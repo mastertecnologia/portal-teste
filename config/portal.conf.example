@@ -1,0 +1,54 @@
+# ========== HTTP (porta 80) – redireciona para HTTPS ==========
+<VirtualHost *:80>
+    ServerName portal.pgm.inf.br
+    ServerAlias 10.0.2.25
+
+    DocumentRoot /var/www/portal/public
+
+    <Directory /var/www/portal/public>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    # Redireciona HTTP -> HTTPS
+    Redirect permanent / https://portal.pgm.inf.br/
+</VirtualHost>
+
+# ========== HTTPS (porta 443) ==========
+
+<VirtualHost *:443>
+    ServerName portal.pgm.inf.br
+
+    DocumentRoot /var/www/portal/public
+
+    # IMPORTANTE: Rewrite ANTES do Alias, para /portal/arquivo existente ser servido como /arquivo pelo DocumentRoot
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/portal/(.+)$
+    RewriteCond /var/www/portal/public/%1 -f
+    RewriteRule ^portal/(.+)$ /$1 [L]
+
+    Alias /portal /var/www/portal/public
+
+    <Directory /var/www/portal/public>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile      /etc/ssl/portal/portal.crt
+    SSLCertificateKeyFile   /etc/ssl/portal/portal.key
+    # Se seu PFX tiver certificado intermediário separado, adicione:
+    # SSLCertificateChainFile /etc/ssl/portal/chain.crt
+
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
+    SetEnv APP_BASE "/portal"
+    SetEnv HTTPS "on"
+
+    ErrorLog ${APACHE_LOG_DIR}/portal_error_ssl.log
+    CustomLog ${APACHE_LOG_DIR}/portal_access_ssl.log combined
+</VirtualHost>

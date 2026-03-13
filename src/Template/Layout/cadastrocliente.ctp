@@ -7,59 +7,58 @@
     <meta name="description" content="Cadastro de Cliente">
     <meta name="author" content="Grid Sistemas">
 
-	<!-- Ícone (paths relativos ao webroot) -->
-	<?php $webroot = $this->request->getAttribute('webroot'); ?>
-	<?= $this->Html->meta($webroot . 'assets/images/favicon.ico?data=11/06/2021', $webroot . 'favicon.ico?data=11/06/2021', ['type' => 'icon']); ?>
+	<!-- Ícone (path relativo; HtmlHelper já adiciona a base) -->
+	<?= $this->Html->meta('assets/images/favicon.ico?data=11/06/2021', 'favicon.ico?data=11/06/2021', ['type' => 'icon']); ?>
 
 	<!-- Título -->
 	<title>Cadastro de Cliente</title>
 
     <!-- CSS -->
-    <?= $this->Html->css($webroot . "assets/node_modules/clockpicker/dist/jquery-clockpicker.min") ?>
-	<?= $this->Html->css($webroot . "assets/node_modules/morrisjs/morris") ?>
-	<?= $this->Html->css($webroot . "assets/node_modules/toast-master/css/jquery.toast") ?>
-	<?= $this->Html->css($webroot . "dist/css/style.min") ?>
-	<?= $this->Html->css($webroot . "dist/css/css.css") ?>
-	<?= $this->Html->css($webroot . "dist/css/pages/bootstrap-select.css") ?>
-	<?= $this->Html->css($webroot . "assets/node_modules/register-steps/steps.css") ?>
-	<?= $this->Html->css($webroot . "dist/css/pages/register3.css") ?>
+    <?= $this->Html->css("assets/node_modules/clockpicker/dist/jquery-clockpicker.min") ?>
+	<?= $this->Html->css("assets/node_modules/morrisjs/morris") ?>
+	<?= $this->Html->css("assets/node_modules/toast-master/css/jquery.toast") ?>
+	<?= $this->Html->css("dist/css/style.min") ?>
+	<?= $this->Html->css("dist/css/css.css") ?>
+	<?= $this->Html->css("dist/css/pages/bootstrap-select.css") ?>
+	<?= $this->Html->css("assets/node_modules/register-steps/steps.css") ?>
+	<?= $this->Html->css("dist/css/pages/register3.css") ?>
 
 	<!--- Scripts -->
-	<?= $this->Html->script($webroot . "assets/node_modules/jquery/jquery-3.2.1.min") ?>
+	<?= $this->Html->script("assets/node_modules/jquery/jquery-3.2.1.min") ?>
     <!-- Bootstrap popper Core JavaScript -->
-	<?= $this->Html->script($webroot . "assets/node_modules/popper/popper.min") ?>
-	<?= $this->Html->script($webroot . "assets/node_modules/bootstrap/dist/js/bootstrap.min") ?>
+	<?= $this->Html->script("assets/node_modules/popper/popper.min") ?>
+	<?= $this->Html->script("assets/node_modules/bootstrap/dist/js/bootstrap.min") ?>
     <!-- Slimscrollbar scrollbar JavaScript -->
-	<?= $this->Html->script($webroot . "dist/js/perfect-scrollbar.jquery.min") ?>
+	<?= $this->Html->script("dist/js/perfect-scrollbar.jquery.min") ?>
     <!-- Wave Effects -->
-	<?= $this->Html->script($webroot . "dist/js/waves") ?>
+	<?= $this->Html->script("dist/js/waves") ?>
     <!-- Menu sidebar -->
-	<?= $this->Html->script($webroot . "dist/js/sidebarmenu") ?>
+	<?= $this->Html->script("dist/js/sidebarmenu") ?>
     <!-- Custom JavaScript -->
-	<?= $this->Html->script($webroot . "dist/js/custom") ?>
-	<?= $this->Html->script($webroot . "assets/node_modules/jquery-sparkline/jquery.sparkline.min") ?>
-	<?= $this->Html->script($webroot . "dist/js/pages/jasny-bootstrap.js") ?>
-	<?= $this->Html->script($webroot . "custom-file-input") ?>
+	<?= $this->Html->script("dist/js/custom") ?>
+	<?= $this->Html->script("assets/node_modules/jquery-sparkline/jquery.sparkline.min") ?>
+	<?= $this->Html->script("dist/js/pages/jasny-bootstrap.js") ?>
+	<?= $this->Html->script("custom-file-input") ?>
 	<!-- masks -->
-	<?= $this->Html->script($webroot . 'plugins/jQuery-Mask-Plugin-master/src/jquery.mask.js') ?>
+	<?= $this->Html->script('plugins/jQuery-Mask-Plugin-master/src/jquery.mask.js') ?>
 
 	<!-- Scripts personalizados para as páginas -->
    
 	<!--- Material Picker -->
-	<?= $this->Html->script($webroot . "assets/node_modules/moment/moment-with-locales") ?>
-	<?= $this->Html->script($webroot . "assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker") ?>
+	<?= $this->Html->script("assets/node_modules/moment/moment-with-locales") ?>
+	<?= $this->Html->script("assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker") ?>
 	<!-- select multiple-->
-	<?= $this->Html->script($webroot . "dist/js/pages/bootstrap-select") ?>
+	<?= $this->Html->script("dist/js/pages/bootstrap-select") ?>
 	<!-- Autosuggest (?) -->
-	<?= $this->Html->script($webroot . 'plugins/Chrome-like-jQuery-Autocomplete-Autosuggest-Plugin-typeAhead/lib/jquery-typeahead.js') ?>
+	<?= $this->Html->script('plugins/Chrome-like-jQuery-Autocomplete-Autosuggest-Plugin-typeAhead/lib/jquery-typeahead.js') ?>
 	<!-- Bootbox - confirms -->
-	<?= $this->Html->script($webroot . 'plugins/bootbox/bootbox.min.js') ?>
-	<?= $this->Html->script($webroot . 'plugins/bootbox/bootbox.locales.min.js') ?>
+	<?= $this->Html->script('plugins/bootbox/bootbox.min.js') ?>
+	<?= $this->Html->script('plugins/bootbox/bootbox.locales.min.js') ?>
 	<!-- Clockpicker -->
-	<?= $this->Html->script($webroot . "assets/node_modules/clockpicker/dist/jquery-clockpicker.min.js") ?>
+	<?= $this->Html->script("assets/node_modules/clockpicker/dist/jquery-clockpicker.min.js") ?>
 	<!-- Register -->
-	<?= $this->Html->script($webroot . "assets/node_modules/register-steps/register-init.js") ?>
-	<?= $this->Html->script($webroot . "assets/node_modules/register-steps/jquery.easing.min.js") ?>
+	<?= $this->Html->script("assets/node_modules/register-steps/register-init.js") ?>
+	<?= $this->Html->script("assets/node_modules/register-steps/jquery.easing.min.js") ?>
 	<!-- Leitura dos componentes -->
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
@@ -68,11 +67,11 @@
 </head>
 <body>
 	<!-- Plugins -->
-	<?= $this->Html->script($webroot . 'assets/node_modules/jquery/jquery-3.2.1.min'); ?>
-	<?= $this->Html->script($webroot . 'assets/node_modules/popper/popper.min'); ?>
-	<?= $this->Html->script($webroot . 'assets/node_modules/bootstrap/dist/js/bootstrap.min'); ?>
+	<?= $this->Html->script('assets/node_modules/jquery/jquery-3.2.1.min'); ?>
+	<?= $this->Html->script('assets/node_modules/popper/popper.min'); ?>
+	<?= $this->Html->script('assets/node_modules/bootstrap/dist/js/bootstrap.min'); ?>
 	<!-- Custom JavaScript -->
-	<?= $this->Html->script($webroot . "dist/js/custom") ?>
+	<?= $this->Html->script("dist/js/custom") ?>
 
 	<!-- Pre laoder -->
 	<div class="preloader">
