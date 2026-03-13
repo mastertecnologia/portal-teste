@@ -49,3 +49,16 @@ configuration relevant for your application.
 The app skeleton uses a subset of [Foundation](http://foundation.zurb.com/) CSS
 framework by default. You can, however, replace it with any other library or
 custom styles.
+
+---
+
+## Deploy no Linux (/var/www/portal)
+
+Estrutura no servidor: **public/** (Document root), **config/**, **logs/**, **src/** (a pasta **app** não existe). Integração com ERP Windows: ver `LIGACAO_ERP_WINDOWS.md`.
+
+1. Copie o projeto para `/var/www/portal`.
+2. Crie `.env` a partir de `.env.example` com `WEBROOT_DIR=public` e `APP_DIR=src`.
+3. Rode `./scripts/preparar_linux.sh` (e opcionalmente `./scripts/preparar_linux.sh www-data`).
+4. Configure Apache/Nginx com DocumentRoot `/var/www/portal/public`; para SSL use o exemplo em `config/apache-vhost-portal-raiz.conf.example`.
+
+Documentação: **DEPLOY_LINUX.md** (passo a passo), **MIGRACAO_LINUX.md** (detalhes), **DIAGNOSTICO_ERRO_500.md** (erros 500), **ESTRUTURA_LINUX.md** (pastas fora do public).

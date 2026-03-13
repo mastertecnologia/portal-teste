@@ -3,7 +3,7 @@
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
-	<?= $this->Html->meta(['link' => '/webroot/manifest.json', 'rel' => 'manifest']); ?>
+	<?= $this->Html->meta(['link' => $this->request->getAttribute('webroot') . 'manifest.json', 'rel' => 'manifest']); ?>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="Portal PGM">

@@ -1,12 +1,10 @@
-# Exemplo de VirtualHost Apache para portal.pgm.inf.br
-# Acessar em https://portal.pgm.inf.br (sem /portal na URL)
+# Exemplo de VirtualHost Apache para portal (estrutura /var/www/portal com public/, config/, logs/, src/)
+# .env: WEBROOT_DIR=public, APP_DIR=src. Integração ERP: LIGACAO_ERP_WINDOWS.md
 #
-# Estrutura no Linux: pasta pública = public (DocumentRoot = .../public).
-# No .env do projeto defina: WEBROOT_DIR=public
-#
-# 1. Copie para o diretório de vhosts do Apache (ex.: /etc/apache2/sites-available/)
-# 2. Habilite: a2ensite apache-vhost-portal-raiz.conf
-# 3. Recarregue o Apache: systemctl reload apache2
+# 1. Copie para /etc/apache2/sites-available/ (ex.: portal.conf)
+# 2. Ajuste ServerName e caminhos dos certificados SSL
+# 3. Habilite: a2ensite portal.conf
+# 4. Recarregue: systemctl reload apache2
 
 <VirtualHost *:80>
     ServerName portal.pgm.inf.br
@@ -18,25 +16,31 @@
         Options -Indexes +FollowSymLinks
     </Directory>
 
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
     ErrorLog ${APACHE_LOG_DIR}/portal-error.log
     CustomLog ${APACHE_LOG_DIR}/portal-access.log combined
 </VirtualHost>
 
-# HTTPS (descomente e ajuste certificados se usar SSL)
-#<VirtualHost *:443>
-#    ServerName portal.pgm.inf.br
-#    DocumentRoot /var/www/portal/public
-#
-#    SSLEngine on
-#    SSLCertificateFile      /caminho/para/certificado.crt
-#    SSLCertificateKeyFile   /caminho/para/private.key
-#
-#    <Directory /var/www/portal/public>
-#        AllowOverride All
-#        Require all granted
-#        Options -Indexes +FollowSymLinks
-#    </Directory>
-#
-#    ErrorLog ${APACHE_LOG_DIR}/portal-ssl-error.log
-#    CustomLog ${APACHE_LOG_DIR}/portal-ssl-access.log combined
-#</VirtualHost>
+# HTTPS – use este bloco quando SSL já estiver configurado no servidor
+<VirtualHost *:443>
+    ServerName portal.pgm.inf.br
+    DocumentRoot /var/www/portal/public
+
+    SSLEngine on
+    SSLCertificateFile      /etc/ssl/certs/portal.pgm.inf.br.crt
+    SSLCertificateKeyFile    /etc/ssl/private/portal.pgm.inf.br.key
+    # SSLCertificateChainFile /etc/ssl/certs/chain.crt
+
+    <Directory /var/www/portal/public>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
+    SetEnv HTTPS "on"
+    ErrorLog ${APACHE_LOG_DIR}/portal-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/portal-ssl-access.log combined
+</VirtualHost>

@@ -1,6 +1,6 @@
 # Estrutura no Linux: config, logs e app fora da pasta public
 
-Objetivo: **config**, **logs** e **src** (app) ficam **fora** do DocumentRoot; só a pasta **public** é exposta na web.
+Objetivo: **config**, **logs** e **src** (código da aplicação; a pasta **app** não existe) ficam **fora** do DocumentRoot; só a pasta **public** é exposta na web. Integração com ERP Windows: ver `LIGACAO_ERP_WINDOWS.md`.
 
 ## Estrutura final no servidor
 
@@ -80,15 +80,17 @@ Copie **da pasta `webroot`** do projeto para `public/`:
 | `webroot/plugins/`       | `/var/www/portal/public/plugins/` |
 | `webroot/sass/`          | `/var/www/portal/public/sass/` |
 
-Resumo em um comando (execute na raiz do projeto no Linux, onde já existem `webroot` e `public`):
+Se você ainda tiver uma pasta `webroot` e quiser migrar conteúdo para `public`:
 
 ```bash
 # Na raiz do projeto (ex: /var/www/portal)
-cp -r webroot/.htaccess public/
+cp -r webroot/.htaccess public/ 2>/dev/null || true
 cp -r webroot/css webroot/img webroot/js webroot/favicon.ico public/ 2>/dev/null || true
 cp -r webroot/arquivos webroot/assets webroot/dist webroot/font webroot/plugins webroot/sass public/ 2>/dev/null || true
 # index.php e .htaccess em public/ já vêm do repositório; não sobrescreva com os de webroot
 ```
+
+Se a estrutura já estiver com `public/` (como no seu Linux), basta garantir que `.env` tenha `WEBROOT_DIR=public`.
 
 ---
 

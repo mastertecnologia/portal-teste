@@ -9,11 +9,10 @@ Este guia descreve a migração do portal de XAMPP/Windows para Linux, com banco
 ```
 /var/www/
 ├── portal/           # Aplicação CakePHP
-│   ├── public/       # Document root (ou webroot – veja abaixo)
-│   ├── app/          # Opcional: se renomear "src" para "app"
-│   ├── src/          # Código da aplicação (padrão CakePHP)
-│   ├── config/
+│   ├── public/      # Document root (único acessível pela web; use esta estrutura)
+│   ├── config/      # Fora do public
 │   ├── logs/
+│   ├── src/         # Código da aplicação (não usar pasta app – não existe)
 │   ├── tmp/
 │   ├── vendor/
 │   └── ...
@@ -22,11 +21,7 @@ Este guia descreve a migração do portal de XAMPP/Windows para Linux, com banco
 └── backups/
 ```
 
-**Nota:** O CakePHP usa por padrão a pasta `webroot` como document root. Se você preferir usar a pasta `public`:
-
-1. Renomeie `webroot` para `public`: `mv webroot public`
-2. No `.env` ou no servidor (Apache/Nginx), defina `WEBROOT_DIR=public`
-3. No `.htaccess` da **raiz** do projeto, troque `webroot/` por `public/` (ou use o arquivo `.htaccess.public.example`)
+**Nota:** Nesta estrutura a pasta **app não existe**; o código fica em **src**. O document root é **public**. No `.env` defina `WEBROOT_DIR=public` e `APP_DIR=src`. O `.htaccess` na raiz já redireciona para `public/`.
 
 ## 1. Banco de dados PostgreSQL (remoto)
 
@@ -89,35 +84,31 @@ sudo chmod -R 775 /var/www/portal/public/arquivos   # ou webroot/arquivos
 
 ## 4. Apache – VirtualHost exemplo
 
-Document root apontando para a pasta **webroot** (ou **public**, se tiver renomeado):
+Document root apontando para a pasta **public** (estrutura recomendada):
 
 ```apache
 <VirtualHost *:80>
     ServerName portal.seudominio.com
-    DocumentRoot /var/www/portal/webroot
+    DocumentRoot /var/www/portal/public
 
-    <Directory /var/www/portal/webroot>
+    <Directory /var/www/portal/public>
         AllowOverride All
         Require all granted
         Options -Indexes +FollowSymLinks
     </Directory>
 
-    # Variáveis de ambiente (opcional; senão use .env ou app_local.php)
     SetEnv DB_HOST "10.0.2.23"
     SetEnv DB_PORT "5432"
     SetEnv DB_USERNAME "postgres"
     SetEnv DB_PASSWORD "pgm@postgres"
     SetEnv DB_DATABASE "pgm"
     SetEnv SECURITY_SALT "sua-salt-aleatoria-longa"
-    SetEnv WEBROOT_DIR "webroot"
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
 </VirtualHost>
 ```
 
-Se tiver renomeado `webroot` para `public`:
-
-- `DocumentRoot /var/www/portal/public`
-- `<Directory /var/www/portal/public>`
-- `SetEnv WEBROOT_DIR "public"`
+Para **HTTPS** (SSL já configurado no servidor), use um VirtualHost *:443 com `SSLEngine on` e os certificados; o CakePHP usa `env('HTTPS')` para gerar links com `https://`. Ver `config/apache-vhost-portal-raiz.conf.example`.
 
 ## 5. Nginx – Exemplo
 
@@ -125,7 +116,7 @@ Se tiver renomeado `webroot` para `public`:
 server {
     listen 80;
     server_name portal.seudominio.com;
-    root /var/www/portal/webroot;
+    root /var/www/portal/public;
 
     index index.php;
 
@@ -143,9 +134,13 @@ server {
         fastcgi_param DB_PASSWORD pgm@postgres;
         fastcgi_param DB_DATABASE pgm;
         fastcgi_param SECURITY_SALT "sua-salt-aleatoria-longa";
+        fastcgi_param WEBROOT_DIR "public";
+        fastcgi_param APP_DIR "src";
     }
 }
 ```
+
+Para HTTPS, use um `server { listen 443 ssl; ... }` com `ssl_certificate` e `ssl_certificate_key`.
 
 ## 6. Rotas e URLs
 
@@ -158,7 +153,7 @@ server {
 - [ ] `config/app_local.php` criado (a partir de `app_local_linux.example`) ou `.env` configurado
 - [ ] Banco PostgreSQL acessível a partir do servidor web (firewall, pg_hba.conf)
 - [ ] Permissões em `tmp/`, `logs/` e pasta de anexos
-- [ ] Document root do Apache/Nginx = `webroot` ou `public`
+- [ ] Document root do Apache/Nginx = `public` (e `.env` com `WEBROOT_DIR=public`, `APP_DIR=src`)
 - [ ] `SECURITY_SALT` definido e igual em todos os ambientes que compartilham sessão
 - [ ] Debug desativado em produção (`debug => false` ou `DEBUG=false`)
 
@@ -197,7 +192,7 @@ Se tudo estiver certo, a saída será algo como:
 
   [OK] .env encontrado: ...
   [OK] ROOT = /var/www/portal
-  [OK] WWW_ROOT = /var/www/portal/webroot/
+  [OK] WWW_ROOT = /var/www/portal/public/
   ...
   [OK] Conexão PostgreSQL: OK (host=10.0.2.23, database=pgm)
   [OK] Query de teste (SELECT 1): OK
@@ -211,7 +206,7 @@ Ambiente OK. Pode testar no navegador ou com: php bin/cake.php
 No mesmo diretório raiz do projeto:
 
 ```bash
-php -S localhost:8765 -t webroot
+php -S localhost:8765 -t public
 ```
 
 Acesse: **http://localhost:8765**
@@ -240,5 +235,5 @@ curl -s "http://localhost:8765/ordensservico/list-api?empresa=1&token=SEU_TOKEN&
 | `config/paths.php` | Define ROOT, WWW_ROOT, APP; usa `WEBROOT_DIR` e `APP_DIR` do ambiente |
 | `config/app_local_linux.example` | Exemplo de config local para Linux com PostgreSQL remoto |
 | `.env.example` | Exemplo de variáveis de ambiente (DB, WEBROOT_DIR, APP_DIR) |
-| `.htaccess` (raiz) | Redireciona para `webroot/` (ou use `.htaccess.public.example` para `public/`) |
+| `.htaccess` (raiz) | Redireciona para `public/` |
 | `scripts/test_ambiente_linux.php` | Script para testar paths, .env, diretórios e conexão PostgreSQL |

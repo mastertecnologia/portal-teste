@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Prepara o portal no Linux após copiar os arquivos.
+# Estrutura: /var/www/portal com public/, config/, logs/, src/ (sem app).
 # Uso: na raiz do projeto (ex.: /var/www/portal):
 #   chmod +x scripts/preparar_linux.sh
 #   ./scripts/preparar_linux.sh
@@ -13,10 +14,20 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 WEB_USER="${1:-}"
 
-echo "=== Preparando portal em $ROOT ==="
+# Pasta pública: public (estrutura Linux) ou webroot (legado)
+if [ -f .env ] && grep -q '^WEBROOT_DIR=' .env 2>/dev/null; then
+    WEBROOT_DIR=$(grep '^WEBROOT_DIR=' .env | cut -d= -f2 | tr -d '\r\n ')
+else
+    WEBROOT_DIR="public"
+fi
+[ -z "$WEBROOT_DIR" ] && WEBROOT_DIR="public"
+# fallback se não existir public
+[ ! -d "$WEBROOT_DIR" ] && [ -d "webroot" ] && WEBROOT_DIR="webroot"
+
+echo "=== Preparando portal em $ROOT (WEBROOT=$WEBROOT_DIR) ==="
 
 # 1. Criar diretórios necessários (tmp e logs podem estar no .gitignore)
-for dir in tmp tmp/cache tmp/cache/models tmp/cache/persistent logs webroot/arquivos webroot/arquivos/tickets; do
+for dir in tmp tmp/cache tmp/cache/models tmp/cache/persistent logs "$WEBROOT_DIR/arquivos" "$WEBROOT_DIR/arquivos/tickets"; do
     if [ ! -d "$dir" ]; then
         mkdir -p "$dir"
         echo "  Criado: $dir"
@@ -34,10 +45,10 @@ fi
 # 3. Permissões
 if [ -n "$WEB_USER" ]; then
     echo "  Ajustando dono para $WEB_USER..."
-    chown -R "$WEB_USER:$WEB_USER" tmp logs webroot/arquivos 2>/dev/null || true
+    chown -R "$WEB_USER:$WEB_USER" tmp logs "$WEBROOT_DIR/arquivos" 2>/dev/null || true
 fi
-chmod -R 775 tmp logs webroot/arquivos 2>/dev/null || true
-echo "  Permissões 775 em tmp, logs, webroot/arquivos"
+chmod -R 775 tmp logs "$WEBROOT_DIR/arquivos" 2>/dev/null || true
+echo "  Permissões 775 em tmp, logs, $WEBROOT_DIR/arquivos"
 
 # 4. Teste do ambiente
 echo ""
@@ -46,6 +57,6 @@ php scripts/test_ambiente_linux.php
 
 echo ""
 echo "Pronto. Para testar no navegador:"
-echo "  php -S 0.0.0.0:8765 -t webroot"
-echo "  Acesse: http://IP-DO-SERVIDOR:8765"
+echo "  php -S 0.0.0.0:8765 -t $WEBROOT_DIR"
+echo "  Acesse: http://IP-DO-SERVIDOR:8765 (ou https:// se SSL estiver configurado)"
 echo ""

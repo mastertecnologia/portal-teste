@@ -30,8 +30,8 @@ Depois acesse de novo `portal.pgm.inf.br` no navegador e veja a linha que aparec
 | **Falta `config/app_local.php`** | No servidor: `ls -la config/app_local.php` | Se não existir: `cp config/app_local_linux.example config/app_local.php` e edite (salt, banco). |
 | **Security.salt vazio** | Em `config/app_local.php`: `'Security' => ['salt' => '...']` | Defina uma string longa e aleatória em `salt`. |
 | **Banco de dados inacessível** | Ver host, usuário, senha em `config/app_local.php` ou `.env` | Ajuste host (ex.: 10.0.2.23), usuário, senha e teste: `psql -h ... -U ... -d pgm -c "SELECT 1"`. |
-| **Document root errado** | No Linux a pasta pública é `public` ou `webroot`? | Se for `public`, no `.env` da raiz coloque: `WEBROOT_DIR=public`. Se for `webroot`, não precisa. |
-| **Permissões** | `tmp/` e `logs/` precisam ser graváveis pelo usuário do servidor web | `sudo chown -R www-data:www-data /var/www/portal/tmp /var/www/portal/logs` e `chmod -R 775 tmp logs`. |
+| **Document root errado** | Estrutura Linux usa pasta `public`. | No `.env` na raiz: `WEBROOT_DIR=public` e `APP_DIR=src`. DocumentRoot do Apache/Nginx = `/var/www/portal/public`. |
+| **Permissões** | `tmp/` e `logs/` precisam ser graváveis pelo usuário do servidor web | `sudo chown -R www-data:www-data /var/www/portal/tmp /var/www/portal/logs /var/www/portal/public/arquivos` e `chmod -R 775 tmp logs`. |
 | **Extensões PHP** | intl, mbstring, pdo_pgsql | `php -m` e instale o que faltar (ex.: `apt install php-intl php-mbstring php-pgsql`). |
 
 ---
