@@ -1,0 +1,7 @@
+config/app_local.php
+.env
+.env.*
+tmp/
+logs/
+vendor/
+.ssh/

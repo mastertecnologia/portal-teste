@@ -1,0 +1,29 @@
+# Variáveis de ambiente para o Portal (Windows Server 2019 + XAMPP)
+# Cole o bloco <Directory> abaixo DENTRO de cada <VirtualHost> do portal
+# no arquivo: C:\xampp\apache\conf\extra\httpd-vhosts.conf
+#
+# Substitua os valores entre aspas pelos dados reais de produção.
+# Depois reinicie o Apache no painel do XAMPP.
+
+    <Directory "C:/xampp/htdocs/portal">
+        AllowOverride All
+        Require all granted
+        Options Indexes FollowSymLinks
+        SetEnv SECURITY_SALT "seu_salt_real_64_caracteres_ou_mais"
+        SetEnv DB_HOST "localhost"
+        SetEnv DB_PORT "5432"
+        SetEnv DB_USERNAME "postgres"
+        SetEnv DB_PASSWORD "sua_senha_real_do_banco"
+        SetEnv DB_DATABASE "pgm"
+        SetEnv DEBUG "false"
+        SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
+        SetEnv MAIL_MASTER_PORT "587"
+        SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
+        SetEnv MAIL_MASTER_PASSWORD "senha_email_real"
+        SetEnv MAIL_MASTER_TLS "false"
+        SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
+        SetEnv MAIL_PGM_PORT "587"
+        SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
+        SetEnv MAIL_PGM_PASSWORD "senha_email_real"
+        SetEnv MAIL_PGM_TLS "false"
+    </Directory>

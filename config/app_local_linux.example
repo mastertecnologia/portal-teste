@@ -1,0 +1,27 @@
+<?php
+/**
+ * Exemplo de configuração LOCAL para produção Linux.
+ * Banco PostgreSQL em servidor remoto (10.0.2.23).
+ *
+ * Uso:
+ * 1. Copie para app_local.php: cp app_local_linux.example app_local.php
+ * 2. Ajuste SECURITY_SALT e e-mail se necessário.
+ * 3. Nunca versionar app_local.php (deve estar no .gitignore).
+ */
+return [
+    'debug' => false,
+
+    'Security' => [
+        'salt' => env('SECURITY_SALT', 'gere-uma-string-aleatoria-longa-aqui'),
+    ],
+
+    'Datasources' => [
+        'default' => [
+            'host' => env('DB_HOST', '10.0.2.23'),
+            'port' => env('DB_PORT', '5432'),
+            'username' => env('DB_USERNAME', 'postgres'),
+            'password' => env('DB_PASSWORD', 'pgm@postgres'),
+            'database' => env('DB_DATABASE', 'pgm'),
+        ],
+    ],
+];

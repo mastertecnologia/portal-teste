@@ -1,0 +1,13 @@
+# Uncomment the following to prevent the httpoxy vulnerability
+# See: https://httpoxy.org/
+#<IfModule mod_headers.c>
+#    RequestHeader unset Proxy
+#</IfModule>
+
+# Linux: se usar pasta "public" em vez de "webroot", troque webroot/ por public/
+# e defina WEBROOT_DIR=public no .env ou no Apache (SetEnv). Ver MIGRACAO_LINUX.md
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule    ^$    webroot/    [L]
+    RewriteRule    (.*) webroot/$1    [L]
+</IfModule>

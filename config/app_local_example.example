@@ -1,0 +1,33 @@
+<?php
+/**
+ * Configuração LOCAL – não versionar este arquivo com dados reais.
+ *
+ * Para testar em ambiente local sem afetar produção:
+ * 1. Copie este arquivo para app_local.php:  copy app_local.php.example app_local.php
+ * 2. Ajuste os valores abaixo (banco local, salt de teste, etc.)
+ * 3. No bootstrap.php a linha que carrega app_local já deve estar ativa.
+ *
+ * O app_local.php sobrescreve apenas as chaves definidas aqui; o resto vem do app.php.
+ */
+return [
+    'debug' => true,
+
+    'Security' => [
+        'salt' => 'troque-por-uma-string-aleatoria-longa-para-teste-local',
+    ],
+
+    'Datasources' => [
+        'default' => [
+            'host' => 'localhost',
+            'port' => '5432',
+            'username' => 'postgres',
+            'password' => 'sua_senha_local',
+            'database' => 'pgm_local',
+        ],
+    ],
+
+    // Opcional: desabilitar envio real de e-mail em teste
+    // 'EmailTransport' => [
+    //     'default' => ['className' => 'Debug'],
+    // ],
+];

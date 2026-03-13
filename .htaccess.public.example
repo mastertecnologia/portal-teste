@@ -1,0 +1,12 @@
+# Use este arquivo como .htaccess na RAIZ do projeto quando a pasta
+# do document root for "public" em vez de "webroot".
+# 1. Renomeie webroot para public:  mv webroot public
+# 2. Defina WEBROOT_DIR=public no .env ou no Apache (SetEnv)
+# 3. Copie este conteúdo para o .htaccess da raiz (substituindo webroot por public)
+#
+# Conteúdo:
+#<IfModule mod_rewrite.c>
+#    RewriteEngine On
+#    RewriteRule    ^$    public/    [L]
+#    RewriteRule    (.*) public/$1    [L]
+#</IfModule>

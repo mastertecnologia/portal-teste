@@ -1,0 +1,145 @@
+.dark-mode {
+	background-color: #353c48 !important;
+	color: #ced4da !important;
+}
+
+.card.dark-mode{
+    border: none !important;
+	background-color: #353c48 !important;
+	/* border-left: 1px solid #8190a6 !important; */
+	border-left: 1px solid #3c4452  !important;
+}
+.card.dark-mode:first-child, .card1emeio{
+	border-left: none !important;
+}
+
+.fundo-dark-mode {
+	/* background-color: #8190a6 !important; */
+	background-color: #3c4452 !important;
+	color: #ced4da !important;
+}
+
+.page-wrapper{
+	padding-top: 66px !important;
+}
+
+.footer.dark-mode{
+	border: none !important;
+    padding-top: 19px;
+    margin-top: 15px;
+}
+
+.footer.dark-mode > a{
+    color: #45e5ed;
+}
+
+.nav-link.active.dark-mode{
+    color: #03a9f3 !important;
+}
+
+td.dark-mode:hover{
+    background-color: #707c8f !important;
+}
+
+td.dark-mode > a{
+    color: white;
+}
+
+td.dark-mode:hover > a{
+    color: rgb(211, 211, 211) !important;
+    background-color: #707c8f !important;
+}
+
+th.dark-mode{
+    color: #46bcf3 !important;
+}
+
+select.dark-mode, input.dark-mode, textarea.dark-mode{
+    color: white;
+}
+
+select.dark-mode:focus, input.dark-mode:focus, textarea.dark-mode:focus{
+    background-color: #77818f !important;
+}
+
+input.dark-mode::placeholder, textarea.dark-mode::placeholder{
+    color: #a7aeb9;
+}
+
+.container-fluid.fundo-dark-mode{
+    margin-bottom: 10px;
+}
+
+.iconpicker.dark-mode{
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+    background-color: #555a61 !important;
+    border: 1px solid #a7aeb9;
+    border-radius: 5%;
+}
+
+.table-icons.dark-mode > tbody > tr > td, .table-icons.dark-mode > thead > tr > td, .table-icons.dark-mode > tfoot > tr > td, .table-icons.dark-mode > tbody > tr > td, .table-icons.dark-mode > thead > tr > td > input{
+    background-color: #555a61 !important;
+}
+.table-icons.dark-mode > thead > tr > td > input:hover{
+    background-color: #575b5f !important;
+}
+
+ol > li.breadcrumb-item.dark-mode > a{
+    color: rgb(255, 255, 255) !important;
+    text-decoration: none;
+}
+ol > li.breadcrumb-item.dark-mode > a:last-child{
+    color: rgb(173, 173, 173) !important;
+    text-decoration: none;
+}
+
+.card-header.dark-mode{
+    background-color: #7c7e83 !important;
+}
+
+h5.faq-dark-mode.dark-mode{
+    background-color: #7c7e83 !important;
+}
+
+.faq-dark-mode.dark-mode{
+    background-color: #7c7e83 !important;
+}
+
+.faq-dark-mode.dark-mode:hover{
+    color: #c4d0f0 !important;
+}
+
+.calendar-events.dark-mode{
+    border: none !important;
+}
+
+.fc-row .fc-content-skeleton td.dark-mode{
+    background-color: #353c48 !important;
+}
+
+.fc-today.dark-mode{
+    color: #ffffff !important;
+}
+
+.fc-day.dark-mode:hover{
+    background-color: #353c48 !important;
+}
+
+.close.dark-mode{
+    color: white !important;
+}
+
+.fc td.fc-today.dark-mode{
+    background-color: #a5aab6 !important;
+}
+
+.bg-dark.dark-mode{
+    background-color: rgb(179, 179, 179) !important;
+}
+
+.text-dark.dark-mode{
+    color: rgb(179, 179, 179) !important;
+}

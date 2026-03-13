@@ -1,0 +1,42 @@
+# Exemplo de VirtualHost Apache para portal.pgm.inf.br
+# Acessar em https://portal.pgm.inf.br (sem /portal na URL)
+#
+# Estrutura no Linux: pasta pública = public (DocumentRoot = .../public).
+# No .env do projeto defina: WEBROOT_DIR=public
+#
+# 1. Copie para o diretório de vhosts do Apache (ex.: /etc/apache2/sites-available/)
+# 2. Habilite: a2ensite apache-vhost-portal-raiz.conf
+# 3. Recarregue o Apache: systemctl reload apache2
+
+<VirtualHost *:80>
+    ServerName portal.pgm.inf.br
+    DocumentRoot /var/www/portal/public
+
+    <Directory /var/www/portal/public>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/portal-error.log
+    CustomLog ${APACHE_LOG_DIR}/portal-access.log combined
+</VirtualHost>
+
+# HTTPS (descomente e ajuste certificados se usar SSL)
+#<VirtualHost *:443>
+#    ServerName portal.pgm.inf.br
+#    DocumentRoot /var/www/portal/public
+#
+#    SSLEngine on
+#    SSLCertificateFile      /caminho/para/certificado.crt
+#    SSLCertificateKeyFile   /caminho/para/private.key
+#
+#    <Directory /var/www/portal/public>
+#        AllowOverride All
+#        Require all granted
+#        Options -Indexes +FollowSymLinks
+#    </Directory>
+#
+#    ErrorLog ${APACHE_LOG_DIR}/portal-ssl-error.log
+#    CustomLog ${APACHE_LOG_DIR}/portal-ssl-access.log combined
+#</VirtualHost>

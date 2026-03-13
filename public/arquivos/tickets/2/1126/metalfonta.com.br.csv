@@ -1,0 +1,11 @@
+﻿Registros MX
+Prioridade,Nome do host,Pontos de endereçamento ou valor,TTL
+0,@,metalfonta-com-br.mail.protection.outlook.com,3600
+
+Registros CNAME
+Nome do host,Pontos de endereçamento ou valor,TTL
+autodiscover,autodiscover.outlook.com,3600
+
+Registros TXT
+Nome TXT,Valor TXT,TTL
+@,v=spf1 include:spf.protection.outlook.com -all,3600

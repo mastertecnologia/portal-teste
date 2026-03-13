@@ -1,0 +1,7 @@
+# Pastas ignoradas
+tmp/
+logs/
+webroot/arquivos
+
+# Arquivos ignorados
+webroot/*.zip
