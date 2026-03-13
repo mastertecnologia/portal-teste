@@ -1,0 +1,50 @@
+# Apache: portal em https://portal.pgm.inf.br/portal/ (assets 404 → CakePHP)
+#
+# Os logs mostraram: Request URL /portal/dist/css/... e /assets/... gerando
+# MissingControllerException (Portal, Assets) porque o Apache envia TUDO
+# para index.php. O arquivo estático existe em public/dist/... mas o servidor
+# procura public/portal/dist/... (não existe) e cai no rewrite.
+#
+# SOLUÇÃO: Alias /portal -> public. Assim /portal/dist/... = public/dist/...
+# e o .htaccess em public serve o arquivo (não reescreve para index.php).
+#
+# Opção A – VirtualHost só do portal (acesso em portal.pgm.inf.br/portal/...)
+# 1. Copie para /etc/apache2/sites-available/portal.conf
+# 2. Ajuste certificados; a2enmod rewrite; a2ensite portal; systemctl reload apache2
+
+<VirtualHost *:443>
+    ServerName portal.pgm.inf.br
+    DocumentRoot /var/www/portal/public
+
+    Alias /portal /var/www/portal/public
+
+    <Directory /var/www/portal/public>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile      /etc/ssl/certs/portal.pgm.inf.br.crt
+    SSLCertificateKeyFile    /etc/ssl/private/portal.pgm.inf.br.key
+
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
+    SetEnv HTTPS "on"
+    SetEnv APP_BASE "/portal"
+
+    ErrorLog ${APACHE_LOG_DIR}/portal-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/portal-ssl-access.log combined
+</VirtualHost>
+
+# Opção B – Se o portal já tem outro VirtualHost, só adicione dentro do <VirtualHost>:
+#   Alias /portal /var/www/portal/public
+#   <Directory /var/www/portal/public>
+#       AllowOverride All
+#       Require all granted
+#       Options -Indexes +FollowSymLinks
+#   </Directory>
+#   SetEnv APP_BASE "/portal"
+# Depois: systemctl reload apache2
+#
+# No .env do projeto: APP_BASE=/portal (ou use SetEnv acima)

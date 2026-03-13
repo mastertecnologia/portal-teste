@@ -1,5 +1,13 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Com Alias /portal -> public: servir arquivos que existem (REQUEST_URI pode vir com ou sem /portal/)
+    RewriteCond %{REQUEST_URI} ^/portal/(.*)$
+    RewriteCond %{DOCUMENT_ROOT}/%1 -f
+    RewriteRule ^ - [L]
+    RewriteCond %{REQUEST_URI} !^/portal/
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    RewriteRule ^ - [L]
     RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [L]
 </IfModule>
