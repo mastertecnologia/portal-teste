@@ -1,6 +1,8 @@
 # Corrigir URLs com /portal (login e 2FA)
 
-Quando a página de login mostra **todas** as URLs com o prefixo `/portal/` (ex.: `/portal/users/login`, `/portal/users/verificacodigo/...`), o site está sendo servido em um **subdiretório**. Isso pode quebrar o 2FA e outras chamadas AJAX se o servidor não estiver configurado de forma consistente.
+Quando a página de login mostra **todas** as URLs com o prefixo `/portal/` (ex.: `/portal/users/login`, `/portal/users/verificacodigo/...`), o site está sendo servido em um **subdiretório**. Se os **assets (CSS, JS, imagens)** usavam caminhos absolutos a partir da raiz do domínio (ex.: `/dist/css/...`), o navegador pedia `portal.pgm.inf.br/dist/...` em vez de `portal.pgm.inf.br/portal/dist/...`, gerando 404 e a página de login quebrada (sem estilo, logo, modal).
+
+**Ajuste feito no código:** os layouts `login.ctp` e `cadastrocliente.ctp` passaram a usar `$this->request->getAttribute('webroot')` em todos os links de CSS, JS e favicon. Assim, tanto em **https://portal.pgm.inf.br** (raiz) quanto em **https://portal.pgm.inf.br/portal** (subdiretório), os assets são carregados corretamente.
 
 **Objetivo:** acessar em **https://portal.pgm.inf.br** (sem `/portal` na barra de endereço) e ter links como `/users/login`, `/assets/...`.
 
