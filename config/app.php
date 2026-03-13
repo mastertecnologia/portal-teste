@@ -53,8 +53,9 @@ return [
         // 'baseUrl' => env('SCRIPT_NAME'),
         'fullBaseUrl' => false,
         'imageBaseUrl' => 'img/',
-        'cssBaseUrl' => 'css/',
-        'jsBaseUrl' => 'js/',
+        // Vazio: assets estão em dist/css/, assets/, plugins/ (não em public/css/ nem public/js/)
+        'cssBaseUrl' => '',
+        'jsBaseUrl' => '',
         'paths' => [
             'plugins' => [ROOT . DS . 'plugins' . DS],
             'templates' => [APP . 'Template' . DS],
