@@ -1,0 +1,222 @@
+/**
+ * Login ERP - Layout do HTML fornecido (PGM Soluções em TI)
+ * Fonte: Inter | Cores: #0e6b66, #18a7a0, #14b8a6, #0f766e
+ */
+.login-erp-wrap {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 1rem;
+	background: linear-gradient(135deg, #0e6b66, #18a7a0);
+	overflow: hidden;
+	position: relative;
+	font-family: 'Inter', sans-serif;
+}
+.login-erp-wrap::before {
+	content: "";
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	background-image:
+		radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 2px, transparent 2px),
+		radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 2px, transparent 2px);
+	background-size: 120px 120px;
+	pointer-events: none;
+}
+.login-erp-card {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 420px;
+	padding: 40px;
+	background: #fff;
+	border-radius: 14px;
+	box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+	text-align: center;
+}
+.login-erp-logo {
+	text-align: center;
+	margin-bottom: 15px;
+}
+.login-erp-logo img {
+	width: 80px;
+	height: auto;
+}
+.login-erp-title {
+	font-size: 22px;
+	font-weight: 600;
+	margin-bottom: 25px;
+	color: #333;
+}
+.login-erp .input-group {
+	position: relative;
+	margin-bottom: 18px;
+}
+.login-erp .input-group .input-icon {
+	position: absolute;
+	left: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	opacity: 0.6;
+	color: #555;
+	font-size: 1rem;
+	z-index: 2;
+	pointer-events: none;
+}
+.login-erp .input-group .eye-icon {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	opacity: 0.6;
+	background: none;
+	border: none;
+	padding: 4px;
+	color: #555;
+	z-index: 2;
+}
+.login-erp .input-group .eye-icon:hover {
+	opacity: 1;
+	color: #0f766e;
+}
+.login-erp .input-group input,
+.login-erp .input-group .form-control {
+	width: 100%;
+	padding: 13px 40px;
+	border-radius: 8px;
+	border: 1px solid #ddd;
+	font-size: 14px;
+	transition: 0.2s;
+	height: auto;
+}
+.login-erp .input-group input:focus,
+.login-erp .input-group .form-control:focus {
+	border-color: #0ea5a0;
+	outline: none;
+}
+.login-erp .input-group .input {
+	margin: 0;
+}
+.login-erp .remember {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	font-size: 13px;
+	margin-bottom: 20px;
+	color: #555;
+}
+.login-erp .remember input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	accent-color: #0f766e;
+	cursor: pointer;
+}
+.login-erp .remember label {
+	margin: 0;
+	cursor: pointer;
+}
+.login-erp .login-btn {
+	width: 100%;
+	padding: 14px;
+	background: linear-gradient(90deg, #14b8a6, #0f766e);
+	border: none;
+	border-radius: 8px;
+	color: #fff !important;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: 0.2s;
+}
+.login-erp .login-btn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+	color: #fff !important;
+}
+.login-erp .support {
+	margin-top: 18px;
+	display: flex;
+	gap: 10px;
+}
+.login-erp .support .support-btn {
+	flex: 1;
+	padding: 10px;
+	border-radius: 6px;
+	border: 1px solid #ddd;
+	background: #f5f5f5;
+	cursor: pointer;
+	font-size: 13px;
+	color: #333;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	transition: 0.2s;
+}
+.login-erp .support .support-btn:hover {
+	background: #eee;
+	color: #0f766e;
+	text-decoration: none;
+}
+.login-erp .mfa {
+	margin-top: 18px;
+	font-size: 13px;
+	color: #555;
+}
+.login-erp .mfa a,
+.login-erp .mfa .link-mfa {
+	color: #0f766e;
+	text-decoration: none;
+	font-weight: 500;
+	cursor: pointer;
+}
+.login-erp .mfa a:hover,
+.login-erp .mfa .link-mfa:hover {
+	text-decoration: underline;
+}
+.login-erp .login-erp-cadastro {
+	margin-top: 12px;
+	font-size: 13px;
+}
+.login-erp .login-erp-cadastro a {
+	color: #0f766e;
+	text-decoration: none;
+	font-weight: 500;
+}
+.login-erp .login-erp-cadastro a:hover {
+	text-decoration: underline;
+}
+.login-erp .footer {
+	margin-top: 25px;
+	font-size: 12px;
+	color: #777;
+}
+.login-erp .alert {
+	border-radius: 8px;
+	margin-bottom: 18px;
+	font-size: 14px;
+}
+.login-erp .minsuculaOnly {
+	font-size: 12px;
+	color: #777;
+	margin-top: 4px;
+	display: block;
+}
+/* Modal 2FA */
+#modal-duasetapas .modal-content {
+	background: linear-gradient(135deg, #0e6b66, #18a7a0) !important;
+	border-radius: 8px;
+}
+#modal-duasetapas .form-control {
+	background: #fff;
+	color: #212529;
+	border: 1px solid #ddd;
+}
+.modal.show .modal-dialog {
+	margin-top: 15%;
+}

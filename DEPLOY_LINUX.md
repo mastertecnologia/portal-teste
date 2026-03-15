@@ -45,7 +45,7 @@ rsync -av --exclude=tmp --exclude=logs --exclude=.git \
 ## Pré-requisitos no Linux
 
 - PHP 5.6+ com extensões: intl, mbstring, pdo_pgsql
-- PostgreSQL acessível (ex.: servidor em 10.0.2.23 com usuário postgres, senha pgm@postgres)
+- PostgreSQL acessível no servidor 10.0.2.23 (usuário postgres, senha pgm@postgres). Portal em 10.0.2.25; ERP/Grid em 10.0.2.7. Ver docs/INFRAESTRUTURA_SERVIDORES.md.
 - Banco `pgm` criado no PostgreSQL (ou outro nome; ajuste em `config/app_local.php`)
 
 ## 1. Copiar o projeto para o Linux
@@ -131,10 +131,12 @@ Edite apenas se for usar outro banco, host ou salt:
 nano config/app_local.php
 ```
 
-- `host` → IP do PostgreSQL (padrão 10.0.2.23)  
+- `host` → IP do PostgreSQL (10.0.2.23 com servidores separados)  
 - `database` → nome do banco (padrão pgm)  
 - `password` → senha do postgres (padrão pgm@postgres)  
 - `Security.salt` → troque por uma string longa e aleatória (obrigatório em produção)
+
+**URL do ERP (Grid em 10.0.2.7):** não fica no app_local; fica no **banco** (tabela `empresas`, coluna `urlerp`). Use `http://10.0.2.7:85/WebGridPGM/`. Atualize pela tela **Empresas → Editar empresa** ou execute o script `config/sql_atualizar_urlerp_para_grid_remoto.sql`. Ver `docs/INFRAESTRUTURA_SERVIDORES.md`.
 
 Salve e rode de novo o teste:
 

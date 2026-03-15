@@ -54,11 +54,14 @@ custom styles.
 
 ## Deploy no Linux (/var/www/portal)
 
-Estrutura no servidor: **public/** (Document root), **config/**, **logs/**, **src/** (a pasta **app** não existe). Integração com ERP Windows: ver `LIGACAO_ERP_WINDOWS.md`.
+**Infraestrutura (servidores separados):** Portal **10.0.2.25** | PostgreSQL **10.0.2.23** | ERP/Grid **10.0.2.7** (ECS-MASTER). Ver **`docs/INFRAESTRUTURA_SERVIDORES.md`**.
+
+Estrutura no servidor: **public/** (Document root), **config/**, **logs/**, **src/** (a pasta **app** não existe). Integração com ERP Windows: ver `LIGACAO_ERP_WINDOWS.md`. URL do ERP no banco (`empresas.urlerp`): `http://10.0.2.7:85/WebGridPGM/`.
 
 1. Copie o projeto para `/var/www/portal`.
-2. Crie `.env` a partir de `.env.example` com `WEBROOT_DIR=public` e `APP_DIR=src`.
+2. Crie `.env` a partir de `.env.example` com `WEBROOT_DIR=public`, `APP_DIR=src` e `DB_HOST=10.0.2.23`.
 3. Rode `./scripts/preparar_linux.sh` (e opcionalmente `./scripts/preparar_linux.sh www-data`).
 4. Configure Apache/Nginx com DocumentRoot `/var/www/portal/public`; para SSL use o exemplo em `config/apache-vhost-portal-raiz.conf.example`.
+5. No banco, confira/atualize `empresas.urlerp` para o Grid (script: `config/sql_atualizar_urlerp_para_grid_remoto.sql`).
 
-Documentação: **DEPLOY_LINUX.md** (passo a passo), **MIGRACAO_LINUX.md** (detalhes), **DIAGNOSTICO_ERRO_500.md** (erros 500), **ESTRUTURA_LINUX.md** (pastas fora do public).
+Documentação: **docs/INFRAESTRUTURA_SERVIDORES.md** (IPs e configurações), **DEPLOY_LINUX.md** (passo a passo), **MIGRACAO_LINUX.md** (detalhes), **DIAGNOSTICO_ERRO_500.md** (erros 500), **ESTRUTURA_LINUX.md** (pastas fora do public).

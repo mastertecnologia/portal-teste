@@ -1,0 +1,50 @@
+# Portal na RAIZ do domínio: https://portal.pgm.inf.br/users/login (SEM /portal na URL)
+#
+# Use ESTE arquivo quando quiser acessar em portal.pgm.inf.br (sem /portal).
+# 1. Copie para /etc/apache2/sites-available/portal.conf (substitua o atual)
+# 2. Ajuste certificados SSL
+# 3. No servidor: remova APP_BASE do .env (ou deixe comentado)
+# 4. systemctl reload apache2
+
+# ========== HTTP (porta 80) – redireciona para HTTPS ==========
+<VirtualHost *:80>
+    ServerName portal.pgm.inf.br
+    ServerAlias 10.0.2.25
+
+    DocumentRoot /var/www/portal/public
+
+    <Directory /var/www/portal/public>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    Redirect permanent / https://portal.pgm.inf.br/
+</VirtualHost>
+
+# ========== HTTPS (porta 443) – portal na raiz ==========
+<VirtualHost *:443>
+    ServerName portal.pgm.inf.br
+
+    DocumentRoot /var/www/portal/public
+
+    <Directory /var/www/portal/public>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile      /etc/ssl/portal/portal.crt
+    SSLCertificateKeyFile    /etc/ssl/portal/portal.key
+
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
+    SetEnv HTTPS "on"
+    # NÃO defina APP_BASE – URLs ficam /users/login, /dist/..., etc.
+
+    ErrorLog ${APACHE_LOG_DIR}/portal_error_ssl.log
+    CustomLog ${APACHE_LOG_DIR}/portal_access_ssl.log combined
+</VirtualHost>

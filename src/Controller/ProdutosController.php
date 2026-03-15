@@ -279,14 +279,49 @@ class ProdutosController extends AppController {
         }
     }
 
+    /**
+     * Normaliza valor "ativo" enviado pelo ERP (Sim/Não, true/false, 1/0) para 0 ou 1.
+     */
+    private function _normalizarAtivoApi($valor) {
+        if ($valor === null || $valor === '') {
+            return 1;
+        }
+        if (is_numeric($valor)) {
+            return (int) $valor ? 1 : 0;
+        }
+        $v = is_string($valor) ? strtolower(trim($valor)) : $valor;
+        if (in_array($v, ['sim', 's', 'true', '1', 'yes'], true)) {
+            return 1;
+        }
+        if (in_array($v, ['não', 'nao', 'n', 'false', '0', 'no'], true)) {
+            return 0;
+        }
+        return 1;
+    }
+
+    /**
+     * Normaliza valor monetário (ex.: "180,00" ou "180.00") para float.
+     */
+    private function _normalizarVlUnitarioApi($valor) {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+        if (is_numeric($valor)) {
+            return (float) $valor;
+        }
+        $s = preg_replace('/[^\d,.-]/', '', trim((string) $valor));
+        $s = str_replace('.', '', $s);
+        $s = str_replace(',', '.', $s);
+        return $s === '' ? null : (float) $s;
+    }
+
     public function addAPI() {
         $this->autoRender = false;
+        $responseApi = function ($mensagem, $status = 200) {
+            return $this->jsonResponse(['mensagem' => $mensagem, 'retorno' => $mensagem], $status);
+        };
         if (!$this->request->is('post')) {
-            return $this->jsonResponse([
-                'mensagem' => 'Método não permitido. Use POST com headers empresa e token, e body JSON com pelo menos "codigo".',
-                'metodo_esperado' => 'POST',
-                'exemplo_headers' => ['empresa' => 'ID da empresa', 'token' => 'Token da empresa', 'Content-Type' => 'application/json'],
-            ], 405);
+            return $responseApi('Método não permitido. Use POST com headers empresa e token, e body JSON com pelo menos "codigo".', 405);
         }
         try {
             $empresa = $this->request->getHeaderLine('empresa');
@@ -304,13 +339,13 @@ class ProdutosController extends AppController {
             $json = (object) $json;
 
             if (empty($token) || empty($empresa) || empty($json) || !isset($json->codigo)) {
-                return $this->jsonResponse(['mensagem' => 'Objeto ou parâmetros inválidos'], 400);
+                return $responseApi('Objeto ou parâmetros inválidos', 400);
             }
             if (empty($this->Empresas->findById($empresa)->first())) {
-                return $this->jsonResponse(['mensagem' => 'Objeto ou parâmetros inválidos'], 400);
+                return $responseApi('Objeto ou parâmetros inválidos', 400);
             }
             if ($token !== $this->Empresas->get($empresa)->token) {
-                return $this->jsonResponse(['mensagem' => 'Autenticação Inválida'], 401);
+                return $responseApi('Autenticação Inválida', 401);
             }
 
             $produto = $this->Produtos->findByCodigo(trim($json->codigo))->where(['idempresa' => $empresa])->first();
@@ -321,19 +356,35 @@ class ProdutosController extends AppController {
             $produto->idempresa = $empresa;
             $produto->codigo = trim($json->codigo);
             $produto->descricao = isset($json->descricao) ? trim($json->descricao) : $produto->descricao;
-            $produto->unidade = isset($json->unidade) ? $json->unidade : $produto->unidade;
-            $produto->vlunitario = isset($json->vlunitario) ? $json->vlunitario : $produto->vlunitario;
+            $produto->unidade = isset($json->unidade) ? trim((string) $json->unidade) : $produto->unidade;
+            $vl = $this->_normalizarVlUnitarioApi(isset($json->vlunitario) ? $json->vlunitario : $produto->vlunitario);
+            $produto->vlunitario = $vl !== null ? $vl : $produto->vlunitario;
             $produto->tipo = isset($json->tipo) ? $json->tipo : $produto->tipo;
-            $produto->ativo = isset($json->ativo) ? $json->ativo : (isset($produto->ativo) ? $produto->ativo : 1);
+            $produto->ativo = $this->_normalizarAtivoApi(isset($json->ativo) ? $json->ativo : (isset($produto->ativo) ? $produto->ativo : 1));
+
+            // Campos de locação: se for entidade nova e o ERP não enviar, usar 0 para evitar falha em colunas NOT NULL
+            if ($produto->isNew() && $produto->get('vllocdiario') === null) {
+                $produto->vllocdiario = 0;
+            }
+            if ($produto->isNew() && $produto->get('vllocsemanal') === null) {
+                $produto->vllocsemanal = 0;
+            }
+            if ($produto->isNew() && $produto->get('vllocquinzenal') === null) {
+                $produto->vllocquinzenal = 0;
+            }
+            if ($produto->isNew() && $produto->get('vllocmensal') === null) {
+                $produto->vllocmensal = 0;
+            }
 
             if ($this->Produtos->save($produto)) {
-                return $this->jsonResponse(['mensagem' => 'Produto cadastrado com sucesso'], 201);
+                return $responseApi('Produto cadastrado com sucesso', 201);
             }
             $errors = $produto->getErrors();
             $msg = !empty($errors) ? json_encode($errors) : 'Objeto ou parâmetros inválidos';
-            return $this->jsonResponse(['mensagem' => $msg], 400);
+            return $responseApi($msg, 400);
         } catch (\Exception $e) {
-            return $this->jsonResponse(['mensagem' => 'Erro ao processar requisição: ' . $e->getMessage()], 500);
+            $this->log('Produtos::addAPI exceção: ' . $e->getMessage(), 'error');
+            return $responseApi('Erro ao processar requisição: ' . $e->getMessage(), 500);
         }
     }
 

@@ -1,10 +1,21 @@
-# ========== HTTP (porta 80) – redireciona para HTTPS ==========
+# Portal COM /portal na URL: https://portal.pgm.inf.br/portal/users/login
+# Para URL sem /portal (portal.pgm.inf.br/users/login), use config/portal-raiz.conf.example
+
+# ========== HTTP (porta 80) – redireciona para HTTPS exceto /portal (Integrador) ==========
+# O Integrador no Windows usa http://10.0.2.25/portal/... e não segue redirect 301.
+# Por isso NÃO redirecionamos requisições para /portal; só o resto vai para HTTPS.
 <VirtualHost *:80>
     ServerName portal.pgm.inf.br
     ServerAlias 10.0.2.25
 
     DocumentRoot /var/www/portal/public
 
+    # Redireciona para HTTPS apenas quando a URL NÃO for /portal (Integrador usa HTTP em /portal)
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/portal
+    RewriteRule ^ https://portal.pgm.inf.br%{REQUEST_URI} [R=301,L]
+
+    Alias /portal /var/www/portal/public
     <Directory /var/www/portal/public>
         Options FollowSymLinks
         AllowOverride All
@@ -12,8 +23,9 @@
         Options -Indexes +FollowSymLinks
     </Directory>
 
-    # Redireciona HTTP -> HTTPS
-    Redirect permanent / https://portal.pgm.inf.br/
+    SetEnv WEBROOT_DIR "public"
+    SetEnv APP_DIR "src"
+    SetEnv APP_BASE "/portal"
 </VirtualHost>
 
 # ========== HTTPS (porta 443) ==========

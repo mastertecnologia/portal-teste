@@ -322,10 +322,13 @@ class ClientesController extends AppController {
             $token = $this->request->getHeaderLine('token');
 			$json = $this->request->input('json_decode');
 
-			if(empty($token)) return $this->jsonResponse(["mensagem" => "O token não foi informado"], 400);
-			if(empty($empresa)) return $this->jsonResponse(["mensagem" => "O ID da empresa não foi informado"], 400);
-			if(empty($json)) return $this->jsonResponse(["mensagem" => "O JSON não foi informado"], 400);
-			if(empty($this->Empresas->findById($empresa)->first())) return $this->jsonResponse(["mensagem" => "Não foi encontrada uma empresa com o ID ($empresa) informado"], 400);
+			$apiRet = function ($msg, $status = 200) {
+				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
+			};
+			if(empty($token)) return $apiRet("O token não foi informado", 400);
+			if(empty($empresa)) return $apiRet("O ID da empresa não foi informado", 400);
+			if(empty($json)) return $apiRet("O JSON não foi informado", 400);
+			if(empty($this->Empresas->findById($empresa)->first())) return $apiRet("Não foi encontrada uma empresa com o ID ($empresa) informado", 400);
 
 			if($token == $this->Empresas->get($empresa)->token) {
 				$retorno['CNPJ'] = removeCaracteres($json->cnpj);
@@ -392,10 +395,10 @@ class ClientesController extends AppController {
 						if($this->Clicontratos->save($contrato)) $contratos[] = $contrato;
 						else $deuerro = 'sim';
 					}
-					if(  $deuerro == 'não' ) return $this->jsonResponse(["mensagem" => "Cliente cadastrado/atualizado com sucesso"], 201);
-					else return $this->jsonResponse(["mensagem" => "Houve um erro ao salvar os contratos do cliente. Json recebido: $json"], 400);
-				} else return $this->jsonResponse(["mensagem" => "Houve um erro ao cadastrar/atualizar o cliente. Json recebido: $json",], 400);
-			} else return $this->jsonResponse(["mensagem" => "Autenticação Inválida"], 401);
+					if(  $deuerro == 'não' ) return $apiRet("Cliente cadastrado/atualizado com sucesso", 201);
+					else return $apiRet("Houve um erro ao salvar os contratos do cliente. Json recebido: $json", 400);
+				} else return $apiRet("Houve um erro ao cadastrar/atualizar o cliente. Json recebido: $json", 400);
+			} else return $apiRet("Autenticação Inválida", 401);
         }
 	}
 	
@@ -406,10 +409,13 @@ class ClientesController extends AppController {
             $token = $this->request->getHeaderLine('token');
             $cnpj = $this->request->getHeaderLine('cnpj');
 
+			$apiRetList = function ($msg, $status = 200) {
+				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
+			};
 			if(empty($token) || empty($empresa)) 
-			return $this->jsonResponse(["mensagem" => 'Parâmetros da requisição inválidos'], 400);
+			return $apiRetList('Parâmetros da requisição inválidos', 400);
 
-			if(empty($this->Empresas->findById($empresa)->first())) return $this->jsonResponse(["mensagem" => 'Parâmetros da requisição inválidos'], 400);
+			if(empty($this->Empresas->findById($empresa)->first())) return $apiRetList('Parâmetros da requisição inválidos', 400);
 			if($token == $this->Empresas->get($empresa)->token){
 				$retorno['CNPJ'] = removeCaracteres($cnpj);
 				$retorno['Empresa'] = $empresa;
@@ -418,7 +424,7 @@ class ClientesController extends AppController {
 					$tipo = strlen($retorno['CNPJ']) > 11 ? 'j' : 'f' ;
 					if($tipo == 'j') $cliente = $this->Clientes->findByCnpj($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa']])->toArray();
 					else $cliente = $this->Clientes->findByCpf($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa'], 'tipo' => C_ClientesTipoFisica])->toArray();
-					if ($cliente == null) return $this->jsonResponse(["mensagem" => 'Não foi encontrado um cliente com o CNPJ/CPF '. $cnpj], 404);
+					if ($cliente == null) return $apiRetList('Não foi encontrado um cliente com o CNPJ/CPF '. $cnpj, 404);
 				} else {
 					$cliente = $this->Clientes->find('all')->where(['idempresa' => $retorno['Empresa']])->toArray(); 
 				}
@@ -428,7 +434,7 @@ class ClientesController extends AppController {
 				} 
 				return $this->jsonResponse($cliente, 200);
 			} else {
-				return $this->jsonResponse('Autenticação Inválida', 401);
+				return $apiRetList('Autenticação Inválida', 401);
 			}
 		}
 	}

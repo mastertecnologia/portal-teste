@@ -121,7 +121,7 @@
 							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 								<div class="form-group ">
 									<label class="control-label text-muted"> URL ERP </label>
-									<?= $this->Form->control('urlerp', ['class' => 'form-control', 'label' => false, 'placeholder' => 'URL do ERP']) ?>
+									<?= $this->Form->control('urlerp', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: http://10.0.2.7:85/WebGridPGM/']) ?>
 								</div>
 							</div>
 						</div>

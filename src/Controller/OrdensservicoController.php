@@ -765,10 +765,13 @@ class OrdensservicoController extends AppController {
             $situacao = $this->request->getHeaderLine('situacao');
             $id = $this->request->getHeaderLine('id');
 
+			$apiRet = function ($msg, $status = 200) {
+				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
+			};
 			if(empty($token) || empty($empresa) || empty($situacao)) 
-			return $this->jsonResponse(['mensagem' => 'Parâmetros da requisição inválidos'], 400);
+			return $apiRet('Parâmetros da requisição inválidos', 400);
 			
-			if(empty($this->Empresas->findById($empresa)->first())) return $this->jsonResponse(['mensagem' => 'Parâmetros da requisição inválidos'], 400);
+			if(empty($this->Empresas->findById($empresa)->first())) return $apiRet('Parâmetros da requisição inválidos', 400);
 			if($token == $this->Empresas->get($empresa)->token) {
 				if(!empty($id)){
 					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'Ordensservico.id' => $id, 'situacao' => $situacao])
@@ -803,7 +806,7 @@ class OrdensservicoController extends AppController {
 				}
 				return $this->jsonResponse($ordem, 200);
 			} else {
-				return $this->jsonResponse(['mensagem' => 'Autenticação Inválida'], 401);
+				return $apiRet('Autenticação Inválida', 401);
 			}
         }
 	}
@@ -887,9 +890,12 @@ class OrdensservicoController extends AppController {
         $hToken = $this->request->getHeaderLine('token');
         $this->log('[API-ORDENS refreshAPI] request method=' . $reqMethod . ' path=' . $reqPath . ' headers(empresa=' . ($hEmpresa ?: 'vazio') . ' token=' . (strlen($hToken ?? '') ? '***' : 'vazio') . ')', 'info');
 
+		$apiRet = function ($msg, $status = 200) {
+			return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
+		};
 		if (!$this->request->is('put')) {
             $this->log('[API-ORDENS refreshAPI] resposta 405 metodo nao permitido', 'info');
-			return $this->jsonResponse(['mensagem' => 'Método não permitido. Use PUT.'], 405);
+			return $apiRet('Método não permitido. Use PUT.', 405);
 		}
 		$empresa = $this->request->getHeaderLine('empresa');
 		$token = $this->request->getHeaderLine('token');
@@ -904,18 +910,18 @@ class OrdensservicoController extends AppController {
 
 			if(empty($token) || empty($empresa) || empty($json)) {
 				$this->log('[API-ORDENS refreshAPI] resposta 400 parametros invalidos (empresa/token/body)', 'info');
-				return $this->jsonResponse(['mensagem' => 'Parâmetros da requisição inválidos.'], 400);
+				return $apiRet('Parâmetros da requisição inválidos.', 400);
 			}
 			if(empty($this->Empresas->findById($empresa)->first())) {
 				$this->log('[API-ORDENS refreshAPI] resposta 400 empresa nao encontrada id=' . $empresa, 'info');
-				return $this->jsonResponse(['mensagem' => 'Parâmetros da requisição inválidos.'], 400);
+				return $apiRet('Parâmetros da requisição inválidos.', 400);
 			}
 			if($token == $this->Empresas->get($empresa)->token){
 				$ordem = $this->Ordensservico->findById($json->nroordem)->where(['idempresa' => $empresa])->first(); 
 
 				if ($ordem == null) {
 					$this->log('[API-ORDENS refreshAPI] resposta 400 ordem nao encontrada nroordem=' . ($json->nroordem ?? '?') . ' empresa=' . $empresa, 'info');
-					return $this->jsonResponse(['mensagem' => 'Parâmetros da requisição inválidos.'], 400);
+					return $apiRet('Parâmetros da requisição inválidos.', 400);
 				}
 
 				$sitantiga = $ordem->situacao;
@@ -932,15 +938,15 @@ class OrdensservicoController extends AppController {
 						$this->log('Ordensservico::refreshAPI criarMov: ' . $e->getMessage(), 'error');
 					}
 					$this->log('[API-ORDENS refreshAPI] resposta 201 ok ordem=' . $ordem->id . ' empresa=' . $empresa . ' situacao=' . $ordem->situacao, 'info');
-					return $this->jsonResponse(['mensagem' => 'Situação da Ordem de Serviço alterada com sucesso'], 201);
+					return $apiRet('Situação da Ordem de Serviço alterada com sucesso', 201);
 				}
                 else {
 					$this->log('[API-ORDENS refreshAPI] resposta 400 erro ao salvar ordem', 'info');
-					return $this->jsonResponse(['mensagem' => 'Ocorreu um erro ao atualizar a ordem!'], 400);
+					return $apiRet('Ocorreu um erro ao atualizar a ordem!', 400);
 				}
 			}
 			$this->log('[API-ORDENS refreshAPI] resposta 401 autenticacao invalida empresa=' . $empresa, 'info');
-			return $this->jsonResponse(['mensagem' => 'Autenticação Inválida'], 401);
+			return $apiRet('Autenticação Inválida', 401);
 	}
 
 	public function imprimir($id = null){

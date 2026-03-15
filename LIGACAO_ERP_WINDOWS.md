@@ -2,6 +2,10 @@
 
 Onde estão os dados do servidor ERP e como cada arquivo chama o ERP.
 
+**Infraestrutura (servidores separados):** Portal 10.0.2.25 | PostgreSQL 10.0.2.23 | ERP/Grid 10.0.2.7 (ECS-MASTER). Ver **`docs/INFRAESTRUTURA_SERVIDORES.md`**.
+
+**Visão completa ERP ↔ Portal (APIs + SOAP):** ver **`docs/INTEGRACAO_ERP_PORTAL.md`** — lista todas as APIs que o ERP chama no Portal e todos os serviços SOAP que o Portal chama no ERP (IIS). A URL do ERP é **empresas.urlerp** no banco; use `http://10.0.2.7:85/WebGridPGM/`.
+
 ---
 
 ## 1. Onde estão os dados do servidor ERP
@@ -102,3 +106,46 @@ Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserCo
 | `src/Template/Empresas/edit.ctp` | — | **Tela** para editar `urlerp` | — | — |
 
 Conclusão: **a URL e o token do servidor ERP estão no banco (cadastro da empresa).** Só as constantes de chave e filial estão no código, em `UserConstants.php`. Nenhum controller tem a URL do ERP escrita fixa no arquivo.
+
+---
+
+## 4. Envio de produtos do ERP para o Portal (Integrador GridERP + Web)
+
+O módulo **Envio de Produtos** do Integrador chama a API do Portal para cadastrar/atualizar produtos. O Portal responde com JSON contendo **`mensagem`** e **`retorno`** (mesmo texto); o Integrador exibe o conteúdo de **`retorno`** na caixa "Retorno:".
+
+### URL da API (Portal)
+
+- **Cadastrar/atualizar produto:** `POST /produtos/add-api` ou `POST /produtos/addAPI`
+- Se o Portal estiver em subdiretório: `POST https://portal.pgm.inf.br/portal/produtos/add-api`
+
+### Headers obrigatórios
+
+| Header     | Descrição                          |
+|-----------|-------------------------------------|
+| `empresa` | ID da empresa no Portal (tabela `empresas`) |
+| `token`   | Token da empresa (coluna `empresas.token`)   |
+| `Content-Type` | `application/json`                 |
+
+### Body (JSON)
+
+Mínimo: `{"codigo": "03"}`. Campos opcionais: `descricao`, `unidade`, `vlunitario`, `tipo`, `ativo`.
+
+| Campo      | Tipo   | Descrição |
+|-----------|--------|-----------|
+| codigo    | string | Obrigatório. Código do produto no ERP. |
+| descricao | string | Descrição. |
+| unidade   | string | Ex.: UN. |
+| vlunitario| number ou string | Valor (aceita "180,00" ou 180.00). |
+| tipo      | string/number | Tipo do produto/serviço. |
+| ativo     | 0/1, "Sim"/"Não", true/false | Normalizado no Portal para 0 ou 1. |
+
+### Resposta
+
+- **Sucesso (201):** `{"mensagem": "Produto cadastrado com sucesso", "retorno": "Produto cadastrado com sucesso"}`
+- **Erro (400/401/500):** `{"mensagem": "...", "retorno": "..."}` — o Integrador deve exibir o valor de `retorno` em "Retorno:".
+
+### Erros comuns
+
+1. **"Retorno:" vazio** — O Integrador deve ler o corpo da resposta HTTP (JSON) e exibir a chave `retorno` ou `mensagem`. Confirme também que a URL está correta (incluindo `/portal/` se for o caso) e que os headers `empresa` e `token` estão corretos.
+2. **Produto inativo (Ativo: Não)** — O Portal aceita `ativo: 0` ou `"Não"`; o produto é cadastrado como inativo.
+3. **Valor com vírgula** — O Portal converte "180,00" para 180.00 automaticamente.

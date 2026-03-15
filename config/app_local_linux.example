@@ -2,8 +2,8 @@
 /**
  * Exemplo de configuração LOCAL para produção Linux.
  * Estrutura: /var/www/portal com public/, config/, logs/, src/ (sem app).
- * Banco PostgreSQL em servidor remoto (10.0.2.23).
- * Integração ERP Windows: urlerp e token no banco (empresas); chave/filial em UserConstants.php.
+ * Portal: 10.0.2.25 | PostgreSQL: 10.0.2.23 | ERP/Grid: 10.0.2.7 (ECS-MASTER).
+ * Banco PostgreSQL em servidor remoto (10.0.2.23). Integração ERP: urlerp e token no banco (empresas); chave/filial em UserConstants.php. urlerp = http://10.0.2.7:85/WebGridPGM/
  *
  * Uso:
  * 1. Copie para app_local.php: cp app_local_linux.example config/app_local.php

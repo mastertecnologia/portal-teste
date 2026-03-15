@@ -69,6 +69,16 @@ Router::scope('/', function ($routes) {
     $routes->connect('/ordensservico/listAPI', ['controller' => 'Ordensservico', 'action' => 'listAPI'])->setMethods(['GET', 'POST']);
     $routes->connect('/ordensservico/refresh-api', ['controller' => 'Ordensservico', 'action' => 'refreshAPI'])->setMethods(['PUT']);
     $routes->connect('/ordensservico/refreshAPI', ['controller' => 'Ordensservico', 'action' => 'refreshAPI'])->setMethods(['PUT']);
+    // API integração ERP: cadastro de produtos (Integrador GridERP + Web → Portal)
+    $routes->connect('/produtos/add-api', ['controller' => 'Produtos', 'action' => 'addAPI'])->setMethods(['POST']);
+    $routes->connect('/produtos/addAPI', ['controller' => 'Produtos', 'action' => 'addAPI'])->setMethods(['POST']);
+    $routes->connect('/produtos/list-api', ['controller' => 'Produtos', 'action' => 'listAPI'])->setMethods(['GET']);
+    $routes->connect('/produtos/listAPI', ['controller' => 'Produtos', 'action' => 'listAPI'])->setMethods(['GET']);
+    // API integração ERP: clientes e contratos
+    $routes->connect('/clientes/add-api', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
+    $routes->connect('/clientes/addAPI', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
+    $routes->connect('/clientes/list-api', ['controller' => 'Clientes', 'action' => 'listAPI'])->setMethods(['GET']);
+    $routes->connect('/clientes/listAPI', ['controller' => 'Clientes', 'action' => 'listAPI'])->setMethods(['GET']);
     $routes->fallbacks(DashedRoute::class);
 });
 
