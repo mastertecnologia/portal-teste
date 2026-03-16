@@ -53,7 +53,7 @@ $this->end();
 			</div>
 		<?= $this->Form->end() ?>
 
-		<div class="footer">PGM Soluções em TI • ERP Platform v3.2 • <?= date('Y') ?></div>
+		<div class="footer login-erp-footer">PGM Soluções em TI • ERP Platform v3.2 • <?= date('Y') ?></div>
 	</div>
 </div>
 
