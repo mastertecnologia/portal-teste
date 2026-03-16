@@ -61,13 +61,13 @@ class UsersController extends AppController {
 		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'dashboard']);
 		$admins = $this->Users
 			->find('all', ['fields' => ['id', 'username', 'name', 'secret', 'created', 'inativo', 'idcliente']])
-			->where(['idcliente IS' => null])
+			->where(['role' => 0, 'idcliente IS' => null])
 			->order(['username' => 'ASC'])
 			->toArray();
 
 		$clients = $this->Users
 			->find('all')
-			->where(['idcliente IS NOT' => null])
+			->where(['role' => 1, 'idcliente IS NOT' => null])
 			->contain(['Clientes' => ['fields' => ['razaosocial', 'nome']]])
 			->order(['username' => 'ASC'])
 			->toArray();
