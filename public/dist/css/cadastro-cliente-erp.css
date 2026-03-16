@@ -1,0 +1,148 @@
+/**
+ * Cadastro de Cliente - Padrão visual da tela de login (PGM Soluções em TI)
+ * Mantém todos os IDs/names e estrutura para integração tipo cliente + CPF/CNPJ + ERP Grid
+ */
+.cadastro-erp-wrap {
+	min-height: 100vh;
+	min-height: 100dvh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 4vw, 1rem);
+	background: linear-gradient(135deg, #0e6b66, #18a7a0);
+	overflow-x: hidden;
+	overflow-y: auto;
+	position: relative;
+	font-family: 'Inter', sans-serif;
+	box-sizing: border-box;
+}
+.cadastro-erp-wrap::before {
+	content: "";
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px);
+	background-size: 24px 24px;
+	pointer-events: none;
+}
+.cadastro-erp-card {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 720px;
+	min-width: 0;
+	padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 5vw, 2rem);
+	background: #fff;
+	border-radius: clamp(10px, 2vw, 14px);
+	border-top: 3px solid #0f766e;
+	border-bottom: 3px solid #0f766e;
+	border-left: none;
+	border-right: none;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+	box-sizing: border-box;
+}
+.cadastro-erp-title {
+	font-size: clamp(1.25rem, 4vw, 1.5rem);
+	font-weight: 700;
+	margin-bottom: clamp(1rem, 3vw, 1.5rem);
+	color: #333;
+	text-align: center;
+}
+.cadastro-erp-wrap .form-group {
+	margin-bottom: 1rem;
+}
+.cadastro-erp-wrap .form-control {
+	width: 100%;
+	height: auto;
+	min-height: 2.75rem;
+	padding: 0.5rem 1rem;
+	background: #fff !important;
+	color: #333 !important;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	font-size: 0.9375rem;
+	transition: border-color 0.2s;
+	box-sizing: border-box;
+}
+.cadastro-erp-wrap .form-control:focus {
+	border-color: #0ea5a0;
+	outline: none;
+	background: #fff !important;
+	color: #333 !important;
+}
+.cadastro-erp-wrap .form-control::placeholder {
+	color: #888 !important;
+}
+.cadastro-erp-wrap .form-control[readonly] {
+	background: #f5f5f5 !important;
+	color: #555 !important;
+}
+.cadastro-erp-wrap select.form-control {
+	appearance: auto;
+	cursor: pointer;
+}
+.cadastro-erp-wrap .btn-login.btn-cadastrar {
+	display: block;
+	width: 100%;
+	max-width: 280px;
+	margin: 1.5rem auto 0;
+	padding: 0.75rem 1.5rem;
+	background: linear-gradient(90deg, #14b8a6, #0f766e) !important;
+	border: none;
+	border-radius: 8px;
+	color: #fff !important;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: 0.2s;
+}
+.cadastro-erp-wrap .btn-login.btn-cadastrar:hover {
+	background: linear-gradient(90deg, #0f766e, #0e6b66) !important;
+	color: #fff !important;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.cadastro-erp-wrap .btn-login.btn-cadastrar.btn-disabled {
+	background: #ccc !important;
+	cursor: not-allowed;
+	transform: none;
+}
+.cadastro-erp-wrap .login-wrap {
+	padding: 0;
+}
+.cadastro-erp-wrap .pessoaJuridica,
+.cadastro-erp-wrap .pessoaFisica {
+	margin-top: 0.75rem;
+}
+.cadastro-erp-wrap .padding-20 {
+	padding: 0 0 0.5rem 0;
+}
+.cadastro-erp-wrap .row.justify-content-center {
+	margin-left: -0.5rem;
+	margin-right: -0.5rem;
+}
+.cadastro-erp-wrap .col-md-6 {
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+}
+@media (max-width: 768px) {
+	.cadastro-erp-wrap .col-md-6 {
+		flex: 0 0 100%;
+		max-width: 100%;
+		margin-bottom: 0;
+	}
+	.cadastro-erp-card {
+		max-width: 100%;
+		padding: 1.25rem 1rem;
+	}
+}
+@media (max-width: 480px) {
+	.cadastro-erp-wrap {
+		padding: 1rem 0.75rem;
+	}
+	.cadastro-erp-card {
+		padding: 1rem 0.875rem;
+	}
+}

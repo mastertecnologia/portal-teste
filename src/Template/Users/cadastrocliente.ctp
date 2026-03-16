@@ -1,115 +1,81 @@
-<?php use Cake\Routing\Router; ?>
+<?php
+use Cake\Routing\Router;
+$this->start('css');
+echo $this->Html->css('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', ['fullBase' => true]);
+echo $this->Html->css('dist/css/cadastro-cliente-erp');
+$this->end();
+?>
 <style>
-	.btn-disabled { background: #eee !important; /*Simular campo inativo*/ }
-	select[readonly] {
-		background: #eee; /*Simular campo inativo - Sugestão @GabrielRodrigues*/
+	.cadastro-erp-wrap .btn-disabled { background: #ccc !important; cursor: not-allowed; }
+	.cadastro-erp-wrap select[readonly] {
+		background: #f5f5f5 !important;
 		pointer-events: none;
 		touch-action: none;
 	}
-	.btn-voltarprologin{ width: 160px !important; }
-	.form-control {
-		background: transparent;
-		border: none;
-		height: 50px;
-		color: white !important;
-		border: 1px solid transparent;
-		background: #004640;
-		border-radius: 40px;
-		padding-left: 20px;
-		padding-right: 20px;
-		-webkit-transition: 0.3s;
-		-o-transition: 0.3s;
-		transition: 0.3s;
-	}
-	.form-control:focus { 
-		color: white !important; 
-		background-color: #00ab9e !important; 
-	}
-	.form-control[readonly] {
-		color: white !important; 
-		background-color: #068a80 !important; 
-	}
-	.form-control::placeholder { color: #ebebeb !important; }
-	.ftco-section { padding: 3em 0; }
-	.btn-login {
-		color: #fff;
-		background-color: #098479 !important;
-		border-color: #098479 !important;
-	}
-	.btn-login:hover { 
-		color: white !important; 
-		background-color: #00ab9e !important; 
-	}
 </style>
-<section id="wrapper" class="step-register" style="background-image:url(<?=$this->request->getAttribute('webroot') . '/assets/images/background/login-register.jpg'?>);" >
-	<div class="register-box">
-		<section class="ftco-section">
+<section id="wrapper" class="step-register cadastro-erp-wrap">
+	<div class="cadastro-erp-card">
+		<h1 class="cadastro-erp-title">Cadastre-se</h1>
+		<?= $this->Form->create($user, ['id' => "msform", 'method' => 'post', 'class' => '', 'autocomplete' => "nope"]) ?>
 			<div class="row justify-content-center">
-				<div class="col-md-6 text-center mb-5">
-					<h2 class="heading-section text-light">Cadastre-se</h2>
+				<div class="col-md-6 col-lg-6">
+					<div class="login-wrap p-0">
+						<div class="form-group ">
+							<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome completo', 'required' => true]) ?>
+						</div>
+						<div class="form-group">
+							<?= $this->Form->control('tipo', ['empty' => 'Tipo do cliente', 'options' => C_ClientesTipoCadastroCliente, 'required' => true, 'class' => 'form-control', 'label' => false, ]) ?>
+						</div>
+						<div class="form-group">
+							<?= $this->Form->control('password', ['autocomplete' => 'new-password', 'class' => 'form-control ', 'label' => false, 'required' => true, 'placeholder' => 'Senha']) ?>
+						</div>
+						<div class="form-group">
+							<?= $this->Form->control('confirm_password', ['id' => 'confirmasenha', 'class' => 'form-control', 'label' => false, 'required' => true, 'type' => 'password',  'placeholder' => 'Repetir senha']) ?>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6 col-lg-6">
+					<div class="login-wrap p-0">
+						<div class="form-group ">
+							<?= $this->Form->control('email1', ['class' => 'form-control', 'label' => false, 'placeholder' => 'E-mail', 'required' => true]) ?>
+						</div>
+						<div class="form-group ">
+							<?= $this->Form->control('setor', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Setor', 'required' => false]) ?>
+						</div>
+						<div class="pessoaJuridica">
+							<div class="row padding-20">
+								<div class="col-12">
+									<div class="form-group">
+										<?= $this->Form->control('cnpj', ['class' => 'form-control', 'label' => false, 'placeholder' => 'CNPJ da Empresa']) ?>
+									</div>
+								</div>
+							</div>
+							<div class="row padding-20">
+								<div class="col-12">
+									<div class="form-group">
+										<?= $this->Form->control('razaosocial', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome da Empresa', 'readonly' => true]) ?>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="pessoaFisica">
+							<div class="form-group">
+								<?= $this->Form->control('cpfcliente', ['class' => 'form-control', 'label' => false, 'placeholder' => 'CPF do cliente']) ?>
+							</div>
+							<div class="form-group">
+								<?= $this->Form->control('nomecliente', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome do cliente', 'readonly' => true]) ?>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
-			<?= $this->Form->create($user, ['id' => "msform", 'method' => 'post', 'class' => '', 'autocomplete' => "nope"]) ?>
-				<div class="row justify-content-center">
-					<div class="col-md-6 col-lg-6">
-						<div class="login-wrap p-0">
-							<div class="form-group ">
-								<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome completo', 'required' => true]) ?>
-							</div>
-							<div class="form-group">
-								<?= $this->Form->control('tipo', ['empty' => 'Tipo do cliente', 'options' => C_ClientesTipoCadastroCliente, 'required' => true, 'class' => 'form-control', 'label' => false, ]) ?>
-							</div>
-							<div class="form-group">
-								<?= $this->Form->control('password', ['a utocomplete' => 'new-password', 'class' => 'form-control ', 'label' => false, 'required' => true, 'placeholder' => 'Senha']) ?>
-							</div>
-							<div class="form-group">
-								<?= $this->Form->control('confirm_password', ['id' => 'confirmasenha', 'class' => 'form-control', 'label' => false, 'required' => true, 'type' => 'password',  'placeholder' => 'Repetir senha']) ?>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-6 col-lg-6">
-						<div class="login-wrap p-0">
-							<div class="form-group ">
-								<?= $this->Form->control('email1', ['class' => 'form-control', 'label' => false, 'placeholder' => 'E-mail', 'required' => true]) ?>
-							</div>
-							<div class="form-group ">
-								<?= $this->Form->control('setor', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Setor', 'required' => false]) ?>
-							</div>
-							<div class="pessoaJuridica">
-								<div class="row padding-20">
-									<div class="col-12">
-										<div class="form-group">
-											<?= $this->Form->control('cnpj', ['class' => 'form-control', 'label' => false, 'placeholder' => 'CNPJ da Empresa']) ?>
-										</div>
-									</div>
-								</div>
-								<div class="row padding-20">
-									<div class="col-12">
-										<div class="form-group">
-											<?= $this->Form->control('razaosocial', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome da Empresa', 'readonly' => true]) ?>
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="pessoaFisica">
-								<div class="form-group">
-									<?= $this->Form->control('cpfcliente', ['class' => 'form-control', 'label' => false, 'placeholder' => 'CPF do cliente']) ?>
-								</div>
-								<div class="form-group">
-									<?= $this->Form->control('nomecliente', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome do cliente', 'readonly' => true]) ?>
-								</div>
-							</div>
-						</div>
-					</div>
+			<div class="row justify-content-center">
+				<div class="form-group">
+					<?= $this->Form->control('cliente', ['type' => 'hidden', 'label' => false, 'required' => true]) ?>
+					<button type='submit' class="btn-login btn btn-lg btn-cadastrar btn-rounded px-3">Cadastre-se</button>
 				</div>
-				<div class="row justify-content-center">
-					<div class="form-group">
-						<?= $this->Form->control('cliente', ['type' => 'hidden', 'label' => false, 'required' => true]) ?>
-						<button type='submit' class="btn-login btn btn-lg btn-cadastrar btn-rounded px-3">Cadastre-se</button>
-					</div>
-				</div>
-			</form>
-		</div>
+			</div>
+		<?= $this->Form->end() ?>
 	</div>
 </section>
 <script>
