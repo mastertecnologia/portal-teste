@@ -155,13 +155,33 @@ class ClientesController extends AppController {
 		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		$this->set('title', 'Cliente: ' . $titlenome);
 		
-		// Todos os usuários vinculados a este cliente (ativos e inativos),
-		// para exibição na aba Usuários do cadastro do cliente.
-		$usuarios = $this->Users
+		// Todos os usuários relacionados a este cliente:
+		// - vinculados diretamente por idcliente
+		// - ou associados a um cliente com mesmo CNPJ/CPF (casos de cadastros antigos/dominantes)
+		$usuariosQuery = $this->Users
 			->find('all')
-			->where(['idcliente' => $id])
-			->order(['username' => 'ASC'])
-			->toArray();
+			->contain(['Clientes' => ['fields' => ['id', 'razaosocial', 'nome', 'cnpj', 'cpf']]])
+			->order(['Users.username' => 'ASC']);
+
+		$conditions = ['Users.idcliente' => $id];
+
+		if (!empty($cliente->cnpj)) {
+			$conditions = [
+				'OR' => [
+					['Users.idcliente' => $id],
+					['Clientes.cnpj IS NOT' => null, 'Clientes.cnpj' => $cliente->cnpj],
+				],
+			];
+		} elseif (!empty($cliente->cpf)) {
+			$conditions = [
+				'OR' => [
+					['Users.idcliente' => $id],
+					['Clientes.cpf IS NOT' => null, 'Clientes.cpf' => $cliente->cpf],
+				],
+			];
+		}
+
+		$usuarios = $usuariosQuery->where($conditions)->toArray();
 		$cliente->users = $this->Users->find('all')->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$usuariosValue = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$cliente->senha = descriptografasenha($cliente->senha);
