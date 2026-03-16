@@ -28,6 +28,22 @@
 	color: #666;
 	margin: 0;
 }
+.config-erp-section {
+	margin-bottom: 1rem;
+}
+.config-erp-section:last-of-type {
+	margin-bottom: 0;
+}
+.config-erp-section-title {
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: #0f766e;
+	margin: 0 0 0.5rem 0;
+	padding-bottom: 0.25rem;
+	border-bottom: 1px solid rgba(15, 118, 110, 0.2);
+}
 .config-erp-grid {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);

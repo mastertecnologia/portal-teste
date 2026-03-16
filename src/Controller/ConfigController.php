@@ -12,6 +12,7 @@ class ConfigController extends AppController {
 		$this->loadModel('Config');
 		$this->loadModel('Empresas');
 		$this->loadModel('Empresasusers');
+		$this->loadModel('Clientes');
 		$this->loadModel('Financeiro');
 		$this->loadModel('Vagasestacionamento');
 		$this->loadModel('Usersvagasestacionamento');
@@ -27,14 +28,23 @@ class ConfigController extends AppController {
 		$nroUsuarios = $this->Users->find();
 		$nroEmpresas = $this->Empresas->find();
 		$nroEmpresasusers = $this->Empresasusers->find();
+		$nroClientes = $this->Clientes->find();
+		$nroUsuariosEquipe = $this->Users->find()->where(['role' => 0]);
+		$nroUsuariosClientes = $this->Users->find()->where(['role' => 1]);
 
 		$nroUsuarios->select(['count' => $nroUsuarios->func()->count('*')]);
 		$nroEmpresas->select(['count' => $nroEmpresas->func()->count('*')]);
 		$nroEmpresasusers->select(['count' => $nroEmpresasusers->func()->count('*')]);
+		$nroClientes->select(['count' => $nroClientes->func()->count('*')]);
+		$nroUsuariosEquipe->select(['count' => $nroUsuariosEquipe->func()->count('*')]);
+		$nroUsuariosClientes->select(['count' => $nroUsuariosClientes->func()->count('*')]);
 
 		$this->set('nroUsuarios', $nroUsuarios->toArray()[0]['count']);
 		$this->set('nroEmpresas', $nroEmpresas->toArray()[0]['count']);
 		$this->set('nroEmpresasusers', $nroEmpresasusers->toArray()[0]['count']);
+		$this->set('nroClientes', $nroClientes->toArray()[0]['count']);
+		$this->set('nroUsuariosEquipe', $nroUsuariosEquipe->toArray()[0]['count']);
+		$this->set('nroUsuariosClientes', $nroUsuariosClientes->toArray()[0]['count']);
 	}
 
 	public function pastas() {

@@ -139,7 +139,7 @@ class AppController extends Controller {
 			$menuStates['dashboard'] = "active";
 		}
 
-		if (in_array($controllerLower, ["config", "empresasusers", "empresas", "users", "areas", "problemas", "visitas"], true)) {
+		if (in_array($controllerLower, ["config", "empresasusers", "empresas", "users", "clientes", "areas", "problemas", "visitas", "feriados"], true)) {
 			$menuStates['config'] = "active";
 		}
 

@@ -21,63 +21,97 @@ $iconClock = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="
 <div class="config-erp-wrap">
 	<header class="config-erp-header">
 		<h1 class="config-erp-title">Configurações</h1>
-		<p class="config-erp-subtitle">Usuários, empresas, integrações e parâmetros.</p>
+		<p class="config-erp-subtitle">Gestão PGM/Master, clientes, sistema e parâmetros.</p>
 	</header>
 
-	<div class="config-erp-grid">
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconUser ?></span> Usuários</span>
-			<p class="config-erp-card-value"><?= h($nroUsuarios) ?></p>
-			<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar usuários</a>
+	<!-- PGM / Master: empresas operadoras e equipe -->
+	<section class="config-erp-section">
+		<h2 class="config-erp-section-title">PGM / Master — Empresas e equipe</h2>
+		<div class="config-erp-grid">
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconBuilding ?></span> Empresas</span>
+				<p class="config-erp-card-value"><?= h($nroEmpresas) ?></p>
+				<a href="<?= $this->Url->build(['controller' => 'Empresas', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar empresas</a>
+			</div>
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconUser ?></span> Usuários da equipe</span>
+				<p class="config-erp-card-value"><?= h($nroUsuariosEquipe) ?></p>
+				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar usuários</a>
+			</div>
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconHandshake ?></span> Empresa / Usuário</span>
+				<p class="config-erp-card-value"><?= h($nroEmpresasusers) ?></p>
+				<a href="<?= $this->Url->build(['controller' => 'Empresasusers', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar relações</a>
+			</div>
 		</div>
+	</section>
 
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconBuilding ?></span> Empresas</span>
-			<p class="config-erp-card-value"><?= h($nroEmpresas) ?></p>
-			<a href="<?= $this->Url->build(['controller' => 'Empresas', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar empresas</a>
+	<!-- Clientes e usuários clientes -->
+	<section class="config-erp-section">
+		<h2 class="config-erp-section-title">Clientes e usuários do portal</h2>
+		<div class="config-erp-grid">
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconBuilding ?></span> Clientes</span>
+				<p class="config-erp-card-value"><?= h($nroClientes) ?></p>
+				<a href="<?= $this->Url->build(['controller' => 'Clientes', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar clientes</a>
+			</div>
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconUser ?></span> Usuários clientes</span>
+				<p class="config-erp-card-value"><?= h($nroUsuariosClientes) ?></p>
+				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar usuários</a>
+			</div>
 		</div>
+	</section>
 
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconHandshake ?></span> Empresa / Usuário</span>
-			<p class="config-erp-card-value"><?= h($nroEmpresasusers) ?></p>
-			<a href="<?= $this->Url->build(['controller' => 'Empresasusers', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar relações</a>
+	<!-- Sistema e acesso -->
+	<section class="config-erp-section">
+		<h2 class="config-erp-section-title">Sistema e acesso</h2>
+		<div class="config-erp-grid">
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconFolder ?></span> Login externo</span>
+				<p class="config-erp-card-value">Acesso</p>
+				<a href="<?= $this->Url->build(['controller' => 'Config', 'action' => 'acessos']) ?>" class="config-erp-card-link">Configurações de acesso externo</a>
+			</div>
 		</div>
+	</section>
 
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconFolder ?></span> Sistema</span>
-			<p class="config-erp-card-value">Login externo</p>
-			<a href="<?= $this->Url->build(['controller' => 'Config', 'action' => 'acessos']) ?>" class="config-erp-card-link">Configurações de acesso externo</a>
+	<!-- Parâmetros de OS -->
+	<section class="config-erp-section">
+		<h2 class="config-erp-section-title">Parâmetros — Ordens de serviço</h2>
+		<div class="config-erp-grid">
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconWarning ?></span> Tipos</span>
+				<p class="config-erp-card-value">Tipo de OS</p>
+				<a href="<?= $this->Url->build(['controller' => 'Problemas', 'action' => 'index']) ?>" class="config-erp-card-link">Configurar tipos</a>
+			</div>
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconMarker ?></span> Status</span>
+				<p class="config-erp-card-value">Status de OS</p>
+				<a href="<?= $this->Url->build(['controller' => 'Areas', 'action' => 'index']) ?>" class="config-erp-card-link">Configurar status</a>
+			</div>
 		</div>
+	</section>
 
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconWarning ?></span> Tipos</span>
-			<p class="config-erp-card-value">Tipos</p>
-			<a href="<?= $this->Url->build(['controller' => 'Problemas', 'action' => 'index']) ?>" class="config-erp-card-link">Tipo de OS</a>
+	<!-- Suporte e operação -->
+	<section class="config-erp-section">
+		<h2 class="config-erp-section-title">Suporte e operação</h2>
+		<div class="config-erp-grid">
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconEnvelope ?></span> E-mail</span>
+				<p class="config-erp-card-value">Suporte</p>
+				<a href="<?= $this->Url->build(['controller' => 'Config', 'action' => 'emailsuporte']) ?>" class="config-erp-card-link">E-mail de destino</a>
+			</div>
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconCalendar ?></span> Visitas</span>
+				<p class="config-erp-card-value">Visitas</p>
+				<a href="<?= $this->Url->build(['controller' => 'Visitas', 'action' => 'calendario']) ?>" class="config-erp-card-link">Visitas da empresa</a>
+			</div>
+			<div class="config-erp-card">
+				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconClock ?></span> Feriados</span>
+				<p class="config-erp-card-value">Horário especial</p>
+				<a href="<?= $this->Url->build(['controller' => 'Feriados', 'action' => 'index']) ?>" class="config-erp-card-link">Cadastrar feriados</a>
+			</div>
 		</div>
-
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconMarker ?></span> Status</span>
-			<p class="config-erp-card-value">Status</p>
-			<a href="<?= $this->Url->build(['controller' => 'Areas', 'action' => 'index']) ?>" class="config-erp-card-link">Status de OS</a>
-		</div>
-
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconEnvelope ?></span> E-mail</span>
-			<p class="config-erp-card-value">Suporte</p>
-			<a href="<?= $this->Url->build(['controller' => 'Config', 'action' => 'emailsuporte']) ?>" class="config-erp-card-link">E-mail de destino</a>
-		</div>
-
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconCalendar ?></span> Visitas</span>
-			<p class="config-erp-card-value">Visitas</p>
-			<a href="<?= $this->Url->build(['controller' => 'Visitas', 'action' => 'calendario']) ?>" class="config-erp-card-link">Visitas da empresa</a>
-		</div>
-
-		<div class="config-erp-card">
-			<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconClock ?></span> Contratos e Horas</span>
-			<p class="config-erp-card-value">Feriados</p>
-			<a href="<?= $this->Url->build(['controller' => 'Feriados', 'action' => 'index']) ?>" class="config-erp-card-link">Cadastrar feriados (horário especial)</a>
-		</div>
-	</div>
+	</section>
 </div>
 </div>
