@@ -268,15 +268,41 @@
 				return;
 			}
 
+			// Dados básicos da empresa
 			if (data.nome) $('#razaosocial').val(data.nome.toUpperCase());
 			if (data.fantasia) $('#nomefantasia').val(data.fantasia.toUpperCase());
-			if (data.email) $('#email').val(data.email.toLowerCase());
+			if (data.email) $('#email').val(String(data.email).toLowerCase());
+
+			// Endereço
 			if (data.cep) $('#cep').val((data.cep || '').replace(/\D/g, ''));
 			if (data.bairro) $('#bairro').val(data.bairro.toUpperCase());
 			if (data.logradouro) $('#endereco').val(data.logradouro.toUpperCase());
 			if (data.numero) $('#nroendereco').val(data.numero);
 			if (data.complemento) $('#complemento').val(data.complemento.toUpperCase());
+
+			// Cidade (quando o backend conseguiu mapear para idcidade)
+			if (data.idcidade) {
+				$('#idcidade').val(data.idcidade);
+				if ($('#idcidade').data('live-search')) {
+					$('#idcidade').selectpicker('val', data.idcidade);
+				}
+			}
+
+			// IE (inscrição estadual)
+			if (data.ie) {
+				$('#inscricaoestadual').val(data.ie.replace(/\D/g, ''));
+			}
+
+			// Telefone
 			if (data.telefone) $('#fone').val(data.telefone);
+
+			// Responsável: tenta pegar sócio administrador, senão primeiro sócio
+			if (Array.isArray(data.qsa) && data.qsa.length > 0) {
+				var socioAdm = data.qsa.find(function(s){ return String(s.qual || '').indexOf('Administrador') !== -1; }) || data.qsa[0];
+				if (socioAdm && socioAdm.nome) {
+					$('#nomeresponsavel').val(socioAdm.nome.toUpperCase());
+				}
+			}
 		}).fail(function(){
 			alert('Erro ao acessar o serviço de consulta de CNPJ. Tente novamente em instantes.');
 		});
