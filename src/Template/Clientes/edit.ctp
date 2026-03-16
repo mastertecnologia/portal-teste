@@ -150,8 +150,14 @@
 						<div class="row">
 							<div class="col-lg-4 col-md-6 col-sm-12">
 								<div class="form-group">
-									<label class="control-label text-muted">E-mail de faturamento</label>
-									<?= $this->Form->text('email', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: financeiro@cliente.com.br; cobranca@cliente.com.br', $disabled]) ?>
+									<label class="control-label text-muted d-flex justify-content-between align-items-center">
+										<span>E-mail de faturamento</span>
+										<button type="button" class="btn btn-sm btn-outline-info btn-gerenciar-emails-faturamento" data-toggle="modal" data-target="#modal-emails-faturamento">
+											Adicionar e-mails
+										</button>
+									</label>
+									<?= $this->Form->hidden('email', ['id' => 'email']) ?>
+									<textarea id="email_faturamento_display" class="form-control" rows="2" readonly placeholder="Nenhum e-mail de faturamento cadastrado"></textarea>
 									<small class="form-text text-muted">Você pode informar um ou mais e-mails separados por ponto e vírgula. Serão usados para envio de notas, boletos e comunicações financeiras.</small>
 								</div>
 							</div>
@@ -457,6 +463,26 @@
 		</div>
 	</div>
 </div>
+<!-- Modal gerir e-mails de faturamento -->
+<div class="modal fade none-border" id="modal-emails-faturamento">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="row m-20">
+				<div class="col-12">
+					<div class="form-group">
+						<label class="control-label">E-mails de faturamento</label>
+						<textarea id="email_faturamento_editor" class="form-control" rows="4" placeholder="Informe um e-mail por linha ou separados por ponto e vírgula"></textarea>
+						<small class="form-text text-muted">Você pode informar vários e-mails de cobrança e faturamento. Eles serão salvos no mesmo campo utilizado atualmente pelo sistema.</small>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-success btn-salvar-emails-faturamento">Salvar</button>
+				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
+			</div>
+		</div>
+	</div>
+</div>
 <!-- Modal gerir e-mails de contato -->
 <div class="modal fade none-border" id="modal-emails-contato">
 	<div class="modal-dialog">
@@ -609,6 +635,24 @@
 				table.search(filters).draw();
 			}
 
+			// Inicializa visualização dos e-mails de faturamento
+			var emailsFaturamentoRaw = $('#email').val() || '';
+			atualizaDisplayEmailsFaturamento(emailsFaturamentoRaw);
+
+			$('#modal-emails-faturamento').on('show.bs.modal', function () {
+				$('#email_faturamento_editor').val(formataEmailsParaEdicao($('#email').val() || ''));
+			});
+
+			$('.btn-salvar-emails-faturamento').click(function(e) {
+				e.preventDefault();
+				var texto = $('#email_faturamento_editor').val() || '';
+				var normalizado = normalizaEmails(texto);
+				$('#email').val(normalizado);
+				atualizaDisplayEmailsFaturamento(normalizado);
+				$('#modal-emails-faturamento').modal('hide');
+				// Após fechar o modal, clique em "Salvar cliente" para persistir as alterações.
+			});
+
 			// Inicializa visualização dos e-mails de contato/responsáveis
 			var emailsRaw = $('#emailresponsavel').val() || '';
 			atualizaDisplayEmails(emailsRaw);
@@ -624,7 +668,7 @@
 				$('#emailresponsavel').val(normalizado);
 				atualizaDisplayEmails(normalizado);
 				$('#modal-emails-contato').modal('hide');
-				// Após fechar o modal, clique em \"Salvar cliente\" para persistir as alterações.
+				// Após fechar o modal, clique em "Salvar cliente" para persistir as alterações.
 			});
 		});
 	// Inativos 
@@ -785,5 +829,13 @@
 				return;
 			}
 			$('#emailresponsavel_display').val(texto.replace(/;/g, '; '));
+		}
+		function atualizaDisplayEmailsFaturamento(texto) {
+			if (!texto) {
+				$('#email_faturamento_display').val('');
+				$('#email_faturamento_display').attr('placeholder', 'Nenhum e-mail de faturamento cadastrado');
+				return;
+			}
+			$('#email_faturamento_display').val(texto.replace(/;/g, '; '));
 		}
 </script>
