@@ -6,7 +6,7 @@
 </style>
 <div class="col-md-12">
 	<div class="card">
-		<div class="card-body col-lg-10 col-md-12 mx-auto">
+		<div class="card-body">
 			<h5 class="card-title m-b-10">Editar usuário da equipe</h5>
 			<p class="text-muted m-b-20">Atualize os dados cadastrais, status de acesso e assinaturas utilizadas em comunicações oficiais.</p>
 
