@@ -11,7 +11,15 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
-			<?= $this->Html->link('Cadastrar cliente', ['action' => 'add'], ['class' => 'btn btn-success m-b-20 m-r-5', 'target' => '_blank']) ?>
+			<div class="d-flex justify-content-between align-items-center m-b-15">
+				<div>
+					<h5 class="card-title m-b-0">Lista de Clientes</h5>
+					<small class="text-muted">Clientes vinculados ao ERP e habilitados para acesso ao portal.</small>
+				</div>
+				<div class="text-right">
+					<?= $this->Html->link('Cadastrar cliente', ['action' => 'add'], ['class' => 'btn btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
+				</div>
+			</div>
 			<ul class="nav nav-tabs customtab" role="tablist">
 				<li class="nav-item"> <a class="nav-link active" data-toggle="tab" href="#ativos" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-check"></i></span> <span class="hidden-xs-down">Ativos</span></a> </li>
 				<li class="nav-item"> <a class="nav-link " data-toggle="tab" href="#inativos" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-na"></i></span> <span class="hidden-xs-down">Inativos</span></a> </li>
