@@ -260,14 +260,31 @@ class UsersController extends AppController {
 		$user = $this->Users->get($id);
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
-			$this->usuarioExistente($data['email'], $id);
 
-			$userExistente = $this->Users->findByUsername($data['email'])->where(['inativo' => 0])->first();
-			if(empty($userExistente)) $userExistente = $this->Users->findByEmail($data['email'])->where(['inativo' => 0])->first();
-			if(!empty($userExistente)) {
-				//$this->Flash->error('Já existe um usuário com este e-mail no sistema, verifique e inative o usuário "' . $userExistente->username . '"');
-				$this->Flash->error('Já existe um usuário com este e-mail no sistema, verifique e inative o usuário correspondente.');
-				return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+			// Se o usuário permanecer ativo (inativo vazio ou 0), mantém a validação rígida de e-mail duplicado.
+			// Se ele estiver sendo inativado, permitimos salvar mesmo com e-mail duplicado, para justamente
+			// conseguir desativar o usuário conflitante.
+			$isBecomingInactive = isset($data['inativo']) && (int)$data['inativo'] === 1;
+
+			if (!$isBecomingInactive) {
+				$this->usuarioExistente($data['email'], $id);
+
+				$userExistente = $this->Users
+					->find()
+					->where([
+						'inativo' => 0,
+						'id !=' => $id,
+						'OR' => [
+							'username' => $data['email'],
+							'email' => $data['email'],
+						],
+					])
+					->first();
+
+				if (!empty($userExistente)) {
+					$this->Flash->error('Já existe um usuário com este e-mail no sistema, verifique e inative o usuário correspondente.');
+					return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+				}
 			}
 
 			if (isset($data['role'])) unset($data['role']);
