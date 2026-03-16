@@ -98,7 +98,7 @@
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-lg-4 col-md-6 col-sm-12">
+							<div class="col-lg-6 col-md-6 col-sm-12">
 								<div class="form-group">
 									<label class="control-label text-muted"> Endereço </label>
 									<?= $this->Form->control('endereco', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o endereço', 'required' => true,  $disabled]) ?>
@@ -161,7 +161,7 @@
 									<small class="form-text text-muted">Você pode informar um ou mais e-mails separados por ponto e vírgula. Serão usados para envio de notas, boletos e comunicações financeiras.</small>
 								</div>
 							</div>
-							<div class="col-lg-8 col-md-6 col-sm-12">
+							<div class="col-lg-6 col-md-6 col-sm-12">
 								<div class="form-group">
 									<label class="control-label text-muted d-flex justify-content-between align-items-center">
 										<span>E-mails de contato / responsáveis</span>
