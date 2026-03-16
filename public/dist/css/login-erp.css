@@ -29,7 +29,7 @@
 	z-index: 1;
 	width: 100%;
 	max-width: 420px;
-	padding: 40px;
+	padding: 24px 28px;
 	background: #fff;
 	border-radius: 14px;
 	box-shadow: 0 10px 40px rgba(0,0,0,0.25);
@@ -37,29 +37,28 @@
 }
 .login-erp-logo {
 	text-align: center;
-	margin-bottom: 15px;
+	margin-bottom: 8px;
 }
 .login-erp-logo img {
-	width: 80px;
+	width: 72px;
 	height: auto;
 }
 .login-erp-title {
-	font-size: 22px;
+	font-size: 20px;
 	font-weight: 600;
-	margin-bottom: 25px;
+	margin-bottom: 16px;
 	color: #333;
 }
 .login-erp .input-group {
 	position: relative;
-	margin-bottom: 18px;
+	margin-bottom: 12px;
 }
 .login-erp .input-group .input-icon {
 	position: absolute;
 	left: 12px;
 	top: 50%;
 	transform: translateY(-50%);
-	opacity: 0.7;
-	color: #555;
+	color: #0f766e;
 	z-index: 2;
 	pointer-events: none;
 	display: flex;
@@ -70,6 +69,7 @@
 	width: 20px;
 	height: 20px;
 	flex-shrink: 0;
+	fill: currentColor;
 }
 .login-erp .input-group .eye-icon {
 	position: absolute;
@@ -77,11 +77,10 @@
 	top: 50%;
 	transform: translateY(-50%);
 	cursor: pointer;
-	opacity: 0.7;
+	color: #0f766e;
 	background: none;
 	border: none;
 	padding: 6px;
-	color: #555;
 	z-index: 2;
 	display: flex;
 	align-items: center;
@@ -90,23 +89,29 @@
 .login-erp .input-group .eye-icon svg {
 	width: 20px;
 	height: 20px;
+	fill: currentColor;
 }
 .login-erp .input-group .eye-icon .hidden {
 	display: none !important;
 }
 .login-erp .input-group .eye-icon:hover {
-	opacity: 1;
-	color: #0f766e;
+	color: #0e6b66;
+}
+.login-erp .input-group .eye-icon:focus-visible {
+	outline: 2px solid #14b8a6;
+	outline-offset: 2px;
 }
 .login-erp .input-group input,
 .login-erp .input-group .form-control {
 	width: 100%;
-	padding: 13px 40px;
+	padding: 10px 40px;
 	border-radius: 8px;
 	border: 1px solid #ddd;
 	font-size: 14px;
 	transition: 0.2s;
 	height: auto;
+	min-height: 42px;
+	box-sizing: border-box;
 }
 .login-erp .input-group input:focus,
 .login-erp .input-group .form-control:focus {
@@ -122,7 +127,7 @@
 	justify-content: flex-start;
 	gap: 8px;
 	font-size: 13px;
-	margin-bottom: 20px;
+	margin-bottom: 12px;
 	color: #555;
 }
 .login-erp .remember input[type="checkbox"] {
@@ -137,7 +142,7 @@
 }
 .login-erp .login-btn {
 	width: 100%;
-	padding: 14px;
+	padding: 12px;
 	background: linear-gradient(90deg, #14b8a6, #0f766e);
 	border: none;
 	border-radius: 8px;
@@ -153,41 +158,46 @@
 	color: #fff !important;
 }
 .login-erp .support {
-	margin-top: 18px;
+	margin-top: 12px;
 	display: flex;
-	gap: 10px;
+	gap: 8px;
 }
 .login-erp .support .support-btn {
 	flex: 1;
-	padding: 10px 12px;
+	padding: 8px 10px;
 	border-radius: 6px;
 	border: 1px solid #ddd;
 	background: #f5f5f5;
 	cursor: pointer;
-	font-size: 13px;
+	font-size: 12px;
 	color: #333;
 	text-decoration: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
+	gap: 5px;
 	transition: 0.2s;
 }
 .login-erp .support .support-icon {
 	display: inline-flex;
 	align-items: center;
+	color: #0f766e;
 }
 .login-erp .support .support-icon svg {
 	flex-shrink: 0;
+	fill: currentColor;
 }
 .login-erp .support .support-btn:hover {
 	background: #eee;
 	color: #0f766e;
 	text-decoration: none;
 }
+.login-erp .support .support-btn:hover .support-icon {
+	color: #0e6b66;
+}
 .login-erp .mfa {
-	margin-top: 18px;
-	font-size: 13px;
+	margin-top: 10px;
+	font-size: 12px;
 	color: #555;
 }
 .login-erp .mfa a,
@@ -202,7 +212,7 @@
 	text-decoration: underline;
 }
 .login-erp .login-erp-cadastro {
-	margin-top: 12px;
+	margin-top: 8px;
 	font-size: 13px;
 }
 .login-erp .login-erp-cadastro a {
@@ -214,23 +224,96 @@
 	text-decoration: underline;
 }
 .login-erp .footer {
-	margin-top: 28px;
-	padding-top: 20px;
+	margin-top: 16px;
+	padding-top: 12px;
 	border-top: 1px solid #eee;
-	font-size: 12px;
+	font-size: 11px;
 	color: #777;
-	line-height: 1.4;
+	line-height: 1.35;
 }
 .login-erp .alert {
 	border-radius: 8px;
-	margin-bottom: 18px;
+	margin-bottom: 12px;
 	font-size: 14px;
 }
 .login-erp .minsuculaOnly {
-	font-size: 12px;
+	font-size: 11px;
 	color: #777;
-	margin-top: 4px;
+	margin-top: 2px;
 	display: block;
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 480px) {
+	.login-erp-wrap {
+		padding: 16px 12px;
+		min-height: 100vh;
+		min-height: 100dvh;
+		align-items: center;
+		padding-top: max(16px, env(safe-area-inset-top));
+		padding-bottom: max(16px, env(safe-area-inset-bottom));
+		padding-left: max(12px, env(safe-area-inset-left));
+		padding-right: max(12px, env(safe-area-inset-right));
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+	.login-erp-card {
+		max-width: 100%;
+		padding: 20px 18px;
+		border-radius: 12px;
+		margin: 0 auto;
+	}
+	.login-erp-logo img {
+		width: 64px;
+	}
+	.login-erp-title {
+		font-size: 18px;
+		margin-bottom: 14px;
+	}
+	.login-erp .input-group {
+		margin-bottom: 10px;
+	}
+	.login-erp .input-group input,
+	.login-erp .input-group .form-control {
+		padding: 12px 40px;
+		min-height: 44px;
+		font-size: 16px;
+	}
+	.login-erp .remember {
+		margin-bottom: 10px;
+	}
+	.login-erp .login-btn {
+		padding: 14px;
+		min-height: 48px;
+		font-size: 15px;
+	}
+	.login-erp .support {
+		flex-direction: column;
+		margin-top: 10px;
+		gap: 8px;
+	}
+	.login-erp .support .support-btn {
+		padding: 12px 10px;
+		font-size: 13px;
+	}
+	.login-erp .mfa {
+		margin-top: 8px;
+		font-size: 11px;
+	}
+	.login-erp .footer {
+		margin-top: 12px;
+		padding-top: 10px;
+		font-size: 10px;
+	}
+}
+
+@media (max-width: 360px) {
+	.login-erp-card {
+		padding: 16px 14px;
+	}
+	.login-erp-title {
+		font-size: 16px;
+	}
 }
 /* Modal 2FA */
 #modal-duasetapas .modal-content {
