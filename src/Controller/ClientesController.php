@@ -155,7 +155,13 @@ class ClientesController extends AppController {
 		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		$this->set('title', 'Cliente: ' . $titlenome);
 		
-		$usuarios = $this->Users->find('list', ['keyField' => 'id', 'valueVield' => 'nome'])->where(['idcliente' => $id, 'inativo' => 0])->toArray();
+		// Todos os usuários vinculados a este cliente (ativos e inativos),
+		// para exibição na aba Usuários do cadastro do cliente.
+		$usuarios = $this->Users
+			->find('all')
+			->where(['idcliente' => $id])
+			->order(['username' => 'ASC'])
+			->toArray();
 		$cliente->users = $this->Users->find('all')->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$usuariosValue = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$cliente->senha = descriptografasenha($cliente->senha);

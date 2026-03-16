@@ -329,17 +329,27 @@
 					<div class="table-responsive">
 						<table class="table table-hover" id="tableUsers">
 							<thead class="text-primary">
-								<th>Id</th>
-								<th>Nome</th>
-								<th>Ações</th>
+								<tr>
+									<th>Usuário</th>
+									<th>E-mail</th>
+									<th>Nome</th>
+									<th>Status</th>
+									<th width="10%">Ações</th>
+								</tr>
 							</thead>
 							<tbody>
-								<?php foreach ($usuarios as $key=>$reg): ?>
+								<?php foreach ($usuarios as $usr): ?>
+									<?php
+										$label = $usr->inativo ? 'danger' : 'success';
+										$sit   = $usr->inativo ? 'Inativo' : 'Ativo';
+									?>
 									<tr>
-										<td><?= $key ?></td>
-										<td><?= $reg ?></td>
+										<td><?= h($usr->username) ?></td>
+										<td><?= h($usr->email) ?></td>
+										<td><?= h($usr->name) ?></td>
+										<td><span class="label label-<?= $label ?>"><?= $sit ?></span></td>
 										<td class="td-actions">
-											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "Users", "action" => "editcliente", $key], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "Users", "action" => "editcliente", $usr->id], ['rel' => 'tooltip', 'title' => 'Editar usuário do cliente', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
