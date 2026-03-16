@@ -89,6 +89,7 @@ class ConsultaEmpresaService
                 }
             } else {
                 $raw = $this->receita->consultar($cnpjLimpo);
+                $resultado['avisos'][] = 'Dados cadastrais: Receita. Para usar Speedio, configure SPEEDIO_USERNAME e SPEEDIO_TOKEN no servidor (.env ou config/app_local.php).';
             }
             $resultado['dados'] = $this->mapearCadastro($raw);
             $resultado['origem']['dados_cadastrais'] = $origemCadastro;
@@ -113,7 +114,7 @@ class ConsultaEmpresaService
                 if (!$this->ieProvider->isConfigurado()) {
                     $resultado['dados']['inscricao_estadual'] = $this->ieVazio('NAO_EXECUTADO');
                     $resultado['status_consultas']['inscricao_estadual'] = StatusConsulta::NAO_EXECUTADO;
-                    $resultado['avisos'][] = 'Consulta de IE não configurada (SINTEGRA_API_KEY).';
+                    $resultado['avisos'][] = 'Inscrição Estadual (IE): configure SINTEGRA_API_KEY no servidor para consulta automática (SEFAZ/SINTEGRA).';
                 } else {
                     $ie = $this->ieProvider->consultar($cnpjLimpo, $uf);
                     if ($ie !== null) {
@@ -159,7 +160,7 @@ class ConsultaEmpresaService
                 } else {
                     $resultado['dados']['inscricao_municipal'] = ['numero' => null, 'situacao' => 'SEM_INTEGRACAO'];
                     $resultado['status_consultas']['inscricao_municipal'] = StatusConsulta::NAO_IMPLEMENTADO;
-                    $resultado['avisos'][] = 'Município sem integração para consulta de inscrição municipal';
+                    $resultado['avisos'][] = 'Inscrição Municipal (IM): sem integração disponível no momento; preencha manualmente se necessário.';
                 }
             } catch (\Throwable $e) {
                 $this->logFalha($cnpjLimpo, 'MUNICIPIO', $e);

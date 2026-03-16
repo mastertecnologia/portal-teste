@@ -24,18 +24,18 @@ class SpeedioProvider
         $token = env('SPEEDIO_TOKEN', Configure::read('Speedio.token'));
         $password = env('SPEEDIO_PASSWORD', Configure::read('Speedio.password'));
         $secret = ($token !== null && $token !== '') ? $token : $password;
-        if (empty($username) || empty($secret)) {
-            throw new \RuntimeException('Speedio não configurado. Defina SPEEDIO_USERNAME e SPEEDIO_TOKEN (ou SPEEDIO_PASSWORD).', 500);
+        if (empty($secret)) {
+            throw new \RuntimeException('Speedio não configurado. Defina SPEEDIO_TOKEN ou SPEEDIO_PASSWORD.', 500);
         }
 
         $url = $this->urlBase . '?cnpjs=' . rawurlencode(json_encode([$cnpj]));
-        $auth = base64_encode($username . ':' . $secret);
+        $authHeader = $this->buildAuthHeader($username, $secret);
         $context = stream_context_create([
             'http' => [
                 'method' => 'GET',
                 'timeout' => $this->timeout,
                 'header' => [
-                    'Authorization: Basic ' . $auth,
+                    $authHeader,
                     'Accept: application/json',
                     'Content-Type: application/json',
                 ],
@@ -62,11 +62,22 @@ class SpeedioProvider
 
     public function isConfigurado(): bool
     {
-        $username = env('SPEEDIO_USERNAME', Configure::read('Speedio.username'));
         $token = env('SPEEDIO_TOKEN', Configure::read('Speedio.token'));
         $password = env('SPEEDIO_PASSWORD', Configure::read('Speedio.password'));
         $secret = ($token !== null && $token !== '') ? $token : $password;
-        return !empty($username) && !empty($secret);
+        return !empty($secret);
+    }
+
+    /**
+     * Token no formato JWT (três partes separadas por ponto) usa Bearer; senão Basic (user:secret).
+     */
+    private function buildAuthHeader(?string $username, string $secret): string
+    {
+        if (preg_match('/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/', trim($secret))) {
+            return 'Authorization: Bearer ' . $secret;
+        }
+        $user = ($username !== null && $username !== '') ? $username : 'token';
+        return 'Authorization: Basic ' . base64_encode($user . ':' . $secret);
     }
 
     /**
