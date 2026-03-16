@@ -208,7 +208,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row align-items-center">
 								<div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
 									<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-5">
 										<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']); ?>
@@ -221,8 +221,13 @@
 										<label class="custom-control-label text-muted" for="contrato">Contrato </label>
 									</div>
 								</div>
-								<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-									<?= $this->Form->button('Salvar cliente', ['class' => 'btn-enviar btn btn-success float-right salvarcliente']) ?>
+								<div class="col-lg-7 col-md-6 col-sm-6 col-xs-12 text-right m-t-5">
+									<?php if (!$cliente->inativo): ?>
+										<button type="button" class="btn btn-outline-danger m-r-10 btn-inativar-cliente">
+											Inativar cliente
+										</button>
+									<?php endif; ?>
+									<?= $this->Form->button('Salvar cliente', ['class' => 'btn-enviar btn btn-success salvarcliente']) ?>
 								</div>
 							</div>
 						<?php } ?>
@@ -805,6 +810,15 @@
 		$('#exibirsenhacliente').change(function(){
 			if ($(this).is(':checked')) $('#senha').attr('type', 'text');
 			else $('#senha').attr('type', 'password');
+		});
+
+		// Inativar cliente (atalho visual)
+		$('.btn-inativar-cliente').click(function(e) {
+			e.preventDefault();
+			if (confirm('Você confirma a inativação deste cliente no portal e no ERP?')) {
+				$('#inativo').prop('checked', true);
+				$('form').first().submit();
+			}
 		});
 	// Funções auxiliares para e-mails de contato
 		function normalizaEmails(texto) {
