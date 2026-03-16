@@ -1,0 +1,120 @@
+/**
+ * Configurações ERP - Visual alinhado ao login (PGM Soluções em TI)
+ * Cores: #0f766e, #14b8a6, #0e6b66 | Fonte: Inter
+ */
+.config-erp-wrap {
+	font-family: 'Inter', sans-serif;
+	box-sizing: border-box;
+	padding: 0 0 1.5rem 0;
+}
+.config-erp-wrap *,
+.config-erp-wrap *::before,
+.config-erp-wrap *::after {
+	box-sizing: border-box;
+}
+.config-erp-header {
+	margin-bottom: clamp(1rem, 3vw, 1.5rem);
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid #eee;
+}
+.config-erp-title {
+	font-size: clamp(1.25rem, 4vw, 1.5rem);
+	font-weight: 700;
+	color: #333;
+	margin: 0 0 0.25rem 0;
+}
+.config-erp-subtitle {
+	font-size: 0.875rem;
+	color: #666;
+	margin: 0;
+}
+.config-erp-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: clamp(0.75rem, 2.5vw, 1.25rem);
+}
+.config-erp-card {
+	background: #fff;
+	border-radius: clamp(8px, 1.5vw, 12px);
+	border-top: 3px solid #0f766e;
+	border-left: 1px solid #eee;
+	border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+	box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+	padding: clamp(1rem, 3vw, 1.25rem);
+	transition: box-shadow 0.2s, transform 0.2s;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+.config-erp-card:hover {
+	box-shadow: 0 4px 16px rgba(15, 118, 110, 0.12);
+}
+.config-erp-card-category {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.8125rem;
+	color: #666;
+	margin-bottom: 0.35rem;
+}
+.config-erp-card-category .config-erp-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 6px;
+	background: rgba(15, 118, 110, 0.1);
+	color: #0f766e;
+}
+.config-erp-card-category .config-erp-icon svg {
+	width: 1rem;
+	height: 1rem;
+	fill: currentColor;
+}
+.config-erp-card-value {
+	font-size: clamp(1.5rem, 4vw, 1.75rem);
+	font-weight: 700;
+	color: #333;
+	margin: 0 0 0.5rem 0;
+	line-height: 1.2;
+}
+.config-erp-card-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: #0f766e;
+	text-decoration: none;
+	margin-top: auto;
+	transition: color 0.2s;
+}
+.config-erp-card-link:hover {
+	color: #0e6b66;
+	text-decoration: underline;
+}
+.config-erp-card-link::after {
+	content: "";
+	display: inline-block;
+	width: 0.4em;
+	height: 0.4em;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(-45deg);
+	margin-left: 0.15em;
+}
+@media (max-width: 768px) {
+	.config-erp-grid {
+		grid-template-columns: 1fr;
+	}
+}
+@media (max-width: 480px) {
+	.config-erp-wrap {
+		padding: 0 0 1rem 0;
+	}
+	.config-erp-card {
+		padding: 1rem;
+	}
+}
