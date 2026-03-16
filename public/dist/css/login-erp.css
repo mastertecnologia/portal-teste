@@ -421,16 +421,121 @@
 		margin: 0 auto;
 	}
 }
-/* Modal 2FA */
-#modal-duasetapas .modal-content {
-	background: linear-gradient(135deg, #0e6b66, #18a7a0) !important;
-	border-radius: 8px;
+/* ========== Modais (Recuperar senha, Desativar 2FA, Código 2FA) ========== */
+.login-erp-modal .modal-dialog {
+	max-width: 420px;
+	margin: 1.75rem auto;
 }
-#modal-duasetapas .form-control {
+.login-erp-modal.modal.show .modal-dialog {
+	margin-top: 15vh;
+}
+.login-erp-modal .modal-content {
 	background: #fff;
-	color: #212529;
+	border: none;
+	border-top: 3px solid #0f766e;
+	border-bottom: 3px solid #0f766e;
+	border-radius: clamp(10px, 2vw, 14px);
+	box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+	font-family: 'Inter', sans-serif;
+	overflow: hidden;
+}
+.login-erp-modal .modal-header {
+	background: #fff;
+	border-bottom: 1px solid #eee;
+	padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.25rem);
+	align-items: center;
+}
+.login-erp-modal .modal-title {
+	font-size: clamp(1rem, 3vw, 1.125rem);
+	font-weight: 600;
+	color: #333;
+	margin: 0;
+}
+.login-erp-modal .btn-close-login-erp {
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+	line-height: 1;
+	color: #777;
+	cursor: pointer;
+	padding: 0.25rem;
+	margin: -0.25rem -0.25rem -0.25rem auto;
+	opacity: 0.8;
+}
+.login-erp-modal .btn-close-login-erp:hover {
+	color: #333;
+	opacity: 1;
+}
+.login-erp-modal .modal-body {
+	padding: clamp(1rem, 4vw, 1.25rem);
+}
+.login-erp-modal .login-erp-modal-label {
+	display: block;
+	font-size: 0.9375rem;
+	color: #555;
+	margin-bottom: 0.5rem;
+	line-height: 1.4;
+}
+.login-erp-modal .login-erp-modal-input {
+	width: 100%;
+	padding: 0.5rem 1rem;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	font-size: 1rem;
+	background: #fff;
+	color: #333;
+	box-sizing: border-box;
+}
+.login-erp-modal .login-erp-modal-input:focus {
+	border-color: #0f766e;
+	outline: none;
+}
+.login-erp-modal .login-erp-modal-input::placeholder {
+	color: #999;
+}
+.login-erp-modal .login-erp-modal-error {
+	display: block;
+	margin-top: 0.35rem;
+	font-size: 0.8125rem;
+	color: #c0392b;
+}
+.login-erp-modal .modal-footer {
+	border-top: 1px solid #eee;
+	padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.25rem);
+	background: #fafafa;
+	gap: 0.5rem;
+	justify-content: flex-end;
+}
+.login-erp-modal .btn-login-erp-modal {
+	padding: 0.5rem 1rem;
+	border-radius: 8px;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: 0.2s;
 	border: 1px solid #ddd;
 }
-.modal.show .modal-dialog {
-	margin-top: 15%;
+.login-erp-modal .btn-login-erp-modal.btn-cancel {
+	background: #fff;
+	color: #555;
+}
+.login-erp-modal .btn-login-erp-modal.btn-cancel:hover {
+	background: #eee;
+	color: #333;
+}
+.login-erp-modal .btn-login-erp-modal.btn-primary {
+	background: linear-gradient(90deg, #14b8a6, #0f766e);
+	color: #fff !important;
+	border-color: #0f766e;
+}
+.login-erp-modal .btn-login-erp-modal.btn-primary:hover {
+	background: linear-gradient(90deg, #0f766e, #0e6b66);
+	color: #fff !important;
+	box-shadow: 0 2px 8px rgba(15, 118, 110, 0.35);
+}
+.login-erp-modal .codigoInvalido.hide {
+	display: none !important;
+}
+.login-erp-modal .modal-backdrop.show {
+	opacity: 0.5;
 }

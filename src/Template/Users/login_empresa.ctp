@@ -57,16 +57,59 @@ $this->end();
 	</div>
 </div>
 
-<!-- Modal Duas Etapas -->
-<div class="modal fade none-border" id="modal-duasetapas" data-backdrop="static">
-	<div class="modal-dialog modal-md">
+<!-- Modal Recuperar Senha -->
+<div class="modal fade login-erp-modal" id="modal-recuperar-senha" tabindex="-1" data-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
-			<div class="row p-20">
-				<div class="col-12 codigo">
-					<label class="control-label text-white">Informe o código disponibilizado pelo Google Authenticator App</label>
-					<?= $this->Form->control('codigo', ['id' => 'codigo', 'class' => 'form-control', 'placeholder' => 'Código', 'label' => false]) ?>
-					<small class="codigoInvalido hide text-white">O código não foi informado ou é inválido</small>
-					<?= $this->Html->link('Cancelar', '#', ['class' => 'btn btn-fecha-modal btn-secondary btn-sm text-uppercase float-right m-t-10 btn-rounded']) ?>
+			<div class="modal-header">
+				<h5 class="modal-title">Recuperar senha</h5>
+				<button type="button" class="btn-close-login-erp" data-dismiss="modal" aria-label="Fechar">&times;</button>
+			</div>
+			<div class="modal-body">
+				<label for="email-recuperar" class="login-erp-modal-label">Informe o e-mail da sua conta para receber o link de redefinição.</label>
+				<input type="email" id="email-recuperar" class="form-control login-erp-modal-input" placeholder="E-mail" autocomplete="email">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-login-erp-modal btn-cancel" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-login-erp-modal btn-primary" id="btn-enviar-recuperar">Enviar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Desativar 2FA -->
+<div class="modal fade login-erp-modal" id="modal-desativar-mfa" tabindex="-1" data-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Desativar autenticação em duas etapas</h5>
+				<button type="button" class="btn-close-login-erp" data-dismiss="modal" aria-label="Fechar">&times;</button>
+			</div>
+			<div class="modal-body">
+				<label for="email-desativar-mfa" class="login-erp-modal-label">Informe o e-mail da sua conta para receber o link de desativação.</label>
+				<input type="email" id="email-desativar-mfa" class="form-control login-erp-modal-input" placeholder="E-mail" autocomplete="email">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-login-erp-modal btn-cancel" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-login-erp-modal btn-primary" id="btn-enviar-desativar-mfa">Enviar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Duas Etapas (código 2FA) -->
+<div class="modal fade none-border login-erp-modal" id="modal-duasetapas" data-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered modal-md">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Verificação em duas etapas</h5>
+				<button type="button" class="btn-close-login-erp btn-fecha-modal" aria-label="Fechar">&times;</button>
+			</div>
+			<div class="modal-body">
+				<div class="codigo">
+					<label class="login-erp-modal-label" for="codigo">Informe o código do Google Authenticator</label>
+					<?= $this->Form->control('codigo', ['id' => 'codigo', 'class' => 'form-control login-erp-modal-input', 'placeholder' => 'Código de 6 dígitos', 'label' => false]) ?>
+					<small class="codigoInvalido hide login-erp-modal-error">O código não foi informado ou é inválido.</small>
 				</div>
 			</div>
 		</div>
@@ -83,26 +126,31 @@ $('.recuperasenha, .desativarautenticacao').hover(function(){
 window.iduser = '';
 $('.recuperasenha').click(function(e){
 	e.preventDefault();
-	bootbox.prompt({
-		title: "Insira o seu E-mail:",
-		callback: function(result){
-			if(result != null) {
-				window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'resetPassword']); ?>' + '/' + result;
-			}
-		}
-	});
+	$('#email-recuperar').val('');
+	$('#modal-recuperar-senha').modal('show');
+	setTimeout(function(){ $('#email-recuperar').focus(); }, 300);
 });
+$('#btn-enviar-recuperar').click(function(){
+	var email = $('#email-recuperar').val();
+	if(email && email.trim()) {
+		window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'resetPassword']); ?>' + '/' + encodeURIComponent(email.trim());
+	}
+});
+$('#email-recuperar').on('keypress', function(e){ if(e.which === 13) $('#btn-enviar-recuperar').click(); });
+
 $('.desativarautenticacao').click(function(e){
 	e.preventDefault();
-	bootbox.prompt({
-		title: "Insira o seu E-mail:",
-		callback: function(result){
-			if(result != null) {
-				window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'enviaEmailAutenticacaoSemLogin']); ?>' + '/' + result;
-			}
-		}
-	});
+	$('#email-desativar-mfa').val('');
+	$('#modal-desativar-mfa').modal('show');
+	setTimeout(function(){ $('#email-desativar-mfa').focus(); }, 300);
 });
+$('#btn-enviar-desativar-mfa').click(function(){
+	var email = $('#email-desativar-mfa').val();
+	if(email && email.trim()) {
+		window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'enviaEmailAutenticacaoSemLogin']); ?>' + '/' + encodeURIComponent(email.trim());
+	}
+});
+$('#email-desativar-mfa').on('keypress', function(e){ if(e.which === 13) $('#btn-enviar-desativar-mfa').click(); });
 $('.minsuculaOnly').hide();
 function SemMaisuclaEEspaco(e){
 	var tecla = (window.event) ? event.keyCode : e.which;
@@ -156,9 +204,9 @@ $('.btn-login').click(function(e) {
 	e.preventDefault();
 	verificaduasetapas('login');
 });
-$(".btn-fecha-modal").click(function(e) {
+$(".btn-fecha-modal, #modal-duasetapas .btn-close-login-erp").click(function(e) {
 	e.preventDefault();
-	$("#modal-duasetapas").modal('toggle');
+	$("#modal-duasetapas").modal('hide');
 	window.modalAberto = false;
 });
 $('#modal-duasetapas').on('shown.bs.modal', function () {
