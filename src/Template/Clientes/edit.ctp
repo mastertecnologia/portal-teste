@@ -163,7 +163,7 @@
 											Adicionar e-mails
 										</button>
 									</label>
-									<?= $this->Form->hidden('emailresponsavel', ['id' => 'emailresponsavel', $disabled]) ?>
+									<?= $this->Form->hidden('emailresponsavel', ['id' => 'emailresponsavel']) ?>
 									<textarea id="emailresponsavel_display" class="form-control" rows="2" readonly placeholder="Nenhum e-mail de contato cadastrado"></textarea>
 									<small class="form-text text-muted">E-mails usados para avisos gerais, suporte e comunicações operacionais.</small>
 								</div>
@@ -471,7 +471,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-success btn-salvar-emails-contato" data-dismiss="modal">Salvar</button>
+				<button type="button" class="btn btn-success btn-salvar-emails-contato">Salvar</button>
 				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -615,7 +615,8 @@
 				$('#emailresponsavel_editor').val(formataEmailsParaEdicao($('#emailresponsavel').val() || ''));
 			});
 
-			$('.btn-salvar-emails-contato').click(function() {
+			$('.btn-salvar-emails-contato').click(function(e) {
+				e.preventDefault();
 				var texto = $('#emailresponsavel_editor').val() || '';
 				var normalizado = normalizaEmails(texto);
 				$('#emailresponsavel').val(normalizado);
