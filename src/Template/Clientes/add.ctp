@@ -275,7 +275,11 @@
 		$.getJSON(url, function(resposta){
 			$btn.prop('disabled', false).text('Buscar CNPJ');
 			if (!resposta.sucesso) {
-				alert(resposta.mensagem || 'Não foi possível consultar o CNPJ.');
+				var msg = resposta.mensagem || 'Não foi possível consultar o CNPJ.';
+				if (Array.isArray(resposta.avisos) && resposta.avisos.length) {
+					msg += '\n\n' + resposta.avisos.join('\n');
+				}
+				alert(msg);
 				return;
 			}
 			var d = resposta.dados || {};

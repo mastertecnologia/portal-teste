@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use App\Service\Cadastro\ConsultaEmpresaService;
 use App\Utility\TextoUtil;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -32,12 +33,25 @@ class CadastroController extends AppController
         $consultarIm = $this->request->getQuery('consultar_im', '1') !== '0';
         $usarCache = $this->request->getQuery('usar_cache', '1') !== '0';
 
-        $service = $this->buildService();
-        $resposta = $service->consultar((string)$cnpj, [
-            'consultar_ie' => $consultarIe,
-            'consultar_im' => $consultarIm,
-            'usar_cache' => $usarCache,
-        ]);
+        try {
+            $service = $this->buildService();
+            $resposta = $service->consultar((string)$cnpj, [
+                'consultar_ie' => $consultarIe,
+                'consultar_im' => $consultarIm,
+                'usar_cache' => $usarCache,
+            ]);
+        } catch (\Throwable $e) {
+            Log::write('error', '[CadastroController::empresa] ' . $e->getMessage(), ['scope' => ['cadastro_empresa']]);
+            return $this->jsonResponse([
+                'sucesso' => false,
+                'mensagem' => 'Falha ao consultar serviço cadastral.',
+                'codigo_erro' => 'ERRO_SERVICO_EXTERNO',
+                'dados' => null,
+                'origem' => null,
+                'status_consultas' => null,
+                'avisos' => ['Tente novamente mais tarde ou faça o preenchimento manual.'],
+            ], 200);
+        }
 
         $status = isset($resposta['codigo_erro']) && $resposta['codigo_erro'] === 'CNPJ_INVALIDO' ? 400 : 200;
         return $this->jsonResponse($resposta, $status);
@@ -70,12 +84,25 @@ class CadastroController extends AppController
         $consultarIm = isset($data['consultar_im']) ? (bool)$data['consultar_im'] : true;
         $usarCache = isset($data['usar_cache']) ? (bool)$data['usar_cache'] : true;
 
-        $service = $this->buildService();
-        $resposta = $service->consultar((string)$cnpj, [
-            'consultar_ie' => $consultarIe,
-            'consultar_im' => $consultarIm,
-            'usar_cache' => $usarCache,
-        ]);
+        try {
+            $service = $this->buildService();
+            $resposta = $service->consultar((string)$cnpj, [
+                'consultar_ie' => $consultarIe,
+                'consultar_im' => $consultarIm,
+                'usar_cache' => $usarCache,
+            ]);
+        } catch (\Throwable $e) {
+            Log::write('error', '[CadastroController::consultar] ' . $e->getMessage(), ['scope' => ['cadastro_empresa']]);
+            return $this->jsonResponse([
+                'sucesso' => false,
+                'mensagem' => 'Falha ao consultar serviço cadastral.',
+                'codigo_erro' => 'ERRO_SERVICO_EXTERNO',
+                'dados' => null,
+                'origem' => null,
+                'status_consultas' => null,
+                'avisos' => ['Tente novamente mais tarde ou faça o preenchimento manual.'],
+            ], 200);
+        }
 
         $status = isset($resposta['codigo_erro']) && $resposta['codigo_erro'] === 'CNPJ_INVALIDO' ? 400 : 200;
         return $this->jsonResponse($resposta, $status);
