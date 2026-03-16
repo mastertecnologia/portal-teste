@@ -282,6 +282,18 @@ class ClientesController extends AppController {
 
 		$this->set('acessos', $acessos);
 		$this->set('contratos', $contratos);
+		// UF do contribuinte (para consulta IE na edição): a partir da cidade do cliente
+		$ufContribuinte = null;
+		if (!empty($cliente->idcidade)) {
+			$cidade = $this->Cidades->find()->where(['id' => $cliente->idcidade])->first();
+			if ($cidade && $cidade->idestado) {
+				$estado = $this->Estados->find()->where(['id' => $cidade->idestado])->first();
+				if ($estado) {
+					$ufContribuinte = $estado->sigla;
+				}
+			}
+		}
+		$this->set('ufContribuinte', $ufContribuinte);
 		$this->set('cidades', $cidades);
 		$this->set('cliente', $cliente);	
 		$this->set('usuarios', $usuarios);	
@@ -455,6 +467,94 @@ class ClientesController extends AppController {
 		}
 
 		return $this->jsonResponse($data, 200);
+	}
+
+	/**
+	 * Consulta Inscrição Estadual (IE) na SEFAZ/SINTEGRA via API SintegraPI.
+	 * Requer chave em SINTEGRA_API_KEY (env) ou Configure Sintegra.apiKey.
+	 * Parâmetros: cnpj (obrigatório), uf (opcional; ex: RS, SP).
+	 */
+	public function consultaIe($cnpj = null, $uf = null) {
+		$this->autoRender = false;
+
+		if (!$this->request->is('ajax')) {
+			return $this->jsonResponse(['success' => false, 'message' => 'Requisição inválida'], 400);
+		}
+
+		$cnpj = preg_replace('/\D+/', '', (string)($cnpj ?? ''));
+		if (strlen($cnpj) !== 14) {
+			return $this->jsonResponse(['success' => false, 'message' => 'CNPJ inválido'], 400);
+		}
+
+		$apiKey = env('SINTEGRA_API_KEY', \Cake\Core\Configure::read('Sintegra.apiKey'));
+		if (empty($apiKey)) {
+			return $this->jsonResponse([
+				'success' => false,
+				'message' => 'Consulta de IE não configurada. Defina SINTEGRA_API_KEY no ambiente ou Sintegra.apiKey na configuração.',
+				'ie' => null,
+			], 200);
+		}
+
+		$uf = $uf ? strtoupper(trim($uf)) : null;
+		$url = 'https://api.sintegrapi.com.br/consultas/v2/sintegra/' . $cnpj;
+		if ($uf) {
+			$url .= '?uf=' . rawurlencode($uf);
+		}
+
+		$context = stream_context_create([
+			'http' => [
+				'method' => 'GET',
+				'timeout' => 15,
+				'header' => [
+					'Accept: application/json',
+					'x-api-key: ' . $apiKey,
+					'cache: 25',
+				],
+			],
+		]);
+
+		$result = @file_get_contents($url, false, $context);
+		if ($result === false) {
+			return $this->jsonResponse(['success' => false, 'message' => 'Falha ao acessar serviço de IE (SEFAZ/SINTEGRA).', 'ie' => null], 502);
+		}
+
+		$data = json_decode($result, true);
+		if (json_last_error() !== JSON_ERROR_NONE || empty($data)) {
+			return $this->jsonResponse(['success' => false, 'message' => 'Retorno inválido do serviço de IE.', 'ie' => null], 502);
+		}
+
+		if (!empty($data['error']) || empty($data['success'])) {
+			return $this->jsonResponse([
+				'success' => false,
+				'message' => isset($data['message']) ? $data['message'] : 'IE não encontrada ou indisponível.',
+				'ie' => null,
+			], 200);
+		}
+
+		$ie = null;
+		$situacao = null;
+		$inscricoes = $data['inscricoes_estaduais'] ?? [];
+		if ($uf) {
+			foreach ($inscricoes as $item) {
+				if (isset($item['uf']) && strtoupper($item['uf']) === $uf && !empty($item['inscricao_estadual'])) {
+					$ie = preg_replace('/\D+/', '', $item['inscricao_estadual']);
+					$situacao = $item['situacao_pj'] ?? ($item['ativa'] ? 'Ativa' : 'Inativa');
+					break;
+				}
+			}
+		}
+		if ($ie === null && !empty($inscricoes)) {
+			$first = $inscricoes[0];
+			$ie = preg_replace('/\D+/', '', $first['inscricao_estadual'] ?? '');
+			$situacao = $first['situacao_pj'] ?? null;
+		}
+
+		return $this->jsonResponse([
+			'success' => true,
+			'ie' => $ie,
+			'situacao' => $situacao,
+			'uf' => $uf,
+		], 200);
 	}
 
 	/**

@@ -53,6 +53,7 @@
 								</button>
 							</label>
 							<?= $this->Form->control('cnpj', ['class' => 'form-control', 'id' => 'cnpj', 'label' => false, 'placeholder' => 'Insira o CNPJ']) ?>
+							<input type="hidden" id="uf_contribuinte" value="" />
 						</div>
 					</div>
                 </div>
@@ -155,8 +156,11 @@
 					</div>
 					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
 						<div class="form-group ">
-							<label class="control-label text-muted">Inscrição Estadual <small>(somente números)</small></label>
-							<?= $this->Form->control('inscricaoestadual', ['onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira a inscrição estadual']) ?>
+							<label class="control-label text-muted d-flex justify-content-between align-items-center">
+								<span>Inscrição Estadual <small>(somente números)</small></span>
+								<button type="button" class="btn btn-sm btn-outline-info" id="btn-buscar-ie" title="Consultar IE na SEFAZ/SINTEGRA">Buscar IE</button>
+							</label>
+							<?= $this->Form->control('inscricaoestadual', ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira a inscrição estadual']) ?>
 						</div>
 					</div>
 				</div>
@@ -288,6 +292,11 @@
 			if (data.numero) $('#nroendereco').val(data.numero);
 			if (data.complemento) $('#complemento').val(data.complemento.toUpperCase());
 
+			// UF do contribuinte (para consulta de IE depois)
+			if (data.uf) {
+				$('#uf_contribuinte').val(String(data.uf).trim().toUpperCase());
+			}
+
 			// Cidade (quando o backend conseguiu mapear para idcidade)
 			if (data.idcidade) {
 				$('#idcidade').val(data.idcidade);
@@ -297,7 +306,7 @@
 				}
 			}
 
-			// IE (inscrição estadual)
+			// IE (inscrição estadual) – Receita não retorna IE; use "Buscar IE" para SEFAZ/SINTEGRA
 			if (data.ie) {
 				$('#inscricaoestadual').val(data.ie.replace(/\D/g, ''));
 			}
@@ -314,6 +323,34 @@
 			}
 		}).fail(function(){
 			alert('Erro ao acessar o serviço de consulta de CNPJ. Tente novamente em instantes.');
+		});
+	});
+
+	// Consulta IE (Inscrição Estadual) na SEFAZ/SINTEGRA
+	$('#btn-buscar-ie').click(function(e){
+		e.preventDefault();
+		var cnpj = ($('#cnpj').val() || '').replace(/\D/g, '');
+		if (cnpj.length !== 14) {
+			alert('Informe um CNPJ válido (14 dígitos). Use "Buscar CNPJ" antes ou preencha o CNPJ.');
+			return;
+		}
+		var uf = ($('#uf_contribuinte').val() || '').trim().toUpperCase();
+		if (!uf) {
+			alert('A UF do contribuinte não foi definida. Clique em "Buscar CNPJ" primeiro para preencher os dados da Receita, ou informe a UF manualmente (ex.: RS, SP).');
+			return;
+		}
+		var url = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultaIe']); ?>/" + encodeURIComponent(cnpj) + "/" + encodeURIComponent(uf);
+		$('#btn-buscar-ie').prop('disabled', true).text('Buscando...');
+		$.getJSON(url, function(data){
+			$('#btn-buscar-ie').prop('disabled', false).text('Buscar IE');
+			if (data && data.success && data.ie) {
+				$('#inscricaoestadual').val(data.ie);
+			} else {
+				alert(data && data.message ? data.message : 'IE não encontrada ou serviço indisponível.');
+			}
+		}).fail(function(){
+			$('#btn-buscar-ie').prop('disabled', false).text('Buscar IE');
+			alert('Erro ao acessar o serviço de consulta de IE (SEFAZ/SINTEGRA). Verifique se a chave da API está configurada.');
 		});
 	});
 </script>

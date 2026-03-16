@@ -39,6 +39,8 @@ class AppController extends Controller {
 				'produto', 'qtdestoque', // Orçamentos: busca produto e estoque via AJAX
 				// APIs de integração ERP (sem sessão web; token em header)
 				'addApi', 'listApi', 'refreshApi', 'addAPI', 'listAPI', 'refreshAPI',
+				// Clientes: consulta CNPJ (Receita) e IE (SEFAZ/SINTEGRA) via AJAX
+				'consultacnpj', 'consultaIe',
 			],
 		]);
 		$this->loadComponent('Auth', [

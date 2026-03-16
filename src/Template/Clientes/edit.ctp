@@ -184,8 +184,14 @@
 							</div>
 							<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
 								<div class="form-group">
-									<label class="control-label text-muted"> Inscrição Estadual <small>(somente números)</small> </label>
-									<?= $this->Form->control('inscricaoestadual', ['onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira a inscrição estadual',  $disabled]) ?>
+									<label class="control-label text-muted d-flex justify-content-between align-items-center">
+										<span>Inscrição Estadual <small>(somente números)</small></span>
+										<?php if (empty($disabled)): ?>
+										<button type="button" class="btn btn-sm btn-outline-info" id="btn-buscar-ie-edit" title="Consultar IE na SEFAZ/SINTEGRA">Buscar IE</button>
+										<?php endif; ?>
+									</label>
+									<input type="hidden" id="uf_contribuinte_edit" value="<?= h($ufContribuinte ?? '') ?>" />
+									<?= $this->Form->control('inscricaoestadual', ['id' => 'inscricaoestadual', 'onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira a inscrição estadual',  $disabled]) ?>
 								</div>
 							</div>
 						</div>
@@ -719,6 +725,50 @@
 				},
 				error: function (tab) { alert('Inscrição estadual inválida'); }
 			});
+		});
+
+		// Buscar IE (SEFAZ/SINTEGRA) na edição
+		$('#btn-buscar-ie-edit').on('click', function(e){
+			e.preventDefault();
+			var cnpj = ($('#cnpj').val() || '').replace(/\D/g, '');
+			if (cnpj.length !== 14) {
+				alert('Informe um CNPJ válido (14 dígitos).');
+				return;
+			}
+			var uf = ($('#uf_contribuinte_edit').val() || '').trim().toUpperCase();
+			var self = $(this);
+			function doConsultaIe(ufValue) {
+				if (!ufValue) {
+					alert('Não foi possível obter a UF. Selecione a cidade do cliente.');
+					return;
+				}
+				var url = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultaIe']); ?>/" + encodeURIComponent(cnpj) + "/" + encodeURIComponent(ufValue);
+				self.prop('disabled', true).text('Buscando...');
+				$.getJSON(url, function(data){
+					self.prop('disabled', false).text('Buscar IE');
+					if (data && data.success && data.ie) {
+						$('#inscricaoestadual').val(data.ie);
+					} else {
+						alert(data && data.message ? data.message : 'IE não encontrada ou serviço indisponível.');
+					}
+				}).fail(function(){
+					self.prop('disabled', false).text('Buscar IE');
+					alert('Erro ao acessar o serviço de consulta de IE. Verifique se a chave da API está configurada.');
+				});
+			}
+			if (uf) {
+				doConsultaIe(uf);
+			} else {
+				var idcidade = $('#idcidade').val();
+				if (!idcidade) {
+					alert('Selecione a cidade do cliente para obter a UF.');
+					return;
+				}
+				$.get("<?= Router::url(['controller' => 'Clientes', 'action' => 'cidadesestado']); ?>/" + idcidade, function(sigla){
+					$('#uf_contribuinte_edit').val(sigla);
+					doConsultaIe((sigla || '').trim().toUpperCase());
+				}).fail(function(){ alert('Não foi possível obter a UF da cidade.'); });
+			}
 		});
 	// Tipo 
 		tipo($("#tipo").val());
