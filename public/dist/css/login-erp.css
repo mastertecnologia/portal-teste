@@ -290,6 +290,27 @@
 .login-erp .login-erp-cadastro a:hover {
 	text-decoration: underline;
 }
+.login-erp .login-erp-subtitle {
+	font-size: 0.8125rem;
+	color: #666;
+	margin: -0.5rem 0 1rem;
+	text-align: center;
+}
+.login-erp .login-erp-empresa {
+	margin-top: 0.5rem;
+	font-size: 0.8125rem;
+	text-align: center !important;
+}
+.login-erp .login-erp-empresa .link-empresa,
+.login-erp .login-erp-cadastro .link-cliente {
+	color: #0f766e;
+	text-decoration: none;
+	font-weight: 500;
+}
+.login-erp .login-erp-empresa .link-empresa:hover,
+.login-erp .login-erp-cadastro .link-cliente:hover {
+	text-decoration: underline;
+}
 /* Rodapé do card: centralizado, mesma linha em todas as resoluções */
 /* Rodapé do card: sempre centralizado (sobrescreve estilos globais de .footer) */
 .login-erp-card .footer.login-erp-footer,

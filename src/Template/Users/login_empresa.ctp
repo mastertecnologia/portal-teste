@@ -11,9 +11,10 @@ $this->end();
 		<div class="login-erp-logo">
 			<img src="<?= $webroot ?>assets/images/pgm.png" alt="PGM Soluções em TI" class="logo"/>
 		</div>
-		<div class="login-erp-title title">Acessar Plataforma de Gestão</div>
+		<div class="login-erp-title title">Acesso PGM / Master</div>
+		<p class="login-erp-subtitle">Equipe e usuários internos</p>
 
-		<?= $this->Form->create('', ['id' => 'login', 'class' => 'signin-form']) ?>
+		<?= $this->Form->create('', ['id' => 'login', 'class' => 'signin-form', 'url' => ['action' => 'acessoEmpresa']]) ?>
 			<div class="input-group">
 				<span class="input-icon" aria-hidden="true"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'fill' => 'currentColor', 'width' => '20', 'height' => '20']) ?></span>
 				<?= $this->Form->control('username', [
@@ -49,10 +50,7 @@ $this->end();
 				Deseja desativar a autenticação de dois fatores? <span class="link-mfa desativarautenticacao">Desativar!</span>
 			</div>
 			<div class="login-erp-cadastro">
-				<a href="#" class="comeceausar">Cadastre-se</a>
-			</div>
-			<div class="login-erp-empresa">
-				<?= $this->Html->link('Acesso PGM / Master (equipe)', ['controller' => 'Users', 'action' => 'acessoEmpresa'], ['class' => 'link-empresa']) ?>
+				<?= $this->Html->link('Sou cliente – acessar como cliente', ['controller' => 'Users', 'action' => 'login'], ['class' => 'link-cliente']) ?>
 			</div>
 		<?= $this->Form->end() ?>
 
@@ -80,12 +78,8 @@ $this->end();
 $(document).ready(function(){
 	$('#idempresa').append("<option value='' disabled selected>Empresa</option>");
 });
-$('.comeceausar, .recuperasenha, .desativarautenticacao').hover(function(){
+$('.recuperasenha, .desativarautenticacao').hover(function(){
 	$(this).css('cursor', 'pointer');
-});
-$('.comeceausar').click(function(e){
-	e.preventDefault();
-	window.location = '<?= Router::url(['controller'=>'Users','action'=>'cadastrocliente']); ?>';
 });
 window.iduser = '';
 $('.recuperasenha').click(function(e){

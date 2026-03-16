@@ -43,7 +43,7 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Usuários');
-		$this->Auth->allow(['login', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificadadoscliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
+		$this->Auth->allow(['login', 'acessoEmpresa', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificadadoscliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
 		
 		if (in_array('Security', $this->components()->loaded())) {
             $this->Security->setConfig('unlockedActions', ['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente']);
@@ -334,9 +334,54 @@ class UsersController extends AppController {
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
+				if (isset($user['role']) && $user['role'] == C_RoleFuncionario) {
+					$this->Flash->error(__('Este acesso é para clientes. Use o link "Acesso PGM / Master" para entrar com usuário da equipe.'));
+					return $this->redirect(['action' => 'acessoEmpresa']);
+				}
 				if(!$user['inativo'] && !$user['bloqueado']){
 					$_SESSION['PMG_veiologin'] = true;
 					
+					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
+					$this->Auth->setUser($user);
+					return $this->redirect($this->Auth->redirectUrl());
+				} else if($user['inativo']){
+					$this->Flash->error(__('Seu usuário está inativo!'));
+					return $this->redirect($this->Auth->redirectUrl());
+				} else if($user['bloqueado']){
+					$this->Flash->error(__('Seu usuário está bloqueado! Aguarde a liberação de um administrador.'));
+					return $this->redirect($this->Auth->redirectUrl());
+				} 
+			}
+	
+			$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
+		}
+	}
+
+	/**
+	 * Tela de login exclusiva para usuários das empresas (PGM / Master).
+	 * Clientes (role = C_RoleCliente) devem usar a ação login().
+	 */
+	public function acessoEmpresa() {
+		$this->viewBuilder()->setLayout("login");
+		$this->viewBuilder()->setTemplate("login_empresa");
+	
+		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
+	
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$user = $this->Users->findByEmail($data['username'])->where(['inativo' => 0])->first();
+			if(empty($user)) $user = $this->Users->findByUsername($data['username'])->where(['inativo' => 0])->first();
+	
+			if(!empty($user)) $data['username'] = $user->username;
+			$user = $this->Auth->identify($data);
+			
+			if ($user) {
+				if (isset($user['role']) && $user['role'] == C_RoleCliente) {
+					$this->Flash->error(__('Este acesso é para a equipe PGM / Master. Use o acesso para clientes.'));
+					return $this->redirect(['action' => 'login']);
+				}
+				if(!$user['inativo'] && !$user['bloqueado']){
+					$_SESSION['PMG_veiologin'] = true;
 					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
