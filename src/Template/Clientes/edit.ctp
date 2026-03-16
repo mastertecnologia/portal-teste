@@ -160,7 +160,7 @@
 									<label class="control-label text-muted d-flex justify-content-between align-items-center">
 										<span>E-mails de contato / responsáveis</span>
 										<button type="button" class="btn btn-sm btn-outline-info btn-gerenciar-emails" data-toggle="modal" data-target="#modal-emails-contato">
-											Gerenciar e-mails
+											Adicionar e-mails
 										</button>
 									</label>
 									<?= $this->Form->hidden('emailresponsavel', ['id' => 'emailresponsavel', $disabled]) ?>
@@ -471,7 +471,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-success btn-salvar-emails-contato">Salvar</button>
+				<button type="button" class="btn btn-success btn-salvar-emails-contato" data-dismiss="modal">Salvar</button>
 				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
