@@ -334,13 +334,13 @@ class UsersController extends AppController {
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
-				if (isset($user['role']) && $user['role'] == C_RoleFuncionario) {
+				// Só clientes (role = C_RoleCliente) podem logar aqui. Qualquer outro role é rejeitado.
+				if (!isset($user['role']) || $user['role'] !== C_RoleCliente) {
 					$this->Flash->error(__('Este acesso é para clientes. Use o link "Acesso PGM / Master" para entrar com usuário da equipe.'));
 					return $this->redirect(['action' => 'acessoEmpresa']);
 				}
 				if(!$user['inativo'] && !$user['bloqueado']){
 					$_SESSION['PMG_veiologin'] = true;
-					
 					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
@@ -359,7 +359,7 @@ class UsersController extends AppController {
 
 	/**
 	 * Tela de login exclusiva para usuários das empresas (PGM / Master).
-	 * Clientes (role = C_RoleCliente) devem usar a ação login().
+	 * Apenas role = C_RoleFuncionario pode logar aqui. Clientes devem usar login().
 	 */
 	public function acessoEmpresa() {
 		$this->viewBuilder()->setLayout("login");
@@ -376,7 +376,8 @@ class UsersController extends AppController {
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
-				if (isset($user['role']) && $user['role'] == C_RoleCliente) {
+				// Só equipe PGM/Master (role = C_RoleFuncionario) pode logar aqui. Qualquer outro role é rejeitado.
+				if (!isset($user['role']) || $user['role'] !== C_RoleFuncionario) {
 					$this->Flash->error(__('Este acesso é para a equipe PGM / Master. Use o acesso para clientes.'));
 					return $this->redirect(['action' => 'login']);
 				}
