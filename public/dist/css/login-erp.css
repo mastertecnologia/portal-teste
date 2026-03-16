@@ -189,6 +189,7 @@
 .login-erp .support {
 	margin-top: clamp(0.5rem, 2vw, 0.75rem);
 	display: flex;
+	justify-content: center;
 	gap: clamp(0.35rem, 1.5vw, 0.5rem);
 	flex-wrap: wrap;
 }
@@ -231,6 +232,7 @@
 	margin-top: clamp(0.4rem, 1.5vw, 0.625rem);
 	font-size: clamp(0.65rem, 2vw, 0.75rem);
 	color: #555;
+	text-align: center;
 }
 .login-erp .mfa a,
 .login-erp .mfa .link-mfa {
@@ -246,6 +248,7 @@
 .login-erp .login-erp-cadastro {
 	margin-top: clamp(0.35rem, 1.5vw, 0.5rem);
 	font-size: clamp(0.75rem, 2vw, 0.8125rem);
+	text-align: center;
 }
 .login-erp .login-erp-cadastro a {
 	color: #0f766e;
@@ -262,6 +265,7 @@
 	font-size: clamp(0.625rem, 1.8vw, 0.6875rem);
 	color: #777;
 	line-height: 1.35;
+	text-align: center;
 }
 .login-erp .alert {
 	border-radius: clamp(6px, 1.5vw, 8px);
