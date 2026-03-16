@@ -270,9 +270,10 @@
 		var $btn = $(this);
 		$btn.prop('disabled', true).text('Buscando...');
 		$('#cadastro-empresa-avisos').addClass('d-none');
-		var url = "<?= Router::url(['controller' => 'Cadastro', 'action' => 'empresa', 'cnpj' => '___CNPJ___', '_full' => true]); ?>";
-		url = url.replace('___CNPJ___', encodeURIComponent(cnpj)) + (url.indexOf('?') >= 0 ? '&' : '?') + 'consultar_ie=1&consultar_im=1&usar_cache=1';
-		$.getJSON(url, function(resposta){
+		var baseUrl = "<?= rtrim(Router::url('/', true), '/'); ?>";
+		var urlApi = baseUrl + '/api/cadastro/empresa/' + encodeURIComponent(cnpj) + '?consultar_ie=1&consultar_im=1&usar_cache=1';
+		var urlFallback = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultacnpj']); ?>/" + cnpj;
+		$.getJSON(urlApi, function(resposta){
 			$btn.prop('disabled', false).text('Buscar CNPJ');
 			if (!resposta.sucesso) {
 				var msg = resposta.mensagem || 'Não foi possível consultar o CNPJ.';
@@ -341,8 +342,47 @@
 				$('#cadastro-empresa-avisos').removeClass('d-none');
 			}
 		}).fail(function(){
-			$btn.prop('disabled', false).text('Buscar CNPJ');
-			alert('Erro ao acessar o serviço. Tente novamente ou preencha manualmente.');
+			// Fallback: tenta consulta antiga (só Receita) para preencher o que der
+			$.getJSON(urlFallback, function(data){
+				$btn.prop('disabled', false).text('Buscar CNPJ');
+				if (data && data.status === 'ERROR') {
+					alert(data.message || 'Não foi possível consultar o CNPJ. Preencha os dados manualmente.');
+					return;
+				}
+				if (data.nome) $('#razaosocial').val(data.nome.toUpperCase());
+				if (data.fantasia) $('#nomefantasia').val(data.fantasia.toUpperCase());
+				if (data.email) {
+					var em = String(data.email).trim().toLowerCase();
+					$('#email').val(em);
+					$('input[name="data[email]"]').val(em);
+				}
+				var cepNum = (data.cep || '').replace(/\D/g, '');
+				if (cepNum.length >= 8) $('#cep').val(cepNum.substring(0, 5) + '-' + cepNum.substring(5, 8));
+				else if (data.cep) $('#cep').val(data.cep);
+				if (data.bairro) $('#bairro').val(data.bairro.toUpperCase());
+				if (data.logradouro) $('#endereco').val(data.logradouro.toUpperCase());
+				if (data.numero) $('#nroendereco').val(data.numero);
+				if (data.complemento) $('#complemento').val(data.complemento.toUpperCase());
+				if (data.uf) $('#uf_contribuinte').val(String(data.uf).trim().toUpperCase());
+				if (data.idcidade) {
+					$('#idcidade').val(data.idcidade);
+					if (typeof $().selectpicker === 'function') {
+						$('#idcidade').selectpicker('refresh');
+						$('#idcidade').selectpicker('val', data.idcidade);
+					}
+				}
+				if (data.telefone) $('#fone').val(data.telefone);
+				if (Array.isArray(data.qsa) && data.qsa.length) {
+					var s = data.qsa.find(function(x){ return String(x.qual || '').indexOf('Administrador') !== -1; }) || data.qsa[0];
+					if (s && s.nome) $('#nomeresponsavel').val(s.nome.toUpperCase());
+				}
+				$('#cadastro-empresa-avisos-lista').empty().append('<li>Dados preenchidos pela Receita (consulta direta). IE/IM não consultados.</li>');
+				$('#cadastro-empresa-avisos').removeClass('d-none');
+				alert('A consulta consolidada não está disponível. Os dados da Receita foram preenchidos. Verifique e complete manualmente se necessário.');
+			}).fail(function(){
+				$btn.prop('disabled', false).text('Buscar CNPJ');
+				alert('Erro ao acessar o serviço. Tente novamente ou preencha manualmente.');
+			});
 		});
 	});
 
