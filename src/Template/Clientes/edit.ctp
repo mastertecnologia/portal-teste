@@ -605,7 +605,9 @@
 					else $('td').each(function(){$(this).removeClass('dark-mode');});
 				},
 			});
-			table.search(filters).draw();
+			if (typeof filters !== 'undefined') {
+				table.search(filters).draw();
+			}
 
 			// Inicializa visualização dos e-mails de contato/responsáveis
 			var emailsRaw = $('#emailresponsavel').val() || '';
