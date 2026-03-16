@@ -1,7 +1,18 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
-			<h5 class="card-title mb-3">Usuários clientes</h5>
+			<div class="d-flex justify-content-between align-items-center m-b-15">
+				<div>
+					<h5 class="card-title m-b-0">Usuários clientes</h5>
+					<small class="text-muted">Gestão dos usuários finais vinculados às empresas clientes do portal.</small>
+				</div>
+				<?php if ($admin): ?>
+					<div class="text-right">
+						<?= $this->Html->link('Adicionar cliente', ['action' => 'addcliente'], ['class' => 'btn btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
+						<?= $this->Html->link('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-primary btn-sm']) ?>
+					</div>
+				<?php endif; ?>
+			</div>
 			<div class="table-responsive">
 				<table class="table table-hover table-row-clickable" id="tableClients">
 					<thead class="text-primary">
@@ -32,10 +43,6 @@
 					</tbody>
 				</table>
 			</div>
-			<?php if ($admin): ?>
-				<?= $this->Html->link('Adicionar cliente', ['action' => 'addcliente'], ['class' => 'btn btn-success m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']) ?>
-				<?= $this->Html->link('Voltar para as configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-primary m-t-20', 'style' => 'margin-bottom: 20px;']) ?>
-			<?php endif; ?>
 		</div>
 	</div>
 </div>
