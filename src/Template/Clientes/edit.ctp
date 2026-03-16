@@ -151,8 +151,8 @@
 							<div class="col-lg-4 col-md-6 col-sm-12">
 								<div class="form-group">
 									<label class="control-label text-muted">E-mail de faturamento</label>
-									<?= $this->Form->email('email', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: financeiro@cliente.com.br', $disabled]) ?>
-									<small class="form-text text-muted">Utilizado para envio de notas, boletos e comunicações financeiras.</small>
+									<?= $this->Form->text('email', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: financeiro@cliente.com.br; cobranca@cliente.com.br', $disabled]) ?>
+									<small class="form-text text-muted">Você pode informar um ou mais e-mails separados por ponto e vírgula. Serão usados para envio de notas, boletos e comunicações financeiras.</small>
 								</div>
 							</div>
 							<div class="col-lg-8 col-md-6 col-sm-12">
