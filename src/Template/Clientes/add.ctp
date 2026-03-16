@@ -3,6 +3,21 @@
   	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Clientes', ['controller' => 'clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Adicionar cliente', [], ['class' => 'breadcrumb-item active']);
+
+	// Seleciona PGM Soluções em TI como empresa dominante padrão, quando existir
+	$defaultEmpresaDominanteId = null;
+	if (!empty($empresasOptSidebar)) {
+		foreach ($empresasOptSidebar as $idEmpresa => $nomeEmpresa) {
+			if (stripos($nomeEmpresa, 'PGM') !== false) {
+				$defaultEmpresaDominanteId = $idEmpresa;
+				break;
+			}
+		}
+		if ($defaultEmpresaDominanteId === null) {
+			$keys = array_keys($empresasOptSidebar);
+			$defaultEmpresaDominanteId = reset($keys);
+		}
+	}
 ?>
 
 <div class="col-md-12">
@@ -31,7 +46,12 @@
 					</div>
 					<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
 						<div class="form-group ">
-							<label class="control-label text-muted">CNPJ</label>
+							<label class="control-label text-muted d-flex justify-content-between align-items-center">
+								<span>CNPJ</span>
+								<button type="button" class="btn btn-sm btn-outline-info" id="btn-buscar-cnpj">
+									Buscar CNPJ
+								</button>
+							</label>
 							<?= $this->Form->control('cnpj', ['class' => 'form-control', 'id' => 'cnpj', 'label' => false, 'placeholder' => 'Insira o CNPJ']) ?>
 						</div>
 					</div>
@@ -144,7 +164,7 @@
 					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 						<div class="form-group">
 							<label class='control-label text-muted'> Empresa dominante: </label>
-							<?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar]) ?>
+							<?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar, 'default' => $defaultEmpresaDominanteId]) ?>
 						</div>
 					</div>
 				</div>
@@ -229,5 +249,36 @@
 	$('#nome').change(function(){
 		issoemmaiusculo = $(this).val().toUpperCase();
 		$(this).val(issoemmaiusculo);
+	});
+
+	// Consulta CNPJ e preenche automaticamente os dados principais
+	$('#btn-buscar-cnpj').click(function(e){
+		e.preventDefault();
+		var cnpj = ($('#cnpj').val() || '').replace(/\D/g, '');
+		if (cnpj.length !== 14) {
+			alert('Informe um CNPJ válido com 14 dígitos para buscar na Receita.');
+			return;
+		}
+
+		var url = 'https://www.receitaws.com.br/v1/cnpj/' + cnpj;
+
+		$.getJSON(url, function(data){
+			if (!data || data.status === 'ERROR') {
+				alert(data && data.message ? data.message : 'Não foi possível consultar o CNPJ na Receita.');
+				return;
+			}
+
+			if (data.nome) $('#razaosocial').val(data.nome.toUpperCase());
+			if (data.fantasia) $('#nomefantasia').val(data.fantasia.toUpperCase());
+			if (data.email) $('#email').val(data.email.toLowerCase());
+			if (data.cep) $('#cep').val((data.cep || '').replace(/\D/g, ''));
+			if (data.bairro) $('#bairro').val(data.bairro.toUpperCase());
+			if (data.logradouro) $('#endereco').val(data.logradouro.toUpperCase());
+			if (data.numero) $('#nroendereco').val(data.numero);
+			if (data.complemento) $('#complemento').val(data.complemento.toUpperCase());
+			if (data.telefone) $('#fone').val(data.telefone);
+		}).fail(function(){
+			alert('Erro ao acessar o serviço de consulta de CNPJ. Tente novamente em instantes.');
+		});
 	});
 </script>
