@@ -24,6 +24,10 @@
 	<div class="card" >
 		<div class="card-body">
 			<?=  $this->Form->create($cliente, ['class' => 'form-material']) ?>
+				<div id="cadastro-empresa-avisos" class="alert alert-info d-none mb-3" role="alert">
+					<strong>Origem dos dados e avisos:</strong>
+					<ul id="cadastro-empresa-avisos-lista" class="mb-0 mt-1"></ul>
+				</div>
 				<div class="row">
 					<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
 						<label class="control-label text-muted">Tipo</label>
@@ -255,74 +259,86 @@
 		$(this).val(issoemmaiusculo);
 	});
 
-	// Consulta CNPJ e preenche automaticamente os dados principais
+	// Consulta consolidada: dados cadastrais + IE + IM (API robusta)
 	$('#btn-buscar-cnpj').click(function(e){
 		e.preventDefault();
 		var cnpj = ($('#cnpj').val() || '').replace(/\D/g, '');
 		if (cnpj.length !== 14) {
-			alert('Informe um CNPJ válido com 14 dígitos para buscar na Receita.');
+			alert('Informe um CNPJ válido com 14 dígitos.');
 			return;
 		}
-
-		var url = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultacnpj']); ?>/" + cnpj;
-
-		$.getJSON(url, function(data){
-			if (!data || data.status === 'ERROR') {
-				alert(data && data.message ? data.message : 'Não foi possível consultar o CNPJ na Receita.');
+		var $btn = $(this);
+		$btn.prop('disabled', true).text('Buscando...');
+		$('#cadastro-empresa-avisos').addClass('d-none');
+		var url = "<?= Router::url(['controller' => 'Cadastro', 'action' => 'empresa', 'cnpj' => '___CNPJ___', '_full' => true]); ?>";
+		url = url.replace('___CNPJ___', encodeURIComponent(cnpj)) + (url.indexOf('?') >= 0 ? '&' : '?') + 'consultar_ie=1&consultar_im=1&usar_cache=1';
+		$.getJSON(url, function(resposta){
+			$btn.prop('disabled', false).text('Buscar CNPJ');
+			if (!resposta.sucesso) {
+				alert(resposta.mensagem || 'Não foi possível consultar o CNPJ.');
 				return;
 			}
-
-			// Dados básicos da empresa
-			if (data.nome) $('#razaosocial').val(data.nome.toUpperCase());
-			if (data.fantasia) $('#nomefantasia').val(data.fantasia.toUpperCase());
-			if (data.email) {
-				$('#email').val(String(data.email).trim().toLowerCase());
-				$('input[name="data[email]"]').val(String(data.email).trim().toLowerCase());
+			var d = resposta.dados || {};
+			var end = d.endereco || {};
+			var contato = d.contato || {};
+			// Dados básicos
+			if (d.razao_social) $('#razaosocial').val(d.razao_social.toUpperCase());
+			if (d.nome_fantasia) $('#nomefantasia').val(d.nome_fantasia.toUpperCase());
+			if (contato.email) {
+				var em = String(contato.email).trim().toLowerCase();
+				$('#email').val(em);
+				$('input[name="data[email]"]').val(em);
 			}
-
 			// Endereço
-			var cepNum = (data.cep || '').replace(/\D/g, '');
-			if (cepNum.length >= 8) {
-				$('#cep').val(cepNum.substring(0, 5) + '-' + cepNum.substring(5, 8));
-			} else if (data.cep) {
-				$('#cep').val(cepNum);
-			}
-			if (data.bairro) $('#bairro').val(data.bairro.toUpperCase());
-			if (data.logradouro) $('#endereco').val(data.logradouro.toUpperCase());
-			if (data.numero) $('#nroendereco').val(data.numero);
-			if (data.complemento) $('#complemento').val(data.complemento.toUpperCase());
-
-			// UF do contribuinte (para consulta de IE depois)
-			if (data.uf) {
-				$('#uf_contribuinte').val(String(data.uf).trim().toUpperCase());
-			}
-
-			// Cidade (quando o backend conseguiu mapear para idcidade)
-			if (data.idcidade) {
-				$('#idcidade').val(data.idcidade);
+			var cep = end.cep || '';
+			if (typeof cep === 'string') cep = cep.replace(/\D/g, '');
+			if (cep.length >= 8) {
+				$('#cep').val(cep.substring(0, 5) + '-' + cep.substring(5, 8));
+			} else if (end.cep) $('#cep').val(end.cep);
+			if (end.bairro) $('#bairro').val(end.bairro.toUpperCase());
+			if (end.logradouro) $('#endereco').val(end.logradouro.toUpperCase());
+			if (end.numero) $('#nroendereco').val(end.numero);
+			if (end.complemento) $('#complemento').val(end.complemento.toUpperCase());
+			if (end.uf) $('#uf_contribuinte').val(String(end.uf).trim().toUpperCase());
+			// Cidade
+			if (d.idcidade) {
+				$('#idcidade').val(d.idcidade);
 				if (typeof $().selectpicker === 'function') {
 					$('#idcidade').selectpicker('refresh');
-					$('#idcidade').selectpicker('val', data.idcidade);
+					$('#idcidade').selectpicker('val', d.idcidade);
 				}
 			}
-
-			// IE (inscrição estadual) – Receita não retorna IE; use "Buscar IE" para SEFAZ/SINTEGRA
-			if (data.ie) {
-				$('#inscricaoestadual').val(data.ie.replace(/\D/g, ''));
+			// IE e IM
+			if (d.inscricao_estadual && d.inscricao_estadual.numero) {
+				$('#inscricaoestadual').val(String(d.inscricao_estadual.numero).replace(/\D/g, ''));
 			}
-
-			// Telefone
-			if (data.telefone) $('#fone').val(data.telefone);
-
-			// Responsável: tenta pegar sócio administrador, senão primeiro sócio
-			if (Array.isArray(data.qsa) && data.qsa.length > 0) {
-				var socioAdm = data.qsa.find(function(s){ return String(s.qual || '').indexOf('Administrador') !== -1; }) || data.qsa[0];
-				if (socioAdm && socioAdm.nome) {
-					$('#nomeresponsavel').val(socioAdm.nome.toUpperCase());
-				}
+			if (d.inscricao_municipal && d.inscricao_municipal.numero) {
+				$('#inscricaomunicipal').val(String(d.inscricao_municipal.numero).replace(/\D/g, ''));
+			}
+			if (contato.telefone) $('#fone').val(contato.telefone);
+			// Responsável (QSA)
+			if (Array.isArray(d.qsa) && d.qsa.length > 0) {
+				var socioAdm = d.qsa.find(function(s){ return String(s.qual || '').indexOf('Administrador') !== -1; }) || d.qsa[0];
+				if (socioAdm && socioAdm.nome) $('#nomeresponsavel').val(socioAdm.nome.toUpperCase());
+			}
+			// Origem e avisos
+			var lista = [];
+			if (resposta.origem) {
+				if (resposta.origem.dados_cadastrais) lista.push('Dados cadastrais: ' + resposta.origem.dados_cadastrais);
+				if (resposta.origem.inscricao_estadual) lista.push('IE: ' + resposta.origem.inscricao_estadual);
+				if (resposta.origem.inscricao_municipal) lista.push('IM: ' + resposta.origem.inscricao_municipal);
+			}
+			if (Array.isArray(resposta.avisos) && resposta.avisos.length) {
+				resposta.avisos.forEach(function(a){ lista.push(a); });
+			}
+			if (lista.length) {
+				$('#cadastro-empresa-avisos-lista').empty();
+				lista.forEach(function(t){ $('#cadastro-empresa-avisos-lista').append('<li>' + t + '</li>'); });
+				$('#cadastro-empresa-avisos').removeClass('d-none');
 			}
 		}).fail(function(){
-			alert('Erro ao acessar o serviço de consulta de CNPJ. Tente novamente em instantes.');
+			$btn.prop('disabled', false).text('Buscar CNPJ');
+			alert('Erro ao acessar o serviço. Tente novamente ou preencha manualmente.');
 		});
 	});
 

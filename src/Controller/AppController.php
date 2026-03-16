@@ -41,6 +41,8 @@ class AppController extends Controller {
 				'addApi', 'listApi', 'refreshApi', 'addAPI', 'listAPI', 'refreshAPI',
 				// Clientes: consulta CNPJ (Receita) e IE (SEFAZ/SINTEGRA) via AJAX
 				'consultacnpj', 'consultaIe',
+				// API cadastro consolidado (CadastroController)
+				'empresa', 'consultar',
 			],
 		]);
 		$this->loadComponent('Auth', [
