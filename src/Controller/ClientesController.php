@@ -308,6 +308,27 @@ class ClientesController extends AppController {
 		}
 	}
 
+	public function reativar($id = null) {
+		// Permissão para o cliente
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+
+		$cliente = $this->Clientes->get($id);
+		$cliente->inativo = 0;
+
+		if ($this->Clientes->save($cliente)) {
+			$this->sincronizacliente($id);
+			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $id);
+			$this->Flash->success('O cliente foi reativado com sucesso!');
+		} else {
+			$this->Flash->error('Não foi possível reativar o cliente.');
+		}
+
+		return $this->redirect(['action' => 'index', '#' => 'inativos']);
+	}
+
 	public function solicitantes($idcliente) {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');

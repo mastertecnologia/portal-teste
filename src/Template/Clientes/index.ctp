@@ -53,11 +53,12 @@
 					<div class="table-responsive">
 						<table class="table table-hover table-row-clickable" id="tableInativos">
 							<thead class="text-primary">
-								<th style="width:35%">Nome</th>
+								<th style="width:30%">Nome</th>
 								<th style="width:15%">Tipo</th>
 								<th style="width:15%">CPF/CNPJ</th>
 								<th style="width:15%">E-mail</th>
-								<th style="width:10%">Telefone</th>
+								<th style="width:15%">Telefone</th>
+								<th style="width:10%">Ações</th>
 							</thead>
 							<tbody>
 								<?php foreach ($clientesInativos as $reg): ?>
@@ -67,6 +68,9 @@
 										<td> <a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->tipo == C_ClientesTipoFisica ? formatCnpjCpf($reg->cpf) : formatCnpjCpf($reg->cnpj) ?></td>
 										<td> <a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></td>
 										<td> <a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></td>
+										<td>
+											<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
+										</td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>
