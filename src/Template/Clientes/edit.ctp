@@ -148,7 +148,7 @@
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-lg-4 col-md-6 col-sm-12">
+							<div class="col-lg-6 col-md-6 col-sm-12">
 								<div class="form-group">
 									<label class="control-label text-muted d-flex justify-content-between align-items-center">
 										<span>E-mail de faturamento</span>
