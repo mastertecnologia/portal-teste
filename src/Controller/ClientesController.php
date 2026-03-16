@@ -43,10 +43,22 @@ class ClientesController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 		$this->set('title', 'Lista de Clientes');
-		$this->set('clientesAtivos', $this->Clientes->find('all')
+
+		$clientesAtivos = $this->Clientes->find('all')
 			->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 0])
-			->toArray());
-		$this->set('clientesInativos', $this->Clientes->findByInativo(1)->where(['idempresa' => $this->Auth->user('idempresa')]));
+			->toArray();
+
+		$clientesInativos = $this->Clientes->find('all')
+			->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 1])
+			->toArray();
+
+		$this->set('clientesAtivos', $clientesAtivos);
+		$this->set('clientesInativos', $clientesInativos);
+
+		$this->set('clientesAtivosPJ', array_values(array_filter($clientesAtivos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoJuridica; })));
+		$this->set('clientesAtivosPF', array_values(array_filter($clientesAtivos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoFisica; })));
+		$this->set('clientesInativosPJ', array_values(array_filter($clientesInativos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoJuridica; })));
+		$this->set('clientesInativosPF', array_values(array_filter($clientesInativos, function($c){ return (int)$c->tipo === (int)C_ClientesTipoFisica; })));
 	}
 
 	public function cadastrar() {
