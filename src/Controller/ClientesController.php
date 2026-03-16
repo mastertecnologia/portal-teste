@@ -432,15 +432,11 @@ class ClientesController extends AppController {
 			return $this->jsonResponse(['status' => 'ERROR', 'message' => 'Retorno inválido do serviço de CNPJ'], 502);
 		}
 
-		// Tenta localizar a cidade (idcidade) a partir de município + UF
-		if (!empty($data['municipio']) && !empty($data['uf'])) {
+		// Tenta localizar a cidade (idcidade) a partir do município retornado
+		if (!empty($data['municipio'])) {
 			$cidade = $this->Cidades
 				->find('all')
-				->contain(['Estados'])
-				->where([
-					'UPPER(Cidades.nome)' => strtoupper($data['municipio']),
-					'Estados.sigla' => strtoupper($data['uf']),
-				])
+				->where(['UPPER(nome)' => strtoupper($data['municipio'])])
 				->first();
 
 			if ($cidade) {
