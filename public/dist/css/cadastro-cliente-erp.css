@@ -109,6 +109,22 @@
 	cursor: not-allowed;
 	transform: none;
 }
+.cadastro-erp-voltar-login {
+	margin-top: 1.25rem;
+	padding-top: 0.75rem;
+	font-size: 0.9375rem;
+	color: #555;
+}
+.cadastro-erp-voltar-login .link-voltar-login {
+	color: #0f766e;
+	font-weight: 600;
+	text-decoration: none;
+	transition: color 0.2s;
+}
+.cadastro-erp-voltar-login .link-voltar-login:hover {
+	color: #0e6b66;
+	text-decoration: underline;
+}
 .cadastro-erp-wrap .login-wrap {
 	padding: 0;
 }

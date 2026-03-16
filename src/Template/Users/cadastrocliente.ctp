@@ -75,6 +75,9 @@ $this->end();
 					<button type='submit' class="btn-login btn btn-lg btn-cadastrar btn-rounded px-3">Cadastre-se</button>
 				</div>
 			</div>
+			<div class="cadastro-erp-voltar-login text-center">
+				Já tem conta? <?= $this->Html->link('Fazer login', ['controller' => 'Users', 'action' => 'login'], ['class' => 'link-voltar-login']) ?>
+			</div>
 		<?= $this->Form->end() ?>
 	</div>
 </section>
