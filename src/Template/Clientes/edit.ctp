@@ -622,8 +622,7 @@
 				$('#emailresponsavel').val(normalizado);
 				atualizaDisplayEmails(normalizado);
 				$('#modal-emails-contato').modal('hide');
-				// Opcional: já dispara o salvar do cliente para garantir persistência imediata
-				$('.salvarcliente').trigger('click');
+				// Após fechar o modal, clique em \"Salvar cliente\" para persistir as alterações.
 			});
 		});
 	// Inativos 
