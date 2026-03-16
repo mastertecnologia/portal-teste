@@ -432,19 +432,38 @@ class ClientesController extends AppController {
 			return $this->jsonResponse(['status' => 'ERROR', 'message' => 'Retorno inválido do serviço de CNPJ'], 502);
 		}
 
-		// Tenta localizar a cidade (idcidade) a partir do município retornado
+		// Tenta localizar a cidade (idcidade) a partir do município + UF (comparação sem acentos)
 		if (!empty($data['municipio'])) {
-			$cidade = $this->Cidades
-				->find('all')
-				->where(['UPPER(nome)' => strtoupper($data['municipio'])])
-				->first();
+			$municipioNorm = $this->normalizaTextoParaBusca($data['municipio']);
+			$uf = !empty($data['uf']) ? strtoupper(trim($data['uf'])) : null;
 
-			if ($cidade) {
-				$data['idcidade'] = $cidade->id;
+			$query = $this->Cidades->find('all');
+			if ($uf) {
+				$estado = $this->Estados->find()->where(['sigla' => $uf])->first();
+				if ($estado) {
+					$query->where(['idestado' => $estado->id]);
+				}
+			}
+			$cidadesList = $query->toArray();
+
+			foreach ($cidadesList as $c) {
+				if ($this->normalizaTextoParaBusca($c->nome) === $municipioNorm) {
+					$data['idcidade'] = $c->id;
+					break;
+				}
 			}
 		}
 
 		return $this->jsonResponse($data, 200);
+	}
+
+	/**
+	 * Normaliza texto para busca (maiúsculas, sem acentos) para comparar nomes de cidade.
+	 */
+	private function normalizaTextoParaBusca($texto) {
+		$t = mb_strtoupper(trim((string)$texto), 'UTF-8');
+		$map = ['Á'=>'A','À'=>'A','Ã'=>'A','Â'=>'A','Ä'=>'A','Ç'=>'C','É'=>'E','È'=>'E','Ê'=>'E','Ë'=>'E','Í'=>'I','Ì'=>'I','Î'=>'I','Ï'=>'I','Ó'=>'O','Ò'=>'O','Õ'=>'O','Ô'=>'O','Ö'=>'O','Ú'=>'U','Ù'=>'U','Û'=>'U','Ü'=>'U'];
+		return strtr($t, $map);
 	}
 
 	public function updateToken($idcliente) {

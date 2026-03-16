@@ -142,7 +142,7 @@
 					<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
 						<div class="form-group ">
 							<label class="control-label text-muted">E-mail faturamento</label>
-							<?= $this->Form->email('email', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o e-mail']) ?>
+							<?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o e-mail']) ?>
 						</div>
 					</div>
 				</div>
@@ -271,10 +271,18 @@
 			// Dados básicos da empresa
 			if (data.nome) $('#razaosocial').val(data.nome.toUpperCase());
 			if (data.fantasia) $('#nomefantasia').val(data.fantasia.toUpperCase());
-			if (data.email) $('#email').val(String(data.email).toLowerCase());
+			if (data.email) {
+				$('#email').val(String(data.email).trim().toLowerCase());
+				$('input[name="data[email]"]').val(String(data.email).trim().toLowerCase());
+			}
 
 			// Endereço
-			if (data.cep) $('#cep').val((data.cep || '').replace(/\D/g, ''));
+			var cepNum = (data.cep || '').replace(/\D/g, '');
+			if (cepNum.length >= 8) {
+				$('#cep').val(cepNum.substring(0, 5) + '-' + cepNum.substring(5, 8));
+			} else if (data.cep) {
+				$('#cep').val(cepNum);
+			}
 			if (data.bairro) $('#bairro').val(data.bairro.toUpperCase());
 			if (data.logradouro) $('#endereco').val(data.logradouro.toUpperCase());
 			if (data.numero) $('#nroendereco').val(data.numero);
@@ -283,7 +291,8 @@
 			// Cidade (quando o backend conseguiu mapear para idcidade)
 			if (data.idcidade) {
 				$('#idcidade').val(data.idcidade);
-				if ($('#idcidade').data('live-search')) {
+				if (typeof $().selectpicker === 'function') {
+					$('#idcidade').selectpicker('refresh');
 					$('#idcidade').selectpicker('val', data.idcidade);
 				}
 			}
