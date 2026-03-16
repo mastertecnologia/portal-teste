@@ -157,9 +157,15 @@
 							</div>
 							<div class="col-lg-8 col-md-6 col-sm-12">
 								<div class="form-group">
-									<label class="control-label text-muted">E-mails de contato / responsáveis</label>
-									<?= $this->Form->text('emailresponsavel', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: ti@cliente.com.br; suporte@cliente.com.br', $disabled]) ?>
-									<small class="form-text text-muted">Informe um ou mais e-mails separados por ponto e vírgula para avisos gerais, suporte e comunicações operacionais.</small>
+									<label class="control-label text-muted d-flex justify-content-between align-items-center">
+										<span>E-mails de contato / responsáveis</span>
+										<button type="button" class="btn btn-sm btn-outline-info btn-gerenciar-emails" data-toggle="modal" data-target="#modal-emails-contato">
+											Gerenciar e-mails
+										</button>
+									</label>
+									<?= $this->Form->hidden('emailresponsavel', ['id' => 'emailresponsavel', $disabled]) ?>
+									<textarea id="emailresponsavel_display" class="form-control" rows="2" readonly placeholder="Nenhum e-mail de contato cadastrado"></textarea>
+									<small class="form-text text-muted">E-mails usados para avisos gerais, suporte e comunicações operacionais.</small>
 								</div>
 							</div>
 						</div>
@@ -451,6 +457,26 @@
 		</div>
 	</div>
 </div>
+<!-- Modal gerir e-mails de contato -->
+<div class="modal fade none-border" id="modal-emails-contato">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="row m-20">
+				<div class="col-12">
+					<div class="form-group">
+						<label class="control-label">E-mails de contato / responsáveis</label>
+						<textarea id="emailresponsavel_editor" class="form-control" rows="4" placeholder="Informe um e-mail por linha ou separados por ponto e vírgula"></textarea>
+						<small class="form-text text-muted">Você pode informar vários e-mails. Eles serão salvos no mesmo campo utilizado atualmente pelo sistema.</small>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-success btn-salvar-emails-contato">Salvar</button>
+				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
+			</div>
+		</div>
+	</div>
+</div>
 <!-- Modal Confirma Token -->
 <div class="modal fade none-border" id="modal-confirmaToken">
 	<div class="modal-dialog">
@@ -580,6 +606,22 @@
 				},
 			});
 			table.search(filters).draw();
+
+			// Inicializa visualização dos e-mails de contato/responsáveis
+			var emailsRaw = $('#emailresponsavel').val() || '';
+			atualizaDisplayEmails(emailsRaw);
+
+			$('#modal-emails-contato').on('show.bs.modal', function () {
+				$('#emailresponsavel_editor').val(formataEmailsParaEdicao($('#emailresponsavel').val() || ''));
+			});
+
+			$('.btn-salvar-emails-contato').click(function() {
+				var texto = $('#emailresponsavel_editor').val() || '';
+				var normalizado = normalizaEmails(texto);
+				$('#emailresponsavel').val(normalizado);
+				atualizaDisplayEmails(normalizado);
+				$('#modal-emails-contato').modal('hide');
+			});
 		});
 	// Inativos 
 		$('.inativo').hide();
@@ -716,5 +758,28 @@
 			if ($(this).is(':checked')) $('#senha').attr('type', 'text');
 			else $('#senha').attr('type', 'password');
 		});
-	// 
+	// Funções auxiliares para e-mails de contato
+		function normalizaEmails(texto) {
+			if (!texto) return '';
+			var partes = texto
+				.replace(/[\r\n]+/g, ';')
+				.split(';')
+				.map(function(p) { return p.trim(); })
+				.filter(function(p) { return p.length > 0; });
+			return partes.join('; ');
+		}
+
+		function formataEmailsParaEdicao(texto) {
+			if (!texto) return '';
+			return texto.split(';').map(function(p){ return p.trim(); }).filter(function(p){ return p.length > 0; }).join('\n');
+		}
+
+		function atualizaDisplayEmails(texto) {
+			if (!texto) {
+				$('#emailresponsavel_display').val('');
+				$('#emailresponsavel_display').attr('placeholder', 'Nenhum e-mail de contato cadastrado');
+				return;
+			}
+			$('#emailresponsavel_display').val(texto.replace(/;/g, '; '));
+		}
 </script>
