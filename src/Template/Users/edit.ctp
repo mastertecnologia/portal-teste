@@ -6,9 +6,9 @@
 </style>
 <div class="col-md-12">
 	<div class="card">
-		<div class="card-body">
+		<div class="card-body col-lg-10 col-md-12 mx-auto">
 			<h5 class="card-title m-b-10">Editar usuário da equipe</h5>
-			<p class="text-muted m-b-20">Atualize os dados cadastrais e as assinaturas utilizadas em comunicações oficiais.</p>
+			<p class="text-muted m-b-20">Atualize os dados cadastrais, status de acesso e assinaturas utilizadas em comunicações oficiais.</p>
 
 			<?= $this->Form->create($user, ['class' => 'form-material m-t-10', 'enctype' => 'multipart/form-data', 'type' => 'file']) ?>
 
@@ -36,6 +36,7 @@
 					<div class="custom-control custom-checkbox m-t-30">
 						<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']) ?>
 						<label class="custom-control-label text-muted" for="inativo">Inativo</label>
+						<small class="form-text text-muted m-t-5">Usuário sem acesso ao portal.</small>
 					</div>
 				</div>
 			</div>
