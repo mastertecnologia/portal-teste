@@ -3,6 +3,7 @@ namespace App\Service\Cadastro;
 
 use App\Service\Cadastro\Provider\ReceitaProvider;
 use App\Service\Cadastro\Provider\SintegraIeProvider;
+use App\Service\Cadastro\Provider\SpeedioProvider;
 use App\Service\Cadastro\Provider\InscricaoMunicipalProvider;
 use App\Utility\CnpjUtil;
 use Cake\Cache\Cache;
@@ -15,6 +16,7 @@ use Cake\Log\Log;
 class ConsultaEmpresaService
 {
     private $receita;
+    private $speedio;
     private $ieProvider;
     private $imProvider;
     private $resolveIdCidade;
@@ -25,11 +27,13 @@ class ConsultaEmpresaService
      */
     public function __construct(
         ?ReceitaProvider $receita = null,
+        ?SpeedioProvider $speedio = null,
         ?SintegraIeProvider $ieProvider = null,
         ?InscricaoMunicipalProvider $imProvider = null,
         ?callable $resolveIdCidade = null
     ) {
         $this->receita = $receita ?? new ReceitaProvider();
+        $this->speedio = $speedio ?? new SpeedioProvider();
         $this->ieProvider = $ieProvider ?? new SintegraIeProvider();
         $this->imProvider = $imProvider ?? new InscricaoMunicipalProvider();
         $this->resolveIdCidade = $resolveIdCidade;
@@ -70,21 +74,33 @@ class ConsultaEmpresaService
             'avisos' => [],
         ];
 
-        $inicio = microtime(true);
-
+        $origemCadastro = 'RECEITA';
         try {
-            $raw = $this->receita->consultar($cnpjLimpo);
+            $raw = null;
+            if ($this->speedio->isConfigurado()) {
+                try {
+                    $raw = $this->speedio->consultar($cnpjLimpo);
+                    $origemCadastro = 'SPEEDIO';
+                } catch (\Throwable $e) {
+                    $this->logFalha($cnpjLimpo, 'SPEEDIO', $e);
+                    $raw = $this->receita->consultar($cnpjLimpo);
+                    $origemCadastro = 'RECEITA';
+                    $resultado['avisos'][] = 'Dados cadastrais obtidos pela Receita (Speedio indisponível).';
+                }
+            } else {
+                $raw = $this->receita->consultar($cnpjLimpo);
+            }
             $resultado['dados'] = $this->mapearCadastro($raw);
-            $resultado['origem']['dados_cadastrais'] = 'RECEITA';
+            $resultado['origem']['dados_cadastrais'] = $origemCadastro;
             $resultado['status_consultas']['dados_cadastrais'] = StatusConsulta::SUCESSO;
         } catch (\Throwable $e) {
-            $this->logFalha($cnpjLimpo, 'RECEITA', $e);
+            $this->logFalha($cnpjLimpo, $origemCadastro, $e);
             return $this->erro(
                 'ERRO_SERVICO_EXTERNO',
                 'Falha ao consultar serviço cadastral',
                 [
                     'avisos' => ['Tente novamente mais tarde ou faça o preenchimento manual'],
-                    'origem' => ['dados_cadastrais' => 'RECEITA'],
+                    'origem' => ['dados_cadastrais' => $origemCadastro],
                     'status_consultas' => ['dados_cadastrais' => $this->statusFromException($e)],
                 ]
             );
@@ -266,12 +282,19 @@ class ConsultaEmpresaService
         return StatusConsulta::ERRO;
     }
 
+    /**
+     * Log de falha em consulta externa. Não incluir credenciais (token/senha) na mensagem.
+     */
     private function logFalha(string $cnpj, string $servico, \Throwable $e): void
     {
+        $msg = $e->getMessage();
+        if (stripos($msg, 'token') !== false || stripos($msg, 'password') !== false || stripos($msg, 'senha') !== false) {
+            $msg = '[mensagem redigida por segurança]';
+        }
         Log::write('error', json_encode([
             'cnpj' => $cnpj,
             'servico' => $servico,
-            'mensagem' => $e->getMessage(),
+            'mensagem' => $msg,
             'data_hora' => date('c'),
         ]), ['scope' => ['cadastro_empresa']]);
     }

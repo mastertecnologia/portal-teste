@@ -34,4 +34,10 @@ return [
     // Opcional: consulta de Inscrição Estadual (IE) na SEFAZ/SINTEGRA (telas Clientes)
     // Obtenha a chave em https://sintegrapi.com.br e defina no .env como SINTEGRA_API_KEY
     // ou aqui: 'Sintegra' => ['apiKey' => 'sua-chave-api'],
+
+    // Opcional: dados cadastrais por CNPJ via Speedio (prioridade sobre Receita quando configurado)
+    // Login em https://www.speedio.com.br – use usuário + token (ou senha). No .env:
+    //   SPEEDIO_USERNAME=seu_usuario
+    //   SPEEDIO_TOKEN=seu_token
+    // ou aqui: 'Speedio' => ['username' => '...', 'token' => '...'],
 ];

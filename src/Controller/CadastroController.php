@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Service\Cadastro\ConsultaEmpresaService;
+use App\Service\Cadastro\Provider\SpeedioProvider;
 use App\Utility\TextoUtil;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -126,6 +127,6 @@ class CadastroController extends AppController
             }
             return null;
         };
-        return new ConsultaEmpresaService(null, null, null, $resolveIdCidade);
+        return new ConsultaEmpresaService(null, new SpeedioProvider(), null, null, $resolveIdCidade);
     }
 }
