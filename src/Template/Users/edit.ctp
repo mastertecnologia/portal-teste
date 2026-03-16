@@ -2,69 +2,75 @@
 <?php $this->Breadcrumbs->add('Usuários', ['controller' => 'users', 'action' => 'index'], ['class' => 'breadcrumb-item']); ?>
 <?php $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']); ?>
 <style>
-	.btn-disabled { background: #eee !important; /*Simular campo inativo*/ }
+	.btn-disabled { background: #eee !important; cursor: not-allowed; }
 </style>
 <div class="col-md-12">
-	<div class="card" >
+	<div class="card">
 		<div class="card-body">
-			<?= $this->Form->create($user, ['class' => 'form-material  m-t-10', 'enctype' => 'multipart/form-data', 'type' => 'file',]) ?>
+			<h5 class="card-title m-b-10">Editar usuário da equipe</h5>
+			<p class="text-muted m-b-20">Atualize os dados cadastrais e as assinaturas utilizadas em comunicações oficiais.</p>
+
+			<?= $this->Form->create($user, ['class' => 'form-material m-t-10', 'enctype' => 'multipart/form-data', 'type' => 'file']) ?>
+
+			<h6 class="text-muted m-t-10 m-b-10">Dados básicos</h6>
 			<div class="row">
-				<div class="col-lg-3 col-md-12">
+				<div class="col-lg-3 col-md-6">
 					<div class="form-group">
-						<label class="control-label text-muted"> Usuário </label>
-						<?= $this->Form->control('username', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira o usuário']) ?>
+						<label class="control-label text-muted">Usuário</label>
+						<?= $this->Form->control('username', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Usuário de acesso']) ?>
 					</div>
 				</div>
-				<div class="col-lg-3 col-md-12">
+				<div class="col-lg-3 col-md-6">
 					<div class="form-group">
-						<label class="control-label text-muted"> CPF </label>
-						<?=  $this->Form->control('cpf', ['id' => 'cpf', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o CPF']); ?>
+						<label class="control-label text-muted">CPF</label>
+						<?=  $this->Form->control('cpf', ['id' => 'cpf', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
 					</div>
 				</div>
-				<div class="col-lg-4 col-md-12">
+				<div class="col-lg-4 col-md-8">
 					<div class="form-group">
-						<label class="control-label text-muted"> E-mail </label>
-						<?= $this->Form->control('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira o e-mail']) ?>
+						<label class="control-label text-muted">E-mail</label>
+						<?= $this->Form->control('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'nome@empresa.com']) ?>
 					</div>
 				</div>
-				<div class="col-lg-1 col-md-4 col-sm-12 col-xs-12">
-					<div class="custom-control custom-checkbox mr-sm-2 m-t-30 m-r-10 m-l-10">
-						<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']); ?>
-						<label class="custom-control-label text-muted" for="inativo">Inativo </label>
+				<div class="col-lg-2 col-md-4 col-sm-12">
+					<div class="custom-control custom-checkbox m-t-30">
+						<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']) ?>
+						<label class="custom-control-label text-muted" for="inativo">Inativo</label>
 					</div>
 				</div>
 			</div>
+
 			<div class="row">
 				<div class="col-12">
 					<div class="form-group">
-						<label class="control-label text-muted"> Nome </label>
-						<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o nome']) ?>
+						<label class="control-label text-muted">Nome completo</label>
+						<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome exibido em relatórios e assinaturas']) ?>
 					</div>
 				</div>
 			</div>
+
+			<h6 class="text-muted m-t-20 m-b-10">Assinaturas de e-mail</h6>
 			<div class="row">
-				<div class="col-12">
+				<div class="col-md-6">
 					<div class="form-group">
-						<span class="fake-btn text-muted"> Assinatura Master </span>
-						<?= $this->Form->control('assinaturamaster', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o link da assinatura']) ?>
+						<label class="control-label text-muted">Assinatura Master</label>
+						<?= $this->Form->control('assinaturamaster', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Cole aqui o link da assinatura Master']) ?>
 					</div>
 				</div>
-			</div>
-			<div class="row">
-				<div class="col-12">
+				<div class="col-md-6">
 					<div class="form-group">
-						<span class="fake-btn text-muted"> Assinatura PGM </span>
-						<?= $this->Form->control('assinaturapgm', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o link da assinatura']) ?>
+						<label class="control-label text-muted">Assinatura PGM</label>
+						<?= $this->Form->control('assinaturapgm', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Cole aqui o link da assinatura PGM']) ?>
 					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-success']) ?>
+
+			<div class="row m-t-20">
+				<div class="col-md-12 d-flex align-items-center">
+					<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-success m-r-10']) ?>
 					<?= $this->Form->end(); ?>
-					<?= $this->Html->link('Alterar senha', ['action' => 'changePassword', $user->id], ['class' => 'btn btn-warning m-t-20 m-b-20']) ?>
-					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'btn btn-danger m-t-20 m-b-20']) ?>
-					<div class="clearfix"></div>
+					<?= $this->Html->link('Alterar senha', ['action' => 'changePassword', $user->id], ['class' => 'btn btn-warning m-r-10']) ?>
+					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'btn btn-danger']) ?>
 				</div>
 			</div>
 		</div>
