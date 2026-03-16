@@ -58,7 +58,7 @@ $iconClock = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="
 			<div class="config-erp-card">
 				<span class="config-erp-card-category"><span class="config-erp-icon"><?= $iconUser ?></span> Usuários clientes</span>
 				<p class="config-erp-card-value"><?= h($nroUsuariosClientes) ?></p>
-				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'index']) ?>" class="config-erp-card-link">Visualizar usuários</a>
+				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'indexClientes']) ?>" class="config-erp-card-link">Visualizar usuários</a>
 			</div>
 		</div>
 	</section>

@@ -57,22 +57,25 @@ class UsersController extends AppController {
 	}
 
 	public function index() {
-		$this->set('title', 'Lista de Usuários');
+		$this->set('title', 'Usuários da equipe (PGM/Master)');
 		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'dashboard']);
 		$admins = $this->Users
-			->find('all', ['fields' => ['id', 'username', 'name', 'secret', 'created', 'inativo', 'idcliente']])
+			->find('all', ['fields' => ['id', 'username', 'name', 'email', 'secret', 'created', 'inativo', 'idcliente']])
 			->where(['role' => 0, 'idcliente IS' => null])
 			->order(['username' => 'ASC'])
 			->toArray();
+		$this->set('admins', $admins);
+	}
 
+	public function indexClientes() {
+		$this->set('title', 'Usuários clientes');
+		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'dashboard']);
 		$clients = $this->Users
 			->find('all')
 			->where(['role' => 1, 'idcliente IS NOT' => null])
 			->contain(['Clientes' => ['fields' => ['razaosocial', 'nome']]])
 			->order(['username' => 'ASC'])
 			->toArray();
-
-		$this->set('admins', $admins);
 		$this->set('clients', $clients);
 	}
 
