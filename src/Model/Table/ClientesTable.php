@@ -17,7 +17,9 @@ class ClientesTable extends Table {
 
     public function validationDefault(Validator $validator) {
         return $validator
-        ->notEmpty('fone', 'Telefone obrigatório!');
+            // Telefone obrigatório apenas na criação do cliente; na edição,
+            // permitimos salvar mesmo que o campo esteja vazio.
+            ->notEmpty('fone', 'Telefone obrigatório!', 'create');
     }
 
     public function generateToken($string) {

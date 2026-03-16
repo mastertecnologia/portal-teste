@@ -188,6 +188,27 @@ class ClientesController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+
+			// #region agent log
+			@file_put_contents(
+				ROOT . DS . 'debug-cb94ed.log',
+				json_encode([
+					'sessionId' => 'cb94ed',
+					'runId' => 'clientes_edit_preSave',
+					'hypothesisId' => 'H_emails_validation',
+					'location' => 'ClientesController.php:edit:preSave',
+					'message' => 'Edit cliente POST received',
+					'data' => [
+						'id' => $id,
+						'has_email' => array_key_exists('email', $data),
+						'has_emailresponsavel' => array_key_exists('emailresponsavel', $data),
+					],
+					'timestamp' => round(microtime(true) * 1000),
+				]) . PHP_EOL,
+				FILE_APPEND
+			);
+			// #endregion agent log
+
 			$cliente = $this->Clientes->patchEntity($cliente, $data);
 			if(!empty($data['cpf'])) $cliente->cpf = removeCaracteres($data['cpf']);
 			if(!empty($data['senha'])) $cliente->senha = criptografasenha($data['senha']);
@@ -195,9 +216,48 @@ class ClientesController extends AppController {
 			if ($this->Clientes->save($cliente)) {
 				$this->sincronizacliente($id);
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $cliente->id);
+
+				// #region agent log
+				@file_put_contents(
+					ROOT . DS . 'debug-cb94ed.log',
+					json_encode([
+						'sessionId' => 'cb94ed',
+						'runId' => 'clientes_edit_postSave',
+						'hypothesisId' => 'H_emails_validation',
+						'location' => 'ClientesController.php:edit:postSave',
+						'message' => 'Cliente saved successfully',
+						'data' => [
+							'id' => $cliente->id,
+						],
+						'timestamp' => round(microtime(true) * 1000),
+					]) . PHP_EOL,
+					FILE_APPEND
+				);
+				// #endregion agent log
+
 				$this->Flash->success(__('O cliente foi salvo.'));
 				return $this->redirect(['action' => 'edit', $cliente->id]);
 			}
+
+			// #region agent log
+			@file_put_contents(
+				ROOT . DS . 'debug-cb94ed.log',
+				json_encode([
+					'sessionId' => 'cb94ed',
+					'runId' => 'clientes_edit_saveError',
+					'hypothesisId' => 'H_emails_validation',
+					'location' => 'ClientesController.php:edit:saveError',
+					'message' => 'Failed to save cliente',
+					'data' => [
+						'id' => $id,
+						'errors' => $cliente->getErrors(),
+					],
+					'timestamp' => round(microtime(true) * 1000),
+				]) . PHP_EOL,
+				FILE_APPEND
+			);
+			// #endregion agent log
+
 			$this->Flash->error(__('Não foi possível salvar o cliente.'));
 		}
 
