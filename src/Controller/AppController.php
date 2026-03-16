@@ -31,7 +31,7 @@ class AppController extends Controller {
 		$this->loadComponent('Flash');
 		$this->loadComponent('Security', [
 			'unlockedActions' => [
-				'login', 'logout', 'loginempresa', 'loginduasetapas',
+				'login', 'logout', 'loginempresa', 'acessoEmpresa', 'loginduasetapas',
 				'add', 'edit',
 				'carrinho', 'carrinhoadd', 'carrinhoedititem', 'carrinhodelitem', 'valortotal', 'acaoindex',
 				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'carrinhoedit',
