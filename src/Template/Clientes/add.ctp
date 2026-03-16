@@ -260,7 +260,7 @@
 			return;
 		}
 
-		var url = 'https://www.receitaws.com.br/v1/cnpj/' + cnpj;
+		var url = "<?= Router::url(['controller' => 'Clientes', 'action' => 'consultacnpj']); ?>/" + cnpj;
 
 		$.getJSON(url, function(data){
 			if (!data || data.status === 'ERROR') {

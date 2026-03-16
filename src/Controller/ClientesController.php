@@ -398,6 +398,43 @@ class ClientesController extends AppController {
 		}
 	}
 
+	public function consultacnpj($cnpj = null) {
+		$this->autoRender = false;
+
+		if (!$this->request->is('ajax')) {
+			return $this->jsonResponse(['status' => 'ERROR', 'message' => 'Requisição inválida'], 400);
+		}
+
+		$cnpj = preg_replace('/\D+/', '', (string)($cnpj ?? ''));
+		if (strlen($cnpj) !== 14) {
+			return $this->jsonResponse(['status' => 'ERROR', 'message' => 'CNPJ inválido'], 400);
+		}
+
+		$url = 'https://www.receitaws.com.br/v1/cnpj/' . $cnpj;
+
+		$context = stream_context_create([
+			'http' => [
+				'method' => 'GET',
+				'timeout' => 15,
+				'header' => [
+					'Accept: application/json',
+				],
+			],
+		]);
+
+		$result = @file_get_contents($url, false, $context);
+		if ($result === false) {
+			return $this->jsonResponse(['status' => 'ERROR', 'message' => 'Falha ao acessar serviço de CNPJ'], 502);
+		}
+
+		$data = json_decode($result, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			return $this->jsonResponse(['status' => 'ERROR', 'message' => 'Retorno inválido do serviço de CNPJ'], 502);
+		}
+
+		return $this->jsonResponse($data, 200);
+	}
+
 	public function updateToken($idcliente) {
 		$this->autoRender = false;
 
