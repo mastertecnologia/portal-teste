@@ -148,16 +148,18 @@
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+							<div class="col-lg-4 col-md-6 col-sm-12">
 								<div class="form-group">
-									<label class="control-label text-muted"> E-mail faturamento </label>
-									<?= $this->Form->email('email', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o e-mail', $disabled]) ?>
+									<label class="control-label text-muted">E-mail de faturamento</label>
+									<?= $this->Form->email('email', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: financeiro@cliente.com.br', $disabled]) ?>
+									<small class="form-text text-muted">Utilizado para envio de notas, boletos e comunicações financeiras.</small>
 								</div>
 							</div>
-							<div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+							<div class="col-lg-8 col-md-6 col-sm-12">
 								<div class="form-group">
-									<label class="control-label text-muted"> E-mail responsáveis </label>
-									<?= $this->Form->text('emailresponsavel', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o e-mail', $disabled]) ?>
+									<label class="control-label text-muted">E-mails de contato / responsáveis</label>
+									<?= $this->Form->text('emailresponsavel', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Ex.: ti@cliente.com.br; suporte@cliente.com.br', $disabled]) ?>
+									<small class="form-text text-muted">Informe um ou mais e-mails separados por ponto e vírgula para avisos gerais, suporte e comunicações operacionais.</small>
 								</div>
 							</div>
 						</div>
