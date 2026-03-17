@@ -1,46 +1,157 @@
 <meta http-equiv="refresh" content="180; URL=<?= $this->Url->build(["controller" => "Users", "action" => "dashboard"]) ?>">
-<style>
-	.card1{
-		margin-left: 1%;
-		height: 500px;
-		max-height: 500px;
-		overflow: hidden;
-	}
-	.cardcontadores{ height: 153px; }
-	.card2{ max-height: 500px; }
-	.table td, .table th { padding: 0.4rem;	}
-</style>
+<?= $this->Html->css('dist/css/dashboard-erp.css') ?>
 <!-- Dashboard para os funcionários -->
 <?php if($role == 0){?>
-	<!-- Tickets Pendentes -->
-	<div class="col-md-6 col-xs-12">
-		<div class="card card2">
-			<div class="card-body">
-				<div class="message-box" id="tickets-pendentes" style="height: 450px;position: relative;">
-					<div class="message-widget message-scroll">
-						<h5 class="card-title"> Tickets Aguardando Técnico </h5>
-						<div class="table-responsive">	
-							<table class="table table-hover table-row-clickable" id="tableTickets">
-								<thead class="text-primary">
-									<th>ID</th>
-									<th>Cliente</th>
-									<th>Data</th>
-								</thead>
-								<tbody>
-									<?php foreach ($ticketsPendentesTable as $reg): ?>
+	<div class="dash-erp">
+		<div class="dash-erp-header">
+			<div>
+				<h2 class="dash-erp-title">Dashboard</h2>
+				<p class="dash-erp-subtitle">Visão operacional rápida: chamados e aprovações pendentes.</p>
+			</div>
+		</div>
+
+		<div class="dash-erp-kpis">
+			<div class="dash-erp-kpi">
+				<div class="dash-erp-kpi-icon"><i class="fas fa-ticket-alt"></i></div>
+				<div class="dash-erp-kpi-meta">
+					<p class="dash-erp-kpi-label">Tickets aguardando técnico</p>
+					<p class="dash-erp-kpi-value"><?= count($ticketsPendentesTable ?? []) ?></p>
+				</div>
+				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'index']) ?>">Abrir lista</a>
+			</div>
+			<div class="dash-erp-kpi">
+				<div class="dash-erp-kpi-icon"><i class="fas fa-play-circle"></i></div>
+				<div class="dash-erp-kpi-meta">
+					<p class="dash-erp-kpi-label">Tickets em execução</p>
+					<p class="dash-erp-kpi-value"><?= count($ticketsSendoResolvidosTable ?? []) ?></p>
+				</div>
+				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'index']) ?>">Acompanhar</a>
+			</div>
+			<div class="dash-erp-kpi">
+				<div class="dash-erp-kpi-icon"><i class="fas fa-user-lock"></i></div>
+				<div class="dash-erp-kpi-meta">
+					<p class="dash-erp-kpi-label">Requisições de acesso</p>
+					<p class="dash-erp-kpi-value"><?= count($usuariosBloqueadosTable ?? []) ?></p>
+				</div>
+				<a class="dash-erp-kpi-link" href="#req-acesso">Ver solicitações</a>
+			</div>
+		</div>
+
+		<div class="row">
+			<!-- Tickets Pendentes -->
+			<div class="col-lg-6 col-md-12">
+				<div class="dash-erp-card">
+					<div class="dash-erp-card-header">
+						<h5 class="dash-erp-card-title">Tickets aguardando técnico</h5>
+						<span class="dash-erp-card-badge"><?= count($ticketsPendentesTable ?? []) ?></span>
+					</div>
+					<div class="dash-erp-card-body">
+						<div class="dash-erp-scroll" id="tickets-pendentes">
+							<div class="table-responsive">
+								<table class="dash-erp-table">
+									<thead>
 										<tr>
-											<td><a class='link p-0' target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->id ?></td>
-											<td><a class='link p-0' target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></td>
-											<td><a class='link p-0' target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></td>
+											<th>ID</th>
+											<th>Cliente</th>
+											<th>Data</th>
 										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
+									</thead>
+									<tbody>
+										<?php foreach (($ticketsPendentesTable ?? []) as $reg): ?>
+											<?php $urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]); ?>
+											<tr>
+												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->id ?></a></td>
+												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
+												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= date_format($reg->created, 'd/m/Y') ?></a></td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<!-- <div class="col-lg-2 p-r-0 p-l-0 card1">
+
+			<!-- Tickets em andamento -->
+			<div class="col-lg-6 col-md-12">
+				<div class="dash-erp-card">
+					<div class="dash-erp-card-header">
+						<h5 class="dash-erp-card-title">Tickets em execução</h5>
+						<span class="dash-erp-card-badge"><?= count($ticketsSendoResolvidosTable ?? []) ?></span>
+					</div>
+					<div class="dash-erp-card-body">
+						<div class="dash-erp-scroll" id="tickets-sendo-resolvidos">
+							<div class="table-responsive">
+								<table class="dash-erp-table">
+									<thead>
+										<tr>
+											<th>ID</th>
+											<th>Cliente</th>
+											<th>Data</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php foreach (($ticketsSendoResolvidosTable ?? []) as $reg): ?>
+											<?php $urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]); ?>
+											<tr>
+												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->id ?></a></td>
+												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
+												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= date_format($reg->created, 'd/m/Y') ?></a></td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Requisições de acesso -->
+		<div class="row">
+			<div class="col-12" id="req-acesso">
+				<div class="dash-erp-card">
+					<div class="dash-erp-card-header">
+						<h5 class="dash-erp-card-title">Requisições de acesso</h5>
+						<span class="dash-erp-card-badge"><?= count($usuariosBloqueadosTable ?? []) ?></span>
+					</div>
+					<div class="dash-erp-card-body">
+						<div class="dash-erp-scroll" id="usuarios-bloqueados">
+							<div class="table-responsive">
+								<table class="dash-erp-table">
+									<thead>
+										<tr>
+											<th>Login</th>
+											<th>Nome do Cliente</th>
+											<th>CNPJ do Cliente</th>
+											<th>Empresa</th>
+											<th style="width: 120px;">Ação</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php foreach (($usuariosBloqueadosTable ?? []) as $reg): ?>
+											<tr>
+												<td><?= h($reg->username) ?></td>
+												<td><?= h($reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial) ?></td>
+												<td><?= h($reg->cliente->tipo == C_ClientesTipoFisica ? formatCnpjCpf($reg->cliente->cpf) : formatCnpjCpf($reg->cliente->cnpj)) ?></td>
+												<td><?= h($reg->empresasusers[0]->empresa->nomefantasia ?? '') ?></td>
+												<td class="dash-erp-actions">
+													<a class="btn btn-success btn-sm" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'desbloquear', $reg->id]) ?>">Liberar</a>
+												</td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- <div class="col-lg-2 p-r-0 p-l-0 card1">
 				<div class="card cardcontadores">
 					<div class="card-body">
 						<h5 class="card-title">Ordens Finalizadas</h5>
@@ -98,71 +209,6 @@
 					</div>
 				</div>
 			</div> -->
-		</div>
-	</div>
-	<!-- Tickets em andamento -->
-	<div class="col-md-6 col-xs-12">
-		<div class="card card2">
-			<div class="card-body">
-				<div class="message-box" id="tickets-sendo-resolvidos" style="height: 450px;position: relative;">
-					<div class="message-widget message-scroll">
-						<h5 class="card-title"> Tickets em execução </h5>
-						<div class="table-responsive">	
-							<table class="table table-hover table-row-clickable" id="tableTickets">
-								<thead class="text-primary">
-									<th>ID</th>
-									<th>Cliente</th>
-									<th>Data</th>
-								</thead>
-								<tbody>
-									<?php foreach ($ticketsSendoResolvidosTable as $reg): ?>
-										<tr>
-											<td><a class='link p-0' target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->id ?></td>
-											<td><a class='link p-0' target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></td>
-											<td><a class='link p-0' target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- Usuários -->
-	<div class="col-12">
-		<div class="card card2">
-			<div class="card-body">
-				<div class="message-box" id="usuarios-bloqueados" style="height: 450px;position: relative;">
-					<div class="message-widget message-scroll">
-						<h5 class="card-title">Requisições de acesso</h5>
-						<div class="table-responsive">	
-							<table class="table table-hover table-row-clickable" id="tableTickets">
-								<thead class="text-primary">
-									<th>Login</th>
-									<th>Nome do Cliente</th>
-									<th>CNPJ do Cliente</th>
-									<th>Empresa</th>
-									<th>Ação</th>
-								</thead>
-								<tbody>
-									<?php foreach ($usuariosBloqueadosTable as $reg): ?>
-										<tr>
-											<td> <?= $reg->username ?> </td>
-											<td> <?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?> </td>
-											<td> <?= $reg->cliente->tipo == C_ClientesTipoFisica ? formatCnpjCpf($reg->cliente->cpf) : formatCnpjCpf($reg->cliente->cnpj) ?> </td>
-											<td> <?= $reg->empresasusers[0]->empresa->nomefantasia ?> </td>
-											<td> <a class='btn btn-success btn-sm p-1' href='<?= $this->Url->build(["controller" => "Users", "action" => "desbloquear", $reg->id]) ?>'> Liberar  </a></td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
 	</div>
 <?php }else{ ?>
 	<!-- Totalizadores -->

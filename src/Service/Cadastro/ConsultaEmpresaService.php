@@ -114,7 +114,7 @@ class ConsultaEmpresaService
                 if (!$this->ieProvider->isConfigurado()) {
                     $resultado['dados']['inscricao_estadual'] = $this->ieVazio('NAO_EXECUTADO');
                     $resultado['status_consultas']['inscricao_estadual'] = StatusConsulta::NAO_EXECUTADO;
-                    $resultado['avisos'][] = 'Inscrição Estadual (IE): configure SINTEGRA_API_KEY no servidor para consulta automática (SEFAZ/SINTEGRA).';
+                    $resultado['avisos'][] = 'Inscrição Estadual (IE) não preenchida: configure SINTEGRA_API_KEY no .env ou app_local.php do servidor. Chave em https://sintegrapi.com.br (campo IE pode ser preenchido manualmente).';
                 } else {
                     $ie = $this->ieProvider->consultar($cnpjLimpo, $uf);
                     if ($ie !== null) {
