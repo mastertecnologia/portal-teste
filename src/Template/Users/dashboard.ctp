@@ -29,20 +29,20 @@
 				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'index']) ?>">Acompanhar</a>
 			</div>
 			<div class="dash-erp-kpi">
-				<div class="dash-erp-kpi-icon"><i class="fas fa-user-lock"></i></div>
-				<div class="dash-erp-kpi-meta">
-					<p class="dash-erp-kpi-label">Requisições de acesso</p>
-					<p class="dash-erp-kpi-value"><?= count($usuariosBloqueadosTable ?? []) ?></p>
-				</div>
-				<a class="dash-erp-kpi-link" href="#req-acesso">Ver solicitações</a>
-			</div>
-			<div class="dash-erp-kpi">
 				<div class="dash-erp-kpi-icon"><i class="fas fa-check-circle"></i></div>
 				<div class="dash-erp-kpi-meta">
 					<p class="dash-erp-kpi-label">Tickets finalizados</p>
 					<p class="dash-erp-kpi-value"><?= count($ticketsFinalizadosTable ?? []) ?></p>
 				</div>
-				<a class="dash-erp-kpi-link" href="#tickets-finalizados">Ver finalizados</a>
+				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'index', '?' => ['situacao' => 'finalizados']]) ?>">Ver finalizados</a>
+			</div>
+			<div class="dash-erp-kpi">
+				<div class="dash-erp-kpi-icon"><i class="fas fa-user-lock"></i></div>
+				<div class="dash-erp-kpi-meta">
+					<p class="dash-erp-kpi-label">Requisições de acesso</p>
+					<p class="dash-erp-kpi-value"><?= count($usuariosBloqueadosTable ?? []) ?></p>
+				</div>
+				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'index']) ?>#req-acesso">Ver solicitações</a>
 			</div>
 		</div>
 
@@ -118,82 +118,7 @@
 			</div>
 		</div>
 
-		<div class="row">
-			<!-- Tickets finalizados -->
-			<div class="col-lg-6 col-md-12" id="tickets-finalizados">
-				<div class="dash-erp-card">
-					<div class="dash-erp-card-header">
-						<h5 class="dash-erp-card-title">Tickets finalizados</h5>
-						<span class="dash-erp-card-badge"><?= count($ticketsFinalizadosTable ?? []) ?></span>
-					</div>
-					<div class="dash-erp-card-body">
-						<div class="dash-erp-scroll" id="tickets-finalizados-scroll">
-							<div class="table-responsive">
-								<table class="dash-erp-table">
-									<thead>
-										<tr>
-											<th>ID</th>
-											<th>Cliente</th>
-											<th>Finalizado</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php foreach (($ticketsFinalizadosTable ?? []) as $reg): ?>
-											<?php $urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]); ?>
-											<tr>
-												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->id ?></a></td>
-												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
-												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= !empty($reg->datafinalizado) ? h($reg->datafinalizado) : date_format($reg->modified ?? $reg->created, 'd/m/Y') ?></a></td>
-											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Requisições de acesso -->
-			<div class="col-12" id="req-acesso">
-				<div class="dash-erp-card">
-					<div class="dash-erp-card-header">
-						<h5 class="dash-erp-card-title">Requisições de acesso</h5>
-						<span class="dash-erp-card-badge"><?= count($usuariosBloqueadosTable ?? []) ?></span>
-					</div>
-					<div class="dash-erp-card-body">
-						<div class="dash-erp-scroll" id="usuarios-bloqueados">
-							<div class="table-responsive">
-								<table class="dash-erp-table">
-									<thead>
-										<tr>
-											<th>Login</th>
-											<th>Nome do Cliente</th>
-											<th>CNPJ do Cliente</th>
-											<th>Empresa</th>
-											<th style="width: 120px;">Ação</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php foreach (($usuariosBloqueadosTable ?? []) as $reg): ?>
-											<tr>
-												<td><?= h($reg->username) ?></td>
-												<td><?= h($reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial) ?></td>
-												<td><?= h($reg->cliente->tipo == C_ClientesTipoFisica ? formatCnpjCpf($reg->cliente->cpf) : formatCnpjCpf($reg->cliente->cnpj)) ?></td>
-												<td><?= h($reg->empresasusers[0]->empresa->nomefantasia ?? '') ?></td>
-												<td class="dash-erp-actions">
-													<a class="btn btn-success btn-sm" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'desbloquear', $reg->id]) ?>">Liberar</a>
-												</td>
-											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+		<!-- Sem grades extras: finalizados e requisições acessíveis pelas KPIs -->
 
 		<!-- <div class="col-lg-2 p-r-0 p-l-0 card1">
 				<div class="card cardcontadores">
@@ -411,7 +336,7 @@
 	</div>
 </div>
 <script>
-	$("#tickets-pendentes, #tickets-sendo-resolvidos, #tickets-finalizados-scroll, #usuarios-bloqueados").perfectScrollbar();
+	$("#tickets-pendentes, #tickets-sendo-resolvidos").perfectScrollbar();
 	<?php if(isset($bAtivarDuasEtapas) && isset($veiologin)) { ?> 
 		$('#modal-duasetapas').modal('toggle');
 	<?php } ?>
