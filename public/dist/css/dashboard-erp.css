@@ -184,3 +184,7 @@
   .dash-erp-card-body{ padding: 10px 10px 12px; }
 }
 
+@media (min-width: 1200px){
+  .dash-erp-kpi{ grid-column: span 3; }
+}
+
