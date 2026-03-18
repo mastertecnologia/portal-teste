@@ -98,7 +98,9 @@
     // Se o bootstrap-select estiver disponível no layout, melhora o UX do multi-select.
     try {
       if (window.jQuery && jQuery.fn && jQuery.fn.selectpicker) {
-        jQuery('.selectpicker').selectpicker();
+        jQuery(function(){
+          jQuery('.selectpicker').selectpicker();
+        });
       }
     } catch (e) {}
   })();
