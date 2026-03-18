@@ -3,6 +3,10 @@
 		max-width: 100%;
 		height: 50%;
 	}
+	@media print {
+		.col-btns { display: none !important; }
+		.col-print { margin-top: 0 !important; }
+	}
 	
 	.col-btns { 
 		background-color: white;
@@ -16,9 +20,12 @@
 		margin-top: 60px;
 	}
 </style>
-<div class="col-12 col-btns">
-	<?= $this->Html->link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-purple text-white btn-sm']) ?>
-</div>
+<?php $autoPrint = (bool)$this->request->getQuery('autoprint'); ?>
+<?php if (!$autoPrint) { ?>
+	<div class="col-12 col-btns">
+		<?= $this->Html->link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-purple text-white btn-sm']) ?>
+	</div>
+<?php } ?>
 <div class="col-12 col-print">
 	<div class="card">
 		<div class="card-body">
@@ -70,18 +77,24 @@
 	</div>
 </div>
 <script>
-	$('#btn-imprimir').click(function(e) {
-		e.preventDefault();
-		printBy();
-	});
-
-	setTimeout(() => {
-		printBy();
-	}, "1500");
-
-	function printBy(seletor){
-		var $print = $('.col-print').clone().addClass('print');
-		window.print();
-		$print.remove();
-	}
+	(function(){
+		var autoPrint = <?= $autoPrint ? 'true' : 'false' ?>;
+		function doPrint(){
+			window.print();
+		}
+		var btn = document.getElementById('btn-imprimir');
+		if (btn) {
+			btn.addEventListener('click', function(e){
+				e.preventDefault();
+				doPrint();
+			});
+		}
+		if (autoPrint) {
+			// Espera o layout/pintura do browser antes de abrir o diálogo
+			setTimeout(doPrint, 50);
+			window.onafterprint = function(){
+				try { window.close(); } catch (e) {}
+			};
+		}
+	})();
 </script>

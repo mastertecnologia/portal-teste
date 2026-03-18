@@ -79,7 +79,7 @@
 													if($reg->situacao != C_TicketSituacaoResolvido) echo $this->Html->link('<i class="fas fa-check"></i>', ["action" => "alterarsituacao", $reg->id, '2'], ['rel' => 'tooltip', 'title' => 'Resolvido', 'class' => 'btn btn-success btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 													if($reg->situacao != C_TicketSituacaoFechado) echo $this->Html->link('<i class="fa fa-times"></i>', ["action" => "cancelar", $reg->id], ['rel' => 'tooltip', 'title' => 'Fechado', 'class' => 'btn btn-danger btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 												} 
-												echo $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
+												echo $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id, "?" => ["autoprint" => 1]], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 											?>
 										</td>
 									</tr>
@@ -112,7 +112,7 @@
 												if($reg->situacao != C_TicketSituacaoEmandamento) echo $this->Html->link('<i class="fas fa-reply"></i>', ["action" => "alterarsituacao", $reg->id, '1'], ['rel' => 'tooltip', 'title' => 'Em execução', 'class' => 'btn btn-info btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 												echo $this->Html->link('<i class="fas fa-check"></i>', ["action" => "alterarsituacao", $reg->id, '2'], ['rel' => 'tooltip', 'title' => 'Resolvido', 'class' => 'btn btn-success btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 												echo $this->Html->link('<i class="fa fa-times"></i>', ["action" => "cancelar", $reg->id], ['rel' => 'tooltip', 'title' => 'Cancelar', 'class' => 'btn btn-danger btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
-												echo $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
+												echo $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id, "?" => ["autoprint" => 1]], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 											?>
 										</td>
 									</tr>
@@ -145,7 +145,7 @@
 												if($reg->situacao != C_TicketSituacaoPendente) echo $this->Html->link('<i class="fas fa-reply"></i>', ["action" => "alterarsituacao", $reg->id, '0'], ['rel' => 'tooltip', 'title' => 'Aguardando técnico', 'class' => 'btn btn-warning btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 												echo $this->Html->link('<i class="fas fa-check"></i>', ["action" => "alterarsituacao", $reg->id, '2'], ['rel' => 'tooltip', 'title' => 'Resolvido', 'class' => 'btn btn-success btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 												echo $this->Html->link('<i class="fa fa-times"></i>', ["action" => "cancelar", $reg->id], ['rel' => 'tooltip', 'title' => 'Cancelar', 'class' => 'btn btn-danger btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
-												echo $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
+												echo $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id, "?" => ["autoprint" => 1]], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]);
 											?>
 										</td>
 									</tr>
@@ -175,7 +175,7 @@
 										<td> <a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'> <?= AssuntoTicket($reg->assunto) ?></a></td>
 										<td> <a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'> <?php if($reg->cliente->tipo == 1){ echo $reg->cliente->nome;} else {echo $reg->cliente->razaosocial;} ?></a></td>
 										<td class="td-actions">
-											<?= $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]); ?>
+											<?= $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id, "?" => ["autoprint" => 1]], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]); ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -204,7 +204,7 @@
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= AssuntoTicket($reg->assunto) ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?php if($reg->cliente->tipo == 1){ echo $reg->cliente->nome;} else {echo $reg->cliente->razaosocial;} ?></a></td>
 										<td class="td-actions">
-											<?= $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]); ?>
+											<?= $this->Html->link('<i class="fa fa-print"></i>', ["action" => "imprimir", $reg->id, "?" => ["autoprint" => 1]], ['rel' => 'tooltip', 'title' => 'Imprimir', 'target' => '_blank', 'class' => 'btn btn-purple btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]); ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>

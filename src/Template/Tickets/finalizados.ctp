@@ -45,7 +45,7 @@
                   <?php
                     $urlTicketEdit = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]);
                     $urlTicketView = $this->Url->build(["controller" => "Tickets", "action" => "viewModal", $reg->id]);
-                    $urlTicketPrint = $this->Url->build(["controller" => "Tickets", "action" => "imprimir", $reg->id]);
+                    $urlTicketPrint = $this->Url->build(["controller" => "Tickets", "action" => "imprimir", $reg->id, "?" => ["autoprint" => 1]]);
                     $urlTicketEmail = $this->Url->build(["controller" => "Tickets", "action" => "email", $reg->id, "redirect"]);
 
                     $clienteNome = ($reg->cliente->tipo == C_ClientesTipoFisica) ? $reg->cliente->nome : $reg->cliente->razaosocial;
