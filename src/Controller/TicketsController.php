@@ -1060,10 +1060,8 @@ class TicketsController extends AppController {
 
 			$cliente = null;
 			try {
-				$cliente = $this->Clientes->find()
-					->select(['id', 'email', 'emailresponsavel'])
-					->where(['id' => $ticket->idcliente])
-					->first();
+				$this->loadModel('Clientes');
+				$cliente = $this->Clientes->findById($ticket->idcliente)->first();
 			} catch (\Throwable $e) {}
 
 			$sugestoes = [];
@@ -1081,8 +1079,12 @@ class TicketsController extends AppController {
 			$push($ticket->email ?? '');
 			$push($ticket->user->email ?? '');
 			$push($ticket->cliente->email ?? '');
-			$push($cliente->email ?? '');
-			$push($cliente->emailresponsavel ?? '');
+			if ($cliente) {
+				$push($cliente->email ?? '');
+				$push($cliente->emailresponsavel ?? '');
+			}
+			// fallback: caso o contain venha com dados mas o findById não
+			$push($ticket->cliente->emailresponsavel ?? '');
 
 			$sugestoes = array_values(array_unique($sugestoes));
 
