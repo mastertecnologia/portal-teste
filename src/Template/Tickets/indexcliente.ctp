@@ -187,14 +187,24 @@
 			var iframe = document.getElementById('modal-ticket-client-iframe');
 			var title = document.getElementById('modal-ticket-client-title');
 			if (title) title.textContent = ticketId ? ('Ticket #' + ticketId) : 'Ticket';
-			if (iframe) iframe.src = url || 'about:blank';
+			if (iframe) {
+				if (!url) {
+					iframe.src = 'about:blank';
+				} else {
+					// Normaliza para URL absoluta para evitar perda do prefixo do app
+					// (ex.: quando a página está montada em subpasta).
+					var abs = url;
+					try { abs = new URL(url, window.location.href).toString(); } catch (e) {}
+					iframe.src = abs;
+				}
+			}
 			$('#modal-ticket-client').modal('show');
 		}
 
 		// Clique na linha (sem interferir nas ações)
 		$('#table-todos tbody').on('click', 'tr.ticket-row', function(ev){
 			if ($(ev.target).closest('.td-actions').length) return;
-			var url = $(this).find('a[data-open-ticket-modal="1"]').attr('data-url-ticket-modal');
+			var url = $(this).find('a[data-open-ticket-modal="1"]').attr('href');
 			var ticketId = $(this).find('span.ticket-id').text().trim();
 			if (url) openTicketModal(url, ticketId);
 		});
@@ -203,7 +213,7 @@
 		$('#table-todos').on('click', 'a[data-open-ticket-modal="1"]', function(ev){
 			ev.preventDefault();
 			ev.stopPropagation();
-			var url = $(this).attr('data-url-ticket-modal') || $(this).attr('href');
+			var url = $(this).attr('href');
 			var ticketId = $(this).closest('tr.ticket-row').find('span.ticket-id').text().trim();
 			openTicketModal(url, ticketId);
 		});
