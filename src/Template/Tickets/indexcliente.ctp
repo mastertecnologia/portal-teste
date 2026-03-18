@@ -101,7 +101,7 @@
 								</td>
 								<td><?= SituacaoTicket($reg->situacao) ?></td>
 								<td class="td-actions ticket-actions">
-									<?= $this->Html->link('<i class="fas fa-eye"></i>', $urlViewModal, [
+									<?= $this->Html->link('<i class="fas fa-eye"></i>', '#', [
 										'rel' => 'tooltip',
 										'title' => 'Visualizar ticket',
 										'class' => 'btn btn-info btn-simple btn-xs',
