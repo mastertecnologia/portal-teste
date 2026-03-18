@@ -77,11 +77,17 @@
 						<?php foreach ($tickets as $reg): ?>							
 							<?php
 								$urlViewModal = $this->Url->build(['controller' => 'Tickets', 'action' => 'viewModal', $reg->id]);
-								// Normaliza para começar com "/" para evitar duplicar prefixo (ex.: /portal/portal/...)
-								if (is_string($urlViewModal)
-									&& strpos($urlViewModal, 'http') !== 0
-									&& substr($urlViewModal, 0, 1) !== '/') {
-									$urlViewModal = '/' . $urlViewModal;
+								// Normaliza duplicação de prefixo quando o APPBase/servidor gera URLs como:
+								// /portal/portal/tickets/view-modal/:id  (isso quebra o Cake e ele busca controller "Portal").
+								// A correção abaixo reduz para /portal/tickets/view-modal/:id.
+								if (is_string($urlViewModal) && $urlViewModal !== '') {
+									// garante leading slash apenas para caminhos relativos
+									if (strpos($urlViewModal, 'http') !== 0 && substr($urlViewModal, 0, 1) !== '/') {
+										$urlViewModal = '/' . $urlViewModal;
+									}
+									$urlViewModal = preg_replace('#/portal/portal/#', '/portal/', $urlViewModal);
+									// caso termine com /portal/portal (raro, mas deixa seguro)
+									$urlViewModal = preg_replace('#/portal/portal$#', '/portal', $urlViewModal);
 								}
 							?>
 							<tr class="ticket-row" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
