@@ -89,7 +89,6 @@
 							<tr
 								class="ticket-row"
 								data-url-view="<?= h((string)$urlView) ?>"
-								onclick="window.location.href=<?= json_encode((string)$urlView) ?>;"
 								style="cursor:pointer;"
 								rel="popover"
 								data-trigger="hover"
@@ -187,14 +186,18 @@
 		table.search(filters).draw();
 
 		// Clique no ticket abre a visualização completa.
-		// Usamos listener delegado no document para funcionar mesmo quando o DataTables
-		// recria o tbody durante paginação/filtros.
-		$(document).off('click.ticketRow').on('click.ticketRow', '#table-todos tbody tr.ticket-row', function(ev){
-			// Não abre se o clique for em algum botão/link
-			if ($(ev.target).closest('a,button').length) return;
+		// Captura o clique em fase de captura para não depender de propagação/bloqueio
+		// de handlers internos (ex.: botão do status renderizado por SituacaoTicket()).
+		document.addEventListener('click', function(ev) {
+			var row = ev.target && ev.target.closest ? ev.target.closest('#table-todos tbody tr.ticket-row') : null;
+			if (!row) return;
 
-			var url = this.getAttribute('data-url-view') || '';
+			var url = row.getAttribute('data-url-view') || '';
 			if (!url) return;
+
+			// Evita ação padrão de links/botões internos.
+			if (ev.preventDefault) ev.preventDefault();
+			if (ev.stopPropagation) ev.stopPropagation();
 
 			// Normalização defensiva: remove repetição de /portal/portal/
 			while (url.indexOf('/portal/portal/') !== -1) {
@@ -207,6 +210,17 @@
 
 			if (DEBUG_TICKETS) {
 				console.log('[Tickets/indexcliente] ticket click redirect', { ticketUrl: url });
+			}
+			window.location.href = url;
+		}, true);
+
+		// (Fallback) Listener delegado no document para cenários sem `closest`.
+		$(document).off('click.ticketRow').on('click.ticketRow', '#table-todos tbody tr.ticket-row', function(ev){
+			var url = this.getAttribute('data-url-view') || '';
+			if (!url) return;
+
+			if (DEBUG_TICKETS) {
+				console.log('[Tickets/indexcliente] ticket click (fallback) redirect', { ticketUrl: url });
 			}
 			window.location.href = url;
 		});
