@@ -58,6 +58,48 @@
     background:#fff;
   }
   .tv-desc img{ max-width: 100%; height:auto; }
+  .tv-section{ padding: 0 16px 16px; }
+  .tv-section h3{ margin: 16px 0 10px; font-size: 13px; font-weight: 900; color:#0f172a; }
+  .tv-list{
+    border:1px solid rgba(15,23,42,.08);
+    border-radius: 12px;
+    background:#fff;
+    overflow:hidden;
+  }
+  .tv-row{
+    padding: 10px 12px;
+    border-top:1px solid rgba(15,23,42,.08);
+  }
+  .tv-row:first-child{ border-top:0; }
+  .tv-row-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .tv-row-title{ font-weight: 900; color:#0f172a; font-size: 12px; }
+  .tv-row-meta{ color:#64748b; font-size: 11px; white-space: nowrap; }
+  .tv-row-body{ color:#0f172a; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+  .tv-table-wrap{
+    border:1px solid rgba(15,23,42,.08);
+    border-radius: 12px;
+    overflow:auto;
+    background:#fff;
+  }
+  .tv-table{ width:100%; border-collapse: collapse; }
+  .tv-table th, .tv-table td{ padding: 10px 12px; border-bottom:1px solid rgba(15,23,42,.08); font-size: 12px; text-align:left; }
+  .tv-table th{ font-size: 11px; color:#64748b; text-transform: uppercase; letter-spacing:.04em; }
+  .tv-table td{ color:#0f172a; }
+  .tv-pill{
+    display:inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    background:#eef2ff;
+    color:#3730a3;
+  }
   @media (max-width: 900px){
     .tv-item{ grid-column: span 6; }
   }
@@ -108,6 +150,142 @@
         <?= $ticket->solicitacao ?>
       </div>
     </div>
+
+    <div class="tv-section">
+      <h3>Comentários <span class="tv-pill"><?= (int)count($ticketcomentarios ?? []) ?></span></h3>
+      <div class="tv-list">
+        <?php if (!empty($ticketcomentarios)) { ?>
+          <?php foreach (array_reverse($ticketcomentarios) as $comentario) { ?>
+            <div class="tv-row">
+              <div class="tv-row-top">
+                <div class="tv-row-title"><?= h($comentario['Users']['name'] ?? '') ?></div>
+                <div class="tv-row-meta">
+                  <?= !empty($comentario->created) ? h(date_format($comentario->created, 'd/m/Y H:i')) : '' ?>
+                </div>
+              </div>
+              <div class="tv-row-body"><?= h($comentario->comentario ?? '') ?></div>
+            </div>
+          <?php } ?>
+        <?php } else { ?>
+          <div class="tv-row">
+            <div class="tv-row-body">Nenhum comentário encontrado.</div>
+          </div>
+        <?php } ?>
+      </div>
+    </div>
+
+    <div class="tv-section">
+      <h3>Movimentações <span class="tv-pill"><?= (int)count($ticketsmovs ?? []) ?></span></h3>
+      <div class="tv-list">
+        <?php if (!empty($ticketsmovs)) { ?>
+          <?php foreach (array_reverse($ticketsmovs) as $reg) { ?>
+            <?php
+              $data = $reg['datetime'] ?? null;
+              $dataTexto = '';
+              if ($data) {
+                try {
+                  $dataTexto = $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y H:i');
+                } catch (\Throwable $e) {
+                  $dataTexto = (string)$data;
+                }
+              }
+              $autorMov = $reg['user']->name ?? '';
+              $obs = $reg['observacao'] ?? '';
+              $sitantiga = $reg['sitantiga'] ?? null;
+              $sitnova = $reg['sitnova'] ?? null;
+              $msg = null;
+              if ($sitnova === C_TicketAnexoAdicionado) $msg = "Anexo adicionado: " . $obs;
+              else if ($sitnova === C_TicketAnexoDeletado) $msg = "Anexo deletado: " . $obs;
+              else if ($sitantiga !== null && $sitnova !== null) {
+                $msg = "Situação: " . SituacaoTicket($sitantiga) . " → " . SituacaoTicket($sitnova);
+                if (!empty($obs)) $msg .= "\nObs.: " . $obs;
+              } else {
+                $msg = !empty($obs) ? $obs : 'Movimentação registrada.';
+              }
+            ?>
+            <div class="tv-row">
+              <div class="tv-row-top">
+                <div class="tv-row-title"><?= h($autorMov) ?></div>
+                <div class="tv-row-meta"><?= h($dataTexto) ?></div>
+              </div>
+              <div class="tv-row-body"><?= h($msg) ?></div>
+            </div>
+          <?php } ?>
+        <?php } else { ?>
+          <div class="tv-row">
+            <div class="tv-row-body">Nenhuma movimentação encontrada.</div>
+          </div>
+        <?php } ?>
+      </div>
+    </div>
+
+    <div class="tv-section">
+      <h3>Anexos <span class="tv-pill"><?= (int)count($ticketanexos ?? []) ?></span></h3>
+      <div class="tv-table-wrap">
+        <table class="tv-table">
+          <thead>
+            <tr>
+              <th>Arquivo</th>
+              <th style="width:120px">Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (!empty($ticketanexos)) { ?>
+              <?php foreach ($ticketanexos as $reg) { ?>
+                <tr>
+                  <td><?= h($reg->arquivo ?? '') ?></td>
+                  <td>
+                    <?= $this->Html->link('Baixar', ["controller" => "Tickets", "action" => "downloadAnexo", $reg->id], ['target' => '_blank', 'rel' => 'noopener', 'class' => 'btn btn-info btn-sm', 'escape' => false]) ?>
+                  </td>
+                </tr>
+              <?php } ?>
+            <?php } else { ?>
+              <tr>
+                <td colspan="2">Nenhum anexo encontrado.</td>
+              </tr>
+            <?php } ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <?php if (($role ?? null) == 0) { ?>
+      <div class="tv-section">
+        <h3>Horas cadastradas <span class="tv-pill"><?= (int)count($ticketshoras ?? []) ?></span></h3>
+        <div class="tv-table-wrap">
+          <table class="tv-table">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Data</th>
+                <th>Horário</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if (!empty($ticketshoras)) { ?>
+                <?php foreach ($ticketshoras as $reg) { ?>
+                  <tr>
+                    <td><?= h($reg->user->username ?? '') ?></td>
+                    <td><?= !empty($reg->data) ? h(date_format($reg->data, 'd/m/Y')) : '' ?></td>
+                    <td>
+                      <?php
+                        $ini = !empty($reg->horaini) ? date_format($reg->horaini, 'H:i') : '';
+                        $fim = !empty($reg->horafin) ? date_format($reg->horafin, 'H:i') : '';
+                        echo h(trim($ini . ($fim ? " - $fim" : '')));
+                      ?>
+                    </td>
+                  </tr>
+                <?php } ?>
+              <?php } else { ?>
+                <tr>
+                  <td colspan="3">Nenhum registro de horas encontrado.</td>
+                </tr>
+              <?php } ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <?php } ?>
   </div>
 </div>
 

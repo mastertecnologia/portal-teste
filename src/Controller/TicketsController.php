@@ -265,7 +265,13 @@ class TicketsController extends AppController {
 	 */
 	public function viewModal($idticket = null) {
 		$idempresa = $this->Auth->user('idempresa');
-		$this->set('title', 'Ticket');
+		$idcliente = $this->Auth->user('idcliente');
+		$role = $this->Auth->user('role');
+		$admin = (bool)$this->Auth->user('admin');
+		$permissaoacesso = (bool)$this->Auth->user('permissaoacesso');
+		$iduser = $this->Auth->user('id');
+
+		$this->set('title', "Ticket $idticket");
 		$this->viewBuilder()->setLayout('clear');
 
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])->where(['tickets.id' => $idticket])->first();
@@ -274,9 +280,9 @@ class TicketsController extends AppController {
 			return $this->response->withStringBody('Ticket não encontrado.')->withStatus(404);
 		}
 
-		// Permissão básica: manter regra atual de view (cliente só vê seus tickets)
-		if ($this->Auth->user('role') == C_RoleCliente) {
-			$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
+		// Permissões: manter regra do view()
+		if ($role == C_RoleCliente) {
+			$cliente = $this->Clientes->findById($idcliente)->order(['idempresa ASC'])->first();
 			if ($cliente->empresadominante == $cliente->idempresa) $clienteVerifica = $cliente;
 			else {
 				if ($cliente->tipo == C_ClientesTipoJuridica) $clienteVerifica = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj))->order(['idempresa DESC'])->first();
@@ -286,22 +292,53 @@ class TicketsController extends AppController {
 				$this->autoRender = false;
 				return $this->response->withStringBody('Sem permissão.')->withStatus(403);
 			}
-			if ($ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
+			if ($ticket->idautor != $iduser && !$permissaoacesso) {
 				$this->autoRender = false;
 				return $this->response->withStringBody('Sem permissão.')->withStatus(403);
 			}
 		}
 
-		$clienteNome = ($ticket->cliente->tipo == C_ClientesTipoFisica) ? $ticket->cliente->nome : $ticket->cliente->razaosocial;
-		$solicitante = null;
-		if (!empty($ticket->idsolicitante)) {
-			$sol = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
-			$solicitante = $sol ? $sol->name : null;
+		// Cliente
+		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo'])->first();
+		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? ($ticket->cliente->razaosocial ?? ''));
+
+		// Solicitante
+		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+
+		// Comentários (somente leitura no modal)
+		$ticketcomentarios = $this->Ticketcomentarios->find('all', [
+			'contain' => ['users'],
+			'fields' => ['Users.name', 'Users.role', 'Ticketcomentarios.comentario', 'Ticketcomentarios.created']
+		])->where(['Ticketcomentarios.idticket' => $idticket])->order(['Ticketcomentarios.id'])->toArray();
+
+		// Anexos (somente leitura no modal)
+		$ticketanexos = $this->Ticketsanexos->find('all')
+			->where(['idticket' => $idticket])
+			->toArray();
+
+		// Movimentações e horas (somente leitura no modal)
+		$ticketshoras = $this->Ticketshoras->find('all', ['contain' => 'Users'])->where(['idticket' => $idticket])->toArray();
+		$ticketsmovs = $this->Ticketsmovs->find('all', ['contain' => ['users']])->where(['idticket' => $ticket->id])->order('ticketsmovs.id')->toArray();
+
+		foreach (array_reverse($ticketsmovs) as $reg) {
+			if ($reg['sitnova'] == C_TicketSituacaoFechado && $reg['sitnova'] != $reg['sitantiga']) {
+				$this->set('bMovCancelada', true);
+				break;
+			}
 		}
 
+		$this->set('role', $role);
+		$this->set('admin', $admin);
+		$this->set('permissaoacesso', $permissaoacesso);
+		$this->set('iduser', $iduser);
+
+		$this->set('ticketsmovs', $ticketsmovs);
+		$this->set('ticketanexos', $ticketanexos);
+		$this->set('ticketshoras', $ticketshoras);
+		$this->set('ticketcomentarios', $ticketcomentarios);
 		$this->set('ticket', $ticket);
 		$this->set('clienteNome', $clienteNome);
-		$this->set('solicitante', $solicitante);
+		if (isset($solicitante->name)) $this->set('solicitante', $solicitante->name);
 	}
 
 	public function indexcliente(){
