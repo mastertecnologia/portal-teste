@@ -2,81 +2,54 @@
 	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Tickets', [], ['class' => 'breadcrumb-item active']);
 ?>
+<?= $this->Html->css('dist/css/dashboard-erp.css') ?>
 <style>
-	.popover-big { max-width: 500px; }
+	.popover-big { max-width: 520px; }
 	.td-actions{ width: 11%; }
-	.nav-link{
-		padding: 3%;
-		width: 110%;
-        transition: 0.5s;
-    }
-    .nav-link:hover{
-		padding: 0%;
-        cursor: pointer;
-    }
-    .nav-link.active{  padding: 0%; }
+	.tickets-erp-tabs{ display:flex; flex-wrap:wrap; gap:10px; margin: 6px 0 14px; }
+	.tickets-erp-tab{ border-radius: 12px; font-weight: 900; padding: 10px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:10px; }
+	.tickets-erp-tab .badge{ margin-left: 6px; }
+	.tickets-erp-tab.bg-queequaseinfo, .tickets-erp-tab.bg-dark, .tickets-erp-tab.bg-orange, .tickets-erp-tab.bg-info, .tickets-erp-tab.bg-success, .tickets-erp-tab.bg-danger { color:#fff; }
+	.tickets-erp-tab:not(.active){ opacity: .88; }
+	.tickets-erp-tab.active{ opacity: 1; box-shadow: 0 10px 24px rgba(15,23,42,.10); }
 </style>
-<div class="col-12">
-	<div class="card card-nav-tabs">
-		<div class="card-body">
-			<!-- tabs -->
-			<div class="row" >
-				<div class='m-r-30'>
-					<a class="nav-link btn-abrir-ticket" data-toggle="tab" href="#abrir" role="tab" aria-selected="false">
-						<div class="card">
-							<div class="box bg-queequaseinfo text-center">
-								<p class="text-white h5"> Abrir Ticket </p>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class='m-r-30'>
-					<a class="nav-link" data-toggle="tab" href="#todos" role="tab" aria-selected="false">
-						<div class="card">
-							<div class="box bg-dark text-center">
-								<p class="text-white h5"> Tickets Totais </p>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class='m-r-30'>
-					<a class="nav-link active" data-toggle="tab" href="#pendentes" role="tab" aria-selected="false">
-						<div class="card">
-							<div class="box bg-orange text-center">
-								<p class="text-white h5"> Aguardando Técnico </p>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class='m-r-30'>
-					<a class="nav-link" data-toggle="tab" href="#emandamento" role="tab" aria-selected="false">
-						<div class="card">
-							<div class="box bg-info text-center">
-								<p class="text-white h5"> Em execução </p>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class='m-r-30'>
-					<a class="nav-link" data-toggle="tab" href="#resolvidos" role="tab" aria-selected="false">
-						<div class="card">
-							<div class="box bg-success text-center">
-								<p class="text-white h5"> Resolvidos </p>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class='m-r-30'>
-					<a class="nav-link" data-toggle="tab" href="#fechados" role="tab" aria-selected="false">
-						<div class="card">
-							<div class="box bg-danger text-center">
-								<p class="text-white h5"> Cancelados </p>
-							</div>
-						</div>
-					</a>
-				</div>
+
+<div class="col-12 p-0">
+	<div class="dash-erp">
+		<div class="dash-erp-header">
+			<div>
+				<h2 class="dash-erp-title">Listagem de Tickets</h2>
+				<p class="dash-erp-subtitle">Gerencie tickets por situação, com visual corporativo e sem alterar integrações.</p>
 			</div>
-			<div class="tab-content">
+			<div>
+				<a class="btn btn-outline-secondary" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Voltar ao dashboard</a>
+			</div>
+		</div>
+
+		<div class="dash-erp-card">
+			<div class="dash-erp-card-body">
+				<div class="tickets-erp-tabs">
+					<a class="tickets-erp-tab bg-queequaseinfo btn-abrir-ticket" data-toggle="tab" href="#abrir" role="tab" aria-selected="false">
+						<i class="fas fa-plus-circle"></i> Abrir Ticket
+					</a>
+					<a class="tickets-erp-tab bg-dark" data-toggle="tab" href="#todos" role="tab" aria-selected="false">
+						<i class="fas fa-layer-group"></i> Tickets Totais
+					</a>
+					<a class="tickets-erp-tab bg-orange active" data-toggle="tab" href="#pendentes" role="tab" aria-selected="false">
+						<i class="fas fa-hourglass-half"></i> Aguardando Técnico
+					</a>
+					<a class="tickets-erp-tab bg-info" data-toggle="tab" href="#emandamento" role="tab" aria-selected="false">
+						<i class="fas fa-play-circle"></i> Em execução
+					</a>
+					<a class="tickets-erp-tab bg-success" data-toggle="tab" href="#resolvidos" role="tab" aria-selected="false">
+						<i class="fas fa-check-circle"></i> Resolvidos
+					</a>
+					<a class="tickets-erp-tab bg-danger" data-toggle="tab" href="#fechados" role="tab" aria-selected="false">
+						<i class="fas fa-times-circle"></i> Cancelados
+					</a>
+				</div>
+
+				<div class="tab-content">
 				<div class="tab-pane" id="todos">
 					<div class="table-responsive">
 						<table class="table table-hover table-row-clickable" id="table-todos">
@@ -243,6 +216,7 @@
 			</div>
 		</div>
 	</div>
+</div>
 </div>
 <script>
 	// Tabs

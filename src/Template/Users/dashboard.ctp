@@ -32,9 +32,9 @@
 				<div class="dash-erp-kpi-icon"><i class="fas fa-check-circle"></i></div>
 				<div class="dash-erp-kpi-meta">
 					<p class="dash-erp-kpi-label">Tickets finalizados</p>
-					<p class="dash-erp-kpi-value"><?= count($ticketsFinalizadosTable ?? []) ?></p>
+					<p class="dash-erp-kpi-value"><?= (int)($ticketsFinalizadosCount ?? 0) ?></p>
 				</div>
-				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'index', '?' => ['situacao' => 'finalizados']]) ?>">Ver finalizados</a>
+				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'finalizados']) ?>">Ver finalizados</a>
 			</div>
 			<div class="dash-erp-kpi">
 				<div class="dash-erp-kpi-icon"><i class="fas fa-user-lock"></i></div>

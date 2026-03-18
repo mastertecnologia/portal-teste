@@ -8,7 +8,8 @@
         <p class="dash-erp-subtitle">Solicitações feitas por clientes ao se cadastrarem. Libere com segurança mantendo a integração existente.</p>
       </div>
       <div>
-        <a class="btn btn-outline-secondary" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Voltar ao dashboard</a>
+        <a class="btn btn-outline-secondary m-r-10" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Voltar ao dashboard</a>
+        <button type="button" class="btn btn-outline-info" onclick="window.location.reload()">Atualizar</button>
       </div>
     </div>
 
@@ -18,9 +19,17 @@
         <span class="dash-erp-card-badge"><?= count($usuariosBloqueadosTable ?? []) ?></span>
       </div>
       <div class="dash-erp-card-body">
+        <div class="row m-b-10">
+          <div class="col-md-6 col-sm-12">
+            <input type="text" class="form-control" id="filtro-req-acesso" placeholder="Buscar por login, cliente, CPF/CNPJ, empresa..." />
+          </div>
+          <div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
+            Exibindo <span id="req-acesso-count"><?= count($usuariosBloqueadosTable ?? []) ?></span> registros
+          </div>
+        </div>
         <div class="dash-erp-scroll" id="req-acesso-scroll" style="max-height: 70dvh;">
           <div class="table-responsive">
-            <table class="dash-erp-table">
+            <table class="dash-erp-table" id="table-req-acesso">
               <thead>
                 <tr>
                   <th>Login</th>
@@ -53,5 +62,21 @@
 
 <script>
   $("#req-acesso-scroll").perfectScrollbar();
+  (function(){
+    var $input = $('#filtro-req-acesso');
+    var $rows = $('#table-req-acesso tbody tr');
+    function apply(){
+      var q = ($input.val() || '').toLowerCase().trim();
+      var shown = 0;
+      $rows.each(function(){
+        var t = $(this).text().toLowerCase();
+        var ok = q === '' || t.indexOf(q) !== -1;
+        $(this).toggle(ok);
+        if(ok) shown++;
+      });
+      $('#req-acesso-count').text(shown);
+    }
+    $input.on('input', apply);
+  })();
 </script>
 

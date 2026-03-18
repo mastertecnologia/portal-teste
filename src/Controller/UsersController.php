@@ -114,10 +114,14 @@ class UsersController extends AppController {
 				->where([ 'situacao IN' => [C_TicketSituacaoEmandamento], ])
 				->order(['Tickets.id DESC'])
 			->toArray();
+			$ticketsFinalizadosCount = $this->Tickets->findByIdempresa($empresa)
+				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
+				->count();
 			$usuariosBloqueadosTable = $this->Users->findByBloqueado(1)->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])->contain(['Empresasusers', 'Empresasusers.Empresas'])->toArray();
 			
 			$this->set('ticketsPendentesTable', $ticketsPendentesTable);
 			$this->set('ticketsSendoResolvidosTable', $ticketsSendoResolvidosTable);
+			$this->set('ticketsFinalizadosCount', $ticketsFinalizadosCount);
 			$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
 		} else {
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);

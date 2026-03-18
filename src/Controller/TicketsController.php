@@ -241,6 +241,25 @@ class TicketsController extends AppController {
 		$this->set('title', 'Listagem de Tickets');
 	}
 
+	public function finalizados() {
+		$this->set('title', 'Tickets finalizados');
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+
+		$empresa = $this->Auth->user('idempresa');
+		$ticketsFinalizados = $this->Tickets
+			->findByIdempresa($empresa)
+			->contain(['Users', 'Clientes'])
+			->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
+			->order(['Tickets.id DESC'])
+			->limit(500)
+			->toArray();
+
+		$this->set('ticketsFinalizados', $ticketsFinalizados);
+	}
+
 	public function indexcliente(){
 		$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
 		$assunto = $this->request->getQuery('assunto');
