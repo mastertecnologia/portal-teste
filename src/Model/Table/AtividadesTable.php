@@ -47,8 +47,9 @@ class AtividadesTable extends Table
 		$atividade->data = date('d/m/Y');
 		$atividade->hora = date('H:i');
 
+		// Table não possui Flash/redirect; em caso de falha, apenas sinaliza.
 		if (!$this->save($atividade)) {
-			$this->Flash->error(__('Não foi possível registrar a atividade.'));
+			return false;
 		}
 
 		return true;
