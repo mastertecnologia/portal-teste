@@ -51,18 +51,39 @@
             <div class="form-group">
               <label class="font-weight-bold">Sugestões</label>
               <?php if (!empty($sugestoes)) { ?>
-                <select class="form-control" id="email-sugestao-add">
-                  <option value="">Selecionar destinatário…</option>
-                  <?php foreach (($sugestoes ?? []) as $e): ?>
-                    <option value="<?= h($e) ?>"><?= h($e) ?></option>
-                  <?php endforeach; ?>
-                </select>
-
-                <div id="email-sugestoes-selecionadas" class="m-t-10"></div>
-
-                <small class="text-muted">
-                  Selecione os destinatários extras (não altera o campo “Para”). Você pode adicionar vários.
-                </small>
+                <?php $btnId = 'email-sugestoes-dd'; ?>
+                <div class="dropdown">
+                  <button
+                    class="btn btn-outline-secondary dropdown-toggle btn-block"
+                    type="button"
+                    id="<?= $btnId ?>"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    Destinatários extras (0)
+                  </button>
+                  <div
+                    class="dropdown-menu"
+                    style="width: 100%; max-height: 240px; overflow:auto; padding: 12px;"
+                    aria-labelledby="<?= $btnId ?>"
+                  >
+                    <?php foreach (($sugestoes ?? []) as $i => $e): ?>
+                      <div class="custom-control custom-checkbox m-b-10">
+                        <?= $this->Form->checkbox('sugestoes[]', [
+                          'id' => 'sug-extra-' . $i,
+                          'value' => $e,
+                          'hiddenField' => false,
+                          'class' => 'custom-control-input',
+                        ]) ?>
+                        <label class="custom-control-label" for="<?= 'sug-extra-' . $i ?>">
+                          <?= h($e) ?>
+                        </label>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </div>
+                <small class="text-muted">Selecione os destinatários extras (não altera o campo “Para”).</small>
               <?php } else { ?>
                 <div class="text-muted">Sem sugestões.</div>
               <?php } ?>
@@ -92,69 +113,28 @@
 
 <script>
   (function(){
-    var addSel = document.getElementById('email-sugestao-add');
-    var box = document.getElementById('email-sugestoes-selecionadas');
-    if (!addSel || !box) return;
+    var btn = document.getElementById('<?= $btnId ?>');
+    if (!btn) return;
 
-    function normList(list){
-      var out = [];
-      var seen = {};
-      for (var i=0;i<list.length;i++){
-        var v = (list[i] || '').trim();
-        if (!v) continue;
-        var k = v.toLowerCase();
-        if (seen[k]) continue;
-        seen[k] = true;
-        out.push(v);
-      }
-      return out;
+    function updateBtn(){
+      var checked = document.querySelectorAll('input[name="sugestoes[]"]:checked');
+      var n = checked ? checked.length : 0;
+      btn.textContent = 'Destinatários extras (' + n + ')';
     }
 
-    function currentValues(){
-      var inputs = box.querySelectorAll('input[name="sugestoes[]"]');
-      var vals = [];
-      for (var i=0;i<inputs.length;i++) vals.push(inputs[i].value || '');
-      return normList(vals);
+    // Não fechar o dropdown ao clicar no checkbox
+    var menu = btn.parentElement ? btn.parentElement.querySelector('.dropdown-menu') : null;
+    if (menu) {
+      menu.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
+        cb.addEventListener('click', function(e){ e.stopPropagation(); });
+      });
     }
 
-    function render(vals){
-      vals = normList(vals || []);
-      var html = '';
-      if (!vals.length) {
-        box.innerHTML = '<div class="text-muted" style="font-size:12px;">Nenhum destinatário selecionado.</div>';
-        return;
-      }
-      for (var i=0;i<vals.length;i++){
-        var v = vals[i];
-        html += '' +
-          '<div class="d-flex align-items-center justify-content-between border rounded p-5 m-b-5" style="gap:10px;background:#fff;">' +
-            '<div style="font-size:12px;word-break:break-word;">' + v.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
-            '<button type="button" class="btn btn-outline-danger btn-sm email-sug-remove" data-email="' + v.replace(/"/g,'&quot;') + '">Remover</button>' +
-            '<input type="hidden" name="sugestoes[]" value="' + v.replace(/"/g,'&quot;') + '" />' +
-          '</div>';
-      }
-      box.innerHTML = html;
-    }
-
-    addSel.addEventListener('change', function(){
-      var v = (addSel.value || '').trim();
-      if (!v) return;
-      var vals = currentValues();
-      vals.push(v);
-      render(vals);
-      addSel.value = '';
+    document.querySelectorAll('input[name="sugestoes[]"]').forEach(function(cb){
+      cb.addEventListener('change', updateBtn);
     });
 
-    box.addEventListener('click', function(e){
-      var btn = e.target && e.target.closest ? e.target.closest('.email-sug-remove') : null;
-      if (!btn) return;
-      var email = (btn.getAttribute('data-email') || '').trim();
-      var vals = currentValues().filter(function(x){ return x.toLowerCase() !== email.toLowerCase(); });
-      render(vals);
-    });
-
-    // estado inicial
-    render(currentValues());
+    updateBtn();
   })();
 </script>
 

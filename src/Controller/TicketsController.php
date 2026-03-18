@@ -1076,12 +1076,11 @@ class TicketsController extends AppController {
 				}
 			};
 
-			$push($ticket->email ?? '');
-			$push($ticket->user->email ?? '');
+			// Sugestões devem ser SOMENTE dos e-mails cadastrados no cliente
 			$push($ticket->cliente->email ?? '');
 			if ($cliente) {
-				$push($cliente->email ?? '');
 				$push($cliente->emailresponsavel ?? '');
+				$push($cliente->email ?? '');
 			}
 			// fallback: caso o contain venha com dados mas o findById não
 			$push($ticket->cliente->emailresponsavel ?? '');
