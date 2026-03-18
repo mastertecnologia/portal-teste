@@ -1058,9 +1058,6 @@ class TicketsController extends AppController {
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 			}
 
-			$cliente = null;
-			try { $cliente = $this->Clientes->findById($ticket->idcliente)->first(); } catch (\Throwable $e) {}
-
 			$sugestoes = [];
 			$push = function ($v) use (&$sugestoes) {
 				$v = (string)$v;
@@ -1076,7 +1073,7 @@ class TicketsController extends AppController {
 			$push($ticket->email ?? '');
 			$push($ticket->user->email ?? '');
 			$push($ticket->cliente->email ?? '');
-			$push($cliente->emailresponsavel ?? '');
+			$push($ticket->cliente->emailresponsavel ?? '');
 
 			$sugestoes = array_values(array_unique($sugestoes));
 
