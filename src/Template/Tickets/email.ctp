@@ -50,24 +50,25 @@
           <div class="col-lg-4">
             <div class="form-group">
               <label class="font-weight-bold">Sugestões</label>
-              <div class="border rounded p-10" style="max-height: 160px; overflow:auto; background:#fff;">
-                <?php if (!empty($sugestoes)) { ?>
-                  <?php foreach ($sugestoes as $i => $e): ?>
-                    <div class="custom-control custom-checkbox m-b-5">
-                      <?= $this->Form->checkbox('sugestoes[]', [
-                        'id' => 'sug-' . $i,
-                        'value' => $e,
-                        'hiddenField' => false,
-                        'class' => 'custom-control-input'
-                      ]) ?>
-                      <label class="custom-control-label" for="<?= 'sug-' . $i ?>"><?= h($e) ?></label>
-                    </div>
+              <?php if (!empty($sugestoes)) { ?>
+                <select
+                  class="form-control selectpicker"
+                  id="email-select-sugestoes"
+                  name="sugestoes[]"
+                  multiple
+                  data-live-search="true"
+                  data-actions-box="true"
+                  data-selected-text-format="count > 2"
+                  title="Selecionar destinatários…"
+                >
+                  <?php foreach (($sugestoes ?? []) as $e): ?>
+                    <option value="<?= h($e) ?>"><?= h($e) ?></option>
                   <?php endforeach; ?>
-                <?php } else { ?>
-                  <div class="text-muted">Sem sugestões.</div>
-                <?php } ?>
-              </div>
-              <small class="text-muted">Selecione os destinatários extras (não altera o campo “Para”).</small>
+                </select>
+                <small class="text-muted">Selecione os destinatários extras (não altera o campo “Para”).</small>
+              <?php } else { ?>
+                <div class="text-muted">Sem sugestões.</div>
+              <?php } ?>
             </div>
           </div>
         </div>
@@ -93,6 +94,13 @@
 </div>
 
 <script>
-  // Sem JS necessário: sugestões são seleção e o campo "Para" é manual.
+  (function(){
+    // Se o bootstrap-select estiver disponível no layout, melhora o UX do multi-select.
+    try {
+      if (window.jQuery && jQuery.fn && jQuery.fn.selectpicker) {
+        jQuery('.selectpicker').selectpicker();
+      }
+    } catch (e) {}
+  })();
 </script>
 
