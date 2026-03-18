@@ -159,12 +159,26 @@
 		});
 		table.search(filters).draw();
 
-		// Clique no ticket abre a visualização completa (sem iframe, evitando erros de prefixo APP_BASE).
-		$('#table-todos tbody').off('click.ticketRow').on('click.ticketRow', 'tr.ticket-row', function(ev){
-			// não abre se o clique for em algum botão/link futuro
+		// Clique no ticket abre a visualização completa.
+		// Usamos listener delegado no document para funcionar mesmo quando o DataTables
+		// recria o tbody durante paginação/filtros.
+		$(document).off('click.ticketRow').on('click.ticketRow', '#table-todos tbody tr.ticket-row', function(ev){
+			// Não abre se o clique for em algum botão/link
 			if ($(ev.target).closest('a,button').length) return;
-			var url = $(this).attr('data-url-view') || '';
-			if (url) window.location.href = url;
+
+			var url = this.getAttribute('data-url-view') || '';
+			if (!url) return;
+
+			// Normalização defensiva: remove repetição de /portal/portal/
+			while (url.indexOf('/portal/portal/') !== -1) {
+				url = url.replace('/portal/portal/', '/portal/');
+			}
+
+			if (url && url[0] !== '/' && url.indexOf('http') !== 0) {
+				url = '/' + url;
+			}
+
+			window.location.href = url;
 		});
 	});
 </script>
