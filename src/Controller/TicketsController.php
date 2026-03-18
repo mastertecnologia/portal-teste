@@ -1045,15 +1045,62 @@ class TicketsController extends AppController {
 			$redirect = 'redirect';
 		}
 
-		$emailDest = $this->Tickets->email($idticket, $situacao, null, $this->Auth->user('idempresa'));
+		// GET: exibe tela para selecionar/digitar destinatário (sem envio automático)
+		if (!$this->request->is(['post', 'put'])) {
+			$this->set('title', "Enviar e-mail - Ticket $idticket");
 
-		if(!empty($emailDest)){ 
+			$ticket = $this->Tickets->find()
+				->contain(['Users', 'Clientes'])
+				->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])
+				->first();
+			if (!$ticket) {
+				$this->Flash->error('Ticket não encontrado.');
+				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+			}
+
+			$cliente = null;
+			try { $cliente = $this->Clientes->findById($ticket->idcliente)->first(); } catch (\Throwable $e) {}
+
+			$sugestoes = [];
+			$push = function ($v) use (&$sugestoes) {
+				$v = (string)$v;
+				$v = str_replace(["\r", "\n", "\t"], ' ', $v);
+				$parts = preg_split('/[;,\\s]+/', $v, -1, PREG_SPLIT_NO_EMPTY);
+				foreach ($parts as $p) {
+					$p = trim($p);
+					if ($p === '') continue;
+					if (filter_var($p, FILTER_VALIDATE_EMAIL)) $sugestoes[] = $p;
+				}
+			};
+
+			$push($ticket->email ?? '');
+			$push($ticket->user->email ?? '');
+			$push($ticket->cliente->email ?? '');
+			$push($cliente->emailresponsavel ?? '');
+
+			$sugestoes = array_values(array_unique($sugestoes));
+
+			$this->set('ticket', $ticket);
+			$this->set('sugestoes', $sugestoes);
+			$this->set('situacao', $situacao);
+			$this->set('redirectAfter', $redirect);
+			return;
+		}
+
+		// POST: envia para destinatário(s) informado(s)
+		$emailInput = (string)($this->request->getData('para') ?? $this->request->getData('email') ?? '');
+		$emailDest = $this->Tickets->email($idticket, $situacao, $emailInput, $this->Auth->user('idempresa'));
+
+		if(!empty($emailDest)){
 			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $idticket);
 			if($this->Auth->user('role') == 0) $this->Flash->success("E-mail enviado com sucesso para '$emailDest'!");
+		} else {
+			$this->Flash->error('Erro ao enviar e-mail.');
+		}
 
-		} else $this->Flash->success('Erro ao enviar e-mail.');
-
-		if(!empty($redirect)) return $this->redirect(['action' => 'edit', $idticket]);
+		$redir = $this->request->getData('redirect') ?: $redirect;
+		if(!empty($redir)) return $this->redirect(['action' => 'edit', $idticket]);
+		return $this->redirect(['action' => 'finalizados']);
 	}
 
 	public function emailvarios() {
