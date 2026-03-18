@@ -1068,26 +1068,37 @@ class TicketsController extends AppController {
 			$push = function ($v) use (&$sugestoes) {
 				$v = (string)$v;
 				$v = str_replace(["\r", "\n", "\t"], ' ', $v);
+				if (trim($v) === '') return;
+
+				// Extrai e-mails por regex (robusto para formatos com ; / , / espaços).
+				$matches = [];
+				preg_match_all('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $v, $matches);
+				if (!empty($matches[0])) {
+					foreach ($matches[0] as $email) {
+						$email = trim((string)$email);
+						if ($email !== '') $sugestoes[] = $email;
+					}
+					return;
+				}
+
+				// fallback: tokens contendo @
 				$parts = preg_split('/[;,\\s]+/', $v, -1, PREG_SPLIT_NO_EMPTY);
 				foreach ($parts as $p) {
-					$p = trim($p);
+					$p = trim((string)$p);
 					if ($p === '') continue;
-					// Sugestões: tolerante para exibir os e-mails cadastrados.
-					// O envio final continua validando no TicketsTable::parseEmailList().
-					if (filter_var($p, FILTER_VALIDATE_EMAIL) || strpos($p, '@') !== false) {
-						$sugestoes[] = $p;
-					}
+					if (strpos($p, '@') !== false) $sugestoes[] = $p;
 				}
 			};
 
 			// Sugestões devem ser SOMENTE dos e-mails cadastrados no cliente
-			$push($ticket->cliente->email ?? '');
+			$ticketCliente = $ticket->cliente ?? null;
+			$push(is_object($ticketCliente) ? ($ticketCliente->email ?? '') : '');
+			$push(is_object($ticketCliente) ? ($ticketCliente->emailresponsavel ?? '') : '');
+
 			if ($cliente) {
-				$push($cliente->emailresponsavel ?? '');
 				$push($cliente->email ?? '');
+				$push($cliente->emailresponsavel ?? '');
 			}
-			// fallback: caso o contain venha com dados mas o findById não
-			$push($ticket->cliente->emailresponsavel ?? '');
 
 			$sugestoes = array_values(array_unique($sugestoes));
 
