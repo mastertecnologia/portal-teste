@@ -71,26 +71,22 @@
 						<th> Data </th>
 						<th> Assunto </th>
 						<th> Status </th>
-						<th> Ações </th>
 					</thead>
 					<tbody>
 						<?php foreach ($tickets as $reg): ?>							
 							<?php
-								$urlViewModal = $this->Url->build(['controller' => 'Tickets', 'action' => 'viewModal', $reg->id]);
+								$urlView = $this->Url->build(['controller' => 'Tickets', 'action' => 'view', $reg->id]);
 								// Normaliza duplicação de prefixo quando o APPBase/servidor gera URLs como:
-								// /portal/portal/tickets/view-modal/:id  (isso quebra o Cake e ele busca controller "Portal").
-								// A correção abaixo reduz para /portal/tickets/view-modal/:id.
-								if (is_string($urlViewModal) && $urlViewModal !== '') {
-									// garante leading slash apenas para caminhos relativos
-									if (strpos($urlViewModal, 'http') !== 0 && substr($urlViewModal, 0, 1) !== '/') {
-										$urlViewModal = '/' . $urlViewModal;
+								// /portal/portal/tickets/view/:id  (isso quebra rotas/dispatch dependendo do ambiente).
+								if (is_string($urlView) && $urlView !== '') {
+									if (strpos($urlView, 'http') !== 0 && substr($urlView, 0, 1) !== '/') {
+										$urlView = '/' . $urlView;
 									}
-									$urlViewModal = preg_replace('#/portal/portal/#', '/portal/', $urlViewModal);
-									// caso termine com /portal/portal (raro, mas deixa seguro)
-									$urlViewModal = preg_replace('#/portal/portal$#', '/portal', $urlViewModal);
+									$urlView = preg_replace('#/portal/portal/#', '/portal/', $urlView);
+									$urlView = preg_replace('#/portal/portal$#', '/portal', $urlView);
 								}
 							?>
-							<tr class="ticket-row" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+							<tr class="ticket-row" data-url-view="<?= h((string)$urlView) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 								<td><span class="ticket-id"><?= (int)$reg->id ?></span></td>
 								<td>
 									<div><?= date_format($reg->created, 'd/m/Y') ?></div>
@@ -100,41 +96,10 @@
 									<div class="ticket-meta"><?= h(mb_strimwidth((string)($reg->solicitacao ?? ''), 0, 60, '...')) ?></div>
 								</td>
 								<td><?= SituacaoTicket($reg->situacao) ?></td>
-								<td class="td-actions ticket-actions">
-									<?= $this->Html->link('<i class="fas fa-eye"></i>', '#', [
-										'rel' => 'tooltip',
-										'title' => 'Visualizar ticket',
-										'class' => 'btn btn-info btn-simple btn-xs',
-										'escape' => false,
-										'data-open-ticket-modal' => '1',
-										'data-url-ticket-modal' => (string)$urlViewModal,
-									]); ?>
-									<?php if(in_array($reg->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPendente]) && ($permissaoacesso || $reg->idautor == $iduser)) 
-										echo $this->Html->link('<i class="fa fa-times"></i>', ["action" => "cancelar", $reg->id], ['rel' => 'tooltip', 'title' => 'Cancelar', 'class' => 'btn btn-danger btn-simple btn-xs m-r-5', 'id' => $reg->id, 'escape' => false]); ?>
-								</td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
-			</div>
-		</div>
-	</div>
-</div>
-<!-- Modal: visualizar ticket no portal do cliente -->
-<div class="modal fade" id="modal-ticket-client" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<div>
-					<h5 class="modal-title m-0" id="modal-ticket-client-title">Ticket</h5>
-					<small class="text-muted">Visualização completa do ticket.</small>
-				</div>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-			</div>
-			<div class="modal-body p-0" style="height: 78vh;">
-				<iframe id="modal-ticket-client-iframe" title="Ticket" src="about:blank" style="width:100%; height:100%; border:0;"></iframe>
 			</div>
 		</div>
 	</div>
@@ -194,54 +159,12 @@
 		});
 		table.search(filters).draw();
 
-		// Abre viewModal no modal (evita navegação completa e melhora UX)
-		function openTicketModal(url, ticketId) {
-			var iframe = document.getElementById('modal-ticket-client-iframe');
-			var title = document.getElementById('modal-ticket-client-title');
-			if (title) title.textContent = ticketId ? ('Ticket #' + ticketId) : 'Ticket';
-			if (iframe) {
-				if (!url) {
-					iframe.src = 'about:blank';
-				} else {
-					// Normalização defensiva para remover duplicações no PATH
-					// (ex.: /portal/portal/tickets/... => /portal/tickets/...)
-					var abs = url;
-					try {
-						abs = new URL(url, window.location.href);
-						var p = abs.pathname || '';
-						while (p.indexOf('/portal/portal/') !== -1) {
-							p = p.replace('/portal/portal/', '/portal/');
-						}
-						p = p.replace(/\/portal\/portal$/g, '/portal');
-						abs.pathname = p;
-						iframe.src = abs.toString();
-					} catch (e) {
-						// fallback: não quebra o fluxo se URL não for parseável
-						iframe.src = url;
-					}
-				}
-			}
-			$('#modal-ticket-client').modal('show');
-		}
-
-		// Clique na linha (sem interferir nas ações)
-		$('#table-todos tbody').on('click', 'tr.ticket-row', function(ev){
-			if ($(ev.target).closest('.td-actions').length) return;
-			var link = $(this).find('a[data-open-ticket-modal="1"]')[0];
-			// Importante: usamos o data-url-ticket-modal (correto) e não o href
-			// (que pode vir com /portal/portal duplicado dependendo do APP_BASE).
-			var url = link ? link.getAttribute('data-url-ticket-modal') : null;
-			var ticketId = $(this).find('span.ticket-id').text().trim();
-			if (url) openTicketModal(url, ticketId);
-		});
-
-		// Clique no botão "Visualizar"
-		$('#table-todos').on('click', 'a[data-open-ticket-modal="1"]', function(ev){
-			ev.preventDefault();
-			ev.stopPropagation();
-			var url = this ? this.getAttribute('data-url-ticket-modal') : null;
-			var ticketId = $(this).closest('tr.ticket-row').find('span.ticket-id').text().trim();
-			openTicketModal(url, ticketId);
+		// Clique no ticket abre a visualização completa (sem iframe, evitando erros de prefixo APP_BASE).
+		$('#table-todos tbody').off('click.ticketRow').on('click.ticketRow', 'tr.ticket-row', function(ev){
+			// não abre se o clique for em algum botão/link futuro
+			if ($(ev.target).closest('a,button').length) return;
+			var url = $(this).attr('data-url-view') || '';
+			if (url) window.location.href = url;
 		});
 	});
 </script>

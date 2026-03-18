@@ -111,8 +111,18 @@ $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
 							<h5><span class="text-muted">Status: </span><?= SituacaoTicket($ticket->situacao) ?></h5>
 							<br>
 							<?php
-							if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPendente]) && ($permissaoacesso || $ticket->idautor == $iduser || $admin))
-								echo $this->Html->link('<span> Cancelar </span> <i class="fa fa-times"></i>', ["action" => "cancelar", $ticket->id], ['rel' => 'tooltip', 'title' => 'Cancelar', 'class' => 'btn btn-danger btn-simple btn-sm m-b-20 m-r-5', 'id' => $ticket->id, 'escape' => false]);
+							$canCancel =
+								in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPendente])
+								&& ($permissaoacesso || $ticket->idautor == $iduser || $admin);
+							if ($canCancel) {
+							?>
+								<button type="button"
+									class="btn btn-danger btn-simple btn-sm m-b-20 m-r-5"
+									data-toggle="modal"
+									data-target="#modal-cancel-ticket">
+									<span> Cancelar </span> <i class="fa fa-times"></i>
+								</button>
+							<?php } ?>
 							?>
 						</div>
 						<!-- Fim da Parte da Esquerda -->
@@ -305,6 +315,38 @@ $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
 		</div>
 	</div>
 </div>
+<!-- Modal: cancelar ticket (cliente) -->
+<?php if (!empty($canCancel)) { ?>
+	<div class="modal fade" id="modal-cancel-ticket" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-md" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title m-0">Motivo do cancelamento</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<?= $this->Form->create(null, ['url' => ['action' => 'cancelar', $ticket->id], 'type' => 'post', 'id' => 'form-cancel-ticket']) ?>
+						<div class="form-group">
+							<label for="observacao" class="control-label text-muted">Qual o motivo do cancelamento?</label>
+							<?= $this->Form->textarea('observacao', [
+								'id' => 'observacao',
+								'class' => 'form-control',
+								'label' => false,
+								'rows' => 4,
+								'placeholder' => 'Descreva o motivo...',
+								'required' => true
+							]) ?>
+						</div>
+						<?= $this->Form->button('Confirmar cancelamento', ['class' => 'btn btn-danger']) ?>
+						<button type="button" class="btn btn-outline-secondary m-l-10" data-dismiss="modal">Voltar</button>
+					<?= $this->Form->end() ?>
+				</div>
+			</div>
+		</div>
+	</div>
+<?php } ?>
 <div class="modal fade none-border" id="homologacao">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
