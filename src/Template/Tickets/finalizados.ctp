@@ -21,7 +21,7 @@
       <div class="dash-erp-card-body">
         <div class="row m-b-10">
           <div class="col-md-6 col-sm-12">
-            <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor..." />
+            <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor, solicitante..." />
           </div>
           <div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
             Exibindo <span id="finalizados-count"><?= count($ticketsFinalizados ?? []) ?></span> registros
@@ -51,11 +51,13 @@
                     $clienteNome = ($reg->cliente->tipo == C_ClientesTipoFisica) ? $reg->cliente->nome : $reg->cliente->razaosocial;
                     $autorNome = trim((string)($reg->user->name ?? ''));
                     $autorUser = trim((string)($reg->user->username ?? ''));
+                    $solicitanteNome = trim((string)($solicitantesMap[(int)($reg->idsolicitante ?? 0)] ?? ''));
                     $searchBlob = implode(' ', [
                       (string)(int)$reg->id,
                       (string)$clienteNome,
                       (string)$autorNome,
                       (string)$autorUser,
+                      (string)$solicitanteNome,
                     ]);
                   ?>
                   <tr data-search="<?= h($searchBlob) ?>">
@@ -131,12 +133,8 @@
       var q = norm(($input.val() || '')).toLowerCase().trim();
       var shown = 0;
       $rows.each(function(){
-        // Força a busca apenas por ID + Cliente + Autor (colunas 1-3)
-        var $tds = $(this).find('td');
-        var idTxt = $tds.eq(0).text() || '';
-        var clienteTxt = $tds.eq(1).text() || '';
-        var autorTxt = $tds.eq(2).text() || '';
-        var t = norm((idTxt + ' ' + clienteTxt + ' ' + autorTxt)).toLowerCase();
+        // Busca por ID + Cliente + Autor + Solicitante (mesmo que não tenha coluna visível)
+        var t = norm($(this).attr('data-search') || '').toLowerCase();
         var ok = q === '' || t.indexOf(q) !== -1;
         $(this).toggle(ok);
         if(ok) shown++;

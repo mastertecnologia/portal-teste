@@ -257,7 +257,23 @@ class TicketsController extends AppController {
 			->limit(500)
 			->toArray();
 
+		$solicitantesMap = [];
+		try {
+			$solicitantesIds = [];
+			foreach ($ticketsFinalizados as $t) {
+				if (!empty($t->idsolicitante)) $solicitantesIds[] = (int)$t->idsolicitante;
+			}
+			$solicitantesIds = array_values(array_unique(array_filter($solicitantesIds)));
+			if (!empty($solicitantesIds)) {
+				$solicitantesMap = $this->Users
+					->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+					->where(['id IN' => $solicitantesIds])
+					->toArray();
+			}
+		} catch (\Throwable $e) {}
+
 		$this->set('ticketsFinalizados', $ticketsFinalizados);
+		$this->set('solicitantesMap', $solicitantesMap);
 	}
 
 	/**
