@@ -7,6 +7,23 @@
 		.col-btns { display: none !important; }
 		.col-print { margin-top: 0 !important; }
 	}
+
+	/* Em autoprint, não mostrar "tela atrás" (screen). */
+	body.ticket-autoprint-screen {
+		background: #fff !important;
+	}
+	body.ticket-autoprint-screen .col-print,
+	body.ticket-autoprint-screen .card,
+	body.ticket-autoprint-screen .card-body {
+		display: none !important;
+	}
+	@media print {
+		body.ticket-autoprint-screen .col-print,
+		body.ticket-autoprint-screen .card,
+		body.ticket-autoprint-screen .card-body {
+			display: block !important;
+		}
+	}
 	
 	.col-btns { 
 		background-color: white;
@@ -90,6 +107,8 @@
 			});
 		}
 		if (autoPrint) {
+			// No modo screen, esconder conteúdo (evita "tela por trás").
+			try { document.body.classList.add('ticket-autoprint-screen'); } catch (e) {}
 			// Espera o layout/pintura do browser antes de abrir o diálogo
 			setTimeout(doPrint, 50);
 			window.onafterprint = function(){
