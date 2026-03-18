@@ -113,7 +113,8 @@
     <div class="tv-head">
       <div>
         <h2 class="tv-title">Ticket nº <?= (int)$ticket->id ?></h2>
-        <p class="tv-sub"><?= h(SituacaoTicket($ticket->situacao)) ?> • Abertura: <?= h(date_format($ticket->created, 'd/m/Y')) ?></p>
+        <?php $situacaoTexto = trim(strip_tags((string)SituacaoTicket($ticket->situacao))); ?>
+        <p class="tv-sub"><?= h($situacaoTexto) ?> • Abertura: <?= h(date_format($ticket->created, 'd/m/Y')) ?></p>
       </div>
     </div>
 
@@ -197,8 +198,16 @@
               if ($sitnova === C_TicketAnexoAdicionado) $msg = "Anexo adicionado: " . $obs;
               else if ($sitnova === C_TicketAnexoDeletado) $msg = "Anexo deletado: " . $obs;
               else if ($sitantiga !== null && $sitnova !== null) {
-                $msg = "Situação: " . SituacaoTicket($sitantiga) . " → " . SituacaoTicket($sitnova);
-                if (!empty($obs)) $msg .= "\nObs.: " . $obs;
+                $sitAntTxt = trim(strip_tags((string)SituacaoTicket($sitantiga)));
+                $sitNovTxt = trim(strip_tags((string)SituacaoTicket($sitnova)));
+                if ($sitAntTxt !== '' && $sitNovTxt !== '' && $sitAntTxt !== $sitNovTxt) {
+                  $msg = "Situação: " . $sitAntTxt . " → " . $sitNovTxt;
+                } elseif (!empty($obs)) {
+                  $msg = $obs;
+                } else {
+                  $msg = "Atualização registrada: " . ($sitNovTxt !== '' ? $sitNovTxt : 'situação mantida');
+                }
+                if (!empty($obs) && $msg !== $obs) $msg .= "\nObs.: " . $obs;
               } else {
                 $msg = !empty($obs) ? $obs : 'Movimentação registrada.';
               }
