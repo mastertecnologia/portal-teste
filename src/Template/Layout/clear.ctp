@@ -5,7 +5,10 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 	<?= $this->Html->meta('icon') ?>
 
-	<title><?= 'PGM - ' . $title; ?></title>
+	<?php
+		$pageTitle = (string)($this->fetch('title') ?: ($title ?? ''));
+	?>
+	<title><?= 'PGM - ' . h($pageTitle); ?></title>
 
 	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
 
@@ -23,8 +26,6 @@
 	<?= $this->fetch('script'); ?>
 </head>
 <body>
-	<?= $this->assign('title', $title); ?>
-
 	<?= $this->element('content'); ?>
 
 	<?= $this->Html->script('jquery-3.1.0.min'); ?>
