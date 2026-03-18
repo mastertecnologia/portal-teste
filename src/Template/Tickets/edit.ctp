@@ -477,25 +477,25 @@
 	// Comentário
 		$('#comentario').change(function(e){
 			if ($('#comentario').val().length > 5000) {
-				event.preventDefault();
+			e.preventDefault();
 				$('#submitcomentario').prop("disabled", true);
 				alert('O comentário não pode ter mais de 5000 caracteres');
 			} else {
-				event.preventDefault();
+			e.preventDefault();
 				$('#submitcomentario').prop("disabled", false);
 			}
 		});
 		$('.container').perfectScrollbar();
 	// Files
-		$(document).on('change', '.file-input', function() {
+		$(document).on('change', '.file-input', function(e) {
 			var filesCount = $(this)[0].files.length;
 			var $textContainer = $(this).prev();
 			var fileName = $(this).val().split('\\').pop();
 			if (filesCount > 0) {
-				event.preventDefault();
+				e.preventDefault();
 				$('#submitfile').prop("disabled", false);
 			} else {
-				event.preventDefault();
+				e.preventDefault();
 				$('#submitfile').prop("disabled", true);
 			}
 			if (filesCount === 1) {
@@ -583,15 +583,15 @@
 	$('.container').perfectScrollbar();
 
 	// Files
-	$(document).on('change', '.file-input', function() {
+	$(document).on('change', '.file-input', function(e) {
 		var filesCount = $(this)[0].files.length;
 		var $textContainer = $(this).prev();
 		var fileName = $(this).val().split('\\').pop();
 		if (filesCount > 0) {
-			event.preventDefault();
+			e.preventDefault();
 			$('#submitfile').prop("disabled", false);
 		} else {
-			event.preventDefault();
+			e.preventDefault();
 			$('#submitfile').prop("disabled", true);
 		}
 		if (filesCount === 1) {
