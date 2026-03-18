@@ -1091,13 +1091,17 @@ class TicketsController extends AppController {
 			};
 
 			// Sugestões devem ser SOMENTE dos e-mails cadastrados no cliente
-			$ticketCliente = $ticket->cliente ?? null;
-			$push(is_object($ticketCliente) ? ($ticketCliente->email ?? '') : '');
-			$push(is_object($ticketCliente) ? ($ticketCliente->emailresponsavel ?? '') : '');
-
+			// monta exclusivamente a partir do Cliente carregado no banco
 			if ($cliente) {
 				$push($cliente->email ?? '');
 				$push($cliente->emailresponsavel ?? '');
+			}
+
+			// Fallback: caso o findById falhe ou venha sem emailresponsavel,
+			// tenta extrair do cliente vindo via contain() do ticket.
+			if (empty($sugestoes) && is_object($ticket->cliente ?? null)) {
+				$push($ticket->cliente->email ?? '');
+				$push($ticket->cliente->emailresponsavel ?? '');
 			}
 
 			$sugestoes = array_values(array_unique($sugestoes));
