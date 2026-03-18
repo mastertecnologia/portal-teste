@@ -200,9 +200,26 @@
 			var title = document.getElementById('modal-ticket-client-title');
 			if (title) title.textContent = ticketId ? ('Ticket #' + ticketId) : 'Ticket';
 			if (iframe) {
-				// Usa a resolução nativa do browser (via `element.href`) para evitar
-				// duplicar prefixos (ex.: /portal/portal/...) em apps com subpasta.
-				iframe.src = url || 'about:blank';
+				if (!url) {
+					iframe.src = 'about:blank';
+				} else {
+					// Normalização defensiva para remover duplicações no PATH
+					// (ex.: /portal/portal/tickets/... => /portal/tickets/...)
+					var abs = url;
+					try {
+						abs = new URL(url, window.location.href);
+						var p = abs.pathname || '';
+						while (p.indexOf('/portal/portal/') !== -1) {
+							p = p.replace('/portal/portal/', '/portal/');
+						}
+						p = p.replace(/\/portal\/portal$/g, '/portal');
+						abs.pathname = p;
+						iframe.src = abs.toString();
+					} catch (e) {
+						// fallback: não quebra o fluxo se URL não for parseável
+						iframe.src = url;
+					}
+				}
 			}
 			$('#modal-ticket-client').modal('show');
 		}
