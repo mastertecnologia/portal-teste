@@ -31,16 +31,14 @@
           <div class="col-lg-8">
             <div class="form-group">
               <label class="font-weight-bold">Para</label>
-              <input
-                type="text"
-                name="para"
-                id="email-para"
-                class="form-control"
-                placeholder="Digite um ou mais e-mails (separe por ; ou ,)"
-                value="<?= !empty($sugestoes[0]) ? h($sugestoes[0]) : '' ?>"
-                autocomplete="off"
-                list="email-sugestoes"
-              />
+              <?= $this->Form->text('para', [
+                'id' => 'email-para',
+                'class' => 'form-control',
+                'placeholder' => 'Digite um ou mais e-mails (separe por ; ou ,)',
+                'value' => !empty($sugestoes[0]) ? $sugestoes[0] : '',
+                'autocomplete' => 'off',
+                'list' => 'email-sugestoes',
+              ]) ?>
               <small class="text-muted">Você pode digitar vários e-mails separados por <strong>;</strong> ou <strong>,</strong>.</small>
               <datalist id="email-sugestoes">
                 <?php foreach (($sugestoes ?? []) as $e): ?>
