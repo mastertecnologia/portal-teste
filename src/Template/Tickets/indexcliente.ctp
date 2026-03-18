@@ -118,6 +118,19 @@
 			this.form.submit();
 		});
 
+		// Debug opcional para identificar por que o clique não está abrindo o ticket.
+		// Use na URL: ?debug=1 (ex.: /tickets/indexcliente?debug=1)
+		var DEBUG_TICKETS = (window.location.search.indexOf('debug=1') !== -1);
+		if (DEBUG_TICKETS) {
+			console.log('[Tickets/indexcliente] debug ON', { url: window.location.href });
+			window.addEventListener('error', function (event) {
+				console.error('[Tickets/indexcliente] window error', event.message || event.error);
+			});
+			window.addEventListener('unhandledrejection', function (event) {
+				console.error('[Tickets/indexcliente] unhandledrejection', event.reason);
+			});
+		}
+
 		var $window = $(window);
 
 		table = $('#table-todos');
@@ -181,6 +194,9 @@
 				url = '/' + url;
 			}
 
+			if (DEBUG_TICKETS) {
+				console.log('[Tickets/indexcliente] ticket click redirect', { ticketUrl: url });
+			}
 			window.location.href = url;
 		});
 	});
