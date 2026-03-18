@@ -1072,7 +1072,11 @@ class TicketsController extends AppController {
 				foreach ($parts as $p) {
 					$p = trim($p);
 					if ($p === '') continue;
-					if (filter_var($p, FILTER_VALIDATE_EMAIL)) $sugestoes[] = $p;
+					// Sugestões: tolerante para exibir os e-mails cadastrados.
+					// O envio final continua validando no TicketsTable::parseEmailList().
+					if (filter_var($p, FILTER_VALIDATE_EMAIL) || strpos($p, '@') !== false) {
+						$sugestoes[] = $p;
+					}
 				}
 			};
 
