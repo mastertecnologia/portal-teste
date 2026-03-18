@@ -50,39 +50,42 @@
           <div class="col-lg-4">
             <div class="form-group">
               <label class="font-weight-bold">Sugestões</label>
+              <div class="m-b-10">
+                <span class="text-muted" id="email-sugestoes-selected-count">Destinatários extras (0)</span>
+              </div>
+
               <?php if (!empty($sugestoes)) { ?>
-                <?php $btnId = 'email-sugestoes-dd'; ?>
-                <div class="dropdown">
-                  <button
-                    class="btn btn-outline-secondary dropdown-toggle btn-block"
-                    type="button"
-                    id="<?= $btnId ?>"
-                    data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    Destinatários extras (0)
-                  </button>
-                  <div
-                    class="dropdown-menu"
-                    style="width: 100%; max-height: 240px; overflow:auto; padding: 12px;"
-                    aria-labelledby="<?= $btnId ?>"
-                  >
-                    <?php foreach (($sugestoes ?? []) as $i => $e): ?>
-                      <div class="custom-control custom-checkbox m-b-10">
-                        <?= $this->Form->checkbox('sugestoes[]', [
-                          'id' => 'sug-extra-' . $i,
-                          'value' => $e,
-                          'hiddenField' => false,
-                          'class' => 'custom-control-input',
-                        ]) ?>
-                        <label class="custom-control-label" for="<?= 'sug-extra-' . $i ?>">
-                          <?= h($e) ?>
-                        </label>
-                      </div>
-                    <?php endforeach; ?>
-                  </div>
+                <input
+                  type="text"
+                  id="email-sugestoes-search"
+                  class="form-control"
+                  placeholder="Buscar e-mail..."
+                  autocomplete="off"
+                />
+
+                <div
+                  id="email-sugestoes-list"
+                  style="max-height: 240px; overflow:auto; padding-top: 12px;"
+                  class="m-t-10"
+                >
+                  <?php foreach (($sugestoes ?? []) as $i => $e): ?>
+                    <div
+                      class="custom-control custom-checkbox m-b-10 email-sugestoes-item"
+                      data-email="<?= h((string)$e) ?>"
+                    >
+                      <?= $this->Form->checkbox('sugestoes[]', [
+                        'id' => 'sug-extra-' . $i,
+                        'value' => $e,
+                        'hiddenField' => false,
+                        'class' => 'custom-control-input',
+                      ]) ?>
+                      <label class="custom-control-label" for="<?= 'sug-extra-' . $i ?>">
+                        <?= h($e) ?>
+                      </label>
+                    </div>
+                  <?php endforeach; ?>
                 </div>
+
                 <small class="text-muted">Selecione os destinatários extras (não altera o campo “Para”).</small>
               <?php } else { ?>
                 <div class="text-muted">Sem sugestões.</div>
@@ -113,28 +116,34 @@
 
 <script>
   (function(){
-    var btn = document.getElementById('<?= $btnId ?>');
-    if (!btn) return;
+    var countEl = document.getElementById('email-sugestoes-selected-count');
+    var listEl = document.getElementById('email-sugestoes-list');
+    var searchEl = document.getElementById('email-sugestoes-search');
 
-    function updateBtn(){
+    function updateCount(){
+      if (!countEl) return;
       var checked = document.querySelectorAll('input[name="sugestoes[]"]:checked');
       var n = checked ? checked.length : 0;
-      btn.textContent = 'Destinatários extras (' + n + ')';
+      countEl.textContent = 'Destinatários extras (' + n + ')';
     }
 
-    // Não fechar o dropdown ao clicar no checkbox
-    var menu = btn.parentElement ? btn.parentElement.querySelector('.dropdown-menu') : null;
-    if (menu) {
-      menu.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
-        cb.addEventListener('click', function(e){ e.stopPropagation(); });
+    if (searchEl && listEl) {
+      searchEl.addEventListener('input', function(){
+        var q = (searchEl.value || '').toLowerCase().trim();
+        var items = listEl.querySelectorAll('.email-sugestoes-item');
+        items.forEach(function(item){
+          var email = (item.getAttribute('data-email') || '').toLowerCase();
+          var ok = q === '' || email.indexOf(q) !== -1;
+          item.style.display = ok ? '' : 'none';
+        });
       });
     }
 
     document.querySelectorAll('input[name="sugestoes[]"]').forEach(function(cb){
-      cb.addEventListener('change', updateBtn);
+      cb.addEventListener('change', updateCount);
     });
 
-    updateBtn();
+    updateCount();
   })();
 </script>
 

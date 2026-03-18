@@ -1109,6 +1109,35 @@ class TicketsController extends AppController {
 				);
 			}
 
+			// Inclui também os e-mails cadastrados no cliente na guia "Usuários"
+			// (Users.email vinculados ao idcliente do ticket).
+			$idclienteDoTicket = (int)($ticket->idcliente ?? 0);
+			if (!empty($idclienteDoTicket)) {
+				try {
+					$usuariosQueryAtivos = $this->Users
+						->find()
+						->select(['email' => 'Users.email'])
+						->where(['Users.idcliente' => $idclienteDoTicket, 'Users.inativo' => 0]);
+
+					$usuariosEmails = $usuariosQueryAtivos->toArray();
+
+					// Se não houver ativos, lista também inativos (para não ficar vazio).
+					if (empty($usuariosEmails)) {
+						$usuariosEmails = $this->Users
+							->find()
+							->select(['email' => 'Users.email'])
+							->where(['Users.idcliente' => $idclienteDoTicket])
+							->toArray();
+					}
+
+					foreach ($usuariosEmails as $u) {
+						$email = is_object($u) ? ($u->email ?? '') : ($u['email'] ?? '');
+						if (trim((string)$email) === '') continue;
+						$sugestoes = array_merge($sugestoes, $parseEmailList($email));
+					}
+				} catch (\Throwable $e) {}
+			}
+
 			// Fallback: caso o findById falhe ou venha sem emailresponsavel,
 			// tenta extrair do cliente vindo via contain() do ticket.
 			if (empty($sugestoes) && is_object($ticket->cliente ?? null)) {
