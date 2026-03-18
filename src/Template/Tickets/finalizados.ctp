@@ -44,7 +44,7 @@
                 <?php foreach (($ticketsFinalizados ?? []) as $reg): ?>
                   <?php
                     $urlTicketEdit = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]);
-                    $urlTicketView = $this->Url->build(["controller" => "Tickets", "action" => "view", $reg->id]);
+                    $urlTicketView = $this->Url->build(["controller" => "Tickets", "action" => "viewModal", $reg->id]);
                     $urlTicketPrint = $this->Url->build(["controller" => "Tickets", "action" => "imprimir", $reg->id]);
                     $urlTicketEmail = $this->Url->build(["controller" => "Tickets", "action" => "email", $reg->id, "redirect"]);
                   ?>

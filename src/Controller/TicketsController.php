@@ -260,6 +260,50 @@ class TicketsController extends AppController {
 		$this->set('ticketsFinalizados', $ticketsFinalizados);
 	}
 
+	/**
+	 * Visualização enxuta para modal (sem menu lateral/abas).
+	 */
+	public function viewModal($idticket = null) {
+		$idempresa = $this->Auth->user('idempresa');
+		$this->set('title', 'Ticket');
+		$this->viewBuilder()->setLayout('clear');
+
+		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])->where(['tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			$this->autoRender = false;
+			return $this->response->withStringBody('Ticket não encontrado.')->withStatus(404);
+		}
+
+		// Permissão básica: manter regra atual de view (cliente só vê seus tickets)
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
+			if ($cliente->empresadominante == $cliente->idempresa) $clienteVerifica = $cliente;
+			else {
+				if ($cliente->tipo == C_ClientesTipoJuridica) $clienteVerifica = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj))->order(['idempresa DESC'])->first();
+				else $clienteVerifica = $this->Clientes->findByCpf(removeCaracteres($cliente->cpf))->order(['idempresa DESC'])->first();
+			}
+			if ($clienteVerifica->cpf != $cliente->cpf && $cliente->cnpj != $clienteVerifica->cnpj) {
+				$this->autoRender = false;
+				return $this->response->withStringBody('Sem permissão.')->withStatus(403);
+			}
+			if ($ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
+				$this->autoRender = false;
+				return $this->response->withStringBody('Sem permissão.')->withStatus(403);
+			}
+		}
+
+		$clienteNome = ($ticket->cliente->tipo == C_ClientesTipoFisica) ? $ticket->cliente->nome : $ticket->cliente->razaosocial;
+		$solicitante = null;
+		if (!empty($ticket->idsolicitante)) {
+			$sol = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+			$solicitante = $sol ? $sol->name : null;
+		}
+
+		$this->set('ticket', $ticket);
+		$this->set('clienteNome', $clienteNome);
+		$this->set('solicitante', $solicitante);
+	}
+
 	public function indexcliente(){
 		$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
 		$assunto = $this->request->getQuery('assunto');
