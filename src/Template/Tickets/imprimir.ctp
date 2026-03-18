@@ -17,7 +17,7 @@
 	}
 </style>
 <div class="col-12 col-btns">
-	<?= $this->html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-purple text-white btn-sm']) ?>
+	<?= $this->Html->link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-purple text-white btn-sm']) ?>
 </div>
 <div class="col-12 col-print">
 	<div class="card">
