@@ -163,6 +163,23 @@ class UsersController extends AppController {
 		$this->set('labelHist', ['Ordens de Serviço']);
 	}
 
+	public function requisicoesAcesso() {
+		$this->set('title', 'Requisições de acesso');
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['action' => 'dashboard']);
+		}
+
+		$usuariosBloqueadosTable = $this->Users
+			->findByBloqueado(1)
+			->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])
+			->contain(['Empresasusers', 'Empresasusers.Empresas'])
+			->order(['Users.created' => 'DESC'])
+			->toArray();
+
+		$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
+	}
+
 	public function add() {
 		// Permissão para o cliente
 		if ($this->Auth->user('role') == 1) {
