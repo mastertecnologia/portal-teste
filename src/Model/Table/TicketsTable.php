@@ -6,6 +6,20 @@ use Cake\Validation\Validator;
 use Cake\Mailer\Email;
 
 class TicketsTable extends Table {
+	private function parseEmailList($value) {
+		$value = (string)$value;
+		if ($value === '') return [];
+		$value = str_replace(["\r", "\n", "\t"], ' ', $value);
+		$parts = preg_split('/[;,\\s]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
+		$out = [];
+		foreach ($parts as $p) {
+			$p = trim($p);
+			if ($p === '') continue;
+			if (filter_var($p, FILTER_VALIDATE_EMAIL)) $out[] = $p;
+		}
+		return array_values(array_unique($out));
+	}
+
 	public function initialize(array $config) {
 		$this->hasMany('Ticketcomentarios')->setForeignKey('idticket')->setDependent(true);
 		$this->hasOne('Ticketsusers')->setForeignKey('idticket')->setDependent(true);
@@ -35,7 +49,7 @@ class TicketsTable extends Table {
 			]
 		]);
 		$cliente = $this->Clientes->findById($ticket->idcliente)->first();
-		$emailResponsavel = explode(';', $cliente->emailresponsavel);
+		$emailResponsavel = $this->parseEmailList($cliente->emailresponsavel);
 		
 		$empresa = $this->Empresas->get($idempresa);
 		if (isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
@@ -47,8 +61,9 @@ class TicketsTable extends Table {
 			else if (!empty($ticket->user->email)) $emailDest = $ticket->user->email;
 			else if (!empty($ticket->cliente->email)) $emailDest = $ticket->cliente->email;
 		}
+		$emailDestList = $this->parseEmailList($emailDest);
 
-		if (empty($emailDest)) {
+		if (empty($emailDestList)) {
 			$this->Flash->error('O ticket/solicitante/cliente não possui um endereço de e-mail válido para envio do e-mail!');
 			return $this->redirect(['action' => 'edit', $idticket]);
 		}
@@ -144,7 +159,7 @@ class TicketsTable extends Table {
 		$email->transport('pgm');
 		$from = 'helpdesk@pgm.inf.br';
 		
-		$email->from([$from => $nomeempresa])->to($emailDest)->emailFormat('html')->subject($subject);
+		$email->from([$from => $nomeempresa])->to($emailDestList)->emailFormat('html')->subject($subject);
 			
 		if($email->send($message)) {
 			if(empty($acao)) {
@@ -153,16 +168,14 @@ class TicketsTable extends Table {
 			}
 
 			foreach($emailResponsavel as $regEmailResp) {
-				if(!empty($regEmailResp)) {
-					$email = new Email();
-					$email->transport('pgm');
-					$from = 'helpdesk@pgm.inf.br';
-					$email->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
-					$email->send($message);
-				}
+				$email = new Email();
+				$email->transport('pgm');
+				$from = 'helpdesk@pgm.inf.br';
+				$email->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
+				$email->send($message);
 			}
 
-			return $emailDest;
+			return implode(';', $emailDestList);
 		}
 		return false;
 	}
