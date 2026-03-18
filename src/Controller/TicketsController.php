@@ -362,6 +362,24 @@ class TicketsController extends AppController {
 		$assunto = $this->request->getQuery('assunto');
 		$situacao = $this->request->getQuery('situacao');
 
+		// Debug server-side opcional (para identificar por que o clique não dispara).
+		// Use: /tickets/indexcliente?debug=1
+		$debug = (string)$this->request->getQuery('debug');
+		if ($debug === '1') {
+			try {
+				@file_put_contents(
+					ROOT . DS . 'debug-tickets-indexcliente.log',
+					date('Y-m-d H:i:s') .
+						' debug=1 userId=' . (int)($this->Auth->user('id') ?? 0) .
+						' idcliente=' . (int)($this->Auth->user('idcliente') ?? 0) .
+						' assunto=' . (string)($assunto ?? '') .
+						' situacao=' . (string)($situacao ?? '') .
+						PHP_EOL,
+					FILE_APPEND
+				);
+			} catch (\Throwable $e) {}
+		}
+
 		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes']])->where([ 'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj, ] ]);
 		if($assunto != null) $tickets = $tickets->where(['tickets.assunto' => $assunto]);
 		if($situacao != null && $situacao != -1) $tickets = $tickets->where(['tickets.situacao' => $situacao]);
