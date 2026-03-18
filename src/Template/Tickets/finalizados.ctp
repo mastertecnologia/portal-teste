@@ -49,8 +49,8 @@
                     $urlTicketEmail = $this->Url->build(["controller" => "Tickets", "action" => "email", $reg->id, "redirect"]);
 
                     $clienteNome = ($reg->cliente->tipo == C_ClientesTipoFisica) ? $reg->cliente->nome : $reg->cliente->razaosocial;
-                    $autorNome = trim((string)($reg->user->name ?? ''));
-                    $autorUser = trim((string)($reg->user->username ?? ''));
+                    $autorNome = trim((string)($reg->users['name'] ?? ''));
+                    $autorUser = trim((string)($reg->users['username'] ?? ''));
                     $solicitanteNome = trim((string)($solicitantesMap[(int)($reg->idsolicitante ?? 0)] ?? ''));
                     $searchBlob = implode(' ', [
                       (string)(int)$reg->id,
@@ -63,7 +63,7 @@
                   <tr data-search="<?= h($searchBlob) ?>">
                     <td><a class="dash-erp-link" target="_blank" href="<?= $urlTicketEdit ?>"><?= (int)$reg->id ?></a></td>
                     <td><?= h($clienteNome) ?></td>
-                    <td><?= h($autorNome) ?></td>
+                    <td><?= h($autorNome ?: $autorUser) ?></td>
                     <td><?= !empty($reg->datafinalizado) ? h($reg->datafinalizado) : date_format($reg->modified ?? $reg->created, 'd/m/Y') ?></td>
                     <td class="dash-erp-actions">
                       <button
