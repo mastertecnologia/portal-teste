@@ -1060,48 +1060,63 @@ class TicketsController extends AppController {
 
 			$cliente = null;
 			try {
-				$this->loadModel('Clientes');
-				$cliente = $this->Clientes->findById($ticket->idcliente)->first();
+				// prioridade: usar associação que já vem no contain()
+				$cliente = $ticket->cliente ?? null;
+				if (!is_object($cliente)) {
+					// fallback: carregar do banco pelo id
+					$this->loadModel('Clientes');
+					$cliente = $this->Clientes->findById($ticket->idcliente)->first();
+				}
 			} catch (\Throwable $e) {}
 
-			$sugestoes = [];
-			$push = function ($v) use (&$sugestoes) {
-				$v = (string)$v;
-				$v = str_replace(["\r", "\n", "\t"], ' ', $v);
-				if (trim($v) === '') return;
+			// Extrai e-mails de forma consistente (mesma ideia do parseEmailList em TicketsTable).
+			$parseEmailList = function ($value) {
+				$value = (string)$value;
+				if (trim($value) === '') return [];
 
-				// Extrai e-mails por regex (robusto para formatos com ; / , / espaços).
-				$matches = [];
-				preg_match_all('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $v, $matches);
-				if (!empty($matches[0])) {
-					foreach ($matches[0] as $email) {
-						$email = trim((string)$email);
-						if ($email !== '') $sugestoes[] = $email;
-					}
-					return;
-				}
+				$value = str_replace(["\r", "\n", "\t"], ' ', $value);
+				$parts = preg_split('/[;,\\s]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
 
-				// fallback: tokens contendo @
-				$parts = preg_split('/[;,\\s]+/', $v, -1, PREG_SPLIT_NO_EMPTY);
+				$out = [];
 				foreach ($parts as $p) {
 					$p = trim((string)$p);
 					if ($p === '') continue;
-					if (strpos($p, '@') !== false) $sugestoes[] = $p;
+					if (filter_var($p, FILTER_VALIDATE_EMAIL)) $out[] = $p;
 				}
+
+				// Fallback: caso o conteúdo venha com algum formato inesperado,
+				// ainda assim tenta listar tokens que parecem conter e-mail.
+				if (empty($out)) {
+					foreach ($parts as $p) {
+						$p = trim((string)$p);
+						if ($p === '') continue;
+						if (strpos($p, '@') !== false) $out[] = $p;
+					}
+				}
+
+				return array_values(array_unique($out));
 			};
 
+			$sugestoes = [];
+
 			// Sugestões devem ser SOMENTE dos e-mails cadastrados no cliente
-			// monta exclusivamente a partir do Cliente carregado no banco
-			if ($cliente) {
-				$push($cliente->email ?? '');
-				$push($cliente->emailresponsavel ?? '');
+			// monta a partir do objeto de Cliente disponível (contain ou findById)
+			if (is_object($cliente)) {
+				$sugestoes = array_merge(
+					$sugestoes,
+					$parseEmailList($cliente->email ?? ''),
+					$parseEmailList($cliente->emailresponsavel ?? '')
+				);
 			}
 
 			// Fallback: caso o findById falhe ou venha sem emailresponsavel,
 			// tenta extrair do cliente vindo via contain() do ticket.
 			if (empty($sugestoes) && is_object($ticket->cliente ?? null)) {
-				$push($ticket->cliente->email ?? '');
-				$push($ticket->cliente->emailresponsavel ?? '');
+				$sugestoes = array_merge(
+					$sugestoes,
+					$parseEmailList($ticket->cliente->email ?? ''),
+					$parseEmailList($ticket->cliente->emailresponsavel ?? '')
+				);
 			}
 
 			$sugestoes = array_values(array_unique($sugestoes));
