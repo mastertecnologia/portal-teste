@@ -86,7 +86,18 @@
 									$urlView = preg_replace('#/portal/portal$#', '/portal', $urlView);
 								}
 							?>
-							<tr class="ticket-row" data-url-view="<?= h((string)$urlView) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+							<tr
+								class="ticket-row"
+								data-url-view="<?= h((string)$urlView) ?>"
+								onclick="window.location.href=<?= json_encode((string)$urlView) ?>;"
+								style="cursor:pointer;"
+								rel="popover"
+								data-trigger="hover"
+								data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>'
+								data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>"
+								data-html="true"
+								data-placement="top"
+							>
 								<td><span class="ticket-id"><?= (int)$reg->id ?></span></td>
 								<td>
 									<div><?= date_format($reg->created, 'd/m/Y') ?></div>
