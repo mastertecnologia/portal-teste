@@ -89,7 +89,33 @@
     var inp = document.getElementById('email-para');
     if (sel && inp) {
       sel.addEventListener('change', function(){
-        if (sel.value) inp.value = sel.value;
+        var v = (sel.value || '').trim();
+        if (!v) return;
+
+        var cur = (inp.value || '').trim();
+        if (!cur) {
+          inp.value = v;
+        } else {
+          // Normaliza separadores e evita duplicados
+          var list = cur
+            .replace(/,/g, ';')
+            .split(';')
+            .map(function(x){ return (x || '').trim(); })
+            .filter(Boolean);
+
+          var lower = list.map(function(x){ return x.toLowerCase(); });
+          if (lower.indexOf(v.toLowerCase()) === -1) {
+            list.push(v);
+          }
+          inp.value = list.join(';');
+        }
+
+        // mantém cursor no fim e volta o select para "Selecionar…"
+        try {
+          inp.focus();
+          inp.selectionStart = inp.selectionEnd = inp.value.length;
+        } catch (e) {}
+        sel.value = '';
       });
     }
   })();
