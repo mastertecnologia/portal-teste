@@ -47,11 +47,21 @@
                     $urlTicketView = $this->Url->build(["controller" => "Tickets", "action" => "viewModal", $reg->id]);
                     $urlTicketPrint = $this->Url->build(["controller" => "Tickets", "action" => "imprimir", $reg->id]);
                     $urlTicketEmail = $this->Url->build(["controller" => "Tickets", "action" => "email", $reg->id, "redirect"]);
+
+                    $clienteNome = ($reg->cliente->tipo == C_ClientesTipoFisica) ? $reg->cliente->nome : $reg->cliente->razaosocial;
+                    $autorNome = ($reg->user->name ?? $reg->user->username ?? '');
+                    $assuntoTexto = trim(strip_tags((string)AssuntoTicket($reg->assunto)));
+                    $searchBlob = implode(' ', [
+                      (string)(int)$reg->id,
+                      (string)$clienteNome,
+                      (string)$autorNome,
+                      (string)$assuntoTexto,
+                    ]);
                   ?>
-                  <tr>
+                  <tr data-search="<?= h($searchBlob) ?>">
                     <td><a class="dash-erp-link" target="_blank" href="<?= $urlTicketEdit ?>"><?= (int)$reg->id ?></a></td>
-                    <td><?= h($reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial) ?></td>
-                    <td><?= h($reg->user->name ?? $reg->user->username ?? '') ?></td>
+                    <td><?= h($clienteNome) ?></td>
+                    <td><?= h($autorNome) ?></td>
                     <td><?= !empty($reg->datafinalizado) ? h($reg->datafinalizado) : date_format($reg->modified ?? $reg->created, 'd/m/Y') ?></td>
                     <td class="dash-erp-actions">
                       <button
@@ -114,11 +124,14 @@
   (function(){
     var $input = $('#filtro-finalizados');
     var $rows = $('#table-finalizados tbody tr');
+    function norm(s){
+      try { return (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { return (s || '').toString(); }
+    }
     function apply(){
-      var q = ($input.val() || '').toLowerCase().trim();
+      var q = norm(($input.val() || '')).toLowerCase().trim();
       var shown = 0;
       $rows.each(function(){
-        var t = $(this).text().toLowerCase();
+        var t = norm($(this).attr('data-search') || $(this).text()).toLowerCase();
         var ok = q === '' || t.indexOf(q) !== -1;
         $(this).toggle(ok);
         if(ok) shown++;
