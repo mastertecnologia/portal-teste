@@ -110,6 +110,16 @@
 
 <div class="tv-wrap">
   <div class="tv-card">
+    <?php
+      $tvPlain = function ($v) {
+        $s = (string)$v;
+        $s = html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $s = strip_tags($s);
+        $s = preg_replace("/[ \\t]+/", " ", $s);
+        $s = preg_replace("/\\R{3,}/", "\n\n", $s);
+        return trim($s);
+      };
+    ?>
     <div class="tv-head">
       <div>
         <h2 class="tv-title">Ticket nº <?= (int)$ticket->id ?></h2>
@@ -164,7 +174,7 @@
                   <?= !empty($comentario->created) ? h(date_format($comentario->created, 'd/m/Y H:i')) : '' ?>
                 </div>
               </div>
-              <div class="tv-row-body"><?= h($comentario->comentario ?? '') ?></div>
+              <div class="tv-row-body"><?= h($tvPlain($comentario->comentario ?? '')) ?></div>
             </div>
           <?php } ?>
         <?php } else { ?>
