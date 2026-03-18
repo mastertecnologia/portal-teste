@@ -228,7 +228,9 @@
 		$('#table-todos tbody').on('click', 'tr.ticket-row', function(ev){
 			if ($(ev.target).closest('.td-actions').length) return;
 			var link = $(this).find('a[data-open-ticket-modal="1"]')[0];
-			var url = link ? link.href : null;
+			// Importante: usamos o data-url-ticket-modal (correto) e não o href
+			// (que pode vir com /portal/portal duplicado dependendo do APP_BASE).
+			var url = link ? link.getAttribute('data-url-ticket-modal') : null;
 			var ticketId = $(this).find('span.ticket-id').text().trim();
 			if (url) openTicketModal(url, ticketId);
 		});
@@ -237,7 +239,7 @@
 		$('#table-todos').on('click', 'a[data-open-ticket-modal="1"]', function(ev){
 			ev.preventDefault();
 			ev.stopPropagation();
-			var url = this ? this.href : null;
+			var url = this ? this.getAttribute('data-url-ticket-modal') : null;
 			var ticketId = $(this).closest('tr.ticket-row').find('span.ticket-id').text().trim();
 			openTicketModal(url, ticketId);
 		});
