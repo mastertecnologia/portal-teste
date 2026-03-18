@@ -64,8 +64,9 @@ class TicketsTable extends Table {
 		$emailDestList = $this->parseEmailList($emailDest);
 
 		if (empty($emailDestList)) {
-			$this->Flash->error('O ticket/solicitante/cliente não possui um endereço de e-mail válido para envio do e-mail!');
-			return $this->redirect(['action' => 'edit', $idticket]);
+			// Table não tem acesso a `Flash`/`redirect()` como Controller.
+			// Apenas sinaliza falha para o controller decidir a mensagem/fluxo.
+			return false;
 		}
 
 		// Cálculo de horas técnicas do ticket e do mês para o cliente
