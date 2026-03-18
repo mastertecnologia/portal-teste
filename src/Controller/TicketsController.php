@@ -257,45 +257,7 @@ class TicketsController extends AppController {
 			->limit(500)
 			->toArray();
 
-		$solicitantesMap = [];
-		$comentariosMap = [];
-		try {
-			$ticketIds = [];
-			$solicitantesIds = [];
-			foreach ($ticketsFinalizados as $t) {
-				$ticketIds[] = (int)$t->id;
-				if (!empty($t->idsolicitante)) $solicitantesIds[] = (int)$t->idsolicitante;
-			}
-			$ticketIds = array_values(array_unique(array_filter($ticketIds)));
-			$solicitantesIds = array_values(array_unique(array_filter($solicitantesIds)));
-
-			if (!empty($solicitantesIds)) {
-				$solicitantesMap = $this->Users
-					->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-					->where(['id IN' => $solicitantesIds])
-					->toArray();
-			}
-
-			if (!empty($ticketIds)) {
-				$comentarios = $this->Ticketcomentarios
-					->find()
-					->select(['idticket', 'comentario'])
-					->where(['idticket IN' => $ticketIds])
-					->toArray();
-
-				foreach ($comentarios as $c) {
-					$idt = (int)$c->idticket;
-					$txt = (string)($c->comentario ?? '');
-					if ($txt === '') continue;
-					if (!isset($comentariosMap[$idt])) $comentariosMap[$idt] = '';
-					$comentariosMap[$idt] .= ' ' . $txt;
-				}
-			}
-		} catch (\Throwable $e) {}
-
 		$this->set('ticketsFinalizados', $ticketsFinalizados);
-		$this->set('solicitantesMap', $solicitantesMap);
-		$this->set('comentariosMap', $comentariosMap);
 	}
 
 	/**

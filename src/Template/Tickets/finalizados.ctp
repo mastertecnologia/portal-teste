@@ -21,7 +21,7 @@
       <div class="dash-erp-card-body">
         <div class="row m-b-10">
           <div class="col-md-6 col-sm-12">
-            <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor, solicitante, descrição, comentário..." />
+            <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor..." />
           </div>
           <div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
             Exibindo <span id="finalizados-count"><?= count($ticketsFinalizados ?? []) ?></span> registros
@@ -49,17 +49,13 @@
                     $urlTicketEmail = $this->Url->build(["controller" => "Tickets", "action" => "email", $reg->id, "redirect"]);
 
                     $clienteNome = ($reg->cliente->tipo == C_ClientesTipoFisica) ? $reg->cliente->nome : $reg->cliente->razaosocial;
-                    $autorNome = ($reg->user->name ?? $reg->user->username ?? '');
-                    $solicitanteNome = (string)($solicitantesMap[(int)($reg->idsolicitante ?? 0)] ?? '');
-                    $descricaoTexto = (string)($reg->solicitacao ?? '');
-                    $comentariosTexto = (string)($comentariosMap[(int)$reg->id] ?? '');
+                    $autorNome = trim((string)($reg->user->name ?? ''));
+                    $autorUser = trim((string)($reg->user->username ?? ''));
                     $searchBlob = implode(' ', [
                       (string)(int)$reg->id,
                       (string)$clienteNome,
                       (string)$autorNome,
-                      (string)$solicitanteNome,
-                      (string)$descricaoTexto,
-                      (string)$comentariosTexto,
+                      (string)$autorUser,
                     ]);
                   ?>
                   <tr data-search="<?= h($searchBlob) ?>">
