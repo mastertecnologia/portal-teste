@@ -131,7 +131,12 @@
       var q = norm(($input.val() || '')).toLowerCase().trim();
       var shown = 0;
       $rows.each(function(){
-        var t = norm($(this).attr('data-search') || $(this).text()).toLowerCase();
+        // Força a busca apenas por ID + Cliente + Autor (colunas 1-3)
+        var $tds = $(this).find('td');
+        var idTxt = $tds.eq(0).text() || '';
+        var clienteTxt = $tds.eq(1).text() || '';
+        var autorTxt = $tds.eq(2).text() || '';
+        var t = norm((idTxt + ' ' + clienteTxt + ' ' + autorTxt)).toLowerCase();
         var ok = q === '' || t.indexOf(q) !== -1;
         $(this).toggle(ok);
         if(ok) shown++;
