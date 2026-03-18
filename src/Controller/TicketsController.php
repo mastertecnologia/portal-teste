@@ -1082,13 +1082,18 @@ class TicketsController extends AppController {
 
 			$this->set('ticket', $ticket);
 			$this->set('sugestoes', $sugestoes);
+			$this->set('defaultPara', (string)($ticket->user->email ?? $ticket->email ?? ''));
 			$this->set('situacao', $situacao);
 			$this->set('redirectAfter', $redirect);
 			return;
 		}
 
 		// POST: envia para destinatário(s) informado(s)
-		$emailInput = (string)($this->request->getData('para') ?? $this->request->getData('email') ?? '');
+		$para = (string)($this->request->getData('para') ?? '');
+		$selecionados = (array)($this->request->getData('sugestoes') ?? []);
+		$selecionados = array_values(array_filter(array_map('trim', $selecionados)));
+		$emailInput = trim($para . ';' . implode(';', $selecionados));
+
 		$emailDest = $this->Tickets->email($idticket, $situacao, $emailInput, $this->Auth->user('idempresa'));
 
 		if(!empty($emailDest)){

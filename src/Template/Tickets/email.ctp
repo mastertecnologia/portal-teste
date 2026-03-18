@@ -35,7 +35,7 @@
                 'id' => 'email-para',
                 'class' => 'form-control',
                 'placeholder' => 'Digite um ou mais e-mails (separe por ; ou ,)',
-                'value' => !empty($sugestoes[0]) ? $sugestoes[0] : '',
+                'value' => !empty($defaultPara) ? $defaultPara : (!empty($sugestoes[0]) ? $sugestoes[0] : ''),
                 'autocomplete' => 'off',
                 'list' => 'email-sugestoes',
               ]) ?>
@@ -50,13 +50,24 @@
           <div class="col-lg-4">
             <div class="form-group">
               <label class="font-weight-bold">Sugestões</label>
-              <select class="form-control" id="email-select-sugestao">
-                <option value="">Selecionar…</option>
-                <?php foreach (($sugestoes ?? []) as $e): ?>
-                  <option value="<?= h($e) ?>"><?= h($e) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <small class="text-muted">Selecionar preenche o campo “Para”.</small>
+              <div class="border rounded p-10" style="max-height: 160px; overflow:auto; background:#fff;">
+                <?php if (!empty($sugestoes)) { ?>
+                  <?php foreach ($sugestoes as $i => $e): ?>
+                    <div class="custom-control custom-checkbox m-b-5">
+                      <?= $this->Form->checkbox('sugestoes[]', [
+                        'id' => 'sug-' . $i,
+                        'value' => $e,
+                        'hiddenField' => false,
+                        'class' => 'custom-control-input'
+                      ]) ?>
+                      <label class="custom-control-label" for="<?= 'sug-' . $i ?>"><?= h($e) ?></label>
+                    </div>
+                  <?php endforeach; ?>
+                <?php } else { ?>
+                  <div class="text-muted">Sem sugestões.</div>
+                <?php } ?>
+              </div>
+              <small class="text-muted">Selecione os destinatários extras (não altera o campo “Para”).</small>
             </div>
           </div>
         </div>
@@ -82,40 +93,6 @@
 </div>
 
 <script>
-  (function(){
-    var sel = document.getElementById('email-select-sugestao');
-    var inp = document.getElementById('email-para');
-    if (sel && inp) {
-      sel.addEventListener('change', function(){
-        var v = (sel.value || '').trim();
-        if (!v) return;
-
-        var cur = (inp.value || '').trim();
-        if (!cur) {
-          inp.value = v;
-        } else {
-          // Normaliza separadores e evita duplicados
-          var list = cur
-            .replace(/,/g, ';')
-            .split(';')
-            .map(function(x){ return (x || '').trim(); })
-            .filter(Boolean);
-
-          var lower = list.map(function(x){ return x.toLowerCase(); });
-          if (lower.indexOf(v.toLowerCase()) === -1) {
-            list.push(v);
-          }
-          inp.value = list.join(';');
-        }
-
-        // mantém cursor no fim e volta o select para "Selecionar…"
-        try {
-          inp.focus();
-          inp.selectionStart = inp.selectionEnd = inp.value.length;
-        } catch (e) {}
-        sel.value = '';
-      });
-    }
-  })();
+  // Sem JS necessário: sugestões são seleção e o campo "Para" é manual.
 </script>
 
