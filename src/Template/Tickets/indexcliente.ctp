@@ -157,6 +157,9 @@
 				else $('td').each(function(){$(this).removeClass('dark-mode');});
 			},
 		});
+		// Alguns templates definem `filters` globalmente; caso não exista, evita erro JS
+		// que impediria o click abrir o ticket.
+		var filters = typeof filters !== 'undefined' ? filters : '';
 		table.search(filters).draw();
 
 		// Clique no ticket abre a visualização completa.
