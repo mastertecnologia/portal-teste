@@ -760,21 +760,28 @@ class OrdensservicoController extends AppController {
 	public function listAPI() {
         $this->autoRender = false;
         if ($this->request->is('get')) {
-			$empresa = $this->request->getHeaderLine('empresa');
-            $token = $this->request->getHeaderLine('token');
-            $situacao = $this->request->getHeaderLine('situacao');
-            $id = $this->request->getHeaderLine('id');
+			// Suporta credenciais via headers (ERP) e também via query string (fallback)
+			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
+			$token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+			$situacao = $this->request->getHeaderLine('situacao') ?: $this->request->getQuery('situacao');
+			$id = $this->request->getHeaderLine('id') ?: $this->request->getQuery('id');
 
 			$apiRet = function ($msg, $status = 200) {
 				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
 			};
-			if(empty($token) || empty($empresa) || empty($situacao)) 
-			return $apiRet('Parâmetros da requisição inválidos', 400);
+
+			$empresa = is_string($empresa) ? trim($empresa) : $empresa;
+			$token = is_string($token) ? trim($token) : $token;
+			$situacaoInt = is_numeric($situacao) ? (int)$situacao : null;
+
+			if (empty($token) || empty($empresa) || $situacaoInt === null) {
+				return $apiRet('Parâmetros da requisição inválidos. Envie empresa, token e situacao (ex.: situacao=4).', 400);
+			}
 			
 			if(empty($this->Empresas->findById($empresa)->first())) return $apiRet('Parâmetros da requisição inválidos', 400);
 			if($token == $this->Empresas->get($empresa)->token) {
 				if(!empty($id)){
-					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'Ordensservico.id' => $id, 'situacao' => $situacao])
+					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'Ordensservico.id' => $id, 'situacao' => $situacaoInt])
 						->contain([
 							'Clientes' => ['fields' => ['Clientes.cnpj', 'Clientes.cpf', 'Clientes.razaosocial', 'Clientes.nome', 
 							'Clientes.inscricaoestadual', 'Clientes.endereco', 'Clientes.nroendereco', 'Clientes.complemento', 'Clientes.bairro', 'Clientes.idcidade',
@@ -783,7 +790,7 @@ class OrdensservicoController extends AppController {
 					->toArray();
 					if ($ordem == []) return $this->jsonResponse($ordem, 200);
 				}else{
-					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'situacao' => $situacao])
+					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'situacao' => $situacaoInt])
 						->contain([
 							'Clientes' => ['fields' => ['Clientes.cnpj', 'Clientes.cpf', 'Clientes.razaosocial', 'Clientes.nome', 
 							'Clientes.inscricaoestadual', 'Clientes.endereco', 'Clientes.nroendereco', 'Clientes.complemento', 'Clientes.bairro', 'Clientes.idcidade',
