@@ -238,58 +238,47 @@
 	$('[rel=popover]').popover({offset: 0});
 
 	$(document).ready(function() {
+		table = $('#table-todos, #table-pendentes, #table-emandamento, #table-resolvidos, #table-fechados');
+		table.on( 'length.dt', function ( e, settings, len ) {
+			pagelength(len);
+		} )
+		var dt = table.DataTable({
+			"pageLength": <?= $pagelength ?>,
+			"bLengthChange": false,
+			"order": [[ 0, "desc" ]],
+			"language": {
+				"sProcessing":    "Procesando...",
+				"sLengthMenu":    "Mostrar _MENU_ registros",
+				"sZeroRecords":   "Nenhum registro encontrado",
+				"sEmptyTable":    "Nenhum dado disponível",
+				"sInfo":          "Mostrando de _START_ até _END_ de um total de _TOTAL_ registros",
+				"sInfoEmpty":     "Mostrando registros de 0 a 0 de um total de 0 registros",
+				"sInfoFiltered":  "(filtrado de um total de _MAX_ registros)",
+				"sInfoPostFix":   "",
+				"sSearch":        "Buscar:",
+				"sUrl":           "",
+				"sInfoThousands":  ",",
+				"sLoadingRecords": "Carregando...",
+				"oPaginate": {
+					"sFirst":    "<<",
+					"sLast":    ">>",
+					"sNext":    ">",
+					"sPrevious": "<"
+				},
+				"oAria": {
+					"sSortAscending":  ": Ordem Ascendente",
+					"sSortDescending": ": Ordem Descendente"
+				}
+			},
+			"drawCallback": function( settings ) {
+				if ($('body').hasClass('dark-mode') ) $('td').each(function(){$(this).addClass('dark-mode');});
+				else $('td').each(function(){$(this).removeClass('dark-mode');});
+			},
+		});
 		// Alguns templates definem `filters` globalmente; caso não exista,
 		// evita ReferenceError que pode quebrar handlers e interações da tela.
 		var filters = typeof filters !== 'undefined' ? filters : '';
-
-		// Inicializa DataTables 1 por 1 (evita estado inconsistente ao chamar
-		// .DataTable() em um conjunto de múltiplas tabelas de uma vez).
-		$('#table-todos, #table-pendentes, #table-emandamento, #table-resolvidos, #table-fechados').each(function() {
-			var $table = $(this);
-
-			// Pode ser redesenhado/recarregado em alguns cenários; evita duplicar instância.
-			if ($.fn.DataTable.isDataTable(this)) return;
-
-			$table.on('length.dt', function ( e, settings, len ) {
-				pagelength(len);
-			});
-
-			var dt = $table.DataTable({
-				"pageLength": <?= $pagelength ?>,
-				"bLengthChange": false,
-				"order": [[ 0, "desc" ]],
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "Nenhum registro encontrado",
-					"sEmptyTable":    "Nenhum dado disponível",
-					"sInfo":          "Mostrando de _START_ até _END_ de um total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros de 0 a 0 de um total de 0 registros",
-					"sInfoFiltered":  "(filtrado de um total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Carregando...",
-					"oPaginate": {
-						"sFirst":    "<<",
-						"sLast":    ">>",
-						"sNext":    ">",
-						"sPrevious": "<"
-					},
-					"oAria": {
-						"sSortAscending":  ": Ordem Ascendente",
-						"sSortDescending": ": Ordem Descendente"
-					}
-				},
-				"drawCallback": function( settings ) {
-					if ($('body').hasClass('dark-mode') ) $table.find('td').each(function(){$(this).addClass('dark-mode');});
-					else $table.find('td').each(function(){$(this).removeClass('dark-mode');});
-				},
-			});
-
-			dt.search(filters).draw();
-		});
+		dt.search(filters).draw();
 	});
 
 	$('.btn-resolver').click(function(e){
