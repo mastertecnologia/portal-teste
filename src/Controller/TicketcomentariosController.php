@@ -131,7 +131,8 @@ class TicketcomentariosController extends AppController {
 		$cliente = $this->Clientes->findById($ticket->idcliente)->first();
 		$emailResponsavel = explode(';', $cliente->emailresponsavel);
 		
-		$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
+		$idempresaAtual = (int)$this->Auth->user('idempresa');
+		$empresa = $this->Empresas->get($idempresaAtual);
 		if(isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
 		else $nomeempresa = $empresa->razaosocial;
 
@@ -161,7 +162,7 @@ class TicketcomentariosController extends AppController {
 		$subject = "Novo comentário no ticket nº $idticket - $nomeempresa";
 
 		$email = new Email();
-		$email->transport('pgm');
+		$email->transport($idempresaAtual === (int)C_EmpresaMaster ? 'master' : 'pgm');
 		$from = 'helpdesk@pgm.inf.br';
 		$email->from([$from => $nomeempresa])->to($emailDest)->emailFormat('html')->subject($subject);
 		
@@ -176,7 +177,7 @@ class TicketcomentariosController extends AppController {
 			 foreach($emailResponsavel as $regEmailResp) {
 				if(!empty($regEmailResp)) {
 					$email = new Email();
-					$email->transport('pgm');
+					$email->transport($idempresaAtual === (int)C_EmpresaMaster ? 'master' : 'pgm');
 					$from = 'helpdesk@pgm.inf.br';
 					$email->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
 					$email->send($message);

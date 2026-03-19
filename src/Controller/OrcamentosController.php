@@ -533,7 +533,7 @@ class OrcamentosController extends AppController {
 					else $nomeempresa = $empresa->razaosocial;
 				//
 				$email = new Email();
-				$email->transport('pgm');
+				$email->transport(((int)$orcamento->idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 				$from = 'helpdesk@pgm.inf.br';
 				$email->from([$from => $nomeempresa]);
 				$email->to($this->Config->get(1)->emailtickets)
@@ -696,7 +696,7 @@ class OrcamentosController extends AppController {
 					if(!empty($reg['tmp_name']))
 						$arrayEmail[$reg['name']] = ['file' => $reg['tmp_name']];
 			// Empresa 
-				$empresa = $this->Empresas->get(C_EmpresaPGM);
+				$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
 				if(isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
 				else $nomeempresa = $empresa->razaosocial;
 			//
@@ -704,7 +704,7 @@ class OrcamentosController extends AppController {
 			$destinatario = $data['emailemail'];
 			$email = new Email();
 			
-			$email->transport('pgm');
+			$email->transport(((int)$this->Auth->user('idempresa') === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 			$from = 'helpdesk@pgm.inf.br';
 
 			$email->from([$from => $nomeempresa]);

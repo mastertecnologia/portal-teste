@@ -118,7 +118,7 @@ class FechamentoMensalCommand extends Command {
                 }
 
                 $email = new Email();
-                $email->transport('pgm');
+                $email->transport(((int)$cliente->idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
                 $from = 'helpdesk@pgm.inf.br';
 
                 $email->from([$from => $nomeEmpresa])

@@ -964,8 +964,9 @@ class UsersController extends AppController {
 
 		if ($this->Users->save($user)) {
 			$email = new Email();
-	
-			$email->transport('master');
+			$idempresaEmail = !empty($user->idempresa) ? (int)$user->idempresa : (int)$this->Auth->user('idempresa');
+			if (empty($idempresaEmail)) $idempresaEmail = (int)C_EmpresaPGM;
+			$email->transport($idempresaEmail === (int)C_EmpresaMaster ? 'master' : 'pgm');
 			$from = 'helpdesk@pgm.inf.br';
 	
 			$email->from([$from => 'PGM']);
@@ -1142,7 +1143,7 @@ class UsersController extends AppController {
 		
 		$email = new Email();
 
-		$email->transport('pgm');
+		$email->transport(((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 		$from = 'helpdesk@pgm.inf.br';
 		$email->from([$from => $nomeempresa])->to($user->email)->emailFormat('html')->subject('Redefinição de senha');
 		$email->send($message);
@@ -1197,8 +1198,9 @@ class UsersController extends AppController {
 			return $this->redirect(['action' => 'logout']);
 		}
 			$email = new Email();
-	
-			$email->transport('master');
+			$idempresaEmail = !empty($user->idempresa) ? (int)$user->idempresa : (int)$this->Auth->user('idempresa');
+			if (empty($idempresaEmail)) $idempresaEmail = (int)C_EmpresaPGM;
+			$email->transport($idempresaEmail === (int)C_EmpresaMaster ? 'master' : 'pgm');
 			$from = 'helpdesk@pgm.inf.br';
 			
 			$urlfora = $this->Config->get(1)->urlfora;
