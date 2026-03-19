@@ -118,6 +118,37 @@ $this->end();
 
 <script>
 $(document).ready(function(){
+	// "Lembrar de mim": persistir apenas o usuário via localStorage.
+	// Assim o comportamento é controlado pelo nosso código (não depende de autocomplete do navegador).
+	try {
+		var savedUsername = localStorage.getItem('portal_remember_username');
+		if (savedUsername) {
+			$('#username').val(savedUsername);
+			$('#remember-me').prop('checked', true);
+		}
+	} catch (e) {}
+
+	// Salva/remover conforme checkbox.
+	$('#remember-me').on('change', function(){
+		try {
+			if ($(this).is(':checked')) {
+				var u = ($('#username').val() || '').trim();
+				if (u) localStorage.setItem('portal_remember_username', u);
+			} else {
+				localStorage.removeItem('portal_remember_username');
+			}
+		} catch (e) {}
+	});
+
+	// Garante persistência no submit (inclui caso o checkbox seja marcado antes do submit).
+	$('form#login').on('submit', function(){
+		try {
+			var u = ($('#username').val() || '').trim();
+			var remember = $('#remember-me').is(':checked');
+			if (remember && u) localStorage.setItem('portal_remember_username', u);
+			if (!remember) localStorage.removeItem('portal_remember_username');
+		} catch (e) {}
+	});
 	$('#idempresa').append("<option value='' disabled selected>Empresa</option>");
 });
 $('.recuperasenha, .desativarautenticacao').hover(function(){
