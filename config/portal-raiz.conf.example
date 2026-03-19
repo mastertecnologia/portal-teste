@@ -20,6 +20,17 @@
         Options -Indexes +FollowSymLinks
     </Directory>
 
+    SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
+    SetEnv MAIL_MASTER_PORT "587"
+    SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
+    SetEnv MAIL_MASTER_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
+    SetEnv MAIL_MASTER_TLS "false"
+    SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
+    SetEnv MAIL_PGM_PORT "587"
+    SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
+    SetEnv MAIL_PGM_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
+    SetEnv MAIL_PGM_TLS "false"
+
     Redirect permanent / https://portal.pgm.inf.br/
 </VirtualHost>
 
@@ -44,6 +55,16 @@
     SetEnv APP_DIR "src"
     SetEnv HTTPS "on"
     # NÃO defina APP_BASE – URLs ficam /users/login, /dist/..., etc.
+    SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
+    SetEnv MAIL_MASTER_PORT "587"
+    SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
+    SetEnv MAIL_MASTER_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
+    SetEnv MAIL_MASTER_TLS "false"
+    SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
+    SetEnv MAIL_PGM_PORT "587"
+    SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
+    SetEnv MAIL_PGM_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
+    SetEnv MAIL_PGM_TLS "false"
 
     ErrorLog ${APACHE_LOG_DIR}/portal_error_ssl.log
     CustomLog ${APACHE_LOG_DIR}/portal_access_ssl.log combined

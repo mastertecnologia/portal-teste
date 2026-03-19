@@ -1,14 +1,16 @@
-# Variáveis de ambiente para o Portal (Windows Server 2019 + XAMPP)
-# Cole o bloco <Directory> abaixo DENTRO de cada <VirtualHost> do portal
-# no arquivo: C:\xampp\apache\conf\extra\httpd-vhosts.conf
+# Variáveis de ambiente para o Portal (Linux + Apache2)
+# Cole o bloco abaixo DENTRO do VirtualHost do portal
+# no arquivo: /etc/apache2/sites-available/portal.conf
 #
 # Substitua os valores entre aspas pelos dados reais de produção.
-# Depois reinicie o Apache no painel do XAMPP.
+# Depois valide e recarregue:
+#   sudo apachectl configtest
+#   sudo systemctl reload apache2
 
-    <Directory "C:/xampp/htdocs/portal">
+    <Directory /var/www/portal/public>
         AllowOverride All
         Require all granted
-        Options Indexes FollowSymLinks
+        Options -Indexes +FollowSymLinks
         SetEnv SECURITY_SALT "seu_salt_real_64_caracteres_ou_mais"
         SetEnv DB_HOST "localhost"
         SetEnv DB_PORT "5432"
