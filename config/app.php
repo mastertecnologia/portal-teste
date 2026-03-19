@@ -197,18 +197,22 @@ return [
         ],
         'master' => [
             'className' => 'Smtp',
-            'host' => env('MAIL_MASTER_HOST', ''),
+            // Defaults herdados do projeto original (config/app_old.php)
+            'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
             'port' => (int)env('MAIL_MASTER_PORT', 587),
-            'username' => env('MAIL_MASTER_USERNAME', ''),
+            'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
+            // Senha deve vir do ambiente (não versionar).
             'password' => env('MAIL_MASTER_PASSWORD', ''),
             'tls' => filter_var(env('MAIL_MASTER_TLS', false), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
         ],
         'pgm' => [
             'className' => 'Smtp',
-            'host' => env('MAIL_PGM_HOST', ''),
+            // Defaults herdados do projeto original (config/app_old.php)
+            'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
             'port' => (int)env('MAIL_PGM_PORT', 587),
-            'username' => env('MAIL_PGM_USERNAME', ''),
+            'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
+            // Senha deve vir do ambiente (não versionar).
             'password' => env('MAIL_PGM_PASSWORD', ''),
             'tls' => filter_var(env('MAIL_PGM_TLS', false), FILTER_VALIDATE_BOOLEAN),
             'client' => null,

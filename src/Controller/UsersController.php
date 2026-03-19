@@ -996,7 +996,8 @@ class UsersController extends AppController {
 
 		$email = new Email();
 
-		$email->transport('pgm');
+		// Usa o transporte conforme a empresa do cadastro (multi-empresa).
+		$email->transport(((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 		$from = 'helpdesk@pgm.inf.br';
 		
 		$email->from([$from => $nomeempresa])
