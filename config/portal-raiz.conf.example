@@ -23,13 +23,14 @@
     SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
     SetEnv MAIL_MASTER_PORT "587"
     SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
-    SetEnv MAIL_MASTER_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
     SetEnv MAIL_MASTER_TLS "false"
     SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
     SetEnv MAIL_PGM_PORT "587"
     SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
-    SetEnv MAIL_PGM_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
     SetEnv MAIL_PGM_TLS "false"
+    # Senhas: preferir EnvironmentFile root-only + PassEnv (evita texto plano no vhost)
+    PassEnv MAIL_MASTER_PASSWORD
+    PassEnv MAIL_PGM_PASSWORD
 
     Redirect permanent / https://portal.pgm.inf.br/
 </VirtualHost>
@@ -58,13 +59,14 @@
     SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
     SetEnv MAIL_MASTER_PORT "587"
     SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
-    SetEnv MAIL_MASTER_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
     SetEnv MAIL_MASTER_TLS "false"
     SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
     SetEnv MAIL_PGM_PORT "587"
     SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
-    SetEnv MAIL_PGM_PASSWORD "COLOQUE_SENHA_EMAIL_AQUI"
     SetEnv MAIL_PGM_TLS "false"
+    # Senhas: preferir EnvironmentFile root-only + PassEnv (evita texto plano no vhost)
+    PassEnv MAIL_MASTER_PASSWORD
+    PassEnv MAIL_PGM_PASSWORD
 
     ErrorLog ${APACHE_LOG_DIR}/portal_error_ssl.log
     CustomLog ${APACHE_LOG_DIR}/portal_access_ssl.log combined

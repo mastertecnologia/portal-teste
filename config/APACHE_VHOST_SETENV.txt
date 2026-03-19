@@ -1,31 +1,55 @@
-# Variáveis de ambiente para o Portal (Linux + Apache2)
-# Cole o bloco abaixo DENTRO do VirtualHost do portal
-# no arquivo: /etc/apache2/sites-available/portal.conf
+# Variáveis de ambiente para o Portal (Linux + Apache2) - modo recomendado e mais seguro
+# Arquivos usados:
+#   /etc/apache2/envvars                 -> variáveis estruturais do Apache
+#   /etc/apache2/envvars-portal          -> segredos do portal (root-only)
+#   /etc/systemd/system/apache2.service.d/override.conf -> EnvironmentFile extra
+#   /etc/apache2/sites-available/portal.conf            -> PassEnv + SetEnv não sensíveis
 #
-# Substitua os valores entre aspas pelos dados reais de produção.
-# Depois valide e recarregue:
-#   sudo apachectl configtest
-#   sudo systemctl reload apache2
-
-    <Directory /var/www/portal/public>
-        AllowOverride All
-        Require all granted
-        Options -Indexes +FollowSymLinks
-        SetEnv SECURITY_SALT "seu_salt_real_64_caracteres_ou_mais"
-        SetEnv DB_HOST "localhost"
-        SetEnv DB_PORT "5432"
-        SetEnv DB_USERNAME "postgres"
-        SetEnv DB_PASSWORD "sua_senha_real_do_banco"
-        SetEnv DB_DATABASE "pgm"
-        SetEnv DEBUG "false"
-        SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
-        SetEnv MAIL_MASTER_PORT "587"
-        SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
-        SetEnv MAIL_MASTER_PASSWORD "senha_email_real"
-        SetEnv MAIL_MASTER_TLS "false"
-        SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
-        SetEnv MAIL_PGM_PORT "587"
-        SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
-        SetEnv MAIL_PGM_PASSWORD "senha_email_real"
-        SetEnv MAIL_PGM_TLS "false"
-    </Directory>
+# 1) Recuperar /etc/apache2/envvars (evita erro ${APACHE_RUN_DIR} not defined)
+# cat > /etc/apache2/envvars <<'EOF'
+# export APACHE_RUN_USER=www-data
+# export APACHE_RUN_GROUP=www-data
+# export APACHE_PID_FILE=/var/run/apache2/apache2.pid
+# export APACHE_RUN_DIR=/var/run/apache2
+# export APACHE_LOCK_DIR=/var/lock/apache2
+# export APACHE_LOG_DIR=/var/log/apache2
+# EOF
+# mkdir -p /var/run/apache2 /var/lock/apache2 /var/log/apache2
+# chown root:root /etc/apache2/envvars && chmod 644 /etc/apache2/envvars
+#
+# 2) Criar segredos root-only (NÃO versionar)
+# cat > /etc/apache2/envvars-portal <<'EOF'
+# MAIL_MASTER_PASSWORD=senha_email_real
+# MAIL_PGM_PASSWORD=senha_email_real
+# EOF
+# chown root:root /etc/apache2/envvars-portal
+# chmod 600 /etc/apache2/envvars-portal
+#
+# 3) Carregar o arquivo no serviço apache2
+# mkdir -p /etc/systemd/system/apache2.service.d
+# cat > /etc/systemd/system/apache2.service.d/override.conf <<'EOF'
+# [Service]
+# EnvironmentFile=/etc/apache2/envvars-portal
+# EOF
+#
+# 4) No /etc/apache2/sites-available/portal.conf:
+#    - manter SetEnv para dados não sensíveis
+#    - usar PassEnv para senhas
+#
+#    SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
+#    SetEnv MAIL_MASTER_PORT "587"
+#    SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
+#    SetEnv MAIL_MASTER_TLS "false"
+#    SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
+#    SetEnv MAIL_PGM_PORT "587"
+#    SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
+#    SetEnv MAIL_PGM_TLS "false"
+#    PassEnv MAIL_MASTER_PASSWORD
+#    PassEnv MAIL_PGM_PASSWORD
+#
+# 5) Validar e aplicar
+# bash -lc '. /etc/apache2/envvars && apache2 -t'
+# systemctl daemon-reload
+# systemctl restart apache2
+# systemctl status apache2 --no-pager
+# tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value apache2)/environ | grep '^MAIL_'

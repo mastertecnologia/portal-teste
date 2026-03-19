@@ -34,6 +34,70 @@ WEBROOT_DIR=public
 
 **Importante:** não use `DocumentRoot /var/www/portal` (raiz do projeto). Use sempre `DocumentRoot /var/www/portal/public`. Assim as URLs ficam `/users/login`, `/assets/...`, etc., sem o prefixo `/portal`.
 
+### Senhas SMTP (recomendado)
+
+Para reduzir exposição de segredo, evite `SetEnv ...PASSWORD` dentro do `portal.conf`.
+
+Use:
+- `SetEnv` para valores não sensíveis (`HOST`, `PORT`, `USERNAME`, `TLS`)
+- `PassEnv` para as senhas
+- `EnvironmentFile` root-only no systemd com as variáveis de senha
+
+Exemplo no `portal.conf`:
+
+```apache
+SetEnv MAIL_MASTER_HOST "mail.pgm.inf.br"
+SetEnv MAIL_MASTER_PORT "587"
+SetEnv MAIL_MASTER_USERNAME "helpdesk@pgm.inf.br"
+SetEnv MAIL_MASTER_TLS "false"
+SetEnv MAIL_PGM_HOST "mail.pgm.inf.br"
+SetEnv MAIL_PGM_PORT "587"
+SetEnv MAIL_PGM_USERNAME "helpdesk@pgm.inf.br"
+SetEnv MAIL_PGM_TLS "false"
+PassEnv MAIL_MASTER_PASSWORD
+PassEnv MAIL_PGM_PASSWORD
+```
+
+Crie `/etc/apache2/envvars-portal` (permissão `600`, root:root):
+
+```bash
+MAIL_MASTER_PASSWORD=senha_email_real
+MAIL_PGM_PASSWORD=senha_email_real
+```
+
+No systemd (`/etc/systemd/system/apache2.service.d/override.conf`):
+
+```ini
+[Service]
+EnvironmentFile=/etc/apache2/envvars-portal
+```
+
+### Erro `${APACHE_RUN_DIR} is not defined`
+
+Se o `apache2ctl configtest` falhar com esse erro, restaure `/etc/apache2/envvars`:
+
+```bash
+cat > /etc/apache2/envvars <<'EOF'
+export APACHE_RUN_USER=www-data
+export APACHE_RUN_GROUP=www-data
+export APACHE_PID_FILE=/var/run/apache2/apache2.pid
+export APACHE_RUN_DIR=/var/run/apache2
+export APACHE_LOCK_DIR=/var/lock/apache2
+export APACHE_LOG_DIR=/var/log/apache2
+EOF
+mkdir -p /var/run/apache2 /var/lock/apache2 /var/log/apache2
+chown root:root /etc/apache2/envvars
+chmod 644 /etc/apache2/envvars
+```
+
+Depois:
+
+```bash
+bash -lc '. /etc/apache2/envvars && apache2 -t'
+systemctl daemon-reload
+systemctl restart apache2
+```
+
 ---
 
 ## Nginx (Linux)
