@@ -362,7 +362,8 @@
 					location.reload();
 				},
 				error: function(xhr) {
-					bootbox.alert('Falha ao trocar a empresa. HTTP: ' + xhr.status);
+					var msg = (xhr && xhr.responseText) ? String(xhr.responseText).trim() : '';
+					bootbox.alert('Falha ao trocar a empresa. HTTP: ' + xhr.status + (msg ? ('\\n' + msg) : ''));
 				},
 			});
 		}
