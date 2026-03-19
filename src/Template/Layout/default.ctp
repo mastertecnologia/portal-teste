@@ -57,7 +57,7 @@
 	<?= $this->Html->script("/dist/js/custom") ?>
 	<?= $this->Html->script("/assets/node_modules/jquery-sparkline/jquery.sparkline.min") ?> 
 	<?= $this->Html->script("/dist/js/pages/jasny-bootstrap.js") ?>
-	<?= $this->Html->script("custom-file-input") ?>
+	<?= $this->Html->script("/js/custom-file-input") ?>
 	<!-- masks -->
 	<!-- <?= $this->Html->script("/dist/js/pages/mask.init.js") ?>
 	<?= $this->Html->script("/dist/js/pages/mask.js") ?> -->
