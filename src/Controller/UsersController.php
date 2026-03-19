@@ -240,7 +240,9 @@ class UsersController extends AppController {
 			$cliente = $this->Clientes->findById($data['idcliente']);
 			$cliente = $cliente->toList();
 
-			if (isset($cliente[0])) $idempresa = $cliente[0]['empresadominante'];
+			// Mantém o cadastro do usuário na empresa "atual" (multi-empresa via dropdown).
+			if (!empty($this->Auth->user('idempresa'))) $idempresa = (int)$this->Auth->user('idempresa');
+			elseif (isset($cliente[0])) $idempresa = (int)$cliente[0]['empresadominante'];
 			
 			$this->usuarioExistente($data['email']);
 
@@ -676,6 +678,7 @@ class UsersController extends AppController {
 		
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
+			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
 			
 			// Normalização do e-mail
 			$data['email1'] = strtolower(trim($data['email1'])); 
@@ -685,8 +688,16 @@ class UsersController extends AppController {
 				return $this->redirect(['controller' => 'users', 'action' => 'login']);
 			}
 
-			$cliente = $this->Clientes->findByCnpj(removeCaracteres(trim($data['cnpj'])))->first();
-			if(empty($cliente)) $cliente = $this->Clientes->findByCpf(removeCaracteres(trim($data['cpfcliente'])))->first();
+			$cliente = $this->Clientes
+				->findByCnpj(removeCaracteres(trim($data['cnpj'])));
+			if ($empresaIdAtual) $cliente = $cliente->where(['idempresa' => $empresaIdAtual]);
+			$cliente = $cliente->first();
+			if(empty($cliente)) {
+				$cliente = $this->Clientes
+					->findByCpf(removeCaracteres(trim($data['cpfcliente'])));
+				if ($empresaIdAtual) $cliente = $cliente->where(['idempresa' => $empresaIdAtual]);
+				$cliente = $cliente->first();
+			}
 
 			if(empty($cliente)) {
 				$this->Flash->error(__('Não foi localizado o cadastro do cliente através do CPF/CNPJ informado para vinculação ao novo login.'));
@@ -713,12 +724,10 @@ class UsersController extends AppController {
 				$user->tipo = intval($data['tipo']);
 				$user->ip = $this->request->clientIp();
 
-				$cliente = $this->Clientes->findByCnpj(removeCaracteres(trim($data['cnpj'])))->first();
-				if(empty($cliente)) $cliente = $this->Clientes->findByCpf(removeCaracteres(trim($data['cpfcliente'])))->first();
-
 				if ($this->Users->save($user)) {
 					$empresauser = $this->Empresasusers->newEntity();
-					$empresauser->idempresa = $cliente->empresadominante;
+					// Se existe contexto multi-empresa (usuário logado), usa a empresa selecionada.
+					$empresauser->idempresa = $empresaIdAtual ? $empresaIdAtual : $cliente->empresadominante;
 					$empresauser->iduser = $user->id;
 					$this->Empresasusers->save($empresauser);
 					$bEmailSent = $this->email($user->id, $empresauser->idempresa);
@@ -743,12 +752,22 @@ class UsersController extends AppController {
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
 			$cnpj = $data['cnpj'];
+			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
 		
 			$clientes = $this->Clientes->findByCnpj(removeCaracteres($cnpj))->toArray();
-			foreach($clientes as $reg) {
-				if($reg->empresadominante == $reg->idempresa) {
-					$cliente = $reg;
-					break;
+			$cliente = null;
+
+			// Prioriza a empresa selecionada pelo usuário (quando houver contexto).
+			if ($empresaIdAtual) {
+				foreach($clientes as $reg) {
+					if ((int)$reg->idempresa === $empresaIdAtual) { $cliente = $reg; break; }
+				}
+			}
+
+			// Fallback: comportamento antigo (empresa dominante).
+			if (empty($cliente)) {
+				foreach($clientes as $reg) {
+					if($reg->empresadominante == $reg->idempresa) { $cliente = $reg; break; }
 				}
 			}
 
@@ -767,11 +786,20 @@ class UsersController extends AppController {
 		if ($this->request->is(['post'])) {
 			$data = $this->request->getData();
 			$cpf = $data['cpf'];
+			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
 			$clientes = $this->Clientes->findByCpf(removeCaracteres($cpf))->toArray();
-			foreach($clientes as $reg) {
-				if($reg->empresadominante == $reg->idempresa) {
-					$cliente = $reg;
-					break;
+			$cliente = null;
+
+			if ($empresaIdAtual) {
+				foreach($clientes as $reg) {
+					if ((int)$reg->idempresa === $empresaIdAtual) { $cliente = $reg; break; }
+				}
+			}
+
+			// Fallback: comportamento antigo (empresa dominante).
+			if (empty($cliente)) {
+				foreach($clientes as $reg) {
+					if($reg->empresadominante == $reg->idempresa) { $cliente = $reg; break; }
 				}
 			}
 			

@@ -372,8 +372,18 @@ class EmpresasController extends AppController{
 		}
 
 		$this->autoRender = false;
+		$empresaSelecionada = (int)$this->request->getData('empresa');
+		if ($empresaSelecionada <= 0) return;
+
+		// Garante que o usuário tem acesso a essa empresa (evita troca indevida).
+		$temAcesso = $this->Empresasusers->find()
+			->where(['iduser' => $this->Auth->user('id'), 'idempresa' => $empresaSelecionada])
+			->count();
+		if ($temAcesso <= 0) return;
+
 		$user = $this->Users->get($this->Auth->user('id'));
-		$user->idempresa = $this->request->getData('empresa');
+		$user->idempresa = $empresaSelecionada;
+		$this->Users->save($user); // persiste para que recarregamentos/flows que re-carregam do banco reflitam
 		$this->Auth->setUser($user);
 	}
 }
