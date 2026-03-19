@@ -376,17 +376,26 @@ class EmpresasController extends AppController{
 
 		$this->autoRender = false;
 		$empresaSelecionada = (int)$this->request->getData('empresa');
-		if ($empresaSelecionada <= 0) return;
+		if ($empresaSelecionada <= 0) {
+			return $this->response->withStatus(400)->withStringBody('Empresa inválida.');
+		}
 
 		// Garante que o usuário tem acesso a essa empresa (evita troca indevida).
 		$temAcesso = $this->Empresasusers->find()
 			->where(['iduser' => $this->Auth->user('id'), 'idempresa' => $empresaSelecionada])
 			->count();
-		if ($temAcesso <= 0) return;
+		if ($temAcesso <= 0) {
+			return $this->response->withStatus(403)->withStringBody('Sem acesso à empresa selecionada.');
+		}
 
 		$user = $this->Users->get($this->Auth->user('id'));
 		$user->idempresa = $empresaSelecionada;
-		$this->Users->save($user); // persiste para que recarregamentos/flows que re-carregam do banco reflitam
-		$this->Auth->setUser($user);
+		if (!$this->Users->save($user)) {
+			return $this->response->withStatus(500)->withStringBody('Falha ao salvar empresa do usuário.');
+		}
+
+		// CRÍTICO: Auth->setUser espera array; passar Entity pode não atualizar a sessão corretamente.
+		$this->Auth->setUser($user->toArray());
+		return $this->response->withStatus(200)->withStringBody('OK');
 	}
 }
