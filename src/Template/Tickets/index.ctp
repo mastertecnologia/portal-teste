@@ -12,6 +12,17 @@
 	.tickets-erp-tab.bg-queequaseinfo, .tickets-erp-tab.bg-dark, .tickets-erp-tab.bg-orange, .tickets-erp-tab.bg-info, .tickets-erp-tab.bg-success, .tickets-erp-tab.bg-danger { color:#fff; }
 	.tickets-erp-tab:not(.active){ opacity: .88; }
 	.tickets-erp-tab.active{ opacity: 1; box-shadow: 0 10px 24px rgba(15,23,42,.10); }
+	/* Master-detail: lista (esquerda) e detalhe (direita) */
+	.tickets-master-detail { align-items: flex-start; }
+	.tickets-master-detail-panel{
+		background:#f6f8fb;
+		min-height: 650px;
+		border-left: 1px solid rgba(15,23,42,.08);
+	}
+	#ticket-detail-container{ padding: 14px; }
+	tr.ticket-row { cursor:pointer; }
+	tr.ticket-row:hover td{ background:#f1f5f9 !important; }
+	tr.ticket-row.active td{ background:#e0e7ff !important; }
 </style>
 
 <div class="col-12 p-0">
@@ -28,6 +39,8 @@
 
 		<div class="dash-erp-card">
 			<div class="dash-erp-card-body">
+				<div class="row tickets-master-detail">
+					<div class="col-md-4 tickets-master-list">
 				<div class="tickets-erp-tabs">
 					<a class="tickets-erp-tab bg-queequaseinfo btn-abrir-ticket" data-toggle="tab" href="#abrir" role="tab" aria-selected="false">
 						<i class="fas fa-plus-circle"></i> Abrir Ticket
@@ -64,7 +77,7 @@
 							</thead>
 							<tbody>
 								<?php foreach ($tickets as $reg): ?>
-									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+									<tr class="ticket-row" data-id="<?= (int)$reg->id ?>" data-url="<?= h((string)$this->Url->build(['controller' => 'Tickets', 'action' => 'view', $reg->id])) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->id ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->users['name']; ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></a></td>
@@ -101,7 +114,7 @@
 							</thead>
 							<tbody>
 								<?php foreach ($ticketsPendentes as $reg): ?>
-									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+									<tr class="ticket-row" data-id="<?= (int)$reg->id ?>" data-url="<?= h((string)$this->Url->build(['controller' => 'Tickets', 'action' => 'view', $reg->id])) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->id ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->users['name']; ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></a></td>
@@ -134,7 +147,7 @@
 							</thead>
 							<tbody>
 								<?php foreach ($ticketsEmandamento as $reg): ?>
-									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+									<tr class="ticket-row" data-id="<?= (int)$reg->id ?>" data-url="<?= h((string)$this->Url->build(['controller' => 'Tickets', 'action' => 'view', $reg->id])) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->id ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->users['name']; ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></a></td>
@@ -168,7 +181,7 @@
 							</thead>
 							<tbody>
 								<?php foreach ($ticketsResolvidos as $reg): ?>
-									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+									<tr class="ticket-row" data-id="<?= (int)$reg->id ?>" data-url="<?= h((string)$this->Url->build(['controller' => 'Tickets', 'action' => 'view', $reg->id])) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 										<td> <a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'> <?= $reg->id ?></a></td>
 										<td> <a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'> <?= $reg->users['name']; ?></a></td>
 										<td> <a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'> <?= date_format($reg->created, 'd/m/Y') ?></a></td>
@@ -197,7 +210,7 @@
 							</thead>
 							<tbody>
 								<?php foreach ($ticketsFechados as $reg): ?>
-									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+									<tr class="ticket-row" data-id="<?= (int)$reg->id ?>" data-url="<?= h((string)$this->Url->build(['controller' => 'Tickets', 'action' => 'view', $reg->id])) ?>" rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->id ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= $reg->users['name']; ?></a></td>
 										<td><a class="link" target='_blank' href='<?= $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></a></td>
@@ -213,6 +226,11 @@
 					</div>
 					
 				</div>
+			</div>
+		</div>
+		<div class="col-md-8 tickets-master-detail-panel">
+			<div id="ticket-detail-container" class="ticket-detail-container">
+				<div class="text-muted p-3">Selecione um ticket para ver o detalhe.</div>
 			</div>
 		</div>
 	</div>
@@ -276,6 +294,70 @@
 			},
 		});
 		table.search(filters).draw();
+
+		// Master-detail (AJAX + history)
+		var urlIndexBase = "<?= Router::url(['controller' => 'Tickets', 'action' => 'index']); ?>";
+		var urlViewBase = "<?= Router::url(['controller' => 'Tickets', 'action' => 'view']); ?>";
+		var $detail = $('#ticket-detail-container');
+
+		function extractTicketIdFromUrl() {
+			var m = window.location.pathname.match(/tickets\/index\/(\d+)/i);
+			return m ? parseInt(m[1], 10) : null;
+		}
+
+		function buildViewUrl(id) {
+			var base = urlViewBase.replace(/\/$/, '');
+			return base + '/' + encodeURIComponent(id);
+		}
+
+		function loadTicketDetail(ticketId, pushState) {
+			if (!ticketId) return;
+
+			$('tr.ticket-row.active').removeClass('active');
+			$('tr.ticket-row[data-id="' + ticketId + '"]').addClass('active');
+
+			$detail.html('<div class="text-center p-4 text-muted"><i class="fa fa-spinner fa-spin"></i> Carregando...</div>');
+
+			$.ajax({
+				type: 'GET',
+				url: buildViewUrl(ticketId),
+				headers: { 'X-Requested-With': 'XMLHttpRequest' },
+				success: function (html) {
+					$detail.html(html);
+				},
+				error: function () {
+					$detail.html('<div class="alert alert-danger m-0">Erro ao carregar o detalhe do ticket.</div>');
+				}
+			});
+
+			if (pushState) {
+				var base = urlIndexBase.replace(/\/$/, '');
+				history.pushState({ ticketId: ticketId }, '', base + '/' + ticketId);
+			}
+		}
+
+		$(document).off('click.ticketMasterDetail').on('click.ticketMasterDetail', 'tr.ticket-row', function(ev) {
+			// Mantém comportamento das ações (coluna "Ações")
+			if ($(ev.target).closest('.td-actions').length) return;
+
+			var ticketId = parseInt($(this).attr('data-id'), 10);
+			if (!ticketId) return;
+
+			ev.preventDefault();
+			ev.stopPropagation();
+
+			loadTicketDetail(ticketId, true);
+		});
+
+		// Inicial: se URL já estiver com /tickets/index/{id}
+		var initialId = extractTicketIdFromUrl();
+		if (initialId) loadTicketDetail(initialId, false);
+
+		window.addEventListener('popstate', function () {
+			var id = extractTicketIdFromUrl();
+			if (id) loadTicketDetail(id, false);
+			else $detail.html('<div class="text-muted p-3">Selecione um ticket para ver o detalhe.</div>');
+		});
 	});
 
 	$('.btn-resolver').click(function(e){
