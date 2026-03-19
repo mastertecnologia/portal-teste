@@ -721,7 +721,10 @@ class UsersController extends AppController {
 					$empresauser->idempresa = $cliente->empresadominante;
 					$empresauser->iduser = $user->id;
 					$this->Empresasusers->save($empresauser);
-					$this->email($user->id, $empresauser->idempresa);
+					$bEmailSent = $this->email($user->id, $empresauser->idempresa);
+					if (!$bEmailSent) {
+						$this->Flash->warning(__('Usuário cadastrado, porém não foi possível enviar a notificação por e-mail (falha no SMTP).'));
+					}
 					$this->Flash->success(__('Usuário cadastrado com sucesso! Aguarde a liberação de um administrador para efetuar o login.'));
 				} else $this->Flash->error(__('Não foi possível adicionar o usuário.'));
 
@@ -918,7 +921,13 @@ class UsersController extends AppController {
 			->emailFormat('html')
 			->subject($subject);
 
-		$email->send($message);
+		try {
+			return (bool)$email->send($message);
+		} catch (\Throwable $e) {
+			// Evita que falhas de SMTP (credenciais/TLS) travem o cadastro.
+			$this->log('[UsersController::email] Falha ao enviar e-mail: ' . $e->getMessage(), 'error');
+			return false;
+		}
 	}
 
 	public function verificasenha($senhaadm) {
