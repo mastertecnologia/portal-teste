@@ -290,7 +290,10 @@ class TicketsController extends AppController {
 		$this->set('title', "Ticket $idticket");
 		$this->viewBuilder()->setLayout('clear');
 
-		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])->where(['tickets.id' => $idticket])->first();
+		// Impede vazamento entre empresas: modal só pode exibir ticket da empresa atual.
+		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
+			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $idempresa])
+			->first();
 		if (empty($ticket)) {
 			$this->autoRender = false;
 			return $this->response->withStringBody('Ticket não encontrado.')->withStatus(404);
@@ -298,13 +301,32 @@ class TicketsController extends AppController {
 
 		// Permissões: manter regra do view()
 		if ($role == C_RoleCliente) {
-			$cliente = $this->Clientes->findById($idcliente)->order(['idempresa ASC'])->first();
-			if ($cliente->empresadominante == $cliente->idempresa) $clienteVerifica = $cliente;
-			else {
-				if ($cliente->tipo == C_ClientesTipoJuridica) $clienteVerifica = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj))->order(['idempresa DESC'])->first();
-				else $clienteVerifica = $this->Clientes->findByCpf(removeCaracteres($cliente->cpf))->order(['idempresa DESC'])->first();
+			// Valida permissões usando somente a empresa atual (não empresadominante).
+			$clienteBase = $this->Clientes->findById($idcliente)->first();
+			$clienteVerifica = null;
+
+			if ($clienteBase && (int)$clienteBase->idempresa !== (int)$idempresa) {
+				if ($clienteBase->tipo == C_ClientesTipoJuridica) {
+					$clienteVerifica = $this->Clientes
+						->findByCnpj(removeCaracteres($clienteBase->cnpj))
+						->where(['idempresa' => $idempresa])
+						->first();
+				} else {
+					$clienteVerifica = $this->Clientes
+						->findByCpf(removeCaracteres($clienteBase->cpf))
+						->where(['idempresa' => $idempresa])
+						->first();
+				}
+			} else {
+				$clienteVerifica = $clienteBase;
 			}
-			if ($clienteVerifica->cpf != $cliente->cpf && $cliente->cnpj != $clienteVerifica->cnpj) {
+
+			if (empty($clienteVerifica)) {
+				$this->autoRender = false;
+				return $this->response->withStringBody('Sem permissão.')->withStatus(403);
+			}
+
+			if ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj) {
 				$this->autoRender = false;
 				return $this->response->withStringBody('Sem permissão.')->withStatus(403);
 			}
@@ -380,7 +402,12 @@ class TicketsController extends AppController {
 			} catch (\Throwable $e) {}
 		}
 
-		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes']])->where([ 'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj, ] ]);
+		// Garante que o cliente veja apenas tickets da empresa atual.
+		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes']])
+			->where([
+				'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj],
+				'Tickets.idempresa' => $this->Auth->user('idempresa')
+			]);
 		if($assunto != null) $tickets = $tickets->where(['tickets.assunto' => $assunto]);
 		if($situacao != null && $situacao != -1) $tickets = $tickets->where(['tickets.situacao' => $situacao]);
 		else if($situacao != -1) $tickets = $tickets->where(['tickets.situacao IN' => [C_TicketSituacaoPendente, C_TicketSituacaoEmandamento]]);
@@ -425,16 +452,32 @@ class TicketsController extends AppController {
 		if($this->Auth->user('role') == C_RoleCliente){
 			$this->set('email', $this->Auth->user(['email']));
 
+			$empresaAtual = (int)$this->Auth->user('idempresa');
 			$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
-		
-			if($cliente->tipo == C_ClientesTipoJuridica) $clientes = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj))->order(['idempresa DESC'])->toArray();
-			else $clientes = $this->Clientes->findByCpf(removeCaracteres($cliente->cpf))->order(['idempresa DESC'])->toArray();
-			foreach($clientes as $reg) {
-				if($reg->empresadominante == $reg->idempresa) {
-					$ticket->idempresa = $reg->idempresa;
-					$ticket->idcliente = $reg->id;
-					break;
-				}
+			if (empty($cliente)) {
+				$this->Flash->error('Cliente não encontrado para a empresa atual.');
+				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+			}
+
+			// Seleciona o cadastro do cliente dentro da empresa atual.
+			if($cliente->tipo == C_ClientesTipoJuridica) {
+				$clienteAtual = $this->Clientes
+					->findByCnpj(removeCaracteres($cliente->cnpj))
+					->where(['idempresa' => $empresaAtual])
+					->first();
+			} else {
+				$clienteAtual = $this->Clientes
+					->findByCpf(removeCaracteres($cliente->cpf))
+					->where(['idempresa' => $empresaAtual])
+					->first();
+			}
+
+			if (!empty($clienteAtual)) {
+				$ticket->idempresa = $empresaAtual;
+				$ticket->idcliente = $clienteAtual->id;
+			} else {
+				$this->Flash->error('Não existe cadastro do cliente na empresa atual para abrir o ticket.');
+				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 			}
 		}
 
@@ -451,7 +494,36 @@ class TicketsController extends AppController {
 			$ticket->idautor = $this->Auth->user('id');
 			$ticket->situacao = 0;
 			$ticket->resolvido = 0;
-			if($this->Auth->user('role') != C_RoleCliente) $ticket->idempresa = $this->Auth->user('idempresa');
+			// Garante idempresa correto (empresa atual no dropdown).
+			$ticket->idempresa = $this->Auth->user('idempresa');
+
+			// Para cliente, também garante idcliente correto (CPF/CNPJ dentro da empresa atual).
+			if($this->Auth->user('role') == C_RoleCliente) {
+				$empresaAtual = (int)$this->Auth->user('idempresa');
+				$clienteBase = $this->Clientes->findById($this->Auth->user('idcliente'))->first();
+
+				$clienteAtual = null;
+				if (!empty($clienteBase)) {
+					if ($clienteBase->tipo == C_ClientesTipoJuridica) {
+						$clienteAtual = $this->Clientes
+							->findByCnpj(removeCaracteres($clienteBase->cnpj))
+							->where(['idempresa' => $empresaAtual])
+							->first();
+					} else {
+						$clienteAtual = $this->Clientes
+							->findByCpf(removeCaracteres($clienteBase->cpf))
+							->where(['idempresa' => $empresaAtual])
+							->first();
+					}
+				}
+
+				if (empty($clienteAtual)) {
+					$this->Flash->error('Não existe cadastro do cliente na empresa atual para abrir o ticket.');
+					return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+				}
+
+				$ticket->idcliente = $clienteAtual->id;
+			}
 		
 			if ($this->Tickets->save($ticket)) {
 				// Anexos
@@ -665,7 +737,10 @@ class TicketsController extends AppController {
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
 		// Ticket 
-			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])->where(['tickets.id' => $idticket])->first();
+			// Impede vazamento entre empresas.
+			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])
+				->where(['tickets.id' => $idticket, 'tickets.idempresa' => $idempresa])
+				->first();
 			if(empty($ticket)) {
 				$this->Flash->error('Não foi encontrado um ticket com o Id informado na Empresa selecionada.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
@@ -679,15 +754,24 @@ class TicketsController extends AppController {
 			}
 
 			if ($this->Auth->user('role') == C_RoleCliente) {
-				$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
+				$clienteBase = $this->Clientes->findById($this->Auth->user('idcliente'))->first();
+				$clienteVerifica = null;
 
-				if($cliente->empresadominante == $cliente->idempresa) $clienteVerifica = $cliente;
-				else {
-					if($cliente->tipo == C_ClientesTipoJuridica) $clienteVerifica = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj))->order(['idempresa DESC'])->first();
-					else $clienteVerifica = $this->Clientes->findByCpf(removeCaracteres($cliente->cpf))->order(['idempresa DESC'])->first();
+				if (!empty($clienteBase)) {
+					if($clienteBase->tipo == C_ClientesTipoJuridica) {
+						$clienteVerifica = $this->Clientes
+							->findByCnpj(removeCaracteres($clienteBase->cnpj))
+							->where(['idempresa' => $idempresa])
+							->first();
+					} else {
+						$clienteVerifica = $this->Clientes
+							->findByCpf(removeCaracteres($clienteBase->cpf))
+							->where(['idempresa' => $idempresa])
+							->first();
+					}
 				}
 
-				if($clienteVerifica->cpf != $cliente->cpf && $cliente->cnpj != $clienteVerifica->cnpj) {
+				if (empty($clienteVerifica) || ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj)) {
 					$this->Flash->error('Você não possui permissão para visualizar este ticket.');
 					return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 				}
@@ -749,7 +833,10 @@ class TicketsController extends AppController {
 		$this->viewBuilder()->setLayout('print');
 		
 		// Ticket 
-			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])->where(['tickets.id' => $idticket])->first();
+			// Impede vazamento entre empresas.
+			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])
+				->where(['tickets.id' => $idticket, 'tickets.idempresa' => $idempresa])
+				->first();
 			if(empty($ticket)) {
 				$this->Flash->error('Não foi encontrado um ticket com o Id informado na Empresa selecionada.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
@@ -763,15 +850,24 @@ class TicketsController extends AppController {
 			}
 
 			if ($this->Auth->user('role') == C_RoleCliente) {
-				$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
+				$clienteBase = $this->Clientes->findById($this->Auth->user('idcliente'))->first();
+				$clienteVerifica = null;
 
-				if($cliente->empresadominante == $cliente->idempresa) $clienteVerifica = $cliente;
-				else {
-					if($cliente->tipo == C_ClientesTipoJuridica) $clienteVerifica = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj))->order(['idempresa DESC'])->first();
-					else $clienteVerifica = $this->Clientes->findByCpf(removeCaracteres($cliente->cpf))->order(['idempresa DESC'])->first();
+				if (!empty($clienteBase)) {
+					if($clienteBase->tipo == C_ClientesTipoJuridica) {
+						$clienteVerifica = $this->Clientes
+							->findByCnpj(removeCaracteres($clienteBase->cnpj))
+							->where(['idempresa' => $idempresa])
+							->first();
+					} else {
+						$clienteVerifica = $this->Clientes
+							->findByCpf(removeCaracteres($clienteBase->cpf))
+							->where(['idempresa' => $idempresa])
+							->first();
+					}
 				}
 
-				if($clienteVerifica->cpf != $cliente->cpf && $cliente->cnpj != $clienteVerifica->cnpj) {
+				if (empty($clienteVerifica) || ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj)) {
 					$this->Flash->error('Você não possui permissão para visualizar este ticket.');
 					return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 				}
