@@ -24,7 +24,13 @@ $this->end();
 							<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome completo', 'required' => true]) ?>
 						</div>
 						<div class="form-group">
+							<?= $this->Form->control('idempresa_cadastro', ['empty' => 'Empresa (PGM/Master)', 'options' => $empresasCadastro ?? [], 'required' => true, 'class' => 'form-control', 'label' => false]) ?>
+						</div>
+						<div class="form-group">
 							<?= $this->Form->control('tipo', ['empty' => 'Tipo do cliente', 'options' => C_ClientesTipoCadastroCliente, 'required' => true, 'class' => 'form-control', 'label' => false, ]) ?>
+						</div>
+						<div class="form-group">
+							<?= $this->Form->control('fone', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Telefone', 'required' => true]) ?>
 						</div>
 						<div class="form-group">
 							<?= $this->Form->control('password', ['autocomplete' => 'new-password', 'class' => 'form-control ', 'label' => false, 'required' => true, 'placeholder' => 'Senha']) ?>
@@ -86,6 +92,7 @@ $this->end();
 		$("#cnpj").mask("99.999.999/9999-99");
 		$("#cep").mask("99999-999");
 		$("#cpf, #cpfcliente").mask("999.999.999-99");
+		$("#fone").mask("(99) 9999-9999");
 		$("#celular").mask("(99) 99999-9999");
 		$("#telefone").mask("(99) 9999-9999");
 	});
@@ -131,21 +138,30 @@ $this->end();
 				url: "<?= Router::url(['controller'=>'Users','action'=>'verificacnpjcliente']);?>",
 				type: 'POST',
 				dataType: 'JSON',
-				data: {cnpj: $('#cnpj').val()},
+				data: {cnpj: $('#cnpj').val(), idempresa: $('#idempresa-cadastro').val()},
 				success: function(data){
 					$('#cliente').val(data.IdCliente);
 					$('#razaosocial').val(data.RazaoSocial);
+					$('#razaosocial').prop('readonly', true);
 
 					window.idcliente = data;
 					deuerrado('nao', 'cnpj');
 				},
-				error: function(data) {
-					if(data.Mensagem == 'jatem'){
+				error: function(xhr) {
+					var resp = xhr && xhr.responseJSON ? xhr.responseJSON : {};
+					if(resp.Mensagem == 'jatem'){
 						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário para este cliente.</p>');
 						deuerrado('sim', 'cpf');
-					} else if(data.Mensagem == 'inativo'){
+					} else if(resp.Mensagem == 'inativo'){
 						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">O cliente encontra-se inativado no banco de dados.</p>');
 						deuerrado('sim', 'cpf');
+					} else if(resp.Mensagem == 'naopode'){
+						// Auto-cadastro: permite digitar o nome da empresa e seguir.
+						$('#cliente').val('');
+						$('#razaosocial').val('');
+						$('#razaosocial').prop('readonly', false);
+						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">CNPJ não encontrado. Informe o Nome da Empresa para criar o cadastro automaticamente.</p>');
+						deuerrado('nao', 'cnpj');
 					}
 				}
 			});
@@ -158,21 +174,30 @@ $this->end();
 				url: "<?= Router::url(['controller'=>'Users','action'=>'verificacpfcliente']);?>",
 				type: 'POST',
 				dataType: 'JSON',
-				data: {cpf: $('#cpfcliente').val()},
+				data: {cpf: $('#cpfcliente').val(), idempresa: $('#idempresa-cadastro').val()},
 				success: function(data){
 					$('#cliente').val(data.IdCliente);
 					$('#nomecliente').val(data.NomeCliente);
+					$('#nomecliente').prop('readonly', true);
 					
 					window.idcliente = data;
 					deuerrado('nao', 'cpf');
 				},
-				error: function(data) {
-					if(data.Mensagem == 'jatem'){
+				error: function(xhr) {
+					var resp = xhr && xhr.responseJSON ? xhr.responseJSON : {};
+					if(resp.Mensagem == 'jatem'){
 						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário para este cliente.</p>');
 						deuerrado('sim', 'cpf');
-					} else if(data.Mensagem == 'inativo'){
+					} else if(resp.Mensagem == 'inativo'){
 						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">O cliente encontra-se inativado no banco de dados.</p>');
 						deuerrado('sim', 'cpf');
+					} else if(resp.Mensagem == 'naopode'){
+						// Auto-cadastro: permite digitar o nome do cliente e seguir.
+						$('#cliente').val('');
+						$('#nomecliente').val('');
+						$('#nomecliente').prop('readonly', false);
+						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">CPF não encontrado. Informe o Nome do cliente para criar o cadastro automaticamente.</p>');
+						deuerrado('nao', 'cpf');
 					}
 				}
 			});

@@ -675,10 +675,23 @@ class UsersController extends AppController {
 		$this->viewBuilder()->setLayout("cadastrocliente");
 		
 		$user = $this->Users->newEntity();
+		$empresasCadastro = $this->Empresas
+			->find('list', ['keyField' => 'id', 'valueField' => 'nomefantasia'])
+			->order(['nomefantasia' => 'ASC'])
+			->toArray();
+		$this->set('empresasCadastro', $empresasCadastro);
 		
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
+			// No auto-cadastro o usuário normalmente não está logado.
+			// Então exigimos que ele selecione a empresa (PGM/Master) na tela.
 			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
+			$empresaIdCadastro = !empty($data['idempresa_cadastro']) ? (int)$data['idempresa_cadastro'] : null;
+			$empresaId = $empresaIdAtual ?: $empresaIdCadastro;
+			if (empty($empresaId) || $empresaId <= 0) {
+				$this->Flash->error(__('Selecione a empresa para concluir o cadastro.'));
+				return $this->redirect(['controller' => 'users', 'action' => 'login']);
+			}
 			
 			// Normalização do e-mail
 			$data['email1'] = strtolower(trim($data['email1'])); 
@@ -688,20 +701,58 @@ class UsersController extends AppController {
 				return $this->redirect(['controller' => 'users', 'action' => 'login']);
 			}
 
-			$cliente = $this->Clientes
-				->findByCnpj(removeCaracteres(trim($data['cnpj'])));
-			if ($empresaIdAtual) $cliente = $cliente->where(['idempresa' => $empresaIdAtual]);
-			$cliente = $cliente->first();
-			if(empty($cliente)) {
+			$cliente = null;
+
+			$cnpj = removeCaracteres(trim((string)($data['cnpj'] ?? '')));
+			$cpf = removeCaracteres(trim((string)($data['cpfcliente'] ?? '')));
+
+			if (!empty($cnpj)) {
 				$cliente = $this->Clientes
-					->findByCpf(removeCaracteres(trim($data['cpfcliente'])));
-				if ($empresaIdAtual) $cliente = $cliente->where(['idempresa' => $empresaIdAtual]);
-				$cliente = $cliente->first();
+					->findByCnpj($cnpj)
+					->where(['idempresa' => $empresaId])
+					->first();
+			}
+			if(empty($cliente)) {
+				if (!empty($cpf)) {
+					$cliente = $this->Clientes
+						->findByCpf($cpf)
+						->where(['idempresa' => $empresaId])
+						->first();
+				}
 			}
 
 			if(empty($cliente)) {
-				$this->Flash->error(__('Não foi localizado o cadastro do cliente através do CPF/CNPJ informado para vinculação ao novo login.'));
-				return $this->redirect(['controller' => 'users', 'action' => 'login']);
+				// Auto-cadastro: cria o cliente automaticamente na empresa selecionada.
+				$cliente = $this->Clientes->newEntity();
+				$tipoCliente = (int)($data['tipo'] ?? 0);
+
+				$cliente->idempresa = $empresaId;
+				$cliente->empresadominante = $empresaId;
+				$cliente->tipo = $tipoCliente;
+				$cliente->inativo = 0;
+				$cliente->fone = (string)($data['fone'] ?? '');
+
+				if ($tipoCliente === C_ClientesTipoJuridica) {
+					$cliente->cnpj = $cnpj;
+					$cliente->razaosocial = trim((string)($data['razaosocial'] ?? ''));
+					$cliente->nomefantasia = trim((string)($data['razaosocial'] ?? ''));
+					if (empty($cliente->cnpj) || empty($cliente->razaosocial)) {
+						$this->Flash->error(__('Informe CNPJ e Nome da Empresa para concluir o cadastro.'));
+						return $this->redirect(['controller' => 'users', 'action' => 'login']);
+					}
+				} else {
+					$cliente->cpf = $cpf;
+					$cliente->nome = trim((string)($data['nomecliente'] ?? ''));
+					if (empty($cliente->cpf) || empty($cliente->nome)) {
+						$this->Flash->error(__('Informe CPF e Nome do cliente para concluir o cadastro.'));
+						return $this->redirect(['controller' => 'users', 'action' => 'login']);
+					}
+				}
+
+				if (!$this->Clientes->save($cliente)) {
+					$this->Flash->error(__('Não foi possível criar o cadastro do cliente automaticamente. Verifique os dados e tente novamente.'));
+					return $this->redirect(['controller' => 'users', 'action' => 'login']);
+				}
 			}
 
 			$bExists = $this->usuarioExistente(trim($data['email1']));
@@ -720,14 +771,15 @@ class UsersController extends AppController {
 				$user->role = 1;
 				$user->bloqueado = 1;
 				$user->created = date('Y-m-d');
-				$user->idcliente = trim($data['cliente']);
+				// Sempre usa o id do cliente encontrado/criado (não confia apenas no hidden do form).
+				$user->idcliente = (int)$cliente->id;
 				$user->tipo = intval($data['tipo']);
 				$user->ip = $this->request->clientIp();
 
 				if ($this->Users->save($user)) {
 					$empresauser = $this->Empresasusers->newEntity();
 					// Se existe contexto multi-empresa (usuário logado), usa a empresa selecionada.
-					$empresauser->idempresa = $empresaIdAtual ? $empresaIdAtual : $cliente->empresadominante;
+					$empresauser->idempresa = $empresaId;
 					$empresauser->iduser = $user->id;
 					$this->Empresasusers->save($empresauser);
 					$bEmailSent = $this->email($user->id, $empresauser->idempresa);
@@ -753,14 +805,16 @@ class UsersController extends AppController {
 			$data = $this->request->getData();
 			$cnpj = $data['cnpj'];
 			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
+			$empresaIdCadastro = !empty($data['idempresa']) ? (int)$data['idempresa'] : null;
+			$empresaId = $empresaIdAtual ?: $empresaIdCadastro;
 		
 			$clientes = $this->Clientes->findByCnpj(removeCaracteres($cnpj))->toArray();
 			$cliente = null;
 
 			// Prioriza a empresa selecionada pelo usuário (quando houver contexto).
-			if ($empresaIdAtual) {
+			if ($empresaId) {
 				foreach($clientes as $reg) {
-					if ((int)$reg->idempresa === $empresaIdAtual) { $cliente = $reg; break; }
+					if ((int)$reg->idempresa === $empresaId) { $cliente = $reg; break; }
 				}
 			}
 
@@ -771,7 +825,7 @@ class UsersController extends AppController {
 				}
 			}
 
-			if(empty($cliente)) return $this->jsonResponse(['Mensagem' => 'naopode'], 400);
+			if(empty($cliente)) return $this->jsonResponse(['Mensagem' => 'naopode'], 404);
 			if($cliente->inativo) return $this->jsonResponse(['Mensagem' => 'inativo'], 400);
 			
 			return $this->jsonResponse(['IdCliente' => $cliente->id, 'RazaoSocial' => $cliente->razaosocial], 200);
@@ -787,12 +841,14 @@ class UsersController extends AppController {
 			$data = $this->request->getData();
 			$cpf = $data['cpf'];
 			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
+			$empresaIdCadastro = !empty($data['idempresa']) ? (int)$data['idempresa'] : null;
+			$empresaId = $empresaIdAtual ?: $empresaIdCadastro;
 			$clientes = $this->Clientes->findByCpf(removeCaracteres($cpf))->toArray();
 			$cliente = null;
 
-			if ($empresaIdAtual) {
+			if ($empresaId) {
 				foreach($clientes as $reg) {
-					if ((int)$reg->idempresa === $empresaIdAtual) { $cliente = $reg; break; }
+					if ((int)$reg->idempresa === $empresaId) { $cliente = $reg; break; }
 				}
 			}
 
@@ -803,7 +859,7 @@ class UsersController extends AppController {
 				}
 			}
 			
-			if(empty($cliente)) return $this->jsonResponse(['Mensagem' => 'naopode'], 400);
+			if(empty($cliente)) return $this->jsonResponse(['Mensagem' => 'naopode'], 404);
 			if($cliente->inativo) return $this->jsonResponse(['Mensagem' => 'inativo'], 400);
 			
 			return $this->jsonResponse(['IdCliente' => $cliente->id, 'NomeCliente' => $cliente->nome], 200);
