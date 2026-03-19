@@ -237,11 +237,40 @@
 
 	$('[rel=popover]').popover({offset: 0});
 
+	// Garante troca entre tabs de status mesmo se o comportamento do Bootstrap não estiver funcionando.
+	// Excluímos "Abrir Ticket" porque este abre nova tela via handler separado.
+	$('.tickets-erp-tab:not(.btn-abrir-ticket)').on('click', function(e) {
+		e.preventDefault();
+		var href = $(this).attr('href');
+		if (!href) return;
+
+		// Ativa/desativa estilos do tab
+		$('.tickets-erp-tab').removeClass('active');
+		$(this).addClass('active');
+
+		// Mostra o content correspondente
+		$('.tab-pane').removeClass('active');
+		$(href).addClass('active');
+
+		// Atualiza acessibilidade
+		$('.tickets-erp-tab').attr('aria-selected', 'false');
+		$(this).attr('aria-selected', 'true');
+
+		// Recalcula DataTables para evitar "tela travada" por layout/colunas.
+		setTimeout(function() {
+			$(href).find('table').each(function() {
+				if ($.fn.DataTable && $.fn.DataTable.isDataTable(this)) {
+					$(this).DataTable().columns.adjust().draw(false);
+				}
+			});
+		}, 0);
+	});
+
 	$(document).ready(function() {
 		var filters = typeof filters !== 'undefined' ? filters : '';
 		table = $('#table-todos, #table-pendentes, #table-emandamento, #table-resolvidos, #table-fechados');
 		table.on( 'length.dt', function ( e, settings, len ) {
-			pagelength(len);
+			if (typeof pagelength === 'function') pagelength(len);
 		} )
 		table.DataTable({
 			"pageLength": <?= $pagelength ?>,
