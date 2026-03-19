@@ -242,7 +242,7 @@
 		table.on( 'length.dt', function ( e, settings, len ) {
 			pagelength(len);
 		} )
-		table.DataTable({
+		var dt = table.DataTable({
 			"pageLength": <?= $pagelength ?>,
 			"bLengthChange": false,
 			"order": [[ 0, "desc" ]],
@@ -278,7 +278,7 @@
 		// Alguns templates definem `filters` globalmente; caso não exista,
 		// evita ReferenceError que pode quebrar handlers e interações da tela.
 		var filters = typeof filters !== 'undefined' ? filters : '';
-		table.search(filters).draw();
+		dt.search(filters).draw();
 	});
 
 	$('.btn-resolver').click(function(e){
