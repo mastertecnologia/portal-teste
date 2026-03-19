@@ -346,18 +346,25 @@
 			}
 		}, 1000);
 	// Empresa 
-		$('#empresaSidebar').change(function() {
-			empresa = $(this).val()
+		function handleEmpresaSidebarChange() {
+			var empresa = $(this).val();
 
 			$.ajax({
 				data: {empresa: empresa},
 				type: 'POST',
 				url: "<?= Router::url(['controller' => 'Empresas', 'action' => 'alteraempresa']);?>",
-				success: function(data) { 
-					location.reload() 
+				success: function(data) {
+					location.reload();
 				},
-			})
-		});
+				error: function(xhr) {
+					bootbox.alert('Falha ao trocar a empresa. HTTP: ' + xhr.status);
+				},
+			});
+		}
+
+		// Suporta tanto select normal (change) quanto bootstrap-select (changed.bs.select).
+		$('#empresaSidebar').on('change', handleEmpresaSidebarChange);
+		$('#empresaSidebar').on('changed.bs.select', handleEmpresaSidebarChange);
 	// 
 
 </script>

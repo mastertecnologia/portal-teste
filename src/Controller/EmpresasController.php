@@ -51,7 +51,10 @@ class EmpresasController extends AppController{
 		parent::beforeFilter($event);
 		$this->set('title', 'Empresas');		
 		
-		if ($this->Auth->user('role') == C_RoleCliente) {
+		// Permite a troca de empresa via dropdown também para clientes.
+		// Outras ações do controller continuam bloqueadas para role de cliente.
+		$action = (string)$this->request->getParam('action');
+		if ($this->Auth->user('role') == C_RoleCliente && $action !== 'alteraempresa') {
             $this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
