@@ -257,9 +257,9 @@ class ProdutosController extends AppController {
     public function listAPI() {
         $this->autoRender = false;
         if ($this->request->is('get')) {
-			$empresa = $this->request->getHeaderLine('empresa');
-            $token = $this->request->getHeaderLine('token');
-            $codigo = $this->request->getHeaderLine('codigo');
+			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
+            $token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+            $codigo = $this->request->getHeaderLine('codigo') ?: $this->request->getQuery('codigo');
 
 			if(empty($token) || empty($empresa)) 
 			return $this->jsonResponse(['mensagem' => 'Parâmetros da requisição inválidos'], 400);
@@ -324,8 +324,8 @@ class ProdutosController extends AppController {
             return $responseApi('Método não permitido. Use POST com headers empresa e token, e body JSON com pelo menos "codigo".', 405);
         }
         try {
-            $empresa = $this->request->getHeaderLine('empresa');
-            $token = $this->request->getHeaderLine('token');
+            $empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
+            $token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
             // Usar getData() quando o body já foi parseado (Content-Type: application/json)
             $json = $this->request->getData();
             if (empty($json) || !is_array($json)) {

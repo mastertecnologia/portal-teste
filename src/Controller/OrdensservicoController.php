@@ -904,8 +904,8 @@ class OrdensservicoController extends AppController {
             $this->log('[API-ORDENS refreshAPI] resposta 405 metodo nao permitido', 'info');
 			return $apiRet('Método não permitido. Use PUT.', 405);
 		}
-		$empresa = $this->request->getHeaderLine('empresa');
-		$token = $this->request->getHeaderLine('token');
+		$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
+		$token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
 		// Aceitar JSON do body: getData() ou input('json_decode')
 		$json = $this->request->getData();
 		if (empty($json) || !is_array($json)) {

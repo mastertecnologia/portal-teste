@@ -605,9 +605,15 @@ class ClientesController extends AppController {
 		$this->autoRender = false;
 
         if ($this->request->is('post')) {
-			$empresa = $this->request->getHeaderLine('empresa');
-            $token = $this->request->getHeaderLine('token');
-			$json = $this->request->input('json_decode');
+			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
+            $token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+			$json = $this->request->getData();
+			if (empty($json) || !is_array($json)) {
+				$raw = $this->request->input('json_decode');
+				$json = is_string($raw) ? json_decode($raw) : $raw;
+			} else {
+				$json = (object)$json;
+			}
 
 			$apiRet = function ($msg, $status = 200) {
 				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
@@ -657,7 +663,8 @@ class ClientesController extends AppController {
 				$cliente->nomefantasia = $json->fantasia;
 				$cliente->inativo = 0;
 				$cliente->idcidade = $this->Cidades->findByCodibge($json->codibge)->first()->id;
-				$cliente->empresadominante = 2; // fixo pgm
+				// Multiempresa: dominante deve seguir a empresa informada na API.
+				$cliente->empresadominante = (int)$empresa;
 
 				if($this->Clientes->save($cliente)) {
 					$deuerro = 'não';
@@ -692,9 +699,9 @@ class ClientesController extends AppController {
 	public function listAPI() {
         $this->autoRender = false;
         if ($this->request->is('get')) {
-			$empresa = $this->request->getHeaderLine('empresa');
-            $token = $this->request->getHeaderLine('token');
-            $cnpj = $this->request->getHeaderLine('cnpj');
+			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
+            $token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+            $cnpj = $this->request->getHeaderLine('cnpj') ?: $this->request->getQuery('cnpj');
 
 			$apiRetList = function ($msg, $status = 200) {
 				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
