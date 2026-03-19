@@ -26,10 +26,35 @@ return [
         ],
     ],
 
+    /**
+     * E-mail (SMTP) para ambientes que usam app_local.php
+     *
+     * Este bloco sobrescreve os transports do app.php.
+     * Use env(...) para não salvar senha em texto plano.
+     */
+    'EmailTransport' => [
+        'master' => [
+            'className' => 'Smtp',
+            'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
+            'port' => (int)env('MAIL_MASTER_PORT', 587),
+            'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
+            'password' => env('MAIL_MASTER_PASSWORD', ''),
+            'tls' => filter_var(env('MAIL_MASTER_TLS', false), FILTER_VALIDATE_BOOLEAN),
+            'client' => null,
+        ],
+        'pgm' => [
+            'className' => 'Smtp',
+            'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
+            'port' => (int)env('MAIL_PGM_PORT', 587),
+            'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
+            'password' => env('MAIL_PGM_PASSWORD', ''),
+            'tls' => filter_var(env('MAIL_PGM_TLS', false), FILTER_VALIDATE_BOOLEAN),
+            'client' => null,
+        ],
+    ],
+
     // Opcional: desabilitar envio real de e-mail em teste
-    // 'EmailTransport' => [
-    //     'default' => ['className' => 'Debug'],
-    // ],
+    // 'EmailTransport' => ['default' => ['className' => 'Debug']],
 
     // Opcional: consulta de Inscrição Estadual (IE) na SEFAZ/SINTEGRA (telas Clientes)
     // Obtenha a chave em https://sintegrapi.com.br e defina no .env como SINTEGRA_API_KEY
