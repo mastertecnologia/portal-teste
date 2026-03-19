@@ -275,6 +275,9 @@
 				else $('td').each(function(){$(this).removeClass('dark-mode');});
 			},
 		});
+		// Alguns templates definem `filters` globalmente; caso não exista,
+		// evita ReferenceError que pode quebrar handlers e interações da tela.
+		var filters = typeof filters !== 'undefined' ? filters : '';
 		table.search(filters).draw();
 	});
 
