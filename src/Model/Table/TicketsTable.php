@@ -54,6 +54,7 @@ class TicketsTable extends Table {
 		$empresa = $this->Empresas->get($idempresa);
 		if (isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
 		else $nomeempresa = $empresa->razaosocial;
+		$transporteEmail = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
 
 		// E-mail do destinatário (prioridade: ticket, usuário vinculado ao ticket, cliente vinculado ao ticket)
 		if (empty($emailDest)) {
@@ -157,7 +158,7 @@ class TicketsTable extends Table {
 
 		$email = new Email();
 		
-		$email->transport('pgm');
+		$email->transport($transporteEmail);
 		$from = 'helpdesk@pgm.inf.br';
 		
 		$email->from([$from => $nomeempresa])->to($emailDestList)->emailFormat('html')->subject($subject);
@@ -170,7 +171,7 @@ class TicketsTable extends Table {
 
 			foreach($emailResponsavel as $regEmailResp) {
 				$email = new Email();
-				$email->transport('pgm');
+				$email->transport($transporteEmail);
 				$from = 'helpdesk@pgm.inf.br';
 				$email->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
 				$email->send($message);
