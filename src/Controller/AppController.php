@@ -33,6 +33,8 @@ class AppController extends Controller {
 			'unlockedActions' => [
 				'login', 'logout', 'loginempresa', 'acessoEmpresa', 'loginduasetapas',
 				'add', 'edit',
+				// Troca de empresa via dropdown (AJAX) não envia _Token.
+				'alteraempresa',
 				'carrinho', 'carrinhoadd', 'carrinhoedititem', 'carrinhodelitem', 'valortotal', 'acaoindex',
 				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'carrinhoedit',
 				'timerIniciar', 'timerPausar', 'timerRetomar', 'timerFinalizar',
