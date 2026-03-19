@@ -346,8 +346,13 @@
 			}
 		}, 1000);
 	// Empresa 
-		function handleEmpresaSidebarChange() {
-			var empresa = $(this).val();
+		function handleEmpresaSidebarChange(e) {
+			// Sempre lê do <select> real (bootstrap-select pode disparar o evento com outro target).
+			var empresa = $('#empresaSidebar').val();
+			if (!empresa) {
+				bootbox.alert('Falha ao trocar a empresa: valor inválido no seletor.');
+				return;
+			}
 
 			$.ajax({
 				data: {empresa: empresa},
