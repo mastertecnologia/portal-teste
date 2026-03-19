@@ -664,18 +664,9 @@ class TicketsController extends AppController {
 	public function view($idticket = null){
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
-		$isAjax = $this->request->is('ajax');
-		if ($isAjax) {
-			// Para master-detail via AJAX: não renderiza o layout do ERP.
-			$this->viewBuilder()->setLayout('clear');
-		}
 		// Ticket 
 			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])->where(['tickets.id' => $idticket])->first();
 			if(empty($ticket)) {
-				if ($isAjax) {
-					$this->autoRender = false;
-					return $this->response->withStringBody('Ticket não encontrado.')->withStatus(404);
-				}
 				$this->Flash->error('Não foi encontrado um ticket com o Id informado na Empresa selecionada.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 			}
@@ -683,10 +674,6 @@ class TicketsController extends AppController {
 			$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
 		// Permissões 
 			if(empty($idticket)) {
-				if ($isAjax) {
-					$this->autoRender = false;
-					return $this->response->withStringBody('Selecione um ticket para visualizar.')->withStatus(400);
-				}
 				$this->Flash->error('Selecione um ticket para editar.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 			}
@@ -701,20 +688,12 @@ class TicketsController extends AppController {
 				}
 
 				if($clienteVerifica->cpf != $cliente->cpf && $cliente->cnpj != $clienteVerifica->cnpj) {
-					if ($isAjax) {
-						$this->autoRender = false;
-						return $this->response->withStringBody('Sem permissão.')->withStatus(403);
-					}
 					$this->Flash->error('Você não possui permissão para visualizar este ticket.');
 					return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 				}
 			}
 
 			if ($this->Auth->user('role') == C_RoleCliente && $ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
-				if ($isAjax) {
-					$this->autoRender = false;
-					return $this->response->withStringBody('Sem permissão.')->withStatus(403);
-				}
 				$this->Flash->error('Você não possui permissão para visualizar este ticket.');
 				return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 			}
