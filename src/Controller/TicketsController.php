@@ -605,7 +605,8 @@ class TicketsController extends AppController {
 					$ticket->fila_suporte = 'n1';
 					$ticket->nivel_atendimento = 1;
 					$ticket->idtecnico_responsavel = null;
-					$this->Tickets->save($ticket, ['fields' => ['fila_suporte', 'nivel_atendimento', 'idtecnico_responsavel']]);
+					$f = $this->_ticketFieldsComResponsavel(['fila_suporte', 'nivel_atendimento', 'idtecnico_responsavel']);
+					$this->Tickets->save($ticket, ['fields' => $f]);
 				}
 				$this->_syncTicketQueueAfterCreate((int)$ticket->id);
 				// Anexos (vários arquivos: input multiple ou lista normalizada)
@@ -1776,9 +1777,7 @@ class TicketsController extends AppController {
 		if (in_array('idtecnico_responsavel', $cols, true)) {
 			$ticket->idtecnico_responsavel = $uid;
 		}
-		if (in_array('owner_id', $cols, true)) {
-			$ticket->owner_id = $uid;
-		}
+		// owner_id é preenchido em TicketsTable::beforeSave a partir de idtecnico_responsavel
 		$emp = (int)$this->Auth->user('idempresa');
 		$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $uid])->first();
 		if (empty($ja)) {
@@ -1791,20 +1790,10 @@ class TicketsController extends AppController {
 	}
 
 	/**
-	 * Garante persistência de owner_id junto com idtecnico_responsavel (save com `fields`).
+	 * Save com `fields`: ao persistir idtecnico_responsavel, incluir owner_id (espelho sincronizado no beforeSave).
 	 */
 	protected function _ticketFieldsComResponsavel(array $fields): array {
-		$cols = $this->Tickets->getSchema()->columns();
-		if (in_array('idtecnico_responsavel', $cols, true) && in_array('owner_id', $cols, true)) {
-			if (in_array('idtecnico_responsavel', $fields, true) && !in_array('owner_id', $fields, true)) {
-				$fields[] = 'owner_id';
-			}
-			if (in_array('owner_id', $fields, true) && !in_array('idtecnico_responsavel', $fields, true)) {
-				$fields[] = 'idtecnico_responsavel';
-			}
-		}
-
-		return $fields;
+		return $this->Tickets->fieldsComEspelhoResponsavel($fields);
 	}
 
 	protected function _ticketTransferApiAllowed(): bool {
@@ -2155,12 +2144,12 @@ class TicketsController extends AppController {
 			],
 			'acoes' => $acoes,
 		];
-		if (isset($reg->owner_id)) {
-			$row['owner_id'] = $reg->owner_id !== null && $reg->owner_id !== '' ? (int)$reg->owner_id : null;
+		$canonicalResp = (int)($reg->idtecnico_responsavel ?? 0);
+		if ($canonicalResp <= 0 && isset($reg->owner_id) && $reg->owner_id !== null && $reg->owner_id !== '') {
+			$canonicalResp = (int)$reg->owner_id;
 		}
-		if (isset($reg->idtecnico_responsavel)) {
-			$row['idtecnico_responsavel'] = $reg->idtecnico_responsavel !== null && $reg->idtecnico_responsavel !== '' ? (int)$reg->idtecnico_responsavel : null;
-		}
+		$row['idtecnico_responsavel'] = $canonicalResp > 0 ? $canonicalResp : null;
+		$row['owner_id'] = $canonicalResp > 0 ? $canonicalResp : null;
 		if ($wf || $queuesUi) {
 			if ($qEnt && !empty($qEnt->name)) {
 				$row['filaLabel'] = (string)$qEnt->name;
@@ -2645,10 +2634,6 @@ class TicketsController extends AppController {
 			try {
 				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agora, $obsLinhas, $newQueue, $wf, $cat, $filaPost, $nivelPost, $sitAntes) {
 					$ticket->idtecnico_responsavel = null;
-					$colsL = $this->Tickets->getSchema()->columns();
-					if (in_array('owner_id', $colsL, true)) {
-						$ticket->owner_id = null;
-					}
 					$ticket->situacao = C_TicketSituacaoPendente;
 					$ticket->queue_id = (int)$newQueue->id;
 					$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel', 'situacao', 'queue_id']);
@@ -2714,10 +2699,6 @@ class TicketsController extends AppController {
 		try {
 			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agora, $obsLinhas, $filaPost, $oldId, $cat, $nivelPost, $newQueue, $wf) {
 				$ticket->idtecnico_responsavel = $destId;
-				$colsL = $this->Tickets->getSchema()->columns();
-				if (in_array('owner_id', $colsL, true)) {
-					$ticket->owner_id = $destId;
-				}
 				if ($newQueue) {
 					$ticket->queue_id = (int)$newQueue->id;
 				}
@@ -2808,9 +2789,6 @@ class TicketsController extends AppController {
 		$cols = $this->Tickets->getSchema()->columns();
 		if (in_array('idtecnico_responsavel', $cols, true)) {
 			$fields[] = 'idtecnico_responsavel';
-		}
-		if (in_array('owner_id', $cols, true)) {
-			$fields[] = 'owner_id';
 		}
 		$fields = $this->_ticketFieldsComResponsavel($fields);
 		if ($this->Tickets->save($ticket, ['fields' => $fields])) {

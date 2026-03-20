@@ -52,21 +52,34 @@ class TicketsTable extends Table {
 	}
 
 	/**
-	 * Mantém owner_id e idtecnico_responsavel alinhados quando ambos existem.
+	 * Responsável pelo ticket: referência canônica é idtecnico_responsavel (legado e regras de negócio).
+	 * owner_id é espelho persistido (API JSON, FK opcional) — sempre derivado de idtecnico_responsavel
+	 * para evitar divergência. Não use owner_id como fonte de verdade na aplicação.
 	 */
 	public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
 		$cols = $this->getSchema()->columns();
 		$hasOwner = in_array('owner_id', $cols, true);
 		$hasTec = in_array('idtecnico_responsavel', $cols, true);
 		if ($hasOwner && $hasTec) {
-			if ($entity->isDirty('idtecnico_responsavel') && !$entity->isDirty('owner_id')) {
-				$entity->owner_id = $entity->idtecnico_responsavel;
-			} elseif ($entity->isDirty('owner_id') && !$entity->isDirty('idtecnico_responsavel')) {
-				$entity->idtecnico_responsavel = $entity->owner_id;
-			}
+			$tid = $entity->idtecnico_responsavel;
+			$uid = ($tid !== null && $tid !== '' && (int)$tid > 0) ? (int)$tid : null;
+			$entity->owner_id = $uid;
 		}
 
 		return true;
+	}
+
+	/**
+	 * Para save com lista explícita de fields: incluir owner_id quando idtecnico_responsavel for persistido.
+	 */
+	public function fieldsComEspelhoResponsavel(array $fields): array {
+		$cols = $this->getSchema()->columns();
+		if (in_array('idtecnico_responsavel', $cols, true) && in_array('owner_id', $cols, true)
+			&& in_array('idtecnico_responsavel', $fields, true) && !in_array('owner_id', $fields, true)) {
+			$fields[] = 'owner_id';
+		}
+
+		return $fields;
 	}
 
 	public function email($idticket, $acao = null, $emailDest = null, $idempresa = null) {

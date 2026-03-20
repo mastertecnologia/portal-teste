@@ -53,7 +53,8 @@ class TicketsusersController extends AppController
 			}
 			$ticket = $Tickets->get($idticket);
 			$ticket->idtecnico_responsavel = (int)$iduser;
-			$Tickets->save($ticket, ['fields' => ['idtecnico_responsavel']]);
+			$f = $Tickets->fieldsComEspelhoResponsavel(['idtecnico_responsavel']);
+			$Tickets->save($ticket, ['fields' => $f]);
 		} catch (\Throwable $e) {
 			$this->log('Ticketsusers::gravarTecnicoResponsavelAssuncao ' . $e->getMessage(), 'warning');
 		}

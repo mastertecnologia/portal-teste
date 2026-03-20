@@ -36,4 +36,4 @@ COMMENT ON TABLE public.queues IS 'Filas de atendimento por empresa (Master/PGM 
 COMMENT ON COLUMN public.queues.codigo IS 'Opcional: n1, n2, n3… para alinhar a filtros legados (fila_suporte)';
 COMMENT ON TABLE public.queues_users IS 'Técnicos habilitados por fila';
 COMMENT ON COLUMN public.tickets.queue_id IS 'Fila em que o chamado está';
-COMMENT ON COLUMN public.tickets.owner_id IS 'Responsável atual (espelho de idtecnico_responsavel)';
+COMMENT ON COLUMN public.tickets.owner_id IS 'Espelho de idtecnico_responsavel (sincronizado no app; não usar como fonte de verdade)';
