@@ -554,7 +554,9 @@ class TicketsController extends AppController {
 				// E-mail (cliente): notificar suporte — chamar a Table diretamente.
 				// NÃO usar $this->email() aqui: o request ainda é POST do formulário "add" e o action email()
 				// interpretaria como envio manual (para/sugestoes vazios), gerava Flash de erro e descartava o redirect.
+					$emailSuporteOk = true;
 					if ($this->Auth->user('role') == C_RoleCliente) {
+						$emailSuporteOk = false;
 						try {
 							$sent = $this->Tickets->email(
 								$ticket->id,
@@ -562,20 +564,26 @@ class TicketsController extends AppController {
 								null,
 								$this->Auth->user('idempresa')
 							);
-							if (empty($sent)) {
-								$this->Flash->warning(__('O ticket foi aberto, porém não foi possível enviar a notificação por e-mail (destinatário ou SMTP).'));
+							$emailSuporteOk = !empty($sent);
+							if (!$emailSuporteOk) {
 								$this->log('[Tickets::add] Falha ao enviar e-mail de ticket criado (cliente).', 'warning');
 							}
 						} catch (\Throwable $e) {
 							$this->log('[Tickets::add] Exceção ao enviar e-mail de ticket criado: ' . $e->getMessage(), 'error');
-							$this->Flash->warning(__('O ticket foi aberto, porém ocorreu um erro ao enviar a notificação por e-mail.'));
+							$emailSuporteOk = false;
 						}
 					}
 				// Not
 					$this->criaNot($ticket->situacao, $ticket->id, $ticket->idcliente);
 				// 
 
-				$this->Flash->success(__("O Ticket nº $ticket->id foi aberto com sucesso"));
+				if ($this->Auth->user('role') == C_RoleCliente && !$emailSuporteOk) {
+					$this->Flash->warning(__(
+						'O Ticket nº ' . $ticket->id . ' foi aberto com sucesso. A notificação por e-mail ao suporte não foi enviada — confira o campo "e-mail de tickets" nas configurações e as credenciais SMTP no servidor (MAIL_*).'
+					));
+				} else {
+					$this->Flash->success(__("O Ticket nº $ticket->id foi aberto com sucesso"));
+				}
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $ticket->id);
 				if ($this->Auth->user('role') == C_RoleCliente) return $this->redirect(['action' => 'view', $ticket->id]);
 				else return $this->redirect(['action' => 'edit', $ticket->id]);

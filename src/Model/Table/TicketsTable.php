@@ -45,11 +45,15 @@ class TicketsTable extends Table {
 		$ticket = $this->get($idticket, [
 			'contain' => [
 				'Clientes' => ['fields' => ['Clientes.email', 'Clientes.razaosocial']],
-				'Users' => ['fields' => ['Users.email', 'Users.name']]
+				'users' => ['fields' => ['Users.email', 'Users.name']]
 			]
 		]);
 		$cliente = $this->Clientes->findById($ticket->idcliente)->first();
-		$emailResponsavel = $this->parseEmailList($cliente->emailresponsavel);
+		if (empty($cliente)) {
+			$this->log('[TicketsTable::email] Cliente não encontrado idcliente=' . $ticket->idcliente, 'error');
+			return false;
+		}
+		$emailResponsavel = $this->parseEmailList(isset($cliente->emailresponsavel) ? $cliente->emailresponsavel : '');
 		
 		$empresa = $this->Empresas->get($idempresa);
 		if (isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
@@ -65,9 +69,13 @@ class TicketsTable extends Table {
 
 		// E-mail do destinatário (prioridade: ticket, usuário vinculado ao ticket, cliente vinculado ao ticket)
 		if (empty($emailDest)) {
-			if (!empty($ticket->email)) $emailDest = $ticket->email;
-			else if (!empty($ticket->user->email)) $emailDest = $ticket->user->email;
-			else if (!empty($ticket->cliente->email)) $emailDest = $ticket->cliente->email;
+			if (!empty($ticket->email)) {
+				$emailDest = $ticket->email;
+			} elseif (!empty($ticket->user) && !empty($ticket->user->email)) {
+				$emailDest = $ticket->user->email;
+			} elseif (!empty($ticket->cliente) && !empty($ticket->cliente->email)) {
+				$emailDest = $ticket->cliente->email;
+			}
 		}
 		$emailDestList = $this->parseEmailList($emailDest);
 
@@ -152,12 +160,12 @@ class TicketsTable extends Table {
 
 			$subject = "Ticket nº $idticket cancelado - $nomeempresa";
 		} else if ($acao == C_TicketCriado) {
-			$cliente = $ticket->cliente->razaosocial;
-			$message = 
+			$nomeClienteEmail = ($cliente->tipo == C_ClientesTipoFisica) ? $cliente->nome : $cliente->razaosocial;
+			$message =
 				"<h3> Ticket $idticket Criado! </h3>
 				<p> <b> Assunto: </b> $assunto</p>
 				<p> <b> Descrição: </b> $ticket->solicitacao</p>
-				<p> <b> Cliente: </b> $cliente</p>
+				<p> <b> Cliente: </b> $nomeClienteEmail</p>
 			";
 			$subject = "Ticket nº $idticket criado - $nomeempresa";
 		}
