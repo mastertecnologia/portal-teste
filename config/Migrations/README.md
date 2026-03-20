@@ -36,3 +36,25 @@ psql -U USUARIO -d pgm -f config/schema/postgres_queues_patch_idempotent.sql
 3. No cadastro de usuário, vincular **Filas de Atendimento** (`queues_users`).
 4. Criar/editar ticket com `queue_id` e responsável via **`idtecnico_responsavel`** (ou ações “Iniciar atendimento” / assumir) — conferir que `owner_id` no banco acompanha após o save.
 5. **GET** `tickets/api-index` e **GET** `queues/api-for-ticket/{id}` / `queues/get-available-queues/{id}`.
+
+## Níveis de suporte (`20250321140000_SupportLevelsQueuesTickets.php`)
+
+- Cria **`support_levels`** (N1, N2, N3, NOC, Serviço) e colunas **`support_level_id`** em `queues`, `queues_users`, `users`, `tickets` (+ `description` em `queues` no PostgreSQL).
+- Depois de migrar, rode **`bin/cake migrations migrate`** também no servidor.
+
+### Se “as alterações não aparecem” no servidor
+
+1. Na **máquina de desenvolvimento**: `git status` deve estar limpo; `git log -1` deve mostrar commits recentes (`feat(admin): painel Filas/técnicos`, `feat(tickets): filas…`, etc.).
+2. No **servidor** (`/var/www/portal` ou equivalente): `git fetch origin && git pull origin main` (ou a branch usada em produção).
+3. Confirme que estes caminhos **existem** no disco do servidor:
+   - `config/Migrations/20250321140000_SupportLevelsQueuesTickets.php`
+   - `src/Controller/QueuesController.php` (ações `adminIndex`, `adminEdit`, …)
+   - `src/Template/Queues/admin_index.ctp` (e `admin_edit.ctp`, `admin_technicians.ctp`)
+   - `src/Model/Table/SupportLevelsTable.php` (deve conter `parent::initialize($config);`)
+4. Se o deploy **não** copia `config/` ou `src/Template/`, ajuste o pipeline ou faça deploy pelo **mesmo repositório Git** completo.
+5. Reinicie **PHP-FPM** / **Apache** após o pull se usar OPcache agressivo.
+
+### Painel web (admin)
+
+- Menu lateral (**admin**): **Filas / técnicos** → `queues/admin-index`.
+- Ou **Configurações** → cartão **Filas / técnicos**.
