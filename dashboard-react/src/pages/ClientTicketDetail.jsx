@@ -132,7 +132,7 @@ export default function ClientTicketDetail({ boot }) {
   const clienteNome = stripHtml(ticket.cliente || '').trim() || '—';
 
   const header = embedded ? (
-    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm sm:py-4">
+    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm">
       {backHref ? (
         <a href={backHref} className="text-sm font-medium text-teal-700 hover:underline">
           {backLabel}
@@ -142,7 +142,9 @@ export default function ClientTicketDetail({ boot }) {
           {backLabel}
         </Link>
       )}
-      <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900">Ticket #{ticket.id}</h1>
+      <h1 className="tickets-react-ticket-title mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900">
+        Ticket #{ticket.id}
+      </h1>
       <p className="mt-1 text-sm text-slate-600">
         {clienteNome} · <span className="font-semibold text-slate-800">{statusPlain}</span>
       </p>
@@ -298,7 +300,7 @@ export default function ClientTicketDetail({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 px-3 pb-4 pt-2 text-slate-800 sm:px-4">
+      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 px-3 pb-4 pt-5 text-slate-800 sm:px-4 sm:pt-6">
         {header}
         <div className="min-h-0 flex-1">{inner}</div>
       </div>

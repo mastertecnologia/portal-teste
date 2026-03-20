@@ -27,15 +27,32 @@
 */
 #tickets-react-root .tickets-react-ticket-strip {
   box-sizing: border-box;
+  overflow: visible !important;
   background-color: #fff !important;
   color: #0f172a !important;
   border: 1px solid #cbd5e1 !important;
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  padding: 1.25rem 1rem 1rem !important;
 }
 
-#tickets-react-root .tickets-react-ticket-strip h1 {
+@media (min-width: 640px) {
+  #tickets-react-root .tickets-react-ticket-strip {
+    padding: 1.35rem 1rem 1.1rem !important;
+  }
+}
+
+/* Evita cortar ascendentes do título (overflow / line-height do tema) */
+#tickets-react-root .tickets-react-ticket-strip h1,
+#tickets-react-root .tickets-react-ticket-title {
   color: #0f172a !important;
+  line-height: 1.35 !important;
+  padding-top: 0.125rem;
+  overflow: visible !important;
+}
+
+#tickets-react-root .tickets-react-client-detail {
+  overflow-y: visible !important;
 }
 
 #tickets-react-root .tickets-react-ticket-strip a {
