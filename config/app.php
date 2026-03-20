@@ -203,7 +203,8 @@ return [
             'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
             // Senha deve vir do ambiente (não versionar).
             'password' => env('MAIL_MASTER_PASSWORD', ''),
-            'tls' => filter_var(env('MAIL_MASTER_TLS', false), FILTER_VALIDATE_BOOLEAN),
+            // Porta 587 costuma exigir STARTTLS; defina MAIL_MASTER_TLS=false só se o servidor for realmente sem TLS.
+            'tls' => filter_var(env('MAIL_MASTER_TLS', true), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
         ],
         'pgm' => [
@@ -214,7 +215,7 @@ return [
             'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
             // Senha deve vir do ambiente (não versionar).
             'password' => env('MAIL_PGM_PASSWORD', ''),
-            'tls' => filter_var(env('MAIL_PGM_TLS', false), FILTER_VALIDATE_BOOLEAN),
+            'tls' => filter_var(env('MAIL_PGM_TLS', true), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
         ],
     ],

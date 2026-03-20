@@ -579,7 +579,7 @@ class TicketsController extends AppController {
 
 				if ($this->Auth->user('role') == C_RoleCliente && !$emailSuporteOk) {
 					$this->Flash->warning(__(
-						'O Ticket nº ' . $ticket->id . ' foi aberto com sucesso. A notificação por e-mail ao suporte não foi enviada — confira o campo "e-mail de tickets" nas configurações e as credenciais SMTP no servidor (MAIL_*).'
+						'O Ticket nº ' . $ticket->id . ' foi aberto com sucesso. A notificação por e-mail ao suporte não foi enviada — confira o campo "e-mail de tickets" (formato válido), senha MAIL_MASTER_PASSWORD ou MAIL_PGM_PASSWORD no servidor e, na porta 587, TLS (MAIL_*_TLS). Detalhes em logs/error.log.'
 					));
 				} else {
 					$this->Flash->success(__("O Ticket nº $ticket->id foi aberto com sucesso"));

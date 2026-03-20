@@ -2,6 +2,7 @@
 namespace App\Model\Table;
 
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Mailer\Email;
 
@@ -15,7 +16,13 @@ class TicketsTable extends Table {
 		foreach ($parts as $p) {
 			$p = trim($p);
 			if ($p === '') continue;
-			if (filter_var($p, FILTER_VALIDATE_EMAIL)) $out[] = $p;
+			// Aceita "Nome" <mail@dominio.com> colado no campo de configuração
+			if (preg_match('/<([^>]+@[^>]+)>/', $p, $m)) {
+				$p = trim($m[1]);
+			}
+			if (filter_var($p, FILTER_VALIDATE_EMAIL)) {
+				$out[] = $p;
+			}
 		}
 		return array_values(array_unique($out));
 	}
@@ -40,8 +47,6 @@ class TicketsTable extends Table {
 	}
 
 	public function email($idticket, $acao = null, $emailDest = null, $idempresa = null) {
-		error_reporting(0);
-
 		$ticket = $this->get($idticket, [
 			'contain' => [
 				'Clientes' => ['fields' => ['Clientes.email', 'Clientes.razaosocial']],
@@ -60,11 +65,13 @@ class TicketsTable extends Table {
 		else $nomeempresa = $empresa->razaosocial;
 		$transporteEmail = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
 
+		$configRow = TableRegistry::get('Config')->get(1);
+		$urlFora = !empty($configRow->urlfora) ? $configRow->urlfora : '#';
+
 		// Ticket criado: notificar o suporte (config.emailtickets) — deve ser resolvido ANTES do parse/lista vazia.
 		// Antes, $emailDest era setado só no bloco C_TicketCriado (abaixo), depois da verificação, gerando falha falsa.
 		if ($acao == C_TicketCriado) {
-			$cfg = $this->Config->get(1);
-			$emailDest = !empty($cfg->emailtickets) ? trim((string)$cfg->emailtickets) : null;
+			$emailDest = !empty($configRow->emailtickets) ? trim((string)$configRow->emailtickets) : null;
 		}
 
 		// E-mail do destinatário (prioridade: ticket, usuário vinculado ao ticket, cliente vinculado ao ticket)
@@ -80,8 +87,11 @@ class TicketsTable extends Table {
 		$emailDestList = $this->parseEmailList($emailDest);
 
 		if (empty($emailDestList)) {
-			// Table não tem acesso a `Flash`/`redirect()` como Controller.
-			// Apenas sinaliza falha para o controller decidir a mensagem/fluxo.
+			if ($acao == C_TicketCriado) {
+				$this->log('[TicketsTable::email] Ticket criado: nenhum destinatário válido (campo emailtickets vazio ou formato inválido).', 'warning');
+			} else {
+				$this->log('[TicketsTable::email] Lista de destinatários vazia após validação.', 'warning');
+			}
 			return false;
 		}
 
@@ -121,7 +131,7 @@ class TicketsTable extends Table {
 				<p> <b> Descrição: </b> $ticket->solicitacao</p>
 				$linhaHorasTicket
 				$linhaHorasMes
-				<br/><strong>Verifique os tickets da sua empresa <a href='".$this->Config->get(1)->urlfora."'>clicando aqui!</a></strong>
+				<br/><strong>Verifique os tickets da sua empresa <a href='".$urlFora."'>clicando aqui!</a></strong>
 				<br/><br />Atenciosamente,<br />$nomeempresa.
 			";
 
@@ -132,7 +142,7 @@ class TicketsTable extends Table {
 				<p> <b> Assunto: </b> $assunto</p>
 				<p> Seu ticket nº $idticket foi movido para 'Aguardando técnico' </p>
 				<p> <b> Descrição: </b> $ticket->solicitacao</p>
-				<br/><strong>Verifique os tickets da sua empresa <a href='".$this->Config->get(1)->urlfora."'>clicando aqui!</a></strong>
+				<br/><strong>Verifique os tickets da sua empresa <a href='".$urlFora."'>clicando aqui!</a></strong>
 				<br/><br />Atenciosamente,<br/>$nomeempresa.
 			";
 
@@ -143,7 +153,7 @@ class TicketsTable extends Table {
 				<p> <b> Assunto: </b> $assunto</p>
 				<p> Seu ticket nº $idticket foi movido para 'Em execução' </p>
 				<p> <b> Descrição: </b> $ticket->solicitacao</p>
-				<br/><strong>Verifique os tickets da sua empresa <a href='".$this->Config->get(1)->urlfora."'>clicando aqui!</a></strong>
+				<br/><strong>Verifique os tickets da sua empresa <a href='".$urlFora."'>clicando aqui!</a></strong>
 				<br/><br />Atenciosamente,<br/>$nomeempresa.
 			";
 
@@ -154,7 +164,7 @@ class TicketsTable extends Table {
 				<p> <b> Assunto: </b> $assunto</p>
 				<p> Seu ticket nº $idticket foi cancelado! </p>
 				<p> <b> Descrição: </b> $ticket->solicitacao</p>
-				<br/><strong>Verifique os tickets da sua empresa <a href='".$this->Config->get(1)->urlfora."'>clicando aqui!</a></strong>
+				<br/><strong>Verifique os tickets da sua empresa <a href='".$urlFora."'>clicando aqui!</a></strong>
 				<br/><br />Atenciosamente,<br/>$nomeempresa.
 			";
 
@@ -197,6 +207,7 @@ class TicketsTable extends Table {
 
 				return implode(';', $emailDestList);
 			}
+			$this->log('[TicketsTable::email] Email::send() retornou false (transporte ' . $transporteEmail . ', ticket ' . $idticket . '). Verifique SMTP/senha/TLS.', 'warning');
 		} catch (\Throwable $e) {
 			$this->log('[TicketsTable::email] Falha SMTP/envio: ' . $e->getMessage(), 'error');
 		}
