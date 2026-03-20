@@ -1846,16 +1846,8 @@ class TicketsController extends AppController {
 			}
 			return false;
 		}
+		// Técnico (role 0): mesmo critério do isAuthorized do edit — qualquer usuário técnico da empresa.
 		if ($role === 0) {
-			if ((int)$this->Auth->user('admin') !== 1) {
-				$meuticket = $this->Tickets->findById($ticket->id)->first();
-				if (!$meuticket) {
-					return false;
-				}
-				if ($this->Auth->user('id') != $meuticket->idautor && $this->Auth->user('idcliente') != $meuticket->idcliente) {
-					return false;
-				}
-			}
 			return true;
 		}
 		return false;
@@ -1927,12 +1919,18 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		$comentarios = $this->_apiComentariosPayload($idticket);
-		return $this->jsonResponse([
+		$payload = [
 			'ok' => true,
 			'comentarios' => $comentarios,
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,
-		]);
+		];
+
+		return $this->response
+			->withType('application/json')
+			->withHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate')
+			->withHeader('Pragma', 'no-cache')
+			->withStringBody(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 	}
 
 	protected function _apiTicketDetailPayload($ticket, $idticket): array {
@@ -2145,7 +2143,13 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		$data = $this->_apiTicketDetailPayload($ticket, $idticket);
-		return $this->jsonResponse(['ok' => true, 'ticket' => $data]);
+		$body = json_encode(['ok' => true, 'ticket' => $data], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+		return $this->response
+			->withType('application/json')
+			->withHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate')
+			->withHeader('Pragma', 'no-cache')
+			->withStringBody($body);
 	}
 
 	public function apiSaveTicket($idticket = null) {

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { fetchTicketComments, USE_MOCK } from '../lib/api';
 
 /** Intervalo padrão de sincronização da conversa (polling). */
-export const TICKET_COMMENTS_POLL_MS = 4000;
+export const TICKET_COMMENTS_POLL_MS = 2500;
 
 /**
  * Atualiza comentários e status do ticket em intervalo (aba visível).
@@ -24,9 +24,18 @@ export function useTicketCommentsPoll(ticketId, setComentarios, setTicket, inter
       const res = await fetchTicketComments(ticketId);
       if (!res.ok) return;
       setC.current(res.comentarios);
-      setT.current((prev) =>
-        prev && res.status != null ? { ...prev, status: res.status, situacao: res.situacao } : prev
-      );
+      setT.current((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev };
+        // Sempre aplicar situacao quando a API envia (inclui 0 = pendente).
+        if (res.situacao !== undefined && res.situacao !== null) {
+          next.situacao = res.situacao;
+        }
+        if (res.status !== undefined && res.status !== null && res.status !== '') {
+          next.status = res.status;
+        }
+        return next;
+      });
     };
 
     const iv = setInterval(run, intervalMs);

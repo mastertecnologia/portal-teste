@@ -68,7 +68,11 @@ export async function fetchTicketDetail(id) {
     return t ? { ok: true, data: t } : { ok: false, error: 'Não encontrado' };
   }
   const boot = getBoot();
-  const r = await fetch(`${boot.paths.apiView}${encodeURIComponent(id)}`, { credentials: 'same-origin' });
+  const r = await fetch(`${boot.paths.apiView}${encodeURIComponent(id)}`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
   if (!r.ok) return { ok: false, error: r.statusText };
   const json = await r.json();
   if (!json.ok) return { ok: false, error: json.error || 'erro' };
@@ -86,6 +90,7 @@ export async function fetchTicketComments(id) {
   }
   const r = await fetch(`${boot.paths.apiComments}${encodeURIComponent(id)}`, {
     credentials: 'same-origin',
+    cache: 'no-store',
     headers: { Accept: 'application/json' },
   });
   if (!r.ok) return { ok: false, error: r.statusText };

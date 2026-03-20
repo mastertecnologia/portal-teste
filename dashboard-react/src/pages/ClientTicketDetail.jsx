@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchTicketDetail, postComentario, getBoot, USE_MOCK } from '../lib/api';
-import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
+import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
 import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
@@ -148,7 +148,7 @@ export default function ClientTicketDetail({ boot }) {
         {ticket.responsavel && ticket.responsavel !== '—' ? ` · ${ticket.responsavel}` : ''}
       </p>
       <p className="mt-2 text-xs text-slate-400">
-        A conversa atualiza automaticamente (~4s) com a aba visível.
+        Conversa e status atualizam automaticamente (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
       </p>
     </div>
   ) : (

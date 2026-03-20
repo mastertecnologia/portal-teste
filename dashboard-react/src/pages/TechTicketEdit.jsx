@@ -6,7 +6,7 @@ import {
   saveTicketDescricaoAtendimento,
   getBoot,
 } from '../lib/api';
-import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
+import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
 import { stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
@@ -205,8 +205,8 @@ export default function TechTicketEdit({ boot }) {
       {erro && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800 sm:text-sm">{erro}</p>}
       {embedded && (
         <p className="mb-3 text-xs text-slate-400">
-          Comentários atualizam automaticamente (~4s) quando a aba está visível. Envio de e-mail não bloqueia a resposta
-          (PHP-FPM).
+          Comentários e status do ticket atualizam (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
+          Envio de e-mail não bloqueia a resposta (PHP-FPM).
         </p>
       )}
     </>
