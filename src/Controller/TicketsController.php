@@ -1594,6 +1594,21 @@ class TicketsController extends AppController {
 		return array_replace_recursive($base, $extra);
 	}
 
+	/**
+	 * SituacaoTicket()/AssuntoTicket() no legado retornam HTML; a API JSON precisa de texto para o React.
+	 */
+	protected function _ticketSituacaoTexto($situacao) {
+		$raw = SituacaoTicket($situacao);
+		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+		return $t !== '' ? $t : (string)$situacao;
+	}
+
+	protected function _ticketAssuntoTexto($assunto) {
+		$raw = AssuntoTicket($assunto);
+		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+		return $t !== '' ? $t : (string)$assunto;
+	}
+
 	protected function _ticketRowApiTecnico($reg): array {
 		$c = $reg->cliente ?? null;
 		$nomeCliente = '';
@@ -1623,10 +1638,10 @@ class TicketsController extends AppController {
 			'id' => $id,
 			'autor' => $reg->users['name'] ?? ($reg->user->name ?? ''),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
-			'assunto' => AssuntoTicket($reg->assunto),
+			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assuntoCode' => $reg->assunto,
 			'situacao' => $sit,
-			'situacaoLabel' => SituacaoTicket($reg->situacao),
+			'situacaoLabel' => $this->_ticketSituacaoTexto($reg->situacao),
 			'cliente' => $nomeCliente,
 			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
@@ -1640,9 +1655,9 @@ class TicketsController extends AppController {
 		return [
 			'id' => (int)$reg->id,
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
-			'assunto' => AssuntoTicket($reg->assunto),
+			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assuntoCode' => $reg->assunto,
-			'status' => SituacaoTicket($reg->situacao),
+			'status' => $this->_ticketSituacaoTexto($reg->situacao),
 			'situacao' => (int)$reg->situacao,
 			'descricao' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 160, '…', 'UTF-8'),
 			'urls' => [
@@ -1739,8 +1754,8 @@ class TicketsController extends AppController {
 
 		return [
 			'id' => (int)$ticket->id,
-			'assunto' => AssuntoTicket($ticket->assunto),
-			'status' => SituacaoTicket($ticket->situacao),
+			'assunto' => $this->_ticketAssuntoTexto($ticket->assunto),
+			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,
 			'descricao' => (string)($ticket->solicitacao ?? ''),
 			'prioridade' => '—',

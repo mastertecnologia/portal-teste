@@ -12,11 +12,20 @@ const GROUP_KEYS = {
   fechados: 'fechados',
 };
 
+/** Legado pode mandar HTML em situacaoLabel até o servidor atualizar — remove tags. */
+function stripHtml(raw) {
+  if (raw == null) return '—';
+  const s = String(raw);
+  const t = s.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  return t || '—';
+}
+
 function statusLabel(row) {
-  return row.situacaoLabel || row.status || '—';
+  return stripHtml(row.situacaoLabel || row.status);
 }
 
 export default function TechDashboard({ boot }) {
+  const embedded = Boolean(boot);
   const [groups, setGroups] = useState(null);
   const [q, setQ] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('pendente');
@@ -53,6 +62,183 @@ export default function TechDashboard({ boot }) {
   const dash = boot?.paths?.dashboard;
   const addTicket = boot?.paths?.addTicket;
 
+  const tableSection = (
+    <section
+      className={
+        embedded
+          ? 'rounded-lg border border-slate-200 bg-white shadow-sm'
+          : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
+      }
+    >
+      <div
+        className={
+          embedded
+            ? 'flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between'
+            : 'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'
+        }
+      >
+        {!embedded && (
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Fila</h3>
+            <p className="text-sm text-slate-500">
+              {totalTodos} ticket(s) na empresa · integração JSON ativa quando embutido no CakePHP
+            </p>
+          </div>
+        )}
+        {embedded && (
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold text-slate-900">Fila</h3>
+            <p className="text-xs text-slate-500">{totalTodos} ticket(s) na empresa</p>
+          </div>
+        )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar nº, cliente ou assunto"
+            className="h-10 w-full min-w-[200px] rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-xs"
+          />
+          <select
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+            className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-teal-500"
+          >
+            <option value="todos">Todos</option>
+            <option value="pendente">Aguardando técnico</option>
+            <option value="execucao">Em execução</option>
+            <option value="resolvido">Resolvidos</option>
+            <option value="fechados">Cancelados / fechados</option>
+          </select>
+        </div>
+      </div>
+
+      <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 text-left text-slate-500">
+              <tr>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Ticket</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Autor</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Data</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Assunto</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Status</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Cliente</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                    Nenhum ticket neste filtro.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((ticket) => {
+                  const st = statusLabel(ticket);
+                  const assuntoLinha = stripHtml(ticket.assunto);
+                  return (
+                    <tr key={ticket.id} className="transition hover:bg-slate-50/80">
+                      <td className="px-3 py-3 font-semibold sm:px-4">
+                        {ticket.urls?.edit ? (
+                          <a className="text-teal-700 hover:underline" href={ticket.urls.edit}>
+                            #{ticket.id}
+                          </a>
+                        ) : (
+                          <Link className="text-teal-700 hover:underline" to={`/cliente/ticket/${ticket.id}`}>
+                            #{ticket.id}
+                          </Link>
+                        )}
+                      </td>
+                      <td className="max-w-[140px] truncate px-3 py-3 sm:px-4" title={ticket.autor || ''}>
+                        {ticket.autor || '—'}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3 text-slate-600 sm:px-4">
+                        {ticket.created || ticket.atualizado || '—'}
+                      </td>
+                      <td className="px-3 py-3 sm:px-4">
+                        <div className="max-w-xs font-medium text-slate-800">{assuntoLinha}</div>
+                        {ticket.solicitacaoPreview && (
+                          <div className="line-clamp-2 text-xs text-slate-500">{ticket.solicitacaoPreview}</div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 sm:px-4">
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
+                            statusType(st)
+                          )}`}
+                        >
+                          {st}
+                        </span>
+                      </td>
+                      <td className="max-w-[160px] truncate px-3 py-3 sm:px-4" title={ticket.cliente || ''}>
+                        {ticket.cliente || '—'}
+                      </td>
+                      <td className="px-3 py-3 sm:px-4">
+                        {(ticket.acoes || []).length === 0 ? (
+                          <span className="text-slate-400">—</span>
+                        ) : (
+                          <div className="flex max-w-[200px] flex-wrap gap-1">
+                            {ticket.acoes.map((a) => (
+                              <a
+                                key={a.key + a.label}
+                                href={a.url}
+                                target={a.target || '_self'}
+                                rel={a.target === '_blank' ? 'noreferrer' : undefined}
+                                className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-teal-50"
+                                title={a.label}
+                              >
+                                {a.label}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+
+  if (embedded) {
+    return (
+      <div className="tickets-react-tech w-full text-slate-800">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Tickets — técnico</h2>
+            <p className="text-xs text-slate-500">Listagem e ações usam as mesmas URLs do portal.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {dash && (
+              <a href={dash} className="text-sm font-medium text-slate-600 hover:text-teal-700">
+                Dashboard
+              </a>
+            )}
+            {addTicket && (
+              <a
+                href={addTicket}
+                className="rounded-lg bg-teal-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-800"
+              >
+                Abrir ticket
+              </a>
+            )}
+            {boot?.paths?.indexCliente && (
+              <a href={boot.paths.indexCliente} className="text-sm text-slate-600 hover:text-teal-700">
+                Visão cliente
+              </a>
+            )}
+          </div>
+        </div>
+        {tableSection}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <div className="flex min-h-screen">
@@ -72,21 +258,12 @@ export default function TechDashboard({ boot }) {
             </div>
           </div>
           <nav className="flex-1 space-y-2 px-4 py-6 text-sm">
-            {dash ? (
-              <a
-                href={dash}
-                className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-teal-50/90 transition hover:bg-white/10"
-              >
-                <span className="font-medium">← Dashboard</span>
-              </a>
-            ) : (
-              <Link
-                to="/"
-                className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-teal-50/90 transition hover:bg-white/10"
-              >
-                <span className="font-medium">← Início</span>
-              </Link>
-            )}
+            <Link
+              to="/"
+              className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-teal-50/90 transition hover:bg-white/10"
+            >
+              <span className="font-medium">← Início</span>
+            </Link>
             {USE_MOCK && (
               <Link
                 to="/cliente"
@@ -102,9 +279,7 @@ export default function TechDashboard({ boot }) {
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
             <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-sm font-medium text-teal-700">
-                  {boot ? 'Empresa atual (sessão)' : MOCK_SESSION_TECNICO.empresa}
-                </p>
+                <p className="text-sm font-medium text-teal-700">{MOCK_SESSION_TECNICO.empresa}</p>
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900">Tickets — técnico</h2>
                 <p className="text-sm text-slate-500">
                   Mesmas rotas do portal: alterar situação e cancelar usam URLs do CakePHP (navegação completa).
@@ -115,142 +290,14 @@ export default function TechDashboard({ boot }) {
                   <span className="block text-slate-500">Data</span>
                   <span className="font-semibold text-slate-800">{hoje}</span>
                 </div>
-                {addTicket ? (
-                  <a
-                    href={addTicket}
-                    className="rounded-2xl bg-gradient-to-r from-teal-700 to-cyan-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-700/20"
-                  >
-                    Abrir ticket
-                  </a>
-                ) : (
-                  <span className="rounded-2xl border border-slate-200 px-5 py-3 text-sm text-slate-500">Abrir ticket (portal)</span>
-                )}
+                <span className="rounded-2xl border border-slate-200 px-5 py-3 text-sm text-slate-500">Abrir ticket (portal)</span>
               </div>
             </div>
           </header>
 
           <div className="space-y-6 p-4 sm:p-6">
-            <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Fila</h3>
-                  <p className="text-sm text-slate-500">
-                    {totalTodos} ticket(s) na empresa · integração JSON ativa quando embutido no CakePHP
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <input
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Buscar nº, cliente ou assunto"
-                    className="h-11 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500"
-                  />
-                  <select
-                    value={filtroStatus}
-                    onChange={(e) => setFiltroStatus(e.target.value)}
-                    className="h-11 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-teal-500"
-                  >
-                    <option value="todos">Todos</option>
-                    <option value="pendente">Aguardando técnico</option>
-                    <option value="execucao">Em execução</option>
-                    <option value="resolvido">Resolvidos</option>
-                    <option value="fechados">Cancelados / fechados</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead className="bg-slate-50 text-left text-slate-500">
-                      <tr>
-                        <th className="px-4 py-3 font-semibold">Ticket</th>
-                        <th className="px-4 py-3 font-semibold">Autor</th>
-                        <th className="px-4 py-3 font-semibold">Data</th>
-                        <th className="px-4 py-3 font-semibold">Assunto</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
-                        <th className="px-4 py-3 font-semibold">Cliente</th>
-                        <th className="px-4 py-3 font-semibold">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {rows.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                            Nenhum ticket neste filtro.
-                          </td>
-                        </tr>
-                      ) : (
-                        rows.map((ticket) => {
-                          const st = statusLabel(ticket);
-                          return (
-                            <tr key={ticket.id} className="transition hover:bg-slate-50/80">
-                              <td className="px-4 py-4 font-semibold">
-                                {ticket.urls?.edit ? (
-                                  <a className="text-teal-700 hover:underline" href={ticket.urls.edit}>
-                                    #{ticket.id}
-                                  </a>
-                                ) : (
-                                  <Link className="text-teal-700 hover:underline" to={`/cliente/ticket/${ticket.id}`}>
-                                    #{ticket.id}
-                                  </Link>
-                                )}
-                              </td>
-                              <td className="px-4 py-4">{ticket.autor || '—'}</td>
-                              <td className="px-4 py-4 text-slate-600">{ticket.created || ticket.atualizado || '—'}</td>
-                              <td className="px-4 py-4">
-                                <div className="max-w-xs font-medium text-slate-800">{ticket.assunto}</div>
-                                {ticket.solicitacaoPreview && (
-                                  <div className="text-xs text-slate-500 line-clamp-2">{ticket.solicitacaoPreview}</div>
-                                )}
-                              </td>
-                              <td className="px-4 py-4">
-                                <span
-                                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(
-                                    statusType(st)
-                                  )}`}
-                                >
-                                  {st}
-                                </span>
-                              </td>
-                              <td className="px-4 py-4">{ticket.cliente || '—'}</td>
-                              <td className="px-4 py-4">
-                                {(ticket.acoes || []).length === 0 ? (
-                                  <span className="text-slate-400">—</span>
-                                ) : (
-                                  <div className="flex flex-wrap gap-1">
-                                    {ticket.acoes.map((a) => (
-                                      <a
-                                        key={a.key + a.label}
-                                        href={a.url}
-                                        target={a.target || '_self'}
-                                        rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                        className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-teal-50"
-                                        title={a.label}
-                                      >
-                                        {a.label}
-                                      </a>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </section>
-
-            {boot?.paths?.indexCliente && (
-              <p className="text-center text-xs text-slate-400">
-                <a href={boot.paths.indexCliente} className="text-teal-700 hover:underline">
-                  Abrir visão cliente (mesma sessão)
-                </a>
-              </p>
-            )}
+            {tableSection}
+            <p className="text-center text-xs text-slate-400">Modo demonstração — use Vite em localhost.</p>
           </div>
         </main>
       </div>
