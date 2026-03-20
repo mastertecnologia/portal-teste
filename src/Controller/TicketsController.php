@@ -238,7 +238,7 @@ class TicketsController extends AppController {
 
 	public function index(){
 		$this->viewBuilder()->setLayout('default');
-		$this->viewBuilder()->setTemplate('Tickets/react_app');
+		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', 'Listagem de Tickets');
 		$this->set('reactBoot', $this->_reactBoot('tech_index', null));
 	}
@@ -404,7 +404,7 @@ class TicketsController extends AppController {
 		}
 
 		$this->viewBuilder()->setLayout('default');
-		$this->viewBuilder()->setTemplate('Tickets/react_app');
+		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', 'Tickets');
 		$this->set('reactBoot', $this->_reactBoot('client_index', null, [
 			'queryAssunto' => $assunto,
@@ -750,7 +750,7 @@ class TicketsController extends AppController {
 
 		if (!$this->request->is(['post', 'put']) && $this->request->getQuery('classic') !== '1') {
 			$this->viewBuilder()->setLayout('default');
-			$this->viewBuilder()->setTemplate('Tickets/react_app');
+			$this->viewBuilder()->setTemplate('react_app');
 			$this->set('reactBoot', $this->_reactBoot('tech_edit', (int)$idticket, [
 				'classicEditUrl' => Router::url(['action' => 'edit', $idticket, '?' => ['classic' => '1']]),
 			]));
@@ -818,7 +818,7 @@ class TicketsController extends AppController {
 			}
 
 		$this->viewBuilder()->setLayout('default');
-		$this->viewBuilder()->setTemplate('Tickets/react_app');
+		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', "Ticket $idticket");
 		$this->set('reactBoot', $this->_reactBoot('client_view', (int)$idticket));
 	}
