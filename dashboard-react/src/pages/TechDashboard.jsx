@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   fetchTicketsTecnico,
@@ -8,7 +8,7 @@ import {
   postStartTicket,
   USE_MOCK,
 } from '../lib/api';
-import { acaoLinkClassName, badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
+import { badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 
 const API_ERR_TRANSFER = {
@@ -42,6 +42,112 @@ function stripHtml(raw) {
 
 function statusLabel(row) {
   return stripHtml(row.situacaoLabel || row.status);
+}
+
+/** Menu compacto por linha — evita parede de links na coluna Ações. */
+function TicketActionsMenu({
+  ticket,
+  acoes,
+  openTransfer,
+  handleStartAtendimento,
+  startBusyId,
+}) {
+  const acoesOrd = sortTicketAcoes(acoes || []);
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDoc = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  if (acoesOrd.length === 0) return <span className="text-slate-400">—</span>;
+
+  const itemCls =
+    'block w-full cursor-pointer border-0 bg-transparent px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
+
+  return (
+    <div className="relative" ref={wrapRef}>
+      <button
+        type="button"
+        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-sm hover:border-teal-400 hover:bg-teal-50/40"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+      >
+        Ações
+        <span className="text-[10px] text-slate-400" aria-hidden>
+          ▾
+        </span>
+      </button>
+      {open ? (
+        <ul
+          className="absolute right-0 z-40 mt-1 min-w-[12.5rem] list-none rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+          role="menu"
+        >
+          {acoesOrd.map((a) => {
+            if (a.behavior === 'reactTransfer') {
+              return (
+                <li key={`${a.key}-${a.label}`} role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={itemCls}
+                    onClick={() => {
+                      setOpen(false);
+                      openTransfer(ticket);
+                    }}
+                  >
+                    {a.label}
+                  </button>
+                </li>
+              );
+            }
+            if (a.behavior === 'reactStart') {
+              const busy = startBusyId === Number(ticket.id);
+              return (
+                <li key={`${a.key}-${a.label}`} role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={itemCls}
+                    disabled={busy}
+                    onClick={() => {
+                      setOpen(false);
+                      handleStartAtendimento(ticket);
+                    }}
+                  >
+                    {busy ? 'Iniciando…' : a.label}
+                  </button>
+                </li>
+              );
+            }
+            return (
+              <li key={`${a.key}-${a.label}`} role="none">
+                <a
+                  role="menuitem"
+                  href={a.url}
+                  target={a.target || '_self'}
+                  rel={a.target === '_blank' ? 'noreferrer' : undefined}
+                  className={`${itemCls} no-underline`}
+                  onClick={() => setOpen(false)}
+                >
+                  {a.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
 }
 
 /** Destaques operacionais na fila (Service Desk / técnico). */
@@ -318,48 +424,65 @@ export default function TechDashboard({ boot }) {
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
-      <div
-        className={
-          embedded
-            ? 'flex flex-col gap-2 border-b border-slate-100 p-3 sm:flex-row sm:items-center sm:justify-between'
-            : 'flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'
-        }
-      >
-        {!embedded && (
+      {!embedded ? (
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h3 className="text-lg font-bold text-slate-900">Fila</h3>
             <p className="text-sm text-slate-500">
               {totalTodos} ticket(s) na empresa · integração JSON ativa quando embutido no CakePHP
             </p>
           </div>
-        )}
-        {embedded && (
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-slate-900">Fila</h3>
-            <p className="text-xs text-slate-500">{totalTodos} ticket(s) na empresa</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar nº, cliente ou assunto"
+              className="h-9 w-full min-w-[180px] rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-xs"
+            />
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value)}
+              className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-teal-500"
+            >
+              <option value="todos">Todos</option>
+              <option value="ativos">Aguardando + Em execução</option>
+              <option value="pendente">Aguardando técnico</option>
+              <option value="execucao">Em execução</option>
+              <option value="resolvido">Resolvidos</option>
+              <option value="fechados">Cancelados / fechados</option>
+            </select>
           </div>
-        )}
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar nº, cliente ou assunto"
-            className="h-9 w-full min-w-[180px] rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-xs"
-          />
-          <select
-            value={filtroStatus}
-            onChange={(e) => setFiltroStatus(e.target.value)}
-            className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-teal-500"
-          >
-            <option value="todos">Todos</option>
-            <option value="ativos">Aguardando + Em execução</option>
-            <option value="pendente">Aguardando técnico</option>
-            <option value="execucao">Em execução</option>
-            <option value="resolvido">Resolvidos</option>
-            <option value="fechados">Cancelados / fechados</option>
-          </select>
         </div>
-      </div>
+      ) : (
+        <div className="border-b border-slate-100 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium tabular-nums text-slate-700"
+              title="Total de tickets na empresa (todos os status)"
+            >
+              {totalTodos} na empresa
+            </span>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar nº, cliente ou assunto"
+              className="h-9 min-w-[12rem] flex-1 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-md"
+            />
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value)}
+              className="h-9 min-w-[11rem] shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none focus:border-teal-500"
+            >
+              <option value="todos">Todos</option>
+              <option value="ativos">Aguardando + Em execução</option>
+              <option value="pendente">Aguardando técnico</option>
+              <option value="execucao">Em execução</option>
+              <option value="resolvido">Resolvidos</option>
+              <option value="fechados">Cancelados / fechados</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {transferOkHint ? (
         <div
@@ -372,7 +495,7 @@ export default function TechDashboard({ boot }) {
       ) : null}
 
       {wfEnabled ? (
-        <div className="flex flex-col gap-2 border-b border-slate-100 p-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/40 p-3 sm:flex-row sm:flex-wrap sm:items-center">
           <select
             value={filaSuporte}
             onChange={(e) => setFilaSuporte(e.target.value)}
@@ -460,7 +583,7 @@ export default function TechDashboard({ boot }) {
                 ) : null}
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Técnico</th>
                 <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
-                <th className="min-w-[14rem] px-2 py-1.5 font-semibold sm:min-w-[17rem] sm:px-3">Ações</th>
+                <th className="w-[5.5rem] min-w-[5.5rem] px-2 py-1.5 text-right font-semibold sm:px-3">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -474,7 +597,6 @@ export default function TechDashboard({ boot }) {
                 rows.map((ticket) => {
                   const st = statusLabel(ticket);
                   const assuntoLinha = stripHtml(ticket.assunto);
-                  const acoesOrd = sortTicketAcoes(ticket.acoes || []);
                   return (
                     <tr
                       key={ticket.id}
@@ -546,55 +668,14 @@ export default function TechDashboard({ boot }) {
                       <td className="max-w-[8rem] truncate px-2 py-1.5 sm:px-3" title={ticket.cliente || ''}>
                         {ticket.cliente || '—'}
                       </td>
-                      <td className="px-2 py-1 sm:px-3">
-                        {acoesOrd.length === 0 ? (
-                          <span className="text-slate-400">—</span>
-                        ) : (
-                          <div className="flex max-w-[42vw] flex-nowrap items-center gap-0.5 overflow-x-auto py-0.5 sm:max-w-none sm:overflow-visible [scrollbar-width:thin]">
-                            {acoesOrd.map((a) => {
-                              if (a.behavior === 'reactTransfer') {
-                                return (
-                                  <button
-                                    key={a.key + a.label}
-                                    type="button"
-                                    className={acaoLinkClassName(a.key)}
-                                    title={a.label}
-                                    onClick={() => openTransfer(ticket)}
-                                  >
-                                    {a.label}
-                                  </button>
-                                );
-                              }
-                              if (a.behavior === 'reactStart') {
-                                const busy = startBusyId === Number(ticket.id);
-                                return (
-                                  <button
-                                    key={a.key + a.label}
-                                    type="button"
-                                    className={acaoLinkClassName(a.key)}
-                                    title={a.label}
-                                    disabled={busy}
-                                    onClick={() => handleStartAtendimento(ticket)}
-                                  >
-                                    {busy ? 'Iniciando…' : a.label}
-                                  </button>
-                                );
-                              }
-                              return (
-                                <a
-                                  key={a.key + a.label}
-                                  href={a.url}
-                                  target={a.target || '_self'}
-                                  rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                  className={acaoLinkClassName(a.key)}
-                                  title={a.label}
-                                >
-                                  {a.label}
-                                </a>
-                              );
-                            })}
-                          </div>
-                        )}
+                      <td className="px-2 py-1 text-right sm:px-3">
+                        <TicketActionsMenu
+                          ticket={ticket}
+                          acoes={ticket.acoes}
+                          openTransfer={openTransfer}
+                          handleStartAtendimento={handleStartAtendimento}
+                          startBusyId={startBusyId}
+                        />
                       </td>
                     </tr>
                   );
@@ -725,38 +806,47 @@ export default function TechDashboard({ boot }) {
   if (embedded) {
     return (
       <div className="tickets-react-tech w-full text-slate-800">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              {boot?.servicedesk ? 'Service Desk — fila técnica' : 'Tickets — técnico'}
+        <header className="mb-1 flex flex-col gap-3 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+              {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500">
               {boot?.servicedesk
                 ? 'Atualização automática a cada 12 s · mesmas regras e APIs do ERP.'
                 : 'Listagem e ações usam as mesmas URLs do portal.'}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <nav
+            className="flex flex-wrap items-center gap-2 sm:justify-end"
+            aria-label="Atalhos da fila"
+          >
             {dash && (
-              <a href={dash} className="text-sm font-medium text-slate-600 hover:text-teal-700">
+              <a
+                href={dash}
+                className="inline-flex h-9 items-center rounded-md px-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-teal-800"
+              >
                 Dashboard
+              </a>
+            )}
+            {boot?.paths?.indexCliente && (
+              <a
+                href={boot.paths.indexCliente}
+                className="inline-flex h-9 items-center rounded-md px-2.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-teal-800"
+              >
+                Visão cliente
               </a>
             )}
             {addTicket && (
               <a
                 href={addTicket}
-                className="rounded-lg bg-teal-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-800"
+                className="inline-flex h-9 items-center rounded-lg bg-teal-700 px-3 text-sm font-semibold text-white shadow-sm hover:bg-teal-800"
               >
                 Abrir ticket
               </a>
             )}
-            {boot?.paths?.indexCliente && (
-              <a href={boot.paths.indexCliente} className="text-sm text-slate-600 hover:text-teal-700">
-                Visão cliente
-              </a>
-            )}
-          </div>
-        </div>
+          </nav>
+        </header>
         {tableSection}
       </div>
     );
