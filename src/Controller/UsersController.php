@@ -422,9 +422,53 @@ class UsersController extends AppController {
 		return $this->redirect(['action' => 'dashboard']);
 	}
 
+	/**
+	 * GET ?redirect=… após login (ex.: retorno ao Service Desk). Só caminhos internos / servicedesk.
+	 */
+	protected function _rememberServicedeskRedirectFromQuery(): void {
+		if (!$this->request->is('get')) {
+			return;
+		}
+		$raw = $this->request->getQuery('redirect');
+		if ($raw === null || $raw === '') {
+			return;
+		}
+		$target = $this->_sanitizePostLoginRedirect((string)$raw);
+		if ($target !== null) {
+			$this->request->getSession()->write('Auth.redirect', $target);
+		}
+	}
+
+	/**
+	 * @return array|string|null URL/array Cake ou null se inválido
+	 */
+	protected function _sanitizePostLoginRedirect(string $s) {
+		$s = trim($s);
+		if ($s === '' || strpos($s, "\n") !== false || strpos($s, "\r") !== false) {
+			return null;
+		}
+		if (preg_match('#^(https?:)?//#i', $s) || strpos($s, '..') !== false) {
+			return null;
+		}
+		$w = $this->request->getAttribute('webroot');
+		$wTrim = rtrim((string)$w, '/');
+		if ($s === 'servicedesk' || preg_match('#(^|/)servicedesk/?$#', $s)) {
+			return ['controller' => 'Servicedesk', 'action' => 'index'];
+		}
+		if ($wTrim !== '' && $wTrim !== '/' && ($s === $wTrim . '/servicedesk' || $s === $w . 'servicedesk')) {
+			return ['controller' => 'Servicedesk', 'action' => 'index'];
+		}
+		if ($s[0] === '/' && preg_match('#^[a-zA-Z0-9/_?&=\-.]+$#', $s)) {
+			return $s;
+		}
+
+		return null;
+	}
+
 	public function login() {
 		$this->viewBuilder()->setLayout("login");
-	
+		$this->_rememberServicedeskRedirectFromQuery();
+
 		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
 	
 		if ($this->request->is('post')) {
@@ -466,7 +510,8 @@ class UsersController extends AppController {
 	public function acessoEmpresa() {
 		$this->viewBuilder()->setLayout("login");
 		$this->viewBuilder()->setTemplate("login_empresa");
-	
+		$this->_rememberServicedeskRedirectFromQuery();
+
 		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
 	
 		if ($this->request->is('post')) {

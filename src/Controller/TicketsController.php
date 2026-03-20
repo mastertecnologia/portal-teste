@@ -70,6 +70,44 @@ class TicketsController extends AppController {
 		return false;
 	}
 
+	/** Query string para manter o shell Service Desk em links gerados pela API. */
+	protected function _ticketUiQuery(): array {
+		return $this->request->getQuery('sd') === '1' ? ['sd' => '1'] : [];
+	}
+
+	protected function _ticketUrl(array $parts): string {
+		$extra = $this->_ticketUiQuery();
+		if ($extra === []) {
+			return Router::url($parts);
+		}
+		$q = isset($parts['?']) && is_array($parts['?']) ? array_merge($extra, $parts['?']) : $extra;
+		$parts['?'] = $q;
+
+		return Router::url($parts);
+	}
+
+	/** Mescla paths/layout do Service Desk quando ?sd=1 (edição/visualização a partir do /servicedesk). */
+	protected function _servicedeskBootMerge(): array {
+		if ($this->request->getQuery('sd') !== '1') {
+			return [];
+		}
+		$this->viewBuilder()->setLayout('servicedesk');
+
+		return [
+			'servicedesk' => true,
+			'paths' => [
+				'indexTecnico' => Router::url(['controller' => 'Servicedesk', 'action' => 'index'], true),
+				'indexCliente' => Router::url(['controller' => 'Servicedesk', 'action' => 'index'], true),
+				'servicedeskUrl' => Router::url(['controller' => 'Servicedesk', 'action' => 'index'], true),
+				'erpDashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard'], true),
+				'ticketsClassicIndex' => Router::url(['controller' => 'Tickets', 'action' => 'index'], true),
+				'ticketsClassicCliente' => Router::url(['controller' => 'Tickets', 'action' => 'indexcliente'], true),
+				'ticketEditQuery' => '?sd=1',
+				'ticketViewQuery' => '?sd=1',
+			],
+		];
+	}
+
 	public function criarMov($idticket = null, $sitantiga = null, $sitnova = null, $observacao = null) {
 		$mov = $this->Ticketsmovs->newEntity();
 		$mov->idticket = $idticket;
@@ -848,9 +886,9 @@ class TicketsController extends AppController {
 			$this->viewBuilder()->setTemplate('react_app');
 			// Evita tarja duplicada: o React já mostra "Ticket #…" no conteúdo.
 			$this->set('hideLayoutPageTitle', true);
-			$this->set('reactBoot', $this->_reactBoot('tech_edit', (int)$idticket, [
+			$this->set('reactBoot', $this->_reactBoot('tech_edit', (int)$idticket, array_replace_recursive([
 				'classicEditUrl' => Router::url(['action' => 'edit', $idticket, '?' => ['classic' => '1']]),
-			]));
+			], $this->_servicedeskBootMerge())));
 		}
 	}
 
@@ -920,7 +958,7 @@ class TicketsController extends AppController {
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', "Ticket $idticket");
 		$this->set('hideLayoutPageTitle', true);
-		$this->set('reactBoot', $this->_reactBoot('client_view', (int)$idticket));
+		$this->set('reactBoot', $this->_reactBoot('client_view', (int)$idticket, $this->_servicedeskBootMerge()));
 	}
 
 	public function imprimir($idticket = null){
@@ -989,6 +1027,9 @@ class TicketsController extends AppController {
 	}
 
 	public function cancelar($idticket = null){
+		if ($this->request->getQuery('sd') === '1') {
+			$this->viewBuilder()->setLayout('servicedesk');
+		}
 		$ticket = $this->Tickets->get($idticket);
 
 		if($ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('admin') && ($this->Auth->user('role') == 1 && !$this->Auth->user('permissaoacesso'))) {
@@ -1005,13 +1046,14 @@ class TicketsController extends AppController {
 
 			$sitantiga = $ticket->situacao;
 			$ticket->situacao = C_TicketSituacaoFechado;
+			$sd = $this->request->getQuery('sd') === '1' || (isset($data['sd']) && (string)$data['sd'] === '1');
 
 			if ($this->Tickets->save($ticket)) {
 				$this->criarMov($idticket, $sitantiga, C_TicketSituacaoFechado, $observacao);
 				$this->Flash->success("Ticket cancelado.");
 			} else $this->Flash->error("Erro ao cancelar Ticket.");
 
-			return $this->redirect(['action' => $this->Auth->user('role') == 0 ? 'edit' : 'view', $idticket]);
+			return $this->redirect(['action' => $this->Auth->user('role') == 0 ? 'edit' : 'view', $idticket, '?' => $sd ? ['sd' => '1'] : []]);
 		}
 		$this->set('title', 'Ticket ' . $idticket);
 		$this->set('ticket', $ticket);
@@ -1105,8 +1147,12 @@ class TicketsController extends AppController {
 			if ($this->request->getHeaderLine('HX-Request')) {
 				return $this->redirect(['controller' => 'Tickets', 'action' => 'panelLeftFragment', $idticket]);
 			}
-			if (in_array($ticket->situacao, [C_TicketSituacaoPendente, C_TicketSituacaoResolvido])) return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
-			return $this->redirect(['controller' => 'Tickets', 'action' => 'edit', $idticket]);
+			$sd = $this->request->getQuery('sd') === '1';
+			if (in_array($ticket->situacao, [C_TicketSituacaoPendente, C_TicketSituacaoResolvido], true)) {
+				return $this->redirect($sd ? ['controller' => 'Servicedesk', 'action' => 'index'] : ['controller' => 'Tickets', 'action' => 'index']);
+			}
+
+			return $this->redirect(['controller' => 'Tickets', 'action' => 'edit', $idticket, '?' => $sd ? ['sd' => '1'] : []]);
 		}
 	}
 
@@ -2262,35 +2308,35 @@ class TicketsController extends AppController {
 		$acoes = [];
 		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
 			if ($sit !== (int)C_TicketSituacaoPendente) {
-				$acoes[] = ['key' => 'pendente', 'label' => 'Aguardando técnico', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoPendente])];
+				$acoes[] = ['key' => 'pendente', 'label' => 'Aguardando técnico', 'url' => $this->_ticketUrl(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoPendente])];
 			}
 			if ($sit !== (int)C_TicketSituacaoEmandamento) {
-				$acoes[] = ['key' => 'emandamento', 'label' => 'Em execução', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoEmandamento])];
+				$acoes[] = ['key' => 'emandamento', 'label' => 'Em execução', 'url' => $this->_ticketUrl(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoEmandamento])];
 			}
 			if ($sit === (int)C_TicketSituacaoPendente && $transferOk) {
 				$acoes[] = [
 					'key' => 'iniciar',
 					'label' => 'Iniciar atendimento',
 					'behavior' => 'reactStart',
-					'url' => Router::url(['action' => 'edit', $id]),
+					'url' => $this->_ticketUrl(['action' => 'edit', $id]),
 				];
 			}
 			if ($sit !== (int)C_TicketSituacaoResolvido) {
-				$acoes[] = ['key' => 'resolvido', 'label' => 'Resolvido', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoResolvido])];
+				$acoes[] = ['key' => 'resolvido', 'label' => 'Resolvido', 'url' => $this->_ticketUrl(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoResolvido])];
 			}
 			if ($sit !== (int)C_TicketSituacaoFechado) {
-				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
+				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
 			}
 			if ($transferOk) {
 				$acoes[] = [
 					'key' => 'transferir',
 					'label' => 'Transferir',
 					'behavior' => 'reactTransfer',
-					'url' => Router::url(['action' => 'edit', $id]),
+					'url' => $this->_ticketUrl(['action' => 'edit', $id]),
 				];
 			}
 		}
-		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
+		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => $this->_ticketUrl(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
 
 		$tecCol = $tecnicosLabel !== '' ? $tecnicosLabel : '—';
 		if (!$wf && ($tecCol === '—' || $tecCol === '')) {
@@ -2309,7 +2355,7 @@ class TicketsController extends AppController {
 			'tecnicos' => $tecCol,
 			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
-				'edit' => Router::url(['action' => 'edit', $id]),
+				'edit' => $this->_ticketUrl(['action' => 'edit', $id]),
 			],
 			'acoes' => $acoes,
 		];
@@ -2364,9 +2410,9 @@ class TicketsController extends AppController {
 		$sit = (int)$reg->situacao;
 		$acoes = [];
 		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
-			$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
+			$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
 		}
-		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]], true), 'target' => '_blank'];
+		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => $this->_ticketUrl(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
 
 		return [
 			'id' => $id,
@@ -2382,7 +2428,7 @@ class TicketsController extends AppController {
 			'descricao' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 160, '…', 'UTF-8'),
 			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
-				'view' => Router::url(['action' => 'view', $id]),
+				'view' => $this->_ticketUrl(['action' => 'view', $id]),
 			],
 			'acoes' => $acoes,
 		];
@@ -2549,9 +2595,9 @@ class TicketsController extends AppController {
 			'comentarios' => $comentarios,
 			'anexos' => $anexos,
 			'urls' => [
-				'indexCliente' => Router::url(['action' => 'indexcliente']),
-				'edit' => Router::url(['action' => 'edit', $idticket]),
-				'imprimir' => Router::url(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
+				'indexCliente' => $this->_ticketUrl(['action' => 'indexcliente']),
+				'edit' => $this->_ticketUrl(['action' => 'edit', $idticket]),
+				'imprimir' => $this->_ticketUrl(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
 			],
 			'flags' => [
 				'role' => $role,

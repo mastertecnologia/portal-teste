@@ -44,6 +44,24 @@ function statusLabel(row) {
   return stripHtml(row.situacaoLabel || row.status);
 }
 
+/** Destaques operacionais na fila (Service Desk / técnico). */
+function techRowHighlightClass(ticket) {
+  const label = String(ticket.situacaoLabel || ticket.status || '').toLowerCase();
+  const closed =
+    label.includes('resolvido') || label.includes('fechado') || label.includes('cancelado');
+  const semResp =
+    !closed &&
+    !ticket.idtecnico_responsavel &&
+    (String(ticket.tecnicos || '').includes('não atribuído') ||
+      ticket.tecnicos === '—' ||
+      ticket.tecnicos === '');
+  const parts = ['align-middle', 'transition'];
+  if (label.includes('aguardando')) parts.push('bg-amber-50/70');
+  else if (label.includes('execução') || label.includes('andamento')) parts.push('bg-sky-50/60');
+  if (semResp) parts.push('ring-1', 'ring-inset', 'ring-slate-300/80');
+  return parts.join(' ');
+}
+
 export default function TechDashboard({ boot }) {
   const embedded = Boolean(boot);
   const [groups, setGroups] = useState(null);
@@ -118,6 +136,14 @@ export default function TechDashboard({ boot }) {
       cancel = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!embedded || !boot?.servicedesk) return undefined;
+    const id = window.setInterval(() => {
+      reload();
+    }, 12000);
+    return () => window.clearInterval(id);
+  }, [embedded, boot?.servicedesk, reload]);
 
   const wfEnabled = Boolean(workflow?.enabled);
   const filasMeta = workflow?.filas || [];
@@ -450,7 +476,10 @@ export default function TechDashboard({ boot }) {
                   const assuntoLinha = stripHtml(ticket.assunto);
                   const acoesOrd = sortTicketAcoes(ticket.acoes || []);
                   return (
-                    <tr key={ticket.id} className="align-middle transition hover:bg-slate-50/80">
+                    <tr
+                      key={ticket.id}
+                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-50/80`}
+                    >
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.edit ? (
                           <a className="text-teal-700 hover:underline" href={ticket.urls.edit}>
@@ -698,8 +727,14 @@ export default function TechDashboard({ boot }) {
       <div className="tickets-react-tech w-full text-slate-800">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Tickets — técnico</h2>
-            <p className="text-xs text-slate-500">Listagem e ações usam as mesmas URLs do portal.</p>
+            <h2 className="text-lg font-bold text-slate-900">
+              {boot?.servicedesk ? 'Service Desk — fila técnica' : 'Tickets — técnico'}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {boot?.servicedesk
+                ? 'Atualização automática a cada 12 s · mesmas regras e APIs do ERP.'
+                : 'Listagem e ações usam as mesmas URLs do portal.'}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {dash && (

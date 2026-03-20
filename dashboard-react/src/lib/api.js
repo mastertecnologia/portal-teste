@@ -103,6 +103,7 @@ export async function fetchTicketsTecnico(filters = {}) {
     idtecnico_responsavel: filters.idResponsavel,
     transferidos: filters.somenteTransferidos ? '1' : '',
     queue_id: filters.queueId,
+    sd: boot?.servicedesk ? '1' : '',
   });
   const r = await fetch(`${boot.paths.apiIndex}${q}`, { credentials: 'same-origin' });
   if (!r.ok) return { ok: false, error: r.statusText, groups: null, workflow: null };
@@ -223,6 +224,7 @@ export async function fetchTicketsCliente(filters = {}) {
     assunto: filters.assunto,
     situacao: filters.situacao,
     fila: filters.fila,
+    sd: boot?.servicedesk ? '1' : '',
   });
   const r = await fetch(`${boot.paths.apiIndexCliente}${q}`, { credentials: 'same-origin' });
   if (!r.ok) return { ok: false, error: r.statusText, data: [] };
@@ -237,7 +239,8 @@ export async function fetchTicketDetail(id) {
     return t ? { ok: true, data: t } : { ok: false, error: 'Não encontrado' };
   }
   const boot = getBoot();
-  const r = await fetch(`${boot.paths.apiView}${encodeURIComponent(id)}`, {
+  const sdQ = boot?.servicedesk ? '?sd=1' : '';
+  const r = await fetch(`${boot.paths.apiView}${encodeURIComponent(id)}${sdQ}`, {
     credentials: 'same-origin',
     cache: 'no-store',
     headers: { Accept: 'application/json' },

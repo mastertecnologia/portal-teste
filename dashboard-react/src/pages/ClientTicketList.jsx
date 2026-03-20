@@ -46,6 +46,21 @@ export default function ClientTicketList({ boot }) {
     };
   }, [fila, boot?.queryAssunto]);
 
+  useEffect(() => {
+    if (!embedded || !boot?.servicedesk) return undefined;
+    const id = window.setInterval(async () => {
+      const res = await fetchTicketsCliente({
+        fila: FILA_TO_API[fila] || 'todos',
+        assunto:
+          boot?.queryAssunto !== undefined && boot?.queryAssunto !== null && String(boot.queryAssunto) !== ''
+            ? String(boot.queryAssunto)
+            : undefined,
+      });
+      if (res.ok) setTickets(res.data);
+    }, 12000);
+    return () => clearInterval(id);
+  }, [embedded, boot?.servicedesk, boot?.queryAssunto, fila]);
+
   const fromApiRows = useMemo(() => {
     if (!USE_MOCK) return tickets;
     let list = tickets;
@@ -114,9 +129,13 @@ export default function ClientTicketList({ boot }) {
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-bold leading-tight text-slate-900">Tickets — cliente</h2>
+                <h2 className="text-lg font-bold leading-tight text-slate-900">
+                  {boot?.servicedesk ? 'Service Desk — meus chamados' : 'Tickets — cliente'}
+                </h2>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  Fila · {totalFila} ticket(s) neste filtro
+                  {boot?.servicedesk
+                    ? `Atualização a cada 12 s · ${totalFila} ticket(s) neste filtro`
+                    : `Fila · ${totalFila} ticket(s) neste filtro`}
                 </p>
               </div>
               {addHref && (

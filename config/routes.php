@@ -95,6 +95,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/queues/get-available-queues/*', ['controller' => 'Queues', 'action' => 'getAvailableQueues'], ['pass' => ['ticketId']])->setMethods(['GET']);
     $routes->connect('/queues/getAvailableQueues/*', ['controller' => 'Queues', 'action' => 'getAvailableQueues'], ['pass' => ['ticketId']])->setMethods(['GET']);
     $routes->connect('/ticket-comentarios/api-add/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiAdd'], ['pass' => ['idticket']])->setMethods(['POST']);
+    // Central de Atendimento (layout dedicado; mesma sessão e APIs de tickets)
+    $routes->connect('/servicedesk', ['controller' => 'Servicedesk', 'action' => 'index']);
+    $routes->connect('/servicedesk/', ['controller' => 'Servicedesk', 'action' => 'index']);
     $routes->fallbacks(DashedRoute::class);
 });
 
