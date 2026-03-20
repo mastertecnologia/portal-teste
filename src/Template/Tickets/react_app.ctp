@@ -18,4 +18,7 @@ $this->append(
 	. '<script type="module" src="' . h($w . 'tickets-app/assets/tickets.js') . '"></script>'
 );
 ?>
-<div id="tickets-react-root" class="tickets-react-host w-100"></div>
+<?php /* Filho direto de .row precisa ser .col-* no Bootstrap, senão largura/overflow quebram o React */ ?>
+<div class="col-md-12 tickets-react-shell p-0">
+	<div id="tickets-react-root" class="tickets-react-host w-100"></div>
+</div>

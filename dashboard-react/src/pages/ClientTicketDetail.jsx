@@ -132,7 +132,7 @@ export default function ClientTicketDetail({ boot }) {
   const clienteNome = stripHtml(ticket.cliente || '').trim() || '—';
 
   const header = embedded ? (
-    <div className="relative z-20 mb-4 shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm sm:py-4">
+    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm sm:py-4">
       {backHref ? (
         <a href={backHref} className="text-sm font-medium text-teal-700 hover:underline">
           {backLabel}
@@ -144,7 +144,7 @@ export default function ClientTicketDetail({ boot }) {
       )}
       <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900">Ticket #{ticket.id}</h1>
       <p className="mt-1 text-sm text-slate-600">
-        {clienteNome} · <span className="font-medium text-slate-800">{statusPlain}</span>
+        {clienteNome} · <span className="font-semibold text-slate-800">{statusPlain}</span>
       </p>
       {ticket.prioridade && ticket.prioridade !== '—' ? (
         <p className="mt-1.5">
@@ -157,11 +157,11 @@ export default function ClientTicketDetail({ boot }) {
           </span>
         </p>
       ) : null}
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="tickets-react-ticket-strip-muted mt-2 text-xs">
         {ticket.atualizado}
         {ticket.responsavel && ticket.responsavel !== '—' ? ` · ${ticket.responsavel}` : ''}
       </p>
-      <p className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-400">
+      <p className="tickets-react-ticket-strip-hint mt-2 border-t border-slate-200 pt-2 text-xs">
         Conversa e status atualizam automaticamente (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
       </p>
     </div>
