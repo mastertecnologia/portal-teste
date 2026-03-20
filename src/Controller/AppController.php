@@ -45,6 +45,9 @@ class AppController extends Controller {
 				'consultacnpj', 'consultaIe',
 				// API cadastro consolidado (CadastroController)
 				'empresa', 'consultar',
+				// Tickets UI React (JSON; autenticação via sessão Auth)
+				'apiIndex', 'apiIndexCliente', 'apiView', 'apiSaveTicket',
+				'apiAdd',
 			],
 		]);
 		$this->loadComponent('Auth', [

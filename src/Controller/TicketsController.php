@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Mailer\Email;
+use Cake\Routing\Router;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -43,6 +44,16 @@ class TicketsController extends AppController {
 
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
+
+		if ($action === 'apiIndex') {
+			return (int)$user['role'] === 0;
+		}
+		if ($action === 'apiIndexCliente') {
+			return (int)$user['role'] === 1;
+		}
+		if (in_array($action, ['apiView', 'apiSaveTicket'], true)) {
+			return in_array((int)$user['role'], [0, 1], true);
+		}
 
 		if ($user['role'] == 0 and $action != 'indexcliente') return true;
 		else if ($user['role'] == 1 and in_array($action, [
@@ -226,19 +237,10 @@ class TicketsController extends AppController {
 	}
 
 	public function index(){
-		$ticketsPendentes = $this->Tickets->find('all', ['contain' => ['Users', 'Clientes']])->where(['AND' => ['situacao' => C_TicketSituacaoPendente], ['Tickets.idempresa' => $this->Auth->user('idempresa')]])->toArray();
-
-		$ticketsEmandamento = $this->Tickets->find('all',['contain' => ['Users', 'Clientes']])->where(['AND' => ['situacao' => C_TicketSituacaoEmandamento], ['Tickets.idempresa' => $this->Auth->user('idempresa')]])->toArray();
-		$ticketsResolvidos = $this->Tickets->find('all',['contain' => ['Users', 'Clientes']])->where(['AND' => ['situacao' => C_TicketSituacaoResolvido], ['Tickets.idempresa' => $this->Auth->user('idempresa')]])->toArray();
-		$ticketsFechados = $this->Tickets->find('all',['contain' => ['Users', 'Clientes']])->where(['AND' => ['situacao' => C_TicketSituacaoFechado], ['Tickets.idempresa' => $this->Auth->user('idempresa')]])->toArray();
-		$tickets = $this->Tickets->find('all', ['contain' => ['Users', 'Clientes']])->where(['Tickets.idempresa' => $this->Auth->user('idempresa')])->order('Tickets.situacao')->toArray();
-
-		$this->set(compact('ticketsPendentes'));
-		$this->set(compact('ticketsEmandamento'));
-		$this->set(compact('ticketsResolvidos'));
-		$this->set(compact('ticketsFechados'));
-		$this->set(compact('tickets'));
+		$this->viewBuilder()->setLayout('default');
+		$this->viewBuilder()->setTemplate('Tickets/react_app');
 		$this->set('title', 'Listagem de Tickets');
+		$this->set('reactBoot', $this->_reactBoot('tech_index', null));
 	}
 
 	public function finalizados() {
@@ -380,7 +382,6 @@ class TicketsController extends AppController {
 	}
 
 	public function indexcliente(){
-		$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
 		$assunto = $this->request->getQuery('assunto');
 		$situacao = $this->request->getQuery('situacao');
 
@@ -402,24 +403,13 @@ class TicketsController extends AppController {
 			} catch (\Throwable $e) {}
 		}
 
-		// Garante que o cliente veja apenas tickets da empresa atual.
-		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes']])
-			->where([
-				'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj],
-				'Tickets.idempresa' => $this->Auth->user('idempresa')
-			]);
-		if($assunto != null) $tickets = $tickets->where(['tickets.assunto' => $assunto]);
-		if($situacao != null && $situacao != -1) $tickets = $tickets->where(['tickets.situacao' => $situacao]);
-		else if($situacao != -1) $tickets = $tickets->where(['tickets.situacao IN' => [C_TicketSituacaoPendente, C_TicketSituacaoEmandamento]]);
-
-		if(!$this->Auth->user('permissaoacesso')) $tickets = $tickets->where(['idautor' => $this->Auth->user('id')]);
-		
-		$tickets = $tickets->toArray();
-
-		$this->set('situacao', $situacao);
-		$this->set('assunto', $assunto);
-		$this->set('tickets', $tickets);
+		$this->viewBuilder()->setLayout('default');
+		$this->viewBuilder()->setTemplate('Tickets/react_app');
 		$this->set('title', 'Tickets');
+		$this->set('reactBoot', $this->_reactBoot('client_index', null, [
+			'queryAssunto' => $assunto,
+			'querySituacao' => $situacao,
+		]));
 	}
 
 	public function meustickets(){
@@ -757,6 +747,14 @@ class TicketsController extends AppController {
 
 		$this->set('cliente', $clienteNome);
 		@$this->set('solicitante', $solicitante->name);
+
+		if (!$this->request->is(['post', 'put']) && $this->request->getQuery('classic') !== '1') {
+			$this->viewBuilder()->setLayout('default');
+			$this->viewBuilder()->setTemplate('Tickets/react_app');
+			$this->set('reactBoot', $this->_reactBoot('tech_edit', (int)$idticket, [
+				'classicEditUrl' => Router::url(['action' => 'edit', $idticket, '?' => ['classic' => '1']]),
+			]));
+		}
 	}
 
 	public function view($idticket = null){
@@ -818,39 +816,11 @@ class TicketsController extends AppController {
 					return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 				} else $bComentar = true;
 			}
-		// Cliente 
-			$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo'])->first();
-		// Comentarios 
-			$ticketcomentarios = $this->Ticketcomentarios->find('all', [
-				'contain' => ['users'], 'fields' => ['Users.name', 'Users.role', 'Ticketcomentarios.comentario', 'Ticketcomentarios.created']
-				])->where(['Ticketcomentarios.idticket' => $idticket])->order(['Ticketcomentarios.id'
-			])->toArray();
-		// Anexos 
-			$ticketanexos = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket])->toArray();
-		// Movs e horas
-			$ticketshoras = $this->Ticketshoras->find('all', ['contain' => 'Users'])->where(['idticket' => $idticket])->toArray();
-			$ticketsmovs = $this->Ticketsmovs->find('all', ['contain' => ['users']])->where(['idticket' => $ticket->id])->order('ticketsmovs.id')->toArray();
 
-			foreach (array_reverse($ticketsmovs) as $reg):
-				if ($reg['sitnova'] == C_TicketSituacaoFechado && $reg['sitnova'] != $reg['sitantiga']) {
-					$this->set('bMovCancelada', true);
-					break;
-				} 
-			endforeach;
-		// 
-
-	   	$this->set('title', "Ticket $idticket" );
-		$this->set('ticketsmovs', $ticketsmovs);
-		$this->set('ticketanexos', $ticketanexos);
-		$this->set('ticketshoras', $ticketshoras);
-		$this->set('ticketcomentarios', $ticketcomentarios);
-		$this->set('ticket', $ticket);
-		$this->set('podecomentar', true);
-		
-		$clienteNome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
-		
-		$this->set('cliente', $clienteNome);
-		if(isset($solicitante->name)) $this->set('solicitante', $solicitante->name);
+		$this->viewBuilder()->setLayout('default');
+		$this->viewBuilder()->setTemplate('Tickets/react_app');
+		$this->set('title', "Ticket $idticket");
+		$this->set('reactBoot', $this->_reactBoot('client_view', (int)$idticket));
 	}
 
 	public function imprimir($idticket = null){
@@ -1594,6 +1564,310 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {
 			$this->log('subtrairHorasContrato: ' . $e->getMessage() . ' (idcliente=' . $idcliente . ')', 'error');
 		}
+	}
+
+	protected function _reactBoot(string $screen, $ticketId = null, array $extra = []): array {
+		$w = $this->request->getAttribute('webroot');
+		$base = [
+			'screen' => $screen,
+			'ticketId' => $ticketId !== null ? (int)$ticketId : null,
+			'webroot' => $w,
+			'role' => (int)$this->Auth->user('role'),
+			'admin' => (int)$this->Auth->user('admin'),
+			'paths' => [
+				'apiIndex' => $w . 'tickets/api-index',
+				'apiIndexCliente' => $w . 'tickets/api-index-cliente',
+				'apiView' => $w . 'tickets/api-view/',
+				'apiSaveTicket' => $w . 'tickets/api-save/',
+				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
+				'indexTecnico' => Router::url(['action' => 'index']),
+				'indexCliente' => Router::url(['action' => 'indexcliente']),
+				'addTicket' => Router::url(['action' => 'add']),
+				'dashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard']),
+				'viewTicketBase' => $w . 'tickets/view/',
+				'editTicketBase' => $w . 'tickets/edit/',
+				'cancelarBase' => $w . 'tickets/cancelar/',
+				'imprimirBase' => $w . 'tickets/imprimir/',
+			],
+		];
+
+		return array_replace_recursive($base, $extra);
+	}
+
+	protected function _ticketRowApiTecnico($reg): array {
+		$c = $reg->cliente ?? null;
+		$nomeCliente = '';
+		if ($c) {
+			$nomeCliente = (int)$c->tipo === (int)C_ClientesTipoFisica ? (string)$c->nome : (string)$c->razaosocial;
+		}
+		$id = (int)$reg->id;
+		$sit = (int)$reg->situacao;
+		$acoes = [];
+		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
+			if ($sit !== (int)C_TicketSituacaoPendente) {
+				$acoes[] = ['key' => 'pendente', 'label' => 'Aguardando técnico', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoPendente])];
+			}
+			if ($sit !== (int)C_TicketSituacaoEmandamento) {
+				$acoes[] = ['key' => 'emandamento', 'label' => 'Em execução', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoEmandamento])];
+			}
+			if ($sit !== (int)C_TicketSituacaoResolvido) {
+				$acoes[] = ['key' => 'resolvido', 'label' => 'Resolvido', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoResolvido])];
+			}
+			if ($sit !== (int)C_TicketSituacaoFechado) {
+				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
+			}
+		}
+		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
+
+		return [
+			'id' => $id,
+			'autor' => $reg->users['name'] ?? ($reg->user->name ?? ''),
+			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
+			'assunto' => AssuntoTicket($reg->assunto),
+			'assuntoCode' => $reg->assunto,
+			'situacao' => $sit,
+			'situacaoLabel' => SituacaoTicket($reg->situacao),
+			'cliente' => $nomeCliente,
+			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
+			'urls' => [
+				'edit' => Router::url(['action' => 'edit', $id]),
+			],
+			'acoes' => $acoes,
+		];
+	}
+
+	protected function _ticketRowApiCliente($reg): array {
+		return [
+			'id' => (int)$reg->id,
+			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
+			'assunto' => AssuntoTicket($reg->assunto),
+			'assuntoCode' => $reg->assunto,
+			'status' => SituacaoTicket($reg->situacao),
+			'situacao' => (int)$reg->situacao,
+			'descricao' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 160, '…', 'UTF-8'),
+			'urls' => [
+				'view' => Router::url(['action' => 'view', $reg->id]),
+			],
+		];
+	}
+
+	protected function _apiTicketViewAllowed($ticket): bool {
+		if (empty($ticket)) {
+			return false;
+		}
+		$role = (int)$this->Auth->user('role');
+		$idempresa = $this->Auth->user('idempresa');
+		if ((int)$ticket->idempresa !== (int)$idempresa) {
+			return false;
+		}
+		if ($role === (int)C_RoleCliente) {
+			$idcliente = $this->Auth->user('idcliente');
+			$clienteBase = $this->Clientes->findById($idcliente)->first();
+			if (empty($clienteBase)) {
+				return false;
+			}
+			$clienteVerifica = null;
+			if ($clienteBase->tipo == C_ClientesTipoJuridica) {
+				$clienteVerifica = $this->Clientes
+					->findByCnpj(removeCaracteres($clienteBase->cnpj))
+					->where(['idempresa' => $idempresa])
+					->first();
+			} else {
+				$clienteVerifica = $this->Clientes
+					->findByCpf(removeCaracteres($clienteBase->cpf))
+					->where(['idempresa' => $idempresa])
+					->first();
+			}
+			if (empty($clienteVerifica) || ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj)) {
+				return false;
+			}
+			if ($ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
+				return false;
+			}
+			return true;
+		}
+		if ($role === 0) {
+			if ((int)$this->Auth->user('admin') !== 1) {
+				$meuticket = $this->Tickets->findById($ticket->id)->first();
+				if (!$meuticket) {
+					return false;
+				}
+				if ($this->Auth->user('id') != $meuticket->idautor && $this->Auth->user('idcliente') != $meuticket->idcliente) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	protected function _apiTicketDetailPayload($ticket, $idticket): array {
+		$role = (int)$this->Auth->user('role');
+		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo'])->first();
+		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? '');
+		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+
+		$ticketcomentarios = $this->Ticketcomentarios->find('all', [
+			'contain' => ['users', 'Tickets'],
+			'fields' => ['Users.name', 'Users.role', 'Ticketcomentarios.id', 'Ticketcomentarios.comentario', 'Ticketcomentarios.created', 'Tickets.idempresa'],
+		])->where(['Ticketcomentarios.idticket' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])->order(['Ticketcomentarios.id'])->toArray();
+
+		$comentarios = [];
+		foreach ($ticketcomentarios as $c) {
+			$u = $c->user ?? null;
+			$r = $u ? (int)$u->role : 1;
+			$comentarios[] = [
+				'id' => (int)$c->id,
+				'autor' => $u ? $u->name : '',
+				'papel' => $r === 0 ? 'tecnico' : 'cliente',
+				'texto' => $c->comentario,
+				'quando' => $c->created ? $c->created->format('d/m/Y H:i') : '',
+			];
+		}
+
+		$anexosRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
+		$anexos = [];
+		foreach ($anexosRows as $a) {
+			$anexos[] = [
+				'id' => (int)$a->id,
+				'nome' => $a->arquivo,
+				'url' => Router::url(['action' => 'downloadAnexo', $a->id]),
+			];
+		}
+
+		$createdFmt = $ticket->created ? $ticket->created->format('d/m/Y H:i') : '';
+
+		return [
+			'id' => (int)$ticket->id,
+			'assunto' => AssuntoTicket($ticket->assunto),
+			'status' => SituacaoTicket($ticket->situacao),
+			'situacao' => (int)$ticket->situacao,
+			'descricao' => (string)($ticket->solicitacao ?? ''),
+			'prioridade' => '—',
+			'responsavel' => $solicitante->name ?? '—',
+			'atualizado' => $createdFmt,
+			'cliente' => $clienteNome,
+			'email' => $ticket->email ?? '',
+			'comentarios' => $comentarios,
+			'anexos' => $anexos,
+			'urls' => [
+				'indexCliente' => Router::url(['action' => 'indexcliente']),
+				'edit' => Router::url(['action' => 'edit', $idticket]),
+				'imprimir' => Router::url(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
+			],
+			'flags' => [
+				'role' => $role,
+				'canEditDescricao' => $role === 0 && (int)$this->Auth->user('admin') === 1,
+			],
+		];
+	}
+
+	public function apiIndex() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$empresa = $this->Auth->user('idempresa');
+		$base = ['contain' => ['Users', 'Clientes'], 'order' => ['Tickets.id' => 'DESC']];
+		$ticketsPendentes = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])->toArray();
+		$ticketsEmandamento = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento, 'Tickets.idempresa' => $empresa])->toArray();
+		$ticketsResolvidos = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido, 'Tickets.idempresa' => $empresa])->toArray();
+		$ticketsFechados = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])->toArray();
+		$tickets = $this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])->toArray();
+
+		$map = [$this, '_ticketRowApiTecnico'];
+		$out = [
+			'ok' => true,
+			'groups' => [
+				'todos' => array_map($map, $tickets),
+				'pendentes' => array_map($map, $ticketsPendentes),
+				'emandamento' => array_map($map, $ticketsEmandamento),
+				'resolvidos' => array_map($map, $ticketsResolvidos),
+				'fechados' => array_map($map, $ticketsFechados),
+			],
+		];
+		return $this->jsonResponse($out);
+	}
+
+	public function apiIndexCliente() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$cliente = $this->Clientes->findById($this->Auth->user('idcliente'))->order(['idempresa ASC'])->first();
+		if (empty($cliente)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'cliente_not_found'], 404);
+		}
+		$assunto = $this->request->getQuery('assunto');
+		$situacao = $this->request->getQuery('situacao');
+
+		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes']])->where([
+			'Tickets.idempresa' => $this->Auth->user('idempresa'),
+			'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj],
+		]);
+		if ($assunto !== null && $assunto !== '') {
+			$tickets = $tickets->where(['tickets.assunto' => $assunto]);
+		}
+		if ($situacao !== null && $situacao !== '' && (int)$situacao != -1) {
+			$tickets = $tickets->where(['tickets.situacao' => $situacao]);
+		} elseif ($situacao != -1) {
+			$tickets = $tickets->where(['tickets.situacao IN' => [C_TicketSituacaoPendente, C_TicketSituacaoEmandamento]]);
+		}
+		if (!$this->Auth->user('permissaoacesso')) {
+			$tickets = $tickets->where(['idautor' => $this->Auth->user('id')]);
+		}
+		$tickets = $tickets->order(['Tickets.id' => 'DESC'])->toArray();
+
+		$rows = array_map([$this, '_ticketRowApiCliente'], $tickets);
+		return $this->jsonResponse([
+			'ok' => true,
+			'tickets' => $rows,
+			'query' => ['assunto' => $assunto, 'situacao' => $situacao],
+		]);
+	}
+
+	public function apiView($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
+			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
+			->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$data = $this->_apiTicketDetailPayload($ticket, $idticket);
+		return $this->jsonResponse(['ok' => true, 'ticket' => $data]);
+	}
+
+	public function apiSaveTicket($idticket = null) {
+		$this->request->allowMethod(['post', 'put']);
+		$this->autoRender = false;
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if ((int)$this->Auth->user('admin') !== 1) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'only_admin_can_edit_descricao'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$texto = isset($body['solicitacao']) ? (string)$body['solicitacao'] : null;
+		if ($texto === null) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'missing_solicitacao'], 400);
+		}
+		$ticket->solicitacao = $texto;
+		if ($this->Tickets->save($ticket, ['fields' => ['solicitacao']])) {
+			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $idticket);
+			return $this->jsonResponse(['ok' => true]);
+		}
+		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
 	}
 
 	/**

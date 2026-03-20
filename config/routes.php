@@ -82,6 +82,12 @@ Router::scope('/', function ($routes) {
     // API cadastro consolidado: dados empresa por CNPJ (Receita + IE + IM)
     $routes->connect('/api/cadastro/empresa/consultar', ['controller' => 'Cadastro', 'action' => 'consultar'])->setMethods(['POST']);
     $routes->connect('/api/cadastro/empresa/:cnpj', ['controller' => 'Cadastro', 'action' => 'empresa', 'cnpj'])->setPass(['cnpj'])->setMethods(['GET']);
+    // Tickets — UI React (JSON com sessão; desbloqueado no Security)
+    $routes->connect('/tickets/api-index', ['controller' => 'Tickets', 'action' => 'apiIndex'])->setMethods(['GET']);
+    $routes->connect('/tickets/api-index-cliente', ['controller' => 'Tickets', 'action' => 'apiIndexCliente'])->setMethods(['GET']);
+    $routes->connect('/tickets/api-view/*', ['controller' => 'Tickets', 'action' => 'apiView'], ['pass' => ['idticket']])->setMethods(['GET']);
+    $routes->connect('/tickets/api-save/*', ['controller' => 'Tickets', 'action' => 'apiSaveTicket'], ['pass' => ['idticket']])->setMethods(['POST', 'PUT']);
+    $routes->connect('/ticket-comentarios/api-add/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiAdd'], ['pass' => ['idticket']])->setMethods(['POST']);
     $routes->fallbacks(DashedRoute::class);
 });
 
