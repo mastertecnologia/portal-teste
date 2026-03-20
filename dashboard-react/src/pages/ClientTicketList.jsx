@@ -68,7 +68,8 @@ export default function ClientTicketList({ boot }) {
       const id = String(t.id);
       const cliente = String(t.cliente || '').toLowerCase();
       const assunto = String(t.assunto || '').toLowerCase();
-      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq);
+      const autor = String(t.autor || '').toLowerCase();
+      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || autor.includes(qq);
     });
   }, [fromApiRows, q]);
 
@@ -86,41 +87,75 @@ export default function ClientTicketList({ boot }) {
       <div
         className={
           embedded
-            ? 'flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between'
-            : 'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'
+            ? 'border-b border-slate-100 p-4'
+            : 'flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between'
         }
       >
-        {!embedded && (
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Fila</h3>
-            <p className="text-sm text-slate-500">{totalFila} ticket(s) · seus chamados na empresa</p>
+        {embedded ? (
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+            <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold leading-tight text-slate-900">Tickets — cliente</h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Fila · {totalFila} ticket(s) neste filtro
+                </p>
+              </div>
+              {addHref && (
+                <a
+                  href={addHref}
+                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-600 to-teal-600 px-4 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:self-center"
+                >
+                  Abrir chamado
+                </a>
+              )}
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto lg:max-w-xl">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Buscar nº, cliente ou assunto"
+                className="h-10 w-full min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-cyan-500 sm:min-w-[200px]"
+              />
+              <select
+                value={fila}
+                onChange={(e) => setFila(e.target.value)}
+                className="h-10 w-full shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-cyan-500 sm:w-44"
+              >
+                <option value="todos">Todos</option>
+                <option value="pendente">Aguardando técnico</option>
+                <option value="execucao">Em execução</option>
+                <option value="resolvido">Resolvidos</option>
+                <option value="fechados">Cancelados / fechados</option>
+              </select>
+            </div>
           </div>
+        ) : (
+          <>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Fila</h3>
+              <p className="text-sm text-slate-500">{totalFila} ticket(s) · seus chamados na empresa</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Buscar nº, cliente ou assunto"
+                className="h-10 w-full min-w-[200px] rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-cyan-500 sm:max-w-xs"
+              />
+              <select
+                value={fila}
+                onChange={(e) => setFila(e.target.value)}
+                className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-cyan-500"
+              >
+                <option value="todos">Todos</option>
+                <option value="pendente">Aguardando técnico</option>
+                <option value="execucao">Em execução</option>
+                <option value="resolvido">Resolvidos</option>
+                <option value="fechados">Cancelados / fechados</option>
+              </select>
+            </div>
+          </>
         )}
-        {embedded && (
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-slate-900">Fila</h3>
-            <p className="text-xs text-slate-500">{totalFila} ticket(s) neste filtro</p>
-          </div>
-        )}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar nº, cliente ou assunto"
-            className="h-10 w-full min-w-[200px] rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-cyan-500 sm:max-w-xs"
-          />
-          <select
-            value={fila}
-            onChange={(e) => setFila(e.target.value)}
-            className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-cyan-500"
-          >
-            <option value="todos">Todos</option>
-            <option value="pendente">Aguardando técnico</option>
-            <option value="execucao">Em execução</option>
-            <option value="resolvido">Resolvidos</option>
-            <option value="fechados">Cancelados / fechados</option>
-          </select>
-        </div>
       </div>
 
       <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
@@ -224,26 +259,7 @@ export default function ClientTicketList({ boot }) {
   );
 
   if (embedded) {
-    return (
-      <div className="tickets-react-client w-full text-slate-800">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Tickets — cliente</h2>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {addHref && (
-              <a
-                href={addHref}
-                className="rounded-lg bg-gradient-to-r from-cyan-600 to-teal-600 px-3 py-1.5 text-sm font-semibold text-white hover:opacity-95"
-              >
-                Abrir chamado
-              </a>
-            )}
-          </div>
-        </div>
-        {tableSection}
-      </div>
-    );
+    return <div className="tickets-react-client w-full text-slate-800">{tableSection}</div>;
   }
 
   return (

@@ -57,7 +57,7 @@ class TicketsController extends AppController {
 
 		if ($user['role'] == 0 and $action != 'indexcliente') return true;
 		else if ($user['role'] == 1 and in_array($action, [
-			'indexcliente', 'add', 'assuntoTicket', 'view', 'cancelar', 'downloadAnexo'
+			'indexcliente', 'add', 'assuntoTicket', 'view', 'cancelar', 'downloadAnexo', 'imprimir',
 		])) return true;
 
 		return false;
@@ -901,7 +901,9 @@ class TicketsController extends AppController {
 				}
 			}
 
-			if ($this->Auth->user('role') == C_RoleCliente && $ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
+			if ($this->Auth->user('role') == C_RoleCliente && !$this->Auth->user('permissaoacesso')
+				&& (int)$ticket->idautor !== (int)$this->Auth->user('id')
+				&& (int)$ticket->idcliente !== (int)$this->Auth->user('idcliente')) {
 				$this->Flash->error('Você não possui permissão para visualizar este ticket.');
 				return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 			}
@@ -1645,6 +1647,36 @@ class TicketsController extends AppController {
 		return $t !== '' ? $t : (string)$assunto;
 	}
 
+	/** Nome de exibição de quem abriu o ticket (idautor). */
+	protected function _ticketAutorNome($reg): string {
+		$name = '';
+		if (!empty($reg->users)) {
+			$u = $reg->users;
+			if (is_object($u)) {
+				$name = (string)($u->name ?? $u->username ?? '');
+			} elseif (is_array($u)) {
+				$name = (string)($u['name'] ?? $u['username'] ?? '');
+			}
+		}
+		if ($name === '' && !empty($reg->user)) {
+			$u = $reg->user;
+			if (is_object($u)) {
+				$name = (string)($u->name ?? $u->username ?? '');
+			}
+		}
+		if ($name === '' && !empty($reg->idautor)) {
+			$u = $this->Users->findById($reg->idautor)->select(['name', 'username'])->first();
+			if ($u) {
+				$name = trim((string)($u->name ?? ''));
+				if ($name === '') {
+					$name = trim((string)($u->username ?? ''));
+				}
+			}
+		}
+
+		return $name;
+	}
+
 	protected function _ticketRowApiTecnico($reg): array {
 		$c = $reg->cliente ?? null;
 		$nomeCliente = '';
@@ -1672,7 +1704,7 @@ class TicketsController extends AppController {
 
 		return [
 			'id' => $id,
-			'autor' => $reg->users['name'] ?? ($reg->user->name ?? ''),
+			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
 			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assuntoCode' => $reg->assunto,
@@ -1699,15 +1731,11 @@ class TicketsController extends AppController {
 		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
 			$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
 		}
-		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
-		$autor = '';
-		if (!empty($reg->users)) {
-			$autor = (string)($reg->users->name ?? '');
-		}
+		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]], true), 'target' => '_blank'];
 
 		return [
 			'id' => $id,
-			'autor' => $autor,
+			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
 			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assuntoCode' => $reg->assunto,
@@ -1911,7 +1939,7 @@ class TicketsController extends AppController {
 		$situacao = $this->request->getQuery('situacao');
 		$fila = $this->request->getQuery('fila');
 
-		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes', 'users']])->where([
+		$tickets = $this->Tickets->find('all', ['contain' => ['Users', 'Clientes']])->where([
 			'Tickets.idempresa' => $this->Auth->user('idempresa'),
 			'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj],
 		]);
