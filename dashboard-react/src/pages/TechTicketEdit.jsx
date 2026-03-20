@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { fetchTicketDetail, postComentario, saveTicketSolicitacao, getBoot } from '../lib/api';
 import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
 import { stripHtml } from '../lib/text';
+import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
+
+/** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
+const SHOW_LEGACY_TICKET_UI = false;
 
 function CommentBody({ html }) {
   if (!html) return null;
@@ -84,9 +88,6 @@ export default function TechTicketEdit({ boot }) {
     else setErro(res.error || 'Falha ao salvar.');
   }
 
-  const classicAnexos =
-    boot?.classicEditUrl && `${String(boot.classicEditUrl).replace(/#.*$/, '')}#arquivos`;
-
   if (erro && !ticket) {
     return (
       <div className={embedded ? 'py-8 text-center' : 'min-h-screen bg-slate-100 px-4 py-12 text-center'}>
@@ -112,7 +113,7 @@ export default function TechTicketEdit({ boot }) {
 
   const headerActions = (
     <div className="flex flex-shrink-0 flex-wrap gap-2">
-      {boot?.classicEditUrl && (
+      {SHOW_LEGACY_TICKET_UI && boot?.classicEditUrl && (
         <a
           href={boot.classicEditUrl}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 sm:text-sm"
@@ -204,29 +205,12 @@ export default function TechTicketEdit({ boot }) {
   );
 
   const anexosBlock = (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-bold text-slate-900">Anexos</h3>
-        {classicAnexos && (
-          <a href={classicAnexos} className="text-xs font-semibold text-teal-700 hover:underline">
-            + Enviar
-          </a>
-        )}
-      </div>
-      {ticket.anexos?.length ? (
-        <ul className="mt-2 space-y-1 text-sm">
-          {ticket.anexos.map((a) => (
-            <li key={a.id}>
-              <a href={a.url} className="text-teal-700 hover:underline" target="_blank" rel="noreferrer">
-                {a.nome}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-2 text-xs text-slate-500">Nenhum. Use o formulário clássico para upload.</p>
-      )}
-    </div>
+    <TicketAnexosPanel
+      ticketId={ticket.id}
+      anexos={ticket.anexos}
+      onAnexosChange={(next) => setTicket((prev) => (prev ? { ...prev, anexos: next } : prev))}
+      disabled={false}
+    />
   );
 
   const comentariosBlock = (

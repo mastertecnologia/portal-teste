@@ -88,6 +88,8 @@ Router::scope('/', function ($routes) {
     $routes->connect('/tickets/api-view/*', ['controller' => 'Tickets', 'action' => 'apiView'], ['pass' => ['idticket']])->setMethods(['GET']);
     $routes->connect('/tickets/api-comments/*', ['controller' => 'Tickets', 'action' => 'apiComments'], ['pass' => ['idticket']])->setMethods(['GET']);
     $routes->connect('/tickets/api-save/*', ['controller' => 'Tickets', 'action' => 'apiSaveTicket'], ['pass' => ['idticket']])->setMethods(['POST', 'PUT']);
+    $routes->connect('/tickets/api-anexo-upload/*', ['controller' => 'Tickets', 'action' => 'apiAnexoUpload'], ['pass' => ['idticket']])->setMethods(['POST']);
+    $routes->connect('/tickets/api-anexo-delete/*', ['controller' => 'Tickets', 'action' => 'apiAnexoDelete'], ['pass' => ['idanexo']])->setMethods(['POST']);
     $routes->connect('/ticket-comentarios/api-add/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiAdd'], ['pass' => ['idticket']])->setMethods(['POST']);
     $routes->fallbacks(DashedRoute::class);
 });

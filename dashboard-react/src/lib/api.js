@@ -53,6 +53,7 @@ export async function fetchTicketsCliente(filters = {}) {
   const q = qs({
     assunto: filters.assunto,
     situacao: filters.situacao,
+    fila: filters.fila,
   });
   const r = await fetch(`${boot.paths.apiIndexCliente}${q}`, { credentials: 'same-origin' });
   if (!r.ok) return { ok: false, error: r.statusText, data: [] };
@@ -123,6 +124,57 @@ export async function postComentario(ticketId, texto) {
   const json = await r.json();
   if (!json.ok) return { ok: false, error: json.error || 'erro' };
   return { ok: true, data: json.data };
+}
+
+export async function uploadTicketAnexo(ticketId, file) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 250));
+    return {
+      ok: true,
+      anexo: {
+        id: Date.now(),
+        nome: file.name,
+        url: '#',
+        urlView: '#',
+      },
+    };
+  }
+  const boot = getBoot();
+  if (!boot?.paths?.apiAnexoUpload) {
+    return { ok: false, error: 'api_anexo_disabled' };
+  }
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch(`${boot.paths.apiAnexoUpload}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+    body: fd,
+  });
+  if (!r.ok) return { ok: false, error: r.statusText };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return { ok: true, anexo: json.anexo };
+}
+
+export async function deleteTicketAnexo(anexoId) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 150));
+    return { ok: true, anexos: undefined };
+  }
+  const boot = getBoot();
+  if (!boot?.paths?.apiAnexoDelete) {
+    return { ok: false, error: 'api_anexo_disabled' };
+  }
+  const r = await fetch(`${boot.paths.apiAnexoDelete}${encodeURIComponent(anexoId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  if (!r.ok) return { ok: false, error: r.statusText };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return { ok: true, anexos: json.anexos };
 }
 
 export async function saveTicketSolicitacao(ticketId, solicitacao) {

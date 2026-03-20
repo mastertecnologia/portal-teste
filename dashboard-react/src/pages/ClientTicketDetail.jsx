@@ -5,6 +5,7 @@ import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
 import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
+import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 
 function CommentBody({ html }) {
   if (!html) return null;
@@ -175,22 +176,12 @@ export default function ClientTicketDetail({ boot }) {
   );
 
   const anexosCard = (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-bold text-slate-900">Anexos</h2>
-      {ticket.anexos && ticket.anexos.length > 0 ? (
-        <ul className="mt-2 space-y-1 text-sm">
-          {ticket.anexos.map((a) => (
-            <li key={a.id}>
-              <a href={a.url} className="text-teal-700 hover:underline" target="_blank" rel="noreferrer">
-                {a.nome}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-2 text-xs text-slate-500">Nenhum anexo.</p>
-      )}
-    </div>
+    <TicketAnexosPanel
+      ticketId={ticket.id}
+      anexos={ticket.anexos}
+      onAnexosChange={(next) => setTicket((prev) => (prev ? { ...prev, anexos: next } : prev))}
+      disabled={false}
+    />
   );
 
   const chatCard = (

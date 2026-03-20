@@ -32,7 +32,9 @@ export const mockTickets = [
       { id: 1, autor: 'Cristiane Lazarotto', papel: 'cliente', texto: 'Segue o print do erro na tela de login.', quando: 'há 3 h' },
       { id: 2, autor: 'NOC 02', papel: 'tecnico', texto: 'Verificamos o certificado; teste novamente em modo anônimo.', quando: 'há 1 h' },
     ],
-    anexos: [{ id: 'a1', nome: 'erro-login.png', quando: 'há 3 h' }],
+    anexos: [
+      { id: 9001, nome: 'erro-login.png', url: '#mock-download', urlView: '#mock-view', quando: 'há 3 h' },
+    ],
   },
   {
     id: 1180,

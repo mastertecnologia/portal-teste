@@ -51,7 +51,7 @@ class TicketsController extends AppController {
 		if ($action === 'apiIndexCliente') {
 			return (int)$user['role'] === 1;
 		}
-		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments'], true)) {
+		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments', 'apiAnexoUpload', 'apiAnexoDelete'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
 
@@ -154,12 +154,37 @@ class TicketsController extends AppController {
 		exit;
 	}
 
+	/**
+	 * Abre no navegador (imagens/PDF) em vez de forçar download.
+	 */
+	protected function _sendFileInline($fullPath, $downloadName) {
+		$this->autoRender = false;
+		if (!is_readable($fullPath)) {
+			return;
+		}
+		$mime = 'application/octet-stream';
+		if (function_exists('mime_content_type')) {
+			$m = @mime_content_type($fullPath);
+			if (is_string($m) && $m !== '') {
+				$mime = $m;
+			}
+		}
+		ob_start();
+		header('Content-Type: ' . $mime);
+		header('Content-Disposition: inline; filename="' . str_replace('"', '', basename($downloadName)) . '"');
+		header('Content-Length: ' . filesize($fullPath));
+		ob_clean();
+		readfile($fullPath);
+		exit;
+	}
+
 	public function downloadAnexo($idanexo) {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
 
 		if ($this->request->is('get')) {
 			$anexo = $this->Ticketsanexos->get($idanexo);
+			$inline = in_array((string)$this->request->getQuery('inline'), ['1', 'true', 'yes'], true);
 
 			// Garantir que o anexo pertence à mesma empresa do usuário logado
 			if ($anexo->idempresa != $this->Auth->user('idempresa')) {
@@ -181,8 +206,13 @@ class TicketsController extends AppController {
 
 			// Arquivo para download
 			$arquivo = $this->dirAnexos($anexo->idempresa, $anexo->idticket) . DS . $anexo->arquivo;
-			if (file_exists($arquivo)) $this->downloadFile($arquivo);
-			else {
+			if (file_exists($arquivo)) {
+				if ($inline) {
+					$this->_sendFileInline($arquivo, $anexo->arquivo);
+				} else {
+					$this->downloadFile($arquivo);
+				}
+			} else {
 				$this->Flash->error('O arquivo solicitado para download não foi localizado!', ['params' => ['title' => 'Erro ao fazer download do anexo']]);
 				return $this->redirect($this->referer());
 			}
@@ -801,7 +831,9 @@ class TicketsController extends AppController {
 				}
 			}
 
-			if ($this->Auth->user('role') == C_RoleCliente && $ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
+			if ($this->Auth->user('role') == C_RoleCliente && !$this->Auth->user('permissaoacesso')
+				&& (int)$ticket->idautor !== (int)$this->Auth->user('id')
+				&& (int)$ticket->idcliente !== (int)$this->Auth->user('idcliente')) {
 				$this->Flash->error('Você não possui permissão para visualizar este ticket.');
 				return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 			}
@@ -1581,6 +1613,8 @@ class TicketsController extends AppController {
 				'apiView' => $w . 'tickets/api-view/',
 				'apiComments' => $w . 'tickets/api-comments/',
 				'apiSaveTicket' => $w . 'tickets/api-save/',
+				'apiAnexoUpload' => $w . 'tickets/api-anexo-upload/',
+				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -1654,17 +1688,39 @@ class TicketsController extends AppController {
 	}
 
 	protected function _ticketRowApiCliente($reg): array {
+		$c = $reg->cliente ?? null;
+		$nomeCliente = '';
+		if ($c) {
+			$nomeCliente = (int)$c->tipo === (int)C_ClientesTipoFisica ? (string)$c->nome : (string)($c->razaosocial ?? '');
+		}
+		$id = (int)$reg->id;
+		$sit = (int)$reg->situacao;
+		$acoes = [];
+		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
+			$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
+		}
+		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
+		$autor = '';
+		if (!empty($reg->users)) {
+			$autor = (string)($reg->users->name ?? '');
+		}
+
 		return [
-			'id' => (int)$reg->id,
+			'id' => $id,
+			'autor' => $autor,
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
 			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assuntoCode' => $reg->assunto,
 			'status' => $this->_ticketSituacaoTexto($reg->situacao),
-			'situacao' => (int)$reg->situacao,
+			'situacao' => $sit,
+			'situacaoLabel' => $this->_ticketSituacaoTexto($reg->situacao),
+			'cliente' => $nomeCliente,
 			'descricao' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 160, '…', 'UTF-8'),
+			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
-				'view' => Router::url(['action' => 'view', $reg->id]),
+				'view' => Router::url(['action' => 'view', $id]),
 			],
+			'acoes' => $acoes,
 		];
 	}
 
@@ -1698,10 +1754,16 @@ class TicketsController extends AppController {
 			if (empty($clienteVerifica) || ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj)) {
 				return false;
 			}
-			if ($ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
-				return false;
+			if ($this->Auth->user('permissaoacesso')) {
+				return true;
 			}
-			return true;
+			if ((int)$ticket->idautor === (int)$this->Auth->user('id')) {
+				return true;
+			}
+			if ((int)$ticket->idcliente === (int)$this->Auth->user('idcliente')) {
+				return true;
+			}
+			return false;
 		}
 		if ($role === 0) {
 			if ((int)$this->Auth->user('admin') !== 1) {
@@ -1716,6 +1778,18 @@ class TicketsController extends AppController {
 			return true;
 		}
 		return false;
+	}
+
+	protected function _apiAnexoRow($a): array {
+		$id = (int)$a->id;
+		$base = Router::url(['action' => 'downloadAnexo', $id], true);
+
+		return [
+			'id' => $id,
+			'nome' => (string)$a->arquivo,
+			'url' => $base,
+			'urlView' => $base . (strpos($base, '?') !== false ? '&' : '?') . 'inline=1',
+		];
 	}
 
 	protected function _apiComentariosPayload($idticket): array {
@@ -1771,11 +1845,7 @@ class TicketsController extends AppController {
 		$anexosRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
 		$anexos = [];
 		foreach ($anexosRows as $a) {
-			$anexos[] = [
-				'id' => (int)$a->id,
-				'nome' => $a->arquivo,
-				'url' => Router::url(['action' => 'downloadAnexo', $a->id]),
-			];
+			$anexos[] = $this->_apiAnexoRow($a);
 		}
 
 		$createdFmt = $ticket->created ? $ticket->created->format('d/m/Y H:i') : '';
@@ -1839,15 +1909,34 @@ class TicketsController extends AppController {
 		}
 		$assunto = $this->request->getQuery('assunto');
 		$situacao = $this->request->getQuery('situacao');
+		$fila = $this->request->getQuery('fila');
 
-		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes']])->where([
+		$tickets = $this->Tickets->find('all', ['contain' => ['Clientes', 'users']])->where([
 			'Tickets.idempresa' => $this->Auth->user('idempresa'),
 			'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj],
 		]);
 		if ($assunto !== null && $assunto !== '') {
 			$tickets = $tickets->where(['tickets.assunto' => $assunto]);
 		}
-		if ($situacao !== null && $situacao !== '' && (int)$situacao != -1) {
+		if ($fila !== null && $fila !== '') {
+			switch ($fila) {
+				case 'pendente':
+					$tickets = $tickets->where(['tickets.situacao' => C_TicketSituacaoPendente]);
+					break;
+				case 'execucao':
+					$tickets = $tickets->where(['tickets.situacao' => C_TicketSituacaoEmandamento]);
+					break;
+				case 'resolvido':
+					$tickets = $tickets->where(['tickets.situacao' => C_TicketSituacaoResolvido]);
+					break;
+				case 'fechados':
+					$tickets = $tickets->where(['tickets.situacao' => C_TicketSituacaoFechado]);
+					break;
+				case 'todos':
+				default:
+					break;
+			}
+		} elseif ($situacao !== null && $situacao !== '' && (int)$situacao != -1) {
 			$tickets = $tickets->where(['tickets.situacao' => $situacao]);
 		} elseif ($situacao != -1) {
 			$tickets = $tickets->where(['tickets.situacao IN' => [C_TicketSituacaoPendente, C_TicketSituacaoEmandamento]]);
@@ -1861,8 +1950,81 @@ class TicketsController extends AppController {
 		return $this->jsonResponse([
 			'ok' => true,
 			'tickets' => $rows,
-			'query' => ['assunto' => $assunto, 'situacao' => $situacao],
+			'query' => ['assunto' => $assunto, 'situacao' => $situacao, 'fila' => $fila],
 		]);
+	}
+
+	public function apiAnexoUpload($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
+			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
+			->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$file = $this->request->getData('file');
+		if (empty($file) || !is_array($file) || empty($file['tmp_name'])) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'no_file'], 400);
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$ret = $this->moveFile($file, $idempresa, $idticket);
+		if ($ret != 1) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'upload_failed'], 500);
+		}
+		if (empty($file['name'])) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'no_file'], 400);
+		}
+		$anexo = $this->Ticketsanexos->newEntity();
+		$anexo->arquivo = $file['name'];
+		$anexo->idticket = $idticket;
+		$anexo->idempresa = $idempresa;
+		if (!$this->Ticketsanexos->save($anexo)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		$this->criarMov((int)$idticket, 0, C_TicketAnexoAdicionado, $file['name']);
+		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoUpload', (int)$anexo->id);
+
+		return $this->jsonResponse(['ok' => true, 'anexo' => $this->_apiAnexoRow($anexo)]);
+	}
+
+	public function apiAnexoDelete($idanexo = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		try {
+			$anexo = $this->Ticketsanexos->get($idanexo);
+		} catch (\Exception $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if ((int)$anexo->idempresa !== (int)$this->Auth->user('idempresa')) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$idticket = (int)$anexo->idticket;
+		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
+			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
+			->first();
+		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$arquivo = $this->dirAnexos($anexo->idempresa, $anexo->idticket) . DS . $anexo->arquivo;
+		if (file_exists($arquivo) && !@unlink($arquivo)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'unlink_failed'], 500);
+		}
+		if (!$this->Ticketsanexos->delete($anexo)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
+		}
+		$this->criarMov($idticket, 0, C_TicketAnexoDeletado, $anexo->arquivo);
+		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoDelete', (int)$idanexo);
+		$anexosRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
+		$list = [];
+		foreach ($anexosRows as $row) {
+			$list[] = $this->_apiAnexoRow($row);
+		}
+
+		return $this->jsonResponse(['ok' => true, 'anexos' => $list]);
 	}
 
 	public function apiView($idticket = null) {
