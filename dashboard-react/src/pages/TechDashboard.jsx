@@ -578,11 +578,15 @@ export default function TechDashboard({ boot }) {
 
   const colCount = wfEnabled ? 10 : 8;
 
+  /** Campos do painel embutido (Service Desk) — borda, sombra e foco consistentes. */
+  const sdField =
+    'h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/15';
+
   const tableSection = (
     <section
       className={
         embedded
-          ? 'rounded-lg border border-slate-200 bg-white shadow-sm'
+          ? 'overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-900/[0.06] ring-1 ring-slate-900/[0.03]'
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
@@ -616,32 +620,58 @@ export default function TechDashboard({ boot }) {
           </div>
         </div>
       ) : (
-        <div className="border-b border-slate-100 p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium tabular-nums text-slate-700"
+        <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 via-white to-teal-50/25 px-4 py-4 sm:px-5 sm:py-5">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Busca e situação
+            </span>
+            <span className="h-px min-w-[2rem] flex-1 bg-gradient-to-r from-slate-200 to-transparent sm:max-w-xs" />
+          </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div
+              className="flex shrink-0 items-center gap-3 rounded-xl border border-teal-100/90 bg-white px-4 py-3 shadow-sm ring-1 ring-teal-900/[0.04]"
               title="Total de tickets na empresa (todos os status)"
             >
-              {totalTodos} na empresa
-            </span>
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar nº, cliente ou assunto"
-              className="h-9 min-w-[12rem] flex-1 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-md"
-            />
-            <select
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-              className="h-9 min-w-[11rem] shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none focus:border-teal-500"
-            >
-              <option value="todos">Todos</option>
-              <option value="ativos">Aguardando + Em execução</option>
-              <option value="pendente">Aguardando técnico</option>
-              <option value="execucao">Em execução</option>
-              <option value="resolvido">Resolvidos</option>
-              <option value="fechados">Cancelados / fechados</option>
-            </select>
+              <span className="text-3xl font-bold tabular-nums leading-none text-teal-800">{totalTodos}</span>
+              <div className="min-w-0 text-left leading-tight">
+                <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Total
+                </span>
+                <span className="text-sm font-medium text-slate-700">na empresa</span>
+              </div>
+            </div>
+            <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_16rem]">
+              <div className="min-w-0">
+                <label htmlFor="sd-tech-q" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                  Buscar na lista
+                </label>
+                <input
+                  id="sd-tech-q"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Nº do ticket, cliente ou assunto"
+                  className={sdField}
+                />
+              </div>
+              <div className="min-w-0">
+                <label htmlFor="sd-tech-status" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                  Situação
+                </label>
+                <select
+                  id="sd-tech-status"
+                  value={filtroStatus}
+                  onChange={(e) => setFiltroStatus(e.target.value)}
+                  className={`${sdField} cursor-pointer`}
+                >
+                  <option value="todos">Todos</option>
+                  <option value="ativos">Aguardando + Em execução</option>
+                  <option value="pendente">Aguardando técnico</option>
+                  <option value="execucao">Em execução</option>
+                  <option value="resolvido">Resolvidos</option>
+                  <option value="fechados">Cancelados / fechados</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -657,74 +687,189 @@ export default function TechDashboard({ boot }) {
       ) : null}
 
       {wfEnabled ? (
-        <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/40 p-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <select
-            value={filaSuporte}
-            onChange={(e) => setFilaSuporte(e.target.value)}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
-          >
-            <option value="">Todas as filas</option>
-            {filasMeta.map((f) => (
-              <option key={f.code} value={f.code}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={nivelAtendimento}
-            onChange={(e) => setNivelAtendimento(e.target.value)}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
-          >
-            <option value="">Todos os níveis</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={String(n)}>
-                Nível {n}
-              </option>
-            ))}
-          </select>
-          <select
-            value={idResponsavel}
-            onChange={(e) => setIdResponsavel(e.target.value)}
-            className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
-          >
-            <option value="">Qualquer técnico</option>
-            {tecnicosOpcoes.map((t) => (
-              <option key={t.id} value={String(t.id)}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={semResponsavel}
-              onChange={(e) => setSemResponsavel(e.target.checked)}
-            />
-            Sem técnico
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={somenteTransferidos}
-              onChange={(e) => setSomenteTransferidos(e.target.checked)}
-            />
-            Transferidos
-          </label>
-          {dbQueuesList.length > 0 ? (
+        embedded ? (
+          <div className="border-b border-slate-100 bg-white px-4 py-4 sm:px-5 sm:py-5">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                Fila e equipe
+              </span>
+              <span className="h-px min-w-[2rem] flex-1 bg-gradient-to-r from-slate-200 to-transparent sm:max-w-md" />
+            </div>
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/50 p-4 shadow-inner shadow-slate-900/[0.02]">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
+                <div className="md:col-span-1 xl:col-span-4">
+                  <label htmlFor="sd-wf-fila" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                    Fila de suporte
+                  </label>
+                  <select
+                    id="sd-wf-fila"
+                    value={filaSuporte}
+                    onChange={(e) => setFilaSuporte(e.target.value)}
+                    className={`${sdField} cursor-pointer`}
+                  >
+                    <option value="">Todas as filas</option>
+                    {filasMeta.map((f) => (
+                      <option key={f.code} value={f.code}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-1 xl:col-span-2">
+                  <label htmlFor="sd-wf-nivel" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                    Nível
+                  </label>
+                  <select
+                    id="sd-wf-nivel"
+                    value={nivelAtendimento}
+                    onChange={(e) => setNivelAtendimento(e.target.value)}
+                    className={`${sdField} cursor-pointer`}
+                  >
+                    <option value="">Todos os níveis</option>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={String(n)}>
+                        Nível {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2 xl:col-span-4">
+                  <label htmlFor="sd-wf-tec" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                    Técnico responsável
+                  </label>
+                  <select
+                    id="sd-wf-tec"
+                    value={idResponsavel}
+                    onChange={(e) => setIdResponsavel(e.target.value)}
+                    className={`${sdField} cursor-pointer`}
+                  >
+                    <option value="">Qualquer técnico</option>
+                    {tecnicosOpcoes.map((t) => (
+                      <option key={t.id} value={String(t.id)}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2 md:col-span-2 xl:col-span-2 xl:pb-0.5">
+                  <span className="text-xs font-semibold text-slate-600">Opções</span>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition hover:border-teal-200 has-[:checked]:border-teal-300 has-[:checked]:bg-teal-50/60">
+                      <input
+                        type="checkbox"
+                        checked={semResponsavel}
+                        onChange={(e) => setSemResponsavel(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      Sem técnico
+                    </label>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition hover:border-teal-200 has-[:checked]:border-teal-300 has-[:checked]:bg-teal-50/60">
+                      <input
+                        type="checkbox"
+                        checked={somenteTransferidos}
+                        onChange={(e) => setSomenteTransferidos(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      Transferidos
+                    </label>
+                  </div>
+                </div>
+              </div>
+              {dbQueuesList.length > 0 ? (
+                <div className="mt-4 border-t border-slate-200/80 pt-4">
+                  <label htmlFor="sd-wf-queue-db" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                    Fila no cadastro (ERP)
+                  </label>
+                  <p className="mb-2 text-[11px] text-slate-500">
+                    Refina por fila cadastrada no sistema — útil quando há várias filas com o mesmo fluxo.
+                  </p>
+                  <select
+                    id="sd-wf-queue-db"
+                    value={queueDbFilter}
+                    onChange={(e) => setQueueDbFilter(e.target.value)}
+                    className={`${sdField} max-w-full cursor-pointer md:max-w-xl`}
+                  >
+                    <option value="">Todas as filas (cadastro)</option>
+                    {dbQueuesList.map((fq) => (
+                      <option key={fq.id} value={String(fq.id)}>
+                        {fq.name || fq.codigo || `Fila #${fq.id}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/40 p-3 sm:flex-row sm:flex-wrap sm:items-center">
             <select
-              value={queueDbFilter}
-              onChange={(e) => setQueueDbFilter(e.target.value)}
-              className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+              value={filaSuporte}
+              onChange={(e) => setFilaSuporte(e.target.value)}
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
             >
-              <option value="">Todas as filas (cadastro)</option>
-              {dbQueuesList.map((fq) => (
-                <option key={fq.id} value={String(fq.id)}>
-                  {fq.name || fq.codigo || `Fila #${fq.id}`}
+              <option value="">Todas as filas</option>
+              {filasMeta.map((f) => (
+                <option key={f.code} value={f.code}>
+                  {f.label}
                 </option>
               ))}
             </select>
-          ) : null}
-        </div>
+            <select
+              value={nivelAtendimento}
+              onChange={(e) => setNivelAtendimento(e.target.value)}
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+            >
+              <option value="">Todos os níveis</option>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={String(n)}>
+                  Nível {n}
+                </option>
+              ))}
+            </select>
+            <select
+              value={idResponsavel}
+              onChange={(e) => setIdResponsavel(e.target.value)}
+              className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+            >
+              <option value="">Qualquer técnico</option>
+              {tecnicosOpcoes.map((t) => (
+                <option key={t.id} value={String(t.id)}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={semResponsavel}
+                onChange={(e) => setSemResponsavel(e.target.checked)}
+              />
+              Sem técnico
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={somenteTransferidos}
+                onChange={(e) => setSomenteTransferidos(e.target.checked)}
+              />
+              Transferidos
+            </label>
+            {dbQueuesList.length > 0 ? (
+              <select
+                value={queueDbFilter}
+                onChange={(e) => setQueueDbFilter(e.target.value)}
+                className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+              >
+                <option value="">Todas as filas (cadastro)</option>
+                {dbQueuesList.map((fq) => (
+                  <option key={fq.id} value={String(fq.id)}>
+                    {fq.name || fq.codigo || `Fila #${fq.id}`}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+          </div>
+        )
       ) : null}
 
       <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
@@ -968,46 +1113,59 @@ export default function TechDashboard({ boot }) {
   if (embedded) {
     return (
       <div className="tickets-react-tech w-full text-slate-800">
-        <header className="mb-1 flex flex-col gap-3 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-              {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {boot?.servicedesk
-                ? 'Atualização automática a cada 12 s · mesmas regras e APIs do ERP.'
-                : 'Listagem e ações usam as mesmas URLs do portal.'}
-            </p>
+        <header className="mb-4 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm shadow-slate-200/60 ring-1 ring-slate-900/[0.03] sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+              <div
+                className="mt-1 hidden h-14 w-1 shrink-0 rounded-full bg-gradient-to-b from-teal-500 to-teal-800 sm:block"
+                aria-hidden
+              />
+              <div className="min-w-0">
+                {boot?.servicedesk ? (
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-teal-700/90">
+                    Painel técnico
+                  </p>
+                ) : null}
+                <h2 className="mt-0.5 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                  {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
+                </h2>
+                <p className="mt-1 max-w-prose text-xs leading-relaxed text-slate-500 sm:text-sm">
+                  {boot?.servicedesk
+                    ? 'Atualização automática a cada 12 s · mesmas regras e APIs do ERP.'
+                    : 'Listagem e ações usam as mesmas URLs do portal.'}
+                </p>
+              </div>
+            </div>
+            <nav
+              className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 sm:gap-2.5 lg:border-t-0 lg:pt-0"
+              aria-label="Atalhos da fila"
+            >
+              {dash && (
+                <a
+                  href={dash}
+                  className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-200 hover:bg-teal-50/40 hover:text-teal-900"
+                >
+                  Dashboard
+                </a>
+              )}
+              {boot?.paths?.indexCliente && (
+                <a
+                  href={boot.paths.indexCliente}
+                  className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-200 hover:bg-teal-50/40 hover:text-teal-900"
+                >
+                  Visão cliente
+                </a>
+              )}
+              {addTicket && (
+                <a
+                  href={addTicket}
+                  className="inline-flex h-10 items-center rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 px-4 text-sm font-semibold text-white shadow-md shadow-teal-900/15 transition hover:from-teal-700 hover:to-teal-800"
+                >
+                  Abrir ticket
+                </a>
+              )}
+            </nav>
           </div>
-          <nav
-            className="flex flex-wrap items-center gap-2 sm:justify-end"
-            aria-label="Atalhos da fila"
-          >
-            {dash && (
-              <a
-                href={dash}
-                className="inline-flex h-9 items-center rounded-md px-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-teal-800"
-              >
-                Dashboard
-              </a>
-            )}
-            {boot?.paths?.indexCliente && (
-              <a
-                href={boot.paths.indexCliente}
-                className="inline-flex h-9 items-center rounded-md px-2.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-teal-800"
-              >
-                Visão cliente
-              </a>
-            )}
-            {addTicket && (
-              <a
-                href={addTicket}
-                className="inline-flex h-9 items-center rounded-lg bg-teal-700 px-3 text-sm font-semibold text-white shadow-sm hover:bg-teal-800"
-              >
-                Abrir ticket
-              </a>
-            )}
-          </nav>
         </header>
         {tableSection}
       </div>
