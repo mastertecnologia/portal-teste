@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\SupportInboxMail;
 use Cake\Event\Event;
 use Cake\Http\Response;
 
@@ -983,37 +984,15 @@ class UsersController extends AppController {
 
 	public function email($iduser, $idempresa) {
 		$user = $this->Users->get($iduser);
-		$empresa = $this->Empresas->get($idempresa);
 		$cliente = $this->Clientes->findById($user->idcliente)->first();
 
-		if(isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
-		else $nomeempresa = $empresa->razaosocial;
-
-		$message = 
+		$nomeCliente = ($cliente && $cliente->tipo == C_ClientesTipoFisica) ? $cliente->nome : ($cliente ? $cliente->razaosocial : '');
+		$message =
 		"<h3> Novo usuário cadastrado! </h3>
-		<h3> O usuário $user->name do cliente $cliente->razaosocial foi cadastrado e está aguardando liberação. </h3>";
-		$emailDest = $this->Config->get(1)->emailtickets;
+		<h3> O usuário $user->name do cliente $nomeCliente foi cadastrado e está aguardando liberação. </h3>";
 		$subject = "Novo usuário cadastrado";
 
-		$email = new Email();
-
-		// Usa o transporte conforme a empresa do cadastro (multi-empresa).
-		$email->transport(((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
-		$from = 'helpdesk@pgm.inf.br';
-		
-		$email->from([$from => $nomeempresa])
-			->to($emailDest)
-			// ->to('joaomario3224@gmail.com')
-			->emailFormat('html')
-			->subject($subject);
-
-		try {
-			return (bool)$email->send($message);
-		} catch (\Throwable $e) {
-			// Evita que falhas de SMTP (credenciais/TLS) travem o cadastro.
-			$this->log('[UsersController::email] Falha ao enviar e-mail: ' . $e->getMessage(), 'error');
-			return false;
-		}
+		return SupportInboxMail::sendHtml($message, $subject, (int)$idempresa);
 	}
 
 	public function verificasenha($senhaadm) {

@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Table;
 
+use App\Utility\SupportInboxMail;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -68,10 +69,33 @@ class TicketsTable extends Table {
 		$configRow = TableRegistry::get('Config')->get(1);
 		$urlFora = !empty($configRow->urlfora) ? $configRow->urlfora : '#';
 
-		// Ticket criado: notificar o suporte (config.emailtickets) — deve ser resolvido ANTES do parse/lista vazia.
-		// Antes, $emailDest era setado só no bloco C_TicketCriado (abaixo), depois da verificação, gerando falha falsa.
+		// Ticket criado: mesmo envio que UsersController::email (Cadastre-se) — ->to() com string de emailtickets.
 		if ($acao == C_TicketCriado) {
-			$emailDest = !empty($configRow->emailtickets) ? trim((string)$configRow->emailtickets) : null;
+			$assunto = AssuntoTicket($ticket->assunto);
+			$nomeClienteEmail = ($cliente->tipo == C_ClientesTipoFisica) ? $cliente->nome : $cliente->razaosocial;
+			$message =
+				"<h3> Ticket $idticket Criado! </h3>
+				<p> <b> Assunto: </b> $assunto</p>
+				<p> <b> Descrição: </b> $ticket->solicitacao</p>
+				<p> <b> Cliente: </b> $nomeClienteEmail</p>
+			";
+			$subject = "Ticket nº $idticket criado - $nomeempresa";
+			if (!SupportInboxMail::sendHtml($message, $subject, (int)$idempresa)) {
+				return false;
+			}
+			$from = 'helpdesk@pgm.inf.br';
+			foreach ($emailResponsavel as $regEmailResp) {
+				try {
+					$emailResp = new Email();
+					$emailResp->transport($transporteEmail);
+					$emailResp->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
+					$emailResp->send($message);
+				} catch (\Throwable $e) {
+					$this->log('[TicketsTable::email] Falha cópia responsável: ' . $e->getMessage(), 'error');
+				}
+			}
+			$raw = !empty($configRow->emailtickets) ? trim((string)$configRow->emailtickets) : '';
+			return $raw !== '' ? $raw : '1';
 		}
 
 		// E-mail do destinatário (prioridade: ticket, usuário vinculado ao ticket, cliente vinculado ao ticket)
@@ -169,15 +193,6 @@ class TicketsTable extends Table {
 			";
 
 			$subject = "Ticket nº $idticket cancelado - $nomeempresa";
-		} else if ($acao == C_TicketCriado) {
-			$nomeClienteEmail = ($cliente->tipo == C_ClientesTipoFisica) ? $cliente->nome : $cliente->razaosocial;
-			$message =
-				"<h3> Ticket $idticket Criado! </h3>
-				<p> <b> Assunto: </b> $assunto</p>
-				<p> <b> Descrição: </b> $ticket->solicitacao</p>
-				<p> <b> Cliente: </b> $nomeClienteEmail</p>
-			";
-			$subject = "Ticket nº $idticket criado - $nomeempresa";
 		}
 
 		$email = new Email();
