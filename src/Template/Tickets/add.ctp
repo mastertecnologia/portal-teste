@@ -7,15 +7,10 @@
 <style>
 	.tickets-add-wrap {
 		width: 100%;
-		max-width: min(1320px, calc(100vw - 24px));
-		margin: 0 auto;
+		max-width: none;
+		margin: 0;
 		padding: 0.5rem 0 2.5rem;
 		box-sizing: border-box;
-	}
-	@media (min-width: 992px) {
-		.tickets-add-wrap {
-			max-width: min(1360px, calc(100vw - 40px));
-		}
 	}
 	.card-ticket-add {
 		border-radius: 10px;
@@ -24,6 +19,11 @@
 	}
 	.card-ticket-add .card-body {
 		padding: 1.75rem 2rem 2rem;
+	}
+	@media (min-width: 1200px) {
+		.card-ticket-add .card-body {
+			padding: 2rem clamp(1.5rem, 3vw, 3rem) 2.25rem;
+		}
 	}
 	@media (max-width: 767px) {
 		.card-ticket-add .card-body {
@@ -50,7 +50,7 @@
 		font-size: 13px;
 	}
 	.ticket-add-textarea.form-control {
-		min-height: 200px;
+		min-height: 240px;
 		border: 1px solid #ced4da;
 		border-radius: 8px;
 		padding: 14px 16px;
@@ -233,7 +233,7 @@
 					</div>
 				</div>
 				<div class="row ticket-add-section">
-					<div class="col-lg-7 col-md-12">
+					<div class="col-xl-8 col-lg-7 col-md-12">
 						<div class="form-group">
 							<label class="control-label text-muted">Anexos (opcional)</label>
 							<p class="ticket-add-hint">
@@ -249,7 +249,7 @@
 							<ul class="ticket-files-chosen" id="ticket-attachments-list" aria-live="polite"></ul>
 						</div>
 					</div>
-					<div class="col-lg-5 col-md-12 ticket-add-section">
+					<div class="col-xl-4 col-lg-5 col-md-12 ticket-add-section">
 						<label class="control-label text-muted" for="email">E-mail para contato</label>
 						<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'E-mail para retorno do suporte']) ?>
 					</div>
