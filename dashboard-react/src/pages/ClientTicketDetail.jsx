@@ -6,10 +6,19 @@ import { MOCK_SESSION_CLIENTE } from '../data/mockData';
 import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
+import CommentMessage from '../components/CommentMessage.jsx';
 
-function CommentBody({ html }) {
-  if (!html) return null;
-  return <div className="prose prose-sm mt-1 max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: html }} />;
+function PapelBadge({ papel }) {
+  const isTech = papel === 'tecnico';
+  return (
+    <span
+      className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+        isTech ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-200 text-slate-700'
+      }`}
+    >
+      {isTech ? 'Suporte' : 'Cliente'}
+    </span>
+  );
 }
 
 export default function ClientTicketDetail({ boot }) {
@@ -184,33 +193,47 @@ export default function ClientTicketDetail({ boot }) {
     />
   );
 
+  const bootNow = getBoot();
+  const meuNome = USE_MOCK ? MOCK_SESSION_CLIENTE.name : (bootNow?.userName || '').trim();
+
   const chatCard = (
     <div className="flex flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 px-4 py-2">
         <h2 className="text-sm font-bold text-slate-900">Conversa</h2>
         <p className="text-xs text-slate-500">
-          {USE_MOCK ? `Olá, ${MOCK_SESSION_CLIENTE.name}` : 'Mensagens com o suporte.'}
+          {meuNome
+            ? `Você está como ${meuNome}. Cada mensagem fica gravada no chamado e no histórico (movimentações).`
+            : 'Mensagens com o suporte — gravadas no chamado e no histórico.'}
         </p>
       </div>
       <ul className="max-h-[min(420px,calc(100vh-280px))] space-y-2 overflow-y-auto p-3 sm:max-h-[min(520px,calc(100vh-240px))]">
-        {comentarios.map((c) => (
-          <li
-            key={c.id}
-            className={`rounded-lg border px-3 py-2 text-sm ${
-              c.pending
-                ? 'border-amber-200 bg-amber-50/80'
-                : c.papel === 'tecnico'
-                  ? 'border-cyan-200 bg-cyan-50/50'
-                  : 'border-slate-200 bg-slate-50/80'
-            }`}
-          >
-            <div className="flex flex-wrap justify-between gap-1 text-xs text-slate-500">
-              <span className="font-semibold text-slate-800">{c.autor}</span>
-              <span>{c.quando}</span>
-            </div>
-            <CommentBody html={c.texto} />
+        {comentarios.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
+            Nenhuma mensagem ainda. Escreva abaixo para falar com o suporte.
           </li>
-        ))}
+        ) : (
+          comentarios.map((c) => (
+            <li
+              key={c.id}
+              className={`rounded-lg border px-3 py-2 text-sm ${
+                c.pending
+                  ? 'border-amber-200 bg-amber-50/80'
+                  : c.papel === 'tecnico'
+                    ? 'border-cyan-200 bg-cyan-50/50'
+                    : 'border-slate-200 bg-slate-50/80'
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-900">{c.autor || '—'}</span>
+                  <PapelBadge papel={c.papel} />
+                </div>
+                <time className="flex-shrink-0 text-slate-500">{c.quando}</time>
+              </div>
+              <CommentMessage texto={c.texto} />
+            </li>
+          ))
+        )}
       </ul>
       <form onSubmit={handleComentario} className="border-t border-slate-100 p-3">
         <textarea

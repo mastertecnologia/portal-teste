@@ -58,6 +58,18 @@ class TicketcomentariosController extends AppController {
 	}
 
 	/**
+	 * Trecho do comentário para gravar em ticketsmovs.observacao (log / movimentações).
+	 */
+	protected function _observacaoMovComentario($texto): string {
+		$t = preg_replace('/\s+/u', ' ', trim(strip_tags((string)$texto)));
+		if (function_exists('mb_substr')) {
+			return mb_substr($t, 0, 240);
+		}
+
+		return substr($t, 0, 240);
+	}
+
+	/**
 	 * Envia o e-mail de “novo comentário” sem Flash/redirect (uso em criarMov e API).
 	 *
 	 * @return bool true se enviou ao destinatário principal; false se não havia destino ou falhou.
@@ -152,10 +164,18 @@ class TicketcomentariosController extends AppController {
 			if (empty($clienteVerifica) || ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj)) {
 				return false;
 			}
-			if ($ticket->idautor != $this->Auth->user('id') && !$this->Auth->user('permissaoacesso')) {
-				return false;
+			// Mesma regra de TicketsController::_apiTicketViewAllowed (autor OU cliente do ticket OU permissão).
+			if ($this->Auth->user('permissaoacesso')) {
+				return true;
 			}
-			return true;
+			if ((int)$ticket->idautor === (int)$this->Auth->user('id')) {
+				return true;
+			}
+			if ((int)$ticket->idcliente === (int)$this->Auth->user('idcliente')) {
+				return true;
+			}
+
+			return false;
 		}
 		if ($role === 0) {
 			if ((int)$this->Auth->user('admin') !== 1) {
@@ -222,7 +242,8 @@ class TicketcomentariosController extends AppController {
 					try {
 						$sitantiga = $ticket->situacao;
 						if (isset($sitantiga)) {
-							$this->criarMov($idticket, $sitantiga, C_TicketSituacaoRespondido);
+							$obs = $this->_observacaoMovComentario($comentario->comentario ?? '');
+							$this->criarMov($idticket, $sitantiga, C_TicketSituacaoRespondido, $obs);
 						}
 					} catch (\Throwable $e) {
 						$this->log('Ticketcomentarios::add criarMov: ' . $e->getMessage(), 'error');
@@ -279,7 +300,8 @@ class TicketcomentariosController extends AppController {
 			try {
 				$sitantiga = $ticketReload->situacao;
 				if (isset($sitantiga)) {
-					$this->criarMov($idticket, $sitantiga, C_TicketSituacaoRespondido, null, false);
+					$obs = $this->_observacaoMovComentario($comentario->comentario ?? '');
+					$this->criarMov($idticket, $sitantiga, C_TicketSituacaoRespondido, $obs, false);
 				}
 			} catch (\Throwable $e) {
 				$this->log('Ticketcomentarios::apiAdd criarMov: ' . $e->getMessage(), 'error');

@@ -285,8 +285,13 @@
 						//0 - Pendente
 						else if ($reg['sitnova'] == C_TicketSituacaoPendente && $reg['sitnova'] != $reg['sitantiga']) echo "Alterou a situação do ticket para 'Aguardando técnico'.";
 
-						//1 - Respondido
-						else if ($reg['sitnova'] == C_TicketSituacaoRespondido && $reg['sitnova'] != $reg['sitantiga']) echo "Publicou um comentário.";
+						//1 - Respondido (observacao = trecho do comentário)
+						else if ($reg['sitnova'] == C_TicketSituacaoRespondido && $reg['sitnova'] != $reg['sitantiga']) {
+							echo "Publicou um comentário.";
+							if (!empty($reg['observacao'])) {
+								echo ' <em class="text-muted">' . h($reg['observacao']) . '</em>';
+							}
+						}
 
 						//2 - Resolvido
 						else if ($reg['sitnova'] == C_TicketSituacaoResolvido && $reg['sitnova'] != $reg['sitantiga'] && empty($reg['observacao'])) echo "Resolveu o ticket.";

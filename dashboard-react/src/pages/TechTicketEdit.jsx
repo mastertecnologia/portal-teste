@@ -3,13 +3,22 @@ import { fetchTicketDetail, postComentario, saveTicketSolicitacao, getBoot } fro
 import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
 import { stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
+import CommentMessage from '../components/CommentMessage.jsx';
 
 /** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
 const SHOW_LEGACY_TICKET_UI = false;
 
-function CommentBody({ html }) {
-  if (!html) return null;
-  return <div className="prose prose-sm mt-1 max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: html }} />;
+function PapelBadge({ papel }) {
+  const isTech = papel === 'tecnico';
+  return (
+    <span
+      className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+        isTech ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-200 text-slate-700'
+      }`}
+    >
+      {isTech ? 'Suporte' : 'Cliente'}
+    </span>
+  );
 }
 
 export default function TechTicketEdit({ boot }) {
@@ -217,26 +226,38 @@ export default function TechTicketEdit({ boot }) {
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 px-4 py-2">
         <h3 className="text-sm font-bold text-slate-900">Conversa</h3>
+        <p className="text-xs text-slate-500">
+          Nome do autor vem do cadastro de usuário. Comentários ficam em ticket + movimentações (trecho no histórico).
+        </p>
       </div>
       <ul className="max-h-[min(420px,calc(100vh-280px))] flex-1 space-y-2 overflow-y-auto p-3 sm:max-h-[min(520px,calc(100vh-240px))]">
-        {comentarios.map((c) => (
-          <li
-            key={c.id}
-            className={`rounded-lg border px-3 py-2 text-sm ${
-              c.pending
-                ? 'border-amber-200 bg-amber-50/80'
-                : c.papel === 'tecnico'
-                  ? 'border-cyan-200 bg-cyan-50/40'
-                  : 'border-slate-200 bg-slate-50/90'
-            }`}
-          >
-            <div className="flex flex-wrap justify-between gap-1 text-xs text-slate-500">
-              <span className="font-semibold text-slate-800">{c.autor}</span>
-              <span>{c.quando}</span>
-            </div>
-            <CommentBody html={c.texto} />
+        {comentarios.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
+            Nenhum comentário ainda.
           </li>
-        ))}
+        ) : (
+          comentarios.map((c) => (
+            <li
+              key={c.id}
+              className={`rounded-lg border px-3 py-2 text-sm ${
+                c.pending
+                  ? 'border-amber-200 bg-amber-50/80'
+                  : c.papel === 'tecnico'
+                    ? 'border-cyan-200 bg-cyan-50/40'
+                    : 'border-slate-200 bg-slate-50/90'
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-900">{c.autor || '—'}</span>
+                  <PapelBadge papel={c.papel} />
+                </div>
+                <time className="flex-shrink-0 text-slate-500">{c.quando}</time>
+              </div>
+              <CommentMessage texto={c.texto} />
+            </li>
+          ))
+        )}
       </ul>
       <form onSubmit={handleComentario} className="border-t border-slate-100 p-3">
         <textarea

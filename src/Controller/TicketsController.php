@@ -1871,23 +1871,43 @@ class TicketsController extends AppController {
 	}
 
 	protected function _apiComentariosPayload($idticket): array {
-		$ticketcomentarios = $this->Ticketcomentarios->find('all', [
-			'contain' => ['users', 'Tickets'],
-			'fields' => ['Users.name', 'Users.role', 'Ticketcomentarios.id', 'Ticketcomentarios.comentario', 'Ticketcomentarios.created', 'Tickets.idempresa'],
-		])->where(['Ticketcomentarios.idticket' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])->order(['Ticketcomentarios.id' => 'ASC'])->toArray();
+		// Sem lista restrita de fields: no CakePHP, omitir FKs quebra o contain e a lista pode vir vazia.
+		$rows = $this->Ticketcomentarios->find('all', [
+			'contain' => ['Users', 'Tickets'],
+		])->where([
+			'Ticketcomentarios.idticket' => $idticket,
+			'Tickets.idempresa' => $this->Auth->user('idempresa'),
+		])->order(['Ticketcomentarios.id' => 'ASC'])->toArray();
 
 		$comentarios = [];
-		foreach ($ticketcomentarios as $c) {
+		foreach ($rows as $c) {
 			$u = $c->user ?? null;
-			$r = $u ? (int)$u->role : 1;
+			$autor = '';
+			$roleU = 1;
+			if ($u) {
+				$autor = trim((string)($u->name ?? $u->username ?? ''));
+				$roleU = (int)($u->role ?? 1);
+			}
+			if ($autor === '' && !empty($c->idautor)) {
+				$uf = $this->Users->findById($c->idautor)->select(['name', 'username', 'role'])->first();
+				if ($uf) {
+					$autor = trim((string)($uf->name ?: $uf->username));
+					$roleU = (int)$uf->role;
+				}
+			}
+			$papel = $roleU === 0 ? 'tecnico' : 'cliente';
+			if ($autor === '') {
+				$autor = $papel === 'tecnico' ? 'Técnico' : 'Cliente';
+			}
 			$comentarios[] = [
 				'id' => (int)$c->id,
-				'autor' => $u ? $u->name : '',
-				'papel' => $r === 0 ? 'tecnico' : 'cliente',
-				'texto' => $c->comentario,
+				'autor' => $autor,
+				'papel' => $papel,
+				'texto' => (string)($c->comentario ?? ''),
 				'quando' => $c->created ? $c->created->format('d/m/Y H:i') : '',
 			];
 		}
+
 		return $comentarios;
 	}
 

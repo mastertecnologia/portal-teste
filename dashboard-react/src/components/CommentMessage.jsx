@@ -1,0 +1,13 @@
+/**
+ * Exibe texto do comentário: escapa HTML quando for texto puro (como no legado);
+ * se já houver marcação salva no banco, renderiza como HTML (cuidado com XSS — origem confiável).
+ */
+export default function CommentMessage({ texto }) {
+  if (texto == null || texto === '') return null;
+  const s = String(texto);
+  const looksLikeHtml = /<[a-z][\s\S]*>/i.test(s);
+  if (looksLikeHtml) {
+    return <div className="prose prose-sm mt-1 max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: s }} />;
+  }
+  return <div className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700">{s}</div>;
+}
