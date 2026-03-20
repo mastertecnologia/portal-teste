@@ -33,6 +33,8 @@ class UsersController extends AppController {
 		$this->loadModel('Visitas');
 		$this->loadModel('Tarefas');
 		$this->loadModel('Empresas');
+		$this->loadModel('Queues');
+		$this->loadModel('QueuesUsers');
 		$this->loadModel('Empresasusers');
 		$this->loadModel('Orcamentos');
 		$this->loadModel('Orcamentosservicos');
@@ -207,6 +209,7 @@ class UsersController extends AppController {
 				$user->role = 0;
 
 				if ($this->Users->save($user)) {
+					$this->_syncQueuesUsuario((int)$user->id, (int)$this->Auth->user('idempresa'));
 					$this->Flash->success(__('O usuário foi salvo.'));
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $user->id);
 					return $this->redirect(['action' => 'index']);
@@ -216,6 +219,14 @@ class UsersController extends AppController {
 			}
 		}
 
+		$queuesList = [];
+		if ($this->_queuesTablesExist()) {
+			$queuesList = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+				->where(['idempresa' => $this->Auth->user('idempresa')])
+				->order(['sort_order' => 'ASC', 'id' => 'ASC'])
+				->toArray();
+		}
+		$this->set(compact('queuesList'));
 		$this->set('user', $user);
 	}
 
@@ -315,6 +326,9 @@ class UsersController extends AppController {
 			$this->Users->patchEntity($user, $data);
 
 			if ($this->Users->save($user)) {
+				if ((int)$user->role === 0) {
+					$this->_syncQueuesUsuario((int)$id, (int)$this->Auth->user('idempresa'));
+				}
 				$this->Flash->success('As informações do usuário foram alteradas com sucesso!');
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
 				return $this->redirect(['action' => 'index']);
@@ -323,7 +337,22 @@ class UsersController extends AppController {
 			$this->Flash->error('Ocorreu um erro ao editar as informações do usuário! Tente novamente mais tarde.');
 		}
 
+		$queuesList = [];
+		$selectedQueues = [];
+		if ($this->_queuesTablesExist() && (int)$user->role === 0) {
+			$queuesList = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+				->where(['idempresa' => $this->Auth->user('idempresa')])
+				->order(['sort_order' => 'ASC', 'id' => 'ASC'])
+				->toArray();
+			$selectedQueues = $this->QueuesUsers->find()
+				->select(['queue_id'])
+				->where(['user_id' => $user->id])
+				->extract('queue_id')
+				->toList();
+		}
+
 		$this->set('user', $user);
+		$this->set(compact('queuesList', 'selectedQueues'));
 		$this->set('title', 'Editar Usuário');
 	}
 
@@ -1248,6 +1277,42 @@ class UsersController extends AppController {
 		if($this->Users->save($user)){
 			$this->Flash->success('A verificação em duas etapas foi desativada com sucesso! Remova a conta no Google Authenticator App');
 			return $this->redirect(['action' => 'index']);
+		}
+	}
+
+	protected function _queuesTablesExist(): bool {
+		try {
+			$tables = $this->Queues->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('queues', $tables, true) && in_array('queues_users', $tables, true);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	protected function _syncQueuesUsuario(int $userId, int $idempresa): void {
+		if (!$this->_queuesTablesExist()) {
+			return;
+		}
+		$raw = $this->request->getData('queue_ids');
+		if (!is_array($raw)) {
+			$raw = [];
+		}
+		$ids = array_values(array_unique(array_filter(array_map('intval', $raw))));
+		$allowedIds = $this->Queues->find()
+			->select(['id'])
+			->where(['idempresa' => $idempresa])
+			->extract('id')
+			->toList();
+		if (!empty($allowedIds)) {
+			$this->QueuesUsers->deleteAll(['user_id' => $userId, 'queue_id IN' => $allowedIds]);
+		}
+		foreach ($ids as $qid) {
+			if (!in_array($qid, $allowedIds, true)) {
+				continue;
+			}
+			$row = $this->QueuesUsers->newEntity(['queue_id' => $qid, 'user_id' => $userId]);
+			$this->QueuesUsers->save($row);
 		}
 	}
 }

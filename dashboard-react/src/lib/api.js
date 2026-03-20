@@ -30,6 +30,24 @@ function mockTicketToTechRow(t) {
     t.status === 'Aguardando técnico' ||
     t.status === 'Em execução' ||
     t.status === 'Em andamento';
+  const pendente = t.status === 'Aguardando técnico';
+  const acoes = [];
+  if (open) {
+    if (pendente) {
+      acoes.push({
+        key: 'iniciar',
+        label: 'Iniciar atendimento',
+        behavior: 'reactStart',
+        url: `#/mock-ticket/${t.id}`,
+      });
+    }
+    acoes.push({
+      key: 'transferir',
+      label: 'Transferir',
+      behavior: 'reactTransfer',
+      url: `#/mock-ticket/${t.id}`,
+    });
+  }
   return {
     id: t.id,
     autor: '—',
@@ -41,20 +59,12 @@ function mockTicketToTechRow(t) {
     tecnicos: t.tecnicos ?? t.responsavel ?? '—',
     filaSuporte: t.filaSuporte || 'n1',
     filaLabel: t.filaLabel || 'Fila N1 — Suporte inicial / triagem',
+    filaQueueId: 1,
     nivelAtendimento: t.nivelAtendimento ?? 1,
     transferido: Boolean(t.transferido),
     solicitacaoPreview: (t.descricao || '').slice(0, 120),
     urls: { edit: `#/mock-ticket/${t.id}` },
-    acoes: open
-      ? [
-          {
-            key: 'transferir',
-            label: 'Transferir',
-            behavior: 'reactTransfer',
-            url: `#/mock-ticket/${t.id}`,
-          },
-        ]
-      : [],
+    acoes,
   };
 }
 
@@ -75,7 +85,15 @@ export async function fetchTicketsTecnico(filters = {}) {
       { code: 'noc', label: 'Fila NOC — Monitoramento', nivel: 4 },
       { code: 'servico', label: 'Fila requisições de serviço', nivel: 5 },
     ];
-    return { ok: true, groups, workflow: { enabled: true, filas } };
+    const queues = [
+      { id: 1, name: 'N1 — Triagem', codigo: 'n1' },
+      { id: 2, name: 'N2 — Avançado', codigo: 'n2' },
+    ];
+    return {
+      ok: true,
+      groups,
+      workflow: { enabled: true, filas, queuesRelacional: true, queues },
+    };
   }
   const boot = getBoot();
   const q = qs({
@@ -84,6 +102,7 @@ export async function fetchTicketsTecnico(filters = {}) {
     sem_responsavel: filters.semResponsavel ? '1' : '',
     idtecnico_responsavel: filters.idResponsavel,
     transferidos: filters.somenteTransferidos ? '1' : '',
+    queue_id: filters.queueId,
   });
   const r = await fetch(`${boot.paths.apiIndex}${q}`, { credentials: 'same-origin' });
   if (!r.ok) return { ok: false, error: r.statusText, groups: null, workflow: null };
@@ -92,7 +111,66 @@ export async function fetchTicketsTecnico(filters = {}) {
   return { ok: true, groups: json.groups, workflow: json.workflow || { enabled: false, filas: [] } };
 }
 
-export async function fetchTecnicosParaTransferencia() {
+export async function fetchQueuesForTicket(ticketId) {
+  if (USE_MOCK) {
+    return {
+      ok: true,
+      queues: [
+        { id: 1, name: 'N1 — Triagem', codigo: 'n1' },
+        { id: 2, name: 'N2 — Avançado', codigo: 'n2' },
+      ],
+    };
+  }
+  const boot = getBoot();
+  const base = boot.paths?.apiGetAvailableQueues || boot.paths?.apiQueuesForTicket;
+  if (!base) return { ok: false, error: 'no_api', queues: [] };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  if (!r.ok) return { ok: false, error: r.statusText, queues: [] };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro', queues: [] };
+  return { ok: true, queues: json.queues || [] };
+}
+
+export async function postStartTicket(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true };
+  }
+  const boot = getBoot();
+  const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
+  const init = { credentials: 'same-origin', headers, body: '{}' };
+
+  async function readBody(res) {
+    let json = {};
+    try {
+      json = await res.json();
+    } catch (_) {
+      /* ignore */
+    }
+    return json;
+  }
+
+  const slug = boot.paths?.apiStartTicketSlug;
+  const legacy = boot.paths?.apiStartTicket;
+  if (slug) {
+    const rPut = await fetch(`${slug}${encodeURIComponent(ticketId)}`, { method: 'PUT', ...init });
+    const jPut = await readBody(rPut);
+    if (rPut.ok && jPut.ok) return { ok: true };
+    if (rPut.status !== 405 && rPut.status !== 404) {
+      return { ok: false, error: jPut.error || rPut.statusText };
+    }
+  }
+  if (!legacy) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${legacy}${encodeURIComponent(ticketId)}`, { method: 'POST', ...init });
+  const json = await readBody(r);
+  if (!r.ok) return { ok: false, error: json.error || r.statusText };
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return { ok: true };
+}
+
+export async function fetchTecnicosParaTransferencia(queueId) {
   if (USE_MOCK) {
     return {
       ok: true,
@@ -104,7 +182,8 @@ export async function fetchTecnicosParaTransferencia() {
     };
   }
   const boot = getBoot();
-  const r = await fetch(boot.paths.apiTecnicosLista, { credentials: 'same-origin' });
+  const q = qs({ queue_id: queueId });
+  const r = await fetch(`${boot.paths.apiTecnicosLista}${q}`, { credentials: 'same-origin' });
   if (!r.ok) return { ok: false, error: r.statusText, tecnicos: [] };
   const json = await r.json();
   if (!json.ok) return { ok: false, error: json.error || 'erro', tecnicos: [] };

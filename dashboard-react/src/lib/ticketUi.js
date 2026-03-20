@@ -64,6 +64,7 @@ export function acaoKeyToBadgeType(key) {
   if (k === 'cancelar') return 'cancelled';
   if (k === 'imprimir') return 'low';
   if (k === 'transferir') return 'medium';
+  if (k === 'iniciar') return 'progress';
   return 'low';
 }
 
@@ -72,7 +73,7 @@ export function acaoLinkClassName(key) {
 }
 
 /** Mesma ordem visual para qualquer status (como na fila “Em execução”). */
-const ACAO_ORDER = ['pendente', 'emandamento', 'resolvido', 'transferir', 'cancelar', 'imprimir'];
+const ACAO_ORDER = ['iniciar', 'pendente', 'emandamento', 'resolvido', 'transferir', 'cancelar', 'imprimir'];
 
 export function sortTicketAcoes(acoes) {
   if (!Array.isArray(acoes) || acoes.length === 0) return [];

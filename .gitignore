@@ -5,3 +5,7 @@ tmp/
 logs/
 vendor/
 .ssh/
+dashboard-react/.vite/
+# chaves acidentais na raiz do repo (não versionar)
+/yes
+/yes.pub

@@ -49,6 +49,21 @@
 						</div>
 					</div>
 				</div>
+				<?php if (!empty($queuesList)) : ?>
+				<div class="row padding-20">
+					<div class="col-12">
+						<div class="form-group">
+							<label class="control-label text-muted">Filas de Atendimento</label>
+							<select name="queue_ids[]" class="form-control" multiple size="8" style="min-height: 10rem;">
+								<?php foreach ($queuesList as $qid => $qname) : ?>
+									<option value="<?= (int)$qid ?>"><?= h($qname) ?></option>
+								<?php endforeach; ?>
+							</select>
+							<small class="form-text text-muted">Opcional: vincule o técnico às filas da empresa atual. Ctrl/Cmd + clique para várias.</small>
+						</div>
+					</div>
+				</div>
+				<?php endif; ?>
 				<div class="row padding-20">
 					<div class="col-lg-12 col-md-12">
 						<?= $this->Form->button('Criar usuário', ['class' => 'btn waves-effect waves-light btn-success']) ?>

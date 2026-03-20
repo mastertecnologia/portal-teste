@@ -2,6 +2,9 @@
 namespace App\Model\Table;
 
 use App\Utility\SupportInboxMail;
+use ArrayObject;
+use Cake\Datasource\EntityInterface;
+use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -40,11 +43,30 @@ class TicketsTable extends Table {
 		$this->belongsTo('Clientes')->setForeignKey('idcliente');
 		$this->belongsTo('Clicontabilidade')->setForeignKey('idsolicitantecontador');
 		$this->belongsTo('users')->setForeignKey('idautor')->setDependent(false);
+		$this->belongsTo('Queues', ['foreignKey' => 'queue_id', 'joinType' => 'LEFT']);
 
 		$this->hasMany('Ticketsclientes', ['dependent' => true,'cascadeCallbacks' => true,])->setForeignKey('idticket'); 
 		
 		$this->hasOne('Empresas');
 		$this->hasOne('Config');
+	}
+
+	/**
+	 * Mantém owner_id e idtecnico_responsavel alinhados quando ambos existem.
+	 */
+	public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
+		$cols = $this->getSchema()->columns();
+		$hasOwner = in_array('owner_id', $cols, true);
+		$hasTec = in_array('idtecnico_responsavel', $cols, true);
+		if ($hasOwner && $hasTec) {
+			if ($entity->isDirty('idtecnico_responsavel') && !$entity->isDirty('owner_id')) {
+				$entity->owner_id = $entity->idtecnico_responsavel;
+			} elseif ($entity->isDirty('owner_id') && !$entity->isDirty('idtecnico_responsavel')) {
+				$entity->idtecnico_responsavel = $entity->owner_id;
+			}
+		}
+
+		return true;
 	}
 
 	public function email($idticket, $acao = null, $emailDest = null, $idempresa = null) {

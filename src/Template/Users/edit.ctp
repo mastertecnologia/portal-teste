@@ -50,6 +50,23 @@
 				</div>
 			</div>
 
+			<?php if (!empty($queuesList) && (int)$user->role === 0) : ?>
+			<h6 class="text-muted m-t-20 m-b-10">Filas de Atendimento</h6>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-group">
+						<label class="control-label text-muted">Filas em que este técnico pode atuar (empresa atual)</label>
+						<select name="queue_ids[]" class="form-control" multiple size="8" style="min-height: 10rem;">
+							<?php foreach ($queuesList as $qid => $qname) : ?>
+								<option value="<?= (int)$qid ?>" <?= in_array((int)$qid, array_map('intval', $selectedQueues ?? []), true) ? 'selected' : '' ?>><?= h($qname) ?></option>
+							<?php endforeach; ?>
+						</select>
+						<small class="form-text text-muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar várias. As filas são por empresa (Master/PGM conforme o contexto do login). Crie filas via SQL ou POST <code>queues/api-ensure-defaults</code> como admin.</small>
+					</div>
+				</div>
+			</div>
+			<?php endif; ?>
+
 			<h6 class="text-muted m-t-20 m-b-10">Assinaturas de e-mail</h6>
 			<div class="row">
 				<div class="col-md-6">

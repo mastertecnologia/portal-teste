@@ -41,6 +41,8 @@ class TicketsController extends AppController {
 		$this->loadModel('Empresasusers');
 		$this->loadModel('Ordensservico');
 		$this->loadModel('Config');
+		$this->loadModel('Queues');
+		$this->loadModel('QueuesUsers');
 	}
 
 	public function isAuthorized($user) {
@@ -55,7 +57,7 @@ class TicketsController extends AppController {
 		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments', 'apiAnexoUpload', 'apiAnexoDelete'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
-		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket'], true)) {
+		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket'], true)) {
 			return (int)$user['role'] === 0;
 		}
 
@@ -605,6 +607,7 @@ class TicketsController extends AppController {
 					$ticket->idtecnico_responsavel = null;
 					$this->Tickets->save($ticket, ['fields' => ['fila_suporte', 'nivel_atendimento', 'idtecnico_responsavel']]);
 				}
+				$this->_syncTicketQueueAfterCreate((int)$ticket->id);
 				// Anexos (vários arquivos: input multiple ou lista normalizada)
 					foreach ($anexos as $file) {
 						$idempresa = $this->Auth->user('idempresa');
@@ -1077,6 +1080,10 @@ class TicketsController extends AppController {
 		$ticket->situacao = $situacao;
 
 		if ($situacao == C_TicketSituacaoResolvido || $situacao == C_TicketSituacaoFechado) $ticket->datafinalizado = date('d/m/Y');
+
+		if ((int)$situacao === (int)C_TicketSituacaoEmandamento && (int)$situacao !== (int)$sitantiga) {
+			$this->_assignTecnicoEmExecucao($ticket, (int)$idticket);
+		}
 
 		if ($this->Tickets->save($ticket)) {
 			try {
@@ -1682,6 +1689,12 @@ class TicketsController extends AppController {
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
 				'apiTecnicosLista' => $w . 'tickets/api-tecnicos-lista',
 				'apiTransferirTicket' => $w . 'tickets/api-transferir-ticket/',
+				'apiStartTicket' => $w . 'tickets/api-start-ticket/',
+				'apiStartTicketSlug' => $w . 'tickets/start-ticket/',
+				'apiQueuesForTicket' => $w . 'queues/api-for-ticket/',
+				'apiGetAvailableQueues' => $w . 'queues/get-available-queues/',
+				'apiQueuesIndex' => $w . 'queues/api-index',
+				'apiQueuesEnsureDefaults' => $w . 'queues/api-ensure-defaults',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -1727,6 +1740,113 @@ class TicketsController extends AppController {
 		}
 
 		return $ok;
+	}
+
+	protected function _queuesRelacionalReady(): bool {
+		static $ok = null;
+		if ($ok !== null) {
+			return $ok;
+		}
+		try {
+			$tables = $this->Tickets->getConnection()->getSchemaCollection()->listTables();
+			$ok = in_array('queues', $tables, true)
+				&& in_array('queue_id', $this->Tickets->getSchema()->columns(), true);
+		} catch (\Throwable $e) {
+			$ok = false;
+		}
+
+		return $ok;
+	}
+
+	/**
+	 * Ao entrar em execução, o técnico logado vira responsável (e entra em ticketsusers).
+	 */
+	protected function _assignTecnicoEmExecucao($ticket, int $idticket): void {
+		if ((int)$this->Auth->user('role') !== 0) {
+			return;
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		if (!in_array('idtecnico_responsavel', $cols, true) && !in_array('owner_id', $cols, true)) {
+			return;
+		}
+		$uid = (int)$this->Auth->user('id');
+		if ($uid <= 0) {
+			return;
+		}
+		if (in_array('idtecnico_responsavel', $cols, true)) {
+			$ticket->idtecnico_responsavel = $uid;
+		}
+		if (in_array('owner_id', $cols, true)) {
+			$ticket->owner_id = $uid;
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $uid])->first();
+		if (empty($ja)) {
+			$tu = $this->Ticketsusers->newEntity();
+			$tu->idticket = $idticket;
+			$tu->iduser = $uid;
+			$tu->idempresa = $emp;
+			$this->Ticketsusers->save($tu);
+		}
+	}
+
+	/**
+	 * Garante persistência de owner_id junto com idtecnico_responsavel (save com `fields`).
+	 */
+	protected function _ticketFieldsComResponsavel(array $fields): array {
+		$cols = $this->Tickets->getSchema()->columns();
+		if (in_array('idtecnico_responsavel', $cols, true) && in_array('owner_id', $cols, true)) {
+			if (in_array('idtecnico_responsavel', $fields, true) && !in_array('owner_id', $fields, true)) {
+				$fields[] = 'owner_id';
+			}
+			if (in_array('owner_id', $fields, true) && !in_array('idtecnico_responsavel', $fields, true)) {
+				$fields[] = 'idtecnico_responsavel';
+			}
+		}
+
+		return $fields;
+	}
+
+	protected function _ticketTransferApiAllowed(): bool {
+		$cols = $this->Tickets->getSchema()->columns();
+		$hasResp = in_array('idtecnico_responsavel', $cols, true);
+
+		return $hasResp && ($this->_ticketWorkflowSchemaReady() || $this->_queuesRelacionalReady());
+	}
+
+	/**
+	 * Associa o ticket recém-criado à primeira fila da empresa (preferindo codigo n1).
+	 */
+	protected function _syncTicketQueueAfterCreate(int $idticket): void {
+		if (!$this->_queuesRelacionalReady()) {
+			return;
+		}
+		try {
+			$t = $this->Tickets->get($idticket);
+		} catch (\Throwable $e) {
+			return;
+		}
+		$emp = (int)$t->idempresa;
+		$q = $this->Queues->find()->where(['idempresa' => $emp, 'codigo' => 'n1'])->first();
+		if (empty($q)) {
+			$q = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC'])->first();
+		}
+		if (empty($q)) {
+			return;
+		}
+		$t->queue_id = (int)$q->id;
+		$fields = ['queue_id'];
+		if ($this->_ticketWorkflowSchemaReady() && $q->codigo !== null && $q->codigo !== '') {
+			$cat = $this->_filaSuporteCatalog();
+			$cd = (string)$q->codigo;
+			if (isset($cat[$cd])) {
+				$t->fila_suporte = $cd;
+				$t->nivel_atendimento = $cat[$cd]['nivel'];
+				$fields[] = 'fila_suporte';
+				$fields[] = 'nivel_atendimento';
+			}
+		}
+		$this->Tickets->save($t, ['fields' => $fields]);
 	}
 
 	/**
@@ -1848,6 +1968,10 @@ class TicketsController extends AppController {
 			} else {
 				$query->where(['Tickets.id IN' => $ids]);
 			}
+		}
+		$qid = $this->request->getQuery('queue_id');
+		if ($qid !== null && $qid !== '' && ctype_digit((string)$qid) && in_array('queue_id', $this->Tickets->getSchema()->columns(), true)) {
+			$query->where(['Tickets.queue_id' => (int)$qid]);
 		}
 
 		return $query;
@@ -1972,6 +2096,9 @@ class TicketsController extends AppController {
 		$id = (int)$reg->id;
 		$sit = (int)$reg->situacao;
 		$wf = !empty($ctx['workflow']);
+		$queuesUi = !empty($ctx['queuesUi']);
+		$transferOk = !empty($ctx['transferEnabled']);
+		$qEnt = $reg->queue ?? $reg->queues ?? null;
 		$filaCode = $wf ? (string)($reg->fila_suporte ?? 'n1') : '';
 		$nivel = $wf ? (int)($reg->nivel_atendimento ?? 1) : null;
 		$acoes = [];
@@ -1982,13 +2109,21 @@ class TicketsController extends AppController {
 			if ($sit !== (int)C_TicketSituacaoEmandamento) {
 				$acoes[] = ['key' => 'emandamento', 'label' => 'Em execução', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoEmandamento])];
 			}
+			if ($sit === (int)C_TicketSituacaoPendente && $transferOk) {
+				$acoes[] = [
+					'key' => 'iniciar',
+					'label' => 'Iniciar atendimento',
+					'behavior' => 'reactStart',
+					'url' => Router::url(['action' => 'edit', $id]),
+				];
+			}
 			if ($sit !== (int)C_TicketSituacaoResolvido) {
 				$acoes[] = ['key' => 'resolvido', 'label' => 'Resolvido', 'url' => Router::url(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoResolvido])];
 			}
 			if ($sit !== (int)C_TicketSituacaoFechado) {
 				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
 			}
-			if ($wf) {
+			if ($transferOk) {
 				$acoes[] = [
 					'key' => 'transferir',
 					'label' => 'Transferir',
@@ -2020,10 +2155,28 @@ class TicketsController extends AppController {
 			],
 			'acoes' => $acoes,
 		];
-		if ($wf) {
-			$row['filaSuporte'] = $filaCode;
-			$row['filaLabel'] = $this->_filaLabelFromCode($filaCode);
-			$row['nivelAtendimento'] = $nivel;
+		if (isset($reg->owner_id)) {
+			$row['owner_id'] = $reg->owner_id !== null && $reg->owner_id !== '' ? (int)$reg->owner_id : null;
+		}
+		if (isset($reg->idtecnico_responsavel)) {
+			$row['idtecnico_responsavel'] = $reg->idtecnico_responsavel !== null && $reg->idtecnico_responsavel !== '' ? (int)$reg->idtecnico_responsavel : null;
+		}
+		if ($wf || $queuesUi) {
+			if ($qEnt && !empty($qEnt->name)) {
+				$row['filaLabel'] = (string)$qEnt->name;
+				$row['filaQueueId'] = (int)$qEnt->id;
+				$row['filaSuporte'] = $qEnt->codigo !== null && $qEnt->codigo !== '' ? (string)$qEnt->codigo : $filaCode;
+			} else {
+				$row['filaSuporte'] = $filaCode ?: 'n1';
+				$row['filaLabel'] = $wf ? $this->_filaLabelFromCode($filaCode) : '—';
+			}
+			if ($wf) {
+				$row['nivelAtendimento'] = $nivel;
+			} elseif ($queuesUi && $qEnt && $qEnt->codigo) {
+				$cat = $this->_filaSuporteCatalog();
+				$cd = (string)$qEnt->codigo;
+				$row['nivelAtendimento'] = isset($cat[$cd]) ? $cat[$cd]['nivel'] : null;
+			}
 			$row['transferido'] = !empty($ctx['transferido']);
 		}
 
@@ -2241,7 +2394,11 @@ class TicketsController extends AppController {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
 		$empresa = $this->Auth->user('idempresa');
-		$base = ['contain' => ['Users', 'Clientes'], 'order' => ['Tickets.id' => 'DESC']];
+		$contain = ['Users', 'Clientes'];
+		if ($this->_queuesRelacionalReady()) {
+			$contain[] = 'Queues';
+		}
+		$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
 		$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
 			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])
 		)->toArray();
@@ -2264,22 +2421,32 @@ class TicketsController extends AppController {
 			$tecIds[] = (int)$t->id;
 		}
 		$wf = $this->_ticketWorkflowSchemaReady();
+		$queuesUi = $this->_queuesRelacionalReady();
+		$cols = $this->Tickets->getSchema()->columns();
+		$hasRespCol = in_array('idtecnico_responsavel', $cols, true) || in_array('owner_id', $cols, true);
 		$tecMap = $this->_ticketTecnicosLabelsByTicketIds($tecIds);
 		$respIds = [];
-		if ($wf) {
+		if ($hasRespCol) {
 			foreach ($allForTec as $t) {
 				$rid = (int)($t->idtecnico_responsavel ?? 0);
+				if ($rid <= 0 && in_array('owner_id', $cols, true)) {
+					$rid = (int)($t->owner_id ?? 0);
+				}
 				if ($rid > 0) {
 					$respIds[] = $rid;
 				}
 			}
 		}
-		$respNames = $wf ? $this->_batchUserDisplayNames($respIds) : [];
-		$transfSet = $wf ? $this->_ticketIdsComTransferencia($tecIds) : [];
-		$mapTec = function ($reg) use ($tecMap, $wf, $respNames, $transfSet) {
+		$respNames = $hasRespCol ? $this->_batchUserDisplayNames($respIds) : [];
+		$transfSet = $hasRespCol ? $this->_ticketIdsComTransferencia($tecIds) : [];
+		$transferEnabled = $this->_ticketTransferApiAllowed();
+		$mapTec = function ($reg) use ($tecMap, $wf, $queuesUi, $hasRespCol, $respNames, $transfSet, $transferEnabled, $cols) {
 			$tid = (int)$reg->id;
-			if ($wf) {
+			if ($hasRespCol) {
 				$rid = (int)($reg->idtecnico_responsavel ?? 0);
+				if ($rid <= 0 && in_array('owner_id', $cols, true)) {
+					$rid = (int)($reg->owner_id ?? 0);
+				}
 				$tecLabel = $rid > 0 ? ($respNames[$rid] ?? ('Usuário #' . $rid)) : 'Não atribuído';
 			} else {
 				$tecLabel = $tecMap[$tid] ?? '';
@@ -2287,6 +2454,8 @@ class TicketsController extends AppController {
 
 			return $this->_ticketRowApiTecnico($reg, $tecLabel, [
 				'workflow' => $wf,
+				'queuesUi' => $queuesUi,
+				'transferEnabled' => $transferEnabled,
 				'transferido' => isset($transfSet[$tid]),
 			]);
 		};
@@ -2294,11 +2463,31 @@ class TicketsController extends AppController {
 		foreach ($this->_filaSuporteCatalog() as $code => $meta) {
 			$catalog[] = ['code' => $code, 'label' => $meta['label'], 'nivel' => $meta['nivel']];
 		}
+		$dbQueues = [];
+		if ($queuesUi) {
+			foreach (
+				$this->Queues->find()
+					->where(['idempresa' => (int)$empresa])
+					->order(['sort_order' => 'ASC', 'id' => 'ASC'])
+					->all() as $qr
+			) {
+				$e = (int)$empresa;
+				$dbQueues[] = [
+					'id' => (int)$qr->id,
+					'name' => (string)$qr->name,
+					'company_id' => $e,
+					'idempresa' => $e,
+					'codigo' => $qr->codigo !== null ? (string)$qr->codigo : null,
+				];
+			}
+		}
 		$out = [
 			'ok' => true,
 			'workflow' => [
-				'enabled' => $wf,
+				'enabled' => $wf || $queuesUi,
 				'filas' => $catalog,
+				'queuesRelacional' => $queuesUi,
+				'queues' => $dbQueues,
 			],
 			'groups' => [
 				'todos' => array_map($mapTec, $tickets),
@@ -2315,10 +2504,28 @@ class TicketsController extends AppController {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
 		$empresa = (int)$this->Auth->user('idempresa');
-		$rows = $this->Empresasusers->find('all', ['contain' => ['Users']])
-			->where(['Empresasusers.idempresa' => $empresa, 'Users.role' => 0, 'Users.inativo' => 0])
-			->order(['Users.name' => 'ASC'])
-			->toArray();
+		$qFilter = $this->request->getQuery('queue_id');
+		$queueUserFilter = null;
+		if ($qFilter !== null && $qFilter !== '' && ctype_digit((string)$qFilter) && $this->_queuesRelacionalReady()) {
+			$qRow = $this->Queues->find()->where(['id' => (int)$qFilter, 'idempresa' => $empresa])->first();
+			if (empty($qRow)) {
+				return $this->jsonResponse(['ok' => true, 'tecnicos' => []]);
+			}
+			$queueUserFilter = $this->QueuesUsers->find()
+				->select(['user_id'])
+				->where(['queue_id' => (int)$qFilter])
+				->extract('user_id')
+				->toList();
+			if (empty($queueUserFilter)) {
+				return $this->jsonResponse(['ok' => true, 'tecnicos' => []]);
+			}
+		}
+		$qry = $this->Empresasusers->find('all', ['contain' => ['Users']])
+			->where(['Empresasusers.idempresa' => $empresa, 'Users.role' => 0, 'Users.inativo' => 0]);
+		if ($queueUserFilter !== null) {
+			$qry->where(['Users.id IN' => $queueUserFilter]);
+		}
+		$rows = $qry->order(['Users.name' => 'ASC'])->toArray();
 		$seen = [];
 		$list = [];
 		foreach ($rows as $r) {
@@ -2343,7 +2550,7 @@ class TicketsController extends AppController {
 	public function apiTransferirTicket($idticket = null) {
 		$this->request->allowMethod(['post']);
 		$this->autoRender = false;
-		if (!$this->_ticketWorkflowSchemaReady()) {
+		if (!$this->_ticketTransferApiAllowed()) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_columns_missing'], 503);
 		}
 		$idticket = (int)$idticket;
@@ -2356,22 +2563,35 @@ class TicketsController extends AppController {
 			$body = $this->request->getData();
 		}
 		$destId = isset($body['iduser_destino']) ? (int)$body['iduser_destino'] : 0;
+		$queueIdBody = isset($body['queue_id']) ? (int)$body['queue_id'] : 0;
 		$motivo = isset($body['motivo']) ? trim((string)$body['motivo']) : '';
 		$filaNova = isset($body['fila_suporte']) ? trim((string)$body['fila_suporte']) : '';
 		$nivelNova = isset($body['nivel_atendimento']) ? (int)$body['nivel_atendimento'] : null;
 
-		if ($destId <= 0) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_destino'], 400);
-		}
 		if (mb_strlen($motivo) < 3) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'motivo_obrigatorio'], 400);
 		}
-		$empresa = (int)$this->Auth->user('idempresa');
-		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $destId])->first();
-		$destUser = $this->Users->find()->where(['id' => $destId, 'role' => 0, 'inativo' => 0])->first();
-		if (empty($vinculo) || empty($destUser)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'destino_invalido'], 400);
+		if ($destId <= 0 && $queueIdBody <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'destino_ou_fila_obrigatorio'], 400);
 		}
+
+		$empresa = (int)$this->Auth->user('idempresa');
+		$ticketEmpresa = (int)$ticket->idempresa;
+		if ($ticketEmpresa !== $empresa) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$newQueue = null;
+		if ($queueIdBody > 0) {
+			if (!$this->_queuesRelacionalReady()) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'queues_not_installed'], 503);
+			}
+			$newQueue = $this->Queues->find()->where(['id' => $queueIdBody, 'idempresa' => $ticketEmpresa])->first();
+			if (empty($newQueue)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'fila_invalida'], 400);
+			}
+		}
+
+		$wf = $this->_ticketWorkflowSchemaReady();
 		$cat = $this->_filaSuporteCatalog();
 		$filaAnt = (string)($ticket->fila_suporte ?? 'n1');
 		$nivelAnt = (int)($ticket->nivel_atendimento ?? 1);
@@ -2387,11 +2607,87 @@ class TicketsController extends AppController {
 				}
 			}
 		}
+		if ($newQueue && $newQueue->codigo !== null && $newQueue->codigo !== '' && isset($cat[(string)$newQueue->codigo])) {
+			$filaPost = (string)$newQueue->codigo;
+			$nivelPost = $cat[$filaPost]['nivel'];
+		}
 
 		$oldId = (int)($ticket->idtecnico_responsavel ?? 0);
 		$oldName = 'Não atribuído';
 		if ($oldId > 0) {
 			$oldName = ($this->_batchUserDisplayNames([$oldId])[$oldId]) ?? ('Usuário #' . $oldId);
+		}
+		$agora = date('d/m/Y H:i:s');
+		$sitAntes = (int)$ticket->situacao;
+
+		// Só troca de fila (sem novo técnico): volta para aguardando e remove vínculos.
+		if ($destId <= 0 && $queueIdBody > 0) {
+			$qNameOld = '';
+			if ($this->_queuesRelacionalReady() && !empty($ticket->queue_id)) {
+				try {
+					$qo = $this->Queues->get((int)$ticket->queue_id);
+					$qNameOld = (string)$qo->name;
+				} catch (\Throwable $e) {
+					$qNameOld = '';
+				}
+			}
+			$obsLinhas = [
+				'Transferência para outra fila (sem técnico atribuído)',
+				'Data/hora: ' . $agora,
+				'Técnico anterior: ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+				'Fila de destino: ' . $newQueue->name . ' (id ' . (int)$newQueue->id . ')',
+				'Motivo: ' . $motivo,
+			];
+			if ($qNameOld !== '') {
+				$obsLinhas[] = 'Fila anterior: ' . $qNameOld;
+			}
+
+			try {
+				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agora, $obsLinhas, $newQueue, $wf, $cat, $filaPost, $nivelPost, $sitAntes) {
+					$ticket->idtecnico_responsavel = null;
+					$colsL = $this->Tickets->getSchema()->columns();
+					if (in_array('owner_id', $colsL, true)) {
+						$ticket->owner_id = null;
+					}
+					$ticket->situacao = C_TicketSituacaoPendente;
+					$ticket->queue_id = (int)$newQueue->id;
+					$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel', 'situacao', 'queue_id']);
+					if ($wf && $filaPost !== null) {
+						$ticket->fila_suporte = $filaPost;
+						$ticket->nivel_atendimento = $nivelPost ?? $cat[$filaPost]['nivel'];
+						$fields[] = 'fila_suporte';
+						$fields[] = 'nivel_atendimento';
+					}
+					if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
+						throw new \RuntimeException('save_ticket');
+					}
+					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
+					$mov = $this->Ticketsmovs->newEntity();
+					$mov->idticket = $idticket;
+					$mov->sitantiga = $sitAntes;
+					$mov->sitnova = C_TicketMovTransferencia;
+					$mov->idusuario = $this->Auth->user('id');
+					$mov->idempresa = $empresa;
+					$mov->datetime = $agora;
+					$mov->observacao = implode("\n", $obsLinhas);
+					if (!$this->Ticketsmovs->save($mov)) {
+						throw new \RuntimeException('save_mov');
+					}
+				});
+			} catch (\Throwable $e) {
+				$this->log('apiTransferirTicket: ' . $e->getMessage(), 'error');
+
+				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			}
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiTransferirTicket', $idticket);
+
+			return $this->jsonResponse(['ok' => true]);
+		}
+
+		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $destId])->first();
+		$destUser = $this->Users->find()->where(['id' => $destId, 'role' => 0, 'inativo' => 0])->first();
+		if (empty($vinculo) || empty($destUser)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'destino_invalido'], 400);
 		}
 		$destName = trim((string)($destUser->name ?? ''));
 		if ($destName === '') {
@@ -2400,7 +2696,6 @@ class TicketsController extends AppController {
 		if ($destName === '') {
 			$destName = 'Usuário #' . $destId;
 		}
-		$agora = date('d/m/Y H:i:s');
 		$obsLinhas = [
 			'Transferência de atendimento',
 			'Data/hora: ' . $agora,
@@ -2408,22 +2703,39 @@ class TicketsController extends AppController {
 			'Novo técnico: ' . $destName . ' (id ' . $destId . ')',
 			'Motivo: ' . $motivo,
 		];
-		if ($filaPost !== null && $filaPost !== $filaAnt) {
+		if ($newQueue) {
+			$obsLinhas[] = 'Fila de destino: ' . $newQueue->name . ' (id ' . (int)$newQueue->id . ')';
+		} elseif ($filaPost !== null && $filaPost !== $filaAnt) {
 			$obsLinhas[] = 'Fila: ' . $this->_filaLabelFromCode($filaAnt) . ' → ' . $this->_filaLabelFromCode($filaPost);
 		} elseif ($nivelPost !== null && $nivelPost !== $nivelAnt && $filaPost === null) {
 			$obsLinhas[] = 'Nível de atendimento: ' . $nivelAnt . ' → ' . $nivelPost;
 		}
 
 		try {
-			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agora, $obsLinhas, $filaPost, $filaAnt, $oldId, $cat, $nivelPost) {
+			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agora, $obsLinhas, $filaPost, $oldId, $cat, $nivelPost, $newQueue, $wf) {
 				$ticket->idtecnico_responsavel = $destId;
+				$colsL = $this->Tickets->getSchema()->columns();
+				if (in_array('owner_id', $colsL, true)) {
+					$ticket->owner_id = $destId;
+				}
+				if ($newQueue) {
+					$ticket->queue_id = (int)$newQueue->id;
+				}
 				if ($filaPost !== null) {
 					$ticket->fila_suporte = $filaPost;
 					$ticket->nivel_atendimento = $cat[$filaPost]['nivel'];
 				} elseif ($nivelPost !== null) {
 					$ticket->nivel_atendimento = $nivelPost;
 				}
-				if (!$this->Tickets->save($ticket, ['fields' => ['idtecnico_responsavel', 'fila_suporte', 'nivel_atendimento']])) {
+				$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel']);
+				if ($this->_queuesRelacionalReady()) {
+					$fields[] = 'queue_id';
+				}
+				if ($wf) {
+					$fields[] = 'fila_suporte';
+					$fields[] = 'nivel_atendimento';
+				}
+				if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
 					throw new \RuntimeException('save_ticket');
 				}
 				$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $destId])->first();
@@ -2462,6 +2774,74 @@ class TicketsController extends AppController {
 		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiTransferirTicket', $idticket);
 
 		return $this->jsonResponse(['ok' => true]);
+	}
+
+	public function apiStartTicket($idticket = null) {
+		$this->request->allowMethod(['post', 'put']);
+		$this->autoRender = false;
+
+		return $this->_apiStartTicketResponse((int)$idticket);
+	}
+
+	/**
+	 * Alias REST (/tickets/startTicket/:id) — mesmo comportamento de apiStartTicket.
+	 */
+	public function startTicket($idticket = null) {
+		$this->request->allowMethod(['post', 'put']);
+		$this->autoRender = false;
+
+		return $this->_apiStartTicketResponse((int)$idticket);
+	}
+
+	protected function _apiStartTicketResponse(int $idticket) {
+		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$sitantiga = (int)$ticket->situacao;
+		$ticket->situacao = C_TicketSituacaoEmandamento;
+		$this->_assignTecnicoEmExecucao($ticket, $idticket);
+		$fields = ['situacao'];
+		$cols = $this->Tickets->getSchema()->columns();
+		if (in_array('idtecnico_responsavel', $cols, true)) {
+			$fields[] = 'idtecnico_responsavel';
+		}
+		if (in_array('owner_id', $cols, true)) {
+			$fields[] = 'owner_id';
+		}
+		$fields = $this->_ticketFieldsComResponsavel($fields);
+		if ($this->Tickets->save($ticket, ['fields' => $fields])) {
+			$uid = (int)$this->Auth->user('id');
+			$nm = trim((string)($this->Auth->user('name') ?? ''));
+			if ($nm === '') {
+				$nm = trim((string)($this->Auth->user('username') ?? ''));
+			}
+			if ($nm === '') {
+				$nm = 'Usuário #' . $uid;
+			}
+			$obsMov = "Início de atendimento\nData/hora: " . date('d/m/Y H:i:s')
+				. "\nTécnico: {$nm} (id {$uid})\nSituação anterior: {$sitantiga}\nNova situação: " . (int)C_TicketSituacaoEmandamento;
+			try {
+				$this->criarMov($idticket, $sitantiga, C_TicketSituacaoEmandamento, $obsMov);
+			} catch (\Throwable $e) {
+				$this->log('apiStartTicket criarMov: ' . $e->getMessage(), 'error');
+			}
+			try {
+				if ($sitantiga !== (int)C_TicketSituacaoEmandamento) {
+					$this->email($idticket, C_TicketsAcaoEmandamento, null, $this->Auth->user('idempresa'));
+				}
+			} catch (\Throwable $e) {
+				$this->log('apiStartTicket email: ' . $e->getMessage(), 'error');
+			}
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiStartTicket', $idticket);
+
+			return $this->jsonResponse(['ok' => true]);
+		}
+
+		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
 	}
 
 	public function apiIndexCliente() {

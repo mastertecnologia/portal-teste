@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import {
   fetchTicketsTecnico,
   fetchTecnicosParaTransferencia,
+  fetchQueuesForTicket,
   postTransferirTicket,
+  postStartTicket,
   USE_MOCK,
 } from '../lib/api';
 import { acaoLinkClassName, badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
@@ -40,6 +42,7 @@ export default function TechDashboard({ boot }) {
   const [semResponsavel, setSemResponsavel] = useState(false);
   const [somenteTransferidos, setSomenteTransferidos] = useState(false);
   const [idResponsavel, setIdResponsavel] = useState('');
+  const [queueDbFilter, setQueueDbFilter] = useState('');
   const [tecnicosOpcoes, setTecnicosOpcoes] = useState([]);
 
   const [transferOpen, setTransferOpen] = useState(false);
@@ -47,8 +50,14 @@ export default function TechDashboard({ boot }) {
   const [transferDest, setTransferDest] = useState('');
   const [transferMotivo, setTransferMotivo] = useState('');
   const [transferFila, setTransferFila] = useState('');
+  const [transferQueues, setTransferQueues] = useState([]);
+  const [transferQueueId, setTransferQueueId] = useState('');
+  const [tecnicosModal, setTecnicosModal] = useState([]);
   const [transferSaving, setTransferSaving] = useState(false);
   const [transferErr, setTransferErr] = useState('');
+  const [transferQueuesErr, setTransferQueuesErr] = useState('');
+  const [startBusyId, setStartBusyId] = useState(null);
+  const [transferOkHint, setTransferOkHint] = useState('');
 
   const loadFilters = useMemo(
     () => ({
@@ -57,8 +66,9 @@ export default function TechDashboard({ boot }) {
       semResponsavel,
       somenteTransferidos,
       idResponsavel: idResponsavel || undefined,
+      queueId: queueDbFilter || undefined,
     }),
-    [filaSuporte, nivelAtendimento, semResponsavel, somenteTransferidos, idResponsavel]
+    [filaSuporte, nivelAtendimento, semResponsavel, somenteTransferidos, idResponsavel, queueDbFilter]
   );
 
   const reload = useCallback(async () => {
@@ -98,6 +108,22 @@ export default function TechDashboard({ boot }) {
 
   const wfEnabled = Boolean(workflow?.enabled);
   const filasMeta = workflow?.filas || [];
+  const queuesRelacional = Boolean(workflow?.queuesRelacional);
+  const dbQueuesList = workflow?.queues || [];
+
+  useEffect(() => {
+    if (!transferOpen || !queuesRelacional) return undefined;
+    let cancel = false;
+    (async () => {
+      const q = Number(transferQueueId) || 0;
+      const r = await fetchTecnicosParaTransferencia(q || undefined);
+      if (cancel || !r.ok) return;
+      setTecnicosModal(r.tecnicos || []);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [transferOpen, transferQueueId, queuesRelacional]);
 
   const rows = useMemo(() => {
     if (!groups) return [];
@@ -140,12 +166,33 @@ export default function TechDashboard({ boot }) {
   const dash = boot?.paths?.dashboard;
   const addTicket = boot?.paths?.addTicket;
 
-  const openTransfer = (ticket) => {
+  const openTransfer = async (ticket) => {
     setTransferTicket(ticket);
     setTransferDest('');
     setTransferMotivo('');
     setTransferFila(wfEnabled ? ticket.filaSuporte || 'n1' : '');
     setTransferErr('');
+    setTransferQueuesErr('');
+    setTransferQueues([]);
+    setTransferQueueId('');
+    if (queuesRelacional) {
+      const rq = await fetchQueuesForTicket(ticket.id);
+      if (!rq.ok) {
+        setTransferQueuesErr(rq.error || 'Não foi possível carregar as filas.');
+        setTransferQueues([]);
+        setTransferQueueId('');
+      } else {
+        const list = rq.queues || [];
+        setTransferQueues(list);
+        const pref =
+          ticket.filaQueueId && list.some((x) => Number(x.id) === Number(ticket.filaQueueId))
+            ? String(ticket.filaQueueId)
+            : list[0]
+              ? String(list[0].id)
+              : '';
+        setTransferQueueId(pref);
+      }
+    }
     setTransferOpen(true);
   };
 
@@ -153,22 +200,38 @@ export default function TechDashboard({ boot }) {
     if (!transferTicket) return;
     const id = Number(transferTicket.id);
     const dest = Number(transferDest);
-    if (!dest) {
-      setTransferErr('Selecione o técnico de destino.');
-      return;
-    }
     if (transferMotivo.trim().length < 3) {
       setTransferErr('Informe o motivo da transferência (mín. 3 caracteres).');
       return;
     }
     setTransferSaving(true);
     setTransferErr('');
-    const payload = {
-      iduser_destino: dest,
-      motivo: transferMotivo.trim(),
-    };
-    if (wfEnabled && transferFila) {
-      payload.fila_suporte = transferFila;
+    const qid = Number(transferQueueId) || 0;
+    let payload;
+    if (queuesRelacional) {
+      if (!qid) {
+        setTransferSaving(false);
+        setTransferErr('Selecione a fila de destino.');
+        return;
+      }
+      if (!dest) {
+        payload = { queue_id: qid, motivo: transferMotivo.trim() };
+      } else {
+        payload = { iduser_destino: dest, queue_id: qid, motivo: transferMotivo.trim() };
+      }
+    } else {
+      if (!dest) {
+        setTransferSaving(false);
+        setTransferErr('Selecione o técnico de destino.');
+        return;
+      }
+      payload = {
+        iduser_destino: dest,
+        motivo: transferMotivo.trim(),
+      };
+      if (wfEnabled && transferFila) {
+        payload.fila_suporte = transferFila;
+      }
     }
     const r = await postTransferirTicket(id, payload);
     setTransferSaving(false);
@@ -177,7 +240,26 @@ export default function TechDashboard({ boot }) {
       return;
     }
     setTransferOpen(false);
+    setTransferOkHint('Transferência registrada.');
+    window.setTimeout(() => setTransferOkHint(''), 4000);
     await reload();
+  };
+
+  const handleStartAtendimento = async (ticket) => {
+    const id = Number(ticket.id);
+    setStartBusyId(id);
+    try {
+      const r = await postStartTicket(id);
+      if (!r.ok) {
+        window.alert(r.error || 'Não foi possível iniciar o atendimento.');
+        return;
+      }
+      setTransferOkHint('Atendimento iniciado.');
+      window.setTimeout(() => setTransferOkHint(''), 4000);
+      await reload();
+    } finally {
+      setStartBusyId(null);
+    }
   };
 
   const colCount = wfEnabled ? 10 : 8;
@@ -233,6 +315,16 @@ export default function TechDashboard({ boot }) {
         </div>
       </div>
 
+      {transferOkHint ? (
+        <div
+          className="border-b border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+          role="status"
+          aria-live="polite"
+        >
+          {transferOkHint}
+        </div>
+      ) : null}
+
       {wfEnabled ? (
         <div className="flex flex-col gap-2 border-b border-slate-100 p-3 sm:flex-row sm:flex-wrap sm:items-center">
           <select
@@ -287,6 +379,20 @@ export default function TechDashboard({ boot }) {
             />
             Transferidos
           </label>
+          {dbQueuesList.length > 0 ? (
+            <select
+              value={queueDbFilter}
+              onChange={(e) => setQueueDbFilter(e.target.value)}
+              className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+            >
+              <option value="">Todas as filas (cadastro)</option>
+              {dbQueuesList.map((fq) => (
+                <option key={fq.id} value={String(fq.id)}>
+                  {fq.name || fq.codigo || `Fila #${fq.id}`}
+                </option>
+              ))}
+            </select>
+          ) : null}
         </div>
       ) : null}
 
@@ -392,18 +498,36 @@ export default function TechDashboard({ boot }) {
                           <span className="text-slate-400">—</span>
                         ) : (
                           <div className="flex max-w-[42vw] flex-nowrap items-center gap-0.5 overflow-x-auto py-0.5 sm:max-w-none sm:overflow-visible [scrollbar-width:thin]">
-                            {acoesOrd.map((a) =>
-                              a.behavior === 'reactTransfer' ? (
-                                <button
-                                  key={a.key + a.label}
-                                  type="button"
-                                  className={acaoLinkClassName(a.key)}
-                                  title={a.label}
-                                  onClick={() => openTransfer(ticket)}
-                                >
-                                  {a.label}
-                                </button>
-                              ) : (
+                            {acoesOrd.map((a) => {
+                              if (a.behavior === 'reactTransfer') {
+                                return (
+                                  <button
+                                    key={a.key + a.label}
+                                    type="button"
+                                    className={acaoLinkClassName(a.key)}
+                                    title={a.label}
+                                    onClick={() => openTransfer(ticket)}
+                                  >
+                                    {a.label}
+                                  </button>
+                                );
+                              }
+                              if (a.behavior === 'reactStart') {
+                                const busy = startBusyId === Number(ticket.id);
+                                return (
+                                  <button
+                                    key={a.key + a.label}
+                                    type="button"
+                                    className={acaoLinkClassName(a.key)}
+                                    title={a.label}
+                                    disabled={busy}
+                                    onClick={() => handleStartAtendimento(ticket)}
+                                  >
+                                    {busy ? 'Iniciando…' : a.label}
+                                  </button>
+                                );
+                              }
+                              return (
                                 <a
                                   key={a.key + a.label}
                                   href={a.url}
@@ -414,8 +538,8 @@ export default function TechDashboard({ boot }) {
                                 >
                                   {a.label}
                                 </a>
-                              )
-                            )}
+                              );
+                            })}
                           </div>
                         )}
                       </td>
@@ -435,40 +559,80 @@ export default function TechDashboard({ boot }) {
               Transferir ticket #{transferTicket?.id}
             </h4>
             <p className="mt-1 text-sm text-slate-500">
-              O histórico registrará técnico anterior, novo técnico, data/hora e motivo.
+              {queuesRelacional
+                ? 'Escolha a fila da mesma empresa. Você pode só mover o chamado para a fila ou indicar um técnico da fila selecionada.'
+                : 'O histórico registrará técnico anterior, novo técnico, data/hora e motivo.'}
             </p>
             <div className="mt-4 space-y-3">
-              <label className="block text-sm font-medium text-slate-700">
-                Novo técnico responsável
-                <select
-                  value={transferDest}
-                  onChange={(e) => setTransferDest(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
-                >
-                  <option value="">Selecione…</option>
-                  {tecnicosOpcoes.map((t) => (
-                    <option key={t.id} value={String(t.id)}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {wfEnabled ? (
-                <label className="block text-sm font-medium text-slate-700">
-                  Fila de destino (opcional — escala N1→N2→N3 etc.)
-                  <select
-                    value={transferFila}
-                    onChange={(e) => setTransferFila(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
-                  >
-                    {filasMeta.map((f) => (
-                      <option key={f.code} value={f.code}>
-                        {f.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
+              {queuesRelacional ? (
+                <>
+                  {transferQueuesErr ? <p className="text-sm text-amber-800">{transferQueuesErr}</p> : null}
+                  <label className="block text-sm font-medium text-slate-700">
+                    Fila de destino
+                    <select
+                      value={transferQueueId}
+                      onChange={(e) => setTransferQueueId(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                    >
+                      <option value="">Selecione…</option>
+                      {transferQueues.map((fq) => (
+                        <option key={fq.id} value={String(fq.id)}>
+                          {fq.name || fq.codigo || `Fila #${fq.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Encaminhar para técnico (opcional)
+                    <select
+                      value={transferDest}
+                      onChange={(e) => setTransferDest(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                    >
+                      <option value="">Apenas mover para a fila (sem responsável)</option>
+                      {tecnicosModal.map((tm) => (
+                        <option key={tm.id} value={String(tm.id)}>
+                          {tm.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Novo técnico responsável
+                    <select
+                      value={transferDest}
+                      onChange={(e) => setTransferDest(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                    >
+                      <option value="">Selecione…</option>
+                      {tecnicosOpcoes.map((t) => (
+                        <option key={t.id} value={String(t.id)}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {wfEnabled ? (
+                    <label className="block text-sm font-medium text-slate-700">
+                      Fila de destino (opcional — escala N1→N2→N3 etc.)
+                      <select
+                        value={transferFila}
+                        onChange={(e) => setTransferFila(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                      >
+                        {filasMeta.map((f) => (
+                          <option key={f.code} value={f.code}>
+                            {f.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </>
+              )}
               <label className="block text-sm font-medium text-slate-700">
                 Motivo
                 <textarea

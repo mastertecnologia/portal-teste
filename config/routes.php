@@ -90,6 +90,10 @@ Router::scope('/', function ($routes) {
     $routes->connect('/tickets/api-save/*', ['controller' => 'Tickets', 'action' => 'apiSaveTicket'], ['pass' => ['idticket']])->setMethods(['POST', 'PUT']);
     $routes->connect('/tickets/api-anexo-upload/*', ['controller' => 'Tickets', 'action' => 'apiAnexoUpload'], ['pass' => ['idticket']])->setMethods(['POST']);
     $routes->connect('/tickets/api-anexo-delete/*', ['controller' => 'Tickets', 'action' => 'apiAnexoDelete'], ['pass' => ['idanexo']])->setMethods(['POST']);
+    $routes->connect('/tickets/start-ticket/*', ['controller' => 'Tickets', 'action' => 'startTicket'], ['pass' => ['idticket']])->setMethods(['POST', 'PUT']);
+    $routes->connect('/tickets/startTicket/*', ['controller' => 'Tickets', 'action' => 'startTicket'], ['pass' => ['idticket']])->setMethods(['POST', 'PUT']);
+    $routes->connect('/queues/get-available-queues/*', ['controller' => 'Queues', 'action' => 'getAvailableQueues'], ['pass' => ['ticketId']])->setMethods(['GET']);
+    $routes->connect('/queues/getAvailableQueues/*', ['controller' => 'Queues', 'action' => 'getAvailableQueues'], ['pass' => ['ticketId']])->setMethods(['GET']);
     $routes->connect('/ticket-comentarios/api-add/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiAdd'], ['pass' => ['idticket']])->setMethods(['POST']);
     $routes->fallbacks(DashedRoute::class);
 });
