@@ -831,6 +831,8 @@ class TicketsController extends AppController {
 		if (!$this->request->is(['post', 'put']) && $this->request->getQuery('classic') !== '1') {
 			$this->viewBuilder()->setLayout('default');
 			$this->viewBuilder()->setTemplate('react_app');
+			// Evita tarja duplicada: o React já mostra "Ticket #…" no conteúdo.
+			$this->set('hideLayoutPageTitle', true);
 			$this->set('reactBoot', $this->_reactBoot('tech_edit', (int)$idticket, [
 				'classicEditUrl' => Router::url(['action' => 'edit', $idticket, '?' => ['classic' => '1']]),
 			]));
@@ -902,6 +904,7 @@ class TicketsController extends AppController {
 		$this->viewBuilder()->setLayout('default');
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', "Ticket $idticket");
+		$this->set('hideLayoutPageTitle', true);
 		$this->set('reactBoot', $this->_reactBoot('client_view', (int)$idticket));
 	}
 

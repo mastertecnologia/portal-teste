@@ -149,6 +149,7 @@
 		?>
 		<div class="page-wrapper">
 			<div class="container-fluid">
+				<?php if (!($hideLayoutPageTitle ?? false)): ?>
 				<div class="row page-titles" style='padding-bottom: 8px;'>
 					<!-- Título -->
 		            <div class="col-md-5 align-self-center">
@@ -161,6 +162,7 @@
 		                </div>
 		            </div>
 	        	</div>
+				<?php endif; ?>
 				<?= $this->element('content'); ?>
 			</div>
 		</div>
