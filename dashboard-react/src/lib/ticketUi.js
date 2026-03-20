@@ -67,5 +67,17 @@ export function acaoKeyToBadgeType(key) {
 }
 
 export function acaoLinkClassName(key) {
-  return `inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold transition hover:opacity-90 ${badgeClass(acaoKeyToBadgeType(key))}`;
+  return `inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90 ${badgeClass(acaoKeyToBadgeType(key))}`;
+}
+
+/** Mesma ordem visual para qualquer status (como na fila “Em execução”). */
+const ACAO_ORDER = ['pendente', 'emandamento', 'resolvido', 'cancelar', 'imprimir'];
+
+export function sortTicketAcoes(acoes) {
+  if (!Array.isArray(acoes) || acoes.length === 0) return [];
+  const rank = (k) => {
+    const i = ACAO_ORDER.indexOf(String(k || '').toLowerCase());
+    return i === -1 ? 100 : i;
+  };
+  return [...acoes].sort((a, b) => rank(a.key) - rank(b.key));
 }

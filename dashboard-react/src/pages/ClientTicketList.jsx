@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchTicketsCliente, USE_MOCK } from '../lib/api';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
-import { acaoLinkClassName, badgeClass, statusType } from '../lib/ticketUi';
+import { acaoLinkClassName, badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
 
 const FILA_TO_API = {
@@ -87,13 +87,13 @@ export default function ClientTicketList({ boot }) {
       <div
         className={
           embedded
-            ? 'border-b border-slate-100 p-4'
+            ? 'border-b border-slate-100 p-3'
             : 'flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between'
         }
       >
         {embedded ? (
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-            <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <div className="min-w-0">
                 <h2 className="text-lg font-bold leading-tight text-slate-900">Tickets — cliente</h2>
                 <p className="mt-0.5 text-xs text-slate-500">
@@ -103,7 +103,7 @@ export default function ClientTicketList({ boot }) {
               {addHref && (
                 <a
                   href={addHref}
-                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-600 to-teal-600 px-4 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:self-center"
+                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-600 to-teal-600 px-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:self-center"
                 >
                   Abrir chamado
                 </a>
@@ -114,12 +114,12 @@ export default function ClientTicketList({ boot }) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar nº, cliente ou assunto"
-                className="h-10 w-full min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-cyan-500 sm:min-w-[200px]"
+                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-cyan-500 sm:min-w-[180px]"
               />
               <select
                 value={fila}
                 onChange={(e) => setFila(e.target.value)}
-                className="h-10 w-full shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-cyan-500 sm:w-44"
+                className="h-9 w-full shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-cyan-500 sm:w-44"
               >
                 <option value="todos">Todos</option>
                 <option value="pendente">Aguardando técnico</option>
@@ -160,16 +160,16 @@ export default function ClientTicketList({ boot }) {
 
       <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-slate-500">
+          <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
+            <thead className="bg-slate-50 text-left text-xs text-slate-500">
               <tr>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Ticket</th>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Autor</th>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Data</th>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Assunto</th>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Status</th>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Cliente</th>
-                <th className="px-3 py-2.5 font-semibold sm:px-4">Ações</th>
+                <th className="px-2 py-1.5 font-semibold sm:px-3">Ticket</th>
+                <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Autor</th>
+                <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Data</th>
+                <th className="min-w-[8rem] px-2 py-1.5 font-semibold sm:min-w-[10rem] sm:px-3">Assunto</th>
+                <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Status</th>
+                <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
+                <th className="min-w-[14rem] px-2 py-1.5 font-semibold sm:min-w-[17rem] sm:px-3">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -190,9 +190,10 @@ export default function ClientTicketList({ boot }) {
                   const st = statusLabel(ticket);
                   const assuntoLinha = stripHtml(ticket.assunto);
                   const dest = ticket.urls?.view || `/cliente/ticket/${ticket.id}`;
+                  const acoesOrd = sortTicketAcoes(ticket.acoes || []);
                   return (
-                    <tr key={ticket.id} className="transition hover:bg-slate-50/80">
-                      <td className="px-3 py-3 font-semibold sm:px-4">
+                    <tr key={ticket.id} className="align-middle transition hover:bg-slate-50/80">
+                      <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.view ? (
                           <a className="text-cyan-700 hover:underline" href={dest}>
                             #{ticket.id}
@@ -203,36 +204,41 @@ export default function ClientTicketList({ boot }) {
                           </Link>
                         )}
                       </td>
-                      <td className="max-w-[140px] truncate px-3 py-3 sm:px-4" title={ticket.autor || ''}>
+                      <td className="max-w-[7rem] truncate px-2 py-1.5 sm:px-3" title={ticket.autor || ''}>
                         {ticket.autor || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-3 text-slate-600 sm:px-4">
+                      <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 sm:px-3">
                         {ticket.created || '—'}
                       </td>
-                      <td className="px-3 py-3 sm:px-4">
-                        <div className="max-w-xs font-medium text-slate-800">{assuntoLinha}</div>
-                        {ticket.solicitacaoPreview && (
-                          <div className="line-clamp-2 text-xs text-slate-500">{ticket.solicitacaoPreview}</div>
-                        )}
+                      <td className="max-w-[14rem] px-2 py-1.5 sm:max-w-xs sm:px-3">
+                        <div className="truncate font-medium text-slate-800" title={assuntoLinha}>
+                          {assuntoLinha}
+                        </div>
+                        {ticket.solicitacaoPreview ? (
+                          <div className="line-clamp-1 text-[11px] leading-tight text-slate-500" title={ticket.solicitacaoPreview}>
+                            {ticket.solicitacaoPreview}
+                          </div>
+                        ) : null}
                       </td>
-                      <td className="px-3 py-3 sm:px-4">
+                      <td className="whitespace-nowrap px-2 py-1.5 sm:px-3">
                         <span
-                          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
+                          className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
                             statusType(st)
                           )}`}
+                          title={st}
                         >
                           {st}
                         </span>
                       </td>
-                      <td className="max-w-[160px] truncate px-3 py-3 sm:px-4" title={ticket.cliente || ''}>
+                      <td className="max-w-[8rem] truncate px-2 py-1.5 sm:px-3" title={ticket.cliente || ''}>
                         {ticket.cliente || '—'}
                       </td>
-                      <td className="px-3 py-3 sm:px-4">
-                        {(ticket.acoes || []).length === 0 ? (
+                      <td className="px-2 py-1 sm:px-3">
+                        {acoesOrd.length === 0 ? (
                           <span className="text-slate-400">—</span>
                         ) : (
-                          <div className="flex max-w-[200px] flex-wrap gap-1">
-                            {ticket.acoes.map((a) => (
+                          <div className="flex max-w-[42vw] flex-nowrap items-center gap-0.5 overflow-x-auto py-0.5 sm:max-w-none sm:overflow-visible [scrollbar-width:thin]">
+                            {acoesOrd.map((a) => (
                               <a
                                 key={a.key + a.label}
                                 href={a.url}
