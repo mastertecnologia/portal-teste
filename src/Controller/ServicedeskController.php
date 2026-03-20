@@ -60,17 +60,17 @@ class ServicedeskController extends TicketsController {
 	}
 
 	protected function _servicedeskBootExtra(): array {
-		$w = $this->request->getAttribute('webroot');
-		$sd = Router::url(['controller' => 'Servicedesk', 'action' => 'index'], true);
+		// Caminhos relativos à raiz (sem Router::url(..., true)) evitam /portal/portal/… quando fullBaseUrl ou proxy inclui o subdiretório.
+		$sd = Router::url(['controller' => 'Servicedesk', 'action' => 'index']);
 		return [
 			'servicedesk' => true,
 			'paths' => [
 				'indexTecnico' => $sd,
 				'indexCliente' => $sd,
 				'servicedeskUrl' => $sd,
-				'erpDashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard'], true),
-				'ticketsClassicIndex' => Router::url(['controller' => 'Tickets', 'action' => 'index'], true),
-				'ticketsClassicCliente' => Router::url(['controller' => 'Tickets', 'action' => 'indexcliente'], true),
+				'erpDashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard']),
+				'ticketsClassicIndex' => Router::url(['controller' => 'Tickets', 'action' => 'index']),
+				'ticketsClassicCliente' => Router::url(['controller' => 'Tickets', 'action' => 'indexcliente']),
 				'ticketEditQuery' => '?sd=1',
 				'ticketViewQuery' => '?sd=1',
 			],
