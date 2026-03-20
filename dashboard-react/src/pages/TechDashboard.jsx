@@ -612,10 +612,10 @@ export default function TechDashboard({ boot }) {
             </select>
           </div>
         </div>
-      ) : (
-        <div className="flex flex-wrap items-end gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5">
+      ) : wfEnabled ? (
+        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto">
           <span
-            className="shrink-0 pb-2 text-xs tabular-nums text-slate-500"
+            className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500"
             title="Tickets na empresa (todos os status)"
           >
             <span className="font-semibold text-slate-800">{totalTodos}</span> na empresa
@@ -626,14 +626,87 @@ export default function TechDashboard({ boot }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar nº, cliente ou assunto"
             aria-label="Buscar na lista"
-            className={`${sdField} min-w-[10rem] flex-1 sm:max-w-md`}
+            className={`${sdField} min-w-[9rem] flex-1 basis-[10rem]`}
           />
           <select
             id="sd-tech-status"
             value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
             aria-label="Situação"
-            className={`${sdField} w-full min-w-[10rem] shrink-0 sm:w-auto sm:min-w-[12.5rem]`}
+            className={`${sdField} w-[12rem] shrink-0 cursor-pointer sm:w-[13rem]`}
+          >
+            <option value="todos">Todos</option>
+            <option value="ativos">Aguardando + Em execução</option>
+            <option value="pendente">Aguardando técnico</option>
+            <option value="execucao">Em execução</option>
+            <option value="resolvido">Resolvidos</option>
+            <option value="fechados">Cancelados / fechados</option>
+          </select>
+          <select
+            id="sd-wf-fila"
+            value={filaSuporte}
+            onChange={(e) => setFilaSuporte(e.target.value)}
+            aria-label="Fila de suporte"
+            className={`${sdField} w-[10.5rem] shrink-0 cursor-pointer sm:w-[11.5rem]`}
+          >
+            <option value="">Todas as filas</option>
+            {filasMeta.map((f) => (
+              <option key={f.code} value={f.code}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            id="sd-wf-nivel"
+            value={nivelAtendimento}
+            onChange={(e) => setNivelAtendimento(e.target.value)}
+            aria-label="Nível de atendimento"
+            className={`${sdField} w-[7.25rem] shrink-0 cursor-pointer`}
+          >
+            <option value="">Todos os níveis</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={String(n)}>
+                Nível {n}
+              </option>
+            ))}
+          </select>
+          <select
+            id="sd-wf-tec"
+            value={idResponsavel}
+            onChange={(e) => setIdResponsavel(e.target.value)}
+            aria-label="Técnico responsável"
+            className={`${sdField} w-[10rem] shrink-0 cursor-pointer sm:w-[11rem]`}
+          >
+            <option value="">Qualquer técnico</option>
+            {tecnicosOpcoes.map((t) => (
+              <option key={t.id} value={String(t.id)}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto">
+          <span
+            className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500"
+            title="Tickets na empresa (todos os status)"
+          >
+            <span className="font-semibold text-slate-800">{totalTodos}</span> na empresa
+          </span>
+          <input
+            id="sd-tech-q"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar nº, cliente ou assunto"
+            aria-label="Buscar na lista"
+            className={`${sdField} min-w-[9rem] flex-1 basis-[10rem]`}
+          />
+          <select
+            id="sd-tech-status"
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+            aria-label="Situação"
+            className={`${sdField} w-[12rem] shrink-0 cursor-pointer sm:w-[13rem]`}
           >
             <option value="todos">Todos</option>
             <option value="ativos">Aguardando + Em execução</option>
@@ -656,52 +729,7 @@ export default function TechDashboard({ boot }) {
       ) : null}
 
       {wfEnabled ? (
-        embedded ? (
-          <div className="flex flex-wrap items-end gap-2 border-b border-slate-100 bg-white px-3 py-2.5">
-            <select
-              id="sd-wf-fila"
-              value={filaSuporte}
-              onChange={(e) => setFilaSuporte(e.target.value)}
-              aria-label="Fila de suporte"
-              className={`${sdField} min-w-[8.5rem] flex-1 sm:max-w-xs cursor-pointer`}
-            >
-              <option value="">Todas as filas</option>
-              {filasMeta.map((f) => (
-                <option key={f.code} value={f.code}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-            <select
-              id="sd-wf-nivel"
-              value={nivelAtendimento}
-              onChange={(e) => setNivelAtendimento(e.target.value)}
-              aria-label="Nível de atendimento"
-              className={`${sdField} w-[7.5rem] shrink-0 cursor-pointer`}
-            >
-              <option value="">Todos os níveis</option>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={String(n)}>
-                  Nível {n}
-                </option>
-              ))}
-            </select>
-            <select
-              id="sd-wf-tec"
-              value={idResponsavel}
-              onChange={(e) => setIdResponsavel(e.target.value)}
-              aria-label="Técnico responsável"
-              className={`${sdField} min-w-[10rem] flex-1 sm:max-w-xs cursor-pointer`}
-            >
-              <option value="">Qualquer técnico</option>
-              {tecnicosOpcoes.map((t) => (
-                <option key={t.id} value={String(t.id)}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
+        !embedded ? (
           <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/40 p-3 sm:flex-row sm:flex-wrap sm:items-center">
             <select
               value={filaSuporte}
@@ -740,7 +768,7 @@ export default function TechDashboard({ boot }) {
               ))}
             </select>
           </div>
-        )
+        ) : null
       ) : null}
 
       <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
