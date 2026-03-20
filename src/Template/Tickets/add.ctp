@@ -6,9 +6,16 @@
 ?>
 <style>
 	.tickets-add-wrap {
-		max-width: 920px;
+		width: 100%;
+		max-width: min(1320px, calc(100vw - 24px));
 		margin: 0 auto;
 		padding: 0.5rem 0 2.5rem;
+		box-sizing: border-box;
+	}
+	@media (min-width: 992px) {
+		.tickets-add-wrap {
+			max-width: min(1360px, calc(100vw - 40px));
+		}
 	}
 	.card-ticket-add {
 		border-radius: 10px;
@@ -57,11 +64,17 @@
 		box-shadow: 0 0 0 0.2rem rgba(26, 179, 148, 0.18);
 		outline: 0;
 	}
+	.ticket-add-hint {
+		font-size: 13px;
+		color: #6c757d;
+		margin: 0 0 0.65rem;
+		line-height: 1.45;
+	}
 	.ticket-dropzone {
 		border: 2px dashed #cfd8dc;
 		border-radius: 10px;
 		background: #f8fafb;
-		min-height: 120px;
+		min-height: 100px;
 		padding: 1rem 1.25rem;
 		display: flex;
 		align-items: center;
@@ -69,9 +82,44 @@
 		text-align: center;
 		transition: border-color 0.2s, background 0.2s;
 	}
+	.ticket-dropzone.ticket-dropzone--drag {
+		border-color: #1ab394;
+		background: #e8faf5;
+	}
 	.ticket-dropzone:hover {
 		border-color: #1ab394;
 		background: #f0fdf9;
+	}
+	.ticket-files-chosen {
+		list-style: none;
+		margin: 0.75rem 0 0;
+		padding: 0;
+		font-size: 13px;
+		color: #3d4a54;
+	}
+	.ticket-files-chosen li {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 6px 10px;
+		margin-bottom: 4px;
+		background: #f1f5f7;
+		border-radius: 6px;
+		border: 1px solid #e2e8ec;
+	}
+	.ticket-files-chosen .ticket-file-remove {
+		flex-shrink: 0;
+		border: none;
+		background: transparent;
+		color: #c0392b;
+		font-size: 12px;
+		cursor: pointer;
+		text-decoration: underline;
+		padding: 0 4px;
+	}
+	.ticket-files-chosen .ticket-file-remove:hover {
+		color: #922b21;
 	}
 	.file-drop-area {
 		position: relative;
@@ -185,18 +233,23 @@
 					</div>
 				</div>
 				<div class="row ticket-add-section">
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div class="col-lg-7 col-md-12">
 						<div class="form-group">
 							<label class="control-label text-muted">Anexos (opcional)</label>
-							<div class="ticket-dropzone">
+							<p class="ticket-add-hint">
+								Vários arquivos: na janela de escolha, use <strong>Ctrl+clique</strong> (Windows) ou <strong>Cmd+clique</strong> (Mac) para marcar mais de um.
+								Ou clique várias vezes em “Adicionar arquivos” para ir incluindo mais. Também pode arrastar e soltar aqui.
+							</p>
+							<div class="ticket-dropzone" id="ticket-dropzone">
 								<div class="file-drop-area">
-									<span class="fake-btn text-muted">Escolha arquivo(s) ou arraste para esta área</span>
+									<span class="fake-btn text-muted" id="ticket-file-hint">Adicionar arquivos ou arrastar para cá</span>
 									<input class="file-input form-control" name="file-3[]" id="file-3" type="file" multiple>
 								</div>
 							</div>
+							<ul class="ticket-files-chosen" id="ticket-attachments-list" aria-live="polite"></ul>
 						</div>
 					</div>
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 ticket-add-section">
+					<div class="col-lg-5 col-md-12 ticket-add-section">
 						<label class="control-label text-muted" for="email">E-mail para contato</label>
 						<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'E-mail para retorno do suporte']) ?>
 					</div>
@@ -217,16 +270,82 @@
 				var idcliente = <?= $idcliente ?>;
 			});
 		<?php } ?>
-	// File input
-		$(document).on('change', '.file-input', function() {
-			var filesCount = $(this)[0].files.length;
-			var $textContainer = $(this).prev();
-			var fileName = $(this).val().split('\\').pop();
-			if (filesCount === 1) {
-				var fileName = $(this).val().split('\\').pop();
-				$textContainer.text(fileName);
-			} else  $textContainer.text(filesCount + ' arquivos selecionados');
-		});
+	// Vários anexos (acumula escolhas + arrastar/soltar) via DataTransfer
+		(function () {
+			var $inp = $('#file-3');
+			var $list = $('#ticket-attachments-list');
+			var $hint = $('#ticket-file-hint');
+			var $zone = $('#ticket-dropzone');
+			if (!$inp.length) return;
+
+			var dt = new DataTransfer();
+
+			function syncInput() {
+				try {
+					$inp[0].files = dt.files;
+				} catch (e) {}
+			}
+
+			function renderList() {
+				$list.empty();
+				var n = dt.files.length;
+				if (n === 0) {
+					$hint.text('Adicionar arquivos ou arrastar para cá');
+					return;
+				}
+				$hint.text(n === 1 ? '1 arquivo selecionado — adicione mais se precisar' : n + ' arquivos — pode adicionar mais');
+				for (var i = 0; i < n; i++) {
+					(function (idx) {
+						var name = dt.files[idx].name;
+						var $li = $('<li/>');
+						$li.append($('<span/>').text(name).css({overflow: 'hidden', 'text-overflow': 'ellipsis', 'white-space': 'nowrap'}));
+						var $rm = $('<button type="button" class="ticket-file-remove"/>').text('Remover');
+						$rm.on('click', function () {
+							var next = new DataTransfer();
+							for (var j = 0; j < dt.files.length; j++) {
+								if (j !== idx) next.items.add(dt.files[j]);
+							}
+							dt = next;
+							syncInput();
+							renderList();
+						});
+						$li.append($rm);
+						$list.append($li);
+					})(i);
+				}
+			}
+
+			function addFileList(fileList) {
+				if (!fileList || !fileList.length) return;
+				for (var i = 0; i < fileList.length; i++) {
+					dt.items.add(fileList[i]);
+				}
+				syncInput();
+				renderList();
+			}
+
+			$inp.on('change', function () {
+				addFileList(this.files);
+				this.value = '';
+			});
+
+			$zone.on('dragover', function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				$zone.addClass('ticket-dropzone--drag');
+			});
+			$zone.on('dragleave drop', function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				$zone.removeClass('ticket-dropzone--drag');
+			});
+			$zone.on('drop', function (e) {
+				var ev = e.originalEvent;
+				if (ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files.length) {
+					addFileList(ev.dataTransfer.files);
+				}
+			});
+		})();
 	// Solicitantes
 		function loadSolicitantes(idcliente) {
 			$.ajax({

@@ -109,6 +109,51 @@ class TicketsController extends AppController {
 		return (WWW_ROOT . 'arquivos' . DS . 'tickets' . DS . $idempresa . DS . $idticket);
 	}
 
+	/**
+	 * Normaliza campo upload file-3 (um ou vários arquivos) para lista de entradas compatíveis com moveFile().
+	 *
+	 * @param array|null $raw Valor de $this->request->getData('file-3')
+	 * @return array<int, array<string, mixed>>
+	 */
+	protected function _normalizeUploadFilesList($raw): array {
+		if (empty($raw) || !is_array($raw)) {
+			return [];
+		}
+		// Um arquivo: name é string
+		if (isset($raw['name']) && !is_array($raw['name'])) {
+			$err = (int)($raw['error'] ?? UPLOAD_ERR_NO_FILE);
+			if ($err === UPLOAD_ERR_NO_FILE || empty($raw['tmp_name'])) {
+				return [];
+			}
+
+			return [$raw];
+		}
+		// Vários: name é array (mesmo com um único elemento)
+		if (isset($raw['name']) && is_array($raw['name'])) {
+			$out = [];
+			foreach ($raw['name'] as $i => $name) {
+				if ($name === '' || $name === null) {
+					continue;
+				}
+				$err = (int)($raw['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+				if ($err === UPLOAD_ERR_NO_FILE) {
+					continue;
+				}
+				$out[] = [
+					'name' => $name,
+					'type' => $raw['type'][$i] ?? '',
+					'tmp_name' => $raw['tmp_name'][$i] ?? '',
+					'error' => $err,
+					'size' => $raw['size'][$i] ?? 0,
+				];
+			}
+
+			return $out;
+		}
+
+		return [];
+	}
+
 	public function moveFile($file, $idempresa, $idticket) {
 		//Ignora, se não tiver nada selecionado.
 		if (!isset($file['tmp_name']) || !isset($file['name'])) {
@@ -502,15 +547,19 @@ class TicketsController extends AppController {
 		}
 
 		if ($this->request->is('post')) {
-			if (isset($this->request->getData()['file-3'])) {
-				$anexos = $this->request->getData()['file-3'];
-				unset($this->request->getData()['file-3']);
+			$post = $this->request->getData();
+			$anexos = [];
+			if (!empty($post['file-3'])) {
+				$anexos = $this->_normalizeUploadFilesList($post['file-3']);
 			}
+			unset($post['file-3']);
 
 			// Caso não tenha email preenchido
-			if ($this->Auth->user('role') == 1 && $this->request->getData('email') == '' && isset($clientequetememail->email)) $ticket->email = $clientequetememail->email;
+			if ($this->Auth->user('role') == 1 && ($post['email'] ?? '') === '' && isset($clientequetememail->email)) {
+				$ticket->email = $clientequetememail->email;
+			}
 
-			$ticket = $this->Tickets->patchEntity($ticket, $this->request->getData());
+			$ticket = $this->Tickets->patchEntity($ticket, $post);
 			$ticket->idautor = $this->Auth->user('id');
 			$ticket->situacao = 0;
 			$ticket->resolvido = 0;
@@ -546,7 +595,7 @@ class TicketsController extends AppController {
 			}
 		
 			if ($this->Tickets->save($ticket)) {
-				// Anexos
+				// Anexos (vários arquivos: input multiple ou lista normalizada)
 					foreach ($anexos as $file) {
 						$idempresa = $this->Auth->user('idempresa');
 						$ret = $this->moveFile($file, $idempresa, $ticket->id);
