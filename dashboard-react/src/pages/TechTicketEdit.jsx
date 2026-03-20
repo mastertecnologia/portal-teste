@@ -275,14 +275,14 @@ export default function TechTicketEdit({ boot }) {
   );
 
   const comentariosBlock = (
-    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 px-4 py-2">
+    <div className="flex min-h-[260px] max-h-[min(36rem,calc(100dvh-11rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:max-h-[min(40rem,calc(100dvh-12rem))]">
+      <div className="shrink-0 border-b border-slate-100 px-4 py-2">
         <h3 className="text-sm font-bold text-slate-900">Conversa</h3>
         <p className="text-xs text-slate-500">
           Nome do autor vem do cadastro de usuário. Comentários ficam em ticket + movimentações (trecho no histórico).
         </p>
       </div>
-      <ul className="max-h-[min(420px,calc(100vh-280px))] flex-1 space-y-2 overflow-y-auto p-3 sm:max-h-[min(520px,calc(100vh-240px))]">
+      <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
         {comentarios.length === 0 ? (
           <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
             Nenhum comentário ainda.
@@ -311,7 +311,7 @@ export default function TechTicketEdit({ boot }) {
           ))
         )}
       </ul>
-      <form onSubmit={handleComentario} className="border-t border-slate-100 p-3">
+      <form onSubmit={handleComentario} className="shrink-0 border-t border-slate-100 p-3">
         <textarea
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
@@ -337,12 +337,12 @@ export default function TechTicketEdit({ boot }) {
         <div className="px-0">
           {alerts}
           <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-            <div className="space-y-4 lg:col-span-7">
+            <div className="min-w-0 space-y-4 lg:col-span-7">
               {descricaoBlock}
               {relatorioAtendimentoBlock}
               {anexosBlock}
             </div>
-            <div className="flex flex-col gap-0 lg:sticky lg:top-2 lg:col-span-5 lg:self-start">{comentariosBlock}</div>
+            <div className="min-w-0 lg:col-span-5">{comentariosBlock}</div>
           </div>
         </div>
       </div>
@@ -355,12 +355,12 @@ export default function TechTicketEdit({ boot }) {
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
         {alerts}
         <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-          <div className="space-y-4 lg:col-span-7">
+          <div className="min-w-0 space-y-4 lg:col-span-7">
             {descricaoBlock}
             {relatorioAtendimentoBlock}
             {anexosBlock}
           </div>
-          <div className="lg:col-span-5">{comentariosBlock}</div>
+          <div className="min-w-0 lg:col-span-5">{comentariosBlock}</div>
         </div>
       </main>
     </div>
