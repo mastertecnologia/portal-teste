@@ -51,7 +51,7 @@ class TicketsController extends AppController {
 		if ($action === 'apiIndexCliente') {
 			return (int)$user['role'] === 1;
 		}
-		if (in_array($action, ['apiView', 'apiSaveTicket'], true)) {
+		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
 
@@ -1574,10 +1574,12 @@ class TicketsController extends AppController {
 			'webroot' => $w,
 			'role' => (int)$this->Auth->user('role'),
 			'admin' => (int)$this->Auth->user('admin'),
+			'userName' => (string)($this->Auth->user('name') ?? ''),
 			'paths' => [
 				'apiIndex' => $w . 'tickets/api-index',
 				'apiIndexCliente' => $w . 'tickets/api-index-cliente',
 				'apiView' => $w . 'tickets/api-view/',
+				'apiComments' => $w . 'tickets/api-comments/',
 				'apiSaveTicket' => $w . 'tickets/api-save/',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'indexTecnico' => Router::url(['action' => 'index']),
@@ -1716,16 +1718,11 @@ class TicketsController extends AppController {
 		return false;
 	}
 
-	protected function _apiTicketDetailPayload($ticket, $idticket): array {
-		$role = (int)$this->Auth->user('role');
-		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo'])->first();
-		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? '');
-		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
-
+	protected function _apiComentariosPayload($idticket): array {
 		$ticketcomentarios = $this->Ticketcomentarios->find('all', [
 			'contain' => ['users', 'Tickets'],
 			'fields' => ['Users.name', 'Users.role', 'Ticketcomentarios.id', 'Ticketcomentarios.comentario', 'Ticketcomentarios.created', 'Tickets.idempresa'],
-		])->where(['Ticketcomentarios.idticket' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])->order(['Ticketcomentarios.id'])->toArray();
+		])->where(['Ticketcomentarios.idticket' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])->order(['Ticketcomentarios.id' => 'ASC'])->toArray();
 
 		$comentarios = [];
 		foreach ($ticketcomentarios as $c) {
@@ -1739,6 +1736,37 @@ class TicketsController extends AppController {
 				'quando' => $c->created ? $c->created->format('d/m/Y H:i') : '',
 			];
 		}
+		return $comentarios;
+	}
+
+	public function apiComments($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
+			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
+			->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$comentarios = $this->_apiComentariosPayload($idticket);
+		return $this->jsonResponse([
+			'ok' => true,
+			'comentarios' => $comentarios,
+			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
+			'situacao' => (int)$ticket->situacao,
+		]);
+	}
+
+	protected function _apiTicketDetailPayload($ticket, $idticket): array {
+		$role = (int)$this->Auth->user('role');
+		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo'])->first();
+		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? '');
+		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+
+		$comentarios = $this->_apiComentariosPayload($idticket);
 
 		$anexosRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
 		$anexos = [];

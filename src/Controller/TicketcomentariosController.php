@@ -35,7 +35,7 @@ class TicketcomentariosController extends AppController {
 		$this->loadModel('Notificacoes');
 	}
 
-	public function criarMov($idticket = null, $sitantiga = null, $sitnova = null, $observacao = null) {
+	public function criarMov($idticket = null, $sitantiga = null, $sitnova = null, $observacao = null, $enviarEmailComentario = true) {
 		$mov = $this->Ticketsmovs->newEntity();
 		$mov->idticket = $idticket;
 		$mov->sitantiga = $sitantiga;
@@ -46,10 +46,12 @@ class TicketcomentariosController extends AppController {
 
 		if (!empty($observacao)) $mov->observacao = $observacao;
 
-		try {
-			$this->_enviarEmailNovoComentario($idticket, C_TicketsAcaoAddComentario);
-		} catch (\Throwable $e) {
-			$this->log('Ticketcomentarios::criarMov _enviarEmailNovoComentario: ' . $e->getMessage(), 'error');
+		if ($enviarEmailComentario) {
+			try {
+				$this->_enviarEmailNovoComentario($idticket, C_TicketsAcaoAddComentario);
+			} catch (\Throwable $e) {
+				$this->log('Ticketcomentarios::criarMov _enviarEmailNovoComentario: ' . $e->getMessage(), 'error');
+			}
 		}
 
 		return $this->Ticketsmovs->save($mov);
@@ -277,7 +279,7 @@ class TicketcomentariosController extends AppController {
 			try {
 				$sitantiga = $ticketReload->situacao;
 				if (isset($sitantiga)) {
-					$this->criarMov($idticket, $sitantiga, C_TicketSituacaoRespondido);
+					$this->criarMov($idticket, $sitantiga, C_TicketSituacaoRespondido, null, false);
 				}
 			} catch (\Throwable $e) {
 				$this->log('Ticketcomentarios::apiAdd criarMov: ' . $e->getMessage(), 'error');
@@ -298,7 +300,33 @@ class TicketcomentariosController extends AppController {
 			'texto' => $comentario->comentario,
 			'quando' => $comentario->created ? date('d/m/Y H:i', strtotime($comentario->created)) : '',
 		];
-		return $this->jsonResponse(['ok' => true, 'data' => $out]);
+		$payload = ['ok' => true, 'data' => $out];
+		$jsonBody = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+		if (function_exists('fastcgi_finish_request')) {
+			if (session_status() === PHP_SESSION_ACTIVE) {
+				session_write_close();
+			}
+			$this->autoRender = false;
+			$this->response = $this->response
+				->withType('application/json')
+				->withStringBody($jsonBody);
+			$this->response->send();
+			fastcgi_finish_request();
+			try {
+				$this->_enviarEmailNovoComentario((int)$idticket, C_TicketsAcaoAddComentario);
+			} catch (\Throwable $e) {
+				$this->log('Ticketcomentarios::apiAdd e-mail pós-resposta: ' . $e->getMessage(), 'error');
+			}
+			exit(0);
+		}
+
+		try {
+			$this->_enviarEmailNovoComentario((int)$idticket, C_TicketsAcaoAddComentario);
+		} catch (\Throwable $e) {
+			$this->log('Ticketcomentarios::apiAdd e-mail: ' . $e->getMessage(), 'error');
+		}
+		return $this->jsonResponse($payload);
 	}
 
 	public function delete($id = null) {

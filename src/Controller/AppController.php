@@ -46,7 +46,7 @@ class AppController extends Controller {
 				// API cadastro consolidado (CadastroController)
 				'empresa', 'consultar',
 				// Tickets UI React (JSON; autenticação via sessão Auth)
-				'apiIndex', 'apiIndexCliente', 'apiView', 'apiSaveTicket',
+				'apiIndex', 'apiIndexCliente', 'apiView', 'apiComments', 'apiSaveTicket',
 				'apiAdd',
 			],
 		]);

@@ -74,6 +74,30 @@ export async function fetchTicketDetail(id) {
   return { ok: true, data: json.ticket };
 }
 
+/** Polling leve: só comentários + status (sem anexos/descrição). */
+export async function fetchTicketComments(id) {
+  if (USE_MOCK) {
+    return { ok: true, comentarios: [], status: null, situacao: null };
+  }
+  const boot = getBoot();
+  if (!boot?.paths?.apiComments) {
+    return { ok: false, error: 'no_api_comments' };
+  }
+  const r = await fetch(`${boot.paths.apiComments}${encodeURIComponent(id)}`, {
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  if (!r.ok) return { ok: false, error: r.statusText };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return {
+    ok: true,
+    comentarios: json.comentarios || [],
+    status: json.status ?? null,
+    situacao: json.situacao ?? null,
+  };
+}
+
 export async function postComentario(ticketId, texto) {
   if (USE_MOCK) {
     await new Promise((res) => setTimeout(res, 400));

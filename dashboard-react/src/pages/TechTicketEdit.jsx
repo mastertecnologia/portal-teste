@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
-import { fetchTicketDetail, postComentario, saveTicketSolicitacao } from '../lib/api';
+import { fetchTicketDetail, postComentario, saveTicketSolicitacao, getBoot } from '../lib/api';
+import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
+import { stripHtml } from '../lib/text';
+
+function CommentBody({ html }) {
+  if (!html) return null;
+  return <div className="prose prose-sm mt-1 max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: html }} />;
+}
 
 export default function TechTicketEdit({ boot }) {
   const id = boot?.ticketId;
+  const embedded = Boolean(boot);
   const [ticket, setTicket] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [texto, setTexto] = useState('');
@@ -30,20 +38,38 @@ export default function TechTicketEdit({ boot }) {
     };
   }, [id]);
 
+  useTicketCommentsPoll(id, setComentarios, setTicket);
+
   async function handleComentario(e) {
     e.preventDefault();
     const t = texto.trim();
     if (!t || !ticket) return;
+    const b = getBoot();
+    const papel = (b?.role ?? 1) === 0 ? 'tecnico' : 'cliente';
+    const nome = (b?.userName || 'Eu').trim();
+    const tmpId = `pending-${Date.now()}`;
+    const optimistic = {
+      id: tmpId,
+      autor: nome,
+      papel,
+      texto: t,
+      quando: 'Enviando…',
+      pending: true,
+    };
+    setComentarios((prev) => [...prev, optimistic]);
+    setTexto('');
     setEnviando(true);
     setErro(null);
+    setMsg(null);
     const res = await postComentario(ticket.id, t);
     setEnviando(false);
+    setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
     if (res.ok) {
       setComentarios((prev) => [...prev, res.data]);
-      setTexto('');
       setMsg('Comentário enviado.');
     } else {
       setErro('Não foi possível enviar o comentário.');
+      setTexto(t);
     }
   }
 
@@ -58,9 +84,12 @@ export default function TechTicketEdit({ boot }) {
     else setErro(res.error || 'Falha ao salvar.');
   }
 
+  const classicAnexos =
+    boot?.classicEditUrl && `${String(boot.classicEditUrl).replace(/#.*$/, '')}#arquivos`;
+
   if (erro && !ticket) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 py-12 text-center">
+      <div className={embedded ? 'py-8 text-center' : 'min-h-screen bg-slate-100 px-4 py-12 text-center'}>
         <p className="text-rose-700">{erro}</p>
         {boot?.paths?.indexTecnico && (
           <a href={boot.paths.indexTecnico} className="mt-4 inline-block text-teal-700 underline">
@@ -73,130 +102,207 @@ export default function TechTicketEdit({ boot }) {
 
   if (!ticket) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 py-12 text-center text-slate-500">
+      <div className={embedded ? 'py-12 text-center text-slate-500' : 'min-h-screen bg-slate-100 px-4 py-12 text-center text-slate-500'}>
         Carregando ticket…
+      </div>
+    );
+  }
+
+  const statusLine = stripHtml(ticket.status);
+
+  const headerActions = (
+    <div className="flex flex-shrink-0 flex-wrap gap-2">
+      {boot?.classicEditUrl && (
+        <a
+          href={boot.classicEditUrl}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 sm:text-sm"
+        >
+          Clássico (timer, anexos)
+        </a>
+      )}
+      {ticket.urls?.imprimir && (
+        <a
+          href={ticket.urls.imprimir}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:text-sm"
+        >
+          Imprimir
+        </a>
+      )}
+    </div>
+  );
+
+  const header = embedded ? (
+    <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3">
+      <div className="min-w-0">
+        {boot?.paths?.indexTecnico && (
+          <a href={boot.paths.indexTecnico} className="text-sm font-medium text-teal-700 hover:underline">
+            ← Tickets
+          </a>
+        )}
+        <h1 className="mt-1 text-xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
+        <p className="text-sm text-slate-600">
+          {stripHtml(ticket.cliente)} · <span className="font-medium text-slate-800">{statusLine}</span>
+        </p>
+      </div>
+      {headerActions}
+    </div>
+  ) : (
+    <div className="border-b border-slate-200 bg-white shadow-sm">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-3 px-4 py-4 sm:px-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
+          <p className="text-sm text-slate-500">
+            {stripHtml(ticket.cliente)} · {statusLine}
+          </p>
+        </div>
+        {headerActions}
+      </div>
+    </div>
+  );
+
+  const alerts = (
+    <>
+      {msg && (
+        <p className="mb-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 sm:text-sm">{msg}</p>
+      )}
+      {erro && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800 sm:text-sm">{erro}</p>}
+      {embedded && (
+        <p className="mb-3 text-xs text-slate-400">
+          Comentários atualizam automaticamente (~4s) quando a aba está visível. Envio de e-mail não bloqueia a resposta
+          (PHP-FPM).
+        </p>
+      )}
+    </>
+  );
+
+  const descricaoBlock = (
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 className="text-base font-bold text-slate-900">{stripHtml(ticket.assunto)}</h2>
+      {ticket.flags?.canEditDescricao ? (
+        <form onSubmit={handleSalvarDescricao} className="mt-3 space-y-2">
+          <label className="text-xs font-medium text-slate-600">Descrição (admin)</label>
+          <textarea
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            rows={embedded ? 6 : 8}
+            className="w-full rounded-lg border border-slate-200 p-2 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={salvando}
+            className="rounded-lg bg-teal-700 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvando ? 'Salvando…' : 'Salvar descrição'}
+          </button>
+        </form>
+      ) : (
+        <div className="prose prose-sm mt-3 max-w-none whitespace-pre-wrap text-slate-700">{ticket.descricao}</div>
+      )}
+    </div>
+  );
+
+  const anexosBlock = (
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold text-slate-900">Anexos</h3>
+        {classicAnexos && (
+          <a href={classicAnexos} className="text-xs font-semibold text-teal-700 hover:underline">
+            + Enviar
+          </a>
+        )}
+      </div>
+      {ticket.anexos?.length ? (
+        <ul className="mt-2 space-y-1 text-sm">
+          {ticket.anexos.map((a) => (
+            <li key={a.id}>
+              <a href={a.url} className="text-teal-700 hover:underline" target="_blank" rel="noreferrer">
+                {a.nome}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">Nenhum. Use o formulário clássico para upload.</p>
+      )}
+    </div>
+  );
+
+  const comentariosBlock = (
+    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 px-4 py-2">
+        <h3 className="text-sm font-bold text-slate-900">Conversa</h3>
+      </div>
+      <ul className="max-h-[min(420px,calc(100vh-280px))] flex-1 space-y-2 overflow-y-auto p-3 sm:max-h-[min(520px,calc(100vh-240px))]">
+        {comentarios.map((c) => (
+          <li
+            key={c.id}
+            className={`rounded-lg border px-3 py-2 text-sm ${
+              c.pending
+                ? 'border-amber-200 bg-amber-50/80'
+                : c.papel === 'tecnico'
+                  ? 'border-cyan-200 bg-cyan-50/40'
+                  : 'border-slate-200 bg-slate-50/90'
+            }`}
+          >
+            <div className="flex flex-wrap justify-between gap-1 text-xs text-slate-500">
+              <span className="font-semibold text-slate-800">{c.autor}</span>
+              <span>{c.quando}</span>
+            </div>
+            <CommentBody html={c.texto} />
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={handleComentario} className="border-t border-slate-100 p-3">
+        <textarea
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          rows={3}
+          placeholder="Novo comentário…"
+          className="w-full rounded-lg border border-slate-200 p-2 text-sm"
+        />
+        <button
+          type="submit"
+          disabled={enviando}
+          className="mt-2 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {enviando ? 'Enviando…' : 'Enviar'}
+        </button>
+      </form>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="tickets-react-edit w-full text-slate-800">
+        {header}
+        <div className="px-0">
+          {alerts}
+          <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
+            <div className="space-y-4 lg:col-span-7">
+              {descricaoBlock}
+              {anexosBlock}
+            </div>
+            <div className="flex flex-col gap-0 lg:sticky lg:top-2 lg:col-span-5 lg:self-start">{comentariosBlock}</div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
-      <header className="border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <div>
-            {boot?.paths?.indexTecnico && (
-              <a href={boot.paths.indexTecnico} className="text-sm font-medium text-teal-700 hover:underline">
-                ← Tickets
-              </a>
-            )}
-            <h1 className="mt-2 text-2xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
-            <p className="text-sm text-slate-500">
-              {ticket.cliente} · {ticket.status}
-            </p>
+      {header}
+      <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
+        {alerts}
+        <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
+          <div className="space-y-4 lg:col-span-7">
+            {descricaoBlock}
+            {anexosBlock}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {boot?.classicEditUrl && (
-              <a
-                href={boot.classicEditUrl}
-                className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-              >
-                Formulário clássico (timer, anexos HTMX)
-              </a>
-            )}
-            {ticket.urls?.imprimir && (
-              <a
-                href={ticket.urls.imprimir}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Imprimir
-              </a>
-            )}
-          </div>
+          <div className="lg:col-span-5">{comentariosBlock}</div>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
-        {msg && <p className="rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-800">{msg}</p>}
-        {erro && <p className="rounded-xl bg-rose-50 px-4 py-2 text-sm text-rose-800">{erro}</p>}
-
-        <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">{ticket.assunto}</h2>
-          {ticket.flags?.canEditDescricao ? (
-            <form onSubmit={handleSalvarDescricao} className="mt-4 space-y-3">
-              <label className="block text-sm font-medium text-slate-600">Descrição (admin)</label>
-              <textarea
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                rows={8}
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              />
-              <button
-                type="submit"
-                disabled={salvando}
-                className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {salvando ? 'Salvando…' : 'Salvar descrição'}
-              </button>
-            </form>
-          ) : (
-            <div className="prose prose-sm mt-4 max-w-none whitespace-pre-wrap text-slate-700">{ticket.descricao}</div>
-          )}
-        </section>
-
-        <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Anexos</h2>
-          {ticket.anexos?.length ? (
-            <ul className="mt-3 space-y-2">
-              {ticket.anexos.map((a) => (
-                <li key={a.id}>
-                  <a href={a.url} className="text-teal-700 hover:underline" target="_blank" rel="noreferrer">
-                    {a.nome}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-sm text-slate-500">Nenhum anexo.</p>
-          )}
-        </section>
-
-        <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Comentários</h2>
-          <ul className="mt-4 space-y-3">
-            {comentarios.map((c) => (
-              <li
-                key={c.id}
-                className={`rounded-2xl border px-4 py-3 ${
-                  c.papel === 'tecnico' ? 'border-cyan-200 bg-cyan-50/50' : 'border-slate-200 bg-slate-50/80'
-                }`}
-              >
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span className="font-semibold text-slate-800">{c.autor}</span>
-                  <span>{c.quando}</span>
-                </div>
-                <p className="mt-2 text-sm text-slate-700">{c.texto}</p>
-              </li>
-            ))}
-          </ul>
-          <form onSubmit={handleComentario} className="mt-6 space-y-3">
-            <textarea
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              rows={4}
-              placeholder="Novo comentário…"
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            />
-            <button
-              type="submit"
-              disabled={enviando}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {enviando ? 'Enviando…' : 'Enviar'}
-            </button>
-          </form>
-        </section>
       </main>
     </div>
   );

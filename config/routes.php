@@ -86,6 +86,7 @@ Router::scope('/', function ($routes) {
     $routes->connect('/tickets/api-index', ['controller' => 'Tickets', 'action' => 'apiIndex'])->setMethods(['GET']);
     $routes->connect('/tickets/api-index-cliente', ['controller' => 'Tickets', 'action' => 'apiIndexCliente'])->setMethods(['GET']);
     $routes->connect('/tickets/api-view/*', ['controller' => 'Tickets', 'action' => 'apiView'], ['pass' => ['idticket']])->setMethods(['GET']);
+    $routes->connect('/tickets/api-comments/*', ['controller' => 'Tickets', 'action' => 'apiComments'], ['pass' => ['idticket']])->setMethods(['GET']);
     $routes->connect('/tickets/api-save/*', ['controller' => 'Tickets', 'action' => 'apiSaveTicket'], ['pass' => ['idticket']])->setMethods(['POST', 'PUT']);
     $routes->connect('/ticket-comentarios/api-add/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiAdd'], ['pass' => ['idticket']])->setMethods(['POST']);
     $routes->fallbacks(DashedRoute::class);
