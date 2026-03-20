@@ -76,4 +76,52 @@ class ServicedeskController extends TicketsController {
 			],
 		];
 	}
+
+	/**
+	 * Views de ticket ficam em Template/Tickets/; com controller Servicedesk o Cake buscaria Template/Servicedesk/*.ctp.
+	 */
+	protected function _servicedeskUseTicketsTemplates(): void {
+		$this->viewBuilder()->setTemplatePath('Tickets');
+	}
+
+	/** Layout shell do Service Desk quando a ação vai renderizar HTML (não download/redirect só). */
+	protected function _servicedeskShellLayoutIfRendering(): void {
+		if ($this->autoRender === false) {
+			return;
+		}
+		if ($this->viewBuilder()->getLayout() === 'print') {
+			return;
+		}
+		$this->viewBuilder()->setLayout('servicedesk');
+	}
+
+	public function add($assunto = null) {
+		$this->_servicedeskUseTicketsTemplates();
+		$this->viewBuilder()->setTemplate('add');
+		$this->viewBuilder()->setLayout('servicedesk');
+		parent::add($assunto);
+	}
+
+	public function view($idticket = null) {
+		$this->_servicedeskUseTicketsTemplates();
+		parent::view($idticket);
+		$this->_servicedeskShellLayoutIfRendering();
+	}
+
+	public function edit($idticket = null) {
+		$this->_servicedeskUseTicketsTemplates();
+		parent::edit($idticket);
+		$this->_servicedeskShellLayoutIfRendering();
+	}
+
+	public function cancelar($idticket = null) {
+		$this->_servicedeskUseTicketsTemplates();
+		parent::cancelar($idticket);
+		$this->_servicedeskShellLayoutIfRendering();
+	}
+
+	public function imprimir($idticket = null) {
+		$this->_servicedeskUseTicketsTemplates();
+		parent::imprimir($idticket);
+	}
 }
