@@ -50,6 +50,7 @@ class AppController extends Controller {
 				'apiAnexoUpload', 'apiAnexoDelete',
 				'apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket',
 				'apiForTicket', 'getAvailableQueues', 'apiEnsureDefaults', 'apiSupportLevels', 'apiSave',
+				'adminIndex', 'adminEdit', 'adminTechnicians', 'adminDelete', 'adminEnsureDefaults',
 				'apiAdd',
 			],
 		]);
@@ -145,13 +146,14 @@ class AppController extends Controller {
 			'senhasActive' => '',
 			'faturasActive' => '',
 			'config' => '',
+			'queuesAtendimentoActive' => '',
 		];
 
 		if ($action === "dashboard") {
 			$menuStates['dashboard'] = "active";
 		}
 
-		if (in_array($controllerLower, ["config", "empresasusers", "empresas", "users", "clientes", "areas", "problemas", "visitas", "feriados"], true)) {
+		if (in_array($controllerLower, ["config", "empresasusers", "empresas", "users", "clientes", "areas", "problemas", "visitas", "feriados", "queues"], true)) {
 			$menuStates['config'] = "active";
 		}
 
@@ -172,6 +174,7 @@ class AppController extends Controller {
 			'bancosenhas' => 'senhasActive',
 			'faturas' => 'faturasActive',
 			'tickets' => 'ticketsActive',
+			'queues' => 'queuesAtendimentoActive',
 		];
 
 		if (isset($controllerToMenuMap[$controllerLower])) {

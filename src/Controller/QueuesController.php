@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use Cake\Event\Event;
 
 /**
  * Filas de atendimento por empresa (técnico ↔ filas).
@@ -13,6 +14,18 @@ class QueuesController extends AppController {
 		$this->loadModel('Queues');
 		$this->loadModel('Tickets');
 		$this->loadModel('SupportLevels');
+		$this->loadModel('Users');
+		$this->loadModel('Empresasusers');
+		$this->loadModel('QueuesUsers');
+	}
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$action = $this->request->getParam('action');
+		$htmlAdmin = ['adminIndex', 'adminEdit', 'adminTechnicians', 'adminDelete', 'adminEnsureDefaults'];
+		if (in_array($action, $htmlAdmin, true)) {
+			$this->set('title', 'Filas e técnicos — suporte');
+		}
 	}
 
 	public function isAuthorized($user) {
@@ -23,8 +36,220 @@ class QueuesController extends AppController {
 		if (in_array($action, ['apiIndex', 'apiEnsureDefaults', 'apiSave'], true)) {
 			return (int)$user['admin'] === 1 && (int)$user['role'] === 0;
 		}
+		if (in_array($action, ['adminIndex', 'adminEdit', 'adminTechnicians', 'adminDelete', 'adminEnsureDefaults'], true)) {
+			return !empty($user['admin']) && (int)$user['role'] === 0;
+		}
 
 		return (int)$user['admin'] === 1 && (int)$user['role'] === 0;
+	}
+
+	/**
+	 * Painel web: filas da empresa atual (Master/PGM conforme login) + atalhos.
+	 */
+	public function adminIndex() {
+		if (!$this->_queuesTableExists()) {
+			$this->Flash->error('As tabelas de filas ainda não existem neste ambiente. Execute as migrations.');
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$qf = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+		if ($this->_supportLevelsRoutingReady()) {
+			$qf->contain(['SupportLevels']);
+		}
+		$queues = $qf->all();
+		$supportLevels = $this->_supportLevelsRoutingReady()
+			? $this->SupportLevels->find()->order(['sort_order' => 'ASC'])->all()
+			: [];
+		$supportLevelsEnabled = $this->_supportLevelsRoutingReady();
+		$this->set(compact('queues', 'supportLevels', 'emp', 'supportLevelsEnabled'));
+	}
+
+	/**
+	 * Cadastro / edição de fila (empresa atual).
+	 */
+	public function adminEdit($id = null) {
+		if (!$this->_queuesTableExists()) {
+			$this->Flash->error('Tabelas de filas não instaladas.');
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$id = $id !== null ? (int)$id : 0;
+		if ($this->request->is(['post', 'put'])) {
+			$id = (int)$this->request->getData('id') ?: $id;
+		}
+		if ($id > 0) {
+			$queue = $this->Queues->find()->where(['id' => $id, 'idempresa' => $emp])->first();
+			if (empty($queue)) {
+				$this->Flash->error('Fila não encontrada nesta empresa.');
+				return $this->redirect(['action' => 'adminIndex']);
+			}
+		} else {
+			$queue = $this->Queues->newEntity(['idempresa' => $emp, 'sort_order' => 10]);
+		}
+		if ($this->request->is(['post', 'put'])) {
+			$queue = $this->Queues->patchEntity($queue, $this->request->getData());
+			$queue->idempresa = $emp;
+			$fields = ['name', 'codigo', 'sort_order', 'idempresa'];
+			if ($this->_queuesColumn('description')) {
+				$fields[] = 'description';
+			}
+			if ($this->_supportLevelsRoutingReady()) {
+				$fields[] = 'support_level_id';
+			}
+			$fields = array_values(array_intersect($fields, $this->Queues->getSchema()->columns()));
+			if ($this->Queues->save($queue, ['fields' => $fields])) {
+				$this->Flash->success('Fila salva com sucesso.');
+				return $this->redirect(['action' => 'adminIndex']);
+			}
+			$this->Flash->error('Não foi possível salvar a fila. Verifique os dados.');
+		}
+		$supportLevelsOptions = [];
+		if ($this->_supportLevelsRoutingReady()) {
+			$supportLevelsOptions = $this->SupportLevels->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+				->order(['sort_order' => 'ASC', 'id' => 'ASC'])
+				->toArray();
+		}
+		$queuesHasDescription = $this->_queuesColumn('description');
+		$this->set(compact('queue', 'supportLevelsOptions', 'emp', 'queuesHasDescription'));
+	}
+
+	/**
+	 * Lista técnicos vinculados à empresa atual com nível e filas (N:N).
+	 */
+	public function adminTechnicians() {
+		if (!$this->_queuesTableExists()) {
+			$this->Flash->error('Tabelas de filas não instaladas.');
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$userIds = $this->Empresasusers->find()
+			->select(['iduser'])
+			->where(['idempresa' => $emp])
+			->extract('iduser')
+			->toList();
+		$userIds = array_values(array_unique(array_map('intval', $userIds)));
+		$tecnicos = [];
+		$queuesByUser = [];
+		if (!empty($userIds)) {
+			$tecnicos = $this->Users->find()
+				->where([
+					'Users.id IN' => $userIds,
+					'Users.role' => 0,
+					'Users.idcliente IS' => null,
+				])
+				->contain($this->_usersSupportLevelColumn() ? ['SupportLevels'] : [])
+				->order(['Users.name' => 'ASC', 'Users.username' => 'ASC'])
+				->all();
+			$tids = [];
+			foreach ($tecnicos as $t) {
+				$tids[] = (int)$t->id;
+			}
+			if (!empty($tids)) {
+				$qContain = $this->_supportLevelsRoutingReady()
+					? ['Queues' => ['SupportLevels'], 'SupportLevels']
+					: ['Queues'];
+				foreach ($this->QueuesUsers->find()->contain($qContain)->where(['user_id IN' => $tids])->all() as $link) {
+					$uid = (int)$link->user_id;
+					if (!isset($queuesByUser[$uid])) {
+						$queuesByUser[$uid] = [];
+					}
+					$queuesByUser[$uid][] = $link;
+				}
+			}
+		}
+		$this->set(compact('tecnicos', 'queuesByUser', 'emp'));
+	}
+
+	/**
+	 * Remove fila se não houver tickets associados.
+	 */
+	public function adminDelete($id = null) {
+		$this->request->allowMethod(['post']);
+		if (!$this->_queuesTableExists()) {
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$id = (int)$id;
+		$queue = $id > 0 ? $this->Queues->find()->where(['id' => $id, 'idempresa' => $emp])->first() : null;
+		if (empty($queue)) {
+			$this->Flash->error('Fila não encontrada.');
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		$n = 0;
+		if (in_array('queue_id', $this->Tickets->getSchema()->columns(), true)) {
+			$n = $this->Tickets->find()->where(['queue_id' => $id])->count();
+		}
+		if ($n > 0) {
+			$this->Flash->error("Existem {$n} ticket(s) nesta fila. Transfira ou reassocie antes de excluir.");
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		if ($this->Queues->delete($queue)) {
+			$this->Flash->success('Fila removida.');
+		} else {
+			$this->Flash->error('Não foi possível remover a fila.');
+		}
+		return $this->redirect(['action' => 'adminIndex']);
+	}
+
+	/**
+	 * Cria filas padrão N1…serviço para a empresa atual (só se ainda não existir nenhuma).
+	 */
+	public function adminEnsureDefaults() {
+		$this->request->allowMethod(['post']);
+		if (!$this->_queuesTableExists()) {
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$n = $this->Queues->find()->where(['idempresa' => $emp])->count();
+		if ($n > 0) {
+			$this->Flash->warning('Esta empresa já possui filas cadastradas.');
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		$mapCodOrd = ['n1' => 1, 'n2' => 2, 'n3' => 3, 'noc' => 4, 'servico' => 5];
+		$defs = [
+			['name' => 'N1 — Suporte inicial / triagem', 'codigo' => 'n1', 'sort_order' => 1],
+			['name' => 'N2 — Suporte avançado / field service', 'codigo' => 'n2', 'sort_order' => 2],
+			['name' => 'N3 — Infraestrutura / especializado', 'codigo' => 'n3', 'sort_order' => 3],
+			['name' => 'NOC — Monitoramento', 'codigo' => 'noc', 'sort_order' => 4],
+			['name' => 'Requisições de serviço', 'codigo' => 'servico', 'sort_order' => 5],
+		];
+		$created = 0;
+		foreach ($defs as $d) {
+			$data = [
+				'name' => $d['name'],
+				'codigo' => $d['codigo'],
+				'sort_order' => $d['sort_order'],
+				'idempresa' => $emp,
+			];
+			if ($this->_supportLevelsRoutingReady()) {
+				$ord = $mapCodOrd[$d['codigo']] ?? null;
+				if ($ord !== null) {
+					$sl = $this->SupportLevels->find()->where(['sort_order' => $ord])->first();
+					if ($sl) {
+						$data['support_level_id'] = (int)$sl->id;
+					}
+				}
+			}
+			$e = $this->Queues->newEntity($data);
+			$saveFields = ['name', 'codigo', 'sort_order', 'idempresa'];
+			if ($this->_supportLevelsRoutingReady()) {
+				$saveFields[] = 'support_level_id';
+			}
+			$saveFields = array_values(array_intersect($saveFields, $this->Queues->getSchema()->columns()));
+			if ($this->Queues->save($e, ['fields' => $saveFields])) {
+				$created++;
+			}
+		}
+		$this->Flash->success($created > 0 ? "Foram criadas {$created} fila(s) padrão." : 'Nenhuma fila foi criada.');
+		return $this->redirect(['action' => 'adminIndex']);
+	}
+
+	protected function _usersSupportLevelColumn(): bool {
+		try {
+			return in_array('support_level_id', $this->Users->getSchema()->columns(), true);
+		} catch (\Throwable $e) {
+			return false;
+		}
 	}
 
 	public function apiSupportLevels() {
