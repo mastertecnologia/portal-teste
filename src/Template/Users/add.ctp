@@ -49,6 +49,22 @@
 						</div>
 					</div>
 				</div>
+				<?php if (!empty($supportLevelsList)) : ?>
+				<div class="row padding-20">
+					<div class="col-md-8">
+						<div class="form-group">
+							<label class="control-label text-muted">Nível principal do técnico (N1 / N2 / N3)</label>
+							<?= $this->Form->control('support_level_id', [
+								'type' => 'select',
+								'options' => $supportLevelsList,
+								'empty' => '— Não definido —',
+								'class' => 'form-control',
+								'label' => false,
+							]) ?>
+						</div>
+					</div>
+				</div>
+				<?php endif; ?>
 				<?php if (!empty($queuesList)) : ?>
 				<div class="row padding-20">
 					<div class="col-12">

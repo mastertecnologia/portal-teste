@@ -9,6 +9,7 @@ class QueuesTable extends Table {
 		parent::initialize($config);
 		$this->setTable('queues');
 		$this->setDisplayField('name');
+		$this->belongsTo('SupportLevels', ['foreignKey' => 'support_level_id', 'joinType' => 'LEFT']);
 		$this->hasMany('QueuesUsers', ['foreignKey' => 'queue_id', 'dependent' => true]);
 		$this->hasMany('Tickets', ['foreignKey' => 'queue_id']);
 	}

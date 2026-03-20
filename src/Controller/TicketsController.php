@@ -43,6 +43,7 @@ class TicketsController extends AppController {
 		$this->loadModel('Config');
 		$this->loadModel('Queues');
 		$this->loadModel('QueuesUsers');
+		$this->loadModel('SupportLevels');
 	}
 
 	public function isAuthorized($user) {
@@ -1696,6 +1697,8 @@ class TicketsController extends AppController {
 				'apiGetAvailableQueues' => $w . 'queues/get-available-queues/',
 				'apiQueuesIndex' => $w . 'queues/api-index',
 				'apiQueuesEnsureDefaults' => $w . 'queues/api-ensure-defaults',
+				'apiSupportLevels' => $w . 'queues/api-support-levels',
+				'apiQueuesSave' => $w . 'queues/api-save',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -1803,6 +1806,168 @@ class TicketsController extends AppController {
 		return $hasResp && ($this->_ticketWorkflowSchemaReady() || $this->_queuesRelacionalReady());
 	}
 
+	/** Tabela support_levels + colunas support_level_id em queues/tickets. */
+	protected function _supportLevelsRoutingReady(): bool {
+		static $ok = null;
+		if ($ok !== null) {
+			return $ok;
+		}
+		try {
+			$tables = $this->Tickets->getConnection()->getSchemaCollection()->listTables();
+			$ok = in_array('support_levels', $tables, true)
+				&& in_array('support_level_id', $this->Queues->getSchema()->columns(), true);
+		} catch (\Throwable $e) {
+			$ok = false;
+		}
+
+		return $ok;
+	}
+
+	protected function _supportLevelSortById(?int $levelId): int {
+		if (!$this->_supportLevelsRoutingReady() || $levelId === null || $levelId <= 0) {
+			return 0;
+		}
+		static $cache = [];
+		if (isset($cache[$levelId])) {
+			return $cache[$levelId];
+		}
+		$sl = $this->SupportLevels->find()->select(['sort_order'])->where(['id' => $levelId])->first();
+		$cache[$levelId] = $sl ? (int)$sl->sort_order : 0;
+
+		return $cache[$levelId];
+	}
+
+	protected function _queueLevelSortOrder(?int $queueId): int {
+		if (!$this->_queuesRelacionalReady() || $queueId === null || $queueId <= 0) {
+			return 0;
+		}
+		try {
+			$contain = $this->_supportLevelsRoutingReady() ? ['SupportLevels'] : [];
+			$q = $this->Queues->get($queueId, ['contain' => $contain]);
+		} catch (\Throwable $e) {
+			return 0;
+		}
+		if (!empty($q->support_level)) {
+			return (int)$q->support_level->sort_order;
+		}
+		if ($this->_supportLevelsRoutingReady() && !empty($q->support_level_id)) {
+			return $this->_supportLevelSortById((int)$q->support_level_id);
+		}
+
+		return (int)($q->sort_order ?? 0);
+	}
+
+	protected function _ticketQueueLevelSort($reg): int {
+		if ($this->_supportLevelsRoutingReady() && isset($reg->support_level_id) && (int)$reg->support_level_id > 0) {
+			$s = $this->_supportLevelSortById((int)$reg->support_level_id);
+			if ($s > 0) {
+				return $s;
+			}
+		}
+		if (!empty($reg->queue_id)) {
+			return $this->_queueLevelSortOrder((int)$reg->queue_id);
+		}
+		if ($this->_ticketWorkflowSchemaReady()) {
+			return (int)($reg->nivel_atendimento ?? 1);
+		}
+
+		return 0;
+	}
+
+	protected function _userEffectiveLevelSortForQueue(int $userId, int $queueId): int {
+		$uOrd = 0;
+		try {
+			$u = $this->Users->get($userId);
+			if ($this->_supportLevelsRoutingReady() && !empty($u->support_level_id)) {
+				$uOrd = $this->_supportLevelSortById((int)$u->support_level_id);
+			}
+		} catch (\Throwable $e) {
+			$uOrd = 0;
+		}
+		$qu = $this->QueuesUsers->find()->where(['user_id' => $userId, 'queue_id' => $queueId])->first();
+		if (!empty($qu) && !empty($qu->support_level_id) && $this->_supportLevelsRoutingReady()) {
+			$qOrd = $this->_supportLevelSortById((int)$qu->support_level_id);
+
+			return max($uOrd, $qOrd);
+		}
+
+		return $uOrd;
+	}
+
+	/** Técnico com nível efetivo >= exigência da fila (N3 atende N1–N3). */
+	protected function _userCanWorkQueue(int $userId, int $queueId): bool {
+		$need = $this->_queueLevelSortOrder($queueId);
+		if ($need <= 0) {
+			return true;
+		}
+		$eff = $this->_userEffectiveLevelSortForQueue($userId, $queueId);
+		if ($eff <= 0) {
+			return true;
+		}
+
+		return $eff >= $need;
+	}
+
+	protected function _userMayAssumeTicketTechnically($ticket): bool {
+		$uid = (int)$this->Auth->user('id');
+		$qid = (int)($ticket->queue_id ?? 0);
+		if (!$this->_queuesRelacionalReady() || $qid <= 0) {
+			return true;
+		}
+		$link = $this->QueuesUsers->find()->where(['user_id' => $uid, 'queue_id' => $qid])->first();
+		if (empty($link)) {
+			return false;
+		}
+		if (!$this->_supportLevelsRoutingReady()) {
+			return true;
+		}
+
+		return $this->_userCanWorkQueue($uid, $qid);
+	}
+
+	protected function _supportLevelName(?int $levelId): string {
+		if (!$this->_supportLevelsRoutingReady() || $levelId === null || $levelId <= 0) {
+			return '';
+		}
+		try {
+			$sl = $this->SupportLevels->get($levelId);
+
+			return (string)$sl->name;
+		} catch (\Throwable $e) {
+			return '';
+		}
+	}
+
+	/** Rótulo de nível para histórico (support_level_id, fila ou legado nivel_atendimento). */
+	protected function _ticketSupportLevelLabelForHistory($ticket): string {
+		if ($this->_supportLevelsRoutingReady() && !empty($ticket->support_level_id) && (int)$ticket->support_level_id > 0) {
+			$n = $this->_supportLevelName((int)$ticket->support_level_id);
+			if ($n !== '') {
+				return $n;
+			}
+		}
+		if ($this->_queuesRelacionalReady() && !empty($ticket->queue_id)) {
+			try {
+				$q = $this->Queues->get((int)$ticket->queue_id, ['contain' => ['SupportLevels']]);
+				if (!empty($q->support_level)) {
+					return (string)$q->support_level->name;
+				}
+				if (!empty($q->support_level_id) && $this->_supportLevelsRoutingReady()) {
+					$n = $this->_supportLevelName((int)$q->support_level_id);
+					if ($n !== '') {
+						return $n;
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		if ($this->_ticketWorkflowSchemaReady()) {
+			return 'N' . (int)($ticket->nivel_atendimento ?? 1);
+		}
+
+		return '—';
+	}
+
 	/**
 	 * Associa o ticket recém-criado à primeira fila da empresa (preferindo codigo n1).
 	 */
@@ -1825,6 +1990,10 @@ class TicketsController extends AppController {
 		}
 		$t->queue_id = (int)$q->id;
 		$fields = ['queue_id'];
+		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $this->Tickets->getSchema()->columns(), true) && !empty($q->support_level_id)) {
+			$t->support_level_id = (int)$q->support_level_id;
+			$fields[] = 'support_level_id';
+		}
 		if ($this->_ticketWorkflowSchemaReady() && $q->codigo !== null && $q->codigo !== '') {
 			$cat = $this->_filaSuporteCatalog();
 			$cd = (string)$q->codigo;
@@ -2168,6 +2337,19 @@ class TicketsController extends AppController {
 			}
 			$row['transferido'] = !empty($ctx['transferido']);
 		}
+		if ($this->_supportLevelsRoutingReady()) {
+			$tl = '';
+			if (isset($reg->support_level) && $reg->support_level) {
+				$tl = (string)$reg->support_level->name;
+			} elseif (isset($reg->support_level_id) && (int)$reg->support_level_id > 0) {
+				$tl = $this->_supportLevelName((int)$reg->support_level_id);
+			} elseif ($qEnt && !empty($qEnt->support_level)) {
+				$tl = (string)$qEnt->support_level->name;
+			}
+			$row['supportLevelId'] = isset($reg->support_level_id) && (int)$reg->support_level_id > 0 ? (int)$reg->support_level_id : null;
+			$row['supportLevelLabel'] = $tl !== '' ? $tl : null;
+			$row['supportLevelSort'] = $this->_ticketQueueLevelSort($reg);
+		}
 
 		return $row;
 	}
@@ -2385,7 +2567,10 @@ class TicketsController extends AppController {
 		$empresa = $this->Auth->user('idempresa');
 		$contain = ['Users', 'Clientes'];
 		if ($this->_queuesRelacionalReady()) {
-			$contain[] = 'Queues';
+			$contain['Queues'] = $this->_supportLevelsRoutingReady() ? ['SupportLevels'] : [];
+		}
+		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $this->Tickets->getSchema()->columns(), true)) {
+			$contain[] = 'SupportLevels';
 		}
 		$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
 		$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
@@ -2454,19 +2639,34 @@ class TicketsController extends AppController {
 		}
 		$dbQueues = [];
 		if ($queuesUi) {
-			foreach (
-				$this->Queues->find()
-					->where(['idempresa' => (int)$empresa])
-					->order(['sort_order' => 'ASC', 'id' => 'ASC'])
-					->all() as $qr
-			) {
+			$qf = $this->Queues->find()->where(['idempresa' => (int)$empresa])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+			if ($this->_supportLevelsRoutingReady()) {
+				$qf->contain(['SupportLevels']);
+			}
+			foreach ($qf->all() as $qr) {
 				$e = (int)$empresa;
-				$dbQueues[] = [
+				$item = [
 					'id' => (int)$qr->id,
 					'name' => (string)$qr->name,
 					'company_id' => $e,
 					'idempresa' => $e,
 					'codigo' => $qr->codigo !== null ? (string)$qr->codigo : null,
+				];
+				if ($this->_supportLevelsRoutingReady()) {
+					$item['support_level_id'] = $qr->support_level_id !== null && $qr->support_level_id !== '' ? (int)$qr->support_level_id : null;
+					$item['supportLevelName'] = !empty($qr->support_level) ? (string)$qr->support_level->name : null;
+					$item['supportLevelSort'] = $this->_queueLevelSortOrder((int)$qr->id);
+				}
+				$dbQueues[] = $item;
+			}
+		}
+		$supportLevelsOut = [];
+		if ($this->_supportLevelsRoutingReady()) {
+			foreach ($this->SupportLevels->find()->order(['sort_order' => 'ASC'])->all() as $sx) {
+				$supportLevelsOut[] = [
+					'id' => (int)$sx->id,
+					'name' => (string)$sx->name,
+					'sort_order' => (int)$sx->sort_order,
 				];
 			}
 		}
@@ -2477,6 +2677,8 @@ class TicketsController extends AppController {
 				'filas' => $catalog,
 				'queuesRelacional' => $queuesUi,
 				'queues' => $dbQueues,
+				'supportLevels' => $supportLevelsOut,
+				'supportLevelsEnabled' => $this->_supportLevelsRoutingReady(),
 			],
 			'groups' => [
 				'todos' => array_map($mapTec, $tickets),
@@ -2517,9 +2719,13 @@ class TicketsController extends AppController {
 		$rows = $qry->order(['Users.name' => 'ASC'])->toArray();
 		$seen = [];
 		$list = [];
+		$qidFilter = ($qFilter !== null && $qFilter !== '' && ctype_digit((string)$qFilter)) ? (int)$qFilter : 0;
 		foreach ($rows as $r) {
 			$u = $r->users ?? null;
 			if (!$u || isset($seen[(int)$u->id])) {
+				continue;
+			}
+			if ($qidFilter > 0 && !$this->_userCanWorkQueue((int)$u->id, $qidFilter)) {
 				continue;
 			}
 			$seen[(int)$u->id] = true;
@@ -2569,14 +2775,31 @@ class TicketsController extends AppController {
 		if ($ticketEmpresa !== $empresa) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
+		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_transferir_fila'], 403);
+		}
 		$newQueue = null;
 		if ($queueIdBody > 0) {
 			if (!$this->_queuesRelacionalReady()) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'queues_not_installed'], 503);
 			}
-			$newQueue = $this->Queues->find()->where(['id' => $queueIdBody, 'idempresa' => $ticketEmpresa])->first();
+			$qFind = $this->Queues->find()->where(['id' => $queueIdBody, 'idempresa' => $ticketEmpresa]);
+			if ($this->_supportLevelsRoutingReady()) {
+				$qFind->contain(['SupportLevels']);
+			}
+			$newQueue = $qFind->first();
 			if (empty($newQueue)) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'fila_invalida'], 400);
+			}
+			if ($destId <= 0 && (int)($ticket->queue_id ?? 0) === $queueIdBody) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'mesma_fila'], 400);
+			}
+			if ($this->_supportLevelsRoutingReady()) {
+				$curOrd = $this->_ticketQueueLevelSort($ticket);
+				$dstOrd = $this->_queueLevelSortOrder($queueIdBody);
+				if ($curOrd > 0 && $dstOrd > 0 && $dstOrd <= $curOrd) {
+					return $this->jsonResponse(['ok' => false, 'error' => 'escalacao_invalida'], 400);
+				}
 			}
 		}
 
@@ -2608,6 +2831,15 @@ class TicketsController extends AppController {
 		}
 		$agora = date('d/m/Y H:i:s');
 		$sitAntes = (int)$ticket->situacao;
+		$levelAntLabel = $this->_ticketSupportLevelLabelForHistory($ticket);
+		$newLevelLabelForObs = '';
+		if ($newQueue) {
+			if (!empty($newQueue->support_level)) {
+				$newLevelLabelForObs = (string)$newQueue->support_level->name;
+			} elseif (!empty($newQueue->support_level_id) && $this->_supportLevelsRoutingReady()) {
+				$newLevelLabelForObs = $this->_supportLevelName((int)$newQueue->support_level_id);
+			}
+		}
 
 		// Só troca de fila (sem novo técnico): volta para aguardando e remove vínculos.
 		if ($destId <= 0 && $queueIdBody > 0) {
@@ -2623,12 +2855,17 @@ class TicketsController extends AppController {
 			$obsLinhas = [
 				'Transferência para outra fila (sem técnico atribuído)',
 				'Data/hora: ' . $agora,
-				'Técnico anterior: ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+				'Técnico que transferiu: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
+				'Técnico anterior (responsável): ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
 				'Fila de destino: ' . $newQueue->name . ' (id ' . (int)$newQueue->id . ')',
 				'Motivo: ' . $motivo,
 			];
 			if ($qNameOld !== '') {
 				$obsLinhas[] = 'Fila anterior: ' . $qNameOld;
+			}
+			$obsLinhas[] = 'Nível anterior: ' . $levelAntLabel;
+			if ($newLevelLabelForObs !== '') {
+				$obsLinhas[] = 'Novo nível: ' . $newLevelLabelForObs;
 			}
 
 			try {
@@ -2642,6 +2879,11 @@ class TicketsController extends AppController {
 						$ticket->nivel_atendimento = $nivelPost ?? $cat[$filaPost]['nivel'];
 						$fields[] = 'fila_suporte';
 						$fields[] = 'nivel_atendimento';
+					}
+					$tcols = $this->Tickets->getSchema()->columns();
+					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
+						$ticket->support_level_id = !empty($newQueue->support_level_id) ? (int)$newQueue->support_level_id : null;
+						$fields[] = 'support_level_id';
 					}
 					if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
 						throw new \RuntimeException('save_ticket');
@@ -2669,6 +2911,19 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => true]);
 		}
 
+		if ($destId > 0) {
+			$qPerm = $newQueue ? (int)$newQueue->id : (int)($ticket->queue_id ?? 0);
+			if ($qPerm > 0 && $this->_queuesRelacionalReady()) {
+				$dlink = $this->QueuesUsers->find()->where(['user_id' => $destId, 'queue_id' => $qPerm])->first();
+				if (empty($dlink)) {
+					return $this->jsonResponse(['ok' => false, 'error' => 'destino_sem_vinculo_fila'], 400);
+				}
+				if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($destId, $qPerm)) {
+					return $this->jsonResponse(['ok' => false, 'error' => 'destino_nivel_incompativel'], 400);
+				}
+			}
+		}
+
 		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $destId])->first();
 		$destUser = $this->Users->find()->where(['id' => $destId, 'role' => 0, 'inativo' => 0])->first();
 		if (empty($vinculo) || empty($destUser)) {
@@ -2684,10 +2939,15 @@ class TicketsController extends AppController {
 		$obsLinhas = [
 			'Transferência de atendimento',
 			'Data/hora: ' . $agora,
-			'Técnico anterior: ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+			'Técnico que transferiu: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
+			'Técnico anterior (responsável): ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
 			'Novo técnico: ' . $destName . ' (id ' . $destId . ')',
 			'Motivo: ' . $motivo,
 		];
+		$obsLinhas[] = 'Nível anterior: ' . $levelAntLabel;
+		if ($newLevelLabelForObs !== '') {
+			$obsLinhas[] = 'Novo nível: ' . $newLevelLabelForObs;
+		}
 		if ($newQueue) {
 			$obsLinhas[] = 'Fila de destino: ' . $newQueue->name . ' (id ' . (int)$newQueue->id . ')';
 		} elseif ($filaPost !== null && $filaPost !== $filaAnt) {
@@ -2715,6 +2975,20 @@ class TicketsController extends AppController {
 				if ($wf) {
 					$fields[] = 'fila_suporte';
 					$fields[] = 'nivel_atendimento';
+				}
+				$tcols = $this->Tickets->getSchema()->columns();
+				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
+					$eq = $newQueue ? (int)$newQueue->id : (int)($ticket->queue_id ?? 0);
+					if ($eq > 0) {
+						try {
+							$qq = $this->Queues->get($eq, ['contain' => ['SupportLevels']]);
+							if (!empty($qq->support_level_id)) {
+								$ticket->support_level_id = (int)$qq->support_level_id;
+							}
+						} catch (\Throwable $e) {
+						}
+					}
+					$fields[] = 'support_level_id';
 				}
 				if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
 					throw new \RuntimeException('save_ticket');
@@ -2782,6 +3056,9 @@ class TicketsController extends AppController {
 		if ((int)$this->Auth->user('role') !== 0) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
+		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_fila'], 403);
+		}
 		$sitantiga = (int)$ticket->situacao;
 		$ticket->situacao = C_TicketSituacaoEmandamento;
 		$this->_assignTecnicoEmExecucao($ticket, $idticket);
@@ -2791,6 +3068,30 @@ class TicketsController extends AppController {
 			$fields[] = 'idtecnico_responsavel';
 		}
 		$fields = $this->_ticketFieldsComResponsavel($fields);
+		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $cols, true)) {
+			$qid = (int)($ticket->queue_id ?? 0);
+			if ($qid > 0) {
+				try {
+					$qq = $this->Queues->get($qid);
+					if (!empty($qq->support_level_id)) {
+						$ticket->support_level_id = (int)$qq->support_level_id;
+					}
+				} catch (\Throwable $e) {
+				}
+			}
+			if (empty($ticket->support_level_id)) {
+				try {
+					$uu = $this->Users->get((int)$this->Auth->user('id'));
+					if (!empty($uu->support_level_id)) {
+						$ticket->support_level_id = (int)$uu->support_level_id;
+					}
+				} catch (\Throwable $e) {
+				}
+			}
+			if (!in_array('support_level_id', $fields, true)) {
+				$fields[] = 'support_level_id';
+			}
+		}
 		if ($this->Tickets->save($ticket, ['fields' => $fields])) {
 			$uid = (int)$this->Auth->user('id');
 			$nm = trim((string)($this->Auth->user('name') ?? ''));

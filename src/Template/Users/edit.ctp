@@ -50,6 +50,25 @@
 				</div>
 			</div>
 
+			<?php if (!empty($supportLevelsList) && (int)$user->role === 0) : ?>
+			<h6 class="text-muted m-t-20 m-b-10">Nível de suporte</h6>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label class="control-label text-muted">Nível principal do técnico (N1 / N2 / N3)</label>
+						<?= $this->Form->control('support_level_id', [
+							'type' => 'select',
+							'options' => $supportLevelsList,
+							'empty' => '— Não definido —',
+							'class' => 'form-control',
+							'label' => false,
+						]) ?>
+						<small class="form-text text-muted">Usado nas regras de escalonamento e compatibilidade com a fila. Ao salvar, o vínculo em cada fila herda este nível, salvo override opcional abaixo.</small>
+					</div>
+				</div>
+			</div>
+			<?php endif; ?>
+
 			<?php if (!empty($queuesList) && (int)$user->role === 0) : ?>
 			<h6 class="text-muted m-t-20 m-b-10">Filas de Atendimento</h6>
 			<div class="row">
@@ -61,7 +80,29 @@
 								<option value="<?= (int)$qid ?>" <?= in_array((int)$qid, array_map('intval', $selectedQueues ?? []), true) ? 'selected' : '' ?>><?= h($qname) ?></option>
 							<?php endforeach; ?>
 						</select>
-						<small class="form-text text-muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar várias. As filas são por empresa (Master/PGM conforme o contexto do login). Crie filas via SQL ou POST <code>queues/api-ensure-defaults</code> como admin.</small>
+						<?php if (!empty($showQueueLevelOverrides) && !empty($selectedQueues)) : ?>
+							<p class="text-muted m-t-10 m-b-5"><small><strong>Nível na fila (opcional)</strong> — por fila selecionada; vazio = usa o nível principal acima.</small></p>
+							<div class="row">
+								<?php foreach ($queuesList as $qid => $qname) :
+									$qid = (int)$qid;
+									if (!in_array($qid, array_map('intval', $selectedQueues ?? []), true)) {
+										continue;
+									}
+									$selSl = isset($queuesUserSupportLevels[$qid]) ? (int)$queuesUserSupportLevels[$qid] : 0;
+									?>
+									<div class="col-md-6 m-b-10">
+										<label class="control-label text-muted small"><?= h($qname) ?></label>
+										<select name="queue_support_level[<?= $qid ?>]" class="form-control form-control-sm">
+											<option value="">— Herda nível principal —</option>
+											<?php foreach ($supportLevelsList as $sid => $sln) : ?>
+												<option value="<?= (int)$sid ?>" <?= $selSl === (int)$sid ? 'selected' : '' ?>><?= h($sln) ?></option>
+											<?php endforeach; ?>
+										</select>
+									</div>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
+						<small class="form-text text-muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar várias. As filas são por empresa (Master/PGM conforme o contexto do login). Admin: <code>queues/api-ensure-defaults</code> ou <code>queues/api-save</code> (JSON).</small>
 					</div>
 				</div>
 			</div>

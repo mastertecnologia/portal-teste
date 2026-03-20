@@ -11,6 +11,19 @@ import {
 import { acaoLinkClassName, badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 
+const API_ERR_TRANSFER = {
+  escalacao_invalida: 'Só é possível transferir para uma fila de nível superior (escalonamento).',
+  mesma_fila: 'Selecione uma fila diferente da atual.',
+  sem_permissao_transferir_fila: 'Você não está vinculado a esta fila ou seu nível não permite esta ação.',
+  destino_sem_vinculo_fila: 'O técnico de destino não está vinculado à fila indicada.',
+  destino_nivel_incompativel: 'O nível do técnico de destino não cobre essa fila.',
+  motivo_obrigatorio: 'Informe o motivo (mín. 3 caracteres).',
+};
+
+const API_ERR_START = {
+  sem_permissao_fila: 'Você não pode assumir este ticket: verifique vínculo com a fila e nível de suporte.',
+};
+
 const GROUP_KEYS = {
   todos: 'todos',
   pendente: 'pendentes',
@@ -176,7 +189,8 @@ export default function TechDashboard({ boot }) {
     setTransferQueues([]);
     setTransferQueueId('');
     if (queuesRelacional) {
-      const rq = await fetchQueuesForTicket(ticket.id);
+      const useEscalation = Boolean(workflow?.supportLevelsEnabled);
+      const rq = await fetchQueuesForTicket(ticket.id, { escalationOnly: useEscalation });
       if (!rq.ok) {
         setTransferQueuesErr(rq.error || 'Não foi possível carregar as filas.');
         setTransferQueues([]);
@@ -184,6 +198,10 @@ export default function TechDashboard({ boot }) {
       } else {
         const list = rq.queues || [];
         setTransferQueues(list);
+        setTransferQueuesErr('');
+        if (useEscalation && list.length === 0) {
+          setTransferQueuesErr('Não há filas de escalonamento disponíveis acima do nível atual.');
+        }
         const pref =
           ticket.filaQueueId && list.some((x) => Number(x.id) === Number(ticket.filaQueueId))
             ? String(ticket.filaQueueId)
@@ -236,7 +254,8 @@ export default function TechDashboard({ boot }) {
     const r = await postTransferirTicket(id, payload);
     setTransferSaving(false);
     if (!r.ok) {
-      setTransferErr(r.error || 'Falha ao transferir.');
+      const code = r.error;
+      setTransferErr(API_ERR_TRANSFER[code] || code || 'Falha ao transferir.');
       return;
     }
     setTransferOpen(false);
@@ -251,7 +270,8 @@ export default function TechDashboard({ boot }) {
     try {
       const r = await postStartTicket(id);
       if (!r.ok) {
-        window.alert(r.error || 'Não foi possível iniciar o atendimento.');
+        const code = r.error;
+        window.alert(API_ERR_START[code] || code || 'Não foi possível iniciar o atendimento.');
         return;
       }
       setTransferOkHint('Atendimento iniciado.');
@@ -483,7 +503,11 @@ export default function TechDashboard({ boot }) {
                             ) : null}
                           </td>
                           <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 sm:px-3">
-                            {ticket.nivelAtendimento != null ? `N${ticket.nivelAtendimento}` : '—'}
+                            {ticket.supportLevelLabel
+                              ? ticket.supportLevelLabel
+                              : ticket.nivelAtendimento != null
+                                ? `N${ticket.nivelAtendimento}`
+                                : '—'}
                           </td>
                         </>
                       ) : null}

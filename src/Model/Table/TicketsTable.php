@@ -44,6 +44,7 @@ class TicketsTable extends Table {
 		$this->belongsTo('Clicontabilidade')->setForeignKey('idsolicitantecontador');
 		$this->belongsTo('users')->setForeignKey('idautor')->setDependent(false);
 		$this->belongsTo('Queues', ['foreignKey' => 'queue_id', 'joinType' => 'LEFT']);
+		$this->belongsTo('SupportLevels', ['foreignKey' => 'support_level_id', 'joinType' => 'LEFT']);
 
 		$this->hasMany('Ticketsclientes', ['dependent' => true,'cascadeCallbacks' => true,])->setForeignKey('idticket'); 
 		

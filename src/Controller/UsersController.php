@@ -35,6 +35,7 @@ class UsersController extends AppController {
 		$this->loadModel('Empresas');
 		$this->loadModel('Queues');
 		$this->loadModel('QueuesUsers');
+		$this->loadModel('SupportLevels');
 		$this->loadModel('Empresasusers');
 		$this->loadModel('Orcamentos');
 		$this->loadModel('Orcamentosservicos');
@@ -226,7 +227,8 @@ class UsersController extends AppController {
 				->order(['sort_order' => 'ASC', 'id' => 'ASC'])
 				->toArray();
 		}
-		$this->set(compact('queuesList'));
+		$supportLevelsList = $this->_supportLevelsListForTechnicians();
+		$this->set(compact('queuesList', 'supportLevelsList'));
 		$this->set('user', $user);
 	}
 
@@ -339,6 +341,8 @@ class UsersController extends AppController {
 
 		$queuesList = [];
 		$selectedQueues = [];
+		$queuesUserSupportLevels = [];
+		$showQueueLevelOverrides = false;
 		if ($this->_queuesTablesExist() && (int)$user->role === 0) {
 			$queuesList = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 				->where(['idempresa' => $this->Auth->user('idempresa')])
@@ -349,10 +353,22 @@ class UsersController extends AppController {
 				->where(['user_id' => $user->id])
 				->extract('queue_id')
 				->toList();
+			try {
+				if (in_array('support_level_id', $this->QueuesUsers->getSchema()->columns(), true)) {
+					foreach ($this->QueuesUsers->find()->where(['user_id' => $user->id])->all() as $link) {
+						if (!empty($link->support_level_id)) {
+							$queuesUserSupportLevels[(int)$link->queue_id] = (int)$link->support_level_id;
+						}
+					}
+				}
+			} catch (\Throwable $e) {
+			}
 		}
 
+		$supportLevelsList = ((int)$user->role === 0) ? $this->_supportLevelsListForTechnicians() : [];
+		$showQueueLevelOverrides = !empty($supportLevelsList) && $this->_queuesUsersSupportLevelColumn();
 		$this->set('user', $user);
-		$this->set(compact('queuesList', 'selectedQueues'));
+		$this->set(compact('queuesList', 'selectedQueues', 'supportLevelsList', 'queuesUserSupportLevels', 'showQueueLevelOverrides'));
 		$this->set('title', 'Editar Usuário');
 	}
 
@@ -1307,12 +1323,89 @@ class UsersController extends AppController {
 		if (!empty($allowedIds)) {
 			$this->QueuesUsers->deleteAll(['user_id' => $userId, 'queue_id IN' => $allowedIds]);
 		}
+		$perQueueSl = $this->request->getData('queue_support_level');
+		if (!is_array($perQueueSl)) {
+			$perQueueSl = [];
+		}
+		$quHasSl = false;
+		try {
+			$quHasSl = in_array('support_level_id', $this->QueuesUsers->getSchema()->columns(), true);
+		} catch (\Throwable $e) {
+		}
+		$userSl = 0;
+		if ($quHasSl && $this->_usersSupportLevelColumn()) {
+			try {
+				$ur = $this->Users->get($userId);
+				$userSl = (int)($ur->support_level_id ?? 0);
+			} catch (\Throwable $e) {
+			}
+		}
 		foreach ($ids as $qid) {
 			if (!in_array($qid, $allowedIds, true)) {
 				continue;
 			}
 			$row = $this->QueuesUsers->newEntity(['queue_id' => $qid, 'user_id' => $userId]);
+			if ($quHasSl) {
+				$pid = 0;
+				if (isset($perQueueSl[$qid])) {
+					$pid = (int)$perQueueSl[$qid];
+				} elseif (isset($perQueueSl[(string)$qid])) {
+					$pid = (int)$perQueueSl[(string)$qid];
+				}
+				if ($pid > 0 && $this->_supportLevelIdAllowedForTechnician($pid)) {
+					$row->support_level_id = $pid;
+				} elseif ($userSl > 0) {
+					$row->support_level_id = $userSl;
+				}
+			}
 			$this->QueuesUsers->save($row);
+		}
+	}
+
+	protected function _usersSupportLevelColumn(): bool {
+		try {
+			return in_array('support_level_id', $this->Users->getSchema()->columns(), true);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	protected function _supportLevelsTableExists(): bool {
+		try {
+			$tables = $this->Users->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('support_levels', $tables, true);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	/** N1–N3 para select do técnico (sort_order 1–3). */
+	protected function _supportLevelsListForTechnicians(): array {
+		if (!$this->_usersSupportLevelColumn() || !$this->_supportLevelsTableExists()) {
+			return [];
+		}
+
+		return $this->SupportLevels->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['sort_order IN' => [1, 2, 3]])
+			->order(['sort_order' => 'ASC', 'id' => 'ASC'])
+			->toArray();
+	}
+
+	protected function _supportLevelIdAllowedForTechnician(int $id): bool {
+		if (!$this->_supportLevelsTableExists()) {
+			return false;
+		}
+		$r = $this->SupportLevels->find()->select(['id'])->where(['id' => $id, 'sort_order IN' => [1, 2, 3]])->first();
+
+		return !empty($r);
+	}
+
+	protected function _queuesUsersSupportLevelColumn(): bool {
+		try {
+			return in_array('support_level_id', $this->QueuesUsers->getSchema()->columns(), true);
+		} catch (\Throwable $e) {
+			return false;
 		}
 	}
 }

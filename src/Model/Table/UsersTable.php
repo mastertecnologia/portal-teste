@@ -12,6 +12,7 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php')
 
 class UsersTable extends Table {
 	public function initialize(array $config) {
+		$this->belongsTo('SupportLevels', ['foreignKey' => 'support_level_id', 'joinType' => 'LEFT']);
 		$this->hasMany('Ordensservico', [ 'dependent'  => true, 'cascadeCallbacks' => true ])->setForeignKey('iduser');
 		$this->hasMany('Listamembros')->setForeignKey('iduser');
 		$this->belongsToMany('Visitas', [

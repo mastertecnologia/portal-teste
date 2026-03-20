@@ -49,7 +49,7 @@ class AppController extends Controller {
 				'apiIndex', 'apiIndexCliente', 'apiView', 'apiComments', 'apiSaveTicket',
 				'apiAnexoUpload', 'apiAnexoDelete',
 				'apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket',
-				'apiForTicket', 'getAvailableQueues', 'apiEnsureDefaults',
+				'apiForTicket', 'getAvailableQueues', 'apiEnsureDefaults', 'apiSupportLevels', 'apiSave',
 				'apiAdd',
 			],
 		]);

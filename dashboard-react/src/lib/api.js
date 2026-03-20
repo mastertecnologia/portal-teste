@@ -111,7 +111,7 @@ export async function fetchTicketsTecnico(filters = {}) {
   return { ok: true, groups: json.groups, workflow: json.workflow || { enabled: false, filas: [] } };
 }
 
-export async function fetchQueuesForTicket(ticketId) {
+export async function fetchQueuesForTicket(ticketId, opts = {}) {
   if (USE_MOCK) {
     return {
       ok: true,
@@ -124,7 +124,8 @@ export async function fetchQueuesForTicket(ticketId) {
   const boot = getBoot();
   const base = boot.paths?.apiGetAvailableQueues || boot.paths?.apiQueuesForTicket;
   if (!base) return { ok: false, error: 'no_api', queues: [] };
-  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+  const q = opts.escalationOnly ? '?escalation_only=1' : '';
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}${q}`, {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
   });
