@@ -216,6 +216,8 @@
               $msg = null;
               if ($sitnova === C_TicketAnexoAdicionado) $msg = "Anexo adicionado: " . $obs;
               else if ($sitnova === C_TicketAnexoDeletado) $msg = "Anexo deletado: " . $obs;
+              else if ($sitnova === C_TicketMovTransferencia) $msg = !empty($obs) ? $obs : 'Transferência de atendimento registrada.';
+              else if ($sitnova === C_TicketMovMudancaFila) $msg = !empty($obs) ? $obs : 'Mudança de fila registrada.';
               else if ($sitantiga !== null && $sitnova !== null) {
                 $sitAntTxt = trim(strip_tags((string)SituacaoTicket($sitantiga)));
                 $sitNovTxt = trim(strip_tags((string)SituacaoTicket($sitnova)));

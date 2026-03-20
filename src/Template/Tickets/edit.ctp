@@ -312,6 +312,9 @@
 						//6 - Anexo Deletado
 						if ($reg['sitnova'] == C_TicketAnexoDeletado) echo "O anexo '".$reg['observacao']."' foi deletado.";
 
+						else if (isset($reg['sitnova']) && $reg['sitnova'] == C_TicketMovTransferencia) echo nl2br(h($reg['observacao'] ?? ''));
+						else if (isset($reg['sitnova']) && $reg['sitnova'] == C_TicketMovMudancaFila) echo nl2br(h($reg['observacao'] ?? ''));
+
 						//10/11/12 - Timer horas técnicas
 						else if (isset($reg['sitnova']) && $reg['sitnova'] == C_TicketTimerIniciado) echo !empty($reg['observacao']) ? $reg['observacao'] : 'Iniciou o timer de horas técnicas.';
 						else if (isset($reg['sitnova']) && $reg['sitnova'] == C_TicketTimerPausado) echo !empty($reg['observacao']) ? $reg['observacao'] : 'Pausou o timer de horas técnicas.';

@@ -245,6 +245,9 @@ $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
 								//4 - Cancelar
 								else if ($reg['sitnova'] == C_TicketSituacaoFechado && $reg['sitnova'] != $reg['sitantiga']) echo h($reg['observacao']);
 
+								else if (isset($reg['sitnova']) && $reg['sitnova'] == C_TicketMovTransferencia) echo nl2br(h($reg['observacao'] ?? ''));
+								else if (isset($reg['sitnova']) && $reg['sitnova'] == C_TicketMovMudancaFila) echo nl2br(h($reg['observacao'] ?? ''));
+
 								//5 - Anexo Adicionado
 								if ($reg['sitnova'] == C_TicketAnexoAdicionado) echo "O anexo '" . h($reg['observacao']) . "' foi adicionado.";
 

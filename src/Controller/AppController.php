@@ -48,6 +48,7 @@ class AppController extends Controller {
 				// Tickets UI React (JSON; autenticação via sessão Auth)
 				'apiIndex', 'apiIndexCliente', 'apiView', 'apiComments', 'apiSaveTicket',
 				'apiAnexoUpload', 'apiAnexoDelete',
+				'apiTecnicosLista', 'apiTransferirTicket',
 				'apiAdd',
 			],
 		]);

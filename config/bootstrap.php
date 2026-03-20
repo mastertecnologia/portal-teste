@@ -255,3 +255,5 @@ Type::build('timestamp')
 
 // Formata as datas em JSON
 \Cake\I18n\FrozenDate::setJsonEncodeFormat('dd/MM/yyyy');
+
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'ticket_workflow_constants.php';

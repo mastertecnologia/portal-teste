@@ -3,10 +3,12 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Mailer\Email;
+use Cake\ORM\TableRegistry;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
+require_once ROOT . DS . 'config' . DS . 'ticket_workflow_constants.php';
 
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
@@ -39,6 +41,24 @@ class TicketsusersController extends AppController
 		return $this->Ticketsmovs->save($mov);
 	}
 
+	/**
+	 * Grava o técnico responsável ao assumir o chamado (colunas de workflow na tabela tickets).
+	 */
+	protected function gravarTecnicoResponsavelAssuncao($idticket, $iduser) {
+		try {
+			$Tickets = TableRegistry::get('Tickets');
+			$cols = $Tickets->getSchema()->columns();
+			if (!in_array('idtecnico_responsavel', $cols, true)) {
+				return;
+			}
+			$ticket = $Tickets->get($idticket);
+			$ticket->idtecnico_responsavel = (int)$iduser;
+			$Tickets->save($ticket, ['fields' => ['idtecnico_responsavel']]);
+		} catch (\Throwable $e) {
+			$this->log('Ticketsusers::gravarTecnicoResponsavelAssuncao ' . $e->getMessage(), 'warning');
+		}
+	}
+
     public function resolver($idticket = null) {
         $ticket = $this->Tickets->get($idticket);
 
@@ -57,6 +77,7 @@ class TicketsusersController extends AppController
 				$ticketuser->idempresa = $this->Auth->user('idempresa');
 
 				if ($this->Ticketsusers->save($ticketuser)) {
+					$this->gravarTecnicoResponsavelAssuncao($idticket, $this->Auth->user('id'));
 					$this->Flash->success(__('Ingressado ao ticket com sucesso!'));
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $ticketuser->id);
 				} else {
@@ -64,6 +85,7 @@ class TicketsusersController extends AppController
 					return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
 				}
 			} else {
+				$this->gravarTecnicoResponsavelAssuncao($idticket, $this->Auth->user('id'));
 				$this->Flash->success(__('Ticket movido para "Em andamento" com sucesso!'));
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $ticket->id);
 			}

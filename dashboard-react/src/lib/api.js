@@ -26,21 +26,39 @@ function qs(params) {
 }
 
 function mockTicketToTechRow(t) {
+  const open =
+    t.status === 'Aguardando técnico' ||
+    t.status === 'Em execução' ||
+    t.status === 'Em andamento';
   return {
     id: t.id,
     autor: '—',
     created: t.atualizado || '—',
     assunto: t.assunto,
+    situacao: open ? 1 : 2,
     situacaoLabel: t.status,
     cliente: t.cliente,
     tecnicos: t.tecnicos ?? t.responsavel ?? '—',
+    filaSuporte: t.filaSuporte || 'n1',
+    filaLabel: t.filaLabel || 'Fila N1 — Suporte inicial / triagem',
+    nivelAtendimento: t.nivelAtendimento ?? 1,
+    transferido: Boolean(t.transferido),
     solicitacaoPreview: (t.descricao || '').slice(0, 120),
     urls: { edit: `#/mock-ticket/${t.id}` },
-    acoes: [],
+    acoes: open
+      ? [
+          {
+            key: 'transferir',
+            label: 'Transferir',
+            behavior: 'reactTransfer',
+            url: `#/mock-ticket/${t.id}`,
+          },
+        ]
+      : [],
   };
 }
 
-export async function fetchTicketsTecnico() {
+export async function fetchTicketsTecnico(filters = {}) {
   if (USE_MOCK) {
     const all = listTicketsForTecnico().map(mockTicketToTechRow);
     const groups = {
@@ -50,14 +68,70 @@ export async function fetchTicketsTecnico() {
       resolvidos: all.filter((t) => t.situacaoLabel === 'Resolvido'),
       fechados: all.filter((t) => t.situacaoLabel === 'Cancelado' || t.situacaoLabel === 'Fechado'),
     };
-    return { ok: true, groups };
+    const filas = [
+      { code: 'n1', label: 'Fila N1 — Suporte inicial / triagem', nivel: 1 },
+      { code: 'n2', label: 'Fila N2 — Suporte avançado / field service', nivel: 2 },
+      { code: 'n3', label: 'Fila N3 — Infraestrutura / especializado', nivel: 3 },
+      { code: 'noc', label: 'Fila NOC — Monitoramento', nivel: 4 },
+      { code: 'servico', label: 'Fila requisições de serviço', nivel: 5 },
+    ];
+    return { ok: true, groups, workflow: { enabled: true, filas } };
   }
   const boot = getBoot();
-  const r = await fetch(boot.paths.apiIndex, { credentials: 'same-origin' });
-  if (!r.ok) return { ok: false, error: r.statusText, groups: null };
+  const q = qs({
+    fila_suporte: filters.filaSuporte,
+    nivel_atendimento: filters.nivelAtendimento,
+    sem_responsavel: filters.semResponsavel ? '1' : '',
+    idtecnico_responsavel: filters.idResponsavel,
+    transferidos: filters.somenteTransferidos ? '1' : '',
+  });
+  const r = await fetch(`${boot.paths.apiIndex}${q}`, { credentials: 'same-origin' });
+  if (!r.ok) return { ok: false, error: r.statusText, groups: null, workflow: null };
   const json = await r.json();
-  if (!json.ok) return { ok: false, error: json.error || 'erro', groups: null };
-  return { ok: true, groups: json.groups };
+  if (!json.ok) return { ok: false, error: json.error || 'erro', groups: null, workflow: null };
+  return { ok: true, groups: json.groups, workflow: json.workflow || { enabled: false, filas: [] } };
+}
+
+export async function fetchTecnicosParaTransferencia() {
+  if (USE_MOCK) {
+    return {
+      ok: true,
+      tecnicos: [
+        { id: 1, name: 'NOC 02' },
+        { id: 2, name: 'Service Desk' },
+        { id: 3, name: 'Suporte N2' },
+      ],
+    };
+  }
+  const boot = getBoot();
+  const r = await fetch(boot.paths.apiTecnicosLista, { credentials: 'same-origin' });
+  if (!r.ok) return { ok: false, error: r.statusText, tecnicos: [] };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro', tecnicos: [] };
+  return { ok: true, tecnicos: json.tecnicos || [] };
+}
+
+export async function postTransferirTicket(ticketId, payload) {
+  if (USE_MOCK) {
+    return { ok: true };
+  }
+  const boot = getBoot();
+  const url = `${boot.paths.apiTransferirTicket}${encodeURIComponent(ticketId)}`;
+  const r = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok) return { ok: false, error: json.error || r.statusText };
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return { ok: true };
 }
 
 export async function fetchTicketsCliente(filters = {}) {

@@ -1,6 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchTicketsTecnico, USE_MOCK } from '../lib/api';
+import {
+  fetchTicketsTecnico,
+  fetchTecnicosParaTransferencia,
+  postTransferirTicket,
+  USE_MOCK,
+} from '../lib/api';
 import { acaoLinkClassName, badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 
@@ -27,20 +32,72 @@ function statusLabel(row) {
 export default function TechDashboard({ boot }) {
   const embedded = Boolean(boot);
   const [groups, setGroups] = useState(null);
+  const [workflow, setWorkflow] = useState(null);
   const [q, setQ] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('ativos');
+  const [filaSuporte, setFilaSuporte] = useState('');
+  const [nivelAtendimento, setNivelAtendimento] = useState('');
+  const [semResponsavel, setSemResponsavel] = useState(false);
+  const [somenteTransferidos, setSomenteTransferidos] = useState(false);
+  const [idResponsavel, setIdResponsavel] = useState('');
+  const [tecnicosOpcoes, setTecnicosOpcoes] = useState([]);
+
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferTicket, setTransferTicket] = useState(null);
+  const [transferDest, setTransferDest] = useState('');
+  const [transferMotivo, setTransferMotivo] = useState('');
+  const [transferFila, setTransferFila] = useState('');
+  const [transferSaving, setTransferSaving] = useState(false);
+  const [transferErr, setTransferErr] = useState('');
+
+  const loadFilters = useMemo(
+    () => ({
+      filaSuporte: filaSuporte || undefined,
+      nivelAtendimento: nivelAtendimento || undefined,
+      semResponsavel,
+      somenteTransferidos,
+      idResponsavel: idResponsavel || undefined,
+    }),
+    [filaSuporte, nivelAtendimento, semResponsavel, somenteTransferidos, idResponsavel]
+  );
+
+  const reload = useCallback(async () => {
+    const res = await fetchTicketsTecnico(loadFilters);
+    if (res.ok && res.groups) {
+      setGroups(res.groups);
+      setWorkflow(res.workflow ?? { enabled: false, filas: [] });
+    }
+  }, [loadFilters]);
 
   useEffect(() => {
     let cancel = false;
     (async () => {
-      const res = await fetchTicketsTecnico();
+      const res = await fetchTicketsTecnico(loadFilters);
       if (cancel) return;
-      if (res.ok && res.groups) setGroups(res.groups);
+      if (res.ok && res.groups) {
+        setGroups(res.groups);
+        setWorkflow(res.workflow ?? { enabled: false, filas: [] });
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [loadFilters]);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const r = await fetchTecnicosParaTransferencia();
+      if (cancel || !r.ok) return;
+      setTecnicosOpcoes(r.tecnicos || []);
     })();
     return () => {
       cancel = true;
     };
   }, []);
+
+  const wfEnabled = Boolean(workflow?.enabled);
+  const filasMeta = workflow?.filas || [];
 
   const rows = useMemo(() => {
     if (!groups) return [];
@@ -66,7 +123,14 @@ export default function TechDashboard({ boot }) {
       const cliente = String(t.cliente || '').toLowerCase();
       const assunto = String(t.assunto || '').toLowerCase();
       const tec = String(t.tecnicos || '').toLowerCase();
-      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || tec.includes(qq);
+      const fila = String(t.filaLabel || '').toLowerCase();
+      return (
+        id.includes(qq) ||
+        cliente.includes(qq) ||
+        assunto.includes(qq) ||
+        tec.includes(qq) ||
+        fila.includes(qq)
+      );
     });
   }, [groups, filtroStatus, q]);
 
@@ -75,6 +139,48 @@ export default function TechDashboard({ boot }) {
 
   const dash = boot?.paths?.dashboard;
   const addTicket = boot?.paths?.addTicket;
+
+  const openTransfer = (ticket) => {
+    setTransferTicket(ticket);
+    setTransferDest('');
+    setTransferMotivo('');
+    setTransferFila(wfEnabled ? ticket.filaSuporte || 'n1' : '');
+    setTransferErr('');
+    setTransferOpen(true);
+  };
+
+  const submitTransfer = async () => {
+    if (!transferTicket) return;
+    const id = Number(transferTicket.id);
+    const dest = Number(transferDest);
+    if (!dest) {
+      setTransferErr('Selecione o técnico de destino.');
+      return;
+    }
+    if (transferMotivo.trim().length < 3) {
+      setTransferErr('Informe o motivo da transferência (mín. 3 caracteres).');
+      return;
+    }
+    setTransferSaving(true);
+    setTransferErr('');
+    const payload = {
+      iduser_destino: dest,
+      motivo: transferMotivo.trim(),
+    };
+    if (wfEnabled && transferFila) {
+      payload.fila_suporte = transferFila;
+    }
+    const r = await postTransferirTicket(id, payload);
+    setTransferSaving(false);
+    if (!r.ok) {
+      setTransferErr(r.error || 'Falha ao transferir.');
+      return;
+    }
+    setTransferOpen(false);
+    await reload();
+  };
+
+  const colCount = wfEnabled ? 10 : 8;
 
   const tableSection = (
     <section
@@ -105,7 +211,7 @@ export default function TechDashboard({ boot }) {
             <p className="text-xs text-slate-500">{totalTodos} ticket(s) na empresa</p>
           </div>
         )}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -127,6 +233,63 @@ export default function TechDashboard({ boot }) {
         </div>
       </div>
 
+      {wfEnabled ? (
+        <div className="flex flex-col gap-2 border-b border-slate-100 p-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <select
+            value={filaSuporte}
+            onChange={(e) => setFilaSuporte(e.target.value)}
+            className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+          >
+            <option value="">Todas as filas</option>
+            {filasMeta.map((f) => (
+              <option key={f.code} value={f.code}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={nivelAtendimento}
+            onChange={(e) => setNivelAtendimento(e.target.value)}
+            className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+          >
+            <option value="">Todos os níveis</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={String(n)}>
+                Nível {n}
+              </option>
+            ))}
+          </select>
+          <select
+            value={idResponsavel}
+            onChange={(e) => setIdResponsavel(e.target.value)}
+            className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+          >
+            <option value="">Qualquer técnico</option>
+            {tecnicosOpcoes.map((t) => (
+              <option key={t.id} value={String(t.id)}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={semResponsavel}
+              onChange={(e) => setSemResponsavel(e.target.checked)}
+            />
+            Sem técnico
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={somenteTransferidos}
+              onChange={(e) => setSomenteTransferidos(e.target.checked)}
+            />
+            Transferidos
+          </label>
+        </div>
+      ) : null}
+
       <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
@@ -137,6 +300,12 @@ export default function TechDashboard({ boot }) {
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Data</th>
                 <th className="min-w-[8rem] px-2 py-1.5 font-semibold sm:min-w-[10rem] sm:px-3">Assunto</th>
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Status</th>
+                {wfEnabled ? (
+                  <>
+                    <th className="max-w-[9rem] px-2 py-1.5 font-semibold sm:px-3">Fila</th>
+                    <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Nível</th>
+                  </>
+                ) : null}
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Técnico</th>
                 <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
                 <th className="min-w-[14rem] px-2 py-1.5 font-semibold sm:min-w-[17rem] sm:px-3">Ações</th>
@@ -145,7 +314,7 @@ export default function TechDashboard({ boot }) {
             <tbody className="divide-y divide-slate-100 bg-white">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={colCount} className="px-4 py-8 text-center text-slate-500">
                     Nenhum ticket neste filtro.
                   </td>
                 </tr>
@@ -178,7 +347,10 @@ export default function TechDashboard({ boot }) {
                           {assuntoLinha}
                         </div>
                         {ticket.solicitacaoPreview ? (
-                          <div className="line-clamp-1 text-[11px] leading-tight text-slate-500" title={ticket.solicitacaoPreview}>
+                          <div
+                            className="line-clamp-1 text-[11px] leading-tight text-slate-500"
+                            title={ticket.solicitacaoPreview}
+                          >
                             {ticket.solicitacaoPreview}
                           </div>
                         ) : null}
@@ -193,6 +365,22 @@ export default function TechDashboard({ boot }) {
                           {st}
                         </span>
                       </td>
+                      {wfEnabled ? (
+                        <>
+                          <td
+                            className="max-w-[9rem] truncate px-2 py-1.5 text-slate-700 sm:px-3"
+                            title={ticket.filaLabel || ''}
+                          >
+                            <span className="line-clamp-2">{ticket.filaLabel || '—'}</span>
+                            {ticket.transferido ? (
+                              <span className="mt-0.5 block text-[10px] font-semibold text-amber-700">Transferido</span>
+                            ) : null}
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 sm:px-3">
+                            {ticket.nivelAtendimento != null ? `N${ticket.nivelAtendimento}` : '—'}
+                          </td>
+                        </>
+                      ) : null}
                       <td className="max-w-[7rem] truncate px-2 py-1.5 text-slate-700 sm:px-3" title={ticket.tecnicos || ''}>
                         {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
                       </td>
@@ -204,18 +392,30 @@ export default function TechDashboard({ boot }) {
                           <span className="text-slate-400">—</span>
                         ) : (
                           <div className="flex max-w-[42vw] flex-nowrap items-center gap-0.5 overflow-x-auto py-0.5 sm:max-w-none sm:overflow-visible [scrollbar-width:thin]">
-                            {acoesOrd.map((a) => (
-                              <a
-                                key={a.key + a.label}
-                                href={a.url}
-                                target={a.target || '_self'}
-                                rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                className={acaoLinkClassName(a.key)}
-                                title={a.label}
-                              >
-                                {a.label}
-                              </a>
-                            ))}
+                            {acoesOrd.map((a) =>
+                              a.behavior === 'reactTransfer' ? (
+                                <button
+                                  key={a.key + a.label}
+                                  type="button"
+                                  className={acaoLinkClassName(a.key)}
+                                  title={a.label}
+                                  onClick={() => openTransfer(ticket)}
+                                >
+                                  {a.label}
+                                </button>
+                              ) : (
+                                <a
+                                  key={a.key + a.label}
+                                  href={a.url}
+                                  target={a.target || '_self'}
+                                  rel={a.target === '_blank' ? 'noreferrer' : undefined}
+                                  className={acaoLinkClassName(a.key)}
+                                  title={a.label}
+                                >
+                                  {a.label}
+                                </a>
+                              )
+                            )}
                           </div>
                         )}
                       </td>
@@ -227,6 +427,81 @@ export default function TechDashboard({ boot }) {
           </table>
         </div>
       </div>
+
+      {transferOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+            <h4 className="text-lg font-bold text-slate-900">
+              Transferir ticket #{transferTicket?.id}
+            </h4>
+            <p className="mt-1 text-sm text-slate-500">
+              O histórico registrará técnico anterior, novo técnico, data/hora e motivo.
+            </p>
+            <div className="mt-4 space-y-3">
+              <label className="block text-sm font-medium text-slate-700">
+                Novo técnico responsável
+                <select
+                  value={transferDest}
+                  onChange={(e) => setTransferDest(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                >
+                  <option value="">Selecione…</option>
+                  {tecnicosOpcoes.map((t) => (
+                    <option key={t.id} value={String(t.id)}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {wfEnabled ? (
+                <label className="block text-sm font-medium text-slate-700">
+                  Fila de destino (opcional — escala N1→N2→N3 etc.)
+                  <select
+                    value={transferFila}
+                    onChange={(e) => setTransferFila(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                  >
+                    {filasMeta.map((f) => (
+                      <option key={f.code} value={f.code}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              <label className="block text-sm font-medium text-slate-700">
+                Motivo
+                <textarea
+                  value={transferMotivo}
+                  onChange={(e) => setTransferMotivo(e.target.value)}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                  placeholder="Ex.: Escalação para N2 — necessidade de visita presencial."
+                />
+              </label>
+              {transferErr ? <p className="text-sm text-red-600">{transferErr}</p> : null}
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onClick={() => setTransferOpen(false)}
+                disabled={transferSaving}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
+                onClick={() => submitTransfer()}
+                disabled={transferSaving}
+              >
+                {transferSaving ? 'Salvando…' : 'Confirmar transferência'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 
@@ -307,7 +582,7 @@ export default function TechDashboard({ boot }) {
                 <p className="text-sm font-medium text-teal-700">{MOCK_SESSION_TECNICO.empresa}</p>
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900">Tickets — técnico</h2>
                 <p className="text-sm text-slate-500">
-                  Mesmas rotas do portal: alterar situação e cancelar usam URLs do CakePHP (navegação completa).
+                  Responsável, filas N1–N3/NOC/serviço e transferência com registro no histórico.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">

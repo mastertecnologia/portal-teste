@@ -8,6 +8,7 @@ use Cake\Routing\Router;
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
+require_once ROOT . DS . 'config' . DS . 'ticket_workflow_constants.php';
 
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
@@ -53,6 +54,9 @@ class TicketsController extends AppController {
 		}
 		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments', 'apiAnexoUpload', 'apiAnexoDelete'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
+		}
+		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket'], true)) {
+			return (int)$user['role'] === 0;
 		}
 
 		if ($user['role'] == 0 and $action != 'indexcliente') return true;
@@ -595,6 +599,12 @@ class TicketsController extends AppController {
 			}
 		
 			if ($this->Tickets->save($ticket)) {
+				if ($this->_ticketWorkflowSchemaReady()) {
+					$ticket->fila_suporte = 'n1';
+					$ticket->nivel_atendimento = 1;
+					$ticket->idtecnico_responsavel = null;
+					$this->Tickets->save($ticket, ['fields' => ['fila_suporte', 'nivel_atendimento', 'idtecnico_responsavel']]);
+				}
 				// Anexos (vários arquivos: input multiple ou lista normalizada)
 					foreach ($anexos as $file) {
 						$idempresa = $this->Auth->user('idempresa');
@@ -1670,6 +1680,8 @@ class TicketsController extends AppController {
 				'apiSaveTicket' => $w . 'tickets/api-save/',
 				'apiAnexoUpload' => $w . 'tickets/api-anexo-upload/',
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
+				'apiTecnicosLista' => $w . 'tickets/api-tecnicos-lista',
+				'apiTransferirTicket' => $w . 'tickets/api-transferir-ticket/',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -1698,6 +1710,147 @@ class TicketsController extends AppController {
 		$raw = AssuntoTicket($assunto);
 		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 		return $t !== '' ? $t : (string)$assunto;
+	}
+
+	protected function _ticketWorkflowSchemaReady(): bool {
+		static $ok = null;
+		if ($ok !== null) {
+			return $ok;
+		}
+		try {
+			$cols = $this->Tickets->getSchema()->columns();
+			$ok = in_array('idtecnico_responsavel', $cols, true)
+				&& in_array('fila_suporte', $cols, true)
+				&& in_array('nivel_atendimento', $cols, true);
+		} catch (\Throwable $e) {
+			$ok = false;
+		}
+
+		return $ok;
+	}
+
+	/**
+	 * Catálogo de filas (código → rótulo e nível numérico para filtros).
+	 *
+	 * @return array<string, array{label: string, nivel: int}>
+	 */
+	protected function _filaSuporteCatalog(): array {
+		return [
+			'n1' => ['label' => 'Fila N1 — Suporte inicial / triagem', 'nivel' => 1],
+			'n2' => ['label' => 'Fila N2 — Suporte avançado / field service', 'nivel' => 2],
+			'n3' => ['label' => 'Fila N3 — Infraestrutura / especializado', 'nivel' => 3],
+			'noc' => ['label' => 'Fila NOC — Monitoramento', 'nivel' => 4],
+			'servico' => ['label' => 'Fila requisições de serviço', 'nivel' => 5],
+		];
+	}
+
+	protected function _filaLabelFromCode(?string $code): string {
+		$c = $code !== null && $code !== '' ? $code : 'n1';
+		$cat = $this->_filaSuporteCatalog();
+
+		return $cat[$c]['label'] ?? $c;
+	}
+
+	/**
+	 * @param int[] $userIds
+	 * @return array<int, string>
+	 */
+	protected function _batchUserDisplayNames(array $userIds): array {
+		$userIds = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+		if (empty($userIds)) {
+			return [];
+		}
+		$out = [];
+		foreach (
+			$this->Users->find()
+				->select(['id', 'name', 'username'])
+				->where(['id IN' => $userIds])
+				->all() as $usr
+		) {
+			$nm = trim((string)($usr->name ?? ''));
+			if ($nm === '') {
+				$nm = trim((string)($usr->username ?? ''));
+			}
+			if ($nm === '') {
+				$nm = 'Usuário #' . (int)$usr->id;
+			}
+			$out[(int)$usr->id] = $nm;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param int[] $ticketIds
+	 * @return array<int, true> ids que já tiveram transferência registrada
+	 */
+	protected function _ticketIdsComTransferencia(array $ticketIds): array {
+		$ticketIds = array_values(array_unique(array_filter(array_map('intval', $ticketIds))));
+		if (empty($ticketIds)) {
+			return [];
+		}
+		$rows = $this->Ticketsmovs->find()
+			->select(['idticket'])
+			->where(['idticket IN' => $ticketIds, 'sitnova' => C_TicketMovTransferencia])
+			->group(['idticket'])
+			->all();
+		$set = [];
+		foreach ($rows as $r) {
+			$set[(int)$r->idticket] = true;
+		}
+
+		return $set;
+	}
+
+	/**
+	 * Aplica filtros GET opcionais na listagem técnica (fila, nível, responsável, transferidos).
+	 *
+	 * @param \Cake\ORM\Query $query
+	 * @return \Cake\ORM\Query
+	 */
+	protected function _applyApiIndexWorkflowFilters($query) {
+		if (!$this->_ticketWorkflowSchemaReady()) {
+			return $query;
+		}
+		$f = $this->request->getQuery('fila_suporte');
+		if ($f !== null && $f !== '') {
+			$cat = $this->_filaSuporteCatalog();
+			if (isset($cat[(string)$f])) {
+				$query->where(['Tickets.fila_suporte' => (string)$f]);
+			}
+		}
+		$n = $this->request->getQuery('nivel_atendimento');
+		if ($n !== null && $n !== '' && ctype_digit((string)$n)) {
+			$query->where(['Tickets.nivel_atendimento' => (int)$n]);
+		}
+		if ($this->request->getQuery('sem_responsavel') === '1') {
+			$query->where([
+				'OR' => [
+					['Tickets.idtecnico_responsavel IS' => null],
+					['Tickets.idtecnico_responsavel' => 0],
+				],
+			]);
+		}
+		$rid = $this->request->getQuery('idtecnico_responsavel');
+		if ($rid !== null && $rid !== '' && ctype_digit((string)$rid)) {
+			$query->where(['Tickets.idtecnico_responsavel' => (int)$rid]);
+		}
+		if ($this->request->getQuery('transferidos') === '1') {
+			$subIds = $this->Ticketsmovs->find()
+				->select(['idticket'])
+				->where(['sitnova' => C_TicketMovTransferencia])
+				->group(['idticket'])
+				->enableHydration(false)
+				->toArray();
+			$ids = array_values(array_unique(array_filter(array_map('intval', array_column($subIds, 'idticket')))));
+			if (empty($ids)) {
+				$query->where(['Tickets.id' => -1]);
+			} else {
+				$query->where(['Tickets.id IN' => $ids]);
+			}
+		}
+
+		return $query;
 	}
 
 	/** Nome de exibição de quem abriu o ticket (idautor). */
@@ -1810,7 +1963,7 @@ class TicketsController extends AppController {
 		return $out;
 	}
 
-	protected function _ticketRowApiTecnico($reg, string $tecnicosLabel = ''): array {
+	protected function _ticketRowApiTecnico($reg, string $tecnicosLabel = '', array $ctx = []): array {
 		$c = $reg->cliente ?? null;
 		$nomeCliente = '';
 		if ($c) {
@@ -1818,6 +1971,9 @@ class TicketsController extends AppController {
 		}
 		$id = (int)$reg->id;
 		$sit = (int)$reg->situacao;
+		$wf = !empty($ctx['workflow']);
+		$filaCode = $wf ? (string)($reg->fila_suporte ?? 'n1') : '';
+		$nivel = $wf ? (int)($reg->nivel_atendimento ?? 1) : null;
 		$acoes = [];
 		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
 			if ($sit !== (int)C_TicketSituacaoPendente) {
@@ -1832,10 +1988,23 @@ class TicketsController extends AppController {
 			if ($sit !== (int)C_TicketSituacaoFechado) {
 				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => Router::url(['action' => 'cancelar', $id])];
 			}
+			if ($wf) {
+				$acoes[] = [
+					'key' => 'transferir',
+					'label' => 'Transferir',
+					'behavior' => 'reactTransfer',
+					'url' => Router::url(['action' => 'edit', $id]),
+				];
+			}
 		}
 		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => Router::url(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
 
-		return [
+		$tecCol = $tecnicosLabel !== '' ? $tecnicosLabel : '—';
+		if (!$wf && ($tecCol === '—' || $tecCol === '')) {
+			$tecCol = '—';
+		}
+
+		$row = [
 			'id' => $id,
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
@@ -1844,13 +2013,21 @@ class TicketsController extends AppController {
 			'situacao' => $sit,
 			'situacaoLabel' => $this->_ticketSituacaoTexto($reg->situacao),
 			'cliente' => $nomeCliente,
-			'tecnicos' => $tecnicosLabel !== '' ? $tecnicosLabel : '—',
+			'tecnicos' => $tecCol,
 			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
 				'edit' => Router::url(['action' => 'edit', $id]),
 			],
 			'acoes' => $acoes,
 		];
+		if ($wf) {
+			$row['filaSuporte'] = $filaCode;
+			$row['filaLabel'] = $this->_filaLabelFromCode($filaCode);
+			$row['nivelAtendimento'] = $nivel;
+			$row['transferido'] = !empty($ctx['transferido']);
+		}
+
+		return $row;
 	}
 
 	protected function _ticketRowApiCliente($reg, string $tecnicosLabel = ''): array {
@@ -2065,23 +2242,64 @@ class TicketsController extends AppController {
 		$this->autoRender = false;
 		$empresa = $this->Auth->user('idempresa');
 		$base = ['contain' => ['Users', 'Clientes'], 'order' => ['Tickets.id' => 'DESC']];
-		$ticketsPendentes = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])->toArray();
-		$ticketsEmandamento = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento, 'Tickets.idempresa' => $empresa])->toArray();
-		$ticketsResolvidos = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido, 'Tickets.idempresa' => $empresa])->toArray();
-		$ticketsFechados = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])->toArray();
-		$tickets = $this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])->toArray();
+		$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
+			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])
+		)->toArray();
+		$ticketsEmandamento = $this->_applyApiIndexWorkflowFilters(
+			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento, 'Tickets.idempresa' => $empresa])
+		)->toArray();
+		$ticketsResolvidos = $this->_applyApiIndexWorkflowFilters(
+			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido, 'Tickets.idempresa' => $empresa])
+		)->toArray();
+		$ticketsFechados = $this->_applyApiIndexWorkflowFilters(
+			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])
+		)->toArray();
+		$tickets = $this->_applyApiIndexWorkflowFilters(
+			$this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])
+		)->toArray();
 
 		$allForTec = array_merge($ticketsPendentes, $ticketsEmandamento, $ticketsResolvidos, $ticketsFechados, $tickets);
 		$tecIds = [];
 		foreach ($allForTec as $t) {
 			$tecIds[] = (int)$t->id;
 		}
+		$wf = $this->_ticketWorkflowSchemaReady();
 		$tecMap = $this->_ticketTecnicosLabelsByTicketIds($tecIds);
-		$mapTec = function ($reg) use ($tecMap) {
-			return $this->_ticketRowApiTecnico($reg, $tecMap[(int)$reg->id] ?? '');
+		$respIds = [];
+		if ($wf) {
+			foreach ($allForTec as $t) {
+				$rid = (int)($t->idtecnico_responsavel ?? 0);
+				if ($rid > 0) {
+					$respIds[] = $rid;
+				}
+			}
+		}
+		$respNames = $wf ? $this->_batchUserDisplayNames($respIds) : [];
+		$transfSet = $wf ? $this->_ticketIdsComTransferencia($tecIds) : [];
+		$mapTec = function ($reg) use ($tecMap, $wf, $respNames, $transfSet) {
+			$tid = (int)$reg->id;
+			if ($wf) {
+				$rid = (int)($reg->idtecnico_responsavel ?? 0);
+				$tecLabel = $rid > 0 ? ($respNames[$rid] ?? ('Usuário #' . $rid)) : 'Não atribuído';
+			} else {
+				$tecLabel = $tecMap[$tid] ?? '';
+			}
+
+			return $this->_ticketRowApiTecnico($reg, $tecLabel, [
+				'workflow' => $wf,
+				'transferido' => isset($transfSet[$tid]),
+			]);
 		};
+		$catalog = [];
+		foreach ($this->_filaSuporteCatalog() as $code => $meta) {
+			$catalog[] = ['code' => $code, 'label' => $meta['label'], 'nivel' => $meta['nivel']];
+		}
 		$out = [
 			'ok' => true,
+			'workflow' => [
+				'enabled' => $wf,
+				'filas' => $catalog,
+			],
 			'groups' => [
 				'todos' => array_map($mapTec, $tickets),
 				'pendentes' => array_map($mapTec, $ticketsPendentes),
@@ -2091,6 +2309,159 @@ class TicketsController extends AppController {
 			],
 		];
 		return $this->jsonResponse($out);
+	}
+
+	public function apiTecnicosLista() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$empresa = (int)$this->Auth->user('idempresa');
+		$rows = $this->Empresasusers->find('all', ['contain' => ['Users']])
+			->where(['Empresasusers.idempresa' => $empresa, 'Users.role' => 0, 'Users.inativo' => 0])
+			->order(['Users.name' => 'ASC'])
+			->toArray();
+		$seen = [];
+		$list = [];
+		foreach ($rows as $r) {
+			$u = $r->users ?? null;
+			if (!$u || isset($seen[(int)$u->id])) {
+				continue;
+			}
+			$seen[(int)$u->id] = true;
+			$nm = trim((string)($u->name ?? ''));
+			if ($nm === '') {
+				$nm = trim((string)($u->username ?? ''));
+			}
+			if ($nm === '') {
+				$nm = 'Usuário #' . (int)$u->id;
+			}
+			$list[] = ['id' => (int)$u->id, 'name' => $nm];
+		}
+
+		return $this->jsonResponse(['ok' => true, 'tecnicos' => $list]);
+	}
+
+	public function apiTransferirTicket($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		if (!$this->_ticketWorkflowSchemaReady()) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_columns_missing'], 503);
+		}
+		$idticket = (int)$idticket;
+		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$destId = isset($body['iduser_destino']) ? (int)$body['iduser_destino'] : 0;
+		$motivo = isset($body['motivo']) ? trim((string)$body['motivo']) : '';
+		$filaNova = isset($body['fila_suporte']) ? trim((string)$body['fila_suporte']) : '';
+		$nivelNova = isset($body['nivel_atendimento']) ? (int)$body['nivel_atendimento'] : null;
+
+		if ($destId <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_destino'], 400);
+		}
+		if (mb_strlen($motivo) < 3) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'motivo_obrigatorio'], 400);
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $destId])->first();
+		$destUser = $this->Users->find()->where(['id' => $destId, 'role' => 0, 'inativo' => 0])->first();
+		if (empty($vinculo) || empty($destUser)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'destino_invalido'], 400);
+		}
+		$cat = $this->_filaSuporteCatalog();
+		$filaAnt = (string)($ticket->fila_suporte ?? 'n1');
+		$nivelAnt = (int)($ticket->nivel_atendimento ?? 1);
+		$filaPost = $filaNova !== '' && isset($cat[$filaNova]) ? $filaNova : null;
+		$nivelPost = $nivelNova !== null && $nivelNova >= 1 && $nivelNova <= 5 ? $nivelNova : null;
+		if ($filaPost !== null) {
+			$nivelPost = $cat[$filaPost]['nivel'];
+		} elseif ($nivelPost !== null) {
+			foreach ($cat as $c => $meta) {
+				if ((int)$meta['nivel'] === $nivelPost) {
+					$filaPost = $c;
+					break;
+				}
+			}
+		}
+
+		$oldId = (int)($ticket->idtecnico_responsavel ?? 0);
+		$oldName = 'Não atribuído';
+		if ($oldId > 0) {
+			$oldName = ($this->_batchUserDisplayNames([$oldId])[$oldId]) ?? ('Usuário #' . $oldId);
+		}
+		$destName = trim((string)($destUser->name ?? ''));
+		if ($destName === '') {
+			$destName = trim((string)($destUser->username ?? ''));
+		}
+		if ($destName === '') {
+			$destName = 'Usuário #' . $destId;
+		}
+		$agora = date('d/m/Y H:i:s');
+		$obsLinhas = [
+			'Transferência de atendimento',
+			'Data/hora: ' . $agora,
+			'Técnico anterior: ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+			'Novo técnico: ' . $destName . ' (id ' . $destId . ')',
+			'Motivo: ' . $motivo,
+		];
+		if ($filaPost !== null && $filaPost !== $filaAnt) {
+			$obsLinhas[] = 'Fila: ' . $this->_filaLabelFromCode($filaAnt) . ' → ' . $this->_filaLabelFromCode($filaPost);
+		} elseif ($nivelPost !== null && $nivelPost !== $nivelAnt && $filaPost === null) {
+			$obsLinhas[] = 'Nível de atendimento: ' . $nivelAnt . ' → ' . $nivelPost;
+		}
+
+		try {
+			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agora, $obsLinhas, $filaPost, $filaAnt, $oldId, $cat, $nivelPost) {
+				$ticket->idtecnico_responsavel = $destId;
+				if ($filaPost !== null) {
+					$ticket->fila_suporte = $filaPost;
+					$ticket->nivel_atendimento = $cat[$filaPost]['nivel'];
+				} elseif ($nivelPost !== null) {
+					$ticket->nivel_atendimento = $nivelPost;
+				}
+				if (!$this->Tickets->save($ticket, ['fields' => ['idtecnico_responsavel', 'fila_suporte', 'nivel_atendimento']])) {
+					throw new \RuntimeException('save_ticket');
+				}
+				$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $destId])->first();
+				if (empty($ja)) {
+					$tu = $this->Ticketsusers->newEntity();
+					$tu->idticket = $idticket;
+					$tu->iduser = $destId;
+					$tu->idempresa = $empresa;
+					if (!$this->Ticketsusers->save($tu)) {
+						throw new \RuntimeException('save_ticketsusers');
+					}
+				}
+				if ($oldId > 0 && $oldId !== $destId) {
+					$oldRows = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $oldId])->toArray();
+					foreach ($oldRows as $ent) {
+						$this->Ticketsusers->delete($ent);
+					}
+				}
+				$mov = $this->Ticketsmovs->newEntity();
+				$mov->idticket = $idticket;
+				$mov->sitantiga = (int)$ticket->situacao;
+				$mov->sitnova = C_TicketMovTransferencia;
+				$mov->idusuario = $this->Auth->user('id');
+				$mov->idempresa = $empresa;
+				$mov->datetime = $agora;
+				$mov->observacao = implode("\n", $obsLinhas);
+				if (!$this->Ticketsmovs->save($mov)) {
+					throw new \RuntimeException('save_mov');
+				}
+			});
+		} catch (\Throwable $e) {
+			$this->log('apiTransferirTicket: ' . $e->getMessage(), 'error');
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiTransferirTicket', $idticket);
+
+		return $this->jsonResponse(['ok' => true]);
 	}
 
 	public function apiIndexCliente() {
