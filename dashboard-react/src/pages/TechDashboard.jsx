@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   fetchTicketsTecnico,
@@ -44,7 +45,73 @@ function statusLabel(row) {
   return stripHtml(row.situacaoLabel || row.status);
 }
 
-/** Menu compacto por linha — evita parede de links na coluna Ações. */
+const ACTION_MENU_WIDTH = 268;
+
+function ActionMenuIcon({ actionKey }) {
+  const k = String(actionKey || '').toLowerCase();
+  const c = 'h-4 w-4 shrink-0';
+  const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  switch (k) {
+    case 'iniciar':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+        </svg>
+      );
+    case 'pendente':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'emandamento':
+    case 'execucao':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75v-6z" />
+        </svg>
+      );
+    case 'resolvido':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'transferir':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+        </svg>
+      );
+    case 'cancelar':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+      );
+    case 'imprimir':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M6.72 13.829v-.63A1.125 1.125 0 017.848 12h11.304a1.125 1.125 0 011.128 1.198v.63m-3.75 0v3.375c0 .621-.504 1.125-1.125 1.125H9.375c-.621 0-1.125-.504-1.125-1.125v-3.375m0 0h-.375A1.125 1.125 0 018.25 15.75h7.5c.621 0 1.125.504 1.125 1.125v.375m-12 0h.008v.008H6v-.008zm11.25 0h.008v.008H17.25v-.008z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      );
+  }
+}
+
+function actionItemTone(key) {
+  const k = String(key || '').toLowerCase();
+  if (k === 'cancelar') return 'danger';
+  if (k === 'imprimir') return 'muted';
+  return 'default';
+}
+
+/** Menu por linha: portal + posição fixa (não é cortado pelo overflow da tabela), visual alinhado ao Service Desk. */
 function TicketActionsMenu({
   ticket,
   acoes,
@@ -54,99 +121,194 @@ function TicketActionsMenu({
 }) {
   const acoesOrd = sortTicketAcoes(acoes || []);
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef(null);
+  const menuRef = useRef(null);
+
+  const updatePosition = useCallback(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const pad = 8;
+    let left = r.right - ACTION_MENU_WIDTH;
+    left = Math.max(pad, Math.min(left, window.innerWidth - ACTION_MENU_WIDTH - pad));
+    const estH = Math.min(360, 56 + acoesOrd.length * 48);
+    let top = r.bottom + 6;
+    if (top + estH > window.innerHeight - pad) {
+      top = Math.max(pad, r.top - estH - 6);
+    }
+    setPos({ top, left });
+  }, [acoesOrd.length]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+  }, [open, updatePosition]);
 
   useEffect(() => {
     if (!open) return undefined;
     const onDoc = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+      const t = e.target;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    const onResize = () => updatePosition();
+    const onScroll = () => setOpen(false);
     document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onScroll, true);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll, true);
+    };
+  }, [open, updatePosition]);
 
   if (acoesOrd.length === 0) return <span className="text-slate-400">—</span>;
 
-  const itemCls =
-    'block w-full cursor-pointer border-0 bg-transparent px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
+  const toneCls = {
+    default:
+      'text-slate-700 hover:bg-teal-50 hover:text-teal-900 focus-visible:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-400/60',
+    muted:
+      'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300',
+    danger:
+      'text-slate-700 hover:bg-red-50 hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-300/70',
+  };
 
-  return (
-    <div className="relative" ref={wrapRef}>
-      <button
-        type="button"
-        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-sm hover:border-teal-400 hover:bg-teal-50/40"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
-      >
-        Ações
-        <span className="text-[10px] text-slate-400" aria-hidden>
-          ▾
-        </span>
-      </button>
-      {open ? (
-        <ul
-          className="absolute right-0 z-40 mt-1 min-w-[12.5rem] list-none rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
-          role="menu"
-        >
-          {acoesOrd.map((a) => {
-            if (a.behavior === 'reactTransfer') {
-              return (
-                <li key={`${a.key}-${a.label}`} role="none">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={itemCls}
-                    onClick={() => {
-                      setOpen(false);
-                      openTransfer(ticket);
-                    }}
-                  >
-                    {a.label}
-                  </button>
-                </li>
-              );
-            }
-            if (a.behavior === 'reactStart') {
-              const busy = startBusyId === Number(ticket.id);
-              return (
-                <li key={`${a.key}-${a.label}`} role="none">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={itemCls}
-                    disabled={busy}
-                    onClick={() => {
-                      setOpen(false);
-                      handleStartAtendimento(ticket);
-                    }}
-                  >
-                    {busy ? 'Iniciando…' : a.label}
-                  </button>
-                </li>
-              );
-            }
+  const rowBase =
+    'flex w-full items-center gap-3 border-0 bg-transparent px-3 py-2.5 text-left text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-45';
+
+  const menuPanel = open ? (
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-label={`Ações do ticket ${ticket.id}`}
+      className="fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5"
+      style={{ top: pos.top, left: pos.left }}
+    >
+      <div className="border-b border-slate-100 bg-gradient-to-r from-teal-50/90 to-slate-50/80 px-3 py-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-800/90">Chamado</p>
+        <p className="text-sm font-bold tabular-nums text-slate-900">#{ticket.id}</p>
+      </div>
+      <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto py-1">
+        {acoesOrd.map((a) => {
+          const tone = actionItemTone(a.key);
+          const iconWrap =
+            tone === 'danger'
+              ? 'text-red-500/90'
+              : tone === 'muted'
+                ? 'text-slate-400'
+                : 'text-teal-600/90';
+          if (a.behavior === 'reactTransfer') {
             return (
               <li key={`${a.key}-${a.label}`} role="none">
-                <a
+                <button
+                  type="button"
                   role="menuitem"
-                  href={a.url}
-                  target={a.target || '_self'}
-                  rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                  className={`${itemCls} no-underline`}
-                  onClick={() => setOpen(false)}
+                  className={`${rowBase} ${toneCls[tone]}`}
+                  onClick={() => {
+                    setOpen(false);
+                    openTransfer(ticket);
+                  }}
                 >
-                  {a.label}
-                </a>
+                  <span className={iconWrap}>
+                    <ActionMenuIcon actionKey={a.key} />
+                  </span>
+                  <span className="min-w-0 flex-1 leading-snug">{a.label}</span>
+                </button>
               </li>
             );
-          })}
-        </ul>
-      ) : null}
+          }
+          if (a.behavior === 'reactStart') {
+            const busy = startBusyId === Number(ticket.id);
+            return (
+              <li key={`${a.key}-${a.label}`} role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`${rowBase} ${toneCls.default}`}
+                  disabled={busy}
+                  onClick={() => {
+                    setOpen(false);
+                    handleStartAtendimento(ticket);
+                  }}
+                >
+                  <span className="text-teal-600/90">
+                    <ActionMenuIcon actionKey={a.key} />
+                  </span>
+                  <span className="min-w-0 flex-1 leading-snug">{busy ? 'Iniciando…' : a.label}</span>
+                </button>
+              </li>
+            );
+          }
+          return (
+            <li key={`${a.key}-${a.label}`} role="none">
+              <a
+                role="menuitem"
+                href={a.url}
+                target={a.target || '_self'}
+                rel={a.target === '_blank' ? 'noreferrer' : undefined}
+                className={`${rowBase} ${toneCls[tone]} no-underline`}
+                onClick={() => setOpen(false)}
+              >
+                <span className={iconWrap}>
+                  <ActionMenuIcon actionKey={a.key} />
+                </span>
+                <span className="min-w-0 flex-1 leading-snug">{a.label}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
     </div>
+  ) : null;
+
+  return (
+    <>
+      <div className="flex justify-end">
+        <button
+          ref={btnRef}
+          type="button"
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={`Abrir menu de ações do ticket ${ticket.id}`}
+          className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${
+            open
+              ? 'bg-teal-800 text-white ring-2 ring-teal-600/40'
+              : 'bg-gradient-to-b from-teal-600 to-teal-700 text-white hover:from-teal-700 hover:to-teal-800'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }}
+        >
+          <svg className="h-4 w-4 opacity-95" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <circle cx="12" cy="5" r="1.75" />
+            <circle cx="12" cy="12" r="1.75" />
+            <circle cx="12" cy="19" r="1.75" />
+          </svg>
+          <span>Ações</span>
+          <svg
+            className={`h-3.5 w-3.5 opacity-90 transition-transform ${open ? 'rotate-180' : ''}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+      {typeof document !== 'undefined' && menuPanel ? createPortal(menuPanel, document.body) : null}
+    </>
   );
 }
 
@@ -583,7 +745,7 @@ export default function TechDashboard({ boot }) {
                 ) : null}
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Técnico</th>
                 <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
-                <th className="w-[5.5rem] min-w-[5.5rem] px-2 py-1.5 text-right font-semibold sm:px-3">Ações</th>
+                <th className="w-[7.25rem] min-w-[7.25rem] px-2 py-1.5 text-right font-semibold sm:px-3">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
