@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchTicketDetail, postComentario, getBoot, USE_MOCK } from '../lib/api';
 import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
+import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
 import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
@@ -19,6 +20,17 @@ function PapelBadge({ papel }) {
       {isTech ? 'Suporte' : 'Cliente'}
     </span>
   );
+}
+
+/** Lista de tickets do cliente no embed (boot.paths ou resposta da API). */
+function resolveClienteIndexUrl(boot, ticket) {
+  const fromBoot = boot?.paths?.indexCliente;
+  if (fromBoot) return fromBoot;
+  const fromTicket = ticket?.urls?.indexCliente;
+  if (fromTicket) return fromTicket;
+  const w = boot?.webroot;
+  if (w) return `${String(w).replace(/\/$/, '')}/tickets/indexcliente`;
+  return null;
 }
 
 export default function ClientTicketDetail({ boot }) {
@@ -50,10 +62,13 @@ export default function ClientTicketDetail({ boot }) {
 
   useTicketCommentsPoll(id, setComentarios, setTicket);
 
+  const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
+
   async function handleComentario(e) {
     e.preventDefault();
     const t = texto.trim();
     if (!t || !ticket) return;
+    pinToBottom();
     const b = getBoot();
     const nome = USE_MOCK
       ? MOCK_SESSION_CLIENTE.name
@@ -83,15 +98,15 @@ export default function ClientTicketDetail({ boot }) {
     }
   }
 
-  const backHref = boot?.paths?.indexCliente;
   const backLabel = '← Meus tickets';
 
   if (erro && !ticket) {
+    const backErr = embedded ? resolveClienteIndexUrl(boot, null) : null;
     return (
       <div className={embedded ? 'py-8 text-center' : 'min-h-screen bg-slate-100 px-4 py-12 text-center'}>
         <p className="text-rose-700">{erro}</p>
-        {backHref ? (
-          <a href={backHref} className="mt-4 inline-block text-cyan-700 underline">
+        {embedded && backErr ? (
+          <a href={backErr} className="mt-4 inline-block text-cyan-700 underline">
             {backLabel}
           </a>
         ) : (
@@ -112,9 +127,10 @@ export default function ClientTicketDetail({ boot }) {
   }
 
   const statusPlain = stripHtml(ticket.status);
+  const backHref = embedded ? resolveClienteIndexUrl(boot, ticket) : null;
 
   const header = embedded ? (
-    <div className="relative z-10 mb-4 border-b border-slate-200 bg-slate-100 pb-3 pt-3 sm:pt-4">
+    <div className="relative z-20 mb-4 shrink-0 border-b border-slate-200 bg-slate-100 pb-3 pt-3 shadow-sm sm:pt-4">
       {backHref ? (
         <a href={backHref} className="text-sm font-medium text-cyan-700 hover:underline">
           {backLabel}
@@ -125,7 +141,7 @@ export default function ClientTicketDetail({ boot }) {
         </Link>
       )}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-bold text-slate-900">#{ticket.id}</h1>
+        <h1 className="text-xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
         <span
           className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
             statusType(statusPlain)
@@ -158,7 +174,7 @@ export default function ClientTicketDetail({ boot }) {
           {backLabel}
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold text-slate-900">#{ticket.id}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
           <span
             className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(
               statusType(statusPlain)
@@ -217,7 +233,11 @@ export default function ClientTicketDetail({ boot }) {
             : 'Mensagens com o suporte — gravadas no chamado e no histórico.'}
         </p>
       </div>
-      <ul className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
+      <ul
+        ref={listRef}
+        onScroll={onListScroll}
+        className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
+      >
         {comentarios.length === 0 ? (
           <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
             Nenhuma mensagem ainda. Escreva abaixo para falar com o suporte.
@@ -282,7 +302,7 @@ export default function ClientTicketDetail({ boot }) {
     return (
       <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 text-slate-800">
         {header}
-        {inner}
+        <div className="min-h-0 flex-1">{inner}</div>
       </div>
     );
   }

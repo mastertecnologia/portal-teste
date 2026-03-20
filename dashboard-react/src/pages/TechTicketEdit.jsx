@@ -7,6 +7,7 @@ import {
   getBoot,
 } from '../lib/api';
 import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
+import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
 import { stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
@@ -25,6 +26,13 @@ function PapelBadge({ papel }) {
       {isTech ? 'Suporte' : 'Cliente'}
     </span>
   );
+}
+
+function resolveTechIndexUrl(boot) {
+  if (boot?.paths?.indexTecnico) return boot.paths.indexTecnico;
+  const w = boot?.webroot;
+  if (w) return `${String(w).replace(/\/$/, '')}/tickets`;
+  return null;
 }
 
 export default function TechTicketEdit({ boot }) {
@@ -62,10 +70,13 @@ export default function TechTicketEdit({ boot }) {
 
   useTicketCommentsPoll(id, setComentarios, setTicket);
 
+  const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
+
   async function handleComentario(e) {
     e.preventDefault();
     const t = texto.trim();
     if (!t || !ticket) return;
+    pinToBottom();
     const b = getBoot();
     const papel = (b?.role ?? 1) === 0 ? 'tecnico' : 'cliente';
     const nome = (b?.userName || 'Eu').trim();
@@ -168,14 +179,16 @@ export default function TechTicketEdit({ boot }) {
     </div>
   );
 
+  const techListUrl = resolveTechIndexUrl(boot);
+
   const header = embedded ? (
-    <div className="relative z-10 mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 pb-3 pt-1">
+    <div className="relative z-20 mb-4 flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 pb-3 pt-1 shadow-sm">
       <div className="min-w-0">
-        {boot?.paths?.indexTecnico && (
-          <a href={boot.paths.indexTecnico} className="text-sm font-medium text-teal-700 hover:underline">
+        {techListUrl ? (
+          <a href={techListUrl} className="text-sm font-medium text-teal-700 hover:underline">
             ← Tickets
           </a>
-        )}
+        ) : null}
         <h1 className="mt-1 text-xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
         <p className="text-sm text-slate-600">
           {stripHtml(ticket.cliente)} · <span className="font-medium text-slate-800">{statusLine}</span>
@@ -282,7 +295,11 @@ export default function TechTicketEdit({ boot }) {
           Nome do autor vem do cadastro de usuário. Comentários ficam em ticket + movimentações (trecho no histórico).
         </p>
       </div>
-      <ul className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
+      <ul
+        ref={listRef}
+        onScroll={onListScroll}
+        className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
+      >
         {comentarios.length === 0 ? (
           <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
             Nenhum comentário ainda.
@@ -334,7 +351,7 @@ export default function TechTicketEdit({ boot }) {
     return (
       <div className="tickets-react-edit flex min-h-0 w-full max-w-full flex-col overflow-x-hidden text-slate-800">
         {header}
-        <div className="min-h-0 px-0">
+        <div className="min-h-0 flex-1 px-0">
           {alerts}
           <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
             <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
