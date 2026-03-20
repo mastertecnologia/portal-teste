@@ -73,10 +73,7 @@ export default function ClientTicketList({ boot }) {
   }, [fromApiRows, q]);
 
   const totalFila = fromApiRows.length;
-  const indexHref = boot?.paths?.indexCliente || '/cliente';
   const addHref = boot?.paths?.addTicket;
-  const dashHref = boot?.paths?.dashboard;
-  const techHref = boot?.paths?.indexTecnico;
 
   const tableSection = (
     <section
@@ -232,19 +229,8 @@ export default function ClientTicketList({ boot }) {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Tickets — cliente</h2>
-            <p className="text-xs text-slate-500">Mesmo layout em lista do painel técnico.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {dashHref && (
-              <a href={dashHref} className="text-sm font-medium text-slate-600 hover:text-cyan-700">
-                Dashboard
-              </a>
-            )}
-            {techHref && (
-              <a href={techHref} className="text-sm text-slate-600 hover:text-cyan-700">
-                Área técnico
-              </a>
-            )}
             {addHref && (
               <a
                 href={addHref}
