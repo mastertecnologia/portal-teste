@@ -25,15 +25,30 @@ function qs(params) {
   return s ? `?${s}` : '';
 }
 
+function mockTicketToTechRow(t) {
+  return {
+    id: t.id,
+    autor: '—',
+    created: t.atualizado || '—',
+    assunto: t.assunto,
+    situacaoLabel: t.status,
+    cliente: t.cliente,
+    tecnicos: t.tecnicos ?? t.responsavel ?? '—',
+    solicitacaoPreview: (t.descricao || '').slice(0, 120),
+    urls: { edit: `#/mock-ticket/${t.id}` },
+    acoes: [],
+  };
+}
+
 export async function fetchTicketsTecnico() {
   if (USE_MOCK) {
-    const all = listTicketsForTecnico();
+    const all = listTicketsForTecnico().map(mockTicketToTechRow);
     const groups = {
       todos: all,
-      pendentes: all.filter((t) => t.status === 'Aguardando técnico'),
-      emandamento: all.filter((t) => t.status === 'Em execução' || t.status === 'Em andamento'),
-      resolvidos: all.filter((t) => t.status === 'Resolvido'),
-      fechados: all.filter((t) => t.status === 'Cancelado' || t.status === 'Fechado'),
+      pendentes: all.filter((t) => t.situacaoLabel === 'Aguardando técnico'),
+      emandamento: all.filter((t) => t.situacaoLabel === 'Em execução' || t.situacaoLabel === 'Em andamento'),
+      resolvidos: all.filter((t) => t.situacaoLabel === 'Resolvido'),
+      fechados: all.filter((t) => t.situacaoLabel === 'Cancelado' || t.situacaoLabel === 'Fechado'),
     };
     return { ok: true, groups };
   }

@@ -7,6 +7,7 @@ import { stripHtml } from '../lib/text';
 
 const FILA_TO_API = {
   todos: 'todos',
+  ativos: 'ativos',
   pendente: 'pendente',
   execucao: 'execucao',
   resolvido: 'resolvido',
@@ -21,7 +22,7 @@ export default function ClientTicketList({ boot }) {
   const embedded = Boolean(boot);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fila, setFila] = useState('pendente');
+  const [fila, setFila] = useState('ativos');
   const [q, setQ] = useState('');
 
   useEffect(() => {
@@ -47,7 +48,23 @@ export default function ClientTicketList({ boot }) {
 
   const fromApiRows = useMemo(() => {
     if (!USE_MOCK) return tickets;
-    return tickets.map((t) => ({
+    let list = tickets;
+    const st = (x) => x.status;
+    if (fila === 'ativos') {
+      list = list.filter(
+        (t) =>
+          st(t) === 'Aguardando técnico' || st(t) === 'Em execução' || st(t) === 'Em andamento'
+      );
+    } else if (fila === 'pendente') {
+      list = list.filter((t) => st(t) === 'Aguardando técnico');
+    } else if (fila === 'execucao') {
+      list = list.filter((t) => st(t) === 'Em execução' || st(t) === 'Em andamento');
+    } else if (fila === 'resolvido') {
+      list = list.filter((t) => st(t) === 'Resolvido');
+    } else if (fila === 'fechados') {
+      list = list.filter((t) => st(t) === 'Cancelado' || st(t) === 'Fechado');
+    }
+    return list.map((t) => ({
       id: t.id,
       autor: MOCK_SESSION_CLIENTE.name,
       created: t.atualizado || '—',
@@ -56,10 +73,11 @@ export default function ClientTicketList({ boot }) {
       situacaoLabel: t.status,
       status: t.status,
       cliente: t.cliente,
+      tecnicos: t.tecnicos ?? t.responsavel ?? '—',
       urls: { view: `/cliente/ticket/${t.id}` },
       acoes: [],
     }));
-  }, [tickets]);
+  }, [tickets, fila]);
 
   const rows = useMemo(() => {
     const qq = q.trim().toLowerCase();
@@ -69,7 +87,8 @@ export default function ClientTicketList({ boot }) {
       const cliente = String(t.cliente || '').toLowerCase();
       const assunto = String(t.assunto || '').toLowerCase();
       const autor = String(t.autor || '').toLowerCase();
-      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || autor.includes(qq);
+      const tec = String(t.tecnicos || '').toLowerCase();
+      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || autor.includes(qq) || tec.includes(qq);
     });
   }, [fromApiRows, q]);
 
@@ -122,6 +141,7 @@ export default function ClientTicketList({ boot }) {
                 className="h-9 w-full shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-cyan-500 sm:w-44"
               >
                 <option value="todos">Todos</option>
+                <option value="ativos">Aguardando + Em execução</option>
                 <option value="pendente">Aguardando técnico</option>
                 <option value="execucao">Em execução</option>
                 <option value="resolvido">Resolvidos</option>
@@ -148,6 +168,7 @@ export default function ClientTicketList({ boot }) {
                 className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-cyan-500"
               >
                 <option value="todos">Todos</option>
+                <option value="ativos">Aguardando + Em execução</option>
                 <option value="pendente">Aguardando técnico</option>
                 <option value="execucao">Em execução</option>
                 <option value="resolvido">Resolvidos</option>
@@ -168,6 +189,7 @@ export default function ClientTicketList({ boot }) {
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Data</th>
                 <th className="min-w-[8rem] px-2 py-1.5 font-semibold sm:min-w-[10rem] sm:px-3">Assunto</th>
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Status</th>
+                <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Técnico</th>
                 <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
                 <th className="min-w-[14rem] px-2 py-1.5 font-semibold sm:min-w-[17rem] sm:px-3">Ações</th>
               </tr>
@@ -175,13 +197,13 @@ export default function ClientTicketList({ boot }) {
             <tbody className="divide-y divide-slate-100 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                     Carregando…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                     Nenhum ticket neste filtro.
                   </td>
                 </tr>
@@ -229,6 +251,9 @@ export default function ClientTicketList({ boot }) {
                         >
                           {st}
                         </span>
+                      </td>
+                      <td className="max-w-[7rem] truncate px-2 py-1.5 text-slate-700 sm:px-3" title={ticket.tecnicos || ''}>
+                        {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
                       </td>
                       <td className="max-w-[8rem] truncate px-2 py-1.5 sm:px-3" title={ticket.cliente || ''}>
                         {ticket.cliente || '—'}

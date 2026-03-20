@@ -27,6 +27,7 @@ export const mockTickets = [
     prioridade: 'Alta',
     status: 'Em execução',
     responsavel: 'NOC 02',
+    tecnicos: 'NOC 02',
     atualizado: 'há 14 min',
     descricaoAtendimento: 'Ajuste de certificado SSL no binding do site; cache do navegador orientado.',
     comentarios: [
@@ -47,6 +48,7 @@ export const mockTickets = [
     prioridade: 'Crítica',
     status: 'Aguardando técnico',
     responsavel: '—',
+    tecnicos: '—',
     atualizado: 'há 26 min',
     comentarios: [{ id: 1, autor: 'Financeiro Kiwify', papel: 'cliente', texto: 'Ocorre principalmente após as 14h.', quando: 'há 26 min' }],
     anexos: [],
@@ -61,6 +63,7 @@ export const mockTickets = [
     prioridade: 'Baixa',
     status: 'Aguardando cliente',
     responsavel: 'Service Desk',
+    tecnicos: 'Service Desk',
     atualizado: 'há 1 h',
     comentarios: [
       { id: 1, autor: 'Service Desk', papel: 'tecnico', texto: 'Envie nome completo e e-mail corporativo para cadastro.', quando: 'há 2 h' },
@@ -77,6 +80,7 @@ export const mockTickets = [
     prioridade: 'Média',
     status: 'Resolvido',
     responsavel: 'Suporte N2',
+    tecnicos: 'Suporte N2',
     atualizado: 'há 2 h',
     comentarios: [
       { id: 1, autor: 'Suporte N2', papel: 'tecnico', texto: 'Ajustamos o SMTP na instância; favor validar o próximo disparo.', quando: 'há 2 h' },

@@ -1730,7 +1730,47 @@ class TicketsController extends AppController {
 		return $name;
 	}
 
-	protected function _ticketRowApiTecnico($reg): array {
+	/**
+	 * Nomes dos técnicos vinculados ao ticket (tabela ticketsusers), separados por vírgula.
+	 *
+	 * @param int[] $ids ids de ticket
+	 * @return array<int,string> idticket => "Nome A, Nome B"
+	 */
+	protected function _ticketTecnicosLabelsByTicketIds(array $ids): array {
+		$ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+		if (empty($ids)) {
+			return [];
+		}
+		$emp = $this->Auth->user('idempresa');
+		$rows = $this->Ticketsusers->find('all')
+			->contain(['users'])
+			->where(['Ticketsusers.idticket IN' => $ids, 'Ticketsusers.idempresa' => $emp])
+			->toArray();
+		$byTicket = [];
+		foreach ($rows as $r) {
+			$tid = (int)$r->idticket;
+			$u = $r->users ?? $r->user ?? null;
+			if ($u === null) {
+				continue;
+			}
+			$nome = trim((string)($u->name ?? ''));
+			if ($nome === '') {
+				continue;
+			}
+			if (!isset($byTicket[$tid])) {
+				$byTicket[$tid] = [];
+			}
+			$byTicket[$tid][(int)$u->id] = $nome;
+		}
+		$out = [];
+		foreach ($byTicket as $tid => $map) {
+			$out[$tid] = implode(', ', array_values($map));
+		}
+
+		return $out;
+	}
+
+	protected function _ticketRowApiTecnico($reg, string $tecnicosLabel = ''): array {
 		$c = $reg->cliente ?? null;
 		$nomeCliente = '';
 		if ($c) {
@@ -1764,6 +1804,7 @@ class TicketsController extends AppController {
 			'situacao' => $sit,
 			'situacaoLabel' => $this->_ticketSituacaoTexto($reg->situacao),
 			'cliente' => $nomeCliente,
+			'tecnicos' => $tecnicosLabel !== '' ? $tecnicosLabel : '—',
 			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
 				'edit' => Router::url(['action' => 'edit', $id]),
@@ -1772,7 +1813,7 @@ class TicketsController extends AppController {
 		];
 	}
 
-	protected function _ticketRowApiCliente($reg): array {
+	protected function _ticketRowApiCliente($reg, string $tecnicosLabel = ''): array {
 		$c = $reg->cliente ?? null;
 		$nomeCliente = '';
 		if ($c) {
@@ -1796,6 +1837,7 @@ class TicketsController extends AppController {
 			'situacao' => $sit,
 			'situacaoLabel' => $this->_ticketSituacaoTexto($reg->situacao),
 			'cliente' => $nomeCliente,
+			'tecnicos' => $tecnicosLabel !== '' ? $tecnicosLabel : '—',
 			'descricao' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 160, '…', 'UTF-8'),
 			'solicitacaoPreview' => mb_strimwidth(strip_tags((string)($reg->solicitacao ?? '')), 0, 220, '…', 'UTF-8'),
 			'urls' => [
@@ -1989,15 +2031,23 @@ class TicketsController extends AppController {
 		$ticketsFechados = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])->toArray();
 		$tickets = $this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])->toArray();
 
-		$map = [$this, '_ticketRowApiTecnico'];
+		$allForTec = array_merge($ticketsPendentes, $ticketsEmandamento, $ticketsResolvidos, $ticketsFechados, $tickets);
+		$tecIds = [];
+		foreach ($allForTec as $t) {
+			$tecIds[] = (int)$t->id;
+		}
+		$tecMap = $this->_ticketTecnicosLabelsByTicketIds($tecIds);
+		$mapTec = function ($reg) use ($tecMap) {
+			return $this->_ticketRowApiTecnico($reg, $tecMap[(int)$reg->id] ?? '');
+		};
 		$out = [
 			'ok' => true,
 			'groups' => [
-				'todos' => array_map($map, $tickets),
-				'pendentes' => array_map($map, $ticketsPendentes),
-				'emandamento' => array_map($map, $ticketsEmandamento),
-				'resolvidos' => array_map($map, $ticketsResolvidos),
-				'fechados' => array_map($map, $ticketsFechados),
+				'todos' => array_map($mapTec, $tickets),
+				'pendentes' => array_map($mapTec, $ticketsPendentes),
+				'emandamento' => array_map($mapTec, $ticketsEmandamento),
+				'resolvidos' => array_map($mapTec, $ticketsResolvidos),
+				'fechados' => array_map($mapTec, $ticketsFechados),
 			],
 		];
 		return $this->jsonResponse($out);
@@ -2035,6 +2085,9 @@ class TicketsController extends AppController {
 				case 'fechados':
 					$tickets = $tickets->where(['tickets.situacao' => C_TicketSituacaoFechado]);
 					break;
+				case 'ativos':
+					$tickets = $tickets->where(['tickets.situacao IN' => [C_TicketSituacaoPendente, C_TicketSituacaoEmandamento]]);
+					break;
 				case 'todos':
 				default:
 					break;
@@ -2049,7 +2102,15 @@ class TicketsController extends AppController {
 		}
 		$tickets = $tickets->order(['Tickets.id' => 'DESC'])->toArray();
 
-		$rows = array_map([$this, '_ticketRowApiCliente'], $tickets);
+		$cliIds = [];
+		foreach ($tickets as $t) {
+			$cliIds[] = (int)$t->id;
+		}
+		$tecMapCli = $this->_ticketTecnicosLabelsByTicketIds($cliIds);
+		$rows = [];
+		foreach ($tickets as $reg) {
+			$rows[] = $this->_ticketRowApiCliente($reg, $tecMapCli[(int)$reg->id] ?? '');
+		}
 		return $this->jsonResponse([
 			'ok' => true,
 			'tickets' => $rows,

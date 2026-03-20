@@ -28,7 +28,7 @@ export default function TechDashboard({ boot }) {
   const embedded = Boolean(boot);
   const [groups, setGroups] = useState(null);
   const [q, setQ] = useState('');
-  const [filtroStatus, setFiltroStatus] = useState('pendente');
+  const [filtroStatus, setFiltroStatus] = useState('ativos');
 
   useEffect(() => {
     let cancel = false;
@@ -44,15 +44,29 @@ export default function TechDashboard({ boot }) {
 
   const rows = useMemo(() => {
     if (!groups) return [];
-    const key = GROUP_KEYS[filtroStatus] || 'todos';
-    const base = groups[key] || [];
+    let base;
+    if (filtroStatus === 'ativos') {
+      const a = groups.pendentes || [];
+      const b = groups.emandamento || [];
+      const seen = new Set();
+      base = [...a, ...b].filter((t) => {
+        if (seen.has(t.id)) return false;
+        seen.add(t.id);
+        return true;
+      });
+      base.sort((x, y) => Number(y.id) - Number(x.id));
+    } else {
+      const key = GROUP_KEYS[filtroStatus] || 'todos';
+      base = groups[key] || [];
+    }
     const qq = q.trim().toLowerCase();
     if (!qq) return base;
     return base.filter((t) => {
       const id = String(t.id);
       const cliente = String(t.cliente || '').toLowerCase();
       const assunto = String(t.assunto || '').toLowerCase();
-      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq);
+      const tec = String(t.tecnicos || '').toLowerCase();
+      return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || tec.includes(qq);
     });
   }, [groups, filtroStatus, q]);
 
@@ -104,6 +118,7 @@ export default function TechDashboard({ boot }) {
             className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-teal-500"
           >
             <option value="todos">Todos</option>
+            <option value="ativos">Aguardando + Em execução</option>
             <option value="pendente">Aguardando técnico</option>
             <option value="execucao">Em execução</option>
             <option value="resolvido">Resolvidos</option>
@@ -122,6 +137,7 @@ export default function TechDashboard({ boot }) {
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Data</th>
                 <th className="min-w-[8rem] px-2 py-1.5 font-semibold sm:min-w-[10rem] sm:px-3">Assunto</th>
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Status</th>
+                <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Técnico</th>
                 <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
                 <th className="min-w-[14rem] px-2 py-1.5 font-semibold sm:min-w-[17rem] sm:px-3">Ações</th>
               </tr>
@@ -129,7 +145,7 @@ export default function TechDashboard({ boot }) {
             <tbody className="divide-y divide-slate-100 bg-white">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                     Nenhum ticket neste filtro.
                   </td>
                 </tr>
@@ -176,6 +192,9 @@ export default function TechDashboard({ boot }) {
                         >
                           {st}
                         </span>
+                      </td>
+                      <td className="max-w-[7rem] truncate px-2 py-1.5 text-slate-700 sm:px-3" title={ticket.tecnicos || ''}>
+                        {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
                       </td>
                       <td className="max-w-[8rem] truncate px-2 py-1.5 sm:px-3" title={ticket.cliente || ''}>
                         {ticket.cliente || '—'}
