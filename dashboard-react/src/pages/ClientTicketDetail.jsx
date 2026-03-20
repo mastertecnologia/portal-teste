@@ -129,41 +129,39 @@ export default function ClientTicketDetail({ boot }) {
   const statusPlain = stripHtml(ticket.status);
   const backHref = embedded ? resolveClienteIndexUrl(boot, ticket) : null;
 
+  const clienteNome = stripHtml(ticket.cliente || '').trim() || '—';
+
   const header = embedded ? (
-    <div className="relative z-20 mb-4 shrink-0 border-b border-slate-200 bg-slate-100 pb-3 pt-3 shadow-sm sm:pt-4">
+    <div className="relative z-20 mb-4 shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm sm:py-4">
       {backHref ? (
-        <a href={backHref} className="text-sm font-medium text-cyan-700 hover:underline">
+        <a href={backHref} className="text-sm font-medium text-teal-700 hover:underline">
           {backLabel}
         </a>
       ) : (
-        <Link to="/cliente" className="text-sm font-medium text-cyan-700 hover:underline">
+        <Link to="/cliente" className="text-sm font-medium text-teal-700 hover:underline">
           {backLabel}
         </Link>
       )}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
-        <span
-          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
-            statusType(statusPlain)
-          )}`}
-        >
-          {statusPlain}
-        </span>
-        {ticket.prioridade && ticket.prioridade !== '—' && (
+      <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900">Ticket #{ticket.id}</h1>
+      <p className="mt-1 text-sm text-slate-600">
+        {clienteNome} · <span className="font-medium text-slate-800">{statusPlain}</span>
+      </p>
+      {ticket.prioridade && ticket.prioridade !== '—' ? (
+        <p className="mt-1.5">
           <span
-            className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
+            className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badgeClass(
               priorityType(ticket.prioridade)
             )}`}
           >
-            {ticket.prioridade}
+            Prioridade: {ticket.prioridade}
           </span>
-        )}
-      </div>
-      <p className="mt-1 text-xs text-slate-500">
+        </p>
+      ) : null}
+      <p className="mt-2 text-xs text-slate-500">
         {ticket.atualizado}
         {ticket.responsavel && ticket.responsavel !== '—' ? ` · ${ticket.responsavel}` : ''}
       </p>
-      <p className="mt-2 text-xs text-slate-400">
+      <p className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-400">
         Conversa e status atualizam automaticamente (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
       </p>
     </div>
@@ -300,7 +298,7 @@ export default function ClientTicketDetail({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 text-slate-800">
+      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 px-3 pb-4 pt-2 text-slate-800 sm:px-4">
         {header}
         <div className="min-h-0 flex-1">{inner}</div>
       </div>
