@@ -2,71 +2,145 @@
 	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Tickets', ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Abertura', [], ['class' => 'breadcrumb-item active']);
-	if($role == 0) $email = null; 
+	if($role == 0) $email = null;
 ?>
 <style>
-	#canvas{
-		width: 500px;
-		height: 500px;
+	.tickets-add-wrap {
+		max-width: 920px;
+		margin: 0 auto;
+		padding: 0.5rem 0 2.5rem;
 	}
-
-	.bg {
-	  display: flex;
-	  flex-direction: column;
-	  align-items: center;
-	  justify-content: space-between;
-	  font-family: 'Lato', sans-serif;
+	.card-ticket-add {
+		border-radius: 10px;
+		border: 1px solid #e8ecef;
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+	}
+	.card-ticket-add .card-body {
+		padding: 1.75rem 2rem 2rem;
+	}
+	@media (max-width: 767px) {
+		.card-ticket-add .card-body {
+			padding: 1.25rem 1rem 1.5rem;
+		}
+	}
+	.ticket-add-lead {
+		font-size: 14px;
+		color: #6c757d;
+		margin-bottom: 1.25rem;
+		line-height: 1.5;
+	}
+	.ticket-add-lead strong {
+		color: #3d4a54;
+	}
+	.ticket-add-section {
+		margin-top: 1.35rem;
+	}
+	.ticket-add-section > label.control-label {
+		display: block;
+		margin-bottom: 0.45rem;
+		font-weight: 600;
+		color: #495057;
+		font-size: 13px;
+	}
+	.ticket-add-textarea.form-control {
+		min-height: 200px;
+		border: 1px solid #ced4da;
+		border-radius: 8px;
+		padding: 14px 16px;
+		font-size: 15px;
+		line-height: 1.55;
+		resize: vertical;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	}
+	.ticket-add-textarea.form-control:focus {
+		border-color: #1ab394;
+		box-shadow: 0 0 0 0.2rem rgba(26, 179, 148, 0.18);
+		outline: 0;
+	}
+	.ticket-dropzone {
+		border: 2px dashed #cfd8dc;
+		border-radius: 10px;
+		background: #f8fafb;
+		min-height: 120px;
+		padding: 1rem 1.25rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		transition: border-color 0.2s, background 0.2s;
+	}
+	.ticket-dropzone:hover {
+		border-color: #1ab394;
+		background: #f0fdf9;
 	}
 	.file-drop-area {
-	  position: relative;
-	  display: flex;
-	  align-items: center;
-	  width: 100%;
-	  max-width: 100%;
-	  padding: 4px;
-	  border-bottom: 1px solid #E9ECEF;
-	  /* border-radius: 3px; */
-	  transition: 0.2s;
+		position: relative;
+		width: 100%;
+		min-height: 72px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: none;
 	}
 	.fake-btn {
-	  flex-shrink: 0;
-	  border-radius: 3px;
-	  padding: 5px;
-	  margin-right: 30px;
-	  font-size: 12px;
-	  text-transform: uppercase;
-	}
-	.file-msg {
-	  font-size: small;
-	  font-weight: 300;
-	  line-height: 1.4;
-	  white-space: nowrap;
-	  overflow: hidden;
-	  text-overflow: ellipsis;
+		flex-shrink: 0;
+		border-radius: 6px;
+		padding: 10px 14px;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.4;
+		white-space: normal;
+		text-align: center;
+		color: #495057;
+		pointer-events: none;
 	}
 	.file-input {
-	  position: absolute;
-	  left: 0;
-	  top: 0;
-	  height: 100%;
-	  width: 100%;
-	  cursor: pointer;
-	  opacity: 0;
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 100%;
+		cursor: pointer;
+		opacity: 0;
 	}
-
-	select[multiple]{
-		width: 400px;
+	.ticket-add-email.form-control {
+		border-radius: 8px;
+		padding: 10px 14px;
+		font-size: 15px;
+		min-height: 44px;
 	}
-
-	.homologacoes{
-		border:solid 1px #757575;
-		box-shadow: 1px 1px 1px 0.5px #c9c9c9;
+	.ticket-add-actions {
+		margin-top: 1.75rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid #eef1f3;
+	}
+	.ticket-add-actions .btn-abrirticket {
+		min-width: 200px;
+		padding: 12px 28px;
+		font-size: 15px;
+		font-weight: 600;
+		border-radius: 8px;
+	}
+	@media (max-width: 767px) {
+		.ticket-add-actions .btn-abrirticket {
+			width: 100%;
+			min-width: 0;
+		}
+	}
+	select[multiple] {
+		max-width: 100%;
 	}
 </style>
-<div class="col-md-12">
-	<div class="card" >
+<div class="col-md-12 tickets-add-wrap">
+	<div class="card card-ticket-add">
 		<div class="card-body">
-			<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material']) ?>
+			<?php if ($role == 1 && !empty($authUserName)) : ?>
+				<p class="ticket-add-lead">
+					O chamado será registrado em nome de <strong><?= h($authUserName) ?></strong>.
+				</p>
+			<?php endif; ?>
+			<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
 				<div class="row">
 					<?php if($role == 0) { ?>
 						<div class="col-md-4 col-xs-12">
@@ -86,7 +160,7 @@
 							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 						</div>
 					<?php } else { ?>
-						<div class="col-12">
+						<div class="col-12 ticket-add-section">
 							<label class="control-label text-muted">Assunto</label>
 							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 						</div>
@@ -98,31 +172,37 @@
 						<?= $this->Form->text('data', ['class' => 'form-control datepicker', 'label' => false,]) ?>
 					</div>
 				</div>
-				<div class="row m-t-10">
+				<div class="row ticket-add-section">
 					<div class="col-12">
-						<label class="control-label text-muted">Solicitação</label>
-						<?= $this->Form->textarea('solicitacao', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' =>'']) ?>
+						<label class="control-label text-muted" for="solicitacao">Solicitação</label>
+						<?= $this->Form->textarea('solicitacao', [
+							'id' => 'solicitacao',
+							'class' => 'form-control ticket-add-textarea',
+							'label' => false,
+							'required' => true,
+							'placeholder' => 'Descreva o problema ou a solicitação com o máximo de detalhes possível (passos, mensagens de erro, telas afetadas, etc.).',
+						]) ?>
 					</div>
 				</div>
-				<div class="row m-t-10">
+				<div class="row ticket-add-section">
 					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 						<div class="form-group">
-							<label class="control-label text-muted">Adicionar Anexo</label>
-							<div class="bg">
+							<label class="control-label text-muted">Anexos (opcional)</label>
+							<div class="ticket-dropzone">
 								<div class="file-drop-area">
-									<span class="fake-btn text-muted">Escolha o(s) arquivo(s) ou arraste-o(s) aqui</span>
+									<span class="fake-btn text-muted">Escolha arquivo(s) ou arraste para esta área</span>
 									<input class="file-input form-control" name="file-3[]" id="file-3" type="file" multiple>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-						<label class="control-label text-muted">E-mail para contato:</label>
-						<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'class' => 'email form-control', 'label' => false, 'placeholder' =>'Insira seu e-mail']) ?>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 ticket-add-section">
+						<label class="control-label text-muted" for="email">E-mail para contato</label>
+						<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'E-mail para retorno do suporte']) ?>
 					</div>
 				</div>
-				<div class="row m-t-10">
-					<div class="col-12">
+				<div class="row ticket-add-actions">
+					<div class="col-12 text-right">
 						<?= $this->Form->button('Abrir Ticket', ['id' => 'abrirticket', 'class' => 'btn btn-success aparecedepois btn-abrirticket']) ?>
 					</div>
 				</div>
@@ -182,7 +262,7 @@
 			loadSolicitantes(idcliente);
 			loadEmail(idcliente);
 		});
-		
+
 		// Só busca a lista de Solicitantes e Contadores se houver um cliente selecionado
 		if ($("#idcliente").val() != '' && $("#idcliente").val() != null) {
 			loadSolicitantes($("#idcliente").val());
@@ -223,10 +303,10 @@
 
 	// Somente número
 		function SomenteNumero(e){
-			var tecla=(window.event)?event.keyCode:e.which;  
+			var tecla=(window.event)?event.keyCode:e.which;
 			if((tecla>47 && tecla<58)) return true;
 			else if (tecla==8 || tecla==0) return true;
-			else if (tecla == 46)  return true;    
+			else if (tecla == 46)  return true;
 			else if( $('#valor').val().indexOf(',') > -1 && tecla == 44 ) return false
 			else if( $('#valor').val().indexOf(',') <= -1 && tecla == 44 ) return true
 			else  return false;
@@ -236,5 +316,5 @@
 			if($(this).val() == 5) $('.data').show();
 			else $('.data').hide();
 		});
-	// 
+	//
 </script>

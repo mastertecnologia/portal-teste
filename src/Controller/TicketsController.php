@@ -629,6 +629,7 @@ class TicketsController extends AppController {
 		
 		$this->set('assunto', $assunto);
 		$this->set('clientes', $clientesList);
+		$this->set('authUserName', (string)($this->Auth->user('name') ?? ''));
 		$this->set(compact('ticket'));
 	}
 
