@@ -10,6 +10,11 @@
   min-height: 0;
 }
 
+/* Fila técnica embutida: ancestrais flex com min-height podem cortar o topo do botão */
+#tickets-react-root .tickets-react-tech {
+  overflow: visible;
+}
+
 .tickets-react-client-detail,
 .tickets-react-edit {
   min-width: 0;

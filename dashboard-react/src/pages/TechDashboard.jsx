@@ -1024,15 +1024,15 @@ export default function TechDashboard({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-tech w-full text-slate-800">
-        <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="min-w-0 text-lg font-semibold tracking-tight text-slate-900">
+      <div className="tickets-react-tech w-full overflow-visible pt-1 text-slate-800">
+        <header className="mb-2 flex min-h-[2.75rem] flex-wrap items-center justify-between gap-3 overflow-visible py-1">
+          <h2 className="m-0 min-w-0 self-center text-lg font-semibold leading-snug tracking-tight text-slate-900">
             {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
           </h2>
           {addTicket ? (
             <a
               href={addTicket}
-              className="inline-flex h-8 shrink-0 items-center rounded-md bg-teal-700 px-3 text-sm font-semibold text-white hover:bg-teal-800"
+              className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-teal-800"
             >
               Abrir ticket
             </a>
