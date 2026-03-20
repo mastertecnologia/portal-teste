@@ -28,6 +28,7 @@ export const mockTickets = [
     status: 'Em execução',
     responsavel: 'NOC 02',
     atualizado: 'há 14 min',
+    descricaoAtendimento: 'Ajuste de certificado SSL no binding do site; cache do navegador orientado.',
     comentarios: [
       { id: 1, autor: 'Cristiane Lazarotto', papel: 'cliente', texto: 'Segue o print do erro na tela de login.', quando: 'há 3 h' },
       { id: 2, autor: 'NOC 02', papel: 'tecnico', texto: 'Verificamos o certificado; teste novamente em modo anônimo.', quando: 'há 1 h' },

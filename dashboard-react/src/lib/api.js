@@ -193,4 +193,21 @@ export async function saveTicketSolicitacao(ticketId, solicitacao) {
   return { ok: !!json.ok, error: json.error };
 }
 
+/** Relato do técnico (o que foi feito no atendimento). Qualquer usuário role técnico. */
+export async function saveTicketDescricaoAtendimento(ticketId, descricaoAtendimento) {
+  if (USE_MOCK) {
+    return { ok: true };
+  }
+  const boot = getBoot();
+  const r = await fetch(`${boot.paths.apiSaveTicket}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ descricaoAtendimento }),
+  });
+  if (!r.ok) return { ok: false, error: r.statusText };
+  const json = await r.json();
+  return { ok: !!json.ok, error: json.error };
+}
+
 export { getBoot, USE_MOCK, MOCK_SESSION_CLIENTE };

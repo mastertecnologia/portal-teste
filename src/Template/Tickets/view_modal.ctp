@@ -162,6 +162,15 @@
       </div>
     </div>
 
+    <?php if (!empty($ticket->descricao_atendimento)) { ?>
+    <div class="tv-desc">
+      <h3>Atendimento técnico</h3>
+      <div class="tv-box">
+        <?= nl2br(h($ticket->descricao_atendimento)) ?>
+      </div>
+    </div>
+    <?php } ?>
+
     <div class="tv-section">
       <h3>Comentários <span class="tv-pill"><?= (int)count($ticketcomentarios ?? []) ?></span></h3>
       <div class="tv-list">

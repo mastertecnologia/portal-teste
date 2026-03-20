@@ -89,7 +89,13 @@
 				<?php if($ticket->assunto == C_TicketCategoriaVisita) { ?>
 					<p  class='h6'> Data solicitada para a visita: <b> <?= date_format($ticket->data, 'd/m/Y') ?> </b> </p>
 				<?php } ?>
-			</div>				
+			</div>
+			<?php if (!empty($ticket->descricao_atendimento)) { ?>
+			<div class="descricao mt-3">
+				<p class="h5 font-weight-bolder"> Atendimento técnico (o que foi feito) </p>
+				<?= nl2br(h($ticket->descricao_atendimento)) ?>
+			</div>
+			<?php } ?>
 		</div>
 	</div>
 </div>

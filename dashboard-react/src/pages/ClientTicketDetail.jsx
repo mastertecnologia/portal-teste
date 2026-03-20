@@ -175,12 +175,23 @@ export default function ClientTicketDetail({ boot }) {
     </header>
   );
 
+  const relatoTecnico = (ticket.descricaoAtendimento || '').trim();
+
   const descCard = (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assunto</h2>
       <p className="mt-1 text-base font-semibold text-slate-900">{stripHtml(ticket.assunto)}</p>
       <h2 className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</h2>
       <div className="prose prose-sm mt-2 max-w-none whitespace-pre-wrap text-slate-700">{ticket.descricao}</div>
+      {relatoTecnico ? (
+        <>
+          <h2 className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Atendimento técnico</h2>
+          <p className="mt-1 text-xs text-slate-500">O que foi feito pelo suporte neste chamado.</p>
+          <div className="mt-2 rounded-md border border-teal-100 bg-teal-50/40 p-3 text-sm whitespace-pre-wrap text-slate-800">
+            {relatoTecnico}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 

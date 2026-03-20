@@ -1951,12 +1951,15 @@ class TicketsController extends AppController {
 
 		$createdFmt = $ticket->created ? $ticket->created->format('d/m/Y H:i') : '';
 
+		$descAtend = isset($ticket->descricao_atendimento) ? (string)$ticket->descricao_atendimento : '';
+
 		return [
 			'id' => (int)$ticket->id,
 			'assunto' => $this->_ticketAssuntoTexto($ticket->assunto),
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,
 			'descricao' => (string)($ticket->solicitacao ?? ''),
+			'descricaoAtendimento' => $descAtend,
 			'prioridade' => '—',
 			'responsavel' => $solicitante->name ?? '—',
 			'atualizado' => $createdFmt,
@@ -1972,6 +1975,7 @@ class TicketsController extends AppController {
 			'flags' => [
 				'role' => $role,
 				'canEditDescricao' => $role === 0 && (int)$this->Auth->user('admin') === 1,
+				'canEditDescricaoAtendimento' => $role === 0,
 			],
 		];
 	}
@@ -2157,19 +2161,37 @@ class TicketsController extends AppController {
 		if (!$this->_apiTicketViewAllowed($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
-		if ((int)$this->Auth->user('admin') !== 1) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'only_admin_can_edit_descricao'], 403);
-		}
 		$body = $this->request->input('json_decode', true);
 		if (!is_array($body)) {
 			$body = $this->request->getData();
 		}
-		$texto = isset($body['solicitacao']) ? (string)$body['solicitacao'] : null;
-		if ($texto === null) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'missing_solicitacao'], 400);
+
+		$saveFields = [];
+
+		if (array_key_exists('solicitacao', $body)) {
+			if ((int)$this->Auth->user('admin') !== 1) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'only_admin_can_edit_descricao'], 403);
+			}
+			$ticket->solicitacao = (string)$body['solicitacao'];
+			$saveFields[] = 'solicitacao';
 		}
-		$ticket->solicitacao = $texto;
-		if ($this->Tickets->save($ticket, ['fields' => ['solicitacao']])) {
+
+		$descAt = null;
+		if (array_key_exists('descricao_atendimento', $body)) {
+			$descAt = $body['descricao_atendimento'];
+		} elseif (array_key_exists('descricaoAtendimento', $body)) {
+			$descAt = $body['descricaoAtendimento'];
+		}
+		if ($descAt !== null) {
+			$ticket->descricao_atendimento = (string)$descAt;
+			$saveFields[] = 'descricao_atendimento';
+		}
+
+		if ($saveFields === []) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'missing_fields'], 400);
+		}
+
+		if ($this->Tickets->save($ticket, ['fields' => $saveFields])) {
 			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $idticket);
 			return $this->jsonResponse(['ok' => true]);
 		}

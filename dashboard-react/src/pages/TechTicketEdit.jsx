@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { fetchTicketDetail, postComentario, saveTicketSolicitacao, getBoot } from '../lib/api';
+import {
+  fetchTicketDetail,
+  postComentario,
+  saveTicketSolicitacao,
+  saveTicketDescricaoAtendimento,
+  getBoot,
+} from '../lib/api';
 import { useTicketCommentsPoll } from '../hooks/useTicketCommentsPoll';
 import { stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
@@ -28,8 +34,10 @@ export default function TechTicketEdit({ boot }) {
   const [comentarios, setComentarios] = useState([]);
   const [texto, setTexto] = useState('');
   const [desc, setDesc] = useState('');
+  const [relatorioAtendimento, setRelatorioAtendimento] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
   const [msg, setMsg] = useState(null);
 
@@ -45,6 +53,7 @@ export default function TechTicketEdit({ boot }) {
       setTicket(res.data);
       setComentarios(res.data.comentarios || []);
       setDesc(res.data.descricao || '');
+      setRelatorioAtendimento(res.data.descricaoAtendimento || '');
     })();
     return () => {
       c = true;
@@ -95,6 +104,22 @@ export default function TechTicketEdit({ boot }) {
     setSalvando(false);
     if (res.ok) setMsg('Descrição salva.');
     else setErro(res.error || 'Falha ao salvar.');
+  }
+
+  async function handleSalvarRelatorioAtendimento(e) {
+    e.preventDefault();
+    if (!ticket?.flags?.canEditDescricaoAtendimento) return;
+    setSalvandoRelatorio(true);
+    setMsg(null);
+    setErro(null);
+    const res = await saveTicketDescricaoAtendimento(ticket.id, relatorioAtendimento);
+    setSalvandoRelatorio(false);
+    if (res.ok) {
+      setTicket((prev) => (prev ? { ...prev, descricaoAtendimento: relatorioAtendimento } : prev));
+      setMsg('Relatório do atendimento salvo.');
+    } else {
+      setErro(res.error || 'Falha ao salvar o relatório. Confira se o banco tem a coluna descricao_atendimento (SQL em config/schema).');
+    }
   }
 
   if (erro && !ticket) {
@@ -213,6 +238,33 @@ export default function TechTicketEdit({ boot }) {
     </div>
   );
 
+  const relatorioAtendimentoBlock =
+    ticket.flags?.canEditDescricaoAtendimento ? (
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-sm font-bold text-slate-900">Relatório do atendimento</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Descreva o que foi feito antes de finalizar o chamado (ex.: reparado pacote Office em modo online, ajuste de
+          perfil de e-mail, etc.). O cliente verá este texto na visualização do ticket e na impressão.
+        </p>
+        <form onSubmit={handleSalvarRelatorioAtendimento} className="mt-3 space-y-2">
+          <textarea
+            value={relatorioAtendimento}
+            onChange={(e) => setRelatorioAtendimento(e.target.value)}
+            rows={embedded ? 4 : 5}
+            placeholder="Ex.: Reparado Outlook via reparo online do Office 365; testado envio e recebimento."
+            className="w-full rounded-lg border border-slate-200 p-2 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={salvandoRelatorio}
+            className="rounded-lg bg-cyan-700 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvandoRelatorio ? 'Salvando…' : 'Salvar relatório do atendimento'}
+          </button>
+        </form>
+      </div>
+    ) : null;
+
   const anexosBlock = (
     <TicketAnexosPanel
       ticketId={ticket.id}
@@ -287,6 +339,7 @@ export default function TechTicketEdit({ boot }) {
           <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
             <div className="space-y-4 lg:col-span-7">
               {descricaoBlock}
+              {relatorioAtendimentoBlock}
               {anexosBlock}
             </div>
             <div className="flex flex-col gap-0 lg:sticky lg:top-2 lg:col-span-5 lg:self-start">{comentariosBlock}</div>
@@ -304,6 +357,7 @@ export default function TechTicketEdit({ boot }) {
         <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
           <div className="space-y-4 lg:col-span-7">
             {descricaoBlock}
+            {relatorioAtendimentoBlock}
             {anexosBlock}
           </div>
           <div className="lg:col-span-5">{comentariosBlock}</div>
