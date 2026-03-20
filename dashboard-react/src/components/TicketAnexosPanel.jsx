@@ -72,14 +72,26 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
                 {a.nome}
               </span>
               <span className="flex flex-shrink-0 flex-wrap items-center gap-2 text-xs">
-                {a.url && (
-                  <a href={a.url} className="font-semibold text-teal-700 hover:underline" target="_blank" rel="noreferrer">
-                    Baixar
+                {a.urlView && (
+                  <a
+                    href={a.urlView}
+                    className="font-semibold text-slate-700 hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Abrir no navegador (PDF, imagens)"
+                  >
+                    Visualizar
                   </a>
                 )}
-                {a.urlView && (
-                  <a href={a.urlView} className="font-semibold text-slate-600 hover:underline" target="_blank" rel="noreferrer">
-                    Abrir
+                {a.url && (
+                  <a
+                    href={a.url}
+                    className="font-semibold text-teal-700 hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Baixar arquivo"
+                  >
+                    Baixar
                   </a>
                 )}
                 {canApi && (

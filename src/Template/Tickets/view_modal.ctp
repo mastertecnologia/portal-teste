@@ -245,7 +245,7 @@
           <thead>
             <tr>
               <th>Arquivo</th>
-              <th style="width:120px">Download</th>
+              <th style="width:200px">Visualizar / baixar</th>
             </tr>
           </thead>
           <tbody>
@@ -254,7 +254,8 @@
                 <tr>
                   <td><?= h($reg->arquivo ?? '') ?></td>
                   <td>
-                    <?= $this->Html->link('Baixar', ["controller" => "Tickets", "action" => "downloadAnexo", $reg->id], ['target' => '_blank', 'rel' => 'noopener', 'class' => 'btn btn-info btn-sm', 'escape' => false]) ?>
+                    <?= $this->Html->link('Visualizar', ['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id, '?' => ['inline' => '1']], ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-info btn-sm m-r-5', 'escape' => false]) ?>
+                    <?= $this->Html->link('Baixar', ['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id], ['class' => 'btn btn-secondary btn-sm', 'escape' => false]) ?>
                   </td>
                 </tr>
               <?php } ?>

@@ -270,7 +270,7 @@
 				var idcliente = <?= $idcliente ?>;
 			});
 		<?php } ?>
-	// Vários anexos (acumula escolhas + arrastar/soltar) via DataTransfer
+	// Vários anexos: lista em memória (fileStore) + DataTransfer só para enviar — evita bug de remover 1 e sumir todos
 		(function () {
 			var $inp = $('#file-3');
 			var $list = $('#ticket-attachments-list');
@@ -278,17 +278,25 @@
 			var $zone = $('#ticket-dropzone');
 			if (!$inp.length) return;
 
-			var dt = new DataTransfer();
+			var fileStore = [];
+
+			function filesToInput() {
+				var dt = new DataTransfer();
+				for (var i = 0; i < fileStore.length; i++) {
+					dt.items.add(fileStore[i]);
+				}
+				return dt.files;
+			}
 
 			function syncInput() {
 				try {
-					$inp[0].files = dt.files;
+					$inp[0].files = filesToInput();
 				} catch (e) {}
 			}
 
 			function renderList() {
 				$list.empty();
-				var n = dt.files.length;
+				var n = fileStore.length;
 				if (n === 0) {
 					$hint.text('Adicionar arquivos ou arrastar para cá');
 					return;
@@ -296,16 +304,12 @@
 				$hint.text(n === 1 ? '1 arquivo selecionado — adicione mais se precisar' : n + ' arquivos — pode adicionar mais');
 				for (var i = 0; i < n; i++) {
 					(function (idx) {
-						var name = dt.files[idx].name;
+						var name = fileStore[idx].name;
 						var $li = $('<li/>');
 						$li.append($('<span/>').text(name).css({overflow: 'hidden', 'text-overflow': 'ellipsis', 'white-space': 'nowrap'}));
 						var $rm = $('<button type="button" class="ticket-file-remove"/>').text('Remover');
 						$rm.on('click', function () {
-							var next = new DataTransfer();
-							for (var j = 0; j < dt.files.length; j++) {
-								if (j !== idx) next.items.add(dt.files[j]);
-							}
-							dt = next;
+							fileStore.splice(idx, 1);
 							syncInput();
 							renderList();
 						});
@@ -318,7 +322,7 @@
 			function addFileList(fileList) {
 				if (!fileList || !fileList.length) return;
 				for (var i = 0; i < fileList.length; i++) {
-					dt.items.add(fileList[i]);
+					fileStore.push(fileList[i]);
 				}
 				syncInput();
 				renderList();

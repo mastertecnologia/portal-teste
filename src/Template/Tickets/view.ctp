@@ -265,14 +265,23 @@ $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
 							<table class="table table-hover" id="tableLicencas">
 								<thead class="text-primary">
 									<th>Arquivo</th>
-									<th width="10%">Download</th>
+									<th width="22%">Visualizar / baixar</th>
 								</thead>
 								<tbody>
 									<?php foreach ($ticketanexos as $reg) { ?>
 										<tr>
 											<td><?= h($reg->arquivo) ?></td>
 											<td class="td-actions">
-												<?= $this->Html->link("<i class='fa fa-eye'></i><div class='ripple-container'></div>", ["controller" => "Tickets", "action" => "downloadAnexo", $reg->id], ['rel' => 'tooltip', 'title' => 'Visualizar', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false]) ?>
+												<?= $this->Html->link(
+													'<i class="fa fa-eye"></i> Visualizar',
+													['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id, '?' => ['inline' => '1']],
+													['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-info btn-simple btn-xs m-r-5', 'escape' => false, 'title' => 'Abrir no navegador (PDF, imagens, etc.)']
+												) ?>
+												<?= $this->Html->link(
+													'<i class="fa fa-download"></i> Baixar',
+													['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id],
+													['class' => 'btn btn-secondary btn-simple btn-xs', 'escape' => false, 'title' => 'Download do arquivo']
+												) ?>
 											</td>
 										</tr>
 									<?php } ?>
