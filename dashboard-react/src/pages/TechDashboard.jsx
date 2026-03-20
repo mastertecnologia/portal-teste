@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
@@ -24,6 +32,9 @@ const API_ERR_TRANSFER = {
 const API_ERR_START = {
   sem_permissao_fila: 'Você não pode assumir este ticket: verifique vínculo com a fila e nível de suporte.',
 };
+
+/** Polling do Service Desk embutido — aba em segundo plano não dispara fetch. */
+const SERVICEDESK_POLL_MS = 10_000;
 
 const GROUP_KEYS = {
   todos: 'todos',
@@ -402,8 +413,9 @@ export default function TechDashboard({ boot }) {
   useEffect(() => {
     if (!embedded || !boot?.servicedesk) return undefined;
     const id = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
       reload();
-    }, 12000);
+    }, SERVICEDESK_POLL_MS);
     return () => window.clearInterval(id);
   }, [embedded, boot?.servicedesk, reload]);
 
@@ -425,6 +437,8 @@ export default function TechDashboard({ boot }) {
     };
   }, [transferOpen, transferQueueId, queuesRelacional]);
 
+  const deferredQ = useDeferredValue(q);
+
   const rows = useMemo(() => {
     if (!groups) return [];
     let base;
@@ -442,7 +456,7 @@ export default function TechDashboard({ boot }) {
       const key = GROUP_KEYS[filtroStatus] || 'todos';
       base = groups[key] || [];
     }
-    const qq = q.trim().toLowerCase();
+    const qq = deferredQ.trim().toLowerCase();
     if (!qq) return base;
     return base.filter((t) => {
       const id = String(t.id);
@@ -458,12 +472,11 @@ export default function TechDashboard({ boot }) {
         fila.includes(qq)
       );
     });
-  }, [groups, filtroStatus, q]);
+  }, [groups, filtroStatus, deferredQ]);
 
   const totalTodos = groups?.todos?.length ?? 0;
   const hoje = new Date().toLocaleDateString('pt-BR');
 
-  const dash = boot?.paths?.dashboard;
   const addTicket = boot?.paths?.addTicket;
 
   const openTransfer = async (ticket) => {
@@ -1012,43 +1025,18 @@ export default function TechDashboard({ boot }) {
   if (embedded) {
     return (
       <div className="tickets-react-tech w-full text-slate-800">
-        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-              {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
-            </h2>
-            <p className="text-xs text-slate-500">
-              {boot?.servicedesk
-                ? 'Atualização a cada 12 s · mesmas regras do ERP.'
-                : 'Listagem e ações usam as mesmas URLs do portal.'}
-            </p>
-          </div>
-          <nav className="flex flex-wrap items-center gap-2" aria-label="Atalhos da fila">
-            {dash && (
-              <a
-                href={dash}
-                className="inline-flex h-8 items-center rounded-md px-2.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-teal-800"
-              >
-                Dashboard
-              </a>
-            )}
-            {boot?.paths?.indexCliente && (
-              <a
-                href={boot.paths.indexCliente}
-                className="inline-flex h-8 items-center rounded-md px-2.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-teal-800"
-              >
-                Visão cliente
-              </a>
-            )}
-            {addTicket && (
-              <a
-                href={addTicket}
-                className="inline-flex h-8 items-center rounded-md bg-teal-700 px-3 text-sm font-semibold text-white hover:bg-teal-800"
-              >
-                Abrir ticket
-              </a>
-            )}
-          </nav>
+        <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="min-w-0 text-lg font-semibold tracking-tight text-slate-900">
+            {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
+          </h2>
+          {addTicket ? (
+            <a
+              href={addTicket}
+              className="inline-flex h-8 shrink-0 items-center rounded-md bg-teal-700 px-3 text-sm font-semibold text-white hover:bg-teal-800"
+            >
+              Abrir ticket
+            </a>
+          ) : null}
         </header>
         {tableSection}
       </div>

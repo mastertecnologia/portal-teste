@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchTicketsCliente, USE_MOCK } from '../lib/api';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
@@ -49,6 +49,7 @@ export default function ClientTicketList({ boot }) {
   useEffect(() => {
     if (!embedded || !boot?.servicedesk) return undefined;
     const id = window.setInterval(async () => {
+      if (document.visibilityState !== 'visible') return;
       const res = await fetchTicketsCliente({
         fila: FILA_TO_API[fila] || 'todos',
         assunto:
@@ -57,7 +58,7 @@ export default function ClientTicketList({ boot }) {
             : undefined,
       });
       if (res.ok) setTickets(res.data);
-    }, 12000);
+    }, 10_000);
     return () => clearInterval(id);
   }, [embedded, boot?.servicedesk, boot?.queryAssunto, fila]);
 
@@ -94,8 +95,10 @@ export default function ClientTicketList({ boot }) {
     }));
   }, [tickets, fila]);
 
+  const deferredQ = useDeferredValue(q);
+
   const rows = useMemo(() => {
-    const qq = q.trim().toLowerCase();
+    const qq = deferredQ.trim().toLowerCase();
     if (!qq) return fromApiRows;
     return fromApiRows.filter((t) => {
       const id = String(t.id);
@@ -105,7 +108,7 @@ export default function ClientTicketList({ boot }) {
       const tec = String(t.tecnicos || '').toLowerCase();
       return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || autor.includes(qq) || tec.includes(qq);
     });
-  }, [fromApiRows, q]);
+  }, [fromApiRows, deferredQ]);
 
   const totalFila = fromApiRows.length;
   const addHref = boot?.paths?.addTicket;
@@ -134,7 +137,7 @@ export default function ClientTicketList({ boot }) {
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-500">
                   {boot?.servicedesk
-                    ? `Atualização a cada 12 s · ${totalFila} ticket(s) neste filtro`
+                    ? `Atualização a cada 10 s · ${totalFila} ticket(s) neste filtro`
                     : `Fila · ${totalFila} ticket(s) neste filtro`}
                 </p>
               </div>
