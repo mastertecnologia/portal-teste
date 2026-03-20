@@ -56,6 +56,13 @@ class TicketsTable extends Table {
 		else $nomeempresa = $empresa->razaosocial;
 		$transporteEmail = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
 
+		// Ticket criado: notificar o suporte (config.emailtickets) — deve ser resolvido ANTES do parse/lista vazia.
+		// Antes, $emailDest era setado só no bloco C_TicketCriado (abaixo), depois da verificação, gerando falha falsa.
+		if ($acao == C_TicketCriado) {
+			$cfg = $this->Config->get(1);
+			$emailDest = !empty($cfg->emailtickets) ? trim((string)$cfg->emailtickets) : null;
+		}
+
 		// E-mail do destinatário (prioridade: ticket, usuário vinculado ao ticket, cliente vinculado ao ticket)
 		if (empty($emailDest)) {
 			if (!empty($ticket->email)) $emailDest = $ticket->email;
@@ -152,7 +159,6 @@ class TicketsTable extends Table {
 				<p> <b> Descrição: </b> $ticket->solicitacao</p>
 				<p> <b> Cliente: </b> $cliente</p>
 			";
-			$emailDest = $this->Config->get(1)->emailtickets;
 			$subject = "Ticket nº $idticket criado - $nomeempresa";
 		}
 
@@ -163,21 +169,28 @@ class TicketsTable extends Table {
 		
 		$email->from([$from => $nomeempresa])->to($emailDestList)->emailFormat('html')->subject($subject);
 			
-		if($email->send($message)) {
-			if(empty($acao)) {
-				$ticket->emailenviado = 1;
-				$this->save($ticket);
-			}
+		try {
+			if ($email->send($message)) {
+				if (empty($acao)) {
+					$ticket->emailenviado = 1;
+					$this->save($ticket);
+				}
 
-			foreach($emailResponsavel as $regEmailResp) {
-				$email = new Email();
-				$email->transport($transporteEmail);
-				$from = 'helpdesk@pgm.inf.br';
-				$email->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
-				$email->send($message);
-			}
+				foreach ($emailResponsavel as $regEmailResp) {
+					try {
+						$emailResp = new Email();
+						$emailResp->transport($transporteEmail);
+						$emailResp->from([$from => $nomeempresa])->to($regEmailResp)->emailFormat('html')->subject($subject);
+						$emailResp->send($message);
+					} catch (\Throwable $e) {
+						$this->log('[TicketsTable::email] Falha cópia responsável: ' . $e->getMessage(), 'error');
+					}
+				}
 
-			return implode(';', $emailDestList);
+				return implode(';', $emailDestList);
+			}
+		} catch (\Throwable $e) {
+			$this->log('[TicketsTable::email] Falha SMTP/envio: ' . $e->getMessage(), 'error');
 		}
 		return false;
 	}

@@ -551,8 +551,26 @@ class TicketsController extends AppController {
 					$mov->idusuario = $this->Auth->user('id');
 					$mov->datetime = date('d/m/Y H:i:s', time());
 					$this->Ticketsmovs->save($mov);
-				// E-mail
-					if($this->Auth->user('role') == 1) $this->email($ticket->id, C_TicketCriado);
+				// E-mail (cliente): notificar suporte — chamar a Table diretamente.
+				// NÃO usar $this->email() aqui: o request ainda é POST do formulário "add" e o action email()
+				// interpretaria como envio manual (para/sugestoes vazios), gerava Flash de erro e descartava o redirect.
+					if ($this->Auth->user('role') == C_RoleCliente) {
+						try {
+							$sent = $this->Tickets->email(
+								$ticket->id,
+								C_TicketCriado,
+								null,
+								$this->Auth->user('idempresa')
+							);
+							if (empty($sent)) {
+								$this->Flash->warning(__('O ticket foi aberto, porém não foi possível enviar a notificação por e-mail (destinatário ou SMTP).'));
+								$this->log('[Tickets::add] Falha ao enviar e-mail de ticket criado (cliente).', 'warning');
+							}
+						} catch (\Throwable $e) {
+							$this->log('[Tickets::add] Exceção ao enviar e-mail de ticket criado: ' . $e->getMessage(), 'error');
+							$this->Flash->warning(__('O ticket foi aberto, porém ocorreu um erro ao enviar a notificação por e-mail.'));
+						}
+					}
 				// Not
 					$this->criaNot($ticket->situacao, $ticket->id, $ticket->idcliente);
 				// 
