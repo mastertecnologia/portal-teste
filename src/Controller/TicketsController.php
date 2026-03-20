@@ -1732,6 +1732,8 @@ class TicketsController extends AppController {
 
 	/**
 	 * Nomes dos técnicos vinculados ao ticket (tabela ticketsusers), separados por vírgula.
+	 * Não depende de contain nem de idempresa em ticketsusers (legado pode ter NULL).
+	 * Restringe aos tickets da empresa atual via Tickets.idempresa.
 	 *
 	 * @param int[] $ids ids de ticket
 	 * @return array<int,string> idticket => "Nome A, Nome B"
@@ -1741,27 +1743,65 @@ class TicketsController extends AppController {
 		if (empty($ids)) {
 			return [];
 		}
-		$emp = $this->Auth->user('idempresa');
+		$emp = (int)$this->Auth->user('idempresa');
+
+		$allowedIds = [];
+		foreach (
+			$this->Tickets->find()
+				->select(['id'])
+				->where(['id IN' => $ids, 'idempresa' => $emp])
+				->all() as $t
+		) {
+			$allowedIds[] = (int)$t->id;
+		}
+		if (empty($allowedIds)) {
+			return [];
+		}
+
 		$rows = $this->Ticketsusers->find('all')
-			->contain(['users'])
-			->where(['Ticketsusers.idticket IN' => $ids, 'Ticketsusers.idempresa' => $emp])
+			->where(['idticket IN' => $allowedIds])
 			->toArray();
+
+		$userIds = [];
+		foreach ($rows as $r) {
+			$uid = (int)$r->iduser;
+			if ($uid > 0) {
+				$userIds[$uid] = true;
+			}
+		}
+
+		$usersMap = [];
+		if (!empty($userIds)) {
+			foreach (
+				$this->Users->find()
+					->select(['id', 'name', 'username'])
+					->where(['id IN' => array_keys($userIds)])
+					->all() as $usr
+			) {
+				$nm = trim((string)($usr->name ?? ''));
+				if ($nm === '') {
+					$nm = trim((string)($usr->username ?? ''));
+				}
+				if ($nm === '') {
+					$nm = 'Usuário #' . (int)$usr->id;
+				}
+				$usersMap[(int)$usr->id] = $nm;
+			}
+		}
+
 		$byTicket = [];
 		foreach ($rows as $r) {
 			$tid = (int)$r->idticket;
-			$u = $r->users ?? $r->user ?? null;
-			if ($u === null) {
-				continue;
-			}
-			$nome = trim((string)($u->name ?? ''));
-			if ($nome === '') {
+			$uid = (int)$r->iduser;
+			if ($uid <= 0 || empty($usersMap[$uid])) {
 				continue;
 			}
 			if (!isset($byTicket[$tid])) {
 				$byTicket[$tid] = [];
 			}
-			$byTicket[$tid][(int)$u->id] = $nome;
+			$byTicket[$tid][$uid] = $usersMap[$uid];
 		}
+
 		$out = [];
 		foreach ($byTicket as $tid => $map) {
 			$out[$tid] = implode(', ', array_values($map));
