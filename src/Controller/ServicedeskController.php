@@ -33,8 +33,9 @@ class ServicedeskController extends TicketsController {
 	 */
 	public function index() {
 		if (!$this->Auth->user()) {
-			$this->viewBuilder()->setLayout('servicedesk');
-			$this->set('title', 'Service Desk — Acesso');
+			$this->viewBuilder()->setLayout('servicedesk_login');
+			$this->set('title', 'Service Desk — Login');
+			$this->viewBuilder()->setTemplate('login');
 			return;
 		}
 		$role = (int)$this->Auth->user('role');

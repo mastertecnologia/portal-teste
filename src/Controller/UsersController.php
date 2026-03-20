@@ -426,7 +426,7 @@ class UsersController extends AppController {
 	 * GET ?redirect=… após login (ex.: retorno ao Service Desk). Só caminhos internos / servicedesk.
 	 */
 	protected function _rememberServicedeskRedirectFromQuery(): void {
-		if (!$this->request->is('get')) {
+		if (!$this->request->is('get') && !$this->request->is('post')) {
 			return;
 		}
 		$raw = $this->request->getQuery('redirect');
@@ -437,6 +437,15 @@ class UsersController extends AppController {
 		if ($target !== null) {
 			$this->request->getSession()->write('Auth.redirect', $target);
 		}
+	}
+
+	/** Volta ao login do Service Desk após falha de autenticação (formulário embutido). */
+	protected function _redirectServicedeskLoginIfEmbedded() {
+		if ($this->request->getData('service_desk') !== '1' && $this->request->getData('service_desk') !== 1) {
+			return null;
+		}
+
+		return $this->redirect(['controller' => 'Servicedesk', 'action' => 'index']);
 	}
 
 	/**
@@ -483,6 +492,10 @@ class UsersController extends AppController {
 				// Só clientes (role = C_RoleCliente) podem logar aqui. Qualquer outro role é rejeitado.
 				if (!isset($user['role']) || $user['role'] !== C_RoleCliente) {
 					$this->Flash->error(__('Este acesso é para clientes. Use o link "Acesso PGM / Master" para entrar com usuário da equipe.'));
+					$r = $this->_redirectServicedeskLoginIfEmbedded();
+					if ($r !== null) {
+						return $r;
+					}
 					return $this->redirect(['action' => 'acessoEmpresa']);
 				}
 				if(!$user['inativo'] && !$user['bloqueado']){
@@ -500,6 +513,10 @@ class UsersController extends AppController {
 			}
 	
 			$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
+			$r = $this->_redirectServicedeskLoginIfEmbedded();
+			if ($r !== null) {
+				return $r;
+			}
 		}
 	}
 
@@ -526,6 +543,10 @@ class UsersController extends AppController {
 				// Só equipe PGM/Master (role = C_RoleFuncionario) pode logar aqui. Qualquer outro role é rejeitado.
 				if (!isset($user['role']) || $user['role'] !== C_RoleFuncionario) {
 					$this->Flash->error(__('Este acesso é para a equipe PGM / Master. Use o acesso para clientes.'));
+					$r = $this->_redirectServicedeskLoginIfEmbedded();
+					if ($r !== null) {
+						return $r;
+					}
 					return $this->redirect(['action' => 'login']);
 				}
 				if(!$user['inativo'] && !$user['bloqueado']){
@@ -543,6 +564,10 @@ class UsersController extends AppController {
 			}
 	
 			$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
+			$r = $this->_redirectServicedeskLoginIfEmbedded();
+			if ($r !== null) {
+				return $r;
+			}
 		}
 	}
 
