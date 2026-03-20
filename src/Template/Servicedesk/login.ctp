@@ -83,7 +83,7 @@ $this->append(
 			</div>
 		<?= $this->Form->end() ?>
 
-		<div class="sd-login-back">
+		<div class="sd-login-back sd-support-equipe">
 			<a href="<?= h(Router::url(['controller' => 'Users', 'action' => 'dashboard'])) ?>">Voltar ao portal ERP</a>
 		</div>
 		<div class="footer login-erp-footer">PGM Soluções em TI • Service Desk • <?= date('Y') ?></div>
@@ -158,12 +158,12 @@ function sdSetTab(tab) {
 	$('#login').attr('action', SD_LOGIN_URLS[tab]);
 	if (tab === 'equipe') {
 		$('#sd-login-title').text('Acesso PGM / Master');
-		$('#sd-login-subtitle').text('Equipe e usuários internos — use o mesmo usuário e senha do ERP.');
+		$('#sd-login-subtitle').text('Equipe e usuários internos — use o mesmo usuário e senha do ERP.').show();
 		$('.sd-support-equipe').show();
 		$('.sd-support-cliente').hide();
 	} else {
 		$('#sd-login-title').text('Acesso cliente');
-		$('#sd-login-subtitle').text('Clientes — mesmo login da área do cliente do portal.');
+		$('#sd-login-subtitle').hide().text('');
 		$('.sd-support-equipe').hide();
 		$('.sd-support-cliente').show();
 	}
