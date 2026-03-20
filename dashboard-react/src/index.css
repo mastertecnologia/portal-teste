@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Embed no portal Cake: células de grid/flex com min-height:auto esticam pela conversa */
+#tickets-react-root.tickets-react-host,
+.tickets-react-host {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+}
+
+.tickets-react-client-detail,
+.tickets-react-edit {
+  min-width: 0;
+  max-width: 100%;
+}

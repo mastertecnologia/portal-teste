@@ -169,7 +169,7 @@ export default function TechTicketEdit({ boot }) {
   );
 
   const header = embedded ? (
-    <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3">
+    <div className="relative z-10 mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 pb-3 pt-1">
       <div className="min-w-0">
         {boot?.paths?.indexTecnico && (
           <a href={boot.paths.indexTecnico} className="text-sm font-medium text-teal-700 hover:underline">
@@ -275,14 +275,14 @@ export default function TechTicketEdit({ boot }) {
   );
 
   const comentariosBlock = (
-    <div className="flex min-h-[260px] max-h-[min(36rem,calc(100dvh-11rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:max-h-[min(40rem,calc(100dvh-12rem))]">
+    <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
       <div className="shrink-0 border-b border-slate-100 px-4 py-2">
         <h3 className="text-sm font-bold text-slate-900">Conversa</h3>
         <p className="text-xs text-slate-500">
           Nome do autor vem do cadastro de usuário. Comentários ficam em ticket + movimentações (trecho no histórico).
         </p>
       </div>
-      <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
+      <ul className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
         {comentarios.length === 0 ? (
           <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
             Nenhum comentário ainda.
@@ -332,17 +332,17 @@ export default function TechTicketEdit({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-edit w-full text-slate-800">
+      <div className="tickets-react-edit flex min-h-0 w-full max-w-full flex-col overflow-x-hidden text-slate-800">
         {header}
-        <div className="px-0">
+        <div className="min-h-0 px-0">
           {alerts}
-          <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-            <div className="min-w-0 space-y-4 lg:col-span-7">
+          <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
+            <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
               {descricaoBlock}
               {relatorioAtendimentoBlock}
               {anexosBlock}
             </div>
-            <div className="min-w-0 lg:col-span-5">{comentariosBlock}</div>
+            <div className="min-h-0 min-w-0 self-start lg:col-span-5">{comentariosBlock}</div>
           </div>
         </div>
       </div>
@@ -354,13 +354,13 @@ export default function TechTicketEdit({ boot }) {
       {header}
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
         {alerts}
-        <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-          <div className="min-w-0 space-y-4 lg:col-span-7">
+        <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
+          <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
             {descricaoBlock}
             {relatorioAtendimentoBlock}
             {anexosBlock}
           </div>
-          <div className="min-w-0 lg:col-span-5">{comentariosBlock}</div>
+          <div className="min-h-0 min-w-0 self-start lg:col-span-5">{comentariosBlock}</div>
         </div>
       </main>
     </div>

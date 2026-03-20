@@ -114,7 +114,7 @@ export default function ClientTicketDetail({ boot }) {
   const statusPlain = stripHtml(ticket.status);
 
   const header = embedded ? (
-    <div className="mb-4 border-b border-slate-200 pb-3 pt-4 sm:pt-5">
+    <div className="relative z-10 mb-4 border-b border-slate-200 bg-slate-100 pb-3 pt-3 sm:pt-4">
       {backHref ? (
         <a href={backHref} className="text-sm font-medium text-cyan-700 hover:underline">
           {backLabel}
@@ -208,7 +208,7 @@ export default function ClientTicketDetail({ boot }) {
   const meuNome = USE_MOCK ? MOCK_SESSION_CLIENTE.name : (bootNow?.userName || '').trim();
 
   const chatCard = (
-    <div className="flex min-h-[260px] max-h-[min(36rem,calc(100dvh-11rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:max-h-[min(40rem,calc(100dvh-12rem))]">
+    <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
       <div className="shrink-0 border-b border-slate-100 px-4 py-2">
         <h2 className="text-sm font-bold text-slate-900">Conversa</h2>
         <p className="text-xs text-slate-500">
@@ -217,7 +217,7 @@ export default function ClientTicketDetail({ boot }) {
             : 'Mensagens com o suporte — gravadas no chamado e no histórico.'}
         </p>
       </div>
-      <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
+      <ul className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
         {comentarios.length === 0 ? (
           <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
             Nenhuma mensagem ainda. Escreva abaixo para falar com o suporte.
@@ -268,19 +268,19 @@ export default function ClientTicketDetail({ boot }) {
   const inner = (
     <>
       {erro && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">{erro}</p>}
-      <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-        <div className="min-w-0 space-y-4 lg:col-span-7">
+      <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
+        <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
           {descCard}
           {anexosCard}
         </div>
-        <div className="min-w-0 lg:col-span-5">{chatCard}</div>
+        <div className="min-h-0 min-w-0 self-start lg:col-span-5">{chatCard}</div>
       </div>
     </>
   );
 
   if (embedded) {
     return (
-      <div className="tickets-react-client-detail w-full text-slate-800">
+      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 text-slate-800">
         {header}
         {inner}
       </div>
