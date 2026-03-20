@@ -1,5 +1,8 @@
 -- Filas por empresa + vínculo técnico ↔ fila + ticket na fila atual.
 -- PostgreSQL (ajuste schema se necessário).
+--
+-- Se `queues` já existir sem name/idempresa/codigo/sort_order, rode também:
+--   config/schema/postgres_queues_patch_idempotent.sql
 
 CREATE TABLE IF NOT EXISTS public.queues (
 	id SERIAL PRIMARY KEY,
