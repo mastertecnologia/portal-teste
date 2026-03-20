@@ -114,7 +114,7 @@ export default function ClientTicketDetail({ boot }) {
   const statusPlain = stripHtml(ticket.status);
 
   const header = embedded ? (
-    <div className="mb-4 border-b border-slate-200 pb-3">
+    <div className="mb-4 border-b border-slate-200 pb-3 pt-4 sm:pt-5">
       {backHref ? (
         <a href={backHref} className="text-sm font-medium text-cyan-700 hover:underline">
           {backLabel}
