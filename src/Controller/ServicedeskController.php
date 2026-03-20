@@ -39,6 +39,8 @@ class ServicedeskController extends TicketsController {
 		}
 		$role = (int)$this->Auth->user('role');
 		$this->viewBuilder()->setLayout('servicedesk');
+		// react_app.ctp fica em Template/Tickets/ — sem isso o Cake busca Servicedesk/react_app.ctp e quebra.
+		$this->viewBuilder()->setTemplatePath('Tickets');
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', 'Service Desk');
 		$this->set('hideLayoutPageTitle', true);
