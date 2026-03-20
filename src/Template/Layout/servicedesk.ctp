@@ -45,8 +45,7 @@
 		</div>
 		<nav class="sd-actions" aria-label="Acesso">
 			<?php if ($this->request->getSession()->read('Auth.User.id')) : ?>
-				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Painel ERP</a>
-				<a href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => (int)($role ?? -1) === 1 ? 'indexcliente' : 'index']) ?>">Tickets (clássico)</a>
+				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Dashboard</a>
 				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'logout']) ?>">Sair</a>
 			<?php else : ?>
 				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'login']) ?>">Login cliente</a>
