@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchTicketsCliente, USE_MOCK } from '../lib/api';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
-import { badgeClass, statusType } from '../lib/ticketUi';
+import { acaoLinkClassName, badgeClass, statusType } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
 
 const FILA_TO_API = {
@@ -238,7 +238,7 @@ export default function ClientTicketList({ boot }) {
                                 href={a.url}
                                 target={a.target || '_self'}
                                 rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-cyan-50"
+                                className={acaoLinkClassName(a.key)}
                                 title={a.label}
                               >
                                 {a.label}

@@ -8,14 +8,28 @@ export function badgeClass(type) {
     high: 'bg-orange-50 text-orange-700 border-orange-200',
     medium: 'bg-sky-50 text-sky-700 border-sky-200',
     low: 'bg-slate-50 text-slate-700 border-slate-200',
-    progress: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-    waiting: 'bg-violet-50 text-violet-700 border-violet-200',
-    pendingTech: 'bg-amber-50 text-amber-800 border-amber-200',
-    resolved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    escalated: 'bg-rose-50 text-rose-700 border-rose-200',
-    closed: 'bg-slate-100 text-slate-600 border-slate-200',
+    progress: 'bg-sky-50 text-sky-800 border-sky-300',
+    waiting: 'bg-violet-50 text-violet-800 border-violet-200',
+    pendingTech: 'bg-amber-100 text-amber-900 border-amber-300',
+    resolved: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    escalated: 'bg-rose-50 text-rose-800 border-rose-300',
+    closed: 'bg-slate-200 text-slate-700 border-slate-300',
+    cancelled: 'bg-red-50 text-red-800 border-red-300',
   };
   return map[type] || 'bg-slate-50 text-slate-700 border-slate-200';
+}
+
+/** Normaliza rótulo de status vindo do legado (HTML, acentos, espaços). */
+export function normalizeStatusKey(value) {
+  if (value == null) return '';
+  const t = String(value)
+    .replace(/<[^>]*>/g, ' ')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+  return t;
 }
 
 export function priorityType(value) {
@@ -25,13 +39,33 @@ export function priorityType(value) {
   return 'low';
 }
 
-/** Status alinhados ao portal (situacao) */
+/** Status alinhados ao portal (situacao) — aceita texto cru ou já sem HTML. */
 export function statusType(value) {
-  if (value === 'Em execução' || value === 'Em andamento') return 'progress';
-  if (value === 'Aguardando cliente' || value === 'Respondido') return 'waiting';
-  if (value === 'Aguardando técnico') return 'pendingTech';
-  if (value === 'Resolvido') return 'resolved';
-  if (value === 'Escalado') return 'escalated';
-  if (value === 'Cancelado' || value === 'Fechado') return 'closed';
+  const v = normalizeStatusKey(value);
+  if (!v || v === '-') return 'low';
+  if (v.includes('em execucao') || v.includes('em andamento')) return 'progress';
+  if (v.includes('aguardando cliente') || v.includes('respondido')) return 'waiting';
+  if (v.includes('aguardando tecnico') || v.includes('aguardando técnico')) return 'pendingTech';
+  if (v.includes('resolvido')) return 'resolved';
+  if (v.includes('escalado')) return 'escalated';
+  if (v.includes('cancelado')) return 'cancelled';
+  if (v.includes('fechado')) return 'closed';
   return 'low';
+}
+
+/**
+ * Cor do link de ação na listagem (key vinda do PHP: pendente, emandamento, resolvido, cancelar, imprimir).
+ */
+export function acaoKeyToBadgeType(key) {
+  const k = String(key || '').toLowerCase();
+  if (k === 'pendente') return 'pendingTech';
+  if (k === 'emandamento' || k === 'execucao') return 'progress';
+  if (k === 'resolvido') return 'resolved';
+  if (k === 'cancelar') return 'cancelled';
+  if (k === 'imprimir') return 'low';
+  return 'low';
+}
+
+export function acaoLinkClassName(key) {
+  return `inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold transition hover:opacity-90 ${badgeClass(acaoKeyToBadgeType(key))}`;
 }

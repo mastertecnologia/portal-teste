@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchTicketsTecnico, USE_MOCK } from '../lib/api';
-import { badgeClass, statusType } from '../lib/ticketUi';
+import { acaoLinkClassName, badgeClass, statusType } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 
 const GROUP_KEYS = {
@@ -185,7 +185,7 @@ export default function TechDashboard({ boot }) {
                                 href={a.url}
                                 target={a.target || '_self'}
                                 rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-teal-50"
+                                className={acaoLinkClassName(a.key)}
                                 title={a.label}
                               >
                                 {a.label}

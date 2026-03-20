@@ -9,6 +9,7 @@ import {
 import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
 import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
 import { stripHtml } from '../lib/text';
+import { badgeClass, statusType } from '../lib/ticketUi';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
 
@@ -201,8 +202,16 @@ export default function TechTicketEdit({ boot }) {
       <div className="mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-3 px-4 py-4 sm:px-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Ticket #{ticket.id}</h1>
-          <p className="text-sm text-slate-500">
-            {stripHtml(ticket.cliente)} · {statusLine}
+          <p className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+            <span>{stripHtml(ticket.cliente)}</span>
+            <span className="text-slate-400">·</span>
+            <span
+              className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
+                statusType(statusLine)
+              )}`}
+            >
+              {statusLine}
+            </span>
           </p>
         </div>
         {headerActions}

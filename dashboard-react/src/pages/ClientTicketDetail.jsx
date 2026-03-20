@@ -145,8 +145,16 @@ export default function ClientTicketDetail({ boot }) {
       <h1 className="tickets-react-ticket-title mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900">
         Ticket #{ticket.id}
       </h1>
-      <p className="mt-1 text-sm text-slate-600">
-        {clienteNome} · <span className="font-semibold text-slate-800">{statusPlain}</span>
+      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+        <span>{clienteNome}</span>
+        <span className="text-slate-400">·</span>
+        <span
+          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
+            statusType(statusPlain)
+          )}`}
+        >
+          {statusPlain}
+        </span>
       </p>
       {ticket.prioridade && ticket.prioridade !== '—' ? (
         <p className="mt-1.5">
