@@ -27,6 +27,7 @@ const API_ERR_TRANSFER = {
   destino_sem_vinculo_fila: 'O técnico de destino não está vinculado à fila indicada.',
   destino_nivel_incompativel: 'O nível do técnico de destino não cobre essa fila.',
   motivo_obrigatorio: 'Informe o motivo (mín. 3 caracteres).',
+  destino_ou_fila_obrigatorio: 'Indique fila de destino e/ou técnico, conforme a opção escolhida.',
 };
 
 const API_ERR_START = {
@@ -366,6 +367,8 @@ export default function TechDashboard({ boot }) {
   const [transferQueuesErr, setTransferQueuesErr] = useState('');
   const [startBusyId, setStartBusyId] = useState(null);
   const [transferOkHint, setTransferOkHint] = useState('');
+  /** sem = só fila / sem responsável; com = atribuir técnico */
+  const [transferAssignMode, setTransferAssignMode] = useState('sem');
 
   const loadFilters = useMemo(
     () => ({
@@ -489,6 +492,7 @@ export default function TechDashboard({ boot }) {
     setTransferQueuesErr('');
     setTransferQueues([]);
     setTransferQueueId('');
+    setTransferAssignMode('sem');
     if (queuesRelacional) {
       const useEscalation = Boolean(workflow?.supportLevelsEnabled);
       const rq = await fetchQueuesForTicket(ticket.id, { escalationOnly: useEscalation });
@@ -533,23 +537,52 @@ export default function TechDashboard({ boot }) {
         setTransferErr('Selecione a fila de destino.');
         return;
       }
-      if (!dest) {
-        payload = { queue_id: qid, motivo: transferMotivo.trim() };
-      } else {
+      if (transferAssignMode === 'com') {
+        if (!dest) {
+          setTransferSaving(false);
+          setTransferErr('Selecione o técnico ou marque “somente fila (sem responsável)”.');
+          return;
+        }
         payload = { iduser_destino: dest, queue_id: qid, motivo: transferMotivo.trim() };
+      } else {
+        setTransferDest('');
+        payload = { queue_id: qid, motivo: transferMotivo.trim() };
       }
     } else {
-      if (!dest) {
-        setTransferSaving(false);
-        setTransferErr('Selecione o técnico de destino.');
-        return;
-      }
-      payload = {
-        iduser_destino: dest,
-        motivo: transferMotivo.trim(),
-      };
-      if (wfEnabled && transferFila) {
-        payload.fila_suporte = transferFila;
+      if (wfEnabled) {
+        const fc = transferFila || 'n1';
+        const cur = transferTicket.filaSuporte || 'n1';
+        if (transferAssignMode === 'sem') {
+          if (fc === cur) {
+            setTransferSaving(false);
+            setTransferErr('Escolha uma fila de destino diferente da atual ou atribua um técnico.');
+            return;
+          }
+          payload = { fila_suporte: fc, motivo: transferMotivo.trim() };
+        } else {
+          if (!dest) {
+            setTransferSaving(false);
+            setTransferErr('Selecione o técnico de destino.');
+            return;
+          }
+          payload = {
+            iduser_destino: dest,
+            motivo: transferMotivo.trim(),
+          };
+          if (transferFila) {
+            payload.fila_suporte = transferFila;
+          }
+        }
+      } else {
+        if (!dest) {
+          setTransferSaving(false);
+          setTransferErr('Selecione o técnico de destino.');
+          return;
+        }
+        payload = {
+          iduser_destino: dest,
+          motivo: transferMotivo.trim(),
+        };
       }
     }
     const r = await postTransferirTicket(id, payload);
@@ -914,8 +947,10 @@ export default function TechDashboard({ boot }) {
             </h4>
             <p className="mt-1 text-sm text-slate-500">
               {queuesRelacional
-                ? 'Escolha a fila da mesma empresa. Você pode só mover o chamado para a fila ou indicar um técnico da fila selecionada.'
-                : 'O histórico registrará técnico anterior, novo técnico, data/hora e motivo.'}
+                ? 'Escolha a fila da mesma empresa. Depois defina se o ticket fica só na fila (sem responsável) ou se já vai para um técnico.'
+                : wfEnabled
+                  ? 'Escolha se deseja só mudar a fila de suporte (sem trocar o responsável) ou encaminhar a um técnico. O histórico registra motivo e data/hora.'
+                  : 'O histórico registrará técnico anterior, novo técnico, data/hora e motivo.'}
             </p>
             <div className="mt-4 space-y-3">
               {queuesRelacional ? (
@@ -936,42 +971,57 @@ export default function TechDashboard({ boot }) {
                       ))}
                     </select>
                   </label>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Encaminhar para técnico (opcional)
-                    <select
-                      value={transferDest}
-                      onChange={(e) => setTransferDest(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
-                    >
-                      <option value="">Apenas mover para a fila (sem responsável)</option>
-                      {tecnicosModal.map((tm) => (
-                        <option key={tm.id} value={String(tm.id)}>
-                          {tm.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <fieldset className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
+                    <legend className="px-1 text-sm font-medium text-slate-700">Responsável</legend>
+                    <div className="mt-2 space-y-2">
+                      <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                        <input
+                          type="radio"
+                          name="transferAssign"
+                          className="mt-0.5"
+                          checked={transferAssignMode === 'sem'}
+                          onChange={() => {
+                            setTransferAssignMode('sem');
+                            setTransferDest('');
+                          }}
+                        />
+                        <span>Somente mover para a fila (sem definir técnico responsável)</span>
+                      </label>
+                      <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                        <input
+                          type="radio"
+                          name="transferAssign"
+                          className="mt-0.5"
+                          checked={transferAssignMode === 'com'}
+                          onChange={() => setTransferAssignMode('com')}
+                        />
+                        <span>Atribuir a um técnico vinculado à fila selecionada</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  {transferAssignMode === 'com' ? (
+                    <label className="block text-sm font-medium text-slate-700">
+                      Técnico
+                      <select
+                        value={transferDest}
+                        onChange={(e) => setTransferDest(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                      >
+                        <option value="">Selecione o técnico…</option>
+                        {tecnicosModal.map((tm) => (
+                          <option key={tm.id} value={String(tm.id)}>
+                            {tm.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                 </>
               ) : (
                 <>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Novo técnico responsável
-                    <select
-                      value={transferDest}
-                      onChange={(e) => setTransferDest(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
-                    >
-                      <option value="">Selecione…</option>
-                      {tecnicosOpcoes.map((t) => (
-                        <option key={t.id} value={String(t.id)}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
                   {wfEnabled ? (
                     <label className="block text-sm font-medium text-slate-700">
-                      Fila de destino (opcional — escala N1→N2→N3 etc.)
+                      Fila de destino
                       <select
                         value={transferFila}
                         onChange={(e) => setTransferFila(e.target.value)}
@@ -985,6 +1035,53 @@ export default function TechDashboard({ boot }) {
                       </select>
                     </label>
                   ) : null}
+                  {wfEnabled ? (
+                    <fieldset className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
+                      <legend className="px-1 text-sm font-medium text-slate-700">Responsável</legend>
+                      <div className="mt-2 space-y-2">
+                        <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                          <input
+                            type="radio"
+                            name="transferAssignLegacy"
+                            className="mt-0.5"
+                            checked={transferAssignMode === 'sem'}
+                            onChange={() => {
+                              setTransferAssignMode('sem');
+                              setTransferDest('');
+                            }}
+                          />
+                          <span>Só alterar a fila; deixar sem técnico responsável (aguardando na fila)</span>
+                        </label>
+                        <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                          <input
+                            type="radio"
+                            name="transferAssignLegacy"
+                            className="mt-0.5"
+                            checked={transferAssignMode === 'com'}
+                            onChange={() => setTransferAssignMode('com')}
+                          />
+                          <span>Encaminhar para um técnico</span>
+                        </label>
+                      </div>
+                    </fieldset>
+                  ) : null}
+                  {(!wfEnabled || transferAssignMode === 'com') && (
+                    <label className="block text-sm font-medium text-slate-700">
+                      {wfEnabled ? 'Técnico de destino' : 'Novo técnico responsável'}
+                      <select
+                        value={transferDest}
+                        onChange={(e) => setTransferDest(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                      >
+                        <option value="">Selecione…</option>
+                        {tecnicosOpcoes.map((t) => (
+                          <option key={t.id} value={String(t.id)}>
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                 </>
               )}
               <label className="block text-sm font-medium text-slate-700">

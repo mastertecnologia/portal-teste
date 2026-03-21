@@ -2865,7 +2865,15 @@ class TicketsController extends AppController {
 		if (mb_strlen($motivo) < 3) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'motivo_obrigatorio'], 400);
 		}
-		if ($destId <= 0 && $queueIdBody <= 0) {
+
+		$wf = $this->_ticketWorkflowSchemaReady();
+		$cat = $this->_filaSuporteCatalog();
+		$filaAnt = (string)($ticket->fila_suporte ?? 'n1');
+		$nivelAnt = (int)($ticket->nivel_atendimento ?? 1);
+		$filaBody = ($filaNova !== '' && isset($cat[$filaNova])) ? $filaNova : null;
+		$filaWorkflowSemTecnicoOk = $wf && $filaBody !== null && $filaBody !== $filaAnt;
+
+		if ($destId <= 0 && $queueIdBody <= 0 && !$filaWorkflowSemTecnicoOk) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'destino_ou_fila_obrigatorio'], 400);
 		}
 
@@ -2902,10 +2910,6 @@ class TicketsController extends AppController {
 			}
 		}
 
-		$wf = $this->_ticketWorkflowSchemaReady();
-		$cat = $this->_filaSuporteCatalog();
-		$filaAnt = (string)($ticket->fila_suporte ?? 'n1');
-		$nivelAnt = (int)($ticket->nivel_atendimento ?? 1);
 		$filaPost = $filaNova !== '' && isset($cat[$filaNova]) ? $filaNova : null;
 		$nivelPost = $nivelNova !== null && $nivelNova >= 1 && $nivelNova <= 5 ? $nivelNova : null;
 		if ($filaPost !== null) {
@@ -2938,6 +2942,83 @@ class TicketsController extends AppController {
 			} elseif (!empty($newQueue->support_level_id) && $this->_supportLevelsRoutingReady()) {
 				$newLevelLabelForObs = $this->_supportLevelName((int)$newQueue->support_level_id);
 			}
+		}
+
+		// Workflow legado sem queue_id no POST: só fila/nível, sem técnico (espelha filas relacionais quando possível).
+		if ($destId <= 0 && $queueIdBody <= 0 && $wf && $filaPost !== null && $filaPost !== $filaAnt) {
+			$nDestWf = (int)($cat[$filaPost]['nivel'] ?? 0);
+			if ($nDestWf > 0 && $nDestWf < $nivelAnt) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'escalacao_invalida'], 400);
+			}
+			$mappedQ = null;
+			if ($this->_queuesRelacionalReady()) {
+				$qf = $this->Queues->find()->where(['idempresa' => $ticketEmpresa, 'codigo' => $filaPost]);
+				if ($this->_supportLevelsRoutingReady()) {
+					$qf->contain(['SupportLevels']);
+				}
+				$mappedQ = $qf->first();
+			}
+			$newLevelObs = $newLevelLabelForObs;
+			if ($newLevelObs === '') {
+				$newLevelObs = $this->_filaLabelFromCode($filaPost);
+			}
+			$obsLinhas = [
+				'Transferência de fila (sem técnico atribuído)',
+				'Data/hora: ' . $agora,
+				'Técnico que transferiu: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
+				'Técnico anterior (responsável): ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+				'Nova fila (workflow): ' . $this->_filaLabelFromCode($filaPost),
+				'Motivo: ' . $motivo,
+				'Nível anterior: ' . $levelAntLabel,
+			];
+			if ($newLevelObs !== '') {
+				$obsLinhas[] = 'Novo nível / fila: ' . $newLevelObs;
+			}
+
+			try {
+				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agora, $obsLinhas, $wf, $cat, $filaPost, $sitAntes, $mappedQ) {
+					$ticket->idtecnico_responsavel = null;
+					$ticket->situacao = C_TicketSituacaoPendente;
+					$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel', 'situacao']);
+					if ($wf && $filaPost !== null) {
+						$ticket->fila_suporte = $filaPost;
+						$ticket->nivel_atendimento = $cat[$filaPost]['nivel'];
+						$fields[] = 'fila_suporte';
+						$fields[] = 'nivel_atendimento';
+					}
+					$tcols = $this->Tickets->getSchema()->columns();
+					if ($mappedQ && in_array('queue_id', $tcols, true)) {
+						$ticket->queue_id = (int)$mappedQ->id;
+						$fields[] = 'queue_id';
+					}
+					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
+						$ticket->support_level_id = ($mappedQ && !empty($mappedQ->support_level_id)) ? (int)$mappedQ->support_level_id : null;
+						$fields[] = 'support_level_id';
+					}
+					if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
+						throw new \RuntimeException('save_ticket');
+					}
+					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
+					$mov = $this->Ticketsmovs->newEntity();
+					$mov->idticket = $idticket;
+					$mov->sitantiga = $sitAntes;
+					$mov->sitnova = C_TicketMovTransferencia;
+					$mov->idusuario = $this->Auth->user('id');
+					$mov->idempresa = $empresa;
+					$mov->datetime = $agora;
+					$mov->observacao = implode("\n", $obsLinhas);
+					if (!$this->Ticketsmovs->save($mov)) {
+						throw new \RuntimeException('save_mov');
+					}
+				});
+			} catch (\Throwable $e) {
+				$this->log('apiTransferirTicket: ' . $e->getMessage(), 'error');
+
+				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			}
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiTransferirTicket', $idticket);
+
+			return $this->jsonResponse(['ok' => true]);
 		}
 
 		// Só troca de fila (sem novo técnico): volta para aguardando e remove vínculos.
