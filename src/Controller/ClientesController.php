@@ -356,13 +356,31 @@ class ClientesController extends AppController {
 	public function solicitantes($idcliente) {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
-	
-		if ($this->request->is('ajax')) {
-			$solicitantes = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])->order(['name'])->where(['idcliente' => $idcliente, 'inativo' => 0])->toArray();
-			/* $solicitantes = [0 => 'Outros'] + $solicitantes; */
-			
-			return $this->jsonResponse($solicitantes, 200);
+
+		if (!$this->Auth->user()) {
+			return $this->jsonResponse([], 401);
 		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse([], 403);
+		}
+		$cid = (int)$idcliente;
+		if ($cid <= 0) {
+			return $this->jsonResponse([], 400);
+		}
+		$cli = $this->Clientes->find()->where([
+			'id' => $cid,
+			'idempresa' => $this->Auth->user('idempresa'),
+		])->first();
+		if (empty($cli)) {
+			return $this->jsonResponse([], 404);
+		}
+
+		$solicitantes = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->order(['name'])
+			->where(['idcliente' => $cid, 'inativo' => 0])
+			->toArray();
+
+		return $this->jsonResponse($solicitantes, 200);
 	}
 
 	public function solicitante($idsolicitante) {
@@ -378,10 +396,28 @@ class ClientesController extends AppController {
 	public function cliemail($idcliente) {
 		$this->autoRender = false;
 
-		if ($this->request->is('ajax')) {
-			$cliente = $this->Clientes->find('all')->where(['id' => $idcliente, 'inativo' => '0', 'idempresa' => $this->Auth->user('idempresa')])->first();
-			return $this->jsonResponse($cliente, 200);
+		if (!$this->Auth->user()) {
+			return $this->jsonResponse(['email' => ''], 401);
 		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['email' => ''], 403);
+		}
+		$cid = (int)$idcliente;
+		if ($cid <= 0) {
+			return $this->jsonResponse(['email' => ''], 400);
+		}
+		$cliente = $this->Clientes->find('all')->where([
+			'id' => $cid,
+			'inativo' => '0',
+			'idempresa' => $this->Auth->user('idempresa'),
+		])->first();
+		if (empty($cliente)) {
+			return $this->jsonResponse(['email' => ''], 404);
+		}
+
+		return $this->jsonResponse([
+			'email' => (string)($cliente->get('email') ?? ''),
+		], 200);
 	}
 
 	public function solemail($idsolicitante) {

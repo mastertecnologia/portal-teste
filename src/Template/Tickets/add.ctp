@@ -384,6 +384,7 @@
 		function loadSolicitantes(idcliente) {
 			$.ajax({
 				dataType: "json",
+				headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'solicitantes']);?>/" + idcliente,
 				success: function(data){
 					$('#idsolicitante').find('option').remove().end();
@@ -404,6 +405,7 @@
 			function loadEmail(idcliente) {
 				$.ajax({
 					dataType: "json",
+					headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
 					url: "<?= Router::url(['controller'=>'Clientes','action'=>'cliemail']);?>/" + idcliente,
 					success: function(data){ $('.email').val(data.email); },
 				});
@@ -439,18 +441,10 @@
 			return this;
 		};
 
-		$('form').preventDoubleSubmission();
+		$('form.ticket-add-form').preventDoubleSubmission();
 
-		$('form').submit(function (e) {
-			var botao = $(this);
-			if (botao.hasClass('disabled')) {
-				setTimeout(function(){
-					botao.removeClass('disabled');
-				}, 2000);
-				return false; // Do something else in here if required
-			}
-			else window.location.href = $('form').submit();
-			botao.addClass('disabled');
+		$('form.ticket-add-form').on('submit', function () {
+			$(this).find('#abrirticket').prop('disabled', true);
 		});
 
 

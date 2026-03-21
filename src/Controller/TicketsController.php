@@ -1849,13 +1849,42 @@ class TicketsController extends AppController {
 		return $ok;
 	}
 
+	/**
+	 * PostgreSQL pode listar tabelas como public.queues; normaliza para o sufixo.
+	 *
+	 * @return string[]
+	 */
+	protected function _schemaTableBaseNames(): array {
+		static $cache = null;
+		if ($cache !== null) {
+			return $cache;
+		}
+		try {
+			$raw = $this->Tickets->getConnection()->getSchemaCollection()->listTables();
+		} catch (\Throwable $e) {
+			$cache = [];
+
+			return $cache;
+		}
+		$out = [];
+		foreach ((array)$raw as $t) {
+			if (!is_string($t) || $t === '') {
+				continue;
+			}
+			$out[] = strpos($t, '.') !== false ? substr($t, strrpos($t, '.') + 1) : $t;
+		}
+		$cache = $out;
+
+		return $cache;
+	}
+
 	protected function _queuesRelacionalReady(): bool {
 		static $ok = null;
 		if ($ok !== null) {
 			return $ok;
 		}
 		try {
-			$tables = $this->Tickets->getConnection()->getSchemaCollection()->listTables();
+			$tables = $this->_schemaTableBaseNames();
 			$ok = in_array('queues', $tables, true)
 				&& in_array('queue_id', $this->Tickets->getSchema()->columns(), true);
 		} catch (\Throwable $e) {
@@ -1916,7 +1945,7 @@ class TicketsController extends AppController {
 			return $ok;
 		}
 		try {
-			$tables = $this->Tickets->getConnection()->getSchemaCollection()->listTables();
+			$tables = $this->_schemaTableBaseNames();
 			$ok = in_array('support_levels', $tables, true)
 				&& in_array('support_level_id', $this->Queues->getSchema()->columns(), true);
 		} catch (\Throwable $e) {
