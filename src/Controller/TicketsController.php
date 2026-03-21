@@ -3107,7 +3107,9 @@ class TicketsController extends AppController {
 		if ($oldId > 0) {
 			$oldName = ($this->_batchUserDisplayNames([$oldId])[$oldId]) ?? ('Usuário #' . $oldId);
 		}
-		$agora = date('d/m/Y H:i:s');
+		$agoraDt = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+		$agora = $agoraDt->format('d/m/Y H:i:s');
+		$agoraSql = $agoraDt->format('Y-m-d H:i:s');
 		$sitAntes = (int)$ticket->situacao;
 		$levelAntLabel = $this->_ticketSupportLevelLabelForHistory($ticket);
 		$newLevelLabelForObs = '';
@@ -3151,7 +3153,7 @@ class TicketsController extends AppController {
 			}
 
 			try {
-				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agora, $obsLinhas, $wf, $cat, $filaPost, $sitAntes, $mappedQ) {
+				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agoraSql, $obsLinhas, $wf, $cat, $filaPost, $sitAntes, $mappedQ) {
 					$ticket->idtecnico_responsavel = null;
 					$ticket->situacao = C_TicketSituacaoPendente;
 					$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel', 'situacao']);
@@ -3185,7 +3187,7 @@ class TicketsController extends AppController {
 					$mov->sitnova = C_TicketMovTransferencia;
 					$mov->idusuario = $this->Auth->user('id');
 					$mov->idempresa = $empresa;
-					$mov->datetime = $agora;
+					$mov->datetime = $agoraSql;
 					$mov->observacao = implode("\n", $obsLinhas);
 					if (!$this->Ticketsmovs->save($mov)) {
 						$this->log(
@@ -3233,7 +3235,7 @@ class TicketsController extends AppController {
 			}
 
 			try {
-				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agora, $obsLinhas, $newQueue, $wf, $cat, $filaPost, $nivelPost, $sitAntes) {
+				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agoraSql, $obsLinhas, $newQueue, $wf, $cat, $filaPost, $nivelPost, $sitAntes) {
 					$ticket->idtecnico_responsavel = null;
 					$ticket->situacao = C_TicketSituacaoPendente;
 					$ticket->queue_id = (int)$newQueue->id;
@@ -3264,7 +3266,7 @@ class TicketsController extends AppController {
 					$mov->sitnova = C_TicketMovTransferencia;
 					$mov->idusuario = $this->Auth->user('id');
 					$mov->idempresa = $empresa;
-					$mov->datetime = $agora;
+					$mov->datetime = $agoraSql;
 					$mov->observacao = implode("\n", $obsLinhas);
 					if (!$this->Ticketsmovs->save($mov)) {
 						$this->log(
@@ -3287,8 +3289,19 @@ class TicketsController extends AppController {
 		if ($destId > 0) {
 			$qPerm = $newQueue ? (int)$newQueue->id : (int)($ticket->queue_id ?? 0);
 			if ($qPerm > 0 && $this->_queuesRelacionalReady()) {
-				$dlink = $this->QueuesUsers->find()->where(['user_id' => $destId, 'queue_id' => $qPerm])->first();
-				if (empty($dlink)) {
+				$dlink = $this->QueuesUsers->find()
+					->where(['QueuesUsers.user_id' => $destId, 'QueuesUsers.queue_id' => $qPerm])
+					->first();
+				$membersCount = (int)$this->QueuesUsers->find()
+					->where(['QueuesUsers.queue_id' => $qPerm])
+					->count();
+				if (empty($dlink) && $membersCount === 0) {
+					$ins = $this->QueuesUsers->newEntity(['queue_id' => $qPerm, 'user_id' => $destId]);
+					if ($this->QueuesUsers->save($ins)) {
+						$dlink = $ins;
+					}
+				}
+				if (empty($dlink) && $membersCount > 0) {
 					return $this->jsonResponse(['ok' => false, 'error' => 'destino_sem_vinculo_fila'], 400);
 				}
 				if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($destId, $qPerm)) {
@@ -3330,7 +3343,7 @@ class TicketsController extends AppController {
 		}
 
 		try {
-			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agora, $obsLinhas, $filaPost, $oldId, $cat, $nivelPost, $newQueue, $wf) {
+			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agoraSql, $obsLinhas, $filaPost, $oldId, $cat, $nivelPost, $newQueue, $wf) {
 				$ticket->idtecnico_responsavel = $destId;
 				if ($newQueue) {
 					$ticket->queue_id = (int)$newQueue->id;
@@ -3398,7 +3411,7 @@ class TicketsController extends AppController {
 				$mov->sitnova = C_TicketMovTransferencia;
 				$mov->idusuario = $this->Auth->user('id');
 				$mov->idempresa = $empresa;
-				$mov->datetime = $agora;
+				$mov->datetime = $agoraSql;
 				$mov->observacao = implode("\n", $obsLinhas);
 				if (!$this->Ticketsmovs->save($mov)) {
 					$this->log(
