@@ -52,7 +52,7 @@ class QueuesController extends AppController {
 			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 		}
 		$emp = (int)$this->Auth->user('idempresa');
-		$qf = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+		$qf = $this->Queues->find()->where(['Queues.idempresa' => $emp])->order(['Queues.sort_order' => 'ASC', 'Queues.id' => 'ASC']);
 		if ($this->_supportLevelsRoutingReady()) {
 			$qf->contain(['SupportLevels']);
 		}
@@ -278,7 +278,7 @@ class QueuesController extends AppController {
 			return $this->_json(['ok' => false, 'error' => 'queues_not_installed'], 503);
 		}
 		$emp = (int)$this->Auth->user('idempresa');
-		$qf = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+		$qf = $this->Queues->find()->where(['Queues.idempresa' => $emp])->order(['Queues.sort_order' => 'ASC', 'Queues.id' => 'ASC']);
 		if ($this->_supportLevelsRoutingReady()) {
 			$qf->contain(['SupportLevels']);
 		}
@@ -398,7 +398,7 @@ class QueuesController extends AppController {
 		$escalationOnly = (string)$this->request->getQuery('escalation_only') === '1'
 			|| (string)$this->request->getQuery('escalation_only') === 'true';
 		$curOrd = $this->_ticketCurrentLevelSort($ticket);
-		$qf = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+		$qf = $this->Queues->find()->where(['Queues.idempresa' => $emp])->order(['Queues.sort_order' => 'ASC', 'Queues.id' => 'ASC']);
 		if ($this->_supportLevelsRoutingReady()) {
 			$qf->contain(['SupportLevels']);
 		}

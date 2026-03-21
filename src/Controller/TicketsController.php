@@ -2876,7 +2876,7 @@ class TicketsController extends AppController {
 		$dbQueues = [];
 		if ($queuesUi) {
 			try {
-				$qf = $this->Queues->find()->where(['idempresa' => (int)$empresa])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+				$qf = $this->Queues->find()->where(['Queues.idempresa' => (int)$empresa])->order(['Queues.sort_order' => 'ASC', 'Queues.id' => 'ASC']);
 				if ($this->_supportLevelsRoutingReady()) {
 					$qf->contain(['SupportLevels']);
 				}
@@ -3062,7 +3062,7 @@ class TicketsController extends AppController {
 			if (!$this->_queuesRelacionalReady()) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'queues_not_installed'], 503);
 			}
-			$qFind = $this->Queues->find()->where(['id' => $queueIdBody, 'idempresa' => $ticketEmpresa]);
+			$qFind = $this->Queues->find()->where(['Queues.id' => $queueIdBody, 'Queues.idempresa' => $ticketEmpresa]);
 			if ($this->_supportLevelsRoutingReady()) {
 				$qFind->contain(['SupportLevels']);
 			}
@@ -3124,7 +3124,7 @@ class TicketsController extends AppController {
 			}
 			$mappedQ = null;
 			if ($this->_queuesRelacionalReady()) {
-				$qf = $this->Queues->find()->where(['idempresa' => $ticketEmpresa, 'codigo' => $filaPost]);
+				$qf = $this->Queues->find()->where(['Queues.idempresa' => $ticketEmpresa, 'Queues.codigo' => $filaPost]);
 				if ($this->_supportLevelsRoutingReady()) {
 					$qf->contain(['SupportLevels']);
 				}
