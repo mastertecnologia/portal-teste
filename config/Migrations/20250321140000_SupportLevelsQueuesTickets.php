@@ -187,14 +187,33 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 	}
 
 	protected function _backfillTicketsSupportLevelPg(): void {
-		$this->execute(
-			'UPDATE tickets t SET support_level_id = q.support_level_id FROM queues q '
-			. 'WHERE t.queue_id = q.id AND t.support_level_id IS NULL AND q.support_level_id IS NOT NULL'
-		);
-		$this->execute(
-			'UPDATE tickets t SET support_level_id = sl.id FROM support_levels sl '
-			. 'WHERE t.support_level_id IS NULL AND sl.sort_order = COALESCE(t.nivel_atendimento::integer, 1)'
-		);
+		try {
+			$this->execute(
+				'UPDATE tickets t SET support_level_id = q.support_level_id FROM queues q '
+				. 'WHERE t.queue_id = q.id AND t.support_level_id IS NULL AND q.support_level_id IS NOT NULL'
+			);
+		} catch (\Throwable $e) {
+			// tickets.queue_id ou colunas podem não existir em legado
+		}
+		// nivel_atendimento pode ser texto não numérico (ex. "N1"); cast direto aborta a transação no PostgreSQL.
+		try {
+			$this->execute(
+				'UPDATE tickets t SET support_level_id = sl.id FROM support_levels sl '
+				. 'WHERE t.support_level_id IS NULL AND sl.sort_order = ( '
+				. 'CASE '
+				. 'WHEN t.nivel_atendimento IS NULL THEN 1 '
+				. "WHEN trim(t.nivel_atendimento::text) ~ '^[0-9]+$' THEN trim(t.nivel_atendimento::text)::integer "
+				. 'ELSE 1 END )'
+			);
+		} catch (\Throwable $e) {
+			try {
+				$this->execute(
+					'UPDATE tickets t SET support_level_id = sl.id FROM support_levels sl '
+					. 'WHERE t.support_level_id IS NULL AND sl.sort_order = 1'
+				);
+			} catch (\Throwable $e2) {
+			}
+		}
 	}
 
 	public function down() {
