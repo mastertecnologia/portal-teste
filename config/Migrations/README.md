@@ -14,6 +14,13 @@ bin/cake migrations migrate
 
 Bases que já receberam o SQL em `config/schema/queues_queues_users_tickets_queue_id.sql` continuarão ok: a migration só acrescenta o que faltar (ex.: `owner_id`, timestamps).
 
+## Contratos de horas (`20260321170000_ContratosHorasCompleto.php`)
+
+- Tabela **`contratos_horas`**: colunas do CRUD **Contratos de Horas Técnicas** (`data_inicio`, `data_fim`, `horas_contratadas`, `saldo_horas`, `horas_utilizadas`, `ativo`, valores de hora, e-mails de relatório) mais campos opcionais usados pelo **`subtrairHorasContrato`** (`minutos_*`, `segundos_consumidos`, `horas_consumidas`, `saldo`, `saldo_minutos`).
+- **Único** par **`(idcliente, idempresa)`** — um registro de contrato por cliente e empresa.
+- **PostgreSQL** apenas nesta migration; SQL de referência: `config/sql/create_contratos_horas.sql`.
+- Se já existir tabela antiga só com `minutos_*`, a migration só faz `ADD COLUMN IF NOT EXISTS` e tenta o `UNIQUE` (ignora se o constraint já existir). Duplicatas em `(idcliente, idempresa)` impedem o `UNIQUE` até serem corrigidas (ver comentário no `.sql`).
+
 ## Severidade na abertura (`20260320120000_TicketsSeveridade.php`)
 
 - **`tickets.severidade`**: `VARCHAR(16)` NOT NULL DEFAULT `'media'` — valores persistidos: `baixa`, `media`, `alta`, `urgente`.

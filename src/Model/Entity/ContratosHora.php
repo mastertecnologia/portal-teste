@@ -16,7 +16,16 @@ class ContratosHora extends Entity {
 		'segundos_consumidos' => true,
 		'horas_contratadas' => true,
 		'horas_consumidas' => true,
+		'horas_utilizadas' => true,
 		'saldo' => true,
+		'saldo_horas' => true,
 		'saldo_minutos' => true,
+		'data_inicio' => true,
+		'data_fim' => true,
+		'ativo' => true,
+		'valor_hora_comercial' => true,
+		'valor_hora_adicional_comercial' => true,
+		'valor_hora_especial' => true,
+		'contatos_email_relatorio' => true,
 	];
 }

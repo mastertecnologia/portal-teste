@@ -29,13 +29,18 @@ class ContratosHorasController extends AppController
     public function index($idcliente = null)
     {
         $this->set('idcliente', $idcliente);
-        $contratos = $this->ContratosHoras->find('all')
+        $q = $this->ContratosHoras->find('all')
             ->where([
                 'idcliente' => $idcliente,
                 'idempresa' => $this->Auth->user('idempresa'),
-            ])
-            ->orderDesc('data_inicio')
-            ->toArray();
+            ]);
+        $cols = $this->ContratosHoras->getSchema()->columns();
+        if (in_array('data_inicio', $cols, true)) {
+            $q->orderDesc('data_inicio');
+        } else {
+            $q->orderDesc('id');
+        }
+        $contratos = $q->toArray();
         $this->set('contratos', $contratos);
     }
 

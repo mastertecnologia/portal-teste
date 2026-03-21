@@ -868,6 +868,10 @@ class TicketsController extends AppController {
 					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));
 					$saldoH = (float)str_replace(',', '.', $contrato->get('saldo'));
 					$horasContratoTexto = number_format($hContratadas, 2, ',', '.') . ' h contratadas; saldo: ' . number_format(max(0, $saldoH), 2, ',', '.') . ' h';
+				} elseif ($contrato->get('horas_contratadas') !== null && $contrato->get('saldo_horas') !== null) {
+					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));
+					$saldoH = (float)str_replace(',', '.', $contrato->get('saldo_horas'));
+					$horasContratoTexto = number_format($hContratadas, 2, ',', '.') . ' h contratadas; saldo: ' . number_format(max(0, $saldoH), 2, ',', '.') . ' h';
 				} elseif ($contrato->get('horas_contratadas') !== null && $contrato->get('horas_consumidas') !== null) {
 					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));
 					$hConsumidas = (float)str_replace(',', '.', $contrato->get('horas_consumidas'));
@@ -1690,7 +1694,7 @@ class TicketsController extends AppController {
 
 	/**
 	 * Subtrai tempo do contrato do cliente (segundos/minutos/horas conforme coluna na tabela).
-	 * Ordem: segundos_consumidos → horas_consumidas → saldo → minutos_consumidos → saldo_minutos.
+	 * Ordem: segundos_consumidos → horas_consumidas → saldo → saldo_horas (+ horas_utilizadas) → minutos_consumidos → saldo_minutos.
 	 */
 	protected function subtrairHorasContrato($idcliente, $idempresa, $duracaoSegundos, $duracaoMinutos = null) {
 		if ($duracaoSegundos <= 0) return;
@@ -1722,6 +1726,18 @@ class TicketsController extends AppController {
 				$saldoAtual = $contrato->get('saldo');
 				$saldoAtual = is_string($saldoAtual) ? (float)str_replace(',', '.', $saldoAtual) : (float)$saldoAtual;
 				$contrato->set('saldo', max(0, round($saldoAtual - $horasUsadas, 4)));
+				$table->save($contrato);
+				$saved = true;
+			}
+			if (!$saved && $contrato->get('saldo_horas') !== null) {
+				$saldoH = $contrato->get('saldo_horas');
+				$saldoH = is_string($saldoH) ? (float)str_replace(',', '.', $saldoH) : (float)$saldoH;
+				$contrato->set('saldo_horas', max(0, round($saldoH - $horasUsadas, 4)));
+				if ($contrato->get('horas_utilizadas') !== null) {
+					$hu = $contrato->get('horas_utilizadas');
+					$hu = is_string($hu) ? (float)str_replace(',', '.', $hu) : (float)$hu;
+					$contrato->set('horas_utilizadas', round($hu + $horasUsadas, 4));
+				}
 				$table->save($contrato);
 				$saved = true;
 			}
@@ -4118,6 +4134,10 @@ class TicketsController extends AppController {
 				if ($contrato->get('horas_contratadas') !== null && $contrato->get('saldo') !== null) {
 					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));
 					$saldoH = (float)str_replace(',', '.', $contrato->get('saldo'));
+					$horasContratoTexto = number_format($hContratadas, 2, ',', '.') . ' h contratadas; saldo: ' . number_format(max(0, $saldoH), 2, ',', '.') . ' h';
+				} elseif ($contrato->get('horas_contratadas') !== null && $contrato->get('saldo_horas') !== null) {
+					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));
+					$saldoH = (float)str_replace(',', '.', $contrato->get('saldo_horas'));
 					$horasContratoTexto = number_format($hContratadas, 2, ',', '.') . ' h contratadas; saldo: ' . number_format(max(0, $saldoH), 2, ',', '.') . ' h';
 				} elseif ($contrato->get('horas_contratadas') !== null && $contrato->get('horas_consumidas') !== null) {
 					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));
