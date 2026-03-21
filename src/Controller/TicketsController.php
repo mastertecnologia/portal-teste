@@ -2061,13 +2061,18 @@ class TicketsController extends AppController {
 		if (!$this->_supportLevelsRoutingReady() || $levelId === null || $levelId <= 0) {
 			return '';
 		}
+		static $cache = [];
+		if (array_key_exists($levelId, $cache)) {
+			return $cache[$levelId];
+		}
 		try {
 			$sl = $this->SupportLevels->get($levelId);
-
-			return (string)$sl->name;
+			$cache[$levelId] = (string)$sl->name;
 		} catch (\Throwable $e) {
-			return '';
+			$cache[$levelId] = '';
 		}
+
+		return $cache[$levelId];
 	}
 
 	/** Rótulo de nível para histórico (support_level_id, fila ou legado nivel_atendimento). */
@@ -2769,33 +2774,54 @@ class TicketsController extends AppController {
 				'workflow' => ['enabled' => false, 'filas' => [], 'queuesRelacional' => false, 'queues' => []],
 			], 403);
 		}
-		// Nome da associação em TicketsTable é `users` (idautor); `Users` quebra o eager-load em alguns ambientes.
-		$contain = ['users', 'Clientes'];
+		// Não eager-load SupportLevels no ticket: no PG o ORM pode falhar ao montar o SQL (joins/alias).
+		// Rótulos vêm de _supportLevelName (cache) em _ticketRowApiTecnico.
+		$tierContains = [];
+		$t0 = ['users', 'Clientes'];
 		if ($this->_queuesRelacionalReady()) {
-			// Não aninhar Queues.SupportLevels aqui: com SupportLevels na raiz do ticket o ORM pode
-			// gerar alias/joins duplicados no PostgreSQL e disparar 500 em apiIndex.
-			$contain['Queues'] = [];
+			$t0['Queues'] = [];
 		}
-		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $this->Tickets->getSchema()->columns(), true)) {
-			$contain[] = 'SupportLevels';
-		}
-		$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
+		$tierContains[] = $t0;
+		$tierContains[] = ['users', 'Clientes'];
+		$tierContains[] = ['Clientes'];
+		$tierContains[] = [];
+
 		try {
-		$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
-			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])
-		)->toArray();
-		$ticketsEmandamento = $this->_applyApiIndexWorkflowFilters(
-			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento, 'Tickets.idempresa' => $empresa])
-		)->toArray();
-		$ticketsResolvidos = $this->_applyApiIndexWorkflowFilters(
-			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido, 'Tickets.idempresa' => $empresa])
-		)->toArray();
-		$ticketsFechados = $this->_applyApiIndexWorkflowFilters(
-			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])
-		)->toArray();
-		$tickets = $this->_applyApiIndexWorkflowFilters(
-			$this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])
-		)->toArray();
+		$loadEx = null;
+		foreach ($tierContains as $tierIdx => $contain) {
+			try {
+				$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
+				$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
+					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])
+				)->toArray();
+				$ticketsEmandamento = $this->_applyApiIndexWorkflowFilters(
+					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento, 'Tickets.idempresa' => $empresa])
+				)->toArray();
+				$ticketsResolvidos = $this->_applyApiIndexWorkflowFilters(
+					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido, 'Tickets.idempresa' => $empresa])
+				)->toArray();
+				$ticketsFechados = $this->_applyApiIndexWorkflowFilters(
+					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])
+				)->toArray();
+				$tickets = $this->_applyApiIndexWorkflowFilters(
+					$this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])
+				)->toArray();
+				$loadEx = null;
+				if ($tierIdx > 0) {
+					$this->log('apiIndex: carregou com contain reduzido (tier ' . $tierIdx . ')', 'warning');
+				}
+				break;
+			} catch (\Throwable $e) {
+				$loadEx = $e;
+				$this->log(
+					'apiIndex tier_' . $tierIdx . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(),
+					'warning'
+				);
+			}
+		}
+		if ($loadEx !== null) {
+			throw $loadEx;
+		}
 
 		$allForTec = array_merge($ticketsPendentes, $ticketsEmandamento, $ticketsResolvidos, $ticketsFechados, $tickets);
 		$tecIds = [];
@@ -2849,35 +2875,45 @@ class TicketsController extends AppController {
 		}
 		$dbQueues = [];
 		if ($queuesUi) {
-			$qf = $this->Queues->find()->where(['idempresa' => (int)$empresa])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
-			if ($this->_supportLevelsRoutingReady()) {
-				$qf->contain(['SupportLevels']);
-			}
-			foreach ($qf->all() as $qr) {
-				$e = (int)$empresa;
-				$item = [
-					'id' => (int)$qr->id,
-					'name' => (string)$qr->name,
-					'company_id' => $e,
-					'idempresa' => $e,
-					'codigo' => $qr->codigo !== null ? (string)$qr->codigo : null,
-				];
+			try {
+				$qf = $this->Queues->find()->where(['idempresa' => (int)$empresa])->order(['sort_order' => 'ASC', 'id' => 'ASC']);
 				if ($this->_supportLevelsRoutingReady()) {
-					$item['support_level_id'] = $qr->support_level_id !== null && $qr->support_level_id !== '' ? (int)$qr->support_level_id : null;
-					$item['supportLevelName'] = !empty($qr->support_level) ? (string)$qr->support_level->name : null;
-					$item['supportLevelSort'] = $this->_queueLevelSortOrder((int)$qr->id);
+					$qf->contain(['SupportLevels']);
 				}
-				$dbQueues[] = $item;
+				foreach ($qf->all() as $qr) {
+					$e = (int)$empresa;
+					$item = [
+						'id' => (int)$qr->id,
+						'name' => (string)$qr->name,
+						'company_id' => $e,
+						'idempresa' => $e,
+						'codigo' => $qr->codigo !== null ? (string)$qr->codigo : null,
+					];
+					if ($this->_supportLevelsRoutingReady()) {
+						$item['support_level_id'] = $qr->support_level_id !== null && $qr->support_level_id !== '' ? (int)$qr->support_level_id : null;
+						$item['supportLevelName'] = !empty($qr->support_level) ? (string)$qr->support_level->name : null;
+						$item['supportLevelSort'] = $this->_queueLevelSortOrder((int)$qr->id);
+					}
+					$dbQueues[] = $item;
+				}
+			} catch (\Throwable $e) {
+				$this->log('apiIndex dbQueues: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(), 'error');
+				$dbQueues = [];
 			}
 		}
 		$supportLevelsOut = [];
 		if ($this->_supportLevelsRoutingReady()) {
-			foreach ($this->SupportLevels->find()->order(['sort_order' => 'ASC'])->all() as $sx) {
-				$supportLevelsOut[] = [
-					'id' => (int)$sx->id,
-					'name' => (string)$sx->name,
-					'sort_order' => (int)$sx->sort_order,
-				];
+			try {
+				foreach ($this->SupportLevels->find()->order(['sort_order' => 'ASC'])->all() as $sx) {
+					$supportLevelsOut[] = [
+						'id' => (int)$sx->id,
+						'name' => (string)$sx->name,
+						'sort_order' => (int)$sx->sort_order,
+					];
+				}
+			} catch (\Throwable $e) {
+				$this->log('apiIndex supportLevelsOut: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(), 'error');
+				$supportLevelsOut = [];
 			}
 		}
 		$out = [
