@@ -1,0 +1,3 @@
+# Evitar CRLF em scripts executados no Linux (shebang quebra com \r).
+bin/cake text eol=lf
+bin/cake.php text eol=lf
