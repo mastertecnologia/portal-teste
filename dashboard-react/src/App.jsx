@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import TechDashboard from './pages/TechDashboard.jsx';
 import TechTicketEdit from './pages/TechTicketEdit.jsx';
+import OperationalDashboard from './pages/OperationalDashboard.jsx';
 import ClientTicketList from './pages/ClientTicketList.jsx';
 import ClientTicketDetail from './pages/ClientTicketDetail.jsx';
 
@@ -11,6 +12,8 @@ function EmbeddedTickets() {
   switch (boot.screen) {
     case 'tech_index':
       return <TechDashboard boot={boot} />;
+    case 'tech_operacional':
+      return <OperationalDashboard boot={boot} />;
     case 'tech_edit':
       return <TechTicketEdit boot={boot} />;
     case 'client_index':
@@ -32,6 +35,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/tecnico" element={<TechDashboard boot={null} />} />
+        <Route path="/tecnico/operacional" element={<OperationalDashboard boot={null} />} />
         <Route path="/cliente" element={<ClientTicketList boot={null} />} />
         <Route path="/cliente/ticket/:id" element={<ClientTicketDetail boot={null} />} />
         <Route path="*" element={<Navigate to="/" replace />} />

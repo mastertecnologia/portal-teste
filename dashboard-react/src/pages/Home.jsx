@@ -9,11 +9,11 @@ export default function Home() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Escolha o painel</h1>
         <p className="mt-3 text-slate-600">
-          Dois ambientes: operação interna (técnico) e acompanhamento pelo cliente, com comentários e histórico do chamado.
+          Operação (fila + painel SLA) e portal do cliente, com comentários e histórico do chamado.
         </p>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-4xl gap-6 sm:grid-cols-2">
+      <div className="mx-auto mt-12 grid max-w-6xl gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <Link
           to="/tecnico"
           className="group rounded-[28px] border-2 border-transparent bg-white p-8 shadow-lg shadow-slate-200/60 transition hover:border-teal-400 hover:shadow-xl"
@@ -24,6 +24,19 @@ export default function Home() {
             Fila completa, prioridades, status e visão executiva. Pronto para integrar com <code className="rounded bg-slate-100 px-1">TicketsController</code>.
           </p>
           <span className="mt-6 inline-block text-sm font-semibold text-teal-700 group-hover:underline">Entrar →</span>
+        </Link>
+
+        <Link
+          to="/tecnico/operacional"
+          className="group rounded-[28px] border-2 border-transparent bg-white p-8 shadow-lg shadow-slate-200/60 transition hover:border-emerald-400 hover:shadow-xl"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-800 text-lg font-bold text-white">O</div>
+          <h2 className="mt-6 text-xl font-bold text-slate-900">Painel operacional</h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            Backlog, SLA, P1 e alertas (mock aqui; no portal: <code className="rounded bg-slate-100 px-1">/tickets/operacional</code> ou{' '}
+            <code className="rounded bg-slate-100 px-1">/servicedesk/operacional</code>).
+          </p>
+          <span className="mt-6 inline-block text-sm font-semibold text-emerald-700 group-hover:underline">Entrar →</span>
         </Link>
 
         <Link

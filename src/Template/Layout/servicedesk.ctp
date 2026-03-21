@@ -45,6 +45,10 @@
 		</div>
 		<nav class="sd-actions" aria-label="Acesso">
 			<?php if ($this->request->getSession()->read('Auth.User.id')) : ?>
+				<?php if ((int)$this->request->getSession()->read('Auth.User.role') === 0) : ?>
+					<a href="<?= $this->Url->build(['controller' => 'Servicedesk', 'action' => 'index']) ?>">Fila</a>
+					<a href="<?= $this->Url->build(['controller' => 'Servicedesk', 'action' => 'operacional']) ?>">Painel operacional</a>
+				<?php endif; ?>
 				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Dashboard</a>
 				<a href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'logout']) ?>">Sair</a>
 			<?php else : ?>

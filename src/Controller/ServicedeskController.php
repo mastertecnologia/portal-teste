@@ -14,8 +14,29 @@ class ServicedeskController extends TicketsController {
 		parent::beforeFilter($event);
 	}
 
+	/**
+	 * Painel operacional (React): métricas SLA / backlog — somente técnico (role 0).
+	 */
+	public function operacional() {
+		if (!$this->Auth->user()) {
+			return $this->redirect(['action' => 'index']);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->redirect(['action' => 'index']);
+		}
+		$this->viewBuilder()->setLayout('servicedesk');
+		$this->viewBuilder()->setTemplatePath('Tickets');
+		$this->viewBuilder()->setTemplate('react_app');
+		$this->set('title', 'Service Desk — Painel operacional');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('reactBoot', $this->_reactBoot('tech_operacional', null, $this->_servicedeskBootExtra()));
+	}
+
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
+		if ($action === 'operacional') {
+			return !empty($user) && (int)$user['role'] === 0;
+		}
 		if ($action === 'index') {
 			if (empty($user)) {
 				return true;

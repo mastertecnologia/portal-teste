@@ -19,6 +19,15 @@ Bases que já receberam o SQL em `config/schema/queues_queues_users_tickets_queu
 - **`tickets.severidade`**: `VARCHAR(16)` NOT NULL DEFAULT `'media'` — valores persistidos: `baixa`, `media`, `alta`, `urgente`.
 - SQL manual alternativo: `config/schema/tickets_severidade.sql`.
 
+## Enterprise service desk — PASSO 3 (`20260321140000` … `20260321140300`)
+
+- **`20260321140000_QueuesEnterpriseFields`**: colunas maduras em `queues` (`tipo_fila`, `nivel_da_fila`, `ativo`, `fila_pai_id`, `proxima_fila_id`), backfill e filas adicionais por empresa (`n2_remoto`, `n2_field`, `n3_infra`, `n3_especialistas`, `mudanca`).
+- **`20260321140100_SlaPolicies`**: tabela **`sla_policies`** + políticas padrão P1–P4 por empresa.
+- **`20260321140200_TicketHistories`**: **`ticket_histories`** (eventos tipados; complementa `ticketsmovs`).
+- **`20260321140300_TicketsSlaEnterpriseColumns`**: colunas de SLA, prioridade P1–P4, impacto/urgência, tipo e prazos em **`tickets`** (todas compatíveis com dados legados).
+
+Após migrar, novos tickets podem receber **prioridade/SLA** via `SlaService` na abertura (ver `docs/service-desk-evolution.md`).
+
 ## Patch PostgreSQL: `queues` incompleta (`20250320120000_PostgreSQLQueuesSchemaPatch.php`)
 
 Se as tabelas `queues` / `queues_users` já existiam **sem** `name`, `idempresa`, `codigo`, `sort_order`, etc., rode as migrations de novo **ou** execute o SQL manual:

@@ -2,7 +2,11 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Ticket\DashboardService;
+use App\Service\Ticket\SlaService;
+use App\Service\Ticket\TicketHistoryLogger;
 use Cake\Mailer\Email;
+use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -49,7 +53,7 @@ class TicketsController extends AppController {
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
 
-		if ($action === 'apiIndex') {
+		if ($action === 'apiIndex' || $action === 'apiDashboardOperacional') {
 			return (int)$user['role'] === 0;
 		}
 		if ($action === 'apiIndexCliente') {
@@ -59,6 +63,9 @@ class TicketsController extends AppController {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
 		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket'], true)) {
+			return (int)$user['role'] === 0;
+		}
+		if ($action === 'operacional') {
 			return (int)$user['role'] === 0;
 		}
 
@@ -363,6 +370,14 @@ class TicketsController extends AppController {
 		$this->set('reactBoot', $this->_reactBoot('tech_index', null));
 	}
 
+	/** Painel operacional (React) — mesmo shell que `index`; só técnico (role 0). */
+	public function operacional() {
+		$this->viewBuilder()->setLayout('default');
+		$this->viewBuilder()->setTemplate('react_app');
+		$this->set('title', 'Painel operacional — Tickets');
+		$this->set('reactBoot', $this->_reactBoot('tech_operacional', null));
+	}
+
 	public function finalizados() {
 		$this->set('title', 'Tickets finalizados');
 		if ($this->Auth->user('role') == 1) {
@@ -657,6 +672,7 @@ class TicketsController extends AppController {
 					$this->Tickets->save($ticket, ['fields' => $f]);
 				}
 				$this->_syncTicketQueueAfterCreate((int)$ticket->id);
+				$this->_applyEnterpriseTicketOnCreate($ticket);
 				// Anexos (vários arquivos: input multiple ou lista normalizada)
 					foreach ($anexos as $file) {
 						$idempresa = $this->Auth->user('idempresa');
@@ -1739,6 +1755,7 @@ class TicketsController extends AppController {
 			'userName' => (string)($this->Auth->user('name') ?? ''),
 			'paths' => [
 				'apiIndex' => $w . 'tickets/api-index',
+				'apiDashboardOperacional' => $w . 'tickets/api-dashboard-operacional',
 				'apiIndexCliente' => $w . 'tickets/api-index-cliente',
 				'apiView' => $w . 'tickets/api-view/',
 				'apiComments' => $w . 'tickets/api-comments/',
@@ -1757,6 +1774,7 @@ class TicketsController extends AppController {
 				'apiQueuesSave' => $w . 'queues/api-save',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'indexTecnico' => Router::url(['action' => 'index']),
+				'ticketsOperacional' => Router::url(['controller' => 'Tickets', 'action' => 'operacional']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
 				'addTicket' => Router::url(['action' => 'add']),
 				'dashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard']),
@@ -2051,6 +2069,56 @@ class TicketsController extends AppController {
 		}
 
 		return '—';
+	}
+
+	/**
+	 * Prioridade P1–P4, política de SLA e registro em ticket_histories (se migrations enterprise estiverem aplicadas).
+	 */
+	protected function _applyEnterpriseTicketOnCreate($ticket): void {
+		if ($ticket === null || empty($ticket->id)) {
+			return;
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		if (!in_array('prioridade', $cols, true)) {
+			return;
+		}
+		try {
+			if (in_array('origem_ticket', $cols, true) && ($ticket->get('origem_ticket') === null || $ticket->get('origem_ticket') === '')) {
+				$ticket->set('origem_ticket', (int)$this->Auth->user('role') === (int)C_RoleCliente ? 'portal' : 'manual');
+			}
+			$sev = in_array('severidade', $cols, true) ? $ticket->get('severidade') : null;
+			$sla = new SlaService($this->Tickets);
+			$fields = $sla->bootstrapNewTicket($ticket, (int)$this->Auth->user('idempresa'), is_string($sev) ? $sev : null);
+			if (in_array('origem_ticket', $cols, true) && $ticket->get('origem_ticket')) {
+				$fields[] = 'origem_ticket';
+			}
+			$fields = array_values(array_unique(array_filter($fields)));
+			if (!empty($fields)) {
+				$fields = $this->Tickets->fieldsComEspelhoResponsavel($fields);
+				$this->Tickets->save($ticket, ['fields' => $fields]);
+			}
+			$snap = [
+				'prioridade' => $ticket->get('prioridade'),
+				'sla_status' => $ticket->get('sla_status'),
+				'tipo_ticket' => $ticket->get('tipo_ticket'),
+			];
+			try {
+				$hist = TableRegistry::get('TicketHistories');
+				TicketHistoryLogger::log(
+					$hist,
+					(int)$ticket->id,
+					(int)$this->Auth->user('id'),
+					'criacao',
+					null,
+					json_encode($snap, JSON_UNESCAPED_UNICODE),
+					'Ticket criado (classificação/SLA)',
+					'usuario'
+				);
+			} catch (\Throwable $e) {
+			}
+		} catch (\Throwable $e) {
+			$this->log('_applyEnterpriseTicketOnCreate: ' . $e->getMessage(), 'warning');
+		}
 	}
 
 	/**
@@ -2788,6 +2856,18 @@ class TicketsController extends AppController {
 			],
 		];
 		return $this->jsonResponse($out);
+	}
+
+	public function apiDashboardOperacional() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$empresa = (int)$this->Auth->user('idempresa');
+		$svc = new DashboardService($this->Tickets);
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'dashboard' => $svc->operationalSnapshot($empresa),
+		]);
 	}
 
 	public function apiTecnicosLista() {

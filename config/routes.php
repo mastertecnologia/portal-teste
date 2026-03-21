@@ -83,7 +83,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/api/cadastro/empresa/consultar', ['controller' => 'Cadastro', 'action' => 'consultar'])->setMethods(['POST']);
     $routes->connect('/api/cadastro/empresa/:cnpj', ['controller' => 'Cadastro', 'action' => 'empresa', 'cnpj'])->setPass(['cnpj'])->setMethods(['GET']);
     // Tickets — UI React (JSON com sessão; desbloqueado no Security)
+    $routes->connect('/tickets/operacional', ['controller' => 'Tickets', 'action' => 'operacional']);
     $routes->connect('/tickets/api-index', ['controller' => 'Tickets', 'action' => 'apiIndex'])->setMethods(['GET']);
+    $routes->connect('/tickets/api-dashboard-operacional', ['controller' => 'Tickets', 'action' => 'apiDashboardOperacional'])->setMethods(['GET']);
     $routes->connect('/tickets/api-index-cliente', ['controller' => 'Tickets', 'action' => 'apiIndexCliente'])->setMethods(['GET']);
     $routes->connect('/tickets/api-view/*', ['controller' => 'Tickets', 'action' => 'apiView'], ['pass' => ['idticket']])->setMethods(['GET']);
     $routes->connect('/tickets/api-comments/*', ['controller' => 'Tickets', 'action' => 'apiComments'], ['pass' => ['idticket']])->setMethods(['GET']);
@@ -98,6 +100,7 @@ Router::scope('/', function ($routes) {
     // Central de Atendimento (layout dedicado; mesma sessão e APIs de tickets)
     $routes->connect('/servicedesk', ['controller' => 'Servicedesk', 'action' => 'index']);
     $routes->connect('/servicedesk/', ['controller' => 'Servicedesk', 'action' => 'index']);
+    $routes->connect('/servicedesk/operacional', ['controller' => 'Servicedesk', 'action' => 'operacional']);
     $routes->fallbacks(DashedRoute::class);
 });
 

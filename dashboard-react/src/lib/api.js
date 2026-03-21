@@ -387,4 +387,53 @@ export async function saveTicketDescricaoAtendimento(ticketId, descricaoAtendime
   return { ok: !!json.ok, error: json.error };
 }
 
+export async function fetchDashboardOperacional() {
+  if (USE_MOCK) {
+    return {
+      ok: true,
+      dashboard: {
+        empresa_id: 1,
+        gerado_em: new Date().toISOString(),
+        colunas_sla_ativas: true,
+        backlog: 12,
+        resolvidos_hoje: 3,
+        p1_abertos: 2,
+        por_prioridade: { P1: 2, P2: 5, P3: 10, P4: 3 },
+        por_sla_status: { dentro_sla: 18, em_risco: 4, violado: 2 },
+        por_situacao: { 1: 5, 2: 8, 3: 2 },
+        por_fila_id: { 1: 10, 2: 2, '(sem fila)': 1 },
+        alertas_sla_violado: [
+          {
+            id: 101,
+            prioridade: 'P1',
+            sla_status: 'violado',
+            sla_percentual_consumido: 118.5,
+            data_limite_resolucao: new Date(Date.now() - 3600000).toISOString(),
+            queue_id: 1,
+            fila_nome: 'N1 — Triagem',
+          },
+        ],
+      },
+    };
+  }
+  const boot = getBoot();
+  const url = boot?.paths?.apiDashboardOperacional;
+  if (!url) {
+    return { ok: false, error: 'no_api', dashboard: null };
+  }
+  const r = await fetch(url, {
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!r.ok) {
+    return { ok: false, error: r.statusText, dashboard: null };
+  }
+  const json = await r.json();
+  if (!json.ok) {
+    return { ok: false, error: json.error || 'erro', dashboard: null };
+  }
+  return { ok: true, dashboard: json.dashboard || null };
+}
+
 export { getBoot, USE_MOCK, MOCK_SESSION_CLIENTE };

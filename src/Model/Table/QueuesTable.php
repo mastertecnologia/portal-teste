@@ -10,6 +10,8 @@ class QueuesTable extends Table {
 		$this->setTable('queues');
 		$this->setDisplayField('name');
 		$this->belongsTo('SupportLevels', ['foreignKey' => 'support_level_id', 'joinType' => 'LEFT']);
+		$this->belongsTo('ParentQueues', ['className' => 'Queues', 'foreignKey' => 'fila_pai_id', 'joinType' => 'LEFT']);
+		$this->belongsTo('NextQueues', ['className' => 'Queues', 'foreignKey' => 'proxima_fila_id', 'joinType' => 'LEFT']);
 		$this->hasMany('QueuesUsers', ['foreignKey' => 'queue_id', 'dependent' => true]);
 		$this->hasMany('Tickets', ['foreignKey' => 'queue_id']);
 	}

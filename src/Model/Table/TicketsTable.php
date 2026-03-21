@@ -45,7 +45,9 @@ class TicketsTable extends Table {
 		$this->belongsTo('users')->setForeignKey('idautor')->setDependent(false);
 		$this->belongsTo('Queues', ['foreignKey' => 'queue_id', 'joinType' => 'LEFT']);
 		$this->belongsTo('SupportLevels', ['foreignKey' => 'support_level_id', 'joinType' => 'LEFT']);
+		$this->belongsTo('SlaPolicies', ['foreignKey' => 'sla_policy_id', 'joinType' => 'LEFT']);
 
+		$this->hasMany('TicketHistories', ['foreignKey' => 'ticket_id', 'dependent' => true]);
 		$this->hasMany('Ticketsclientes', ['dependent' => true,'cascadeCallbacks' => true,])->setForeignKey('idticket'); 
 		
 		$this->hasOne('Empresas');

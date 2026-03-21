@@ -1132,14 +1132,24 @@ export default function TechDashboard({ boot }) {
           <h2 className="m-0 min-w-0 self-center text-lg font-semibold leading-snug tracking-tight text-slate-900">
             {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
           </h2>
-          {addTicket ? (
-            <a
-              href={addTicket}
-              className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-teal-800"
-            >
-              Abrir ticket
-            </a>
-          ) : null}
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {!boot?.servicedesk && boot?.paths?.ticketsOperacional ? (
+              <a
+                href={boot.paths.ticketsOperacional}
+                className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold leading-none text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                Painel operacional
+              </a>
+            ) : null}
+            {addTicket ? (
+              <a
+                href={addTicket}
+                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-teal-800"
+              >
+                Abrir ticket
+              </a>
+            ) : null}
+          </div>
         </header>
         {tableSection}
       </div>
