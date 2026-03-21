@@ -28,6 +28,8 @@ const API_ERR_TRANSFER = {
   destino_nivel_incompativel: 'O nível do técnico de destino não cobre essa fila.',
   motivo_obrigatorio: 'Informe o motivo (mín. 3 caracteres).',
   destino_ou_fila_obrigatorio: 'Indique fila de destino e/ou técnico, conforme a opção escolhida.',
+  save_failed:
+    'Não foi possível gravar a transferência no servidor. Se persistir, veja o log (apiTransferirTicket / ticket_errors).',
 };
 
 const API_ERR_START = {

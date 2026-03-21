@@ -1931,6 +1931,11 @@ class TicketsController extends AppController {
 		return $this->Tickets->fieldsComEspelhoResponsavel($fields);
 	}
 
+	/** Só colunas que existem no schema (evita save falhar no PG com campo inexistente / typo). */
+	protected function _ticketIntersectSchemaFields(array $fields): array {
+		return array_values(array_intersect($fields, $this->Tickets->getSchema()->columns()));
+	}
+
 	protected function _ticketTransferApiAllowed(): bool {
 		$cols = $this->Tickets->getSchema()->columns();
 		$hasResp = in_array('idtecnico_responsavel', $cols, true);
@@ -2969,18 +2974,20 @@ class TicketsController extends AppController {
 		$qFilter = $this->request->getQuery('queue_id');
 		$queueUserFilter = null;
 		if ($qFilter !== null && $qFilter !== '' && ctype_digit((string)$qFilter) && $this->_queuesRelacionalReady()) {
-			$qRow = $this->Queues->find()->where(['id' => (int)$qFilter, 'idempresa' => $empresa])->first();
+			$qRow = $this->Queues->find()
+				->where(['Queues.id' => (int)$qFilter, 'Queues.idempresa' => $empresa])
+				->first();
 			if (empty($qRow)) {
 				return $this->jsonResponse(['ok' => true, 'tecnicos' => []]);
 			}
-			$queueUserFilter = $this->QueuesUsers->find()
+			$linkedIds = $this->QueuesUsers->find()
 				->select(['user_id'])
-				->where(['queue_id' => (int)$qFilter])
+				->where(['QueuesUsers.queue_id' => (int)$qFilter])
 				->extract('user_id')
 				->toList();
-			if (empty($queueUserFilter)) {
-				return $this->jsonResponse(['ok' => true, 'tecnicos' => []]);
-			}
+			// Com vínculos: só esses usuários. Sem vínculos na fila: lista técnicos da empresa (a API de
+			// transferência ainda exige queues_users ao atribuir alguém; “só fila” funciona).
+			$queueUserFilter = !empty($linkedIds) ? $linkedIds : null;
 		}
 		$qry = $this->Empresasusers->find('all', ['contain' => ['Users']])
 			->where(['Empresasusers.idempresa' => $empresa, 'Users.role' => 0, 'Users.inativo' => 0]);
@@ -2990,13 +2997,9 @@ class TicketsController extends AppController {
 		$rows = $qry->order(['Users.name' => 'ASC'])->toArray();
 		$seen = [];
 		$list = [];
-		$qidFilter = ($qFilter !== null && $qFilter !== '' && ctype_digit((string)$qFilter)) ? (int)$qFilter : 0;
 		foreach ($rows as $r) {
 			$u = $r->user ?? $r->users ?? null;
 			if (!$u || isset($seen[(int)$u->id])) {
-				continue;
-			}
-			if ($qidFilter > 0 && !$this->_userCanWorkQueue((int)$u->id, $qidFilter)) {
 				continue;
 			}
 			$seen[(int)$u->id] = true;
@@ -3167,7 +3170,12 @@ class TicketsController extends AppController {
 						$ticket->support_level_id = ($mappedQ && !empty($mappedQ->support_level_id)) ? (int)$mappedQ->support_level_id : null;
 						$fields[] = 'support_level_id';
 					}
-					if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
+					$saveFields = $this->_ticketIntersectSchemaFields($fields);
+					if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
+						$this->log(
+							'apiTransferirTicket ticket_errors: ' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE),
+							'error'
+						);
 						throw new \RuntimeException('save_ticket');
 					}
 					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
@@ -3180,6 +3188,10 @@ class TicketsController extends AppController {
 					$mov->datetime = $agora;
 					$mov->observacao = implode("\n", $obsLinhas);
 					if (!$this->Ticketsmovs->save($mov)) {
+						$this->log(
+							'apiTransferirTicket mov_errors: ' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE),
+							'error'
+						);
 						throw new \RuntimeException('save_mov');
 					}
 				});
@@ -3237,7 +3249,12 @@ class TicketsController extends AppController {
 						$ticket->support_level_id = !empty($newQueue->support_level_id) ? (int)$newQueue->support_level_id : null;
 						$fields[] = 'support_level_id';
 					}
-					if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
+					$saveFields = $this->_ticketIntersectSchemaFields($fields);
+					if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
+						$this->log(
+							'apiTransferirTicket ticket_errors: ' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE),
+							'error'
+						);
 						throw new \RuntimeException('save_ticket');
 					}
 					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
@@ -3250,6 +3267,10 @@ class TicketsController extends AppController {
 					$mov->datetime = $agora;
 					$mov->observacao = implode("\n", $obsLinhas);
 					if (!$this->Ticketsmovs->save($mov)) {
+						$this->log(
+							'apiTransferirTicket mov_errors: ' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE),
+							'error'
+						);
 						throw new \RuntimeException('save_mov');
 					}
 				});
@@ -3331,6 +3352,7 @@ class TicketsController extends AppController {
 				$tcols = $this->Tickets->getSchema()->columns();
 				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
 					$eq = $newQueue ? (int)$newQueue->id : (int)($ticket->queue_id ?? 0);
+					$ticket->support_level_id = null;
 					if ($eq > 0) {
 						try {
 							$qq = $this->Queues->get($eq, ['contain' => ['SupportLevels']]);
@@ -3342,7 +3364,12 @@ class TicketsController extends AppController {
 					}
 					$fields[] = 'support_level_id';
 				}
-				if (!$this->Tickets->save($ticket, ['fields' => $fields])) {
+				$saveFields = $this->_ticketIntersectSchemaFields($fields);
+				if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
+					$this->log(
+						'apiTransferirTicket ticket_errors: ' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE),
+						'error'
+					);
 					throw new \RuntimeException('save_ticket');
 				}
 				$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $destId])->first();
@@ -3352,6 +3379,10 @@ class TicketsController extends AppController {
 					$tu->iduser = $destId;
 					$tu->idempresa = $empresa;
 					if (!$this->Ticketsusers->save($tu)) {
+						$this->log(
+							'apiTransferirTicket ticketsusers_errors: ' . json_encode($tu->getErrors(), JSON_UNESCAPED_UNICODE),
+							'error'
+						);
 						throw new \RuntimeException('save_ticketsusers');
 					}
 				}
@@ -3370,6 +3401,10 @@ class TicketsController extends AppController {
 				$mov->datetime = $agora;
 				$mov->observacao = implode("\n", $obsLinhas);
 				if (!$this->Ticketsmovs->save($mov)) {
+					$this->log(
+						'apiTransferirTicket mov_errors: ' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE),
+						'error'
+					);
 					throw new \RuntimeException('save_mov');
 				}
 			});
