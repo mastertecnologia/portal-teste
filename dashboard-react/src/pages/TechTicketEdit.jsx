@@ -11,6 +11,7 @@ import { useConversationScrollToBottom } from '../hooks/useConversationScrollToB
 import { stripHtml } from '../lib/text';
 import { badgeClass, statusType } from '../lib/ticketUi';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
+import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
 
 /** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
@@ -234,6 +235,23 @@ export default function TechTicketEdit({ boot }) {
     </>
   );
 
+  const horasTecnicasBlock = (
+    <HorasTecnicasTimerPanel
+      ticketId={ticket.id}
+      horasTecnicas={ticket.horasTecnicas}
+      onSnapshot={(ht) => setTicket((p) => (p ? { ...p, horasTecnicas: ht } : p))}
+      onFeedback={(okMsg, errMsg) => {
+        if (errMsg) {
+          setErro(errMsg);
+          setMsg(null);
+        } else {
+          setErro(null);
+        }
+        if (okMsg) setMsg(okMsg);
+      }}
+    />
+  );
+
   const descricaoBlock = (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <h2 className="text-base font-bold text-slate-900">{stripHtml(ticket.assunto)}</h2>
@@ -365,6 +383,7 @@ export default function TechTicketEdit({ boot }) {
           <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
             <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
               {descricaoBlock}
+              {horasTecnicasBlock}
               {relatorioAtendimentoBlock}
               {anexosBlock}
             </div>
@@ -383,6 +402,7 @@ export default function TechTicketEdit({ boot }) {
         <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
           <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
             {descricaoBlock}
+            {horasTecnicasBlock}
             {relatorioAtendimentoBlock}
             {anexosBlock}
           </div>

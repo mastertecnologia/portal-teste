@@ -63,7 +63,7 @@ class TicketsController extends AppController {
 		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments', 'apiAnexoUpload', 'apiAnexoDelete'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
-		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket'], true)) {
+		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket', 'apiTimer'], true)) {
 			return (int)$user['role'] === 0;
 		}
 		if ($action === 'operacional') {
@@ -1745,6 +1745,186 @@ class TicketsController extends AppController {
 		}
 	}
 
+	/**
+	 * Normaliza campo datetime do ORM para string Y-m-d H:i:s.
+	 */
+	protected function _ormTimeToString($v): ?string {
+		if ($v === null || $v === '') {
+			return null;
+		}
+		if (is_object($v) && method_exists($v, 'format')) {
+			return $v->format('Y-m-d H:i:s');
+		}
+
+		return is_string($v) ? $v : null;
+	}
+
+	/**
+	 * Estado do timer de horas técnicas + total já registrado em Ticketshoras (para o Service Desk React).
+	 */
+	protected function _apiHorasTecnicasPayload(int $idticket, $ticket): array {
+		$role = (int)$this->Auth->user('role');
+		$base = [
+			'canUseTimer' => $role === 0,
+			'minutosRegistrados' => 0,
+			'sessao' => null,
+			'serverUnix' => time(),
+			'timerDisponivel' => true,
+		];
+		if ($role !== 0) {
+			return $base;
+		}
+		try {
+			$base['minutosRegistrados'] = (int)$this->Ticketshoras->minutosTicket($idticket, '2000-01-01', '2099-12-31');
+		} catch (\Throwable $e) {
+			$base['timerDisponivel'] = false;
+
+			return $base;
+		}
+		try {
+			$this->loadModel('AtendimentoTimer');
+			$timerAtivo = $this->AtendimentoTimer->find()
+				->where([
+					'idticket' => $idticket,
+					'iduser' => $this->Auth->user('id'),
+					'hora_fim IS' => null,
+				])
+				->orderDesc('id')
+				->first();
+			if ($timerAtivo) {
+				$hi = $this->_ormTimeToString($timerAtivo->get('hora_inicio') ?: $timerAtivo->get('horainicio'));
+				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa'));
+				$base['sessao'] = [
+					'id' => (int)$timerAtivo->id,
+					'horaInicio' => $hi,
+					'horaPausa' => $hp,
+					'pausado' => $hp !== null && $hp !== '',
+				];
+			}
+		} catch (\Throwable $e) {
+			$base['timerDisponivel'] = false;
+		}
+
+		return $base;
+	}
+
+	/**
+	 * Timer (JSON): mesma regra das ações POST legadas, sem redirect/Flash.
+	 *
+	 * @return array{ok:bool,error?:string,message?:string,duracaoMinutosFinal?:int}
+	 */
+	protected function _timerServiceExecute(int $idticket, $ticket, string $acao): array {
+		$acao = strtolower(trim($acao));
+		$allowed = ['iniciar', 'pausar', 'retomar', 'finalizar'];
+		if (!in_array($acao, $allowed, true)) {
+			return ['ok' => false, 'error' => 'invalid_action', 'message' => 'Ação inválida. Use: iniciar, pausar, retomar ou finalizar.'];
+		}
+		$uid = (int)$this->Auth->user('id');
+		$agora = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+		$agoraStr = $agora->format('Y-m-d H:i:s');
+
+		try {
+			$this->loadModel('AtendimentoTimer');
+		} catch (\Throwable $e) {
+			return ['ok' => false, 'error' => 'timer_unavailable', 'message' => 'Timer indisponível.'];
+		}
+
+		try {
+			if ($acao === 'iniciar') {
+				$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'iduser' => $uid, 'hora_fim IS' => null])->first();
+				if ($ativo) {
+					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
+				}
+				$novo = $this->AtendimentoTimer->newEntity([
+					'idticket' => $idticket,
+					'iduser' => $uid,
+					'idempresa' => (int)$this->Auth->user('idempresa'),
+					'hora_inicio' => $agoraStr,
+				]);
+				$this->AtendimentoTimer->save($novo);
+				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas iniciado.');
+
+				return ['ok' => true, 'message' => 'Timer iniciado.'];
+			}
+
+			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'iduser' => $uid, 'hora_fim IS' => null])->orderDesc('id')->first();
+			if (!$timer) {
+				return ['ok' => false, 'error' => 'no_timer', 'message' => 'Nenhum timer em andamento para este ticket.'];
+			}
+
+			if ($acao === 'pausar') {
+				$timer->set('hora_pausa', $agoraStr);
+				$this->AtendimentoTimer->save($timer);
+				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerPausado, 'Timer de horas técnicas pausado.');
+
+				return ['ok' => true, 'message' => 'Timer pausado.'];
+			}
+			if ($acao === 'retomar') {
+				$timer->set('hora_pausa', null);
+				$this->AtendimentoTimer->save($timer);
+				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas retomado.');
+
+				return ['ok' => true, 'message' => 'Timer retomado.'];
+			}
+
+			// finalizar
+			$timer->set('hora_fim', $agoraStr);
+			$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+			$horaFim = $timer->get('hora_fim') ?: $timer->get('horafim');
+			if ($horaInicio && is_object($horaInicio) && method_exists($horaInicio, 'format')) {
+				$horaInicio = $horaInicio->format('Y-m-d H:i:s');
+			}
+			if ($horaFim && is_object($horaFim) && method_exists($horaFim, 'format')) {
+				$horaFim = $horaFim->format('Y-m-d H:i:s');
+			}
+			$inicio = null;
+			$fim = null;
+			$duracaoSegundos = 0;
+			$duracaoMinutos = 0;
+			if ($horaInicio && $horaFim) {
+				$inicio = is_string($horaInicio) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaInicio) : null;
+				$fim = is_string($horaFim) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaFim) : null;
+				if ($inicio && $fim) {
+					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());
+					$duracaoMinutos = (int)round($duracaoSegundos / 60);
+					$timer->set('duracao_calculada_minutos', $duracaoMinutos);
+				}
+			}
+			$this->AtendimentoTimer->save($timer);
+
+			if ($inicio && $fim) {
+				try {
+					$regHora = $this->Ticketshoras->newEntity([
+						'idticket' => $idticket,
+						'iduser' => (int)$this->Auth->user('id'),
+						'idempresa' => (int)$this->Auth->user('idempresa'),
+						'data' => $inicio->format('Y-m-d'),
+						'horaini' => $inicio->format('Y-m-d H:i:s'),
+						'horafin' => $fim->format('Y-m-d H:i:s'),
+					]);
+					$this->Ticketshoras->save($regHora);
+				} catch (\Throwable $e) {
+					$this->log('Timer JSON: falha ao registrar em Ticketshoras: ' . $e->getMessage(), 'error');
+				}
+				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $duracaoSegundos, $duracaoMinutos);
+			}
+
+			return ['ok' => true, 'message' => 'Timer finalizado. Horas registradas.', 'duracaoMinutosFinal' => $duracaoMinutos];
+		} catch (\Throwable $e) {
+			$this->log($e->getMessage() . "\n" . $e->getTraceAsString(), 'error');
+			$msg = $e->getMessage();
+			if (stripos($msg, 'does not exist') !== false || stripos($msg, 'relation') !== false || stripos($msg, 'undefined table') !== false) {
+				return ['ok' => false, 'error' => 'table_missing', 'message' => 'Tabela atendimento_timer não existe ou está inacessível.'];
+			}
+			if (stripos($msg, 'column') !== false && stripos($msg, 'exist') !== false) {
+				return ['ok' => false, 'error' => 'schema', 'message' => 'Tabela atendimento_timer com colunas incorretas.'];
+			}
+
+			return ['ok' => false, 'error' => 'exception', 'message' => 'Erro ao executar ação do timer.'];
+		}
+	}
+
 	protected function _reactBoot(string $screen, $ticketId = null, array $extra = []): array {
 		$w = $this->request->getAttribute('webroot');
 		$base = [
@@ -1761,6 +1941,7 @@ class TicketsController extends AppController {
 				'apiView' => $w . 'tickets/api-view/',
 				'apiComments' => $w . 'tickets/api-comments/',
 				'apiSaveTicket' => $w . 'tickets/api-save/',
+				'apiTimer' => $w . 'tickets/api-timer/',
 				'apiAnexoUpload' => $w . 'tickets/api-anexo-upload/',
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
 				'apiTecnicosLista' => $w . 'tickets/api-tecnicos-lista',
@@ -2891,6 +3072,7 @@ class TicketsController extends AppController {
 				'canEditDescricao' => $role === 0 && (int)$this->Auth->user('admin') === 1,
 				'canEditDescricaoAtendimento' => $role === 0,
 			],
+			'horasTecnicas' => $this->_apiHorasTecnicasPayload((int)$idticket, $ticket),
 		];
 	}
 
@@ -3791,6 +3973,44 @@ class TicketsController extends AppController {
 			->withHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate')
 			->withHeader('Pragma', 'no-cache')
 			->withStringBody($body);
+	}
+
+	public function apiTimer($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Apenas usuários de suporte podem usar o timer.'], 403);
+		}
+		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$acao = '';
+		if (!empty($body['action'])) {
+			$acao = (string)$body['action'];
+		} elseif (!empty($body['acao'])) {
+			$acao = (string)$body['acao'];
+		}
+		$result = $this->_timerServiceExecute((int)$idticket, $ticket, $acao);
+		$payload = [
+			'ok' => $result['ok'],
+			'error' => $result['ok'] ? null : ($result['error'] ?? 'erro'),
+			'message' => $result['message'] ?? null,
+			'horasTecnicas' => $this->_apiHorasTecnicasPayload((int)$idticket, $ticket),
+		];
+		if (array_key_exists('duracaoMinutosFinal', $result)) {
+			$payload['duracaoMinutosFinal'] = (int)$result['duracaoMinutosFinal'];
+		}
+		$status = $result['ok'] ? 200 : 400;
+
+		return $this->jsonResponse($payload, $status);
 	}
 
 	public function apiSaveTicket($idticket = null) {

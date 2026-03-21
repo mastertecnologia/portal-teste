@@ -254,10 +254,35 @@ export async function fetchTicketsCliente(filters = {}) {
   return { ok: true, data: json.tickets || [] };
 }
 
+/** Estado mínimo do timer só para `npm run dev` sem portal. */
+let mockTimerSessao = null;
+
 export async function fetchTicketDetail(id) {
   if (USE_MOCK) {
     const t = getTicketById(id);
-    return t ? { ok: true, data: t } : { ok: false, error: 'Não encontrado' };
+    if (!t) return { ok: false, error: 'Não encontrado' };
+    const horasTecnicas = {
+      canUseTimer: true,
+      minutosRegistrados: 0,
+      sessao: mockTimerSessao,
+      serverUnix: Math.floor(Date.now() / 1000),
+      timerDisponivel: true,
+    };
+    return {
+      ok: true,
+      data: {
+        ...t,
+        assunto: t.assunto,
+        status: t.status,
+        descricao: t.descricao || '',
+        descricaoAtendimento: t.descricaoAtendimento || '',
+        cliente: t.cliente,
+        comentarios: t.comentarios || [],
+        anexos: t.anexos || [],
+        flags: { role: 0, canEditDescricao: true, canEditDescricaoAtendimento: true },
+        horasTecnicas,
+      },
+    };
   }
   const boot = getBoot();
   const sdQ = boot?.servicedesk ? '?sd=1' : '';
@@ -455,6 +480,61 @@ export async function fetchDashboardOperacional() {
     return { ok: false, error: json.error || 'erro', dashboard: null };
   }
   return { ok: true, dashboard: json.dashboard || null };
+}
+
+export async function postTimerAction(ticketId, action) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 150));
+    const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    if (action === 'iniciar') {
+      mockTimerSessao = { id: 1, horaInicio: nowStr, horaPausa: null, pausado: false };
+    } else if (action === 'pausar' && mockTimerSessao) {
+      mockTimerSessao = { ...mockTimerSessao, pausado: true, horaPausa: nowStr };
+    } else if (action === 'retomar' && mockTimerSessao) {
+      mockTimerSessao = { ...mockTimerSessao, pausado: false, horaPausa: null };
+    } else if (action === 'finalizar') {
+      mockTimerSessao = null;
+    }
+    return {
+      ok: true,
+      message: 'ok (mock)',
+      horasTecnicas: {
+        canUseTimer: true,
+        minutosRegistrados: action === 'finalizar' ? 15 : 0,
+        sessao: mockTimerSessao,
+        serverUnix: Math.floor(Date.now() / 1000),
+        timerDisponivel: true,
+      },
+    };
+  }
+  const boot = getBoot();
+  const base = boot.paths?.apiTimer;
+  if (!base) return { ok: false, error: 'no_api', message: 'apiTimer não configurado no boot.' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      message: json.message || json.error || 'Falha no timer',
+    };
+  }
+  return {
+    ok: true,
+    message: json.message,
+    horasTecnicas: json.horasTecnicas,
+    duracaoMinutosFinal: json.duracaoMinutosFinal,
+  };
 }
 
 export { getBoot, USE_MOCK, MOCK_SESSION_CLIENTE };
