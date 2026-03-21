@@ -40,9 +40,10 @@ class TicketsTable extends Table {
 		$this->hasMany('Ticketshoras')->setForeignKey('idticket')->setDependent(true);
 		$this->hasMany('AtendimentoTimer', ['foreignKey' => 'idticket', 'dependent' => true]);
 
-		$this->belongsTo('Clientes')->setForeignKey('idcliente');
+		// LEFT: tickets legados ou idcliente/idautor inconsistente não podem sumir da listagem JSON.
+		$this->belongsTo('Clientes', ['foreignKey' => 'idcliente', 'joinType' => 'LEFT']);
 		$this->belongsTo('Clicontabilidade')->setForeignKey('idsolicitantecontador');
-		$this->belongsTo('users')->setForeignKey('idautor')->setDependent(false);
+		$this->belongsTo('users', ['foreignKey' => 'idautor', 'joinType' => 'LEFT'])->setDependent(false);
 		$this->belongsTo('Queues', ['foreignKey' => 'queue_id', 'joinType' => 'LEFT']);
 		$this->belongsTo('SupportLevels', ['foreignKey' => 'support_level_id', 'joinType' => 'LEFT']);
 		$this->belongsTo('SlaPolicies', ['foreignKey' => 'sla_policy_id', 'joinType' => 'LEFT']);

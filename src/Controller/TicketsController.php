@@ -2758,8 +2758,17 @@ class TicketsController extends AppController {
 	public function apiIndex() {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
-		$empresa = $this->Auth->user('idempresa');
-		$contain = ['Users', 'Clientes'];
+		$empresa = (int)$this->Auth->user('idempresa');
+		if ($empresa <= 0) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'session_empresa_invalida',
+				'groups' => null,
+				'workflow' => ['enabled' => false, 'filas' => [], 'queuesRelacional' => false, 'queues' => []],
+			], 403);
+		}
+		// Nome da associação em TicketsTable é `users` (idautor); `Users` quebra o eager-load em alguns ambientes.
+		$contain = ['users', 'Clientes'];
 		if ($this->_queuesRelacionalReady()) {
 			$contain['Queues'] = $this->_supportLevelsRoutingReady() ? ['SupportLevels'] : [];
 		}
@@ -2767,6 +2776,7 @@ class TicketsController extends AppController {
 			$contain[] = 'SupportLevels';
 		}
 		$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
+		try {
 		$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
 			$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])
 		)->toArray();
@@ -2885,6 +2895,16 @@ class TicketsController extends AppController {
 			],
 		];
 		return $this->jsonResponse($out);
+		} catch (\Throwable $e) {
+			$this->log('apiIndex: ' . $e->getMessage(), 'error');
+
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'api_index_failed',
+				'groups' => null,
+				'workflow' => ['enabled' => false, 'filas' => [], 'queuesRelacional' => false, 'queues' => []],
+			], 500);
+		}
 	}
 
 	public function apiDashboardOperacional() {
@@ -3423,7 +3443,7 @@ class TicketsController extends AppController {
 		$situacao = $this->request->getQuery('situacao');
 		$fila = $this->request->getQuery('fila');
 
-		$tickets = $this->Tickets->find('all', ['contain' => ['Users', 'Clientes']])->where([
+		$tickets = $this->Tickets->find('all', ['contain' => ['users', 'Clientes']])->where([
 			'Tickets.idempresa' => $this->Auth->user('idempresa'),
 			'OR' => ['Clientes.cpf' => $cliente->cpf, 'Clientes.cnpj' => $cliente->cnpj],
 		]);

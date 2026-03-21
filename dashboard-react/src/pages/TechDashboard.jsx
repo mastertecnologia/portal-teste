@@ -367,6 +367,7 @@ export default function TechDashboard({ boot }) {
   const [transferQueuesErr, setTransferQueuesErr] = useState('');
   const [startBusyId, setStartBusyId] = useState(null);
   const [transferOkHint, setTransferOkHint] = useState('');
+  const [loadError, setLoadError] = useState(null);
   /** sem = só fila / sem responsável; com = atribuir técnico */
   const [transferAssignMode, setTransferAssignMode] = useState('sem');
 
@@ -382,9 +383,19 @@ export default function TechDashboard({ boot }) {
   const reload = useCallback(async () => {
     const res = await fetchTicketsTecnico(loadFilters);
     if (res.ok && res.groups) {
+      setLoadError(null);
       setGroups(res.groups);
       setWorkflow(res.workflow ?? { enabled: false, filas: [] });
+      return;
     }
+    const hint = res.httpStatus ? ` (HTTP ${res.httpStatus})` : '';
+    setLoadError(
+      res.error === 'session_empresa_invalida'
+        ? 'Sessão sem empresa válida. Troque de empresa ou faça login novamente.'
+        : res.error === 'api_index_failed'
+          ? `Falha ao montar a lista de tickets no servidor.${hint} Veja o log da aplicação (apiIndex).`
+          : `Não foi possível carregar os tickets.${hint} ${res.error || ''}`.trim(),
+    );
   }, [loadFilters]);
 
   useEffect(() => {
@@ -393,8 +404,18 @@ export default function TechDashboard({ boot }) {
       const res = await fetchTicketsTecnico(loadFilters);
       if (cancel) return;
       if (res.ok && res.groups) {
+        setLoadError(null);
         setGroups(res.groups);
         setWorkflow(res.workflow ?? { enabled: false, filas: [] });
+      } else {
+        const hint = res.httpStatus ? ` (HTTP ${res.httpStatus})` : '';
+        setLoadError(
+          res.error === 'session_empresa_invalida'
+            ? 'Sessão sem empresa válida. Troque de empresa ou faça login novamente.'
+            : res.error === 'api_index_failed'
+              ? `Falha ao montar a lista de tickets no servidor.${hint}`
+              : `Não foi possível carregar os tickets.${hint} ${res.error || ''}`.trim(),
+        );
       }
     })();
     return () => {
@@ -630,6 +651,12 @@ export default function TechDashboard({ boot }) {
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
+      {loadError ? (
+        <div className="border-b border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950">
+          <span className="font-semibold">Lista não carregou: </span>
+          {loadError}
+        </div>
+      ) : null}
       {!embedded ? (
         <div className="flex flex-col gap-3 border-b border-slate-100 p-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -843,7 +870,9 @@ export default function TechDashboard({ boot }) {
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={colCount} className="px-4 py-8 text-center text-slate-500">
-                    Nenhum ticket neste filtro.
+                    {loadError
+                      ? 'Ajuste o problema indicado acima e atualize a página.'
+                      : 'Nenhum ticket neste filtro.'}
                   </td>
                 </tr>
               ) : (

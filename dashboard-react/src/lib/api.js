@@ -106,9 +106,30 @@ export async function fetchTicketsTecnico(filters = {}) {
     sd: boot?.servicedesk ? '1' : '',
   });
   const r = await fetch(`${boot.paths.apiIndex}${q}`, { credentials: 'same-origin' });
-  if (!r.ok) return { ok: false, error: r.statusText, groups: null, workflow: null };
-  const json = await r.json();
-  if (!json.ok) return { ok: false, error: json.error || 'erro', groups: null, workflow: null };
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText || 'http_error',
+      httpStatus: r.status,
+      groups: null,
+      workflow: null,
+    };
+  }
+  if (!json.ok) {
+    return {
+      ok: false,
+      error: json.error || 'erro',
+      httpStatus: r.status,
+      groups: null,
+      workflow: null,
+    };
+  }
   return { ok: true, groups: json.groups, workflow: json.workflow || { enabled: false, filas: [] } };
 }
 
