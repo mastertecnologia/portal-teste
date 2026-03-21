@@ -30,7 +30,8 @@ const API_ERR_TRANSFER = {
 };
 
 const API_ERR_START = {
-  sem_permissao_fila: 'Você não pode assumir este ticket: verifique vínculo com a fila e nível de suporte.',
+  sem_permissao_fila:
+    'Não é possível assumir: seu usuário precisa estar vinculado à fila deste ticket e ter nível de suporte compatível (ex.: fila N2 → nível N2). Admin: Portal → Filas / técnicos → Editar no seu usuário (filas + nível).',
 };
 
 /** Polling do Service Desk embutido — aba em segundo plano não dispara fetch. */

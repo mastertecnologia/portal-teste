@@ -33,7 +33,7 @@ export function normalizeStatusKey(value) {
 }
 
 export function priorityType(value) {
-  if (value === 'Crítica') return 'critical';
+  if (value === 'Crítica' || value === 'Urgente') return 'critical';
   if (value === 'Alta') return 'high';
   if (value === 'Média') return 'medium';
   return 'low';

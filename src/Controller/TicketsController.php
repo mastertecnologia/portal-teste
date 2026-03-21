@@ -557,6 +557,9 @@ class TicketsController extends AppController {
 	public function add($assunto = null) { 
 		$this->set('title', 'Abertura de Ticket');
 		$ticket = $this->Tickets->newEntity();
+		if (in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
+			$ticket->severidade = 'media';
+		}
 
 		// Cliente
 		if($this->Auth->user('role') == C_RoleCliente){
@@ -598,6 +601,9 @@ class TicketsController extends AppController {
 				$anexos = $this->_normalizeUploadFilesList($post['file-3']);
 			}
 			unset($post['file-3']);
+			if (!in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
+				unset($post['severidade']);
+			}
 
 			// Caso não tenha email preenchido
 			if ($this->Auth->user('role') == 1 && ($post['email'] ?? '') === '' && isset($clientequetememail->email)) {
@@ -605,6 +611,9 @@ class TicketsController extends AppController {
 			}
 
 			$ticket = $this->Tickets->patchEntity($ticket, $post);
+			if (in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
+				$ticket->severidade = $this->_normalizeTicketSeveridade($post['severidade'] ?? $ticket->severidade ?? 'media');
+			}
 			$ticket->idautor = $this->Auth->user('id');
 			$ticket->situacao = 0;
 			$ticket->resolvido = 0;
@@ -732,6 +741,7 @@ class TicketsController extends AppController {
 		$this->set('assunto', $assunto);
 		$this->set('clientes', $clientesList);
 		$this->set('authUserName', (string)($this->Auth->user('name') ?? ''));
+		$this->set('severidadeColumnReady', in_array('severidade', $this->Tickets->getSchema()->columns(), true));
 		$this->set(compact('ticket'));
 	}
 
@@ -1775,6 +1785,35 @@ class TicketsController extends AppController {
 		return $t !== '' ? $t : (string)$assunto;
 	}
 
+	/** Códigos persistidos em tickets.severidade */
+	protected function _ticketSeveridadeCodigos(): array {
+		return ['baixa', 'media', 'alta', 'urgente'];
+	}
+
+	protected function _normalizeTicketSeveridade($value): string {
+		$v = is_string($value) ? strtolower(trim($value)) : '';
+		if ($v === 'média') {
+			$v = 'media';
+		}
+		if (!in_array($v, $this->_ticketSeveridadeCodigos(), true)) {
+			$v = 'media';
+		}
+
+		return $v;
+	}
+
+	protected function _ticketSeveridadeLabel(?string $code): string {
+		$map = [
+			'baixa' => 'Baixa',
+			'media' => 'Média',
+			'alta' => 'Alta',
+			'urgente' => 'Urgente',
+		];
+		$c = $code !== null && $code !== '' ? $this->_normalizeTicketSeveridade($code) : 'media';
+
+		return $map[$c] ?? 'Média';
+	}
+
 	protected function _ticketWorkflowSchemaReady(): bool {
 		static $ok = null;
 		if ($ok !== null) {
@@ -2396,11 +2435,15 @@ class TicketsController extends AppController {
 			$row['supportLevelLabel'] = $tl !== '' ? $tl : null;
 			$row['supportLevelSort'] = $this->_ticketQueueLevelSort($reg);
 		}
+		if (!empty($ctx['hasSeveridadeCol'])) {
+			$row['severidade'] = $this->_ticketSeveridadeLabel((string)($reg->severidade ?? 'media'));
+			$row['severidadeCode'] = $this->_normalizeTicketSeveridade($reg->severidade ?? 'media');
+		}
 
 		return $row;
 	}
 
-	protected function _ticketRowApiCliente($reg, string $tecnicosLabel = ''): array {
+	protected function _ticketRowApiCliente($reg, string $tecnicosLabel = '', array $ctx = []): array {
 		$c = $reg->cliente ?? null;
 		$nomeCliente = '';
 		if ($c) {
@@ -2414,7 +2457,7 @@ class TicketsController extends AppController {
 		}
 		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => $this->_ticketUrl(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
 
-		return [
+		$row = [
 			'id' => $id,
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
@@ -2432,6 +2475,12 @@ class TicketsController extends AppController {
 			],
 			'acoes' => $acoes,
 		];
+		if (!empty($ctx['hasSeveridadeCol'])) {
+			$row['severidade'] = $this->_ticketSeveridadeLabel((string)($reg->severidade ?? 'media'));
+			$row['severidadeCode'] = $this->_normalizeTicketSeveridade($reg->severidade ?? 'media');
+		}
+
+		return $row;
 	}
 
 	protected function _apiTicketViewAllowed($ticket): bool {
@@ -2587,7 +2636,9 @@ class TicketsController extends AppController {
 			'situacao' => (int)$ticket->situacao,
 			'descricao' => (string)($ticket->solicitacao ?? ''),
 			'descricaoAtendimento' => $descAtend,
-			'prioridade' => '—',
+			'prioridade' => in_array('severidade', $this->Tickets->getSchema()->columns(), true)
+				? $this->_ticketSeveridadeLabel((string)($ticket->severidade ?? 'media'))
+				: '—',
 			'responsavel' => $solicitante->name ?? '—',
 			'atualizado' => $createdFmt,
 			'cliente' => $clienteNome,
@@ -2660,7 +2711,8 @@ class TicketsController extends AppController {
 		$respNames = $hasRespCol ? $this->_batchUserDisplayNames($respIds) : [];
 		$transfSet = $hasRespCol ? $this->_ticketIdsComTransferencia($tecIds) : [];
 		$transferEnabled = $this->_ticketTransferApiAllowed();
-		$mapTec = function ($reg) use ($tecMap, $wf, $queuesUi, $hasRespCol, $respNames, $transfSet, $transferEnabled, $cols) {
+		$hasSeveridadeCol = in_array('severidade', $cols, true);
+		$mapTec = function ($reg) use ($tecMap, $wf, $queuesUi, $hasRespCol, $respNames, $transfSet, $transferEnabled, $cols, $hasSeveridadeCol) {
 			$tid = (int)$reg->id;
 			if ($hasRespCol) {
 				$rid = (int)($reg->idtecnico_responsavel ?? 0);
@@ -2677,6 +2729,7 @@ class TicketsController extends AppController {
 				'queuesUi' => $queuesUi,
 				'transferEnabled' => $transferEnabled,
 				'transferido' => isset($transfSet[$tid]),
+				'hasSeveridadeCol' => $hasSeveridadeCol,
 			]);
 		};
 		$catalog = [];
@@ -3223,9 +3276,10 @@ class TicketsController extends AppController {
 			$cliIds[] = (int)$t->id;
 		}
 		$tecMapCli = $this->_ticketTecnicosLabelsByTicketIds($cliIds);
+		$hasSeveridadeCol = in_array('severidade', $this->Tickets->getSchema()->columns(), true);
 		$rows = [];
 		foreach ($tickets as $reg) {
-			$rows[] = $this->_ticketRowApiCliente($reg, $tecMapCli[(int)$reg->id] ?? '');
+			$rows[] = $this->_ticketRowApiCliente($reg, $tecMapCli[(int)$reg->id] ?? '', ['hasSeveridadeCol' => $hasSeveridadeCol]);
 		}
 		return $this->jsonResponse([
 			'ok' => true,

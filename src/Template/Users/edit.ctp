@@ -75,11 +75,27 @@
 				<div class="col-md-12">
 					<div class="form-group">
 						<label class="control-label text-muted">Filas em que este técnico pode atuar (empresa atual)</label>
-						<select name="queue_ids[]" class="form-control" multiple size="8" style="min-height: 10rem;">
-							<?php foreach ($queuesList as $qid => $qname) : ?>
-								<option value="<?= (int)$qid ?>" <?= in_array((int)$qid, array_map('intval', $selectedQueues ?? []), true) ? 'selected' : '' ?>><?= h($qname) ?></option>
+						<p class="small text-muted m-b-10">
+							<strong>Importante:</strong> o vínculo vale para <em>este usuário</em> (quem faz login no Service Desk). Para assumir um ticket na fila N2, ele precisa estar marcado na fila N2 <strong>e</strong> ter nível de suporte compatível (N2 ou acima) acima.
+							<?= $this->Html->link('Lista de todos os técnicos e filas', ['controller' => 'Queues', 'action' => 'adminTechnicians'], ['class' => 'd-block m-t-5']) ?>
+						</p>
+						<div class="border rounded p-3 bg-light queues-checkboxes" style="max-height: 14rem; overflow-y: auto;">
+							<?php foreach ($queuesList as $qid => $qname) :
+								$qid = (int)$qid;
+								$selQ = array_map('intval', $selectedQueues ?? []);
+								$qChecked = in_array($qid, $selQ, true);
+								?>
+								<div class="custom-control custom-checkbox mb-1">
+									<input type="checkbox" class="custom-control-input js-queue-cb" name="queue_ids[]" id="queue_cb_<?= $qid ?>" value="<?= $qid ?>" <?= $qChecked ? 'checked' : '' ?>>
+									<label class="custom-control-label" for="queue_cb_<?= $qid ?>"><?= h($qname) ?></label>
+								</div>
 							<?php endforeach; ?>
-						</select>
+						</div>
+						<p class="small m-t-5 m-b-0">
+							<button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="queuesMarcarTodas" aria-label="Marcar todas as filas">Marcar todas</button>
+							<span class="text-muted">·</span>
+							<button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="queuesDesmarcarTodas" aria-label="Desmarcar todas as filas">Desmarcar todas</button>
+						</p>
 						<?php if (!empty($showQueueLevelOverrides) && !empty($selectedQueues)) : ?>
 							<p class="text-muted m-t-10 m-b-5"><small><strong>Nível na fila (opcional)</strong> — por fila selecionada; vazio = usa o nível principal acima.</small></p>
 							<div class="row">
@@ -102,7 +118,7 @@
 								<?php endforeach; ?>
 							</div>
 						<?php endif; ?>
-						<small class="form-text text-muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar várias. As filas são por empresa (Master/PGM conforme o contexto do login). Admin: <code>queues/api-ensure-defaults</code> ou <code>queues/api-save</code> (JSON).</small>
+						<small class="form-text text-muted">Marque ou desmarque cada fila; use o seletor Master/PGM no topo para a empresa correta. APIs: <code>queues/api-ensure-defaults</code>, <code>queues/api-save</code> (JSON).</small>
 					</div>
 				</div>
 			</div>
@@ -138,6 +154,12 @@
 <script>
 	jQuery(function($){
 		$("#cpf").mask("999.999.999-99");
+		$('#queuesMarcarTodas').on('click', function () {
+			$('.queues-checkboxes .js-queue-cb').prop('checked', true);
+		});
+		$('#queuesDesmarcarTodas').on('click', function () {
+			$('.queues-checkboxes .js-queue-cb').prop('checked', false);
+		});
 	});
 
 	// troca o texto de dentro

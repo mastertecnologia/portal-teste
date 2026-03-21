@@ -14,6 +14,11 @@ bin/cake migrations migrate
 
 Bases que já receberam o SQL em `config/schema/queues_queues_users_tickets_queue_id.sql` continuarão ok: a migration só acrescenta o que faltar (ex.: `owner_id`, timestamps).
 
+## Severidade na abertura (`20260320120000_TicketsSeveridade.php`)
+
+- **`tickets.severidade`**: `VARCHAR(16)` NOT NULL DEFAULT `'media'` — valores persistidos: `baixa`, `media`, `alta`, `urgente`.
+- SQL manual alternativo: `config/schema/tickets_severidade.sql`.
+
 ## Patch PostgreSQL: `queues` incompleta (`20250320120000_PostgreSQLQueuesSchemaPatch.php`)
 
 Se as tabelas `queues` / `queues_users` já existiam **sem** `name`, `idempresa`, `codigo`, `sort_order`, etc., rode as migrations de novo **ou** execute o SQL manual:

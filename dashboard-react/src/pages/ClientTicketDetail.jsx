@@ -163,7 +163,7 @@ export default function ClientTicketDetail({ boot }) {
               priorityType(ticket.prioridade)
             )}`}
           >
-            Prioridade: {ticket.prioridade}
+            Severidade: {ticket.prioridade}
           </span>
         </p>
       ) : null}

@@ -190,8 +190,8 @@
 			<?php endif; ?>
 			<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
 				<div class="row">
-					<?php if($role == 0) { ?>
-						<div class="col-md-4 col-xs-12">
+					<?php if ($role == 0) { ?>
+						<div class="<?= !empty($severidadeColumnReady) ? 'col-md-3' : 'col-md-4' ?> col-xs-12">
 							<label class="control-label text-muted">Cliente</label>
 							<?= $this->Form->control('idcliente', [ 'class' => 'selectpicker form-control', 'data-live-search' => true, 'empty' => 'Selecione o cliente', 'options' => $clientes, 'label' => false, 'required' => true]) ?>
 						</div>
@@ -203,15 +203,45 @@
 							<label class="control-label text-muted"></label>
 							<?= $this->Form->control('nomesolicitante', ['class' => 'form-control m-t-5', 'title' => 'Nome do solicitante', 'label' => false, 'required' => false, 'placeholder' => 'Solicitante (caso não cadastrado)']) ?>
 						</div>
+						<div class="<?= !empty($severidadeColumnReady) ? 'col-md-2' : 'col-md-3' ?> col-xs-12">
+							<label class="control-label text-muted">Assunto</label>
+							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+						</div>
+						<?php if (!empty($severidadeColumnReady)) : ?>
 						<div class="col-md-3 col-xs-12">
-							<label class="control-label text-muted">Assunto</label>
-							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+							<label class="control-label text-muted">Severidade</label>
+							<?= $this->Form->control('severidade', [
+								'type' => 'select',
+								'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
+								'class' => 'selectpicker form-control',
+								'title' => 'Grau de severidade',
+								'label' => false,
+								'required' => true,
+								'default' => 'media',
+								'value' => $ticket->severidade ?? 'media',
+							]) ?>
 						</div>
+						<?php endif; ?>
 					<?php } else { ?>
-						<div class="col-12 ticket-add-section">
+						<div class="<?= !empty($severidadeColumnReady) ? 'col-md-8' : 'col-12' ?> col-xs-12 ticket-add-section">
 							<label class="control-label text-muted">Assunto</label>
 							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 						</div>
+						<?php if (!empty($severidadeColumnReady)) : ?>
+						<div class="col-md-4 col-xs-12 ticket-add-section">
+							<label class="control-label text-muted">Severidade</label>
+							<?= $this->Form->control('severidade', [
+								'type' => 'select',
+								'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
+								'class' => 'selectpicker form-control',
+								'title' => 'Grau de severidade',
+								'label' => false,
+								'required' => true,
+								'default' => 'media',
+								'value' => $ticket->severidade ?? 'media',
+							]) ?>
+						</div>
+						<?php endif; ?>
 					<?php } ?>
 				</div>
 				<div class="row hide data m-t-10">

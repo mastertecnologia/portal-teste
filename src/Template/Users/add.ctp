@@ -70,12 +70,20 @@
 					<div class="col-12">
 						<div class="form-group">
 							<label class="control-label text-muted">Filas de Atendimento</label>
-							<select name="queue_ids[]" class="form-control" multiple size="8" style="min-height: 10rem;">
-								<?php foreach ($queuesList as $qid => $qname) : ?>
-									<option value="<?= (int)$qid ?>"><?= h($qname) ?></option>
+							<p class="small text-muted m-b-10">Marque as filas em que este técnico pode atuar (empresa atual do login). Sem marcação = sem vínculo até editar depois.</p>
+							<div class="border rounded p-3 bg-light queues-checkboxes" style="max-height: 14rem; overflow-y: auto;">
+								<?php foreach ($queuesList as $qid => $qname) : $qid = (int)$qid; ?>
+									<div class="custom-control custom-checkbox mb-1">
+										<input type="checkbox" class="custom-control-input js-queue-cb" name="queue_ids[]" id="queue_cb_add_<?= $qid ?>" value="<?= $qid ?>">
+										<label class="custom-control-label" for="queue_cb_add_<?= $qid ?>"><?= h($qname) ?></label>
+									</div>
 								<?php endforeach; ?>
-							</select>
-							<small class="form-text text-muted">Opcional: vincule o técnico às filas da empresa atual. Ctrl/Cmd + clique para várias.</small>
+							</div>
+							<p class="small m-t-5 m-b-0">
+								<button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="queuesMarcarTodasAdd">Marcar todas</button>
+								<span class="text-muted">·</span>
+								<button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="queuesDesmarcarTodasAdd">Desmarcar todas</button>
+							</p>
 						</div>
 					</div>
 				</div>
@@ -95,5 +103,11 @@
 <script>
 	jQuery(function($){
 		$("#cpf").mask("999.999.999-99");
+		$('#queuesMarcarTodasAdd').on('click', function () {
+			$('.queues-checkboxes .js-queue-cb').prop('checked', true);
+		});
+		$('#queuesDesmarcarTodasAdd').on('click', function () {
+			$('.queues-checkboxes .js-queue-cb').prop('checked', false);
+		});
 	});
 </script>

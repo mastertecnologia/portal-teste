@@ -1,0 +1,5 @@
+-- Grau de severidade na abertura do chamado (valores: baixa | media | alta | urgente).
+-- PostgreSQL:
+--   ALTER TABLE tickets ADD COLUMN IF NOT EXISTS severidade VARCHAR(16) NOT NULL DEFAULT 'media';
+-- MySQL/MariaDB:
+--   ALTER TABLE tickets ADD COLUMN severidade VARCHAR(16) NOT NULL DEFAULT 'media';
