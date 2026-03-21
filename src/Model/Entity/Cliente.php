@@ -53,4 +53,10 @@ class Cliente extends Entity {
                   return $this->removeCaracteres($cep);
             }
       }
+
+      protected function _setRg($rg) {
+            if (strlen((string)$rg) > 0) {
+                  return $this->removeCaracteres($rg);
+            }
+      }
 }
