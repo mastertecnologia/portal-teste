@@ -2820,7 +2820,7 @@ class TicketsController extends AppController {
 		$list = [];
 		$qidFilter = ($qFilter !== null && $qFilter !== '' && ctype_digit((string)$qFilter)) ? (int)$qFilter : 0;
 		foreach ($rows as $r) {
-			$u = $r->users ?? null;
+			$u = $r->user ?? $r->users ?? null;
 			if (!$u || isset($seen[(int)$u->id])) {
 				continue;
 			}

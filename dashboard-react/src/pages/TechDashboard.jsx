@@ -1014,6 +1014,11 @@ export default function TechDashboard({ boot }) {
                           </option>
                         ))}
                       </select>
+                      {transferQueueId && tecnicosModal.length === 0 ? (
+                        <p className="mt-1 text-xs text-amber-800">
+                          Nenhum técnico listado: cadastre o vínculo à fila em Usuários ou ajuste o nível de suporte para cobrir esta fila.
+                        </p>
+                      ) : null}
                     </label>
                   ) : null}
                 </>
