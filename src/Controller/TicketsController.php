@@ -5,6 +5,7 @@ use App\Controller\AppController;
 use App\Service\Ticket\DashboardService;
 use App\Service\Ticket\SlaService;
 use App\Service\Ticket\TicketHistoryLogger;
+use Cake\Database\Expression\QueryExpression;
 use Cake\Mailer\Email;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
@@ -1959,10 +1960,11 @@ class TicketsController extends AppController {
 	/**
 	 * UPDATE direto (transferência): contorna falhas de save do ORM com entity carregada / dirty no PG.
 	 * Espelha owner_id quando idtecnico_responsavel está no conjunto (como TicketsTable::beforeSave).
+	 * No PostgreSQL, NULL em updateAll precisa de expressão explícita; rowCount pode ser 0 se nada mudou.
 	 *
-	 * @return int linhas afetadas
+	 * @return array{0:int,1:array<string,mixed>} [linhas afetadas, valores para conferência]
 	 */
-	protected function _ticketTransferUpdateAll(int $idticket, int $idempresa, array $set, ?string $modifiedSql = null): int {
+	protected function _ticketTransferApplyUpdate(int $idticket, int $idempresa, array $set, ?string $modifiedSql = null): array {
 		$cols = $this->Tickets->getSchema()->columns();
 		$set = array_intersect_key($set, array_flip($cols));
 		if (array_key_exists('idtecnico_responsavel', $set) && in_array('owner_id', $cols, true)) {
@@ -1972,8 +1974,93 @@ class TicketsController extends AppController {
 		if (in_array('modified', $cols, true)) {
 			$set['modified'] = $modifiedSql ?? date('Y-m-d H:i:s');
 		}
+		$plain = $set;
+		$sqlSet = [];
+		foreach ($set as $k => $v) {
+			$sqlSet[$k] = $v === null ? new QueryExpression('NULL') : $v;
+		}
+		$n = (int)$this->Tickets->updateAll($sqlSet, ['id' => $idticket, 'idempresa' => $idempresa]);
+		if ($n === 0 && !$this->_ticketTransferRowMatches($idticket, $idempresa, $plain)) {
+			$row = $this->Tickets->find()->select(['id', 'idempresa'])->where(['id' => $idticket])->first();
+			if ($row && (int)$row->idempresa === $idempresa) {
+				$n = (int)$this->Tickets->updateAll($sqlSet, ['id' => $idticket]);
+			}
+		}
 
-		return (int)$this->Tickets->updateAll($set, ['id' => $idticket, 'idempresa' => $idempresa]);
+		return [$n, $plain];
+	}
+
+	/** Confere se o ticket já está com os valores pretendidos após o UPDATE. */
+	protected function _ticketTransferRowMatches(int $idticket, int $idempresa, array $set): bool {
+		if ($set === []) {
+			return true;
+		}
+		$fields = array_keys($set);
+		$row = $this->Tickets->find()->select($fields)->where(['id' => $idticket, 'idempresa' => $idempresa])->first();
+		if (!$row) {
+			return false;
+		}
+		foreach ($set as $col => $val) {
+			if ($col === 'modified') {
+				continue;
+			}
+			$cur = $row->get($col);
+			if (in_array($col, ['idtecnico_responsavel', 'owner_id'], true)) {
+				$ci = ($cur === null || $cur === '') ? 0 : (int)$cur;
+				$vi = ($val === null || $val === '') ? 0 : (int)$val;
+				if ($ci !== $vi) {
+					return false;
+				}
+			} elseif ($col === 'support_level_id') {
+				$ci = ($cur === null || $cur === '') ? null : (int)$cur;
+				$vi = ($val === null || $val === '') ? null : (int)$val;
+				if ($ci !== $vi) {
+					return false;
+				}
+			} elseif ((string)$cur !== (string)$val) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	protected function _ticketTransferAssertUpdated(int $idticket, int $idempresa, array $set, int $rows, string $ctx): void {
+		if ($rows === 1 || $this->_ticketTransferRowMatches($idticket, $idempresa, $set)) {
+			return;
+		}
+		$this->log(
+			'apiTransferirTicket ' . $ctx . ' rows=' . $rows . ' id=' . $idticket . ' set=' . json_encode($set, JSON_UNESCAPED_UNICODE),
+			'error'
+		);
+		throw new \RuntimeException('update_ticket');
+	}
+
+	/** Limita observação ao tamanho da coluna (evita falha no save de ticketsmovs). */
+	protected function _ticketsmovsObservacaoLimitada(string $texto): string {
+		$texto = (string)$texto;
+		$len = null;
+		try {
+			$sch = $this->Ticketsmovs->getSchema();
+			if (in_array('observacao', $sch->columns(), true)) {
+				$col = $sch->getColumn('observacao');
+				if (is_array($col) && !empty($col['length'])) {
+					$len = (int)$col['length'];
+				} elseif (is_object($col) && method_exists($col, 'getLimit')) {
+					$l = $col->getLimit();
+					$len = $l !== null ? (int)$l : null;
+				}
+			}
+		} catch (\Throwable $e) {
+		}
+		if ($len !== null && $len > 0 && function_exists('mb_strlen') && mb_strlen($texto) > $len) {
+			return mb_substr($texto, 0, $len);
+		}
+		if (function_exists('mb_strlen') && mb_strlen($texto) > 8000) {
+			return mb_substr($texto, 0, 8000);
+		}
+
+		return $texto;
 	}
 
 	protected function _ticketTransferApiAllowed(): bool {
@@ -3209,11 +3296,8 @@ class TicketsController extends AppController {
 					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
 						$set['support_level_id'] = $this->_ticketSupportLevelIdFromQueue($mappedQ);
 					}
-					$n = $this->_ticketTransferUpdateAll($idticket, $empresa, $set, $agoraSql);
-					if ($n !== 1) {
-						$this->log('apiTransferirTicket update_ticket rows=' . $n . ' id=' . $idticket, 'error');
-						throw new \RuntimeException('update_ticket');
-					}
+					list($n, $plain) = $this->_ticketTransferApplyUpdate($idticket, $empresa, $set, $agoraSql);
+					$this->_ticketTransferAssertUpdated($idticket, $empresa, $plain, $n, 'wf_queue_map');
 					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
 					$mov = $this->Ticketsmovs->newEntity();
 					$mov->idticket = $idticket;
@@ -3222,7 +3306,7 @@ class TicketsController extends AppController {
 					$mov->idusuario = $this->Auth->user('id');
 					$mov->idempresa = $empresa;
 					$mov->datetime = $agoraSql;
-					$mov->observacao = implode("\n", $obsLinhas);
+					$mov->observacao = $this->_ticketsmovsObservacaoLimitada(implode("\n", $obsLinhas));
 					if (!$this->Ticketsmovs->save($mov)) {
 						$this->log(
 							'apiTransferirTicket mov_errors: ' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE),
@@ -3287,11 +3371,8 @@ class TicketsController extends AppController {
 					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
 						$set['support_level_id'] = $this->_ticketSupportLevelIdFromQueue($newQueue);
 					}
-					$n = $this->_ticketTransferUpdateAll($idticket, $empresa, $set, $agoraSql);
-					if ($n !== 1) {
-						$this->log('apiTransferirTicket update_ticket rows=' . $n . ' id=' . $idticket, 'error');
-						throw new \RuntimeException('update_ticket');
-					}
+					list($n, $plain) = $this->_ticketTransferApplyUpdate($idticket, $empresa, $set, $agoraSql);
+					$this->_ticketTransferAssertUpdated($idticket, $empresa, $plain, $n, 'queue_only');
 					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
 					$mov = $this->Ticketsmovs->newEntity();
 					$mov->idticket = $idticket;
@@ -3300,7 +3381,7 @@ class TicketsController extends AppController {
 					$mov->idusuario = $this->Auth->user('id');
 					$mov->idempresa = $empresa;
 					$mov->datetime = $agoraSql;
-					$mov->observacao = implode("\n", $obsLinhas);
+					$mov->observacao = $this->_ticketsmovsObservacaoLimitada(implode("\n", $obsLinhas));
 					if (!$this->Ticketsmovs->save($mov)) {
 						$this->log(
 							'apiTransferirTicket mov_errors: ' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE),
@@ -3407,11 +3488,8 @@ class TicketsController extends AppController {
 					}
 					$set['support_level_id'] = $sl;
 				}
-				$n = $this->_ticketTransferUpdateAll($idticket, $empresa, $set, $agoraSql);
-				if ($n !== 1) {
-					$this->log('apiTransferirTicket update_ticket rows=' . $n . ' id=' . $idticket, 'error');
-					throw new \RuntimeException('update_ticket');
-				}
+				list($n, $plain) = $this->_ticketTransferApplyUpdate($idticket, $empresa, $set, $agoraSql);
+				$this->_ticketTransferAssertUpdated($idticket, $empresa, $plain, $n, 'assign_tec');
 				$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $destId])->first();
 				if (empty($ja)) {
 					$tu = $this->Ticketsusers->newEntity();
@@ -3439,7 +3517,7 @@ class TicketsController extends AppController {
 				$mov->idusuario = $this->Auth->user('id');
 				$mov->idempresa = $empresa;
 				$mov->datetime = $agoraSql;
-				$mov->observacao = implode("\n", $obsLinhas);
+				$mov->observacao = $this->_ticketsmovsObservacaoLimitada(implode("\n", $obsLinhas));
 				if (!$this->Ticketsmovs->save($mov)) {
 					$this->log(
 						'apiTransferirTicket mov_errors: ' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE),
