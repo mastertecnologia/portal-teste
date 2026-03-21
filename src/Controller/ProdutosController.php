@@ -38,33 +38,34 @@ class ProdutosController extends AppController {
 
 		$produtosWs = [];
 		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
-		$soap = null;
 
 		try {
-			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-			if ($soap === null) {
-				throw new \Exception('Erro ao instanciar SOAP para produtos.');
-			}
-
-			$response = $soap->sendRequest('GetEstoqueProdutos', [
-				'Data' => [
-					'iFilial' => C_Filial,
-					'sChave' => C_ChaveAcesso,
-					'bApenasComSaldo' => false,
-					'sCodProduto' => null,
-					'sDescricao' => null,
-				]
-			]);
-
-			if (!empty($response->GetEstoqueProdutosResult->tWsProdutosEstoque)) {
-				if (!is_array($response->GetEstoqueProdutosResult->tWsProdutosEstoque)) {
-					$response->GetEstoqueProdutosResult->tWsProdutosEstoque = [$response->GetEstoqueProdutosResult->tWsProdutosEstoque];
+			$this->runSoapBuffered(function () use ($soapprodutos, &$produtosWs) {
+				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+				if ($soap === null) {
+					throw new \Exception('Erro ao instanciar SOAP para produtos.');
 				}
-				foreach ($response->GetEstoqueProdutosResult->tWsProdutosEstoque as $produtoWs) {
-					$produtosWs[$produtoWs->sCodProduto] = $produtoWs;
+
+				$response = $soap->sendRequest('GetEstoqueProdutos', [
+					'Data' => [
+						'iFilial' => C_Filial,
+						'sChave' => C_ChaveAcesso,
+						'bApenasComSaldo' => false,
+						'sCodProduto' => null,
+						'sDescricao' => null,
+					]
+				]);
+
+				if (!empty($response->GetEstoqueProdutosResult->tWsProdutosEstoque)) {
+					if (!is_array($response->GetEstoqueProdutosResult->tWsProdutosEstoque)) {
+						$response->GetEstoqueProdutosResult->tWsProdutosEstoque = [$response->GetEstoqueProdutosResult->tWsProdutosEstoque];
+					}
+					foreach ($response->GetEstoqueProdutosResult->tWsProdutosEstoque as $produtoWs) {
+						$produtosWs[$produtoWs->sCodProduto] = $produtoWs;
+					}
 				}
-			}
-		} catch (\Exception $e) {
+			});
+		} catch (\Throwable $e) {
 			// Se o ERP estiver indisponível, apenas não sincroniza valores
 			$this->log('Produtos::index WS indisponível: ' . $e->getMessage(), 'error');
 		}
@@ -121,30 +122,34 @@ class ProdutosController extends AppController {
         // Para produtos (tipo 1), atualizar Valor Unitário com Preço de Venda do ERP ao abrir a edição
         if ($produto->tipo == 1 && !$this->request->is(['post', 'put'])) {
             try {
-                $soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
-                $soap = new CakeSoap(['wsdl' => $soapprodutos]);
-                $response = $soap->sendRequest('GetEstoqueProdutos', [
-                    'Data' => [
-                        'iFilial' => C_Filial,
-                        'sChave' => C_ChaveAcesso,
-                        'bApenasComSaldo' => false,
-                        'sCodProduto' => null,
-                        'sDescricao' => null,
-                    ]
-                ]);
-                $lista = $response->GetEstoqueProdutosResult->tWsProdutosEstoque;
-                if (!is_array($lista)) $lista = [$lista];
-                foreach ($lista as $item) {
-                    if (trim((string)$item->sCodProduto) === trim((string)$produto->codigo) && isset($item->nPrecoVenda)) {
-                        $precoVenda = (float) $item->nPrecoVenda;
-                        if ($precoVenda != (float) $produto->vlunitario) {
-                            $produto->vlunitario = $precoVenda;
-                            $this->Produtos->save($produto);
-                        }
-                        break;
+                $this->runSoapBuffered(function () use ($produto) {
+                    $soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
+                    $soap = new CakeSoap(['wsdl' => $soapprodutos]);
+                    $response = $soap->sendRequest('GetEstoqueProdutos', [
+                        'Data' => [
+                            'iFilial' => C_Filial,
+                            'sChave' => C_ChaveAcesso,
+                            'bApenasComSaldo' => false,
+                            'sCodProduto' => null,
+                            'sDescricao' => null,
+                        ]
+                    ]);
+                    $lista = $response->GetEstoqueProdutosResult->tWsProdutosEstoque;
+                    if (!is_array($lista)) {
+                        $lista = [$lista];
                     }
-                }
-            } catch (\Exception $e) {
+                    foreach ($lista as $item) {
+                        if (trim((string)$item->sCodProduto) === trim((string)$produto->codigo) && isset($item->nPrecoVenda)) {
+                            $precoVenda = (float) $item->nPrecoVenda;
+                            if ($precoVenda != (float) $produto->vlunitario) {
+                                $produto->vlunitario = $precoVenda;
+                                $this->Produtos->save($produto);
+                            }
+                            break;
+                        }
+                    }
+                });
+            } catch (\Throwable $e) {
                 // Mantém vlunitario atual se o ERP não responder
             }
         }
@@ -214,9 +219,12 @@ class ProdutosController extends AppController {
 				$idempresa = $this->Auth->user('idempresa');
 				$empresa = $this->Empresas->get($idempresa);
 				if (!empty($empresa->urlerp)) {
-					$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
-					$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-					if ($soap !== null) {
+					$this->runSoapBuffered(function () use ($empresa, $codigo, $produto) {
+						$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
+						$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+						if ($soap === null) {
+							return;
+						}
 						$response = $soap->sendRequest('GetEstoqueProdutos', [
 							'Data' => [
 								'iFilial' => C_Filial,
@@ -228,7 +236,9 @@ class ProdutosController extends AppController {
 						]);
 						$lista = isset($response->GetEstoqueProdutosResult->tWsProdutosEstoque) ? $response->GetEstoqueProdutosResult->tWsProdutosEstoque : null;
 						if ($lista !== null) {
-							if (!is_array($lista)) $lista = [$lista];
+							if (!is_array($lista)) {
+								$lista = [$lista];
+							}
 							$vlAntigo = (float) $produto->vlunitario;
 							foreach ($lista as $item) {
 								if (trim((string)($item->sCodProduto ?? '')) === $codigo && isset($item->nPrecoVenda)) {
@@ -245,7 +255,7 @@ class ProdutosController extends AppController {
 								}
 							}
 						}
-					}
+					});
 				}
 			} catch (\Throwable $e) {
 				$this->log('Produtos::produto GetEstoqueProdutos: ' . $e->getMessage(), 'error');
@@ -395,23 +405,24 @@ class ProdutosController extends AppController {
 		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
 
 		try {
-			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-			if ($soap === null) throw new \Exception('Erro');
-		} catch (\Exception $e) {
+			return $this->runSoapBuffered(function () use ($soapprodutos, $produto) {
+				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+				if ($soap === null) {
+					throw new \Exception('Erro');
+				}
+				$response = $soap->sendRequest('GetProdutoEstoque', [
+					'Data' => [
+						'iFilial' => C_Filial,
+						'sChave' => C_ChaveAcesso,
+						'sProduto' => $produto,
+					]
+				]);
+
+				return $this->jsonResponse($response->GetProdutoEstoqueResult, 200);
+			});
+		} catch (\Throwable $e) {
 			return $this->jsonResponse(-999, 200);
 		}
-		
-		$response = $soap->sendRequest('GetProdutoEstoque', [
-			'Data' => [
-				'iFilial' => C_Filial,
-				'sChave' => C_ChaveAcesso,
-				'sProduto' => $produto,
-			]
-		]);
-
-		//echo $response->GetProdutoEstoqueResult;
-		return $this->jsonResponse($response->GetProdutoEstoqueResult, 200);
-       
 	}
 
 	public function serialnumberproduto($produto) {
@@ -420,24 +431,27 @@ class ProdutosController extends AppController {
 
 		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
 		try {
-			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-			if ($soap === null) throw new \Exception('Erro');
-		} catch (\Exception $e) {
+			return $this->runSoapBuffered(function () use ($soapprodutos, $produto) {
+				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+				if ($soap === null) {
+					throw new \Exception('Erro');
+				}
+				$response = $soap->sendRequest('GetSerialNumberProduto', [
+					'Data' => [
+						'iFilial' => C_Filial,
+						'sChave' => C_ChaveAcesso,
+						'sProduto' => $produto,
+						'bApenasDisponiveis' => true,
+					]
+				]);
+				if (!is_array($response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber)) {
+					$response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber = [$response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber];
+				}
+				return $this->jsonResponse($response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber, 200);
+			});
+		} catch (\Throwable $e) {
 			return $this->jsonResponse([], 200);
 		}
-        
-        $response = $soap->sendRequest('GetSerialNumberProduto', [
-            'Data' => [
-                'iFilial' => C_Filial,
-                'sChave' => C_ChaveAcesso,
-                'sProduto' => $produto,
-                'bApenasDisponiveis' => true,
-            ]
-        ]);
-		
-		// echo json_encode($response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber, JSON_PRETTY_PRINT);
-		if(!is_array($response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber)) $response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber = array($response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber);
-		return $this->jsonResponse($response->GetSerialNumberProdutoResult->tWsProdutoSerialNumber, 200);
 	}
 
 	public function estoque($opt = null) {
@@ -465,36 +479,46 @@ class ProdutosController extends AppController {
 
 		$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
 		try {
-			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-			if ($soap === null) throw new \Exception('Cliente SOAP não inicializado.');
+			$this->runSoapBuffered(function () use ($soapprodutos, $bApenasComSaldo, &$sCodProduto, $sDescricao, &$produtos) {
+				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+				if ($soap === null) {
+					throw new \Exception('Cliente SOAP não inicializado.');
+				}
 
-			if ($sCodProduto == 0) $sCodProduto = null;
+				if ($sCodProduto == 0) {
+					$sCodProduto = null;
+				}
 
-			$response = $soap->sendRequest('GetEstoqueProdutos', [
-				'Data' => [
-					'iFilial' => C_Filial,
-					'sChave' => C_ChaveAcesso,
-					'bApenasComSaldo' => $bApenasComSaldo,
-					'sCodProduto' => $sCodProduto,
-					'sDescricao' => $sDescricao,
-				]
-			]);
+				$response = $soap->sendRequest('GetEstoqueProdutos', [
+					'Data' => [
+						'iFilial' => C_Filial,
+						'sChave' => C_ChaveAcesso,
+						'bApenasComSaldo' => $bApenasComSaldo,
+						'sCodProduto' => $sCodProduto,
+						'sDescricao' => $sDescricao,
+					]
+				]);
 
-			$result = $response->GetEstoqueProdutosResult ?? null;
-			$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : null;
+				$result = $response->GetEstoqueProdutosResult ?? null;
+				$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : null;
 
-			if ($lista === null) {
-				$produtos = [];
-			} else {
-				if (!is_array($lista)) $lista = [$lista];
-				$produtos = $lista;
-				usort($produtos, function($a, $b) {
-					$descA = $a->sDescProduto ?? '';
-					$descB = $b->sDescProduto ?? '';
-					if ($descA == $descB) return 0;
-					return ($descA < $descB) ? -1 : 1;
-				});
-			}
+				if ($lista === null) {
+					$produtos = [];
+				} else {
+					if (!is_array($lista)) {
+						$lista = [$lista];
+					}
+					$produtos = $lista;
+					usort($produtos, function ($a, $b) {
+						$descA = $a->sDescProduto ?? '';
+						$descB = $b->sDescProduto ?? '';
+						if ($descA == $descB) {
+							return 0;
+						}
+						return ($descA < $descB) ? -1 : 1;
+					});
+				}
+			});
 		} catch (\SoapFault $e) {
 			$this->log('Produtos::estoque SoapFault: ' . $e->getMessage(), 'error');
 			$this->Flash->error(__('Erro ao comunicar com o ERP (Windows Server). Verifique: 1) Se o servidor ERP está ligado e acessível; 2) URL do ERP em Empresas; 3) Rede/firewall. Detalhe: ') . $e->getMessage());
@@ -540,6 +564,33 @@ class ProdutosController extends AppController {
             
         return $this->jsonResponse($produtos, 200);
     }
+
+	/**
+	 * SoapClient emite warnings (ex.: connection refused) que iam para o output antes dos headers,
+	 * quebrando CSS/sessão. Isto descarta essa saída e regista em log.
+	 *
+	 * @param callable $fn
+	 * @return mixed
+	 * @throws \Throwable
+	 */
+	private function runSoapBuffered(callable $fn) {
+		ob_start();
+		try {
+			$result = $fn();
+		} catch (\Throwable $e) {
+			$this->discardSoapBuffer();
+			throw $e;
+		}
+		$this->discardSoapBuffer();
+		return $result;
+	}
+
+	private function discardSoapBuffer() {
+		$buf = ob_get_clean();
+		if ($buf !== false && trim($buf) !== '') {
+			$this->log('Produtos::SOAP output suprimido: ' . trim($buf), 'warning');
+		}
+	}
 }
 
 

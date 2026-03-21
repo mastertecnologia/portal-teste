@@ -148,6 +148,8 @@ Ex.: `http://10.0.2.7:85/WebGridPGM/WsProdutos.wso?wsdl` (Grid em 10.0.2.7)
 
 A **URL base** do ERP (onde esses .wso estão) é configurada no Portal em **Empresas → Editar empresa → URL ERP**. O Portal monta as chamadas como `{urlerp}NomeDoServico.wso?wsdl`.
 
+**Importante:** se o Portal corre num **servidor Linux** e o ERP Grid no **Windows/IIS** (outra máquina), em **URL ERP** use o **IP ou hostname acessível a partir do servidor do Portal** (ex.: `http://10.0.2.7:85/WebGridPGM/`). **`http://localhost:...` aponta para o próprio servidor do Portal**, não para o IIS — resulta em *Connection refused* e falha de estoque/SOAP.
+
 ---
 
 ## Parte 4: O que precisamos do ERP (checklist)
