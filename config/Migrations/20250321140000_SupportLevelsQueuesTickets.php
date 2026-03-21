@@ -16,6 +16,8 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 				->addTimestamps()
 				->addIndex(['sort_order'], ['name' => 'ix_support_levels_sort'])
 				->create();
+		} else {
+			$this->_ensureSupportLevelsColumnsMatchPhinx();
 		}
 
 		$this->_seedSupportLevelsSql();
@@ -60,6 +62,39 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 					$this->table('tickets')->addColumn('support_level_id', 'integer', ['null' => true])->update();
 				}
 			}
+		}
+	}
+
+	/**
+	 * Tabelas criadas manualmente ou por script antigo podem existir sem created/modified;
+	 * o seed usa essas colunas — alinhar ao schema esperado pelo Phinx.
+	 */
+	protected function _ensureSupportLevelsColumnsMatchPhinx(): void {
+		if (!$this->hasTable('support_levels')) {
+			return;
+		}
+		$t = $this->table('support_levels');
+		if ($this->getAdapter()->getAdapterType() === 'pgsql') {
+			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS description TEXT NULL');
+			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0');
+			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS created TIMESTAMP NULL');
+			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS modified TIMESTAMP NULL');
+			return;
+		}
+		if (!$t->hasColumn('description')) {
+			$t->addColumn('description', 'text', ['null' => true])->update();
+			$t = $this->table('support_levels');
+		}
+		if (!$t->hasColumn('sort_order')) {
+			$t->addColumn('sort_order', 'integer', ['null' => false, 'default' => 0])->update();
+			$t = $this->table('support_levels');
+		}
+		if (!$t->hasColumn('created')) {
+			$t->addColumn('created', 'timestamp', ['null' => true])->update();
+			$t = $this->table('support_levels');
+		}
+		if (!$t->hasColumn('modified')) {
+			$t->addColumn('modified', 'timestamp', ['null' => true])->update();
 		}
 	}
 
