@@ -1936,6 +1936,46 @@ class TicketsController extends AppController {
 		return array_values(array_intersect($fields, $this->Tickets->getSchema()->columns()));
 	}
 
+	/**
+	 * Nível do ticket alinhado à fila; null se FK inválida (evita UPDATE quebrando no PostgreSQL).
+	 */
+	protected function _ticketSupportLevelIdFromQueue($queueEntity): ?int {
+		if (!$this->_supportLevelsRoutingReady() || empty($queueEntity)) {
+			return null;
+		}
+		$sid = isset($queueEntity->support_level_id) ? (int)$queueEntity->support_level_id : 0;
+		if ($sid <= 0) {
+			return null;
+		}
+		try {
+			$ok = $this->SupportLevels->find()->select(['id'])->where(['id' => $sid])->first();
+
+			return $ok !== null ? $sid : null;
+		} catch (\Throwable $e) {
+			return null;
+		}
+	}
+
+	/**
+	 * UPDATE direto (transferência): contorna falhas de save do ORM com entity carregada / dirty no PG.
+	 * Espelha owner_id quando idtecnico_responsavel está no conjunto (como TicketsTable::beforeSave).
+	 *
+	 * @return int linhas afetadas
+	 */
+	protected function _ticketTransferUpdateAll(int $idticket, int $idempresa, array $set, ?string $modifiedSql = null): int {
+		$cols = $this->Tickets->getSchema()->columns();
+		$set = array_intersect_key($set, array_flip($cols));
+		if (array_key_exists('idtecnico_responsavel', $set) && in_array('owner_id', $cols, true)) {
+			$tid = $set['idtecnico_responsavel'];
+			$set['owner_id'] = ($tid !== null && $tid !== '' && (int)$tid > 0) ? (int)$tid : null;
+		}
+		if (in_array('modified', $cols, true)) {
+			$set['modified'] = $modifiedSql ?? date('Y-m-d H:i:s');
+		}
+
+		return (int)$this->Tickets->updateAll($set, ['id' => $idticket, 'idempresa' => $idempresa]);
+	}
+
 	protected function _ticketTransferApiAllowed(): bool {
 		$cols = $this->Tickets->getSchema()->columns();
 		$hasResp = in_array('idtecnico_responsavel', $cols, true);
@@ -3153,32 +3193,26 @@ class TicketsController extends AppController {
 			}
 
 			try {
-				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agoraSql, $obsLinhas, $wf, $cat, $filaPost, $sitAntes, $mappedQ) {
-					$ticket->idtecnico_responsavel = null;
-					$ticket->situacao = C_TicketSituacaoPendente;
-					$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel', 'situacao']);
-					if ($wf && $filaPost !== null) {
-						$ticket->fila_suporte = $filaPost;
-						$ticket->nivel_atendimento = $cat[$filaPost]['nivel'];
-						$fields[] = 'fila_suporte';
-						$fields[] = 'nivel_atendimento';
-					}
+				$this->Tickets->getConnection()->transactional(function () use ($idticket, $empresa, $agoraSql, $obsLinhas, $wf, $cat, $filaPost, $sitAntes, $mappedQ) {
 					$tcols = $this->Tickets->getSchema()->columns();
+					$set = [
+						'idtecnico_responsavel' => null,
+						'situacao' => C_TicketSituacaoPendente,
+					];
+					if ($wf && $filaPost !== null) {
+						$set['fila_suporte'] = $filaPost;
+						$set['nivel_atendimento'] = $cat[$filaPost]['nivel'];
+					}
 					if ($mappedQ && in_array('queue_id', $tcols, true)) {
-						$ticket->queue_id = (int)$mappedQ->id;
-						$fields[] = 'queue_id';
+						$set['queue_id'] = (int)$mappedQ->id;
 					}
 					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
-						$ticket->support_level_id = ($mappedQ && !empty($mappedQ->support_level_id)) ? (int)$mappedQ->support_level_id : null;
-						$fields[] = 'support_level_id';
+						$set['support_level_id'] = $this->_ticketSupportLevelIdFromQueue($mappedQ);
 					}
-					$saveFields = $this->_ticketIntersectSchemaFields($fields);
-					if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
-						$this->log(
-							'apiTransferirTicket ticket_errors: ' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE),
-							'error'
-						);
-						throw new \RuntimeException('save_ticket');
+					$n = $this->_ticketTransferUpdateAll($idticket, $empresa, $set, $agoraSql);
+					if ($n !== 1) {
+						$this->log('apiTransferirTicket update_ticket rows=' . $n . ' id=' . $idticket, 'error');
+						throw new \RuntimeException('update_ticket');
 					}
 					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
 					$mov = $this->Ticketsmovs->newEntity();
@@ -3198,7 +3232,11 @@ class TicketsController extends AppController {
 					}
 				});
 			} catch (\Throwable $e) {
-				$this->log('apiTransferirTicket: ' . $e->getMessage(), 'error');
+				$prev = $e->getPrevious();
+				$this->log(
+					'apiTransferirTicket: ' . $e->getMessage() . ($prev ? ' | ' . $prev->getMessage() : ''),
+					'error'
+				);
 
 				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
 			}
@@ -3235,29 +3273,24 @@ class TicketsController extends AppController {
 			}
 
 			try {
-				$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $empresa, $agoraSql, $obsLinhas, $newQueue, $wf, $cat, $filaPost, $nivelPost, $sitAntes) {
-					$ticket->idtecnico_responsavel = null;
-					$ticket->situacao = C_TicketSituacaoPendente;
-					$ticket->queue_id = (int)$newQueue->id;
-					$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel', 'situacao', 'queue_id']);
-					if ($wf && $filaPost !== null) {
-						$ticket->fila_suporte = $filaPost;
-						$ticket->nivel_atendimento = $nivelPost ?? $cat[$filaPost]['nivel'];
-						$fields[] = 'fila_suporte';
-						$fields[] = 'nivel_atendimento';
-					}
+				$this->Tickets->getConnection()->transactional(function () use ($idticket, $empresa, $agoraSql, $obsLinhas, $newQueue, $wf, $cat, $filaPost, $nivelPost, $sitAntes) {
 					$tcols = $this->Tickets->getSchema()->columns();
-					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
-						$ticket->support_level_id = !empty($newQueue->support_level_id) ? (int)$newQueue->support_level_id : null;
-						$fields[] = 'support_level_id';
+					$set = [
+						'idtecnico_responsavel' => null,
+						'situacao' => C_TicketSituacaoPendente,
+						'queue_id' => (int)$newQueue->id,
+					];
+					if ($wf && $filaPost !== null) {
+						$set['fila_suporte'] = $filaPost;
+						$set['nivel_atendimento'] = $nivelPost ?? $cat[$filaPost]['nivel'];
 					}
-					$saveFields = $this->_ticketIntersectSchemaFields($fields);
-					if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
-						$this->log(
-							'apiTransferirTicket ticket_errors: ' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE),
-							'error'
-						);
-						throw new \RuntimeException('save_ticket');
+					if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
+						$set['support_level_id'] = $this->_ticketSupportLevelIdFromQueue($newQueue);
+					}
+					$n = $this->_ticketTransferUpdateAll($idticket, $empresa, $set, $agoraSql);
+					if ($n !== 1) {
+						$this->log('apiTransferirTicket update_ticket rows=' . $n . ' id=' . $idticket, 'error');
+						throw new \RuntimeException('update_ticket');
 					}
 					$this->Ticketsusers->deleteAll(['idticket' => $idticket]);
 					$mov = $this->Ticketsmovs->newEntity();
@@ -3277,7 +3310,11 @@ class TicketsController extends AppController {
 					}
 				});
 			} catch (\Throwable $e) {
-				$this->log('apiTransferirTicket: ' . $e->getMessage(), 'error');
+				$prev = $e->getPrevious();
+				$this->log(
+					'apiTransferirTicket: ' . $e->getMessage() . ($prev ? ' | ' . $prev->getMessage() : ''),
+					'error'
+				);
 
 				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
 			}
@@ -3344,46 +3381,36 @@ class TicketsController extends AppController {
 
 		try {
 			$this->Tickets->getConnection()->transactional(function () use ($ticket, $idticket, $destId, $empresa, $agoraSql, $obsLinhas, $filaPost, $oldId, $cat, $nivelPost, $newQueue, $wf) {
-				$ticket->idtecnico_responsavel = $destId;
-				if ($newQueue) {
-					$ticket->queue_id = (int)$newQueue->id;
+				$tcols = $this->Tickets->getSchema()->columns();
+				$set = ['idtecnico_responsavel' => $destId];
+				if ($newQueue && $this->_queuesRelacionalReady()) {
+					$set['queue_id'] = (int)$newQueue->id;
 				}
 				if ($filaPost !== null) {
-					$ticket->fila_suporte = $filaPost;
-					$ticket->nivel_atendimento = $cat[$filaPost]['nivel'];
+					$set['fila_suporte'] = $filaPost;
+					$set['nivel_atendimento'] = $cat[$filaPost]['nivel'];
 				} elseif ($nivelPost !== null) {
-					$ticket->nivel_atendimento = $nivelPost;
+					$set['nivel_atendimento'] = $nivelPost;
 				}
-				$fields = $this->_ticketFieldsComResponsavel(['idtecnico_responsavel']);
-				if ($this->_queuesRelacionalReady()) {
-					$fields[] = 'queue_id';
+				if (!$wf) {
+					unset($set['fila_suporte'], $set['nivel_atendimento']);
 				}
-				if ($wf) {
-					$fields[] = 'fila_suporte';
-					$fields[] = 'nivel_atendimento';
-				}
-				$tcols = $this->Tickets->getSchema()->columns();
 				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
 					$eq = $newQueue ? (int)$newQueue->id : (int)($ticket->queue_id ?? 0);
-					$ticket->support_level_id = null;
+					$sl = null;
 					if ($eq > 0) {
 						try {
 							$qq = $this->Queues->get($eq, ['contain' => ['SupportLevels']]);
-							if (!empty($qq->support_level_id)) {
-								$ticket->support_level_id = (int)$qq->support_level_id;
-							}
+							$sl = $this->_ticketSupportLevelIdFromQueue($qq);
 						} catch (\Throwable $e) {
 						}
 					}
-					$fields[] = 'support_level_id';
+					$set['support_level_id'] = $sl;
 				}
-				$saveFields = $this->_ticketIntersectSchemaFields($fields);
-				if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
-					$this->log(
-						'apiTransferirTicket ticket_errors: ' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE),
-						'error'
-					);
-					throw new \RuntimeException('save_ticket');
+				$n = $this->_ticketTransferUpdateAll($idticket, $empresa, $set, $agoraSql);
+				if ($n !== 1) {
+					$this->log('apiTransferirTicket update_ticket rows=' . $n . ' id=' . $idticket, 'error');
+					throw new \RuntimeException('update_ticket');
 				}
 				$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $destId])->first();
 				if (empty($ja)) {
@@ -3422,7 +3449,11 @@ class TicketsController extends AppController {
 				}
 			});
 		} catch (\Throwable $e) {
-			$this->log('apiTransferirTicket: ' . $e->getMessage(), 'error');
+			$prev = $e->getPrevious();
+			$this->log(
+				'apiTransferirTicket: ' . $e->getMessage() . ($prev ? ' | ' . $prev->getMessage() : ''),
+				'error'
+			);
 
 			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
 		}
