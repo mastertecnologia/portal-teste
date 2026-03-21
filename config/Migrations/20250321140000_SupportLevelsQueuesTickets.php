@@ -22,7 +22,7 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 
 		$this->_seedSupportLevelsSql();
 
-		if ($this->getAdapter()->getAdapterType() === 'pgsql') {
+		if ($this->_isPgsql()) {
 			$this->execute('ALTER TABLE queues ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
 			$this->execute('ALTER TABLE queues ADD COLUMN IF NOT EXISTS description TEXT NULL');
 			$this->execute('ALTER TABLE queues_users ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
@@ -65,16 +65,34 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		}
 	}
 
+	/** Phinx/Cake em alguns ambientes não retornam getAdapterType() === 'pgsql'; PDO é canônico. */
+	protected function _isPgsql(): bool {
+		try {
+			$c = $this->getAdapter()->getConnection();
+			if ($c && $c->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'pgsql') {
+				return true;
+			}
+		} catch (\Throwable $e) {
+		}
+		try {
+			$t = strtolower((string)$this->getAdapter()->getAdapterType());
+
+			return $t === 'pgsql' || $t === 'postgres' || $t === 'postgresql';
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
 	/**
 	 * Tabelas criadas manualmente ou por script antigo podem existir sem created/modified;
-	 * o seed usa essas colunas — alinhar ao schema esperado pelo Phinx.
+	 * o seed não deve depender dessas colunas no PostgreSQL.
 	 */
 	protected function _ensureSupportLevelsColumnsMatchPhinx(): void {
 		if (!$this->hasTable('support_levels')) {
 			return;
 		}
 		$t = $this->table('support_levels');
-		if ($this->getAdapter()->getAdapterType() === 'pgsql') {
+		if ($this->_isPgsql()) {
 			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS description TEXT NULL');
 			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0');
 			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS created TIMESTAMP NULL');
@@ -102,8 +120,10 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		if (!$this->hasTable('support_levels')) {
 			return;
 		}
-		$adapter = $this->getAdapter()->getAdapterType();
-		$nowF = $adapter === 'pgsql' ? 'NOW()' : 'CURRENT_TIMESTAMP';
+		$this->_ensureSupportLevelsColumnsMatchPhinx();
+
+		$isPg = $this->_isPgsql();
+		$nowF = $isPg ? 'NOW()' : 'CURRENT_TIMESTAMP';
 		$rows = [
 			['N1', 'Suporte inicial / triagem', 1],
 			['N2', 'Suporte avançado / field service', 2],
@@ -115,10 +135,11 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 			$n = str_replace("'", "''", $r[0]);
 			$d = str_replace("'", "''", $r[1]);
 			$o = (int)$r[2];
-			if ($adapter === 'pgsql') {
+			if ($isPg) {
+				// Não usar created/modified no INSERT: tabelas legadas podem não tê-las ainda neste ponto.
 				$this->execute(
-					"INSERT INTO support_levels (name, description, sort_order, created, modified) "
-					. "SELECT '{$n}', '{$d}', {$o}, {$nowF}, {$nowF} "
+					"INSERT INTO support_levels (name, description, sort_order) "
+					. "SELECT '{$n}', '{$d}', {$o} "
 					. "WHERE NOT EXISTS (SELECT 1 FROM support_levels WHERE sort_order = {$o} LIMIT 1)"
 				);
 			} else {
@@ -126,6 +147,16 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 					"INSERT IGNORE INTO support_levels (name, description, sort_order, created, modified) "
 					. "VALUES ('{$n}', '{$d}', {$o}, {$nowF}, {$nowF})"
 				);
+			}
+		}
+		if ($isPg) {
+			try {
+				$this->execute(
+					'UPDATE support_levels SET created = COALESCE(created, NOW()), modified = COALESCE(modified, NOW()) '
+					. 'WHERE created IS NULL OR modified IS NULL'
+				);
+			} catch (\Throwable $e) {
+				// Colunas podem não existir em schema legado extremo; INSERT já garantiu as linhas.
 			}
 		}
 	}
