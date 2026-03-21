@@ -33,7 +33,7 @@ class ClientesController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Clientes');
-		$this->Auth->allow(['addApi', 'listApi']);
+		$this->Auth->allow(['addApi', 'listApi', 'addAPI', 'listAPI']);
 	}
 
 	public function index() {
@@ -640,9 +640,17 @@ class ClientesController extends AppController {
 	public function addAPI() {
 		$this->autoRender = false;
 
-        if ($this->request->is('post')) {
+		$apiRet = function ($msg, $status = 200) {
+			return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
+		};
+
+		if (!$this->request->is('post')) {
+			return $apiRet('Método não permitido. Use POST com JSON em /clientes/addAPI.', 405);
+		}
+
+		try {
 			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
-            $token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+			$token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
 			$json = $this->request->getData();
 			if (empty($json) || !is_array($json)) {
 				$raw = $this->request->input('json_decode');
@@ -651,91 +659,144 @@ class ClientesController extends AppController {
 				$json = (object)$json;
 			}
 
-			$apiRet = function ($msg, $status = 200) {
-				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
-			};
-			if(empty($token)) return $apiRet("O token não foi informado", 400);
-			if(empty($empresa)) return $apiRet("O ID da empresa não foi informado", 400);
-			// `{}` é object não-vazio para empty(); validar explicitamente.
+			if (empty($token)) {
+				return $apiRet('O token não foi informado', 400);
+			}
+			if (empty($empresa)) {
+				return $apiRet('O ID da empresa não foi informado', 400);
+			}
 			if ($json === null || !is_object($json)) {
-				return $apiRet("O JSON não foi informado", 400);
+				return $apiRet('O JSON não foi informado ou é inválido.', 400);
 			}
 			if (!isset($json->cnpj) || trim((string) $json->cnpj) === '') {
-				return $apiRet("JSON inválido: o campo cnpj é obrigatório.", 400);
+				return $apiRet('JSON inválido: o campo cnpj é obrigatório.', 400);
 			}
-			if(empty($this->Empresas->findById($empresa)->first())) return $apiRet("Não foi encontrada uma empresa com o ID ($empresa) informado", 400);
+			if (empty($this->Empresas->findById($empresa)->first())) {
+				return $apiRet("Não foi encontrada uma empresa com o ID ($empresa) informado", 400);
+			}
 
-			if($token == $this->Empresas->get($empresa)->token) {
-				$retorno['CNPJ'] = removeCaracteres($json->cnpj);
-				$retorno['Empresa'] = $empresa;
+			if ($token != $this->Empresas->get($empresa)->token) {
+				return $apiRet('Autenticação Inválida', 401);
+			}
 
-				$tipo = strlen($retorno['CNPJ']) > 11 ? 'j' : 'f' ;
+			$retorno['CNPJ'] = removeCaracteres($json->cnpj);
+			$retorno['Empresa'] = $empresa;
+			$tipo = strlen($retorno['CNPJ']) > 11 ? 'j' : 'f';
 
-				if($tipo == 'j') $cliente = $this->Clientes->findByCnpj($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa']])->first(); 
-				else $cliente = $this->Clientes->findByCpf($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa'], 'tipo' => C_ClientesTipoFisica])->first();
+			if ($tipo == 'j') {
+				$cliente = $this->Clientes->findByCnpj($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa']])->first();
+			} else {
+				$cliente = $this->Clientes->findByCpf($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa'], 'tipo' => C_ClientesTipoFisica])->first();
+			}
 
-				if ($cliente == null){
-					$cliente = $this->Clientes->newEntity();
-					$string = $empresa . $retorno['CNPJ'] .  date('d/m/y') .  date('H:i');
-					$cliente->token = $this->Clientes->generateToken($string);
-				} 
+			if ($cliente == null) {
+				$cliente = $this->Clientes->newEntity();
+				$string = $empresa . $retorno['CNPJ'] . date('d/m/y') . date('H:i');
+				$cliente->token = $this->Clientes->generateToken($string);
+			}
 
-				if($tipo == 'j'){
-					$cliente->razaosocial = strtoupper($json->nome);
-					$cliente->nome = ' ';
-					$cliente->cnpj = $retorno['CNPJ'];
-					$cliente->tipo = C_ClientesTipoJuridica;
-				} else{
-					$cliente->nome = strtoupper($json->nome);
-					$cliente->cpf = $retorno['CNPJ'];
-					$cliente->tipo = C_ClientesTipoFisica;
+			$nomeIn = strtoupper(trim((string)($json->nome ?? '')));
+			if ($tipo == 'j') {
+				$cliente->razaosocial = $nomeIn;
+				$cliente->nome = ' ';
+				$cliente->cnpj = $retorno['CNPJ'];
+				$cliente->tipo = C_ClientesTipoJuridica;
+			} else {
+				$cliente->nome = $nomeIn !== '' ? $nomeIn : ' ';
+				$cliente->cpf = $retorno['CNPJ'];
+				$cliente->tipo = C_ClientesTipoFisica;
+			}
+			$cliente->inscricaoestadual = $json->inscest ?? null;
+			$cliente->membrodesde = date('d/m/y');
+			$cliente->idempresa = $empresa;
+			$cliente->endereco = $json->endereco ?? null;
+			$cliente->nroendereco = $json->nroendereco ?? null;
+			$cliente->complemento = $json->complemento ?? null;
+			$cliente->bairro = $json->bairro ?? null;
+			$cliente->cep = isset($json->cep) ? removeCaracteres((string)$json->cep) : null;
+			if (isset($json->telefone)) {
+				$cliente->fone = removeCaracteres((string)$json->telefone);
+			}
+			if (isset($json->celular)) {
+				$cliente->fone2 = removeCaracteres((string)$json->celular);
+			}
+			$cliente->email = $json->email ?? null;
+			$cliente->contrato = $json->contrato ?? null;
+			$cliente->nomefantasia = $json->fantasia ?? null;
+			$cliente->inativo = 0;
+
+			$codibge = isset($json->codibge) ? trim((string)$json->codibge) : '';
+			if ($codibge === '') {
+				return $apiRet('JSON inválido: informe codibge (código IBGE do município).', 400);
+			}
+			$cidade = $this->Cidades->findByCodibge($codibge)->first();
+			if ($cidade === null) {
+				return $apiRet("Município não encontrado no portal para codibge={$codibge}. Cadastre a cidade ou corrija o IBGE.", 400);
+			}
+			$cliente->idcidade = $cidade->id;
+			$cliente->empresadominante = (int)$empresa;
+
+			if (!$this->Clientes->save($cliente)) {
+				$err = json_encode($cliente->getErrors(), JSON_UNESCAPED_UNICODE);
+
+				return $apiRet('Erro ao salvar cliente no portal: ' . $err, 400);
+			}
+
+			$deuerro = 'não';
+			$contratos = $this->Clicontratos->find('all')->where(['idempresa' => $empresa, 'idcliente' => $cliente->id])->toArray();
+			foreach ($contratos as $reg) {
+				$this->Clicontratos->delete($reg);
+			}
+
+			$servicosList = [];
+			if (isset($json->Servicos)) {
+				if (is_array($json->Servicos)) {
+					$servicosList = $json->Servicos;
+				} elseif (is_object($json->Servicos)) {
+					$servicosList = [$json->Servicos];
 				}
-				$cliente->inscricaoestadual = $json->inscest;
-				$cliente->membrodesde = date('d/m/y');
-				$cliente->idempresa = $empresa;
-				$cliente->endereco = $json->endereco;
-				$cliente->nroendereco = $json->nroendereco;
-				$cliente->complemento = $json->complemento;
-				$cliente->bairro = $json->bairro;
-				$cliente->cep = $json->cep;
-				if(isset($json->telefone)) $cliente->fone = $json->telefone;
-				if(isset($json->celular)) $cliente->fone2 = $json->celular;
-				$cliente->email = $json->email;
-				$cliente->contrato = $json->contrato;
-				$cliente->nomefantasia = $json->fantasia;
-				$cliente->inativo = 0;
-				$cliente->idcidade = $this->Cidades->findByCodibge($json->codibge)->first()->id;
-				// Multiempresa: dominante deve seguir a empresa informada na API.
-				$cliente->empresadominante = (int)$empresa;
+			}
+			foreach ($servicosList as $servico) {
+				$servico = is_array($servico) ? (object)$servico : $servico;
+				$contrato = $this->Clicontratos->newEntity();
+				$contrato->iderp = $servico->idERP ?? null;
+				$contrato->codproduto = $servico->codproduto ?? null;
+				$contrato->descricao = $servico->descricao ?? null;
+				$contrato->infadicional = $servico->infadicional ?? null;
+				$contrato->vlunit = $servico->vlunit ?? null;
+				$contrato->qtde = $servico->qtde ?? null;
+				$contrato->vltotal = $servico->vltotal ?? null;
+				if (!empty($servico->dtcontratacao)) {
+					$contrato->dtcontratacao = $servico->dtcontratacao;
+				}
+				if (!empty($servico->dtvalidade)) {
+					$contrato->dtvalidade = $servico->dtvalidade;
+				}
+				if (!empty($servico->dtcancelamento)) {
+					$contrato->dtcancelamento = $servico->dtcancelamento;
+				}
+				$contrato->idcliente = $cliente->id;
+				$contrato->idempresa = $empresa;
+				if ($this->Clicontratos->save($contrato)) {
+					$contratos[] = $contrato;
+				} else {
+					$deuerro = 'sim';
+				}
+			}
 
-				if($this->Clientes->save($cliente)) {
-					$deuerro = 'não';
-					$contratos = $this->Clicontratos->find('all')->where(['idempresa' => $empresa, 'idcliente' => $cliente->id])->toArray();
-					foreach($contratos as $reg) $this->Clicontratos->delete($reg);
-					foreach($json->Servicos as $servico){
-						// $contrato = $this->Clicontratos->findByCodproduto($servico->codproduto)->where(['idempresa' => $empresa, 'idcliente' => $cliente->id])->first();
-						// if(empty($contrato)) $contrato = $this->Clicontratos->newEntity();
-						$contrato = $this->Clicontratos->newEntity();
-							$contrato->iderp = $servico->idERP;
-							$contrato->codproduto = $servico->codproduto;
-							$contrato->descricao = $servico->descricao;
-							$contrato->infadicional = $servico->infadicional;
-							$contrato->vlunit = $servico->vlunit;
-							$contrato->qtde = $servico->qtde;
-							$contrato->vltotal = $servico->vltotal;
-							if(!empty($servico->dtcontratacao))$contrato->dtcontratacao = $servico->dtcontratacao;
-							if(!empty($servico->dtvalidade))$contrato->dtvalidade = $servico->dtvalidade;
-							if(!empty($servico->dtcancelamento))$contrato->dtcancelamento = $servico->dtcancelamento;
-							$contrato->idcliente = $cliente->id;
-							$contrato->idempresa = $empresa;
-						if($this->Clicontratos->save($contrato)) $contratos[] = $contrato;
-						else $deuerro = 'sim';
-					}
-					if(  $deuerro == 'não' ) return $apiRet("Cliente cadastrado/atualizado com sucesso", 201);
-					else return $apiRet("Houve um erro ao salvar os contratos do cliente. Json recebido: $json", 400);
-				} else return $apiRet("Houve um erro ao cadastrar/atualizar o cliente. Json recebido: $json", 400);
-			} else return $apiRet("Autenticação Inválida", 401);
-        }
+			if ($deuerro == 'não') {
+				return $apiRet('Cliente cadastrado/atualizado com sucesso', 201);
+			}
+
+			return $apiRet('Houve um erro ao salvar os contratos do cliente.', 400);
+		} catch (\Throwable $e) {
+			$this->log('Clientes::addAPI: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(), 'error');
+
+			return $this->jsonResponse([
+				'mensagem' => 'Erro interno ao processar addAPI: ' . $e->getMessage(),
+				'retorno' => 'Erro interno ao processar addAPI: ' . $e->getMessage(),
+			], 500);
+		}
 	}
 	
 	public function listAPI() {
