@@ -23,17 +23,37 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		$this->_seedSupportLevelsSql();
 
 		if ($this->_isPgsql()) {
-			$this->execute('ALTER TABLE queues ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
-			$this->execute('ALTER TABLE queues ADD COLUMN IF NOT EXISTS description TEXT NULL');
-			$this->execute('ALTER TABLE queues_users ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
-			$this->execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
-			$this->execute('ALTER TABLE tickets ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
-			$this->_pgsqlTryFk('queues', 'support_level_id', 'support_levels', 'id');
-			$this->_pgsqlTryFk('queues_users', 'support_level_id', 'support_levels', 'id');
-			$this->_pgsqlTryFk('users', 'support_level_id', 'support_levels', 'id');
-			$this->_pgsqlTryFk('tickets', 'support_level_id', 'support_levels', 'id');
-			$this->_backfillQueuesLevelsPg();
-			$this->_backfillTicketsSupportLevelPg();
+			if ($this->hasTable('queues')) {
+				$this->execute('ALTER TABLE public.queues ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
+				$this->execute('ALTER TABLE public.queues ADD COLUMN IF NOT EXISTS description TEXT NULL');
+			}
+			if ($this->hasTable('queues_users')) {
+				$this->execute('ALTER TABLE public.queues_users ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
+			}
+			if ($this->hasTable('users')) {
+				$this->execute('ALTER TABLE public.users ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
+			}
+			if ($this->hasTable('tickets')) {
+				$this->execute('ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS support_level_id INTEGER NULL');
+			}
+			if ($this->hasTable('queues')) {
+				$this->_pgsqlTryFk('public.queues', 'support_level_id', 'public.support_levels', 'id');
+			}
+			if ($this->hasTable('queues_users')) {
+				$this->_pgsqlTryFk('public.queues_users', 'support_level_id', 'public.support_levels', 'id');
+			}
+			if ($this->hasTable('users')) {
+				$this->_pgsqlTryFk('public.users', 'support_level_id', 'public.support_levels', 'id');
+			}
+			if ($this->hasTable('tickets')) {
+				$this->_pgsqlTryFk('public.tickets', 'support_level_id', 'public.support_levels', 'id');
+			}
+			if ($this->hasTable('queues')) {
+				$this->_backfillQueuesLevelsPg();
+			}
+			if ($this->hasTable('tickets')) {
+				$this->_backfillTicketsSupportLevelPg();
+			}
 		} else {
 			if ($this->hasTable('queues')) {
 				$qt = $this->table('queues');
@@ -93,10 +113,12 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		}
 		$t = $this->table('support_levels');
 		if ($this->_isPgsql()) {
-			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS description TEXT NULL');
-			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0');
-			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS created TIMESTAMP NULL');
-			$this->execute('ALTER TABLE support_levels ADD COLUMN IF NOT EXISTS modified TIMESTAMP NULL');
+			// Legado: tabela support_levels sem "name" quebra o INSERT do seed.
+			$this->execute('ALTER TABLE public.support_levels ADD COLUMN IF NOT EXISTS name VARCHAR(64) NULL');
+			$this->execute('ALTER TABLE public.support_levels ADD COLUMN IF NOT EXISTS description TEXT NULL');
+			$this->execute('ALTER TABLE public.support_levels ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0');
+			$this->execute('ALTER TABLE public.support_levels ADD COLUMN IF NOT EXISTS created TIMESTAMP NULL');
+			$this->execute('ALTER TABLE public.support_levels ADD COLUMN IF NOT EXISTS modified TIMESTAMP NULL');
 			return;
 		}
 		if (!$t->hasColumn('description')) {
@@ -138,9 +160,9 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 			if ($isPg) {
 				// Não usar created/modified no INSERT: tabelas legadas podem não tê-las ainda neste ponto.
 				$this->execute(
-					"INSERT INTO support_levels (name, description, sort_order) "
+					"INSERT INTO public.support_levels (name, description, sort_order) "
 					. "SELECT '{$n}', '{$d}', {$o} "
-					. "WHERE NOT EXISTS (SELECT 1 FROM support_levels WHERE sort_order = {$o} LIMIT 1)"
+					. "WHERE NOT EXISTS (SELECT 1 FROM public.support_levels WHERE sort_order = {$o} LIMIT 1)"
 				);
 			} else {
 				$this->execute(
@@ -152,7 +174,7 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		if ($isPg) {
 			try {
 				$this->execute(
-					'UPDATE support_levels SET created = COALESCE(created, NOW()), modified = COALESCE(modified, NOW()) '
+					'UPDATE public.support_levels SET created = COALESCE(created, NOW()), modified = COALESCE(modified, NOW()) '
 					. 'WHERE created IS NULL OR modified IS NULL'
 				);
 			} catch (\Throwable $e) {
@@ -161,10 +183,11 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		}
 	}
 
-	protected function _pgsqlTryFk(string $tbl, string $col, string $refTbl, string $refCol): void {
-		$cname = $tbl . '_' . $col . '_fkey';
-		$sql = 'ALTER TABLE ' . $tbl . ' ADD CONSTRAINT ' . $cname . ' '
-			. 'FOREIGN KEY (' . $col . ') REFERENCES ' . $refTbl . '(' . $refCol . ') ON DELETE SET NULL ON UPDATE CASCADE';
+	protected function _pgsqlTryFk(string $tblQualified, string $col, string $refTblQualified, string $refCol): void {
+		$short = preg_replace('/^[^.]+\./', '', $tblQualified);
+		$cname = $short . '_' . $col . '_fkey';
+		$sql = 'ALTER TABLE ' . $tblQualified . ' ADD CONSTRAINT ' . $cname . ' '
+			. 'FOREIGN KEY (' . $col . ') REFERENCES ' . $refTblQualified . '(' . $refCol . ') ON DELETE SET NULL ON UPDATE CASCADE';
 		try {
 			$this->execute($sql);
 		} catch (\Throwable $e) {
@@ -172,47 +195,70 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 	}
 
 	protected function _backfillQueuesLevelsPg(): void {
+		$cols = $this->fetchAll(
+			"SELECT column_name FROM information_schema.columns "
+			. "WHERE table_schema = 'public' AND table_name = 'queues'"
+		);
+		$have = [];
+		foreach ($cols as $row) {
+			$cn = $row['column_name'] ?? $row['COLUMN_NAME'] ?? null;
+			if ($cn !== null) {
+				$have[strtolower((string)$cn)] = true;
+			}
+		}
+		if (empty($have['support_level_id']) || empty($have['codigo'])) {
+			return;
+		}
 		$map = ['n1' => 1, 'n2' => 2, 'n3' => 3, 'noc' => 4, 'servico' => 5];
 		foreach ($map as $cod => $ord) {
 			$codEsc = str_replace("'", "''", $cod);
 			$this->execute(
-				'UPDATE queues q SET support_level_id = sl.id FROM support_levels sl '
+				'UPDATE public.queues q SET support_level_id = sl.id FROM public.support_levels sl '
 				. 'WHERE sl.sort_order = ' . (int)$ord . " AND q.codigo = '{$codEsc}' AND q.support_level_id IS NULL"
 			);
 		}
 		$this->execute(
-			'UPDATE queues q SET support_level_id = sl.id FROM support_levels sl '
+			'UPDATE public.queues q SET support_level_id = sl.id FROM public.support_levels sl '
 			. 'WHERE sl.sort_order = 1 AND q.support_level_id IS NULL'
 		);
 	}
 
 	protected function _backfillTicketsSupportLevelPg(): void {
-		try {
+		if (!$this->hasTable('tickets')) {
+			return;
+		}
+		// Evita erro se colunas não existirem (transação PG aborta com qualquer falha).
+		$cols = $this->fetchAll(
+			"SELECT column_name FROM information_schema.columns "
+			. "WHERE table_schema = 'public' AND table_name = 'tickets'"
+		);
+		$have = [];
+		foreach ($cols as $row) {
+			$cn = $row['column_name'] ?? $row['COLUMN_NAME'] ?? null;
+			if ($cn !== null) {
+				$have[strtolower((string)$cn)] = true;
+			}
+		}
+		if (!empty($have['queue_id']) && $this->hasTable('queues')) {
 			$this->execute(
-				'UPDATE tickets t SET support_level_id = q.support_level_id FROM queues q '
+				'UPDATE public.tickets t SET support_level_id = q.support_level_id FROM public.queues q '
 				. 'WHERE t.queue_id = q.id AND t.support_level_id IS NULL AND q.support_level_id IS NOT NULL'
 			);
-		} catch (\Throwable $e) {
-			// tickets.queue_id ou colunas podem não existir em legado
 		}
-		// nivel_atendimento pode ser texto não numérico (ex. "N1"); cast direto aborta a transação no PostgreSQL.
-		try {
+		if (!empty($have['nivel_atendimento'])) {
 			$this->execute(
-				'UPDATE tickets t SET support_level_id = sl.id FROM support_levels sl '
+				'UPDATE public.tickets t SET support_level_id = sl.id FROM public.support_levels sl '
 				. 'WHERE t.support_level_id IS NULL AND sl.sort_order = ( '
 				. 'CASE '
 				. 'WHEN t.nivel_atendimento IS NULL THEN 1 '
 				. "WHEN trim(t.nivel_atendimento::text) ~ '^[0-9]+$' THEN trim(t.nivel_atendimento::text)::integer "
 				. 'ELSE 1 END )'
 			);
-		} catch (\Throwable $e) {
-			try {
-				$this->execute(
-					'UPDATE tickets t SET support_level_id = sl.id FROM support_levels sl '
-					. 'WHERE t.support_level_id IS NULL AND sl.sort_order = 1'
-				);
-			} catch (\Throwable $e2) {
-			}
+		} else {
+			$this->execute(
+				'UPDATE public.tickets t SET support_level_id = sl.id FROM public.support_levels sl '
+				. 'WHERE t.support_level_id IS NULL AND sl.sort_order = 1'
+			);
 		}
 	}
 
