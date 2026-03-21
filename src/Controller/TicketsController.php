@@ -2527,6 +2527,8 @@ class TicketsController extends AppController {
 				$tl = $this->_supportLevelName((int)$reg->support_level_id);
 			} elseif ($qEnt && !empty($qEnt->support_level)) {
 				$tl = (string)$qEnt->support_level->name;
+			} elseif ($qEnt && isset($qEnt->support_level_id) && (int)$qEnt->support_level_id > 0) {
+				$tl = $this->_supportLevelName((int)$qEnt->support_level_id);
 			}
 			$row['supportLevelId'] = isset($reg->support_level_id) && (int)$reg->support_level_id > 0 ? (int)$reg->support_level_id : null;
 			$row['supportLevelLabel'] = $tl !== '' ? $tl : null;
@@ -2770,7 +2772,9 @@ class TicketsController extends AppController {
 		// Nome da associação em TicketsTable é `users` (idautor); `Users` quebra o eager-load em alguns ambientes.
 		$contain = ['users', 'Clientes'];
 		if ($this->_queuesRelacionalReady()) {
-			$contain['Queues'] = $this->_supportLevelsRoutingReady() ? ['SupportLevels'] : [];
+			// Não aninhar Queues.SupportLevels aqui: com SupportLevels na raiz do ticket o ORM pode
+			// gerar alias/joins duplicados no PostgreSQL e disparar 500 em apiIndex.
+			$contain['Queues'] = [];
 		}
 		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $this->Tickets->getSchema()->columns(), true)) {
 			$contain[] = 'SupportLevels';
@@ -2896,7 +2900,10 @@ class TicketsController extends AppController {
 		];
 		return $this->jsonResponse($out);
 		} catch (\Throwable $e) {
-			$this->log('apiIndex: ' . $e->getMessage(), 'error');
+			$this->log(
+				'apiIndex: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(),
+				'error'
+			);
 
 			return $this->jsonResponse([
 				'ok' => false,
