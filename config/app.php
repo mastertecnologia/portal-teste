@@ -306,9 +306,6 @@ return [
             
         ],
     ],
-    'Error' => [
-        'errorLevel' => E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED
-    ],
 
     /**
      * Session configuration.

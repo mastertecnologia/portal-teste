@@ -66,6 +66,8 @@ class AppExceptionRenderer extends ExceptionRenderer
         $payload = [
             'mensagem' => $message,
             'retorno' => $message,
+            // Alguns clientes leem só "message" (formato Cake); o Grid costuma usar "retorno".
+            'message' => $message,
             'code' => $code,
         ];
         if (Configure::read('debug')) {
