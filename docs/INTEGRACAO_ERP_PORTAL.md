@@ -7,6 +7,8 @@ Visão completa das integrações: **o que o ERP chama no Portal** (APIs HTTP) e
 **Base URL do Portal (com subdiretório):** `https://portal.pgm.inf.br/portal`  
 **Base URL do ERP (IIS no 10.0.2.7):** configurada no Portal em **Empresas → URL ERP**, ex.: `http://10.0.2.7:85/WebGridPGM/`.
 
+**Requisito PHP no servidor do Portal:** extensão **SOAP** (pacote `php*-soap` no Debian/Ubuntu) ativa no **mesmo** interpretador que serve o site (PHP-FPM ou Apache). Sem `SoapClient`, a mensagem *"Class SoapClient not found, please enable Soap extensions"* aparece e **estoque / preços** vindos do ERP Grid (SOAP) não carregam. As **APIs REST** de integração (`produtos/listAPI`, `clientes/addAPI`, ordens, etc.) **não** dependem de SOAP e podem continuar OK.
+
 ---
 
 ## Parte 1: APIs do Portal chamadas pelo ERP (Integrador)
