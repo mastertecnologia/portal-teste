@@ -915,8 +915,16 @@ class OrdensservicoController extends AppController {
 			$json = (object) $json;
 		}
 
-			if(empty($token) || empty($empresa) || empty($json)) {
+			if ($json === null || !is_object($json)) {
 				$this->log('[API-ORDENS refreshAPI] resposta 400 parametros invalidos (empresa/token/body)', 'info');
+				return $apiRet('Parâmetros da requisição inválidos.', 400);
+			}
+			if (empty($token) || empty($empresa)) {
+				$this->log('[API-ORDENS refreshAPI] resposta 400 parametros invalidos (empresa/token/body)', 'info');
+				return $apiRet('Parâmetros da requisição inválidos.', 400);
+			}
+			if (!isset($json->nroordem) || $json->nroordem === '' || $json->nroordem === null) {
+				$this->log('[API-ORDENS refreshAPI] resposta 400 parametros invalidos (sem nroordem)', 'info');
 				return $apiRet('Parâmetros da requisição inválidos.', 400);
 			}
 			if(empty($this->Empresas->findById($empresa)->first())) {

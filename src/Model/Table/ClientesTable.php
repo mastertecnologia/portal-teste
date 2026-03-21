@@ -37,7 +37,11 @@ class ClientesTable extends Table {
 		if($cliente->tipo == C_ClientesTipoFisica) $cliente->cnpj = $cliente->cpf;
 		else $cliente->nome = $cliente->razaosocial;
 		$cliente->inscest = removeCaracteres($cliente->inscricaoestadual);
-		$cliente->codibge = $this->Cidades->get($cliente->idcidade)->codibge;
+		if (!empty($cliente->idcidade)) {
+			$cliente->codibge = $this->Cidades->get($cliente->idcidade)->codibge;
+		} else {
+			$cliente->codibge = null;
+		}
 		$cliente->telefone = $cliente->fone;
 		$cliente->celular = $cliente->fone2;
 		$cliente->fantasia = $cliente->nomefantasia;

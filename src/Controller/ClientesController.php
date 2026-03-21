@@ -656,7 +656,13 @@ class ClientesController extends AppController {
 			};
 			if(empty($token)) return $apiRet("O token não foi informado", 400);
 			if(empty($empresa)) return $apiRet("O ID da empresa não foi informado", 400);
-			if(empty($json)) return $apiRet("O JSON não foi informado", 400);
+			// `{}` é object não-vazio para empty(); validar explicitamente.
+			if ($json === null || !is_object($json)) {
+				return $apiRet("O JSON não foi informado", 400);
+			}
+			if (!isset($json->cnpj) || trim((string) $json->cnpj) === '') {
+				return $apiRet("JSON inválido: o campo cnpj é obrigatório.", 400);
+			}
 			if(empty($this->Empresas->findById($empresa)->first())) return $apiRet("Não foi encontrada uma empresa com o ID ($empresa) informado", 400);
 
 			if($token == $this->Empresas->get($empresa)->token) {
