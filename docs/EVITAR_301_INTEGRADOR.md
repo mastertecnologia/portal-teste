@@ -1,8 +1,10 @@
 # Evitar erro 301 no Integrador (HTTP em /portal)
 
-Quando o Integrador no Windows usa **http://10.0.2.25/portal** e recebe **Status 301**, o Apache está redirecionando tudo para HTTPS. O Integrador não segue o redirect (ou trata como erro).
+Quando o Integrador no Windows usa **http://10.0.2.25/portal** (ou HTTP na porta 80) e recebe **Status 301**, o Apache está redirecionando para HTTPS. Muitos clientes (ex.: **PGMModeloEnviaClientes**, Integrador Grid) **não seguem redirect em POST** ou recebem **HTML** em vez de JSON → “Retorno” vazio no erro.
 
-**Solução:** no servidor do Portal (Linux 10.0.2.25), alterar o VirtualHost da **porta 80** para **não** redirecionar requisições cujo caminho começa com **/portal**. Assim o Integrador pode usar HTTP em `http://10.0.2.25/portal/...` sem receber 301.
+**Solução preferida (lado Windows):** configurar a URL do Portal com **HTTPS** direto: **`https://portal.pgm.inf.br/portal`**. Ver passo a passo em **`docs/CONFIGURAR_INTEGRADOR_WINDOWS.md`** (secção 0).
+
+**Solução alternativa (lado servidor):** no Portal (Linux 10.0.2.25), alterar o VirtualHost da **porta 80** para **não** redirecionar requisições cujo caminho começa com **/portal**. Assim o Integrador pode continuar usando HTTP em `http://10.0.2.25/portal/...` sem receber 301.
 
 ---
 

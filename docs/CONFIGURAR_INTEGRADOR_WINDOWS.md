@@ -4,21 +4,35 @@ Onde encontrar e onde preencher as informações para o Integrador chamar o Port
 
 ---
 
+## 0. Use HTTPS na URL do Portal (evita 301 e “Retorno vazio”)
+
+**Recomendado (Grid → Portal):** configure sempre **`https://portal.pgm.inf.br/portal`** como base do Portal.
+
+Se o Integrador usar **`http://10.0.2.25/portal`** ou **`http://...` na porta 80**, o Apache do Portal costuma responder **HTTP 301** redirecionando para HTTPS. A resposta vem em **HTML**, não em JSON.
+
+- Programas antigos (ex.: **PGMModeloEnviaClientes**, Integrador Grid) **muitas vezes não seguem redirect em POST** (ou tratam 301 como erro).
+- Na tela aparece erro ao cadastrar e **“Retorno:” vazio**; no Fiddler o **JSON fica vazio** porque o corpo é a página “Moved Permanently”.
+
+**Correção:** altere a URL no Grid para **`https://portal.pgm.inf.br/portal`** (tela de configuração ou arquivos `.ini` / `.config` / `.xml` / `.json` — ver secções 3.1 e 3.2).
+
+**Alternativa no servidor:** se for obrigatório manter HTTP na porta 80, veja `docs/EVITAR_301_INTEGRADOR.md` (Apache sem redirect para `/portal`).
+
+---
+
 ## 1. Valores prontos para usar
 
 Use estes valores ao achar a tela ou arquivo de configuração:
 
 | O que configurar | Valor para copiar |
 |------------------|-------------------|
-| **URL do Portal** | `https://portal.pgm.inf.br/portal` |
-| **URL de envio de produtos** | `https://portal.pgm.inf.br/portal/produtos/add-api` |
-| **Método (envio de produtos)** | `POST` |
+| **URL do Portal (base)** | `https://portal.pgm.inf.br/portal` |
+| **URL de envio de produtos** (se pedir URL completa) | `https://portal.pgm.inf.br/portal/produtos/add-api` |
+| **URL de envio de clientes** (se pedir URL completa) | `https://portal.pgm.inf.br/portal/clientes/addAPI` |
+| **Método (envio de produtos / clientes)** | `POST` |
 | **Header empresa** | `1` (Master Tecnologia) ou `2` (PGM) – conforme a empresa que o Integrador representa) |
 | **Header token** | Token completo da empresa no Portal (veja item 2 abaixo como obter) |
 
-Se não usar HTTPS/domínio, use em vez disso:
-- URL do Portal: `http://10.0.2.25/portal`
-- URL produtos: `http://10.0.2.25/portal/produtos/add-api`
+**Evite** `http://10.0.2.25/portal` para chamadas da API **a menos** que o Apache esteja configurado para **não** redirecionar `/portal` (ver `EVITAR_301_INTEGRADOR.md`). Caso contrário ocorre **301** e a integração quebra.
 
 ---
 
@@ -52,6 +66,15 @@ Saída esperada (exemplo): duas colunas separadas por `|`. A terceira coluna é 
 
 Se não achar nenhum arquivo de texto com isso, a configuração pode estar **só na tela** do programa (ícone Configurações) ou no **banco de dados do próprio Grid** no Windows; nesse caso é preciso usar a tela ou a documentação/suporte da Grid.
 
+### 3.0.1 PGMModeloEnviaClientes (envio de clientes)
+
+O executável **PGMModeloEnviaClientes** pode ter configuração **separada** do Integrador GridERP + Web.
+
+1. Localize a pasta do `.exe` (atalho → **Abrir local do arquivo**).
+2. Em **`AppData\Local`** e **`AppData\Roaming`** do utilizador que roda o programa, procure pastas **Grid** / **PGM** e ficheiros **`.ini`**, **`.config`**, **`.xml`**, **`.json`**.
+3. Substitua qualquer URL **`http://10.0.2.25/...`** ou **`http://portal...`** por **`https://portal.pgm.inf.br/portal`** (ou URL completa **`https://portal.pgm.inf.br/portal/clientes/addAPI`** se o campo for o endpoint completo).
+4. Reinicie o programa e confirme no Fiddler: resposta **201** com JSON, não **301** com HTML.
+
 ### 3.1 Pela tela do Integrador
 
 1. Abra o **Integrador GridERP + Web** no Windows (10.0.2.7).
@@ -62,8 +85,9 @@ Se não achar nenhum arquivo de texto com isso, a configuração pode estar **s�
    - **Envio de produtos** ou **Produtos**
    - Campos para **Empresa**, **Token**, **Chave** ou **API Key**
 4. Onde houver:
-   - **URL / Endereço / Base URL:** cole `https://portal.pgm.inf.br/portal` (ou `http://10.0.2.25/portal`).
+   - **URL / Endereço / Base URL:** cole **`https://portal.pgm.inf.br/portal`** (preferencial; evita 301).
    - **URL de produtos (se for separada):** cole `https://portal.pgm.inf.br/portal/produtos/add-api`.
+   - **URL de clientes / portal web (se for separada):** use a mesma base HTTPS ou `https://portal.pgm.inf.br/portal/clientes/addAPI` conforme o programa peça.
    - **Método:** selecione **POST** (não GET).
    - **Empresa / ID empresa:** coloque `1` ou `2`.
    - **Token / Chave / Senha API:** cole o token completo que você obteve no passo 2.
@@ -84,8 +108,9 @@ O Integrador pode guardar a URL e o token em um arquivo .ini, .config, .xml ou .
 3. Abra os arquivos com Bloco de Notas e procure por:
    - `localhost`, `127.0.0.1`, `portal`, `url`, `Url`, `token`, `Token`, `empresa`, `api`
 4. Onde aparecer URL do portal/web, troque para:
-   - `https://portal.pgm.inf.br/portal` ou `http://10.0.2.25/portal`
-   - E, se houver um campo de URL de produtos: `https://portal.pgm.inf.br/portal/produtos/add-api`
+   - **`https://portal.pgm.inf.br/portal`** (recomendado)
+   - Se houver URL de produtos: `https://portal.pgm.inf.br/portal/produtos/add-api`
+   - Procure também `http://10.0.2.25` e substitua pela URL **https** acima
 5. Onde aparecer empresa/id: use `1` ou `2`. Onde aparecer token/chave: use o token completo do banco.
 6. Salve o arquivo e reinicie o Integrador.
 
@@ -104,7 +129,7 @@ Alguns programas guardam config no Registro. Só altere se você souber usar o `
 | Onde | O que fazer |
 |------|-------------|
 | **Configurações do Integrador (tela)** | Abrir **Configurações** → preencher URL do Portal, URL de produtos (se houver), método POST, empresa (1 ou 2), token (copiado do banco/Portal). |
-| **Arquivo de config no Windows** | Procurar .ini/.config/.xml/.json na pasta do Integrador ou em AppData; substituir URL por `https://portal.pgm.inf.br/portal` (ou `http://10.0.2.25/portal`) e preencher empresa e token. |
+| **Arquivo de config no Windows** | Procurar .ini/.config/.xml/.json na pasta do Integrador, **PGMModeloEnviaClientes** ou em AppData; substituir `http://10.0.2.25` / HTTP por **`https://portal.pgm.inf.br/portal`**; preencher empresa e token. |
 | **Token** | Obter com `psql ... SELECT id, nomefantasia, token FROM empresas` ou no Portal em Empresas → Exibir (token). |
 
 Se você disser o nome exato da tela de configuração do Integrador (ou enviar um print), dá para indicar campo a campo onde colar cada valor.

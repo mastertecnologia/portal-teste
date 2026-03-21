@@ -20,6 +20,8 @@ O Integrador/ERP no Windows faz requisições **HTTP** para o Portal. Todas exig
 
 As respostas de erro/sucesso incluem `mensagem` e `retorno` (mesmo texto), para o Integrador exibir em "Retorno:".
 
+**Importante (Grid → Portal):** use a base **`https://portal.pgm.inf.br/portal`** no Integrador. Chamadas **`http://10.0.2.25/portal`** na porta 80 podem receber **301** para HTTPS; o corpo vira HTML e o Integrador mostra **Retorno vazio**. Detalhes: `docs/CONFIGURAR_INTEGRADOR_WINDOWS.md` e `docs/EVITAR_301_INTEGRADOR.md`.
+
 ---
 
 ### 1.1 Produtos
