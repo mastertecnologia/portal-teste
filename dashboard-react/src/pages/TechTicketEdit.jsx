@@ -49,7 +49,6 @@ export default function TechTicketEdit({ boot }) {
   const [salvando, setSalvando] = useState(false);
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
-  const [msg, setMsg] = useState(null);
 
   useEffect(() => {
     let c = false;
@@ -95,13 +94,11 @@ export default function TechTicketEdit({ boot }) {
     setTexto('');
     setEnviando(true);
     setErro(null);
-    setMsg(null);
     const res = await postComentario(ticket.id, t);
     setEnviando(false);
     setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
     if (res.ok) {
       setComentarios((prev) => [...prev, res.data]);
-      setMsg(null);
     } else {
       setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
       setTexto(t);
@@ -112,24 +109,26 @@ export default function TechTicketEdit({ boot }) {
     e.preventDefault();
     if (!ticket?.flags?.canEditDescricao) return;
     setSalvando(true);
-    setMsg(null);
+    setErro(null);
     const res = await saveTicketSolicitacao(ticket.id, desc);
     setSalvando(false);
-    if (res.ok) setMsg('Descrição salva.');
-    else setErro(res.error || 'Falha ao salvar.');
+    if (res.ok) {
+      setErro(null);
+    } else {
+      setErro(res.error || 'Falha ao salvar.');
+    }
   }
 
   async function handleSalvarRelatorioAtendimento(e) {
     e.preventDefault();
     if (!ticket?.flags?.canEditDescricaoAtendimento) return;
     setSalvandoRelatorio(true);
-    setMsg(null);
     setErro(null);
     const res = await saveTicketDescricaoAtendimento(ticket.id, relatorioAtendimento);
     setSalvandoRelatorio(false);
     if (res.ok) {
       setTicket((prev) => (prev ? { ...prev, descricaoAtendimento: relatorioAtendimento } : prev));
-      setMsg('Relatório do atendimento salvo.');
+      setErro(null);
     } else {
       setErro(res.error || 'Falha ao salvar o relatório. Confira se o banco tem a coluna descricao_atendimento (SQL em config/schema).');
     }
@@ -222,9 +221,6 @@ export default function TechTicketEdit({ boot }) {
 
   const alerts = (
     <>
-      {msg && (
-        <p className="mb-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 sm:text-sm">{msg}</p>
-      )}
       {erro && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800 sm:text-sm">{erro}</p>}
       {embedded && (
         <p className="mb-3 text-xs text-slate-400">
@@ -240,14 +236,12 @@ export default function TechTicketEdit({ boot }) {
       ticketId={ticket.id}
       horasTecnicas={ticket.horasTecnicas}
       onSnapshot={(ht) => setTicket((p) => (p ? { ...p, horasTecnicas: ht } : p))}
-      onFeedback={(okMsg, errMsg) => {
+      onFeedback={(_okMsg, errMsg) => {
         if (errMsg) {
           setErro(errMsg);
-          setMsg(null);
         } else {
           setErro(null);
         }
-        if (okMsg) setMsg(okMsg);
       }}
     />
   );
