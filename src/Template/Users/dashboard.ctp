@@ -180,142 +180,161 @@
 			</div> -->
 	</div>
 	</div>
-<?php }else{ ?>
-	<!-- Totalizadores -->
-	<div class="col-12">
-		<div class="row">
-			<!-- Chamados Desenvolvidos -->
-			<div class="col-md-4">
-				<div class="card">
-					<div class="card-body">
-						<h5 class="card-title">Ordens de Serviço</h5>
-						<div class="d-flex m-t-30 m-b-20 no-block align-items-center">
-							<span class="display-5 text-purple"><i class="ti-pencil-alt"></i></span>
-							<span class="display-5 ml-auto"><?= $ordensCliente ?></span>
+<?php } else { ?>
+	<div class="col-12 p-0">
+		<div class="dash-cli">
+			<div class="dash-erp-header">
+				<div>
+					<h2 class="dash-erp-title">Dashboard</h2>
+					<p class="dash-erp-subtitle">Resumo da empresa: acompanhe tickets, ordens, orçamentos e contratos.</p>
+				</div>
+			</div>
+
+			<?php if ($permissaoacesso) { ?>
+				<div class="dash-cli-quick">
+					<?= $this->Html->link('<i class="fas fa-plus-circle"></i> Novo ticket', ['controller' => 'Tickets', 'action' => 'add'], ['escape' => false]); ?>
+					<?= $this->Html->link('<i class="fas fa-ticket-alt"></i> Todos os tickets', ['controller' => 'Tickets', 'action' => 'indexcliente'], ['escape' => false]); ?>
+					<?= $this->Html->link('<i class="fas fa-file-invoice-dollar"></i> Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['escape' => false]); ?>
+					<?= $this->Html->link('<i class="fas fa-building"></i> Dados da empresa', ['controller' => 'Clientes', 'action' => 'edit', $idcliente], ['escape' => false]); ?>
+				</div>
+			<?php } ?>
+
+			<div class="dash-erp-kpis">
+				<div class="dash-erp-kpi dash-cli-kpi--orders">
+					<div class="dash-erp-kpi-icon"><i class="fas fa-clipboard-list"></i></div>
+					<div class="dash-erp-kpi-meta">
+						<p class="dash-erp-kpi-label">Ordens de serviço</p>
+						<p class="dash-erp-kpi-value"><?= (int) $ordensCliente ?></p>
+					</div>
+					<?= $this->Html->link('Ver ordens', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'dash-erp-kpi-link']); ?>
+				</div>
+				<div class="dash-erp-kpi dash-cli-kpi--budgets">
+					<div class="dash-erp-kpi-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+					<div class="dash-erp-kpi-meta">
+						<p class="dash-erp-kpi-label">Orçamentos</p>
+						<p class="dash-erp-kpi-value"><?= (int) $orcamentosCliente ?></p>
+					</div>
+					<?= $this->Html->link('Ver orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'dash-erp-kpi-link']); ?>
+				</div>
+				<div class="dash-erp-kpi dash-cli-kpi--tickets">
+					<div class="dash-erp-kpi-icon"><i class="fas fa-ticket-alt"></i></div>
+					<div class="dash-erp-kpi-meta">
+						<p class="dash-erp-kpi-label">Meus tickets (abertos por você)</p>
+						<p class="dash-erp-kpi-value"><?= (int) $ticketsCliente ?></p>
+					</div>
+					<?= $this->Html->link('Abrir lista', ['controller' => 'Tickets', 'action' => 'indexcliente'], ['class' => 'dash-erp-kpi-link']); ?>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-12 dash-cli-table-wrap">
+					<div class="dash-erp-card">
+						<div class="dash-erp-card-header">
+							<h5 class="dash-erp-card-title">Tickets aguardando técnico / em execução</h5>
+							<span class="dash-erp-card-badge"><?= count($ticketsPendentes) ?></span>
+						</div>
+						<div class="dash-erp-card-body dash-cli-table p-0">
+							<div class="table-responsive">
+								<table class="table table-hover table-row-clickable mb-0" id="table-todos">
+									<thead>
+										<tr>
+											<th>Número</th>
+											<th>Data</th>
+											<th>Assunto</th>
+											<th>Status</th>
+											<th class="text-right">Ações</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php foreach ($ticketsPendentes as $reg): ?>
+											<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+												<td><strong><?= h($reg->id) ?></strong></td>
+												<td><?= date_format($reg->created, 'd/m/Y') ?></td>
+												<td><?= AssuntoTicket($reg->assunto) ?></td>
+												<td class="dash-cli-status-cell"><?= SituacaoTicket($reg->situacao) ?></td>
+												<td class="td-actions text-right">
+													<?= $this->Html->link('<i class="fas fa-eye"></i>', ['controller' => 'Tickets', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Visualizar ticket', 'class' => 'btn btn-sm btn-info dash-cli-btn-icon', 'escape' => false]); ?>
+												</td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<!-- Tickets Resolvidos -->
-			<div class="col-md-4">
-				<div class="card">
-					<div class="card-body">
-						<h5 class="card-title">Orçamentos</h5>
-						<div class="d-flex m-t-30 m-b-20 no-block align-items-center">
-							<span class="display-5 text-orange"><i class="ti-receipt"></i></span>
-							<span class="display-5 ml-auto"><?= $orcamentosCliente ?></span>
+
+			<?php if ($permissaoacesso) { ?>
+				<div class="row">
+					<div class="col-lg-6 col-md-12 dash-cli-table-wrap">
+						<div class="dash-erp-card">
+							<div class="dash-erp-card-header">
+								<h5 class="dash-erp-card-title">Contratos da empresa</h5>
+								<span class="dash-erp-card-badge"><?= count($contratos) ?></span>
+							</div>
+							<div class="dash-erp-card-body dash-cli-table p-0">
+								<div class="table-responsive">
+									<table class="table table-hover table-row-clickable mb-0" id="table-contratos-cli">
+										<thead>
+											<tr>
+												<th>Número</th>
+												<th>Descrição</th>
+												<th>Qtd.</th>
+												<th>Data</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php foreach ($contratos as $reg): ?>
+												<tr>
+													<td><?= h($reg->id) ?></td>
+													<td><?= h($reg->descricao) ?></td>
+													<td><?= h($reg->qtde) ?></td>
+													<td data-order="<?= !empty($reg->dtcontratacao) ? date_format($reg->dtcontratacao, 'Ymd') : '' ?>"><?= !empty($reg->dtcontratacao) ? date_format($reg->dtcontratacao, 'd/m/Y') : '—' ?></td>
+												</tr>
+											<?php endforeach; ?>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-6 col-md-12 dash-cli-table-wrap">
+						<div class="dash-erp-card">
+							<div class="dash-erp-card-header">
+								<h5 class="dash-erp-card-title">Últimos orçamentos</h5>
+								<span class="dash-erp-card-badge"><?= count($orcamentosRecentes) ?></span>
+							</div>
+							<div class="dash-erp-card-body dash-cli-table p-0">
+								<div class="table-responsive">
+									<table class="table table-hover table-row-clickable mb-0" id="table-orcamentos-cli">
+										<thead>
+											<tr>
+												<th>Número</th>
+												<th>Autor</th>
+												<th>Abertura</th>
+												<th>Validade</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php foreach ($orcamentosRecentes as $reg): ?>
+												<tr>
+													<td><?= $this->Html->link($reg->id, ['controller' => 'Orcamentos', 'action' => 'view', $reg->id], ['class' => 'dash-erp-link']); ?></td>
+													<td><?= $this->Html->link(h($autores[$reg->idautor] ?? ''), ['controller' => 'Orcamentos', 'action' => 'view', $reg->id], ['class' => 'dash-erp-link']); ?></td>
+													<td data-order="<?= date_format($reg->created, 'Ymd') ?>"><?= $this->Html->link(date_format($reg->created, 'd/m/Y'), ['controller' => 'Orcamentos', 'action' => 'view', $reg->id], ['class' => 'dash-erp-link']); ?></td>
+													<td data-order="<?= date_format($reg->validoate, 'Ymd') ?>"><?= $this->Html->link(date_format($reg->validoate, 'd/m/Y'), ['controller' => 'Orcamentos', 'action' => 'view', $reg->id], ['class' => 'dash-erp-link']); ?></td>
+												</tr>
+											<?php endforeach; ?>
+										</tbody>
+									</table>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-			<!-- Atendimentos Realizados -->
-			<div class="col-md-4">
-				<div class="card">
-					<div class="card-body">
-						<h5 class="card-title">Tickets</h5>
-						<div class="d-flex m-t-30 m-b-20 no-block align-items-center">
-							<span class="display-5 text-info"><i class="fa fa-user-alt"></i></span>
-							<span class="display-5 ml-auto"><?= $ticketsCliente ?></span>
-						</div>
-					</div>
-				</div>
-			</div>
+			<?php } ?>
 		</div>
 	</div>
-	<div class="col-12">
-			<div class="card-group">
-				<div class="card">
-					<div class="card-body">
-						<h5 class="card-title"> Tickets Aguardando Técnico </h5>
-						<div class="table-responsive">
-							<table class="table table-hover table-row-clickable" id="table-todos">
-								<thead class="text-primary">
-									<th> Número </th>
-									<th> Data </th>
-									<th> Assunto </th>
-									<th> Status </th>
-									<th> Ações </th>
-								</thead>
-								<tbody>
-									<?php foreach ($ticketsPendentes as $reg): ?>							
-										<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>' data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
-											<td><?= $reg->id ?></td>
-											<td><?= date_format($reg->created, 'd/m/Y') ?></td>
-											<td><?= AssuntoTicket($reg->assunto) ?></td>
-											<td><?= SituacaoTicket($reg->situacao) ?></td>
-											<td class="td-actions">
-												<?= $this->Html->link('<i class="fas fa-eye"></i><div class="ripple-container"></div>', ["controller" => "Tickets", "action" => "view", $reg->id], ['rel' => 'tooltip', 'title' => 'Visualizar ticket', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false]); ?>
-											</td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	<?php if($permissaoacesso) { ?>
-		<!-- Grades -->
-		<div class="col-12">
-			<div class="card-group">
-				<div class="card">
-					<div class="card-body">
-						<h5 class="card-title">Contratos</h5>
-						<div class="table-responsive">	
-							<table class="table table-hover table-row-clickable" id="tableOrdens">
-								<thead class="text-primary">
-									<th>Número</th>
-									<th>Descrição</th>
-									<th>Quantidade</th>
-									<th>Data</th>
-								</thead>
-								<tbody>
-									<?php foreach ($contratos as $reg): ?>
-										<tr>
-											<td><?= $reg->id ?></td>
-											<td><?= $reg->descricao ?></td>
-											<td><?= $reg->qtde ?></a></td>
-											<td data-order="<?= @date_format($reg->dtcontratacao, 'Ymd') ?>"><?= @date_format($reg->dtcontratacao, 'd/m/Y') ?></a></td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-12">
-			<div class="card-group">
-				<div class="card card2">
-					<div class="card-body">
-						<h5 class="card-title">Últimos Orçamentos</h5>
-						<div class="table-responsive">	
-							<table class="table table-hover table-row-clickable" id="tableOrdens">
-								<thead class="text-primary">
-									<th>Número</th>
-									<th>Autor</th>
-									<th>Abertura</th>
-									<th>Validade</th>
-								</thead>
-								<tbody>
-									<?php foreach ($orcamentosRecentes as $reg): ?>
-										<tr>
-											<td><a class="link" href='<?= $this->Url->build(["controller" => "Orcamentos", "action" => "view", $reg->id]) ?>'><?= $reg->id ?></a></td>
-											<td><a class="link" href='<?= $this->Url->build(["controller" => "Orcamentos", "action" => "view", $reg->id]) ?>'><?= $autores[$reg->idautor] ?></a></td>
-											<td data-order="<?= date_format($reg->created, 'Ymd') ?>">  <a class="link" href='<?= $this->Url->build(["controller" => "Orcamentos", "action" => "view", $reg->id]) ?>'><?= date_format($reg->created, 'd/m/Y') ?></a></td>
-											<td data-order="<?= date_format($reg->validoate, 'Ymd') ?>"><a class="link" href='<?= $this->Url->build(["controller" => "Orcamentos", "action" => "view", $reg->id]) ?>'><?= date_format($reg->validoate, 'd/m/Y') ?></a></td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	<?php } ?>
 <?php } ?>
 <!-- Modal Duas Etapas -->
 <div class="modal fade none-border" id="modal-duasetapas">
