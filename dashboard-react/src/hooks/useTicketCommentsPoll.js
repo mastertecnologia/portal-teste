@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { fetchTicketComments, USE_MOCK } from '../lib/api';
 
 /** Intervalo padrão de sincronização da conversa (polling). */
-export const TICKET_COMMENTS_POLL_MS = 2500;
+export const TICKET_COMMENTS_POLL_MS = 2000;
 
 /**
  * Atualiza comentários e status do ticket em intervalo (aba visível).
@@ -33,6 +33,18 @@ export function useTicketCommentsPoll(ticketId, setComentarios, setTicket, inter
         }
         if (res.status !== undefined && res.status !== null && res.status !== '') {
           next.status = res.status;
+        }
+        if (res.descricao !== undefined) {
+          next.descricao = res.descricao;
+        }
+        if (res.descricaoAtendimento !== undefined) {
+          next.descricaoAtendimento = res.descricaoAtendimento;
+        }
+        if (res.horasTecnicas !== undefined) {
+          next.horasTecnicas = res.horasTecnicas;
+        }
+        if (res.responsavel !== undefined) {
+          next.responsavel = res.responsavel;
         }
         return next;
       });

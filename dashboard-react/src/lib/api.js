@@ -319,6 +319,10 @@ export async function fetchTicketComments(id) {
     comentarios: json.comentarios || [],
     status: json.status ?? null,
     situacao: json.situacao ?? null,
+    descricao: json.descricao,
+    descricaoAtendimento: json.descricaoAtendimento,
+    horasTecnicas: json.horasTecnicas,
+    responsavel: json.responsavel,
   };
 }
 

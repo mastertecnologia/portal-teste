@@ -101,9 +101,9 @@ export default function TechTicketEdit({ boot }) {
     setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
     if (res.ok) {
       setComentarios((prev) => [...prev, res.data]);
-      setMsg('Comentário enviado.');
+      setMsg(null);
     } else {
-      setErro('Não foi possível enviar o comentário.');
+      setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
       setTexto(t);
     }
   }

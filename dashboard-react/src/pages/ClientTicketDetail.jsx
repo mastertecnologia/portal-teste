@@ -93,7 +93,7 @@ export default function ClientTicketDetail({ boot }) {
     if (res.ok) {
       setComentarios((prev) => [...prev, res.data]);
     } else {
-      setErro('Não foi possível enviar o comentário.');
+      setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
       setTexto(t);
     }
   }

@@ -3093,11 +3093,21 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		$comentarios = $this->_apiComentariosPayload($idticket);
+		$solicitante = null;
+		if (!empty($ticket->idsolicitante)) {
+			$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+		}
+		$descAtend = isset($ticket->descricao_atendimento) ? (string)$ticket->descricao_atendimento : '';
+		$idt = (int)$idticket;
 		$payload = [
 			'ok' => true,
 			'comentarios' => $comentarios,
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,
+			'descricao' => (string)($ticket->solicitacao ?? ''),
+			'descricaoAtendimento' => $descAtend,
+			'horasTecnicas' => $this->_apiHorasTecnicasPayload($idt, $ticket),
+			'responsavel' => $solicitante->name ?? '—',
 		];
 
 		return $this->response
