@@ -621,6 +621,22 @@ class TicketsController extends AppController {
 				unset($post['severidade']);
 			}
 
+			$__queueIdCol = in_array('queue_id', $this->Tickets->getSchema()->columns(), true);
+			if (!$this->_queuesRelacionalReady() || !$__queueIdCol) {
+				unset($post['queue_id']);
+			} else {
+				$__qid = isset($post['queue_id']) ? (int)$post['queue_id'] : 0;
+				if ($__qid <= 0) {
+					unset($post['queue_id']);
+				} else {
+					$__empId = (int)$this->Auth->user('idempresa');
+					$__okQ = $this->Queues->find()->where(['id' => $__qid, 'idempresa' => $__empId])->first();
+					if (empty($__okQ)) {
+						unset($post['queue_id']);
+					}
+				}
+			}
+
 			// Caso não tenha email preenchido
 			if ($this->Auth->user('role') == 1 && ($post['email'] ?? '') === '' && isset($clientequetememail->email)) {
 				$ticket->email = $clientequetememail->email;
@@ -666,8 +682,24 @@ class TicketsController extends AppController {
 		
 			if ($this->Tickets->save($ticket)) {
 				if ($this->_ticketWorkflowSchemaReady()) {
-					$ticket->fila_suporte = 'n1';
-					$ticket->nivel_atendimento = 1;
+					$fila = 'n1';
+					$nivel = 1;
+					if ($this->_queuesRelacionalReady() && in_array('queue_id', $this->Tickets->getSchema()->columns(), true) && !empty($ticket->queue_id)) {
+						$qPick = $this->Queues->find()->where([
+							'id' => (int)$ticket->queue_id,
+							'idempresa' => (int)$ticket->idempresa,
+						])->first();
+						if (!empty($qPick) && $qPick->codigo !== null && $qPick->codigo !== '') {
+							$cat = $this->_filaSuporteCatalog();
+							$cd = (string)$qPick->codigo;
+							if (isset($cat[$cd])) {
+								$fila = $cd;
+								$nivel = $cat[$cd]['nivel'];
+							}
+						}
+					}
+					$ticket->fila_suporte = $fila;
+					$ticket->nivel_atendimento = $nivel;
 					$ticket->idtecnico_responsavel = null;
 					$f = $this->_ticketFieldsComResponsavel(['fila_suporte', 'nivel_atendimento', 'idtecnico_responsavel']);
 					$this->Tickets->save($ticket, ['fields' => $f]);
@@ -759,7 +791,31 @@ class TicketsController extends AppController {
 		$this->set('clientes', $clientesList);
 		$this->set('authUserName', (string)($this->Auth->user('name') ?? ''));
 		$this->set('severidadeColumnReady', in_array('severidade', $this->Tickets->getSchema()->columns(), true));
-		$this->set(compact('ticket'));
+		$ticketAddQueueFieldReady = $this->_queuesRelacionalReady() && in_array('queue_id', $this->Tickets->getSchema()->columns(), true);
+		$ticketAddQueues = [];
+		$ticketAddDefaultQueueId = null;
+		if ($ticketAddQueueFieldReady) {
+			$__emp = (int)$this->Auth->user('idempresa');
+			foreach (
+				$this->Queues->find()
+					->where(['idempresa' => $__emp])
+					->order(['sort_order' => 'ASC', 'id' => 'ASC'])
+					->all() as $__row
+			) {
+				$ticketAddQueues[(int)$__row->id] = (string)($__row->name ?? ('Fila #' . $__row->id));
+			}
+			if ($ticketAddQueues !== []) {
+				$__n1 = $this->Queues->find()->where(['idempresa' => $__emp, 'codigo' => 'n1'])->first();
+				if (!empty($__n1)) {
+					$ticketAddDefaultQueueId = (int)$__n1->id;
+				} else {
+					reset($ticketAddQueues);
+					$__k = key($ticketAddQueues);
+					$ticketAddDefaultQueueId = $__k !== null ? (int)$__k : null;
+				}
+			}
+		}
+		$this->set(compact('ticket', 'ticketAddQueues', 'ticketAddQueueFieldReady', 'ticketAddDefaultQueueId'));
 	}
 
 	public function edit($idticket = null){
@@ -2497,14 +2553,21 @@ class TicketsController extends AppController {
 			return;
 		}
 		$emp = (int)$t->idempresa;
-		$q = $this->Queues->find()->where(['idempresa' => $emp, 'codigo' => 'n1'])->first();
-		if (empty($q)) {
-			$q = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC'])->first();
+		$q = null;
+		$qid = (int)($t->queue_id ?? 0);
+		if ($qid > 0) {
+			$q = $this->Queues->find()->where(['id' => $qid, 'idempresa' => $emp])->first();
 		}
 		if (empty($q)) {
-			return;
+			$q = $this->Queues->find()->where(['idempresa' => $emp, 'codigo' => 'n1'])->first();
+			if (empty($q)) {
+				$q = $this->Queues->find()->where(['idempresa' => $emp])->order(['sort_order' => 'ASC', 'id' => 'ASC'])->first();
+			}
+			if (empty($q)) {
+				return;
+			}
+			$t->queue_id = (int)$q->id;
 		}
-		$t->queue_id = (int)$q->id;
 		$fields = ['queue_id'];
 		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $this->Tickets->getSchema()->columns(), true) && !empty($q->support_level_id)) {
 			$t->support_level_id = (int)$q->support_level_id;

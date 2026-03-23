@@ -54,14 +54,14 @@
 		max-width: 36rem;
 	}
 	.sd-add-status {
-		display: none;
+		width: 100%;
 		border-radius: 1rem;
 		background: #fff;
 		padding: 0.65rem 1rem;
 		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 	}
 	@media (min-width: 768px) {
-		.sd-add-status { display: block; }
+		.sd-add-status { width: auto; max-width: 14rem; }
 	}
 	.sd-add-status-label {
 		font-size: 0.65rem;
@@ -75,6 +75,36 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		color: #059669;
+		transition: color 0.15s ease;
+	}
+	.sd-add-status-value.is-ok { color: #059669; }
+	.sd-add-status-value.is-warn { color: #d97706; }
+	.sd-add-status-value.is-muted { color: #64748b; }
+	.sd-add-status-value.is-danger { color: #dc2626; }
+	.sd-sum-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.sd-sum-field-label {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: #64748b;
+	}
+	.sd-sum-select {
+		width: 100%;
+		border-radius: 1rem !important;
+		border: 1px solid #e2e8f0 !important;
+		background: #f8fafc !important;
+		padding: 0.5rem 0.75rem !important;
+		font-size: 0.8125rem !important;
+		color: #0f172a;
+		min-height: 2.5rem;
+	}
+	.sd-sum-select:focus {
+		border-color: #94a3b8 !important;
+		outline: none;
+		box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.35);
 	}
 	.sd-add-grid {
 		display: grid;
@@ -403,13 +433,14 @@
 					Preencha os dados abaixo para registrar um incidente, requisição ou solicitação de acesso.
 				</p>
 			</div>
-			<div class="sd-add-status">
+			<div class="sd-add-status" id="sd-add-status-card">
 				<p class="sd-add-status-label">Status</p>
-				<p class="sd-add-status-value">Formulário disponível</p>
+				<p class="sd-add-status-value is-muted" id="sd-atendimento-status-value">Carregando…</p>
 			</div>
 		</header>
 
 		<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
+		<div class="sd-add-role-holder" data-sd-role="<?= (int)$role ?>" hidden></div>
 
 		<div class="sd-add-grid">
 			<div class="sd-add-stack">
@@ -549,22 +580,54 @@
 			<div class="sd-add-stack">
 				<section class="sd-add-card">
 					<h2 class="sd-add-card-title">Resumo do chamado</h2>
-					<p class="sd-add-card-desc" style="margin-top:0.25rem">Atualizado conforme você preenche o formulário.</p>
+					<p class="sd-add-card-desc" style="margin-top:0.25rem">Altere assunto, urgência ou fila aqui ou na etapa 2 — os campos ficam sincronizados.</p>
 					<div class="sd-sum-stack">
-						<div class="sd-sum-item">
-							<span>Assunto</span>
-							<span id="sd-sum-assunto">—</span>
+						<?php
+							$__assuntoCur = ($ticket->assunto !== null && $ticket->assunto !== '') ? $ticket->assunto : $assunto;
+							$__sevCur = $ticket->severidade ?? 'media';
+						?>
+						<div class="sd-sum-field">
+							<label class="sd-sum-field-label" for="sd-sum-assunto-select">Assunto</label>
+							<select id="sd-sum-assunto-select" class="form-control sd-sum-select" title="Assunto / categoria">
+								<?php foreach (C_TicketCategoriaClienteQuery as $__aid => $__alabel) : ?>
+									<option value="<?= h($__aid) ?>" <?= ((string)$__aid === (string)$__assuntoCur) ? 'selected' : '' ?>><?= h($__alabel) ?></option>
+								<?php endforeach; ?>
+							</select>
 						</div>
 						<?php if (!empty($severidadeColumnReady)) : ?>
-						<div class="sd-sum-item">
-							<span>Urgência</span>
-							<span id="sd-sum-severidade">—</span>
+						<div class="sd-sum-field">
+							<label class="sd-sum-field-label" for="sd-sum-severidade-select">Urgência</label>
+							<select id="sd-sum-severidade-select" class="form-control sd-sum-select" title="Urgência (severidade)">
+								<?php
+									$__sevOpts = ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'];
+									foreach ($__sevOpts as $__sv => $__sl) :
+								?>
+									<option value="<?= h($__sv) ?>" <?= ((string)$__sv === (string)$__sevCur) ? 'selected' : '' ?>><?= h($__sl) ?></option>
+								<?php endforeach; ?>
+							</select>
 						</div>
 						<?php endif; ?>
-						<div class="sd-sum-item">
-							<span>Destino</span>
-							<span>Triagem — equipe de suporte</span>
+						<?php if (!empty($ticketAddQueueFieldReady) && !empty($ticketAddQueues)) : ?>
+						<div class="sd-sum-field">
+							<label class="sd-sum-field-label" for="queue_id">Destino (fila)</label>
+							<?= $this->Form->control('queue_id', [
+								'type' => 'select',
+								'options' => $ticketAddQueues,
+								'label' => false,
+								'id' => 'queue_id',
+								'class' => 'form-control sd-sum-select',
+								'value' => $ticket->queue_id ?? $ticketAddDefaultQueueId,
+								'required' => false,
+							]) ?>
 						</div>
+						<?php else : ?>
+						<div class="sd-sum-field">
+							<span class="sd-sum-field-label">Destino</span>
+							<div class="sd-sum-select" style="display:flex;align-items:center;color:#475569;font-weight:500">
+								Triagem — equipe de suporte
+							</div>
+						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -604,26 +667,115 @@
 	</div>
 </div>
 <script>
-	function sdTicketAddSyncSummary() {
+	function sdTicketAddGetRole() {
+		var r = $('.sd-add-role-holder').attr('data-sd-role');
+		return parseInt(r || '1', 10);
+	}
+
+	function sdTicketAddMirrorFromMain() {
 		var $a = $('#assunto');
-		var assuntoTxt = '—';
-		if ($a.length) {
-			assuntoTxt = $.trim($a.find('option:selected').text()) || '—';
+		var $sa = $('#sd-sum-assunto-select');
+		if ($a.length && $sa.length) {
+			$sa.val(String($a.val() != null ? $a.val() : ''));
 		}
-		$('#sd-sum-assunto').text(assuntoTxt);
-		var $sumSev = $('#sd-sum-severidade');
-		if ($sumSev.length) {
-			var $s = $('#severidade');
-			var sevTxt = '—';
-			if ($s.length) {
-				sevTxt = $.trim($s.find('option:selected').text()) || '—';
-			}
-			$sumSev.text(sevTxt);
+		var $s = $('#severidade');
+		var $ss = $('#sd-sum-severidade-select');
+		if ($s.length && $ss.length) {
+			$ss.val(String($s.val() != null ? $s.val() : ''));
 		}
 	}
+
+	function sdTicketAddMirrorSidebarToMain() {
+		var v = $('#sd-sum-assunto-select').val();
+		var $a = $('#assunto');
+		if ($a.length) {
+			if (typeof $a.selectpicker === 'function') {
+				$a.selectpicker('val', v);
+				$a.selectpicker('refresh');
+			} else {
+				$a.val(v);
+			}
+		}
+		var $s = $('#severidade');
+		var $ss = $('#sd-sum-severidade-select');
+		if ($s.length && $ss.length) {
+			var sv = $ss.val();
+			if (typeof $s.selectpicker === 'function') {
+				$s.selectpicker('val', sv);
+				$s.selectpicker('refresh');
+			} else {
+				$s.val(sv);
+			}
+		}
+	}
+
+	function sdTicketAddFormBasicsComplete() {
+		var role = sdTicketAddGetRole();
+		if (role === 0) {
+			var cid = $('#idcliente').val();
+			if (!cid) return false;
+		}
+		var assunto = $('#assunto').val();
+		if (assunto === null || assunto === '' || assunto === undefined) return false;
+		if ($('#severidade').length) {
+			var sev = $('#severidade').val();
+			if (sev === null || sev === '' || sev === undefined) return false;
+		}
+		var sol = ($('#solicitacao').val() || '').replace(/^\s+|\s+$/g, '');
+		if (!sol) return false;
+		return true;
+	}
+
+	var sdTicketAddSubmitting = false;
+
+	function sdTicketAddRefreshAtendimentoStatus() {
+		var $el = $('#sd-atendimento-status-value');
+		if (!$el.length) return;
+		if (sdTicketAddSubmitting) {
+			$el.removeClass('is-ok is-warn is-danger').addClass('is-muted');
+			$el.text('Enviando chamado…');
+			return;
+		}
+		if (!sdTicketAddFormBasicsComplete()) {
+			$el.removeClass('is-ok is-muted is-danger').addClass('is-warn');
+			$el.text('Aguardando dados do chamado');
+			return;
+		}
+		$el.removeClass('is-warn is-muted is-danger').addClass('is-ok');
+		$el.text('Pronto para enviar');
+	}
+
 	$(document).ready(function () {
-		sdTicketAddSyncSummary();
-		$('#assunto, #severidade').on('changed.bs.select change', sdTicketAddSyncSummary);
+		sdTicketAddMirrorFromMain();
+		sdTicketAddRefreshAtendimentoStatus();
+
+		$('#sd-sum-assunto-select').on('change', function () {
+			sdTicketAddMirrorSidebarToMain();
+			sdTicketAddRefreshAtendimentoStatus();
+		});
+		$('#sd-sum-severidade-select').on('change', function () {
+			sdTicketAddMirrorSidebarToMain();
+			sdTicketAddRefreshAtendimentoStatus();
+		});
+
+		$('#assunto, #severidade').on('changed.bs.select change', function () {
+			sdTicketAddMirrorFromMain();
+			sdTicketAddRefreshAtendimentoStatus();
+		});
+
+		$('#idcliente').on('changed.bs.select change', sdTicketAddRefreshAtendimentoStatus);
+		$('#solicitacao').on('input change', sdTicketAddRefreshAtendimentoStatus);
+		$('#queue_id').on('change', sdTicketAddRefreshAtendimentoStatus);
+
+		setTimeout(function () {
+			sdTicketAddMirrorFromMain();
+			sdTicketAddRefreshAtendimentoStatus();
+		}, 300);
+
+		$('form.ticket-add-form').on('submit', function () {
+			sdTicketAddSubmitting = true;
+			sdTicketAddRefreshAtendimentoStatus();
+		});
 	});
 	// Idcliente
 		<?php if(isset($idcliente)) { ?>
