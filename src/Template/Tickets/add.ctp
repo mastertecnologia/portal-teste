@@ -11,71 +11,179 @@
 		margin: 0;
 		padding: 0.5rem 0 2.5rem;
 		box-sizing: border-box;
+		background: #f1f5f9;
+		border-radius: 0;
 	}
-	.card-ticket-add {
-		border-radius: 10px;
-		border: 1px solid #e8ecef;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+	.sd-add-page {
+		max-width: 72rem;
+		margin: 0 auto;
+		padding: 0 0.5rem;
 	}
-	.card-ticket-add .card-body {
-		padding: 1.75rem 2rem 2rem;
+	@media (min-width: 768px) {
+		.sd-add-page { padding: 0 1.25rem; }
 	}
-	@media (min-width: 1200px) {
-		.card-ticket-add .card-body {
-			padding: 2rem clamp(1.5rem, 3vw, 3rem) 2.25rem;
-		}
+	.sd-add-header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
 	}
-	@media (max-width: 767px) {
-		.card-ticket-add .card-body {
-			padding: 1.25rem 1rem 1.5rem;
-		}
-	}
-	.ticket-add-lead {
-		font-size: 14px;
-		color: #6c757d;
-		margin-bottom: 1.25rem;
-		line-height: 1.5;
-	}
-	.ticket-add-lead strong {
-		color: #3d4a54;
-	}
-	.ticket-add-section {
-		margin-top: 1.35rem;
-	}
-	.ticket-add-section > label.control-label {
-		display: block;
-		margin-bottom: 0.45rem;
+	.sd-add-kicker {
+		font-size: 0.875rem;
 		font-weight: 600;
-		color: #495057;
-		font-size: 13px;
+		color: #64748b;
+		margin: 0;
 	}
+	.sd-add-title {
+		font-size: 1.75rem;
+		font-weight: 700;
+		color: #0f172a;
+		margin: 0.15rem 0 0;
+		line-height: 1.2;
+	}
+	@media (min-width: 768px) {
+		.sd-add-title { font-size: 1.875rem; }
+	}
+	.sd-add-sub {
+		margin: 0.35rem 0 0;
+		font-size: 0.875rem;
+		color: #475569;
+		line-height: 1.45;
+		max-width: 36rem;
+	}
+	.sd-add-status {
+		display: none;
+		border-radius: 1rem;
+		background: #fff;
+		padding: 0.65rem 1rem;
+		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+	}
+	@media (min-width: 768px) {
+		.sd-add-status { display: block; }
+	}
+	.sd-add-status-label {
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: #94a3b8;
+		margin: 0;
+	}
+	.sd-add-status-value {
+		margin: 0.15rem 0 0;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #059669;
+	}
+	.sd-add-grid {
+		display: grid;
+		gap: 1.5rem;
+		align-items: start;
+	}
+	@media (min-width: 1024px) {
+		.sd-add-grid {
+			grid-template-columns: 1.15fr 0.85fr;
+		}
+	}
+	.sd-add-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+	.sd-add-card {
+		background: #fff;
+		border-radius: 1.5rem;
+		padding: 1.35rem 1.25rem;
+		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+	}
+	@media (min-width: 768px) {
+		.sd-add-card { padding: 1.5rem; }
+	}
+	.sd-add-card-head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 1.15rem;
+	}
+	.sd-add-card-title {
+		font-size: 1.05rem;
+		font-weight: 600;
+		color: #0f172a;
+		margin: 0;
+	}
+	.sd-add-card-desc {
+		font-size: 0.8125rem;
+		color: #64748b;
+		margin: 0.2rem 0 0;
+		line-height: 1.4;
+	}
+	.sd-add-badge {
+		flex-shrink: 0;
+		border-radius: 9999px;
+		background: #f1f5f9;
+		padding: 0.25rem 0.65rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: #475569;
+	}
+	.sd-add-fields {
+		display: grid;
+		gap: 1rem;
+	}
+	@media (min-width: 768px) {
+		.sd-add-fields.sd-add-fields-2 { grid-template-columns: 1fr 1fr; }
+	}
+	.sd-add-field label.control-label {
+		display: block;
+		margin-bottom: 0.4rem;
+		font-weight: 600;
+		color: #334155;
+		font-size: 0.8125rem;
+	}
+	.sd-add-field .form-control,
+	.sd-add-field .bootstrap-select > .dropdown-toggle {
+		border-radius: 1rem !important;
+		border-color: #e2e8f0 !important;
+		background-color: #f8fafc !important;
+		min-height: 2.75rem;
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+		font-size: 0.875rem;
+	}
+	.sd-add-field .bootstrap-select { width: 100% !important; }
 	.ticket-add-textarea.form-control {
-		min-height: 240px;
-		border: 1px solid #ced4da;
-		border-radius: 8px;
-		padding: 14px 16px;
-		font-size: 15px;
+		min-height: 9rem;
+		border: 1px solid #e2e8f0;
+		border-radius: 1rem;
+		padding: 0.85rem 1rem;
+		font-size: 0.875rem;
 		line-height: 1.55;
 		resize: vertical;
+		background: #f8fafc;
 		transition: border-color 0.15s ease, box-shadow 0.15s ease;
 	}
 	.ticket-add-textarea.form-control:focus {
-		border-color: #1ab394;
-		box-shadow: 0 0 0 0.2rem rgba(26, 179, 148, 0.18);
+		border-color: #94a3b8;
+		box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.35);
 		outline: 0;
 	}
+	.sd-add-label-block {
+		display: block;
+		margin-bottom: 0.4rem;
+		font-weight: 600;
+		color: #334155;
+		font-size: 0.8125rem;
+	}
 	.ticket-add-hint {
-		font-size: 13px;
-		color: #6c757d;
-		margin: 0 0 0.65rem;
+		font-size: 0.75rem;
+		color: #64748b;
+		margin: 0 0 0.5rem;
 		line-height: 1.45;
 	}
 	.ticket-dropzone {
-		border: 2px dashed #cfd8dc;
-		border-radius: 10px;
-		background: #f8fafb;
-		min-height: 100px;
-		padding: 1rem 1.25rem;
+		border: 2px dashed #cbd5e1;
+		border-radius: 1rem;
+		background: #f8fafc;
+		min-height: 5.5rem;
+		padding: 1rem 1.15rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -84,18 +192,18 @@
 	}
 	.ticket-dropzone.ticket-dropzone--drag {
 		border-color: #1ab394;
-		background: #e8faf5;
+		background: #ecfdf5;
 	}
 	.ticket-dropzone:hover {
-		border-color: #1ab394;
-		background: #f0fdf9;
+		border-color: #94a3b8;
+		background: #f1f5f9;
 	}
 	.ticket-files-chosen {
 		list-style: none;
-		margin: 0.75rem 0 0;
+		margin: 0.65rem 0 0;
 		padding: 0;
-		font-size: 13px;
-		color: #3d4a54;
+		font-size: 0.8125rem;
+		color: #334155;
 	}
 	.ticket-files-chosen li {
 		display: flex;
@@ -104,9 +212,9 @@
 		gap: 8px;
 		padding: 6px 10px;
 		margin-bottom: 4px;
-		background: #f1f5f7;
-		border-radius: 6px;
-		border: 1px solid #e2e8ec;
+		background: #f1f5f9;
+		border-radius: 0.65rem;
+		border: 1px solid #e2e8f0;
 	}
 	.ticket-files-chosen .ticket-file-remove {
 		flex-shrink: 0;
@@ -124,7 +232,7 @@
 	.file-drop-area {
 		position: relative;
 		width: 100%;
-		min-height: 72px;
+		min-height: 3.5rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -133,14 +241,14 @@
 	}
 	.fake-btn {
 		flex-shrink: 0;
-		border-radius: 6px;
-		padding: 10px 14px;
-		font-size: 13px;
+		border-radius: 0.5rem;
+		padding: 0.5rem 0.85rem;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		line-height: 1.4;
 		white-space: normal;
 		text-align: center;
-		color: #495057;
+		color: #64748b;
 		pointer-events: none;
 	}
 	.file-input {
@@ -153,147 +261,370 @@
 		opacity: 0;
 	}
 	.ticket-add-email.form-control {
-		border-radius: 8px;
-		padding: 10px 14px;
-		font-size: 15px;
-		min-height: 44px;
+		border-radius: 1rem;
+		padding: 0.65rem 1rem;
+		font-size: 0.875rem;
+		min-height: 2.75rem;
+		border-color: #e2e8f0;
+		background: #f8fafc;
 	}
-	.ticket-add-actions {
-		margin-top: 1.75rem;
-		padding-top: 1.25rem;
-		border-top: 1px solid #eef1f3;
+	.ticket-add-lead {
+		font-size: 0.875rem;
+		color: #64748b;
+		margin: 0 0 1rem;
+		line-height: 1.5;
+		padding: 0.75rem 1rem;
+		background: #f8fafc;
+		border-radius: 1rem;
+		border: 1px solid #e2e8f0;
 	}
-	.ticket-add-actions .btn-abrirticket {
-		min-width: 200px;
-		padding: 12px 28px;
-		font-size: 15px;
+	.ticket-add-lead strong {
+		color: #0f172a;
+	}
+	.sd-sum-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		border-radius: 1rem;
+		background: #f8fafc;
+		padding: 0.65rem 0.85rem;
+		font-size: 0.8125rem;
+	}
+	.sd-sum-item span:first-child { color: #64748b; }
+	.sd-sum-item span:last-child {
 		font-weight: 600;
-		border-radius: 8px;
+		color: #0f172a;
+		text-align: right;
+		max-width: 58%;
+		word-break: break-word;
 	}
-	@media (max-width: 767px) {
-		.ticket-add-actions .btn-abrirticket {
-			width: 100%;
-			min-width: 0;
-		}
+	.sd-sum-stack { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 1rem; }
+	.sd-rules-card {
+		background: #fffbeb;
+		border-radius: 1.5rem;
+		padding: 1.35rem 1.25rem;
+		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+	}
+	@media (min-width: 768px) {
+		.sd-rules-card { padding: 1.5rem; }
+	}
+	.sd-rule {
+		background: #fff;
+		border-radius: 1rem;
+		padding: 0.85rem 1rem;
+		margin-bottom: 0.65rem;
+	}
+	.sd-rule:last-child { margin-bottom: 0; }
+	.sd-rule-pill {
+		display: inline-flex;
+		border-radius: 9999px;
+		padding: 0.2rem 0.5rem;
+		font-size: 0.65rem;
+		font-weight: 700;
+	}
+	.sd-rule-pill--u { background: #fee2e2; color: #b91c1c; }
+	.sd-rule-pill--a { background: #ffedd5; color: #c2410c; }
+	.sd-rule-pill--m { background: #fef9c3; color: #a16207; }
+	.sd-rule-pill--b { background: #e2e8f0; color: #334155; }
+	.sd-rule p {
+		margin: 0.4rem 0 0;
+		font-size: 0.8125rem;
+		color: #334155;
+		line-height: 1.4;
+	}
+	.sd-actions-card {
+		background: #0f172a;
+		color: #fff;
+		border-radius: 1.5rem;
+		padding: 1.35rem 1.25rem;
+		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+	}
+	@media (min-width: 768px) {
+		.sd-actions-card { padding: 1.5rem; }
+	}
+	.sd-actions-card h2 { color: #fff; font-size: 1.05rem; font-weight: 600; margin: 0; }
+	.sd-actions-btns {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+		margin-top: 1.15rem;
+	}
+	.sd-btn-submit {
+		width: 100%;
+		border: none;
+		border-radius: 1rem;
+		background: #fff;
+		color: #0f172a;
+		padding: 0.75rem 1rem;
+		font-size: 0.875rem;
+		font-weight: 700;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+		cursor: pointer;
+		transition: opacity 0.15s;
+	}
+	.sd-btn-submit:hover { opacity: 0.92; }
+	.sd-btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+	.sd-btn-ghost {
+		display: block;
+		width: 100%;
+		text-align: center;
+		border-radius: 1rem;
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		background: transparent;
+		color: #fff;
+		padding: 0.65rem 1rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: background 0.15s;
+	}
+	.sd-btn-ghost:hover {
+		background: rgba(255, 255, 255, 0.1);
+		color: #fff;
+		text-decoration: none;
 	}
 	select[multiple] {
 		max-width: 100%;
 	}
+	.sd-btn-submit.btn-success {
+		background: #fff !important;
+		border-color: transparent !important;
+		color: #0f172a !important;
+	}
 </style>
 <div class="col-md-12 tickets-add-wrap">
-	<div class="card card-ticket-add">
-		<div class="card-body">
-			<?php if ($role == 1 && !empty($authUserName)) : ?>
-				<p class="ticket-add-lead">
-					O chamado será registrado em nome de <strong><?= h($authUserName) ?></strong>.
+	<div class="sd-add-page">
+		<header class="sd-add-header">
+			<div>
+				<p class="sd-add-kicker">Central de Atendimento</p>
+				<h1 class="sd-add-title">Abertura de Chamado</h1>
+				<p class="sd-add-sub">
+					Preencha os dados abaixo para registrar um incidente, requisição ou solicitação de acesso.
 				</p>
-			<?php endif; ?>
-			<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
-				<div class="row">
-					<?php if ($role == 0) { ?>
-						<div class="<?= !empty($severidadeColumnReady) ? 'col-md-3' : 'col-md-4' ?> col-xs-12">
-							<label class="control-label text-muted">Cliente</label>
-							<?= $this->Form->control('idcliente', [ 'class' => 'selectpicker form-control', 'data-live-search' => true, 'empty' => 'Selecione o cliente', 'options' => $clientes, 'label' => false, 'required' => true]) ?>
+			</div>
+			<div class="sd-add-status">
+				<p class="sd-add-status-label">Status</p>
+				<p class="sd-add-status-value">Formulário disponível</p>
+			</div>
+		</header>
+
+		<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
+
+		<div class="sd-add-grid">
+			<div class="sd-add-stack">
+				<section class="sd-add-card">
+					<div class="sd-add-card-head">
+						<div>
+							<h2 class="sd-add-card-title">Dados do solicitante</h2>
+							<p class="sd-add-card-desc">Informações básicas do usuário.</p>
 						</div>
-						<div class="col-md-2 col-xs-12">
-							<label class="control-label text-muted">Solicitante</label>
-							<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
-						</div>
-						<div class="col-md-2 col-xs-12">
-							<label class="control-label text-muted"></label>
-							<?= $this->Form->control('nomesolicitante', ['class' => 'form-control m-t-5', 'title' => 'Nome do solicitante', 'label' => false, 'required' => false, 'placeholder' => 'Solicitante (caso não cadastrado)']) ?>
-						</div>
-						<div class="<?= !empty($severidadeColumnReady) ? 'col-md-2' : 'col-md-3' ?> col-xs-12">
-							<label class="control-label text-muted">Assunto</label>
-							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
-						</div>
-						<?php if (!empty($severidadeColumnReady)) : ?>
-						<div class="col-md-3 col-xs-12">
-							<label class="control-label text-muted">Severidade</label>
-							<?= $this->Form->control('severidade', [
-								'type' => 'select',
-								'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
-								'class' => 'selectpicker form-control',
-								'title' => 'Grau de severidade',
-								'label' => false,
-								'required' => true,
-								'default' => 'media',
-								'value' => $ticket->severidade ?? 'media',
-							]) ?>
-						</div>
-						<?php endif; ?>
-					<?php } else { ?>
-						<div class="<?= !empty($severidadeColumnReady) ? 'col-md-8' : 'col-12' ?> col-xs-12 ticket-add-section">
-							<label class="control-label text-muted">Assunto</label>
-							<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
-						</div>
-						<?php if (!empty($severidadeColumnReady)) : ?>
-						<div class="col-md-4 col-xs-12 ticket-add-section">
-							<label class="control-label text-muted">Severidade</label>
-							<?= $this->Form->control('severidade', [
-								'type' => 'select',
-								'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
-								'class' => 'selectpicker form-control',
-								'title' => 'Grau de severidade',
-								'label' => false,
-								'required' => true,
-								'default' => 'media',
-								'value' => $ticket->severidade ?? 'media',
-							]) ?>
-						</div>
-						<?php endif; ?>
-					<?php } ?>
-				</div>
-				<div class="row hide data m-t-10">
-					<div class="col-4">
-						<label class="control-label text-muted">Data da Visita</label>
-						<?= $this->Form->text('data', ['class' => 'form-control datepicker', 'label' => false,]) ?>
+						<span class="sd-add-badge">Etapa 1</span>
 					</div>
-				</div>
-				<div class="row ticket-add-section">
-					<div class="col-12">
-						<label class="control-label text-muted" for="solicitacao">Solicitação</label>
+
+					<?php if ($role == 1 && !empty($authUserName)) : ?>
+						<p class="ticket-add-lead" style="margin-top:0">
+							Chamado em nome de <strong><?= h($authUserName) ?></strong>.
+						</p>
+					<?php endif; ?>
+
+					<div class="sd-add-fields sd-add-fields-2">
+						<?php if ($role == 0) { ?>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Cliente</label>
+								<?= $this->Form->control('idcliente', ['class' => 'selectpicker form-control', 'data-live-search' => true, 'empty' => 'Selecione o cliente', 'options' => $clientes, 'label' => false, 'required' => true]) ?>
+							</div>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Solicitante</label>
+								<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
+							</div>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Nome do solicitante</label>
+								<?= $this->Form->control('nomesolicitante', ['class' => 'form-control', 'title' => 'Nome do solicitante', 'label' => false, 'required' => false, 'placeholder' => 'Se não estiver cadastrado']) ?>
+							</div>
+							<div class="sd-add-field sd-email-main">
+								<label class="control-label text-muted" for="email">E-mail para contato</label>
+								<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'usuario@empresa.com']) ?>
+							</div>
+						<?php } else { ?>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Nome</label>
+								<input type="text" class="form-control" readonly value="<?= h($authUserName) ?>" style="background:#e2e8f0;color:#475569;cursor:default" tabindex="-1" aria-label="Nome do solicitante">
+							</div>
+							<div class="sd-add-field">
+								<label class="control-label text-muted" for="email">E-mail</label>
+								<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'usuario@empresa.com']) ?>
+							</div>
+						<?php } ?>
+					</div>
+				</section>
+
+				<section class="sd-add-card">
+					<div class="sd-add-card-head">
+						<div>
+							<h2 class="sd-add-card-title">Detalhes do chamado</h2>
+							<p class="sd-add-card-desc">Classifique o atendimento para direcionamento correto.</p>
+						</div>
+						<span class="sd-add-badge">Etapa 2</span>
+					</div>
+
+					<div class="sd-add-fields sd-add-fields-2">
+						<?php if ($role == 0) { ?>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Assunto / Categoria</label>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+							</div>
+							<?php if (!empty($severidadeColumnReady)) : ?>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Urgência (severidade)</label>
+								<?= $this->Form->control('severidade', [
+									'type' => 'select',
+									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
+									'class' => 'selectpicker form-control',
+									'title' => 'Grau de severidade',
+									'label' => false,
+									'required' => true,
+									'default' => 'media',
+									'value' => $ticket->severidade ?? 'media',
+								]) ?>
+							</div>
+							<?php endif; ?>
+						<?php } else { ?>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Assunto / Categoria</label>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+							</div>
+							<?php if (!empty($severidadeColumnReady)) : ?>
+							<div class="sd-add-field">
+								<label class="control-label text-muted">Urgência (severidade)</label>
+								<?= $this->Form->control('severidade', [
+									'type' => 'select',
+									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
+									'class' => 'selectpicker form-control',
+									'title' => 'Grau de severidade',
+									'label' => false,
+									'required' => true,
+									'default' => 'media',
+									'value' => $ticket->severidade ?? 'media',
+								]) ?>
+							</div>
+							<?php endif; ?>
+						<?php } ?>
+					</div>
+
+					<div class="row hide data m-t-10" style="margin-top:0.75rem">
+						<div class="col-md-6 col-xs-12 sd-add-field">
+							<label class="control-label text-muted">Data da Visita</label>
+							<?= $this->Form->text('data', ['class' => 'form-control datepicker', 'label' => false]) ?>
+						</div>
+					</div>
+
+					<div style="margin-top:1rem">
+						<label class="sd-add-label-block" for="solicitacao">Descrição do problema / solicitação</label>
 						<?= $this->Form->textarea('solicitacao', [
 							'id' => 'solicitacao',
 							'class' => 'form-control ticket-add-textarea',
 							'label' => false,
 							'required' => true,
-							'placeholder' => 'Descreva o problema ou a solicitação com o máximo de detalhes possível (passos, mensagens de erro, telas afetadas, etc.).',
+							'placeholder' => 'Descreva detalhadamente o problema, mensagem de erro, sistema afetado e impacto no trabalho…',
 						]) ?>
 					</div>
-				</div>
-				<div class="row ticket-add-section">
-					<div class="col-xl-8 col-lg-7 col-md-12">
-						<div class="form-group">
-							<label class="control-label text-muted">Anexos (opcional)</label>
-							<p class="ticket-add-hint">
-								Vários arquivos: na janela de escolha, use <strong>Ctrl+clique</strong> (Windows) ou <strong>Cmd+clique</strong> (Mac) para marcar mais de um.
-								Ou clique várias vezes em “Adicionar arquivos” para ir incluindo mais. Também pode arrastar e soltar aqui.
-							</p>
-							<div class="ticket-dropzone" id="ticket-dropzone">
-								<div class="file-drop-area">
-									<span class="fake-btn text-muted" id="ticket-file-hint">Adicionar arquivos ou arrastar para cá</span>
-									<input class="file-input form-control" name="file-3[]" id="file-3" type="file" multiple>
-								</div>
+
+					<div style="margin-top:1rem">
+						<label class="sd-add-label-block">Anexos</label>
+						<p class="ticket-add-hint">
+							Vários arquivos: <strong>Ctrl+clique</strong> (Windows) ou <strong>Cmd+clique</strong> (Mac). Também pode arrastar e soltar.
+						</p>
+						<div class="ticket-dropzone" id="ticket-dropzone">
+							<div class="file-drop-area">
+								<span class="fake-btn text-muted" id="ticket-file-hint">Arraste arquivos ou clique para anexar</span>
+								<input class="file-input form-control" name="file-3[]" id="file-3" type="file" multiple>
 							</div>
-							<ul class="ticket-files-chosen" id="ticket-attachments-list" aria-live="polite"></ul>
+						</div>
+						<ul class="ticket-files-chosen" id="ticket-attachments-list" aria-live="polite"></ul>
+					</div>
+				</section>
+			</div>
+
+			<div class="sd-add-stack">
+				<section class="sd-add-card">
+					<h2 class="sd-add-card-title">Resumo do chamado</h2>
+					<p class="sd-add-card-desc" style="margin-top:0.25rem">Atualizado conforme você preenche o formulário.</p>
+					<div class="sd-sum-stack">
+						<div class="sd-sum-item">
+							<span>Assunto</span>
+							<span id="sd-sum-assunto">—</span>
+						</div>
+						<?php if (!empty($severidadeColumnReady)) : ?>
+						<div class="sd-sum-item">
+							<span>Urgência</span>
+							<span id="sd-sum-severidade">—</span>
+						</div>
+						<?php endif; ?>
+						<div class="sd-sum-item">
+							<span>Destino</span>
+							<span>Triagem — equipe de suporte</span>
 						</div>
 					</div>
-					<div class="col-xl-4 col-lg-5 col-md-12 ticket-add-section">
-						<label class="control-label text-muted" for="email">E-mail para contato</label>
-						<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'E-mail para retorno do suporte']) ?>
+				</section>
+
+				<section class="sd-rules-card">
+					<h2 class="sd-add-card-title">Regras de priorização</h2>
+					<div style="margin-top:0.75rem">
+						<div class="sd-rule">
+							<span class="sd-rule-pill sd-rule-pill--u">Urgente</span>
+							<p>Empresa parada ou serviço essencial indisponível.</p>
+						</div>
+						<div class="sd-rule">
+							<span class="sd-rule-pill sd-rule-pill--a">Alta</span>
+							<p>Impacta o trabalho do setor.</p>
+						</div>
+						<div class="sd-rule">
+							<span class="sd-rule-pill sd-rule-pill--m">Média</span>
+							<p>Afeta o usuário, com alternativa temporária.</p>
+						</div>
+						<div class="sd-rule">
+							<span class="sd-rule-pill sd-rule-pill--b">Baixa</span>
+							<p>Solicitações sem urgência imediata.</p>
+						</div>
 					</div>
-				</div>
-				<div class="row ticket-add-actions">
-					<div class="col-12 text-right">
-						<?= $this->Form->button('Abrir Ticket', ['id' => 'abrirticket', 'class' => 'btn btn-success aparecedepois btn-abrirticket']) ?>
+				</section>
+
+				<section class="sd-actions-card">
+					<h2>Ações</h2>
+					<div class="sd-actions-btns">
+						<?= $this->Form->button('Enviar chamado', ['id' => 'abrirticket', 'type' => 'submit', 'class' => 'sd-btn-submit btn btn-success aparecedepois']) ?>
+						<a href="<?= h(Router::url(['controller' => 'Tickets', 'action' => 'index'])) ?>" class="sd-btn-ghost">Cancelar</a>
 					</div>
-				</div>
-			<?= $this->Form->end(); ?>
+				</section>
+			</div>
 		</div>
+
+		<?= $this->Form->end() ?>
 	</div>
 </div>
 <script>
+	function sdTicketAddSyncSummary() {
+		var $a = $('#assunto');
+		var assuntoTxt = '—';
+		if ($a.length) {
+			assuntoTxt = $.trim($a.find('option:selected').text()) || '—';
+		}
+		$('#sd-sum-assunto').text(assuntoTxt);
+		var $sumSev = $('#sd-sum-severidade');
+		if ($sumSev.length) {
+			var $s = $('#severidade');
+			var sevTxt = '—';
+			if ($s.length) {
+				sevTxt = $.trim($s.find('option:selected').text()) || '—';
+			}
+			$sumSev.text(sevTxt);
+		}
+	}
+	$(document).ready(function () {
+		sdTicketAddSyncSummary();
+		$('#assunto, #severidade').on('changed.bs.select change', sdTicketAddSyncSummary);
+	});
 	// Idcliente
 		<?php if(isset($idcliente)) { ?>
 			$(document).ready(function() {
@@ -328,7 +659,7 @@
 				$list.empty();
 				var n = fileStore.length;
 				if (n === 0) {
-					$hint.text('Adicionar arquivos ou arrastar para cá');
+					$hint.text('Arraste arquivos ou clique para anexar');
 					return;
 				}
 				$hint.text(n === 1 ? '1 arquivo selecionado — adicione mais se precisar' : n + ' arquivos — pode adicionar mais');
