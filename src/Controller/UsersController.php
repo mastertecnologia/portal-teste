@@ -309,12 +309,41 @@ class UsersController extends AppController {
 				->toArray();
 			$byCount = [];
 			foreach ($rows as $r) {
-				$tid = isset($r['idtecnico_responsavel']) ? (int)$r['idtecnico_responsavel'] : 0;
-				if ($tid > 0) {
-					$byCount[$tid] = (int)$r['cnt'];
+				$tid = $this->_rankingRowTecnicoId($r);
+				$cnt = $this->_rankingRowCount($r);
+				if ($tid !== null && $tid > 0 && $cnt !== null) {
+					$byCount[$tid] = (int)$cnt;
 				}
 			}
 			arsort($byCount);
+			$idToNome = [];
+			if ($byCount !== []) {
+				$nameRows = $this->Users->find()
+					->select(['id', 'name', 'username'])
+					->where(['id IN' => array_keys($byCount)])
+					->enableHydration(false)
+					->toArray();
+				foreach ($nameRows as $nr) {
+					$uid = (int)($nr['id'] ?? $nr['Users__id'] ?? 0);
+					if ($uid <= 0) {
+						continue;
+					}
+					$nm = '';
+					$un = '';
+					foreach ($nr as $k => $v) {
+						if (!is_string($k) || $v === null) {
+							continue;
+						}
+						if ($k === 'name' || $k === 'Users__name' || substr($k, -6) === '__name') {
+							$nm = trim((string)$v);
+						}
+						if ($k === 'username' || $k === 'Users__username' || substr($k, -10) === '__username') {
+							$un = trim((string)$v);
+						}
+					}
+					$idToNome[$uid] = $nm !== '' ? $nm : ($un !== '' ? $un : '#' . $uid);
+				}
+			}
 			$place = 1;
 			foreach ($byCount as $uid => $cnt) {
 				if ($place > 10) {
@@ -322,7 +351,7 @@ class UsersController extends AppController {
 				}
 				$ranking[] = [
 					'place' => $place,
-					'nome' => $tecMap[$uid] ?? ('#' . $uid),
+					'nome' => $idToNome[$uid] ?? $tecMap[$uid] ?? ('#' . $uid),
 					'tickets' => $cnt,
 				];
 				$place++;
@@ -393,6 +422,48 @@ class UsersController extends AppController {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * @param array<string,mixed> $row
+	 */
+	protected function _rankingRowTecnicoId(array $row): ?int {
+		$v = $row['idtecnico_responsavel'] ?? $row['Tickets__idtecnico_responsavel'] ?? null;
+		if ($v === null || $v === '') {
+			foreach ($row as $k => $val) {
+				if (is_string($k) && substr($k, -strlen('idtecnico_responsavel')) === 'idtecnico_responsavel' && $val !== null && $val !== '') {
+					return (int)$val;
+				}
+			}
+
+			return null;
+		}
+
+		return (int)$v;
+	}
+
+	/**
+	 * @param array<string,mixed> $row
+	 */
+	protected function _rankingRowCount(array $row): ?int {
+		foreach (['cnt', 'count', 'Tickets__cnt'] as $key) {
+			if (array_key_exists($key, $row) && $row[$key] !== null && $row[$key] !== '') {
+				return (int)$row[$key];
+			}
+		}
+		foreach ($row as $k => $val) {
+			if (!is_string($k)) {
+				continue;
+			}
+			if ($val === null || $val === '') {
+				continue;
+			}
+			if ($k === 'cnt' || substr($k, -4) === '__cnt' || substr($k, -6) === '__count') {
+				return (int)$val;
+			}
+		}
+
+		return null;
 	}
 
 	/**
