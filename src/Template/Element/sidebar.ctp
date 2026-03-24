@@ -58,7 +58,7 @@
 				<label>Empresa</label>
 				<?= $this->Form->control('empresaSidebar', [
 					'id' => 'empresaSidebar',
-					'class' => 'form-control',
+					'class' => 'form-control pgm-empresa-select',
 					'label' => false,
 					'value' => $empresa,
 					'options' => $empresasOptSidebar,
