@@ -1,7 +1,7 @@
 <?php
-use Cake\Routing\Router;
-
 $this->Html->css('/dist/css/pages/ordensservico-index-shell.css', ['block' => true]);
+
+$osCsvSkipCol = ($role == 0) ? 8 : -1;
 
 $kpiTotal = count($ordens);
 $kpiExec = $kpiSync = $kpiLib = 0;
@@ -77,7 +77,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 		<div class="os-kpi-grid">
 			<div class="os-kpi-card os-kpi-blue os-kpi-click<?= $kpiActive === 'all' ? ' is-active' : '' ?>" role="button" tabindex="0" data-os-kpi="all" title="Mostrar todas (limpar filtro de situação)">
-				<div class="os-kpi-label">Total OSs</div>
+				<div class="os-kpi-label">Total de OS</div>
 				<div class="os-kpi-value"><?= (int)$kpiTotal ?></div>
 				<div class="os-kpi-sub">Todos os registros</div>
 			</div>
@@ -112,7 +112,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		<?= $this->Form->end() ?>
 
 		<div class="os-toolbar">
-			<?= $this->Form->create('Ordem', ['type' => 'get', 'class' => 'form-material os-filter-form w-100']); ?>
+			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material os-filter-form w-100', 'url' => ['controller' => 'Ordensservico', 'action' => 'index']]); ?>
 			<div class="row">
 				<?php if ($role == 0) { ?>
 					<div class="col-lg-2 col-md-3 col-sm-6 col-12">
@@ -154,7 +154,9 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 							<th>Técnico</th>
 							<th class="text-right">Vl. Total</th>
 							<th>Situação</th>
-							<th><i class="fa fa-check-square"></i></th>
+							<?php if ($role == 0) : ?>
+							<th class="os-col-check" aria-label="Seleção em massa"><i class="fa fa-check-square" aria-hidden="true"></i></th>
+							<?php endif; ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -220,12 +222,14 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 										</span>
 									</a>
 								</td>
-								<td>
-									<div class="custom-control custom-checkbox mr-sm-2 mb-0">
+								<?php if ($role == 0) : ?>
+								<td class="os-col-check">
+									<div class="custom-control custom-checkbox os-row-checkbox mr-sm-2 mb-0">
 										<input data-id="<?= h($reg->id) ?>" type="checkbox" class="custom-control-input checkbox" id="checkbox<?= h($reg->id) ?>" value="check">
-										<label class="custom-control-label" for="checkbox<?= h($reg->id) ?>"></label>
+										<label class="custom-control-label" for="checkbox<?= h($reg->id) ?>"><span class="sr-only">Selecionar OS <?= h($reg->id) ?></span></label>
 									</div>
 								</td>
+								<?php endif; ?>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
@@ -335,6 +339,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 <script>
 	var osUserRole = <?= (int)$role ?>;
+	var osCsvSkipCol = <?= (int)$osCsvSkipCol ?>;
 	var osAddUrl = <?= $role == 0 ? json_encode($this->Url->build(['action' => 'add'])) : 'null' ?>;
 	var osDrawerActiveRow = null;
 	var osKpiSituacaoMap = {
@@ -505,7 +510,21 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		table.on('length.dt', function (e, settings, len) {
 			pagelength(len);
 		});
-		var filters = typeof filters !== 'undefined' ? filters : '';
+		if (typeof $.fn.selectpicker === 'function') {
+			$('.os-index-shell .os-filter-form select.selectpicker').each(function () {
+				var $s = $(this);
+				if ($s.parent().hasClass('bootstrap-select')) {
+					return;
+				}
+				$s.selectpicker({
+					liveSearch: true,
+					style: '',
+					size: 8,
+					container: 'body'
+				});
+			});
+		}
+		var osDtInitialFilter = (typeof window.filters !== 'undefined' && window.filters != null) ? String(window.filters) : '';
 		table.DataTable({
 			order: [[0, 'desc']],
 			pageLength: <?= (int)$pagelength ?>,
@@ -534,7 +553,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
 			}
 		});
-		table.search(filters).draw();
+		table.search(osDtInitialFilter).draw();
 		osBulkUi();
 		if ($('#badge-exec-os').length) {
 			$('#badge-exec-os').text('<?= (int)$kpiExec ?>');
@@ -555,10 +574,10 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 		$('#os-btn-export-csv').on('click', function() {
 			var dt = table.DataTable();
-			var skipCol = 8;
+			var skipCol = osCsvSkipCol;
 			var headers = [];
 			$('#tableOrdens thead th').each(function(i) {
-				if (i === skipCol) return;
+				if (skipCol >= 0 && i === skipCol) return;
 				headers.push($(this).text().trim().replace(/\s+/g, ' '));
 			});
 			var lines = [headers.join(';')];
@@ -566,7 +585,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				var $tr = $(this.node());
 				var cols = [];
 				$tr.find('td').each(function(i) {
-					if (i === skipCol) return;
+					if (skipCol >= 0 && i === skipCol) return;
 					cols.push('"' + $(this).text().trim().replace(/"/g, '""') + '"');
 				});
 				lines.push(cols.join(';'));
@@ -640,37 +659,39 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		$('#formimprimir').submit();
 	});
 
-	$('.dataval2, .dataval3, .dataval4, .dataval5').hide();
-	$('#situacaomodal').change(function() {
-		if ($(this).val() == <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>) {
-			$('.liberada').show();
-		} else {
-			$('.liberada').hide();
-		}
-	});
-	$('#nmrparcelas').change(function() {
-		var nmrparcelas = $(this).val();
-		switch (nmrparcelas) {
-			case '1':
-				$('.dataval2, .dataval3, .dataval4, .dataval5').hide();
-				break;
-			case '2':
-				$('.dataval3, .dataval4, .dataval5').hide();
-				$('.dataval2').show();
-				break;
-			case '3':
-				$('.dataval4, .dataval5').hide();
-				$('.dataval2, .dataval3').show();
-				break;
-			case '4':
-				$('.dataval5').hide();
-				$('.dataval2, .dataval3, .dataval4').show();
-				break;
-			case '5':
-				$('.dataval2, .dataval3, .dataval4, .dataval5').show();
-				break;
-			default:
-				break;
-		}
+	$(function () {
+		$('.dataval2, .dataval3, .dataval4, .dataval5').hide();
+		$('#situacaomodal').on('change', function () {
+			if ($(this).val() == <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>) {
+				$('.liberada').show();
+			} else {
+				$('.liberada').hide();
+			}
+		});
+		$('#nmrparcelas').on('change', function () {
+			var nmrparcelas = $(this).val();
+			switch (nmrparcelas) {
+				case '1':
+					$('.dataval2, .dataval3, .dataval4, .dataval5').hide();
+					break;
+				case '2':
+					$('.dataval3, .dataval4, .dataval5').hide();
+					$('.dataval2').show();
+					break;
+				case '3':
+					$('.dataval4, .dataval5').hide();
+					$('.dataval2, .dataval3').show();
+					break;
+				case '4':
+					$('.dataval5').hide();
+					$('.dataval2, .dataval3, .dataval4').show();
+					break;
+				case '5':
+					$('.dataval2, .dataval3, .dataval4, .dataval5').show();
+					break;
+				default:
+					break;
+			}
+		});
 	});
 </script>
