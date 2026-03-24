@@ -121,27 +121,11 @@ class UsersController extends AppController {
 			$ticketsFinalizadosCount = $this->Tickets->findByIdempresa($empresa)
 				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
 				->count();
-			$ticketsFinalizadosTable = $this->Tickets->findByIdempresa($empresa)
-				->contain(['Clientes'])
-				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
-				->order(['Tickets.id DESC'])
-				->limit(50)
-			->toArray();
-			$usuariosBloqueadosTable = $this->Users
-				->findByBloqueado(1)
-				->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])
-				->contain(['Empresasusers', 'Empresasusers.Empresas'])
-				->matching('Empresasusers', function($q) use ($empresa) {
-					return $q->where(['Empresasusers.idempresa' => $empresa]);
-				})
-				->order(['Users.created' => 'DESC'])
-				->distinct(['Users.id'])
-				->toArray();
+			$usuariosBloqueadosTable = $this->Users->findByBloqueado(1)->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])->contain(['Empresasusers', 'Empresasusers.Empresas'])->toArray();
 			
 			$this->set('ticketsPendentesTable', $ticketsPendentesTable);
 			$this->set('ticketsSendoResolvidosTable', $ticketsSendoResolvidosTable);
 			$this->set('ticketsFinalizadosCount', $ticketsFinalizadosCount);
-			$this->set('ticketsFinalizadosTable', $ticketsFinalizadosTable);
 			$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
 		} else {
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
@@ -198,11 +182,7 @@ class UsersController extends AppController {
 			->findByBloqueado(1)
 			->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])
 			->contain(['Empresasusers', 'Empresasusers.Empresas'])
-			->matching('Empresasusers', function($q) {
-				return $q->where(['Empresasusers.idempresa' => $this->Auth->user('idempresa')]);
-			})
 			->order(['Users.created' => 'DESC'])
-			->distinct(['Users.id'])
 			->toArray();
 
 		$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
