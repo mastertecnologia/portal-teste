@@ -124,6 +124,27 @@
 	color: var(--os-text2) !important;
 }
 
+/*
+ * bootstrap-select copia "form-control" do <select> para o wrapper .bootstrap-select.
+ * Sem isso, .os-edit-shell .form-control desenha uma caixa no wrapper E outra no .dropdown-toggle.
+ */
+.os-edit-shell .bootstrap-select.form-control {
+	background: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	min-height: 0 !important;
+	padding: 0 !important;
+}
+
+.os-edit-shell .bootstrap-select > select.form-control {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	min-height: 0 !important;
+}
+
 .os-edit-shell textarea.form-control {
 	min-height: 64px;
 	padding: 8px 10px;
@@ -137,15 +158,25 @@
 	margin-bottom: 8px;
 }
 
-/* Bootstrap-select */
+/* Bootstrap-select — só o botão é a “caixa”; remove sombra do .btn do tema */
 .os-edit-shell .bootstrap-select > .dropdown-toggle {
 	background-color: var(--os-bg3) !important;
+	background-image: none !important;
 	border: 1px solid var(--os-border) !important;
 	border-radius: 7px !important;
+	box-shadow: none !important;
 	min-height: 34px;
 	padding: 4px 10px;
 	font-size: 12.5px;
 	color: var(--os-text) !important;
+}
+
+.os-edit-shell .bootstrap-select > .dropdown-toggle:focus,
+.os-edit-shell .bootstrap-select > .dropdown-toggle:active,
+.os-edit-shell .bootstrap-select.show > .dropdown-toggle {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	outline: none !important;
 }
 
 .os-edit-shell .bootstrap-select .filter-option {
