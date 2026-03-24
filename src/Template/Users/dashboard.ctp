@@ -204,7 +204,7 @@
 						<div class="dash-pgm-table-header"><span>Ranking Técnicos</span><span class="badge blue"><?= h($rankingPeriodLabel) ?></span></div>
 						<div class="dash-pgm-ranking-scroll">
 							<?php if (empty($rankingTecnicos)): ?>
-								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>fechados no período do selo, com responsável no ticket; data por resolução ou última alteração se a resolução estiver vazia</small></div>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>independe do saldo do dia: precisa fechado com responsável (campo do ticket). O selo indica o período (até “geral” se não houver dados nas janelas)</small></div>
 							<?php else: ?>
 								<?php foreach ($rankingTecnicos as $row): ?>
 									<div class="dash-pgm-ranking-item"><span><?= (int)$row['place'] ?></span><strong><?= h($row['nome']) ?></strong><small><?= (int)$row['tickets'] ?> tickets</small></div>

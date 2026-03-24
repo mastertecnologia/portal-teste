@@ -312,6 +312,12 @@ class UsersController extends AppController {
 					$rankingPeriodLabel = '12 meses';
 				}
 			}
+			if ($byCount === []) {
+				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, null, null);
+				if ($byCount !== []) {
+					$rankingPeriodLabel = 'geral';
+				}
+			}
 			$idToNome = [];
 			if ($byCount !== []) {
 				$nameRows = $this->Users->find()
@@ -504,8 +510,8 @@ class UsersController extends AppController {
 	 * @param int $idempresa
 	 * @param int[] $closedSit
 	 * @param string[] $cols Colunas do schema tickets
-	 * @param string $rangeStart
-	 * @param string $rangeEnd
+	 * @param string|null $rangeStart Início do intervalo; null com $rangeEnd null = sem filtro de data
+	 * @param string|null $rangeEnd
 	 * @return int[]
 	 */
 	protected function _dashPgmTechnicianRankingCounts($idempresa, array $closedSit, array $cols, $rangeStart, $rangeEnd) {
@@ -530,30 +536,32 @@ class UsersController extends AppController {
 				'Tickets.situacao IN' => $closedSit,
 			])
 			->where($q->newExpr('(' . $tecSql . ') IS NOT NULL'));
-		if (in_array('data_resolucao', $cols, true)) {
-			$q->where([
-				'OR' => [
-					[
-						'AND' => [
-							'Tickets.data_resolucao IS NOT' => null,
-							'Tickets.data_resolucao >=' => $rangeStart,
-							'Tickets.data_resolucao <=' => $rangeEnd,
+		if ($rangeStart !== null && $rangeEnd !== null) {
+			if (in_array('data_resolucao', $cols, true)) {
+				$q->where([
+					'OR' => [
+						[
+							'AND' => [
+								'Tickets.data_resolucao IS NOT' => null,
+								'Tickets.data_resolucao >=' => $rangeStart,
+								'Tickets.data_resolucao <=' => $rangeEnd,
+							],
+						],
+						[
+							'AND' => [
+								'Tickets.data_resolucao IS' => null,
+								'Tickets.modified >=' => $rangeStart,
+								'Tickets.modified <=' => $rangeEnd,
+							],
 						],
 					],
-					[
-						'AND' => [
-							'Tickets.data_resolucao IS' => null,
-							'Tickets.modified >=' => $rangeStart,
-							'Tickets.modified <=' => $rangeEnd,
-						],
-					],
-				],
-			]);
-		} else {
-			$q->where([
-				'Tickets.modified >=' => $rangeStart,
-				'Tickets.modified <=' => $rangeEnd,
-			]);
+				]);
+			} else {
+				$q->where([
+					'Tickets.modified >=' => $rangeStart,
+					'Tickets.modified <=' => $rangeEnd,
+				]);
+			}
 		}
 
 		$rows = $q->group($tecExpr)
