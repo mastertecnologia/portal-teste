@@ -85,6 +85,8 @@ class UsersController extends AppController {
 
 	public function dashboard($erro = null) {
 		$this->set('title', 'Dashboard');
+		// Título e breadcrumb próprios em dashboard.ctp (evita duplicar "Dashboard" com .page-titles).
+		$this->set('hideLayoutPageTitle', true);
 		$idusuario = $this->Auth->user('id');
 		$idcliente = $this->Auth->user('idcliente');
 		$role = $this->Auth->user('role');
