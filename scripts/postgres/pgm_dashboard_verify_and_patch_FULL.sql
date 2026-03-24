@@ -1,39 +1,23 @@
 -- =============================================================================
--- PGM Portal — Verificação + correção idempotente (PostgreSQL)
--- Dashboard funcionários: tickets, SLA enterprise, ranking técnicos, datas.
---
--- USO (recomendado — IDs de situação automáticos):
---   1) Na raiz do repo:  php scripts/generate_pgm_sit_config.php
---   2) Um arquivo só (pgAdmin ou psql):  php scripts/build_pgm_postgres_full_sql.php
---      → gera/atualiza scripts/postgres/pgm_dashboard_verify_and_patch_FULL.sql (também versionado no repo com placeholders).
---   Ou psql em dois passos:
---      psql ... -f scripts/postgres/pgm_sit_config_generated.sql -f scripts/postgres/pgm_dashboard_verify_and_patch.sql
---
--- USO direto (sem PHP): edite o bloco entre >> BEGIN_PGM_SIT_CONFIG e << END_PGM_SIT_CONFIG.
---
---   psql:  psql -U seu_usuario -d seu_banco -v ON_ERROR_STOP=1 -f pgm_dashboard_verify_and_patch.sql
---   pgAdmin: abra este arquivo e execute tudo (Query Tool).
---
--- SEGURANÇA:
---   • Backup (pg_dump) antes em produção.
---   • Usuário com permissão CREATE/ALTER no schema public (ou ajuste search_path).
---   • Não executa DELETE em tickets/users; apenas DDL idempotente + UPDATEs de correção listados.
---   • Relatório da última execução: public.pgm_maintenance_report (é truncado no início).
---
--- APÓS RODAR (CakePHP):
---   bin/cake tickets_sla recalculate --empresa=ID
+-- ARQUIVO GERADO / VERSIONADO — um único script para pgAdmin ou psql
+-- Conteúdo = pgm_sit_config_generated.sql (início) + patch principal (resto).
+-- Para regenerar após mudar TicketConstants: php scripts/build_pgm_postgres_full_sql.php
 -- =============================================================================
 
 SET client_min_messages TO notice;
 SET search_path TO public;
 
--- >> BEGIN_PGM_SIT_CONFIG (substituído automaticamente por build_pgm_postgres_full_sql.php)
+-- Versionado no repositório com valores padrão (2 / 3).
+-- Para alinhar ao TicketConstants.php do seu deploy, rode na raiz do projeto:
+--   php scripts/generate_pgm_sit_config.php
+-- (sobrescreve este arquivo) e faça commit se quiser fixar os IDs reais.
+--
+-- C_TicketSituacaoResolvido = 2, C_TicketSituacaoFechado = 3 (placeholder)
 DO $cfg$
 BEGIN
   PERFORM set_config('pgm.sit_resolvido', '2', false);
   PERFORM set_config('pgm.sit_fechado', '3', false);
 END $cfg$;
--- << END_PGM_SIT_CONFIG
 
 -- Relatório persistente (truncado a cada run — função pgm_log precisa de tabela não-temp)
 CREATE TABLE IF NOT EXISTS public.pgm_maintenance_report (

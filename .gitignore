@@ -4,10 +4,6 @@ config/app_local.php
 tmp/
 logs/
 vendor/
-
-# Gerados por scripts PostgreSQL (IDs de situação / patch único)
-scripts/postgres/pgm_sit_config_generated.sql
-scripts/postgres/pgm_dashboard_verify_and_patch_FULL.sql
 .ssh/
 dashboard-react/.vite/
 # chaves acidentais na raiz do repo (não versionar)
