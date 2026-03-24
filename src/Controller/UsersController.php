@@ -1302,13 +1302,13 @@ class UsersController extends AppController {
 			$link = $urlfora . "Users/desativaverificacaosemlogin?hash=$user->hashreset";
 			
 			$message = 
-			"<h3> Desativação de autenticação 2F! </h3>
-			<h3> Desative sua autenticação 2F <a href='$link'> clicando aqui </a>!";
+			"<h3>Desativação de autenticação em duas etapas</h3>
+			<h3>Desative sua autenticação 2FA <a href='$link'>clicando aqui</a>.</h3>";
 
 			$email->from([$from => 'PGM']);
 			$email->to($destinatario)
 				->emailFormat('html')
-				->subject('Desativação de autenticação 2F - PGM');
+				->subject('Desativação de autenticação 2FA - PGM');
 	
 			if($email->send($message)) {
 				$this->Flash->success('Email para desativação de 2FA enviado!');

@@ -1,0 +1,40 @@
+.mfa-shell-card {
+	background: #13161d;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.mfa-shell-body {
+	padding: 22px 24px;
+	color: #8b92a8;
+}
+
+.mfa-shell-title {
+	margin: 0 0 14px 0;
+	color: #f0f2f8;
+	font-size: 20px;
+	font-weight: 600;
+}
+
+.mfa-shell-help {
+	margin-bottom: 0;
+	color: #8b92a8;
+	font-size: 14px;
+}
+
+.mfa-shell-help .link {
+	color: #3d7eff;
+	font-weight: 600;
+}
+
+.mfa-shell-qrcode {
+	display: block;
+	max-width: 220px;
+	width: 100%;
+	height: auto;
+	padding: 8px;
+	background: #fff;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+}
