@@ -2,7 +2,7 @@
  * Layout sem barra superior: logo, empresa, data e usuário ficam na sidebar.
  * Ativado com body.layout-no-topbar
  */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap");
 
 body.layout-no-topbar {
 	font-family: "DM Sans", "Poppins", sans-serif;

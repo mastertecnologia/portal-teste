@@ -1,7 +1,8 @@
-/* UI Ordens de Serviço — tema alinhado ao mock enterprise (escopo apenas .os-index-shell) */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+/* UI Ordens de Serviço — alinhado a ordens_servico_premium.html (escopo .os-index-shell) */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
 .os-index-shell {
+	/* Espelho das variáveis do mock premium (--os-* + aliases --bg/--text para drawer/JS inline) */
 	--os-bg: #0d0f14;
 	--os-bg2: #13161d;
 	--os-bg3: #1a1e28;
@@ -25,6 +26,28 @@
 	--os-radius-lg: 16px;
 	--os-font: 'DM Sans', sans-serif;
 	--os-mono: 'DM Mono', monospace;
+	--bg: var(--os-bg);
+	--bg2: var(--os-bg2);
+	--bg3: var(--os-bg3);
+	--bg4: var(--os-bg4);
+	--border: var(--os-border);
+	--border2: var(--os-border2);
+	--text: var(--os-text);
+	--text2: var(--os-text2);
+	--text3: var(--os-text3);
+	--accent: var(--os-accent);
+	--accent2: var(--os-accent2);
+	--aglow: var(--os-accent-glow);
+	--green: var(--os-green);
+	--gbg: var(--os-green-bg);
+	--amber: var(--os-amber);
+	--ambg: var(--os-amber-bg);
+	--orange: var(--os-orange);
+	--obg: var(--os-orange-bg);
+	--purple: var(--os-purple);
+	--pbg: var(--os-purple-bg);
+	--font: var(--os-font);
+	--mono: var(--os-mono);
 	font-family: var(--os-font);
 	font-size: 14px;
 	color: var(--os-text2);
@@ -627,7 +650,7 @@
 }
 
 .os-index-shell .os-kpi-purple .os-kpi-value-accent {
-	color: #e879a9;
+	color: var(--os-purple);
 }
 
 .os-index-shell .os-icon-btn--btn {
@@ -645,9 +668,43 @@
 	cursor: pointer;
 }
 
+/* Linha com drawer aberto (mock: row-active) */
 .os-index-shell table tbody tr.os-row-drawer-active {
-	background: rgba(61, 126, 255, 0.12) !important;
-	box-shadow: inset 3px 0 0 0 var(--os-accent);
+	background: rgba(61, 126, 255, 0.09) !important;
+	box-shadow: inset 2px 0 0 0 var(--os-accent);
+}
+
+/* Linha com checkbox de massa marcado (mock: row-sel) */
+.os-index-shell table tbody tr.os-row-sel {
+	background: var(--os-accent-glow) !important;
+}
+
+/* Primeira coluna: checkbox + #Nº (premium) */
+.os-index-shell .os-th-num {
+	width: 1%;
+	white-space: nowrap;
+	padding-left: 14px !important;
+	vertical-align: middle !important;
+}
+
+.os-index-shell .os-num-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.os-index-shell .os-check-all {
+	width: 15px;
+	height: 15px;
+	margin: 0;
+	cursor: pointer;
+	accent-color: var(--os-accent);
+	flex-shrink: 0;
+}
+
+.os-index-shell .os-num-wrap .os-num-cell {
+	flex-shrink: 0;
 }
 
 .os-index-shell .os-btn-primary[type='button'] {
@@ -992,4 +1049,12 @@
 .os-drawer-btn-primary:hover {
 	background: var(--os-accent2);
 	color: #fff !important;
+}
+
+button.os-drawer-btn {
+	line-height: 1.2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 10px;
 }

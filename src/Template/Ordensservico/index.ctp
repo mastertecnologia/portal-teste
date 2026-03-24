@@ -1,8 +1,6 @@
 <?php
 $this->Html->css('/dist/css/pages/ordensservico-index-shell.css', ['block' => true]);
 
-$osCsvSkipCol = ($role == 0) ? 8 : -1;
-
 $kpiTotal = count($ordens);
 $kpiExec = $kpiSync = $kpiLib = 0;
 foreach ($ordens as $reg) {
@@ -146,7 +144,16 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				<table class="table table-hover table-row-clickable" id="tableOrdens" style="margin:0">
 					<thead>
 						<tr>
-							<th>Número</th>
+							<th class="os-th-num">
+								<?php if ($role == 0) : ?>
+								<div class="os-num-wrap">
+									<input type="checkbox" id="os-check-all" class="os-check-all" title="Selecionar todas nesta página" aria-label="Selecionar todas as OS visíveis" />
+									<span>Nº</span>
+								</div>
+								<?php else : ?>
+								Nº
+								<?php endif; ?>
+							</th>
 							<th>Abertura</th>
 							<th>Previsão</th>
 							<th>Cliente</th>
@@ -154,9 +161,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 							<th>Técnico</th>
 							<th class="text-right">Vl. Total</th>
 							<th>Situação</th>
-							<?php if ($role == 0) : ?>
-							<th class="os-col-check" aria-label="Seleção em massa"><i class="fa fa-check-square" aria-hidden="true"></i></th>
-							<?php endif; ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -184,8 +188,16 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 							$dataOs = htmlspecialchars(json_encode($rowPayload, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 							?>
 							<tr class="<?= h($rowClass) ?> os-row-drawer" data-os="<?= $dataOs ?>">
-								<td>
-									<a class="link os-num-cell" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>"><?= h($reg->id) ?></a>
+								<td class="os-th-num" data-order="<?= h($reg->id) ?>">
+									<div class="os-num-wrap">
+										<?php if ($role == 0) : ?>
+										<div class="custom-control custom-checkbox os-row-checkbox mb-0">
+											<input data-id="<?= h($reg->id) ?>" type="checkbox" class="custom-control-input checkbox" id="checkbox<?= h($reg->id) ?>" value="check">
+											<label class="custom-control-label p-0 m-0" for="checkbox<?= h($reg->id) ?>" style="min-height:0"><span class="sr-only">Selecionar OS <?= h($reg->id) ?></span></label>
+										</div>
+										<?php endif; ?>
+										<a class="link os-num-cell" target="_blank" rel="noopener noreferrer" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>">#<?= h($reg->id) ?></a>
+									</div>
 								</td>
 								<td data-order="<?= date_format($reg->dataabertura, 'Ymd') ?>">
 									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>"><?= h(date_format($reg->dataabertura, 'd/m/Y')) ?></a>
@@ -222,14 +234,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 										</span>
 									</a>
 								</td>
-								<?php if ($role == 0) : ?>
-								<td class="os-col-check">
-									<div class="custom-control custom-checkbox os-row-checkbox mr-sm-2 mb-0">
-										<input data-id="<?= h($reg->id) ?>" type="checkbox" class="custom-control-input checkbox" id="checkbox<?= h($reg->id) ?>" value="check">
-										<label class="custom-control-label" for="checkbox<?= h($reg->id) ?>"><span class="sr-only">Selecionar OS <?= h($reg->id) ?></span></label>
-									</div>
-								</td>
-								<?php endif; ?>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
@@ -278,7 +282,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	<div class="os-drawer-body" id="os-drawer-body"></div>
 	<div class="os-drawer-foot">
 		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2">Fechar</button>
-		<a class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit" href="#" target="_blank" rel="noopener noreferrer">Abrir OS</a>
+		<button type="button" class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit-btn" data-href="#">Editar OS</button>
 	</div>
 </aside>
 
@@ -339,7 +343,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 <script>
 	var osUserRole = <?= (int)$role ?>;
-	var osCsvSkipCol = <?= (int)$osCsvSkipCol ?>;
 	var osAddUrl = <?= $role == 0 ? json_encode($this->Url->build(['action' => 'add'])) : 'null' ?>;
 	var osDrawerActiveRow = null;
 	var osKpiSituacaoMap = {
@@ -415,7 +418,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Situação</div>' +
 			'<div class="os-dr-row"><span class="os-dr-k">Status</span><span class="os-dr-v">' + osEscapeHtml(row.situacao) + '</span></div></div>'
 		);
-		$('#os-drawer-edit').attr('href', row.url).text(osUserRole === 0 ? 'Editar OS' : 'Abrir OS');
+		$('#os-drawer-edit-btn').attr('data-href', row.url).text(osUserRole === 0 ? 'Editar OS' : 'Abrir OS');
 		$('#os-drawer').addClass('open').attr('aria-hidden', 'false');
 		$('#os-drawer-backdrop').addClass('open');
 	}
@@ -442,6 +445,12 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 		$('#os-drawer-backdrop, #os-drawer-close, #os-drawer-close2').on('click', function() {
 			osCloseDrawer();
+		});
+		$('#os-drawer-edit-btn').on('click', function() {
+			var u = $(this).attr('data-href');
+			if (u && u !== '#') {
+				window.open(u, '_blank', 'noopener');
+			}
 		});
 		$(document).on('keydown', function(e) {
 			if (e.key !== 'Escape') return;
@@ -497,13 +506,62 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			}
 		}
 
+		function osSyncRowSelClass() {
+			var set = {};
+			(window.ids || '').split(',').forEach(function (id) {
+				if (id) {
+					set[id] = true;
+				}
+			});
+			$('#tableOrdens tbody tr.os-row-drawer').each(function () {
+				var raw = $(this).attr('data-os');
+				if (!raw) return;
+				try {
+					var r = JSON.parse(raw);
+					$(this).toggleClass('os-row-sel', !!set[String(r.id)]);
+				} catch (e1) {}
+			});
+		}
+
+		function osRebuildIdsFromCheckboxes() {
+			window.ids = '';
+			$('#tableOrdens tbody .checkbox:checked').each(function () {
+				window.ids += $(this).attr('data-id') + ',';
+			});
+			if (window.ids !== '') {
+				$('.btn-acao, .btn-imprimir').show();
+			} else {
+				$('.btn-acao, .btn-imprimir').hide();
+			}
+			$('#ids').val(window.ids);
+			$('#idsimprimir').val(window.ids);
+			osBulkUi();
+			osSyncRowSelClass();
+			var $all = $('#os-check-all');
+			if ($all.length) {
+				var $boxes = $('#tableOrdens tbody .checkbox');
+				var n = $boxes.length;
+				var c = $boxes.filter(':checked').length;
+				$all.prop('checked', n > 0 && c === n);
+				$all.prop('indeterminate', c > 0 && c < n);
+			}
+		}
+
 		$('#os-bulk-clear').on('click', function() {
 			window.ids = '';
 			$('.checkbox').prop('checked', false);
+			$('#os-check-all').prop('checked', false).prop('indeterminate', false);
 			$('#ids').val('');
 			$('#idsimprimir').val('');
 			$('.btn-acao, .btn-imprimir').hide();
 			osBulkUi();
+			osSyncRowSelClass();
+		});
+
+		$('#os-check-all').on('change', function () {
+			var on = $(this).prop('checked');
+			$('#tableOrdens tbody .checkbox').prop('checked', on);
+			osRebuildIdsFromCheckboxes();
 		});
 
 		var table = $('#tableOrdens');
@@ -574,10 +632,8 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 		$('#os-btn-export-csv').on('click', function() {
 			var dt = table.DataTable();
-			var skipCol = osCsvSkipCol;
 			var headers = [];
-			$('#tableOrdens thead th').each(function(i) {
-				if (skipCol >= 0 && i === skipCol) return;
+			$('#tableOrdens thead th').each(function() {
 				headers.push($(this).text().trim().replace(/\s+/g, ' '));
 			});
 			var lines = [headers.join(';')];
@@ -585,8 +641,19 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				var $tr = $(this.node());
 				var cols = [];
 				$tr.find('td').each(function(i) {
-					if (skipCol >= 0 && i === skipCol) return;
-					cols.push('"' + $(this).text().trim().replace(/"/g, '""') + '"');
+					var cell = $(this);
+					var txt;
+					if (i === 0) {
+						try {
+							var row = JSON.parse($tr.attr('data-os'));
+							txt = '#' + row.id;
+						} catch (e2) {
+							txt = cell.text().trim();
+						}
+					} else {
+						txt = cell.text().trim();
+					}
+					cols.push('"' + String(txt).replace(/"/g, '""') + '"');
 				});
 				lines.push(cols.join(';'));
 			});
@@ -607,6 +674,10 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				});
 			}
 		});
+
+		$(document).on('change', '#tableOrdens tbody .checkbox', function () {
+			osRebuildIdsFromCheckboxes();
+		});
 	});
 
 	window.onload = function() {
@@ -617,37 +688,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	};
 
 	window.ids = '';
-
-	$(document).on('click', '.checkbox', function() {
-		var id = $(this).attr('data-id');
-		if (!$(this).is(':checked')) {
-			var array = window.ids.split(',');
-			if (array.indexOf(id) > -1) array.splice(array.indexOf(id), 1);
-			window.ids = '';
-			array.forEach(function(value) {
-				if (value !== '') window.ids += value + ',';
-			});
-		} else {
-			window.ids += id + ',';
-		}
-		if (window.ids !== '') {
-			$('.btn-acao, .btn-imprimir').show();
-		} else {
-			$('.btn-acao, .btn-imprimir').hide();
-		}
-		$('#ids').val(window.ids);
-		$('#idsimprimir').val(window.ids);
-		if ($('#os-bulk-bar').length) {
-			if (window.ids !== '') {
-				$('#os-bulk-bar').addClass('visible');
-				var n = window.ids.split(',').filter(function (x) { return x !== ''; }).length;
-				$('#os-bulk-count').text(n + ' ordem(ns) selecionada(s)');
-			} else {
-				$('#os-bulk-bar').removeClass('visible');
-				$('#os-bulk-count').text('');
-			}
-		}
-	});
 
 	$(document).on('click', '.btn-acao', function(e) {
 		e.preventDefault();
