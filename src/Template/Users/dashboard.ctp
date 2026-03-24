@@ -10,6 +10,14 @@
 		$reqRows = $usuariosBloqueadosTable ?? [];
 		$reqCount = count($reqRows);
 		$ticketsAll = array_merge($ticketsPend, $ticketsExec);
+		$pgmClienteNome = function ($reg) {
+			if (empty($reg->cliente)) {
+				return '—';
+			}
+			$c = $reg->cliente;
+
+			return ($c->tipo == C_ClientesTipoFisica) ? $c->nome : $c->razaosocial;
+		};
 		$kpi = $dashPgmKpi ?? [];
 		$noPrazo = (int)($kpi['sla_no_prazo'] ?? 0);
 		$emRisco = (int)($kpi['sla_em_risco'] ?? 0);
@@ -26,7 +34,7 @@
 
 		$topClientesCount = [];
 		foreach ($ticketsAll as $t) {
-			$cliNome = ($t->cliente->tipo == C_ClientesTipoFisica) ? $t->cliente->nome : $t->cliente->razaosocial;
+			$cliNome = $pgmClienteNome($t);
 			$topClientesCount[$cliNome] = ($topClientesCount[$cliNome] ?? 0) + 1;
 		}
 		arsort($topClientesCount);
@@ -47,7 +55,7 @@
 
 			<div class="dash-pgm-notif-panel" id="dashPgmNotifPanel">
 				<div class="dash-pgm-notif-header">
-					Notificações <span id="dashPgmNotifCount"><?= $reqCount ?> novas</span>
+					Notificações <span id="dashPgmNotifCount"><?= $reqCount === 0 ? 'nenhuma pendente' : ((int)$reqCount . ' nova' . ((int)$reqCount !== 1 ? 's' : '')) ?></span>
 				</div>
 				<?php foreach (array_slice($reqRows, 0, 3) as $u): ?>
 					<?php $nomeReq = !empty($u->name) ? $u->name : (!empty($u->username) ? $u->username : 'Usuário'); ?>
@@ -151,7 +159,7 @@
 											$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
 											$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 											$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
-											$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
+											$clienteNome = $pgmClienteNome($reg);
 										?>
 										<tr class="dash-pgm-row">
 											<td class="td-id">#<?= h($reg->id) ?></td>
@@ -178,7 +186,7 @@
 											$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 											$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
 											$isStagnant = (time() - strtotime((string)$refMod)) >= 86400;
-											$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
+											$clienteNome = $pgmClienteNome($reg);
 										?>
 										<tr class="dash-pgm-row <?= $isStagnant ? 'stagnant' : '' ?>">
 											<td class="td-id">#<?= h($reg->id) ?></td>
@@ -232,7 +240,7 @@
 						$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
 						$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
-						$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
+						$clienteNome = $pgmClienteNome($reg);
 					?>
 					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
@@ -251,7 +259,7 @@
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 						$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
 						$stagnantTag = (time() - strtotime((string)$refMod)) >= 86400 ? ' <span class="stagnant-tag">+24h</span>' : '';
-						$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
+						$clienteNome = $pgmClienteNome($reg);
 					?>
 					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome . $stagnantTag) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
@@ -260,12 +268,12 @@
 			finalizados: {
 				color: '#3fb950',
 				title: 'Tickets Finalizados',
-				subtitle: '<?= (int)($ticketsFinalizadosCount ?? 0) ?> tickets finalizados no período',
+				subtitle: '<?= (int)($ticketsFinalizadosCount ?? 0) ?> na empresa · detalhe: até <?= count($ticketsFin) ?> mais recentes',
 				head: ['ID', 'Cliente', 'Encerrado', 'Status'],
 				rows: [
 					<?php foreach ($ticketsFin as $reg): ?>
 					<?php
-						$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
+						$clienteNome = $pgmClienteNome($reg);
 						$refData = (isset($reg->modified) && $reg->modified !== null) ? $reg->modified : $reg->created;
 					?>
 					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($refData, 'd/m/Y')) ?>, "Finalizado"],
@@ -335,7 +343,7 @@
 		});
 		document.getElementById('dashPgmFilterClose').addEventListener('click', closeFilter);
 
-		document.querySelectorAll('.dash-pgm-row').forEach(function(row) {
+		document.querySelectorAll('#dashPgmContent .dash-pgm-row').forEach(function(row) {
 			row.addEventListener('click', function() { selectRow(row); });
 		});
 
