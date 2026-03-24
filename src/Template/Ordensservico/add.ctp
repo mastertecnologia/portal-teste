@@ -1,5 +1,6 @@
 <?php
 	use Cake\Routing\Router;
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
@@ -8,14 +9,15 @@
 		overflow: auto; 
 	} 
 	.jsgrid-cell {
-		height: 50px; 
-		overflow: hidden;
+		min-height: 44px;
+		height: auto;
+		overflow: visible;
 	}
 	.jsgrid-cell > select > option { text-align: left; }
 </style>
-<div class="col-md-12">
-    <div class="card">
-        <div class="card-body">
+<div class="col-md-12 p-0">
+    <div class="os-add-shell form-material">
+        <div class="os-add-shell-body">
             <?= $this->Form->create($ordem, ['class' => 'form-material']) ?>
 			<div class="row">
 				<div class="col-lg-6 col-sm-12">
@@ -105,7 +107,7 @@
 				</div>
 				<hr>
 				<!-- Campos pro mobile  -->
-					<br><h4 class='text-center'>Adicionar Produtos/Serviços</h4><br>
+					<h4 class='text-center os-add-section-title'>Adicionar Produtos/Serviços</h4>
 					<?php if(isMobile()){ ?>
 						<div class="row">
 							<div class="col-2">
@@ -197,7 +199,6 @@
                         <div class="form-group">
                             <label class="control-label m-b-0">Serial Number (N/S)</label>
                             <?= $this->Form->text('serialnumbermodal', ['list' => 'listaSN', 'maxlength' => 100, 'placeholder' => 'Insira o serial number', 'id' => 'serialnumbermodal', 'class' => 'form-control', 'label' => false]);?>
-                            <datalist id="listaSN"> </datalist>
                         </div>
                     </div>
                     <div class="col-12">
@@ -237,7 +238,6 @@
 					<div class="form-group ">
 						<label class="control-label m-b-0">Serial Number</label>
 						<?= $this->Form->text('serialnumbermodal', ['list' => 'listaSN', 'maxlength' => 100, 'placeholder' => 'Insira o serial number do item', 'id' => 'serialnumbermodal', 'class' => 'form-control', 'label' => false]);?>
-						<datalist id="listaSN"> </datalist>
 						<small>*Informe apenas um Serial Number. Para mais códigos, adicione o produto novamente.</small>
 					</div>
 				</div>
@@ -291,14 +291,21 @@
     </div>
 </div>
 <script>
-	idEmpresAtual = $("#empresaSidebar").val()
-	$('#idEmpresaAtual').val(idEmpresAtual) 
+	var idEmpresAtual = $("#empresaSidebar").val();
+	$('#idEmpresaAtual').val(idEmpresAtual);
+	$('body').addClass('os-add-page');
+	function getEmpresaAtual() {
+		return $("#empresaSidebar").val() || $("#empresaSidebar option:selected").val();
+	}
 		
 	// Solicitantes e telemail
 		$(document).ready(function(){
 			$('.clienteTelemail').hide();
 			$('.clienteTelemail').prop("disabled", true);
 		});
+		function habilitarCamposContato(habilitar) {
+			$('.telefone, .celular, .email').prop("disabled", !habilitar);
+		}
 
 		function loadSolicitantes(idcliente) {
 			$.ajax({
@@ -348,6 +355,7 @@
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'cliemail']);?>/" + idcliente,
 				success: function(data){
 					$('.clienteTelemail').show();
+					habilitarCamposContato(true);
 					$('.email').val(data.email);
 					$('.telefone').val(data.fone);
 					$('.celular').val(data.fone2);
@@ -359,6 +367,7 @@
 			if(idsolicitante == 0) {
 				// Se for "Outros", limpa os campos de contato
 				$('.clienteTelemail').show();
+				habilitarCamposContato(true);
 				$('.email').val('');
 				$('.telefone').val('');
 				$('.celular').val('');
@@ -370,6 +379,7 @@
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'solemail']);?>/" + idsolicitante,
 				success: function(data){
 					$('.clienteTelemail').show();
+					habilitarCamposContato(true);
 					$('.email').val(data.email);
 					$('.telefone').val(data.telefone);
 					$('.celular').val(data.celular);
@@ -388,10 +398,6 @@
 				},
 			});
 		});
-
-		$("#idsolicitante").change(function() {
-			loadSolTelemail($(this).val());
-		})
 
 	// URLsF
 		var urlLoadData = "<?= Router::url(['controller'=>'Ordensservico','action'=>'carrinho']);?>";
@@ -440,7 +446,7 @@
 							success:function(data){
 								valortotal = parseFloat(data.valortotal);
 								$('#valortotalordem').val(valortotal); //formulário hidden
-								$('.valortotalordem').html( '<font color="#212529"> Total geral:</font> R$ ' + numberToReal(valortotal)); //lugar que aparece escrito
+								$('.valortotalordem').html('<span class="os-add-total-label">Total geral:</span> R$ ' + numberToReal(valortotal)); //lugar que aparece escrito
 								tdcommuitotexto();
 								$('.inputTipo, .inputValordesconto, .inputValorunitario, .inputQuantidade, .inputValordesconto, .inputDescricao, .inputQuantidade, .inputUnidade, .inputObservacao, .inputValortotal, .inputSerialnumber').append('<small class="vazio">⠀⠀⠀</small>')
 								$('.inputCodproduto').append('<small class="qtdEstoque"> ⠀⠀⠀</small>')
@@ -450,8 +456,7 @@
 					});
 				},
 				insertItem: function(item){
-					idEmpresAtual = $("#empresaSidebar option:selected").val()
-					item['idEmpresaAtual'] = idEmpresAtual
+					item['idEmpresaAtual'] = getEmpresaAtual();
 					return $.ajax({
 					type: "POST",
 					url: urlAdd+'/null/'+item.codproduto,
@@ -462,13 +467,12 @@
 						if(data == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 					}, 
 					error: function(data) {
-						location. reload()
+						location.reload();
 					}
 					});
 				},
 				updateItem: function(item){
-					idEmpresAtual = $("#empresaSidebar option:selected").val()
-					item['idEmpresaAtual'] = idEmpresAtual
+					item['idEmpresaAtual'] = getEmpresaAtual();
 					return $.ajax({
 					type: "PUT",
 					url: urlEdit,
@@ -478,13 +482,12 @@
 						$("#grid_table").jsGrid("loadData");
 					},
 					error: function(data) {
-						location. reload()
+						location.reload();
 					}
 					});
 				},
 				deleteItem: function(item){
-					idEmpresAtual = $("#empresaSidebar option:selected").val()
-					item['idEmpresaAtual'] = idEmpresAtual
+					item['idEmpresaAtual'] = getEmpresaAtual();
 					return $.ajax({
 						type: "DELETE",
 						url: urlDelete,
@@ -494,7 +497,7 @@
 							$("#grid_table").jsGrid("loadData");
 						},
 						error: function(data) {
-							location. reload()
+							location.reload();
 						}
 					});
 				},
@@ -760,7 +763,7 @@
         window.isEditMode = false;
 
         // Ao clicar no input de observação (Grid)
-        $(document).on("click, focus", ".inputObservacao > input, .editObservacao > input", function(e){ 
+        $(document).on("click focus", ".inputObservacao > input, .editObservacao > input", function(e){ 
             // Identifica se é insert ou edit baseado na classe do pai
             window.isEditMode = $(this).parent().hasClass('editObservacao');
             
@@ -771,19 +774,19 @@
             var currentObs = $(this).val();
             var currentModelo = "";
             var currentSerial = "";
-			var currentproducykey = "";
-			var currentobsinterna = "";
+			var currentProductkey = "";
+			var currentObsInterna = "";
 
             if(window.isEditMode){
                 currentModelo = window.targetRow.find('.editModelo input').val();
                 currentSerial = window.targetRow.find('.editSerialnumber input').val();
-                currentProductkey = window.targetRow.find('.editProductkey input').val();
-                currentObsInterna = window.targetRow.find('.editobsinterna input').val();
+                currentProductkey = window.targetRow.find('.editProductKey input').val();
+                currentObsInterna = window.targetRow.find('.editObsInterna input').val();
             } else {
                 currentModelo = window.targetRow.find('.inputModelo input').val();
                 currentSerial = window.targetRow.find('.inputSerialnumber input').val();
-				currentProductkey = window.targetRow.find('.inputProductkey input').val();
-                currentObsInterna = window.targetRow.find('.inputobsinterna input').val();
+				currentProductkey = window.targetRow.find('.inputProductKey input').val();
+                currentObsInterna = window.targetRow.find('.inputObsInterna input').val();
             }
 
             // Preenche o modal
@@ -791,7 +794,7 @@
             $('#modelomodal').val(currentModelo);
             $('#serialnumbermodal').val(currentSerial);
             $('#productkeymodal').val(currentProductkey);
-            $('#obsInternamodal').val(currentObsInterna);
+            $('#observacainternaomodal').val(currentObsInterna);
 
             // Abre o modal
             $('#modal-observacao').modal('show');
@@ -805,22 +808,21 @@
             var mod = $('#modelomodal').val();
             var sn  = $('#serialnumbermodal').val();
 			var pk 	= $('#productkeymodal').val();
-			var obsInt = $('#obsinternamodal').val();
+			var obsInt = $('#observacainternaomodal').val();
 
             if(window.targetRow){
                 if(window.isEditMode){
                     window.targetRow.find('.editObservacao input').val(obs).trigger('change');
                     window.targetRow.find('.editModelo input').val(mod).trigger('change');
                     window.targetRow.find('.editSerialnumber input').val(sn).trigger('change');
-                    window.targetRow.find('.editProductKey input').val(sn).trigger('change');
-                    window.targetRow.find('.editObsInterna input').val(sn).trigger('change');
+                    window.targetRow.find('.editProductKey input').val(pk).trigger('change');
+                    window.targetRow.find('.editObsInterna input').val(obsInt).trigger('change');
                 } else {
                     window.targetRow.find('.inputObservacao input').val(obs).trigger('change');
                     window.targetRow.find('.inputModelo input').val(mod).trigger('change');
                     window.targetRow.find('.inputSerialnumber input').val(sn).trigger('change');
-                    window.targetRow.find('.inputProductKey input').val(sn).trigger('change');
-                    window.targetRow.find('.inputObsInterna input').val(sn).trigger('change');
-                    window.targetRow.find('.input input').val(sn).trigger('change');
+                    window.targetRow.find('.inputProductKey input').val(pk).trigger('change');
+                    window.targetRow.find('.inputObsInterna input').val(obsInt).trigger('change');
                 }
             }
             
@@ -895,9 +897,9 @@
 						$.each(data, function(index, prod) {
 							// Cria a linha da tabela
 							var tr = $('<tr>');
-							tr.append('<td>' + prod.codigo + '</td>');
-							tr.append('<td>' + prod.descricao + '</td>');
-							tr.append('<td>R$ ' + numberToReal(prod.vlunitario) + '</td>');
+							tr.append($('<td>').text(prod.codigo));
+							tr.append($('<td>').text(prod.descricao));
+							tr.append($('<td>').text('R$ ' + numberToReal(prod.vlunitario)));
 							
 							var btn = $('<button>').addClass('btn btn-success btn-sm').text('Selecionar');
 							

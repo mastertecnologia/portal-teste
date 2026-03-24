@@ -125,10 +125,12 @@ class OrdensservicoController extends AppController {
 			$ultimo = $this->Empresas->prxOrdem($this->Auth->user('idempresa'));
 			if($ultimo == null || $ultimo == 0) {
 				$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . 1 . $this->Auth->user('id');
+				$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
 				$idcarrinho = $idempresa . 1 . $this->Auth->user('id');
 			} else {
 				$idcarrinho =  $idempresa . $ultimo . $this->Auth->user('id');
 				$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . $ultimo . $this->Auth->user('id');
+				$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
 			}
 		}
 
@@ -148,11 +150,14 @@ class OrdensservicoController extends AppController {
 
             if ($this->Ordensservico->save($ordem)) {
 				$carrinho = $this->Ordemservicositens->newEntity();
-				$idempresaCarrinho = $_SESSION['PGM_Ordem_Idcarrinhoadd'][0];
+				$idempresaCarrinho = $_SESSION['PGM_Ordem_Idempresaadd'] ?? null;
+				if ($idempresaCarrinho === null && !empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])) {
+					$idempresaCarrinho = substr($_SESSION['PGM_Ordem_Idcarrinhoadd'], 0, strlen((string)$idempresa));
+				}
 				if($idempresa == $idempresaCarrinho){
 					$carrinho->iditens = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 				}  else {
-						$carrinho->iditens = $idempresa . substr($_SESSION['PGM_Ordem_Idcarrinhoadd'], 1);
+						$carrinho->iditens = $idempresa . substr($_SESSION['PGM_Ordem_Idcarrinhoadd'], strlen((string)$idempresaCarrinho));
 						$itemOrdens = $this->Itensordem->find('all')->where(['idordempk' => $_SESSION['PGM_Ordem_Idcarrinhoadd']])->toArray();
 
 						foreach($itemOrdens as $item) {
@@ -165,6 +170,7 @@ class OrdensservicoController extends AppController {
 				$carrinho->idempresa = $idempresa;
 				$this->Ordemservicositens->save($carrinho);
 				unset($_SESSION['PGM_Ordem_Idcarrinhoadd']);
+				unset($_SESSION['PGM_Ordem_Idempresaadd']);
 
 				// Movimentação
 				$this->Ordensservico->criarMov($ordem->id, 1, 1, $this->Auth->user('idempresa'), $this->Auth->user('id'));
@@ -217,6 +223,7 @@ class OrdensservicoController extends AppController {
 		$this->set('clientes', $clientesOpt);
 		$this->set('ordem', $ordem);
 		$this->set('title', 'Cadastro de ordem de serviços');
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function edit($id = null) {
