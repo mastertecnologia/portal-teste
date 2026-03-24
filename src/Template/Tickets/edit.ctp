@@ -128,6 +128,7 @@
 								<h5><span class="text-muted"> Assunto: </span><?= AssuntoTicket($ticket->assunto) ?></h5>
 								<h5><span class="text-muted"> Status: </span><?= SituacaoTicket($ticket->situacao) ?></h5>
 								<br>
+								<?= $this->element('ticket_tecnico_responsavel', ['tecnicoResponsavelLabel' => $tecnicoResponsavelLabel ?? null]) ?>
 								<h4> Alterar Situação: </h4>
 								<?php
 									if ($ticket->situacao != C_TicketSituacaoFechado) {

@@ -410,8 +410,11 @@ class TicketsController extends AppController {
 			}
 		} catch (\Throwable $e) {}
 
+		$responsaveisMap = $this->_responsaveisMapForTicketEntities($ticketsFinalizados);
+
 		$this->set('ticketsFinalizados', $ticketsFinalizados);
 		$this->set('solicitantesMap', $solicitantesMap);
+		$this->set('responsaveisMap', $responsaveisMap);
 	}
 
 	/**
@@ -948,6 +951,9 @@ class TicketsController extends AppController {
 				}
 			}
 		} catch (\Throwable $e) {}
+
+		$tecnicoResponsavelLabel = $this->_tecnicoResponsavelDisplayLabel($ticket);
+		$this->set('tecnicoResponsavelLabel', $tecnicoResponsavelLabel);
 
 		$this->set('title', "Ticket $idticket" );
 		$this->set('users', $users);
@@ -4153,6 +4159,84 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * ID do usuário responsável no ticket (idtecnico_responsavel ou owner_id).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|object $ticket
+	 * @return int 0 se ausente
+	 */
+	protected function _responsavelUserIdFromTicket($ticket) {
+		try {
+			$cols = $this->Tickets->getSchema()->columns();
+		} catch (\Throwable $e) {
+			return 0;
+		}
+		$rid = 0;
+		if (in_array('idtecnico_responsavel', $cols, true)) {
+			$v = is_object($ticket) && method_exists($ticket, 'get') ? $ticket->get('idtecnico_responsavel') : (isset($ticket->idtecnico_responsavel) ? $ticket->idtecnico_responsavel : null);
+			$rid = (int)($v ?? 0);
+		}
+		if ($rid <= 0 && in_array('owner_id', $cols, true)) {
+			$v = is_object($ticket) && method_exists($ticket, 'get') ? $ticket->get('owner_id') : (isset($ticket->owner_id) ? $ticket->owner_id : null);
+			$rid = (int)($v ?? 0);
+		}
+
+		return $rid > 0 ? $rid : 0;
+	}
+
+	/**
+	 * Nome para exibir do técnico responsável (ranking PGM usa o mesmo vínculo).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|object $ticket
+	 * @return string|null null se não houver responsável
+	 */
+	protected function _tecnicoResponsavelDisplayLabel($ticket) {
+		$rid = $this->_responsavelUserIdFromTicket($ticket);
+		if ($rid <= 0) {
+			return null;
+		}
+		$u = $this->Users->find()->select(['id', 'name', 'username'])->where(['id' => $rid])->first();
+		if (!$u) {
+			return 'Usuário #' . $rid;
+		}
+		$nm = trim((string)$u->name);
+		if ($nm !== '') {
+			return $nm;
+		}
+		$un = trim((string)$u->username);
+
+		return $un !== '' ? $un : ('#' . $rid);
+	}
+
+	/**
+	 * Mapa id usuário => nome para lista de tickets (evita N+1).
+	 *
+	 * @param array<int,\Cake\Datasource\EntityInterface|object> $tickets
+	 * @return array<int,string>
+	 */
+	protected function _responsaveisMapForTicketEntities(array $tickets) {
+		$ids = [];
+		foreach ($tickets as $t) {
+			$rid = $this->_responsavelUserIdFromTicket($t);
+			if ($rid > 0) {
+				$ids[] = $rid;
+			}
+		}
+		$ids = array_values(array_unique($ids));
+		if ($ids === []) {
+			return [];
+		}
+		$rows = $this->Users->find()->select(['id', 'name', 'username'])->where(['id IN' => $ids])->all();
+		$map = [];
+		foreach ($rows as $u) {
+			$rid = (int)$u->id;
+			$nm = trim((string)$u->name);
+			$map[$rid] = $nm !== '' ? $nm : (trim((string)$u->username) !== '' ? $u->username : ('#' . $rid));
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Preenche as variáveis de view necessárias para o fragmento do painel esquerdo (HTMX).
 	 * Usado quando as ações do timer respondem com atualização parcial em vez de redirect.
 	 */
@@ -4230,7 +4314,8 @@ class TicketsController extends AppController {
 			}
 		} catch (\Throwable $e) {}
 
-		$this->set(compact('ticket', 'ticketsusers', 'ordem', 'timerAtivo', 'timerPausado', 'timerPausadoElapsedTexto', 'minutosTicket', 'minutosClienteMes', 'horasContratoTexto'));
+		$tecnicoResponsavelLabel = $this->_tecnicoResponsavelDisplayLabel($ticket);
+		$this->set(compact('ticket', 'ticketsusers', 'ordem', 'timerAtivo', 'timerPausado', 'timerPausadoElapsedTexto', 'minutosTicket', 'minutosClienteMes', 'horasContratoTexto', 'tecnicoResponsavelLabel'));
 		$this->set('cliente', $clienteNome);
 		$this->set('solicitante', $solicitante ? $solicitante->name : null);
 	}

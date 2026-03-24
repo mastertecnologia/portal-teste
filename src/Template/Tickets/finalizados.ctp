@@ -1,11 +1,12 @@
 <?= $this->Html->css('dist/css/dashboard-erp.css') ?>
+<?php $responsaveisMap = $responsaveisMap ?? []; ?>
 
 <div class="col-12 p-0">
   <div class="dash-erp">
     <div class="dash-erp-header">
       <div>
         <h2 class="dash-erp-title">Tickets finalizados</h2>
-        <p class="dash-erp-subtitle">Listagem dos tickets em situação Resolvido/Fechado. Visualização rápida e corporativa (sem alterar integrações).</p>
+		<p class="dash-erp-subtitle">Listagem dos tickets em situação Resolvido/Fechado. A coluna Responsável reflete o vínculo no ticket (mesmo critério do ranking PGM).</p>
       </div>
       <div>
         <a class="btn btn-outline-secondary m-r-10" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Voltar ao dashboard</a>
@@ -21,7 +22,7 @@
       <div class="dash-erp-card-body">
         <div class="row m-b-10">
           <div class="col-md-6 col-sm-12">
-            <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor, solicitante..." />
+            <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor, responsável..." />
           </div>
           <div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
             Exibindo <span id="finalizados-count"><?= count($ticketsFinalizados ?? []) ?></span> registros
@@ -36,6 +37,7 @@
                   <th>ID</th>
                   <th>Cliente</th>
                   <th>Autor</th>
+                  <th>Responsável</th>
                   <th>Finalizado</th>
                   <th style="width: 110px;">Abrir</th>
                 </tr>
@@ -52,18 +54,25 @@
                     $autorNome = trim((string)($reg->users['name'] ?? ''));
                     $autorUser = trim((string)($reg->users['username'] ?? ''));
                     $solicitanteNome = trim((string)($solicitantesMap[(int)($reg->idsolicitante ?? 0)] ?? ''));
+                    $ridResp = (int)($reg->idtecnico_responsavel ?? 0);
+                    if ($ridResp <= 0 && isset($reg->owner_id)) {
+                      $ridResp = (int)$reg->owner_id;
+                    }
+                    $respNome = ($ridResp > 0 && !empty($responsaveisMap[$ridResp])) ? $responsaveisMap[$ridResp] : '—';
                     $searchBlob = implode(' ', [
                       (string)(int)$reg->id,
                       (string)$clienteNome,
                       (string)$autorNome,
                       (string)$autorUser,
                       (string)$solicitanteNome,
+                      (string)$respNome,
                     ]);
                   ?>
                   <tr data-search="<?= h($searchBlob) ?>">
                     <td><a class="dash-erp-link" target="_blank" href="<?= $urlTicketEdit ?>"><?= (int)$reg->id ?></a></td>
                     <td><?= h($clienteNome) ?></td>
                     <td><?= h($autorNome ?: $autorUser) ?></td>
+                    <td><?= h($respNome) ?></td>
                     <td><?= !empty($reg->datafinalizado) ? h($reg->datafinalizado) : date_format($reg->modified ?? $reg->created, 'd/m/Y') ?></td>
                     <td class="dash-erp-actions">
                       <button
