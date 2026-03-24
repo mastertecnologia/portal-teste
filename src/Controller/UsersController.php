@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Ticket\DashboardService;
 use App\Utility\SupportInboxMail;
 use Cake\Event\Event;
 use Cake\Http\Response;
@@ -136,6 +137,7 @@ class UsersController extends AppController {
 			$this->set('ticketsFinalizadosCount', $ticketsFinalizadosCount);
 			$this->set('ticketsFinalizadosTable', $ticketsFinalizadosTable);
 			$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
+			$this->set('dashPgmKpi', $this->_dashPgmKpiData((int)$empresa));
 		} else {
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
 
@@ -213,6 +215,209 @@ class UsersController extends AppController {
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * KPIs reais do dashboard PGM (funcionários): SLA, saldo do dia, ranking de técnicos, série 30 dias.
+	 */
+	protected function _dashPgmKpiData(int $idempresa): array {
+		$cols = $this->Tickets->getSchema()->columns();
+		$closedSit = $this->_closedTicketSituacoes();
+		$openSit = [];
+		if (defined('C_TicketSituacaoPendente')) {
+			$openSit[] = (int)C_TicketSituacaoPendente;
+		}
+		if (defined('C_TicketSituacaoEmandamento')) {
+			$openSit[] = (int)C_TicketSituacaoEmandamento;
+		}
+
+		$d0 = date('Y-m-d') . ' 00:00:00';
+		$d1 = date('Y-m-d') . ' 23:59:59';
+
+		$abertosHoje = $this->Tickets->find()
+			->where(['Tickets.idempresa' => $idempresa, 'Tickets.created >=' => $d0, 'Tickets.created <=' => $d1])
+			->count();
+
+		$svc = new DashboardService($this->Tickets);
+		$snapshot = $svc->operationalSnapshot($idempresa);
+		$fechadosHoje = (int)($snapshot['resolvidos_hoje'] ?? 0);
+		$saldoDia = $fechadosHoje - $abertosHoje;
+
+		$slaNoPrazo = 0;
+		$slaEmRisco = 0;
+		$slaVencido = 0;
+		$slaUsaEnterprise = in_array('sla_status', $cols, true) && $openSit !== [];
+
+		if ($slaUsaEnterprise) {
+			$q = $this->Tickets->find();
+			$f = $q->func()->count('*');
+			$rows = $q->select(['sla_status', 'total' => $f])
+				->where(['Tickets.idempresa' => $idempresa, 'Tickets.situacao IN' => $openSit])
+				->group('sla_status')
+				->hydrate(false)
+				->toArray();
+			foreach ($rows as $r) {
+				$st = isset($r['sla_status']) ? (string)$r['sla_status'] : '';
+				$n = (int)$r['total'];
+				if ($st === 'violado') {
+					$slaVencido += $n;
+				} elseif ($st === 'em_risco') {
+					$slaEmRisco += $n;
+				} else {
+					$slaNoPrazo += $n;
+				}
+			}
+		} elseif ($openSit !== []) {
+			$openList = $this->Tickets->find()
+				->select(['created'])
+				->where(['Tickets.idempresa' => $idempresa, 'Tickets.situacao IN' => $openSit])
+				->toArray();
+			foreach ($openList as $t) {
+				$dias = max(0, (int)floor((time() - strtotime((string)$t->created)) / 86400));
+				if ($dias <= 3) {
+					$slaNoPrazo++;
+				} elseif ($dias <= 10) {
+					$slaEmRisco++;
+				} else {
+					$slaVencido++;
+				}
+			}
+		}
+
+		$totalSla = max(1, $slaNoPrazo + $slaEmRisco + $slaVencido);
+		$slaPct = (int)round(($slaNoPrazo / $totalSla) * 100);
+
+		$tecMap = $this->_tecnicosEmpresaMap($idempresa);
+		$ranking = [];
+		if ($tecMap !== [] && in_array('idtecnico_responsavel', $cols, true) && $closedSit !== []) {
+			$monthStart = date('Y-m-01 00:00:00');
+			$monthEnd = date('Y-m-t 23:59:59');
+			$dateField = in_array('data_resolucao', $cols, true) ? 'data_resolucao' : 'modified';
+			$techIds = array_keys($tecMap);
+			$q = $this->Tickets->find();
+			$f = $q->func()->count('*');
+			$rows = $q->select(['idtecnico_responsavel', 'cnt' => $f])
+				->where([
+					'Tickets.idempresa' => $idempresa,
+					'Tickets.situacao IN' => $closedSit,
+					'Tickets.idtecnico_responsavel IN' => $techIds,
+					'Tickets.' . $dateField . ' >=' => $monthStart,
+					'Tickets.' . $dateField . ' <=' => $monthEnd,
+				])
+				->group('idtecnico_responsavel')
+				->hydrate(false)
+				->toArray();
+			$byCount = [];
+			foreach ($rows as $r) {
+				$tid = isset($r['idtecnico_responsavel']) ? (int)$r['idtecnico_responsavel'] : 0;
+				if ($tid > 0) {
+					$byCount[$tid] = (int)$r['cnt'];
+				}
+			}
+			arsort($byCount);
+			$place = 1;
+			foreach ($byCount as $uid => $cnt) {
+				if ($place > 10) {
+					break;
+				}
+				$ranking[] = [
+					'place' => $place,
+					'nome' => $tecMap[$uid] ?? ('#' . $uid),
+					'tickets' => $cnt,
+				];
+				$place++;
+			}
+		}
+
+		$trendLabels = [];
+		$trendOpened = [];
+		$trendClosed = [];
+		for ($i = 29; $i >= 0; $i--) {
+			$ts = strtotime('-' . $i . ' days');
+			$day = date('Y-m-d', $ts);
+			$ds = $day . ' 00:00:00';
+			$de = $day . ' 23:59:59';
+			$trendLabels[] = date('d/m', $ts);
+			$trendOpened[] = $this->Tickets->find()
+				->where(['Tickets.idempresa' => $idempresa, 'Tickets.created >=' => $ds, 'Tickets.created <=' => $de])
+				->count();
+			if (in_array('data_resolucao', $cols, true)) {
+				$trendClosed[] = $this->Tickets->find()
+					->where([
+						'Tickets.idempresa' => $idempresa,
+						'Tickets.situacao IN' => $closedSit,
+						'Tickets.data_resolucao >=' => $ds,
+						'Tickets.data_resolucao <=' => $de,
+					])
+					->count();
+			} elseif ($closedSit !== []) {
+				$trendClosed[] = $this->Tickets->find()
+					->where([
+						'Tickets.idempresa' => $idempresa,
+						'Tickets.situacao IN' => $closedSit,
+						'Tickets.modified >=' => $ds,
+						'Tickets.modified <=' => $de,
+					])
+					->count();
+			} else {
+				$trendClosed[] = 0;
+			}
+		}
+
+		return [
+			'sla_usa_enterprise' => $slaUsaEnterprise,
+			'sla_no_prazo' => $slaNoPrazo,
+			'sla_em_risco' => $slaEmRisco,
+			'sla_vencido' => $slaVencido,
+			'sla_pct' => $slaPct,
+			'abertos_hoje' => $abertosHoje,
+			'fechados_hoje' => $fechadosHoje,
+			'saldo_dia' => $saldoDia,
+			'ranking' => $ranking,
+			'trend_labels' => $trendLabels,
+			'trend_opened' => $trendOpened,
+			'trend_closed' => $trendClosed,
+		];
+	}
+
+	/**
+	 * @return int[]
+	 */
+	protected function _closedTicketSituacoes(): array {
+		if (!defined('C_TicketSituacaoResolvido') || !defined('C_TicketSituacaoFechado')) {
+			return [];
+		}
+		$out = [(int)C_TicketSituacaoResolvido, (int)C_TicketSituacaoFechado];
+		if (defined('C_TicketSituacaoCancelado')) {
+			$out[] = (int)C_TicketSituacaoCancelado;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Técnicos (role 0) vinculados à empresa via empresasusers.
+	 *
+	 * @return array<int,string> iduser => nome exibição
+	 */
+	protected function _tecnicosEmpresaMap(int $idempresa): array {
+		$rels = $this->Empresasusers->find()
+			->contain(['Users'])
+			->where(['Empresasusers.idempresa' => $idempresa])
+			->toArray();
+		$map = [];
+		foreach ($rels as $r) {
+			$u = $r->user ?? null;
+			if ($u === null || (int)$u->role !== 0) {
+				continue;
+			}
+			if (isset($u->inativo) && (int)$u->inativo === 1) {
+				continue;
+			}
+			$map[(int)$u->id] = !empty($u->name) ? (string)$u->name : (string)$u->username;
+		}
+
+		return $map;
 	}
 
 	public function add() {

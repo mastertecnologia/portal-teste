@@ -10,27 +10,24 @@
 		$reqRows = $usuariosBloqueadosTable ?? [];
 		$reqCount = count($reqRows);
 		$ticketsAll = array_merge($ticketsPend, $ticketsExec);
-		$todayYmd = date('Ymd');
+		$kpi = $dashPgmKpi ?? [];
+		$noPrazo = (int)($kpi['sla_no_prazo'] ?? 0);
+		$emRisco = (int)($kpi['sla_em_risco'] ?? 0);
+		$vencido = (int)($kpi['sla_vencido'] ?? 0);
+		$slaPct = (int)($kpi['sla_pct'] ?? 0);
+		$abertosHoje = (int)($kpi['abertos_hoje'] ?? 0);
+		$fechadosHoje = (int)($kpi['fechados_hoje'] ?? 0);
+		$saldoDia = (int)($kpi['saldo_dia'] ?? 0);
+		$rankingTecnicos = $kpi['ranking'] ?? [];
+		$trendLabels = $kpi['trend_labels'] ?? [];
+		$trendOpened = $kpi['trend_opened'] ?? [];
+		$trendClosed = $kpi['trend_closed'] ?? [];
 
-		$noPrazo = 0;
-		$emRisco = 0;
-		$vencido = 0;
-		$abertosHoje = 0;
 		$topClientesCount = [];
 		foreach ($ticketsAll as $t) {
-			$dias = max(0, (int) floor((time() - strtotime((string)$t->created)) / 86400));
-			if ($dias <= 3) $noPrazo++;
-			elseif ($dias <= 10) $emRisco++;
-			else $vencido++;
-			if (date_format($t->created, 'Ymd') === $todayYmd) $abertosHoje++;
-
 			$cliNome = ($t->cliente->tipo == C_ClientesTipoFisica) ? $t->cliente->nome : $t->cliente->razaosocial;
 			$topClientesCount[$cliNome] = ($topClientesCount[$cliNome] ?? 0) + 1;
 		}
-		$totalSla = max(1, count($ticketsAll));
-		$slaPct = (int) round(($noPrazo / $totalSla) * 100);
-		$saldoDia = 0 - $abertosHoje;
-
 		arsort($topClientesCount);
 		$topClientes = array_slice($topClientesCount, 0, 6, true);
 	?>
@@ -132,7 +129,7 @@
 					<div class="dash-pgm-mini-card">
 						<div class="dash-pgm-mini-title">Saldo do Dia</div>
 						<div class="dash-pgm-saldo-row"><span>Abertos hoje</span><strong><?= $abertosHoje ?></strong></div>
-						<div class="dash-pgm-saldo-row"><span>Fechados hoje</span><strong>0</strong></div>
+						<div class="dash-pgm-saldo-row"><span>Fechados hoje</span><strong><?= $fechadosHoje ?></strong></div>
 						<div class="dash-pgm-saldo-row"><span>Saldo</span><strong><?= $saldoDia >= 0 ? '+' : '' ?><?= $saldoDia ?></strong></div>
 					</div>
 					<div class="dash-pgm-mini-card">
@@ -178,7 +175,8 @@
 											$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
 											$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 											$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
-											$isStagnant = in_array((int)$reg->id, [1093, 1088], true);
+											$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
+											$isStagnant = (time() - strtotime((string)$refMod)) >= 86400;
 											$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
 										?>
 										<tr class="dash-pgm-row <?= $isStagnant ? 'stagnant' : '' ?>">
@@ -196,10 +194,13 @@
 					<div class="dash-pgm-ranking-card">
 						<div class="dash-pgm-table-header"><span>Ranking Técnicos</span><span class="badge blue">mês</span></div>
 						<div class="dash-pgm-ranking-scroll">
-							<div class="dash-pgm-ranking-item"><span>1</span><strong>Darli G.</strong><small>32 tickets</small></div>
-							<div class="dash-pgm-ranking-item"><span>2</span><strong>Marcos S.</strong><small>24 tickets</small></div>
-							<div class="dash-pgm-ranking-item"><span>3</span><strong>Ana R.</strong><small>18 tickets</small></div>
-							<div class="dash-pgm-ranking-item"><span>4</span><strong>Pedro T.</strong><small>11 tickets</small></div>
+							<?php if (empty($rankingTecnicos)): ?>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>tickets resolvidos no mês com técnico vinculado</small></div>
+							<?php else: ?>
+								<?php foreach ($rankingTecnicos as $row): ?>
+									<div class="dash-pgm-ranking-item"><span><?= (int)$row['place'] ?></span><strong><?= h($row['nome']) ?></strong><small><?= (int)$row['tickets'] ?> tickets</small></div>
+								<?php endforeach; ?>
+							<?php endif; ?>
 						</div>
 					</div>
 
@@ -247,9 +248,11 @@
 						$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
 						$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
+						$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
+						$stagnantTag = (time() - strtotime((string)$refMod)) >= 86400 ? ' <span class="stagnant-tag">+24h</span>' : '';
 						$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
 					?>
-					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
+					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome . $stagnantTag) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
 			},
@@ -355,21 +358,16 @@
 		}, 30000);
 
 		if (window.Chart) {
-			var labels = [];
-			var opened = [];
-			var closed = [];
-			for (var i = 29; i >= 0; i--) {
-				labels.push((30 - i).toString());
-				opened.push(Math.floor(Math.random() * 6) + 1);
-				closed.push(Math.floor(Math.random() * 7) + 2);
-			}
+			var labels = <?= json_encode($trendLabels) ?>;
+			var opened = <?= json_encode($trendOpened) ?>;
+			var closed = <?= json_encode($trendClosed) ?>;
 			new Chart(document.getElementById('dashPgmTrendChart'), {
 				type: 'line',
 				data: {
 					labels: labels,
 					datasets: [
-						{ data: opened, borderColor: '#388bfd', backgroundColor: 'rgba(56,139,253,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 },
-						{ data: closed, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
+						{ label: 'Abertos', data: opened, borderColor: '#388bfd', backgroundColor: 'rgba(56,139,253,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 },
+						{ label: 'Fechados', data: closed, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
 					]
 				},
 				options: {
