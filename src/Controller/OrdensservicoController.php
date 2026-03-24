@@ -74,31 +74,14 @@ class OrdensservicoController extends AppController {
 			$locacao = -1;
 		}
 
-		$ordens = [];
-		if ($this->request->is('get')) {
-			/* Cliente já é redirecionado no início de index(); consulta única para staff */
-			$ordens = $this->Ordensservico->find('all')
-				->where(['Ordensservico.idempresa' => $idempresa])
-				->contain([
-					'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
-					'Users' => ['fields' => ['Users.id', 'Users.name']],
-				]);
-
-			if (!empty($cliente)) {
-				$ordens = $ordens->where(['Ordensservico.idcliente' => $cliente]);
-			}
-			if (!empty($situacao)) {
-				$ordens = $ordens->where(['situacao' => $situacao]);
-			}
-			if (!empty($problema)) {
-				$ordens = $ordens->where(['idproblema' => $problema]);
-			}
-			/* empty(0) é true: valor 0 de locação nunca era aplicado com !empty($locacao) */
-			if ($locacao !== null && $locacao !== '' && (string)$locacao !== '-1') {
-				$ordens = $ordens->where(['locacao' => $locacao]);
-			}
-			$ordens = $ordens->toArray();
-		}
+		/* Consulta completa para permitir filtros/KPI instantâneos no cliente (sem reload). */
+		$ordens = $this->Ordensservico->find('all')
+			->where(['Ordensservico.idempresa' => $idempresa])
+			->contain([
+				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
+				'Users' => ['fields' => ['Users.id', 'Users.name']],
+			])
+			->toArray();
 		$problemas1 = [0 => 'Todos'];
 		$clientesOpt1 = [0 => 'Todos'];
 		

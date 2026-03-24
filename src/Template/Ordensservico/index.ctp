@@ -62,9 +62,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				<button type="button" class="os-icon-btn os-icon-btn--btn" id="os-btn-export-csv" title="Exportar CSV (filtro atual da tabela)">
 					<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 1Z" stroke="currentColor" stroke-width="1.3"/><path d="M9 1v5h5" stroke="currentColor" stroke-width="1.3"/><path d="M8 10v4M6 12l2 2 2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
 				</button>
-				<?php if ($role == 0) : ?>
-					<button type="button" class="os-btn-primary" id="os-open-modal-nova">Abrir ordem de serviço</button>
-				<?php endif; ?>
 				<span class="os-icon-btn" title="Notificações" aria-hidden="true">
 					<svg width="15" height="15" viewBox="0 0 16 16" fill="none">
 						<path d="M8 1a5 5 0 0 1 5 5v3l1 2H2l1-2V6a5 5 0 0 1 5-5ZM6.5 13.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.3"/>
@@ -191,6 +188,10 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 							$rowClass = $reg->locacao ? 'os-row-locacao' : '';
 							$rowPayload = [
 								'id' => (int)$reg->id,
+								'idcliente' => (int)$reg->idcliente,
+								'situacao_id' => (int)$reg->situacao,
+								'idproblema' => (int)$reg->idproblema,
+								'locacao' => (int)$reg->locacao,
 								'abertura' => date_format($reg->dataabertura, 'd/m/Y'),
 								'previsao' => date_format($reg->dataprevisao, 'd/m/Y'),
 								'cliente' => $cliNome,
@@ -365,6 +366,12 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		sync: <?= json_encode(C_OrdensSituacaoSincronizadaPeloGrid) ?>,
 		lib: <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>
 	};
+	var osInitialFilters = {
+		situacao: <?= json_encode((string)$situacao) ?>,
+		cliente: <?= json_encode((string)$cliente) ?>,
+		problema: <?= json_encode((string)$problema) ?>,
+		locacao: <?= json_encode((string)$locacao) ?>
+	};
 	<?php
 	$_osIndexJson = json_encode(!empty($osRowsById) ? $osRowsById : new \stdClass(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
 	if ($_osIndexJson === false) {
@@ -405,14 +412,23 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		return s;
 	}
 
-	function osApplySituacaoToUrl(sit) {
+	function osSyncQueryFromFilters() {
 		var u = new URL(window.location.href);
-		if (sit === '' || sit == null) {
-			u.searchParams.delete('situacao');
-		} else {
-			u.searchParams.set('situacao', String(sit));
-		}
-		window.location.href = u.toString();
+		var params = {
+			situacao: $('#situacao').val(),
+			cliente: $('#cliente').val(),
+			problema: $('#problema').val(),
+			locacao: $('#locacao').val()
+		};
+		Object.keys(params).forEach(function(k) {
+			var v = params[k];
+			if (v == null || v === '' || v === '-1' || v === '0') {
+				u.searchParams.delete(k);
+			} else {
+				u.searchParams.set(k, String(v));
+			}
+		});
+		window.history.replaceState({}, '', u.toString());
 	}
 
 	function osClearDrawerRowHighlight() {
@@ -465,16 +481,20 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		$('#os-drawer-backdrop, #os-drawer').appendTo('body');
 
 		$('#situacao, #cliente, #problema, #locacao').on('change', function() {
-			this.form.submit();
+			osApplyClientFilters();
 		});
 
 		$(document).on('click', '[data-os-kpi]', function() {
 			var k = $(this).data('os-kpi');
 			if (k === 'all') {
-				osApplySituacaoToUrl('');
+				$('#situacao').val('');
 			} else if (osKpiSituacaoMap[k] != null) {
-				osApplySituacaoToUrl(osKpiSituacaoMap[k]);
+				$('#situacao').val(String(osKpiSituacaoMap[k]));
 			}
+			if (typeof $.fn.selectpicker === 'function') {
+				$('#situacao').selectpicker('refresh');
+			}
+			osApplyClientFilters();
 		});
 		$(document).on('keydown', '[data-os-kpi]', function(e) {
 			if (e.key === 'Enter' || e.key === ' ') {
@@ -624,6 +644,37 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			});
 		}
 		var osDtInitialFilter = (typeof window.filters !== 'undefined' && window.filters != null) ? String(window.filters) : '';
+		function osRowPassesFilters(row) {
+			if (!row) return false;
+			var fSituacao = $('#situacao').val();
+			var fCliente = $('#cliente').val();
+			var fProblema = $('#problema').val();
+			var fLocacao = $('#locacao').val();
+			if (fSituacao && String(row.situacao_id) !== String(fSituacao)) return false;
+			if (fCliente && fCliente !== '0' && String(row.idcliente) !== String(fCliente)) return false;
+			if (fProblema && fProblema !== '0' && String(row.idproblema) !== String(fProblema)) return false;
+			if (fLocacao && fLocacao !== '-1' && String(row.locacao) !== String(fLocacao)) return false;
+			return true;
+		}
+		function osRefreshKpiActive() {
+			var sit = $('#situacao').val();
+			var active = 'all';
+			if (sit && String(sit) === String(osKpiSituacaoMap.exec)) active = 'exec';
+			if (sit && String(sit) === String(osKpiSituacaoMap.sync)) active = 'sync';
+			if (sit && String(sit) === String(osKpiSituacaoMap.lib)) active = 'lib';
+			$('[data-os-kpi]').removeClass('is-active');
+			$('[data-os-kpi="' + active + '"]').addClass('is-active');
+		}
+		$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+			if (settings.nTable !== $osTable[0]) return true;
+			var api = new $.fn.dataTable.Api(settings);
+			var node = api.row(dataIndex).node();
+			if (!node) return true;
+			var $tr = $(node);
+			var rid = osResolveOsRowId($tr);
+			var row = osIndexRowsById && (osIndexRowsById[rid] || osIndexRowsById[String(rid)]);
+			return osRowPassesFilters(row);
+		});
 		var osDt = $osTable.DataTable({
 			order: [[0, 'desc']],
 			pageLength: <?= (int)$pagelength ?>,
@@ -677,6 +728,21 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			var len = parseInt($(this).val(), 10) || <?= (int)$pagelength ?>;
 			osDt.page.len(len).draw(false);
 		});
+		function osApplyClientFilters() {
+			osSyncQueryFromFilters();
+			osRefreshKpiActive();
+			osDt.draw();
+		}
+
+		/* Aplica filtros da URL somente como estado inicial, sem request extra. */
+		if (osInitialFilters.situacao) $('#situacao').val(osInitialFilters.situacao);
+		if (osInitialFilters.cliente) $('#cliente').val(osInitialFilters.cliente);
+		if (osInitialFilters.problema) $('#problema').val(osInitialFilters.problema);
+		if (osInitialFilters.locacao) $('#locacao').val(osInitialFilters.locacao);
+		if (typeof $.fn.selectpicker === 'function') {
+			$('#situacao, #cliente, #problema, #locacao').selectpicker('refresh');
+		}
+		osApplyClientFilters();
 
 		osBulkUi();
 		if ($('#badge-exec-os').length) {
