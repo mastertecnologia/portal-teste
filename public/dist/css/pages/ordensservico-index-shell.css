@@ -354,6 +354,50 @@
 	overflow: hidden;
 }
 
+.os-index-shell .os-table-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--os-border);
+}
+
+.os-index-shell .os-table-head-l {
+	font-size: 12.5px;
+	color: var(--os-text2);
+}
+
+.os-index-shell .os-table-head-l strong {
+	color: var(--os-text);
+	font-weight: 600;
+}
+
+.os-index-shell .os-table-head-r {
+	display: flex;
+	align-items: center;
+}
+
+.os-index-shell .os-per-page {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: var(--os-text3);
+	margin: 0;
+}
+
+.os-index-shell .os-per-page select {
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border);
+	border-radius: 6px;
+	color: var(--os-text2);
+	padding: 3px 6px;
+	font-family: var(--os-mono);
+	font-size: 12px;
+	outline: none;
+}
+
 .os-index-shell .os-table-responsive {
 	padding: 0;
 }
@@ -364,10 +408,7 @@
 }
 
 .os-index-shell .dataTables_wrapper .dataTables_length {
-	float: none;
-	margin-bottom: 10px;
-	font-size: 12px;
-	color: var(--os-text3);
+	display: none;
 }
 
 .os-index-shell .dataTables_wrapper .dataTables_length select {
@@ -380,6 +421,7 @@
 }
 
 .os-index-shell .dataTables_wrapper .dataTables_info {
+	display: none;
 	padding-top: 12px;
 	font-size: 12px;
 	color: var(--os-text3);

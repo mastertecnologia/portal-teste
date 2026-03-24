@@ -140,6 +140,20 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		</div>
 
 		<div class="os-table-outer">
+			<div class="os-table-head">
+				<div class="os-table-head-l">Mostrando <strong id="os-showing">0</strong> de <strong id="os-total">0</strong> registros</div>
+				<div class="os-table-head-r">
+					<label class="os-per-page" for="os-per-page">
+						Por página:
+						<select id="os-per-page">
+							<option value="10"<?= (int)$pagelength === 10 ? ' selected' : '' ?>>10</option>
+							<option value="25"<?= (int)$pagelength === 25 ? ' selected' : '' ?>>25</option>
+							<option value="50"<?= (int)$pagelength === 50 ? ' selected' : '' ?>>50</option>
+							<option value="100"<?= (int)$pagelength === 100 ? ' selected' : '' ?>>100</option>
+						</select>
+					</label>
+				</div>
+			</div>
 			<div class="table-responsive os-table-responsive">
 				<table class="table table-hover table-row-clickable" id="tableOrdens" style="margin:0">
 					<thead>
@@ -649,6 +663,21 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			}
 		});
 		osDt.search(osDtInitialFilter).draw();
+
+		function osRefreshTableMeta() {
+			var info = osDt.page.info();
+			$('#os-showing').text(info.recordsDisplay);
+			$('#os-total').text(info.recordsTotal);
+			$('#os-per-page').val(String(info.length));
+			$('#tableOrdens_paginate').prev('.dataTables_info').hide();
+		}
+		osRefreshTableMeta();
+		$osTable.on('draw.dt search.dt page.dt length.dt', osRefreshTableMeta);
+		$('#os-per-page').on('change', function() {
+			var len = parseInt($(this).val(), 10) || <?= (int)$pagelength ?>;
+			osDt.page.len(len).draw(false);
+		});
+
 		osBulkUi();
 		if ($('#badge-exec-os').length) {
 			$('#badge-exec-os').text('<?= (int)$kpiExec ?>');
