@@ -282,8 +282,8 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	</div>
 	<div class="os-drawer-body" id="os-drawer-body"></div>
 	<div class="os-drawer-foot">
-		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2">Fechar</button>
-		<button type="button" class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit-btn" data-href="#">Editar OS</button>
+		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2" title="Fecha a pré-visualização e permanece na listagem">Voltar à lista</button>
+		<button type="button" class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit-btn" data-href="#" title="Abre o cadastro completo da OS">Editar OS</button>
 	</div>
 </aside>
 
@@ -351,7 +351,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		sync: <?= json_encode(C_OrdensSituacaoSincronizadaPeloGrid) ?>,
 		lib: <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>
 	};
-	var osIndexRowsById = <?= json_encode($osRowsById, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
+	var osIndexRowsById = <?= json_encode(!empty($osRowsById) ? $osRowsById : new \stdClass(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
 
 	function osEscapeHtml(text) {
 		return $('<div/>').text(text == null ? '' : String(text)).html();
@@ -391,6 +391,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 	function osCloseDrawer() {
 		osClearDrawerRowHighlight();
+		$('body').removeClass('os-drawer-active');
 		$('#os-drawer').removeClass('open').attr('aria-hidden', 'true');
 		$('#os-drawer-backdrop').removeClass('open');
 	}
@@ -421,11 +422,15 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			'<div class="os-dr-row"><span class="os-dr-k">Status</span><span class="os-dr-v">' + osEscapeHtml(row.situacao) + '</span></div></div>'
 		);
 		$('#os-drawer-edit-btn').attr('data-href', row.url).text(osUserRole === 0 ? 'Editar OS' : 'Abrir OS');
+		$('body').addClass('os-drawer-active');
 		$('#os-drawer').addClass('open').attr('aria-hidden', 'false');
 		$('#os-drawer-backdrop').addClass('open');
 	}
 
 	$(document).ready(function() {
+		/* Drawer no body: evita ficar atrás da sidebar (stacking context do .page-wrapper) */
+		$('#os-drawer-backdrop, #os-drawer').appendTo('body');
+
 		$('#situacao, #cliente, #problema, #locacao').on('change', function() {
 			this.form.submit();
 		});
@@ -451,7 +456,11 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		$('#os-drawer-edit-btn').on('click', function() {
 			var u = $(this).attr('data-href');
 			if (u && u !== '#') {
-				window.open(u, '_blank', 'noopener');
+				osCloseDrawer();
+				var w = window.open(u, '_blank');
+				if (w) {
+					w.opener = null;
+				}
 			}
 		});
 		$(document).on('keydown', function(e) {

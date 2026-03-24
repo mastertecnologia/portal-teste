@@ -90,9 +90,18 @@ $(function () {
     })
 
     // ==============================================================
-    // Perfact scrollbar
+    // Perfect scrollbar (sidebar: sem PS no layout-no-topbar — scroll nativo em layout-sidebar-shell.css)
     // ==============================================================
-    $('.scroll-sidebar, .right-side-panel, .message-center, .right-sidebar').perfectScrollbar();
+    if ($('body').hasClass('layout-no-topbar')) {
+        $('.scroll-sidebar').each(function () {
+            try {
+                $(this).perfectScrollbar('destroy');
+            } catch (err) { /* não estava inicializado */ }
+        });
+        $('.right-side-panel, .message-center, .right-sidebar').perfectScrollbar();
+    } else {
+        $('.scroll-sidebar, .right-side-panel, .message-center, .right-sidebar').perfectScrollbar();
+    }
     // ==============================================================
     // Resize all elements
     // ==============================================================

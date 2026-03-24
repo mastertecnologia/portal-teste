@@ -83,6 +83,33 @@ body.layout-no-topbar .scroll-sidebar {
 	right: auto !important;
 	bottom: auto !important;
 	width: 100% !important;
+	/* Scroll nativo visível (Perfect Scrollbar desligado em custom.js neste layout) */
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+body.layout-no-topbar .scroll-sidebar::-webkit-scrollbar {
+	width: 6px;
+}
+
+body.layout-no-topbar .scroll-sidebar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+body.layout-no-topbar .scroll-sidebar::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.18);
+	border-radius: 6px;
+}
+
+body.layout-no-topbar .scroll-sidebar::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.28);
+}
+
+/* Se restarem trilhos do Perfect Scrollbar no DOM, esconder */
+body.layout-no-topbar .scroll-sidebar .ps__scrollbar-x-rail,
+body.layout-no-topbar .scroll-sidebar .ps__scrollbar-y-rail {
+	display: none !important;
+	pointer-events: none !important;
 }
 
 body.layout-no-topbar.mini-sidebar .left-sidebar .scroll-sidebar {
