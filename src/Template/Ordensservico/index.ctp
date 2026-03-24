@@ -513,7 +513,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					set[id] = true;
 				}
 			});
-			$('#tableOrdens tbody tr.os-row-drawer').each(function () {
+			$('#tableOrdens tbody tr[data-os]').each(function () {
 				var raw = $(this).attr('data-os');
 				if (!raw) return;
 				try {
@@ -627,17 +627,29 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			}
 		}
 
-		$('#tableOrdens tbody').on('click', 'tr.os-row-drawer', function(e) {
-			if ($(e.target).closest('input, label, .custom-control, button, a').length) {
-				return;
+		/* Clique no texto (#text) não funciona com $(e.target).closest — normalizar para o elemento */
+		function osEventTargetEl(e) {
+			var t = e.target;
+			if (t && t.nodeType === 3 && t.parentElement) {
+				return t.parentElement;
 			}
+			return t;
+		}
+
+		/* Delegar no document: tbody/linhas podem ser recriados pelo DataTables; usar [data-os] */
+		$(document).on('click', '#tableOrdens tbody tr[data-os]', function(e) {
+			var el = osEventTargetEl(e);
+			if (!el || typeof el.closest !== 'function') return;
+			if (el.closest('.os-row-checkbox')) return;
+			if (el.closest('a[href]')) return;
+			if (el.closest('button')) return;
 			osRowOpenDrawer($(this));
 		});
 
-		$('#tableOrdens tbody').on('keydown', 'tr.os-row-drawer .link[role="button"]', function(e) {
+		$(document).on('keydown', '#tableOrdens tbody tr[data-os] .link[role="button"]', function(e) {
 			if (e.key !== 'Enter' && e.key !== ' ') return;
 			e.preventDefault();
-			osRowOpenDrawer($(this).closest('tr.os-row-drawer'));
+			osRowOpenDrawer($(this).closest('tr[data-os]'));
 		});
 
 		$('#os-btn-export-csv').on('click', function() {
