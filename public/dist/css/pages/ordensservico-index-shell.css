@@ -548,6 +548,29 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	vertical-align: middle;
 }
 
+/* Remove indicadores/sombras de ordenação do DataTables (setas no header) */
+.os-index-shell table.dataTable thead th.sorting,
+.os-index-shell table.dataTable thead th.sorting_asc,
+.os-index-shell table.dataTable thead th.sorting_desc,
+.os-index-shell table.dataTable thead th.sorting_asc_disabled,
+.os-index-shell table.dataTable thead th.sorting_desc_disabled {
+	background-image: none !important;
+}
+
+.os-index-shell table.dataTable thead th.sorting::before,
+.os-index-shell table.dataTable thead th.sorting::after,
+.os-index-shell table.dataTable thead th.sorting_asc::before,
+.os-index-shell table.dataTable thead th.sorting_asc::after,
+.os-index-shell table.dataTable thead th.sorting_desc::before,
+.os-index-shell table.dataTable thead th.sorting_desc::after,
+.os-index-shell table.dataTable thead th.sorting_asc_disabled::before,
+.os-index-shell table.dataTable thead th.sorting_asc_disabled::after,
+.os-index-shell table.dataTable thead th.sorting_desc_disabled::before,
+.os-index-shell table.dataTable thead th.sorting_desc_disabled::after {
+	display: none !important;
+	content: none !important;
+}
+
 .os-index-shell table.dataTable tbody td,
 .os-index-shell table.table tbody td {
 	padding: 12px 14px !important;
