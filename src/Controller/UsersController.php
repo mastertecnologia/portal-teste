@@ -121,11 +121,18 @@ class UsersController extends AppController {
 			$ticketsFinalizadosCount = $this->Tickets->findByIdempresa($empresa)
 				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
 				->count();
-			$usuariosBloqueadosTable = $this->Users->findByBloqueado(1)->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])->contain(['Empresasusers', 'Empresasusers.Empresas'])->toArray();
-			
+			$ticketsFinalizadosTable = $this->Tickets->findByIdempresa($empresa)
+				->contain(['Clientes'])
+				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
+				->order(['Tickets.id DESC'])
+				->limit(50)
+				->toArray();
+			$usuariosBloqueadosTable = $this->_usuariosBloqueadosEmpresa((int)$empresa);
+
 			$this->set('ticketsPendentesTable', $ticketsPendentesTable);
 			$this->set('ticketsSendoResolvidosTable', $ticketsSendoResolvidosTable);
 			$this->set('ticketsFinalizadosCount', $ticketsFinalizadosCount);
+			$this->set('ticketsFinalizadosTable', $ticketsFinalizadosTable);
 			$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
 		} else {
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
@@ -178,14 +185,32 @@ class UsersController extends AppController {
 			return $this->redirect(['action' => 'dashboard']);
 		}
 
-		$usuariosBloqueadosTable = $this->Users
+		$usuariosBloqueadosTable = $this->_usuariosBloqueadosEmpresa((int)$this->Auth->user('idempresa'));
+
+		$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
+	}
+
+	/**
+	 * Usuários bloqueados vinculados à empresa (filtro em memória — evita matching/distinct que podem falhar em alguns DB/drivers).
+	 */
+	protected function _usuariosBloqueadosEmpresa(int $idempresa): array {
+		$all = $this->Users
 			->findByBloqueado(1)
 			->contain(['Clientes' => ['fields' => ['nome', 'razaosocial', 'cnpj', 'tipo', 'cpf']]])
 			->contain(['Empresasusers', 'Empresasusers.Empresas'])
 			->order(['Users.created' => 'DESC'])
 			->toArray();
-
-		$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
+		$out = [];
+		foreach ($all as $u) {
+			$links = $u->empresasusers ?? [];
+			foreach ($links as $eu) {
+				if ((int)$eu->idempresa === $idempresa) {
+					$out[] = $u;
+					break;
+				}
+			}
+		}
+		return $out;
 	}
 
 	public function add() {

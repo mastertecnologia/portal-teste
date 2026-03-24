@@ -60,6 +60,9 @@
   border: 2px solid var(--surface);
   background: var(--red);
 }
+.dash-pgm-notif-dot.is-hidden {
+  display: none;
+}
 
 .dash-pgm-notif-panel {
   position: fixed;

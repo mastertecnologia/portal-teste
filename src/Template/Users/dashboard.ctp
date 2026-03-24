@@ -6,6 +6,7 @@
 	<?php
 		$ticketsPend = $ticketsPendentesTable ?? [];
 		$ticketsExec = $ticketsSendoResolvidosTable ?? [];
+		$ticketsFin = $ticketsFinalizadosTable ?? [];
 		$reqRows = $usuariosBloqueadosTable ?? [];
 		$reqCount = count($reqRows);
 		$ticketsAll = array_merge($ticketsPend, $ticketsExec);
@@ -41,14 +42,14 @@
 					<div class="dash-pgm-clock" id="dashPgmClock"><?= date('d/m/Y') ?> — <?= date('H:i') ?></div>
 					<button class="dash-pgm-notif-btn" id="dashPgmNotifBtn" type="button">
 						<i class="fas fa-bell"></i>
-						<span class="dash-pgm-notif-dot" id="dashPgmNotifDot"></span>
+						<span class="dash-pgm-notif-dot<?= $reqCount === 0 ? ' is-hidden' : '' ?>" id="dashPgmNotifDot"></span>
 					</button>
 				</div>
 			</div>
 
 			<div class="dash-pgm-notif-panel" id="dashPgmNotifPanel">
 				<div class="dash-pgm-notif-header">
-					Notificações <span id="dashPgmNotifCount"><?= max(1, $reqCount) ?> novas</span>
+					Notificações <span id="dashPgmNotifCount"><?= $reqCount ?> novas</span>
 				</div>
 				<?php foreach (array_slice($reqRows, 0, 3) as $u): ?>
 					<?php $nomeReq = !empty($u->name) ? $u->name : (!empty($u->username) ? $u->username : 'Usuário'); ?>
@@ -257,7 +258,15 @@
 				title: 'Tickets Finalizados',
 				subtitle: '<?= (int)($ticketsFinalizadosCount ?? 0) ?> tickets finalizados no período',
 				head: ['ID', 'Cliente', 'Encerrado', 'Status'],
-				rows: []
+				rows: [
+					<?php foreach ($ticketsFin as $reg): ?>
+					<?php
+						$clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial;
+						$refData = (isset($reg->modified) && $reg->modified !== null) ? $reg->modified : $reg->created;
+					?>
+					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($refData, 'd/m/Y')) ?>, "Finalizado"],
+					<?php endforeach; ?>
+				]
 			},
 			requisicoes: {
 				color: '#bc8cff',
@@ -375,15 +384,6 @@
 			});
 		}
 
-		setTimeout(function() {
-			var reqCountEl = document.getElementById('dashPgmReqCount');
-			var curr = parseInt(reqCountEl.textContent || '0', 10);
-			reqCountEl.textContent = (curr + 1).toString();
-			document.getElementById('dashPgmNotifCount').textContent = (curr + 1) + ' novas';
-			var card = document.getElementById('dashPgmReqCard');
-			card.classList.add('flash');
-			setTimeout(function(){ card.classList.remove('flash'); }, 2400);
-		}, 8000);
 	})();
 	</script>
 <?php } else { ?>
