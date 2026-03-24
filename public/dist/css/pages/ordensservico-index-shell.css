@@ -284,11 +284,36 @@
 .os-index-shell .os-filter-form .bootstrap-select > .dropdown-toggle,
 .os-index-shell .os-filter-form select.form-control {
 	background: var(--os-bg2) !important;
+	background-image: none !important;
+	background-size: auto !important;
+	background-position: initial !important;
+	box-shadow: none !important;
 	border: 1px solid var(--os-border) !important;
 	border-radius: 8px !important;
 	color: var(--os-text2) !important;
 	font-size: 13px !important;
 	min-height: 34px;
+}
+
+/* Neutraliza sublinhado herdado de .form-material nos filtros da OS */
+.os-index-shell .os-filter-form.form-material .form-control,
+.os-index-shell .os-filter-form.form-material .form-control:focus,
+.os-index-shell .os-filter-form.form-material .form-control.focus {
+	background-image: none !important;
+	background-size: auto !important;
+	background-position: initial !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 8px !important;
+	box-shadow: none !important;
+	float: none !important;
+}
+
+.os-index-shell .os-filter-form.form-material .bootstrap-select.form-control {
+	background: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 0 !important;
 }
 
 .os-index-shell .os-filter-form .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
