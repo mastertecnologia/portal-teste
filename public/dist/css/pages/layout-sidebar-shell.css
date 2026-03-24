@@ -18,6 +18,7 @@ html:has(body.layout-no-topbar) {
 body.layout-no-topbar #main-wrapper {
 	width: 100%;
 	overflow: hidden;
+	background: #0d0f14 !important;
 }
 
 /* Remove qualquer barra superior (tema antigo / dark-mode reserva espaço) */
@@ -682,6 +683,104 @@ body.layout-no-topbar.mini-sidebar .pgm-sidebar-footer .caret {
 /* Conteúdo principal */
 body.layout-no-topbar .page-wrapper > .container-fluid {
 	padding-top: 16px;
+}
+
+/*
+ * Coluna única (conteúdo + rodapé): mesmo fundo do shell, margem lateral herdada
+ * do tema via .pgm-shell-main (substitui margin em .page-wrapper + .footer).
+ */
+body.layout-no-topbar .pgm-shell-main {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	min-width: 0;
+	flex: 1 1 auto;
+	background: #0d0f14 !important;
+}
+
+body.layout-no-topbar .pgm-shell-main .page-wrapper {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 0 !important;
+}
+
+body.layout-no-topbar .pgm-shell-main .page-wrapper > .container-fluid {
+	flex: 1 1 auto;
+}
+
+body.layout-no-topbar .pgm-shell-main .page-wrapper,
+body.layout-no-topbar .pgm-shell-main .footer {
+	margin-left: 0 !important;
+}
+
+@media (min-width: 1024px) {
+	body.layout-no-topbar .pgm-shell-main {
+		margin-left: 220px;
+	}
+
+	body.layout-no-topbar.mini-sidebar .pgm-shell-main {
+		margin-left: 70px;
+	}
+}
+
+/* Faixa de título / breadcrumb: tema usa $white em .page-titles (app.scss) */
+body.layout-no-topbar .page-titles {
+	background: #13161d !important;
+	padding: 12px 18px !important;
+	margin: 0 -25px 20px -25px !important;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 12px;
+	box-shadow: none !important;
+}
+
+body.layout-no-topbar .page-titles h5,
+body.layout-no-topbar .page-titles h4 {
+	color: #f0f2f8 !important;
+}
+
+body.layout-no-topbar .page-titles .breadcrumb {
+	background: transparent !important;
+}
+
+body.layout-no-topbar .page-titles .breadcrumb-item a {
+	color: rgba(255, 255, 255, 0.68) !important;
+}
+
+body.layout-no-topbar .page-titles .breadcrumb-item.active {
+	color: #6ea8ff !important;
+}
+
+body.layout-no-topbar .page-titles .breadcrumb-item + .breadcrumb-item::before {
+	color: rgba(255, 255, 255, 0.35) !important;
+}
+
+body.layout-no-topbar .page-titles .text-themecolor {
+	color: #6ea8ff !important;
+}
+
+@media (max-width: 767px) {
+	body.layout-no-topbar .page-titles {
+		margin-left: -15px !important;
+		margin-right: -15px !important;
+	}
+}
+
+/* Rodapé: tema usa background $white (app.scss) */
+body.layout-no-topbar .pgm-shell-main .footer {
+	flex-shrink: 0;
+	background: #13161d !important;
+	color: rgba(255, 255, 255, 0.72) !important;
+	border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+	padding: 14px 24px !important;
+}
+
+body.layout-no-topbar .pgm-shell-main .footer a {
+	color: #9db7ff !important;
+}
+
+body.layout-no-topbar .pgm-shell-main .footer a strong {
+	color: #e8ebf4 !important;
 }
 
 @media (max-width: 1169px) {

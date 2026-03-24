@@ -144,6 +144,7 @@
 			if ($role == 0) echo $this->element('sidebar');
 			else echo $this->element('sidebarcli');
 		?>
+		<div class="pgm-shell-main">
 		<div class="page-wrapper">
 			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>
@@ -164,6 +165,7 @@
 			</div>
 		</div>
 		<?= $this->element('footer'); ?>
+		</div>
 	</div>
 	<div class='hide' id='notificacao'></div>
 </body>
@@ -379,7 +381,12 @@
 				return;
 			}
 			var h = Math.max(1, (window.innerHeight > 0 ? window.innerHeight : screen.height) - 1);
-			$('.page-wrapper').css('min-height', h + 'px');
+			var $shell = $('.pgm-shell-main');
+			if ($shell.length) {
+				$shell.css('min-height', h + 'px');
+			} else {
+				$('.page-wrapper').css('min-height', h + 'px');
+			}
 		}
 		$(window).on('resize', pgmLayoutNoTopbarMinHeight);
 		$(window).on('load', function () {
