@@ -28,6 +28,7 @@
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
 	<?= $this->Html->css("/dist/css/dark-mode.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
+	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css") ?>
 
 	<!-- Timeline CSS -->
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>
@@ -126,7 +127,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-default-dark mini">
+<body class="fixed-layout skin-default-dark mini layout-no-topbar">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">
@@ -137,11 +138,7 @@
 	<?= $this->element('deleteModal'); ?>
 	<!-- Painel principal -->
 	<div class="main-wrapper">
-		<!-- Header -->
-		<?php
-			if ($role == 0) echo $this->element('header');
-			else echo $this->element('headercli');
-		?>
+		<!-- Header horizontal removido: empresa, data e perfil estão na sidebar (layout-sidebar-shell.css) -->
 		<!-- Sidebar -->
 		<?php
 			if ($role == 0) echo $this->element('sidebar');
@@ -349,8 +346,11 @@
 		}, 1000);
 	// Empresa 
 		function handleEmpresaSidebarChange(e) {
-			// Sempre lê do <select> real (bootstrap-select pode disparar o evento com outro target).
-			var empresa = $('#empresaSidebar').val();
+			var $sel = $('#empresaSidebar');
+			if (!$sel.length || $sel.attr('type') === 'hidden') {
+				return;
+			}
+			var empresa = $sel.val();
 			if (!empresa) {
 				bootbox.alert('Falha ao trocar a empresa: valor inválido no seletor.');
 				return;
@@ -373,6 +373,17 @@
 		// Suporta tanto select normal (change) quanto bootstrap-select (changed.bs.select).
 		$('#empresaSidebar').on('change', handleEmpresaSidebarChange);
 		$('#empresaSidebar').on('changed.bs.select', handleEmpresaSidebarChange);
-	// 
+
+		$(window).on('resize', function () {
+			if (!$('body').hasClass('layout-no-topbar')) {
+				return;
+			}
+			var h = Math.max(1, (window.innerHeight > 0 ? window.innerHeight : screen.height) - 1);
+			$('.page-wrapper').css('min-height', h + 'px');
+		});
+		$(function () {
+			$(window).trigger('resize');
+		});
+	//
 
 </script>

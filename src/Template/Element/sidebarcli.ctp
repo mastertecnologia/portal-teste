@@ -1,46 +1,94 @@
-<?php 
-	use Cake\Routing\Router; 
+<?php
+	use Cake\Routing\Router;
 	require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php');
-	//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
+
+	$nameTrim = trim((string)($name ?? ''));
+	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
+	$u0 = $partsName[0] ?? '';
+	$u1 = $partsName[1] ?? '';
+	$userInitials = '';
+	if ($u0 !== '') {
+		$userInitials .= strtoupper($u0[0]);
+	}
+	if ($u1 !== '') {
+		$userInitials .= strtoupper($u1[0]);
+	} elseif (strlen($u0) > 1) {
+		$userInitials = strtoupper(substr($u0, 0, 2));
+	}
 ?>
-<style>
-	.fixed-layout .page-wrapper, .left-sidebar { padding-top: 0 !important; }
-	.imagem-sidebar-expandida {
-		display: block;
-		margin-left: 90%;
-		width: 65px !important;
-	}
-	.imagem-sidebar-mini { width: 50px !important; }
-	.topbar .top-navbar .navbar-header { line-height: 0px !important; }
-	.user-profile .dropdown-menu { 
-		margin-right: -20% !important;
-		width: 220px !important;
-	}
-</style>
-<aside class="left-sidebar skin-pgm" style='margin-top:50px;'>
-    <div class="scroll-sidebar ps ps--theme_default ps--active-y" data-ps-id="5c23612c-2012-1d1a-2b77-a7091df065d9">
-        <nav class="sidebar-nav">
-			<ul id="sidebarnav" class='p-t-30'>
-				<?php if($permissaoacesso) { ?>
-					<li class="<?= $dashboard ?>"> <?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu">Dashboard</span>', '/users/dashboard', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?> </li>
-					<li class="<?= $clientesActive ?>"> <?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu">Empresa</span>', "/clientes/edit/$idcliente", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?> </li>
-					<li class="<?= $orcamentosActive ?>"> <?= $this->Html->link('<i class="fa fa-file-invoice-dollar"></i><span class="hide-menu">Orçamentos</span>', "/orcamentos/index", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?> </li>
-				<?php } ?>
-				<li class="<?= $ticketsActive ?>"> <?= $this->Html->link('<i class="fa fa-ticket-alt"></i><span class="hide-menu">Tickets</span>', "/tickets/indexcliente", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?> </li>
-                <?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>
-                <li id="mini-logout" style="display:<?= $display ?>;"> <?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', '/users/logout', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?> </li>
-				<?php if(count($empresasOptSidebar) > 1) { ?>
-					<div style='max-width: 90%' class='m-l-10'>
-						<label class='text-white mini-itens'> Empresa: </label>
-						<?= $this->Form->control('empresaRightSidebar', ['id' => 'empresaRightSidebar', 'class' => 'form-control mini-itens', 'label' => false, 'value' => $empresa, 'options' => $empresasOptSidebar]) ?>
+<aside class="left-sidebar skin-pgm pgm-sidebar-shell">
+	<div class="pgm-sidebar-brand">
+		<a href="javascript:void(0)" class="nav-toggler d-block d-md-none waves-effect waves-dark pgm-sidebar-toggler" aria-label="Abrir menu">
+			<i class="ti-menu"></i>
+		</a>
+		<a href="javascript:void(0)" class="sidebartoggler d-none d-md-block waves-effect waves-dark pgm-sidebar-toggler" aria-label="Recolher menu">
+			<i class="icon-menu"></i>
+		</a>
+		<?= $this->Html->link(
+			'<div class="pgm-sidebar-mark">PGM</div><div class="pgm-sidebar-titles hide-menu"><strong>PGM Soluções</strong><div class="pgm-sidebar-sub">ERP Enterprise</div></div>',
+			['controller' => 'Users', 'action' => 'dashboard'],
+			['class' => 'pgm-sidebar-logo-link navbar-brand', 'escape' => false]
+		) ?>
+	</div>
+
+	<div class="pgm-sidebar-meta">
+		<div class="pgm-meta-row">
+			<div style="flex:1;min-width:0">
+				<label>Empresa</label>
+				<?php if (count($empresasOptSidebar) > 1) : ?>
+					<?= $this->Form->control('empresaSidebar', [
+						'id' => 'empresaSidebar',
+						'class' => 'form-control',
+						'label' => false,
+						'value' => $empresa,
+						'options' => $empresasOptSidebar,
+					]) ?>
+				<?php else : ?>
+					<p class="pgm-meta-date m-0"><?= h(EmpresaNome($empresa)) ?></p>
+					<?= $this->Form->hidden('empresaSidebar', ['id' => 'empresaSidebar', 'value' => $empresa]); ?>
+				<?php endif; ?>
+			</div>
+			<div>
+				<small>Data</small>
+				<p class="pgm-meta-date"><?= h(date('d/m/Y')) ?></p>
+			</div>
+		</div>
+	</div>
+
+	<div class="scroll-sidebar ps ps--theme_default ps--active-y" data-ps-id="5c23612c-2012-1d1a-2b77-a7091df065d9">
+		<nav class="sidebar-nav">
+			<ul id="sidebarnav" class="p-t-30">
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Menu</span></li>
+				<?php if (!empty($permissaoacesso)) : ?>
+					<li class="<?= $dashboard ?>"><?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu">Dashboard</span>', '/users/dashboard', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<li class="<?= $clientesActive ?>"><?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu">Empresa</span>', "/clientes/edit/$idcliente", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<li class="<?= $orcamentosActive ?>"><?= $this->Html->link('<i class="fa fa-file-invoice-dollar"></i><span class="hide-menu">Orçamentos</span>', '/orcamentos/index', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+				<?php endif; ?>
+				<li class="<?= $ticketsActive ?>"><?= $this->Html->link('<i class="fa fa-ticket-alt"></i><span class="hide-menu">Tickets</span>', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>
+				<li id="mini-logout" style="display:<?= $display ?>;"><?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', '/users/logout', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+			</ul>
+		</nav>
+	</div>
+
+	<div class="pgm-sidebar-footer">
+		<div class="user-profile">
+			<div class="user-pro-body">
+				<div class="dropdown dropup">
+					<a href="javascript:void(0)" class="dropdown-toggle u-dropdown link hide-menu text-white d-flex align-items-center" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+						<span class="pgm-user-av"><?= h($userInitials ?: '?') ?></span>
+						<span class="hide-menu text-truncate" style="max-width:140px"><?= h($name) ?></span>
+						<span class="caret hide-menu"></span>
+					</a>
+					<div class="dropdown-menu animated flipInY">
+						<?= $this->Html->link('<i class="fas fa-user"></i> Alterar Perfil', ['controller' => 'Users', 'action' => 'change_profile'], ['class' => 'dropdown-item', 'escape' => false]); ?>
+						<?= $this->Html->link('<i class="fa fa-lock"></i> Alterar Senha', ['controller' => 'Users', 'action' => 'change_password'], ['class' => 'dropdown-item', 'escape' => false]); ?>
+						<?= $this->Html->link('<i class="ti-rss-alt"></i> Acesso Remoto', ['controller' => 'normasempresa', 'action' => 'acessoremoto'], ['class' => 'dropdown-item', 'escape' => false]); ?>
+						<?= $this->Html->link('<i class="ti-lock"></i> Verificação login', ['controller' => 'users', 'action' => 'loginduasetapas'], ['class' => 'dropdown-item', 'escape' => false]); ?>
+						<?= $this->Html->link('<i class="fa fa-power-off"></i> Logout', ['controller' => 'Users', 'action' => 'logout'], ['class' => 'dropdown-item', 'escape' => false]); ?>
 					</div>
-				<?php } ?>
-            </ul>
-        </nav>
+				</div>
+			</div>
+		</div>
 	</div>
 </aside>
-
-
-
-
-
