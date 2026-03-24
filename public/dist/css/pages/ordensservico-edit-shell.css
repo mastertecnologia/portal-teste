@@ -1,0 +1,217 @@
+/**
+ * Tela de edição/visualização de OS — painel claro alinhado ao ERP (tabs + formulário + grid).
+ * Escopo: .os-edit-shell (layout escuro no body; conteúdo em cartão claro).
+ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+
+.os-edit-shell {
+	--os-ed-bg: #ffffff;
+	--os-ed-border: rgba(15, 23, 42, 0.08);
+	--os-ed-muted: #64748b;
+	--os-ed-text: #1e293b;
+	--os-ed-input-bg: #f8fafc;
+	--os-ed-input-border: #e2e8f0;
+	--os-ed-accent: #3d7eff;
+	--os-ed-radius: 14px;
+	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	background: var(--os-ed-bg);
+	border: 1px solid var(--os-ed-border);
+	border-radius: var(--os-ed-radius);
+	box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+	margin-bottom: 1.25rem;
+	overflow: hidden;
+	color: var(--os-ed-text);
+}
+
+/* Abas superiores */
+.os-edit-shell .os-edit-tabs {
+	border-bottom: 1px solid var(--os-ed-input-border);
+	padding: 0 8px 0 16px;
+	margin-bottom: 0 !important;
+	flex-wrap: wrap;
+	background: #fafbfc;
+}
+
+.os-edit-shell .os-edit-tabs .nav-item {
+	margin-bottom: -1px;
+}
+
+.os-edit-shell .os-edit-tabs .nav-link {
+	border: none !important;
+	border-radius: 0 !important;
+	padding: 14px 18px 12px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--os-ed-muted) !important;
+	background: transparent !important;
+	position: relative;
+}
+
+.os-edit-shell .os-edit-tabs .nav-link:hover {
+	color: var(--os-ed-text) !important;
+}
+
+.os-edit-shell .os-edit-tabs .nav-link.active {
+	color: var(--os-ed-accent) !important;
+	background: var(--os-ed-bg) !important;
+	border-bottom: 2px solid var(--os-ed-accent) !important;
+	padding-bottom: 10px;
+}
+
+.os-edit-shell .tab-content {
+	padding: 22px 22px 28px;
+	background: var(--os-ed-bg);
+}
+
+/* Título OS nº */
+.os-edit-shell .os-edit-os-legend {
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--os-ed-text);
+	margin: 0 0 18px 0;
+	padding: 0;
+	border: none;
+	width: 100%;
+}
+
+.os-edit-shell .os-edit-os-legend .btn {
+	vertical-align: middle;
+	margin-top: -2px;
+}
+
+/* Labels do formulário */
+.os-edit-shell .control-label,
+.os-edit-shell label.control-label {
+	font-size: 10.5px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--os-ed-muted) !important;
+	margin-bottom: 6px !important;
+}
+
+/* Campos */
+.os-edit-shell .form-control,
+.os-edit-shell select.form-control {
+	background-color: var(--os-ed-input-bg) !important;
+	border: 1px solid var(--os-ed-input-border) !important;
+	border-radius: 8px !important;
+	color: var(--os-ed-text) !important;
+	min-height: 38px;
+	font-size: 13px;
+}
+
+.os-edit-shell .form-control:focus,
+.os-edit-shell select.form-control:focus {
+	border-color: var(--os-ed-accent) !important;
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.15) !important;
+	background-color: #fff !important;
+}
+
+.os-edit-shell textarea.form-control {
+	min-height: 88px;
+}
+
+.os-edit-shell .form-group {
+	margin-bottom: 14px;
+}
+
+/* Material / floating overrides dentro do shell claro */
+.os-edit-shell.form-material .form-group {
+	margin-bottom: 14px;
+}
+
+/* Bootstrap-select */
+.os-edit-shell .bootstrap-select > .dropdown-toggle {
+	background-color: var(--os-ed-input-bg) !important;
+	border: 1px solid var(--os-ed-input-border) !important;
+	border-radius: 8px !important;
+	min-height: 38px;
+	padding: 6px 12px;
+	font-size: 13px;
+	color: var(--os-ed-text) !important;
+}
+
+.os-edit-shell .bootstrap-select .filter-option {
+	color: var(--os-ed-text) !important;
+}
+
+/* Seção produtos */
+.os-edit-shell .os-edit-section-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--os-ed-text);
+	margin: 28px 0 16px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--os-ed-input-border);
+}
+
+/* Tabelas auxiliares nas abas */
+.os-edit-shell .table {
+	font-size: 13px;
+}
+
+.os-edit-shell .table thead th {
+	background: #f1f5f9;
+	color: var(--os-ed-muted);
+	font-weight: 600;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	border-bottom: 1px solid var(--os-ed-input-border);
+}
+
+.os-edit-shell .table td {
+	border-color: #f1f5f9;
+	vertical-align: middle;
+}
+
+/* jsGrid */
+.os-edit-shell .jsgrid-grid-header,
+.os-edit-shell .jsgrid-grid-body {
+	background: var(--os-ed-bg);
+}
+
+.os-edit-shell .jsgrid-header-row > .jsgrid-header-cell {
+	background: #f1f5f9 !important;
+	border-color: var(--os-ed-input-border) !important;
+	color: var(--os-ed-muted) !important;
+	font-weight: 600;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.os-edit-shell .jsgrid-row > .jsgrid-cell,
+.os-edit-shell .jsgrid-alt-row > .jsgrid-cell {
+	border-color: #f1f5f9 !important;
+	background: var(--os-ed-bg) !important;
+}
+
+.os-edit-shell .jsgrid-row:hover > .jsgrid-cell {
+	background: #f8fafc !important;
+}
+
+.os-edit-shell .jsgrid-cell .form-control {
+	min-height: 34px;
+	font-size: 12px;
+}
+
+/* Botões de ação na faixa inferior da aba principal */
+.os-edit-shell .tab-pane#ordem .btn {
+	border-radius: 8px;
+	font-weight: 500;
+	font-size: 13px;
+}
+
+/* HR nas movimentações */
+.os-edit-shell #movimentacoes hr {
+	border-color: var(--os-ed-input-border);
+}
+
+/* Parcelas / textos */
+.os-edit-shell .sideh {
+	color: var(--os-ed-muted);
+	font-weight: 600;
+	font-size: 12px;
+}

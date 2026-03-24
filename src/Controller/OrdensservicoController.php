@@ -323,6 +323,7 @@ class OrdensservicoController extends AppController {
 		$this->set('ordem', $ordem);
 		$this->set('ordemhoras', $ordemhoras);
 		$this->set('ordemparcelas', $ordemparcelas);
+		$this->set('hideLayoutPageTitle', true);
 		$this->set('title', 'Editar ordem de serviços');
 	}
 	

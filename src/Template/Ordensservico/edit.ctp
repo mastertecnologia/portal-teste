@@ -2,6 +2,8 @@
 
 use Cake\Routing\Router;
 
+$this->Html->css('/dist/css/pages/ordensservico-edit-shell.css', ['block' => true]);
+
 $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Edit', [], ['class' => 'breadcrumb-item active']);
 
@@ -27,10 +29,9 @@ else $disabled = false;
 		display: none !important;
 	}
 </style>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<ul class="nav nav-tabs customtab m-b-20" role="tablist">
+<div class="col-md-12 p-0">
+	<div class="os-edit-shell form-material">
+			<ul class="nav nav-tabs os-edit-tabs customtab" role="tablist">
 				<li class="nav-item"> <a class="nav-link active " data-toggle="tab" href="#ordem" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Ordem de Serviço</span></a> </li>
 				<li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#movimentacoes" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-reload"></i></span> <span class="hidden-xs-down">Movimentações (<?= count($movimentacoes) ?>)</span></a> </li>
 				<li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#horas" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-time"></i></span> <span class="hidden-xs-down">Horas Cadastradas (<?= count($ordemhoras) ?>)</span></a> </li>
@@ -40,7 +41,7 @@ else $disabled = false;
 				<div class="tab-pane active show" id="ordem">
 					<div class="row">
 						<div class="col-12">
-							<legend>
+							<legend class="os-edit-os-legend">
 								OS nº: <?= $ordem->id ?>
 
 								<?php
@@ -164,7 +165,7 @@ else $disabled = false;
 					</div>
 					<br>
 					<!-- Mobile -->
-					<h4 class='texte-center'>Adicionar Produtos/Serviços</h4>
+					<h4 class="os-edit-section-title text-center">Adicionar Produtos/Serviços</h4>
 					<?php if (isMobile() && $disabled == false) { ?>
 						<div class="row">
 							<div class="col-3">
@@ -421,7 +422,6 @@ else $disabled = false;
 			</div>
 			<div class="clearfix"></div>
 		</div>
-	</div>
 </div>
 <!-- Modal Observacao -->
 <div class="modal fade none-border" id="modal-observacao">
