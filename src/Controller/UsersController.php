@@ -290,17 +290,26 @@ class UsersController extends AppController {
 		$tecMap = $this->_tecnicosEmpresaMap($idempresa);
 		$ranking = [];
 		$rankingPeriodLabel = 'mês';
-		if (in_array('idtecnico_responsavel', $cols, true) && $closedSit !== []) {
+		$hasRespCol = in_array('idtecnico_responsavel', $cols, true);
+		$hasOwnerCol = in_array('owner_id', $cols, true);
+		if (($hasRespCol || $hasOwnerCol) && $closedSit !== []) {
 			$monthStart = date('Y-m-01 00:00:00');
 			$monthEnd = date('Y-m-t 23:59:59');
-			$dateField = in_array('data_resolucao', $cols, true) ? 'data_resolucao' : 'modified';
-			$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $dateField, $monthStart, $monthEnd);
+			$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $monthStart, $monthEnd);
 			if ($byCount === []) {
 				$thirtyStart = date('Y-m-d 00:00:00', strtotime('-30 days'));
 				$thirtyEnd = date('Y-m-d 23:59:59');
-				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $dateField, $thirtyStart, $thirtyEnd);
+				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $thirtyStart, $thirtyEnd);
 				if ($byCount !== []) {
 					$rankingPeriodLabel = '30 dias';
+				}
+			}
+			if ($byCount === []) {
+				$yearStart = date('Y-m-d 00:00:00', strtotime('-365 days'));
+				$yearEnd = date('Y-m-d 23:59:59');
+				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $yearStart, $yearEnd);
+				if ($byCount !== []) {
+					$rankingPeriodLabel = '12 meses';
 				}
 			}
 			$idToNome = [];
@@ -362,8 +371,22 @@ class UsersController extends AppController {
 					->where([
 						'Tickets.idempresa' => $idempresa,
 						'Tickets.situacao IN' => $closedSit,
-						'Tickets.data_resolucao >=' => $ds,
-						'Tickets.data_resolucao <=' => $de,
+						'OR' => [
+							[
+								'AND' => [
+									'Tickets.data_resolucao IS NOT' => null,
+									'Tickets.data_resolucao >=' => $ds,
+									'Tickets.data_resolucao <=' => $de,
+								],
+							],
+							[
+								'AND' => [
+									'Tickets.data_resolucao IS' => null,
+									'Tickets.modified >=' => $ds,
+									'Tickets.modified <=' => $de,
+								],
+							],
+						],
 					])
 					->count();
 			} elseif ($closedSit !== []) {
@@ -416,6 +439,25 @@ class UsersController extends AppController {
 	 * @param array<string,mixed> $row
 	 */
 	protected function _rankingRowTecnicoId(array $row): ?int {
+		foreach (['tecnico_efetivo', 'Tickets__tecnico_efetivo'] as $key) {
+			if (array_key_exists($key, $row) && $row[$key] !== null && $row[$key] !== '') {
+				$tid = (int)$row[$key];
+				if ($tid > 0) {
+					return $tid;
+				}
+			}
+		}
+		foreach ($row as $k => $val) {
+			if (!is_string($k) || $val === null || $val === '') {
+				continue;
+			}
+			if (substr($k, -strlen('tecnico_efetivo')) === 'tecnico_efetivo') {
+				$tid = (int)$val;
+				if ($tid > 0) {
+					return $tid;
+				}
+			}
+		}
 		$v = $row['idtecnico_responsavel'] ?? $row['Tickets__idtecnico_responsavel'] ?? null;
 		if ($v === null || $v === '') {
 			foreach ($row as $k => $val) {
@@ -455,27 +497,66 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * Tickets fechados por técnico responsável no intervalo (idtecnico_responsavel não nulo).
+	 * Tickets fechados por técnico no intervalo.
+	 * Data: com data_resolucao, usa resolução; se for NULL, cai para modified (legado).
+	 * Técnico: COALESCE(idtecnico_responsavel, owner_id), ignorando 0 — alinhado a TicketsTable::beforeSave.
 	 *
 	 * @param int $idempresa
 	 * @param int[] $closedSit
-	 * @param string $dateField
+	 * @param string[] $cols Colunas do schema tickets
 	 * @param string $rangeStart
 	 * @param string $rangeEnd
 	 * @return int[]
 	 */
-	protected function _dashPgmTechnicianRankingCounts($idempresa, array $closedSit, $dateField, $rangeStart, $rangeEnd) {
+	protected function _dashPgmTechnicianRankingCounts($idempresa, array $closedSit, array $cols, $rangeStart, $rangeEnd) {
+		$hasResp = in_array('idtecnico_responsavel', $cols, true);
+		$hasOwner = in_array('owner_id', $cols, true);
+		if ($hasResp && $hasOwner) {
+			$tecSql = 'COALESCE(NULLIF(Tickets.idtecnico_responsavel, 0), NULLIF(Tickets.owner_id, 0))';
+		} elseif ($hasResp) {
+			$tecSql = 'NULLIF(Tickets.idtecnico_responsavel, 0)';
+		} elseif ($hasOwner) {
+			$tecSql = 'NULLIF(Tickets.owner_id, 0)';
+		} else {
+			return [];
+		}
+
 		$q = $this->Tickets->find();
 		$f = $q->func()->count('*');
-		$rows = $q->select(['idtecnico_responsavel', 'cnt' => $f])
+		$tecExpr = $q->newExpr($tecSql);
+		$q->select(['tecnico_efetivo' => $tecExpr, 'cnt' => $f])
 			->where([
 				'Tickets.idempresa' => $idempresa,
 				'Tickets.situacao IN' => $closedSit,
-				'Tickets.idtecnico_responsavel IS NOT' => null,
-				'Tickets.' . $dateField . ' >=' => $rangeStart,
-				'Tickets.' . $dateField . ' <=' => $rangeEnd,
 			])
-			->group('idtecnico_responsavel')
+			->where($q->newExpr('(' . $tecSql . ') IS NOT NULL'));
+		if (in_array('data_resolucao', $cols, true)) {
+			$q->where([
+				'OR' => [
+					[
+						'AND' => [
+							'Tickets.data_resolucao IS NOT' => null,
+							'Tickets.data_resolucao >=' => $rangeStart,
+							'Tickets.data_resolucao <=' => $rangeEnd,
+						],
+					],
+					[
+						'AND' => [
+							'Tickets.data_resolucao IS' => null,
+							'Tickets.modified >=' => $rangeStart,
+							'Tickets.modified <=' => $rangeEnd,
+						],
+					],
+				],
+			]);
+		} else {
+			$q->where([
+				'Tickets.modified >=' => $rangeStart,
+				'Tickets.modified <=' => $rangeEnd,
+			]);
+		}
+
+		$rows = $q->group($tecExpr)
 			->hydrate(false)
 			->toArray();
 		$byCount = [];
