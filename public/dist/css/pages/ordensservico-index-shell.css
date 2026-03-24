@@ -49,7 +49,7 @@
 	--font: var(--os-font);
 	--mono: var(--os-mono);
 	font-family: var(--os-font);
-	font-size: 14px;
+	font-size: 13px;
 	line-height: 1.2;
 	color: var(--os-text2);
 	background: var(--os-bg);
@@ -67,12 +67,12 @@
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
-	margin-bottom: 22px;
+	margin-bottom: 14px;
 	padding: 0 4px;
 }
 
 .os-index-shell .os-page-title {
-	font-size: 19px;
+	font-size: 17px;
 	font-weight: 600;
 	color: var(--os-text);
 	margin: 0;
@@ -80,9 +80,9 @@
 }
 
 .os-index-shell .os-page-sub {
-	font-size: 11.5px;
+	font-size: 11px;
 	color: var(--os-text3);
-	margin: 2px 0 0 0;
+	margin: 3px 0 0 0;
 }
 
 .os-index-shell .os-page-head-actions {
@@ -153,8 +153,8 @@
 .os-index-shell .os-kpi-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 12px;
-	margin-bottom: 20px;
+	gap: 10px;
+	margin-bottom: 12px;
 	padding: 0 4px;
 	background: var(--os-bg);
 	border-left: none;
@@ -177,7 +177,7 @@
 	background: var(--os-bg2);
 	border: 1px solid var(--os-border);
 	border-radius: var(--os-radius-lg);
-	padding: 16px 18px;
+	padding: 12px 14px;
 	position: relative;
 	overflow: hidden;
 	cursor: default;
@@ -213,21 +213,21 @@
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
 	font-weight: 500;
-	margin-bottom: 6px;
+	margin-bottom: 4px;
 	line-height: 1.1;
 }
 
 .os-index-shell .os-kpi-value {
-	font-size: 24px;
+	font-size: 21px;
 	font-weight: 600;
 	color: var(--os-text);
 	font-family: var(--os-mono);
 	line-height: 1;
-	margin-bottom: 4px;
+	margin-bottom: 2px;
 }
 
 .os-index-shell .os-kpi-sub {
-	font-size: 10.5px;
+	font-size: 10px;
 	color: var(--os-text3);
 	line-height: 1.2;
 }
@@ -260,7 +260,7 @@
 	flex-wrap: wrap;
 	align-items: flex-end;
 	gap: 8px;
-	margin-bottom: 14px;
+	margin-bottom: 8px;
 	padding: 0 4px;
 	background: var(--os-bg);
 	border-left: none;
@@ -286,7 +286,7 @@
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 	margin: 0 !important;
-	line-height: 1.2;
+	line-height: 1.05;
 }
 
 .os-index-shell .os-filter-form .bootstrap-select > .dropdown-toggle,
@@ -299,11 +299,11 @@
 	border: 1px solid var(--os-border) !important;
 	border-radius: 7px !important;
 	color: var(--os-text2) !important;
-	font-size: 12.5px !important;
-	height: 32px !important;
-	min-height: 32px !important;
+	font-size: 12px !important;
+	height: 30px !important;
+	min-height: 30px !important;
 	padding: 0 10px !important;
-	line-height: 32px !important;
+	line-height: 30px !important;
 }
 
 /* Neutraliza sublinhado herdado de .form-material nos filtros da OS */
@@ -461,12 +461,12 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	align-items: center;
 	justify-content: space-between;
 	gap: 10px;
-	padding: 12px 16px;
+	padding: 8px 12px;
 	border-bottom: none;
 }
 
 .os-index-shell .os-table-head-l {
-	font-size: 12.5px;
+	font-size: 11px;
 	color: var(--os-text2);
 }
 
@@ -484,7 +484,7 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	font-size: 12px;
+	font-size: 11px;
 	color: var(--os-text3);
 	margin: 0;
 }
@@ -574,7 +574,7 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 .os-index-shell table.dataTable thead th,
 .os-index-shell table.table thead th {
 	text-align: left;
-	padding: 9px 14px !important;
+	padding: 7px 12px !important;
 	font-size: 10.5px !important;
 	font-weight: 500 !important;
 	text-transform: uppercase;
@@ -611,8 +611,8 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 
 .os-index-shell table.dataTable tbody td,
 .os-index-shell table.table tbody td {
-	padding: 11px 14px !important;
-	font-size: 13px !important;
+	padding: 8px 12px !important;
+	font-size: 12px !important;
 	color: var(--os-text2) !important;
 	border-color: var(--os-border) !important;
 	vertical-align: middle;
@@ -692,7 +692,7 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	gap: 5px;
 	padding: 3px 9px;
 	border-radius: 20px;
-	font-size: 11.5px;
+	font-size: 10px;
 	font-weight: 500;
 	white-space: nowrap;
 }
