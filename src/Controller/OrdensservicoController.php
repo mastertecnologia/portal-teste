@@ -119,7 +119,7 @@ class OrdensservicoController extends AppController {
 		$this->set('locacao', $locacao);
 		$this->set('ordens',  $ordens);
 		$this->set('title', 'Ordens de Serviços');
-		
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function add() {

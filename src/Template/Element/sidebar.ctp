@@ -90,7 +90,7 @@
 						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</div>
 					<ul class="pgm-nc list-unstyled">
-						<li><?= $this->Html->link('<span class="pgm-ndot"></span><span>Listar ordens</span>', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'pgm-nch ' . ($osIndexActive ? 'act' : ''), 'escape' => false]); ?></li>
+						<li><?= $this->Html->link('<span class="pgm-ndot"></span><span>Listar Ordens</span>', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'pgm-nch ' . ($osIndexActive ? 'act' : ''), 'escape' => false]); ?></li>
 						<?php if ($roleNav === 0) : ?>
 						<li><?= $this->Html->link('<span class="pgm-ndot"></span><span>Nova ordem</span>', ['controller' => 'Ordensservico', 'action' => 'add'], ['class' => 'pgm-nch pgm-nch-nova ' . ($osAddActive ? 'act' : ''), 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']); ?></li>
 						<?php endif; ?>

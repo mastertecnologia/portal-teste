@@ -43,17 +43,29 @@ $osTechInitials = function ($name) {
 	$fb = isset($parts[1][0]) ? $parts[1][0] : '';
 	return h(strtoupper($fa . $fb));
 };
+
+$kpiActive = 'all';
+if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
+	$kpiActive = 'exec';
+} elseif ((string)$situacao === (string)C_OrdensSituacaoSincronizadaPeloGrid) {
+	$kpiActive = 'sync';
+} elseif ((string)$situacao === (string)C_OrdensSituacaoLiberadaParaFaturamento) {
+	$kpiActive = 'lib';
+}
 ?>
 <div class="col-md-12 p-0">
 	<div class="os-index-shell">
 		<header class="os-page-head">
 			<div>
 				<h1 class="os-page-title">Ordens de Serviço</h1>
-				<p class="os-page-sub"><?= h(date('d/m/Y')) ?> · <?= h($nomeempresa ?? '') ?></p>
+				<p class="os-page-sub"><?= h(date('d/m/Y')) ?> — <?= h($nomeempresa ?? '') ?></p>
 			</div>
 			<div class="os-page-head-actions">
+				<button type="button" class="os-icon-btn os-icon-btn--btn" id="os-btn-export-csv" title="Exportar CSV (filtro atual da tabela)">
+					<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 1Z" stroke="currentColor" stroke-width="1.3"/><path d="M9 1v5h5" stroke="currentColor" stroke-width="1.3"/><path d="M8 10v4M6 12l2 2 2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+				</button>
 				<?php if ($role == 0) : ?>
-					<?= $this->Html->link('Abrir ordem de serviço', ['action' => 'add'], ['class' => 'os-btn-primary', 'target' => '_blank']) ?>
+					<button type="button" class="os-btn-primary" id="os-open-modal-nova">Abrir ordem de serviço</button>
 				<?php endif; ?>
 				<span class="os-icon-btn" title="Notificações" aria-hidden="true">
 					<svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -64,24 +76,24 @@ $osTechInitials = function ($name) {
 		</header>
 
 		<div class="os-kpi-grid">
-			<div class="os-kpi-card os-kpi-blue">
+			<div class="os-kpi-card os-kpi-blue os-kpi-click<?= $kpiActive === 'all' ? ' is-active' : '' ?>" role="button" tabindex="0" data-os-kpi="all" title="Mostrar todas (limpar filtro de situação)">
 				<div class="os-kpi-label">Total OSs</div>
 				<div class="os-kpi-value"><?= (int)$kpiTotal ?></div>
 				<div class="os-kpi-sub">Todos os registros</div>
 			</div>
-			<div class="os-kpi-card os-kpi-amber">
+			<div class="os-kpi-card os-kpi-amber os-kpi-click<?= $kpiActive === 'exec' ? ' is-active' : '' ?>" role="button" tabindex="0" data-os-kpi="exec" title="Filtrar por em execução">
 				<div class="os-kpi-label">Em execução</div>
-				<div class="os-kpi-value"><?= (int)$kpiExec ?></div>
+				<div class="os-kpi-value os-kpi-value-accent"><?= (int)$kpiExec ?></div>
 				<div class="os-kpi-sub">Aguardando conclusão</div>
 			</div>
-			<div class="os-kpi-card os-kpi-green">
+			<div class="os-kpi-card os-kpi-green os-kpi-click<?= $kpiActive === 'sync' ? ' is-active' : '' ?>" role="button" tabindex="0" data-os-kpi="sync" title="Filtrar por sincronizadas">
 				<div class="os-kpi-label">Sincronizadas</div>
-				<div class="os-kpi-value"><?= (int)$kpiSync ?></div>
+				<div class="os-kpi-value os-kpi-value-accent"><?= (int)$kpiSync ?></div>
 				<div class="os-kpi-sub">Integradas ao ERP</div>
 			</div>
-			<div class="os-kpi-card os-kpi-purple">
+			<div class="os-kpi-card os-kpi-purple os-kpi-click<?= $kpiActive === 'lib' ? ' is-active' : '' ?>" role="button" tabindex="0" data-os-kpi="lib" title="Filtrar por liberadas para sincronização">
 				<div class="os-kpi-label">Liberadas</div>
-				<div class="os-kpi-value"><?= (int)$kpiLib ?></div>
+				<div class="os-kpi-value os-kpi-value-accent"><?= (int)$kpiLib ?></div>
 				<div class="os-kpi-sub">Aguardando sync</div>
 			</div>
 		</div>
@@ -156,8 +168,20 @@ $osTechInitials = function ($name) {
 							$contratoPlain = trim(strip_tags((string)$contratoLbl));
 							$contratoClass = ($contratoPlain === 'Sim' || stripos($contratoPlain, 'sim') === 0) ? 'contract-yes' : 'contract-no';
 							$rowClass = $reg->locacao ? 'os-row-locacao' : '';
+							$rowPayload = [
+								'id' => (int)$reg->id,
+								'abertura' => date_format($reg->dataabertura, 'd/m/Y'),
+								'previsao' => date_format($reg->dataprevisao, 'd/m/Y'),
+								'cliente' => $cliNome,
+								'contrato' => $contratoPlain,
+								'tecnico' => $reg->user ? ($reg->user->name ?? '') : '',
+								'valor' => number_format($reg->valortotal, 2, ',', '.'),
+								'situacao' => trim(strip_tags((string)$situacaoTxt)),
+								'url' => $this->Url->build(['action' => $action, $reg->id]),
+							];
+							$dataOs = htmlspecialchars(json_encode($rowPayload, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 							?>
-							<tr class="<?= h($rowClass) ?>">
+							<tr class="<?= h($rowClass) ?> os-row-drawer" data-os="<?= $dataOs ?>">
 								<td>
 									<a class="link os-num-cell" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>"><?= h($reg->id) ?></a>
 								</td>
@@ -210,6 +234,49 @@ $osTechInitials = function ($name) {
 		</div>
 	</div>
 </div>
+
+<?php if ($role == 0) : ?>
+<div class="os-modal-nova-overlay" id="os-modal-nova-overlay" aria-hidden="true">
+	<div class="os-modal-nova" role="dialog" aria-modal="true" aria-labelledby="os-modal-nova-title" onclick="event.stopPropagation()">
+		<div class="os-modal-nova-head">
+			<div>
+				<div class="os-modal-nova-bc">Ordens de Serviço &rsaquo; <em>Nova Ordem</em></div>
+				<h2 id="os-modal-nova-title">Nova Ordem de Serviço</h2>
+			</div>
+			<button type="button" class="os-modal-nova-x" id="os-modal-nova-close" aria-label="Fechar">×</button>
+		</div>
+		<form class="os-modal-nova-inner" id="os-modal-nova-form" novalidate>
+			<p class="os-modal-nova-hint">Indique o cliente (obrigatório). O cadastro completo da OS abre em nova aba com o fluxo atual do sistema.</p>
+			<div class="os-modal-nova-field">
+				<label for="os-nova-cliente">Cliente *</label>
+				<input type="text" id="os-nova-cliente" name="os_nova_cliente_hint" autocomplete="organization" placeholder="Nome ou razão social" />
+			</div>
+			<div class="os-modal-nova-field">
+				<label for="os-nova-desc">Descrição / problema (opcional)</label>
+				<textarea id="os-nova-desc" rows="3" placeholder="Resumo para referência ao abrir o cadastro…"></textarea>
+			</div>
+			<div class="os-modal-nova-foot">
+				<button type="button" class="os-modal-nova-btn os-modal-nova-btn-ghost" id="os-modal-nova-cancel">Cancelar</button>
+				<button type="submit" class="os-modal-nova-btn os-modal-nova-btn-primary">Continuar para cadastro completo</button>
+			</div>
+		</form>
+	</div>
+</div>
+<?php endif; ?>
+
+<div class="os-drawer-backdrop" id="os-drawer-backdrop" aria-hidden="true"></div>
+<aside class="os-drawer" id="os-drawer" aria-hidden="true" aria-labelledby="os-drawer-title">
+	<div class="os-drawer-head">
+		<div class="os-drawer-num" id="os-drawer-title">#—</div>
+		<div class="os-drawer-status" id="os-drawer-status"></div>
+		<button type="button" class="os-drawer-x" id="os-drawer-close" aria-label="Fechar">×</button>
+	</div>
+	<div class="os-drawer-body" id="os-drawer-body"></div>
+	<div class="os-drawer-foot">
+		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2">Fechar</button>
+		<a class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit" href="#" target="_blank" rel="noopener noreferrer">Abrir OS</a>
+	</div>
+</aside>
 
 <!-- Modal Ação (fora do shell escuro para manter contraste Bootstrap) -->
 <div class="modal fade none-border" id="modal-acao">
@@ -267,10 +334,149 @@ $osTechInitials = function ($name) {
 </div>
 
 <script>
+	var osUserRole = <?= (int)$role ?>;
+	var osAddUrl = <?= $role == 0 ? json_encode($this->Url->build(['action' => 'add'])) : 'null' ?>;
+	var osDrawerActiveRow = null;
+	var osKpiSituacaoMap = {
+		exec: <?= json_encode(C_OrdensSituacaoEmExecucao) ?>,
+		sync: <?= json_encode(C_OrdensSituacaoSincronizadaPeloGrid) ?>,
+		lib: <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>
+	};
+
+	function osEscapeHtml(text) {
+		return $('<div/>').text(text == null ? '' : String(text)).html();
+	}
+
+	function osStatusClass(s) {
+		s = String(s || '');
+		if (s === 'Em execução') return 'os-st-exec';
+		if (s.indexOf('Sincronizada') !== -1 && s.indexOf('Grid') !== -1) return 'os-st-sync';
+		if (s.indexOf('Liberada') !== -1 && s.indexOf('sincroniz') !== -1) return 'os-st-lib';
+		return 'os-st-default';
+	}
+
+	function osStatusShort(s) {
+		s = String(s || '');
+		if (s.indexOf('Sincronizada') !== -1 && s.indexOf('Grid') !== -1) return 'Sincronizada';
+		if (s.indexOf('Liberada') !== -1 && s.indexOf('sincroniz') !== -1) return 'Liberada';
+		return s;
+	}
+
+	function osApplySituacaoToUrl(sit) {
+		var u = new URL(window.location.href);
+		if (sit === '' || sit == null) {
+			u.searchParams.delete('situacao');
+		} else {
+			u.searchParams.set('situacao', String(sit));
+		}
+		window.location.href = u.toString();
+	}
+
+	function osClearDrawerRowHighlight() {
+		if (osDrawerActiveRow && osDrawerActiveRow.length) {
+			osDrawerActiveRow.removeClass('os-row-drawer-active');
+		}
+		osDrawerActiveRow = null;
+	}
+
+	function osCloseDrawer() {
+		osClearDrawerRowHighlight();
+		$('#os-drawer').removeClass('open').attr('aria-hidden', 'true');
+		$('#os-drawer-backdrop').removeClass('open');
+	}
+
+	function osOpenDrawer(row, $tr) {
+		if (!row || !row.id) return;
+		osClearDrawerRowHighlight();
+		if ($tr && $tr.length) {
+			$tr.addClass('os-row-drawer-active');
+			osDrawerActiveRow = $tr;
+		}
+		$('#os-drawer-title').text('#' + row.id);
+		var pillClass = osStatusClass(row.situacao);
+		var pillShort = osStatusShort(row.situacao);
+		$('#os-drawer-status').html('<span class="os-status ' + pillClass + '"><span class="os-status-dot"></span>' + osEscapeHtml(pillShort) + '</span>');
+		var contratoHtml = row.contrato === 'Sim' ? '<span style="color:var(--os-green)">Sim</span>' : '<span style="color:var(--os-text3)">Não</span>';
+		$('#os-drawer-body').html(
+			'<div class="os-dr-sec"><div class="os-dr-sec-t">Informações gerais</div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Cliente</span><span class="os-dr-v">' + osEscapeHtml(row.cliente) + '</span></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Técnico</span><span class="os-dr-v">' + osEscapeHtml(row.tecnico) + '</span></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Contrato</span><span class="os-dr-v">' + contratoHtml + '</span></div></div>' +
+			'<div class="os-dr-sec"><div class="os-dr-sec-t">Datas</div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Abertura</span><span class="os-dr-v">' + osEscapeHtml(row.abertura) + '</span></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Previsão</span><span class="os-dr-v">' + osEscapeHtml(row.previsao) + '</span></div></div>' +
+			'<div class="os-dr-sec"><div class="os-dr-sec-t">Financeiro</div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Valor total</span><span class="os-dr-v" style="font-family:var(--os-mono);font-size:15px;color:var(--os-text)">R$ ' + osEscapeHtml(row.valor) + '</span></div></div>' +
+			'<div class="os-dr-sec"><div class="os-dr-sec-t">Situação</div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Status</span><span class="os-dr-v">' + osEscapeHtml(row.situacao) + '</span></div></div>'
+		);
+		$('#os-drawer-edit').attr('href', row.url).text(osUserRole === 0 ? 'Editar OS' : 'Abrir OS');
+		$('#os-drawer').addClass('open').attr('aria-hidden', 'false');
+		$('#os-drawer-backdrop').addClass('open');
+	}
+
 	$(document).ready(function() {
 		$('#situacao, #cliente, #problema, #locacao').on('change', function() {
 			this.form.submit();
 		});
+
+		$(document).on('click', '[data-os-kpi]', function() {
+			var k = $(this).data('os-kpi');
+			if (k === 'all') {
+				osApplySituacaoToUrl('');
+			} else if (osKpiSituacaoMap[k] != null) {
+				osApplySituacaoToUrl(osKpiSituacaoMap[k]);
+			}
+		});
+		$(document).on('keydown', '[data-os-kpi]', function(e) {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				$(this).trigger('click');
+			}
+		});
+
+		$('#os-drawer-backdrop, #os-drawer-close, #os-drawer-close2').on('click', function() {
+			osCloseDrawer();
+		});
+		$(document).on('keydown', function(e) {
+			if (e.key !== 'Escape') return;
+			if ($('#os-drawer').hasClass('open')) {
+				osCloseDrawer();
+				return;
+			}
+			if ($('#os-modal-nova-overlay').hasClass('open')) {
+				osNovaClose();
+			}
+		});
+
+		function osNovaOpen() {
+			$('#os-modal-nova-overlay').addClass('open').attr('aria-hidden', 'false');
+			$('#os-nova-cliente').removeClass('os-invalid').focus();
+		}
+		function osNovaClose() {
+			$('#os-modal-nova-overlay').removeClass('open').attr('aria-hidden', 'true');
+			$('#os-nova-cliente').removeClass('os-invalid');
+		}
+		if ($('#os-open-modal-nova').length && osAddUrl) {
+			$('#os-open-modal-nova').on('click', osNovaOpen);
+			$('#os-modal-nova-close, #os-modal-nova-cancel').on('click', osNovaClose);
+			$('#os-modal-nova-overlay').on('click', function() {
+				osNovaClose();
+			});
+			$('#os-modal-nova-form').on('submit', function(ev) {
+				ev.preventDefault();
+				var c = $('#os-nova-cliente').val().trim();
+				if (!c.length) {
+					$('#os-nova-cliente').addClass('os-invalid').focus();
+					return;
+				}
+				$('#os-nova-cliente').removeClass('os-invalid');
+				window.open(osAddUrl, '_blank', 'noopener');
+				osNovaClose();
+				$('#os-nova-cliente').val('');
+				$('#os-nova-desc').val('');
+			});
+		}
 
 		function osBulkUi() {
 			var $bar = $('#os-bulk-bar');
@@ -295,7 +501,6 @@ $osTechInitials = function ($name) {
 			osBulkUi();
 		});
 
-		var $window = $(window);
 		var table = $('#tableOrdens');
 		table.on('length.dt', function (e, settings, len) {
 			pagelength(len);
@@ -334,6 +539,55 @@ $osTechInitials = function ($name) {
 		if ($('#badge-exec-os').length) {
 			$('#badge-exec-os').text('<?= (int)$kpiExec ?>');
 		}
+
+		$('#tableOrdens tbody').on('click', 'tr.os-row-drawer', function(e) {
+			if ($(e.target).closest('a, input, label, .custom-control').length) {
+				return;
+			}
+			var raw = $(this).attr('data-os');
+			if (!raw) return;
+			try {
+				osOpenDrawer(JSON.parse(raw), $(this));
+			} catch (err) {
+				return;
+			}
+		});
+
+		$('#os-btn-export-csv').on('click', function() {
+			var dt = table.DataTable();
+			var skipCol = 8;
+			var headers = [];
+			$('#tableOrdens thead th').each(function(i) {
+				if (i === skipCol) return;
+				headers.push($(this).text().trim().replace(/\s+/g, ' '));
+			});
+			var lines = [headers.join(';')];
+			dt.rows({ search: 'applied' }).every(function() {
+				var $tr = $(this.node());
+				var cols = [];
+				$tr.find('td').each(function(i) {
+					if (i === skipCol) return;
+					cols.push('"' + $(this).text().trim().replace(/"/g, '""') + '"');
+				});
+				lines.push(cols.join(';'));
+			});
+			var blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+			var a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+			a.download = 'ordens_servico.csv';
+			a.click();
+			URL.revokeObjectURL(a.href);
+			if (typeof $.toast === 'function') {
+				$.toast({
+					heading: 'Exportação',
+					text: 'CSV gerado com os registros do filtro atual da tabela.',
+					icon: 'success',
+					position: 'bottom-right',
+					hideAfter: 3500,
+					loaderBg: '#3d7eff'
+				});
+			}
+		});
 	});
 
 	window.onload = function() {

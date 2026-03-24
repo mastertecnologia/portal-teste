@@ -23,6 +23,12 @@
 	padding-top: 66px !important;
 }
 
+/* Layout sem topbar: não reservar faixa para barra removida */
+body.layout-no-topbar .page-wrapper,
+html body.layout-no-topbar.fixed-layout .page-wrapper {
+	padding-top: 0 !important;
+}
+
 .footer.dark-mode{
 	border: none !important;
     padding-top: 19px;

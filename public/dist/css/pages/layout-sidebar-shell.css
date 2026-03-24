@@ -8,16 +8,25 @@ body.layout-no-topbar {
 	font-family: "DM Sans", "Poppins", sans-serif;
 }
 
-body.layout-no-topbar .topbar {
+/* Remove qualquer barra superior (tema antigo / dark-mode reserva espaço) */
+body.layout-no-topbar header.topbar,
+body.layout-no-topbar .topbar,
+body.layout-no-topbar nav.top-navbar,
+body.layout-no-topbar .navbar.top-navbar {
 	display: none !important;
 	height: 0 !important;
+	max-height: 0 !important;
 	min-height: 0 !important;
 	overflow: hidden !important;
 	visibility: hidden !important;
 	pointer-events: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
 }
 
-body.layout-no-topbar .page-wrapper {
+html body.layout-no-topbar.fixed-layout .page-wrapper,
+html body.layout-no-topbar .page-wrapper {
 	padding-top: 0 !important;
 	margin-top: 0 !important;
 }
@@ -27,12 +36,14 @@ body.layout-no-topbar .left-sidebar {
 	margin-top: 0 !important;
 	padding-top: 0 !important;
 	height: 100vh !important;
+	max-height: 100vh !important;
 	min-height: 100vh !important;
 	background: #0d0f14 !important;
 	border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
 	display: flex !important;
 	flex-direction: column !important;
 	z-index: 1001 !important;
+	overflow: hidden !important;
 }
 
 body.layout-no-topbar .left-sidebar.skin-pgm {
@@ -43,6 +54,9 @@ body.layout-no-topbar .scroll-sidebar {
 	flex: 1 1 auto;
 	min-height: 0;
 	padding-bottom: 12px;
+	overflow-x: hidden !important;
+	overflow-y: auto !important;
+	-webkit-overflow-scrolling: touch;
 }
 
 body.layout-no-topbar .sidebar-nav > ul#sidebarnav {
