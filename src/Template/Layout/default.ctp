@@ -137,7 +137,7 @@
     </div>
 	<?= $this->element('deleteModal'); ?>
 	<!-- Painel principal -->
-	<div class="main-wrapper">
+	<div class="main-wrapper" id="main-wrapper">
 		<!-- Header horizontal removido: empresa, data e perfil estão na sidebar (layout-sidebar-shell.css) -->
 		<!-- Sidebar -->
 		<?php

@@ -6,13 +6,27 @@
 
 body.layout-no-topbar {
 	font-family: "DM Sans", "Poppins", sans-serif;
+	background-color: #0d0f14 !important;
+}
+
+/* Evita faixa clara (#edf1f5 do tema) no topo do viewport */
+html:has(body.layout-no-topbar) {
+	background-color: #0d0f14;
+}
+
+/* Tema (style.min) usa #main-wrapper; o layout agora expõe o mesmo id */
+body.layout-no-topbar #main-wrapper {
+	width: 100%;
+	overflow: hidden;
 }
 
 /* Remove qualquer barra superior (tema antigo / dark-mode reserva espaço) */
 body.layout-no-topbar header.topbar,
 body.layout-no-topbar .topbar,
 body.layout-no-topbar nav.top-navbar,
-body.layout-no-topbar .navbar.top-navbar {
+body.layout-no-topbar .navbar.top-navbar,
+body.layout-no-topbar .navbar.navbar-expand-md.top-navbar,
+body.layout-no-topbar .top-navbar.navbar-expand-md {
 	display: none !important;
 	height: 0 !important;
 	max-height: 0 !important;
@@ -29,6 +43,9 @@ html body.layout-no-topbar.fixed-layout .page-wrapper,
 html body.layout-no-topbar .page-wrapper {
 	padding-top: 0 !important;
 	margin-top: 0 !important;
+	background: #0d0f14 !important;
+	border-top: none !important;
+	box-shadow: none !important;
 }
 
 body.layout-no-topbar .left-sidebar {
@@ -57,6 +74,20 @@ body.layout-no-topbar .scroll-sidebar {
 	overflow-x: hidden !important;
 	overflow-y: auto !important;
 	-webkit-overflow-scrolling: touch;
+	/* Tema: height calc(100% - 67px); mini: position absolute + calc(100vh - 70px) — quebrava sem topbar */
+	position: relative !important;
+	height: auto !important;
+	max-height: none !important;
+	top: auto !important;
+	left: auto !important;
+	right: auto !important;
+	bottom: auto !important;
+	width: 100% !important;
+}
+
+body.layout-no-topbar.mini-sidebar .left-sidebar .scroll-sidebar {
+	height: auto !important;
+	max-height: none !important;
 }
 
 body.layout-no-topbar .sidebar-nav > ul#sidebarnav {

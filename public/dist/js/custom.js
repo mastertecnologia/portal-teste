@@ -11,7 +11,7 @@ $(function () {
     // ==============================================================
     var set = function () {
         var width = (window.innerWidth > 0) ? window.innerWidth : this.screen.width;
-        var topOffset = 55;
+        var topOffset = $("body").hasClass("layout-no-topbar") ? 0 : 55;
         var teste = 2; 
         // Alterado de 1170 para 500
         if($("body").hasClass("mini-sidebar")){
