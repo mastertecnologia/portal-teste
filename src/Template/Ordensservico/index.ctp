@@ -165,6 +165,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					</thead>
 					<tbody>
 						<?php
+						$osRowsById = [];
 						$action = $role == 0 ? 'edit' : 'view';
 						foreach ($ordens as $reg) :
 							$situacaoTxt = SituacaoOrdem($reg->situacao);
@@ -185,9 +186,9 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 								'situacao' => trim(strip_tags((string)$situacaoTxt)),
 								'url' => $this->Url->build(['action' => $action, $reg->id]),
 							];
-							$dataOs = htmlspecialchars(json_encode($rowPayload, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+							$osRowsById[(int)$reg->id] = $rowPayload;
 							?>
-							<tr class="<?= h($rowClass) ?> os-row-drawer" data-os="<?= $dataOs ?>">
+							<tr class="<?= h($rowClass) ?> os-row-drawer" data-os-id="<?= (int)$reg->id ?>">
 								<td class="os-th-num" data-order="<?= h($reg->id) ?>">
 									<div class="os-num-wrap">
 										<?php if ($role == 0) : ?>
@@ -350,6 +351,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		sync: <?= json_encode(C_OrdensSituacaoSincronizadaPeloGrid) ?>,
 		lib: <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>
 	};
+	var osIndexRowsById = <?= json_encode($osRowsById, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
 
 	function osEscapeHtml(text) {
 		return $('<div/>').text(text == null ? '' : String(text)).html();
@@ -513,13 +515,10 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					set[id] = true;
 				}
 			});
-			$('#tableOrdens tbody tr[data-os]').each(function () {
-				var raw = $(this).attr('data-os');
-				if (!raw) return;
-				try {
-					var r = JSON.parse(raw);
-					$(this).toggleClass('os-row-sel', !!set[String(r.id)]);
-				} catch (e1) {}
+			$('#tableOrdens tbody tr[data-os-id]').each(function () {
+				var rid = $(this).attr('data-os-id');
+				if (rid == null || rid === '') return;
+				$(this).toggleClass('os-row-sel', !!set[String(rid)]);
 			});
 		}
 
@@ -618,13 +617,11 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		}
 
 		function osRowOpenDrawer($tr) {
-			var raw = $tr.attr('data-os');
-			if (!raw) return;
-			try {
-				osOpenDrawer(JSON.parse(raw), $tr);
-			} catch (err) {
-				return;
-			}
+			var rid = $tr.attr('data-os-id');
+			if (rid == null || rid === '') return;
+			var row = osIndexRowsById && (osIndexRowsById[rid] || osIndexRowsById[String(rid)]);
+			if (!row || !row.id) return;
+			osOpenDrawer(row, $tr);
 		}
 
 		/* Clique no texto (#text) não funciona com $(e.target).closest — normalizar para o elemento */
@@ -636,20 +633,21 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			return t;
 		}
 
-		/* Delegar no document: tbody/linhas podem ser recriados pelo DataTables; usar [data-os] */
-		$(document).on('click', '#tableOrdens tbody tr[data-os]', function(e) {
+		/* Delegar no document: tbody/linhas podem ser recriados pelo DataTables */
+		$(document).on('click', '#tableOrdens tbody tr[data-os-id]', function(e) {
 			var el = osEventTargetEl(e);
 			if (!el || typeof el.closest !== 'function') return;
 			if (el.closest('.os-row-checkbox')) return;
 			if (el.closest('a[href]')) return;
 			if (el.closest('button')) return;
+			if (el.closest('input[type="checkbox"]')) return;
 			osRowOpenDrawer($(this));
 		});
 
-		$(document).on('keydown', '#tableOrdens tbody tr[data-os] .link[role="button"]', function(e) {
+		$(document).on('keydown', '#tableOrdens tbody tr[data-os-id] .link[role="button"]', function(e) {
 			if (e.key !== 'Enter' && e.key !== ' ') return;
 			e.preventDefault();
-			osRowOpenDrawer($(this).closest('tr[data-os]'));
+			osRowOpenDrawer($(this).closest('tr[data-os-id]'));
 		});
 
 		$('#os-btn-export-csv').on('click', function() {
@@ -662,16 +660,13 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			dt.rows({ search: 'applied' }).every(function() {
 				var $tr = $(this.node());
 				var cols = [];
+				var rid = $tr.attr('data-os-id');
+				var rowMeta = rid != null && rid !== '' && osIndexRowsById && (osIndexRowsById[rid] || osIndexRowsById[String(rid)]);
 				$tr.find('td').each(function(i) {
 					var cell = $(this);
 					var txt;
 					if (i === 0) {
-						try {
-							var row = JSON.parse($tr.attr('data-os'));
-							txt = '#' + row.id;
-						} catch (e2) {
-							txt = cell.text().trim();
-						}
+						txt = rowMeta && rowMeta.id ? '#' + rowMeta.id : cell.text().trim();
 					} else {
 						txt = cell.text().trim();
 					}
