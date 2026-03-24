@@ -35,7 +35,8 @@ $(function () {
         }
         
     };
-    $(window).ready(set);
+    /* Após CSS/fontes carregarem — reduz aviso de layout forçado antes do load completo */
+    $(window).on("load", set);
     $(window).on("resize", set);
 
     // ==============================================================

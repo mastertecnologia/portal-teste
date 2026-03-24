@@ -323,15 +323,8 @@
 
 		$('.datepicker').bootstrapMaterialDatePicker({ format : 'DD/MM/YYYY', lang : 'pt-br', time : false, switchOnClick : true, nowButton : true, cancelText : 'Cancelar' , 'setDate' : 'currentDate', nowText : 'Hoje'});	
 
-	// Notificações (só pede permissão se ainda estiver "default" — evita spam no console e bloqueios do navegador)
-		if (window.Notification && Notification.permission === 'default') {
-			try {
-				var p = Notification.requestPermission();
-				if (p && typeof p.then === 'function') {
-					p.catch(function () {});
-				}
-			} catch (e) {}
-		}
+	// Notificações: não chamar requestPermission no carregamento — o navegador exige gesto do usuário.
+	// Permissão pode ser concedida nas configurações do site ou num fluxo futuro com botão explícito.
 
 		function notificacaoTicket(){
 			$.ajax({ 
@@ -381,15 +374,16 @@
 		$('#empresaSidebar').on('change', handleEmpresaSidebarChange);
 		$('#empresaSidebar').on('changed.bs.select', handleEmpresaSidebarChange);
 
-		$(window).on('resize', function () {
+		function pgmLayoutNoTopbarMinHeight() {
 			if (!$('body').hasClass('layout-no-topbar')) {
 				return;
 			}
 			var h = Math.max(1, (window.innerHeight > 0 ? window.innerHeight : screen.height) - 1);
 			$('.page-wrapper').css('min-height', h + 'px');
-		});
-		$(function () {
-			$(window).trigger('resize');
+		}
+		$(window).on('resize', pgmLayoutNoTopbarMinHeight);
+		$(window).on('load', function () {
+			pgmLayoutNoTopbarMinHeight();
 		});
 	//
 
