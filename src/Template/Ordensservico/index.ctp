@@ -110,19 +110,19 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material os-filter-form w-100', 'url' => ['controller' => 'Ordensservico', 'action' => 'index']]); ?>
 			<div class="row">
 				<?php if ($role == 0) { ?>
-					<div class="col-lg-2 col-md-3 col-sm-6 col-12">
+					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Situação</p>
 						<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensSituacao, 'label' => false]) ?>
 					</div>
-					<div class="col-lg-2 col-md-3 col-sm-6 col-12">
+					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Problema</p>
 						<?= $this->Form->control('problema', ['data-live-search' => true, 'title' => 'Todos', 'value' => $problema, 'id' => 'problema', 'class' => 'form-control selectpicker', 'options' => $problemas, 'label' => false]) ?>
 					</div>
-					<div class="col-lg-4 col-md-6 col-12">
+					<div class="col-lg-3 col-md-6 col-12">
 						<p>Cliente</p>
-						<?= $this->Form->control('cliente', ['data-live-search' => true, 'title' => 'Todos', 'value' => strtoupper($cliente), 'class' => 'form-control selectpicker', 'id' => 'cliente', 'options' => $clientes, 'label' => false]) ?>
+						<?= $this->Form->control('cliente', ['data-live-search' => true, 'title' => 'Todos', 'value' => $cliente, 'class' => 'form-control selectpicker', 'id' => 'cliente', 'options' => $clientes, 'label' => false]) ?>
 					</div>
-					<div class="col-lg-2 col-md-3 col-sm-6 col-12">
+					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Tipo</p>
 						<?= $this->Form->control('locacao', ['data-live-search' => true, 'title' => 'Todos', 'value' => $locacao, 'id' => 'locacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensLocacao, 'label' => false]) ?>
 					</div>

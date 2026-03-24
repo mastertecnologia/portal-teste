@@ -70,6 +70,8 @@ class OrdensservicoController extends AppController {
 		$situacao = $this->request->getQuery('situacao');
 		$problema = $this->request->getQuery('problema');
 		$locacao = $this->request->getQuery('locacao');
+		if ((string)$cliente === '0') $cliente = '';
+		if ((string)$problema === '0') $problema = '';
 		if ($locacao === null || $locacao === '') {
 			$locacao = -1;
 		}
@@ -82,8 +84,9 @@ class OrdensservicoController extends AppController {
 				'Users' => ['fields' => ['Users.id', 'Users.name']],
 			])
 			->toArray();
-		$problemas1 = [0 => 'Todos'];
-		$clientesOpt1 = [0 => 'Todos'];
+		$problemas1 = [];
+		$clientesOpt1 = [];
+		$clientesOpt = [];
 		
 		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
 		foreach($problemas as $key=>$reg) $problemas1[$key] = $reg;
