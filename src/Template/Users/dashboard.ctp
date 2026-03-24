@@ -36,26 +36,27 @@
 				</div>
 				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'finalizados']) ?>">Ver finalizados</a>
 			</div>
-			<div class="dash-erp-kpi">
+			<?php $requisicoesAcessoCount = count($usuariosBloqueadosTable ?? []); ?>
+			<div class="dash-erp-kpi <?= $requisicoesAcessoCount === 0 ? 'zero-state' : '' ?>">
 				<div class="dash-erp-kpi-icon"><i class="fas fa-user-lock"></i></div>
 				<div class="dash-erp-kpi-meta">
 					<p class="dash-erp-kpi-label">Requisições de acesso</p>
-					<p class="dash-erp-kpi-value"><?= count($usuariosBloqueadosTable ?? []) ?></p>
+					<p class="dash-erp-kpi-value <?= $requisicoesAcessoCount === 0 ? 'dim' : '' ?>"><?= $requisicoesAcessoCount ?></p>
 				</div>
-				<a class="dash-erp-kpi-link" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'requisicoesAcesso']) ?>">Ver solicitações</a>
+				<a class="dash-erp-kpi-link <?= $requisicoesAcessoCount === 0 ? 'dimmed' : '' ?>" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'requisicoesAcesso']) ?>"><?= $requisicoesAcessoCount === 0 ? 'Nenhuma pendente' : 'Ver solicitações' ?></a>
 			</div>
 		</div>
 
 		<div class="row">
 			<!-- Tickets Pendentes -->
 			<div class="col-lg-6 col-md-12">
-				<div class="dash-erp-card">
+				<div class="dash-erp-card table-card">
 					<div class="dash-erp-card-header">
 						<h5 class="dash-erp-card-title">Tickets aguardando técnico</h5>
 						<span class="dash-erp-card-badge"><?= count($ticketsPendentesTable ?? []) ?></span>
 					</div>
 					<div class="dash-erp-card-body">
-						<div class="dash-erp-scroll" id="tickets-pendentes">
+						<div class="dash-erp-scroll table-scroll" id="tickets-pendentes">
 							<div class="table-responsive">
 								<table class="dash-erp-table">
 									<thead>
@@ -63,15 +64,27 @@
 											<th>ID</th>
 											<th>Cliente</th>
 											<th>Data</th>
+											<th>SLA</th>
 										</tr>
 									</thead>
 									<tbody>
 										<?php foreach (($ticketsPendentesTable ?? []) as $reg): ?>
-											<?php $urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]); ?>
+											<?php
+												$urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]);
+												$diasSla = max(0, (int) floor((time() - strtotime((string) $reg->created)) / 86400));
+												$slaClass = $diasSla <= 3 ? 'sla-ok' : ($diasSla <= 10 ? 'sla-warn' : 'sla-overdue');
+												$slaDot = $diasSla <= 3 ? 'green' : ($diasSla <= 10 ? 'orange' : 'red');
+											?>
 											<tr>
 												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->id ?></a></td>
-												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
+												<td><a class="dash-erp-link td-client" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
 												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= date_format($reg->created, 'd/m/Y') ?></a></td>
+												<td>
+													<span class="sla-badge <?= $slaClass ?>">
+														<span class="dot <?= $slaDot ?>"></span>
+														<?= $diasSla ?> dia<?= $diasSla === 1 ? '' : 's' ?>
+													</span>
+												</td>
 											</tr>
 										<?php endforeach; ?>
 									</tbody>
@@ -84,13 +97,13 @@
 
 			<!-- Tickets em andamento -->
 			<div class="col-lg-6 col-md-12">
-				<div class="dash-erp-card">
+				<div class="dash-erp-card table-card">
 					<div class="dash-erp-card-header">
 						<h5 class="dash-erp-card-title">Tickets em execução</h5>
 						<span class="dash-erp-card-badge"><?= count($ticketsSendoResolvidosTable ?? []) ?></span>
 					</div>
 					<div class="dash-erp-card-body">
-						<div class="dash-erp-scroll" id="tickets-sendo-resolvidos">
+						<div class="dash-erp-scroll table-scroll" id="tickets-sendo-resolvidos">
 							<div class="table-responsive">
 								<table class="dash-erp-table">
 									<thead>
@@ -98,15 +111,27 @@
 											<th>ID</th>
 											<th>Cliente</th>
 											<th>Data</th>
+											<th>SLA</th>
 										</tr>
 									</thead>
 									<tbody>
 										<?php foreach (($ticketsSendoResolvidosTable ?? []) as $reg): ?>
-											<?php $urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]); ?>
+											<?php
+												$urlTicket = $this->Url->build(["controller" => "Tickets", "action" => "edit", $reg->id]);
+												$diasSla = max(0, (int) floor((time() - strtotime((string) $reg->created)) / 86400));
+												$slaClass = $diasSla <= 3 ? 'sla-ok' : ($diasSla <= 10 ? 'sla-warn' : 'sla-overdue');
+												$slaDot = $diasSla <= 3 ? 'green' : ($diasSla <= 10 ? 'orange' : 'red');
+											?>
 											<tr>
 												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->id ?></a></td>
-												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
+												<td><a class="dash-erp-link td-client" target="_blank" href="<?= $urlTicket ?>"><?= $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial ?></a></td>
 												<td><a class="dash-erp-link" target="_blank" href="<?= $urlTicket ?>"><?= date_format($reg->created, 'd/m/Y') ?></a></td>
+												<td>
+													<span class="sla-badge <?= $slaClass ?>">
+														<span class="dot <?= $slaDot ?>"></span>
+														<?= $diasSla ?> dia<?= $diasSla === 1 ? '' : 's' ?>
+													</span>
+												</td>
 											</tr>
 										<?php endforeach; ?>
 									</tbody>
@@ -360,6 +385,11 @@
 </div>
 <script>
 	$("#tickets-pendentes, #tickets-sendo-resolvidos").perfectScrollbar();
+	$(".dash-erp-table tbody tr").on("click", function() {
+		var $tbody = $(this).closest("tbody");
+		$tbody.find("tr.selected").removeClass("selected");
+		$(this).addClass("selected");
+	});
 	<?php if(isset($bAtivarDuasEtapas) && isset($veiologin)) { ?> 
 		$('#modal-duasetapas').modal('toggle');
 	<?php } ?>

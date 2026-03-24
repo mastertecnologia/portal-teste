@@ -92,6 +92,18 @@
 .dash-erp-kpi-link:hover{
   text-decoration:underline;
 }
+.dash-erp-kpi.zero-state{
+  opacity: .55;
+}
+.dash-erp-kpi-value.dim{
+  color:#6b738a;
+}
+.dash-erp-kpi-link.dimmed{
+  color:#6b738a;
+  pointer-events:none;
+  cursor:default;
+  text-decoration:none;
+}
 
 .dash-erp-card{
   background: var(--erp-card);
@@ -132,6 +144,19 @@
   max-height: 420px;
   overflow:auto;
 }
+.table-card{
+  display:flex;
+  flex-direction:column;
+  max-height:440px;
+  overflow:hidden;
+}
+.table-scroll{
+  overflow-y:auto;
+  flex:1;
+}
+.table-scroll::-webkit-scrollbar{ width:4px; }
+.table-scroll::-webkit-scrollbar-track{ background:transparent; }
+.table-scroll::-webkit-scrollbar-thumb{ background:#30363d; border-radius:2px; }
 
 .dash-erp-table{
   width:100%;
@@ -160,6 +185,12 @@
 .dash-erp-table tbody tr:hover td{
   background: rgba(61,126,255,.10);
 }
+.dash-erp-table tbody tr.selected td{
+  background: rgba(56, 139, 253, 0.10);
+}
+.dash-erp-table tbody tr.selected td:first-child{
+  border-left: 2px solid #388bfd;
+}
 .dash-erp-link{
   color: var(--erp-text);
   text-decoration:none;
@@ -168,6 +199,53 @@
 .dash-erp-link:hover{
   color: var(--erp-teal);
   text-decoration: underline;
+}
+.td-client{
+  color:#388bfd;
+  font-weight:500;
+  cursor:pointer;
+}
+.td-client:hover{
+  text-decoration:underline;
+}
+.sla-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:10.5px;
+  font-weight:600;
+  padding:2px 7px;
+  border-radius:4px;
+  white-space:nowrap;
+}
+.sla-ok{
+  background:#1a3a25;
+  color:#3fb950;
+}
+.sla-warn{
+  background:#3d2e0a;
+  color:#d29922;
+}
+.sla-overdue{
+  background:#3d1515;
+  color:#f85149;
+}
+.dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  display:inline-block;
+}
+.dot.green{ background:#3fb950; }
+.dot.orange{ background:#d29922; }
+.dot.red{
+  background:#f85149;
+  box-shadow:0 0 6px #f85149;
+  animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.4; }
 }
 
 .dash-erp-actions .btn{
