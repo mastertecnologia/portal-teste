@@ -1,35 +1,41 @@
 /**
- * Tela de edição/visualização de OS — painel claro alinhado ao ERP (tabs + formulário + grid).
- * Escopo: .os-edit-shell (layout escuro no body; conteúdo em cartão claro).
+ * Edição de OS — mesmo vocabulário visual da listagem (.os-index-shell) e sidebar PGM.
+ * Layout compacto (menos padding / alturas de campo).
  */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
 .os-edit-shell {
-	--os-ed-bg: #ffffff;
-	--os-ed-border: rgba(15, 23, 42, 0.08);
-	--os-ed-muted: #64748b;
-	--os-ed-text: #1e293b;
-	--os-ed-input-bg: #f8fafc;
-	--os-ed-input-border: #e2e8f0;
-	--os-ed-accent: #3d7eff;
-	--os-ed-radius: 14px;
+	--os-bg: #0d0f14;
+	--os-bg2: #13161d;
+	--os-bg3: #1a1e28;
+	--os-bg4: #222736;
+	--os-border: rgba(255, 255, 255, 0.07);
+	--os-border2: rgba(255, 255, 255, 0.12);
+	--os-text: #f0f2f8;
+	--os-text2: #8b92a8;
+	--os-text3: #555e78;
+	--os-accent: #3d7eff;
+	--os-accent2: #2563eb;
+	--os-accent-glow: rgba(61, 126, 255, 0.15);
+
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	background: var(--os-ed-bg);
-	border: 1px solid var(--os-ed-border);
-	border-radius: var(--os-ed-radius);
-	box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
-	margin-bottom: 1.25rem;
+	font-size: 13px;
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border);
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+	margin-bottom: 0.75rem;
 	overflow: hidden;
-	color: var(--os-ed-text);
+	color: var(--os-text2);
 }
 
-/* Abas superiores */
+/* Abas — faixa como sidebar / listagem */
 .os-edit-shell .os-edit-tabs {
-	border-bottom: 1px solid var(--os-ed-input-border);
-	padding: 0 8px 0 16px;
+	border-bottom: 1px solid var(--os-border);
+	padding: 0 4px 0 10px;
 	margin-bottom: 0 !important;
 	flex-wrap: wrap;
-	background: #fafbfc;
+	background: var(--os-bg);
 }
 
 .os-edit-shell .os-edit-tabs .nav-item {
@@ -39,179 +45,260 @@
 .os-edit-shell .os-edit-tabs .nav-link {
 	border: none !important;
 	border-radius: 0 !important;
-	padding: 14px 18px 12px;
-	font-size: 13px;
+	padding: 8px 12px 6px;
+	font-size: 12px;
 	font-weight: 500;
-	color: var(--os-ed-muted) !important;
+	color: var(--os-text2) !important;
 	background: transparent !important;
-	position: relative;
 }
 
 .os-edit-shell .os-edit-tabs .nav-link:hover {
-	color: var(--os-ed-text) !important;
+	color: var(--os-text) !important;
 }
 
 .os-edit-shell .os-edit-tabs .nav-link.active {
-	color: var(--os-ed-accent) !important;
-	background: var(--os-ed-bg) !important;
-	border-bottom: 2px solid var(--os-ed-accent) !important;
-	padding-bottom: 10px;
+	color: var(--os-accent) !important;
+	background: var(--os-bg2) !important;
+	border-bottom: 2px solid var(--os-accent) !important;
+	padding-bottom: 4px;
 }
 
 .os-edit-shell .tab-content {
-	padding: 22px 22px 28px;
-	background: var(--os-ed-bg);
+	padding: 12px 14px 16px;
+	background: var(--os-bg2);
 }
 
 /* Título OS nº */
 .os-edit-shell .os-edit-os-legend {
-	font-size: 18px;
+	font-size: 15px;
 	font-weight: 600;
-	color: var(--os-ed-text);
-	margin: 0 0 18px 0;
+	color: var(--os-text);
+	margin: 0 0 10px 0;
 	padding: 0;
 	border: none;
 	width: 100%;
+	line-height: 1.3;
 }
 
 .os-edit-shell .os-edit-os-legend .btn {
 	vertical-align: middle;
-	margin-top: -2px;
+	margin-top: -1px;
+	font-size: 11px;
+	padding: 4px 8px;
 }
 
-/* Labels do formulário */
+/* Labels */
 .os-edit-shell .control-label,
 .os-edit-shell label.control-label {
-	font-size: 10.5px !important;
+	font-size: 10px !important;
 	font-weight: 600 !important;
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
-	color: var(--os-ed-muted) !important;
-	margin-bottom: 6px !important;
+	color: var(--os-text3) !important;
+	margin-bottom: 3px !important;
 }
 
 /* Campos */
 .os-edit-shell .form-control,
 .os-edit-shell select.form-control {
-	background-color: var(--os-ed-input-bg) !important;
-	border: 1px solid var(--os-ed-input-border) !important;
-	border-radius: 8px !important;
-	color: var(--os-ed-text) !important;
-	min-height: 38px;
-	font-size: 13px;
+	background-color: var(--os-bg3) !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	color: var(--os-text) !important;
+	min-height: 34px;
+	padding: 5px 10px;
+	font-size: 12.5px;
 }
 
 .os-edit-shell .form-control:focus,
 .os-edit-shell select.form-control:focus {
-	border-color: var(--os-ed-accent) !important;
-	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.15) !important;
-	background-color: #fff !important;
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+}
+
+.os-edit-shell .form-control:disabled,
+.os-edit-shell select.form-control:disabled,
+.os-edit-shell .form-control[readonly] {
+	opacity: 0.85;
+	color: var(--os-text2) !important;
 }
 
 .os-edit-shell textarea.form-control {
-	min-height: 88px;
+	min-height: 64px;
+	padding: 8px 10px;
 }
 
 .os-edit-shell .form-group {
-	margin-bottom: 14px;
+	margin-bottom: 8px;
 }
 
-/* Material / floating overrides dentro do shell claro */
 .os-edit-shell.form-material .form-group {
-	margin-bottom: 14px;
+	margin-bottom: 8px;
 }
 
 /* Bootstrap-select */
 .os-edit-shell .bootstrap-select > .dropdown-toggle {
-	background-color: var(--os-ed-input-bg) !important;
-	border: 1px solid var(--os-ed-input-border) !important;
-	border-radius: 8px !important;
-	min-height: 38px;
-	padding: 6px 12px;
-	font-size: 13px;
-	color: var(--os-ed-text) !important;
+	background-color: var(--os-bg3) !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	min-height: 34px;
+	padding: 4px 10px;
+	font-size: 12.5px;
+	color: var(--os-text) !important;
 }
 
 .os-edit-shell .bootstrap-select .filter-option {
-	color: var(--os-ed-text) !important;
+	color: var(--os-text) !important;
+}
+
+.os-edit-shell .bootstrap-select .dropdown-menu {
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border2);
+}
+
+.os-edit-shell .bootstrap-select .dropdown-menu .dropdown-item {
+	color: var(--os-text2);
+}
+
+.os-edit-shell .bootstrap-select .dropdown-menu .dropdown-item:hover,
+.os-edit-shell .bootstrap-select .dropdown-menu .dropdown-item:focus {
+	background: var(--os-bg4);
+	color: var(--os-text);
 }
 
 /* Seção produtos */
 .os-edit-shell .os-edit-section-title {
-	font-size: 15px;
+	font-size: 13px;
 	font-weight: 600;
-	color: var(--os-ed-text);
-	margin: 28px 0 16px;
-	padding-bottom: 10px;
-	border-bottom: 1px solid var(--os-ed-input-border);
+	color: var(--os-text);
+	margin: 14px 0 8px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--os-border);
 }
 
-/* Tabelas auxiliares nas abas */
+/* Menos respiro entre blocos do template */
+.os-edit-shell .tab-pane#ordem > .row:first-of-type {
+	margin-bottom: 4px;
+}
+
+/* Tabelas */
 .os-edit-shell .table {
-	font-size: 13px;
+	font-size: 12px;
+	color: var(--os-text2);
+	margin-bottom: 0.5rem;
 }
 
 .os-edit-shell .table thead th {
-	background: #f1f5f9;
-	color: var(--os-ed-muted);
+	background: var(--os-bg3) !important;
+	color: var(--os-text3) !important;
 	font-weight: 600;
-	font-size: 11px;
+	font-size: 10px;
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	border-bottom: 1px solid var(--os-ed-input-border);
+	letter-spacing: 0.05em;
+	border-bottom: 1px solid var(--os-border) !important;
+	border-color: var(--os-border) !important;
+	padding: 8px 10px !important;
 }
 
 .os-edit-shell .table td {
-	border-color: #f1f5f9;
-	vertical-align: middle;
+	border-color: var(--os-border) !important;
+	padding: 8px 10px !important;
+	color: var(--os-text2);
+}
+
+.os-edit-shell .table.text-primary thead th {
+	color: var(--os-text3) !important;
 }
 
 /* jsGrid */
 .os-edit-shell .jsgrid-grid-header,
 .os-edit-shell .jsgrid-grid-body {
-	background: var(--os-ed-bg);
+	background: var(--os-bg2);
 }
 
 .os-edit-shell .jsgrid-header-row > .jsgrid-header-cell {
-	background: #f1f5f9 !important;
-	border-color: var(--os-ed-input-border) !important;
-	color: var(--os-ed-muted) !important;
+	background: var(--os-bg3) !important;
+	border-color: var(--os-border) !important;
+	color: var(--os-text3) !important;
 	font-weight: 600;
-	font-size: 11px;
+	font-size: 10px;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
+	padding: 6px 8px !important;
 }
 
 .os-edit-shell .jsgrid-row > .jsgrid-cell,
 .os-edit-shell .jsgrid-alt-row > .jsgrid-cell {
-	border-color: #f1f5f9 !important;
-	background: var(--os-ed-bg) !important;
+	border-color: var(--os-border) !important;
+	background: var(--os-bg2) !important;
+	color: var(--os-text2);
+	padding: 4px 6px !important;
 }
 
 .os-edit-shell .jsgrid-row:hover > .jsgrid-cell {
-	background: #f8fafc !important;
+	background: var(--os-bg3) !important;
 }
 
 .os-edit-shell .jsgrid-cell .form-control {
-	min-height: 34px;
+	min-height: 30px;
 	font-size: 12px;
+	padding: 3px 8px;
 }
 
-/* Botões de ação na faixa inferior da aba principal */
+.os-edit-shell .jsgrid-cell {
+	height: auto !important;
+	min-height: 40px;
+}
+
+/* Botões */
 .os-edit-shell .tab-pane#ordem .btn {
-	border-radius: 8px;
+	border-radius: 7px;
 	font-weight: 500;
-	font-size: 13px;
-}
-
-/* HR nas movimentações */
-.os-edit-shell #movimentacoes hr {
-	border-color: var(--os-ed-input-border);
-}
-
-/* Parcelas / textos */
-.os-edit-shell .sideh {
-	color: var(--os-ed-muted);
-	font-weight: 600;
 	font-size: 12px;
+	padding: 6px 12px;
+}
+
+.os-edit-shell #movimentacoes {
+	color: var(--os-text2);
+	font-size: 12.5px;
+}
+
+.os-edit-shell #movimentacoes hr {
+	border-color: var(--os-border);
+	margin: 0.5rem 0;
+}
+
+.os-edit-shell #movimentacoes strong {
+	color: var(--os-text);
+}
+
+.os-edit-shell .sideh {
+	color: var(--os-text3);
+	font-weight: 600;
+	font-size: 11px;
+}
+
+/* Links dentro do painel */
+.os-edit-shell a.link,
+.os-edit-shell .tab-pane a:not(.btn):not(.nav-link) {
+	color: var(--os-accent);
+}
+
+.os-edit-shell a.link:hover,
+.os-edit-shell .tab-pane a:not(.btn):not(.nav-link):hover {
+	color: var(--os-accent2);
+}
+
+/* Checkbox / texto auxiliar */
+.os-edit-shell .custom-control-label,
+.os-edit-shell .text-muted {
+	color: var(--os-text3) !important;
+}
+
+.os-edit-shell legend:not(.os-edit-os-legend) {
+	font-size: 12px;
+	color: var(--os-text2);
+	border: none;
+	margin-bottom: 6px;
 }
