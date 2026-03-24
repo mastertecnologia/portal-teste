@@ -427,7 +427,7 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	justify-content: space-between;
 	gap: 10px;
 	padding: 12px 16px;
-	border-bottom: 1px solid var(--os-border);
+	border-bottom: none;
 }
 
 .os-index-shell .os-table-head-l {
@@ -467,11 +467,13 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 
 .os-index-shell .os-table-responsive {
 	padding: 0;
+	border-top: none !important;
 }
 
 .os-index-shell .dataTables_wrapper {
 	padding: 14px 16px 16px;
 	color: var(--os-text2);
+	border-top: none !important;
 }
 
 .os-index-shell .dataTables_wrapper .dataTables_length {
