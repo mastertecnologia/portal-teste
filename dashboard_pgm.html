@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PGM Soluções — Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2230;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --text-muted: #7d8590;
+  --text-dim: #484f58;
+  --blue: #388bfd;
+  --blue-dim: #1f3a5f;
+  --blue-glow: rgba(56,139,253,0.12);
+  --green: #3fb950;
+  --green-dim: #1a3a25;
+  --orange: #d29922;
+  --orange-dim: #3d2e0a;
+  --red: #f85149;
+  --red-dim: #3d1515;
+  --purple: #bc8cff;
+  --purple-dim: #2d1f4e;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text);
+  display: flex;
+  height: 100vh; width: 100vw;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: 196px;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0; overflow: hidden;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 15px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.logo-badge {
+  width: 30px; height: 30px;
+  background: var(--blue); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 11px; color: #fff; flex-shrink: 0;
+}
+.logo-text strong { display: block; font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+.logo-text span { font-size: 9.5px; color: var(--blue); letter-spacing: .5px; text-transform: uppercase; }
+
+.search-box {
+  margin: 10px 10px 4px;
+  background: var(--bg); border: 1px solid var(--border2); border-radius: 6px;
+  padding: 6px 10px; color: var(--text-muted); font-size: 12px;
+  font-family: inherit; outline: none; flex-shrink: 0;
+}
+.search-box:focus { border-color: var(--blue); }
+
+.company-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 14px 8px; flex-shrink: 0;
+}
+.company-row strong { color: var(--text); font-size: 12px; }
+.company-date { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--blue); }
+
+.nav-section { overflow-y: auto; flex: 1; }
+.nav-section::-webkit-scrollbar { width: 3px; }
+.nav-section::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.nav-label {
+  padding: 12px 14px 3px;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px; color: var(--text-muted);
+  cursor: pointer; border-left: 2px solid transparent;
+  transition: all .12s; font-size: 12px; user-select: none;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--blue-glow); color: var(--blue); border-left-color: var(--blue); }
+
+.sidebar-bottom {
+  margin-top: auto; padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 9px;
+  font-size: 11.5px; color: var(--text-muted); flex-shrink: 0;
+}
+.avatar {
+  width: 26px; height: 26px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+
+/* ══ MAIN ══ */
+.main {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; height: 100vh; min-width: 0;
+}
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px; height: 46px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.topbar-title { font-size: 13.5px; font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.notif-btn {
+  position: relative; width: 30px; height: 30px;
+  border-radius: 6px; background: transparent;
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted); transition: all .15s;
+}
+.notif-btn:hover { background: var(--surface2); color: var(--text); }
+.notif-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px;
+  background: var(--red); border-radius: 50%;
+  border: 2px solid var(--surface);
+  animation: pulse-red 1.5s ease-in-out infinite;
+}
+@keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+.notif-panel {
+  position: fixed; top: 50px; right: 14px;
+  width: 300px; background: var(--surface);
+  border: 1px solid var(--border2); border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.55);
+  z-index: 1000; display: none; overflow: hidden;
+}
+.notif-panel.open { display: block; animation: slideDown .15s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+.notif-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600;
+}
+.notif-header span { color: var(--text-muted); font-weight: 400; font-size: 11px; }
+.notif-item {
+  display: flex; gap: 10px; padding: 10px 14px;
+  border-bottom: 1px solid var(--border); transition: background .12s; cursor: pointer;
+}
+.notif-item:hover { background: var(--surface2); }
+.notif-item:last-child { border-bottom: none; }
+.notif-icon-wrap {
+  width: 30px; height: 30px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.notif-icon-wrap.purple { background: var(--purple-dim); color: var(--purple); }
+.notif-icon-wrap.orange { background: var(--orange-dim); color: var(--orange); }
+.notif-body { flex: 1; min-width: 0; }
+.notif-body strong { display: block; font-size: 12px; font-weight: 500; }
+.notif-body p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.notif-time { font-size: 10px; color: var(--text-dim); margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+
+.content {
+  padding: 16px 20px; overflow-y: auto; flex: 1;
+}
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ══ STAT CARDS ══ */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 10px; margin-bottom: 12px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 13px;
+  display: flex; align-items: flex-start; gap: 11px;
+  cursor: pointer; transition: border-color .15s, background .15s;
+  user-select: none; position: relative; overflow: hidden;
+}
+.stat-card:hover { border-color: var(--border2); background: var(--surface2); }
+.stat-card.active-filter { border-color: var(--accent-color) !important; background: color-mix(in srgb, var(--accent-color) 8%, var(--surface)); }
+.stat-card[data-filter="aguardando"] { --accent-color: var(--orange); }
+.stat-card[data-filter="execucao"]   { --accent-color: var(--blue); }
+.stat-card[data-filter="finalizados"]{ --accent-color: var(--green); }
+.stat-card[data-filter="requisicoes"]{ --accent-color: var(--purple); }
+
+.stat-icon {
+  width: 35px; height: 35px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: transform .15s;
+}
+.stat-card.active-filter .stat-icon { transform: scale(1.1); }
+.stat-icon.blue   { background: var(--blue-dim);   color: var(--blue); }
+.stat-icon.green  { background: var(--green-dim);  color: var(--green); }
+.stat-icon.orange { background: var(--orange-dim); color: var(--orange); }
+.stat-icon.purple { background: var(--purple-dim); color: var(--purple); }
+
+.stat-info { flex: 1; min-width: 0; }
+.stat-label { font-size: 10.5px; color: var(--text-muted); margin-bottom: 3px; line-height: 1.3; }
+.stat-value {
+  font-size: 28px; font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace; line-height: 1;
+}
+.stat-value.blue   { color: var(--blue); }
+.stat-value.green  { color: var(--green); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.purple { color: var(--purple); }
+
+.stat-hint {
+  display: flex; align-items: center; gap: 3px;
+  margin-top: 5px; font-size: 10px; color: var(--text-dim);
+}
+
+/* ══ FILTER SECTION ══ */
+.filter-section { display: none; margin-bottom: 12px; }
+.filter-section.visible { display: block; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
+
+.filter-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 8px;
+}
+.filter-bar-title { font-size: 12px; font-weight: 600; flex: 1; }
+.filter-close {
+  width: 22px; height: 22px; border-radius: 5px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted); font-size: 13px; line-height: 1;
+  transition: all .1s;
+}
+.filter-close:hover { background: var(--red-dim); color: var(--red); border-color: var(--red-dim); }
+
+.full-table-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  max-height: 280px; display: flex; flex-direction: column;
+}
+
+/* ══ MIDDLE ROW ══ */
+.mid-row {
+  display: grid;
+  grid-template-columns: 210px 190px 1fr;
+  gap: 10px; margin-bottom: 12px;
+}
+.mini-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 13px;
+}
+.mini-card-title {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .5px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 10px;
+}
+
+/* SLA */
+.sla-ring-wrap { display: flex; align-items: center; gap: 12px; }
+.sla-ring { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+.sla-ring svg { transform: rotate(-90deg); }
+.sla-pct {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px; font-weight: 600; color: var(--green);
+}
+.sla-details { display: flex; flex-direction: column; gap: 5px; }
+.sla-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.sla-row .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* Saldo */
+.saldo-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.saldo-row:last-child { border-bottom: none; padding-bottom: 0; }
+.saldo-label { font-size: 11px; color: var(--text-muted); }
+.saldo-val { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; }
+
+/* Chart */
+.chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.chart-legend { display: flex; gap: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+canvas#trendChart { width: 100% !important; height: 82px !important; }
+
+/* ══ BOTTOM ROW ══ */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 185px 185px;
+  gap: 10px;
+}
+
+.table-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  display: flex; flex-direction: column; max-height: 290px;
+}
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 13px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.table-title { font-size: 12px; font-weight: 600; }
+
+.badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px; font-family: 'IBM Plex Mono', monospace;
+}
+.badge.orange { background: var(--orange-dim); color: var(--orange); }
+.badge.blue   { background: var(--blue-dim);   color: var(--blue); }
+.badge.green  { background: var(--green-dim);  color: var(--green); }
+.badge.purple { background: var(--purple-dim); color: var(--purple); }
+
+.table-scroll { overflow-y: auto; flex: 1; }
+.table-scroll::-webkit-scrollbar { width: 3px; }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 6px 12px; text-align: left;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: .6px; text-transform: uppercase;
+  color: var(--text-dim); border-bottom: 1px solid var(--border);
+  background: var(--surface); position: sticky; top: 0; z-index: 1;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .1s; cursor: pointer;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody tr.selected { background: var(--blue-glow); }
+tbody tr.selected td:first-child { border-left: 2px solid var(--blue); padding-left: 10px; }
+tbody tr.stagnant { background: color-mix(in srgb, var(--red) 5%, transparent); }
+tbody tr.stagnant:hover { background: color-mix(in srgb, var(--red) 10%, transparent); }
+td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
+
+.td-id { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.td-client { color: var(--blue); font-weight: 500; }
+.td-client:hover { text-decoration: underline; }
+.td-date { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-muted); white-space: nowrap; }
+
+.sla-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9.5px; font-weight: 600;
+  padding: 2px 5px; border-radius: 4px; white-space: nowrap;
+}
+.sla-ok      { background: var(--green-dim);  color: var(--green); }
+.sla-warn    { background: var(--orange-dim); color: var(--orange); }
+.sla-overdue { background: var(--red-dim);    color: var(--red); }
+
+.dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot.green  { background: var(--green); }
+.dot.orange { background: var(--orange); }
+.dot.red    { background: var(--red); box-shadow: 0 0 4px var(--red); animation: pulse-dot 1.5s ease-in-out infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.stagnant-tag {
+  display: inline-flex; align-items: center;
+  font-size: 9px; font-weight: 600;
+  padding: 1px 4px; border-radius: 3px;
+  background: var(--red-dim); color: var(--red); margin-left: 4px;
+}
+
+/* ══ RANKING ══ */
+.ranking-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  max-height: 290px; display: flex; flex-direction: column;
+}
+.ranking-scroll { overflow-y: auto; flex: 1; padding: 4px 0; }
+.ranking-scroll::-webkit-scrollbar { width: 3px; }
+.ranking-scroll::-webkit-scrollbar-thumb { background: var(--border2); }
+.ranking-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; transition: background .1s; cursor: pointer;
+}
+.ranking-item:hover { background: var(--surface2); }
+.rank-num { width: 16px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+.rank-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9.5px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-sub { font-size: 9.5px; color: var(--text-muted); }
+.rank-bar-wrap { width: 44px; }
+.rank-bar-bg { height: 3px; background: var(--border2); border-radius: 2px; }
+.rank-bar-fill { height: 3px; border-radius: 2px; background: var(--blue); }
+
+/* ══ TOP CLIENTS ══ */
+.clients-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  max-height: 290px; display: flex; flex-direction: column;
+}
+.clients-scroll { overflow-y: auto; flex: 1; padding: 4px 0; }
+.clients-scroll::-webkit-scrollbar { width: 3px; }
+.client-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 13px; transition: background .1s; cursor: pointer; gap: 8px;
+}
+.client-item:hover { background: var(--surface2); }
+.client-name { font-size: 11px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.client-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-badge">PGM</div>
+    <div class="logo-text">
+      <strong>PGM Soluções</strong>
+      <span>ERP Enterprise</span>
+    </div>
+  </div>
+  <input class="search-box" placeholder="Buscar funções…" />
+  <div class="company-row">
+    <div>
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:1px">Empresa</div>
+      <strong>PGM</strong>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:1px">Data</div>
+      <span class="company-date">24/03/2026</span>
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Menu Principal</div>
+    <div class="nav-item active">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Clientes
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Produtos
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Ordens de Serviço
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2M15 11v2M15 17v2M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7a2 2 0 0 1 2-2z"/></svg>
+      Tickets
+    </div>
+    <div class="nav-label">Operações</div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg>
+      Filas / Técnicos
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Orçamentos
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Agenda
+    </div>
+    <div class="nav-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Banco de Senhas
+    </div>
+    <div class="nav-item" style="color:var(--red);margin-top:4px">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </div>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="avatar">DG</div>
+    <div style="min-width:0">
+      <div style="font-size:11.5px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Darli Gonçalves</div>
+      <div style="font-size:10px;color:var(--text-dim)">Administrador</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <div class="topbar-right">
+      <div style="font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">24/03/2026 — 09:41</div>
+      <div class="notif-btn" id="notifBtn" onclick="toggleNotif()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot" id="notifDot"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Painel de notificações -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-header">Notificações <span id="notifCount">2 novas</span></div>
+    <div class="notif-item">
+      <div class="notif-icon-wrap purple">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="notif-body">
+        <strong>Nova requisição de acesso</strong>
+        <p>João Silva — módulo Financeiro</p>
+        <div class="notif-time">agora mesmo</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-icon-wrap orange">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div class="notif-body">
+        <strong>SLA em risco — #1088</strong>
+        <p>TRIANON sem movimentação há 78 dias</p>
+        <div class="notif-time">há 5 min</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" onclick="closeNotifOnOutside(event)">
+
+    <!-- ── STAT CARDS (one-click filter) ── -->
+    <div class="stats-grid">
+      <div class="stat-card" data-filter="aguardando" onclick="toggleFilter('aguardando','Tickets Aguardando Técnico')">
+        <div class="stat-icon orange">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Tickets aguardando técnico</div>
+          <div class="stat-value orange">4</div>
+          <div class="stat-hint">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            Clique para filtrar
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card" data-filter="execucao" onclick="toggleFilter('execucao','Tickets Em Execução')">
+        <div class="stat-icon blue">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Tickets em execução</div>
+          <div class="stat-value blue">11</div>
+          <div class="stat-hint">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            Clique para filtrar
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card" data-filter="finalizados" onclick="toggleFilter('finalizados','Tickets Finalizados')">
+        <div class="stat-icon green">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Tickets finalizados</div>
+          <div class="stat-value green">440</div>
+          <div class="stat-hint">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            Clique para filtrar
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card" data-filter="requisicoes" id="reqCard" onclick="toggleFilter('requisicoes','Requisições de Acesso')">
+        <div class="stat-icon purple">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Requisições de acesso</div>
+          <div class="stat-value purple" id="reqCount">1</div>
+          <div class="stat-hint" style="color:var(--purple)">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Nova requisição!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FILTER EXPANDED ── -->
+    <div class="filter-section" id="filterSection">
+      <div class="filter-bar">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="filterDot" style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>
+          <span class="filter-bar-title" id="filterTitle">Filtro</span>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted)" id="filterSubtitle"></span>
+        <div class="filter-close" onclick="closeFilter()">✕</div>
+      </div>
+      <div class="full-table-card">
+        <div class="table-scroll">
+          <table id="filterTable">
+            <thead id="filterThead"></thead>
+            <tbody id="filterTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MIDDLE ROW ── -->
+    <div class="mid-row">
+
+      <!-- SLA -->
+      <div class="mini-card">
+        <div class="mini-card-title">SLA em Tempo Real</div>
+        <div class="sla-ring-wrap">
+          <div class="sla-ring">
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="24" fill="none" stroke="#21262d" stroke-width="6"/>
+              <circle cx="30" cy="30" r="24" fill="none" stroke="#3fb950" stroke-width="6"
+                stroke-dasharray="150.8" stroke-dashoffset="40.7" stroke-linecap="round"/>
+            </svg>
+            <div class="sla-pct">73%</div>
+          </div>
+          <div class="sla-details">
+            <div class="sla-row"><span class="dot green"></span><span style="color:var(--green);font-weight:600;margin-right:3px">8</span><span style="color:var(--text-muted)">no prazo</span></div>
+            <div class="sla-row"><span class="dot orange"></span><span style="color:var(--orange);font-weight:600;margin-right:3px">2</span><span style="color:var(--text-muted)">em risco</span></div>
+            <div class="sla-row"><span class="dot red"></span><span style="color:var(--red);font-weight:600;margin-right:3px">3</span><span style="color:var(--text-muted)">vencidos</span></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Vencendo em:</div>
+          <div style="display:flex;gap:5px">
+            <div style="flex:1;background:var(--red-dim);border-radius:5px;padding:5px 6px;text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--red)">1</div>
+              <div style="font-size:9px;color:var(--text-muted)">2h</div>
+            </div>
+            <div style="flex:1;background:var(--orange-dim);border-radius:5px;padding:5px 6px;text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--orange)">2</div>
+              <div style="font-size:9px;color:var(--text-muted)">4h</div>
+            </div>
+            <div style="flex:1;background:var(--surface2);border-radius:5px;padding:5px 6px;text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--text-dim)">0</div>
+              <div style="font-size:9px;color:var(--text-muted)">8h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saldo do Dia -->
+      <div class="mini-card">
+        <div class="mini-card-title">Saldo do Dia</div>
+        <div class="saldo-row">
+          <span class="saldo-label">Abertos hoje</span>
+          <span class="saldo-val" style="color:var(--orange)">3</span>
+        </div>
+        <div class="saldo-row">
+          <span class="saldo-label">Fechados hoje</span>
+          <span class="saldo-val" style="color:var(--green)">7</span>
+        </div>
+        <div class="saldo-row">
+          <span class="saldo-label">Saldo</span>
+          <span class="saldo-val" style="color:var(--green)">+4 ✓</span>
+        </div>
+        <div class="saldo-row">
+          <span class="saldo-label">Tempo médio</span>
+          <span class="saldo-val" style="color:var(--blue);font-size:12px">2h 14min</span>
+        </div>
+        <div class="saldo-row">
+          <span class="saldo-label">Taxa reabertura</span>
+          <span class="saldo-val" style="color:var(--text-muted);font-size:12px">4%</span>
+        </div>
+      </div>
+
+      <!-- Gráfico 30 dias -->
+      <div class="mini-card">
+        <div class="chart-header">
+          <div class="mini-card-title" style="margin-bottom:0">Volume — últimos 30 dias</div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Abertos</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Fechados</div>
+          </div>
+        </div>
+        <canvas id="trendChart"></canvas>
+      </div>
+
+    </div>
+
+    <!-- ── BOTTOM ROW ── -->
+    <div class="bottom-row">
+
+      <!-- Aguardando Técnico -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Aguardando Técnico</span>
+          <span class="badge orange">4</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Cliente</th><th>Data</th><th>SLA</th></tr></thead>
+            <tbody>
+              <tr class="selected" onclick="selectRow(this)">
+                <td class="td-id">#1165</td><td class="td-client">TRANSPORTES CRISTOFOLI LTDA</td>
+                <td class="td-date">17/03/2026</td>
+                <td><span class="sla-badge sla-warn"><span class="dot orange"></span>7d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1160</td><td class="td-client">TRIANON IND E COM LTDA</td>
+                <td class="td-date">16/03/2026</td>
+                <td><span class="sla-badge sla-warn"><span class="dot orange"></span>8d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1155</td><td class="td-client">MOBLES FAB DE MOV LTDA</td>
+                <td class="td-date">11/03/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>13d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1145</td><td class="td-client">TRANSPORTES CRISTOFOLI LTDA</td>
+                <td class="td-date">09/03/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>15d</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Em Execução -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Em Execução</span>
+          <span class="badge blue">11</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Cliente</th><th>Data</th><th>SLA</th></tr></thead>
+            <tbody>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1172</td><td class="td-client">PGM SOLUÇÕES EM TI LTDA</td>
+                <td class="td-date">23/03/2026</td>
+                <td><span class="sla-badge sla-ok"><span class="dot green"></span>1d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1147</td><td class="td-client">UFFICIO ASSESSORIA CONTÁBIL</td>
+                <td class="td-date">09/03/2026</td>
+                <td><span class="sla-badge sla-warn"><span class="dot orange"></span>15d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1142</td><td class="td-client">METALÚRGICA VIGNATTI LTDA</td>
+                <td class="td-date">06/03/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>18d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1141</td><td class="td-client">MOBLES FAB DE MOV LTDA</td>
+                <td class="td-date">06/03/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>18d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1133</td><td class="td-client">PGM SOLUÇÕES EM TI LTDA</td>
+                <td class="td-date">02/03/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>22d</span></td>
+              </tr>
+              <tr onclick="selectRow(this)">
+                <td class="td-id">#1127</td><td class="td-client">TRANSPORTES CRISTOFOLI</td>
+                <td class="td-date">26/02/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>26d</span></td>
+              </tr>
+              <tr class="stagnant" onclick="selectRow(this)">
+                <td class="td-id">#1093</td>
+                <td class="td-client">TRIANON IND E COM LTDA <span class="stagnant-tag">+24h</span></td>
+                <td class="td-date">19/01/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>64d</span></td>
+              </tr>
+              <tr class="stagnant" onclick="selectRow(this)">
+                <td class="td-id">#1088</td>
+                <td class="td-client">TRIANON IND E COM LTDA <span class="stagnant-tag">+24h</span></td>
+                <td class="td-date">05/01/2026</td>
+                <td><span class="sla-badge sla-overdue"><span class="dot red"></span>78d</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Ranking Técnicos -->
+      <div class="ranking-card">
+        <div class="table-header">
+          <span class="table-title">Ranking Técnicos</span>
+          <span class="badge blue">mês</span>
+        </div>
+        <div class="ranking-scroll">
+          <div class="ranking-item">
+            <span class="rank-num">1</span>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#388bfd,#bc8cff)">DG</div>
+            <div class="rank-info">
+              <div class="rank-name">Darli G.</div>
+              <div class="rank-sub" style="color:var(--green)">32 tickets</div>
+            </div>
+            <div class="rank-bar-wrap"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:100%"></div></div></div>
+          </div>
+          <div class="ranking-item">
+            <span class="rank-num">2</span>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#3fb950,#388bfd)">MS</div>
+            <div class="rank-info">
+              <div class="rank-name">Marcos S.</div>
+              <div class="rank-sub">24 tickets</div>
+            </div>
+            <div class="rank-bar-wrap"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:75%"></div></div></div>
+          </div>
+          <div class="ranking-item">
+            <span class="rank-num">3</span>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#d29922,#f85149)">AR</div>
+            <div class="rank-info">
+              <div class="rank-name">Ana R.</div>
+              <div class="rank-sub">18 tickets</div>
+            </div>
+            <div class="rank-bar-wrap"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:56%"></div></div></div>
+          </div>
+          <div class="ranking-item">
+            <span class="rank-num">4</span>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#bc8cff,#388bfd)">PT</div>
+            <div class="rank-info">
+              <div class="rank-name">Pedro T.</div>
+              <div class="rank-sub">11 tickets</div>
+            </div>
+            <div class="rank-bar-wrap"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:34%"></div></div></div>
+          </div>
+          <div class="ranking-item">
+            <span class="rank-num">5</span>
+            <div class="rank-avatar" style="background:var(--surface2);color:var(--text-muted)">LF</div>
+            <div class="rank-info">
+              <div class="rank-name">Lucas F.</div>
+              <div class="rank-sub" style="color:var(--red)">4 tickets ↓</div>
+            </div>
+            <div class="rank-bar-wrap"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:12%;background:var(--red)"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Clientes -->
+      <div class="clients-card">
+        <div class="table-header">
+          <span class="table-title">Top Clientes</span>
+          <span class="badge purple">vol.</span>
+        </div>
+        <div class="clients-scroll">
+          <div class="client-item"><div style="width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0"></div><span class="client-name">TRIANON IND E COM</span><span class="client-count">18</span></div>
+          <div class="client-item"><div style="width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0"></div><span class="client-name">TRANSPORTES CRISTOFOLI</span><span class="client-count">12</span></div>
+          <div class="client-item"><div style="width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0"></div><span class="client-name">PGM SOLUÇÕES EM TI</span><span class="client-count">9</span></div>
+          <div class="client-item"><div style="width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0"></div><span class="client-name">MOBLES FAB DE MOV</span><span class="client-count">7</span></div>
+          <div class="client-item"><div style="width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0"></div><span class="client-name">UFFICIO ASSESSORIA</span><span class="client-count">5</span></div>
+          <div class="client-item"><div style="width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0"></div><span class="client-name">METALÚRGICA VIGNATTI</span><span class="client-count">4</span></div>
+        </div>
+      </div>
+
+    </div><!-- /bottom-row -->
+  </div><!-- /content -->
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── GRÁFICO DE TENDÊNCIA ──
+const labels = [], opened = [], closed = [];
+const today = new Date(2026, 2, 24);
+for (let i = 29; i >= 0; i--) {
+  const d = new Date(today);
+  d.setDate(d.getDate() - i);
+  labels.push(d.getDate() + '/' + (d.getMonth()+1));
+  opened.push(Math.floor(Math.random() * 6) + 1);
+  closed.push(Math.floor(Math.random() * 7) + 2);
+}
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      { data: opened, borderColor: '#388bfd', backgroundColor: 'rgba(56,139,253,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 },
+      { data: closed, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.07)',  fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
+    plugins: { legend: { display: false }, tooltip: {
+      backgroundColor: '#1c2230', borderColor: '#30363d', borderWidth: 1,
+      titleColor: '#7d8590', bodyColor: '#e6edf3',
+      titleFont: { family: 'IBM Plex Mono', size: 10 },
+      bodyFont: { family: 'IBM Plex Mono', size: 11 },
+    }},
+    scales: {
+      x: { grid: { color: '#21262d' }, ticks: { color: '#484f58', font: { family: 'IBM Plex Mono', size: 9 }, maxRotation: 0, maxTicksLimit: 7 } },
+      y: { grid: { color: '#21262d' }, ticks: { color: '#484f58', font: { family: 'IBM Plex Mono', size: 9 }, stepSize: 2 }, min: 0 }
+    }
+  }
+});
+
+// ── ONE-CLICK FILTER DATA ──
+const filterData = {
+  aguardando: {
+    color: '#d29922', subtitle: '4 tickets aguardando atribuição',
+    head: ['ID','Cliente','Data','SLA'],
+    rows: [
+      ['#1165','TRANSPORTES CRISTOFOLI LTDA','17/03/2026','<span class="sla-badge sla-warn"><span class="dot orange"></span>7 dias</span>'],
+      ['#1160','TRIANON IND E COM LTDA','16/03/2026','<span class="sla-badge sla-warn"><span class="dot orange"></span>8 dias</span>'],
+      ['#1155','MOBLES FAB DE MOV LTDA','11/03/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>13 dias</span>'],
+      ['#1145','TRANSPORTES CRISTOFOLI LTDA','09/03/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>15 dias</span>'],
+    ]
+  },
+  execucao: {
+    color: '#388bfd', subtitle: '11 tickets em andamento',
+    head: ['ID','Cliente','Data','SLA'],
+    rows: [
+      ['#1172','PGM SOLUÇÕES EM TI LTDA','23/03/2026','<span class="sla-badge sla-ok"><span class="dot green"></span>1 dia</span>'],
+      ['#1147','UFFICIO ASSESSORIA CONTÁBIL','09/03/2026','<span class="sla-badge sla-warn"><span class="dot orange"></span>15 dias</span>'],
+      ['#1142','METALÚRGICA VIGNATTI LTDA','06/03/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>18 dias</span>'],
+      ['#1141','MOBLES FAB DE MOV LTDA','06/03/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>18 dias</span>'],
+      ['#1133','PGM SOLUÇÕES EM TI LTDA','02/03/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>22 dias</span>'],
+      ['#1127','TRANSPORTES CRISTOFOLI LTDA','26/02/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>26 dias</span>'],
+      ['#1125','TRIANON IND E COM LTDA','26/02/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>26 dias</span>'],
+      ['#1093','TRIANON IND E COM LTDA','19/01/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>64 dias</span>'],
+      ['#1088','TRIANON IND E COM LTDA','05/01/2026','<span class="sla-badge sla-overdue"><span class="dot red"></span>78 dias</span>'],
+    ]
+  },
+  finalizados: {
+    color: '#3fb950', subtitle: '440 tickets finalizados no período',
+    head: ['ID','Cliente','Encerrado','Técnico'],
+    rows: [
+      ['#1170','TRIANON IND E COM LTDA','22/03/2026','Darli G.'],
+      ['#1168','PGM SOLUÇÕES EM TI','21/03/2026','Marcos S.'],
+      ['#1166','TRANSPORTES CRISTOFOLI','20/03/2026','Ana R.'],
+      ['#1164','METALÚRGICA VIGNATTI','19/03/2026','Darli G.'],
+      ['#1163','MOBLES FAB DE MOV','18/03/2026','Pedro T.'],
+    ]
+  },
+  requisicoes: {
+    color: '#bc8cff', subtitle: '1 requisição aguardando aprovação',
+    head: ['Usuário','Módulo','Solicitado','Status'],
+    rows: [
+      ['João Silva','Financeiro','24/03/2026','<span class="sla-badge" style="background:var(--purple-dim);color:var(--purple)">Pendente</span>'],
+    ]
+  }
+};
+
+let activeFilter = null;
+
+function toggleFilter(key, title) {
+  if (activeFilter === key) { closeFilter(); return; }
+  activeFilter = key;
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+  document.querySelector(`[data-filter="${key}"]`).classList.add('active-filter');
+
+  const d = filterData[key];
+  document.getElementById('filterTitle').textContent = title;
+  document.getElementById('filterSubtitle').textContent = d.subtitle;
+  document.getElementById('filterDot').style.background = d.color;
+
+  const thead = document.getElementById('filterThead');
+  const tbody = document.getElementById('filterTbody');
+  thead.innerHTML = '<tr>' + d.head.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  tbody.innerHTML = d.rows.map(r =>
+    '<tr onclick="selectRow(this)">' +
+    r.map((c, i) => `<td class="${i===0?'td-id':i===1?'td-client':i===2?'td-date':''}">${c}</td>`).join('') +
+    '</tr>'
+  ).join('');
+
+  const sec = document.getElementById('filterSection');
+  sec.classList.add('visible');
+  sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeFilter() {
+  activeFilter = null;
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+  document.getElementById('filterSection').classList.remove('visible');
+}
+
+function selectRow(row) {
+  row.closest('tbody').querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+}
+
+// ── NOTIFICAÇÕES ──
+function toggleNotif() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+function closeNotifOnOutside(e) {
+  if (!e.target.closest('#notifPanel') && !e.target.closest('#notifBtn')) {
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+}
+
+// Simula nova requisição chegando após 8s
+setTimeout(() => {
+  document.getElementById('reqCount').textContent = '2';
+
+  const panel = document.getElementById('notifPanel');
+  const item = document.createElement('div');
+  item.className = 'notif-item';
+  item.style.background = 'rgba(188,140,255,0.07)';
+  item.innerHTML = `
+    <div class="notif-icon-wrap purple">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div class="notif-body">
+      <strong>Nova requisição de acesso</strong>
+      <p>Maria Costa — módulo RH</p>
+      <div class="notif-time">agora mesmo</div>
+    </div>`;
+  panel.insertBefore(item, panel.children[1]);
+  document.getElementById('notifCount').textContent = '3 novas';
+
+  const card = document.getElementById('reqCard');
+  card.style.borderColor = 'var(--purple)';
+  card.style.boxShadow = '0 0 18px rgba(188,140,255,0.3)';
+  filterData.requisicoes.rows.push(['Maria Costa','RH','24/03/2026','<span class="sla-badge" style="background:var(--purple-dim);color:var(--purple)">Pendente</span>']);
+  filterData.requisicoes.subtitle = '2 requisições aguardando aprovação';
+  setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 2500);
+}, 8000);
+</script>
+</body>
+</html>
