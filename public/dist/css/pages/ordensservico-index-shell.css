@@ -341,8 +341,8 @@
  */
 body.os-index-page .bs-container .dropdown-menu,
 body.os-index-page .bootstrap-select .dropdown-menu {
-	background: var(--os-bg3) !important;
-	border: 1px solid var(--os-border2) !important;
+	background: #1a1e28 !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
 	border-radius: 8px !important;
 	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
 }
@@ -351,7 +351,7 @@ body.os-index-page .bs-container .dropdown-menu li a,
 body.os-index-page .bootstrap-select .dropdown-menu li a,
 body.os-index-page .bs-container .dropdown-menu .dropdown-item,
 body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item {
-	color: var(--os-text2) !important;
+	color: #8b92a8 !important;
 	background: transparent !important;
 }
 
@@ -371,20 +371,20 @@ body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item:hover,
 body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item:focus,
 body.os-index-page .bootstrap-select .dropdown-menu .active .dropdown-item,
 body.os-index-page .bootstrap-select .dropdown-menu .selected .dropdown-item {
-	background: var(--os-accent-glow) !important;
-	color: var(--os-text) !important;
+	background: rgba(61, 126, 255, 0.15) !important;
+	color: #f0f2f8 !important;
 }
 
 body.os-index-page .bs-container .bs-searchbox .form-control,
 body.os-index-page .bootstrap-select .bs-searchbox .form-control {
-	background: var(--os-bg2) !important;
-	border: 1px solid var(--os-border) !important;
-	color: var(--os-text2) !important;
+	background: #13161d !important;
+	border: 1px solid rgba(255, 255, 255, 0.07) !important;
+	color: #8b92a8 !important;
 }
 
 body.os-index-page .bs-container .bs-searchbox .form-control::placeholder,
 body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
-	color: var(--os-text3) !important;
+	color: #555e78 !important;
 }
 
 .os-index-shell .os-filter-form .bootstrap-select .bs-searchbox .form-control {
@@ -821,6 +821,15 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	vertical-align: middle !important;
 }
 
+.os-index-shell thead .os-th-num .os-num-wrap > span {
+	color: var(--os-text3) !important;
+	font-family: var(--os-font);
+	font-size: 10.5px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+}
+
 .os-index-shell .os-num-wrap {
 	display: flex;
 	align-items: center;
@@ -839,6 +848,18 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 
 .os-index-shell .os-num-wrap .os-num-cell {
 	flex-shrink: 0;
+	color: var(--os-accent) !important;
+	font-family: var(--os-mono);
+	font-weight: 600;
+	font-size: 12.5px;
+	letter-spacing: 0;
+}
+
+.os-index-shell .os-num-wrap .os-num-cell:hover,
+.os-index-shell .os-row-drawer-active .os-num-wrap .os-num-cell,
+.os-index-shell table tbody tr:hover .os-num-wrap .os-num-cell {
+	color: var(--os-accent) !important;
+	text-decoration: none !important;
 }
 
 .os-index-shell .os-btn-primary[type='button'] {
