@@ -471,6 +471,11 @@
 	font-family: var(--os-mono);
 	font-weight: 600;
 	text-decoration: none;
+	cursor: pointer;
+}
+
+.os-index-shell table tbody tr.os-row-drawer .link {
+	user-select: none;
 }
 
 .os-index-shell table .link:hover {

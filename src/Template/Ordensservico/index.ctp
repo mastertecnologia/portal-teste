@@ -196,43 +196,43 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 											<label class="custom-control-label p-0 m-0" for="checkbox<?= h($reg->id) ?>" style="min-height:0"><span class="sr-only">Selecionar OS <?= h($reg->id) ?></span></label>
 										</div>
 										<?php endif; ?>
-										<a class="link os-num-cell" target="_blank" rel="noopener noreferrer" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>">#<?= h($reg->id) ?></a>
+										<span class="link os-num-cell" role="button" tabindex="0">#<?= h($reg->id) ?></span>
 									</div>
 								</td>
 								<td data-order="<?= date_format($reg->dataabertura, 'Ymd') ?>">
-									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>"><?= h(date_format($reg->dataabertura, 'd/m/Y')) ?></a>
+									<span class="link"><?= h(date_format($reg->dataabertura, 'd/m/Y')) ?></span>
 								</td>
 								<td data-order="<?= date_format($reg->dataprevisao, 'Ymd') ?>">
-									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>"><?= h(date_format($reg->dataprevisao, 'd/m/Y')) ?></a>
+									<span class="link"><?= h(date_format($reg->dataprevisao, 'd/m/Y')) ?></span>
 								</td>
 								<td>
-									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>" title="<?= h($cliNome) ?>">
+									<span class="link" title="<?= h($cliNome) ?>">
 										<span class="os-client-cell"><?= h($cliNome) ?></span>
-									</a>
+									</span>
 								</td>
 								<td>
-									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>">
+									<span class="link">
 										<span class="contract-badge <?= h($contratoClass) ?>"><?= h($contratoLbl) ?></span>
-									</a>
+									</span>
 								</td>
 								<td>
-									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>">
+									<span class="link">
 										<span class="os-tech">
 											<span class="os-tech-av"><?= $osTechInitials($reg->user ? ($reg->user->name ?? '') : '') ?></span>
 											<?= h($reg->user ? ($reg->user->name ?? '—') : '—') ?>
 										</span>
-									</a>
+									</span>
 								</td>
 								<td class="text-right">
-									<a class="link os-valor-cell" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>"><?= h(number_format($reg->valortotal, 2, ',', '.')) ?></a>
+									<span class="link os-valor-cell"><?= h(number_format($reg->valortotal, 2, ',', '.')) ?></span>
 								</td>
 								<td>
-									<a class="link" target="_blank" href="<?= $this->Url->build(['action' => $action, $reg->id]) ?>">
+									<span class="link">
 										<span class="os-status <?= h($pillClass) ?>">
 											<span class="os-status-dot"></span>
 											<?= $pillShort ?>
 										</span>
-									</a>
+									</span>
 								</td>
 							</tr>
 						<?php endforeach; ?>
@@ -617,17 +617,27 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			$('#badge-exec-os').text('<?= (int)$kpiExec ?>');
 		}
 
-		$('#tableOrdens tbody').on('click', 'tr.os-row-drawer', function(e) {
-			if ($(e.target).closest('a, input, label, .custom-control').length) {
-				return;
-			}
-			var raw = $(this).attr('data-os');
+		function osRowOpenDrawer($tr) {
+			var raw = $tr.attr('data-os');
 			if (!raw) return;
 			try {
-				osOpenDrawer(JSON.parse(raw), $(this));
+				osOpenDrawer(JSON.parse(raw), $tr);
 			} catch (err) {
 				return;
 			}
+		}
+
+		$('#tableOrdens tbody').on('click', 'tr.os-row-drawer', function(e) {
+			if ($(e.target).closest('input, label, .custom-control, button, a').length) {
+				return;
+			}
+			osRowOpenDrawer($(this));
+		});
+
+		$('#tableOrdens tbody').on('keydown', 'tr.os-row-drawer .link[role="button"]', function(e) {
+			if (e.key !== 'Enter' && e.key !== ' ') return;
+			e.preventDefault();
+			osRowOpenDrawer($(this).closest('tr.os-row-drawer'));
 		});
 
 		$('#os-btn-export-csv').on('click', function() {
