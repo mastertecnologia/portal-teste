@@ -416,6 +416,7 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	margin: 0 20px 20px;
 	background: var(--os-bg2);
 	border: 1px solid var(--os-border);
+	border-top: none;
 	border-radius: var(--os-radius-lg);
 	overflow: hidden;
 }
