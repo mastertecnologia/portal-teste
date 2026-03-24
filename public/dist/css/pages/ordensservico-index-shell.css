@@ -258,8 +258,8 @@
 	gap: 10px;
 	padding: 0 20px 16px;
 	background: var(--os-bg);
-	border-left: 1px solid var(--os-border);
-	border-right: 1px solid var(--os-border);
+	border-left: none;
+	border-right: none;
 }
 
 .os-index-shell .os-filter-form .row {
