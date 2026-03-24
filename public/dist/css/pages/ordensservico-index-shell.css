@@ -507,7 +507,8 @@
 	font-weight: 500;
 }
 
-.os-index-shell .os-status {
+.os-index-shell .os-status,
+.os-drawer .os-status {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
@@ -518,50 +519,61 @@
 	white-space: nowrap;
 }
 
-.os-index-shell .os-status-dot {
+.os-index-shell .os-status-dot,
+.os-drawer .os-status-dot {
 	width: 5px;
 	height: 5px;
 	border-radius: 50%;
 	flex-shrink: 0;
 }
 
-.os-index-shell .os-st-exec {
+.os-index-shell .os-st-exec,
+.os-drawer .os-st-exec {
 	background: var(--os-amber-bg);
 	color: var(--os-amber);
 }
-.os-index-shell .os-st-exec .os-status-dot {
+.os-index-shell .os-st-exec .os-status-dot,
+.os-drawer .os-st-exec .os-status-dot {
 	background: var(--os-amber);
 }
 
-.os-index-shell .os-st-sync {
+.os-index-shell .os-st-sync,
+.os-drawer .os-st-sync {
 	background: var(--os-green-bg);
 	color: var(--os-green);
 }
-.os-index-shell .os-st-sync .os-status-dot {
+.os-index-shell .os-st-sync .os-status-dot,
+.os-drawer .os-st-sync .os-status-dot {
 	background: var(--os-green);
 }
 
-.os-index-shell .os-st-lib {
+.os-index-shell .os-st-lib,
+.os-drawer .os-st-lib {
 	background: var(--os-orange-bg);
 	color: var(--os-orange);
 }
-.os-index-shell .os-st-lib .os-status-dot {
+.os-index-shell .os-st-lib .os-status-dot,
+.os-drawer .os-st-lib .os-status-dot {
 	background: var(--os-orange);
 }
 
-.os-index-shell .os-st-pen {
+.os-index-shell .os-st-pen,
+.os-drawer .os-st-pen {
 	background: var(--os-purple-bg);
 	color: var(--os-purple);
 }
-.os-index-shell .os-st-pen .os-status-dot {
+.os-index-shell .os-st-pen .os-status-dot,
+.os-drawer .os-st-pen .os-status-dot {
 	background: var(--os-purple);
 }
 
-.os-index-shell .os-st-default {
+.os-index-shell .os-st-default,
+.os-drawer .os-st-default {
 	background: var(--os-bg4);
 	color: var(--os-text3);
 }
-.os-index-shell .os-st-default .os-status-dot {
+.os-index-shell .os-st-default .os-status-dot,
+.os-drawer .os-st-default .os-status-dot {
 	background: var(--os-text3);
 }
 
@@ -893,6 +905,35 @@ body.os-drawer-active {
 	overflow: hidden;
 }
 
+/*
+ * Drawer é movido para document.body (JS): fora de .os-index-shell, as custom properties
+ * não herdavam — var(--os-bg2) virava inválido e o painel ficava transparente.
+ */
+.os-drawer-backdrop,
+.os-drawer {
+	--os-bg: #0d0f14;
+	--os-bg2: #13161d;
+	--os-bg3: #1a1e28;
+	--os-bg4: #222736;
+	--os-border: rgba(255, 255, 255, 0.07);
+	--os-border2: rgba(255, 255, 255, 0.12);
+	--os-text: #f0f2f8;
+	--os-text2: #8b92a8;
+	--os-text3: #555e78;
+	--os-accent: #3d7eff;
+	--os-accent2: #2563eb;
+	--os-green: #22c55e;
+	--os-green-bg: rgba(34, 197, 94, 0.1);
+	--os-amber: #f59e0b;
+	--os-amber-bg: rgba(245, 158, 11, 0.1);
+	--os-orange: #f97316;
+	--os-orange-bg: rgba(249, 115, 22, 0.1);
+	--os-purple: #a78bfa;
+	--os-purple-bg: rgba(167, 139, 250, 0.1);
+	--os-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	--os-mono: 'DM Mono', ui-monospace, monospace;
+}
+
 /* Drawer lateral (detalhe da OS) — acima da sidebar PGM (z-index ~1001) */
 .os-drawer-backdrop {
 	position: fixed;
@@ -915,8 +956,8 @@ body.os-drawer-active {
 	bottom: 0;
 	width: 420px;
 	max-width: 100vw;
-	background: var(--os-bg2);
-	border-left: 1px solid var(--os-border2);
+	background: var(--os-bg2, #13161d);
+	border-left: 1px solid var(--os-border2, rgba(255, 255, 255, 0.12));
 	z-index: 12050;
 	transform: translateX(100%);
 	transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
