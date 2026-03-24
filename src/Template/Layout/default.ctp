@@ -323,8 +323,15 @@
 
 		$('.datepicker').bootstrapMaterialDatePicker({ format : 'DD/MM/YYYY', lang : 'pt-br', time : false, switchOnClick : true, nowButton : true, cancelText : 'Cancelar' , 'setDate' : 'currentDate', nowText : 'Hoje'});	
 
-	// Notificações 
-		Notification.requestPermission();
+	// Notificações (só pede permissão se ainda estiver "default" — evita spam no console e bloqueios do navegador)
+		if (window.Notification && Notification.permission === 'default') {
+			try {
+				var p = Notification.requestPermission();
+				if (p && typeof p.then === 'function') {
+					p.catch(function () {});
+				}
+			} catch (e) {}
+		}
 
 		function notificacaoTicket(){
 			$.ajax({ 
