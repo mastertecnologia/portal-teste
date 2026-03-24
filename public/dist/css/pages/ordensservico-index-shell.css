@@ -334,6 +334,59 @@
 	color: var(--os-text) !important;
 }
 
+/*
+ * O selectpicker dos filtros usa container no body (bs-container),
+ * então os estilos escopados em .os-index-shell não alcançam o dropdown aberto.
+ * Escopo global protegido por body.os-index-page para não afetar outras telas.
+ */
+body.os-index-page .bs-container .dropdown-menu,
+body.os-index-page .bootstrap-select .dropdown-menu {
+	background: var(--os-bg3) !important;
+	border: 1px solid var(--os-border2) !important;
+	border-radius: 8px !important;
+	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.os-index-page .bs-container .dropdown-menu li a,
+body.os-index-page .bootstrap-select .dropdown-menu li a,
+body.os-index-page .bs-container .dropdown-menu .dropdown-item,
+body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item {
+	color: var(--os-text2) !important;
+	background: transparent !important;
+}
+
+body.os-index-page .bs-container .dropdown-menu li.active a,
+body.os-index-page .bs-container .dropdown-menu li.selected a,
+body.os-index-page .bs-container .dropdown-menu li a:hover,
+body.os-index-page .bs-container .dropdown-menu li a:focus,
+body.os-index-page .bs-container .dropdown-menu .dropdown-item:hover,
+body.os-index-page .bs-container .dropdown-menu .dropdown-item:focus,
+body.os-index-page .bs-container .dropdown-menu .active .dropdown-item,
+body.os-index-page .bs-container .dropdown-menu .selected .dropdown-item,
+body.os-index-page .bootstrap-select .dropdown-menu li.active a,
+body.os-index-page .bootstrap-select .dropdown-menu li.selected a,
+body.os-index-page .bootstrap-select .dropdown-menu li a:hover,
+body.os-index-page .bootstrap-select .dropdown-menu li a:focus,
+body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item:hover,
+body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item:focus,
+body.os-index-page .bootstrap-select .dropdown-menu .active .dropdown-item,
+body.os-index-page .bootstrap-select .dropdown-menu .selected .dropdown-item {
+	background: var(--os-accent-glow) !important;
+	color: var(--os-text) !important;
+}
+
+body.os-index-page .bs-container .bs-searchbox .form-control,
+body.os-index-page .bootstrap-select .bs-searchbox .form-control {
+	background: var(--os-bg2) !important;
+	border: 1px solid var(--os-border) !important;
+	color: var(--os-text2) !important;
+}
+
+body.os-index-page .bs-container .bs-searchbox .form-control::placeholder,
+body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
+	color: var(--os-text3) !important;
+}
+
 .os-index-shell .os-filter-form .bootstrap-select .bs-searchbox .form-control {
 	background: var(--os-bg2) !important;
 	border: 1px solid var(--os-border) !important;

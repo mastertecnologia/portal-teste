@@ -477,6 +477,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	}
 
 	$(document).ready(function() {
+		$('body').addClass('os-index-page');
 		/* Drawer no body: evita ficar atrás da sidebar (stacking context do .page-wrapper) */
 		$('#os-drawer-backdrop, #os-drawer').appendTo('body');
 
