@@ -175,7 +175,7 @@
 	background: var(--os-bg2);
 	border: 1px solid var(--os-border);
 	border-radius: var(--os-radius-lg);
-	padding: 16px 18px;
+	padding: 12px 14px;
 	position: relative;
 	overflow: hidden;
 	cursor: default;
@@ -206,25 +206,25 @@
 }
 
 .os-index-shell .os-kpi-label {
-	font-size: 11px;
+	font-size: 10.5px;
 	color: var(--os-text3);
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
 	font-weight: 500;
-	margin-bottom: 8px;
+	margin-bottom: 6px;
 }
 
 .os-index-shell .os-kpi-value {
-	font-size: 24px;
+	font-size: 22px;
 	font-weight: 600;
 	color: var(--os-text);
 	font-family: var(--os-mono);
 	line-height: 1;
-	margin-bottom: 6px;
+	margin-bottom: 4px;
 }
 
 .os-index-shell .os-kpi-sub {
-	font-size: 12px;
+	font-size: 11px;
 	color: var(--os-text3);
 }
 
