@@ -19,6 +19,7 @@
 		$fechadosHoje = (int)($kpi['fechados_hoje'] ?? 0);
 		$saldoDia = (int)($kpi['saldo_dia'] ?? 0);
 		$rankingTecnicos = $kpi['ranking'] ?? [];
+		$rankingPeriodLabel = $kpi['ranking_period_label'] ?? 'mês';
 		$trendLabels = $kpi['trend_labels'] ?? [];
 		$trendOpened = $kpi['trend_opened'] ?? [];
 		$trendClosed = $kpi['trend_closed'] ?? [];
@@ -192,10 +193,10 @@
 					</div>
 
 					<div class="dash-pgm-ranking-card">
-						<div class="dash-pgm-table-header"><span>Ranking Técnicos</span><span class="badge blue">mês</span></div>
+						<div class="dash-pgm-table-header"><span>Ranking Técnicos</span><span class="badge blue"><?= h($rankingPeriodLabel) ?></span></div>
 						<div class="dash-pgm-ranking-scroll">
 							<?php if (empty($rankingTecnicos)): ?>
-								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>tickets resolvidos no mês com técnico vinculado</small></div>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>tickets fechados no período, com técnico responsável no ticket</small></div>
 							<?php else: ?>
 								<?php foreach ($rankingTecnicos as $row): ?>
 									<div class="dash-pgm-ranking-item"><span><?= (int)$row['place'] ?></span><strong><?= h($row['nome']) ?></strong><small><?= (int)$row['tickets'] ?> tickets</small></div>

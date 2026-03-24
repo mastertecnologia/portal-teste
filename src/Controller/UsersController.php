@@ -289,33 +289,20 @@ class UsersController extends AppController {
 
 		$tecMap = $this->_tecnicosEmpresaMap($idempresa);
 		$ranking = [];
-		if ($tecMap !== [] && in_array('idtecnico_responsavel', $cols, true) && $closedSit !== []) {
+		$rankingPeriodLabel = 'mês';
+		if (in_array('idtecnico_responsavel', $cols, true) && $closedSit !== []) {
 			$monthStart = date('Y-m-01 00:00:00');
 			$monthEnd = date('Y-m-t 23:59:59');
 			$dateField = in_array('data_resolucao', $cols, true) ? 'data_resolucao' : 'modified';
-			$techIds = array_keys($tecMap);
-			$q = $this->Tickets->find();
-			$f = $q->func()->count('*');
-			$rows = $q->select(['idtecnico_responsavel', 'cnt' => $f])
-				->where([
-					'Tickets.idempresa' => $idempresa,
-					'Tickets.situacao IN' => $closedSit,
-					'Tickets.idtecnico_responsavel IN' => $techIds,
-					'Tickets.' . $dateField . ' >=' => $monthStart,
-					'Tickets.' . $dateField . ' <=' => $monthEnd,
-				])
-				->group('idtecnico_responsavel')
-				->hydrate(false)
-				->toArray();
-			$byCount = [];
-			foreach ($rows as $r) {
-				$tid = $this->_rankingRowTecnicoId($r);
-				$cnt = $this->_rankingRowCount($r);
-				if ($tid !== null && $tid > 0 && $cnt !== null) {
-					$byCount[$tid] = (int)$cnt;
+			$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $dateField, $monthStart, $monthEnd);
+			if ($byCount === []) {
+				$thirtyStart = date('Y-m-d 00:00:00', strtotime('-30 days'));
+				$thirtyEnd = date('Y-m-d 23:59:59');
+				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $dateField, $thirtyStart, $thirtyEnd);
+				if ($byCount !== []) {
+					$rankingPeriodLabel = '30 dias';
 				}
 			}
-			arsort($byCount);
 			$idToNome = [];
 			if ($byCount !== []) {
 				$nameRows = $this->Users->find()
@@ -403,6 +390,7 @@ class UsersController extends AppController {
 			'fechados_hoje' => $fechadosHoje,
 			'saldo_dia' => $saldoDia,
 			'ranking' => $ranking,
+			'ranking_period_label' => $rankingPeriodLabel,
 			'trend_labels' => $trendLabels,
 			'trend_opened' => $trendOpened,
 			'trend_closed' => $trendClosed,
@@ -464,6 +452,43 @@ class UsersController extends AppController {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Tickets fechados por técnico responsável no intervalo (idtecnico_responsavel não nulo).
+	 *
+	 * @param int $idempresa
+	 * @param int[] $closedSit
+	 * @param string $dateField
+	 * @param string $rangeStart
+	 * @param string $rangeEnd
+	 * @return int[]
+	 */
+	protected function _dashPgmTechnicianRankingCounts($idempresa, array $closedSit, $dateField, $rangeStart, $rangeEnd) {
+		$q = $this->Tickets->find();
+		$f = $q->func()->count('*');
+		$rows = $q->select(['idtecnico_responsavel', 'cnt' => $f])
+			->where([
+				'Tickets.idempresa' => $idempresa,
+				'Tickets.situacao IN' => $closedSit,
+				'Tickets.idtecnico_responsavel IS NOT' => null,
+				'Tickets.' . $dateField . ' >=' => $rangeStart,
+				'Tickets.' . $dateField . ' <=' => $rangeEnd,
+			])
+			->group('idtecnico_responsavel')
+			->hydrate(false)
+			->toArray();
+		$byCount = [];
+		foreach ($rows as $r) {
+			$tid = $this->_rankingRowTecnicoId($r);
+			$cnt = $this->_rankingRowCount($r);
+			if ($tid !== null && $tid > 0 && $cnt !== null) {
+				$byCount[$tid] = (int)$cnt;
+			}
+		}
+		arsort($byCount);
+
+		return $byCount;
 	}
 
 	/**
