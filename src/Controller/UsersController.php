@@ -290,34 +290,14 @@ class UsersController extends AppController {
 		$tecMap = $this->_tecnicosEmpresaMap($idempresa);
 		$ranking = [];
 		$rankingPeriodLabel = 'mês';
+		$rankingMonthClosedCount = 0;
 		$hasRespCol = in_array('idtecnico_responsavel', $cols, true);
 		$hasOwnerCol = in_array('owner_id', $cols, true);
 		if (($hasRespCol || $hasOwnerCol) && $closedSit !== []) {
 			$monthStart = date('Y-m-01 00:00:00');
 			$monthEnd = date('Y-m-t 23:59:59');
+			$rankingMonthClosedCount = $this->_dashPgmClosedTicketsCountInRange($idempresa, $closedSit, $cols, $monthStart, $monthEnd);
 			$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $monthStart, $monthEnd);
-			if ($byCount === []) {
-				$thirtyStart = date('Y-m-d 00:00:00', strtotime('-30 days'));
-				$thirtyEnd = date('Y-m-d 23:59:59');
-				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $thirtyStart, $thirtyEnd);
-				if ($byCount !== []) {
-					$rankingPeriodLabel = '30 dias';
-				}
-			}
-			if ($byCount === []) {
-				$yearStart = date('Y-m-d 00:00:00', strtotime('-365 days'));
-				$yearEnd = date('Y-m-d 23:59:59');
-				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $yearStart, $yearEnd);
-				if ($byCount !== []) {
-					$rankingPeriodLabel = '12 meses';
-				}
-			}
-			if ($byCount === []) {
-				$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, null, null);
-				if ($byCount !== []) {
-					$rankingPeriodLabel = 'geral';
-				}
-			}
 			$idToNome = [];
 			if ($byCount !== []) {
 				$nameRows = $this->Users->find()
@@ -420,6 +400,7 @@ class UsersController extends AppController {
 			'saldo_dia' => $saldoDia,
 			'ranking' => $ranking,
 			'ranking_period_label' => $rankingPeriodLabel,
+			'ranking_month_closed_count' => $rankingMonthClosedCount,
 			'trend_labels' => $trendLabels,
 			'trend_opened' => $trendOpened,
 			'trend_closed' => $trendClosed,
@@ -503,6 +484,62 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Mesma janela de datas do ranking (data_resolucao ou modified).
+	 *
+	 * @param \Cake\ORM\Query $q
+	 * @param string[] $cols
+	 */
+	protected function _dashPgmApplyRankingDateWindow($q, array $cols, $rangeStart, $rangeEnd) {
+		if ($rangeStart === null || $rangeEnd === null) {
+			return;
+		}
+		if (in_array('data_resolucao', $cols, true)) {
+			$q->where([
+				'OR' => [
+					[
+						'AND' => [
+							'Tickets.data_resolucao IS NOT' => null,
+							'Tickets.data_resolucao >=' => $rangeStart,
+							'Tickets.data_resolucao <=' => $rangeEnd,
+						],
+					],
+					[
+						'AND' => [
+							'Tickets.data_resolucao IS' => null,
+							'Tickets.modified >=' => $rangeStart,
+							'Tickets.modified <=' => $rangeEnd,
+						],
+					],
+				],
+			]);
+		} else {
+			$q->where([
+				'Tickets.modified >=' => $rangeStart,
+				'Tickets.modified <=' => $rangeEnd,
+			]);
+		}
+	}
+
+	/**
+	 * Quantidade de tickets fechados (situações encerradas) no intervalo, sem filtro de técnico.
+	 *
+	 * @param int $idempresa
+	 * @param int[] $closedSit
+	 * @param string[] $cols
+	 * @return int
+	 */
+	protected function _dashPgmClosedTicketsCountInRange($idempresa, array $closedSit, array $cols, $rangeStart, $rangeEnd) {
+		$q = $this->Tickets->find();
+		$q->where([
+			'Tickets.idempresa' => $idempresa,
+			'Tickets.situacao IN' => $closedSit,
+		]);
+		$this->_dashPgmApplyRankingDateWindow($q, $cols, $rangeStart, $rangeEnd);
+
+		return (int)$q->count();
+	}
+
+	/**
 	 * Tickets fechados por técnico no intervalo.
 	 * Data: com data_resolucao, usa resolução; se for NULL, cai para modified (legado).
 	 * Técnico: COALESCE(idtecnico_responsavel, owner_id), ignorando 0 — alinhado a TicketsTable::beforeSave.
@@ -536,33 +573,7 @@ class UsersController extends AppController {
 				'Tickets.situacao IN' => $closedSit,
 			])
 			->where($q->newExpr('(' . $tecSql . ') IS NOT NULL'));
-		if ($rangeStart !== null && $rangeEnd !== null) {
-			if (in_array('data_resolucao', $cols, true)) {
-				$q->where([
-					'OR' => [
-						[
-							'AND' => [
-								'Tickets.data_resolucao IS NOT' => null,
-								'Tickets.data_resolucao >=' => $rangeStart,
-								'Tickets.data_resolucao <=' => $rangeEnd,
-							],
-						],
-						[
-							'AND' => [
-								'Tickets.data_resolucao IS' => null,
-								'Tickets.modified >=' => $rangeStart,
-								'Tickets.modified <=' => $rangeEnd,
-							],
-						],
-					],
-				]);
-			} else {
-				$q->where([
-					'Tickets.modified >=' => $rangeStart,
-					'Tickets.modified <=' => $rangeEnd,
-				]);
-			}
-		}
+		$this->_dashPgmApplyRankingDateWindow($q, $cols, $rangeStart, $rangeEnd);
 
 		$rows = $q->group($tecExpr)
 			->hydrate(false)

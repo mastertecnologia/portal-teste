@@ -28,6 +28,7 @@
 		$saldoDia = (int)($kpi['saldo_dia'] ?? 0);
 		$rankingTecnicos = $kpi['ranking'] ?? [];
 		$rankingPeriodLabel = $kpi['ranking_period_label'] ?? 'mês';
+		$rankingMonthClosedCount = (int)($kpi['ranking_month_closed_count'] ?? 0);
 		$trendLabels = $kpi['trend_labels'] ?? [];
 		$trendOpened = $kpi['trend_opened'] ?? [];
 		$trendClosed = $kpi['trend_closed'] ?? [];
@@ -203,12 +204,14 @@
 					<div class="dash-pgm-ranking-card">
 						<div class="dash-pgm-table-header"><span>Ranking Técnicos</span><span class="badge blue"><?= h($rankingPeriodLabel) ?></span></div>
 						<div class="dash-pgm-ranking-scroll">
-							<?php if (empty($rankingTecnicos)): ?>
-								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>independe do saldo do dia: precisa fechado com responsável (campo do ticket). O selo indica o período (até “geral” se não houver dados nas janelas)</small></div>
-							<?php else: ?>
+							<?php if (!empty($rankingTecnicos)): ?>
 								<?php foreach ($rankingTecnicos as $row): ?>
 									<div class="dash-pgm-ranking-item"><span><?= (int)$row['place'] ?></span><strong><?= h($row['nome']) ?></strong><small><?= (int)$row['tickets'] ?> tickets</small></div>
 								<?php endforeach; ?>
+							<?php elseif ($rankingMonthClosedCount === 0): ?>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>nenhum ticket finalizado no mês calendário (mesma janela do ranking)</small></div>
+							<?php else: ?>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem ranking</strong><small><?= (int)$rankingMonthClosedCount ?> fechamento(s) no mês, sem responsável no ticket (idtecnico_responsavel / owner_id)</small></div>
 							<?php endif; ?>
 						</div>
 					</div>
