@@ -6,6 +6,7 @@
 	<?php
 		$ticketsPend = $ticketsPendentesTable ?? [];
 		$ticketsExec = $ticketsSendoResolvidosTable ?? [];
+		$ticketsFin = $ticketsFinalizadosTable ?? [];
 		$reqRows = $usuariosBloqueadosTable ?? [];
 		$reqCount = count($reqRows);
 		$ticketsAll = array_merge($ticketsPend, $ticketsExec);
@@ -48,7 +49,7 @@
 
 			<div class="dash-pgm-notif-panel" id="dashPgmNotifPanel">
 				<div class="dash-pgm-notif-header">
-					Notificações <span id="dashPgmNotifCount"><?= max(1, $reqCount) ?> novas</span>
+					Notificações <span id="dashPgmNotifCount"><?= $reqCount ?> novas</span>
 				</div>
 				<?php foreach (array_slice($reqRows, 0, 3) as $u): ?>
 					<?php $nomeReq = !empty($u->name) ? $u->name : (!empty($u->username) ? $u->username : 'Usuário'); ?>
@@ -257,7 +258,12 @@
 				title: 'Tickets Finalizados',
 				subtitle: '<?= (int)($ticketsFinalizadosCount ?? 0) ?> tickets finalizados no período',
 				head: ['ID', 'Cliente', 'Encerrado', 'Status'],
-				rows: []
+				rows: [
+					<?php foreach ($ticketsFin as $reg): ?>
+					<?php $clienteNome = $reg->cliente->tipo == C_ClientesTipoFisica ? $reg->cliente->nome : $reg->cliente->razaosocial; ?>
+					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($reg->modified ?? $reg->created, 'd/m/Y')) ?>, "Finalizado"],
+					<?php endforeach; ?>
+				]
 			},
 			requisicoes: {
 				color: '#bc8cff',
