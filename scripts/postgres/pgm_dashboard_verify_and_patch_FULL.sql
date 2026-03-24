@@ -117,6 +117,8 @@ BEGIN
 
   ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS idtecnico_responsavel integer NULL;
 
+  ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS modified timestamptz NULL;
+
   ALTER TABLE public.tickets
     ADD COLUMN IF NOT EXISTS tipo_ticket varchar(32) NULL,
     ADD COLUMN IF NOT EXISTS categoria varchar(128) NULL,
@@ -274,6 +276,8 @@ DECLARE
   n int;
   v_res int;
   v_fec int;
+  v_coalesce text;
+  v_src text;
 BEGIN
   IF to_regclass('public.tickets') IS NULL THEN
     RETURN;
@@ -291,16 +295,32 @@ BEGIN
     RETURN;
   END IF;
 
-  UPDATE public.tickets t
-  SET data_resolucao = t.modified
-  WHERE t.data_resolucao IS NULL
-    AND t.modified IS NOT NULL
-    AND t.situacao IN (v_res, v_fec);
+  SELECT string_agg('t.' || quote_ident(c.col), ', ' ORDER BY c.ord)
+  INTO v_coalesce
+  FROM (
+    SELECT u.col, u.ord
+    FROM unnest(ARRAY['modified', 'updated', 'updated_at', 'created']) WITH ORDINALITY AS u(col, ord)
+    WHERE EXISTS (
+      SELECT 1 FROM information_schema.columns x
+      WHERE x.table_schema = 'public' AND x.table_name = 'tickets' AND x.column_name = u.col
+    )
+  ) c;
+
+  IF v_coalesce IS NULL OR v_coalesce = '' THEN
+    PERFORM public.pgm_log('WARN', 'BACKFILL_DATA_RESOLUCAO',
+      'Nenhuma coluna de data (modified/updated/updated_at/created) em tickets', 'Backfill ignorado.');
+    RETURN;
+  END IF;
+
+  v_src := 'COALESCE(' || v_coalesce || ')';
+  EXECUTE 'UPDATE public.tickets t SET data_resolucao = ' || v_src
+    || ' WHERE t.data_resolucao IS NULL AND (' || v_src || ') IS NOT NULL AND t.situacao IN ('
+    || v_res::text || ', ' || v_fec::text || ')';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n > 0 THEN
     PERFORM public.pgm_log('FIX', 'BACKFILL_DATA_RESOLUCAO',
-      format('%s ticket(s): data_resolucao ← modified (sit %s,%s)', n, v_res, v_fec),
-      'Confirme IDs de situação no PHP.');
+      format('%s ticket(s): data_resolucao ← %s (sit %s,%s)', n, v_src, v_res, v_fec),
+      'Prioridade: modified, updated, updated_at, created. Confirme IDs de situação no PHP.');
   ELSE
     PERFORM public.pgm_log('INFO', 'BACKFILL_DATA_RESOLUCAO', 'Nenhum backfill de data_resolucao necessário', NULL);
   END IF;
