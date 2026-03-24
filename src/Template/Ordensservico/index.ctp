@@ -46,13 +46,20 @@ $osTechInitials = function ($name) {
 ?>
 <div class="col-md-12 p-0">
 	<div class="os-index-shell">
-		<header class="os-topbar">
-			<h1 class="os-page-title">Ordens de Serviço</h1>
-			<div class="os-topbar-search-slot" id="os-dt-search-slot" aria-label="Busca na tabela"></div>
-			<div class="os-topbar-actions">
+		<header class="os-page-head">
+			<div>
+				<h1 class="os-page-title">Ordens de Serviço</h1>
+				<p class="os-page-sub"><?= h(date('d/m/Y')) ?> · <?= h($nomeempresa ?? '') ?></p>
+			</div>
+			<div class="os-page-head-actions">
 				<?php if ($role == 0) : ?>
 					<?= $this->Html->link('Abrir ordem de serviço', ['action' => 'add'], ['class' => 'os-btn-primary', 'target' => '_blank']) ?>
 				<?php endif; ?>
+				<span class="os-icon-btn" title="Notificações" aria-hidden="true">
+					<svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+						<path d="M8 1a5 5 0 0 1 5 5v3l1 2H2l1-2V6a5 5 0 0 1 5-5ZM6.5 13.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.3"/>
+					</svg>
+				</span>
 			</div>
 		</header>
 
@@ -60,12 +67,12 @@ $osTechInitials = function ($name) {
 			<div class="os-kpi-card os-kpi-blue">
 				<div class="os-kpi-label">Total OSs</div>
 				<div class="os-kpi-value"><?= (int)$kpiTotal ?></div>
-				<div class="os-kpi-sub">Lista filtrada atual</div>
+				<div class="os-kpi-sub">Todos os registros</div>
 			</div>
 			<div class="os-kpi-card os-kpi-amber">
 				<div class="os-kpi-label">Em execução</div>
 				<div class="os-kpi-value"><?= (int)$kpiExec ?></div>
-				<div class="os-kpi-sub">Nesta visão</div>
+				<div class="os-kpi-sub">Aguardando conclusão</div>
 			</div>
 			<div class="os-kpi-card os-kpi-green">
 				<div class="os-kpi-label">Sincronizadas</div>
@@ -313,16 +320,27 @@ $osTechInitials = function ($name) {
 			},
 			initComplete: function () {
 				var $f = $('.os-index-shell .dataTables_filter');
-				$('#os-dt-search-slot').append($f);
-				$f.find('input').attr('placeholder', 'Buscar por número, cliente, técnico…');
+				var $host = $('#pgm-sidebar-dt-host');
+				if ($host.length) {
+					$('#pgm-sidebar-functions-search').hide();
+					$host.show().append($f);
+					$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
+				}
+				$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
 			}
 		});
 		table.search(filters).draw();
 		osBulkUi();
+		if ($('#badge-exec-os').length) {
+			$('#badge-exec-os').text('<?= (int)$kpiExec ?>');
+		}
 	});
 
 	window.onload = function() {
-		$('.os-index-shell .dataTables_filter input[type="search"]').focus();
+		var $inp = $('#pgm-sidebar-dt-host input[type="search"]');
+		if ($inp.length) {
+			$inp.focus();
+		}
 	};
 
 	window.ids = '';

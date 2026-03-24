@@ -2,7 +2,7 @@
  * Layout sem barra superior: logo, empresa, data e usuário ficam na sidebar.
  * Ativado com body.layout-no-topbar
  */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap");
 
 body.layout-no-topbar {
 	font-family: "DM Sans", "Poppins", sans-serif;
@@ -91,13 +91,13 @@ body.layout-no-topbar .pgm-sidebar-logo-link {
 }
 
 body.layout-no-topbar .pgm-sidebar-mark {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
 	background: #3d7eff;
 	color: #fff;
-	font-weight: 600;
-	font-size: 11px;
+	font-weight: 700;
+	font-size: 12px;
 	letter-spacing: 0.02em;
 	display: flex;
 	align-items: center;
@@ -125,6 +125,250 @@ body.layout-no-topbar .pgm-sidebar-logo-link .pgm-sidebar-sub {
 	font-size: 11px;
 	color: #6b7288;
 	font-weight: 400;
+}
+
+/* Busca (funções) + slot DataTables (página OS) */
+body.layout-no-topbar .pgm-sb-search-block {
+	padding: 10px 12px 8px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+	flex-shrink: 0;
+}
+
+body.layout-no-topbar .pgm-sb-sbox {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	background: #1a1e28;
+	border: 1px solid rgba(255, 255, 255, 0.07);
+	border-radius: 7px;
+	padding: 0 10px;
+	height: 32px;
+	transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+body.layout-no-topbar .pgm-sb-sbox:focus-within {
+	border-color: #3d7eff;
+	background: #222736;
+}
+
+body.layout-no-topbar .pgm-sb-sbox input {
+	background: none;
+	border: none;
+	outline: none;
+	color: #f0f2f8;
+	font-family: inherit;
+	font-size: 12.5px;
+	width: 100%;
+}
+
+body.layout-no-topbar .pgm-sb-sbox input::placeholder {
+	color: #555e78;
+}
+
+body.layout-no-topbar .pgm-sb-typeahead {
+	max-height: 200px;
+	overflow-y: auto;
+	margin-top: 6px !important;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: #13161d;
+}
+
+body.layout-no-topbar .pgm-sb-typeahead li a {
+	display: block;
+	padding: 8px 10px;
+	font-size: 12px;
+	color: #a8b0c4 !important;
+	text-decoration: none !important;
+	margin: 0 !important;
+	border-radius: 0 !important;
+}
+
+body.layout-no-topbar .pgm-sb-typeahead li a:hover {
+	background: #1a1e28 !important;
+	color: #f0f2f8 !important;
+}
+
+body.layout-no-topbar #pgm-sidebar-dt-host .dataTables_filter {
+	float: none;
+	margin: 0;
+	text-align: left;
+}
+
+body.layout-no-topbar #pgm-sidebar-dt-host .dataTables_filter label {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin: 0;
+	font-size: 0;
+	color: transparent;
+}
+
+body.layout-no-topbar #pgm-sidebar-dt-host .dataTables_filter input[type="search"] {
+	background: #1a1e28 !important;
+	border: 1px solid rgba(255, 255, 255, 0.07) !important;
+	border-radius: 7px !important;
+	padding: 0 10px !important;
+	height: 32px !important;
+	width: 100% !important;
+	max-width: none !important;
+	color: #f0f2f8 !important;
+	font-family: inherit !important;
+	font-size: 12.5px !important;
+}
+
+body.layout-no-topbar #pgm-sidebar-dt-host .dataTables_filter input:focus {
+	border-color: #3d7eff !important;
+	background: #222736 !important;
+}
+
+/* Submenu Ordens de Serviço */
+body.layout-no-topbar li.pgm-ng {
+	list-style: none;
+	margin: 2px 8px;
+	padding: 0;
+}
+
+body.layout-no-topbar .pgm-np {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8.5px 9px;
+	border-radius: 7px;
+	color: #a8b0c4;
+	font-size: 13px;
+	cursor: pointer;
+	user-select: none;
+	transition: background 0.18s ease, color 0.18s ease;
+}
+
+body.layout-no-topbar .pgm-np:hover {
+	background: #1a1e28;
+	color: #f0f2f8;
+}
+
+body.layout-no-topbar .pgm-np.open-p {
+	background: rgba(61, 126, 255, 0.15);
+	color: #6ea8ff;
+}
+
+body.layout-no-topbar .pgm-np .ni-ico-fa {
+	width: 16px;
+	text-align: center;
+	opacity: 0.75;
+	font-size: 14px;
+	flex-shrink: 0;
+}
+
+body.layout-no-topbar .pgm-np.open-p .ni-ico-fa {
+	opacity: 1;
+	color: #6ea8ff;
+}
+
+body.layout-no-topbar .pgm-os-badge {
+	margin-left: auto;
+	background: rgba(61, 126, 255, 0.15);
+	color: #6ea8ff;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 1px 6px;
+	border-radius: 20px;
+	font-family: "DM Mono", monospace;
+	flex-shrink: 0;
+}
+
+body.layout-no-topbar .pgm-chevron {
+	color: #555e78;
+	transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+	flex-shrink: 0;
+	margin-left: 4px;
+}
+
+body.layout-no-topbar .pgm-ng.open .pgm-chevron {
+	transform: rotate(180deg);
+}
+
+body.layout-no-topbar .pgm-nc {
+	overflow: hidden;
+	max-height: 0;
+	transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	padding: 0;
+	margin: 0;
+	position: relative;
+}
+
+body.layout-no-topbar .pgm-ng.open .pgm-nc {
+	max-height: 220px;
+}
+
+body.layout-no-topbar .pgm-nc::before {
+	content: "";
+	position: absolute;
+	left: 19px;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: rgba(255, 255, 255, 0.12);
+}
+
+body.layout-no-topbar .pgm-nc li {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+body.layout-no-topbar a.pgm-nch {
+	display: flex !important;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 9px 7px 31px !important;
+	margin: 0 0 2px 0 !important;
+	border-radius: 6px !important;
+	color: #555e78 !important;
+	font-size: 12.5px !important;
+	text-decoration: none !important;
+	transition: background 0.18s ease, color 0.18s ease;
+}
+
+body.layout-no-topbar a.pgm-nch:hover {
+	color: #8b92a8 !important;
+	background: #1a1e28 !important;
+}
+
+body.layout-no-topbar a.pgm-nch.act {
+	color: #6ea8ff !important;
+	font-weight: 500;
+}
+
+body.layout-no-topbar a.pgm-nch.pgm-nch-nova {
+	color: #22c55e !important;
+}
+
+body.layout-no-topbar .pgm-ndot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: #555e78;
+	flex-shrink: 0;
+	transition: background 0.18s ease, transform 0.18s ease;
+}
+
+body.layout-no-topbar a.pgm-nch:hover .pgm-ndot {
+	background: #8b92a8;
+}
+
+body.layout-no-topbar a.pgm-nch.act .pgm-ndot {
+	background: #3d7eff;
+	transform: scale(1.5);
+}
+
+body.layout-no-topbar a.pgm-nch.pgm-nch-nova .pgm-ndot {
+	background: #22c55e;
+}
+
+body.layout-no-topbar .sidebar-nav > ul > li.pgm-ng.active > .pgm-np {
+	background: rgba(61, 126, 255, 0.15);
+	color: #6ea8ff;
 }
 
 /* Empresa + data */

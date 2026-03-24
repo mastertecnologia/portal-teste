@@ -2,6 +2,13 @@
 	use Cake\Routing\Router;
 	require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php');
 
+	$ctrl = $this->request->getParam('controller');
+	$act = $this->request->getParam('action');
+	$osOpen = ($ctrl === 'Ordensservico');
+	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
+	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
+	$roleNav = (int)($role ?? 1);
+
 	$nameTrim = trim((string)($name ?? ''));
 	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
 	$u0 = $partsName[0] ?? '';
@@ -31,6 +38,20 @@
 		) ?>
 	</div>
 
+	<div class="pgm-sb-search-block">
+		<div class="pgm-sidebar-functions-search" id="pgm-sidebar-functions-search">
+			<div class="pgm-sb-sbox">
+				<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="color:#555e78;flex-shrink:0">
+					<circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+					<path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+				</svg>
+				<input type="text" id="pesquisa-funcoes" autocomplete="off" placeholder="Buscar funções…" />
+			</div>
+			<ul class="pgm-sb-typeahead htmlpesquisa list-unstyled m-0 p-0"></ul>
+		</div>
+		<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host" style="display:none" aria-label="Busca na listagem"></div>
+	</div>
+
 	<div class="pgm-sidebar-meta">
 		<div class="pgm-meta-row">
 			<div style="flex:1;min-width:0">
@@ -58,7 +79,25 @@
 				<li class="<?= $dashboard ?>"><?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu"> Dashboard </span>', ['controller' => 'Users', 'action' => 'dashboard'], ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 				<li class="<?= $clientesActive ?>"><?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu"> Clientes </span>', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'waves-effect waves-dark m-r-0', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 				<li class="<?= $produtosActive ?>"><?= $this->Html->link('<i class="fa fa-boxes"></i><span class="hide-menu"> Produtos </span>', ['controller' => 'Produtos', 'action' => 'index'], ['class' => 'waves-effect waves-dark m-r-0', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
-				<li class="<?= $ordensActive ?>"><?= $this->Html->link('<i class="fas fa-file-signature"></i><span class="hide-menu"> Ordens de Serviço </span>', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'waves-effect m-r-0 waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+
+				<li class="pgm-ng <?= h($ordensActive) ?> <?= $osOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $osOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $osOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-file-signature ni-ico-fa"></i>
+						<span class="hide-menu">Ordens de Serviço</span>
+						<?php if ($osIndexActive) : ?>
+							<span class="pgm-os-badge hide-menu" id="badge-exec-os">—</span>
+						<?php endif; ?>
+						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<li><?= $this->Html->link('<span class="pgm-ndot"></span><span>Listar ordens</span>', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'pgm-nch ' . ($osIndexActive ? 'act' : ''), 'escape' => false]); ?></li>
+						<?php if ($roleNav === 0) : ?>
+						<li><?= $this->Html->link('<span class="pgm-ndot"></span><span>Nova ordem</span>', ['controller' => 'Ordensservico', 'action' => 'add'], ['class' => 'pgm-nch pgm-nch-nova ' . ($osAddActive ? 'act' : ''), 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']); ?></li>
+						<?php endif; ?>
+						<li><?= $this->Html->link('<span class="pgm-ndot"></span><span>Relatórios</span>', ['controller' => 'Ordensservico', 'action' => 'imprimirordens'], ['class' => 'pgm-nch', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']); ?></li>
+					</ul>
+				</li>
+
 				<li class="<?= $ticketsActive ?>"><?= $this->Html->link('<i class="fas fa-ticket-alt"></i><span class="hide-menu"> Tickets </span>', ['controller' => 'Servicedesk', 'action' => 'index'], ['class' => 'waves-effect waves-dark m-r-0', 'aria-expanded' => 'false', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']); ?></li>
 
 				<li class="pgm-nav-section-label" aria-hidden="true"><span>Operações</span></li>
@@ -106,25 +145,45 @@
 		}
 		return true;
 	};
-	$('#pesquisa-funcoes').keyup(function(e){
+	$(document).on('click', '.pgm-np', function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		var $g = $(this).closest('.pgm-ng');
+		var on = !$g.hasClass('open');
+		$g.toggleClass('open', on);
+		$(this).toggleClass('open-p', on).attr('aria-expanded', on ? 'true' : 'false');
+	});
+	$('.pgm-np').on('keydown', function(e) {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			$(this).trigger('click');
+		}
+	});
+	$('#pesquisa-funcoes').on('keyup', function(e) {
 		e.preventDefault();
 		$.ajax({
-			url:  "<?= Router::url(['controller'=>'Pesquisa','action'=>'pesquisa']);?>/" + $('#pesquisa-funcoes').val(),
+			url: "<?= Router::url(['controller'=>'Pesquisa','action'=>'pesquisa']);?>/" + $('#pesquisa-funcoes').val(),
 			dataType: "json",
-			success: function(data){
+			success: function(data) {
 				$('.htmlpesquisa').html('');
 				$.each(data, function(key, array) {
-					$('.htmlpesquisa').append('<li><a class="link link-btn" data-controller="'+array.Controller+'"data-action="'+array.Action+'" >'+array.ControllerQueAparece+ ' > ' +array.ActionQueAparece+'</a></li>');
+					$('.htmlpesquisa').append('<li><a class="link link-btn" data-controller="'+array.Controller+'" data-action="'+array.Action+'">'+array.ControllerQueAparece+ ' > ' +array.ActionQueAparece+'</a></li>');
 				});
 			},
 		});
 	});
-	$(document).on("click", ".link-btn",function(e) {
+	$(document).on("click", ".link-btn", function(e) {
 		var controller = $(this).attr('data-controller');
 		var action = $(this).attr('data-action');
 		$.ajax({
 			url: "<?= Router::url(['controller'=>'Pesquisa','action'=>'link']);?>/" + controller + '/' + action,
-			success: function(data){ window.location = data; },
+			success: function(data) { window.location = data; },
 		});
 	});
+	$(document).on('click', 'a.pgm-nch', function(e) {
+		e.stopPropagation();
+	});
+	setTimeout(function() {
+		$('.pgm-nc').removeClass('in');
+	}, 0);
 </script>
