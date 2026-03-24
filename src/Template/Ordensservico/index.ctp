@@ -282,7 +282,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	</div>
 	<div class="os-drawer-body" id="os-drawer-body"></div>
 	<div class="os-drawer-foot">
-		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2" title="Fecha a pré-visualização e permanece na listagem">Voltar à lista</button>
+		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2" title="Volta à listagem de ordens">Fechar</button>
 		<button type="button" class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit-btn" data-href="#" title="Abre o cadastro completo da OS">Editar OS</button>
 	</div>
 </aside>
@@ -351,7 +351,26 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		sync: <?= json_encode(C_OrdensSituacaoSincronizadaPeloGrid) ?>,
 		lib: <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>
 	};
-	var osIndexRowsById = <?= json_encode(!empty($osRowsById) ? $osRowsById : new \stdClass(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
+	<?php
+	$_osIndexJson = json_encode(!empty($osRowsById) ? $osRowsById : new \stdClass(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
+	if ($_osIndexJson === false) {
+		$_osIndexJson = '{}';
+	}
+	?>
+	var osIndexRowsById = <?= $_osIndexJson ?>;
+
+	/** ID da linha: data-os-id ou fallback da 1ª célula (DataTables pode remover data-os-id ao redesenhar). */
+	function osResolveOsRowId($tr) {
+		if (!$tr || !$tr.length) return '';
+		var rid = $tr.attr('data-os-id');
+		if (rid != null && rid !== '') return String(rid);
+		var order = $tr.find('td').first().attr('data-order');
+		if (order != null && order !== '') {
+			$tr.attr('data-os-id', order);
+			return String(order);
+		}
+		return '';
+	}
 
 	function osEscapeHtml(text) {
 		return $('<div/>').text(text == null ? '' : String(text)).html();
@@ -524,10 +543,10 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					set[id] = true;
 				}
 			});
-			$('#tableOrdens tbody tr[data-os-id]').each(function () {
-				var rid = $(this).attr('data-os-id');
-				if (rid == null || rid === '') return;
-				$(this).toggleClass('os-row-sel', !!set[String(rid)]);
+			$('#tableOrdens tbody tr').each(function () {
+				var rid = osResolveOsRowId($(this));
+				if (rid === '') return;
+				$(this).toggleClass('os-row-sel', !!set[rid]);
 			});
 		}
 
@@ -617,6 +636,16 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
 				}
 				$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
+			},
+			drawCallback: function () {
+				$('#tableOrdens tbody tr').each(function () {
+					var $tr = $(this);
+					if (!$tr.find('td').length) return;
+					var order = $tr.find('td').first().attr('data-order');
+					if (order != null && order !== '' && (!$tr.attr('data-os-id') || $tr.attr('data-os-id') === '')) {
+						$tr.attr('data-os-id', order);
+					}
+				});
 			}
 		});
 		table.search(osDtInitialFilter).draw();
@@ -626,8 +655,8 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		}
 
 		function osRowOpenDrawer($tr) {
-			var rid = $tr.attr('data-os-id');
-			if (rid == null || rid === '') return;
+			var rid = osResolveOsRowId($tr);
+			if (rid === '') return;
 			var row = osIndexRowsById && (osIndexRowsById[rid] || osIndexRowsById[String(rid)]);
 			if (!row || !row.id) return;
 			osOpenDrawer(row, $tr);
@@ -642,21 +671,25 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			return t;
 		}
 
-		/* Delegar no document: tbody/linhas podem ser recriados pelo DataTables */
-		$(document).on('click', '#tableOrdens tbody tr[data-os-id]', function(e) {
+		/* Delegar no document: tbody/linhas podem ser recriados pelo DataTables (tr pode perder data-os-id) */
+		$(document).on('click', '#tableOrdens tbody tr', function(e) {
+			var $tr = $(this);
+			if (!osResolveOsRowId($tr)) return;
 			var el = osEventTargetEl(e);
 			if (!el || typeof el.closest !== 'function') return;
 			if (el.closest('.os-row-checkbox')) return;
+			if (el.closest('label.custom-control-label')) return;
 			if (el.closest('a[href]')) return;
 			if (el.closest('button')) return;
 			if (el.closest('input[type="checkbox"]')) return;
-			osRowOpenDrawer($(this));
+			osRowOpenDrawer($tr);
 		});
 
-		$(document).on('keydown', '#tableOrdens tbody tr[data-os-id] .link[role="button"]', function(e) {
+		$(document).on('keydown', '#tableOrdens tbody tr .link[role="button"]', function(e) {
 			if (e.key !== 'Enter' && e.key !== ' ') return;
 			e.preventDefault();
-			osRowOpenDrawer($(this).closest('tr[data-os-id]'));
+			var $tr = $(this).closest('#tableOrdens tbody tr');
+			if (osResolveOsRowId($tr)) osRowOpenDrawer($tr);
 		});
 
 		$('#os-btn-export-csv').on('click', function() {
@@ -669,8 +702,8 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			dt.rows({ search: 'applied' }).every(function() {
 				var $tr = $(this.node());
 				var cols = [];
-				var rid = $tr.attr('data-os-id');
-				var rowMeta = rid != null && rid !== '' && osIndexRowsById && (osIndexRowsById[rid] || osIndexRowsById[String(rid)]);
+				var rid = osResolveOsRowId($tr);
+				var rowMeta = rid !== '' && osIndexRowsById && (osIndexRowsById[rid] || osIndexRowsById[String(rid)]);
 				$tr.find('td').each(function(i) {
 					var cell = $(this);
 					var txt;
