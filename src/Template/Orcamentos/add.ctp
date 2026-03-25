@@ -56,98 +56,197 @@
 		padding: 0.5em 0.3em !important;
 	}
 </style>
-<div class="col-md-12 orc-premium-wrap">
+<div class="col-md-12 orc-premium-wrap orc-premium-form">
+	<!-- Cabeçalho da página -->
+	<div class="orc-page-head">
+		<div>
+			<div class="orc-eyebrow">Módulo comercial</div>
+			<h1 class="orc-h1">Proposta de Orçamento</h1>
+		</div>
+		<?= $this->Html->link(
+			'<i class="fa fa-arrow-left"></i> Voltar',
+			['action' => 'index'],
+			['class' => 'btn btn-default', 'escape' => false]
+		) ?>
+	</div>
+
+	<!-- Stepper -->
+	<div class="orc-stepper">
+		<div class="orc-stp done">
+			<div class="orc-stp-c"><i class="fa fa-check" style="font-size:10px;"></i></div>
+			<div class="orc-stp-l">Dados</div>
+			<div class="orc-stp-line"></div>
+		</div>
+		<div class="orc-stp active">
+			<div class="orc-stp-c">2</div>
+			<div class="orc-stp-l">Itens</div>
+			<div class="orc-stp-line"></div>
+		</div>
+		<div class="orc-stp">
+			<div class="orc-stp-c">3</div>
+			<div class="orc-stp-l">Revisão</div>
+			<div class="orc-stp-line"></div>
+		</div>
+		<div class="orc-stp">
+			<div class="orc-stp-c">4</div>
+			<div class="orc-stp-l">Envio</div>
+		</div>
+	</div>
+
 	<div class="card orc-premium-card-inner">
 		<div class="card-body">
-			<h3 class="text-center orc-premium-page-title">Proposta de Orçamento</h3>
-			<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?> <!-- Pega o ID do item para edição -->
-			<?= $this->Form->create($orcamento, ['url' => ['action' => 'add'], 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material']); //floating-labels?> 
+			<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?>
+			<?= $this->Form->create($orcamento, ['url' => ['action' => 'add'], 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material']); ?>
+
+				<!-- Dados do cliente -->
+				<div class="orc-sec-title">Dados do cliente</div>
 				<div class="row">
-					<br>
 					<div class="col-lg-10 col-sm-12">
 						<label class="control-label">Cliente</label>
 						<?= $this->Form->control('idcliente', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'label' => false, 'required' => true]) ?>
 					</div>
 					<div class="col-lg-2 col-sm-12">
 						<div class="form-group">
-							<label class="control-label text-muted">Válido até</label>
-							<?= $this->Form->text('validoate', ['class' => 'form-control datepicker ', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
+							<label class="control-label">Válido até</label>
+							<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
 						</div>
 					</div>
 				</div>
 				<div class="row m-t-10">
 					<div class="col-12">
-						<label class="control-label">Observação</label>
+						<label class="control-label">Observação / condições</label>
 						<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'editor form-control', 'label' => false]) ?>
 					</div>
 				</div>
-				<h4 class='texte-center m-t-10'>Produtos e Serviços</h4>
-				<div class="row m-t-10">
+
+				<!-- Produtos e Serviços -->
+				<div class="orc-sec-title m-t-20" style="margin-top:22px;">
+					Produtos e serviços
+					<span style="margin-left:auto;margin-right:0;">
+						<button type="button" class="btn btn-sm btn-default" onclick="$('#orc-catalog-overlay').addClass('open');" style="font-size:11px;">
+							<i class="fa fa-list"></i> Buscar no catálogo
+						</button>
+					</span>
+				</div>
+
+				<!-- Resumo de margem -->
+				<div class="orc-margin-summary" id="orc-margin-summary">
+					<div class="orc-margin-card">
+						<div class="orc-margin-card-val" id="ms-subtotal" style="color:#1a1a18;">R$ 0,00</div>
+						<div class="orc-margin-card-lbl">Subtotal</div>
+					</div>
+					<div class="orc-margin-card">
+						<div class="orc-margin-card-val" id="ms-unitario" style="color:#6b6a65;">—</div>
+						<div class="orc-margin-card-lbl">Último vl. unitário</div>
+					</div>
+					<div class="orc-margin-card">
+						<div class="orc-margin-card-val" id="ms-qtd" style="color:#6b6a65;">—</div>
+						<div class="orc-margin-card-lbl">Última qtde.</div>
+					</div>
+					<div class="orc-margin-card">
+						<div class="orc-margin-card-val" id="ms-itens" style="color:#1d9e75;">0</div>
+						<div class="orc-margin-card-lbl">Itens no carrinho</div>
+					</div>
+				</div>
+
+				<div class="row">
 					<div class="col-lg-2 col-md-12">
 						<label class="control-label">Código</label>
 						<?= $this->Form->control('idproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false]) ?>
 					</div>
 					<div class="col-lg-5 col-md-12">
-						<div class="form-group ">
-							<label class="control-label text-muted">Produto/Serviço</label>
+						<div class="form-group">
+							<label class="control-label">Produto/Serviço</label>
 							<?= $this->Form->control('servico', ['class' => 'form-control', 'label' => false]) ?>
-							<small class="qtdEstoque">  </small>
+							<small class="qtdEstoque text-muted"></small>
 						</div>
 					</div>
 					<div class="col-lg-1 col-md-6">
-						<div class="form-group ">
-							<label class="control-label text-muted">Tipo</label>
+						<div class="form-group">
+							<label class="control-label">Tipo</label>
 							<?= $this->Form->control('tipo', ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false]) ?>
 						</div>
 					</div>
 					<div class="col-lg-1 col-md-6">
-						<div class="form-group ">
-							<label class="control-label text-muted">Qtde.</label>
+						<div class="form-group">
+							<label class="control-label">Qtde.</label>
 							<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
 						</div>
 					</div>
-					<div class="col-lg-1 col-md-6 ">
+					<div class="col-lg-1 col-md-6">
 						<div class="form-group">
-							<label class="control-label text-muted">Vl. Mensal</label>
+							<label class="control-label">Vl. Mensal</label>
 							<?= $this->Form->control('valormensal', ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false]) ?>
 						</div>
 					</div>
 					<div class="col-lg-1 col-md-6">
-						<div class="form-group ">
-							<label class="control-label text-muted">Vl. Unitário </label>
+						<div class="form-group">
+							<label class="control-label">Vl. Unitário</label>
 							<?= $this->Form->control('valoruni', ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
 						</div>
 					</div>
 					<div class="col-lg-1 col-md-12">
-						<div class="form-group ">
-							<label class="control-label text-muted">Vl. Total</label>
+						<div class="form-group">
+							<label class="control-label">Vl. Total</label>
 							<?= $this->Form->control('valordoservico', ['class' => 'form-control', 'label' => false, 'disabled' => true]) ?>
 						</div>
 					</div>
 				</div>
-				<div class='row'>
+				<div class="row">
 					<div class="col-lg-12 col-md-12">
-						<div class="form-group ">
-							<label class="control-label text-muted">Descrição</label>
+						<div class="form-group">
+							<label class="control-label">Descrição adicional</label>
 							<?= $this->Form->control('observacao', ['class' => 'form-control', 'label' => false]) ?>
 						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="col-12">
-						<button class="btn btn-secondary float-right" id='btn-addservico'>Adicionar</button>
-						<!-- botoes para edição -->
-						<button class="btn btn-warning float-right mr-2" id='btn-editarservico' style="display: none;">Atualizar</button>
-						<button class="btn btn-secondary float-right mr-2" id='btn-cancelaredicao' style="display: none;">Cancelar</button>
-					</div>
+
+				<!-- Botões de adicionar/editar item -->
+				<button type="button" class="orc-add-row" id="btn-addservico">
+					<i class="fa fa-plus" style="font-size:11px;"></i> Adicionar item
+				</button>
+				<button type="button" class="btn btn-warning btn-sm float-right mr-2" id="btn-editarservico" style="display:none;">
+					<i class="fa fa-check"></i> Atualizar
+				</button>
+				<button type="button" class="btn btn-default btn-sm float-right mr-2" id="btn-cancelaredicao" style="display:none;">
+					Cancelar
+				</button>
+
+				<!-- Carrinho -->
+				<div id="carrinho" class="m-t-10"></div>
+
+				<!-- Footer de ações -->
+				<div class="orc-footer-bar">
+					<span style="font-size:11px;color:var(--orc-text-muted);">
+						<i class="fa fa-info-circle"></i> Revise os itens antes de gerar o orçamento
+					</span>
+					<?= $this->Form->button('<i class="fa fa-file-text-o"></i> Gerar Orçamento', [
+						'class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-orc-premium-primary',
+						'escape' => false
+					]) ?>
 				</div>
-				<div id="carrinho" class='m-t-10'> </div>
-				<div class="row">
-					<div class="col-12">
-						<?= $this->Form->button('Gerar Orçamento', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-orc-premium-primary']) ?>
-					</div>
-				</div>
+
 			<?= $this->Form->end(); ?>
+		</div>
+	</div>
+</div>
+
+<!-- Catalog overlay -->
+<div class="orc-catalog-overlay" id="orc-catalog-overlay" onclick="if(event.target===this)$(this).removeClass('open');">
+	<div class="orc-catalog-modal">
+		<div class="orc-catalog-header">
+			<h4><i class="fa fa-list" style="color:#1d9e75;margin-right:8px;"></i> Catálogo de Produtos e Serviços</h4>
+			<button type="button" class="btn btn-xs btn-default" onclick="$('#orc-catalog-overlay').removeClass('open');">
+				<i class="fa fa-times"></i>
+			</button>
+		</div>
+		<div class="orc-catalog-search">
+			<input type="text" id="orc-catalog-search-input" placeholder="Buscar produto ou serviço..." oninput="orcCatalogFilter(this.value)" />
+		</div>
+		<div class="orc-catalog-body" id="orc-catalog-body">
+			<div style="padding:24px;text-align:center;color:#9a9890;font-size:12px;">
+				<i class="fa fa-spinner fa-spin"></i> Carregando catálogo...
+			</div>
 		</div>
 	</div>
 </div>
@@ -560,6 +659,71 @@
 	// Atualizar cálculo quando campos mudarem
 	$('#quantidade, #valoruni, #valormensal').on('keyup change', function() {
 		calcularValorTotal();
+		// Atualiza cards de resumo
+		$('#ms-unitario').text($('#valoruni').val() || $('#valormensal').val() || '—');
+		$('#ms-qtd').text($('#quantidade').val() || '—');
 	});
+
+	// Catálogo overlay
+	var orcCatalogData = [];
+	$('#orc-catalog-overlay').on('click', function(e){
+		if($(e.target).is('#orc-catalog-overlay')) $(this).removeClass('open');
+	});
+
+	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function(){
+		var cod  = $(this).data('cod');
+		var nome = $(this).data('nome');
+		var tipo = $(this).data('tipo');
+		var uni  = $(this).data('uni');
+		var id   = $(this).data('id');
+
+		$('#idproduto').val(id).trigger('change');
+		// Se não encontrar pelo trigger, preenche manualmente
+		setTimeout(function(){
+			if($('#servico').val() === '') {
+				$('#servico').val(nome);
+				$('#valoruni').val(uni);
+			}
+		}, 400);
+
+		$('#orc-catalog-overlay').removeClass('open');
+	});
+
+	// Abre catalog e carrega produtos via selectpicker options
+	$('#orc-catalog-overlay').on('click', function(){
+		var $body = $('#orc-catalog-body');
+		if(orcCatalogData.length === 0) {
+			orcCatalogData = [];
+			$('#idproduto option').each(function(){
+				if($(this).val() && $(this).val() != '0') {
+					orcCatalogData.push({ id: $(this).val(), nome: $(this).text() });
+				}
+			});
+			orcRenderCatalog(orcCatalogData);
+		}
+	});
+
+	function orcRenderCatalog(items) {
+		var $body = $('#orc-catalog-body');
+		if(!items.length) {
+			$body.html('<div style="padding:24px;text-align:center;color:#9a9890;font-size:12px;">Nenhum produto encontrado.</div>');
+			return;
+		}
+		var html = '';
+		items.forEach(function(p){
+			html += '<div class="orc-catalog-item" data-id="' + p.id + '" data-nome="' + $('<div>').text(p.nome).html() + '" data-cod="" data-tipo="" data-uni="">' +
+				'<div class="orc-catalog-item-info">' +
+				'<div class="orc-catalog-item-name">' + $('<div>').text(p.nome).html() + '</div>' +
+				'</div>' +
+				'<div><i class="fa fa-chevron-right" style="color:#9a9890;font-size:11px;"></i></div>' +
+				'</div>';
+		});
+		$body.html(html);
+	}
+
+	function orcCatalogFilter(q) {
+		var filtered = q ? orcCatalogData.filter(function(p){ return p.nome.toLowerCase().indexOf(q.toLowerCase()) > -1; }) : orcCatalogData;
+		orcRenderCatalog(filtered);
+	}
 
 </script>

@@ -97,125 +97,185 @@
 		opacity: 0;
     }
 </style>
-<div class="col-md-12 orc-premium-wrap">
+<div class="col-md-12 orc-premium-wrap orc-premium-form">
+	<!-- Cabeçalho -->
+	<div class="orc-page-head">
+		<div>
+			<div class="orc-eyebrow">Módulo comercial</div>
+			<h1 class="orc-h1">
+				Orçamento
+				<span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
+			</h1>
+		</div>
+		<div style="display:flex;gap:8px;flex-wrap:wrap;">
+			<?= $this->Html->link(
+				'<i class="fa fa-arrow-left"></i> Voltar',
+				['action' => 'index'],
+				['class' => 'btn btn-default', 'escape' => false]
+			) ?>
+		</div>
+	</div>
+
 	<div class="card orc-premium-card-inner">
 		<div class="card-body">
-			<h3 class="text-center orc-premium-page-title">Proposta de Orçamento</h3>
-			<?= $this->Form->create($orcamento, ['class' => 'form-material']); //floating-labels?> 
+			<?= $this->Form->create($orcamento, ['class' => 'form-material']); ?>
+
+				<!-- Dados do cliente -->
+				<div class="orc-sec-title">Dados do cliente</div>
 				<div class="row m-t-10">
 					<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
-						<label class="control-label">Cliente</label> <br>
-						<?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?>
+						<label class="control-label">Cliente</label>
+						<div style="font-size:14px;font-weight:500;color:#1a1a18;padding:6px 0;">
+							<?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?>
+						</div>
 					</div>
 					<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
-						<label class="control-label text-muted">Válido até</label>
-						<?= $this->Form->text('validoate', ['class' => 'form-control datepicker ', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true, 'data-mask' => '99/99/9999']) ?>
+						<label class="control-label">Válido até</label>
+						<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true, 'data-mask' => '99/99/9999']) ?>
 					</div>
 				</div>
 				<div class="row m-t-10">
 					<div class="col-12">
-						<label class="control-label">Observação</label>
+						<label class="control-label">Observação / condições</label>
 						<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'editor form-control', 'label' => false]) ?>
 					</div>
 				</div>
+
+				<!-- Status + OS vinculada -->
 				<div class="row m-t-10">
 					<div class="col-12">
-						<label class="control-label text-muted">Status do orçamento</label>
-						
-						<h5> <?= orcamentoStatus($orcamento->status) ?> </h5>
-
-						<?php if(isset($temordem) && $temordem != 'nao'): ?>
-							<h5 class="m-t-10"> 
+						<div class="orc-sec-title" style="margin-top:14px;">Status</div>
+						<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+							<span><?= orcamentoStatus($orcamento->status) ?></span>
+							<?php if(isset($temordem) && $temordem != 'nao'): ?>
 								<?= $this->Html->link(
-									'<i class="fa fa-wrench"></i> Ordem de serviço gerada: Nº ' . $temordem, 
-									["controller" => "ordensservico", "action" => "edit", $temordem], 
-									['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white m-r-5', 'escape' => false]
-								); ?> 
-							</h5>
-						<?php endif; ?>
+									'<i class="fa fa-wrench"></i> OS Nº ' . $temordem,
+									['controller' => 'ordensservico', 'action' => 'edit', $temordem],
+									['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white', 'escape' => false]
+								); ?>
+							<?php endif; ?>
+						</div>
 					</div>
 				</div>
-				<?php if($orcamento->status != C_OrcamentoStatusAprovado && $role == 0) { ?> 
-					<h4 class='texte-center'>Produtos e Serviços</h4><br>
+
+				<?php if($orcamento->status != C_OrcamentoStatusAprovado && $role == 0): ?>
+					<!-- Adicionar produtos -->
+					<div class="orc-sec-title" style="margin-top:22px;">
+						Produtos e serviços
+					</div>
 					<div class="row">
 						<div class="col-lg-2 col-md-12">
 							<label class="control-label">Código</label>
 							<?= $this->Form->control('idproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false]) ?>
 						</div>
 						<div class="col-lg-5 col-md-12">
-							<div class="form-group ">
-								<label class="control-label text-muted">Produto/Serviço</label>
+							<div class="form-group">
+								<label class="control-label">Produto/Serviço</label>
 								<?= $this->Form->control('servico', ['class' => 'form-control', 'label' => false]) ?>
-								<small class="qtdEstoque">  </small>
+								<small class="qtdEstoque text-muted"></small>
 							</div>
 						</div>
 						<div class="col-lg-1 col-md-6">
-							<div class="form-group ">
-								<label class="control-label text-muted">Tipo</label>
+							<div class="form-group">
+								<label class="control-label">Tipo</label>
 								<?= $this->Form->control('tipo', ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false]) ?>
 							</div>
 						</div>
 						<div class="col-lg-1 col-md-6">
-							<div class="form-group ">
-								<label class="control-label text-muted">Qtde.</label>
+							<div class="form-group">
+								<label class="control-label">Qtde.</label>
 								<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
 							</div>
 						</div>
-						<div class="col-lg-1 col-md-6 ">
+						<div class="col-lg-1 col-md-6">
 							<div class="form-group">
-								<label class="control-label text-muted">Vl. Mensal</label>
+								<label class="control-label">Vl. Mensal</label>
 								<?= $this->Form->control('valormensal', ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false]) ?>
 							</div>
 						</div>
 						<div class="col-lg-1 col-md-6">
-							<div class="form-group ">
-								<label class="control-label text-muted">Vl. Unitário </label>
+							<div class="form-group">
+								<label class="control-label">Vl. Unitário</label>
 								<?= $this->Form->control('valoruni', ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
 							</div>
 						</div>
 						<div class="col-lg-1 col-md-12">
-							<div class="form-group ">
-								<label class="control-label text-muted">Vl. Total</label>
+							<div class="form-group">
+								<label class="control-label">Vl. Total</label>
 								<?= $this->Form->control('valordoservico', ['class' => 'form-control', 'label' => false, 'disabled' => true]) ?>
 							</div>
 						</div>
 					</div>
-					<div class='row'>
+					<div class="row">
 						<div class="col-lg-12 col-md-12">
-							<div class="form-group ">
-								<label class="control-label text-muted">Descrição</label>
+							<div class="form-group">
+								<label class="control-label">Descrição adicional</label>
 								<?= $this->Form->control('observacao', ['class' => 'form-control', 'label' => false]) ?>
 							</div>
 						</div>
 					</div>
-					<button class="btn btn-secondary float-right" id='btn-addservico'>Adicionar</button>
-					<br><br>
-				<?php }
-				if($orcamento->status == C_OrcamentoStatusAprovado && $role == 0 && !empty($orcamento->ipaprovacao)) { ?> 
-					<div class="row">
-						<div class="col-lg-2 col-md-3 col-sm-4 col-xs-12">
-							<label class="control-label">IP aprovação: </label> <br>
-							<?= $orcamento->ipaprovacao ?>
-						</div>
-						<div class="col-lg-2 col-md-3 col-sm-4 col-xs-12">
-							<label class="control-label">Navegador aprovação: </label> <br>
-							<?= $orcamento->navegadoraprovacao ?>
+					<button type="button" class="orc-add-row" id="btn-addservico">
+						<i class="fa fa-plus" style="font-size:11px;"></i> Adicionar item
+					</button>
+				<?php endif; ?>
+
+				<?php if($orcamento->status == C_OrcamentoStatusAprovado && $role == 0 && !empty($orcamento->ipaprovacao)): ?>
+					<div class="orc-alcada-block">
+						<div class="orc-alcada-icon"><i class="fa fa-check"></i></div>
+						<div>
+							<div style="font-size:12px;font-weight:600;color:#0f6e56;margin-bottom:3px;">Aprovado pelo cliente</div>
+							<div style="font-size:11px;color:#1d9e75;">
+								IP: <?= $orcamento->ipaprovacao ?>
+								&nbsp;·&nbsp; Navegador: <?= $orcamento->navegadoraprovacao ?>
+							</div>
 						</div>
 					</div>
-				<?php } ?>
-				<div id="carrinho" class='m-t-10'> </div>
-				<div class="row m-t-10">
-					<div class="col-12">
-						<?php
-							if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])) echo $this->Form->button('Salvar alterações realizadas', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-l-5']);
-							echo $this->Html->Link('Alterar Situação', ['action' => 'alterarsituacao', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo m-l-5']);
-							echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5']);
-							echo $this->Html->Link('Baixar PDF', ['action' => 'imprimirPdf', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-pdf btn-success m-l-5']);
-							echo $this->Html->Link('Enviar e-mail', ['#'], ['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-email m-l-5']);
-							if($temordem == 'nao') echo $this->html->Link('Transformar em ordem', ['action' => 'novaordem', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-ordem btn-warning m-l-5']);
-						?>
+				<?php endif; ?>
+
+				<!-- Carrinho -->
+				<div id="carrinho" class="m-t-10"></div>
+
+				<!-- Footer de ações -->
+				<div class="orc-footer-bar">
+					<div style="display:flex;gap:8px;flex-wrap:wrap;">
+						<?= $this->Html->Link(
+							'<i class="fa fa-exchange"></i> Alterar Situação',
+							['action' => 'alterarsituacao', $orcamento->id],
+							['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo', 'escape' => false]
+						) ?>
+						<?php if($temordem == 'nao'): ?>
+							<?= $this->html->Link(
+								'<i class="fa fa-wrench"></i> Transformar em OS',
+								['action' => 'novaordem', $orcamento->id],
+								['class' => 'btn btn-pgm btn-pgm-ordem btn-warning', 'escape' => false]
+							) ?>
+						<?php endif; ?>
+					</div>
+					<div style="display:flex;gap:8px;flex-wrap:wrap;">
+						<?= $this->Html->Link(
+							'<i class="fa fa-print"></i> Imprimir',
+							['action' => 'imprimir', $orcamento->id],
+							['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange', 'escape' => false]
+						) ?>
+						<?= $this->Html->Link(
+							'<i class="fa fa-file-pdf-o"></i> PDF',
+							['action' => 'imprimirPdf', $orcamento->id],
+							['class' => 'btn btn-pgm btn-pgm-pdf btn-success', 'escape' => false]
+						) ?>
+						<?= $this->Html->Link(
+							'<i class="fa fa-envelope"></i> E-mail',
+							['#'],
+							['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-email', 'escape' => false]
+						) ?>
+						<?php if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])): ?>
+							<?= $this->Form->button(
+								'<i class="fa fa-save"></i> Salvar alterações',
+								['class' => 'btn btn-pgm btn-pgm-salvar btn-success', 'escape' => false]
+							) ?>
+						<?php endif; ?>
 					</div>
 				</div>
+
 			<?= $this->Form->end(); ?>
 		</div>
 	</div>
