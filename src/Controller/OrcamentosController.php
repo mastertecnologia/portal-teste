@@ -1072,7 +1072,7 @@ class OrcamentosController extends AppController {
 			$orcamento->status = C_OrcamentoStatusEnviado;
 
 			if ($this->Orcamentos->save($orcamento)) {
-				$this->criarMov($id, $sitantiga, C_OrcamentoStatusRecusado, $observacao);
+				$this->criarMov($id, $sitantiga, C_OrcamentoStatusEnviado, $observacao);
 				$this->Flash->success('O orçamento foi enviado com sucesso!');
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $id);
 				return $this->redirect(['action' => 'edit', $id]);
@@ -1082,6 +1082,62 @@ class OrcamentosController extends AppController {
 
 		$this->set('title', 'Enviar Orçamento');
 		$this->set('orcamento', $orcamento);
+	}
+
+	/**
+	 * Passo 6: Envio & Assinatura Digital (UI espelhada do mock pgm_orcamentos_premium.html).
+	 * - GET: mostra tela.
+	 * - POST: marca o orçamento como enviado e cria movimento.
+	 */
+	public function envioassinatura($id = null){
+		// Permissão para backoffice (cliente/role 1 não acessa).
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+
+		$orcamento = $this->Orcamentos->find('all')
+			->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'id' => $id]])
+			->contain(['Users', 'Clientes'])
+			->first();
+
+		if (empty($orcamento)) {
+			$this->Flash->error('Orçamento não encontrado.');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		$envioSucesso = false;
+		if ($this->request->is(['post', 'put'])) {
+			$oldStatus = $orcamento->status;
+			$orcamento->status = C_OrcamentoStatusEnviado;
+
+			if ($this->Orcamentos->save($orcamento)) {
+				$this->criarMov($id, $oldStatus, C_OrcamentoStatusEnviado, null);
+				$envioSucesso = true;
+			} else {
+				$this->Flash->error('Ocorreu um erro ao enviar para assinatura.');
+			}
+		}
+
+		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($this->Auth->user('idempresa'), [(int)$orcamento->id]);
+		$orcVersaoLabel = $versaoMap[(int)$orcamento->id] ?? 'v1';
+
+		// Link do portal onde o cliente assina (viewhash).
+		$assinarUrl = null;
+		try {
+			$base = $this->Config->get(1)->urlfora ?? null;
+			if (!empty($base) && !empty($orcamento->hash)) {
+				$assinarUrl = $base . 'orcamentos/viewhash/' . $orcamento->hash;
+			}
+		} catch (\Throwable $e) {
+			$assinarUrl = null;
+		}
+
+		$this->set('title', 'Envio & Assinatura Digital');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('orcStepperStep', 6);
+
+		$this->set(compact('orcamento', 'orcVersaoLabel', 'assinarUrl', 'envioSucesso'));
 	}
 
 	public function alterarsituacao($id = null) {

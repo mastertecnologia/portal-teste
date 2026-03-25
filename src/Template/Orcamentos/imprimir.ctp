@@ -104,7 +104,7 @@ $totGeral = $totUnico + $totMensal;
 			<?php if ($role == 0) : ?>
 				<?= $this->Html->link(
 					'Enviar & Assinar',
-					['action' => 'enviar', $orcamento->id],
+					['action' => 'envioassinatura', $orcamento->id],
 					['class' => 'btn btn-pgm btn-pgm-email']
 				) ?>
 				<?= $this->Html->link(
