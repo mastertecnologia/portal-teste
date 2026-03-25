@@ -64,43 +64,121 @@ class OrcamentosController extends AppController {
 		return $this->Orcamentosmovs->save($mov);
 	}
 
+	/**
+	 * Soma itens do orçamento (Orcamentosservicos ligados via Orcamentositens.iditem).
+	 *
+	 * @param int|string $idempresa
+	 * @param int[]      $orcamentoIds
+	 * @return array<int,float> id orçamento => total
+	 */
+	protected function _valorTotaisPorOrcamentoIds($idempresa, array $orcamentoIds) {
+		$orcamentoIds = array_values(array_unique(array_filter(array_map('intval', $orcamentoIds))));
+		$out = [];
+		foreach ($orcamentoIds as $oid) {
+			$out[$oid] = 0.0;
+		}
+		if ($orcamentoIds === []) {
+			return $out;
+		}
+		$rows = $this->Orcamentositens->find()
+			->select(['idorcamento', 'iditem'])
+			->where(['idempresa' => $idempresa, 'idorcamento IN' => $orcamentoIds])
+			->order(['id' => 'ASC'])
+			->toArray();
+		$orcToItem = [];
+		foreach ($rows as $row) {
+			$oid = (int)$row->idorcamento;
+			if (!isset($orcToItem[$oid]) && $row->iditem !== null && $row->iditem !== '') {
+				$orcToItem[$oid] = (int)$row->iditem;
+			}
+		}
+		$itemIds = array_values(array_unique(array_filter($orcToItem)));
+		if ($itemIds === []) {
+			return $out;
+		}
+		$servicos = $this->Orcamentosservicos->find()
+			->where(['idempresa' => $idempresa, 'idorcamento IN' => $itemIds])
+			->toArray();
+		$sumByItem = [];
+		foreach ($servicos as $s) {
+			$bid = (int)$s->idorcamento;
+			if (!isset($sumByItem[$bid])) {
+				$sumByItem[$bid] = 0.0;
+			}
+			$vm = (float)($s->valormensal ?? 0);
+			$vd = (float)($s->valordoservico ?? 0);
+			$sumByItem[$bid] += ($vm > 0 ? $vm : $vd);
+		}
+		foreach ($orcToItem as $oid => $iid) {
+			$out[$oid] = $sumByItem[$iid] ?? 0.0;
+		}
+
+		return $out;
+	}
+
 	public function index() {
+		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
 		$orcamentosCliente = $this->Orcamentos->find('all', ['contain' => 'Users'
-			])->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa'), 'Orcamentos.idcliente' => $idcliente])
+			])->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.idcliente' => $idcliente])
 		->order(['Orcamentos.id DESC'])->toArray();
 
 		$orcamentosPendentes = $this->Orcamentos->find('all',[
 			'contain' => 'Clientes',
 			'conditions' => ['Orcamentos.status' => 0]
-		])->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa')])->order(['Orcamentos.id DESC'])->toArray();
+		])->where(['Orcamentos.idempresa' => $idempresa])->order(['Orcamentos.id DESC'])->toArray();
 
 		$orcamentosEnviados = $this->Orcamentos->find('all',[
 			'contain' => 'Clientes',
 			'conditions' => ['Orcamentos.status' => 1]
-		])->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa')])->order(['Orcamentos.id DESC'])->toArray();
+		])->where(['Orcamentos.idempresa' => $idempresa])->order(['Orcamentos.id DESC'])->toArray();
 
 		$orcamentosAprovados = $this->Orcamentos->find('all',[
 			'contain' => 'Clientes',
 			'conditions' => ['Orcamentos.status' => 2]
-		])->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa')])->order(['Orcamentos.id DESC'])->toArray();
+		])->where(['Orcamentos.idempresa' => $idempresa])->order(['Orcamentos.id DESC'])->toArray();
 
 		$orcamentosRecusados = $this->Orcamentos->find('all',[
 			'contain' => 'Clientes',
 			'conditions' => ['Orcamentos.status' => 3]
-		])->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa')])->order(['Orcamentos.id DESC'])->toArray();
+		])->where(['Orcamentos.idempresa' => $idempresa])->order(['Orcamentos.id DESC'])->toArray();
 
 		$orcamentosArquivados = $this->Orcamentos->find('all',[
 			'contain' => 'Clientes',
 			'conditions' => ['Orcamentos.status' => 4]
-		])->where(['Orcamentos.idempresa' => $this->Auth->user('idempresa')])->order(['Orcamentos.id DESC'])->toArray();
-		
+		])->where(['Orcamentos.idempresa' => $idempresa])->order(['Orcamentos.id DESC'])->toArray();
+
+		$totais = [
+			'em_andamento' => count($orcamentosPendentes),
+			'enviados' => count($orcamentosEnviados),
+			'aprovados' => count($orcamentosAprovados),
+			'recusados' => count($orcamentosRecusados),
+			'arquivados' => count($orcamentosArquivados),
+		];
+
+		$allIds = [];
+		foreach ([$orcamentosCliente, $orcamentosPendentes, $orcamentosEnviados, $orcamentosAprovados, $orcamentosRecusados, $orcamentosArquivados] as $lista) {
+			foreach ($lista as $o) {
+				$allIds[(int)$o->id] = true;
+			}
+		}
+		$valorTotalPorOrcamentoId = $this->_valorTotaisPorOrcamentoIds($idempresa, array_keys($allIds));
+
+		$orcamentos = array_merge(
+			$orcamentosPendentes,
+			$orcamentosEnviados,
+			$orcamentosAprovados,
+			$orcamentosRecusados,
+			$orcamentosArquivados
+		);
+
 		$this->set('orcamentosCliente', $orcamentosCliente);
 		$this->set('orcamentosPendentes', $orcamentosPendentes);
 		$this->set('orcamentosEnviados', $orcamentosEnviados);
 		$this->set('orcamentosAprovados', $orcamentosAprovados);
 		$this->set('orcamentosRecusados', $orcamentosRecusados);
 		$this->set('orcamentosArquivados', $orcamentosArquivados);
+		$this->set(compact('totais', 'orcamentos', 'valorTotalPorOrcamentoId'));
 		$this->set('title', 'Orçamentos');
 	}
 

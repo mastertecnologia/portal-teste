@@ -154,3 +154,335 @@
 .orc-premium-wrap .table th {
   padding: 0.55rem 0.65rem;
 }
+
+/* ========== Lista (protótipo pgm_orcamentos_premium.html — área clara) ========== */
+.orc-premium-wrap.orc-premium-index {
+  --orc-border: #e5e4e0;
+  --orc-border-light: #f0efec;
+  --orc-text: #1a1a18;
+  --orc-text-muted: #6b6a65;
+  --orc-text-hint: #9a9890;
+  --orc-bg-page: #f2f1ee;
+  --orc-bg-surface: #f9f9f8;
+  --orc-bg-card: #ffffff;
+  --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --orc-radius-sm: 8px;
+  --orc-radius-lg: 12px;
+  padding: 16px 18px 28px;
+  background: #ffffff;
+  border-radius: var(--orc-radius-lg);
+}
+
+.orc-premium-index .orc-premium-empresa-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.orc-premium-index .orc-premium-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(29, 158, 117, 0.15);
+  color: #0f6e56;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.orc-premium-index .orc-premium-empresa-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orc-premium-index .orc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.orc-premium-index .orc-badge--pend { background: #faeeda; color: #633806; }
+.orc-premium-index .orc-badge--env { background: #e1f5ee; color: #085041; }
+.orc-premium-index .orc-badge--aprov { background: #e6f1fb; color: #0c447c; }
+.orc-premium-index .orc-badge--recus { background: #fcebeb; color: #791f1f; }
+.orc-premium-index .orc-badge--arq { background: #f0efec; color: #5f5e5a; }
+
+.orc-premium-index .orc-premium-valor {
+  font-weight: 600;
+  color: var(--orc-text);
+}
+
+.orc-premium-index .orc-premium-list-card .dataTables_filter {
+  display: none !important;
+}
+
+.orc-premium-index .orc-premium-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.orc-premium-index .orc-premium-eyebrow {
+  font-size: 11px;
+  color: var(--orc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+}
+
+.orc-premium-index .orc-premium-h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--orc-text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.orc-premium-index .orc-premium-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--orc-teal) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: var(--orc-shadow-sm);
+}
+.orc-premium-index .orc-premium-btn-primary:hover {
+  background: var(--orc-teal-dark) !important;
+  color: #fff !important;
+}
+
+.orc-premium-index .orc-premium-btn-ghost {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--orc-radius-sm);
+  border: 1px solid var(--orc-border) !important;
+  background: #fff !important;
+  color: var(--orc-text) !important;
+}
+.orc-premium-index .orc-premium-btn-ghost:hover {
+  background: var(--orc-bg-surface) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
+}
+
+.orc-premium-index .orc-premium-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 991px) {
+  .orc-premium-index .orc-premium-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.orc-premium-index .orc-premium-stat {
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  padding: 14px 16px;
+  background: var(--orc-bg-card);
+  box-shadow: var(--orc-shadow-sm);
+  border-left: 3px solid transparent;
+  transition: box-shadow 0.15s ease, border-left-color 0.15s ease, background 0.15s ease;
+}
+
+.orc-premium-index .orc-premium-stat:hover,
+.orc-premium-index .orc-premium-stat.active {
+  border-left-color: var(--orc-sc, var(--orc-teal));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.orc-premium-index .orc-premium-stat.active {
+  background: var(--orc-bg-surface);
+}
+
+.orc-premium-index .orc-premium-stat-l {
+  display: block;
+  font-size: 10px;
+  color: var(--orc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.orc-premium-index .orc-premium-stat-n {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--orc-sc, var(--orc-teal));
+}
+
+.orc-premium-index .orc-premium-list-card {
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  overflow: hidden;
+}
+
+.orc-premium-index .orc-premium-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--orc-border);
+  background: var(--orc-bg-surface);
+}
+
+.orc-premium-index .orc-premium-list-toolbar--simple {
+  justify-content: flex-start;
+}
+
+.orc-premium-index .orc-premium-tab-btns {
+  border-bottom: none !important;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0;
+}
+
+.orc-premium-index .orc-premium-tab-btns .nav-item {
+  margin: 0;
+}
+
+.orc-premium-index .orc-premium-tab-btns .nav-link {
+  border: none !important;
+  border-radius: var(--orc-radius-sm) !important;
+  padding: 7px 14px !important;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted) !important;
+  background: transparent !important;
+}
+
+.orc-premium-index .orc-premium-tab-btns .nav-link:hover {
+  background: rgba(29, 158, 117, 0.08) !important;
+  color: var(--orc-teal-dark) !important;
+}
+
+.orc-premium-index .orc-premium-tab-btns .nav-link.active {
+  background: rgba(29, 158, 117, 0.18) !important;
+  color: var(--orc-teal-dark) !important;
+  font-weight: 600 !important;
+}
+
+.orc-premium-index .orc-premium-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.orc-premium-index .orc-premium-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-sm);
+  padding: 6px 10px;
+  background: #fff;
+  margin: 0;
+}
+
+.orc-premium-index .orc-premium-search i {
+  color: var(--orc-text-hint);
+  font-size: 14px;
+}
+
+.orc-premium-index .orc-premium-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  width: min(200px, 42vw);
+  color: var(--orc-text);
+}
+
+.orc-premium-index .orc-premium-list-meta {
+  font-size: 11px;
+  color: var(--orc-text-muted);
+  white-space: nowrap;
+}
+
+.orc-premium-index .orc-premium-tbl-wrap {
+  overflow-x: auto;
+}
+
+.orc-premium-index .orc-premium-tbl {
+  margin: 0;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.orc-premium-index .orc-premium-tbl thead th {
+  font-size: 10px;
+  color: var(--orc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--orc-border) !important;
+  font-weight: 600;
+  background: var(--orc-bg-surface) !important;
+  vertical-align: middle;
+}
+
+.orc-premium-index .orc-premium-tbl tbody td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--orc-border-light) !important;
+  vertical-align: middle;
+  color: var(--orc-text);
+}
+
+.orc-premium-index .orc-premium-tbl tbody tr:hover {
+  background: var(--orc-bg-surface);
+}
+
+.orc-premium-index .orc-premium-link {
+  color: var(--orc-teal-dark);
+  font-weight: 500;
+}
+.orc-premium-index .orc-premium-link:hover {
+  color: var(--orc-teal);
+}
+
+.orc-premium-index .orc-premium-muted {
+  color: var(--orc-text-hint);
+  font-size: 11px;
+}
+
+.orc-premium-index .orc-premium-status-slot h5 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.orc-premium-index .orc-premium-tab-panels {
+  padding: 0;
+  background: var(--orc-bg-card);
+}
