@@ -2133,3 +2133,65 @@ body.dark-mode .orc-premium-wrap .orc-premium-carrinho-tbl tbody td {
     print-color-adjust: exact;
   }
 }
+
+/* ── Workflow e versionamento para orc-premium-form (edit) ─────────────── */
+.orc-premium-form .orc-wf-list { padding: 2px 0; }
+
+.orc-premium-form .orc-workflow-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  position: relative;
+}
+
+.orc-premium-form .orc-workflow-step::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: -9px;
+  width: 1px;
+  background: var(--orc-border);
+}
+
+.orc-premium-form .orc-workflow-step:last-child::after { display: none; }
+
+.orc-premium-form .orc-wf-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--orc-border);
+  background: var(--orc-bg-card);
+  font-size: 13px;
+}
+
+.orc-premium-form .orc-wf-ok   { background: var(--orc-teal-light); border-color: var(--orc-teal-mid); color: var(--orc-teal-dark); }
+.orc-premium-form .orc-wf-pend { background: #faeeda; border-color: #fac775; color: #633806; }
+.orc-premium-form .orc-wf-body { flex: 1; }
+.orc-premium-form .orc-wf-title { font-size: 12px; font-weight: 500; color: var(--orc-text); }
+.orc-premium-form .orc-wf-sub   { font-size: 11px; color: var(--orc-text-muted); }
+
+/* Version panel (form) */
+.orc-premium-form .orc-version-panel {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  padding: 14px 18px;
+}
+
+.orc-premium-form .orc-version-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--orc-border-light);
+  font-size: 12px;
+  color: var(--orc-text);
+}
+
+.orc-premium-form .orc-version-item:last-child { border: none; }
