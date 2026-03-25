@@ -1,6 +1,6 @@
 <?php
   	use Cake\Routing\Router;
-	$this->append('css', $this->Html->css('/dist/css/orcamentos-premium'));
+	$this->append('css', $this->Html->css('/css/orcamentos-premium'));
 	$this->Html->script('/js/orcamentos', ['block' => true]);
 	// Breadcumbs
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);

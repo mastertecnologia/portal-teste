@@ -1,5 +1,6 @@
 /**
  * PGM Orçamentos — acentos visuais alinhados ao protótipo pgm_orcamentos_premium.html
+ * Caminho servido: /css/orcamentos-premium.css (estático em webroot/css; sem pipeline de build)
  * Escopo: .orc-premium-wrap (não altera o restante do ERP)
  */
 .orc-premium-wrap {

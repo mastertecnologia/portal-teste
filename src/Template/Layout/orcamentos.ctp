@@ -17,7 +17,7 @@
 	<?= $this->Html->css("/dist/css/pages/stylish-tooltip") ?>
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
-	<?= $this->Html->css("/dist/css/orcamentos-premium") ?>
+	<?= $this->Html->css("/css/orcamentos-premium") ?>
 
 	<!-- Timeline CSS -->
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>
