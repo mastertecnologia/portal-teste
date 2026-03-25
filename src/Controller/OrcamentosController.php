@@ -503,6 +503,8 @@ class OrcamentosController extends AppController {
 		$temordem = empty($ordem) ? 'nao' : $ordem->id;
 
 		$this->set('title', 'Edição de Orçamento');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('orcStepperStep', 2);
 		$this->set('produtos', $produtosOpt);
 		$this->set('temordem', $temordem);
 		$this->set('orcamento', $orcamento);
@@ -543,6 +545,8 @@ class OrcamentosController extends AppController {
 		}
 	
 		$this->set('title', 'Visualização de Orçamento');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('orcStepperStep', 4);
 		$this->set('empresaObj', $empresaObj);
 		$this->set('orcamento', $orcamento);
 		$this->set('idcarrinho', $_SESSION['idcarrinho']);
@@ -777,7 +781,21 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 
-		$this->set('title', 'Imprimir Orçamento');
+		$vid = (int)$id;
+		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($this->Auth->user('idempresa'), [$vid]);
+		$this->set('orcVersaoLabel', $versaoMap[$vid] ?? 'v1');
+		try {
+			$empresaPdf = $this->Empresas->get($this->Auth->user('idempresa'), [
+				'contain' => ['Cidades' => ['Estados']],
+			]);
+		} catch (\Throwable $e) {
+			$empresaPdf = null;
+		}
+		$this->set('empresaPdf', $empresaPdf);
+
+		$this->set('title', 'Pré-visualização PDF');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('orcStepperStep', 5);
 	}
 
 	/**

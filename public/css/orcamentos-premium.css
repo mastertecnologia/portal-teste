@@ -1229,3 +1229,489 @@ body.dark-mode .orc-premium-view .form-control {
   height: 1px;
   background: var(--orc-border-light);
 }
+
+/* ---------- Pré-visualização impressão (pg-print) + fundo cinza ---------- */
+.orc-premium-wrap.orc-premium-form.orc-premium-print {
+  background: #f2f1ee !important;
+  box-shadow: none !important;
+  border-radius: 12px;
+  padding-bottom: 8px;
+}
+
+body.dark-mode .orc-premium-wrap.orc-premium-form.orc-premium-print {
+  background: #f2f1ee !important;
+  color: #1a1a18 !important;
+}
+
+.orc-print-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.orc-print-toolbar-back {
+  font-size: 11px;
+  color: var(--orc-text-muted);
+  margin-bottom: 3px;
+}
+
+.orc-print-toolbar-back a {
+  color: var(--orc-teal);
+  font-weight: 500;
+}
+
+.orc-print-toolbar h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--orc-text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.orc-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.orc-print-actions .btn-pgm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Documento “papel” (protótipo .paper / .ptbl) */
+.orc-premium-wrap .orc-paper {
+  background: #fff;
+  border: 1px solid var(--orc-border);
+  border-radius: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px 40px 40px;
+  color: #1a1a18;
+  font-size: 11px;
+  line-height: 1.6;
+  box-shadow: var(--orc-shadow-sm);
+}
+
+.orc-premium-wrap .orc-paper-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 2.5px solid #00c08b;
+}
+
+.orc-premium-wrap .orc-paper-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+
+.orc-premium-wrap .orc-paper-logo {
+  width: 34px;
+  height: 34px;
+  background: #00c08b;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.orc-premium-wrap .orc-paper-co {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+}
+
+.orc-premium-wrap .orc-paper-co-sub {
+  font-size: 9px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.orc-premium-wrap .orc-paper-addr {
+  font-size: 10px;
+  color: #666;
+  line-height: 1.8;
+}
+
+.orc-premium-wrap .orc-paper-right {
+  text-align: right;
+}
+
+.orc-premium-wrap .orc-paper-doc-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #111;
+}
+
+.orc-premium-wrap .orc-paper-meta {
+  font-size: 10px;
+  color: #888;
+  margin-top: 3px;
+}
+
+.orc-premium-wrap .orc-paper-badges {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.orc-premium-wrap .orc-paper-badge {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.orc-premium-wrap .orc-paper-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.orc-premium-wrap .orc-paper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 0.5px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.orc-premium-wrap .orc-paper-cell {
+  padding: 11px 15px;
+  border-right: 0.5px solid #e5e5e5;
+  border-bottom: 0.5px solid #e5e5e5;
+}
+
+.orc-premium-wrap .orc-paper-cell:nth-child(2n) {
+  border-right: none;
+}
+
+.orc-premium-wrap .orc-paper-cell-full {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: none;
+  padding: 0;
+}
+
+.orc-premium-wrap .orc-paper-cell-full > div {
+  padding: 11px 15px;
+  border-right: 0.5px solid #e5e5e5;
+}
+
+.orc-premium-wrap .orc-paper-cell-full > div:last-child {
+  border-right: none;
+}
+
+.orc-premium-wrap .orc-paper-lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #999;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.orc-premium-wrap .orc-paper-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111;
+}
+
+.orc-premium-wrap .orc-paper-val-sm {
+  font-size: 10px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.orc-premium-wrap .orc-ptbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  margin-bottom: 18px;
+}
+
+.orc-premium-wrap .orc-ptbl thead tr {
+  background: #00c08b;
+}
+
+.orc-premium-wrap .orc-ptbl thead th {
+  padding: 7px 9px;
+  color: #fff;
+  text-align: left;
+  font-weight: 600;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.orc-premium-wrap .orc-ptbl thead th.r {
+  text-align: right;
+}
+
+.orc-premium-wrap .orc-ptbl tbody tr {
+  border-bottom: 0.5px solid #eee;
+}
+
+.orc-premium-wrap .orc-ptbl tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.orc-premium-wrap .orc-ptbl td {
+  padding: 8px 9px;
+  color: #333;
+  vertical-align: top;
+}
+
+.orc-premium-wrap .orc-ptbl td.r {
+  text-align: right;
+}
+
+.orc-premium-wrap .orc-ptbl td.b {
+  font-weight: 600;
+  color: #111;
+}
+
+.orc-premium-wrap .orc-paper-totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.orc-premium-wrap .orc-paper-totals-inner {
+  min-width: 210px;
+}
+
+.orc-premium-wrap .orc-paper-tot-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 10px;
+  color: #666;
+  border-bottom: 0.5px solid #eee;
+}
+
+.orc-premium-wrap .orc-paper-tot-row.disc {
+  color: #e24b4a;
+}
+
+.orc-premium-wrap .orc-paper-tot-row.grand {
+  border-bottom: none;
+  padding: 7px 0 3px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+}
+
+.orc-premium-wrap .orc-paper-tot-row.grand span:last-child {
+  color: #00c08b;
+}
+
+.orc-premium-wrap .orc-paper-obs {
+  background: #f9f9f9;
+  border-radius: 6px;
+  border-left: 3px solid #00c08b;
+  padding: 10px 13px;
+  margin-bottom: 16px;
+  font-size: 10px;
+  color: #444;
+  line-height: 1.7;
+}
+
+.orc-premium-wrap .orc-paper-cond {
+  margin-bottom: 16px;
+}
+
+.orc-premium-wrap .orc-paper-cond h4 {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #999;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.orc-premium-wrap .orc-paper-cond-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  font-size: 10px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.orc-premium-wrap .orc-paper-cond-item {
+  display: flex;
+  gap: 5px;
+}
+
+.orc-premium-wrap .orc-paper-cond-item span.i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #00c08b;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.orc-premium-wrap .orc-paper-sig {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.orc-premium-wrap .orc-paper-sig-b {
+  text-align: center;
+}
+
+.orc-premium-wrap .orc-paper-sig-line {
+  border-top: 0.5px solid #bbb;
+  padding-top: 6px;
+  font-size: 10px;
+  color: #666;
+  margin-top: 30px;
+}
+
+.orc-premium-wrap .orc-paper-foot {
+  text-align: center;
+  font-size: 9px;
+  color: #bbb;
+  border-top: 0.5px solid #eee;
+  padding-top: 10px;
+  margin-top: 14px;
+  line-height: 1.8;
+}
+
+/* Tabela itens em edição/visualização (carrinhoedit) */
+.orc-premium-wrap .orc-premium-carrinho-tbl-wrap {
+  overflow-x: auto;
+  margin-top: 4px;
+}
+
+.orc-premium-wrap .orc-premium-carrinho-tbl {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.orc-premium-wrap .orc-premium-carrinho-tbl thead th {
+  font-size: 10px;
+  color: #6b6a65;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 10px !important;
+  text-align: left;
+  border-bottom: 1px solid #e5e4e0 !important;
+  font-weight: 600;
+  background: #f9f9f8 !important;
+  vertical-align: middle;
+}
+
+.orc-premium-wrap .orc-premium-carrinho-tbl thead th.text-right,
+.orc-premium-wrap .orc-premium-carrinho-tbl td.text-right {
+  text-align: right !important;
+}
+
+.orc-premium-wrap .orc-premium-carrinho-tbl tbody td {
+  padding: 10px 10px !important;
+  border-bottom: 1px solid #f0efec !important;
+  vertical-align: middle;
+  color: #1a1a18;
+}
+
+.orc-premium-wrap .orc-premium-carrinho-tbl tbody tr:hover {
+  background: #f9f9f8;
+}
+
+body.dark-mode .orc-premium-wrap .orc-premium-carrinho-tbl thead th {
+  color: #6b6a65 !important;
+  background: #f9f9f8 !important;
+}
+
+body.dark-mode .orc-premium-wrap .orc-premium-carrinho-tbl tbody td {
+  color: #1a1a18 !important;
+  border-color: #e5e4e0 !important;
+}
+
+/* Impressão: esconder cromado ERP + stepper + botões */
+@media print {
+  .topbar,
+  .left-sidebar,
+  .sidebar,
+  header,
+  aside,
+  footer,
+  .page-titles,
+  .navbar,
+  .breadcrumb,
+  .orc-print-toolbar,
+  .orc-print-actions,
+  .orc-stepper,
+  .preloader {
+    display: none !important;
+  }
+
+  body,
+  .page-wrapper,
+  .main-wrapper,
+  .container-fluid,
+  .col-md-12 {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printable,
+  #printable * {
+    visibility: visible !important;
+  }
+
+  #printable {
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    left: auto !important;
+    top: auto !important;
+  }
+
+  .orc-paper {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    padding: 12px !important;
+  }
+
+  .orc-ptbl thead tr {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .orc-paper-obs,
+  .orc-paper-obs * {
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

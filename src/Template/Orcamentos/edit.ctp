@@ -1,6 +1,6 @@
 <?php
   	use Cake\Routing\Router;
-	$this->append('css', $this->Html->css('/css/orcamentos-premium'));
+	$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
 	$this->Html->script('/js/orcamentos', ['block' => true]);
 	// Breadcumbs
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
@@ -97,7 +97,8 @@
 		opacity: 0;
     }
 </style>
-<div class="col-md-12 orc-premium-wrap orc-premium-form">
+<div class="col-md-12 orc-premium-page-root">
+<div class="orc-premium-wrap orc-premium-form">
 	<!-- Cabeçalho -->
 	<div class="orc-page-head">
 		<div>
@@ -111,10 +112,17 @@
 			<?= $this->Html->link(
 				'<i class="fa fa-arrow-left"></i> Voltar',
 				['action' => 'index'],
-				['class' => 'btn btn-default', 'escape' => false]
+				['class' => 'btn btn-sm btn-secondary', 'escape' => false]
+			) ?>
+			<?= $this->Html->link(
+				'<i class="fa fa-file-text-o"></i> Pré-visualizar PDF',
+				['action' => 'imprimir', $orcamento->id],
+				['class' => 'btn btn-sm btn-pgm btn-pgm-pdf', 'escape' => false]
 			) ?>
 		</div>
 	</div>
+
+	<?= $this->element('orcamentos_stepper') ?>
 
 	<div class="card orc-premium-card-inner">
 		<div class="card-body">
@@ -279,6 +287,7 @@
 			<?= $this->Form->end(); ?>
 		</div>
 	</div>
+</div>
 </div>
 <!-- Modal Email -->
 <div class="modal fade none-border" id="modal-email">

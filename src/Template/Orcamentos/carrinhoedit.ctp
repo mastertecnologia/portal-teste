@@ -4,33 +4,25 @@ use Cake\Routing\Router;
 
 error_reporting(E_ERROR | E_PARSE);
 ?>
-<style>
-	.titulosessao {
-		padding: 0.5rem !important;
-	}
-
-	.table td,
-	.table th {
-		padding: 0.7rem !important;
-	}
-</style>
 <div class="row">
 	<div class="col-lg-12">
-		<div class="table-responsive">
-			<table class="table table-hover table-row-clickable" id="tableCarrinho">
-				<thead class="text-primary">
-					<th width="5%">Ordem</th>
-					<th width="6%">Código</th>
-					<th width="20%">Produto/Serviço</th>
-					<th width="20%">Descrição</th>
+		<div class="orc-premium-carrinho-tbl-wrap table-responsive">
+			<table class="table orc-premium-carrinho-tbl" id="tableCarrinho">
+				<thead>
+					<tr>
+					<th style="width:5%;">Ordem</th>
+					<th style="width:6%;">Código</th>
+					<th style="width:20%;">Produto/Serviço</th>
+					<th style="width:20%;">Descrição</th>
 					<th class="text-right">Pagamento</th>
 					<th class="text-right">Qtde.</th>
 					<th class="text-right">Vl. Mensal</th>
 					<th class="text-right">Vl. Unit.</th>
 					<th class="text-right">Valor Total</th>
 					<?php if ($orcamento->status != C_OrcamentoStatusAprovado && $role == 0) { ?>
-						<th class="text-center">Ações</th>
+						<th class="text-center" style="width:90px;">Ações</th>
 					<?php } ?>
+					</tr>
 				</thead>
 				<tbody>
 					<!-- Serviços -->
@@ -73,6 +65,9 @@ error_reporting(E_ERROR | E_PARSE);
 						<th class="text-right valortotal">
 							</p>
 						</th>
+						<?php if ($orcamento->status != C_OrcamentoStatusAprovado && $role == 0) { ?>
+							<th></th>
+						<?php } ?>
 					</tr>
 					<!-- Fim Outros -->
 				</tbody>

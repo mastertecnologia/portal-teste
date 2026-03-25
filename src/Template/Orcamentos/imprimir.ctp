@@ -1,340 +1,305 @@
 <?php
 
 use Cake\Routing\Router;
-// Breadcumbs
-if ($role == 0) $this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
-if ($role == 0) $this->Breadcrumbs->add('Editar', ['controller' => 'Orcamentos', 'action' => 'edit', $orcamento->id], ['class' => 'breadcrumb-item']);
-if ($role == 1) $this->Breadcrumbs->add('Orçamentos', ['controller' => 'Financeiro', 'action' => 'orcamentos'], ['class' => 'breadcrumb-item']);
 
-$this->Breadcrumbs->add('Imprimir Orçamento', [], ['class' => 'breadcrumb-item active']);
+$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
 
-$logo = 'pgm.png';
-$logoClaro = 'pgm2.png';
-$logoEscuro = 'pgm3.png';
-error_reporting(0);
+if ($role == 0) {
+	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add('Editar', ['controller' => 'Orcamentos', 'action' => 'edit', $orcamento->id], ['class' => 'breadcrumb-item']);
+}
+if ($role == 1) {
+	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Financeiro', 'action' => 'orcamentos'], ['class' => 'breadcrumb-item']);
+}
+$this->Breadcrumbs->add('Pré-visualização PDF', [], ['class' => 'breadcrumb-item active']);
+
+$versaoLbl = isset($orcVersaoLabel) ? h($orcVersaoLabel) : 'v1';
+$emissao = $orcamento->created ? date_format($orcamento->created, 'd/m/Y') : '';
+$validadeFmt = '';
+if (!empty($orcamento->validoate)) {
+	$validadeFmt = date_format(date_create($orcamento->validoate), 'd/m/Y');
+}
+
+$nomeCliente = $orcamento->cliente->tipo == C_ClientesTipoJuridica
+	? ($orcamento->cliente->razaosocial ?? '')
+	: ($orcamento->cliente->nome ?? '');
+$docCliente = '';
+if ($orcamento->cliente->tipo == C_ClientesTipoJuridica && !empty($orcamento->cliente->cnpj)) {
+	$docCliente = 'CNPJ: ' . h($orcamento->cliente->cnpj);
+} elseif (!empty($orcamento->cliente->cpf)) {
+	$docCliente = 'CPF: ' . h($orcamento->cliente->cpf);
+}
+
+$autorNome = ($orcamento->user && !empty($orcamento->user->name)) ? h($orcamento->user->name) : '—';
+$autorEmail = '';
+if ($orcamento->user) {
+	$u = $orcamento->user;
+	$autorEmail = (isset($u->email) && (string)$u->email !== '') ? h($u->email) : ((isset($u->username) && (string)$u->username !== '') ? h($u->username) : '');
+}
+
+$st = (int)$orcamento->status;
+$statusPaper = 'Em andamento';
+if ($st === C_OrcamentoStatusEnviado) {
+	$statusPaper = 'Enviado ao cliente';
+} elseif ($st === C_OrcamentoStatusAprovado) {
+	$statusPaper = 'Aprovado';
+} elseif ($st === C_OrcamentoStatusRecusado) {
+	$statusPaper = 'Recusado';
+} elseif ($st === C_OrcamentoStatusArquivado) {
+	$statusPaper = 'Arquivado';
+}
+
+$emp = $empresaPdf ?? null;
+$empNome = $emp && !empty($emp->razaosocial) ? h($emp->razaosocial) : 'PGM Soluções';
+$empLinha = '';
+if ($emp) {
+	$parts = array_filter([
+		!empty($emp->cnpj) ? 'CNPJ: ' . h($emp->cnpj) : '',
+		!empty($emp->cidade->nome) ? h($emp->cidade->nome) . (!empty($emp->cidade->estado->sigla) ? ', ' . h($emp->cidade->estado->sigla) : '') : '',
+	]);
+	$empLinha = implode(' · ', $parts);
+}
+$empContato = '';
+if ($emp) {
+	$empContato = implode(' · ', array_filter([
+		!empty($emp->email) ? h($emp->email) : '',
+		!empty($emp->fone) ? h($emp->fone) : '',
+	]));
+}
+
+$carrinho = $carrinho ?? [];
+$totUnico = 0.0;
+$totMensal = 0.0;
+foreach ($carrinho as $_row) {
+	if ((float)($_row->valormensal ?? 0) > 0) {
+		$totMensal += (float)$_row->valormensal;
+	} else {
+		$totUnico += (float)($_row->valordoservico ?? 0);
+	}
+}
+$totGeral = $totUnico + $totMensal;
 ?>
-<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
-
-<style>
-	body {
-		font-family: 'Open Sans', sans-serif;
-		background: white;
-	}
-
-	.table td,
-	.table th {
-		padding: 0.8rem;
-		vertical-align: top;
-		border-top: 1px solid #dee2e6;
-		font-size: 12px;
-	}
-
-	.titulo {
-		background-color: #343a40 !important;
-		color: white !important;
-		text-align: center;
-		padding: 8px;
-		margin: 10px 0;
-	}
-
-	/* Estilos para Impressão Física (Ctrl+P / A4) */
-	@media print {
-		@page {
-			size: A4 portrait;
-			margin: 1cm;
-			/* Margem segura controlada via código */
-		}
-
-		/* 1. Ocultamos fisicamente os menus em vez de apenas deixá-los invisíveis */
-		.topbar,
-		.left-sidebar,
-		.sidebar,
-		header,
-		aside,
-		footer,
-		.page-titles,
-		.navbar,
-		.breadcrumb,
-		.btn,
-		#btn-imprimir,
-		#btn-salvar-pdf {
-			display: none !important;
-		}
-
-		/* 2. Zeramos paddings e margins das caixas principais */
-		body,
-		.page-wrapper,
-		.main-wrapper,
-		.container-fluid,
-		.col-md-12,
-		.row {
-			margin: 0 !important;
-			padding: 0 !important;
-			background-color: #fff !important;
-		}
-
-		/* 3. Posicionamento relativo impede que a tabela fuja da folha com as margens */
-		#printable {
-			position: relative !important;
-			width: 100% !important;
-			margin: 0 !important;
-			padding: 0 !important;
-			left: auto !important;
-			top: auto !important;
-			visibility: visible !important;
-		}
-
-		body * {
-			visibility: hidden;
-		}
-
-		#printable,
-		#printable * {
-			visibility: visible;
-		}
-
-		#printable .card {
-			border: none !important;
-			box-shadow: none !important;
-			margin: 0 !important;
-			padding: 0 !important;
-		}
-
-		#printable .card-body {
-			padding: 0 !important;
-		}
-
-		.table-responsive {
-			overflow: visible !important;
-		}
-
-		table {
-			page-break-inside: auto;
-			width: 100% !important;
-		}
-
-		tr {
-			page-break-inside: avoid;
-			page-break-after: auto;
-		}
-
-		thead {
-			display: table-header-group;
-		}
-
-		.titulo {
-			background-color: #343a40 !important;
-			color: white !important;
-			-webkit-print-color-adjust: exact;
-			print-color-adjust: exact;
-		}
-
-		.area-observacao, 
-		.area-observacao * {
-			color: #000000 !important;
-			background-color: transparent !important;
-			-webkit-text-fill-color: #000000 !important;
-		}
-		
-	}
-</style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<div class="col-md-12">
-	<?= $this->Html->link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
-	<?= $this->Html->link('Salvar PDF', [], ['id' => 'btn-salvar-pdf', 'class' => 'btn btn-pgm btn-pgm-pdf btn-success m-l-5 m-b-5']) ?>
-	<?= $this->Html->link('Baixar PDF (servidor)', ['action' => 'imprimirPdf', $orcamento->id], ['class' => 'btn btn-outline-secondary m-l-5 m-b-5']) ?>
-	<?php if ($role == 0) echo $this->Html->link('Voltar para o Orçamento', ["action" => "edit", $orcamento->id], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
-	<?php if ($role == 1) echo $this->Html->link('Voltar', ['controller' => 'Financeiro', 'action' => 'orcamentos'], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
-	<div id="printable">
-		<div class="card">
-			<div class="card-body">
-				<h2 class='titulo bg-dark text-white text-center p-2'> Proposta de Orçamento </h2><br>
-				<div class="row">
-					<div class="col-3 text-center">
-						<img src="<?= $this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="homepage" style='width: 140px' class='p-l-20 m-t-10'><br>
-					</div>
-					<div class="col-9 text-center">
-						<table class="table table-dados m-t-10" id='table-imprimir'>
-							<tbody>
-								<tr>
-									<th width='30%' class='text-left'>Nº do Orçamento</th>
-									<td class='text-left'> <?= $orcamento->id ?></td>
-								</tr>
-								<tr>
-									<th width='30%' class='text-left'>Cliente</th>
-									<td class='text-left'> <?= $orcamento->cliente->tipo == C_ClientesTipoJuridica ? $orcamento->cliente->razaosocial : $orcamento->cliente->nome ?></td>
-								</tr>
+<div class="col-md-12 orc-premium-wrap orc-premium-form orc-premium-print">
+	<div class="orc-print-toolbar orc-print-no-print">
+		<div>
+			<div class="orc-print-toolbar-back">
+				<?php if ($role == 0) : ?>
+					← <?= $this->Html->link('Revisão', ['action' => 'edit', $orcamento->id]) ?>
+				<?php else : ?>
+					← <?= $this->Html->link('Voltar', ['controller' => 'Financeiro', 'action' => 'orcamentos']) ?>
+				<?php endif; ?>
+			</div>
+			<h1>Pré-visualização PDF</h1>
+		</div>
+		<div class="orc-print-actions">
+			<?= $this->Html->link(
+				'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="8 2 8 10"/><polyline points="5 7 8 10 11 7"/></svg> Exportar PDF',
+				'#',
+				['id' => 'btn-salvar-pdf', 'class' => 'btn btn-pgm btn-pgm-pdf', 'escape' => false]
+			) ?>
+			<?php if ($role == 0) : ?>
+				<?= $this->Html->link(
+					'Enviar & Assinar',
+					['action' => 'enviar', $orcamento->id],
+					['class' => 'btn btn-pgm btn-pgm-email']
+				) ?>
+				<?= $this->Html->link(
+					'Confirmar e salvar',
+					['action' => 'edit', $orcamento->id],
+					['class' => 'btn btn-pgm btn-pgm-salvar']
+				) ?>
+			<?php endif; ?>
+			<?= $this->Html->link(
+				'Imprimir',
+				'#',
+				['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir']
+			) ?>
+			<?= $this->Html->link(
+				'Baixar PDF (servidor)',
+				['action' => 'imprimirPdf', $orcamento->id],
+				['class' => 'btn btn-secondary btn-sm']
+			) ?>
+		</div>
+	</div>
 
-								<tr>
-									<th width='30%' class='text-left'>Cidade</th>
-									<td class='text-left'>
-										<?= !empty($orcamento->cliente->cidade) ? $orcamento->cliente->cidade->nome : 'Não informada' ?>
-									</td>
-								</tr>
-								<tr>
-									<th width='30%' class='text-left'>Validade</th>
-									<td class='cnpj text-left'> <?= date_format(date_create($orcamento->validoate), "d/m/Y"); ?></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<div class="row m-t-10">
-					<div class="col-12">
-						<h3 class='titulo bg-dark text-center p-2'> Observação </h3><br>
-						<div class='m-l-40 m-r-40 area-observacao' style="font-size: 14px;">
-							<?= str_replace(['text-white', 'dark:text-[#EBEBEB]'], '', $orcamento->solicitacao) ?>
+	<?= $this->element('orcamentos_stepper') ?>
+
+	<div id="printable">
+		<div class="orc-paper">
+			<div class="orc-paper-head">
+				<div>
+					<div class="orc-paper-brand">
+						<div class="orc-paper-logo" aria-hidden="true">
+							<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+						</div>
+						<div>
+							<div class="orc-paper-co"><?= $empNome ?></div>
+							<div class="orc-paper-co-sub">ERP Enterprise</div>
 						</div>
 					</div>
-				</div>
-				<div class="row m-t-10">
-					<div class="col-12">
-						<h3 class='titulo bg-dark text-white text-center p-2'> Produtos e Serviços </h3><br>
+					<div class="orc-paper-addr">
+						<?php if ($empLinha !== '') : ?>
+							<?= $empLinha ?><br>
+						<?php endif; ?>
+						<?php if ($empContato !== '') : ?>
+							<?= $empContato ?>
+						<?php endif; ?>
 					</div>
 				</div>
-				<div class="table-responsive">
-					<table class="table" id="tableCarrinho">
-						<thead class="text-primary">
-							<th width="6%">Código</th>
-							<th width="20%">Produto/Serviço</th>
-							<th width="23%">Descrição</th>
-							<th width="10%" class="text-right">Pagamento</th>
-							<th width="10%" class="text-right">Qtde.</th>
-							<th width="10%" class="text-right">Vl. Mensal</th>
-							<th width="10%" class="text-right">Vl. Unit.</th>
-							<th width="10%" class="text-right">Valor Total</th>
-						</thead>
-						<tbody>
-							<!-- Serviços -->
-							<?php if (isset($carrinho)) {
-								foreach ($carrinho as $reg) { ?>
-									<tr id='<?= $reg->id ?>'>
-										<td><?= $reg->idproduto ?></td>
-										<td><?= $reg->servico ?></td>
-										<td><?= $reg->observacao ?></td>
-
-										<td class="text-right">
-											<?= ($reg->valormensal > 0) ? 'Mensal' : 'Único' ?>
-										</td>
-
-										<td class="text-right"><?= $reg->quantidade ?></td>
-
-										<td class="text-right valormensal">
-											<?= $reg->valormensal > 0 ? 'R$ ' . number_format($reg->valormensal, 2, ",", ".") : 'R$ 0,00' ?>
-										</td>
-
-										<td class="text-right valorunit">
-											<?= ($reg->valormensal <= 0 && $reg->valoruni > 0) ? 'R$ ' . number_format($reg->valoruni, 2, ",", ".") : 'R$ 0,00' ?>
-										</td>
-
-										<td class="text-right valordoservico">
-											<?= ($reg->valormensal <= 0 && $reg->valordoservico > 0) ? 'R$ ' . number_format($reg->valordoservico, 2, ",", ".") : 'R$ 0,00' ?>
-										</td>
-									</tr>
-							<?php }
-							} ?>
-							<!-- Fim Serviços -->
-							<!-- Outros -->
-							<tr>
-								<th class="text-right"> </th>
-								<th class="text-right"> </th>
-								<th class="text-right"> </th>
-								<th class="text-right"> </th>
-								<th class="text-right"> Pagamento Mensal: </th>
-								<th class="text-right valormensaltotal">
-									</p>
-								</th>
-								<th class="text-right"> Pagamento Único: </th>
-								<th class="text-right valortotal">
-									</p>
-								</th>
-							</tr>
-							<!-- Fim Outros -->
-						</tbody>
-					</table>
+				<div class="orc-paper-right">
+					<div class="orc-paper-doc-title">Proposta de Orçamento</div>
+					<div class="orc-paper-meta">
+						Nº <?= h((string)$orcamento->id) ?> <?= $versaoLbl ?> · <?= h($emissao) ?>
+					</div>
+					<div class="orc-paper-badges">
+						<div class="orc-paper-badge" style="color:#00c08b;">
+							<span class="dot" style="background:#00c08b;"></span>
+							<?= h($statusPaper) ?>
+						</div>
+						<?php if ($validadeFmt !== '') : ?>
+							<div class="orc-paper-badge" style="color:#ffc107;">
+								<span class="dot" style="background:#ffc107;"></span>
+								Válido até <?= h($validadeFmt) ?>
+							</div>
+						<?php endif; ?>
+					</div>
 				</div>
-				<p style="width:1000px"></p>
+			</div>
+
+			<div class="orc-paper-grid">
+				<div class="orc-paper-cell">
+					<div class="orc-paper-lbl">Cliente</div>
+					<div class="orc-paper-val"><?= h($nomeCliente) ?></div>
+					<?php if ($docCliente !== '') : ?>
+						<div class="orc-paper-val-sm"><?= $docCliente ?></div>
+					<?php endif; ?>
+				</div>
+				<div class="orc-paper-cell">
+					<div class="orc-paper-lbl">Responsável</div>
+					<div class="orc-paper-val"><?= $autorNome ?></div>
+					<?php if ($autorEmail !== '') : ?>
+						<div class="orc-paper-val-sm"><?= $autorEmail ?></div>
+					<?php endif; ?>
+				</div>
+				<div class="orc-paper-cell-full">
+					<div>
+						<div class="orc-paper-lbl">Pagamento</div>
+						<div class="orc-paper-val">Conforme itens (único / mensal)</div>
+					</div>
+					<div>
+						<div class="orc-paper-lbl">Emissão</div>
+						<div class="orc-paper-val"><?= h($emissao) ?></div>
+					</div>
+					<div>
+						<div class="orc-paper-lbl">Validade</div>
+						<div class="orc-paper-val" style="color:#ffc107;"><?= h($validadeFmt ?: '—') ?></div>
+					</div>
+				</div>
+			</div>
+
+			<table class="orc-ptbl" id="tableCarrinho">
+				<thead>
+					<tr>
+						<th style="width:60px;">Código</th>
+						<th>Produto / Serviço</th>
+						<th style="width:56px;">Tipo</th>
+						<th class="r" style="width:38px;">Qtd.</th>
+						<th class="r" style="width:80px;">Vl. Unit.</th>
+						<th class="r" style="width:90px;">Vl. Total</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ($carrinho as $reg) :
+						$tipoLbl = ((int)$reg->tipo === 1) ? 'Hora' : 'Unidade';
+						$vlUnit = ($reg->valormensal <= 0 && (float)$reg->valoruni > 0)
+							? 'R$ ' . number_format($reg->valoruni, 2, ',', '.')
+							: '—';
+						$vlTot = ($reg->valormensal > 0)
+							? 'R$ ' . number_format($reg->valormensal, 2, ',', '.')
+							: (($reg->valordoservico > 0) ? 'R$ ' . number_format($reg->valordoservico, 2, ',', '.') : 'R$ 0,00');
+						?>
+						<tr id="<?= h((string)$reg->id) ?>">
+							<td><?= h((string)$reg->idproduto) ?></td>
+							<td class="b"><?= h($reg->servico) ?>
+								<?php if (!empty($reg->observacao)) : ?>
+									<div style="font-size:9px;color:#666;font-weight:400;margin-top:2px;"><?= h($reg->observacao) ?></div>
+								<?php endif; ?>
+							</td>
+							<td><?= h($tipoLbl) ?></td>
+							<td class="r"><?= h((string)$reg->quantidade) ?></td>
+							<td class="r"><?= $vlUnit ?></td>
+							<td class="r"><?= $vlTot ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+
+			<div class="orc-paper-totals">
+				<div class="orc-paper-totals-inner">
+					<div class="orc-paper-tot-row"><span>Subtotal (pagamento único)</span><span>R$ <?= number_format($totUnico, 2, ',', '.') ?></span></div>
+					<div class="orc-paper-tot-row"><span>Total mensal (linhas)</span><span>R$ <?= number_format($totMensal, 2, ',', '.') ?></span></div>
+					<div class="orc-paper-tot-row disc"><span>Desconto</span><span>—</span></div>
+					<div class="orc-paper-tot-row grand"><span>Total geral</span><span>R$ <?= number_format($totGeral, 2, ',', '.') ?></span></div>
+				</div>
+			</div>
+
+			<div class="orc-paper-obs area-observacao">
+				<?= str_replace(['text-white', 'dark:text-[#EBEBEB]'], '', $orcamento->solicitacao ?? '') ?>
+			</div>
+
+			<div class="orc-paper-cond">
+				<h4>Condições gerais</h4>
+				<div class="orc-paper-cond-grid">
+					<div class="orc-paper-cond-item"><span class="i"></span> Proposta válida pelo período indicado.</div>
+					<div class="orc-paper-cond-item"><span class="i"></span> Garantia de 12 meses contra defeitos de fabricação, quando aplicável.</div>
+					<div class="orc-paper-cond-item"><span class="i"></span> NF emitida após confirmação do pagamento.</div>
+					<div class="orc-paper-cond-item"><span class="i"></span> Suporte técnico conforme contrato.</div>
+				</div>
+			</div>
+
+			<div class="orc-paper-sig">
+				<div class="orc-paper-sig-b">
+					<div style="height:28px;"></div>
+					<div class="orc-paper-sig-line"></div>
+					<div style="font-size:11px;font-weight:700;color:#111;"><?= $empNome ?></div>
+					<div style="font-size:9px;color:#999;">Fornecedor<?= ($emp && !empty($emp->cnpj)) ? ' · CNPJ: ' . h($emp->cnpj) : '' ?></div>
+				</div>
+				<div class="orc-paper-sig-b">
+					<div style="height:28px;"></div>
+					<div class="orc-paper-sig-line"></div>
+					<div style="font-size:11px;font-weight:700;color:#111;">Cliente</div>
+					<div style="font-size:9px;color:#999;">Contratante</div>
+				</div>
+			</div>
+
+			<div class="orc-paper-foot">
+				<span style="color:#00c08b;font-weight:600;"><?= $empNome ?></span>
+				<?php if ($emp && !empty($emp->site)) : ?>
+					· <?= h($emp->site) ?>
+				<?php endif; ?>
+				<?php if ($emp && !empty($emp->email)) : ?>
+					· <?= h($emp->email) ?>
+				<?php endif; ?>
 				<br>
-				<div class="float-right">
-					<p class='m-b-0 text-right'>Bento Gonçalves, <?= @date_format($orcamento->created, 'd') . ' de ' . descricaoMes($orcamento->created, 1) . ' de ' . @date_format($orcamento->created, 'Y') ?></p>
-					<p class='m-b-0 text-right'>Obrigado pela sua atenção,</p>
-					<p class='m-b-0 text-right'><?= $orcamento->user->name ?></p>
-				</div>
+				Documento gerado pelo ERP Enterprise · <?= h($emissao) ?>
 			</div>
 		</div>
 	</div>
 </div>
 <script>
-	function numberToReal(numero) {
-		if (!isNaN(numero)) {
-			var numero = numero.toFixed(2).split('.');
-			numero[0] = numero[0].split(/(?=(?:...)*$)/).join('.');
-			return numero.join(',');
-		}
-	}
-
-
-	function valortotal() {
-		var valortotal = 0;
-		var valormensaltotal = 0;
-
-		$('.valormensal').each(function() {
-			var linha = $(this).closest('tr');
-			var strQtde = $(this).prev().text().trim();
-			var qtde = 0;
-			if (strQtde.indexOf(':') > -1) {
-				var arr = strQtde.split(':');
-				qtde = parseFloat(arr[0]) + (parseFloat(arr[1]) / 6 / 10);
-			} else {
-				qtde = parseFloat(strQtde.replace(/\./g, "").replace(",", ".")) || 0;
-			}
-			var strMensal = $(this).text().split('R$').join('');
-			var vMensal = parseFloat(strMensal.replace(/\./g, "").replace(",", ".")) || 0;
-			var strUnit = linha.find('.valorunit').text().split('R$').join('');
-			var vUnit = parseFloat(strUnit.replace(/\./g, "").replace(",", ".")) || 0;
-			if (vMensal > 0) {
-				valormensaltotal += (vMensal * qtde);
-			} else {
-				valortotal += (vUnit * qtde);
-			}
-		});
-
-		$(".valortotal").html('R$ ' + numberToReal(valortotal));
-		$(".valormensaltotal").html('R$ ' + numberToReal(valormensaltotal));
-	}
-
-	valortotal();
-
 	$('#btn-imprimir').click(function(e) {
 		e.preventDefault();
-		$('.titulo').removeClass('bg-dark').removeClass('text-white');
-		if ($("body").hasClass("mini-sidebar")) $("#printable").removeClass('printMini');
-		else $("#printable").addClass('printMini');
-		var $print = $('#printable')
-			.clone()
-			.addClass('print')
 		window.print();
-		$('.titulo').addClass('bg-dark').addClass('text-white');
-		$print.remove();
 	});
-
-	$('.tempoestimado').each(function() {
-		var body = $(this).html();
-		var h = body.search("h");
-		var min = body.search("min");
-		if (h < 0 && min < 0) $(this).text($(this).text() + 'h');
-	})
-
 
 	function gerarPDF() {
 		const elemento = document.getElementById('printable');
 		const tituloOriginal = document.title;
-		document.title = "Orcamento_<?= $orcamento->id ?>";
+		document.title = "Orcamento_<?= (int)$orcamento->id ?>";
 		elemento.classList.add('pdf-mode');
 		const style = document.createElement('style');
 		style.id = 'temp-pdf-style';
@@ -349,15 +314,15 @@ error_reporting(0);
 				left: 0 !important;
 				top: 0 !important;
 			}
-			#printable.pdf-mode .table td,
-			#printable.pdf-mode .table th {
+			#printable.pdf-mode .orc-ptbl td,
+			#printable.pdf-mode .orc-ptbl th {
 				font-size: 11px !important;
 				padding: 5px !important;
 			}
 			#printable.pdf-mode .area-observacao,
-            #printable.pdf-mode .area-observacao * {
-                color: #000000 !important;
-            }
+			#printable.pdf-mode .area-observacao * {
+				color: #000000 !important;
+			}
 		`;
 		document.head.appendChild(style);
 
@@ -385,19 +350,16 @@ error_reporting(0);
 			if (tempStyle) tempStyle.remove();
 
 			const imgData = canvas.toDataURL('image/png');
-
 			const pdf = new jspdf.jsPDF({
 				orientation: 'portrait',
 				unit: 'px',
 				format: 'a4',
 				hotfixes: ["px_scaling"]
 			});
-
 			const pdfWidth = pdf.internal.pageSize.getWidth();
 			const pdfHeight = pdf.internal.pageSize.getHeight();
 			const imgWidth = canvas.width;
 			const imgHeight = canvas.height;
-
 			const scale = pdfWidth / imgWidth;
 			const height = imgHeight * scale;
 
@@ -405,13 +367,12 @@ error_reporting(0);
 				const scaleHeight = pdfHeight / imgHeight;
 				const width = imgWidth * scaleHeight;
 				const x = (pdfWidth - width) / 2;
-
 				pdf.addImage(imgData, 'PNG', x, 0, width, pdfHeight);
 			} else {
 				pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, height);
 			}
 
-			pdf.save(`Orcamento_<?= $orcamento->id ?>.pdf`);
+			pdf.save(`Orcamento_<?= (int)$orcamento->id ?>.pdf`);
 			document.title = tituloOriginal;
 		}).catch(error => {
 			console.error('Erro:', error);
@@ -422,7 +383,6 @@ error_reporting(0);
 		});
 	}
 
-	// Evento do botão Salvar PDF
 	$('#btn-salvar-pdf').click(function(e) {
 		e.preventDefault();
 		gerarPDF();

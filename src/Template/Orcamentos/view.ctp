@@ -1,6 +1,6 @@
 <?php
     use Cake\Routing\Router;
-    $this->append('css', $this->Html->css('/css/orcamentos-premium'));
+    $this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
     // Breadcumbs
     $this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Visualizar Orçamento', [], ['class' => 'breadcrumb-item active']);
@@ -52,7 +52,8 @@
         }
     });
 </script>
-<div class="col-md-12 orc-premium-wrap orc-premium-view">
+<div class="col-md-12 orc-premium-page-root">
+<div class="orc-premium-wrap orc-premium-form orc-premium-view">
     <!-- Cabeçalho -->
     <div class="orc-page-head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
         <div>
@@ -65,17 +66,31 @@
             <?= $this->Html->link(
                 '<i class="fa fa-arrow-left"></i> Voltar',
                 ['action' => 'index'],
-                ['class' => 'btn btn-default', 'escape' => false]
+                ['class' => 'btn btn-sm btn-secondary', 'escape' => false]
             ) ?>
+            <?php if (isset($role) && (int)$role === 0) : ?>
+                <?= $this->Html->link(
+                    '<i class="fa fa-pencil"></i> Editar',
+                    ['action' => 'edit', $orcamento->id],
+                    ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao', 'escape' => false]
+                ) ?>
+                <?= $this->Html->link(
+                    '<i class="fa fa-file-text-o"></i> Pré-visualizar PDF',
+                    ['action' => 'imprimir', $orcamento->id],
+                    ['class' => 'btn btn-sm btn-pgm btn-pgm-pdf', 'escape' => false]
+                ) ?>
+            <?php endif; ?>
             <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
                 <?= $this->Html->Link(
                     '<i class="fa fa-check"></i> Aprovar',
                     ['action' => 'aprovar', $orcamento->id],
-                    ['class' => 'btn btn-pgm btn-pgm-salvar btn-success', 'escape' => false]
+                    ['class' => 'btn btn-sm btn-pgm btn-pgm-salvar btn-success', 'escape' => false]
                 ) ?>
             <?php endif; ?>
         </div>
     </div>
+
+    <?= $this->element('orcamentos_stepper') ?>
 
     <div class="card orc-premium-card-inner">
         <div class="card-body">
@@ -85,7 +100,7 @@
             <div class="row m-t-10">
                 <div class="col-md-3 col-xs-12">
                     <label class="control-label">Autor</label>
-                    <?= $this->Form->text('idautor', ['class' => 'form-control', 'id' => 'idautor', 'value' => $orcamento->user->name, 'disabled']) ?>
+                    <?= $this->Form->text('idautor', ['class' => 'form-control', 'id' => 'idautor', 'value' => ($orcamento->user && !empty($orcamento->user->name)) ? $orcamento->user->name : '—', 'disabled']) ?>
                 </div>
                 <div class="col-md-3 col-xs-12">
                     <label class="control-label">Válido até</label>
@@ -174,6 +189,7 @@
 
         </div>
     </div>
+</div>
 </div>
 <script>
     carrinho();
