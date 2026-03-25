@@ -156,14 +156,24 @@
   padding: 0.55rem 0.65rem;
 }
 
-/* ========== Lista (protótipo Orçamentos Premium — paleta PGM 2026) ========== */
+/* ========== Lista — alinhado a pgm_orcamentos_premium.html (ERP: só área de conteúdo) ========== */
+.orc-premium-page-root {
+  background: #f2f1ee;
+  padding: 24px 12px 32px;
+  margin-bottom: 0;
+  min-height: calc(100vh - 120px);
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 13px;
+}
+
 .orc-premium-wrap.orc-premium-index {
-  --orc-teal: #1d9e75;
-  --orc-teal-dark: #0f6e56;
-  --orc-teal-light: #e1f5ee;
-  --orc-teal-mid: #5dcaa5;
-  --orc-amber: #e9a025;
-  --orc-blue: #378add;
+  /* :root do protótipo */
+  --orc-teal: #00c08b;
+  --orc-teal-dark: #008f68;
+  --orc-teal-light: #e6faf4;
+  --orc-teal-mid: #5cdbc0;
+  --orc-amber: #ffc107;
+  --orc-blue: #33ccff;
   --orc-red: #e24b4a;
   --orc-border: #e5e4e0;
   --orc-border-light: #f0efec;
@@ -176,43 +186,75 @@
   --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --orc-radius-sm: 8px;
   --orc-radius-lg: 12px;
-  padding: 16px 18px 28px;
-  background: #ffffff;
-  border-radius: var(--orc-radius-lg);
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  color: var(--orc-text);
 }
 
-/* Container principal (força tema claro dentro do ERP dark) */
 #orc-premium-container.orc-premium-wrap.orc-premium-index {
-  background: #ffffff !important;
+  background: transparent !important;
   color: #1a1a18 !important;
-  min-height: 100vh;
+  min-height: 0;
 }
 
-#orc-premium-container.orc-premium-index table td,
-#orc-premium-container.orc-premium-index table th,
-#orc-premium-container.orc-premium-index table tr,
+/* Tema claro no dark-mode: células e controles DataTables (não aplicar em `tr` — quebra layout) */
 #orc-premium-container.orc-premium-index .dataTables_wrapper {
-  background: #ffffff !important;
+  color: #1a1a18 !important;
+}
+
+#orc-premium-container.orc-premium-index table.dataTable tbody td,
+#orc-premium-container.orc-premium-index table.dataTable thead th,
+#orc-premium-container.orc-premium-index table.orc-premium-tbl tbody td,
+#orc-premium-container.orc-premium-index table.orc-premium-tbl thead th {
+  background-color: #fff !important;
   color: #1a1a18 !important;
   border-color: #e5e4e0 !important;
 }
 
-#orc-premium-container.orc-premium-index .orc-premium-tbl thead th {
+#orc-premium-container.orc-premium-index table.orc-premium-tbl thead th,
+#orc-premium-container.orc-premium-index table.dataTable thead th {
   background: #f9f9f8 !important;
 }
 
 #orc-premium-container.orc-premium-index a.orc-premium-link,
 #orc-premium-container.orc-premium-index a.orc-premium-id {
-  color: #1d9e75 !important;
+  color: #00c08b !important;
 }
 
-#orc-premium-container.orc-premium-index .orc-premium-tab-btns .nav-link {
-  color: #6b6a65 !important;
+/* Abas tipo pill (protótipo .tabs / .tab) */
+.orc-premium-index .orc-premium-tabs-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0;
+  align-items: center;
 }
 
-#orc-premium-container.orc-premium-index .orc-premium-tab-btns .nav-link.active {
-  color: #0f6e56 !important;
-  background: #e1f5ee !important;
+.orc-premium-index .orc-premium-tab-pill {
+  padding: 7px 14px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted) !important;
+  border: none !important;
+  background: transparent !important;
+  text-decoration: none !important;
+  display: inline-block;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.orc-premium-index .orc-premium-tab-pill:hover {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-teal-dark) !important;
+}
+
+.orc-premium-index .orc-premium-tab-pill.active,
+.orc-premium-index .orc-premium-tab-pill.active:focus {
+  background: var(--orc-teal-light) !important;
+  color: var(--orc-teal-dark) !important;
+  font-weight: 500 !important;
 }
 
 .orc-premium-index .orc-premium-empresa-cell {
@@ -244,7 +286,7 @@
   border-radius: 999px;
   font-size: 10px;
   font-weight: 600;
-  background: #1d9e75;
+  background: #00c08b;
   color: #fff;
 }
 
@@ -254,11 +296,11 @@
 }
 
 .orc-premium-index .orc-premium-margem--good {
-  color: #1d9e75;
+  color: #00c08b;
 }
 
 .orc-premium-index .orc-premium-margem--warn {
-  color: #e9a025;
+  color: #ffc107;
 }
 
 .orc-premium-index .orc-premium-margem--bad {
@@ -436,39 +478,6 @@
   justify-content: flex-start;
 }
 
-.orc-premium-index .orc-premium-tab-btns {
-  border-bottom: none !important;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin: 0;
-}
-
-.orc-premium-index .orc-premium-tab-btns .nav-item {
-  margin: 0;
-}
-
-.orc-premium-index .orc-premium-tab-btns .nav-link {
-  border: none !important;
-  border-radius: var(--orc-radius-sm) !important;
-  padding: 7px 14px !important;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--orc-text-muted) !important;
-  background: transparent !important;
-}
-
-.orc-premium-index .orc-premium-tab-btns .nav-link:hover {
-  background: rgba(29, 158, 117, 0.08) !important;
-  color: var(--orc-teal-dark) !important;
-}
-
-.orc-premium-index .orc-premium-tab-btns .nav-link.active {
-  background: var(--orc-teal-light) !important;
-  color: var(--orc-teal-dark) !important;
-  font-weight: 500 !important;
-}
-
 .orc-premium-index .orc-premium-toolbar-right {
   display: flex;
   align-items: center;
@@ -487,9 +496,10 @@
   margin: 0;
 }
 
-.orc-premium-index .orc-premium-search i {
+.orc-premium-index .orc-premium-search i,
+.orc-premium-index .orc-premium-search .orc-premium-search-ic {
   color: var(--orc-text-hint);
-  font-size: 14px;
+  flex-shrink: 0;
 }
 
 .orc-premium-index .orc-premium-search input {
@@ -497,7 +507,8 @@
   background: transparent;
   outline: none;
   font-size: 12px;
-  width: min(200px, 42vw);
+  width: 150px;
+  max-width: 46vw;
   color: var(--orc-text);
 }
 
@@ -522,11 +533,15 @@
   color: var(--orc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  padding: 10px 12px !important;
+  padding: 8px 12px !important;
   border-bottom: 1px solid var(--orc-border) !important;
   font-weight: 600;
   background: var(--orc-bg-surface) !important;
   vertical-align: middle;
+}
+
+.orc-premium-index .orc-premium-th-r {
+  text-align: right !important;
 }
 
 .orc-premium-index .orc-premium-tbl tbody td {
@@ -564,10 +579,34 @@
   background: var(--orc-bg-card);
 }
 
-/* ERP dark skin / dark-mode: manter lista premium clara (carrega depois de dark-mode.css via fetch('css')) */
+/* DataTables: rodapé e paginação no estilo claro */
+.orc-premium-index .orc-premium-list-card .dataTables_length,
+.orc-premium-index .orc-premium-list-card .dataTables_info,
+.orc-premium-index .orc-premium-list-card .dataTables_paginate {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--orc-text-muted) !important;
+}
+
+.orc-premium-index .orc-premium-list-card .dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: var(--orc-text-muted) !important;
+}
+
+.orc-premium-index .orc-premium-list-card .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--orc-teal-light) !important;
+  color: var(--orc-teal-dark) !important;
+  border-color: var(--orc-border) !important;
+}
+
+/* ERP dark skin / dark-mode: fundo da página + lista clara */
+body.skin-default-dark .orc-premium-page-root,
+body.dark-mode .orc-premium-page-root {
+  background: #f2f1ee !important;
+}
+
 body.skin-default-dark .orc-premium-wrap.orc-premium-index,
 body.dark-mode .orc-premium-wrap.orc-premium-index {
-  background: #ffffff !important;
+  background: transparent !important;
   color: #1a1a18 !important;
 }
 

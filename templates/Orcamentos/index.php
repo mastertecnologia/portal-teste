@@ -81,7 +81,8 @@ $orcPremiumMargemOrder = function ($id) use ($margemBrutaPctPorOrcamentoId) {
 
 $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 ?>
-<div id="orc-premium-container" class="col-md-12 orc-premium-wrap orc-premium-index">
+<div class="col-md-12 orc-premium-page-root">
+<div id="orc-premium-container" class="orc-premium-wrap orc-premium-index">
 	<?php if ((int)($role ?? 1) === 0) : ?>
 		<header class="orc-premium-page-head">
 			<div class="orc-premium-page-head-text">
@@ -96,15 +97,15 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 		</header>
 
 		<div class="orc-premium-stats" role="tablist">
-			<button type="button" class="orc-premium-stat active" style="--orc-sc:#E9A025;" data-orc-tab="pendentes" aria-selected="true">
+			<button type="button" class="orc-premium-stat active" style="--orc-sc:#FFC107;" data-orc-tab="pendentes" aria-selected="true">
 				<span class="orc-premium-stat-l">Andamento</span>
 				<span class="orc-premium-stat-n"><?= $tEm ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#1D9E75;" data-orc-tab="enviados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#00C08B;" data-orc-tab="enviados" aria-selected="false">
 				<span class="orc-premium-stat-l">Enviados</span>
 				<span class="orc-premium-stat-n"><?= $tEn ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#378ADD;" data-orc-tab="aprovados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#33CCFF;" data-orc-tab="aprovados" aria-selected="false">
 				<span class="orc-premium-stat-l">Aprovados</span>
 				<span class="orc-premium-stat-n"><?= $tAp ?></span>
 			</button>
@@ -120,27 +121,17 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 
 		<div class="orc-premium-list-card orc-premium-list-card--admin">
 			<div class="orc-premium-list-toolbar">
-				<ul class="orc-premium-tab-btns nav nav-tabs" role="tablist">
-					<li class="nav-item">
-						<a class="nav-link active" data-toggle="tab" href="#pendentes" role="tab" aria-controls="pendentes" aria-selected="true">Pendentes</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#enviados" role="tab" aria-controls="enviados" aria-selected="false">Enviados</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#aprovados" role="tab" aria-controls="aprovados" aria-selected="false">Aprovados</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#recusados" role="tab" aria-controls="recusados" aria-selected="false">Recusados</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#arquivados" role="tab" aria-controls="arquivados" aria-selected="false">Arquivados</a>
-					</li>
-				</ul>
+				<div class="orc-premium-tabs-strip" role="tablist">
+					<a class="orc-premium-tab-pill active" data-toggle="tab" href="#pendentes" role="tab" aria-controls="pendentes" aria-selected="true">Pendentes</a>
+					<a class="orc-premium-tab-pill" data-toggle="tab" href="#enviados" role="tab" aria-controls="enviados" aria-selected="false">Enviados</a>
+					<a class="orc-premium-tab-pill" data-toggle="tab" href="#aprovados" role="tab" aria-controls="aprovados" aria-selected="false">Aprovados</a>
+					<a class="orc-premium-tab-pill" data-toggle="tab" href="#recusados" role="tab" aria-controls="recusados" aria-selected="false">Recusados</a>
+					<a class="orc-premium-tab-pill" data-toggle="tab" href="#arquivados" role="tab" aria-controls="arquivados" aria-selected="false">Arquivados</a>
+				</div>
 				<div class="orc-premium-toolbar-right">
 					<label class="orc-premium-search" for="orc-list-search">
-						<i class="ti-search" aria-hidden="true"></i>
-						<input type="search" id="orc-list-search" placeholder="Buscar por ID, empresa…" autocomplete="off" />
+						<svg class="orc-premium-search-ic" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+						<input type="search" id="orc-list-search" placeholder="Buscar…" autocomplete="off" />
 					</label>
 					<span class="orc-premium-list-meta"><?= (int)$totalListaAdmin ?> registro(s) no total</span>
 				</div>
@@ -156,8 +147,8 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									<th>Empresa</th>
 									<th style="width:75px;">Versão</th>
 									<th style="width:85px;">Status</th>
-									<th class="text-right" style="width:100px;">Total</th>
-									<th class="text-right" style="width:80px;">Margem</th>
+									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
+									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
 									<th style="width:95px;">Data</th>
 									<th style="width:90px;">Ações</th>
 								</tr>
@@ -199,8 +190,8 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									<th>Empresa</th>
 									<th style="width:75px;">Versão</th>
 									<th style="width:85px;">Status</th>
-									<th class="text-right" style="width:100px;">Total</th>
-									<th class="text-right" style="width:80px;">Margem</th>
+									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
+									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
 									<th style="width:95px;">Data</th>
 									<th style="width:90px;">Ações</th>
 								</tr>
@@ -242,8 +233,8 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									<th>Empresa</th>
 									<th style="width:75px;">Versão</th>
 									<th style="width:85px;">Status</th>
-									<th class="text-right" style="width:100px;">Total</th>
-									<th class="text-right" style="width:80px;">Margem</th>
+									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
+									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
 									<th style="width:95px;">Data</th>
 									<th style="width:90px;">Ações</th>
 								</tr>
@@ -285,8 +276,8 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									<th>Empresa</th>
 									<th style="width:75px;">Versão</th>
 									<th style="width:85px;">Status</th>
-									<th class="text-right" style="width:100px;">Total</th>
-									<th class="text-right" style="width:80px;">Margem</th>
+									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
+									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
 									<th style="width:95px;">Data</th>
 									<th style="width:90px;">Ações</th>
 								</tr>
@@ -328,8 +319,8 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									<th>Empresa</th>
 									<th style="width:75px;">Versão</th>
 									<th style="width:85px;">Status</th>
-									<th class="text-right" style="width:100px;">Total</th>
-									<th class="text-right" style="width:80px;">Margem</th>
+									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
+									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
 									<th style="width:95px;">Data</th>
 									<th style="width:90px;">Ações</th>
 								</tr>
@@ -392,8 +383,8 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							<th>Autor</th>
 							<th style="width:75px;">Versão</th>
 							<th style="width:85px;">Status</th>
-							<th class="text-right" style="width:100px;">Total</th>
-							<th class="text-right" style="width:80px;">Margem</th>
+							<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
+							<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
 							<th style="width:95px;">Data</th>
 							<th style="width:90px;">Ações</th>
 						</tr>
@@ -427,6 +418,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 			</div>
 		</div>
 	<?php endif; ?>
+</div>
 </div>
 
 <script>

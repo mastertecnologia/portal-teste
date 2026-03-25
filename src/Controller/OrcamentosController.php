@@ -384,6 +384,7 @@ class OrcamentosController extends AppController {
 			'margemBrutaPctPorOrcamentoId'
 		));
 		$this->set('title', 'Orçamentos');
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function add($idticket = null) {
