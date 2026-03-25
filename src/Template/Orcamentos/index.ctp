@@ -1,5 +1,5 @@
 <?php
-$this->append('css', $this->Html->css('/css/orcamentos-premium'));
+$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
 
 $totais = isset($totais) && is_array($totais) ? $totais : [];
 $tEm = (int)($totais['em_andamento'] ?? count($orcamentosPendentes ?? []));
@@ -405,8 +405,17 @@ $(document).ready(function() {
 			oAria: { sSortAscending: ': Ordem Ascendente', sSortDescending: ': Ordem descendente' }
 		},
 		drawCallback: function() {
-			if ($('body').hasClass('dark-mode')) $('td').each(function() { $(this).addClass('dark-mode'); });
-			else $('td').each(function() { $(this).removeClass('dark-mode'); });
+			// Não aplicar células .dark-mode dentro da lista premium (senão o DataTables força o tema escuro do ERP).
+			$('td').each(function() {
+				var $td = $(this);
+				if ($td.closest('.orc-premium-wrap.orc-premium-index').length) {
+					$td.removeClass('dark-mode');
+				} else if ($('body').hasClass('dark-mode')) {
+					$td.addClass('dark-mode');
+				} else {
+					$td.removeClass('dark-mode');
+				}
+			});
 		}
 	});
 	if (typeof filters !== 'undefined' && filters) {
