@@ -91,6 +91,33 @@
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
+a.dash-pgm-notif-item-link {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+  align-items: flex-start;
+}
+a.dash-pgm-notif-item-link:hover {
+  background: var(--surface2);
+}
+.dash-pgm-notif-footer {
+  display: block;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--purple);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+}
+.dash-pgm-notif-footer:hover {
+  background: var(--surface2);
+  color: var(--purple);
+  text-decoration: none;
+}
 .dash-pgm-notif-icon {
   width: 30px; height: 30px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
@@ -103,6 +130,9 @@
 .dash-pgm-content {
   padding: 16px 20px;
   overflow: auto;
+  background: var(--bg);
+  flex: 1;
+  min-height: 0;
 }
 
 .dash-pgm-stats-grid {
@@ -120,9 +150,22 @@
   gap: 11px;
   cursor: pointer;
 }
-.dash-pgm-stat-card.active-filter {
+/* Destaque do KPI ativo: cor alinhada ao tipo de filtro (evita card roxo com borda azul) */
+.dash-pgm-stat-card.active-filter[data-filter="aguardando"] {
+  border-color: var(--orange);
+  background: rgba(210, 153, 34, 0.08);
+}
+.dash-pgm-stat-card.active-filter[data-filter="execucao"] {
   border-color: var(--blue);
   background: rgba(56, 139, 253, 0.08);
+}
+.dash-pgm-stat-card.active-filter[data-filter="finalizados"] {
+  border-color: var(--green);
+  background: rgba(63, 185, 80, 0.08);
+}
+.dash-pgm-stat-card.active-filter[data-filter="requisicoes"] {
+  border-color: var(--purple);
+  background: rgba(188, 140, 255, 0.08);
 }
 .dash-pgm-stat-card.flash {
   box-shadow: 0 0 18px rgba(188, 140, 255, 0.35);
@@ -221,6 +264,9 @@
   grid-template-columns: 1fr 1fr 185px 185px;
   gap: 10px;
 }
+.dash-pgm-bottom-row .dash-pgm-table {
+  table-layout: fixed;
+}
 .dash-pgm-table-card, .dash-pgm-ranking-card, .dash-pgm-clients-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -267,7 +313,21 @@
 .dash-pgm-empty { text-align: center; color: var(--text-muted); }
 
 .td-id { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); white-space: nowrap; }
-.td-client { color: var(--blue); font-weight: 500; }
+.td-client { color: var(--blue); font-weight: 500; max-width: 0; }
+.td-client-inner {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+.td-client-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
 .td-date { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); white-space: nowrap; }
 .sla-badge {
   display: inline-flex;
@@ -287,12 +347,14 @@
 .dot.red { background: var(--red); }
 .stagnant-tag {
   display: inline-flex;
+  flex-shrink: 0;
   font-size: 9px;
   background: #3d2e0a;
   color: var(--orange);
   border-radius: 3px;
   padding: 1px 4px;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .dash-pgm-ranking-item {
@@ -307,7 +369,31 @@
 .dash-pgm-ranking-item strong { font-size: 11px; }
 .dash-pgm-ranking-item small { color: var(--text-muted); font-size: 10px; }
 .dash-pgm-ranking-empty strong { font-weight: 500; color: var(--text-muted); }
-.dash-pgm-ranking-empty small { display: block; margin-top: 4px; max-width: min(100%, 280px); line-height: 1.35; }
+.dash-pgm-ranking-empty small { display: block; margin-top: 4px; max-width: min(100%, 280px); line-height: 1.35; color: var(--text-muted); }
+
+.td-actions { white-space: nowrap; text-align: right; vertical-align: middle; }
+a.dash-pgm-liberar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(63, 185, 80, 0.35);
+  text-decoration: none;
+}
+a.dash-pgm-liberar:hover {
+  background: rgba(63, 185, 80, 0.28);
+  color: #56d364;
+  text-decoration: none;
+}
+.dash-pgm-no-action {
+  font-size: 11px;
+  color: var(--text-dim);
+}
 
 .dash-pgm-client-item {
   display: flex;

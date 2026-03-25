@@ -58,17 +58,23 @@
 				<div class="dash-pgm-notif-header">
 					Notificações <span id="dashPgmNotifCount"><?= $reqCount === 0 ? 'nenhuma pendente' : ((int)$reqCount . ' nova' . ((int)$reqCount !== 1 ? 's' : '')) ?></span>
 				</div>
+				<?php
+					$urlReqAcesso = $this->Url->build(['controller' => 'Users', 'action' => 'requisicoesAcesso']);
+				?>
 				<?php foreach (array_slice($reqRows, 0, 3) as $u): ?>
 					<?php $nomeReq = !empty($u->name) ? $u->name : (!empty($u->username) ? $u->username : 'Usuário'); ?>
-					<div class="dash-pgm-notif-item">
+					<a href="<?= h($urlReqAcesso) ?>" class="dash-pgm-notif-item dash-pgm-notif-item-link">
 						<div class="dash-pgm-notif-icon purple"><i class="fas fa-user-lock"></i></div>
 						<div class="dash-pgm-notif-body">
 							<strong>Nova requisição de acesso</strong>
 							<p><?= h($nomeReq) ?></p>
-							<div class="dash-pgm-notif-time">agora mesmo</div>
+							<div class="dash-pgm-notif-time">Abrir requisições →</div>
 						</div>
-					</div>
+					</a>
 				<?php endforeach; ?>
+				<?php if ($reqCount > 0): ?>
+					<a href="<?= h($urlReqAcesso) ?>" class="dash-pgm-notif-footer">Gerenciar requisições de acesso</a>
+				<?php endif; ?>
 			</div>
 
 			<div class="dash-pgm-content" id="dashPgmContent">
@@ -164,7 +170,7 @@
 										?>
 										<tr class="dash-pgm-row">
 											<td class="td-id">#<?= h($reg->id) ?></td>
-											<td class="td-client"><?= h($clienteNome) ?></td>
+											<td class="td-client"><span class="td-client-inner"><span class="td-client-name"><?= h($clienteNome) ?></span></span></td>
 											<td class="td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
 											<td><span class="sla-badge <?= $slaClass ?>"><span class="dot <?= $dotClass ?>"></span><?= $dias ?>d</span></td>
 										</tr>
@@ -191,7 +197,7 @@
 										?>
 										<tr class="dash-pgm-row <?= $isStagnant ? 'stagnant' : '' ?>">
 											<td class="td-id">#<?= h($reg->id) ?></td>
-											<td class="td-client"><?= h($clienteNome) ?><?= $isStagnant ? ' <span class="stagnant-tag">+24h</span>' : '' ?></td>
+											<td class="td-client"><span class="td-client-inner"><span class="td-client-name"><?= h($clienteNome) ?></span><?= $isStagnant ? '<span class="stagnant-tag">+24h</span>' : '' ?></span></td>
 											<td class="td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
 											<td><span class="sla-badge <?= $slaClass ?>"><span class="dot <?= $dotClass ?>"></span><?= $dias ?>d</span></td>
 										</tr>
@@ -211,7 +217,7 @@
 							<?php elseif ($rankingMonthClosedCount === 0): ?>
 								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>nenhum ticket finalizado no mês calendário (mesma janela do ranking)</small></div>
 							<?php else: ?>
-								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem ranking</strong><small><?= (int)$rankingMonthClosedCount ?> fechamento(s) no mês, sem responsável no ticket (idtecnico_responsavel / owner_id)</small></div>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem ranking</strong><small><?= (int)$rankingMonthClosedCount ?> fechamento(s) no período sem técnico responsável atribuído ao ticket.</small></div>
 							<?php endif; ?>
 						</div>
 					</div>
@@ -287,11 +293,17 @@
 				color: '#bc8cff',
 				title: 'Requisições de Acesso',
 				subtitle: '<?= $reqCount ?> requisições aguardando aprovação',
-				head: ['Usuário', 'Módulo', 'Solicitado', 'Status'],
+				head: ['Usuário', 'Módulo', 'Solicitado', 'Status', 'Ações'],
 				rows: [
 					<?php foreach ($reqRows as $u): ?>
-					<?php $nomeReq = !empty($u->name) ? $u->name : (!empty($u->username) ? $u->username : 'Usuário'); ?>
-					[<?= json_encode($nomeReq) ?>, "Acesso", <?= json_encode(!empty($u->created) ? date_format($u->created, 'd/m/Y') : date('d/m/Y')) ?>, <?= json_encode('<span class="sla-badge" style="background:#2d1f4e;color:#bc8cff">Pendente</span>') ?>],
+					<?php
+						$nomeReq = !empty($u->name) ? $u->name : (!empty($u->username) ? $u->username : 'Usuário');
+						$urlDesbloquear = $this->Url->build(['controller' => 'Users', 'action' => 'desbloquear', $u->id]);
+						$acaoHtml = ((int)($admin ?? 0) === 1)
+							? '<a class="dash-pgm-liberar" href="' . h($urlDesbloquear) . '" onclick="event.stopPropagation();">Liberar</a>'
+							: '<span class="dash-pgm-no-action" title="Somente administrador pode liberar.">—</span>';
+					?>
+					[<?= json_encode($nomeReq) ?>, "Acesso", <?= json_encode(!empty($u->created) ? date_format($u->created, 'd/m/Y') : date('d/m/Y')) ?>, <?= json_encode('<span class="sla-badge" style="background:#2d1f4e;color:#bc8cff">Pendente</span>') ?>, <?= json_encode($acaoHtml, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>],
 					<?php endforeach; ?>
 				]
 			}
@@ -332,7 +344,7 @@
 			filterThead.innerHTML = '<tr>' + d.head.map(function(h){ return '<th>' + h + '</th>'; }).join('') + '</tr>';
 			filterTbody.innerHTML = d.rows.length ? d.rows.map(function(r){
 				return '<tr class="dash-pgm-row" onclick="dashPgmSelectRow(this)">' + r.map(function(c, i){
-					var cls = i === 0 ? 'td-id' : (i === 1 ? 'td-client' : (i === 2 ? 'td-date' : ''));
+					var cls = i === 0 ? 'td-id' : (i === 1 ? 'td-client' : (i === 2 ? 'td-date' : (i === 3 ? 'td-status' : (i === 4 ? 'td-actions' : ''))));
 					return '<td class="' + cls + '">' + c + '</td>';
 				}).join('') + '</tr>';
 			}).join('') : '<tr><td colspan="' + d.head.length + '" class="dash-pgm-empty">Sem registros para este filtro.</td></tr>';
@@ -389,8 +401,22 @@
 					scales: {
 						x: { grid: { color: '#21262d' }, ticks: { color: '#484f58', maxTicksLimit: 7 } },
 						y: { grid: { color: '#21262d' }, ticks: { color: '#484f58', stepSize: 2 }, min: 0 }
+					},
+					elements: { line: { borderWidth: 1.5 } }
+				},
+				plugins: [{
+					id: 'dashPgmChartClearBg',
+					beforeDraw: function(chart) {
+						var ctx = chart.ctx;
+						var w = chart.width;
+						var h = chart.height;
+						if (w <= 0 || h <= 0) return;
+						ctx.save();
+						ctx.fillStyle = '#161b22';
+						ctx.fillRect(0, 0, w, h);
+						ctx.restore();
 					}
-				}
+				}]
 			});
 		}
 
