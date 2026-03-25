@@ -297,6 +297,95 @@ class OrcamentosController extends AppController {
 		return $out;
 	}
 
+	/**
+	 * Detecta driver PostgreSQL na conexão de Orcamentositens.
+	 */
+	protected function _isPostgresOrcamentositensConnection(): bool {
+		$conn = $this->Orcamentositens->getConnection();
+		$cfg = $conn->config();
+		if (!empty($cfg['driver']) && stripos((string)$cfg['driver'], 'Postgres') !== false) {
+			return true;
+		}
+		$driver = $conn->getDriver();
+
+		return is_object($driver) && stripos(get_class($driver), 'Postgres') !== false;
+	}
+
+	/**
+	 * Indica violação de unicidade na PK de orcamentosnovositens (sequence atrasada, import, etc.).
+	 */
+	protected function _isOrcamentositensPkDuplicateException(\Throwable $e): bool {
+		$msg = $e->getMessage();
+		if (stripos($msg, '23505') === false && stripos($msg, 'Unique violation') === false) {
+			return false;
+		}
+
+		return stripos($msg, 'orcamentosnovositens') !== false;
+	}
+
+	/**
+	 * Realinha a sequence da coluna id com MAX(id) (PostgreSQL).
+	 *
+	 * @return bool true se a sequence existir e o comando tiver sucesso
+	 */
+	protected function _resyncOrcamentositensIdSequence(): bool {
+		if (!$this->_isPostgresOrcamentositensConnection()) {
+			return false;
+		}
+		$conn = $this->Orcamentositens->getConnection();
+		try {
+			$seqRow = $conn->execute(
+				"SELECT pg_get_serial_sequence('orcamentosnovositens', 'id') AS s"
+			)->fetch('assoc');
+			if (empty($seqRow['s'])) {
+				return false;
+			}
+			$maxRow = $conn->execute('SELECT COALESCE(MAX(id), 0) AS m FROM orcamentosnovositens')->fetch('assoc');
+			$max = (int)($maxRow['m'] ?? 0);
+			if ($max <= 0) {
+				$conn->execute('SELECT setval(pg_get_serial_sequence(\'orcamentosnovositens\', \'id\'), 1, false)');
+			} else {
+				$conn->execute(
+					'SELECT setval(pg_get_serial_sequence(\'orcamentosnovositens\', \'id\'), ?, true)',
+					[$max]
+				);
+			}
+
+			return true;
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Insere a linha de vínculo carrinho ↔ orçamento; em 23505 tenta corrigir a sequence e repetir uma vez.
+	 *
+	 * @param int|string $iditem
+	 * @return bool
+	 */
+	protected function _saveOrcamentositensNovoOrcamento($iditem, $idorcamento, $idempresa): bool {
+		$data = [
+			'iditem' => $iditem,
+			'idorcamento' => $idorcamento,
+			'idempresa' => $idempresa,
+		];
+		$carrinho = $this->Orcamentositens->newEntity($data, ['validate' => false]);
+		try {
+			return (bool)$this->Orcamentositens->save($carrinho);
+		} catch (\Throwable $e) {
+			if ($this->_isOrcamentositensPkDuplicateException($e) && $this->_resyncOrcamentositensIdSequence()) {
+				$carrinho = $this->Orcamentositens->newEntity($data, ['validate' => false]);
+				try {
+					return (bool)$this->Orcamentositens->save($carrinho);
+				} catch (\Throwable $e2) {
+					return false;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	public function index() {
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
@@ -416,15 +505,20 @@ class OrcamentosController extends AppController {
 
 			if ($this->Orcamentos->save($orcamento)) {
 				if(isset($idcarrinhoorcamento)) $_SESSION['idcarrinhoadd'] = $idcarrinhoorcamento;
-				$carrinho = $this->Orcamentositens->newEntity();
-				$carrinho->iditem = $_SESSION['idcarrinhoadd'];
-				$carrinho->idorcamento = $orcamento->id;
-				$carrinho->idempresa = $orcamento->idempresa;
-				$this->Orcamentositens->save($carrinho);
-				$this->limpasession();
-				$this->Flash->success(__('Orçamento gerado com sucesso!'));
-				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
-				return $this->redirect(['action' => 'edit', $orcamento->id]);
+				$savedLink = $this->_saveOrcamentositensNovoOrcamento(
+					$_SESSION['idcarrinhoadd'],
+					$orcamento->id,
+					$orcamento->idempresa
+				);
+				if ($savedLink) {
+					$this->limpasession();
+					$this->Flash->success(__('Orçamento gerado com sucesso!'));
+					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
+					return $this->redirect(['action' => 'edit', $orcamento->id]);
+				}
+				$this->Orcamentos->delete($orcamento);
+				$this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
+				$this->Flash->error(__('Não foi possível vincular os itens ao orçamento (erro ao gravar o carrinho). Se o problema persistir, verifique a sequence da tabela orcamentosnovositens no PostgreSQL.'));
 			}
 			$orcamento->id = $this->Empresas->decrementOrcamento($this->Auth->user('idempresa'));
 			$this->Flash->error(__('Não foi possível gerar o orçamento.'));
@@ -455,6 +549,8 @@ class OrcamentosController extends AppController {
 		$this->set('produtos', $produtosOpt);
 		$this->set('orcamento', $orcamento);
 		$this->set('title', 'Gerar Orçamento');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('orcStepperStep', 2);
 	}
 	
 	public function edit($id = null) {

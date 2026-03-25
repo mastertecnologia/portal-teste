@@ -83,7 +83,8 @@ $totGeral = $totUnico + $totMensal;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<div class="col-md-12 orc-premium-wrap orc-premium-form orc-premium-print">
+<div class="col-md-12 orc-premium-page-root">
+<div class="orc-premium-wrap orc-premium-form orc-premium-print">
 	<div class="orc-print-toolbar orc-print-no-print">
 		<div>
 			<div class="orc-print-toolbar-back">
@@ -289,6 +290,7 @@ $totGeral = $totUnico + $totMensal;
 			</div>
 		</div>
 	</div>
+</div>
 </div>
 <script>
 	$('#btn-imprimir').click(function(e) {

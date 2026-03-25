@@ -105,7 +105,8 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 	}
 </style>
 
-<div class="col-md-12 orc-premium-wrap orc-premium-form orc-esign">
+<div class="col-md-12 orc-premium-page-root">
+<div class="orc-premium-wrap orc-premium-form orc-esign">
 	<?php if (!empty($envioSucesso)) : ?>
 		<div class="card" style="text-align:center;padding:32px;max-width:600px;margin:0 auto;">
 			<div style="width:60px;height:60px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
@@ -265,6 +266,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 
 		<?= $this->Form->end(); ?>
 	<?php endif; ?>
+</div>
 </div>
 
 <script>
