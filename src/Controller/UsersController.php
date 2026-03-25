@@ -299,6 +299,14 @@ class UsersController extends AppController {
 			$monthEnd = date('Y-m-t 23:59:59');
 			$rankingMonthClosedCount = $this->_dashPgmClosedTicketsCountInRange($idempresa, $closedSit, $cols, $monthStart, $monthEnd);
 			$byCount = $this->_dashPgmTechnicianRankingCounts($idempresa, $closedSit, $cols, $monthStart, $monthEnd);
+			if ($byCount !== []) {
+				if ($tecMap !== []) {
+					$byCount = array_intersect_key($byCount, $tecMap);
+					arsort($byCount);
+				} else {
+					$byCount = [];
+				}
+			}
 			$idToNome = [];
 			if ($byCount !== []) {
 				$nameRows = $this->Users->find()
@@ -546,8 +554,9 @@ class UsersController extends AppController {
 	 *
 	 * @param string[] $cols
 	 * @param int[] $closedSit Situações consideradas fechamento (resolvido/fechado/cancelado…)
+	 * @param int $idempresa Empresa do ticket (movimentação só conta se o usuário for funcionário vinculado a essa empresa)
 	 */
-	protected function _dashPgmTecnicoEfetivoSql(array $cols, array $closedSit): ?string {
+	protected function _dashPgmTecnicoEfetivoSql(array $cols, array $closedSit, int $idempresa): ?string {
 		if ($closedSit === []) {
 			return null;
 		}
@@ -563,8 +572,15 @@ class UsersController extends AppController {
 			return null;
 		}
 		$tm = $this->Ticketsmovs->getTable();
+		$usersTbl = $this->Users->getTable();
+		$euTbl = $this->Empresasusers->getTable();
 		$closedIn = implode(',', array_map('intval', $closedSit));
-		$sub = '(SELECT tm_sub.idusuario FROM ' . $tm . ' AS tm_sub WHERE tm_sub.idticket = Tickets.id AND tm_sub.sitnova IN (' . $closedIn . ') ORDER BY tm_sub.id DESC LIMIT 1)';
+		// Só usuários role=0 (funcionário), ativos, com vínculo na mesma empresa do ticket (critério do ranking PGM).
+		$sub = '(SELECT tm_sub.idusuario FROM ' . $tm . ' AS tm_sub '
+			. 'INNER JOIN ' . $usersTbl . ' AS u_r ON u_r.id = tm_sub.idusuario AND u_r.role = 0 AND (COALESCE(u_r.inativo, 0) = 0) '
+			. 'INNER JOIN ' . $euTbl . ' AS eu_r ON eu_r.iduser = u_r.id AND eu_r.idempresa = Tickets.idempresa '
+			. 'WHERE tm_sub.idticket = Tickets.id AND tm_sub.sitnova IN (' . $closedIn . ') '
+			. 'ORDER BY tm_sub.id DESC LIMIT 1)';
 
 		return 'COALESCE(' . $base . ', NULLIF(' . $sub . ', 0))';
 	}
@@ -582,7 +598,7 @@ class UsersController extends AppController {
 	 * @return int[]
 	 */
 	protected function _dashPgmTechnicianRankingCounts($idempresa, array $closedSit, array $cols, $rangeStart, $rangeEnd) {
-		$tecSql = $this->_dashPgmTecnicoEfetivoSql($cols, $closedSit);
+		$tecSql = $this->_dashPgmTecnicoEfetivoSql($cols, $closedSit, $idempresa);
 		if ($tecSql === null) {
 			return [];
 		}
