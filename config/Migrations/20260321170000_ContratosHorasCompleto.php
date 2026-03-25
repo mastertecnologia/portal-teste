@@ -77,9 +77,18 @@ SQL
 		$this->execute(<<<'SQL'
 DO $$
 BEGIN
-	ALTER TABLE contratos_horas ADD CONSTRAINT contratos_horas_idcliente_idempresa_key UNIQUE (idcliente, idempresa);
-EXCEPTION
-	WHEN duplicate_object THEN NULL;
+	IF NOT EXISTS (
+		SELECT 1
+		FROM pg_constraint c
+		JOIN pg_class t ON t.oid = c.conrelid
+		JOIN pg_namespace n ON n.oid = t.relnamespace
+		WHERE n.nspname = 'public'
+			AND t.relname = 'contratos_horas'
+			AND c.conname = 'contratos_horas_idcliente_idempresa_key'
+	) THEN
+		ALTER TABLE public.contratos_horas
+			ADD CONSTRAINT contratos_horas_idcliente_idempresa_key UNIQUE (idcliente, idempresa);
+	END IF;
 END $$;
 SQL
 		);
