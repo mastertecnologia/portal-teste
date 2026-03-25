@@ -58,6 +58,7 @@ return [
         'jsBaseUrl' => '',
         'paths' => [
             'plugins' => [ROOT . DS . 'plugins' . DS],
+            // CakePHP 3: views em src/Template/*.ctp apenas. A pasta /templates na raiz do repo não é usada.
             'templates' => [APP . 'Template' . DS],
             'locales' => [APP . 'Locale' . DS],
         ],
@@ -84,7 +85,8 @@ return [
      * enable timestamping regardless of debug value.
      */
     'Asset' => [
-        // 'timestamp' => true,
+        // Força ?timestamp= no CSS/JS para evitar cache antigo (ex.: lista Orçamentos premium).
+        'timestamp' => 'force',
     ],
 
     /**
