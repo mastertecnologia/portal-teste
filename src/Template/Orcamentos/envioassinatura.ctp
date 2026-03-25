@@ -121,7 +121,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 			</div>
 			<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;">
 				<?= $this->Html->link('Ver lista', ['action' => 'index'], ['class' => 'btn btn-ghost', 'escape' => false]) ?>
-				<?= $this->Html->link('Reenviar e-mail (na edição)', ['action' => 'edit', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-email', 'escape' => false]) ?>
+				<?= $this->Html->link('Reenviar e-mail', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-email', 'escape' => false]) ?>
 				<?= $this->Html->link(
 					'Baixar PDF',
 					['action' => 'imprimirPdf', $orcamento->id],
@@ -136,9 +136,12 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		</div>
 	<?php else : ?>
 		<?= $this->Form->create(null, [
-			'url' => ['action' => 'envioassinatura', $orcamento->id],
+			'url' => ['action' => 'email'],
+			'type' => 'file',
 			'id' => 'form-envioassinatura'
 		]); ?>
+		<input type="hidden" name="idorcamento" value="<?= h((string)$orcamento->id) ?>" />
+		<input type="hidden" name="step6" value="1" />
 
 		<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
 			<div>
@@ -175,6 +178,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 							<input
 								type="email"
 								id="em-para"
+								name="emailemail"
 								style="flex:1;border:none;background:transparent;outline:none;font-size:12px;font-family:inherit;color:var(--text);"
 								value="<?= !empty($orcamento->cliente->email) ? h($orcamento->cliente->email) : '' ?>"
 							/>

@@ -1106,7 +1106,7 @@ class OrcamentosController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 
-		$envioSucesso = false;
+		$envioSucesso = ((int)$this->request->getQuery('ok', 0)) === 1;
 		if ($this->request->is(['post', 'put'])) {
 			$oldStatus = $orcamento->status;
 			$orcamento->status = C_OrcamentoStatusEnviado;
@@ -1172,6 +1172,7 @@ class OrcamentosController extends AppController {
 
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
+			$isStep6 = isset($data['step6']) && (int)$data['step6'] === 1;
 			$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
 			$orcamento = $this->Orcamentos->findById($data['idorcamento'])->where(['idempresa' => $this->Auth->user('idempresa')])->first();
 			// Link de acesso 
@@ -1190,11 +1191,33 @@ class OrcamentosController extends AppController {
 					$img = '<img src="'.$this->Auth->user('assinaturapgm') .'" alt=""/>';
 					$message = $mensagem . '<hr>' . $img;
 				}
-			// Anexos 
+			// Anexos (fluxo real)
 				$arrayEmail = [];
-				foreach($data['file'] as $reg) 
-					if(!empty($reg['tmp_name']))
-						$arrayEmail[$reg['name']] = ['file' => $reg['tmp_name']];
+				$tmpGeneratedPdfPath = null;
+
+				$hasUploads = false;
+				if (!empty($data['file']) && is_array($data['file'])) {
+					foreach ($data['file'] as $reg) {
+						if (!empty($reg['tmp_name'])) {
+							$hasUploads = true;
+							$arrayEmail[$reg['name']] = ['file' => $reg['tmp_name']];
+						}
+					}
+				}
+
+				// Passo 6: se não foi enviado arquivo, gera e anexa PDF automaticamente.
+				if ($isStep6 && !$hasUploads) {
+					try {
+						if ($this->_prepareImprimirViewVars((int)$idorcamento)) {
+							$pdfBytes = $this->_renderOrcamentoPdfHtmlToPdf();
+							$tmpGeneratedPdfPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'Orcamento_' . (int)$idorcamento . '_' . uniqid('', true) . '.pdf';
+							file_put_contents($tmpGeneratedPdfPath, $pdfBytes);
+							$arrayEmail['Orcamento_' . (int)$idorcamento . '.pdf'] = ['file' => $tmpGeneratedPdfPath];
+						}
+					} catch (\Throwable $e) {
+						// Se falhar gerar PDF, envia mesmo assim (sem anexo) para não bloquear o fluxo.
+					}
+				}
 			// Empresa 
 				$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
 				if(isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
@@ -1215,8 +1238,31 @@ class OrcamentosController extends AppController {
 
 			if($email->send($message) ){
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $data['idorcamento']);
-				$this->enviar($idorcamento);
-			} else $this->Flash->success('Erro ao enviar e-mail.');
+				// Atualiza status para "Enviado" e registra movimento.
+				$sitantiga = (int)($orcamento->status ?? C_OrcamentoStatusPendente);
+				$orcamento->status = C_OrcamentoStatusEnviado;
+				$this->Orcamentos->save($orcamento);
+				$this->criarMov($idorcamento, $sitantiga, C_OrcamentoStatusEnviado, null);
+
+				if (!empty($tmpGeneratedPdfPath) && is_file($tmpGeneratedPdfPath)) {
+					@unlink($tmpGeneratedPdfPath);
+				}
+
+				if ($isStep6) {
+					return $this->redirect(['action' => 'envioassinatura', $data['idorcamento'], '?' => ['ok' => 1]]);
+				}
+				return $this->redirect(['action' => 'edit', $data['idorcamento']]);
+			} else $this->Flash->error('Erro ao enviar e-mail.');
+
+			if (!empty($tmpGeneratedPdfPath) && is_file($tmpGeneratedPdfPath)) {
+				@unlink($tmpGeneratedPdfPath);
+			}
+
+			if ($isStep6) {
+				$this->Flash->error('Erro ao enviar e-mail.');
+				return $this->redirect(['action' => 'envioassinatura', $data['idorcamento']]);
+			}
+
 			return $this->redirect(['action' => 'edit', $data['idorcamento']]);
 		}
 	}
