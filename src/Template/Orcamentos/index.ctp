@@ -8,6 +8,8 @@ $tAp = (int)($totais['aprovados'] ?? count($orcamentosAprovados ?? []));
 $tRe = (int)($totais['recusados'] ?? count($orcamentosRecusados ?? []));
 $tAr = (int)($totais['arquivados'] ?? count($orcamentosArquivados ?? []));
 $valorTotalPorOrcamentoId = isset($valorTotalPorOrcamentoId) && is_array($valorTotalPorOrcamentoId) ? $valorTotalPorOrcamentoId : [];
+$versaoRotuloPorOrcamentoId = isset($versaoRotuloPorOrcamentoId) && is_array($versaoRotuloPorOrcamentoId) ? $versaoRotuloPorOrcamentoId : [];
+$margemBrutaPctPorOrcamentoId = isset($margemBrutaPctPorOrcamentoId) && is_array($margemBrutaPctPorOrcamentoId) ? $margemBrutaPctPorOrcamentoId : [];
 
 $orcPremiumIniciais = function ($text) {
 	$text = trim(preg_replace('/\s+/u', ' ', strip_tags((string)$text)));
@@ -53,39 +55,33 @@ $orcPremiumFmtValor = function ($id) use ($valorTotalPorOrcamentoId) {
 	return 'R$ ' . number_format($v, 2, ',', '.');
 };
 
+$orcPremiumVersao = function ($id) use ($versaoRotuloPorOrcamentoId) {
+	$id = (int)$id;
+	$v = $versaoRotuloPorOrcamentoId[$id] ?? 'v1';
+
+	return is_string($v) && $v !== '' ? $v : 'v1';
+};
+
+$orcPremiumMargemHtml = function ($id) use ($margemBrutaPctPorOrcamentoId) {
+	$id = (int)$id;
+	$m = $margemBrutaPctPorOrcamentoId[$id] ?? null;
+	if ($m === null) {
+		return '<span class="orc-premium-muted">—</span>';
+	}
+	$cls = $m > 30 ? 'orc-premium-margem--good' : ($m > 15 ? 'orc-premium-margem--warn' : 'orc-premium-margem--bad');
+
+	return '<span class="orc-premium-margem ' . $cls . '">' . h((string)$m) . '%</span>';
+};
+
+$orcPremiumMargemOrder = function ($id) use ($margemBrutaPctPorOrcamentoId) {
+	$m = $margemBrutaPctPorOrcamentoId[(int)$id] ?? null;
+
+	return $m === null ? -1 : (int)$m;
+};
+
 $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 ?>
-<div id="orc-premium-container"
-	class="col-md-12 orc-premium-wrap orc-premium-index"
-	style="background:#ffffff; color:#1a1a18; min-height:100vh;">
-	<style>
-#orc-premium-container,
-#orc-premium-container * {
-	background-color: inherit;
-	color: inherit;
-}
-#orc-premium-container table td,
-#orc-premium-container table th,
-#orc-premium-container table tr,
-#orc-premium-container .dataTables_wrapper {
-	background: #ffffff !important;
-	color: #1a1a18 !important;
-	border-color: #e5e4e0 !important;
-}
-#orc-premium-container .orc-premium-kpi {
-	background: #f9f9f8 !important;
-	border: 1px solid #e5e4e0 !important;
-	color: #1a1a18 !important;
-}
-#orc-premium-container .orc-premium-kpi-n { color: var(--sc) !important; }
-#orc-premium-container .orc-premium-stat-label { color: #6b6a65 !important; }
-#orc-premium-container a { color: #00C08B !important; }
-#orc-premium-container .nav-tabs .nav-link { color: #6b6a65 !important; }
-#orc-premium-container .nav-tabs .nav-link.active {
-	color: #00C08B !important;
-	border-bottom: 2px solid #00C08B !important;
-}
-	</style>
+<div id="orc-premium-container" class="col-md-12 orc-premium-wrap orc-premium-index">
 	<?php if ((int)($role ?? 1) === 0) : ?>
 		<header class="orc-premium-page-head">
 			<div class="orc-premium-page-head-text">
@@ -100,19 +96,19 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 		</header>
 
 		<div class="orc-premium-stats" role="tablist">
-			<button type="button" class="orc-premium-stat active" style="--orc-sc:#FFC107;" data-orc-tab="pendentes" aria-selected="true">
-				<span class="orc-premium-stat-l">Em andamento</span>
+			<button type="button" class="orc-premium-stat active" style="--orc-sc:#E9A025;" data-orc-tab="pendentes" aria-selected="true">
+				<span class="orc-premium-stat-l">Andamento</span>
 				<span class="orc-premium-stat-n"><?= $tEm ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#00C08B;" data-orc-tab="enviados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#1D9E75;" data-orc-tab="enviados" aria-selected="false">
 				<span class="orc-premium-stat-l">Enviados</span>
 				<span class="orc-premium-stat-n"><?= $tEn ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#33CCFF;" data-orc-tab="aprovados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#378ADD;" data-orc-tab="aprovados" aria-selected="false">
 				<span class="orc-premium-stat-l">Aprovados</span>
 				<span class="orc-premium-stat-n"><?= $tAp ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#e24b4a;" data-orc-tab="recusados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#E24B4A;" data-orc-tab="recusados" aria-selected="false">
 				<span class="orc-premium-stat-l">Recusados</span>
 				<span class="orc-premium-stat-n"><?= $tRe ?></span>
 			</button>
@@ -144,7 +140,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 				<div class="orc-premium-toolbar-right">
 					<label class="orc-premium-search" for="orc-list-search">
 						<i class="ti-search" aria-hidden="true"></i>
-						<input type="search" id="orc-list-search" placeholder="Buscar por ID ou empresa…" autocomplete="off" />
+						<input type="search" id="orc-list-search" placeholder="Buscar por ID, empresa…" autocomplete="off" />
 					</label>
 					<span class="orc-premium-list-meta"><?= (int)$totalListaAdmin ?> registro(s) no total</span>
 				</div>
@@ -156,12 +152,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tablePendentes">
 							<thead>
 								<tr>
-									<th style="width:72px;">ID</th>
+									<th style="width:65px;">ID</th>
 									<th>Empresa</th>
-									<th style="width:120px;">Status</th>
-									<th class="text-right" style="width:110px;">Valor total</th>
-									<th style="width:96px;">Data</th>
-									<th style="width:100px;">Ações</th>
+									<th style="width:75px;">Versão</th>
+									<th style="width:85px;">Status</th>
+									<th class="text-right" style="width:100px;">Total</th>
+									<th class="text-right" style="width:80px;">Margem</th>
+									<th style="width:95px;">Data</th>
+									<th style="width:90px;">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -171,16 +169,18 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($reg->id) ?></a></td>
+										<td data-order="<?= (int)$reg->id ?>"><a class="orc-premium-link orc-premium-id" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>">#<?= h($reg->id) ?></a></td>
 										<td>
 											<div class="orc-premium-empresa-cell">
 												<span class="orc-premium-av" aria-hidden="true"><?= h($ini) ?></span>
 												<a class="orc-premium-link orc-premium-empresa-name" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($nomeCli) ?></a>
 											</div>
 										</td>
+										<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
+										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -195,12 +195,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableEnviados">
 							<thead>
 								<tr>
-									<th style="width:72px;">ID</th>
+									<th style="width:65px;">ID</th>
 									<th>Empresa</th>
-									<th style="width:120px;">Status</th>
-									<th class="text-right" style="width:110px;">Valor total</th>
-									<th style="width:96px;">Data</th>
-									<th style="width:100px;">Ações</th>
+									<th style="width:75px;">Versão</th>
+									<th style="width:85px;">Status</th>
+									<th class="text-right" style="width:100px;">Total</th>
+									<th class="text-right" style="width:80px;">Margem</th>
+									<th style="width:95px;">Data</th>
+									<th style="width:90px;">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -210,16 +212,18 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($reg->id) ?></a></td>
+										<td data-order="<?= (int)$reg->id ?>"><a class="orc-premium-link orc-premium-id" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>">#<?= h($reg->id) ?></a></td>
 										<td>
 											<div class="orc-premium-empresa-cell">
 												<span class="orc-premium-av" aria-hidden="true"><?= h($ini) ?></span>
 												<a class="orc-premium-link orc-premium-empresa-name" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($nomeCli) ?></a>
 											</div>
 										</td>
+										<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
+										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -234,12 +238,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableAprovados">
 							<thead>
 								<tr>
-									<th style="width:72px;">ID</th>
+									<th style="width:65px;">ID</th>
 									<th>Empresa</th>
-									<th style="width:120px;">Status</th>
-									<th class="text-right" style="width:110px;">Valor total</th>
-									<th style="width:96px;">Data</th>
-									<th style="width:100px;">Ações</th>
+									<th style="width:75px;">Versão</th>
+									<th style="width:85px;">Status</th>
+									<th class="text-right" style="width:100px;">Total</th>
+									<th class="text-right" style="width:80px;">Margem</th>
+									<th style="width:95px;">Data</th>
+									<th style="width:90px;">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -249,16 +255,18 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($reg->id) ?></a></td>
+										<td data-order="<?= (int)$reg->id ?>"><a class="orc-premium-link orc-premium-id" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>">#<?= h($reg->id) ?></a></td>
 										<td>
 											<div class="orc-premium-empresa-cell">
 												<span class="orc-premium-av" aria-hidden="true"><?= h($ini) ?></span>
 												<a class="orc-premium-link orc-premium-empresa-name" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($nomeCli) ?></a>
 											</div>
 										</td>
+										<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
+										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -273,12 +281,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableRecusados">
 							<thead>
 								<tr>
-									<th style="width:72px;">ID</th>
+									<th style="width:65px;">ID</th>
 									<th>Empresa</th>
-									<th style="width:120px;">Status</th>
-									<th class="text-right" style="width:110px;">Valor total</th>
-									<th style="width:96px;">Data</th>
-									<th style="width:100px;">Ações</th>
+									<th style="width:75px;">Versão</th>
+									<th style="width:85px;">Status</th>
+									<th class="text-right" style="width:100px;">Total</th>
+									<th class="text-right" style="width:80px;">Margem</th>
+									<th style="width:95px;">Data</th>
+									<th style="width:90px;">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -288,16 +298,18 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($reg->id) ?></a></td>
+										<td data-order="<?= (int)$reg->id ?>"><a class="orc-premium-link orc-premium-id" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>">#<?= h($reg->id) ?></a></td>
 										<td>
 											<div class="orc-premium-empresa-cell">
 												<span class="orc-premium-av" aria-hidden="true"><?= h($ini) ?></span>
 												<a class="orc-premium-link orc-premium-empresa-name" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($nomeCli) ?></a>
 											</div>
 										</td>
+										<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
+										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -312,12 +324,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableArquivados">
 							<thead>
 								<tr>
-									<th style="width:72px;">ID</th>
+									<th style="width:65px;">ID</th>
 									<th>Empresa</th>
-									<th style="width:120px;">Status</th>
-									<th class="text-right" style="width:110px;">Valor total</th>
-									<th style="width:96px;">Data</th>
-									<th style="width:100px;">Ações</th>
+									<th style="width:75px;">Versão</th>
+									<th style="width:85px;">Status</th>
+									<th class="text-right" style="width:100px;">Total</th>
+									<th class="text-right" style="width:80px;">Margem</th>
+									<th style="width:95px;">Data</th>
+									<th style="width:90px;">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -327,16 +341,18 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 									$ini = $orcPremiumIniciais($nomeCli);
 									?>
 									<tr>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($reg->id) ?></a></td>
+										<td data-order="<?= (int)$reg->id ?>"><a class="orc-premium-link orc-premium-id" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>">#<?= h($reg->id) ?></a></td>
 										<td>
 											<div class="orc-premium-empresa-cell">
 												<span class="orc-premium-av" aria-hidden="true"><?= h($ini) ?></span>
 												<a class="orc-premium-link orc-premium-empresa-name" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= h($nomeCli) ?></a>
 											</div>
 										</td>
+										<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-										<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
+										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -372,12 +388,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 				<table class="table orc-premium-tbl" id="tableCliente">
 					<thead>
 						<tr>
-							<th style="width:72px;">ID</th>
+							<th style="width:65px;">ID</th>
 							<th>Autor</th>
-							<th style="width:120px;">Status</th>
-							<th class="text-right" style="width:110px;">Valor total</th>
-							<th style="width:96px;">Data</th>
-							<th style="width:100px;">Ações</th>
+							<th style="width:75px;">Versão</th>
+							<th style="width:85px;">Status</th>
+							<th class="text-right" style="width:100px;">Total</th>
+							<th class="text-right" style="width:80px;">Margem</th>
+							<th style="width:95px;">Data</th>
+							<th style="width:90px;">Ações</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -387,16 +405,18 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 							$ini = $orcPremiumIniciais($nomeAutor);
 							?>
 							<tr>
-								<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= h($reg->id) ?></a></td>
+								<td data-order="<?= (int)$reg->id ?>"><a class="orc-premium-link orc-premium-id" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>">#<?= h($reg->id) ?></a></td>
 								<td>
 									<div class="orc-premium-empresa-cell">
 										<span class="orc-premium-av" aria-hidden="true"><?= h($ini) ?></span>
 										<a class="orc-premium-link orc-premium-empresa-name" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= h($nomeAutor) ?></a>
 									</div>
 								</td>
+								<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 								<td><?= $orcPremiumBadge($reg->status) ?></td>
 								<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-								<td><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+								<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
+								<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 								<td>
 									<?= $this->Html->link('Abrir', ['action' => 'view', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 								</td>

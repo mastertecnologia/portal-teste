@@ -156,8 +156,15 @@
   padding: 0.55rem 0.65rem;
 }
 
-/* ========== Lista (protótipo pgm_orcamentos_premium.html — área clara) ========== */
+/* ========== Lista (protótipo Orçamentos Premium — paleta PGM 2026) ========== */
 .orc-premium-wrap.orc-premium-index {
+  --orc-teal: #1d9e75;
+  --orc-teal-dark: #0f6e56;
+  --orc-teal-light: #e1f5ee;
+  --orc-teal-mid: #5dcaa5;
+  --orc-amber: #e9a025;
+  --orc-blue: #378add;
+  --orc-red: #e24b4a;
   --orc-border: #e5e4e0;
   --orc-border-light: #f0efec;
   --orc-text: #1a1a18;
@@ -174,6 +181,40 @@
   border-radius: var(--orc-radius-lg);
 }
 
+/* Container principal (força tema claro dentro do ERP dark) */
+#orc-premium-container.orc-premium-wrap.orc-premium-index {
+  background: #ffffff !important;
+  color: #1a1a18 !important;
+  min-height: 100vh;
+}
+
+#orc-premium-container.orc-premium-index table td,
+#orc-premium-container.orc-premium-index table th,
+#orc-premium-container.orc-premium-index table tr,
+#orc-premium-container.orc-premium-index .dataTables_wrapper {
+  background: #ffffff !important;
+  color: #1a1a18 !important;
+  border-color: #e5e4e0 !important;
+}
+
+#orc-premium-container.orc-premium-index .orc-premium-tbl thead th {
+  background: #f9f9f8 !important;
+}
+
+#orc-premium-container.orc-premium-index a.orc-premium-link,
+#orc-premium-container.orc-premium-index a.orc-premium-id {
+  color: #1d9e75 !important;
+}
+
+#orc-premium-container.orc-premium-index .orc-premium-tab-btns .nav-link {
+  color: #6b6a65 !important;
+}
+
+#orc-premium-container.orc-premium-index .orc-premium-tab-btns .nav-link.active {
+  color: #0f6e56 !important;
+  background: #e1f5ee !important;
+}
+
 .orc-premium-index .orc-premium-empresa-cell {
   display: flex;
   align-items: center;
@@ -182,17 +223,51 @@
 }
 
 .orc-premium-index .orc-premium-av {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: rgba(0, 192, 139, 0.15);
-  color: #0f6e56;
-  font-size: 11px;
-  font-weight: 700;
+  background: var(--orc-teal-light);
+  color: var(--orc-teal-dark);
+  font-size: 10px;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* Badge versão (protótipo .b-v) */
+.orc-premium-index .orc-premium-ver {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  background: #1d9e75;
+  color: #fff;
+}
+
+.orc-premium-index .orc-premium-margem {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.orc-premium-index .orc-premium-margem--good {
+  color: #1d9e75;
+}
+
+.orc-premium-index .orc-premium-margem--warn {
+  color: #e9a025;
+}
+
+.orc-premium-index .orc-premium-margem--bad {
+  color: #e24b4a;
+}
+
+.orc-premium-index .orc-premium-id {
+  font-weight: 600;
+  color: var(--orc-teal);
 }
 
 .orc-premium-index .orc-premium-empresa-name {
@@ -255,15 +330,16 @@
 .orc-premium-index .orc-premium-btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
+  gap: 6px;
+  padding: 7px 14px;
   border-radius: var(--orc-radius-sm);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   background: var(--orc-teal) !important;
   border: none !important;
   color: #fff !important;
   box-shadow: var(--orc-shadow-sm);
+  transition: background 0.15s ease;
 }
 .orc-premium-index .orc-premium-btn-primary:hover {
   background: var(--orc-teal-dark) !important;
@@ -383,14 +459,14 @@
 }
 
 .orc-premium-index .orc-premium-tab-btns .nav-link:hover {
-  background: rgba(0, 192, 139, 0.08) !important;
+  background: rgba(29, 158, 117, 0.08) !important;
   color: var(--orc-teal-dark) !important;
 }
 
 .orc-premium-index .orc-premium-tab-btns .nav-link.active {
-  background: rgba(0, 192, 139, 0.18) !important;
+  background: var(--orc-teal-light) !important;
   color: var(--orc-teal-dark) !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 .orc-premium-index .orc-premium-toolbar-right {
@@ -465,11 +541,11 @@
 }
 
 .orc-premium-index .orc-premium-link {
-  color: var(--orc-teal-dark);
+  color: var(--orc-teal);
   font-weight: 500;
 }
 .orc-premium-index .orc-premium-link:hover {
-  color: var(--orc-teal);
+  color: var(--orc-teal-dark);
 }
 
 .orc-premium-index .orc-premium-muted {

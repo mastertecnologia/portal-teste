@@ -116,6 +116,187 @@ class OrcamentosController extends AppController {
 		return $out;
 	}
 
+	/**
+	 * Rótulo de versão para lista (ex.: v1): 1 + quantidade de registros em orcamentosnovosdesmovs.
+	 * Não existe coluna dedicada de revisão no legado; movimentações aproximam “ciclos” do orçamento.
+	 *
+	 * @param int|string $idempresa
+	 * @param int[]      $orcamentoIds
+	 * @return array<int,string> id orçamento => "vN"
+	 */
+	protected function _versaoRotuloPorOrcamentoIds($idempresa, array $orcamentoIds): array {
+		$orcamentoIds = array_values(array_unique(array_filter(array_map('intval', $orcamentoIds))));
+		$out = [];
+		foreach ($orcamentoIds as $oid) {
+			$out[$oid] = 'v1';
+		}
+		if ($orcamentoIds === []) {
+			return $out;
+		}
+		$movRows = $this->Orcamentosmovs->find()
+			->select(['idorcamento'])
+			->where(['idempresa' => $idempresa, 'idorcamento IN' => $orcamentoIds])
+			->enableHydration(false)
+			->toArray();
+		$cntByOrc = [];
+		foreach ($movRows as $row) {
+			$oid = (int)($row['idorcamento'] ?? 0);
+			if ($oid > 0) {
+				$cntByOrc[$oid] = ($cntByOrc[$oid] ?? 0) + 1;
+			}
+		}
+		foreach ($cntByOrc as $oid => $c) {
+			$out[$oid] = 'v' . max(1, 1 + (int)$c);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Soma custo estimado por orçamento (mesmo vínculo Orcamentositens → carrinho → Orcamentosservicos).
+	 * Usa coluna de custo na linha do serviço, se existir; senão custo unitário do produto × quantidade.
+	 *
+	 * @param int|string $idempresa
+	 * @param int[]      $orcamentoIds
+	 * @return array<int,float>
+	 */
+	protected function _custoTotaisPorOrcamentoIds($idempresa, array $orcamentoIds): array {
+		$orcamentoIds = array_values(array_unique(array_filter(array_map('intval', $orcamentoIds))));
+		$out = [];
+		foreach ($orcamentoIds as $oid) {
+			$out[$oid] = 0.0;
+		}
+		if ($orcamentoIds === []) {
+			return $out;
+		}
+
+		$svcSchema = $this->Orcamentosservicos->getSchema();
+		$lineCostCol = null;
+		foreach (['valorcusto', 'valor_custo', 'custototal', 'valorcustomo', 'custo', 'precocusto'] as $col) {
+			if ($svcSchema->hasColumn($col)) {
+				$lineCostCol = $col;
+				break;
+			}
+		}
+
+		$prodSchema = $this->Produtos->getSchema();
+		$prodCostCol = null;
+		foreach (['vlcusto', 'vlcustounitario', 'precocusto', 'preco_custo', 'custounitario', 'custo'] as $col) {
+			if ($prodSchema->hasColumn($col)) {
+				$prodCostCol = $col;
+				break;
+			}
+		}
+
+		$rows = $this->Orcamentositens->find()
+			->select(['idorcamento', 'iditem'])
+			->where(['idempresa' => $idempresa, 'idorcamento IN' => $orcamentoIds])
+			->order(['id' => 'ASC'])
+			->toArray();
+		$orcToItem = [];
+		foreach ($rows as $row) {
+			$oid = (int)$row->idorcamento;
+			if (!isset($orcToItem[$oid]) && $row->iditem !== null && $row->iditem !== '') {
+				$orcToItem[$oid] = (int)$row->iditem;
+			}
+		}
+		$itemIds = array_values(array_unique(array_filter($orcToItem)));
+		if ($itemIds === []) {
+			return $out;
+		}
+
+		$servicos = $this->Orcamentosservicos->find()
+			->where(['idempresa' => $idempresa, 'idorcamento IN' => $itemIds])
+			->toArray();
+
+		$produtoIds = [];
+		foreach ($servicos as $s) {
+			if (!empty($s->idproduto)) {
+				$produtoIds[(int)$s->idproduto] = true;
+			}
+		}
+		$custoUnitPorProdutoId = [];
+		if ($prodCostCol !== null && $produtoIds !== []) {
+			foreach ($this->Produtos->find()
+				->where(['idempresa' => $idempresa, 'id IN' => array_keys($produtoIds)])
+				->all() as $p) {
+				$custoUnitPorProdutoId[(int)$p->id] = (float)($p->{$prodCostCol} ?? 0);
+			}
+		}
+
+		$sumCostByItem = [];
+		foreach ($servicos as $s) {
+			$bid = (int)$s->idorcamento;
+			if (!isset($sumCostByItem[$bid])) {
+				$sumCostByItem[$bid] = 0.0;
+			}
+			$lineCost = 0.0;
+			if ($lineCostCol !== null) {
+				$lineCost = (float)($s->{$lineCostCol} ?? 0);
+			} elseif ($prodCostCol !== null && !empty($s->idproduto)) {
+				$pu = $custoUnitPorProdutoId[(int)$s->idproduto] ?? 0.0;
+				$lineCost = $pu * $this->_quantidadeServicoParaCalculo($s->quantidade ?? 1);
+			}
+			$sumCostByItem[$bid] += $lineCost;
+		}
+
+		foreach ($orcToItem as $oid => $iid) {
+			$out[$oid] = $sumCostByItem[$iid] ?? 0.0;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param mixed $quantidade Valor bruto do item (número ou texto tipo hora "1:30").
+	 */
+	protected function _quantidadeServicoParaCalculo($quantidade): float {
+		if (is_numeric($quantidade)) {
+			$q = (float)$quantidade;
+
+			return $q > 0 ? $q : 1.0;
+		}
+		$str = trim((string)$quantidade);
+		if ($str === '') {
+			return 1.0;
+		}
+		if (strpos($str, ':') !== false) {
+			$parts = explode(':', $str);
+			$h = (float)str_replace(',', '.', preg_replace('/[^\d.,-]/', '', (string)($parts[0] ?? '0')));
+			$m = (float)str_replace(',', '.', preg_replace('/[^\d.,-]/', '', (string)($parts[1] ?? '0')));
+			$q = $h + ($m / 60.0);
+
+			return $q > 0 ? $q : 1.0;
+		}
+		$q = (float)str_replace(',', '.', preg_replace('/[^\d.,-]/', '', $str));
+
+		return $q > 0 ? $q : 1.0;
+	}
+
+	/**
+	 * Margem bruta % por orçamento (venda e custo > 0); senão null (UI mostra —).
+	 *
+	 * @param array<int,float> $valorVendaPorId
+	 * @return array<int,int|null>
+	 */
+	protected function _margemBrutaPctPorOrcamentoIds($idempresa, array $orcamentoIds, array $valorVendaPorId): array {
+		$orcamentoIds = array_values(array_unique(array_filter(array_map('intval', $orcamentoIds))));
+		$custos = $this->_custoTotaisPorOrcamentoIds($idempresa, $orcamentoIds);
+		$out = [];
+		foreach ($orcamentoIds as $oid) {
+			$oid = (int)$oid;
+			$v = (float)($valorVendaPorId[$oid] ?? 0);
+			$c = (float)($custos[$oid] ?? 0);
+			if ($v <= 0 || $c <= 0) {
+				$out[$oid] = null;
+			} else {
+				$out[$oid] = (int)round((($v - $c) / $v) * 100);
+			}
+		}
+
+		return $out;
+	}
+
 	public function index() {
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
@@ -178,6 +359,8 @@ class OrcamentosController extends AppController {
 			}
 		}
 		$valorTotalPorOrcamentoId = $this->_valorTotaisPorOrcamentoIds($idempresa, array_keys($allIds));
+		$versaoRotuloPorOrcamentoId = $this->_versaoRotuloPorOrcamentoIds($idempresa, array_keys($allIds));
+		$margemBrutaPctPorOrcamentoId = $this->_margemBrutaPctPorOrcamentoIds($idempresa, array_keys($allIds), $valorTotalPorOrcamentoId);
 
 		$orcamentos = array_merge(
 			$orcamentosPendentes,
@@ -193,7 +376,13 @@ class OrcamentosController extends AppController {
 		$this->set('orcamentosAprovados', $orcamentosAprovados);
 		$this->set('orcamentosRecusados', $orcamentosRecusados);
 		$this->set('orcamentosArquivados', $orcamentosArquivados);
-		$this->set(compact('totais', 'orcamentos', 'valorTotalPorOrcamentoId'));
+		$this->set(compact(
+			'totais',
+			'orcamentos',
+			'valorTotalPorOrcamentoId',
+			'versaoRotuloPorOrcamentoId',
+			'margemBrutaPctPorOrcamentoId'
+		));
 		$this->set('title', 'Orçamentos');
 	}
 
