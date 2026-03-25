@@ -172,13 +172,20 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 			}
 		}
 		if ($isPg) {
+			$sp = 'sp_sl_ts_' . substr(md5(__CLASS__), 0, 10);
 			try {
+				$this->execute('SAVEPOINT ' . $sp);
 				$this->execute(
 					'UPDATE public.support_levels SET created = COALESCE(created, NOW()), modified = COALESCE(modified, NOW()) '
 					. 'WHERE created IS NULL OR modified IS NULL'
 				);
+				$this->execute('RELEASE SAVEPOINT ' . $sp);
 			} catch (\Throwable $e) {
-				// Colunas podem não existir em schema legado extremo; INSERT já garantiu as linhas.
+				try {
+					$this->execute('ROLLBACK TO SAVEPOINT ' . $sp);
+				} catch (\Throwable $e2) {
+					// Colunas podem não existir em schema legado extremo; INSERT já garantiu as linhas.
+				}
 			}
 		}
 	}
@@ -188,9 +195,25 @@ class SupportLevelsQueuesTickets extends AbstractMigration {
 		$cname = $short . '_' . $col . '_fkey';
 		$sql = 'ALTER TABLE ' . $tblQualified . ' ADD CONSTRAINT ' . $cname . ' '
 			. 'FOREIGN KEY (' . $col . ') REFERENCES ' . $refTblQualified . '(' . $refCol . ') ON DELETE SET NULL ON UPDATE CASCADE';
+		if (!$this->_isPgsql()) {
+			try {
+				$this->execute($sql);
+			} catch (\Throwable $e) {
+			}
+
+			return;
+		}
+		// PostgreSQL: erro num ALTER dentro do try aborta a transação inteira; isolar com SAVEPOINT.
+		$sp = 'sp_fk_' . substr(md5($tblQualified . '|' . $col), 0, 12);
 		try {
+			$this->execute('SAVEPOINT ' . $sp);
 			$this->execute($sql);
+			$this->execute('RELEASE SAVEPOINT ' . $sp);
 		} catch (\Throwable $e) {
+			try {
+				$this->execute('ROLLBACK TO SAVEPOINT ' . $sp);
+			} catch (\Throwable $e2) {
+			}
 		}
 	}
 
