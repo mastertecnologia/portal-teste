@@ -250,8 +250,9 @@
 						$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 						$clienteNome = $pgmClienteNome($reg);
+						$clienteCellAg = '<span class="td-client-inner"><span class="td-client-name">' . h($clienteNome) . '</span></span>';
 					?>
-					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
+					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteCellAg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
 			},
@@ -267,10 +268,11 @@
 						$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 						$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
-						$stagnantTag = (time() - strtotime((string)$refMod)) >= 86400 ? ' <span class="stagnant-tag">+24h</span>' : '';
+						$stagnantTag = (time() - strtotime((string)$refMod)) >= 86400 ? '<span class="stagnant-tag">+24h</span>' : '';
 						$clienteNome = $pgmClienteNome($reg);
+						$clienteCellExec = '<span class="td-client-inner"><span class="td-client-name">' . h($clienteNome) . '</span>' . $stagnantTag . '</span>';
 					?>
-					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome . $stagnantTag) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
+					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteCellExec, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
 			},

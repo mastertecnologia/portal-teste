@@ -846,7 +846,7 @@ class UsersController extends AppController {
 		if ($this->Users->save($user)) {
 			$this->Flash->success('O usuário foi liberado com sucesso!');
 			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
-		} else $this->Flash->success('Ocorreu um erro ao liberar o usuário, tente novamente.');
+		} else $this->Flash->error('Ocorreu um erro ao liberar o usuário, tente novamente.');
 		return $this->redirect(['action' => 'dashboard']);
 	}
 
