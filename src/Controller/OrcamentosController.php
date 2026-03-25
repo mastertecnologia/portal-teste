@@ -1210,9 +1210,17 @@ class OrcamentosController extends AppController {
             $this->set('areas', $areas);
             $this->set('clientes', $clientesOpt);
             
+        // Resincroniza a sequência da PK de itensordem para evitar violação de unique key
+        try {
+            $conn = $this->Itensordem->getConnection();
+            $conn->execute("SELECT setval(pg_get_serial_sequence('itensordem', 'id'), COALESCE((SELECT MAX(id) FROM itensordem), 0) + 1)");
+        } catch (\Exception $e) {
+            // Ignora se o banco não for PostgreSQL ou a função não existir
+        }
+
         // Carrinho
             $idcarrinho = $this->Orcamentositens->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $idorcamento]])->first();
-            
+
             if ($idcarrinho) {
                 $carrinho = $this->Orcamentosservicos->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $idcarrinho->iditem]])->order(['id'])->toArray();
 

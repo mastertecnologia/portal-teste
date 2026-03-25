@@ -150,7 +150,7 @@
 							<?php if(isset($temordem) && $temordem != 'nao'): ?>
 								<?= $this->Html->link(
 									'<i class="fa fa-wrench"></i> OS Nº ' . $temordem,
-									['controller' => 'ordensservico', 'action' => 'edit', $temordem],
+									['controller' => 'Ordensservico', 'action' => 'edit', $temordem],
 									['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white', 'escape' => false]
 								); ?>
 							<?php endif; ?>
@@ -244,7 +244,7 @@
 							['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo', 'escape' => false]
 						) ?>
 						<?php if($temordem == 'nao'): ?>
-							<?= $this->html->Link(
+							<?= $this->Html->link(
 								'<i class="fa fa-wrench"></i> Transformar em OS',
 								['action' => 'novaordem', $orcamento->id],
 								['class' => 'btn btn-pgm btn-pgm-ordem btn-warning', 'escape' => false]
