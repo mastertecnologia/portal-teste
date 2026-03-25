@@ -13,7 +13,6 @@ $this->end();
 	<div class="lm-brand-panel">
 		<div class="lm-circle2"></div>
 		<div class="lm-brand-content">
-			<div class="lm-admin-badge">Acesso Restrito</div>
 			<img src="<?= $webroot ?>assets/images/pgm.png" alt="PGM Soluções em TI" class="lm-brand-logo"/>
 			<h1 class="lm-brand-name">PGM Soluções em TI</h1>
 			<p class="lm-brand-tagline">Painel Administrativo &amp; Técnico</p>
