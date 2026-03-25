@@ -304,18 +304,7 @@ a.dash-pgm-notif-item-link:hover {
 .dash-pgm-row:hover { background: var(--surface2); }
 .dash-pgm-row.selected { background: rgba(56, 139, 253, 0.12); }
 .dash-pgm-row.selected td:first-child { border-left: 2px solid var(--blue); }
-/* +24h sem movimentação: mesmo vocabulário visual do KPI "em execução" (azul frio), sem wash âmbar na linha inteira */
-.dash-pgm-row.stagnant {
-  background: rgba(56, 139, 253, 0.05);
-  box-shadow: inset 3px 0 0 rgba(56, 139, 253, 0.5);
-}
-.dash-pgm-row.stagnant:hover {
-  background: rgba(56, 139, 253, 0.09);
-}
-.dash-pgm-row.stagnant .td-client {
-  color: var(--blue);
-  font-weight: 500;
-}
+/* +24h: mesmo visual base das outras tabelas KPI; aviso só no badge .stagnant-tag (sem barra lateral) */
 .dash-pgm-empty { text-align: center; color: var(--text-muted); }
 
 .td-id { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); white-space: nowrap; }
