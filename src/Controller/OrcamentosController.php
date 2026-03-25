@@ -148,12 +148,27 @@ class OrcamentosController extends AppController {
 			'conditions' => ['Orcamentos.status' => 4]
 		])->where(['Orcamentos.idempresa' => $idempresa])->order(['Orcamentos.id DESC'])->toArray();
 
+		// Contagens por status (BD legada: inteiros + UserConstants; não usar strings tipo 'enviado').
+		$statusEmAndamento = [C_OrcamentoStatusPendente];
+		if (defined('C_OrcamentoStatusRascunho')) {
+			$statusEmAndamento[] = constant('C_OrcamentoStatusRascunho');
+		}
 		$totais = [
-			'em_andamento' => count($orcamentosPendentes),
-			'enviados' => count($orcamentosEnviados),
-			'aprovados' => count($orcamentosAprovados),
-			'recusados' => count($orcamentosRecusados),
-			'arquivados' => count($orcamentosArquivados),
+			'em_andamento' => $this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.status IN' => $statusEmAndamento])
+				->count(),
+			'enviados' => $this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.status' => C_OrcamentoStatusEnviado])
+				->count(),
+			'aprovados' => $this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.status' => C_OrcamentoStatusAprovado])
+				->count(),
+			'recusados' => $this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.status' => C_OrcamentoStatusRecusado])
+				->count(),
+			'arquivados' => $this->Orcamentos->find()
+				->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.status' => C_OrcamentoStatusArquivado])
+				->count(),
 		];
 
 		$allIds = [];
