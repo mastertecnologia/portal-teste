@@ -116,9 +116,7 @@ $this->end();
 						Ainda não tem conta?
 						<a href="#" class="comeceausar">Cadastre-se gratuitamente</a>
 					</div>
-					<div class="lm-link-small">
-						<?= $this->Html->link('Acesso PGM / Equipe interna', ['controller' => 'Users', 'action' => 'acessoEmpresa'], ['class' => 'link-empresa']) ?>
-					</div>
+	
 				</div>
 
 				<hr class="lm-divider">
