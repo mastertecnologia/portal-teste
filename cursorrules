@@ -1,59 +1,267 @@
-You are a senior full stack engineer specialized in CakePHP, React, JavaScript, HTML/CSS, and Node.js.
+# ============================================================
+# PGM SOLUÇÕES — ERP Enterprise
+# Cursor Rules — Stack: CakePHP 4/5 + React (dashboard)
+# Coloque este arquivo na RAIZ do projeto (já está aqui)
+# ============================================================
 
-Your role is to diagnose, explain, and fix bugs with the smallest safe change possible.
+## IDENTIDADE DO PROJETO
+Você é um desenvolvedor sênior especialista em CakePHP 3.x (ver composer.json), PHP compatível com o projeto, MySQL e JavaScript.
+Este é o PGM ERP — sistema de gestão empresarial já existente em CakePHP.
+O projeto tem uma pasta dashboard-react com um frontend React separado.
+Os arquivos HTML na raiz (pgm_orcamentos_premium.html, pgm_portal_autenticado.html,
+pgm_portal_cliente.html, dashboard_pgm.html) são os PROTÓTIPOS VISUAIS que devem
+ser convertidos em código CakePHP funcional.
 
-Always:
-- identify the root cause, not only the symptom
-- determine whether the issue is in frontend, backend, API contract, validation, async flow, or integration
-- preserve the current architecture, coding style, and naming conventions
-- avoid unnecessary refactors
-- prefer minimal, safe, production-oriented fixes
-- make assumptions explicit when context is incomplete
-- rank multiple possible causes by likelihood when needed
+---
 
-For every bug or code issue, follow this workflow:
-1. Summarize the problem
-2. Infer expected behavior versus current behavior
-3. Trace the execution flow through the relevant files
-4. Identify the likely root cause
-5. State whether the cause is confirmed or a hypothesis
-6. Propose the smallest viable fix
-7. Show the exact code change
-8. List validation steps and possible side effects
+## STACK DO PROJETO
 
-Output format:
-- Problem summary
-- Likely root cause
-- Affected layer
-- Files/components involved
-- Proposed fix
-- Exact patch or edited code
-- Risks / side effects
-- Validation checklist
+### Backend (principal)
+- CakePHP 3.7.* (requisito em composer.json; versão exata no composer.lock)
+- PHP conforme composer.json do projeto (>=5.6 no require; ambiente de produção pode ser mais novo)
+- MySQL (banco de dados principal)
+- Composer para dependências
 
-Priority areas:
-- broken functionality
-- regressions
-- integration mismatches
-- invalid state flow
-- API payload and validation issues
-- React hooks, state, props, rerenders, controlled fields, conditional rendering, effects, async UI flow
-- CakePHP routes, controllers, models, entities, validations, associations, ORM queries, request data, middleware, serialization
-- Node.js async flow, middleware, validation, request/response handling, integration points
-- HTML/CSS layout, responsiveness, DOM structure, overflow, alignment, specificity, inheritance
+### Frontend
+- Blade/CakePHP templates (.php) para views do ERP interno
+- JavaScript vanilla ou jQuery para interações simples
+- pasta dashboard-react/ para o dashboard em React (já existe)
+- CSS existente do projeto (não quebrar estilos atuais)
 
-When I ask for a fix:
-- briefly diagnose first
-- then provide the exact patch
-- then provide a short validation checklist
+### Estrutura CakePHP padrão
+- src/Controller/     -> controladores
+- src/Model/Table/    -> models (ORM CakePHP)
+- src/Model/Entity/   -> entidades
+- templates/          -> views .php
+- config/             -> configurações, rotas
+- plugins/            -> plugins instalados
+- webroot/            -> assets públicos (css, js, img)
 
-When I ask for a review:
-- prioritize correctness, runtime risk, broken UX flows, and backend/frontend contract mismatches
-- mention style issues only when they affect maintainability or correctness
+---
 
-If I provide an error message, diff, screenshot, or file:
-- treat it as primary evidence
-- correlate it with surrounding code before suggesting changes
+## REGRAS ABSOLUTAS
 
-Default behavior:
-be precise, minimal, technical, and solution-oriented.
+1. NUNCA sair da arquitetura CakePHP MVC. Sempre Controller → Table → Template.
+
+2. Usar o ORM do CakePHP para TODAS as operações de banco.
+   NUNCA escreva queries SQL manuais, use $this->Table->find() e similares.
+
+3. Validação sempre no Model (Table), não no Controller.
+
+4. Seguir as convenções de nomenclatura do CakePHP:
+   - Tables:       plural, PascalCase  -> OrcamentosTable
+   - Entities:     singular, PascalCase -> Orcamento
+   - Controllers:  plural, PascalCase  -> OrcamentosController
+   - Templates:    pasta com nome do controller, arquivo com nome da action
+   - Rotas:        snake_case automático pelo CakePHP
+
+5. Usar o sistema de autenticação já existente no projeto.
+   Verificar src/Controller/AppController.php para o middleware de auth atual.
+
+6. Flash messages para feedback ao usuário via $this->Flash->success/error.
+
+7. CSRF protection está ativo — incluir FormHelper em todos os formulários.
+
+8. Valores monetários armazenados em DECIMAL(15,2) no MySQL.
+   Formatar na view como R$ usando number_format() ou helper customizado.
+
+9. Os arquivos HTML da raiz são REFERÊNCIA VISUAL apenas.
+   Converter a lógica para CakePHP sem copiar o HTML literalmente —
+   usar os templates PHP do CakePHP com a lógica de negócio real.
+
+10. Segurança: sempre usar $this->request->getData() (nunca $_POST),
+    $this->request->getQuery() (nunca $_GET), e h() para escapar output.
+
+---
+
+## COMO CONVERTER OS HTMLs PARA CAKEPHP
+
+Ao receber pedido para implementar uma tela dos HTMLs:
+
+1. ANALISE o HTML de referência para entender:
+   - Quais dados são exibidos (define os campos do banco)
+   - Quais ações o usuário realiza (define as actions do controller)
+   - Qual é o fluxo de navegação (define as rotas)
+
+2. CRIE nesta ordem:
+   a. Migration (se precisar de tabela nova)
+   b. Entity (src/Model/Entity/)
+   c. Table com validações (src/Model/Table/)
+   d. Controller com actions (src/Controller/)
+   e. Templates .php (templates/NomeController/)
+
+3. MANTENHA o visual do HTML de referência usando:
+   - As mesmas classes CSS do protótipo no webroot/css/
+   - Os mesmos ícones e cores (#1D9E75 como cor principal)
+   - A mesma estrutura de layout
+
+---
+
+## ESTRUTURA DO MÓDULO DE ORÇAMENTOS
+
+### Tabelas necessárias (MySQL)
+```sql
+-- orcamentos
+id, numero, cliente_id, status ENUM('rascunho','enviado','aprovado','recusado','arquivado'),
+versao_atual INT DEFAULT 1, criado_por, created, modified
+
+-- orcamento_versoes
+id, orcamento_id, versao INT, itens JSON, total_venda DECIMAL(15,2),
+total_custo DECIMAL(15,2), desconto DECIMAL(15,2), condicao_pagamento,
+validade DATE, obs TEXT, aprovacao_interna BOOL, aprovado_por, aprovado_em,
+assinado_em, assinado_por, cpf_signatario, ip_assinatura, hash_documento,
+audit_log JSON, created
+
+-- portal_tokens
+id, orcamento_id, token VARCHAR(64), usado BOOL DEFAULT 0, usado_em,
+expira_em DATETIME, bloqueado BOOL DEFAULT 0, tentativas INT DEFAULT 0, created
+
+-- produtos (catálogo)
+id, codigo, nome, descricao, tipo ENUM('produto','servico','licenca','locacao'),
+preco_venda DECIMAL(15,2), preco_custo DECIMAL(15,2), estoque INT, ativo BOOL, created, modified
+```
+
+### Controllers necessários
+- OrcamentosController: index, view, add, edit, enviar, versao, pdf
+- PortalController: acesso, verificar, otp, proposta, assinar (público, sem auth)
+- ProdutosController: index, view, add, edit, delete (catálogo)
+
+### Rotas (config/routes.php)
+```php
+// Portal público — sem autenticação
+$routes->scope('/portal', function (RouteBuilder $routes) {
+    $routes->connect('/{token}', ['controller' => 'Portal', 'action' => 'acesso']);
+    $routes->connect('/{token}/otp', ['controller' => 'Portal', 'action' => 'otp']);
+    $routes->connect('/{token}/proposta', ['controller' => 'Portal', 'action' => 'proposta']);
+    $routes->connect('/{token}/assinar', ['controller' => 'Portal', 'action' => 'assinar']);
+});
+```
+
+---
+
+## SEGURANÇA — PORTAL DO CLIENTE (PHP)
+
+### Geração de token seguro
+```php
+// CORRETO — criptograficamente seguro
+$token = hash('sha256', random_bytes(32) . env('PORTAL_TOKEN_SECRET') . $orcamentoId . time());
+
+// ERRADO — nunca use rand() ou uniqid() para segurança
+// $token = uniqid(); // INSEGURO
+```
+
+### OTP em PHP
+```php
+// Gerar OTP de 6 dígitos seguro
+$otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+// Armazenar APENAS o hash (nunca o OTP em texto puro)
+// Usar tabela otp_tokens ou sessão server-side com TTL
+$otpHash = hash('sha256', $otp . env('OTP_SECRET'));
+
+// Para sessão com TTL:
+$_SESSION['otp_' . $tokenId] = [
+    'hash' => $otpHash,
+    'expira' => time() + 600, // 10 minutos
+    'tentativas' => 0
+];
+```
+
+### Rate limiting (sem Redis — usando banco)
+```php
+// Tabela: rate_limits (ip, rota, tentativas, janela_inicio)
+// Verificar antes de processar qualquer rota pública do portal
+```
+
+---
+
+## ENVIO DE E-MAIL (PHP/CakePHP)
+
+```php
+// Usar o Mailer do CakePHP
+use Cake\Mailer\Mailer;
+
+$mailer = new Mailer('default');
+$mailer
+    ->setTo($emailCliente)
+    ->setSubject('Proposta de Orçamento Nº ' . $numero . ' — PGM Soluções')
+    ->setEmailFormat('html')
+    ->viewBuilder()
+        ->setTemplate('proposta_cliente')
+        ->setLayout('email/html/default');
+$mailer->setViewVars(['orcamento' => $orcamento, 'token' => $portalToken]);
+$mailer->deliver();
+```
+
+---
+
+## CORES E IDENTIDADE VISUAL
+
+Manter as cores do protótipo HTML em todos os templates:
+- Principal:     #1D9E75  (teal — botões, destaques, cabeçalhos)
+- Hover:         #0F6E56  (teal escuro)
+- Fundo suave:   #E1F5EE  (teal claro — backgrounds)
+- Aviso:         #E9A025  (amber — validade, alertas)
+- Erro/Recusa:   #E24B4A  (vermelho)
+- Aprovado:      #378ADD  (azul)
+
+---
+
+## GERAÇÃO DE PDF (PHP)
+
+Usar a biblioteca TCPDF ou mPDF (verificar se já está no composer.json).
+Se não estiver: composer require tecnickcom/tcpdf
+
+```php
+// No OrcamentosController::pdf()
+$pdf = new TCPDF();
+$pdf->AddPage();
+$html = $this->render('pdf/orcamento'); // template separado para PDF
+$pdf->writeHTML($html);
+$pdf->Output('Orcamento_' . $numero . '.pdf', 'D'); // D = download
+```
+
+---
+
+## FLUXO DE DESENVOLVIMENTO — ORDEM CORRETA
+
+Ao pedir para implementar o módulo de orçamentos, seguir esta ordem:
+
+1. Migration das tabelas (bin/cake bake migration CreateOrcamentos)
+2. Models/Tables (bin/cake bake model Orcamentos)
+3. Controllers (bin/cake bake controller Orcamentos)
+4. Templates básicos (bin/cake bake template Orcamentos)
+5. Refinar templates com o visual dos HTMLs de referência
+6. Portal público (PortalController sem auth)
+7. Sistema de OTP e tokens
+8. Envio de e-mail
+9. Geração de PDF
+
+---
+
+## COMANDOS ÚTEIS CAKEPHP
+
+```bash
+bin/cake bake migration NomeDaMigration    # criar migration
+bin/cake migrations migrate                # aplicar migrations
+bin/cake bake model NomeDoModel           # criar model + entity + table
+bin/cake bake controller NomeDoController  # criar controller
+bin/cake bake template NomeDoController    # criar templates
+bin/cake routes                           # listar rotas registradas
+bin/cake cache clear_all                  # limpar cache
+composer install                          # instalar dependências
+```
+
+---
+
+## O QUE NUNCA FAZER
+
+- Usar $_POST, $_GET, $_SESSION diretamente (usar helpers do CakePHP)
+- Escrever SQL manual (usar ORM do CakePHP)
+- Criar lógica de negócio nos templates (fica no Controller/Model)
+- Ignorar validações do Model
+- Quebrar o sistema de autenticação existente
+- Commitar .env ou config com senhas
+- Usar rand() ou uniqid() para tokens de segurança
+- Copiar o HTML do protótipo literalmente — converter para templates PHP
+- Criar rotas do portal sem desabilitar o middleware de autenticação

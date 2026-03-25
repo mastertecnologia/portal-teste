@@ -101,6 +101,11 @@ Router::scope('/', function ($routes) {
     $routes->connect('/servicedesk', ['controller' => 'Servicedesk', 'action' => 'index']);
     $routes->connect('/servicedesk/', ['controller' => 'Servicedesk', 'action' => 'index']);
     $routes->connect('/servicedesk/operacional', ['controller' => 'Servicedesk', 'action' => 'operacional']);
+    // Orçamentos — URLs explícitas (prompt_cursor_cakephp.md PROMPT 7); o inflection padrão já cobre, isto documenta o contrato.
+    $routes->connect('/orcamentos', ['controller' => 'Orcamentos', 'action' => 'index']);
+    $routes->connect('/orcamentos/add', ['controller' => 'Orcamentos', 'action' => 'add']);
+    $routes->connect('/orcamentos/catalogo', ['controller' => 'Orcamentos', 'action' => 'catalogo']);
+    $routes->connect('/orcamentos/:id/pdf', ['controller' => 'Orcamentos', 'action' => 'pdf'], ['pass' => ['id'], 'id' => '\d+']);
     $routes->fallbacks(DashedRoute::class);
 });
 

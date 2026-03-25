@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\Mailer\Email;
+use Cake\View\View;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
@@ -440,34 +441,176 @@ class OrcamentosController extends AppController {
 		unset($_SESSION['idcarrinhoadd']);
 	}
 	
+	/**
+	 * Carrega orçamento, marca pdfgerado, monta carrinho (mesma regra que imprimir / PDF).
+	 *
+	 * @param int|string|null $id ID do orçamento
+	 * @return bool false se não encontrado
+	 */
+	protected function _prepareImprimirViewVars($id) {
+		$orcamento = $this->Orcamentos->find('all', [
+			'contain' => ['Users', 'Clientes.Cidades']
+		])->where(['AND' => ['orcamentos.idempresa' => $this->Auth->user('idempresa'), 'orcamentos.id' => $id]])->first();
+
+		if ($orcamento === null) {
+			return false;
+		}
+
+		$orcamento->pdfgerado = 1;
+		$this->Orcamentos->save($orcamento);
+
+		$idprapesquisa = $this->Orcamentositens->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $orcamento->id]])->toArray();
+
+		$carrinho = [];
+		$carrinhoMensal = [];
+		if (!empty($idprapesquisa)) {
+			$carrinho = $this->Orcamentosservicos->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $idprapesquisa[0]->iditem]])->order(['id'])->toArray();
+			foreach ($carrinho as $reg) {
+				if ($reg->valormensal != null) {
+					$carrinhoMensal[] = $reg;
+				}
+			}
+		}
+
+		$this->set('carrinho', $carrinho);
+		if (!empty($carrinhoMensal)) {
+			$this->set('carrinhoMensal', $carrinhoMensal);
+		}
+		$this->set('idorcamento', $id);
+		$this->set('orcamento', $orcamento);
+
+		return true;
+	}
+
 	public function imprimir($id = null) {
 		// Permissão para o cliente
 		if ($this->Auth->user('role') == 1) {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
-		
-		$orcamento = $this->Orcamentos->find('all', [
-			'contain' => ['Users', 'Clientes.Cidades']
-		])->where(['AND' => ['orcamentos.idempresa' => $this->Auth->user('idempresa'), 'orcamentos.id' => $id]])->first();
-		
-		$orcamento->pdfgerado = 1;
-		$this->Orcamentos->save($orcamento);
-		
-		$idprapesquisa = $this->Orcamentositens->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $orcamento->id]])->toArray();
 
-		if(empty($id)) $idorcamento = $_SESSION['idcarrinho'];
-		$carrinho = $this->Orcamentosservicos->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $idprapesquisa[0]->iditem]])->order(['id'])->toArray();
+		if (!$this->_prepareImprimirViewVars($id)) {
+			$this->Flash->error('Orçamento não encontrado.');
+			return $this->redirect(['action' => 'index']);
+		}
 
-		foreach($carrinho as $key => $reg) 
-			if($reg->valormensal != null) 
-				$carrinhoMensal[] = $reg;
-
-		if(isset($carrinho))$this->set('carrinho', $carrinho);
-		if(isset($carrinhoMensal))$this->set('carrinhoMensal', $carrinhoMensal);
-		$this->set('idorcamento', $id);
 		$this->set('title', 'Imprimir Orçamento');
-		$this->set('orcamento', $orcamento);
+	}
+
+	/**
+	 * PDF gerado no servidor (mPDF). Requer: composer require mpdf/mpdf
+	 */
+	public function imprimirPdf($id = null) {
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+
+		if (!class_exists(\Mpdf\Mpdf::class)) {
+			$this->Flash->error('Biblioteca mPDF não instalada. No servidor, execute: composer require mpdf/mpdf');
+			return $this->redirect(['action' => 'imprimir', $id]);
+		}
+
+		if (!$this->_prepareImprimirViewVars($id)) {
+			$this->Flash->error('Orçamento não encontrado.');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		$this->autoRender = false;
+		$pdf = $this->_renderOrcamentoPdfHtmlToPdf();
+
+		$filename = 'Orcamento-' . (int)$id . '.pdf';
+		$this->response = $this->response
+			->withType('application/pdf')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+			->withStringBody($pdf);
+
+		return $this->response;
+	}
+
+	/**
+	 * Rota do PROMPT 7: /orcamentos/{id}/pdf — mesmo fluxo que imprimirPdf (mPDF, não TCPDF).
+	 */
+	public function pdf($id = null) {
+		return $this->imprimirPdf($id);
+	}
+
+	/**
+	 * Catálogo JSON (PROMPT 3/4): GET ?q= ou ?busca= — produtos ativos da empresa.
+	 * Schema legado: nome ← descricao; preco_custo/estoque não existem na tabela → 0 / null.
+	 */
+	public function catalogo() {
+		if ((int)$this->Auth->user('role') === 1) {
+			$this->autoRender = false;
+
+			return $this->response
+				->withType('application/json')
+				->withStringBody(json_encode(['error' => 'Forbidden']))
+				->withStatus(403);
+		}
+
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+
+		$q = trim((string)$this->request->getQuery('q', ''));
+		$busca = trim((string)$this->request->getQuery('busca', $q));
+
+		$query = $this->Produtos->find('all')
+			->select(['id', 'codigo', 'descricao', 'tipo', 'vlunitario', 'ativo'])
+			->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])
+			->order(['descricao' => 'ASC'])
+			->limit(80);
+
+		if ($busca !== '') {
+			$query->where([
+				'OR' => [
+					'codigo LIKE' => '%' . $busca . '%',
+					'descricao LIKE' => '%' . $busca . '%',
+				],
+			]);
+		}
+
+		$out = [];
+		foreach ($query->toArray() as $p) {
+			$pv = (float)($p->vlunitario ?? 0);
+			$out[] = [
+				'id' => (int)$p->id,
+				'codigo' => (string)$p->codigo,
+				'nome' => (string)$p->descricao,
+				'tipo' => (int)$p->tipo,
+				'preco_venda' => $pv,
+				'preco_custo' => 0.0,
+				'estoque' => null,
+				'margem' => 0.0,
+			];
+		}
+
+		return $this->response
+			->withType('application/json')
+			->withStringBody(json_encode($out, JSON_UNESCAPED_UNICODE));
+	}
+
+	protected function _renderOrcamentoPdfHtmlToPdf() {
+		$tmpDir = TMP . 'mpdf' . DS;
+		if (!is_dir($tmpDir)) {
+			mkdir($tmpDir, 0775, true);
+		}
+
+		$view = new View($this->request, $this->response, $this->getEventManager(), [
+			'layout' => false,
+		]);
+		$view->setTemplatePath('Orcamentos');
+		$view->set($this->viewVars);
+		$html = $view->render('imprimir_pdf');
+
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8',
+			'format' => 'A4',
+			'tempDir' => $tmpDir,
+		]);
+		$mpdf->WriteHTML($html);
+
+		return $mpdf->Output('', 'S');
 	}
 	
 	public function aprovar($id = null) {

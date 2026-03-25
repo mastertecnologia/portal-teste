@@ -1,5 +1,7 @@
 <?php
   	use Cake\Routing\Router;
+	$this->append('css', $this->Html->css('/dist/css/orcamentos-premium'));
+	$this->Html->script('/js/orcamentos', ['block' => true]);
 	// Breadcumbs
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Editar Orçamento', [], ['class' => 'breadcrumb-item active']);
@@ -95,10 +97,10 @@
 		opacity: 0;
     }
 </style>
-<div class="col-md-12">
-	<div class="card">
+<div class="col-md-12 orc-premium-wrap">
+	<div class="card orc-premium-card-inner">
 		<div class="card-body">
-			<h3 class='text-center'>Proposta de Orçamento</h3>
+			<h3 class="text-center orc-premium-page-title">Proposta de Orçamento</h3>
 			<?= $this->Form->create($orcamento, ['class' => 'form-material']); //floating-labels?> 
 				<div class="row m-t-10">
 					<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
@@ -208,6 +210,7 @@
 							if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])) echo $this->Form->button('Salvar alterações realizadas', ['class' => 'btn btn-success m-l-5']);
 							echo $this->Html->Link('Alterar Situação', ['action' => 'alterarsituacao', $orcamento->id], ['class' => 'btn btn-queequaseinfo m-l-5']);
 							echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orange m-l-5']);
+							echo $this->Html->Link('Baixar PDF', ['action' => 'imprimirPdf', $orcamento->id], ['class' => 'btn btn-success m-l-5']);
 							echo $this->Html->Link('Enviar e-mail', ['#'], ['class' => 'btn btn-purple btn-email m-l-5']);
 							if($temordem == 'nao') echo $this->html->Link('Transformar em ordem', ['action' => 'novaordem', $orcamento->id], ['class' => 'btn btn-warning m-l-5']);
 						?>

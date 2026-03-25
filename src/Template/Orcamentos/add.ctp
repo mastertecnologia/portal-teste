@@ -1,5 +1,7 @@
 <?php
   	use Cake\Routing\Router;
+	$this->append('css', $this->Html->css('/dist/css/orcamentos-premium'));
+	$this->Html->script('/js/orcamentos', ['block' => true]);
 	// Breadcumbs
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Novo Orçamento', [], ['class' => 'breadcrumb-item active']);
@@ -54,10 +56,10 @@
 		padding: 0.5em 0.3em !important;
 	}
 </style>
-<div class="col-md-12">
-	<div class="card">
+<div class="col-md-12 orc-premium-wrap">
+	<div class="card orc-premium-card-inner">
 		<div class="card-body">
-			<h3 class='text-center'>Proposta de Orçamento</h3>
+			<h3 class="text-center orc-premium-page-title">Proposta de Orçamento</h3>
 			<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?> <!-- Pega o ID do item para edição -->
 			<?= $this->Form->create($orcamento, ['url' => ['action' => 'add'], 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material']); //floating-labels?> 
 				<div class="row">
@@ -142,7 +144,7 @@
 				<div id="carrinho" class='m-t-10'> </div>
 				<div class="row">
 					<div class="col-12">
-						<?= $this->Form->button('Gerar Orçamento', ['class' => 'btn btn-success']) ?>
+						<?= $this->Form->button('Gerar Orçamento', ['class' => 'btn btn-success btn-orc-premium-primary']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

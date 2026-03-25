@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Proposta de Orçamento — PGM Soluções</title>
+<style>
+:root{
+  --teal:#1D9E75;--teal-dark:#0F6E56;--teal-light:#E1F5EE;--teal-mid:#5DCAA5;
+  --amber:#E9A025;--amber-light:#FAEEDA;--amber-dark:#633806;
+  --red:#E24B4A;--red-light:#FCEBEB;--red-dark:#791F1F;
+  --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#0C447C;
+  --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#3C3489;
+  --border:#e8e7e3;--border-light:#f0efec;
+  --text:#1a1a18;--text-muted:#6b6a65;--text-hint:#9a9890;
+  --bg:#f5f4f0;--bg-card:#ffffff;
+  --radius:10px;--radius-lg:14px;--radius-xl:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;}
+
+/* HEADER BANNER */
+.header{background:var(--text);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-box{width:34px;height:34px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.logo-name{font-size:15px;font-weight:700;color:#fff;}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;}
+.header-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:99px;font-size:12px;color:rgba(255,255,255,.7);}
+.header-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+/* MAIN LAYOUT */
+.container{max-width:780px;margin:0 auto;padding:28px 16px 60px;}
+
+/* HERO CARD */
+.hero{background:var(--bg-card);border-radius:var(--radius-xl);padding:28px 32px;margin-bottom:16px;border:1px solid var(--border);}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.orc-num{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.orc-title{font-size:22px;font-weight:700;color:var(--text);}
+.validity-pill{display:flex;align-items:center;gap:6px;background:var(--amber-light);border:1px solid #FAC775;padding:8px 14px;border-radius:99px;font-size:12px;color:var(--amber-dark);font-weight:600;white-space:nowrap;}
+.validity-pill svg{width:14px;height:14px;}
+
+.client-block{background:var(--bg);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;}
+.client-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;margin-bottom:6px;}
+.client-name{font-size:16px;font-weight:700;color:var(--text);}
+.client-cnpj{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+.info-row{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.info-cell{flex:1;padding:12px 16px;border-right:1px solid var(--border);}
+.info-cell:last-child{border-right:none;}
+.info-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;margin-bottom:4px;}
+.info-value{font-size:13px;font-weight:600;color:var(--text);}
+
+/* PROGRESS */
+.progress-bar{height:4px;background:var(--border);border-radius:2px;margin:20px 0 6px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--teal);border-radius:2px;transition:width 1s ease;}
+.progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);}
+
+/* SECTION CARD */
+.card{background:var(--bg-card);border-radius:var(--radius-lg);padding:22px 26px;margin-bottom:14px;border:1px solid var(--border);}
+.card-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border-light);}
+
+/* ITEMS TABLE */
+.items-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.items-tbl thead th{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;background:#fafaf8;}
+.items-tbl thead th.r{text-align:right;}
+.items-tbl tbody tr{border-bottom:1px solid var(--border-light);}
+.items-tbl tbody tr:last-child{border-bottom:none;}
+.items-tbl td{padding:12px 12px;vertical-align:middle;}
+.items-tbl td.r{text-align:right;}
+.item-name{font-weight:600;color:var(--text);margin-bottom:3px;}
+.item-spec{font-size:12px;color:var(--text-muted);line-height:1.5;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;}
+.b-prod{background:#E1F5EE;color:#085041;}
+.b-serv{background:#E6F1FB;color:#0C447C;}
+.b-lic{background:#EEEDFE;color:#3C3489;}
+.b-loc{background:#FAEEDA;color:#633806;}
+
+/* TOTALS */
+.totals{display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--border);}
+.totals-inner{min-width:260px;}
+.tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:var(--text-muted);border-bottom:1px solid var(--border-light);}
+.tot-row:last-child{border:none;font-size:17px;font-weight:700;color:var(--text);padding-top:10px;}
+.tot-row .green{color:var(--teal);}
+.tot-row .red{color:var(--red);}
+
+/* PAYMENT OPTIONS */
+.payment-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.payment-opt{border:2px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;transition:all .2s;position:relative;}
+.payment-opt:hover{border-color:var(--teal);background:var(--teal-light);}
+.payment-opt.selected{border-color:var(--teal);background:var(--teal-light);}
+.payment-opt .check{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:#fff;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.payment-opt.selected .check{background:var(--teal);border-color:var(--teal);}
+.payment-opt-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.payment-opt-val{font-size:20px;font-weight:800;color:var(--teal);margin-bottom:4px;}
+.payment-opt-desc{font-size:12px;color:var(--text-muted);}
+.payment-opt-tag{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:var(--teal);color:#fff;margin-bottom:6px;}
+
+/* QUESTIONS */
+.question-block{background:var(--bg);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+.question-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;}
+.question-opts{display:flex;gap:8px;flex-wrap:wrap;}
+.q-opt{padding:7px 16px;border-radius:99px;font-size:12px;font-weight:500;border:1.5px solid var(--border);cursor:pointer;background:#fff;color:var(--text-muted);transition:all .15s;}
+.q-opt:hover{border-color:var(--teal);color:var(--teal);}
+.q-opt.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+.q-opt.selected-red{background:var(--red-light);border-color:var(--red);color:var(--red-dark);}
+.q-opt.selected-amber{background:var(--amber-light);border-color:var(--amber);color:var(--amber-dark);}
+
+/* NEGOTIATION */
+.textarea-field{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text);outline:none;font-family:inherit;resize:vertical;min-height:90px;line-height:1.6;background:#fff;}
+.textarea-field:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.1);}
+
+/* ESIGN */
+.sign-canvas{border:1.5px solid var(--border);border-radius:var(--radius);width:100%;height:110px;cursor:crosshair;background:#fff;touch-action:none;display:block;}
+.sign-canvas:focus{border-color:var(--teal);}
+.sign-guide{font-size:12px;color:var(--text-muted);text-align:center;margin-top:6px;}
+
+/* DECISION BUTTONS */
+.decision-area{margin-top:6px;}
+.decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.decision-btn{padding:16px;border-radius:var(--radius-lg);font-size:14px;font-weight:700;cursor:pointer;border:none;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;font-family:inherit;}
+.decision-btn svg{width:24px;height:24px;}
+.btn-approve{background:var(--teal);color:#fff;}.btn-approve:hover{background:var(--teal-dark);transform:translateY(-1px);}
+.btn-decline{background:var(--red-light);color:var(--red-dark);border:2px solid #F7C1C1;}.btn-decline:hover{background:#F7C1C1;}
+.btn-negotiate{width:100%;padding:14px;border-radius:var(--radius-lg);font-size:14px;font-weight:600;cursor:pointer;border:2px solid var(--amber);background:var(--amber-light);color:var(--amber-dark);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;font-family:inherit;}
+.btn-negotiate:hover{background:#FAC775;}
+.btn-submit{width:100%;padding:14px;border-radius:var(--radius-lg);font-size:14px;font-weight:700;cursor:pointer;border:none;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;font-family:inherit;margin-top:12px;}
+.btn-submit:hover{background:var(--teal-dark);}
+.btn-submit:disabled{background:var(--border);color:var(--text-muted);cursor:not-allowed;}
+
+/* STATES */
+.pg{display:none;}.pg.show{display:block;}
+
+/* SUCCESS */
+.success-card{background:var(--bg-card);border-radius:var(--radius-xl);padding:40px 32px;text-align:center;border:1px solid var(--border);}
+.success-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.success-title{font-size:26px;font-weight:800;margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--text-muted);line-height:1.7;max-width:420px;margin:0 auto 28px;}
+
+.contract-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;text-align:left;}
+.contract-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-light);}
+.contract-row:last-child{border:none;}
+.contract-label{color:var(--text-muted);}
+.contract-value{font-weight:600;color:var(--text);}
+
+.doc-badge{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid;}
+.doc-valid{background:#E1F5EE;color:#085041;border-color:#5DCAA5;}
+.doc-icp{background:var(--purple-light);color:var(--purple-dark);border-color:#CECBF6;}
+
+/* FOOTER */
+.portal-footer{text-align:center;padding:28px 0;font-size:12px;color:var(--text-muted);line-height:1.8;}
+.portal-footer a{color:var(--teal);text-decoration:none;}
+
+/* SECURITY BAR */
+.security-bar{background:#fff;border-top:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:11px;color:var(--text-muted);}
+.security-item{display:flex;align-items:center;gap:5px;}
+
+@media(max-width:600px){
+  .hero{padding:20px 18px;}
+  .card{padding:18px 16px;}
+  .info-row{flex-wrap:wrap;}
+  .info-cell{min-width:50%;border-right:none;border-bottom:1px solid var(--border);}
+  .payment-opts{grid-template-columns:1fr;}
+  .decision-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-box">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="logo-name">PGM Soluções</div>
+      <div class="logo-sub">Portal de Propostas</div>
+    </div>
+  </div>
+  <div class="header-badge">
+    <span class="dot"></span>
+    Proposta aguardando sua resposta
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+<!-- ======== TELA: PROPOSTA ======== -->
+<div class="pg show" id="pg-proposta">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="orc-num">Proposta Nº 361 · v1</div>
+        <div class="orc-title">Proposta de Venda de Equipamentos</div>
+      </div>
+      <div class="validity-pill">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><polyline points="8 5 8 8 10 10"/></svg>
+        Válido até 31/03/2026
+      </div>
+    </div>
+
+    <div class="client-block">
+      <div class="client-label">Destinatário</div>
+      <div class="client-name">Mobles Ambientes Pensados</div>
+      <div class="client-cnpj">CNPJ: 10.630.396/0001-04</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-cell">
+        <div class="info-label">Emitido por</div>
+        <div class="info-value">Darli Gonçalves B.</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Emissão</div>
+        <div class="info-value">24/03/2026</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Pagamento</div>
+        <div class="info-value">Boleto 1+5x</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Contato</div>
+        <div class="info-value">(54) 0000-0000</div>
+      </div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" style="width:33%;"></div></div>
+    <div class="progress-labels">
+      <span>Proposta enviada</span>
+      <span style="color:var(--amber);font-weight:600;">Aguardando sua resposta</span>
+      <span>Contrato finalizado</span>
+    </div>
+  </div>
+
+  <!-- PRODUTOS -->
+  <div class="card">
+    <div class="card-title">Produtos e serviços inclusos</div>
+    <div style="overflow-x:auto;">
+      <table class="items-tbl">
+        <thead><tr>
+          <th style="width:60px;">Código</th><th>Produto / Serviço</th>
+          <th style="width:70px;">Tipo</th><th class="r" style="width:46px;">Qtd.</th>
+          <th class="r" style="width:100px;">Vl. Unit.</th><th class="r" style="width:110px;">Vl. Total</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-size:11px;color:var(--text-muted);font-family:monospace;">HW-001</td>
+            <td>
+              <div class="item-name">Computador Work Office AMD</div>
+              <div class="item-spec">Proc. Ryzen 7 4.6GHz · 32GB RAM · NVMe 256GB · Fonte 500W 80+ Win 11 Pro · Office Home &amp; Business 2019</div>
+            </td>
+            <td>
+              <span class="badge b-prod">Produto</span><br>
+              <span class="badge b-lic" style="margin-top:3px;">Licença</span>
+            </td>
+            <td class="r">1</td>
+            <td class="r" id="vl-unit-display">R$ 7.890,00</td>
+            <td class="r" style="font-weight:700;color:var(--teal);" id="vl-total-display">R$ 7.890,00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="totals">
+      <div class="totals-inner">
+        <div class="tot-row"><span>Subtotal</span><span>R$ 7.890,00</span></div>
+        <div class="tot-row"><span>Desconto à vista (5%)</span><span class="red">— R$ 394,50</span></div>
+        <div class="tot-row"><span style="color:var(--teal);">Total à vista</span><span class="green" id="tot-vista">R$ 7.495,50</span></div>
+        <div class="tot-row"><span>Total a prazo (1+5x boleto)</span><span>R$ 7.890,00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGAMENTO -->
+  <div class="card">
+    <div class="card-title">Escolha a condição de pagamento</div>
+    <div class="payment-opts">
+      <div class="payment-opt" id="opt-prazo" onclick="selectPayment('prazo')">
+        <div class="check"></div>
+        <div class="payment-opt-label">Pagamento a prazo</div>
+        <div class="payment-opt-val">R$ 7.890,00</div>
+        <div class="payment-opt-desc">1 + 5 parcelas · Boleto bancário<br>Vencimentos: 15/30/45/60/75/90 dias</div>
+      </div>
+      <div class="payment-opt selected" id="opt-vista" onclick="selectPayment('vista')">
+        <div class="check"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="13 2 6 12 2 8"/></svg></div>
+        <div class="payment-opt-tag">5% OFF</div>
+        <div class="payment-opt-label">Pagamento à vista</div>
+        <div class="payment-opt-val">R$ 7.495,50</div>
+        <div class="payment-opt-desc">Boleto único · Vencimento em 3 dias úteis<br>Economia de R$ 394,50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONDIÇÕES -->
+  <div class="card">
+    <div class="card-title">Condições comerciais</div>
+    <div style="background:var(--bg);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text);line-height:1.8;margin-bottom:12px;border-left:3px solid var(--teal);">
+      Apresentamos nossa proposta comercial para a venda dos equipamentos solicitados, com condições especiais de pagamento. Permanecemos à disposição para quaisquer esclarecimentos adicionais.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--text-muted);">
+      <div style="display:flex;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--teal);margin-top:5px;flex-shrink:0;"></span>Proposta válida por 7 dias da emissão</div>
+      <div style="display:flex;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--teal);margin-top:5px;flex-shrink:0;"></span>Garantia de 12 meses contra defeitos</div>
+      <div style="display:flex;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--teal);margin-top:5px;flex-shrink:0;"></span>Suporte técnico 90 dias após implantação</div>
+      <div style="display:flex;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--teal);margin-top:5px;flex-shrink:0;"></span>NF emitida após confirmação do pedido</div>
+    </div>
+  </div>
+
+  <!-- PERGUNTAS -->
+  <div class="card">
+    <div class="card-title">Antes de responder</div>
+    <div class="question-block">
+      <div class="question-text">As especificações técnicas atendem sua necessidade?</div>
+      <div class="question-opts">
+        <div class="q-opt" id="q1-sim" onclick="selectQ(1,'sim')">Sim, atende</div>
+        <div class="q-opt" id="q1-par" onclick="selectQ(1,'par')">Parcialmente</div>
+        <div class="q-opt" id="q1-nao" onclick="selectQ(1,'nao')">Preciso de ajustes</div>
+      </div>
+    </div>
+    <div class="question-block">
+      <div class="question-text">O prazo de entrega é adequado para você?</div>
+      <div class="question-opts">
+        <div class="q-opt" id="q2-sim" onclick="selectQ(2,'sim')">Sim</div>
+        <div class="q-opt" id="q2-nao" onclick="selectQ(2,'nao')">Preciso de urgência</div>
+        <div class="q-opt" id="q2-flex" onclick="selectQ(2,'flex')">Tenho flexibilidade</div>
+      </div>
+    </div>
+    <div class="question-block">
+      <div class="question-text">Como avalia o valor apresentado?</div>
+      <div class="question-opts">
+        <div class="q-opt" id="q3-ok" onclick="selectQ(3,'ok')">Adequado</div>
+        <div class="q-opt" id="q3-alto" onclick="selectQ(3,'alto')">Acima do esperado</div>
+        <div class="q-opt" id="q3-neg" onclick="selectQ(3,'neg')">Quero negociar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISÃO -->
+  <div class="card">
+    <div class="card-title">Sua decisão</div>
+    <div class="decision-area">
+      <div class="decision-grid">
+        <button class="decision-btn btn-approve" onclick="irAprovar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Aprovar proposta
+          <span style="font-size:11px;font-weight:400;opacity:.85;">Aceito as condições acima</span>
+        </button>
+        <button class="decision-btn btn-decline" onclick="irRecusar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Recusar proposta
+          <span style="font-size:11px;font-weight:400;opacity:.7;">Não tenho interesse</span>
+        </button>
+      </div>
+      <button class="btn-negotiate" onclick="irNegociar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Quero negociar / solicitar ajustes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== TELA: APROVAR ======== -->
+<div class="pg" id="pg-aprovar">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:52px;height:52px;background:var(--teal-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Assinar e aprovar proposta</div>
+      <div style="font-size:13px;color:var(--text-muted);">Ao assinar, você confirma a aceitação das condições desta proposta comercial com validade jurídica.</div>
+    </div>
+
+    <div style="background:var(--bg);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;">Resumo do que está sendo aprovado</div>
+      <div class="contract-row"><span class="contract-label">Proposta</span><span class="contract-value">Nº 361 v1 — PGM Soluções</span></div>
+      <div class="contract-row"><span class="contract-label">Cliente</span><span class="contract-value">Mobles Ambientes Pensados</span></div>
+      <div class="contract-row"><span class="contract-label">Pagamento escolhido</span><span class="contract-value" id="resumo-pag">À vista — R$ 7.495,50</span></div>
+      <div class="contract-row"><span class="contract-label">Validade</span><span class="contract-value" style="color:var(--amber);">31/03/2026</span></div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Nome completo do signatário</div>
+      <input type="text" id="sign-name" placeholder="Nome completo conforme documento..." style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit;" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">CPF do signatário</div>
+      <input type="text" id="sign-cpf" placeholder="000.000.000-00" maxlength="14" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit;" oninput="maskCPF(this)" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Assinatura digital</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Assine com o mouse ou dedo (tela touch) no espaço abaixo:</div>
+      <canvas id="client-canvas" class="sign-canvas"></canvas>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+        <div class="sign-guide">← Assine aqui dentro →</div>
+        <button onclick="clearClientCanvas()" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;">Limpar</button>
+      </div>
+    </div>
+
+    <div style="background:var(--blue-light);border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--blue-dark)" stroke-width="1.5" style="flex-shrink:0;margin-top:1px;"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="var(--blue-dark)"/></svg>
+      <div style="font-size:12px;color:var(--blue-dark);line-height:1.6;">Sua assinatura tem validade jurídica conforme a <strong>MP 2.200-2/2001</strong> e é processada sob os padrões <strong>ICP-Brasil</strong>. O documento assinado será enviado para seu e-mail.</div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;">
+      <input type="checkbox" id="check-termos" style="width:16px;height:16px;margin-top:2px;cursor:pointer;accent-color:var(--teal);"/>
+      <label for="check-termos" style="font-size:12px;color:var(--text-muted);line-height:1.6;cursor:pointer;">Li e aceito as condições desta proposta comercial, incluindo prazo de entrega, garantia e condições de pagamento selecionadas.</label>
+    </div>
+
+    <button class="btn-submit" id="btn-assinar" onclick="confirmarAssinatura()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Assinar e confirmar aprovação
+    </button>
+    <button onclick="goTo('pg-proposta')" style="width:100%;margin-top:10px;background:none;border:none;font-size:13px;color:var(--text-muted);cursor:pointer;padding:8px;text-decoration:underline;">← Voltar para a proposta</button>
+  </div>
+</div>
+
+<!-- ======== TELA: RECUSAR ======== -->
+<div class="pg" id="pg-recusar">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:52px;height:52px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red-dark)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Recusar proposta</div>
+      <div style="font-size:13px;color:var(--text-muted);">Lamentamos que não tenha dado certo. Poderia nos informar o motivo? Isso nos ajuda a melhorar.</div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Motivo da recusa</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="motivos">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:all .15s;">
+          <input type="radio" name="motivo" value="preco" style="accent-color:var(--teal);"/> Preço acima do orçamento disponível
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:all .15s;">
+          <input type="radio" name="motivo" value="prazo"/> Prazo de entrega não atende
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:all .15s;">
+          <input type="radio" name="motivo" value="spec"/> Especificações técnicas não atendem
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:all .15s;">
+          <input type="radio" name="motivo" value="outro"/> Escolhemos outro fornecedor
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:all .15s;">
+          <input type="radio" name="motivo" value="cancelado"/> Projeto cancelado internamente
+        </label>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Observação adicional (opcional)</div>
+      <textarea class="textarea-field" placeholder="Deixe um comentário para o vendedor..."></textarea>
+    </div>
+
+    <button class="btn-submit" style="background:var(--red);margin-bottom:10px;" onclick="confirmarRecusa()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Confirmar recusa
+    </button>
+    <button onclick="goTo('pg-proposta')" style="width:100%;background:none;border:none;font-size:13px;color:var(--text-muted);cursor:pointer;padding:8px;text-decoration:underline;">← Voltar — ainda posso reconsiderar</button>
+  </div>
+</div>
+
+<!-- ======== TELA: NEGOCIAR ======== -->
+<div class="pg" id="pg-negociar">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:52px;height:52px;background:var(--amber-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--amber-dark)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Solicitar ajustes</div>
+      <div style="font-size:13px;color:var(--text-muted);">Informe o que precisa ser ajustado. Nossa equipe retornará em até 24h com uma nova proposta.</div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">O que precisa ser ajustado?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="ajuste-opts">
+        <button class="q-opt" onclick="toggleAjuste(this,'preco')">Preço / desconto</button>
+        <button class="q-opt" onclick="toggleAjuste(this,'prazo')">Prazo de entrega</button>
+        <button class="q-opt" onclick="toggleAjuste(this,'spec')">Especificações</button>
+        <button class="q-opt" onclick="toggleAjuste(this,'pagamento')">Condição de pagamento</button>
+        <button class="q-opt" onclick="toggleAjuste(this,'itens')">Adicionar / remover itens</button>
+        <button class="q-opt" onclick="toggleAjuste(this,'garantia')">Garantia / suporte</button>
+      </div>
+    </div>
+
+    <div id="bloco-preco" style="display:none;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Qual valor você esperava pagar?</div>
+      <input type="text" id="valor-esperado" placeholder="Ex: R$ 7.000,00" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit;" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Descreva o que precisa ser ajustado</div>
+      <textarea class="textarea-field" id="neg-obs" placeholder="Ex: Precisamos de no mínimo 16GB de RAM e o prazo máximo é 15 dias..."></textarea>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Seu nome e telefone para contato</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="text" id="neg-nome" placeholder="Nome completo" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit;" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'"/>
+        <input type="tel" id="neg-tel" placeholder="(54) 99999-9999" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit;" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+    </div>
+
+    <button class="btn-submit" style="background:var(--amber);margin-bottom:10px;" onclick="confirmarNegociacao()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Enviar solicitação de ajuste
+    </button>
+    <button onclick="goTo('pg-proposta')" style="width:100%;background:none;border:none;font-size:13px;color:var(--text-muted);cursor:pointer;padding:8px;text-decoration:underline;">← Voltar para a proposta</button>
+  </div>
+</div>
+
+<!-- ======== SUCESSO: APROVADO ======== -->
+<div class="pg" id="pg-sucesso-aprov">
+  <div class="success-card">
+    <div class="success-icon" style="background:var(--teal-light);">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="success-title" style="color:var(--teal-dark);">Proposta aprovada!</div>
+    <div class="success-sub">Sua aprovação foi registrada com sucesso. A PGM Soluções será notificada imediatamente e entrará em contato para os próximos passos.</div>
+
+    <div class="contract-preview" style="max-width:440px;margin:0 auto 24px;">
+      <div class="contract-row"><span class="contract-label">Proposta</span><span class="contract-value">Nº 361 v1</span></div>
+      <div class="contract-row"><span class="contract-label">Assinado por</span><span class="contract-value" id="nome-assinado">—</span></div>
+      <div class="contract-row"><span class="contract-label">Pagamento</span><span class="contract-value" id="pag-assinado">—</span></div>
+      <div class="contract-row"><span class="contract-label">Data / hora</span><span class="contract-value" id="dt-assinado">—</span></div>
+      <div class="contract-row"><span class="contract-label">Hash do documento</span><span class="contract-value" style="font-family:monospace;font-size:11px;">a3f7c9e2d1b8...</span></div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;">
+      <span class="doc-badge doc-valid">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg>
+        Assinatura válida
+      </span>
+      <span class="doc-badge doc-icp">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1l2 4 5 .7-3.6 3.5.8 5L8 12l-4.2 2.2.8-5L1 5.7 6 5z"/></svg>
+        ICP-Brasil
+      </span>
+    </div>
+
+    <div style="background:var(--teal-light);border-radius:var(--radius);padding:14px 18px;max-width:440px;margin:0 auto;text-align:left;font-size:13px;color:var(--teal-dark);line-height:1.7;">
+      <strong>Próximos passos:</strong><br>
+      1. Você receberá o contrato assinado por e-mail em breve<br>
+      2. A PGM entrará em contato para confirmar dados de entrega<br>
+      3. Boleto será enviado após confirmação
+    </div>
+  </div>
+</div>
+
+<!-- ======== SUCESSO: RECUSADO ======== -->
+<div class="pg" id="pg-sucesso-recus">
+  <div class="success-card">
+    <div class="success-icon" style="background:var(--red-light);">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--red-dark)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <div class="success-title" style="color:var(--text);">Recusa registrada</div>
+    <div class="success-sub">Agradecemos o retorno. Sua resposta foi enviada à equipe da PGM Soluções. Esperamos poder atendê-lo em uma próxima oportunidade.</div>
+    <div style="background:var(--bg);border-radius:var(--radius);padding:14px 18px;max-width:440px;margin:0 auto;font-size:13px;color:var(--text-muted);">Se mudar de ideia ou precisar de algo, entre em contato:<br><strong style="color:var(--text);">darli@pgm.inf.br · (54) 0000-0000</strong></div>
+  </div>
+</div>
+
+<!-- ======== SUCESSO: NEGOCIAÇÃO ======== -->
+<div class="pg" id="pg-sucesso-neg">
+  <div class="success-card">
+    <div class="success-icon" style="background:var(--amber-light);">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--amber-dark)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </div>
+    <div class="success-title" style="color:var(--amber-dark);">Solicitação enviada!</div>
+    <div class="success-sub">Recebemos sua solicitação de ajuste. Nossa equipe comercial analisará e retornará com uma nova proposta em até <strong>24 horas úteis</strong>.</div>
+    <div style="background:var(--amber-light);border-radius:var(--radius);padding:14px 18px;max-width:440px;margin:0 auto;font-size:13px;color:var(--amber-dark);line-height:1.7;border:1px solid #FAC775;">
+      <strong>O que acontece agora:</strong><br>
+      1. Vendedor recebe notificação imediata<br>
+      2. Proposta atualizada enviada por e-mail em até 24h<br>
+      3. Novo link de aprovação será gerado
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="portal-footer">
+  <strong>PGM Soluções em TI Ltda</strong> · CNPJ: 00.000.000/0001-00<br>
+  Bento Gonçalves, RS · <a href="#">contato@pgm.inf.br</a> · (54) 0000-0000<br>
+  <span style="font-size:11px;opacity:.7;">Este portal é exclusivo para aprovação da proposta Nº 361. Link válido até 31/03/2026.</span>
+</div>
+
+</div><!-- /container -->
+
+<!-- SECURITY BAR -->
+<div class="security-bar">
+  <div class="security-item">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="8" rx="1"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+    Conexão segura SSL
+  </div>
+  <div class="security-item">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L2 4v5c0 3 2.7 5.7 6 6 3.3-.3 6-3 6-6V4L8 1z"/></svg>
+    Assinatura ICP-Brasil
+  </div>
+  <div class="security-item">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><polyline points="8 5 8 8 10 10"/></svg>
+    Link exclusivo e intransferível
+  </div>
+  <div class="security-item">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="13 2 6 12 2 8"/></svg>
+    Válido até 31/03/2026
+  </div>
+</div>
+
+<script>
+let selectedPayment = 'vista';
+let painting = false, ctx, lastX, lastY;
+let hasSignature = false;
+
+function selectPayment(opt){
+  selectedPayment = opt;
+  document.getElementById('opt-vista').classList.toggle('selected', opt==='vista');
+  document.getElementById('opt-prazo').classList.toggle('selected', opt==='prazo');
+  document.querySelectorAll('.payment-opt .check').forEach((c,i)=>{
+    const isSelected = (i===0&&opt==='prazo')||(i===1&&opt==='vista');
+    c.innerHTML = isSelected ? '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="13 2 6 12 2 8"/></svg>' : '';
+  });
+  const label = opt==='vista' ? 'À vista — R$ 7.495,50' : 'A prazo 1+5x — R$ 7.890,00';
+  document.getElementById('resumo-pag').textContent = label;
+}
+
+function selectQ(q, val){
+  const prefix = `q${q}-`;
+  document.querySelectorAll(`[id^="${prefix}"]`).forEach(el=>{
+    el.className = 'q-opt';
+  });
+  const el = document.getElementById(`q${q}-${val}`);
+  if(el){
+    if(val==='nao'||val==='alto') el.className='q-opt selected-red';
+    else if(val==='par'||val==='neg') el.className='q-opt selected-amber';
+    else el.className='q-opt selected';
+  }
+}
+
+function toggleAjuste(el, tipo){
+  el.classList.toggle('selected');
+  const bloco = document.getElementById('bloco-'+tipo);
+  if(bloco) bloco.style.display = el.classList.contains('selected') ? 'block' : 'none';
+}
+
+function irAprovar(){ goTo('pg-aprovar'); setTimeout(initClientCanvas,150); }
+function irRecusar(){ goTo('pg-recusar'); }
+function irNegociar(){ goTo('pg-negociar'); }
+
+function confirmarAssinatura(){
+  const nome = document.getElementById('sign-name').value.trim();
+  const cpf = document.getElementById('sign-cpf').value.trim();
+  const termos = document.getElementById('check-termos').checked;
+  if(!nome){ alert('Por favor, informe seu nome completo.'); return; }
+  if(!cpf||cpf.length<14){ alert('Por favor, informe um CPF válido.'); return; }
+  if(!termos){ alert('Por favor, aceite os termos da proposta.'); return; }
+  if(!hasSignature){ alert('Por favor, assine no campo de assinatura acima.'); return; }
+
+  const now = new Date();
+  const dtStr = now.toLocaleDateString('pt-BR')+' às '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('nome-assinado').textContent = nome;
+  document.getElementById('pag-assinado').textContent = selectedPayment==='vista'?'À vista — R$ 7.495,50':'A prazo 1+5x — R$ 7.890,00';
+  document.getElementById('dt-assinado').textContent = dtStr;
+  goTo('pg-sucesso-aprov');
+}
+
+function confirmarRecusa(){
+  const mot = document.querySelector('input[name="motivo"]:checked');
+  if(!mot){ alert('Por favor, selecione o motivo da recusa.'); return; }
+  goTo('pg-sucesso-recus');
+}
+
+function confirmarNegociacao(){
+  const obs = document.getElementById('neg-obs').value.trim();
+  const nome = document.getElementById('neg-nome').value.trim();
+  if(!obs){ alert('Por favor, descreva o que precisa ser ajustado.'); return; }
+  if(!nome){ alert('Por favor, informe seu nome.'); return; }
+  goTo('pg-sucesso-neg');
+}
+
+function initClientCanvas(){
+  const c = document.getElementById('client-canvas');
+  if(!c||c._inited) return;
+  c._inited = true;
+  const dpr = window.devicePixelRatio||1;
+  const w = c.offsetWidth;
+  c.width = w*dpr; c.height = 110*dpr;
+  ctx = c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.strokeStyle='#1a1a18'; ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round';
+
+  function getPos(e){
+    const r=c.getBoundingClientRect();
+    if(e.touches) return {x:(e.touches[0].clientX-r.left),y:(e.touches[0].clientY-r.top)};
+    return {x:e.offsetX,y:e.offsetY};
+  }
+  c.addEventListener('mousedown',e=>{painting=true;const p=getPos(e);lastX=p.x;lastY=p.y;});
+  c.addEventListener('mousemove',e=>{if(!painting)return;const p=getPos(e);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();lastX=p.x;lastY=p.y;hasSignature=true;});
+  c.addEventListener('mouseup',()=>painting=false);
+  c.addEventListener('mouseleave',()=>painting=false);
+  c.addEventListener('touchstart',e=>{e.preventDefault();painting=true;const p=getPos(e);lastX=p.x;lastY=p.y;},{passive:false});
+  c.addEventListener('touchmove',e=>{e.preventDefault();if(!painting)return;const p=getPos(e);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();lastX=p.x;lastY=p.y;hasSignature=true;},{passive:false});
+  c.addEventListener('touchend',()=>painting=false);
+}
+
+function clearClientCanvas(){
+  if(ctx){ ctx.clearRect(0,0,9999,9999); hasSignature=false; }
+}
+
+function maskCPF(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>11)v=v.slice(0,11);
+  if(v.length>9) v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+  else if(v.length>6) v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+  else if(v.length>3) v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+  el.value=v;
+}
+
+function goTo(id){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init
+selectPayment('vista');
+</script>
+</body>
+</html>

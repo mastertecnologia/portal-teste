@@ -147,6 +147,7 @@ error_reporting(0);
 <div class="col-md-12">
 	<?= $this->html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-orange m-l-5 m-b-5']) ?>
 	<?= $this->html->Link('Salvar PDF', [], ['id' => 'btn-salvar-pdf', 'class' => 'btn btn-success m-l-5 m-b-5']) ?>
+	<?= $this->Html->link('Baixar PDF (servidor)', ['action' => 'imprimirPdf', $orcamento->id], ['class' => 'btn btn-outline-secondary m-l-5 m-b-5']) ?>
 	<?php if ($role == 0) echo $this->Html->link('Voltar para o Orçamento', ["action" => "edit", $orcamento->id], ['class' => 'm-b-5 btn btn-info']); ?>
 	<?php if ($role == 1) echo $this->Html->link('Voltar', ['controller' => 'Financeiro', 'action' => 'orcamentos'], ['class' => 'm-b-5 btn btn-info']); ?>
 	<div id="printable">
