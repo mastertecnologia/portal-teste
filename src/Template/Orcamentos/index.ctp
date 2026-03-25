@@ -92,7 +92,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 			<?= $this->Html->link(
 				'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> + Gerar Orçamento',
 				['action' => 'add'],
-				['class' => 'btn orc-premium-btn-primary btn-pgm btn-pgm-salvar', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
+				['class' => 'btn orc-premium-btn-primary', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
 			) ?>
 		</header>
 
@@ -365,7 +365,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 			<?= $this->Html->link(
 				'<i class="ti-plus" aria-hidden="true"></i> Solicitar orçamento',
 				['controller' => 'Tickets', 'action' => 'add', 4],
-				['class' => 'btn orc-premium-btn-primary btn-pgm btn-pgm-salvar', 'escape' => false]
+				['class' => 'btn orc-premium-btn-primary', 'escape' => false]
 			) ?>
 		</header>
 		<div class="orc-premium-list-card">

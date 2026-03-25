@@ -55,14 +55,14 @@ $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 									'data-valormensal' => $reg->valormensal,
 									'data-idproduto' => $reg->idproduto,
 									'data-tipo' => $reg->valormensal > 0 ? 1 : 0,
-									'class' => 'editaitemcarrinho btn btn-warning btn-simple btn-xs',
+									'class' => 'editaitemcarrinho btn btn-orc-tbl-icon btn-orc-tbl-icon--edit',
 									'escape' => false,
 								]) ?>
 								<?= $this->Html->link('<i class="fa fa-times"></i>', [], [
 									'rel' => 'tooltip',
 									'title' => 'Excluir',
 									'id' => $reg->id,
-									'class' => 'excluiitemcarrinho btn btn-danger btn-simple btn-xs',
+									'class' => 'excluiitemcarrinho btn btn-orc-tbl-icon btn-orc-tbl-icon--del',
 									'escape' => false,
 								]) ?>
 							</td>

@@ -3,48 +3,6 @@
 	$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
 	$this->Html->script('/js/orcamentos', ['block' => true]);
 ?>
-<script>
-	tinymce.init({
-		selector: '.editor',  // change this value according to your HTML
-		plugins : 'advlist autolink link image imagetools lists advlist charmap media preview autoresize hr jbimages textcolor fullscreen table help paste',
-		height: 300,
-		language: 'pt_BR',
-		entity_encoding : "raw",
-		menubar: false,
-		toolbar: ['undo redo | bold italic underline strikethrough | bullist numlist | alinhamento | forecolor backcolor | table | link | fontselect fontsizeselect | image media | preview | hr | fullscreen',
-		],
-		audio_template_callback: function(data) {
-			return '<audio controls>' + '\n<source src="' + data.source1 + '"' + (data.source1mime ? ' type="' + data.source1mime + '"' : '') + ' />\n' + '</audio>';
-		},
-		setup: function(editor) {
-			editor.addButton('alinhamento', {
-				type: 'listbox',
-				text: 'Alinhar',
-				icon: false,
-				onselect: function(e) {
-					tinyMCE.execCommand(this.value());
-				},
-				values: [
-					{icon: 'alignleft', value: 'JustifyLeft'},
-					{icon: 'alignright', value: 'JustifyRight'},
-					{icon: 'aligncenter', value: 'JustifyCenter'},
-					{icon: 'alignjustify', value: 'JustifyFull'},
-					{icon: 'outdent', value: 'outdent'},
-					{icon: 'indent', value: 'indent'},
-				],
-				onPostRender: function() {
-					// Select the firts item by default
-					this.value('JustifyLeft');
-				}
-			});
-		},
-		browser_spellcheck: true,
-		contextmenu: false,
-		table_default_styles: {
-			width: '75%'
-		}
-	});
-</script>
 <style>
 	.dtp table.dtp-picker-days tr > td{
 		font-weight: 700	 !important;
@@ -66,11 +24,11 @@
 			</div>
 			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento</h1>
 		</div>
-		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-sm btn-secondary']) ?>
+		<div class="orc-page-head-actions">
+			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary']) ?>
 			<?= $this->Form->button('Avançar para revisão →', [
 				'type' => 'submit',
-				'class' => 'btn btn-sm btn-pgm btn-pgm-salvar btn-success btn-orc-premium-primary',
+				'class' => 'btn btn-orc-premium-primary',
 				'escape' => false,
 			]) ?>
 		</div>
@@ -127,9 +85,9 @@
 
 	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
 		<div class="card-body">
-			<div class="orc-sec-title" style="justify-content:space-between;">
+			<div class="orc-sec-title orc-sec-title--split">
 				<span>Produtos e serviços</span>
-				<button type="button" class="btn btn-sm btn-pgm btn-pgm-situacao" onclick="$('#orc-catalog-overlay').addClass('open');" style="font-size:11px;">
+				<button type="button" class="btn btn-orc-outline-teal" onclick="$('#orc-catalog-overlay').addClass('open');">
 					<i class="fa fa-list"></i> Buscar no catálogo
 				</button>
 			</div>
@@ -207,14 +165,16 @@
 			</div>
 
 			<button type="button" class="orc-add-row" id="btn-addservico">
-				<i class="fa fa-plus" style="font-size:11px;"></i> Adicionar item manualmente
+				<i class="fa fa-plus orc-add-row-ic"></i> Adicionar item manualmente
 			</button>
-			<button type="button" class="btn btn-warning btn-sm float-right mr-2" id="btn-editarservico" style="display:none;">
-				<i class="fa fa-check"></i> Atualizar
-			</button>
-			<button type="button" class="btn btn-default btn-sm float-right mr-2" id="btn-cancelaredicao" style="display:none;">
-				Cancelar edição
-			</button>
+			<div class="orc-inline-actions" id="orc-item-edit-actions" style="display:none;">
+				<button type="button" class="btn btn-orc-form-secondary btn-orc-compact" id="btn-cancelaredicao">
+					Cancelar edição
+				</button>
+				<button type="button" class="btn btn-orc-premium-primary btn-orc-compact" id="btn-editarservico">
+					<i class="fa fa-check"></i> Atualizar
+				</button>
+			</div>
 
 			<div id="carrinho" class="m-t-10"></div>
 
@@ -241,23 +201,28 @@
 		</div>
 	</div>
 
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
-		<div class="card-body">
-			<div class="orc-sec-title">Observações</div>
-			<label class="control-label">Condições, prazos, garantias</label>
-			<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'editor form-control', 'label' => false, 'rows' => 4, 'placeholder' => 'Condições, prazos, garantias...']) ?>
-		</div>
+	<div class="orc-obs-block">
+		<div class="orc-sec-title">Observações</div>
+		<label class="control-label" for="observacoes">Condições, prazos, garantias</label>
+		<?= $this->Form->textarea('solicitacao', [
+			'novalidate' => true,
+			'id' => 'observacoes',
+			'class' => 'form-control orc-obs-textarea',
+			'label' => false,
+			'rows' => 6,
+			'placeholder' => 'Condições, prazos, garantias...',
+		]) ?>
 	</div>
 
 	<div class="orc-footer-bar">
-		<button type="button" class="btn btn-sm btn-default" id="btn-orc-limpar-novo" style="border-color:#E24B4A;color:#E24B4A;">
+		<button type="button" class="btn btn-orc-outline-danger" id="btn-orc-limpar-novo">
 			<i class="fa fa-trash"></i> Limpar
 		</button>
-		<div style="display:flex;gap:8px;flex-wrap:wrap;">
-			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-sm btn-secondary']) ?>
+		<div class="orc-footer-bar-actions">
+			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary']) ?>
 			<?= $this->Form->button('Avançar →', [
 				'type' => 'submit',
-				'class' => 'btn btn-sm btn-pgm btn-pgm-salvar btn-success btn-orc-premium-primary',
+				'class' => 'btn btn-orc-premium-primary',
 				'escape' => false,
 			]) ?>
 		</div>
@@ -271,8 +236,8 @@
 <div class="orc-catalog-overlay" id="orc-catalog-overlay" onclick="if(event.target===this)$(this).removeClass('open');">
 	<div class="orc-catalog-modal">
 		<div class="orc-catalog-header">
-			<h4><i class="fa fa-list" style="color:#1d9e75;margin-right:8px;"></i> Catálogo de Produtos e Serviços</h4>
-			<button type="button" class="btn btn-xs btn-default" onclick="$('#orc-catalog-overlay').removeClass('open');">
+			<h4><i class="fa fa-list orc-catalog-title-ic"></i> Catálogo de Produtos e Serviços</h4>
+			<button type="button" class="btn btn-orc-modal-close" onclick="$('#orc-catalog-overlay').removeClass('open');" aria-label="Fechar">
 				<i class="fa fa-times"></i>
 			</button>
 		</div>
@@ -636,13 +601,11 @@
 		editando = modo;
 		if (modo) {
 			$('#btn-addservico').hide();
-			$('#btn-editarservico').show();
-			$('#btn-cancelaredicao').show();
+			$('#orc-item-edit-actions').show();
 			$('#orc-novo-proposta-title').text('Editando item do orçamento');
 		} else {
 			$('#btn-addservico').show();
-			$('#btn-editarservico').hide();
-			$('#btn-cancelaredicao').hide();
+			$('#orc-item-edit-actions').hide();
 			$('#orc-novo-proposta-title').text('Proposta de Orçamento');
 			limparFormularioEdicao();
 		}
@@ -792,11 +755,7 @@
 		orcClienteMetaFill();
 		$('#disc-val').val(0);
 		$('#disc-tipo').val('pct');
-		if (typeof tinymce !== 'undefined' && tinymce.get('observacoes')) {
-			tinymce.get('observacoes').setContent('');
-		} else {
-			$('#observacoes').val('');
-		}
+		$('#observacoes').val('');
 		$.ajax({
 			type: 'POST',
 			url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'limpacarrinho']);?>",

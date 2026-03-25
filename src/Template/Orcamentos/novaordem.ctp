@@ -1,13 +1,15 @@
 <?php
 	use Cake\Routing\Router;
+	$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
     // Breadcumbs
     $this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Orçamento nº '.$idorcamento, ['controller' => 'Orcamentos', 'action' => 'edit', $idorcamento], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Nova Ordem de Serviço', [], ['class' => 'breadcrumb-item active']);
 
 ?>
-<div class="col-md-12">
-    <div class="card">
+<div class="col-md-12 orc-premium-page-root">
+<div class="orc-premium-wrap orc-premium-form">
+    <div class="card orc-premium-card-inner">
         <div class="card-body">
 			<div class="row">
 				<div class="col-12">
@@ -133,7 +135,7 @@
 								</div>
 							</div>
 						</div>
-						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
+						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-orc-outline-teal btn-orc-compact btn-additem m-b-20']) ?>
 					<?php } ?>
 				<!-- Tabela -->
 				<div id="grid_table"></div>
@@ -147,7 +149,7 @@
 				<p class='m-b-0 mensagem'>Todos os itens da ordem devem poussir um código! Vincule os itens que não possuem um código a um produto válido.</p>
 				<?php
 					}else $disabled = false;
-					echo $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 btn-enviar', 'disabled' => $disabled])
+					echo $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-orc-premium-primary btn-orc-compact m-t-20 btn-enviar', 'disabled' => $disabled])
 				?>
 
             <?= $this->Form->end() ?>
@@ -155,9 +157,10 @@
         </div>
     </div>
 </div>
+</div>
 <!-- Modal observação -->
 <div class="modal fade none-border" id="modal-observacao">
-    <div class="modal-dialog">
+    <div class="modal-dialog orc-premium-wrap orc-premium-form">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Detalhes do Item</h4>
@@ -187,15 +190,15 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-observacao m-l-5']) ?>
-                <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
+                <?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-orc-premium-primary btn-orc-compact btn-observacao m-l-5']) ?>
+                <button type="button" class="btn btn-orc-form-secondary btn-orc-compact" data-dismiss="modal">Fechar</button>
             </div>
         </div>
     </div>
 </div>
 <!-- Modal Serial Number -->
 <div class="modal fade none-border" id="modal-serialnumber">
-	<div class="modal-dialog modal-lg">
+	<div class="modal-dialog modal-lg orc-premium-wrap orc-premium-form">
 		<div class="modal-content">
 			<div class="row m-20 m-b-0 form-material">
 				<div class="col-12">
@@ -208,8 +211,8 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-serialnumber m-l-5']) ?>
-				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
+				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-orc-premium-primary btn-orc-compact btn-serialnumber m-l-5']) ?>
+				<button type="button" class="btn btn-orc-form-secondary btn-orc-compact" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
 	</div>
@@ -601,7 +604,7 @@
         $('.jsgrid-cell').each(function() {
             if(!$(this).hasClass('cellInput') && $(this).text().length > 50) {
                 $(this).attr('data-textointeiro', $(this).text());
-                $(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-sm btn-pgm btn-pgm-situacao btn-primary btn-exapndemuitotexto btn-'+i+'"><i class="fa fa-search "></i></div>');
+                $(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-xs btn-orc-outline-teal btn-exapndemuitotexto btn-'+i+'" style="display:inline-flex;padding:2px 8px;"><i class="fa fa-search"></i></div>');
                 i++;
             }
         });

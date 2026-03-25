@@ -4,17 +4,20 @@
 	$this->Breadcrumbs->add('Editar', ['controller' => 'Orcamentos', 'action' => 'edit', $orcamento->id], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Alterar Situação', [], ['class' => 'breadcrumb-item active']);
 ?>
-<div class="col-md-12 orc-premium-wrap orc-premium-form">
+<div class="col-md-12 orc-premium-page-root">
+<div class="orc-premium-wrap orc-premium-form">
 	<div class="orc-page-head">
 		<div>
 			<div class="orc-eyebrow">Orçamento #<?= $orcamento->id ?></div>
 			<h1 class="orc-h1">Alterar Situação</h1>
 		</div>
-		<?= $this->Html->link(
-			'<i class="fa fa-arrow-left"></i> Voltar',
-			['action' => 'edit', $orcamento->id],
-			['class' => 'btn btn-default', 'escape' => false]
-		) ?>
+		<div class="orc-page-head-actions">
+			<?= $this->Html->link(
+				'<i class="fa fa-arrow-left"></i> Voltar',
+				['action' => 'edit', $orcamento->id],
+				['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
+			) ?>
+		</div>
 	</div>
 	<div class="card orc-premium-card-inner">
 		<div class="card-body">
@@ -42,16 +45,17 @@
 				<?= $this->Html->link(
 					'<i class="fa fa-arrow-left"></i> Voltar',
 					['action' => 'edit', $orcamento->id],
-					['class' => 'btn btn-default', 'escape' => false]
+					['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
 				) ?>
 				<?= $this->Form->button(
 					'<i class="fa fa-exchange"></i> Alterar situação',
-					['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo', 'escape' => false]
+					['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
 				) ?>
 			</div>
 
 			<?= $this->Form->end(); ?>
 		</div>
 	</div>
+</div>
 </div>
 

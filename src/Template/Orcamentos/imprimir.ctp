@@ -104,29 +104,29 @@ $totGeral = $totUnico + $totMensal;
 			<?= $this->Html->link(
 				'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="8 2 8 10"/><polyline points="5 7 8 10 11 7"/></svg> Exportar PDF',
 				'#',
-				['id' => 'btn-salvar-pdf', 'class' => 'btn btn-pgm btn-pgm-pdf', 'escape' => false]
+				['id' => 'btn-salvar-pdf', 'class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
 			) ?>
 			<?php if ($role == 0) : ?>
 				<?= $this->Html->link(
 					'Enviar & Assinar',
 					['action' => 'envioassinatura', $orcamento->id],
-					['class' => 'btn btn-pgm btn-pgm-email']
+					['class' => 'btn btn-orc-outline-purple btn-orc-compact']
 				) ?>
 				<?= $this->Html->link(
 					'Confirmar e salvar',
 					['action' => 'edit', $orcamento->id],
-					['class' => 'btn btn-pgm btn-pgm-salvar']
+					['class' => 'btn btn-orc-premium-primary btn-orc-compact']
 				) ?>
 			<?php endif; ?>
 			<?= $this->Html->link(
 				'Imprimir',
 				'#',
-				['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir']
+				['id' => 'btn-imprimir', 'class' => 'btn btn-orc-form-secondary btn-orc-compact']
 			) ?>
 			<?= $this->Html->link(
 				'Baixar PDF (servidor)',
 				['action' => 'imprimirPdf', $orcamento->id],
-				['class' => 'btn btn-secondary btn-sm']
+				['class' => 'btn btn-orc-form-secondary btn-orc-compact']
 			) ?>
 		</div>
 	</div>

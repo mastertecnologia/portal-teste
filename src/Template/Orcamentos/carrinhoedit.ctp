@@ -43,8 +43,8 @@ error_reporting(E_ERROR | E_PARSE);
 							<td class="text-right valordoservico"><?php echo ($reg->valormensal > 0) ? 'R$ 0,00' : 'R$ ' . number_format($reg->valordoservico, 2, ",", ".") ?></td>
 							<?php if ($orcamento->status == C_OrcamentoStatusPendente && $role == 0) { ?>
 								<td class="text-center">
-									<?= $this->Html->link('<i class="fas fa-edit"></i><div class="ripple-container"></div>', ['#'], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-edit-item btn-simple btn-xs', 'id' => $reg->id, 'escape' => false]); ?>
-									<?= $this->Html->link('<i class="fa fa-times"></i><div class="ripple-container"></div>', [], ['rel' => 'tooltip', 'title' => 'Excluir', 'id' => $reg->id, 'class' => 'excluiitemcarrinho btn btn-danger btn-simple btn-xs', 'escape' => false]) ?>
+									<?= $this->Html->link('<i class="fas fa-edit"></i>', ['#'], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-orc-tbl-icon btn-orc-tbl-icon--edit btn-edit-item', 'id' => $reg->id, 'escape' => false]); ?>
+									<?= $this->Html->link('<i class="fa fa-times"></i>', [], ['rel' => 'tooltip', 'title' => 'Excluir', 'id' => $reg->id, 'class' => 'excluiitemcarrinho btn btn-orc-tbl-icon btn-orc-tbl-icon--del', 'escape' => false]) ?>
 								</td>
 							<?php } ?>
 						</tr>
@@ -78,7 +78,7 @@ error_reporting(E_ERROR | E_PARSE);
 <?php if ($orcamento->status == C_OrcamentoStatusPendente && $role == 0) { ?>
 	<!-- Modal Edit Item -->
 	<div class="modal fade none-border" id="modal-edit-item">
-		<div class="modal-dialog">
+		<div class="modal-dialog orc-premium-wrap orc-premium-form">
 			<div class="modal-content">
 				<div class="row m-20">
 					<div class="col-12">
@@ -137,8 +137,8 @@ error_reporting(E_ERROR | E_PARSE);
 						<?= $this->Form->control('iditem', ['id' => 'iditem-modal', 'label' => false, 'type' => 'hidden']) ?>
 						<?= $this->Form->control('idorcamentofind', ['id' => 'idorcamentofind-modal', 'value' => $orcamento->id, 'label' => false, 'type' => 'hidden']) ?>
 						<?= $this->Form->control('idorcamento', ['id' => 'idorcamento-modal',  'label' => false, 'type' => 'hidden']) ?>
-						<button type="button" class="btn btn-danger waves-effect float-right" data-dismiss="modal">Fechar</button>
-						<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-info text-white m-r-5 float-right']) ?>
+						<button type="button" class="btn btn-orc-form-secondary btn-orc-compact float-right m-r-5" data-dismiss="modal">Fechar</button>
+						<?= $this->Form->button('Salvar', ['class' => 'btn btn-orc-premium-primary btn-orc-compact float-right m-r-5']) ?>
 						<?= $this->Form->end(); ?>
 					</div>
 				</div>

@@ -62,29 +62,29 @@
                 Orçamento <span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
             </h1>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div class="orc-page-head-actions">
             <?= $this->Html->link(
                 '<i class="fa fa-arrow-left"></i> Voltar',
                 ['action' => 'index'],
-                ['class' => 'btn btn-sm btn-secondary', 'escape' => false]
+                ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
             ) ?>
             <?php if (isset($role) && (int)$role === 0) : ?>
                 <?= $this->Html->link(
                     '<i class="fa fa-pencil"></i> Editar',
                     ['action' => 'edit', $orcamento->id],
-                    ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao', 'escape' => false]
+                    ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
                 ) ?>
                 <?= $this->Html->link(
                     '<i class="fa fa-file-text-o"></i> Pré-visualizar PDF',
                     ['action' => 'imprimir', $orcamento->id],
-                    ['class' => 'btn btn-sm btn-pgm btn-pgm-pdf', 'escape' => false]
+                    ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
                 ) ?>
             <?php endif; ?>
             <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
                 <?= $this->Html->Link(
                     '<i class="fa fa-check"></i> Aprovar',
                     ['action' => 'aprovar', $orcamento->id],
-                    ['class' => 'btn btn-sm btn-pgm btn-pgm-salvar btn-success', 'escape' => false]
+                    ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
                 ) ?>
             <?php endif; ?>
         </div>
@@ -122,7 +122,7 @@
                             <?= $this->Html->link(
                                 '<i class="fa fa-list-alt"></i> OS Nº ' . $temordem,
                                 ['controller' => 'Ordensservico', 'action' => 'view', $temordem],
-                                ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white', 'escape' => false]
+                                ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
                             ) ?>
                         <?php endif; ?>
                     </div>
@@ -184,12 +184,12 @@
                 <span style="font-size:11px;color:#6b6a65;">
                     Orçamento #<?= $orcamento->id ?>
                 </span>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <div class="orc-footer-bar-actions">
                     <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
                         <?= $this->Html->Link(
                             '<i class="fa fa-check"></i> Aprovar',
                             ['action' => 'aprovar', $orcamento->id],
-                            ['class' => 'btn btn-pgm btn-pgm-salvar btn-success', 'escape' => false]
+                            ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
                         ) ?>
                     <?php endif; ?>
                 </div>

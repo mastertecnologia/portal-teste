@@ -1,5 +1,6 @@
 <?php
   	use Cake\Routing\Router;
+	$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Visualizar Orçamento', [], ['class' => 'breadcrumb-item active']);
 
@@ -84,7 +85,7 @@
                         <!-- Fim Outros -->
                     </tbody>
                 </table>
-				<?php if($orcamento->status == C_OrcamentoStatusEnviado) echo $this->Html->Link('Aprovar', ['action' => 'aprovarhash', $orcamento->hash], ['class' => 'btn btn-aprovar btn-pgm btn-pgm-salvar btn-success float-right m-t-20']); ?>
+				<?php if($orcamento->status == C_OrcamentoStatusEnviado) echo $this->Html->Link('Aprovar', ['action' => 'aprovarhash', $orcamento->hash], ['class' => 'btn btn-aprovar btn-orc-premium-primary btn-orc-compact float-right m-t-20']); ?>
             </div>
 		</div>
 	</div>
@@ -104,8 +105,8 @@
 		bootbox.confirm({
 			message: "Você confirma a aprovação do orçamento?",
 			buttons: {
-				confirm: { label: 'Sim', className: 'btn btn-pgm btn-pgm-salvar btn-success' },
-				cancel: { label: 'Cancelar', className: 'btn-danger' }
+				confirm: { label: 'Sim', className: 'btn btn-success' },
+				cancel: { label: 'Cancelar', className: 'btn btn-secondary' }
 			},
 			callback: function (result) {
 				if(result === true) window.location = href;

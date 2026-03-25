@@ -121,17 +121,17 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 				Proposta enviada. Aguardando assinaturas digitais.
 			</div>
 			<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;">
-				<?= $this->Html->link('Ver lista', ['action' => 'index'], ['class' => 'btn btn-ghost', 'escape' => false]) ?>
-				<?= $this->Html->link('Reenviar e-mail', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-email', 'escape' => false]) ?>
+				<?= $this->Html->link('Ver lista', ['action' => 'index'], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
+				<?= $this->Html->link('Reenviar e-mail', ['action' => 'envioassinatura', $orcamento->id], ['class' => 'btn btn-orc-outline-purple btn-orc-compact', 'escape' => false]) ?>
 				<?= $this->Html->link(
 					'Baixar PDF',
 					['action' => 'imprimirPdf', $orcamento->id],
-					['class' => 'btn btn-pgm btn-pgm-pdf', 'escape' => false]
+					['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
 				) ?>
 				<?= $this->Html->link(
 					'+ Novo orçamento',
 					['action' => 'add'],
-					['class' => 'btn btn-pgm btn-pgm-salvar', 'escape' => false]
+					['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
 				) ?>
 			</div>
 		</div>
@@ -159,9 +159,9 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 				<?= $this->Html->link(
 					'← Voltar',
 					['action' => 'imprimir', $orcamento->id],
-					['class' => 'btn btn-ghost', 'escape' => false]
+					['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
 				) ?>
-				<button type="submit" class="btn btn-pgm btn-pgm-salvar">
+				<button type="submit" class="btn btn-orc-premium-primary btn-orc-compact">
 					Enviar e aguardar assinatura →
 				</button>
 			</div>
@@ -229,8 +229,8 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 						<div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text);">Assine o documento como fornecedor:</div>
 						<canvas id="sign-canvas" class="sign-canvas" width="400" height="100"></canvas>
 						<div style="display:flex;gap:6px;margin-top:8px;">
-							<button type="button" class="btn btn-ghost btn-xs" onclick="clearCanvas()">Limpar assinatura</button>
-							<button type="button" class="btn btn-pgm btn-pgm-salvar btn-xs" onclick="salvarAssinatura()">✓ Salvar assinatura</button>
+							<button type="button" class="btn btn-orc-form-secondary btn-orc-compact" onclick="clearCanvas()">Limpar assinatura</button>
+							<button type="button" class="btn btn-orc-premium-primary btn-orc-compact" onclick="salvarAssinatura()">✓ Salvar assinatura</button>
 						</div>
 						<div id="sign-ok" style="display:none;background:var(--teal-light);border-radius:var(--radius);padding:10px 12px;align-items:center;gap:8px;">
 							<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
@@ -253,15 +253,15 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 							<span class="badge" style="background:var(--blue-light);color:var(--blue-dark);">ClickSign</span>
 							<span class="badge b-env">ICP-Brasil</span>
 						</div>
-						<button type="button" class="btn btn-pgm btn-pgm-email btn-sm" style="width:100%;justify-content:center;" onclick="simularAssinaturaCliente()">Simular assinatura do cliente</button>
+						<button type="button" class="btn btn-orc-outline-purple btn-orc-compact" style="width:100%;justify-content:center;display:inline-flex;" onclick="simularAssinaturaCliente()">Simular assinatura do cliente</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<div class="footer-bar">
-			<?= $this->Html->link('← Voltar', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-ghost', 'escape' => false]) ?>
-			<button type="submit" class="btn btn-pgm btn-pgm-salvar">Enviar e aguardar assinatura →</button>
+			<?= $this->Html->link('← Voltar', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]) ?>
+			<button type="submit" class="btn btn-orc-premium-primary btn-orc-compact">Enviar e aguardar assinatura →</button>
 		</div>
 
 		<?= $this->Form->end(); ?>

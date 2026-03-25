@@ -108,16 +108,16 @@
 				<span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
 			</h1>
 		</div>
-		<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<div class="orc-page-head-actions">
 			<?= $this->Html->link(
 				'<i class="fa fa-arrow-left"></i> Voltar',
 				['action' => 'index'],
-				['class' => 'btn btn-sm btn-secondary', 'escape' => false]
+				['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
 			) ?>
 			<?= $this->Html->link(
 				'<i class="fa fa-file-text-o"></i> Pré-visualizar PDF',
 				['action' => 'imprimir', $orcamento->id],
-				['class' => 'btn btn-sm btn-pgm btn-pgm-pdf', 'escape' => false]
+				['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
 			) ?>
 		</div>
 	</div>
@@ -170,7 +170,7 @@
 								<?= $this->Html->link(
 									'<i class="fa fa-wrench"></i> OS Nº ' . $temordem,
 									['controller' => 'Ordensservico', 'action' => 'edit', $temordem],
-									['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white', 'escape' => false]
+									['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
 								); ?>
 							<?php endif; ?>
 						</div>
@@ -234,7 +234,7 @@
 						</div>
 					</div>
 					<button type="button" class="orc-add-row" id="btn-addservico">
-						<i class="fa fa-plus" style="font-size:11px;"></i> Adicionar item
+						<i class="fa fa-plus orc-add-row-ic"></i> Adicionar item
 					</button>
 				<?php endif; ?>
 
@@ -256,40 +256,40 @@
 
 				<!-- Footer de ações -->
 				<div class="orc-footer-bar">
-					<div style="display:flex;gap:8px;flex-wrap:wrap;">
+					<div class="orc-footer-bar-actions">
 						<?= $this->Html->Link(
 							'<i class="fa fa-exchange"></i> Alterar Situação',
 							['action' => 'alterarsituacao', $orcamento->id],
-							['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo', 'escape' => false]
+							['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
 						) ?>
 						<?php if($temordem == 'nao'): ?>
 							<?= $this->Html->link(
 								'<i class="fa fa-wrench"></i> Transformar em OS',
 								['action' => 'novaordem', $orcamento->id],
-								['class' => 'btn btn-pgm btn-pgm-ordem btn-warning', 'escape' => false]
+								['class' => 'btn btn-orc-outline-amber btn-orc-compact', 'escape' => false]
 							) ?>
 						<?php endif; ?>
 					</div>
-					<div style="display:flex;gap:8px;flex-wrap:wrap;">
+					<div class="orc-footer-bar-actions">
 						<?= $this->Html->Link(
 							'<i class="fa fa-print"></i> Imprimir',
 							['action' => 'imprimir', $orcamento->id],
-							['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange', 'escape' => false]
+							['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
 						) ?>
 						<?= $this->Html->Link(
 							'<i class="fa fa-file-pdf-o"></i> PDF',
 							['action' => 'imprimirPdf', $orcamento->id],
-							['class' => 'btn btn-pgm btn-pgm-pdf btn-success', 'escape' => false]
+							['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
 						) ?>
 						<?= $this->Html->Link(
 							'<i class="fa fa-envelope"></i> E-mail',
 							['#'],
-							['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-email', 'escape' => false]
+							['class' => 'btn btn-orc-outline-purple btn-orc-compact btn-email', 'escape' => false]
 						) ?>
 						<?php if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])): ?>
 							<?= $this->Form->button(
 								'<i class="fa fa-save"></i> Salvar alterações',
-								['class' => 'btn btn-pgm btn-pgm-salvar btn-success', 'escape' => false]
+								['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
 							) ?>
 						<?php endif; ?>
 					</div>
@@ -302,7 +302,7 @@
 </div>
 <!-- Modal Email -->
 <div class="modal fade none-border" id="modal-email">
-	<div class="modal-dialog">
+	<div class="modal-dialog orc-premium-wrap orc-premium-form">
 		<div class="modal-content">
 			<div class="row m-20">
 				<div class="col-12">
@@ -321,8 +321,8 @@
 							<br>
 							<?= $this->Form->control('idorcamento', ['value' => $orcamento->id, 'label' => false, 'type' => 'hidden']) ?>
 						</div>
-						<?= $this->Form->button('Enviar', ['class' => 'btn btn-pgm btn-pgm-email btn-purple text-white float-right m-l-10']) ?>
-						<button type="button" class="btn btn-danger waves-effect float-right" data-dismiss="modal">Fechar</button>
+						<?= $this->Form->button('Enviar', ['class' => 'btn btn-orc-premium-primary btn-orc-compact float-right m-l-10']) ?>
+						<button type="button" class="btn btn-orc-form-secondary btn-orc-compact float-right" data-dismiss="modal">Fechar</button>
 					<?= $this->Form->end(); ?>
 				</div>
 			</div>
