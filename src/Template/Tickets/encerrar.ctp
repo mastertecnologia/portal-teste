@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 <div class="box-footer">
-                    <?= $this->Form->button(__('Finalizar e Notificar Diretores'), ['class' => 'btn btn-success']) ?>
+                    <?= $this->Form->button(__('Finalizar e Notificar Diretores'), ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
                     <?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn btn-default']) ?>
                 </div>
                 <?= $this->Form->end() ?>

@@ -75,7 +75,7 @@
             </div>
 			<div class="row">
 				<div class="col-lg-12">
-					<?= $this->Form->button('Cadastrar visita', ['class' => 'btn btn-success']) ?>
+					<?= $this->Form->button('Cadastrar visita', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 				</div>
 			</div>
 			<div class="clearfix"></div>

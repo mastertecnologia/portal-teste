@@ -47,7 +47,7 @@
 										</label>
 									</div>
 								   <?php if($role == 0){ ?>
-									<a href="javascript:void(0)" id="novavisita" data-toggle="modal" data-target="#add-new-event" class="btn m-t-10 btn-success btn-block waves-effect waves-light">
+									<a href="javascript:void(0)" id="novavisita" data-toggle="modal" data-target="#add-new-event" class="btn btn-pgm btn-pgm-salvar m-t-10 btn-success btn-block waves-effect waves-light">
 										<i class="ti-plus"></i> Cadastrar nova visita
 									</a>
 								   <?php } ?>
@@ -75,7 +75,7 @@
 			<div class="modal-body"></div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
-				<button type="button" class="btn btn-success save-event waves-effect waves-light">Cadastrar visita</button>
+				<button type="button" class="btn btn-pgm btn-pgm-salvar btn-success save-event waves-effect waves-light">Cadastrar visita</button>
 				<button type="button" class="btn btn-danger delete-event waves-effect waves-light" data-dismiss="modal">Cancelar visita</button>
 			</div>
 		</div>
@@ -151,7 +151,7 @@
 
 			</div>
 			<div class="modal-footer">
-				<?= $this->Form->button('Salvar Visita', ['class' => 'btn btn-success']) ?>
+				<?= $this->Form->button('Salvar Visita', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 			<?= $this->Form->end(); ?>

@@ -74,7 +74,7 @@
 				</div>
 			</div>
 
-			<?= $this->Form->button('Criar usuário', ['class' => 'btn waves-effect waves-light btn-success m-l-30 m-b-20']) ?>
+			<?= $this->Form->button('Criar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar waves-effect waves-light btn-success m-l-30 m-b-20']) ?>
 			<div class="clearfix"></div>
 			<?= $this->Form->end(); ?>
 		</div>

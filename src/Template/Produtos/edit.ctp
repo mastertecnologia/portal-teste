@@ -72,7 +72,7 @@
 						</div>
 					</div>
 				</div>
-                <?= $this->Form->button('Salvar', ['class' => 'btn btn-success m-t-20']) ?>
+                <?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']) ?>
             <?= $this->Form->end(); ?>
         </div>
     </div>

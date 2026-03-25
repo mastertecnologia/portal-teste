@@ -9,11 +9,11 @@
   --text: #e6edf3;
   --text-muted: #7d8590;
   --text-dim: #484f58;
-  --blue: #388bfd;
-  --green: #3fb950;
-  --orange: #d29922;
+  --blue: #33CCFF;
+  --green: #00C08B;
+  --orange: #FF8833;
   --red: #f85149;
-  --purple: #bc8cff;
+  --purple: #A682E6;
 
   font-family: 'IBM Plex Sans', sans-serif;
   color: var(--text);

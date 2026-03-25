@@ -55,12 +55,12 @@ $(function () {
         , labels: ['iPhone', 'iPad', 'iPod Touch']
         , pointSize: 3
         , fillOpacity: 0
-        , pointStrokeColors: ['#00bfc7', '#fb9678', '#9675ce']
+        , pointStrokeColors: ['#33CCFF', '#00C08B', '#A682E6']
         , behaveLikeLine: true
         , gridLineColor: '#e0e0e0'
         , lineWidth: 3
         , hideHover: 'auto'
-        , lineColors: ['#00bfc7', '#fb9678', '#9675ce']
+        , lineColors: ['#33CCFF', '#00C08B', '#A682E6']
         , resize: true
     });
     Morris.Area({
@@ -100,13 +100,13 @@ $(function () {
         , labels: ['Site A', 'Site B']
         , pointSize: 0
         , fillOpacity: 0.4
-        , pointStrokeColors: ['#b4becb', '#01c0c8']
+        , pointStrokeColors: ['#b4becb', '#33CCFF']
         , behaveLikeLine: true
         , gridLineColor: '#e0e0e0'
         , lineWidth: 0
         , smooth: false
         , hideHover: 'auto'
-        , lineColors: ['#b4becb', '#01c0c8']
+        , lineColors: ['#b4becb', '#33CCFF']
         , resize: true
     });
 });    
@@ -116,7 +116,7 @@ $(function () {
             type: 'pie',
             height: '90',
             resize: true,
-            sliceColors: ['#01c0c8', '#7d5ab6', '#ffffff']
+            sliceColors: ['#33CCFF', '#A682E6', '#ffffff']
         });
         $('#sparkline2dash').sparkline([6, 10, 9, 11, 9, 10, 12], {
             type: 'bar',

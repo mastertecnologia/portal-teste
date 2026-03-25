@@ -6,7 +6,7 @@ $this->Breadcrumbs->add('Feriados', [], ['class' => 'breadcrumb-item active']);
 	<div class="card">
 		<div class="card-body">
 			<h4 class="card-title">Feriados (horário especial)</h4>
-			<?= $this->Html->link('Novo feriado', ['action' => 'add'], ['class' => 'btn btn-success m-b-20']) ?>
+			<?= $this->Html->link('Novo feriado', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-b-20']) ?>
 			<div class="table-responsive">
 				<table class="table table-hover">
 					<thead class="text-primary">

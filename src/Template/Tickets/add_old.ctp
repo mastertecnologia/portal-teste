@@ -123,7 +123,7 @@
 				</div>
 				<div class="row m-t-10">
 					<div class="col-12">
-						<?= $this->Form->button('Abrir Ticket', ['id' => 'abrirticket', 'class' => 'btn btn-success aparecedepois btn-abrirticket']) ?>
+						<?= $this->Form->button('Abrir Ticket', ['id' => 'abrirticket', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success aparecedepois btn-abrirticket']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

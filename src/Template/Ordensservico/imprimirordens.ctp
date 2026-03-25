@@ -56,8 +56,8 @@
 </style>
 
 <div class="col-md-12">
-	<?= $this->Html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-orange m-l-5 m-b-5']) ?>
-	<?= $this->Html->link('Voltar', ["action" => "index"], ['class' => 'm-b-5 btn btn-info']); ?>
+	<?= $this->Html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
+	<?= $this->Html->link('Voltar', ["action" => "index"], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
 	<div id="printable">
 		<?php foreach($ordens as $ordem) { ?>
 			<div class="card">

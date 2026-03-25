@@ -119,7 +119,7 @@
         </div>
 
         <div class="d-flex" style="gap:10px;">
-          <?= $this->Form->button('Enviar e-mail', ['class' => 'btn btn-success']) ?>
+          <?= $this->Form->button('Enviar e-mail', ['class' => 'btn btn-pgm btn-pgm-email btn-success']) ?>
           <?= $this->Html->link('Cancelar', ['action' => !empty($redirectAfter) ? 'edit' : 'finalizados', $ticketId], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
       <?= $this->Form->end() ?>

@@ -1,0 +1,154 @@
+/**
+ * PGM Soluções — botões de ação (paleta referência ERP)
+ * Uso: <button type="button" class="btn btn-pgm btn-pgm-salvar">Salvar</button>
+ * Incluído globalmente via Layout/default.ctp → /css/pgm-action-buttons.css
+ */
+:root {
+  --pgm-btn-teal: #00c08b;
+  --pgm-btn-teal-hover: #009e74;
+  --pgm-btn-sky: #33ccff;
+  --pgm-btn-sky-hover: #1ab8e8;
+  --pgm-btn-orange: #ff8833;
+  --pgm-btn-orange-hover: #e67220;
+  --pgm-btn-purple: #a682e6;
+  --pgm-btn-purple-hover: #8f68d4;
+  --pgm-btn-amber: #ffc107;
+  --pgm-btn-amber-hover: #e0a800;
+}
+
+/* Base: combina com .btn (Bootstrap) ou sozinho */
+.btn-pgm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.25;
+  color: #fff !important;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none !important;
+  transition: background-color 0.15s ease, filter 0.15s ease;
+  white-space: nowrap;
+}
+
+a.btn-pgm:hover,
+a.btn-pgm:focus {
+  color: #fff !important;
+}
+
+.btn-pgm:disabled,
+.btn-pgm.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 1 e 4 — Salvar / Baixar PDF (teal) */
+.btn-pgm-salvar,
+.btn-pgm-pdf,
+.btn-pgm-save {
+  background-color: var(--pgm-btn-teal) !important;
+  border-color: var(--pgm-btn-teal) !important;
+}
+
+.btn-pgm-salvar:hover:not(:disabled):not(.disabled),
+.btn-pgm-pdf:hover:not(:disabled):not(.disabled),
+.btn-pgm-save:hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-teal-hover) !important;
+  border-color: var(--pgm-btn-teal-hover) !important;
+  color: #fff !important;
+}
+
+/* 2 — Alterar situação (ciano) */
+.btn-pgm-situacao,
+.btn-pgm-status {
+  background-color: var(--pgm-btn-sky) !important;
+  border-color: var(--pgm-btn-sky) !important;
+}
+
+.btn-pgm-situacao:hover:not(:disabled):not(.disabled),
+.btn-pgm-status:hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-sky-hover) !important;
+  border-color: var(--pgm-btn-sky-hover) !important;
+  color: #fff !important;
+}
+
+/* 3 — Imprimir (laranja) */
+.btn-pgm-imprimir,
+.btn-pgm-print {
+  background-color: var(--pgm-btn-orange) !important;
+  border-color: var(--pgm-btn-orange) !important;
+}
+
+.btn-pgm-imprimir:hover:not(:disabled):not(.disabled),
+.btn-pgm-print:hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-orange-hover) !important;
+  border-color: var(--pgm-btn-orange-hover) !important;
+  color: #fff !important;
+}
+
+/* 5 — Enviar e-mail (roxo) */
+.btn-pgm-email {
+  background-color: var(--pgm-btn-purple) !important;
+  border-color: var(--pgm-btn-purple) !important;
+}
+
+.btn-pgm-email:hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-purple-hover) !important;
+  border-color: var(--pgm-btn-purple-hover) !important;
+  color: #fff !important;
+}
+
+/* 6 — Transformar em ordem (âmbar) */
+.btn-pgm-ordem,
+.btn-pgm-order {
+  background-color: var(--pgm-btn-amber) !important;
+  border-color: var(--pgm-btn-amber) !important;
+  color: #fff !important;
+}
+
+.btn-pgm-ordem:hover:not(:disabled):not(.disabled),
+.btn-pgm-order:hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-amber-hover) !important;
+  border-color: var(--pgm-btn-amber-hover) !important;
+  color: #fff !important;
+}
+
+/* ========= Ponte Bootstrap / legado → paleta PGM (todas as telas) =========
+   Mantém classes existentes (ex.: jQuery .btn-success) e aplica cores da referência. */
+.btn.btn-success:not(.btn-pgm) {
+  background-color: var(--pgm-btn-teal) !important;
+  border-color: var(--pgm-btn-teal) !important;
+  color: #fff !important;
+}
+.btn.btn-success:not(.btn-pgm):hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-teal-hover) !important;
+  border-color: var(--pgm-btn-teal-hover) !important;
+  color: #fff !important;
+}
+
+.btn.btn-info:not(.btn-pgm) {
+  background-color: var(--pgm-btn-sky) !important;
+  border-color: var(--pgm-btn-sky) !important;
+  color: #fff !important;
+}
+.btn.btn-info:not(.btn-pgm):hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-sky-hover) !important;
+  border-color: var(--pgm-btn-sky-hover) !important;
+  color: #fff !important;
+}
+
+.btn.btn-warning:not(.btn-pgm) {
+  background-color: var(--pgm-btn-amber) !important;
+  border-color: var(--pgm-btn-amber) !important;
+  color: #fff !important;
+}
+.btn.btn-warning:not(.btn-pgm):hover:not(:disabled):not(.disabled) {
+  background-color: var(--pgm-btn-amber-hover) !important;
+  border-color: var(--pgm-btn-amber-hover) !important;
+  color: #fff !important;
+}
+

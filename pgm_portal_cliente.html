@@ -4,13 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Proposta de Orçamento — PGM Soluções</title>
+<link rel="stylesheet" href="webroot/css/pgm-action-buttons.css"/>
 <style>
 :root{
-  --teal:#1D9E75;--teal-dark:#0F6E56;--teal-light:#E1F5EE;--teal-mid:#5DCAA5;
-  --amber:#E9A025;--amber-light:#FAEEDA;--amber-dark:#633806;
+  --teal:#00C08B;--teal-dark:#008F68;--teal-light:#E6FAF4;--teal-mid:#5CDBC0;
+  --amber:#FFC107;--amber-light:#FFF8E1;--amber-dark:#8A6A00;
   --red:#E24B4A;--red-light:#FCEBEB;--red-dark:#791F1F;
-  --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#0C447C;
-  --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#3C3489;
+  --blue:#33CCFF;--blue-light:#E6F9FF;--blue-dark:#006B88;
+  --purple:#A682E6;--purple-light:#F3EDFC;--purple-dark:#4A3488;
   --border:#e8e7e3;--border-light:#f0efec;
   --text:#1a1a18;--text-muted:#6b6a65;--text-hint:#9a9890;
   --bg:#f5f4f0;--bg-card:#ffffff;
@@ -109,7 +110,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 
 /* NEGOTIATION */
 .textarea-field{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text);outline:none;font-family:inherit;resize:vertical;min-height:90px;line-height:1.6;background:#fff;}
-.textarea-field:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.1);}
+.textarea-field:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,192,139,.1);}
 
 /* ESIGN */
 .sign-canvas{border:1.5px solid var(--border);border-radius:var(--radius);width:100%;height:110px;cursor:crosshair;background:#fff;touch-action:none;display:block;}
@@ -344,18 +345,18 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
     <div class="card-title">Sua decisão</div>
     <div class="decision-area">
       <div class="decision-grid">
-        <button class="decision-btn btn-approve" onclick="irAprovar()">
+        <button type="button" class="btn btn-pgm btn-pgm-salvar decision-btn btn-approve" onclick="irAprovar()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Aprovar proposta
           <span style="font-size:11px;font-weight:400;opacity:.85;">Aceito as condições acima</span>
         </button>
-        <button class="decision-btn btn-decline" onclick="irRecusar()">
+        <button type="button" class="decision-btn btn-decline" onclick="irRecusar()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Recusar proposta
           <span style="font-size:11px;font-weight:400;opacity:.7;">Não tenho interesse</span>
         </button>
       </div>
-      <button class="btn-negotiate" onclick="irNegociar()">
+      <button type="button" class="btn-pgm btn-pgm-ordem btn-negotiate" onclick="irNegociar()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Quero negociar / solicitar ajustes
       </button>
@@ -412,7 +413,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       <label for="check-termos" style="font-size:12px;color:var(--text-muted);line-height:1.6;cursor:pointer;">Li e aceito as condições desta proposta comercial, incluindo prazo de entrega, garantia e condições de pagamento selecionadas.</label>
     </div>
 
-    <button class="btn-submit" id="btn-assinar" onclick="confirmarAssinatura()">
+    <button type="button" class="btn btn-pgm btn-pgm-salvar btn-submit" id="btn-assinar" onclick="confirmarAssinatura()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       Assinar e confirmar aprovação
     </button>
@@ -457,7 +458,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       <textarea class="textarea-field" placeholder="Deixe um comentário para o vendedor..."></textarea>
     </div>
 
-    <button class="btn-submit" style="background:var(--red);margin-bottom:10px;" onclick="confirmarRecusa()">
+    <button type="button" class="btn-submit" style="background:var(--red);margin-bottom:10px;" onclick="confirmarRecusa()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       Confirmar recusa
     </button>
@@ -506,7 +507,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       </div>
     </div>
 
-    <button class="btn-submit" style="background:var(--amber);margin-bottom:10px;" onclick="confirmarNegociacao()">
+    <button type="button" class="btn btn-pgm btn-pgm-ordem btn-submit" onclick="confirmarNegociacao()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       Enviar solicitação de ajuste
     </button>

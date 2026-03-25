@@ -40,7 +40,7 @@
 							</tbody>
 						</table>
                		</div>
-                    <?= $this->Html->link('Cadastrar nova visita', ['action' => 'add'], ['class' => 'btn btn-success m-t-10 m-b-10']) ?>
+                    <?= $this->Html->link('Cadastrar nova visita', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-10 m-b-10']) ?>
                     <?= $this->Html->link('Calendário', ['action' => 'calendario'], ['class' => 'btn btn-secondary m-t-10 m-b-10']) ?>
                 </div>
             </div>

@@ -165,7 +165,7 @@
 								</div>
 							</div>
 						</div>
-						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-info btn-additem m-b-20']) ?>
+						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
 					<?php } ?>
 				<!-- Tabela -->
 				<div id="grid_table"></div>
@@ -174,7 +174,7 @@
 				<?= $this->Form->control('valortotalordem', ['type' => 'hidden', 'label' => false, ]) ?>
 					
 				<p class='m-t-10'><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
-				<?= $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-success']) ?>
+				<?= $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
             <?= $this->Form->end() ?>
             <div class="clearfix"></div>
         </div>
@@ -222,7 +222,7 @@
                     </div>
             </div>
             <div class="modal-footer">
-                <?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-success text-white btn-observacao m-l-5']) ?>
+                <?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-observacao m-l-5']) ?>
                 <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
             </div>
         </div>
@@ -243,7 +243,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-success text-white btn-serialnumber m-l-5']) ?>
+				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-serialnumber m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -263,7 +263,7 @@
                         <div class="input-group">
                             <input type="text" id="termo-pesquisa-produto" class="form-control" placeholder="Digite o nome ou código do produto...">
                             <span class="input-group-btn">
-                                <button class="btn btn-info" type="button" onclick="buscarProdutos()">Pesquisar</button>
+                                <button class="btn btn-pgm btn-pgm-situacao btn-info" type="button" onclick="buscarProdutos()">Pesquisar</button>
                             </span>
                         </div>
                     </div>
@@ -853,7 +853,7 @@
 					if($(this).text().length > 50) {
 						$(this).attr('data-textointeiro', $(this).text());
 						$(this).html($(this).text().substr(0, 49))
-						$(this).append('... <div class="btn btn-sm btn-primary btn-exapndemuitotexto btn-'+i+'"><i class="fa fa-search "></i></div>')
+						$(this).append('... <div class="btn btn-sm btn-pgm btn-pgm-situacao btn-primary btn-exapndemuitotexto btn-'+i+'"><i class="fa fa-search "></i></div>')
 					}
 				}
 				$('.btn-'+i).attr('data-textointeiro', $(this).attr('data-textointeiro'));
@@ -901,7 +901,7 @@
 							tr.append($('<td>').text(prod.descricao));
 							tr.append($('<td>').text('R$ ' + numberToReal(prod.vlunitario)));
 							
-							var btn = $('<button>').addClass('btn btn-success btn-sm').text('Selecionar');
+							var btn = $('<button>').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
 							
 							// Evento de clique para selecionar
 							btn.click(function() {

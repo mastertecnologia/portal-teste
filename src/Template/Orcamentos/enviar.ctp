@@ -19,8 +19,8 @@ $this->Breadcrumbs->add('Enviar Orçamento', [], ['class' => 'breadcrumb-item ac
 					</div>
 					<div class="row">
 						<div class="col-lg-12">
-							<?= $this->Form->button('Enviar Orçamento', ['class' => 'btn btn-success m-l-5']) ?>
-							<?= $this->Html->link('Voltar para o Orçamento', ["action" => "edit", $orcamento->id], ['class' => 'btn btn-info']); ?>
+							<?= $this->Form->button('Enviar Orçamento', ['class' => 'btn btn-pgm btn-pgm-email btn-success m-l-5']) ?>
+							<?= $this->Html->link('Voltar para o Orçamento', ["action" => "edit", $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info']); ?>
 						</div>
 					</div>
 				</div>

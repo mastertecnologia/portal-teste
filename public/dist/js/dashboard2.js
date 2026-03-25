@@ -120,7 +120,7 @@ $(function () {
         , xaxis: {
             show: false
         }
-        , colors: ["#01c0c8"]
+        , colors: ["#33CCFF"]
         , grid: {
             color: "#AFAFAF"
             , hoverable: true

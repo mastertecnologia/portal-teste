@@ -265,7 +265,7 @@
                 <tr>
                   <td><?= h($reg->arquivo ?? '') ?></td>
                   <td>
-                    <?= $this->Html->link('Visualizar', ['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id, '?' => ['inline' => '1']], ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-info btn-sm m-r-5', 'escape' => false]) ?>
+                    <?= $this->Html->link('Visualizar', ['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id, '?' => ['inline' => '1']], ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-sm m-r-5', 'escape' => false]) ?>
                     <?= $this->Html->link('Baixar', ['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id], ['class' => 'btn btn-secondary btn-sm', 'escape' => false]) ?>
                   </td>
                 </tr>

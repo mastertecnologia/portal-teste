@@ -233,7 +233,7 @@
 											Inativar cliente
 										</button>
 									<?php endif; ?>
-									<?= $this->Form->button('Salvar cliente', ['class' => 'btn-enviar btn btn-success salvarcliente']) ?>
+									<?= $this->Form->button('Salvar cliente', ['class' => 'btn-enviar btn btn-pgm btn-pgm-salvar btn-success salvarcliente']) ?>
 								</div>
 							</div>
 						<?php } ?>
@@ -250,7 +250,7 @@
 								</div>
 								<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
 								<div class="col-md-4 col-xs-12">
-									<?= $this->Form->button('Salvar', ['class' => 'btn btn-success m-t-25']) ?>
+									<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-25']) ?>
 								</div>
 							</div>
 						<?= $this->Form->end(); ?>
@@ -301,7 +301,7 @@
 							<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
 							<div class="row m-t-10">
 								<div class="col-12">
-									<?= $this->Form->button('Adicionar acesso', ['class' => 'btn btn-success float-right'], $cliente->id) ?>
+									<?= $this->Form->button('Adicionar acesso', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right'], $cliente->id) ?>
 									<a role="button" class='btn btn-danger btn-inativoAcessos text-white'>Exibir Inativos </a>
 								</div>
 							</div>
@@ -384,9 +384,9 @@
 				</div>
 				<?php } if($permissaoacesso || $role == 0){ ?>
 				<div class="tab-pane" id="contratos">
-					<?= $this->Html->link('Cadastrar item', ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn btn-success  m-r-5 m-b-20']) ?>
-					<?= $this->Html->link('Contratos de Horas Técnicas', ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn btn-info m-r-5 m-b-20']) ?>
-					<?= $this->Html->link('Cadastrar Contrato de Horas', ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn btn-orange text-white m-r-5 m-b-20']) ?>
+					<?= $this->Html->link('Cadastrar item', ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-r-5 m-b-20']) ?>
+					<?= $this->Html->link('Contratos de Horas Técnicas', ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-b-20']) ?>
+					<?= $this->Html->link('Cadastrar Contrato de Horas', ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5 m-b-20']) ?>
 					<div class="table-responsive">
 						<table class="table table-hover" id="tableContratos">
 							<thead class="text-primary">
@@ -465,7 +465,7 @@
 							<?= $cliente->token ?>
 						</div><?php if($role == 0) { ?>
 						<div class="col-12">
-							<?= $this->Html->link('Atualizar Token', [], ['class' => 'btn-atualizaToken btn btn-success float-right salvarcliente']) ?>
+							<?= $this->Html->link('Atualizar Token', [], ['class' => 'btn-atualizaToken btn btn-pgm btn-pgm-salvar btn-success float-right salvarcliente']) ?>
 						</div><?php } ?>
 					</div>
 				</div>
@@ -488,7 +488,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-success btn-salvar-emails-faturamento">Salvar</button>
+				<button type="button" class="btn btn-pgm btn-pgm-salvar btn-success btn-salvar-emails-faturamento">Salvar</button>
 				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -508,7 +508,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-success btn-salvar-emails-contato">Salvar</button>
+				<button type="button" class="btn btn-pgm btn-pgm-salvar btn-success btn-salvar-emails-contato">Salvar</button>
 				<button type="button" class="btn btn-secondary waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -541,7 +541,7 @@
 				</div>
 			<?=  $this->Form->end() ?>
 			<div class="modal-footer">
-				<?= $this->Html->link('Atualizar', [], ['class' => 'btn btn-atualizaDentroDoModal btn-success text-white m-l-5']) ?>
+				<?= $this->Html->link('Atualizar', [], ['class' => 'btn btn-atualizaDentroDoModal btn-pgm btn-pgm-salvar btn-success text-white m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -567,7 +567,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Confirmar', ['#'], ['class' => 'btn btn-success text-white btn-verificasenha m-l-5']) ?>
+				<?= $this->Html->link('Confirmar', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-verificasenha m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>

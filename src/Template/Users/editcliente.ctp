@@ -70,9 +70,9 @@
 				</div>
 				<div class="row m-t-20">
 					<div class="col-12">
-						<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-success']) ?>
+						<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 						<?= $this->Html->link('Alterar senha', ['action' => 'changePasswordAdmin', $user->id], ['class' => 'btn btn-warning']) ?>
-						<?= $this->Html->link('Redefinir senha', ['action' => 'resetPassword', $user->id], ['class' => 'btn-reset-password btn btn-orange']) ?>
+						<?= $this->Html->link('Redefinir senha', ['action' => 'resetPassword', $user->id], ['class' => 'btn-reset-password btn btn-pgm btn-pgm-email']) ?>
 						<?= $this->Html->link('Excluir usuário', ['#'], ['class' => 'btn btn-danger btn-delete']) ?>
 					</div>
 				</div>
@@ -99,7 +99,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Confirmar', ['action' => 'delete', $user->id], ['class' => 'btn btn-success text-white btn-verificasenha m-l-5']) ?>
+				<?= $this->Html->link('Confirmar', ['action' => 'delete', $user->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-verificasenha m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -175,7 +175,7 @@
 					},
 					ok: {
 						label: "Confirmar",
-						className: 'btn-success',
+						className: 'btn btn-pgm btn-pgm-salvar btn-success',
 						callback: function(){
 							window.location = href;
 						}

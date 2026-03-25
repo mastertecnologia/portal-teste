@@ -20,7 +20,7 @@ $this->Breadcrumbs->add('Recusar Orçamento', [], ['class' => 'breadcrumb-item a
                         <div class="row">
                               <div class="col-lg-12">
                                     <?= $this->Form->button('Orçamento Recusado', ['class' => 'btn btn-danger  m-l-5']) ?>
-                                    <?= $this->Html->link('Voltar para o Orçamento', ["action" => "edit", $orcamento->id], ['class' => 'btn btn-info']); ?>
+                                    <?= $this->Html->link('Voltar para o Orçamento', ["action" => "edit", $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info']); ?>
                               </div>
                         </div>
                   </div>

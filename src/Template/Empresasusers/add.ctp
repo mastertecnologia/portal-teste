@@ -16,7 +16,7 @@
 				</div>
 				<div class="row">
 					<div class="col-lg-12 col-md-12">
-						<?= $this->Form->button('Criar relação', ['class' => 'btn waves-effect waves-light btn-success']) ?>
+						<?= $this->Form->button('Criar relação', ['class' => 'btn btn-pgm btn-pgm-salvar waves-effect waves-light btn-success']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

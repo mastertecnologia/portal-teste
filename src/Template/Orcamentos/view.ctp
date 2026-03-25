@@ -81,14 +81,14 @@
                             <?= $this->Html->link(
                                 '<i class="fa fa-list-alt"></i> Ordem de serviço gerada: Nº ' . $temordem,
                                 ['controller' => 'Ordensservico', 'action' => 'view', $temordem],
-                                ['class' => 'btn btn-sm btn-info text-white', 'escape' => false]
+                                ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white', 'escape' => false]
                             ) ?>
                         </div>
                     <?php endif; ?>
                     </div>
             </div>
             <div id="carrinho" class="m-t-10"></div>
-            <?php if($orcamento->status == C_OrcamentoStatusEnviado) echo $this->Html->Link('Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-aprovar btn-success float-right m-t-20']); ?>
+            <?php if($orcamento->status == C_OrcamentoStatusEnviado) echo $this->Html->Link('Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-aprovar btn-pgm btn-pgm-salvar btn-success float-right m-t-20']); ?>
         </div>
     </div>
 </div>

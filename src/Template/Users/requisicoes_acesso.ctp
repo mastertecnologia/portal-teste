@@ -48,7 +48,7 @@
                     <td><?= h($reg->empresasusers[0]->empresa->nomefantasia ?? '') ?></td>
                     <td class="dash-erp-actions">
                       <?php if ((int)($admin ?? 0) === 1): ?>
-                      <a class="btn btn-success btn-sm" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'desbloquear', $reg->id]) ?>">Liberar</a>
+                      <a class="btn btn-pgm btn-pgm-salvar btn-success btn-sm" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'desbloquear', $reg->id]) ?>">Liberar</a>
                       <?php else: ?>
                       <span class="text-muted" title="Somente administrador pode liberar acesso.">—</span>
                       <?php endif; ?>

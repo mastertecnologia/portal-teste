@@ -144,7 +144,7 @@
 				<div id="carrinho" class='m-t-10'> </div>
 				<div class="row">
 					<div class="col-12">
-						<?= $this->Form->button('Gerar Orçamento', ['class' => 'btn btn-success btn-orc-premium-primary']) ?>
+						<?= $this->Form->button('Gerar Orçamento', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-orc-premium-primary']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

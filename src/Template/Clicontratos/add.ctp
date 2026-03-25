@@ -70,7 +70,7 @@
 				<div class="row">
 					<div class="col-lg-12">
 						<?= $this->Form->control('idcliente', ['value' => $idcliente, 'type' => 'hidden', 'label' => false]) ?>
-						<?= $this->Form->button('Cadastrar', ['class' => 'btn btn-success']) ?>
+						<?= $this->Form->button('Cadastrar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

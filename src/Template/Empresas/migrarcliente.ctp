@@ -12,7 +12,7 @@
 						<?= $this->Form->control('clientes._ids', ['id' => 'clientes', 'data-live-search' => true, 'class' => 'form-control selectpicker', 'label' => false, 'multiple' => true, 'options' => $clientes]) ?>
 					</div>
 				</div>
-				<?= $this->Form->button('Migrar dados', ['class' => 'btn btn-success']) ?>
+				<?= $this->Form->button('Migrar dados', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 			<?= $this->Form->end(); ?>
 		</div>
 	</div>

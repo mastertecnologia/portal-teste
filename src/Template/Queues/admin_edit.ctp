@@ -52,7 +52,7 @@ $isNew = $queue->isNew();
 			<?php endif; ?>
 
 			<div class="m-t-20">
-				<?= $this->Form->button($isNew ? 'Criar fila' : 'Salvar', ['class' => 'btn btn-success']) ?>
+				<?= $this->Form->button($isNew ? 'Criar fila' : 'Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 				<?= $this->Html->link('Cancelar', ['action' => 'adminIndex'], ['class' => 'btn btn-secondary m-l-5']) ?>
 			</div>
 			<?= $this->Form->end() ?>

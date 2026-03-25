@@ -22,7 +22,7 @@ $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
 			<div class="row">
 				<div class="col-md-12"><?= $this->Form->control('contatos_email_relatorio', ['class' => 'form-control', 'type' => 'textarea']) ?></div>
 			</div>
-			<?= $this->Form->button('Salvar', ['class' => 'btn btn-success']) ?>
+			<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 			<?= $this->Html->link('Cancelar', ['action' => 'index', $contrato->idcliente], ['class' => 'btn btn-secondary']) ?>
 			<?= $this->Form->end() ?>
 		</div>

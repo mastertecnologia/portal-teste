@@ -15,8 +15,8 @@ $this->Breadcrumbs->add('Filas e técnicos', [], ['class' => 'breadcrumb-item ac
 					</p>
 				</div>
 				<div class="text-right m-t-10">
-					<?= $this->Html->link('Técnicos e filas', ['action' => 'adminTechnicians'], ['class' => 'btn btn-info btn-sm m-r-5']) ?>
-					<?= $this->Html->link('Nova fila', ['action' => 'adminEdit'], ['class' => 'btn btn-success btn-sm m-r-5']) ?>
+					<?= $this->Html->link('Técnicos e filas', ['action' => 'adminTechnicians'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-sm m-r-5']) ?>
+					<?= $this->Html->link('Nova fila', ['action' => 'adminEdit'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5']) ?>
 					<?php if ($queues->count() === 0) : ?>
 						<?= $this->Form->postLink(
 							'Criar filas padrão (N1–N3, NOC, serviço)',
@@ -58,7 +58,7 @@ $this->Breadcrumbs->add('Filas e técnicos', [], ['class' => 'breadcrumb-item ac
 									<?php endif; ?>
 								</td>
 								<td class="text-right td-actions">
-									<?= $this->Html->link('<i class="fa fa-edit"></i>', ['action' => 'adminEdit', $q->id], ['class' => 'btn btn-sm btn-info', 'escape' => false, 'title' => 'Editar']) ?>
+									<?= $this->Html->link('<i class="fa fa-edit"></i>', ['action' => 'adminEdit', $q->id], ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info', 'escape' => false, 'title' => 'Editar']) ?>
 									<?= $this->Form->postLink(
 										'<i class="fa fa-trash"></i>',
 										['action' => 'adminDelete', $q->id],

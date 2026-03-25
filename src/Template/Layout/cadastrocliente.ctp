@@ -22,6 +22,7 @@
 	<?= $this->Html->css("dist/css/pages/bootstrap-select.css") ?>
 	<?= $this->Html->css("assets/node_modules/register-steps/steps.css") ?>
 	<?= $this->Html->css("dist/css/pages/register3.css") ?>
+	<?= $this->Html->css("css/pgm-action-buttons") ?>
 
 	<!--- Scripts -->
 	<?= $this->Html->script("assets/node_modules/jquery/jquery-3.2.1.min") ?>

@@ -26,8 +26,8 @@
 				</div>
 				<div class="row">
 					<div class="col-lg-12">
-						<?= $this->Form->button('Alterar situação do orçamento', ['class' => 'btn btn-queequaseinfo btn-options m-l-5']) ?>						
-						<?= $this->Html->link('Voltar para o orçamento', ["action" => "edit", $orcamento->id], ['class' => 'btn btn-info btn-options ']); ?>
+						<?= $this->Form->button('Alterar situação do orçamento', ['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo btn-options m-l-5']) ?>						
+						<?= $this->Html->link('Voltar para o orçamento', ["action" => "edit", $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-options ']); ?>
 					</div>
 				</div>
 			</div>

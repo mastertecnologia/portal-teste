@@ -11,6 +11,7 @@
 	<?= $this->Html->script('plugins/bootbox/bootbox.locales.min.js') ?>
 	<?= $this->Html->css('dist/css/pages/login-register-lock') ?>
 	<?= $this->Html->css('dist/css/style.min') ?>
+	<?= $this->Html->css('/css/pgm-action-buttons') ?>
 	<?= $this->fetch('meta') ?>
 	<?= $this->fetch('css') ?>
 	<?= $this->fetch('script') ?>

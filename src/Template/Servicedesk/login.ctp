@@ -104,7 +104,7 @@ $this->append(
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-login-erp-modal btn-cancel" data-dismiss="modal">Cancelar</button>
-				<button type="button" class="btn btn-login-erp-modal btn-primary" id="btn-enviar-recuperar">Enviar</button>
+				<button type="button" class="btn btn-pgm btn-pgm-email btn-login-erp-modal btn-primary" id="btn-enviar-recuperar">Enviar</button>
 			</div>
 		</div>
 	</div>
@@ -124,7 +124,7 @@ $this->append(
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-login-erp-modal btn-cancel" data-dismiss="modal">Cancelar</button>
-				<button type="button" class="btn btn-login-erp-modal btn-primary" id="btn-enviar-desativar-mfa">Enviar</button>
+				<button type="button" class="btn btn-pgm btn-pgm-email btn-login-erp-modal btn-primary" id="btn-enviar-desativar-mfa">Enviar</button>
 			</div>
 		</div>
 	</div>

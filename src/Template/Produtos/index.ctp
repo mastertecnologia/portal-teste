@@ -1,8 +1,8 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
-			<?= $this->Html->link('Cadastrar um novo produto/serviço/contrato', ['action' => 'add'], ['class' => 'btn btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']) ?>
-			<?= $this->Html->link('Estoque', ['action' => 'estoque'], ['class' => 'btn btn-info  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']) ?>
+			<?= $this->Html->link('Cadastrar um novo produto/serviço/contrato', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']) ?>
+			<?= $this->Html->link('Estoque', ['action' => 'estoque'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']) ?>
 			<ul class="nav nav-tabs customtab" role="tablist">
                 <li class="nav-item"> <a class="nav-link active" data-toggle="tab" href="#produtos" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="fa fa-box-open"></i></span> <span class="hidden-xs-down">Produtos</span></a> </li>
                 <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#servicos" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="fa fa-laptop"></i></span> <span class="hidden-xs-down">Serviços</span></a> </li>

@@ -28,10 +28,10 @@ Table- Footable
 ******************/
 #demo-show-entries {
   border: 0;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#fb9678), to(#fb9678)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
-  background-image: -webkit-linear-gradient(#fb9678, #fb9678), -webkit-linear-gradient(#e9ecef, #e9ecef);
-  background-image: -o-linear-gradient(#fb9678, #fb9678), -o-linear-gradient(#e9ecef, #e9ecef);
-  background-image: linear-gradient(#fb9678, #fb9678), linear-gradient(#e9ecef, #e9ecef);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#00C08B), to(#00C08B)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
+  background-image: -webkit-linear-gradient(#00C08B, #00C08B), -webkit-linear-gradient(#e9ecef, #e9ecef);
+  background-image: -o-linear-gradient(#00C08B, #00C08B), -o-linear-gradient(#e9ecef, #e9ecef);
+  background-image: linear-gradient(#00C08B, #00C08B), linear-gradient(#e9ecef, #e9ecef);
   background-size: 0 2px, 100% 1px;
   background-repeat: no-repeat;
   background-position: center bottom, center calc(100% - 1px);
@@ -43,10 +43,10 @@ Table- Footable
   color: #212529; }
   #demo-show-entries:focus {
     outline: none;
-    background-image: -webkit-gradient(linear, left top, left bottom, from(#fb9678), to(#fb9678)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
-    background-image: -webkit-linear-gradient(#fb9678, #fb9678), -webkit-linear-gradient(#e9ecef, #e9ecef);
-    background-image: -o-linear-gradient(#fb9678, #fb9678), -o-linear-gradient(#e9ecef, #e9ecef);
-    background-image: linear-gradient(#fb9678, #fb9678), linear-gradient(#e9ecef, #e9ecef);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#00C08B), to(#00C08B)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
+    background-image: -webkit-linear-gradient(#00C08B, #00C08B), -webkit-linear-gradient(#e9ecef, #e9ecef);
+    background-image: -o-linear-gradient(#00C08B, #00C08B), -o-linear-gradient(#e9ecef, #e9ecef);
+    background-image: linear-gradient(#00C08B, #00C08B), linear-gradient(#e9ecef, #e9ecef);
     background-size: 100% 2px, 100% 1px;
     -webkit-box-shadow: none;
     box-shadow: none;
@@ -56,10 +56,10 @@ Table- Footable
 
 #demo-input-search2 {
   border: 0;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#fb9678), to(#fb9678)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
-  background-image: -webkit-linear-gradient(#fb9678, #fb9678), -webkit-linear-gradient(#e9ecef, #e9ecef);
-  background-image: -o-linear-gradient(#fb9678, #fb9678), -o-linear-gradient(#e9ecef, #e9ecef);
-  background-image: linear-gradient(#fb9678, #fb9678), linear-gradient(#e9ecef, #e9ecef);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#00C08B), to(#00C08B)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
+  background-image: -webkit-linear-gradient(#00C08B, #00C08B), -webkit-linear-gradient(#e9ecef, #e9ecef);
+  background-image: -o-linear-gradient(#00C08B, #00C08B), -o-linear-gradient(#e9ecef, #e9ecef);
+  background-image: linear-gradient(#00C08B, #00C08B), linear-gradient(#e9ecef, #e9ecef);
   background-size: 0 2px, 100% 1px;
   background-repeat: no-repeat;
   background-position: center bottom, center calc(100% - 1px);
@@ -75,10 +75,10 @@ Table- Footable
   color: #212529; }
   #demo-input-search2:focus {
     outline: none;
-    background-image: -webkit-gradient(linear, left top, left bottom, from(#fb9678), to(#fb9678)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
-    background-image: -webkit-linear-gradient(#fb9678, #fb9678), -webkit-linear-gradient(#e9ecef, #e9ecef);
-    background-image: -o-linear-gradient(#fb9678, #fb9678), -o-linear-gradient(#e9ecef, #e9ecef);
-    background-image: linear-gradient(#fb9678, #fb9678), linear-gradient(#e9ecef, #e9ecef);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#00C08B), to(#00C08B)), -webkit-gradient(linear, left top, left bottom, from(#e9ecef), to(#e9ecef));
+    background-image: -webkit-linear-gradient(#00C08B, #00C08B), -webkit-linear-gradient(#e9ecef, #e9ecef);
+    background-image: -o-linear-gradient(#00C08B, #00C08B), -o-linear-gradient(#e9ecef, #e9ecef);
+    background-image: linear-gradient(#00C08B, #00C08B), linear-gradient(#e9ecef, #e9ecef);
     background-size: 100% 2px, 100% 1px;
     -webkit-box-shadow: none;
     box-shadow: none;

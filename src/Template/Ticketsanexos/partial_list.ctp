@@ -13,7 +13,7 @@ if (!empty($ticketanexos)):
 		<?= $this->Html->link(
 			'<i class="fa fa-eye"></i> Visualizar',
 			['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id, '?' => ['inline' => '1']],
-			['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-info btn-simple btn-xs m-r-5', 'escape' => false, 'title' => 'Abrir no navegador']
+			['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-simple btn-xs m-r-5', 'escape' => false, 'title' => 'Abrir no navegador']
 		) ?>
 		<?= $this->Html->link(
 			'<i class="fa fa-download"></i> Baixar',

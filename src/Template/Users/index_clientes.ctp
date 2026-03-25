@@ -8,8 +8,8 @@
 				</div>
 				<?php if ($admin): ?>
 					<div class="text-right">
-						<?= $this->Html->link('Adicionar cliente', ['action' => 'addcliente'], ['class' => 'btn btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
-						<?= $this->Html->link('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-primary btn-sm']) ?>
+						<?= $this->Html->link('Adicionar cliente', ['action' => 'addcliente'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
+						<?= $this->Html->link('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary btn-sm']) ?>
 					</div>
 				<?php endif; ?>
 			</div>

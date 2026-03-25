@@ -8,7 +8,7 @@
 					echo "<p class='mfa-shell-title'>Para ativar a verificação em duas etapas, utilize o Google Authenticator.</p>";
 					echo $this->Form->create(null, ['class' => 'form-material']);
 					echo $this->Form->control('duasetapas', ['type' => 'hidden', 'value' => 'ativa', 'label' => false]);
-					echo $this->Form->button('Ativar verificação em duas etapas', ['class' => 'btn btn-primary btn-lg']);
+					echo $this->Form->button('Ativar verificação em duas etapas', ['class' => 'btn btn-pgm btn-pgm-salvar btn-primary btn-lg']);
 					echo $this->Form->end();
 				} ?>
 			<?php } else if($bAutenticacao) { ?>

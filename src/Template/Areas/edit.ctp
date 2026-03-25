@@ -17,7 +17,7 @@
                     </div>
                 </div>
             </div>
-            <?= $this->Form->button('Salvar Status', ['class' => 'btn btn-success m-t-20']) ?>
+            <?= $this->Form->button('Salvar Status', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']) ?>
             <?= $this->Html->link('Excluir', ["controller" => "Areas", "action" => "delete", $area->id], ['class' => 'btn btn-danger m-t-20']); ?>
             <div class="clearfix"></div>
             <?= $this->Form->end(); ?>

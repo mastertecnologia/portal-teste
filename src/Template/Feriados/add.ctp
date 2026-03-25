@@ -9,7 +9,7 @@ $this->Breadcrumbs->add('Novo', [], ['class' => 'breadcrumb-item active']);
 			<?= $this->Form->create($feriado, ['class' => 'form-material']) ?>
 			<?= $this->Form->control('data', ['type' => 'text', 'class' => 'form-control datepicker']) ?>
 			<?= $this->Form->control('descricao', ['class' => 'form-control']) ?>
-			<?= $this->Form->button('Salvar', ['class' => 'btn btn-success']) ?>
+			<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 			<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn btn-secondary']) ?>
 			<?= $this->Form->end() ?>
 		</div>

@@ -16,7 +16,7 @@
                     </div>
                 </div>
             </div>
-            <?= $this->Form->button('Salvar Tipo de OS', ['class' => 'btn btn-success m-t-20']) ?>
+            <?= $this->Form->button('Salvar Tipo de OS', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']) ?>
             <?= $this->Html->link('Excluir', ["controller" => "Problemas", "action" => "delete", $problema->id], ['class' => 'btn btn-danger m-t-20']); ?>
             <div class="clearfix"></div>
             <?= $this->Form->end(); ?>

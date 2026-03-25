@@ -67,7 +67,7 @@
                 
 			<div class="row">
 				<div class="col-lg-12">
-					<?= $this->Form->button('Salvar visita', ['class' => 'btn btn-success']) ?>
+					<?= $this->Form->button('Salvar visita', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 					<?php if($admin) echo $this->Html->link('Deletar visita', ['controller' => 'Agenda', 'action' => 'delete', $visita->id], ['class' => 'btn btn-danger']) ?>
 				</div>
 			</div>

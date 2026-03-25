@@ -19,8 +19,8 @@
 				</div>
 				<div class="row">
 					<div class="col-lg-12">
-						<?= $this->Form->button('Orçamento Aprovado', ['class' => 'btn btn-success   m-l-5']) ?>
-						<?= $this->Html->link('Voltar para o Orçamento', ["action" => $action, $orcamento->id], ['class' => 'btn btn-info']); ?>
+						<?= $this->Form->button('Orçamento Aprovado', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success   m-l-5']) ?>
+						<?= $this->Html->link('Voltar para o Orçamento', ["action" => $action, $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info']); ?>
 					</div>
 				</div>
 			</div>

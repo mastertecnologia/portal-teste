@@ -12,17 +12,17 @@
 	--os-text: #f0f2f8;
 	--os-text2: #8b92a8;
 	--os-text3: #555e78;
-	--os-accent: #3d7eff;
-	--os-accent2: #2563eb;
-	--os-accent-glow: rgba(61, 126, 255, 0.15);
+	--os-accent: #00c08b;
+	--os-accent2: #009e74;
+	--os-accent-glow: rgba(0, 192, 139, 0.18);
 	--os-green: #22c55e;
 	--os-green-bg: rgba(34, 197, 94, 0.1);
 	--os-amber: #f59e0b;
 	--os-amber-bg: rgba(245, 158, 11, 0.1);
-	--os-orange: #f97316;
-	--os-orange-bg: rgba(249, 115, 22, 0.1);
-	--os-purple: #a78bfa;
-	--os-purple-bg: rgba(167, 139, 250, 0.1);
+	--os-orange: #ff8833;
+	--os-orange-bg: rgba(255, 136, 51, 0.12);
+	--os-purple: #a682e6;
+	--os-purple-bg: rgba(166, 130, 230, 0.12);
 	--os-radius-lg: 14px;
 	--os-font: 'DM Sans', sans-serif;
 	--os-mono: 'DM Mono', monospace;
@@ -990,7 +990,7 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 
 .os-modal-nova-bc em {
 	font-style: normal;
-	color: #3d7eff;
+	color: var(--os-accent, #00c08b);
 	font-weight: 500;
 }
 
@@ -1091,12 +1091,12 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 }
 
 .os-modal-nova-btn-primary {
-	background: #3d7eff;
+	background: var(--os-accent, #00c08b);
 	color: #fff;
 }
 
 .os-modal-nova-btn-primary:hover {
-	background: #2563eb;
+	background: var(--os-accent2, #009e74);
 }
 
 /* Lista com painel aberto: evita scroll duplo no conteúdo principal */
@@ -1119,16 +1119,16 @@ body.os-drawer-active {
 	--os-text: #f0f2f8;
 	--os-text2: #8b92a8;
 	--os-text3: #555e78;
-	--os-accent: #3d7eff;
-	--os-accent2: #2563eb;
+	--os-accent: #00c08b;
+	--os-accent2: #009e74;
 	--os-green: #22c55e;
 	--os-green-bg: rgba(34, 197, 94, 0.1);
 	--os-amber: #f59e0b;
 	--os-amber-bg: rgba(245, 158, 11, 0.1);
-	--os-orange: #f97316;
-	--os-orange-bg: rgba(249, 115, 22, 0.1);
-	--os-purple: #a78bfa;
-	--os-purple-bg: rgba(167, 139, 250, 0.1);
+	--os-orange: #ff8833;
+	--os-orange-bg: rgba(255, 136, 51, 0.12);
+	--os-purple: #a682e6;
+	--os-purple-bg: rgba(166, 130, 230, 0.12);
 	--os-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	--os-mono: 'DM Mono', ui-monospace, monospace;
 }

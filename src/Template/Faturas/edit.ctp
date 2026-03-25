@@ -96,7 +96,7 @@
 						</div>
 						<div class="row">
 							<div class="col-12">
-								<?= $this->Form->button('Salvar', ['class' => 'btn btn-success float-right m-t-10']) ?>
+								<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10']) ?>
 							</div>
 						</div>
 						<?php if($fatura->status == C_LocacaoStatusPendente) { ?>
@@ -138,15 +138,15 @@
 						<div id="carrinho" class='m-t-10'> </div>
 						<div class="row">
 							<div class="col-12">
-								<?= $this->Html->link('Imprimir', ['action' => 'imprimir', $fatura->id], ['target' => '_blank', 'class' => 'btn btn-orange float-right m-t-10']) ?>
-								<?= $this->Html->link('Compartilhar', ['action' => 'view', $fatura->hash], ['class' => 'btn btn-purple btn-compartilhar float-right m-t-10 m-r-5']) ?>
+								<?= $this->Html->link('Imprimir', ['action' => 'imprimir', $fatura->id], ['target' => '_blank', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange float-right m-t-10']) ?>
+								<?= $this->Html->link('Compartilhar', ['action' => 'view', $fatura->hash], ['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-compartilhar float-right m-t-10 m-r-5']) ?>
 								<?php
 									if($fatura->status == C_LocacaoStatusPendente) {
-										echo $this->html->Link('Aprovar', ['action' => 'aprovar', $fatura->id], ['id' => 'btn-aprovar', 'class' => 'btn btn-success float-right m-t-10 m-r-5']);
+										echo $this->html->Link('Aprovar', ['action' => 'aprovar', $fatura->id], ['id' => 'btn-aprovar', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10 m-r-5']);
 										echo $this->html->Link('Rejeitar', ['action' => 'rejeitar', $fatura->id], ['id' => 'btn-rejeitar', 'class' => 'btn btn-danger float-right m-t-10 m-r-5']);
 									}
 									if($fatura->status == C_LocacaoStatusAprovado) {
-										echo $this->html->Link('Receber', ['action' => 'receber', $fatura->id], ['target' => '_blank', 'id' => 'btn-receber', 'class' => 'btn btn-info float-right m-t-10 m-r-5']);
+										echo $this->html->Link('Receber', ['action' => 'receber', $fatura->id], ['target' => '_blank', 'id' => 'btn-receber', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info float-right m-t-10 m-r-5']);
 									}
 								?>
 							</div>
@@ -174,7 +174,7 @@
 									<td> <?= number_format($reg->juros, 2, ',', '.') ?> </td>
 									<td> <?= number_format($reg->valorpago, 2, ',', '.') ?> </td>
 									<td> 
-										<?= $this->Html->link('<i class="fa fa-print"></i>', ['action' => 'recibo', $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'id' => $reg->id, 'class' => 'btn btn-orange btn-xs', 'target' => '_blank', 'escape' => false]) ?>
+										<?= $this->Html->link('<i class="fa fa-print"></i>', ['action' => 'recibo', $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'id' => $reg->id, 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange btn-xs', 'target' => '_blank', 'escape' => false]) ?>
 									</td>
 								</tr>
 							<?php endforeach; ?>
@@ -318,7 +318,7 @@
 				buttons: {
 					confirm: {
 						label: 'Sim',
-						className: 'btn-success'
+						className: 'btn btn-pgm btn-pgm-salvar btn-success'
 					},
 					cancel: {
 						label: 'Não',

@@ -6,6 +6,7 @@
 	<title><?= h($title ?? 'Service Desk') ?> — PGM</title>
 	<?= $this->Html->meta('icon') ?>
 	<?= $this->Html->css('/dist/css/style.min') ?>
+	<?= $this->Html->css('/css/pgm-action-buttons') ?>
 	<?= $this->Html->css('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', ['fullBase' => true]) ?>
 	<style>
 		.sd-shell { min-height: 100vh; background: #f4f6f9; display: flex; flex-direction: column; }

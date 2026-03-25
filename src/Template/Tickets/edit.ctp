@@ -138,11 +138,11 @@
 										}
 										if ($ticket->situacao != C_TicketSituacaoEmandamento) {
 											$url = $this->Url->build(["controller" => "Ticketsusers", "action" => "resolver", $ticket->id]);
-											echo $this->Html->link('<span> Em execução </span> <i class="fas fa-reply"></i>', $url, ['rel' => 'tooltip', 'title' => 'Em andamento', 'class' => 'btn btn-info btn-simple btn-xs m-b-20 m-r-5', 'id' => $ticket->id, 'escape' => false, 'hx-get' => $url, 'hx-target' => '#ticket-panel-left', 'hx-swap' => 'innerHTML']);
+											echo $this->Html->link('<span> Em execução </span> <i class="fas fa-reply"></i>', $url, ['rel' => 'tooltip', 'title' => 'Em andamento', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-simple btn-xs m-b-20 m-r-5', 'id' => $ticket->id, 'escape' => false, 'hx-get' => $url, 'hx-target' => '#ticket-panel-left', 'hx-swap' => 'innerHTML']);
 										}
 										if ($ticket->situacao != C_TicketSituacaoResolvido) {
 											$url = $this->Url->build(["action" => "alterarsituacao", $ticket->id, C_TicketSituacaoResolvido]);
-											echo $this->Html->link('<span> Resolvido </span> <i class="fas fa-check"></i>', $url, ['rel' => 'tooltip', 'title' => 'Resolvido', 'class' => 'btn btn-success btn-simple btn-xs m-b-20 m-r-5', 'id' => $ticket->id, 'escape' => false, 'hx-get' => $url, 'hx-target' => '#ticket-panel-left', 'hx-swap' => 'innerHTML']);
+											echo $this->Html->link('<span> Resolvido </span> <i class="fas fa-check"></i>', $url, ['rel' => 'tooltip', 'title' => 'Resolvido', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-simple btn-xs m-b-20 m-r-5', 'id' => $ticket->id, 'escape' => false, 'hx-get' => $url, 'hx-target' => '#ticket-panel-left', 'hx-swap' => 'innerHTML']);
 										}
 									}
 									if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPendente])) echo $this->Html->link('<span> Cancelado </span> <i class="fa fa-times"></i>', ["action" => "cancelar", $ticket->id], ['rel' => 'tooltip', 'title' => 'Fechado', 'class' => 'btn btn-danger btn-simple btn-xs m-b-20 m-r-5', 'id' => $ticket->id, 'escape' => false]);
@@ -180,7 +180,7 @@
 								$hxAttrs = ' hx-target="#ticket-panel-left" hx-swap="innerHTML" ';
 								if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPendente])) {
 									if (empty($timerAtivo)) {
-										echo '<form method="post" action="' . h($urlIniciar) . '" class="d-inline" hx-post="' . h($urlIniciar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-info btn-simple btn-xs m-r-5">Iniciar</button></form>';
+										echo '<form method="post" action="' . h($urlIniciar) . '" class="d-inline" hx-post="' . h($urlIniciar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-pgm btn-pgm-situacao btn-info btn-simple btn-xs m-r-5">Iniciar</button></form>';
 									} else {
 										if ($timerPausado) {
 											echo '<form method="post" action="' . h($urlRetomar) . '" class="d-inline" hx-post="' . h($urlRetomar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-warning btn-simple btn-xs m-r-5">Retomar</button></form>';
@@ -188,18 +188,18 @@
 											echo '<form method="post" action="' . h($urlPausar) . '" class="d-inline" hx-post="' . h($urlPausar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-warning btn-simple btn-xs m-r-5">Pausar</button></form>';
 										}
 										echo ' ';
-										echo '<form method="post" action="' . h($urlFinalizar) . '" class="d-inline" hx-post="' . h($urlFinalizar) . '"' . $hxAttrs . ' hx-confirm="Finalizar o timer e registrar as horas?"><button type="submit" class="btn btn-success btn-simple btn-xs m-r-5">Finalizar</button></form>';
+										echo '<form method="post" action="' . h($urlFinalizar) . '" class="d-inline" hx-post="' . h($urlFinalizar) . '"' . $hxAttrs . ' hx-confirm="Finalizar o timer e registrar as horas?"><button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success btn-simple btn-xs m-r-5">Finalizar</button></form>';
 									}
 								}
 								?>
 								<br>
 								<h4> Ações: </h4>
 								<?php
-									if(in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoResolvido])) echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ticket->id], ['class' => 'btn btn-orange text-white m-r-5']); 
-									if($ticket->situacao == C_TicketSituacaoResolvido) echo $this->Html->link('Enviar e-mail', ["action" => "email", $ticket->id, null, 'redirect'], ['class' => 'btn btn-email btn-purple text-white m-r-5']); 
+									if(in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoResolvido])) echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ticket->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5']); 
+									if($ticket->situacao == C_TicketSituacaoResolvido) echo $this->Html->link('Enviar e-mail', ["action" => "email", $ticket->id, null, 'redirect'], ['class' => 'btn btn-pgm btn-pgm-email btn-email btn-purple text-white m-r-5']); 
 									if(!$ordem) echo $this->Html->link('Gerar Ordem de Serviço', ["controller" => "ordensservico", "action" => "ticketordem", $ticket->id], ['class' => 'btn btn-warning text-white m-r-5', 'target' => '_blank']);
 									else echo $this->Html->link("Ordem nº $ordem gerada", ["controller" => "ordensservico", "action" => "edit", $ordem], ['class' => 'btn btn-warning text-white m-r-5', 'target' => '_blank']);
-									echo $this->Html->link("Imprimir", ["controller" => "Tickets", "action" => "imprimir", $ticket->id, "?" => ["autoprint" => 1]], ['class' => 'btn btn-purple text-white m-r-5', 'target' => '_blank']);
+									echo $this->Html->link("Imprimir", ["controller" => "Tickets", "action" => "imprimir", $ticket->id, "?" => ["autoprint" => 1]], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-r-5', 'target' => '_blank']);
 								?>
 							</div>
                         <!-- Fim da Parte da Esquerda -->
@@ -340,7 +340,7 @@
 										</div>
 									</div>
 								</div>
-							<?= $this->Form->button('Adicionar Anexo', ['id' => 'submitfile', 'class' => 'btn btn-primary', 'style' => 'color:white', 'disabled']) ?>
+							<?= $this->Form->button('Adicionar Anexo', ['id' => 'submitfile', 'class' => 'btn btn-pgm btn-pgm-salvar btn-primary', 'style' => 'color:white', 'disabled']) ?>
 							<br>
 							<div class="clearfix"></div>
 							<?= $this->Form->end(); ?>
@@ -360,7 +360,7 @@
 											<?= $this->Html->link(
 												'<i class="fa fa-eye"></i> Visualizar',
 												['controller' => 'Tickets', 'action' => 'downloadAnexo', $reg->id, '?' => ['inline' => '1']],
-												['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-info btn-simple btn-xs m-r-5', 'escape' => false, 'title' => 'Abrir no navegador']
+												['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-simple btn-xs m-r-5', 'escape' => false, 'title' => 'Abrir no navegador']
 											) ?>
 											<?= $this->Html->link(
 												'<i class="fa fa-download"></i> Baixar',
@@ -420,8 +420,8 @@
 							<?= $this->Form->control('email', ['name' => 'email[]', 'value' => $ticket->email, 'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 						</div>
 						<?= $this->Form->control('idticket', ['value' => $ticket->id, 'label' => false, 'type' => 'hidden']) ?>
-						<?= $this->Form->button('Enviar', ['class' => 'btn btn-purple text-white float-right m-l-10']) ?>
-						<button type="button" class="btn btn-info btn-add-destinatario waves-effect float-right m-l-10">Adicionar destinatário</button>
+						<?= $this->Form->button('Enviar', ['class' => 'btn btn-pgm btn-pgm-email btn-purple text-white float-right m-l-10']) ?>
+						<button type="button" class="btn btn-pgm btn-pgm-situacao btn-info btn-add-destinatario waves-effect float-right m-l-10">Adicionar destinatário</button>
 						<button type="button" class="btn btn-danger waves-effect float-right" data-dismiss="modal">Fechar</button>
 					<?= $this->Form->end(); ?>
 				</div>

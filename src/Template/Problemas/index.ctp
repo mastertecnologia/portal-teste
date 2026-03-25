@@ -1,7 +1,7 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
-			<?= $this->Html->link('Cadastrar um novo Tipo de OS', ['action' => 'add'], ['class' => 'btn btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']); ?>
+			<?= $this->Html->link('Cadastrar um novo Tipo de OS', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']); ?>
             <div class="table-responsive">	
                 <table class="table table-hover table-row-clickable" id="tableProblemas">
                     <thead class="text-primary">

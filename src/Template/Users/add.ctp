@@ -90,7 +90,7 @@
 				<?php endif; ?>
 				<div class="row padding-20">
 					<div class="col-lg-12 col-md-12">
-						<?= $this->Form->button('Criar usuário', ['class' => 'btn waves-effect waves-light btn-success']) ?>
+						<?= $this->Form->button('Criar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar waves-effect waves-light btn-success']) ?>
 						<?= $this->Html->link('Voltar para os usuários', ['action' => 'index'], ['class' => 'btn btn-secondary m-l-10']) ?>
 					</div>
 				</div>

@@ -58,7 +58,7 @@
 				</div>
 				<div class="row">
 					<div class="col-12">
-						<?= $this->Form->button('Confirmar devolução', ['class' => 'btn btn-success float-right']) ?>
+						<?= $this->Form->button('Confirmar devolução', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

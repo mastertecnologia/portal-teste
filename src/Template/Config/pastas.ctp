@@ -27,8 +27,8 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-12">
-                        <?= $this->Form->button('Salvar', ['class' => 'btn btn-success ']) ?>
-                        <?= $this->Html->link('Voltar para as configurações', ["action" => "index"], ['class' => 'btn btn-info m-l-5']); ?>
+                        <?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success ']) ?>
+                        <?= $this->Html->link('Voltar para as configurações', ["action" => "index"], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-l-5']); ?>
                     </div>
                 </div>
             </div>

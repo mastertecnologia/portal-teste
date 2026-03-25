@@ -17,7 +17,7 @@
 					<small class="text-muted">Clientes vinculados ao ERP e habilitados para acesso ao portal.</small>
 				</div>
 				<div class="text-right">
-					<?= $this->Html->link('Cadastrar cliente', ['action' => 'add'], ['class' => 'btn btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
+					<?= $this->Html->link('Cadastrar cliente', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
 				</div>
 			</div>
 			<ul class="nav nav-tabs customtab" role="tablist">
@@ -117,7 +117,7 @@
 												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></a></td>
 												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></a></td>
 												<td>
-													<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
+													<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
 												</td>
 											</tr>
 										<?php endforeach; ?>
@@ -143,7 +143,7 @@
 												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></a></td>
 												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></a></td>
 												<td>
-													<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
+													<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
 												</td>
 											</tr>
 										<?php endforeach; ?>

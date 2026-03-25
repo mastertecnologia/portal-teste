@@ -185,7 +185,7 @@
 					</div>
 					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 						<div class="form-group ">
-							<?= $this->Form->button('Cadastrar cliente', ['class' => 'btn btn-success m-t-25 float-right']) ?>
+							<?= $this->Form->button('Cadastrar cliente', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-25 float-right']) ?>
 						</div>
 					</div>
 				</div>		

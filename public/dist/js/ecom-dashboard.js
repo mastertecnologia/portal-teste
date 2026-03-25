@@ -45,13 +45,13 @@ $(function () {
         labels: ['iMac', 'iPhone'],
         pointSize: 0,
         fillOpacity: 0.4,
-        pointStrokeColors:['#b4becb', '#01c0c8'],
+        pointStrokeColors:['#b4becb', '#33CCFF'],
         behaveLikeLine: true,
         gridLineColor: '#e0e0e0',
         lineWidth: 0,
         smooth: true,
         hideHover: 'auto',
-        lineColors: ['#b4becb', '#01c0c8'],
+        lineColors: ['#b4becb', '#33CCFF'],
         resize: true
         
     });
@@ -72,7 +72,7 @@ $(function () {
             value: 4870
         }],
         resize: true,
-        colors:['#fb9678', '#01c0c8', '#4F5467']
+        colors:['#00C08B', '#33CCFF', '#4F5467']
     });
  
 });    

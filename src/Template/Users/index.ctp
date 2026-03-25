@@ -8,8 +8,8 @@
 				</div>
 				<?php if ($admin): ?>
 					<div class="text-right">
-						<?= $this->Html->link('Adicionar usuário', ['action' => 'add'], ['class' => 'btn btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
-						<?= $this->Html->link('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-primary btn-sm']) ?>
+						<?= $this->Html->link('Adicionar usuário', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
+						<?= $this->Html->link('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary btn-sm']) ?>
 					</div>
 				<?php endif; ?>
 			</div>
@@ -43,7 +43,7 @@
 								<?php if ($admin): ?>
 									<td width="10%" class="td-actions text-center">
 										<?php if ($adm->secret != null): ?>
-											<?= $this->Html->link('<i class="far fa-id-card"></i>', ['action' => 'desativaverificacaoqualqueruser', $adm->id, '0'], ['rel' => 'tooltip', 'title' => 'Desativar 2FA', 'class' => 'btn btn-info btn-secondary btn-xs', 'id' => $adm->id, 'escape' => false, 'confirm' => 'Tem certeza que deseja desativar a autenticação de dois fatores deste usuário?']) ?>
+											<?= $this->Html->link('<i class="far fa-id-card"></i>', ['action' => 'desativaverificacaoqualqueruser', $adm->id, '0'], ['rel' => 'tooltip', 'title' => 'Desativar 2FA', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-secondary btn-xs', 'id' => $adm->id, 'escape' => false, 'confirm' => 'Tem certeza que deseja desativar a autenticação de dois fatores deste usuário?']) ?>
 										<?php else: ?>
 											<span class="text-muted small">—</span>
 										<?php endif; ?>

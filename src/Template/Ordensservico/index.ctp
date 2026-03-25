@@ -281,7 +281,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			</div>
 			<div class="os-modal-nova-foot">
 				<button type="button" class="os-modal-nova-btn os-modal-nova-btn-ghost" id="os-modal-nova-cancel">Cancelar</button>
-				<button type="submit" class="os-modal-nova-btn os-modal-nova-btn-primary">Continuar para cadastro completo</button>
+				<button type="submit" class="os-modal-nova-btn os-modal-nova-btn-primary btn btn-pgm btn-pgm-salvar">Continuar para cadastro completo</button>
 			</div>
 		</form>
 	</div>
@@ -298,7 +298,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	<div class="os-drawer-body" id="os-drawer-body"></div>
 	<div class="os-drawer-foot">
 		<button type="button" class="os-drawer-btn os-drawer-btn-ghost" id="os-drawer-close2" title="Volta à listagem de ordens">Fechar</button>
-		<button type="button" class="os-drawer-btn os-drawer-btn-primary" id="os-drawer-edit-btn" data-href="#" title="Abre o cadastro completo da OS">Editar OS</button>
+		<button type="button" class="os-drawer-btn os-drawer-btn-primary btn btn-pgm btn-pgm-situacao" id="os-drawer-edit-btn" data-href="#" title="Abre o cadastro completo da OS">Editar OS</button>
 	</div>
 </aside>
 
@@ -349,7 +349,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Form->button('Salvar', ['class' => 'btn btn-success text-white m-l-5']) ?>
+				<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 			<?= $this->Form->end() ?>

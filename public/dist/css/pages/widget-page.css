@@ -49,11 +49,11 @@ widget-chart-page product review
   color: #212529; }
   .profile-tab li a.nav-link.active,
   .customtab li a.nav-link.active {
-    border-bottom: 2px solid #fb9678;
-    color: #fb9678; }
+    border-bottom: 2px solid #00C08B;
+    color: #00C08B; }
   .profile-tab li a.nav-link:hover,
   .customtab li a.nav-link:hover {
-    color: #fb9678; }
+    color: #00C08B; }
 
 /*******************/
 /*widgets -app*/
@@ -77,7 +77,7 @@ ul.list-icons {
     ul.list-icons li a {
       color: #212529; }
       ul.list-icons li a:hover {
-        color: #fb9678; }
+        color: #00C08B; }
     ul.list-icons li i {
       padding-right: 8px; }
 
@@ -91,14 +91,14 @@ ul.list-icons {
     stroke: #03a9f3;
     stroke-width: 5px; }
   .total-revenue4 .ct-series-b .ct-line {
-    stroke: #00c292;
+    stroke: #00C08B;
     stroke-width: 1px; }
   .total-revenue4 .ct-series-b .ct-point {
-    stroke: #00c292;
+    stroke: #00C08B;
     stroke-width: 5px; }
   .total-revenue4 .ct-series-a .ct-area {
     fill: #03a9f3;
     fill-opacity: 0.2; }
   .total-revenue4 .ct-series-b .ct-area {
-    fill: #00c292;
+    fill: #00C08B;
     fill-opacity: 0.2; }

@@ -141,7 +141,7 @@ $(function () {
                 barWidth: '4',
                 resize: true,
                 barSpacing: '7',
-                barColor: '#01c0c8'
+                barColor: '#33CCFF'
             });
         },
         sparkResize;

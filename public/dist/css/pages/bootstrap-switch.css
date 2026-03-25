@@ -35,7 +35,7 @@ Bootstrap Switch
 .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-primary,
 .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-primary {
   color: #fff;
-  background: #fb9678; }
+  background: #00C08B; }
 
 .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-info,
 .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-info {
@@ -45,7 +45,7 @@ Bootstrap Switch
 .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-success,
 .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-success {
   color: #fff;
-  background: #00c292; }
+  background: #00C08B; }
 
 .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-warning,
 .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-warning {
@@ -76,7 +76,7 @@ Bootstrap Switch
   display: block;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid #00c292;
+  border: 2px solid #00C08B;
   border-radius: 20px; }
 
 .onoffswitch-inner {
@@ -102,7 +102,7 @@ Bootstrap Switch
 .onoffswitch-inner:before {
   content: "ON";
   padding-left: 27px;
-  background-color: #00c292;
+  background-color: #00C08B;
   color: #FFFFFF; }
 
 .onoffswitch-inner:after {
@@ -121,7 +121,7 @@ Bootstrap Switch
   top: 0;
   bottom: 0;
   right: 56px;
-  border: 2px solid #00c292;
+  border: 2px solid #00C08B;
   border-radius: 20px;
   -webkit-transition: all 0.3s ease-in 0s;
   -o-transition: all 0.3s ease-in 0s;

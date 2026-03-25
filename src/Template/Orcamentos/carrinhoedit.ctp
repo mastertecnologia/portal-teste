@@ -143,7 +143,7 @@ error_reporting(E_ERROR | E_PARSE);
 						<?= $this->Form->control('idorcamentofind', ['id' => 'idorcamentofind-modal', 'value' => $orcamento->id, 'label' => false, 'type' => 'hidden']) ?>
 						<?= $this->Form->control('idorcamento', ['id' => 'idorcamento-modal',  'label' => false, 'type' => 'hidden']) ?>
 						<button type="button" class="btn btn-danger waves-effect float-right" data-dismiss="modal">Fechar</button>
-						<?= $this->Form->button('Salvar', ['class' => 'btn btn-info text-white m-r-5 float-right']) ?>
+						<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-info text-white m-r-5 float-right']) ?>
 						<?= $this->Form->end(); ?>
 					</div>
 				</div>

@@ -54,8 +54,8 @@
 				</div>
 			</div>
 			<?php if($admin){
-				echo $this->Html->link('Adicionar empresa', ['action' => 'add'], ['class' => 'btn btn-success m-t-20 m-r-5', 'target' => '_blank']);
-				echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-primary m-t-20 m-r-5']);
+				echo $this->Html->link('Adicionar empresa', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 m-r-5', 'target' => '_blank']);
+				echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary m-t-20 m-r-5']);
 				// echo $this->Html->link('Migrar dados', ['action' => 'migrar'], ['class' => 'btn btn-secondary m-t-20 m-r-5']);
 				// echo $this->Html->link('Migrar dados de clientes', ['action' => 'migrarcliente'], ['class' => 'btn btn-queequaseinfo m-t-20']);
 			} ?>

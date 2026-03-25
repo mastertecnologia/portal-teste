@@ -4,13 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Acesso Seguro — Proposta PGM Soluções</title>
+<link rel="stylesheet" href="webroot/css/pgm-action-buttons.css"/>
 <style>
 :root{
-  --teal:#1D9E75;--teal-dark:#0F6E56;--teal-light:#E1F5EE;--teal-mid:#5DCAA5;
-  --amber:#E9A025;--amber-light:#FAEEDA;--amber-dark:#633806;
+  --teal:#00C08B;--teal-dark:#008F68;--teal-light:#E6FAF4;--teal-mid:#5CDBC0;
+  --amber:#FFC107;--amber-light:#FFF8E1;--amber-dark:#8A6A00;
   --red:#E24B4A;--red-light:#FCEBEB;--red-dark:#791F1F;
-  --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#0C447C;
-  --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#3C3489;
+  --blue:#33CCFF;--blue-light:#E6F9FF;--blue-dark:#006B88;
+  --purple:#A682E6;--purple-light:#F3EDFC;--purple-dark:#4A3488;
   --border:#e8e7e3;--border-light:#f0efec;
   --text:#1a1a18;--text-muted:#6b6a65;--text-hint:#9a9890;
   --bg:#f2f1ee;--card:#ffffff;
@@ -53,7 +54,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;}
 .field input{padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--text);outline:none;font-family:inherit;background:#fff;transition:all .15s;}
-.field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.1);}
+.field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,192,139,.1);}
 .field input.error{border-color:var(--red);background:#fff9f9;}
 .field input.success{border-color:var(--teal);background:#f9fefc;}
 .field-hint{font-size:11px;color:var(--text-muted);margin-top:3px;}
@@ -63,7 +64,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 /* OTP INPUT */
 .otp-group{display:flex;gap:10px;justify-content:center;margin:20px 0;}
 .otp-digit{width:50px;height:58px;border:1.5px solid var(--border);border-radius:var(--r);text-align:center;font-size:22px;font-weight:700;color:var(--text);outline:none;font-family:inherit;background:#fff;transition:all .15s;caret-color:var(--teal);}
-.otp-digit:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.1);}
+.otp-digit:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,192,139,.1);}
 .otp-digit.filled{border-color:var(--teal-mid);background:var(--teal-light);color:var(--teal-dark);}
 .otp-digit.error{border-color:var(--red);background:#fff5f5;}
 
@@ -243,7 +244,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       <span id="attempts-text">Atenção: você tem <strong id="attempts-left">2</strong> tentativas restantes antes do bloqueio.</span>
     </div>
 
-    <button class="btn-main" onclick="verificarIdentidade()">
+    <button type="button" class="btn btn-pgm btn-pgm-salvar btn-main" onclick="verificarIdentidade()">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg>
       Verificar e enviar código
     </button>
@@ -288,14 +289,14 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
     <div class="timer-row">
       <span id="timer-msg">Código expira em </span>
       <span class="timer-count" id="timer">09:47</span>
-      <span id="resend-area" style="display:none;"> · <button class="resend-btn" onclick="reenviarOTP()">Reenviar código</button></span>
+      <span id="resend-area" style="display:none;"> · <button type="button" class="btn-pgm btn-pgm-email" style="padding:6px 12px;font-size:12px;border-radius:6px;margin:0;vertical-align:baseline;" onclick="reenviarOTP()">Reenviar código</button></span>
     </div>
 
     <div id="otp-error" style="display:none;background:var(--red-light);border-radius:var(--r);padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--red-dark);text-align:center;">
       Código incorreto. Verifique e tente novamente.
     </div>
 
-    <button class="btn-main" id="btn-otp" onclick="verificarOTP()" disabled>
+    <button type="button" class="btn btn-pgm btn-pgm-salvar btn-main" id="btn-otp" onclick="verificarOTP()" disabled>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg>
       Confirmar código
     </button>
@@ -373,16 +374,16 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <button class="btn-main" style="flex:1;" onclick="goTo('pg-assinar')">
+      <button type="button" class="btn btn-pgm btn-pgm-salvar btn-main" style="flex:1;" onclick="goTo('pg-assinar')">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg>
         Aprovar e assinar
       </button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <button style="padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #FAC775;background:var(--amber-light);color:var(--amber-dark);font-family:inherit;transition:all .15s;" onclick="goTo('pg-negociar')">
+      <button type="button" class="btn btn-pgm btn-pgm-ordem btn-main" style="padding:11px;font-size:13px;font-weight:600;width:100%;" onclick="goTo('pg-negociar')">
         Negociar ajustes
       </button>
-      <button style="padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #F7C1C1;background:var(--red-light);color:var(--red-dark);font-family:inherit;transition:all .15s;" onclick="goTo('pg-recusar')">
+      <button type="button" class="btn-main red" style="padding:11px;font-size:13px;font-weight:600;width:100%;" onclick="goTo('pg-recusar')">
         Recusar proposta
       </button>
     </div>
@@ -443,7 +444,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       Esta assinatura tem validade jurídica conforme <strong>MP 2.200-2/2001</strong>, padrão <strong>ICP-Brasil</strong>. CPF verificado na Receita Federal. O contrato assinado será enviado para seu e-mail.
     </div>
 
-    <button class="btn-main" id="btn-sign" onclick="confirmarAssinatura()">
+    <button type="button" class="btn btn-pgm btn-pgm-salvar btn-main" id="btn-sign" onclick="confirmarAssinatura()">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 6 12 2 8"/></svg>
       Assinar e confirmar aprovação
     </button>
@@ -474,7 +475,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       <label>Seu nome e contato</label>
       <input type="text" id="neg-nome" placeholder="Nome completo"/>
     </div>
-    <button class="btn-main amber" onclick="confirmarNeg()">
+    <button type="button" class="btn btn-pgm btn-pgm-ordem btn-main amber" onclick="confirmarNeg()">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="14" y1="2" x2="5" y2="11"/><polygon points="14 2 9 14 5 11 14 2"/></svg>
       Enviar solicitação
     </button>
@@ -497,7 +498,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
       <label style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px;"><input type="radio" name="rec" value="outro"/> Escolhemos outro fornecedor</label>
       <label style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px;"><input type="radio" name="rec" value="canc"/> Projeto cancelado</label>
     </div>
-    <button class="btn-main red" onclick="confirmarRec()">Confirmar recusa</button>
+    <button type="button" class="btn-main red" onclick="confirmarRec()">Confirmar recusa</button>
     <button class="btn-ghost" onclick="goTo('pg-proposta')">← Voltar</button>
   </div>
 </div>

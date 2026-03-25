@@ -134,7 +134,7 @@
 							</div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 								<div class="form-group ">
-									<?= $this->Form->button('Salvar empresa', ['class' => 'btn btn-success m-t-5 float-right']) ?>
+									<?= $this->Form->button('Salvar empresa', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-5 float-right']) ?>
 									<?= $this->Html->link('Alterar Senha Administrativa', ['action' => 'change_password', $entity->id], ['class' => 'btn btn-warning m-t-5 m-r-5 float-right']) ?>
 								</div>
 							</div>
@@ -161,7 +161,7 @@
 						</div>
 						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 							<div class="form-group ">
-								<?= $this->Form->button('Salvar', ['class' => 'btn btn-success m-t-5 float-left']) ?>
+								<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-5 float-left']) ?>
 							</div>
 						</div>
 					<?= $this->Form->end(); ?>					

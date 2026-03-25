@@ -14,7 +14,7 @@ $this->Breadcrumbs->add('Técnicos e vínculos', [], ['class' => 'breadcrumb-ite
 						Use <strong>Editar</strong> para definir nível principal (N1/N2/N3), filas e, se necessário, nível por fila.
 					</p>
 				</div>
-				<?= $this->Html->link('Gerenciar filas', ['action' => 'adminIndex'], ['class' => 'btn btn-primary btn-sm']) ?>
+				<?= $this->Html->link('Gerenciar filas', ['action' => 'adminIndex'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary btn-sm']) ?>
 			</div>
 
 			<div class="table-responsive">
@@ -61,7 +61,7 @@ $this->Breadcrumbs->add('Técnicos e vínculos', [], ['class' => 'breadcrumb-ite
 									<?php endif; ?>
 								</td>
 								<td class="text-right">
-									<?= $this->Html->link('Editar vínculos', ['controller' => 'Users', 'action' => 'edit', $t->id], ['class' => 'btn btn-sm btn-success', 'title' => 'Nível, filas múltiplas e nível por fila']) ?>
+									<?= $this->Html->link('Editar vínculos', ['controller' => 'Users', 'action' => 'edit', $t->id], ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info', 'title' => 'Nível, filas múltiplas e nível por fila']) ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>

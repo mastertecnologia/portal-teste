@@ -103,9 +103,9 @@
 	}
 </style>
 <div class="row hidden-print">
-	<?= $this->html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-orange m-l-5 m-r-5 m-b-5']) ?>
+	<?= $this->html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-r-5 m-b-5']) ?>
 	<?php if($fatura->status == C_LocacaoStatusPendente) {
-		echo $this->html->Link('Aprovar', ['action' => 'aprovarhash', $fatura->hash], ['id' => 'btn-aprovar', 'class' => 'btn btn-success m-b-5']);
+		echo $this->html->Link('Aprovar', ['action' => 'aprovarhash', $fatura->hash], ['id' => 'btn-aprovar', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success m-b-5']);
 		echo $this->html->Link('Rejeitar', ['action' => 'rejeitarhash', $fatura->hash], ['id' => 'btn-rejeitar', 'class' => 'btn btn-danger m-l-5 m-b-5']);
 	} else {
 		echo LocacaoStatus($fatura->status);
@@ -487,7 +487,7 @@
 			buttons: {
 				confirm: {
 					label: 'Sim',
-					className: 'btn-success'
+					className: 'btn btn-pgm btn-pgm-salvar btn-success'
 				},
 				cancel: {
 					label: 'Não',

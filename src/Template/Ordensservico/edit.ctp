@@ -216,7 +216,7 @@ else $disabled = false;
 								</div>
 							</div>
 						</div>
-						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-info btn-additem m-b-20', 'disabled' => $disabled]) ?>
+						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20', 'disabled' => $disabled]) ?>
 					<?php } ?>
 					<!-- Tabela -->
 					<div id="grid_table"></div>
@@ -225,17 +225,17 @@ else $disabled = false;
 					<?= $this->Form->control('valortotalordem', ['type' => 'hidden', 'label' => false,]) ?>
 
 					<?php
-					echo $this->Form->button('Salvar Ordem de Serviço', ['class' => 'btn btn-success m-t-20']);
-					echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $ordem->id], ['class' => 'btn btn-purple text-white m-l-5 m-t-20']);
-					echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ordem->id], ['class' => 'btn btn-orange text-white m-l-5 m-t-20']);
+					echo $this->Form->button('Salvar Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']);
+					echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-l-5 m-t-20']);
+					echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-l-5 m-t-20']);
 					if (!$ordem->locacao) echo $this->Html->link('Locação', ['action' => 'locacao', $ordem->id, 1], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right']);
 					else echo $this->Html->link('Remover locação', ['action' => 'locacao', $ordem->id, 0], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-info m-r-5 m-t-20 float-right']);
+					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right']);
 					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-danger m-r-5 m-t-20 float-right']);
 					if ($ordem->situacao == C_OrdensSituacaoLiberadaParaFaturamento) echo $this->Html->link('Voltar ordem', ['action' => 'pausar', $ordem->id], ['class' => 'btn btn-warning m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoAberta) echo $this->Html->link('Em execução', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-info m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-success m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao != C_OrdensSituacaoFinalizada) echo $this->Html->link('Finalizar', ['action' => 'finalizar', $ordem->id], ['class' => 'btn btn-purple m-r-5 m-t-20 float-right']);
+					if ($ordem->situacao == C_OrdensSituacaoAberta) echo $this->Html->link('Em execução', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right']);
+					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right']);
+					if ($ordem->situacao != C_OrdensSituacaoFinalizada) echo $this->Html->link('Finalizar', ['action' => 'finalizar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right']);
 					?>
 
 					<?= $this->Form->end() ?>
@@ -358,7 +358,7 @@ else $disabled = false;
 						</div>
 						<div class="row">
 							<div class="col-md-2 col-md-3 col-xs-6  m-t-20">
-								<?= $this->Form->button('Enviar', ['class' => 'btn btn-primary ']) ?>
+								<?= $this->Form->button('Enviar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-primary ']) ?>
 							</div>
 						</div>
 						<div class="clearfix"></div>
@@ -468,7 +468,7 @@ else $disabled = false;
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-success text-white btn-observacao m-l-5']) ?>
+				<?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-observacao m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -489,7 +489,7 @@ else $disabled = false;
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-success text-white btn-serialnumber m-l-5']) ?>
+				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-serialnumber m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -508,7 +508,7 @@ else $disabled = false;
 						<div class="input-group">
 							<input type="text" id="termo-pesquisa-produto" class="form-control" placeholder="Digite o nome ou código do produto...">
 							<span class="input-group-btn">
-								<button class="btn btn-info" type="button" onclick="buscarProdutos()">Pesquisar</button>
+								<button class="btn btn-pgm btn-pgm-situacao btn-info" type="button" onclick="buscarProdutos()">Pesquisar</button>
 							</span>
 						</div>
 					</div>
@@ -1342,7 +1342,7 @@ else $disabled = false;
 		$('.jsgrid-cell').each(function() {
 			if (!$(this).hasClass('cellInput') && $(this).text().length > 50) {
 				$(this).attr('data-textointeiro', $(this).text());
-				$(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-sm btn-primary btn-exapndemuitotexto btn-' + i + '"><i class="fa fa-search"></i></div>');
+				$(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-sm btn-pgm btn-pgm-situacao btn-primary btn-exapndemuitotexto btn-' + i + '"><i class="fa fa-search"></i></div>');
 				i++;
 			}
 		});
@@ -1422,7 +1422,7 @@ else $disabled = false;
 						tr.append('<td>' + prod.descricao + '</td>');
 						tr.append('<td>R$ ' + numberToReal(prod.vlunitario) + '</td>');
 
-						var btn = $('<button>').addClass('btn btn-success btn-sm').text('Selecionar');
+						var btn = $('<button>').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
 						btn.click(function() {
 							selecionarProduto(prod.codigo);
 						});

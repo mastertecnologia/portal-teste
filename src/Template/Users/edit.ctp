@@ -142,7 +142,7 @@
 
 			<div class="row m-t-20">
 				<div class="col-md-12 d-flex align-items-center">
-					<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-success m-r-10']) ?>
+					<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-10']) ?>
 					<?= $this->Form->end(); ?>
 					<?= $this->Html->link('Alterar senha', ['action' => 'changePassword', $user->id], ['class' => 'btn btn-warning m-r-10']) ?>
 					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'btn btn-danger']) ?>

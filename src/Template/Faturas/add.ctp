@@ -121,7 +121,7 @@
 				<div id="carrinho" class='m-t-10'> </div>
 				<div class="row">
 					<div class="col-12">
-						<?= $this->Form->button('Gerar Fatura', ['class' => 'btn btn-success float-right m-t-10']) ?>
+						<?= $this->Form->button('Gerar Fatura', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10']) ?>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>

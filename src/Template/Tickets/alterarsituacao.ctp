@@ -34,8 +34,8 @@
 				</div>
 				<div class="row">
 					<div class="col-lg-12">
-						<?= $this->Form->button('Alterar situação do Ticket', ['class' => 'btn btn-success btn-options m-l-5']) ?>						
-						<?= $this->Html->link('Voltar para o ticket', ["action" => "edit", $ticket->id], ['class' => 'btn btn-info btn-options']); ?>
+						<?= $this->Form->button('Alterar situação do Ticket', ['class' => 'btn btn-pgm btn-pgm-situacao btn-success btn-options m-l-5']) ?>						
+						<?= $this->Html->link('Voltar para o ticket', ["action" => "edit", $ticket->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-options']); ?>
 					</div>
 				</div>
 			</div>
@@ -64,7 +64,7 @@ $('#situacao').change(function(){
 							buttons: {
 								ver: {
 									label: 'Ver',
-									className: 'btn-success',
+									className: 'btn btn-pgm btn-pgm-situacao btn-info',
 									callback: function(){
 										var url = "<?= Router::url(array('controller'=>'Tickets','action'=>'edit'));?>";
 										window.open(url + '/' + data);

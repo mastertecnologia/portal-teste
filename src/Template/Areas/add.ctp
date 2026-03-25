@@ -16,7 +16,7 @@
                     </div>
                 </div>
             </div>
-            <?= $this->Form->button('Cadastrar Status', ['class' => 'btn btn-success m-t-20']) ?>
+            <?= $this->Form->button('Cadastrar Status', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']) ?>
             <div class="clearfix"></div>
             <?= $this->Form->end(); ?>
         </div>

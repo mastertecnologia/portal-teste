@@ -133,7 +133,7 @@
 								</div>
 							</div>
 						</div>
-						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-info btn-additem m-b-20']) ?>
+						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
 					<?php } ?>
 				<!-- Tabela -->
 				<div id="grid_table"></div>
@@ -147,7 +147,7 @@
 				<p class='m-b-0 mensagem'>Todos os itens da ordem devem poussir um código! Vincule os itens que não possuem um código a um produto válido.</p>
 				<?php
 					}else $disabled = false;
-					echo $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-success m-t-20 btn-enviar', 'disabled' => $disabled])
+					echo $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 btn-enviar', 'disabled' => $disabled])
 				?>
 
             <?= $this->Form->end() ?>
@@ -187,7 +187,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-success text-white btn-observacao m-l-5']) ?>
+                <?= $this->Html->link('Salvar Detalhes', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-observacao m-l-5']) ?>
                 <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
             </div>
         </div>
@@ -208,7 +208,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-success text-white btn-serialnumber m-l-5']) ?>
+				<?= $this->Html->link('Salvar serial number', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-serialnumber m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>
@@ -601,7 +601,7 @@
         $('.jsgrid-cell').each(function() {
             if(!$(this).hasClass('cellInput') && $(this).text().length > 50) {
                 $(this).attr('data-textointeiro', $(this).text());
-                $(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-sm btn-primary btn-exapndemuitotexto btn-'+i+'"><i class="fa fa-search "></i></div>');
+                $(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-sm btn-pgm btn-pgm-situacao btn-primary btn-exapndemuitotexto btn-'+i+'"><i class="fa fa-search "></i></div>');
                 i++;
             }
         });

@@ -5,7 +5,7 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
-			<?php if($role == 0) echo $this->Html->link('Nova locação', ['controller'=> 'locacao', 'action' => 'add'], ['class' => 'btn btn-success m-t-5 m-r-5 m-b-20', 'target' => '_blank']) ?>
+			<?php if($role == 0) echo $this->Html->link('Nova locação', ['controller'=> 'locacao', 'action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-5 m-r-5 m-b-20', 'target' => '_blank']) ?>
 			<?= $this->Form->create('Fatura', ['type' => 'get', 'class' => 'form-material']); ?>
 				<div class="row">
 					<?php if($role == 0){ ?>

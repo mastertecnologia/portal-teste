@@ -6,7 +6,7 @@ $this->Breadcrumbs->add('Contratos de Horas', [], ['class' => 'breadcrumb-item a
 	<div class="card">
 		<div class="card-body">
 			<h4 class="card-title">Contratos de Horas Técnicas</h4>
-			<?= $this->Html->link('Novo contrato', ['action' => 'add', $idcliente], ['class' => 'btn btn-success m-b-20']) ?>
+			<?= $this->Html->link('Novo contrato', ['action' => 'add', $idcliente], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-b-20']) ?>
 			<?= $this->Html->link('Voltar ao cliente', ['controller' => 'Clientes', 'action' => 'edit', $idcliente], ['class' => 'btn btn-secondary m-b-20']) ?>
 			<div class="table-responsive">
 				<table class="table table-hover">

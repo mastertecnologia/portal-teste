@@ -40,7 +40,7 @@
 <?php $autoPrint = (bool)$this->request->getQuery('autoprint'); ?>
 <?php if (!$autoPrint) { ?>
 	<div class="col-12 col-btns">
-		<?= $this->Html->link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-purple text-white btn-sm']) ?>
+		<?= $this->Html->link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white btn-sm']) ?>
 	</div>
 <?php } ?>
 <div class="col-12 col-print">

@@ -36,7 +36,7 @@ $this->Breadcrumbs->add('Cadastrar Horas', [], ['class' => 'breadcrumb-item acti
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-3 col-sm-6 col-xs-12 m-t-20">
-                    <?= $this->Form->button('Cadastrar', ['class' => 'btn btn-orange ']) ?>
+                    <?= $this->Form->button('Cadastrar', ['class' => 'btn btn-pgm btn-pgm-salvar ']) ?>
                 </div>
             </div>
             <div class="clearfix"></div>
@@ -60,7 +60,7 @@ $this->Breadcrumbs->add('Cadastrar Horas', [], ['class' => 'breadcrumb-item acti
                     </tbody>
                 </table>
             </div>
-            <?= $this->Html->link('Voltar para o ticket', ["action" => "edit", $idticket], ['class' => 'btn btn-info']); ?>
+            <?= $this->Html->link('Voltar para o ticket', ["action" => "edit", $idticket], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info']); ?>
         </div>
     </div>
 </div>

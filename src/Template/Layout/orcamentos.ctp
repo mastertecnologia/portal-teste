@@ -18,6 +18,7 @@
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/css/orcamentos-premium") ?>
+	<?= $this->Html->css("/css/pgm-action-buttons") ?>
 
 	<!-- Timeline CSS -->
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>

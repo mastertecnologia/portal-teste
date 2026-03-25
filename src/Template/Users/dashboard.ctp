@@ -497,7 +497,7 @@
 												<td><?= AssuntoTicket($reg->assunto) ?></td>
 												<td class="dash-cli-status-cell"><?= SituacaoTicket($reg->situacao) ?></td>
 												<td class="td-actions text-right">
-													<?= $this->Html->link('<i class="fas fa-eye"></i>', ['controller' => 'Tickets', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Visualizar ticket', 'class' => 'btn btn-sm btn-info dash-cli-btn-icon', 'escape' => false]); ?>
+													<?= $this->Html->link('<i class="fas fa-eye"></i>', ['controller' => 'Tickets', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Visualizar ticket', 'class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info dash-cli-btn-icon', 'escape' => false]); ?>
 												</td>
 											</tr>
 										<?php endforeach; ?>

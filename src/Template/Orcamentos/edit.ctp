@@ -129,7 +129,7 @@
 								<?= $this->Html->link(
 									'<i class="fa fa-wrench"></i> Ordem de serviço gerada: Nº ' . $temordem, 
 									["controller" => "ordensservico", "action" => "edit", $temordem], 
-									['class' => 'btn btn-sm btn-info text-white m-r-5', 'escape' => false]
+									['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info text-white m-r-5', 'escape' => false]
 								); ?> 
 							</h5>
 						<?php endif; ?>
@@ -207,12 +207,12 @@
 				<div class="row m-t-10">
 					<div class="col-12">
 						<?php
-							if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])) echo $this->Form->button('Salvar alterações realizadas', ['class' => 'btn btn-success m-l-5']);
-							echo $this->Html->Link('Alterar Situação', ['action' => 'alterarsituacao', $orcamento->id], ['class' => 'btn btn-queequaseinfo m-l-5']);
-							echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-orange m-l-5']);
-							echo $this->Html->Link('Baixar PDF', ['action' => 'imprimirPdf', $orcamento->id], ['class' => 'btn btn-success m-l-5']);
-							echo $this->Html->Link('Enviar e-mail', ['#'], ['class' => 'btn btn-purple btn-email m-l-5']);
-							if($temordem == 'nao') echo $this->html->Link('Transformar em ordem', ['action' => 'novaordem', $orcamento->id], ['class' => 'btn btn-warning m-l-5']);
+							if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])) echo $this->Form->button('Salvar alterações realizadas', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-l-5']);
+							echo $this->Html->Link('Alterar Situação', ['action' => 'alterarsituacao', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-queequaseinfo m-l-5']);
+							echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5']);
+							echo $this->Html->Link('Baixar PDF', ['action' => 'imprimirPdf', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-pdf btn-success m-l-5']);
+							echo $this->Html->Link('Enviar e-mail', ['#'], ['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-email m-l-5']);
+							if($temordem == 'nao') echo $this->html->Link('Transformar em ordem', ['action' => 'novaordem', $orcamento->id], ['class' => 'btn btn-pgm btn-pgm-ordem btn-warning m-l-5']);
 						?>
 					</div>
 				</div>
@@ -241,7 +241,7 @@
 							<br>
 							<?= $this->Form->control('idorcamento', ['value' => $orcamento->id, 'label' => false, 'type' => 'hidden']) ?>
 						</div>
-						<?= $this->Form->button('Enviar', ['class' => 'btn btn-purple text-white float-right m-l-10']) ?>
+						<?= $this->Form->button('Enviar', ['class' => 'btn btn-pgm btn-pgm-email btn-purple text-white float-right m-l-10']) ?>
 						<button type="button" class="btn btn-danger waves-effect float-right" data-dismiss="modal">Fechar</button>
 					<?= $this->Form->end(); ?>
 				</div>

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PGM Soluções — Dashboard</title>
+<link rel="stylesheet" href="webroot/css/pgm-action-buttons.css"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -16,17 +17,17 @@
   --text: #e6edf3;
   --text-muted: #7d8590;
   --text-dim: #484f58;
-  --blue: #388bfd;
-  --blue-dim: #1f3a5f;
-  --blue-glow: rgba(56,139,253,0.12);
-  --green: #3fb950;
-  --green-dim: #1a3a25;
-  --orange: #d29922;
-  --orange-dim: #3d2e0a;
+  --blue: #33CCFF;
+  --blue-dim: #0d3d52;
+  --blue-glow: rgba(51,204,255,0.12);
+  --green: #00C08B;
+  --green-dim: #0a2e28;
+  --orange: #FF8833;
+  --orange-dim: #3d220c;
   --red: #f85149;
   --red-dim: #3d1515;
-  --purple: #bc8cff;
-  --purple-dim: #2d1f4e;
+  --purple: #A682E6;
+  --purple-dim: #352550;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -129,8 +130,24 @@ body {
   border-bottom: 1px solid var(--border);
   background: var(--surface); flex-shrink: 0;
 }
-.topbar-title { font-size: 13.5px; font-weight: 500; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-title { font-size: 13.5px; font-weight: 500; flex-shrink: 0; }
+.topbar-left-cluster { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; flex-wrap: wrap; }
+.topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.dash-pgm-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dash-pgm-toolbar .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
 
 .notif-btn {
   position: relative; width: 30px; height: 30px;
@@ -509,7 +526,16 @@ td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
 <!-- ══ MAIN ══ -->
 <main class="main">
   <div class="topbar">
-    <span class="topbar-title">Dashboard</span>
+    <div class="topbar-left-cluster">
+      <span class="topbar-title">Dashboard</span>
+      <div class="dash-pgm-toolbar" aria-label="Ações rápidas (protótipo PGM)">
+        <button type="button" class="btn btn-pgm btn-pgm-salvar" title="Protótipo — sem ação" onclick="void(0)">Nova OS</button>
+        <button type="button" class="btn btn-pgm btn-pgm-situacao" title="Protótipo — sem ação" onclick="void(0)">Situação</button>
+        <button type="button" class="btn btn-pgm btn-pgm-imprimir" title="Protótipo — sem ação" onclick="void(0)">Imprimir</button>
+        <button type="button" class="btn btn-pgm btn-pgm-email" title="Protótipo — sem ação" onclick="void(0)">E-mail</button>
+        <button type="button" class="btn btn-pgm btn-pgm-ordem" title="Protótipo — sem ação" onclick="void(0)">Converter ordem</button>
+      </div>
+    </div>
     <div class="topbar-right">
       <div style="font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">24/03/2026 — 09:41</div>
       <div class="notif-btn" id="notifBtn" onclick="toggleNotif()">
@@ -635,7 +661,7 @@ td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
           <div class="sla-ring">
             <svg width="60" height="60" viewBox="0 0 60 60">
               <circle cx="30" cy="30" r="24" fill="none" stroke="#21262d" stroke-width="6"/>
-              <circle cx="30" cy="30" r="24" fill="none" stroke="#3fb950" stroke-width="6"
+              <circle cx="30" cy="30" r="24" fill="none" stroke="#00C08B" stroke-width="6"
                 stroke-dasharray="150.8" stroke-dashoffset="40.7" stroke-linecap="round"/>
             </svg>
             <div class="sla-pct">73%</div>
@@ -808,7 +834,7 @@ td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
         <div class="ranking-scroll">
           <div class="ranking-item">
             <span class="rank-num">1</span>
-            <div class="rank-avatar" style="background:linear-gradient(135deg,#388bfd,#bc8cff)">DG</div>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#33CCFF,#A682E6)">DG</div>
             <div class="rank-info">
               <div class="rank-name">Darli G.</div>
               <div class="rank-sub" style="color:var(--green)">32 tickets</div>
@@ -817,7 +843,7 @@ td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
           </div>
           <div class="ranking-item">
             <span class="rank-num">2</span>
-            <div class="rank-avatar" style="background:linear-gradient(135deg,#3fb950,#388bfd)">MS</div>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#00C08B,#33CCFF)">MS</div>
             <div class="rank-info">
               <div class="rank-name">Marcos S.</div>
               <div class="rank-sub">24 tickets</div>
@@ -826,7 +852,7 @@ td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
           </div>
           <div class="ranking-item">
             <span class="rank-num">3</span>
-            <div class="rank-avatar" style="background:linear-gradient(135deg,#d29922,#f85149)">AR</div>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#FF8833,#f85149)">AR</div>
             <div class="rank-info">
               <div class="rank-name">Ana R.</div>
               <div class="rank-sub">18 tickets</div>
@@ -835,7 +861,7 @@ td { padding: 7px 12px; vertical-align: middle; font-size: 11.5px; }
           </div>
           <div class="ranking-item">
             <span class="rank-num">4</span>
-            <div class="rank-avatar" style="background:linear-gradient(135deg,#bc8cff,#388bfd)">PT</div>
+            <div class="rank-avatar" style="background:linear-gradient(135deg,#A682E6,#33CCFF)">PT</div>
             <div class="rank-info">
               <div class="rank-name">Pedro T.</div>
               <div class="rank-sub">11 tickets</div>
@@ -891,8 +917,8 @@ new Chart(document.getElementById('trendChart'), {
   data: {
     labels,
     datasets: [
-      { data: opened, borderColor: '#388bfd', backgroundColor: 'rgba(56,139,253,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 },
-      { data: closed, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.07)',  fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
+      { data: opened, borderColor: '#33CCFF', backgroundColor: 'rgba(51,204,255,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 },
+      { data: closed, borderColor: '#00C08B', backgroundColor: 'rgba(0,192,139,0.07)',  fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 }
     ]
   },
   options: {
@@ -913,7 +939,7 @@ new Chart(document.getElementById('trendChart'), {
 // ── ONE-CLICK FILTER DATA ──
 const filterData = {
   aguardando: {
-    color: '#d29922', subtitle: '4 tickets aguardando atribuição',
+    color: '#FF8833', subtitle: '4 tickets aguardando atribuição',
     head: ['ID','Cliente','Data','SLA'],
     rows: [
       ['#1165','TRANSPORTES CRISTOFOLI LTDA','17/03/2026','<span class="sla-badge sla-warn"><span class="dot orange"></span>7 dias</span>'],
@@ -923,7 +949,7 @@ const filterData = {
     ]
   },
   execucao: {
-    color: '#388bfd', subtitle: '11 tickets em andamento',
+    color: '#33CCFF', subtitle: '11 tickets em andamento',
     head: ['ID','Cliente','Data','SLA'],
     rows: [
       ['#1172','PGM SOLUÇÕES EM TI LTDA','23/03/2026','<span class="sla-badge sla-ok"><span class="dot green"></span>1 dia</span>'],
@@ -938,7 +964,7 @@ const filterData = {
     ]
   },
   finalizados: {
-    color: '#3fb950', subtitle: '440 tickets finalizados no período',
+    color: '#00C08B', subtitle: '440 tickets finalizados no período',
     head: ['ID','Cliente','Encerrado','Técnico'],
     rows: [
       ['#1170','TRIANON IND E COM LTDA','22/03/2026','Darli G.'],
@@ -949,7 +975,7 @@ const filterData = {
     ]
   },
   requisicoes: {
-    color: '#bc8cff', subtitle: '1 requisição aguardando aprovação',
+    color: '#A682E6', subtitle: '1 requisição aguardando aprovação',
     head: ['Usuário','Módulo','Solicitado','Status'],
     rows: [
       ['João Silva','Financeiro','24/03/2026','<span class="sla-badge" style="background:var(--purple-dim);color:var(--purple)">Pendente</span>'],
@@ -1012,7 +1038,7 @@ setTimeout(() => {
   const panel = document.getElementById('notifPanel');
   const item = document.createElement('div');
   item.className = 'notif-item';
-  item.style.background = 'rgba(188,140,255,0.07)';
+  item.style.background = 'rgba(166,130,230,0.07)';
   item.innerHTML = `
     <div class="notif-icon-wrap purple">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1027,7 +1053,7 @@ setTimeout(() => {
 
   const card = document.getElementById('reqCard');
   card.style.borderColor = 'var(--purple)';
-  card.style.boxShadow = '0 0 18px rgba(188,140,255,0.3)';
+  card.style.boxShadow = '0 0 18px rgba(166,130,230,0.3)';
   filterData.requisicoes.rows.push(['Maria Costa','RH','24/03/2026','<span class="sla-badge" style="background:var(--purple-dim);color:var(--purple)">Pendente</span>']);
   filterData.requisicoes.subtitle = '2 requisições aguardando aprovação';
   setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 2500);

@@ -656,7 +656,7 @@
 				<section class="sd-actions-card">
 					<h2>Ações</h2>
 					<div class="sd-actions-btns">
-						<?= $this->Form->button('Enviar chamado', ['id' => 'abrirticket', 'type' => 'submit', 'class' => 'sd-btn-submit btn btn-success aparecedepois']) ?>
+						<?= $this->Form->button('Enviar chamado', ['id' => 'abrirticket', 'type' => 'submit', 'class' => 'sd-btn-submit btn btn-pgm btn-pgm-salvar btn-success aparecedepois']) ?>
 						<a href="<?= h(Router::url(['controller' => 'Tickets', 'action' => 'index'])) ?>" class="sd-btn-ghost">Cancelar</a>
 					</div>
 				</section>

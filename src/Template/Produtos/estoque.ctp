@@ -47,8 +47,8 @@
     
 </style>
 <div class="col-md-12">
-    <?= $this->Html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-orange m-l-5 m-b-5']) ?>
-    <?php if(!$bApenasComSaldo) echo $this->html->Link('Exibir apenas produtos com estoque', [], ['id' => 'btn-saldo', 'class' => 'btn btn-info m-l-5 m-b-5']) ?>
+    <?= $this->Html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
+    <?php if(!$bApenasComSaldo) echo $this->html->Link('Exibir apenas produtos com estoque', [], ['id' => 'btn-saldo', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info m-l-5 m-b-5']) ?>
     <?php if($bApenasComSaldo) echo $this->html->Link('Exibir todos os produtos', [], ['id' => 'btn-todos', 'class' => 'btn btn-queequaseinfo m-l-5 m-b-5']) ?>
     <br>
     <?= $this->Form->create(null, ['class' => 'form']) ?>
@@ -62,7 +62,7 @@
                 <?= $this->Form->control('sDescricao', ['id' => 'sDescricao',  'class' => 'form-control', 'value' => $sDescricao, 'label' => false]) ?>
             </div>
             <div class="col-md-4 col-xs-12">
-                <?= $this->Form->button('Buscar', ['class' => 'btn btn-info m-l-5 m-t-30']) ?>
+                <?= $this->Form->button('Buscar', ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-l-5 m-t-30']) ?>
                 <?= $this->Form->button('Limpar filtros', ['id' => 'btn-limpar', 'class' => 'btn btn-warning m-t-30']) ?>
             </div>
         </div>

@@ -51,7 +51,7 @@ Form icheck
   margin-left: 0; }
 
 .icolors > li.orange {
-  background: #fb9678; }
+  background: #00C08B; }
 
 .icolors > li.yellow {
   background: #fec107; }
@@ -60,7 +60,7 @@ Form icheck
   background: #03a9f3; }
 
 .icolors > li.green {
-  background: #00c292; }
+  background: #00C08B; }
 
 .icolors > li.red {
   background: #e46a76; }
@@ -69,7 +69,7 @@ Form icheck
   background: #ab8ce4; }
 
 .icolors > li.blue {
-  background: #01c0c8; }
+  background: #33CCFF; }
 
 .icheck-list {
   float: left;

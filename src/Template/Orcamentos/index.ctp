@@ -79,11 +79,11 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 }
 #orc-premium-container .orc-premium-kpi-n { color: var(--sc) !important; }
 #orc-premium-container .orc-premium-stat-label { color: #6b6a65 !important; }
-#orc-premium-container a { color: #1D9E75 !important; }
+#orc-premium-container a { color: #00C08B !important; }
 #orc-premium-container .nav-tabs .nav-link { color: #6b6a65 !important; }
 #orc-premium-container .nav-tabs .nav-link.active {
-	color: #1D9E75 !important;
-	border-bottom: 2px solid #1D9E75 !important;
+	color: #00C08B !important;
+	border-bottom: 2px solid #00C08B !important;
 }
 	</style>
 	<?php if ((int)($role ?? 1) === 0) : ?>
@@ -95,20 +95,20 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 			<?= $this->Html->link(
 				'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> + Gerar Orçamento',
 				['action' => 'add'],
-				['class' => 'btn orc-premium-btn-primary', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
+				['class' => 'btn orc-premium-btn-primary btn-pgm btn-pgm-salvar', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
 			) ?>
 		</header>
 
 		<div class="orc-premium-stats" role="tablist">
-			<button type="button" class="orc-premium-stat active" style="--orc-sc:#e9a025;" data-orc-tab="pendentes" aria-selected="true">
+			<button type="button" class="orc-premium-stat active" style="--orc-sc:#FFC107;" data-orc-tab="pendentes" aria-selected="true">
 				<span class="orc-premium-stat-l">Em andamento</span>
 				<span class="orc-premium-stat-n"><?= $tEm ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#1d9e75;" data-orc-tab="enviados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#00C08B;" data-orc-tab="enviados" aria-selected="false">
 				<span class="orc-premium-stat-l">Enviados</span>
 				<span class="orc-premium-stat-n"><?= $tEn ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#378add;" data-orc-tab="aprovados" aria-selected="false">
+			<button type="button" class="orc-premium-stat" style="--orc-sc:#33CCFF;" data-orc-tab="aprovados" aria-selected="false">
 				<span class="orc-premium-stat-l">Aprovados</span>
 				<span class="orc-premium-stat-n"><?= $tAp ?></span>
 			</button>
@@ -358,7 +358,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 			<?= $this->Html->link(
 				'<i class="ti-plus" aria-hidden="true"></i> Solicitar orçamento',
 				['controller' => 'Tickets', 'action' => 'add', 4],
-				['class' => 'btn orc-premium-btn-primary', 'escape' => false]
+				['class' => 'btn orc-premium-btn-primary btn-pgm btn-pgm-salvar', 'escape' => false]
 			) ?>
 		</header>
 		<div class="orc-premium-list-card">

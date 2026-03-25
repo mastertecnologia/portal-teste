@@ -3,7 +3,7 @@
 	<div class="card">
 		<div class="card-body">
             <div class="table-responsive">	
-                <?= $this->Html->link('Adicionar Senha', ['action' => 'add'], ['class' => 'btn btn-success', 'target' => '_blank']) ?>
+                <?= $this->Html->link('Adicionar Senha', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success', 'target' => '_blank']) ?>
                 <table class="table table-hover table-row-clickable" id="tableSenhas">
                     <thead class="text-primary">
                         <th>Serviço</th>
@@ -59,7 +59,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<?= $this->Html->link('Confirmar', ['#'], ['class' => 'btn btn-success text-white btn-verificasenha m-l-5']) ?>
+				<?= $this->Html->link('Confirmar', ['#'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success text-white btn-verificasenha m-l-5']) ?>
 				<button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">Fechar</button>
 			</div>
 		</div>

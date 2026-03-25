@@ -51,7 +51,7 @@
 											</div>
 										</div>
 									</div>
-									<?= $this->Form->button('Salvar senha', ['class' => 'btn btn-success m-t-10']) ?>
+									<?= $this->Form->button('Salvar senha', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-10']) ?>
 								<?= $this->Form->end(); ?>
 							</div>
 						</div>

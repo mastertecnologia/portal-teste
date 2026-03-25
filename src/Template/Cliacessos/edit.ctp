@@ -45,7 +45,7 @@
 				</div>
 				<div class="row m-t-10">
 					<div class="col-lg-12">
-						<?= $this->Form->button('Salvar acesso', ['class' => 'btn btn-success']) ?>
+						<?= $this->Form->button('Salvar acesso', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 						<?= $this->Html->link('Alterar senha', ['action' => 'change_password', $cliacesso->id], ['class' => 'btn btn-warning m-l-5']) ?>
 						<?= $this->Html->link('Voltar para o cliente', ["controller" => "clientes", "action" => "edit", $cliacesso->idcliente, 1], ['class' => 'btn btn-secondary m-l-5']); ?>
 					</div>

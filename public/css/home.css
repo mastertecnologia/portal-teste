@@ -18,7 +18,7 @@
 }
 
 a {
-    color: #0071BC;
+    color: #33CCFF;
     -webkit-transition: all 0.2s;
     -moz-transition: all 0.2s;
     -ms-transition: all 0.2s;
@@ -107,7 +107,7 @@ h3, h4 {
     text-align: center;
     display: block;
     padding: 12px;
-    border-bottom: 2px solid #ffcf06;
+    border-bottom: 2px solid #FFC107;
 }
 
 .alert {
@@ -115,7 +115,7 @@ h3, h4 {
     font-size: 12px;
     display: block;
     padding: 12px;
-    border-bottom: 2px solid #ffcf06;
+    border-bottom: 2px solid #FFC107;
     margin-bottom: 30px;
     color: #404041;
 }
@@ -127,7 +127,7 @@ h3, h4 {
 }
 
 .alert p:before {
-    color: #ffcf06;
+    color: #FFC107;
     content: "\0055";
     font-family: 'cakefont', sans-serif;
     font-size: 21px;
@@ -180,7 +180,7 @@ ul li ul, ul li ul li {
 }
 
 .success:before {
-    color: #88c671;
+    color: #00C08B;
     content: "\0056";
 }
 

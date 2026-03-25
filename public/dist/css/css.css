@@ -43,15 +43,15 @@
 
 .btn-orange  {
 	color: white !important;
-	background-color: #ff882e !important;
+	background-color: #ff8833 !important;
 }
 .btn-orange:hover  {
 	color: white;
-	background-color: rgb(235, 111, 10) !important;
-	box-shadow: 0 0 0 0.02rem rgb(221, 112, 28) !important;
+	background-color: #e67220 !important;
+	box-shadow: 0 0 0 0.02rem rgba(255, 136, 51, 0.35) !important;
 }
 .btn-orange:focus  {
-	box-shadow: 0 0 0 0.17rem #f86f06 !important;
+	box-shadow: 0 0 0 0.17rem rgba(255, 136, 51, 0.45) !important;
 }
 .btn-orange:disabled,
 .btn-orange.is-disabled  {
@@ -59,23 +59,23 @@
 }
 
 .bg-queequaseinfo {
-	background-color: #22cdf0 !important;
+	background-color: #33ccff !important;
 	color: white !important;
 }
 .btn-queequaseinfo {
-	background-color: #22cdf0 !important;
+	background-color: #33ccff !important;
 	color: white !important;
 }
 .btn-queequaseinfo:hover {
-	background-color: #1a9fba !important;
+	background-color: #1ab8e8 !important;
 }
 .btn-queequaseinfo:focus {
-	background-color: #16859c !important;
-	-webkit-box-shadow: 0 0 0 0.2rem rgba(35, 198, 232, 0.5);
-	box-shadow: 0 0 0 0.2rem rgba(35, 198, 232, 0.5);
+	background-color: #1ab8e8 !important;
+	-webkit-box-shadow: 0 0 0 0.2rem rgba(51, 204, 255, 0.45);
+	box-shadow: 0 0 0 0.2rem rgba(51, 204, 255, 0.45);
 }
 .label-queequaseinfo {
-	background-color: #22cdf0 !important;
+	background-color: #33ccff !important;
 	color: white !important;
 }
 .label-dark {
@@ -96,6 +96,14 @@
 
 .btn-purple {
 	color: white !important;
+	background-color: #a682e6 !important;
+	border-color: #a682e6 !important;
+}
+.btn-purple:hover,
+.btn-purple:focus {
+	color: white !important;
+	background-color: #8f68d4 !important;
+	border-color: #8f68d4 !important;
 }
 
 

@@ -27,8 +27,8 @@
 						</table>
 					</div>
 					<?php if($admin){
-						echo $this->Html->link('Adicionar relação', ['action' => 'add'], ['class' => 'btn btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']);
-						echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-primary  m-t-20', 'style' => 'margin-bottom: 20px;']);
+						echo $this->Html->link('Adicionar relação', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']);
+						echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary  m-t-20', 'style' => 'margin-bottom: 20px;']);
 					} ?>
                 </div>
 				<div class="tab-pane" id="clirelacoes">
@@ -51,8 +51,8 @@
 						</table>
 					</div>
 					<?php if($admin){
-						echo $this->Html->link('Adicionar relação', ['action' => 'add'], ['class' => 'btn btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']);
-						echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-primary  m-t-20', 'style' => 'margin-bottom: 20px;']);
+						echo $this->Html->link('Adicionar relação', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-t-20 m-r-5', 'style' => 'margin-bottom: 20px;', 'target' => '_blank']);
+						echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary  m-t-20', 'style' => 'margin-bottom: 20px;']);
 					} ?>
                 </div>
             </div>      	

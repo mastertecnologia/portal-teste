@@ -60,7 +60,7 @@
 					</div>
 					<div class="col-lg-4 col-md-12 m-t-10">
 						<?= $this->Html->link('Limpar', ["action" => "indexcliente"], ['rel' => 'tooltip', 'class' => 'btn btn-secondary m-t-20']); ?>
-						<?= $this->Html->link('Abrir Ticket', ["action" => "add"], ['class' => 'btn btn-success m-t-20 m-l-10', 'escape' => false]) ?>
+						<?= $this->Html->link('Abrir Ticket', ["action" => "add"], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 m-l-10', 'escape' => false]) ?>
 					</div>
 				</div><br>
 			<?= $this->Form->end(); ?>

@@ -14,7 +14,7 @@
 						</div>
 					</div>
 				</div>
-				<?= $this->Form->button('Migrar dados', ['class' => 'btn btn-success']) ?>
+				<?= $this->Form->button('Migrar dados', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 			<?= $this->Form->end(); ?>
 		</div>
 	</div>

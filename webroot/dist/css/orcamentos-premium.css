@@ -4,17 +4,17 @@
  * Escopo: .orc-premium-wrap (não altera o restante do ERP)
  */
 .orc-premium-wrap {
-  --orc-teal: #1d9e75;
-  --orc-teal-dark: #0f6e56;
-  --orc-teal-dim: rgba(29, 158, 117, 0.15);
-  --orc-amber: #e9a025;
-  --orc-amber-dim: rgba(233, 160, 37, 0.15);
-  --orc-blue: #378add;
-  --orc-blue-dim: rgba(55, 138, 221, 0.15);
-  --orc-green: #1d9e75;
+  --orc-teal: #00C08B;
+  --orc-teal-dark: #008f68;
+  --orc-teal-dim: rgba(0, 192, 139, 0.15);
+  --orc-amber: #FFC107;
+  --orc-amber-dim: rgba(255, 193, 7, 0.15);
+  --orc-blue: #33CCFF;
+  --orc-blue-dim: rgba(51, 204, 255, 0.15);
+  --orc-green: #00C08B;
   --orc-red: #e24b4a;
   --orc-red-dim: rgba(226, 75, 74, 0.12);
-  --orc-purple: #7f77dd;
+  --orc-purple: #A682E6;
   --orc-radius: 12px;
   --orc-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
@@ -41,7 +41,7 @@
 }
 
 .orc-premium-wrap .orc-premium-kpi:hover {
-  border-color: rgba(29, 158, 117, 0.35);
+  border-color: rgba(0, 192, 139, 0.35);
 }
 
 .orc-premium-wrap .orc-premium-kpi-icon {
@@ -97,7 +97,7 @@
 .orc-premium-wrap .orc-premium-kpi--rejected .orc-premium-kpi-value { color: var(--orc-red); }
 
 .orc-premium-wrap .orc-premium-kpi--archived .orc-premium-kpi-icon {
-  background: rgba(127, 119, 221, 0.15);
+  background: rgba(166, 130, 230, 0.15);
   color: var(--orc-purple);
 }
 .orc-premium-wrap .orc-premium-kpi--archived .orc-premium-kpi-value { color: #c4bddf; }
@@ -117,7 +117,7 @@
   font-weight: 700;
   border-radius: 10px;
   padding: 10px 18px;
-  box-shadow: 0 2px 12px rgba(29, 158, 117, 0.35);
+  box-shadow: 0 2px 12px rgba(0, 192, 139, 0.35);
 }
 .orc-premium-wrap .btn-orc-premium-primary:hover {
   filter: brightness(1.06);
@@ -135,8 +135,8 @@
 }
 .orc-premium-wrap .orc-premium-tabs .nav-link.active {
   color: var(--orc-teal) !important;
-  background: rgba(29, 158, 117, 0.1) !important;
-  border-color: rgba(29, 158, 117, 0.35) rgba(29, 158, 117, 0.2) transparent !important;
+  background: rgba(0, 192, 139, 0.1) !important;
+  border-color: rgba(0, 192, 139, 0.35) rgba(0, 192, 139, 0.2) transparent !important;
 }
 
 .orc-premium-wrap .orc-premium-card-inner {
@@ -185,7 +185,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(29, 158, 117, 0.15);
+  background: rgba(0, 192, 139, 0.15);
   color: #0f6e56;
   font-size: 11px;
   font-weight: 700;
@@ -383,12 +383,12 @@
 }
 
 .orc-premium-index .orc-premium-tab-btns .nav-link:hover {
-  background: rgba(29, 158, 117, 0.08) !important;
+  background: rgba(0, 192, 139, 0.08) !important;
   color: var(--orc-teal-dark) !important;
 }
 
 .orc-premium-index .orc-premium-tab-btns .nav-link.active {
-  background: rgba(29, 158, 117, 0.18) !important;
+  background: rgba(0, 192, 139, 0.18) !important;
   color: var(--orc-teal-dark) !important;
   font-weight: 600 !important;
 }

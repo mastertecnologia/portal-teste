@@ -19,7 +19,7 @@
 						</div>
 					</div>
 				</div>
-				<?= $this->Form->button('Desativar Verificação', ['class' => 'btn btn-success m-t-10']) ?>
+				<?= $this->Form->button('Desativar Verificação', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-10']) ?>
 			<?= $this->Form->end(); ?>
 		</div>
 </div>

@@ -84,7 +84,7 @@
                         <!-- Fim Outros -->
                     </tbody>
                 </table>
-				<?php if($orcamento->status == C_OrcamentoStatusEnviado) echo $this->Html->Link('Aprovar', ['action' => 'aprovarhash', $orcamento->hash], ['class' => 'btn btn-aprovar btn-success float-right m-t-20']); ?>
+				<?php if($orcamento->status == C_OrcamentoStatusEnviado) echo $this->Html->Link('Aprovar', ['action' => 'aprovarhash', $orcamento->hash], ['class' => 'btn btn-aprovar btn-pgm btn-pgm-salvar btn-success float-right m-t-20']); ?>
             </div>
 		</div>
 	</div>
@@ -104,7 +104,7 @@
 		bootbox.confirm({
 			message: "Você confirma a aprovação do orçamento?",
 			buttons: {
-				confirm: { label: 'Sim', className: 'btn-success' },
+				confirm: { label: 'Sim', className: 'btn btn-pgm btn-pgm-salvar btn-success' },
 				cancel: { label: 'Cancelar', className: 'btn-danger' }
 			},
 			callback: function (result) {

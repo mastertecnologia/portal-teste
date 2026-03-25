@@ -55,7 +55,7 @@
 						</div>
 					</div>
 				</div>
-				<?= $this->Form->button('Salvar', ['class' => 'btn btn-success m-t-20']) ?>
+				<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']) ?>
 				<?= $this->Html->link('Alterar senha', ['action' => 'change_password', $senha->id], ['class' => 'btn btn-warning m-t-20']) ?>
 			<?= $this->Form->end(); ?>
 		</div>
