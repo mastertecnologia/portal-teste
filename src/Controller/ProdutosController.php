@@ -425,6 +425,74 @@ class ProdutosController extends AppController {
 		}
 	}
 
+	/**
+	 * Estoque ERP em lote (GetProdutoEstoque por código) — catálogo de orçamento.
+	 * POST: codigos = string CSV ou array de códigos (máx. 150).
+	 *
+	 * @return \Cake\Http\Response JSON objeto { "COD1": n, "COD2": -999, ... }
+	 */
+	public function estoquesLote() {
+		error_reporting(0);
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+
+		$codigos = $this->request->getData('codigos');
+		if (is_string($codigos)) {
+			$codigos = array_filter(array_map('trim', explode(',', $codigos)));
+		}
+		if (!is_array($codigos)) {
+			return $this->jsonResponse(['erro' => 'codigos inválidos'], 400);
+		}
+		$codigos = array_values(array_unique(array_filter(array_map('strval', $codigos), function ($c) {
+			return $c !== '';
+		})));
+		if (count($codigos) > 150) {
+			$codigos = array_slice($codigos, 0, 150);
+		}
+
+		$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
+		$out = [];
+		if (empty($empresa->urlerp)) {
+			foreach ($codigos as $c) {
+				$out[$c] = null;
+			}
+
+			return $this->jsonResponse($out, 200);
+		}
+
+		$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
+		foreach ($codigos as $produto) {
+			try {
+				$q = $this->runSoapBuffered(function () use ($soapprodutos, $produto) {
+					$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+					if ($soap === null) {
+						throw new \Exception('Erro');
+					}
+					$response = $soap->sendRequest('GetProdutoEstoque', [
+						'Data' => [
+							'iFilial' => C_Filial,
+							'sChave' => C_ChaveAcesso,
+							'sProduto' => $produto,
+						]
+					]);
+
+					return $response->GetProdutoEstoqueResult;
+				});
+				if (is_numeric($q)) {
+					$out[$produto] = (float) $q;
+				} elseif (is_scalar($q) && is_numeric((string) $q)) {
+					$out[$produto] = (float) (string) $q;
+				} else {
+					$out[$produto] = -999;
+				}
+			} catch (\Throwable $e) {
+				$out[$produto] = -999;
+			}
+		}
+
+		return $this->jsonResponse($out, 200);
+	}
+
 	public function serialnumberproduto($produto) {
 		error_reporting(0);
 		$this->autoRender = false;

@@ -38,7 +38,7 @@ class AppController extends Controller {
 				'carrinho', 'carrinhoadd', 'carrinhoedititem', 'carrinhodelitem', 'valortotal', 'acaoindex',
 				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'carrinhoedit',
 				'timerIniciar', 'timerPausar', 'timerRetomar', 'timerFinalizar',
-				'produto', 'qtdestoque', // Orçamentos: busca produto e estoque via AJAX
+				'produto', 'qtdestoque', 'estoquesLote', // Orçamentos: produto, estoque e catálogo (lote)
 				// APIs de integração ERP (sem sessão web; token em header)
 				'addApi', 'listApi', 'refreshApi', 'addAPI', 'listAPI', 'refreshAPI',
 				// Clientes: consulta CNPJ (Receita) e IE (SEFAZ/SINTEGRA) via AJAX

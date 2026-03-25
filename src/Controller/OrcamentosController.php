@@ -406,6 +406,34 @@ class OrcamentosController extends AppController {
 	}
 
 	/**
+	 * Custo unitário por código de produto (mesma coluna usada em _carrinhoLinhasCustoMargem).
+	 *
+	 * @return array<string,float> codigo => custo unitário
+	 */
+	protected function _produtosCustoUnitPorCodigo($idempresa): array {
+		$schema = $this->Produtos->getSchema();
+		$costCol = null;
+		foreach (['vlcusto', 'precocusto', 'vlcustounitario', 'custo'] as $c) {
+			if ($schema->hasColumn($c)) {
+				$costCol = $c;
+				break;
+			}
+		}
+		if ($costCol === null) {
+			return [];
+		}
+		$out = [];
+		foreach ($this->Produtos->find()
+			->select(['codigo', $costCol])
+			->where(['idempresa' => $idempresa])
+			->enableHydration(false) as $p) {
+			$out[trim((string) $p['codigo'])] = (float) ($p[$costCol] ?? 0);
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Custo e margem por linha do carrinho (custo unitário do cadastro de produtos × qtde).
 	 *
 	 * @param \Cake\Datasource\EntityInterface[] $carrinho
@@ -655,6 +683,8 @@ class OrcamentosController extends AppController {
 				$tc = constant('C_ProdutosTipo');
 				$tipoMap = is_array($tc) ? $tc : [];
 			}
+			$idempresaCat = (int) $this->Auth->user('idempresa');
+			$custoPorCodigo = $this->_produtosCustoUnitPorCodigo($idempresaCat);
 			foreach ($produtosOpt1 as $reg) {
 				$tipoInt = (int)($reg->tipo ?? 0);
 				$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
@@ -668,6 +698,13 @@ class OrcamentosController extends AppController {
 				} elseif (stripos((string) $tipoLabel, 'loca') !== false) {
 					$badge = 'loc';
 				}
+				$codKey = trim((string) $reg->codigo);
+				$custoU = $custoPorCodigo[$codKey] ?? 0.0;
+				$vendaU = (float) ($reg->vlunitario ?? 0);
+				$margemPct = null;
+				if ($vendaU > 0.0001 && $custoU > 0.0001) {
+					$margemPct = (int) round((($vendaU - $custoU) / $vendaU) * 100);
+				}
 				$produtosCatalogoLista[] = [
 					'id' => (string) $reg->codigo,
 					'codigo' => (string) $reg->codigo,
@@ -676,8 +713,10 @@ class OrcamentosController extends AppController {
 					'tipo' => $tipoInt,
 					'tipoLabel' => $tipoLabel,
 					'badge' => $badge,
-					'vlunitario' => (float) ($reg->vlunitario ?? 0),
+					'vlunitario' => $vendaU,
 					'unidade' => (string) ($reg->unidade ?? 'un'),
+					'custoUnit' => $custoU > 0.0001 ? round($custoU, 4) : null,
+					'margemPct' => $margemPct,
 				];
 			}
 			$this->set(

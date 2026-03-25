@@ -1392,7 +1392,38 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
   margin-top: 4px;
 }
 
-.orc-catalog-item-cost { font-size: 11px; color: #6b6a65; }
+.orc-catalog-item-cost {
+  font-size: 11px;
+  color: #6b6a65;
+  margin-top: 4px;
+}
+
+.orc-catalog-stock-margem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.orc-catalog-stock-line,
+.orc-catalog-margem-line {
+  color: #1d9e75;
+  font-weight: 600;
+}
+
+.orc-catalog-stock-line--loading,
+.orc-catalog-stock-line--err {
+  color: #9a9890;
+  font-weight: 500;
+}
+
+.orc-catalog-meta-sep {
+  color: #c5c4bf;
+  font-weight: 400;
+}
 
 /* ========== View page ========== */
 .orc-premium-wrap.orc-premium-view {

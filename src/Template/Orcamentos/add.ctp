@@ -261,12 +261,21 @@
 <script>
 	window.orcClientesMeta = <?= isset($clientesMetaJson) ? $clientesMetaJson : '{}' ?>;
 	window.orcProdutosCatalogo = <?= isset($produtosCatalogoJson) ? $produtosCatalogoJson : '[]' ?>;
+	window.orcEstoquesLoteUrl = <?= json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 
 	function numberToReal(n) {
 		if (isNaN(n)) return '0,00';
 		var x = Number(n).toFixed(2).split('.');
 		x[0] = x[0].split(/(?=(?:...)*$)/).join('.');
 		return x.join(',');
+	}
+
+	function orcEscapeHtmlAttr(s) {
+		return String(s == null ? '' : s)
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;')
+			.replace(/</g, '&lt;');
 	}
 
 	function parseBrFloat(txt) {
@@ -814,6 +823,61 @@
 		return (p.unidade || 'un').toString();
 	}
 
+	/** Produto, licença e locação: ERP pode devolver saldo (GetProdutoEstoque). Serviço/outros: só margem. */
+	function orcCatalogBadgeConsultaEstoque(badge) {
+		var b = (badge || '').toLowerCase();
+		return b === 'prod' || b === 'lic' || b === 'loc';
+	}
+
+	function orcCatalogFetchEstoques(items) {
+		var url = window.orcEstoquesLoteUrl;
+		if (!url || !items || !items.length) return;
+		var cods = [];
+		items.forEach(function(p) {
+			if (!orcCatalogBadgeConsultaEstoque(p.badge)) return;
+			var c = (p.codigo != null && p.codigo !== '') ? String(p.codigo).trim() : '';
+			if (c && cods.indexOf(c) === -1) {
+				cods.push(c);
+			}
+		});
+		if (!cods.length) return;
+		if (cods.length > 150) cods = cods.slice(0, 150);
+		$.ajax({
+			type: 'POST',
+			url: url,
+			data: { codigos: cods.join(',') },
+			dataType: 'json',
+			success: function(map) {
+				if (!map || typeof map !== 'object') return;
+				$('#orc-catalog-body .orc-catalog-item').each(function() {
+					var cod = ($(this).attr('data-codigo') || '').trim();
+					if (!cod) return;
+					var $el = $(this).find('.orc-catalog-stock-line');
+					if (!$el.length) return;
+					if (map[cod] === undefined || map[cod] === null) {
+						$el.removeClass('orc-catalog-stock-line--loading').addClass('orc-catalog-stock-line--err');
+						$el.text('Estoque indisponível');
+						return;
+					}
+					var q = map[cod];
+					$el.removeClass('orc-catalog-stock-line--loading');
+					if (q === -999 || (typeof q === 'number' && q < 0)) {
+						$el.addClass('orc-catalog-stock-line--err');
+						$el.text('Estoque indisponível');
+					} else {
+						$el.text('Em estoque (' + q + ')');
+					}
+				});
+			},
+			error: function() {
+				$('#orc-catalog-body .orc-catalog-stock-line.orc-catalog-stock-line--loading').each(function() {
+					$(this).removeClass('orc-catalog-stock-line--loading').addClass('orc-catalog-stock-line--err');
+					$(this).text('Estoque indisponível');
+				});
+			}
+		});
+	}
+
 	function orcRenderCatalog(items) {
 		var $body = $('#orc-catalog-body');
 		orcCatalogRenderedItems = items;
@@ -825,27 +889,40 @@
 		items.forEach(function(p, idx) {
 			var nome = $('<div>').text(p.descricao || p.nome || '').html();
 			var cod = $('<div>').text(p.codigo || '').html();
+			var codRaw = (p.codigo != null && p.codigo !== '') ? String(p.codigo) : '';
 			var tipoLb = $('<div>').text(p.tipoLabel || 'Item').html();
 			var spec = 'Cód. ' + cod + ' · ' + $('<div>').text(orcCatalogUnidadeHint(p)).html();
 			var preco = 'R$ ' + numberToReal(parseFloat(p.vlunitario) || 0);
-			var meta = 'Preço base no cadastro · estoque ao confirmar (produtos)';
 			var badgeClass = orcCatalogBadgeClass(p.badge);
-			html += '<div class="orc-catalog-item" data-idx="' + idx + '" role="button" tabindex="0">' +
+			var margemTxt = (p.margemPct !== null && p.margemPct !== undefined) ? ('Margem: ' + p.margemPct + '%') : 'Margem: —';
+			var margemHtml = '<span class="orc-catalog-margem-line">' + $('<div>').text(margemTxt).html() + '</span>';
+			var stockHtml = '';
+			if (orcCatalogBadgeConsultaEstoque(p.badge)) {
+				stockHtml = '<span class="orc-catalog-stock-line orc-catalog-stock-line--loading">Carregando estoque…</span><span class="orc-catalog-meta-sep">·</span>';
+			}
+			var metaRow = '<div class="orc-catalog-item-meta orc-catalog-stock-margem">' + stockHtml + margemHtml + '</div>';
+			var custoNum = parseFloat(p.custoUnit);
+			var custoBlock = (!isNaN(custoNum) && custoNum > 0)
+				? ('<div class="orc-catalog-item-cost">Custo: R$ ' + numberToReal(custoNum) + '</div>')
+				: '';
+			html += '<div class="orc-catalog-item" data-idx="' + idx + '" data-codigo="' + orcEscapeHtmlAttr(codRaw.trim()) + '" role="button" tabindex="0">' +
 				'<div class="orc-catalog-item-main">' +
 					'<div class="orc-catalog-item-title-row">' +
 						'<span class="orc-catalog-item-name">' + nome + '</span>' +
 						'<span class="' + badgeClass + '">' + tipoLb + '</span>' +
 					'</div>' +
 					'<div class="orc-catalog-item-spec">' + spec + '</div>' +
-					'<div class="orc-catalog-item-meta">' + meta + '</div>' +
+					metaRow +
 				'</div>' +
 				'<div class="orc-catalog-item-prices">' +
 					'<div class="orc-catalog-item-price">' + preco + '</div>' +
+					custoBlock +
 					'<div class="orc-catalog-item-unit">' + $('<div>').text(orcCatalogUnidadeHint(p)).html() + '</div>' +
 				'</div>' +
 			'</div>';
 		});
 		$body.html(html);
+		orcCatalogFetchEstoques(items);
 	}
 
 	function orcCatalogFilter(q) {
