@@ -37,6 +37,10 @@ if ($orcamento->user) {
 	$autorEmail = (isset($u->email) && (string)$u->email !== '') ? h($u->email) : ((isset($u->username) && (string)$u->username !== '') ? h($u->username) : '');
 }
 
+$formaPagamentoPaper = !empty($orcamento->formapagamento)
+	? h($orcamento->formapagamento)
+	: 'Conforme itens (único / mensal)';
+
 $st = (int)$orcamento->status;
 $statusPaper = 'Em andamento';
 if ($st === C_OrcamentoStatusEnviado) {
@@ -189,7 +193,7 @@ $totGeral = $totUnico + $totMensal;
 				<div class="orc-paper-cell-full">
 					<div>
 						<div class="orc-paper-lbl">Pagamento</div>
-						<div class="orc-paper-val">Conforme itens (único / mensal)</div>
+						<div class="orc-paper-val"><?= $formaPagamentoPaper ?></div>
 					</div>
 					<div>
 						<div class="orc-paper-lbl">Emissão</div>

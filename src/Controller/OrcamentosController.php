@@ -386,6 +386,97 @@ class OrcamentosController extends AppController {
 		return false;
 	}
 
+	/**
+	 * Quantidade em linha de orçamento (número ou formato hora "H:M" como no JS legado).
+	 */
+	protected function _parseQuantidadeOrcamentoLinha($quantidade): float {
+		$str = trim((string)$quantidade);
+		if ($str === '') {
+			return 0.0;
+		}
+		if (strpos($str, ':') !== false) {
+			$parts = explode(':', $str);
+			$h = (float)str_replace(['.', ','], ['', '.'], preg_replace('/[^\d.,-]/', '', (string)($parts[0] ?? '0')));
+			$m = (float)str_replace(['.', ','], ['', '.'], preg_replace('/[^\d.,-]/', '', (string)($parts[1] ?? '0')));
+
+			return $h + ($m / 6 / 10);
+		}
+
+		return (float)str_replace(['.', ','], ['', '.'], preg_replace('/[^\d.,-]/', '', $str));
+	}
+
+	/**
+	 * Custo e margem por linha do carrinho (custo unitário do cadastro de produtos × qtde).
+	 *
+	 * @param \Cake\Datasource\EntityInterface[] $carrinho
+	 * @return array<int,array{custoLinha:float,margemPct:int|null}>
+	 */
+	protected function _carrinhoLinhasCustoMargem(array $carrinho, $idempresa): array {
+		$schema = $this->Produtos->getSchema();
+		$costCol = null;
+		foreach (['vlcusto', 'precocusto', 'vlcustounitario', 'custo'] as $c) {
+			if ($schema->hasColumn($c)) {
+				$costCol = $c;
+				break;
+			}
+		}
+		$byId = [];
+		$byCodigo = [];
+		if ($costCol) {
+			foreach ($this->Produtos->find()
+				->select(['id', 'codigo', $costCol])
+				->where(['idempresa' => $idempresa])
+				->enableHydration(false) as $p) {
+				$byId[(int)$p['id']] = (float)($p[$costCol] ?? 0);
+				$byCodigo[trim((string)$p['codigo'])] = (float)($p[$costCol] ?? 0);
+			}
+		}
+		$out = [];
+		foreach ($carrinho as $reg) {
+			$rid = (int)$reg->id;
+			$cu = 0.0;
+			$idp = $reg->idproduto ?? null;
+			if ($idp !== null && $idp !== '' && (string)$idp !== '0') {
+				if (is_numeric($idp) && isset($byId[(int)$idp])) {
+					$cu = $byId[(int)$idp];
+				}
+				$key = trim((string)$idp);
+				if ($cu <= 0 && $key !== '' && isset($byCodigo[$key])) {
+					$cu = $byCodigo[$key];
+				}
+			}
+			$q = $this->_parseQuantidadeOrcamentoLinha($reg->quantidade ?? 0);
+			$custoLinha = $cu * $q;
+			$venda = 0.0;
+			if ((float)($reg->valormensal ?? 0) > 0) {
+				$venda = (float)$reg->valormensal;
+			} else {
+				$venda = (float)($reg->valordoservico ?? 0);
+			}
+			$margemPct = null;
+			if ($venda > 0.0001) {
+				$margemPct = (int)round((($venda - $custoLinha) / $venda) * 100);
+			}
+			$out[$rid] = ['custoLinha' => $custoLinha, 'margemPct' => $margemPct];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Opções de “Pagamento” na proposta (gravadas em orcamentosnovosdes.formapagamento).
+	 *
+	 * @return array<string,string> valor => rótulo
+	 */
+	protected function _orcFormaPagamentoOpcoes(): array {
+		return [
+			'À vista' => 'À vista',
+			'Parcelado' => 'Parcelado',
+			'Boleto 30/60/90' => 'Boleto 30/60/90',
+			'1+5 parcelas boleto' => '1+5 parcelas boleto',
+		];
+	}
+
 	public function index() {
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
@@ -524,6 +615,10 @@ class OrcamentosController extends AppController {
 			$this->Flash->error(__('Não foi possível gerar o orçamento.'));
 		} else $this->limpacarrinho();
 
+		if ($orcamento->get('formapagamento') === null || $orcamento->get('formapagamento') === '') {
+			$orcamento->set('formapagamento', 'À vista');
+		}
+
 		// Combos 
 		$clientes = $this->Clientes->find('all')
 			->where(['Clientes.idempresa' => $this->Auth->user('idempresa'), 'Clientes.inativo' => 0])
@@ -532,10 +627,19 @@ class OrcamentosController extends AppController {
 			->toArray();
 
 		$clientesOpt = [];
-		foreach($clientes as $reg){
+		$clientesMeta = [];
+		foreach ($clientes as $reg) {
 			$nomeCliente = ($reg->tipo == C_ClientesTipoJuridica) ? $reg->razaosocial : $reg->nome;
 			$nomeCidade = (!empty($reg->cidade) && !empty($reg->cidade->nome)) ? $reg->cidade->nome : 'Sem Cidade';
 			$clientesOpt[$reg->id] = $nomeCliente . ' (' . $nomeCidade . ')';
+			$clientesMeta[$reg->id] = [
+				'tipo' => (int)$reg->tipo,
+				'cnpj' => (string)($reg->cnpj ?? ''),
+				'cpf' => (string)($reg->cpf ?? ''),
+				'email' => (string)($reg->email ?? ''),
+				'nome' => (string)($reg->nome ?? ''),
+				'razaosocial' => (string)($reg->razaosocial ?? ''),
+			];
 		}
 		asort($clientesOpt);
 
@@ -548,9 +652,11 @@ class OrcamentosController extends AppController {
 		$this->set('clientes', $clientesOpt);
 		$this->set('produtos', $produtosOpt);
 		$this->set('orcamento', $orcamento);
+		$this->set('clientesMetaJson', json_encode($clientesMeta, JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE));
 		$this->set('title', 'Gerar Orçamento');
 		$this->set('hideLayoutPageTitle', true);
-		$this->set('orcStepperStep', 2);
+		$this->set('orcStepperStep', 1);
+		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
 	}
 	
 	public function edit($id = null) {
@@ -605,6 +711,7 @@ class OrcamentosController extends AppController {
 		$this->set('temordem', $temordem);
 		$this->set('orcamento', $orcamento);
 		$this->set('idcarrinho', $_SESSION['idcarrinho']);
+		$this->set('orcFormaPagamentoOpcoes', $this->_orcFormaPagamentoOpcoes());
 	}
 
 	public function view($id = null, $idempresa = null) {
@@ -751,10 +858,13 @@ class OrcamentosController extends AppController {
 
 	public function carrinho($idorcamento = null){
 		if($idorcamento == null) $idorcamento = $_SESSION['idcarrinhoadd'];
-		$carrinho = $this->Orcamentosservicos->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $idorcamento]])->order(['id'])->toArray();
+		$idempresa = $this->Auth->user('idempresa');
+		$carrinho = $this->Orcamentosservicos->find('all')->where(['AND' => ['idempresa' => $idempresa, 'idorcamento' => $idorcamento]])->order(['id'])->toArray();
+		$carrinhoLinhasExtra = $this->_carrinhoLinhasCustoMargem($carrinho, $idempresa);
 
 		$this->set('carrinho', $carrinho);
 		$this->set('idorcamento', $idorcamento);
+		$this->set('carrinhoLinhasExtra', $carrinhoLinhasExtra);
 	}
 	
 	public function carrinhoedit($idorcamento = null){

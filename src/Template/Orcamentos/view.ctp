@@ -103,10 +103,18 @@
                     <?= $this->Form->text('idautor', ['class' => 'form-control', 'id' => 'idautor', 'value' => ($orcamento->user && !empty($orcamento->user->name)) ? $orcamento->user->name : '—', 'disabled']) ?>
                 </div>
                 <div class="col-md-3 col-xs-12">
+                    <label class="control-label">Pagamento</label>
+                    <?= $this->Form->text('formapagamento', [
+                        'class' => 'form-control',
+                        'value' => !empty($orcamento->formapagamento) ? $orcamento->formapagamento : '—',
+                        'disabled' => true,
+                    ]) ?>
+                </div>
+                <div class="col-md-3 col-xs-12">
                     <label class="control-label">Válido até</label>
                     <?= $this->Form->text('validoate', ['class' => 'form-control', 'id' => 'validoate', 'disabled' => true]) ?>
                 </div>
-                <div class="col-md-6 col-xs-12">
+                <div class="col-md-3 col-xs-12">
                     <label class="control-label">Status</label>
                     <div style="display:flex;align-items:center;gap:10px;padding:6px 0;">
                         <?= orcamentoStatus($orcamento->status) ?>

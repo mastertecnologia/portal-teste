@@ -131,13 +131,24 @@
 				<!-- Dados do cliente -->
 				<div class="orc-sec-title">Dados do cliente</div>
 				<div class="row m-t-10">
-					<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+					<div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
 						<label class="control-label">Cliente</label>
 						<div style="font-size:14px;font-weight:500;color:#1a1a18;padding:6px 0;">
 							<?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?>
 						</div>
 					</div>
-					<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+					<div class="col-lg-3 col-md-6 col-sm-12 col-xs-12">
+						<label class="control-label">Pagamento</label>
+						<?= $this->Form->control('formapagamento', [
+							'type' => 'select',
+							'options' => $orcFormaPagamentoOpcoes ?? [],
+							'class' => 'form-control selectpicker',
+							'label' => false,
+							'id' => 'formapagamento',
+							'empty' => false,
+						]) ?>
+					</div>
+					<div class="col-lg-3 col-md-6 col-sm-12 col-xs-12">
 						<label class="control-label">Válido até</label>
 						<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true, 'data-mask' => '99/99/9999']) ?>
 					</div>

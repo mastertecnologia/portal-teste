@@ -3,6 +3,7 @@
 use Cake\Routing\Router;
 
 error_reporting(E_ERROR | E_PARSE);
+$carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 ?>
 <div class="row">
 	<div class="col-lg-12">
@@ -12,18 +13,24 @@ error_reporting(E_ERROR | E_PARSE);
 					<tr>
 						<th style="width:5%;">Ordem</th>
 						<th style="width:6%;">Código</th>
-						<th style="width:20%;">Produto/Serviço</th>
-						<th style="width:20%;">Descrição</th>
+						<th style="width:18%;">Produto/Serviço</th>
+						<th style="width:16%;">Descrição</th>
 						<th class="text-right">Pagamento</th>
 						<th class="text-right">Qtde.</th>
 						<th class="text-right">Vl. Mensal</th>
 						<th class="text-right">Vl. Unit.</th>
 						<th class="text-right">Valor Total</th>
+						<th class="text-right" style="width:8%;">Custo</th>
+						<th class="text-right" style="width:7%;">Margem</th>
 						<th class="text-center" style="width:90px;">Ações</th>
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ($carrinho as $reg) : ?>
+					<?php foreach ($carrinho as $reg) :
+						$ex = $carrinhoLinhasExtra[(int)$reg->id] ?? ['custoLinha' => 0.0, 'margemPct' => null];
+						$custoLinha = (float)($ex['custoLinha'] ?? 0);
+						$margemPct = $ex['margemPct'] ?? null;
+						?>
 						<tr id="<?= $reg->id ?>">
 							<td><?= (isset($reg->virouitemordem) && (int)$reg->virouitemordem === 1) ? 'Sim' : 'Não' ?></td>
 							<td><?= h($reg->idproduto) ?></td>
@@ -34,6 +41,8 @@ error_reporting(E_ERROR | E_PARSE);
 							<td class="text-right valormensal"><?php echo 'R$ ' . number_format($reg->valormensal, 2, ',', '.'); ?></td>
 							<td class="text-right valorunit"><?php echo 'R$ ' . number_format($reg->valoruni, 2, ',', '.'); ?></td>
 							<td class="text-right valordoservico"><?php echo ($reg->valormensal > 0) ? 'R$ 0,00' : 'R$ ' . number_format($reg->valordoservico, 2, ',', '.'); ?></td>
+							<td class="text-right orc-line-custo" data-custo="<?= h((string)$custoLinha) ?>"><?= 'R$ ' . number_format($custoLinha, 2, ',', '.'); ?></td>
+							<td class="text-right orc-line-margem"><?= $margemPct !== null ? h((string)$margemPct) . '%' : '—' ?></td>
 							<td class="text-center btn-actions">
 								<?= $this->Html->link('<i class="fa fa-edit"></i>', [], [
 									'rel' => 'tooltip',
@@ -69,6 +78,8 @@ error_reporting(E_ERROR | E_PARSE);
 						<th class="text-right valormensaltotal"></th>
 						<th class="text-right">Valor Total:</th>
 						<th class="text-right valortotal"></th>
+						<th class="text-right"></th>
+						<th class="text-right"></th>
 						<th></th>
 					</tr>
 				</tbody>
@@ -86,6 +97,11 @@ error_reporting(E_ERROR | E_PARSE);
 			numero[0] = numero[0].split(/(?=(?:...)*$)/).join('.');
 			return numero.join(',');
 		}
+	}
+
+	function parseBrFloat(txt) {
+		if (!txt) return 0;
+		return parseFloat(String(txt).split('R$').join('').replace(/\./g, '').replace(',', '.').trim()) || 0;
 	}
 
 	function valortotal() {
@@ -115,6 +131,10 @@ error_reporting(E_ERROR | E_PARSE);
 
 		$('.valortotal').html('R$ ' + numberToReal(valortotal));
 		$('.valormensaltotal').html('R$ ' + numberToReal(valormensaltotal));
+
+		if (typeof window.orcNovoAfterCarrinhoTotals === 'function') {
+			window.orcNovoAfterCarrinhoTotals();
+		}
 	}
 
 	$('.excluiitemcarrinho').click(function(e) {
