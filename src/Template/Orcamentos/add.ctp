@@ -87,7 +87,7 @@
 		<div class="card-body">
 			<div class="orc-sec-title orc-sec-title--split">
 				<span>Produtos e serviços</span>
-				<button type="button" class="btn btn-orc-outline-teal" onclick="$('#orc-catalog-overlay').addClass('open');">
+				<button type="button" class="btn btn-orc-outline-teal" onclick="orcCatalogOpen();">
 					<i class="fa fa-list"></i> Buscar no catálogo
 				</button>
 			</div>
@@ -232,20 +232,26 @@
 </div>
 </div>
 
-<!-- Catalog overlay -->
+<!-- Catálogo (layout alinhado ao protótipo “novo frontend”) -->
 <div class="orc-catalog-overlay" id="orc-catalog-overlay" onclick="if(event.target===this)$(this).removeClass('open');">
-	<div class="orc-catalog-modal">
+	<div class="orc-catalog-modal" onclick="event.stopPropagation();">
 		<div class="orc-catalog-header">
-			<h4><i class="fa fa-list orc-catalog-title-ic"></i> Catálogo de Produtos e Serviços</h4>
-			<button type="button" class="btn btn-orc-modal-close" onclick="$('#orc-catalog-overlay').removeClass('open');" aria-label="Fechar">
-				<i class="fa fa-times"></i>
+			<div class="orc-catalog-header-text">
+				<h2 class="orc-catalog-h2">Catálogo de produtos</h2>
+				<p class="orc-catalog-sub">Clique para adicionar ao orçamento</p>
+			</div>
+			<button type="button" class="btn btn-orc-catalog-fechar" onclick="$('#orc-catalog-overlay').removeClass('open');" aria-label="Fechar">
+				<i class="fa fa-times"></i> Fechar
 			</button>
 		</div>
 		<div class="orc-catalog-search">
-			<input type="text" id="orc-catalog-search-input" placeholder="Buscar produto ou serviço..." oninput="orcCatalogFilter(this.value)" />
+			<div class="orc-catalog-search-inner">
+				<i class="fa fa-search orc-catalog-search-ic" aria-hidden="true"></i>
+				<input type="text" id="orc-catalog-search-input" placeholder="Buscar produto, código ou descrição..." autocomplete="off" oninput="orcCatalogFilter(this.value)" />
+			</div>
 		</div>
 		<div class="orc-catalog-body" id="orc-catalog-body">
-			<div style="padding:24px;text-align:center;color:#9a9890;font-size:12px;">
+			<div class="orc-catalog-loading">
 				<i class="fa fa-spinner fa-spin"></i> Carregando catálogo...
 			</div>
 		</div>
@@ -254,6 +260,7 @@
 
 <script>
 	window.orcClientesMeta = <?= isset($clientesMetaJson) ? $clientesMetaJson : '{}' ?>;
+	window.orcProdutosCatalogo = <?= isset($produtosCatalogoJson) ? $produtosCatalogoJson : '[]' ?>;
 
 	function numberToReal(n) {
 		if (isNaN(n)) return '0,00';
@@ -773,66 +780,101 @@
 		orcApplyDiscountRow(0, 0);
 	});
 
-	// Catálogo overlay
+	// Catálogo overlay (dados completos via JSON do servidor — ver OrcamentosController::add)
 	var orcCatalogData = [];
-	$('#orc-catalog-overlay').on('click', function(e){
-		if($(e.target).is('#orc-catalog-overlay')) $(this).removeClass('open');
-	});
+	var orcCatalogRenderedItems = [];
 
-	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function(){
-		var cod  = $(this).data('cod');
-		var nome = $(this).data('nome');
-		var tipo = $(this).data('tipo');
-		var uni  = $(this).data('uni');
-		var id   = $(this).data('id');
+	function orcCatalogOpen() {
+		$('#orc-catalog-search-input').val('');
+		$('#orc-catalog-overlay').addClass('open');
+		orcCatalogEnsureLoaded();
+	}
 
-		$('#idproduto').val(id).trigger('change');
-		// Se não encontrar pelo trigger, preenche manualmente
-		setTimeout(function(){
-			if($('#servico').val() === '') {
-				$('#servico').val(nome);
-				$('#valoruni').val(uni);
-			}
-		}, 400);
-
-		$('#orc-catalog-overlay').removeClass('open');
-	});
-
-	// Abre catalog e carrega produtos via selectpicker options
-	$('#orc-catalog-overlay').on('click', function(){
-		var $body = $('#orc-catalog-body');
-		if(orcCatalogData.length === 0) {
-			orcCatalogData = [];
-			$('#idproduto option').each(function(){
-				if($(this).val() && $(this).val() != '0') {
-					orcCatalogData.push({ id: $(this).val(), nome: $(this).text() });
-				}
-			});
-			orcRenderCatalog(orcCatalogData);
+	function orcCatalogEnsureLoaded() {
+		var src = window.orcProdutosCatalogo || [];
+		if (!src.length) {
+			$('#orc-catalog-body').html('<div class="orc-catalog-empty">Nenhum produto ou serviço ativo cadastrado.</div>');
+			return;
 		}
-	});
+		orcCatalogData = src.slice();
+		orcCatalogFilter('');
+	}
+
+	function orcCatalogBadgeClass(badge) {
+		var b = (badge || 'outro').toLowerCase();
+		if (b === 'prod') return 'orc-cat-badge orc-cat-badge--prod';
+		if (b === 'srv') return 'orc-cat-badge orc-cat-badge--srv';
+		if (b === 'lic') return 'orc-cat-badge orc-cat-badge--lic';
+		if (b === 'loc') return 'orc-cat-badge orc-cat-badge--loc';
+		return 'orc-cat-badge orc-cat-badge--outro';
+	}
+
+	function orcCatalogUnidadeHint(p) {
+		if ((p.badge || '') === 'srv') return 'usr/mês';
+		return (p.unidade || 'un').toString();
+	}
 
 	function orcRenderCatalog(items) {
 		var $body = $('#orc-catalog-body');
-		if(!items.length) {
-			$body.html('<div style="padding:24px;text-align:center;color:#9a9890;font-size:12px;">Nenhum produto encontrado.</div>');
+		orcCatalogRenderedItems = items;
+		if (!items.length) {
+			$body.html('<div class="orc-catalog-empty">Nenhum resultado para a busca.</div>');
 			return;
 		}
 		var html = '';
-		items.forEach(function(p){
-			html += '<div class="orc-catalog-item" data-id="' + p.id + '" data-nome="' + $('<div>').text(p.nome).html() + '" data-cod="" data-tipo="" data-uni="">' +
-				'<div class="orc-catalog-item-info">' +
-				'<div class="orc-catalog-item-name">' + $('<div>').text(p.nome).html() + '</div>' +
+		items.forEach(function(p, idx) {
+			var nome = $('<div>').text(p.descricao || p.nome || '').html();
+			var cod = $('<div>').text(p.codigo || '').html();
+			var tipoLb = $('<div>').text(p.tipoLabel || 'Item').html();
+			var spec = 'Cód. ' + cod + ' · ' + $('<div>').text(orcCatalogUnidadeHint(p)).html();
+			var preco = 'R$ ' + numberToReal(parseFloat(p.vlunitario) || 0);
+			var meta = 'Preço base no cadastro · estoque ao confirmar (produtos)';
+			var badgeClass = orcCatalogBadgeClass(p.badge);
+			html += '<div class="orc-catalog-item" data-idx="' + idx + '" role="button" tabindex="0">' +
+				'<div class="orc-catalog-item-main">' +
+					'<div class="orc-catalog-item-title-row">' +
+						'<span class="orc-catalog-item-name">' + nome + '</span>' +
+						'<span class="' + badgeClass + '">' + tipoLb + '</span>' +
+					'</div>' +
+					'<div class="orc-catalog-item-spec">' + spec + '</div>' +
+					'<div class="orc-catalog-item-meta">' + meta + '</div>' +
 				'</div>' +
-				'<div><i class="fa fa-chevron-right" style="color:#9a9890;font-size:11px;"></i></div>' +
-				'</div>';
+				'<div class="orc-catalog-item-prices">' +
+					'<div class="orc-catalog-item-price">' + preco + '</div>' +
+					'<div class="orc-catalog-item-unit">' + $('<div>').text(orcCatalogUnidadeHint(p)).html() + '</div>' +
+				'</div>' +
+			'</div>';
 		});
 		$body.html(html);
 	}
 
 	function orcCatalogFilter(q) {
-		var filtered = q ? orcCatalogData.filter(function(p){ return p.nome.toLowerCase().indexOf(q.toLowerCase()) > -1; }) : orcCatalogData;
+		q = (q || '').toLowerCase().trim();
+		var filtered = !q ? orcCatalogData.slice() : orcCatalogData.filter(function(p) {
+			var d = ((p.descricao || p.nome || '') + ' ' + (p.codigo || '') + ' ' + (p.tipoLabel || '')).toLowerCase();
+			return d.indexOf(q) > -1;
+		});
 		orcRenderCatalog(filtered);
 	}
+
+	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function() {
+		var idx = $(this).data('idx');
+		var p = orcCatalogRenderedItems[idx];
+		if (!p) return;
+		$('#idproduto').val(p.id).trigger('change');
+		setTimeout(function() {
+			if ($('#servico').val() === '' && (p.descricao || p.nome)) {
+				$('#servico').val(p.descricao || p.nome);
+			}
+			if (!$('#valoruni').val() && parseFloat(p.vlunitario) > 0) {
+				$('#valoruni').val(numberToReal(parseFloat(p.vlunitario)));
+			}
+		}, 450);
+		$('#orc-catalog-overlay').removeClass('open');
+	});
+
+	$('#orc-catalog-search-input').on('keydown', function(e) {
+		if (e.key === 'Enter') e.preventDefault();
+	});
 
 </script>

@@ -645,8 +645,45 @@ class OrcamentosController extends AppController {
 
 			$produtosOpt = [0 => 'Código'];
 			$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])->order(['descricao'])->toArray();
-			foreach($produtosOpt1 as $reg) $produtosOpt[$reg->codigo] =  $reg->descricao . ' (' . $reg->codigo . ')';
-		// 
+			foreach ($produtosOpt1 as $reg) {
+				$produtosOpt[$reg->codigo] = $reg->descricao . ' (' . $reg->codigo . ')';
+			}
+
+			$produtosCatalogoLista = [];
+			$tipoMap = [];
+			if (defined('C_ProdutosTipo')) {
+				$tc = constant('C_ProdutosTipo');
+				$tipoMap = is_array($tc) ? $tc : [];
+			}
+			foreach ($produtosOpt1 as $reg) {
+				$tipoInt = (int)($reg->tipo ?? 0);
+				$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
+				$badge = 'outro';
+				if (defined('C_ProdutosTipoProduto') && $tipoInt === (int) C_ProdutosTipoProduto) {
+					$badge = 'prod';
+				} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int) C_ProdutosTipoServico) {
+					$badge = 'srv';
+				} elseif (stripos((string) $tipoLabel, 'licen') !== false) {
+					$badge = 'lic';
+				} elseif (stripos((string) $tipoLabel, 'loca') !== false) {
+					$badge = 'loc';
+				}
+				$produtosCatalogoLista[] = [
+					'id' => (string) $reg->codigo,
+					'codigo' => (string) $reg->codigo,
+					'descricao' => (string) ($reg->descricao ?? ''),
+					'nome' => (string) ($reg->descricao ?? ''),
+					'tipo' => $tipoInt,
+					'tipoLabel' => $tipoLabel,
+					'badge' => $badge,
+					'vlunitario' => (float) ($reg->vlunitario ?? 0),
+					'unidade' => (string) ($reg->unidade ?? 'un'),
+				];
+			}
+			$this->set(
+				'produtosCatalogoJson',
+				json_encode($produtosCatalogoLista, JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE)
+			);
 
 		$this->set('idcarrinho', $_SESSION['idcarrinhoadd']);
 		$this->set('clientes', $clientesOpt);
