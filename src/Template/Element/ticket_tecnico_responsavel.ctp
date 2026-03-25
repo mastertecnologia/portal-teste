@@ -14,6 +14,6 @@ $label = $tecnicoResponsavelLabel ?? null;
 		<p class="text-muted mb-0" style="font-size: 11px; line-height: 1.35;">Conta para o ranking do dashboard (fechamentos do mês).</p>
 	<?php else: ?>
 		<p class="mb-1 text-warning"><strong>Não definido</strong></p>
-		<p class="text-muted mb-0" style="font-size: 11px; line-height: 1.35;">Use <em>Em execução</em> ou transferência com técnico. Fechamentos sem responsável não entram no ranking PGM.</p>
+		<p class="text-muted mb-0" style="font-size: 11px; line-height: 1.35;">Use <em>Em execução</em> ou transferência com técnico. Ao resolver/fechar, o sistema pode gravar o funcionário logado se ainda estiver vazio. O ranking também usa o último registro de movimentação que fechou o ticket.</p>
 	<?php endif; ?>
 </div>

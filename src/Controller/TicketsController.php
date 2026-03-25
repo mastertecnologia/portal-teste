@@ -1221,6 +1221,9 @@ class TicketsController extends AppController {
 		if ((int)$situacao === (int)C_TicketSituacaoEmandamento && (int)$situacao !== (int)$sitantiga) {
 			$this->_assignTecnicoEmExecucao($ticket, (int)$idticket);
 		}
+		if (($situacao == C_TicketSituacaoResolvido || $situacao == C_TicketSituacaoFechado) && (int)$situacao !== (int)$sitantiga) {
+			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
+		}
 
 		if ($this->Tickets->save($ticket)) {
 			try {
@@ -1371,6 +1374,7 @@ class TicketsController extends AppController {
 
 			$ticket->situacao = C_TicketSituacaoResolvido;
 			$ticket->datafinalizado = date('d/m/Y');
+			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
 
 			if ($this->Tickets->save($ticket)) {
 				// Desmarca nos user q tavam fazendo ele
@@ -2181,6 +2185,37 @@ class TicketsController extends AppController {
 			$tu->iduser = $uid;
 			$tu->idempresa = $emp;
 			$this->Ticketsusers->save($tu);
+		}
+	}
+
+	/**
+	 * Resolução/fechamento por funcionário sem técnico no registro: grava o logado em idtecnico_responsavel
+	 * para o ranking PGM e telas de responsável (owner_id espelhado no beforeSave).
+	 */
+	protected function _ensureTecnicoResponsavelAoFechamento($ticket): void {
+		if ((int)$this->Auth->user('role') !== 0) {
+			return;
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		if (!in_array('idtecnico_responsavel', $cols, true) && !in_array('owner_id', $cols, true)) {
+			return;
+		}
+		$rid = 0;
+		if (in_array('idtecnico_responsavel', $cols, true)) {
+			$rid = (int)($ticket->idtecnico_responsavel ?? 0);
+		}
+		if ($rid <= 0 && in_array('owner_id', $cols, true)) {
+			$rid = (int)($ticket->owner_id ?? 0);
+		}
+		if ($rid > 0) {
+			return;
+		}
+		$uid = (int)$this->Auth->user('id');
+		if ($uid <= 0) {
+			return;
+		}
+		if (in_array('idtecnico_responsavel', $cols, true)) {
+			$ticket->idtecnico_responsavel = $uid;
 		}
 	}
 

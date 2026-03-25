@@ -31,6 +31,7 @@ class UsersController extends AppController {
 		$this->loadModel('Atividades');
 		$this->loadModel('Books');
 		$this->loadModel('Tickets');
+		$this->loadModel('Ticketsmovs');
 		$this->loadModel('Visitas');
 		$this->loadModel('Tarefas');
 		$this->loadModel('Empresas');
@@ -540,9 +541,38 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Expressão SQL do “técnico efetivo” para o ranking: campos do ticket + fallback pelo último ticketsmovs
+	 * que registrou transição para situação encerrada (quem operou o fechamento).
+	 *
+	 * @param string[] $cols
+	 * @param int[] $closedSit Situações consideradas fechamento (resolvido/fechado/cancelado…)
+	 */
+	protected function _dashPgmTecnicoEfetivoSql(array $cols, array $closedSit): ?string {
+		if ($closedSit === []) {
+			return null;
+		}
+		$hasResp = in_array('idtecnico_responsavel', $cols, true);
+		$hasOwner = in_array('owner_id', $cols, true);
+		if ($hasResp && $hasOwner) {
+			$base = 'COALESCE(NULLIF(Tickets.idtecnico_responsavel, 0), NULLIF(Tickets.owner_id, 0))';
+		} elseif ($hasResp) {
+			$base = 'NULLIF(Tickets.idtecnico_responsavel, 0)';
+		} elseif ($hasOwner) {
+			$base = 'NULLIF(Tickets.owner_id, 0)';
+		} else {
+			return null;
+		}
+		$tm = $this->Ticketsmovs->getTable();
+		$closedIn = implode(',', array_map('intval', $closedSit));
+		$sub = '(SELECT tm_sub.idusuario FROM ' . $tm . ' AS tm_sub WHERE tm_sub.idticket = Tickets.id AND tm_sub.sitnova IN (' . $closedIn . ') ORDER BY tm_sub.id DESC LIMIT 1)';
+
+		return 'COALESCE(' . $base . ', NULLIF(' . $sub . ', 0))';
+	}
+
+	/**
 	 * Tickets fechados por técnico no intervalo.
 	 * Data: com data_resolucao, usa resolução; se for NULL, cai para modified (legado).
-	 * Técnico: COALESCE(idtecnico_responsavel, owner_id), ignorando 0 — alinhado a TicketsTable::beforeSave.
+	 * Técnico: COALESCE(idtecnico_responsavel, owner_id, último idusuario em ticketsmovs com sitnova encerrada).
 	 *
 	 * @param int $idempresa
 	 * @param int[] $closedSit
@@ -552,15 +582,8 @@ class UsersController extends AppController {
 	 * @return int[]
 	 */
 	protected function _dashPgmTechnicianRankingCounts($idempresa, array $closedSit, array $cols, $rangeStart, $rangeEnd) {
-		$hasResp = in_array('idtecnico_responsavel', $cols, true);
-		$hasOwner = in_array('owner_id', $cols, true);
-		if ($hasResp && $hasOwner) {
-			$tecSql = 'COALESCE(NULLIF(Tickets.idtecnico_responsavel, 0), NULLIF(Tickets.owner_id, 0))';
-		} elseif ($hasResp) {
-			$tecSql = 'NULLIF(Tickets.idtecnico_responsavel, 0)';
-		} elseif ($hasOwner) {
-			$tecSql = 'NULLIF(Tickets.owner_id, 0)';
-		} else {
+		$tecSql = $this->_dashPgmTecnicoEfetivoSql($cols, $closedSit);
+		if ($tecSql === null) {
 			return [];
 		}
 
