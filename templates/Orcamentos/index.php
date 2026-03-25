@@ -55,7 +55,37 @@ $orcPremiumFmtValor = function ($id) use ($valorTotalPorOrcamentoId) {
 
 $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 ?>
-<div class="col-md-12 orc-premium-wrap orc-premium-index">
+<div id="orc-premium-container"
+	class="col-md-12 orc-premium-wrap orc-premium-index"
+	style="background:#ffffff; color:#1a1a18; min-height:100vh;">
+	<style>
+#orc-premium-container,
+#orc-premium-container * {
+	background-color: inherit;
+	color: inherit;
+}
+#orc-premium-container table td,
+#orc-premium-container table th,
+#orc-premium-container table tr,
+#orc-premium-container .dataTables_wrapper {
+	background: #ffffff !important;
+	color: #1a1a18 !important;
+	border-color: #e5e4e0 !important;
+}
+#orc-premium-container .orc-premium-kpi {
+	background: #f9f9f8 !important;
+	border: 1px solid #e5e4e0 !important;
+	color: #1a1a18 !important;
+}
+#orc-premium-container .orc-premium-kpi-n { color: var(--sc) !important; }
+#orc-premium-container .orc-premium-stat-label { color: #6b6a65 !important; }
+#orc-premium-container a { color: #1D9E75 !important; }
+#orc-premium-container .nav-tabs .nav-link { color: #6b6a65 !important; }
+#orc-premium-container .nav-tabs .nav-link.active {
+	color: #1D9E75 !important;
+	border-bottom: 2px solid #1D9E75 !important;
+}
+	</style>
 	<?php if ((int)($role ?? 1) === 0) : ?>
 		<header class="orc-premium-page-head">
 			<div class="orc-premium-page-head-text">
@@ -405,8 +435,16 @@ $(document).ready(function() {
 			oAria: { sSortAscending: ': Ordem Ascendente', sSortDescending: ': Ordem descendente' }
 		},
 		drawCallback: function() {
-			if ($('body').hasClass('dark-mode')) $('td').each(function() { $(this).addClass('dark-mode'); });
-			else $('td').each(function() { $(this).removeClass('dark-mode'); });
+			$('td').each(function() {
+				var $td = $(this);
+				if ($td.closest('#orc-premium-container').length) {
+					$td.removeClass('dark-mode');
+				} else if ($('body').hasClass('dark-mode')) {
+					$td.addClass('dark-mode');
+				} else {
+					$td.removeClass('dark-mode');
+				}
+			});
 		}
 	});
 	if (typeof filters !== 'undefined' && filters) {
