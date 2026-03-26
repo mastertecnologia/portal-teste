@@ -103,9 +103,11 @@
 	<div class="orc-page-head">
 		<div>
 			<div class="orc-eyebrow">Módulo comercial</div>
+			<div style="font-size:11px;color:var(--orc-text-muted,#6b6a65);margin-bottom:3px;">
+				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#1d9e75;">Editar #<?= $orcamento->id ?></span>
+			</div>
 			<h1 class="orc-h1">
-				Orçamento
-				<span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
+				Orçamento <span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
 				<?php if(!empty($orcamento->versao)): ?>
 					<span class="badge" style="background:#1d9e75;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
 				<?php endif; ?>
@@ -128,238 +130,245 @@
 
 	<?= $this->element('orcamentos_stepper') ?>
 
-	<div class="card orc-premium-card-inner">
+	<?= $this->Form->create($orcamento, ['class' => 'form-material']); ?>
+
+	<!-- Card: Dados do cliente -->
+	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
 		<div class="card-body">
-			<?= $this->Form->create($orcamento, ['class' => 'form-material']); ?>
-
-				<!-- Dados do cliente -->
-				<div class="orc-sec-title">Dados do cliente</div>
-				<div class="row m-t-10">
-					<div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
-						<label class="control-label">Cliente</label>
-						<div style="font-size:14px;font-weight:500;color:#1a1a18;padding:6px 0;">
-							<?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?>
-						</div>
-					</div>
-					<div class="col-lg-3 col-md-6 col-sm-12 col-xs-12">
-						<label class="control-label">Pagamento</label>
-						<?= $this->Form->control('formapagamento', [
-							'type' => 'select',
-							'options' => $orcFormaPagamentoOpcoes ?? [],
-							'class' => 'form-control selectpicker',
-							'label' => false,
-							'id' => 'formapagamento',
-							'empty' => false,
-						]) ?>
-					</div>
-					<div class="col-lg-3 col-md-6 col-sm-12 col-xs-12">
-						<label class="control-label">Válido até</label>
-						<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true, 'data-mask' => '99/99/9999']) ?>
+			<div class="orc-sec-title">Dados do cliente</div>
+			<div class="row">
+				<div class="col-lg-6 col-md-12 col-sm-12">
+					<label class="control-label">Cliente</label>
+					<div style="font-size:14px;font-weight:500;color:#1a1a18;padding:6px 0;">
+						<?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?>
 					</div>
 				</div>
-				<div class="row m-t-10">
-					<div class="col-12">
-						<label class="control-label">Observação / condições</label>
-						<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'editor form-control', 'label' => false]) ?>
-					</div>
+				<div class="col-lg-3 col-md-6 col-sm-12">
+					<label class="control-label">Pagamento</label>
+					<?= $this->Form->control('formapagamento', [
+						'type' => 'select',
+						'options' => $orcFormaPagamentoOpcoes ?? [],
+						'class' => 'form-control selectpicker',
+						'label' => false,
+						'id' => 'formapagamento',
+						'empty' => false,
+					]) ?>
 				</div>
-
-				<!-- Status + Fluxo de aprovação -->
-				<div class="row m-t-10">
-					<div class="col-12">
-						<div class="orc-sec-title" style="margin-top:14px;">Status</div>
-						<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-							<span><?= orcamentoStatus($orcamento->status) ?></span>
-							<?php if(isset($temordem) && $temordem != 'nao'): ?>
-								<?= $this->Html->link(
-									'<i class="fa fa-wrench"></i> OS Nº ' . $temordem,
-									['controller' => 'Ordensservico', 'action' => 'edit', $temordem],
-									['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
-								); ?>
-							<?php else: ?>
-								<span style="font-size:12px;color:#9a9890;">Sem ordem de serviço vinculada</span>
-							<?php endif; ?>
-						</div>
-						<!-- Fluxo de aprovação -->
-						<div class="orc-wf-list">
-							<div class="orc-workflow-step">
-								<div class="orc-wf-dot orc-wf-ok"><i class="fa fa-check"></i></div>
-								<div class="orc-wf-body">
-									<div class="orc-wf-title">Criado</div>
-									<div class="orc-wf-sub">Orçamento registrado no sistema</div>
-								</div>
-							</div>
-							<div class="orc-workflow-step">
-								<div class="orc-wf-dot <?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'orc-wf-ok' : 'orc-wf-pend' ?>">
-									<i class="fa fa-<?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'check' : 'circle-o' ?>"></i>
-								</div>
-								<div class="orc-wf-body">
-									<div class="orc-wf-title" <?= $orcamento->status < C_OrcamentoStatusEnviado ? 'style="color:#9a9890;"' : '' ?>>Enviado ao cliente</div>
-									<div class="orc-wf-sub"><?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'Proposta enviada por e-mail' : 'Aguardando envio por e-mail' ?></div>
-								</div>
-								<?php if($orcamento->status < C_OrcamentoStatusEnviado): ?>
-									<button type="button" class="btn btn-orc-outline-teal btn-orc-compact btn-email" style="font-size:11px;margin-left:auto;">
-										<i class="fa fa-paper-plane"></i> Enviar agora
-									</button>
-								<?php endif; ?>
-							</div>
-							<div class="orc-workflow-step">
-								<div class="orc-wf-dot <?= $orcamento->status == C_OrcamentoStatusAprovado ? 'orc-wf-ok' : ($orcamento->status == C_OrcamentoStatusRecusado ? 'orc-wf-pend' : '') ?>">
-									<?php if($orcamento->status == C_OrcamentoStatusAprovado): ?><i class="fa fa-check"></i>
-									<?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?><i class="fa fa-times"></i>
-									<?php else: ?><div style="width:7px;height:7px;border-radius:50%;background:#e5e4e0;"></div><?php endif; ?>
-								</div>
-								<div class="orc-wf-body">
-									<div class="orc-wf-title" <?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? 'style="color:#9a9890;"' : '' ?>>Decisão do cliente</div>
-									<div class="orc-wf-sub">
-										<?php if($orcamento->status == C_OrcamentoStatusAprovado): ?>
-											Aprovado<?php if(!empty($orcamento->ipaprovacao)): ?> · IP: <?= $orcamento->ipaprovacao ?><?php endif; ?>
-										<?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?>
-											Recusado pelo cliente
-										<?php else: ?>
-											Aguardando resposta
-										<?php endif; ?>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
+				<div class="col-lg-3 col-md-6 col-sm-12">
+					<label class="control-label">Válido até</label>
+					<?= $this->Form->text('validoate', ['class' => 'form-control datepicker', 'id' => 'validoate', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true, 'data-mask' => '99/99/9999']) ?>
 				</div>
-
-				<!-- Card: Controle de versões -->
-				<div class="orc-sec-title" style="margin-top:22px;display:flex;align-items:center;justify-content:space-between;">
-					<span>Controle de versões</span>
-					<?= $this->Html->link(
-						'<i class="fa fa-plus"></i> Criar nova versão',
-						['action' => 'novaversao', $orcamento->id],
-						['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
-					) ?>
-				</div>
-				<div class="orc-version-panel" style="margin-bottom:16px;">
-					<div class="orc-version-item">
-						<div style="display:flex;align-items:center;gap:10px;">
-							<span class="orc-version-badge orc-v-current">v<?= !empty($orcamento->versao) ? $orcamento->versao : '1' ?> — atual</span>
-							<span style="font-size:12px;font-weight:500;color:#1a1a18;">Versão atual</span>
-						</div>
-						<div style="display:flex;align-items:center;gap:8px;">
-							<span style="font-size:11px;color:#9a9890;"><?= $orcamento->created->format('d/m/Y') ?></span>
-							<span><?= orcamentoStatus($orcamento->status) ?></span>
-						</div>
-					</div>
-				</div>
-				<div style="margin-bottom:16px;padding:10px 12px;background:#f9f9f8;border-radius:8px;border:1px solid #f0efec;font-size:11px;color:#6b6a65;line-height:1.6;">
-					<strong style="color:#1a1a18;">Criar nova versão</strong> duplica o orçamento atual para ajustes sem perder o histórico. Cada versão mantém seus próprios itens, valores e status.
-				</div>
-
-				<?php if($orcamento->status != C_OrcamentoStatusAprovado && $role == 0): ?>
-					<!-- Adicionar produtos -->
-					<div class="orc-sec-title" style="margin-top:22px;">
-						Produtos e serviços
-					</div>
-					<div class="row">
-						<div class="col-lg-2 col-md-12">
-							<label class="control-label">Código</label>
-							<?= $this->Form->control('idproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false]) ?>
-						</div>
-						<div class="col-lg-5 col-md-12">
-							<div class="form-group">
-								<label class="control-label">Produto/Serviço</label>
-								<?= $this->Form->control('servico', ['class' => 'form-control', 'label' => false]) ?>
-								<small class="qtdEstoque text-muted"></small>
-							</div>
-						</div>
-						<div class="col-lg-1 col-md-6">
-							<div class="form-group">
-								<label class="control-label">Tipo</label>
-								<?= $this->Form->control('tipo', ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false]) ?>
-							</div>
-						</div>
-						<div class="col-lg-1 col-md-6">
-							<div class="form-group">
-								<label class="control-label">Qtde.</label>
-								<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
-							</div>
-						</div>
-						<div class="col-lg-1 col-md-6">
-							<div class="form-group">
-								<label class="control-label">Vl. Mensal</label>
-								<?= $this->Form->control('valormensal', ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false]) ?>
-							</div>
-						</div>
-						<div class="col-lg-1 col-md-6">
-							<div class="form-group">
-								<label class="control-label">Vl. Unitário</label>
-								<?= $this->Form->control('valoruni', ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
-							</div>
-						</div>
-						<div class="col-lg-1 col-md-12">
-							<div class="form-group">
-								<label class="control-label">Vl. Total</label>
-								<?= $this->Form->control('valordoservico', ['class' => 'form-control', 'label' => false, 'disabled' => true]) ?>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-lg-12 col-md-12">
-							<div class="form-group">
-								<label class="control-label">Descrição adicional</label>
-								<?= $this->Form->control('observacao', ['class' => 'form-control', 'label' => false]) ?>
-							</div>
-						</div>
-					</div>
-					<button type="button" class="orc-add-row" id="btn-addservico">
-						<i class="fa fa-plus orc-add-row-ic"></i> Adicionar item
-					</button>
-				<?php endif; ?>
-
-				<?php if($orcamento->status == C_OrcamentoStatusAprovado && $role == 0 && !empty($orcamento->ipaprovacao)): ?>
-					<div class="orc-alcada-block">
-						<div class="orc-alcada-icon"><i class="fa fa-check"></i></div>
-						<div>
-							<div style="font-size:12px;font-weight:600;color:#0f6e56;margin-bottom:3px;">Aprovado pelo cliente</div>
-							<div style="font-size:11px;color:#1d9e75;">
-								IP: <?= $orcamento->ipaprovacao ?>
-								&nbsp;·&nbsp; Navegador: <?= $orcamento->navegadoraprovacao ?>
-							</div>
-						</div>
-					</div>
-				<?php endif; ?>
-
-				<!-- Carrinho -->
-				<div id="carrinho" class="m-t-10"></div>
-
-				<!-- Footer de ações -->
-				<div class="orc-footer-bar">
-					<div class="orc-footer-bar-actions">
-					</div>
-					<div class="orc-footer-bar-actions">
-						<?= $this->Html->link(
-							'<i class="fa fa-print"></i> Imprimir',
-							['action' => 'imprimir', $orcamento->id],
-							['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
-						) ?>
-						<?= $this->Html->link(
-							'<i class="fa fa-file-pdf-o"></i> PDF',
-							['action' => 'imprimirPdf', $orcamento->id],
-							['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
-						) ?>
-						<?= $this->Html->link(
-							'<i class="fa fa-envelope"></i> E-mail',
-							['#'],
-							['class' => 'btn btn-orc-outline-purple btn-orc-compact btn-email', 'escape' => false]
-						) ?>
-						<?php if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])): ?>
-							<?= $this->Form->button(
-								'<i class="fa fa-save"></i> Salvar alterações',
-								['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
-							) ?>
-						<?php endif; ?>
-					</div>
-				</div>
-
-			<?= $this->Form->end(); ?>
+			</div>
 		</div>
 	</div>
+
+	<!-- Observações -->
+	<div class="orc-obs-block">
+		<div class="orc-sec-title">Observações</div>
+		<label class="control-label" for="observacoes">Condições, prazos, garantias</label>
+		<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'editor form-control orc-obs-textarea', 'label' => false]) ?>
+	</div>
+
+	<!-- Card: Status + Fluxo de aprovação -->
+	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+		<div class="card-body">
+			<div class="orc-sec-title">Status</div>
+			<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+				<span><?= orcamentoStatus($orcamento->status) ?></span>
+				<?php if(isset($temordem) && $temordem != 'nao'): ?>
+					<?= $this->Html->link(
+						'<i class="fa fa-wrench"></i> OS Nº ' . $temordem,
+						['controller' => 'Ordensservico', 'action' => 'edit', $temordem],
+						['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
+					); ?>
+				<?php else: ?>
+					<span style="font-size:12px;color:#9a9890;">Sem ordem de serviço vinculada</span>
+				<?php endif; ?>
+			</div>
+			<div class="orc-wf-list">
+				<div class="orc-workflow-step">
+					<div class="orc-wf-dot orc-wf-ok"><i class="fa fa-check"></i></div>
+					<div class="orc-wf-body">
+						<div class="orc-wf-title">Criado</div>
+						<div class="orc-wf-sub">Orçamento registrado no sistema</div>
+					</div>
+				</div>
+				<div class="orc-workflow-step">
+					<div class="orc-wf-dot <?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'orc-wf-ok' : 'orc-wf-pend' ?>">
+						<i class="fa fa-<?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'check' : 'circle-o' ?>"></i>
+					</div>
+					<div class="orc-wf-body">
+						<div class="orc-wf-title" <?= $orcamento->status < C_OrcamentoStatusEnviado ? 'style="color:#9a9890;"' : '' ?>>Enviado ao cliente</div>
+						<div class="orc-wf-sub"><?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'Proposta enviada por e-mail' : 'Aguardando envio por e-mail' ?></div>
+					</div>
+					<?php if($orcamento->status < C_OrcamentoStatusEnviado): ?>
+						<button type="button" class="btn btn-orc-outline-teal btn-orc-compact btn-email" style="font-size:11px;margin-left:auto;">
+							<i class="fa fa-paper-plane"></i> Enviar agora
+						</button>
+					<?php endif; ?>
+				</div>
+				<div class="orc-workflow-step">
+					<div class="orc-wf-dot <?= $orcamento->status == C_OrcamentoStatusAprovado ? 'orc-wf-ok' : ($orcamento->status == C_OrcamentoStatusRecusado ? 'orc-wf-pend' : '') ?>">
+						<?php if($orcamento->status == C_OrcamentoStatusAprovado): ?><i class="fa fa-check"></i>
+						<?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?><i class="fa fa-times"></i>
+						<?php else: ?><div style="width:7px;height:7px;border-radius:50%;background:#e5e4e0;"></div><?php endif; ?>
+					</div>
+					<div class="orc-wf-body">
+						<div class="orc-wf-title" <?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? 'style="color:#9a9890;"' : '' ?>>Decisão do cliente</div>
+						<div class="orc-wf-sub">
+							<?php if($orcamento->status == C_OrcamentoStatusAprovado): ?>
+								Aprovado<?php if(!empty($orcamento->ipaprovacao)): ?> · IP: <?= $orcamento->ipaprovacao ?><?php endif; ?>
+							<?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?>
+								Recusado pelo cliente
+							<?php else: ?>
+								Aguardando resposta
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Card: Controle de versões -->
+	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+		<div class="card-body">
+			<div class="orc-sec-title orc-sec-title--split">
+				<span>Controle de versões</span>
+				<?= $this->Html->link(
+					'<i class="fa fa-plus"></i> Criar nova versão',
+					['action' => 'novaversao', $orcamento->id],
+					['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
+				) ?>
+			</div>
+			<div class="orc-version-panel" style="margin-bottom:12px;">
+				<div class="orc-version-item">
+					<div style="display:flex;align-items:center;gap:10px;">
+						<span class="orc-version-badge orc-v-current">v<?= !empty($orcamento->versao) ? $orcamento->versao : '1' ?> — atual</span>
+						<span style="font-size:12px;font-weight:500;color:#1a1a18;">Versão atual</span>
+					</div>
+					<div style="display:flex;align-items:center;gap:8px;">
+						<span style="font-size:11px;color:#9a9890;"><?= $orcamento->created->format('d/m/Y') ?></span>
+						<span><?= orcamentoStatus($orcamento->status) ?></span>
+					</div>
+				</div>
+			</div>
+			<div style="padding:10px 12px;background:#f9f9f8;border-radius:8px;border:1px solid #f0efec;font-size:11px;color:#6b6a65;line-height:1.6;">
+				<strong style="color:#1a1a18;">Criar nova versão</strong> duplica o orçamento atual para ajustes sem perder o histórico. Cada versão mantém seus próprios itens, valores e status.
+			</div>
+		</div>
+	</div>
+
+	<!-- Card: Produtos e serviços / Itens -->
+	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+		<div class="card-body">
+			<?php if($orcamento->status != C_OrcamentoStatusAprovado && $role == 0): ?>
+				<div class="orc-sec-title">Produtos e serviços</div>
+				<div class="row">
+					<div class="col-lg-2 col-md-12">
+						<label class="control-label">Código</label>
+						<?= $this->Form->control('idproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false]) ?>
+					</div>
+					<div class="col-lg-5 col-md-12">
+						<div class="form-group">
+							<label class="control-label">Produto/Serviço</label>
+							<?= $this->Form->control('servico', ['class' => 'form-control', 'label' => false]) ?>
+							<small class="qtdEstoque text-muted"></small>
+						</div>
+					</div>
+					<div class="col-lg-1 col-md-6">
+						<div class="form-group">
+							<label class="control-label">Tipo</label>
+							<?= $this->Form->control('tipo', ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false]) ?>
+						</div>
+					</div>
+					<div class="col-lg-1 col-md-6">
+						<div class="form-group">
+							<label class="control-label">Qtde.</label>
+							<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
+						</div>
+					</div>
+					<div class="col-lg-1 col-md-6">
+						<div class="form-group">
+							<label class="control-label">Vl. Mensal</label>
+							<?= $this->Form->control('valormensal', ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false]) ?>
+						</div>
+					</div>
+					<div class="col-lg-1 col-md-6">
+						<div class="form-group">
+							<label class="control-label">Vl. Unitário</label>
+							<?= $this->Form->control('valoruni', ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+						</div>
+					</div>
+					<div class="col-lg-1 col-md-12">
+						<div class="form-group">
+							<label class="control-label">Vl. Total</label>
+							<?= $this->Form->control('valordoservico', ['class' => 'form-control', 'label' => false, 'disabled' => true]) ?>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="form-group">
+							<label class="control-label">Descrição adicional</label>
+							<?= $this->Form->control('observacao', ['class' => 'form-control', 'label' => false]) ?>
+						</div>
+					</div>
+				</div>
+				<button type="button" class="orc-add-row" id="btn-addservico">
+					<i class="fa fa-plus orc-add-row-ic"></i> Adicionar item
+				</button>
+			<?php else: ?>
+				<div class="orc-sec-title">Itens do orçamento</div>
+			<?php endif; ?>
+
+			<?php if($orcamento->status == C_OrcamentoStatusAprovado && $role == 0 && !empty($orcamento->ipaprovacao)): ?>
+				<div class="orc-alcada-block">
+					<div class="orc-alcada-icon"><i class="fa fa-check"></i></div>
+					<div>
+						<div style="font-size:12px;font-weight:600;color:#0f6e56;margin-bottom:3px;">Aprovado pelo cliente</div>
+						<div style="font-size:11px;color:#1d9e75;">
+							IP: <?= $orcamento->ipaprovacao ?>
+							&nbsp;·&nbsp; Navegador: <?= $orcamento->navegadoraprovacao ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<div id="carrinho" class="m-t-10"></div>
+		</div>
+	</div>
+
+	<!-- Footer de ações -->
+	<div class="orc-footer-bar">
+		<div class="orc-footer-bar-actions">
+		</div>
+		<div class="orc-footer-bar-actions">
+			<?= $this->Html->link(
+				'<i class="fa fa-print"></i> Imprimir',
+				['action' => 'imprimir', $orcamento->id],
+				['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
+			) ?>
+			<?= $this->Html->link(
+				'<i class="fa fa-file-pdf-o"></i> PDF',
+				['action' => 'imprimirPdf', $orcamento->id],
+				['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
+			) ?>
+			<?= $this->Html->link(
+				'<i class="fa fa-envelope"></i> E-mail',
+				['#'],
+				['class' => 'btn btn-orc-outline-purple btn-orc-compact btn-email', 'escape' => false]
+			) ?>
+			<?php if(in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado])): ?>
+				<?= $this->Form->button(
+					'<i class="fa fa-save"></i> Salvar alterações',
+					['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]
+				) ?>
+			<?php endif; ?>
+		</div>
+	</div>
+
+	<?= $this->Form->end(); ?>
 </div>
 </div>
 <!-- Modal Email -->
