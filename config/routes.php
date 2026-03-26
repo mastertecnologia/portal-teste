@@ -112,6 +112,15 @@ Router::scope('/', function ($routes) {
         ['controller' => 'PgmAssets', 'action' => 'css'],
         ['pass' => ['name']]
     );
+    // Compat: HTML em cache / links antigos ainda pedem /css/*.css — mesma resposta que pgm-assets
+    $routes->connect(
+        '/css/:file',
+        ['controller' => 'PgmAssets', 'action' => 'legacyCss'],
+        [
+            'pass' => ['file'],
+            'file' => '(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons)\.css',
+        ]
+    );
     $routes->fallbacks(DashedRoute::class);
 });
 

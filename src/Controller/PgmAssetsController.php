@@ -20,14 +20,35 @@ class PgmAssetsController extends AppController
 	{
 		parent::initialize();
 		if ($this->components()->has('Security')) {
-			$this->Security->setConfig('unlockedActions', ['css']);
+			$this->Security->setConfig('unlockedActions', ['css', 'legacyCss']);
 		}
 	}
 
 	public function beforeFilter(Event $event)
 	{
-		$this->Auth->allow(['css']);
+		$this->Auth->allow(['css', 'legacyCss']);
 		parent::beforeFilter($event);
+	}
+
+	/**
+	 * Atende URLs antigas /css/produtos-premium.css etc. (cache de página, bookmarks).
+	 *
+	 * @param string|null $file Nome do ficheiro com extensão .css
+	 * @return \Cake\Http\Response
+	 */
+	public function legacyCss($file = null)
+	{
+		$map = [
+			'produtos-premium.css' => 'produtos-premium',
+			'clientes-premium.css' => 'clientes-premium',
+			'orcamentos-premium.css' => 'orcamentos-premium',
+			'pgm-action-buttons.css' => 'pgm-action-buttons',
+		];
+		if ($file === null || !isset($map[$file])) {
+			throw new NotFoundException();
+		}
+
+		return $this->css($map[$file]);
 	}
 
 	public function css($name = null)

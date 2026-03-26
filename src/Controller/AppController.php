@@ -234,7 +234,7 @@ class AppController extends Controller {
 			return true;
 		}
 
-		if ($controller === 'pgmassets' && $action === 'css') {
+		if ($controller === 'pgmassets' && in_array($action, ['css', 'legacycss'], true)) {
 			return true;
 		}
 
