@@ -435,7 +435,10 @@
     var unid  = document.getElementById('unidade').value.trim();
     var preco = document.getElementById('vlunitario').value.trim();
     var ativoEl = document.getElementById('ativo');
-    var ativoTxt = ativoEl.options[ativoEl.selectedIndex]?.text || '—';
+    var ativoOpt = (ativoEl && ativoEl.options && ativoEl.selectedIndex >= 0)
+      ? ativoEl.options[ativoEl.selectedIndex]
+      : null;
+    var ativoTxt = ativoOpt ? ativoOpt.text : '—';
 
     var titleEl = document.getElementById('prev-title');
     titleEl.textContent = desc || 'Sem descrição';

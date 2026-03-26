@@ -26,23 +26,29 @@
   }
   $margemMedia = $margemCnt > 0 ? round($margemTotal / $margemCnt, 1) : 0;
 
+  if (!function_exists('prdBadge')) {
   function prdBadge($ativo) {
     return $ativo
       ? '<span class="prd-badge prd-badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span>'
       : '<span class="prd-badge prd-badge-off"><i class="fas fa-circle" style="font-size:5px"></i> Inativo</span>';
   }
+  }
 
+  if (!function_exists('prdStock')) {
   function prdStock($qty) {
     if ($qty <= 0)  return '<span class="prd-stock"><span class="prd-stock-dot out"></span>' . (int)$qty . '</span>';
     if ($qty <= 5)  return '<span class="prd-stock"><span class="prd-stock-dot low"></span>' . (int)$qty . '</span>';
     return '<span class="prd-stock"><span class="prd-stock-dot ok"></span>' . (int)$qty . '</span>';
   }
+  }
 
+  if (!function_exists('prdMargin')) {
   function prdMargin($custo, $venda) {
     if ($venda <= 0 || $custo <= 0) return '<span class="prd-td-margin" style="color:var(--prd-dim)">—</span>';
     $m = round((($venda - $custo) / $venda) * 100, 1);
     $cls = $m >= 30 ? 'margin-good' : ($m >= 15 ? 'margin-ok' : 'margin-low');
     return '<span class="prd-td-margin ' . $cls . '">' . $m . '%</span>';
+  }
   }
 ?>
 
@@ -410,8 +416,9 @@
     // Use DataTables column search on "Status" column
     // Column index for status: produtos=7, servicos=4, contratos=4
     var statusColIdx = (active === 'produtos') ? 7 : 4;
-    var search = st === 'ativos' ? 'Ativo' : (st === 'inativos' ? 'Inativo' : '');
-    tables[active].column(statusColIdx).search(search).draw();
+    var search = st === 'ativos' ? '^\\s*Ativo\\s*$' : (st === 'inativos' ? '^\\s*Inativo\\s*$' : '');
+    var isRegex = st !== 'todos';
+    tables[active].column(statusColIdx).search(search, isRegex, false).draw();
   };
 
   /* ── Export CSV ─────────────────────────────── */
