@@ -1,202 +1,376 @@
 <?php
-	function Mask($mask,$str){
-		$str = str_replace(" ","",$str);
-		for($i=0;$i<strlen($str);$i++) $mask[strpos($mask,"#")] = $str[$i];
-		return $mask;
-	}
+    use Cake\Routing\Router;
+    $this->append('css', $this->Html->css('/css/clientes-premium', ['timestamp' => true]));
+
+    function Mask($mask, $str) {
+        $str = str_replace(" ", "", $str);
+        for ($i = 0; $i < strlen($str); $i++) $mask[strpos($mask, "#")] = $str[$i];
+        return $mask;
+    }
+
+    $cntAPJ = count($clientesAtivosPJ);
+    $cntAPF = count($clientesAtivosPF);
+    $cntIPJ = count($clientesInativosPJ);
+    $cntIPF = count($clientesInativosPF);
+    $cntTotal = $cntAPJ + $cntAPF + $cntIPJ + $cntIPF;
+
+    // Initials helper
+    function cliInitials($str) {
+        $parts = preg_split('/\s+/', trim($str), -1, PREG_SPLIT_NO_EMPTY);
+        $a = strtoupper(substr($parts[0] ?? 'C', 0, 1));
+        $b = strtoupper(substr($parts[1] ?? '', 0, 1));
+        return $a . $b;
+    }
 ?>
-<style>
-	.table td, .table th { padding: 0.4rem;	}
-</style>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<div class="d-flex justify-content-between align-items-center m-b-15">
-				<div>
-					<h5 class="card-title m-b-0">Lista de Clientes</h5>
-					<small class="text-muted">Clientes vinculados ao ERP e habilitados para acesso ao portal.</small>
-				</div>
-				<div class="text-right">
-					<?= $this->Html->link('Cadastrar cliente', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
-				</div>
-			</div>
-			<ul class="nav nav-tabs customtab" role="tablist">
-				<li class="nav-item"> <a class="nav-link active" data-toggle="tab" href="#ativos" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-check"></i></span> <span class="hidden-xs-down">Ativos</span></a> </li>
-				<li class="nav-item"> <a class="nav-link " data-toggle="tab" href="#inativos" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-na"></i></span> <span class="hidden-xs-down">Inativos</span></a> </li>
-			</ul>
-			<div class="tab-content">
-				<div class="tab-pane active" id="ativos">
-					<ul class="nav nav-pills m-b-10" role="tablist">
-						<li class="nav-item">
-							<a class="nav-link active" data-toggle="tab" href="#ativos_pj" role="tab" aria-selected="true">
-								Pessoa Jurídica <span class="badge badge-pill badge-info m-l-5"><?= count($clientesAtivosPJ) ?></span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" data-toggle="tab" href="#ativos_pf" role="tab" aria-selected="false">
-								Pessoa Física <span class="badge badge-pill badge-info m-l-5"><?= count($clientesAtivosPF) ?></span>
-							</a>
-						</li>
-					</ul>
-					<div class="tab-content">
-						<div class="tab-pane active" id="ativos_pj">
-							<div class="table-responsive">
-								<table class="table table-hover table-row-clickable" id="tableAtivosPJ">
-									<thead class="text-primary">
-										<th style="width:40%">Razão Social</th>
-										<th style="width:20%">CNPJ</th>
-										<th style="width:20%">E-mail</th>
-										<th style="width:20%">Telefone</th>
-									</thead>
-									<tbody>
-										<?php foreach ($clientesAtivosPJ as $reg): ?>
-											<tr>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->razaosocial ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= formatCnpjCpf($reg->cnpj) ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></a></td>
-											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-						<div class="tab-pane" id="ativos_pf">
-							<div class="table-responsive">
-								<table class="table table-hover table-row-clickable" id="tableAtivosPF">
-									<thead class="text-primary">
-										<th style="width:40%">Nome</th>
-										<th style="width:20%">CPF</th>
-										<th style="width:20%">E-mail</th>
-										<th style="width:20%">Telefone</th>
-									</thead>
-									<tbody>
-										<?php foreach ($clientesAtivosPF as $reg): ?>
-											<tr>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->nome ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= formatCnpjCpf($reg->cpf) ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></a></td>
-											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="tab-pane" id="inativos">
-					<ul class="nav nav-pills m-b-10" role="tablist">
-						<li class="nav-item">
-							<a class="nav-link active" data-toggle="tab" href="#inativos_pj" role="tab" aria-selected="true">
-								Pessoa Jurídica <span class="badge badge-pill badge-secondary m-l-5"><?= count($clientesInativosPJ) ?></span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" data-toggle="tab" href="#inativos_pf" role="tab" aria-selected="false">
-								Pessoa Física <span class="badge badge-pill badge-secondary m-l-5"><?= count($clientesInativosPF) ?></span>
-							</a>
-						</li>
-					</ul>
-					<div class="tab-content">
-						<div class="tab-pane active" id="inativos_pj">
-							<div class="table-responsive">
-								<table class="table table-hover table-row-clickable" id="tableInativosPJ">
-									<thead class="text-primary">
-										<th style="width:30%">Razão Social</th>
-										<th style="width:15%">CNPJ</th>
-										<th style="width:20%">E-mail</th>
-										<th style="width:15%">Telefone</th>
-										<th style="width:10%">Ações</th>
-									</thead>
-									<tbody>
-										<?php foreach ($clientesInativosPJ as $reg): ?>
-											<tr>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->razaosocial ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= formatCnpjCpf($reg->cnpj) ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></a></td>
-												<td>
-													<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
-												</td>
-											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-						<div class="tab-pane" id="inativos_pf">
-							<div class="table-responsive">
-								<table class="table table-hover table-row-clickable" id="tableInativosPF">
-									<thead class="text-primary">
-										<th style="width:30%">Nome</th>
-										<th style="width:15%">CPF</th>
-										<th style="width:20%">E-mail</th>
-										<th style="width:15%">Telefone</th>
-										<th style="width:10%">Ações</th>
-									</thead>
-									<tbody>
-										<?php foreach ($clientesInativosPF as $reg): ?>
-											<tr>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->nome ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= formatCnpjCpf($reg->cpf) ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?= $reg->email ?></a></td>
-												<td><a class='link' target='_blank' href='<?= $this->Url->build(["controller" => "Clientes", "action" => "edit", $reg->id]) ?>'><?php if(!empty($reg->fone)) echo Mask("(###) ####-####",$reg->fone).'<br>'; if(!empty($reg->fone2))echo Mask("(###) #####-####",$reg->fone2) ?></a></td>
-												<td>
-													<?= $this->Html->link('Reativar', ['controller' => 'Clientes', 'action' => 'reativar', $reg->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm', 'confirm' => 'Você confirma a reativação deste cliente?']) ?>
-												</td>
-											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-			
-			</div>
-			<div class="clearfix"></div>
-		</div>
-	</div>
+
+<div class="col-md-12 p-0">
+<div class="cli-root">
+
+    <!-- ── Topbar ─────────────────────────────────────────── -->
+    <div class="cli-topbar">
+        <div class="cli-topbar-left">
+            <div class="cli-eyebrow">Módulo comercial</div>
+            <h1 class="cli-h1">Clientes</h1>
+            <div class="cli-subtitle">Empresas e pessoas vinculadas ao ERP</div>
+        </div>
+        <div class="cli-topbar-right">
+            <?= $this->Html->link(
+                '<i class="fas fa-plus"></i> Novo cliente',
+                ['action' => 'add'],
+                ['class' => 'btn-cli-primary', 'escape' => false, 'target' => '_blank']
+            ) ?>
+        </div>
+    </div>
+
+    <!-- ── KPI Strip ──────────────────────────────────────── -->
+    <div class="cli-kpi-strip">
+        <div class="cli-kpi active" data-kpi="ativos-pj">
+            <div class="cli-kpi-label">Ativos · PJ</div>
+            <div class="cli-kpi-val teal"><?= $cntAPJ ?></div>
+            <div class="cli-kpi-sub">Pessoa Jurídica</div>
+        </div>
+        <div class="cli-kpi" data-kpi="ativos-pf">
+            <div class="cli-kpi-label">Ativos · PF</div>
+            <div class="cli-kpi-val teal"><?= $cntAPF ?></div>
+            <div class="cli-kpi-sub">Pessoa Física</div>
+        </div>
+        <div class="cli-kpi" data-kpi="inativos">
+            <div class="cli-kpi-label">Inativos</div>
+            <div class="cli-kpi-val muted"><?= $cntIPJ + $cntIPF ?></div>
+            <div class="cli-kpi-sub">PJ + PF</div>
+        </div>
+        <div class="cli-kpi" data-kpi="total">
+            <div class="cli-kpi-label">Total cadastros</div>
+            <div class="cli-kpi-val"><?= $cntTotal ?></div>
+            <div class="cli-kpi-sub">Todos</div>
+        </div>
+    </div>
+
+    <!-- ── Table area ─────────────────────────────────────── -->
+    <div class="cli-table-wrap">
+
+        <!-- Status toggle (Ativos / Inativos) -->
+        <div class="cli-filter-bar" id="cli-filter-bar">
+            <div class="cli-pill-group" id="cli-status-pills">
+                <button class="cli-pill active" data-status="ativos">
+                    <i class="fas fa-circle" style="font-size:6px;"></i> Ativos
+                    <span class="cnt"><?= $cntAPJ + $cntAPF ?></span>
+                </button>
+                <button class="cli-pill" data-status="inativos">
+                    <i class="fas fa-circle" style="font-size:6px;color:#f85149;"></i> Inativos
+                    <span class="cnt"><?= $cntIPJ + $cntIPF ?></span>
+                </button>
+            </div>
+            <div class="cli-filter-divider"></div>
+            <div class="cli-pill-group" id="cli-type-pills">
+                <button class="cli-pill active" data-type="pj">
+                    <i class="fas fa-building" style="font-size:10px;"></i> Pessoa Jurídica
+                    <span class="cnt" id="cnt-pj"><?= $cntAPJ ?></span>
+                </button>
+                <button class="cli-pill" data-type="pf">
+                    <i class="fas fa-user" style="font-size:10px;"></i> Pessoa Física
+                    <span class="cnt" id="cnt-pf"><?= $cntAPF ?></span>
+                </button>
+            </div>
+            <div class="cli-filter-divider"></div>
+            <div class="cli-filter-search">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="cli-search" placeholder="Buscar por nome, CNPJ, e-mail…" autocomplete="off" />
+            </div>
+        </div>
+
+        <!-- ── Tables ─── -->
+
+        <!-- ATIVOS PJ -->
+        <div class="cli-table-panel active" id="panel-ativos-pj">
+            <div class="cli-table-card">
+                <table class="cli-table" id="tableAtivosPJ">
+                    <thead>
+                        <tr>
+                            <th style="width:42%">Razão Social</th>
+                            <th style="width:18%">CNPJ</th>
+                            <th style="width:24%">E-mail</th>
+                            <th style="width:14%">Telefone</th>
+                            <th style="width:2%"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($clientesAtivosPJ as $reg): ?>
+                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
+                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                            <td>
+                                <div class="cli-td-name">
+                                    <div class="cli-av"><?= cliInitials($reg->razaosocial ?? '') ?></div>
+                                    <span class="cli-name-main"><?= h($reg->razaosocial) ?></span>
+                                </div>
+                            </td>
+                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cnpj)) ?></td>
+                            <td class="cli-td-email"><?= h($reg->email) ?></td>
+                            <td class="cli-td-phone">
+                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
+                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
+                            </td>
+                            <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ATIVOS PF -->
+        <div class="cli-table-panel" id="panel-ativos-pf">
+            <div class="cli-table-card">
+                <table class="cli-table" id="tableAtivosPF">
+                    <thead>
+                        <tr>
+                            <th style="width:42%">Nome</th>
+                            <th style="width:18%">CPF</th>
+                            <th style="width:24%">E-mail</th>
+                            <th style="width:14%">Telefone</th>
+                            <th style="width:2%"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($clientesAtivosPF as $reg): ?>
+                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
+                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                            <td>
+                                <div class="cli-td-name">
+                                    <div class="cli-av"><?= cliInitials($reg->nome ?? '') ?></div>
+                                    <span class="cli-name-main"><?= h($reg->nome) ?></span>
+                                </div>
+                            </td>
+                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cpf)) ?></td>
+                            <td class="cli-td-email"><?= h($reg->email) ?></td>
+                            <td class="cli-td-phone">
+                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
+                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
+                            </td>
+                            <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- INATIVOS PJ -->
+        <div class="cli-table-panel" id="panel-inativos-pj">
+            <div class="cli-table-card">
+                <table class="cli-table" id="tableInativosPJ">
+                    <thead>
+                        <tr>
+                            <th style="width:38%">Razão Social</th>
+                            <th style="width:16%">CNPJ</th>
+                            <th style="width:22%">E-mail</th>
+                            <th style="width:14%">Telefone</th>
+                            <th style="width:10%">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($clientesInativosPJ as $reg): ?>
+                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
+                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                            <td>
+                                <div class="cli-td-name">
+                                    <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->razaosocial ?? '') ?></div>
+                                    <span class="cli-name-main"><?= h($reg->razaosocial) ?></span>
+                                </div>
+                            </td>
+                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cnpj)) ?></td>
+                            <td class="cli-td-email"><?= h($reg->email) ?></td>
+                            <td class="cli-td-phone">
+                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
+                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
+                            </td>
+                            <td onclick="event.stopPropagation()">
+                                <?= $this->Html->link(
+                                    '<i class="fas fa-redo-alt"></i> Reativar',
+                                    ['controller' => 'Clientes', 'action' => 'reativar', $reg->id],
+                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?']
+                                ) ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- INATIVOS PF -->
+        <div class="cli-table-panel" id="panel-inativos-pf">
+            <div class="cli-table-card">
+                <table class="cli-table" id="tableInativosPF">
+                    <thead>
+                        <tr>
+                            <th style="width:38%">Nome</th>
+                            <th style="width:16%">CPF</th>
+                            <th style="width:22%">E-mail</th>
+                            <th style="width:14%">Telefone</th>
+                            <th style="width:10%">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($clientesInativosPF as $reg): ?>
+                        <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
+                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                            <td>
+                                <div class="cli-td-name">
+                                    <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->nome ?? '') ?></div>
+                                    <span class="cli-name-main"><?= h($reg->nome) ?></span>
+                                </div>
+                            </td>
+                            <td class="cli-td-doc"><?= h(formatCnpjCpf($reg->cpf)) ?></td>
+                            <td class="cli-td-email"><?= h($reg->email) ?></td>
+                            <td class="cli-td-phone">
+                                <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
+                                <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
+                            </td>
+                            <td onclick="event.stopPropagation()">
+                                <?= $this->Html->link(
+                                    '<i class="fas fa-redo-alt"></i> Reativar',
+                                    ['controller' => 'Clientes', 'action' => 'reativar', $reg->id],
+                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?']
+                                ) ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /cli-table-wrap -->
+</div><!-- /cli-root -->
 </div>
+
 <script>
-	$(document).ready(function() {
-		var $window = $(window);
-		table = $('#tableAtivosPJ, #tableAtivosPF, #tableInativosPJ, #tableInativosPF')
-		table.on( 'length.dt', function ( e, settings, len ) {
-			pagelength(len);
-		} )
-		table.DataTable({
-			"pageLength": <?= $pagelength ?>,
-			"language": {
-				"sProcessing":    "Procesando...",
-				"sLengthMenu":    "Mostrar _MENU_ registros",
-				"sZeroRecords":   "Nenhum registro encontrado",
-				"sEmptyTable":    "Nenhum dado disponível",
-				"sInfo":          "Mostrando registros de _START_ até _END_ de um total de _TOTAL_ registros",
-				"sInfoEmpty":     "Mostrando registros de 0 a 0 de um total de 0 registros",
-				"sInfoFiltered":  "(filtrado de um total de _MAX_ registros)",
-				"sInfoPostFix":   "",
-				"sSearch":        "Buscar:",
-				"sUrl":           "",
-				"sInfoThousands":  ",",
-				"sLoadingRecords": "Carregando...",
-				"oPaginate": {
-					"sFirst":    "<<",
-					"sLast":    ">>",
-					"sNext":    ">",
-					"sPrevious": "<"
-				},
-				"oAria": {
-					"sSortAscending":  ": Ordem Ascendente",
-					"sSortDescending": ": Ordem descendente"
-				}
-			},
-			"drawCallback": function( settings ) {
-				if ($('body').hasClass('dark-mode') ) $('td').each(function(){$(this).addClass('dark-mode');});
-				else $('td').each(function(){$(this).removeClass('dark-mode');});
-			},
-		});
-		if (typeof filters !== 'undefined') table.search(filters).draw();
-	});
+$(document).ready(function() {
+
+    // State
+    var status = 'ativos';
+    var type = 'pj';
+
+    var counts = {
+        'ativos':   { pj: <?= $cntAPJ ?>, pf: <?= $cntAPF ?> },
+        'inativos': { pj: <?= $cntIPJ ?>, pf: <?= $cntIPF ?> }
+    };
+
+    function showPanel() {
+        $('.cli-table-panel').removeClass('active');
+        $('#panel-' + status + '-' + type).addClass('active');
+    }
+
+    // KPI clicks
+    $('.cli-kpi').on('click', function() {
+        var kpi = $(this).data('kpi');
+        if (kpi === 'ativos-pj')  { status = 'ativos';   type = 'pj'; }
+        else if (kpi === 'ativos-pf')  { status = 'ativos';   type = 'pf'; }
+        else if (kpi === 'inativos')   { status = 'inativos'; type = 'pj'; }
+        else if (kpi === 'total')      { status = 'ativos';   type = 'pj'; }
+        $('.cli-kpi').removeClass('active');
+        $(this).addClass('active');
+        updatePills();
+        showPanel();
+    });
+
+    // Status pills
+    $('#cli-status-pills .cli-pill').on('click', function() {
+        status = $(this).data('status');
+        $('#cli-status-pills .cli-pill').removeClass('active');
+        $(this).addClass('active');
+        // reset type to pj
+        type = 'pj';
+        updateTypePills();
+        updatePills();
+        showPanel();
+    });
+
+    // Type pills
+    $('#cli-type-pills .cli-pill').on('click', function() {
+        type = $(this).data('type');
+        $('#cli-type-pills .cli-pill').removeClass('active');
+        $(this).addClass('active');
+        showPanel();
+    });
+
+    function updateTypePills() {
+        $('#cli-type-pills .cli-pill').removeClass('active');
+        $('#cli-type-pills .cli-pill[data-type="pj"]').addClass('active');
+        var c = counts[status];
+        $('#cnt-pj').text(c.pj);
+        $('#cnt-pf').text(c.pf);
+    }
+
+    function updatePills() {
+        updateTypePills();
+    }
+
+    // DataTables
+    var dtOpts = {
+        "pageLength": <?= $pagelength ?? 25 ?>,
+        "language": {
+            "sLengthMenu":    "Mostrar _MENU_ registros",
+            "sZeroRecords":   "Nenhum registro encontrado",
+            "sEmptyTable":    "Nenhum dado disponível",
+            "sInfo":          "Mostrando _START_ a _END_ de _TOTAL_",
+            "sInfoEmpty":     "Nenhum registro",
+            "sInfoFiltered":  "(filtrado de _MAX_)",
+            "sSearch":        "Filtrar:",
+            "sLoadingRecords":"Carregando...",
+            "oPaginate": { "sFirst":"<<","sLast":">>","sNext":">","sPrevious":"<" }
+        },
+        "dom": '<"d-flex justify-content-between align-items-center"lf>rt<"d-flex justify-content-between align-items-center"ip>',
+    };
+
+    var tables = {
+        'ativosPJ':   $('#tableAtivosPJ').DataTable(dtOpts),
+        'ativosPF':   $('#tableAtivosPF').DataTable(dtOpts),
+        'inativosPJ': $('#tableInativosPJ').DataTable(dtOpts),
+        'inativosPF': $('#tableInativosPF').DataTable(dtOpts)
+    };
+
+    // Persist pagelength
+    $('#tableAtivosPJ, #tableAtivosPF, #tableInativosPJ, #tableInativosPF').on('length.dt', function(e, s, len) {
+        pagelength(len);
+    });
+
+    // Global search wired to active table
+    $('#cli-search').on('keyup', function() {
+        var q = $(this).val();
+        var key = status === 'ativos'
+            ? (type === 'pj' ? 'ativosPJ' : 'ativosPF')
+            : (type === 'pj' ? 'inativosPJ' : 'inativosPF');
+        tables[key].search(q).draw();
+    });
+
+    // Auto-apply filter if passed from another page
+    if (typeof filters !== 'undefined') {
+        tables['ativosPJ'].search(filters).draw();
+    }
+});
 </script>
