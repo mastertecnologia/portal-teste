@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview — Clientes Premium</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0d14; font-family: 'DM Sans', sans-serif; }
+
+/* Preview nav */
+.pv-nav {
+  display: flex;
+  gap: 0;
+  background: #0d1117;
+  border-bottom: 1px solid #21262d;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.pv-tab {
+  padding: 12px 20px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #7d8590;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  user-select: none;
+}
+.pv-tab.active { color: #5cdbc0; border-bottom-color: #1d9e75; }
+.pv-tab:hover { color: #e6edf3; }
+
+/* Fake sidebar shell */
+.pv-shell { display: flex; min-height: 100vh; }
+.pv-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #0d1117;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+.pv-sb-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 14px 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.pv-sb-mark {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg,#1d9e75,#13715a);
+  color:#fff; display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  box-shadow:0 2px 8px rgba(29,158,117,.35);
+  flex-shrink:0;
+}
+.pv-sb-titles strong { font-size:13.5px;font-weight:600;color:#e6edf3;display:block;line-height:1.2; }
+.pv-sb-titles small { font-size:10.5px;color:#555e78; }
+.pv-sb-ws {
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.pv-sb-ws-icon {
+  width:28px;height:28px;border-radius:7px;
+  background:rgba(29,158,117,.12);color:#5cdbc0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+}
+.pv-sb-ws-label { font-size:9.5px;color:#555e78;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px; }
+.pv-sb-ws-name { font-size:12.5px;font-weight:500;color:#c9d1d9; }
+.pv-sb-ws-date {
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:7px;padding:4px 7px;min-width:36px;
+}
+.pv-sb-ws-date-day { font-size:15px;font-weight:700;color:#e6edf3;line-height:1;font-family:'DM Mono',monospace; }
+.pv-sb-ws-date-mon { font-size:9px;color:#555e78;text-transform:uppercase; }
+.pv-sb-search {
+  padding:9px 12px 8px;border-bottom:1px solid rgba(255,255,255,.07);
+}
+.pv-sb-sbox {
+  display:flex;align-items:center;gap:7px;
+  background:#1a1f28;border:1px solid rgba(255,255,255,.07);
+  border-radius:7px;padding:0 10px;height:30px;
+}
+.pv-sb-sbox input { background:none;border:none;outline:none;color:#e6edf3;font-size:12px;width:100%; }
+.pv-sb-sbox input::placeholder { color:#555e78; }
+.pv-sb-section {
+  font-size:9.5px;text-transform:uppercase;letter-spacing:.10em;
+  color:#484f58;padding:13px 18px 5px;font-weight:600;
+}
+.pv-sb-nav { flex:1;overflow-y:auto;padding-bottom:12px; }
+.pv-sb-item {
+  display:flex;align-items:center;gap:9px;
+  padding:8.5px 14px;margin:1px 8px;
+  border-radius:8px;color:#8b929e;font-size:13px;
+  cursor:pointer;transition:all .15s;
+}
+.pv-sb-item i { width:16px;text-align:center;font-size:13px;color:#555e78; }
+.pv-sb-item:hover { background:rgba(255,255,255,.05);color:#e6edf3; }
+.pv-sb-item.active {
+  background:rgba(29,158,117,.12);color:#5cdbc0;
+  box-shadow:inset 2px 0 0 #1d9e75;font-weight:500;
+}
+.pv-sb-item.active i { color:#5cdbc0; }
+.pv-sb-footer {
+  border-top:1px solid rgba(255,255,255,.07);
+  padding:10px 14px 14px;background:#0d1117;
+}
+.pv-sb-actions { display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px; }
+.pv-sb-act {
+  width:28px;height:28px;border-radius:7px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  color:#555e78;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;
+}
+.pv-sb-user { display:flex;align-items:center;gap:10px; }
+.pv-sb-av {
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,#1d9e75,#13715a);
+  border:2px solid rgba(29,158,117,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;letter-spacing:.05em;
+}
+.pv-sb-uname { font-size:12.5px;font-weight:500;color:#e6edf3;display:block; }
+.pv-sb-urole { font-size:10px;color:#5cdbc0;opacity:.8; }
+
+.pv-main { flex:1;min-width:0;background:#0d1117; }
+.pv-screen { display:none; }
+.pv-screen.active { display:block; }
+
+/* ══ INDEX ══════════════════════════════════════════════════════ */
+.cli-root {
+  --cli-bg:#0d1117;--cli-surface:#161b22;--cli-surface2:#1c2230;
+  --cli-border:#21262d;--cli-border2:#30363d;--cli-text:#e6edf3;
+  --cli-muted:#7d8590;--cli-dim:#484f58;--cli-teal:#1d9e75;
+  --cli-teal-lt:#5cdbc0;--cli-teal-dim:rgba(29,158,117,0.12);
+  --cli-teal-glow:rgba(29,158,117,0.22);--cli-red:#f85149;
+  font-family:'DM Sans',sans-serif;color:var(--cli-text);background:var(--cli-bg);
+}
+.cli-topbar {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px 14px;border-bottom:1px solid var(--cli-border);
+  background:var(--cli-surface);
+}
+.cli-eyebrow { font-size:10px;text-transform:uppercase;letter-spacing:.10em;color:var(--cli-teal-lt);font-weight:600;margin-bottom:3px; }
+.cli-h1 { font-size:20px;font-weight:600;color:var(--cli-text);margin:0 0 2px;line-height:1.2; }
+.cli-subtitle { font-size:11.5px;color:var(--cli-muted); }
+.btn-cli-primary {
+  display:inline-flex;align-items:center;gap:7px;padding:9px 18px;
+  border-radius:8px;background:var(--cli-teal);color:#fff;font-weight:600;
+  font-size:13px;border:none;cursor:pointer;text-decoration:none;
+  transition:background .15s;
+}
+.btn-cli-primary:hover { background:#178a63; }
+.btn-cli-secondary {
+  display:inline-flex;align-items:center;gap:7px;padding:8px 16px;
+  border-radius:8px;background:rgba(255,255,255,.05);color:#7d8590;
+  font-size:12.5px;border:1px solid #30363d;cursor:pointer;text-decoration:none;
+}
+.cli-kpi-strip { display:flex;gap:0;border-bottom:1px solid var(--cli-border);background:var(--cli-surface); }
+.cli-kpi {
+  flex:1;padding:12px 20px;border-right:1px solid var(--cli-border);
+  cursor:pointer;transition:background .15s;position:relative;
+}
+.cli-kpi:last-child { border-right:none; }
+.cli-kpi.active::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cli-teal);border-radius:2px 2px 0 0; }
+.cli-kpi-label { font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--cli-dim);font-weight:600;margin-bottom:4px; }
+.cli-kpi-val { font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;color:var(--cli-text); }
+.cli-kpi-val.teal { color:var(--cli-teal-lt); }
+.cli-kpi-val.muted { color:var(--cli-muted); }
+.cli-kpi-sub { font-size:10px;color:var(--cli-dim);margin-top:3px; }
+.cli-filter-bar {
+  display:flex;align-items:center;gap:12px;padding:10px 24px;
+  border-bottom:1px solid var(--cli-border);background:var(--cli-bg);flex-wrap:wrap;
+}
+.cli-pill-group { display:flex;gap:4px; }
+.cli-pill {
+  display:inline-flex;align-items:center;gap:5px;padding:5px 12px;
+  border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;
+  border:1px solid #30363d;background:transparent;color:#7d8590;transition:all .15s;
+}
+.cli-pill.active { background:var(--cli-teal-dim);border-color:var(--cli-teal);color:var(--cli-teal-lt); }
+.cli-pill .cnt {
+  display:inline-flex;align-items:center;justify-content:center;min-width:18px;
+  height:18px;padding:0 5px;border-radius:10px;font-size:10px;font-weight:700;
+  background:rgba(255,255,255,.08);font-family:'DM Mono',monospace;
+}
+.cli-pill.active .cnt { background:rgba(29,158,117,.20);color:var(--cli-teal-lt); }
+.cli-filter-divider { width:1px;height:22px;background:#30363d;flex-shrink:0; }
+.cli-filter-search {
+  display:flex;align-items:center;gap:8px;background:var(--cli-surface);
+  border:1px solid #30363d;border-radius:8px;padding:0 12px;height:32px;flex:1;max-width:320px;
+}
+.cli-filter-search input { background:none;border:none;outline:none;color:var(--cli-text);font-size:12.5px;font-family:inherit;width:100%; }
+.cli-filter-search input::placeholder { color:var(--cli-dim); }
+.cli-table-wrap { padding:14px 24px 24px;background:var(--cli-bg); }
+.cli-table-card { background:var(--cli-surface);border:1px solid var(--cli-border);border-radius:12px;overflow:hidden; }
+.cli-table { width:100%;border-collapse:collapse; }
+.cli-table thead th {
+  padding:10px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--cli-dim);font-weight:600;border-bottom:1px solid var(--cli-border);
+  background:var(--cli-surface);white-space:nowrap;
+}
+.cli-table tbody tr { border-bottom:1px solid var(--cli-border);cursor:pointer;transition:background .12s; }
+.cli-table tbody tr:last-child { border-bottom:none; }
+.cli-table tbody tr:hover { background:var(--cli-surface2); }
+.cli-table tbody td { padding:10px 14px;font-size:12.5px;vertical-align:middle; }
+.cli-td-name { display:flex;align-items:center;gap:10px; }
+.cli-av { width:30px;height:30px;border-radius:8px;background:var(--cli-teal-dim);color:var(--cli-teal-lt);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;letter-spacing:.05em;font-family:'DM Mono',monospace; }
+.cli-name-main { font-weight:500;color:var(--cli-text);font-size:12.5px; }
+.cli-td-doc { font-family:'DM Mono',monospace;font-size:11.5px;color:var(--cli-muted); }
+.cli-td-email { font-size:12px;color:var(--cli-muted); }
+.cli-td-phone { font-size:12px;color:var(--cli-muted);font-family:'DM Mono',monospace; }
+.cli-td-arrow { color:var(--cli-dim);font-size:12px;text-align:right; }
+.cli-table tbody tr:hover .cli-td-arrow { color:var(--cli-teal-lt); }
+
+/* ══ ADD FORM ═══════════════════════════════════════════════════ */
+.cli-form-root {
+  --cli-bg:#0d1117;--cli-surface:#161b22;--cli-surface2:#1c2230;
+  --cli-border:#21262d;--cli-border2:#30363d;--cli-text:#e6edf3;
+  --cli-muted:#7d8590;--cli-dim:#484f58;--cli-teal:#1d9e75;
+  --cli-teal-lt:#5cdbc0;--cli-teal-dim:rgba(29,158,117,0.12);
+  --cli-teal-glow:rgba(29,158,117,0.22);
+  font-family:'DM Sans',sans-serif;color:var(--cli-text);background:var(--cli-bg);
+}
+.cli-form-topbar {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:18px 24px 14px;border-bottom:1px solid var(--cli-border);background:var(--cli-surface);
+}
+.cli-form-body { padding:20px 24px;display:flex;flex-direction:column;gap:14px; }
+.cli-section { background:var(--cli-surface);border:1px solid var(--cli-border);border-radius:12px;overflow:hidden; }
+.cli-section-head { display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--cli-border);background:var(--cli-surface2); }
+.cli-section-icon { width:28px;height:28px;border-radius:7px;background:var(--cli-teal-dim);color:var(--cli-teal-lt);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0; }
+.cli-section-title { font-size:12.5px;font-weight:600;color:var(--cli-text); }
+.cli-section-body { padding:16px 18px; }
+.cli-fg { display:grid;gap:12px 14px; }
+.cli-fgroup {}
+.cli-fgroup label { display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cli-muted);font-weight:600;margin-bottom:5px; }
+.cli-input {
+  width:100%;background:var(--cli-surface2);border:1px solid var(--cli-border2);
+  border-radius:8px;color:var(--cli-text);font-size:13px;padding:8px 12px;
+  height:38px;font-family:inherit;transition:border-color .15s;outline:none;
+}
+.cli-input::placeholder { color:var(--cli-dim); }
+.cli-input:focus { border-color:var(--cli-teal);box-shadow:0 0 0 2px var(--cli-teal-glow); }
+.cli-select { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b92a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:11px;padding-right:30px; }
+.cli-tipo-group { display:flex;gap:10px;margin-top:12px; }
+.cli-tipo-btn { display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;border:1.5px solid #30363d;background:#1c2230;color:#7d8590;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;font-family:inherit; }
+.cli-tipo-btn.active { background:var(--cli-teal-dim);border-color:var(--cli-teal);color:var(--cli-teal-lt); }
+.btn-cli-outline { display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:transparent;color:var(--cli-teal-lt);font-size:11.5px;font-weight:600;border:1px solid rgba(29,158,117,.35);cursor:pointer;font-family:inherit; }
+.cli-form-footer { padding:14px 24px;border-top:1px solid var(--cli-border);background:var(--cli-surface);display:flex;justify-content:space-between;align-items:center;gap:12px; }
+.cli-form-footer-left { font-size:11.5px;color:var(--cli-dim); }
+.cli-form-footer-right { display:flex;gap:8px; }
+.cli-check-row { display:flex;align-items:center;gap:10px; }
+.cli-check-row input { width:16px;height:16px;accent-color:var(--cli-teal);cursor:pointer; }
+.cli-check-row label { font-size:13px;color:var(--cli-text);cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- Preview nav -->
+<div class="pv-nav">
+  <div class="pv-tab active" onclick="showScreen('lista')">Lista de Clientes</div>
+  <div class="pv-tab" onclick="showScreen('add')">Cadastrar Cliente</div>
+</div>
+
+<div class="pv-shell">
+
+  <!-- Sidebar simulada -->
+  <div class="pv-sidebar">
+    <div class="pv-sb-brand">
+      <div class="pv-sb-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="pv-sb-titles"><strong>PGM Soluções</strong><small>ERP Enterprise</small></div>
+    </div>
+    <div class="pv-sb-ws">
+      <div class="pv-sb-ws-icon"><i class="fas fa-building" style="font-size:11px;"></i></div>
+      <div style="flex:1;min-width:0;">
+        <div class="pv-sb-ws-label">Empresa</div>
+        <div class="pv-sb-ws-name">PGM Soluções</div>
+      </div>
+      <div class="pv-sb-ws-date">
+        <div class="pv-sb-ws-date-day">25</div>
+        <div class="pv-sb-ws-date-mon">Mar</div>
+      </div>
+    </div>
+    <div class="pv-sb-search">
+      <div class="pv-sb-sbox">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="color:#555e78;flex-shrink:0;"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="Buscar funções…">
+      </div>
+    </div>
+    <div class="pv-sb-nav">
+      <div class="pv-sb-section">Menu principal</div>
+      <div class="pv-sb-item"><i class="fa fa-columns"></i> Dashboard</div>
+      <div class="pv-sb-item active"><i class="fa fa-building"></i> Clientes</div>
+      <div class="pv-sb-item"><i class="fa fa-boxes"></i> Produtos</div>
+      <div class="pv-sb-item"><i class="fas fa-file-signature"></i> Ordens de Serviço</div>
+      <div class="pv-sb-item"><i class="fas fa-ticket-alt"></i> Tickets</div>
+      <div class="pv-sb-section">Operações</div>
+      <div class="pv-sb-item"><i class="fas fa-layer-group"></i> Filas / técnicos</div>
+      <div class="pv-sb-item"><i class="fas fa-file-invoice-dollar"></i> Orçamentos</div>
+      <div class="pv-sb-item"><i class="fas fa-file-invoice"></i> Locação</div>
+      <div class="pv-sb-item"><i class="fa fa-calendar"></i> Agenda</div>
+      <div class="pv-sb-item"><i class="fa fa-lock"></i> Banco de Senhas</div>
+    </div>
+    <div class="pv-sb-footer">
+      <div class="pv-sb-actions">
+        <div class="pv-sb-act" title="Perfil"><i class="fas fa-user-cog"></i></div>
+        <div class="pv-sb-act" title="Senha"><i class="fa fa-lock"></i></div>
+        <div class="pv-sb-act" title="Admin"><i class="ti-settings fas fa-cog"></i></div>
+        <div class="pv-sb-act" title="Sair" style="color:#f85149;"><i class="fa fa-power-off"></i></div>
+      </div>
+      <div class="pv-sb-user">
+        <div class="pv-sb-av">DG</div>
+        <div>
+          <span class="pv-sb-uname">Darli Gonçalves B…</span>
+          <span class="pv-sb-urole">Administrador</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="pv-main">
+
+    <!-- ══ LISTA ══ -->
+    <div class="pv-screen active" id="screen-lista">
+    <div class="cli-root">
+      <div class="cli-topbar">
+        <div>
+          <div class="cli-eyebrow">Módulo comercial</div>
+          <h1 class="cli-h1">Clientes</h1>
+          <div class="cli-subtitle">Empresas e pessoas vinculadas ao ERP</div>
+        </div>
+        <div>
+          <button class="btn-cli-primary"><i class="fas fa-plus"></i> Novo cliente</button>
+        </div>
+      </div>
+      <div class="cli-kpi-strip">
+        <div class="cli-kpi active">
+          <div class="cli-kpi-label">Ativos · PJ</div>
+          <div class="cli-kpi-val teal">214</div>
+          <div class="cli-kpi-sub">Pessoa Jurídica</div>
+        </div>
+        <div class="cli-kpi">
+          <div class="cli-kpi-label">Ativos · PF</div>
+          <div class="cli-kpi-val teal">150</div>
+          <div class="cli-kpi-sub">Pessoa Física</div>
+        </div>
+        <div class="cli-kpi">
+          <div class="cli-kpi-label">Inativos</div>
+          <div class="cli-kpi-val muted">37</div>
+          <div class="cli-kpi-sub">PJ + PF</div>
+        </div>
+        <div class="cli-kpi">
+          <div class="cli-kpi-label">Total cadastros</div>
+          <div class="cli-kpi-val">401</div>
+          <div class="cli-kpi-sub">Todos</div>
+        </div>
+      </div>
+      <div class="cli-filter-bar">
+        <div class="cli-pill-group">
+          <button class="cli-pill active"><i class="fas fa-circle" style="font-size:6px;"></i> Ativos <span class="cnt">364</span></button>
+          <button class="cli-pill"><i class="fas fa-circle" style="font-size:6px;color:#f85149;"></i> Inativos <span class="cnt">37</span></button>
+        </div>
+        <div class="cli-filter-divider"></div>
+        <div class="cli-pill-group">
+          <button class="cli-pill active"><i class="fas fa-building" style="font-size:10px;"></i> Pessoa Jurídica <span class="cnt">214</span></button>
+          <button class="cli-pill"><i class="fas fa-user" style="font-size:10px;"></i> Pessoa Física <span class="cnt">150</span></button>
+        </div>
+        <div class="cli-filter-divider"></div>
+        <div class="cli-filter-search">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input type="text" placeholder="Buscar por nome, CNPJ, e-mail…">
+        </div>
+      </div>
+      <div class="cli-table-wrap">
+        <div class="cli-table-card">
+          <table class="cli-table">
+            <thead><tr>
+              <th style="width:42%">Razão Social</th>
+              <th style="width:18%">CNPJ</th>
+              <th style="width:24%">E-mail</th>
+              <th style="width:14%">Telefone</th>
+              <th style="width:2%"></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">TR</div><span class="cli-name-main">TRIANON IND E COM LTDA</span></div></td>
+                <td class="cli-td-doc">50.187.817/0001-99</td>
+                <td class="cli-td-email">financeiro@trianon.com.br</td>
+                <td class="cli-td-phone">(054) 9198-6775</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">MB</div><span class="cli-name-main">MOBLES FAB DE MOV LTDA</span></div></td>
+                <td class="cli-td-doc">50.674.210/0001-33</td>
+                <td class="cli-td-email">alexandrezattera@hotmail.com</td>
+                <td class="cli-td-phone">(054) 9198-6775</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AC</div><span class="cli-name-main">A. CARLOS BRANDELLI LTDA</span></div></td>
+                <td class="cli-td-doc">63.336.965/0001-70</td>
+                <td class="cli-td-email">despachantebrandelli@gmail.com</td>
+                <td class="cli-td-phone">(054) 3451-5033</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AG</div><span class="cli-name-main">AGROPEC COM E ELETRICIDADE HENZEL LTDA.</span></div></td>
+                <td class="cli-td-doc">41.627.074/0001-30</td>
+                <td class="cli-td-email">magnojairhenzel@gmail.com</td>
+                <td class="cli-td-phone">(054) 9600-7241</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AL</div><span class="cli-name-main">ALEPLAST EMBALAGENS PLASTICAS LTDA</span></div></td>
+                <td class="cli-td-doc">01.737.383/0001-48</td>
+                <td class="cli-td-email">financeiro@aleplast.com.br</td>
+                <td class="cli-td-phone">(054) 9965-6415</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AF</div><span class="cli-name-main">ALFEMA IND DE MODELOS LTDA</span></div></td>
+                <td class="cli-td-doc">93.108.199/0001-57</td>
+                <td class="cli-td-email">fiscal@alfema.com.br</td>
+                <td class="cli-td-phone">(054) 3452-1048</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AL</div><span class="cli-name-main">ALLTEX SOLUCOES INDUSTRIAIS LTDA ME</span></div></td>
+                <td class="cli-td-doc">13.464.230/0001-53</td>
+                <td class="cli-td-email">financeiro@alltex.com.br</td>
+                <td class="cli-td-phone">(054) 9148-5866</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AM</div><span class="cli-name-main">AMX FABRICACAO DE ACESSORIOS PARA MOTOCICLETAS</span></div></td>
+                <td class="cli-td-doc">33.563.720/0001-14</td>
+                <td class="cli-td-email">financeiro@amxacessorios.com.br</td>
+                <td class="cli-td-phone">(054) 9156-4228</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AN</div><span class="cli-name-main">ANDRESA PROVENZI SOCIEDADE INDIVIDUAL DE ADVOCACIA</span></div></td>
+                <td class="cli-td-doc">33.144.658/0001-26</td>
+                <td class="cli-td-email">andresa@provenziadvocacia.com.br</td>
+                <td class="cli-td-phone">(054) 3702-7717</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">UA</div><span class="cli-name-main">UFFICIO ASSESSORIA CONTABIL LTDA</span></div></td>
+                <td class="cli-td-doc">00.521.874/0001-22</td>
+                <td class="cli-td-email">financeiro@ufficio.com.br</td>
+                <td class="cli-td-phone">(054) 3321-4400</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:12px;color:#7d8590;">
+          <span>Mostrando 1 a 10 de 214 registros</span>
+          <div style="display:flex;gap:4px;">
+            <button style="padding:4px 10px;border-radius:6px;background:#161b22;border:1px solid #30363d;color:#7d8590;font-size:11px;cursor:pointer;">&lt;&lt;</button>
+            <button style="padding:4px 10px;border-radius:6px;background:rgba(29,158,117,.12);border:1px solid #1d9e75;color:#5cdbc0;font-size:11px;cursor:pointer;">1</button>
+            <button style="padding:4px 10px;border-radius:6px;background:#161b22;border:1px solid #30363d;color:#7d8590;font-size:11px;cursor:pointer;">2</button>
+            <button style="padding:4px 10px;border-radius:6px;background:#161b22;border:1px solid #30363d;color:#7d8590;font-size:11px;cursor:pointer;">3</button>
+            <button style="padding:4px 10px;border-radius:6px;background:#161b22;border:1px solid #30363d;color:#7d8590;font-size:11px;cursor:pointer;">&gt;&gt;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- ══ CADASTRO ══ -->
+    <div class="pv-screen" id="screen-add">
+    <div class="cli-form-root">
+      <div class="cli-form-topbar">
+        <div>
+          <div class="cli-eyebrow">Módulo comercial</div>
+          <div style="font-size:11px;color:#555e78;margin-bottom:3px;">
+            <span style="color:#7d8590;">Clientes</span> › <span style="color:#5cdbc0;">Novo cliente</span>
+          </div>
+          <h1 class="cli-h1">Cadastrar cliente</h1>
+        </div>
+        <div><button class="btn-cli-secondary"><i class="fas fa-arrow-left"></i> Voltar</button></div>
+      </div>
+      <div class="cli-form-body">
+
+        <!-- Tipo -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-id-card"></i></div>
+            <div class="cli-section-title">Tipo de cliente</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-tipo-group">
+              <button class="cli-tipo-btn active"><i class="fas fa-building"></i> Pessoa Jurídica</button>
+              <button class="cli-tipo-btn"><i class="fas fa-user"></i> Pessoa Física</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados PJ -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-building"></i></div>
+            <div class="cli-section-title">Dados da empresa</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:5fr 4fr 3fr;margin-bottom:14px;">
+              <div class="cli-fgroup">
+                <label>Razão Social <span style="color:#5cdbc0;">*</span></label>
+                <input class="cli-input" placeholder="Nome empresarial completo">
+              </div>
+              <div class="cli-fgroup">
+                <label>Nome Fantasia</label>
+                <input class="cli-input" placeholder="Nome comercial">
+              </div>
+              <div class="cli-fgroup">
+                <label style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>CNPJ <span style="color:#5cdbc0;">*</span></span>
+                  <button class="btn-cli-outline"><i class="fas fa-search"></i> Buscar</button>
+                </label>
+                <input class="cli-input" placeholder="00.000.000/0000-00">
+              </div>
+            </div>
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Nome do Responsável</label>
+                <input class="cli-input" placeholder="Sócio / administrador">
+              </div>
+              <div class="cli-fgroup">
+                <label>CPF do Responsável</label>
+                <input class="cli-input" placeholder="000.000.000-00">
+              </div>
+              <div class="cli-fgroup">
+                <label>RG do Responsável</label>
+                <input class="cli-input" placeholder="Documento de identidade">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Endereço -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="cli-section-title">Endereço</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:4fr 1fr 2fr 2fr 1.5fr;margin-bottom:14px;">
+              <div class="cli-fgroup">
+                <label>Logradouro <span style="color:#5cdbc0;">*</span></label>
+                <input class="cli-input" placeholder="Rua, Av., Trav…">
+              </div>
+              <div class="cli-fgroup">
+                <label>Número <span style="color:#5cdbc0;">*</span></label>
+                <input class="cli-input" placeholder="Nro.">
+              </div>
+              <div class="cli-fgroup">
+                <label>Bairro <span style="color:#5cdbc0;">*</span></label>
+                <input class="cli-input" placeholder="Bairro">
+              </div>
+              <div class="cli-fgroup">
+                <label>Complemento</label>
+                <input class="cli-input" placeholder="Sala, Bloco…">
+              </div>
+              <div class="cli-fgroup">
+                <label>CEP <span style="color:#5cdbc0;">*</span></label>
+                <input class="cli-input" placeholder="00000-000">
+              </div>
+            </div>
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Cidade <span style="color:#5cdbc0;">*</span></label>
+                <select class="cli-input cli-select"><option>Selecione a cidade…</option><option>Caxias do Sul - RS</option><option>Porto Alegre - RS</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contato -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-phone-alt"></i></div>
+            <div class="cli-section-title">Contato</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Telefone <span style="color:#5cdbc0;">*</span></label>
+                <input class="cli-input" placeholder="(00) 0000-0000">
+              </div>
+              <div class="cli-fgroup">
+                <label>Celular</label>
+                <input class="cli-input" placeholder="(00) 00000-0000">
+              </div>
+              <div class="cli-fgroup">
+                <label>E-mail de faturamento</label>
+                <input class="cli-input" placeholder="financeiro@empresa.com.br" type="email">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fiscal -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
+            <div class="cli-section-title">Registros fiscais</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Inscrição Municipal</label>
+                <input class="cli-input" placeholder="Somente números">
+              </div>
+              <div class="cli-fgroup">
+                <label style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>Inscrição Estadual</span>
+                  <button class="btn-cli-outline"><i class="fas fa-search"></i> Buscar IE</button>
+                </label>
+                <input class="cli-input" placeholder="Somente números">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-cog"></i></div>
+            <div class="cli-section-title">Configurações</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr;align-items:center;">
+              <div class="cli-fgroup">
+                <label>Empresa dominante</label>
+                <select class="cli-input cli-select"><option>PGM Soluções em TI LTDA</option></select>
+              </div>
+              <div style="padding-top:22px;">
+                <div class="cli-check-row">
+                  <input type="checkbox" id="prev-contrato">
+                  <label for="prev-contrato">Possui contrato de serviço</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="cli-form-footer">
+        <div class="cli-form-footer-left">
+          <i class="fas fa-shield-alt" style="color:#1d9e75;margin-right:5px;"></i>
+          Dados salvos com segurança no ERP
+        </div>
+        <div class="cli-form-footer-right">
+          <button class="btn-cli-secondary"><i class="fa fa-arrow-left"></i> Cancelar</button>
+          <button class="btn-cli-primary"><i class="fas fa-check"></i> Cadastrar cliente</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </div><!-- /pv-main -->
+</div><!-- /pv-shell -->
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.pv-screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.pv-tab').forEach(function(t){ t.classList.remove('active'); });
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

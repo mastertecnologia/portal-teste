@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview — Produtos & Serviços | PGM Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117; --sf: #161b22; --sf2: #1c2230;
+  --bd: #21262d; --bd2: #30363d;
+  --tx: #e6edf3; --mu: #7d8590; --dm: #484f58;
+  --teal: #1d9e75; --teal-lt: #5cdbc0;
+  --teal-dim: rgba(29,158,117,.12); --teal-glow: rgba(29,158,117,.22);
+  --green: #3fb950; --red: #f85149; --blue: #33ccff; --orange: #ff8833;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: #0a0e14; color: var(--tx); }
+
+/* ── Screen switcher ─── */
+.preview-nav {
+  display: flex; gap: 0; padding: 14px 20px 0; background: #060a10;
+  border-bottom: 1px solid var(--bd);
+}
+.preview-tab {
+  padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer;
+  color: var(--mu); border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.preview-tab:hover { color: var(--tx); }
+.preview-tab.active { color: var(--teal-lt); border-color: var(--teal); }
+
+/* ── Shell ─── */
+.shell { display: flex; height: calc(100vh - 46px); overflow: hidden; }
+
+/* ── Sidebar ─── */
+.pgm-sidebar {
+  width: 240px; flex-shrink: 0;
+  background: #0f1923; border-right: 1px solid var(--bd);
+  display: flex; flex-direction: column; height: 100%;
+}
+
+.pgm-mark {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.pgm-mark-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg,#1d9e75,#13715a);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px;
+  box-shadow: 0 2px 8px rgba(29,158,117,.35);
+}
+
+.pgm-mark-text { font-size: 13px; font-weight: 700; letter-spacing: .5px; color: var(--tx); }
+.pgm-mark-sub  { font-size: 10px; font-weight: 400; color: var(--mu); margin-top: 1px; }
+
+.pgm-workspace {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-bottom: 1px solid var(--bd);
+}
+
+.pgm-ws-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--sf2); border: 1px solid var(--bd2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mu); font-size: 12px; flex-shrink: 0;
+}
+
+.pgm-ws-info { flex: 1; min-width: 0; }
+.pgm-ws-label { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--dm); }
+.pgm-ws-name  { font-size: 12px; font-weight: 500; color: var(--tx); truncate: ellipsis; white-space: nowrap; overflow: hidden; }
+
+.pgm-ws-date { flex-shrink: 0; text-align: center; }
+.pgm-ws-date-day { font-size: 15px; font-weight: 700; color: var(--teal-lt); font-family: 'DM Mono', monospace; line-height: 1; }
+.pgm-ws-date-mon { font-size: 9px; text-transform: uppercase; color: var(--mu); }
+
+.pgm-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+.pgm-nav::-webkit-scrollbar { width: 3px; }
+.pgm-nav::-webkit-scrollbar-thumb { background: var(--bd2); }
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 14px; color: var(--mu); font-size: 12.5px; cursor: pointer;
+  transition: color .12s, background .12s;
+  border-radius: 0;
+}
+.nav-item:hover { color: var(--tx); background: var(--sf2); }
+.nav-item.active {
+  color: var(--teal-lt); background: var(--teal-dim);
+  box-shadow: inset 2px 0 0 var(--teal);
+}
+.nav-item i { width: 16px; text-align: center; font-size: 13px; }
+.nav-group-label {
+  padding: 10px 14px 4px; font-size: 9.5px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--dm);
+}
+
+.pgm-sf {
+  border-top: 1px solid var(--bd); padding: 10px 10px 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.pgm-sf-av {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg,#1d9e75,#13715a);
+  border: 1.5px solid var(--teal);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.pgm-sf-name { font-size: 12.5px; font-weight: 600; color: var(--tx); }
+.pgm-sf-role { font-size: 10.5px; color: var(--mu); }
+
+/* ── Main content ─── */
+.pgm-main { flex: 1; overflow-y: auto; background: var(--bg); }
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─────────────────────────────────────────────
+   INDEX SCREEN
+───────────────────────────────────────────── */
+.prd-topbar {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; padding: 24px 24px 0; flex-wrap: wrap;
+}
+.prd-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); margin-bottom: 4px; }
+.prd-h1 { font-size: 22px; font-weight: 600; color: var(--tx); margin: 0; letter-spacing: -.4px; }
+
+.btn-new {
+  background: var(--teal); color: #fff; border: none; border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: opacity .15s;
+}
+.btn-new:hover { opacity: .85; }
+
+.btn-out {
+  background: transparent; color: var(--mu); border: 1px solid var(--bd2);
+  border-radius: 8px; padding: 8px 14px; font-size: 13px;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all .15s;
+}
+.btn-out:hover { color: var(--tx); border-color: var(--teal); }
+
+/* KPI */
+.kpi-strip { display: flex; gap: 12px; padding: 20px 24px 0; flex-wrap: wrap; }
+.kpi {
+  flex: 1; min-width: 110px;
+  background: var(--sf); border: 1px solid var(--bd);
+  border-radius: 10px; padding: 14px 16px;
+  cursor: pointer; transition: border-color .18s, background .18s, transform .12s;
+}
+.kpi:hover { border-color: var(--teal); background: var(--teal-dim); transform: translateY(-1px); }
+.kpi.active { border-color: var(--teal); background: var(--teal-dim); box-shadow: 0 0 0 1px var(--teal); }
+.kpi-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--teal-dim); display: flex; align-items: center; justify-content: center;
+  color: var(--teal); font-size: 13px; margin-bottom: 8px;
+}
+.kpi.active .kpi-icon { background: var(--teal-glow); }
+.kpi-val { font-size: 24px; font-weight: 700; color: var(--tx); font-family: 'DM Mono', monospace; line-height: 1; }
+.kpi-lbl { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); margin-top: 4px; }
+.kpi.active .kpi-val { color: var(--teal-lt); }
+.kpi.active .kpi-lbl { color: var(--teal); }
+
+/* Filter bar */
+.filter-bar { display: flex; align-items: center; gap: 10px; padding: 16px 24px 0; flex-wrap: wrap; }
+.pill-group {
+  display: flex; background: var(--sf); border: 1px solid var(--bd);
+  border-radius: 8px; padding: 3px; gap: 2px;
+}
+.pill {
+  padding: 5px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500;
+  color: var(--mu); cursor: pointer; border: none; background: transparent;
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.pill:hover { color: var(--tx); }
+.pill.on { background: var(--teal); color: #fff; box-shadow: 0 1px 4px rgba(29,158,117,.35); }
+
+.fsearch { flex: 1; min-width: 180px; max-width: 280px; position: relative; }
+.fsearch input {
+  width: 100%; background: var(--sf); border: 1px solid var(--bd);
+  border-radius: 8px; color: var(--tx); padding: 7px 12px 7px 30px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none;
+  transition: border-color .15s;
+}
+.fsearch input:focus { border-color: var(--teal); }
+.fsearch input::placeholder { color: var(--mu); }
+.fsearch .si { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--mu); font-size: 11px; pointer-events: none; }
+
+/* Table */
+.tbl-wrap { padding: 16px 24px 32px; }
+.tbl-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; }
+.panel { display: none; }
+.panel.on { display: block; }
+table.ptbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.ptbl thead th {
+  background: var(--sf2); color: var(--mu);
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  padding: 11px 14px; border-bottom: 1px solid var(--bd); white-space: nowrap;
+}
+table.ptbl tbody tr { border-bottom: 1px solid var(--bd); cursor: pointer; transition: background .1s; }
+table.ptbl tbody tr:last-child { border-bottom: none; }
+table.ptbl tbody tr:hover { background: var(--sf2); }
+table.ptbl tbody td { padding: 10px 14px; color: var(--tx); vertical-align: middle; }
+.td-code { font-family: 'DM Mono', monospace; font-size: 12.5px; color: var(--mu); }
+.td-desc { font-weight: 500; }
+.td-val  { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--teal-lt); text-align: right; }
+.td-qty  { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--blue); text-align: right; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-on  { background: rgba(63,185,80,.13); color: #3fb950; border: 1px solid rgba(63,185,80,.25); }
+.badge-off { background: rgba(248,81,73,.10); color: #f85149; border: 1px solid rgba(248,81,73,.22); }
+
+/* ─────────────────────────────────────────────
+   FORM SCREEN
+───────────────────────────────────────────── */
+.form-topbar {
+  display: flex; align-items: center; gap: 16px; padding: 20px 24px 0; flex-wrap: wrap;
+}
+.form-topbar-info { flex: 1; }
+.form-body { padding: 20px 24px 80px; display: flex; flex-direction: column; gap: 16px; }
+.section { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; }
+.section-head {
+  display: flex; align-items: center; gap: 10px; padding: 13px 18px;
+  border-bottom: 1px solid var(--bd); background: var(--sf2);
+}
+.sec-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--teal-dim); display: flex; align-items: center; justify-content: center;
+  color: var(--teal); font-size: 12px; flex-shrink: 0;
+}
+.sec-title { font-size: 13px; font-weight: 600; color: var(--tx); }
+.section-body { padding: 18px; }
+
+.fgrid { display: grid; gap: 14px 12px; }
+.fg1 { grid-template-columns: 1fr; }
+.fg2 { grid-template-columns: 1fr 1fr; }
+.fg3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.fg-main { grid-template-columns: 120px 1fr 180px 120px; }
+
+.fgroup { display: flex; flex-direction: column; gap: 5px; }
+.fgroup label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); }
+
+.finput {
+  background: var(--sf2); border: 1px solid var(--bd2); border-radius: 7px;
+  color: var(--tx); padding: 8px 11px; font-size: 13.5px;
+  font-family: 'DM Sans', sans-serif; outline: none; width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+.finput:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-dim); }
+.finput::placeholder { color: var(--dm); }
+.finput-pfx { position: relative; }
+.finput-pfx::before { content: 'R$'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--mu); pointer-events: none; }
+.finput-pfx .finput { padding-left: 30px; }
+
+/* Tipo buttons */
+.tipo-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.tipo-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 22px; border-radius: 9px;
+  border: 1.5px solid var(--bd2); background: var(--sf2);
+  color: var(--mu); font-size: 13.5px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+}
+.tipo-btn:hover { border-color: var(--teal); color: var(--tx); }
+.tipo-btn.on { border-color: var(--teal); background: var(--teal-dim); color: var(--teal-lt); box-shadow: 0 0 0 1px var(--teal); }
+.tipo-btn.on i { color: var(--teal); }
+
+/* Footer */
+.form-footer {
+  position: sticky; bottom: 0;
+  background: rgba(13,17,23,.95); backdrop-filter: blur(8px);
+  border-top: 1px solid var(--bd); padding: 12px 24px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  z-index: 200;
+}
+.btn-prim {
+  background: var(--teal); color: #fff; border: none; border-radius: 8px;
+  padding: 9px 22px; font-size: 13.5px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: opacity .15s, transform .1s;
+}
+.btn-prim:hover { opacity: .88; transform: translateY(-1px); }
+.btn-sec {
+  background: var(--sf2); color: var(--mu); border: 1px solid var(--bd2);
+  border-radius: 8px; padding: 9px 18px; font-size: 13.5px;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: all .15s;
+}
+.btn-sec:hover { color: var(--tx); }
+</style>
+</head>
+<body>
+
+<!-- Screen switcher -->
+<nav class="preview-nav">
+  <div class="preview-tab active" onclick="showScreen('index')">
+    <i class="fas fa-list"></i> Lista de Produtos
+  </div>
+  <div class="preview-tab" onclick="showScreen('form')">
+    <i class="fas fa-plus"></i> Cadastrar Produto
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="pgm-sidebar">
+    <div class="pgm-mark">
+      <div class="pgm-mark-icon"><i class="fas fa-layer-group"></i></div>
+      <div>
+        <div class="pgm-mark-text">PGM</div>
+        <div class="pgm-mark-sub">Soluções</div>
+      </div>
+    </div>
+
+    <div class="pgm-workspace">
+      <div class="pgm-ws-icon"><i class="fas fa-building"></i></div>
+      <div class="pgm-ws-info">
+        <div class="pgm-ws-label">Empresa</div>
+        <div class="pgm-ws-name">Master Tecnologia</div>
+      </div>
+      <div class="pgm-ws-date">
+        <div class="pgm-ws-date-day">25</div>
+        <div class="pgm-ws-date-mon">MAR</div>
+      </div>
+    </div>
+
+    <nav class="pgm-nav">
+      <div class="nav-group-label">Principal</div>
+      <div class="nav-item"><i class="fas fa-home"></i> Início</div>
+      <div class="nav-group-label">Cadastros</div>
+      <div class="nav-item"><i class="fas fa-users"></i> Clientes</div>
+      <div class="nav-item active"><i class="fas fa-box-open"></i> Produtos</div>
+      <div class="nav-group-label">Comercial</div>
+      <div class="nav-item"><i class="fas fa-file-invoice-dollar"></i> Orçamentos</div>
+      <div class="nav-item"><i class="fas fa-tools"></i> Ordens de Serviço</div>
+      <div class="nav-group-label">Financeiro</div>
+      <div class="nav-item"><i class="fas fa-receipt"></i> Faturas</div>
+      <div class="nav-group-label">Suporte</div>
+      <div class="nav-item"><i class="fas fa-headset"></i> Tickets</div>
+    </nav>
+
+    <div class="pgm-sf">
+      <div class="pgm-sf-av">DA</div>
+      <div>
+        <div class="pgm-sf-name">Darli</div>
+        <div class="pgm-sf-role">Administrador</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="pgm-main">
+
+    <!-- ════════════════════════════════════════════════════════
+         SCREEN: INDEX
+    ════════════════════════════════════════════════════════ -->
+    <div class="screen active" id="screen-index">
+
+      <div class="prd-topbar">
+        <div>
+          <div class="prd-eyebrow">Cadastros › Catálogo</div>
+          <h1 class="prd-h1">Produtos &amp; Serviços</h1>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn-out"><i class="fas fa-warehouse"></i> Estoque</button>
+          <button class="btn-new" onclick="showScreen('form')"><i class="fas fa-plus"></i> Novo</button>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi active" onclick="switchPanel('produtos',this)">
+          <div class="kpi-icon"><i class="fas fa-box-open"></i></div>
+          <div class="kpi-val">47</div>
+          <div class="kpi-lbl">Produtos</div>
+        </div>
+        <div class="kpi" onclick="switchPanel('servicos',this)">
+          <div class="kpi-icon"><i class="fas fa-laptop-code"></i></div>
+          <div class="kpi-val">12</div>
+          <div class="kpi-lbl">Serviços</div>
+        </div>
+        <div class="kpi" onclick="switchPanel('contratos',this)">
+          <div class="kpi-icon"><i class="fas fa-file-contract"></i></div>
+          <div class="kpi-val">8</div>
+          <div class="kpi-lbl">Contratos</div>
+        </div>
+        <div class="kpi" onclick="switchPanel('produtos',this)">
+          <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+          <div class="kpi-val">67</div>
+          <div class="kpi-lbl">Total</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="pill-group">
+          <button class="pill on" id="pill-p" onclick="switchPanel('produtos',null,'pill-p')">Produtos</button>
+          <button class="pill"    id="pill-s" onclick="switchPanel('servicos',null,'pill-s')">Serviços</button>
+          <button class="pill"    id="pill-c" onclick="switchPanel('contratos',null,'pill-c')">Contratos</button>
+        </div>
+        <div class="fsearch">
+          <i class="fas fa-search si"></i>
+          <input type="text" placeholder="Buscar…">
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <div class="tbl-card">
+
+          <!-- Produtos panel -->
+          <div class="panel on" id="panel-produtos">
+            <table class="ptbl">
+              <thead><tr>
+                <th>Código</th><th>Descrição</th>
+                <th style="text-align:right">Vl. Unitário</th>
+                <th style="text-align:right">Qtd. Atual</th>
+                <th style="text-align:right">Preço Venda</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody>
+                <tr><td class="td-code">001</td><td class="td-desc">Notebook Dell Inspiron 15</td><td class="td-val">4.899,00</td><td class="td-qty">12</td><td class="td-val">5.499,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">002</td><td class="td-desc">Monitor LG 27" 4K</td><td class="td-val">2.350,00</td><td class="td-qty">8</td><td class="td-val">2.890,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">003</td><td class="td-desc">Teclado Mecânico HyperX</td><td class="td-val">389,00</td><td class="td-qty">25</td><td class="td-val">479,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">004</td><td class="td-desc">Mouse Logitech MX Master 3</td><td class="td-val">449,00</td><td class="td-qty">18</td><td class="td-val">549,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">005</td><td class="td-desc">Cabo HDMI 2.1 3m</td><td class="td-val">89,00</td><td class="td-qty">0</td><td class="td-val">119,00</td><td><span class="badge badge-off"><i class="fas fa-circle" style="font-size:5px"></i> Inativo</span></td></tr>
+                <tr><td class="td-code">006</td><td class="td-desc">Roteador TP-Link AX3000</td><td class="td-val">799,00</td><td class="td-qty">6</td><td class="td-val">949,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">007</td><td class="td-desc">HD SSD Kingston 1TB</td><td class="td-val">349,00</td><td class="td-qty">14</td><td class="td-val">419,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">008</td><td class="td-desc">Nobreak APC 1500VA</td><td class="td-val">1.290,00</td><td class="td-qty">3</td><td class="td-val">1.590,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Serviços panel -->
+          <div class="panel" id="panel-servicos">
+            <table class="ptbl">
+              <thead><tr>
+                <th>Código</th><th>Descrição</th>
+                <th style="text-align:right">Vl. Hora</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody>
+                <tr><td class="td-code">SRV-001</td><td class="td-desc">Suporte Técnico Remoto</td><td class="td-val">150,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">SRV-002</td><td class="td-desc">Desenvolvimento de Software</td><td class="td-val">250,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">SRV-003</td><td class="td-desc">Consultoria em TI</td><td class="td-val">300,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">SRV-004</td><td class="td-desc">Instalação e Configuração</td><td class="td-val">120,00</td><td><span class="badge badge-off"><i class="fas fa-circle" style="font-size:5px"></i> Inativo</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Contratos panel -->
+          <div class="panel" id="panel-contratos">
+            <table class="ptbl">
+              <thead><tr>
+                <th>Código</th><th>Descrição</th>
+                <th style="text-align:right">Vl. Mensal</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody>
+                <tr><td class="td-code">CTR-001</td><td class="td-desc">Plano Suporte Básico</td><td class="td-val">890,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">CTR-002</td><td class="td-desc">Plano Suporte Premium</td><td class="td-val">2.490,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+                <tr><td class="td-code">CTR-003</td><td class="td-desc">Monitoramento 24h</td><td class="td-val">1.290,00</td><td><span class="badge badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /#screen-index -->
+
+    <!-- ════════════════════════════════════════════════════════
+         SCREEN: FORM
+    ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screen-form">
+
+      <div class="form-topbar">
+        <div>
+          <div class="prd-eyebrow">Cadastros › Produtos › Novo</div>
+        </div>
+        <div class="form-topbar-info">
+          <h1 class="prd-h1" style="font-size:20px">Cadastrar Produto / Serviço</h1>
+        </div>
+        <button class="btn-sec" onclick="showScreen('index')"><i class="fas fa-arrow-left"></i> Voltar</button>
+      </div>
+
+      <div class="form-body">
+
+        <!-- Tipo -->
+        <div class="section">
+          <div class="section-head">
+            <div class="sec-icon"><i class="fas fa-tag"></i></div>
+            <span class="sec-title">Tipo de Cadastro</span>
+          </div>
+          <div class="section-body">
+            <div class="tipo-group">
+              <button class="tipo-btn on" onclick="setTipo(this,'produto')">
+                <i class="fas fa-box-open"></i> Produto
+              </button>
+              <button class="tipo-btn" onclick="setTipo(this,'servico')">
+                <i class="fas fa-laptop-code"></i> Serviço
+              </button>
+              <button class="tipo-btn" onclick="setTipo(this,'contrato')">
+                <i class="fas fa-file-contract"></i> Contrato
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados Principais -->
+        <div class="section">
+          <div class="section-head">
+            <div class="sec-icon"><i class="fas fa-info-circle"></i></div>
+            <span class="sec-title">Dados Principais</span>
+          </div>
+          <div class="section-body">
+            <div class="fgrid fg-main">
+              <div class="fgroup">
+                <label>Código</label>
+                <input class="finput" type="text" placeholder="Ex: 001">
+              </div>
+              <div class="fgroup">
+                <label>Descrição <span style="color:var(--red)">*</span></label>
+                <input class="finput" type="text" placeholder="Descrição do produto ou serviço">
+              </div>
+              <div class="fgroup">
+                <label>Unidade</label>
+                <input class="finput" type="text" placeholder="Ex: UN, KG, M²">
+              </div>
+              <div class="fgroup">
+                <label>Valor Unitário <span style="color:var(--red)">*</span></label>
+                <div class="finput-pfx">
+                  <input class="finput" type="text" placeholder="0,00">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Locação (só para Produto) -->
+        <div class="section" id="secLocacao">
+          <div class="section-head">
+            <div class="sec-icon"><i class="fas fa-calendar-alt"></i></div>
+            <span class="sec-title">Valores de Locação</span>
+            <span style="font-size:11px;color:var(--mu);margin-left:auto;">Opcional — preencha se o produto for locado</span>
+          </div>
+          <div class="section-body">
+            <div class="fgrid fg4">
+              <div class="fgroup">
+                <label>Diário</label>
+                <div class="finput-pfx"><input class="finput" type="text" placeholder="0,00"></div>
+              </div>
+              <div class="fgroup">
+                <label>Semanal</label>
+                <div class="finput-pfx"><input class="finput" type="text" placeholder="0,00"></div>
+              </div>
+              <div class="fgroup">
+                <label>Quinzenal</label>
+                <div class="finput-pfx"><input class="finput" type="text" placeholder="0,00"></div>
+              </div>
+              <div class="fgroup">
+                <label>Mensal</label>
+                <div class="finput-pfx"><input class="finput" type="text" placeholder="0,00"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configurações -->
+        <div class="section">
+          <div class="section-head">
+            <div class="sec-icon"><i class="fas fa-sliders-h"></i></div>
+            <span class="sec-title">Configurações</span>
+          </div>
+          <div class="section-body">
+            <div class="fgrid fg2">
+              <div class="fgroup">
+                <label>Situação</label>
+                <select class="finput">
+                  <option>Ativo</option>
+                  <option>Inativo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.form-body -->
+
+      <div class="form-footer">
+        <button class="btn-sec" onclick="showScreen('index')"><i class="fas fa-times"></i> Cancelar</button>
+        <button class="btn-prim"><i class="fas fa-check"></i> Cadastrar</button>
+      </div>
+
+    </div><!-- /#screen-form -->
+
+  </main>
+</div><!-- /.shell -->
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.preview-tab').forEach(function(t, i){
+    t.classList.toggle('active', (id === 'index' && i === 0) || (id === 'form' && i === 1));
+  });
+}
+
+function switchPanel(key, kpiEl, pillId) {
+  // panels
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+  document.getElementById('panel-' + key).classList.add('on');
+  // kpis
+  document.querySelectorAll('.kpi').forEach(function(k){ k.classList.remove('active'); });
+  if (kpiEl) kpiEl.classList.add('active');
+  // pills
+  document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('on'); });
+  if (pillId) document.getElementById(pillId).classList.add('on');
+  else {
+    var map = { produtos: 'pill-p', servicos: 'pill-s', contratos: 'pill-c' };
+    if (map[key]) document.getElementById(map[key]).classList.add('on');
+  }
+}
+
+function setTipo(btn, tipo) {
+  document.querySelectorAll('.tipo-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('secLocacao').style.display = (tipo === 'produto') ? '' : 'none';
+}
+</script>
+</body>
+</html>
