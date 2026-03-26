@@ -17,8 +17,8 @@
 	<?= $this->Html->css("/dist/css/pages/stylish-tooltip") ?>
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
-	<?= $this->Html->css("/css/orcamentos-premium") ?>
-	<?= $this->Html->css("/css/pgm-action-buttons") ?>
+	<?= $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']) ?>
+	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
 	<!-- Timeline CSS -->
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>

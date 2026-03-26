@@ -1,6 +1,6 @@
 <?php
     use Cake\Routing\Router;
-    $this->append('css', $this->Html->css('/css/clientes-premium', ['timestamp' => true]));
+    $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
 
     $this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Novo cliente', [], ['class' => 'breadcrumb-item active']);

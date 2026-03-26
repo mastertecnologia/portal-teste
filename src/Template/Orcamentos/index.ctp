@@ -1,5 +1,5 @@
 <?php
-$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
+$this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
 
 $totais = isset($totais) && is_array($totais) ? $totais : [];
 $tEm = (int)($totais['em_andamento'] ?? count($orcamentosPendentes ?? []));

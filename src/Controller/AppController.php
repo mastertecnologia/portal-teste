@@ -234,6 +234,10 @@ class AppController extends Controller {
 			return true;
 		}
 
+		if ($controller === 'pgmassets' && $action === 'css') {
+			return true;
+		}
+
 		// Se não há usuário logado, nega acesso por padrão
 		if (empty($user)) {
 			return false;

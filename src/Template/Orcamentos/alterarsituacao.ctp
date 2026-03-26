@@ -1,5 +1,5 @@
 <?php
-	$this->append('css', $this->Html->css('/css/orcamentos-premium'));
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Editar', ['controller' => 'Orcamentos', 'action' => 'edit', $orcamento->id], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Alterar Situação', [], ['class' => 'breadcrumb-item active']);

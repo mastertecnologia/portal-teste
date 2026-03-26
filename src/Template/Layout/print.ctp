@@ -31,7 +31,7 @@
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
 	<?= $this->Html->css("/dist/css/dark-mode.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
-	<?= $this->Html->css("/css/pgm-action-buttons") ?>
+	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
 	<!-- Timeline CSS -->
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>

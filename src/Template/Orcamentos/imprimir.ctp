@@ -2,7 +2,7 @@
 
 use Cake\Routing\Router;
 
-$this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
+$this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
 
 if ($role == 0) {
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);

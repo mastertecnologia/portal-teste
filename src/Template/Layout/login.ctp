@@ -22,7 +22,7 @@
 	<!-- CSS -->
 	<?= $this->Html->css('dist/css/pages/login-register-lock') ?>
 	<?= $this->Html->css('dist/css/style.min') ?>
-	<?= $this->Html->css('css/pgm-action-buttons') ?>
+	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
 	<!-- Leitura dos componentes -->
     <?= $this->fetch('meta') ?>

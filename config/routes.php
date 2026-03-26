@@ -106,6 +106,12 @@ Router::scope('/', function ($routes) {
     $routes->connect('/orcamentos/add', ['controller' => 'Orcamentos', 'action' => 'add']);
     $routes->connect('/orcamentos/catalogo', ['controller' => 'Orcamentos', 'action' => 'catalogo']);
     $routes->connect('/orcamentos/:id/pdf', ['controller' => 'Orcamentos', 'action' => 'pdf'], ['pass' => ['id'], 'id' => '\d+']);
+    // CSS premium via Cake (leitura em WWW_ROOT/css) — evita 404 estático com APP_BASE=/portal e Alias Apache
+    $routes->connect(
+        '/pgm-assets/css/:name',
+        ['controller' => 'PgmAssets', 'action' => 'css'],
+        ['pass' => ['name']]
+    );
     $routes->fallbacks(DashedRoute::class);
 });
 

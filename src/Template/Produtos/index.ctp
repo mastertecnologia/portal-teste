@@ -1,7 +1,7 @@
 <?php
   $this->Breadcrumbs->add('Cadastros', '#', ['class' => 'breadcrumb-item']);
   $this->Breadcrumbs->add('Produtos & Serviços', ['controller' => 'Produtos', 'action' => 'index'], ['class' => 'breadcrumb-item active']);
-  $this->append('css', $this->Html->css('/css/produtos-premium', ['timestamp' => true]));
+  $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 
   $cntProd  = count($produtos  ?? []);
   $cntServ  = count($servicos  ?? []);

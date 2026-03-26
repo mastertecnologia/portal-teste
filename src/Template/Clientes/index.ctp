@@ -1,6 +1,6 @@
 <?php
     use Cake\Routing\Router;
-    $this->append('css', $this->Html->css('/css/clientes-premium', ['timestamp' => true]));
+    $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
 
     function Mask($mask, $str) {
         $str = str_replace(" ", "", $str);

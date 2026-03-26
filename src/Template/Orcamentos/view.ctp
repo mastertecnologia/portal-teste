@@ -1,6 +1,6 @@
 <?php
     use Cake\Routing\Router;
-    $this->append('css', $this->Html->css('/css/orcamentos-premium', ['timestamp' => true]));
+    $this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
 
     $dval = date_format(date_create($orcamento['validoate']), "d/m/Y");
     $orcamento['validoate'] = $dval;

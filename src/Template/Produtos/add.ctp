@@ -2,7 +2,7 @@
   $this->Breadcrumbs->add('Cadastros', '#', ['class' => 'breadcrumb-item']);
   $this->Breadcrumbs->add('Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
   $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
-  $this->append('css', $this->Html->css('/css/produtos-premium', ['timestamp' => true]));
+  $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 ?>
 
 <div class="prd-form-root">
