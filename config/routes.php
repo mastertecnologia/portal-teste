@@ -105,9 +105,6 @@ Router::scope('/', function ($routes) {
     $routes->connect('/servicedesk/', ['controller' => 'Servicedesk', 'action' => 'index']);
     $routes->connect('/servicedesk/operacional', ['controller' => 'Servicedesk', 'action' => 'operacional']);
     // Precificação / Gestão de Preços
-    $routes->connect('/produtos/precificacao', ['controller' => 'Produtos', 'action' => 'precificacao']);
-    $routes->connect('/produtos/salvar-precos', ['controller' => 'Produtos', 'action' => 'salvarPrecos'])->setMethods(['POST', 'PUT']);
-    $routes->connect('/produtos/salvarPrecos', ['controller' => 'Produtos', 'action' => 'salvarPrecos'])->setMethods(['POST', 'PUT']);
     // Orçamentos — URLs explícitas (prompt_cursor_cakephp.md PROMPT 7); o inflection padrão já cobre, isto documenta o contrato.
     $routes->connect('/orcamentos', ['controller' => 'Orcamentos', 'action' => 'index']);
     $routes->connect('/orcamentos/add', ['controller' => 'Orcamentos', 'action' => 'add']);
