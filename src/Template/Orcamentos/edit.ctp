@@ -9,49 +9,6 @@
 	$dval = date_format(date_create($orcamento['validoate']), "d/m/Y");
 	$orcamento['validoate'] = $dval;
 ?>
-<script>
-	tinymce.init({
-		selector: '.editor',  // change this value according to your HTML
-		plugins : 'advlist autolink link image imagetools lists advlist charmap media preview autoresize hr jbimages textcolor fullscreen table help paste',
-		height: 300,
-		language: 'pt_BR',
-		entity_encoding : "raw",
-		menubar: false,
-        readonly: <?= in_array($orcamento->status, [C_OrcamentoStatusPendente, C_OrcamentoStatusEnviado]) ? '0' : '1' ?>,
-		toolbar: ['undo redo | bold italic underline strikethrough | bullist numlist | alinhamento | forecolor backcolor | table | link | fontselect fontsizeselect | image media | preview | hr | fullscreen',
-		],
-		audio_template_callback: function(data) {
-			return '<audio controls>' + '\n<source src="' + data.source1 + '"' + (data.source1mime ? ' type="' + data.source1mime + '"' : '') + ' />\n' + '</audio>';
-		},
-		setup: function(editor) {
-			editor.addButton('alinhamento', {
-				type: 'listbox',
-				text: 'Alinhar',
-				icon: false,
-				onselect: function(e) {
-					tinyMCE.execCommand(this.value());
-				},
-				values: [
-					{icon: 'alignleft', value: 'JustifyLeft'},
-					{icon: 'alignright', value: 'JustifyRight'},
-					{icon: 'aligncenter', value: 'JustifyCenter'},
-					{icon: 'alignjustify', value: 'JustifyFull'},
-					{icon: 'outdent', value: 'outdent'},
-					{icon: 'indent', value: 'indent'},
-				],
-				onPostRender: function() {
-					// Select the firts item by default
-					this.value('JustifyLeft');
-				}
-			});
-		},
-		browser_spellcheck: true,
-		contextmenu: false,
-		table_default_styles: {
-			width: '75%'
-		}
-	});
-</script>
 <style>
 	.bg {
 		display: flex;
@@ -166,7 +123,7 @@
 	<div class="orc-obs-block">
 		<div class="orc-sec-title">Observações</div>
 		<label class="control-label" for="observacoes">Condições, prazos, garantias</label>
-		<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'editor form-control orc-obs-textarea', 'label' => false]) ?>
+		<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'form-control orc-obs-textarea', 'label' => false, 'rows' => 6, 'placeholder' => 'Condições, prazos, garantias...']) ?>
 	</div>
 
 	<!-- Card: Status + Fluxo de aprovação -->
