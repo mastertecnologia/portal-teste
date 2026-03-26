@@ -26,10 +26,10 @@
 		<div class="card-body">
 			<ul class="nav nav-tabs customtab m-b-20" role="tablist">
 				<li class="nav-item"> <a class="nav-link active " data-toggle="tab" href="#cliente" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Cliente</span></a> </li>
-				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#<?= $role == 1 ? 'acessosCliente' : 'acessos' ?>" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-desktop"></i></span> <span class="hidden-xs-down">Acessos</span></a> </li> </li><?php } ?>
-				<?php if($role == 0){ ?><li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#usuarios" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-user"></i></span> <span class="hidden-xs-down">Usuários</span></a> </li> </li><?php } ?>
-				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#contratos" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-write"></i></span> <span class="hidden-xs-down">Contratos</span></a> </li><?php } ?>
-				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#token" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-key"></i></span> <span class="hidden-xs-down">Token</span></a> </li><?php } ?>
+				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#<?= $role == 1 ? 'acessosCliente' : 'acessos' ?>" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-desktop"></i></span> <span class="hidden-xs-down">Acessos</span></a></li><?php } ?>
+				<?php if($role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usuarios" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Usuários</span></a></li><?php } ?>
+				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contratos" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-write"></i></span> <span class="hidden-xs-down">Contratos</span></a></li><?php } ?>
+				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#token" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-key"></i></span> <span class="hidden-xs-down">Token</span></a></li><?php } ?>
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente">

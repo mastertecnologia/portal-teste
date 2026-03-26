@@ -35,11 +35,13 @@ $this->Breadcrumbs->add('Pesquisa', [], ['class' => 'breadcrumb-item active']);
 					<div class="table-responsive">
 						<table class="table table-hover table-row-clickable" id="tableClientes">
 							<thead class="text-primary">
-								<th width="25%">Razão Social</th>
-								<th width="25%">Nome Fantasia</th>
-								<th width="20%">E-mail</th>
-								<th width="20%">Telefone</th>
-								<th width="10%">Situação</th>
+								<tr>
+									<th width="25%">Razão Social</th>
+									<th width="25%">Nome Fantasia</th>
+									<th width="20%">E-mail</th>
+									<th width="20%">Telefone</th>
+									<th width="10%">Situação</th>
+								</tr>
 							</thead>
 							<tbody>
 								<?php foreach ($clientes as $reg): 

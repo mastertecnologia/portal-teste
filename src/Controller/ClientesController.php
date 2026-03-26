@@ -3,7 +3,6 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
-Use Cake\Datasource\ConnectionManager;
 use CakeSoap\Network\CakeSoap;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -27,7 +26,26 @@ class ClientesController extends AppController {
 		$this->loadModel('Empresas');
 		$this->loadModel('Users');
 		$this->loadModel('Config');
-		$this->loadModel('Empresas');
+	}
+
+	/**
+	 * Cliente do ID informado, restrito à empresa do utilizador (mitiga IDOR).
+	 *
+	 * @param int|string|null $id
+	 * @return \App\Model\Entity\Cliente|null
+	 */
+	protected function _findClienteForCurrentUser($id) {
+		if ($id === null || $id === '') {
+			return null;
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		if ($idempresa === null || $idempresa === '') {
+			return null;
+		}
+
+		return $this->Clientes->find()
+			->where(['id' => (int) $id, 'idempresa' => $idempresa])
+			->first();
 	}
 
 	public function beforeFilter(Event $event) {
@@ -62,27 +80,35 @@ class ClientesController extends AppController {
 	}
 
 	public function cadastrar() {
-		$clientesAtivos = sizeof($this->Clientes->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 0])->toArray());
-		$clientesInativos = sizeof($this->Clientes->findByInativo(1)->where(['idempresa' => $this->Auth->user('idempresa')])->toArray());
-		
-		$this->set('title', 'Cadastro de Clientes');
-		$this->set('clientesAtivos', $clientesAtivos);
-		$this->set('clientesInativos', $clientesInativos);
+		return $this->redirect(['action' => 'add']);
 	}
 
 	public function view($id) {
-		$cliente = $this->Clientes->get($id);
-		$cidade = $this->Cidades->findById($cliente->idcidade);
-		$cidade = $cidade->toList();
-		$this->set(compact('cliente'));
-		$this->set(compact('cidade'));
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			$this->Flash->error(__('Cliente não encontrado.'));
+			return $this->redirect(['action' => 'index']);
+		}
+		$cidade = null;
+		if (!empty($cliente->idcidade)) {
+			$cidade = $this->Cidades->get($cliente->idcidade);
+		}
+		$this->set(compact('cliente', 'cidade'));
 	}
 
 	public function search() {
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
 		$this->set('title', 'Pesquisa de Clientes');
+		$clientes = [];
 		if ($this->request->is('get')) {
 			$keywords = $this->request->getQuery('keywords');
-			$clientes = array();
 
 			if ($keywords) {
 				$array = explode(" ", $keywords);
@@ -120,7 +146,7 @@ class ClientesController extends AppController {
 		$this->set('title', 'Adicionar Cliente');
 		$cliente = $this->Clientes->newEntity();
 
-		if (!empty($this->request->data) ) {
+		if ($this->request->is('post')) {
 			$data = $this->request->getData();
 			if($data['tipo'] == C_ClientesTipoFisica) $clientequejaexiste = $this->Clientes->findByCpf($data['cpf'])->where(['tipo' => C_ClientesTipoFisica, 'idempresa' => $this->Auth->user('idempresa')])->first();
 			else $clientequejaexiste = $this->Clientes->findByCnpj($data['cnpj'])->where(['idempresa' => $this->Auth->user('idempresa')])->first();
@@ -161,9 +187,13 @@ class ClientesController extends AppController {
 		if ($this->Auth->user('role') == 1){
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);	
 			if($this->Auth->user('idcliente') != $id) return $this->redirect(['controller' => 'Clientes', 'action' => 'edit', $this->Auth->user('idcliente')]);
-		} 
+		}
 
-		$cliente = $this->Clientes->get($id);
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			$this->Flash->error(__('Cliente não encontrado ou sem permissão.'));
+			return $this->redirect(['action' => 'index']);
+		}
 		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		$this->set('title', 'Cliente: ' . $titlenome);
 		
@@ -201,26 +231,6 @@ class ClientesController extends AppController {
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
 
-			// #region agent log
-			@file_put_contents(
-				ROOT . DS . 'debug-cb94ed.log',
-				json_encode([
-					'sessionId' => 'cb94ed',
-					'runId' => 'clientes_edit_preSave',
-					'hypothesisId' => 'H_emails_validation',
-					'location' => 'ClientesController.php:edit:preSave',
-					'message' => 'Edit cliente POST received',
-					'data' => [
-						'id' => $id,
-						'has_email' => array_key_exists('email', $data),
-						'has_emailresponsavel' => array_key_exists('emailresponsavel', $data),
-					],
-					'timestamp' => round(microtime(true) * 1000),
-				]) . PHP_EOL,
-				FILE_APPEND
-			);
-			// #endregion agent log
-
 			$cliente = $this->Clientes->patchEntity($cliente, $data);
 			if(!empty($data['cpf'])) $cliente->cpf = removeCaracteres($data['cpf']);
 			if(!empty($data['senha'])) $cliente->senha = criptografasenha($data['senha']);
@@ -229,46 +239,9 @@ class ClientesController extends AppController {
 				$this->sincronizacliente($id);
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $cliente->id);
 
-				// #region agent log
-				@file_put_contents(
-					ROOT . DS . 'debug-cb94ed.log',
-					json_encode([
-						'sessionId' => 'cb94ed',
-						'runId' => 'clientes_edit_postSave',
-						'hypothesisId' => 'H_emails_validation',
-						'location' => 'ClientesController.php:edit:postSave',
-						'message' => 'Cliente saved successfully',
-						'data' => [
-							'id' => $cliente->id,
-						],
-						'timestamp' => round(microtime(true) * 1000),
-					]) . PHP_EOL,
-					FILE_APPEND
-				);
-				// #endregion agent log
-
 				$this->Flash->success(__('O cliente foi salvo.'));
 				return $this->redirect(['action' => 'edit', $cliente->id]);
 			}
-
-			// #region agent log
-			@file_put_contents(
-				ROOT . DS . 'debug-cb94ed.log',
-				json_encode([
-					'sessionId' => 'cb94ed',
-					'runId' => 'clientes_edit_saveError',
-					'hypothesisId' => 'H_emails_validation',
-					'location' => 'ClientesController.php:edit:saveError',
-					'message' => 'Failed to save cliente',
-					'data' => [
-						'id' => $id,
-						'errors' => $cliente->getErrors(),
-					],
-					'timestamp' => round(microtime(true) * 1000),
-				]) . PHP_EOL,
-				FILE_APPEND
-			);
-			// #endregion agent log
 
 			$this->Flash->error(__('Não foi possível salvar o cliente.'));
 		}
@@ -304,10 +277,14 @@ class ClientesController extends AppController {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
 
-		$cidade = $this->Cidades->find('all')->where(['id' => $idcidade])->toArray();
-		$estado = $this->Estados->findById($cidade[0]->idestado)->toArray();;
-
-		echo $estado[0]->sigla;
+		$cidade = $this->Cidades->find('all')->where(['id' => $idcidade])->first();
+		if (empty($cidade) || empty($cidade->idestado)) {
+			return;
+		}
+		$estado = $this->Estados->find()->where(['id' => $cidade->idestado])->first();
+		if (!empty($estado)) {
+			echo h($estado->sigla);
+		}
 	}
 
 	public function delete($id = null) {
@@ -317,11 +294,9 @@ class ClientesController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
-		$cliente = $this->Clientes->get($id);
-
-		// Garante que o cliente pertence à mesma empresa do usuário logado
-		if ($cliente->idempresa != $this->Auth->user('idempresa')) {
-			$this->Flash->error('Você não possui permissão para excluir este cliente.');
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			$this->Flash->error('Você não possui permissão para excluir este cliente ou registro não encontrado.');
 			return $this->redirect(['action' => 'index']);
 		}
 
@@ -339,7 +314,11 @@ class ClientesController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
-		$cliente = $this->Clientes->get($id);
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			$this->Flash->error('Cliente não encontrado ou sem permissão.');
+			return $this->redirect(['action' => 'index']);
+		}
 		$cliente->inativo = 0;
 
 		if ($this->Clientes->save($cliente)) {
@@ -388,8 +367,8 @@ class ClientesController extends AppController {
 		$this->viewBuilder()->setLayout('ajax');
 
 		if ($this->request->is('ajax')) {
-			$user = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'nome'])->where(['id' => $idsolicitante, 'inativo' => '0'])->toArray();
-			return $this->jsonResponse($solicitante, 200);
+			$user = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])->where(['id' => $idsolicitante, 'inativo' => '0'])->toArray();
+			return $this->jsonResponse($user, 200);
 		}
 	}
 
@@ -434,16 +413,26 @@ class ClientesController extends AppController {
 		$this->viewBuilder()->setLayout('ajax');
 		
 		$idsclientes = explode(',', $idsclientes);
+		$clientes = [];
+		$idempresa = $this->Auth->user('idempresa');
 
-		if ($this->request->is('ajax')) {
-			foreach($idsclientes as $id){
-				$clientes[] = $this->Clientes->findById($id)
-					->select([ 'id', 'razaosocial'])
+		if ($this->request->is('ajax') && $idempresa !== null && $idempresa !== '') {
+			foreach ($idsclientes as $id) {
+				$id = trim((string) $id);
+				if ($id === '') {
+					continue;
+				}
+				$rows = $this->Clientes->find()
+					->select(['id', 'razaosocial'])
+					->where(['id' => (int) $id, 'idempresa' => $idempresa])
 					->toArray();
+				foreach ($rows as $row) {
+					$clientes[] = $row;
+				}
 			}
-			//echo json_encode($clientes, JSON_PRETTY_PRINT);
 			return $this->jsonResponse($clientes, 200);
 		}
+		return $this->jsonResponse([], 400);
 	}
 
 	public function consultacnpj($cnpj = null) {
@@ -605,7 +594,11 @@ class ClientesController extends AppController {
 	public function updateToken($idcliente) {
 		$this->autoRender = false;
 
-		$cliente = $this->Clientes->findById($idcliente, ['fields' => ['id', 'cnpj', 'token', 'cpf']])->first();
+		$cliente = $this->_findClienteForCurrentUser($idcliente);
+		if (empty($cliente)) {
+			$this->Flash->error(__('Cliente não encontrado.'));
+			return $this->redirect(['action' => 'index']);
+		}
 		// Gera o token
 		$cpfoucnpj = isset($cliente->cnpj) ? $cliente->cnpj : $cliente->cpf;
 		$string = $this->Auth->user('idempresa') . $cpfoucnpj .  date('d/m/y') .  date('H:i');
@@ -620,10 +613,8 @@ class ClientesController extends AppController {
 	public function contrato($id){
 		$this->autoRender = false;
 
-		$cliente = $this->Clientes->get($id);
-
-		// Garante que o cliente pertence à mesma empresa
-		if ($cliente->idempresa != $this->Auth->user('idempresa')) {
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
 			echo 'Você não possui permissão para visualizar este contrato.';
 			return;
 		}
@@ -634,7 +625,8 @@ class ClientesController extends AppController {
 			return;
 		}
 
-		echo $cliente->contrato;
+		$this->response = $this->response->withType('text/html; charset=UTF-8');
+		echo h((string) $cliente->contrato);
 	}
 
 	public function addAPI() {
@@ -821,7 +813,9 @@ class ClientesController extends AppController {
 					$tipo = strlen($retorno['CNPJ']) > 11 ? 'j' : 'f' ;
 					if($tipo == 'j') $cliente = $this->Clientes->findByCnpj($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa']])->toArray();
 					else $cliente = $this->Clientes->findByCpf($retorno['CNPJ'])->where(['idempresa' => $retorno['Empresa'], 'tipo' => C_ClientesTipoFisica])->toArray();
-					if ($cliente == null) return $apiRetList('Não foi encontrado um cliente com o CNPJ/CPF '. $cnpj, 404);
+					if (empty($cliente)) {
+						return $apiRetList('Não foi encontrado um cliente com o CNPJ/CPF '. $cnpj, 404);
+					}
 				} else {
 					$cliente = $this->Clientes->find('all')->where(['idempresa' => $retorno['Empresa']])->toArray(); 
 				}
@@ -837,8 +831,12 @@ class ClientesController extends AppController {
 	}
 
 	public function sincronizacliente($idcliente) {
-		$cliente = $this->Clientes->get($idcliente);
-		$cliente = $arr = ['Cliente' => $this->Clientes->clientesArr($cliente)];
+		$clienteEnt = $this->_findClienteForCurrentUser($idcliente);
+		if (empty($clienteEnt)) {
+			$this->Flash->error(__('Cliente não encontrado para sincronização.'));
+			return;
+		}
+		$cliente = ['Cliente' => $this->Clientes->clientesArr($clienteEnt)];
 
 		$json = json_encode($cliente, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
@@ -848,7 +846,7 @@ class ClientesController extends AppController {
 			if ($soap === null) throw new \Exception('Erro');
 		} catch (\Exception $e) {
 			$this->Flash->error(__('O WS não pode ser acessado no momento!'));
-			return $this->redirect(['controller' => 'Clientes', 'action' => 'index']);
+			return;
 		}
 	
 		$response = $soap->sendRequest('GerenciaCliente', [

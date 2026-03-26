@@ -37,7 +37,7 @@
             <?= $this->Html->link(
                 '<i class="fas fa-plus"></i> Novo cliente',
                 ['action' => 'add'],
-                ['class' => 'btn-cli-primary', 'escape' => false, 'target' => '_blank']
+                ['class' => 'btn-cli-primary', 'escape' => false]
             ) ?>
         </div>
     </div>
@@ -120,7 +120,7 @@
                     <tbody>
                         <?php foreach ($clientesAtivosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -157,7 +157,7 @@
                     <tbody>
                         <?php foreach ($clientesAtivosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -194,7 +194,7 @@
                     <tbody>
                         <?php foreach ($clientesInativosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -237,7 +237,7 @@
                     <tbody>
                         <?php foreach ($clientesInativosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.open('<?= $url ?>', '_blank')">
+                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->nome ?? '') ?></div>
