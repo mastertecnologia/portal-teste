@@ -717,3 +717,14 @@
 }
 .prd-loc-chip-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--prd-dim); }
 .prd-loc-chip-val { font-size: 13px; font-weight: 600; color: var(--prd-teal-lt); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* ── Botão Precificação (toolbar do index) ─────────────────── */
+.btn-prd-price {
+  background: linear-gradient(135deg, var(--prd-teal), #16c784);
+  color: #fff; border: none; border-radius: 8px;
+  padding: 9px 18px; font-size: 13px; font-weight: 700;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .18s;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+  box-shadow: 0 2px 10px rgba(29,158,117,.3);
+}
+.btn-prd-price:hover { opacity: .88; color: #fff; text-decoration: none; transform: translateY(-1px); }

@@ -68,6 +68,11 @@
         ['class' => 'btn-prd-outline', 'escape' => false, 'target' => '_blank']
       ) ?>
       <?= $this->Html->link(
+        '<i class="fas fa-tags"></i> Precificação',
+        ['action' => 'precificacao'],
+        ['class' => 'btn-prd-price', 'escape' => false]
+      ) ?>
+      <?= $this->Html->link(
         '<i class="fas fa-plus"></i> Novo Cadastro',
         ['action' => 'add'],
         ['class' => 'btn-prd-new', 'escape' => false, 'target' => '_blank']

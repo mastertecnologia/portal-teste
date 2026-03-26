@@ -179,6 +179,150 @@ class ProdutosController extends AppController {
 		return true;
 	}
 
+	/**
+	 * Tela de gestão de preços/precificação.
+	 * Carrega todos os produtos/serviços/contratos da empresa e, para tipo 1 (produtos),
+	 * busca custo e preço de venda no ERP via SOAP GetEstoqueProdutos.
+	 * Envia $produtosJson (array JSON) para o template JS.
+	 */
+	public function precificacao() {
+		$this->set('title', 'Gestão de Preços');
+
+		$idempresa = $this->Auth->user('idempresa');
+		$todos = $this->Produtos->find('all')
+			->where(['idempresa' => $idempresa])
+			->order(['tipo', 'descricao'])
+			->toArray();
+
+		// Buscar dados do ERP (custo/venda/estoque) para cruzar com tipo 1
+		$produtosWs = [];
+		try {
+			$soapprodutos = $this->Empresas->get($idempresa)->urlerp . 'WsProdutos.wso?wsdl';
+			$this->runSoapBuffered(function () use ($soapprodutos, &$produtosWs) {
+				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+				$response = $soap->sendRequest('GetEstoqueProdutos', [
+					'Data' => [
+						'iFilial'        => C_Filial,
+						'sChave'         => C_ChaveAcesso,
+						'bApenasComSaldo' => false,
+						'sCodProduto'    => null,
+						'sDescricao'     => null,
+					]
+				]);
+				if (!empty($response->GetEstoqueProdutosResult->tWsProdutosEstoque)) {
+					$lista = $response->GetEstoqueProdutosResult->tWsProdutosEstoque;
+					if (!is_array($lista)) $lista = [$lista];
+					foreach ($lista as $item) {
+						$produtosWs[trim((string)$item->sCodProduto)] = $item;
+					}
+				}
+			});
+		} catch (\Throwable $e) {
+			$this->log('Precificacao::WS indisponível: ' . $e->getMessage(), 'error');
+		}
+
+		// Montar array para o JS
+		$tipoLabels = [1 => 'Produto', 2 => 'Serviço', 3 => 'Contrato'];
+		$lista = [];
+		foreach ($todos as $p) {
+			$custo     = 0.0;
+			$qtde      = null;
+			$temCusto  = false;
+			$vendaErp  = (float) $p->vlunitario;
+
+			if ((int)$p->tipo === 1 && isset($produtosWs[trim((string)$p->codigo)])) {
+				$ws       = $produtosWs[trim((string)$p->codigo)];
+				$custo    = (float)($ws->nPrecoCusto ?? 0);
+				$qtde     = isset($ws->nQtdeAtual) ? (float)$ws->nQtdeAtual : null;
+				$vendaErp = isset($ws->nPrecoVenda) ? (float)$ws->nPrecoVenda : $vendaErp;
+				$temCusto = $custo > 0;
+			}
+
+			// Calcular markup e fator atual com base no custo ERP
+			$markup    = ($temCusto && $custo > 0) ? round((($vendaErp / $custo) - 1) * 100, 4) : 0;
+			$fatorMult = ($temCusto && $custo > 0) ? round($vendaErp / $custo, 6) : 0;
+			$fatorDiv  = ($fatorMult > 0) ? round(1 / $fatorMult, 6) : 0;
+			$margem    = ($vendaErp > 0 && $temCusto) ? round((1 - ($custo / $vendaErp)) * 100, 2) : 0;
+
+			$lista[] = [
+				'id'          => $p->id,
+				'codigo'      => trim((string)$p->codigo),
+				'descricao'   => trim((string)$p->descricao),
+				'unidade'     => trim((string)($p->unidade ?? '')),
+				'tipo'        => (int)$p->tipo,
+				'tipoLabel'   => $tipoLabels[(int)$p->tipo] ?? 'Outro',
+				'ativo'       => (int)$p->ativo,
+				'custo'       => $custo,
+				'vendaAtual'  => $vendaErp,
+				'margem'      => $margem,
+				'markup'      => $markup,
+				'fatorMult'   => $fatorMult,
+				'fatorDiv'    => $fatorDiv,
+				'qtde'        => $qtde,
+				'temCusto'    => $temCusto,
+			];
+		}
+
+		$this->set('produtosJson', json_encode($lista, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+	}
+
+	/**
+	 * Salvar novos preços (vlunitario) para uma lista de produtos.
+	 * POST JSON: { "precos": [{"id": 1, "vlunitario": 150.00}, ...] }
+	 * Retorna JSON: { "salvos": N, "erros": [] }
+	 */
+	public function salvarPrecos() {
+		$this->autoRender = false;
+		$this->request->allowMethod(['post', 'put']);
+		$idempresa = $this->Auth->user('idempresa');
+
+		$precos = $this->request->getData('precos');
+		if (empty($precos) || !is_array($precos)) {
+			return $this->jsonResponse(['erro' => 'Nenhum preço enviado'], 400);
+		}
+
+		$salvos = 0;
+		$erros  = [];
+
+		foreach ($precos as $item) {
+			$id  = isset($item['id'])  ? (int)$item['id']          : null;
+			$vl  = isset($item['vlunitario']) ? (float)$item['vlunitario'] : null;
+
+			if (!$id || $vl === null || $vl < 0) {
+				$erros[] = ['id' => $id, 'erro' => 'Dados inválidos'];
+				continue;
+			}
+
+			try {
+				$produto = $this->Produtos->get($id);
+				// Garantia: produto pertence à empresa autenticada
+				if ((int)$produto->idempresa !== (int)$idempresa) {
+					$erros[] = ['id' => $id, 'erro' => 'Acesso negado'];
+					continue;
+				}
+				$produto->vlunitario = $vl;
+				if ($this->Produtos->save($produto)) {
+					$salvos++;
+				} else {
+					$erros[] = ['id' => $id, 'erro' => 'Falha ao salvar'];
+				}
+			} catch (\Throwable $e) {
+				$erros[] = ['id' => $id, 'erro' => $e->getMessage()];
+			}
+		}
+
+		if ($salvos > 0) {
+			$this->Atividades->registrar(
+				$this->Auth->user('id'),
+				$this->request->getParam('controller'),
+				$this->request->getParam('action'),
+				$salvos
+			);
+		}
+
+		return $this->jsonResponse(['salvos' => $salvos, 'erros' => $erros], 200);
+	}
+
 	public function delete($id = null) {
 		$produto = $this->Produtos->get($id);
 
