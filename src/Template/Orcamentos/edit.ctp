@@ -54,6 +54,24 @@
 		opacity: 0;
     }
 </style>
+<style>
+.orc-premium-wrap.orc-premium-form {
+  --orc-teal-light: #e6faf4;
+  --orc-teal-mid: #5cdbc0;
+  --orc-border: #e5e4e0;
+  --orc-border-light: #f0efec;
+  --orc-text: #1a1a18;
+  --orc-text-muted: #6b6a65;
+  --orc-text-hint: #9a9890;
+  --orc-bg-card: #ffffff;
+  --orc-bg-surface: #f9f9f8;
+}
+.orc-premium-form .orc-premium-card-inner,
+.orc-premium-view .orc-premium-card-inner {
+  border: 1px solid #e5e4e0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04) !important;
+}
+</style>
 <div class="col-md-12 orc-premium-page-root">
 <div class="orc-premium-wrap orc-premium-form">
 	<!-- Cabeçalho -->
