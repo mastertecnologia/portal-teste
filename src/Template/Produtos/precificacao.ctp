@@ -4,7 +4,7 @@
  * Carrega produtos do BD + custos do ERP (SOAP), calcula preços via
  * 3 métodos: Markup, Fator Multiplicador, Fator Divisor.
  */
-$this->element('pgm_premium_css', ['name' => 'produtos-premium']);
+$this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 ?>
 <style>
 /* ── Precificação: estilos específicos ─────────────────────────── */
@@ -132,7 +132,7 @@ $this->element('pgm_premium_css', ['name' => 'produtos-premium']);
       </div>
       <span class="prec-badge-erp">ERP Integrado</span>
     </div>
-    <a href="/produtos" style="font-size:.78rem;color:var(--prd-muted);text-decoration:none;">
+    <a href="<?= $this->Url->build(['controller' => 'Produtos', 'action' => 'index']) ?>" style="font-size:.78rem;color:var(--prd-muted);text-decoration:none;">
       &larr; Voltar para Produtos
     </a>
   </div>
@@ -323,6 +323,7 @@ var state = {
   novosPrecos: {},   // id → float
   selected: new Set()
 };
+var saveUrl = <?= json_encode($this->Url->build(['controller' => 'Produtos', 'action' => 'salvarPrecos'])) ?>;
 
 /* ── Formatação ────────────────────────────────────────────────── */
 function fmt(n, dec) {
@@ -653,7 +654,7 @@ function salvarPrecos() {
   btn.disabled = true;
   btn.textContent = 'Salvando…';
 
-  fetch('/produtos/salvar-precos', {
+  fetch(saveUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
