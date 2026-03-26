@@ -78,6 +78,31 @@
 			</div>
 
 			<div class="dash-pgm-content" id="dashPgmContent">
+
+			<!-- Módulos rápidos -->
+			<div class="dash-pgm-modules">
+				<?php
+					$_ctrl = $this->request->getParam('controller');
+					$modulos = [
+						['label' => 'Clientes',   'icon' => 'fa-building',             'url' => ['controller'=>'Clientes','action'=>'index'],       'active' => $_ctrl === 'Clientes'],
+						['label' => 'Produtos',   'icon' => 'fa-boxes',                'url' => ['controller'=>'Produtos','action'=>'index'],        'active' => $_ctrl === 'Produtos'],
+						['label' => 'OS',         'icon' => 'fa-file-signature',       'url' => ['controller'=>'Ordensservico','action'=>'index'],   'active' => $_ctrl === 'Ordensservico'],
+						['label' => 'Tickets',    'icon' => 'fa-ticket-alt',           'url' => ['controller'=>'Servicedesk','action'=>'index'],     'active' => $_ctrl === 'Servicedesk'],
+						['label' => 'Orçamentos', 'icon' => 'fa-file-invoice-dollar',  'url' => ['controller'=>'Orcamentos','action'=>'index'],      'active' => $_ctrl === 'Orcamentos'],
+						['label' => 'Locação',    'icon' => 'fa-file-invoice',         'url' => ['controller'=>'Faturas','action'=>'index'],         'active' => $_ctrl === 'Faturas'],
+						['label' => 'Agenda',     'icon' => 'fa-calendar-alt',         'url' => ['controller'=>'Agenda','action'=>'calendario'],     'active' => $_ctrl === 'Agenda'],
+						['label' => 'Senhas',     'icon' => 'fa-lock',                 'url' => ['controller'=>'Bancosenhas','action'=>'index'],     'active' => $_ctrl === 'Bancosenhas'],
+					];
+					foreach ($modulos as $mod):
+				?>
+				<?= $this->Html->link(
+					'<div class="dash-pgm-mod-icon"><i class="fas ' . $mod['icon'] . '"></i></div>' . h($mod['label']),
+					$mod['url'],
+					['class' => 'dash-pgm-mod' . ($mod['active'] ? ' mod-active' : ''), 'escape' => false]
+				) ?>
+				<?php endforeach; ?>
+			</div>
+
 				<div class="dash-pgm-stats-grid">
 					<div class="dash-pgm-stat-card" data-filter="aguardando">
 						<div class="dash-pgm-stat-icon orange"><i class="fas fa-tools"></i></div>
