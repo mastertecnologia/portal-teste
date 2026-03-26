@@ -136,6 +136,13 @@ body.prec-screen-active .modal-backdrop {
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+body.prec-screen-active .prec-overlay-killed {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
 </style>
 
 <div class="prec-root">
@@ -754,15 +761,56 @@ function cleanupGhostBackdrop() {
   document.body.classList.remove('modal-open');
 }
 
+function isDarkOverlayCandidate(el) {
+  if (!el || el === document.body || el === document.documentElement) return false;
+  if (el.classList && (el.classList.contains('modal') || el.classList.contains('bootbox') || el.classList.contains('prec-toast'))) return false;
+  if (el.closest && el.closest('.modal.show, .bootbox.modal.show, .prec-root, .left-sidebar, .topbar')) return false;
+
+  var st = window.getComputedStyle(el);
+  if (st.display === 'none' || st.visibility === 'hidden') return false;
+  if (st.position !== 'fixed' && st.position !== 'absolute') return false;
+
+  var rect = el.getBoundingClientRect();
+  var vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  var vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  var coversScreen = rect.width >= vw * 0.95 && rect.height >= vh * 0.95;
+  if (!coversScreen) return false;
+
+  var zi = parseInt(st.zIndex, 10);
+  if (!isNaN(zi) && zi < 100) return false;
+
+  var bg = st.backgroundColor || '';
+  var isDarkBg = /rgba?\(\s*0\s*,\s*0\s*,\s*0(?:\s*,\s*(0\.[1-9]|1))?\s*\)/.test(bg);
+  var hasBackdrop = st.backdropFilter && st.backdropFilter !== 'none';
+  var hasBlend = st.mixBlendMode && st.mixBlendMode !== 'normal';
+  return isDarkBg || hasBackdrop || hasBlend;
+}
+
+function neutralizeDarkOverlays() {
+  var nodes = document.body ? document.body.querySelectorAll('*') : [];
+  for (var i = 0; i < nodes.length; i++) {
+    var el = nodes[i];
+    if (isDarkOverlayCandidate(el)) {
+      el.classList.add('prec-overlay-killed');
+    }
+  }
+}
+
 /* ── Init ──────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
   document.body.classList.add('prec-screen-active');
   cleanupGhostBackdrop();
+  neutralizeDarkOverlays();
   setTimeout(cleanupGhostBackdrop, 250);
+  setTimeout(neutralizeDarkOverlays, 300);
   setTimeout(cleanupGhostBackdrop, 1200);
+  setTimeout(neutralizeDarkOverlays, 1300);
 
   // Alguns scripts globais podem reinserir overlay após load.
-  var obs = new MutationObserver(function() { cleanupGhostBackdrop(); });
+  var obs = new MutationObserver(function() {
+    cleanupGhostBackdrop();
+    neutralizeDarkOverlays();
+  });
   obs.observe(document.body, { childList: true, subtree: true });
   window.addEventListener('beforeunload', function() { obs.disconnect(); });
   refreshTable();
