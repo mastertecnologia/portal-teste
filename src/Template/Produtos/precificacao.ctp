@@ -119,6 +119,14 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 @keyframes toastIn{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
 /* Checkbox */
 .prec-check{width:15px;height:15px;accent-color:var(--prd-teal);cursor:pointer;}
+
+/* Escudo de contraste para esta tela (evita herança de estados globais) */
+body.prec-screen-active .pgm-shell-main,
+body.prec-screen-active .page-wrapper,
+body.prec-screen-active .container-fluid {
+  opacity: 1 !important;
+  filter: none !important;
+}
 </style>
 
 <div class="prec-root">
@@ -720,8 +728,20 @@ function showToast(msg, type) {
   setTimeout(function() { item.remove(); }, 4000);
 }
 
+function cleanupGhostBackdrop() {
+  var hasOpenModal = !!document.querySelector('.modal.show, .bootbox.modal.show');
+  if (hasOpenModal) return;
+  document.querySelectorAll('.modal-backdrop').forEach(function(el) {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  });
+  document.body.classList.remove('modal-open');
+}
+
 /* ── Init ──────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
+  document.body.classList.add('prec-screen-active');
+  cleanupGhostBackdrop();
+  setTimeout(cleanupGhostBackdrop, 250);
   refreshTable();
 });
 </script>
