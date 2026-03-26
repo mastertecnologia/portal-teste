@@ -8,7 +8,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 ?>
 <style>
 /* ── Precificação: estilos específicos ─────────────────────────── */
-.prec-root{display:flex;flex-direction:column;gap:0;min-height:calc(100vh - 56px);}
+.prec-root{display:flex;flex-direction:column;gap:0;min-height:calc(100vh - 56px);background:var(--prd-bg);isolation:isolate;}
 .prec-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--prd-surface);border-bottom:1px solid var(--prd-border);}
 .prec-topbar-left{display:flex;align-items:center;gap:12px;}
 .prec-topbar h1{font-size:1.1rem;font-weight:700;color:var(--prd-teal-lt);margin:0;}
@@ -17,7 +17,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 .prec-body{display:flex;gap:0;flex:1;}
 /* ── Painel lateral (estratégia) ───────────────────────────────── */
 .prec-panel{width:320px;min-width:280px;background:var(--prd-surface);border-right:1px solid var(--prd-border);padding:20px 18px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:calc(100vh - 115px);overflow-y:auto;}
-.prec-panel-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--prd-muted);margin-bottom:4px;}
+.prec-panel-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--prd-text2);margin-bottom:4px;}
 /* Tabs de método */
 .prec-method-tabs{display:flex;gap:4px;background:var(--prd-bg);border-radius:8px;padding:3px;}
 .prec-method-tab{flex:1;padding:7px 4px;font-size:.72rem;font-weight:600;text-align:center;border-radius:6px;cursor:pointer;color:var(--prd-muted);border:none;background:transparent;transition:all .18s;}
@@ -25,10 +25,10 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 /* Parâmetros */
 .prec-param-block{display:flex;flex-direction:column;gap:10px;}
 .prec-param-row{display:flex;flex-direction:column;gap:4px;}
-.prec-param-row label{font-size:.7rem;color:var(--prd-muted);font-weight:600;}
+.prec-param-row label{font-size:.7rem;color:var(--prd-text2);font-weight:600;}
 .prec-param-input{width:100%;padding:8px 10px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:6px;color:var(--prd-text);font-family:'DM Mono',monospace;font-size:.9rem;}
 .prec-param-input:focus{outline:none;border-color:var(--prd-teal);box-shadow:0 0 0 2px var(--prd-teal-dim);}
-.prec-param-hint{font-size:.66rem;color:var(--prd-muted);line-height:1.4;}
+.prec-param-hint{font-size:.66rem;color:var(--prd-text2);line-height:1.4;}
 /* Formula display */
 .prec-formula{background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--prd-text);line-height:1.6;}
 .prec-formula .formula-label{font-size:.65rem;color:var(--prd-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
@@ -64,17 +64,17 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 .prec-grid-scroll{flex:1;overflow:auto;}
 /* Tabela */
 .prec-table{width:100%;border-collapse:collapse;font-size:.8rem;}
-.prec-table thead th{position:sticky;top:0;z-index:2;background:var(--prd-surface);padding:9px 10px;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--prd-muted);border-bottom:1px solid var(--prd-border);white-space:nowrap;}
+.prec-table thead th{position:sticky;top:0;z-index:2;background:var(--prd-surface);padding:9px 10px;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--prd-text2);border-bottom:1px solid var(--prd-border);white-space:nowrap;}
 .prec-table tbody tr{border-bottom:1px solid var(--prd-border);transition:background .12s;}
 .prec-table tbody tr:hover{background:var(--prd-surface2);}
 .prec-table tbody tr.selected{background:var(--prd-teal-dim);}
-.prec-table td{padding:8px 10px;color:var(--prd-text);vertical-align:middle;}
+.prec-table td{padding:8px 10px;color:var(--prd-text);vertical-align:middle;background:transparent;}
 .prec-td-mono{font-family:'DM Mono',monospace;font-size:.78rem;}
-.prec-td-code{font-family:'DM Mono',monospace;font-size:.73rem;color:var(--prd-muted);}
+.prec-td-code{font-family:'DM Mono',monospace;font-size:.73rem;color:var(--prd-text2);}
 .prec-td-desc{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Custo — cinza quando não tem dado ERP */
 .prec-td-custo{font-family:'DM Mono',monospace;font-size:.78rem;}
-.prec-td-custo.no-data{color:var(--prd-muted);font-style:italic;}
+.prec-td-custo.no-data{color:var(--prd-text2);font-style:italic;}
 /* Novo preço — editável */
 .prec-novo-preco{width:100px;padding:5px 7px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:5px;color:var(--prd-text);font-family:'DM Mono',monospace;font-size:.78rem;text-align:right;}
 .prec-novo-preco:focus{outline:none;border-color:var(--prd-teal);box-shadow:0 0 0 2px var(--prd-teal-dim);}
@@ -83,7 +83,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 .prec-delta{font-family:'DM Mono',monospace;font-size:.75rem;white-space:nowrap;}
 .prec-delta.up{color:#34d399;}
 .prec-delta.down{color:#f87171;}
-.prec-delta.same{color:var(--prd-muted);}
+.prec-delta.same{color:var(--prd-text2);}
 /* Margem */
 .prec-td-margem{font-family:'DM Mono',monospace;font-size:.75rem;}
 .prec-td-margem.good{color:#34d399;}
@@ -154,23 +154,23 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
       <!-- Parâmetros ligados -->
       <div class="prec-param-block">
         <div class="prec-param-row" id="row-markup">
-          <label>Markup (%)</label>
-          <input class="prec-param-input" id="inp-markup" type="number" min="0" step="0.01" placeholder="ex.: 40" oninput="syncParams('markup')">
+          <label for="inp-markup">Markup (%)</label>
+          <input class="prec-param-input" id="inp-markup" name="inp_markup" type="number" min="0" step="0.01" placeholder="ex.: 40" oninput="syncParams('markup')">
           <div class="prec-param-hint">PV = Custo × (1 + Markup/100)</div>
         </div>
         <div class="prec-param-row" id="row-fmult">
-          <label>Fator Multiplicador</label>
-          <input class="prec-param-input" id="inp-fmult" type="number" min="0" step="0.001" placeholder="ex.: 1.40" oninput="syncParams('fmult')">
+          <label for="inp-fmult">Fator Multiplicador</label>
+          <input class="prec-param-input" id="inp-fmult" name="inp_fmult" type="number" min="0" step="0.001" placeholder="ex.: 1.40" oninput="syncParams('fmult')">
           <div class="prec-param-hint">PV = Custo × Fator</div>
         </div>
         <div class="prec-param-row" id="row-fdiv">
-          <label>Fator Divisor</label>
-          <input class="prec-param-input" id="inp-fdiv" type="number" min="0" max="0.9999" step="0.0001" placeholder="ex.: 0.7143" oninput="syncParams('fdiv')">
+          <label for="inp-fdiv">Fator Divisor</label>
+          <input class="prec-param-input" id="inp-fdiv" name="inp_fdiv" type="number" min="0" max="0.9999" step="0.0001" placeholder="ex.: 0.7143" oninput="syncParams('fdiv')">
           <div class="prec-param-hint">PV = Custo ÷ FD &nbsp;·&nbsp; FD = 1 − Margem%/100</div>
         </div>
         <div class="prec-param-row" id="row-margem">
-          <label>Margem Líquida (%)</label>
-          <input class="prec-param-input" id="inp-margem" type="number" min="0" max="99" step="0.01" placeholder="ex.: 28.57" oninput="syncParams('margem')">
+          <label for="inp-margem">Margem Líquida (%)</label>
+          <input class="prec-param-input" id="inp-margem" name="inp_margem" type="number" min="0" max="99" step="0.01" placeholder="ex.: 28.57" oninput="syncParams('margem')">
           <div class="prec-param-hint">% da receita (não do custo)</div>
         </div>
       </div>
@@ -193,24 +193,24 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
         <div class="prec-param-hint" style="margin-bottom:8px;">Preenchendo, o Fator Divisor é calculado automaticamente: FD = 1 − Σcustos/100</div>
         <div class="prec-costs" id="prec-costs">
           <div class="prec-cost-row">
-            <label>Impostos (%)</label>
-            <input class="prec-cost-input" id="cost-impostos" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
+            <label for="cost-impostos">Impostos (%)</label>
+            <input class="prec-cost-input" id="cost-impostos" name="cost_impostos" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
           </div>
           <div class="prec-cost-row">
-            <label>Comissão (%)</label>
-            <input class="prec-cost-input" id="cost-comissao" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
+            <label for="cost-comissao">Comissão (%)</label>
+            <input class="prec-cost-input" id="cost-comissao" name="cost_comissao" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
           </div>
           <div class="prec-cost-row">
-            <label>Despesas Fixas (%)</label>
-            <input class="prec-cost-input" id="cost-despesas" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
+            <label for="cost-despesas">Despesas Fixas (%)</label>
+            <input class="prec-cost-input" id="cost-despesas" name="cost_despesas" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
           </div>
           <div class="prec-cost-row">
-            <label>Frete (%)</label>
-            <input class="prec-cost-input" id="cost-frete" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
+            <label for="cost-frete">Frete (%)</label>
+            <input class="prec-cost-input" id="cost-frete" name="cost_frete" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
           </div>
           <div class="prec-cost-row">
-            <label>Lucro Desejado (%)</label>
-            <input class="prec-cost-input" id="cost-lucro" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
+            <label for="cost-lucro">Lucro Desejado (%)</label>
+            <input class="prec-cost-input" id="cost-lucro" name="cost_lucro" type="number" min="0" max="100" step="0.01" value="0" oninput="calcFatorDivComposto()">
           </div>
           <div class="prec-costs-total">
             <span>Σ Custos</span>
@@ -227,8 +227,8 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
       <div>
         <div class="prec-panel-title">Margem Mínima</div>
         <div class="prec-cost-row">
-          <label>Alertar abaixo de (%)</label>
-          <input class="prec-cost-input" id="margem-min" type="number" min="0" max="99" step="1" value="10" oninput="refreshTable()">
+          <label for="margem-min">Alertar abaixo de (%)</label>
+          <input class="prec-cost-input" id="margem-min" name="margem_min" type="number" min="0" max="99" step="1" value="10" oninput="refreshTable()">
         </div>
       </div>
       <div class="prec-margin-alert" id="margem-alert">
@@ -323,7 +323,7 @@ var PREC_DATA = <?= $produtosJson ?? '[]' ?>;
 var state = {
   method: 'markup',
   tipoFiltro: 0,
-  params: { markup: 0, fmult: 1, fdiv: 1, margem: 0 },
+  params: { markup: null, fmult: null, fdiv: null, margem: null },
   novosPrecos: {},   // id → float
   selected: new Set()
 };
@@ -340,7 +340,15 @@ function fmtBRL(n) {
 }
 function parseFl(s) {
   if (s === '' || s === null || s === undefined) return NaN;
-  return parseFloat(String(s).replace(',', '.'));
+  var raw = String(s).trim();
+  if (!raw) return NaN;
+  var hasComma = raw.indexOf(',') !== -1;
+  if (hasComma) {
+    raw = raw.replace(/\./g, '').replace(',', '.');
+  } else {
+    raw = raw.replace(',', '.');
+  }
+  return parseFloat(raw);
 }
 
 /* ── Sincronização dos 4 campos ────────────────────────────────── */
@@ -428,10 +436,13 @@ function calcNewPrice(custo) {
   if (!custo || custo <= 0) return null;
   var p = state.params;
   if (state.method === 'markup') {
+    if (p.markup === null) return null;
     return isNaN(p.markup) ? null : custo * (1 + p.markup / 100);
   } else if (state.method === 'fmult') {
+    if (p.fmult === null) return null;
     return (isNaN(p.fmult) || p.fmult <= 0) ? null : custo * p.fmult;
   } else {
+    if (p.fdiv === null) return null;
     return (isNaN(p.fdiv) || p.fdiv <= 0) ? null : custo / p.fdiv;
   }
 }
@@ -474,7 +485,7 @@ function refreshTable() {
   var margemMin = parseFl(document.getElementById('margem-min').value) || 0;
   var hasLow = false;
   var totalChanged = Object.keys(state.novosPrecos).length;
-  var totalSelected = state.selected.size;
+  var totalSelected = vis.filter(function(p) { return state.selected.has(p.id); }).length;
   var impacto = 0;
 
   var rows = vis.map(function(p) {
@@ -491,7 +502,7 @@ function refreshTable() {
     }
 
     // Delta
-    var delta = (novoPreco !== null) ? (novoPreco - precoRef) : null;
+    var delta = changed && novoPreco !== null ? (novoPreco - precoRef) : null;
     var deltaPct = (delta !== null && precoRef > 0) ? (delta / precoRef * 100) : null;
 
     // Markup atual
@@ -589,6 +600,10 @@ function refreshFooterOnly() {
 /* ── Aplicar cálculo aos selecionados / todos ─────────────────── */
 function aplicarSelecionados() {
   if (state.selected.size === 0) { showToast('Selecione ao menos um item', 'error'); return; }
+  if (state.params.markup === null && state.params.fmult === null && state.params.fdiv === null) {
+    showToast('Preencha um parâmetro de cálculo antes de aplicar', 'error');
+    return;
+  }
   var aplicados = 0;
   state.selected.forEach(function(id) {
     var p = PREC_DATA.find(function(x) { return x.id === id; });
@@ -601,6 +616,10 @@ function aplicarSelecionados() {
 }
 
 function aplicarTodos() {
+  if (state.params.markup === null && state.params.fmult === null && state.params.fdiv === null) {
+    showToast('Preencha um parâmetro de cálculo antes de aplicar', 'error');
+    return;
+  }
   var vis = getVisible();
   var aplicados = 0;
   vis.forEach(function(p) {
