@@ -54,9 +54,6 @@
 	<!-- Bootbox - confirms -->
 	<?= $this->Html->script('/plugins/bootbox/bootbox.min.js') ?>
 	<?= $this->Html->script('/plugins/bootbox/bootbox.locales.min.js') ?>
-	<!-- Máscara dinheiro  -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js"></script>
-
 	<!-- Leitura dos componentes -->
 	<?= $this->fetch('meta'); ?>
 	<?= $this->fetch('css'); ?>
@@ -88,11 +85,17 @@
 		}
 
 		$(function(){
-			$(".mascaramonetaria").maskMoney({
-				allowNegative: true,
-				thousands: '.',
-				decimal: ','
-			});
+			if ($.fn.maskMoney) {
+				$(".mascaramonetaria").maskMoney({
+					allowNegative: true,
+					thousands: '.',
+					decimal: ','
+				});
+				return;
+			}
+			if ($.fn.mask) {
+				$(".mascaramonetaria").mask('#.##0,00', { reverse: true });
+			}
 		});
 	// 
 </script>

@@ -113,15 +113,13 @@
 	<?= $this->Html->script('/plugins/validaInscricaoEstadual.js') ?>
 	<!-- Clockpicker -->
 	<?= $this->Html->script("/assets/node_modules/clockpicker/dist/jquery-clockpicker.min.js") ?>
-	<!-- JSGrid -->
-	<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
-	<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-	<!-- Máscara dinheiro  -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js"></script>
-    <!-- Inclusão do Select2 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+	<!-- JSGrid local -->
+	<?= $this->Html->css("/assets/node_modules/jsgrid/jsgrid.min") ?>
+	<?= $this->Html->css("/assets/node_modules/jsgrid/jsgrid-theme") ?>
+	<?= $this->Html->script("/assets/node_modules/jsgrid/jsgrid") ?>
+    <!-- Select2 local -->
+    <?= $this->Html->css("/assets/node_modules/select2/dist/css/select2") ?>
+    <?= $this->Html->script("/assets/node_modules/select2/dist/js/select2") ?>
 
 	<!-- Leitura dos componentes -->
 	<?= $this->fetch('meta'); ?>
@@ -317,11 +315,17 @@
 		}
 
 		$(function(){
-			$(".mascaramonetaria").maskMoney({
-				allowNegative: true,
-				thousands: '.',
-				decimal: ','
-			});
+			if ($.fn.maskMoney) {
+				$(".mascaramonetaria").maskMoney({
+					allowNegative: true,
+					thousands: '.',
+					decimal: ','
+				});
+				return;
+			}
+			if ($.fn.mask) {
+				$(".mascaramonetaria").mask('#.##0,00', { reverse: true });
+			}
 		});
 
 		$('.datepicker').bootstrapMaterialDatePicker({ format : 'DD/MM/YYYY', lang : 'pt-br', time : false, switchOnClick : true, nowButton : true, cancelText : 'Cancelar' , 'setDate' : 'currentDate', nowText : 'Hoje'});	
