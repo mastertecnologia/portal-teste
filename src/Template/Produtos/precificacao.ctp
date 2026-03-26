@@ -127,6 +127,15 @@ body.prec-screen-active .container-fluid {
   opacity: 1 !important;
   filter: none !important;
 }
+
+/* Se o preloader/backdrop ficar órfão nesta tela, não pode cobrir o conteúdo */
+body.prec-screen-active .preloader,
+body.prec-screen-active .modal-backdrop {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
 </style>
 
 <div class="prec-root">
@@ -734,6 +743,14 @@ function cleanupGhostBackdrop() {
   document.querySelectorAll('.modal-backdrop').forEach(function(el) {
     if (el && el.parentNode) el.parentNode.removeChild(el);
   });
+  document.querySelectorAll('.preloader').forEach(function(el) {
+    if (el) {
+      el.style.display = 'none';
+      el.style.opacity = '0';
+      el.style.visibility = 'hidden';
+      el.style.pointerEvents = 'none';
+    }
+  });
   document.body.classList.remove('modal-open');
 }
 
@@ -742,6 +759,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.body.classList.add('prec-screen-active');
   cleanupGhostBackdrop();
   setTimeout(cleanupGhostBackdrop, 250);
+  setTimeout(cleanupGhostBackdrop, 1200);
+
+  // Alguns scripts globais podem reinserir overlay após load.
+  var obs = new MutationObserver(function() { cleanupGhostBackdrop(); });
+  obs.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('beforeunload', function() { obs.disconnect(); });
   refreshTable();
 });
 </script>
