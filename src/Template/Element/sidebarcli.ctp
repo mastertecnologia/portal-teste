@@ -16,6 +16,61 @@
 		$userInitials = strtoupper(substr($u0, 0, 2));
 	}
 ?>
+<style>
+/* ── Sidebar submenu orcamentos ──────────────────────────────── */
+.pgm-sidebar-shell .has-arrow-sub > ul.collapse,
+.pgm-sidebar-shell .has-arrow-sub > ul.collapsing{
+	padding:4px 0 6px 0;
+	margin:0;
+	list-style:none;
+}
+.pgm-sidebar-shell .has-arrow-sub > ul > li > a{
+	display:flex;
+	align-items:center;
+	gap:8px;
+	padding:7px 14px 7px 42px;
+	font-size:.78rem;
+	font-weight:500;
+	color:#6e7681;
+	text-decoration:none;
+	border-radius:6px;
+	margin:1px 8px;
+	transition:background .15s,color .15s;
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+.pgm-sidebar-shell .has-arrow-sub > ul > li > a:before{
+	content:'';
+	width:5px;height:5px;
+	border-radius:50%;
+	background:#30363d;
+	flex-shrink:0;
+	transition:background .15s;
+}
+.pgm-sidebar-shell .has-arrow-sub > ul > li > a:hover{
+	color:#c9d1d9;
+	background:rgba(255,255,255,.04);
+}
+.pgm-sidebar-shell .has-arrow-sub > ul > li > a:hover:before{
+	background:#1d9e75;
+}
+.pgm-sidebar-shell .has-arrow-sub > ul > li.active > a,
+.pgm-sidebar-shell .has-arrow-sub > ul > li > a.active{
+	color:#5cdbc0;
+	background:rgba(29,158,117,.1);
+}
+.pgm-sidebar-shell .has-arrow-sub > ul > li.active > a:before{
+	background:#1d9e75;
+}
+/* Linha separadora acima do submenu */
+.pgm-sidebar-shell .has-arrow-sub.active > a,
+.pgm-sidebar-shell .has-arrow-sub.selected > a{
+	color:#e6edf3;
+}
+/* mini-sidebar: esconder texto do submenu mas manter ícone */
+.mini-sidebar .pgm-sidebar-shell .has-arrow-sub > ul{ display:none!important; }
+</style>
 <aside class="left-sidebar skin-pgm pgm-sidebar-shell">
 	<div class="pgm-sidebar-brand">
 		<a href="javascript:void(0)" class="nav-toggler d-block d-md-none waves-effect waves-dark pgm-sidebar-toggler" aria-label="Abrir menu">
@@ -69,7 +124,7 @@
 						</a>
 						<ul class="collapse <?= !empty($orcamentosActive) ? 'in' : '' ?>">
 							<li><?= $this->Html->link('Meus Orçamentos', '/orcamentos/index', ['class' => 'waves-effect waves-dark']) ?></li>
-							<li><?= $this->Html->link('<i class="ti-plus" style="font-size:.7rem;margin-right:4px;"></i> Solicitar Orçamento', '/orcamentos/solicitar', ['class' => 'waves-effect waves-dark', 'escape' => false]) ?></li>
+							<li><?= $this->Html->link('Solicitar Orçamento', '/orcamentos/solicitar', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>
 				<?php endif; ?>
