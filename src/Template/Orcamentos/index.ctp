@@ -380,11 +380,10 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 					<thead>
 						<tr>
 							<th style="width:65px;">ID</th>
-							<th>Autor</th>
+							<th>Consultor</th>
 							<th style="width:75px;">Versão</th>
 							<th style="width:85px;">Status</th>
-							<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
-							<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
+							<th class="text-right orc-premium-th-r" style="width:110px;">Total</th>
 							<th style="width:95px;">Data</th>
 							<th style="width:90px;">Ações</th>
 						</tr>
@@ -406,7 +405,6 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 								<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 								<td><?= $orcPremiumBadge($reg->status) ?></td>
 								<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-								<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
 								<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 								<td>
 									<?= $this->Html->link('Abrir', ['action' => 'view', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>

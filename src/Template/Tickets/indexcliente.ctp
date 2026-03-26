@@ -1,68 +1,64 @@
 <style>
 	.popover-big { max-width: 500px; }
-	/* Visual "card" premium sem quebrar DataTables: mantém a tabela, mas
-	   aplica espaçamento/borda suave entre linhas e melhora hierarquia. */
-	#table-todos{
-		border-collapse: separate;
-		border-spacing: 0 12px;
-	}
-	#table-todos thead th{
-		font-size: 11px;
-		font-weight: 900;
-		text-transform: uppercase;
-		letter-spacing: .04em;
-	}
-	#table-todos tbody td{
-		background:#fff;
-		border-top: 1px solid rgba(15,23,42,.06);
-		padding: 14px 12px;
-		vertical-align: middle;
-	}
-	#table-todos tbody tr.ticket-row td{
-		box-shadow: 0 10px 24px rgba(15,23,42,.05);
-	}
-	#table-todos tbody tr.ticket-row td:first-child{
-		border-radius: 12px 0 0 12px;
-	}
-	#table-todos tbody tr.ticket-row td:last-child{
-		border-radius: 0 12px 12px 0;
-	}
-	.ticket-id{
-		font-weight: 900;
-		color:#0f172a;
-		font-size: 13px;
-	}
-	.ticket-assunto{
-		font-weight: 900;
-		color:#0f172a;
-		line-height: 1.2;
-		word-break: break-word;
-	}
-	.ticket-meta{
-		color:#64748b;
-		font-size: 12px;
-		margin-top: 4px;
-	}
-	.ticket-actions a{ margin-right: 4px; }
+	/* ── Tickets cliente — Premium dark layout ─────────────────── */
+	.tkcli-wrap{background:#161b22;border:1px solid #21262d;border-radius:12px;padding:24px;}
+	.tkcli-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+	.tkcli-head-left .tkcli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#1d9e75;font-weight:700;margin-bottom:3px;}
+	.tkcli-head-left h1{font-size:1.2rem;font-weight:800;color:#e6edf3;margin:0;}
+	.tkcli-head-left p{font-size:.78rem;color:#6e7681;margin:3px 0 0;}
+	/* Filters bar */
+	.tkcli-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid #21262d;}
+	.tkcli-filter-group label{font-size:.68rem;font-weight:600;color:#6e7681;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px;}
+	.tkcli-filter-group .form-control,.tkcli-filter-group .selectpicker{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:7px;font-size:.8rem;}
+	.tkcli-filter-group .form-control:focus{border-color:#1d9e75;box-shadow:none;}
+	.tkcli-btn-abrir{background:linear-gradient(135deg,#1d9e75,#16a085);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.8rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s;}
+	.tkcli-btn-abrir:hover{opacity:.85;color:#fff;text-decoration:none;}
+	.tkcli-btn-limpar{background:transparent;border:1px solid #30363d;color:#8b949e;border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;transition:border-color .15s,color .15s;}
+	.tkcli-btn-limpar:hover{border-color:#6e7681;color:#c9d1d9;text-decoration:none;}
+	/* Table */
+	#table-todos{border-collapse:separate;border-spacing:0 6px;width:100%;}
+	#table-todos thead th{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6e7681;padding:6px 10px;border-bottom:1px solid #21262d;}
+	#table-todos tbody td{background:#0d1117;border-top:1px solid #21262d;padding:12px 10px;vertical-align:middle;color:#c9d1d9;}
+	#table-todos tbody tr.ticket-row td{transition:background .12s;}
+	#table-todos tbody tr.ticket-row:hover td{background:#161b22;}
+	#table-todos tbody tr.ticket-row td:first-child{border-radius:8px 0 0 8px;}
+	#table-todos tbody tr.ticket-row td:last-child{border-radius:0 8px 8px 0;}
+	.ticket-id{font-weight:900;color:#5cdbc0;font-size:13px;font-family:'DM Mono',monospace;}
+	.ticket-assunto{font-weight:700;color:#e6edf3;line-height:1.3;word-break:break-word;font-size:.85rem;}
+	.ticket-meta{color:#6e7681;font-size:.72rem;margin-top:3px;}
+	.ticket-actions a{margin-right:4px;}
+	/* DataTables overrides for dark theme */
+	.dataTables_wrapper .dataTables_length select,
+	.dataTables_wrapper .dataTables_filter input{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:6px;}
+	.dataTables_wrapper .dataTables_info,.dataTables_wrapper .dataTables_length,.dataTables_wrapper .dataTables_filter{color:#6e7681;font-size:.75rem;}
+	.dataTables_wrapper .dataTables_paginate .paginate_button{color:#8b949e!important;border-radius:6px!important;}
+	.dataTables_wrapper .dataTables_paginate .paginate_button.current{background:#1d9e75!important;color:#fff!important;border:none!important;}
+	.dataTables_wrapper .dataTables_paginate .paginate_button:hover{background:#21262d!important;color:#e6edf3!important;}
 </style>
 <div class="col-lg-12">
-	<div class="card card-nav-tabs">
-		<div class="card-body">
-			<?= $this->Form->create('Ticket', ['action' => 'indexcliente', 'type' => 'get', 'class' => 'form-material']); ?>
-				<div class="row">
-					<div class="col-xl-2 col-md-3 col-md-12">
-						<label class="control-label text-muted"> Assunto: </label>
-						<?= $this->Form->control('assunto', ['data-live-search' => true, 'title' => 'Todos', 'value' => $assunto, 'id' => 'assunto', 'class' => 'form-control selectpicker', 'options' => C_TicketCategoriaClienteQuery, 'label' => false]) ?>
-					</div>
-					<div class="col-xl-2 col-md-3 col-md-12">
-						<label class="control-label text-muted"> Status: </label>
-						<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Selecione', 'value' => $situacao, 'id' => 'assunto', 'class' => 'form-control selectpicker', 'options' => [-1 => 'Todos'] + C_TicketSituacoes, 'label' => false]) ?>
-					</div>
-					<div class="col-lg-4 col-md-12 m-t-10">
-						<?= $this->Html->link('Limpar', ["action" => "indexcliente"], ['rel' => 'tooltip', 'class' => 'btn btn-secondary m-t-20']); ?>
-						<?= $this->Html->link('Abrir Ticket', ["action" => "add"], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 m-l-10', 'escape' => false]) ?>
-					</div>
-				</div><br>
+	<div class="tkcli-wrap">
+		<!-- Page head -->
+		<div class="tkcli-head">
+			<div class="tkcli-head-left">
+				<div class="tkcli-eyebrow">Portal do Cliente</div>
+				<h1>Meus Tickets</h1>
+				<p>Acompanhe e abra chamados de suporte</p>
+			</div>
+			<?= $this->Html->link('<i class="fa fa-plus"></i> Abrir Chamado', ['action' => 'add'], ['class' => 'tkcli-btn-abrir', 'escape' => false]) ?>
+		</div>
+		<div class="card-body" style="padding:0;background:transparent;">
+			<?= $this->Form->create('Ticket', ['action' => 'indexcliente', 'type' => 'get', 'class' => 'tkcli-filters']); ?>
+				<div class="tkcli-filter-group">
+					<label>Assunto</label>
+					<?= $this->Form->control('assunto', ['data-live-search' => true, 'title' => 'Todos', 'value' => $assunto, 'id' => 'assunto', 'class' => 'form-control selectpicker', 'options' => C_TicketCategoriaClienteQuery, 'label' => false]) ?>
+				</div>
+				<div class="tkcli-filter-group">
+					<label>Status</label>
+					<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Selecione', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control selectpicker', 'options' => [-1 => 'Todos'] + C_TicketSituacoes, 'label' => false]) ?>
+				</div>
+				<div class="tkcli-filter-group" style="padding-top:18px;">
+					<?= $this->Html->link('Limpar filtros', ['action' => 'indexcliente'], ['class' => 'tkcli-btn-limpar']) ?>
+				</div>
 			<?= $this->Form->end(); ?>
 			<div class="table-responsive">
 				<table class="table table-hover table-row-clickable" id="table-todos">

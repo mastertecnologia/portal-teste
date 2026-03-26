@@ -62,7 +62,16 @@
 				<?php if (!empty($permissaoacesso)) : ?>
 					<li class="<?= $dashboard ?>"><?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu">Dashboard</span>', '/users/dashboard', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 					<li class="<?= $clientesActive ?>"><?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu">Empresa</span>', "/clientes/edit/$idcliente", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
-					<li class="<?= $orcamentosActive ?>"><?= $this->Html->link('<i class="fa fa-file-invoice-dollar"></i><span class="hide-menu">Orçamentos</span>', '/orcamentos/index', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<li class="<?= $orcamentosActive ?> has-arrow-sub">
+						<a href="javascript:void(0)" class="waves-effect waves-dark has-arrow" aria-expanded="<?= !empty($orcamentosActive) ? 'true' : 'false' ?>">
+							<i class="fa fa-file-invoice-dollar"></i>
+							<span class="hide-menu">Orçamentos</span>
+						</a>
+						<ul class="collapse <?= !empty($orcamentosActive) ? 'in' : '' ?>">
+							<li><?= $this->Html->link('Meus Orçamentos', '/orcamentos/index', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li><?= $this->Html->link('<i class="ti-plus" style="font-size:.7rem;margin-right:4px;"></i> Solicitar Orçamento', '/orcamentos/solicitar', ['class' => 'waves-effect waves-dark', 'escape' => false]) ?></li>
+						</ul>
+					</li>
 				<?php endif; ?>
 				<li class="<?= $ticketsActive ?>"><?= $this->Html->link('<i class="fa fa-ticket-alt"></i><span class="hide-menu">Tickets</span>', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>

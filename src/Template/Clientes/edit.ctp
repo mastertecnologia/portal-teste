@@ -433,11 +433,13 @@
 				</div>
 				<?php } if($permissaoacesso || $role == 0){ ?>
 				<div class="tab-pane" id="contratos">
+					<?php if ($role == 0) : ?>
 					<?= $this->Html->link('Cadastrar item', ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-r-5 m-b-20']) ?>
 					<?= $this->Html->link('Contratos de Horas Técnicas', ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-b-20']) ?>
 					<?= $this->Html->link('Cadastrar Contrato de Horas', ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5 m-b-20']) ?>
+					<?php endif; ?>
 					<div class="table-responsive">
-						<table class="table table-hover" id="tableContratos">
+						<table class="cli-acessos-table" id="tableContratos">
 							<thead class="text-primary">
 								<th>Cód. Produto</th>
 								<th>Descrição </th>
@@ -490,7 +492,7 @@
 										<td><?= $reg->nome ?></td>
 										<td><?= $reg->ip ?></td>
 										<td><?= $reg->usuario ?></td>
-										<td><a class="link senha" data-id="<?=$reg->id?>" href="#"><?=$reg->senha?></a></td>
+										<td><a class="link senha cli-senha-mask" data-id="<?=$reg->id?>" href="#" title="Clique para revelar">••••••••</a></td>
 										<td> <?= $reg->inativo == 1 ? 'Não' : 'Sim'; ?></td>
 										<?php if ($role == 0) { ?>
 										<td class="td-actions">
