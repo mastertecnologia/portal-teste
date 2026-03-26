@@ -168,6 +168,43 @@
   font-size: 13px;
 }
 
+/*
+ * Tarja escura ao redor: vem de layout-sidebar-shell.css (body.layout-no-topbar,
+ * #main-wrapper, .page-wrapper, .pgm-shell-main = #0d0f14). Nas telas com catálogo
+ * premium, expandir o fundo claro para a área útil inteira.
+ */
+body.layout-no-topbar:has(.orc-premium-page-root),
+html:has(body.layout-no-topbar .orc-premium-page-root) {
+  background-color: #f2f1ee !important;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) #main-wrapper,
+body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper,
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main {
+  background: #f2f1ee !important;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper > .container-fluid {
+  max-width: 100%;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) .orc-premium-page-root {
+  padding: 16px 10px 28px;
+  min-height: calc(100vh - 72px);
+  font-size: 14px;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {
+  background: #e8e6e1 !important;
+  color: #5f5e5a !important;
+  border-top-color: #d5d4d0 !important;
+}
+
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a,
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a strong {
+  color: #1d9e75 !important;
+}
+
 .orc-premium-wrap.orc-premium-index {
   /* :root do protótipo */
   --orc-teal: #00c08b;
@@ -985,6 +1022,30 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
   border-color: var(--orc-teal-mid);
   box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.12);
   outline: none;
+}
+
+/*
+ * form-pages.scss (.form-material .form-control:focus): gradiente com background-repeat
+ * default em textarea preenche toda a altura com a cor do tema → “fica azul”.
+ */
+.orc-premium-form.form-material textarea.form-control {
+  background-image: none !important;
+  background-color: #fff !important;
+  border: 1px solid var(--orc-border, #e5e4e0) !important;
+  border-radius: var(--orc-radius-sm, 8px) !important;
+  padding: 10px 12px !important;
+  box-shadow: none !important;
+  float: none !important;
+  min-height: 88px;
+  resize: vertical;
+}
+
+.orc-premium-form.form-material textarea.form-control:focus {
+  background-image: none !important;
+  background-size: auto !important;
+  border-color: var(--orc-teal-mid, #5dcaa5) !important;
+  box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.12) !important;
+  outline: none !important;
 }
 
 /* Botões do formulário premium (cancelar / limpar) */

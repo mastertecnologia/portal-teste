@@ -73,7 +73,7 @@
 				</div>
 				<div class="col-md-4 col-sm-12">
 					<label class="control-label">E-mail do cliente</label>
-					<input type="email" class="form-control" id="orc-cli-email" readonly style="background:#f2f1ee;color:#6b6a65;" placeholder="Auto-preenchido" />
+					<input type="email" class="form-control" id="orc-cli-email" autocomplete="email" placeholder="Preenchido ao escolher o cliente (editável)" />
 				</div>
 				<div class="col-md-4 col-sm-12">
 					<label class="control-label">Contato / responsável</label>
