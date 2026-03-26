@@ -28,7 +28,8 @@
   background: var(--cli-bg);
   min-height: 80vh;
   padding: 0;
-  margin: -16px -25px 0;
+  /* Margens negativas suaves — evita sobrepor KPIs / sidebar em alguns layouts */
+  margin: -8px -12px 0;
 }
 
 /* ── Page header ─────────────────────────────────────────────── */
@@ -127,16 +128,16 @@
   font-weight: 500;
   cursor: pointer;
   border: 1px solid var(--cli-border2);
-  background: transparent;
-  color: var(--cli-muted);
+  background: transparent !important;
+  color: var(--cli-muted) !important;
   transition: all .15s;
   white-space: nowrap;
 }
 .cli-pill:hover { border-color: var(--cli-teal); color: var(--cli-teal-lt); }
 .cli-pill.active {
-  background: var(--cli-teal-dim);
+  background: var(--cli-teal-dim) !important;
   border-color: var(--cli-teal);
-  color: var(--cli-teal-lt);
+  color: var(--cli-teal-lt) !important;
 }
 .cli-pill .cnt {
   display: inline-flex;
@@ -368,6 +369,64 @@
 .cli-root .dataTables_wrapper .dataTables_info,
 .cli-root .dataTables_wrapper .dataTables_paginate { padding: 10px 0 14px; }
 
+/* Toolbar: alinhar “Mostrar” e “Filtrar” (dom com d-flex) */
+.cli-root .dataTables_wrapper > .d-flex {
+  align-items: center !important;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+/* DataTables core + datatables.min.css: células no tema escuro (contraste) */
+.cli-root table.dataTable {
+  width: 100% !important;
+  margin: 0 !important;
+  border-collapse: collapse !important;
+  background: var(--cli-surface) !important;
+}
+.cli-root table.dataTable thead th,
+.cli-root table.dataTable thead td {
+  background: var(--cli-surface) !important;
+  color: var(--cli-dim) !important;
+  border-bottom: 1px solid var(--cli-border) !important;
+  box-sizing: border-box;
+}
+.cli-root table.dataTable tbody td {
+  background: var(--cli-surface) !important;
+  color: var(--cli-muted) !important;
+  border-bottom: 1px solid var(--cli-border) !important;
+  box-sizing: border-box;
+}
+.cli-root table.dataTable tbody tr:hover td {
+  background: var(--cli-surface2) !important;
+  color: var(--cli-text) !important;
+}
+.cli-root table.dataTable.stripe tbody tr.odd td,
+.cli-root table.dataTable tbody tr.odd td {
+  background: var(--cli-surface) !important;
+}
+.cli-root table.dataTable.stripe tbody tr.even td,
+.cli-root table.dataTable tbody tr.even td {
+  background: rgba(28, 34, 48, 0.92) !important;
+}
+.cli-root table.dataTable tbody tr:hover.even td,
+.cli-root table.dataTable tbody tr:hover.odd td {
+  background: var(--cli-surface2) !important;
+}
+.cli-root table.dataTable tbody td.sorting_1 {
+  background: inherit !important;
+}
+.cli-root table.dataTable tbody td .cli-name-main {
+  color: var(--cli-text) !important;
+}
+.cli-root table.dataTable tbody td .cli-td-doc,
+.cli-root table.dataTable tbody td .cli-td-email,
+.cli-root table.dataTable tbody td .cli-td-phone {
+  color: var(--cli-muted) !important;
+}
+.cli-root table.dataTable tbody tr:hover td .cli-name-main {
+  color: var(--cli-text) !important;
+}
+
 /* DataTables sorting arrows */
 .cli-table thead th.sorting::after,
 .cli-table thead th.sorting_asc::after,
@@ -393,7 +452,7 @@
   font-family: 'DM Sans', sans-serif;
   color: var(--cli-text);
   background: var(--cli-bg);
-  margin: -16px -25px 0;
+  margin: -8px -12px 0;
   min-height: 80vh;
 }
 
@@ -461,9 +520,14 @@
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color: var(--cli-muted);
+  color: #9aa7b8;
   font-weight: 600;
   margin-bottom: 5px;
+}
+/* Vencer Bootstrap / tema global em labels */
+.cli-form-root .cli-fgroup label,
+.cli-form-root .cli-fgroup > label {
+  color: #9aa7b8 !important;
 }
 .cli-fgroup label .req { color: var(--cli-teal-lt); margin-left: 2px; }
 
@@ -549,8 +613,21 @@
 }
 .cli-tipo-btn i { font-size: 14px; }
 
-/* Hidden tipo select */
-#tipo { display: none !important; }
+/* Select nativo sincronizado com botões PJ/PF — fora do layout (evita overrides) */
+.cli-form-root select#tipo.form-control,
+.cli-form-root #tipo {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
 /* Checkbox group */
 .cli-check-row { display: flex; align-items: center; gap: 10px; }

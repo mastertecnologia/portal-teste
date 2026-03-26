@@ -61,6 +61,7 @@ class ClientesController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 		$this->set('title', 'Lista de Clientes');
+		$this->set('hideLayoutPageTitle', true);
 
 		$clientesAtivos = $this->Clientes->find('all')
 			->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 0])
@@ -144,6 +145,7 @@ class ClientesController extends AppController {
 		}
 		
 		$this->set('title', 'Adicionar Cliente');
+		$this->set('hideLayoutPageTitle', true);
 		$cliente = $this->Clientes->newEntity();
 
 		if ($this->request->is('post')) {

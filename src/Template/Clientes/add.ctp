@@ -30,8 +30,8 @@
     <div class="cli-form-topbar">
         <div>
             <div class="cli-eyebrow">Módulo comercial</div>
-            <div style="font-size:11px;color:#555e78;margin-bottom:3px;">
-                <?= $this->Html->link('Clientes', ['action' => 'index'], ['escape' => false, 'style' => 'color:#7d8590;text-decoration:none;']) ?>
+            <div style="font-size:11px;color:#8b949e;margin-bottom:3px;">
+                <?= $this->Html->link('Clientes', ['action' => 'index'], ['escape' => false, 'style' => 'color:#9aa7b8;text-decoration:none;']) ?>
                 › <span style="color:#5cdbc0;">Novo cliente</span>
             </div>
             <h1 class="cli-h1">Cadastrar cliente</h1>
@@ -57,7 +57,7 @@
                 <div class="cli-section-title">Tipo de cliente</div>
             </div>
             <div class="cli-section-body">
-                <?= $this->Form->control('tipo', ['id' => 'tipo', 'options' => C_ClientesTipo, 'required' => true, 'label' => false, 'class' => 'form-control']) ?>
+                <?= $this->Form->control('tipo', ['id' => 'tipo', 'options' => C_ClientesTipo, 'required' => false, 'label' => false, 'class' => 'form-control']) ?>
                 <div class="cli-tipo-group" style="margin-top:12px;">
                     <button type="button" class="cli-tipo-btn active" id="btn-tipo-pj" onclick="cliSetTipo(2)">
                         <i class="fas fa-building"></i> Pessoa Jurídica
@@ -298,16 +298,18 @@
             }
         }
 
-        // Init
-        $('.pessoaFisica').hide();
-        $('.pessoaJuridica').hide();
-
         $("#tipo").on('change', function() {
             toggleTipo($(this).val());
         });
 
-        // Default: PJ
-        setTimeout(function() { cliSetTipo(2); }, 50);
+        var TIPO_PF = <?= (int)C_ClientesTipoFisica ?>;
+        var TIPO_PJ = <?= (int)C_ClientesTipoJuridica ?>;
+        var rawTipo = $('#tipo').val();
+        var tipoNum = parseInt(rawTipo, 10);
+        if (tipoNum !== TIPO_PF) {
+            tipoNum = TIPO_PJ;
+        }
+        cliSetTipo(tipoNum);
 
         // Uppercase
         $('#razaosocial').on('change', function() { $(this).val($(this).val().toUpperCase()); });
