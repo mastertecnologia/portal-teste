@@ -595,9 +595,58 @@ class OrcamentosController extends AppController {
 		$this->set('hideLayoutPageTitle', true);
 	}
 
+	/**
+	 * Tela de solicitação de orçamento para clientes (role==1).
+	 * Coleta dados detalhados do pedido e cria um ticket de categoria "Orçamento".
+	 */
+	public function solicitar() {
+		$this->set('title', 'Solicitar Orçamento');
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			// Montar solicitação como texto para o ticket
+			$linhas   = [];
+			$linhas[] = '--- SOLICITAÇÃO DE ORÇAMENTO ---';
+			$linhas[] = 'Assunto: ' . ($data['assunto'] ?? '');
+			$linhas[] = 'Urgência: ' . ($data['urgencia'] ?? 'Normal');
+			if (!empty($data['descricao'])) $linhas[] = 'Descrição: ' . $data['descricao'];
+			if (!empty($data['itens'])) {
+				$linhas[] = '';
+				$linhas[] = 'ITENS SOLICITADOS:';
+				foreach ((array)$data['itens'] as $i => $item) {
+					if (empty($item['descricao'])) continue;
+					$linhas[] = sprintf('  %d. %s — Qtd: %s — Obs: %s',
+						$i + 1,
+						$item['descricao'],
+						$item['quantidade'] ?? '1',
+						$item['obs'] ?? ''
+					);
+				}
+			}
+			if (!empty($data['prazo'])) $linhas[] = 'Prazo desejado: ' . $data['prazo'];
+			$solicitacaoTexto = implode("\n", $linhas);
+
+			// Criar ticket de categoria orçamento (assunto=4)
+			$this->loadModel('Tickets');
+			$ticket = $this->Tickets->newEntity();
+			$ticket->idempresa  = $this->Auth->user('idempresa');
+			$ticket->idcliente  = $this->Auth->user('idcliente');
+			$ticket->idautor    = $this->Auth->user('id');
+			$ticket->assunto    = 4; // C_TicketCategoriaOrcamento
+			$ticket->solicitacao = $solicitacaoTexto;
+			$ticket->situacao   = 0;
+			$ticket->resolvido  = 0;
+			$ticket->email      = $this->Auth->user('email') ?? '';
+			if ($this->Tickets->save($ticket)) {
+				$this->Flash->success(__('Solicitação de orçamento enviada! Em breve nossa equipe entrará em contato. Ticket #' . $ticket->id));
+				return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
+			}
+			$this->Flash->error(__('Não foi possível enviar a solicitação. Tente novamente.'));
+		}
+	}
+
 	public function add($idticket = null) {
 		// Permissão para o cliente
-		if ($this->Auth->user('role') == 1) return $this->redirect(['controller' => 'Tickets', 'action' => 'add', 4]);
+		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'solicitar']);
 
 		$orcamento = $this->Orcamentos->newEntity();
         $ticket = $this->Tickets->findById($idticket)->first();

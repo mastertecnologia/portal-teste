@@ -359,12 +359,12 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 	<?php else : ?>
 		<header class="orc-premium-page-head">
 			<div class="orc-premium-page-head-text">
-				<p class="orc-premium-eyebrow">Portal</p>
-				<h1 class="orc-premium-h1">Meus orçamentos</h1>
+				<p class="orc-premium-eyebrow">Portal do Cliente</p>
+				<h1 class="orc-premium-h1">Meus Orçamentos</h1>
 			</div>
 			<?= $this->Html->link(
-				'<i class="ti-plus" aria-hidden="true"></i> Solicitar orçamento',
-				['controller' => 'Tickets', 'action' => 'add', 4],
+				'<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg> Solicitar Orçamento',
+				['action' => 'solicitar'],
 				['class' => 'btn orc-premium-btn-primary', 'escape' => false]
 			) ?>
 		</header>

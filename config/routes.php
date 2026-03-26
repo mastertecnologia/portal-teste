@@ -108,6 +108,7 @@ Router::scope('/', function ($routes) {
     // Orçamentos — URLs explícitas (prompt_cursor_cakephp.md PROMPT 7); o inflection padrão já cobre, isto documenta o contrato.
     $routes->connect('/orcamentos', ['controller' => 'Orcamentos', 'action' => 'index']);
     $routes->connect('/orcamentos/add', ['controller' => 'Orcamentos', 'action' => 'add']);
+    $routes->connect('/orcamentos/solicitar', ['controller' => 'Orcamentos', 'action' => 'solicitar']);
     $routes->connect('/orcamentos/catalogo', ['controller' => 'Orcamentos', 'action' => 'catalogo']);
     $routes->connect('/orcamentos/:id/pdf', ['controller' => 'Orcamentos', 'action' => 'pdf'], ['pass' => ['id'], 'id' => '\d+']);
     // CSS premium via Cake (leitura em WWW_ROOT/css) — evita 404 estático com APP_BASE=/portal e Alias Apache

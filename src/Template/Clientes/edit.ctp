@@ -19,18 +19,65 @@
 
 ?>
 <style>
-	.table td, .table th { padding: 0.4rem;	}
+.table td, .table th { padding: 0.4rem; }
+/* ── Empresa edit — Premium tabs ─────────────────────────────── */
+.cli-page-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.cli-page-head-left .cli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#1d9e75;font-weight:700;margin-bottom:3px;}
+.cli-page-head-left h1{font-size:1.2rem;font-weight:800;color:#e6edf3;margin:0;}
+.cli-page-head-left p{font-size:.78rem;color:#6e7681;margin:3px 0 0;}
+/* Tab nav override */
+.cli-tabs-nav{display:flex;gap:2px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:4px;margin-bottom:20px;flex-wrap:wrap;}
+.cli-tabs-nav .nav-item{flex:none;}
+.cli-tabs-nav .nav-link{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:7px;font-size:.78rem;font-weight:600;color:#8b949e;border:none!important;background:transparent;transition:all .18s;cursor:pointer;}
+.cli-tabs-nav .nav-link:hover{color:#c9d1d9;background:#161b22;}
+.cli-tabs-nav .nav-link.active{background:#1d9e75!important;color:#fff!important;}
+.cli-tabs-nav .nav-link i{font-size:.8rem;}
+/* Card body */
+.cli-card{background:#161b22;border:1px solid #21262d;border-radius:12px;padding:24px;}
+/* Form labels */
+.cli-label{font-size:.72rem;font-weight:600;color:#8b949e;margin-bottom:4px;display:block;letter-spacing:.04em;text-transform:uppercase;}
+/* Readonly display for clients */
+.cli-field-ro{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:9px 12px;color:#c9d1d9;font-size:.85rem;min-height:38px;}
+/* Section divider */
+.cli-section{margin-top:20px;padding-top:16px;border-top:1px solid #21262d;}
+.cli-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:14px;}
+/* Acessos table */
+.cli-acessos-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.cli-acessos-table thead th{padding:8px 10px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6e7681;border-bottom:1px solid #21262d;}
+.cli-acessos-table tbody tr{border-bottom:1px solid #21262d;}
+.cli-acessos-table tbody tr:hover{background:#1c2230;}
+.cli-acessos-table td{padding:9px 10px;color:#c9d1d9;vertical-align:middle;}
+.cli-senha-mask{font-family:'DM Mono',monospace;letter-spacing:.1em;cursor:pointer;color:#8b949e;}
+.cli-senha-mask:hover{color:#5cdbc0;}
+/* Token box */
+.cli-token-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:.8rem;color:#5cdbc0;word-break:break-all;letter-spacing:.04em;}
+.cli-token-note{font-size:.72rem;color:#6e7681;margin-top:8px;}
 </style>
 <div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<ul class="nav nav-tabs customtab m-b-20" role="tablist">
-				<li class="nav-item"> <a class="nav-link active " data-toggle="tab" href="#cliente" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Cliente</span></a> </li>
-				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#<?= $role == 1 ? 'acessosCliente' : 'acessos' ?>" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-desktop"></i></span> <span class="hidden-xs-down">Acessos</span></a></li><?php } ?>
-				<?php if($role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usuarios" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Usuários</span></a></li><?php } ?>
-				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contratos" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-write"></i></span> <span class="hidden-xs-down">Contratos</span></a></li><?php } ?>
-				<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#token" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-key"></i></span> <span class="hidden-xs-down">Token</span></a></li><?php } ?>
-			</ul>
+	<div class="cli-card">
+
+		<!-- Page head -->
+		<div class="cli-page-head">
+			<div class="cli-page-head-left">
+				<div class="cli-eyebrow">Minha Empresa</div>
+				<h1><?= h($cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?: $cliente->nomefantasia)) ?></h1>
+				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
+			</div>
+			<?php if ($role == 0): ?>
+				<div>
+					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]) ?>
+				</div>
+			<?php endif; ?>
+		</div>
+
+		<!-- Tab nav -->
+		<ul class="nav cli-tabs-nav" role="tablist">
+			<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#cliente" role="tab"><i class="fas fa-user"></i> Cliente</a></li>
+			<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#<?= $role == 1 ? 'acessosCliente' : 'acessos' ?>" role="tab"><i class="fas fa-desktop"></i> Acessos</a></li><?php } ?>
+			<?php if($role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usuarios" role="tab"><i class="fas fa-users"></i> Usuários</a></li><?php } ?>
+			<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contratos" role="tab"><i class="fas fa-file-contract"></i> Contratos</a></li><?php } ?>
+			<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#token" role="tab"><i class="fas fa-key"></i> Token</a></li><?php } ?>
+		</ul>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente">
 					<?=  $this->Form->create($cliente, ['class' => 'form-material']) ?>
@@ -307,10 +354,11 @@
 							</div>
 						<?= $this->Form->end(); ?>
 					<?php } ?>
-					<hr>
+					<div class="cli-section-title" style="margin-top:12px;">Acessos cadastrados</div>
 					<div class="table-responsive">
-						<table class="table table-hover" id="tableAtivos">
-							<thead class="text-primary">
+						<table class="cli-acessos-table" id="tableAtivos">
+							<thead>
+								<tr>
 								<th>Serviço</th>
 								<th>Provedor</th>
 								<th>IP</th>
@@ -320,7 +368,8 @@
 								<th>Protocolo</th>
 								<th>Senha</th>
 								<th>Ativo</th>
-								<?php if ($role == 0) { ?> <th width="10%">Ações</th> <?php } ?>
+								<?php if ($role == 0) { ?> <th style="width:10%">Ações</th> <?php } ?>
+								</tr>
 							</thead>
 							<tbody>
 								<?php foreach ($acessos as $reg):
@@ -459,21 +508,19 @@
 				</div>
 				<?php }if($permissaoacesso || $role == 0){ ?>
 				<div class="tab-pane" id="token">
-					<div class="row">
-						<div class="col-12">
-							<label class="control-label text-muted"> Token: </label> <br>
-							<?= $cliente->token ?>
-						</div><?php if($role == 0) { ?>
-						<div class="col-12">
-							<?= $this->Html->link('Atualizar Token', [], ['class' => 'btn-atualizaToken btn btn-pgm btn-pgm-salvar btn-success float-right salvarcliente']) ?>
-						</div><?php } ?>
+					<div class="cli-section-title">Token de Integração API</div>
+					<div class="cli-token-box" id="token-display"><?= h($cliente->token) ?></div>
+					<p class="cli-token-note">Este token é utilizado para autenticar integrações externas com a API do portal. Mantenha-o em segurança.</p>
+					<?php if($role == 0) { ?>
+					<div class="mt-3">
+						<?= $this->Html->link('<i class="fas fa-sync-alt"></i> Atualizar Token', [], ['class' => 'btn-atualizaToken btn btn-sm btn-outline-warning salvarcliente', 'escape' => false]) ?>
 					</div>
+					<?php } ?>
 				</div>
 				<?php }  ?>
-			</div>
-		</div>
-	</div>
-</div>
+		</div><!-- /tab-content -->
+	</div><!-- /cli-card -->
+</div><!-- /col-md-12 -->
 <!-- Modal gerir e-mails de faturamento -->
 <div class="modal fade none-border" id="modal-emails-faturamento">
 	<div class="modal-dialog">
