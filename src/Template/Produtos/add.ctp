@@ -5,6 +5,7 @@
   $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 ?>
 
+<div class="col-md-12 p-0">
 <div class="prd-form-root">
 <?= $this->Form->create($produto, ['id' => 'prdForm', 'novalidate' => true]) ?>
 
@@ -350,6 +351,7 @@
 
 <?= $this->Form->end() ?>
 </div><!-- /.prd-form-root -->
+</div>
 
 <script>
 (function () {

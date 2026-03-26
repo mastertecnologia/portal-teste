@@ -42,6 +42,14 @@
   min-height: 80vh;
 }
 
+/* Bootstrap: em .row, filho sem .col-* não expande — KPIs empilham (layout “desconfigurado”) */
+.row > .prd-root,
+.row > .prd-form-root {
+  flex: 0 0 100%;
+  max-width: 100%;
+  width: 100%;
+}
+
 /* ══════════════════════════════════════════════════════════════
    INDEX — TOPBAR
 ══════════════════════════════════════════════════════════════ */

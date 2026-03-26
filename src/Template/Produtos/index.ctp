@@ -46,6 +46,7 @@
   }
 ?>
 
+<div class="col-md-12 p-0">
 <div class="prd-root">
 
   <!-- ── Topbar ─────────────────────────────────────────────── -->
@@ -317,6 +318,7 @@
   </div><!-- /.prd-table-wrap -->
 
 </div><!-- /.prd-root -->
+</div>
 
 <script>
 (function () {
