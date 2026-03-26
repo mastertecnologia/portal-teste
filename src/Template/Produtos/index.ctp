@@ -63,6 +63,11 @@
     </div>
     <div class="prd-topbar-actions">
       <?= $this->Html->link(
+        '<i class="fas fa-calculator"></i> Precificação',
+        ['action' => 'precificacao'],
+        ['class' => 'btn-prd-outline', 'escape' => false]
+      ) ?>
+      <?= $this->Html->link(
         '<i class="fas fa-warehouse"></i> Estoque',
         ['action' => 'estoque'],
         ['class' => 'btn-prd-outline', 'escape' => false, 'target' => '_blank']

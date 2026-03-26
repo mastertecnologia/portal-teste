@@ -74,6 +74,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/produtos/addAPI', ['controller' => 'Produtos', 'action' => 'addAPI'])->setMethods(['POST']);
     $routes->connect('/produtos/list-api', ['controller' => 'Produtos', 'action' => 'listAPI'])->setMethods(['GET']);
     $routes->connect('/produtos/listAPI', ['controller' => 'Produtos', 'action' => 'listAPI'])->setMethods(['GET']);
+    $routes->connect('/produtos/precificacao', ['controller' => 'Produtos', 'action' => 'precificacao'])->setMethods(['GET']);
+    $routes->connect('/produtos/salvar-precos', ['controller' => 'Produtos', 'action' => 'salvarPrecos'])->setMethods(['POST']);
+    $routes->connect('/produtos/salvarPrecos', ['controller' => 'Produtos', 'action' => 'salvarPrecos'])->setMethods(['POST']);
     // API integração ERP: clientes e contratos
     $routes->connect('/clientes/add-api', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
     $routes->connect('/clientes/addAPI', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
