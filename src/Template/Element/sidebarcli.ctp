@@ -60,13 +60,13 @@
 			<ul id="sidebarnav" class="p-t-30">
 				<li class="pgm-nav-section-label" aria-hidden="true"><span>Menu</span></li>
 				<?php if (!empty($permissaoacesso)) : ?>
-					<li class="<?= $dashboard ?>"><?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu">Dashboard</span>', ['controller' => 'Users', 'action' => 'dashboard'], ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
-					<li class="<?= $clientesActive ?>"><?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu">Empresa</span>', ['controller' => 'Clientes', 'action' => 'edit', $idcliente], ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
-					<li class="<?= $orcamentosActive ?>"><?= $this->Html->link('<i class="fa fa-file-invoice-dollar"></i><span class="hide-menu">Orçamentos</span>', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<li class="<?= $dashboard ?>"><?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu">Dashboard</span>', '/users/dashboard', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<li class="<?= $clientesActive ?>"><?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu">Empresa</span>', "/clientes/edit/$idcliente", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<li class="<?= $orcamentosActive ?>"><?= $this->Html->link('<i class="fa fa-file-invoice-dollar"></i><span class="hide-menu">Orçamentos</span>', '/orcamentos/index', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 				<?php endif; ?>
-				<li class="<?= $ticketsActive ?>"><?= $this->Html->link('<i class="fa fa-ticket-alt"></i><span class="hide-menu">Tickets</span>', ['controller' => 'Tickets', 'action' => 'indexcliente'], ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+				<li class="<?= $ticketsActive ?>"><?= $this->Html->link('<i class="fa fa-ticket-alt"></i><span class="hide-menu">Tickets</span>', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>
-				<li id="mini-logout" style="display:<?= $display ?>;"><?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', ['controller' => 'Users', 'action' => 'logout'], ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+				<li id="mini-logout" style="display:<?= $display ?>;"><?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', '/users/logout', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 			</ul>
 		</nav>
 	</div>

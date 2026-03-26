@@ -208,7 +208,7 @@
 				<li id="mini-logout" style="display:<?= $display ?>;">
 					<?= $this->Html->link(
 						'<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>',
-						['controller' => 'Users', 'action' => 'logout'],
+						'/users/logout',
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>

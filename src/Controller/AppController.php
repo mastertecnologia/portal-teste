@@ -32,6 +32,7 @@ class AppController extends Controller {
 		$this->loadComponent('Security', [
 			'unlockedActions' => [
 				'login', 'logout', 'loginempresa', 'acessoEmpresa', 'loginduasetapas',
+				'add', 'edit',
 				// Troca de empresa via dropdown (AJAX) não envia _Token.
 				'alteraempresa',
 				'carrinho', 'carrinhoadd', 'carrinhoedititem', 'carrinhodelitem', 'valortotal', 'acaoindex',
@@ -89,19 +90,34 @@ class AppController extends Controller {
 	}
 
 	public function afterFilter(Event $event) {
-		$this->applyIntegrationCorsHeaders();
+		$controllerLower = strtolower($this->request->getParam('controller'));
+		$actionLower = strtolower($this->request->getParam('action'));
+		$apiControllers = ['ordensservico' => ['listapi', 'refreshapi'], 'clientes' => ['addapi', 'listapi'], 'produtos' => ['addapi', 'listapi'], 'clicontratos' => ['addapi', 'listapi']];
+		if (isset($apiControllers[$controllerLower]) && in_array($actionLower, $apiControllers[$controllerLower], true)) {
+			$this->response = $this->response->withHeader('Access-Control-Allow-Origin', '*')
+				->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
+				->withHeader('Access-Control-Allow-Headers', 'Content-Type, empresa, token, situacao, id, cnpj, codigo');
+		}
 	}
 
 	public function beforeFilter(Event $event) {
 		ini_set('memory_limit', '518M');
 		set_time_limit(0);
 
-		// APIs de integração ERP: CORS com allowlist opcional por env.
-		// Env: PGM_CORS_ALLOWED_ORIGINS=https://erp1.com,https://erp2.com
-		if ($this->isIntegrationApiRequest()) {
-			$originAllowed = $this->applyIntegrationCorsHeaders();
+		$controller = $this->request->getParam('controller');
+		$action = $this->request->getParam('action');
+		$controllerLower = strtolower($controller);
+		$actionLower = strtolower($action);
+
+		// APIs de integração ERP: CORS para o ERP conseguir chamar de outro domínio
+		$apiControllers = ['ordensservico' => ['listapi', 'refreshapi'], 'clientes' => ['addapi', 'listapi'], 'produtos' => ['addapi', 'listapi'], 'clicontratos' => ['addapi', 'listapi']];
+		if (isset($apiControllers[$controllerLower]) && in_array($actionLower, $apiControllers[$controllerLower], true)) {
+			$this->response = $this->response->withHeader('Access-Control-Allow-Origin', '*')
+				->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
+				->withHeader('Access-Control-Allow-Headers', 'Content-Type, empresa, token, situacao, id, cnpj, codigo')
+				->withHeader('Access-Control-Max-Age', '86400');
 			if ($this->request->is('options')) {
-				return $originAllowed ? $this->response->withStatus(204) : $this->response->withStatus(403);
+				return $this->response->withStatus(204);
 			}
 		}
 
@@ -208,7 +224,12 @@ class AppController extends Controller {
 		// APIs de integração ERP: permitir mesmo sem usuário logado (auth por token no header)
 		$controller = strtolower($this->request->getParam('controller'));
 		$action = strtolower($this->request->getParam('action'));
-		$apiActions = $this->integrationApiActions();
+		$apiActions = [
+			'ordensservico' => ['listapi', 'refreshapi'],
+			'clientes' => ['addapi', 'listapi'],
+			'produtos' => ['addapi', 'listapi'],
+			'clicontratos' => ['addapi', 'listapi'],
+		];
 		if (isset($apiActions[$controller]) && in_array($action, $apiActions[$controller], true)) {
 			return true;
 		}
@@ -241,48 +262,5 @@ class AppController extends Controller {
 				$responseData,
 				JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
 			));
-	}
-
-	protected function integrationApiActions() {
-		return [
-			'ordensservico' => ['listapi', 'refreshapi'],
-			'clientes' => ['addapi', 'listapi'],
-			'produtos' => ['addapi', 'listapi'],
-			'clicontratos' => ['addapi', 'listapi'],
-		];
-	}
-
-	protected function isIntegrationApiRequest() {
-		$controller = strtolower((string)$this->request->getParam('controller'));
-		$action = strtolower((string)$this->request->getParam('action'));
-		$apiActions = $this->integrationApiActions();
-		return isset($apiActions[$controller]) && in_array($action, $apiActions[$controller], true);
-	}
-
-	protected function applyIntegrationCorsHeaders() {
-		if (!$this->isIntegrationApiRequest()) {
-			return false;
-		}
-
-		$origin = (string)$this->request->getHeaderLine('Origin');
-		$rawAllowlist = (string)env('PGM_CORS_ALLOWED_ORIGINS', '');
-		$allowedOrigins = array_values(array_filter(array_map('trim', explode(',', $rawAllowlist))));
-		$allowAnyOrigin = empty($allowedOrigins);
-		$originAllowed = $allowAnyOrigin || ($origin !== '' && in_array($origin, $allowedOrigins, true));
-		if (!$originAllowed) {
-			return false;
-		}
-
-		$allowOriginHeader = $allowAnyOrigin ? '*' : $origin;
-		$this->response = $this->response
-			->withHeader('Access-Control-Allow-Origin', $allowOriginHeader)
-			->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
-			->withHeader('Access-Control-Allow-Headers', 'Content-Type, empresa, token, situacao, id, cnpj, codigo')
-			->withHeader('Access-Control-Max-Age', '86400');
-		if (!$allowAnyOrigin) {
-			$this->response = $this->response->withHeader('Vary', 'Origin');
-		}
-
-		return true;
 	}
 }
