@@ -1028,7 +1028,9 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
  * form-pages.scss (.form-material .form-control:focus): gradiente com background-repeat
  * default em textarea preenche toda a altura com a cor do tema → “fica azul”.
  */
-.orc-premium-form.form-material textarea.form-control {
+.orc-premium-form.form-material textarea.form-control,
+.orc-premium-form.form-material #observacao.form-control,
+.orc-premium-form.form-material .orc-item-obs-field.form-control {
   background-image: none !important;
   background-color: #fff !important;
   border: 1px solid var(--orc-border, #e5e4e0) !important;
@@ -1040,12 +1042,20 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
   resize: vertical;
 }
 
-.orc-premium-form.form-material textarea.form-control:focus {
+.orc-premium-form.form-material textarea.form-control:focus,
+.orc-premium-form.form-material #observacao.form-control:focus,
+.orc-premium-form.form-material .orc-item-obs-field.form-control:focus {
   background-image: none !important;
   background-size: auto !important;
   border-color: var(--orc-teal-mid, #5dcaa5) !important;
   box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.12) !important;
   outline: none !important;
+}
+
+.orc-premium-form.form-material input.orc-item-obs-field.form-control,
+.orc-premium-form.form-material input#observacao.form-control {
+  min-height: 0 !important;
+  resize: none !important;
 }
 
 /* Botões do formulário premium (cancelar / limpar) */

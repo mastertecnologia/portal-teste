@@ -159,7 +159,7 @@
 				<div class="col-lg-12 col-md-12">
 					<div class="form-group">
 						<label class="control-label">Descrição adicional</label>
-						<?= $this->Form->control('observacao', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Detalhes...']) ?>
+						<?= $this->Form->control('observacao', ['class' => 'form-control orc-item-obs-field', 'label' => false, 'placeholder' => 'Detalhes...', 'id' => 'observacao']) ?>
 					</div>
 				</div>
 			</div>
@@ -829,9 +829,21 @@
 		return b === 'prod' || b === 'lic' || b === 'loc';
 	}
 
+	function orcCatalogClearStockLoadingAll(msg) {
+		var t = msg || 'Estoque indisponível';
+		$('#orc-catalog-body .orc-catalog-stock-line.orc-catalog-stock-line--loading').each(function() {
+			$(this).removeClass('orc-catalog-stock-line--loading').addClass('orc-catalog-stock-line--err');
+			$(this).text(t);
+		});
+	}
+
 	function orcCatalogFetchEstoques(items) {
 		var url = window.orcEstoquesLoteUrl;
-		if (!url || !items || !items.length) return;
+		if (!items || !items.length) return;
+		if (!url) {
+			orcCatalogClearStockLoadingAll('Estoque indisponível');
+			return;
+		}
 		var cods = [];
 		items.forEach(function(p) {
 			if (!orcCatalogBadgeConsultaEstoque(p.badge)) return;
@@ -848,7 +860,10 @@
 			data: { codigos: cods.join(',') },
 			dataType: 'json',
 			success: function(map) {
-				if (!map || typeof map !== 'object') return;
+				if (!map || typeof map !== 'object' || map.erro) {
+					orcCatalogClearStockLoadingAll();
+					return;
+				}
 				$('#orc-catalog-body .orc-catalog-item').each(function() {
 					var cod = ($(this).attr('data-codigo') || '').trim();
 					if (!cod) return;
@@ -870,10 +885,7 @@
 				});
 			},
 			error: function() {
-				$('#orc-catalog-body .orc-catalog-stock-line.orc-catalog-stock-line--loading').each(function() {
-					$(this).removeClass('orc-catalog-stock-line--loading').addClass('orc-catalog-stock-line--err');
-					$(this).text('Estoque indisponível');
-				});
+				orcCatalogClearStockLoadingAll();
 			}
 		});
 	}
@@ -934,11 +946,22 @@
 		orcRenderCatalog(filtered);
 	}
 
-	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function() {
-		var idx = $(this).data('idx');
+	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function(e) {
+		e.preventDefault();
+		var idx = $(this).attr('data-idx');
+		if (idx === undefined || idx === '') return;
+		idx = parseInt(idx, 10);
+		if (isNaN(idx)) return;
 		var p = orcCatalogRenderedItems[idx];
-		if (!p) return;
-		$('#idproduto').val(p.id).trigger('change');
+		if (p == null) return;
+		var rawId = p.id != null ? String(p.id) : '';
+		var $sel = $('#idproduto');
+		if ($sel.data('selectpicker')) {
+			$sel.selectpicker('val', rawId);
+		} else {
+			$sel.val(rawId);
+		}
+		$sel.trigger('change');
 		setTimeout(function() {
 			if ($('#servico').val() === '' && (p.descricao || p.nome)) {
 				$('#servico').val(p.descricao || p.nome);
