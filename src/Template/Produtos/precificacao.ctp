@@ -248,7 +248,8 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
     <div class="prec-grid-wrap">
 
       <div class="prec-grid-toolbar">
-        <input class="prec-search" id="prec-search" type="text" placeholder="Buscar código ou descrição…" oninput="refreshTable()">
+        <label for="prec-search" style="position:absolute;left:-9999px;">Buscar itens da precificação</label>
+        <input class="prec-search" id="prec-search" name="prec_search" type="text" placeholder="Buscar código ou descrição…" oninput="refreshTable()">
         <div class="prec-tipo-pills">
           <button class="prec-tipo-pill active" data-tipo="0" onclick="setTipo(0,this)">Todos</button>
           <button class="prec-tipo-pill" data-tipo="1" onclick="setTipo(1,this)">Produtos</button>
@@ -265,7 +266,10 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
         <table class="prec-table" id="prec-table">
           <thead>
             <tr>
-              <th style="width:30px;"><input type="checkbox" class="prec-check" id="chk-all" onchange="toggleAll(this)"></th>
+              <th style="width:30px;">
+                <label for="chk-all" style="position:absolute;left:-9999px;">Selecionar todos os itens</label>
+                <input type="checkbox" class="prec-check" id="chk-all" name="chk_all" onchange="toggleAll(this)">
+              </th>
               <th style="width:36px;"></th>
               <th>Código</th>
               <th>Descrição</th>
@@ -508,7 +512,7 @@ function refreshTable() {
     var sel = state.selected.has(p.id);
 
     return '<tr class="' + (sel ? 'selected' : '') + '" data-id="' + p.id + '">' +
-      '<td><input type="checkbox" class="prec-check row-chk" data-id="' + p.id + '" ' + (sel ? 'checked' : '') + ' onchange="toggleRow(' + p.id + ',this)"></td>' +
+      '<td><input type="checkbox" class="prec-check row-chk" data-id="' + p.id + '" name="row_chk_' + p.id + '" aria-label="Selecionar item ' + escHtml(p.codigo) + '" ' + (sel ? 'checked' : '') + ' onchange="toggleRow(' + p.id + ',this)"></td>' +
       '<td>' + avatarHtml(p.tipo) + '</td>' +
       '<td class="prec-td-code">' + escHtml(p.codigo) + '</td>' +
       '<td class="prec-td-desc" title="' + escHtml(p.descricao) + '">' + escHtml(p.descricao) + '</td>' +
@@ -519,7 +523,7 @@ function refreshTable() {
         (mkAtual !== null ? ('<div style="display:flex;align-items:center;gap:5px;"><span class="prec-td-mono" style="font-size:.72rem;">' + fmt(mkAtual, 1) + '%</span><div class="prec-bar-mini"><div class="prec-bar-fill" style="width:' + Math.round(barW) + '%"></div></div></div>') : '<span style="color:var(--prd-muted);font-size:.72rem;">—</span>') +
       '</td>' +
       '<td></td>' +
-      '<td><input type="number" class="prec-novo-preco' + (changed ? ' changed' : '') + '" data-id="' + p.id + '" value="' + (novoPreco !== null ? novoPreco.toFixed(2) : '') + '" step="0.01" min="0" oninput="onPrecoEdit(this)" onblur="onPrecoBlur(this)"></td>' +
+      '<td><input type="number" class="prec-novo-preco' + (changed ? ' changed' : '') + '" data-id="' + p.id + '" name="novo_preco_' + p.id + '" aria-label="Novo preço para item ' + escHtml(p.codigo) + '" value="' + (novoPreco !== null ? novoPreco.toFixed(2) : '') + '" step="0.01" min="0" oninput="onPrecoEdit(this)" onblur="onPrecoBlur(this)"></td>' +
       '<td class="prec-td-margem ' + margemClass(novaMargem) + '">' + (novaMargem !== null ? fmt(novaMargem, 2) + '%' : '—') + '</td>' +
       '<td class="prec-delta ' + (delta === null ? 'same' : delta > 0 ? 'up' : delta < 0 ? 'down' : 'same') + '">' +
         (delta !== null ? (delta >= 0 ? '+' : '') + fmtBRL(delta) + (deltaPct !== null ? '<br><span style="font-size:.65rem;">' + (deltaPct >= 0 ? '+' : '') + fmt(deltaPct, 1) + '%</span>' : '') : '—') +
