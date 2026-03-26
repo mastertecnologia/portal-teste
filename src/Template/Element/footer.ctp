@@ -31,6 +31,6 @@
 
 <footer class="footer">
 	&copy; <script>document.write(new Date().getFullYear())</script> 
-	<a href="http://www.gridsistemas.com.br">Desenvolvido por <strong>Grid Sistemas</strong> &copy;	
+	<a href="http://www.gridsistemas.com.br">Desenvolvido por <strong>Grid Sistemas</strong></a> &copy;
 
 </footer>
