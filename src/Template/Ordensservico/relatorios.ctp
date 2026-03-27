@@ -31,6 +31,20 @@ foreach ($modelosRelatorio as $_m) {
 		$optsModelo[$_m['id']] = $_m['titulo'] ?? $_m['id'];
 	}
 }
+$dataIniUi = '';
+if (!empty($data_ini)) {
+	$ts = strtotime((string)$data_ini);
+	$dataIniUi = $ts ? date('d/m/Y', $ts) : (string)$data_ini;
+}
+$dataFimUi = '';
+if (!empty($data_fim)) {
+	$ts = strtotime((string)$data_fim);
+	$dataFimUi = $ts ? date('d/m/Y', $ts) : (string)$data_fim;
+}
+$mesUi = '';
+if (!empty($mes) && preg_match('/^\d{4}-\d{2}$/', (string)$mes)) {
+	$mesUi = substr((string)$mes, 5, 2) . '/' . substr((string)$mes, 0, 4);
+}
 ?>
 <style>
 @media print {
@@ -86,15 +100,15 @@ foreach ($modelosRelatorio as $_m) {
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>De</p>
-					<input type="date" name="data_ini" id="rel-data-ini" class="form-control" value="<?= h($data_ini ?? '') ?>" />
+					<input type="text" name="data_ini" id="rel-data-ini" class="form-control rel-date" value="<?= h($dataIniUi) ?>" placeholder="dd/mm/aaaa" autocomplete="off" />
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>Até</p>
-					<input type="date" name="data_fim" id="rel-data-fim" class="form-control" value="<?= h($data_fim ?? '') ?>" />
+					<input type="text" name="data_fim" id="rel-data-fim" class="form-control rel-date" value="<?= h($dataFimUi) ?>" placeholder="dd/mm/aaaa" autocomplete="off" />
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>Mês</p>
-					<input type="month" name="mes" id="rel-mes" class="form-control" value="<?= h($mes ?? '') ?>" />
+					<input type="text" name="mes" id="rel-mes" class="form-control rel-month" value="<?= h($mesUi) ?>" placeholder="mm/aaaa" autocomplete="off" />
 				</div>
 			</div>
 			<div class="m-t-15">
@@ -233,32 +247,43 @@ $(function () {
 	var $fim = $('#rel-data-fim');
 	var manualRangeEdit = false;
 	function pad2(n) { return (n < 10 ? '0' : '') + n; }
-	function currentYm() {
+	function currentMy() {
 		var d = new Date();
-		return d.getFullYear() + '-' + pad2(d.getMonth() + 1);
+		return pad2(d.getMonth() + 1) + '/' + d.getFullYear();
 	}
-	function monthBounds(ym) {
-		if (!/^\d{4}-\d{2}$/.test(ym)) return null;
-		var y = parseInt(ym.slice(0, 4), 10);
-		var m = parseInt(ym.slice(5, 7), 10);
+	function monthBounds(my) {
+		if (!/^\d{2}\/\d{4}$/.test(my)) return null;
+		var m = parseInt(my.slice(0, 2), 10);
+		var y = parseInt(my.slice(3, 7), 10);
 		if (!y || !m || m < 1 || m > 12) return null;
 		var last = new Date(y, m, 0).getDate();
 		return {
-			ini: y + '-' + pad2(m) + '-01',
-			fim: y + '-' + pad2(m) + '-' + pad2(last)
+			ini: pad2(1) + '/' + pad2(m) + '/' + y,
+			fim: pad2(last) + '/' + pad2(m) + '/' + y
 		};
 	}
 	function syncRangeFromMonth(force) {
-		var ym = ($mes.val() || '').trim();
-		var b = monthBounds(ym);
+		var my = ($mes.val() || '').trim();
+		var b = monthBounds(my);
 		if (!b) return;
 		if (force || !manualRangeEdit || !$ini.val() || !$fim.val()) {
 			$ini.val(b.ini);
 			$fim.val(b.fim);
 		}
 	}
+	function relInstallDatepickers() {
+		if (typeof $.fn.datepicker !== 'function') return;
+		$ini.datepicker({ format: 'dd/mm/yyyy', weekStart: 1 }).on('changeDate', function () { manualRangeEdit = true; });
+		$fim.datepicker({ format: 'dd/mm/yyyy', weekStart: 1 }).on('changeDate', function () { manualRangeEdit = true; });
+		$mes.datepicker({ format: 'mm/yyyy', weekStart: 1, minViewMode: 'months', viewMode: 'months' })
+			.on('changeDate', function () {
+				manualRangeEdit = false;
+				syncRangeFromMonth(true);
+			});
+	}
+	relInstallDatepickers();
 	if (!$mes.val()) {
-		$mes.val(currentYm());
+		$mes.val(currentMy());
 	}
 	if (!$ini.val() && !$fim.val()) {
 		syncRangeFromMonth(true);

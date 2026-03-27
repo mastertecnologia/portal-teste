@@ -1017,6 +1017,36 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	background: var(--os-bg4);
 	color: var(--os-text);
 }
+body.os-index-page .datepicker.dropdown-menu {
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border2);
+	color: var(--os-text2);
+}
+body.os-index-page .datepicker table tr td,
+body.os-index-page .datepicker table tr th {
+	color: var(--os-text2);
+}
+body.os-index-page .datepicker table tr td.day:hover,
+body.os-index-page .datepicker table tr td.month:hover,
+body.os-index-page .datepicker table tr td.year:hover,
+body.os-index-page .datepicker table tr th:hover {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+body.os-index-page .datepicker table tr td.active,
+body.os-index-page .datepicker table tr td.active:hover,
+body.os-index-page .datepicker table tr td span.active,
+body.os-index-page .datepicker table tr td span.active:hover {
+	background: var(--os-accent);
+	color: #fff;
+}
+body.os-index-page .datepicker table tr td.disabled,
+body.os-index-page .datepicker table tr td span.disabled {
+	color: var(--os-text3);
+}
+body.os-index-page .datepicker table thead tr th.switch {
+	color: var(--os-text);
+}
 .os-index-shell .os-rel-filtros .form-control:focus,
 .os-index-shell .os-rel-email .form-control:focus {
 	border-color: var(--os-accent);

@@ -1356,10 +1356,27 @@ class OrdensservicoController extends AppController {
 				return '';
 			}
 			$s = $toScalar($v);
+			if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $s, $m)) {
+				$dd = (int)$m[1];
+				$mm = (int)$m[2];
+				$yy = (int)$m[3];
+				if (checkdate($mm, $dd, $yy)) {
+					return sprintf('%04d-%02d-%02d', $yy, $mm, $dd);
+				}
+				return '';
+			}
 			return preg_match('/^\d{4}-\d{2}-\d{2}$/', $s) ? $s : '';
 		};
 		$toMonthYm = function ($v) use ($toScalar) {
 			$s = $toScalar($v);
+			if (preg_match('/^(\d{2})\/(\d{4})$/', $s, $m)) {
+				$mm = (int)$m[1];
+				$yy = (int)$m[2];
+				if ($mm >= 1 && $mm <= 12) {
+					return sprintf('%04d-%02d', $yy, $mm);
+				}
+				return '';
+			}
 			return preg_match('/^\d{4}-\d{2}$/', $s) ? $s : '';
 		};
 		$cliente = $toScalar($cliente);
