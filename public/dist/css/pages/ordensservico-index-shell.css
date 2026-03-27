@@ -976,8 +976,18 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 .os-index-shell .os-rel-email .form-control {
 	background: var(--os-bg);
 	border-color: var(--os-border2);
-	color: var(--os-text);
+	color: var(--os-text) !important;
 	font-size: 12px;
+}
+.os-index-shell .os-rel-filtros input.rel-date,
+.os-index-shell .os-rel-filtros input.rel-month {
+	background: #0d0f14 !important;
+	color: #f0f2f8 !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.os-index-shell .os-rel-filtros input.rel-date::placeholder,
+.os-index-shell .os-rel-filtros input.rel-month::placeholder {
+	color: #555e78 !important;
 }
 .os-index-shell .os-rel-filtros input[type="date"],
 .os-index-shell .os-rel-filtros input[type="month"],
@@ -1018,34 +1028,44 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	color: var(--os-text);
 }
 body.os-index-page .datepicker.dropdown-menu {
-	background: var(--os-bg2);
-	border: 1px solid var(--os-border2);
-	color: var(--os-text2);
+	background: #13161d !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	color: #8b92a8 !important;
+	z-index: 14000 !important;
+	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
 }
 body.os-index-page .datepicker table tr td,
 body.os-index-page .datepicker table tr th {
-	color: var(--os-text2);
+	color: #8b92a8 !important;
 }
 body.os-index-page .datepicker table tr td.day:hover,
 body.os-index-page .datepicker table tr td.month:hover,
 body.os-index-page .datepicker table tr td.year:hover,
 body.os-index-page .datepicker table tr th:hover {
-	background: var(--os-bg4);
-	color: var(--os-text);
+	background: #222736 !important;
+	color: #f0f2f8 !important;
 }
 body.os-index-page .datepicker table tr td.active,
 body.os-index-page .datepicker table tr td.active:hover,
 body.os-index-page .datepicker table tr td span.active,
 body.os-index-page .datepicker table tr td span.active:hover {
-	background: var(--os-accent);
-	color: #fff;
+	background: #00c08b !important;
+	color: #fff !important;
 }
 body.os-index-page .datepicker table tr td.disabled,
 body.os-index-page .datepicker table tr td span.disabled {
-	color: var(--os-text3);
+	color: #555e78 !important;
 }
 body.os-index-page .datepicker table thead tr th.switch {
-	color: var(--os-text);
+	color: #f0f2f8 !important;
+}
+body.os-index-page .datepicker table thead tr th.prev,
+body.os-index-page .datepicker table thead tr th.next {
+	color: #8b92a8 !important;
+}
+body.os-index-page .datepicker table thead tr th.prev:hover,
+body.os-index-page .datepicker table thead tr th.next:hover {
+	color: #f0f2f8 !important;
 }
 .os-index-shell .os-rel-filtros .form-control:focus,
 .os-index-shell .os-rel-email .form-control:focus {

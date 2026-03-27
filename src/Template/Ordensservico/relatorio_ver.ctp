@@ -24,13 +24,26 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 	.no-print { display: none !important; }
 }
 .os-rel-doc { max-width: 1100px; margin: 0 auto; padding: 16px; font-size: 13px; }
-.os-rel-doc h1 { font-size: 1.25rem; margin: 0 0 4px; }
-.os-rel-doc .meta { color: #555; font-size: 12px; margin-bottom: 16px; }
-.os-rel-doc table { width: 100%; border-collapse: collapse; }
-.os-rel-doc th, .os-rel-doc td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-.os-rel-doc th { background: #f0f0f0; font-size: 11px; text-transform: uppercase; }
+.os-rel-doc {
+	background: #13161d;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 12px;
+	color: #f0f2f8;
+}
+.os-rel-doc h1 { font-size: 1.25rem; margin: 0 0 4px; color: #f0f2f8; }
+.os-rel-doc .meta { color: #8b92a8; font-size: 12px; margin-bottom: 16px; }
+.os-rel-doc table { width: 100%; border-collapse: collapse; background: #0d0f14; }
+.os-rel-doc th, .os-rel-doc td { border: 1px solid rgba(255, 255, 255, 0.12); padding: 6px 8px; text-align: left; color: #f0f2f8; }
+.os-rel-doc th { background: #1a1e28; font-size: 11px; text-transform: uppercase; color: #8b92a8; }
 .os-rel-doc .num { text-align: right; }
-.os-rel-doc .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #eee; }
+.os-rel-doc .tag {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 11px;
+	background: rgba(0, 192, 139, 0.18);
+	color: #00c08b;
+}
 </style>
 
 <div class="os-index-shell no-print" style="margin:0 0 12px;border-radius:12px;padding:12px 16px;">
