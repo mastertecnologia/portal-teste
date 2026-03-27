@@ -22,6 +22,48 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 	#os-rel-printable, #os-rel-printable * { visibility: visible; }
 	#os-rel-printable { position: absolute; left: 0; top: 0; width: 100%; }
 	.no-print { display: none !important; }
+	/* Tema claro na impressão: fundos escuros somem no papel → texto precisa ser escuro */
+	#os-rel-printable.os-rel-doc {
+		background: #fff !important;
+		color: #111 !important;
+		border: none !important;
+		border-radius: 0 !important;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+	#os-rel-printable h1 {
+		color: #000 !important;
+		font-weight: 700 !important;
+		font-size: 16pt !important;
+	}
+	#os-rel-printable .meta {
+		color: #333 !important;
+		font-size: 10pt !important;
+		font-weight: 500 !important;
+	}
+	#os-rel-printable table {
+		background: #fff !important;
+	}
+	#os-rel-printable th {
+		background: #e0e0e0 !important;
+		color: #000 !important;
+		font-weight: 700 !important;
+		font-size: 9pt !important;
+		border: 1px solid #333 !important;
+		padding: 6px 8px !important;
+	}
+	#os-rel-printable td {
+		color: #111 !important;
+		font-weight: 500 !important;
+		border: 1px solid #666 !important;
+		padding: 5px 8px !important;
+	}
+	#os-rel-printable .tag {
+		background: #e8f5f1 !important;
+		color: #0d5c45 !important;
+		border: 1px solid #0d5c45 !important;
+		font-weight: 600 !important;
+	}
 }
 .os-rel-doc { max-width: 1100px; margin: 0 auto; padding: 16px; font-size: 13px; }
 .os-rel-doc {
@@ -30,11 +72,12 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 	border-radius: 12px;
 	color: #f0f2f8;
 }
-.os-rel-doc h1 { font-size: 1.25rem; margin: 0 0 4px; color: #f0f2f8; }
+.os-rel-doc h1 { font-size: 1.25rem; margin: 0 0 4px; color: #f0f2f8; font-weight: 600; }
 .os-rel-doc .meta { color: #8b92a8; font-size: 12px; margin-bottom: 16px; }
 .os-rel-doc table { width: 100%; border-collapse: collapse; background: #0d0f14; }
 .os-rel-doc th, .os-rel-doc td { border: 1px solid rgba(255, 255, 255, 0.12); padding: 6px 8px; text-align: left; color: #f0f2f8; }
-.os-rel-doc th { background: #1a1e28; font-size: 11px; text-transform: uppercase; color: #8b92a8; }
+.os-rel-doc th { background: #1a1e28; font-size: 11px; text-transform: uppercase; color: #c5cad8; font-weight: 600; }
+.os-rel-doc td { font-weight: 500; }
 .os-rel-doc .num { text-align: right; }
 .os-rel-doc .tag {
 	display: inline-block;
@@ -43,6 +86,7 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 	font-size: 11px;
 	background: rgba(0, 192, 139, 0.18);
 	color: #00c08b;
+	font-weight: 500;
 }
 </style>
 

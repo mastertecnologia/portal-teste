@@ -9,13 +9,44 @@ $nf = function ($v) {
 <head>
 	<meta charset="utf-8"/>
 	<style>
-		body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #222; }
-		h1 { font-size: 14pt; margin: 0 0 6px; }
-		.meta { font-size: 9pt; color: #444; margin-bottom: 12px; }
-		table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-		th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
-		th { background: #eee; font-size: 8pt; text-transform: uppercase; }
-		.num { text-align: right; }
+		body {
+			font-family: DejaVu Sans, sans-serif;
+			font-size: 10pt;
+			color: #111;
+			font-weight: normal;
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
+		h1 {
+			font-size: 15pt;
+			margin: 0 0 8px;
+			color: #000;
+			font-weight: bold;
+		}
+		.meta {
+			font-size: 9.5pt;
+			color: #222;
+			margin-bottom: 12px;
+			font-weight: 500;
+			line-height: 1.35;
+		}
+		table { width: 100%; border-collapse: collapse; margin-top: 8px; background: #fff; }
+		th, td {
+			border: 1px solid #444;
+			padding: 5px 7px;
+			text-align: left;
+			color: #111;
+		}
+		th {
+			background: #d8d8d8;
+			font-size: 8.5pt;
+			text-transform: uppercase;
+			font-weight: bold;
+			color: #000;
+		}
+		td { font-weight: 500; }
+		tr:nth-child(even) td { background: #f7f7f7; }
+		.num { text-align: right; font-variant-numeric: tabular-nums; }
 	</style>
 </head>
 <body>
