@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Gestão de Preços</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#0d1117;color:#e6edf3;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Fake admin topbar ── */
+.fake-topbar{height:56px;background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;}
+.fake-topbar-brand{font-weight:800;font-size:.9rem;color:#5cdbc0;letter-spacing:.04em;}
+.fake-topbar-nav{font-size:.75rem;color:#7d8590;margin-left:auto;display:flex;align-items:center;gap:16px;}
+.fake-topbar-nav span{cursor:pointer;}
+.fake-topbar-nav span:hover{color:#e6edf3;}
+
+/* ── prec-root ── */
+.prec-root{display:flex;flex-direction:column;flex:1;overflow:hidden;background:#0d1117;position:relative;}
+
+/* Topbar */
+.prec-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#161b22;border-bottom:1px solid #21262d;flex-shrink:0;}
+.prec-topbar-left{display:flex;align-items:center;gap:12px;}
+.prec-topbar h1{font-size:1.1rem;font-weight:700;color:#5cdbc0;margin:0;}
+.prec-breadcrumb{font-size:.75rem;color:#7d8590;margin:0;}
+.prec-badge-erp{font-size:.7rem;padding:2px 8px;background:rgba(29,158,117,.15);color:#5cdbc0;border:1px solid #1d9e75;border-radius:99px;font-family:'DM Mono',monospace;}
+.prec-back-link{font-size:.78rem;color:#7d8590;text-decoration:none;}
+
+/* Body */
+.prec-body{display:flex;flex:1;overflow:hidden;}
+
+/* ── Panel ── */
+.prec-panel{width:290px;min-width:260px;background:#161b22;border-right:1px solid #21262d;padding:18px 16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex-shrink:0;}
+.prec-panel-title{font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8b949e;margin-bottom:4px;}
+.prec-method-tabs{display:flex;gap:4px;background:#0d1117;border-radius:8px;padding:3px;}
+.prec-method-tab{flex:1;padding:7px 4px;font-size:.72rem;font-weight:600;text-align:center;border-radius:6px;cursor:pointer;color:#7d8590;border:none;background:transparent;}
+.prec-method-tab.active{background:#1d9e75;color:#fff;}
+.prec-param-block{display:flex;flex-direction:column;gap:10px;}
+.prec-param-row{display:flex;flex-direction:column;gap:4px;}
+.prec-param-row label{font-size:.7rem;color:#8b949e;font-weight:600;}
+.prec-param-input{width:100%;padding:8px 10px;background:#0d1117;border:1px solid #1d9e75;border-radius:6px;color:#e6edf3;font-family:'DM Mono',monospace;font-size:.9rem;box-shadow:0 0 0 2px rgba(29,158,117,.2);}
+.prec-param-input.dim{border-color:#21262d;box-shadow:none;}
+.prec-param-hint{font-size:.66rem;color:#8b949e;line-height:1.4;}
+.prec-formula{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:.78rem;color:#e6edf3;line-height:1.7;}
+.formula-label{font-size:.65rem;color:#7d8590;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.formula-eq{color:#5cdbc0;}
+.formula-vals{color:#7d8590;font-size:.68rem;}
+.formula-vals b{color:#e6edf3;}
+/* Custos operacionais */
+.prec-costs{display:flex;flex-direction:column;gap:8px;}
+.prec-cost-row{display:grid;grid-template-columns:1fr 72px;align-items:center;gap:8px;}
+.prec-cost-row label{font-size:.72rem;color:#7d8590;}
+.prec-cost-input{padding:5px 8px;background:#0d1117;border:1px solid #21262d;border-radius:5px;color:#e6edf3;font-family:'DM Mono',monospace;font-size:.78rem;text-align:right;width:100%;}
+.prec-costs-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #21262d;font-size:.78rem;color:#7d8590;}
+.prec-costs-total .val{font-family:'DM Mono',monospace;color:#5cdbc0;font-weight:700;}
+/* Margem mínima alerta */
+.prec-margin-alert{display:none;align-items:center;gap:6px;padding:8px 10px;border-radius:7px;font-size:.72rem;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);color:#fb923c;}
+.prec-margin-alert.show{display:flex;}
+.prec-panel-actions{display:flex;flex-direction:column;gap:8px;margin-top:auto;padding-top:8px;}
+.prec-btn-apply-sel{padding:9px 14px;background:#1d9e75;color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;}
+.prec-btn-apply-all{padding:9px 14px;background:transparent;color:#5cdbc0;border:1px solid #1d9e75;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;}
+.prec-btn-reset{padding:7px 14px;background:transparent;color:#7d8590;border:1px solid #21262d;border-radius:7px;font-size:.75rem;cursor:pointer;}
+
+/* ── Grid ── */
+.prec-grid-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.prec-grid-toolbar{display:flex;align-items:center;gap:10px;padding:11px 18px;background:#1c2128;border-bottom:1px solid #21262d;flex-shrink:0;}
+.prec-search{flex:1;max-width:260px;padding:7px 12px;background:#0d1117;border:1px solid #21262d;border-radius:6px;color:#e6edf3;font-size:.82rem;}
+.prec-tipo-pills{display:flex;gap:4px;}
+.prec-tipo-pill{padding:5px 11px;border-radius:99px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid #21262d;background:transparent;color:#7d8590;}
+.prec-tipo-pill.active{background:rgba(29,158,117,.15);color:#5cdbc0;border-color:#1d9e75;}
+.prec-sel-count{font-size:.72rem;color:#7d8590;margin-left:auto;}
+.prec-grid-scroll{flex:1;overflow-y:auto;}
+
+/* Table */
+.prec-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+.prec-table thead th{position:sticky;top:0;z-index:2;background:#161b22;padding:9px 10px;text-align:left;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8b949e;border-bottom:1px solid #21262d;white-space:nowrap;}
+.prec-table tbody tr{border-bottom:1px solid #21262d;}
+.prec-table tbody tr:hover td{background:#1c2128;}
+.prec-table tbody tr.selected td{background:rgba(29,158,117,.1);}
+.prec-table td{padding:8px 10px;color:#e6edf3;vertical-align:middle;}
+/* Zero price */
+.prec-table tbody tr.prec-row-zero-price td{background:rgba(210,153,34,.07);}
+.prec-table tbody tr.prec-row-zero-price:hover td{background:rgba(210,153,34,.13);}
+.prec-badge-zero{font-size:.67rem;font-weight:700;color:#d29922;background:rgba(210,153,34,.15);border:1px solid rgba(210,153,34,.3);border-radius:5px;padding:2px 7px;white-space:nowrap;}
+
+.prec-td-mono{font-family:'DM Mono',monospace;font-size:.78rem;}
+.prec-td-code{font-family:'DM Mono',monospace;font-size:.73rem;color:#8b949e;}
+.prec-td-desc{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prec-td-custo{font-family:'DM Mono',monospace;font-size:.78rem;}
+.prec-td-custo.no-data{color:#8b949e;font-style:italic;}
+.prec-novo-preco{width:96px;padding:5px 7px;background:#0d1117;border:1px solid #21262d;border-radius:5px;color:#e6edf3;font-family:'DM Mono',monospace;font-size:.78rem;text-align:right;}
+.prec-novo-preco.changed{border-color:#1d9e75;background:rgba(29,158,117,.1);}
+.prec-delta{font-family:'DM Mono',monospace;font-size:.75rem;white-space:nowrap;}
+.prec-delta.up{color:#34d399;}
+.prec-delta.down{color:#f87171;}
+.prec-delta.same{color:#8b949e;}
+.prec-td-margem{font-family:'DM Mono',monospace;font-size:.75rem;}
+.prec-td-margem.good{color:#34d399;}
+.prec-td-margem.ok{color:#fbbf24;}
+.prec-td-margem.low{color:#f87171;}
+.prec-td-margem.none{color:#7d8590;}
+.prec-warn{display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(249,115,22,.2);color:#fb923c;font-size:.6rem;font-weight:900;text-align:center;line-height:18px;visibility:hidden;}
+.prec-warn.show{visibility:visible;}
+.prec-avatar{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem;}
+.prec-avatar.t1{background:rgba(29,158,117,.15);}
+.prec-avatar.t2{background:rgba(99,102,241,.15);}
+.prec-avatar.t3{background:rgba(251,191,36,.12);}
+.prec-bar-mini{width:52px;height:5px;background:#21262d;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;}
+.prec-bar-fill{height:100%;background:linear-gradient(90deg,#1d9e75,#5cdbc0);border-radius:3px;}
+.type-badge{font-size:.66rem;padding:2px 7px;border-radius:99px;background:#1c2128;color:#7d8590;}
+.chk{width:14px;height:14px;accent-color:#1d9e75;cursor:pointer;}
+
+/* ── Footer ── */
+.prec-footer{background:#161b22;border-top:1px solid #21262d;padding:11px 24px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.prec-footer-stat{display:flex;align-items:center;gap:6px;font-size:.75rem;color:#7d8590;}
+.prec-footer-stat strong{font-family:'DM Mono',monospace;color:#e6edf3;}
+.prec-footer-divider{width:1px;height:18px;background:#21262d;}
+.prec-footer-actions{display:flex;gap:10px;margin-left:auto;}
+.prec-btn-save{padding:9px 22px;background:#1d9e75;color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;}
+.prec-btn-cancel{padding:9px 16px;background:transparent;color:#7d8590;border:1px solid #21262d;border-radius:7px;font-size:.78rem;cursor:pointer;}
+
+/* ── Floating selection bar ── */
+.prec-sel-bar{position:absolute;bottom:0;left:0;right:0;z-index:200;background:#161b22;border-top:2px solid #1d9e75;padding:12px 24px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 24px rgba(0,0,0,.5);}
+.prec-sel-bar-count{font-size:.85rem;font-weight:700;color:#5cdbc0;}
+.prec-sel-bar-label{font-size:.8rem;color:#7d8590;}
+.prec-sel-bar-spacer{flex:1;}
+.prec-btn-sel-apply{padding:8px 18px;background:#1d9e75;color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;}
+.prec-btn-sel-clear{padding:8px 14px;background:transparent;color:#7d8590;border:1px solid #21262d;border-radius:7px;font-size:.78rem;cursor:pointer;}
+
+/* Tooltip label */
+.preview-label{position:absolute;font-size:.63rem;font-weight:700;background:#d29922;color:#0d1117;border-radius:4px;padding:2px 6px;white-space:nowrap;z-index:300;}
+.preview-label.teal{background:#1d9e75;color:#fff;}
+.preview-label.red{background:#f85149;color:#fff;}
+.preview-label::after{content:'';position:absolute;left:50%;transform:translateX(-50%);border:5px solid transparent;}
+.preview-label.bottom::after{top:100%;border-top-color:#d29922;}
+.preview-label.bottom.teal::after{border-top-color:#1d9e75;}
+.preview-label.bottom.red::after{border-top-color:#f85149;}
+
+/* Callout arrows pointing to feature */
+.callout-line{position:absolute;width:2px;background:#d29922;z-index:250;}
+</style>
+</head>
+<body>
+
+<!-- Fake Admin Topbar -->
+<div class="fake-topbar">
+  <span class="fake-topbar-brand">PGM</span>
+  <span style="font-size:.75rem;color:#7d8590;">ERP Enterprise</span>
+  <div class="fake-topbar-nav">
+    <span>Dashboard</span>
+    <span>Produtos</span>
+    <span style="color:#5cdbc0;font-weight:700;">Precificação</span>
+    <span style="width:28px;height:28px;background:#1d9e75;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">AD</span>
+  </div>
+</div>
+
+<!-- Prec Root -->
+<div class="prec-root">
+
+  <!-- Topbar -->
+  <div class="prec-topbar">
+    <div class="prec-topbar-left">
+      <div>
+        <h1>Gestão de Preços</h1>
+        <div class="prec-breadcrumb">Produtos e Serviços › Precificação</div>
+      </div>
+      <span class="prec-badge-erp">ERP Integrado</span>
+    </div>
+    <a class="prec-back-link">← Voltar para Produtos</a>
+  </div>
+
+  <!-- Body -->
+  <div class="prec-body">
+
+    <!-- Panel -->
+    <aside class="prec-panel">
+      <div>
+        <div class="prec-panel-title">Método de Cálculo</div>
+        <div class="prec-method-tabs">
+          <button class="prec-method-tab active">Markup</button>
+          <button class="prec-method-tab">F. Mult.</button>
+          <button class="prec-method-tab">F. Div.</button>
+        </div>
+      </div>
+
+      <div class="prec-param-block">
+        <div class="prec-param-row">
+          <label>Markup (%)</label>
+          <input class="prec-param-input" type="number" value="30">
+          <div class="prec-param-hint">PV = Custo × (1 + Markup/100)</div>
+        </div>
+        <div class="prec-param-row">
+          <label>Fator Multiplicador</label>
+          <input class="prec-param-input dim" type="number" value="1.3000">
+        </div>
+        <div class="prec-param-row">
+          <label>Fator Divisor</label>
+          <input class="prec-param-input dim" type="number" value="0.769231">
+        </div>
+        <div class="prec-param-row">
+          <label>Margem Líquida (%)</label>
+          <input class="prec-param-input dim" type="number" value="23.0769">
+        </div>
+      </div>
+
+      <div class="prec-formula">
+        <div class="formula-label">Fórmula ativa</div>
+        <div class="formula-eq">PV = Custo × (1 + Markup/100)</div>
+        <div class="formula-vals" style="margin-top:6px;">
+          Markup: <b>30,00</b> % · F.Mult: <b>1,3000</b><br>
+          F.Div: <b>0,7692</b> · Margem: <b>23,08</b> %
+        </div>
+      </div>
+
+      <!-- Custos Operacionais -->
+      <div>
+        <div class="prec-panel-title">Custos Operacionais (opcional)</div>
+        <div class="prec-param-hint" style="margin-bottom:8px;">Preenchendo, o Fator Divisor é calculado automaticamente: FD = 1 − Σcustos/100</div>
+        <div class="prec-costs">
+          <div class="prec-cost-row">
+            <label>Impostos (%)</label>
+            <input class="prec-cost-input" type="number" value="0">
+          </div>
+          <div class="prec-cost-row">
+            <label>Comissão (%)</label>
+            <input class="prec-cost-input" type="number" value="0">
+          </div>
+          <div class="prec-cost-row">
+            <label>Despesas Fixas (%)</label>
+            <input class="prec-cost-input" type="number" value="0">
+          </div>
+          <div class="prec-cost-row">
+            <label>Frete (%)</label>
+            <input class="prec-cost-input" type="number" value="0">
+          </div>
+          <div class="prec-cost-row">
+            <label>Lucro Desejado (%)</label>
+            <input class="prec-cost-input" type="number" value="0">
+          </div>
+          <div class="prec-costs-total">
+            <span>Σ Custos</span>
+            <span class="val">0,00 %</span>
+          </div>
+          <div class="prec-costs-total" style="padding-top:2px;">
+            <span>Fator Divisor resultante</span>
+            <span class="val">1,0000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Margem Mínima -->
+      <div>
+        <div class="prec-panel-title">Margem Mínima</div>
+        <div class="prec-cost-row" style="margin-top:6px;">
+          <label>Alertar abaixo de (%)</label>
+          <input class="prec-cost-input" type="number" value="10">
+        </div>
+      </div>
+      <div class="prec-margin-alert">
+        ⚠ Alguns itens estão abaixo da margem mínima
+      </div>
+
+      <div class="prec-panel-actions">
+        <button class="prec-btn-apply-sel">Aplicar aos Selecionados</button>
+        <button class="prec-btn-apply-all">Aplicar a Todos os Visíveis</button>
+        <button class="prec-btn-reset">Resetar Alterações</button>
+      </div>
+    </aside>
+
+    <!-- Grid -->
+    <div class="prec-grid-wrap">
+      <div class="prec-grid-toolbar">
+        <input class="prec-search" type="text" placeholder="Buscar código ou descrição…">
+        <div class="prec-tipo-pills">
+          <button class="prec-tipo-pill active">Todos</button>
+          <button class="prec-tipo-pill">Produtos</button>
+          <button class="prec-tipo-pill">Serviços</button>
+          <button class="prec-tipo-pill">Contratos</button>
+        </div>
+        <label style="font-size:.72rem;color:#7d8590;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" class="chk"> Só alterados
+        </label>
+        <div class="prec-sel-count">3 selecionados</div>
+      </div>
+
+      <div class="prec-grid-scroll">
+        <table class="prec-table">
+          <thead>
+            <tr>
+              <th style="width:30px;"><input type="checkbox" class="chk"></th>
+              <th style="width:34px;"></th>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Tipo</th>
+              <th>Custo ERP</th>
+              <th>Preço Atual</th>
+              <th>Markup Atual</th>
+              <th>Novo Preço</th>
+              <th>Nova Margem</th>
+              <th>Δ Diferença</th>
+              <th style="width:22px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- Row 1: Normal, selected, com delta -->
+            <tr class="selected">
+              <td><input type="checkbox" class="chk" checked></td>
+              <td><div class="prec-avatar t1">📦</div></td>
+              <td class="prec-td-code">PRD-001</td>
+              <td class="prec-td-desc">Cabo HDMI 2.0 4K 2m Premium</td>
+              <td><span class="type-badge">Produto</span></td>
+              <td class="prec-td-custo">R$ 28,50</td>
+              <td class="prec-td-mono">R$ 34,90</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span class="prec-td-mono" style="font-size:.72rem;">22,5%</span>
+                  <div class="prec-bar-mini"><div class="prec-bar-fill" style="width:23%"></div></div>
+                </div>
+              </td>
+              <td><input class="prec-novo-preco changed" type="number" value="37.05"></td>
+              <td class="prec-td-margem good">23,08%</td>
+              <td class="prec-delta up">+R$ 2,15<br><span style="font-size:.65rem;">+6,2%</span></td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 2: Normal, not selected -->
+            <tr>
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="prec-avatar t1">📦</div></td>
+              <td class="prec-td-code">PRD-002</td>
+              <td class="prec-td-desc">Adaptador USB-C para HDMI 4K</td>
+              <td><span class="type-badge">Produto</span></td>
+              <td class="prec-td-custo">R$ 45,00</td>
+              <td class="prec-td-mono">R$ 68,00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span class="prec-td-mono" style="font-size:.72rem;">51,1%</span>
+                  <div class="prec-bar-mini"><div class="prec-bar-fill" style="width:51%"></div></div>
+                </div>
+              </td>
+              <td><input class="prec-novo-preco" type="number" value="58.50"></td>
+              <td class="prec-td-margem good">23,08%</td>
+              <td class="prec-delta same">—</td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 3: Zero price — DESTAQUE ÂMBAR -->
+            <tr class="prec-row-zero-price">
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="prec-avatar t1">📦</div></td>
+              <td class="prec-td-code">PRD-008</td>
+              <td class="prec-td-desc">Fonte ATX 650W 80 Plus Bronze Modular</td>
+              <td><span class="type-badge">Produto</span></td>
+              <td class="prec-td-custo">R$ 189,90</td>
+              <td><span class="prec-badge-zero">⚠ Sem preço</span></td>
+              <td><span style="color:#d29922;font-size:.68rem;font-weight:600;">Sem preço</span></td>
+              <td><input class="prec-novo-preco" type="number" value="246.87"></td>
+              <td class="prec-td-margem good">23,08%</td>
+              <td class="prec-delta same">—</td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 4: Sem custo ERP -->
+            <tr>
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="prec-avatar t2">⚙️</div></td>
+              <td class="prec-td-code">SRV-012</td>
+              <td class="prec-td-desc">Instalação e Configuração de Rede</td>
+              <td><span class="type-badge">Serviço</span></td>
+              <td class="prec-td-custo no-data">Sem dado ERP</td>
+              <td class="prec-td-mono">R$ 350,00</td>
+              <td><span style="color:#7d8590;font-size:.72rem;">Sem custo ERP</span></td>
+              <td><input class="prec-novo-preco" type="number" value=""></td>
+              <td class="prec-td-margem none">—</td>
+              <td class="prec-delta same">—</td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 5: selected, margem baixa -->
+            <tr class="selected">
+              <td><input type="checkbox" class="chk" checked></td>
+              <td><div class="prec-avatar t1">📦</div></td>
+              <td class="prec-td-code">PRD-014</td>
+              <td class="prec-td-desc">Switch Gigabit 8 Portas Gerenciável</td>
+              <td><span class="type-badge">Produto</span></td>
+              <td class="prec-td-custo">R$ 312,00</td>
+              <td class="prec-td-mono">R$ 380,00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span class="prec-td-mono" style="font-size:.72rem;">21,8%</span>
+                  <div class="prec-bar-mini"><div class="prec-bar-fill" style="width:22%"></div></div>
+                </div>
+              </td>
+              <td><input class="prec-novo-preco changed" type="number" value="405.60"></td>
+              <td class="prec-td-margem good">23,08%</td>
+              <td class="prec-delta up">+R$ 25,60<br><span style="font-size:.65rem;">+6,7%</span></td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 6: margem ok -->
+            <tr>
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="prec-avatar t3">📄</div></td>
+              <td class="prec-td-code">CTR-003</td>
+              <td class="prec-td-desc">Contrato Suporte Mensal — Básico</td>
+              <td><span class="type-badge">Contrato</span></td>
+              <td class="prec-td-custo">R$ 620,00</td>
+              <td class="prec-td-mono">R$ 750,00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span class="prec-td-mono" style="font-size:.72rem;">21,0%</span>
+                  <div class="prec-bar-mini"><div class="prec-bar-fill" style="width:21%"></div></div>
+                </div>
+              </td>
+              <td><input class="prec-novo-preco" type="number" value="806.00"></td>
+              <td class="prec-td-margem good">23,08%</td>
+              <td class="prec-delta same">—</td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 7: selected, preço caindo -->
+            <tr class="selected">
+              <td><input type="checkbox" class="chk" checked></td>
+              <td><div class="prec-avatar t1">📦</div></td>
+              <td class="prec-td-code">PRD-021</td>
+              <td class="prec-td-desc">Memória RAM DDR4 8GB 3200MHz</td>
+              <td><span class="type-badge">Produto</span></td>
+              <td class="prec-td-custo">R$ 148,00</td>
+              <td class="prec-td-mono">R$ 210,00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span class="prec-td-mono" style="font-size:.72rem;">41,9%</span>
+                  <div class="prec-bar-mini"><div class="prec-bar-fill" style="width:42%"></div></div>
+                </div>
+              </td>
+              <td><input class="prec-novo-preco changed" type="number" value="192.40"></td>
+              <td class="prec-td-margem good">23,08%</td>
+              <td class="prec-delta down">−R$ 17,60<br><span style="font-size:.65rem;">−8,4%</span></td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+            <!-- Row 8: margem baixa + warn -->
+            <tr>
+              <td><input type="checkbox" class="chk"></td>
+              <td><div class="prec-avatar t2">⚙️</div></td>
+              <td class="prec-td-code">SRV-005</td>
+              <td class="prec-td-desc">Hora Técnica On-site (taxa deslocamento)</td>
+              <td><span class="type-badge">Serviço</span></td>
+              <td class="prec-td-custo">R$ 95,00</td>
+              <td class="prec-td-mono">R$ 105,00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span class="prec-td-mono" style="font-size:.72rem;">10,5%</span>
+                  <div class="prec-bar-mini"><div class="prec-bar-fill" style="width:11%"></div></div>
+                </div>
+              </td>
+              <td><input class="prec-novo-preco" type="number" value="123.50"></td>
+              <td class="prec-td-margem ok">23,08%</td>
+              <td class="prec-delta same">—</td>
+              <td><span class="prec-warn"></span></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /prec-grid-wrap -->
+  </div><!-- /prec-body -->
+
+  <!-- Footer -->
+  <div class="prec-footer">
+    <div class="prec-footer-stat">Itens: <strong>8</strong></div>
+    <div class="prec-footer-divider"></div>
+    <div class="prec-footer-stat">Alterados: <strong>3</strong></div>
+    <div class="prec-footer-divider"></div>
+    <div class="prec-footer-stat">Selecionados: <strong>3</strong></div>
+    <div class="prec-footer-divider"></div>
+    <div class="prec-footer-stat">Impacto estoque: <strong style="color:#34d399;">+R$ 147,80</strong></div>
+    <div class="prec-footer-actions">
+      <button class="prec-btn-cancel">Cancelar</button>
+      <button class="prec-btn-save">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Salvar Preços
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Selection Bar -->
+  <div class="prec-sel-bar">
+    <span class="prec-sel-bar-count">3</span>
+    <span class="prec-sel-bar-label">itens selecionados</span>
+    <span class="prec-sel-bar-spacer"></span>
+    <button class="prec-btn-sel-clear">Limpar seleção</button>
+    <button class="prec-btn-sel-apply">▶ Aplicar cálculo</button>
+  </div>
+
+</div><!-- /prec-root -->
+
+<!-- ── Callout annotations ── -->
+<style>
+.annotation{position:fixed;display:flex;align-items:flex-start;gap:6px;pointer-events:none;z-index:500;}
+.ann-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.ann-text{font-size:.72rem;font-family:'DM Sans',sans-serif;line-height:1.4;max-width:160px;}
+.ann-line{border-left:2px dashed;padding-left:8px;}
+</style>
+
+<!-- Legend box -->
+<div style="position:fixed;bottom:82px;right:16px;z-index:600;background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px 16px;font-size:.72rem;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.5);">
+  <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5cdbc0;margin-bottom:10px;">Novidades desta versão</div>
+
+  <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+    <div style="width:10px;height:10px;border-radius:3px;background:rgba(210,153,34,.4);border:1px solid #d29922;flex-shrink:0;margin-top:2px;"></div>
+    <div>
+      <div style="font-weight:700;color:#d29922;">Linha âmbar</div>
+      <div style="color:#7d8590;font-size:.68rem;">Tem custo ERP mas Preço Atual = 0</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+    <div style="width:10px;height:10px;border-radius:3px;background:rgba(29,158,117,.2);border:1px solid #1d9e75;flex-shrink:0;margin-top:2px;"></div>
+    <div>
+      <div style="font-weight:700;color:#5cdbc0;">Linha verde</div>
+      <div style="color:#7d8590;font-size:.68rem;">Item selecionado para edição</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+    <div style="padding:1px 6px;background:rgba(210,153,34,.15);border:1px solid rgba(210,153,34,.3);border-radius:4px;color:#d29922;font-size:.64rem;font-weight:700;flex-shrink:0;">⚠ Sem preço</div>
+    <div style="color:#7d8590;font-size:.68rem;margin-left:4px;">Badge no lugar do R$ 0,00</div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+    <div style="width:10px;height:10px;background:#1d9e75;border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+    <div>
+      <div style="font-weight:700;color:#e6edf3;">Markup padrão 30%</div>
+      <div style="color:#7d8590;font-size:.68rem;">Novo Preço/Margem/Δ preenchidos ao carregar</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:8px;">
+    <div style="width:10px;height:10px;background:linear-gradient(90deg,#1d9e75,#5cdbc0);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+    <div>
+      <div style="font-weight:700;color:#e6edf3;">Barra flutuante</div>
+      <div style="color:#7d8590;font-size:.68rem;">Aparece ao selecionar ≥1 item</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
