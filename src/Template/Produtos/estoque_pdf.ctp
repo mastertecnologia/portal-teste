@@ -1,5 +1,13 @@
 <?php
 $geradoEm = date('d/m/Y H:i');
+$escopo = (string)($escopo ?? '');
+$codigosSelecionados = (array)($codigosSelecionados ?? []);
+$escopoLabel = 'Listagem atual';
+if ($escopo === 'selecionados') {
+	$escopoLabel = 'Produtos selecionados';
+} elseif ($escopo === 'item') {
+	$escopoLabel = 'Produto unico';
+}
 ?>
 <style>
 body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #111; }
@@ -15,9 +23,13 @@ td.num { text-align: right; }
 <h1>Relatório de Estoque</h1>
 <div class="meta">
 	<strong>Gerado em:</strong> <?= h($geradoEm) ?><br>
+	<strong>Escopo:</strong> <?= h($escopoLabel) ?><br>
 	<strong>Filtro:</strong> <?= !empty($bApenasComSaldo) ? 'Apenas produtos com estoque' : 'Todos os produtos' ?><br>
 	<strong>Código:</strong> <?= $sCodProduto !== null && $sCodProduto !== '' ? h($sCodProduto) : 'Todos' ?> |
 	<strong>Descrição:</strong> <?= !empty($sDescricao) ? h($sDescricao) : 'Todas' ?>
+	<?php if (!empty($codigosSelecionados)) : ?><br>
+	<strong>Códigos selecionados:</strong> <?= h(implode(', ', $codigosSelecionados)) ?>
+	<?php endif; ?>
 </div>
 
 <table>

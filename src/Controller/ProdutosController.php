@@ -701,12 +701,16 @@ class ProdutosController extends AppController {
 		$this->set('title', 'Produtos em Estoque');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'estoque-screen-active');
+		$this->set('regraBuscaDescricao', 'Busca precisa por descricao: ignora acentos/caixa e exige todos os termos relevantes (2+ caracteres) no nome do produto.');
 	}
 
 	public function estoquePdf($opt = null) {
 		$query = (array)$this->request->getQueryParams();
 		$sCodProduto = $query['sCodProduto'] ?? null;
 		$sDescricao = $query['sDescricao'] ?? null;
+		$codigosParam = (string)($query['codigos'] ?? '');
+		$escopo = (string)($query['escopo'] ?? '');
+		$codigosSelecionados = $this->extrairCodigosSelecionados($codigosParam);
 
 		if ($opt === 't') {
 			$bApenasComSaldo = true;
@@ -723,6 +727,10 @@ class ProdutosController extends AppController {
 			return $this->redirect(['action' => 'estoque', $bApenasComSaldo ? 't' : 'f', '?' => ['sCodProduto' => $sCodProduto, 'sDescricao' => $sDescricao]]);
 		}
 
+		if (!empty($codigosSelecionados)) {
+			$produtos = $this->filtrarProdutosPorCodigos($produtos, $codigosSelecionados);
+		}
+
 		if (!class_exists(\Mpdf\Mpdf::class)) {
 			$this->Flash->error('Biblioteca mPDF não instalada. Execute: composer require mpdf/mpdf');
 			return $this->redirect(['action' => 'estoque', $bApenasComSaldo ? 't' : 'f', '?' => ['sCodProduto' => $sCodProduto, 'sDescricao' => $sDescricao]]);
@@ -735,7 +743,7 @@ class ProdutosController extends AppController {
 
 		$view = new View($this->request, $this->response, $this->getEventManager(), ['layout' => false]);
 		$view->setTemplatePath('Produtos');
-		$view->set(compact('produtos', 'bApenasComSaldo', 'sCodProduto', 'sDescricao'));
+		$view->set(compact('produtos', 'bApenasComSaldo', 'sCodProduto', 'sDescricao', 'escopo', 'codigosSelecionados'));
 		$html = $view->render('estoque_pdf');
 
 		$mpdf = new \Mpdf\Mpdf([
@@ -806,6 +814,7 @@ class ProdutosController extends AppController {
 				}
 				return ($descA < $descB) ? -1 : 1;
 			});
+			$produtos = $this->aplicarRegraBuscaDescricao($produtos, $sDescricao);
 		});
 
 		$produtosOpt1 = $this->Produtos->find('all')
@@ -818,6 +827,104 @@ class ProdutosController extends AppController {
 		}
 
 		return [$produtos, $produtosOpt, $sCodProduto];
+	}
+
+	private function extrairCodigosSelecionados($codigosParam) {
+		if ($codigosParam === '') {
+			return [];
+		}
+		$itens = array_filter(array_map('trim', explode(',', $codigosParam)), function ($v) {
+			return $v !== '';
+		});
+		return array_values(array_unique($itens));
+	}
+
+	private function filtrarProdutosPorCodigos($produtos, $codigos) {
+		$map = array_fill_keys($codigos, true);
+		return array_values(array_filter($produtos, function ($p) use ($map) {
+			$codigo = trim((string)($p->sCodProduto ?? ''));
+			return isset($map[$codigo]);
+		}));
+	}
+
+	private function aplicarRegraBuscaDescricao($produtos, $sDescricao) {
+		$busca = trim((string)$sDescricao);
+		if ($busca === '') {
+			return $produtos;
+		}
+
+		$buscaNorm = $this->normalizarTextoBusca($busca);
+		if ($buscaNorm === '') {
+			return $produtos;
+		}
+
+		$tokens = preg_split('/\s+/', $buscaNorm, -1, PREG_SPLIT_NO_EMPTY);
+		$stop = ['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'para', 'por', 'a', 'o', 'as', 'os'];
+		$tokens = array_values(array_filter($tokens, function ($t) use ($stop) {
+			return mb_strlen($t) >= 2 && !in_array($t, $stop, true);
+		}));
+
+		if (empty($tokens)) {
+			return $produtos;
+		}
+
+		$filtrados = array_filter($produtos, function ($p) use ($tokens) {
+			$descNorm = $this->normalizarTextoBusca((string)($p->sDescProduto ?? ''));
+			foreach ($tokens as $tk) {
+				if (mb_strpos($descNorm, $tk) === false) {
+					return false;
+				}
+			}
+			return true;
+		});
+
+		usort($filtrados, function ($a, $b) use ($buscaNorm, $tokens) {
+			$da = $this->normalizarTextoBusca((string)($a->sDescProduto ?? ''));
+			$db = $this->normalizarTextoBusca((string)($b->sDescProduto ?? ''));
+
+			$score = function ($desc) use ($buscaNorm, $tokens) {
+				$s = 0;
+				if ($desc === $buscaNorm) {
+					$s += 100;
+				}
+				if (mb_strpos($desc, $buscaNorm) === 0) {
+					$s += 50;
+				}
+				foreach ($tokens as $tk) {
+					$pos = mb_strpos($desc, $tk);
+					if ($pos === 0) {
+						$s += 12;
+					} elseif ($pos !== false) {
+						$s += 5;
+					}
+				}
+				return $s;
+			};
+
+			$sa = $score($da);
+			$sb = $score($db);
+			if ($sa === $sb) {
+				return strcmp($da, $db);
+			}
+			return ($sa > $sb) ? -1 : 1;
+		});
+
+		return array_values($filtrados);
+	}
+
+	private function normalizarTextoBusca($txt) {
+		$txt = mb_strtolower(trim((string)$txt), 'UTF-8');
+		$txt = strtr($txt, [
+			'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
+			'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+			'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+			'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+			'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+			'ç' => 'c',
+		]);
+		$txt = preg_replace('/[^a-z0-9\s\-]/u', ' ', $txt);
+		$txt = preg_replace('/\s+/', ' ', $txt);
+		return trim((string)$txt);
 	}
 
 	public function pesquisar() {
