@@ -987,7 +987,9 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	font-size: 12px;
 }
 .os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date,
-.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month {
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-date,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-month {
 	background: var(--os-bg2) !important;
 	background-color: var(--os-bg2) !important;
 	background-image: none !important;
@@ -1008,6 +1010,8 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 .os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date:active,
 .os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month:focus,
 .os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month:active,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-date:focus,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-month:focus,
 .os-index-shell .os-rel-filtros .os-filter-form .form-group.is-focused input.rel-date,
 .os-index-shell .os-rel-filtros .os-filter-form .form-group.is-focused input.rel-month {
 	background: var(--os-bg2) !important;
@@ -1092,18 +1096,29 @@ body.os-index-page .datepicker thead tr:first-child th {
 	font-weight: 600 !important;
 	border-radius: 6px !important;
 }
-body.os-index-page .datepicker thead tr:first-child th.switch {
+/* material-kit usa th.switch-datepicker (não .switch) no datepicker do /public/js */
+body.os-index-page .datepicker thead tr:first-child th.switch,
+body.os-index-page .datepicker thead tr:first-child th.switch-datepicker {
 	color: #f0f2f8 !important;
 }
 body.os-index-page .datepicker thead tr:first-child th.prev,
-body.os-index-page .datepicker thead tr:first-child th.next {
+body.os-index-page .datepicker thead tr:first-child th.next,
+body.os-index-page .datepicker thead tr:first-child th.prev p,
+body.os-index-page .datepicker thead tr:first-child th.next p {
 	color: #00c08b !important;
 	font-size: 16px !important;
-	width: 28px !important;
+	width: auto !important;
+	min-width: 28px !important;
 }
 body.os-index-page .datepicker thead tr:first-child th:hover {
 	background: #222736 !important;
 	color: #ffffff !important;
+}
+body.os-index-page .datepicker thead tr th.dow {
+	color: #c5cad8 !important;
+	font-weight: 600 !important;
+	font-size: 11px !important;
+	background: #13161d !important;
 }
 body.os-index-page .datepicker tbody tr td.day,
 body.os-index-page .datepicker tbody tr td.month,
@@ -1115,16 +1130,25 @@ body.os-index-page .datepicker tbody tr td.old,
 body.os-index-page .datepicker tbody tr td.new {
 	color: #555e78 !important;
 }
-body.os-index-page .datepicker table tr td,
-body.os-index-page .datepicker table tr th {
+/* Não aplicar cinza em thead — a regra genérica apagava título e navegação */
+body.os-index-page .datepicker table tbody tr td {
 	color: #8b92a8 !important;
 }
-body.os-index-page .datepicker table tr td.day:hover,
-body.os-index-page .datepicker table tr td.month:hover,
-body.os-index-page .datepicker table tr td.year:hover,
-body.os-index-page .datepicker table tr th:hover {
+body.os-index-page .datepicker table tbody tr td.day:hover,
+body.os-index-page .datepicker table tbody tr td.month:hover,
+body.os-index-page .datepicker table tbody tr td.year:hover {
 	background: #222736 !important;
 	color: #f0f2f8 !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.prev:hover,
+body.os-index-page .datepicker thead tr:first-child th.next:hover,
+body.os-index-page .datepicker thead tr:first-child th.switch-datepicker:hover {
+	background: #222736 !important;
+	color: #ffffff !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.prev:hover p,
+body.os-index-page .datepicker thead tr:first-child th.next:hover p {
+	color: #ffffff !important;
 }
 body.os-index-page .datepicker table tr td.active,
 body.os-index-page .datepicker table tr td.active:hover,
@@ -1137,16 +1161,16 @@ body.os-index-page .datepicker table tr td.disabled,
 body.os-index-page .datepicker table tr td span.disabled {
 	color: #555e78 !important;
 }
-body.os-index-page .datepicker table thead tr th.switch {
+body.os-index-page .datepicker table thead tr th.switch,
+body.os-index-page .datepicker table thead tr th.switch-datepicker {
 	color: #f0f2f8 !important;
 }
-body.os-index-page .datepicker table thead tr th.prev,
-body.os-index-page .datepicker table thead tr th.next {
-	color: #8b92a8 !important;
+body.os-index-page .datepicker.dropdown-menu.open {
+	opacity: 1 !important;
+	visibility: visible !important;
 }
-body.os-index-page .datepicker table thead tr th.prev:hover,
-body.os-index-page .datepicker table thead tr th.next:hover {
-	color: #f0f2f8 !important;
+body.os-index-page .datepicker p:hover {
+	background: transparent !important;
 }
 .os-index-shell .os-rel-email .form-control:focus {
 	border-color: var(--os-accent);
