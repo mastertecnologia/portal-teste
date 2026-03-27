@@ -1336,6 +1336,40 @@ class OrdensservicoController extends AppController {
 				$mes = $data['mes'] ?? $mes;
 			}
 		}
+		$toScalar = function ($v) {
+			if (is_array($v)) {
+				return '';
+			}
+			if ($v === null) {
+				return '';
+			}
+			return trim((string)$v);
+		};
+		$toDateYmd = function ($v) use ($toScalar) {
+			if (is_array($v)) {
+				$y = isset($v['year']) ? (int)$v['year'] : 0;
+				$m = isset($v['month']) ? (int)$v['month'] : 0;
+				$d = isset($v['day']) ? (int)$v['day'] : 0;
+				if ($y > 0 && $m > 0 && $d > 0 && checkdate($m, $d, $y)) {
+					return sprintf('%04d-%02d-%02d', $y, $m, $d);
+				}
+				return '';
+			}
+			$s = $toScalar($v);
+			return preg_match('/^\d{4}-\d{2}-\d{2}$/', $s) ? $s : '';
+		};
+		$toMonthYm = function ($v) use ($toScalar) {
+			$s = $toScalar($v);
+			return preg_match('/^\d{4}-\d{2}$/', $s) ? $s : '';
+		};
+		$cliente = $toScalar($cliente);
+		$situacao = $toScalar($situacao);
+		$problema = $toScalar($problema);
+		$locacao = $toScalar($locacao);
+		$solicitante = $toScalar($solicitante);
+		$data_ini = $toDateYmd($data_ini);
+		$data_fim = $toDateYmd($data_fim);
+		$mes = $toMonthYm($mes);
 		if ((string)$cliente === '0') {
 			$cliente = '';
 		}
@@ -1348,7 +1382,6 @@ class OrdensservicoController extends AppController {
 		if ((string)$solicitante === '0') {
 			$solicitante = '';
 		}
-		$mes = trim((string)$mes);
 		if ($mes !== '' && preg_match('/^\d{4}-\d{2}$/', $mes)) {
 			if ($data_ini === null || $data_ini === '') {
 				$data_ini = $mes . '-01';
@@ -1357,8 +1390,6 @@ class OrdensservicoController extends AppController {
 				$data_fim = date('Y-m-t', strtotime($mes . '-01'));
 			}
 		}
-		$data_ini = trim((string)$data_ini);
-		$data_fim = trim((string)$data_fim);
 		if ($data_ini !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data_ini)) {
 			$data_ini = '';
 		}
