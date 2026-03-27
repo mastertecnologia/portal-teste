@@ -8,7 +8,12 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 ?>
 <style>
 /* ── Precificação: estilos específicos ─────────────────────────── */
-.prec-root{display:flex;flex-direction:column;gap:0;height:calc(100vh - 56px);background:var(--prd-bg);isolation:isolate;overflow:hidden;}
+.prec-root{display:flex;flex-direction:column;gap:0;background:var(--prd-bg);isolation:isolate;overflow:hidden;}
+/* Zera scroll de página — layout app-like */
+body.prec-screen-active{overflow:hidden!important;}
+body.prec-screen-active .page-wrapper{overflow:hidden!important;}
+body.prec-screen-active .container-fluid,
+body.prec-screen-active .row{overflow:visible!important;padding:0!important;margin:0!important;}
 .prec-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--prd-surface);border-bottom:1px solid var(--prd-border);}
 .prec-topbar-left{display:flex;align-items:center;gap:12px;}
 .prec-topbar h1{font-size:1.1rem;font-weight:700;color:var(--prd-teal-lt);margin:0;}
@@ -794,6 +799,20 @@ function neutralizeDarkOverlays() {
   }
 }
 
+/* ── Altura exata: mede posição real do .prec-root no viewport ── */
+function fitPrecRoot() {
+  var el = document.querySelector('.prec-root');
+  if (!el) return;
+  var top = el.getBoundingClientRect().top;
+  // Garante altura mínima útil (evita colapso em situações extremas)
+  var h = Math.max(300, window.innerHeight - top);
+  el.style.height = h + 'px';
+  // Também expande horizontalmente até a borda da janela (ignora padding do container)
+  var left = el.getBoundingClientRect().left;
+  el.style.marginLeft = '-' + left + 'px';
+  el.style.width = window.innerWidth + 'px';
+}
+
 /* ── Init ──────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
   document.body.classList.add('prec-screen-active');
@@ -803,6 +822,10 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(neutralizeDarkOverlays, 300);
   setTimeout(cleanupGhostBackdrop, 1200);
   setTimeout(neutralizeDarkOverlays, 1300);
+
+  // Altura real após o layout ter renderizado completamente
+  fitPrecRoot();
+  window.addEventListener('resize', fitPrecRoot);
 
   // Alguns scripts globais podem reinserir overlay após load.
   var obs = new MutationObserver(function() {
