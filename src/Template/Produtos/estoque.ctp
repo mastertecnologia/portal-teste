@@ -31,27 +31,36 @@ $queryStringAtual = http_build_query($queryAtual);
 .est-btn:hover{background:rgba(255,255,255,.05);}
 .est-btn.primary{background:var(--est-teal);border-color:var(--est-teal);color:#fff;}
 .est-btn.warn{border-color:var(--est-yellow);color:var(--est-yellow);}
-.est-filters{display:grid;grid-template-columns:280px 1fr auto;gap:10px;align-items:end;}
+.est-filters{display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr) auto;gap:12px;align-items:end;}
 .est-field label{display:block;font-size:.72rem;color:var(--est-muted);margin-bottom:4px;}
+.est-label-spacer{display:block;font-size:.72rem;margin-bottom:4px;visibility:hidden;line-height:1;}
 .est-input{width:100%;background:#0b1220;border:1px solid var(--est-border);border-radius:8px;color:var(--est-text);padding:8px 10px;}
 .est-input:focus{outline:none;border-color:var(--est-teal);}
-.bootstrap-select .dropdown-toggle.est-input{
+.est-field--codigo .bootstrap-select{width:100% !important;}
+.est-field--codigo .bootstrap-select > .dropdown-toggle,
+.est-field--codigo .bootstrap-select > .dropdown-toggle.btn-light,
+.est-field--codigo .bootstrap-select > .dropdown-toggle.btn-default,
+.est-field--codigo .bootstrap-select > .dropdown-toggle:hover,
+.est-field--codigo .bootstrap-select > .dropdown-toggle:focus,
+.est-field--codigo .bootstrap-select.show > .dropdown-toggle,
+.est-field--codigo .bootstrap-select > .dropdown-toggle:active{
 	background:#0b1220 !important;
 	border:1px solid var(--est-border) !important;
 	color:var(--est-text) !important;
+	box-shadow:none !important;
 }
-.bootstrap-select .dropdown-toggle.est-input .filter-option{color:var(--est-text) !important;}
-.bootstrap-select .dropdown-menu{
+.est-field--codigo .bootstrap-select > .dropdown-toggle.bs-placeholder{color:var(--est-muted) !important;}
+.est-field--codigo .bootstrap-select .filter-option-inner-inner{color:var(--est-text) !important;}
+.est-field--codigo .bootstrap-select .dropdown-menu{
 	background:#0b1220 !important;
 	border:1px solid var(--est-border) !important;
 }
-.bootstrap-select .dropdown-menu .dropdown-item{color:var(--est-text) !important;}
-.bootstrap-select .dropdown-menu .dropdown-item:hover,
-.bootstrap-select .dropdown-menu .dropdown-item.active{
+.est-field--codigo .bootstrap-select .dropdown-menu .dropdown-item{color:var(--est-text) !important;}
+.est-field--codigo .bootstrap-select .dropdown-menu .dropdown-item:hover,
+.est-field--codigo .bootstrap-select .dropdown-menu .dropdown-item.active{
 	background:rgba(29,158,117,.18) !important;
 	color:var(--est-text) !important;
 }
-.est-hint{font-size:.74rem;color:var(--est-muted);margin-top:2px;}
 .est-actions-secondary{display:flex;gap:8px;flex-wrap:wrap;}
 .est-table-wrap{flex:1;min-height:0;overflow:auto;border:1px solid var(--est-border);border-radius:10px;}
 .est-table-wrap::-webkit-scrollbar{width:8px;height:8px;}
@@ -94,9 +103,13 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		</div>
 	</div>
 
-	<?= $this->Form->create(null, ['type' => 'get']) ?>
+	<?= $this->Form->create(null, [
+		'type' => 'get',
+		'id' => 'estoque-filter-form',
+		'url' => ['controller' => 'Produtos', 'action' => 'estoque', $bApenasComSaldo ? 't' : 'f'],
+	]) ?>
 	<div class="est-filters">
-		<div class="est-field">
+		<div class="est-field est-field--codigo">
 			<label for="sCodProduto">Filtro por código</label>
 			<?= $this->Form->control('sCodProduto', [
 				'id' => 'sCodProduto',
@@ -110,12 +123,14 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		</div>
 		<div class="est-field">
 			<label for="sDescricao">Filtro por descrição</label>
-			<?= $this->Form->control('sDescricao', ['id' => 'sDescricao', 'class' => 'est-input', 'value' => $sDescricao, 'label' => false]) ?>
-			<div class="est-hint"><?= h($regraBuscaDescricao ?? '') ?></div>
+			<?= $this->Form->control('sDescricao', ['id' => 'sDescricao', 'class' => 'est-input', 'value' => $sDescricao, 'label' => false, 'autocomplete' => 'off']) ?>
 		</div>
-		<div class="est-actions">
+		<div class="est-field est-field--actions">
+			<label class="est-label-spacer" aria-hidden="true">&nbsp;</label>
+			<div class="est-actions">
 			<?= $this->Form->button('Buscar', ['class' => 'est-btn primary']) ?>
 			<a class="est-btn" href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $bApenasComSaldo ? 't' : 'f']) ?>">Limpar</a>
+			</div>
 		</div>
 	</div>
 	<?= $this->Form->end() ?>
@@ -228,5 +243,16 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	});
 
 	refreshSelectedState();
+
+	var descTimer;
+	var $form = $('#estoque-filter-form');
+	$(document).on('input', '#sDescricao', function() {
+		clearTimeout(descTimer);
+		descTimer = setTimeout(function() {
+			if ($form.length) {
+				$form[0].submit();
+			}
+		}, 400);
+	});
 })();
 </script>

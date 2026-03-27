@@ -701,7 +701,6 @@ class ProdutosController extends AppController {
 		$this->set('title', 'Produtos em Estoque');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'estoque-screen-active');
-		$this->set('regraBuscaDescricao', 'Busca precisa por descricao: ignora acentos/caixa e exige todos os termos relevantes (2+ caracteres) no nome do produto.');
 	}
 
 	public function estoquePdf($opt = null) {
