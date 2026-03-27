@@ -1843,11 +1843,32 @@ class OrdensservicoController extends AppController {
 		if ($msg === '') {
 			$msg = 'Segue em anexo o relatório de Ordens de Serviço (' . $meta['titulo'] . ').';
 		}
+		$transportEmail = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
+		$nomeEmpresa = 'Portal';
+		$from = 'helpdesk@pgm.inf.br';
 		try {
-			$email = new Email('default');
-			$email->setTo($to)
-				->setSubject('Relatório — Ordens de Serviço — ' . $meta['titulo'])
-				->setAttachments([
+			$empresa = $this->Empresas->find('all')
+				->select(['id', 'nomefantasia', 'razaosocial'])
+				->where(['id' => $idempresa])
+				->first();
+			if (!empty($empresa)) {
+				if (!empty($empresa->nomefantasia)) {
+					$nomeEmpresa = (string)$empresa->nomefantasia;
+				} elseif (!empty($empresa->razaosocial)) {
+					$nomeEmpresa = (string)$empresa->razaosocial;
+				}
+			}
+		} catch (\Throwable $e) {
+			// Mantem fallback do remetente caso falhe consulta da empresa.
+		}
+		try {
+			$email = new Email();
+			$email->transport($transportEmail);
+			$email->from([$from => $nomeEmpresa])
+				->to($to)
+				->emailFormat('text')
+				->subject('Relatório — Ordens de Serviço — ' . $meta['titulo'])
+				->attachments([
 					$attachName => [
 						'data' => $pdfBinary,
 						'mimetype' => 'application/pdf',
@@ -1856,8 +1877,12 @@ class OrdensservicoController extends AppController {
 			$email->send($msg);
 			$this->Flash->success('Relatório enviado por e-mail para ' . $to . '.');
 		} catch (\Throwable $e) {
-			$this->log('Ordensservico::relatorioEnviarEmail: ' . $e->getMessage(), 'error');
-			$this->Flash->error('Não foi possível enviar o e-mail. Verifique a configuração de e-mail do sistema.');
+			$this->log('Ordensservico::relatorioEnviarEmail transport=' . $transportEmail . ': ' . $e->getMessage(), 'error');
+			$msgErro = 'Não foi possível enviar o e-mail. Verifique a configuração de e-mail do sistema.';
+			if ((bool)\Cake\Core\Configure::read('debug')) {
+				$msgErro .= ' Detalhes: [' . $transportEmail . '] ' . $e->getMessage();
+			}
+			$this->Flash->error($msgErro);
 		}
 		return $this->redirect(['action' => 'relatorios', '?' => $filtros]);
 	}
