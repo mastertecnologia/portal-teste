@@ -9,7 +9,6 @@ $queryAtual = [
 	'sDescricao' => $sDescricao,
 	'apenasComSaldo' => $bApenasComSaldo ? 1 : 0,
 ];
-$queryStringAtual = http_build_query($queryAtual);
 ?>
 <style>
 .est-root{
@@ -62,6 +61,7 @@ $queryStringAtual = http_build_query($queryAtual);
 	color:var(--est-text) !important;
 }
 .est-actions-secondary{display:flex;gap:8px;flex-wrap:wrap;}
+.est-results{display:flex;flex:1;flex-direction:column;gap:12px;min-height:0;}
 .est-table-wrap{flex:1;min-height:0;overflow:auto;border:1px solid var(--est-border);border-radius:10px;}
 .est-table-wrap::-webkit-scrollbar{width:8px;height:8px;}
 .est-table-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:8px;}
@@ -135,50 +135,25 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	</div>
 	<?= $this->Form->end() ?>
 
-	<div class="est-table-wrap">
-		<?php if (!empty($produtos)) : ?>
-		<table class="est-table">
-			<thead>
-				<tr>
-					<th class="est-col-check"><input type="checkbox" id="est-check-all" class="est-check" /></th>
-					<th>Código</th>
-					<th>Descrição</th>
-					<th class="est-num">Quantidade Atual</th>
-					<th class="est-num">Preço Custo</th>
-					<th class="est-num">Preço Venda</th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($produtos as $reg) : ?>
-				<tr class="est-row" data-codigo="<?= h($reg->sCodProduto) ?>">
-					<td class="est-col-check"><input type="checkbox" class="est-check est-check-item" data-codigo="<?= h($reg->sCodProduto) ?>" /></td>
-					<td><?= h($reg->sCodProduto) ?></td>
-					<td><?= h($reg->sDescProduto) ?></td>
-					<td class="est-num"><?= h($reg->nQtdeAtual) ?></td>
-					<td class="est-num"><?= number_format((float)$reg->nPrecoCusto, 2, ',', '.') ?></td>
-					<td class="est-num"><?= number_format((float)$reg->nPrecoVenda, 2, ',', '.') ?></td>
-				</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		<?php else : ?>
-			<div class="est-empty">Nenhum produto encontrado com os filtros atuais.</div>
-		<?php endif; ?>
-	</div>
-
-	<div class="est-footer">
-		<div><?= $bApenasComSaldo ? 'Modo: apenas produtos com estoque.' : 'Modo: todos os produtos.' ?></div>
-		<div class="est-actions-secondary">
-			<span>Total listado: <strong><?= (int)count($produtos ?? []) ?></strong></span>
-			<span>Selecionados: <strong id="est-selected-count">0</strong></span>
-		</div>
+	<div class="est-results" id="est-results">
+		<?= $this->element('Produtos/estoque_lista', ['produtos' => $produtos, 'bApenasComSaldo' => $bApenasComSaldo]) ?>
 	</div>
 </div>
 
 <script>
 (function() {
 	var basePdf = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoquePdf', $bApenasComSaldo ? 't' : 'f']) ?>";
-	var queryAtual = "<?= h($queryStringAtual) ?>";
+	var $form = $('#estoque-filter-form');
+	var $results = $('#est-results');
+	var descTimer;
+	var activeRequest = null;
+
+	function getFilterQueryString() {
+		if (!$form.length) {
+			return '';
+		}
+		return $form.serialize();
+	}
 
 	function selectedCodes() {
 		var codes = [];
@@ -203,9 +178,35 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	}
 
 	function openPdfSelected(codes) {
+		var queryAtual = getFilterQueryString();
 		var qs = queryAtual ? (queryAtual + '&') : '';
 		qs += 'escopo=selecionados&codigos=' + encodeURIComponent(codes.join(','));
 		window.open(basePdf + '?' + qs, '_blank');
+	}
+
+	function submitFiltersAjax() {
+		if (!$form.length || !$results.length) {
+			return;
+		}
+
+		var query = getFilterQueryString();
+		var url = $form.attr('action');
+		if (!url) {
+			return;
+		}
+
+		if (activeRequest && activeRequest.readyState !== 4) {
+			activeRequest.abort();
+		}
+
+		activeRequest = $.get(url, query + (query ? '&' : '') + 'ajax=1')
+			.done(function(html) {
+				$results.html(html);
+				$('#est-check-all').prop('checked', false);
+				refreshSelectedState();
+				var newUrl = url + (query ? ('?' + query) : '');
+				window.history.replaceState({}, '', newUrl);
+			});
 	}
 
 	$(document).on('change', '#est-check-all', function() {
@@ -244,14 +245,19 @@ body.est-print-selected .est-row-not-selected{display:none;}
 
 	refreshSelectedState();
 
-	var descTimer;
-	var $form = $('#estoque-filter-form');
+	$(document).on('submit', '#estoque-filter-form', function(e) {
+		e.preventDefault();
+		submitFiltersAjax();
+	});
+
+	$(document).on('change changed.bs.select', '#sCodProduto', function() {
+		submitFiltersAjax();
+	});
+
 	$(document).on('input', '#sDescricao', function() {
 		clearTimeout(descTimer);
 		descTimer = setTimeout(function() {
-			if ($form.length) {
-				$form[0].submit();
-			}
+			submitFiltersAjax();
 		}, 400);
 	});
 })();

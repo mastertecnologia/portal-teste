@@ -682,7 +682,7 @@ class ProdutosController extends AppController {
 		} elseif ($opt === 'f') {
 			$bApenasComSaldo = false;
 		} else {
-			$bApenasComSaldo = in_array((string)($query['apenasComSaldo'] ?? '0'), ['1', 'true', 't'], true);
+			$bApenasComSaldo = in_array((string)($query['apenasComSaldo'] ?? '1'), ['1', 'true', 't'], true);
 		}
 
 		try {
@@ -701,6 +701,13 @@ class ProdutosController extends AppController {
 		$this->set('title', 'Produtos em Estoque');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'estoque-screen-active');
+
+		$isAjax = $this->request->is('ajax') || in_array((string)($query['ajax'] ?? '0'), ['1', 'true'], true);
+		if ($isAjax) {
+			$this->viewBuilder()->setLayout(false);
+			$this->render('estoque_lista');
+			return;
+		}
 	}
 
 	public function estoquePdf($opt = null) {
@@ -716,7 +723,7 @@ class ProdutosController extends AppController {
 		} elseif ($opt === 'f') {
 			$bApenasComSaldo = false;
 		} else {
-			$bApenasComSaldo = in_array((string)($query['apenasComSaldo'] ?? '0'), ['1', 'true', 't'], true);
+			$bApenasComSaldo = in_array((string)($query['apenasComSaldo'] ?? '1'), ['1', 'true', 't'], true);
 		}
 
 		try {
