@@ -9,6 +9,9 @@ $queryAtual = [
 	'sDescricao' => $sDescricao,
 	'apenasComSaldo' => $bApenasComSaldo ? 1 : 0,
 ];
+$toggleTarget = $bApenasComSaldo ? 'todos' : 'estoque';
+$toggleLabel = $bApenasComSaldo ? 'Exibir todos' : 'Apenas com estoque';
+$toggleClass = $bApenasComSaldo ? 'est-btn' : 'est-btn primary';
 ?>
 <style>
 .est-root{
@@ -94,11 +97,12 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		<div class="est-actions">
 			<a href="#" id="btn-imprimir" class="est-btn warn">Imprimir</a>
 			<a href="#" id="btn-pdf" class="est-btn">PDF</a>
-			<?php if ($bApenasComSaldo) : ?>
-				<?= $this->Html->link('Exibir todos', ['controller' => 'Produtos', 'action' => 'estoque', 'f', '?' => $queryAtual], ['class' => 'est-btn']) ?>
-			<?php else : ?>
-				<?= $this->Html->link('Apenas com estoque', ['controller' => 'Produtos', 'action' => 'estoque', 't', '?' => $queryAtual], ['class' => 'est-btn primary']) ?>
-			<?php endif; ?>
+			<a
+				href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $toggleTarget === 'estoque' ? 't' : 'f', '?' => $queryAtual]) ?>"
+				class="<?= $toggleClass ?>"
+				id="btn-toggle-estoque"
+				data-target="<?= h($toggleTarget) ?>"
+			><?= h($toggleLabel) ?></a>
 		</div>
 	</div>
 
@@ -141,7 +145,12 @@ body.est-print-selected .est-row-not-selected{display:none;}
 
 <script>
 (function() {
-	var basePdf = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoquePdf', $bApenasComSaldo ? 't' : 'f']) ?>";
+	var estoqueUrlComSaldo = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', 't']) ?>";
+	var estoqueUrlTodos = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', 'f']) ?>";
+	var pdfUrlComSaldo = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoquePdf', 't']) ?>";
+	var pdfUrlTodos = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoquePdf', 'f']) ?>";
+	var apenasComSaldoAtual = <?= $bApenasComSaldo ? 'true' : 'false' ?>;
+	var basePdf = apenasComSaldoAtual ? pdfUrlComSaldo : pdfUrlTodos;
 	var $form = $('#estoque-filter-form');
 	var $results = $('#est-results');
 	var descTimer;
@@ -208,6 +217,26 @@ body.est-print-selected .est-row-not-selected{display:none;}
 			});
 	}
 
+	function atualizarBotaoModo() {
+		var $btn = $('#btn-toggle-estoque');
+		if (!$btn.length) {
+			return;
+		}
+
+		if (apenasComSaldoAtual) {
+			$btn.text('Exibir todos');
+			$btn.removeClass('primary');
+			$btn.attr('data-target', 'todos');
+			$btn.attr('href', estoqueUrlTodos);
+			return;
+		}
+
+		$btn.text('Apenas com estoque');
+		$btn.addClass('primary');
+		$btn.attr('data-target', 'estoque');
+		$btn.attr('href', estoqueUrlComSaldo);
+	}
+
 	$(document).on('change', '#est-check-all', function() {
 		$('.est-check-item').prop('checked', $(this).is(':checked'));
 		refreshSelectedState();
@@ -271,6 +300,16 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		submitFiltersAjax();
 	});
 
+	$(document).on('click', '#btn-toggle-estoque', function(e) {
+		e.preventDefault();
+		var target = String($(this).attr('data-target') || '');
+		apenasComSaldoAtual = (target === 'estoque');
+		$form.attr('action', apenasComSaldoAtual ? estoqueUrlComSaldo : estoqueUrlTodos);
+		basePdf = apenasComSaldoAtual ? pdfUrlComSaldo : pdfUrlTodos;
+		atualizarBotaoModo();
+		submitFiltersAjax();
+	});
+
 	$(document).on('change changed.bs.select', '#sCodProduto', function() {
 		submitFiltersAjax();
 	});
@@ -281,5 +320,7 @@ body.est-print-selected .est-row-not-selected{display:none;}
 			submitFiltersAjax();
 		}, 400);
 	});
+
+	atualizarBotaoModo();
 })();
 </script>
