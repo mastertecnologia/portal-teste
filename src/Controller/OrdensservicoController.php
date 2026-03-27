@@ -3,6 +3,9 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Mailer\Email;
+use Cake\View\View;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -1181,5 +1184,384 @@ class OrdensservicoController extends AppController {
 		if ($this->Ordensservico->save($ordem)) $this->Flash->success('Informações da ordem de serviço alteradas com sucesso!');
 		else $this->Flash->error('Ocorreu um erro ao salvar as informações da ordem de serviço.');
 		return $this->redirect(['action' => 'edit', $id]);
+	}
+
+	// —— Relatórios (modelos em config/ordens_servico_relatorios.php) ——
+
+	protected function _osRelatorioModelosConfig() {
+		$path = ROOT . DS . 'config' . DS . 'ordens_servico_relatorios.php';
+		if (!is_file($path)) {
+			return [];
+		}
+		$cfg = include $path;
+		return is_array($cfg) ? $cfg : [];
+	}
+
+	protected function _osRelatorioMetaPorId($modelo) {
+		foreach ($this->_osRelatorioModelosConfig() as $m) {
+			if (!empty($m['id']) && $m['id'] === $modelo) {
+				return $m;
+			}
+		}
+		return null;
+	}
+
+	protected function _normalizarFiltrosRelatorioOsFromRequest() {
+		$cliente = $this->request->getQuery('cliente');
+		$situacao = $this->request->getQuery('situacao');
+		$problema = $this->request->getQuery('problema');
+		$locacao = $this->request->getQuery('locacao');
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			if (is_array($data)) {
+				$cliente = $data['cliente'] ?? $cliente;
+				$situacao = $data['situacao'] ?? $situacao;
+				$problema = $data['problema'] ?? $problema;
+				$locacao = $data['locacao'] ?? $locacao;
+			}
+		}
+		if ((string)$cliente === '0') {
+			$cliente = '';
+		}
+		if ((string)$problema === '0') {
+			$problema = '';
+		}
+		if ($locacao === null || $locacao === '') {
+			$locacao = -1;
+		}
+		return compact('cliente', 'situacao', 'problema', 'locacao');
+	}
+
+	protected function _fetchOrdensRelatorioLista(array $filtros) {
+		$idempresa = $this->Auth->user('idempresa');
+		$q = $this->Ordensservico->find('all')
+			->where(['Ordensservico.idempresa' => $idempresa])
+			->contain([
+				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
+				'Users' => ['fields' => ['Users.id', 'Users.name']],
+			]);
+		if ($filtros['situacao'] !== '' && $filtros['situacao'] !== null) {
+			$q->where(['Ordensservico.situacao' => $filtros['situacao']]);
+		}
+		if ($filtros['cliente'] !== '' && $filtros['cliente'] !== null && (string)$filtros['cliente'] !== '0') {
+			$q->where(['Ordensservico.idcliente' => $filtros['cliente']]);
+		}
+		if ($filtros['problema'] !== '' && $filtros['problema'] !== null && (string)$filtros['problema'] !== '0') {
+			$q->where(['Ordensservico.idproblema' => $filtros['problema']]);
+		}
+		if ((string)$filtros['locacao'] !== '' && (string)$filtros['locacao'] !== '-1') {
+			$q->where(['Ordensservico.locacao' => $filtros['locacao']]);
+		}
+		return $q->toArray();
+	}
+
+	protected function _fetchOrdensRelatorioResumo(array $filtros) {
+		$idempresa = $this->Auth->user('idempresa');
+		$q = $this->Ordensservico->find('all')
+			->where(['Ordensservico.idempresa' => $idempresa])
+			->contain([
+				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
+				'Users' => ['fields' => ['Users.id', 'Users.name']],
+			]);
+		if ($filtros['cliente'] !== '' && $filtros['cliente'] !== null && (string)$filtros['cliente'] !== '0') {
+			$q->where(['Ordensservico.idcliente' => $filtros['cliente']]);
+		}
+		if ($filtros['problema'] !== '' && $filtros['problema'] !== null && (string)$filtros['problema'] !== '0') {
+			$q->where(['Ordensservico.idproblema' => $filtros['problema']]);
+		}
+		if ((string)$filtros['locacao'] !== '' && (string)$filtros['locacao'] !== '-1') {
+			$q->where(['Ordensservico.locacao' => $filtros['locacao']]);
+		}
+		return $q->toArray();
+	}
+
+	protected function _agruparResumoSituacao(array $ordens) {
+		$map = [];
+		foreach ($ordens as $o) {
+			$k = (string)$o->situacao;
+			if (!isset($map[$k])) {
+				$map[$k] = [
+					'situacao' => $o->situacao,
+					'label' => trim(strip_tags((string)SituacaoOrdem($o->situacao))),
+					'total' => 0,
+				];
+			}
+			$map[$k]['total']++;
+		}
+		$out = array_values($map);
+		usort($out, function ($a, $b) {
+			return $b['total'] <=> $a['total'];
+		});
+		return $out;
+	}
+
+	protected function _rotulosFiltrosRelatorio(array $filtros, array $clientesOpt, array $problemasOpt) {
+		$s = $filtros['situacao'];
+		if ($s === '' || $s === null) {
+			$sitLbl = 'Todas';
+		} elseif (function_exists('DescricaoSituacaoOrdem')) {
+			$sitLbl = (string)DescricaoSituacaoOrdem($s);
+		} else {
+			$sitLbl = (string)(C_OrdensSituacao[$s] ?? C_OrdensSituacao[(int)$s] ?? $s);
+		}
+		$c = $filtros['cliente'];
+		$cliLbl = ($c === '' || $c === null || (string)$c === '0') ? 'Todos' : (string)($clientesOpt[$c] ?? $c);
+		$p = $filtros['problema'];
+		$probLbl = ($p === '' || $p === null || (string)$p === '0') ? 'Todos' : (string)($problemasOpt[$p] ?? $p);
+		$l = $filtros['locacao'];
+		$locLbl = ((string)$l === '-1' || $l === '' || $l === null) ? 'Todos' : (string)(C_OrdensLocacao[$l] ?? $l);
+		return [
+			'situacao' => $sitLbl,
+			'cliente' => $cliLbl,
+			'problema' => $probLbl,
+			'locacao' => $locLbl,
+		];
+	}
+
+	protected function _dadosRelatorioOs($modelo, array $filtros) {
+		$idempresa = $this->Auth->user('idempresa');
+		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
+		if ($modelo === 'lista_filtrada') {
+			$ordens = $this->_fetchOrdensRelatorioLista($filtros);
+			return [
+				'ordens' => $ordens,
+				'resumoSituacao' => [],
+				'problemas' => $problemas,
+			];
+		}
+		if ($modelo === 'resumo_situacao') {
+			$ordensFull = $this->_fetchOrdensRelatorioResumo($filtros);
+			return [
+				'ordens' => [],
+				'resumoSituacao' => $this->_agruparResumoSituacao($ordensFull),
+				'problemas' => $problemas,
+			];
+		}
+		return null;
+	}
+
+	protected function _renderRelatorioOsPdfHtml($modelo, array $filtros, $titulo, array $filtrosRotulo, array $payload) {
+		$nomeEmp = '';
+		try {
+			$eid = $this->Auth->user('idempresa');
+			if ($eid) {
+				$nomeEmp = (string)$this->Empresas->get($eid)->razaosocial;
+			}
+		} catch (\Throwable $e) {
+			$nomeEmp = '';
+		}
+		$view = new View($this->request, $this->response, $this->getEventManager(), ['layout' => false]);
+		$view->setTemplatePath('Ordensservico');
+		$view->set(array_merge(
+			[
+				'modeloRelatorio' => $modelo,
+				'tituloRelatorio' => $titulo,
+				'filtros' => $filtros,
+				'filtrosRotulo' => $filtrosRotulo,
+				'nomeempresa' => $nomeEmp,
+			],
+			$payload
+		));
+		return $view->render('relatorio_pdf');
+	}
+
+	public function relatorios() {
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		$filtros = $this->_normalizarFiltrosRelatorioOsFromRequest();
+
+		$problemas1 = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
+		$clientesOpt = [];
+		$clientes = $this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+		foreach ($clientes as $reg) {
+			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
+		}
+		asort($clientesOpt);
+
+		$this->set('modelosRelatorio', $this->_osRelatorioModelosConfig());
+		$this->set('cliente', $filtros['cliente']);
+		$this->set('situacao', $filtros['situacao']);
+		$this->set('problema', $filtros['problema']);
+		$this->set('locacao', $filtros['locacao']);
+		$this->set('problemas', $problemas1);
+		$this->set('clientes', $clientesOpt);
+		$this->set('title', 'Relatórios — Ordens de Serviço');
+	}
+
+	public function relatorioVer($modelo = null) {
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$meta = $this->_osRelatorioMetaPorId((string)$modelo);
+		if ($meta === null) {
+			throw new NotFoundException(__('Modelo de relatório inválido.'));
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		$filtros = $this->_normalizarFiltrosRelatorioOsFromRequest();
+		$problemasOpt = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
+		$clientesOpt = [];
+		foreach ($this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->toArray() as $reg) {
+			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
+		}
+		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt);
+		$payload = $this->_dadosRelatorioOs((string)$modelo, $filtros);
+		if ($payload === null) {
+			throw new NotFoundException(__('Modelo de relatório inválido.'));
+		}
+		$this->set('modeloRelatorio', (string)$modelo);
+		$this->set('tituloRelatorio', $meta['titulo']);
+		$this->set('filtros', $filtros);
+		$this->set('filtrosRotulo', $filtrosRotulo);
+		$this->set($payload);
+	}
+
+	public function relatorioPdf($modelo = null) {
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$meta = $this->_osRelatorioMetaPorId((string)$modelo);
+		if ($meta === null) {
+			throw new NotFoundException(__('Modelo de relatório inválido.'));
+		}
+		if (!class_exists(\Mpdf\Mpdf::class)) {
+			$this->Flash->error('Biblioteca mPDF não instalada. Execute: composer require mpdf/mpdf');
+			return $this->redirect(['action' => 'relatorios', '?' => $this->request->getQueryParams()]);
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		$filtros = $this->_normalizarFiltrosRelatorioOsFromRequest();
+		$problemasOpt = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
+		$clientesOpt = [];
+		foreach ($this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->toArray() as $reg) {
+			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
+		}
+		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt);
+		$payload = $this->_dadosRelatorioOs((string)$modelo, $filtros);
+		if ($payload === null) {
+			throw new NotFoundException(__('Modelo de relatório inválido.'));
+		}
+		$html = $this->_renderRelatorioOsPdfHtml(
+			(string)$modelo,
+			$filtros,
+			$meta['titulo'],
+			$filtrosRotulo,
+			$payload
+		);
+		$tmpDir = TMP . 'mpdf' . DS;
+		if (!is_dir($tmpDir)) {
+			mkdir($tmpDir, 0775, true);
+		}
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8',
+			'format' => 'A4-L',
+			'tempDir' => $tmpDir,
+		]);
+		$mpdf->WriteHTML($html);
+		$pdf = $mpdf->Output('', 'S');
+		$fn = 'Relatorio-OS-' . preg_replace('/[^a-z0-9_-]+/i', '_', (string)$modelo) . '-' . date('Ymd-His') . '.pdf';
+		return $this->response
+			->withType('application/pdf')
+			->withDownload($fn)
+			->withStringBody($pdf);
+	}
+
+	public function relatorioEnviarEmail() {
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		if (!$this->request->is('post')) {
+			return $this->redirect(['action' => 'relatorios']);
+		}
+		$data = $this->request->getData();
+		$to = trim((string)($data['email_destino'] ?? ''));
+		$modelo = (string)($data['modelo'] ?? '');
+		if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+			$this->Flash->error('Informe um e-mail destino válido.');
+			$d = $this->request->getData();
+			return $this->redirect(['action' => 'relatorios', '?' => [
+				'cliente' => $d['cliente'] ?? '',
+				'situacao' => $d['situacao'] ?? '',
+				'problema' => $d['problema'] ?? '',
+				'locacao' => $d['locacao'] ?? '',
+			]]);
+		}
+		$meta = $this->_osRelatorioMetaPorId($modelo);
+		if ($meta === null) {
+			$this->Flash->error('Modelo de relatório inválido.');
+			return $this->redirect(['action' => 'relatorios']);
+		}
+		if (!class_exists(\Mpdf\Mpdf::class)) {
+			$this->Flash->error('mPDF não está disponível; não é possível anexar o PDF. Instale: composer require mpdf/mpdf');
+			$d = $this->request->getData();
+			return $this->redirect(['action' => 'relatorios', '?' => [
+				'cliente' => $d['cliente'] ?? '',
+				'situacao' => $d['situacao'] ?? '',
+				'problema' => $d['problema'] ?? '',
+				'locacao' => $d['locacao'] ?? '',
+			]]);
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		$filtros = $this->_normalizarFiltrosRelatorioOsFromRequest();
+		$problemasOpt = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
+		$clientesOpt = [];
+		foreach ($this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->toArray() as $reg) {
+			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
+		}
+		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt);
+		$payload = $this->_dadosRelatorioOs($modelo, $filtros);
+		if ($payload === null) {
+			$this->Flash->error('Modelo de relatório inválido.');
+			$d = $this->request->getData();
+			return $this->redirect(['action' => 'relatorios', '?' => [
+				'cliente' => $d['cliente'] ?? '',
+				'situacao' => $d['situacao'] ?? '',
+				'problema' => $d['problema'] ?? '',
+				'locacao' => $d['locacao'] ?? '',
+			]]);
+		}
+		$html = $this->_renderRelatorioOsPdfHtml($modelo, $filtros, $meta['titulo'], $filtrosRotulo, $payload);
+		$tmpDir = TMP . 'mpdf' . DS;
+		if (!is_dir($tmpDir)) {
+			mkdir($tmpDir, 0775, true);
+		}
+		$mp = new \Mpdf\Mpdf([
+			'mode' => 'utf-8',
+			'format' => 'A4-L',
+			'tempDir' => $tmpDir,
+		]);
+		$mp->WriteHTML($html);
+		$pdfBinary = $mp->Output('', 'S');
+		$attachName = 'Relatorio-OS-' . preg_replace('/[^a-z0-9_-]+/i', '_', $modelo) . '.pdf';
+		$msg = trim((string)($data['mensagem'] ?? ''));
+		if ($msg === '') {
+			$msg = 'Segue em anexo o relatório de Ordens de Serviço (' . $meta['titulo'] . ').';
+		}
+		try {
+			$email = new Email('default');
+			$email->setTo($to)
+				->setSubject('Relatório — Ordens de Serviço — ' . $meta['titulo'])
+				->setAttachments([
+					$attachName => [
+						'data' => $pdfBinary,
+						'mimetype' => 'application/pdf',
+					],
+				]);
+			$email->send($msg);
+			$this->Flash->success('Relatório enviado por e-mail para ' . $to . '.');
+		} catch (\Throwable $e) {
+			$this->log('Ordensservico::relatorioEnviarEmail: ' . $e->getMessage(), 'error');
+			$this->Flash->error('Não foi possível enviar o e-mail. Verifique a configuração de e-mail do sistema.');
+		}
+		return $this->redirect(['action' => 'relatorios', '?' => $filtros]);
 	}
 }
