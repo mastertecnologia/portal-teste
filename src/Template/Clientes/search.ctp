@@ -24,7 +24,7 @@ $this->Breadcrumbs->add('Pesquisa', [], ['class' => 'breadcrumb-item active']);
 			<div class="row">
 				<div class="col-lg-12 col-md-12">
 					<div class="form-group ">
-						<label class="control-label text-muted">Informe a razão social ou o nome fantasia do cliente que deseja buscar no campo abaixo:</label>
+						<label class="control-label text-muted">Busque por nome, razão social, nome fantasia, e-mail ou CNPJ/CPF (com ou sem máscara):</label>
 						<?= $this->Form->control('keywords', ['class' => 'form-control', 'label' => false, 'required' => true]) ?>
 					</div>
 				</div>

@@ -1,4 +1,8 @@
 <?php
+    /**
+     * Clientes — lista (esta tela): action index.
+     * Telas relacionadas no mesmo controller: add (novo), edit (cadastro), view (detalhe), search (pesquisa legada por query string).
+     */
     use Cake\Routing\Router;
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
 
@@ -20,6 +24,19 @@
         $a = strtoupper(substr($parts[0] ?? 'C', 0, 1));
         $b = strtoupper(substr($parts[1] ?? '', 0, 1));
         return $a . $b;
+    }
+
+    /** Atributos data-* para busca client-side (nome, CNPJ/CPF sem máscara, e-mail). */
+    function cliRowDataAttrs($reg) {
+        $isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
+        $docDigits = preg_replace('/\D/', '', (string)($isPj ? ($reg->cnpj ?? '') : ($reg->cpf ?? '')));
+        $emailLower = mb_strtolower(trim((string)($reg->email ?? '')), 'UTF-8');
+        $parts = $isPj ? [trim((string)($reg->razaosocial ?? '')), trim((string)($reg->nomefantasia ?? ''))] : [trim((string)($reg->nome ?? ''))];
+        $textBlob = mb_strtolower(trim(preg_replace('/\s+/', ' ', implode(' ', array_filter($parts)))), 'UTF-8');
+        if ($emailLower !== '') {
+            $textBlob = trim($textBlob . ' ' . $emailLower);
+        }
+        return ' data-cli-doc="' . h($docDigits) . '" data-cli-email="' . h($emailLower) . '" data-cli-text="' . h($textBlob) . '"';
     }
 ?>
 
@@ -93,12 +110,13 @@
                 </button>
             </div>
             <div class="cli-filter-divider"></div>
-            <div class="cli-filter-search">
+            <div class="cli-filter-search" id="cli-filter-search">
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
                     <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-                <input type="text" id="cli-search" placeholder="Buscar por nome, CNPJ, e-mail…" autocomplete="off" />
+                <input type="text" id="cli-search" placeholder="Nome, CNPJ, CPF ou e-mail" autocomplete="off" inputmode="text" aria-describedby="cli-search-mode" />
+                <span class="cli-search-mode" id="cli-search-mode" title="Formato detectado para a busca"></span>
             </div>
         </div>
 
@@ -120,7 +138,7 @@
                     <tbody>
                         <?php foreach ($clientesAtivosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -157,7 +175,7 @@
                     <tbody>
                         <?php foreach ($clientesAtivosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -194,7 +212,7 @@
                     <tbody>
                         <?php foreach ($clientesInativosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -237,7 +255,7 @@
                     <tbody>
                         <?php foreach ($clientesInativosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -280,9 +298,20 @@ $(document).ready(function() {
         'inativos': { pj: <?= $cntIPJ ?>, pf: <?= $cntIPF ?> }
     };
 
+    function activeTableKey() {
+        return status === 'ativos'
+            ? (type === 'pj' ? 'ativosPJ' : 'ativosPF')
+            : (type === 'pj' ? 'inativosPJ' : 'inativosPF');
+    }
+
+    function redrawActiveTable() {
+        tables[activeTableKey()].draw();
+    }
+
     function showPanel() {
         $('.cli-table-panel').removeClass('active');
         $('#panel-' + status + '-' + type).addClass('active');
+        redrawActiveTable();
     }
 
     // KPI clicks
@@ -330,7 +359,62 @@ $(document).ready(function() {
         updateTypePills();
     }
 
-    // DataTables
+    function normalizeAccent(s) {
+        if (!s) return '';
+        try {
+            return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        } catch (e) {
+            return s;
+        }
+    }
+
+    function detectQueryType(raw) {
+        var s = (raw || '').trim();
+        if (!s) return { type: 'empty' };
+        if (s.indexOf('@') >= 0) {
+            return { type: 'email', value: s.toLowerCase().replace(/\s/g, '') };
+        }
+        var digits = s.replace(/\D/g, '');
+        var onlyDocChars = /^[\d\s.\-\/\(\)]+$/u.test(s);
+        if (digits.length >= 3 && onlyDocChars) {
+            return { type: 'doc', digits: digits };
+        }
+        var lowered = normalizeAccent(s.toLowerCase());
+        var words = lowered.split(/\s+/).filter(function(w) { return w.length > 0; });
+        return { type: 'nome', words: words };
+    }
+
+    function rowMatches($row, q) {
+        var doc = $row.attr('data-cli-doc') || '';
+        var email = $row.attr('data-cli-email') || '';
+        var text = normalizeAccent(($row.attr('data-cli-text') || '').toLowerCase());
+        if (q.type === 'empty') return true;
+        if (q.type === 'email') {
+            return email.indexOf(q.value) !== -1;
+        }
+        if (q.type === 'doc') {
+            if (!doc) return false;
+            return doc.indexOf(q.digits) !== -1;
+        }
+        if (q.type === 'nome') {
+            if (q.words.length === 0) return true;
+            for (var i = 0; i < q.words.length; i++) {
+                if (text.indexOf(q.words[i]) === -1) return false;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        var api = new $.fn.dataTable.Api(settings);
+        var row = api.row(dataIndex).node();
+        if (!row) return true;
+        var q = detectQueryType($('#cli-search').val());
+        return rowMatches($(row), q);
+    });
+
+    // DataTables (após registrar ext.search para o primeiro draw já respeitar o filtro)
     var dtOpts = {
         "pageLength": <?= $pagelength ?? 25 ?>,
         "language": {
@@ -354,23 +438,65 @@ $(document).ready(function() {
         'inativosPF': $('#tableInativosPF').DataTable(dtOpts)
     };
 
+    $.each(tables, function(_, dt) {
+        dt.search('');
+    });
+
+    function updateSearchModeUi() {
+        var $inp = $('#cli-search');
+        var $wrap = $('#cli-filter-search');
+        var $mode = $('#cli-search-mode');
+        var q = detectQueryType($inp.val());
+        $wrap.removeClass('cli-mode-nome cli-mode-doc cli-mode-email');
+        if (q.type === 'empty') {
+            $mode.text('');
+            $inp.attr('inputmode', 'text');
+            $inp.removeAttr('maxlength');
+            return;
+        }
+        if (q.type === 'email') {
+            $mode.text('E-mail');
+            $wrap.addClass('cli-mode-email');
+            $inp.attr('inputmode', 'email');
+            $inp.removeAttr('maxlength');
+            return;
+        }
+        if (q.type === 'doc') {
+            if (q.digits.length < 11) {
+                $mode.text('CNPJ/CPF');
+            } else if (q.digits.length === 11) {
+                $mode.text('CPF');
+            } else {
+                $mode.text('CNPJ');
+            }
+            $wrap.addClass('cli-mode-doc');
+            $inp.attr('inputmode', 'numeric');
+            $inp.attr('maxlength', '20');
+            return;
+        }
+        $mode.text('Nome');
+        $wrap.addClass('cli-mode-nome');
+        $inp.attr('inputmode', 'text');
+        $inp.removeAttr('maxlength');
+    }
+
     // Persist pagelength
     $('#tableAtivosPJ, #tableAtivosPF, #tableInativosPJ, #tableInativosPF').on('length.dt', function(e, s, len) {
         pagelength(len);
     });
 
-    // Global search wired to active table
-    $('#cli-search').on('keyup', function() {
-        var q = $(this).val();
-        var key = status === 'ativos'
-            ? (type === 'pj' ? 'ativosPJ' : 'ativosPF')
-            : (type === 'pj' ? 'inativosPJ' : 'inativosPF');
-        tables[key].search(q).draw();
+    $('#cli-search').on('keyup input', function() {
+        updateSearchModeUi();
+        redrawActiveTable();
     });
+
+    updateSearchModeUi();
 
     // Auto-apply filter if passed from another page
     if (typeof filters !== 'undefined') {
-        tables['ativosPJ'].search(filters).draw();
+        $('#cli-search').val(filters);
+        updateSearchModeUi();
+        redrawActiveTable();
     }
 });
 </script>

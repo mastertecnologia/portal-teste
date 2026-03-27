@@ -188,6 +188,21 @@
   width: 100%;
 }
 .cli-filter-search input::placeholder { color: var(--cli-dim); }
+.cli-search-mode {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cli-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cli-filter-search.cli-mode-email { border-color: rgba(88, 166, 255, 0.35); }
+.cli-filter-search.cli-mode-doc { border-color: rgba(29, 158, 117, 0.4); }
+.cli-filter-search.cli-mode-nome { border-color: rgba(139, 148, 158, 0.35); }
 
 /* ── Table area ──────────────────────────────────────────────── */
 .cli-table-wrap { padding: 0 24px 24px; background: var(--cli-bg); }

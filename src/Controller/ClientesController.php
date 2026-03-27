@@ -101,6 +101,59 @@ class ClientesController extends AppController {
 		$this->set(compact('cliente', 'cidade'));
 	}
 
+	/**
+	 * Pesquisa server-side (tela search.ctp): mesma regra de formatos da lista — e-mail, CNPJ/CPF (apenas dígitos e máscara) ou nome (palavras em nome/razão/fantasia/e-mail).
+	 *
+	 * @param string $keywords
+	 * @return \App\Model\Entity\Cliente[]
+	 */
+	protected function _findClientesPorKeywords($keywords) {
+		$kw = trim((string)$keywords);
+		if ($kw === '') {
+			return [];
+		}
+		$idempresa = $this->Auth->user('idempresa');
+		$base = ['Clientes.idempresa' => $idempresa];
+
+		if (mb_strpos($kw, '@') !== false) {
+			$email = mb_strtolower($kw, 'UTF-8');
+			return $this->Clientes->find('all')->where([
+				$base,
+				'LOWER(Clientes.email) LIKE' => '%' . $email . '%',
+			])->toArray();
+		}
+
+		$digits = preg_replace('/\D/', '', $kw);
+		if (preg_match('/^[\d\s.\-\/\(\)]+$/u', $kw) && strlen($digits) >= 3) {
+			return $this->Clientes->find('all')->where([
+				$base,
+				'OR' => [
+					['Clientes.cnpj LIKE' => '%' . $digits . '%'],
+					['Clientes.cpf LIKE' => '%' . $digits . '%'],
+				],
+			])->toArray();
+		}
+
+		$words = preg_split('/\s+/', mb_strtolower($kw, 'UTF-8'), -1, PREG_SPLIT_NO_EMPTY);
+		if (empty($words)) {
+			return [];
+		}
+
+		$q = $this->Clientes->find('all')->where([$base]);
+		foreach ($words as $w) {
+			$q->andWhere([
+				'OR' => [
+					['LOWER(Clientes.razaosocial) LIKE' => '%' . $w . '%'],
+					['LOWER(Clientes.nomefantasia) LIKE' => '%' . $w . '%'],
+					['LOWER(Clientes.nome) LIKE' => '%' . $w . '%'],
+					['LOWER(Clientes.email) LIKE' => '%' . $w . '%'],
+				],
+			]);
+		}
+
+		return $q->toArray();
+	}
+
 	public function search() {
 		if ($this->Auth->user('role') == 1) {
 			$this->Flash->error('Você não possui permissões para acessar esta página.');
@@ -112,24 +165,15 @@ class ClientesController extends AppController {
 			$keywords = $this->request->getQuery('keywords');
 
 			if ($keywords) {
-				$array = explode(" ", $keywords);
+				$clientes = $this->_findClientesPorKeywords($keywords);
 
-				foreach ($array as $data) {
-					$data = strtolower($data);
-					$query = $this->Clientes->find('all', [
-						'conditions' => ['AND' => [
-							['idempresa' => $this->Auth->user('idempresa')],
-							['OR' =>[['LOWER(Clientes.razaosocial) LIKE' => '%' . $data . '%'], ['LOWER(Clientes.nomefantasia) LIKE' => '%' . $data . '%'], 
-							['LOWER(Clientes.nome) LIKE' => '%' . $data . '%']]]]]
-					])->toArray();
-
-					$clientes = array_unique(array_merge($clientes, $query), SORT_REGULAR);
-				}
-				
-				foreach($clientes as $key=>$reg){
+				foreach ($clientes as $key => $reg) {
 					$reg->controller = 'Clientes';
-					if($reg->inativo == 0) 	$clientes[$key]->search =  '<span class="label label-info">Ativo</span>';
-					else if($reg->inativo == 1) $clientes[$key]->search = '<span class="label label-danger">Inativo</span>';
+					if ($reg->inativo == 0) {
+						$clientes[$key]->search = '<span class="label label-info">Ativo</span>';
+					} elseif ($reg->inativo == 1) {
+						$clientes[$key]->search = '<span class="label label-danger">Inativo</span>';
+					}
 				}
 			}
 		}
