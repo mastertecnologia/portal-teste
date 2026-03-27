@@ -8,8 +8,10 @@
 /* ══════════════════════════════════════════════════════════════
    VARIÁVEIS GLOBAIS
 ══════════════════════════════════════════════════════════════ */
+/* .prec-root = tela Gestão de Preços (precificacao.ctp); mesmas tokens --prd-* */
 .prd-root,
-.prd-form-root {
+.prd-form-root,
+.prec-root {
   --prd-bg:         #0d1117;
   --prd-surface:    #161b22;
   --prd-surface2:   #1c2230;
@@ -44,7 +46,8 @@
 
 /* Bootstrap: em .row, filho sem .col-* não expande — KPIs empilham (layout “desconfigurado”) */
 .row > .prd-root,
-.row > .prd-form-root {
+.row > .prd-form-root,
+.row > .prec-root {
   flex: 0 0 100%;
   max-width: 100%;
   width: 100%;

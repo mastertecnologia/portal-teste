@@ -66,7 +66,11 @@ body.prec-screen-active .row{overflow:visible!important;padding:0!important;marg
 .prec-tipo-pill{padding:5px 12px;border-radius:99px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--prd-border);background:transparent;color:var(--prd-muted);transition:all .15s;}
 .prec-tipo-pill.active{background:var(--prd-teal-dim);color:var(--prd-teal-lt);border-color:var(--prd-teal);}
 .prec-sel-count{font-size:.72rem;color:var(--prd-muted);margin-left:auto;}
-.prec-grid-scroll{flex:1;overflow:auto;min-height:0;}
+.prec-grid-scroll{flex:1;overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.22) transparent;}
+.prec-grid-scroll::-webkit-scrollbar{width:8px;height:8px;}
+.prec-grid-scroll::-webkit-scrollbar-track{background:transparent;}
+.prec-grid-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px;}
+.prec-grid-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28);}
 /* Tabela */
 .prec-table{width:100%;border-collapse:collapse;font-size:.8rem;}
 .prec-table thead th{position:sticky;top:0;z-index:2;background:var(--prd-surface);padding:9px 10px;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--prd-text2);border-bottom:1px solid var(--prd-border);white-space:nowrap;}
