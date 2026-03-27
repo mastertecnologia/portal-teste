@@ -1434,6 +1434,7 @@ class OrdensservicoController extends AppController {
 		$this->set('problemas', $problemas1);
 		$this->set('clientes', $clientesOpt);
 		$this->set('title', 'Relatórios — Ordens de Serviço');
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function relatorioVer($modelo = null) {
@@ -1463,6 +1464,16 @@ class OrdensservicoController extends AppController {
 		$this->set('filtros', $filtros);
 		$this->set('filtrosRotulo', $filtrosRotulo);
 		$this->set($payload);
+		$nomeEmp = '';
+		try {
+			if ($idempresa) {
+				$nomeEmp = (string)$this->Empresas->get($idempresa)->razaosocial;
+			}
+		} catch (\Throwable $e) {
+			$nomeEmp = '';
+		}
+		$this->set('nomeempresa', $nomeEmp);
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function relatorioPdf($modelo = null) {

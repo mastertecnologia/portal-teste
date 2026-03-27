@@ -859,6 +859,151 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	color: var(--os-text);
 }
 
+/* Link com rótulo no cabeçalho (não usar .os-icon-btn — aquele é só ícone 34×34) */
+.os-index-shell .os-page-head-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 34px;
+	padding: 0 14px;
+	border-radius: 8px;
+	border: 1px solid var(--os-border);
+	background: var(--os-bg3);
+	color: var(--os-text2);
+	text-decoration: none !important;
+	font-size: 12.5px;
+	font-weight: 500;
+	flex-shrink: 0;
+	white-space: nowrap;
+	line-height: 1;
+}
+.os-index-shell .os-page-head-link:hover {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+.os-index-shell .os-page-head-link svg {
+	flex-shrink: 0;
+	display: block;
+}
+
+/* —— Relatórios OS (Template/Ordensservico/relatorios) —— */
+.os-index-shell .os-rel-inner {
+	padding: 0 16px 24px;
+	max-width: 1120px;
+	margin: 0 auto;
+}
+.os-index-shell .os-rel-headline {
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-headline .os-page-title {
+	margin-bottom: 4px;
+}
+.os-index-shell .os-rel-panel {
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border);
+	border-radius: 12px;
+	padding: 16px 18px;
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-panel h2 {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 0 0 10px;
+}
+.os-index-shell .os-rel-panel .os-rel-help {
+	font-size: 11px;
+	color: var(--os-text3);
+	margin: 0 0 12px;
+	line-height: 1.45;
+}
+.os-index-shell .os-rel-map {
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border);
+	border-radius: 10px;
+	padding: 12px 14px;
+	font-size: 11px;
+	color: var(--os-text2);
+	line-height: 1.45;
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-map strong {
+	color: var(--os-text);
+}
+.os-index-shell .os-rel-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-card {
+	border: 1px solid var(--os-border);
+	border-radius: 12px;
+	padding: 14px 16px;
+	background: var(--os-bg3);
+}
+.os-index-shell .os-rel-card h3 {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 0 0 6px;
+}
+.os-index-shell .os-rel-card p {
+	font-size: 11px;
+	color: var(--os-text2);
+	margin: 0 0 12px;
+	line-height: 1.45;
+}
+.os-index-shell .os-rel-card .os-rel-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.os-index-shell .os-rel-card .btn {
+	font-size: 11.5px;
+	padding: 6px 12px;
+	border-radius: 8px;
+}
+.os-index-shell .os-rel-filtros .form-material p {
+	color: var(--os-text3);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: 6px;
+}
+.os-index-shell .os-rel-filtros .form-control,
+.os-index-shell .os-rel-email .form-control {
+	background: var(--os-bg);
+	border-color: var(--os-border2);
+	color: var(--os-text);
+	font-size: 12px;
+}
+.os-index-shell .os-rel-filtros .form-control:focus,
+.os-index-shell .os-rel-email .form-control:focus {
+	border-color: var(--os-accent);
+	box-shadow: 0 0 0 2px var(--os-accent-glow);
+}
+.os-index-shell .os-rel-panel code,
+.os-index-shell .os-rel-email code {
+	background: var(--os-bg4);
+	color: var(--os-accent);
+	padding: 1px 6px;
+	border-radius: 4px;
+	font-size: 10px;
+}
+.os-index-shell .os-rel-email .control-label,
+.os-index-shell .os-rel-email label {
+	color: var(--os-text3);
+	font-size: 11px;
+	font-weight: 500;
+}
+.os-index-shell .os-rel-warn {
+	color: var(--os-amber);
+	margin: 0;
+	font-size: 12px;
+}
+
 .os-index-shell tr.os-row-drawer {
 	cursor: pointer;
 }

@@ -1,8 +1,20 @@
 <?php
+$this->Html->css('/dist/css/pages/ordensservico-index-shell.css', ['block' => true]);
 $this->assign('title', h($tituloRelatorio ?? 'Relatório'));
 $nf = function ($v) {
 	return number_format((float)$v, 2, ',', '.');
 };
+$qRelFiltros = [];
+foreach (['cliente', 'situacao', 'problema', 'locacao'] as $k) {
+	$v = $filtros[$k] ?? null;
+	if ($v === null || $v === '') {
+		continue;
+	}
+	if ($k === 'locacao' && ((string)$v === '-1' || (int)$v === -1)) {
+		continue;
+	}
+	$qRelFiltros[$k] = $v;
+}
 ?>
 <style>
 @media print {
@@ -21,20 +33,16 @@ $nf = function ($v) {
 .os-rel-doc .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #eee; }
 </style>
 
-<div class="no-print" style="padding:12px;">
-	<button type="button" class="btn btn-default" onclick="window.print()">Imprimir</button>
-	<?= $this->Html->link('PDF', ['action' => 'relatorioPdf', $modeloRelatorio, '?' => [
-		'cliente' => $filtros['cliente'],
-		'situacao' => $filtros['situacao'],
-		'problema' => $filtros['problema'],
-		'locacao' => $filtros['locacao'],
-	]], ['class' => 'btn btn-success']) ?>
-	<?= $this->Html->link('Fechar', ['action' => 'relatorios', '?' => [
-		'cliente' => $filtros['cliente'],
-		'situacao' => $filtros['situacao'],
-		'problema' => $filtros['problema'],
-		'locacao' => $filtros['locacao'],
-	]], ['class' => 'btn btn-link']) ?>
+<div class="os-index-shell no-print" style="margin:0 0 12px;border-radius:12px;padding:12px 16px;">
+	<div class="os-page-head-actions" style="flex-wrap:wrap;gap:10px;">
+		<button type="button" class="os-btn-ghost" style="border:none;cursor:pointer;font-family:inherit;" onclick="window.print()">Imprimir</button>
+		<?= $this->Html->link('PDF', ['action' => 'relatorioPdf', $modeloRelatorio, '?' => $qRelFiltros], ['class' => 'btn btn-success', 'style' => 'border-radius:8px;padding:6px 14px;font-size:12.5px;']) ?>
+		<?= $this->Html->link(
+			'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Relatórios</span>',
+			['action' => 'relatorios', '?' => $qRelFiltros],
+			['class' => 'os-page-head-link', 'escape' => false]
+		) ?>
+	</div>
 </div>
 
 <div id="os-rel-printable" class="os-rel-doc">

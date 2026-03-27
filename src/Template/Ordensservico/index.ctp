@@ -60,9 +60,9 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			</div>
 			<div class="os-page-head-actions">
 				<?= $this->Html->link(
-					'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M4 2h5l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.2"/><path d="M9 2v3h3" stroke="currentColor" stroke-width="1.2"/></svg>Relatórios',
+					'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 2h5l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.2"/><path d="M9 2v3h3" stroke="currentColor" stroke-width="1.2"/></svg><span>Relatórios</span>',
 					['action' => 'relatorios'],
-					['class' => 'os-icon-btn os-icon-btn--btn', 'escape' => false, 'title' => 'Relatórios PDF, impressão e e-mail']
+					['class' => 'os-page-head-link', 'escape' => false, 'title' => 'Relatórios: visualizar, PDF e e-mail']
 				) ?>
 				<button type="button" class="os-icon-btn os-icon-btn--btn" id="os-btn-export-csv" title="Exportar CSV (filtro atual da tabela)">
 					<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M9 1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 1Z" stroke="currentColor" stroke-width="1.3"/><path d="M9 1v5h5" stroke="currentColor" stroke-width="1.3"/><path d="M8 10v4M6 12l2 2 2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
