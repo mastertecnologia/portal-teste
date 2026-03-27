@@ -275,9 +275,14 @@ $(function () {
 	}
 	function relInstallDatepickers() {
 		if (typeof $.fn.datepicker !== 'function') return;
-		$ini.datepicker({ format: 'dd/mm/yyyy', weekStart: 1 }).on('changeDate', function () { manualRangeEdit = true; });
-		$fim.datepicker({ format: 'dd/mm/yyyy', weekStart: 1 }).on('changeDate', function () { manualRangeEdit = true; });
-		$mes.datepicker({ format: 'mm/yyyy', weekStart: 1, minViewMode: 'months', viewMode: 'months' })
+		var dpBase = {
+			weekStart: 1,
+			container: 'body',
+			zIndexOffset: 3000
+		};
+		$ini.datepicker($.extend({}, dpBase, { format: 'dd/mm/yyyy' })).on('changeDate', function () { manualRangeEdit = true; });
+		$fim.datepicker($.extend({}, dpBase, { format: 'dd/mm/yyyy' })).on('changeDate', function () { manualRangeEdit = true; });
+		$mes.datepicker($.extend({}, dpBase, { format: 'mm/yyyy', minViewMode: 'months', viewMode: 'months' }))
 			.on('changeDate', function () {
 				manualRangeEdit = false;
 				syncRangeFromMonth(true);

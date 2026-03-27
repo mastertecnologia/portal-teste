@@ -1043,6 +1043,11 @@ body.os-index-page .datepicker.dropdown-menu {
 	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
 	opacity: 1 !important;
 }
+body.os-index-page .datepicker,
+body.os-index-page .datepicker-dropdown,
+body.os-index-page .datepicker-dropdown.dropdown-menu {
+	z-index: 14000 !important;
+}
 body.os-index-page .datepicker:before {
 	border-bottom-color: rgba(255, 255, 255, 0.18) !important;
 }
