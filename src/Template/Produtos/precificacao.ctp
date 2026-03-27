@@ -8,15 +8,15 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 ?>
 <style>
 /* ── Precificação: estilos específicos ─────────────────────────── */
-.prec-root{display:flex;flex-direction:column;gap:0;min-height:calc(100vh - 56px);background:var(--prd-bg);isolation:isolate;}
+.prec-root{display:flex;flex-direction:column;gap:0;height:calc(100vh - 56px);background:var(--prd-bg);isolation:isolate;overflow:hidden;}
 .prec-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--prd-surface);border-bottom:1px solid var(--prd-border);}
 .prec-topbar-left{display:flex;align-items:center;gap:12px;}
 .prec-topbar h1{font-size:1.1rem;font-weight:700;color:var(--prd-teal-lt);margin:0;}
 .prec-topbar .prec-badge-erp{font-size:.7rem;padding:2px 8px;background:var(--prd-teal-dim);color:var(--prd-teal-lt);border:1px solid var(--prd-teal);border-radius:99px;font-family:'DM Mono',monospace;}
 .prec-breadcrumb{font-size:.75rem;color:var(--prd-muted);margin:0;}
-.prec-body{display:flex;gap:0;flex:1;}
+.prec-body{display:flex;gap:0;flex:1;min-height:0;}
 /* ── Painel lateral (estratégia) ───────────────────────────────── */
-.prec-panel{width:320px;min-width:280px;background:var(--prd-surface);border-right:1px solid var(--prd-border);padding:20px 18px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:calc(100vh - 115px);overflow-y:auto;}
+.prec-panel{width:300px;min-width:260px;background:var(--prd-surface);border-right:1px solid var(--prd-border);padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex-shrink:0;overflow-y:auto;}
 .prec-panel-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--prd-text2);margin-bottom:4px;}
 /* Tabs de método */
 .prec-method-tabs{display:flex;gap:4px;background:var(--prd-bg);border-radius:8px;padding:3px;}
@@ -53,7 +53,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 .prec-btn-apply-all:hover{background:var(--prd-teal-dim);}
 .prec-btn-reset{padding:7px 14px;background:transparent;color:var(--prd-muted);border:1px solid var(--prd-border);border-radius:7px;font-size:.75rem;cursor:pointer;}
 /* ── Grade de produtos ─────────────────────────────────────────── */
-.prec-grid-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.prec-grid-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
 .prec-grid-toolbar{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--prd-surface2);border-bottom:1px solid var(--prd-border);}
 .prec-search{flex:1;max-width:280px;padding:7px 12px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:6px;color:var(--prd-text);font-size:.82rem;}
 .prec-search:focus{outline:none;border-color:var(--prd-teal);}
@@ -61,7 +61,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 .prec-tipo-pill{padding:5px 12px;border-radius:99px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--prd-border);background:transparent;color:var(--prd-muted);transition:all .15s;}
 .prec-tipo-pill.active{background:var(--prd-teal-dim);color:var(--prd-teal-lt);border-color:var(--prd-teal);}
 .prec-sel-count{font-size:.72rem;color:var(--prd-muted);margin-left:auto;}
-.prec-grid-scroll{flex:1;overflow:auto;}
+.prec-grid-scroll{flex:1;overflow:auto;min-height:0;}
 /* Tabela */
 .prec-table{width:100%;border-collapse:collapse;font-size:.8rem;}
 .prec-table thead th{position:sticky;top:0;z-index:2;background:var(--prd-surface);padding:9px 10px;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--prd-text2);border-bottom:1px solid var(--prd-border);white-space:nowrap;}
@@ -71,7 +71,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 .prec-table td{padding:8px 10px;color:var(--prd-text);vertical-align:middle;background:transparent;}
 .prec-td-mono{font-family:'DM Mono',monospace;font-size:.78rem;}
 .prec-td-code{font-family:'DM Mono',monospace;font-size:.73rem;color:var(--prd-text2);}
-.prec-td-desc{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prec-td-desc{max-width:220px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Custo — cinza quando não tem dado ERP */
 .prec-td-custo{font-family:'DM Mono',monospace;font-size:.78rem;}
 .prec-td-custo.no-data{color:var(--prd-text2);font-style:italic;}
@@ -301,7 +301,6 @@ body.prec-screen-active .prec-overlay-killed {
               <th>Custo ERP</th>
               <th>Preço Atual</th>
               <th>Markup Atual</th>
-              <th style="width:60px;"></th>
               <th>Novo Preço</th>
               <th>Nova Margem</th>
               <th>Δ Diferença</th>
@@ -557,7 +556,6 @@ function refreshTable() {
       '<td>' +
         (mkAtual !== null ? ('<div style="display:flex;align-items:center;gap:5px;"><span class="prec-td-mono" style="font-size:.72rem;">' + fmt(mkAtual, 1) + '%</span><div class="prec-bar-mini"><div class="prec-bar-fill" style="width:' + Math.round(barW) + '%"></div></div></div>') : '<span style="color:var(--prd-muted);font-size:.72rem;">—</span>') +
       '</td>' +
-      '<td></td>' +
       '<td><input type="number" class="prec-novo-preco' + (changed ? ' changed' : '') + '" data-id="' + p.id + '" name="novo_preco_' + p.id + '" aria-label="Novo preço para item ' + escHtml(p.codigo) + '" value="' + (novoPreco !== null ? novoPreco.toFixed(2) : '') + '" step="0.01" min="0" oninput="onPrecoEdit(this)" onblur="onPrecoBlur(this)"></td>' +
       '<td class="prec-td-margem ' + margemClass(novaMargem) + '">' + (novaMargem !== null ? fmt(novaMargem, 2) + '%' : '—') + '</td>' +
       '<td class="prec-delta ' + (delta === null ? 'same' : delta > 0 ? 'up' : delta < 0 ? 'down' : 'same') + '">' +
