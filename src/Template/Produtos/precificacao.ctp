@@ -8,7 +8,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 ?>
 <style>
 /* ── Precificação: estilos específicos ─────────────────────────── */
-.prec-root{display:flex;flex-direction:column;gap:0;background:var(--prd-bg);isolation:isolate;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box;flex:1 1 auto;min-height:0;margin:0;}
+.prec-root{display:flex;flex-direction:column;gap:0;background:var(--prd-bg);isolation:isolate;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box;flex:1 1 auto;min-height:0;margin:0;color-scheme:dark;}
 /* Zera scroll de página — layout app-like */
 body.prec-screen-active{overflow:hidden!important;}
 body.prec-screen-active .page-wrapper{overflow:hidden!important;width:100%!important;max-width:100%!important;}
@@ -46,7 +46,11 @@ body.prec-screen-active .container-fluid > .row.tirar-black-mode > .prec-root{
 .prec-breadcrumb{font-size:.75rem;color:var(--prd-muted);margin:0;}
 .prec-body{display:flex;gap:0;flex:1;min-height:0;}
 /* ── Painel lateral (estratégia) ───────────────────────────────── */
-.prec-panel{width:300px;min-width:260px;background:var(--prd-surface);border-right:1px solid var(--prd-border);padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex-shrink:0;overflow-y:auto;}
+.prec-panel{width:300px;min-width:260px;background:var(--prd-surface);border-right:1px solid var(--prd-border);padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex-shrink:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.22) transparent;}
+.prec-panel::-webkit-scrollbar{width:8px;}
+.prec-panel::-webkit-scrollbar-track{background:transparent;}
+.prec-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px;}
+.prec-panel::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28);}
 .prec-panel-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--prd-text2);margin-bottom:4px;}
 /* Tabs de método */
 .prec-method-tabs{display:flex;gap:4px;background:var(--prd-bg);border-radius:8px;padding:3px;}
@@ -96,6 +100,7 @@ body.prec-screen-active .container-fluid > .row.tirar-black-mode > .prec-root{
 .prec-grid-scroll::-webkit-scrollbar-track{background:transparent;}
 .prec-grid-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px;}
 .prec-grid-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28);}
+.prec-grid-scroll::-webkit-scrollbar-corner{background:transparent;}
 /* Tabela */
 .prec-table{width:100%;border-collapse:collapse;font-size:.8rem;}
 .prec-table thead th{position:sticky;top:0;z-index:2;background:var(--prd-surface);padding:9px 10px;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--prd-text2);border-bottom:1px solid var(--prd-border);white-space:nowrap;}
