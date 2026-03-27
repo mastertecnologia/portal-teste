@@ -43,7 +43,6 @@ foreach ($modelosRelatorio as $_m) {
 	<header class="os-page-head no-print">
 		<div class="os-rel-headline">
 			<h1 class="os-page-title">Relatórios — Ordens de Serviço</h1>
-			<p class="os-page-sub">Visualização na tela, PDF para download ou envio por e-mail (anexo PDF).</p>
 		</div>
 		<div class="os-page-head-actions">
 			<?= $this->Html->link(
@@ -63,7 +62,6 @@ foreach ($modelosRelatorio as $_m) {
 
 		<div class="os-rel-panel os-rel-filtros no-print">
 			<h2>Filtros do relatório</h2>
-			<p class="os-rel-help">Mesmos critérios da lista de OS. No modelo <strong>Resumo por situação</strong>, o agrupamento é sempre por situação; cliente, problema e tipo limitam quais ordens entram nos totais.</p>
 			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material', 'url' => ['action' => 'relatorios']]); ?>
 			<div class="row">
 				<div class="col-lg-3 col-md-6 col-12">
@@ -88,11 +86,11 @@ foreach ($modelosRelatorio as $_m) {
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>De</p>
-					<?= $this->Form->control('data_ini', ['type' => 'date', 'value' => $data_ini, 'id' => 'rel-data-ini', 'class' => 'form-control', 'label' => false]) ?>
+					<input type="date" name="data_ini" id="rel-data-ini" class="form-control" value="<?= h($data_ini ?? '') ?>" />
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>Até</p>
-					<?= $this->Form->control('data_fim', ['type' => 'date', 'value' => $data_fim, 'id' => 'rel-data-fim', 'class' => 'form-control', 'label' => false]) ?>
+					<input type="date" name="data_fim" id="rel-data-fim" class="form-control" value="<?= h($data_fim ?? '') ?>" />
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>Mês</p>
@@ -129,7 +127,6 @@ foreach ($modelosRelatorio as $_m) {
 
 		<div class="os-rel-panel no-print">
 			<h2>Selecionar ordens para imprimir/PDF/e-mail</h2>
-			<p class="os-rel-help">Use os filtros acima, marque as OS desejadas e gere PDF apenas das selecionadas ou envie por e-mail. Para manter desempenho, esta grade mostra até as 300 ordens mais recentes do filtro.</p>
 			<div class="table-responsive">
 				<table class="table table-sm table-hover" style="margin-bottom:0;">
 					<thead>
@@ -178,7 +175,6 @@ foreach ($modelosRelatorio as $_m) {
 
 		<div class="os-rel-panel os-rel-email no-print">
 			<h2>Enviar por e-mail</h2>
-			<p class="os-rel-help">Gera o PDF do modelo escolhido e envia como anexo. Usa o perfil <code>Email.default</code> em <code>config/app.php</code>.</p>
 			<?= $this->Form->create(null, ['url' => ['action' => 'relatorioEnviarEmail']]); ?>
 			<div class="row">
 				<div class="col-md-4">
@@ -232,6 +228,48 @@ foreach ($modelosRelatorio as $_m) {
 
 <script>
 $(function () {
+	var $mes = $('#rel-mes');
+	var $ini = $('#rel-data-ini');
+	var $fim = $('#rel-data-fim');
+	var manualRangeEdit = false;
+	function pad2(n) { return (n < 10 ? '0' : '') + n; }
+	function currentYm() {
+		var d = new Date();
+		return d.getFullYear() + '-' + pad2(d.getMonth() + 1);
+	}
+	function monthBounds(ym) {
+		if (!/^\d{4}-\d{2}$/.test(ym)) return null;
+		var y = parseInt(ym.slice(0, 4), 10);
+		var m = parseInt(ym.slice(5, 7), 10);
+		if (!y || !m || m < 1 || m > 12) return null;
+		var last = new Date(y, m, 0).getDate();
+		return {
+			ini: y + '-' + pad2(m) + '-01',
+			fim: y + '-' + pad2(m) + '-' + pad2(last)
+		};
+	}
+	function syncRangeFromMonth(force) {
+		var ym = ($mes.val() || '').trim();
+		var b = monthBounds(ym);
+		if (!b) return;
+		if (force || !manualRangeEdit || !$ini.val() || !$fim.val()) {
+			$ini.val(b.ini);
+			$fim.val(b.fim);
+		}
+	}
+	if (!$mes.val()) {
+		$mes.val(currentYm());
+	}
+	if (!$ini.val() && !$fim.val()) {
+		syncRangeFromMonth(true);
+	}
+	$mes.on('change', function () {
+		manualRangeEdit = false;
+		syncRangeFromMonth(true);
+	});
+	$ini.add($fim).on('change', function () {
+		manualRangeEdit = true;
+	});
 	if ($.fn.selectpicker) {
 		$('.os-rel-filtros select.selectpicker').selectpicker({ liveSearch: true, style: '', size: 8, container: 'body' });
 	}
