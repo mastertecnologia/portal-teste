@@ -112,11 +112,11 @@
 									</tr>
 									<tr>
 										<th width='30%' class='text-left'>Cidade</th>
-										<td class='text-left'> <?= $cidades[$ordem->id]->nome ?></td> 
+										<td class='text-left'> <?= h($cidades[$ordem->id]->nome ?? '—') ?></td> 
 									</tr>
 									<tr>
 										<th width='30%' class='text-left'>Estado</th>
-										<td class='text-left'> <?= $estados[$ordem->id]->nome ?></td> 
+										<td class='text-left'> <?= h($estados[$ordem->id]->nome ?? '—') ?></td> 
 									</tr>
 								</tbody>
 							</table>
@@ -179,7 +179,7 @@
 					<div class="float-right">
 						<p class='m-b-0 text-right'>Bento Gonçalves, <?=  @date_format($ordem->dataabertura, 'd') . ' de ' . descricaoMes($ordem->dataabertura, 1) . ' de ' . @date_format($ordem->dataabertura, 'Y') ?></p>
 						<p class='m-b-0 text-right'>Obrigado pela sua atenção,</p>
-						<p class='m-b-0 text-right'><?= $ordem->user->name ?></p>
+						<p class='m-b-0 text-right'><?= h($ordem->user ? ($ordem->user->name ?? '') : '') ?></p>
 					</div>
 				</div>
 			</div>

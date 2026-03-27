@@ -997,18 +997,61 @@ class OrdensservicoController extends AppController {
 		}
 
 		$data = $this->request->getData();
+		$idsRaw = isset($data['idsimprimir']) ? trim((string)$data['idsimprimir']) : '';
+		if ($idsRaw === '') {
+			$this->Flash->error('Nenhuma ordem selecionada para impressão.');
+			return $this->redirect(['action' => 'index']);
+		}
+		$ids = [];
+		foreach (explode(',', $idsRaw) as $part) {
+			$n = (int)trim($part);
+			if ($n > 0) {
+				$ids[$n] = true;
+			}
+		}
+		$ids = array_keys($ids);
+		if ($ids === []) {
+			$this->Flash->error('Nenhuma ordem válida selecionada para impressão.');
+			return $this->redirect(['action' => 'index']);
+		}
+
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
-		$ordens = $this->Ordensservico->find('all', ['contain' => ['Users', 'Clientes']])->where(['Ordensservico.id IN' => explode(',', $data['idsimprimir']), 'Ordensservico.idempresa' => $idempresa])->toArray();
-		
-		foreach($ordens as $ordem) {
-			$cidades[$ordem->id] = $this->Cidades->get($ordem->cliente->idcidade);
-			$estados[$ordem->id] = $this->Estados->get($cidades[$ordem->id]->idestado);
-			//$idcarrinho = $this->Ordemservicositens->findByIdordem($ordem->id)->first();
-			$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'idordem' => $ordem->id])->first();
-			$carrinhos[$ordem->id] = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+		$ordens = $this->Ordensservico->find('all', ['contain' => ['Users', 'Clientes']])
+			->where(['Ordensservico.id IN' => $ids, 'Ordensservico.idempresa' => $idempresa])
+			->toArray();
+
+		$cidades = [];
+		$estados = [];
+		$carrinhos = [];
+		$placeholderGeo = (object)['nome' => '—'];
+
+		foreach ($ordens as $ordem) {
+			$oid = (int)$ordem->id;
+			if (!empty($ordem->cliente) && !empty($ordem->cliente->idcidade)) {
+				try {
+					$cidades[$oid] = $this->Cidades->get($ordem->cliente->idcidade);
+					$estados[$oid] = $this->Estados->get($cidades[$oid]->idestado);
+				} catch (\Throwable $e) {
+					$this->log('Ordensservico::imprimirordens cidade/estado OS ' . $oid . ': ' . $e->getMessage(), 'warning');
+					$cidades[$oid] = $placeholderGeo;
+					$estados[$oid] = $placeholderGeo;
+				}
+			} else {
+				$cidades[$oid] = $placeholderGeo;
+				$estados[$oid] = $placeholderGeo;
+			}
+
+			$idcarrinho = $this->Ordemservicositens->find('all')
+				->where(['idempresa' => $idempresa, 'idordem' => $ordem->id])
+				->first();
+			if ($idcarrinho !== null && !empty($idcarrinho->iditens)) {
+				$carrinhos[$oid] = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+			} else {
+				$carrinhos[$oid] = [];
+			}
 		}
-	
+
 		$this->set('cidades', $cidades);
 		$this->set('estados', $estados);
 		$this->set('carrinhos', $carrinhos);
