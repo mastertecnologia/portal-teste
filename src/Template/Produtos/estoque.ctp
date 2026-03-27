@@ -128,7 +128,7 @@ body.est-print-selected .est-row-not-selected{display:none;}
 			<label class="est-label-spacer" aria-hidden="true">&nbsp;</label>
 			<div class="est-actions">
 			<?= $this->Form->button('Buscar', ['class' => 'est-btn primary', 'type' => 'button', 'id' => 'btn-buscar']) ?>
-			<a class="est-btn" href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $bApenasComSaldo ? 't' : 'f']) ?>">Limpar</a>
+			<a class="est-btn" href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $bApenasComSaldo ? 't' : 'f']) ?>" id="btn-limpar">Limpar</a>
 			</div>
 		</div>
 	</div>
@@ -259,6 +259,16 @@ body.est-print-selected .est-row-not-selected{display:none;}
 			e.preventDefault();
 			submitFiltersAjax();
 		}
+	});
+
+	$(document).on('click', '#btn-limpar', function(e) {
+		e.preventDefault();
+		$('#sDescricao').val('');
+		$('#sCodProduto').val('');
+		if ($.fn.selectpicker) {
+			$('#sCodProduto').selectpicker('refresh');
+		}
+		submitFiltersAjax();
 	});
 
 	$(document).on('change changed.bs.select', '#sCodProduto', function() {
