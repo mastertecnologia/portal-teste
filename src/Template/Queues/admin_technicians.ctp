@@ -1,25 +1,28 @@
 <?php
+$this->Html->css('/dist/css/pages/queues-admin-shell.css', ['block' => true]);
 $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Filas e técnicos', ['action' => 'adminIndex'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Técnicos e vínculos', [], ['class' => 'breadcrumb-item active']);
 ?>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<div class="d-flex flex-wrap justify-content-between align-items-center m-b-15">
-				<div>
-					<h5 class="card-title m-b-5">Técnicos da empresa atual</h5>
-					<p class="text-muted m-b-0">
-						<strong><?= h($nomeempresa ?? ('#' . (int)$emp)) ?></strong> — Cada técnico pode ter <strong>várias filas</strong> (como permissões de grupo).
-						Use <strong>Editar</strong> para definir nível principal (N1/N2/N3), filas e, se necessário, nível por fila.
-					</p>
-				</div>
-				<?= $this->Html->link('Gerenciar filas', ['action' => 'adminIndex'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary btn-sm']) ?>
+<div class="col-md-12 p-0 queues-page-ambient">
+	<div class="queues-shell queues-shell--elevated">
+		<header class="queues-page-head">
+			<div>
+				<h1>Técnicos da empresa</h1>
+				<p class="queues-page-sub">
+					<strong><?= h($nomeempresa ?? ('#' . (int)$emp)) ?></strong> — Cada técnico pode ter <strong>várias filas</strong> (como permissões de grupo).
+					Use <strong>Editar vínculos</strong> para definir nível principal (N1/N2/N3), filas e, se necessário, nível por fila.
+				</p>
 			</div>
+			<div class="queues-page-actions">
+				<?= $this->Html->link('<i class="fa fa-list"></i> Gerenciar filas', ['action' => 'adminIndex'], ['class' => 'queues-btn queues-btn--primary', 'escape' => false]) ?>
+			</div>
+		</header>
 
+		<div class="queues-table-outer">
 			<div class="table-responsive">
 				<table class="table table-hover" id="tableTecnicosFilas">
-					<thead class="text-primary">
+					<thead>
 						<tr>
 							<th>Nome</th>
 							<th>Login</th>
@@ -35,24 +38,24 @@ $this->Breadcrumbs->add('Técnicos e vínculos', [], ['class' => 'breadcrumb-ite
 							?>
 							<tr>
 								<td><?= h($t->name ?: $t->username) ?></td>
-								<td><code><?= h($t->username) ?></code></td>
+								<td><span class="queues-code"><?= h($t->username) ?></span></td>
 								<td>
 									<?php if (!empty($t->support_level)) : ?>
-										<?= h($t->support_level->name) ?>
+										<span class="queues-badge"><?= h($t->support_level->name) ?></span>
 									<?php else : ?>
-										<span class="text-muted">—</span>
+										<span class="queues-badge queues-badge--muted">—</span>
 									<?php endif; ?>
 								</td>
 								<td>
 									<?php if (empty($links)) : ?>
-										<span class="text-warning"><i class="fa fa-exclamation-triangle"></i> Nenhuma fila</span>
+										<span class="queues-warn-inline"><i class="fa fa-exclamation-triangle"></i> Nenhuma fila</span>
 									<?php else : ?>
-										<ul class="list-unstyled m-b-0 small">
+										<ul class="queues-tech-list">
 											<?php foreach ($links as $lnk) :
 												$qn = $lnk->queue ? h($lnk->queue->name) : '?';
 												$ln = '';
 												if (!empty($lnk->support_level)) {
-													$ln = ' <span class="label label-default">' . h($lnk->support_level->name) . '</span>';
+													$ln = ' <span class="queues-badge queues-badge--muted">' . h($lnk->support_level->name) . '</span>';
 												}
 												?>
 												<li><?= $qn ?><?= $ln ?></li>
@@ -61,21 +64,21 @@ $this->Breadcrumbs->add('Técnicos e vínculos', [], ['class' => 'breadcrumb-ite
 									<?php endif; ?>
 								</td>
 								<td class="text-right">
-									<?= $this->Html->link('Editar vínculos', ['controller' => 'Users', 'action' => 'edit', $t->id], ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info', 'title' => 'Nível, filas múltiplas e nível por fila']) ?>
+									<?= $this->Html->link('Editar vínculos', ['controller' => 'Users', 'action' => 'edit', $t->id, '?' => ['from' => 'queues']], ['class' => 'queues-btn queues-btn--primary', 'title' => 'Nível, filas múltiplas e nível por fila']) ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
 			</div>
-			<?php if (count($tecnicos) === 0) : ?>
-				<p class="text-muted text-center m-t-15">Nenhum técnico vinculado a esta empresa em <code>empresasusers</code>.</p>
-			<?php endif; ?>
-
-			<p class="m-t-20 m-b-0">
-				<?= $this->Html->link('← Voltar às filas', ['action' => 'adminIndex'], ['class' => 'btn btn-secondary btn-sm']) ?>
-			</p>
 		</div>
+		<?php if (count($tecnicos) === 0) : ?>
+			<p class="queues-empty">Nenhum técnico vinculado a esta empresa em <span class="queues-code">empresasusers</span>.</p>
+		<?php endif; ?>
+
+		<footer class="queues-foot">
+			<?= $this->Html->link('← Voltar às filas', ['action' => 'adminIndex'], ['class' => 'queues-btn']) ?>
+		</footer>
 	</div>
 </div>
 <script>

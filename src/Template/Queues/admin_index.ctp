@@ -1,41 +1,42 @@
 <?php
 use Cake\Routing\Router;
+$this->Html->css('/dist/css/pages/queues-admin-shell.css', ['block' => true]);
 $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Filas e técnicos', [], ['class' => 'breadcrumb-item active']);
 ?>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<div class="d-flex flex-wrap justify-content-between align-items-start m-b-15">
-				<div>
-					<h5 class="card-title m-b-5">Filas de atendimento</h5>
-					<p class="text-muted m-b-0">
-						Empresa atual: <strong><?= h($nomeempresa ?? ('#' . (int)$emp)) ?></strong>
-						— As filas e vínculos são por empresa (use o seletor Master/PGM no topo para alternar).
-					</p>
-				</div>
-				<div class="text-right m-t-10">
-					<?= $this->Html->link('Técnicos e filas', ['action' => 'adminTechnicians'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-sm m-r-5']) ?>
-					<?= $this->Html->link('Nova fila', ['action' => 'adminEdit'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5']) ?>
-					<?php if ($queues->count() === 0) : ?>
-						<?= $this->Form->postLink(
-							'Criar filas padrão (N1–N3, NOC, serviço)',
-							['action' => 'adminEnsureDefaults'],
-							['class' => 'btn btn-warning btn-sm', 'confirm' => 'Criar as filas padrão para esta empresa?']
-						) ?>
-					<?php endif; ?>
-				</div>
-			</div>
-
-			<?php if (!empty($supportLevelsEnabled)) : ?>
-				<p class="small text-muted m-b-15">
-					<strong>Regras:</strong> cada fila tem um <em>nível principal</em> (N1, N2, N3, NOC, Serviço). Nos usuários, defina o <em>nível do técnico</em> e em quais <em>filas</em> ele atua (várias filas permitidas). O técnico só assume tickets das filas em que está vinculado, com nível compatível com a fila.
+<div class="col-md-12 p-0 queues-page-ambient">
+	<div class="queues-shell queues-shell--elevated">
+		<header class="queues-page-head">
+			<div>
+				<h1>Filas de atendimento</h1>
+				<p class="queues-page-sub">
+					Empresa atual: <strong><?= h($nomeempresa ?? ('#' . (int)$emp)) ?></strong>
+					— Filas e vínculos são por empresa (use o seletor Master/PGM no topo para alternar).
 				</p>
-			<?php endif; ?>
+			</div>
+			<div class="queues-page-actions">
+				<?= $this->Html->link('<i class="fa fa-users"></i> Técnicos e filas', ['action' => 'adminTechnicians'], ['class' => 'queues-btn queues-btn--primary', 'escape' => false]) ?>
+				<?= $this->Html->link('<i class="fa fa-plus"></i> Nova fila', ['action' => 'adminEdit'], ['class' => 'queues-btn queues-btn--success', 'escape' => false]) ?>
+				<?php if ($queues->count() === 0) : ?>
+					<?= $this->Form->postLink(
+						'<i class="fa fa-magic"></i> Criar filas padrão',
+						['action' => 'adminEnsureDefaults'],
+						['class' => 'queues-btn queues-btn--warn', 'escape' => false, 'confirm' => 'Criar as filas padrão (N1–N3, NOC, serviço) para esta empresa?']
+					) ?>
+				<?php endif; ?>
+			</div>
+		</header>
 
+		<?php if (!empty($supportLevelsEnabled)) : ?>
+			<div class="queues-callout">
+				<strong>Regras:</strong> cada fila tem um <em>nível principal</em> (N1, N2, N3, NOC, Serviço). Nos usuários, defina o <em>nível do técnico</em> e em quais <em>filas</em> ele atua. O técnico só assume tickets das filas em que está vinculado, com nível compatível com a fila.
+			</div>
+		<?php endif; ?>
+
+		<div class="queues-table-outer">
 			<div class="table-responsive">
 				<table class="table table-hover" id="tableQueues">
-					<thead class="text-primary">
+					<thead>
 						<tr>
 							<th>Ordem</th>
 							<th>Nome</th>
@@ -49,37 +50,38 @@ $this->Breadcrumbs->add('Filas e técnicos', [], ['class' => 'breadcrumb-item ac
 							<tr>
 								<td><?= (int)$q->sort_order ?></td>
 								<td><?= h($q->name) ?></td>
-								<td><code><?= h($q->codigo ?? '—') ?></code></td>
+								<td><span class="queues-code"><?= h($q->codigo ?? '—') ?></span></td>
 								<td>
 									<?php if (!empty($q->support_level)) : ?>
-										<span class="label label-primary"><?= h($q->support_level->name) ?></span>
+										<span class="queues-badge"><?= h($q->support_level->name) ?></span>
 									<?php else : ?>
-										<span class="text-muted">—</span>
+										<span class="queues-badge queues-badge--muted">—</span>
 									<?php endif; ?>
 								</td>
 								<td class="text-right td-actions">
-									<?= $this->Html->link('<i class="fa fa-edit"></i>', ['action' => 'adminEdit', $q->id], ['class' => 'btn btn-sm btn-pgm btn-pgm-situacao btn-info', 'escape' => false, 'title' => 'Editar']) ?>
-									<?= $this->Form->postLink(
-										'<i class="fa fa-trash"></i>',
-										['action' => 'adminDelete', $q->id],
-										['class' => 'btn btn-sm btn-danger', 'escape' => false, 'confirm' => 'Excluir esta fila? Só é permitido se não houver tickets.', 'title' => 'Excluir']
-									) ?>
+									<div class="queues-actions">
+										<?= $this->Html->link('<i class="fa fa-edit"></i>', ['action' => 'adminEdit', $q->id], ['class' => 'queues-icon-btn queues-icon-btn--edit', 'escape' => false, 'title' => 'Editar']) ?>
+										<?= $this->Form->postLink(
+											'<i class="fa fa-trash"></i>',
+											['action' => 'adminDelete', $q->id],
+											['class' => 'queues-icon-btn queues-icon-btn--danger', 'escape' => false, 'confirm' => 'Excluir esta fila? Só é permitido se não houver tickets.', 'title' => 'Excluir']
+										) ?>
+									</div>
 								</td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
 			</div>
-			<?php if ($queues->count() === 0) : ?>
-				<p class="text-center text-muted m-t-20">Nenhuma fila nesta empresa. Use <strong>Criar filas padrão</strong> ou <strong>Nova fila</strong>.</p>
-			<?php endif; ?>
-
-			<hr class="m-t-25">
-			<p class="m-b-0">
-				<?= $this->Html->link('← Voltar às configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-secondary btn-sm']) ?>
-				<?= $this->Html->link('Usuários da equipe (cadastro completo)', ['controller' => 'Users', 'action' => 'index'], ['class' => 'btn btn-outline-secondary btn-sm m-l-5']) ?>
-			</p>
 		</div>
+		<?php if ($queues->count() === 0) : ?>
+			<p class="queues-empty">Nenhuma fila nesta empresa. Use <strong>Criar filas padrão</strong> ou <strong>Nova fila</strong>.</p>
+		<?php endif; ?>
+
+		<footer class="queues-foot">
+			<?= $this->Html->link('← Voltar às configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'queues-btn']) ?>
+			<?= $this->Html->link('Usuários da equipe (cadastro completo)', ['controller' => 'Users', 'action' => 'index', '?' => ['from' => 'queues']], ['class' => 'queues-btn']) ?>
+		</footer>
 	</div>
 </div>
 <script>

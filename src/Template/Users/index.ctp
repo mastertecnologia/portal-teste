@@ -8,8 +8,15 @@
 				</div>
 				<?php if ($admin): ?>
 					<div class="text-right">
+						<?php if (!empty($fromQueues)) : ?>
+							<?= $this->Html->link('Filas de atendimento', ['controller' => 'Queues', 'action' => 'adminIndex'], ['class' => 'btn btn-secondary btn-sm m-r-5']) ?>
+						<?php endif; ?>
 						<?= $this->Html->link('Adicionar usuário', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success btn-sm m-r-5', 'target' => '_blank']) ?>
 						<?= $this->Html->link('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary btn-sm']) ?>
+					</div>
+				<?php elseif (!empty($fromQueues)) : ?>
+					<div class="text-right">
+						<?= $this->Html->link('Filas de atendimento', ['controller' => 'Queues', 'action' => 'adminIndex'], ['class' => 'btn btn-secondary btn-sm']) ?>
 					</div>
 				<?php endif; ?>
 			</div>
@@ -32,11 +39,15 @@
 							<?php
 								$labelStatus = $adm->inativo ? 'danger' : 'success';
 								$textStatus  = $adm->inativo ? 'Inativo' : 'Ativo';
+								$editUserUrl = ['controller' => 'Users', 'action' => 'edit', $adm->id];
+								if (!empty($fromQueues)) {
+									$editUserUrl['?'] = ['from' => 'queues'];
+								}
 							?>
 							<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><h4>Desativar 2FA</h4><br>Desative a autenticação de dois fatores</div>' data-original-title="Autenticação 2FA <small style='font-size: 12px;'></small>" data-html="true" data-placement="top">
-								<td width="25%"><a class="link" target="_blank" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'edit', $adm->id]) ?>"><?= h($adm->username) ?></a></td>
-								<td width="30%"><a class="link" target="_blank" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'edit', $adm->id]) ?>"><?= h($adm->email) ?></a></td>
-								<td width="25%"><a class="link" target="_blank" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'edit', $adm->id]) ?>"><?= h($adm->name) ?></a></td>
+								<td width="25%"><a class="link" target="_blank" href="<?= $this->Url->build($editUserUrl) ?>"><?= h($adm->username) ?></a></td>
+								<td width="30%"><a class="link" target="_blank" href="<?= $this->Url->build($editUserUrl) ?>"><?= h($adm->email) ?></a></td>
+								<td width="25%"><a class="link" target="_blank" href="<?= $this->Url->build($editUserUrl) ?>"><?= h($adm->name) ?></a></td>
 								<td width="10%" class="text-center">
 									<span class="label label-<?= $labelStatus ?>"><?= $textStatus ?></span>
 								</td>

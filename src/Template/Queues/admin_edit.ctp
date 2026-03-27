@@ -1,13 +1,23 @@
 <?php
+$this->Html->css('/dist/css/pages/queues-admin-shell.css', ['block' => true]);
 $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Filas e técnicos', ['action' => 'adminIndex'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add($queue->isNew() ? 'Nova fila' : 'Editar fila', [], ['class' => 'breadcrumb-item active']);
 $isNew = $queue->isNew();
 ?>
-<div class="col-md-12 col-lg-8">
-	<div class="card">
-		<div class="card-body">
-			<h5 class="card-title m-b-15"><?= $isNew ? 'Nova fila' : 'Editar fila' ?></h5>
+<div class="col-md-12 col-lg-9 p-0 queues-page-ambient">
+	<div class="queues-shell queues-shell--elevated">
+		<header class="queues-page-head">
+			<div>
+				<h1><?= $isNew ? 'Nova fila' : 'Editar fila' ?></h1>
+				<p class="queues-page-sub">Empresa: <strong><?= h($nomeempresa ?? ('#' . (int)$emp)) ?></strong> — Defina nome, código interno, ordem e nível principal.</p>
+			</div>
+			<div class="queues-page-actions">
+				<?= $this->Html->link('← Voltar às filas', ['action' => 'adminIndex'], ['class' => 'queues-btn']) ?>
+			</div>
+		</header>
+
+		<div class="queues-form-panel">
 			<?= $this->Form->create($queue, ['class' => 'form-material']) ?>
 			<?php if (!$isNew) : ?>
 				<?= $this->Form->hidden('id') ?>
@@ -52,8 +62,8 @@ $isNew = $queue->isNew();
 			<?php endif; ?>
 
 			<div class="m-t-20">
-				<?= $this->Form->button($isNew ? 'Criar fila' : 'Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
-				<?= $this->Html->link('Cancelar', ['action' => 'adminIndex'], ['class' => 'btn btn-secondary m-l-5']) ?>
+				<?= $this->Form->button($isNew ? 'Criar fila' : 'Salvar', ['class' => 'queues-btn queues-btn--success']) ?>
+				<?= $this->Html->link('Cancelar', ['action' => 'adminIndex'], ['class' => 'queues-btn m-l-5']) ?>
 			</div>
 			<?= $this->Form->end() ?>
 		</div>

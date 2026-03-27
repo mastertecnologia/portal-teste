@@ -62,6 +62,7 @@ class QueuesController extends AppController {
 			: [];
 		$supportLevelsEnabled = $this->_supportLevelsRoutingReady();
 		$this->set(compact('queues', 'supportLevels', 'emp', 'supportLevelsEnabled'));
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	/**
@@ -111,6 +112,7 @@ class QueuesController extends AppController {
 		}
 		$queuesHasDescription = $this->_queuesColumn('description');
 		$this->set(compact('queue', 'supportLevelsOptions', 'emp', 'queuesHasDescription'));
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	/**
@@ -158,6 +160,7 @@ class QueuesController extends AppController {
 			}
 		}
 		$this->set(compact('tecnicos', 'queuesByUser', 'emp'));
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	/**

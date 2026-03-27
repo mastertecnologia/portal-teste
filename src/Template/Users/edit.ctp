@@ -1,18 +1,42 @@
-<?php use Cake\Routing\Router; ?>
-<?php $this->Breadcrumbs->add('Usuários', ['controller' => 'users', 'action' => 'index'], ['class' => 'breadcrumb-item']); ?>
-<?php $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']); ?>
-<style>
-	.btn-disabled { background: #eee !important; cursor: not-allowed; }
-</style>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<h5 class="card-title m-b-10">Editar usuário da equipe</h5>
-			<p class="text-muted m-b-20">Atualize os dados cadastrais, status de acesso e assinaturas utilizadas em comunicações oficiais.</p>
+<?php
+use Cake\Routing\Router;
+$this->Html->css('/dist/css/pages/queues-admin-shell.css', ['block' => true]);
+if (!empty($fromQueues)) {
+	$this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add('Filas e técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add('Técnicos e vínculos', ['controller' => 'Queues', 'action' => 'adminTechnicians'], ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add('Editar usuário', [], ['class' => 'breadcrumb-item active']);
+} else {
+	$this->Breadcrumbs->add('Usuários', ['controller' => 'users', 'action' => 'index'], ['class' => 'breadcrumb-item']);
+	$this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
+}
+?>
+<div class="col-md-12 p-0 queues-page-ambient">
+	<div class="queues-shell queues-shell--elevated">
+		<header class="queues-page-head">
+			<div>
+				<h1>Editar usuário da equipe</h1>
+				<p class="queues-page-sub">
+					<strong><?= h($user->name ?: $user->username) ?></strong>
+					<?php if (!empty($user->email)) : ?> · <?= h($user->email) ?><?php endif; ?>
+					— Dados cadastrais, acesso e filas de atendimento (quando aplicável).
+				</p>
+			</div>
+			<div class="queues-page-actions">
+				<?php if (!empty($fromQueues)) : ?>
+					<?= $this->Html->link('<i class="fa fa-users"></i> Técnicos e filas', ['controller' => 'Queues', 'action' => 'adminTechnicians'], ['class' => 'queues-btn queues-btn--primary', 'escape' => false]) ?>
+				<?php endif; ?>
+				<?= $this->Html->link('<i class="fa fa-list"></i> Lista de usuários', ['action' => 'index'], ['class' => 'queues-btn', 'escape' => false]) ?>
+			</div>
+		</header>
 
+		<div class="queues-form-panel queues-form-panel--wide">
 			<?= $this->Form->create($user, ['class' => 'form-material m-t-10', 'enctype' => 'multipart/form-data', 'type' => 'file']) ?>
+			<?php if (!empty($fromQueues)) : ?>
+				<input type="hidden" name="from" value="queues">
+			<?php endif; ?>
 
-			<h6 class="text-muted m-t-10 m-b-10">Dados básicos</h6>
+			<h6 class="text-muted m-t-0 m-b-10">Dados básicos</h6>
 			<div class="row">
 				<div class="col-lg-3 col-md-6">
 					<div class="form-group">
@@ -23,7 +47,7 @@
 				<div class="col-lg-3 col-md-6">
 					<div class="form-group">
 						<label class="control-label text-muted">CPF</label>
-						<?=  $this->Form->control('cpf', ['id' => 'cpf', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
+						<?= $this->Form->control('cpf', ['id' => 'cpf', 'class' => 'form-control', 'label' => false, 'placeholder' => '000.000.000-00']) ?>
 					</div>
 				</div>
 				<div class="col-lg-4 col-md-8">
@@ -70,7 +94,7 @@
 			<?php endif; ?>
 
 			<?php if (!empty($queuesList) && (int)$user->role === 0) : ?>
-			<h6 class="text-muted m-t-20 m-b-10">Filas de Atendimento</h6>
+			<h6 class="text-muted m-t-20 m-b-10">Filas de atendimento</h6>
 			<div class="row">
 				<div class="col-md-12">
 					<div class="form-group">
@@ -79,7 +103,7 @@
 							<strong>Importante:</strong> o vínculo vale para <em>este usuário</em> (quem faz login no Service Desk). Para assumir um ticket na fila N2, ele precisa estar marcado na fila N2 <strong>e</strong> ter nível de suporte compatível (N2 ou acima) acima.
 							<?= $this->Html->link('Lista de todos os técnicos e filas', ['controller' => 'Queues', 'action' => 'adminTechnicians'], ['class' => 'd-block m-t-5']) ?>
 						</p>
-						<div class="border rounded p-3 bg-light queues-checkboxes" style="max-height: 14rem; overflow-y: auto;">
+						<div class="queues-queues-box queues-checkboxes">
 							<?php foreach ($queuesList as $qid => $qname) :
 								$qid = (int)$qid;
 								$selQ = array_map('intval', $selectedQueues ?? []);
@@ -141,11 +165,11 @@
 			</div>
 
 			<div class="row m-t-20">
-				<div class="col-md-12 d-flex align-items-center">
-					<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-10']) ?>
+				<div class="col-md-12 queues-form-actions">
+					<?= $this->Form->button('Salvar usuário', ['class' => 'queues-btn queues-btn--success', 'id' => 'btnSalvarUsuario']) ?>
 					<?= $this->Form->end(); ?>
-					<?= $this->Html->link('Alterar senha', ['action' => 'changePassword', $user->id], ['class' => 'btn btn-warning m-r-10']) ?>
-					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'btn btn-danger']) ?>
+					<?= $this->Html->link('Alterar senha', ['action' => 'changePassword', $user->id], ['class' => 'queues-btn queues-btn--warning']) ?>
+					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'queues-btn queues-btn--danger']) ?>
 				</div>
 			</div>
 		</div>
@@ -162,16 +186,14 @@
 		});
 	});
 
-	// troca o texto de dentro
 	$(document).on('change', '.file-input', function() {
-        var filesCount = $(this)[0].files.length;
-        var $textContainer = $(this).prev();
-        var fileName = $(this).val().split('\\').pop();
-        if (filesCount === 1) {
-            var fileName = $(this).val().split('\\').pop();
-            $textContainer.text(fileName);
-        } 
-    });
+		var filesCount = $(this)[0].files.length;
+		var $textContainer = $(this).prev();
+		if (filesCount === 1) {
+			var fileName = $(this).val().split('\\').pop();
+			$textContainer.text(fileName);
+		}
+	});
 
 	var email = $('#email').val();
 
@@ -181,18 +203,18 @@
 				url: "<?= Router::url(['controller'=>'Users','action'=>'verificalogincadastro']);?>/" + $('#email').val(),
 				success: function(data){
 					if(data == 'podecadastrar') {
-						$('.btn-success').prop('disabled', false);
-						$('.btn-success').removeClass('btn-disabled');
+						$('#btnSalvarUsuario').prop('disabled', false);
+						$('#btnSalvarUsuario').removeClass('btn-disabled');
 					}else{
 						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário com este e-mail no sistema.</p>');
-						$('.btn-success').prop('disabled', 'disabled');
-						$('.btn-success').addClass('btn-disabled');
+						$('#btnSalvarUsuario').prop('disabled', 'disabled');
+						$('#btnSalvarUsuario').addClass('btn-disabled');
 					}
 				},
 			});
 		} else {
-			$('.btn-success').prop('disabled', false);
-			$('.btn-success').removeClass('btn-disabled');
+			$('#btnSalvarUsuario').prop('disabled', false);
+			$('#btnSalvarUsuario').removeClass('btn-disabled');
 		}
 	});
 </script>

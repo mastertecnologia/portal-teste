@@ -65,12 +65,13 @@ class UsersController extends AppController {
 	public function index() {
 		$this->set('title', 'Usuários da equipe (PGM/Master)');
 		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'dashboard']);
+		$fromQueues = ($this->request->getQuery('from') === 'queues');
 		$admins = $this->Users
 			->find('all', ['fields' => ['id', 'username', 'name', 'email', 'secret', 'created', 'inativo', 'idcliente']])
 			->where(['role' => 0, 'idcliente IS' => null])
 			->order(['username' => 'ASC'])
 			->toArray();
-		$this->set('admins', $admins);
+		$this->set(compact('admins', 'fromQueues'));
 	}
 
 	public function indexClientes() {
@@ -762,8 +763,13 @@ class UsersController extends AppController {
 		$situacoes = "";
 		
 		$user = $this->Users->get($id);
+		$fromQueues = ($this->request->getQuery('from') === 'queues');
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+			if (!empty($data['from']) && $data['from'] === 'queues') {
+				$fromQueues = true;
+			}
+			unset($data['from']);
 
 			// Se o usuário permanecer ativo (inativo vazio ou 0), mantém a validação rígida de e-mail duplicado.
 			// Se ele estiver sendo inativado, permitimos salvar mesmo com e-mail duplicado, para justamente
@@ -800,6 +806,9 @@ class UsersController extends AppController {
 				}
 				$this->Flash->success('As informações do usuário foram alteradas com sucesso!');
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
+				if ($fromQueues) {
+					return $this->redirect(['controller' => 'Queues', 'action' => 'adminTechnicians']);
+				}
 				return $this->redirect(['action' => 'index']);
 			}
 
@@ -835,7 +844,8 @@ class UsersController extends AppController {
 		$supportLevelsList = ((int)$user->role === 0) ? $this->_supportLevelsListForTechnicians() : [];
 		$showQueueLevelOverrides = !empty($supportLevelsList) && $this->_queuesUsersSupportLevelColumn();
 		$this->set('user', $user);
-		$this->set(compact('queuesList', 'selectedQueues', 'supportLevelsList', 'queuesUserSupportLevels', 'showQueueLevelOverrides'));
+		$this->set(compact('queuesList', 'selectedQueues', 'supportLevelsList', 'queuesUserSupportLevels', 'showQueueLevelOverrides', 'fromQueues'));
+		$this->set('hideLayoutPageTitle', true);
 		$this->set('title', 'Editar Usuário');
 	}
 
