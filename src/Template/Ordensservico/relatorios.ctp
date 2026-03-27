@@ -243,6 +243,7 @@ if (!empty($mes) && preg_match('/^\d{4}-\d{2}$/', (string)$mes)) {
 
 <script>
 $(function () {
+	$('body').addClass('os-index-page');
 	var $mes = $('#rel-mes');
 	var $ini = $('#rel-data-ini');
 	var $fim = $('#rel-data-fim');

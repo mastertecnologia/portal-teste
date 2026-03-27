@@ -979,6 +979,14 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	color: var(--os-text) !important;
 	font-size: 12px;
 }
+.os-index-shell .os-rel-filtros.form-material .form-control,
+.os-index-shell .os-rel-filtros.form-material .form-control:focus,
+.os-index-shell .os-rel-filtros.form-material .form-control.focus {
+	background-image: none !important;
+	background-repeat: no-repeat !important;
+	background-size: 0 0 !important;
+	box-shadow: none !important;
+}
 .os-index-shell .os-rel-filtros input.rel-date,
 .os-index-shell .os-rel-filtros input.rel-month {
 	background: #0d0f14 !important;
@@ -1033,6 +1041,7 @@ body.os-index-page .datepicker.dropdown-menu {
 	color: #8b92a8 !important;
 	z-index: 14000 !important;
 	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
+	opacity: 1 !important;
 }
 body.os-index-page .datepicker table tr td,
 body.os-index-page .datepicker table tr th {
