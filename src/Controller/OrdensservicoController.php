@@ -80,12 +80,39 @@ class OrdensservicoController extends AppController {
 		}
 
 		/* Consulta completa para permitir filtros/KPI instantâneos no cliente (sem reload). */
-		$ordens = $this->Ordensservico->find('all')
+		$ordensQ = $this->Ordensservico->find('all')
+			->select([
+				'Ordensservico.id',
+				'Ordensservico.idempresa',
+				'Ordensservico.idcliente',
+				'Ordensservico.iduser',
+				'Ordensservico.idproblema',
+				'Ordensservico.situacao',
+				'Ordensservico.locacao',
+				'Ordensservico.dataabertura',
+				'Ordensservico.dataprevisao',
+				'Ordensservico.contrato',
+				'Ordensservico.valortotal',
+			])
 			->where(['Ordensservico.idempresa' => $idempresa])
 			->contain([
 				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
 				'Users' => ['fields' => ['Users.id', 'Users.name']],
-			])
+			]);
+		if ($situacao !== '' && $situacao !== null) {
+			$ordensQ->where(['Ordensservico.situacao' => $situacao]);
+		}
+		if ($cliente !== '' && $cliente !== null && (string)$cliente !== '0') {
+			$ordensQ->where(['Ordensservico.idcliente' => $cliente]);
+		}
+		if ($problema !== '' && $problema !== null && (string)$problema !== '0') {
+			$ordensQ->where(['Ordensservico.idproblema' => $problema]);
+		}
+		if ((string)$locacao !== '' && (string)$locacao !== '-1') {
+			$ordensQ->where(['Ordensservico.locacao' => $locacao]);
+		}
+		$ordens = $ordensQ
+			->order(['Ordensservico.id' => 'DESC'])
 			->toArray();
 		$problemas1 = [];
 		$clientesOpt1 = [];
@@ -196,8 +223,9 @@ class OrdensservicoController extends AppController {
 		asort($clientesOpt); */
 
 		$clientes = $this->Clientes->find('all')
+			->select(['Clientes.id', 'Clientes.tipo', 'Clientes.razaosocial', 'Clientes.nome', 'Clientes.idcidade'])
 			->where(['Clientes.idempresa' => $idempresa, 'Clientes.inativo' => 0])
-			->contain(['Cidades']) 
+			->contain(['Cidades' => ['fields' => ['Cidades.id', 'Cidades.nome']]])
 			->order(['Clientes.razaosocial'])
 			->toArray();
 
@@ -210,11 +238,21 @@ class OrdensservicoController extends AppController {
 		asort($clientesOpt);
 
 
-		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->order(['descricao'])->toArray();
-		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->order(['descricao'])->toArray();
+		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray();
+		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray();
 
 		$produtosOpt = [];
-		foreach($this->Produtos->find('all')->where(['idempresa' => $idempresa, 'ativo' => 1])->order(['descricao'])->toArray() as $reg)
+		foreach($this->Produtos->find('all')
+			->select(['codigo', 'descricao'])
+			->where(['idempresa' => $idempresa, 'ativo' => 1])
+			->order(['descricao'])
+			->toArray() as $reg)
 			$produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao).' ('.trim($reg->codigo).')'];
 		
 		$this->set('produtosMobile', $produtosOpt);
@@ -281,8 +319,9 @@ class OrdensservicoController extends AppController {
         }
 
 		$clientes = $this->Clientes->find('all')
+			->select(['Clientes.id', 'Clientes.tipo', 'Clientes.razaosocial', 'Clientes.nome', 'Clientes.idcidade'])
 			->where(['Clientes.idempresa' => $idempresa, 'Clientes.inativo' => 0])
-			->contain(['Cidades']) 
+			->contain(['Cidades' => ['fields' => ['Cidades.id', 'Cidades.nome']]])
 			->order(['Clientes.razaosocial'])
 			->toArray();
 
@@ -295,15 +334,37 @@ class OrdensservicoController extends AppController {
 		asort($clientesOpt);
 
 
-		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->order(['descricao'])->toArray();
-		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->order(['descricao'])->toArray();
+		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray();
+		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray();
 		
 		$produtosOpt = [];
-		foreach($this->Produtos->find('all')->where(['idempresa' => $idempresa])->order(['descricao'])->toArray() as $reg)
+		foreach($this->Produtos->find('all')
+			->select(['codigo', 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray() as $reg)
 			$produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao).' ('.trim($reg->codigo).')'];
 
-		$ordemhoras = $this->Ordemhoras->find('all')->contain(['Users', 'Ordensservico'])->where(['idordem' => $id, 'Ordensservico.idempresa' => $this->Auth->user('idempresa')])->toArray();
-		$ordemparcelas = $this->Ordemparcelas->find('all')->contain(['Users', 'Ordensservico'])->where(['idordem' => $id, 'Ordensservico.idempresa' => $this->Auth->user('idempresa')])->first();
+		$ordemhoras = $this->Ordemhoras->find('all')
+			->contain([
+				'Users' => ['fields' => ['Users.id', 'Users.name']],
+				'Ordensservico' => ['fields' => ['Ordensservico.id', 'Ordensservico.idempresa']],
+			])
+			->where(['idordem' => $id, 'Ordensservico.idempresa' => $this->Auth->user('idempresa')])
+			->toArray();
+		$ordemparcelas = $this->Ordemparcelas->find('all')
+			->contain([
+				'Users' => ['fields' => ['Users.id', 'Users.name']],
+				'Ordensservico' => ['fields' => ['Ordensservico.id', 'Ordensservico.idempresa']],
+			])
+			->where(['idordem' => $id, 'Ordensservico.idempresa' => $this->Auth->user('idempresa')])
+			->first();
 
 		$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $idempresa, 'idordem' => $id])->first();
 		if(empty($this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray())) $this->set('finaliza', 'finaliza');
@@ -350,7 +411,11 @@ class OrdensservicoController extends AppController {
 
 		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
 		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
-		$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $idempresa, 'ativo' => 1])->order(['descricao'])->toArray();
+		$produtosOpt1 = $this->Produtos->find('all')
+			->select(['codigo', 'descricao'])
+			->where(['idempresa' => $idempresa, 'ativo' => 1])
+			->order(['descricao'])
+			->toArray();
 		foreach($produtosOpt1 as $reg){
 			$produtosOpt[$reg->codigo] = $reg->descricao.' ('.$reg->codigo.')';
 		}

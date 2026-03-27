@@ -197,13 +197,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 								'situacao_id' => (int)$reg->situacao,
 								'idproblema' => (int)$reg->idproblema,
 								'locacao' => (int)$reg->locacao,
-								'abertura' => date_format($reg->dataabertura, 'd/m/Y'),
-								'previsao' => date_format($reg->dataprevisao, 'd/m/Y'),
-								'cliente' => $cliNome,
-								'contrato' => $contratoPlain,
-								'tecnico' => $reg->user ? ($reg->user->name ?? '') : '',
-								'valor' => number_format($reg->valortotal, 2, ',', '.'),
-								'situacao' => trim(strip_tags((string)$situacaoTxt)),
 								'url' => $this->Url->build(['action' => $action, $reg->id]),
 							];
 							$osRowsById[(int)$reg->id] = $rowPayload;
@@ -417,6 +410,27 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		return s;
 	}
 
+	function osExtractRowDisplay($tr, row) {
+		var $td = $tr.find('td');
+		var openTxt = $.trim($td.eq(1).text());
+		var prevTxt = $.trim($td.eq(2).text());
+		var cliTxt = $.trim($td.eq(3).text());
+		var conTxt = $.trim($td.eq(4).text());
+		var tecTxt = $.trim($td.eq(5).text());
+		var valTxt = $.trim($td.eq(6).text());
+		var sitTxt = $.trim($td.eq(7).text());
+		return {
+			id: row && row.id ? row.id : osResolveOsRowId($tr),
+			abertura: openTxt,
+			previsao: prevTxt,
+			cliente: cliTxt,
+			contrato: conTxt,
+			tecnico: tecTxt,
+			valor: valTxt,
+			situacao: sitTxt
+		};
+	}
+
 	function osSyncQueryFromFilters() {
 		var u = new URL(window.location.href);
 		var params = {
@@ -452,28 +466,29 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 
 	function osOpenDrawer(row, $tr) {
 		if (!row || !row.id) return;
+		var disp = osExtractRowDisplay($tr, row);
 		osClearDrawerRowHighlight();
 		if ($tr && $tr.length) {
 			$tr.addClass('os-row-drawer-active');
 			osDrawerActiveRow = $tr;
 		}
-		$('#os-drawer-title').text('#' + row.id);
-		var pillClass = osStatusClass(row.situacao);
-		var pillShort = osStatusShort(row.situacao);
+		$('#os-drawer-title').text('#' + disp.id);
+		var pillClass = osStatusClass(disp.situacao);
+		var pillShort = osStatusShort(disp.situacao);
 		$('#os-drawer-status').html('<span class="os-status ' + pillClass + '"><span class="os-status-dot"></span>' + osEscapeHtml(pillShort) + '</span>');
-		var contratoHtml = row.contrato === 'Sim' ? '<span style="color:var(--os-green)">Sim</span>' : '<span style="color:var(--os-text3)">Não</span>';
+		var contratoHtml = disp.contrato === 'Sim' ? '<span style="color:var(--os-green)">Sim</span>' : '<span style="color:var(--os-text3)">Não</span>';
 		$('#os-drawer-body').html(
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Informações gerais</div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Cliente</span><span class="os-dr-v">' + osEscapeHtml(row.cliente) + '</span></div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Técnico</span><span class="os-dr-v">' + osEscapeHtml(row.tecnico) + '</span></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Cliente</span><span class="os-dr-v">' + osEscapeHtml(disp.cliente) + '</span></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Técnico</span><span class="os-dr-v">' + osEscapeHtml(disp.tecnico) + '</span></div>' +
 			'<div class="os-dr-row"><span class="os-dr-k">Contrato</span><span class="os-dr-v">' + contratoHtml + '</span></div></div>' +
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Datas</div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Abertura</span><span class="os-dr-v">' + osEscapeHtml(row.abertura) + '</span></div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Previsão</span><span class="os-dr-v">' + osEscapeHtml(row.previsao) + '</span></div></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Abertura</span><span class="os-dr-v">' + osEscapeHtml(disp.abertura) + '</span></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Previsão</span><span class="os-dr-v">' + osEscapeHtml(disp.previsao) + '</span></div></div>' +
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Financeiro</div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Valor total</span><span class="os-dr-v" style="font-family:var(--os-mono);font-size:15px;color:var(--os-text)">R$ ' + osEscapeHtml(row.valor) + '</span></div></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Valor total</span><span class="os-dr-v" style="font-family:var(--os-mono);font-size:15px;color:var(--os-text)">R$ ' + osEscapeHtml(disp.valor) + '</span></div></div>' +
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Situação</div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Status</span><span class="os-dr-v">' + osEscapeHtml(row.situacao) + '</span></div></div>'
+			'<div class="os-dr-row"><span class="os-dr-k">Status</span><span class="os-dr-v">' + osEscapeHtml(disp.situacao) + '</span></div></div>'
 		);
 		$('#os-drawer-edit-btn').attr('data-href', row.url).text(osUserRole === 0 ? 'Editar OS' : 'Abrir OS');
 		$('body').addClass('os-drawer-active');
