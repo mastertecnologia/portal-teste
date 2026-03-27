@@ -84,7 +84,8 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 
 		<div class="os-rel-panel os-rel-filtros no-print">
 			<h2>Filtros do relatório</h2>
-			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material', 'url' => ['action' => 'relatorios']]); ?>
+			<div class="os-toolbar">
+			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material os-filter-form w-100', 'url' => ['action' => 'relatorios']]); ?>
 			<div class="row">
 				<div class="col-lg-3 col-md-6 col-12">
 					<p>Situação</p>
@@ -123,8 +124,10 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 				<?= $this->Form->button('Aplicar filtros', ['class' => 'btn btn-primary']) ?>
 			</div>
 			<?= $this->Form->end(); ?>
+			</div>
 		</div>
 
+		<?php if ($filtrosAplicados) : ?>
 		<?php if (empty($modelosRelatorio)) : ?>
 		<div class="os-rel-panel no-print">
 			<p class="os-rel-help m-b-0">Nenhum modelo de relatório configurado. Verifique o arquivo <code>config/ordens_servico_relatorios.php</code>.</p>
@@ -146,11 +149,10 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 			<?php endforeach; ?>
 		</div>
 		<?php endif; ?>
-
-		<?php if ($filtrosAplicados) : ?>
 		<div class="os-rel-panel no-print">
 			<h2>Selecionar ordens para imprimir/PDF/e-mail</h2>
-			<div class="table-responsive">
+			<div class="os-table-outer">
+			<div class="table-responsive os-table-responsive">
 				<table class="table table-sm table-hover" style="margin-bottom:0;">
 					<thead>
 						<tr>
@@ -190,12 +192,12 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 					</tbody>
 				</table>
 			</div>
+			</div>
 			<div class="m-t-10 d-flex" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
 				<button type="button" class="btn btn-success" id="rel-btn-pdf-selecionadas">PDF selecionadas</button>
 				<span class="os-rel-help m-b-0" id="rel-count-selected">0 selecionada(s)</span>
 			</div>
 		</div>
-		<?php endif; ?>
 
 		<div class="os-rel-panel os-rel-email no-print">
 			<h2>Enviar por e-mail</h2>
@@ -247,6 +249,7 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 			</div>
 			<?= $this->Form->end(); ?>
 		</div>
+		<?php endif; ?>
 	</div>
 </div>
 </div>
@@ -324,8 +327,12 @@ $(function () {
 		return ids;
 	}
 	function relSyncSelectedUi() {
+		var $hid = $('#rel-ids-hidden');
+		if (!$hid.length) {
+			return;
+		}
 		var ids = relGetSelectedIds();
-		$('#rel-ids-hidden').val(ids.join(','));
+		$hid.val(ids.join(','));
 		$('#rel-count-selected').text(ids.length + ' selecionada(s)');
 		var total = $('.rel-check-os').length;
 		$('#rel-check-all').prop('checked', total > 0 && ids.length === total);

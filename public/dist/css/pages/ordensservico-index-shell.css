@@ -965,63 +965,71 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	padding: 6px 12px;
 	border-radius: 8px;
 }
-.os-index-shell .os-rel-filtros .form-material p {
-	color: var(--os-text3);
-	font-size: 10px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	margin-bottom: 6px;
+/* Filtros de relatório: mesmas convenções da lista (index) — os-filter-form dentro do painel */
+.os-index-shell .os-rel-panel.os-rel-filtros .os-toolbar {
+	background: transparent;
+	margin-bottom: 0;
+	padding: 0;
 }
-.os-index-shell .os-rel-filtros .form-control,
+.os-index-shell .os-rel-filtros .os-filter-form p {
+	font-size: 10px !important;
+	font-weight: 600 !important;
+	color: var(--os-text3) !important;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin: 0 0 6px !important;
+	line-height: 1.05;
+}
 .os-index-shell .os-rel-email .form-control {
 	background: var(--os-bg);
 	border-color: var(--os-border2);
 	color: var(--os-text) !important;
 	font-size: 12px;
 }
-.os-index-shell .os-rel-filtros.form-material .form-control,
-.os-index-shell .os-rel-filtros.form-material .form-control:focus,
-.os-index-shell .os-rel-filtros.form-material .form-control.focus {
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month {
+	background: var(--os-bg2) !important;
+	background-color: var(--os-bg2) !important;
 	background-image: none !important;
-	background-repeat: no-repeat !important;
-	background-size: 0 0 !important;
+	color: var(--os-text2) !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	font-size: 12px !important;
+	height: 30px !important;
+	min-height: 30px !important;
+	line-height: 30px !important;
+	padding: 0 10px !important;
+	opacity: 1 !important;
+	-webkit-text-fill-color: var(--os-text2) !important;
+	caret-color: var(--os-text2) !important;
 	box-shadow: none !important;
 }
-.os-index-shell .os-rel-filtros input.rel-date,
-.os-index-shell .os-rel-filtros input.rel-month {
-	background: #0d0f14 !important;
-	background-color: #0d0f14 !important;
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date:focus,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date:active,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month:focus,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month:active,
+.os-index-shell .os-rel-filtros .os-filter-form .form-group.is-focused input.rel-date,
+.os-index-shell .os-rel-filtros .os-filter-form .form-group.is-focused input.rel-month {
+	background: var(--os-bg2) !important;
 	background-image: none !important;
-	color: #f0f2f8 !important;
-	border: 1px solid rgba(255, 255, 255, 0.12) !important;
-	opacity: 1 !important;
-	-webkit-text-fill-color: #f0f2f8 !important;
-	caret-color: #f0f2f8 !important;
+	border: 1px solid var(--os-border) !important;
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.22) !important;
+	color: var(--os-text2) !important;
+	-webkit-text-fill-color: var(--os-text2) !important;
+	outline: none !important;
 }
-.os-index-shell .os-rel-filtros input.rel-date:focus,
-.os-index-shell .os-rel-filtros input.rel-date:active,
-.os-index-shell .os-rel-filtros input.rel-month:focus,
-.os-index-shell .os-rel-filtros input.rel-month:active,
-.os-index-shell .os-rel-filtros .form-group.is-focused input.rel-date,
-.os-index-shell .os-rel-filtros .form-group.is-focused input.rel-month {
-	background: #0d0f14 !important;
-	background-color: #0d0f14 !important;
-	background-image: none !important;
-	color: #f0f2f8 !important;
-	-webkit-text-fill-color: #f0f2f8 !important;
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date::placeholder,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month::placeholder {
+	color: var(--os-text3) !important;
 }
-.os-index-shell .os-rel-filtros input.rel-date::placeholder,
-.os-index-shell .os-rel-filtros input.rel-month::placeholder {
-	color: #555e78 !important;
-}
-.os-index-shell .os-rel-filtros input.rel-date:-webkit-autofill,
-.os-index-shell .os-rel-filtros input.rel-date:-webkit-autofill:hover,
-.os-index-shell .os-rel-filtros input.rel-date:-webkit-autofill:focus,
-.os-index-shell .os-rel-filtros input.rel-month:-webkit-autofill,
-.os-index-shell .os-rel-filtros input.rel-month:-webkit-autofill:hover,
-.os-index-shell .os-rel-filtros input.rel-month:-webkit-autofill:focus {
-	-webkit-box-shadow: 0 0 0 1000px #0d0f14 inset !important;
-	-webkit-text-fill-color: #f0f2f8 !important;
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date:-webkit-autofill,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date:-webkit-autofill:hover,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date:-webkit-autofill:focus,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month:-webkit-autofill,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month:-webkit-autofill:hover,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month:-webkit-autofill:focus {
+	-webkit-box-shadow: 0 0 0 1000px var(--os-bg2) inset !important;
+	-webkit-text-fill-color: var(--os-text2) !important;
 }
 .os-index-shell .os-rel-filtros input[type="date"],
 .os-index-shell .os-rel-filtros input[type="month"],
@@ -1039,23 +1047,18 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	opacity: 0.8;
 	cursor: pointer;
 }
-.os-index-shell .os-rel-filtros .bootstrap-select > .dropdown-toggle,
 .os-index-shell .os-rel-email .bootstrap-select > .dropdown-toggle {
 	background: var(--os-bg) !important;
 	border: 1px solid var(--os-border2) !important;
 	color: var(--os-text) !important;
 }
-.os-index-shell .os-rel-filtros .bootstrap-select .dropdown-menu,
 .os-index-shell .os-rel-email .bootstrap-select .dropdown-menu {
 	background: var(--os-bg2);
 	border: 1px solid var(--os-border2);
 }
-.os-index-shell .os-rel-filtros .bootstrap-select .dropdown-menu li a,
 .os-index-shell .os-rel-email .bootstrap-select .dropdown-menu li a {
 	color: var(--os-text2);
 }
-.os-index-shell .os-rel-filtros .bootstrap-select .dropdown-menu li a:hover,
-.os-index-shell .os-rel-filtros .bootstrap-select .dropdown-menu li.selected a,
 .os-index-shell .os-rel-email .bootstrap-select .dropdown-menu li a:hover,
 .os-index-shell .os-rel-email .bootstrap-select .dropdown-menu li.selected a {
 	background: var(--os-bg4);
@@ -1145,7 +1148,6 @@ body.os-index-page .datepicker table thead tr th.prev:hover,
 body.os-index-page .datepicker table thead tr th.next:hover {
 	color: #f0f2f8 !important;
 }
-.os-index-shell .os-rel-filtros .form-control:focus,
 .os-index-shell .os-rel-email .form-control:focus {
 	border-color: var(--os-accent);
 	box-shadow: 0 0 0 2px var(--os-accent-glow);
