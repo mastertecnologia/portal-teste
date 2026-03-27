@@ -8,12 +8,37 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 ?>
 <style>
 /* ── Precificação: estilos específicos ─────────────────────────── */
-.prec-root{display:flex;flex-direction:column;gap:0;background:var(--prd-bg);isolation:isolate;overflow:hidden;}
+.prec-root{display:flex;flex-direction:column;gap:0;background:var(--prd-bg);isolation:isolate;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box;flex:1 1 auto;min-height:0;margin:0;}
 /* Zera scroll de página — layout app-like */
 body.prec-screen-active{overflow:hidden!important;}
-body.prec-screen-active .page-wrapper{overflow:hidden!important;}
+body.prec-screen-active .page-wrapper{overflow:hidden!important;width:100%!important;max-width:100%!important;}
 body.prec-screen-active .container-fluid,
 body.prec-screen-active .row{overflow:visible!important;padding:0!important;margin:0!important;}
+/* Ocupa toda a largura da coluna principal (evita bloco “encostado” à esquerda com faixa vazia à direita) */
+body.prec-screen-active .pgm-shell-main .page-wrapper > .container-fluid{
+  width:100%!important;
+  max-width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
+/* content.ctp envolve a view em .row sem .col-* no .prec-root — no flex do Bootstrap o bloco não estica */
+body.prec-screen-active .container-fluid > .row.tirar-black-mode{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+body.prec-screen-active .container-fluid > .row.tirar-black-mode > .prec-root{
+  width:100%!important;
+  max-width:100%!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
 .prec-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--prd-surface);border-bottom:1px solid var(--prd-border);}
 .prec-topbar-left{display:flex;align-items:center;gap:12px;}
 .prec-topbar h1{font-size:1.1rem;font-weight:700;color:var(--prd-teal-lt);margin:0;}
@@ -868,18 +893,15 @@ function neutralizeDarkOverlays() {
   }
 }
 
-/* ── Altura exata: mede posição real do .prec-root no viewport ── */
+/* ── Altura exata: mede posição real do .prec-root no viewport (sem mexer em largura — evita deslocar o bloco para a esquerda) ── */
 function fitPrecRoot() {
   var el = document.querySelector('.prec-root');
   if (!el) return;
   var top = el.getBoundingClientRect().top;
-  // Garante altura mínima útil (evita colapso em situações extremas)
   var h = Math.max(300, window.innerHeight - top);
   el.style.height = h + 'px';
-  // Também expande horizontalmente até a borda da janela (ignora padding do container)
-  var left = el.getBoundingClientRect().left;
-  el.style.marginLeft = '-' + left + 'px';
-  el.style.width = window.innerWidth + 'px';
+  el.style.removeProperty('margin-left');
+  el.style.removeProperty('width');
 }
 
 /* ── Init ──────────────────────────────────────────────────────── */
