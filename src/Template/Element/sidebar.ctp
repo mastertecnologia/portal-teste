@@ -135,11 +135,6 @@
 							['class' => 'pgm-nch pgm-nch-nova ' . ($osAddActive ? 'act' : ''), 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
 						) ?></li>
 						<?php endif; ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Relatórios</span>',
-							['controller' => 'Ordensservico', 'action' => 'imprimirordens'],
-							['class' => 'pgm-nch', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
-						) ?></li>
 					</ul>
 				</li>
 
