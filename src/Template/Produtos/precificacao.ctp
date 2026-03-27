@@ -98,6 +98,20 @@ body.prec-screen-active .row{overflow:visible!important;padding:0!important;marg
 /* Warning */
 .prec-warn{display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(249,115,22,.2);color:#fb923c;font-size:.6rem;font-weight:900;text-align:center;line-height:18px;cursor:default;visibility:hidden;}
 .prec-warn.show{visibility:visible;}
+/* Zero-price row (tem custo ERP mas Preço Atual zerado) */
+.prec-table tbody tr.prec-row-zero-price td{background:rgba(210,153,34,.07);}
+.prec-table tbody tr.prec-row-zero-price:hover td{background:rgba(210,153,34,.13);}
+.prec-badge-zero{font-size:.68rem;font-weight:700;color:#d29922;background:rgba(210,153,34,.15);border:1px solid rgba(210,153,34,.3);border-radius:5px;padding:2px 6px;white-space:nowrap;}
+/* Floating selection bar */
+.prec-sel-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--prd-surface);border-top:2px solid var(--prd-teal);padding:12px 24px;display:flex;align-items:center;gap:12px;transform:translateY(100%);transition:transform .2s ease;box-shadow:0 -4px 24px rgba(0,0,0,.4);}
+.prec-sel-bar.visible{transform:translateY(0);}
+.prec-sel-bar-count{font-size:.85rem;font-weight:700;color:var(--prd-teal-lt);}
+.prec-sel-bar-label{font-size:.8rem;color:var(--prd-muted);}
+.prec-sel-bar-spacer{flex:1;}
+.prec-btn-sel-apply{padding:8px 18px;background:var(--prd-teal);color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .15s;}
+.prec-btn-sel-apply:hover{background:var(--prd-teal-lt);color:#111;}
+.prec-btn-sel-clear{padding:8px 14px;background:transparent;color:var(--prd-muted);border:1px solid var(--prd-border);border-radius:7px;font-size:.78rem;cursor:pointer;transition:border-color .15s,color .15s;}
+.prec-btn-sel-clear:hover{border-color:var(--prd-text2);color:var(--prd-text);}
 /* Avatar */
 .prec-avatar{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;}
 .prec-avatar.t1{background:rgba(29,158,117,.15);color:var(--prd-teal-lt);}
@@ -340,6 +354,15 @@ body.prec-screen-active .prec-overlay-killed {
 
 </div><!-- /prec-root -->
 
+<!-- Floating selection bar -->
+<div class="prec-sel-bar" id="prec-sel-bar">
+  <span class="prec-sel-bar-count" id="sel-bar-count">0</span>
+  <span class="prec-sel-bar-label">itens selecionados</span>
+  <span class="prec-sel-bar-spacer"></span>
+  <button class="prec-btn-sel-clear" onclick="clearSelection()">Limpar seleção</button>
+  <button class="prec-btn-sel-apply" onclick="aplicarSelecionados()">&#9654; Aplicar cálculo</button>
+</div>
+
 <!-- Toast container -->
 <div class="prec-toast" id="prec-toast"></div>
 
@@ -549,17 +572,23 @@ function refreshTable() {
     var showWarn = novaMargem !== null && novaMargem < margemMin;
 
     var sel = state.selected.has(p.id);
+    var isPrecoZero = p.temCusto && (!p.vendaAtual || p.vendaAtual <= 0);
+    var rowCls = (sel ? 'selected' : '') + (isPrecoZero ? (sel ? ' prec-row-zero-price' : 'prec-row-zero-price') : '');
 
-    return '<tr class="' + (sel ? 'selected' : '') + '" data-id="' + p.id + '">' +
+    return '<tr class="' + rowCls + '" data-id="' + p.id + '">' +
       '<td><input type="checkbox" class="prec-check row-chk" data-id="' + p.id + '" name="row_chk_' + p.id + '" aria-label="Selecionar item ' + escHtml(p.codigo) + '" ' + (sel ? 'checked' : '') + ' onchange="toggleRow(' + p.id + ',this)"></td>' +
       '<td>' + avatarHtml(p.tipo) + '</td>' +
       '<td class="prec-td-code">' + escHtml(p.codigo) + '</td>' +
       '<td class="prec-td-desc" title="' + escHtml(p.descricao) + '">' + escHtml(p.descricao) + '</td>' +
       '<td><span style="font-size:.68rem;padding:2px 7px;border-radius:99px;background:var(--prd-surface2);color:var(--prd-muted);">' + tipoLabel(p.tipo) + '</span></td>' +
       '<td class="prec-td-custo' + (!p.temCusto ? ' no-data' : '') + '">' + (p.temCusto ? fmtBRL(p.custo) : 'Sem dado ERP') + '</td>' +
-      '<td class="prec-td-mono">' + fmtBRL(p.vendaAtual) + '</td>' +
+      '<td class="prec-td-mono">' + (isPrecoZero ? '<span class="prec-badge-zero">⚠ Sem preço</span>' : fmtBRL(p.vendaAtual)) + '</td>' +
       '<td>' +
-        (mkAtual !== null ? ('<div style="display:flex;align-items:center;gap:5px;"><span class="prec-td-mono" style="font-size:.72rem;">' + fmt(mkAtual, 1) + '%</span><div class="prec-bar-mini"><div class="prec-bar-fill" style="width:' + Math.round(barW) + '%"></div></div></div>') : '<span style="color:var(--prd-muted);font-size:.72rem;">—</span>') +
+        (mkAtual !== null
+          ? ('<div style="display:flex;align-items:center;gap:5px;"><span class="prec-td-mono" style="font-size:.72rem;">' + fmt(mkAtual, 1) + '%</span><div class="prec-bar-mini"><div class="prec-bar-fill" style="width:' + Math.round(barW) + '%"></div></div></div>')
+          : (isPrecoZero
+              ? '<span style="color:#d29922;font-size:.68rem;font-weight:600;">Sem preço</span>'
+              : '<span style="color:var(--prd-muted);font-size:.72rem;">Sem custo ERP</span>')) +
       '</td>' +
       '<td><input type="number" class="prec-novo-preco' + (changed ? ' changed' : '') + '" data-id="' + p.id + '" name="novo_preco_' + p.id + '" aria-label="Novo preço para item ' + escHtml(p.codigo) + '" value="' + (novoPreco !== null ? novoPreco.toFixed(2) : '') + '" step="0.01" min="0" oninput="onPrecoEdit(this)" onblur="onPrecoBlur(this)"></td>' +
       '<td class="prec-td-margem ' + margemClass(novaMargem) + '">' + (novaMargem !== null ? fmt(novaMargem, 2) + '%' : '—') + '</td>' +
@@ -582,6 +611,14 @@ function refreshTable() {
   // Alerta margem
   var alertEl = document.getElementById('margem-alert');
   alertEl.classList.toggle('show', hasLow);
+
+  // Floating selection bar
+  var selBar = document.getElementById('prec-sel-bar');
+  if (selBar) {
+    selBar.classList.toggle('visible', totalSelected > 0);
+    var selBarCount = document.getElementById('sel-bar-count');
+    if (selBarCount) selBarCount.textContent = totalSelected;
+  }
 
   // Btn salvar
   document.getElementById('btn-save').disabled = totalChanged === 0;
@@ -679,6 +716,11 @@ function toggleAll(chk) {
     if (chk.checked) state.selected.add(p.id);
     else state.selected.delete(p.id);
   });
+  refreshTable();
+}
+
+function clearSelection() {
+  state.selected.clear();
   refreshTable();
 }
 
@@ -834,6 +876,9 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   obs.observe(document.body, { childList: true, subtree: true });
   window.addEventListener('beforeunload', function() { obs.disconnect(); });
-  refreshTable();
+
+  // Markup padrão 30% — exibe colunas "Novo Preço / Nova Margem / Δ Diferença" imediatamente
+  silentSet('inp-markup', '30');
+  syncParams('markup'); // já chama refreshTable() internamente
 });
 </script>
