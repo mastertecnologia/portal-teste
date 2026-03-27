@@ -147,6 +147,29 @@ body.prec-screen-active .container-fluid {
   filter: none !important;
 }
 
+/* Sidebar nesta rota: sem hambúrguer ao lado da marca, sem badge de data, marca centralizada */
+body.prec-screen-active .pgm-sidebar-toggler,
+body.prec-screen-active a.pgm-sidebar-toggler {
+  display: none !important;
+}
+body.prec-screen-active .pgm-ws-date {
+  display: none !important;
+}
+body.prec-screen-active .pgm-sidebar-brand {
+  justify-content: center !important;
+}
+body.prec-screen-active .pgm-sidebar-logo-link {
+  justify-content: center !important;
+  flex: 0 1 auto !important;
+}
+body.prec-screen-active .pgm-sidebar-logo-link .pgm-sidebar-titles {
+  align-items: center !important;
+  text-align: center !important;
+}
+body.prec-screen-active .pgm-sidebar-logo-link .pgm-sidebar-titles strong {
+  white-space: normal !important;
+}
+
 /* Se o preloader/backdrop ficar órfão nesta tela, não pode cobrir o conteúdo */
 body.prec-screen-active .preloader,
 body.prec-screen-active .modal-backdrop {
@@ -857,7 +880,9 @@ function fitPrecRoot() {
 
 /* ── Init ──────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
-  document.body.classList.add('prec-screen-active');
+  if (!document.body.classList.contains('prec-screen-active')) {
+    document.body.classList.add('prec-screen-active');
+  }
   cleanupGhostBackdrop();
   neutralizeDarkOverlays();
   setTimeout(cleanupGhostBackdrop, 250);

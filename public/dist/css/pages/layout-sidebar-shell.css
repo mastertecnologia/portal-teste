@@ -115,35 +115,20 @@ body.layout-no-topbar .sidebar-nav > ul#sidebarnav { padding-top: 8px !important
 body.layout-no-topbar .pgm-sidebar-brand {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	gap: 10px;
 	padding: 15px 14px 13px;
 	border-bottom: 1px solid var(--pgm-sb-border);
 	flex-shrink: 0;
 }
 
-body.layout-no-topbar .pgm-sidebar-toggler {
-	flex-shrink: 0;
-	width: 32px;
-	height: 32px;
-	border-radius: 7px;
-	border: 1px solid rgba(255,255,255,0.10);
-	background: rgba(255,255,255,0.04);
-	color: #8b929e;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	text-decoration: none !important;
-	transition: background 0.18s, color 0.18s;
-}
-body.layout-no-topbar .pgm-sidebar-toggler:hover { color: #fff; background: rgba(255,255,255,0.09); }
-
 body.layout-no-topbar .pgm-sidebar-logo-link {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	gap: 10px;
 	text-decoration: none !important;
-	flex: 1;
+	flex: 0 1 auto;
 	min-width: 0;
 	margin: 0 !important;
 	padding: 0 !important;
@@ -169,16 +154,18 @@ body.layout-no-topbar .pgm-sidebar-mark {
 body.layout-no-topbar .pgm-sidebar-logo-link .pgm-sidebar-titles {
 	display: flex;
 	flex-direction: column;
+	align-items: center;
+	text-align: center;
 	min-width: 0;
 }
 body.layout-no-topbar .pgm-sidebar-logo-link .pgm-sidebar-titles strong {
 	font-size: 13.5px;
 	font-weight: 600;
 	color: #e6edf3;
-	line-height: 1.2;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	line-height: 1.25;
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
 }
 body.layout-no-topbar .pgm-sidebar-logo-link .pgm-sidebar-sub {
 	font-size: 10.5px;
@@ -514,6 +501,41 @@ body.layout-no-topbar .sidebar-nav ul li a:hover {
 }
 body.layout-no-topbar .sidebar-nav ul li a:hover i { color: #a8b0c4 !important; }
 
+/* ── Recolher menu (substitui toggler ao lado da marca) ─────────────────────── */
+body.layout-no-topbar .pgm-sidebar-collapse-row {
+	padding: 0 14px 10px;
+	flex-shrink: 0;
+	border-bottom: 1px solid var(--pgm-sb-border);
+}
+body.layout-no-topbar .pgm-sidebar-collapse-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: 36px;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.04);
+	color: #8b929e;
+	text-decoration: none !important;
+	transition: background 0.18s, color 0.18s;
+	font-size: 14px;
+}
+body.layout-no-topbar .pgm-sidebar-collapse-btn:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.08);
+}
+body.layout-no-topbar.mini-sidebar .pgm-sidebar-collapse-row {
+	padding: 8px 6px 10px;
+	border-bottom: none;
+}
+body.layout-no-topbar.mini-sidebar .pgm-sidebar-collapse-btn {
+	width: 36px;
+	min-height: 32px;
+	margin: 0 auto;
+	padding: 0;
+}
+
 /* ── Footer usuário ─────────────────────────────────────────────────────────── */
 body.layout-no-topbar .pgm-sidebar-footer {
 	border-top: 1px solid var(--pgm-sb-border);
@@ -676,6 +698,25 @@ body.layout-no-topbar .page-titles .text-themecolor { color: var(--pgm-teal-ligh
 
 @media (max-width: 767px) {
 	body.layout-no-topbar .page-titles { margin-left: -15px !important; margin-right: -15px !important; }
+	/* Menu móvel: botão fora da faixa da marca (layout sem topbar) */
+	body.layout-no-topbar .pgm-shell-mobile-nav {
+		position: fixed;
+		top: 10px;
+		left: 10px;
+		z-index: 1002;
+		width: 42px;
+		height: 42px;
+		border-radius: 10px;
+		background: rgba(22, 27, 34, 0.96);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		display: flex !important;
+		align-items: center;
+		justify-content: center;
+		color: #8b929e;
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+		text-decoration: none !important;
+	}
+	body.layout-no-topbar .pgm-shell-mobile-nav:hover { color: #e6edf3; }
 }
 
 /* ── Rodapé ─────────────────────────────────────────────────────────────────── */
@@ -688,10 +729,6 @@ body.layout-no-topbar .pgm-shell-main .footer {
 }
 body.layout-no-topbar .pgm-shell-main .footer a { color: var(--pgm-teal-light) !important; }
 body.layout-no-topbar .pgm-shell-main .footer a strong { color: var(--pgm-sb-text) !important; }
-
-@media (max-width: 1169px) {
-	body.layout-no-topbar .pgm-sidebar-toggler.d-none.d-md-block { display: none !important; }
-}
 
 /* ── Retrocompatibilidade: pgm-sidebar-meta ─────────────────────────────────── */
 /* Mapeado para workspace no HTML novo; estilos herdados via .pgm-sidebar-workspace */

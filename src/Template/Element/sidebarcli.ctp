@@ -73,14 +73,8 @@
 </style>
 <aside class="left-sidebar skin-pgm pgm-sidebar-shell">
 	<div class="pgm-sidebar-brand">
-		<a href="javascript:void(0)" class="nav-toggler d-block d-md-none waves-effect waves-dark pgm-sidebar-toggler" aria-label="Abrir menu">
-			<i class="ti-menu"></i>
-		</a>
-		<a href="javascript:void(0)" class="sidebartoggler d-none d-md-block waves-effect waves-dark pgm-sidebar-toggler" aria-label="Recolher menu">
-			<i class="icon-menu"></i>
-		</a>
 		<?= $this->Html->link(
-			'<div class="pgm-sidebar-mark">PGM</div><div class="pgm-sidebar-titles hide-menu"><strong>PGM Soluções</strong><div class="pgm-sidebar-sub">ERP Enterprise</div></div>',
+			'<div class="pgm-sidebar-mark">PGM</div><div class="pgm-sidebar-titles hide-menu"><strong>PGM Soluções em TI</strong><div class="pgm-sidebar-sub">ERP Enterprise</div></div>',
 			['controller' => 'Users', 'action' => 'dashboard'],
 			['class' => 'pgm-sidebar-logo-link navbar-brand', 'escape' => false]
 		) ?>
@@ -102,10 +96,6 @@
 					<p class="pgm-meta-date m-0"><?= h(EmpresaNome($empresa)) ?></p>
 					<?= $this->Form->hidden('empresaSidebar', ['id' => 'empresaSidebar', 'value' => $empresa]); ?>
 				<?php endif; ?>
-			</div>
-			<div>
-				<small>Data</small>
-				<p class="pgm-meta-date"><?= h(date('d/m/Y')) ?></p>
 			</div>
 		</div>
 	</div>
@@ -136,6 +126,9 @@
 	</div>
 
 	<div class="pgm-sidebar-footer">
+		<div class="pgm-sidebar-collapse-row">
+			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
+		</div>
 		<div class="user-profile">
 			<div class="user-pro-body">
 				<div class="dropdown dropup">

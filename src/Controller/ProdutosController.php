@@ -187,6 +187,8 @@ class ProdutosController extends AppController {
 	 */
 	public function precificacao() {
 		$this->set('title', 'Gestão de Preços');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('bodyPageClass', 'prec-screen-active');
 
 		$idempresa = $this->Auth->user('idempresa');
 		$todos = $this->Produtos->find('all')

@@ -24,19 +24,11 @@
 	}
 
 	$multiEmpresa = count($empresasOptSidebar ?? []) > 1;
-	$meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-	$mesAbrev = $meses[(int)date('n') - 1];
 ?>
 <aside class="left-sidebar skin-pgm pgm-sidebar-shell">
 
 	<!-- ── Brand ──────────────────────────────────────────── -->
 	<div class="pgm-sidebar-brand">
-		<a href="javascript:void(0)" class="nav-toggler d-block d-md-none waves-effect waves-dark pgm-sidebar-toggler" aria-label="Abrir menu">
-			<i class="ti-menu"></i>
-		</a>
-		<a href="javascript:void(0)" class="sidebartoggler d-none d-md-block waves-effect waves-dark pgm-sidebar-toggler" aria-label="Recolher menu">
-			<i class="icon-menu"></i>
-		</a>
 		<?= $this->Html->link(
 			'<div class="pgm-sidebar-mark">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -46,7 +38,7 @@
 				</svg>
 			</div>
 			<div class="pgm-sidebar-titles hide-menu">
-				<strong>PGM Soluções</strong>
+				<strong>PGM Soluções em TI</strong>
 				<div class="pgm-sidebar-sub">ERP Enterprise</div>
 			</div>',
 			['controller' => 'Users', 'action' => 'dashboard'],
@@ -71,10 +63,6 @@
 				'options' => $empresasOptSidebar,
 				'readonly' => !$multiEmpresa,
 			]) ?>
-		</div>
-		<div class="pgm-ws-date" title="<?= h(date('d/m/Y')) ?>">
-			<div class="pgm-ws-date-day"><?= date('d') ?></div>
-			<div class="pgm-ws-date-mon"><?= h($mesAbrev) ?></div>
 		</div>
 	</div>
 
@@ -218,6 +206,9 @@
 
 	<!-- ── Footer usuário ─────────────────────────────────── -->
 	<div class="pgm-sidebar-footer">
+		<div class="pgm-sidebar-collapse-row">
+			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
+		</div>
 		<!-- Ações rápidas (visíveis apenas sidebar expandida) -->
 		<div class="pgm-sf-actions hide-menu">
 			<?= $this->Html->link(

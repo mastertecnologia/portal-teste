@@ -126,7 +126,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-default-dark mini layout-no-topbar">
+<body class="fixed-layout skin-default-dark mini layout-no-topbar <?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">
@@ -144,6 +144,7 @@
 			else echo $this->element('sidebarcli');
 		?>
 		<div class="pgm-shell-main">
+		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
 		<div class="page-wrapper">
 			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>
