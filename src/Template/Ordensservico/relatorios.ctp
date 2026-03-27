@@ -190,6 +190,7 @@ if (!empty($mes) && preg_match('/^\d{4}-\d{2}$/', (string)$mes)) {
 		<div class="os-rel-panel os-rel-email no-print">
 			<h2>Enviar por e-mail</h2>
 			<?= $this->Form->create(null, ['url' => ['action' => 'relatorioEnviarEmail']]); ?>
+			<?= $this->Form->unlockField('ids') ?>
 			<div class="row">
 				<div class="col-md-4">
 					<?php if ($optsModelo !== []) : ?>
