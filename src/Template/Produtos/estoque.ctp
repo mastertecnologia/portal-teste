@@ -90,7 +90,6 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	<div class="est-top">
 		<div class="est-title">
 			<h1>Produtos em Estoque</h1>
-			<p>Selecione os produtos e use imprimir/PDF da seleção.</p>
 		</div>
 		<div class="est-actions">
 			<a href="#" id="btn-imprimir" class="est-btn warn">Imprimir</a>
@@ -128,7 +127,7 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		<div class="est-field est-field--actions">
 			<label class="est-label-spacer" aria-hidden="true">&nbsp;</label>
 			<div class="est-actions">
-			<?= $this->Form->button('Buscar', ['class' => 'est-btn primary']) ?>
+			<?= $this->Form->button('Buscar', ['class' => 'est-btn primary', 'type' => 'button', 'id' => 'btn-buscar']) ?>
 			<a class="est-btn" href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $bApenasComSaldo ? 't' : 'f']) ?>">Limpar</a>
 			</div>
 		</div>
@@ -248,6 +247,18 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	$(document).on('submit', '#estoque-filter-form', function(e) {
 		e.preventDefault();
 		submitFiltersAjax();
+	});
+
+	$(document).on('click', '#btn-buscar', function(e) {
+		e.preventDefault();
+		submitFiltersAjax();
+	});
+
+	$(document).on('keydown', '#sDescricao', function(e) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			submitFiltersAjax();
+		}
 	});
 
 	$(document).on('change changed.bs.select', '#sCodProduto', function() {
