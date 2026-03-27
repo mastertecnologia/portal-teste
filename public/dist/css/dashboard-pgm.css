@@ -288,6 +288,41 @@ a.dash-pgm-notif-item-link:hover {
 .dash-pgm .badge { font-size: 10px; font-family: 'IBM Plex Mono', monospace; }
 
 .dash-pgm-table-scroll, .dash-pgm-ranking-scroll, .dash-pgm-clients-scroll { overflow-y: auto; flex: 1; }
+/* Scrollbars no tema escuro (Windows/WebKit/Firefox) */
+.dash-pgm-table-scroll,
+.dash-pgm-ranking-scroll,
+.dash-pgm-clients-scroll,
+.dash-pgm-content {
+  scrollbar-width: thin;
+  scrollbar-color: #30363d #161b22;
+}
+.dash-pgm-table-scroll::-webkit-scrollbar,
+.dash-pgm-ranking-scroll::-webkit-scrollbar,
+.dash-pgm-clients-scroll::-webkit-scrollbar,
+.dash-pgm-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.dash-pgm-table-scroll::-webkit-scrollbar-track,
+.dash-pgm-ranking-scroll::-webkit-scrollbar-track,
+.dash-pgm-clients-scroll::-webkit-scrollbar-track,
+.dash-pgm-content::-webkit-scrollbar-track {
+  background: #161b22;
+}
+.dash-pgm-table-scroll::-webkit-scrollbar-thumb,
+.dash-pgm-ranking-scroll::-webkit-scrollbar-thumb,
+.dash-pgm-clients-scroll::-webkit-scrollbar-thumb,
+.dash-pgm-content::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 10px;
+  border: 2px solid #161b22;
+}
+.dash-pgm-table-scroll::-webkit-scrollbar-thumb:hover,
+.dash-pgm-ranking-scroll::-webkit-scrollbar-thumb:hover,
+.dash-pgm-clients-scroll::-webkit-scrollbar-thumb:hover,
+.dash-pgm-content::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
 .dash-pgm-table { width: 100%; border-collapse: collapse; }
 .dash-pgm-table thead th {
   padding: 6px 12px;
