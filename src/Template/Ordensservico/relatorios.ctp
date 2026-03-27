@@ -96,7 +96,7 @@ foreach ($modelosRelatorio as $_m) {
 				</div>
 				<div class="col-lg-2 col-md-6 col-12">
 					<p>Mês</p>
-					<?= $this->Form->control('mes', ['type' => 'month', 'value' => $mes, 'id' => 'rel-mes', 'class' => 'form-control', 'label' => false]) ?>
+					<input type="month" name="mes" id="rel-mes" class="form-control" value="<?= h($mes ?? '') ?>" />
 				</div>
 			</div>
 			<div class="m-t-15">
@@ -129,7 +129,7 @@ foreach ($modelosRelatorio as $_m) {
 
 		<div class="os-rel-panel no-print">
 			<h2>Selecionar ordens para imprimir/PDF/e-mail</h2>
-			<p class="os-rel-help">Use os filtros acima, marque as OS desejadas e gere PDF apenas das selecionadas ou envie por e-mail.</p>
+			<p class="os-rel-help">Use os filtros acima, marque as OS desejadas e gere PDF apenas das selecionadas ou envie por e-mail. Para manter desempenho, esta grade mostra até as 300 ordens mais recentes do filtro.</p>
 			<div class="table-responsive">
 				<table class="table table-sm table-hover" style="margin-bottom:0;">
 					<thead>

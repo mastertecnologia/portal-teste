@@ -1406,17 +1406,17 @@ class OrdensservicoController extends AppController {
 			$q->where(['Ordensservico.iduser' => $filtros['solicitante']]);
 		}
 		if (($filtros['data_ini'] ?? '') !== '') {
-			$q->where(['DATE(Ordensservico.dataabertura) >=' => $filtros['data_ini']]);
+			$q->where(['Ordensservico.dataabertura >=' => $filtros['data_ini'] . ' 00:00:00']);
 		}
 		if (($filtros['data_fim'] ?? '') !== '') {
-			$q->where(['DATE(Ordensservico.dataabertura) <=' => $filtros['data_fim']]);
+			$q->where(['Ordensservico.dataabertura <=' => $filtros['data_fim'] . ' 23:59:59']);
 		}
 		if (!empty($filtros['ids']) && is_array($filtros['ids'])) {
 			$q->where(['Ordensservico.id IN' => $filtros['ids']]);
 		}
 	}
 
-	protected function _fetchOrdensRelatorioLista(array $filtros) {
+	protected function _fetchOrdensRelatorioLista(array $filtros, ?int $limit = null) {
 		$idempresa = $this->Auth->user('idempresa');
 		$q = $this->Ordensservico->find('all')
 			->select([
@@ -1437,7 +1437,11 @@ class OrdensservicoController extends AppController {
 				'Users' => ['fields' => ['Users.id', 'Users.name']],
 			]);
 		$this->_aplicarFiltrosRelatorioOs($q, $filtros, false);
-		return $q->order(['Ordensservico.id' => 'DESC'])->toArray();
+		$q->order(['Ordensservico.id' => 'DESC']);
+		if ($limit !== null && $limit > 0) {
+			$q->limit($limit);
+		}
+		return $q->toArray();
 	}
 
 	protected function _fetchOrdensRelatorioResumo(array $filtros) {
@@ -1582,7 +1586,7 @@ class OrdensservicoController extends AppController {
 			->where(['role' => C_RoleFuncionario, 'inativo' => 0])
 			->order(['name' => 'ASC'])
 			->toArray();
-		$ordensSelecionaveis = $this->_fetchOrdensRelatorioLista($filtros);
+		$ordensSelecionaveis = $this->_fetchOrdensRelatorioLista($filtros, 300);
 
 		$this->set('modelosRelatorio', $this->_osRelatorioModelosConfig());
 		$this->set('cliente', $filtros['cliente']);
