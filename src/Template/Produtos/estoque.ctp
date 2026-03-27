@@ -35,6 +35,22 @@ $queryStringAtual = http_build_query($queryAtual);
 .est-field label{display:block;font-size:.72rem;color:var(--est-muted);margin-bottom:4px;}
 .est-input{width:100%;background:#0b1220;border:1px solid var(--est-border);border-radius:8px;color:var(--est-text);padding:8px 10px;}
 .est-input:focus{outline:none;border-color:var(--est-teal);}
+.bootstrap-select .dropdown-toggle.est-input{
+	background:#0b1220 !important;
+	border:1px solid var(--est-border) !important;
+	color:var(--est-text) !important;
+}
+.bootstrap-select .dropdown-toggle.est-input .filter-option{color:var(--est-text) !important;}
+.bootstrap-select .dropdown-menu{
+	background:#0b1220 !important;
+	border:1px solid var(--est-border) !important;
+}
+.bootstrap-select .dropdown-menu .dropdown-item{color:var(--est-text) !important;}
+.bootstrap-select .dropdown-menu .dropdown-item:hover,
+.bootstrap-select .dropdown-menu .dropdown-item.active{
+	background:rgba(29,158,117,.18) !important;
+	color:var(--est-text) !important;
+}
 .est-hint{font-size:.74rem;color:var(--est-muted);margin-top:2px;}
 .est-actions-secondary{display:flex;gap:8px;flex-wrap:wrap;}
 .est-table-wrap{flex:1;min-height:0;overflow:auto;border:1px solid var(--est-border);border-radius:10px;}
@@ -46,7 +62,6 @@ $queryStringAtual = http_build_query($queryAtual);
 .est-table tr:hover td{background:rgba(255,255,255,.03);}
 .est-table tr.est-row-checked td{background:rgba(29,158,117,.12);}
 .est-table .est-col-check{width:36px;text-align:center;}
-.est-table .est-col-actions{width:130px;text-align:right;}
 .est-num{text-align:right;font-family:monospace;}
 .est-empty{padding:30px;text-align:center;color:var(--est-muted);}
 .est-footer{display:flex;justify-content:space-between;align-items:center;color:var(--est-muted);font-size:.78rem;}
@@ -58,7 +73,7 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	#estoque-printable,#estoque-printable *{visibility:visible;}
 	#estoque-printable{position:absolute;left:0;top:0;width:100%;background:#fff;color:#111;}
 	.est-actions,.est-actions-secondary,.est-filters,.page-titles,.left-sidebar,.pgm-sidebar-footer,.pgm-sidebar-brand,.pgm-sidebar-workspace,.pgm-sb-search-block{display:none!important;}
-	.est-table .est-col-actions,.est-table .est-col-check{display:none;}
+	.est-table .est-col-check{display:none;}
 }
 </style>
 
@@ -66,14 +81,11 @@ body.est-print-selected .est-row-not-selected{display:none;}
 	<div class="est-top">
 		<div class="est-title">
 			<h1>Produtos em Estoque</h1>
-			<p>Subtelas: visualização, impressão e geração de PDF (parcial, total e por item).</p>
+			<p>Selecione os produtos e use imprimir/PDF da seleção.</p>
 		</div>
 		<div class="est-actions">
-			<a href="#" id="btn-imprimir-todos" class="est-btn warn">Imprimir listados</a>
-			<a href="#" id="btn-imprimir-selecionados" class="est-btn">Imprimir selecionados</a>
-			<?= $this->Html->link('PDF atual', ['controller' => 'Produtos', 'action' => 'estoquePdf', $bApenasComSaldo ? 't' : 'f', '?' => $queryAtual], ['class' => 'est-btn']) ?>
-			<a href="#" id="btn-pdf-selecionados" class="est-btn">PDF selecionados</a>
-			<?= $this->Html->link('PDF completo', ['controller' => 'Produtos', 'action' => 'estoquePdf', 'f', '?' => ['sCodProduto' => null, 'sDescricao' => null, 'apenasComSaldo' => 0]], ['class' => 'est-btn']) ?>
+			<a href="#" id="btn-imprimir" class="est-btn warn">Imprimir</a>
+			<a href="#" id="btn-pdf" class="est-btn">PDF</a>
 			<?php if ($bApenasComSaldo) : ?>
 				<?= $this->Html->link('Exibir todos', ['controller' => 'Produtos', 'action' => 'estoque', 'f', '?' => $queryAtual], ['class' => 'est-btn']) ?>
 			<?php else : ?>
@@ -119,7 +131,6 @@ body.est-print-selected .est-row-not-selected{display:none;}
 					<th class="est-num">Quantidade Atual</th>
 					<th class="est-num">Preço Custo</th>
 					<th class="est-num">Preço Venda</th>
-					<th class="est-col-actions">Ações</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -131,18 +142,6 @@ body.est-print-selected .est-row-not-selected{display:none;}
 					<td class="est-num"><?= h($reg->nQtdeAtual) ?></td>
 					<td class="est-num"><?= number_format((float)$reg->nPrecoCusto, 2, ',', '.') ?></td>
 					<td class="est-num"><?= number_format((float)$reg->nPrecoVenda, 2, ',', '.') ?></td>
-					<td class="est-col-actions">
-						<?= $this->Html->link(
-							'PDF item',
-							[
-								'controller' => 'Produtos',
-								'action' => 'estoquePdf',
-								$bApenasComSaldo ? 't' : 'f',
-								'?' => array_merge($queryAtual, ['escopo' => 'item', 'codigos' => (string)$reg->sCodProduto])
-							],
-							['class' => 'est-btn', 'style' => 'padding:5px 9px;font-size:.72rem;']
-						) ?>
-					</td>
 				</tr>
 				<?php endforeach; ?>
 			</tbody>
@@ -206,13 +205,7 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		refreshSelectedState();
 	});
 
-	$(document).on('click', '#btn-imprimir-todos', function(e) {
-		e.preventDefault();
-		$('body').removeClass('est-print-selected');
-		window.print();
-	});
-
-	$(document).on('click', '#btn-imprimir-selecionados', function(e) {
+	$(document).on('click', '#btn-imprimir', function(e) {
 		e.preventDefault();
 		var codes = selectedCodes();
 		if (!codes.length) {
@@ -224,7 +217,7 @@ body.est-print-selected .est-row-not-selected{display:none;}
 		setTimeout(function() { $('body').removeClass('est-print-selected'); }, 200);
 	});
 
-	$(document).on('click', '#btn-pdf-selecionados', function(e) {
+	$(document).on('click', '#btn-pdf', function(e) {
 		e.preventDefault();
 		var codes = selectedCodes();
 		if (!codes.length) {
