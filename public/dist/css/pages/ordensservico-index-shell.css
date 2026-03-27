@@ -918,19 +918,6 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 	margin: 0 0 12px;
 	line-height: 1.45;
 }
-.os-index-shell .os-rel-map {
-	background: var(--os-bg3);
-	border: 1px solid var(--os-border);
-	border-radius: 10px;
-	padding: 12px 14px;
-	font-size: 11px;
-	color: var(--os-text2);
-	line-height: 1.45;
-	margin-bottom: 16px;
-}
-.os-index-shell .os-rel-map strong {
-	color: var(--os-text);
-}
 .os-index-shell .os-rel-grid {
 	display: grid;
 	gap: 12px;

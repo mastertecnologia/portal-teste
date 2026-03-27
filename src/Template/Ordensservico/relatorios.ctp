@@ -76,12 +76,6 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 	</header>
 
 	<div class="os-rel-inner">
-		<div class="os-rel-map no-print">
-			<strong>Mapeamento do módulo:</strong>
-			Lista principal (index), cadastro (edit/view), nova OS (add), impressão de uma OS (imprimir), impressão em lote (imprimirordens).
-			Esta página concentra relatórios com filtros alinhados ao index.
-		</div>
-
 		<div class="os-rel-panel os-rel-filtros no-print">
 			<h2>Filtros do relatório</h2>
 			<div class="os-toolbar">
