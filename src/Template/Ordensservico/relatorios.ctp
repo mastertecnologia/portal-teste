@@ -45,6 +45,14 @@ $mesUi = '';
 if (!empty($mes) && preg_match('/^\d{4}-\d{2}$/', (string)$mes)) {
 	$mesUi = substr((string)$mes, 5, 2) . '/' . substr((string)$mes, 0, 4);
 }
+$filtrosAplicados = false;
+foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini', 'data_fim', 'mes'] as $_fk) {
+	$_qv = $this->request->getQuery($_fk);
+	if ($_qv !== null && $_qv !== '') {
+		$filtrosAplicados = true;
+		break;
+	}
+}
 ?>
 <style>
 @media print {
@@ -139,6 +147,7 @@ if (!empty($mes) && preg_match('/^\d{4}-\d{2}$/', (string)$mes)) {
 		</div>
 		<?php endif; ?>
 
+		<?php if ($filtrosAplicados) : ?>
 		<div class="os-rel-panel no-print">
 			<h2>Selecionar ordens para imprimir/PDF/e-mail</h2>
 			<div class="table-responsive">
@@ -186,6 +195,7 @@ if (!empty($mes) && preg_match('/^\d{4}-\d{2}$/', (string)$mes)) {
 				<span class="os-rel-help m-b-0" id="rel-count-selected">0 selecionada(s)</span>
 			</div>
 		</div>
+		<?php endif; ?>
 
 		<div class="os-rel-panel os-rel-email no-print">
 			<h2>Enviar por e-mail</h2>

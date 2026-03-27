@@ -990,12 +990,25 @@ body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
 .os-index-shell .os-rel-filtros input.rel-date,
 .os-index-shell .os-rel-filtros input.rel-month {
 	background: #0d0f14 !important;
+	background-color: #0d0f14 !important;
 	color: #f0f2f8 !important;
 	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	opacity: 1 !important;
+	-webkit-text-fill-color: #f0f2f8 !important;
+	caret-color: #f0f2f8 !important;
 }
 .os-index-shell .os-rel-filtros input.rel-date::placeholder,
 .os-index-shell .os-rel-filtros input.rel-month::placeholder {
 	color: #555e78 !important;
+}
+.os-index-shell .os-rel-filtros input.rel-date:-webkit-autofill,
+.os-index-shell .os-rel-filtros input.rel-date:-webkit-autofill:hover,
+.os-index-shell .os-rel-filtros input.rel-date:-webkit-autofill:focus,
+.os-index-shell .os-rel-filtros input.rel-month:-webkit-autofill,
+.os-index-shell .os-rel-filtros input.rel-month:-webkit-autofill:hover,
+.os-index-shell .os-rel-filtros input.rel-month:-webkit-autofill:focus {
+	-webkit-box-shadow: 0 0 0 1000px #0d0f14 inset !important;
+	-webkit-text-fill-color: #f0f2f8 !important;
 }
 .os-index-shell .os-rel-filtros input[type="date"],
 .os-index-shell .os-rel-filtros input[type="month"],
