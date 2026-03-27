@@ -1043,6 +1043,44 @@ body.os-index-page .datepicker.dropdown-menu {
 	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
 	opacity: 1 !important;
 }
+body.os-index-page .datepicker:before {
+	border-bottom-color: rgba(255, 255, 255, 0.18) !important;
+}
+body.os-index-page .datepicker:after {
+	border-bottom-color: #13161d !important;
+}
+body.os-index-page .datepicker table {
+	background: #13161d !important;
+}
+body.os-index-page .datepicker thead tr:first-child th {
+	background: #1a1e28 !important;
+	color: #f0f2f8 !important;
+	font-weight: 600 !important;
+	border-radius: 6px !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.switch {
+	color: #f0f2f8 !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.prev,
+body.os-index-page .datepicker thead tr:first-child th.next {
+	color: #00c08b !important;
+	font-size: 16px !important;
+	width: 28px !important;
+}
+body.os-index-page .datepicker thead tr:first-child th:hover {
+	background: #222736 !important;
+	color: #ffffff !important;
+}
+body.os-index-page .datepicker tbody tr td.day,
+body.os-index-page .datepicker tbody tr td.month,
+body.os-index-page .datepicker tbody tr td.year,
+body.os-index-page .datepicker tbody tr td span {
+	color: #8b92a8 !important;
+}
+body.os-index-page .datepicker tbody tr td.old,
+body.os-index-page .datepicker tbody tr td.new {
+	color: #555e78 !important;
+}
 body.os-index-page .datepicker table tr td,
 body.os-index-page .datepicker table tr th {
 	color: #8b92a8 !important;
