@@ -261,6 +261,29 @@
 	border-color: var(--q-border2);
 }
 
+.queues-badge--success {
+	background: rgba(0, 192, 139, 0.14);
+	color: #6ee7c5;
+	border: 1px solid rgba(0, 192, 139, 0.4);
+}
+
+.queues-badge--danger {
+	background: rgba(248, 113, 113, 0.12);
+	color: #fca5a5;
+	border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.queues-shell a.users-table-link {
+	color: #93c5fd;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.queues-shell a.users-table-link:hover {
+	color: #bfdbfe;
+	text-decoration: underline;
+}
+
 .queues-actions {
 	display: inline-flex;
 	gap: 6px;

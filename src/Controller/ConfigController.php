@@ -45,6 +45,7 @@ class ConfigController extends AppController {
 		$this->set('nroClientes', $nroClientes->toArray()[0]['count']);
 		$this->set('nroUsuariosEquipe', $nroUsuariosEquipe->toArray()[0]['count']);
 		$this->set('nroUsuariosClientes', $nroUsuariosClientes->toArray()[0]['count']);
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function pastas() {
@@ -64,6 +65,8 @@ class ConfigController extends AppController {
 		}
 
 		$this->set('config', $config);
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('title', 'Diretórios do sistema');
 	}
 
 	public function acessos() {
@@ -82,6 +85,8 @@ class ConfigController extends AppController {
 		}
 
 		$this->set('config', $config);
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('title', 'Login externo e horários');
 	}
 
 	public function financeiro() {
@@ -117,6 +122,7 @@ class ConfigController extends AppController {
 
 		$this->set('config', $config);
 		$this->set('title', 'E-mail suporte');
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function createFinanceiroIfNotExist() {

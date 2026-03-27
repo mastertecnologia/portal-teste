@@ -72,6 +72,7 @@ class UsersController extends AppController {
 			->order(['username' => 'ASC'])
 			->toArray();
 		$this->set(compact('admins', 'fromQueues'));
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function indexClientes() {
@@ -665,14 +666,21 @@ class UsersController extends AppController {
 		
 		$this->set('title', 'Adicionar Usuário');
 
-		$user = $this->Users->newEntity(); 
+		$user = $this->Users->newEntity();
+		$fromQueues = ($this->request->getQuery('from') === 'queues');
 
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
+			if (!empty($data['from']) && $data['from'] === 'queues') {
+				$fromQueues = true;
+			}
+			unset($data['from']);
+
 			$this->usuarioExistente($data['username']);
 
-			if (strcmp($data['password'], $data['confirm_password']) != 0) $this->Flash->warning(__('Senhas não conferem!'));
-			else {
+			if (strcmp($data['password'], $data['confirm_password']) != 0) {
+				$this->Flash->warning(__('Senhas não conferem!'));
+			} else {
 				// $data['admin'] = $data['role'] == C_RoleFuncionario ? 1 : 0;
 				$user = $this->Users->patchEntity($user, $data);
 				$user->role = 0;
@@ -681,6 +689,9 @@ class UsersController extends AppController {
 					$this->_syncQueuesUsuario((int)$user->id, (int)$this->Auth->user('idempresa'));
 					$this->Flash->success(__('O usuário foi salvo.'));
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $user->id);
+					if ($fromQueues) {
+						return $this->redirect(['controller' => 'Queues', 'action' => 'adminTechnicians']);
+					}
 					return $this->redirect(['action' => 'index']);
 				}
 
@@ -696,8 +707,9 @@ class UsersController extends AppController {
 				->toArray();
 		}
 		$supportLevelsList = $this->_supportLevelsListForTechnicians();
-		$this->set(compact('queuesList', 'supportLevelsList'));
+		$this->set(compact('queuesList', 'supportLevelsList', 'fromQueues'));
 		$this->set('user', $user);
+		$this->set('hideLayoutPageTitle', true);
 	}
 
 	public function addcliente() {
