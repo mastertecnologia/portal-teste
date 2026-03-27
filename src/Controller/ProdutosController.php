@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\View\View;
 use CakeSoap\Network\CakeSoap;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -670,87 +671,153 @@ class ProdutosController extends AppController {
 
 	public function estoque($opt = null) {
 		error_reporting(0);
-		if($opt == 't') $bApenasComSaldo = true;
-		else $bApenasComSaldo = false;
-		$sCodProduto = null;
-		$sDescricao = null;
+		$query = (array)$this->request->getQueryParams();
+		$data = $this->request->is(['post', 'put']) ? (array)$this->request->getData() : [];
 
-		if ($this->request->is(['post', 'put'])) {
-            $data = $this->request->getData();
-			$sCodProduto = isset($data['sCodProduto']) ? $data['sCodProduto'] : null;
-			$sDescricao = isset($data['sDescricao']) ? $data['sDescricao'] : null;
-			$opt = 't';
-        }
+		$sCodProduto = $data['sCodProduto'] ?? ($query['sCodProduto'] ?? null);
+		$sDescricao = $data['sDescricao'] ?? ($query['sDescricao'] ?? null);
 
-		$produtos = [];
-		$produtosOpt = [];
-		$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
-
-		if (empty($empresa->urlerp)) {
-			$this->Flash->error(__('URL do ERP não configurada para esta empresa. Configure em Empresas > Editar > URL ERP.'));
-			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
+		if ($opt === 't') {
+			$bApenasComSaldo = true;
+		} elseif ($opt === 'f') {
+			$bApenasComSaldo = false;
+		} else {
+			$bApenasComSaldo = in_array((string)($query['apenasComSaldo'] ?? '0'), ['1', 'true', 't'], true);
 		}
 
-		$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
 		try {
-			$this->runSoapBuffered(function () use ($soapprodutos, $bApenasComSaldo, &$sCodProduto, $sDescricao, &$produtos) {
-				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-				if ($soap === null) {
-					throw new \Exception('Cliente SOAP não inicializado.');
-				}
-
-				if ($sCodProduto == 0) {
-					$sCodProduto = null;
-				}
-
-				$response = $soap->sendRequest('GetEstoqueProdutos', [
-					'Data' => [
-						'iFilial' => C_Filial,
-						'sChave' => C_ChaveAcesso,
-						'bApenasComSaldo' => $bApenasComSaldo,
-						'sCodProduto' => $sCodProduto,
-						'sDescricao' => $sDescricao,
-					]
-				]);
-
-				$result = $response->GetEstoqueProdutosResult ?? null;
-				$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : null;
-
-				if ($lista === null) {
-					$produtos = [];
-				} else {
-					if (!is_array($lista)) {
-						$lista = [$lista];
-					}
-					$produtos = $lista;
-					usort($produtos, function ($a, $b) {
-						$descA = $a->sDescProduto ?? '';
-						$descB = $b->sDescProduto ?? '';
-						if ($descA == $descB) {
-							return 0;
-						}
-						return ($descA < $descB) ? -1 : 1;
-					});
-				}
-			});
-		} catch (\SoapFault $e) {
-			$this->log('Produtos::estoque SoapFault: ' . $e->getMessage(), 'error');
-			$this->Flash->error(__('Erro ao comunicar com o ERP (Windows Server). Verifique: 1) Se o servidor ERP está ligado e acessível; 2) URL do ERP em Empresas; 3) Rede/firewall. Detalhe: ') . $e->getMessage());
-			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
-		} catch (\Exception $e) {
+			[$produtos, $produtosOpt, $sCodProduto] = $this->carregarDadosEstoque($bApenasComSaldo, $sCodProduto, $sDescricao);
+		} catch (\Throwable $e) {
 			$this->log('Produtos::estoque: ' . $e->getMessage(), 'error');
 			$this->Flash->error(__('O estoque não pôde ser carregado. Erro: ') . $e->getMessage());
 			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
 		}
 
-		$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])->order(['descricao'])->toArray();
-		foreach ($produtosOpt1 as $reg) $produtosOpt[$reg->codigo] = $reg->descricao . ' (' . $reg->codigo . ')';
-
 		$this->set('sCodProduto', $sCodProduto);
+		$this->set('sDescricao', $sDescricao);
 		$this->set('produtosOpt', $produtosOpt);
 		$this->set('bApenasComSaldo', $bApenasComSaldo);
 		$this->set('produtos', $produtos);
 		$this->set('title', 'Produtos em Estoque');
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('bodyPageClass', 'estoque-screen-active');
+	}
+
+	public function estoquePdf($opt = null) {
+		$query = (array)$this->request->getQueryParams();
+		$sCodProduto = $query['sCodProduto'] ?? null;
+		$sDescricao = $query['sDescricao'] ?? null;
+
+		if ($opt === 't') {
+			$bApenasComSaldo = true;
+		} elseif ($opt === 'f') {
+			$bApenasComSaldo = false;
+		} else {
+			$bApenasComSaldo = in_array((string)($query['apenasComSaldo'] ?? '0'), ['1', 'true', 't'], true);
+		}
+
+		try {
+			[$produtos, , $sCodProduto] = $this->carregarDadosEstoque($bApenasComSaldo, $sCodProduto, $sDescricao);
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Não foi possível gerar o PDF. Erro: ') . $e->getMessage());
+			return $this->redirect(['action' => 'estoque', $bApenasComSaldo ? 't' : 'f', '?' => ['sCodProduto' => $sCodProduto, 'sDescricao' => $sDescricao]]);
+		}
+
+		if (!class_exists(\Mpdf\Mpdf::class)) {
+			$this->Flash->error('Biblioteca mPDF não instalada. Execute: composer require mpdf/mpdf');
+			return $this->redirect(['action' => 'estoque', $bApenasComSaldo ? 't' : 'f', '?' => ['sCodProduto' => $sCodProduto, 'sDescricao' => $sDescricao]]);
+		}
+
+		$tmpDir = TMP . 'mpdf' . DS;
+		if (!is_dir($tmpDir)) {
+			mkdir($tmpDir, 0775, true);
+		}
+
+		$view = new View($this->request, $this->response, $this->getEventManager(), ['layout' => false]);
+		$view->setTemplatePath('Produtos');
+		$view->set(compact('produtos', 'bApenasComSaldo', 'sCodProduto', 'sDescricao'));
+		$html = $view->render('estoque_pdf');
+
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8',
+			'format' => 'A4-L',
+			'tempDir' => $tmpDir,
+		]);
+		$mpdf->WriteHTML($html);
+
+		$pdf = $mpdf->Output('', 'S');
+		$filename = 'Estoque-' . date('Ymd-His') . '.pdf';
+
+		return $this->response
+			->withType('application/pdf')
+			->withDownload($filename)
+			->withStringBody($pdf);
+	}
+
+	private function carregarDadosEstoque($bApenasComSaldo, $sCodProduto, $sDescricao) {
+		$produtos = [];
+		$produtosOpt = [];
+		$empresa = $this->Empresas->get($this->Auth->user('idempresa'));
+
+		if (empty($empresa->urlerp)) {
+			throw new \Exception('URL do ERP não configurada para esta empresa.');
+		}
+
+		$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
+
+		$this->runSoapBuffered(function () use ($soapprodutos, $bApenasComSaldo, &$sCodProduto, $sDescricao, &$produtos) {
+			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+			if ($soap === null) {
+				throw new \Exception('Cliente SOAP não inicializado.');
+			}
+
+			if ($sCodProduto == 0 || $sCodProduto === '0') {
+				$sCodProduto = null;
+			}
+
+			$response = $soap->sendRequest('GetEstoqueProdutos', [
+				'Data' => [
+					'iFilial' => C_Filial,
+					'sChave' => C_ChaveAcesso,
+					'bApenasComSaldo' => (bool)$bApenasComSaldo,
+					'sCodProduto' => $sCodProduto,
+					'sDescricao' => $sDescricao,
+				]
+			]);
+
+			$result = $response->GetEstoqueProdutosResult ?? null;
+			$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : null;
+
+			if ($lista === null) {
+				$produtos = [];
+				return;
+			}
+
+			if (!is_array($lista)) {
+				$lista = [$lista];
+			}
+
+			$produtos = $lista;
+			usort($produtos, function ($a, $b) {
+				$descA = $a->sDescProduto ?? '';
+				$descB = $b->sDescProduto ?? '';
+				if ($descA === $descB) {
+					return 0;
+				}
+				return ($descA < $descB) ? -1 : 1;
+			});
+		});
+
+		$produtosOpt1 = $this->Produtos->find('all')
+			->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])
+			->order(['descricao'])
+			->toArray();
+
+		foreach ($produtosOpt1 as $reg) {
+			$produtosOpt[$reg->codigo] = $reg->descricao . ' (' . $reg->codigo . ')';
+		}
+
+		return [$produtos, $produtosOpt, $sCodProduto];
 	}
 
 	public function pesquisar() {
