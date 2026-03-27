@@ -22,7 +22,7 @@ $nf = function ($v) {
 	<h1><?= h($tituloRelatorio) ?></h1>
 	<div class="meta">
 		<?= h($nomeempresa ?? '') ?> — <?= h(date('d/m/Y H:i')) ?><br/>
-		Filtros: <?= h($filtrosRotulo['situacao']) ?> | <?= h($filtrosRotulo['cliente']) ?> | <?= h($filtrosRotulo['problema']) ?> | <?= h($filtrosRotulo['locacao']) ?>
+		Filtros: <?= h($filtrosRotulo['situacao']) ?> | <?= h($filtrosRotulo['cliente']) ?> | <?= h($filtrosRotulo['problema']) ?> | <?= h($filtrosRotulo['locacao']) ?> | Técnico responsável: <?= h($filtrosRotulo['solicitante'] ?? 'Todos') ?> | <?= h($filtrosRotulo['periodo'] ?? 'Todos') ?>
 	</div>
 
 	<?php if ($modeloRelatorio === 'lista_filtrada') : ?>

@@ -5,7 +5,7 @@ $nf = function ($v) {
 	return number_format((float)$v, 2, ',', '.');
 };
 $qRelFiltros = [];
-foreach (['cliente', 'situacao', 'problema', 'locacao'] as $k) {
+foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini', 'data_fim', 'mes'] as $k) {
 	$v = $filtros[$k] ?? null;
 	if ($v === null || $v === '') {
 		continue;
@@ -50,7 +50,8 @@ foreach (['cliente', 'situacao', 'problema', 'locacao'] as $k) {
 	<div class="meta">
 		Empresa: <?= h($nomeempresa ?? '') ?> · Gerado em <?= h(date('d/m/Y H:i')) ?><br>
 		Filtros: situação <?= h($filtrosRotulo['situacao']) ?>, cliente <?= h($filtrosRotulo['cliente']) ?>,
-		problema <?= h($filtrosRotulo['problema']) ?>, tipo <?= h($filtrosRotulo['locacao']) ?>.
+		problema <?= h($filtrosRotulo['problema']) ?>, tipo <?= h($filtrosRotulo['locacao']) ?>,
+		técnico responsável <?= h($filtrosRotulo['solicitante'] ?? 'Todos') ?>, período <?= h($filtrosRotulo['periodo'] ?? 'Todos') ?>.
 	</div>
 
 	<?php if ($modeloRelatorio === 'lista_filtrada') : ?>

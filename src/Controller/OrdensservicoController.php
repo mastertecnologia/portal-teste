@@ -1319,6 +1319,10 @@ class OrdensservicoController extends AppController {
 		$situacao = $this->request->getQuery('situacao');
 		$problema = $this->request->getQuery('problema');
 		$locacao = $this->request->getQuery('locacao');
+		$solicitante = $this->request->getQuery('solicitante');
+		$data_ini = $this->request->getQuery('data_ini');
+		$data_fim = $this->request->getQuery('data_fim');
+		$mes = $this->request->getQuery('mes');
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
 			if (is_array($data)) {
@@ -1326,6 +1330,10 @@ class OrdensservicoController extends AppController {
 				$situacao = $data['situacao'] ?? $situacao;
 				$problema = $data['problema'] ?? $problema;
 				$locacao = $data['locacao'] ?? $locacao;
+				$solicitante = $data['solicitante'] ?? $solicitante;
+				$data_ini = $data['data_ini'] ?? $data_ini;
+				$data_fim = $data['data_fim'] ?? $data_fim;
+				$mes = $data['mes'] ?? $mes;
 			}
 		}
 		if ((string)$cliente === '0') {
@@ -1337,18 +1345,52 @@ class OrdensservicoController extends AppController {
 		if ($locacao === null || $locacao === '') {
 			$locacao = -1;
 		}
-		return compact('cliente', 'situacao', 'problema', 'locacao');
+		if ((string)$solicitante === '0') {
+			$solicitante = '';
+		}
+		$mes = trim((string)$mes);
+		if ($mes !== '' && preg_match('/^\d{4}-\d{2}$/', $mes)) {
+			if ($data_ini === null || $data_ini === '') {
+				$data_ini = $mes . '-01';
+			}
+			if ($data_fim === null || $data_fim === '') {
+				$data_fim = date('Y-m-t', strtotime($mes . '-01'));
+			}
+		}
+		$data_ini = trim((string)$data_ini);
+		$data_fim = trim((string)$data_fim);
+		if ($data_ini !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data_ini)) {
+			$data_ini = '';
+		}
+		if ($data_fim !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data_fim)) {
+			$data_fim = '';
+		}
+		$idsRaw = $this->request->getQuery('ids');
+		if ($idsRaw === null || $idsRaw === '') {
+			$idsRaw = $this->request->getData('ids');
+		}
+		$ids = [];
+		if (is_array($idsRaw)) {
+			foreach ($idsRaw as $v) {
+				$n = (int)$v;
+				if ($n > 0) {
+					$ids[$n] = $n;
+				}
+			}
+		} elseif ($idsRaw !== null && $idsRaw !== '') {
+			foreach (explode(',', (string)$idsRaw) as $part) {
+				$n = (int)trim($part);
+				if ($n > 0) {
+					$ids[$n] = $n;
+				}
+			}
+		}
+		$ids = array_values($ids);
+		return compact('cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini', 'data_fim', 'mes', 'ids');
 	}
 
-	protected function _fetchOrdensRelatorioLista(array $filtros) {
-		$idempresa = $this->Auth->user('idempresa');
-		$q = $this->Ordensservico->find('all')
-			->where(['Ordensservico.idempresa' => $idempresa])
-			->contain([
-				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
-				'Users' => ['fields' => ['Users.id', 'Users.name']],
-			]);
-		if ($filtros['situacao'] !== '' && $filtros['situacao'] !== null) {
+	protected function _aplicarFiltrosRelatorioOs($q, array $filtros, bool $ignorarSituacao = false) {
+		if (!$ignorarSituacao && $filtros['situacao'] !== '' && $filtros['situacao'] !== null) {
 			$q->where(['Ordensservico.situacao' => $filtros['situacao']]);
 		}
 		if ($filtros['cliente'] !== '' && $filtros['cliente'] !== null && (string)$filtros['cliente'] !== '0') {
@@ -1360,26 +1402,62 @@ class OrdensservicoController extends AppController {
 		if ((string)$filtros['locacao'] !== '' && (string)$filtros['locacao'] !== '-1') {
 			$q->where(['Ordensservico.locacao' => $filtros['locacao']]);
 		}
-		return $q->toArray();
+		if (($filtros['solicitante'] ?? '') !== '' && (string)$filtros['solicitante'] !== '0') {
+			$q->where(['Ordensservico.iduser' => $filtros['solicitante']]);
+		}
+		if (($filtros['data_ini'] ?? '') !== '') {
+			$q->where(['DATE(Ordensservico.dataabertura) >=' => $filtros['data_ini']]);
+		}
+		if (($filtros['data_fim'] ?? '') !== '') {
+			$q->where(['DATE(Ordensservico.dataabertura) <=' => $filtros['data_fim']]);
+		}
+		if (!empty($filtros['ids']) && is_array($filtros['ids'])) {
+			$q->where(['Ordensservico.id IN' => $filtros['ids']]);
+		}
 	}
 
-	protected function _fetchOrdensRelatorioResumo(array $filtros) {
+	protected function _fetchOrdensRelatorioLista(array $filtros) {
 		$idempresa = $this->Auth->user('idempresa');
 		$q = $this->Ordensservico->find('all')
+			->select([
+				'Ordensservico.id',
+				'Ordensservico.idempresa',
+				'Ordensservico.idcliente',
+				'Ordensservico.iduser',
+				'Ordensservico.idproblema',
+				'Ordensservico.situacao',
+				'Ordensservico.locacao',
+				'Ordensservico.dataabertura',
+				'Ordensservico.dataprevisao',
+				'Ordensservico.valortotal',
+			])
 			->where(['Ordensservico.idempresa' => $idempresa])
 			->contain([
 				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
 				'Users' => ['fields' => ['Users.id', 'Users.name']],
 			]);
-		if ($filtros['cliente'] !== '' && $filtros['cliente'] !== null && (string)$filtros['cliente'] !== '0') {
-			$q->where(['Ordensservico.idcliente' => $filtros['cliente']]);
-		}
-		if ($filtros['problema'] !== '' && $filtros['problema'] !== null && (string)$filtros['problema'] !== '0') {
-			$q->where(['Ordensservico.idproblema' => $filtros['problema']]);
-		}
-		if ((string)$filtros['locacao'] !== '' && (string)$filtros['locacao'] !== '-1') {
-			$q->where(['Ordensservico.locacao' => $filtros['locacao']]);
-		}
+		$this->_aplicarFiltrosRelatorioOs($q, $filtros, false);
+		return $q->order(['Ordensservico.id' => 'DESC'])->toArray();
+	}
+
+	protected function _fetchOrdensRelatorioResumo(array $filtros) {
+		$idempresa = $this->Auth->user('idempresa');
+		$q = $this->Ordensservico->find('all')
+			->select([
+				'Ordensservico.id',
+				'Ordensservico.situacao',
+				'Ordensservico.idcliente',
+				'Ordensservico.iduser',
+				'Ordensservico.idproblema',
+				'Ordensservico.locacao',
+				'Ordensservico.dataabertura',
+			])
+			->where(['Ordensservico.idempresa' => $idempresa])
+			->contain([
+				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
+				'Users' => ['fields' => ['Users.id', 'Users.name']],
+			]);
+		$this->_aplicarFiltrosRelatorioOs($q, $filtros, true);
 		return $q->toArray();
 	}
 
@@ -1403,7 +1481,7 @@ class OrdensservicoController extends AppController {
 		return $out;
 	}
 
-	protected function _rotulosFiltrosRelatorio(array $filtros, array $clientesOpt, array $problemasOpt) {
+	protected function _rotulosFiltrosRelatorio(array $filtros, array $clientesOpt, array $problemasOpt, array $usuariosOpt = []) {
 		$s = $filtros['situacao'];
 		if ($s === '' || $s === null) {
 			$sitLbl = 'Todas';
@@ -1418,11 +1496,21 @@ class OrdensservicoController extends AppController {
 		$probLbl = ($p === '' || $p === null || (string)$p === '0') ? 'Todos' : (string)($problemasOpt[$p] ?? $p);
 		$l = $filtros['locacao'];
 		$locLbl = ((string)$l === '-1' || $l === '' || $l === null) ? 'Todos' : (string)(C_OrdensLocacao[$l] ?? $l);
+		$u = $filtros['solicitante'] ?? '';
+		$solLbl = ($u === '' || $u === null || (string)$u === '0') ? 'Todos' : (string)($usuariosOpt[$u] ?? $u);
+		$di = trim((string)($filtros['data_ini'] ?? ''));
+		$df = trim((string)($filtros['data_fim'] ?? ''));
+		$perLbl = 'Todos';
+		if ($di !== '' || $df !== '') {
+			$perLbl = ($di !== '' ? $di : '...') . ' até ' . ($df !== '' ? $df : '...');
+		}
 		return [
 			'situacao' => $sitLbl,
 			'cliente' => $cliLbl,
 			'problema' => $probLbl,
 			'locacao' => $locLbl,
+			'solicitante' => $solLbl,
+			'periodo' => $perLbl,
 		];
 	}
 
@@ -1490,14 +1578,26 @@ class OrdensservicoController extends AppController {
 			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
 		}
 		asort($clientesOpt);
+		$usuariosOpt = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['role' => C_RoleFuncionario, 'inativo' => 0])
+			->order(['name' => 'ASC'])
+			->toArray();
+		$ordensSelecionaveis = $this->_fetchOrdensRelatorioLista($filtros);
 
 		$this->set('modelosRelatorio', $this->_osRelatorioModelosConfig());
 		$this->set('cliente', $filtros['cliente']);
 		$this->set('situacao', $filtros['situacao']);
 		$this->set('problema', $filtros['problema']);
 		$this->set('locacao', $filtros['locacao']);
+		$this->set('solicitante', $filtros['solicitante']);
+		$this->set('data_ini', $filtros['data_ini']);
+		$this->set('data_fim', $filtros['data_fim']);
+		$this->set('mes', $filtros['mes']);
+		$this->set('idsSelecionados', $filtros['ids']);
 		$this->set('problemas', $problemas1);
 		$this->set('clientes', $clientesOpt);
+		$this->set('usuarios', $usuariosOpt);
+		$this->set('ordensSelecionaveis', $ordensSelecionaveis);
 		$this->set('title', 'Relatórios — Ordens de Serviço');
 		$this->set('hideLayoutPageTitle', true);
 	}
@@ -1519,7 +1619,11 @@ class OrdensservicoController extends AppController {
 		foreach ($this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->toArray() as $reg) {
 			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
 		}
-		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt);
+		$usuariosOpt = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['role' => C_RoleFuncionario, 'inativo' => 0])
+			->order(['name' => 'ASC'])
+			->toArray();
+		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt, $usuariosOpt);
 		$payload = $this->_dadosRelatorioOs((string)$modelo, $filtros);
 		if ($payload === null) {
 			throw new NotFoundException(__('Modelo de relatório inválido.'));
@@ -1562,7 +1666,11 @@ class OrdensservicoController extends AppController {
 		foreach ($this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->toArray() as $reg) {
 			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
 		}
-		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt);
+		$usuariosOpt = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['role' => C_RoleFuncionario, 'inativo' => 0])
+			->order(['name' => 'ASC'])
+			->toArray();
+		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt, $usuariosOpt);
 		$payload = $this->_dadosRelatorioOs((string)$modelo, $filtros);
 		if ($payload === null) {
 			throw new NotFoundException(__('Modelo de relatório inválido.'));
@@ -1611,6 +1719,10 @@ class OrdensservicoController extends AppController {
 				'situacao' => $d['situacao'] ?? '',
 				'problema' => $d['problema'] ?? '',
 				'locacao' => $d['locacao'] ?? '',
+				'solicitante' => $d['solicitante'] ?? '',
+				'data_ini' => $d['data_ini'] ?? '',
+				'data_fim' => $d['data_fim'] ?? '',
+				'mes' => $d['mes'] ?? '',
 			]]);
 		}
 		$meta = $this->_osRelatorioMetaPorId($modelo);
@@ -1626,6 +1738,11 @@ class OrdensservicoController extends AppController {
 				'situacao' => $d['situacao'] ?? '',
 				'problema' => $d['problema'] ?? '',
 				'locacao' => $d['locacao'] ?? '',
+				'solicitante' => $d['solicitante'] ?? '',
+				'data_ini' => $d['data_ini'] ?? '',
+				'data_fim' => $d['data_fim'] ?? '',
+				'mes' => $d['mes'] ?? '',
+				'ids' => $d['ids'] ?? '',
 			]]);
 		}
 		$idempresa = $this->Auth->user('idempresa');
@@ -1636,7 +1753,11 @@ class OrdensservicoController extends AppController {
 		foreach ($this->Clientes->find('all')->where(['idempresa' => $idempresa, 'inativo' => 0])->toArray() as $reg) {
 			$clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial : $reg->nome;
 		}
-		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt);
+		$usuariosOpt = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where(['role' => C_RoleFuncionario, 'inativo' => 0])
+			->order(['name' => 'ASC'])
+			->toArray();
+		$filtrosRotulo = $this->_rotulosFiltrosRelatorio($filtros, $clientesOpt, $problemasOpt, $usuariosOpt);
 		$payload = $this->_dadosRelatorioOs($modelo, $filtros);
 		if ($payload === null) {
 			$this->Flash->error('Modelo de relatório inválido.');
@@ -1646,6 +1767,11 @@ class OrdensservicoController extends AppController {
 				'situacao' => $d['situacao'] ?? '',
 				'problema' => $d['problema'] ?? '',
 				'locacao' => $d['locacao'] ?? '',
+				'solicitante' => $d['solicitante'] ?? '',
+				'data_ini' => $d['data_ini'] ?? '',
+				'data_fim' => $d['data_fim'] ?? '',
+				'mes' => $d['mes'] ?? '',
+				'ids' => $d['ids'] ?? '',
 			]]);
 		}
 		$html = $this->_renderRelatorioOsPdfHtml($modelo, $filtros, $meta['titulo'], $filtrosRotulo, $payload);
