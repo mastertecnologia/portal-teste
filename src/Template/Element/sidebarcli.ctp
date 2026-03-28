@@ -118,7 +118,21 @@
 						</ul>
 					</li>
 				<?php endif; ?>
-				<li class="<?= $ticketsActive ?>"><?= $this->Html->link('<i class="fa fa-ticket-alt"></i><span class="hide-menu">Tickets</span>', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<?php
+						$ticketsCliAction = $this->request->getParam('action');
+						$ticketsSubIndexActive = ($ticketsCliAction === 'indexcliente') ? 'active' : '';
+						$ticketsSubAddActive = ($ticketsCliAction === 'add') ? 'active' : '';
+					?>
+					<li class="<?= $ticketsActive ?> has-arrow-sub <?= !empty($ticketsActive) ? 'selected' : '' ?>">
+						<a href="javascript:void(0)" class="waves-effect waves-dark has-arrow" aria-expanded="<?= !empty($ticketsActive) ? 'true' : 'false' ?>">
+							<i class="fa fa-ticket-alt"></i>
+							<span class="hide-menu">Tickets</span>
+						</a>
+						<ul class="collapse <?= !empty($ticketsActive) ? 'in' : '' ?>">
+							<li class="<?= h($ticketsSubIndexActive) ?>"><?= $this->Html->link('Meus tickets', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($ticketsSubAddActive) ?>"><?= $this->Html->link('Abrir chamado', '/tickets/add', ['class' => 'waves-effect waves-dark']) ?></li>
+						</ul>
+					</li>
 				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>
 				<li id="mini-logout" style="display:<?= $display ?>;"><?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', '/users/logout', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 			</ul>

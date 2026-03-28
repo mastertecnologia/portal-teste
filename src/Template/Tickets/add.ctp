@@ -1,6 +1,7 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Breadcrumbs->add('Tickets', ['controller' => 'Tickets', 'action' => 'index'], ['class' => 'breadcrumb-item']);
+	$ticketsListAction = (isset($role) && (int)$role === 1) ? 'indexcliente' : 'index';
+	$this->Breadcrumbs->add('Tickets', ['controller' => 'Tickets', 'action' => $ticketsListAction], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Abertura', [], ['class' => 'breadcrumb-item active']);
 	if($role == 0) $email = null;
 ?>
@@ -74,10 +75,10 @@
 		margin: 0.15rem 0 0;
 		font-size: 0.875rem;
 		font-weight: 600;
-		color: #059669;
+		color: #1d9e75;
 		transition: color 0.15s ease;
 	}
-	.sd-add-status-value.is-ok { color: #059669; }
+	.sd-add-status-value.is-ok { color: #1d9e75; }
 	.sd-add-status-value.is-warn { color: #d97706; }
 	.sd-add-status-value.is-muted { color: #64748b; }
 	.sd-add-status-value.is-danger { color: #dc2626; }
@@ -221,8 +222,8 @@
 		transition: border-color 0.2s, background 0.2s;
 	}
 	.ticket-dropzone.ticket-dropzone--drag {
-		border-color: #1ab394;
-		background: #ecfdf5;
+		border-color: #1d9e75;
+		background: rgba(29, 158, 117, 0.08);
 	}
 	.ticket-dropzone:hover {
 		border-color: #94a3b8;
@@ -380,21 +381,28 @@
 		gap: 0.65rem;
 		margin-top: 1.15rem;
 	}
-	.sd-btn-submit {
+	.sd-actions-card .sd-btn-submit {
 		width: 100%;
 		border: none;
 		border-radius: 1rem;
-		background: #fff;
-		color: #0f172a;
 		padding: 0.75rem 1rem;
 		font-size: 0.875rem;
 		font-weight: 700;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 		cursor: pointer;
-		transition: opacity 0.15s;
+		transition: filter 0.15s ease, opacity 0.15s;
+		background: linear-gradient(135deg, #1d9e75 0%, #13715a 100%) !important;
+		color: #fff !important;
+		box-shadow: 0 2px 10px rgba(29, 158, 117, 0.28);
 	}
-	.sd-btn-submit:hover { opacity: 0.92; }
-	.sd-btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+	.sd-actions-card .sd-btn-submit:hover:not(:disabled):not(.disabled) {
+		filter: brightness(1.06);
+	}
+	.sd-actions-card .sd-btn-submit:disabled,
+	.sd-actions-card .sd-btn-submit.disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		filter: none;
+	}
 	.sd-btn-ghost {
 		display: block;
 		width: 100%;
@@ -416,11 +424,6 @@
 	}
 	select[multiple] {
 		max-width: 100%;
-	}
-	.sd-btn-submit.btn-success {
-		background: #fff !important;
-		border-color: transparent !important;
-		color: #0f172a !important;
 	}
 </style>
 <div class="col-md-12 tickets-add-wrap">
@@ -657,7 +660,7 @@
 					<h2>Ações</h2>
 					<div class="sd-actions-btns">
 						<?= $this->Form->button('Enviar chamado', ['id' => 'abrirticket', 'type' => 'submit', 'class' => 'sd-btn-submit btn btn-pgm btn-pgm-salvar btn-success aparecedepois']) ?>
-						<a href="<?= h(Router::url(['controller' => 'Tickets', 'action' => 'index'])) ?>" class="sd-btn-ghost">Cancelar</a>
+						<a href="<?= h(Router::url(['controller' => 'Tickets', 'action' => $ticketsListAction])) ?>" class="sd-btn-ghost">Cancelar</a>
 					</div>
 				</section>
 			</div>

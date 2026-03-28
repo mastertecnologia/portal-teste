@@ -11,7 +11,7 @@
 	.tkcli-filter-group label{font-size:.68rem;font-weight:600;color:#6e7681;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px;}
 	.tkcli-filter-group .form-control,.tkcli-filter-group .selectpicker{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:7px;font-size:.8rem;}
 	.tkcli-filter-group .form-control:focus{border-color:#1d9e75;box-shadow:none;}
-	.tkcli-btn-abrir{background:linear-gradient(135deg,#1d9e75,#16a085);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.8rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s;}
+	.tkcli-btn-abrir{background:linear-gradient(135deg,#1d9e75 0%,#13715a 100%);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.8rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s;}
 	.tkcli-btn-abrir:hover{opacity:.85;color:#fff;text-decoration:none;}
 	.tkcli-btn-limpar{background:transparent;border:1px solid #30363d;color:#8b949e;border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;transition:border-color .15s,color .15s;}
 	.tkcli-btn-limpar:hover{border-color:#6e7681;color:#c9d1d9;text-decoration:none;}
