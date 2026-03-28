@@ -1,22 +1,45 @@
 /** Classes Tailwind para badges — reutilizado em técnico e cliente. */
 
-export function badgeClass(type) {
-  const map = {
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    critical: 'bg-rose-50 text-rose-700 border-rose-200',
-    high: 'bg-orange-50 text-orange-700 border-orange-200',
-    medium: 'bg-sky-50 text-sky-700 border-sky-200',
-    low: 'bg-slate-50 text-slate-700 border-slate-200',
-    progress: 'bg-sky-50 text-sky-800 border-sky-300',
-    waiting: 'bg-violet-50 text-violet-800 border-violet-200',
-    pendingTech: 'bg-amber-100 text-amber-900 border-amber-300',
-    resolved: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-    escalated: 'bg-rose-50 text-rose-800 border-rose-300',
-    closed: 'bg-slate-200 text-slate-700 border-slate-300',
-    cancelled: 'bg-red-50 text-red-800 border-red-300',
-  };
-  return map[type] || 'bg-slate-50 text-slate-700 border-slate-200';
+const BADGE_LIGHT = {
+  success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  warning: 'bg-amber-50 text-amber-700 border-amber-200',
+  critical: 'bg-rose-50 text-rose-700 border-rose-200',
+  high: 'bg-orange-50 text-orange-700 border-orange-200',
+  medium: 'bg-sky-50 text-sky-700 border-sky-200',
+  low: 'bg-slate-50 text-slate-700 border-slate-200',
+  progress: 'bg-sky-50 text-sky-800 border-sky-300',
+  waiting: 'bg-violet-50 text-violet-800 border-violet-200',
+  pendingTech: 'bg-amber-100 text-amber-900 border-amber-300',
+  resolved: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+  escalated: 'bg-rose-50 text-rose-800 border-rose-300',
+  closed: 'bg-slate-200 text-slate-700 border-slate-300',
+  cancelled: 'bg-red-50 text-red-800 border-red-300',
+};
+
+/** Badges no tema escuro do portal cliente (PGM #1d9e75 / #5cdbc0). */
+const BADGE_EMBED = {
+  success: 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+  warning: 'border border-amber-500/35 bg-amber-500/10 text-amber-200',
+  critical: 'border border-rose-500/35 bg-rose-500/10 text-rose-300',
+  high: 'border border-orange-500/35 bg-orange-500/10 text-orange-200',
+  medium: 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+  low: 'border border-[#30363d] bg-[#21262d] text-[#8b949e]',
+  progress: 'border border-sky-500/30 bg-sky-500/10 text-sky-200',
+  waiting: 'border border-violet-500/30 bg-violet-500/10 text-violet-200',
+  pendingTech: 'border border-amber-500/35 bg-amber-500/12 text-amber-200',
+  resolved: 'border border-emerald-500/35 bg-emerald-500/12 text-emerald-200',
+  escalated: 'border border-rose-500/35 bg-rose-500/10 text-rose-200',
+  closed: 'border border-[#484f58] bg-[#30363d] text-[#8b949e]',
+  cancelled: 'border border-red-500/35 bg-red-500/10 text-red-300',
+};
+
+/**
+ * @param {string} type
+ * @param {boolean} [embed] lista/detalhe embutidos no shell escuro
+ */
+export function badgeClass(type, embed = false) {
+  const map = embed ? BADGE_EMBED : BADGE_LIGHT;
+  return map[type] || (embed ? BADGE_EMBED.low : BADGE_LIGHT.low);
 }
 
 /** Normaliza rótulo de status vindo do legado (HTML, acentos, espaços). */
@@ -68,8 +91,21 @@ export function acaoKeyToBadgeType(key) {
   return 'low';
 }
 
-export function acaoLinkClassName(key) {
-  return `inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90 ${badgeClass(acaoKeyToBadgeType(key))}`;
+/**
+ * @param {string} key
+ * @param {boolean} [embed]
+ */
+export function acaoLinkClassName(key, embed = false) {
+  const k = String(key || '').toLowerCase();
+  const base =
+    'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
+  if (embed && k === 'imprimir') {
+    return `${base} border-[rgba(29,158,117,0.45)] bg-[rgba(29,158,117,0.12)] text-[#5cdbc0] hover:bg-[rgba(29,158,117,0.2)]`;
+  }
+  if (embed && k === 'cancelar') {
+    return `${base} ${badgeClass('cancelled', true)}`;
+  }
+  return `${base} ${badgeClass(acaoKeyToBadgeType(key), embed)}`;
 }
 
 /** Mesma ordem visual para qualquer status (como na fila “Em execução”). */

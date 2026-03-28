@@ -122,7 +122,8 @@
 		background: #fff;
 		border-radius: 1.5rem;
 		padding: 1.35rem 1.25rem;
-		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+		border: 1px solid #e2e8f0;
+		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(226, 232, 240, 0.65);
 	}
 	@media (min-width: 768px) {
 		.sd-add-card { padding: 1.5rem; }
@@ -296,8 +297,20 @@
 		padding: 0.65rem 1rem;
 		font-size: 0.875rem;
 		min-height: 2.75rem;
-		border-color: #e2e8f0;
-		background: #f8fafc;
+		border: 1px solid #e2e8f0 !important;
+		background-color: #f8fafc !important;
+		color: #0f172a !important;
+		-webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+		box-shadow: 0 0 0 1000px #f8fafc inset !important;
+	}
+	.ticket-add-email.form-control:-webkit-autofill,
+	.ticket-add-email.form-control:-webkit-autofill:hover,
+	.ticket-add-email.form-control:-webkit-autofill:focus {
+		-webkit-text-fill-color: #0f172a !important;
+		-webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+		box-shadow: 0 0 0 1000px #f8fafc inset !important;
+		border-color: #e2e8f0 !important;
+		transition: background-color 9999s ease-out 0s;
 	}
 	.ticket-add-lead {
 		font-size: 0.875rem;

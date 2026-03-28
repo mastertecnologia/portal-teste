@@ -1120,8 +1120,31 @@ class TicketsController extends AppController {
 		$clienteNome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
 		
 		if(isset($solicitante->name)) $this->set('solicitante', $solicitante->name);
+
+		$ticketcomentarios = $this->Ticketcomentarios->find('all', [
+			'contain' => ['users'],
+		])->where(['Ticketcomentarios.idticket' => $idticket])->order(['Ticketcomentarios.id' => 'ASC'])->toArray();
+
+		$qAnxPrint = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket]);
+		$this->Abac->applyToQuery($qAnxPrint, 'Ticketsanexos', 'Ticketsanexos');
+		$ticketanexos = $qAnxPrint->order(['Ticketsanexos.id' => 'ASC'])->toArray();
+
+		$ticketsmovs = $this->Ticketsmovs->find('all', ['contain' => ['users']])
+			->where(['Ticketsmovs.idticket' => $ticket->id])
+			->order(['ticketsmovs.id' => 'ASC'])
+			->toArray();
+
+		$severidadeLabel = null;
+		if (in_array('severidade', $this->Tickets->getSchema()->columns(), true) && $ticket->get('severidade') !== null && $ticket->get('severidade') !== '') {
+			$severidadeLabel = $this->_ticketSeveridadeLabel((string)$ticket->get('severidade'));
+		}
+
 		$this->set('cliente', $clienteNome);
 		$this->set('ticket', $ticket);
+		$this->set('ticketcomentarios', $ticketcomentarios);
+		$this->set('ticketanexos', $ticketanexos);
+		$this->set('ticketsmovs', $ticketsmovs);
+		$this->set('severidadeLabel', $severidadeLabel);
 		$this->set('title', "Ticket $idticket" );
 	}
 

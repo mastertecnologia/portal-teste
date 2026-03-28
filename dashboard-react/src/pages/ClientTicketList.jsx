@@ -116,7 +116,7 @@ export default function ClientTicketList({ boot }) {
     <section
       className={
         embedded
-          ? 'rounded-xl border border-[#21262d] bg-[#161b22]'
+          ? 'rounded-xl border border-[#21262d] bg-[#161b22] shadow-[inset_0_0_0_1px_rgba(33,38,45,0.85)]'
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
@@ -294,7 +294,8 @@ export default function ClientTicketList({ boot }) {
                       <td className="whitespace-nowrap px-2 py-1.5 sm:px-3">
                         <span
                           className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
-                            statusType(st)
+                            statusType(st),
+                            embedded
                           )}`}
                           title={st}
                         >
@@ -321,7 +322,7 @@ export default function ClientTicketList({ boot }) {
                                 href={a.url}
                                 target={a.target || '_self'}
                                 rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                className={acaoLinkClassName(a.key)}
+                                className={acaoLinkClassName(a.key, embedded)}
                                 title={a.label}
                               >
                                 {a.label}

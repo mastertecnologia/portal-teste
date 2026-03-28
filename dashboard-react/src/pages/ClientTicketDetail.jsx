@@ -9,8 +9,19 @@ import { stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
 
-function PapelBadge({ papel }) {
+function PapelBadge({ papel, embed }) {
   const isTech = papel === 'tecnico';
+  if (embed) {
+    return (
+      <span
+        className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+          isTech ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-200' : 'border-[#30363d] bg-[#21262d] text-[#8b949e]'
+        }`}
+      >
+        {isTech ? 'Suporte' : 'Cliente'}
+      </span>
+    );
+  }
   return (
     <span
       className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
@@ -103,10 +114,14 @@ export default function ClientTicketDetail({ boot }) {
   if (erro && !ticket) {
     const backErr = embedded ? resolveClienteIndexUrl(boot, null) : null;
     return (
-      <div className={embedded ? 'py-8 text-center' : 'min-h-screen bg-slate-100 px-4 py-12 text-center'}>
-        <p className="text-rose-700">{erro}</p>
+      <div
+        className={
+          embedded ? 'py-8 text-center text-[#c9d1d9]' : 'min-h-screen bg-slate-100 px-4 py-12 text-center'
+        }
+      >
+        <p className={embedded ? 'text-red-300' : 'text-rose-700'}>{erro}</p>
         {embedded && backErr ? (
-          <a href={backErr} className="mt-4 inline-block text-cyan-700 underline">
+          <a href={backErr} className="mt-4 inline-block text-[#5cdbc0] underline">
             {backLabel}
           </a>
         ) : (
@@ -120,7 +135,11 @@ export default function ClientTicketDetail({ boot }) {
 
   if (!ticket) {
     return (
-      <div className={embedded ? 'py-12 text-center text-slate-500' : 'min-h-screen bg-slate-100 px-4 py-12 text-center text-slate-500'}>
+      <div
+        className={
+          embedded ? 'py-12 text-center text-[#6e7681]' : 'min-h-screen bg-slate-100 px-4 py-12 text-center text-slate-500'
+        }
+      >
         Carregando chamado…
       </div>
     );
@@ -132,25 +151,26 @@ export default function ClientTicketDetail({ boot }) {
   const clienteNome = stripHtml(ticket.cliente || '').trim() || '—';
 
   const header = embedded ? (
-    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-xl border border-[#30363d] bg-[#161b22] p-4 shadow-[inset_0_0_0_1px_rgba(48,54,61,0.85)]">
       {backHref ? (
-        <a href={backHref} className="text-sm font-medium text-teal-700 hover:underline">
+        <a href={backHref} className="text-sm font-medium text-[#5cdbc0] hover:underline">
           {backLabel}
         </a>
       ) : (
-        <Link to="/cliente" className="text-sm font-medium text-teal-700 hover:underline">
+        <Link to="/cliente" className="text-sm font-medium text-[#5cdbc0] hover:underline">
           {backLabel}
         </Link>
       )}
-      <h1 className="tickets-react-ticket-title mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900">
+      <h1 className="tickets-react-ticket-title mt-2 text-xl font-bold leading-snug tracking-tight text-[#e6edf3]">
         Ticket #{ticket.id}
       </h1>
-      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-        <span>{clienteNome}</span>
-        <span className="text-slate-400">·</span>
+      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[#8b949e]">
+        <span className="text-[#c9d1d9]">{clienteNome}</span>
+        <span className="text-[#484f58]">·</span>
         <span
           className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
-            statusType(statusPlain)
+            statusType(statusPlain),
+            true
           )}`}
         >
           {statusPlain}
@@ -160,18 +180,19 @@ export default function ClientTicketDetail({ boot }) {
         <p className="mt-1.5">
           <span
             className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badgeClass(
-              priorityType(ticket.prioridade)
+              priorityType(ticket.prioridade),
+              true
             )}`}
           >
             Severidade: {ticket.prioridade}
           </span>
         </p>
       ) : null}
-      <p className="tickets-react-ticket-strip-muted mt-2 text-xs">
+      <p className="tickets-react-ticket-strip-muted mt-2 text-xs text-[#6e7681]">
         {ticket.atualizado}
         {ticket.responsavel && ticket.responsavel !== '—' ? ` · ${ticket.responsavel}` : ''}
       </p>
-      <p className="tickets-react-ticket-strip-hint mt-2 border-t border-slate-200 pt-2 text-xs">
+      <p className="tickets-react-ticket-strip-hint mt-2 border-t border-[#21262d] pt-2 text-xs text-[#6e7681]">
         Conversa e status atualizam automaticamente (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
       </p>
     </div>
@@ -201,19 +222,29 @@ export default function ClientTicketDetail({ boot }) {
 
   const relatoTecnico = (ticket.descricaoAtendimento || '').trim();
 
+  const descShell = embedded
+    ? 'rounded-xl border border-[#30363d] bg-[#0d1117] p-4 shadow-[inset_0_0_0_1px_rgba(48,54,61,0.9)]'
+    : 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm';
+  const descLabel = embedded ? 'text-xs font-semibold uppercase tracking-wide text-[#6e7681]' : 'text-xs font-semibold uppercase tracking-wide text-slate-500';
+  const descTitle = embedded ? 'mt-1 text-base font-semibold text-[#e6edf3]' : 'mt-1 text-base font-semibold text-slate-900';
+  const descBody = embedded ? 'prose prose-sm mt-2 max-w-none whitespace-pre-wrap text-[#c9d1d9]' : 'prose prose-sm mt-2 max-w-none whitespace-pre-wrap text-slate-700';
+  const techBox = embedded
+    ? 'mt-2 rounded-lg border border-[#1d9e75]/30 bg-[rgba(29,158,117,0.08)] p-3 text-sm whitespace-pre-wrap text-[#e6edf3]'
+    : 'mt-2 rounded-md border border-teal-100 bg-teal-50/40 p-3 text-sm whitespace-pre-wrap text-slate-800';
+
   const descCard = (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assunto</h2>
-      <p className="mt-1 text-base font-semibold text-slate-900">{stripHtml(ticket.assunto)}</p>
-      <h2 className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</h2>
-      <div className="prose prose-sm mt-2 max-w-none whitespace-pre-wrap text-slate-700">{ticket.descricao}</div>
+    <div className={descShell}>
+      <h2 className={descLabel}>Assunto</h2>
+      <p className={descTitle}>{stripHtml(ticket.assunto)}</p>
+      <h2 className={`mt-4 ${descLabel}`}>Descrição</h2>
+      <div className={descBody}>{ticket.descricao}</div>
       {relatoTecnico ? (
         <>
-          <h2 className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Atendimento técnico</h2>
-          <p className="mt-1 text-xs text-slate-500">O que foi feito pelo suporte neste chamado.</p>
-          <div className="mt-2 rounded-md border border-teal-100 bg-teal-50/40 p-3 text-sm whitespace-pre-wrap text-slate-800">
-            {relatoTecnico}
-          </div>
+          <h2 className={`mt-4 ${descLabel}`}>Atendimento técnico</h2>
+          <p className={embedded ? 'mt-1 text-xs text-[#6e7681]' : 'mt-1 text-xs text-slate-500'}>
+            O que foi feito pelo suporte neste chamado.
+          </p>
+          <div className={techBox}>{relatoTecnico}</div>
         </>
       ) : null}
     </div>
@@ -225,17 +256,22 @@ export default function ClientTicketDetail({ boot }) {
       anexos={ticket.anexos}
       onAnexosChange={(next) => setTicket((prev) => (prev ? { ...prev, anexos: next } : prev))}
       disabled={false}
+      embed={embedded}
     />
   );
 
   const bootNow = getBoot();
   const meuNome = USE_MOCK ? MOCK_SESSION_CLIENTE.name : (bootNow?.userName || '').trim();
 
+  const chatShell = embedded
+    ? 'flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[#30363d] bg-[#0d1117] shadow-[inset_0_0_0_1px_rgba(48,54,61,0.9)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]'
+    : 'flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]';
+
   const chatCard = (
-    <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
-      <div className="shrink-0 border-b border-slate-100 px-4 py-2">
-        <h2 className="text-sm font-bold text-slate-900">Conversa</h2>
-        <p className="text-xs text-slate-500">
+    <div className={chatShell}>
+      <div className={embedded ? 'shrink-0 border-b border-[#21262d] px-4 py-2' : 'shrink-0 border-b border-slate-100 px-4 py-2'}>
+        <h2 className={embedded ? 'text-sm font-bold text-[#e6edf3]' : 'text-sm font-bold text-slate-900'}>Conversa</h2>
+        <p className={embedded ? 'text-xs text-[#6e7681]' : 'text-xs text-slate-500'}>
           {meuNome
             ? `Você está como ${meuNome}. Cada mensagem fica gravada no chamado e no histórico (movimentações).`
             : 'Mensagens com o suporte — gravadas no chamado e no histórico.'}
@@ -247,45 +283,72 @@ export default function ClientTicketDetail({ boot }) {
         className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
       >
         {comentarios.length === 0 ? (
-          <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500">
+          <li
+            className={
+              embedded
+                ? 'rounded-lg border border-dashed border-[#30363d] bg-[#161b22] px-3 py-6 text-center text-sm text-[#6e7681]'
+                : 'rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500'
+            }
+          >
             Nenhuma mensagem ainda. Escreva abaixo para falar com o suporte.
           </li>
         ) : (
           comentarios.map((c) => (
             <li
               key={c.id}
-              className={`rounded-lg border px-3 py-2 text-sm ${
+              className={
                 c.pending
-                  ? 'border-amber-200 bg-amber-50/80'
+                  ? embedded
+                    ? 'rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm'
+                    : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
                   : c.papel === 'tecnico'
-                    ? 'border-cyan-200 bg-cyan-50/50'
-                    : 'border-slate-200 bg-slate-50/80'
-              }`}
+                    ? embedded
+                      ? 'rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-sm'
+                      : 'rounded-lg border border-cyan-200 bg-cyan-50/50 px-3 py-2 text-sm'
+                    : embedded
+                      ? 'rounded-lg border border-[#30363d] bg-[#161b22] px-3 py-2 text-sm'
+                      : 'rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm'
+              }
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <div
+                className={
+                  embedded
+                    ? 'flex flex-wrap items-center justify-between gap-2 text-xs text-[#6e7681]'
+                    : 'flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500'
+                }
+              >
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="font-semibold text-slate-900">{c.autor || '—'}</span>
-                  <PapelBadge papel={c.papel} />
+                  <span className={embedded ? 'font-semibold text-[#e6edf3]' : 'font-semibold text-slate-900'}>
+                    {c.autor || '—'}
+                  </span>
+                  <PapelBadge papel={c.papel} embed={embedded} />
                 </div>
-                <time className="flex-shrink-0 text-slate-500">{c.quando}</time>
+                <time className={embedded ? 'flex-shrink-0 text-[#6e7681]' : 'flex-shrink-0 text-slate-500'}>{c.quando}</time>
               </div>
-              <CommentMessage texto={c.texto} />
+              <CommentMessage texto={c.texto} embed={embedded} />
             </li>
           ))
         )}
       </ul>
-      <form onSubmit={handleComentario} className="shrink-0 border-t border-slate-100 p-3">
+      <form
+        onSubmit={handleComentario}
+        className={embedded ? 'shrink-0 border-t border-[#21262d] p-3' : 'shrink-0 border-t border-slate-100 p-3'}
+      >
         <textarea
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-slate-200 p-2 text-sm"
+          className={
+            embedded
+              ? 'w-full rounded-lg border border-[#30363d] bg-[#161b22] p-2 text-sm text-[#c9d1d9] placeholder:text-[#484f58] focus:border-[#1d9e75] focus:outline-none'
+              : 'w-full rounded-lg border border-slate-200 p-2 text-sm'
+          }
           placeholder="Escreva um comentário…"
         />
         <button
           type="submit"
           disabled={enviando}
-          className="mt-2 rounded-lg bg-gradient-to-r from-cyan-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="mt-2 rounded-lg bg-gradient-to-r from-[#1d9e75] to-[#13715a] px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
         >
           {enviando ? 'Enviando…' : 'Enviar comentário'}
         </button>
@@ -295,7 +358,17 @@ export default function ClientTicketDetail({ boot }) {
 
   const inner = (
     <>
-      {erro && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">{erro}</p>}
+      {erro && (
+        <p
+          className={
+            embedded
+              ? 'mb-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200'
+              : 'mb-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800'
+          }
+        >
+          {erro}
+        </p>
+      )}
       <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
         <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
           {descCard}
@@ -308,7 +381,7 @@ export default function ClientTicketDetail({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-slate-100 px-3 pb-4 pt-5 text-slate-800 sm:px-4 sm:pt-6">
+      <div className="tickets-react-client-detail flex min-h-0 w-full max-w-full flex-col overflow-x-hidden bg-[#0d1117] px-3 pb-4 pt-5 text-[#c9d1d9] sm:px-4 sm:pt-6">
         {header}
         <div className="min-h-0 flex-1">{inner}</div>
       </div>
