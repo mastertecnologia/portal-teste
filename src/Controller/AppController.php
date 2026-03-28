@@ -64,6 +64,9 @@ class AppController extends Controller {
 				'apiAdd',
 				'adminSyncRegistry', 'adminMatrix', 'adminGrantSuperAll',
 				'adminUsers', 'adminUserRoles',
+				// Cofre de senhas: revelar segredo via POST JSON (senha admin nunca na URL)
+				'vaultReveal',
+				'verificasenha',
 			],
 		]);
 		$this->loadComponent('Auth', [
