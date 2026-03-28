@@ -111,56 +111,45 @@ export default function ClientTicketList({ boot }) {
   }, [fromApiRows, deferredQ]);
 
   const totalFila = fromApiRows.length;
-  const addHref = boot?.paths?.addTicket;
 
   const tableSection = (
     <section
       className={
         embedded
-          ? 'rounded-lg border border-slate-200 bg-white shadow-sm'
+          ? 'rounded-xl border border-[#21262d] bg-[#161b22]'
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
       <div
         className={
           embedded
-            ? 'border-b border-slate-100 p-3'
+            ? 'border-b border-[#21262d] p-3'
             : 'flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between'
         }
       >
         {embedded ? (
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-              <div className="min-w-0">
-                <h2 className="text-lg font-bold leading-tight text-slate-900">
-                  {boot?.servicedesk ? 'Service Desk — meus chamados' : 'Tickets — cliente'}
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {boot?.servicedesk
-                    ? `Atualização a cada 10 s · ${totalFila} ticket(s) neste filtro`
-                    : `Fila · ${totalFila} ticket(s) neste filtro`}
-                </p>
-              </div>
-              {addHref && (
-                <a
-                  href={addHref}
-                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-cyan-600 to-teal-600 px-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:self-center"
-                >
-                  Abrir chamado
-                </a>
-              )}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold leading-tight text-[#e6edf3]">
+                {boot?.servicedesk ? 'Service Desk — meus chamados' : 'Tickets — cliente'}
+              </h2>
+              <p className="mt-0.5 text-xs text-[#6e7681]">
+                {boot?.servicedesk
+                  ? `Atualização a cada 10 s · ${totalFila} ticket(s) neste filtro`
+                  : `Fila · ${totalFila} ticket(s) neste filtro`}
+              </p>
             </div>
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto lg:max-w-xl">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar nº, cliente ou assunto"
-                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-cyan-500 sm:min-w-[180px]"
+                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-[#30363d] bg-[#0d1117] px-2.5 text-sm text-[#c9d1d9] outline-none placeholder:text-[#6e7681] focus:border-[#1d9e75] sm:min-w-[180px]"
               />
               <select
                 value={fila}
                 onChange={(e) => setFila(e.target.value)}
-                className="h-9 w-full shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-cyan-500 sm:w-44"
+                className="h-9 w-full shrink-0 rounded-lg border border-[#30363d] bg-[#0d1117] px-2.5 text-sm text-[#c9d1d9] outline-none focus:border-[#1d9e75] sm:w-44"
               >
                 <option value="todos">Todos</option>
                 <option value="ativos">Aguardando + Em execução</option>
@@ -201,10 +190,26 @@ export default function ClientTicketList({ boot }) {
         )}
       </div>
 
-      <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
+      <div
+        className={
+          embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'
+        }
+      >
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
-            <thead className="bg-slate-50 text-left text-xs text-slate-500">
+          <table
+            className={
+              embedded
+                ? 'min-w-full divide-y divide-[#21262d] text-xs text-[#c9d1d9] sm:text-sm'
+                : 'min-w-full divide-y divide-slate-200 text-xs sm:text-sm'
+            }
+          >
+            <thead
+              className={
+                embedded
+                  ? 'bg-[#0d1117] text-left text-xs text-[#6e7681]'
+                  : 'bg-slate-50 text-left text-xs text-slate-500'
+              }
+            >
               <tr>
                 <th className="px-2 py-1.5 font-semibold sm:px-3">Ticket</th>
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Autor</th>
@@ -216,16 +221,26 @@ export default function ClientTicketList({ boot }) {
                 <th className="min-w-[14rem] px-2 py-1.5 font-semibold sm:min-w-[17rem] sm:px-3">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody
+              className={
+                embedded ? 'divide-y divide-[#21262d] bg-[#0d1117]' : 'divide-y divide-slate-100 bg-white'
+              }
+            >
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                  <td
+                    colSpan={8}
+                    className={`px-4 py-8 text-center ${embedded ? 'text-[#6e7681]' : 'text-slate-500'}`}
+                  >
                     Carregando…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                  <td
+                    colSpan={8}
+                    className={`px-4 py-8 text-center ${embedded ? 'text-[#6e7681]' : 'text-slate-500'}`}
+                  >
                     Nenhum ticket neste filtro.
                   </td>
                 </tr>
@@ -235,15 +250,19 @@ export default function ClientTicketList({ boot }) {
                   const assuntoLinha = stripHtml(ticket.assunto);
                   const dest = ticket.urls?.view || `/cliente/ticket/${ticket.id}`;
                   const acoesOrd = sortTicketAcoes(ticket.acoes || []);
+                  const idLinkCls = embedded
+                    ? 'text-[#5cdbc0] hover:underline'
+                    : 'text-cyan-700 hover:underline';
+                  const rowHover = embedded ? 'hover:bg-[#161b22]' : 'hover:bg-slate-50/80';
                   return (
-                    <tr key={ticket.id} className="align-middle transition hover:bg-slate-50/80">
+                    <tr key={ticket.id} className={`align-middle transition ${rowHover}`}>
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.view ? (
-                          <a className="text-cyan-700 hover:underline" href={dest}>
+                          <a className={idLinkCls} href={dest}>
                             #{ticket.id}
                           </a>
                         ) : (
-                          <Link className="text-cyan-700 hover:underline" to={dest}>
+                          <Link className={idLinkCls} to={dest}>
                             #{ticket.id}
                           </Link>
                         )}
@@ -251,15 +270,23 @@ export default function ClientTicketList({ boot }) {
                       <td className="max-w-[7rem] truncate px-2 py-1.5 sm:px-3" title={ticket.autor || ''}>
                         {ticket.autor || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 sm:px-3">
+                      <td
+                        className={`whitespace-nowrap px-2 py-1.5 sm:px-3 ${embedded ? 'text-[#8b949e]' : 'text-slate-600'}`}
+                      >
                         {ticket.created || '—'}
                       </td>
                       <td className="max-w-[14rem] px-2 py-1.5 sm:max-w-xs sm:px-3">
-                        <div className="truncate font-medium text-slate-800" title={assuntoLinha}>
+                        <div
+                          className={`truncate font-medium ${embedded ? 'text-[#e6edf3]' : 'text-slate-800'}`}
+                          title={assuntoLinha}
+                        >
                           {assuntoLinha}
                         </div>
                         {ticket.solicitacaoPreview ? (
-                          <div className="line-clamp-1 text-[11px] leading-tight text-slate-500" title={ticket.solicitacaoPreview}>
+                          <div
+                            className={`line-clamp-1 text-[11px] leading-tight ${embedded ? 'text-[#6e7681]' : 'text-slate-500'}`}
+                            title={ticket.solicitacaoPreview}
+                          >
                             {ticket.solicitacaoPreview}
                           </div>
                         ) : null}
@@ -274,7 +301,10 @@ export default function ClientTicketList({ boot }) {
                           {st}
                         </span>
                       </td>
-                      <td className="max-w-[7rem] truncate px-2 py-1.5 text-slate-700 sm:px-3" title={ticket.tecnicos || ''}>
+                      <td
+                        className={`max-w-[7rem] truncate px-2 py-1.5 sm:px-3 ${embedded ? 'text-[#c9d1d9]' : 'text-slate-700'}`}
+                        title={ticket.tecnicos || ''}
+                      >
                         {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
                       </td>
                       <td className="max-w-[8rem] truncate px-2 py-1.5 sm:px-3" title={ticket.cliente || ''}>
@@ -282,7 +312,7 @@ export default function ClientTicketList({ boot }) {
                       </td>
                       <td className="px-2 py-1 sm:px-3">
                         {acoesOrd.length === 0 ? (
-                          <span className="text-slate-400">—</span>
+                          <span className={embedded ? 'text-[#484f58]' : 'text-slate-400'}>—</span>
                         ) : (
                           <div className="flex max-w-[42vw] flex-nowrap items-center gap-0.5 overflow-x-auto py-0.5 sm:max-w-none sm:overflow-visible [scrollbar-width:thin]">
                             {acoesOrd.map((a) => (
@@ -312,7 +342,7 @@ export default function ClientTicketList({ boot }) {
   );
 
   if (embedded) {
-    return <div className="tickets-react-client w-full text-slate-800">{tableSection}</div>;
+    return <div className="tickets-react-client w-full text-[#c9d1d9]">{tableSection}</div>;
   }
 
   return (
@@ -334,31 +364,16 @@ export default function ClientTicketList({ boot }) {
               )}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {USE_MOCK && (
+          {USE_MOCK ? (
+            <div className="flex flex-wrap gap-2">
               <Link
                 to="/tecnico"
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
                 Painel técnico (demo)
               </Link>
-            )}
-            {addHref ? (
-              <a
-                href={addHref}
-                className="rounded-2xl bg-gradient-to-r from-cyan-600 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-95"
-              >
-                Abrir novo chamado
-              </a>
-            ) : (
-              <Link
-                to="/cliente"
-                className="rounded-2xl bg-gradient-to-r from-cyan-600 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-95"
-              >
-                Abrir novo chamado
-              </Link>
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
       </header>
 
