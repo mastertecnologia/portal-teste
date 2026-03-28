@@ -27,9 +27,10 @@ $emitidoEm = date('d/m/Y H:i');
 		border-bottom: 1px solid #e2e8f0;
 	}
 	.ticket-print-root {
-		max-width: 920px;
+		max-width: 100%;
+		width: 100%;
 		margin: 0 auto;
-		padding: 16px;
+		padding: 12px 16px;
 		font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 		font-size: 11pt;
 		line-height: 1.45;
@@ -37,6 +38,7 @@ $emitidoEm = date('d/m/Y H:i');
 		background: #fff;
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
+		box-sizing: border-box;
 	}
 	body.ticket-autoprint-screen .ticket-print-root {
 		margin-top: 0;
@@ -170,15 +172,49 @@ $emitidoEm = date('d/m/Y H:i');
 		border-top: 1px dashed #cbd5e1;
 		text-align: center;
 	}
+	@page {
+		size: A4;
+		margin: 12mm;
+	}
 	@media print {
-		.ticket-print-actions { display: none !important; }
+		html,
+		body {
+			width: 100% !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			background: #fff !important;
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
+		.main-wrapper,
+		.container-fluid {
+			max-width: none !important;
+			width: 100% !important;
+			padding: 0 !important;
+			margin: 0 !important;
+		}
+		.ticket-print-actions {
+			display: none !important;
+		}
 		.ticket-print-root {
-			max-width: none;
-			padding: 0;
+			max-width: 100% !important;
+			width: 100% !important;
+			padding: 0 !important;
+			margin: 0 !important;
 			box-shadow: none;
+			font-size: 10.5pt;
+		}
+		.ticket-print-banner {
+			border-radius: 0;
 		}
 		.ticket-print-sheet {
 			box-shadow: none;
+			border-radius: 0;
+			border-left: none;
+			border-right: none;
+		}
+		.ticket-print-meta th {
+			width: 24%;
 		}
 	}
 	body.ticket-autoprint-screen {

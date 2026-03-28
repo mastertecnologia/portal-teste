@@ -27,17 +27,17 @@
 }
 
 /*
-  Tarja do ticket (cliente): o tema do portal (dark / .text-themecolor) pode anular Tailwind.
-  Especificidade alta + cores explícitas para fundo, texto e link.
+  Tarja do ticket (cliente) embutida: o tema Bootstrap do portal pode anular Tailwind.
+  Mesma paleta escura da lista/detalhe (#161b22) — não forçar fundo branco.
 */
 #tickets-react-root .tickets-react-ticket-strip {
   box-sizing: border-box;
   overflow: visible !important;
-  background-color: #fff !important;
-  color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  background-color: #161b22 !important;
+  color: #c9d1d9 !important;
+  border: 1px solid #484f58 !important;
+  border-radius: 0.75rem;
+  box-shadow: inset 0 0 0 1px rgba(72, 79, 88, 0.45);
   padding: 1.25rem 1rem 1rem !important;
 }
 
@@ -47,10 +47,9 @@
   }
 }
 
-/* Evita cortar ascendentes do título (overflow / line-height do tema) */
 #tickets-react-root .tickets-react-ticket-strip h1,
 #tickets-react-root .tickets-react-ticket-title {
-  color: #0f172a !important;
+  color: #e6edf3 !important;
   line-height: 1.35 !important;
   padding-top: 0.125rem;
   overflow: visible !important;
@@ -58,10 +57,11 @@
 
 #tickets-react-root .tickets-react-client-detail {
   overflow-y: visible !important;
+  background-color: #0d1117 !important;
 }
 
 #tickets-react-root .tickets-react-ticket-strip a {
-  color: #00C08B !important;
+  color: #5cdbc0 !important;
   text-decoration: none;
 }
 
@@ -69,18 +69,11 @@
   text-decoration: underline;
 }
 
-#tickets-react-root .tickets-react-ticket-strip .text-slate-600 {
-  color: #475569 !important;
-}
-
-#tickets-react-root .tickets-react-ticket-strip .text-slate-800 {
-  color: #1e293b !important;
-}
-
 #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-muted {
-  color: #64748b !important;
+  color: #6e7681 !important;
 }
 
 #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-hint {
-  color: #94a3b8 !important;
+  color: #6e7681 !important;
+  border-top-color: #30363d !important;
 }

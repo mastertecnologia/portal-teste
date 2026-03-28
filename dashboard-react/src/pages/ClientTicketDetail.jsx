@@ -15,7 +15,7 @@ function PapelBadge({ papel, embed }) {
     return (
       <span
         className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-          isTech ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-200' : 'border-[#30363d] bg-[#21262d] text-[#8b949e]'
+          isTech ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-200' : 'border-[#484f58] bg-[#21262d] text-[#8b949e]'
         }`}
       >
         {isTech ? 'Suporte' : 'Cliente'}
@@ -151,7 +151,7 @@ export default function ClientTicketDetail({ boot }) {
   const clienteNome = stripHtml(ticket.cliente || '').trim() || '—';
 
   const header = embedded ? (
-    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-xl border border-[#30363d] bg-[#161b22] p-4 shadow-[inset_0_0_0_1px_rgba(48,54,61,0.85)]">
+    <div className="tickets-react-ticket-strip relative z-20 mb-4 shrink-0 rounded-xl border border-[#484f58] bg-[#161b22] p-4 shadow-[inset_0_0_0_1px_rgba(72,79,88,0.5)]">
       {backHref ? (
         <a href={backHref} className="text-sm font-medium text-[#5cdbc0] hover:underline">
           {backLabel}
@@ -223,7 +223,7 @@ export default function ClientTicketDetail({ boot }) {
   const relatoTecnico = (ticket.descricaoAtendimento || '').trim();
 
   const descShell = embedded
-    ? 'rounded-xl border border-[#30363d] bg-[#0d1117] p-4 shadow-[inset_0_0_0_1px_rgba(48,54,61,0.9)]'
+    ? 'rounded-xl border border-[#484f58] bg-[#0d1117] p-4 shadow-[inset_0_0_0_1px_rgba(72,79,88,0.55)]'
     : 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm';
   const descLabel = embedded ? 'text-xs font-semibold uppercase tracking-wide text-[#6e7681]' : 'text-xs font-semibold uppercase tracking-wide text-slate-500';
   const descTitle = embedded ? 'mt-1 text-base font-semibold text-[#e6edf3]' : 'mt-1 text-base font-semibold text-slate-900';
@@ -264,7 +264,7 @@ export default function ClientTicketDetail({ boot }) {
   const meuNome = USE_MOCK ? MOCK_SESSION_CLIENTE.name : (bootNow?.userName || '').trim();
 
   const chatShell = embedded
-    ? 'flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[#30363d] bg-[#0d1117] shadow-[inset_0_0_0_1px_rgba(48,54,61,0.9)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]'
+    ? 'flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[#484f58] bg-[#0d1117] shadow-[inset_0_0_0_1px_rgba(72,79,88,0.55)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]'
     : 'flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]';
 
   const chatCard = (
@@ -286,7 +286,7 @@ export default function ClientTicketDetail({ boot }) {
           <li
             className={
               embedded
-                ? 'rounded-lg border border-dashed border-[#30363d] bg-[#161b22] px-3 py-6 text-center text-sm text-[#6e7681]'
+                ? 'rounded-lg border border-dashed border-[#484f58] bg-[#161b22] px-3 py-6 text-center text-sm text-[#6e7681]'
                 : 'rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-sm text-slate-500'
             }
           >
@@ -306,7 +306,7 @@ export default function ClientTicketDetail({ boot }) {
                       ? 'rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-sm'
                       : 'rounded-lg border border-cyan-200 bg-cyan-50/50 px-3 py-2 text-sm'
                     : embedded
-                      ? 'rounded-lg border border-[#30363d] bg-[#161b22] px-3 py-2 text-sm'
+                      ? 'rounded-lg border border-[#484f58] bg-[#161b22] px-3 py-2 text-sm'
                       : 'rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm'
               }
             >
@@ -340,7 +340,7 @@ export default function ClientTicketDetail({ boot }) {
           rows={3}
           className={
             embedded
-              ? 'w-full rounded-lg border border-[#30363d] bg-[#161b22] p-2 text-sm text-[#c9d1d9] placeholder:text-[#484f58] focus:border-[#1d9e75] focus:outline-none'
+              ? 'w-full rounded-lg border border-[#484f58] bg-[#161b22] p-2 text-sm text-[#c9d1d9] placeholder:text-[#484f58] focus:border-[#1d9e75] focus:outline-none'
               : 'w-full rounded-lg border border-slate-200 p-2 text-sm'
           }
           placeholder="Escreva um comentário…"

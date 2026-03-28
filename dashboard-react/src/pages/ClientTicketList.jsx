@@ -116,7 +116,7 @@ export default function ClientTicketList({ boot }) {
     <section
       className={
         embedded
-          ? 'rounded-xl border border-[#21262d] bg-[#161b22] shadow-[inset_0_0_0_1px_rgba(33,38,45,0.85)]'
+          ? 'rounded-xl border border-[#484f58] bg-[#161b22] shadow-[inset_0_0_0_1px_rgba(72,79,88,0.5)]'
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
@@ -144,12 +144,12 @@ export default function ClientTicketList({ boot }) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar nº, cliente ou assunto"
-                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-[#30363d] bg-[#0d1117] px-2.5 text-sm text-[#c9d1d9] outline-none placeholder:text-[#6e7681] focus:border-[#1d9e75] sm:min-w-[180px]"
+                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-[#484f58] bg-[#0d1117] px-2.5 text-sm text-[#c9d1d9] outline-none placeholder:text-[#6e7681] focus:border-[#1d9e75] sm:min-w-[180px]"
               />
               <select
                 value={fila}
                 onChange={(e) => setFila(e.target.value)}
-                className="h-9 w-full shrink-0 rounded-lg border border-[#30363d] bg-[#0d1117] px-2.5 text-sm text-[#c9d1d9] outline-none focus:border-[#1d9e75] sm:w-44"
+                className="h-9 w-full shrink-0 rounded-lg border border-[#484f58] bg-[#0d1117] px-2.5 text-sm text-[#c9d1d9] outline-none focus:border-[#1d9e75] sm:w-44"
               >
                 <option value="todos">Todos</option>
                 <option value="ativos">Aguardando + Em execução</option>

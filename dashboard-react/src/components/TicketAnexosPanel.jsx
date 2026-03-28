@@ -46,7 +46,7 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
   const list = anexos || [];
 
   const shell = embed
-    ? 'rounded-xl border border-[#30363d] bg-[#0d1117] p-4 shadow-[inset_0_0_0_1px_rgba(48,54,61,0.9)]'
+    ? 'rounded-xl border border-[#484f58] bg-[#0d1117] p-4 shadow-[inset_0_0_0_1px_rgba(72,79,88,0.55)]'
     : 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm';
   const titleCls = embed ? 'text-sm font-bold text-[#e6edf3]' : 'text-sm font-bold text-slate-900';
   const linkUpload = embed
