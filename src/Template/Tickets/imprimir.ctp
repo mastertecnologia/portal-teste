@@ -14,6 +14,7 @@ $autorNome = $ticket->users->name ?? $ticket['users']['name'] ?? '—';
 $dataAbertura = !empty($ticket->created) ? $ticket->created->format('d/m/Y H:i') : '—';
 $emitidoEm = date('d/m/Y H:i');
 ?>
+<div class="ticket-print-document">
 <style>
 	/* ── Impressão PGM — relatório completo de chamado ───────────── */
 	.ticket-print-actions {
@@ -222,6 +223,39 @@ $emitidoEm = date('d/m/Y H:i');
 	}
 	body.ticket-autoprint-screen .ticket-print-actions {
 		display: none !important;
+	}
+	/* Só o relatório na área útil; o restante do layout some na impressão */
+	.ticket-print-document {
+		box-sizing: border-box;
+	}
+	@media print {
+		/* Conteúdo do layout print: row com Flash + este template */
+		.row.tirar-black-mode > *:not(.ticket-print-document),
+		.row.tirar-black-mode > script {
+			display: none !important;
+			height: 0 !important;
+			overflow: hidden !important;
+			visibility: hidden !important;
+		}
+		.row.tirar-black-mode {
+			display: block !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			width: 100% !important;
+			max-width: none !important;
+		}
+		.ticket-print-document {
+			display: block !important;
+			width: 100% !important;
+			max-width: none !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			background: #fff !important;
+		}
+		.main-wrapper {
+			background: #fff !important;
+			box-shadow: none !important;
+		}
 	}
 </style>
 <?php if (!$autoPrint) { ?>
@@ -445,6 +479,7 @@ $emitidoEm = date('d/m/Y H:i');
 			Ticket nº <?= (int)$ticket->id ?> · PGM Soluções em TI · Documento confidencial · Impresso em <?= h($emitidoEm) ?>
 		</div>
 	</div>
+</div>
 </div>
 <script>
 	(function () {
