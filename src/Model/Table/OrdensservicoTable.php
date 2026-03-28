@@ -1,6 +1,8 @@
 <?php
 namespace App\Model\Table;
 
+use App\Utility\AbacQuery;
+use Cake\Core\Configure;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -25,8 +27,14 @@ class OrdensservicoTable extends Table {
 		}
 	}
 	
-	// Retorna um histórico de 4 meses
-	public function historicoOrdens($idUser = null, $idempresa = null) {
+	/**
+	 * Retorna string JSON-like para gráfico (4 meses).
+	 *
+	 * @param int|string|null $idUser
+	 * @param int|string|null $idempresa usado se ABAC desligado ou sem controller
+	 * @param \Cake\Controller\Controller|null $controller se informado, aplica escopo ABAC em Ordensservico
+	 */
+	public function historicoOrdens($idUser = null, $idempresa = null, $controller = null) {
 
 		$dIni = decreaseMonths(primeiroDiaMes(dataAtual()), 3);
 		$dFin = decreaseMonths(ultimoDiaMes(dataAtual()), 3);
@@ -34,12 +42,28 @@ class OrdensservicoTable extends Table {
 		$historico = "";
 
 		for ($i = 1; $i <= 4; $i++) {
-			$xKey1 = sizeof($this->find()->where([
-				'iduser'   => $idUser,
-				'idempresa'   => $idempresa,
+			$q = $this->find()->where([
+				'iduser' => $idUser,
 				'dataabertura::date >=' => $dIni,
-				'dataabertura::date <=' => $dFin
-			])->toArray());
+				'dataabertura::date <=' => $dFin,
+			]);
+			if ($controller !== null) {
+				$user = [];
+				if (method_exists($controller, 'Auth')) {
+					$u = $controller->Auth->user();
+					if (is_array($u)) {
+						$user = $u;
+					}
+				}
+				AbacQuery::apply($q, $user, $controller, 'Ordensservico', 'Ordensservico');
+				$abacCfg = Configure::read('Abac');
+				if (empty($abacCfg['enabled']) && $idempresa !== null && $idempresa !== '') {
+					$q->where(['idempresa' => $idempresa]);
+				}
+			} elseif ($idempresa !== null && $idempresa !== '') {
+				$q->where(['idempresa' => $idempresa]);
+			}
+			$xKey1 = sizeof($q->toArray());
 
 			$historico .= "{ mes: '" . descricaoMes($dIni) . "', xKey1: " . $xKey1. " },";
 			

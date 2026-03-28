@@ -117,6 +117,14 @@ if (file_exists(__DIR__ . DS . 'app_local.php')) {
     Configure::load('app_local', 'default');
 }
 
+if (file_exists(__DIR__ . DS . 'rbac.php')) {
+    Configure::load('rbac', 'default');
+}
+
+if (file_exists(__DIR__ . DS . 'abac.php')) {
+    Configure::load('abac', 'default');
+}
+
 /*
  * When debug = true the metadata cache should only last
  * for a short time.

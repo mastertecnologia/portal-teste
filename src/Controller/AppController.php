@@ -18,6 +18,13 @@ use Cake\Controller\Controller;
 use Cake\Event\Event;
 
 class AppController extends Controller {
+
+	/** @var string|null escopo ABAC da permissão RBAC que autorizou a ação (empresa|cliente|own) */
+	public $rbacAbacScope = null;
+
+	/** @var string|null código da permissão RBAC que autorizou (ex.: clientes.manage) */
+	public $rbacAbacPermissionCode = null;
+
 	public function initialize() {
 		parent::initialize();
 		$this->loadModel('Atividades');
@@ -29,6 +36,8 @@ class AppController extends Controller {
 		  'enableBeforeRedirect' => false
 		]);
 		$this->loadComponent('Flash');
+		$this->loadComponent('Rbac');
+		$this->loadComponent('Abac');
 		$this->loadComponent('Security', [
 			'unlockedActions' => [
 				'login', 'logout', 'loginempresa', 'acessoEmpresa', 'loginduasetapas',
@@ -53,6 +62,8 @@ class AppController extends Controller {
 				'apiForTicket', 'getAvailableQueues', 'apiEnsureDefaults', 'apiSupportLevels', 'apiSave',
 				'adminIndex', 'adminEdit', 'adminTechnicians', 'adminDelete', 'adminEnsureDefaults',
 				'apiAdd',
+				'adminSyncRegistry', 'adminMatrix', 'adminGrantSuperAll',
+				'adminUsers', 'adminUserRoles',
 			],
 		]);
 		$this->loadComponent('Auth', [
@@ -154,7 +165,7 @@ class AppController extends Controller {
 			$menuStates['dashboard'] = "active";
 		}
 
-		if (in_array($controllerLower, ["config", "empresasusers", "empresas", "users", "clientes", "areas", "problemas", "visitas", "feriados", "queues"], true)) {
+		if (in_array($controllerLower, ['config', 'empresasusers', 'empresas', 'users', 'clientes', 'areas', 'problemas', 'visitas', 'feriados', 'queues', 'permissoes'], true)) {
 			$menuStates['config'] = "active";
 		}
 
@@ -217,6 +228,13 @@ class AppController extends Controller {
 			$this->set('skin', $user->skin);
 			$this->set('sidebar', $user->sidebar);
 			$this->set('pagelength', $user->pagelength);
+		}
+
+		if ($this->components()->has('Rbac') && $this->Auth->user('id') > 0) {
+			$rbacResp = $this->Rbac->checkRequest($controller, $action);
+			if ($rbacResp !== null) {
+				return $rbacResp;
+			}
 		}
 	}
 

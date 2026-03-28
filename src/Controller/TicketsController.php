@@ -431,10 +431,11 @@ class TicketsController extends AppController {
 		$this->set('title', "Ticket $idticket");
 		$this->viewBuilder()->setLayout('clear');
 
-		// Impede vazamento entre empresas: modal só pode exibir ticket da empresa atual.
+		// Impede vazamento entre empresas / escopo ABAC (empresa ou cliente).
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
-			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $idempresa])
-			->first();
+			->where(['tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+		$ticket = $ticket->first();
 		if (empty($ticket)) {
 			$this->autoRender = false;
 			return $this->response->withStringBody('Ticket não encontrado.')->withStatus(404);
@@ -448,15 +449,13 @@ class TicketsController extends AppController {
 
 			if ($clienteBase && (int)$clienteBase->idempresa !== (int)$idempresa) {
 				if ($clienteBase->tipo == C_ClientesTipoJuridica) {
-					$clienteVerifica = $this->Clientes
-						->findByCnpj(removeCaracteres($clienteBase->cnpj))
-						->where(['idempresa' => $idempresa])
-						->first();
+					$qCv = $this->Clientes->findByCnpj(removeCaracteres($clienteBase->cnpj));
+					$this->Abac->applyToQuery($qCv, 'Clientes');
+					$clienteVerifica = $qCv->first();
 				} else {
-					$clienteVerifica = $this->Clientes
-						->findByCpf(removeCaracteres($clienteBase->cpf))
-						->where(['idempresa' => $idempresa])
-						->first();
+					$qCv = $this->Clientes->findByCpf(removeCaracteres($clienteBase->cpf));
+					$this->Abac->applyToQuery($qCv, 'Clientes');
+					$clienteVerifica = $qCv->first();
 				}
 			} else {
 				$clienteVerifica = $clienteBase;
@@ -553,9 +552,10 @@ class TicketsController extends AppController {
 
 	public function meustickets(){
 		$meustickets = $this->Tickets->find('all',['contain' => ['Users', 'Ticketsusers', 'Clientes' => ['fields' => ['razaosocial', 'id', 'nomefantasia']]]])
-			->where(['AND' => ['idautor' => $this->Auth->user('id')], ['Ticketsusers.iduser' => $this->Auth->user('id')], ['Tickets.idempresa' => $this->Auth->user('idempresa')]])
-			->distinct(['Tickets.id'])
-		->toArray();
+			->where(['AND' => ['idautor' => $this->Auth->user('id')], ['Ticketsusers.iduser' => $this->Auth->user('id')]])
+			->distinct(['Tickets.id']);
+		$this->Abac->applyToQuery($meustickets, 'Tickets', 'Tickets');
+		$meustickets = $meustickets->toArray();
 		
 		$this->set('title', 'Meus Tickets');
 		$this->set(compact('meustickets'));
@@ -565,9 +565,10 @@ class TicketsController extends AppController {
 		$empresatickets = [];
 
 		$empresatickets = $this->Tickets->find('all',['contain' => ['Users', 'Ticketsusers', 'Clientes' => ['fields' => ['razaosocial', 'id', 'nomefantasia']]]])
-			->where(['AND' => ['idautor' => $this->Auth->user('id')], ['Ticketsusers.iduser' => $this->Auth->user('id')], ['Tickets.idempresa' => $this->Auth->user('idempresa')]])
-			->distinct(['Tickets.id'])
-		->toArray();
+			->where(['AND' => ['idautor' => $this->Auth->user('id')], ['Ticketsusers.iduser' => $this->Auth->user('id')]])
+			->distinct(['Tickets.id']);
+		$this->Abac->applyToQuery($empresatickets, 'Tickets', 'Tickets');
+		$empresatickets = $empresatickets->toArray();
 		
 		$this->set('title', 'Tickets da Empresa');
 		$this->set(compact('empresatickets'));
@@ -591,17 +592,15 @@ class TicketsController extends AppController {
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
 			}
 
-			// Seleciona o cadastro do cliente dentro da empresa atual.
-			if($cliente->tipo == C_ClientesTipoJuridica) {
-				$clienteAtual = $this->Clientes
-					->findByCnpj(removeCaracteres($cliente->cnpj))
-					->where(['idempresa' => $empresaAtual])
-					->first();
+			// Seleciona o cadastro do cliente dentro da empresa atual (ABAC).
+			if ($cliente->tipo == C_ClientesTipoJuridica) {
+				$qCa = $this->Clientes->findByCnpj(removeCaracteres($cliente->cnpj));
+				$this->Abac->applyToQuery($qCa, 'Clientes');
+				$clienteAtual = $qCa->first();
 			} else {
-				$clienteAtual = $this->Clientes
-					->findByCpf(removeCaracteres($cliente->cpf))
-					->where(['idempresa' => $empresaAtual])
-					->first();
+				$qCa = $this->Clientes->findByCpf(removeCaracteres($cliente->cpf));
+				$this->Abac->applyToQuery($qCa, 'Clientes');
+				$clienteAtual = $qCa->first();
 			}
 
 			if (!empty($clienteAtual)) {
@@ -632,8 +631,9 @@ class TicketsController extends AppController {
 				if ($__qid <= 0) {
 					unset($post['queue_id']);
 				} else {
-					$__empId = (int)$this->Auth->user('idempresa');
-					$__okQ = $this->Queues->find()->where(['id' => $__qid, 'idempresa' => $__empId])->first();
+					$__okQ = $this->Queues->find()->where(['id' => $__qid]);
+					$this->Abac->applyToQuery($__okQ, 'Queues', 'Queues');
+					$__okQ = $__okQ->first();
 					if (empty($__okQ)) {
 						unset($post['queue_id']);
 					}
@@ -663,15 +663,13 @@ class TicketsController extends AppController {
 				$clienteAtual = null;
 				if (!empty($clienteBase)) {
 					if ($clienteBase->tipo == C_ClientesTipoJuridica) {
-						$clienteAtual = $this->Clientes
-							->findByCnpj(removeCaracteres($clienteBase->cnpj))
-							->where(['idempresa' => $empresaAtual])
-							->first();
+						$qCa = $this->Clientes->findByCnpj(removeCaracteres($clienteBase->cnpj));
+						$this->Abac->applyToQuery($qCa, 'Clientes');
+						$clienteAtual = $qCa->first();
 					} else {
-						$clienteAtual = $this->Clientes
-							->findByCpf(removeCaracteres($clienteBase->cpf))
-							->where(['idempresa' => $empresaAtual])
-							->first();
+						$qCa = $this->Clientes->findByCpf(removeCaracteres($clienteBase->cpf));
+						$this->Abac->applyToQuery($qCa, 'Clientes');
+						$clienteAtual = $qCa->first();
 					}
 				}
 
@@ -688,10 +686,9 @@ class TicketsController extends AppController {
 					$fila = 'n1';
 					$nivel = 1;
 					if ($this->_queuesRelacionalReady() && in_array('queue_id', $this->Tickets->getSchema()->columns(), true) && !empty($ticket->queue_id)) {
-						$qPick = $this->Queues->find()->where([
-							'id' => (int)$ticket->queue_id,
-							'idempresa' => (int)$ticket->idempresa,
-						])->first();
+						$qPick = $this->Queues->find()->where(['id' => (int)$ticket->queue_id]);
+						$this->Abac->applyToQuery($qPick, 'Queues', 'Queues');
+						$qPick = $qPick->first();
 						if (!empty($qPick) && $qPick->codigo !== null && $qPick->codigo !== '') {
 							$cat = $this->_filaSuporteCatalog();
 							$cd = (string)$qPick->codigo;
@@ -775,13 +772,15 @@ class TicketsController extends AppController {
 		}
 
 		$clientesFis = $this->Clientes->find('all')
-			->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'inativo' => '0', 'tipo' => '1']])
-			->order(['nome'])
-		->toArray();
+			->where(['AND' => ['inativo' => '0', 'tipo' => '1']])
+			->order(['nome']);
+		$this->Abac->applyToQuery($clientesFis, 'Clientes');
+		$clientesFis = $clientesFis->toArray();
 		$clientesJur = $this->Clientes->find('all')
-			->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'inativo' => '0', 'tipo' => '2']])
-			->order(['razaosocial'])
-		->toArray();
+			->where(['AND' => ['inativo' => '0', 'tipo' => '2']])
+			->order(['razaosocial']);
+		$this->Abac->applyToQuery($clientesJur, 'Clientes');
+		$clientesJur = $clientesJur->toArray();
 		
 		$clientesList = [];
 		foreach($clientesJur as $reg){
@@ -798,17 +797,15 @@ class TicketsController extends AppController {
 		$ticketAddQueues = [];
 		$ticketAddDefaultQueueId = null;
 		if ($ticketAddQueueFieldReady) {
-			$__emp = (int)$this->Auth->user('idempresa');
-			foreach (
-				$this->Queues->find()
-					->where(['idempresa' => $__emp])
-					->order(['sort_order' => 'ASC', 'id' => 'ASC'])
-					->all() as $__row
-			) {
+			$qAddQueues = $this->Queues->find()->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+			$this->Abac->applyToQuery($qAddQueues, 'Queues', 'Queues');
+			foreach ($qAddQueues->all() as $__row) {
 				$ticketAddQueues[(int)$__row->id] = (string)($__row->name ?? ('Fila #' . $__row->id));
 			}
 			if ($ticketAddQueues !== []) {
-				$__n1 = $this->Queues->find()->where(['idempresa' => $__emp, 'codigo' => 'n1'])->first();
+				$qN1 = $this->Queues->find()->where(['codigo' => 'n1']);
+				$this->Abac->applyToQuery($qN1, 'Queues', 'Queues');
+				$__n1 = $qN1->first();
 				if (!empty($__n1)) {
 					$ticketAddDefaultQueueId = (int)$__n1->id;
 				} else {
@@ -822,16 +819,21 @@ class TicketsController extends AppController {
 	}
 
 	public function edit($idticket = null){
-		// Meus tickets 
-			$meustickets = $this->Ticketsusers->find('all', [ 'contain' => ['Tickets']])->where(['Ticketsusers.idempresa' => $this->Auth->user('idempresa')])->toArray();
-			$ticketsusers = $this->Ticketsusers->find('all', ['contain' => ['users'], 'fields' => ['Users.name', 'Users.id', 'Ticketsusers.id']])->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->autoFields(true)->toArray();
-		// Permissões 
-			if ($this->Auth->user('role') == 1) {
-				$this->Flash->error('Você não possui permissões para visualizar esta página.');
-				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
-			}
-		// Ticket 
-			$ticket = $this->Tickets->findById($idticket)->contain(['users'])->first();
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para visualizar esta página.');
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		$qMu = $this->Ticketsusers->find('all', ['contain' => ['Tickets']]);
+		$this->Abac->applyToQuery($qMu, 'Ticketsusers', 'Ticketsusers');
+		$meustickets = $qMu->toArray();
+		$qTu = $this->Ticketsusers->find('all', ['contain' => ['users'], 'fields' => ['Users.name', 'Users.id', 'Ticketsusers.id']])
+			->where(['idticket' => $idticket])
+			->autoFields(true);
+		$this->Abac->applyToQuery($qTu, 'Ticketsusers', 'Ticketsusers');
+		$ticketsusers = $qTu->toArray();
+		$qTicket = $this->Tickets->findById($idticket)->contain(['users']);
+		$this->Abac->applyToQuery($qTicket, 'Tickets', 'Tickets');
+		$ticket = $qTicket->first();
 			if(empty($ticket)) {
 				$this->Flash->error('Não foi encontrado um ticket com o Id informado na Empresa selecionada.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
@@ -844,9 +846,11 @@ class TicketsController extends AppController {
 			$ticketcomentarios = $this->Ticketcomentarios->find('all', [
 				'contain' => ['users', 'Tickets'],
 				'fields' => ['Users.name', 'Users.role', 'Ticketcomentarios.comentario', 'Ticketcomentarios.created', 'Tickets.idempresa']
-			])->where(['Ticketcomentarios.idticket' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])->order(['Ticketcomentarios.id'])->toArray();
+			])->where(['Ticketcomentarios.idticket' => $idticket])->order(['Ticketcomentarios.id'])->toArray();
 		// Anexos 
-			$ticketanexos = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
+			$qAn = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket]);
+			$this->Abac->applyToQuery($qAn, 'Ticketsanexos', 'Ticketsanexos');
+			$ticketanexos = $qAn->toArray();
 		// Movs e horas 
 			$ticketsmovs = $this->Ticketsmovs->find('all', ['contain' => ['users']])->where(['idticket' => $ticket->id])->order('ticketsmovs.id')->toArray();
 			$ticketshoras = $this->Ticketshoras->find('all', ['contain' => 'Users'])->where(['idticket' => $idticket])->toArray();
@@ -917,7 +921,9 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {}
 		try {
 			$table = \Cake\ORM\TableRegistry::getTableLocator()->get('ContratosHoras');
-			$contrato = $table->find()->where(['idcliente' => $ticket->idcliente, 'idempresa' => $this->Auth->user('idempresa')])->first();
+			$qCh = $table->find()->where(['idcliente' => $ticket->idcliente]);
+			$this->Abac->applyToQuery($qCh, 'ContratosHoras', 'ContratosHoras');
+			$contrato = $qCh->first();
 			if (!$contrato) {
 				$contrato = $table->find()->where(['idcliente' => $ticket->idcliente])->first();
 			}
@@ -991,8 +997,9 @@ class TicketsController extends AppController {
 		// Ticket 
 			// Impede vazamento entre empresas.
 			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])
-				->where(['tickets.id' => $idticket, 'tickets.idempresa' => $idempresa])
-				->first();
+				->where(['tickets.id' => $idticket]);
+			$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+			$ticket = $ticket->first();
 			if(empty($ticket)) {
 				$this->Flash->error('Não foi encontrado um ticket com o Id informado na Empresa selecionada.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
@@ -1011,15 +1018,13 @@ class TicketsController extends AppController {
 
 				if (!empty($clienteBase)) {
 					if($clienteBase->tipo == C_ClientesTipoJuridica) {
-						$clienteVerifica = $this->Clientes
-							->findByCnpj(removeCaracteres($clienteBase->cnpj))
-							->where(['idempresa' => $idempresa])
-							->first();
+						$qCv = $this->Clientes->findByCnpj(removeCaracteres($clienteBase->cnpj));
+						$this->Abac->applyToQuery($qCv, 'Clientes');
+						$clienteVerifica = $qCv->first();
 					} else {
-						$clienteVerifica = $this->Clientes
-							->findByCpf(removeCaracteres($clienteBase->cpf))
-							->where(['idempresa' => $idempresa])
-							->first();
+						$qCv = $this->Clientes->findByCpf(removeCaracteres($clienteBase->cpf));
+						$this->Abac->applyToQuery($qCv, 'Clientes');
+						$clienteVerifica = $qCv->first();
 					}
 				}
 
@@ -1040,7 +1045,9 @@ class TicketsController extends AppController {
 
 			if($this->Auth->user('admin') != 1){
 				// Verifica se é um ticket sem outros funcionários, pois nesses casos, o ticket não entra em na consulta retornada de 'Ticketsusers'
-				$meuticket = $this->Tickets->findById($idticket)->toArray();
+				$qMt = $this->Tickets->findById($idticket);
+				$this->Abac->applyToQuery($qMt, 'Tickets', 'Tickets');
+				$meuticket = $qMt->toArray();
 				if ($this->Auth->user('id') != $meuticket[0]->idautor && $this->Auth->user('idcliente') != $meuticket[0]->idcliente) {
 					$this->Flash->error('Você não possui permissões para visualizar este Ticket. Contate um administrador do sistema.');
 					return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
@@ -1062,8 +1069,9 @@ class TicketsController extends AppController {
 		// Ticket 
 			// Impede vazamento entre empresas.
 			$ticket = $this->Tickets->find('all',['contain' => ['Clientes', 'Users']])
-				->where(['tickets.id' => $idticket, 'tickets.idempresa' => $idempresa])
-				->first();
+				->where(['tickets.id' => $idticket]);
+			$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+			$ticket = $ticket->first();
 			if(empty($ticket)) {
 				$this->Flash->error('Não foi encontrado um ticket com o Id informado na Empresa selecionada.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
@@ -1082,15 +1090,13 @@ class TicketsController extends AppController {
 
 				if (!empty($clienteBase)) {
 					if($clienteBase->tipo == C_ClientesTipoJuridica) {
-						$clienteVerifica = $this->Clientes
-							->findByCnpj(removeCaracteres($clienteBase->cnpj))
-							->where(['idempresa' => $idempresa])
-							->first();
+						$qCv = $this->Clientes->findByCnpj(removeCaracteres($clienteBase->cnpj));
+						$this->Abac->applyToQuery($qCv, 'Clientes');
+						$clienteVerifica = $qCv->first();
 					} else {
-						$clienteVerifica = $this->Clientes
-							->findByCpf(removeCaracteres($clienteBase->cpf))
-							->where(['idempresa' => $idempresa])
-							->first();
+						$qCv = $this->Clientes->findByCpf(removeCaracteres($clienteBase->cpf));
+						$this->Abac->applyToQuery($qCv, 'Clientes');
+						$clienteVerifica = $qCv->first();
 					}
 				}
 
@@ -1207,7 +1213,9 @@ class TicketsController extends AppController {
 	}
 
 	public function alterarsituacao($idticket = null, $sit = null) {
-		$ticket = $this->Tickets->find('all')->where(['AND' => ['id' => $idticket], ['idempresa' => $this->Auth->user('idempresa')]])->first();
+		$qAlt = $this->Tickets->find('all')->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qAlt, 'Tickets', 'Tickets');
+		$ticket = $qAlt->first();
 		if (!$ticket) {
 			$this->Flash->error('Ticket não encontrado.');
 			return $this->redirect(['action' => 'index']);
@@ -1258,8 +1266,10 @@ class TicketsController extends AppController {
 	 */
 	public function panelLeftFragment($idticket = null) {
 		if (!$idticket) return $this->redirect(['action' => 'index']);
-		$ticket = $this->Tickets->findById($idticket)->contain(['users'])->first();
-		if (!$ticket || $ticket->idempresa != $this->Auth->user('idempresa')) {
+		$qPl = $this->Tickets->findById($idticket)->contain(['users']);
+		$this->Abac->applyToQuery($qPl, 'Tickets', 'Tickets');
+		$ticket = $qPl->first();
+		if (!$ticket) {
 			return $this->response->withStatus(404);
 		}
 		$this->_setEditPanelLeftVars($idticket);
@@ -1410,8 +1420,9 @@ class TicketsController extends AppController {
 
 			$ticket = $this->Tickets->find()
 				->contain(['Users', 'Clientes'])
-				->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $this->Auth->user('idempresa')])
-				->first();
+				->where(['Tickets.id' => $idticket]);
+			$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+			$ticket = $ticket->first();
 			if (!$ticket) {
 				$this->Flash->error('Ticket não encontrado.');
 				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
@@ -1557,7 +1568,9 @@ class TicketsController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 		try {
-			$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+			$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+			$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+			$ticket = $qTm->first();
 			if (!$ticket) {
 				$this->Flash->error('Ticket não encontrado.');
 				return $this->redirect(['action' => 'index']);
@@ -1603,7 +1616,9 @@ class TicketsController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 		try {
-			$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+			$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+			$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+			$ticket = $qTm->first();
 			if (!$ticket) {
 				$this->Flash->error('Ticket não encontrado.');
 				return $this->redirect(['action' => 'index']);
@@ -1644,7 +1659,9 @@ class TicketsController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 		try {
-			$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+			$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+			$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+			$ticket = $qTm->first();
 			if (!$ticket) {
 				$this->Flash->error('Ticket não encontrado.');
 				return $this->redirect(['action' => 'index']);
@@ -1684,7 +1701,9 @@ class TicketsController extends AppController {
 			return $this->redirect(['action' => 'index']);
 		}
 		try {
-			$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+			$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+			$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+			$ticket = $qTm->first();
 			if (!$ticket) {
 				$this->Flash->error('Ticket não encontrado.');
 				return $this->redirect(['action' => 'index']);
@@ -2788,7 +2807,7 @@ class TicketsController extends AppController {
 	/**
 	 * Nomes dos técnicos vinculados ao ticket (tabela ticketsusers), separados por vírgula.
 	 * Não depende de contain nem de idempresa em ticketsusers (legado pode ter NULL).
-	 * Restringe aos tickets da empresa atual via Tickets.idempresa.
+	 * Restringe ao escopo ABAC (empresa/cliente) nos ids solicitados.
 	 *
 	 * @param int[] $ids ids de ticket
 	 * @return array<int,string> idticket => "Nome A, Nome B"
@@ -2798,15 +2817,13 @@ class TicketsController extends AppController {
 		if (empty($ids)) {
 			return [];
 		}
-		$emp = (int)$this->Auth->user('idempresa');
 
 		$allowedIds = [];
-		foreach (
-			$this->Tickets->find()
-				->select(['id'])
-				->where(['id IN' => $ids, 'idempresa' => $emp])
-				->all() as $t
-		) {
+		$qAllow = $this->Tickets->find()
+			->select(['id'])
+			->where(['id IN' => $ids]);
+		$this->Abac->applyToQuery($qAllow, 'Tickets', 'Tickets');
+		foreach ($qAllow->all() as $t) {
 			$allowedIds[] = (int)$t->id;
 		}
 		if (empty($allowedIds)) {
@@ -3037,15 +3054,13 @@ class TicketsController extends AppController {
 			}
 			$clienteVerifica = null;
 			if ($clienteBase->tipo == C_ClientesTipoJuridica) {
-				$clienteVerifica = $this->Clientes
-					->findByCnpj(removeCaracteres($clienteBase->cnpj))
-					->where(['idempresa' => $idempresa])
-					->first();
+				$qCv = $this->Clientes->findByCnpj(removeCaracteres($clienteBase->cnpj));
+				$this->Abac->applyToQuery($qCv, 'Clientes');
+				$clienteVerifica = $qCv->first();
 			} else {
-				$clienteVerifica = $this->Clientes
-					->findByCpf(removeCaracteres($clienteBase->cpf))
-					->where(['idempresa' => $idempresa])
-					->first();
+				$qCv = $this->Clientes->findByCpf(removeCaracteres($clienteBase->cpf));
+				$this->Abac->applyToQuery($qCv, 'Clientes');
+				$clienteVerifica = $qCv->first();
 			}
 			if (empty($clienteVerifica) || ($clienteVerifica->cpf != $clienteBase->cpf && $clienteBase->cnpj != $clienteVerifica->cnpj)) {
 				return false;
@@ -3086,7 +3101,6 @@ class TicketsController extends AppController {
 			'contain' => ['Users', 'Tickets'],
 		])->where([
 			'Ticketcomentarios.idticket' => $idticket,
-			'Tickets.idempresa' => $this->Auth->user('idempresa'),
 		])->order(['Ticketcomentarios.id' => 'ASC'])->toArray();
 
 		$comentarios = [];
@@ -3125,8 +3139,9 @@ class TicketsController extends AppController {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
-			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
-			->first();
+			->where(['tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+		$ticket = $ticket->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -3166,7 +3181,9 @@ class TicketsController extends AppController {
 
 		$comentarios = $this->_apiComentariosPayload($idticket);
 
-		$anexosRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
+		$qAnx = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket]);
+		$this->Abac->applyToQuery($qAnx, 'Ticketsanexos', 'Ticketsanexos');
+		$anexosRows = $qAnx->toArray();
 		$anexos = [];
 		foreach ($anexosRows as $a) {
 			$anexos[] = $this->_apiAnexoRow($a);
@@ -3235,21 +3252,21 @@ class TicketsController extends AppController {
 		foreach ($tierContains as $tierIdx => $contain) {
 			try {
 				$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
-				$ticketsPendentes = $this->_applyApiIndexWorkflowFilters(
-					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente, 'Tickets.idempresa' => $empresa])
-				)->toArray();
-				$ticketsEmandamento = $this->_applyApiIndexWorkflowFilters(
-					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento, 'Tickets.idempresa' => $empresa])
-				)->toArray();
-				$ticketsResolvidos = $this->_applyApiIndexWorkflowFilters(
-					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido, 'Tickets.idempresa' => $empresa])
-				)->toArray();
-				$ticketsFechados = $this->_applyApiIndexWorkflowFilters(
-					$this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado, 'Tickets.idempresa' => $empresa])
-				)->toArray();
-				$tickets = $this->_applyApiIndexWorkflowFilters(
-					$this->Tickets->find('all', $base)->where(['Tickets.idempresa' => $empresa])->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC'])
-				)->toArray();
+				$qPend = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente]);
+				$this->Abac->applyToQuery($qPend, 'Tickets', 'Tickets');
+				$ticketsPendentes = $this->_applyApiIndexWorkflowFilters($qPend)->toArray();
+				$qEm = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento]);
+				$this->Abac->applyToQuery($qEm, 'Tickets', 'Tickets');
+				$ticketsEmandamento = $this->_applyApiIndexWorkflowFilters($qEm)->toArray();
+				$qRes = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido]);
+				$this->Abac->applyToQuery($qRes, 'Tickets', 'Tickets');
+				$ticketsResolvidos = $this->_applyApiIndexWorkflowFilters($qRes)->toArray();
+				$qFec = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado]);
+				$this->Abac->applyToQuery($qFec, 'Tickets', 'Tickets');
+				$ticketsFechados = $this->_applyApiIndexWorkflowFilters($qFec)->toArray();
+				$qAll = $this->Tickets->find('all', $base)->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC']);
+				$this->Abac->applyToQuery($qAll, 'Tickets', 'Tickets');
+				$tickets = $this->_applyApiIndexWorkflowFilters($qAll)->toArray();
 				$loadEx = null;
 				if ($tierIdx > 0) {
 					$this->log('apiIndex: carregou com contain reduzido (tier ' . $tierIdx . ')', 'warning');
@@ -3462,7 +3479,9 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_columns_missing'], 503);
 		}
 		$idticket = (int)$idticket;
-		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -3504,10 +3523,11 @@ class TicketsController extends AppController {
 			if (!$this->_queuesRelacionalReady()) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'queues_not_installed'], 503);
 			}
-			$qFind = $this->Queues->find()->where(['Queues.id' => $queueIdBody, 'Queues.idempresa' => $ticketEmpresa]);
+			$qFind = $this->Queues->find()->where(['Queues.id' => $queueIdBody]);
 			if ($this->_supportLevelsRoutingReady()) {
 				$qFind->contain(['SupportLevels']);
 			}
+			$this->Abac->applyToQuery($qFind, 'Queues', 'Queues');
 			$newQueue = $qFind->first();
 			if (empty($newQueue)) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'fila_invalida'], 400);
@@ -3870,7 +3890,9 @@ class TicketsController extends AppController {
 	}
 
 	protected function _apiStartTicketResponse(int $idticket) {
-		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -4014,8 +4036,9 @@ class TicketsController extends AppController {
 		$this->request->allowMethod(['post']);
 		$this->autoRender = false;
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
-			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
-			->first();
+			->where(['tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+		$ticket = $ticket->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -4060,8 +4083,9 @@ class TicketsController extends AppController {
 		}
 		$idticket = (int)$anexo->idticket;
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
-			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
-			->first();
+			->where(['tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+		$ticket = $ticket->first();
 		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
@@ -4074,7 +4098,9 @@ class TicketsController extends AppController {
 		}
 		$this->criarMov($idticket, 0, C_TicketAnexoDeletado, $anexo->arquivo);
 		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoDelete', (int)$idanexo);
-		$anexosRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->toArray();
+		$qAnx = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket]);
+		$this->Abac->applyToQuery($qAnx, 'Ticketsanexos', 'Ticketsanexos');
+		$anexosRows = $qAnx->toArray();
 		$list = [];
 		foreach ($anexosRows as $row) {
 			$list[] = $this->_apiAnexoRow($row);
@@ -4087,8 +4113,9 @@ class TicketsController extends AppController {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
-			->where(['tickets.id' => $idticket, 'tickets.idempresa' => $this->Auth->user('idempresa')])
-			->first();
+			->where(['tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+		$ticket = $ticket->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -4111,7 +4138,9 @@ class TicketsController extends AppController {
 		if ((int)$this->Auth->user('role') !== 0) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Apenas usuários de suporte podem usar o timer.'], 403);
 		}
-		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -4149,7 +4178,9 @@ class TicketsController extends AppController {
 		if ((int)$this->Auth->user('role') !== 0) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
-		$ticket = $this->Tickets->find()->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
+		$qTm = $this->Tickets->find()->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
 		if (empty($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
@@ -4276,10 +4307,14 @@ class TicketsController extends AppController {
 	 * Usado quando as ações do timer respondem com atualização parcial em vez de redirect.
 	 */
 	protected function _setEditPanelLeftVars($idticket) {
-		$ticket = $this->Tickets->findById($idticket)->contain(['users'])->first();
+		$qT = $this->Tickets->findById($idticket)->contain(['users']);
+		$this->Abac->applyToQuery($qT, 'Tickets', 'Tickets');
+		$ticket = $qT->first();
 		if (!$ticket) return;
-		$ticketsusers = $this->Ticketsusers->find('all', ['contain' => ['users'], 'fields' => ['Users.name', 'Users.id', 'Ticketsusers.id']])
-			->where(['idticket' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->autoFields(true)->toArray();
+		$qTu = $this->Ticketsusers->find('all', ['contain' => ['users'], 'fields' => ['Users.name', 'Users.id', 'Ticketsusers.id']])
+			->where(['idticket' => $idticket])->autoFields(true);
+		$this->Abac->applyToQuery($qTu, 'Ticketsusers', 'Ticketsusers');
+		$ticketsusers = $qTu->toArray();
 		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
 		$clienteRow = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo', 'idempresa'])->first();
 		$clienteNome = $clienteRow && $clienteRow->tipo == C_ClientesTipoFisica ? $clienteRow->nome : ($clienteRow ? $clienteRow->razaosocial : '');
@@ -4320,8 +4355,12 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {}
 		try {
 			$table = \Cake\ORM\TableRegistry::getTableLocator()->get('ContratosHoras');
-			$contrato = $table->find()->where(['idcliente' => $ticket->idcliente, 'idempresa' => $this->Auth->user('idempresa')])->first();
-			if (!$contrato) $contrato = $table->find()->where(['idcliente' => $ticket->idcliente])->first();
+			$qCh = $table->find()->where(['idcliente' => $ticket->idcliente]);
+			$this->Abac->applyToQuery($qCh, 'ContratosHoras', 'ContratosHoras');
+			$contrato = $qCh->first();
+			if (!$contrato) {
+				$contrato = $table->find()->where(['idcliente' => $ticket->idcliente])->first();
+			}
 			if ($contrato) {
 				if ($contrato->get('horas_contratadas') !== null && $contrato->get('saldo') !== null) {
 					$hContratadas = (float)str_replace(',', '.', $contrato->get('horas_contratadas'));

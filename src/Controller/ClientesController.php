@@ -38,14 +38,10 @@ class ClientesController extends AppController {
 		if ($id === null || $id === '') {
 			return null;
 		}
-		$idempresa = $this->Auth->user('idempresa');
-		if ($idempresa === null || $idempresa === '') {
-			return null;
-		}
+		$q = $this->Clientes->find()->where(['id' => (int) $id]);
+		$this->Abac->applyToQuery($q, 'Clientes');
 
-		return $this->Clientes->find()
-			->where(['id' => (int) $id, 'idempresa' => $idempresa])
-			->first();
+		return $q->first();
 	}
 
 	public function beforeFilter(Event $event) {
@@ -63,13 +59,13 @@ class ClientesController extends AppController {
 		$this->set('title', 'Lista de Clientes');
 		$this->set('hideLayoutPageTitle', true);
 
-		$clientesAtivos = $this->Clientes->find('all')
-			->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 0])
-			->toArray();
+		$qAtivos = $this->Clientes->find('all')->where(['inativo' => 0]);
+		$this->Abac->applyToQuery($qAtivos, 'Clientes');
+		$clientesAtivos = $qAtivos->toArray();
 
-		$clientesInativos = $this->Clientes->find('all')
-			->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 1])
-			->toArray();
+		$qInativos = $this->Clientes->find('all')->where(['inativo' => 1]);
+		$this->Abac->applyToQuery($qInativos, 'Clientes');
+		$clientesInativos = $qInativos->toArray();
 
 		$this->set('clientesAtivos', $clientesAtivos);
 		$this->set('clientesInativos', $clientesInativos);
@@ -112,26 +108,27 @@ class ClientesController extends AppController {
 		if ($kw === '') {
 			return [];
 		}
-		$idempresa = $this->Auth->user('idempresa');
-		$base = ['Clientes.idempresa' => $idempresa];
-
 		if (mb_strpos($kw, '@') !== false) {
 			$email = mb_strtolower($kw, 'UTF-8');
-			return $this->Clientes->find('all')->where([
-				$base,
+			$q = $this->Clientes->find('all')->where([
 				'LOWER(Clientes.email) LIKE' => '%' . $email . '%',
-			])->toArray();
+			]);
+			$this->Abac->applyToQuery($q, 'Clientes');
+
+			return $q->toArray();
 		}
 
 		$digits = preg_replace('/\D/', '', $kw);
 		if (preg_match('/^[\d\s.\-\/\(\)]+$/u', $kw) && strlen($digits) >= 3) {
-			return $this->Clientes->find('all')->where([
-				$base,
+			$q = $this->Clientes->find('all')->where([
 				'OR' => [
 					['Clientes.cnpj LIKE' => '%' . $digits . '%'],
 					['Clientes.cpf LIKE' => '%' . $digits . '%'],
 				],
-			])->toArray();
+			]);
+			$this->Abac->applyToQuery($q, 'Clientes');
+
+			return $q->toArray();
 		}
 
 		$words = preg_split('/\s+/', mb_strtolower($kw, 'UTF-8'), -1, PREG_SPLIT_NO_EMPTY);
@@ -139,7 +136,8 @@ class ClientesController extends AppController {
 			return [];
 		}
 
-		$q = $this->Clientes->find('all')->where([$base]);
+		$q = $this->Clientes->find('all');
+		$this->Abac->applyToQuery($q, 'Clientes');
 		foreach ($words as $w) {
 			$q->andWhere([
 				'OR' => [
@@ -194,8 +192,15 @@ class ClientesController extends AppController {
 
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
-			if($data['tipo'] == C_ClientesTipoFisica) $clientequejaexiste = $this->Clientes->findByCpf($data['cpf'])->where(['tipo' => C_ClientesTipoFisica, 'idempresa' => $this->Auth->user('idempresa')])->first();
-			else $clientequejaexiste = $this->Clientes->findByCnpj($data['cnpj'])->where(['idempresa' => $this->Auth->user('idempresa')])->first();
+			if ($data['tipo'] == C_ClientesTipoFisica) {
+				$qDup = $this->Clientes->findByCpf($data['cpf'])->where(['tipo' => C_ClientesTipoFisica]);
+				$this->Abac->applyToQuery($qDup, 'Clientes');
+				$clientequejaexiste = $qDup->first();
+			} else {
+				$qDup = $this->Clientes->findByCnpj($data['cnpj']);
+				$this->Abac->applyToQuery($qDup, 'Clientes');
+				$clientequejaexiste = $qDup->first();
+			}
 			if(empty($clientequejaexiste)){
 				if (!isset($data['inativo'])) $data['inativo'] = '0';
 
@@ -392,10 +397,9 @@ class ClientesController extends AppController {
 		if ($cid <= 0) {
 			return $this->jsonResponse([], 400);
 		}
-		$cli = $this->Clientes->find()->where([
-			'id' => $cid,
-			'idempresa' => $this->Auth->user('idempresa'),
-		])->first();
+		$qCli = $this->Clientes->find()->where(['id' => $cid]);
+		$this->Abac->applyToQuery($qCli, 'Clientes');
+		$cli = $qCli->first();
 		if (empty($cli)) {
 			return $this->jsonResponse([], 404);
 		}
@@ -431,11 +435,12 @@ class ClientesController extends AppController {
 		if ($cid <= 0) {
 			return $this->jsonResponse(['email' => ''], 400);
 		}
-		$cliente = $this->Clientes->find('all')->where([
+		$qMail = $this->Clientes->find('all')->where([
 			'id' => $cid,
 			'inativo' => '0',
-			'idempresa' => $this->Auth->user('idempresa'),
-		])->first();
+		]);
+		$this->Abac->applyToQuery($qMail, 'Clientes');
+		$cliente = $qMail->first();
 		if (empty($cliente)) {
 			return $this->jsonResponse(['email' => ''], 404);
 		}
@@ -468,10 +473,11 @@ class ClientesController extends AppController {
 				if ($id === '') {
 					continue;
 				}
-				$rows = $this->Clientes->find()
+				$qRow = $this->Clientes->find()
 					->select(['id', 'razaosocial'])
-					->where(['id' => (int) $id, 'idempresa' => $idempresa])
-					->toArray();
+					->where(['id' => (int) $id]);
+				$this->Abac->applyToQuery($qRow, 'Clientes');
+				$rows = $qRow->toArray();
 				foreach ($rows as $row) {
 					$clientes[] = $row;
 				}

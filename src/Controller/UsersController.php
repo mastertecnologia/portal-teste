@@ -78,13 +78,13 @@ class UsersController extends AppController {
 	public function indexClientes() {
 		$this->set('title', 'Usuários clientes');
 		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'dashboard']);
-		$clients = $this->Users
+		$qClients = $this->Users
 			->find('all')
 			->where(['role' => 1, 'idcliente IS NOT' => null])
 			->contain(['Clientes' => ['fields' => ['razaosocial', 'nome']]])
-			->order(['username' => 'ASC'])
-			->toArray();
-		$this->set('clients', $clients);
+			->order(['username' => 'ASC']);
+		$this->Abac->applyToQuery($qClients, 'Users', 'Users');
+		$this->set('clients', $qClients->toArray());
 	}
 
 	public function dashboard($erro = null) {
@@ -114,25 +114,29 @@ class UsersController extends AppController {
 				->order(['Ordensservico.id DESC'])
 				->limit(5)
 			->toArray();
-			$ticketsPendentesTable = $this->Tickets->findByIdempresa($empresa)
+			$qTp = $this->Tickets->find('all')
 				->contain(['Clientes'])
 				->where([ 'situacao IN' => [C_TicketSituacaoPendente]])
-				->order(['Tickets.id DESC'])
-			->toArray();
-			$ticketsSendoResolvidosTable = $this->Tickets->findByIdempresa($empresa)
+				->order(['Tickets.id DESC']);
+			$this->Abac->applyToQuery($qTp, 'Tickets', 'Tickets');
+			$ticketsPendentesTable = $qTp->toArray();
+			$qTs = $this->Tickets->find('all')
 				->contain(['Clientes'])
 				->where([ 'situacao IN' => [C_TicketSituacaoEmandamento], ])
-				->order(['Tickets.id DESC'])
-			->toArray();
-			$ticketsFinalizadosCount = $this->Tickets->findByIdempresa($empresa)
-				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
-				->count();
-			$ticketsFinalizadosTable = $this->Tickets->findByIdempresa($empresa)
+				->order(['Tickets.id DESC']);
+			$this->Abac->applyToQuery($qTs, 'Tickets', 'Tickets');
+			$ticketsSendoResolvidosTable = $qTs->toArray();
+			$qTfc = $this->Tickets->find()
+				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]]);
+			$this->Abac->applyToQuery($qTfc, 'Tickets', 'Tickets');
+			$ticketsFinalizadosCount = $qTfc->count();
+			$qTft = $this->Tickets->find('all')
 				->contain(['Clientes'])
 				->where(['situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
 				->order(['Tickets.id DESC'])
-				->limit(50)
-				->toArray();
+				->limit(50);
+			$this->Abac->applyToQuery($qTft, 'Tickets', 'Tickets');
+			$ticketsFinalizadosTable = $qTft->toArray();
 			$usuariosBloqueadosTable = $this->_usuariosBloqueadosEmpresa((int)$empresa);
 
 			$this->set('ticketsPendentesTable', $ticketsPendentesTable);
@@ -144,21 +148,34 @@ class UsersController extends AppController {
 		} else {
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
 
-			$ordensCliente		= sizeof($this->Ordensservico->find('all')->where(['idempresa' => $empresa, 'idcliente' => $idcliente])->toArray());
-			$orcamentosCliente	= sizeof($this->Orcamentos->find('all')->where(['idempresa' => $empresa, 'idcliente' => $idcliente])->toArray());
-			$ticketsCliente 	= sizeof($this->Tickets->find('all')->where(['idempresa' => $empresa, 'idautor' => $idusuario])->toArray());
-			$visitasCliente		= sizeof($this->Visitas->find('all')->where(['idempresa' => $empresa, 'idcliente' => $idcliente, 'situacao' => C_UserSituacaoFinalizada])->toArray());
+			$qOrdDash = $this->Ordensservico->find('all');
+			$this->Abac->applyToQuery($qOrdDash, 'Ordensservico', 'Ordensservico');
+			$ordensCliente = sizeof($qOrdDash->toArray());
+			$qOrcDash = $this->Orcamentos->find('all');
+			$this->Abac->applyToQuery($qOrcDash, 'Orcamentos', 'Orcamentos');
+			$orcamentosCliente = sizeof($qOrcDash->toArray());
+			$qTcDash = $this->Tickets->find('all')->where(['idautor' => $idusuario]);
+			$this->Abac->applyToQuery($qTcDash, 'Tickets', 'Tickets');
+			$ticketsCliente = sizeof($qTcDash->toArray());
+			$qVisDash = $this->Visitas->find('all')->where(['situacao' => C_UserSituacaoFinalizada]);
+			$this->Abac->applyToQuery($qVisDash, 'Visitas', 'Visitas');
+			$visitasCliente = sizeof($qVisDash->toArray());
 			$ticketsPendentes = $this->Tickets->find('all')->where([
-				'Tickets.idempresa' => $empresa, 
-				'Tickets.idcliente' => $idcliente, 
 				'situacao IN' => [C_TicketSituacaoPendente, C_TicketSituacaoEmandamento]
 			]);
+			$this->Abac->applyToQuery($ticketsPendentes, 'Tickets', 'Tickets');
 			if(!$this->Auth->user('permissaoacesso')) $ticketsPendentes = $ticketsPendentes->where(['idautor' => $idusuario]);
 
-			$contratos = $this->Clicontratos->find('all')->where(['idempresa' => $empresa,'idcliente' => $idcliente])->order(['id DESC'])->toArray();
-		
-			$orcamentosRecentes = $this->Orcamentos->find('all')->contain(['Clientes'])->where(['Orcamentos.idempresa' => $empresa,'idcliente' => $idcliente,])->order(['Orcamentos.id DESC'])->limit(5)->toArray();
-			$visitasRecentes = $this->Visitas->find('all')->contain(['Listamembros', 'Clientes'])->where(['Visitas.idempresa' => $empresa,'idcliente' => $idcliente,])->limit(5)->order(['Visitas.data'])->toArray();
+			$qContrDash = $this->Clicontratos->find('all')->order(['id DESC']);
+			$this->Abac->applyToQuery($qContrDash, 'Clicontratos', 'Clicontratos');
+			$contratos = $qContrDash->toArray();
+
+			$qOrcRec = $this->Orcamentos->find('all')->contain(['Clientes'])->order(['Orcamentos.id DESC'])->limit(5);
+			$this->Abac->applyToQuery($qOrcRec, 'Orcamentos', 'Orcamentos');
+			$orcamentosRecentes = $qOrcRec->toArray();
+			$qVisRec = $this->Visitas->find('all')->contain(['Listamembros', 'Clientes'])->limit(5)->order(['Visitas.data']);
+			$this->Abac->applyToQuery($qVisRec, 'Visitas', 'Visitas');
+			$visitasRecentes = $qVisRec->toArray();
 
 			$autores =  $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'name'])->where(['role' => 0])->toArray();
 			$this->set('autores', $autores);
@@ -179,8 +196,8 @@ class UsersController extends AppController {
 			unset($_SESSION['PMG_veiologin']);
 		}
 
-		// Desempenho pessoal
-		$this->set('historico', $this->Ordensservico->historicoOrdens($this->Auth->user('id'), $empresa));
+		// Desempenho pessoal (ABAC em Ordensservico quando habilitado)
+		$this->set('historico', $this->Ordensservico->historicoOrdens($this->Auth->user('id'), $empresa, $this));
 		// Label para o gráfico
 		$this->set('labelHist', ['Ordens de Serviço']);
 	}
@@ -237,9 +254,10 @@ class UsersController extends AppController {
 		$d0 = date('Y-m-d') . ' 00:00:00';
 		$d1 = date('Y-m-d') . ' 23:59:59';
 
-		$abertosHoje = $this->Tickets->find()
-			->where(['Tickets.idempresa' => $idempresa, 'Tickets.created >=' => $d0, 'Tickets.created <=' => $d1])
-			->count();
+		$qAb = $this->Tickets->find()
+			->where(['Tickets.created >=' => $d0, 'Tickets.created <=' => $d1]);
+		$this->Abac->applyToQuery($qAb, 'Tickets', 'Tickets');
+		$abertosHoje = $qAb->count();
 
 		$svc = new DashboardService($this->Tickets);
 		$snapshot = $svc->operationalSnapshot($idempresa);
@@ -254,11 +272,11 @@ class UsersController extends AppController {
 		if ($slaUsaEnterprise) {
 			$q = $this->Tickets->find();
 			$f = $q->func()->count('*');
-			$rows = $q->select(['sla_status', 'total' => $f])
-				->where(['Tickets.idempresa' => $idempresa, 'Tickets.situacao IN' => $openSit])
-				->group('sla_status')
-				->hydrate(false)
-				->toArray();
+			$q->select(['sla_status', 'total' => $f])
+				->where(['Tickets.situacao IN' => $openSit])
+				->group('sla_status');
+			$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+			$rows = $q->hydrate(false)->toArray();
 			foreach ($rows as $r) {
 				$st = isset($r['sla_status']) ? (string)$r['sla_status'] : '';
 				$n = (int)$r['total'];
@@ -271,10 +289,11 @@ class UsersController extends AppController {
 				}
 			}
 		} elseif ($openSit !== []) {
-			$openList = $this->Tickets->find()
+			$qOpen = $this->Tickets->find()
 				->select(['created'])
-				->where(['Tickets.idempresa' => $idempresa, 'Tickets.situacao IN' => $openSit])
-				->toArray();
+				->where(['Tickets.situacao IN' => $openSit]);
+			$this->Abac->applyToQuery($qOpen, 'Tickets', 'Tickets');
+			$openList = $qOpen->toArray();
 			foreach ($openList as $t) {
 				$dias = max(0, (int)floor((time() - strtotime((string)$t->created)) / 86400));
 				if ($dias <= 3) {
@@ -360,13 +379,13 @@ class UsersController extends AppController {
 			$ds = $day . ' 00:00:00';
 			$de = $day . ' 23:59:59';
 			$trendLabels[] = date('d/m', $ts);
-			$trendOpened[] = $this->Tickets->find()
-				->where(['Tickets.idempresa' => $idempresa, 'Tickets.created >=' => $ds, 'Tickets.created <=' => $de])
-				->count();
+			$qTrO = $this->Tickets->find()
+				->where(['Tickets.created >=' => $ds, 'Tickets.created <=' => $de]);
+			$this->Abac->applyToQuery($qTrO, 'Tickets', 'Tickets');
+			$trendOpened[] = $qTrO->count();
 			if (in_array('data_resolucao', $cols, true)) {
-				$trendClosed[] = $this->Tickets->find()
+				$qTrC = $this->Tickets->find()
 					->where([
-						'Tickets.idempresa' => $idempresa,
 						'Tickets.situacao IN' => $closedSit,
 						'OR' => [
 							[
@@ -384,17 +403,18 @@ class UsersController extends AppController {
 								],
 							],
 						],
-					])
-					->count();
+					]);
+				$this->Abac->applyToQuery($qTrC, 'Tickets', 'Tickets');
+				$trendClosed[] = $qTrC->count();
 			} elseif ($closedSit !== []) {
-				$trendClosed[] = $this->Tickets->find()
+				$qTrC2 = $this->Tickets->find()
 					->where([
-						'Tickets.idempresa' => $idempresa,
 						'Tickets.situacao IN' => $closedSit,
 						'Tickets.modified >=' => $ds,
 						'Tickets.modified <=' => $de,
-					])
-					->count();
+					]);
+				$this->Abac->applyToQuery($qTrC2, 'Tickets', 'Tickets');
+				$trendClosed[] = $qTrC2->count();
 			} else {
 				$trendClosed[] = 0;
 			}
@@ -542,9 +562,9 @@ class UsersController extends AppController {
 	protected function _dashPgmClosedTicketsCountInRange($idempresa, array $closedSit, array $cols, $rangeStart, $rangeEnd) {
 		$q = $this->Tickets->find();
 		$q->where([
-			'Tickets.idempresa' => $idempresa,
 			'Tickets.situacao IN' => $closedSit,
 		]);
+		$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
 		$this->_dashPgmApplyRankingDateWindow($q, $cols, $rangeStart, $rangeEnd);
 
 		return (int)$q->count();
@@ -610,10 +630,10 @@ class UsersController extends AppController {
 		$tecExpr = $q->newExpr($tecSql);
 		$q->select(['tecnico_efetivo' => $tecExpr, 'cnt' => $f])
 			->where([
-				'Tickets.idempresa' => $idempresa,
 				'Tickets.situacao IN' => $closedSit,
 			])
 			->where($q->newExpr('(' . $tecSql . ') IS NOT NULL'));
+		$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
 		$this->_dashPgmApplyRankingDateWindow($q, $cols, $rangeStart, $rangeEnd);
 
 		$rows = $q->group($tecExpr)
@@ -701,10 +721,10 @@ class UsersController extends AppController {
 
 		$queuesList = [];
 		if ($this->_queuesTablesExist()) {
-			$queuesList = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-				->where(['idempresa' => $this->Auth->user('idempresa')])
-				->order(['sort_order' => 'ASC', 'id' => 'ASC'])
-				->toArray();
+			$queuesListQ = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+				->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+			$this->Abac->applyToQuery($queuesListQ, 'Queues', 'Queues');
+			$queuesList = $queuesListQ->toArray();
 		}
 		$supportLevelsList = $this->_supportLevelsListForTechnicians();
 		$this->set(compact('queuesList', 'supportLevelsList', 'fromQueues'));
@@ -720,7 +740,10 @@ class UsersController extends AppController {
 
 		$user = $this->Users->newEntity();
 
-		$clientes = $this->Clientes->find('all', ['keyField' => 'id', 'valueField' => 'razaosocial'])->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 0])->order(['razaosocial'])->toArray();
+		$clientesQ = $this->Clientes->find('all', ['keyField' => 'id', 'valueField' => 'razaosocial'])->where(['inativo' => 0])->order(['razaosocial']);
+		$this->Abac->applyToQuery($clientesQ, 'Clientes');
+		$clientes = $clientesQ->toArray();
+		$clientesOpt = [];
 		foreach($clientes as $reg){
 			if($reg->tipo == C_ClientesTipoJuridica) $clientesOpt[$reg->id] = $reg->razaosocial;
 			else $clientesOpt[$reg->id] = $reg->nome;
@@ -832,10 +855,10 @@ class UsersController extends AppController {
 		$queuesUserSupportLevels = [];
 		$showQueueLevelOverrides = false;
 		if ($this->_queuesTablesExist() && (int)$user->role === 0) {
-			$queuesList = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-				->where(['idempresa' => $this->Auth->user('idempresa')])
-				->order(['sort_order' => 'ASC', 'id' => 'ASC'])
-				->toArray();
+			$queuesListQ = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+				->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+			$this->Abac->applyToQuery($queuesListQ, 'Queues', 'Queues');
+			$queuesList = $queuesListQ->toArray();
 			$selectedQueues = $this->QueuesUsers->find()
 				->select(['queue_id'])
 				->where(['user_id' => $user->id])
@@ -886,7 +909,10 @@ class UsersController extends AppController {
 			}
 			$this->Flash->error('Ocorreu um erro ao editar as informações do usuário! Tente novamente mais tarde.');
 		}
-		$clientes = $this->Clientes->find('all', ['keyField' => 'id', 'valueField' => 'razaosocial'])->where(['idempresa' => $this->Auth->user('idempresa'), 'inativo' => 0])->order(['razaosocial'])->toArray();
+		$clientesQ = $this->Clientes->find('all', ['keyField' => 'id', 'valueField' => 'razaosocial'])->where(['inativo' => 0])->order(['razaosocial']);
+		$this->Abac->applyToQuery($clientesQ, 'Clientes');
+		$clientes = $clientesQ->toArray();
+		$clientesOpt = [];
 		foreach($clientes as $reg) $clientesOpt[$reg->id] = $reg->tipo == C_ClientesTipoJuridica ? $reg->razaosocial :  $reg->nome;
 		asort($clientesOpt);
 
