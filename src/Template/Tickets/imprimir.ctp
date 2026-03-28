@@ -257,6 +257,49 @@ $emitidoEm = date('d/m/Y H:i');
 			box-shadow: none !important;
 		}
 	}
+	/*
+	 * Enquanto o diálogo de impressão está aberto, o Chrome ainda mostra a página (media screen).
+	 * Fixamos o relatório em tela cheia por cima para não aparecer “duplicado” / fundo atrás.
+	 */
+	@media screen {
+		html.ticket-print-ui-active,
+		html.ticket-print-ui-active body {
+			background: #fff !important;
+			overflow: hidden !important;
+		}
+		html.ticket-print-ui-active .ticket-print-actions {
+			display: none !important;
+		}
+		html.ticket-print-ui-active .ticket-print-document {
+			position: fixed !important;
+			inset: 0 !important;
+			width: 100% !important;
+			max-width: none !important;
+			height: 100% !important;
+			margin: 0 !important;
+			padding: 12px 16px !important;
+			z-index: 2147483646 !important;
+			overflow: auto !important;
+			background: #fff !important;
+			-webkit-overflow-scrolling: touch;
+			box-sizing: border-box !important;
+		}
+		html.ticket-print-ui-active .ticket-print-root {
+			margin-top: 0 !important;
+			max-height: none !important;
+		}
+	}
+	@media print {
+		html.ticket-print-ui-active .ticket-print-document {
+			position: static !important;
+			inset: auto !important;
+			width: 100% !important;
+			height: auto !important;
+			z-index: auto !important;
+			overflow: visible !important;
+			padding: 0 !important;
+		}
+	}
 </style>
 <?php if (!$autoPrint) { ?>
 	<div class="ticket-print-actions">
@@ -484,9 +527,43 @@ $emitidoEm = date('d/m/Y H:i');
 <script>
 	(function () {
 		var autoPrint = <?= $autoPrint ? 'true' : 'false' ?>;
+		var root = document.documentElement;
+
+		function setPrintUiActive(on) {
+			try {
+				if (on) {
+					root.classList.add('ticket-print-ui-active');
+				} else {
+					root.classList.remove('ticket-print-ui-active');
+				}
+			} catch (e) {}
+		}
+
+		window.addEventListener('beforeprint', function () {
+			setPrintUiActive(true);
+		});
+		window.addEventListener('afterprint', function () {
+			setPrintUiActive(false);
+		});
+
+		/* Fallback (ex.: alguns Chromium / extensões) */
+		if (window.matchMedia) {
+			var mqPrint = window.matchMedia('print');
+			function onPrintMq(e) {
+				setPrintUiActive(!!(e && e.matches));
+			}
+			if (mqPrint.addEventListener) {
+				mqPrint.addEventListener('change', onPrintMq);
+			} else if (mqPrint.addListener) {
+				mqPrint.addListener(onPrintMq);
+			}
+		}
+
 		function doPrint() {
+			setPrintUiActive(true);
 			window.print();
 		}
+
 		var btn = document.getElementById('btn-imprimir');
 		if (btn) {
 			btn.addEventListener('click', function (e) {
@@ -498,12 +575,19 @@ $emitidoEm = date('d/m/Y H:i');
 			try {
 				document.body.classList.add('ticket-autoprint-screen');
 			} catch (e) {}
-			setTimeout(doPrint, 80);
-			window.onafterprint = function () {
-				try {
-					window.close();
-				} catch (e) {}
-			};
+			setPrintUiActive(true);
+			setTimeout(function () {
+				doPrint();
+			}, 80);
+			window.addEventListener(
+				'afterprint',
+				function () {
+					try {
+						window.close();
+					} catch (e) {}
+				},
+				{ once: true }
+			);
 		}
 	})();
 </script>
