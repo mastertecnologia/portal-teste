@@ -247,7 +247,7 @@
     <!-- ── Footer com botão salvar ───────────────────────── -->
     <div class="cli-form-footer">
         <div class="cli-form-footer-left">
-            <i class="fas fa-shield-alt" style="color:#1d9e75;margin-right:5px;"></i>
+            <i class="fas fa-shield-alt" style="color:#00c08b;margin-right:5px;"></i>
             Dados salvos com segurança no ERP
         </div>
         <div class="cli-form-footer-right">

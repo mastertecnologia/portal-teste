@@ -102,7 +102,7 @@ $this->end();
 					</div>
 				</div>
 				<div class="vault-form-actions">
-					<?= $this->Form->button('Salvar no cofre', ['class' => 'btn btn-success vault-btn-copy', 'style' => 'color:#042f1f !important;']) ?>
+					<?= $this->Form->button('Salvar no cofre', ['class' => 'btn btn-success vault-btn-copy', 'style' => 'color:#fff !important;']) ?>
 				</div>
 				<?= $this->Form->end(); ?>
 			</div>

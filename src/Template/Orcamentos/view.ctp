@@ -20,7 +20,7 @@
 .orc-info-cell:last-child { border-right:none; }
 .orc-info-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6b6a65; font-weight:600; margin-bottom:4px; }
 .orc-info-value { font-size:13px; font-weight:600; color:#1a1a18; }
-.orc-obs-box { background:#f9f9f8; border-radius:8px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; border-left:3px solid #1d9e75; }
+.orc-obs-box { background:#f9f9f8; border-radius:8px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; border-left:3px solid #00c08b; }
 </style>
 <div class="col-md-12 orc-premium-page-root">
 <div class="orc-premium-wrap orc-premium-form orc-premium-view">
@@ -30,12 +30,12 @@
         <div>
             <div class="orc-eyebrow">Módulo comercial</div>
             <div style="font-size:11px;color:#6b6a65;margin-bottom:3px;">
-                <?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#1d9e75;">Orçamento #<?= $orcamento->id ?></span>
+                <?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#00c08b;">Orçamento #<?= $orcamento->id ?></span>
             </div>
             <h1 class="orc-h1">
-                Orçamento <span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
+                Orçamento <span style="color:#00c08b;">#<?= $orcamento->id ?></span>
                 <?php if(!empty($orcamento->versao)): ?>
-                    <span class="badge" style="background:#1d9e75;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
+                    <span class="badge" style="background:#00c08b;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
                 <?php endif; ?>
                 <span><?= orcamentoStatus($orcamento->status) ?></span>
             </h1>

@@ -22,7 +22,7 @@
 .table td, .table th { padding: 0.4rem; }
 /* ── Empresa edit — Premium tabs ─────────────────────────────── */
 .cli-page-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
-.cli-page-head-left .cli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#1d9e75;font-weight:700;margin-bottom:3px;}
+.cli-page-head-left .cli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#00c08b;font-weight:700;margin-bottom:3px;}
 .cli-page-head-left h1{font-size:1.2rem;font-weight:800;color:#e6edf3;margin:0;}
 .cli-page-head-left p{font-size:.78rem;color:#6e7681;margin:3px 0 0;}
 /* Tab nav override */
@@ -30,7 +30,7 @@
 .cli-tabs-nav .nav-item{flex:none;}
 .cli-tabs-nav .nav-link{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:7px;font-size:.78rem;font-weight:600;color:#8b949e;border:none!important;background:transparent;transition:all .18s;cursor:pointer;}
 .cli-tabs-nav .nav-link:hover{color:#c9d1d9;background:#161b22;}
-.cli-tabs-nav .nav-link.active{background:#1d9e75!important;color:#fff!important;}
+.cli-tabs-nav .nav-link.active{background:#00c08b!important;color:#fff!important;}
 .cli-tabs-nav .nav-link i{font-size:.8rem;}
 /* Card body */
 .cli-card{background:#161b22;border:1px solid #21262d;border-radius:12px;padding:24px;}
@@ -687,8 +687,7 @@
 					}
 				},
 				"drawCallback": function( settings ) {
-					if ($('body').hasClass('dark-mode') ) $('td').each(function(){$(this).addClass('dark-mode');});
-					else $('td').each(function(){$(this).removeClass('dark-mode');});
+					$('td').removeClass('dark-mode');
 				},
 			});
 			if (typeof filters !== 'undefined') {

@@ -247,8 +247,7 @@ jQuery(function($){
 				}
 			},
 			"drawCallback": function( settings ) {
-				if ($('body').hasClass('dark-mode') ) $('td').each(function(){$(this).addClass('dark-mode');});
-				else $('td').each(function(){$(this).removeClass('dark-mode');});
+				$('td').removeClass('dark-mode');
 			},
 		});
 		table.search(filters).draw();

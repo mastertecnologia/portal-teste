@@ -46,11 +46,11 @@ $emitidoEm = date('d/m/Y H:i');
 		padding-top: 20px;
 	}
 	.ticket-print-banner {
-		background: linear-gradient(135deg, #1d9e75 0%, #13715a 100%);
+		background: linear-gradient(135deg, #00c08b 0%, #008f68 100%);
 		color: #fff;
 		padding: 18px 22px;
 		border-radius: 8px 8px 0 0;
-		border: 1px solid #13715a;
+		border: 1px solid #008f68;
 		border-bottom: none;
 	}
 	.ticket-print-banner h1 {
@@ -93,7 +93,7 @@ $emitidoEm = date('d/m/Y H:i');
 		font-weight: 800;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: #1d9e75;
+		color: #00c08b;
 	}
 	.ticket-print-meta {
 		width: 100%;
@@ -125,7 +125,7 @@ $emitidoEm = date('d/m/Y H:i');
 		font-size: 9pt;
 		font-weight: 700;
 		background: rgba(29, 158, 117, 0.12);
-		color: #13715a;
+		color: #008f68;
 		border: 1px solid rgba(29, 158, 117, 0.35);
 	}
 	.ticket-print-box {

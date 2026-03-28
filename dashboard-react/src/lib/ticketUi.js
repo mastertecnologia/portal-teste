@@ -16,26 +16,26 @@ const BADGE_LIGHT = {
   cancelled: 'bg-red-50 text-red-800 border-red-300',
 };
 
-/** Badges no tema escuro do portal cliente (PGM #1d9e75 / #5cdbc0). */
+/** Badges no embed portal cliente — paleta pgm_orcamentos_premium (fundo claro). */
 const BADGE_EMBED = {
-  success: 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
-  warning: 'border border-amber-500/35 bg-amber-500/10 text-amber-200',
-  critical: 'border border-rose-500/35 bg-rose-500/10 text-rose-300',
-  high: 'border border-orange-500/35 bg-orange-500/10 text-orange-200',
-  medium: 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
-  low: 'border border-[#30363d] bg-[#21262d] text-[#8b949e]',
-  progress: 'border border-sky-500/30 bg-sky-500/10 text-sky-200',
-  waiting: 'border border-violet-500/30 bg-violet-500/10 text-violet-200',
-  pendingTech: 'border border-amber-500/35 bg-amber-500/12 text-amber-200',
-  resolved: 'border border-emerald-500/35 bg-emerald-500/12 text-emerald-200',
-  escalated: 'border border-rose-500/35 bg-rose-500/10 text-rose-200',
-  closed: 'border border-[#484f58] bg-[#30363d] text-[#8b949e]',
-  cancelled: 'border border-red-500/35 bg-red-500/10 text-red-300',
+  success: 'border border-emerald-200 bg-emerald-50 text-emerald-800',
+  warning: 'border border-amber-200 bg-amber-50 text-amber-900',
+  critical: 'border border-rose-200 bg-rose-50 text-rose-800',
+  high: 'border border-orange-200 bg-orange-50 text-orange-900',
+  medium: 'border border-sky-200 bg-sky-50 text-sky-900',
+  low: 'border border-[#e5e4e0] bg-[#f9f9f8] text-[#6b6a65]',
+  progress: 'border border-sky-200 bg-sky-50 text-sky-900',
+  waiting: 'border border-violet-200 bg-violet-50 text-violet-900',
+  pendingTech: 'border border-amber-200 bg-amber-50 text-amber-950',
+  resolved: 'border border-emerald-200 bg-emerald-50 text-emerald-900',
+  escalated: 'border border-rose-200 bg-rose-50 text-rose-900',
+  closed: 'border border-[#e5e4e0] bg-[#f2f1ee] text-[#5f5e5a]',
+  cancelled: 'border border-red-200 bg-red-50 text-red-800',
 };
 
 /**
  * @param {string} type
- * @param {boolean} [embed] lista/detalhe embutidos no shell escuro
+ * @param {boolean} [embed] lista/detalhe embutidos no shell cliente (tema premium claro)
  */
 export function badgeClass(type, embed = false) {
   const map = embed ? BADGE_EMBED : BADGE_LIGHT;
@@ -100,7 +100,7 @@ export function acaoLinkClassName(key, embed = false) {
   const base =
     'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
   if (embed && k === 'imprimir') {
-    return `${base} border-[rgba(29,158,117,0.45)] bg-[rgba(29,158,117,0.12)] text-[#5cdbc0] hover:bg-[rgba(29,158,117,0.2)]`;
+    return `${base} border-[rgba(0,192,139,0.45)] bg-[#e6faf4] text-[#008f68] hover:bg-[rgba(0,192,139,0.18)]`;
   }
   if (embed && k === 'cancelar') {
     return `${base} ${badgeClass('cancelled', true)}`;

@@ -31,7 +31,7 @@
 	padding:7px 14px 7px 42px;
 	font-size:.78rem;
 	font-weight:500;
-	color:#6e7681;
+	color:var(--pgm-sb-muted, #9a9890);
 	text-decoration:none;
 	border-radius:6px;
 	margin:1px 8px;
@@ -44,29 +44,29 @@
 	content:'';
 	width:5px;height:5px;
 	border-radius:50%;
-	background:#30363d;
+	background:rgba(255,255,255,.12);
 	flex-shrink:0;
 	transition:background .15s;
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li > a:hover{
-	color:#c9d1d9;
-	background:rgba(255,255,255,.04);
+	color:var(--pgm-sb-text, #f5f5f3);
+	background:rgba(255,255,255,.06);
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li > a:hover:before{
-	background:#1d9e75;
+	background:var(--pgm-teal, #00c08b);
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li.active > a,
 .pgm-sidebar-shell .has-arrow-sub > ul > li > a.active{
-	color:#5cdbc0;
-	background:rgba(29,158,117,.1);
+	color:var(--pgm-teal-light, #5cdbc0);
+	background:var(--pgm-teal-dim, rgba(0,192,139,.14));
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li.active > a:before{
-	background:#1d9e75;
+	background:var(--pgm-teal, #00c08b);
 }
 /* Linha separadora acima do submenu */
 .pgm-sidebar-shell .has-arrow-sub.active > a,
 .pgm-sidebar-shell .has-arrow-sub.selected > a{
-	color:#e6edf3;
+	color:var(--pgm-sb-text, #f5f5f3);
 }
 /* mini-sidebar: esconder texto do submenu mas manter ícone */
 .mini-sidebar .pgm-sidebar-shell .has-arrow-sub > ul{ display:none!important; }

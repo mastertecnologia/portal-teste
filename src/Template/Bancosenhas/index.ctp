@@ -178,7 +178,7 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 		});
 		listEl.appendChild(frag);
 		if (n === 0) {
-			listEl.innerHTML = '<p class="p-3 small text-muted" style="color:#8b92a8;">Nenhuma credencial encontrada.</p>';
+			listEl.innerHTML = '<p class="p-3 small text-muted" style="color:#6b6a65;">Nenhuma credencial encontrada.</p>';
 		}
 	}
 
@@ -311,7 +311,7 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 		if (navigator.clipboard && navigator.clipboard.writeText) {
 			navigator.clipboard.writeText(revealedPlain).then(function () {
 				if (typeof $.toast !== 'undefined') {
-					$.toast({ text: 'Copiado para a área de transferência.', position: 'top-right', loaderBg: '#10b981', bgColor: '#1a1f2e' });
+					$.toast({ text: 'Copiado para a área de transferência.', position: 'top-right', loaderBg: '#00c08b', bgColor: '#1a1a18' });
 				}
 			});
 		} else {

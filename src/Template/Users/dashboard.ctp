@@ -451,77 +451,67 @@
 	</script>
 <?php } else { ?>
 <style>
-/* ── Dashboard Cliente (Premium) ──────────────────────────────── */
+/* ── Dashboard Cliente — pgm_orcamentos_premium (claro) ───────── */
 .dcli-root{display:flex;flex-direction:column;gap:20px;padding:4px 0 24px;}
-/* Topbar */
 .dcli-topbar{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-.dcli-topbar-left .dcli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#1d9e75;font-weight:700;margin-bottom:3px;}
-.dcli-topbar-left h1{font-size:1.5rem;font-weight:800;color:#e6edf3;margin:0;}
-.dcli-topbar-left p{font-size:.8rem;color:#6e7681;margin:4px 0 0;}
-/* Quick actions */
+.dcli-topbar-left .dcli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#00c08b;font-weight:700;margin-bottom:3px;}
+.dcli-topbar-left h1{font-size:1.5rem;font-weight:800;color:#1a1a18;margin:0;}
+.dcli-topbar-left p{font-size:.8rem;color:#6b6a65;margin:4px 0 0;}
 .dcli-actions{display:flex;flex-wrap:wrap;gap:8px;}
 .dcli-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .18s;border:none;cursor:pointer;}
-.dcli-btn-primary{background:#1d9e75;color:#fff;}
-.dcli-btn-primary:hover{background:#5cdbc0;color:#111;text-decoration:none;}
-.dcli-btn-outline{background:transparent;color:#8b949e;border:1px solid #30363d;}
-.dcli-btn-outline:hover{color:#e6edf3;border-color:#8b949e;text-decoration:none;}
-/* KPI strip */
+.dcli-btn-primary{background:linear-gradient(135deg,#00c08b,#008f68);color:#fff;}
+.dcli-btn-primary:hover{opacity:.92;color:#fff;text-decoration:none;}
+.dcli-btn-outline{background:#fff;color:#6b6a65;border:1px solid #e5e4e0;}
+.dcli-btn-outline:hover{color:#008f68;border-color:#00c08b;text-decoration:none;}
 .dcli-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
-.dcli-kpi{background:#161b22;border:1px solid #21262d;border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;transition:border-color .18s;}
-.dcli-kpi:hover{border-color:#1d9e75;}
+.dcli-kpi{background:#fff;border:1px solid #e5e4e0;border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;transition:border-color .18s;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.dcli-kpi:hover{border-color:rgba(0,192,139,.45);}
 .dcli-kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
-.dcli-kpi-icon.teal{background:rgba(29,158,117,.15);color:#5cdbc0;}
-.dcli-kpi-icon.blue{background:rgba(56,139,253,.15);color:#79c0ff;}
-.dcli-kpi-icon.purple{background:rgba(188,140,255,.15);color:#d2a8ff;}
-.dcli-kpi-icon.orange{background:rgba(210,153,34,.15);color:#e3b341;}
+.dcli-kpi-icon.teal{background:rgba(0,192,139,.12);color:#00c08b;}
+.dcli-kpi-icon.blue{background:rgba(51,204,255,.12);color:#006b88;}
+.dcli-kpi-icon.purple{background:rgba(166,130,230,.12);color:#4a3488;}
+.dcli-kpi-icon.orange{background:rgba(255,193,7,.15);color:#8a6a00;}
 .dcli-kpi-meta{flex:1;}
-.dcli-kpi-label{font-size:.7rem;color:#6e7681;font-weight:500;margin:0 0 2px;}
-.dcli-kpi-value{font-size:1.6rem;font-weight:800;color:#e6edf3;font-family:'DM Mono',monospace;line-height:1;margin:0 0 6px;}
-.dcli-kpi-link{font-size:.7rem;color:#1d9e75;text-decoration:none;font-weight:600;}
-.dcli-kpi-link:hover{color:#5cdbc0;text-decoration:none;}
-.dcli-kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:#21262d;}
-.dcli-kpi-bar-fill{height:100%;background:linear-gradient(90deg,#1d9e75,#5cdbc0);}
-/* Seções */
+.dcli-kpi-label{font-size:.7rem;color:#6b6a65;font-weight:500;margin:0 0 2px;}
+.dcli-kpi-value{font-size:1.6rem;font-weight:800;color:#1a1a18;font-family:'DM Mono',monospace;line-height:1;margin:0 0 6px;}
+.dcli-kpi-link{font-size:.7rem;color:#008f68;text-decoration:none;font-weight:600;}
+.dcli-kpi-link:hover{color:#00c08b;text-decoration:none;}
+.dcli-kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:#e5e4e0;}
+.dcli-kpi-bar-fill{height:100%;background:linear-gradient(90deg,#00c08b,#5cdbc0);}
 .dcli-section-row{display:grid;gap:16px;}
 .dcli-section-row.two-col{grid-template-columns:1fr 1fr;}
 @media(max-width:768px){.dcli-section-row.two-col{grid-template-columns:1fr;}}
-/* Cards de tabela */
-.dcli-card{background:#161b22;border:1px solid #21262d;border-radius:12px;overflow:hidden;}
-.dcli-card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #21262d;}
-.dcli-card-title{font-size:.82rem;font-weight:700;color:#c9d1d9;}
-.dcli-card-badge{background:#21262d;color:#8b949e;font-size:.68rem;font-family:'DM Mono',monospace;padding:2px 9px;border-radius:99px;font-weight:600;}
-.dcli-card-link{font-size:.72rem;color:#1d9e75;text-decoration:none;font-weight:600;}
-.dcli-card-link:hover{color:#5cdbc0;text-decoration:none;}
-/* Tabela interna */
+.dcli-card{background:#fff;border:1px solid #e5e4e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.dcli-card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e5e4e0;background:#f9f9f8;}
+.dcli-card-title{font-size:.82rem;font-weight:700;color:#1a1a18;}
+.dcli-card-badge{background:#f2f1ee;color:#5f5e5a;font-size:.68rem;font-family:'DM Mono',monospace;padding:2px 9px;border-radius:99px;font-weight:600;border:1px solid #e5e4e0;}
+.dcli-card-link{font-size:.72rem;color:#008f68;text-decoration:none;font-weight:600;}
+.dcli-card-link:hover{color:#00c08b;text-decoration:none;}
 .dcli-table{width:100%;border-collapse:collapse;font-size:.78rem;}
-.dcli-table thead th{padding:9px 14px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6e7681;border-bottom:1px solid #21262d;white-space:nowrap;}
-.dcli-table tbody tr{border-bottom:1px solid #161b2a;transition:background .12s;}
+.dcli-table thead th{padding:9px 14px;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6b6a65;border-bottom:1px solid #e5e4e0;white-space:nowrap;}
+.dcli-table tbody tr{border-bottom:1px solid #f0efec;transition:background .12s;}
 .dcli-table tbody tr:last-child{border-bottom:none;}
-.dcli-table tbody tr:hover{background:#1c2230;}
-.dcli-table td{padding:9px 14px;color:#c9d1d9;vertical-align:middle;}
-.dcli-td-id{font-family:'DM Mono',monospace;font-size:.75rem;color:#6e7681;}
-.dcli-td-link{color:#5cdbc0;text-decoration:none;font-weight:600;}
-.dcli-td-link:hover{color:#1d9e75;text-decoration:none;}
-.dcli-td-date{font-family:'DM Mono',monospace;font-size:.72rem;color:#6e7681;}
-.dcli-empty{text-align:center;color:#6e7681;padding:24px 14px!important;font-size:.78rem;}
-/* Status badges */
+.dcli-table tbody tr:hover{background:#f9f9f8;}
+.dcli-table td{padding:9px 14px;color:#1a1a18;vertical-align:middle;}
+.dcli-td-id{font-family:'DM Mono',monospace;font-size:.75rem;color:#9a9890;}
+.dcli-td-link{color:#008f68;text-decoration:none;font-weight:600;}
+.dcli-td-link:hover{color:#00c08b;text-decoration:none;}
+.dcli-td-date{font-family:'DM Mono',monospace;font-size:.72rem;color:#6b6a65;}
+.dcli-empty{text-align:center;color:#6b6a65;padding:24px 14px!important;font-size:.78rem;}
 .dcli-status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:.68rem;font-weight:700;}
 .dcli-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.dcli-status.aguardando{background:rgba(210,153,34,.15);color:#e3b341;}
-.dcli-status.aguardando .dcli-status-dot{background:#e3b341;}
-.dcli-status.execucao{background:rgba(56,139,253,.15);color:#79c0ff;}
-.dcli-status.execucao .dcli-status-dot{background:#388bfd;}
-.dcli-status.finalizado{background:rgba(63,185,80,.15);color:#56d364;}
-.dcli-status.finalizado .dcli-status-dot{background:#3fb950;}
-/* Ações rápidas */
+.dcli-status.aguardando{background:rgba(255,193,7,.15);color:#8a6a00;}
+.dcli-status.aguardando .dcli-status-dot{background:#ffc107;}
+.dcli-status.execucao{background:rgba(51,204,255,.15);color:#006b88;}
+.dcli-status.execucao .dcli-status-dot{background:#33ccff;}
+.dcli-status.finalizado{background:rgba(0,192,139,.12);color:#008f68;}
+.dcli-status.finalizado .dcli-status-dot{background:#00c08b;}
 .dcli-td-actions{display:flex;gap:6px;justify-content:flex-end;}
-.dcli-btn-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;background:#21262d;color:#8b949e;border:none;cursor:pointer;text-decoration:none;transition:all .15s;}
-.dcli-btn-icon:hover{background:#1d9e75;color:#fff;text-decoration:none;}
-/* Contratos chip */
-.dcli-contrato-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:rgba(29,158,117,.1);color:#5cdbc0;border:1px solid rgba(29,158,117,.3);border-radius:99px;font-size:.68rem;font-weight:700;}
-/* Vazio state */
-.dcli-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;color:#6e7681;gap:8px;}
-.dcli-empty-state i{font-size:1.8rem;opacity:.4;}
+.dcli-btn-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;background:#f9f9f8;color:#6b6a65;border:1px solid #e5e4e0;cursor:pointer;text-decoration:none;transition:all .15s;}
+.dcli-btn-icon:hover{background:#00c08b;border-color:#00c08b;color:#fff;text-decoration:none;}
+.dcli-contrato-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:#e6faf4;color:#008f68;border:1px solid rgba(0,192,139,.28);border-radius:99px;font-size:.68rem;font-weight:700;}
+.dcli-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;color:#6b6a65;gap:8px;}
+.dcli-empty-state i{font-size:1.8rem;opacity:.45;}
 .dcli-empty-state p{margin:0;font-size:.78rem;}
 </style>
 
@@ -580,7 +570,7 @@
 				<?php if ($permissaoacesso) : ?>
 					<?= $this->Html->link('Ver orçamentos →', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'dcli-kpi-link']); ?>
 				<?php else : ?>
-					<span class="dcli-kpi-link" style="color:#484f58;">Solicite por ticket</span>
+					<span class="dcli-kpi-link" style="color:#9a9890;">Solicite por ticket</span>
 				<?php endif; ?>
 			</div>
 			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" style="width:<?= min(100, (int)$orcamentosCliente * 4) ?>%"></div></div>
@@ -643,9 +633,9 @@
 					<tr>
 						<td class="dcli-td-id">#<?= h($reg->id) ?></td>
 						<td class="dcli-td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
-						<td style="color:#c9d1d9;font-weight:500;"><?= AssuntoTicket($reg->assunto) ?><div style="font-size:.68rem;color:#6e7681;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"><?= h(mb_substr((string)($reg->solicitacao ?? ''), 0, 80)) ?></div></td>
+						<td style="color:#1a1a18;font-weight:500;"><?= AssuntoTicket($reg->assunto) ?><div style="font-size:.68rem;color:#6b6a65;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"><?= h(mb_substr((string)($reg->solicitacao ?? ''), 0, 80)) ?></div></td>
 						<td><span class="dcli-status <?= $stCls ?>"><span class="dcli-status-dot"></span><?= SituacaoTicket($reg->situacao) ?></span></td>
-						<td style="font-size:.75rem;color:#8b949e;"><?= h($tecnico) ?></td>
+						<td style="font-size:.75rem;color:#9a9890;"><?= h($tecnico) ?></td>
 						<td>
 							<div class="dcli-td-actions">
 								<?= $this->Html->link('<i class="fas fa-eye"></i>', ['controller' => 'Tickets', 'action' => 'view', $reg->id], ['class' => 'dcli-btn-icon', 'title' => 'Ver ticket', 'escape' => false]); ?>
@@ -688,7 +678,7 @@
 						<?php foreach ($contratos as $reg): ?>
 						<tr>
 							<td class="dcli-td-id"><?= h($reg->id) ?></td>
-							<td style="color:#c9d1d9;"><?= h($reg->descricao) ?></td>
+							<td style="color:#1a1a18;"><?= h($reg->descricao) ?></td>
 							<td><span class="dcli-contrato-chip"><?= h($reg->qtde) ?></span></td>
 							<td class="dcli-td-date"><?= !empty($reg->dtcontratacao) ? date_format($reg->dtcontratacao, 'd/m/Y') : '—' ?></td>
 						</tr>
@@ -728,7 +718,7 @@
 						<?php foreach ($orcamentosRecentes as $reg): ?>
 						<tr>
 							<td><?= $this->Html->link('#' . h($reg->id), ['controller' => 'Orcamentos', 'action' => 'view', $reg->id], ['class' => 'dcli-td-link']); ?></td>
-							<td style="font-size:.78rem;color:#c9d1d9;"><?= h($autores[$reg->idautor] ?? '—') ?></td>
+							<td style="font-size:.78rem;color:#5f5e5a;"><?= h($autores[$reg->idautor] ?? '—') ?></td>
 							<td class="dcli-td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
 							<td class="dcli-td-date"><?= date_format($reg->validoate, 'd/m/Y') ?></td>
 						</tr>

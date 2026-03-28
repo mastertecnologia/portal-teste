@@ -26,7 +26,6 @@
 	<?= $this->Html->css("/dist/css/pages/floating-label.css") ?>
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
-	<?= $this->Html->css("/dist/css/dark-mode.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 
 	<!-- Timeline CSS -->
@@ -126,7 +125,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-default-dark mini">
+<body class="fixed-layout skin-green mini">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">

@@ -20,7 +20,7 @@
 		<div>
 			<div class="orc-eyebrow">Módulo comercial</div>
 			<div style="font-size:11px;color:var(--orc-text-muted,#6b6a65);margin-bottom:3px;">
-				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#1d9e75;">Novo</span>
+				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#00c08b;">Novo</span>
 			</div>
 			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento</h1>
 		</div>
@@ -102,11 +102,11 @@
 					<div class="orc-margin-card-lbl">Custo total</div>
 				</div>
 				<div class="orc-margin-card">
-					<div class="orc-margin-card-val" id="ms-lucro" style="color:#1d9e75;">R$ 0,00</div>
+					<div class="orc-margin-card-val" id="ms-lucro" style="color:#00c08b;">R$ 0,00</div>
 					<div class="orc-margin-card-lbl">Lucro bruto</div>
 				</div>
 				<div class="orc-margin-card">
-					<div class="orc-margin-card-val" id="ms-margem" style="color:#1d9e75;">0%</div>
+					<div class="orc-margin-card-val" id="ms-margem" style="color:#00c08b;">0%</div>
 					<div class="orc-margin-card-lbl">Margem bruta</div>
 					<div class="orc-margin-bar"><div class="orc-margin-fill" id="ms-bar" style="width:0%;"></div></div>
 				</div>
@@ -194,7 +194,7 @@
 					<div class="orc-tot-l"><span>Subtotal</span><span id="t-sub">R$ 0,00</span></div>
 					<div class="orc-tot-l"><span>Custo total</span><span id="t-cus" style="color:#6b6a65;">R$ 0,00</span></div>
 					<div class="orc-tot-l"><span>Desconto</span><span class="orc-tot-rd" id="t-disc">— R$ 0,00</span></div>
-					<div class="orc-tot-l"><span>Margem após desconto</span><span id="t-marg" style="color:#1d9e75;">0%</span></div>
+					<div class="orc-tot-l"><span>Margem após desconto</span><span id="t-marg" style="color:#00c08b;">0%</span></div>
 					<div class="orc-tot-l"><span>Total geral</span><span class="orc-tot-g" id="t-tot">R$ 0,00</span></div>
 				</div>
 			</div>
@@ -319,7 +319,7 @@
 		$('#t-sub').text('R$ ' + numberToReal(subVenda));
 		$('#t-cus').text('R$ ' + numberToReal(subCusto));
 		$('#t-disc').text('— R$ ' + numberToReal(discAbs));
-		$('#t-marg').text(margem + '%').css('color', margem >= 15 ? '#1d9e75' : '#FFC107');
+		$('#t-marg').text(margem + '%').css('color', margem >= 15 ? '#00c08b' : '#FFC107');
 		$('#t-tot').text('R$ ' + numberToReal(afterDisc));
 	}
 

@@ -5,7 +5,7 @@
 export default function CommentMessage({ texto, embed = false }) {
   if (texto == null || texto === '') return null;
   const s = String(texto);
-  const textCls = embed ? 'text-[#c9d1d9]' : 'text-slate-700';
+  const textCls = embed ? 'text-[#5f5e5a]' : 'text-slate-700';
   const looksLikeHtml = /<[a-z][\s\S]*>/i.test(s);
   if (looksLikeHtml) {
     return (

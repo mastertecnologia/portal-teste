@@ -46,20 +46,20 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
   const list = anexos || [];
 
   const shell = embed
-    ? 'rounded-xl border border-[#484f58] bg-[#0d1117] p-4 shadow-[inset_0_0_0_1px_rgba(72,79,88,0.55)]'
+    ? 'rounded-xl border border-[#e5e4e0] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]'
     : 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm';
-  const titleCls = embed ? 'text-sm font-bold text-[#e6edf3]' : 'text-sm font-bold text-slate-900';
+  const titleCls = embed ? 'text-sm font-bold text-[#1a1a18]' : 'text-sm font-bold text-slate-900';
   const linkUpload = embed
-    ? 'text-xs font-semibold text-[#5cdbc0] hover:underline disabled:opacity-50'
+    ? 'text-xs font-semibold text-[#00c08b] hover:text-[#008f68] hover:underline disabled:opacity-50'
     : 'text-xs font-semibold text-teal-700 hover:underline disabled:opacity-50';
-  const errCls = embed ? 'mt-2 text-xs text-red-400' : 'mt-2 text-xs text-rose-600';
+  const errCls = embed ? 'mt-2 text-xs text-red-700' : 'mt-2 text-xs text-rose-600';
   const rowCls = embed
-    ? 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#21262d] bg-[#161b22] px-2 py-1.5'
+    ? 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#e5e4e0] bg-[#f9f9f8] px-2 py-1.5'
     : 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5';
-  const nameCls = embed ? 'min-w-0 flex-1 truncate font-medium text-[#e6edf3]' : 'min-w-0 flex-1 truncate font-medium text-slate-800';
-  const visCls = embed ? 'font-semibold text-[#c9d1d9] hover:underline' : 'font-semibold text-slate-700 hover:underline';
-  const dlCls = embed ? 'font-semibold text-[#5cdbc0] hover:underline' : 'font-semibold text-teal-700 hover:underline';
-  const emptyCls = embed ? 'mt-2 text-xs text-[#6e7681]' : 'mt-2 text-xs text-slate-500';
+  const nameCls = embed ? 'min-w-0 flex-1 truncate font-medium text-[#1a1a18]' : 'min-w-0 flex-1 truncate font-medium text-slate-800';
+  const visCls = embed ? 'font-semibold text-[#5f5e5a] hover:underline' : 'font-semibold text-slate-700 hover:underline';
+  const dlCls = embed ? 'font-semibold text-[#00c08b] hover:text-[#008f68] hover:underline' : 'font-semibold text-teal-700 hover:underline';
+  const emptyCls = embed ? 'mt-2 text-xs text-[#6b6a65]' : 'mt-2 text-xs text-slate-500';
 
   return (
     <div className={shell}>
@@ -98,7 +98,7 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
                     type="button"
                     disabled={busy}
                     onClick={() => remove(a.id)}
-                    className={embed ? 'font-semibold text-red-400 hover:underline disabled:opacity-50' : 'font-semibold text-rose-600 hover:underline disabled:opacity-50'}
+                    className={embed ? 'font-semibold text-red-700 hover:underline disabled:opacity-50' : 'font-semibold text-rose-600 hover:underline disabled:opacity-50'}
                   >
                     Remover
                   </button>

@@ -152,10 +152,10 @@ $(function () {
     sparklineLogin();
 
     // ==============================================================
-    // Color variation
+    // Color variation (apenas skins claras; escuras bloqueadas)
     // ==============================================================
 
-    var mySkins = [
+    var allSkinClasses = [
         "skin-default",
         "skin-green",
         "skin-red",
@@ -168,13 +168,17 @@ $(function () {
         "skin-blue-dark",
         "skin-purple-dark",
         "skin-megna-dark"
-    ]
-        /**
-         * Get a prestored setting
-         *
-         * @param String name Name of of the setting
-         * @returns String The value of the setting | null
-         */
+    ];
+    var lightSkins = [
+        "skin-default",
+        "skin-green",
+        "skin-red",
+        "skin-blue",
+        "skin-purple",
+        "skin-megna"
+    ];
+    var defaultLightSkin = "skin-green";
+
     function get(name) {
         if (typeof (Storage) !== 'undefined') {
             return localStorage.getItem(name)
@@ -183,13 +187,6 @@ $(function () {
             window.alert('Please use a modern browser to properly view this template!')
         }
     }
-    /**
-     * Store a new settings in the browser
-     *
-     * @param String name Name of the setting
-     * @param String val Value of the setting
-     * @returns void
-     */
     function store(name, val) {
         if (typeof (Storage) !== 'undefined') {
             localStorage.setItem(name, val)
@@ -199,29 +196,64 @@ $(function () {
         }
     }
 
+    function stripAllSkins($body) {
+        $.each(allSkinClasses, function (i) {
+            $body.removeClass(allSkinClasses[i]);
+        });
+    }
+
     /**
-     * Replaces the old skin with the new skin
-     * @param String cls the new skin class
-     * @returns Boolean false to prevent link's default action
+     * Troca de skin: só aceita tema claro; demais caem em skin-green.
      */
     function changeSkin(cls) {
-        $.each(mySkins, function (i) {
-            $('body').removeClass(mySkins[i])
-        })
-        $('body').addClass(cls)
-        store('skin', cls)
-        return false
+        if ($.inArray(cls, lightSkins) === -1) {
+            cls = defaultLightSkin;
+        }
+        var $body = $('body');
+        stripAllSkins($body);
+        $body.addClass(cls);
+        store('skin', cls);
+        return false;
+    }
+
+    /** Remove skin escura do body (HTML antigo, cache, extensão) e normaliza localStorage. */
+    function sanitizeDarkSkinsOnLoad() {
+        var $body = $('body');
+        var i;
+        for (i = 0; i < allSkinClasses.length; i++) {
+            if (allSkinClasses[i].indexOf('-dark') !== -1 && $body.hasClass(allSkinClasses[i])) {
+                stripAllSkins($body);
+                $body.addClass(defaultLightSkin);
+                store('skin', defaultLightSkin);
+                return;
+            }
+        }
+        var stored = get('skin');
+        if (stored && $.inArray(stored, lightSkins) === -1) {
+            store('skin', defaultLightSkin);
+        }
     }
 
     function setup() {
-        //var tmp = get('skin')
-        //if (tmp && $.inArray(tmp, mySkins)) changeSkin(tmp)
-        // Add the change skin listener
+        sanitizeDarkSkinsOnLoad();
+
+        $('[data-skin]').each(function () {
+            var s = $(this).data('skin');
+            if ($.inArray(s, lightSkins) === -1) {
+                $(this).closest('li').hide();
+            }
+        });
+
         $('[data-skin]').on('click', function (e) {
-            if ($(this).hasClass('knob')) return
-            e.preventDefault()
-            changeSkin($(this).data('skin'))
-        })
+            if ($(this).hasClass('knob')) return;
+            e.preventDefault();
+            var next = $(this).data('skin');
+            if ($.inArray(next, lightSkins) === -1) {
+                changeSkin(defaultLightSkin);
+                return false;
+            }
+            changeSkin(next);
+        });
     }
 
     setup()

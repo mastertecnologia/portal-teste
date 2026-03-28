@@ -445,17 +445,7 @@ $(document).ready(function() {
 			oAria: { sSortAscending: ': Ordem Ascendente', sSortDescending: ': Ordem descendente' }
 		},
 		drawCallback: function() {
-			// Não aplicar células .dark-mode dentro da lista premium (senão o DataTables força o tema escuro do ERP).
-			$('td').each(function() {
-				var $td = $(this);
-				if ($td.closest('#orc-premium-container').length) {
-					$td.removeClass('dark-mode');
-				} else if ($('body').hasClass('dark-mode')) {
-					$td.addClass('dark-mode');
-				} else {
-					$td.removeClass('dark-mode');
-				}
-			});
+			$('td').removeClass('dark-mode');
 		}
 	});
 	if (typeof filters !== 'undefined' && filters) {

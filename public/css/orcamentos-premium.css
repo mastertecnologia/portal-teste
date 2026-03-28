@@ -112,13 +112,13 @@
 
 .btn-orc-premium-primary,
 .orc-premium-wrap .btn-orc-premium-primary {
-  background: linear-gradient(180deg, var(--orc-teal, #1d9e75) 0%, var(--orc-teal-dark, #0f6e56) 100%);
+  background: linear-gradient(180deg, var(--orc-teal, #00c08b) 0%, var(--orc-teal-dark, #008f68) 100%);
   border: none;
   color: #fff !important;
   font-weight: 700;
   border-radius: 10px;
   padding: 10px 18px;
-  box-shadow: 0 2px 12px rgba(29, 158, 117, 0.35);
+  box-shadow: 0 2px 12px rgba(0, 192, 139, 0.3);
 }
 .btn-orc-premium-primary:hover,
 .orc-premium-wrap .btn-orc-premium-primary:hover {
@@ -202,7 +202,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {
 
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a,
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a strong {
-  color: #1d9e75 !important;
+  color: #00c08b !important;
 }
 
 .orc-premium-wrap.orc-premium-index {
@@ -237,7 +237,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   min-height: 0;
 }
 
-/* Tema claro no dark-mode: células e controles DataTables (não aplicar em `tr` — quebra layout) */
+/* DataTables: células e wrapper no tema claro (não aplicar em `tr` — quebra layout) */
 #orc-premium-container.orc-premium-index .dataTables_wrapper {
   color: #1a1a18 !important;
 }
@@ -637,43 +637,22 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   border-color: var(--orc-border) !important;
 }
 
-/* ERP dark skin / dark-mode: fundo da página + lista clara */
-body.skin-default-dark .orc-premium-page-root,
-body.dark-mode .orc-premium-page-root {
+/* Skin teal ERP: reforço de fundo claro nas áreas premium */
+body.skin-green .orc-premium-page-root {
   background: #f2f1ee !important;
 }
 
-body.skin-default-dark .orc-premium-wrap.orc-premium-index,
-body.dark-mode .orc-premium-wrap.orc-premium-index {
+body.skin-green .orc-premium-wrap.orc-premium-index {
   background: transparent !important;
   color: #1a1a18 !important;
 }
 
-body.dark-mode .orc-premium-index .table,
-body.dark-mode .orc-premium-index .table td,
-body.dark-mode .orc-premium-index .table th {
-  background-color: transparent !important;
-  color: #1a1a18 !important;
-  border-color: #e5e4e0 !important;
-}
-
-body.dark-mode .orc-premium-index .orc-premium-tbl thead th {
-  color: #6b6a65 !important;
-  background: #f9f9f8 !important;
-}
-
-body.dark-mode .orc-premium-index .dataTables_wrapper .dataTables_length,
-body.dark-mode .orc-premium-index .dataTables_wrapper .dataTables_info,
-body.dark-mode .orc-premium-index .dataTables_wrapper .dataTables_paginate {
-  color: #6b6a65 !important;
-}
-
 /* ========== Form pages (add / edit) — variante clara ========== */
 .orc-premium-wrap.orc-premium-form {
-  --orc-teal: #1d9e75;
-  --orc-teal-dark: #0f6e56;
-  --orc-teal-light: #e1f5ee;
-  --orc-teal-mid: #5dcaa5;
+  --orc-teal: #00c08b;
+  --orc-teal-dark: #008f68;
+  --orc-teal-light: #e6faf4;
+  --orc-teal-mid: #5cdbc0;
   --orc-amber: #e9a025;
   --orc-red: #e24b4a;
   --orc-border: #e5e4e0;
@@ -691,39 +670,8 @@ body.dark-mode .orc-premium-index .dataTables_wrapper .dataTables_paginate {
   padding: 0;
 }
 
-body.skin-default-dark .orc-premium-wrap.orc-premium-form,
-body.dark-mode .orc-premium-wrap.orc-premium-form {
+body.skin-green .orc-premium-wrap.orc-premium-form {
   background: #ffffff !important;
-  color: #1a1a18 !important;
-}
-
-body.dark-mode .orc-premium-form .card,
-body.dark-mode .orc-premium-form .card-body {
-  background: #ffffff !important;
-  color: #1a1a18 !important;
-  border-color: #e5e4e0 !important;
-}
-
-body.dark-mode .orc-premium-form label,
-body.dark-mode .orc-premium-form .control-label,
-body.dark-mode .orc-premium-form h3,
-body.dark-mode .orc-premium-form h4,
-body.dark-mode .orc-premium-form h5 {
-  color: #1a1a18 !important;
-}
-
-body.dark-mode .orc-premium-form .form-control,
-body.dark-mode .orc-premium-form .bootstrap-select .btn {
-  background: #f9f9f8 !important;
-  color: #1a1a18 !important;
-  border-color: #e5e4e0 !important;
-}
-
-body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu {
-  background: #ffffff !important;
-}
-
-body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
   color: #1a1a18 !important;
 }
 
@@ -1020,7 +968,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 
 .orc-premium-form .orc-obs-textarea:focus {
   border-color: var(--orc-teal-mid);
-  box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.12);
+  box-shadow: 0 0 0 2px rgba(0, 192, 139, 0.12);
   outline: none;
 }
 
@@ -1048,7 +996,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
   background-image: none !important;
   background-size: auto !important;
   border-color: var(--orc-teal-mid, #5dcaa5) !important;
-  box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(0, 192, 139, 0.12) !important;
   outline: none !important;
 }
 
@@ -1143,7 +1091,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 .orc-premium-wrap .btn-orc-outline-teal {
   background: #fff;
   border: 1px solid var(--orc-teal-mid, #5dcaa5);
-  color: var(--orc-teal-dark, #0f6e56);
+  color: var(--orc-teal-dark, #008f68);
   border-radius: 10px;
   font-weight: 600;
   font-size: 12px;
@@ -1155,8 +1103,8 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 .orc-premium-wrap .btn-orc-outline-teal:hover,
 .orc-premium-wrap .btn-orc-outline-teal:focus {
   background: var(--orc-teal-light, #e1f5ee);
-  border-color: var(--orc-teal, #1d9e75);
-  color: var(--orc-teal-dark, #0f6e56);
+  border-color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal-dark, #008f68);
 }
 
 .orc-premium-wrap .btn-orc-outline-purple {
@@ -1213,7 +1161,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 
 .orc-premium-wrap .btn-orc-premium-primary.btn-orc-compact,
 .btn-orc-premium-primary.btn-orc-compact {
-  box-shadow: 0 2px 8px rgba(29, 158, 117, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 192, 139, 0.28);
 }
 
 .orc-premium-form .orc-add-row .orc-add-row-ic {
@@ -1314,9 +1262,9 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 }
 
 .orc-catalog-search-inner:focus-within {
-  border-color: #1d9e75;
+  border-color: #00c08b;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.08);
+  box-shadow: 0 0 0 3px rgba(0, 192, 139, 0.08);
 }
 
 .orc-catalog-search-ic {
@@ -1407,7 +1355,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 
 .orc-cat-badge--prod {
   background: #e1f5ee;
-  color: #0f6e56;
+  color: #008f68;
 }
 
 .orc-cat-badge--srv {
@@ -1453,7 +1401,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 .orc-catalog-item-price {
   font-size: 16px;
   font-weight: 700;
-  color: #1d9e75;
+  color: #00c08b;
   line-height: 1.2;
 }
 
@@ -1481,7 +1429,7 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 
 .orc-catalog-stock-line,
 .orc-catalog-margem-line {
-  color: #1d9e75;
+  color: #00c08b;
   font-weight: 600;
 }
 
@@ -1498,8 +1446,8 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
 
 /* ========== View page ========== */
 .orc-premium-wrap.orc-premium-view {
-  --orc-teal: #1d9e75;
-  --orc-teal-dark: #0f6e56;
+  --orc-teal: #00c08b;
+  --orc-teal-dark: #008f68;
   --orc-teal-light: #e1f5ee;
   --orc-teal-mid: #5dcaa5;
   --orc-amber: #e9a025;
@@ -1517,31 +1465,9 @@ body.dark-mode .orc-premium-form .bootstrap-select .dropdown-menu li a {
   border-radius: var(--orc-radius-lg);
 }
 
-body.skin-default-dark .orc-premium-wrap.orc-premium-view,
-body.dark-mode .orc-premium-wrap.orc-premium-view {
+body.skin-green .orc-premium-wrap.orc-premium-view {
   background: #ffffff !important;
   color: #1a1a18 !important;
-}
-
-body.dark-mode .orc-premium-view .card,
-body.dark-mode .orc-premium-view .card-body {
-  background: #ffffff !important;
-  color: #1a1a18 !important;
-  border-color: #e5e4e0 !important;
-}
-
-body.dark-mode .orc-premium-view label,
-body.dark-mode .orc-premium-view .control-label,
-body.dark-mode .orc-premium-view h3,
-body.dark-mode .orc-premium-view h4,
-body.dark-mode .orc-premium-view h5 {
-  color: #1a1a18 !important;
-}
-
-body.dark-mode .orc-premium-view .form-control {
-  background: #f9f9f8 !important;
-  color: #1a1a18 !important;
-  border-color: #e5e4e0 !important;
 }
 
 /* Version panel */
@@ -1575,7 +1501,7 @@ body.dark-mode .orc-premium-view .form-control {
   font-family: monospace;
 }
 
-.orc-v-current { background: #1d9e75; color: #fff; }
+.orc-v-current { background: #00c08b; color: #fff; }
 .orc-v-old { background: #e5e4e0; color: #5f5e5a; }
 
 /* Workflow */
@@ -1685,11 +1611,6 @@ body.dark-mode .orc-premium-view .form-control {
   padding-bottom: 8px;
 }
 
-body.dark-mode .orc-premium-wrap.orc-premium-form.orc-premium-print {
-  background: #f2f1ee !important;
-  color: #1a1a18 !important;
-}
-
 .orc-print-toolbar {
   display: flex;
   align-items: flex-start;
@@ -1754,8 +1675,8 @@ body.dark-mode .orc-premium-wrap.orc-premium-form.orc-premium-print {
 }
 
 .orc-premium-carrinho-tbl .btn-orc-tbl-icon--edit {
-  border-color: rgba(29, 158, 117, 0.4);
-  color: #0f6e56;
+  border-color: rgba(0, 192, 139, 0.4);
+  color: #008f68;
 }
 
 .orc-premium-carrinho-tbl .btn-orc-tbl-icon--edit:hover {
@@ -2129,16 +2050,6 @@ body.dark-mode .orc-premium-wrap.orc-premium-form.orc-premium-print {
   background: #f9f9f8;
 }
 
-body.dark-mode .orc-premium-wrap .orc-premium-carrinho-tbl thead th {
-  color: #6b6a65 !important;
-  background: #f9f9f8 !important;
-}
-
-body.dark-mode .orc-premium-wrap .orc-premium-carrinho-tbl tbody td {
-  color: #1a1a18 !important;
-  border-color: #e5e4e0 !important;
-}
-
 /* Impressão: esconder cromado ERP + stepper + botões */
 @media print {
   .topbar,
@@ -2204,3 +2115,65 @@ body.dark-mode .orc-premium-wrap .orc-premium-carrinho-tbl tbody td {
     print-color-adjust: exact;
   }
 }
+
+/* ── Workflow e versionamento para orc-premium-form (edit) ─────────────── */
+.orc-premium-form .orc-wf-list { padding: 2px 0; }
+
+.orc-premium-form .orc-workflow-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  position: relative;
+}
+
+.orc-premium-form .orc-workflow-step::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: -9px;
+  width: 1px;
+  background: var(--orc-border);
+}
+
+.orc-premium-form .orc-workflow-step:last-child::after { display: none; }
+
+.orc-premium-form .orc-wf-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--orc-border);
+  background: var(--orc-bg-card);
+  font-size: 13px;
+}
+
+.orc-premium-form .orc-wf-ok   { background: var(--orc-teal-light); border-color: var(--orc-teal-mid); color: var(--orc-teal-dark); }
+.orc-premium-form .orc-wf-pend { background: #faeeda; border-color: #fac775; color: #633806; }
+.orc-premium-form .orc-wf-body { flex: 1; }
+.orc-premium-form .orc-wf-title { font-size: 12px; font-weight: 500; color: var(--orc-text); }
+.orc-premium-form .orc-wf-sub   { font-size: 11px; color: var(--orc-text-muted); }
+
+/* Version panel (form) */
+.orc-premium-form .orc-version-panel {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  padding: 14px 18px;
+}
+
+.orc-premium-form .orc-version-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--orc-border-light);
+  font-size: 12px;
+  color: var(--orc-text);
+}
+
+.orc-premium-form .orc-version-item:last-child { border: none; }

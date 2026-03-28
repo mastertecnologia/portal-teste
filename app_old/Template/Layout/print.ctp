@@ -29,7 +29,6 @@
 	<?= $this->Html->css("/dist/css/pages/floating-label.css") ?>
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
-	<?= $this->Html->css("/dist/css/dark-mode.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 
 	<!-- Timeline CSS -->

@@ -79,12 +79,12 @@
 		<div>
 			<div class="orc-eyebrow">Módulo comercial</div>
 			<div style="font-size:11px;color:var(--orc-text-muted,#6b6a65);margin-bottom:3px;">
-				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#1d9e75;">Editar #<?= $orcamento->id ?></span>
+				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#00c08b;">Editar #<?= $orcamento->id ?></span>
 			</div>
 			<h1 class="orc-h1">
-				Orçamento <span style="color:#1d9e75;">#<?= $orcamento->id ?></span>
+				Orçamento <span style="color:#00c08b;">#<?= $orcamento->id ?></span>
 				<?php if(!empty($orcamento->versao)): ?>
-					<span class="badge" style="background:#1d9e75;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
+					<span class="badge" style="background:#00c08b;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
 				<?php endif; ?>
 				<span><?= orcamentoStatus($orcamento->status) ?></span>
 			</h1>
@@ -302,7 +302,7 @@
 					<div class="orc-alcada-icon"><i class="fa fa-check"></i></div>
 					<div>
 						<div style="font-size:12px;font-weight:600;color:#0f6e56;margin-bottom:3px;">Aprovado pelo cliente</div>
-						<div style="font-size:11px;color:#1d9e75;">
+						<div style="font-size:11px;color:#00c08b;">
 							IP: <?= $orcamento->ipaprovacao ?>
 							&nbsp;·&nbsp; Navegador: <?= $orcamento->navegadoraprovacao ?>
 						</div>

@@ -27,17 +27,16 @@
 }
 
 /*
-  Tarja do ticket (cliente) embutida: o tema Bootstrap do portal pode anular Tailwind.
-  Mesma paleta escura da lista/detalhe (#161b22) — não forçar fundo branco.
+  Tarja do ticket (cliente) embutida: alinhada a pgm_orcamentos_premium.html (cartão claro).
 */
 #tickets-react-root .tickets-react-ticket-strip {
   box-sizing: border-box;
   overflow: visible !important;
-  background-color: #161b22 !important;
-  color: #c9d1d9 !important;
-  border: 1px solid #484f58 !important;
+  background-color: #ffffff !important;
+  color: #1a1a18 !important;
+  border: 1px solid #e5e4e0 !important;
   border-radius: 0.75rem;
-  box-shadow: inset 0 0 0 1px rgba(72, 79, 88, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   padding: 1.25rem 1rem 1rem !important;
 }
 
@@ -49,7 +48,7 @@
 
 #tickets-react-root .tickets-react-ticket-strip h1,
 #tickets-react-root .tickets-react-ticket-title {
-  color: #e6edf3 !important;
+  color: #1a1a18 !important;
   line-height: 1.35 !important;
   padding-top: 0.125rem;
   overflow: visible !important;
@@ -57,23 +56,24 @@
 
 #tickets-react-root .tickets-react-client-detail {
   overflow-y: visible !important;
-  background-color: #0d1117 !important;
+  background-color: transparent !important;
 }
 
 #tickets-react-root .tickets-react-ticket-strip a {
-  color: #5cdbc0 !important;
+  color: #00c08b !important;
   text-decoration: none;
 }
 
 #tickets-react-root .tickets-react-ticket-strip a:hover {
+  color: #008f68 !important;
   text-decoration: underline;
 }
 
 #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-muted {
-  color: #6e7681 !important;
+  color: #6b6a65 !important;
 }
 
 #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-hint {
-  color: #6e7681 !important;
-  border-top-color: #30363d !important;
+  color: #9a9890 !important;
+  border-top-color: #e5e4e0 !important;
 }

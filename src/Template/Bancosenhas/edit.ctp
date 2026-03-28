@@ -86,7 +86,7 @@ $this->end();
 					</div>
 				</div>
 				<div class="vault-form-actions">
-					<?= $this->Form->button('Salvar alterações', ['class' => 'btn btn-success vault-btn-copy', 'style' => 'color:#042f1f !important;']) ?>
+					<?= $this->Form->button('Salvar alterações', ['class' => 'btn btn-success vault-btn-copy', 'style' => 'color:#fff !important;']) ?>
 					<?= $this->Html->link(
 						'<i class="fa fa-key"></i> Alterar senha do cofre',
 						['action' => 'change_password', $senha->id],

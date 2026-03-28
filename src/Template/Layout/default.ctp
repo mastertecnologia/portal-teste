@@ -26,9 +26,12 @@
 	<?= $this->Html->css("/dist/css/pages/floating-label.css") ?>
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
-	<?= $this->Html->css("/dist/css/dark-mode.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css") ?>
+	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
+	<?php if (!empty($pgmPortalClient)): ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-client-premium") ?>
+	<?php endif; ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
 	<!-- Timeline CSS -->
@@ -126,7 +129,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-default-dark mini layout-no-topbar <?= h($bodyPageClass ?? '') ?>">
+<body class="fixed-layout skin-green mini layout-no-topbar <?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">
