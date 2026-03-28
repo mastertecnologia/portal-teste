@@ -1140,15 +1140,90 @@ class UsersController extends AppController {
 	}
 
 	public function delete($id = null) {
-		if ($this->Auth->user('role') == 1) return $this->redirect(['action' => 'dashboard']);
+		if ($this->Auth->user('role') == 1) {
+			return $this->redirect(['action' => 'dashboard']);
+		}
 
 		$user = $this->Users->get($id);
+		$osSchema = $this->Ordensservico->getSchema();
+		$bloqueios = [];
 
-		if ($this->Users->delete($user)) {
+		if ($osSchema->hasColumn('iduser')) {
+			$nOsUsuario = $this->Ordensservico->find()->where(['iduser' => $user->id])->count();
+			if ($nOsUsuario > 0) {
+				$amostraOs = $this->Ordensservico->find()
+					->select(['id'])
+					->where(['iduser' => $user->id])
+					->order(['id' => 'DESC'])
+					->limit(8)
+					->all()
+					->extract('id')
+					->toList();
+				$amostraTxt = $amostraOs !== [] ? ' Exemplos de número de OS: ' . implode(', ', $amostraOs) . '.' : '';
+				$bloqueios[] = 'Motivo: existem ' . $nOsUsuario . ' ordem(ns) de serviço em que este usuário está vinculado como técnico/responsável (campo da OS). '
+					. 'Transfira essas ordens para outro usuário ou ajuste o cadastro antes de excluir.' . $amostraTxt;
+			}
+		}
+
+		$ticketIds = $this->Tickets->find('list', [
+			'keyField' => 'id',
+			'valueField' => 'id',
+		])->where(['idautor' => $user->id])->toArray();
+		$ticketIds = array_values($ticketIds);
+
+		if ($ticketIds !== [] && $osSchema->hasColumn('idticket')) {
+			$nOsTicket = $this->Ordensservico->find()->where(['idticket IN' => $ticketIds])->count();
+			if ($nOsTicket > 0) {
+				$ticketsAmostra = $this->Ordensservico->find('list', [
+					'keyField' => 'idticket',
+					'valueField' => 'idticket',
+				])->where(['idticket IN' => $ticketIds])->toArray();
+				$ticketsAmostra = array_slice(array_unique(array_map('intval', array_values($ticketsAmostra))), 0, 8);
+				$ticketsTxt = $ticketsAmostra !== [] ? ' Tickets envolvidos (amostra): ' . implode(', ', $ticketsAmostra) . '.' : '';
+				$bloqueios[] = 'Motivo: existem ' . $nOsTicket . ' ordem(ns) de serviço vinculadas a ticket(s) dos quais este usuário é o autor (campo ticket→OS). '
+					. 'Remova ou altere o vínculo entre essas OS e os tickets antes de excluir o usuário.' . $ticketsTxt;
+			}
+		}
+
+		if ($bloqueios !== []) {
+			$this->Flash->error('Não foi possível excluir o usuário. ' . implode(' ', $bloqueios));
+
+			return $this->redirect(['action' => 'index']);
+		}
+
+		$conn = $this->Users->getConnection();
+
+		try {
+			$conn->transactional(function () use ($user) {
+				if (!$this->Users->delete($user)) {
+					throw new \RuntimeException('Não foi possível excluir o usuário.');
+				}
+			});
+
 			$this->Flash->success('O usuário foi deletado com sucesso!');
-			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
-			if ($this->Auth->user('id') == $id) return $this->redirect(['action' => 'logout']);
-			else return $this->redirect(['action' => 'index']);
+			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $id);
+			if ($this->Auth->user('id') == $id) {
+				return $this->redirect(['action' => 'logout']);
+			}
+
+			return $this->redirect(['action' => 'index']);
+		} catch (\PDOException $e) {
+			$msg = $e->getMessage();
+			if (strpos($msg, '23503') !== false || stripos($msg, 'foreign key') !== false) {
+				$this->Flash->error(
+					'Não foi possível excluir o usuário. Motivo: ainda há registros vinculados no banco de dados '
+					. '(regra de integridade — por exemplo tickets, comentários ou outras tabelas). '
+					. 'Verifique vínculos desse usuário antes de tentar novamente.'
+				);
+			} else {
+				$this->Flash->error('Erro ao excluir usuário. Tente novamente ou contate o suporte.');
+			}
+
+			return $this->redirect(['action' => 'index']);
+		} catch (\Exception $e) {
+			$this->Flash->error($e->getMessage());
+
+			return $this->redirect(['action' => 'index']);
 		}
 	}
 
