@@ -744,28 +744,6 @@
 </div><!-- /dcli-root -->
 </div>
 <?php } ?>
-<!-- Modal Duas Etapas -->
-<div class="modal fade none-border" id="modal-duasetapas">
-	<div class="modal-dialog modal-md modal-dialog-centered">
-		<div class="modal-content">
-			<div class="dash-erp-mfa-body">
-				<p class="dash-erp-mfa-title">
-					Ative a verificação em duas etapas <?= $this->Html->link('clicando aqui', ['action' => 'loginduasetapas']); ?>.
-				</p>
-				<p>
-					Baixe o Google Authenticator para
-					<a target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android</a>
-					ou para
-					<a target="_blank" rel="noopener" href="https://apps.apple.com/br/app/google-authenticator/id388497605">iOS</a>.
-				</p>
-				<!-- <p>
-					Baixe o Duo Authenticator para Android <a target="_blank" class='link text-success text-bold' href="https://play.google.com/store/apps/details?id=com.duosecurity.duomobile&hl=pt"> Android </a> ou para
-					<a target="_blank" class='link text-success text-bold' href="https://apps.apple.com/br/app/duo-mobile/id422663827"> IOS </a>
-				</p> -->
-			</div>
-		</div>
-	</div>
-</div>
 <script>
 	if (window.jQuery && $.fn && $.fn.perfectScrollbar && $("#tickets-pendentes").length && $("#tickets-sendo-resolvidos").length) {
 		$("#tickets-pendentes, #tickets-sendo-resolvidos").perfectScrollbar();
@@ -775,7 +753,4 @@
 		$tbody.find("tr.selected").removeClass("selected");
 		$(this).addClass("selected");
 	});
-	<?php if(isset($bAtivarDuasEtapas) && isset($veiologin)) { ?> 
-		$('#modal-duasetapas').modal('toggle');
-	<?php } ?>
 </script>

@@ -98,8 +98,6 @@ class UsersController extends AppController {
 		$mes = date('01/m/Y');
 		$empresa = $this->Auth->user('idempresa');
 
-		if(empty($this->Users->get($idusuario)->secret)) $this->set('bAtivarDuasEtapas', true);
-
 		$iniSemana = primeiroDiaSemana();
 		$finSemana = ultimoDiaSemana();
 
@@ -189,11 +187,6 @@ class UsersController extends AppController {
 			$this->set('contratos', $contratos);
 			$this->set('orcamentosRecentes', $orcamentosRecentes);
 			$this->set('visitasRecentes', $visitasRecentes);
-		}
-
-		if(isset($_SESSION['PMG_veiologin'])) {
-			$this->set('veiologin', true);
-			unset($_SESSION['PMG_veiologin']);
 		}
 
 		// Desempenho pessoal (ABAC em Ordensservico quando habilitado)
@@ -1014,7 +1007,6 @@ class UsersController extends AppController {
 					return $this->redirect(['action' => 'acessoEmpresa']);
 				}
 				if(!$user['inativo'] && !$user['bloqueado']){
-					$_SESSION['PMG_veiologin'] = true;
 					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
@@ -1065,7 +1057,6 @@ class UsersController extends AppController {
 					return $this->redirect(['action' => 'login']);
 				}
 				if(!$user['inativo'] && !$user['bloqueado']){
-					$_SESSION['PMG_veiologin'] = true;
 					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());

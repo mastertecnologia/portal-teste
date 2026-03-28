@@ -63,6 +63,8 @@ return [
 	// —— Perfil & conta ——
 	['code' => 'users.profile', 'name' => 'Meu perfil / senha', 'module' => 'Conta', 'controller' => 'Users', 'action' => 'change_profile', 'perm_type' => 'rbac', 'abac_scope' => 'own', 'description' => 'ABAC: apenas o próprio usuário.', 'sort_order' => $n()],
 	['code' => 'users.password', 'name' => 'Alterar senha', 'module' => 'Conta', 'controller' => 'Users', 'action' => 'change_password', 'perm_type' => 'rbac', 'abac_scope' => 'own', 'description' => 'ABAC: próprio usuário ou admin conforme regra legada.', 'sort_order' => $n()],
+	['code' => 'users.twofactor', 'name' => 'Verificação em duas etapas (conta própria)', 'module' => 'Conta', 'controller' => 'Users', 'action' => 'loginduasetapas', 'perm_type' => 'rbac', 'abac_scope' => 'own', 'description' => 'Ativar MFA (Google Authenticator). Já liberado na whitelist RBAC; entrada no catálogo para matriz.', 'sort_order' => $n()],
+	['code' => 'users.twofactor_off', 'name' => 'Desativar 2FA (senha + código)', 'module' => 'Conta', 'controller' => 'Users', 'action' => 'desativaverificacao', 'perm_type' => 'rbac', 'abac_scope' => 'own', 'description' => 'Fluxo autenticado para desligar MFA.', 'sort_order' => $n()],
 
 	// —— APIs integração (RBAC técnico) ——
 	['code' => 'api.ordensservico', 'name' => 'API — Ordens de serviço (ERP)', 'module' => 'Integração API', 'controller' => 'Ordensservico', 'action' => 'listAPI', 'perm_type' => 'rbac', 'abac_scope' => null, 'description' => 'Token/header — mapear para service account.', 'sort_order' => $n()],

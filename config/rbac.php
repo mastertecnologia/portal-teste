@@ -32,6 +32,7 @@ return [
 			'users#acessoempresa',
 			'users#alteraempresa',
 			'users#loginduasetapas',
+			'users#desativaverificacao',
 			'users#verificalogincadastro',
 			'users#dashboard',
 			'users#resetpassword',
