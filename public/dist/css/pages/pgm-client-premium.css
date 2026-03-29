@@ -1,6 +1,9 @@
 /**
- * Portal cliente — tema alinhado a pgm_orcamentos_premium.html
+ * Portal cliente — tema claro PGM (pgm_orcamentos_premium.html)
  * Ativo com body.layout-no-topbar.pgm-portal-client (role ≠ admin interno)
+ *
+ * layout-sidebar-shell.css usa --pgm-sb-bg no .page-wrapper (alta especificidade);
+ * aqui forçamos área principal com --pgm-premium-page e sidebar clara.
  */
 body.layout-no-topbar.pgm-portal-client {
 	--pgm-teal: #00c08b;
@@ -8,12 +11,12 @@ body.layout-no-topbar.pgm-portal-client {
 	--pgm-teal-dim: rgba(0, 192, 139, 0.14);
 	--pgm-teal-semi: rgba(0, 192, 139, 0.4);
 	--pgm-teal-glow: rgba(0, 192, 139, 0.22);
-	--pgm-sb-bg: #1a1a18;
-	--pgm-sb-surface: #242422;
-	--pgm-sb-border: rgba(255, 255, 255, 0.08);
-	--pgm-sb-text: #f5f5f3;
-	--pgm-sb-muted: #9a9890;
-	--pgm-sb-dim: #6b6a65;
+	--pgm-sb-bg: #ffffff;
+	--pgm-sb-surface: #f9f9f8;
+	--pgm-sb-border: #e5e4e0;
+	--pgm-sb-text: #1a1a18;
+	--pgm-sb-muted: #6b6a65;
+	--pgm-sb-dim: #9a9890;
 	--pgm-premium-page: #f2f1ee;
 	--pgm-premium-surface: #f9f9f8;
 	--pgm-premium-border: #e5e4e0;
@@ -31,8 +34,11 @@ body.layout-no-topbar.pgm-portal-client {
 	color: var(--pgm-premium-text);
 }
 
+/* >= especificidade de html body.layout-no-topbar.fixed-layout .page-wrapper (shell usa var(--pgm-sb-bg)) */
+html body.layout-no-topbar.pgm-portal-client.fixed-layout .page-wrapper,
+html body.layout-no-topbar.pgm-portal-client .page-wrapper,
 body.layout-no-topbar.pgm-portal-client #main-wrapper,
-body.layout-no-topbar.pgm-portal-client .page-wrapper,
+html body.layout-no-topbar.pgm-portal-client #main-wrapper,
 body.layout-no-topbar.pgm-portal-client .pgm-shell-main {
 	background: var(--pgm-premium-page) !important;
 }
@@ -40,6 +46,17 @@ body.layout-no-topbar.pgm-portal-client .pgm-shell-main {
 body.layout-no-topbar.pgm-portal-client .left-sidebar,
 body.layout-no-topbar.pgm-portal-client .scroll-sidebar {
 	background: var(--pgm-sb-bg) !important;
+	border-right-color: var(--pgm-sb-border) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .scroll-sidebar {
+	scrollbar-color: rgba(26, 26, 24, 0.2) transparent;
+}
+body.layout-no-topbar.pgm-portal-client .scroll-sidebar::-webkit-scrollbar-thumb {
+	background: rgba(26, 26, 24, 0.18);
+}
+body.layout-no-topbar.pgm-portal-client .scroll-sidebar::-webkit-scrollbar-thumb:hover {
+	background: rgba(26, 26, 24, 0.28);
 }
 
 body.layout-no-topbar.pgm-portal-client .pgm-sb-sbox {
@@ -55,8 +72,183 @@ body.layout-no-topbar.pgm-portal-client .pgm-sb-sbox input::placeholder {
 	color: var(--pgm-sb-muted) !important;
 }
 
+/* ── Sidebar + faixa de título: sobrescreve layout-sidebar-shell (tema escuro) ── */
+body.layout-no-topbar.pgm-portal-client .page-titles {
+	background: var(--pgm-premium-surface) !important;
+	border: 1px solid var(--pgm-premium-border) !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+body.layout-no-topbar.pgm-portal-client .page-titles .breadcrumb {
+	background: transparent !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-mark {
+	background: linear-gradient(135deg, #00c08b 0%, #008f68 100%);
+	box-shadow: 0 2px 8px rgba(0, 192, 139, 0.3);
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-logo-link .pgm-sidebar-titles strong {
+	color: var(--pgm-sb-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-logo-link .pgm-sidebar-sub {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace {
+	color-scheme: light;
+	border-bottom-color: var(--pgm-sb-border) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-ws-label {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-ws-date {
+	background: var(--pgm-sb-surface);
+	border-color: var(--pgm-sb-border) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-ws-date-day {
+	color: var(--pgm-sb-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-ws-date-mon {
+	color: var(--pgm-sb-muted) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select.pgm-empresa-select,
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select#empresaSidebar {
+	background-color: var(--pgm-premium-card) !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6a65' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+	border-color: var(--pgm-premium-border) !important;
+	color: var(--pgm-premium-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select.pgm-empresa-select:focus,
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select#empresaSidebar:focus {
+	background-color: var(--pgm-premium-card) !important;
+	border-color: var(--pgm-teal-semi) !important;
+	color: var(--pgm-premium-text) !important;
+	box-shadow: 0 0 0 2px var(--pgm-teal-glow) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select option {
+	background: var(--pgm-premium-card);
+	color: var(--pgm-premium-text);
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-sb-typeahead li a {
+	color: var(--pgm-premium-text) !important;
+}
 body.layout-no-topbar.pgm-portal-client .pgm-sb-typeahead li a:hover {
-	background: rgba(255, 255, 255, 0.06) !important;
+	background: var(--pgm-premium-page) !important;
+	color: var(--pgm-premium-text) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a i {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a:hover {
+	color: var(--pgm-sb-text) !important;
+	background: var(--pgm-premium-page) !important;
+}
+body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a:hover i {
+	color: var(--pgm-teal) !important;
+}
+body.layout-no-topbar.pgm-portal-client .sidebar-nav > ul > li.active > a,
+body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a.active {
+	color: #008f68 !important;
+	background: rgba(0, 192, 139, 0.1) !important;
+	border-left-color: var(--pgm-teal) !important;
+}
+body.layout-no-topbar.pgm-portal-client .sidebar-nav > ul > li.active > a i,
+body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a.active i {
+	color: var(--pgm-teal) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-np {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-np:hover {
+	background: var(--pgm-premium-page) !important;
+	color: var(--pgm-sb-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-np.open-p {
+	background: rgba(0, 192, 139, 0.12) !important;
+	color: #008f68 !important;
+}
+body.layout-no-topbar.pgm-portal-client a.pgm-nch {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client a.pgm-nch:hover {
+	color: var(--pgm-sb-text) !important;
+	background: var(--pgm-premium-page) !important;
+}
+body.layout-no-topbar.pgm-portal-client a.pgm-nch.act {
+	color: var(--pgm-teal) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-nc::before {
+	background: var(--pgm-sb-border) !important;
+}
+body.layout-no-topbar.pgm-portal-client .sidebar-nav > ul > li.pgm-ng.active > .pgm-np {
+	background: rgba(0, 192, 139, 0.12) !important;
+	color: #008f68 !important;
+}
+body.layout-no-topbar.pgm-portal-client a.pgm-nch.pgm-nch-nova {
+	color: var(--pgm-teal) !important;
+}
+body.layout-no-topbar.pgm-portal-client li.pgm-nav-section-label span {
+	color: var(--pgm-sb-dim) !important;
+	border-top-color: var(--pgm-sb-border) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-brand {
+	border-bottom-color: var(--pgm-sb-border) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-footer {
+	border-top-color: var(--pgm-sb-border) !important;
+	background: var(--pgm-sb-bg) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sf-user-name {
+	color: var(--pgm-sb-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sf-user-role {
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client a.pgm-sf-act {
+	border-color: var(--pgm-sb-border) !important;
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client a.pgm-sf-act:hover {
+	background: var(--pgm-premium-page) !important;
+	color: var(--pgm-sb-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-footer .dropdown-menu {
+	background: var(--pgm-premium-card) !important;
+	border-color: var(--pgm-premium-border) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-footer .dropdown-item {
+	color: var(--pgm-premium-text) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-footer .dropdown-item:hover {
+	background: var(--pgm-premium-page) !important;
+}
+
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-collapse-btn {
+	border-color: var(--pgm-sb-border) !important;
+	color: var(--pgm-sb-muted) !important;
+}
+body.layout-no-topbar.pgm-portal-client .pgm-sidebar-collapse-btn:hover {
+	background: var(--pgm-premium-page) !important;
+	color: var(--pgm-teal) !important;
+}
+
+@media (max-width: 767px) {
+	body.layout-no-topbar.pgm-portal-client .pgm-shell-mobile-nav {
+		background: var(--pgm-premium-card) !important;
+		border-color: var(--pgm-premium-border) !important;
+		color: var(--pgm-premium-muted) !important;
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+	}
+	body.layout-no-topbar.pgm-portal-client .pgm-shell-mobile-nav:hover {
+		color: var(--pgm-teal) !important;
+	}
 }
 
 /* Área principal: títulos e breadcrumb (texto escuro sobre fundo claro) */
@@ -418,9 +610,4 @@ body.layout-no-topbar.pgm-portal-client .orc-premium-page-root {
 	background: transparent !important;
 	padding-top: 8px;
 	min-height: 0;
-}
-body.layout-no-topbar.pgm-portal-client:has(.orc-premium-page-root) #main-wrapper,
-body.layout-no-topbar.pgm-portal-client:has(.orc-premium-page-root) .page-wrapper,
-body.layout-no-topbar.pgm-portal-client:has(.orc-premium-page-root) .pgm-shell-main {
-	background: var(--pgm-premium-page) !important;
 }
