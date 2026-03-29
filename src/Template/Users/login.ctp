@@ -114,7 +114,7 @@ $this->end();
 					</div>
 					<div class="lm-link-small">
 						Ainda não tem conta?
-						<a href="#" class="comeceausar">Cadastre-se gratuitamente</a>
+						<a href="#" class="comeceausar">Cadastre-se</a>
 					</div>
 	
 				</div>
