@@ -587,7 +587,12 @@ class OrdensservicoController extends AppController {
 	public function carrinhoadd($idordem = null, $codproduto = null){
 		$this->autoRender = false;
 
-		if($idordem == 'null'){
+		/* Nova OS: add.ctp usa URL sem id → $idordem é null; edit passa id numérico ou às vezes "null" na rota. */
+		$isCarrinhoSessao = ($idordem === null || $idordem === '' || (string)$idordem === 'null');
+		if ($isCarrinhoSessao) {
+			if (empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])) {
+				return $this->jsonResponse(['msg' => 'Sessão do carrinho expirada. Recarregue a página de cadastro.'], 400);
+			}
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 		} else {
 			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
