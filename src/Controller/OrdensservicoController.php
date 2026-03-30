@@ -73,14 +73,20 @@ class OrdensservicoController extends AppController {
 	 * @return string|null
 	 */
 	protected function getOrdemIditensPk($idempresa, $idordem) {
-		$row = $this->Ordemservicositens->find('all')
-			->where(['idempresa' => $idempresa, 'idordem' => $idordem])
-			->first();
-		if ($row === null || !isset($row->iditens) || $row->iditens === '' || $row->iditens === null) {
-			return null;
+		$rows = $this->Ordemservicositens->find('all')
+			->where(['idordem' => $idordem])
+			->toArray();
+		foreach ($rows as $row) {
+			if ((int)$row->idempresa !== (int)$idempresa) {
+				continue;
+			}
+			$it = $row->iditens;
+			if ($it !== null && trim((string)$it) !== '') {
+				return (string)$it;
+			}
 		}
 
-		return (string)$row->iditens;
+		return null;
 	}
 
 	/**
@@ -157,11 +163,9 @@ class OrdensservicoController extends AppController {
 			$this->log('ensureOrdemServicoItensVinculo: duplicate key ordemservicositens OS ' . $idordem . ', realinhando sequência', 'warning');
 			$this->fixPostgresIdSequence('ordemservicositens');
 
-			$again = $this->Ordemservicositens->find('all')
-				->where(['idempresa' => $idempresa, 'idordem' => $idordem])
-				->first();
-			if ($again !== null && $again->iditens !== null && $again->iditens !== '') {
-				return (string)$again->iditens;
+			$againPk = $this->getOrdemIditensPk($idempresa, $idordem);
+			if ($againPk !== null) {
+				return $againPk;
 			}
 
 			if ($row->isNew()) {
@@ -821,6 +825,16 @@ class OrdensservicoController extends AppController {
 			]);
 		}
 
+		foreach ($carrinho as $reg) {
+			if (trim((string)$reg->codproduto) === $codproduto) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'code' => 'os_grid_produto_duplicado',
+					'msg' => 'Este produto já foi adicionado à ordem de serviço.',
+				], 200);
+			}
+		}
+
 		$idempresa = $this->Auth->user('idempresa');
 		$valorunitario = (float) str_replace(',', '.', str_replace('.', '', $data['valorunitario'] ?? '0'));
 		$descricao = $data['descricao'] ?? '';
@@ -897,10 +911,15 @@ class OrdensservicoController extends AppController {
 
 		$this->fixPostgresIdSequence('itensordem');
 		$this->fixPostgresIdSequence('ordemservicositens');
-		if ($this->Itensordem->save($ordem)) {
-			$this->response = $this->response->withType('text/html')->withStringBody('boa');
+		try {
+			if ($this->Itensordem->save($ordem)) {
+				return $this->jsonResponse(['ok' => true, 'code' => 'os_grid_item_ok'], 200);
+			}
+		} catch (\Throwable $e) {
+			$this->log('Ordensservico::carrinhoadd save exception: ' . $e->getMessage(), 'error');
+			$this->fixPostgresIdSequence('itensordem');
 
-			return $this->response;
+			return $this->osGridJsonError(500, 'os_grid_save_excecao', 'Erro ao gravar o item no banco. Tente novamente ou recarregue a página.', $this->osGridDebugVerbose() ? ['exception' => $e->getMessage()] : []);
 		}
 		$errFlat = $ordem->getErrors();
 		$this->log('Ordensservico::carrinhoadd save failed: ' . json_encode($errFlat) . ' codproduto=' . $codproduto, 'error');

@@ -545,11 +545,33 @@
 					item['idEmpresaAtual'] = getEmpresaAtual();
 					return $.ajax({
 					type: "POST",
+					dataType: "json",
 					url: urlAdd + '/null/' + encodeURIComponent(item.codproduto || ''),
 					data: item,
 					success: function(data){
 						$(".qtdEstoque, .vazio").remove();
+						if (data && data.ok === true) {
+							$("#grid_table").jsGrid("loadData");
+							return;
+						}
+						if (typeof data === 'string') {
+							var t = $.trim(data);
+							if (t === 'boa') {
+								$("#grid_table").jsGrid("loadData");
+								return;
+							}
+							if (t === 'naopode') {
+								bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
+								$("#grid_table").jsGrid("loadData");
+								return;
+							}
+						}
 						if (data && typeof data === 'object' && data.ok === false) {
+							if (data.code === 'os_grid_produto_duplicado' && data.msg) {
+								bootbox.alert('<p class="text-center" style="font-weight:300;font-size:1.1rem">' + pgmOsGridEscapeHtml(data.msg) + '</p>');
+								$("#grid_table").jsGrid("loadData");
+								return;
+							}
 							var p = ['<p><strong>' + pgmOsGridEscapeHtml('Não foi possível adicionar o item.') + '</strong></p>'];
 							if (data.code) p.push('<p><strong>Código:</strong> ' + pgmOsGridEscapeHtml(data.code) + '</p>');
 							if (data.msg) p.push('<p>' + pgmOsGridEscapeHtml(data.msg) + '</p>');
@@ -565,8 +587,10 @@
 							$("#grid_table").jsGrid("loadData");
 							return;
 						}
+						var snippet = (data === null || data === undefined) ? '(resposta vazia)' : (typeof data === 'string' ? data : JSON.stringify(data));
+						pgmOsGridAlertHtml('<p><strong>Resposta inesperada ao incluir item.</strong></p><pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+							pgmOsGridEscapeHtml(String(snippet).substring(0, 1500)) + '</pre>');
 						$("#grid_table").jsGrid("loadData");
-						if(data == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 					}, 
 					error: function(xhr) {
 						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível adicionar o item. Verifique os dados e tente novamente.'));
