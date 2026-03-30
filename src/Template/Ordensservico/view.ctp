@@ -173,6 +173,22 @@
 						<!-- valortotal que é exibido e o input hidden dele -->
 						<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
 					<?= $this->Form->end() ?>
+
+					<?php
+					// ── Botão Gerar Faturamento (OS finalizada ou liberada para faturamento) ──
+					if ($role == 0 && in_array($ordem->situacao, [C_OrdensSituacaoFinalizada, C_OrdensSituacaoLiberadaParaFaturamento], true)):
+					?>
+					<div class="row m-t-10">
+						<div class="col-12 text-right">
+							<?= $this->Html->link(
+								'<i class="fas fa-file-alt"></i> Gerar Faturamento',
+								['controller' => 'Faturamento', 'action' => 'gerarDeOS', $ordem->id],
+								['class' => 'btn btn-pgm btn-pgm-salvar btn-sm', 'escape' => false, 'title' => 'Criar documento de faturamento a partir desta OS']
+							) ?>
+						</div>
+					</div>
+					<?php endif; ?>
+
         		</div>
 				<div class="tab-pane" id="movimentacoes">
 					<?php

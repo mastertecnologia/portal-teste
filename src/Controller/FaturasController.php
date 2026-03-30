@@ -8,6 +8,19 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php')
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
 
+// Fallback: define constants that may be missing from UserConstants.php
+if (!defined('C_LocacaoStatusPendente'))   define('C_LocacaoStatusPendente',   1);
+if (!defined('C_LocacaoStatusAprovado'))   define('C_LocacaoStatusAprovado',    2);
+if (!defined('C_LocacaoStatusRejeitado'))  define('C_LocacaoStatusRejeitado',   3);
+if (!defined('C_LocacaoStatusFinalizado')) define('C_LocacaoStatusFinalizado',  4);
+if (!defined('C_LocacaoTipoDiaria'))       define('C_LocacaoTipoDiaria',        1);
+if (!defined('C_LocacaoTipoSemanal'))      define('C_LocacaoTipoSemanal',       2);
+if (!defined('C_LocacaoTipoQuinzenal'))    define('C_LocacaoTipoQuinzenal',     3);
+if (!defined('C_LocacaoTipoMensal'))       define('C_LocacaoTipoMensal',        4);
+if (!defined('C_LocacaoTipoArray'))        define('C_LocacaoTipoArray',         [1 => 'Diária', 2 => 'Semanal', 3 => 'Quinzenal', 4 => 'Mensal']);
+if (!defined('C_RoleCliente'))             define('C_RoleCliente',              1);
+if (!defined('C_ClientesTipoJuridica'))    define('C_ClientesTipoJuridica',     2);
+
 class FaturasController extends AppController {
 	public function initialize() {
 		parent::initialize();

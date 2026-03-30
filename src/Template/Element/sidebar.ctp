@@ -172,6 +172,20 @@
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
+				<li class="<?= $faturamentoActive ?>">
+					<?= $this->Html->link(
+						'<i class="fas fa-file-alt"></i><span class="hide-menu"> Faturamento </span>',
+						['controller' => 'Faturamento', 'action' => 'index'],
+						['class' => 'waves-effect waves-dark', 'escape' => false]
+					) ?>
+				</li>
+				<li class="<?= $financeiroActive ?>">
+					<?= $this->Html->link(
+						'<i class="fas fa-chart-line"></i><span class="hide-menu"> Financeiro </span>',
+						['controller' => 'Financeiro', 'action' => 'index'],
+						['class' => 'waves-effect waves-dark', 'escape' => false]
+					) ?>
+				</li>
 				<li class="<?= $faturasActive ?>">
 					<?= $this->Html->link(
 						'<i class="fas fa-file-invoice"></i><span class="hide-menu"> Locação </span>',
@@ -210,6 +224,14 @@
 	<div class="pgm-sidebar-footer">
 		<div class="pgm-sidebar-collapse-row">
 			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
+			<!-- Toggle tema claro/escuro -->
+			<?php $isLight = (($skin ?? '') === 'skin-pgm-light'); ?>
+			<button type="button" class="pgm-theme-toggle-btn hide-menu" id="pgmThemeToggle"
+				title="<?= $isLight ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
+				data-current="<?= $isLight ? 'light' : 'dark' ?>">
+				<span class="pgm-tt-icon"><?= $isLight ? '☀️' : '🌙' ?></span>
+				<span class="pgm-tt-label"><?= $isLight ? 'Claro' : 'Escuro' ?></span>
+			</button>
 		</div>
 		<!-- Ações rápidas (visíveis apenas sidebar expandida) -->
 		<div class="pgm-sf-actions hide-menu">
@@ -312,4 +334,18 @@
 	setTimeout(function() {
 		$('.pgm-nc').removeClass('in');
 	}, 0);
+
+	// ── Toggle tema claro / escuro ────────────────────────────
+	$('#pgmThemeToggle').on('click', function() {
+		var $btn = $(this);
+		var current = $btn.data('current');
+		var next = (current === 'dark') ? 'light' : 'dark';
+		$.ajax({
+			type: 'POST',
+			url: "<?= Router::url(['controller' => 'Users', 'action' => 'selectTheme']) ?>",
+			data: { theme: next },
+			success: function() { location.reload(); },
+			error: function() { bootbox.alert('Erro ao trocar o tema. Tente novamente.'); }
+		});
+	});
 </script>

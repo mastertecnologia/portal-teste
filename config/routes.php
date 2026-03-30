@@ -115,6 +115,20 @@ Router::scope('/', function ($routes) {
     $routes->connect('/orcamentos/solicitar', ['controller' => 'Orcamentos', 'action' => 'solicitar']);
     $routes->connect('/orcamentos/catalogo', ['controller' => 'Orcamentos', 'action' => 'catalogo']);
     $routes->connect('/orcamentos/:id/pdf', ['controller' => 'Orcamentos', 'action' => 'pdf'], ['pass' => ['id'], 'id' => '\d+']);
+    // Faturamento — módulo de emissão de documentos fiscais / cobranças
+    $routes->connect('/faturamento', ['controller' => 'Faturamento', 'action' => 'index']);
+    $routes->connect('/faturamento/index', ['controller' => 'Faturamento', 'action' => 'index']);
+    $routes->connect('/faturamento/add', ['controller' => 'Faturamento', 'action' => 'add']);
+    $routes->connect('/faturamento/view/*', ['controller' => 'Faturamento', 'action' => 'view']);
+    $routes->connect('/faturamento/edit/*', ['controller' => 'Faturamento', 'action' => 'edit']);
+    $routes->connect('/faturamento/delete/*', ['controller' => 'Faturamento', 'action' => 'delete']);
+    $routes->connect('/faturamento/alterar-status/*', ['controller' => 'Faturamento', 'action' => 'alterarStatus'])->setMethods(['POST']);
+    $routes->connect('/faturamento/gerar-de-os/*', ['controller' => 'Faturamento', 'action' => 'gerarDeOS']);
+    // Financeiro — dashboard e contas a receber/pagar
+    $routes->connect('/financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
+    $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);
+    $routes->connect('/financeiro/contas-receber', ['controller' => 'Financeiro', 'action' => 'contasReceber']);
+    $routes->connect('/financeiro/registrar-recebimento/*', ['controller' => 'Financeiro', 'action' => 'registrarRecebimento'])->setMethods(['POST']);
     // CSS premium via Cake (leitura em WWW_ROOT/css) — evita 404 estático com APP_BASE=/portal e Alias Apache
     $routes->connect(
         '/pgm-assets/css/:name',

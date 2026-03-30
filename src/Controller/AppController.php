@@ -67,6 +67,8 @@ class AppController extends Controller {
 				// Cofre de senhas: revelar segredo via POST JSON (senha admin nunca na URL)
 				'vaultReveal',
 				'verificasenha',
+				// Troca de tema claro/escuro via AJAX
+				'selectTheme',
 			],
 		]);
 		$this->loadComponent('Auth', [
@@ -153,6 +155,7 @@ class AppController extends Controller {
 			'produtosActive' => '',
 			'visitasActive' => '',
 			'orcamentosActive' => '',
+			'faturamentoActive' => '',
 			'financeiroActive' => '',
 			'areasActive' => '',
 			'problemasActive' => '',
@@ -184,6 +187,7 @@ class AppController extends Controller {
 			'visitas' => 'visitasActive',
 			'orcamentos' => 'orcamentosActive',
 			'financeiro' => 'financeiroActive',
+			'faturamento' => 'faturamentoActive',
 			'areas' => 'areasActive',
 			'problemas' => 'problemasActive',
 			'ordensservico' => 'ordensActive',

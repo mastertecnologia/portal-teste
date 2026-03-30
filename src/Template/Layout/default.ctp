@@ -128,8 +128,11 @@
 	<?= $this->fetch('meta'); ?>
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
+	<!-- Tema claro (light mode) -->
+	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 </head>
-<body class="fixed-layout skin-green mini layout-no-topbar <?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($bodyPageClass ?? '') ?>">
+<?php $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : ''; ?>
+<body class="fixed-layout skin-green mini layout-no-topbar <?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($pgmThemeClass) ?> <?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">

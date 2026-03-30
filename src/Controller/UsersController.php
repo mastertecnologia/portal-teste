@@ -1346,6 +1346,20 @@ class UsersController extends AppController {
 		}
 	}
 
+	public function selectTheme() {
+		$this->autoRender = false;
+		$this->viewBuilder()->setLayout('ajax');
+
+		if ($this->request->is('ajax')) {
+			$theme = $this->request->getData('theme');
+			$skin  = ($theme === 'light') ? 'skin-pgm-light' : 'skin-green';
+			$user  = $this->Users->get($this->Auth->user('id'));
+			$user->skin = $skin;
+			$this->Users->save($user);
+		}
+		return $this->jsonResponse(['ok' => true]);
+	}
+
 	public function selectSidebar(){
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
