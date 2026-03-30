@@ -56,11 +56,22 @@ class OrdensservicoController extends AppController {
 				return;
 			}
 			$qi = $conn->quoteIdentifier($table);
-			// regclass com schema (evita setval no sequence errado); valor = MAX(id) para o próximo nextval ser MAX+1
-			$rel = 'public.' . str_replace(['"', "'"], '', $table);
-			$conn->execute(
-				"SELECT setval(pg_get_serial_sequence('" . $rel . "', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {$qi}))"
-			);
+			$base = str_replace(['"', "'"], '', $table);
+			$lastErr = null;
+			foreach (['public.' . $base, $base] as $rel) {
+				try {
+					$conn->execute(
+						"SELECT setval(pg_get_serial_sequence('" . $rel . "', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {$qi}))"
+					);
+
+					return;
+				} catch (\Throwable $e) {
+					$lastErr = $e;
+				}
+			}
+			if ($lastErr !== null) {
+				$this->log('fixPostgresIdSequence(' . $table . '): ' . $lastErr->getMessage(), 'warning');
+			}
 		} catch (\Throwable $e) {
 			$this->log('fixPostgresIdSequence(' . $table . '): ' . $e->getMessage(), 'warning');
 		}
@@ -952,10 +963,43 @@ class OrdensservicoController extends AppController {
 				return $this->jsonResponse(['ok' => true, 'code' => 'os_grid_item_ok'], 200);
 			}
 		} catch (\Throwable $e) {
-			$this->log('Ordensservico::carrinhoadd save exception: ' . $e->getMessage(), 'error');
+			$msg = $e->getMessage();
+			$this->log('Ordensservico::carrinhoadd save exception: ' . $msg, 'error');
+
+			$isDupPk = (strpos($msg, '23505') !== false || stripos($msg, 'duplicate key') !== false)
+				&& stripos($msg, 'itensordem') !== false;
+
+			if ($isDupPk) {
+				$this->fixPostgresIdSequence('itensordem');
+				$retry = $this->Itensordem->newEntity([
+					'idordempk' => $ordem->idordempk,
+					'idempresa' => $ordem->idempresa,
+					'tipo' => $ordem->tipo,
+					'codproduto' => $ordem->codproduto,
+					'descricao' => $ordem->descricao,
+					'observacao' => $ordem->observacao,
+					'unidade' => $ordem->unidade,
+					'quantidade' => $ordem->quantidade,
+					'serialnumber' => $ordem->serialnumber,
+					'modelo' => $ordem->modelo,
+					'productkey' => $ordem->productkey,
+					'obsinterna' => $ordem->obsinterna,
+					'valorunitario' => $ordem->valorunitario,
+					'valordesconto' => $ordem->valordesconto,
+					'valortotal' => $ordem->valortotal,
+				]);
+				try {
+					if ($this->Itensordem->save($retry)) {
+						return $this->jsonResponse(['ok' => true, 'code' => 'os_grid_item_ok'], 200);
+					}
+				} catch (\Throwable $e2) {
+					$this->log('Ordensservico::carrinhoadd retry após PK itensordem: ' . $e2->getMessage(), 'error');
+				}
+			}
+
 			$this->fixPostgresIdSequence('itensordem');
 
-			return $this->osGridJsonError(500, 'os_grid_save_excecao', 'Erro ao gravar o item no banco. Tente novamente ou recarregue a página.', $this->osGridDebugVerbose() ? ['exception' => $e->getMessage()] : []);
+			return $this->osGridJsonError(500, 'os_grid_save_excecao', 'Erro ao gravar o item no banco. Tente novamente ou recarregue a página.', $this->osGridDebugVerbose() ? ['exception' => $msg] : []);
 		}
 		$errFlat = $ordem->getErrors();
 		$this->log('Ordensservico::carrinhoadd save failed: ' . json_encode($errFlat) . ' codproduto=' . $codproduto, 'error');
