@@ -626,7 +626,7 @@
                 { name: "serialnumber", type: "text", css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
 				{ name: "productkey", type: "text", css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},
 				{ name: "obsinterna", type: "text", css: 'hide', insertcss: 'hide inputObsInterna', editcss: 'hide editObsInterna'},
-                { type: "control" }
+				{ type: "control", modeSwitchButton: false }
 			], 
 			onRefreshed: function() {
 				try {

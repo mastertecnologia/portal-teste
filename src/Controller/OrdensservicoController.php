@@ -63,6 +63,23 @@ class OrdensservicoController extends AppController {
 		}
 	}
 
+	/**
+	 * Retorna iditens (chave do carrinho em itensordem) para a OS, ou null se não houver linha em ordemservicositens.
+	 *
+	 * @param int|string $idordem
+	 * @return string|null
+	 */
+	protected function getOrdemIditensPk($idempresa, $idordem) {
+		$row = $this->Ordemservicositens->find('all')
+			->where(['idempresa' => $idempresa, 'idordem' => $idordem])
+			->first();
+		if ($row === null || !isset($row->iditens) || $row->iditens === '' || $row->iditens === null) {
+			return null;
+		}
+
+		return (string)$row->iditens;
+	}
+
 	public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
         
@@ -392,8 +409,10 @@ class OrdensservicoController extends AppController {
 			->where(['idordem' => $id, 'Ordensservico.idempresa' => $this->Auth->user('idempresa')])
 			->first();
 
-		$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $idempresa, 'idordem' => $id])->first();
-		if(empty($this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray())) $this->set('finaliza', 'finaliza');
+		$iditensPk = $this->getOrdemIditensPk($idempresa, $id);
+		if ($iditensPk === null || empty($this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray())) {
+			$this->set('finaliza', 'finaliza');
+		}
 
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
@@ -451,8 +470,10 @@ class OrdensservicoController extends AppController {
 		$ordemhoras = $this->Ordemhoras->find('all', ['contain' => 'Users'])->where(['idordem' => $id])->toArray();
 		$ordemparcelas = $this->Ordemparcelas->find('all', ['contain' => 'Users'])->where(['idordem' => $id])->first();
 
-		$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $idempresa, 'idordem' => $id])->first();
-		$carrinho = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+		$iditensPk = $this->getOrdemIditensPk($idempresa, $id);
+		$carrinho = $iditensPk !== null
+			? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
+			: [];
 
 		$this->loadModel('Faturamento');
 		$faturamentos = $this->Faturamento->find('all')
@@ -531,8 +552,10 @@ class OrdensservicoController extends AppController {
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 			$result = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 		} else {
-			$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'idordem' => $idordem])->first();
-			$result = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
+			$result = $iditensPk !== null
+				? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
+				: [];
 		}
 
 		$output = [];
@@ -567,8 +590,11 @@ class OrdensservicoController extends AppController {
 		if($idordem == 'null'){
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 		} else {
-			$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'idordem' => $idordem])->first();
-			$idordem = $idcarrinho->iditens;
+			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
+			if ($iditensPk === null) {
+				return $this->jsonResponse(['msg' => 'Carrinho desta ordem não foi encontrado. Salve a ordem ou recarregue a página.'], 400);
+			}
+			$idordem = $iditensPk;
 		}
 		
 		$carrinho = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
@@ -727,11 +753,10 @@ class OrdensservicoController extends AppController {
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 			$carrinho = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 		} else {
-			//$idcarrinho = $this->Ordemservicositens->findByIdordem($idordem)->toArray();
-			//$carrinho = $this->Itensordem->findByIdordempk($idcarrinho[0]->iditens)->order(['id'])->toArray();
-
-			$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'idordem' => $idordem])->first();
-			$carrinho = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
+			$carrinho = $iditensPk !== null
+				? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
+				: [];
 		}
 		
 		$valortotal = 0;
@@ -920,9 +945,10 @@ class OrdensservicoController extends AppController {
 				}
 				foreach($ordem as $reg){
 					// Itens
-					//$idcarrinho = $this->Ordemservicositens->findByIdordem($reg->id)->first();
-					$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $empresa, 'idordem' => $reg->id])->first();
-					$itens = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+					$iditensPk = $this->getOrdemIditensPk($empresa, $reg->id);
+					$itens = $iditensPk !== null
+						? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
+						: [];
 					$reg->itens = $this->itensArr($itens);
 					// Parcelas
 					$parcelas = $this->Ordemparcelas->findByIdordem($reg->id)->where(['idempresa' => $empresa])->toArray();
@@ -1096,9 +1122,10 @@ class OrdensservicoController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
-		//$idcarrinho = $this->Ordemservicositens->findByIdordem($id)->first();
-		$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $idempresa, 'idordem' => $id])->first();
-		$carrinho = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
+		$iditensPk = $this->getOrdemIditensPk($idempresa, $id);
+		$carrinho = $iditensPk !== null
+			? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
+			: [];
 
 		$this->set('cidade', $cidade->nome);
 		$this->set('estado', $estado->nome);

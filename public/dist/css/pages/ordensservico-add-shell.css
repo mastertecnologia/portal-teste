@@ -160,16 +160,58 @@ body.os-add-page .bs-container .dropdown-menu li > a:hover {
 	overflow: hidden;
 	background: var(--os-bg3);
 	max-height: min(60vh, 600px);
+	color-scheme: dark;
+	scrollbar-color: #3d4454 var(--os-bg2);
 }
 
-.os-add-shell .jsgrid-header-row > .jsgrid-header-cell {
-	background: var(--os-bg4);
+/* Faixa branca à direita: área de scroll do cabeçalho (jsGrid usa overflow-y: scroll) */
+body.os-add-page .os-add-shell .jsgrid-grid-header,
+body.os-add-page .os-add-shell .jsgrid-grid-header.jsgrid-header-scrollbar {
+	background: var(--os-bg3) !important;
 	color: var(--os-text2);
-	border-color: var(--os-border);
+}
+
+body.os-add-page .os-add-shell .jsgrid-grid-body {
+	background: var(--os-bg3) !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-table,
+body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
+	background: transparent !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar,
+body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar-track,
+body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar-track {
+	background: var(--os-bg2);
+}
+
+body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar-thumb,
+body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar-thumb {
+	background: var(--os-bg4);
+	border-radius: 5px;
+	border: 2px solid var(--os-bg2);
+}
+
+.os-add-shell .jsgrid-header-row > .jsgrid-header-cell,
+body.os-add-page .os-add-shell th.jsgrid-header-cell {
+	background: var(--os-bg4) !important;
+	color: var(--os-text2) !important;
+	border-color: var(--os-border) !important;
 	font-size: 11px;
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
+}
+
+/* Células vazias da coluna controlo no <thead> */
+body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field {
+	background: var(--os-bg4) !important;
 }
 
 .os-add-shell .jsgrid-row > .jsgrid-cell,
@@ -216,6 +258,13 @@ body.os-add-page .os-add-shell .jsgrid .input-group .form-control {
 	border: 1px solid var(--os-border) !important;
 	color: var(--os-text) !important;
 	box-shadow: none !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid .input-group-append .btn,
+body.os-add-page .os-add-shell .jsgrid .input-group-append .btn-secondary {
+	background: var(--os-bg4) !important;
+	border-color: var(--os-border2) !important;
+	color: var(--os-text2) !important;
 }
 
 body.os-add-page .os-add-shell .jsgrid input.form-control:focus,
