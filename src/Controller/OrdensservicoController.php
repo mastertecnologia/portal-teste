@@ -308,6 +308,7 @@ class OrdensservicoController extends AppController {
 		$this->set('ordem', $ordem);
 		$this->set('title', 'Cadastro de ordem de serviços');
 		$this->set('hideLayoutPageTitle', true);
+		$this->set('authIdempresa', (int)$idempresa);
 	}
 
 	public function edit($id = null) {
@@ -427,8 +428,9 @@ class OrdensservicoController extends AppController {
 		$this->set('ordemparcelas', $ordemparcelas);
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('title', 'Editar ordem de serviços');
+		$this->set('authIdempresa', (int)$idempresa);
 	}
-	
+
 	public function view($id = null) {
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
@@ -605,7 +607,9 @@ class OrdensservicoController extends AppController {
 		$carrinho = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 
 		$data = $this->request->getData();
-		if($data['idEmpresaAtual'] != $this->Auth->user('idempresa')) {
+		$empAuth = (int)$this->Auth->user('idempresa');
+		$empPost = isset($data['idEmpresaAtual']) ? (int)$data['idEmpresaAtual'] : 0;
+		if ($empPost !== $empAuth) {
 			$this->Flash->error('Ocorreu um erro ao salvar os itens de ordem de serviço. Verifique sua empresa atual e tente novamente');
 			return $this->jsonResponse(['msg' => 'Ocorreu um erro ao salvar os itens de ordem de serviço. Verifique sua empresa atual e tente novamente'], 400);
 		}
@@ -707,10 +711,12 @@ class OrdensservicoController extends AppController {
         $this->autoRender = false;
         $data = $this->request->getData();
 
-        if($data['idEmpresaAtual'] != $this->Auth->user('idempresa')) {
+        $empAuth = (int)$this->Auth->user('idempresa');
+        $empPost = isset($data['idEmpresaAtual']) ? (int)$data['idEmpresaAtual'] : 0;
+        if ($empPost !== $empAuth) {
             $this->Flash->error('Ocorreu um erro ao atualizar os itens. Verifique sua empresa.');
             return $this->jsonResponse(['msg' => 'Erro empresa'], 400);
-        }   
+        }
 
         $ordem = $this->Itensordem->findById($data['id'])->first();
         
@@ -742,10 +748,12 @@ class OrdensservicoController extends AppController {
 		$this->autoRender = false;
 		$data = $this->request->getData();
 
-		if($data['idEmpresaAtual'] != $this->Auth->user('idempresa')) {
+		$empAuth = (int)$this->Auth->user('idempresa');
+		$empPost = isset($data['idEmpresaAtual']) ? (int)$data['idEmpresaAtual'] : 0;
+		if ($empPost !== $empAuth) {
 			$this->Flash->error('Ocorreu um erro ao deletar o item da ordem de serviço. Verifique sua empresa atual e tente novamente');
 			return $this->jsonResponse(['msg' => 'Ocorreu um erro ao salvar os itens de ordem de serviço. Verifique sua empresa atual e tente novamente'], 400);
-		}	
+		}
 
 		$ordem = $this->Itensordem->findById($data['id'])->first();
 		
@@ -1295,6 +1303,7 @@ class OrdensservicoController extends AppController {
 		$this->set('ordem', $ordem);
 		$this->set('idticket', $idticket);
 		$this->set('title', 'Cadastro de ordem de serviços');
+		$this->set('authIdempresa', (int)$idempresa);
 	}
 
 	public function acaoindex() {

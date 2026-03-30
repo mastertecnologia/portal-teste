@@ -18,7 +18,7 @@
 					<legend>Ticket nº: <?= $idticket ?></legend>
 				</div>
 			</div>
-            <?= $this->Form->create($ordem, ['class' => 'form-material']) ?>
+            <?= $this->Form->create($ordem, ['class' => 'form-material', 'id' => 'form-os-ticket']) ?>
 				<div class="row">
 					<div class="col-lg-6 col-sm-12">
 						<label class="control-label">Cliente</label>
@@ -97,6 +97,9 @@
 						<label class="control-label">Atendimento</label>
 						<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 					</div>
+					<div class="d-none">
+						<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0), 'label' => false]) ?>
+					</div>
 					<div class="col-lg-4 col-sm-12">
 						<label class="control-label">Modelo</label>
 						<?= $this->Form->control('modelo', ['placeholder' => 'Insira o modelo',  'class' => 'form-control', 'label' => false, 'required' => false]) ?>
@@ -158,15 +161,12 @@
 						</div>
 						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
 					<?php } ?>
-				<!-- Tabela -->
+				<?= $this->Form->end() ?>
 				<div id="grid_table"></div>
-				<!-- valortotal que é exibido e o input hidden dele -->
 				<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
-				<?= $this->Form->control('valortotalordem', ['type' => 'hidden', 'label' => false, ]) ?>
-					
+				<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-ticket">
 				<br><p><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
-				<?= $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
-            <?= $this->Form->end() ?>
+				<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success" form="form-os-ticket"><?= __('Abrir Ordem de Serviço') ?></button>
             <div class="clearfix"></div>
         </div>
     </div>
@@ -214,9 +214,15 @@
 
 
 <script>
-	idEmpresAtual = $("#empresaSidebar").val()
-	$('#idEmpresaAtual').val(idEmpresAtual) 
-		
+	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
+	function getEmpresaAtualTicket() {
+		var v = $('#empresaSidebar').val();
+		if (v !== undefined && v !== null && v !== '') return v;
+		return String(pgmAuthIdempresa);
+	}
+	$(function () {
+		$('#idEmpresaAtual').val(getEmpresaAtualTicket());
+	});
 	// Solicitantes e telemail
 		$(document).ready(function(){
 			$('.clienteTelemail').hide();
@@ -340,25 +346,26 @@
 					});
 				},
 				insertItem: function(item){
-					idEmpresAtual = $("#empresaSidebar option:selected").val()
-					item['idEmpresaAtual'] = idEmpresAtual
+					item['idEmpresaAtual'] = getEmpresaAtualTicket();
 					return $.ajax({
 					type: "POST",
-					url: urlAdd+'/null/'+$('.inputCodproduto > select').val(),
+					url: urlAdd + '/null/' + encodeURIComponent(item.codproduto || ''),
 					data: item,
 					success: function(data){
 						$(".qtdEstoque, .vazio").remove();
 						$("#grid_table").jsGrid("loadData");
 						if(data == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
-					}, 
-					error: function(data) {
-						location. reload()
+					},
+					error: function(xhr) {
+						var msg = 'Não foi possível adicionar o item.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						$("#grid_table").jsGrid("loadData");
 					}
 					});
 				},
 				updateItem: function(item){
-					idEmpresAtual = $("#empresaSidebar option:selected").val()
-					item['idEmpresaAtual'] = idEmpresAtual
+					item['idEmpresaAtual'] = getEmpresaAtualTicket();
 					return $.ajax({
 					type: "PUT",
 					url: urlEdit,
@@ -367,14 +374,16 @@
 						$(".qtdEstoque, .vazio").remove();
 						$("#grid_table").jsGrid("loadData");
 					},
-					error: function(data) {
-						location. reload()
+					error: function(xhr) {
+						var msg = 'Não foi possível atualizar o item.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						$("#grid_table").jsGrid("loadData");
 					}
 					});
 				},
 				deleteItem: function(item){
-					idEmpresAtual = $("#empresaSidebar option:selected").val()
-					item['idEmpresaAtual'] = idEmpresAtual
+					item['idEmpresaAtual'] = getEmpresaAtualTicket();
 					return $.ajax({
 						type: "DELETE",
 						url: urlDelete,
@@ -383,8 +392,11 @@
 							$(".qtdEstoque, .vazio").remove();
 							$("#grid_table").jsGrid("loadData");
 						},
-						error: function(data) {
-							location. reload()
+						error: function(xhr) {
+							var msg = 'Não foi possível remover o item.';
+							if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+							if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+							$("#grid_table").jsGrid("loadData");
 						}
 					});
 				},

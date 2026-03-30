@@ -18,7 +18,7 @@
 <div class="col-md-12 p-0">
     <div class="os-add-shell form-material">
         <div class="os-add-shell-body">
-            <?= $this->Form->create($ordem, ['class' => 'form-material']) ?>
+            <?= $this->Form->create($ordem, ['class' => 'form-material', 'id' => 'form-os-add']) ?>
 			<div class="row">
 				<div class="col-lg-6 col-sm-12">
 					<label class="control-label m-b-0">Cliente</label>
@@ -102,7 +102,7 @@
 						<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 					</div>
 					<div>
-						<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type'=>'hidden']) ?>
+						<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
 					</div>
 				</div>
 				<hr>
@@ -167,15 +167,13 @@
 						</div>
 						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
 					<?php } ?>
-				<!-- Tabela -->
+				<?= $this->Form->end() ?>
+				<!-- jsGrid fora do form: Enter/botões não submetem "Abrir OS"; campos abaixo usam form="form-os-add" (HTML5). -->
 				<div id="grid_table"></div>
-				<!-- valortotal que é exibido e o input hidden dele -->
 				<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
-				<?= $this->Form->control('valortotalordem', ['type' => 'hidden', 'label' => false, ]) ?>
-					
+				<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-add">
 				<p class='m-t-10'><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
-				<?= $this->Form->button('Abrir Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
-            <?= $this->Form->end() ?>
+				<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success" form="form-os-add"><?= __('Abrir Ordem de Serviço') ?></button>
             <div class="clearfix"></div>
         </div>
     </div>
@@ -291,12 +289,18 @@
     </div>
 </div>
 <script>
-	var idEmpresAtual = $("#empresaSidebar").val();
-	$('#idEmpresaAtual').val(idEmpresAtual);
+	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
 	$('body').addClass('os-add-page');
 	function getEmpresaAtual() {
-		return $("#empresaSidebar").val() || $("#empresaSidebar option:selected").val();
+		var v = $('#empresaSidebar').val();
+		if (v !== undefined && v !== null && v !== '') {
+			return v;
+		}
+		return String(pgmAuthIdempresa);
 	}
+	$(function () {
+		$('#idEmpresaAtual').val(getEmpresaAtual());
+	});
 		
 	// Solicitantes e telemail
 		$(document).ready(function(){
@@ -477,7 +481,7 @@
 					item['idEmpresaAtual'] = getEmpresaAtual();
 					return $.ajax({
 					type: "POST",
-					url: urlAdd+'/null/'+item.codproduto,
+					url: urlAdd + '/null/' + encodeURIComponent(item.codproduto || ''),
 					data: item,
 					success: function(data){
 						$(".qtdEstoque, .vazio").remove();

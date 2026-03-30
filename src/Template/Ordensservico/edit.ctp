@@ -54,7 +54,7 @@ else $disabled = false;
 							</legend>
 						</div>
 					</div>
-					<?= $this->Form->create($ordem, ['class' => 'form-material']);
+					<?= $this->Form->create($ordem, ['class' => 'form-material', 'id' => 'form-os-edit']);
 					if (!empty($ordem->idorcamento)) { ?>
 						<div class="row">
 							<div class="col-12">
@@ -143,7 +143,7 @@ else $disabled = false;
 							<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 						</div>
 						<div>
-							<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden']) ?>
+							<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
 						</div>
 						<?php if (!empty($ordem->nrodestino)) { ?>
 							<div class="col-md-2 col-xs-12">
@@ -218,14 +218,14 @@ else $disabled = false;
 						</div>
 						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20', 'disabled' => $disabled]) ?>
 					<?php } ?>
-					<!-- Tabela -->
+					<?= $this->Form->end() ?>
+					<!-- jsGrid fora do form da OS (evita submit acidental). Campos abaixo: form="form-os-edit". -->
 					<div id="grid_table"></div>
-					<!-- valortotal que é exibido e o input hidden dele -->
 					<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
-					<?= $this->Form->control('valortotalordem', ['type' => 'hidden', 'label' => false,]) ?>
+					<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-edit">
 
 					<?php
-					echo $this->Form->button('Salvar Ordem de Serviço', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20']);
+					echo '<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-t-20" form="form-os-edit">' . h(__('Salvar Ordem de Serviço')) . '</button>';
 					echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-l-5 m-t-20']);
 					echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-l-5 m-t-20']);
 					if (!$ordem->locacao) echo $this->Html->link('Locação', ['action' => 'locacao', $ordem->id, 1], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right']);
@@ -237,8 +237,6 @@ else $disabled = false;
 					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right']);
 					if ($ordem->situacao != C_OrdensSituacaoFinalizada) echo $this->Html->link('Finalizar', ['action' => 'finalizar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right']);
 					?>
-
-					<?= $this->Form->end() ?>
 				</div>
 				<div class="tab-pane" id="movimentacoes">
 					<?php
@@ -574,12 +572,19 @@ else $disabled = false;
 
 <script>
 	// --- Configurações Iniciais ---
-	var idEmpresAtual = $("#empresaSidebar").val();
-	$('#idEmpresaAtual').val(idEmpresAtual);
+	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
+	function pgmEmpresaAtualAjax() {
+		var v = $('#empresaSidebar').val();
+		if (v !== undefined && v !== null && v !== '') {
+			return v;
+		}
+		return String(pgmAuthIdempresa);
+	}
 	var idcliente = $("#idcliente").val();
 	var idsolicitante = $("#idsolicitante").val();
 
 	$(document).ready(function() {
+		$('#idEmpresaAtual').val(pgmEmpresaAtualAjax());
 		$('#idsolicitante').append("<option value='' >Indefinido</option>");
 		$('.dataval2, .dataval3, .dataval4, .dataval5').hide();
 
@@ -764,25 +769,27 @@ else $disabled = false;
 				});
 			},
 			insertItem: function(item) {
-				item['idEmpresaAtual'] = $("#empresaSidebar").val();
-				console.log("Inserindo item:", item);
+				item['idEmpresaAtual'] = pgmEmpresaAtualAjax();
 				return $.ajax({
 					type: "POST",
-					url: urlAdd + '/' + item.codproduto,
+					url: urlAdd + '/' + encodeURIComponent(item.codproduto),
 					data: item,
 					success: function(data) {
 						$("#grid_table").jsGrid("loadData");
 						if (data == 'naopode') bootbox.alert('Este produto já foi adicionado.');
 					},
-					error: function(err) {
-						console.log(err);
-						location.reload();
+					error: function(xhr) {
+						var msg = 'Não foi possível adicionar o item.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+						else if (xhr.responseText && xhr.responseText.length < 400) msg = xhr.responseText;
+						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						else alert(msg);
+						$("#grid_table").jsGrid("loadData");
 					}
 				});
 			},
 			updateItem: function(item) {
-				item['idEmpresaAtual'] = $("#empresaSidebar").val();
-				console.log("Atualizando item:", item); // Debug
+				item['idEmpresaAtual'] = pgmEmpresaAtualAjax();
 				return $.ajax({
 					type: "PUT",
 					url: urlEdit,
@@ -790,14 +797,16 @@ else $disabled = false;
 					success: function(data) {
 						$("#grid_table").jsGrid("loadData");
 					},
-					error: function(err) {
-						console.log(err);
-						location.reload();
+					error: function(xhr) {
+						var msg = 'Não foi possível atualizar o item.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						$("#grid_table").jsGrid("loadData");
 					}
 				});
 			},
 			deleteItem: function(item) {
-				item['idEmpresaAtual'] = $("#empresaSidebar").val();
+				item['idEmpresaAtual'] = pgmEmpresaAtualAjax();
 				return $.ajax({
 					type: "DELETE",
 					url: urlDelete,
@@ -805,8 +814,11 @@ else $disabled = false;
 					success: function() {
 						$("#grid_table").jsGrid("loadData");
 					},
-					error: function() {
-						location.reload();
+					error: function(xhr) {
+						var msg = 'Não foi possível remover o item.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						$("#grid_table").jsGrid("loadData");
 					}
 				});
 			},
