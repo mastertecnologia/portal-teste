@@ -470,6 +470,12 @@
 				$(".jsgrid-select2").select2();
 			}
 		});
+		$('#grid_table').on('keydown', 'input, select, textarea', function (e) {
+			if (e.key === 'Enter' || e.which === 13) {
+				e.preventDefault();
+				return false;
+			}
+		});
 	// numberToReal
 		function numberToReal(numero) {
 			if(!isNaN(numero)){
@@ -690,8 +696,7 @@
 			});
 		}
 	// TDs com mto texto
-		$('.jsgrid-button').click(function(){tdcommuitotexto()});
-		$('th').click(function(){tdcommuitotexto()});
+		$('#grid_table').on('click', 'th', function () { tdcommuitotexto(); });
 		function tdcommuitotexto () {
 			i = 0;
 			$('.jsgrid-cell').each(function() {

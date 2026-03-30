@@ -642,6 +642,13 @@
 				}
 			}
 		});
+		/* Grid está dentro do form da OS: Enter em qtde/preço submetia o form inteiro (refresh). */
+		$('#grid_table').on('keydown', 'input, select, textarea', function (e) {
+			if (e.key === 'Enter' || e.which === 13) {
+				e.preventDefault();
+				return false;
+			}
+		});
 	// numberToReal
 		function numberToReal(numero) {
 			if(!isNaN(numero)){
@@ -899,9 +906,8 @@
                 error: function (error) { console.log(error); }
             });
         }
-	// TDs com mto texto
-		$('.jsgrid-button').click(function(){tdcommuitotexto()});
-		$('th').click(function(){tdcommuitotexto()});
+	// TDs com mto texto (não ligar em .jsgrid-button: corre o insert/update do jsGrid e quebra a linha)
+		$('#grid_table').on('click', 'th', function () { tdcommuitotexto(); });
 		function tdcommuitotexto () {
 			i = 0;
 			$('.jsgrid-cell').each(function() {
@@ -957,10 +963,10 @@
 							tr.append($('<td>').text(prod.descricao));
 							tr.append($('<td>').text('R$ ' + numberToReal(prod.vlunitario)));
 							
-							var btn = $('<button>').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
-							
-							// Evento de clique para selecionar
-							btn.click(function() {
+							var btn = $('<button>').attr('type', 'button').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
+							btn.on('click', function (e) {
+								e.preventDefault();
+								e.stopPropagation();
 								selecionarProduto(prod.codigo);
 							});
 							

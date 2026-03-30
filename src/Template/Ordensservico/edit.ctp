@@ -1084,6 +1084,12 @@ else $disabled = false;
 			$(".jsgrid-select2").select2();
 		}
 	});
+	$('#grid_table').on('keydown', 'input, select, textarea', function (e) {
+		if (e.key === 'Enter' || e.which === 13) {
+			e.preventDefault();
+			return false;
+		}
+	});
 
 	window.currentRowContext = null;
 	$(document).on("click", ".btn-modal-obs", function(e) {
@@ -1329,11 +1335,8 @@ else $disabled = false;
 		}
 	});
 
-	// Funções de Texto Longo
-	$('.jsgrid-button').click(function() {
-		tdcommuitotexto();
-	});
-	$('th').click(function() {
+	// Funções de Texto Longo (evitar .jsgrid-button: interfere no insert/update do jsGrid)
+	$('#grid_table').on('click', 'th', function () {
 		tdcommuitotexto();
 	});
 
@@ -1422,8 +1425,10 @@ else $disabled = false;
 						tr.append('<td>' + prod.descricao + '</td>');
 						tr.append('<td>R$ ' + numberToReal(prod.vlunitario) + '</td>');
 
-						var btn = $('<button>').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
-						btn.click(function() {
+						var btn = $('<button>').attr('type', 'button').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
+						btn.on('click', function (e) {
+							e.preventDefault();
+							e.stopPropagation();
 							selecionarProduto(prod.codigo);
 						});
 
