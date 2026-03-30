@@ -19,9 +19,10 @@ class ClientPortalRbacPapel extends AbstractMigration {
 			return;
 		}
 
+		// Sem created/modified: esquemas legados podem não ter timestamps em rbac_roles.
 		$this->execute(<<<'SQL'
-INSERT INTO rbac_roles (slug, name, description, is_system, active, sort_order, created, modified)
-SELECT 'cliente_portal', 'Cliente portal', 'Usuário externo — portal comercial e chamados (ABAC por cliente).', TRUE, TRUE, 60, NOW(), NOW()
+INSERT INTO rbac_roles (slug, name, description, is_system, active, sort_order)
+SELECT 'cliente_portal', 'Cliente portal', 'Usuário externo — portal comercial e chamados (ABAC por cliente).', TRUE, TRUE, 60
 WHERE NOT EXISTS (SELECT 1 FROM rbac_roles WHERE slug = 'cliente_portal')
 SQL
 		);
