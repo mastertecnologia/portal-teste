@@ -217,8 +217,13 @@
 	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
 	function getEmpresaAtualTicket() {
 		var v = $('#empresaSidebar').val();
-		if (v !== undefined && v !== null && v !== '') return v;
-		return String(pgmAuthIdempresa);
+		if (v !== undefined && v !== null && v !== '') {
+			var n = parseInt(String(v), 10);
+			if (!isNaN(n) && n > 0) {
+				return n;
+			}
+		}
+		return pgmAuthIdempresa;
 	}
 	$(function () {
 		$('#idEmpresaAtual').val(getEmpresaAtualTicket());

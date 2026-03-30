@@ -576,9 +576,12 @@ else $disabled = false;
 	function pgmEmpresaAtualAjax() {
 		var v = $('#empresaSidebar').val();
 		if (v !== undefined && v !== null && v !== '') {
-			return v;
+			var n = parseInt(String(v), 10);
+			if (!isNaN(n) && n > 0) {
+				return n;
+			}
 		}
-		return String(pgmAuthIdempresa);
+		return pgmAuthIdempresa;
 	}
 	var idcliente = $("#idcliente").val();
 	var idsolicitante = $("#idsolicitante").val();

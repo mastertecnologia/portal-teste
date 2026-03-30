@@ -374,6 +374,15 @@ class OrdensservicoController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
+		if ($id === null || $id === '' || !ctype_digit((string)$id)) {
+			$this->Flash->error(
+				'URL inválida: o endereço deve terminar com o número da ordem (ex.: …/ordensservico/edit/123), não com texto como "ID".'
+			);
+
+			return $this->redirect(['action' => 'index']);
+		}
+		$id = (int)$id;
+
 		$idempresa = $this->Auth->user('idempresa');
 
 		$data = $this->request->getData();
@@ -1337,8 +1346,22 @@ class OrdensservicoController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
+		if ($idticket === null || $idticket === '' || !ctype_digit((string)$idticket)) {
+			$this->Flash->error(
+				'URL inválida: use o número do ticket (ex.: …/ordensservico/ticketordem/456), não texto como "IDTICKET". Abra "Gerar Ordem de Serviço" a partir do ticket no sistema.'
+			);
+
+			return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
+		}
+		$idticket = (int)$idticket;
+
 		$idempresa = $this->Auth->user('idempresa');
 		$ticket = $this->Tickets->findById($idticket)->contain(['Clientes' => ['fields' => ['contrato']], 'Ticketcomentarios', 'Ticketcomentarios.Users'])->first();
+
+		if ($ticket === null) {
+			$this->Flash->error('Ticket não encontrado.');
+			return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
+		}
 		
 		$ordem = $this->Ordensservico->newEntity();
 		$ordem->idcliente = $ticket->idcliente;
