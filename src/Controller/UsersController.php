@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Service\Ticket\DashboardService;
+use App\Utility\RbacClientePortal;
 use App\Utility\SupportInboxMail;
 use Cake\Event\Event;
 use Cake\Http\Response;
@@ -766,6 +767,7 @@ class UsersController extends AppController {
 					$empresauser->idempresa = $idempresa; //$this->Auth->user('idempresa');
 					$empresauser->iduser = $user->id;
 					$this->Empresasusers->save($empresauser);
+					RbacClientePortal::syncUserIfEligible((int)$user->id);
 
 					$this->Flash->success(__('O usuário foi salvo.'));
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $user->id);
@@ -895,6 +897,9 @@ class UsersController extends AppController {
 			$this->Users->patchEntity($user, $data);
 
 			if ($this->Users->save($user)) {
+				if ((int)$user->role === 1) {
+					RbacClientePortal::syncUserIfEligible((int)$user->id);
+				}
 				$this->Flash->success('As informações do usuário foram alteradas com sucesso!');
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
 
@@ -1641,7 +1646,9 @@ class UsersController extends AppController {
 			foreach($data['users']['_ids'] as $id){
 				$user = $this->Users->get($id);
 				$user->permissaoacesso = 1;
-				$this->Users->save($user);
+				if ($this->Users->save($user)) {
+					RbacClientePortal::syncUserIfEligible((int)$user->id);
+				}
 			}
 			$this->Flash->success(__('Os usuários foram salvos.'));
 			return $this->redirect(['controller' => 'Clientes', 'action' => 'edit', $data['idcliente']]);

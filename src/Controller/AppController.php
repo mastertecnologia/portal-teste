@@ -14,6 +14,7 @@
  */
 namespace App\Controller;
 
+use App\Utility\RbacChecker;
 use Cake\Controller\Controller;
 use Cake\Event\Event;
 
@@ -48,6 +49,7 @@ class AppController extends Controller {
 				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'carrinhoedit',
 				// Solicitar orçamento: inputs HTML + itens dinâmicos (itens[n][*]) fora do FormHelper
 				'solicitar',
+				'catalogoSugestoes',
 				'timerIniciar', 'timerPausar', 'timerRetomar', 'timerFinalizar',
 				'produto', 'qtdestoque', 'estoquesLote', // Orçamentos: produto, estoque e catálogo (lote)
 				// APIs de integração ERP (sem sessão web; token em header)
@@ -213,6 +215,14 @@ class AppController extends Controller {
 		$this->set('idempresa', $this->Auth->user('idempresa'));
 		$this->set('name', $this->Auth->user('name'));
 		$this->set('permissaoacesso', $this->Auth->user('permissaoacesso'));
+		$canClienteSolicitarOrcamento = false;
+		if ((int)$role === 1) {
+			$canClienteSolicitarOrcamento = RbacChecker::clientePodeSolicitarOrcamento(
+				(int)$iduser,
+				!empty($this->Auth->user('permissaoacesso'))
+			);
+		}
+		$this->set('canClienteSolicitarOrcamento', $canClienteSolicitarOrcamento);
 		$this->set($menuStates);
 		$this->set('idcliente', $idcliente);
 		$this->set('iduser', $iduser);

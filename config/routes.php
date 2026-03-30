@@ -113,6 +113,7 @@ Router::scope('/', function ($routes) {
     $routes->connect('/orcamentos', ['controller' => 'Orcamentos', 'action' => 'index']);
     $routes->connect('/orcamentos/add', ['controller' => 'Orcamentos', 'action' => 'add']);
     $routes->connect('/orcamentos/solicitar', ['controller' => 'Orcamentos', 'action' => 'solicitar']);
+    $routes->connect('/orcamentos/catalogo-sugestoes', ['controller' => 'Orcamentos', 'action' => 'catalogoSugestoes'])->setMethods(['GET']);
     $routes->connect('/orcamentos/catalogo', ['controller' => 'Orcamentos', 'action' => 'catalogo']);
     $routes->connect('/orcamentos/:id/pdf', ['controller' => 'Orcamentos', 'action' => 'pdf'], ['pass' => ['id'], 'id' => '\d+']);
     // Faturamento — módulo de emissão de documentos fiscais / cobranças

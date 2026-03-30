@@ -49,6 +49,8 @@ return [
 			'produtos#listapi',
 			'clicontratos#addapi',
 			'clicontratos#listapi',
+			// JSON de catálogo (mesma regra que solicitar; gate em OrcamentosController::beforeFilter)
+			'orcamentos#catalogosugestoes',
 		],
 		// Em modo warn, também exibir Flash (pode ser repetitivo)
 		'warn_flash' => false,

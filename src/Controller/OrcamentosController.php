@@ -2,8 +2,10 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\RbacChecker;
 use Cake\Event\Event;
 use Cake\Mailer\Email;
+use Cake\Routing\Router;
 use Cake\View\View;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -29,13 +31,30 @@ class OrcamentosController extends AppController {
 	}
 
 	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
+		$parentRet = parent::beforeFilter($event);
+		if ($parentRet !== null) {
+			return $parentRet;
+		}
 
 		if($this->Auth->user('role') == 1 && !$this->Auth->user('permissaoacesso')) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
-		
+
+		$action = $this->request->getParam('action');
+		if (in_array($action, ['solicitar', 'catalogoSugestoes'], true) && (int)$this->Auth->user('role') === 1) {
+			if (!RbacChecker::clientePodeSolicitarOrcamento(
+				(int)$this->Auth->user('id'),
+				!empty($this->Auth->user('permissaoacesso'))
+			)) {
+				$this->Flash->error(__('Seu usuário não está autorizado a solicitar orçamento. Peça ao administrador a permissão «orcamentos.solicitar» no seu papel (RBAC).'));
+				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+			}
+		}
+		if (in_array($action, ['solicitar', 'catalogoSugestoes'], true) && (int)$this->Auth->user('role') !== 1) {
+			return $this->redirect(['action' => 'index']);
+		}
+
 		if($event->_subject->request->params['action'] == 'imprimir' && $this->Auth->user('role') == 1){
 			$orcamento = $this->Orcamentos->get($event->_subject->request->params['pass'][0])->idcliente;
 			$cliente = $this->Clientes->get($this->Auth->user('idcliente'))->id;
@@ -46,7 +65,9 @@ class OrcamentosController extends AppController {
 			}
 		}
 
-		$this->set('title', 'Orçamentos');
+		if (!in_array($this->request->getParam('action'), ['solicitar', 'catalogoSugestoes'], true)) {
+			$this->set('title', 'Orçamentos');
+		}
 		$this->Auth->allow(['viewhash', 'carrinhoedit', 'aprovarhash']);
 	}
 
@@ -598,50 +619,120 @@ class OrcamentosController extends AppController {
 	/**
 	 * Tela de solicitação de orçamento para clientes (role==1).
 	 * Coleta dados detalhados do pedido e cria um ticket de categoria "Orçamento".
+	 * Acesso: permissaoacesso + RBAC orcamentos.solicitar quando o usuário tiver papéis RBAC.
 	 */
 	public function solicitar() {
-		$this->set('title', 'Solicitar Orçamento');
+		$this->set('title', __('Solicitar proposta comercial'));
+		$this->set('hideLayoutPageTitle', true);
+		$this->set('bodyPageClass', 'pgm-solicitar-proposta');
+
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
-			// Montar solicitação como texto para o ticket
 			$linhas   = [];
 			$linhas[] = '--- SOLICITAÇÃO DE ORÇAMENTO ---';
 			$linhas[] = 'Assunto: ' . ($data['assunto'] ?? '');
 			$linhas[] = 'Urgência: ' . ($data['urgencia'] ?? 'Normal');
-			if (!empty($data['descricao'])) $linhas[] = 'Descrição: ' . $data['descricao'];
+			if (!empty($data['descricao'])) {
+				$linhas[] = 'Descrição: ' . $data['descricao'];
+			}
 			if (!empty($data['itens'])) {
 				$linhas[] = '';
 				$linhas[] = 'ITENS SOLICITADOS:';
 				foreach ((array)$data['itens'] as $i => $item) {
-					if (empty($item['descricao'])) continue;
-					$linhas[] = sprintf('  %d. %s — Qtd: %s — Obs: %s',
+					if (empty($item['descricao'])) {
+						continue;
+					}
+					$cod = trim((string)($item['codigo'] ?? ''));
+					$prefix = $cod !== '' ? ('[' . $cod . '] ') : '';
+					$linhas[] = sprintf(
+						'  %d. %s%s — Qtd: %s — Obs: %s',
 						$i + 1,
+						$prefix,
 						$item['descricao'],
 						$item['quantidade'] ?? '1',
 						$item['obs'] ?? ''
 					);
 				}
 			}
-			if (!empty($data['prazo'])) $linhas[] = 'Prazo desejado: ' . $data['prazo'];
+			if (!empty($data['prazo'])) {
+				$linhas[] = 'Prazo desejado: ' . $data['prazo'];
+			}
 			$solicitacaoTexto = implode("\n", $linhas);
 
-			// Criar ticket de categoria orçamento (assunto=4)
 			$this->loadModel('Tickets');
 			$ticket = $this->Tickets->newEntity();
 			$ticket->idempresa  = $this->Auth->user('idempresa');
 			$ticket->idcliente  = $this->Auth->user('idcliente');
 			$ticket->idautor    = $this->Auth->user('id');
-			$ticket->assunto    = 4; // C_TicketCategoriaOrcamento
+			$ticket->assunto    = 4;
 			$ticket->solicitacao = $solicitacaoTexto;
 			$ticket->situacao   = 0;
 			$ticket->resolvido  = 0;
 			$ticket->email      = $this->Auth->user('email') ?? '';
 			if ($this->Tickets->save($ticket)) {
-				$this->Flash->success(__('Solicitação de orçamento enviada! Em breve nossa equipe entrará em contato. Ticket #' . $ticket->id));
-				return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
+				$this->Flash->success(__('Proposta solicitada com sucesso. Nossa equipe retornará em breve. Referência do chamado #%s.', $ticket->id));
+
+				return $this->redirect(['controller' => 'Orcamentos', 'action' => 'index']);
 			}
 			$this->Flash->error(__('Não foi possível enviar a solicitação. Tente novamente.'));
 		}
+
+		$catalogoDestaque = $this->Produtos->find()
+			->select(['codigo', 'descricao', 'vlunitario', 'tipo'])
+			->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])
+			->order(['descricao' => 'ASC'])
+			->limit(8)
+			->toArray();
+		$this->set('catalogoDestaque', $catalogoDestaque);
+		$this->set('catalogoSugestoesUrl', Router::url(['controller' => 'Orcamentos', 'action' => 'catalogoSugestoes'], true));
+	}
+
+	/**
+	 * JSON para autocomplete do catálogo na tela solicitar (apenas clientes autorizados).
+	 */
+	public function catalogoSugestoes() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+
+		$q = trim((string)$this->request->getQuery('q', ''));
+		if (strlen($q) < 2) {
+			return $this->response
+				->withType('application/json')
+				->withStringBody(json_encode(['itens' => []], JSON_UNESCAPED_UNICODE));
+		}
+		$qSafe = str_replace(['%', '_'], '', $q);
+		if ($qSafe === '') {
+			return $this->response
+				->withType('application/json')
+				->withStringBody(json_encode(['itens' => []], JSON_UNESCAPED_UNICODE));
+		}
+
+		$query = $this->Produtos->find()
+			->select(['codigo', 'descricao', 'vlunitario', 'tipo'])
+			->where([
+				'idempresa' => $this->Auth->user('idempresa'),
+				'ativo' => 1,
+				'OR' => [
+					'codigo LIKE' => '%' . $qSafe . '%',
+					'descricao LIKE' => '%' . $qSafe . '%',
+				],
+			])
+			->order(['descricao' => 'ASC'])
+			->limit(25);
+
+		$itens = [];
+		foreach ($query->toArray() as $p) {
+			$itens[] = [
+				'codigo' => trim((string)$p->codigo),
+				'descricao' => trim((string)$p->descricao),
+				'preco' => (float)($p->vlunitario ?? 0),
+				'tipo' => (int)$p->tipo,
+			];
+		}
+
+		return $this->response
+			->withType('application/json')
+			->withStringBody(json_encode(['itens' => $itens], JSON_UNESCAPED_UNICODE));
 	}
 
 	public function add($idticket = null) {

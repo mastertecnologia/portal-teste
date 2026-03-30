@@ -1,241 +1,384 @@
 <?php
 /**
- * Orcamentos/solicitar.ctp — Tela de solicitação de orçamento para clientes.
+ * Solicitar orçamento — experiência comercial (distinta de tickets): catálogo, busca, formulário.
+ * @var \App\View\AppView $this
+ * @var array $catalogoDestaque
+ * @var string $catalogoSugestoesUrl
  */
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
+$catalogoDestaque = $catalogoDestaque ?? [];
+$catalogoSugestoesUrl = $catalogoSugestoesUrl ?? '';
+$tipoLabel = static function ($t) {
+	switch ((int)$t) {
+		case 2:
+			return 'Serviço';
+		case 3:
+			return 'Contrato';
+		default:
+			return 'Produto';
+	}
+};
 ?>
 <style>
-/* ── Solicitar Orçamento — pgm_orcamentos_premium (claro) ───────── */
-.sol-page-wrap{
-    background:transparent;
-    margin:-15px -15px 0;
-    padding:32px 32px 48px;
-    min-height:calc(100vh - 64px);
+.pgm-solicitar-wrap{
+	--sol-navy:#0c2340;
+	--sol-cyan:#00b4d8;
+	--sol-green:#00a878;
+	--sol-border:#e2e8f0;
+	--sol-muted:#64748b;
+	margin:-15px -15px 0;
+	padding:0 0 48px;
+	min-height:calc(100vh - 64px);
+	font-family:'DM Sans',system-ui,sans-serif;
 }
-@media(max-width:768px){.sol-page-wrap{padding:20px 16px 40px;}}
-.sol-root{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:24px;}
-.sol-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-bottom:24px;border-bottom:1px solid #e5e4e0;}
-.sol-eyebrow{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#00c08b;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.sol-eyebrow span{opacity:.6;color:#6b6a65;}
-.sol-head h1{font-size:1.5rem;font-weight:800;color:#1a1a18;margin:0 0 5px;letter-spacing:-.01em;}
-.sol-head p{font-size:.8rem;color:#6b6a65;margin:0;max-width:420px;}
-.sol-back{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #e5e4e0;border-radius:8px;font-size:.78rem;color:#6b6a65;text-decoration:none;transition:all .15s;white-space:nowrap;background:#fff;}
-.sol-back:hover{border-color:#00c08b;color:#008f68;text-decoration:none;}
-.sol-card{background:#fff;border:1px solid #e5e4e0;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);}
-.sol-card-head{padding:16px 22px;border-bottom:1px solid #e5e4e0;display:flex;align-items:center;gap:12px;background:#f9f9f8;}
-.sol-card-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
-.sol-card-icon.teal{background:rgba(0,192,139,.12);color:#00c08b;}
-.sol-card-icon.blue{background:rgba(51,204,255,.12);color:#006b88;}
-.sol-card-title{font-size:.88rem;font-weight:700;color:#1a1a18;}
-.sol-card-hint{font-size:.72rem;color:#9a9890;margin-left:auto;}
-.sol-card-body{padding:22px;}
-.sol-grid{display:grid;gap:16px;}
-.sol-grid.two{grid-template-columns:1fr 1fr;}
-.sol-grid.three{grid-template-columns:2fr 1fr 2fr;}
-@media(max-width:640px){.sol-grid.two,.sol-grid.three{grid-template-columns:1fr;}}
-.sol-field{display:flex;flex-direction:column;gap:6px;}
-.sol-label{font-size:.68rem;font-weight:700;color:#9a9890;text-transform:uppercase;letter-spacing:.08em;}
-.sol-req{color:#e24b4a;margin-left:2px;}
-.sol-input,.sol-textarea{width:100%;padding:10px 14px;background:#f9f9f8;border:1px solid #e5e4e0;border-radius:9px;color:#1a1a18;font-size:.85rem;font-family:'DM Sans',sans-serif;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;}
-.sol-input::placeholder,.sol-textarea::placeholder{color:#9a9890;}
-.sol-input:focus,.sol-textarea:focus{outline:none;border-color:#00c08b;box-shadow:0 0 0 3px rgba(0,192,139,.12);}
-.sol-textarea{resize:vertical;min-height:110px;line-height:1.55;}
-.sol-urgency-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-@media(max-width:480px){.sol-urgency-row{grid-template-columns:1fr;}}
-.sol-urgency-btn{padding:12px 10px;border-radius:10px;border:1px solid #e5e4e0;background:#fff;color:#6b6a65;font-size:.8rem;font-weight:600;cursor:pointer;text-align:center;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;}
-.sol-urgency-btn .urg-icon{font-size:1.2rem;}
-.sol-urgency-btn:hover{border-color:#9a9890;color:#1a1a18;background:#f9f9f8;}
-.sol-urgency-btn.active-low{border-color:#00c08b;background:#e6faf4;color:#008f68;}
-.sol-urgency-btn.active-med{border-color:#ffc107;background:#fff8e1;color:#8a6a00;}
-.sol-urgency-btn.active-high{border-color:#e24b4a;background:#fcebeb;color:#791f1f;}
-.sol-itens-list{display:flex;flex-direction:column;gap:8px;}
-.sol-item-row{display:grid;grid-template-columns:1fr 90px 1fr 34px;gap:10px;align-items:end;background:#f9f9f8;border:1px solid #e5e4e0;border-radius:10px;padding:12px 14px;}
-@media(max-width:600px){.sol-item-row{grid-template-columns:1fr;}}
-.sol-btn-add{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;margin-top:12px;background:transparent;border:1px dashed #e5e4e0;border-radius:9px;color:#6b6a65;font-size:.78rem;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;}
-.sol-btn-add:hover{border-color:#00c08b;color:#008f68;}
-.sol-btn-rm{width:30px;height:30px;border-radius:7px;border:1px solid #e5e4e0;background:#fff;color:#6b6a65;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-.sol-btn-rm:hover{background:#fcebeb;border-color:#e24b4a;color:#e24b4a;}
-.sol-tip{background:#e6faf4;border:1px solid rgba(0,192,139,.22);border-radius:10px;padding:14px 16px;font-size:.78rem;color:#6b6a65;display:flex;gap:12px;align-items:flex-start;line-height:1.55;}
-.sol-tip i{color:#00c08b;font-size:1rem;margin-top:1px;flex-shrink:0;}
-.sol-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 22px;background:#fff;border:1px solid #e5e4e0;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
-.sol-btn-cancel{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:transparent;color:#6b6a65;border:1px solid #e5e4e0;border-radius:9px;font-size:.82rem;cursor:pointer;text-decoration:none;transition:all .15s;}
-.sol-btn-cancel:hover{color:#1a1a18;border-color:#9a9890;text-decoration:none;}
-.sol-btn-submit{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;background:linear-gradient(135deg,#00c08b,#008f68);color:#fff;border:none;border-radius:9px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(0,192,139,.22);}
-.sol-btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,192,139,.3);}
-.sol-btn-submit:active{transform:translateY(0);}
+.pgm-solicitar-wrap *{ box-sizing:border-box; }
+.pgm-sol-hero{
+	background:linear-gradient(135deg,var(--sol-navy) 0%,#153a5f 100%);
+	color:#fff;
+	padding:28px 32px 32px;
+	border-radius:0 0 18px 18px;
+	margin-bottom:28px;
+	box-shadow:0 12px 40px rgba(12,35,64,.25);
+}
+.pgm-sol-hero-inner{ max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start; }
+.pgm-sol-hero h1{ font-size:1.55rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em; }
+.pgm-sol-hero p{ margin:0;font-size:.88rem;opacity:.88;max-width:520px;line-height:1.5; }
+.pgm-sol-eyebrow{ font-size:.62rem;text-transform:uppercase;letter-spacing:.16em;font-weight:700;color:var(--sol-cyan);margin-bottom:8px; }
+.pgm-sol-hero .sol-back{
+	display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;
+	background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.8rem;text-decoration:none;
+}
+.pgm-sol-hero .sol-back:hover{ background:rgba(255,255,255,.18);color:#fff;text-decoration:none; }
+.pgm-sol-main{ max-width:1100px;margin:0 auto;padding:0 24px; display:flex;flex-direction:column;gap:22px; }
+.pgm-sol-section-title{ font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--sol-muted);margin:0 0 12px; }
+.pgm-sol-card{
+	background:#fff;border:1px solid var(--sol-border);border-radius:14px;
+	box-shadow:0 1px 3px rgba(15,23,42,.06); overflow:hidden;
+}
+.pgm-sol-card-h{
+	padding:14px 20px;border-bottom:1px solid var(--sol-border);background:#f8fafc;
+	font-weight:700;font-size:.9rem;color:var(--sol-navy);
+}
+.pgm-sol-card-b{ padding:20px; }
+.pgm-sol-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+@media(max-width:992px){ .pgm-sol-grid{ grid-template-columns:repeat(2,1fr);} }
+@media(max-width:520px){ .pgm-sol-grid{ grid-template-columns:1fr;} }
+.pgm-sol-pcard{
+	border:1px solid var(--sol-border);border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;gap:10px;
+	min-height:200px;background:#fff;transition:box-shadow .15s,border-color .15s;
+}
+.pgm-sol-pcard:hover{ box-shadow:0 8px 24px rgba(12,35,64,.08); border-color:#cbd5e1; }
+.pgm-sol-pcard h3{ font-size:.82rem;font-weight:800;color:var(--sol-navy);margin:0;line-height:1.35;min-height:2.6em; }
+.pgm-sol-badge{
+	display:inline-block;font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+	padding:4px 10px;border-radius:999px;background:rgba(0,180,216,.15);color:#0077a8;
+}
+.pgm-sol-pcard .pgm-sol-sub{ font-size:.72rem;color:var(--sol-muted);line-height:1.45;flex:1; }
+.pgm-sol-preco{ font-size:.8rem;color:var(--sol-muted); }
+.pgm-sol-preco strong{ color:var(--sol-navy);font-weight:700; }
+.pgm-sol-btn-outline{
+	display:block;width:100%;text-align:center;padding:9px 12px;border-radius:9px;border:2px solid var(--sol-green);
+	background:#fff;color:var(--sol-green);font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.pgm-sol-btn-outline:hover{ background:rgba(0,168,120,.08); }
+.pgm-sol-search-row{ display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start; }
+.pgm-sol-search-row input[type="search"]{
+	flex:1;min-width:200px;padding:12px 14px;border:1px solid var(--sol-border);border-radius:10px;font-size:.88rem;
+}
+.pgm-sol-search-hint{ font-size:.75rem;color:var(--sol-muted);margin-top:8px; }
+.pgm-sol-cat-table-wrap{
+	margin-top:12px;max-height:240px;overflow:auto;border:1px solid var(--sol-border);border-radius:10px;display:none;
+}
+.pgm-sol-cat-table-wrap.open{ display:block; }
+.pgm-sol-cat-table{ width:100%;border-collapse:collapse;font-size:.8rem; }
+.pgm-sol-cat-table th{ text-align:left;padding:10px 12px;background:#e2e8f0;color:#334155;font-weight:700;position:sticky;top:0; }
+.pgm-sol-cat-table td{ padding:10px 12px;border-top:1px solid var(--sol-border);cursor:pointer; }
+.pgm-sol-cat-table tr:hover td{ background:#f1f5f9; }
+.pgm-sol-cat-table .c-cod{ width:28%;font-weight:600;color:var(--sol-navy);white-space:nowrap; }
+.pgm-sol-form-grid{ display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+@media(max-width:640px){ .pgm-sol-form-grid{ grid-template-columns:1fr;} }
+.pgm-sol-field label{ display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sol-muted);margin-bottom:6px; }
+.pgm-sol-field .req{ color:#dc2626; }
+.pgm-sol-input,.pgm-sol-textarea{
+	width:100%;padding:10px 12px;border:1px solid var(--sol-border);border-radius:9px;font-size:.85rem;font-family:inherit;
+	background:#f8fafc;
+}
+.pgm-sol-input:focus,.pgm-sol-textarea:focus{ outline:none;border-color:var(--sol-cyan);box-shadow:0 0 0 3px rgba(0,180,216,.15);background:#fff; }
+.pgm-sol-textarea{ min-height:100px;resize:vertical; }
+.pgm-sol-urg{ display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+@media(max-width:480px){ .pgm-sol-urg{ grid-template-columns:1fr;} }
+.pgm-sol-urg button{
+	padding:11px;border-radius:10px;border:1px solid var(--sol-border);background:#fff;cursor:pointer;font-size:.78rem;font-weight:600;font-family:inherit;
+}
+.pgm-sol-urg button.active-n{ border-color:var(--sol-green);background:#ecfdf5;color:#047857; }
+.pgm-sol-urg button.active-m{ border-color:#f59e0b;background:#fffbeb;color:#b45309; }
+.pgm-sol-urg button.active-h{ border-color:#ef4444;background:#fef2f2;color:#b91c1c; }
+.pgm-sol-item-row{
+	display:grid;grid-template-columns:100px 1fr 72px 1fr 36px;gap:10px;align-items:end;
+	background:#f8fafc;border:1px solid var(--sol-border);border-radius:10px;padding:12px;
+}
+@media(max-width:700px){ .pgm-sol-item-row{ grid-template-columns:1fr; } }
+.pgm-sol-item-row .lbl{ font-size:.58rem;font-weight:700;text-transform:uppercase;color:var(--sol-muted);margin-bottom:4px; }
+.pgm-sol-btn-add{
+	margin-top:10px;padding:9px 16px;border:1px dashed var(--sol-border);border-radius:9px;background:transparent;
+	cursor:pointer;font-size:.78rem;color:var(--sol-muted);font-family:inherit;
+}
+.pgm-sol-btn-add:hover{ border-color:var(--sol-green);color:var(--sol-green); }
+.pgm-sol-btn-rm{
+	width:34px;height:34px;border-radius:8px;border:1px solid var(--sol-border);background:#fff;cursor:pointer;color:var(--sol-muted);
+}
+.pgm-sol-actions{ display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;padding-top:8px; }
+.pgm-sol-btn-cancel{
+	padding:11px 20px;border-radius:10px;border:1px solid var(--sol-border);background:#fff;color:var(--sol-muted);font-size:.85rem;text-decoration:none;
+}
+.pgm-sol-btn-submit{
+	padding:12px 28px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--sol-green),#008f68);color:#fff;font-size:.88rem;font-weight:800;
+	cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(0,168,120,.25);
+}
+.pgm-sol-note{
+	font-size:.78rem;color:var(--sol-muted);padding:14px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;line-height:1.5;
+}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
 
-<div class="col-md-12">
-<div class="sol-page-wrap">
-<div class="sol-root">
+<div class="col-md-12 p-0">
+<div class="pgm-solicitar-wrap">
 
-    <!-- Head -->
-    <div class="sol-head">
-        <div>
-            <div class="sol-eyebrow">
-                Portal do Cliente <span>›</span> Orçamentos
-            </div>
-            <h1>Solicitar Orçamento</h1>
-            <p>Preencha os dados abaixo e nossa equipe preparará uma proposta personalizada.</p>
-        </div>
-        <?= $this->Html->link(
-            '<i class="fas fa-arrow-left"></i> Meus Orçamentos',
-            ['action' => 'index'],
-            ['class' => 'sol-back', 'escape' => false]
-        ) ?>
-    </div>
+	<div class="pgm-sol-hero">
+		<div class="pgm-sol-hero-inner">
+			<div>
+				<div class="pgm-sol-eyebrow"><?= __('Portal comercial') ?> · <?= __('Orçamentos') ?></div>
+				<h1><?= __('Solicitar proposta') ?></h1>
+				<p><?= __('Monte seu pedido com itens do catálogo ou descreva o que precisa. Este fluxo é independente dos chamados de suporte (tickets).') ?></p>
+			</div>
+			<?= $this->Html->link(
+				'<i class="fas fa-arrow-left"></i> ' . __('Meus orçamentos'),
+				['action' => 'index'],
+				['class' => 'sol-back', 'escape' => false]
+			) ?>
+		</div>
+	</div>
 
-    <!-- Flash messages -->
-    <?= $this->Flash->render() ?>
+	<div class="pgm-sol-main">
+		<?= $this->Flash->render() ?>
 
-    <?= $this->Form->create(null, ['url' => ['action' => 'solicitar'], 'type' => 'post', 'id' => 'formSolicitar']) ?>
+		<?php if (!empty($catalogoDestaque)) : ?>
+		<div>
+			<p class="pgm-sol-section-title"><?= __('Catálogo em destaque') ?></p>
+			<div class="pgm-sol-grid">
+				<?php foreach ($catalogoDestaque as $p) :
+					$preco = (float)($p->vlunitario ?? 0);
+					$precoTxt = $preco > 0 ? ('R$ ' . number_format($preco, 2, ',', '.')) : __('Sob consulta');
+					$dPlain = trim((string)$p->descricao);
+					$cPlain = trim((string)$p->codigo);
+					?>
+				<div class="pgm-sol-pcard" data-codigo="<?= h($cPlain) ?>" data-descricao="<?= h($dPlain) ?>">
+					<span class="pgm-sol-badge"><?= h($tipoLabel($p->tipo)) ?></span>
+					<h3><?= h($dPlain) ?></h3>
+					<div class="pgm-sol-sub"><?= h(__('Código')) ?>: <?= h($cPlain) ?></div>
+					<div class="pgm-sol-preco"><?= __('A partir de') ?> <strong><?= h($precoTxt) ?></strong></div>
+					<button type="button" class="pgm-sol-btn-outline pgm-sol-card-pick"><?= __('Incluir no pedido') ?></button>
+				</div>
+				<?php endforeach; ?>
+			</div>
+		</div>
+		<?php endif; ?>
 
-    <!-- Seção 1: Dados gerais -->
-    <div class="sol-card">
-        <div class="sol-card-head">
-            <div class="sol-card-icon teal"><i class="fas fa-clipboard-list"></i></div>
-            <span class="sol-card-title">Dados da Solicitação</span>
-            <span class="sol-card-hint">* campos obrigatórios</span>
-        </div>
-        <div class="sol-card-body">
-            <div class="sol-grid two">
-                <div class="sol-field">
-                    <label class="sol-label" for="sol-assunto">Assunto <span class="sol-req">*</span></label>
-                    <input class="sol-input" id="sol-assunto" name="assunto" type="text" required
-                        placeholder="Ex.: Suporte, Implantação, Licença, Equipamento…" maxlength="120">
-                </div>
-                <div class="sol-field">
-                    <label class="sol-label" for="sol-prazo">Prazo desejado</label>
-                    <input class="sol-input" id="sol-prazo" name="prazo" type="text"
-                        placeholder="Ex.: 15/04/2026 ou 30 dias">
-                </div>
-            </div>
+		<div class="pgm-sol-card">
+			<div class="pgm-sol-card-h"><?= __('Buscar no catálogo (código ou descrição)') ?></div>
+			<div class="pgm-sol-card-b">
+				<div class="pgm-sol-search-row">
+					<input type="search" id="solCatSearch" autocomplete="off" placeholder="<?= h(__('Ex.: CSPSOFT, Windows, Microsoft 365…')) ?>">
+				</div>
+				<p class="pgm-sol-search-hint"><?= __('Digite pelo menos 2 caracteres. Clique numa linha para preencher a linha de item ativa.') ?></p>
+				<div class="pgm-sol-cat-table-wrap" id="solCatWrap">
+					<table class="pgm-sol-cat-table" id="solCatTable">
+						<thead><tr><th class="c-cod"><?= __('Código') ?></th><th><?= __('Descrição do produto') ?></th></tr></thead>
+						<tbody id="solCatTbody"></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
 
-            <div class="sol-field" style="margin-top:16px;">
-                <label class="sol-label" for="sol-descricao">Descrição / Contexto <span class="sol-req">*</span></label>
-                <textarea class="sol-textarea" id="sol-descricao" name="descricao" required
-                    placeholder="Descreva o que precisa, contexto do projeto, volume, restrições técnicas ou qualquer informação relevante…" rows="5"></textarea>
-            </div>
+		<?= $this->Form->create(null, ['url' => ['action' => 'solicitar'], 'type' => 'post', 'id' => 'formSolicitar']) ?>
 
-            <div class="sol-field" style="margin-top:16px;">
-                <label class="sol-label">Urgência</label>
-                <div class="sol-urgency-row" id="urgencyRow">
-                    <button type="button" class="sol-urgency-btn active-low" data-value="Normal" onclick="setUrgency(this,'active-low')">
-                        <span class="urg-icon">✅</span>Normal
-                    </button>
-                    <button type="button" class="sol-urgency-btn" data-value="Média" onclick="setUrgency(this,'active-med')">
-                        <span class="urg-icon">⚠️</span>Média
-                    </button>
-                    <button type="button" class="sol-urgency-btn" data-value="Alta" onclick="setUrgency(this,'active-high')">
-                        <span class="urg-icon">🔥</span>Alta
-                    </button>
-                </div>
-                <input type="hidden" name="urgencia" id="inp-urgencia" value="Normal">
-            </div>
-        </div>
-    </div>
+		<div class="pgm-sol-card">
+			<div class="pgm-sol-card-h"><?= __('Dados da solicitação') ?></div>
+			<div class="pgm-sol-card-b">
+				<div class="pgm-sol-form-grid">
+					<div class="pgm-sol-field">
+						<label for="sol-assunto"><?= __('Assunto') ?> <span class="req">*</span></label>
+						<input class="pgm-sol-input" id="sol-assunto" name="assunto" type="text" required maxlength="120"
+							placeholder="<?= h(__('Licenças, infraestrutura, serviço gerenciado…')) ?>">
+					</div>
+					<div class="pgm-sol-field">
+						<label for="sol-prazo"><?= __('Prazo desejado') ?></label>
+						<input class="pgm-sol-input" id="sol-prazo" name="prazo" type="text" placeholder="<?= h(__('Data ou prazo em dias')) ?>">
+					</div>
+				</div>
+				<div class="pgm-sol-field" style="margin-top:16px;">
+					<label for="sol-descricao"><?= __('Descrição / contexto') ?> <span class="req">*</span></label>
+					<textarea class="pgm-sol-textarea" id="sol-descricao" name="descricao" required placeholder="<?= h(__('Objetivo, escopo, volume, restrições…')) ?>"></textarea>
+				</div>
+				<div class="pgm-sol-field" style="margin-top:16px;">
+					<label><?= __('Urgência') ?></label>
+					<div class="pgm-sol-urg" id="urgencyRow">
+						<button type="button" class="active-n" data-sev="n" data-value="<?= h(__('Normal')) ?>"><?= __('Normal') ?></button>
+						<button type="button" data-sev="m" data-value="<?= h(__('Média')) ?>"><?= __('Média') ?></button>
+						<button type="button" data-sev="h" data-value="<?= h(__('Alta')) ?>"><?= __('Alta') ?></button>
+					</div>
+					<input type="hidden" name="urgencia" id="inp-urgencia" value="<?= h(__('Normal')) ?>">
+				</div>
+			</div>
+		</div>
 
-    <!-- Seção 2: Itens -->
-    <div class="sol-card">
-        <div class="sol-card-head">
-            <div class="sol-card-icon blue"><i class="fas fa-list-ul"></i></div>
-            <span class="sol-card-title">Itens / Produtos / Serviços</span>
-            <span class="sol-card-hint">Adicione os itens que precisam de orçamento (opcional)</span>
-        </div>
-        <div class="sol-card-body">
-            <div class="sol-itens-list" id="itensList">
-                <div class="sol-item-row" id="item-0">
-                    <div class="sol-field" style="margin:0;">
-                        <label class="sol-label" style="font-size:.63rem;">Descrição do item</label>
-                        <input class="sol-input" name="itens[0][descricao]" type="text" placeholder="Ex.: Licença Microsoft 365, Switch 24 portas…">
-                    </div>
-                    <div class="sol-field" style="margin:0;">
-                        <label class="sol-label" style="font-size:.63rem;">Qtde</label>
-                        <input class="sol-input" name="itens[0][quantidade]" type="number" min="1" value="1" style="text-align:center;">
-                    </div>
-                    <div class="sol-field" style="margin:0;">
-                        <label class="sol-label" style="font-size:.63rem;">Observação</label>
-                        <input class="sol-input" name="itens[0][obs]" type="text" placeholder="Especificações, marca, modelo…">
-                    </div>
-                    <button type="button" class="sol-btn-rm" onclick="rmItem('item-0')" title="Remover item">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            <button type="button" class="sol-btn-add" onclick="addItem()">
-                <i class="fas fa-plus"></i> Adicionar item
-            </button>
-        </div>
-    </div>
+		<div class="pgm-sol-card">
+			<div class="pgm-sol-card-h"><?= __('Itens para cotar') ?></div>
+			<div class="pgm-sol-card-b">
+				<div id="itensList">
+					<div class="pgm-sol-item-row" id="item-0" data-sol-focus="1">
+						<div>
+							<div class="lbl"><?= __('Código') ?></div>
+							<input class="pgm-sol-input sol-inp-cod" name="itens[0][codigo]" type="text" placeholder="—" style="background:#f8fafc;">
+						</div>
+						<div>
+							<div class="lbl"><?= __('Descrição') ?></div>
+							<input class="pgm-sol-input sol-inp-desc" name="itens[0][descricao]" type="text" placeholder="<?= h(__('Descrição do item')) ?>">
+						</div>
+						<div>
+							<div class="lbl"><?= __('Qtd') ?></div>
+							<input class="pgm-sol-input" name="itens[0][quantidade]" type="number" min="1" value="1" style="text-align:center;">
+						</div>
+						<div>
+							<div class="lbl"><?= __('Obs.') ?></div>
+							<input class="pgm-sol-input" name="itens[0][obs]" type="text" placeholder="<?= h(__('Opcional')) ?>">
+						</div>
+						<button type="button" class="pgm-sol-btn-rm" onclick="rmItem('item-0')" title="<?= h(__('Remover')) ?>"><i class="fas fa-times"></i></button>
+					</div>
+				</div>
+				<button type="button" class="pgm-sol-btn-add" onclick="addItem()"><i class="fas fa-plus"></i> <?= __('Adicionar linha') ?></button>
+			</div>
+		</div>
 
-    <!-- Dica -->
-    <div class="sol-tip">
-        <i class="fas fa-lightbulb"></i>
-        <div>
-            <strong style="color:#c9d1d9;display:block;margin-bottom:3px;">Dica para uma proposta mais precisa</strong>
-            Quanto mais detalhes você fornecer, mais precisa será a proposta. Informe marca/modelo preferencial,
-            prazo, local de entrega/instalação e qualquer restrição de orçamento.
-            Nossa equipe entrará em contato em até 2 dias úteis.
-        </div>
-    </div>
+		<p class="pgm-sol-note"><?= __('Após o envio, um chamado interno será aberto para a equipe comercial com estes dados. Acompanhe em «Meus orçamentos» ou nos chamados, conforme o processo da sua empresa.') ?></p>
 
-    <!-- Footer de ação -->
-    <div class="sol-actions">
-        <?= $this->Html->link(
-            '<i class="fas fa-times"></i> Cancelar',
-            ['action' => 'index'],
-            ['class' => 'sol-btn-cancel', 'escape' => false]
-        ) ?>
-        <button type="submit" class="sol-btn-submit">
-            <i class="fas fa-paper-plane"></i> Enviar Solicitação
-        </button>
-    </div>
+		<div class="pgm-sol-actions">
+			<?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'pgm-sol-btn-cancel']) ?>
+			<button type="submit" class="pgm-sol-btn-submit"><i class="fas fa-paper-plane"></i> <?= __('Enviar solicitação') ?></button>
+		</div>
 
-    <?= $this->Form->end() ?>
-
-</div><!-- /sol-root -->
-</div><!-- /sol-page-wrap -->
-</div><!-- /col-md-12 -->
+		<?= $this->Form->end() ?>
+	</div>
+</div>
+</div>
 
 <script>
 (function() {
-    var itemCount = 1;
+	var itemCount = 1;
+	var catUrl = <?= json_encode($catalogoSugestoesUrl) ?>;
+	var debounceT = null;
 
-    window.setUrgency = function(btn, cls) {
-        document.querySelectorAll('.sol-urgency-btn').forEach(function(b) {
-            b.classList.remove('active-low', 'active-med', 'active-high');
-        });
-        btn.classList.add(cls);
-        document.getElementById('inp-urgencia').value = btn.getAttribute('data-value');
-    };
+	function activeRow() {
+		return document.querySelector('.pgm-sol-item-row[data-sol-focus="1"]') || document.querySelector('.pgm-sol-item-row');
+	}
+	function setFocusRow(row) {
+		document.querySelectorAll('.pgm-sol-item-row').forEach(function(r) { r.removeAttribute('data-sol-focus'); r.style.outline = ''; });
+		row.setAttribute('data-sol-focus', '1');
+		row.style.outline = '2px solid #00b4d8';
+	}
+	document.getElementById('itensList').addEventListener('click', function(ev) {
+		var row = ev.target.closest('.pgm-sol-item-row');
+		if (row) setFocusRow(row);
+	});
 
-    window.addItem = function() {
-        var idx = itemCount++;
-        var row = document.createElement('div');
-        row.className = 'sol-item-row';
-        row.id = 'item-' + idx;
-        row.innerHTML =
-            '<div class="sol-field" style="margin:0;">' +
-                '<label class="sol-label" style="font-size:.63rem;">Descrição do item</label>' +
-                '<input class="sol-input" name="itens[' + idx + '][descricao]" type="text" placeholder="Ex.: Licença, equipamento, serviço…">' +
-            '</div>' +
-            '<div class="sol-field" style="margin:0;">' +
-                '<label class="sol-label" style="font-size:.63rem;">Qtde</label>' +
-                '<input class="sol-input" name="itens[' + idx + '][quantidade]" type="number" min="1" value="1" style="text-align:center;">' +
-            '</div>' +
-            '<div class="sol-field" style="margin:0;">' +
-                '<label class="sol-label" style="font-size:.63rem;">Observação</label>' +
-                '<input class="sol-input" name="itens[' + idx + '][obs]" type="text" placeholder="Especificações, marca, modelo…">' +
-            '</div>' +
-            '<button type="button" class="sol-btn-rm" onclick="rmItem(\'item-' + idx + '\')" title="Remover"><i class="fas fa-times"></i></button>';
-        document.getElementById('itensList').appendChild(row);
-    };
+	document.querySelectorAll('.pgm-sol-urg button').forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			document.querySelectorAll('.pgm-sol-urg button').forEach(function(b) {
+				b.classList.remove('active-n', 'active-m', 'active-h');
+			});
+			var sev = btn.getAttribute('data-sev') || 'n';
+			if (sev === 'm') btn.classList.add('active-m');
+			else if (sev === 'h') btn.classList.add('active-h');
+			else btn.classList.add('active-n');
+			document.getElementById('inp-urgencia').value = btn.getAttribute('data-value') || '';
+		});
+	});
 
-    window.rmItem = function(id) {
-        var el = document.getElementById(id);
-        if (el && document.getElementById('itensList').children.length > 1) {
-            el.remove();
-        }
-    };
+	function fillRow(codigo, descricao) {
+		var row = activeRow();
+		if (!row) return;
+		var c = row.querySelector('.sol-inp-cod');
+		var d = row.querySelector('.sol-inp-desc');
+		if (c) { c.value = codigo || ''; }
+		if (d) d.value = descricao || '';
+	}
+
+	document.querySelectorAll('.pgm-sol-card-pick').forEach(function(btn) {
+		btn.addEventListener('click', function(ev) {
+			ev.preventDefault();
+			var card = btn.closest('.pgm-sol-pcard');
+			if (!card) return;
+			fillRow(card.getAttribute('data-codigo') || '', card.getAttribute('data-descricao') || '');
+		});
+	});
+
+	function renderCatRows(itens) {
+		var tb = document.getElementById('solCatTbody');
+		var wrap = document.getElementById('solCatWrap');
+		tb.innerHTML = '';
+		if (!itens || !itens.length) { wrap.classList.remove('open'); return; }
+		itens.forEach(function(it) {
+			var tr = document.createElement('tr');
+			tr.innerHTML = '<td class="c-cod"></td><td></td>';
+			tr.cells[0].textContent = it.codigo || '';
+			tr.cells[1].textContent = it.descricao || '';
+			tr.addEventListener('click', function() {
+				fillRow(it.codigo, it.descricao);
+				wrap.classList.remove('open');
+			});
+			tb.appendChild(tr);
+		});
+		wrap.classList.add('open');
+	}
+
+	document.getElementById('solCatSearch').addEventListener('input', function() {
+		var q = this.value.trim();
+		clearTimeout(debounceT);
+		if (q.length < 2) {
+			document.getElementById('solCatWrap').classList.remove('open');
+			return;
+		}
+		debounceT = setTimeout(function() {
+			fetch(catUrl + '?q=' + encodeURIComponent(q), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+				.then(function(r) { return r.json(); })
+				.then(function(data) { renderCatRows(data.itens || []); })
+				.catch(function() { document.getElementById('solCatWrap').classList.remove('open'); });
+		}, 320);
+	});
+
+	window.addItem = function() {
+		var idx = itemCount++;
+		var row = document.createElement('div');
+		row.className = 'pgm-sol-item-row';
+		row.id = 'item-' + idx;
+		row.innerHTML =
+			'<div><div class="lbl"><?= h(__('Código')) ?></div><input class="pgm-sol-input sol-inp-cod" name="itens[' + idx + '][codigo]" type="text" placeholder="—" style="background:#f8fafc;"></div>' +
+			'<div><div class="lbl"><?= h(__('Descrição')) ?></div><input class="pgm-sol-input sol-inp-desc" name="itens[' + idx + '][descricao]" type="text" placeholder="<?= h(__('Descrição do item')) ?>"></div>' +
+			'<div><div class="lbl"><?= h(__('Qtd')) ?></div><input class="pgm-sol-input" name="itens[' + idx + '][quantidade]" type="number" min="1" value="1" style="text-align:center;"></div>' +
+			'<div><div class="lbl"><?= h(__('Obs.')) ?></div><input class="pgm-sol-input" name="itens[' + idx + '][obs]" type="text" placeholder="<?= h(__('Opcional')) ?>"></div>' +
+			'<button type="button" class="pgm-sol-btn-rm" onclick="rmItem(\'item-' + idx + '\')" title="<?= h(__('Remover')) ?>"><i class="fas fa-times"></i></button>';
+		document.getElementById('itensList').appendChild(row);
+		setFocusRow(row);
+	};
+
+	window.rmItem = function(id) {
+		var el = document.getElementById(id);
+		var list = document.getElementById('itensList');
+		if (el && list.children.length > 1) el.remove();
+	};
+
+	setFocusRow(document.getElementById('item-0'));
 })();
 </script>
