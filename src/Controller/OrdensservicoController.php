@@ -82,6 +82,68 @@ class OrdensservicoController extends AppController {
 	}
 
 	/**
+	 * Garante linha em ordemservicositens com iditens preenchido para o grid (itensordem.idordempk).
+	 * Corrige OS antigas ou criadas sem esse vínculo.
+	 *
+	 * @param int|string $idordem ID da tabela ordensservico (não é idordempk do carrinho)
+	 * @return string|null iditens gerado ou já existente; null se a OS não existir ou save falhar
+	 */
+	protected function ensureOrdemServicoItensVinculo($idempresa, $idordem): ?string {
+		$idordem = (int)$idordem;
+		$idempresa = (int)$idempresa;
+		if ($idordem <= 0) {
+			return null;
+		}
+
+		$ordem = $this->Ordensservico->find('all')
+			->where(['id' => $idordem, 'idempresa' => $idempresa])
+			->first();
+		if ($ordem === null) {
+			return null;
+		}
+
+		$pk = $this->getOrdemIditensPk($idempresa, $idordem);
+		if ($pk !== null) {
+			return $pk;
+		}
+
+		$row = $this->Ordemservicositens->find('all')
+			->where(['idempresa' => $idempresa, 'idordem' => $idordem])
+			->first();
+
+		$ultimo = $this->Empresas->prxOrdem($idempresa);
+		if ($ultimo === null || (int)$ultimo === 0) {
+			$iditens = (string)$idempresa . '1' . (string)(int)$this->Auth->user('id');
+		} else {
+			$iditens = (string)$idempresa . (string)(int)$ultimo . (string)(int)$this->Auth->user('id');
+		}
+
+		if ($row === null) {
+			$row = $this->Ordemservicositens->newEntity();
+			$row->idordem = $idordem;
+			$row->idempresa = $idempresa;
+		}
+		$row->iditens = $iditens;
+
+		$this->fixPostgresIdSequence('ordemservicositens');
+		if (!$this->Ordemservicositens->save($row)) {
+			$this->log(
+				'ensureOrdemServicoItensVinculo: falha ao salvar ordemservicositens OS ' . $idordem . ' ' . json_encode($row->getErrors()),
+				'error'
+			);
+
+			return null;
+		}
+
+		$this->log(
+			'ensureOrdemServicoItensVinculo: vínculo criado/atualizado para OS ' . $idordem . ' iditens=' . $iditens,
+			'info'
+		);
+
+		return (string)$iditens;
+	}
+
+	/**
 	 * Diagnóstico extra do grid (debug no JSON + detalhes no Bootbox): debug global do Cake
 	 * ou sessão ativada com ?os_grid_diag=1 na página add/edit/ticketordem (apenas funcionário).
 	 */
@@ -626,7 +688,11 @@ class OrdensservicoController extends AppController {
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 			$result = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 		} else {
-			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
+			$idempresa = (int)$this->Auth->user('idempresa');
+			$iditensPk = $this->getOrdemIditensPk($idempresa, $idordem);
+			if ($iditensPk === null) {
+				$iditensPk = $this->ensureOrdemServicoItensVinculo($idempresa, $idordem);
+			}
 			$result = $iditensPk !== null
 				? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
 				: [];
@@ -669,9 +735,13 @@ class OrdensservicoController extends AppController {
 			}
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 		} else {
-			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
+			$idempresaOs = (int)$this->Auth->user('idempresa');
+			$iditensPk = $this->getOrdemIditensPk($idempresaOs, $idordem);
 			if ($iditensPk === null) {
-				return $this->osGridJsonError(400, 'os_grid_sem_vinculo_itens', 'Carrinho desta ordem não foi encontrado (sem vínculo ordemservicositens). Salve a ordem ou recarregue a página.', [
+				$iditensPk = $this->ensureOrdemServicoItensVinculo($idempresaOs, $idordem);
+			}
+			if ($iditensPk === null) {
+				return $this->osGridJsonError(400, 'os_grid_sem_vinculo_itens', 'Não foi possível vincular o carrinho desta ordem (OS inexistente ou erro ao gravar ordemservicositens).', [
 					'idordem_param' => $idordem,
 				]);
 			}
@@ -886,7 +956,11 @@ class OrdensservicoController extends AppController {
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 			$carrinho = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 		} else {
-			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
+			$idempresa = (int)$this->Auth->user('idempresa');
+			$iditensPk = $this->getOrdemIditensPk($idempresa, $idordem);
+			if ($iditensPk === null) {
+				$iditensPk = $this->ensureOrdemServicoItensVinculo($idempresa, $idordem);
+			}
 			$carrinho = $iditensPk !== null
 				? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
 				: [];
