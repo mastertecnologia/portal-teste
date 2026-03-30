@@ -67,6 +67,39 @@ class OrdensservicoController extends AppController {
 	}
 
 	/**
+	 * Converte valor monetário/qty do grid (pt-BR: 1.234,56) para float, evitando warning PHP 8+ em operações aritméticas.
+	 */
+	protected function parseDecimalBr($value, float $default = 0.0): float {
+		if ($value === null || $value === '') {
+			return $default;
+		}
+		if (is_int($value) || is_float($value)) {
+			return (float)$value;
+		}
+		if (!is_scalar($value)) {
+			return $default;
+		}
+		$s = trim((string)$value);
+		if ($s === '') {
+			return $default;
+		}
+		if (is_numeric($s)) {
+			return (float)$s;
+		}
+		$s = preg_replace('/[^\d,.-]/u', '', $s);
+		if ($s === '' || $s === '-') {
+			return $default;
+		}
+		$s = str_replace('.', '', $s);
+		$s = str_replace(',', '.', $s);
+		if ($s === '' || !is_numeric($s)) {
+			return $default;
+		}
+
+		return (float)$s;
+	}
+
+	/**
 	 * Retorna iditens (chave do carrinho em itensordem) para a OS, ou null se não houver linha em ordemservicositens.
 	 *
 	 * @param int|string $idordem
@@ -836,13 +869,16 @@ class OrdensservicoController extends AppController {
 		}
 
 		$idempresa = $this->Auth->user('idempresa');
-		$valorunitario = (float) str_replace(',', '.', str_replace('.', '', $data['valorunitario'] ?? '0'));
+		$valorunitario = $this->parseDecimalBr($data['valorunitario'] ?? 0);
 		$descricao = $data['descricao'] ?? '';
 		$unidade = $data['unidade'] ?? '';
-		$tipo = $data['tipo'] ?? 0;
+		$tipo = isset($data['tipo']) ? (int)$data['tipo'] : 0;
 
-		$valordesconto = formatNumber($data['valordesconto']);
-		$quantidade = (float) ($data['quantidade'] ?? 1);
+		$valordesconto = $this->parseDecimalBr($data['valordesconto'] ?? 0);
+		$quantidade = $this->parseDecimalBr($data['quantidade'] ?? 1, 1.0);
+		if ($quantidade <= 0) {
+			$quantidade = 1.0;
+		}
 
 		// Sempre buscar preço vigente: primeiro no ERP (Preço de Venda do estoque), senão no cadastro
 		if ($codproduto !== '') {
@@ -850,7 +886,7 @@ class OrdensservicoController extends AppController {
 			if ($produto) {
 				$descricao = $produto->descricao;
 				$unidade = $produto->unidade;
-				$tipo = $produto->tipo;
+				$tipo = (int)$produto->tipo;
 				$precoDoErp = null;
 				try {
 					$soapprodutos = $this->Empresas->get($idempresa)->urlerp . 'WsProdutos.wso?wsdl';
@@ -900,7 +936,7 @@ class OrdensservicoController extends AppController {
         $ordem->descricao = $descricao;
         $ordem->observacao = $data['observacao'] ?? '';
         $ordem->unidade = $unidade;
-        $ordem->quantidade = $data['quantidade'] ?? '';
+        $ordem->quantidade = $quantidade;
         $ordem->serialnumber = $data['serialnumber'] ?? '';
         $ordem->modelo = $data['modelo'] ?? ''; 
 		$ordem->productkey = isset($data['productkey']) ? $data['productkey'] : '';
