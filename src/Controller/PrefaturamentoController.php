@@ -71,6 +71,7 @@ class PrefaturamentoController extends AppController {
 		$this->set('cliente', $cliente);
 		$this->set('clientesOpt1', $clientesOpt1);
 		$this->set('title', 'Pré-faturamento');
+		$this->set('bodyPageClass', 'pgm-prefaturamento-page');
 	}
 
 	/**

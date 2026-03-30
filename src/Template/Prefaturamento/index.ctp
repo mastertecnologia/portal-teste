@@ -5,21 +5,23 @@
  */
 require_once ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
 
+$this->Html->css('/dist/css/pages/prefaturamento-shell.css', ['block' => true]);
+
 $pfBool = static function ($reg, $prop) {
 	return !empty($reg->{$prop});
 };
 ?>
-<div class="col-md-12">
+<div class="col-md-12 pgm-prefaturamento-shell">
 	<div class="card">
 		<div class="card-body">
-			<p class="text-muted m-b-15">
+			<p class="pf-intro m-b-15">
 				Ordens de serviço em <strong><?= h(strip_tags((string)SituacaoOrdem(C_OrdensSituacaoLiberadaParaFaturamento))) ?></strong>.
 				<strong>Nova locação</strong> abre o cadastro de fatura com cliente (e OS) vinculados; ao salvar, o vínculo fica registrado após a migração do banco.
 			</p>
 			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material m-b-20']); ?>
 			<div class="row">
 				<div class="col-md-1 col-xs-12 m-t-10 p-r-0 float-left">
-					<p style="font-weight: 500;">Cliente:</p>
+					<p class="pf-field-label m-t-10">Cliente:</p>
 				</div>
 				<div class="col-md-5 col-xs-12 p-l-0 float-right">
 					<?= $this->Form->control('cliente', [
@@ -46,7 +48,7 @@ $pfBool = static function ($reg, $prop) {
 
 			<div class="table-responsive">
 				<table class="table table-hover" id="table-prefaturamento">
-					<thead class="text-primary">
+					<thead>
 						<tr>
 							<th style="width:36px"><span class="sr-only">Selecionar</span></th>
 							<th>OS</th>
