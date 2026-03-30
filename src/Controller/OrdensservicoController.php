@@ -56,11 +56,13 @@ class OrdensservicoController extends AppController {
 				return;
 			}
 			$qi = $conn->quoteIdentifier($table);
+			// regclass com schema (evita setval no sequence errado); valor = MAX(id) para o próximo nextval ser MAX+1
+			$rel = 'public.' . str_replace(['"', "'"], '', $table);
 			$conn->execute(
-				"SELECT setval(pg_get_serial_sequence('{$table}', 'id'), COALESCE((SELECT MAX(id) FROM {$qi}), 0) + 1)"
+				"SELECT setval(pg_get_serial_sequence('" . $rel . "', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {$qi}))"
 			);
 		} catch (\Throwable $e) {
-			$this->log('fixPostgresIdSequence(' . $table . '): ' . $e->getMessage(), 'debug');
+			$this->log('fixPostgresIdSequence(' . $table . '): ' . $e->getMessage(), 'warning');
 		}
 	}
 
@@ -110,6 +112,14 @@ class OrdensservicoController extends AppController {
 		$row = $this->Ordemservicositens->find('all')
 			->where(['idempresa' => $idempresa, 'idordem' => $idordem])
 			->first();
+		if ($row === null) {
+			foreach ($this->Ordemservicositens->find('all')->where(['idordem' => $idordem]) as $c) {
+				if ((int)$c->idempresa === $idempresa) {
+					$row = $c;
+					break;
+				}
+			}
+		}
 
 		$ultimo = $this->Empresas->prxOrdem($idempresa);
 		if ($ultimo === null || (int)$ultimo === 0) {
@@ -126,13 +136,50 @@ class OrdensservicoController extends AppController {
 		$row->iditens = $iditens;
 
 		$this->fixPostgresIdSequence('ordemservicositens');
-		if (!$this->Ordemservicositens->save($row)) {
-			$this->log(
-				'ensureOrdemServicoItensVinculo: falha ao salvar ordemservicositens OS ' . $idordem . ' ' . json_encode($row->getErrors()),
-				'error'
-			);
 
-			return null;
+		try {
+			if (!$this->Ordemservicositens->save($row)) {
+				$this->log(
+					'ensureOrdemServicoItensVinculo: falha ao salvar ordemservicositens OS ' . $idordem . ' ' . json_encode($row->getErrors()),
+					'error'
+				);
+
+				return null;
+			}
+		} catch (\Throwable $e) {
+			$msg = $e->getMessage();
+			$isDup = (strpos($msg, '23505') !== false || stripos($msg, 'duplicate key') !== false);
+			if (!$isDup) {
+				$this->log('ensureOrdemServicoItensVinculo: exceção OS ' . $idordem . ': ' . $msg, 'error');
+				throw $e;
+			}
+
+			$this->log('ensureOrdemServicoItensVinculo: duplicate key ordemservicositens OS ' . $idordem . ', realinhando sequência', 'warning');
+			$this->fixPostgresIdSequence('ordemservicositens');
+
+			$again = $this->Ordemservicositens->find('all')
+				->where(['idempresa' => $idempresa, 'idordem' => $idordem])
+				->first();
+			if ($again !== null && $again->iditens !== null && $again->iditens !== '') {
+				return (string)$again->iditens;
+			}
+
+			if ($row->isNew()) {
+				$row = $this->Ordemservicositens->newEntity([
+					'idordem' => $idordem,
+					'idempresa' => $idempresa,
+					'iditens' => $iditens,
+				]);
+			}
+
+			if (!$this->Ordemservicositens->save($row)) {
+				$this->log(
+					'ensureOrdemServicoItensVinculo: retry save falhou OS ' . $idordem . ' ' . json_encode($row->getErrors()),
+					'error'
+				);
+
+				return null;
+			}
 		}
 
 		$this->log(
