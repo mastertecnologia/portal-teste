@@ -570,9 +570,10 @@
 					// Template para INSERÇÃO
 					insertTemplate: function() {
 						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true);
-						var $btn = $("<button>").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
+						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 						
-						$btn.on("click", function() {
+						$btn.on("click", function(e) {
+							e.preventDefault();
 							window.activeInputCode = $input; 
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
@@ -594,9 +595,10 @@
 					// Template para EDIÇÃO
 					editTemplate: function(value) {
 						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true).val(value);
-						var $btn = $("<button>").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
+						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 						
-						$btn.on("click", function() {
+						$btn.on("click", function(e) {
+							e.preventDefault();
 							window.activeInputCode = $input;
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
@@ -618,10 +620,11 @@
 				{ name: "descricao",  fixed: true, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
                 { name: "observacao",  title: "Referenciar ▼", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
                 { name: "unidade",  title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
-                { name: "quantidade",  title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "A quantidade não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
-                { name: "valorunitario",  title: "Vl. Unitário", type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "O valor unitário não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
+                { name: "quantidade",  title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
+                { name: "valorunitario",  title: "Vl. Unitário", type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
                 { name: "valordesconto",  title: "Vl. Desconto", type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
-                { name: "valortotal",  title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal', validate: { message: "O valor total não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
+                /* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
+                { name: "valortotal",  title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
                 { name: "modelo", type: "text", css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
                 { name: "serialnumber", type: "text", css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
 				{ name: "productkey", type: "text", css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},
