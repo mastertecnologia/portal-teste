@@ -53,6 +53,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/agenda/edit/*', ['controller' => 'Visitas', 'action' => 'edit']);
     $routes->connect('/agenda/delete/*', ['controller' => 'Visitas', 'action' => 'delete']);
     $routes->connect('/agenda/view/*', ['controller' => 'Visitas', 'action' => 'view']);
+    $routes->connect('/prefaturamento', ['controller' => 'Prefaturamento', 'action' => 'index']);
+    $routes->connect('/prefaturamento/index', ['controller' => 'Prefaturamento', 'action' => 'index']);
+    $routes->connect('/prefaturamento/conferencia', ['controller' => 'Prefaturamento', 'action' => 'conferencia'])->setMethods(['POST']);
     $routes->connect('/locacao', ['controller' => 'Faturas', 'action' => 'index']);
     $routes->connect('/locacao/index', ['controller' => 'Faturas', 'action' => 'index']);
     $routes->connect('/locacao/view/*', ['controller' => 'Faturas', 'action' => 'view']);

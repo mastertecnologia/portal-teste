@@ -165,6 +165,13 @@
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
+				<li class="<?= $prefaturamentoActive ?>">
+					<?= $this->Html->link(
+						'<i class="fas fa-clipboard-check"></i><span class="hide-menu"> Pré-faturamento </span>',
+						['controller' => 'Prefaturamento', 'action' => 'index'],
+						['class' => 'waves-effect waves-dark', 'escape' => false]
+					) ?>
+				</li>
 				<li class="<?= $faturasActive ?>">
 					<?= $this->Html->link(
 						'<i class="fas fa-file-invoice"></i><span class="hide-menu"> Locação </span>',

@@ -160,6 +160,7 @@ class AppController extends Controller {
 			'ticketsActive' => '',
 			'senhasActive' => '',
 			'faturasActive' => '',
+			'prefaturamentoActive' => '',
 			'config' => '',
 			'queuesAtendimentoActive' => '',
 		];
@@ -188,6 +189,7 @@ class AppController extends Controller {
 			'ordensservico' => 'ordensActive',
 			'bancosenhas' => 'senhasActive',
 			'faturas' => 'faturasActive',
+			'prefaturamento' => 'prefaturamentoActive',
 			'tickets' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
 		];

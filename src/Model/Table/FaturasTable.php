@@ -10,6 +10,7 @@ class FaturasTable extends Table {
 		$this->belongsTo('Users')->setForeignKey('iduser')->setDependent(false);
 		$this->hasMany('Faturasitens')->setForeignKey('id')->setDependent(false);
 		$this->hasMany('Faturasitensrel')->setForeignKey('id')->setDependent(false);
+		$this->hasMany('FaturasOrdensServico')->setForeignKey('idfatura')->setDependent(false);
 	}
 
 	public function hash() {

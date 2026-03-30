@@ -18,7 +18,9 @@ class FaturasController extends AppController {
 		$this->loadModel('Faturasitens'); 
 		$this->loadModel('Faturasrecibos'); 
 		$this->loadModel('Produtos'); 
-		$this->loadModel('Config'); 
+		$this->loadModel('Config');
+		$this->loadModel('Ordensservico');
+		$this->loadModel('FaturasOrdensServico');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -120,6 +122,47 @@ class FaturasController extends AppController {
 		$idempresa = $this->Auth->user('idempresa');
 		$fatura = $this->Faturas->newEntity();
 
+		$idclientePrefill = $this->request->getQuery('idcliente');
+		if ($this->request->is('get') && $idclientePrefill !== null && $idclientePrefill !== '') {
+			$c = $this->Clientes->find()->where([
+				'id' => $idclientePrefill,
+				'idempresa' => $idempresa,
+				'inativo' => 0,
+			])->first();
+			if ($c) {
+				$fatura->idcliente = (int)$idclientePrefill;
+			}
+		}
+
+		if ($this->request->is('get')) {
+			$idosQ = $this->request->getQuery('idos');
+			if ($idosQ === null || $idosQ === '') {
+				unset($_SESSION['PGM_Prefat_Idos']);
+			} else {
+				$list = array_values(array_unique(array_filter(array_map('intval', preg_split('/[,\s;]+/', (string)$idosQ)))));
+				$idcliExpect = (int)$this->request->getQuery('idcliente');
+				$valid = [];
+				foreach ($list as $oid) {
+					if ($oid < 1) {
+						continue;
+					}
+					$os = $this->Ordensservico->find()->where([
+						'id' => $oid,
+						'idempresa' => $idempresa,
+						'situacao' => C_OrdensSituacaoLiberadaParaFaturamento,
+					])->first();
+					if (!$os) {
+						continue;
+					}
+					if ($idcliExpect > 0 && (int)$os->idcliente !== $idcliExpect) {
+						continue;
+					}
+					$valid[] = $oid;
+				}
+				$_SESSION['PGM_Prefat_Idos'] = $valid;
+			}
+		}
+
 		if(empty($_SESSION['PGM_Ordem_Idcarrinhofaturaadd'])) {
 			$prxId = $this->Empresas->prxFatura($this->Auth->user('idempresa'));
 			$idcarrinho = $idempresa . $prxId . $this->Auth->user('id');
@@ -160,6 +203,8 @@ class FaturasController extends AppController {
 					$reg->idfatura = $fatura->id;
 					$this->Faturasitens->save($reg);
 				}
+				$this->_persistPrefatOsLinks((int)$idempresa, (int)$fatura->id, (int)$fatura->idcliente);
+				unset($_SESSION['PGM_Prefat_Idos']);
 				unset($_SESSION['PGM_Ordem_Idcarrinhofaturaadd']);
 				$this->Empresas->incrementFatura($this->Auth->user('idempresa'));
 				$this->Flash->success(__('A locação foi cadastrada com sucesso!'));
@@ -210,6 +255,21 @@ class FaturasController extends AppController {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'locacao', 'action' => 'index']);
 		}
+
+		$prefatOsIds = [];
+		try {
+			$__rows = $this->FaturasOrdensServico->find()
+				->select(['idordem'])
+				->where(['idfatura' => $id, 'idempresa' => $idempresa])
+				->order(['idordem' => 'ASC'])
+				->toArray();
+			foreach ($__rows as $__r) {
+				$prefatOsIds[] = (int)$__r->idordem;
+			}
+		} catch (\Throwable $e) {
+			$prefatOsIds = [];
+		}
+		$this->set('prefatOsIds', $prefatOsIds);
 		
 		$fatura->created = date_format($fatura->created, 'd/m/Y');
 		$fatura->vencimento = date_format($fatura->vencimento, 'd/m/Y');
@@ -579,5 +639,48 @@ class FaturasController extends AppController {
 		$this->set('title', 'Devolução');
 		$this->set('item', $item);
 		$this->set('fatura', $fatura);
+	}
+
+	/**
+	 * Grava vínculos pré-faturamento → fatura (tabela `faturas_ordens_servico` após migração).
+	 */
+	protected function _persistPrefatOsLinks($idempresa, $idfatura, $idcliente) {
+		$ids = isset($_SESSION['PGM_Prefat_Idos']) && is_array($_SESSION['PGM_Prefat_Idos']) ? $_SESSION['PGM_Prefat_Idos'] : [];
+		if ($idfatura < 1 || $idcliente < 1 || empty($ids)) {
+			return;
+		}
+		foreach ($ids as $idordem) {
+			$idordem = (int)$idordem;
+			if ($idordem < 1) {
+				continue;
+			}
+			$os = $this->Ordensservico->find()->where([
+				'id' => $idordem,
+				'idempresa' => $idempresa,
+				'idcliente' => $idcliente,
+				'situacao' => C_OrdensSituacaoLiberadaParaFaturamento,
+			])->first();
+			if (!$os) {
+				continue;
+			}
+			$dup = $this->FaturasOrdensServico->find()->where([
+				'idempresa' => $idempresa,
+				'idfatura' => $idfatura,
+				'idordem' => $idordem,
+			])->first();
+			if ($dup) {
+				continue;
+			}
+			try {
+				$row = $this->FaturasOrdensServico->newEntity([
+					'idfatura' => $idfatura,
+					'idordem' => $idordem,
+					'idempresa' => $idempresa,
+				]);
+				$this->FaturasOrdensServico->save($row);
+			} catch (\Throwable $e) {
+				$this->log('[Prefat] vínculo fatura/os: ' . $e->getMessage(), 'warning');
+			}
+		}
 	}
 }

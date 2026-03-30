@@ -16,6 +16,7 @@ class OrdensservicoTable extends Table {
 		$this->hasMany('Ordemmovs')->setForeignKey('id')->setDependent(false);
 		$this->hasMany('Itensordem');
 		$this->hasMany('Ordemmovs');
+		$this->hasMany('FaturasOrdensServico')->setForeignKey('idordem')->setDependent(false);
 	}
 
 	public function limpacarrinho(){

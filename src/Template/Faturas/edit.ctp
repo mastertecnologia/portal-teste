@@ -14,6 +14,18 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
+			<?php if (!empty($prefatOsIds)) : ?>
+			<div class="alert alert-info m-b-15" role="status">
+				<strong>Pré-faturamento:</strong> OS vinculadas —
+				<?php
+				$links = [];
+				foreach ($prefatOsIds as $oid) {
+					$links[] = $this->Html->link('#' . (int)$oid, ['controller' => 'Ordensservico', 'action' => 'edit', (int)$oid], ['target' => '_blank', 'rel' => 'noopener noreferrer']);
+				}
+				echo implode(', ', $links);
+				?>
+			</div>
+			<?php endif; ?>
 			<ul class="nav nav-tabs customtab" role="tablist">
 				<li class="nav-item"> <a class="nav-link <?= $aba == 1 ? 'active' : '' ?>" data-toggle="tab" href="#contratos" role="tab" aria-selected="true"><span class="hidden-sm-up"></span> <span class="hidden-xs-down"> Contrato </span></a> </li>
 				<li class="nav-item"> <a class="nav-link <?= $aba == 2 ? 'active' : '' ?>" data-toggle="tab" href="#recibos" role="tab" aria-selected="false"><span class="hidden-sm-up"></span> <span class="hidden-xs-down"> Recibos </span></a> </li>
