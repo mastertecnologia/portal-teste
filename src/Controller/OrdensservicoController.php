@@ -38,6 +38,31 @@ class OrdensservicoController extends AppController {
 		$this->loadModel('Ticketsmovs');
 	}
 
+	/**
+	 * Realinha a sequência SERIAL da coluna id no PostgreSQL (evita duplicate key após importação / INSERT manual).
+	 *
+	 * @param string $table itensordem | ordemservicositens
+	 */
+	protected function fixPostgresIdSequence($table) {
+		static $allowed = ['itensordem' => true, 'ordemservicositens' => true];
+		if (empty($allowed[$table])) {
+			return;
+		}
+		try {
+			$conn = $this->Itensordem->getConnection();
+			$d = $conn->getDriver();
+			if (!($d instanceof \Cake\Database\Driver\Postgres)) {
+				return;
+			}
+			$qi = $conn->quoteIdentifier($table);
+			$conn->execute(
+				"SELECT setval(pg_get_serial_sequence('{$table}', 'id'), COALESCE((SELECT MAX(id) FROM {$qi}), 0) + 1)"
+			);
+		} catch (\Throwable $e) {
+			$this->log('fixPostgresIdSequence(' . $table . '): ' . $e->getMessage(), 'debug');
+		}
+	}
+
 	public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
         
@@ -198,6 +223,7 @@ class OrdensservicoController extends AppController {
 
 				$carrinho->idordem = $ordem->id;
 				$carrinho->idempresa = $idempresa;
+				$this->fixPostgresIdSequence('ordemservicositens');
 				$this->Ordemservicositens->save($carrinho);
 				unset($_SESSION['PGM_Ordem_Idcarrinhoadd']);
 				unset($_SESSION['PGM_Ordem_Idempresaadd']);
@@ -633,6 +659,8 @@ class OrdensservicoController extends AppController {
         $ordem->valordesconto = $valordesconto;
         $ordem->valortotal = $valortotal;
 
+		$this->fixPostgresIdSequence('itensordem');
+		$this->fixPostgresIdSequence('ordemservicositens');
 		if( $this->Itensordem->save($ordem) ) echo('boa');
 
 	}
@@ -1190,6 +1218,7 @@ class OrdensservicoController extends AppController {
 				$carrinho->iditens = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 				$carrinho->idordem = $ordem->id;
 				$carrinho->idempresa = $idempresa;
+				$this->fixPostgresIdSequence('ordemservicositens');
 				$this->Ordemservicositens->save($carrinho);
 				unset($_SESSION['PGM_Ordem_Idcarrinhoadd']);
 				// Movimentação
