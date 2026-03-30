@@ -428,6 +428,12 @@ class OrdensservicoController extends AppController {
 		$idcarrinho = $this->Ordemservicositens->find('all')->where(['idempresa' => $idempresa, 'idordem' => $id])->first();
 		$carrinho = $this->Itensordem->findByIdordempk($idcarrinho->iditens)->order(['id'])->toArray();
 
+		$this->loadModel('Faturamento');
+		$faturamentos = $this->Faturamento->find('all')
+			->where(['Faturamento.idordem' => $id, 'Faturamento.idempresa' => $idempresa])
+			->order(['Faturamento.created' => 'DESC'])
+			->toArray();
+
 		$this->set('carrinho', $carrinho);
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
@@ -440,6 +446,7 @@ class OrdensservicoController extends AppController {
 		$this->set('ordem', $ordem);
 		$this->set('ordemhoras', $ordemhoras);
 		$this->set('ordemparcelas', $ordemparcelas);
+		$this->set('faturamentos', $faturamentos);
 		$this->set('title', 'Visualizar ordem de serviços');
 	}
 	
@@ -755,6 +762,18 @@ class OrdensservicoController extends AppController {
 
 	public function liberar($id = null){
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])->first();
+
+		if (empty($ordem)) {
+			$this->Flash->error('Ordem de serviço não encontrada.');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		$statusPermitidos = [C_OrdensSituacaoAberta, C_OrdensSituacaoEmExecucao];
+		if (!in_array($ordem->situacao, $statusPermitidos, true)) {
+			$this->Flash->error('Não é possível liberar esta OS. Situação atual não permite a transição para faturamento.');
+			return $this->redirect(['action' => 'edit', $id]);
+		}
+
 		$data = $this->request->getData();
 		$sitantiga = $ordem->situacao;
 		

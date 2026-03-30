@@ -16,7 +16,7 @@ $pfBool = static function ($reg, $prop) {
 		<div class="card-body">
 			<p class="pf-intro m-b-15">
 				Ordens de serviço em <strong><?= h(strip_tags((string)SituacaoOrdem(C_OrdensSituacaoLiberadaParaFaturamento))) ?></strong>.
-				<strong>Nova locação</strong> abre o cadastro de fatura com cliente (e OS) vinculados; ao salvar, o vínculo fica registrado após a migração do banco.
+				Clique em <strong>Gerar Faturamento</strong> para criar o documento de faturamento a partir da OS.
 			</p>
 			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material m-b-20']); ?>
 			<div class="row">
@@ -41,8 +41,8 @@ $pfBool = static function ($reg, $prop) {
 			<?= $this->Form->end(); ?>
 
 			<div class="m-b-10">
-				<button type="button" class="btn btn-sm btn-outline-success" id="pf-batch-locacao" disabled title="Mesmo cliente">
-					Nova locação (selecionadas)
+				<button type="button" class="btn btn-sm btn-pgm btn-pgm-salvar" id="pf-batch-faturamento" disabled title="Selecione OS do mesmo cliente">
+					<i class="fas fa-file-alt"></i> Gerar Faturamento (selecionadas)
 				</button>
 			</div>
 
@@ -100,9 +100,9 @@ $pfBool = static function ($reg, $prop) {
 									</td>
 									<td class="text-right">
 										<?= $this->Html->link(
-											'Nova locação',
-											['controller' => 'Faturas', 'action' => 'add', '?' => ['idcliente' => (int)$reg->idcliente, 'idos' => (int)$reg->id]],
-											['class' => 'btn btn-sm btn-pgm btn-pgm-salvar btn-success', 'target' => '_blank', 'rel' => 'noopener noreferrer']
+											'<i class="fas fa-file-alt"></i> Gerar Faturamento',
+											['controller' => 'Faturamento', 'action' => 'gerarDeOS', $reg->id],
+											['class' => 'btn btn-sm btn-pgm btn-pgm-salvar', 'escape' => false, 'title' => 'Criar documento de faturamento para esta OS']
 										) ?>
 									</td>
 								</tr>
@@ -114,18 +114,16 @@ $pfBool = static function ($reg, $prop) {
 		</div>
 	</div>
 </div>
-<?php
-$pfAddUrl = $this->Url->build(['controller' => 'Faturas', 'action' => 'add']);
-?>
 <script>
 (function ($) {
-	var base = <?= json_encode($pfAddUrl, JSON_UNESCAPED_SLASHES) ?>;
 	function refreshBatch() {
 		var n = $('.pf-os-chk:checked').length;
-		$('#pf-batch-locacao').prop('disabled', n < 1);
+		$('#pf-batch-faturamento').prop('disabled', n < 1);
 	}
 	$(document).on('change', '.pf-os-chk', refreshBatch);
-	$('#pf-batch-locacao').on('click', function () {
+
+	// Batch: se uma OS → redireciona direto; se múltiplas do mesmo cliente → abre a primeira e avisa
+	$('#pf-batch-faturamento').on('click', function () {
 		var $c = $('.pf-os-chk:checked');
 		if (!$c.length) return;
 		var cid = $c.first().data('idcliente');
@@ -136,11 +134,14 @@ $pfAddUrl = $this->Url->build(['controller' => 'Faturas', 'action' => 'add']);
 			ids.push($(this).data('idos'));
 		});
 		if (!ok) {
-			alert('Selecione apenas OS do mesmo cliente.');
+			alert('Selecione apenas OS do mesmo cliente para gerar faturamento em lote.');
 			return;
 		}
-		var u = base + '?idcliente=' + encodeURIComponent(cid) + '&idos=' + encodeURIComponent(ids.join(','));
-		window.open(u, '_blank', 'noopener,noreferrer');
+		// Abre uma aba de gerarDeOS para cada OS selecionada
+		ids.forEach(function (idos) {
+			var u = <?= json_encode($this->Url->build(['controller' => 'Faturamento', 'action' => 'gerarDeOS', ''], false), JSON_UNESCAPED_SLASHES) ?> + idos;
+			window.open(u, '_blank', 'noopener,noreferrer');
+		});
 	});
 })(jQuery);
 </script>

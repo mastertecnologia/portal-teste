@@ -189,6 +189,52 @@
 					</div>
 					<?php endif; ?>
 
+					<?php if ($role == 0 && !empty($faturamentos)): ?>
+					<div class="row m-t-15">
+						<div class="col-12">
+							<h6 class="m-b-5" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#7d8590">
+								<i class="fas fa-file-alt"></i> Documentos de Faturamento
+							</h6>
+							<table class="table table-sm" style="font-size:13px">
+								<thead>
+									<tr>
+										<th>Número</th>
+										<th>Status</th>
+										<th>Emissão</th>
+										<th>Vencimento</th>
+										<th class="text-right">Total</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php
+									$statusLabels = [
+										'rascunho'  => ['label' => 'Rascunho',  'class' => 'badge-secondary'],
+										'pendente'  => ['label' => 'Pendente',  'class' => 'badge-warning'],
+										'enviado'   => ['label' => 'Enviado',   'class' => 'badge-info'],
+										'pago'      => ['label' => 'Pago',      'class' => 'badge-success'],
+										'cancelado' => ['label' => 'Cancelado', 'class' => 'badge-danger'],
+									];
+									foreach ($faturamentos as $fat):
+										$stInfo = $statusLabels[$fat->status] ?? ['label' => $fat->status, 'class' => 'badge-secondary'];
+									?>
+									<tr>
+										<td><?= h($fat->numero ?? '#' . $fat->id) ?></td>
+										<td><span class="badge <?= $stInfo['class'] ?>"><?= $stInfo['label'] ?></span></td>
+										<td><?= $fat->data_emissao ? $fat->data_emissao->format('d/m/Y') : '—' ?></td>
+										<td><?= $fat->data_vencimento ? $fat->data_vencimento->format('d/m/Y') : '—' ?></td>
+										<td class="text-right">R$ <?= number_format((float)$fat->valor_total, 2, ',', '.') ?></td>
+										<td>
+											<?= $this->Html->link('<i class="fas fa-eye"></i>', ['controller' => 'Faturamento', 'action' => 'view', $fat->id], ['class' => 'btn btn-xs btn-default', 'escape' => false, 'title' => 'Visualizar']) ?>
+										</td>
+									</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<?php endif; ?>
+
         		</div>
 				<div class="tab-pane" id="movimentacoes">
 					<?php
