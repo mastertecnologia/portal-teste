@@ -648,11 +648,11 @@ class OrdensservicoController extends AppController {
         $ordem->tipo = $tipo;
         $ordem->codproduto = $codproduto;
         $ordem->descricao = $descricao;
-        $ordem->observacao = $data['observacao'];
+        $ordem->observacao = $data['observacao'] ?? '';
         $ordem->unidade = $unidade;
-        $ordem->quantidade = $data['quantidade'];
-        $ordem->serialnumber = $data['serialnumber'];
-        $ordem->modelo = $data['modelo']; 
+        $ordem->quantidade = $data['quantidade'] ?? '';
+        $ordem->serialnumber = $data['serialnumber'] ?? '';
+        $ordem->modelo = $data['modelo'] ?? ''; 
 		$ordem->productkey = isset($data['productkey']) ? $data['productkey'] : '';
         $ordem->obsinterna = isset($data['obsinterna']) ? $data['obsinterna'] : '';
         $ordem->valorunitario = $valorunitario;
@@ -661,7 +661,14 @@ class OrdensservicoController extends AppController {
 
 		$this->fixPostgresIdSequence('itensordem');
 		$this->fixPostgresIdSequence('ordemservicositens');
-		if( $this->Itensordem->save($ordem) ) echo('boa');
+		if ($this->Itensordem->save($ordem)) {
+			$this->response = $this->response->withType('text/html')->withStringBody('boa');
+
+			return $this->response;
+		}
+		$this->log('Ordensservico::carrinhoadd save failed: ' . json_encode($ordem->getErrors()) . ' codproduto=' . $codproduto, 'error');
+
+		return $this->jsonResponse(['msg' => 'Não foi possível salvar o item. Verifique código, quantidade e valores.'], 422);
 
 	}
 

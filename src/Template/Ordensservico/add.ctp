@@ -413,6 +413,24 @@
 			return 0;
 		})
 
+	// jsGrid — re-inicializa linha de inserção após cada refresh (loadData)
+		window.initOsAddGridInsertRow = function () {
+			var $row = $('.jsgrid-insert-row');
+			if (!$row.length) {
+				return;
+			}
+			var $tipo = $row.find('.inputTipo select');
+			if ($tipo.length) {
+				if (!$tipo.find('option[value="0"]').length) {
+					$tipo.prepend($('<option>', { value: 0, text: 'Tipo' }));
+				}
+				if ($tipo.val() === null || $tipo.val() === '') {
+					$tipo.val(0);
+				}
+			}
+			$row.find('.inputValorunitario > input, .inputValordesconto > input').addClass('mascaramonetaria');
+		};
+
 	// jsGrid
 		$('#grid_table').jsGrid({
 			// Options
@@ -466,8 +484,19 @@
 						$("#grid_table").jsGrid("loadData");
 						if(data == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 					}, 
-					error: function(data) {
-						location.reload();
+					error: function(xhr) {
+						var msg = 'Não foi possível adicionar o item. Verifique os dados e tente novamente.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) {
+							msg = xhr.responseJSON.msg;
+						} else if (xhr.responseText && xhr.responseText.length < 400) {
+							msg = xhr.responseText;
+						}
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert(msg);
+						} else {
+							alert(msg);
+						}
+						$("#grid_table").jsGrid("loadData");
 					}
 					});
 				},
@@ -481,8 +510,17 @@
 						$(".qtdEstoque, .vazio").remove();
 						$("#grid_table").jsGrid("loadData");
 					},
-					error: function(data) {
-						location.reload();
+					error: function(xhr) {
+						var msg = 'Não foi possível atualizar o item.';
+						if (xhr.responseJSON && xhr.responseJSON.msg) {
+							msg = xhr.responseJSON.msg;
+						}
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert(msg);
+						} else {
+							alert(msg);
+						}
+						$("#grid_table").jsGrid("loadData");
 					}
 					});
 				},
@@ -496,8 +534,17 @@
 							$(".qtdEstoque, .vazio").remove();
 							$("#grid_table").jsGrid("loadData");
 						},
-						error: function(data) {
-							location.reload();
+						error: function(xhr) {
+							var msg = 'Não foi possível remover o item.';
+							if (xhr.responseJSON && xhr.responseJSON.msg) {
+								msg = xhr.responseJSON.msg;
+							}
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert(msg);
+							} else {
+								alert(msg);
+							}
+							$("#grid_table").jsGrid("loadData");
 						}
 					});
 				},
@@ -581,8 +628,15 @@
 				{ name: "obsinterna", type: "text", css: 'hide', insertcss: 'hide inputObsInterna', editcss: 'hide editObsInterna'},
                 { type: "control" }
 			], 
-			onRefreshed: function(args) {
-				$(".jsgrid-select2").select2();
+			onRefreshed: function() {
+				try {
+					if ($(".jsgrid-select2").length) {
+						$(".jsgrid-select2").select2();
+					}
+				} catch (e) { /* select2 opcional */ }
+				if (typeof window.initOsAddGridInsertRow === 'function') {
+					window.initOsAddGridInsertRow();
+				}
 			}
 		});
 	// numberToReal
@@ -673,79 +727,78 @@
 				},
 			});
 		});
-	// Desktop
+	// Desktop — código do produto é <input> (pesquisa/modal), não <select>
 		<?php }else{  ?>
-			$(document).ready(function() {
-				$('.inputTipo > select').append($('<option>', {value: 0,text: 'Tipo',class: 'hide',}));
-				$('.inputTipo > select').val(0);
-				//$('.inputCodproduto > select').append($('<option>', {value: 0,text: 'Código',class: 'hide',}));
-				$('.inputCodproduto > select').val(0);
-				$(document).on('change', '.inputTipo > select', function(){
-					$.ajax({
-						url: "<?= Router::url(['controller'=>'Produtos','action'=>'produtostipo']);?>/" + $(this).val(),
-						dataType: "json",
-						success:function(data){
-							data.sort(function(a, b){
-								if(a.descricao < b.descricao) { return -1; }
-								if(a.descricao > b.descricao) { return 1; }
-								return 0;
-							})
-							$('.inputCodproduto option').remove();
-							$.each(data, function(key, array) {
-								$('.inputCodproduto > select').append($('<option>', {
-									value: array.codigo,
-									text: array.descricao
-								}));
-							})
-						}
-					});
-				});
-				
-				$(document).on('change', '.inputCodproduto input.input-codigo-val', function(){
-					$.ajax({
-						url: "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + $(this).val(),
-						dataType: "json",
-						success:function(data){
-							if(data.tipo == <?= C_ProdutosTipoProduto ?>) {
-								$(".inputSerialnumber > input").prop('disabled', false);
-								serialnumbers(data.codigo);
-								$.ajax({
-									url: "<?= Router::url(['controller'=>'Produtos','action'=>'qtdestoque']) ?>" + '/' + data.codigo,
-									success:function(qtd){ if(qtd != -999) $('.qtdEstoque').text('Qtd. em estoque: ' + qtd); },
-								});
-							}else {
-								$('.qtdEstoque').text('⠀⠀⠀');
-								$(".inputSerialnumber > input").prop('disabled', 'disabled');
-							}
-							$('.inputTipo > select').val(data.tipo);
-							$('.inputDescricao > input').val(data.descricao);
-							$('.inputUnidade > input').val(data.unidade);
-							$('.inputValorunitario > input').val(numberToReal(data.vlunitario));
-							$(".inputQuantidade > input").val("");
-							$(".inputValortotal > input").val("");
-							$(".inputValordesconto > input").val("");
-							$(".inputSerialnumber > input").val("");
-						},
-					});
-				});
-				
-				$('.inputValordesconto > input').addClass('mascaramonetaria');
-				$('.inputValorunitario > input').addClass('mascaramonetaria');
-
-				$(document).on('change', '.inputTipo > select', function(){calculoAdd(); });
-				$(document).on('change', '.inputCodproduto > select', function(){calculoAdd(); });
-				$(document).on('change', '.inputQuantidade > input', function(){calculoAdd(); });
-				$(document).on('change', '.inputValordesconto > input', function(){calculoAdd(); });
-				$(document).on('change', '.inputValorunitario > input', function(){calculoAdd(); });
-
-				function calculoAdd(){
-					var qtde = $('.inputQuantidade > input') == "" ? 0 : $('.inputQuantidade > input').val() ;
-					var vldesconto = $('.inputValordesconto > input').val() == "" ? 0 :  $('.inputValordesconto > input').val().replace('.', '').replace(',', '.');
-					var vlunidade = $('.inputValorunitario > input').val() == "" ? 0 :  $('.inputValorunitario > input').val().replace('.', '').replace(',', '.');
-					valortotal = qtde * vlunidade - vldesconto;
-					$('.inputValortotal > input').val(numberToReal(valortotal));
+			function calculoAdd(){
+				var $row = $('.jsgrid-insert-row');
+				if (!$row.length) {
+					return;
 				}
+				var qtdeRaw = $row.find('.inputQuantidade > input').val();
+				var qtde = (qtdeRaw === undefined || qtdeRaw === '') ? 0 : parseFloat(String(qtdeRaw).replace(/\./g, '').replace(',', '.')) || 0;
+				var vldesconto = $row.find('.inputValordesconto > input').val() === '' ? 0 : parseFloat($row.find('.inputValordesconto > input').val().replace(/\./g, '').replace(',', '.')) || 0;
+				var vlunidade = $row.find('.inputValorunitario > input').val() === '' ? 0 : parseFloat($row.find('.inputValorunitario > input').val().replace(/\./g, '').replace(',', '.')) || 0;
+				var valortotal = (qtde * vlunidade) - vldesconto;
+				if (isNaN(valortotal)) {
+					valortotal = 0;
+				}
+				$row.find('.inputValortotal > input').val(numberToReal(valortotal));
+			}
+
+			$(document).on('change', '.jsgrid-insert-row .inputTipo > select', function(){
+				var $row = $(this).closest('tr');
+				$row.find('input.input-codigo-val').val('');
+				$row.find('.inputDescricao > input').val('');
+				$row.find('.inputUnidade > input').val('');
+				$row.find('.inputValorunitario > input').val('');
+				$row.find('.inputQuantidade > input').val('');
+				$row.find('.inputValortotal > input').val('');
+				$row.find('.inputValordesconto > input').val('');
+				$row.find('.inputSerialnumber > input').val('');
+				$('.qtdEstoque').text('');
+				calculoAdd();
 			});
+
+			$(document).on('change', '.jsgrid-insert-row .inputCodproduto input.input-codigo-val', function(){
+				var cod = $.trim($(this).val() || '');
+				var $row = $(this).closest('tr');
+				if (!cod) {
+					return;
+				}
+				$.ajax({
+					url: "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + encodeURIComponent(cod),
+					dataType: "json",
+					success:function(data){
+						if (!data) {
+							return;
+						}
+						if(data.tipo == <?= C_ProdutosTipoProduto ?>) {
+							$row.find(".inputSerialnumber > input").prop('disabled', false);
+							serialnumbers(data.codigo);
+							$.ajax({
+								url: "<?= Router::url(['controller'=>'Produtos','action'=>'qtdestoque']) ?>" + '/' + encodeURIComponent(data.codigo),
+								success:function(qtd){ if(qtd != -999) $('.qtdEstoque').text('Qtd. em estoque: ' + qtd); },
+							});
+						} else {
+							$('.qtdEstoque').text('⠀⠀⠀');
+							$row.find(".inputSerialnumber > input").prop('disabled', true);
+						}
+						$row.find('.inputTipo > select').val(data.tipo);
+						$row.find('.inputDescricao > input').val(data.descricao);
+						$row.find('.inputUnidade > input').val(data.unidade);
+						$row.find('.inputValorunitario > input').val(numberToReal(data.vlunitario));
+						$row.find(".inputQuantidade > input").val("");
+						$row.find(".inputValortotal > input").val("");
+						$row.find(".inputValordesconto > input").val("");
+						$row.find(".inputSerialnumber > input").val("");
+						calculoAdd();
+					},
+				});
+			});
+
+			$(document).on('change', '.jsgrid-insert-row .inputQuantidade > input', function(){ calculoAdd(); });
+			$(document).on('change', '.jsgrid-insert-row .inputValordesconto > input', function(){ calculoAdd(); });
+			$(document).on('change', '.jsgrid-insert-row .inputValorunitario > input', function(){ calculoAdd(); });
 		<?php }  ?>
 	// Cálculo Edit
 		$(document).on('change', '.editQuantidade > input', function(){   calculoEdit(); });

@@ -204,6 +204,58 @@ body.os-add-page .bs-container .dropdown-menu li > a:hover {
 	font-size: 11px;
 }
 
+/* jsGrid: inputs/selects (tema global costuma forçar fundo branco aqui) */
+body.os-add-page .os-add-shell .jsgrid input.form-control,
+body.os-add-page .os-add-shell .jsgrid-insert-row input.form-control,
+body.os-add-page .os-add-shell .jsgrid-edit-row input.form-control,
+body.os-add-page .os-add-shell .jsgrid-insert-row select,
+body.os-add-page .os-add-shell .jsgrid-edit-row select,
+body.os-add-page .os-add-shell .jsgrid .input-group .form-control {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border: 1px solid var(--os-border) !important;
+	color: var(--os-text) !important;
+	box-shadow: none !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid input.form-control:focus,
+body.os-add-page .os-add-shell .jsgrid-insert-row input.form-control:focus,
+body.os-add-page .os-add-shell .jsgrid-edit-row input.form-control:focus,
+body.os-add-page .os-add-shell .jsgrid-insert-row select:focus,
+body.os-add-page .os-add-shell .jsgrid-edit-row select:focus {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+	color: var(--os-text) !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid input.form-control::placeholder {
+	color: var(--os-text3);
+	opacity: 1;
+}
+
+/* Linha “Nenhum item adicionado” */
+body.os-add-page .os-add-shell .jsgrid-nodata-row > .jsgrid-cell {
+	background: var(--os-bg2) !important;
+	color: var(--os-text2) !important;
+	border-color: var(--os-border) !important;
+	padding: 12px 10px !important;
+}
+
+/* Botões + na coluna de controle: alinhar e evitar empilhar */
+body.os-add-page .os-add-shell .jsgrid-control-field,
+body.os-add-page .os-add-shell .jsgrid .jsgrid-control-field {
+	display: inline-flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 4px;
+	vertical-align: middle;
+}
+
+body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
+	margin: 0 2px 0 0;
+}
+
 .os-add-shell .input-group .btn-secondary {
 	background: var(--os-bg4);
 	border-color: var(--os-border2);
@@ -261,4 +313,22 @@ body.os-add-page .modal .close {
 
 body.os-add-page .modal .close:hover {
 	color: #f0f2f8;
+}
+
+/* Modal pesquisa de produto */
+body.os-add-page #modal-pesquisa-produto .table {
+	color: var(--os-text2);
+	background: var(--os-bg3);
+}
+
+body.os-add-page #modal-pesquisa-produto .table thead th {
+	background: var(--os-bg4);
+	color: var(--os-text3);
+	border-color: var(--os-border) !important;
+}
+
+body.os-add-page #modal-pesquisa-produto .table td {
+	background: var(--os-bg3);
+	border-color: var(--os-border) !important;
+	color: var(--os-text);
 }
