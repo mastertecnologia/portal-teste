@@ -46,6 +46,8 @@ class AppController extends Controller {
 				'alteraempresa',
 				'carrinho', 'carrinhoadd', 'carrinhoedititem', 'carrinhodelitem', 'valortotal', 'acaoindex',
 				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'carrinhoedit',
+				// Solicitar orçamento: inputs HTML + itens dinâmicos (itens[n][*]) fora do FormHelper
+				'solicitar',
 				'timerIniciar', 'timerPausar', 'timerRetomar', 'timerFinalizar',
 				'produto', 'qtdestoque', 'estoquesLote', // Orçamentos: produto, estoque e catálogo (lote)
 				// APIs de integração ERP (sem sessão web; token em header)
