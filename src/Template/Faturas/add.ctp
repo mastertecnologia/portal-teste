@@ -2,6 +2,7 @@
   	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Locações', ['controller' => 'Faturas', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Nova locação', [], ['class' => 'breadcrumb-item active']);
+	$this->Html->css('/dist/css/pages/locacao-add-shell.css', ['block' => true]);
 ?>
 <style>
 	.dtp table.dtp-picker-days tr > td{
@@ -11,7 +12,7 @@
 		padding: 0.5em 0.3em !important;
 	}
 </style>
-<div class="col-md-12">
+<div class="col-md-12 pgm-locacao-add-shell">
 	<div class="card">
 		<div class="card-body">
 			<?= $this->Form->create($fatura, ['class' => 'form-material']); ?> 
@@ -84,7 +85,7 @@
 						</div>
 					</div>
 				</div>
-				<h4 class='texte-center m-t-10'> Itens </h4>
+				<h4 class="text-center m-t-10 pgm-loc-add-section-title"> Itens </h4>
 				<div class="row m-t-10">
 					<div class="col-lg-2 col-md-12">
 						<label class="control-label text-muted"> Código </label>

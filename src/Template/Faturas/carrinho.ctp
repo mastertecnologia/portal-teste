@@ -10,13 +10,15 @@
 	<div class="col-lg-12" >
 		<div class="table-responsive">
 			<table class="table table-hover table-row-clickable" id="tableCarrinho">
-				<thead class="text-primary">
-					<th width="10%"> Código </th>
-					<th width="40%"> Descrição da Locação </th>
-					<th width="10%" class="text-right"> Quantidade </th>
-					<th width="10%" class="text-right"> Valor Item </th>
-					<th width="10%" class="text-right"> Valor Total Item</th>
-					<th width="10%"	class="text-center"> Ações </th>
+				<thead>
+					<tr>
+						<th width="10%"> Código </th>
+						<th width="40%"> Descrição da Locação </th>
+						<th width="10%" class="text-right"> Quantidade </th>
+						<th width="10%" class="text-right"> Valor Item </th>
+						<th width="10%" class="text-right"> Valor Total Item</th>
+						<th width="10%" class="text-center pgm-loc-th-acoes"> Ações </th>
+					</tr>
 				</thead>
 				<tbody>
 					<!-- Itens -->
@@ -27,26 +29,26 @@
 							<td class="text-right"> <?= $reg->quantidade ?> </td>
 							<td class="text-right"> <?= 'R$ ' . number_format($reg->valoritem, 2, ",", ".") ?> </td>
 							<td class="text-right"> <?= 'R$ ' . number_format($reg->valortotal, 2, ",", ".") ?> </td>
-							<td class="text-center"> 
-								<?= $this->Html->link('<i class="fa fa-times"></i>', [], ['rel' => 'tooltip', 'title' => 'Excluir', 'id' => $reg->id, 'class' => 'excluiitemcarrinho btn btn-danger btn-xs', 'escape' => false]) ?>
+							<td class="text-center pgm-loc-td-acoes">
+								<?= $this->Html->link('<i class="fa fa-times"></i>', [], ['rel' => 'tooltip', 'title' => 'Excluir', 'id' => $reg->id, 'class' => 'excluiitemcarrinho btn btn-danger btn-sm pgm-loc-btn-excluir', 'escape' => false]) ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>
 					<!-- Fim Itens -->
 					<!-- Outros -->
-					<tr>
-						<th class="text-right"> </th>
-						<th class="text-right"> </th>
-						<th class="text-right"> </th>
-						<th class="text-right"> Valor Total: </th>
-						<th class="text-right valortotal"> </th>
-						<th class="text-right"> </th>
+					<tr class="pgm-loc-total-row">
+						<td colspan="3"></td>
+						<td class="text-right pgm-loc-total-label"> Valor Total: </td>
+						<td class="text-right valortotal pgm-loc-total-value"></td>
+						<td class="pgm-loc-td-acoes"></td>
 					</tr>
 					<!-- Fim Outros -->
 				</tbody>
 			</table>
 		</div>
-		<button class="btn btn-danger float-right m-b-10 btn-limpacarrinho"> Limpar Carrinho </button>
+		<div class="pgm-loc-carrinho-toolbar">
+			<button type="button" class="btn btn-danger btn-sm btn-limpacarrinho"> Limpar carrinho </button>
+		</div>
 	</div>
 </div>
 <script>

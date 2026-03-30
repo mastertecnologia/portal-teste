@@ -253,6 +253,7 @@ class FaturasController extends AppController {
 		$this->set('clientes', $clientesOpt);
 		$this->set('fatura', $fatura);
 		$this->set('title', 'Cadastro de locação');
+		$this->set('bodyPageClass', 'pgm-locacao-add-page');
 	}
 
 	public function edit($id = null, $aba = 1) {
