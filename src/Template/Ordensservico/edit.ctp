@@ -699,6 +699,47 @@ else $disabled = false;
 	var urlAdd = "<?= Router::url(['controller' => 'Ordensservico', 'action' => 'carrinhoadd', $ordem->id]); ?>";
 	var urlEdit = "<?= Router::url(['controller' => 'Ordensservico', 'action' => 'carrinhoedititem']); ?>";
 	var urlDelete = "<?= Router::url(['controller' => 'Ordensservico', 'action' => 'carrinhodelitem']); ?>";
+	var osGridAjaxVerbose = <?= !empty($osGridAjaxVerbose) ? 'true' : 'false' ?>;
+	function pgmOsGridEscapeHtml(s) {
+		if (s == null || s === '') return '';
+		return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+	}
+	function pgmOsGridExplainXhr(xhr, defaultMsg) {
+		var parts = [];
+		parts.push('<p><strong>' + pgmOsGridEscapeHtml(defaultMsg || 'Erro na requisição.') + '</strong></p>');
+		parts.push('<p>HTTP <code>' + pgmOsGridEscapeHtml(String(xhr.status || '?')) + '</code>' +
+			(xhr.statusText ? ' — ' + pgmOsGridEscapeHtml(xhr.statusText) : '') + '</p>');
+		var j = xhr.responseJSON;
+		if (j) {
+			if (j.code) parts.push('<p><strong>Código:</strong> ' + pgmOsGridEscapeHtml(j.code) + '</p>');
+			if (j.msg) parts.push('<p>' + pgmOsGridEscapeHtml(j.msg) + '</p>');
+			if (j.warning) parts.push('<p><strong>Aviso:</strong> ' + pgmOsGridEscapeHtml(j.warning) + '</p>');
+			if (osGridAjaxVerbose && j.debug) {
+				parts.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+					pgmOsGridEscapeHtml(JSON.stringify(j.debug, null, 2)) + '</pre>');
+			}
+			if (osGridAjaxVerbose && j.validation) {
+				parts.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+					pgmOsGridEscapeHtml(JSON.stringify(j.validation, null, 2)) + '</pre>');
+			}
+		} else if (xhr.responseText) {
+			var t = xhr.responseText;
+			if (t.length < 800) {
+				parts.push('<pre style="text-align:left;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap">' +
+					pgmOsGridEscapeHtml(t) + '</pre>');
+			} else {
+				parts.push('<p>' + pgmOsGridEscapeHtml(t.substring(0, 300)) + '…</p>');
+			}
+		}
+		return parts.join('');
+	}
+	function pgmOsGridAlertHtml(html) {
+		if (typeof bootbox !== 'undefined') {
+			bootbox.alert({ message: html });
+		} else {
+			alert($('<div/>').html(html).text());
+		}
+	}
 
 	var tiposOpt = <?= $tiposOpt ?>;
 	var produtosOpt = <?= $produtosOpt ?>;
@@ -723,6 +764,16 @@ else $disabled = false;
 		pageButtonCount: 5,
 		deleteConfirm: "Tem certeza que deseja remover o item?",
 		noDataContent: "Nenhum item adicionado",
+		invalidNotify: function(args) {
+			var lines = $.map(args.errors || [], function(e) {
+				return (e.field && e.field.name ? e.field.name + ': ' : '') + (e.message || '');
+			}).filter(Boolean);
+			var msg = '<p><strong>Preencha os campos obrigatórios do item.</strong></p>';
+			if (lines.length) {
+				msg += '<ul><li>' + lines.map(pgmOsGridEscapeHtml).join('</li><li>') + '</li></ul>';
+			}
+			pgmOsGridAlertHtml(msg);
+		},
 
 		controller: {
 			loadData: function() {
@@ -733,6 +784,7 @@ else $disabled = false;
 						var urlTotal = "<?= Router::url(['controller' => 'Ordensservico', 'action' => 'valortotal', $ordem->id]); ?>";
 						$.ajax({
 							url: urlTotal,
+							dataType: "json",
 							success: function(data) {
 								var valortotal = parseFloat(data.valortotal);
 								$('#valortotalordem').val(valortotal);
@@ -760,11 +812,20 @@ else $disabled = false;
 									$celulas.text('R$ 0,00');
 								}
 								$('.valortotalordem').html('<font color="#212529"> Total geral:</font> R$ ' + numberToReal(valortotal));
+								if (data && data.warning === 'sessao_carrinho' && data.msg) {
+									console.warn('[OS grid valortotal]', data.msg);
+								}
 								setTimeout(function() {
 									tdcommuitotexto();
 								}, 500);
+							},
+							error: function(xhr) {
+								pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível obter o valor total da ordem.'));
 							}
 						});
+					},
+					error: function(xhr) {
+						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível carregar os itens da ordem.'));
 					}
 				});
 			},
@@ -775,15 +836,27 @@ else $disabled = false;
 					url: urlAdd + '/' + encodeURIComponent(item.codproduto),
 					data: item,
 					success: function(data) {
+						if (data && typeof data === 'object' && data.ok === false) {
+							var p = ['<p><strong>' + pgmOsGridEscapeHtml('Não foi possível adicionar o item.') + '</strong></p>'];
+							if (data.code) p.push('<p><strong>Código:</strong> ' + pgmOsGridEscapeHtml(data.code) + '</p>');
+							if (data.msg) p.push('<p>' + pgmOsGridEscapeHtml(data.msg) + '</p>');
+							if (osGridAjaxVerbose && data.debug) {
+								p.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto">' +
+									pgmOsGridEscapeHtml(JSON.stringify(data.debug, null, 2)) + '</pre>');
+							}
+							if (osGridAjaxVerbose && data.validation) {
+								p.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto">' +
+									pgmOsGridEscapeHtml(JSON.stringify(data.validation, null, 2)) + '</pre>');
+							}
+							pgmOsGridAlertHtml(p.join(''));
+							$("#grid_table").jsGrid("loadData");
+							return;
+						}
 						$("#grid_table").jsGrid("loadData");
 						if (data == 'naopode') bootbox.alert('Este produto já foi adicionado.');
 					},
 					error: function(xhr) {
-						var msg = 'Não foi possível adicionar o item.';
-						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
-						else if (xhr.responseText && xhr.responseText.length < 400) msg = xhr.responseText;
-						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
-						else alert(msg);
+						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível adicionar o item.'));
 						$("#grid_table").jsGrid("loadData");
 					}
 				});
@@ -798,9 +871,7 @@ else $disabled = false;
 						$("#grid_table").jsGrid("loadData");
 					},
 					error: function(xhr) {
-						var msg = 'Não foi possível atualizar o item.';
-						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
-						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível atualizar o item.'));
 						$("#grid_table").jsGrid("loadData");
 					}
 				});
@@ -815,9 +886,7 @@ else $disabled = false;
 						$("#grid_table").jsGrid("loadData");
 					},
 					error: function(xhr) {
-						var msg = 'Não foi possível remover o item.';
-						if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
-						if (typeof bootbox !== 'undefined') bootbox.alert(msg);
+						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível remover o item.'));
 						$("#grid_table").jsGrid("loadData");
 					}
 				});

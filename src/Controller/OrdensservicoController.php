@@ -13,6 +13,7 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants
 require_once (ROOT . DS . 'vendor' . DS . 'queencitycodefactory/cakesoap/src/Network/CakeSoap.php');
 
 use CakeSoap\Network\CakeSoap;
+use Cake\Core\Configure;
 
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
@@ -80,8 +81,63 @@ class OrdensservicoController extends AppController {
 		return (string)$row->iditens;
 	}
 
+	/**
+	 * Diagnóstico extra do grid (debug no JSON + detalhes no Bootbox): debug global do Cake
+	 * ou sessão ativada com ?os_grid_diag=1 na página add/edit/ticketordem (apenas funcionário).
+	 */
+	protected function osGridDebugVerbose(): bool {
+		if (Configure::read('debug')) {
+			return true;
+		}
+		if ((int)$this->Auth->user('role') !== C_RoleFuncionario) {
+			return false;
+		}
+
+		return (bool)$this->request->getSession()->read('PGM.os_grid_diag');
+	}
+
+	/**
+	 * Lê ?os_grid_diag=1|0 na URL das telas do grid e grava na sessão (só equipe interna).
+	 */
+	protected function syncOsGridDiagSession(): void {
+		$q = $this->request->getQuery('os_grid_diag');
+		if ($q === null) {
+			return;
+		}
+		if ((int)$this->Auth->user('role') !== C_RoleFuncionario) {
+			return;
+		}
+		if ($q === '1' || $q === 'true') {
+			$this->request->getSession()->write('PGM.os_grid_diag', true);
+		} elseif ($q === '0' || $q === 'false') {
+			$this->request->getSession()->delete('PGM.os_grid_diag');
+		}
+	}
+
+	/**
+	 * Resposta JSON padronizada para o grid de itens da OS (diagnóstico no cliente).
+	 *
+	 * @param array $debug Só incluído no JSON se osGridDebugVerbose() for true.
+	 */
+	protected function osGridJsonError(int $status, string $code, string $msg, array $debug = []) {
+		$out = [
+			'ok' => false,
+			'code' => $code,
+			'msg' => $msg,
+		];
+		if ($this->osGridDebugVerbose()) {
+			$out['debug'] = $debug;
+		}
+
+		return $this->jsonResponse($out, $status);
+	}
+
 	public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
+		$gridDiagActions = ['add', 'edit', 'ticketordem'];
+		if (in_array($this->request->getParam('action'), $gridDiagActions, true)) {
+			$this->syncOsGridDiagSession();
+		}
         
         if($event->_subject->request->params['action'] == 'imprimir' && $this->Auth->user('role') == 1){
             $ordem = $this->Ordensservico->get($event->_subject->request->params['pass'][0])->idcliente;
@@ -309,6 +365,7 @@ class OrdensservicoController extends AppController {
 		$this->set('title', 'Cadastro de ordem de serviços');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('authIdempresa', (int)$idempresa);
+		$this->set('osGridAjaxVerbose', $this->osGridDebugVerbose());
 	}
 
 	public function edit($id = null) {
@@ -429,6 +486,7 @@ class OrdensservicoController extends AppController {
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('title', 'Editar ordem de serviços');
 		$this->set('authIdempresa', (int)$idempresa);
+		$this->set('osGridAjaxVerbose', $this->osGridDebugVerbose());
 	}
 
 	public function view($id = null) {
@@ -550,7 +608,12 @@ class OrdensservicoController extends AppController {
 		error_reporting(0);
 		$this->autoRender = false;
 
-		if($idordem === null){
+		if ($idordem === null) {
+			if (empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])) {
+				return $this->osGridJsonError(400, 'os_grid_sessao_carrinho', 'Sessão do carrinho não encontrada. Recarregue a página de cadastro da OS.', [
+					'session_key' => 'PGM_Ordem_Idcarrinhoadd',
+				]);
+			}
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 			$result = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 		} else {
@@ -593,13 +656,15 @@ class OrdensservicoController extends AppController {
 		$isCarrinhoSessao = ($idordem === null || $idordem === '' || (string)$idordem === 'null');
 		if ($isCarrinhoSessao) {
 			if (empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])) {
-				return $this->jsonResponse(['msg' => 'Sessão do carrinho expirada. Recarregue a página de cadastro.'], 400);
+				return $this->osGridJsonError(400, 'os_grid_sessao_carrinho', 'Sessão do carrinho expirada. Recarregue a página de cadastro.', []);
 			}
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 		} else {
 			$iditensPk = $this->getOrdemIditensPk($this->Auth->user('idempresa'), $idordem);
 			if ($iditensPk === null) {
-				return $this->jsonResponse(['msg' => 'Carrinho desta ordem não foi encontrado. Salve a ordem ou recarregue a página.'], 400);
+				return $this->osGridJsonError(400, 'os_grid_sem_vinculo_itens', 'Carrinho desta ordem não foi encontrado (sem vínculo ordemservicositens). Salve a ordem ou recarregue a página.', [
+					'idordem_param' => $idordem,
+				]);
 			}
 			$idordem = $iditensPk;
 		}
@@ -611,7 +676,12 @@ class OrdensservicoController extends AppController {
 		$empPost = isset($data['idEmpresaAtual']) ? (int)$data['idEmpresaAtual'] : 0;
 		if ($empPost !== $empAuth) {
 			$this->Flash->error('Ocorreu um erro ao salvar os itens de ordem de serviço. Verifique sua empresa atual e tente novamente');
-			return $this->jsonResponse(['msg' => 'Ocorreu um erro ao salvar os itens de ordem de serviço. Verifique sua empresa atual e tente novamente'], 400);
+
+			return $this->osGridJsonError(400, 'os_grid_empresa', 'Empresa enviada (idEmpresaAtual) não confere com a empresa da sessão. Recarregue a página ou troque a empresa no menu.', [
+				'idEmpresaAtual_enviado' => $data['idEmpresaAtual'] ?? null,
+				'idEmpresaAtual_parseado' => $empPost,
+				'idempresa_auth' => $empAuth,
+			]);
 		}
 
 		// Código do produto pode vir na URL ou no POST (ex.: formulário mobile)
@@ -619,6 +689,11 @@ class OrdensservicoController extends AppController {
 			$codproduto = is_array($data['codproduto']) ? ($data['codproduto'][0] ?? null) : $data['codproduto'];
 		}
 		$codproduto = trim($codproduto ?? '');
+		if ($codproduto === '') {
+			return $this->osGridJsonError(422, 'os_grid_codigo_vazio', 'Código do produto/serviço está vazio. Selecione um item na pesquisa ou preencha o código antes de confirmar.', [
+				'url_codigo' => $this->request->getParam('pass')[1] ?? null,
+			]);
+		}
 
 		$idempresa = $this->Auth->user('idempresa');
 		$valorunitario = (float) str_replace(',', '.', str_replace('.', '', $data['valorunitario'] ?? '0'));
@@ -701,10 +776,38 @@ class OrdensservicoController extends AppController {
 
 			return $this->response;
 		}
-		$this->log('Ordensservico::carrinhoadd save failed: ' . json_encode($ordem->getErrors()) . ' codproduto=' . $codproduto, 'error');
+		$errFlat = $ordem->getErrors();
+		$this->log('Ordensservico::carrinhoadd save failed: ' . json_encode($errFlat) . ' codproduto=' . $codproduto, 'error');
 
-		return $this->jsonResponse(['msg' => 'Não foi possível salvar o item. Verifique código, quantidade e valores.'], 422);
+		$msgUser = 'Não foi possível salvar o item. Verifique código, quantidade e valores.';
+		if (!empty($errFlat)) {
+			$parts = [];
+			foreach ($errFlat as $field => $errs) {
+				if (is_array($errs)) {
+					foreach ($errs as $rule => $text) {
+						$parts[] = $field . ': ' . (is_string($text) ? $text : json_encode($text));
+					}
+				}
+			}
+			if ($parts !== []) {
+				$msgUser .= ' Detalhes: ' . implode(' | ', $parts);
+			}
+		}
 
+		$payload = [
+			'ok' => false,
+			'code' => 'os_grid_save_validacao',
+			'msg' => $msgUser,
+			'validation' => $errFlat,
+		];
+		if (!$this->osGridDebugVerbose()) {
+			unset($payload['validation']);
+		}
+
+		return $this->response
+			->withType('application/json')
+			->withStatus(422)
+			->withStringBody(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 	}
 
 	public function carrinhoedititem(){
@@ -715,7 +818,11 @@ class OrdensservicoController extends AppController {
         $empPost = isset($data['idEmpresaAtual']) ? (int)$data['idEmpresaAtual'] : 0;
         if ($empPost !== $empAuth) {
             $this->Flash->error('Ocorreu um erro ao atualizar os itens. Verifique sua empresa.');
-            return $this->jsonResponse(['msg' => 'Erro empresa'], 400);
+
+            return $this->osGridJsonError(400, 'os_grid_empresa', 'Empresa não confere ao atualizar item.', [
+				'idEmpresaAtual_enviado' => $data['idEmpresaAtual'] ?? null,
+				'idempresa_auth' => $empAuth,
+			]);
         }
 
         $ordem = $this->Itensordem->findById($data['id'])->first();
@@ -752,7 +859,8 @@ class OrdensservicoController extends AppController {
 		$empPost = isset($data['idEmpresaAtual']) ? (int)$data['idEmpresaAtual'] : 0;
 		if ($empPost !== $empAuth) {
 			$this->Flash->error('Ocorreu um erro ao deletar o item da ordem de serviço. Verifique sua empresa atual e tente novamente');
-			return $this->jsonResponse(['msg' => 'Ocorreu um erro ao salvar os itens de ordem de serviço. Verifique sua empresa atual e tente novamente'], 400);
+
+			return $this->osGridJsonError(400, 'os_grid_empresa', 'Empresa não confere ao remover item.', []);
 		}
 
 		$ordem = $this->Itensordem->findById($data['id'])->first();
@@ -762,7 +870,10 @@ class OrdensservicoController extends AppController {
 
 	public function valortotal($idordem = null){
 		$this->autoRender = false;
-		if($idordem == null){
+		if ($idordem == null) {
+			if (empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])) {
+				return $this->jsonResponse(['valortotal' => 0, 'warning' => 'sessao_carrinho', 'msg' => 'Sessão do carrinho ausente; total zerado. Recarregue a página.'], 200);
+			}
 			$idordem = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
 			$carrinho = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 		} else {
@@ -1304,6 +1415,7 @@ class OrdensservicoController extends AppController {
 		$this->set('idticket', $idticket);
 		$this->set('title', 'Cadastro de ordem de serviços');
 		$this->set('authIdempresa', (int)$idempresa);
+		$this->set('osGridAjaxVerbose', $this->osGridDebugVerbose());
 	}
 
 	public function acaoindex() {
