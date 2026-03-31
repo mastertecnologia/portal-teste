@@ -124,7 +124,11 @@ Router::scope('/', function ($routes) {
     $routes->connect('/faturamento/edit/*', ['controller' => 'Faturamento', 'action' => 'edit']);
     $routes->connect('/faturamento/delete/*', ['controller' => 'Faturamento', 'action' => 'delete']);
     $routes->connect('/faturamento/alterar-status/*', ['controller' => 'Faturamento', 'action' => 'alterarStatus'])->setMethods(['POST']);
-    $routes->connect('/faturamento/gerar-de-os/*', ['controller' => 'Faturamento', 'action' => 'gerarDeOS']);
+    $routes->connect(
+        '/faturamento/gerar-de-os/:idordem',
+        ['controller' => 'Faturamento', 'action' => 'gerarDeOS'],
+        ['pass' => ['idordem'], 'idordem' => '\d+']
+    );
     // Financeiro — dashboard e contas a receber/pagar
     $routes->connect('/financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);

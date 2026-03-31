@@ -195,6 +195,19 @@ class FaturamentoController extends AppController {
 
 	/* ── Gerar de OS (ação chamada a partir da OS finalizada) ──────────── */
 	public function gerarDeOS($idordem = null) {
+		if ($idordem === null) {
+			$pass = $this->request->getParam('pass') ?: [];
+			$idordem = $pass[0] ?? null;
+		}
+		if (is_array($idordem)) {
+			$idordem = reset($idordem);
+		}
+		$idordem = (int)$idordem;
+		if ($idordem < 1) {
+			$this->Flash->error('Ordem de serviço inválida.');
+			return $this->redirect(['controller' => 'Ordensservico', 'action' => 'index']);
+		}
+
 		$idempresa = $this->Auth->user('idempresa');
 		$ordem = $this->Ordensservico->find('all')
 			->where(['Ordensservico.id' => $idordem, 'Ordensservico.idempresa' => $idempresa])
