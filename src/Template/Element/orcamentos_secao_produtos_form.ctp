@@ -13,6 +13,15 @@ $showItemForm = $isAdd
 	|| ($orcamento !== null
 		&& (int)$orcamento->get('status') !== (int)C_OrcamentoStatusAprovado
 		&& $role === 0);
+
+/** Evita div.form-group dentro de <td> (quebra alinhamento da tabela) */
+$orcTblFieldTpl = [
+	'templates' => [
+		'inputContainer' => '{{content}}',
+		'selectContainer' => '{{content}}',
+		'textareaContainer' => '{{content}}',
+	],
+];
 ?>
 <?php if (!$showItemForm && !$isAdd) : ?>
 	<div class="orc-sec-title">Itens do orçamento</div>
@@ -44,61 +53,55 @@ $showItemForm = $isAdd
 		</div>
 	</div>
 
-	<div class="row">
-		<div class="col-lg-2 col-md-12">
-			<label class="control-label">Código</label>
-			<?= $this->Form->control('idproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false]) ?>
-		</div>
-		<div class="col-lg-5 col-md-12">
-			<div class="form-group">
-				<label class="control-label">Produto/Serviço</label>
-				<?= $this->Form->control('servico', ['class' => 'form-control', 'label' => false]) ?>
-				<small class="qtdEstoque text-muted"></small>
-			</div>
-		</div>
-		<div class="col-lg-1 col-md-6">
-			<div class="form-group">
-				<label class="control-label">Tipo</label>
-				<?= $this->Form->control('tipo', ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false]) ?>
-			</div>
-		</div>
-		<div class="col-lg-1 col-md-6">
-			<div class="form-group">
-				<label class="control-label">Qtde.</label>
-				<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
-			</div>
-		</div>
-		<div class="col-lg-1 col-md-6">
-			<div class="form-group">
-				<label class="control-label">Vl. Mensal</label>
-				<?= $this->Form->control('valormensal', ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false]) ?>
-			</div>
-		</div>
-		<div class="col-lg-1 col-md-6">
-			<div class="form-group">
-				<label class="control-label">Vl. Unitário</label>
-				<?= $this->Form->control('valoruni', ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
-			</div>
-		</div>
-		<div class="col-lg-1 col-md-12">
-			<div class="form-group">
-				<label class="control-label">Vl. Total</label>
-				<?= $this->Form->control('valordoservico', ['class' => 'form-control', 'label' => false, 'disabled' => true]) ?>
-			</div>
-		</div>
+	<div class="orc-premium-carrinho-tbl-wrap table-responsive orc-item-insert-wrap">
+		<table class="table orc-premium-carrinho-tbl orc-item-insert-tbl" id="orcItemInsertTable">
+			<?= $this->element('orcamentos_carrinho_colgroup') ?>
+			<thead>
+				<tr>
+					<th>Ordem</th>
+					<th>Código</th>
+					<th>Produto/Serviço</th>
+					<th>Descrição</th>
+					<th class="text-right">Pagamento</th>
+					<th class="text-right">Qtde.</th>
+					<th class="text-right">Vl. Mensal</th>
+					<th class="text-right">Vl. Unit.</th>
+					<th class="text-right">Valor Total</th>
+					<th class="text-right">Custo</th>
+					<th class="text-right">Margem</th>
+					<th class="text-center">Ações</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="orc-item-insert-row">
+					<td class="orc-insert-muted">—</td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('idproduto', array_merge($orcTblFieldTpl, ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false])) ?></td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('servico', array_merge($orcTblFieldTpl, ['class' => 'form-control', 'label' => false])) ?>
+						<small class="qtdEstoque text-muted"></small>
+					</td>
+					<td class="orc-insert-muted">—</td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('tipo', array_merge($orcTblFieldTpl, ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false])) ?></td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('quantidade', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false])) ?></td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('valormensal', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false])) ?></td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('valoruni', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false])) ?></td>
+					<td class="orc-insert-td-input"><?= $this->Form->control('valordoservico', array_merge($orcTblFieldTpl, ['class' => 'form-control', 'label' => false, 'disabled' => true])) ?></td>
+					<td class="orc-insert-muted">—</td>
+					<td class="orc-insert-muted">—</td>
+					<td class="orc-insert-acoes text-center">
+						<button type="button" class="orc-add-row" id="btn-addservico" title="Adicionar item ao orçamento">
+							<i class="fa fa-plus orc-add-row-ic"></i><span class="orc-add-row-txt"> Adicionar</span>
+						</button>
+					</td>
+				</tr>
+				<tr class="orc-item-insert-obs-row">
+					<td colspan="12" class="orc-insert-obs-cell">
+						<label class="control-label">Descrição adicional</label>
+						<?= $this->Form->control('observacao', array_merge($orcTblFieldTpl, ['class' => 'form-control orc-item-obs-field', 'label' => false, 'placeholder' => 'Detalhes...', 'id' => 'observacao'])) ?>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
-	<div class="row">
-		<div class="col-lg-12 col-md-12">
-			<div class="form-group">
-				<label class="control-label">Descrição adicional</label>
-				<?= $this->Form->control('observacao', ['class' => 'form-control orc-item-obs-field', 'label' => false, 'placeholder' => 'Detalhes...', 'id' => 'observacao']) ?>
-			</div>
-		</div>
-	</div>
-
-	<button type="button" class="orc-add-row" id="btn-addservico">
-		<i class="fa fa-plus orc-add-row-ic"></i> Adicionar item manualmente
-	</button>
 	<div class="orc-inline-actions" id="orc-item-edit-actions" style="display:none;">
 		<button type="button" class="btn btn-orc-form-secondary btn-orc-compact" id="btn-cancelaredicao">
 			Cancelar edição

@@ -9,20 +9,21 @@ $carrinhoLinhasExtra = $carrinhoLinhasExtra ?? [];
 	<div class="col-lg-12">
 		<div class="orc-premium-carrinho-tbl-wrap table-responsive">
 			<table class="table orc-premium-carrinho-tbl" id="tableCarrinho">
+				<?= $this->element('orcamentos_carrinho_colgroup') ?>
 				<thead>
 					<tr>
-						<th style="width:5%;">Ordem</th>
-						<th style="width:6%;">Código</th>
-						<th style="width:18%;">Produto/Serviço</th>
-						<th style="width:16%;">Descrição</th>
+						<th>Ordem</th>
+						<th>Código</th>
+						<th>Produto/Serviço</th>
+						<th>Descrição</th>
 						<th class="text-right">Pagamento</th>
 						<th class="text-right">Qtde.</th>
 						<th class="text-right">Vl. Mensal</th>
 						<th class="text-right">Vl. Unit.</th>
 						<th class="text-right">Valor Total</th>
-						<th class="text-right" style="width:8%;">Custo</th>
-						<th class="text-right" style="width:7%;">Margem</th>
-						<th class="text-center" style="width:90px;">Ações</th>
+						<th class="text-right">Custo</th>
+						<th class="text-right">Margem</th>
+						<th class="text-center">Ações</th>
 					</tr>
 				</thead>
 				<tbody>

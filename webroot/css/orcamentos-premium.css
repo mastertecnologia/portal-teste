@@ -1172,7 +1172,8 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 10px;
+  margin: 10px 0 4px;
+  padding: 0 2px;
 }
 
 .orc-premium-wrap .btn-orc-compact {
@@ -2095,14 +2096,31 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   margin-top: 4px;
 }
 
-.orc-premium-wrap .orc-premium-carrinho-tbl {
+.orc-premium-wrap .orc-premium-carrinho-tbl,
+.orc-premium-wrap .orc-item-insert-tbl {
   width: 100%;
   margin: 0;
   border-collapse: collapse;
   font-size: 12px;
+  table-layout: fixed;
 }
 
-.orc-premium-wrap .orc-premium-carrinho-tbl thead th {
+/* Mesmas larguras: cabeçalho, linha de inserção e linhas do carrinho */
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-ordem { width: 5%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-codigo { width: 6%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-produto { width: 18%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-desc { width: 16%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-pag { width: 7%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-qtd { width: 5%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-vmens { width: 8%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-vunit { width: 8%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-vtot { width: 8%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-custo { width: 8%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-margem { width: 7%; }
+.orc-premium-wrap .orc-carrinho-cols col.orc-cc-acoes { width: 90px; min-width: 90px; max-width: 90px; }
+
+.orc-premium-wrap .orc-premium-carrinho-tbl thead th,
+.orc-premium-wrap .orc-item-insert-tbl thead th {
   font-size: 10px;
   color: #6b6a65;
   text-transform: uppercase;
@@ -2116,11 +2134,19 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orc-premium-wrap .orc-premium-carrinho-tbl thead th.text-right,
-.orc-premium-wrap .orc-premium-carrinho-tbl td.text-right {
+.orc-premium-wrap .orc-item-insert-tbl thead th.text-right,
+.orc-premium-wrap .orc-premium-carrinho-tbl td.text-right,
+.orc-premium-wrap .orc-item-insert-tbl td.text-right {
   text-align: right !important;
 }
 
-.orc-premium-wrap .orc-premium-carrinho-tbl tbody td {
+.orc-premium-wrap .orc-premium-carrinho-tbl thead th.text-center,
+.orc-premium-wrap .orc-item-insert-tbl thead th.text-center {
+  text-align: center !important;
+}
+
+.orc-premium-wrap .orc-premium-carrinho-tbl tbody td,
+.orc-premium-wrap .orc-item-insert-tbl tbody td {
   padding: 10px 10px !important;
   border-bottom: 1px solid #f0efec !important;
   vertical-align: middle;
@@ -2129,6 +2155,52 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 
 .orc-premium-wrap .orc-premium-carrinho-tbl tbody tr:hover {
   background: #f9f9f8;
+}
+
+.orc-premium-wrap .orc-item-insert-tbl tbody tr.orc-item-insert-obs-row td {
+  border-bottom: none !important;
+}
+
+/* Linha de inserção: inputs e botão na mesma grelha que o carrinho */
+.orc-premium-form .orc-item-insert-wrap {
+  margin-bottom: 0;
+}
+
+.orc-premium-form .orc-item-insert-tbl tbody td.orc-insert-muted {
+  color: #9a9890;
+  text-align: center;
+  font-size: 11px;
+}
+
+.orc-premium-form .orc-item-insert-tbl tbody td.orc-insert-td-input .form-group {
+  margin-bottom: 0;
+}
+
+.orc-premium-form .orc-item-insert-tbl td .form-control,
+.orc-premium-form .orc-item-insert-tbl .bootstrap-select {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.orc-premium-form .orc-item-insert-tbl .orc-insert-obs-cell {
+  background: #fcfcfb;
+  border-top: 1px solid #ecebe8 !important;
+}
+
+.orc-premium-form .orc-item-insert-tbl .orc-add-row {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  box-sizing: border-box;
+}
+
+.orc-premium-wrap .orc-th-acoes-placeholder,
+.orc-premium-wrap .orc-td-acoes-placeholder {
+  background: transparent !important;
 }
 
 /* Impressão: esconder cromado ERP + stepper + botões */
