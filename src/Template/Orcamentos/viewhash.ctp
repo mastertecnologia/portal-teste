@@ -85,6 +85,8 @@
 
 /* Conditions */
 .orc-cond-text { background:#f5f4f0; border-radius:10px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; margin-bottom:12px; border-left:3px solid #00C08B; }
+.orc-obs-html p { margin: 0 0 0.65em; }
+.orc-obs-html p:last-child { margin-bottom: 0; }
 
 /* Motivos recusa */
 .orc-radio-opt { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1.5px solid #e8e7e3; border-radius:10px; cursor:pointer; font-size:13px; margin-bottom:8px; transition:all .15px; }
@@ -271,7 +273,7 @@
   <?php if(!empty($orcamento->solicitacao)): ?>
   <div class="orc-portal-card">
     <div class="orc-portal-card-title">Condições comerciais</div>
-    <div class="orc-cond-text"><?= nl2br(htmlspecialchars($orcamento->solicitacao)) ?></div>
+    <div class="orc-cond-text orc-obs-html"><?= $orcamento->solicitacao ?></div>
   </div>
   <?php endif; ?>
 

@@ -21,6 +21,8 @@
 .orc-info-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6b6a65; font-weight:600; margin-bottom:4px; }
 .orc-info-value { font-size:13px; font-weight:600; color:#1a1a18; }
 .orc-obs-box { background:#f9f9f8; border-radius:8px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; border-left:3px solid #00c08b; }
+.orc-obs-html p { margin: 0 0 0.65em; }
+.orc-obs-html p:last-child { margin-bottom: 0; }
 </style>
 <div class="col-md-12 orc-premium-page-root">
 <div class="orc-premium-wrap orc-premium-form orc-premium-view">
@@ -87,7 +89,7 @@
             </div>
             <?php if(!empty($orcamento->solicitacao)): ?>
                 <div class="orc-sec-title" style="margin-top:10px;">Observações / condições</div>
-                <div class="orc-obs-box"><?= nl2br(htmlspecialchars($orcamento->solicitacao)) ?></div>
+                <div class="orc-obs-box orc-obs-html"><?= $orcamento->solicitacao ?></div>
             <?php endif; ?>
         </div>
     </div>
