@@ -14,6 +14,8 @@
 		overflow: visible;
 	}
 	.jsgrid-cell > select > option { text-align: left; }
+	.os-pesquisa-produto-sem-estoque { background-color: #f8d7da !important; }
+	.os-pesquisa-produto-sem-estoque td { color: #721c24; }
 </style>
 <div class="col-md-12 p-0">
     <div class="os-add-shell form-material">
@@ -288,7 +290,17 @@
         </div>
     </div>
 </div>
+<?php
+$osTiposComEstoqueErp = [];
+foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocacao'] as $osConst) {
+	if (defined($osConst)) {
+		$osTiposComEstoqueErp[] = (int)constant($osConst);
+	}
+}
+?>
 <script>
+	var osTiposComEstoqueErp = <?= json_encode($osTiposComEstoqueErp) ?>;
+	var osEstoquesLoteUrl = <?= json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
 	$('body').addClass('os-add-page');
 	function getEmpresaAtual() {
@@ -1042,22 +1054,23 @@
 					tbody.empty();
 					if(data.length > 0) {
 						$.each(data, function(index, prod) {
-							// Cria a linha da tabela
-							var tr = $('<tr>');
+							var tipoInt = parseInt(prod.tipo, 10);
+							var precisaEstoque = (osTiposComEstoqueErp || []).indexOf(tipoInt) !== -1;
+							var tr = $('<tr>').attr('data-codigo', prod.codigo != null ? String(prod.codigo) : '').attr('data-tipo', prod.tipo != null ? String(prod.tipo) : '')
+								.attr('data-estoque-status', precisaEstoque ? 'loading' : 'na');
 							tr.append($('<td>').text(prod.codigo));
 							tr.append($('<td>').text(prod.descricao));
 							tr.append($('<td>').text('R$ ' + numberToReal(prod.vlunitario)));
-							
-							var btn = $('<button>').attr('type', 'button').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm').text('Selecionar');
+							var btn = $('<button>').attr('type', 'button').addClass('btn btn-pgm btn-pgm-salvar btn-success btn-sm btn-os-modal-add').text('Adicionar à OS');
 							btn.on('click', function (e) {
 								e.preventDefault();
 								e.stopPropagation();
 								selecionarProduto(prod.codigo);
 							});
-							
 							tr.append($('<td>').append(btn));
 							tbody.append(tr);
 						});
+						osModalAplicarEstoqueLinhas(data);
 					} else {
 						tbody.html('<tr><td colspan="4" class="text-center">Nenhum produto encontrado.</td></tr>');
 					}
@@ -1068,7 +1081,109 @@
 			});
 		}
 
+		function osModalTipoConsultaEstoque(tipo) {
+			var t = parseInt(tipo, 10);
+			if (isNaN(t)) {
+				return false;
+			}
+			return (osTiposComEstoqueErp || []).indexOf(t) !== -1;
+		}
+
+		function osModalAplicarEstoqueLinhas(data) {
+			if (!data || !data.length) {
+				return;
+			}
+			if (!osEstoquesLoteUrl) {
+				$('#resultado-pesquisa-produtos tr[data-estoque-status="loading"]').attr('data-estoque-status', 'err');
+				return;
+			}
+			var cods = [];
+			data.forEach(function (prod) {
+				if (!osModalTipoConsultaEstoque(prod.tipo)) {
+					return;
+				}
+				var c = (prod.codigo != null && prod.codigo !== '') ? String(prod.codigo).trim() : '';
+				if (c && cods.indexOf(c) === -1) {
+					cods.push(c);
+				}
+			});
+			if (!cods.length) {
+				return;
+			}
+			if (cods.length > 150) {
+				cods = cods.slice(0, 150);
+			}
+			$.ajax({
+				type: 'POST',
+				url: osEstoquesLoteUrl,
+				data: { codigos: cods.join(',') },
+				dataType: 'json',
+				success: function (map) {
+					if (!map || typeof map !== 'object' || map.erro) {
+						$('#resultado-pesquisa-produtos tr[data-estoque-status="loading"]').attr('data-estoque-status', 'err');
+						return;
+					}
+					$('#resultado-pesquisa-produtos tr').each(function () {
+						var $tr = $(this);
+						var cod = ($tr.attr('data-codigo') || '').trim();
+						if (!cod) {
+							return;
+						}
+						$tr.removeClass('os-pesquisa-produto-sem-estoque');
+						$tr.find('.btn-os-modal-add').prop('disabled', false);
+						if (!osModalTipoConsultaEstoque($tr.attr('data-tipo'))) {
+							return;
+						}
+						if (map[cod] === undefined || map[cod] === null) {
+							$tr.attr('data-estoque-status', 'err');
+							return;
+						}
+						var q = map[cod];
+						if (q === 0) {
+							$tr.addClass('os-pesquisa-produto-sem-estoque').attr('data-estoque-status', 'zero');
+							$tr.find('.btn-os-modal-add').prop('disabled', true);
+						} else if (q === -999 || (typeof q === 'number' && q < 0)) {
+							$tr.attr('data-estoque-status', 'err');
+						} else {
+							$tr.attr('data-estoque-status', 'ok');
+						}
+					});
+				},
+				error: function () {
+					$('#resultado-pesquisa-produtos tr[data-estoque-status="loading"]').attr('data-estoque-status', 'err');
+				}
+			});
+		}
+
 		function selecionarProduto(codigo) {
+			var $tr = $('#resultado-pesquisa-produtos tr').filter(function () {
+				return String($(this).attr('data-codigo')) === String(codigo);
+			});
+			var st = $tr.attr('data-estoque-status');
+			if (st === 'loading') {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('Aguarde a consulta de estoque antes de adicionar o item.');
+				} else {
+					alert('Aguarde a consulta de estoque antes de adicionar o item.');
+				}
+				return;
+			}
+			if (st === 'zero') {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('Este produto está com estoque zerado no ERP e não pode ser incluído na ordem de serviço.');
+				} else {
+					alert('Este produto está com estoque zerado no ERP e não pode ser incluído na ordem de serviço.');
+				}
+				return;
+			}
+			if (st === 'err') {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('Não foi possível confirmar o estoque deste item. A inclusão não é permitida.');
+				} else {
+					alert('Não foi possível confirmar o estoque deste item. A inclusão não é permitida.');
+				}
+				return;
+			}
 			if(window.activeInputCode) {
 				// 1. Define o valor no input do Grid
 				window.activeInputCode.val(codigo);

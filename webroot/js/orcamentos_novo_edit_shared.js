@@ -578,6 +578,7 @@
 		$('#orc-catalog-body .orc-catalog-stock-line.orc-catalog-stock-line--loading').each(function () {
 			$(this).removeClass('orc-catalog-stock-line--loading').addClass('orc-catalog-stock-line--err');
 			$(this).text(t);
+			$(this).closest('.orc-catalog-item').find('.btn-orc-catalog-add').prop('disabled', true).attr('aria-disabled', 'true');
 		});
 	}
 
@@ -621,13 +622,17 @@
 					if (!cod) {
 						return;
 					}
-					var $el = $(this).find('.orc-catalog-stock-line');
+					var $row = $(this);
+					var $el = $row.find('.orc-catalog-stock-line');
 					if (!$el.length) {
 						return;
 					}
+					$row.removeClass('orc-catalog-item--sem-estoque');
+					$el.removeClass('orc-catalog-stock-line--zero orc-catalog-stock-line--ok orc-catalog-stock-line--err');
 					if (map[cod] === undefined || map[cod] === null) {
 						$el.removeClass('orc-catalog-stock-line--loading').addClass('orc-catalog-stock-line--err');
 						$el.text('Estoque indisponível');
+						$row.find('.btn-orc-catalog-add').prop('disabled', true).attr('aria-disabled', 'true');
 						return;
 					}
 					var q = map[cod];
@@ -635,8 +640,14 @@
 					if (q === -999 || (typeof q === 'number' && q < 0)) {
 						$el.addClass('orc-catalog-stock-line--err');
 						$el.text('Estoque indisponível');
+						$row.find('.btn-orc-catalog-add').prop('disabled', true).attr('aria-disabled', 'true');
+					} else if (q === 0) {
+						$row.addClass('orc-catalog-item--sem-estoque');
+						$el.addClass('orc-catalog-stock-line--zero').text('Estoque zerado');
+						$row.find('.btn-orc-catalog-add').prop('disabled', true).attr('aria-disabled', 'true');
 					} else {
-						$el.text('Em estoque (' + q + ')');
+						$el.addClass('orc-catalog-stock-line--ok').text('Em estoque (' + q + ')');
+						$row.find('.btn-orc-catalog-add').prop('disabled', false).attr('aria-disabled', 'false');
 					}
 				});
 			},
@@ -687,6 +698,11 @@
 					custoBlock +
 					'<div class="orc-catalog-item-unit">' + $('<div>').text(orcCatalogUnidadeHint(p)).html() + '</div>' +
 				'</div>' +
+				'<div class="orc-catalog-item-actions">' +
+					'<button type="button" class="btn-orc-catalog-add" data-idx="' + idx + '" title="Adicionar ao orçamento">' +
+						'<i class="fa fa-plus" aria-hidden="true"></i> Adicionar' +
+					'</button>' +
+				'</div>' +
 			'</div>';
 		});
 		$body.html(html);
@@ -710,13 +726,11 @@
 
 	window.orcCatalogFilter = orcCatalogFilter;
 
-	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function (e) {
-		e.preventDefault();
-		var idx = $(this).attr('data-idx');
-		if (idx === undefined || idx === '') {
+	function orcCatalogApplySelection(idxStr) {
+		if (idxStr === undefined || idxStr === '') {
 			return;
 		}
-		idx = parseInt(idx, 10);
+		var idx = parseInt(idxStr, 10);
 		if (isNaN(idx)) {
 			return;
 		}
@@ -724,8 +738,40 @@
 		if (p == null) {
 			return;
 		}
+		var $row = $('#orc-catalog-body .orc-catalog-item').filter(function () {
+			return parseInt($(this).attr('data-idx'), 10) === idx;
+		});
+		if (orcCatalogBadgeConsultaEstoque(p.badge)) {
+			if ($row.find('.orc-catalog-stock-line--loading').length) {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('Aguarde a consulta de estoque antes de adicionar o item.');
+				} else {
+					alert('Aguarde a consulta de estoque antes de adicionar o item.');
+				}
+				return;
+			}
+			if ($row.hasClass('orc-catalog-item--sem-estoque')) {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('Este item está com estoque zerado no ERP e não pode ser incluído no orçamento.');
+				} else {
+					alert('Este item está com estoque zerado no ERP e não pode ser incluído no orçamento.');
+				}
+				return;
+			}
+			if ($row.find('.orc-catalog-stock-line--err').length) {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('Não foi possível confirmar o estoque deste item. A inclusão não é permitida.');
+				} else {
+					alert('Não foi possível confirmar o estoque deste item. A inclusão não é permitida.');
+				}
+				return;
+			}
+		}
 		var rawId = p.id != null ? String(p.id) : '';
 		var $sel = $('#idproduto');
+		if ($sel.length === 0) {
+			return;
+		}
 		if ($sel.data('selectpicker')) {
 			$sel.selectpicker('val', rawId);
 		} else {
@@ -741,6 +787,20 @@
 			}
 		}, 450);
 		$('#orc-catalog-overlay').removeClass('open');
+	}
+
+	$('#orc-catalog-overlay').on('click', '.btn-orc-catalog-add', function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+		orcCatalogApplySelection($(this).attr('data-idx'));
+	});
+
+	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function (e) {
+		e.preventDefault();
+		if ($(e.target).closest('.btn-orc-catalog-add').length) {
+			return;
+		}
+		orcCatalogApplySelection($(this).attr('data-idx'));
 	});
 
 	$('#orc-catalog-search-input').on('keydown', function (e) {
