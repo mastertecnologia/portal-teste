@@ -789,19 +789,27 @@
 		$('#orc-catalog-overlay').removeClass('open');
 	}
 
-	$('#orc-catalog-overlay').on('click', '.btn-orc-catalog-add', function (e) {
-		e.preventDefault();
-		e.stopPropagation();
-		orcCatalogApplySelection($(this).attr('data-idx'));
-	});
-
-	$('#orc-catalog-overlay').on('click', '.orc-catalog-item', function (e) {
-		e.preventDefault();
-		if ($(e.target).closest('.btn-orc-catalog-add').length) {
+	// Delegar no .orc-catalog-modal: o modal tem onclick stopPropagation, então o clique
+	// não sobe até #orc-catalog-overlay — handlers no overlay nunca disparavam.
+	function orcCatalogBindModalClicks() {
+		var $modal = $('.orc-catalog-modal');
+		if (!$modal.length) {
 			return;
 		}
-		orcCatalogApplySelection($(this).attr('data-idx'));
-	});
+		$modal.off('click.orcCat').on('click.orcCat', '.btn-orc-catalog-add', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			orcCatalogApplySelection($(this).attr('data-idx'));
+		});
+		$modal.on('click.orcCat', '.orc-catalog-item', function (e) {
+			e.preventDefault();
+			if ($(e.target).closest('.btn-orc-catalog-add').length) {
+				return;
+			}
+			orcCatalogApplySelection($(this).attr('data-idx'));
+		});
+	}
+	orcCatalogBindModalClicks();
 
 	$('#orc-catalog-search-input').on('keydown', function (e) {
 		if (e.key === 'Enter') {
