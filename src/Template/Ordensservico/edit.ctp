@@ -833,6 +833,9 @@ else $disabled = false;
 				});
 			},
 			insertItem: function(item) {
+				if (item && typeof item === 'object') {
+					delete item.id;
+				}
 				item['idEmpresaAtual'] = pgmEmpresaAtualAjax();
 				return $.ajax({
 					type: "POST",

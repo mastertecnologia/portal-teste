@@ -349,6 +349,9 @@
                     });
                 },
                 insertItem: function(item){
+                    if (item && typeof item === 'object') {
+                        delete item.id;
+                    }
                     item['idEmpresaAtual'] = $("#empresaSidebar option:selected").val();
                     return $.ajax({
                         type: "POST",

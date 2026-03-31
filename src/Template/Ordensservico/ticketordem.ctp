@@ -412,6 +412,9 @@
 					});
 				},
 				insertItem: function(item){
+					if (item && typeof item === 'object') {
+						delete item.id;
+					}
 					item['idEmpresaAtual'] = getEmpresaAtualTicket();
 					return $.ajax({
 					type: "POST",

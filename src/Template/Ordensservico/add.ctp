@@ -542,6 +542,9 @@
 					});
 				},
 				insertItem: function(item){
+					if (item && typeof item === 'object') {
+						delete item.id;
+					}
 					item['idEmpresaAtual'] = getEmpresaAtual();
 					return $.ajax({
 					type: "POST",

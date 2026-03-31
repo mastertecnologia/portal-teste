@@ -40,12 +40,28 @@ class OrdensservicoController extends AppController {
 	}
 
 	/**
-	 * Realinha a sequência SERIAL da coluna id no PostgreSQL (evita duplicate key após importação / INSERT manual).
+	 * Realinha a sequência da coluna id no PostgreSQL (evita duplicate key após importação / INSERT manual).
+	 * Tenta pg_get_serial_sequence; se falhar, usa fallbacks: *_id_increment (padrão deste projeto) e *_id_seq.
+	 * Chamar nextval manualmente no psql só consome números da sequence; não corrompe dados.
 	 *
 	 * @param string $table itensordem | ordemservicositens
 	 */
 	protected function fixPostgresIdSequence($table) {
 		static $allowed = ['itensordem' => true, 'ordemservicositens' => true];
+		static $fallbackSeqByTable = [
+			'itensordem' => [
+				'public.itensordem_id_increment',
+				'itensordem_id_increment',
+				'public.itensordem_id_seq',
+				'itensordem_id_seq',
+			],
+			'ordemservicositens' => [
+				'public.ordemservicositens_id_increment',
+				'ordemservicositens_id_increment',
+				'public.ordemservicositens_id_seq',
+				'ordemservicositens_id_seq',
+			],
+		];
 		if (empty($allowed[$table])) {
 			return;
 		}
@@ -57,12 +73,22 @@ class OrdensservicoController extends AppController {
 			}
 			$qi = $conn->quoteIdentifier($table);
 			$base = str_replace(['"', "'"], '', $table);
+			$maxSub = '(SELECT COALESCE(MAX(id), 0) FROM ' . $qi . ')';
 			$lastErr = null;
 			foreach (['public.' . $base, $base] as $rel) {
 				try {
 					$conn->execute(
-						"SELECT setval(pg_get_serial_sequence('" . $rel . "', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {$qi}))"
+						'SELECT setval((pg_get_serial_sequence(\'' . $rel . '\', \'id\'))::regclass, ' . $maxSub . ', true)'
 					);
+
+					return;
+				} catch (\Throwable $e) {
+					$lastErr = $e;
+				}
+			}
+			foreach ($fallbackSeqByTable[$base] ?? [] as $seqLit) {
+				try {
+					$conn->execute('SELECT setval(\'' . $seqLit . '\'::regclass, ' . $maxSub . ', true)');
 
 					return;
 				} catch (\Throwable $e) {
@@ -956,6 +982,8 @@ class OrdensservicoController extends AppController {
         $ordem->valordesconto = $valordesconto;
         $ordem->valortotal = $valortotal;
 
+		$ordem->unsetProperty('id');
+
 		$this->fixPostgresIdSequence('itensordem');
 		$this->fixPostgresIdSequence('ordemservicositens');
 		try {
@@ -988,6 +1016,7 @@ class OrdensservicoController extends AppController {
 					'valordesconto' => $ordem->valordesconto,
 					'valortotal' => $ordem->valortotal,
 				]);
+				$retry->unsetProperty('id');
 				try {
 					if ($this->Itensordem->save($retry)) {
 						return $this->jsonResponse(['ok' => true, 'code' => 'os_grid_item_ok'], 200);
