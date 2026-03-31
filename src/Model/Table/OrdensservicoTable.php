@@ -10,7 +10,7 @@ class OrdensservicoTable extends Table {
 	public function initialize(array $config) {
 		$this->belongsTo('Clientes')->setForeignKey('idcliente')->setDependent(false);
 		$this->belongsTo('Users')->setForeignKey('iduser')->setDependent(false);
-		$this->hasMany('Ordemservicositens')->setForeignKey('idordem')->setDependent(false);
+		$this->hasMany('Ordemservicositens')->setForeignKey('idordem')->setBindingKey('id')->setDependent(false);
 		$this->hasMany('Ordemparcelas')->setForeignKey('id')->setDependent(false);
 		$this->hasMany('Ordemhoras')->setForeignKey('id')->setDependent(false);
 		$this->hasMany('Ordemmovs')->setForeignKey('id')->setDependent(false);

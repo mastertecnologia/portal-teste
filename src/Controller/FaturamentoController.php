@@ -148,8 +148,20 @@ class FaturamentoController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+			$itens = $data['itens'] ?? [];
+			unset($data['itens']);
 			$doc = $this->Faturamento->patchEntity($doc, $data);
 			if ($this->Faturamento->save($doc)) {
+				$this->FaturamentoItens->deleteAll(['idfaturamento' => $doc->id]);
+				foreach ($itens as $item) {
+					if (empty(trim($item['descricao'] ?? ''))) {
+						continue;
+					}
+					$item['idfaturamento'] = $doc->id;
+					$item['valor_total'] = (float)($item['quantidade'] ?? 1) * (float)($item['valor_unitario'] ?? 0);
+					$novoItem = $this->FaturamentoItens->newEntity($item);
+					$this->FaturamentoItens->save($novoItem);
+				}
 				$this->Flash->success('Documento atualizado.');
 				return $this->redirect(['action' => 'view', $id]);
 			}
