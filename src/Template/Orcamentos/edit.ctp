@@ -106,6 +106,7 @@
 	<?= $this->element('orcamentos_stepper') ?>
 
 	<?= $this->Form->create($orcamento, ['class' => 'form-material']); ?>
+	<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?>
 
 	<!-- Card: Dados do cliente -->
 	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
@@ -234,70 +235,16 @@
 		</div>
 	</div>
 
-	<!-- Card: Produtos e serviços / Itens -->
+	<!-- Card: Produtos e serviços / Itens (mesmo bloco que Novo orçamento) -->
 	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
 		<div class="card-body">
-			<?php if($orcamento->status != C_OrcamentoStatusAprovado && $role == 0): ?>
-				<div class="orc-sec-title">Produtos e serviços</div>
-				<div class="row">
-					<div class="col-lg-2 col-md-12">
-						<label class="control-label">Código</label>
-						<?= $this->Form->control('idproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'value' => 0, 'label' => false]) ?>
-					</div>
-					<div class="col-lg-5 col-md-12">
-						<div class="form-group">
-							<label class="control-label">Produto/Serviço</label>
-							<?= $this->Form->control('servico', ['class' => 'form-control', 'label' => false]) ?>
-							<small class="qtdEstoque text-muted"></small>
-						</div>
-					</div>
-					<div class="col-lg-1 col-md-6">
-						<div class="form-group">
-							<label class="control-label">Tipo</label>
-							<?= $this->Form->control('tipo', ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false]) ?>
-						</div>
-					</div>
-					<div class="col-lg-1 col-md-6">
-						<div class="form-group">
-							<label class="control-label">Qtde.</label>
-							<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
-						</div>
-					</div>
-					<div class="col-lg-1 col-md-6">
-						<div class="form-group">
-							<label class="control-label">Vl. Mensal</label>
-							<?= $this->Form->control('valormensal', ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false]) ?>
-						</div>
-					</div>
-					<div class="col-lg-1 col-md-6">
-						<div class="form-group">
-							<label class="control-label">Vl. Unitário</label>
-							<?= $this->Form->control('valoruni', ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
-						</div>
-					</div>
-					<div class="col-lg-1 col-md-12">
-						<div class="form-group">
-							<label class="control-label">Vl. Total</label>
-							<?= $this->Form->control('valordoservico', ['class' => 'form-control', 'label' => false, 'disabled' => true]) ?>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-lg-12">
-						<div class="form-group">
-							<label class="control-label">Descrição adicional</label>
-							<?= $this->Form->control('observacao', ['class' => 'form-control', 'label' => false]) ?>
-						</div>
-					</div>
-				</div>
-				<button type="button" class="orc-add-row" id="btn-addservico">
-					<i class="fa fa-plus orc-add-row-ic"></i> Adicionar item
-				</button>
-			<?php else: ?>
-				<div class="orc-sec-title">Itens do orçamento</div>
-			<?php endif; ?>
+			<?= $this->element('orcamentos_secao_produtos_form', [
+				'orcModo' => 'edit',
+				'orcamento' => $orcamento,
+				'role' => $role,
+			]); ?>
 
-			<?php if($orcamento->status == C_OrcamentoStatusAprovado && $role == 0 && !empty($orcamento->ipaprovacao)): ?>
+			<?php if ($orcamento->status == C_OrcamentoStatusAprovado && $role == 0 && !empty($orcamento->ipaprovacao)) : ?>
 				<div class="orc-alcada-block">
 					<div class="orc-alcada-icon"><i class="fa fa-check"></i></div>
 					<div>
@@ -311,6 +258,12 @@
 			<?php endif; ?>
 
 			<div id="carrinho" class="m-t-10"></div>
+
+			<?= $this->element('orcamentos_secao_produtos_rodape', [
+				'orcModo' => 'edit',
+				'orcamento' => $orcamento,
+				'role' => $role,
+			]); ?>
 		</div>
 	</div>
 
@@ -346,6 +299,33 @@
 	<?= $this->Form->end(); ?>
 </div>
 </div>
+
+<!-- Catálogo (igual Novo orçamento) -->
+<div class="orc-catalog-overlay" id="orc-catalog-overlay" onclick="if(event.target===this)$(this).removeClass('open');">
+	<div class="orc-catalog-modal" onclick="event.stopPropagation();">
+		<div class="orc-catalog-header">
+			<div class="orc-catalog-header-text">
+				<h2 class="orc-catalog-h2">Catálogo de produtos</h2>
+				<p class="orc-catalog-sub">Clique para adicionar ao orçamento</p>
+			</div>
+			<button type="button" class="btn btn-orc-catalog-fechar" onclick="$('#orc-catalog-overlay').removeClass('open');" aria-label="Fechar">
+				<i class="fa fa-times"></i> Fechar
+			</button>
+		</div>
+		<div class="orc-catalog-search">
+			<div class="orc-catalog-search-inner">
+				<i class="fa fa-search orc-catalog-search-ic" aria-hidden="true"></i>
+				<input type="text" id="orc-catalog-search-input" placeholder="Buscar produto, código ou descrição..." autocomplete="off" oninput="orcCatalogFilter(this.value)" />
+			</div>
+		</div>
+		<div class="orc-catalog-body" id="orc-catalog-body">
+			<div class="orc-catalog-loading">
+				<i class="fa fa-spinner fa-spin"></i> Carregando catálogo...
+			</div>
+		</div>
+	</div>
+</div>
+
 <!-- Modal Email -->
 <div class="modal fade none-border" id="modal-email">
 	<div class="modal-dialog orc-premium-wrap orc-premium-form">
@@ -378,239 +358,27 @@
 	</div>
 </div>
 <script>
-	// Carrinho
-		carrinho();
-		function carrinho(){
-			$.ajax({
-				url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'carrinhoedit']);?>/" + <?= $orcamento->id ?>,
-				dataType: "html",
-				success : function(data) {
-					$("#carrinho").html(data);
-					$("#carrinho").fadeIn();
-					$('#valormensal-modal, #valoruni-modal').prop('disabled', false).removeAttr('disabled').prop('readonly', false).removeAttr('readonly');
-				},
-				error : function(error) { alert(error);}
-			});
-		}
-		$(document).on('shown.bs.modal', '#modal-edit-item', function() {
-			$('#valormensal-modal, #valoruni-modal').prop('disabled', false).removeAttr('disabled').prop('readonly', false).removeAttr('readonly');
-		});
-		$(document).on('input focus', '#valormensal-modal, #valoruni-modal', function() {
-			$(this).prop('disabled', false).removeAttr('disabled').prop('readonly', false).removeAttr('readonly');
-		});
-
-	// Limpa Session
-		$(window).bind('beforeunload', function(){
-			$.ajax({ url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'limpasession']);?>" });
-		});
-
-	// E-mail
-		$('.btn-email').click(function(e){
-			e.preventDefault();
-			$('#modal-email').modal('toggle');
-		});
-	// Files
-		$(document).on('change', '.file-input', function() {
-			var filesCount = $(this)[0].files.length;
-			var $textContainer = $(this).prev();
+	$(window).bind('beforeunload', function(){
+		$.ajax({ url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'limpasession']);?>" });
+	});
+	$('.btn-email').click(function(e){
+		e.preventDefault();
+		$('#modal-email').modal('toggle');
+	});
+	$(document).on('change', '.file-input', function() {
+		var filesCount = $(this)[0].files.length;
+		var $textContainer = $(this).prev();
+		var fileName = $(this).val().split('\\').pop();
+		if (filesCount === 1) {
 			var fileName = $(this).val().split('\\').pop();
-			if (filesCount === 1) {
-				var fileName = $(this).val().split('\\').pop();
-				$textContainer.text(fileName);
-			} else $textContainer.text(filesCount + ' arquivos selecionados');
-		});
-	// Só numero
-		function SomenteNumero(e, campo){
-			var tecla=(window.event)?event.keyCode:e.which;  
-
-			if((tecla>47 && tecla<58)) return true;
-			else if (tecla==8 || tecla==0) return true;
-			else if (tecla == 46)  return false;    
-			else if( $(campo).val().indexOf(',') > -1 && tecla == 44 ) return false
-			else if( $(campo).val().indexOf(',') <= -1 && tecla == 44 ) return true
-			else  return false;
-		}
-	// Produto
-		$('#idproduto').change(function(e){
-			if( $(this).val() != 0){
-				$('#valoruni').attr('disabled', true);
-				$('.mensal').attr('disabled', true);
-				$.ajax({
-					type: "post",
-					url: "<?= Router::url(['controller'=>'Produtos','action'=>'produto']);?>/" + $(this).val(),
-					dataType: "json",
-					success: function(data){
-						if (data.mensagem) {
-							$('#servico').val('');
-							$('#valoruni').val('');
-							$('.qtdEstoque').text(data.mensagem).show();
-							$('#valoruni').prop('disabled', false);
-							$('.mensal').prop('disabled', false);
-							return;
-						}
-						$('#servico').val((data.descricao || '').toString().trim());
-						$('#quantidade').val('');
-						$('#valordoservico').val('');
-						if(data.tipo == <?= C_ProdutosTipoServico ?>) {
-							$('#valormensal').prop('disabled', false);
-							$('#valoruni').prop('disabled', false);
-							$('#valormensal').val('');
-							$('#valoruni').val(numberToReal(data.vlunitario));
-							$('#tipo').val(1);
-							$('#quantidade').mask('99:99');
-							$('.qtdEstoque').hide();
-						} else if (data.tipo == <?= C_ProdutosTipoProduto  ?>) {
-							$('#valormensal').prop('disabled', 'disabled');
-							$('#valoruni').prop('disabled', false);
-							$('#valoruni').val(numberToReal(data.vlunitario));
-							$('#valormensal').val('');
-							$('#tipo').val(0);
-							$('#quantidade').mask('0000000');
-							$.ajax({
-								type:"post",
-								url: "<?= Router::url(['controller'=>'Produtos','action'=>'qtdestoque']);?>/" + data.codigo,
-								dataType: "json",
-								success:function(qtdestoque) {
-									var msg = (qtdestoque === -999 || qtdestoque === null || (typeof qtdestoque === 'number' && qtdestoque < 0))
-										? 'Estoque: indisponível (consulte o ERP)'
-										: ('Qtd. em estoque: ' + qtdestoque);
-									$('.qtdEstoque').text(msg).show();
-								},
-								error: function() { $('.qtdEstoque').text('Estoque: indisponível').show(); }
-							});
-						} else {
-							$('#valormensal').prop('disabled', false);
-							$('#valoruni').prop('disabled', false);
-							$('#valormensal').val(numberToReal(data.vlunitario));
-							$('#valoruni').val(numberToReal(data.vlunitario));
-							$('#tipo').val(0);
-							$('#quantidade').mask('0000000');
-							$('.qtdEstoque').hide();
-						}
-					},
-					error: function (xhr) {
-						var msg = 'Produto/serviço não encontrado.';
-						if (xhr.responseJSON && xhr.responseJSON.mensagem) msg = xhr.responseJSON.mensagem;
-						$('.qtdEstoque').text(msg).show();
-						$('#valoruni').val('').prop('disabled', false);
-						$('.mensal').prop('disabled', false);
-					}
-				});
-			}else{
-				$('#servico').val('');
-				$('#valoruni').val('');
-				$('#valoruni').attr('disabled', false);
-				$('.mensal').attr('disabled', false);
-			}
-		});
-
-	// Tipo
-		$('#tipo').change(function(){
-			if($(this).val() == 1) $('#quantidade').mask('99:99');
-			else $('#quantidade').mask('0000000');
-		});
-	// Valores
-		$('#valoruni').keydown(function(){
-			valor = $(this).val() .replaceAll('.', '').replaceAll(',', '.');
-			if(valor > 0) $('#valormensal').val('');
-		});
-
-		$('#valormensal').keydown(function(){
-			valor = $(this).val() .replaceAll('.', '').replaceAll(',', '.');
-			if(valor > 0) $('#valoruni').val('');
-		});
-	// Cálculos
-		$('#quantidade, #valoruni, #idproduto').keyup(function(e){
-			if( $('#quantidade').val().indexOf(':') > -1  ) {
-				quantidadeArray = $('#quantidade').val().split(':');
-				quantidade =( parseFloat(quantidadeArray[0]) + ( parseFloat(quantidadeArray[1]) / 6 / 10 )).toFixed(2);
-			}else quantidade = $('#quantidade').val().replaceAll('.', '').replaceAll(',', '.')
-			
-			valoruni = $('#valoruni').val().replaceAll('.', '').replaceAll(',', '.')
-			valormensal = $('#valormensal').val().replaceAll('.', '').replaceAll(',', '.')
-			valor = 0;
-			if(valoruni != '') valor = valoruni;
-			//else valor = valormensal;
-			if(quantidade > 0 && valor){
-				valortotal = quantidade * valor;
-				$('#valordoservico').val(numberToReal(valortotal));
-			}
-			else $('#valordoservico').val('');
-		});
-
-	// Add Serviço
-		$('#btn-addservico').click(function(e){
-			e.preventDefault();
-			servico =       $('#servico').val();
-			quantidade =	$('#quantidade').val();
-			valoruni =      $('#valoruni').val();
-			valordoservico= $('#valordoservico').val();
-			observacao = 	$('#observacao').val();
-			valormensal = 	$('#valormensal').val();
-			idproduto =		$('#idproduto').val();
-			tipo =			$('#tipo').val();
-
-			if(servico == ''){
-				bootbox.alert('Preencha o campo "Descrição".');
-				return false;
-			}
-
-			if(quantidade == '' || (valoruni == '' && valormensal == '')){
-				bootbox.alert('Preencha o campo "Quantidade" e o campo de valor respectivo.');
-				return false;
-			}
-
-			if(valoruni == '') valoruni = 0;
-			if(valormensal == '') valormensal = 0;
-			
-			$.ajax({
-				url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'addservico']);?>/edit",
-				dataType: "html",
-				type: 'POST',
-				data: { servico: servico, quantidade: quantidade, valoruni: valoruni, valordoservico: valordoservico, observacao: observacao, valormensal: valormensal, idproduto: idproduto, tipo : tipo},
-				success : function(data) {
-					console.log(data);
-					if(data == 'nao pode'){
-						bootbox.alert('O serviço já está no carrinho');
-						return false;
-					}
-					carrinho();
-					$('#servico').val('');
-					$('#quantidade').val('');
-					$('#valoruni').val('');
-					$('#valordoservico').val('');
-					$('#observacao').val('');
-					$('#valormensal').val('');
-					$('#idproduto').val(0);
-					$('#tipo').val(0);
-					$('#idproduto').selectpicker('refresh');
-					$('.qtdEstoque').text('').hide();
-					$('#valormensal').attr('disabled', false);
-					$('#valoruni').attr('disabled', false);
-					$('#servico').focus();
-				},
-				error : function(xhr) {
-					var msg = 'Erro ao adicionar item. Tente novamente.';
-					if (xhr.responseJSON && xhr.responseJSON.mensagem) msg = xhr.responseJSON.mensagem;
-					else if (xhr.responseText && xhr.responseText.length < 200) msg = xhr.responseText;
-					if (typeof bootbox !== 'undefined') bootbox.alert(msg); else alert(msg);
-				}
-			});
-		});
-
-	// Double Submit
-		jQuery.fn.preventDoubleSubmission = function() {
-			$(this).on('submit',function(e){
-				var $form = $(this);
-				if ($form.data('submitted') === true) {
-					e.preventDefault();
-				} else {
-					$form.data('submitted', true);
-				}
-			});
-			return this;
-		};
-
-		$('form').preventDoubleSubmission();
-	// 
+			$textContainer.text(fileName);
+		} else $textContainer.text(filesCount + ' arquivos selecionados');
+	});
 </script>
+<?= $this->element('orcamentos_form_shared_js', [
+	'mode' => 'edit',
+	'orcamentoId' => $orcamento->id,
+	'clientesMetaJson' => '{}',
+	'produtosCatalogoJson' => $produtosCatalogoJson ?? '[]',
+]) ?>
+

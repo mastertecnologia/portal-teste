@@ -526,6 +526,58 @@ class OrcamentosController extends AppController {
 		];
 	}
 
+	/**
+	 * JSON do catálogo (mesmo payload da tela Novo orçamento) para o modal "Buscar no catálogo".
+	 *
+	 * @param \Cake\Datasource\EntityInterface[] $produtosOpt1 Produtos ativos da empresa
+	 */
+	protected function _orcamentoProdutosCatalogoJson(array $produtosOpt1): string {
+		$produtosCatalogoLista = [];
+		$tipoMap = [];
+		if (defined('C_ProdutosTipo')) {
+			$tc = constant('C_ProdutosTipo');
+			$tipoMap = is_array($tc) ? $tc : [];
+		}
+		$idempresaCat = (int) $this->Auth->user('idempresa');
+		$custoPorCodigo = $this->_produtosCustoUnitPorCodigo($idempresaCat);
+		foreach ($produtosOpt1 as $reg) {
+			$tipoInt = (int)($reg->tipo ?? 0);
+			$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
+			$badge = 'outro';
+			if (defined('C_ProdutosTipoProduto') && $tipoInt === (int) C_ProdutosTipoProduto) {
+				$badge = 'prod';
+			} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int) C_ProdutosTipoServico) {
+				$badge = 'srv';
+			} elseif (stripos((string) $tipoLabel, 'licen') !== false) {
+				$badge = 'lic';
+			} elseif (stripos((string) $tipoLabel, 'loca') !== false) {
+				$badge = 'loc';
+			}
+			$codKey = trim((string) $reg->codigo);
+			$custoU = $custoPorCodigo[$codKey] ?? 0.0;
+			$vendaU = (float) ($reg->vlunitario ?? 0);
+			$margemPct = null;
+			if ($vendaU > 0.0001 && $custoU > 0.0001) {
+				$margemPct = (int) round((($vendaU - $custoU) / $vendaU) * 100);
+			}
+			$produtosCatalogoLista[] = [
+				'id' => (string) $reg->codigo,
+				'codigo' => (string) $reg->codigo,
+				'descricao' => (string) ($reg->descricao ?? ''),
+				'nome' => (string) ($reg->descricao ?? ''),
+				'tipo' => $tipoInt,
+				'tipoLabel' => $tipoLabel,
+				'badge' => $badge,
+				'vlunitario' => $vendaU,
+				'unidade' => (string) ($reg->unidade ?? 'un'),
+				'custoUnit' => $custoU > 0.0001 ? round($custoU, 4) : null,
+				'margemPct' => $margemPct,
+			];
+		}
+
+		return json_encode($produtosCatalogoLista, JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE);
+	}
+
 	public function index() {
 		$idempresa = $this->Auth->user('idempresa');
 		$idcliente = $this->Auth->user('idcliente');
@@ -817,52 +869,7 @@ class OrcamentosController extends AppController {
 				$produtosOpt[$reg->codigo] = $reg->descricao . ' (' . $reg->codigo . ')';
 			}
 
-			$produtosCatalogoLista = [];
-			$tipoMap = [];
-			if (defined('C_ProdutosTipo')) {
-				$tc = constant('C_ProdutosTipo');
-				$tipoMap = is_array($tc) ? $tc : [];
-			}
-			$idempresaCat = (int) $this->Auth->user('idempresa');
-			$custoPorCodigo = $this->_produtosCustoUnitPorCodigo($idempresaCat);
-			foreach ($produtosOpt1 as $reg) {
-				$tipoInt = (int)($reg->tipo ?? 0);
-				$tipoLabel = $tipoMap[$tipoInt] ?? 'Item';
-				$badge = 'outro';
-				if (defined('C_ProdutosTipoProduto') && $tipoInt === (int) C_ProdutosTipoProduto) {
-					$badge = 'prod';
-				} elseif (defined('C_ProdutosTipoServico') && $tipoInt === (int) C_ProdutosTipoServico) {
-					$badge = 'srv';
-				} elseif (stripos((string) $tipoLabel, 'licen') !== false) {
-					$badge = 'lic';
-				} elseif (stripos((string) $tipoLabel, 'loca') !== false) {
-					$badge = 'loc';
-				}
-				$codKey = trim((string) $reg->codigo);
-				$custoU = $custoPorCodigo[$codKey] ?? 0.0;
-				$vendaU = (float) ($reg->vlunitario ?? 0);
-				$margemPct = null;
-				if ($vendaU > 0.0001 && $custoU > 0.0001) {
-					$margemPct = (int) round((($vendaU - $custoU) / $vendaU) * 100);
-				}
-				$produtosCatalogoLista[] = [
-					'id' => (string) $reg->codigo,
-					'codigo' => (string) $reg->codigo,
-					'descricao' => (string) ($reg->descricao ?? ''),
-					'nome' => (string) ($reg->descricao ?? ''),
-					'tipo' => $tipoInt,
-					'tipoLabel' => $tipoLabel,
-					'badge' => $badge,
-					'vlunitario' => $vendaU,
-					'unidade' => (string) ($reg->unidade ?? 'un'),
-					'custoUnit' => $custoU > 0.0001 ? round($custoU, 4) : null,
-					'margemPct' => $margemPct,
-				];
-			}
-			$this->set(
-				'produtosCatalogoJson',
-				json_encode($produtosCatalogoLista, JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE)
-			);
+			$this->set('produtosCatalogoJson', $this->_orcamentoProdutosCatalogoJson($produtosOpt1));
 
 		$this->set('idcarrinho', $_SESSION['idcarrinhoadd']);
 		$this->set('clientes', $clientesOpt);
@@ -915,7 +922,10 @@ class OrcamentosController extends AppController {
 
 		$produtosOpt = [0 => 'Código'];
 		$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])->order(['descricao'])->toArray();
-		foreach($produtosOpt1 as $reg) $produtosOpt[$reg->codigo] =  $reg->descricao . ' (' . $reg->codigo . ')';
+		foreach ($produtosOpt1 as $reg) {
+			$produtosOpt[$reg->codigo] = $reg->descricao . ' (' . $reg->codigo . ')';
+		}
+		$this->set('produtosCatalogoJson', $this->_orcamentoProdutosCatalogoJson($produtosOpt1));
 
 		$ordem = $this->Ordensservico->findByIdorcamento($id)->first();
 		$temordem = empty($ordem) ? 'nao' : $ordem->id;
@@ -1091,13 +1101,20 @@ class OrcamentosController extends AppController {
 			? $this->Orcamentosservicos->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $idorcamentoServicos])->order(['id'])->toArray()
 			: [];
 
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$carrinhoLinhasExtra = $this->_carrinhoLinhasCustoMargem($carrinho, $idempresa);
+
 		$produtosOpt = [0 => 'Código'];
-		$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])->order(['descricao'])->toArray();
-		foreach($produtosOpt1 as $reg) $produtosOpt[$reg->codigo] = "$reg->descricao ($reg->codigo)";
+		$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $idempresa, 'ativo' => 1])->order(['descricao'])->toArray();
+		foreach ($produtosOpt1 as $reg) {
+			$produtosOpt[$reg->codigo] = "$reg->descricao ($reg->codigo)";
+		}
 
 		$this->set('produtos', $produtosOpt);
 		$this->set('carrinho', $carrinho);
+		$this->set('carrinhoLinhasExtra', $carrinhoLinhasExtra);
 		$this->set('orcamento', $orcamento);
+		$this->set('role', $this->Auth->user('role'));
 	}
 
 	public function limpacarrinho(){
