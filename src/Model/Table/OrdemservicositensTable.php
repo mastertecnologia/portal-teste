@@ -12,5 +12,6 @@ class OrdemservicositensTable extends Table
 	{
 		parent::initialize($config);
 		$this->setTable('ordemservicositens');
+		$this->belongsTo('Ordensservico')->setForeignKey('idordem')->setDependent(false);
 	}
 }

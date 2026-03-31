@@ -209,9 +209,15 @@ class FaturamentoController extends AppController {
 		}
 
 		$idempresa = $this->Auth->user('idempresa');
+		if (is_array($idempresa)) {
+			$idempresa = (int)reset($idempresa);
+		} else {
+			$idempresa = (int)$idempresa;
+		}
+
 		$ordem = $this->Ordensservico->find('all')
 			->where(['Ordensservico.id' => $idordem, 'Ordensservico.idempresa' => $idempresa])
-			->contain(['Clientes', 'Ordemservicositens'])
+			->contain(['Clientes'])
 			->first();
 
 		if (empty($ordem)) {
