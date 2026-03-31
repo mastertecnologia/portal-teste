@@ -73,6 +73,8 @@ class AppController extends Controller {
 				'verificasenha',
 				// Troca de tema claro/escuro via AJAX
 				'selectTheme',
+				// Faturamento: modal alterar status (POST sem _Token no corpo)
+				'alterarStatus',
 			],
 		]);
 		$this->loadComponent('Auth', [

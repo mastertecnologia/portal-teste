@@ -236,11 +236,16 @@ $('#btnSalvarStatus').on('click', function() {
         type: 'POST',
         url: "<?= Router::url(['controller' => 'Faturamento', 'action' => 'alterarStatus', $doc->id]) ?>",
         data: { status: status },
+        dataType: 'json',
         success: function(r) {
-            if (r.ok) { location.reload(); }
-            else { bootbox.alert('Erro: ' + (r.msg || 'Tente novamente.')); }
+            if (r && r.ok) { location.reload(); }
+            else { bootbox.alert('Erro: ' + (r && r.msg ? r.msg : 'Tente novamente.')); }
         },
-        error: function() { bootbox.alert('Erro ao alterar status.'); }
+        error: function(xhr) {
+            var msg = 'Erro ao alterar status.';
+            if (xhr.responseJSON && xhr.responseJSON.msg) { msg = xhr.responseJSON.msg; }
+            bootbox.alert(msg);
+        }
     });
 });
 </script>
