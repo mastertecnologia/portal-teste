@@ -53,4 +53,4 @@ window.orcProdutosCatalogo = <?= $produtosCatalogoJson ?>;
 window.orcEstoquesLoteUrl = <?= $estoquesLoteJson ?>;
 window.orcOrcamentoFormConfig = <?= $configJson ?>;
 </script>
-<?= $this->Html->script('orcamentos_novo_edit_shared', ['block' => false]) ?>
+<?= $this->Html->script('/js/orcamentos_novo_edit_shared', ['block' => false]) ?>
