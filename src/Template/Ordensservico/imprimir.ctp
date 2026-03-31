@@ -15,81 +15,319 @@ function Mask($mask, $str)
     return $mask;
 }
 ?>
-<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+    /* ── Reset / Base ─────────────────────────────────────── */
     body {
-        font-family: 'Open Sans', sans-serif;
-        background: white;
+        font-family: 'Inter', 'Open Sans', sans-serif;
+        background: #f0f2f5;
+        color: #1a1f2e;
     }
 
-    .table td,
-    .table th {
-        padding: 0.7rem;
-        vertical-align: top;
-        border-top: 1px solid #dee2e6;
-        font-size: 12px;
+    /* ── Action buttons bar ───────────────────────────────── */
+    .os-actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+    .os-actions .btn {
+        font-weight: 600;
+        font-size: 13px;
+        border-radius: 8px;
+        padding: 8px 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-os-pdf    { background: linear-gradient(135deg,#00c08b,#007a56); border:none; color:#fff !important; box-shadow:0 2px 10px rgba(0,192,139,.35); }
+    .btn-os-pdf:hover { filter:brightness(1.08); color:#fff !important; }
+    .btn-os-print  { background: linear-gradient(135deg,#ff8800,#cc6600); border:none; color:#fff !important; box-shadow:0 2px 10px rgba(255,136,0,.30); }
+    .btn-os-print:hover { filter:brightness(1.08); color:#fff !important; }
+    .btn-os-back   { background:#fff; border:1px solid #d0d7de; color:#374151 !important; }
+    .btn-os-back:hover { background:#f3f4f6; color:#374151 !important; }
+
+    /* ── Document card ────────────────────────────────────── */
+    #printable {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,.10);
+        overflow: hidden;
     }
 
-    .titulo {
-        background-color: #343a40 !important;
-        color: white !important;
+    /* ── Document top accent bar ──────────────────────────── */
+    .os-doc-topbar {
+        height: 5px;
+        background: linear-gradient(90deg, #00c08b 0%, #007a56 100%);
+    }
+
+    /* ── Document header (logo + title + info) ────────────── */
+    .os-doc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 28px 36px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .os-doc-header .os-logo img {
+        height: 52px;
+        width: auto;
+    }
+    .os-doc-header .os-title-block {
         text-align: center;
-        padding: 8px;
-        margin: 10px 0;
+    }
+    .os-doc-header .os-title-block h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a1f2e;
+        margin: 0 0 2px;
+        letter-spacing: -.02em;
+    }
+    .os-doc-header .os-title-block .os-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    .os-doc-header .os-number-badge {
+        background: linear-gradient(135deg,#00c08b,#007a56);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 20px;
+        text-align: center;
+        min-width: 110px;
+    }
+    .os-doc-header .os-number-badge .os-num-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        opacity: .85;
+    }
+    .os-doc-header .os-number-badge .os-num-value {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.2;
     }
 
+    /* ── Client info grid ─────────────────────────────────── */
+    .os-client-section {
+        padding: 20px 36px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .os-section-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        color: #00a876;
+        margin-bottom: 12px;
+    }
+    .os-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .os-info-cell {
+        padding: 10px 14px;
+        border-right: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .os-info-cell:nth-child(3n) { border-right: none; }
+    .os-info-cell:nth-last-child(-n+3) { border-bottom: none; }
+    .os-info-cell .os-field-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        color: #6b7280;
+        margin-bottom: 3px;
+    }
+    .os-info-cell .os-field-value {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #1a1f2e;
+        word-break: break-word;
+    }
+
+    /* ── Section headers (Relato / Produtos) ──────────────── */
+    .os-section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 36px;
+        background: #f8fafb;
+        border-bottom: 1px solid #e5e7eb;
+        border-top: 1px solid #e5e7eb;
+    }
+    .os-section-header .os-section-icon {
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(180deg,#00c08b,#007a56);
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+    .os-section-header h3 {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .09em;
+        color: #374151;
+        margin: 0;
+    }
+
+    /* ── Relato body ──────────────────────────────────────── */
+    .os-relato-body {
+        padding: 16px 36px;
+        font-size: 13px;
+        color: #374151;
+        line-height: 1.65;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .os-relato-body .os-obs {
+        margin-top: 8px;
+        padding: 10px 14px;
+        background: #fffbeb;
+        border-left: 3px solid #f59e0b;
+        border-radius: 0 6px 6px 0;
+        font-size: 12.5px;
+        color: #92400e;
+    }
+
+    /* ── Products table ───────────────────────────────────── */
+    .os-products-body {
+        padding: 0 36px 20px;
+    }
+    .os-products-body .table {
+        margin-top: 16px;
+        margin-bottom: 0;
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        width: 100%;
+    }
+    .os-products-body .table thead tr th {
+        background: #f3f4f6;
+        color: #374151;
+        font-weight: 700;
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        padding: 10px 12px;
+        border-bottom: 2px solid #00a876;
+        border-top: none;
+        white-space: nowrap;
+    }
+    .os-products-body .table tbody tr td {
+        padding: 9px 12px;
+        border-top: 1px solid #e5e7eb;
+        color: #374151;
+        vertical-align: middle;
+    }
+    .os-products-body .table tbody tr:nth-child(even) td {
+        background: #f9fafb;
+    }
+    .os-products-body .table tbody tr:hover td {
+        background: #f0faf6;
+    }
+
+    /* ── Total row ────────────────────────────────────────── */
+    .os-total-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 14px 36px;
+        gap: 14px;
+        border-top: 2px solid #e5e7eb;
+    }
+    .os-total-row .os-total-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7280;
+    }
+    .os-total-row .os-total-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #00a876;
+    }
+
+    /* ── Footer / Signature ───────────────────────────────── */
+    .os-doc-footer {
+        padding: 20px 36px 28px;
+        border-top: 1px solid #e5e7eb;
+        background: #f8fafb;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    .os-doc-footer .os-footer-brand {
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 500;
+    }
+    .os-doc-footer .os-footer-brand strong {
+        color: #00a876;
+        font-weight: 700;
+    }
+    .os-doc-footer .os-signature {
+        text-align: right;
+    }
+    .os-doc-footer .os-signature p {
+        margin: 0;
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+    .os-doc-footer .os-signature p.os-sig-name {
+        font-weight: 600;
+        color: #374151;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    /* ── PDF mode override ────────────────────────────────── */
     #printable.pdf-mode {
-        width: 850px !important;
-        max-width: 850px !important;
+        width: 860px !important;
+        max-width: 860px !important;
         margin: 0 !important;
-        padding: 15px !important;
+        padding: 0 !important;
         background: white !important;
-        /* Garante que o elemento não herde deslocamentos da tela */
+        border-radius: 0 !important;
+        box-shadow: none !important;
         position: relative !important;
         left: 0 !important;
         top: 0 !important;
     }
-
     #printable.pdf-mode .table {
         width: 100% !important;
-        table-layout: fixed;
-        /* Evita que a tabela "estique" para fora */
+        table-layout: auto;
     }
-
     #printable.pdf-mode .table th,
     #printable.pdf-mode .table td {
-        font-size: 11px !important;
-        padding: 5px !important;
+        font-size: 10.5px !important;
+        padding: 7px 10px !important;
         word-wrap: break-word;
     }
 
+    /* ── Print media ──────────────────────────────────────── */
     @media print {
         @page {
             size: A4 portrait;
             margin: 1cm;
         }
 
-        .topbar,
-        .left-sidebar,
-        .sidebar,
-        header,
-        aside,
-        footer,
-        .page-titles,
-        .navbar,
-        .breadcrumb,
-        .btn,
-        #btn-imprimir,
-        #btn-salvar-pdf {
+        .topbar, .left-sidebar, .sidebar, header, aside, footer,
+        .page-titles, .navbar, .breadcrumb, .btn,
+        #btn-imprimir, #btn-salvar-pdf, .os-actions {
             display: none !important;
         }
 
-        body,
-        .page-wrapper,
-        .main-wrapper,
-        .container-fluid,
-        .col-md-12,
-        .row {
+        body, .page-wrapper, .main-wrapper, .container-fluid, .col-md-12, .row {
             margin: 0 !important;
             padding: 0 !important;
             background-color: #fff !important;
@@ -103,49 +341,24 @@ function Mask($mask, $str)
             left: auto !important;
             top: auto !important;
             visibility: visible !important;
-        }
-
-        body * {
-            visibility: hidden;
-        }
-
-        #printable,
-        #printable * {
-            visibility: visible;
-        }
-
-        #printable .card {
-            border: none !important;
+            border-radius: 0 !important;
             box-shadow: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
         }
 
-        #printable .card-body {
-            padding: 0 !important;
-        }
+        body * { visibility: hidden; }
+        #printable, #printable * { visibility: visible; }
 
-        .table-responsive {
-            overflow: visible !important;
-        }
+        #printable .card { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+        #printable .card-body { padding: 0 !important; }
+        .table-responsive { overflow: visible !important; }
+        table { page-break-inside: auto; width: 100% !important; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
 
-        table {
-            page-break-inside: auto;
-            width: 100% !important;
-        }
-
-        tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-        }
-
-        thead {
-            display: table-header-group;
-        }
-
-        .titulo {
-            background-color: #343a40 !important;
-            color: white !important;
+        .os-doc-topbar,
+        .os-section-header .os-section-icon,
+        .os-products-body .table thead tr th,
+        .os-doc-header .os-number-badge {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -153,143 +366,166 @@ function Mask($mask, $str)
 </style>
 
 <div class="col-md-12">
-    <?= $this->Html->link('Salvar PDF', '#', ['id' => 'btn-salvar-pdf', 'class' => 'btn btn-pgm btn-pgm-pdf btn-success m-l-5 m-b-5']) ?>
-    <?= $this->Html->link('Imprimir', '#', ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
-    <?= $this->Html->link('Voltar para a Ordem', ["action" => "edit", $ordem->id], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
 
+    <!-- ── Barra de ações ───────────────────────────────────── -->
+    <div class="os-actions">
+        <a href="#" id="btn-salvar-pdf" class="btn btn-os-pdf">
+            <i class="fas fa-file-pdf"></i> Salvar PDF
+        </a>
+        <a href="#" id="btn-imprimir" class="btn btn-os-print">
+            <i class="fas fa-print"></i> Imprimir
+        </a>
+        <?= $this->Html->link(
+            '<i class="fas fa-arrow-left"></i> Voltar para a Ordem',
+            ['action' => 'edit', $ordem->id],
+            ['class' => 'btn btn-os-back', 'escape' => false]
+        ) ?>
+    </div>
+
+    <!-- ── Documento ─────────────────────────────────────────── -->
     <div id="printable">
-        <div class="card">
-            <div class="card-body">
-                <h2 class='titulo bg-dark text-white text-center p-2'> Ordem de Serviço </h2><br>
-                <div class="row">
-                    <div class="col-2 text-center">
-                        <img src="<?= $this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="homepage" style='width: 100px' class='m-t-10'>
-                    </div>
 
-                    <div class="col-4">
-                        <table class="table m-t-10">
-                            <tbody>
-                                <tr>
-                                    <th width='30%' class='text-left'>Cliente</th>
-                                    <td class='text-left' style="word-break: break-word;">
-                                        <?= $ordem->cliente->tipo == C_ClientesTipoJuridica ? $ordem->cliente->razaosocial : $ordem->cliente->nome ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th width='30%' class='text-left'>Nº da Ordem</th>
-                                    <td class='text-left'> <?= $ordem->id ?></td>
-                                </tr>
-                                <tr>
-                                    <th width='30%' class='text-left'>Previsão</th>
-                                    <td class='text-left'> <?= date_format($ordem->dataprevisao, "d/m/Y"); ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="col-3 text-center">
-                        <table class="table m-t-10">
-                            <tbody>
-                                <tr>
-                                    <th width='30%' class='text-left'><?= $ordem->cliente->tipo == C_ClientesTipoJuridica ? 'CNPJ' : 'CPF' ?></th>
-                                    <td class='text-left'> <?= $ordem->cliente->tipo == C_ClientesTipoJuridica ? formatCnpjCpf($ordem->cliente->cnpj) : formatCnpjCpf($ordem->cliente->cpf) ?></td>
-                                </tr>
-                                <tr>
-                                    <th width='30%' class='text-left'>Endereço</th>
-                                    <td class='text-left'> <?= $ordem->cliente->endereco . ' - ' . $ordem->cliente->nroendereco . ' Bairro: ' . $ordem->cliente->bairro ?></td>
-                                </tr>
-                                <tr>
-                                    <th width='30%' class='text-left'>CEP</th>
-                                    <td class='text-left'> <?= Mask("#####-###", $ordem->cliente->cep) ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="col-3 text-center">
-                        <table class="table m-t-10">
-                            <tbody>
-                                <tr>
-                                    <th width='30%' class='text-left'>Telefone</th>
-                                    <td class='text-left'><?php if (!empty($ordem->cliente->fone)) echo Mask("(###) ####-####", $ordem->cliente->fone) . '<br>';
-                                                            if (!empty($ordem->cliente->fone2)) echo Mask("(###) #####-####", $ordem->cliente->fone2) ?></td>
-                                </tr>
-                                <tr>
-                                    <th width='30%' class='text-left'>Cidade</th>
-                                    <td class='text-left'> <?= $cidade ?></td>
-                                </tr>
-                                <tr>
-                                    <th width='30%' class='text-left'>Estado</th>
-                                    <td class='text-left'> <?= $estado ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
+        <!-- Barra accent topo -->
+        <div class="os-doc-topbar"></div>
+
+        <!-- Cabeçalho -->
+        <div class="os-doc-header">
+            <div class="os-logo">
+                <img src="<?= $this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="PGM Soluções em TI">
+            </div>
+            <div class="os-title-block">
+                <h1>Ordem de Serviço</h1>
+                <span class="os-subtitle">PGM Soluções em TI — ERP Enterprise</span>
+            </div>
+            <div class="os-number-badge">
+                <div class="os-num-label">Nº da Ordem</div>
+                <div class="os-num-value"><?= h($ordem->id) ?></div>
+            </div>
+        </div>
+
+        <!-- Dados do cliente -->
+        <div class="os-client-section">
+            <div class="os-section-label">Dados do Cliente</div>
+            <div class="os-info-grid">
+                <!-- linha 1 -->
+                <div class="os-info-cell" style="grid-column: span 2;">
+                    <div class="os-field-label">Cliente</div>
+                    <div class="os-field-value">
+                        <?= h($ordem->cliente->tipo == C_ClientesTipoJuridica ? $ordem->cliente->razaosocial : $ordem->cliente->nome) ?>
                     </div>
                 </div>
-                <br>
-                <div class="row">
-                    <div class="col-12">
-                        <h3 class='titulo bg-dark text-white text-center p-2'> Relato </h3>
-                        <h5 class='m-l-40 m-r-40'><?= $ordem->relato ?></h5>
-                        <?php if ($ordem->observacao != null) { ?>
-                            <h5 class='m-l-40 m-r-40'><?= 'Observação: ' . $ordem->observacao ?></h5>
-                        <?php } ?>
+                <div class="os-info-cell">
+                    <div class="os-field-label"><?= $ordem->cliente->tipo == C_ClientesTipoJuridica ? 'CNPJ' : 'CPF' ?></div>
+                    <div class="os-field-value">
+                        <?= h($ordem->cliente->tipo == C_ClientesTipoJuridica ? formatCnpjCpf($ordem->cliente->cnpj) : formatCnpjCpf($ordem->cliente->cpf)) ?>
                     </div>
                 </div>
-                <br>
-                <div class="row">
-                    <div class="col-12">
-                        <h3 class='titulo bg-dark text-white text-center p-2'> Produtos e Serviços </h3><br>
+                <!-- linha 2 -->
+                <div class="os-info-cell" style="grid-column: span 2;">
+                    <div class="os-field-label">Endereço</div>
+                    <div class="os-field-value">
+                        <?= h($ordem->cliente->endereco . ', ' . $ordem->cliente->nroendereco . ' — Bairro ' . $ordem->cliente->bairro) ?>
                     </div>
                 </div>
-                <!-- Tabela -->
-                <div class="table-responsive">
-                    <table class="table" id="tableCarrinho">
-                        <thead class="text-primary">
+                <div class="os-info-cell">
+                    <div class="os-field-label">CEP</div>
+                    <div class="os-field-value"><?= h(Mask("#####-###", $ordem->cliente->cep)) ?></div>
+                </div>
+                <!-- linha 3 -->
+                <div class="os-info-cell">
+                    <div class="os-field-label">Telefone</div>
+                    <div class="os-field-value">
+                        <?php if (!empty($ordem->cliente->fone))  echo h(Mask("(###) ####-####",  $ordem->cliente->fone))  . '<br>'; ?>
+                        <?php if (!empty($ordem->cliente->fone2)) echo h(Mask("(###) #####-####", $ordem->cliente->fone2)); ?>
+                    </div>
+                </div>
+                <div class="os-info-cell">
+                    <div class="os-field-label">Cidade</div>
+                    <div class="os-field-value"><?= h($cidade) ?></div>
+                </div>
+                <div class="os-info-cell">
+                    <div class="os-field-label">Previsão</div>
+                    <div class="os-field-value"><?= date_format($ordem->dataprevisao, 'd/m/Y') ?></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção Relato -->
+        <div class="os-section-header">
+            <div class="os-section-icon"></div>
+            <h3>Relato</h3>
+        </div>
+        <div class="os-relato-body">
+            <?= nl2br(h($ordem->relato)) ?>
+            <?php if (!empty($ordem->observacao)): ?>
+                <div class="os-obs">
+                    <strong>Observação:</strong> <?= h($ordem->observacao) ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Seção Produtos e Serviços -->
+        <div class="os-section-header">
+            <div class="os-section-icon"></div>
+            <h3>Produtos e Serviços</h3>
+        </div>
+        <div class="os-products-body">
+            <div class="table-responsive">
+                <table class="table" id="tableCarrinho">
+                    <thead>
+                        <tr>
                             <th>Tipo</th>
                             <th>Código</th>
                             <th>Descrição</th>
                             <th>Observação</th>
                             <th>Unidade</th>
-                            <th width="7%" class="text-right">Qtde.</th>
-                            <th width="7%" class="text-right">Vl. Unitário</th>
-                            <th width="7%" class="text-right">Vl. Desconto</th>
-                            <th width="7%" class="text-right">Valor Total</th>
-                            <th>Serial Number</th>
-                        </thead>
-                        <tbody>
-                            <!-- Serviços -->
-                            <?php if (isset($carrinho)) {
-                                foreach ($carrinho as $reg) { ?>
-                                    <tr id='<?= $reg->id ?>'>
-                                        <td><?= ProdutosTipo($reg->tipo) ?></td>
-                                        <td><?= $reg->codproduto ?></td>
-                                        <td><?= $reg->descricao ?></td>
-                                        <td><?= $reg->observacao ?></td>
-                                        <td><?= $reg->unidade ?></td>
-                                        <td class="text-right"><?= $reg->quantidade ?></td>
-                                        <td class="text-right"><?= 'R$ ' . number_format($reg->valorunitario, 2, ",", ".") ?></td>
-                                        <td class="text-right"><?= 'R$ ' . number_format($reg->valordesconto, 2, ",", ".") ?></td>
-                                        <td class="text-right valordoservico"><?= 'R$ ' . number_format($reg->valortotal, 2, ",", ".") ?></td>
-                                        <td><?= $reg->serialnumber ?></td>
-                                    </tr>
-                            <?php }
-                            } ?>
-                            <!-- Fim Serviços -->
-                        </tbody>
-                    </table>
-                </div>
-                <!-- valortotal que é exibido -->
-                <h5 class="text-right font-weight-bold m-r-15 hide valortotalh5"> Total Geral: <span class="text-success valortotal"> </span></h5>
-            </div>
-            <p style="width:1000px"></p>
-            <br>
-            <div class="float-right">
-                <p class='m-b-0 text-right'>Bento Gonçalves, <?= @date_format($ordem->dataabertura, 'd') . ' de ' . descricaoMes($ordem->dataabertura, 1) . ' de ' . @date_format($ordem->dataabertura, 'Y') ?></p>
-                <p class='m-b-0 text-right'>Obrigado pela sua atenção,</p>
-                <p class='m-b-0 text-right'><?= $ordem->user->name ?></p>
+                            <th class="text-right">Qtde.</th>
+                            <th class="text-right">Vl. Unit.</th>
+                            <th class="text-right">Desconto</th>
+                            <th class="text-right">Total</th>
+                            <th>Serial</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (isset($carrinho)): foreach ($carrinho as $reg): ?>
+                        <tr id="<?= $reg->id ?>">
+                            <td><?= ProdutosTipo($reg->tipo) ?></td>
+                            <td><?= h($reg->codproduto) ?></td>
+                            <td><?= h($reg->descricao) ?></td>
+                            <td><?= h($reg->observacao) ?></td>
+                            <td><?= h($reg->unidade) ?></td>
+                            <td class="text-right"><?= h($reg->quantidade) ?></td>
+                            <td class="text-right">R$&nbsp;<?= number_format($reg->valorunitario, 2, ',', '.') ?></td>
+                            <td class="text-right">R$&nbsp;<?= number_format($reg->valordesconto,  2, ',', '.') ?></td>
+                            <td class="text-right valordoservico">R$&nbsp;<?= number_format($reg->valortotal, 2, ',', '.') ?></td>
+                            <td><?= h($reg->serialnumber) ?></td>
+                        </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-</div>
+
+        <!-- Total -->
+        <div class="os-total-row valortotalh5" style="display:none;">
+            <span class="os-total-label">Total Geral</span>
+            <span class="os-total-value valortotal"></span>
+        </div>
+
+        <!-- Rodapé / Assinatura -->
+        <div class="os-doc-footer">
+            <div class="os-footer-brand">
+                Emitido por <strong>PGM Soluções em TI</strong><br>
+                ERP Enterprise — <?= date('d/m/Y H:i') ?>
+            </div>
+            <div class="os-signature">
+                <p>Bento Gonçalves, <?= @date_format($ordem->dataabertura, 'd') . ' de ' . descricaoMes($ordem->dataabertura, 1) . ' de ' . @date_format($ordem->dataabertura, 'Y') ?></p>
+                <p>Atenciosamente,</p>
+                <p class="os-sig-name"><?= h($ordem->user->name) ?></p>
+            </div>
+        </div>
+
+    </div><!-- /#printable -->
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -308,16 +544,15 @@ function Mask($mask, $str)
     }
 
     function valortotal() {
-        valortotal = 0;
+        var total = 0;
         $('.valordoservico').each(function() {
-            valor = $(this).text();
-            valor = valor.split('R$').join('');
-            valor = valor.replaceAll(".", "").replaceAll(",", ".");
-
-            valortotal = valortotal + parseFloat(valor);
-            $('.valortotalh5').show();
+            var valor = $(this).text().replace('R$', '').trim().replaceAll('.', '').replaceAll(',', '.');
+            total += parseFloat(valor) || 0;
         });
-        $(".valortotal").html('R$ ' + numberToReal(valortotal));
+        if ($('.valordoservico').length > 0) {
+            $('.valortotalh5').show();
+            $('.valortotal').text('R$ ' + numberToReal(total));
+        }
     }
 
     valortotal();
@@ -386,14 +621,7 @@ function Mask($mask, $str)
 
     $('#btn-imprimir').click(function(e) {
         e.preventDefault();
-        // Prepara o layout
-        $('.titulo').removeClass('bg-dark').removeClass('text-white');
-        $("#printable").removeClass('printMini');
-
-        setTimeout(function() {
-            window.print();
-            $('.titulo').addClass('bg-dark').addClass('text-white');
-        }, 500);
+        setTimeout(function() { window.print(); }, 300);
     });
 
     // Novo botão para salvar PDF
