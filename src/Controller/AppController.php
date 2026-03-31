@@ -46,7 +46,7 @@ class AppController extends Controller {
 				// Troca de empresa via dropdown (AJAX) não envia _Token.
 				'alteraempresa',
 				'carrinho', 'carrinhoadd', 'carrinhoedititem', 'carrinhodelitem', 'valortotal', 'acaoindex',
-				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'carrinhoedit',
+				'addservico', 'limpacarrinho', 'excluiitemcarrinho', 'getitemcarrinho', 'edititemcarrinho', 'editaitemcarrinho', 'carrinhoedit',
 				// Solicitar orçamento: inputs HTML + itens dinâmicos (itens[n][*]) fora do FormHelper
 				'solicitar',
 				'catalogoSugestoes',

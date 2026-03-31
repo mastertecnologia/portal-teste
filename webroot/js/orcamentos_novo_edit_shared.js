@@ -122,8 +122,26 @@
 				$('#carrinho').html(data);
 				$('#carrinho').fadeIn();
 			},
-			error: function (error) {
-				alert(error);
+			error: function (xhr) {
+				var msg = 'Não foi possível carregar os itens.';
+				if (xhr.responseJSON && xhr.responseJSON.mensagem) {
+					msg = xhr.responseJSON.mensagem;
+				} else if (xhr.responseText) {
+					var t = xhr.responseText.trim();
+					if (t.length && t.charAt(0) === '{') {
+						try {
+							var j = JSON.parse(t);
+							if (j && j.mensagem) {
+								msg = j.mensagem;
+							}
+						} catch (e) {
+							/* ignore */
+						}
+					} else if (t.length < 200) {
+						msg = t;
+					}
+				}
+				alert(msg);
 			}
 		});
 	};
@@ -480,7 +498,8 @@
 				tipo: tipo
 			},
 			success: function (data) {
-				if (data === 'success') {
+				var ok = typeof data === 'string' ? data.trim() === 'success' : false;
+				if (ok) {
 					window.carrinho();
 					toggleModoEdicao(false);
 					bootbox.alert('Item atualizado com sucesso!');
@@ -488,8 +507,26 @@
 					bootbox.alert('Erro ao atualizar item.');
 				}
 			},
-			error: function (error) {
-				bootbox.alert('Erro ao atualizar item: ' + error);
+			error: function (xhr) {
+				var msg = 'Erro ao atualizar item. Tente novamente.';
+				if (xhr.responseJSON && xhr.responseJSON.mensagem) {
+					msg = xhr.responseJSON.mensagem;
+				} else if (xhr.responseText) {
+					var t = xhr.responseText.trim();
+					if (t.length && t.charAt(0) === '{') {
+						try {
+							var j = JSON.parse(t);
+							if (j && j.mensagem) {
+								msg = j.mensagem;
+							}
+						} catch (e) {
+							/* ignore */
+						}
+					} else if (t.length < 200) {
+						msg = t;
+					}
+				}
+				bootbox.alert(msg);
 			}
 		});
 	});
