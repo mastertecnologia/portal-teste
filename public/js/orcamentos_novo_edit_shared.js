@@ -257,20 +257,24 @@
 			valormensal = 0;
 		}
 
+		var postData = {
+			servico: servico,
+			quantidade: quantidade,
+			valoruni: valoruni,
+			valordoservico: valordoservico,
+			observacao: observacao,
+			valormensal: valormensal,
+			idproduto: idproduto,
+			tipo: tipo
+		};
+		if (cfg.mode === 'edit' && cfg.orcamentoId) {
+			postData.id_orcamento = cfg.orcamentoId;
+		}
 		$.ajax({
 			url: cfg.addservicoUrl,
 			dataType: 'html',
 			type: 'POST',
-			data: {
-				servico: servico,
-				quantidade: quantidade,
-				valoruni: valoruni,
-				valordoservico: valordoservico,
-				observacao: observacao,
-				valormensal: valormensal,
-				idproduto: idproduto,
-				tipo: tipo
-			},
+			data: postData,
 			success: function (data) {
 				if (data === 'nao pode') {
 					bootbox.alert('O serviço já está no carrinho');
@@ -295,8 +299,20 @@
 				var msg = 'Erro ao adicionar item. Tente novamente.';
 				if (xhr.responseJSON && xhr.responseJSON.mensagem) {
 					msg = xhr.responseJSON.mensagem;
-				} else if (xhr.responseText && xhr.responseText.length < 200) {
-					msg = xhr.responseText;
+				} else if (xhr.responseText) {
+					var t = xhr.responseText.trim();
+					if (t.length && t.charAt(0) === '{') {
+						try {
+							var j = JSON.parse(t);
+							if (j && j.mensagem) {
+								msg = j.mensagem;
+							}
+						} catch (e) {
+							/* ignore */
+						}
+					} else if (t.length < 200) {
+						msg = t;
+					}
 				}
 				if (typeof bootbox !== 'undefined') {
 					bootbox.alert(msg);

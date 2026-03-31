@@ -527,6 +527,32 @@ class OrcamentosController extends AppController {
 	}
 
 	/**
+	 * Resolve o iditem do carrinho (Orcamentosservicos.idorcamento) a partir do id do orçamento.
+	 * Espelha a lógica de edit() — necessário quando $_SESSION['idcarrinho'] foi limpa (ex.: limpasession no beforeunload).
+	 *
+	 * @return string|null iditem ou null se o orçamento não existir / não pertencer à empresa
+	 */
+	protected function _orcamentoResolveIditemCarrinhoSession(int $idOrcamento): ?string {
+		$idempresa = $this->Auth->user('idempresa');
+		$orc = $this->Orcamentos->find('all')
+			->where(['Orcamentos.idempresa' => $idempresa, 'Orcamentos.id' => $idOrcamento])
+			->first();
+		if ($orc === null) {
+			return null;
+		}
+		$carrinho = $this->Orcamentositens->find('all')
+			->where(['AND' => ['idempresa' => $idempresa, 'idorcamento' => $idOrcamento]])
+			->first();
+		if (empty($carrinho)) {
+			$ultimo = $this->Orcamentos->find('all')->order(['id' => 'ASC'])->last();
+
+			return (string) ($this->Auth->user('idempresa') . $ultimo->id + 1 . $this->Auth->user('id'));
+		}
+
+		return (string) $carrinho->iditem;
+	}
+
+	/**
 	 * JSON do catálogo (mesmo payload da tela Novo orçamento) para o modal "Buscar no catálogo".
 	 *
 	 * @param \Cake\Datasource\EntityInterface[] $produtosOpt1 Produtos ativos da empresa
@@ -1007,10 +1033,23 @@ class OrcamentosController extends AppController {
 			}
 
 			if ($edit == 'edit') {
-				if (!array_key_exists('idcarrinho', $_SESSION)) {
+				$idorcamento = null;
+				if (array_key_exists('idcarrinho', $_SESSION) && $_SESSION['idcarrinho'] !== '' && $_SESSION['idcarrinho'] !== null) {
+					$idorcamento = $_SESSION['idcarrinho'];
+				}
+				if ($idorcamento === null || $idorcamento === '') {
+					$idOrc = (int) ($data['id_orcamento'] ?? 0);
+					if ($idOrc > 0) {
+						$resolved = $this->_orcamentoResolveIditemCarrinhoSession($idOrc);
+						if ($resolved !== null) {
+							$idorcamento = $resolved;
+							$_SESSION['idcarrinho'] = $idorcamento;
+						}
+					}
+				}
+				if ($idorcamento === null || $idorcamento === '') {
 					return $this->response->withType('application/json')->withStringBody(json_encode(['mensagem' => 'Sessão do orçamento expirada. Recarregue a página e tente novamente.']))->withStatus(400);
 				}
-				$idorcamento = $_SESSION['idcarrinho'];
 			} else {
 				if (!array_key_exists('idcarrinhoadd', $_SESSION)) {
 					return $this->response->withType('application/json')->withStringBody(json_encode(['mensagem' => 'Sessão do orçamento expirada. Recarregue a página e tente novamente.']))->withStatus(400);

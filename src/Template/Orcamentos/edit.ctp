@@ -358,9 +358,6 @@
 	</div>
 </div>
 <script>
-	$(window).bind('beforeunload', function(){
-		$.ajax({ url: "<?= Router::url(['controller'=>'Orcamentos','action'=>'limpasession']);?>" });
-	});
 	$('.btn-email').click(function(e){
 		e.preventDefault();
 		$('#modal-email').modal('toggle');

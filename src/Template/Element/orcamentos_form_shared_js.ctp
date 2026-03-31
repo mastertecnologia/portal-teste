@@ -31,6 +31,7 @@ if ($mode === 'edit') {
 
 $config = [
 	'mode' => $mode,
+	'orcamentoId' => $mode === 'edit' ? (int)($orcamentoId ?? 0) : 0,
 	'tipoServico' => $tipoServico,
 	'tipoProduto' => $tipoProduto,
 	'juridicaTipo' => $juridicaTipo,
