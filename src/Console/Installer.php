@@ -70,6 +70,7 @@ class Installer
         }
 
         static::syncWebrootCssToPublic($rootDir, $io);
+        static::syncWebrootJsToPublic($rootDir, $io);
     }
 
     /**
@@ -235,6 +236,51 @@ class Installer
 
         if ($io !== null && $count > 0) {
             $io->write('<info>syncWebrootCssToPublic: ' . $count . ' ficheiro(s) em public/css/</info>');
+        }
+
+        return $count;
+    }
+
+    /**
+     * Copia webroot/js/*.js para public/js/ (produção com WEBROOT_DIR=public).
+     *
+     * @param string $rootDir Caminho raiz do projeto.
+     * @param \Composer\IO\IOInterface|null $io Opcional (mensagens Composer).
+     * @return int Número de ficheiros copiados com sucesso.
+     */
+    public static function syncWebrootJsToPublic($rootDir, $io = null)
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $src = $rootDir . $ds . 'webroot' . $ds . 'js';
+        $dest = $rootDir . $ds . 'public' . $ds . 'js';
+        if (!is_dir($src) || !is_dir($dest)) {
+            if ($io !== null) {
+                $io->write('<comment>syncWebrootJsToPublic: webroot/js ou public/js em falta — ignorado.</comment>');
+            }
+
+            return 0;
+        }
+
+        $files = glob($src . $ds . '*.js');
+        if ($files === false) {
+            $files = [];
+        }
+
+        $count = 0;
+        foreach ($files as $file) {
+            if (!is_file($file)) {
+                continue;
+            }
+            $target = $dest . $ds . basename($file);
+            if (@copy($file, $target)) {
+                $count++;
+            } elseif ($io !== null) {
+                $io->write('<error>Não foi possível copiar ' . basename($file) . ' para public/js/</error>');
+            }
+        }
+
+        if ($io !== null && $count > 0) {
+            $io->write('<info>syncWebrootJsToPublic: ' . $count . ' ficheiro(s) em public/js/</info>');
         }
 
         return $count;
