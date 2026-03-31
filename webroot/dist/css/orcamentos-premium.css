@@ -973,14 +973,15 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 }
 
 /*
- * form-pages.scss (.form-material .form-control:focus): gradiente com background-repeat
- * default em textarea preenche toda a altura com a cor do tema → “fica azul”.
+ * form-pages.scss (.form-material .form-control:focus): gradiente; em textarea
+ * repete na altura inteira → “fica azul”. form.material fica no <form> filho, não no .orc-premium-form.
  */
-.orc-premium-form.form-material textarea.form-control,
-.orc-premium-form.form-material #observacao.form-control,
-.orc-premium-form.form-material .orc-item-obs-field.form-control {
+.orc-premium-form form.form-material textarea.form-control,
+.orc-premium-form form.form-material #observacao.form-control,
+.orc-premium-form form.form-material .orc-item-obs-field.form-control {
   background-image: none !important;
   background-color: #fff !important;
+  color: #1a1a18 !important;
   border: 1px solid var(--orc-border, #e5e4e0) !important;
   border-radius: var(--orc-radius-sm, 8px) !important;
   padding: 10px 12px !important;
@@ -990,18 +991,41 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   resize: vertical;
 }
 
-.orc-premium-form.form-material textarea.form-control:focus,
-.orc-premium-form.form-material #observacao.form-control:focus,
-.orc-premium-form.form-material .orc-item-obs-field.form-control:focus {
+.orc-premium-form form.form-material textarea.form-control:focus,
+.orc-premium-form form.form-material #observacao.form-control:focus,
+.orc-premium-form form.form-material .orc-item-obs-field.form-control:focus {
   background-image: none !important;
+  background-color: #fff !important;
   background-size: auto !important;
   border-color: var(--orc-teal-mid, #5dcaa5) !important;
   box-shadow: 0 0 0 2px rgba(0, 192, 139, 0.12) !important;
   outline: none !important;
 }
 
-.orc-premium-form.form-material input.orc-item-obs-field.form-control,
-.orc-premium-form.form-material input#observacao.form-control {
+.orc-premium-form form.form-material textarea.orc-obs-textarea.form-control,
+.orc-premium-form form.form-material textarea#observacoes.form-control {
+  min-height: 140px !important;
+}
+
+.orc-premium-form form.form-material textarea.orc-obs-textarea.form-control:focus,
+.orc-premium-form form.form-material textarea#observacoes.form-control:focus {
+  background-color: #fff !important;
+}
+
+.orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::selection,
+.orc-premium-form form.form-material textarea#observacoes.form-control::selection {
+  background: #d9d9d9;
+  color: #000;
+}
+
+.orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::-moz-selection,
+.orc-premium-form form.form-material textarea#observacoes.form-control::-moz-selection {
+  background: #d9d9d9;
+  color: #000;
+}
+
+.orc-premium-form form.form-material input.orc-item-obs-field.form-control,
+.orc-premium-form form.form-material input#observacao.form-control {
   min-height: 0 !important;
   resize: none !important;
 }
