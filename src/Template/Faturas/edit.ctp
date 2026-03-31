@@ -154,11 +154,11 @@
 								<?= $this->Html->link('Compartilhar', ['action' => 'view', $fatura->hash], ['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-compartilhar float-right m-t-10 m-r-5']) ?>
 								<?php
 									if($fatura->status == C_LocacaoStatusPendente) {
-										echo $this->html->Link('Aprovar', ['action' => 'aprovar', $fatura->id], ['id' => 'btn-aprovar', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10 m-r-5']);
-										echo $this->html->Link('Rejeitar', ['action' => 'rejeitar', $fatura->id], ['id' => 'btn-rejeitar', 'class' => 'btn btn-danger float-right m-t-10 m-r-5']);
+										echo $this->Html->link('Aprovar', ['action' => 'aprovar', $fatura->id], ['id' => 'btn-aprovar', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10 m-r-5']);
+										echo $this->Html->link('Rejeitar', ['action' => 'rejeitar', $fatura->id], ['id' => 'btn-rejeitar', 'class' => 'btn btn-danger float-right m-t-10 m-r-5']);
 									}
 									if($fatura->status == C_LocacaoStatusAprovado) {
-										echo $this->html->Link('Receber', ['action' => 'receber', $fatura->id], ['target' => '_blank', 'id' => 'btn-receber', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info float-right m-t-10 m-r-5']);
+										echo $this->Html->link('Receber', ['action' => 'receber', $fatura->id], ['target' => '_blank', 'id' => 'btn-receber', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info float-right m-t-10 m-r-5']);
 									}
 								?>
 							</div>

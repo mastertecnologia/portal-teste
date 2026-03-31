@@ -153,8 +153,8 @@ function Mask($mask, $str)
 </style>
 
 <div class="col-md-12">
-    <?= $this->html->Link('Salvar PDF', [], ['id' => 'btn-salvar-pdf', 'class' => 'btn btn-pgm btn-pgm-pdf btn-success m-l-5 m-b-5']) ?>
-    <?= $this->html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
+    <?= $this->Html->link('Salvar PDF', '#', ['id' => 'btn-salvar-pdf', 'class' => 'btn btn-pgm btn-pgm-pdf btn-success m-l-5 m-b-5']) ?>
+    <?= $this->Html->link('Imprimir', '#', ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
     <?= $this->Html->link('Voltar para a Ordem', ["action" => "edit", $ordem->id], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
 
     <div id="printable">

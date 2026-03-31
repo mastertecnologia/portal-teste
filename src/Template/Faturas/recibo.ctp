@@ -77,7 +77,7 @@
 	}
 </style>
 <div class="row hidden-print">
-	<?= $this->html->Link('Imprimir', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
+	<?= $this->Html->link('Imprimir', '#', ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
 	<?php if($role == 0) echo $this->Html->link('Voltar para a locação', ["action" => "edit", $fatura->id], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
 </div>
 <div class="col-md-12">
