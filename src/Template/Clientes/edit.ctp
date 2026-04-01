@@ -62,6 +62,15 @@
 .cli-smart-footer a:hover{text-decoration:underline!important;}
 .cli-smart-footer--alert{border-color:rgba(248,81,73,.45);background:rgba(248,81,73,.06);}
 .cli-smart-footer .cli-sf-token{flex:1 1 220px;max-width:100%;}
+/* Rodapé — blocos (ETAPA 3) */
+.cli-sf-inner{align-items:flex-start;}
+.cli-sf-main{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-start;flex:1 1 280px;}
+.cli-sf-block{min-width:0;}
+.cli-sf-kicker{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:4px;}
+.cli-sf-contracts .cli-sf-kicker + div{line-height:1.45;}
+.cli-sf-token-note{font-size:.72rem;color:#6e7681;line-height:1.4;max-width:360px;}
+.cli-sf-badge-danger{background:#da3633;color:#fff;}
+.cli-sf-badge-warn{background:#d29922;color:#1c1c1c;}
 /* Fase 1 — cards + readonly claro (dark UI) */
 .cli-subcard{border:1px solid #21262d;border-radius:10px;background:#0d1117;margin-bottom:16px;overflow:hidden;}
 .cli-subcard-head{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8b949e;padding:10px 16px;border-bottom:1px solid #21262d;background:#161b22;}
@@ -104,16 +113,10 @@
 			<?php endif; ?>
 		</div>
 
-		<!-- Tab nav -->
-		<ul class="nav cli-tabs-nav" role="tablist">
-			<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#cliente" role="tab"><i class="fas fa-user"></i> Cliente</a></li>
-			<?php if($isEquipe || !empty($permissaoacesso)){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#<?= $isClientePortal ? 'acessosCliente' : 'acessos' ?>" role="tab"><i class="fas fa-desktop"></i> Acessos</a></li><?php } ?>
-			<?php if($isEquipe){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usuarios" role="tab"><i class="fas fa-users"></i> Usuários</a></li><?php } ?>
-			<?php if($isEquipe || !empty($permissaoacesso)){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contratos" role="tab"><i class="fas fa-file-contract"></i> Contratos</a></li><?php } ?>
-			<?php if($isEquipe || !empty($permissaoacesso)){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#token" role="tab"><i class="fas fa-key"></i> Token</a></li><?php } ?>
-		</ul>
+		<!-- Tab nav (element reutilizável + deep-link #hash) -->
+		<?= $this->element('Cli/edit_tabs_nav', compact('isEquipe', 'isClientePortal', 'permissaoacesso')) ?>
 			<div class="tab-content">
-				<div class="tab-pane active" id="cliente">
+				<div class="tab-pane active" id="cliente" role="tabpanel" aria-labelledby="cli-tab-cliente">
 					<?=  $this->Form->create($cliente, ['class' => 'form-material', 'id' => 'form-edit-cliente']) ?>
 						<div class="cli-ficha-toolbar">
 							<p class="cli-ficha-hint mb-0"><i class="fas fa-eye"></i> <span id="cli-ficha-mode-label">Modo leitura</span> — use a barra inferior para <strong>Editar</strong>, <strong>Salvar</strong> ou <strong>Cancelar</strong>.</p>
@@ -195,7 +198,7 @@
 						</div>
 						<?= $this->element('Cli/card_end') ?>
 						<?php if($isEquipe){ ?>
-						<?= $this->element('Cli/card', ['title' => 'Área administrativa (equipe)']) ?>
+						<?= $this->element('Cli/card', ['title' => 'Dados operacionais']) ?>
 							<div class="row">
 							<?= $this->element('Cli/input', ['label' => 'Senha para o cliente visualizar os acessos', 'field' => 'senha', 'colClass' => 'col-lg-2 col-md-3 col-sm-3 col-xs-12', 'options' => ['placeholder' => 'Insira a senha']]) ?>
 								<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-t-30">
@@ -227,7 +230,7 @@
 					<?= $this->Form->end(); ?>
 				</div>
 				<?php if($isEquipe || !empty($permissaoacesso)){ ?>
-				<div class="tab-pane" id="acessos">
+				<div class="tab-pane" id="acessos" role="tabpanel" aria-labelledby="cli-tab-acessos">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Acessos', 'extraClass' => 'mb-3']) ?>
 					<?php if ($isEquipe) { ?>
 						<?= $this->Form->create(null, ['class' => 'form-material m-t-10', 'url' => ['controller' => 'Users', 'action' => 'permissaoacesso']]); ?>
@@ -341,7 +344,7 @@
 					<?= $this->element('Cli/card_end') ?>
 				</div>
 				<?php } if($isEquipe){ ?>
-				<div class="tab-pane" id="usuarios">
+				<div class="tab-pane" id="usuarios" role="tabpanel" aria-labelledby="cli-tab-usuarios">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-users"></i> Usuários do cliente', 'extraClass' => 'mb-3']) ?>
 					<div class="table-responsive">
 						<table class="table table-hover" id="tableUsers">
@@ -376,7 +379,7 @@
 					<?= $this->element('Cli/card_end') ?>
 				</div>
 				<?php } if($isEquipe || !empty($permissaoacesso)){ ?>
-				<div class="tab-pane" id="contratos">
+				<div class="tab-pane" id="contratos" role="tabpanel" aria-labelledby="cli-tab-contratos">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-file-contract"></i> Contratos', 'extraClass' => 'mb-3']) ?>
 					<?php if ($isEquipe) : ?>
 					<?= $this->Html->link('Cadastrar item', ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-r-5 m-b-20']) ?>
@@ -420,7 +423,7 @@
 					<?= $this->element('Cli/card_end') ?>
 				</div>
 				<?php } if($isClientePortal ){ ?>
-				<div class="tab-pane" id="acessosCliente">
+				<div class="tab-pane" id="acessosCliente" role="tabpanel" aria-labelledby="cli-tab-acessosCliente">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Meus acessos', 'extraClass' => 'mb-3']) ?>
 					<div class="table-responsive">
 						<table class="table table-hover" id="tableAcessosClientes">
@@ -459,7 +462,7 @@
 					<?= $this->element('Cli/card_end') ?>
 				</div>
 				<?php }if($isEquipe || !empty($permissaoacesso)){ ?>
-				<div class="tab-pane" id="token">
+				<div class="tab-pane" id="token" role="tabpanel" aria-labelledby="cli-tab-token">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-key"></i> Token de integração API', 'extraClass' => 'mb-3']) ?>
 					<div class="cli-token-box" id="token-display"><?= h($cliente->token) ?></div>
 					<p class="cli-token-note">Este token é utilizado para autenticar integrações externas com a API do portal. Mantenha-o em segurança.</p>
@@ -480,25 +483,36 @@
 	$sfAlert = !empty($cliFooter) && (!empty($cliFooter['contratos_vencidos']) || !empty($cliFooter['contratos_vencendo30']));
 ?>
 <div class="cli-ficha-footer-fixed<?= $sfAlert ? ' cli-smart-footer--alert' : '' ?>" id="cli-ficha-footer-bar">
-	<div class="cli-ff-inner">
-		<div class="d-flex flex-wrap align-items-center" style="gap:10px;">
-			<div>
-				<strong class="text-muted">Status</strong><br>
+	<div class="cli-ff-inner cli-sf-inner">
+		<div class="cli-sf-main">
+			<div class="cli-sf-block">
+				<div class="cli-sf-kicker">Status do cliente</div>
 				<?php if ($isEquipe): ?>
 				<div class="custom-control custom-switch mt-1">
-					<input type="checkbox" class="custom-control-input" id="cli-ff-switch-inativo" <?= !empty($cliente->inativo) ? 'checked' : '' ?>>
+					<input type="checkbox" class="custom-control-input" id="cli-ff-switch-inativo" <?= !empty($cliente->inativo) ? 'checked' : '' ?> aria-describedby="cli-ff-status-hint">
 					<label class="custom-control-label" for="cli-ff-switch-inativo">Cliente inativo</label>
 				</div>
+				<p class="cli-sf-token-note mb-0 mt-1 d-md-none" id="cli-ff-status-hint">Altere o switch e use <strong>Salvar</strong> na barra para persistir.</p>
 				<?php else: ?>
 				<span class="badge badge-<?= !empty($cliFooter['status_class']) ? h($cliFooter['status_class']) : 'secondary' ?>"><?= !empty($cliFooter['status_label']) ? h($cliFooter['status_label']) : '—' ?></span>
 				<?php endif; ?>
 			</div>
 			<?php if (!empty($cliFooter)): ?>
-			<div class="text-muted small" style="max-width:340px;">
-				<strong>Contratos:</strong> <?= (int)$cliFooter['contratos_total'] ?>
-				<?php if (!empty($cliFooter['contratos_vencidos'])): ?><span class="badge badge-danger ml-1"><?= (int)$cliFooter['contratos_vencidos'] ?> venc.</span><?php endif; ?>
-				<?php if (!empty($cliFooter['contratos_vencendo30'])): ?><span class="badge badge-warning text-dark ml-1"><?= (int)$cliFooter['contratos_vencendo30'] ?> 30d</span><?php endif; ?>
-				<br><span class="d-none d-md-inline"><?= h($cliFooter['token_note']) ?></span>
+			<div class="cli-sf-block cli-sf-contracts">
+				<div class="cli-sf-kicker">Contratos (resumo)</div>
+				<div class="text-muted small">
+					<strong class="text-secondary">Total:</strong> <?= (int)$cliFooter['contratos_total'] ?>
+					<?php if (!empty($cliFooter['contratos_vencidos'])): ?>
+						<span class="badge cli-sf-badge-danger ml-1"><?= (int)$cliFooter['contratos_vencidos'] ?> vencido(s)</span>
+					<?php endif; ?>
+					<?php if (!empty($cliFooter['contratos_vencendo30'])): ?>
+						<span class="badge cli-sf-badge-warn ml-1"><?= (int)$cliFooter['contratos_vencendo30'] ?> vence em 30 dias</span>
+					<?php endif; ?>
+				</div>
+			</div>
+			<div class="cli-sf-block cli-sf-token d-none d-md-block">
+				<div class="cli-sf-kicker">Token / integração</div>
+				<p class="cli-sf-token-note mb-0"><?= h($cliFooter['token_note']) ?></p>
 			</div>
 			<?php endif; ?>
 		</div>
@@ -617,6 +631,7 @@
 </div>
 <script>
 <?= $this->element('Cli/toast_js') ?>
+<?= $this->element('Cli/edit_tabs_js') ?>
 	// Datepicker 
 		$('.datepicker').bootstrapMaterialDatePicker({ format : 'DD/MM/YYYY', lang : 'pt-br', time : false, switchOnClick : true, nowButton : true, cancelText : 'Cancelar' , 'setDate' : 'currentDate', nowText : 'Hoje'});
 	// Somente número 
