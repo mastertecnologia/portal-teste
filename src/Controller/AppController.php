@@ -71,6 +71,7 @@ class AppController extends Controller {
 				// Cofre de senhas: revelar segredo via POST JSON (senha admin nunca na URL)
 				'vaultReveal',
 				'verificasenha',
+				'verificadadoscliente',
 				// Troca de tema claro/escuro via AJAX
 				'selectTheme',
 				// Faturamento: modal alterar status (POST sem _Token no corpo)

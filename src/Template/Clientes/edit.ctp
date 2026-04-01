@@ -1035,8 +1035,17 @@
 
 		$('.btn-atualizaDentroDoModal').click(function(e){
 			e.preventDefault();
+			var tok = (window.PgmClienteEditUtils && PgmClienteEditUtils.pgmCsrfToken) ? PgmClienteEditUtils.pgmCsrfToken() : '';
 			$.ajax({
-				url: "<?= Router::url(['controller' => 'Users', 'action' => 'verificadadoscliente', $cliente->id]);?>/" + $('#confirmaNomeResponsavel').val() + '/' + $('#confirmaCpfResponsavel').val() + '/' + $('#confirmaRgResponsavel').val(),
+				type: 'POST',
+				url: "<?= Router::url(['controller' => 'Users', 'action' => 'verificadadoscliente']); ?>",
+				data: {
+					idcliente: <?= (int)$cliente->id ?>,
+					nomeresponsavel: $('#confirmaNomeResponsavel').val() || '',
+					cpf: $('#confirmaCpfResponsavel').val() || '',
+					rg: $('#confirmaRgResponsavel').val() || '',
+					_csrfToken: tok
+				},
 				success: function(data){
 					if(data == 'tudocerto') window.location = "<?= Router::url(['controller' => 'Clientes', 'action' => 'updateToken', $cliente->id]);?>";
 					else bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Os dados inseridos não conferem com os cadastrados no bando de dados.</p>');

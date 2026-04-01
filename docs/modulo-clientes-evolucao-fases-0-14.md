@@ -62,7 +62,7 @@ Documentação técnica curta da entrega alinhada ao plano de refatoração grad
 ## 6. Riscos conhecidos
 
 - **Ficha `edit.ctp`:** ainda contém **muito JS inline**; evolução futura pode mover trechos para `cliente-contracts.js` / `cliente-token.js` com objeto de config gerado na view.  
-- **AJAX `verificadadoscliente`:** dados do modal vão na **URL** (path); caracteres especiais podem exigir encoding adicional — comportamento legado; revisar em hardening futuro.  
+- **`Users::verificadadoscliente`:** endurecido para **POST** com corpo (`idcliente`, `nomeresponsavel`, `cpf`, `rg`, `_csrfToken`); exige **sessão** (removido de `Auth->allow`); mitigação **IDOR** (cliente só o próprio `idcliente`; equipe só cliente da mesma `idempresa`).  
 - **APIs públicas** (`Auth->allow` em `addAPI`/`listAPI`): dependem de token de empresa; não fazem parte desta entrega de UI, mas são superfície crítica em auditoria.  
 - **Opt-in de e-mail** em preferências: sem linha salva = **não** envia e-mail (comportamento atual preservado).
 

@@ -53,7 +53,7 @@ class UsersController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Usuários');
-		$this->Auth->allow(['login', 'acessoEmpresa', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificadadoscliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
+		$this->Auth->allow(['login', 'acessoEmpresa', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
 		
 		if (in_array('Security', $this->components()->loaded())) {
             $this->Security->setConfig('unlockedActions', ['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente']);
@@ -1624,16 +1624,71 @@ class UsersController extends AppController {
 		echo $tudocerto;
 	}
 
-	public function verificadadoscliente($idcliente, $nomeresponsavel, $cpf, $rg){
+	/**
+	 * Confirma dados do responsável antes de renovar token (portal cliente).
+	 * Apenas POST + usuário autenticado + CSRF (_csrfToken) + mitigação IDOR.
+	 */
+	public function verificadadoscliente() {
 		$this->autoRender = false;
-		$this->viewBuilder()->setLayout("ajax");
+		$this->viewBuilder()->setLayout('ajax');
+		$this->request->allowMethod(['post']);
 
-		$cliente = $this->Clientes->get($idcliente);
+		if (!$this->Auth->user()) {
+			echo 'nao';
+
+			return;
+		}
+		$posted = (string)$this->request->getData('_csrfToken');
+		$trusted = (string)($this->request->getAttribute('csrfToken') ?: $this->request->getParam('_csrfToken'));
+		if ($posted === '' || $trusted === '' || !hash_equals($trusted, $posted)) {
+			echo 'nao';
+
+			return;
+		}
+
+		$data = (array)$this->request->getData();
+		$idcliente = (int)($data['idcliente'] ?? 0);
+		$nomeresponsavel = (string)($data['nomeresponsavel'] ?? '');
+		$cpf = (string)($data['cpf'] ?? '');
+		$rg = (string)($data['rg'] ?? '');
+
+		if ($idcliente <= 0) {
+			echo 'nao';
+
+			return;
+		}
+
+		$role = (int)$this->Auth->user('role');
+		if ($role === 1 && (int)$this->Auth->user('idcliente') !== $idcliente) {
+			echo 'nao';
+
+			return;
+		}
+
+		try {
+			$cliente = $this->Clientes->get($idcliente);
+		} catch (\Throwable $e) {
+			echo 'nao';
+
+			return;
+		}
+
+		if ($role === 0 && (int)($cliente->idempresa ?? 0) !== (int)$this->Auth->user('idempresa')) {
+			echo 'nao';
+
+			return;
+		}
+
 		$tudocerto = 'tudocerto';
-
-		if(strtoupper($nomeresponsavel) != strtoupper($cliente->nomeresponsavel)) $tudocerto = 'nao';
-		if(removeCaracteres($cpf) != removeCaracteres($cliente->cpf)) $tudocerto = 'nao';
-		if(removeCaracteres($rg) != removeCaracteres($cliente->rg)) $tudocerto = 'nao';
+		if (mb_strtoupper($nomeresponsavel, 'UTF-8') !== mb_strtoupper((string)$cliente->nomeresponsavel, 'UTF-8')) {
+			$tudocerto = 'nao';
+		}
+		if (removeCaracteres($cpf) !== removeCaracteres($cliente->cpf ?? '')) {
+			$tudocerto = 'nao';
+		}
+		if (removeCaracteres($rg) !== removeCaracteres($cliente->rg ?? '')) {
+			$tudocerto = 'nao';
+		}
 
 		echo $tudocerto;
 	}
