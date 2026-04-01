@@ -49,6 +49,72 @@ class ClientesController extends AppController {
 		return $q->first();
 	}
 
+	/**
+	 * Data de validade do item de contrato em Y-m-d, ou null se cancelado ou sem validade útil.
+	 * Usado no resumo do rodapé e na situação da linha na aba Contratos (mesma regra).
+	 *
+	 * @param object $c Registro Clicontratos
+	 */
+	protected function _clicontratoValidadeYmd($c): ?string {
+		if (!empty($c->dtcancelamento)) {
+			return null;
+		}
+		$raw = $c->dtvalidade ?? null;
+		if ($raw instanceof \DateTimeInterface) {
+			return $raw->format('Y-m-d');
+		}
+		if (is_string($raw) && $raw !== '') {
+			$t = strtotime($raw);
+
+			return $t ? date('Y-m-d', $t) : null;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Rótulo, classe de linha e badge Bootstrap para a listagem de contratos na ficha do cliente.
+	 *
+	 * @param object $c Registro Clicontratos
+	 */
+	protected function _clicontratoRowUi($c, string $todayStr, string $lim30): array {
+		if (!empty($c->dtcancelamento)) {
+			return [
+				'label' => 'Cancelado',
+				'row_class' => 'cli-ctr-row--cancelado',
+				'badge_class' => 'badge-secondary',
+			];
+		}
+		$dv = $this->_clicontratoValidadeYmd($c);
+		if ($dv === null) {
+			return [
+				'label' => 'Sem validade',
+				'row_class' => 'cli-ctr-row--semvalidade',
+				'badge_class' => 'badge-secondary',
+			];
+		}
+		if ($dv < $todayStr) {
+			return [
+				'label' => 'Vencido',
+				'row_class' => 'cli-ctr-row--vencido',
+				'badge_class' => 'badge-danger',
+			];
+		}
+		if ($dv <= $lim30) {
+			return [
+				'label' => 'Vence em 30 dias',
+				'row_class' => 'cli-ctr-row--vencendo',
+				'badge_class' => 'badge-warning text-dark',
+			];
+		}
+
+		return [
+			'label' => 'Ativo',
+			'row_class' => 'cli-ctr-row--ok',
+			'badge_class' => 'badge-success',
+		];
+	}
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Clientes');
@@ -342,17 +408,7 @@ class ClientesController extends AppController {
 		$todayStr = (new \DateTimeImmutable('today'))->format('Y-m-d');
 		$lim30 = (new \DateTimeImmutable('today'))->add(new \DateInterval('P30D'))->format('Y-m-d');
 		foreach ($contratos as $c) {
-			if (!empty($c->dtcancelamento)) {
-				continue;
-			}
-			$raw = $c->dtvalidade ?? null;
-			$dv = null;
-			if ($raw instanceof \DateTimeInterface) {
-				$dv = $raw->format('Y-m-d');
-			} elseif (is_string($raw) && $raw !== '') {
-				$t = strtotime($raw);
-				$dv = $t ? date('Y-m-d', $t) : null;
-			}
+			$dv = $this->_clicontratoValidadeYmd($c);
 			if ($dv === null) {
 				continue;
 			}
@@ -363,8 +419,18 @@ class ClientesController extends AppController {
 			}
 		}
 
+		$contratosRowUi = [];
+		foreach ($contratos as $c) {
+			$cid = (int)$c->id;
+			if ($cid <= 0) {
+				continue;
+			}
+			$contratosRowUi[$cid] = $this->_clicontratoRowUi($c, $todayStr, $lim30);
+		}
+
 		$this->set('acessos', $acessos);
 		$this->set('contratos', $contratos);
+		$this->set('contratosRowUi', $contratosRowUi);
 		$this->set('cliFooter', $cliFooter);
 		// UF do contribuinte (para consulta IE na edição): a partir da cidade do cliente
 		$ufContribuinte = null;

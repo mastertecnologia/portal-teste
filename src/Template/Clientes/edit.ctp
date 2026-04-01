@@ -90,6 +90,25 @@
 .cli-ff-status .custom-switch{padding-left:2.5rem;}
 .cli-ff-status .custom-control-label{color:#c9d1d9;font-size:.78rem;}
 .cli-ficha-page-pad{padding-bottom:100px;}
+/* Contratos — situação (ETAPA 6; regra alinhada ao rodapé via controller) */
+.cli-ctr-legend{font-size:.72rem;color:#8b949e;margin-bottom:10px;line-height:1.5;}
+.cli-ctr-legend .badge{font-size:.65rem;font-weight:600;margin-right:2px;}
+.cli-acessos-table tr.cli-ctr-row--vencido td:first-child{border-left:3px solid #da3633;}
+.cli-acessos-table tr.cli-ctr-row--vencendo td:first-child{border-left:3px solid #d29922;}
+.cli-acessos-table tr.cli-ctr-row--cancelado td:first-child,.cli-acessos-table tr.cli-ctr-row--semvalidade td:first-child{border-left:3px solid #484f58;}
+.cli-acessos-table tr.cli-ctr-row--ok td:first-child{border-left:3px solid #238636;}
+.cli-acessos-table tr.cli-ctr-row--cancelado{opacity:.88;}
+/* Acessos — linha inativa (ETAPA 4) */
+.cli-acessos-table tr.cli-row-acesso-inativo td{color:#6e7681;}
+.cli-acessos-table tr.cli-row-acesso-inativo td:first-child{border-left:3px solid #484f58;}
+/* Token — blocos informativos (ETAPA 7) */
+.cli-token-panel{display:flex;flex-direction:column;gap:16px;}
+@media (min-width:768px){
+	.cli-token-panel--split{flex-direction:row;flex-wrap:wrap;}
+	.cli-token-panel--split .cli-token-panel__col{flex:1 1 280px;min-width:0;}
+}
+.cli-token-callout{font-size:.75rem;color:#8b949e;border:1px solid #30363d;border-radius:8px;padding:10px 12px;background:#0d1117;line-height:1.45;}
+.cli-token-callout strong{color:#e6edf3;}
 </style>
 <?= $this->element('Cli/ui_css') ?>
 <div class="col-md-12 cli-ficha-page-pad">
@@ -233,70 +252,81 @@
 				<div class="tab-pane" id="acessos" role="tabpanel" aria-labelledby="cli-tab-acessos">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Acessos', 'extraClass' => 'mb-3']) ?>
 					<?php if ($isEquipe) { ?>
-						<?= $this->Form->create(null, ['class' => 'form-material m-t-10', 'url' => ['controller' => 'Users', 'action' => 'permissaoacesso']]); ?>
-							<div class="row">
-								<div class="col-md-4 col-xs-12">
-									<label class="control-label text-muted"> Usuários com permissão para acessar senhas, contratos e token: </label>
-									<?= $this->Form->control('users._ids', ['value' => $usuariosValue, 'title' => 'Usuários', 'class' => 'form-control selectpicker', 'options' => $usuarios ,'label' => false]) ?>
-								</div>
-								<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
-								<div class="col-md-4 col-xs-12">
-									<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-25']) ?>
-								</div>
+						<div class="cli-subcard mb-3">
+							<div class="cli-subcard-head">Quem pode ver senhas, contratos e token</div>
+							<div class="cli-subcard-body">
+								<p class="text-muted small mb-2">Usuários do cliente marcados abaixo passam a enxergar as abas sensíveis no portal. Alterações são salvas ao clicar em <strong>Salvar</strong> neste bloco (Flash na próxima tela).</p>
+								<?= $this->Form->create(null, ['class' => 'form-material m-t-5', 'url' => ['controller' => 'Users', 'action' => 'permissaoacesso']]); ?>
+									<div class="row align-items-end">
+										<div class="col-md-8 col-xs-12">
+											<label class="cli-label" for="users-ids">Usuários</label>
+											<?= $this->Form->control('users._ids', ['value' => $usuariosValue, 'title' => 'Usuários', 'class' => 'form-control selectpicker', 'options' => $usuarios ,'label' => false, 'id' => 'users-ids']) ?>
+										</div>
+										<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
+										<div class="col-md-4 col-xs-12 m-t-15">
+											<?= $this->Form->button('Salvar permissões', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
+										</div>
+									</div>
+								<?= $this->Form->end(); ?>
 							</div>
-						<?= $this->Form->end(); ?>
-						<?= $this->Form->create(null, ['class' => 'form-material m-t-10', 'url' => ['controller' => 'Cliacessos', 'action' => 'add']]); ?>
-							<div class="row">
-								<div class="col-md-3 col-xs-12">
-									<label class="control-label m-b-0">Nome do serviço </label>
-									<?= $this->Form->control('nomeservico', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o nome do serviço']);?>
-								</div>
-								<div class="col-md-3 col-xs-12">
-									<label class="control-label m-b-0">Usuário </label>
-									<?= $this->Form->control('usuarioaa', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o usuario', 'required' => true,]);?>
-								</div>
-								<div class="col-md-3 col-xs-12">
-									<label class="control-label m-b-0">IP </label>
-									<?= $this->Form->control('ip', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o ip']);?>
-								</div>
-								<div class="col-3">
-									<label class="control-label m-b-0">Protocolo </label>
-									<?= $this->Form->control('protocolo', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o protocolo', 'list' => 'protocolos']);?>
-									<datalist id="protocolos">
-										<?php foreach(C_ProtocolosArray as $reg) echo '<option value="'.$reg.'">'; ?>
-									</datalist>
-								</div>
+						</div>
+						<div class="cli-subcard mb-3">
+							<div class="cli-subcard-head">Incluir novo acesso</div>
+							<div class="cli-subcard-body">
+								<?= $this->Form->create(null, ['class' => 'form-material m-t-5', 'url' => ['controller' => 'Cliacessos', 'action' => 'add']]); ?>
+									<div class="row">
+										<div class="col-md-3 col-xs-12">
+											<label class="cli-label" for="nomeservico">Nome do serviço</label>
+											<?= $this->Form->control('nomeservico', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o nome do serviço']);?>
+										</div>
+										<div class="col-md-3 col-xs-12">
+											<label class="cli-label" for="usuarioaa">Usuário</label>
+											<?= $this->Form->control('usuarioaa', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o usuario', 'required' => true,]);?>
+										</div>
+										<div class="col-md-3 col-xs-12">
+											<label class="cli-label" for="ip">IP</label>
+											<?= $this->Form->control('ip', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o ip']);?>
+										</div>
+										<div class="col-md-3 col-xs-12">
+											<label class="cli-label" for="protocolo">Protocolo</label>
+											<?= $this->Form->control('protocolo', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o protocolo', 'list' => 'protocolos']);?>
+											<datalist id="protocolos">
+												<?php foreach(C_ProtocolosArray as $reg) echo '<option value="'.$reg.'">'; ?>
+											</datalist>
+										</div>
+									</div>
+									<div class="row m-t-5">
+										<div class="col-md-2 col-xs-12">
+											<label class="cli-label" for="nome-provedor-acesso">Provedor</label>
+											<?= $this->Form->text('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o provedor', 'id' => 'nome-provedor-acesso']);?>
+										</div>
+										<div class="col-md-3 col-xs-12">
+											<label class="cli-label" for="url">URL</label>
+											<?= $this->Form->control('url', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe a url']);?>
+										</div>
+										<div class="col-md-2 col-xs-12">
+											<label class="cli-label" for="porta">Porta</label>
+											<?= $this->Form->control('porta', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe a porta']);?>
+										</div>
+										<div class="col-md-2 col-xs-12">
+											<label class="cli-label" for="senha-acesso">Senha</label>
+											<?= $this->Form->control('senha', ['type' => 'password', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Informe a senha', 'required' => true, 'id' => 'senha-acesso']);?>
+										</div>
+										<div class="col-md-2 col-xs-12">
+											<label class="cli-label" for="confirmasenha">Confirme a senha</label>
+											<?= $this->Form->control('confirmasenha', ['type' => 'password', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Informe novamente a senha', 'required' => true,]);?>
+										</div>
+									</div>
+									<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
+									<div class="row m-t-10">
+										<div class="col-12 d-flex flex-wrap align-items-center" style="gap:8px;">
+											<a role="button" class="btn btn-danger btn-inativoAcessos text-white">Exibir inativos</a>
+											<?= $this->Form->button('Adicionar acesso', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success ml-auto'], $cliente->id) ?>
+										</div>
+									</div>
+								<?= $this->Form->end(); ?>
 							</div>
-							<div class="row m-t-5">
-								<div class="col-md-2 col-xs-12">
-									<label class="control-label m-b-0">Provedor </label>
-									<?= $this->Form->text('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe o provedor']);?>
-								</div>
-								<div class="col-md-3 col-xs-12">
-									<label class="control-label m-b-0">URL </label>
-									<?= $this->Form->control('url', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe a url']);?>
-								</div>
-								<div class="col-md-2 col-xs-12">
-									<label class="control-label m-b-0">Porta </label>
-									<?= $this->Form->control('porta', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Informe a porta']);?>
-								</div>
-								<div class="col-md-2 col-xs-12">
-									<label class="control-label m-b-0">Senha </label>
-									<?= $this->Form->control('senha', ['type' => 'password', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Informe a senha', 'required' => true,]);?>
-								</div>
-								<div class="col-md-2 col-xs-12">
-									<label class="control-label m-b-0">Confirme a senha </label>
-									<?= $this->Form->control('confirmasenha', ['type' => 'password', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Informe novamente a senha', 'required' => true,]);?>
-								</div>
-							</div>
-							<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
-							<div class="row m-t-10">
-								<div class="col-12">
-									<?= $this->Form->button('Adicionar acesso', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right'], $cliente->id) ?>
-									<a role="button" class='btn btn-danger btn-inativoAcessos text-white'>Exibir Inativos </a>
-								</div>
-							</div>
-						<?= $this->Form->end(); ?>
+						</div>
 					<?php } ?>
 					<div class="cli-section-title" style="margin-top:12px;">Acessos cadastrados</div>
 					<div class="table-responsive">
@@ -318,9 +348,12 @@
 							<tbody>
 								<?php foreach ($acessos as $reg):
 									$inativo = '';
-									if ($reg->inativo)	$inativo = 'inativoAcessos';
+									if ($reg->inativo) {
+										$inativo = 'inativoAcessos';
+									}
+									$rowAcessoClass = 'vesetainativoAcessos ' . $inativo . ($reg->inativo ? ' cli-row-acesso-inativo' : '');
 								?>
-									<tr class='vesetainativoAcessos <?= $inativo ?>'>
+									<tr class="<?= h($rowAcessoClass) ?>">
 										<td><?= $reg->nomeservico ?></td>
 										<td><?= $reg->nome ?></td>
 										<td><?= $reg->ip ?></td>
@@ -346,28 +379,32 @@
 				<?php } if($isEquipe){ ?>
 				<div class="tab-pane" id="usuarios" role="tabpanel" aria-labelledby="cli-tab-usuarios">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-users"></i> Usuários do cliente', 'extraClass' => 'mb-3']) ?>
+					<div class="d-flex flex-wrap align-items-center justify-content-between mb-2" style="gap:8px;">
+						<p class="text-muted small mb-0">Edição abre em nova aba. Novo usuário escolhe o cliente no formulário de cadastro.</p>
+						<?= $this->Html->link('<i class="fas fa-user-plus"></i> Novo usuário', ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+					</div>
 					<div class="table-responsive">
-						<table class="table table-hover" id="tableUsers">
-							<thead class="text-primary">
+						<table class="cli-acessos-table" id="tableUsers">
+							<thead>
 								<tr>
 									<th>Usuário</th>
 									<th>E-mail</th>
 									<th>Nome</th>
 									<th>Status</th>
-									<th width="10%">Ações</th>
+									<th style="width:10%">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
 								<?php foreach ($usuarios as $usr): ?>
 									<?php
-										$label = $usr->inativo ? 'danger' : 'success';
+										$badgeClass = $usr->inativo ? 'badge-danger' : 'badge-success';
 										$sit   = $usr->inativo ? 'Inativo' : 'Ativo';
 									?>
 									<tr>
 										<td><?= h($usr->username) ?></td>
 										<td><?= h($usr->email) ?></td>
 										<td><?= h($usr->name) ?></td>
-										<td><span class="label label-<?= $label ?>"><?= $sit ?></span></td>
+										<td><span class="badge <?= h($badgeClass) ?>"><?= h($sit) ?></span></td>
 										<td class="td-actions">
 											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "Users", "action" => "editcliente", $usr->id], ['rel' => 'tooltip', 'title' => 'Editar usuário do cliente', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
 										</td>
@@ -386,32 +423,42 @@
 					<?= $this->Html->link('Contratos de Horas Técnicas', ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-b-20']) ?>
 					<?= $this->Html->link('Cadastrar Contrato de Horas', ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5 m-b-20']) ?>
 					<?php endif; ?>
+					<?php $contratosRowUi = isset($contratosRowUi) && is_array($contratosRowUi) ? $contratosRowUi : []; ?>
+					<p class="cli-ctr-legend mb-2">Situação do item (mesma regra do resumo no rodapé): <span class="badge badge-success">Ativo</span> <span class="badge badge-warning text-dark">Vence em 30 dias</span> <span class="badge badge-danger">Vencido</span> <span class="badge badge-secondary">Cancelado / sem validade</span></p>
 					<div class="table-responsive">
 						<table class="cli-acessos-table" id="tableContratos">
-							<thead class="text-primary">
-								<th>Cód. Produto</th>
-								<th>Descrição </th>
-								<th>Inf. Adicional</th>
-								<th>Vl. Unit.</th>
-								<th>Qtde</th>
-								<th>Vl. Total</th>
-								<th>Dt. Contratação</th>
-								<th>Dt. Validade</th>
-								<th>Dt. Cancelamento</th>
-								<th>Ações</th>
+							<thead>
+								<tr>
+									<th>Situação</th>
+									<th>Cód. Produto</th>
+									<th>Descrição</th>
+									<th>Inf. Adicional</th>
+									<th>Vl. Unit.</th>
+									<th>Qtde</th>
+									<th>Vl. Total</th>
+									<th>Dt. Contratação</th>
+									<th>Dt. Validade</th>
+									<th>Dt. Cancelamento</th>
+									<th>Ações</th>
+								</tr>
 							</thead>
 							<tbody>
-								<?php foreach ($contratos as $reg): ?>
-									<tr>
-										<td><?= $reg->codproduto ?></td>
-										<td><?= $reg->descricao ?></td>
-										<td><?= $reg->infadicional ?></td>
+								<?php foreach ($contratos as $reg):
+									$rid = (int)$reg->id;
+									$cui = $contratosRowUi[$rid] ?? ['label' => '—', 'row_class' => '', 'badge_class' => 'badge-secondary'];
+									$trClass = trim('cli-ctr-contract-row ' . ($cui['row_class'] ?? ''));
+								?>
+									<tr class="<?= h($trClass) ?>">
+										<td><span class="badge <?= h($cui['badge_class'] ?? 'badge-secondary') ?>"><?= h($cui['label'] ?? '—') ?></span></td>
+										<td><?= h($reg->codproduto) ?></td>
+										<td><?= h($reg->descricao) ?></td>
+										<td><?= h($reg->infadicional) ?></td>
 										<td><?= number_format($reg->vlunit, 2, ',', '.') ?></td>
-										<td><?= $reg->qtde ?></td>
+										<td><?= h($reg->qtde) ?></td>
 										<td><?= number_format($reg->vltotal, 2, ',', '.') ?></td>
-										<td><?php if(!empty($reg->dtcontratacao)) 	echo date_format($reg->dtcontratacao, 'd/m/Y') ?></td>
-										<td><?php if(!empty($reg->dtvalidade)) 		echo date_format($reg->dtvalidade, 'd/m/Y') ?></td>
-										<td><?php if(!empty($reg->dtcancelamento)) 	echo date_format($reg->dtcancelamento, 'd/m/Y') ?></td>
+										<td><?php if(!empty($reg->dtcontratacao)) { echo h(date_format($reg->dtcontratacao, 'd/m/Y')); } ?></td>
+										<td><?php if(!empty($reg->dtvalidade)) { echo h(date_format($reg->dtvalidade, 'd/m/Y')); } ?></td>
+										<td><?php if(!empty($reg->dtcancelamento)) { echo h(date_format($reg->dtcancelamento, 'd/m/Y')); } ?></td>
 										<td class="td-actions">
 											<?= $this->Html->link('<i class="fa fa-eye"></i>', ['controller' => 'Clicontratos', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Detalhe', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
 											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "clicontratos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
@@ -425,22 +472,28 @@
 				<?php } if($isClientePortal ){ ?>
 				<div class="tab-pane" id="acessosCliente" role="tabpanel" aria-labelledby="cli-tab-acessosCliente">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Meus acessos', 'extraClass' => 'mb-3']) ?>
+					<p class="text-muted small mb-2">Senhas podem ser exibidas mediante clique; não compartilhe em canais inseguros.</p>
 					<div class="table-responsive">
-						<table class="table table-hover" id="tableAcessosClientes">
-							<thead class="text-primary">
-								<th>Provedor</th>
-								<th>IP</th>
-								<th>Usuário</th>
-								<th>Senha</th>
-								<th>Ativo</th>
-								<?php if ($isEquipe) echo '<th>Ações</th>' ; ?>
+						<table class="cli-acessos-table" id="tableAcessosClientes">
+							<thead>
+								<tr>
+									<th>Provedor</th>
+									<th>IP</th>
+									<th>Usuário</th>
+									<th>Senha</th>
+									<th>Ativo</th>
+									<?php if ($isEquipe) { ?><th>Ações</th><?php } ?>
+								</tr>
 							</thead>
 							<tbody>
 								<?php foreach ($acessos as $reg):
 								$inativo = '';
-								if ($reg->inativo)	$inativo = 'inativoAcessos';
+								if ($reg->inativo) {
+									$inativo = 'inativoAcessos';
+								}
+								$rowPortalClass = 'vesetainativoAcessos ' . $inativo . ($reg->inativo ? ' cli-row-acesso-inativo' : '');
 								?>
-									<tr class='vesetainativoAcessos <?= $inativo ?>'>
+									<tr class="<?= h($rowPortalClass) ?>">
 										<td><?= $reg->nome ?></td>
 										<td><?= $reg->ip ?></td>
 										<td><?= $reg->usuario ?></td>
@@ -464,13 +517,26 @@
 				<?php }if($isEquipe || !empty($permissaoacesso)){ ?>
 				<div class="tab-pane" id="token" role="tabpanel" aria-labelledby="cli-tab-token">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-key"></i> Token de integração API', 'extraClass' => 'mb-3']) ?>
-					<div class="cli-token-box" id="token-display"><?= h($cliente->token) ?></div>
-					<p class="cli-token-note">Este token é utilizado para autenticar integrações externas com a API do portal. Mantenha-o em segurança.</p>
-					<?php if($isEquipe) { ?>
-					<div class="mt-3">
-						<?= $this->Html->link('<i class="fas fa-sync-alt"></i> Atualizar Token', [], ['class' => 'btn-atualizaToken btn btn-sm btn-outline-warning salvarcliente', 'escape' => false]) ?>
+					<div class="cli-token-panel cli-token-panel--split">
+						<div class="cli-token-panel__col">
+							<div class="cli-sf-kicker">Valor atual (somente leitura)</div>
+							<div class="cli-token-box" id="token-display" aria-readonly="true"><?= h($cliente->token) ?></div>
+							<p class="cli-token-note mb-0">Usado para autenticar integrações externas com a API do portal. <strong>Não há data de expiração cadastrada</strong> — a renovação é manual.</p>
+						</div>
+						<div class="cli-token-panel__col">
+							<?php if ($isEquipe) { ?>
+								<div class="cli-sf-kicker">Renovação (equipe)</div>
+								<p class="cli-token-note">Gerar um novo token <strong>invalida o valor anterior</strong> nas integrações que ainda o utilizam.</p>
+								<div class="mt-2">
+									<?= $this->Html->link('<i class="fas fa-sync-alt"></i> Atualizar token', [], ['class' => 'btn-atualizaToken btn btn-sm btn-outline-warning salvarcliente', 'escape' => false]) ?>
+								</div>
+							<?php } else { ?>
+								<div class="cli-token-callout">
+									<strong>Portal do cliente.</strong> A renovação do token é feita pela equipe PGM. Em caso de vazamento ou troca de sistema, solicite suporte.
+								</div>
+							<?php } ?>
+						</div>
 					</div>
-					<?php } ?>
 					<?= $this->element('Cli/card_end') ?>
 				</div>
 				<?php }  ?>
