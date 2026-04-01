@@ -34,8 +34,30 @@ class ClienteDomainShell extends Shell {
 		$dedupe = $dedupe > 0 ? $dedupe : 7;
 
 		$r = ClienteDomainCronService::runContractExpiryAlerts($dias, $dedupe);
+
+		if (empty($r['infra_ready'])) {
+			$this->out('');
+			$this->out('*** AVISO *** Módulo de notificações inativo: tabelas portal_internal_notifications e client_domain_events ausentes ou inacessíveis na conexão default.');
+			$this->out('A migration do repositório só cria essas tabelas em PostgreSQL. Em MySQL/MariaDB, crie o equivalente ou use default em PG com migration aplicada.');
+			$this->out('Nenhum alerta foi processado.');
+			$this->out('');
+
+			return;
+		}
+		if (!empty($r['erro'])) {
+			$this->out('Erro na consulta: ' . $r['erro']);
+
+			return;
+		}
+
 		$this->out(sprintf(
-			'Contratos: vencendo=%d | vencidos=%d | ignorados (fora da janela ou dedupe/cancelado)=%d',
+			'Contratos com dtvalidade preenchida (candidatos): %d | fora da janela (vigência > %d dias e não vencidos): %d',
+			(int)$r['candidatos'],
+			$dias,
+			(int)$r['fora_janela']
+		));
+		$this->out(sprintf(
+			'Alertas emitidos: vencendo=%d | vencidos=%d | ignorados (dedupe/cancelado/sem data válida/ids)=%d',
 			$r['vencendo'],
 			$r['vencido'],
 			$r['skipped']

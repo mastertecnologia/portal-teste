@@ -3,6 +3,8 @@
  * Notificações internas, preferências, histórico de eventos do cliente e log de e-mail automático.
  * Camada nova e desacoplada; não altera tabela legada `notificacoes` (tickets).
  *
+ * PostgreSQL apenas. Para MySQL/MariaDB use a migration 20260404120000_PortalClienteDomainNotificationsMysql.
+ *
  * Rodar: bin/cake migrations migrate
  */
 use Migrations\AbstractMigration;

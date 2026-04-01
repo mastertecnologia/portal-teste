@@ -13,13 +13,22 @@ class ClienteDomainCronService {
 	/**
 	 * Emite eventos de contrato vencido / vencendo (dedupe por cliente + contrato + tipo).
 	 *
-	 * @return array{vencendo:int,vencido:int,skipped:int}
+	 * @return array{infra_ready:bool,candidatos:int,vencendo:int,vencido:int,skipped:int,fora_janela:int,erro:?string}
 	 */
 	public static function runContractExpiryAlerts(int $daysAhead = 30, int $dedupeDays = 7): array {
-		$stats = ['vencendo' => 0, 'vencido' => 0, 'skipped' => 0];
+		$stats = [
+			'infra_ready' => false,
+			'candidatos' => 0,
+			'vencendo' => 0,
+			'vencido' => 0,
+			'skipped' => 0,
+			'fora_janela' => 0,
+			'erro' => null,
+		];
 		if (!InfrastructureGuard::isReady()) {
 			return $stats;
 		}
+		$stats['infra_ready'] = true;
 
 		try {
 			$C = TableRegistry::get('Clicontratos');
@@ -30,9 +39,12 @@ class ClienteDomainCronService {
 				->toArray();
 		} catch (\Throwable $e) {
 			\Cake\Log\Log::warning('ClienteDomainCronService: ' . $e->getMessage());
+			$stats['erro'] = $e->getMessage();
 
 			return $stats;
 		}
+
+		$stats['candidatos'] = count($rows);
 
 		$today = new \DateTimeImmutable('today');
 		$todayStr = $today->format('Y-m-d');
@@ -98,6 +110,8 @@ class ClienteDomainCronService {
 					'metadata' => $meta,
 				]);
 				$stats['vencendo']++;
+			} else {
+				$stats['fora_janela']++;
 			}
 		}
 
