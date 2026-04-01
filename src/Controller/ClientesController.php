@@ -358,6 +358,17 @@ class ClientesController extends AppController {
 		}
 
 		$usuarios = $usuariosQuery->where($conditions)->toArray();
+		$usuariosOptions = [];
+		foreach ($usuarios as $u) {
+			$label = (string)($u->username ?? '');
+			if (!empty($u->email)) {
+				$label .= ($label !== '' ? ' · ' : '') . $u->email;
+			}
+			if (!empty($u->name)) {
+				$label .= ($label !== '' ? ' — ' : '') . $u->name;
+			}
+			$usuariosOptions[$u->id] = $label !== '' ? $label : '#' . $u->id;
+		}
 		$cliente->users = $this->Users->find('all')->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$usuariosValue = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$cliente->senha = descriptografasenha($cliente->senha);
@@ -447,8 +458,9 @@ class ClientesController extends AppController {
 		$this->set('ufContribuinte', $ufContribuinte);
 		$this->set('cidades', $cidades);
 		$this->set('cliente', $cliente);	
-		$this->set('usuarios', $usuarios);	
-		$this->set('usuariosValue', $usuariosValue);	
+		$this->set('usuarios', $usuarios);
+		$this->set('usuariosOptions', $usuariosOptions);
+		$this->set('usuariosValue', $usuariosValue);
 	}
 
 	/**

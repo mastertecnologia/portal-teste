@@ -260,7 +260,7 @@
 									<div class="row align-items-end">
 										<div class="col-md-8 col-xs-12">
 											<label class="cli-label" for="users-ids">Usuários</label>
-											<?= $this->Form->control('users._ids', ['value' => $usuariosValue, 'title' => 'Usuários', 'class' => 'form-control selectpicker', 'options' => $usuarios ,'label' => false, 'id' => 'users-ids']) ?>
+											<?= $this->Form->control('users._ids', ['value' => $usuariosValue, 'title' => 'Usuários', 'class' => 'form-control selectpicker', 'options' => $usuariosOptions, 'label' => false, 'id' => 'users-ids']) ?>
 										</div>
 										<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
 										<div class="col-md-4 col-xs-12 m-t-15">
