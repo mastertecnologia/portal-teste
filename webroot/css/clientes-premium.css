@@ -31,6 +31,8 @@
   padding: 0;
   /* Margens negativas suaves — evita sobrepor KPIs / sidebar em alguns layouts */
   margin: -8px -12px 0;
+  /* Inputs/selects nativos seguem tema escuro (evita fundo branco do SO/navegador) */
+  color-scheme: dark;
 }
 
 /* ── Page header ─────────────────────────────────────────────── */
@@ -179,15 +181,27 @@
 .cli-filter-search:focus-within { border-color: var(--cli-teal); box-shadow: 0 0 0 2px var(--cli-teal-glow); }
 .cli-filter-search svg { color: var(--cli-dim); flex-shrink: 0; }
 .cli-filter-search input {
-  background: none;
+  background: transparent !important;
+  background-color: transparent !important;
   border: none;
   outline: none;
   color: var(--cli-text);
+  -webkit-text-fill-color: var(--cli-text);
   font-size: 12.5px;
   font-family: inherit;
   width: 100%;
+  box-shadow: none !important;
 }
-.cli-filter-search input::placeholder { color: var(--cli-dim); }
+.cli-filter-search input::placeholder { color: var(--cli-dim); opacity: 1; }
+.cli-filter-search input:-webkit-autofill,
+.cli-filter-search input:-webkit-autofill:hover,
+.cli-filter-search input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 40px var(--cli-surface) inset !important;
+  box-shadow: 0 0 0 40px var(--cli-surface) inset !important;
+  -webkit-text-fill-color: var(--cli-text) !important;
+  caret-color: var(--cli-text);
+  transition: background-color 99999s ease-out;
+}
 .cli-search-mode {
   font-size: 10px;
   font-weight: 600;
@@ -259,6 +273,22 @@
   white-space: nowrap;
 }
 .cli-table thead th:first-child { padding-left: 16px; }
+.cli-table thead th:nth-child(2) { padding-left: 16px; }
+/* Coluna numérica oculta (relevância DataTables) — sem largura antes do plugin inicializar */
+.cli-table thead th.cli-dt-rank-col,
+.cli-table tbody td.cli-dt-rank {
+  width: 0 !important;
+  max-width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+  user-select: none;
+}
 .cli-table tbody tr {
   border-bottom: 1px solid var(--cli-border);
   cursor: pointer;
@@ -272,6 +302,7 @@
   vertical-align: middle;
 }
 .cli-table tbody td:first-child { padding-left: 16px; }
+.cli-table tbody td:nth-child(2) { padding-left: 16px; }
 
 /* Cell types */
 .cli-td-name {
@@ -378,11 +409,22 @@
 .cli-root .dataTables_wrapper .dataTables_length select,
 .cli-root .dataTables_wrapper .dataTables_filter input {
   background: var(--cli-surface2) !important;
+  background-color: var(--cli-surface2) !important;
   border: 1px solid var(--cli-border2) !important;
   border-radius: 6px !important;
   color: var(--cli-text) !important;
+  -webkit-text-fill-color: var(--cli-text) !important;
   padding: 4px 8px !important;
   font-size: 12px !important;
+  color-scheme: dark;
+  box-shadow: none !important;
+}
+.cli-root .dataTables_wrapper .dataTables_length select option {
+  background-color: var(--cli-surface);
+  color: var(--cli-text);
+}
+.cli-root .dataTables_wrapper label {
+  color: var(--cli-muted) !important;
 }
 .cli-root .dataTables_wrapper .dataTables_filter input:focus { border-color: var(--cli-teal) !important; outline: none !important; }
 .cli-root .dataTables_wrapper .paginate_button {

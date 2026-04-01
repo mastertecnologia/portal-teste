@@ -26,7 +26,7 @@
         return $a . $b;
     }
 
-    /** Atributos data-* para busca client-side (nome, CNPJ/CPF sem máscara, e-mail). */
+    /** Atributos data-* para busca client-side (nome, CNPJ/CPF sem máscara, e-mail) + nome principal para relevância. */
     function cliRowDataAttrs($reg) {
         $isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
         $docDigits = preg_replace('/\D/', '', (string)($isPj ? ($reg->cnpj ?? '') : ($reg->cpf ?? '')));
@@ -36,7 +36,9 @@
         if ($emailLower !== '') {
             $textBlob = trim($textBlob . ' ' . $emailLower);
         }
-        return ' data-cli-doc="' . h($docDigits) . '" data-cli-email="' . h($emailLower) . '" data-cli-text="' . h($textBlob) . '"';
+        $primaryLower = mb_strtolower(trim($isPj ? (string)($reg->razaosocial ?? '') : (string)($reg->nome ?? '')), 'UTF-8');
+        $primaryLower = trim(preg_replace('/\s+/', ' ', $primaryLower));
+        return ' data-cli-doc="' . h($docDigits) . '" data-cli-email="' . h($emailLower) . '" data-cli-text="' . h($textBlob) . '" data-cli-primary="' . h($primaryLower) . '"';
     }
 ?>
 
@@ -128,6 +130,7 @@
                 <table class="cli-table" id="tableAtivosPJ">
                     <thead>
                         <tr>
+                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
                             <th style="width:42%">Razão Social</th>
                             <th style="width:18%">CNPJ</th>
                             <th style="width:24%">E-mail</th>
@@ -136,9 +139,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($clientesAtivosPJ as $reg): ?>
+                        <?php $idxPjA = 0; foreach ($clientesAtivosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjA ?>" style="cursor:pointer" role="button" tabindex="0">
+                            <td class="cli-dt-rank"><?= (int)$idxPjA ?></td>
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -162,7 +166,7 @@
                                 <span class="cli-td-arrow-chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php $idxPjA++; endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -174,6 +178,7 @@
                 <table class="cli-table" id="tableAtivosPF">
                     <thead>
                         <tr>
+                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
                             <th style="width:42%">Nome</th>
                             <th style="width:18%">CPF</th>
                             <th style="width:24%">E-mail</th>
@@ -182,9 +187,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($clientesAtivosPF as $reg): ?>
+                        <?php $idxPfA = 0; foreach ($clientesAtivosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfA ?>" style="cursor:pointer" role="button" tabindex="0">
+                            <td class="cli-dt-rank"><?= (int)$idxPfA ?></td>
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -208,7 +214,7 @@
                                 <span class="cli-td-arrow-chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php $idxPfA++; endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -220,6 +226,7 @@
                 <table class="cli-table" id="tableInativosPJ">
                     <thead>
                         <tr>
+                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
                             <th style="width:38%">Razão Social</th>
                             <th style="width:16%">CNPJ</th>
                             <th style="width:22%">E-mail</th>
@@ -228,9 +235,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($clientesInativosPJ as $reg): ?>
+                        <?php $idxPjI = 0; foreach ($clientesInativosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjI ?>" style="cursor:pointer" role="button" tabindex="0">
+                            <td class="cli-dt-rank"><?= (int)$idxPjI ?></td>
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -251,7 +259,7 @@
                                 ) ?>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php $idxPjI++; endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -263,6 +271,7 @@
                 <table class="cli-table" id="tableInativosPF">
                     <thead>
                         <tr>
+                            <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
                             <th style="width:38%">Nome</th>
                             <th style="width:16%">CPF</th>
                             <th style="width:22%">E-mail</th>
@@ -271,9 +280,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($clientesInativosPF as $reg): ?>
+                        <?php $idxPfI = 0; foreach ($clientesInativosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfI ?>" style="cursor:pointer" role="button" tabindex="0">
+                            <td class="cli-dt-rank"><?= (int)$idxPfI ?></td>
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -294,7 +304,7 @@
                                 ) ?>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php $idxPfI++; endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -466,8 +476,94 @@
         return true;
     }
 
+    /**
+     * Relevância da linha frente à busca (espelha ideia de ORDER BY CASE WHEN … no SQL).
+     * Tier menor = mais relevante; dentro do tier, texto mais curto primeiro; desempate = ordem original (data-cli-ord).
+     */
+    function rowRelevanceRank($row, q) {
+        var ord = parseInt($row.attr('data-cli-ord') || '0', 10);
+        var doc = $row.attr('data-cli-doc') || '';
+        var email = $row.attr('data-cli-email') || '';
+        var text = normalizeAccent(($row.attr('data-cli-text') || '').toLowerCase());
+        var primary = normalizeAccent(($row.attr('data-cli-primary') || '').toLowerCase());
+        var textLen = Math.min(text.length || 0, 9999);
+
+        function pack(tier, lenKey) {
+            var lk = Math.min(lenKey || 0, 9999);
+            return tier * 10000000 + lk * 1000 + ord;
+        }
+
+        if (q.type === 'empty') {
+            return ord;
+        }
+        if (q.type === 'email') {
+            var v = q.value;
+            if (email === v) {
+                return pack(1, textLen);
+            }
+            if (email.indexOf(v) === 0) {
+                return pack(2, textLen);
+            }
+            return pack(3, textLen);
+        }
+        if (q.type === 'doc') {
+            var d = q.digits;
+            if (!doc) {
+                return pack(99, 9999);
+            }
+            if (doc === d) {
+                return pack(1, doc.length);
+            }
+            if (doc.indexOf(d) === 0) {
+                return pack(2, doc.length);
+            }
+            return pack(3, doc.length);
+        }
+        if (q.type === 'nome') {
+            var words = q.words;
+            if (words.length === 0) {
+                return ord;
+            }
+            var phrase = words.join(' ');
+            if (text === phrase || primary === phrase) {
+                return pack(1, textLen);
+            }
+            if (primary.indexOf(phrase) === 0) {
+                return pack(2, textLen);
+            }
+            if (primary.indexOf(words[0]) === 0) {
+                return pack(3, textLen);
+            }
+            if (text.indexOf(phrase) === 0) {
+                return pack(4, textLen);
+            }
+            return pack(5, textLen);
+        }
+        return pack(50, textLen);
+    }
+
+    function cliPreDrawUpdateRank(settings) {
+        var api = new $.fn.dataTable.Api(settings);
+        var q = detectQueryType($('#cli-search').val());
+        api.rows().every(function () {
+            var $tr = $(this.node());
+            var match = rowMatches($tr, q);
+            var rk = match ? rowRelevanceRank($tr, q) : 999999999;
+            var $cell = $tr.find('td.cli-dt-rank');
+            if ($cell.length) {
+                $cell.text(String(rk));
+            }
+        });
+    }
+
     var dtOpts = {
         "pageLength": <?= $pagelength ?? 25 ?>,
+        "order": [[0, "asc"]],
+        "orderFixed": [[0, "asc"]],
+        "columnDefs": [
+            { "targets": 0, "visible": false, "searchable": false, "orderable": true, "type": "num" }
+        ],
+        "preDrawCallback": cliPreDrawUpdateRank,
         "language": {
             "sLengthMenu":    "Mostrar _MENU_ registros",
             "sZeroRecords":   "Nenhum registro encontrado",
