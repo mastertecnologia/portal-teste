@@ -33,8 +33,8 @@ class Application extends BaseApplication
     public function bootstrap() {
         parent::bootstrap();
         // Load the contact manager plugin by class name
-        if (Configure::read('debug')) {
-          $this->addPlugin('DebugKit');
+        if (Configure::read('debug') && is_dir(ROOT . DS . 'vendor' . DS . 'cakephp' . DS . 'debug_kit')) {
+            $this->addPlugin('DebugKit');
         }
     }
 
