@@ -3,29 +3,40 @@ $this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'in
 $this->Breadcrumbs->add('Contratos de Horas', ['action' => 'index', $idcliente]);
 $this->Breadcrumbs->add('Novo', [], ['class' => 'breadcrumb-item active']);
 ?>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<h4 class="card-title">Novo Contrato de Horas Técnicas</h4>
-			<?= $this->Form->create($contrato, ['class' => 'form-material']) ?>
-			<?= $this->Form->hidden('idcliente', ['value' => $idcliente]) ?>
-			<div class="row">
-				<div class="col-md-3"><?= $this->Form->control('data_inicio', ['type' => 'text', 'class' => 'form-control datepicker', 'label' => 'Data início']) ?></div>
-				<div class="col-md-3"><?= $this->Form->control('data_fim', ['type' => 'text', 'class' => 'form-control datepicker', 'label' => 'Data fim']) ?></div>
-				<div class="col-md-3"><?= $this->Form->control('horas_contratadas', ['class' => 'form-control', 'label' => 'Horas contratadas', 'step' => '0.01']) ?></div>
-				<div class="col-md-3"><?= $this->Form->control('ativo', ['type' => 'checkbox', 'checked' => true]) ?></div>
+<?= $this->element('Pgm/form_shell_dark', ['formId' => 'form-contratos-horas-add']) ?>
+<div class="col-md-12 clictr-edit-page">
+	<div class="clictr-card">
+		<?= $this->Form->create($contrato, ['class' => 'form-material clictr-form', 'id' => 'form-contratos-horas-add']) ?>
+		<?= $this->Form->hidden('idcliente', ['value' => $idcliente]) ?>
+			<div class="clictr-section">
+				<div class="clictr-section-title">Vigência e status</div>
+				<div class="row">
+					<div class="col-md-3 col-sm-6"><?= $this->Form->control('data_inicio', ['type' => 'text', 'class' => 'form-control datepicker', 'label' => 'Data início']) ?></div>
+					<div class="col-md-3 col-sm-6"><?= $this->Form->control('data_fim', ['type' => 'text', 'class' => 'form-control datepicker', 'label' => 'Data fim']) ?></div>
+					<div class="col-md-3 col-sm-6"><?= $this->Form->control('horas_contratadas', ['class' => 'form-control', 'label' => 'Horas contratadas', 'step' => '0.01']) ?></div>
+					<div class="col-md-3 col-sm-6"><?= $this->Form->control('ativo', ['type' => 'checkbox', 'checked' => true, 'label' => 'Ativo']) ?></div>
+				</div>
 			</div>
-			<div class="row">
-				<div class="col-md-4"><?= $this->Form->control('valor_hora_comercial', ['class' => 'form-control', 'label' => 'Valor hora comercial']) ?></div>
-				<div class="col-md-4"><?= $this->Form->control('valor_hora_adicional_comercial', ['class' => 'form-control', 'label' => 'Valor hora adicional comercial']) ?></div>
-				<div class="col-md-4"><?= $this->Form->control('valor_hora_especial', ['class' => 'form-control', 'label' => 'Valor hora especial']) ?></div>
+			<div class="clictr-section">
+				<div class="clictr-section-title">Valores por tipo de hora</div>
+				<div class="row">
+					<div class="col-md-4 col-sm-12"><?= $this->Form->control('valor_hora_comercial', ['class' => 'form-control', 'label' => 'Valor hora comercial']) ?></div>
+					<div class="col-md-4 col-sm-12"><?= $this->Form->control('valor_hora_adicional_comercial', ['class' => 'form-control', 'label' => 'Valor hora adicional comercial']) ?></div>
+					<div class="col-md-4 col-sm-12"><?= $this->Form->control('valor_hora_especial', ['class' => 'form-control', 'label' => 'Valor hora especial']) ?></div>
+				</div>
 			</div>
-			<div class="row">
-				<div class="col-md-12"><?= $this->Form->control('contatos_email_relatorio', ['class' => 'form-control', 'label' => 'E-mails adicionais para relatório (separados por ;)', 'type' => 'textarea']) ?></div>
+			<div class="clictr-section">
+				<div class="clictr-section-title">Relatórios</div>
+				<div class="row">
+					<div class="col-12"><?= $this->Form->control('contatos_email_relatorio', ['class' => 'form-control', 'label' => 'E-mails adicionais para relatório (separados por ;)', 'type' => 'textarea']) ?></div>
+				</div>
 			</div>
-			<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
-			<?= $this->Html->link('Cancelar', ['action' => 'index', $idcliente], ['class' => 'btn btn-secondary']) ?>
-			<?= $this->Form->end() ?>
-		</div>
+			<div class="clictr-actions row">
+				<div class="col-12">
+					<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
+					<?= $this->Html->link('Cancelar', ['action' => 'index', $idcliente], ['class' => 'btn btn-secondary m-l-5']) ?>
+				</div>
+			</div>
+		<?= $this->Form->end() ?>
 	</div>
 </div>

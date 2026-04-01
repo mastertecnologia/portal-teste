@@ -1,89 +1,96 @@
 <?php use Cake\Routing\Router; ?>
 <?php $this->Breadcrumbs->add('Usuários', ['controller' => 'users', 'action' => 'index'], ['class' => 'breadcrumb-item']); ?>
 <?php $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']); ?>
-<style>
-	.btn-disabled { background: #eee !important; /*Simular campo inativo*/ }
-</style>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<?= $this->Form->create($user, ['class' => 'form-material  m-t-10']) ?>
-				<div class="row">
-					<div class="col-lg-3 col-md-12">
-						<div class="form-group">
-							<label class="control-label text-muted"> Usuário </label>
-							<?= $this->Form->control('username', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira o usuário']) ?>
-						</div>
-					</div>
-					<div class="col-lg-4 col-md-12">
-						<div class="form-group">
-							<label class="control-label text-muted"> E-mail </label>
-							<?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira o e-mail']) ?>
-						</div>
-					</div>
-					<div class="col-md-2 col-xs-12">
-						<div class="form-group">
-							<label class="control-label text-muted"> CPF </label>
-							<?= $this->Form->control('cpf', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o cpf']) ?>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-4 col-xs-12">
-						<div class="form-group">
-							<label class="control-label text-muted"> Nome do usuário </label>
-							<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o nome']) ?>
-						</div>
-					</div>
-					<div class="col-md-6 col-xs-12">
-						<label class="control-label">Cliente</label>
-						<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-2 col-lg-2 col-xs-12">
-						<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
-							<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']); ?>
-							<label class="custom-control-label text-muted" for="inativo"> Inativo </label>
-						</div>
-					</div>
-					<div class="col-xl-2 col-lg-2 col-xs-12">
-						<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
-							<?= $this->Form->checkbox('bloqueado', ['class' => 'custom-control-input', 'id' => 'bloqueado']); ?>
-							<label class="custom-control-label text-muted" for="bloqueado"> Bloqueado </label>
-						</div>
-					</div>
-					<div class="col-xl-4 col-lg-4 col-xs-12">
-						<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
-							<?= $this->Form->checkbox('permissaoacesso', ['class' => 'custom-control-input', 'id' => 'permissaoacesso']); ?>
-							<label class="custom-control-label text-muted" for="permissaoacesso"> Permissões administrativas </label>
-						</div>
-					</div>
-					<?php if(!empty($user->secret)) { ?>
-						<div class="col-xl-2 col-lg-2 col-xs-12">
-							<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
-								<?= $this->Form->checkbox('desativasecret', ['class' => 'custom-control-input', 'id' => 'desativasecret']); ?>
-								<label class="custom-control-label text-muted" for="desativasecret"> Desativar verificação em 2 fatores </label>
+<?= $this->element('Pgm/form_shell_dark', ['formId' => 'form-users-editcliente']) ?>
+<div class="col-md-12 clictr-edit-page">
+	<div class="clictr-card">
+			<?= $this->Form->create($user, ['class' => 'form-material clictr-form', 'id' => 'form-users-editcliente']) ?>
+				<div class="clictr-section">
+					<div class="clictr-section-title">Login e documento</div>
+					<div class="row">
+						<div class="col-lg-3 col-md-12">
+							<div class="form-group">
+								<label class="clictr-label" for="username">Usuário</label>
+								<?= $this->Form->control('username', ['class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira o usuário']) ?>
 							</div>
 						</div>
-					<?php } ?>
+						<div class="col-lg-4 col-md-12">
+							<div class="form-group">
+								<label class="clictr-label" for="email">E-mail</label>
+								<?= $this->Form->email('email', ['id' => 'email', 'class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira o e-mail']) ?>
+							</div>
+						</div>
+						<div class="col-md-2 col-xs-12">
+							<div class="form-group">
+								<label class="clictr-label" for="cpf">CPF</label>
+								<?= $this->Form->control('cpf', ['id' => 'cpf', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o cpf']) ?>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div class="row m-t-20">
-					<div class="col-12">
-						<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
-						<?= $this->Html->link('Alterar senha', ['action' => 'changePasswordAdmin', $user->id], ['class' => 'btn btn-warning']) ?>
-						<?= $this->Html->link('Redefinir senha', ['action' => 'resetPassword', $user->id], ['class' => 'btn-reset-password btn btn-pgm btn-pgm-email']) ?>
-						<?= $this->Html->link('Excluir usuário', ['#'], ['class' => 'btn btn-danger btn-delete']) ?>
+				<div class="clictr-section">
+					<div class="clictr-section-title">Perfil</div>
+					<div class="row">
+						<div class="col-md-4 col-xs-12">
+							<div class="form-group">
+								<label class="clictr-label" for="name">Nome do usuário</label>
+								<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o nome']) ?>
+							</div>
+						</div>
+						<div class="col-md-6 col-xs-12">
+							<label class="clictr-label" for="idcliente">Cliente</label>
+							<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+						</div>
+					</div>
+				</div>
+				<div class="clictr-section">
+					<div class="clictr-section-title">Status e permissões</div>
+					<div class="row">
+						<div class="col-xl-2 col-lg-2 col-xs-12">
+							<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
+								<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']); ?>
+								<label class="custom-control-label text-muted" for="inativo"> Inativo </label>
+							</div>
+						</div>
+						<div class="col-xl-2 col-lg-2 col-xs-12">
+							<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
+								<?= $this->Form->checkbox('bloqueado', ['class' => 'custom-control-input', 'id' => 'bloqueado']); ?>
+								<label class="custom-control-label text-muted" for="bloqueado"> Bloqueado </label>
+							</div>
+						</div>
+						<div class="col-xl-4 col-lg-4 col-xs-12">
+							<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
+								<?= $this->Form->checkbox('permissaoacesso', ['class' => 'custom-control-input', 'id' => 'permissaoacesso']); ?>
+								<label class="custom-control-label text-muted" for="permissaoacesso"> Permissões administrativas </label>
+							</div>
+						</div>
+						<?php if(!empty($user->secret)) { ?>
+							<div class="col-xl-2 col-lg-2 col-xs-12">
+								<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10">
+									<?= $this->Form->checkbox('desativasecret', ['class' => 'custom-control-input', 'id' => 'desativasecret']); ?>
+									<label class="custom-control-label text-muted" for="desativasecret"> Desativar verificação em 2 fatores </label>
+								</div>
+							</div>
+						<?php } ?>
+					</div>
+				</div>
+				<div class="clictr-actions">
+					<div class="row">
+						<div class="col-12">
+							<?= $this->Form->button('Salvar usuário', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
+							<?= $this->Html->link('Alterar senha', ['action' => 'changePasswordAdmin', $user->id], ['class' => 'btn btn-warning']) ?>
+							<?= $this->Html->link('Redefinir senha', ['action' => 'resetPassword', $user->id], ['class' => 'btn-reset-password btn btn-pgm btn-pgm-email']) ?>
+							<?= $this->Html->link('Excluir usuário', ['#'], ['class' => 'btn btn-danger btn-delete']) ?>
+						</div>
 					</div>
 				</div>
 			<?= $this->Form->end(); ?>
-		</div>
 	</div>
 </div>
 <!-- Modal Senha -->
 <div class="modal fade none-border" id="modal-senha">
 	<div class="modal-dialog">
-		<div class="modal-content">
+		<div class="modal-content clictr-modal-cmp">
 			<div class="row m-20">
 				<div class="col-12">
 					<div class="form-material">

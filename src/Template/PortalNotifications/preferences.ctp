@@ -6,14 +6,14 @@
 $this->Breadcrumbs->add('Início', ['controller' => 'Users', 'action' => 'dashboard'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'breadcrumb-item active']);
 ?>
-<div class="col-12">
-	<div class="card">
-		<div class="card-body">
-			<h4 class="card-title">Preferências de notificações</h4>
-			<p class="text-muted small mb-4">Defina o que recebe no sino do portal e o que também gera e-mail automático quando o evento ocorrer.</p>
+<?= $this->element('Pgm/form_shell_dark', ['formId' => 'form-portal-notif-prefs']) ?>
+<div class="col-12 clictr-edit-page">
+	<div class="clictr-card clictr-card--wide">
+			<h4 class="clictr-page-title">Preferências de notificações</h4>
+			<p class="clictr-page-lead mb-0">Defina o que recebe no sino do portal e o que também gera e-mail automático quando o evento ocorrer.</p>
 
-			<?= $this->Form->create(null, ['url' => ['action' => 'savePreferences'], 'class' => 'form-material']) ?>
-			<div class="table-responsive">
+			<?= $this->Form->create(null, ['url' => ['action' => 'savePreferences'], 'class' => 'form-material clictr-form', 'id' => 'form-portal-notif-prefs']) ?>
+			<div class="table-responsive m-t-20">
 				<table class="table table-hover">
 					<thead>
 						<tr>
@@ -45,6 +45,5 @@ $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'brea
 			</div>
 			<?= $this->Form->button('Salvar preferências', ['class' => 'btn btn-success']) ?>
 			<?= $this->Form->end() ?>
-		</div>
 	</div>
 </div>
