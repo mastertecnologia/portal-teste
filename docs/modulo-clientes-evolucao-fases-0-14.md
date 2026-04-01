@@ -55,13 +55,16 @@ Documentação técnica curta da entrega alinhada ao plano de refatoração grad
 - `MailAutomationService` — batch de prefs e-mail + e-mails de usuários.  
 - `Cli/edit_tabs_nav`, `Cli/edit_tabs_js` — abas da ficha.  
 - `Pgm/form_shell_dark` — layout escuro reutilizável em formulários satélites.  
-- `webroot/js/modules/clientes/cliente-edit.js` — `PgmClienteEditUtils`.
+- `webroot/js/modules/clientes/cliente-edit.js` — `PgmClienteEditUtils` (CSRF, e-mails na tela).  
+- `webroot/js/modules/clientes/cliente-edit-ficha.js` — núcleo da ficha (máscaras, modo leitura/edição, DataTables, e-mails, IE, PF/PJ).  
+- `webroot/js/modules/clientes/cliente-edit-ficha-acessos.js` — token portal, `verificadadoscliente`, senha administrativa nos acessos, exibir senha, atalho inativar.  
+- A view define `window.PgmClienteEditConfig` (URLs + flags) antes de `cliente-edit-ficha*.js`.
 
 ---
 
 ## 6. Riscos conhecidos
 
-- **Ficha `edit.ctp`:** ainda contém **muito JS inline**; evolução futura pode mover trechos para `cliente-contracts.js` / `cliente-token.js` com objeto de config gerado na view.  
+- **Ficha `edit.ctp`:** JS em `cliente-edit-ficha.js` + `cliente-edit-ficha-acessos.js`; a view mantém `PgmClienteEditConfig` + `toast_js` / `edit_tabs_js`. Evolução futura pode fatiar ainda mais (ex.: só contratos) se fizer sentido.  
 - **`Users::verificadadoscliente`:** endurecido para **POST** com corpo (`idcliente`, `nomeresponsavel`, `cpf`, `rg`, `_csrfToken`); exige **sessão** (removido de `Auth->allow`); mitigação **IDOR** (cliente só o próprio `idcliente`; equipe só cliente da mesma `idempresa`).  
 - **APIs públicas** (`Auth->allow` em `addAPI`/`listAPI`): dependem de token de empresa; não fazem parte desta entrega de UI, mas são superfície crítica em auditoria.  
 - **Opt-in de e-mail** em preferências: sem linha salva = **não** envia e-mail (comportamento atual preservado).
@@ -70,7 +73,7 @@ Documentação técnica curta da entrega alinhada ao plano de refatoração grad
 
 ## 7. Pendências sugeridas (não bloqueantes)
 
-- Extrair mais JS da ficha para `webroot/js/modules/clientes/*`.  
+- (Feito) JS da ficha em `cliente-edit-ficha.js` + config na view.  
 - Endpoints JSON internos com validação explícita e política CORS clara, se expostos além do portal.  
 - Testes automatizados de smoke para `ClienteErpSyncService` com mock SOAP (ambiente isolado).
 
