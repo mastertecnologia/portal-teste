@@ -464,7 +464,9 @@
 										<td><?php if(!empty($reg->dtcontratacao)) 	echo date_format($reg->dtcontratacao, 'd/m/Y') ?></td>
 										<td><?php if(!empty($reg->dtvalidade)) 		echo date_format($reg->dtvalidade, 'd/m/Y') ?></td>
 										<td><?php if(!empty($reg->dtcancelamento)) 	echo date_format($reg->dtcancelamento, 'd/m/Y') ?></td>
-										<td><?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "clicontratos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+										<td class="td-actions">
+											<?= $this->Html->link('<i class="fa fa-eye"></i>', ['controller' => 'Clicontratos', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Detalhe', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "clicontratos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>

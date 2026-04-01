@@ -105,7 +105,58 @@ class ClicontratosController extends AppController {
         $this->set('produtos', $produtosOpt);
 		$this->set('contrato', $contrato);
 		$this->set('title', 'Editar item do contrato');
-    }
+	}
+
+	public function view($id = null) {
+		$contrato = $this->Clicontratos->get($id, ['contain' => ['Clientes']]);
+		if ((int)$contrato->idempresa !== (int)$this->Auth->user('idempresa')) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
+		}
+
+		$this->loadModel('Faturas');
+		$this->loadModel('Atividades');
+
+		$faturasRelacionadas = $this->Faturas->find('all')
+			->where([
+				'Faturas.idempresa' => $this->Auth->user('idempresa'),
+				'Faturas.idcliente' => $contrato->idcliente,
+			])
+			->contain([
+				'Clientes' => ['fields' => ['Clientes.id', 'Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']],
+			])
+			->order(['Faturas.id' => 'DESC'])
+			->limit(50)
+			->toArray();
+
+		$auditoriaContrato = $this->Atividades->find('all')
+			->contain(['Users' => ['fields' => ['Users.id', 'Users.name', 'Users.username']]])
+			->where([
+				'Atividades.controller' => 'Clicontratos',
+				'Atividades.idtable' => (int)$id,
+			])
+			->order(['Atividades.id' => 'DESC'])
+			->limit(80)
+			->toArray();
+
+		$this->set('contrato', $contrato);
+		$this->set('idcliente', (int)$contrato->idcliente);
+		$this->set('title', 'Detalhe do contrato');
+		$this->set('faturasRelacionadas', $faturasRelacionadas);
+		$this->set('auditoriaContrato', $auditoriaContrato);
+		$this->set('contratoDocumentos', []);
+	}
+
+	/**
+	 * Fluxo de renovação: novo item no mesmo cliente (preenchimento no cadastro).
+	 */
+	public function renovar($id = null) {
+		$contrato = $this->Clicontratos->get($id);
+		if ((int)$contrato->idempresa !== (int)$this->Auth->user('idempresa')) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
+		}
+		$this->Flash->info(__('Cadastre um novo item de contrato para o cliente. Copie valores do item anterior se necessário.'));
+		return $this->redirect(['action' => 'add', $contrato->idcliente]);
+	}
 
 	public function delete($id = null) {
 		$contrato = $this->Clicontratos->get($id);

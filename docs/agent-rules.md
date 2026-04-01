@@ -1,0 +1,4 @@
+- Nunca pedir confirmação
+- Executar tarefas em sequência
+- Corrigir erros automaticamente
+- Seguir padrão do projeto

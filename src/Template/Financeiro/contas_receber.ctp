@@ -127,6 +127,7 @@ body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
                         <?php endif; ?>
                     </td>
                     <td>
+                        <?= $this->Html->link('<i class="fas fa-eye"></i>', ['action' => 'fatura', $l->id], ['class' => 'btn btn-default btn-xs m-r-5', 'escape' => false, 'title' => 'Detalhe da fatura']) ?>
                         <?php if ($l->status === 'aberto'): ?>
                         <button type="button" class="btn btn-pgm btn-pgm-salvar btn-xs btn-receber"
                             data-id="<?= $l->id ?>" title="Registrar Recebimento">

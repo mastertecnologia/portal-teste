@@ -105,6 +105,11 @@
 			<ul id="sidebarnav" class="p-t-30">
 				<li class="pgm-nav-section-label" aria-hidden="true"><span>Menu</span></li>
 				<?php if (!empty($permissaoacesso)) : ?>
+					<?php
+						$controllerCli = strtolower((string)$this->request->getParam('controller'));
+						$actionCli = strtolower((string)$this->request->getParam('action'));
+						$relatoriosCliActive = ($controllerCli === 'portalrelatorios' && $actionCli === 'index') ? 'active' : '';
+					?>
 					<li class="<?= $dashboard ?>"><?= $this->Html->link('<i class="fa fa-columns"></i><span class="hide-menu">Dashboard</span>', '/users/dashboard', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 					<li class="<?= $clientesActive ?>"><?= $this->Html->link('<i class="fa fa-building"></i><span class="hide-menu">Empresa</span>', "/clientes/edit/$idcliente", ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 					<li class="<?= $orcamentosActive ?> has-arrow-sub">
@@ -119,6 +124,7 @@
 							<?php endif; ?>
 						</ul>
 					</li>
+					<li class="<?= h($relatoriosCliActive) ?>"><?= $this->Html->link('<i class="fa fa-chart-bar"></i><span class="hide-menu">Relatórios</span>', '/cliente/relatorios', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 				<?php endif; ?>
 					<?php
 						$ticketsCliAction = $this->request->getParam('action');

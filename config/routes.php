@@ -81,6 +81,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/produtos/salvar-precos', ['controller' => 'Produtos', 'action' => 'salvarPrecos'])->setMethods(['POST']);
     $routes->connect('/produtos/salvarPrecos', ['controller' => 'Produtos', 'action' => 'salvarPrecos'])->setMethods(['POST']);
     // API integração ERP: clientes e contratos
+    // Contratos (itens) — detalhe no ERP
+    $routes->connect('/clicontratos/view/*', ['controller' => 'Clicontratos', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/clicontratos/renovar/*', ['controller' => 'Clicontratos', 'action' => 'renovar'], ['pass' => ['id']]);
     $routes->connect('/clientes/add-api', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
     $routes->connect('/clientes/addAPI', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
     $routes->connect('/clientes/list-api', ['controller' => 'Clientes', 'action' => 'listAPI'])->setMethods(['GET']);
@@ -134,10 +137,18 @@ Router::scope('/', function ($routes) {
     $routes->connect('/financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/contas-receber', ['controller' => 'Financeiro', 'action' => 'contasReceber']);
+    $routes->connect('/financeiro/fatura/:id', ['controller' => 'Financeiro', 'action' => 'fatura'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->connect('/financeiro/fatura/:id/exportar', ['controller' => 'Financeiro', 'action' => 'exportarFatura'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->connect('/financeiro/fatura/:id/exportar-pdf', ['controller' => 'Financeiro', 'action' => 'exportarFaturaPdf'], ['pass' => ['id'], 'id' => '\d+']);
     $routes->connect('/financeiro/registrar-recebimento/*', ['controller' => 'Financeiro', 'action' => 'registrarRecebimento'])->setMethods(['POST']);
     // Relatórios e Indicadores (ERP)
     $routes->connect('/relatorios', ['controller' => 'Relatorios', 'action' => 'index']);
     $routes->connect('/relatorios/index', ['controller' => 'Relatorios', 'action' => 'index']);
+    // Portal do Cliente — Relatórios (tela simples, sem dados internos)
+    $routes->connect('/cliente/relatorios', ['controller' => 'PortalRelatorios', 'action' => 'index']);
+    $routes->connect('/cliente/relatorios/index', ['controller' => 'PortalRelatorios', 'action' => 'index']);
+    $routes->connect('/cliente/relatorios/exportar', ['controller' => 'PortalRelatorios', 'action' => 'exportar'])->setMethods(['GET']);
+    $routes->connect('/cliente/relatorios/exportar-excel', ['controller' => 'PortalRelatorios', 'action' => 'exportarExcel'])->setMethods(['GET']);
     // CSS premium via Cake (leitura em WWW_ROOT/css) — evita 404 estático com APP_BASE=/portal e Alias Apache
     $routes->connect(
         '/pgm-assets/css/:name',

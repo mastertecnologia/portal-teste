@@ -10,5 +10,6 @@ class FinanceiroLancamentosTable extends Table {
 		$this->belongsTo('Clientes')->setForeignKey('idcliente')->setDependent(false);
 		$this->belongsTo('Users')->setForeignKey('idautor')->setDependent(false);
 		$this->belongsTo('Faturamento')->setForeignKey('idfaturamento')->setDependent(false);
+		$this->hasMany('FinanceiroLancamentoAnexos', ['foreignKey' => 'idlancamento'])->setDependent(true);
 	}
 }

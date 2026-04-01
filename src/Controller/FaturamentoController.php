@@ -21,6 +21,7 @@ class FaturamentoController extends AppController {
 		$this->loadModel('Ordensservico');
 		$this->loadModel('Empresas');
 		$this->loadModel('FinanceiroLancamentos');
+		$this->loadModel('Atividades');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -307,6 +308,11 @@ class FaturamentoController extends AppController {
 			'status'          => 'recebido',
 			'idautor'         => $doc->idautor,
 		]);
-		$this->FinanceiroLancamentos->save($lancamento);
+		if ($this->FinanceiroLancamentos->save($lancamento)) {
+			$uid = (int)($this->Auth->user('id') ?: ($doc->idautor ?? 0));
+			if ($uid > 0) {
+				$this->Atividades->registrar($uid, 'Financeiro', 'gerarLancamento', (int)$lancamento->id);
+			}
+		}
 	}
 }

@@ -611,3 +611,145 @@ body.layout-no-topbar.pgm-portal-client .orc-premium-page-root {
 	padding-top: 8px;
 	min-height: 0;
 }
+
+/* ── Portal /cliente/relatorios (tkcli + relcli) ─────────────────────────── */
+body.layout-no-topbar.pgm-portal-client .relcli-page .relcli-head-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-export-dd .dropdown-menu {
+	min-width: 12rem;
+	border-radius: 8px;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-export-dd .dropdown-item {
+	font-size: 0.85rem;
+	padding: 0.45rem 1rem;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-export-dd .dropdown-item:hover {
+	background: rgba(0, 143, 104, 0.08);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-kpis {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-kpi {
+	background: var(--pgm-premium-surface);
+	border: 1px solid var(--pgm-premium-border);
+	border-radius: 10px;
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-height: 96px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-kpi__label {
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--pgm-premium-muted);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-kpi__value {
+	font-size: 1.65rem;
+	font-weight: 800;
+	line-height: 1.1;
+	color: var(--pgm-premium-text);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-kpi__hint {
+	font-size: 0.7rem;
+	color: var(--pgm-premium-muted);
+	line-height: 1.35;
+	margin-top: auto;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-panel {
+	background: var(--pgm-premium-surface);
+	border: 1px solid var(--pgm-premium-border);
+	border-radius: 10px;
+	padding: 16px 18px;
+	margin-bottom: 16px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-panel--chart {
+	margin-bottom: 20px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-panel__head {
+	margin-bottom: 12px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-panel__title {
+	font-size: 0.95rem;
+	font-weight: 800;
+	margin: 0 0 4px;
+	color: var(--pgm-premium-text);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-panel__sub {
+	font-size: 0.76rem;
+	margin: 0;
+	color: var(--pgm-premium-muted);
+	line-height: 1.45;
+	max-width: 42rem;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-slot {
+	min-height: 220px;
+	border-radius: 8px;
+	border: 1px dashed var(--pgm-premium-border);
+	background: linear-gradient(180deg, var(--pgm-premium-page) 0%, var(--pgm-premium-surface) 100%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 20px 16px;
+	gap: 8px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-slot__text {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--pgm-premium-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-slot__hint {
+	font-size: 0.72rem;
+	color: var(--pgm-premium-muted);
+	max-width: 22rem;
+	line-height: 1.45;
+	margin: 0;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-blocks {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 16px;
+	align-items: start;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-blocks .relcli-panel {
+	margin-bottom: 0;
+	height: 100%;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-metric-table thead th {
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--pgm-premium-muted);
+	border-bottom: 1px solid var(--pgm-premium-border);
+	padding: 8px 10px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-metric-table tbody td {
+	padding: 10px;
+	vertical-align: top;
+	border-top: 1px solid var(--pgm-premium-border);
+	color: var(--pgm-premium-text);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-metric-label {
+	font-weight: 600;
+	font-size: 0.82rem;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-metric-value {
+	font-weight: 800;
+	font-size: 0.9rem;
+	white-space: nowrap;
+}
