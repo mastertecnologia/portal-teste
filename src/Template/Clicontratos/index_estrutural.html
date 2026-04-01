@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<!--
+  ESTRUTURA: Tela de Contratos — ERP Interno
+  Arquivo-base para conversão em: src/Template/Clicontratos/index.ctp
+  Layout pai esperado: src/Template/Layout/default.ctp
+  Controller: ClicontratosController::index()
+  Variáveis PHP esperadas (CakePHP):
+    $contratos        — ResultSet paginado
+    $clientes         — lista para select de filtros
+    $kpi              — array com totais dos cards
+    $filtros          — array com valores atuais dos filtros
+    $paginacao        — objeto de paginação do CakePHP
+    $permissoes       — array de permissões do usuário atual
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contratos — ERP</title>
+  <!--
+    CSS já carregado pelo layout pai (default.ctp):
+    - bootstrap ou framework CSS do ERP
+    - estilo global do ERP
+    Arquivo de estilos específico desta tela (opcional):
+    <link rel="stylesheet" href="/css/clicontratos.css">
+  -->
+</head>
+<body>
+
+<!--
+  ============================================================
+  NOTA: O layout pai (default.ctp) injeta neste ponto:
+    - <header> com logo, usuário logado e notificações
+    - <nav class="sidebar"> com menu lateral
+    - <main class="conteudo-principal"> que envolve este arquivo
+  O que está abaixo é o conteúdo interno do <main>.
+  ============================================================
+-->
+
+<!-- ============================================================
+     SEÇÃO 1 — CABEÇALHO DA PÁGINA
+     Título, breadcrumb e botões de ação principal
+     ============================================================ -->
+<section class="pagina-cabecalho">
+
+  <div class="pagina-cabecalho__breadcrumb">
+    <nav aria-label="Localização">
+      <ol class="breadcrumb-lista">
+        <li class="breadcrumb-item">
+          <a href="/dashboard">Início</a>
+        </li>
+        <li class="breadcrumb-item breadcrumb-item--ativo" aria-current="page">
+          Contratos
+        </li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="pagina-cabecalho__corpo">
+
+    <div class="pagina-cabecalho__titulo-grupo">
+      <h1 class="pagina-titulo">
+        Contratos de Clientes
+      </h1>
+      <p class="pagina-subtitulo">
+        Gestão de contratos, vigências e consumo de serviços
+      </p>
+    </div>
+
+    <!-- Ações principais — visibilidade controlada por permissão PHP -->
+    <div class="pagina-cabecalho__acoes">
+
+      <!-- Visível para: gestor, comercial, admin -->
+      <a href="/clicontratos/add"
+         class="btn btn--primario btn--icone"
+         title="Novo contrato">
+        <span class="icone icone--mais" aria-hidden="true"></span>
+        Novo Contrato
+      </a>
+
+      <!-- Visível para: financeiro, gestor, admin -->
+      <div class="btn-grupo">
+        <button type="button"
+                class="btn btn--secundario btn--icone dropdown-gatilho"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="menu-exportar"
+                title="Exportar">
+          <span class="icone icone--exportar" aria-hidden="true"></span>
+          Exportar
+          <span class="icone icone--seta-baixo" aria-hidden="true"></span>
+        </button>
+        <ul id="menu-exportar" class="dropdown-menu" role="menu" hidden>
+          <li role="none">
+            <a href="/clicontratos/exportar?formato=xlsx"
+               role="menuitem"
+               class="dropdown-item">
+              Exportar Excel (.xlsx)
+            </a>
+          </li>
+          <li role="none">
+            <a href="/clicontratos/exportar?formato=pdf"
+               role="menuitem"
+               class="dropdown-item">
+              Exportar PDF
+            </a>
+          </li>
+          <li role="none">
+            <a href="/clicontratos/exportar?formato=csv"
+               role="menuitem"
+               class="dropdown-item">
+              Exportar CSV
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Sincronizar com sistema externo (SOAP) -->
+      <button type="button"
+              class="btn btn--neutro btn--icone"
+              id="btn-sincronizar"
+              title="Sincronizar contratos com o ERP externo">
+        <span class="icone icone--sincronizar" aria-hidden="true"></span>
+        Sincronizar
+      </button>
+
+    </div><!-- /pagina-cabecalho__acoes -->
+
+  </div><!-- /pagina-cabecalho__corpo -->
+
+</section>
+<!-- /SEÇÃO 1 — CABEÇALHO -->
+
+
+<!-- ============================================================
+     SEÇÃO 2 — CARDS KPI
+     Totalizadores da carteira de contratos
+     Dados vindos de $kpi (calculado no controller ou service)
+     ============================================================ -->
+<section class="kpi-painel" aria-label="Resumo da carteira de contratos">
+
+  <!-- Card: Contratos Ativos -->
+  <article class="kpi-card kpi-card--verde">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--contrato-ativo"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Contratos Ativos</span>
+      <!-- PHP: <?= $kpi['ativos'] ?? 0 ?> -->
+      <strong class="kpi-card__valor" id="kpi-ativos">38</strong>
+      <span class="kpi-card__detalhe">em toda a carteira</span>
+    </div>
+    <a href="/clicontratos?status=ativo"
+       class="kpi-card__link"
+       aria-label="Ver contratos ativos">
+      Ver todos
+    </a>
+  </article>
+
+  <!-- Card: Vencendo em 30 dias (alerta) -->
+  <article class="kpi-card kpi-card--amarelo" aria-live="polite">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--alerta-prazo"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Vencendo em 30 dias</span>
+      <!-- PHP: <?= $kpi['vencendo_30d'] ?? 0 ?> -->
+      <strong class="kpi-card__valor kpi-card__valor--destaque" id="kpi-vencendo">5</strong>
+      <span class="kpi-card__detalhe">requerem atenção</span>
+    </div>
+    <a href="/clicontratos?alerta=vencimento_30d"
+       class="kpi-card__link"
+       aria-label="Ver contratos vencendo em 30 dias">
+      Ver contratos
+    </a>
+  </article>
+
+  <!-- Card: Contratos Vencidos (crítico) -->
+  <article class="kpi-card kpi-card--vermelho">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--vencido"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Contratos Vencidos</span>
+      <!-- PHP: <?= $kpi['vencidos'] ?? 0 ?> -->
+      <strong class="kpi-card__valor" id="kpi-vencidos">3</strong>
+      <span class="kpi-card__detalhe">sem renovação</span>
+    </div>
+    <a href="/clicontratos?status=vencido"
+       class="kpi-card__link"
+       aria-label="Ver contratos vencidos">
+      Ver contratos
+    </a>
+  </article>
+
+  <!-- Card: Receita Contratada (MRR) -->
+  <article class="kpi-card kpi-card--azul">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--receita"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Receita Contratada</span>
+      <!-- PHP: <?= $this->Number->currency($kpi['mrr'] ?? 0, 'BRL') ?> -->
+      <strong class="kpi-card__valor" id="kpi-mrr">R$&nbsp;42.800</strong>
+      <span class="kpi-card__detalhe">MRR — contratos ativos</span>
+    </div>
+    <!-- Sem link — apenas informativo -->
+  </article>
+
+</section>
+<!-- /SEÇÃO 2 — CARDS KPI -->
+
+
+<!-- ============================================================
+     SEÇÃO 3 — PAINEL DE FILTROS
+     Formulário GET para filtrar a listagem
+     O form envia para a própria URL (/clicontratos)
+     ============================================================ -->
+<section class="filtros-painel" id="painel-filtros">
+
+  <div class="filtros-painel__cabecalho">
+    <h2 class="filtros-painel__titulo">
+      <span class="icone icone--filtro" aria-hidden="true"></span>
+      Filtros
+    </h2>
+    <button type="button"
+            class="btn btn--ghost btn--pequeno filtros-painel__toggle"
+            aria-expanded="true"
+            aria-controls="filtros-corpo"
+            title="Recolher/expandir filtros">
+      <span class="icone icone--seta-cima" aria-hidden="true"></span>
+      <span class="sr-only">Recolher filtros</span>
+    </button>
+  </div>
+
+  <div class="filtros-painel__corpo" id="filtros-corpo">
+
+    <!-- CakePHP: <?= $this->Form->create(null, ['type' => 'get', 'url' => ['action' => 'index']]) ?> -->
+    <form method="get"
+          action="/clicontratos"
+          class="filtros-form"
+          id="form-filtros"
+          role="search"
+          aria-label="Filtrar contratos">
+
+      <div class="filtros-form__grade">
+
+        <!-- Filtro: Cliente -->
+        <div class="filtros-campo">
+          <label for="filtro-cliente" class="filtros-campo__label">
+            Cliente
+          </label>
+          <!-- CakePHP: <?= $this->Form->select('idcliente', $clientes, [...]) ?> -->
+          <select name="idcliente"
+                  id="filtro-cliente"
+                  class="filtros-campo__input filtros-campo__input--select select-busca"
+                  data-placeholder="Todos os clientes">
+            <option value="">Todos os clientes</option>
+            <!-- PHP: foreach ($clientes as $id => $nome) -->
+            <option value="1">Alfa Sistemas Ltda</option>
+            <option value="2">Beta Comércio ME</option>
+            <!-- /foreach -->
+          </select>
+        </div>
+
+        <!-- Filtro: Status do Contrato -->
+        <div class="filtros-campo">
+          <label for="filtro-status" class="filtros-campo__label">
+            Status
+          </label>
+          <select name="status"
+                  id="filtro-status"
+                  class="filtros-campo__input filtros-campo__input--select">
+            <option value="">Todos</option>
+            <option value="ativo">Ativo</option>
+            <option value="suspenso">Suspenso</option>
+            <option value="em_renovacao">Em Renovação</option>
+            <option value="encerrado">Encerrado</option>
+            <option value="vencido">Vencido</option>
+          </select>
+        </div>
+
+        <!-- Filtro: Tipo de Contrato -->
+        <div class="filtros-campo">
+          <label for="filtro-tipo" class="filtros-campo__label">
+            Tipo
+          </label>
+          <select name="tipo"
+                  id="filtro-tipo"
+                  class="filtros-campo__input filtros-campo__input--select">
+            <option value="">Todos os tipos</option>
+            <option value="suporte">Suporte Técnico</option>
+            <option value="locacao">Locação</option>
+            <option value="desenvolvimento">Desenvolvimento</option>
+            <option value="misto">Misto</option>
+          </select>
+        </div>
+
+        <!-- Filtro: Vigência — Início -->
+        <div class="filtros-campo">
+          <label for="filtro-vigencia-inicio" class="filtros-campo__label">
+            Vigência — de
+          </label>
+          <input type="date"
+                 name="vigencia_inicio"
+                 id="filtro-vigencia-inicio"
+                 class="filtros-campo__input"
+                 value=""
+                 placeholder="dd/mm/aaaa">
+        </div>
+
+        <!-- Filtro: Vigência — Fim -->
+        <div class="filtros-campo">
+          <label for="filtro-vigencia-fim" class="filtros-campo__label">
+            Vigência — até
+          </label>
+          <input type="date"
+                 name="vigencia_fim"
+                 id="filtro-vigencia-fim"
+                 class="filtros-campo__input"
+                 value=""
+                 placeholder="dd/mm/aaaa">
+        </div>
+
+        <!-- Filtro: Renovação Automática -->
+        <div class="filtros-campo">
+          <label for="filtro-renovacao" class="filtros-campo__label">
+            Renovação
+          </label>
+          <select name="renovacao"
+                  id="filtro-renovacao"
+                  class="filtros-campo__input filtros-campo__input--select">
+            <option value="">Qualquer</option>
+            <option value="1">Com renovação automática</option>
+            <option value="0">Sem renovação automática</option>
+          </select>
+        </div>
+
+      </div><!-- /filtros-form__grade -->
+
+      <!-- Alertas rápidos (atalhos de filtro) -->
+      <div class="filtros-atalhos" role="group" aria-label="Atalhos de filtro">
+        <span class="filtros-atalhos__rotulo">Atalhos:</span>
+        <button type="button"
+                class="tag-filtro"
+                data-filtro="alerta=vencimento_30d"
+                title="Ver contratos que vencem nos próximos 30 dias">
+          <span class="tag-filtro__ponto tag-filtro__ponto--amarelo" aria-hidden="true"></span>
+          Vencendo em 30 dias
+        </button>
+        <button type="button"
+                class="tag-filtro"
+                data-filtro="status=vencido"
+                title="Ver contratos já vencidos">
+          <span class="tag-filtro__ponto tag-filtro__ponto--vermelho" aria-hidden="true"></span>
+          Vencidos
+        </button>
+        <button type="button"
+                class="tag-filtro"
+                data-filtro="consumo=acima_80"
+                title="Contratos com mais de 80% da franquia consumida">
+          <span class="tag-filtro__ponto tag-filtro__ponto--laranja" aria-hidden="true"></span>
+          Franquia crítica (&gt;80%)
+        </button>
+        <button type="button"
+                class="tag-filtro"
+                data-filtro="status=em_renovacao"
+                title="Contratos aguardando renovação">
+          <span class="tag-filtro__ponto tag-filtro__ponto--azul" aria-hidden="true"></span>
+          Em renovação
+        </button>
+      </div><!-- /filtros-atalhos -->
+
+      <!-- Ações do formulário de filtro -->
+      <div class="filtros-form__acoes">
+        <button type="submit"
+                class="btn btn--primario"
+                form="form-filtros">
+          <span class="icone icone--busca" aria-hidden="true"></span>
+          Aplicar filtros
+        </button>
+        <a href="/clicontratos"
+           class="btn btn--ghost"
+           title="Remover todos os filtros">
+          <span class="icone icone--limpar" aria-hidden="true"></span>
+          Limpar filtros
+        </a>
+      </div>
+
+    </form>
+    <!-- CakePHP: <?= $this->Form->end() ?> -->
+
+  </div><!-- /filtros-painel__corpo -->
+
+</section>
+<!-- /SEÇÃO 3 — FILTROS -->
+
+
+<!-- ============================================================
+     SEÇÃO 4 — BARRA DE CONTROLE DA TABELA
+     Contador de resultados, busca rápida e controle de exibição
+     ============================================================ -->
+<div class="tabela-controle">
+
+  <div class="tabela-controle__esquerda">
+
+    <!-- Contador de resultados -->
+    <!-- PHP: <?= $paginacao->counter('Exibindo {{start}}–{{end}} de {{count}} contratos') ?> -->
+    <span class="tabela-contador" id="tabela-contador" aria-live="polite">
+      Exibindo 1–25 de 38 contratos
+    </span>
+
+    <!-- Ações em lote — aparece só quando há checkboxes marcados -->
+    <div class="tabela-lote" id="acoes-lote" hidden aria-live="polite">
+      <span class="tabela-lote__info" id="lote-info">
+        <strong class="lote-qtd" id="lote-qtd">0</strong> selecionados
+      </span>
+      <button type="button"
+              class="btn btn--pequeno btn--neutro"
+              id="btn-lote-exportar"
+              title="Exportar contratos selecionados">
+        Exportar seleção
+      </button>
+      <button type="button"
+              class="btn btn--pequeno btn--neutro"
+              id="btn-lote-renovar"
+              title="Renovar contratos selecionados em lote">
+        Renovar em lote
+      </button>
+    </div>
+
+  </div><!-- /tabela-controle__esquerda -->
+
+  <div class="tabela-controle__direita">
+
+    <!-- Busca rápida na tabela (client-side ou nova query) -->
+    <div class="busca-rapida">
+      <label for="busca-rapida-input" class="sr-only">
+        Buscar na tabela
+      </label>
+      <input type="search"
+             id="busca-rapida-input"
+             name="q"
+             class="busca-rapida__input"
+             placeholder="Buscar contrato ou cliente..."
+             autocomplete="off"
+             value=""
+             form="form-filtros">
+      <span class="icone icone--lupa busca-rapida__icone" aria-hidden="true"></span>
+    </div>
+
+    <!-- Registros por página -->
+    <div class="tabela-por-pagina">
+      <label for="por-pagina" class="tabela-por-pagina__label">
+        Exibir:
+      </label>
+      <select id="por-pagina"
+              name="limit"
+              class="tabela-por-pagina__select"
+              form="form-filtros">
+        <option value="15">15</option>
+        <option value="25" selected>25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+
+    <!-- Alternar colunas visíveis -->
+    <button type="button"
+            class="btn btn--ghost btn--icone btn--pequeno"
+            id="btn-colunas"
+            aria-label="Configurar colunas visíveis"
+            title="Escolher colunas">
+      <span class="icone icone--colunas" aria-hidden="true"></span>
+    </button>
+
+  </div><!-- /tabela-controle__direita -->
+
+</div>
+<!-- /SEÇÃO 4 — BARRA DE CONTROLE -->
+
+
+<!-- ============================================================
+     SEÇÃO 5 — TABELA PRINCIPAL DE CONTRATOS
+     ============================================================ -->
+<section class="tabela-secao" aria-label="Lista de contratos">
+
+  <!-- ── 5A. ESTADO: CARREGANDO ──────────────────────────── -->
+  <!--
+    PHP: mostrar somente quando a lista estiver sendo carregada via AJAX.
+    Classe controlada por JS: tabela-estado--visivel
+    No carregamento inicial (SSR), este bloco fica hidden.
+  -->
+  <div class="tabela-estado tabela-estado--carregando"
+       id="estado-carregando"
+       hidden
+       role="status"
+       aria-live="polite"
+       aria-label="Carregando contratos">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="tabela-estado__mensagem">Carregando contratos...</p>
+  </div>
+
+  <!-- ── 5B. ESTADO: ERRO AO CARREGAR ────────────────────── -->
+  <!--
+    PHP: <?php if (!empty($erroCarregamento)): ?>
+    Mostrar quando controller lançar exceção ou query falhar.
+  -->
+  <div class="tabela-estado tabela-estado--erro"
+       id="estado-erro"
+       hidden
+       role="alert">
+    <span class="icone icone--erro-circulo tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Erro ao carregar contratos</h3>
+    <p class="tabela-estado__mensagem">
+      Não foi possível carregar a lista de contratos.
+      <!-- PHP: <?= h($erroMensagem ?? 'Tente novamente em instantes.') ?> -->
+    </p>
+    <button type="button"
+            class="btn btn--primario"
+            id="btn-tentar-novamente">
+      Tentar novamente
+    </button>
+    <a href="/clicontratos"
+       class="btn btn--ghost">
+      Recarregar página
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+  <!-- ── 5C. ESTADO: SEM PERMISSÃO ───────────────────────── -->
+  <!--
+    PHP: <?php if (!$permissoes['clicontratos.index']): ?>
+  -->
+  <div class="tabela-estado tabela-estado--sem-permissao"
+       id="estado-sem-permissao"
+       hidden
+       role="alert">
+    <span class="icone icone--cadeado tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Acesso restrito</h3>
+    <p class="tabela-estado__mensagem">
+      Você não tem permissão para visualizar a lista de contratos.
+      Solicite acesso ao administrador do sistema.
+    </p>
+    <a href="/dashboard"
+       class="btn btn--primario">
+      Voltar ao início
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+  <!-- ── 5D. ESTADO: LISTA VAZIA ─────────────────────────── -->
+  <!--
+    PHP: <?php if (empty($contratos) && empty($filtros_ativos)): ?>
+    Nenhum contrato cadastrado ainda.
+  -->
+  <div class="tabela-estado tabela-estado--vazio"
+       id="estado-vazio-sem-filtro"
+       hidden>
+    <span class="icone icone--documento-vazio tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Nenhum contrato cadastrado</h3>
+    <p class="tabela-estado__mensagem">
+      Ainda não há contratos registrados no sistema.
+      Comece cadastrando o primeiro contrato de um cliente.
+    </p>
+    <a href="/clicontratos/add"
+       class="btn btn--primario">
+      <span class="icone icone--mais" aria-hidden="true"></span>
+      Cadastrar primeiro contrato
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+  <!-- ── 5E. ESTADO: FILTRO SEM RESULTADO ────────────────── -->
+  <!--
+    PHP: <?php if (empty($contratos) && !empty($filtros_ativos)): ?>
+    Há filtros aplicados mas nenhum resultado retornou.
+  -->
+  <div class="tabela-estado tabela-estado--sem-resultado"
+       id="estado-sem-resultado"
+       hidden>
+    <span class="icone icone--busca-vazia tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Nenhum contrato encontrado</h3>
+    <p class="tabela-estado__mensagem">
+      Nenhum contrato corresponde aos filtros aplicados.
+      Tente ajustar ou remover os filtros.
+    </p>
+    <a href="/clicontratos"
+       class="btn btn--neutro">
+      Limpar filtros e ver todos
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── 5F. TABELA PRINCIPAL ────────────────────────────── -->
+  <!--
+    PHP: <?php if (!empty($contratos)): ?>
+    Renderiza a tabela apenas quando há dados.
+  -->
+  <div class="tabela-wrapper" id="wrapper-tabela-contratos">
+    <table class="tabela"
+           id="tabela-contratos"
+           aria-label="Contratos de clientes"
+           aria-describedby="tabela-contador">
+      <thead class="tabela__cabecalho">
+        <tr>
+
+          <!-- Checkbox selecionar todos -->
+          <th class="tabela__th tabela__th--checkbox" scope="col">
+            <input type="checkbox"
+                   id="selecionar-todos"
+                   class="checkbox"
+                   aria-label="Selecionar todos os contratos desta página">
+            <label for="selecionar-todos" class="sr-only">
+              Selecionar todos
+            </label>
+          </th>
+
+          <!-- Nº Contrato -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="numero">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="numero"
+                    form="form-filtros">
+              Contrato
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Cliente -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="cliente">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="cliente"
+                    form="form-filtros">
+              Cliente
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Tipo -->
+          <th class="tabela__th"
+              scope="col">
+            Tipo
+          </th>
+
+          <!-- Início da Vigência -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="inicio">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="inicio"
+                    form="form-filtros">
+              Início
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Fim da Vigência -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="fim">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="fim"
+                    form="form-filtros">
+              Fim
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- SLA -->
+          <th class="tabela__th" scope="col">
+            SLA
+          </th>
+
+          <!-- Franquia de Horas -->
+          <th class="tabela__th tabela__th--franquia"
+              scope="col"
+              title="Consumo de franquia de horas no período atual">
+            Franquia
+          </th>
+
+          <!-- Valor Mensal -->
+          <th class="tabela__th tabela__th--ordenavel tabela__th--valor"
+              scope="col"
+              aria-sort="none"
+              data-coluna="valor">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="valor_mensal"
+                    form="form-filtros">
+              Valor Mensal
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Status -->
+          <th class="tabela__th tabela__th--status"
+              scope="col">
+            Status
+          </th>
+
+          <!-- Ações -->
+          <th class="tabela__th tabela__th--acoes"
+              scope="col">
+            <span class="sr-only">Ações</span>
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody class="tabela__corpo" id="tabela-contratos-corpo">
+
+        <!--
+          PHP: <?php foreach ($contratos as $contrato): ?>
+          Cada linha abaixo representa um $contrato do ResultSet.
+          As classes modificadoras de linha são aplicadas via PHP com base no status.
+          Exemplo:
+            $classeStatus = match($contrato->status) {
+              'vencido'      => 'tabela__linha--vencido',
+              'vencendo_30d' => 'tabela__linha--alerta',
+              'suspenso'     => 'tabela__linha--suspenso',
+              default        => ''
+            };
+        -->
+
+        <!-- ── Linha padrão (ativo) ── -->
+        <tr class="tabela__linha"
+            id="linha-contrato-101"
+            data-id="101"
+            data-cliente="Alfa Sistemas Ltda">
+
+          <td class="tabela__td tabela__td--checkbox">
+            <input type="checkbox"
+                   class="checkbox checkbox-linha"
+                   id="sel-101"
+                   name="selecionados[]"
+                   value="101"
+                   aria-label="Selecionar contrato CTR-2024-012 — Alfa Sistemas Ltda">
+            <label for="sel-101" class="sr-only">Selecionar</label>
+          </td>
+
+          <td class="tabela__td tabela__td--contrato">
+            <!-- Código do contrato clicável -->
+            <a href="/clicontratos/view/101"
+               class="tabela__link-contrato"
+               aria-label="Abrir contrato CTR-2024-012">
+              CTR-2024-012
+            </a>
+          </td>
+
+          <td class="tabela__td tabela__td--cliente">
+            <div class="cliente-info">
+              <span class="cliente-info__nome">Alfa Sistemas Ltda</span>
+              <span class="cliente-info__cnpj">12.345.678/0001-90</span>
+            </div>
+          </td>
+
+          <td class="tabela__td">
+            <span class="badge badge--tipo">Suporte</span>
+          </td>
+
+          <td class="tabela__td tabela__td--data">
+            <!-- PHP: <?= $contrato->dtcontratacao->format('d/m/Y') ?> -->
+            01/01/2026
+          </td>
+
+          <td class="tabela__td tabela__td--data">
+            <!-- PHP: <?= $contrato->dtvalidade ? $contrato->dtvalidade->format('d/m/Y') : '—' ?> -->
+            31/12/2026
+          </td>
+
+          <td class="tabela__td">
+            <span class="badge badge--sla" title="Política SLA aplicada">Gold</span>
+          </td>
+
+          <!-- Franquia com barra de consumo -->
+          <td class="tabela__td tabela__td--franquia">
+            <div class="franquia-mini" title="32 horas consumidas de 40 contratadas">
+              <div class="franquia-mini__barra-fundo">
+                <!--
+                  PHP: $pct = round($contrato->horas_consumidas / max($contrato->franquia_horas, 1) * 100);
+                  PHP: $classeBarrinha = $pct >= 90 ? 'franquia-mini__barra--critico'
+                                      : ($pct >= 70 ? 'franquia-mini__barra--atencao' : 'franquia-mini__barra--ok');
+                -->
+                <div class="franquia-mini__barra franquia-mini__barra--atencao"
+                     style="width: 80%"
+                     role="progressbar"
+                     aria-valuenow="80"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-label="80% da franquia consumida">
+                </div>
+              </div>
+              <span class="franquia-mini__texto">32 / 40h</span>
+            </div>
+          </td>
+
+          <td class="tabela__td tabela__td--valor">
+            <!-- PHP: <?= $this->Number->currency($contrato->vlunit * $contrato->qtde, 'BRL') ?> -->
+            <span class="valor-monetario">R$&nbsp;2.800,00</span>
+          </td>
+
+          <td class="tabela__td tabela__td--status">
+            <!-- PHP: classe e texto controlados pelo status do contrato -->
+            <span class="badge badge--status badge--ativo"
+                  title="Contrato ativo">
+              Ativo
+            </span>
+          </td>
+
+          <!-- Ações inline por linha -->
+          <td class="tabela__td tabela__td--acoes">
+            <div class="acoes-linha" role="group" aria-label="Ações do contrato CTR-2024-012">
+
+              <!-- Visualizar detalhes -->
+              <a href="/clicontratos/view/101"
+                 class="btn-acao btn-acao--ver"
+                 title="Visualizar detalhes do contrato"
+                 aria-label="Ver contrato CTR-2024-012">
+                <span class="icone icone--ver" aria-hidden="true"></span>
+              </a>
+
+              <!-- Editar -->
+              <a href="/clicontratos/edit/101"
+                 class="btn-acao btn-acao--editar"
+                 title="Editar contrato"
+                 aria-label="Editar contrato CTR-2024-012">
+                <span class="icone icone--editar" aria-hidden="true"></span>
+              </a>
+
+              <!-- Renovar -->
+              <button type="button"
+                      class="btn-acao btn-acao--renovar"
+                      title="Renovar contrato"
+                      aria-label="Renovar contrato CTR-2024-012"
+                      data-id="101"
+                      data-acao="renovar">
+                <span class="icone icone--renovar" aria-hidden="true"></span>
+              </button>
+
+              <!-- Dropdown: mais ações -->
+              <div class="acoes-linha__mais">
+                <button type="button"
+                        class="btn-acao btn-acao--mais dropdown-gatilho"
+                        title="Mais ações"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="menu-acao-101"
+                        aria-label="Mais ações para CTR-2024-012">
+                  <span class="icone icone--reticencias" aria-hidden="true"></span>
+                </button>
+                <ul id="menu-acao-101"
+                    class="dropdown-menu dropdown-menu--acao"
+                    role="menu"
+                    hidden>
+                  <li role="none">
+                    <button type="button"
+                            role="menuitem"
+                            class="dropdown-item"
+                            data-id="101"
+                            data-acao="documentos">
+                      <span class="icone icone--documento" aria-hidden="true"></span>
+                      Documentos
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button type="button"
+                            role="menuitem"
+                            class="dropdown-item"
+                            data-id="101"
+                            data-acao="abrir-detalhe-faturas">
+                      <span class="icone icone--fatura" aria-hidden="true"></span>
+                      Ver faturas
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button type="button"
+                            role="menuitem"
+                            class="dropdown-item"
+                            data-id="101"
+                            data-acao="sincronizar">
+                      <span class="icone icone--sincronizar" aria-hidden="true"></span>
+                      Sincronizar
+                    </button>
+                  </li>
+                  <li class="dropdown-item--separador" role="separator"></li>
+                  <li role="none">
+                    <button type="button"
+                            role="menuitem"
+                            class="dropdown-item dropdown-item--perigo"
+                            data-id="101"
+                            data-acao="encerrar">
+                      <span class="icone icone--encerrar" aria-hidden="true"></span>
+                      Encerrar contrato
+                    </button>
+                  </li>
+                </ul>
+              </div><!-- /acoes-linha__mais -->
+
+            </div><!-- /acoes-linha -->
+          </td>
+
+        </tr>
+        <!-- PHP: endforeach -->
+
+
+        <!-- ── Linha com alerta: vencendo em 30 dias ── -->
+        <tr class="tabela__linha tabela__linha--alerta"
+            id="linha-contrato-102"
+            data-id="102">
+
+          <td class="tabela__td tabela__td--checkbox">
+            <input type="checkbox"
+                   class="checkbox checkbox-linha"
+                   id="sel-102"
+                   name="selecionados[]"
+                   value="102"
+                   aria-label="Selecionar contrato CTR-2024-008">
+            <label for="sel-102" class="sr-only">Selecionar</label>
+          </td>
+
+          <td class="tabela__td tabela__td--contrato">
+            <a href="/clicontratos/view/102"
+               class="tabela__link-contrato"
+               aria-label="Abrir contrato CTR-2024-008">
+              CTR-2024-008
+            </a>
+            <!-- Alerta visual de vencimento próximo -->
+            <span class="badge-alerta badge-alerta--amarelo"
+                  title="Vence em 5 dias">
+              Vence em 5 dias
+            </span>
+          </td>
+
+          <td class="tabela__td tabela__td--cliente">
+            <div class="cliente-info">
+              <span class="cliente-info__nome">Delta Comércio Ltda</span>
+              <span class="cliente-info__cnpj">98.765.432/0001-11</span>
+            </div>
+          </td>
+
+          <td class="tabela__td">
+            <span class="badge badge--tipo">Suporte</span>
+          </td>
+
+          <td class="tabela__td tabela__td--data">01/01/2026</td>
+
+          <td class="tabela__td tabela__td--data tabela__td--data-alerta">
+            <!-- Destaque na data de vencimento -->
+            <span class="data-vencimento data-vencimento--proximo"
+                  title="Vence em 5 dias">
+              05/04/2026
+            </span>
+          </td>
+
+          <td class="tabela__td">
+            <span class="badge badge--sla">Gold</span>
+          </td>
+
+          <td class="tabela__td tabela__td--franquia">
+            <div class="franquia-mini" title="28 de 30 horas consumidas">
+              <div class="franquia-mini__barra-fundo">
+                <div class="franquia-mini__barra franquia-mini__barra--critico"
+                     style="width: 93%"
+                     role="progressbar"
+                     aria-valuenow="93"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-label="93% da franquia consumida">
+                </div>
+              </div>
+              <span class="franquia-mini__texto franquia-mini__texto--critico">28 / 30h</span>
+            </div>
+          </td>
+
+          <td class="tabela__td tabela__td--valor">
+            <span class="valor-monetario">R$&nbsp;1.800,00</span>
+          </td>
+
+          <td class="tabela__td tabela__td--status">
+            <span class="badge badge--status badge--alerta"
+                  title="Contrato a vencer em breve">
+              A vencer
+            </span>
+          </td>
+
+          <td class="tabela__td tabela__td--acoes">
+            <div class="acoes-linha" role="group" aria-label="Ações do contrato CTR-2024-008">
+              <a href="/clicontratos/view/102" class="btn-acao btn-acao--ver" title="Ver detalhes">
+                <span class="icone icone--ver" aria-hidden="true"></span>
+              </a>
+              <a href="/clicontratos/edit/102" class="btn-acao btn-acao--editar" title="Editar">
+                <span class="icone icone--editar" aria-hidden="true"></span>
+              </a>
+              <button type="button"
+                      class="btn-acao btn-acao--renovar btn-acao--destaque"
+                      title="Renovar contrato urgente"
+                      data-id="102"
+                      data-acao="renovar">
+                <span class="icone icone--renovar" aria-hidden="true"></span>
+              </button>
+              <div class="acoes-linha__mais">
+                <button type="button"
+                        class="btn-acao btn-acao--mais dropdown-gatilho"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="menu-acao-102">
+                  <span class="icone icone--reticencias" aria-hidden="true"></span>
+                </button>
+                <ul id="menu-acao-102"
+                    class="dropdown-menu dropdown-menu--acao"
+                    role="menu"
+                    hidden>
+                  <li role="none">
+                    <button type="button" role="menuitem" class="dropdown-item" data-id="102" data-acao="documentos">
+                      <span class="icone icone--documento" aria-hidden="true"></span>
+                      Documentos
+                    </button>
+                  </li>
+                  <li role="none">
+                    <button type="button" role="menuitem" class="dropdown-item dropdown-item--perigo" data-id="102" data-acao="encerrar">
+                      <span class="icone icone--encerrar" aria-hidden="true"></span>
+                      Encerrar contrato
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+        <!-- Fim das linhas de exemplo -->
+
+      </tbody><!-- /tabela__corpo -->
+
+    </table>
+  </div><!-- /tabela-wrapper -->
+
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── PAGINAÇÃO ────────────────────────────────────────── -->
+  <!--
+    PHP: <?= $this->Paginator->numbers(['first' => 2, 'last' => 2]) ?>
+    Estrutura abaixo é referência do HTML gerado pelo PaginatorHelper.
+  -->
+  <nav class="paginacao" aria-label="Navegação entre páginas de contratos">
+    <div class="paginacao__info">
+      <!-- PHP: <?= $this->Paginator->counter('Página {{page}} de {{pages}}') ?> -->
+      Página 1 de 2
+    </div>
+    <ul class="paginacao__lista" role="list">
+      <li class="paginacao__item paginacao__item--anterior">
+        <a href="#" class="paginacao__link" aria-label="Página anterior" rel="prev">‹ Anterior</a>
+      </li>
+      <li class="paginacao__item paginacao__item--ativo" aria-current="page">
+        <span class="paginacao__link paginacao__link--atual">1</span>
+      </li>
+      <li class="paginacao__item">
+        <a href="?page=2" class="paginacao__link">2</a>
+      </li>
+      <li class="paginacao__item paginacao__item--proximo">
+        <a href="?page=2" class="paginacao__link" aria-label="Próxima página" rel="next">Próxima ›</a>
+      </li>
+    </ul>
+  </nav>
+
+</section>
+<!-- /SEÇÃO 5 — TABELA PRINCIPAL -->
+
+
+<!-- ============================================================
+     SEÇÃO 6 — MODAL DE DETALHES DO CONTRATO
+     Abre ao clicar em "Ver detalhes" ou no código do contrato.
+     Carrega via AJAX: GET /clicontratos/view/{id}?formato=modal
+     Ou pode ser implementado como painel lateral deslizante.
+     ============================================================ -->
+<div class="modal-overlay"
+     id="modal-detalhe-contrato"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-titulo"
+     aria-describedby="modal-descricao"
+     hidden>
+
+  <div class="modal modal--largo">
+
+    <!-- Cabeçalho do modal -->
+    <header class="modal__cabecalho">
+      <div class="modal__cabecalho-info">
+        <h2 class="modal__titulo" id="modal-titulo">
+          <!-- PHP: CTR-2024-012 — Alfa Sistemas Ltda -->
+          <span class="modal__titulo-codigo" id="modal-codigo-contrato"></span>
+          <span class="modal__titulo-separador" aria-hidden="true">—</span>
+          <span class="modal__titulo-cliente" id="modal-nome-cliente"></span>
+        </h2>
+        <p class="modal__subtitulo sr-only" id="modal-descricao">
+          Detalhes completos do contrato selecionado
+        </p>
+        <div class="modal__badges" id="modal-badges">
+          <!-- PHP: badge de status e tipo inseridos via AJAX -->
+          <span class="badge badge--status badge--ativo">Ativo</span>
+          <span class="badge badge--tipo">Suporte</span>
+          <span class="badge badge--sla">Gold SLA</span>
+        </div>
+      </div>
+      <div class="modal__cabecalho-acoes">
+        <a href="#" class="btn btn--pequeno btn--neutro" id="modal-btn-editar" target="_self">
+          <span class="icone icone--editar" aria-hidden="true"></span>
+          Editar
+        </a>
+        <button type="button"
+                class="btn btn--ghost btn--icone modal__btn-fechar"
+                id="modal-fechar"
+                aria-label="Fechar painel de detalhes">
+          <span class="icone icone--fechar" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sistema de abas do modal -->
+    <div class="modal__abas" role="tablist" aria-label="Seções do contrato">
+
+      <button type="button"
+              role="tab"
+              class="modal__aba modal__aba--ativa"
+              id="aba-dados-gerais"
+              aria-selected="true"
+              aria-controls="painel-dados-gerais">
+        Dados Gerais
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-servicos"
+              aria-selected="false"
+              aria-controls="painel-servicos">
+        Serviços
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-sla"
+              aria-selected="false"
+              aria-controls="painel-sla">
+        SLA
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-franquia"
+              aria-selected="false"
+              aria-controls="painel-franquia">
+        Franquia
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-tickets"
+              aria-selected="false"
+              aria-controls="painel-tickets">
+        Tickets
+        <!-- Contador: <span class="aba-contador" id="aba-tickets-total"></span> -->
+        <span class="aba-contador" aria-label="47 tickets">47</span>
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-faturas"
+              aria-selected="false"
+              aria-controls="painel-faturas">
+        Faturas
+        <span class="aba-contador" aria-label="3 faturas">3</span>
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-reajustes"
+              aria-selected="false"
+              aria-controls="painel-reajustes">
+        Reajustes
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-documentos"
+              aria-selected="false"
+              aria-controls="painel-documentos">
+        Documentos
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-auditoria"
+              aria-selected="false"
+              aria-controls="painel-auditoria">
+        Auditoria
+      </button>
+
+    </div><!-- /modal__abas -->
+
+    <!-- Área de conteúdo das abas -->
+    <div class="modal__conteudo">
+
+      <!-- ── ABA 1: DADOS GERAIS ─────────────────────────── -->
+      <div id="painel-dados-gerais"
+           class="modal__painel modal__painel--ativo"
+           role="tabpanel"
+           aria-labelledby="aba-dados-gerais">
+
+        <div class="dados-gerais">
+
+          <div class="dados-gerais__grupo">
+            <h3 class="dados-gerais__secao-titulo">Identificação</h3>
+            <dl class="dados-lista">
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Código</dt>
+                <dd class="dados-lista__valor" id="detalhe-codigo">CTR-2024-012</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Cliente</dt>
+                <dd class="dados-lista__valor">
+                  <a href="/clientes/view/1" class="link-interno" id="detalhe-cliente-link">
+                    Alfa Sistemas Ltda
+                  </a>
+                </dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Tipo de Contrato</dt>
+                <dd class="dados-lista__valor" id="detalhe-tipo">Suporte Técnico</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Produto/SKU</dt>
+                <dd class="dados-lista__valor" id="detalhe-produto">SUP-GOLD-FULL</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="dados-gerais__grupo">
+            <h3 class="dados-gerais__secao-titulo">Vigência e Valores</h3>
+            <dl class="dados-lista">
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Início</dt>
+                <dd class="dados-lista__valor" id="detalhe-inicio">01/01/2026</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Término</dt>
+                <dd class="dados-lista__valor" id="detalhe-fim">31/12/2026</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Renovação automática</dt>
+                <dd class="dados-lista__valor" id="detalhe-renovacao">Sim</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Valor unitário</dt>
+                <dd class="dados-lista__valor" id="detalhe-vlunit">R$&nbsp;2.800,00</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Quantidade</dt>
+                <dd class="dados-lista__valor" id="detalhe-qtde">1</dd>
+              </div>
+              <div class="dados-lista__item dados-lista__item--destaque">
+                <dt class="dados-lista__chave">Valor total mensal</dt>
+                <dd class="dados-lista__valor" id="detalhe-vltotal">
+                  <strong>R$&nbsp;2.800,00</strong>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="dados-gerais__grupo dados-gerais__grupo--observacoes">
+            <h3 class="dados-gerais__secao-titulo">Observações Internas</h3>
+            <div class="observacoes-texto" id="detalhe-observacoes">
+              <!-- PHP: <?= nl2br(h($contrato->observacoes ?? '—')) ?> -->
+              Cliente VIP. Renovado em jan/2026 com reajuste de 5% pelo IGPM.
+            </div>
+          </div>
+
+        </div><!-- /dados-gerais -->
+
+      </div><!-- /painel-dados-gerais -->
+
+
+      <!-- ── ABA 2: SERVIÇOS COBERTOS ──────────────────────── -->
+      <div id="painel-servicos"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-servicos"
+           hidden>
+
+        <div class="servicos-cobertos">
+          <p class="servicos-cobertos__intro">
+            Serviços e coberturas incluídos neste contrato:
+          </p>
+
+          <!-- Grade de cobertura -->
+          <ul class="servicos-grade" aria-label="Cobertura do contrato">
+            <!-- PHP: cada item abaixo pode ser gerado com base nos campos booleanos do contrato -->
+            <li class="servicos-grade__item servicos-grade__item--ativo">
+              <span class="icone icone--check" aria-hidden="true"></span>
+              <span class="servicos-grade__nome">Suporte remoto</span>
+            </li>
+            <li class="servicos-grade__item servicos-grade__item--ativo">
+              <span class="icone icone--check" aria-hidden="true"></span>
+              <span class="servicos-grade__nome">Suporte presencial</span>
+            </li>
+            <li class="servicos-grade__item servicos-grade__item--ativo">
+              <span class="icone icone--check" aria-hidden="true"></span>
+              <span class="servicos-grade__nome">Manutenção preventiva</span>
+            </li>
+            <li class="servicos-grade__item servicos-grade__item--ativo">
+              <span class="icone icone--check" aria-hidden="true"></span>
+              <span class="servicos-grade__nome">Backup gerenciado</span>
+            </li>
+            <li class="servicos-grade__item servicos-grade__item--ativo">
+              <span class="icone icone--check" aria-hidden="true"></span>
+              <span class="servicos-grade__nome">Monitoramento 24x7</span>
+            </li>
+            <li class="servicos-grade__item servicos-grade__item--inativo">
+              <span class="icone icone--x" aria-hidden="true"></span>
+              <span class="servicos-grade__nome">Locação de equipamentos</span>
+            </li>
+          </ul>
+
+          <!-- Limite de chamados -->
+          <div class="servicos-limite">
+            <strong class="servicos-limite__rotulo">Limite de chamados/mês:</strong>
+            <span class="servicos-limite__valor" id="detalhe-limite-chamados">
+              <!-- PHP: <?= $contrato->limite_chamados ?? 'Ilimitado' ?> -->
+              Ilimitado
+            </span>
+          </div>
+
+        </div><!-- /servicos-cobertos -->
+
+      </div><!-- /painel-servicos -->
+
+
+      <!-- ── ABA 3: SLA ──────────────────────────────────── -->
+      <div id="painel-sla"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-sla"
+           hidden>
+
+        <div class="sla-detalhe">
+
+          <div class="sla-politica">
+            <h3 class="sla-politica__titulo">Política Aplicada</h3>
+            <p class="sla-politica__nome" id="detalhe-sla-nome">Gold SLA</p>
+          </div>
+
+          <table class="tabela-sla" aria-label="Prazos de SLA por prioridade">
+            <caption class="tabela-sla__caption">Prazos de SLA por prioridade</caption>
+            <thead>
+              <tr>
+                <th scope="col">Prioridade</th>
+                <th scope="col">1ª Resposta</th>
+                <th scope="col">Resolução</th>
+                <th scope="col">Janela</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- PHP: foreach ($slaPolitica->regras as $regra) -->
+              <tr>
+                <td><span class="badge badge--p1">P1 — Crítico</span></td>
+                <td>30 minutos</td>
+                <td>4 horas</td>
+                <td>24x7</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--p2">P2 — Alto</span></td>
+                <td>1 hora</td>
+                <td>8 horas</td>
+                <td>24x7</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--p3">P3 — Médio</span></td>
+                <td>4 horas</td>
+                <td>24 horas</td>
+                <td>Comercial</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--p4">P4 — Baixo</span></td>
+                <td>8 horas</td>
+                <td>72 horas</td>
+                <td>Comercial</td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div><!-- /sla-detalhe -->
+
+      </div><!-- /painel-sla -->
+
+
+      <!-- ── ABA 4: FRANQUIA / CONSUMO DE HORAS ──────────── -->
+      <div id="painel-franquia"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-franquia"
+           hidden>
+
+        <div class="franquia-detalhe">
+
+          <!-- Resumo do mês atual -->
+          <div class="franquia-resumo">
+            <div class="franquia-resumo__item">
+              <span class="franquia-resumo__rotulo">Horas contratadas/mês</span>
+              <strong class="franquia-resumo__valor" id="detalhe-horas-contratadas">40h</strong>
+            </div>
+            <div class="franquia-resumo__item">
+              <span class="franquia-resumo__rotulo">Utilizadas (Março/26)</span>
+              <strong class="franquia-resumo__valor" id="detalhe-horas-usadas">32h</strong>
+            </div>
+            <div class="franquia-resumo__item">
+              <span class="franquia-resumo__rotulo">Saldo restante</span>
+              <strong class="franquia-resumo__valor franquia-resumo__valor--saldo" id="detalhe-saldo-horas">8h</strong>
+            </div>
+          </div>
+
+          <!-- Barra de consumo do mês atual -->
+          <div class="franquia-barra-grande">
+            <div class="franquia-barra-grande__cabecalho">
+              <span>Consumo — mês atual</span>
+              <span id="detalhe-pct-consumo">80%</span>
+            </div>
+            <div class="franquia-barra-grande__fundo"
+                 role="progressbar"
+                 aria-valuenow="80"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-label="80% da franquia do mês consumida">
+              <div class="franquia-barra-grande__preenchimento franquia-barra-grande__preenchimento--atencao"
+                   style="width: 80%">
+              </div>
+            </div>
+            <div class="franquia-barra-grande__marcadores" aria-hidden="true">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <!-- Histórico dos últimos 6 meses -->
+          <h3 class="franquia-historico__titulo">Histórico — últimos 6 meses</h3>
+          <table class="tabela-franquia" aria-label="Histórico de consumo de horas">
+            <thead>
+              <tr>
+                <th scope="col">Mês/Ano</th>
+                <th scope="col">Contratadas</th>
+                <th scope="col">Utilizadas</th>
+                <th scope="col">Saldo</th>
+                <th scope="col">%</th>
+              </tr>
+            </thead>
+            <tbody id="detalhe-historico-franquia">
+              <!-- PHP: foreach ($historicoFranquia as $h) -->
+              <tr>
+                <td>Out/2025</td>
+                <td>40h</td>
+                <td>28h</td>
+                <td>12h</td>
+                <td>
+                  <div class="franquia-mini">
+                    <div class="franquia-mini__barra-fundo">
+                      <div class="franquia-mini__barra franquia-mini__barra--ok" style="width:70%"></div>
+                    </div>
+                    <span class="franquia-mini__texto">70%</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Nov/2025</td>
+                <td>40h</td>
+                <td>36h</td>
+                <td>4h</td>
+                <td>
+                  <div class="franquia-mini">
+                    <div class="franquia-mini__barra-fundo">
+                      <div class="franquia-mini__barra franquia-mini__barra--critico" style="width:90%"></div>
+                    </div>
+                    <span class="franquia-mini__texto franquia-mini__texto--critico">90%</span>
+                  </div>
+                </td>
+              </tr>
+              <!-- /foreach -->
+            </tbody>
+          </table>
+
+        </div><!-- /franquia-detalhe -->
+
+      </div><!-- /painel-franquia -->
+
+
+      <!-- ── ABA 5: TICKETS VINCULADOS ──────────────────── -->
+      <div id="painel-tickets"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-tickets"
+           hidden>
+
+        <div class="tickets-vinculados">
+
+          <div class="tickets-vinculados__resumo">
+            <span class="badge-contador">47 tickets no total</span>
+            <span class="badge-contador badge-contador--aberto">12 em aberto</span>
+            <span class="badge-contador badge-contador--violado">2 com SLA violado</span>
+          </div>
+
+          <table class="tabela tabela--compacta" aria-label="Tickets vinculados a este contrato">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Assunto</th>
+                <th scope="col">Prior.</th>
+                <th scope="col">SLA</th>
+                <th scope="col">Status</th>
+                <th scope="col">Aberto em</th>
+              </tr>
+            </thead>
+            <tbody id="painel-tickets-lista">
+              <!-- PHP: foreach ($ticketsVinculados as $t) -->
+              <tr>
+                <td>
+                  <a href="/tickets/view/4521" class="link-interno" target="_blank">#4521</a>
+                </td>
+                <td>Lentidão no sistema ERP</td>
+                <td><span class="badge badge--p2">P2</span></td>
+                <td><span class="badge badge--sla-risco">Em risco</span></td>
+                <td><span class="badge badge--status-em-andamento">Em andamento</span></td>
+                <td>28/03/2026</td>
+              </tr>
+              <!-- /foreach -->
+            </tbody>
+          </table>
+
+          <a href="/historico?idcliente=1&idcontrato=101"
+             class="link-ver-todos"
+             target="_blank">
+            Ver todos os tickets no histórico →
+          </a>
+
+        </div><!-- /tickets-vinculados -->
+
+      </div><!-- /painel-tickets -->
+
+
+      <!-- ── ABA 6: FATURAS ─────────────────────────────── -->
+      <div id="painel-faturas"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-faturas"
+           hidden>
+
+        <div class="faturas-vinculadas">
+
+          <div class="faturas-vinculadas__acoes">
+            <a href="/faturamento/add?idcontrato=101"
+               class="btn btn--pequeno btn--primario">
+              <span class="icone icone--mais" aria-hidden="true"></span>
+              Nova fatura
+            </a>
+          </div>
+
+          <table class="tabela tabela--compacta" aria-label="Faturas deste contrato">
+            <thead>
+              <tr>
+                <th scope="col">Nº Fatura</th>
+                <th scope="col">Competência</th>
+                <th scope="col">Vencimento</th>
+                <th scope="col">Valor</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="painel-faturas-lista">
+              <!-- PHP: foreach ($faturasContrato as $f) -->
+              <tr>
+                <td>
+                  <a href="/faturamento/view/142" class="link-interno">FT-0142</a>
+                </td>
+                <td>Março/2026</td>
+                <td>05/04/2026</td>
+                <td>R$&nbsp;2.800,00</td>
+                <td><span class="badge badge--status badge--pendente">Pendente</span></td>
+                <td>
+                  <a href="/faturamento/imprimir/142"
+                     class="btn-acao btn-acao--pdf"
+                     title="Baixar PDF"
+                     target="_blank">
+                    <span class="icone icone--pdf" aria-hidden="true"></span>
+                  </a>
+                </td>
+              </tr>
+              <!-- /foreach -->
+            </tbody>
+          </table>
+
+        </div><!-- /faturas-vinculadas -->
+
+      </div><!-- /painel-faturas -->
+
+
+      <!-- ── ABA 7: REAJUSTES ───────────────────────────── -->
+      <div id="painel-reajustes"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-reajustes"
+           hidden>
+
+        <div class="reajustes">
+
+          <div class="reajustes__acoes">
+            <button type="button"
+                    class="btn btn--pequeno btn--primario"
+                    data-acao="novo-reajuste"
+                    data-id="101">
+              <span class="icone icone--mais" aria-hidden="true"></span>
+              Registrar reajuste
+            </button>
+          </div>
+
+          <table class="tabela tabela--compacta" aria-label="Histórico de reajustes do contrato">
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Índice</th>
+                <th scope="col">% Aplicado</th>
+                <th scope="col">Valor Anterior</th>
+                <th scope="col">Valor Novo</th>
+                <th scope="col">Responsável</th>
+              </tr>
+            </thead>
+            <tbody id="painel-reajustes-lista">
+              <!-- PHP: foreach ($reajustes as $r) -->
+              <tr>
+                <td>01/01/2026</td>
+                <td>IGPM</td>
+                <td>5,00%</td>
+                <td>R$&nbsp;2.666,67</td>
+                <td>R$&nbsp;2.800,00</td>
+                <td>Financeiro</td>
+              </tr>
+              <!-- /foreach -->
+            </tbody>
+          </table>
+
+          <!-- Estado vazio dos reajustes -->
+          <p class="estado-vazio estado-vazio--tabela" id="reajustes-vazio" hidden>
+            Nenhum reajuste registrado para este contrato.
+          </p>
+
+        </div><!-- /reajustes -->
+
+      </div><!-- /painel-reajustes -->
+
+
+      <!-- ── ABA 8: DOCUMENTOS ──────────────────────────── -->
+      <div id="painel-documentos"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-documentos"
+           hidden>
+
+        <div class="documentos">
+
+          <div class="documentos__zona-upload"
+               id="zona-upload-documentos"
+               role="button"
+               tabindex="0"
+               aria-label="Clique ou arraste arquivos para fazer upload">
+            <span class="icone icone--upload documentos__zona-upload-icone" aria-hidden="true"></span>
+            <p class="documentos__zona-upload-texto">
+              Arraste arquivos aqui ou
+              <label for="upload-doc-input" class="documentos__upload-label">
+                clique para selecionar
+              </label>
+            </p>
+            <p class="documentos__zona-upload-formatos">
+              PDF, DOC, DOCX, JPG, PNG — máx. 10 MB por arquivo
+            </p>
+            <input type="file"
+                   id="upload-doc-input"
+                   name="documentos[]"
+                   class="documentos__input-arquivo"
+                   multiple
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                   aria-hidden="true"
+                   tabindex="-1">
+          </div>
+
+          <ul class="documentos__lista" id="documentos-lista" aria-label="Documentos do contrato">
+            <!-- PHP: foreach ($documentos as $doc) -->
+            <li class="documentos__item">
+              <span class="icone icone--pdf documentos__item-icone" aria-hidden="true"></span>
+              <div class="documentos__item-info">
+                <span class="documentos__item-nome">contrato-assinado-2026.pdf</span>
+                <span class="documentos__item-meta">1,2 MB · Enviado em 02/01/2026</span>
+              </div>
+              <div class="documentos__item-acoes">
+                <a href="/clicontratos/download-doc/55"
+                   class="btn-acao btn-acao--download"
+                   title="Baixar documento"
+                   aria-label="Baixar contrato-assinado-2026.pdf">
+                  <span class="icone icone--download" aria-hidden="true"></span>
+                </a>
+                <button type="button"
+                        class="btn-acao btn-acao--excluir"
+                        title="Remover documento"
+                        aria-label="Remover contrato-assinado-2026.pdf"
+                        data-id-doc="55"
+                        data-acao="remover-documento">
+                  <span class="icone icone--lixeira" aria-hidden="true"></span>
+                </button>
+              </div>
+            </li>
+            <!-- /foreach -->
+          </ul>
+
+          <p class="estado-vazio estado-vazio--documentos" id="documentos-vazio" hidden>
+            Nenhum documento anexado a este contrato.
+          </p>
+
+        </div><!-- /documentos -->
+
+      </div><!-- /painel-documentos -->
+
+
+      <!-- ── ABA 9: AUDITORIA ───────────────────────────── -->
+      <div id="painel-auditoria"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-auditoria"
+           hidden>
+
+        <div class="auditoria">
+
+          <table class="tabela tabela--compacta" aria-label="Log de auditoria do contrato">
+            <caption class="tabela__caption">Registro de alterações deste contrato</caption>
+            <thead>
+              <tr>
+                <th scope="col">Data/Hora</th>
+                <th scope="col">Usuário</th>
+                <th scope="col">Ação</th>
+                <th scope="col">Campo</th>
+                <th scope="col">Antes</th>
+                <th scope="col">Depois</th>
+              </tr>
+            </thead>
+            <tbody id="painel-auditoria-lista">
+              <!-- PHP: foreach ($auditoriaContrato as $log) -->
+              <tr>
+                <td>02/01/2026 09:22</td>
+                <td>financeiro@pgm.com.br</td>
+                <td>Edição</td>
+                <td>vltotal</td>
+                <td>R$&nbsp;2.666,67</td>
+                <td>R$&nbsp;2.800,00</td>
+              </tr>
+              <tr>
+                <td>01/01/2026 00:05</td>
+                <td>Sistema</td>
+                <td>Renovação automática</td>
+                <td>dtvalidade</td>
+                <td>31/12/2025</td>
+                <td>31/12/2026</td>
+              </tr>
+              <!-- /foreach -->
+            </tbody>
+          </table>
+
+          <div class="auditoria__exportar">
+            <a href="/clicontratos/auditoria/101?formato=pdf"
+               class="btn btn--pequeno btn--ghost"
+               target="_blank">
+              <span class="icone icone--pdf" aria-hidden="true"></span>
+              Exportar auditoria PDF
+            </a>
+          </div>
+
+        </div><!-- /auditoria -->
+
+      </div><!-- /painel-auditoria -->
+
+    </div><!-- /modal__conteudo -->
+
+    <!-- Rodapé do modal com ações contextuais -->
+    <footer class="modal__rodape">
+      <div class="modal__rodape-esquerda">
+        <span class="modal__rodape-info">
+          Última atualização:
+          <time datetime="2026-01-02T09:22:00" id="modal-ultima-atualizacao">
+            02/01/2026 às 09:22
+          </time>
+          por <span id="modal-atualizado-por">financeiro@pgm.com.br</span>
+        </span>
+      </div>
+      <div class="modal__rodape-direita">
+        <button type="button"
+                class="btn btn--ghost"
+                id="modal-fechar-rodape">
+          Fechar
+        </button>
+        <a href="#"
+           class="btn btn--neutro"
+           id="modal-btn-abrir-pagina"
+           title="Abrir em página completa">
+          <span class="icone icone--pagina-completa" aria-hidden="true"></span>
+          Abrir completo
+        </a>
+        <button type="button"
+                class="btn btn--primario"
+                id="modal-btn-renovar-footer"
+                data-acao="renovar">
+          <span class="icone icone--renovar" aria-hidden="true"></span>
+          Renovar Contrato
+        </button>
+      </div>
+    </footer>
+
+  </div><!-- /modal -->
+
+</div>
+<!-- /SEÇÃO 6 — MODAL DE DETALHES -->
+
+
+<!-- ============================================================
+     SEÇÃO 7 — MODAL DE CONFIRMAÇÃO GENÉRICO
+     Reutilizado para: encerrar, renovar, sincronizar
+     O conteúdo é substituído via JS antes de abrir.
+     ============================================================ -->
+<div class="modal-overlay modal-overlay--pequeno"
+     id="modal-confirmacao"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="confirmacao-titulo"
+     hidden>
+
+  <div class="modal modal--pequeno modal--confirmacao">
+
+    <header class="modal__cabecalho modal__cabecalho--simples">
+      <h2 class="modal__titulo" id="confirmacao-titulo">
+        <!-- JS substitui o título -->
+        Confirmar ação
+      </h2>
+    </header>
+
+    <div class="modal__conteudo modal__conteudo--confirmacao">
+      <p class="confirmacao-mensagem" id="confirmacao-mensagem">
+        <!-- JS substitui a mensagem -->
+        Deseja confirmar esta ação?
+      </p>
+      <!-- Área para dados adicionais da ação (ex: nova data de vigência na renovação) -->
+      <div class="confirmacao-campos" id="confirmacao-campos" hidden>
+        <!-- JS injeta campos dinâmicos conforme a ação -->
+      </div>
+    </div>
+
+    <footer class="modal__rodape modal__rodape--confirmacao">
+      <button type="button"
+              class="btn btn--ghost"
+              id="confirmacao-cancelar">
+        Cancelar
+      </button>
+      <button type="button"
+              class="btn btn--primario"
+              id="confirmacao-confirmar">
+        <!-- JS substitui o texto do botão -->
+        Confirmar
+      </button>
+    </footer>
+
+  </div>
+
+</div>
+<!-- /SEÇÃO 7 — MODAL DE CONFIRMAÇÃO -->
+
+
+<!--
+  ============================================================
+  SCRIPTS DESTA TELA
+  Carregados antes do </body> no layout pai (default.ctp)
+  ou via <?= $this->Html->script('clicontratos') ?>
+  ============================================================
+  Scripts necessários (já disponíveis no projeto):
+    - jQuery (se utilizado pelo ERP)
+    - DataTables (se paginação client-side)
+    - Select2 (para o select de clientes com busca)
+  Scripts específicos desta tela:
+    - /js/clicontratos/index.js
+  Comportamentos JS mínimos esperados:
+    - Toggle do painel de filtros
+    - Abertura/fechamento do modal
+    - Troca de abas no modal
+    - Checkboxes de seleção em lote
+    - Dropdown de ações por linha
+    - Carregamento AJAX do detalhe
+    - Upload de documentos via dropzone
+    - Busca rápida na tabela
+  ============================================================
+-->
+
+</body>
+</html>

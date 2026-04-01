@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<!--
+  PORTAL DO CLIENTE — Relatórios
+  Arquivo: src/Template/Portal/Relatorios/index_estrutural.html
+  Template CakePHP: src/Template/Portal/Relatorios/index.ctp
+  Layout pai: src/Template/Layout/portal.ctp
+  Controller: Portal/RelatoriosController::index()
+  Prefixo CSS: prel-  (porta relatórios — diferente de rel- usado no ERP)
+
+  VARIÁVEIS PHP esperadas:
+    $kpi              => array [tickets_periodo, resolvidos, pendentes, sla_pct,
+                                delta_tickets, delta_sla]
+    $filtros          => array [data_inicio, data_fim, idunidade, idcontrato, idcategoria]
+    $unidades         => array [id => nome] — unidades do cliente logado
+    $contratos        => array [id => descricao] — contratos ativos do cliente
+    $categorias       => array [id => nome]
+    $permissoes       => array de códigos ['rel.contratos', 'rel.financeiro', 'rel.exportar']
+    $abaAtiva         => string ('atendimentos'|'contratos'|'financeiro')
+    $dadosAtendimentos => array [tickets_por_periodo[], tickets_por_categoria[], sla[]]
+    $dadosSla          => array [no_prazo, no_prazo_pct, em_risco, em_risco_pct, violados, violados_pct]
+    $dadosContratos    => array [consumo[], sla_resumo[], tem_excedente]
+    $dadosFinanceiro   => array [resumo{pagas_qtd, vencidas_qtd, total_pago, total_pendente,
+                                        total_vencido}, faturas[]]
+    $erroCarregamento  => bool
+    $semPermissao      => bool
+
+  SEGURANÇA — campos NUNCA expostos ao cliente:
+    - vlunit, vltotal, valor_subtotal, valor_desconto
+    - observacoes internas, hash, idautor, idordem
+    - SLO em minutos brutos (resposta_minutos, resolucao_minutos)
+    - fila, custo, tempo_total
+    - idtecnico (apenas nome), dados de outros clientes
+    - idcliente e idempresa SEMPRE da sessão Auth, nunca de GET/POST
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios — Portal do Cliente</title>
+  <!-- PHP: $this->Html->css('portal/prel') -->
+  <style>
+    /* ================================================================
+       ESTRUTURAL — substituir por arquivo CSS externo em produção.
+       Prefixo único: prel-  para evitar colisão com outros módulos.
+    ================================================================ */
+
+    /* Layout base */
+    .prel-page { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    /* Cabeçalho */
+    .prel-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.75rem; }
+    .prel-header__titulo { font-size:1.5rem; font-weight:700; color:#111; margin:0; }
+    .prel-header__subtitulo { font-size:0.875rem; color:#6b7280; margin:0.25rem 0 0; }
+    .prel-header__acoes { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+
+    /* Botões */
+    .prel-btn { display:inline-flex; align-items:center; gap:0.375rem; padding:0.5rem 1rem; border-radius:0.375rem; font-size:0.875rem; font-weight:500; cursor:pointer; border:none; text-decoration:none; }
+    .prel-btn--primario   { background:#2563eb; color:#fff; }
+    .prel-btn--secundario { background:#fff; color:#374151; border:1px solid #d1d5db; }
+    .prel-btn--outline    { background:transparent; color:#374151; border:1px solid #d1d5db; }
+    .prel-btn--ico        { padding:0.5rem; }
+    .prel-btn--primario:hover   { background:#1d4ed8; }
+    .prel-btn--secundario:hover { background:#f9fafb; }
+    .prel-btn--outline:hover    { background:#f9fafb; }
+
+    /* Dropdown */
+    .prel-dropdown { position:relative; display:inline-block; }
+    .prel-dropdown__menu { display:none; position:absolute; right:0; top:100%; margin-top:0.25rem; background:#fff; border:1px solid #e5e7eb; border-radius:0.375rem; box-shadow:0 4px 12px rgba(0,0,0,.1); min-width:160px; z-index:200; }
+    .prel-dropdown--aberto .prel-dropdown__menu { display:block; }
+    .prel-dropdown__item { display:block; padding:0.625rem 1rem; font-size:0.875rem; color:#374151; text-decoration:none; cursor:pointer; background:none; border:none; width:100%; text-align:left; }
+    .prel-dropdown__item:hover { background:#f3f4f6; }
+
+    /* KPI cards */
+    .prel-kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .prel-kpi { background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.25rem 1rem; }
+    .prel-kpi__label { font-size:0.75rem; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; margin:0 0 0.5rem; }
+    .prel-kpi__valor { font-size:2rem; font-weight:700; color:#111; line-height:1; margin:0; }
+    .prel-kpi__delta { font-size:0.75rem; margin-top:0.375rem; }
+    .prel-kpi__delta--pos { color:#16a34a; }
+    .prel-kpi__delta--neg { color:#dc2626; }
+    .prel-kpi__delta--neu { color:#6b7280; }
+    .prel-kpi--azul    .prel-kpi__valor { color:#2563eb; }
+    .prel-kpi--verde   .prel-kpi__valor { color:#16a34a; }
+    .prel-kpi--amarelo .prel-kpi__valor { color:#d97706; }
+    .prel-kpi--roxo    .prel-kpi__valor { color:#7c3aed; }
+
+    /* Filtros */
+    .prel-filtros { background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; margin-bottom:1.5rem; }
+    .prel-filtros__cab { display:flex; align-items:center; justify-content:space-between; padding:0.875rem 1rem; cursor:pointer; user-select:none; }
+    .prel-filtros__cab-titulo { font-size:0.875rem; font-weight:600; color:#374151; margin:0; display:flex; align-items:center; gap:0.375rem; }
+    .prel-filtros__contador { font-size:0.75rem; background:#dbeafe; color:#1d4ed8; border-radius:9999px; padding:0.125rem 0.5rem; }
+    .prel-filtros__corpo { padding:0 1rem 1rem; }
+    .prel-filtros__corpo[aria-hidden="true"] { display:none; }
+    .prel-filtros__grade { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; }
+    .prel-filtros__periodo { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+    .prel-filtros__atalhos { display:flex; flex-wrap:wrap; gap:0.375rem; margin-top:0.375rem; }
+    .prel-filtros__atalho { font-size:0.75rem; padding:0.25rem 0.625rem; border:1px solid #d1d5db; border-radius:9999px; background:#fff; cursor:pointer; color:#374151; }
+    .prel-filtros__atalho:hover,
+    .prel-filtros__atalho[aria-pressed="true"] { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+    .prel-filtros__rodape { display:flex; gap:0.5rem; padding-top:0.75rem; }
+    .prel-campo { display:flex; flex-direction:column; gap:0.25rem; }
+    .prel-campo label { font-size:0.75rem; font-weight:500; color:#6b7280; }
+    .prel-campo input,
+    .prel-campo select { padding:0.5rem 0.75rem; border:1px solid #d1d5db; border-radius:0.375rem; font-size:0.875rem; width:100%; box-sizing:border-box; background:#fff; }
+
+    /* Abas */
+    .prel-abas { margin-bottom:1.5rem; }
+    .prel-abas__lista { display:flex; border-bottom:2px solid #e5e7eb; list-style:none; margin:0; padding:0; overflow-x:auto; }
+    .prel-abas__item { flex-shrink:0; }
+    .prel-abas__btn { display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.25rem; font-size:0.875rem; font-weight:500; color:#6b7280; background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; cursor:pointer; white-space:nowrap; }
+    .prel-abas__btn[aria-selected="true"] { color:#2563eb; border-bottom-color:#2563eb; font-weight:600; }
+    .prel-abas__btn:hover:not([aria-selected="true"]) { color:#374151; border-bottom-color:#d1d5db; }
+    .prel-abas__badge { font-size:0.7rem; background:#dbeafe; color:#1d4ed8; border-radius:9999px; padding:0.1rem 0.4rem; }
+    .prel-abas__badge--vermelho { background:#fee2e2; color:#991b1b; }
+
+    /* Painéis */
+    .prel-painel { display:none; }
+    .prel-painel[aria-hidden="false"] { display:block; }
+
+    /* Estados visuais */
+    .prel-estado { display:none; flex-direction:column; align-items:center; justify-content:center; padding:3rem 1rem; text-align:center; background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; }
+    .prel-estado[aria-hidden="false"] { display:flex; }
+    .prel-estado__icone { font-size:2.5rem; margin-bottom:0.75rem; }
+    .prel-estado__titulo { font-size:1rem; font-weight:600; color:#374151; margin:0 0 0.375rem; }
+    .prel-estado__descricao { font-size:0.875rem; color:#6b7280; margin:0; max-width:360px; }
+    .prel-estado__acao { margin-top:1rem; }
+
+    /* Blocos de relatório */
+    .prel-bloco { background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; margin-bottom:1rem; }
+    .prel-bloco__cab { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid #f3f4f6; }
+    .prel-bloco__titulo { font-size:0.9375rem; font-weight:600; color:#111; margin:0; }
+    .prel-bloco__corpo { padding:1.25rem; }
+    .prel-bloco__grafico { min-height:220px; position:relative; }
+
+    /* Grade 2 colunas */
+    .prel-grade-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media (max-width:768px) { .prel-grade-2 { grid-template-columns:1fr; } }
+
+    /* Tabelas */
+    .prel-tabela-wrap { overflow-x:auto; }
+    .prel-tabela { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .prel-tabela thead th { padding:0.625rem 0.75rem; text-align:left; font-size:0.75rem; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #e5e7eb; white-space:nowrap; background:#f9fafb; }
+    .prel-tabela tbody td { padding:0.625rem 0.75rem; border-bottom:1px solid #f3f4f6; color:#374151; vertical-align:middle; }
+    .prel-tabela tbody tr:last-child td { border-bottom:none; }
+    .prel-tabela tfoot td { padding:0.625rem 0.75rem; font-weight:600; border-top:2px solid #e5e7eb; background:#f9fafb; }
+    .prel-tabela tbody tr:hover td { background:#f9fafb; }
+
+    /* Badges */
+    .prel-badge { display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:9999px; font-size:0.7rem; font-weight:600; white-space:nowrap; }
+    .prel-badge--verde   { background:#dcfce7; color:#15803d; }
+    .prel-badge--vermelho{ background:#fee2e2; color:#991b1b; }
+    .prel-badge--amarelo { background:#fef3c7; color:#92400e; }
+    .prel-badge--azul    { background:#dbeafe; color:#1e40af; }
+    .prel-badge--roxo    { background:#ede9fe; color:#6d28d9; }
+    .prel-badge--cinza   { background:#f3f4f6; color:#6b7280; }
+
+    /* Barra de progresso */
+    .prel-barra { height:6px; border-radius:9999px; background:#e5e7eb; overflow:hidden; margin-top:0.375rem; }
+    .prel-barra__fill { height:100%; border-radius:9999px; }
+    .prel-barra__fill--verde   { background:#22c55e; }
+    .prel-barra__fill--amarelo { background:#f59e0b; }
+    .prel-barra__fill--vermelho{ background:#ef4444; }
+    .prel-barra__fill--azul    { background:#3b82f6; }
+
+    /* Rodapé */
+    .prel-rodape { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; padding:1rem 0; border-top:1px solid #e5e7eb; margin-top:0.5rem; }
+    .prel-rodape__info { font-size:0.8125rem; color:#6b7280; }
+    .prel-rodape__acoes { display:flex; gap:0.5rem; flex-wrap:wrap; }
+
+    /* Indicador métrico */
+    .prel-metrica { display:flex; align-items:center; justify-content:space-between; padding:0.875rem; border-radius:0.375rem; }
+    .prel-metrica__label { font-size:0.875rem; font-weight:500; color:#374151; }
+    .prel-metrica__valor { font-size:1.125rem; font-weight:700; margin:0; }
+
+    @media print {
+      .prel-header__acoes, .prel-filtros__cab, .prel-filtros__rodape,
+      .prel-abas, .prel-rodape, .prel-btn { display:none !important; }
+      .prel-painel { display:block !important; }
+      .prel-estado { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+<!-- PHP: $this->layout = 'portal'; -->
+
+<div class="prel-page">
+
+  <!-- ============================================================
+       SEÇÃO 1 — CABEÇALHO
+  ============================================================ -->
+  <header class="prel-header" role="banner">
+
+    <div class="prel-header__texto">
+      <!-- PHP: breadcrumb via HtmlHelper -->
+      <nav aria-label="Navegação estrutural">
+        <small>
+          <a href="/portal">Portal</a> &rsaquo;
+          <span aria-current="page">Relatórios</span>
+        </small>
+      </nav>
+      <h1 class="prel-header__titulo">Relatórios</h1>
+      <!-- PHP: echo 'Dados de ' . h($nomeEmpresaCliente) -->
+      <p class="prel-header__subtitulo">Indicadores e relatórios da sua empresa</p>
+    </div>
+
+    <div class="prel-header__acoes">
+
+      <!-- Exportar -->
+      <!-- PHP: if (!empty($permissoes['rel.exportar'])): -->
+      <div class="prel-dropdown" id="prel-dropdown-exportar">
+        <button
+          class="prel-btn prel-btn--secundario"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="prel-menu-exportar"
+          onclick="prel.toggleDropdown('exportar')"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 12h12M8 2v8m0 0L5 7m3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Exportar
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="prel-dropdown__menu" id="prel-menu-exportar" role="menu">
+          <!-- PHP: links apontam para /portal/relatorios/exportar?formato=excel&[filtros] -->
+          <!-- idcliente é injetado pelo controller via sessão, nunca via URL -->
+          <a class="prel-dropdown__item" href="#" id="prel-link-excel" role="menuitem">Excel (.xlsx)</a>
+          <a class="prel-dropdown__item" href="#" id="prel-link-pdf"   role="menuitem">PDF</a>
+          <a class="prel-dropdown__item" href="#" id="prel-link-csv"   role="menuitem">CSV</a>
+        </div>
+      </div>
+      <!-- PHP: endif; -->
+
+      <!-- Imprimir -->
+      <button class="prel-btn prel-btn--outline" type="button" onclick="window.print()" aria-label="Imprimir relatório">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M4 5V2h8v3M4 11H2V7h12v4h-2M4 9h8v5H4V9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Imprimir
+      </button>
+
+    </div>
+  </header>
+
+
+  <!-- ============================================================
+       SEÇÃO 2 — FILTROS GLOBAIS
+  ============================================================ -->
+  <!-- PHP: echo $this->Form->create(null, ['type'=>'get','url'=>['action'=>'index'],'id'=>'prel-form-filtros']); -->
+  <section class="prel-filtros" aria-label="Filtros do relatório" id="prel-secao-filtros">
+
+    <!-- Cabeçalho recolhível -->
+    <div
+      class="prel-filtros__cab"
+      role="button"
+      tabindex="0"
+      aria-expanded="true"
+      aria-controls="prel-filtros-corpo"
+      onclick="prel.toggleFiltros()"
+      onkeydown="if(event.key==='Enter'||event.key===' '){prel.toggleFiltros();event.preventDefault();}"
+    >
+      <span class="prel-filtros__cab-titulo">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 4h12M5 8h6M7 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Filtros
+        <!-- PHP: if ($filtrosAtivos > 0): -->
+        <span class="prel-filtros__contador" id="prel-contador-filtros" aria-live="polite">
+          <!-- PHP: echo $filtrosAtivos . ' ativo(s)' -->2 ativos
+        </span>
+        <!-- PHP: endif; -->
+      </span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" id="prel-filtros-seta">
+        <path d="M4 10l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div class="prel-filtros__corpo" id="prel-filtros-corpo" aria-hidden="false">
+      <div class="prel-filtros__grade">
+
+        <!-- Período -->
+        <div class="prel-campo">
+          <label>Período</label>
+          <div class="prel-filtros__periodo">
+            <!-- PHP: echo $this->Form->date('data_inicio', ['value'=>$filtros['data_inicio']??'']) -->
+            <input type="date" name="data_inicio" value="2025-03-01" aria-label="Data de início">
+            <!-- PHP: echo $this->Form->date('data_fim', ['value'=>$filtros['data_fim']??'']) -->
+            <input type="date" name="data_fim"    value="2025-03-31" aria-label="Data de fim">
+          </div>
+          <div class="prel-filtros__atalhos" role="group" aria-label="Atalhos de período">
+            <button type="button" class="prel-filtros__atalho" data-periodo="hoje"      aria-pressed="false" onclick="prel.setPeriodo(this)">Hoje</button>
+            <button type="button" class="prel-filtros__atalho" data-periodo="7d"        aria-pressed="false" onclick="prel.setPeriodo(this)">7 dias</button>
+            <button type="button" class="prel-filtros__atalho" data-periodo="30d"       aria-pressed="true"  onclick="prel.setPeriodo(this)">30 dias</button>
+            <button type="button" class="prel-filtros__atalho" data-periodo="mes"       aria-pressed="false" onclick="prel.setPeriodo(this)">Mês atual</button>
+            <button type="button" class="prel-filtros__atalho" data-periodo="trimestre" aria-pressed="false" onclick="prel.setPeriodo(this)">Trimestre</button>
+          </div>
+        </div>
+
+        <!-- Unidade -->
+        <!-- PHP: if (!empty($unidades)): -->
+        <div class="prel-campo">
+          <label for="prel-filtro-unidade">Unidade</label>
+          <!-- PHP: echo $this->Form->select('idunidade', $unidades, ['empty'=>'Todas','id'=>'prel-filtro-unidade','value'=>$filtros['idunidade']??'']) -->
+          <select name="idunidade" id="prel-filtro-unidade">
+            <option value="">Todas as unidades</option>
+            <option value="3">Filial São Paulo</option>
+            <option value="7" selected>Matriz Campinas</option>
+          </select>
+        </div>
+        <!-- PHP: endif; -->
+
+        <!-- Contrato -->
+        <!-- PHP: if (!empty($contratos)): -->
+        <div class="prel-campo">
+          <label for="prel-filtro-contrato">Contrato</label>
+          <!-- PHP: echo $this->Form->select('idcontrato', $contratos, ['empty'=>'Todos','id'=>'prel-filtro-contrato','value'=>$filtros['idcontrato']??'']) -->
+          <select name="idcontrato" id="prel-filtro-contrato">
+            <option value="">Todos os contratos</option>
+            <option value="12">Suporte Premium – HQ</option>
+            <option value="15">Suporte Básico – Filial SP</option>
+          </select>
+        </div>
+        <!-- PHP: endif; -->
+
+        <!-- Categoria -->
+        <!-- PHP: if (!empty($categorias)): -->
+        <div class="prel-campo">
+          <label for="prel-filtro-categoria">Categoria</label>
+          <!-- PHP: echo $this->Form->select('idcategoria', $categorias, ['empty'=>'Todas','id'=>'prel-filtro-categoria','value'=>$filtros['idcategoria']??'']) -->
+          <select name="idcategoria" id="prel-filtro-categoria">
+            <option value="">Todas as categorias</option>
+            <option value="1">Infraestrutura</option>
+            <option value="2">Software</option>
+            <option value="3">Rede</option>
+          </select>
+        </div>
+        <!-- PHP: endif; -->
+
+      </div><!-- /.prel-filtros__grade -->
+
+      <!-- SEGURANÇA: idcliente e idempresa sempre da sessão -->
+      <!-- PHP: // $idcliente = $this->Auth->user('idcliente'); — nunca exposto no form -->
+
+      <div class="prel-filtros__rodape">
+        <!-- PHP: echo $this->Form->submit('Aplicar filtros', ['class'=>'prel-btn prel-btn--primario']) -->
+        <button type="submit" class="prel-btn prel-btn--primario">Aplicar filtros</button>
+        <!-- PHP: echo $this->Html->link('Limpar', ['action'=>'index'], ['class'=>'prel-btn prel-btn--outline']) -->
+        <a href="/portal/relatorios" class="prel-btn prel-btn--outline">Limpar</a>
+      </div>
+
+    </div><!-- /#prel-filtros-corpo -->
+  </section>
+  <!-- PHP: echo $this->Form->end(); -->
+
+
+  <!-- ============================================================
+       SEÇÃO 3 — KPI CARDS
+  ============================================================ -->
+  <section class="prel-kpis" aria-label="Indicadores do período">
+
+    <!-- KPI 1 — Tickets no período -->
+    <div class="prel-kpi prel-kpi--azul">
+      <p class="prel-kpi__label">Tickets no período</p>
+      <!-- PHP: echo $kpi['tickets_periodo'] ?? '–' -->
+      <p class="prel-kpi__valor" aria-label="Total de tickets no período">47</p>
+      <!-- PHP: $cls = ($kpi['delta_tickets'] ?? 0) >= 0 ? 'neg' : 'pos'; // mais tickets = pior tendência -->
+      <p class="prel-kpi__delta prel-kpi__delta--neg">
+        <!-- PHP: echo ($kpi['delta_tickets'] > 0 ? '+' : '') . $kpi['delta_tickets'] . '% vs. período anterior' -->
+        +12% vs. período anterior
+      </p>
+    </div>
+
+    <!-- KPI 2 — Resolvidos -->
+    <div class="prel-kpi prel-kpi--verde">
+      <p class="prel-kpi__label">Resolvidos</p>
+      <!-- PHP: echo $kpi['resolvidos'] ?? '–' -->
+      <p class="prel-kpi__valor" aria-label="Tickets resolvidos">38</p>
+      <p class="prel-kpi__delta prel-kpi__delta--pos">
+        <!-- PHP: echo round(($kpi['resolvidos'] / max(1, $kpi['tickets_periodo'])) * 100) . '% do total' -->
+        81% do total
+      </p>
+    </div>
+
+    <!-- KPI 3 — Pendentes -->
+    <div class="prel-kpi prel-kpi--amarelo">
+      <p class="prel-kpi__label">Pendentes</p>
+      <!-- PHP: echo $kpi['pendentes'] ?? '–' -->
+      <p class="prel-kpi__valor" aria-label="Tickets pendentes">9</p>
+      <p class="prel-kpi__delta prel-kpi__delta--neg">
+        <!-- PHP: echo $kpi['pendentes'] . ' em aberto' -->
+        9 em aberto
+      </p>
+    </div>
+
+    <!-- KPI 4 — SLA atendido -->
+    <!-- SEGURANÇA: apenas percentual — nunca exibir SLO em minutos brutos -->
+    <div class="prel-kpi prel-kpi--roxo">
+      <p class="prel-kpi__label">SLA atendido</p>
+      <!-- PHP: echo ($kpi['sla_pct'] ?? '–') . '%' -->
+      <p class="prel-kpi__valor" aria-label="Percentual de SLA atendido no prazo">
+        <!-- PHP: echo $kpi['sla_pct'] ?? '–' -->94<small style="font-size:1.25rem">%</small>
+      </p>
+      <!-- PHP: $textoSla = $kpi['sla_pct'] >= 90 ? 'Dentro da meta' : ($kpi['sla_pct'] >= 75 ? 'Atenção' : 'Abaixo da meta') -->
+      <p class="prel-kpi__delta prel-kpi__delta--pos">
+        <!-- PHP: echo $textoSla -->Dentro da meta
+      </p>
+    </div>
+
+  </section><!-- /.prel-kpis -->
+
+
+  <!-- ============================================================
+       SEÇÃO 4 — NAVEGAÇÃO POR ABAS
+  ============================================================ -->
+  <nav class="prel-abas" aria-label="Abas de relatório">
+    <ul class="prel-abas__lista" role="tablist">
+
+      <!-- Aba Atendimentos — sempre visível -->
+      <li class="prel-abas__item" role="presentation">
+        <button
+          class="prel-abas__btn"
+          role="tab"
+          id="prel-tab-atendimentos"
+          aria-controls="prel-painel-atendimentos"
+          aria-selected="true"
+          tabindex="0"
+          data-aba="atendimentos"
+          onclick="prel.trocarAba('atendimentos')"
+        >
+          Atendimentos
+          <!-- PHP: if (($kpi['pendentes'] ?? 0) > 0): -->
+          <span class="prel-abas__badge" aria-label="tickets pendentes">
+            <!-- PHP: echo $kpi['pendentes'] -->9
+          </span>
+          <!-- PHP: endif; -->
+        </button>
+      </li>
+
+      <!-- Aba Contratos — requer permissão rel.contratos -->
+      <!-- PHP: if (!empty($permissoes['rel.contratos'])): -->
+      <li class="prel-abas__item" role="presentation">
+        <button
+          class="prel-abas__btn"
+          role="tab"
+          id="prel-tab-contratos"
+          aria-controls="prel-painel-contratos"
+          aria-selected="false"
+          tabindex="-1"
+          data-aba="contratos"
+          onclick="prel.trocarAba('contratos')"
+        >
+          Contratos
+        </button>
+      </li>
+      <!-- PHP: endif; -->
+
+      <!-- Aba Financeiro — requer permissão rel.financeiro (apenas gestor/admin financeiro) -->
+      <!-- PHP: if (!empty($permissoes['rel.financeiro'])): -->
+      <li class="prel-abas__item" role="presentation">
+        <button
+          class="prel-abas__btn"
+          role="tab"
+          id="prel-tab-financeiro"
+          aria-controls="prel-painel-financeiro"
+          aria-selected="false"
+          tabindex="-1"
+          data-aba="financeiro"
+          onclick="prel.trocarAba('financeiro')"
+        >
+          Financeiro
+        </button>
+      </li>
+      <!-- PHP: endif; -->
+
+    </ul>
+  </nav><!-- /.prel-abas -->
+
+
+  <!-- ============================================================
+       SEÇÃO 5 — PAINEL: ATENDIMENTOS
+  ============================================================ -->
+  <section
+    id="prel-painel-atendimentos"
+    class="prel-painel"
+    role="tabpanel"
+    aria-labelledby="prel-tab-atendimentos"
+    aria-hidden="false"
+    data-aba="atendimentos"
+  >
+
+    <!-- Estado: carregando (JS ativa quando faz fetch AJAX) -->
+    <div class="prel-estado" id="prel-atend-carregando" aria-hidden="true" aria-live="polite">
+      <div class="prel-estado__icone" aria-hidden="true">⏳</div>
+      <p class="prel-estado__titulo">Carregando…</p>
+    </div>
+
+    <!-- Estado: sem permissão -->
+    <!-- PHP: if (!empty($semPermissao)): -->
+    <div class="prel-estado" id="prel-atend-sem-permissao" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">🔒</div>
+      <p class="prel-estado__titulo">Acesso restrito</p>
+      <p class="prel-estado__descricao">Você não tem permissão para ver os relatórios de atendimento.</p>
+    </div>
+    <!-- PHP: elseif (!empty($erroCarregamento)): -->
+
+    <!-- Estado: erro -->
+    <div class="prel-estado" id="prel-atend-erro" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">⚠️</div>
+      <p class="prel-estado__titulo">Erro ao carregar</p>
+      <p class="prel-estado__descricao">Não foi possível carregar os dados. Tente novamente.</p>
+      <div class="prel-estado__acao">
+        <button type="button" class="prel-btn prel-btn--secundario" onclick="location.reload()">Tentar novamente</button>
+      </div>
+    </div>
+
+    <!-- Estado: sem dados (sem filtros ou sem registros históricos) -->
+    <!-- PHP: elseif (empty($dadosAtendimentos)): -->
+    <div class="prel-estado" id="prel-atend-vazio" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">📊</div>
+      <p class="prel-estado__titulo">Nenhum dado no período</p>
+      <p class="prel-estado__descricao">Selecione um período nos filtros acima para visualizar os dados.</p>
+      <div class="prel-estado__acao">
+        <button type="button" class="prel-btn prel-btn--primario" onclick="prel.expandirFiltros()">Definir período</button>
+      </div>
+    </div>
+
+    <!-- Estado: sem resultado (filtros ativos, zero registros) -->
+    <div class="prel-estado" id="prel-atend-sem-resultado" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">🔍</div>
+      <p class="prel-estado__titulo">Nenhum resultado encontrado</p>
+      <p class="prel-estado__descricao">Os filtros selecionados não retornaram dados. Tente ampliar o período.</p>
+      <div class="prel-estado__acao">
+        <a href="/portal/relatorios" class="prel-btn prel-btn--outline">Limpar filtros</a>
+      </div>
+    </div>
+
+    <!-- PHP: else: -->
+
+    <!-- BLOCO 5.1 — Tickets por período -->
+    <div class="prel-bloco" id="prel-bloco-tickets-periodo">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">Tickets por período</h2>
+        <div>
+          <label for="prel-agrupamento" style="font-size:.8125rem;color:#6b7280;margin-right:.375rem">Agrupar por</label>
+          <!-- PHP: echo $this->Form->select('agrupamento', ['dia'=>'Dia','semana'=>'Semana','mes'=>'Mês'], ['id'=>'prel-agrupamento']) -->
+          <select id="prel-agrupamento" style="font-size:.8125rem;padding:.375rem .625rem;border:1px solid #d1d5db;border-radius:.375rem;background:#fff" onchange="prel.atualizarGrafico()">
+            <option value="dia">Dia</option>
+            <option value="semana">Semana</option>
+            <option value="mes" selected>Mês</option>
+          </select>
+        </div>
+      </div>
+      <div class="prel-bloco__corpo">
+        <!-- Chart.js — canvas instanciado pelo layout pai -->
+        <!-- SEGURANÇA: JSON contém apenas contagens — sem custo, tempo_total, vlunit -->
+        <!-- PHP: $jsonPeriodo = json_encode($dadosAtendimentos['tickets_por_periodo']) -->
+        <div class="prel-bloco__grafico">
+          <canvas
+            id="prel-chart-tickets-periodo"
+            data-tipo="linha"
+            data-json='<?php /* echo $jsonPeriodo */ ?>'
+            aria-label="Gráfico de tickets por período"
+            role="img"
+          ></canvas>
+          <!-- Fallback textual (acessibilidade e impressão) -->
+          <noscript>
+            <table class="prel-tabela" aria-label="Tickets por período">
+              <thead><tr><th>Período</th><th>Abertos</th><th>Resolvidos</th><th>Pendentes</th></tr></thead>
+              <tbody>
+                <!-- PHP: foreach ($dadosAtendimentos['tickets_por_periodo'] as $linha): -->
+                <tr><td>Mar/2025</td><td>47</td><td>38</td><td>9</td></tr>
+                <!-- PHP: endforeach; -->
+              </tbody>
+            </table>
+          </noscript>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 5.2 — Tickets por categoria -->
+    <div class="prel-bloco" id="prel-bloco-tickets-categoria">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">Tickets por categoria</h2>
+      </div>
+      <div class="prel-bloco__corpo">
+        <div class="prel-grade-2">
+
+          <!-- Gráfico de barras horizontais -->
+          <!-- PHP: $jsonCategorias = json_encode($dadosAtendimentos['tickets_por_categoria']) -->
+          <div class="prel-bloco__grafico" style="min-height:200px">
+            <canvas
+              id="prel-chart-categorias"
+              data-tipo="barra-horizontal"
+              data-json='<?php /* echo $jsonCategorias */ ?>'
+              aria-label="Gráfico de tickets por categoria"
+              role="img"
+            ></canvas>
+          </div>
+
+          <!-- Tabela de ranking -->
+          <div class="prel-tabela-wrap">
+            <table class="prel-tabela" aria-label="Ranking de tickets por categoria">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th style="text-align:right">Qtd.</th>
+                  <th style="text-align:right">%</th>
+                  <th>Distribuição</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- PHP: foreach ($dadosAtendimentos['tickets_por_categoria'] as $cat): -->
+                <!-- PHP: $pct = round(($cat['qtd'] / max(1, $kpi['tickets_periodo'])) * 100) -->
+                <tr>
+                  <td><!-- PHP: echo h($cat['nome']) -->Infraestrutura</td>
+                  <td style="text-align:right">18</td>
+                  <td style="text-align:right">38%</td>
+                  <td style="min-width:80px">
+                    <div class="prel-barra">
+                      <div class="prel-barra__fill prel-barra__fill--azul" style="width:38%"></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Software</td>
+                  <td style="text-align:right">15</td>
+                  <td style="text-align:right">32%</td>
+                  <td>
+                    <div class="prel-barra">
+                      <div class="prel-barra__fill prel-barra__fill--azul" style="width:32%"></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Rede</td>
+                  <td style="text-align:right">9</td>
+                  <td style="text-align:right">19%</td>
+                  <td>
+                    <div class="prel-barra">
+                      <div class="prel-barra__fill prel-barra__fill--azul" style="width:19%"></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Outros</td>
+                  <td style="text-align:right">5</td>
+                  <td style="text-align:right">11%</td>
+                  <td>
+                    <div class="prel-barra">
+                      <div class="prel-barra__fill prel-barra__fill--azul" style="width:11%"></div>
+                    </div>
+                  </td>
+                </tr>
+                <!-- PHP: endforeach; -->
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td><strong>Total</strong></td>
+                  <!-- PHP: echo $kpi['tickets_periodo'] -->
+                  <td style="text-align:right"><strong>47</strong></td>
+                  <td style="text-align:right">100%</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 5.3 — SLA do período -->
+    <!-- SEGURANÇA: apenas percentual e classificação qualitativa — sem SLO em minutos -->
+    <div class="prel-bloco" id="prel-bloco-sla">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">SLA do período</h2>
+      </div>
+      <div class="prel-bloco__corpo">
+        <div class="prel-grade-2">
+
+          <!-- Indicadores -->
+          <dl style="display:grid;gap:.875rem;margin:0">
+            <!-- PHP: echo $dadosSla['no_prazo'] . ' (' . $dadosSla['no_prazo_pct'] . '%)' -->
+            <div class="prel-metrica" style="background:#f0fdf4;border:1px solid #bbf7d0">
+              <dt class="prel-metrica__label">Atendidos no prazo</dt>
+              <dd class="prel-metrica__valor" style="color:#16a34a">36 (94%)</dd>
+            </div>
+            <!-- PHP: echo $dadosSla['em_risco'] . ' (' . $dadosSla['em_risco_pct'] . '%)' -->
+            <div class="prel-metrica" style="background:#fffbeb;border:1px solid #fde68a">
+              <dt class="prel-metrica__label">Em risco</dt>
+              <dd class="prel-metrica__valor" style="color:#d97706">2 (5%)</dd>
+            </div>
+            <!-- PHP: echo $dadosSla['violados'] . ' (' . $dadosSla['violados_pct'] . '%)' -->
+            <div class="prel-metrica" style="background:#fef2f2;border:1px solid #fecaca">
+              <dt class="prel-metrica__label">Violados</dt>
+              <dd class="prel-metrica__valor" style="color:#dc2626">1 (1%)</dd>
+            </div>
+          </dl>
+
+          <!-- Donut SLA -->
+          <!-- PHP: $jsonSla = json_encode(['no_prazo'=>$dadosSla['no_prazo_pct'],'em_risco'=>$dadosSla['em_risco_pct'],'violado'=>$dadosSla['violados_pct']]) -->
+          <div class="prel-bloco__grafico" style="min-height:180px">
+            <canvas
+              id="prel-chart-sla"
+              data-tipo="donut"
+              data-json='{"no_prazo":94,"em_risco":5,"violado":1}'
+              aria-label="Distribuição de SLA: atendidos, em risco e violados"
+              role="img"
+            ></canvas>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PHP: endif; // fim $dadosAtendimentos -->
+
+  </section><!-- /#prel-painel-atendimentos -->
+
+
+  <!-- ============================================================
+       SEÇÃO 6 — PAINEL: CONTRATOS
+       Visível apenas para perfis com rel.contratos
+  ============================================================ -->
+  <!-- PHP: if (!empty($permissoes['rel.contratos'])): -->
+  <section
+    id="prel-painel-contratos"
+    class="prel-painel"
+    role="tabpanel"
+    aria-labelledby="prel-tab-contratos"
+    aria-hidden="true"
+    data-aba="contratos"
+  >
+
+    <!-- Estado: sem permissão -->
+    <!-- PHP: if (empty($permissoes['rel.contratos'])): -->
+    <div class="prel-estado" id="prel-cont-sem-permissao" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">🔒</div>
+      <p class="prel-estado__titulo">Acesso restrito</p>
+      <p class="prel-estado__descricao">Seu perfil não tem acesso ao relatório de contratos.</p>
+    </div>
+
+    <!-- Estado: erro -->
+    <!-- PHP: elseif (!empty($erroCarregamento)): -->
+    <div class="prel-estado" id="prel-cont-erro" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">⚠️</div>
+      <p class="prel-estado__titulo">Erro ao carregar</p>
+      <p class="prel-estado__descricao">Não foi possível carregar os dados de contratos.</p>
+      <div class="prel-estado__acao">
+        <button type="button" class="prel-btn prel-btn--secundario" onclick="location.reload()">Tentar novamente</button>
+      </div>
+    </div>
+
+    <!-- Estado: sem dados -->
+    <!-- PHP: elseif (empty($dadosContratos)): -->
+    <div class="prel-estado" id="prel-cont-vazio" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">📋</div>
+      <p class="prel-estado__titulo">Nenhum contrato encontrado</p>
+      <p class="prel-estado__descricao">Não há dados de contratos para o período selecionado.</p>
+    </div>
+
+    <!-- PHP: else: -->
+
+    <!-- BLOCO 6.1 — Consumo de franquia por contrato -->
+    <!-- SEGURANÇA: consumo em horas — sem valor monetário (vlunit, vltotal) -->
+    <div class="prel-bloco" id="prel-bloco-consumo">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">Consumo de franquia por contrato</h2>
+      </div>
+      <div class="prel-bloco__corpo">
+        <div class="prel-tabela-wrap">
+          <table class="prel-tabela" aria-label="Consumo de franquia por contrato">
+            <colgroup>
+              <col><!-- Contrato -->
+              <col style="width:14%"><!-- Franquia -->
+              <col style="width:14%"><!-- Consumido -->
+              <col style="width:14%"><!-- Saldo -->
+              <col style="width:20%"><!-- Utilização -->
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Contrato</th>
+                <!-- Sem coluna de valor (vlunit, vltotal) -->
+                <th style="text-align:right">Franquia</th>
+                <th style="text-align:right">Consumido</th>
+                <th style="text-align:right">Saldo</th>
+                <th>Utilização</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- PHP: foreach ($dadosContratos['consumo'] as $item): -->
+              <!-- PHP: $pct = min(round(($item['consumido_horas'] / max(1,$item['franquia_horas'])) * 100), 100) -->
+              <!-- PHP: $cor = $pct <= 60 ? 'verde' : ($pct <= 85 ? 'amarelo' : 'vermelho') -->
+
+              <!-- Linha: consumo normal (≤ 60%) -->
+              <tr>
+                <!-- PHP: echo h($item['nome_contrato']) -->
+                <td>Suporte Premium – HQ</td>
+                <td style="text-align:right">40h/mês</td>
+                <td style="text-align:right">18h</td>
+                <td style="text-align:right">22h</td>
+                <td>
+                  <div class="prel-barra" title="45% utilizado">
+                    <div class="prel-barra__fill prel-barra__fill--verde" style="width:45%"></div>
+                  </div>
+                  <small style="color:#6b7280;font-size:.7rem">45%</small>
+                </td>
+              </tr>
+
+              <!-- Linha: consumo em atenção (61–85%) -->
+              <tr>
+                <td>Suporte Básico – Filial SP</td>
+                <td style="text-align:right">20h/mês</td>
+                <td style="text-align:right">15h</td>
+                <td style="text-align:right">5h</td>
+                <td>
+                  <div class="prel-barra" title="75% utilizado">
+                    <div class="prel-barra__fill prel-barra__fill--amarelo" style="width:75%"></div>
+                  </div>
+                  <small style="color:#d97706;font-size:.7rem">75% — atenção</small>
+                </td>
+              </tr>
+
+              <!-- Linha: excedente (> 100%) -->
+              <tr style="background:#fff8f8">
+                <td>
+                  <!-- PHP: echo h($item['nome_contrato']) -->Contrato Matriz
+                  <span class="prel-badge prel-badge--vermelho" style="margin-left:.375rem">Excedente</span>
+                </td>
+                <td style="text-align:right">10h/mês</td>
+                <td style="text-align:right">13h</td>
+                <!-- PHP: if ($item['saldo_horas'] < 0): saldo negativo = excedente -->
+                <td style="text-align:right;color:#dc2626;font-weight:600">−3h</td>
+                <!-- PHP: endif; -->
+                <td>
+                  <div class="prel-barra" title="130% utilizado">
+                    <div class="prel-barra__fill prel-barra__fill--vermelho" style="width:100%"></div>
+                  </div>
+                  <small style="color:#dc2626;font-size:.7rem">130% — excedente</small>
+                </td>
+              </tr>
+
+              <!-- PHP: endforeach; -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Nota de excedente — sem mostrar valores monetários -->
+        <!-- PHP: if (!empty($dadosContratos['tem_excedente'])): -->
+        <p style="font-size:.8125rem;color:#6b7280;margin-top:.75rem;padding-top:.75rem;border-top:1px solid #f3f4f6">
+          * Horas excedentes são faturadas conforme contrato. Entre em contato para detalhes.
+        </p>
+        <!-- PHP: endif; -->
+      </div>
+    </div>
+
+    <!-- BLOCO 6.2 — SLA por prioridade (contratual) -->
+    <!-- SEGURANÇA: prazos em linguagem humana — sem minutos brutos -->
+    <div class="prel-bloco" id="prel-bloco-sla-contratual">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">SLA por prioridade</h2>
+      </div>
+      <div class="prel-bloco__corpo">
+        <div class="prel-tabela-wrap">
+          <table class="prel-tabela" aria-label="SLA por prioridade no período">
+            <colgroup>
+              <col style="width:15%"><!-- Prioridade -->
+              <!-- SEGURANÇA: "Prazo" = texto gerado pelo helper prel_formatarMinutos() — nunca minutos brutos -->
+              <col style="width:18%"><!-- Prazo (texto) -->
+              <col style="width:12%"><!-- Total -->
+              <col style="width:12%"><!-- No prazo -->
+              <col style="width:12%"><!-- Violados -->
+              <col><!-- Desempenho -->
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Prioridade</th>
+                <th>Prazo contratual</th>
+                <th style="text-align:right">Total</th>
+                <th style="text-align:right">No prazo</th>
+                <th style="text-align:right">Violados</th>
+                <th>Desempenho</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- PHP: foreach ($dadosContratos['sla_resumo'] as $linha): -->
+              <!-- PHP: // $prazo = prel_formatarMinutos($linha['resolucao_minutos']); NUNCA exibir minutos brutos -->
+              <!-- PHP: // $pct = ($linha['total'] > 0) ? round(($linha['no_prazo']/$linha['total'])*100) : 0 -->
+              <!-- PHP: // $cor = $pct >= 90 ? 'verde' : ($pct >= 75 ? 'amarelo' : 'vermelho') -->
+
+              <tr>
+                <td><span class="prel-badge prel-badge--vermelho">Crítico</span></td>
+                <td style="color:#6b7280;font-size:.8125rem">4 horas</td>
+                <td style="text-align:right">5</td>
+                <td style="text-align:right;color:#16a34a">5</td>
+                <td style="text-align:right;color:#dc2626">0</td>
+                <td>
+                  <div class="prel-barra"><div class="prel-barra__fill prel-barra__fill--verde" style="width:100%"></div></div>
+                  <small style="color:#16a34a;font-size:.7rem">100%</small>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="prel-badge prel-badge--amarelo">Alto</span></td>
+                <td style="color:#6b7280;font-size:.8125rem">8 horas</td>
+                <td style="text-align:right">12</td>
+                <td style="text-align:right;color:#16a34a">11</td>
+                <td style="text-align:right;color:#dc2626">1</td>
+                <td>
+                  <div class="prel-barra"><div class="prel-barra__fill prel-barra__fill--verde" style="width:92%"></div></div>
+                  <small style="color:#16a34a;font-size:.7rem">92%</small>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="prel-badge prel-badge--azul">Médio</span></td>
+                <td style="color:#6b7280;font-size:.8125rem">1 dia útil</td>
+                <td style="text-align:right">22</td>
+                <td style="text-align:right;color:#16a34a">21</td>
+                <td style="text-align:right;color:#dc2626">1</td>
+                <td>
+                  <div class="prel-barra"><div class="prel-barra__fill prel-barra__fill--verde" style="width:95%"></div></div>
+                  <small style="color:#16a34a;font-size:.7rem">95%</small>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="prel-badge prel-badge--cinza">Baixo</span></td>
+                <td style="color:#6b7280;font-size:.8125rem">3 dias úteis</td>
+                <td style="text-align:right">8</td>
+                <td style="text-align:right;color:#16a34a">8</td>
+                <td style="text-align:right;color:#dc2626">0</td>
+                <td>
+                  <div class="prel-barra"><div class="prel-barra__fill prel-barra__fill--verde" style="width:100%"></div></div>
+                  <small style="color:#16a34a;font-size:.7rem">100%</small>
+                </td>
+              </tr>
+              <!-- PHP: endforeach; -->
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2"><strong>Total geral</strong></td>
+                <td style="text-align:right"><strong>47</strong></td>
+                <td style="text-align:right;color:#16a34a"><strong>45</strong></td>
+                <td style="text-align:right;color:#dc2626"><strong>2</strong></td>
+                <td><small style="font-weight:600">94% no prazo</small></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHP: endif; // fim $dadosContratos -->
+
+  </section><!-- /#prel-painel-contratos -->
+  <!-- PHP: endif; // permissoes rel.contratos -->
+
+
+  <!-- ============================================================
+       SEÇÃO 7 — PAINEL: FINANCEIRO
+       Visível apenas para perfis com rel.financeiro
+  ============================================================ -->
+  <!-- PHP: if (!empty($permissoes['rel.financeiro'])): -->
+  <section
+    id="prel-painel-financeiro"
+    class="prel-painel"
+    role="tabpanel"
+    aria-labelledby="prel-tab-financeiro"
+    aria-hidden="true"
+    data-aba="financeiro"
+  >
+
+    <!-- Estado: sem permissão -->
+    <!-- PHP: if (empty($permissoes['rel.financeiro'])): -->
+    <div class="prel-estado" id="prel-fin-sem-permissao" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">🔒</div>
+      <p class="prel-estado__titulo">Acesso restrito</p>
+      <p class="prel-estado__descricao">Apenas usuários com perfil Financeiro podem visualizar este relatório.</p>
+    </div>
+
+    <!-- Estado: erro -->
+    <!-- PHP: elseif (!empty($erroCarregamento)): -->
+    <div class="prel-estado" id="prel-fin-erro" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">⚠️</div>
+      <p class="prel-estado__titulo">Erro ao carregar</p>
+      <p class="prel-estado__descricao">Não foi possível carregar os dados financeiros.</p>
+      <div class="prel-estado__acao">
+        <button type="button" class="prel-btn prel-btn--secundario" onclick="location.reload()">Tentar novamente</button>
+      </div>
+    </div>
+
+    <!-- Estado: sem dados -->
+    <!-- PHP: elseif (empty($dadosFinanceiro)): -->
+    <div class="prel-estado" id="prel-fin-vazio" aria-hidden="true">
+      <div class="prel-estado__icone" aria-hidden="true">💰</div>
+      <p class="prel-estado__titulo">Nenhum dado financeiro</p>
+      <p class="prel-estado__descricao">Não há faturas para o período selecionado.</p>
+    </div>
+
+    <!-- PHP: else: -->
+
+    <!-- BLOCO 7.1 — Resumo: faturas pagas × pendentes -->
+    <!-- SEGURANÇA: valores são totais agregados — sem vlunit, valor_subtotal, valor_desconto por item -->
+    <div class="prel-bloco" id="prel-bloco-faturas-resumo">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">Faturas pagas × pendentes</h2>
+      </div>
+      <div class="prel-bloco__corpo">
+        <div class="prel-grade-2">
+
+          <!-- Indicadores de resumo -->
+          <dl style="display:grid;gap:.875rem;margin:0">
+            <div class="prel-metrica" style="background:#f0fdf4;border:1px solid #bbf7d0">
+              <dt class="prel-metrica__label">
+                Pagas
+                <!-- PHP: echo '(' . $dadosFinanceiro['resumo']['pagas_qtd'] . ')' -->
+                <small style="font-weight:400">(3 faturas)</small>
+              </dt>
+              <!-- PHP: echo 'R$ ' . number_format($dadosFinanceiro['resumo']['total_pago'], 2, ',', '.') -->
+              <!-- SEGURANÇA: total_pago = somatório — nunca vlunit por item -->
+              <dd class="prel-metrica__valor" style="color:#15803d">R$ 8.400,00</dd>
+            </div>
+
+            <div class="prel-metrica" style="background:#fffbeb;border:1px solid #fde68a">
+              <dt class="prel-metrica__label">
+                Pendentes
+                <!-- PHP: echo '(' . $dadosFinanceiro['resumo']['pendentes_qtd'] . ')' -->
+                <small style="font-weight:400">(1 fatura)</small>
+              </dt>
+              <!-- PHP: echo 'R$ ' . number_format($dadosFinanceiro['resumo']['total_pendente'], 2, ',', '.') -->
+              <dd class="prel-metrica__valor" style="color:#92400e">R$ 2.800,00</dd>
+            </div>
+
+            <!-- PHP: if ($dadosFinanceiro['resumo']['vencidas_qtd'] > 0): -->
+            <div class="prel-metrica" style="background:#fef2f2;border:1px solid #fecaca">
+              <dt class="prel-metrica__label">
+                Vencidas
+                <!-- PHP: echo '(' . $dadosFinanceiro['resumo']['vencidas_qtd'] . ')' -->
+                <small style="font-weight:400">(0 faturas)</small>
+              </dt>
+              <!-- PHP: echo 'R$ ' . number_format($dadosFinanceiro['resumo']['total_vencido'], 2, ',', '.') -->
+              <dd class="prel-metrica__valor" style="color:#991b1b">R$ 0,00</dd>
+            </div>
+            <!-- PHP: endif; -->
+          </dl>
+
+          <!-- Donut — pago vs pendente vs vencido -->
+          <!-- PHP: $jsonFin = json_encode(['pago'=>$dadosFinanceiro['resumo']['total_pago'],'pendente'=>$dadosFinanceiro['resumo']['total_pendente'],'vencido'=>$dadosFinanceiro['resumo']['total_vencido']]) -->
+          <!-- SEGURANÇA: apenas totais agregados no JSON — sem detalhe por item -->
+          <div class="prel-bloco__grafico" style="min-height:200px">
+            <canvas
+              id="prel-chart-faturas"
+              data-tipo="donut"
+              data-json='{"pago":8400,"pendente":2800,"vencido":0}'
+              aria-label="Gráfico de faturas pagas, pendentes e vencidas"
+              role="img"
+            ></canvas>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 7.2 — Tabela de faturas do período -->
+    <div class="prel-bloco" id="prel-bloco-faturas-lista">
+      <div class="prel-bloco__cab">
+        <h2 class="prel-bloco__titulo">Faturas no período</h2>
+        <!-- Link para tela completa de faturas -->
+        <a href="/portal/contratos?aba=faturas" class="prel-btn prel-btn--outline" style="font-size:.8125rem">
+          Ver todas as faturas
+        </a>
+      </div>
+      <div class="prel-bloco__corpo">
+        <div class="prel-tabela-wrap">
+          <table class="prel-tabela" aria-label="Faturas no período">
+            <colgroup>
+              <col style="width:15%"><!-- Número -->
+              <col style="width:20%"><!-- Referência -->
+              <col style="width:20%"><!-- Vencimento -->
+              <!-- SEGURANÇA: "Valor" = valor_total (somatório) — sem valor_subtotal, valor_desconto, vlunit -->
+              <col style="width:18%"><!-- Valor total -->
+              <col style="width:15%"><!-- Status -->
+              <col><!-- Ações -->
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Fatura</th>
+                <th>Referência</th>
+                <th>Vencimento</th>
+                <th style="text-align:right">Valor total</th>
+                <th>Status</th>
+                <th style="text-align:center">PDF</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- PHP: foreach ($dadosFinanceiro['faturas'] as $fatura): -->
+
+              <!-- Linha: fatura paga -->
+              <tr id="prel-linha-fatura-FT0021">
+                <!-- PHP: echo h($fatura['numero']) -->
+                <td><strong>FT-0021</strong></td>
+                <!-- PHP: echo date('M/Y', strtotime($fatura['referencia'])) -->
+                <td>Mar/2025</td>
+                <td>
+                  <!-- PHP: echo $this->Time->format($fatura['data_vencimento'], 'd/m/Y') -->
+                  <time datetime="2025-03-10">10/03/2025</time>
+                </td>
+                <!-- PHP: echo 'R$ ' . number_format($fatura['valor_total'], 2, ',', '.') -->
+                <td style="text-align:right">R$ 2.800,00</td>
+                <td><span class="prel-badge prel-badge--verde">Paga</span></td>
+                <td style="text-align:center">
+                  <!-- PHP: if (!empty($permissoes['faturas.download'])): -->
+                  <a
+                    href="/portal/contratos/fatura/download/21"
+                    class="prel-btn prel-btn--outline prel-btn--ico"
+                    title="Baixar PDF"
+                    aria-label="Baixar fatura FT-0021 em PDF"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M3 12h10M8 2v8m0 0L5 7m3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </a>
+                  <!-- PHP: endif; -->
+                </td>
+              </tr>
+
+              <!-- Linha: fatura pendente (vencendo em breve) -->
+              <tr id="prel-linha-fatura-FT0022">
+                <td><strong>FT-0022</strong></td>
+                <td>Abr/2025</td>
+                <td>
+                  <time datetime="2025-04-10">10/04/2025</time>
+                  <!-- PHP: if ($diasParaVencer <= 7 && $diasParaVencer >= 0): -->
+                  <span class="prel-badge prel-badge--amarelo" style="margin-left:.25rem">
+                    <!-- PHP: echo $diasParaVencer . ' dias' -->5 dias
+                  </span>
+                  <!-- PHP: endif; -->
+                </td>
+                <td style="text-align:right">R$ 2.800,00</td>
+                <td><span class="prel-badge prel-badge--amarelo">Pendente</span></td>
+                <td style="text-align:center">
+                  <!-- PHP: if (!empty($permissoes['faturas.download'])): -->
+                  <a href="/portal/contratos/fatura/download/22" class="prel-btn prel-btn--outline prel-btn--ico" title="Baixar PDF" aria-label="Baixar fatura FT-0022 em PDF" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M3 12h10M8 2v8m0 0L5 7m3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </a>
+                  <!-- PHP: endif; -->
+                </td>
+              </tr>
+
+              <!-- PHP: endforeach; -->
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">Total no período</td>
+                <!-- PHP: echo 'R$ ' . number_format($dadosFinanceiro['resumo']['total_pago'] + $dadosFinanceiro['resumo']['total_pendente'], 2, ',', '.') -->
+                <td style="text-align:right"><strong>R$ 11.200,00</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHP: endif; // fim $dadosFinanceiro -->
+
+  </section><!-- /#prel-painel-financeiro -->
+  <!-- PHP: endif; // permissoes rel.financeiro -->
+
+
+  <!-- ============================================================
+       SEÇÃO 8 — RODAPÉ DE AÇÕES
+  ============================================================ -->
+  <footer class="prel-rodape" aria-label="Ações do relatório">
+    <div class="prel-rodape__info">
+      <!-- PHP: echo 'Relatório: ' . h($abaAtiva) . ' · ' . h($filtros['data_inicio']) . ' a ' . h($filtros['data_fim']) -->
+      <span id="prel-rodape-info">Relatório: Atendimentos · Período: 01/03/2025 a 31/03/2025</span>
+    </div>
+    <div class="prel-rodape__acoes">
+      <button class="prel-btn prel-btn--outline" type="button" onclick="window.print()">Imprimir</button>
+      <!-- PHP: if (!empty($permissoes['rel.exportar'])): -->
+      <a class="prel-btn prel-btn--secundario" href="#" id="prel-rodape-link-excel">Exportar Excel</a>
+      <a class="prel-btn prel-btn--secundario" href="#" id="prel-rodape-link-pdf">Exportar PDF</a>
+      <!-- PHP: endif; -->
+    </div>
+  </footer>
+
+</div><!-- /.prel-page -->
+
+
+<!-- ============================================================
+     JS INLINE — comportamento mínimo sem dependências externas
+     PHP: $this->Html->script('portal/prel', ['block' => true]);
+============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── Namespace público ── */
+  var prel = window.prel = {};
+
+  /* ── Aba ativa (lida da URL ou padrão) ── */
+  var abaAtual = (function () {
+    // PHP: pode ser sobrescrito inline: var abaAtual = '<?= $abaAtiva ?? "atendimentos" ?>';
+    var p = new URLSearchParams(window.location.search);
+    return p.get('aba') || 'atendimentos';
+  }());
+
+  /* ── Inicialização ── */
+  document.addEventListener('DOMContentLoaded', function () {
+    prel.trocarAba(abaAtual, false);
+    prel.atualizarLinksExportar(abaAtual);
+    prel.atualizarRodape(abaAtual);
+    prel.restaurarContadorFiltros();
+  });
+
+  /* ── Troca de aba ── */
+  prel.trocarAba = function (aba, atualizarUrl) {
+    document.querySelectorAll('.prel-painel').forEach(function (p) {
+      p.setAttribute('aria-hidden', p.dataset.aba === aba ? 'false' : 'true');
+    });
+    document.querySelectorAll('[role="tab"]').forEach(function (btn) {
+      var ativo = btn.dataset.aba === aba;
+      btn.setAttribute('aria-selected', ativo ? 'true' : 'false');
+      btn.setAttribute('tabindex', ativo ? '0' : '-1');
+    });
+    if (atualizarUrl !== false) {
+      var params = new URLSearchParams(window.location.search);
+      params.set('aba', aba);
+      history.pushState({ aba: aba }, '', '?' + params.toString());
+    }
+    abaAtual = aba;
+    prel.atualizarLinksExportar(aba);
+    prel.atualizarRodape(aba);
+  };
+
+  /* Restaurar aba ao navegar pelo histórico do browser */
+  window.addEventListener('popstate', function (e) {
+    if (e.state && e.state.aba) prel.trocarAba(e.state.aba, false);
+  });
+
+  /* ── Navegação por teclado (ARIA tabs pattern) ── */
+  document.addEventListener('keydown', function (e) {
+    if (!e.target.matches('[role="tab"]')) return;
+    var tabs = Array.from(document.querySelectorAll('[role="tab"]:not([disabled])'));
+    var idx  = tabs.indexOf(e.target);
+    var next;
+    if      (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
+    else if (e.key === 'ArrowLeft')  next = tabs[(idx - 1 + tabs.length) % tabs.length];
+    else if (e.key === 'Home')       next = tabs[0];
+    else if (e.key === 'End')        next = tabs[tabs.length - 1];
+    if (next) { next.click(); next.focus(); e.preventDefault(); }
+  });
+
+  /* ── Dropdown Exportar ── */
+  prel.toggleDropdown = function (nome) {
+    var drop  = document.getElementById('prel-dropdown-' + nome);
+    var aberto = drop.classList.toggle('prel-dropdown--aberto');
+    drop.querySelector('button').setAttribute('aria-expanded', aberto ? 'true' : 'false');
+  };
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.prel-dropdown')) {
+      document.querySelectorAll('.prel-dropdown--aberto').forEach(function (d) {
+        d.classList.remove('prel-dropdown--aberto');
+        var btn = d.querySelector('[aria-expanded]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+
+  /* ── Atualizar links de exportar conforme aba ── */
+  prel.atualizarLinksExportar = function (aba) {
+    var base   = '/portal/relatorios/exportar';
+    var params = new URLSearchParams(window.location.search);
+    params.set('aba', aba);
+    // idcliente é injetado pelo controller — nunca na URL pública
+    ['excel', 'pdf', 'csv'].forEach(function (fmt) {
+      params.set('formato', fmt);
+      var el = document.getElementById('prel-link-' + fmt);
+      if (el) el.href = base + '?' + params.toString();
+    });
+    ['excel', 'pdf'].forEach(function (fmt) {
+      params.set('formato', fmt);
+      var el = document.getElementById('prel-rodape-link-' + fmt);
+      if (el) el.href = base + '?' + params.toString();
+    });
+  };
+
+  /* ── Atualizar texto do rodapé ── */
+  prel.atualizarRodape = function (aba) {
+    var el = document.getElementById('prel-rodape-info');
+    if (!el) return;
+    var mapa = { atendimentos: 'Atendimentos', contratos: 'Contratos', financeiro: 'Financeiro' };
+    var p    = new URLSearchParams(window.location.search);
+    var de   = p.get('data_inicio') || '';
+    var ate  = p.get('data_fim') || '';
+    el.textContent = 'Relatório: ' + (mapa[aba] || aba)
+      + (de && ate ? ' · Período: ' + de + ' a ' + ate : '');
+  };
+
+  /* ── Filtros: recolher / expandir ── */
+  prel.toggleFiltros = function () {
+    var corpo = document.getElementById('prel-filtros-corpo');
+    var cab   = corpo.previousElementSibling;
+    var aberto = corpo.getAttribute('aria-hidden') !== 'true';
+    corpo.setAttribute('aria-hidden', aberto ? 'true' : 'false');
+    cab.setAttribute('aria-expanded', aberto ? 'false' : 'true');
+    var seta = document.getElementById('prel-filtros-seta');
+    if (seta) seta.style.transform = aberto ? 'rotate(180deg)' : '';
+  };
+
+  prel.expandirFiltros = function () {
+    var corpo = document.getElementById('prel-filtros-corpo');
+    var cab   = corpo.previousElementSibling;
+    corpo.setAttribute('aria-hidden', 'false');
+    cab.setAttribute('aria-expanded', 'true');
+  };
+
+  /* ── Atalhos de período ── */
+  prel.setPeriodo = function (btn) {
+    var hoje  = new Date();
+    var inicio, fim;
+    fim = new Date(hoje);
+    switch (btn.dataset.periodo) {
+      case 'hoje':
+        inicio = new Date(hoje);
+        break;
+      case '7d':
+        inicio = new Date(hoje); inicio.setDate(hoje.getDate() - 6);
+        break;
+      case '30d':
+        inicio = new Date(hoje); inicio.setDate(hoje.getDate() - 29);
+        break;
+      case 'mes':
+        inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        fim    = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        break;
+      case 'trimestre':
+        var m0  = Math.floor(hoje.getMonth() / 3) * 3;
+        inicio  = new Date(hoje.getFullYear(), m0, 1);
+        fim     = new Date(hoje.getFullYear(), m0 + 3, 0);
+        break;
+    }
+    var fmt = function (d) {
+      return d.getFullYear() + '-'
+        + String(d.getMonth() + 1).padStart(2, '0') + '-'
+        + String(d.getDate()).padStart(2, '0');
+    };
+    document.querySelector('[name="data_inicio"]').value = fmt(inicio);
+    document.querySelector('[name="data_fim"]').value    = fmt(fim);
+    document.querySelectorAll('[data-periodo]').forEach(function (b) {
+      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+    });
+  };
+
+  /* ── Contador de filtros ativos ── */
+  prel.restaurarContadorFiltros = function () {
+    var el = document.getElementById('prel-contador-filtros');
+    if (!el) return;
+    var params = new URLSearchParams(window.location.search);
+    var ativos = 0;
+    ['data_inicio', 'data_fim', 'idunidade', 'idcontrato', 'idcategoria'].forEach(function (k) {
+      if (params.get(k)) ativos++;
+    });
+    if (ativos > 0) el.textContent = ativos + ' ativo(s)';
+  };
+
+  /* ── Atualizar gráfico ao trocar agrupamento ── */
+  prel.atualizarGrafico = function () {
+    // PHP/JS: ao trocar agrupamento, re-fetch AJAX e reinicializar Chart.js
+    // Exemplo: fetch('/portal/relatorios/dados?secao=atendimentos&agrupamento=' + document.getElementById('prel-agrupamento').value + '&[filtros]')
+    //   .then(r => r.json()).then(dados => { /* destruir e recriar canvas */ });
+    // idcliente injetado pelo controller na resposta JSON — nunca na URL
+  };
+
+}());
+</script>
+
+</body>
+</html>

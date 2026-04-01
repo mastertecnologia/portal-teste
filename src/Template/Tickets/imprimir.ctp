@@ -11,7 +11,15 @@
 $autoPrint = (bool)$this->request->getQuery('autoprint');
 $statusTxt = trim(strip_tags((string)SituacaoTicket($ticket->situacao)));
 $autorNome = $ticket->users->name ?? $ticket['users']['name'] ?? '—';
-$dataAbertura = !empty($ticket->created) ? $ticket->created->format('d/m/Y H:i') : '—';
+$dataAbertura = '—';
+if (!empty($ticket->created)) {
+	$__tc = $ticket->created;
+	if ($__tc instanceof \DateTimeInterface) {
+		$dataAbertura = $__tc->format('d/m/Y H:i');
+	} else {
+		$dataAbertura = h((string)$__tc);
+	}
+}
 $emitidoEm = date('d/m/Y H:i');
 ?>
 <div class="ticket-print-document">
@@ -339,7 +347,7 @@ $emitidoEm = date('d/m/Y H:i');
 					<?php endif; ?>
 					<tr>
 						<th>Assunto</th>
-						<td><?= h(AssuntoTicket($ticket->assunto)) ?></td>
+						<td><?= AssuntoTicket($ticket->assunto) ?></td>
 					</tr>
 					<tr>
 						<th>Status</th>
@@ -467,42 +475,63 @@ $emitidoEm = date('d/m/Y H:i');
 							<?php
 								$dataM = $reg['datetime'] ?? null;
 								$dataTexto = '';
-								if ($dataM) {
+								if ($dataM instanceof \DateTimeInterface) {
 									try {
-										$dataTexto = $dataM->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y H:i');
+										$dataTexto = $dataM->setTimezone(new \DateTimeZone('America/Sao_Paulo'))->format('d/m/Y H:i');
 									} catch (\Throwable $e) {
 										$dataTexto = (string)$dataM;
 									}
+								} elseif ($dataM !== null && $dataM !== '') {
+									$dataTexto = (string)$dataM;
 								}
-								$movUser = $reg['user'] ?? null;
-								$autorMov = $movUser ? (string)$movUser->name : '';
-								$obs = $reg['observacao'] ?? '';
+								$movEnt = $reg['users'] ?? $reg->users ?? $reg['user'] ?? $reg->user ?? null;
+								$autorMov = $movEnt ? (string)$movEnt->name : '';
+								$obs = trim((string)($reg['observacao'] ?? ''));
 								$sitantiga = $reg['sitantiga'] ?? null;
 								$sitnova = $reg['sitnova'] ?? null;
-								$msg = null;
-								if ($sitnova === C_TicketAnexoAdicionado) {
-									$msg = 'Anexo adicionado: ' . $obs;
-								} elseif ($sitnova === C_TicketAnexoDeletado) {
-									$msg = 'Anexo removido: ' . $obs;
-								} elseif ($sitnova === C_TicketMovTransferencia) {
-									$msg = !empty($obs) ? $obs : 'Transferência de atendimento registrada.';
-								} elseif ($sitnova === C_TicketMovMudancaFila) {
-									$msg = !empty($obs) ? $obs : 'Mudança de fila registrada.';
+								$msg = '';
+								if ($sitantiga == C_TicketSituacaoPendente && (int)$sitnova === 0) {
+									$msg = 'Abriu o ticket.';
+								} elseif ($sitnova == C_TicketSituacaoPendente && $sitantiga == C_TicketSituacaoFechado) {
+									$msg = 'Reabriu o ticket.';
+								} elseif ($sitnova == C_TicketSituacaoPendente && $sitnova != $sitantiga) {
+									$msg = 'Alterou a situação do ticket para \'Pendente\'.';
+								} elseif ($sitnova == C_TicketSituacaoRespondido && $sitnova != $sitantiga) {
+									$msg = 'Publicou um comentário.';
+									if ($obs !== '') {
+										$msg .= ' ' . $obs;
+									}
+								} elseif ($sitnova == C_TicketSituacaoResolvido && $sitnova != $sitantiga && $obs === '') {
+									$msg = 'Resolveu o ticket.';
+								} elseif ($sitnova == C_TicketSituacaoResolvido && $sitnova != $sitantiga) {
+									$msg = $obs;
+								} elseif ($sitnova == C_TicketSituacaoEmandamento && $sitnova != $sitantiga) {
+									$msg = 'Alterou a situação do ticket para \'Em andamento\'.';
+								} elseif ($sitnova == C_TicketSituacaoFechado && $sitnova != $sitantiga) {
+									$msg = 'Cancelou o ticket. Motivo: ' . $obs;
+								} elseif (isset($sitnova) && (int)$sitnova === (int)C_TicketMovTransferencia) {
+									$msg = $obs !== '' ? $obs : 'Transferência de atendimento registrada.';
+								} elseif (isset($sitnova) && (int)$sitnova === (int)C_TicketMovMudancaFila) {
+									$msg = $obs !== '' ? $obs : 'Mudança de fila registrada.';
+								} elseif ((int)$sitnova === (int)C_TicketAnexoAdicionado) {
+									$msg = 'O anexo \'' . $obs . '\' foi adicionado.';
+								} elseif ((int)$sitnova === (int)C_TicketAnexoDeletado) {
+									$msg = 'O anexo \'' . $obs . '\' foi deletado.';
 								} elseif ($sitantiga !== null && $sitnova !== null) {
 									$sitAntTxt = trim(strip_tags((string)SituacaoTicket($sitantiga)));
 									$sitNovTxt = trim(strip_tags((string)SituacaoTicket($sitnova)));
 									if ($sitAntTxt !== '' && $sitNovTxt !== '' && $sitAntTxt !== $sitNovTxt) {
 										$msg = 'Situação: ' . $sitAntTxt . ' → ' . $sitNovTxt;
-									} elseif (!empty($obs)) {
+									} elseif ($obs !== '') {
 										$msg = $obs;
 									} else {
 										$msg = 'Atualização registrada: ' . ($sitNovTxt !== '' ? $sitNovTxt : 'situação mantida');
 									}
-									if (!empty($obs) && $msg !== $obs) {
+									if ($obs !== '' && $msg !== $obs && strpos($msg, $obs) === false) {
 										$msg .= "\nObs.: " . $obs;
 									}
 								} else {
-									$msg = !empty($obs) ? $obs : 'Movimentação registrada.';
+									$msg = $obs !== '' ? $obs : 'Movimentação registrada.';
 								}
 							?>
 							<tr>

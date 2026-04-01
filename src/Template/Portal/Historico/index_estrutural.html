@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<!--
+  ESTRUTURA: Portal do Cliente — Histórico de Atendimentos
+  ============================================================
+  Arquivo-base para conversão em: src/Template/Portal/Historico/index.ctp
+  Layout pai esperado: src/Template/Layout/portal.ctp
+  Controller: Portal/HistoricoController::index() (alias: cliente())
+
+  Variáveis PHP esperadas (CakePHP):
+    $tickets         — ResultSet paginado (apenas tickets do idcliente da sessão)
+    $kpi             — array com indicadores:
+                         total_periodo, em_execucao, finalizados, sla_atendido_pct
+    $filtros         — array com valores ativos: periodo_ini, periodo_fim,
+                         situacao, unidade, assunto, idcontrato
+    $unidades        — array id=>nome de unidades/filiais do cliente (se houver)
+    $contratos       — array id=>descricao dos contratos do cliente logado
+    $this->request->getParam('paging')  — metadados de paginação CakePHP
+
+  SEGURANÇA — regras invioláveis:
+    - idcliente SEMPRE de $this->Auth->user('idcliente') — nunca de GET/POST
+    - idempresa SEMPRE de $this->Auth->user('idempresa') — nunca de GET/POST
+    - Comentários com visivel_cliente = false são filtrados NO CONTROLLER
+      antes de chegar nesta view — esta view jamais os exibe
+    - Técnico: exibido apenas como nome (string) — sem link para perfil
+    - Fila, custo, tempo_total, notas internas: nunca exibidos aqui
+    - Anexos: URLs passam por /tickets/download-anexo/:id com verificação ABAC
+
+  SIDEBAR do layout pai (portal.ctp) — referência:
+    - Logo / nome do cliente logado
+    - Painel           /portal
+    - Meus Tickets     /portal/tickets        ← ativo em ticket aberto
+    - Histórico        /portal/historico      ← ATIVO nesta tela
+    - Contratos        /portal/contratos
+    - Faturas          /portal/faturas
+    - Relatórios       /portal/relatorios
+    - [Novo Chamado]   /portal/tickets/novo   ← botão primário no rodapé da sidebar
+    - Logout
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Atendimentos — Portal</title>
+  <!--
+    CSS carregado pelo layout pai (portal.ctp).
+    Estilos específicos desta tela (opcional):
+    <link rel="stylesheet" href="/css/portal-historico.css">
+  -->
+</head>
+<body class="portal-layout">
+
+<!--
+  ============================================================
+  NOTA: O layout pai (portal.ctp) já injeta:
+    - <header class="portal-header"> com logo e nome do usuário
+    - <nav class="portal-sidebar"> com menu lateral
+    - <main class="portal-main"> que envolve este conteúdo
+  O que está abaixo vai dentro de <main class="portal-main">.
+  ============================================================
+-->
+
+
+<!-- ============================================================
+     SEÇÃO 1 — CABEÇALHO DA PÁGINA
+     Breadcrumb + título + ações principais do cliente
+     ============================================================ -->
+<header class="phist-cabecalho">
+
+  <!-- Breadcrumb -->
+  <nav class="phist-breadcrumb" aria-label="Você está em">
+    <ol class="phist-breadcrumb__lista">
+      <li class="phist-breadcrumb__item">
+        <!-- PHP: <?= $this->Html->link('Portal', '/portal') ?> -->
+        <a href="/portal">Portal</a>
+      </li>
+      <li class="phist-breadcrumb__item phist-breadcrumb__item--ativo" aria-current="page">
+        Histórico de Atendimentos
+      </li>
+    </ol>
+  </nav>
+
+  <div class="phist-cabecalho__corpo">
+
+    <!-- Título e contexto -->
+    <div class="phist-cabecalho__titulo-grupo">
+      <h1 class="phist-cabecalho__titulo">Histórico de Atendimentos</h1>
+      <p class="phist-cabecalho__subtitulo">
+        Todos os chamados da sua empresa, com acompanhamento e histórico completo
+      </p>
+    </div>
+
+    <!-- Ações disponíveis para o cliente -->
+    <div class="phist-cabecalho__acoes">
+
+      <!-- Exportar: somente se a empresa/contrato permitir -->
+      <!-- PHP: <?php if ($permissoes['historico.exportar_cliente'] ?? false): ?> -->
+      <a href="/portal/historico/exportar"
+         class="btn-portal btn-portal--secundario"
+         title="Baixar histórico em PDF ou Excel"
+         aria-label="Exportar histórico de atendimentos">
+        <span class="phist-icone phist-icone--exportar" aria-hidden="true"></span>
+        Exportar
+      </a>
+      <!-- PHP: <?php endif ?> -->
+
+      <!-- Novo chamado — ação primária -->
+      <a href="/portal/tickets/novo"
+         class="btn-portal btn-portal--primario"
+         title="Abrir um novo chamado de suporte">
+        <span class="phist-icone phist-icone--mais" aria-hidden="true"></span>
+        Novo Chamado
+      </a>
+
+    </div>
+
+  </div><!-- /phist-cabecalho__corpo -->
+
+</header>
+<!-- /SEÇÃO 1 — CABEÇALHO -->
+
+
+<!-- ============================================================
+     SEÇÃO 2 — CARDS RESUMO (KPI do cliente)
+     4 indicadores — sem dados financeiros nem internos
+     Dados de: $kpi calculado pelo controller com idcliente da sessão
+     ============================================================ -->
+<section class="phist-kpi" aria-label="Resumo dos seus atendimentos">
+
+  <!-- KPI 1: Total de atendimentos no período -->
+  <article class="phist-kpi__card phist-kpi__card--azul">
+    <div class="phist-kpi__icone" aria-hidden="true">
+      <span class="phist-icone phist-icone--ticket"></span>
+    </div>
+    <div class="phist-kpi__corpo">
+      <span class="phist-kpi__rotulo">Total no período</span>
+      <!-- PHP: <?= $kpi['total_periodo'] ?? 0 ?> -->
+      <strong class="phist-kpi__valor" id="kpi-total">21</strong>
+      <span class="phist-kpi__detalhe">atendimentos abertos</span>
+    </div>
+  </article>
+
+  <!-- KPI 2: Em execução (não encerrados) -->
+  <article class="phist-kpi__card phist-kpi__card--laranja">
+    <div class="phist-kpi__icone" aria-hidden="true">
+      <span class="phist-icone phist-icone--em-execucao"></span>
+    </div>
+    <div class="phist-kpi__corpo">
+      <span class="phist-kpi__rotulo">Em execução</span>
+      <!-- PHP: <?= $kpi['em_execucao'] ?? 0 ?> -->
+      <strong class="phist-kpi__valor" id="kpi-em-execucao">3</strong>
+      <span class="phist-kpi__detalhe">chamados em andamento</span>
+    </div>
+    <a href="/portal/historico?situacao[]=aberto&situacao[]=em_andamento"
+       class="phist-kpi__link"
+       aria-label="Ver chamados em execução">
+      Ver ativos
+    </a>
+  </article>
+
+  <!-- KPI 3: Finalizados no período -->
+  <article class="phist-kpi__card phist-kpi__card--cinza">
+    <div class="phist-kpi__icone" aria-hidden="true">
+      <span class="phist-icone phist-icone--finalizado"></span>
+    </div>
+    <div class="phist-kpi__corpo">
+      <span class="phist-kpi__rotulo">Finalizados</span>
+      <!-- PHP: <?= $kpi['finalizados'] ?? 0 ?> -->
+      <strong class="phist-kpi__valor" id="kpi-finalizados">18</strong>
+      <span class="phist-kpi__detalhe">resolvidos no período</span>
+    </div>
+    <a href="/portal/historico?situacao[]=resolvido&situacao[]=encerrado"
+       class="phist-kpi__link"
+       aria-label="Ver chamados finalizados">
+      Ver finalizados
+    </a>
+  </article>
+
+  <!-- KPI 4: SLA atendido (%) — exibição simplificada sem valores internos de SLO -->
+  <article class="phist-kpi__card phist-kpi__card--verde">
+    <div class="phist-kpi__icone" aria-hidden="true">
+      <span class="phist-icone phist-icone--sla-ok"></span>
+    </div>
+    <div class="phist-kpi__corpo">
+      <span class="phist-kpi__rotulo">SLA atendido</span>
+      <!-- PHP: <?= number_format($kpi['sla_atendido_pct'] ?? 0, 1) ?>% -->
+      <strong class="phist-kpi__valor" id="kpi-sla">91,7%</strong>
+      <span class="phist-kpi__detalhe">dos chamados no prazo</span>
+    </div>
+  </article>
+
+</section>
+<!-- /SEÇÃO 2 — CARDS RESUMO -->
+
+
+<!-- ============================================================
+     SEÇÃO 3 — FILTROS
+     Parâmetros permitidos ao cliente; idcliente nunca vem daqui
+     ============================================================ -->
+<section class="phist-filtros" id="painel-filtros">
+
+  <div class="phist-filtros__cabecalho">
+    <h2 class="phist-filtros__titulo">
+      <span class="phist-icone phist-icone--filtro" aria-hidden="true"></span>
+      Filtrar chamados
+    </h2>
+    <button type="button"
+            class="btn-portal btn-portal--fantasma btn-portal--mini phist-filtros__toggle"
+            aria-expanded="true"
+            aria-controls="filtros-corpo"
+            title="Recolher ou expandir os filtros">
+      <span class="phist-icone phist-icone--seta-cima" aria-hidden="true"></span>
+      <span class="sr-only">Recolher filtros</span>
+    </button>
+  </div>
+
+  <!--
+    PHP: <?= $this->Form->create(null, [
+      'type'   => 'get',
+      'url'    => ['action' => 'index'],
+      'id'     => 'form-filtros',
+      'class'  => 'phist-filtros__form',
+    ]) ?>
+    SEGURANÇA: idcliente NÃO está neste form. O controller usa a sessão.
+  -->
+  <form method="get"
+        action="/portal/historico"
+        class="phist-filtros__form"
+        id="form-filtros"
+        role="search"
+        aria-label="Filtros de histórico de atendimentos">
+
+    <div class="phist-filtros__corpo" id="filtros-corpo">
+
+      <!-- Grade de filtros -->
+      <div class="phist-filtros__grade">
+
+        <!-- Filtro: Período — de -->
+        <div class="phist-campo">
+          <label for="filtro-periodo-ini" class="phist-campo__label">De</label>
+          <!--
+            PHP: <?= $this->Form->control('periodo_ini', [
+              'type'  => 'date',
+              'label' => false,
+              'id'    => 'filtro-periodo-ini',
+              'value' => $filtros['periodo_ini'] ?? date('Y-m-d', strtotime('-6 months')),
+            ]) ?>
+          -->
+          <input type="date"
+                 name="periodo_ini"
+                 id="filtro-periodo-ini"
+                 class="phist-campo__input"
+                 value=""
+                 aria-label="Data de início do período de pesquisa">
+        </div>
+
+        <!-- Filtro: Período — até -->
+        <div class="phist-campo">
+          <label for="filtro-periodo-fim" class="phist-campo__label">Até</label>
+          <!--
+            PHP: <?= $this->Form->control('periodo_fim', [
+              'type'  => 'date',
+              'label' => false,
+              'id'    => 'filtro-periodo-fim',
+              'value' => $filtros['periodo_fim'] ?? date('Y-m-d'),
+            ]) ?>
+          -->
+          <input type="date"
+                 name="periodo_fim"
+                 id="filtro-periodo-fim"
+                 class="phist-campo__input"
+                 value=""
+                 aria-label="Data de fim do período de pesquisa">
+        </div>
+
+        <!-- Filtro: Status do chamado -->
+        <div class="phist-campo">
+          <label for="filtro-situacao" class="phist-campo__label">Status</label>
+          <!--
+            PHP: <?= $this->Form->select('situacao[]', [
+              'aberto'            => 'Aberto',
+              'em_andamento'      => 'Em andamento',
+              'aguardando_cliente'=> 'Aguardando retorno',
+              'respondido'        => 'Respondido',
+              'resolvido'         => 'Resolvido',
+              'encerrado'         => 'Encerrado',
+            ], ['empty' => 'Todos os status', 'multiple' => true, 'value' => $filtros['situacao'] ?? []]) ?>
+          -->
+          <select name="situacao[]"
+                  id="filtro-situacao"
+                  class="phist-campo__input phist-campo__input--select"
+                  multiple
+                  aria-label="Filtrar por status do chamado">
+            <option value="aberto">Aberto</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="aguardando_cliente">Aguardando retorno</option>
+            <option value="respondido">Respondido</option>
+            <option value="resolvido">Resolvido</option>
+            <option value="encerrado">Encerrado</option>
+          </select>
+          <span class="phist-campo__dica">Ctrl+clique para múltiplos</span>
+        </div>
+
+        <!-- Filtro: Unidade / filial do cliente (se houver múltiplas) -->
+        <!-- PHP: <?php if (!empty($unidades)): ?> -->
+        <div class="phist-campo">
+          <label for="filtro-unidade" class="phist-campo__label">Unidade</label>
+          <!--
+            PHP: <?= $this->Form->select('unidade', $unidades, [
+              'empty' => 'Todas as unidades',
+              'value' => $filtros['unidade'] ?? '',
+            ]) ?>
+          -->
+          <select name="unidade"
+                  id="filtro-unidade"
+                  class="phist-campo__input phist-campo__input--select"
+                  aria-label="Filtrar por unidade ou filial">
+            <option value="">Todas as unidades</option>
+            <!-- PHP: foreach ($unidades as $id => $nome) -->
+            <option value="1">Matriz — São Paulo</option>
+            <option value="2">Filial — Campinas</option>
+            <!-- PHP: endforeach -->
+          </select>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+
+        <!-- Filtro: Contrato -->
+        <!-- PHP: <?php if (!empty($contratos)): ?> -->
+        <div class="phist-campo">
+          <label for="filtro-contrato" class="phist-campo__label">Contrato</label>
+          <!--
+            PHP: <?= $this->Form->select('idcontrato', $contratos, [
+              'empty' => 'Todos os contratos',
+              'value' => $filtros['idcontrato'] ?? '',
+            ]) ?>
+          -->
+          <select name="idcontrato"
+                  id="filtro-contrato"
+                  class="phist-campo__input phist-campo__input--select"
+                  aria-label="Filtrar por contrato">
+            <option value="">Todos os contratos</option>
+            <!-- PHP: foreach ($contratos as $id => $desc) -->
+            <option value="5">Suporte Premium</option>
+            <option value="8">Locação Mensal</option>
+            <!-- PHP: endforeach -->
+          </select>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+
+        <!-- Filtro: Assunto (busca livre) -->
+        <div class="phist-campo phist-campo--largo">
+          <label for="filtro-assunto" class="phist-campo__label">Assunto</label>
+          <!--
+            PHP: <?= $this->Form->control('assunto', [
+              'type'        => 'text',
+              'label'       => false,
+              'id'          => 'filtro-assunto',
+              'value'       => $filtros['assunto'] ?? '',
+              'placeholder' => 'Buscar por palavras no assunto...',
+            ]) ?>
+          -->
+          <input type="search"
+                 name="assunto"
+                 id="filtro-assunto"
+                 class="phist-campo__input"
+                 value=""
+                 placeholder="Buscar por palavras no assunto..."
+                 autocomplete="off"
+                 aria-label="Filtrar por palavras no assunto do chamado">
+        </div>
+
+        <!--
+          NÃO HÁ filtro de técnico — dado interno, não exposto ao cliente
+          NÃO HÁ filtro de fila — dado interno
+          NÃO HÁ filtro de prioridade — simplificado para o cliente
+        -->
+
+      </div><!-- /phist-filtros__grade -->
+
+    </div><!-- /filtros-corpo -->
+
+    <!-- Ações do form de filtros -->
+    <div class="phist-filtros__acoes">
+      <button type="submit"
+              class="btn-portal btn-portal--primario"
+              form="form-filtros">
+        <span class="phist-icone phist-icone--busca" aria-hidden="true"></span>
+        Filtrar
+      </button>
+      <a href="/portal/historico"
+         class="btn-portal btn-portal--fantasma"
+         title="Remover todos os filtros">
+        <span class="phist-icone phist-icone--limpar" aria-hidden="true"></span>
+        Limpar filtros
+      </a>
+      <!-- PHP: <?php if (!empty(array_filter($filtros))): ?> -->
+      <span class="phist-filtros__ativos-aviso" role="status" aria-live="polite">
+        <!-- PHP: <?= count(array_filter($filtros)) ?> filtro(s) ativo(s) -->
+        2 filtro(s) ativo(s)
+      </span>
+      <!-- PHP: <?php endif ?> -->
+    </div>
+
+  </form>
+  <!-- PHP: <?= $this->Form->end() ?> -->
+
+</section>
+<!-- /SEÇÃO 3 — FILTROS -->
+
+
+<!-- ============================================================
+     SEÇÃO 4 — BARRA DE CONTROLE DA TABELA
+     Contador de resultados, busca rápida e registros por página
+     ============================================================ -->
+<div class="phist-barra-controle">
+
+  <div class="phist-barra-controle__esquerda">
+    <!--
+      PHP: <?= $this->Paginator->counter('Exibindo {{start}}–{{end}} de {{count}} chamado(s)') ?>
+    -->
+    <span class="phist-contador" id="contador-resultados" aria-live="polite" aria-atomic="true">
+      Exibindo 1–15 de 21 chamados
+    </span>
+  </div>
+
+  <div class="phist-barra-controle__direita">
+
+    <!-- Registros por página -->
+    <label class="phist-por-pagina">
+      <span class="phist-por-pagina__rotulo">Exibir:</span>
+      <select name="limit"
+              class="phist-por-pagina__select"
+              form="form-filtros"
+              aria-label="Quantidade de registros por página">
+        <option value="15" selected>15</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+      </select>
+    </label>
+
+  </div>
+
+</div>
+<!-- /SEÇÃO 4 — BARRA DE CONTROLE -->
+
+
+<!-- ============================================================
+     SEÇÃO 5 — ÁREA PRINCIPAL: ESTADOS VISUAIS + TABELA
+     ============================================================ -->
+<section class="phist-lista" aria-label="Lista de atendimentos">
+
+
+  <!-- ── 5A. ESTADO: CARREGANDO ──────────────────────────────── -->
+  <!--
+    JS ativa este estado ao fazer requisições AJAX de atualização.
+    No carregamento inicial via PHP, este bloco fica hidden.
+  -->
+  <div class="phist-estado phist-estado--carregando"
+       id="estado-carregando"
+       hidden
+       role="status"
+       aria-live="polite">
+    <div class="phist-spinner" aria-hidden="true"></div>
+    <p class="phist-estado__mensagem">Carregando seus atendimentos...</p>
+  </div>
+
+
+  <!-- ── 5B. ESTADO: ERRO AO CARREGAR ───────────────────────── -->
+  <!-- PHP: <?php if (!empty($erroCarregamento)): ?> -->
+  <div class="phist-estado phist-estado--erro"
+       id="estado-erro"
+       role="alert"
+       aria-live="assertive">
+    <span class="phist-estado__icone phist-icone phist-icone--erro-circulo" aria-hidden="true"></span>
+    <h2 class="phist-estado__titulo">Não foi possível carregar os atendimentos</h2>
+    <p class="phist-estado__mensagem">
+      Ocorreu um problema ao buscar seus chamados. Tente novamente.
+    </p>
+    <button type="button"
+            class="btn-portal btn-portal--primario"
+            onclick="window.location.reload()"
+            aria-label="Recarregar a página e tentar novamente">
+      Tentar novamente
+    </button>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── 5C. ESTADO: SEM PERMISSÃO ──────────────────────────── -->
+  <!-- PHP: <?php if (!empty($semPermissao)): ?> -->
+  <div class="phist-estado phist-estado--sem-permissao"
+       id="estado-sem-permissao"
+       role="alert">
+    <span class="phist-estado__icone phist-icone phist-icone--cadeado" aria-hidden="true"></span>
+    <h2 class="phist-estado__titulo">Acesso não autorizado</h2>
+    <p class="phist-estado__mensagem">
+      Sua conta não tem permissão para visualizar o histórico de atendimentos.
+      Entre em contato com o administrador do seu portal.
+    </p>
+    <a href="/portal"
+       class="btn-portal btn-portal--secundario"
+       aria-label="Voltar ao painel do portal">
+      Voltar ao painel
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── 5D. ESTADO: LISTA VAZIA (sem filtros ativos) ────────── -->
+  <!-- PHP: <?php if (empty($tickets) && empty(array_filter($filtros))): ?> -->
+  <div class="phist-estado phist-estado--vazio"
+       id="estado-vazio">
+    <span class="phist-estado__icone phist-icone phist-icone--caixa-vazia" aria-hidden="true"></span>
+    <h2 class="phist-estado__titulo">Nenhum atendimento encontrado</h2>
+    <p class="phist-estado__mensagem">
+      Sua empresa ainda não possui atendimentos registrados no sistema.
+    </p>
+    <a href="/portal/tickets/novo"
+       class="btn-portal btn-portal--primario"
+       aria-label="Abrir o primeiro chamado de suporte">
+      Abrir o primeiro chamado
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── 5E. ESTADO: SEM RESULTADO (filtros aplicados) ────────── -->
+  <!-- PHP: <?php if (empty($tickets) && !empty(array_filter($filtros))): ?> -->
+  <div class="phist-estado phist-estado--sem-resultado"
+       id="estado-sem-resultado">
+    <span class="phist-estado__icone phist-icone phist-icone--busca-vazia" aria-hidden="true"></span>
+    <h2 class="phist-estado__titulo">Nenhum resultado para os filtros</h2>
+    <p class="phist-estado__mensagem">
+      Nenhum chamado corresponde ao período e critérios selecionados.
+    </p>
+    <a href="/portal/historico"
+       class="btn-portal btn-portal--secundario"
+       aria-label="Remover todos os filtros e ver todos os chamados">
+      Limpar filtros e ver todos
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── 5F. TABELA PRINCIPAL ──────────────────────────────────
+       Exibida apenas quando há registros.
+       Colunas simplificadas — sem dados internos.
+  ──────────────────────────────────────────────────────────── -->
+  <!-- PHP: <?php if (!empty($tickets)): ?> -->
+  <div class="phist-tabela-wrapper">
+    <table class="phist-tabela"
+           id="tabela-historico"
+           aria-label="Histórico de atendimentos da sua empresa">
+      <colgroup>
+        <col class="phist-col--ticket">
+        <col class="phist-col--data">
+        <col class="phist-col--assunto">
+        <col class="phist-col--tecnico">
+        <col class="phist-col--status">
+        <col class="phist-col--sla">
+        <col class="phist-col--acoes">
+      </colgroup>
+      <thead class="phist-tabela__cabecalho">
+        <tr>
+          <!-- Ordenação via Paginator helper no .ctp -->
+          <th class="phist-tabela__th" scope="col">
+            <!--
+              PHP: <?= $this->Paginator->sort('id', '#', ['direction' => 'desc']) ?>
+            -->
+            <a href="?sort=id&direction=desc" class="phist-th-sort">#</a>
+          </th>
+          <th class="phist-tabela__th" scope="col">
+            <!--
+              PHP: <?= $this->Paginator->sort('created', 'Data') ?>
+            -->
+            <a href="?sort=created&direction=desc" class="phist-th-sort">Data</a>
+          </th>
+          <th class="phist-tabela__th" scope="col">Assunto</th>
+          <th class="phist-tabela__th" scope="col">
+            Técnico
+            <!-- Apenas nome, sem link para perfil interno -->
+          </th>
+          <th class="phist-tabela__th" scope="col">Status</th>
+          <th class="phist-tabela__th" scope="col">SLA</th>
+          <th class="phist-tabela__th phist-tabela__th--acoes" scope="col">
+            <span class="sr-only">Ações</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="phist-tabela__corpo">
+
+        <!--
+          PHP: foreach ($tickets as $ticket):
+          Cada variável abaixo vem do objeto $ticket (CakePHP Entity)
+        -->
+
+        <!-- ── Linha normal ─────────────────────────────────── -->
+        <tr class="phist-tabela__linha" id="linha-ticket-4521">
+
+          <!-- Coluna: # Ticket -->
+          <td class="phist-tabela__td phist-tabela__td--ticket">
+            <button type="button"
+                    class="phist-link-ticket"
+                    data-ticket-id="4521"
+                    data-acao="abrir-detalhe"
+                    aria-label="Ver detalhes do ticket #4521"
+                    title="Ver detalhes do ticket #4521">
+              <!-- PHP: #<?= $ticket->id ?> -->
+              #4521
+            </button>
+          </td>
+
+          <!-- Coluna: Data de abertura -->
+          <td class="phist-tabela__td phist-tabela__td--data">
+            <!--
+              PHP: <?= $ticket->created->format('d/m/Y') ?>
+              Para encerrado: exibir datafinalizado no tooltip
+            -->
+            <time datetime="2026-03-30" title="Aberto em 30/03/2026 às 14h22">
+              30/03/2026
+            </time>
+          </td>
+
+          <!-- Coluna: Assunto (truncado, tooltip com texto completo) -->
+          <td class="phist-tabela__td phist-tabela__td--assunto">
+            <button type="button"
+                    class="phist-assunto-link"
+                    data-ticket-id="4521"
+                    data-acao="abrir-detalhe"
+                    title="Servidor inacessível após queda de energia — clique para ver detalhes">
+              <!-- PHP: <?= h(mb_strimwidth($ticket->assunto, 0, 65, '...')) ?> -->
+              Servidor inacessível após queda de energia
+            </button>
+          </td>
+
+          <!-- Coluna: Técnico responsável — somente nome, sem link -->
+          <td class="phist-tabela__td phist-tabela__td--tecnico">
+            <!--
+              PHP: <?= h($ticket->tecnico_responsavel->name ?? 'Não atribuído') ?>
+              Exibir "Equipe de suporte" se quiser ocultar o nome real.
+            -->
+            <span class="phist-tecnico-nome">Maria Santos</span>
+          </td>
+
+          <!-- Coluna: Status (badge colorido) -->
+          <td class="phist-tabela__td phist-tabela__td--status">
+            <!--
+              PHP: mapping de situacao → badge
+              0 / pendente       → phist-badge--pendente
+              em_andamento       → phist-badge--andamento
+              aguardando_cliente → phist-badge--aguardando
+              respondido         → phist-badge--respondido
+              resolvido          → phist-badge--resolvido
+              encerrado          → phist-badge--encerrado
+            -->
+            <span class="phist-badge phist-badge--andamento">Em andamento</span>
+          </td>
+
+          <!-- Coluna: SLA simplificado (sem valores em minutos de SLO) -->
+          <td class="phist-tabela__td phist-tabela__td--sla">
+            <!--
+              PHP: mapeamento de sla_status para exibição ao cliente:
+              dentro_sla → phist-badge--sla-ok      / "No prazo"
+              em_risco   → phist-badge--sla-risco   / "Em risco"
+              violado    → phist-badge--sla-violado / "Atrasado"
+              null       → phist-badge--sla-nd      / "—"
+            -->
+            <span class="phist-badge phist-badge--sla-ok">No prazo</span>
+          </td>
+
+          <!-- Coluna: Ações por linha -->
+          <td class="phist-tabela__td phist-tabela__td--acoes">
+            <div class="phist-acoes-linha" role="group" aria-label="Ações do ticket #4521">
+
+              <!-- Ação: Visualizar detalhe -->
+              <button type="button"
+                      class="phist-btn-acao phist-btn-acao--ver"
+                      data-ticket-id="4521"
+                      data-acao="abrir-detalhe"
+                      title="Ver detalhes do chamado #4521"
+                      aria-label="Ver detalhes do chamado #4521">
+                <span class="phist-icone phist-icone--ver" aria-hidden="true"></span>
+                <span class="phist-btn-acao__texto">Ver</span>
+              </button>
+
+              <!-- Ação: Anexos (exibe somente se houver anexos) -->
+              <!-- PHP: <?php if ($ticket->total_anexos > 0): ?> -->
+              <button type="button"
+                      class="phist-btn-acao phist-btn-acao--anexos"
+                      data-ticket-id="4521"
+                      data-acao="abrir-detalhe"
+                      data-aba-detalhe="anexos"
+                      title="Ver 2 anexo(s) do chamado #4521"
+                      aria-label="Ver anexos do chamado #4521">
+                <span class="phist-icone phist-icone--clipe" aria-hidden="true"></span>
+                <!-- PHP: <?= $ticket->total_anexos ?> -->
+                <span class="phist-btn-acao__badge">2</span>
+              </button>
+              <!-- PHP: <?php endif ?> -->
+
+              <!-- Ação: Avaliar atendimento (somente em chamados resolvidos/encerrados sem avaliação) -->
+              <!-- PHP: <?php if (in_array($ticket->situacao, ['resolvido', 'encerrado']) && empty($ticket->avaliacao)): ?> -->
+              <button type="button"
+                      class="phist-btn-acao phist-btn-acao--avaliar"
+                      data-ticket-id="4521"
+                      data-acao="abrir-avaliacao"
+                      title="Avaliar o atendimento do chamado #4521"
+                      aria-label="Avaliar atendimento do chamado #4521">
+                <span class="phist-icone phist-icone--estrela" aria-hidden="true"></span>
+                <span class="phist-btn-acao__texto">Avaliar</span>
+              </button>
+              <!-- PHP: <?php endif ?> -->
+
+              <!-- Ação: Reabrir (somente se permitido e chamado finalizado) -->
+              <!--
+                PHP: <?php if (
+                  in_array($ticket->situacao, ['resolvido', 'encerrado'])
+                  && ($permissoes['historico.reabrir_cliente'] ?? false)
+                  && $ticket->pode_reabrir
+                ): ?>
+              -->
+              <button type="button"
+                      class="phist-btn-acao phist-btn-acao--reabrir"
+                      data-ticket-id="4521"
+                      data-acao="confirmar-reabrir"
+                      title="Solicitar reabertura do chamado #4521"
+                      aria-label="Solicitar reabertura do chamado #4521">
+                <span class="phist-icone phist-icone--reabrir" aria-hidden="true"></span>
+                <span class="phist-btn-acao__texto">Reabrir</span>
+              </button>
+              <!-- PHP: <?php endif ?> -->
+
+            </div>
+          </td>
+        </tr>
+        <!-- /linha-ticket-4521 -->
+
+        <!-- ── Segunda linha (variação: resolvido + com avaliação) ── -->
+        <tr class="phist-tabela__linha phist-tabela__linha--resolvido" id="linha-ticket-4519">
+          <td class="phist-tabela__td phist-tabela__td--ticket">
+            <button type="button" class="phist-link-ticket"
+                    data-ticket-id="4519" data-acao="abrir-detalhe"
+                    aria-label="Ver detalhes do ticket #4519">
+              #4519
+            </button>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--data">
+            <time datetime="2026-03-28" title="Aberto em 28/03/2026">28/03/2026</time>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--assunto">
+            <button type="button" class="phist-assunto-link"
+                    data-ticket-id="4519" data-acao="abrir-detalhe"
+                    title="Lentidão no acesso ao sistema — clique para ver">
+              Lentidão no acesso ao sistema
+            </button>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--tecnico">
+            <span class="phist-tecnico-nome">João Silva</span>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--status">
+            <span class="phist-badge phist-badge--resolvido">Resolvido</span>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--sla">
+            <span class="phist-badge phist-badge--sla-ok">No prazo</span>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--acoes">
+            <div class="phist-acoes-linha" role="group" aria-label="Ações do ticket #4519">
+              <button type="button" class="phist-btn-acao phist-btn-acao--ver"
+                      data-ticket-id="4519" data-acao="abrir-detalhe"
+                      aria-label="Ver detalhes do chamado #4519">
+                <span class="phist-icone phist-icone--ver" aria-hidden="true"></span>
+                <span class="phist-btn-acao__texto">Ver</span>
+              </button>
+              <!-- Avaliação já realizada — exibe nota sem botão de ação -->
+              <span class="phist-avaliacao-nota" title="Avaliação: Ótimo (5 estrelas)">
+                <span class="phist-icone phist-icone--estrela-preenchida" aria-hidden="true"></span>
+                <!-- PHP: <?= $ticket->avaliacao->nota ?> -->
+                5
+              </span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ── Linha com SLA em risco ───────────────────────── -->
+        <tr class="phist-tabela__linha phist-tabela__linha--alerta" id="linha-ticket-4515">
+          <td class="phist-tabela__td phist-tabela__td--ticket">
+            <button type="button" class="phist-link-ticket"
+                    data-ticket-id="4515" data-acao="abrir-detalhe"
+                    aria-label="Ver detalhes do ticket #4515">
+              #4515
+            </button>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--data">
+            <time datetime="2026-03-25">25/03/2026</time>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--assunto">
+            <button type="button" class="phist-assunto-link"
+                    data-ticket-id="4515" data-acao="abrir-detalhe">
+              Erro ao gerar relatório mensal de faturamento
+            </button>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--tecnico">
+            <span class="phist-tecnico-nome">Equipe N2</span>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--status">
+            <span class="phist-badge phist-badge--andamento">Em andamento</span>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--sla">
+            <span class="phist-badge phist-badge--sla-risco">Em risco</span>
+          </td>
+          <td class="phist-tabela__td phist-tabela__td--acoes">
+            <div class="phist-acoes-linha" role="group" aria-label="Ações do ticket #4515">
+              <button type="button" class="phist-btn-acao phist-btn-acao--ver"
+                      data-ticket-id="4515" data-acao="abrir-detalhe"
+                      aria-label="Ver detalhes do chamado #4515">
+                <span class="phist-icone phist-icone--ver" aria-hidden="true"></span>
+                <span class="phist-btn-acao__texto">Ver</span>
+              </button>
+              <button type="button" class="phist-btn-acao phist-btn-acao--anexos"
+                      data-ticket-id="4515" data-acao="abrir-detalhe"
+                      data-aba-detalhe="anexos"
+                      aria-label="Ver anexo do chamado #4515">
+                <span class="phist-icone phist-icone--clipe" aria-hidden="true"></span>
+                <span class="phist-btn-acao__badge">1</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- PHP: endforeach -->
+
+      </tbody>
+    </table>
+  </div><!-- /phist-tabela-wrapper -->
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── PAGINAÇÃO ────────────────────────────────────────────── -->
+  <!-- PHP: <?php if (!empty($tickets)): ?> -->
+  <nav class="phist-paginacao" aria-label="Páginas do histórico de atendimentos">
+    <!--
+      PHP:
+      <?= $this->Paginator->prev('← Anterior', ['class' => 'btn-portal btn-portal--fantasma']) ?>
+      <?= $this->Paginator->numbers(['class' => 'phist-paginacao__numeros']) ?>
+      <?= $this->Paginator->next('Próximo →', ['class' => 'btn-portal btn-portal--fantasma']) ?>
+    -->
+    <a href="?page=1"
+       class="btn-portal btn-portal--fantasma phist-paginacao__prev"
+       aria-label="Página anterior">
+      ← Anterior
+    </a>
+    <span class="phist-paginacao__numeros">
+      <a href="?page=1" class="phist-paginacao__num phist-paginacao__num--ativo" aria-current="page" aria-label="Página 1">1</a>
+      <a href="?page=2" class="phist-paginacao__num" aria-label="Página 2">2</a>
+    </span>
+    <a href="?page=2"
+       class="btn-portal btn-portal--fantasma phist-paginacao__next"
+       aria-label="Próxima página">
+      Próximo →
+    </a>
+  </nav>
+  <!-- PHP: <?php endif ?> -->
+
+</section>
+<!-- /SEÇÃO 5 — ÁREA PRINCIPAL -->
+
+
+<!-- ============================================================
+     SEÇÃO 6 — PAINEL LATERAL / MODAL DE DETALHE DO TICKET
+     Ativado ao clicar em qualquer linha ou "Ver".
+     Dados carregados via AJAX: GET /portal/historico/detalhe/:id
+     ============================================================ -->
+
+<!-- Overlay que escurece o fundo ao abrir o painel -->
+<div class="phist-overlay" id="overlay-detalhe" hidden aria-hidden="true"></div>
+
+<!-- Painel lateral deslizante (slide-in pela direita) -->
+<aside class="phist-detalhe"
+       id="painel-detalhe"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="detalhe-titulo"
+       aria-hidden="true"
+       hidden>
+
+  <!-- Cabeçalho do painel de detalhe -->
+  <div class="phist-detalhe__cabecalho">
+    <div class="phist-detalhe__cabecalho-esquerda">
+      <button type="button"
+              class="btn-portal btn-portal--fantasma btn-portal--mini"
+              id="btn-fechar-detalhe"
+              aria-label="Fechar painel de detalhes">
+        <span class="phist-icone phist-icone--fechar" aria-hidden="true"></span>
+      </button>
+      <!-- PHP: #<?= h($ticketDetalhe->id) ?> -->
+      <h2 class="phist-detalhe__titulo" id="detalhe-titulo">#4521</h2>
+    </div>
+    <div class="phist-detalhe__cabecalho-direita">
+      <!-- Link para tela de detalhe completa (página separada) -->
+      <!-- PHP: <?= $this->Html->link('Abrir página completa', [... 'action' => 'clienteView', $ticketDetalhe->id]) ?> -->
+      <a href="/portal/historico/ver/4521"
+         class="btn-portal btn-portal--fantasma btn-portal--mini"
+         target="_blank"
+         rel="noopener"
+         aria-label="Abrir detalhes do ticket em página completa">
+        <span class="phist-icone phist-icone--abrir-externo" aria-hidden="true"></span>
+        Abrir completo
+      </a>
+    </div>
+  </div>
+
+  <!-- Estado: carregando detalhe -->
+  <div class="phist-detalhe__carregando"
+       id="detalhe-carregando"
+       role="status"
+       aria-live="polite"
+       hidden>
+    <div class="phist-spinner" aria-hidden="true"></div>
+    <p>Carregando detalhes...</p>
+  </div>
+
+  <!-- Estado: erro ao carregar detalhe -->
+  <div class="phist-detalhe__erro"
+       id="detalhe-erro"
+       role="alert"
+       hidden>
+    <span class="phist-icone phist-icone--erro-circulo" aria-hidden="true"></span>
+    <p>Não foi possível carregar os detalhes. <button type="button" data-acao="retentar-detalhe" class="btn-portal btn-portal--fantasma btn-portal--mini">Tentar novamente</button></p>
+  </div>
+
+  <!-- Conteúdo do detalhe (preenchido via AJAX) -->
+  <div class="phist-detalhe__conteudo" id="detalhe-conteudo">
+
+    <!-- ── 6A. RESUMO DO TICKET ─────────────────────────────────
+         Dados gerais — sem dados internos de custo ou fila
+    ──────────────────────────────────────────────────────────── -->
+    <div class="phist-detalhe__resumo">
+
+      <!-- Assunto completo -->
+      <h3 class="phist-detalhe__assunto">
+        <!-- PHP: <?= h($ticketDetalhe->assunto) ?> -->
+        Servidor inacessível após queda de energia
+      </h3>
+
+      <!-- Badges de status e SLA lado a lado -->
+      <div class="phist-detalhe__badges">
+        <span class="phist-badge phist-badge--andamento">Em andamento</span>
+        <span class="phist-badge phist-badge--sla-ok">SLA no prazo</span>
+      </div>
+
+      <!-- Meta-informações visíveis ao cliente -->
+      <dl class="phist-detalhe__meta">
+
+        <div class="phist-detalhe__meta-item">
+          <dt class="phist-detalhe__meta-rotulo">Aberto em</dt>
+          <dd class="phist-detalhe__meta-valor">
+            <!-- PHP: <?= $ticketDetalhe->created->format('d/m/Y \à\s H:i') ?> -->
+            <time datetime="2026-03-30T14:22">30/03/2026 às 14h22</time>
+          </dd>
+        </div>
+
+        <div class="phist-detalhe__meta-item">
+          <dt class="phist-detalhe__meta-rotulo">Solicitante</dt>
+          <dd class="phist-detalhe__meta-valor">
+            <!-- PHP: <?= h($ticketDetalhe->autor->name ?? 'Não informado') ?> -->
+            Carlos Pereira
+          </dd>
+        </div>
+
+        <div class="phist-detalhe__meta-item">
+          <dt class="phist-detalhe__meta-rotulo">Técnico responsável</dt>
+          <dd class="phist-detalhe__meta-valor">
+            <!-- PHP: <?= h($ticketDetalhe->tecnico_responsavel->name ?? 'Aguardando atribuição') ?> -->
+            <!-- Somente nome — sem link para perfil interno -->
+            Maria Santos
+          </dd>
+        </div>
+
+        <!-- Contrato (se vinculado) -->
+        <!-- PHP: <?php if (!empty($ticketDetalhe->contrato)): ?> -->
+        <div class="phist-detalhe__meta-item">
+          <dt class="phist-detalhe__meta-rotulo">Contrato</dt>
+          <dd class="phist-detalhe__meta-valor">
+            <!-- PHP: <?= h($ticketDetalhe->contrato->descricao) ?> -->
+            Suporte Premium
+          </dd>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+
+        <!-- Encerrado em (se finalizado) -->
+        <!-- PHP: <?php if (!empty($ticketDetalhe->datafinalizado)): ?> -->
+        <div class="phist-detalhe__meta-item">
+          <dt class="phist-detalhe__meta-rotulo">Encerrado em</dt>
+          <dd class="phist-detalhe__meta-valor">
+            <!-- PHP: <?= $ticketDetalhe->datafinalizado->format('d/m/Y') ?> -->
+            <time datetime="2026-03-31">31/03/2026</time>
+          </dd>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+
+      </dl>
+
+      <!-- Solicitação original (texto completo) -->
+      <div class="phist-detalhe__solicitacao">
+        <h4 class="phist-detalhe__solicitacao-titulo">Descrição do chamado</h4>
+        <!-- PHP: <?= nl2br(h($ticketDetalhe->solicitacao)) ?> -->
+        <div class="phist-detalhe__solicitacao-texto">
+          O servidor principal ficou inacessível após a queda de energia ocorrida
+          ontem à noite. Ao tentar acessar o sistema hoje de manhã, nenhum usuário
+          consegue logar. Precisamos de suporte urgente.
+        </div>
+      </div>
+
+    </div><!-- /phist-detalhe__resumo -->
+
+
+    <!-- ── ABAS DO PAINEL DE DETALHE ─────────────────────────── -->
+    <nav class="phist-detalhe-abas" aria-label="Seções do atendimento">
+      <ul class="phist-detalhe-abas__lista" role="tablist">
+        <li role="none">
+          <button type="button" role="tab"
+                  class="phist-detalhe-aba phist-detalhe-aba--ativa"
+                  id="aba-timeline"
+                  aria-selected="true"
+                  aria-controls="painel-timeline"
+                  data-aba="timeline">
+            Linha do tempo
+          </button>
+        </li>
+        <li role="none">
+          <button type="button" role="tab"
+                  class="phist-detalhe-aba"
+                  id="aba-mensagens"
+                  aria-selected="false"
+                  aria-controls="painel-mensagens"
+                  data-aba="mensagens">
+            Mensagens
+            <!-- PHP: <?php if ($totalMensagensPublicas > 0): ?> -->
+            <span class="phist-detalhe-aba__badge">3</span>
+            <!-- PHP: <?php endif ?> -->
+          </button>
+        </li>
+        <li role="none">
+          <button type="button" role="tab"
+                  class="phist-detalhe-aba"
+                  id="aba-anexos"
+                  aria-selected="false"
+                  aria-controls="painel-anexos"
+                  data-aba="anexos">
+            Anexos
+            <!-- PHP: <?php if ($totalAnexos > 0): ?> -->
+            <span class="phist-detalhe-aba__badge">2</span>
+            <!-- PHP: <?php endif ?> -->
+          </button>
+        </li>
+        <li role="none">
+          <button type="button" role="tab"
+                  class="phist-detalhe-aba"
+                  id="aba-sla"
+                  aria-selected="false"
+                  aria-controls="painel-sla"
+                  data-aba="sla">
+            SLA
+          </button>
+        </li>
+        <!-- Aba de avaliação somente se chamado resolvido/encerrado -->
+        <!-- PHP: <?php if (in_array($ticketDetalhe->situacao, ['resolvido', 'encerrado'])): ?> -->
+        <li role="none">
+          <button type="button" role="tab"
+                  class="phist-detalhe-aba"
+                  id="aba-avaliacao"
+                  aria-selected="false"
+                  aria-controls="painel-avaliacao"
+                  data-aba="avaliacao">
+            Avaliação
+          </button>
+        </li>
+        <!-- PHP: <?php endif ?> -->
+      </ul>
+    </nav>
+
+
+    <!-- ── 6B. ABA: LINHA DO TEMPO ──────────────────────────────
+         Eventos públicos do ticket em ordem cronológica.
+         Comentários com visivel_cliente=false NUNCA chegam aqui.
+    ──────────────────────────────────────────────────────────── -->
+    <div class="phist-aba-painel phist-aba-painel--ativo"
+         id="painel-timeline"
+         role="tabpanel"
+         aria-labelledby="aba-timeline"
+         tabindex="0">
+
+      <ol class="phist-timeline" aria-label="Eventos cronológicos do atendimento">
+
+        <!-- Evento: Ticket criado -->
+        <!-- PHP: foreach ($eventos as $evento): -->
+        <!-- PHP: if ($evento['tipo'] === 'ticket_created'): -->
+        <li class="phist-timeline__evento phist-timeline__evento--criacao">
+          <div class="phist-timeline__marcador" aria-hidden="true">
+            <span class="phist-icone phist-icone--ticket-novo"></span>
+          </div>
+          <div class="phist-timeline__corpo">
+            <div class="phist-timeline__cabecalho">
+              <!-- PHP: <?= h($evento['usuario']) ?> -->
+              <strong class="phist-timeline__autor">Carlos Pereira</strong>
+              <time class="phist-timeline__hora"
+                    datetime="2026-03-30T14:22"
+                    title="30/03/2026 às 14h22">
+                <!-- PHP: <?= $evento['timestamp']->format('d/m H:i') ?> -->
+                30/03 14h22
+              </time>
+            </div>
+            <p class="phist-timeline__descricao">Chamado aberto</p>
+          </div>
+        </li>
+        <!-- PHP: endif -->
+
+        <!-- Evento: Status alterado -->
+        <!-- PHP: if ($evento['tipo'] === 'status_changed'): -->
+        <li class="phist-timeline__evento phist-timeline__evento--status">
+          <div class="phist-timeline__marcador" aria-hidden="true">
+            <span class="phist-icone phist-icone--refresh"></span>
+          </div>
+          <div class="phist-timeline__corpo">
+            <div class="phist-timeline__cabecalho">
+              <strong class="phist-timeline__autor">Maria Santos</strong>
+              <time class="phist-timeline__hora" datetime="2026-03-30T15:10">30/03 15h10</time>
+            </div>
+            <p class="phist-timeline__descricao">
+              <!-- PHP: <?= h($evento['descricao']) ?> -->
+              Status alterado: <em>Pendente → Em andamento</em>
+            </p>
+          </div>
+        </li>
+        <!-- PHP: endif -->
+
+        <!-- Evento: Comentário público adicionado -->
+        <!-- PHP: if ($evento['tipo'] === 'comment_added' && $evento['publico']): -->
+        <li class="phist-timeline__evento phist-timeline__evento--comentario">
+          <div class="phist-timeline__marcador" aria-hidden="true">
+            <span class="phist-icone phist-icone--comentario"></span>
+          </div>
+          <div class="phist-timeline__corpo">
+            <div class="phist-timeline__cabecalho">
+              <strong class="phist-timeline__autor phist-timeline__autor--tecnico">Maria Santos</strong>
+              <span class="phist-timeline__role-badge">Técnico</span>
+              <time class="phist-timeline__hora" datetime="2026-03-30T16:45">30/03 16h45</time>
+            </div>
+            <p class="phist-timeline__descricao">
+              <!-- PHP: <?= h(mb_strimwidth($evento['descricao'], 0, 120, '...')) ?> -->
+              Identificamos o problema na inicialização do serviço. Estamos trabalhando na restauração...
+            </p>
+          </div>
+        </li>
+        <!-- PHP: endif -->
+
+        <!-- Evento: Anexo adicionado -->
+        <!-- PHP: if ($evento['tipo'] === 'attachment_added'): -->
+        <li class="phist-timeline__evento phist-timeline__evento--anexo">
+          <div class="phist-timeline__marcador" aria-hidden="true">
+            <span class="phist-icone phist-icone--clipe"></span>
+          </div>
+          <div class="phist-timeline__corpo">
+            <div class="phist-timeline__cabecalho">
+              <strong class="phist-timeline__autor">Maria Santos</strong>
+              <time class="phist-timeline__hora" datetime="2026-03-30T17:00">30/03 17h00</time>
+            </div>
+            <p class="phist-timeline__descricao">
+              <!-- PHP: <?= h($evento['descricao']) ?> -->
+              Arquivo <em>log-servidor-30-03.txt</em> anexado
+            </p>
+          </div>
+        </li>
+        <!-- PHP: endif -->
+
+        <!--
+          IMPORTANTE: eventos com publico = false (horas registradas,
+          notas internas) nunca chegam aqui — filtrados no controller.
+        -->
+
+        <!-- PHP: endforeach -->
+
+      </ol>
+    </div><!-- /painel-timeline -->
+
+
+    <!-- ── 6C. ABA: MENSAGENS PÚBLICAS ─────────────────────────
+         Comentários com visivel_cliente = true (único valor disponível aqui).
+         O campo "interno" e badge [INTERNO] nunca aparecem nesta view.
+    ──────────────────────────────────────────────────────────── -->
+    <div class="phist-aba-painel"
+         id="painel-mensagens"
+         role="tabpanel"
+         aria-labelledby="aba-mensagens"
+         tabindex="0"
+         hidden>
+
+      <!-- Lista de mensagens -->
+      <div class="phist-mensagens" aria-label="Mensagens do atendimento">
+
+        <!-- PHP: foreach ($comentariosPublicos as $comentario): -->
+
+        <!-- Mensagem da equipe técnica -->
+        <!-- PHP: if ($comentario->user_role === 0): -->
+        <article class="phist-mensagem phist-mensagem--tecnico">
+          <div class="phist-mensagem__cabecalho">
+            <div class="phist-mensagem__avatar phist-mensagem__avatar--tecnico" aria-hidden="true">
+              <!-- Iniciais do nome do técnico -->
+              <!-- PHP: <?= strtoupper(mb_substr($comentario->user->name, 0, 1)) ?> -->
+              M
+            </div>
+            <div class="phist-mensagem__meta">
+              <!-- Somente nome, sem link para perfil -->
+              <!-- PHP: <?= h($comentario->user->name ?? 'Técnico') ?> -->
+              <strong class="phist-mensagem__autor">Maria Santos</strong>
+              <span class="phist-badge phist-badge--tecnico">Técnico</span>
+              <time class="phist-mensagem__hora"
+                    datetime="2026-03-30T16:45"
+                    title="30/03/2026 às 16h45">
+                <!-- PHP: <?= $comentario->created->format('d/m/Y H:i') ?> -->
+                30/03/2026 às 16h45
+              </time>
+            </div>
+          </div>
+          <div class="phist-mensagem__texto">
+            <!--
+              PHP: <?= nl2br(h($comentario->comentario)) ?>
+              JAMAIS exibir $comentario->visivel_cliente aqui — já filtrado no controller.
+            -->
+            <p>Identificamos que o problema ocorreu devido ao não reinício automático
+            do serviço após a queda de energia. Estamos aplicando a correção de
+            configuração no servidor. Aguarde mais atualizações.</p>
+          </div>
+        </article>
+        <!-- PHP: endif -->
+
+        <!-- Mensagem do cliente -->
+        <!-- PHP: if ($comentario->user_role === 1): -->
+        <article class="phist-mensagem phist-mensagem--cliente">
+          <div class="phist-mensagem__cabecalho">
+            <div class="phist-mensagem__avatar phist-mensagem__avatar--cliente" aria-hidden="true">
+              C
+            </div>
+            <div class="phist-mensagem__meta">
+              <!-- PHP: <?= h($comentario->user->name ?? 'Cliente') ?> -->
+              <strong class="phist-mensagem__autor">Carlos Pereira</strong>
+              <span class="phist-badge phist-badge--cliente">Você</span>
+              <time class="phist-mensagem__hora" datetime="2026-03-30T17:10">
+                30/03/2026 às 17h10
+              </time>
+            </div>
+          </div>
+          <div class="phist-mensagem__texto">
+            <p>Entendido. Aguardamos. Os usuários ainda estão sem acesso.</p>
+          </div>
+        </article>
+        <!-- PHP: endif -->
+
+        <!-- PHP: endforeach -->
+
+        <!-- Estado vazio: sem mensagens ainda -->
+        <!-- PHP: <?php if (empty($comentariosPublicos)): ?> -->
+        <div class="phist-mensagens__vazio">
+          <span class="phist-icone phist-icone--comentario-vazio" aria-hidden="true"></span>
+          <p>Nenhuma mensagem neste chamado ainda.</p>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+
+      </div><!-- /phist-mensagens -->
+
+      <!-- Formulário de novo comentário (somente se chamado não encerrado) -->
+      <!-- PHP: <?php if (!in_array($ticketDetalhe->situacao, ['resolvido', 'encerrado', 'cancelado'])): ?> -->
+      <div class="phist-mensagem-form">
+        <h4 class="phist-mensagem-form__titulo">Enviar mensagem</h4>
+        <!--
+          PHP: <?= $this->Form->create(null, [
+            'url'    => ['controller' => 'TicketComentarios', 'action' => 'add', $ticketDetalhe->id],
+            'type'   => 'post',
+            'id'     => 'form-novo-comentario',
+          ]) ?>
+        -->
+        <form method="post"
+              action="/ticket-comentarios/add/4521"
+              id="form-novo-comentario"
+              class="phist-mensagem-form__form">
+
+          <!-- CSRF Token injetado pelo CakePHP FormHelper -->
+          <!-- PHP: <?= $this->Form->hidden('_csrfToken', ['value' => $this->request->getAttribute('csrfToken')]) ?> -->
+          <input type="hidden" name="_csrfToken" value="">
+
+          <div class="phist-campo">
+            <label for="novo-comentario" class="phist-campo__label sr-only">
+              Sua mensagem
+            </label>
+            <!--
+              PHP: <?= $this->Form->textarea('comentario', [
+                'id'          => 'novo-comentario',
+                'rows'        => 3,
+                'placeholder' => 'Digite sua mensagem ou atualização...',
+                'required'    => true,
+              ]) ?>
+            -->
+            <textarea name="comentario"
+                      id="novo-comentario"
+                      class="phist-campo__input phist-campo__input--textarea"
+                      rows="3"
+                      placeholder="Digite sua mensagem ou atualização..."
+                      required
+                      aria-required="true"
+                      maxlength="5000"></textarea>
+          </div>
+
+          <!--
+            CAMPO OCULTO: visivel_cliente sempre TRUE neste form do portal.
+            O campo interno é controlado exclusivamente na interface do ERP.
+          -->
+          <!-- PHP: <?= $this->Form->hidden('visivel_cliente', ['value' => '1']) ?> -->
+          <input type="hidden" name="visivel_cliente" value="1">
+
+          <div class="phist-mensagem-form__acoes">
+            <button type="submit"
+                    class="btn-portal btn-portal--primario"
+                    form="form-novo-comentario">
+              <span class="phist-icone phist-icone--enviar" aria-hidden="true"></span>
+              Enviar mensagem
+            </button>
+          </div>
+
+        </form>
+        <!-- PHP: <?= $this->Form->end() ?> -->
+      </div><!-- /phist-mensagem-form -->
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /painel-mensagens -->
+
+
+    <!-- ── 6D. ABA: ANEXOS PÚBLICOS ────────────────────────────
+         Somente anexos do ticket — sem dados de custo.
+         Download validado por ABAC no controller (rota existente).
+    ──────────────────────────────────────────────────────────── -->
+    <div class="phist-aba-painel"
+         id="painel-anexos"
+         role="tabpanel"
+         aria-labelledby="aba-anexos"
+         tabindex="0"
+         hidden>
+
+      <!-- PHP: <?php if (!empty($anexosPublicos)): ?> -->
+      <ul class="phist-anexos" aria-label="Arquivos anexados ao chamado">
+
+        <!-- PHP: foreach ($anexosPublicos as $anexo): -->
+        <li class="phist-anexos__item">
+          <div class="phist-anexos__icone" aria-hidden="true">
+            <!--
+              Escolher ícone por extensão:
+              .pdf → phist-icone--pdf
+              .xls/.xlsx → phist-icone--excel
+              .jpg/.png → phist-icone--imagem
+              outros → phist-icone--arquivo
+            -->
+            <span class="phist-icone phist-icone--arquivo"></span>
+          </div>
+          <div class="phist-anexos__info">
+            <!-- PHP: <?= h($anexo->arquivo) ?> -->
+            <span class="phist-anexos__nome">log-servidor-30-03.txt</span>
+            <span class="phist-anexos__meta">
+              <!-- PHP: <?= h($anexo->tamanho_formatado ?? '') ?> -->
+              <!-- PHP: · <?= $anexo->created->format('d/m/Y') ?> -->
+              24 KB · 30/03/2026
+            </span>
+          </div>
+          <div class="phist-anexos__acoes">
+            <!--
+              URL de download passa por verificação ABAC no controller.
+              Rota existente: /tickets/download-anexo/:id
+              Inline viewer: /tickets/download-anexo/:id?inline=1
+            -->
+            <!-- PHP: <?= $this->Html->link('Baixar', [
+              'controller' => 'Tickets',
+              'action'     => 'downloadAnexo',
+              $anexo->id,
+            ], ['class' => 'btn-portal btn-portal--secundario btn-portal--mini']) ?> -->
+            <a href="/tickets/download-anexo/201"
+               class="btn-portal btn-portal--secundario btn-portal--mini"
+               download
+               aria-label="Baixar arquivo log-servidor-30-03.txt">
+              <span class="phist-icone phist-icone--download" aria-hidden="true"></span>
+              Baixar
+            </a>
+          </div>
+        </li>
+        <!-- PHP: endforeach -->
+
+      </ul>
+      <!-- PHP: <?php else: ?> -->
+      <div class="phist-anexos__vazio">
+        <span class="phist-icone phist-icone--clipe-vazio" aria-hidden="true"></span>
+        <p>Nenhum arquivo anexado neste chamado.</p>
+      </div>
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /painel-anexos -->
+
+
+    <!-- ── 6E. ABA: SLA (visão simplificada para o cliente) ────
+         Sem valores em minutos de SLO.
+         Sem nome de política detalhada.
+         Sem percentual de consumo exato — apenas status visual.
+    ──────────────────────────────────────────────────────────── -->
+    <div class="phist-aba-painel"
+         id="painel-sla"
+         role="tabpanel"
+         aria-labelledby="aba-sla"
+         tabindex="0"
+         hidden>
+
+      <!-- PHP: <?php if (!empty($ticketDetalhe->sla_status)): ?> -->
+      <div class="phist-sla">
+
+        <!-- Status atual do SLA (simplificado) -->
+        <div class="phist-sla__status">
+          <!-- Badge: No prazo / Em risco / Atrasado -->
+          <span class="phist-badge phist-badge--sla-ok phist-badge--grande">No prazo</span>
+          <!--
+            PHP: mapeamento:
+            dentro_sla → phist-badge--sla-ok     "Dentro do prazo"
+            em_risco   → phist-badge--sla-risco  "Em risco de atraso"
+            violado    → phist-badge--sla-violado "Prazo ultrapassado"
+          -->
+        </div>
+
+        <!-- Barra de progresso do SLA (visual sem % exato) -->
+        <div class="phist-sla__barra-wrapper">
+          <div class="phist-sla__barra"
+               role="progressbar"
+               aria-valuenow="62"
+               aria-valuemin="0"
+               aria-valuemax="100"
+               aria-label="Tempo consumido do prazo de atendimento: 62%">
+            <div class="phist-sla__barra-fill phist-sla__barra-fill--risco"
+                 style="width: 62%">
+            </div>
+          </div>
+          <!--
+            Exibir apenas texto qualitativo — sem valor numérico exato de minutos.
+            PHP: baseado em sla_percentual_consumido para escolher o texto:
+            < 50%  → "Bastante tempo disponível"
+            50–80% → "Consumindo o prazo"
+            > 80%  → "Prazo próximo do limite"
+            > 100% → "Prazo ultrapassado"
+          -->
+          <span class="phist-sla__barra-texto">Consumindo o prazo</span>
+        </div>
+
+        <!-- Prazo limite (sem revelar política SLA interna) -->
+        <!-- PHP: <?php if (!empty($ticketDetalhe->sla_resolucao_prazo)): ?> -->
+        <dl class="phist-sla__detalhes">
+          <div class="phist-sla__detalhe-item">
+            <dt class="phist-sla__detalhe-rotulo">Prazo de atendimento</dt>
+            <dd class="phist-sla__detalhe-valor">
+              <!--
+                PHP: <?= $ticketDetalhe->sla_resolucao_prazo->format('d/m/Y \à\s H:i') ?>
+                Exibir apenas a data/hora limite — sem mencionar a política ou SLO em minutos
+              -->
+              <time datetime="2026-04-02T17:00">02/04/2026 às 17h00</time>
+            </dd>
+          </div>
+        </dl>
+        <!-- PHP: <?php endif ?> -->
+
+      </div><!-- /phist-sla -->
+
+      <!-- PHP: <?php else: ?> -->
+      <div class="phist-sla__indisponivel">
+        <span class="phist-icone phist-icone--sla-nd" aria-hidden="true"></span>
+        <p>Informações de SLA não disponíveis para este chamado.</p>
+      </div>
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /painel-sla -->
+
+
+    <!-- ── 6F. ABA: AVALIAÇÃO ───────────────────────────────────
+         Somente exibida em chamados resolvidos/encerrados
+    ──────────────────────────────────────────────────────────── -->
+    <!-- PHP: <?php if (in_array($ticketDetalhe->situacao, ['resolvido', 'encerrado'])): ?> -->
+    <div class="phist-aba-painel"
+         id="painel-avaliacao"
+         role="tabpanel"
+         aria-labelledby="aba-avaliacao"
+         tabindex="0"
+         hidden>
+
+      <!-- Avaliação já realizada -->
+      <!-- PHP: <?php if (!empty($ticketDetalhe->avaliacao)): ?> -->
+      <div class="phist-avaliacao phist-avaliacao--respondida">
+        <h4 class="phist-avaliacao__titulo">Sua avaliação</h4>
+        <!-- Nota em estrelas -->
+        <div class="phist-avaliacao__estrelas"
+             aria-label="Avaliação: 5 de 5 estrelas">
+          <!-- PHP: for ($i = 1; $i <= 5; $i++): -->
+          <!-- PHP: if ($i <= $ticketDetalhe->avaliacao->nota): -->
+          <span class="phist-icone phist-icone--estrela-preenchida" aria-hidden="true"></span>
+          <!-- PHP: else: -->
+          <span class="phist-icone phist-icone--estrela-vazia" aria-hidden="true"></span>
+          <!-- PHP: endif -->
+          <!-- PHP: endfor -->
+          ★★★★★
+        </div>
+        <!-- PHP: <?php if (!empty($ticketDetalhe->avaliacao->comentario)): ?> -->
+        <blockquote class="phist-avaliacao__comentario">
+          <!-- PHP: <?= nl2br(h($ticketDetalhe->avaliacao->comentario)) ?> -->
+          "Atendimento excelente, resolveram rapidamente!"
+        </blockquote>
+        <!-- PHP: <?php endif ?> -->
+        <p class="phist-avaliacao__data">
+          <!-- PHP: <?= $ticketDetalhe->avaliacao->created->format('d/m/Y') ?> -->
+          Avaliado em 31/03/2026
+        </p>
+      </div>
+      <!-- PHP: <?php else: ?> -->
+
+      <!-- Formulário de avaliação (ainda não realizada) -->
+      <div class="phist-avaliacao phist-avaliacao--pendente">
+        <h4 class="phist-avaliacao__titulo">Avalie este atendimento</h4>
+        <p class="phist-avaliacao__instrucao">
+          Sua opinião é importante para melhorarmos nosso suporte.
+        </p>
+        <!--
+          PHP: <?= $this->Form->create(null, [
+            'url'  => ['controller' => 'TicketAvaliacoes', 'action' => 'add', $ticketDetalhe->id],
+            'type' => 'post',
+            'id'   => 'form-avaliacao',
+          ]) ?>
+        -->
+        <form method="post"
+              action="/portal/historico/avaliar/4521"
+              id="form-avaliacao"
+              class="phist-avaliacao__form">
+
+          <input type="hidden" name="_csrfToken" value="">
+
+          <!-- Seletor de estrelas (input radio com CSS) -->
+          <fieldset class="phist-avaliacao__estrelas-form">
+            <legend class="phist-avaliacao__estrelas-legenda">
+              Qual é a sua nota? <span class="campo-obrigatorio" aria-hidden="true">*</span>
+            </legend>
+            <div class="phist-estrelas-grupo" role="group" aria-label="Selecionar nota de 1 a 5 estrelas">
+
+              <label class="phist-estrela-label" title="Muito ruim">
+                <input type="radio" name="nota" value="1" class="phist-estrela-input sr-only" required>
+                <span class="phist-icone phist-icone--estrela" aria-hidden="true"></span>
+                <span class="sr-only">1 estrela — Muito ruim</span>
+              </label>
+              <label class="phist-estrela-label" title="Ruim">
+                <input type="radio" name="nota" value="2" class="phist-estrela-input sr-only">
+                <span class="phist-icone phist-icone--estrela" aria-hidden="true"></span>
+                <span class="sr-only">2 estrelas — Ruim</span>
+              </label>
+              <label class="phist-estrela-label" title="Regular">
+                <input type="radio" name="nota" value="3" class="phist-estrela-input sr-only">
+                <span class="phist-icone phist-icone--estrela" aria-hidden="true"></span>
+                <span class="sr-only">3 estrelas — Regular</span>
+              </label>
+              <label class="phist-estrela-label" title="Bom">
+                <input type="radio" name="nota" value="4" class="phist-estrela-input sr-only">
+                <span class="phist-icone phist-icone--estrela" aria-hidden="true"></span>
+                <span class="sr-only">4 estrelas — Bom</span>
+              </label>
+              <label class="phist-estrela-label" title="Excelente">
+                <input type="radio" name="nota" value="5" class="phist-estrela-input sr-only">
+                <span class="phist-icone phist-icone--estrela" aria-hidden="true"></span>
+                <span class="sr-only">5 estrelas — Excelente</span>
+              </label>
+
+            </div>
+          </fieldset>
+
+          <!-- Comentário opcional -->
+          <div class="phist-campo">
+            <label for="avaliacao-comentario" class="phist-campo__label">
+              Comentário (opcional)
+            </label>
+            <textarea name="comentario"
+                      id="avaliacao-comentario"
+                      class="phist-campo__input phist-campo__input--textarea"
+                      rows="3"
+                      placeholder="Conte o que achou do atendimento..."
+                      maxlength="1000"></textarea>
+          </div>
+
+          <div class="phist-avaliacao__acoes">
+            <button type="submit"
+                    class="btn-portal btn-portal--primario"
+                    form="form-avaliacao">
+              <span class="phist-icone phist-icone--enviar" aria-hidden="true"></span>
+              Enviar avaliação
+            </button>
+          </div>
+
+        </form>
+        <!-- PHP: <?= $this->Form->end() ?> -->
+      </div><!-- /phist-avaliacao--pendente -->
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /painel-avaliacao -->
+    <!-- PHP: <?php endif ?> -->
+
+  </div><!-- /phist-detalhe__conteudo -->
+
+</aside>
+<!-- /SEÇÃO 6 — PAINEL DE DETALHE -->
+
+
+<!-- ============================================================
+     SEÇÃO 7 — MODAL DE CONFIRMAÇÃO: REABRIR CHAMADO
+     Ativado ao clicar em "Reabrir" em uma linha da tabela
+     ============================================================ -->
+<dialog class="phist-modal"
+        id="modal-reabrir"
+        aria-labelledby="modal-reabrir-titulo"
+        aria-describedby="modal-reabrir-descricao">
+
+  <div class="phist-modal__conteudo">
+
+    <div class="phist-modal__cabecalho">
+      <h2 class="phist-modal__titulo" id="modal-reabrir-titulo">Solicitar reabertura</h2>
+      <button type="button"
+              class="btn-portal btn-portal--fantasma btn-portal--mini phist-modal__fechar"
+              aria-label="Fechar este diálogo">
+        <span class="phist-icone phist-icone--fechar" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="phist-modal__corpo">
+      <p id="modal-reabrir-descricao">
+        Você está solicitando a reabertura do chamado
+        <strong id="modal-reabrir-ticket-num">#4521</strong>.
+        Por favor, informe o motivo para que a equipe possa dar continuidade
+        ao atendimento.
+      </p>
+      <!--
+        PHP: <?= $this->Form->create(null, [
+          'url'  => ['action' => 'reabrir'],
+          'type' => 'post',
+          'id'   => 'form-reabrir',
+        ]) ?>
+      -->
+      <form method="post"
+            action="/portal/historico/reabrir"
+            id="form-reabrir">
+
+        <input type="hidden" name="_csrfToken" value="">
+        <!-- Ticket ID preenchido via JS antes de abrir o modal -->
+        <input type="hidden" name="ticket_id" id="reabrir-ticket-id" value="">
+
+        <div class="phist-campo">
+          <label for="reabrir-motivo" class="phist-campo__label">
+            Motivo da reabertura <span class="campo-obrigatorio" aria-hidden="true">*</span>
+          </label>
+          <textarea name="motivo"
+                    id="reabrir-motivo"
+                    class="phist-campo__input phist-campo__input--textarea"
+                    rows="3"
+                    placeholder="Descreva por que o chamado precisa ser reaberto..."
+                    required
+                    aria-required="true"
+                    maxlength="1000"></textarea>
+        </div>
+
+      </form>
+      <!-- PHP: <?= $this->Form->end() ?> -->
+    </div>
+
+    <div class="phist-modal__rodape">
+      <button type="button"
+              class="btn-portal btn-portal--fantasma phist-modal__fechar"
+              aria-label="Cancelar e fechar">
+        Cancelar
+      </button>
+      <button type="submit"
+              form="form-reabrir"
+              class="btn-portal btn-portal--primario">
+        <span class="phist-icone phist-icone--reabrir" aria-hidden="true"></span>
+        Confirmar reabertura
+      </button>
+    </div>
+
+  </div>
+</dialog>
+<!-- /SEÇÃO 7 — MODAL REABRIR -->
+
+
+<!-- ============================================================
+     SCRIPT: COMPORTAMENTOS DA TELA
+     JS inline mínimo, sem dependências externas.
+     Responsável por: abertura do painel lateral, alternância
+     de abas do detalhe, filtros de toggle, modal de reabertura
+     e seletor de estrelas para avaliação.
+     Requisições AJAX para detalhe: GET /portal/historico/detalhe/:id
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Referências principais ─────────────────────────────── */
+  var painel   = document.getElementById('painel-detalhe');
+  var overlay  = document.getElementById('overlay-detalhe');
+  var btnFechar = document.getElementById('btn-fechar-detalhe');
+
+  /* ─── Abrir painel de detalhe ────────────────────────────── */
+  function abrirDetalhe(ticketId, abaInicial) {
+    if (!painel) return;
+
+    var carregando = document.getElementById('detalhe-carregando');
+    var conteudo   = document.getElementById('detalhe-conteudo');
+    var erroEl     = document.getElementById('detalhe-erro');
+
+    // Mostrar painel e overlay
+    painel.hidden  = false;
+    overlay.hidden = false;
+    painel.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('phist-sem-scroll');
+
+    // Estado: carregando
+    if (carregando) carregando.hidden = false;
+    if (conteudo)   conteudo.hidden   = true;
+    if (erroEl)     erroEl.hidden     = true;
+
+    // Mover foco para o painel
+    painel.focus();
+
+    // AJAX: buscar detalhe (substituir por fetch no .ctp)
+    // PHP equivalente: a tela de detalhe completa é /portal/historico/ver/:id
+    // Para o painel lateral, usar: GET /portal/historico/detalhe/:id (JSON parcial)
+    // Exemplo de fetch:
+    // fetch('/portal/historico/detalhe/' + ticketId)
+    //   .then(function(r) { return r.json(); })
+    //   .then(function(dados) { preencherDetalhe(dados); ativarAba(abaInicial || 'timeline'); })
+    //   .catch(function() { if (erroEl) { erroEl.hidden = false; if (carregando) carregando.hidden = true; } });
+
+    // Simulação: aguardar e mostrar conteúdo estático (remover no .ctp real)
+    setTimeout(function () {
+      if (carregando) carregando.hidden = true;
+      if (conteudo)   conteudo.hidden   = false;
+      if (abaInicial) ativarAbaDetalhe(abaInicial);
+    }, 300);
+  }
+
+  /* ─── Fechar painel de detalhe ───────────────────────────── */
+  function fecharDetalhe() {
+    if (!painel) return;
+    painel.hidden  = true;
+    overlay.hidden = true;
+    painel.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('phist-sem-scroll');
+  }
+
+  if (btnFechar) btnFechar.addEventListener('click', fecharDetalhe);
+  if (overlay)   overlay.addEventListener('click', fecharDetalhe);
+
+  // Tecla Escape fecha o painel
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && painel && !painel.hidden) fecharDetalhe();
+  });
+
+  /* ─── Delegação de cliques para abrir detalhe ────────────── */
+  document.addEventListener('click', function (e) {
+    var gatilho = e.target.closest('[data-acao="abrir-detalhe"]');
+    if (!gatilho) return;
+    var id  = gatilho.getAttribute('data-ticket-id');
+    var aba = gatilho.getAttribute('data-aba-detalhe') || 'timeline';
+    if (id) abrirDetalhe(id, aba);
+  });
+
+  /* ─── Alternância de abas do detalhe ─────────────────────── */
+  var ABAS_DETALHE    = document.querySelectorAll('.phist-detalhe-aba');
+  var PAINEIS_DETALHE = document.querySelectorAll('.phist-aba-painel');
+
+  function ativarAbaDetalhe(nomeAba) {
+    ABAS_DETALHE.forEach(function (aba) {
+      var ativo = aba.getAttribute('data-aba') === nomeAba;
+      aba.setAttribute('aria-selected', ativo ? 'true' : 'false');
+      aba.classList.toggle('phist-detalhe-aba--ativa', ativo);
+    });
+    PAINEIS_DETALHE.forEach(function (p) {
+      var controlador = p.getAttribute('aria-labelledby');
+      var abaEl = document.getElementById(controlador);
+      var ativo  = abaEl && abaEl.getAttribute('data-aba') === nomeAba;
+      p.hidden = !ativo;
+    });
+  }
+
+  ABAS_DETALHE.forEach(function (aba) {
+    aba.addEventListener('click', function () {
+      ativarAbaDetalhe(aba.getAttribute('data-aba'));
+    });
+    // Suporte a teclado
+    aba.addEventListener('keydown', function (e) {
+      var lista = Array.from(ABAS_DETALHE);
+      var idx = lista.indexOf(aba);
+      if (e.key === 'ArrowRight' && idx < lista.length - 1) {
+        lista[idx + 1].focus();
+        ativarAbaDetalhe(lista[idx + 1].getAttribute('data-aba'));
+      }
+      if (e.key === 'ArrowLeft' && idx > 0) {
+        lista[idx - 1].focus();
+        ativarAbaDetalhe(lista[idx - 1].getAttribute('data-aba'));
+      }
+    });
+  });
+
+  /* ─── Recolher/expandir filtros ──────────────────────────── */
+  var btnToggle    = document.querySelector('.phist-filtros__toggle');
+  var corpoFiltros = document.getElementById('filtros-corpo');
+  if (btnToggle && corpoFiltros) {
+    btnToggle.addEventListener('click', function () {
+      var expandido = btnToggle.getAttribute('aria-expanded') === 'true';
+      btnToggle.setAttribute('aria-expanded', String(!expandido));
+      corpoFiltros.hidden = expandido;
+    });
+  }
+
+  /* ─── Modal de reabertura ─────────────────────────────────── */
+  var modalReabrir = document.getElementById('modal-reabrir');
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-acao="confirmar-reabrir"]');
+    if (!btn || !modalReabrir) return;
+
+    var ticketId  = btn.getAttribute('data-ticket-id');
+    var numEl     = document.getElementById('modal-reabrir-ticket-num');
+    var idInput   = document.getElementById('reabrir-ticket-id');
+
+    if (numEl)   numEl.textContent = '#' + ticketId;
+    if (idInput) idInput.value     = ticketId;
+
+    if (modalReabrir.showModal) {
+      modalReabrir.showModal();
+    } else {
+      modalReabrir.removeAttribute('hidden');
+    }
+  });
+
+  document.querySelectorAll('.phist-modal__fechar').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (modalReabrir) {
+        if (modalReabrir.close) modalReabrir.close();
+        else modalReabrir.setAttribute('hidden', '');
+      }
+    });
+  });
+
+  /* ─── Seletor de estrelas (avaliação) ────────────────────── */
+  var grupoEstrelas = document.querySelector('.phist-estrelas-grupo');
+  if (grupoEstrelas) {
+    var labels = grupoEstrelas.querySelectorAll('.phist-estrela-label');
+    labels.forEach(function (label, idx) {
+      label.addEventListener('mouseenter', function () {
+        labels.forEach(function (l, i) {
+          l.classList.toggle('phist-estrela-label--hover', i <= idx);
+        });
+      });
+      label.addEventListener('mouseleave', function () {
+        labels.forEach(function (l) { l.classList.remove('phist-estrela-label--hover'); });
+      });
+      var input = label.querySelector('input[type="radio"]');
+      if (input) {
+        input.addEventListener('change', function () {
+          labels.forEach(function (l, i) {
+            l.classList.toggle('phist-estrela-label--selecionada', i <= idx);
+          });
+        });
+      }
+    });
+  }
+
+}());
+</script>
+
+
+</body>
+</html>

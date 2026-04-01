@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find c:/Portal-git/portal-teste/vendor/PGMPackages -name *.php)",
+      "Bash(php -l \"c:/Portal-git/portal-teste/src/Template/Element/sidebar.ctp\")",
+      "Bash(php -l \"c:/Portal-git/portal-teste/src/Template/Layout/default.ctp\")",
+      "Bash(php -l \"c:/Portal-git/portal-teste/src/Controller/FaturamentoController.php\")",
+      "Bash(php -l \"c:/Portal-git/portal-teste/src/Controller/FinanceiroController.php\")",
+      "Bash(find c:/Portal-git/portal-teste -name *.php -path */PGMPackages/*)",
+      "Bash(git log:*)",
+      "Bash(grep -r \"C_OrcamentoStatus\\\\|C_OrdensSituacao\\\\|C_LocacaoStatus\" /c/Portal-git/portal-teste/src/Controller/*.php)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find c:/Portal-git/portal-teste/vendor -name *.php)",
+      "Bash(grep -rn \"interno\\\\|visivel_cliente\" c:/Portal-git/portal-teste/src/ --include=*.php)",
+      "Bash(grep -l \"tickets\\\\|ticketshoras\\\\|faturamento\\\\|financeiro_lancamentos\\\\|clicontratos\" /c/Portal-git/portal-teste/config/Migrations/*.php)",
+      "Bash(grep -r \"CREATE TABLE\\\\|PRIMARY KEY\\\\|INT\\\\|VARCHAR\\\\|DECIMAL\" /c/Portal-git/portal-teste/config/Migrations/*.php)",
+      "Bash(grep -l \"CREATE TABLE\" /c/Portal-git/portal-teste/config/Migrations/*.php)",
+      "Bash(head -20 grep -n \"new Chart\\\\|Morris\\\\.\\\\|echarts\\\\.\" c:/Portal-git/portal-teste/src/Template/Financeiro/index.ctp)",
+      "Bash(ls \"c:\\\\Portal-git\\\\portal-teste\\\\src\\\\Controller\"\" | grep -iE \"historico)",
+      "Bash(contratos)",
+      "Bash(relatorio \")"
+    ]
+  }
+}

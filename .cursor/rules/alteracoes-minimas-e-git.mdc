@@ -1,0 +1,17 @@
+---
+description: Alterações mínimas, preservar lógica e comparar com Git antes de mudar comportamento
+alwaysApply: true
+---
+
+# Alterações de código — escopo e segurança
+
+- **Não fazer rewrite completo** de arquivos grandes. Preferir diffs pequenos e localizados.
+- **Preservar o máximo possível** da lógica e do fluxo já existentes; só refatorar quando for indispensável.
+- **Alterar apenas o necessário** para cumprir o pedido; evitar “limpezas” ou reorganizações não solicitadas.
+- **Risco de perda de comportamento:** antes de mudar trechos sensíveis (controllers, models, regras de negócio, permissões, impressão/PDF, AJAX), **comparar com a versão anterior no Git** (ex.: `git diff`, `git show <commit>:caminho`, ou baseline acordado como `origin/main` / commit anterior na branch).
+- Se houver dúvida entre duas implementações, **manter o comportamento da versão Git** salvo indicação explícita em contrário.
+
+## Prioridade em revisões
+
+1. Corrigir bug ou desvio de padrão com o **menor** número de linhas.
+2. Documentar em comentário **só** quando a intenção não for óbvia pelo código (evitar comentários óbvios).

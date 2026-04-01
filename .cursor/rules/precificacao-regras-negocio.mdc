@@ -1,0 +1,38 @@
+---
+description: Regras de negocio para tudo que envolver precificacao
+globs: "{src/Controller/ProdutosController.php,src/Controller/OrcamentosController.php,src/Template/Produtos/**/*.ctp,src/Template/Orcamentos/**/*.ctp,config/routes.php}"
+alwaysApply: false
+---
+
+# Regras de Negocio - Precificacao
+
+- Sempre considerar `idempresa` do usuario logado em consultas e salvamentos.
+- Em precificacao, `nPrecoCusto` e `nPrecoVenda` vindos do ERP sao referencia; gravar no portal apenas `vlunitario`.
+- Nunca alterar campos de estoque ERP (`nQtdeAtual`, custo ERP) via portal.
+- `vlunitario` deve ser normalizado para decimal (pt-BR -> float) antes de salvar.
+
+## Metodos de Calculo
+
+- Markup: `PV = Custo * (1 + markup/100)`.
+- Fator multiplicador: `PV = Custo * fator`.
+- Fator divisor: `PV = Custo / fd`, com `fd > 0` e preferencialmente `< 1`.
+- Margem liquida: `margem = (1 - custo/pv) * 100` quando custo e pv > 0.
+
+## Validacoes Obrigatorias
+
+- Nao calcular preco quando custo for `null`, `0` ou invalido.
+- Nao permitir gravacao de preco negativo.
+- Em lote, salvar item a item com retorno de `salvos` e `erros` por id.
+- Em falha de ERP/SOAP, degradar com seguranca (sem quebrar tela) e registrar log.
+
+## Contrato de Rotas/API
+
+- GET de tela de precificacao deve ser autenticado.
+- Endpoint de salvar precos deve aceitar apenas `POST`.
+- Respostas JSON devem ser estaveis e claras para front (`salvos`, `erros`, mensagem).
+
+## UI/UX Minimo
+
+- Evidenciar itens alterados antes de salvar.
+- Mostrar delta de preco e alerta de margem minima configuravel.
+- Nunca sobrescrever preco digitado manualmente sem acao explicita do usuario.
