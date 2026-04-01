@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<!--
+  ESTRUTURA: Relatórios e Indicadores — ERP Interno
+  ============================================================
+  Arquivo-base para conversão em: src/Template/Relatorios/index.ctp
+  Layout pai esperado: src/Template/Layout/default.ctp
+  Controller: RelatoriosController::index()
+
+  Variáveis PHP esperadas (CakePHP):
+    $kpi              — array com indicadores (cache 5 min via relatorios_cache)
+                        chaves: tickets_periodo, sla_medio_pct, receita_contratual,
+                                inadimplencia_valor, produtividade_media, atualizado_em
+    $clientes         — array id=>nome para select de filtros
+    $tecnicos         — array id=>nome (role=0, idempresa da sessão)
+    $contratos        — array id=>descricao para select de filtros
+    $filtros          — array com valores atuais aplicados pelo controller
+    $permissoes       — array de permissões RBAC do usuário atual
+    $dadosAtendimentos — array com dados do relatório de atendimentos
+    $dadosSla         — array com dados do relatório de SLA
+    $dadosFinanceiro  — array com dados do relatório financeiro
+    $dadosContratos   — array com dados do relatório de contratos
+    $dadosTecnicos    — array com dados do relatório de técnicos
+    $dadosClientes    — array com dados do relatório de clientes
+
+  SEGURANÇA:
+    - idempresa SEMPRE vem de $this->Auth->user('idempresa') — nunca de GET/POST
+    - Valores financeiros (custo, margem) nunca exibidos ao cliente (role=1)
+    - Filtro por empresa aplicado no controller antes de passar os dados
+
+  Dados JSON para gráficos:
+    Os arrays de série temporal são passados via scriptBlock ou data-json
+    apontando para endpoints AJAX (/relatorios/dados-*?formato=json).
+    Chart.js 4.4.x é carregado pelo layout pai (default.ctp).
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios e Indicadores — ERP</title>
+  <!--
+    CSS carregado pelo layout pai (default.ctp).
+    Estilos específicos desta tela (opcional):
+    <link rel="stylesheet" href="/css/relatorios.css">
+  -->
+</head>
+<body>
+
+<!--
+  ============================================================
+  NOTA: O layout pai (default.ctp) injeta neste ponto:
+    - <header> com logo, usuário logado e notificações
+    - <nav class="sidebar"> com menu lateral (relActive marcado)
+    - <main class="conteudo-principal"> que envolve este arquivo
+  O que está abaixo é o conteúdo interno do <main>.
+  ============================================================
+-->
+
+
+<!-- ============================================================
+     SEÇÃO 1 — CABEÇALHO DA PÁGINA
+     Título, breadcrumb e ações principais (exportar, imprimir, salvar filtro)
+     ============================================================ -->
+<section class="pagina-cabecalho">
+
+  <!-- Breadcrumb -->
+  <div class="pagina-cabecalho__breadcrumb">
+    <nav aria-label="Localização no sistema">
+      <ol class="breadcrumb-lista">
+        <li class="breadcrumb-item">
+          <!-- PHP: <?= $this->Html->link('Início', '/dashboard') ?> -->
+          <a href="/dashboard">Início</a>
+        </li>
+        <li class="breadcrumb-item breadcrumb-item--ativo" aria-current="page">
+          Relatórios e Indicadores
+        </li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="pagina-cabecalho__corpo">
+
+    <!-- Título e subtítulo -->
+    <div class="pagina-cabecalho__titulo-grupo">
+      <h1 class="pagina-titulo">
+        Relatórios e Indicadores
+      </h1>
+      <p class="pagina-subtitulo">
+        Visão consolidada de atendimentos, SLA, contratos, financeiro e desempenho da equipe
+      </p>
+    </div>
+
+    <!-- Ações principais do cabeçalho -->
+    <div class="pagina-cabecalho__acoes">
+
+      <!-- Ação: Salvar filtro atual como favorito -->
+      <!-- PHP: <?php if ($permissoes['relatorios.salvar_filtro'] ?? false): ?> -->
+      <button type="button"
+              class="btn btn--ghost btn--icone"
+              id="btn-salvar-filtro"
+              title="Salvar configuração de filtros atual"
+              aria-label="Salvar filtros como favorito">
+        <span class="icone icone--favorito" aria-hidden="true"></span>
+        Salvar filtro
+      </button>
+      <!-- PHP: <?php endif ?> -->
+
+      <!-- Ação: Imprimir -->
+      <button type="button"
+              class="btn btn--neutro btn--icone"
+              onclick="window.print()"
+              title="Imprimir relatório atual"
+              aria-label="Imprimir esta página">
+        <span class="icone icone--imprimir" aria-hidden="true"></span>
+        Imprimir
+      </button>
+
+      <!-- Ação: Exportar (dropdown) -->
+      <!-- PHP: <?php if ($permissoes['relatorios.exportar'] ?? false): ?> -->
+      <div class="btn-dropdown-grupo">
+        <button type="button"
+                class="btn btn--primario btn--icone dropdown-gatilho"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="menu-exportar"
+                id="btn-exportar-principal"
+                title="Exportar relatórios">
+          <span class="icone icone--exportar" aria-hidden="true"></span>
+          Exportar
+          <span class="icone icone--seta-baixo" aria-hidden="true"></span>
+        </button>
+        <ul id="menu-exportar"
+            class="dropdown-menu dropdown-menu--direita"
+            role="menu"
+            aria-labelledby="btn-exportar-principal"
+            hidden>
+          <li class="dropdown-menu__cabecalho" role="presentation">
+            <span class="dropdown-menu__rotulo">Exportar relatório atual</span>
+          </li>
+          <li role="none">
+            <button type="button" role="menuitem" class="dropdown-item"
+                    data-acao="exportar" data-formato="xlsx">
+              <span class="icone icone--excel" aria-hidden="true"></span>
+              Excel (.xlsx)
+            </button>
+          </li>
+          <li role="none">
+            <button type="button" role="menuitem" class="dropdown-item"
+                    data-acao="exportar" data-formato="csv">
+              <span class="icone icone--csv" aria-hidden="true"></span>
+              CSV
+            </button>
+          </li>
+          <li role="none">
+            <button type="button" role="menuitem" class="dropdown-item"
+                    data-acao="exportar" data-formato="pdf">
+              <span class="icone icone--pdf" aria-hidden="true"></span>
+              PDF
+            </button>
+          </li>
+          <li class="dropdown-item--separador" role="separator"></li>
+          <li class="dropdown-menu__cabecalho" role="presentation">
+            <span class="dropdown-menu__rotulo">Exportar tudo</span>
+          </li>
+          <li role="none">
+            <a href="/relatorios/exportar?relatorio=completo&formato=xlsx"
+               role="menuitem" class="dropdown-item"
+               aria-label="Exportar relatório completo em Excel">
+              <span class="icone icone--pacote" aria-hidden="true"></span>
+              Relatório completo — Excel
+            </a>
+          </li>
+        </ul>
+      </div>
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /pagina-cabecalho__acoes -->
+
+  </div><!-- /pagina-cabecalho__corpo -->
+
+</section>
+<!-- /SEÇÃO 1 — CABEÇALHO -->
+
+
+<!-- ============================================================
+     SEÇÃO 2 — FILTROS GLOBAIS
+     Aplicados a todos os relatórios.
+     Form GET; idempresa nunca vem daqui — vem da sessão no controller.
+     ============================================================ -->
+<section class="filtros-painel" id="painel-filtros-globais">
+
+  <div class="filtros-painel__cabecalho">
+    <h2 class="filtros-painel__titulo">
+      <span class="icone icone--filtro" aria-hidden="true"></span>
+      Filtros
+    </h2>
+    <button type="button"
+            class="btn btn--ghost btn--micro filtros-painel__toggle"
+            aria-expanded="true"
+            aria-controls="corpo-filtros-globais"
+            title="Recolher/expandir filtros">
+      <span class="icone icone--seta-cima" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <!-- PHP: <?= $this->Form->create(null, ['type' => 'get', 'url' => ['action' => 'index'], 'id' => 'form-filtros-globais']) ?> -->
+  <form method="get"
+        action="/relatorios"
+        class="filtros-form"
+        id="form-filtros-globais"
+        role="search"
+        aria-label="Filtros globais dos relatórios">
+
+    <div class="filtros-form__corpo" id="corpo-filtros-globais">
+
+      <!-- Linha 1: Período -->
+      <fieldset class="filtros-grupo">
+        <legend class="filtros-grupo__titulo">Período</legend>
+        <div class="filtros-form__grade filtros-form__grade--inline">
+
+          <div class="filtros-campo">
+            <label for="filtro-periodo-inicio" class="filtros-campo__label">De</label>
+            <!-- PHP: <?= $this->Form->control('periodo_inicio', ['type' => 'date', 'label' => false, 'id' => 'filtro-periodo-inicio', 'value' => $filtros['periodo_inicio'] ?? date('Y-m-01')]) ?> -->
+            <input type="date"
+                   name="periodo_inicio"
+                   id="filtro-periodo-inicio"
+                   class="filtros-campo__input"
+                   value=""
+                   aria-label="Data de início do período">
+          </div>
+
+          <div class="filtros-campo">
+            <label for="filtro-periodo-fim" class="filtros-campo__label">Até</label>
+            <!-- PHP: <?= $this->Form->control('periodo_fim', ['type' => 'date', 'label' => false, 'id' => 'filtro-periodo-fim', 'value' => $filtros['periodo_fim'] ?? date('Y-m-d')]) ?> -->
+            <input type="date"
+                   name="periodo_fim"
+                   id="filtro-periodo-fim"
+                   class="filtros-campo__input"
+                   value=""
+                   aria-label="Data de fim do período">
+          </div>
+
+          <!-- Atalhos de período -->
+          <div class="filtros-campo filtros-campo--atalhos">
+            <span class="filtros-campo__label" id="rotulo-atalhos-periodo">Atalhos</span>
+            <div class="filtros-atalhos" role="group" aria-labelledby="rotulo-atalhos-periodo">
+              <button type="button" class="tag-filtro" data-periodo="hoje">Hoje</button>
+              <button type="button" class="tag-filtro" data-periodo="7d">7 dias</button>
+              <button type="button" class="tag-filtro tag-filtro--ativo" data-periodo="30d">30 dias</button>
+              <button type="button" class="tag-filtro" data-periodo="mes_atual">Mês atual</button>
+              <button type="button" class="tag-filtro" data-periodo="trimestre">Trimestre</button>
+              <button type="button" class="tag-filtro" data-periodo="ano_atual">Ano atual</button>
+            </div>
+          </div>
+
+        </div>
+      </fieldset>
+
+      <!-- Linha 2: Dimensões -->
+      <fieldset class="filtros-grupo">
+        <legend class="filtros-grupo__titulo">Dimensões</legend>
+        <div class="filtros-form__grade filtros-form__grade--quatro">
+
+          <!-- Cliente -->
+          <div class="filtros-campo">
+            <label for="filtro-idcliente" class="filtros-campo__label">Cliente</label>
+            <!-- PHP: <?= $this->Form->control('idcliente', ['type' => 'select', 'label' => false, 'options' => $clientes, 'empty' => 'Todos os clientes', 'value' => $filtros['idcliente'] ?? '']) ?> -->
+            <select name="idcliente"
+                    id="filtro-idcliente"
+                    class="filtros-campo__input filtros-campo__input--select select-busca"
+                    data-placeholder="Todos os clientes">
+              <option value="">Todos os clientes</option>
+              <!-- PHP: foreach ($clientes as $id => $nome) -->
+              <option value="1">Alfa Sistemas Ltda</option>
+              <option value="2">Beta Comércio ME</option>
+              <!-- PHP: endforeach -->
+            </select>
+          </div>
+
+          <!-- Técnico -->
+          <!-- PHP: <?php if (!isset($filtros['idtecnico_fixo'])): ?> -->
+          <div class="filtros-campo">
+            <label for="filtro-idtecnico" class="filtros-campo__label">Técnico</label>
+            <!-- PHP: <?= $this->Form->control('idtecnico', ['type' => 'select', 'label' => false, 'options' => $tecnicos, 'empty' => 'Todos os técnicos', 'value' => $filtros['idtecnico'] ?? '']) ?> -->
+            <select name="idtecnico"
+                    id="filtro-idtecnico"
+                    class="filtros-campo__input filtros-campo__input--select select-busca"
+                    data-placeholder="Todos os técnicos">
+              <option value="">Todos os técnicos</option>
+              <!-- PHP: foreach ($tecnicos as $id => $nome) -->
+              <option value="10">João Silva</option>
+              <option value="11">Maria Santos</option>
+              <!-- PHP: endforeach -->
+            </select>
+          </div>
+          <!-- PHP: <?php endif ?> -->
+
+          <!-- Contrato -->
+          <div class="filtros-campo">
+            <label for="filtro-idcontrato" class="filtros-campo__label">Contrato</label>
+            <!-- PHP: <?= $this->Form->control('idcontrato', ['type' => 'select', 'label' => false, 'options' => $contratos, 'empty' => 'Todos os contratos', 'value' => $filtros['idcontrato'] ?? '']) ?> -->
+            <select name="idcontrato"
+                    id="filtro-idcontrato"
+                    class="filtros-campo__input filtros-campo__input--select select-busca"
+                    data-placeholder="Todos os contratos">
+              <option value="">Todos os contratos</option>
+              <!-- PHP: foreach ($contratos as $id => $desc) -->
+              <option value="5">Suporte Premium — Alfa</option>
+              <option value="8">Locação Mensal — Beta</option>
+              <!-- PHP: endforeach -->
+            </select>
+          </div>
+
+          <!-- Categoria / Tipo -->
+          <div class="filtros-campo">
+            <label for="filtro-categoria" class="filtros-campo__label">Categoria</label>
+            <select name="categoria"
+                    id="filtro-categoria"
+                    class="filtros-campo__input filtros-campo__input--select">
+              <option value="">Todas as categorias</option>
+              <optgroup label="Tickets">
+                <option value="incidente">Incidente</option>
+                <option value="requisicao">Requisição</option>
+                <option value="problema">Problema</option>
+                <option value="mudanca">Mudança</option>
+              </optgroup>
+              <optgroup label="Contratos">
+                <option value="suporte">Suporte</option>
+                <option value="locacao">Locação</option>
+                <option value="desenvolvimento">Desenvolvimento</option>
+                <option value="misto">Misto</option>
+              </optgroup>
+            </select>
+          </div>
+
+        </div>
+      </fieldset>
+
+    </div><!-- /filtros-form__corpo -->
+
+    <!-- Ações do form de filtros -->
+    <div class="filtros-form__rodape">
+      <div class="filtros-form__acoes">
+        <button type="submit" class="btn btn--primario">
+          <span class="icone icone--busca" aria-hidden="true"></span>
+          Aplicar filtros
+        </button>
+        <a href="/relatorios"
+           class="btn btn--ghost"
+           title="Remover todos os filtros e voltar ao padrão">
+          Limpar filtros
+        </a>
+      </div>
+      <!-- Indicador de filtros ativos -->
+      <!-- PHP: <?php if (!empty(array_filter($filtros))): ?> -->
+      <div class="filtros-ativos-aviso" role="status" aria-live="polite">
+        <span class="icone icone--filtro-ativo" aria-hidden="true"></span>
+        <!-- PHP: <?= count(array_filter($filtros)) ?> filtro(s) ativo(s) -->
+        <span id="contagem-filtros-ativos">2 filtro(s) ativo(s)</span>
+      </div>
+      <!-- PHP: <?php endif ?> -->
+    </div>
+
+  </form>
+  <!-- PHP: <?= $this->Form->end() ?> -->
+
+</section>
+<!-- /SEÇÃO 2 — FILTROS GLOBAIS -->
+
+
+<!-- ============================================================
+     SEÇÃO 3 — CARDS KPI (INDICADORES PRINCIPAIS)
+     Dados com cache de 5 min calculados por RelatorioService.
+     Não disparar queries diretas aqui — usar tabela relatorios_cache.
+     ============================================================ -->
+<section class="kpi-painel"
+         aria-label="Indicadores principais do período"
+         id="painel-kpi">
+
+  <!-- Nota de atualização do cache -->
+  <div class="kpi-painel__nota" aria-live="polite" aria-atomic="true">
+    <span class="icone icone--relogio" aria-hidden="true"></span>
+    <!-- PHP: <?= 'Atualizado em: ' . $kpi['atualizado_em']->format('H:i') . ' · cache 5 min' ?> -->
+    <span id="kpi-cache-info">Atualizado em: 14:25 · cache 5 min</span>
+    <button type="button"
+            class="btn btn--ghost btn--micro"
+            id="btn-atualizar-kpi"
+            data-acao="forcar-atualizacao-kpi"
+            title="Forçar atualização dos indicadores agora"
+            aria-label="Atualizar indicadores agora">
+      <span class="icone icone--sincronizar" aria-hidden="true"></span>
+      Atualizar
+    </button>
+  </div>
+
+  <div class="kpi-painel__grade kpi-painel__grade--cinco">
+
+    <!-- KPI 1: Tickets no período -->
+    <article class="kpi-card kpi-card--azul">
+      <div class="kpi-card__icone" aria-hidden="true">
+        <span class="icone icone--ticket"></span>
+      </div>
+      <div class="kpi-card__corpo">
+        <span class="kpi-card__rotulo">Tickets no período</span>
+        <!-- PHP: <?= $kpi['tickets_periodo'] ?? 0 ?> -->
+        <strong class="kpi-card__valor" id="kpi-tickets-periodo">142</strong>
+        <span class="kpi-card__detalhe">chamados abertos</span>
+      </div>
+      <a href="/tickets" class="kpi-card__link" aria-label="Ver todos os tickets do período">
+        Ver tickets
+      </a>
+    </article>
+
+    <!-- KPI 2: SLA médio -->
+    <article class="kpi-card kpi-card--verde">
+      <div class="kpi-card__icone" aria-hidden="true">
+        <span class="icone icone--sla-ok"></span>
+      </div>
+      <div class="kpi-card__corpo">
+        <span class="kpi-card__rotulo">SLA médio</span>
+        <!-- PHP: <?= number_format($kpi['sla_medio_pct'] ?? 0, 1) ?>% -->
+        <strong class="kpi-card__valor" id="kpi-sla-medio">91,4%</strong>
+        <span class="kpi-card__detalhe">cumprimento no período</span>
+      </div>
+      <a href="#secao-sla" class="kpi-card__link" aria-label="Ver detalhes do SLA">
+        Ver SLA
+      </a>
+    </article>
+
+    <!-- KPI 3: Receita contratual (MRR) -->
+    <!-- PHP: <?php if ($permissoes['relatorios.financeiro'] ?? false): ?> -->
+    <article class="kpi-card kpi-card--azul-escuro">
+      <div class="kpi-card__icone" aria-hidden="true">
+        <span class="icone icone--faturamento"></span>
+      </div>
+      <div class="kpi-card__corpo">
+        <span class="kpi-card__rotulo">Receita contratual</span>
+        <!-- PHP: <?= $this->Number->currency($kpi['receita_contratual'] ?? 0, 'BRL') ?> -->
+        <strong class="kpi-card__valor" id="kpi-receita-contratual">R$&nbsp;42.800</strong>
+        <span class="kpi-card__detalhe">MRR — contratos ativos</span>
+      </div>
+      <a href="#secao-financeiro" class="kpi-card__link" aria-label="Ver detalhes financeiros">
+        Ver financeiro
+      </a>
+    </article>
+
+    <!-- KPI 4: Inadimplência -->
+    <article class="kpi-card kpi-card--vermelho" aria-live="polite">
+      <div class="kpi-card__icone" aria-hidden="true">
+        <span class="icone icone--inadimplencia"></span>
+      </div>
+      <div class="kpi-card__corpo">
+        <span class="kpi-card__rotulo">Inadimplência</span>
+        <!-- PHP: <?= $this->Number->currency($kpi['inadimplencia_valor'] ?? 0, 'BRL') ?> -->
+        <strong class="kpi-card__valor kpi-card__valor--alerta" id="kpi-inadimplencia">R$&nbsp;14.200</strong>
+        <span class="kpi-card__detalhe">em aberto vencido</span>
+      </div>
+      <a href="#secao-financeiro" class="kpi-card__link" aria-label="Ver faturas inadimplentes">
+        Ver faturas
+      </a>
+    </article>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- KPI 5: Produtividade técnica -->
+    <article class="kpi-card kpi-card--roxo">
+      <div class="kpi-card__icone" aria-hidden="true">
+        <span class="icone icone--tecnico"></span>
+      </div>
+      <div class="kpi-card__corpo">
+        <span class="kpi-card__rotulo">Produtividade média</span>
+        <!-- PHP: <?= number_format($kpi['produtividade_media'] ?? 0, 1) ?> -->
+        <strong class="kpi-card__valor" id="kpi-produtividade-media">8,2</strong>
+        <span class="kpi-card__detalhe">tickets/técnico/dia</span>
+      </div>
+      <a href="#secao-tecnicos" class="kpi-card__link" aria-label="Ver detalhes de técnicos">
+        Ver técnicos
+      </a>
+    </article>
+
+  </div><!-- /kpi-painel__grade -->
+
+</section>
+<!-- /SEÇÃO 3 — CARDS KPI -->
+
+
+<!-- ============================================================
+     SEÇÃO 4 — NAVEGAÇÃO POR ABAS
+     Controla qual relatório é exibido na seção principal.
+     JS alterna aria-selected e hidden nos painéis abaixo.
+     ============================================================ -->
+<nav class="rel-abas" aria-label="Navegar entre relatórios" id="nav-abas-relatorios">
+  <div class="rel-abas__lista-wrapper">
+    <ul class="rel-abas__lista" role="tablist">
+
+      <li role="none">
+        <button type="button"
+                role="tab"
+                class="rel-aba rel-aba--ativo"
+                id="aba-atendimento"
+                aria-selected="true"
+                aria-controls="painel-atendimento"
+                data-aba="atendimento">
+          <span class="icone icone--atendimento" aria-hidden="true"></span>
+          Atendimento
+          <!-- PHP: <?php if (!empty($kpi['tickets_periodo'])): ?> -->
+          <span class="rel-aba__badge" aria-label="142 tickets no período">142</span>
+          <!-- PHP: <?php endif ?> -->
+        </button>
+      </li>
+
+      <li role="none">
+        <button type="button"
+                role="tab"
+                class="rel-aba"
+                id="aba-sla"
+                aria-selected="false"
+                aria-controls="painel-sla"
+                data-aba="sla">
+          <span class="icone icone--sla" aria-hidden="true"></span>
+          SLA
+        </button>
+      </li>
+
+      <!-- PHP: <?php if ($permissoes['relatorios.contratos'] ?? false): ?> -->
+      <li role="none">
+        <button type="button"
+                role="tab"
+                class="rel-aba"
+                id="aba-contratos"
+                aria-selected="false"
+                aria-controls="painel-contratos"
+                data-aba="contratos">
+          <span class="icone icone--contrato" aria-hidden="true"></span>
+          Contratos
+        </button>
+      </li>
+      <!-- PHP: <?php endif ?> -->
+
+      <!-- PHP: <?php if ($permissoes['relatorios.financeiro'] ?? false): ?> -->
+      <li role="none">
+        <button type="button"
+                role="tab"
+                class="rel-aba"
+                id="aba-financeiro"
+                aria-selected="false"
+                aria-controls="painel-financeiro"
+                data-aba="financeiro">
+          <span class="icone icone--financeiro" aria-hidden="true"></span>
+          Financeiro
+        </button>
+      </li>
+      <!-- PHP: <?php endif ?> -->
+
+      <li role="none">
+        <button type="button"
+                role="tab"
+                class="rel-aba"
+                id="aba-tecnicos"
+                aria-selected="false"
+                aria-controls="painel-tecnicos"
+                data-aba="tecnicos">
+          <span class="icone icone--equipe" aria-hidden="true"></span>
+          Técnicos
+        </button>
+      </li>
+
+      <li role="none">
+        <button type="button"
+                role="tab"
+                class="rel-aba"
+                id="aba-clientes"
+                aria-selected="false"
+                aria-controls="painel-clientes"
+                data-aba="clientes">
+          <span class="icone icone--cliente" aria-hidden="true"></span>
+          Clientes
+        </button>
+      </li>
+
+    </ul>
+  </div>
+</nav>
+<!-- /SEÇÃO 4 — NAVEGAÇÃO POR ABAS -->
+
+
+<!-- ============================================================
+     SEÇÃO 5 — ÁREA PRINCIPAL DOS RELATÓRIOS
+     Cada painel corresponde a uma aba. Apenas um fica visível por vez.
+     O atributo [hidden] é alternado via JS ao trocar de aba.
+     ============================================================ -->
+<div class="relatorios-area" id="relatorios-area-principal">
+
+
+  <!-- ===========================================================
+       PAINEL 5A — ATENDIMENTO
+       Tickets por período, por cliente, por técnico, SLA cumprido/violado
+       =========================================================== -->
+  <section class="rel-painel rel-painel--ativo"
+           id="painel-atendimento"
+           role="tabpanel"
+           aria-labelledby="aba-atendimento"
+           tabindex="0">
+
+    <div class="rel-painel__cabecalho">
+      <h2 class="rel-painel__titulo">Relatório de Atendimentos</h2>
+      <div class="rel-painel__acoes">
+        <a href="/relatorios/exportar?relatorio=atendimentos&formato=xlsx"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório de atendimentos em Excel">
+          <span class="icone icone--excel" aria-hidden="true"></span>
+          Excel
+        </a>
+        <a href="/relatorios/exportar?relatorio=atendimentos&formato=pdf"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório de atendimentos em PDF">
+          <span class="icone icone--pdf" aria-hidden="true"></span>
+          PDF
+        </a>
+        <a href="/relatorios/tickets"
+           class="btn btn--pequeno btn--ghost"
+           aria-label="Abrir relatório completo de atendimentos">
+          Relatório completo
+          <span class="icone icone--seta-direita" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Estados visuais: carregando, vazio, sem-resultado, sem-permissão, erro -->
+
+    <div class="rel-estado rel-estado--carregando"
+         id="atend-carregando"
+         hidden
+         role="status"
+         aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="rel-estado__mensagem">Carregando dados de atendimentos...</p>
+    </div>
+
+    <div class="rel-estado rel-estado--vazio"
+         id="atend-vazio"
+         hidden>
+      <span class="icone icone--documento-vazio rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum atendimento registrado</h3>
+      <p class="rel-estado__mensagem">Ainda não há dados de atendimento para exibir.</p>
+    </div>
+
+    <div class="rel-estado rel-estado--sem-resultado"
+         id="atend-sem-resultado"
+         hidden>
+      <span class="icone icone--busca-vazia rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum dado encontrado</h3>
+      <p class="rel-estado__mensagem">
+        Nenhum atendimento corresponde ao período e filtros selecionados.
+        <a href="/relatorios" class="link-inline">Limpar filtros</a>
+      </p>
+    </div>
+
+    <div class="rel-estado rel-estado--sem-permissao"
+         id="atend-sem-permissao"
+         hidden
+         role="alert">
+      <span class="icone icone--cadeado rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Acesso restrito</h3>
+      <p class="rel-estado__mensagem">Você não tem permissão para visualizar este relatório.</p>
+    </div>
+
+    <div class="rel-estado rel-estado--erro"
+         id="atend-erro"
+         hidden
+         role="alert">
+      <span class="icone icone--erro-circulo rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Erro ao carregar atendimentos</h3>
+      <p class="rel-estado__mensagem">Não foi possível carregar os dados. Tente novamente.</p>
+      <button type="button" class="btn btn--primario" data-acao="recarregar" data-painel="atendimentos">
+        Tentar novamente
+      </button>
+    </div>
+
+    <!-- Conteúdo do painel (visível quando há dados) -->
+    <!-- PHP: <?php if (!empty($dadosAtendimentos)): ?> -->
+    <div class="rel-painel__conteudo" id="conteudo-atendimentos">
+
+      <!-- Bloco 5A.1: Tickets por período (gráfico de linha) -->
+      <div class="rel-bloco" id="bloco-tickets-por-periodo">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--grafico-linha" aria-hidden="true"></span>
+            Tickets por período
+          </h3>
+          <!-- Seletor de agrupamento -->
+          <div class="rel-bloco__controle">
+            <label for="agrupamento-periodo" class="sr-only">Agrupar por</label>
+            <select id="agrupamento-periodo"
+                    name="agrupamento"
+                    class="filtros-campo__input filtros-campo__input--mini"
+                    data-acao="reagrupar" data-painel="atendimentos" data-grafico="linha">
+              <option value="dia">Por dia</option>
+              <option value="semana">Por semana</option>
+              <option value="mes" selected>Por mês</option>
+            </select>
+          </div>
+        </div>
+        <!--
+          PHP: $this->Html->scriptBlock('
+            var dadosTicketsPeriodo = ' . json_encode($dadosAtendimentos['serie_temporal']) . ';
+          ')
+          Estrutura esperada de dadosAtendimentos['serie_temporal']:
+          { "labels": ["Jan","Fev",...], "abertos": [12,8,...], "fechados": [10,9,...] }
+        -->
+        <div class="grafico-container">
+          <div class="grafico-wrapper"
+               role="img"
+               aria-label="Gráfico de linha: evolução de tickets abertos e fechados no período">
+            <canvas id="grafico-tickets-periodo"
+                    class="grafico-canvas"
+                    data-tipo="line"
+                    data-json="/relatorios/dados-atendimentos?formato=json"
+                    aria-label="Evolução de tickets no período">
+            </canvas>
+          </div>
+          <div class="grafico-legenda" aria-hidden="true">
+            <span class="grafico-legenda__item grafico-legenda__item--azul">Abertos</span>
+            <span class="grafico-legenda__item grafico-legenda__item--verde">Fechados</span>
+          </div>
+        </div>
+      </div><!-- /bloco-tickets-por-periodo -->
+
+      <!-- Bloco 5A.2: Tickets por cliente (ranking tabela) -->
+      <div class="rel-bloco" id="bloco-tickets-por-cliente">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--ranking" aria-hidden="true"></span>
+            Tickets por cliente
+          </h3>
+          <span class="rel-bloco__detalhe">Top 10 no período</span>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta tabela--ranking"
+                 aria-label="Ranking de tickets por cliente">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th tabela__th--pos" scope="col">#</th>
+                <th class="tabela__th" scope="col">Cliente</th>
+                <th class="tabela__th tabela__th--num" scope="col">Total</th>
+                <th class="tabela__th tabela__th--num" scope="col">Abertos</th>
+                <th class="tabela__th tabela__th--num" scope="col">Resolvidos</th>
+                <th class="tabela__th" scope="col">SLA</th>
+                <th class="tabela__th tabela__th--barra" scope="col">Volume</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosAtendimentos['por_cliente'] as $pos => $row) -->
+              <tr class="tabela__linha">
+                <td class="tabela__td tabela__td--pos">1</td>
+                <td class="tabela__td">
+                  <!-- PHP: <?= h($row['fantasia']) ?> -->
+                  Alfa Sistemas Ltda
+                </td>
+                <td class="tabela__td tabela__td--num tabela__td--destaque">38</td>
+                <td class="tabela__td tabela__td--num">5</td>
+                <td class="tabela__td tabela__td--num">33</td>
+                <td class="tabela__td">
+                  <span class="badge badge--sla-ok">94%</span>
+                </td>
+                <td class="tabela__td">
+                  <div class="barra-mini" title="38 tickets — 26% do total" aria-hidden="true">
+                    <div class="barra-mini__fill barra-mini__fill--azul" style="width: 26%"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="tabela__linha">
+                <td class="tabela__td tabela__td--pos">2</td>
+                <td class="tabela__td">Beta Comércio ME</td>
+                <td class="tabela__td tabela__td--num tabela__td--destaque">24</td>
+                <td class="tabela__td tabela__td--num">3</td>
+                <td class="tabela__td tabela__td--num">21</td>
+                <td class="tabela__td">
+                  <span class="badge badge--sla-risco">82%</span>
+                </td>
+                <td class="tabela__td">
+                  <div class="barra-mini" title="24 tickets" aria-hidden="true">
+                    <div class="barra-mini__fill barra-mini__fill--azul" style="width: 16%"></div>
+                  </div>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /bloco-tickets-por-cliente -->
+
+      <!-- Bloco 5A.3: Tickets por técnico (ranking) -->
+      <div class="rel-bloco" id="bloco-tickets-por-tecnico">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--equipe" aria-hidden="true"></span>
+            Tickets por técnico
+          </h3>
+          <a href="#painel-tecnicos"
+             class="btn btn--micro btn--ghost"
+             data-acao="trocar-aba" data-aba="tecnicos"
+             aria-label="Ver relatório completo de técnicos">
+            Ver completo
+          </a>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta"
+                 aria-label="Distribuição de tickets por técnico">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th" scope="col">Técnico</th>
+                <th class="tabela__th tabela__th--num" scope="col">Total</th>
+                <th class="tabela__th tabela__th--num" scope="col">Resolvidos</th>
+                <th class="tabela__th tabela__th--num" scope="col">Tempo médio</th>
+                <th class="tabela__th" scope="col">Distribuição</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosAtendimentos['por_tecnico'] as $row) -->
+              <tr class="tabela__linha">
+                <td class="tabela__td">
+                  <div class="tabela-usuario">
+                    <span class="tabela-usuario__avatar" aria-hidden="true">JS</span>
+                    <!-- PHP: <?= h($row['name']) ?> -->
+                    João Silva
+                  </div>
+                </td>
+                <td class="tabela__td tabela__td--num">31</td>
+                <td class="tabela__td tabela__td--num">28</td>
+                <td class="tabela__td tabela__td--num">2h 14min</td>
+                <td class="tabela__td">
+                  <div class="barra-mini" title="31 tickets — 21% do total" aria-hidden="true">
+                    <div class="barra-mini__fill barra-mini__fill--roxo" style="width: 21%"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="tabela__linha">
+                <td class="tabela__td">
+                  <div class="tabela-usuario">
+                    <span class="tabela-usuario__avatar" aria-hidden="true">MS</span>
+                    Maria Santos
+                  </div>
+                </td>
+                <td class="tabela__td tabela__td--num">27</td>
+                <td class="tabela__td tabela__td--num">25</td>
+                <td class="tabela__td tabela__td--num">1h 48min</td>
+                <td class="tabela__td">
+                  <div class="barra-mini" title="27 tickets" aria-hidden="true">
+                    <div class="barra-mini__fill barra-mini__fill--roxo" style="width: 18%"></div>
+                  </div>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /bloco-tickets-por-tecnico -->
+
+      <!-- Bloco 5A.4: SLA cumprido x violado (gráfico + cards) -->
+      <div class="rel-bloco" id="bloco-sla-preview">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--sla" aria-hidden="true"></span>
+            SLA — cumprido x violado
+          </h3>
+          <a href="#painel-sla"
+             class="btn btn--micro btn--ghost"
+             data-acao="trocar-aba" data-aba="sla"
+             aria-label="Ver relatório completo de SLA">
+            Ver relatório de SLA
+          </a>
+        </div>
+        <div class="rel-bloco__grade rel-bloco__grade--dois">
+
+          <!-- Mini-cards de status SLA -->
+          <div class="metricas-grade metricas-grade--tres">
+            <div class="metrica-caixa metrica-caixa--verde">
+              <span class="metrica-caixa__icone icone icone--check-circulo" aria-hidden="true"></span>
+              <div class="metrica-caixa__corpo">
+                <!-- PHP: <?= $dadosAtendimentos['sla_ok_pct'] ?>% -->
+                <strong class="metrica-caixa__valor">87,3%</strong>
+                <span class="metrica-caixa__rotulo">SLA OK</span>
+                <span class="metrica-caixa__detalhe">124 tickets</span>
+              </div>
+            </div>
+            <div class="metrica-caixa metrica-caixa--amarelo">
+              <span class="metrica-caixa__icone icone icone--alerta" aria-hidden="true"></span>
+              <div class="metrica-caixa__corpo">
+                <!-- PHP: <?= $dadosAtendimentos['sla_risco_pct'] ?>% -->
+                <strong class="metrica-caixa__valor">8,5%</strong>
+                <span class="metrica-caixa__rotulo">Em risco</span>
+                <span class="metrica-caixa__detalhe">12 tickets</span>
+              </div>
+            </div>
+            <div class="metrica-caixa metrica-caixa--vermelho">
+              <span class="metrica-caixa__icone icone icone--x-circulo" aria-hidden="true"></span>
+              <div class="metrica-caixa__corpo">
+                <!-- PHP: <?= $dadosAtendimentos['sla_violado_pct'] ?>% -->
+                <strong class="metrica-caixa__valor">4,2%</strong>
+                <span class="metrica-caixa__rotulo">Violado</span>
+                <span class="metrica-caixa__detalhe">6 tickets</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico donut SLA -->
+          <div class="grafico-container grafico-container--pequeno">
+            <!--
+              PHP: $this->Html->scriptBlock('var dadosSlaDonut = ' . json_encode($dadosAtendimentos['sla_por_status']) . ';')
+            -->
+            <div class="grafico-wrapper grafico-wrapper--donut"
+                 role="img"
+                 aria-label="Gráfico de rosca: proporção de SLA OK, em risco e violado">
+              <canvas id="grafico-sla-donut"
+                      class="grafico-canvas"
+                      data-tipo="doughnut"
+                      data-json="/relatorios/dados-atendimentos?formato=json&agrupamento=sla_status"
+                      aria-label="Distribuição de SLA por status">
+              </canvas>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /bloco-sla-preview -->
+
+    </div><!-- /conteudo-atendimentos -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- /PAINEL 5A — ATENDIMENTO -->
+
+
+  <!-- ===========================================================
+       PAINEL 5B — SLA
+       Taxa de cumprimento, violações por prioridade, top violadores
+       =========================================================== -->
+  <section class="rel-painel"
+           id="painel-sla"
+           role="tabpanel"
+           aria-labelledby="aba-sla"
+           tabindex="0"
+           hidden>
+
+    <div class="rel-painel__cabecalho">
+      <h2 class="rel-painel__titulo">Relatório de SLA</h2>
+      <div class="rel-painel__acoes">
+        <a href="/relatorios/exportar?relatorio=sla&formato=xlsx"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório de SLA em Excel">
+          <span class="icone icone--excel" aria-hidden="true"></span>
+          Excel
+        </a>
+        <a href="/relatorios/sla"
+           class="btn btn--pequeno btn--ghost"
+           aria-label="Abrir relatório completo de SLA">
+          Relatório completo
+          <span class="icone icone--seta-direita" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Estados visuais do painel SLA -->
+    <div class="rel-estado rel-estado--carregando" id="sla-carregando" hidden role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="rel-estado__mensagem">Carregando dados de SLA...</p>
+    </div>
+    <div class="rel-estado rel-estado--vazio" id="sla-vazio" hidden>
+      <span class="icone icone--documento-vazio rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum dado de SLA</h3>
+      <p class="rel-estado__mensagem">Não há dados de SLA para o período selecionado.</p>
+    </div>
+    <div class="rel-estado rel-estado--sem-resultado" id="sla-sem-resultado" hidden>
+      <span class="icone icone--busca-vazia rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum resultado</h3>
+      <p class="rel-estado__mensagem">Ajuste os filtros para encontrar dados de SLA.</p>
+    </div>
+    <div class="rel-estado rel-estado--erro" id="sla-erro" hidden role="alert">
+      <span class="icone icone--erro-circulo rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Erro ao carregar SLA</h3>
+      <p class="rel-estado__mensagem">Falha ao buscar dados de SLA.</p>
+      <button type="button" class="btn btn--primario" data-acao="recarregar" data-painel="sla">Tentar novamente</button>
+    </div>
+
+    <!-- PHP: <?php if (!empty($dadosSla)): ?> -->
+    <div class="rel-painel__conteudo" id="conteudo-sla">
+
+      <!-- Bloco: Métricas de cumprimento -->
+      <div class="rel-bloco" id="bloco-sla-metricas">
+        <h3 class="rel-bloco__titulo sr-only">Métricas de SLA</h3>
+        <div class="metricas-grade metricas-grade--tres">
+          <div class="metrica-caixa metrica-caixa--verde">
+            <span class="metrica-caixa__icone icone icone--check-circulo" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosSla['ok_pct'] ?>% -->
+              <strong class="metrica-caixa__valor" id="sla-ok-pct">87,3%</strong>
+              <span class="metrica-caixa__rotulo">SLA Cumprido</span>
+              <!-- PHP: <?= $dadosSla['ok_qtd'] ?> tickets -->
+              <span class="metrica-caixa__detalhe">124 tickets</span>
+            </div>
+          </div>
+          <div class="metrica-caixa metrica-caixa--amarelo">
+            <span class="metrica-caixa__icone icone icone--alerta" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosSla['risco_pct'] ?>% -->
+              <strong class="metrica-caixa__valor" id="sla-risco-pct">8,5%</strong>
+              <span class="metrica-caixa__rotulo">Em risco</span>
+              <span class="metrica-caixa__detalhe">12 tickets</span>
+            </div>
+          </div>
+          <div class="metrica-caixa metrica-caixa--vermelho">
+            <span class="metrica-caixa__icone icone icone--x-circulo" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosSla['violado_pct'] ?>% -->
+              <strong class="metrica-caixa__valor" id="sla-violado-pct">4,2%</strong>
+              <span class="metrica-caixa__rotulo">Violado</span>
+              <span class="metrica-caixa__detalhe">6 tickets</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco: Gráfico linha — taxa de cumprimento mensal -->
+      <div class="rel-bloco" id="bloco-sla-evolucao">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">Evolução do cumprimento de SLA</h3>
+        </div>
+        <div class="grafico-container">
+          <!--
+            PHP: $this->Html->scriptBlock('var dadosSlaLinha = ' . json_encode($dadosSla['serie_mensal']) . ';')
+            Estrutura: { "labels": ["Jan",...], "ok": [88,91,...], "violado": [4,3,...] }
+          -->
+          <div class="grafico-wrapper"
+               role="img"
+               aria-label="Gráfico de linha: taxa de cumprimento de SLA mês a mês">
+            <canvas id="grafico-sla-linha"
+                    class="grafico-canvas"
+                    data-tipo="line"
+                    data-json="/relatorios/dados-sla?formato=json&agrupamento=mes"
+                    aria-label="Evolução do SLA no período">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco: Violações por prioridade (barra empilhada) -->
+      <div class="rel-bloco" id="bloco-sla-violacoes-prioridade">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">Violações por prioridade</h3>
+        </div>
+        <div class="grafico-container grafico-container--horizontal">
+          <!--
+            PHP: $this->Html->scriptBlock('var dadosSlaBarras = ' . json_encode($dadosSla['violacoes_por_prioridade']) . ';')
+          -->
+          <div class="grafico-wrapper"
+               role="img"
+               aria-label="Gráfico de barras: violações de SLA agrupadas por prioridade P1, P2, P3 e P4">
+            <canvas id="grafico-sla-prioridade"
+                    class="grafico-canvas"
+                    data-tipo="bar"
+                    data-json="/relatorios/dados-sla?formato=json&agrupamento=prioridade"
+                    aria-label="Violações de SLA por prioridade">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco: Tabela top clientes com mais violações -->
+      <div class="rel-bloco" id="bloco-sla-top-violadores">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">Top clientes com mais violações de SLA</h3>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta"
+                 aria-label="Top clientes com mais violações de SLA no período">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th" scope="col">Cliente</th>
+                <th class="tabela__th tabela__th--num" scope="col">Violações</th>
+                <th class="tabela__th tabela__th--num" scope="col">Total tickets</th>
+                <th class="tabela__th tabela__th--num" scope="col">Taxa violação</th>
+                <th class="tabela__th" scope="col">Prioridade mais violada</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosSla['top_violadores'] as $row) -->
+              <tr class="tabela__linha tabela__linha--alerta">
+                <td class="tabela__td">Gama Indústria S.A.</td>
+                <td class="tabela__td tabela__td--num">
+                  <strong class="tabela__td--destaque-vermelho">4</strong>
+                </td>
+                <td class="tabela__td tabela__td--num">18</td>
+                <td class="tabela__td tabela__td--num">22,2%</td>
+                <td class="tabela__td">
+                  <span class="badge badge--p2">P2 — Alto</span>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /conteudo-sla -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- /PAINEL 5B — SLA -->
+
+
+  <!-- ===========================================================
+       PAINEL 5C — CONTRATOS
+       Ativos / vencendo / vencidos, faturamento por contrato, consumo horas
+       =========================================================== -->
+  <!-- PHP: <?php if ($permissoes['relatorios.contratos'] ?? false): ?> -->
+  <section class="rel-painel"
+           id="painel-contratos"
+           role="tabpanel"
+           aria-labelledby="aba-contratos"
+           tabindex="0"
+           hidden>
+
+    <div class="rel-painel__cabecalho">
+      <h2 class="rel-painel__titulo">Relatório de Contratos</h2>
+      <div class="rel-painel__acoes">
+        <a href="/relatorios/exportar?relatorio=contratos&formato=xlsx"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório de contratos em Excel">
+          <span class="icone icone--excel" aria-hidden="true"></span>
+          Excel
+        </a>
+        <a href="/relatorios/contratos"
+           class="btn btn--pequeno btn--ghost"
+           aria-label="Abrir relatório completo de contratos">
+          Relatório completo
+          <span class="icone icone--seta-direita" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Estados visuais -->
+    <div class="rel-estado rel-estado--carregando" id="contratos-carregando" hidden role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="rel-estado__mensagem">Carregando dados de contratos...</p>
+    </div>
+    <div class="rel-estado rel-estado--vazio" id="contratos-vazio" hidden>
+      <span class="icone icone--contrato rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum contrato encontrado</h3>
+      <p class="rel-estado__mensagem">Não há contratos para exibir com os filtros atuais.</p>
+    </div>
+    <div class="rel-estado rel-estado--sem-permissao" id="contratos-sem-permissao" hidden role="alert">
+      <span class="icone icone--cadeado rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Acesso restrito</h3>
+      <p class="rel-estado__mensagem">Você não tem permissão para visualizar dados de contratos.</p>
+    </div>
+    <div class="rel-estado rel-estado--erro" id="contratos-erro" hidden role="alert">
+      <span class="icone icone--erro-circulo rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Erro ao carregar contratos</h3>
+      <p class="rel-estado__mensagem">Falha ao buscar dados de contratos.</p>
+      <button type="button" class="btn btn--primario" data-acao="recarregar" data-painel="contratos">Tentar novamente</button>
+    </div>
+
+    <!-- PHP: <?php if (!empty($dadosContratos)): ?> -->
+    <div class="rel-painel__conteudo" id="conteudo-contratos">
+
+      <!-- Bloco: Cards de status da carteira -->
+      <div class="rel-bloco" id="bloco-contratos-status">
+        <h3 class="rel-bloco__titulo sr-only">Status da carteira de contratos</h3>
+        <div class="metricas-grade metricas-grade--quatro">
+
+          <div class="metrica-caixa metrica-caixa--verde">
+            <span class="metrica-caixa__icone icone icone--contrato-ativo" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosContratos['ativos_qtd'] ?> -->
+              <strong class="metrica-caixa__valor" id="contratos-ativos-qtd">47</strong>
+              <span class="metrica-caixa__rotulo">Contratos ativos</span>
+              <!-- PHP: R$ <?= number_format($dadosContratos['ativos_mrr'], 2, ',', '.') ?>/mês -->
+              <span class="metrica-caixa__detalhe">R$&nbsp;42.800/mês</span>
+            </div>
+          </div>
+
+          <div class="metrica-caixa metrica-caixa--amarelo">
+            <span class="metrica-caixa__icone icone icone--contrato-alerta" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosContratos['vencendo_30d'] ?> -->
+              <strong class="metrica-caixa__valor" id="contratos-vencendo">5</strong>
+              <span class="metrica-caixa__rotulo">Vencendo em 30 dias</span>
+              <span class="metrica-caixa__detalhe">Requerem atenção</span>
+            </div>
+          </div>
+
+          <div class="metrica-caixa metrica-caixa--vermelho">
+            <span class="metrica-caixa__icone icone icone--contrato-vencido" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosContratos['vencidos_qtd'] ?> -->
+              <strong class="metrica-caixa__valor" id="contratos-vencidos">2</strong>
+              <span class="metrica-caixa__rotulo">Contratos vencidos</span>
+              <span class="metrica-caixa__detalhe">Aguardando renovação</span>
+            </div>
+          </div>
+
+          <div class="metrica-caixa metrica-caixa--cinza">
+            <span class="metrica-caixa__icone icone icone--contrato" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $dadosContratos['encerrados_mes'] ?> -->
+              <strong class="metrica-caixa__valor" id="contratos-encerrados">1</strong>
+              <span class="metrica-caixa__rotulo">Encerrados no mês</span>
+              <span class="metrica-caixa__detalhe">Este período</span>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /bloco-contratos-status -->
+
+      <!-- Bloco: Gráfico donut — contratos por status -->
+      <div class="rel-bloco" id="bloco-contratos-grafico">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">Carteira por status</h3>
+        </div>
+        <div class="grafico-container grafico-container--metade">
+          <!--
+            PHP: $this->Html->scriptBlock('var dadosContratosDonut = ' . json_encode($dadosContratos['por_status']) . ';')
+          -->
+          <div class="grafico-wrapper grafico-wrapper--donut"
+               role="img"
+               aria-label="Gráfico de rosca: proporção de contratos ativos, a vencer e vencidos">
+            <canvas id="grafico-contratos-status"
+                    class="grafico-canvas"
+                    data-tipo="doughnut"
+                    data-json="/relatorios/dados-contratos?formato=json&agrupamento=status"
+                    aria-label="Distribuição de contratos por status">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco: Faturamento por contrato -->
+      <div class="rel-bloco" id="bloco-faturamento-por-contrato">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">Faturamento por contrato</h3>
+          <span class="rel-bloco__detalhe">Período selecionado</span>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta"
+                 aria-label="Faturamento por contrato no período">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th" scope="col">Contrato</th>
+                <th class="tabela__th" scope="col">Cliente</th>
+                <th class="tabela__th" scope="col">Tipo</th>
+                <th class="tabela__th tabela__th--num" scope="col">Valor/mês</th>
+                <th class="tabela__th tabela__th--num" scope="col">Faturado</th>
+                <th class="tabela__th tabela__th--num" scope="col">Recebido</th>
+                <th class="tabela__th" scope="col">Situação</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosContratos['por_contrato'] as $row) -->
+              <tr class="tabela__linha">
+                <td class="tabela__td">
+                  <!-- PHP: <?= h($row['descricao']) ?> -->
+                  <a href="/clicontratos/view/5" class="tabela__link">Suporte Premium</a>
+                </td>
+                <td class="tabela__td">Alfa Sistemas Ltda</td>
+                <td class="tabela__td">
+                  <span class="badge badge--tipo-suporte">Suporte</span>
+                </td>
+                <td class="tabela__td tabela__td--num">R$&nbsp;3.500</td>
+                <td class="tabela__td tabela__td--num">R$&nbsp;3.500</td>
+                <td class="tabela__td tabela__td--num">R$&nbsp;3.500</td>
+                <td class="tabela__td">
+                  <span class="badge badge--status badge--pago">Pago</span>
+                </td>
+              </tr>
+              <tr class="tabela__linha tabela__linha--alerta">
+                <td class="tabela__td">
+                  <a href="/clicontratos/view/8" class="tabela__link">Locação Mensal</a>
+                </td>
+                <td class="tabela__td">Beta Comércio ME</td>
+                <td class="tabela__td">
+                  <span class="badge badge--tipo-locacao">Locação</span>
+                </td>
+                <td class="tabela__td tabela__td--num">R$&nbsp;1.200</td>
+                <td class="tabela__td tabela__td--num">R$&nbsp;1.200</td>
+                <td class="tabela__td tabela__td--num">R$&nbsp;0</td>
+                <td class="tabela__td">
+                  <span class="badge badge--status badge--vencido">Vencido</span>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+            <tfoot class="tabela__rodape">
+              <tr>
+                <td class="tabela__td" colspan="3">
+                  <strong>Total</strong>
+                </td>
+                <!-- PHP: <?= $this->Number->currency($dadosContratos['total_faturado'], 'BRL') ?> -->
+                <td class="tabela__td tabela__td--num tabela__td--destaque">R$&nbsp;42.800</td>
+                <td class="tabela__td tabela__td--num tabela__td--destaque">R$&nbsp;41.000</td>
+                <td class="tabela__td tabela__td--num tabela__td--destaque-vermelho">R$&nbsp;1.800</td>
+                <td class="tabela__td"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div><!-- /bloco-faturamento-por-contrato -->
+
+    </div><!-- /conteudo-contratos -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- PHP: <?php endif ?> -->
+  <!-- /PAINEL 5C — CONTRATOS -->
+
+
+  <!-- ===========================================================
+       PAINEL 5D — FINANCEIRO
+       Faturamento, recebimentos, inadimplência detalhada
+       =========================================================== -->
+  <!-- PHP: <?php if ($permissoes['relatorios.financeiro'] ?? false): ?> -->
+  <section class="rel-painel"
+           id="painel-financeiro"
+           role="tabpanel"
+           aria-labelledby="aba-financeiro"
+           tabindex="0"
+           hidden>
+
+    <div class="rel-painel__cabecalho">
+      <h2 class="rel-painel__titulo">Relatório Financeiro</h2>
+      <div class="rel-painel__acoes">
+        <a href="/relatorios/exportar?relatorio=financeiro&formato=xlsx"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório financeiro em Excel">
+          <span class="icone icone--excel" aria-hidden="true"></span>
+          Excel
+        </a>
+        <a href="/relatorios/financeiro"
+           class="btn btn--pequeno btn--ghost"
+           aria-label="Abrir relatório financeiro completo">
+          Relatório completo
+          <span class="icone icone--seta-direita" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Estados visuais -->
+    <div class="rel-estado rel-estado--carregando" id="fin-carregando" hidden role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="rel-estado__mensagem">Carregando dados financeiros...</p>
+    </div>
+    <div class="rel-estado rel-estado--vazio" id="fin-vazio" hidden>
+      <span class="icone icone--documento-vazio rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum dado financeiro</h3>
+      <p class="rel-estado__mensagem">Não há registros financeiros para o período selecionado.</p>
+    </div>
+    <div class="rel-estado rel-estado--sem-permissao" id="fin-sem-permissao" hidden role="alert">
+      <span class="icone icone--cadeado rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Acesso restrito</h3>
+      <p class="rel-estado__mensagem">Você não tem permissão para visualizar dados financeiros.</p>
+    </div>
+    <div class="rel-estado rel-estado--erro" id="fin-erro" hidden role="alert">
+      <span class="icone icone--erro-circulo rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Erro ao carregar dados financeiros</h3>
+      <p class="rel-estado__mensagem">Falha ao buscar os dados. Tente novamente.</p>
+      <button type="button" class="btn btn--primario" data-acao="recarregar" data-painel="financeiro">Tentar novamente</button>
+    </div>
+
+    <!-- PHP: <?php if (!empty($dadosFinanceiro)): ?> -->
+    <div class="rel-painel__conteudo" id="conteudo-financeiro">
+
+      <!-- Bloco: 4 métricas financeiras -->
+      <div class="rel-bloco" id="bloco-fin-metricas">
+        <h3 class="rel-bloco__titulo sr-only">Indicadores financeiros do período</h3>
+        <div class="metricas-grade metricas-grade--quatro">
+
+          <div class="metrica-caixa metrica-caixa--azul">
+            <span class="metrica-caixa__icone icone icone--fatura-emitida" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $this->Number->currency($dadosFinanceiro['faturado'], 'BRL') ?> -->
+              <strong class="metrica-caixa__valor" id="fin-faturado">R$&nbsp;85.400</strong>
+              <span class="metrica-caixa__rotulo">Faturado</span>
+              <span class="metrica-caixa__detalhe">emitido no período</span>
+            </div>
+          </div>
+
+          <div class="metrica-caixa metrica-caixa--verde">
+            <span class="metrica-caixa__icone icone icone--recebido" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $this->Number->currency($dadosFinanceiro['recebido'], 'BRL') ?> -->
+              <strong class="metrica-caixa__valor" id="fin-recebido">R$&nbsp;71.200</strong>
+              <span class="metrica-caixa__rotulo">Recebido</span>
+              <span class="metrica-caixa__detalhe">confirmados</span>
+            </div>
+          </div>
+
+          <div class="metrica-caixa metrica-caixa--vermelho">
+            <span class="metrica-caixa__icone icone icone--inadimplencia" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $this->Number->currency($dadosFinanceiro['inadimplencia'], 'BRL') ?> -->
+              <strong class="metrica-caixa__valor" id="fin-inadimplencia">R$&nbsp;14.200</strong>
+              <span class="metrica-caixa__rotulo">Inadimplência</span>
+              <span class="metrica-caixa__detalhe">vencidas sem pagamento</span>
+            </div>
+          </div>
+
+          <div class="metrica-caixa metrica-caixa--roxo">
+            <span class="metrica-caixa__icone icone icone--mrr" aria-hidden="true"></span>
+            <div class="metrica-caixa__corpo">
+              <!-- PHP: <?= $this->Number->currency($dadosFinanceiro['mrr'], 'BRL') ?> -->
+              <strong class="metrica-caixa__valor" id="fin-mrr">R$&nbsp;42.800</strong>
+              <span class="metrica-caixa__rotulo">MRR</span>
+              <span class="metrica-caixa__detalhe">receita recorrente mensal</span>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /bloco-fin-metricas -->
+
+      <!-- Bloco: Gráfico de barras — faturamento mensal -->
+      <div class="rel-bloco" id="bloco-fin-grafico-mensal">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">Faturamento mensal</h3>
+        </div>
+        <div class="grafico-container">
+          <!--
+            PHP: $this->Html->scriptBlock('var dadosFinBarras = ' . json_encode($dadosFinanceiro['serie_mensal']) . ';')
+            Estrutura: { "labels": ["Jan",...], "faturado": [80000,...], "recebido": [72000,...] }
+          -->
+          <div class="grafico-wrapper"
+               role="img"
+               aria-label="Gráfico de barras: faturamento e recebimentos mês a mês">
+            <canvas id="grafico-fin-mensal"
+                    class="grafico-canvas"
+                    data-tipo="bar"
+                    data-json="/relatorios/dados-financeiro?formato=json&agrupamento=mes"
+                    aria-label="Faturamento mensal no período">
+            </canvas>
+          </div>
+          <div class="grafico-legenda" aria-hidden="true">
+            <span class="grafico-legenda__item grafico-legenda__item--azul">Faturado</span>
+            <span class="grafico-legenda__item grafico-legenda__item--verde">Recebido</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco: Inadimplência — top 10 clientes com faturas vencidas -->
+      <div class="rel-bloco rel-bloco--alerta" id="bloco-inadimplencia-detalhe">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--inadimplencia" aria-hidden="true"></span>
+            Inadimplência — clientes com faturas vencidas
+          </h3>
+          <a href="/faturamento?status=vencido"
+             class="btn btn--micro btn--ghost"
+             aria-label="Ver todas as faturas vencidas">
+            Ver todas
+          </a>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta"
+                 aria-label="Top 10 clientes com maior inadimplência">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th" scope="col">Cliente</th>
+                <th class="tabela__th tabela__th--num" scope="col">Faturas vencidas</th>
+                <th class="tabela__th tabela__th--num" scope="col">Valor total</th>
+                <th class="tabela__th tabela__th--num" scope="col">Dias em atraso (média)</th>
+                <th class="tabela__th" scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosFinanceiro['top_inadimplentes'] as $row) -->
+              <tr class="tabela__linha tabela__linha--alerta-vermelho">
+                <td class="tabela__td">
+                  <!-- PHP: <?= h($row['fantasia']) ?> -->
+                  Delta Tecnologia Ltda
+                </td>
+                <td class="tabela__td tabela__td--num">3</td>
+                <td class="tabela__td tabela__td--num">
+                  <strong class="tabela__td--destaque-vermelho">R$&nbsp;8.400</strong>
+                </td>
+                <td class="tabela__td tabela__td--num">
+                  <span class="badge badge--atraso-alto">47 dias</span>
+                </td>
+                <td class="tabela__td">
+                  <a href="/faturamento?idcliente=3&status=vencido"
+                     class="btn btn--micro btn--perigo"
+                     aria-label="Ver faturas vencidas de Delta Tecnologia">
+                    Ver faturas
+                  </a>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+            <tfoot class="tabela__rodape">
+              <tr>
+                <td class="tabela__td" colspan="2"><strong>Total inadimplência</strong></td>
+                <!-- PHP: <?= $this->Number->currency($dadosFinanceiro['inadimplencia'], 'BRL') ?> -->
+                <td class="tabela__td tabela__td--num tabela__td--destaque-vermelho">R$&nbsp;14.200</td>
+                <td class="tabela__td" colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div><!-- /bloco-inadimplencia-detalhe -->
+
+    </div><!-- /conteudo-financeiro -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- PHP: <?php endif ?> -->
+  <!-- /PAINEL 5D — FINANCEIRO -->
+
+
+  <!-- ===========================================================
+       PAINEL 5E — TÉCNICOS
+       Produtividade, ranking, tempo médio, satisfação
+       =========================================================== -->
+  <section class="rel-painel"
+           id="painel-tecnicos"
+           role="tabpanel"
+           aria-labelledby="aba-tecnicos"
+           tabindex="0"
+           hidden>
+
+    <div class="rel-painel__cabecalho">
+      <h2 class="rel-painel__titulo">Relatório de Técnicos</h2>
+      <div class="rel-painel__acoes">
+        <a href="/relatorios/exportar?relatorio=tecnicos&formato=xlsx"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório de técnicos em Excel">
+          <span class="icone icone--excel" aria-hidden="true"></span>
+          Excel
+        </a>
+      </div>
+    </div>
+
+    <!-- Estados visuais -->
+    <div class="rel-estado rel-estado--carregando" id="tec-carregando" hidden role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="rel-estado__mensagem">Carregando dados de técnicos...</p>
+    </div>
+    <div class="rel-estado rel-estado--vazio" id="tec-vazio" hidden>
+      <span class="icone icone--equipe rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum técnico encontrado</h3>
+      <p class="rel-estado__mensagem">Não há dados de técnicos para o período selecionado.</p>
+    </div>
+    <div class="rel-estado rel-estado--erro" id="tec-erro" hidden role="alert">
+      <span class="icone icone--erro-circulo rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Erro ao carregar dados de técnicos</h3>
+      <p class="rel-estado__mensagem">Falha ao buscar os dados.</p>
+      <button type="button" class="btn btn--primario" data-acao="recarregar" data-painel="tecnicos">Tentar novamente</button>
+    </div>
+
+    <!-- PHP: <?php if (!empty($dadosTecnicos)): ?> -->
+    <div class="rel-painel__conteudo" id="conteudo-tecnicos">
+
+      <!-- Bloco: Produtividade por técnico (tabela ranking) -->
+      <div class="rel-bloco" id="bloco-produtividade-tecnico">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--ranking" aria-hidden="true"></span>
+            Produtividade por técnico
+          </h3>
+          <span class="rel-bloco__detalhe">Período selecionado</span>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta tabela--ranking"
+                 aria-label="Produtividade de cada técnico no período">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th tabela__th--pos" scope="col">#</th>
+                <th class="tabela__th" scope="col">Técnico</th>
+                <th class="tabela__th tabela__th--num" scope="col">Tickets</th>
+                <th class="tabela__th tabela__th--num" scope="col">Resolvidos</th>
+                <th class="tabela__th tabela__th--num" scope="col">Taxa resolução</th>
+                <th class="tabela__th tabela__th--num" scope="col">Tempo médio</th>
+                <th class="tabela__th tabela__th--num" scope="col">SLA OK</th>
+                <th class="tabela__th" scope="col">Desempenho</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosTecnicos['ranking'] as $pos => $row) -->
+              <tr class="tabela__linha">
+                <td class="tabela__td tabela__td--pos">
+                  <!-- Medalha para top 3 -->
+                  <span class="ranking-pos ranking-pos--ouro" aria-label="1º lugar">1</span>
+                </td>
+                <td class="tabela__td">
+                  <div class="tabela-usuario">
+                    <span class="tabela-usuario__avatar" aria-hidden="true">JS</span>
+                    <!-- PHP: <?= h($row['name']) ?> -->
+                    <span class="tabela-usuario__nome">João Silva</span>
+                  </div>
+                </td>
+                <td class="tabela__td tabela__td--num">31</td>
+                <td class="tabela__td tabela__td--num">28</td>
+                <td class="tabela__td tabela__td--num">
+                  <span class="badge badge--sla-ok">90,3%</span>
+                </td>
+                <td class="tabela__td tabela__td--num">2h 14min</td>
+                <td class="tabela__td tabela__td--num">93%</td>
+                <td class="tabela__td">
+                  <div class="barra-mini" title="Desempenho: 93%" aria-label="Desempenho 93%">
+                    <div class="barra-mini__fill barra-mini__fill--verde" style="width: 93%"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="tabela__linha">
+                <td class="tabela__td tabela__td--pos">
+                  <span class="ranking-pos ranking-pos--prata" aria-label="2º lugar">2</span>
+                </td>
+                <td class="tabela__td">
+                  <div class="tabela-usuario">
+                    <span class="tabela-usuario__avatar" aria-hidden="true">MS</span>
+                    <span class="tabela-usuario__nome">Maria Santos</span>
+                  </div>
+                </td>
+                <td class="tabela__td tabela__td--num">27</td>
+                <td class="tabela__td tabela__td--num">25</td>
+                <td class="tabela__td tabela__td--num">
+                  <span class="badge badge--sla-ok">92,6%</span>
+                </td>
+                <td class="tabela__td tabela__td--num">1h 48min</td>
+                <td class="tabela__td tabela__td--num">96%</td>
+                <td class="tabela__td">
+                  <div class="barra-mini" title="Desempenho: 96%" aria-label="Desempenho 96%">
+                    <div class="barra-mini__fill barra-mini__fill--verde" style="width: 96%"></div>
+                  </div>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /bloco-produtividade-tecnico -->
+
+      <!-- Bloco: Satisfação do cliente (NPS/avaliação por técnico) -->
+      <!-- PHP: <?php if (!empty($dadosTecnicos['satisfacao'])): ?> -->
+      <div class="rel-bloco" id="bloco-satisfacao-tecnico">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--estrela" aria-hidden="true"></span>
+            Satisfação por técnico
+          </h3>
+          <span class="rel-bloco__detalhe">Avaliações coletadas no período</span>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta"
+                 aria-label="Avaliação de satisfação por técnico">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th" scope="col">Técnico</th>
+                <th class="tabela__th tabela__th--num" scope="col">Avaliações</th>
+                <th class="tabela__th tabela__th--num" scope="col">Nota média</th>
+                <th class="tabela__th" scope="col">Distribuição</th>
+                <th class="tabela__th tabela__th--num" scope="col">Ótimo</th>
+                <th class="tabela__th tabela__th--num" scope="col">Regular</th>
+                <th class="tabela__th tabela__th--num" scope="col">Ruim</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosTecnicos['satisfacao'] as $row) -->
+              <tr class="tabela__linha">
+                <td class="tabela__td">
+                  <div class="tabela-usuario">
+                    <span class="tabela-usuario__avatar" aria-hidden="true">JS</span>
+                    João Silva
+                  </div>
+                </td>
+                <td class="tabela__td tabela__td--num">24</td>
+                <td class="tabela__td tabela__td--num">
+                  <!-- PHP: <?= number_format($row['nota_media'], 1) ?>/5 -->
+                  <strong>4,7</strong>/5
+                </td>
+                <td class="tabela__td">
+                  <!-- Barra empilhada de satisfação -->
+                  <div class="barra-satisfacao" aria-hidden="true" title="Ótimo: 79% | Regular: 17% | Ruim: 4%">
+                    <div class="barra-satisfacao__seg barra-satisfacao__seg--otimo" style="width: 79%"></div>
+                    <div class="barra-satisfacao__seg barra-satisfacao__seg--regular" style="width: 17%"></div>
+                    <div class="barra-satisfacao__seg barra-satisfacao__seg--ruim" style="width: 4%"></div>
+                  </div>
+                </td>
+                <td class="tabela__td tabela__td--num">19</td>
+                <td class="tabela__td tabela__td--num">4</td>
+                <td class="tabela__td tabela__td--num">1</td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /bloco-satisfacao-tecnico -->
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /conteudo-tecnicos -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- /PAINEL 5E — TÉCNICOS -->
+
+
+  <!-- ===========================================================
+       PAINEL 5F — CLIENTES
+       Tickets por cliente, satisfação, consumo de contrato
+       =========================================================== -->
+  <section class="rel-painel"
+           id="painel-clientes"
+           role="tabpanel"
+           aria-labelledby="aba-clientes"
+           tabindex="0"
+           hidden>
+
+    <div class="rel-painel__cabecalho">
+      <h2 class="rel-painel__titulo">Relatório de Clientes</h2>
+      <div class="rel-painel__acoes">
+        <a href="/relatorios/exportar?relatorio=clientes&formato=xlsx"
+           class="btn btn--pequeno btn--neutro"
+           aria-label="Exportar relatório de clientes em Excel">
+          <span class="icone icone--excel" aria-hidden="true"></span>
+          Excel
+        </a>
+      </div>
+    </div>
+
+    <!-- Estados visuais -->
+    <div class="rel-estado rel-estado--carregando" id="cli-carregando" hidden role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="rel-estado__mensagem">Carregando dados de clientes...</p>
+    </div>
+    <div class="rel-estado rel-estado--vazio" id="cli-vazio" hidden>
+      <span class="icone icone--cliente rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Nenhum dado de cliente</h3>
+      <p class="rel-estado__mensagem">Não há dados de clientes para o período selecionado.</p>
+    </div>
+    <div class="rel-estado rel-estado--erro" id="cli-erro" hidden role="alert">
+      <span class="icone icone--erro-circulo rel-estado__icone" aria-hidden="true"></span>
+      <h3 class="rel-estado__titulo">Erro ao carregar dados de clientes</h3>
+      <p class="rel-estado__mensagem">Falha ao buscar os dados.</p>
+      <button type="button" class="btn btn--primario" data-acao="recarregar" data-painel="clientes">Tentar novamente</button>
+    </div>
+
+    <!-- PHP: <?php if (!empty($dadosClientes)): ?> -->
+    <div class="rel-painel__conteudo" id="conteudo-clientes">
+
+      <!-- Bloco: Tickets por cliente (visão completa) -->
+      <div class="rel-bloco" id="bloco-clientes-tickets">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--cliente" aria-hidden="true"></span>
+            Visão geral por cliente
+          </h3>
+        </div>
+        <div class="tabela-wrapper">
+          <table class="tabela tabela--compacta"
+                 aria-label="Resumo de atendimento e contratos por cliente">
+            <thead class="tabela__cabecalho">
+              <tr>
+                <th class="tabela__th" scope="col">Cliente</th>
+                <th class="tabela__th tabela__th--num" scope="col">Tickets</th>
+                <th class="tabela__th tabela__th--num" scope="col">SLA</th>
+                <th class="tabela__th" scope="col">Contrato</th>
+                <th class="tabela__th tabela__th--num" scope="col">Horas usadas</th>
+                <th class="tabela__th tabela__th--num" scope="col">Saldo</th>
+                <th class="tabela__th tabela__th--num" scope="col">Satisfação</th>
+                <th class="tabela__th" scope="col">Situação financeira</th>
+              </tr>
+            </thead>
+            <tbody class="tabela__corpo">
+              <!-- PHP: foreach ($dadosClientes['por_cliente'] as $row) -->
+              <tr class="tabela__linha">
+                <td class="tabela__td">
+                  <!-- PHP: <?= h($row['fantasia']) ?> -->
+                  <a href="/clientes/view/1" class="tabela__link">Alfa Sistemas Ltda</a>
+                </td>
+                <td class="tabela__td tabela__td--num">38</td>
+                <td class="tabela__td">
+                  <span class="badge badge--sla-ok">94%</span>
+                </td>
+                <td class="tabela__td">Suporte Premium</td>
+                <td class="tabela__td tabela__td--num">
+                  <!-- PHP: <?= $row['horas_usadas'] ?>h -->
+                  18h
+                </td>
+                <td class="tabela__td tabela__td--num">
+                  <!-- Colorir saldo baixo -->
+                  <!-- PHP: <?php if ($row['saldo_horas'] <= 5): ?> -->
+                  <span class="badge badge--horas-critico">2h</span>
+                  <!-- PHP: <?php else: ?> -->
+                  <!-- PHP: <?= $row['saldo_horas'] ?>h -->
+                  2h
+                  <!-- PHP: <?php endif ?> -->
+                </td>
+                <td class="tabela__td tabela__td--num">
+                  <!-- PHP: <?= number_format($row['satisfacao_media'] ?? 0, 1) ?> -->
+                  4,7 ★
+                </td>
+                <td class="tabela__td">
+                  <span class="badge badge--status badge--em-dia">Em dia</span>
+                </td>
+              </tr>
+              <tr class="tabela__linha tabela__linha--alerta">
+                <td class="tabela__td">
+                  <a href="/clientes/view/3" class="tabela__link">Delta Tecnologia Ltda</a>
+                </td>
+                <td class="tabela__td tabela__td--num">22</td>
+                <td class="tabela__td">
+                  <span class="badge badge--sla-risco">78%</span>
+                </td>
+                <td class="tabela__td">Suporte Básico</td>
+                <td class="tabela__td tabela__td--num">12h</td>
+                <td class="tabela__td tabela__td--num">
+                  <span class="badge badge--horas-ok">8h</span>
+                </td>
+                <td class="tabela__td tabela__td--num">3,9 ★</td>
+                <td class="tabela__td">
+                  <span class="badge badge--status badge--inadimplente">Inadimplente</span>
+                </td>
+              </tr>
+              <!-- PHP: endforeach -->
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /bloco-clientes-tickets -->
+
+      <!-- Bloco: Satisfação do cliente (gráfico de barras horizontais) -->
+      <!-- PHP: <?php if (!empty($dadosClientes['satisfacao'])): ?> -->
+      <div class="rel-bloco" id="bloco-satisfacao-clientes">
+        <div class="rel-bloco__cabecalho">
+          <h3 class="rel-bloco__titulo">
+            <span class="icone icone--estrela" aria-hidden="true"></span>
+            Satisfação dos clientes
+          </h3>
+        </div>
+        <div class="grafico-container grafico-container--horizontal">
+          <!--
+            PHP: $this->Html->scriptBlock('var dadosSatisfacaoClientes = ' . json_encode($dadosClientes['satisfacao']) . ';')
+          -->
+          <div class="grafico-wrapper"
+               role="img"
+               aria-label="Gráfico de barras horizontais: nota de satisfação por cliente">
+            <canvas id="grafico-satisfacao-clientes"
+                    class="grafico-canvas"
+                    data-tipo="horizontalBar"
+                    data-json="/relatorios/dados-clientes?formato=json&agrupamento=satisfacao"
+                    aria-label="Satisfação dos clientes no período">
+            </canvas>
+          </div>
+        </div>
+      </div><!-- /bloco-satisfacao-clientes -->
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /conteudo-clientes -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- /PAINEL 5F — CLIENTES -->
+
+
+</div><!-- /relatorios-area-principal -->
+<!-- /SEÇÃO 5 — ÁREA PRINCIPAL DOS RELATÓRIOS -->
+
+
+<!-- ============================================================
+     SEÇÃO 6 — BARRA DE AÇÕES INFERIOR (rodapé fixo)
+     Exportar, imprimir e salvar filtro — visível em todos os painéis
+     Nota: duplica as ações do cabeçalho para facilitar acesso em telas longas
+     ============================================================ -->
+<footer class="rel-rodape-acoes" aria-label="Ações dos relatórios">
+
+  <!-- Informações do contexto atual -->
+  <div class="rel-rodape-acoes__info">
+    <span class="rel-rodape-acoes__label">Relatório:</span>
+    <!-- JS atualiza este texto conforme a aba ativa -->
+    <strong id="rodape-relatorio-ativo">Atendimento</strong>
+    <span class="rel-rodape-acoes__separador" aria-hidden="true">·</span>
+    <span class="rel-rodape-acoes__label">Período:</span>
+    <!-- PHP: <?= $filtros['periodo_inicio'] . ' a ' . $filtros['periodo_fim'] ?> -->
+    <span id="rodape-periodo-ativo">01/03/2026 a 31/03/2026</span>
+  </div>
+
+  <!-- Ações -->
+  <div class="rel-rodape-acoes__botoes">
+
+    <!-- Salvar filtro -->
+    <!-- PHP: <?php if ($permissoes['relatorios.salvar_filtro'] ?? false): ?> -->
+    <button type="button"
+            class="btn btn--ghost btn--pequeno"
+            id="rodape-btn-salvar-filtro"
+            data-acao="salvar-filtro"
+            aria-label="Salvar configuração de filtros como favorito">
+      <span class="icone icone--favorito" aria-hidden="true"></span>
+      Salvar filtro
+    </button>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- Imprimir -->
+    <button type="button"
+            class="btn btn--neutro btn--pequeno"
+            onclick="window.print()"
+            aria-label="Imprimir o relatório atual">
+      <span class="icone icone--imprimir" aria-hidden="true"></span>
+      Imprimir
+    </button>
+
+    <!-- Exportar rápido (Excel) -->
+    <!-- PHP: <?php if ($permissoes['relatorios.exportar'] ?? false): ?> -->
+    <a href="/relatorios/exportar"
+       id="rodape-btn-exportar-xlsx"
+       class="btn btn--neutro btn--pequeno"
+       data-acao="exportar-xlsx"
+       aria-label="Exportar relatório atual em Excel">
+      <span class="icone icone--excel" aria-hidden="true"></span>
+      Exportar Excel
+    </a>
+
+    <a href="/relatorios/exportar"
+       id="rodape-btn-exportar-pdf"
+       class="btn btn--primario btn--pequeno"
+       data-acao="exportar-pdf"
+       aria-label="Exportar relatório atual em PDF">
+      <span class="icone icone--pdf" aria-hidden="true"></span>
+      Exportar PDF
+    </a>
+    <!-- PHP: <?php endif ?> -->
+
+  </div>
+
+</footer>
+<!-- /SEÇÃO 6 — BARRA DE AÇÕES INFERIOR -->
+
+
+<!-- ============================================================
+     MODAL: SALVAR FILTRO
+     Aberto ao clicar em "Salvar filtro"
+     ============================================================ -->
+<dialog class="modal-dialogo" id="modal-salvar-filtro" aria-labelledby="modal-salvar-titulo">
+  <div class="modal-dialogo__conteudo">
+
+    <div class="modal-dialogo__cabecalho">
+      <h2 class="modal-dialogo__titulo" id="modal-salvar-titulo">Salvar filtro como favorito</h2>
+      <button type="button"
+              class="btn btn--ghost btn--icone modal-dialogo__fechar"
+              aria-label="Fechar modal de salvar filtro">
+        <span class="icone icone--fechar" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <!-- PHP: <?= $this->Form->create(null, ['url' => ['action' => 'salvarFiltro'], 'id' => 'form-salvar-filtro']) ?> -->
+    <form method="post"
+          action="/relatorios/salvar-filtro"
+          id="form-salvar-filtro">
+
+      <!-- PHP: <?= $this->Form->hidden('filtros_json', ['id' => 'input-filtros-json']) ?> -->
+      <input type="hidden" name="filtros_json" id="input-filtros-json">
+
+      <div class="modal-dialogo__corpo">
+        <div class="filtros-campo">
+          <label for="filtro-favorito-nome" class="filtros-campo__label">
+            Nome do filtro <span class="campo-obrigatorio" aria-hidden="true">*</span>
+          </label>
+          <input type="text"
+                 name="nome"
+                 id="filtro-favorito-nome"
+                 class="filtros-campo__input"
+                 placeholder="Ex: Mês atual — cliente Alfa"
+                 maxlength="80"
+                 required
+                 aria-required="true">
+        </div>
+        <div class="filtros-campo">
+          <label for="filtro-favorito-descricao" class="filtros-campo__label">
+            Descrição (opcional)
+          </label>
+          <textarea name="descricao"
+                    id="filtro-favorito-descricao"
+                    class="filtros-campo__input filtros-campo__input--textarea"
+                    rows="2"
+                    placeholder="Para que serve este filtro?"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-dialogo__rodape">
+        <button type="button"
+                class="btn btn--ghost modal-dialogo__fechar"
+                aria-label="Cancelar e fechar">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn--primario">
+          <span class="icone icone--favorito" aria-hidden="true"></span>
+          Salvar
+        </button>
+      </div>
+
+    </form>
+    <!-- PHP: <?= $this->Form->end() ?> -->
+
+  </div>
+</dialog>
+<!-- /MODAL SALVAR FILTRO -->
+
+
+<!-- ============================================================
+     SCRIPT: COMPORTAMENTO DAS ABAS E AÇÕES
+     JS inline mínimo — sem dependências externas.
+     Apenas alternância de abas, reset de estados e
+     atualização do texto do rodapé.
+     Lógica de gráficos (Chart.js) em /js/relatorios.js (carregado pelo layout).
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Alternância de abas ────────────────────────────────── */
+  var ABAS = document.querySelectorAll('[role="tab"]');
+  var PAINEIS = document.querySelectorAll('[role="tabpanel"]');
+
+  function ativarAba(abaId) {
+    ABAS.forEach(function (aba) {
+      var ativo = aba.id === abaId;
+      aba.setAttribute('aria-selected', ativo ? 'true' : 'false');
+      aba.classList.toggle('rel-aba--ativo', ativo);
+    });
+    PAINEIS.forEach(function (painel) {
+      var controlador = document.getElementById(painel.getAttribute('aria-labelledby'));
+      var ativo = controlador && controlador.id === abaId;
+      painel.hidden = !ativo;
+      painel.classList.toggle('rel-painel--ativo', ativo);
+    });
+    // Atualizar texto do rodapé
+    var abaEl = document.getElementById(abaId);
+    var textoAba = abaEl ? abaEl.textContent.trim().replace(/\d+$/, '').trim() : '';
+    var rodape = document.getElementById('rodape-relatorio-ativo');
+    if (rodape) rodape.textContent = textoAba;
+  }
+
+  ABAS.forEach(function (aba) {
+    aba.addEventListener('click', function () {
+      ativarAba(aba.id);
+    });
+    // Suporte a teclado: setas direita/esquerda
+    aba.addEventListener('keydown', function (e) {
+      var lista = Array.from(ABAS);
+      var idx = lista.indexOf(aba);
+      if (e.key === 'ArrowRight' && idx < lista.length - 1) {
+        lista[idx + 1].focus();
+        ativarAba(lista[idx + 1].id);
+      }
+      if (e.key === 'ArrowLeft' && idx > 0) {
+        lista[idx - 1].focus();
+        ativarAba(lista[idx - 1].id);
+      }
+    });
+  });
+
+  /* ─── Links internos "trocar-aba" ────────────────────────── */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-acao="trocar-aba"]');
+    if (!btn) return;
+    var alvo = btn.getAttribute('data-aba');
+    var abaAlvo = document.querySelector('[data-aba="' + alvo + '"]');
+    if (abaAlvo) {
+      ativarAba(abaAlvo.id);
+      abaAlvo.focus();
+    }
+  });
+
+  /* ─── Recolher / expandir filtros ───────────────────────── */
+  var btnToggle = document.querySelector('.filtros-painel__toggle');
+  var corpoFiltros = document.getElementById('corpo-filtros-globais');
+  if (btnToggle && corpoFiltros) {
+    btnToggle.addEventListener('click', function () {
+      var expandido = btnToggle.getAttribute('aria-expanded') === 'true';
+      btnToggle.setAttribute('aria-expanded', !expandido);
+      corpoFiltros.hidden = expandido;
+    });
+  }
+
+  /* ─── Atalhos de período ─────────────────────────────────── */
+  var atalhos = document.querySelectorAll('[data-periodo]');
+  atalhos.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var hoje = new Date();
+      var inicio, fim;
+      fim = hoje.toISOString().split('T')[0];
+      switch (btn.getAttribute('data-periodo')) {
+        case 'hoje':
+          inicio = fim;
+          break;
+        case '7d':
+          inicio = new Date(hoje - 7 * 864e5).toISOString().split('T')[0];
+          break;
+        case '30d':
+          inicio = new Date(hoje - 30 * 864e5).toISOString().split('T')[0];
+          break;
+        case 'mes_atual':
+          inicio = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-01';
+          break;
+        case 'trimestre':
+          inicio = new Date(hoje - 90 * 864e5).toISOString().split('T')[0];
+          break;
+        case 'ano_atual':
+          inicio = hoje.getFullYear() + '-01-01';
+          break;
+        default:
+          return;
+      }
+      var campoDe = document.getElementById('filtro-periodo-inicio');
+      var campoAte = document.getElementById('filtro-periodo-fim');
+      if (campoDe) campoDe.value = inicio;
+      if (campoAte) campoAte.value = fim;
+      atalhos.forEach(function (a) { a.classList.remove('tag-filtro--ativo'); });
+      btn.classList.add('tag-filtro--ativo');
+    });
+  });
+
+  /* ─── Modal: Salvar filtro ───────────────────────────────── */
+  var modalSalvar = document.getElementById('modal-salvar-filtro');
+  var inputFiltrosJson = document.getElementById('input-filtros-json');
+
+  function abrirModalSalvarFiltro() {
+    if (!modalSalvar) return;
+    // Serializar filtros atuais do form
+    var form = document.getElementById('form-filtros-globais');
+    if (form && inputFiltrosJson) {
+      var dados = new FormData(form);
+      var obj = {};
+      dados.forEach(function (v, k) { obj[k] = v; });
+      inputFiltrosJson.value = JSON.stringify(obj);
+    }
+    if (modalSalvar.showModal) {
+      modalSalvar.showModal();
+    } else {
+      modalSalvar.removeAttribute('hidden');
+    }
+  }
+
+  document.querySelectorAll('[data-acao="salvar-filtro"], #btn-salvar-filtro, #rodape-btn-salvar-filtro').forEach(function (btn) {
+    btn.addEventListener('click', abrirModalSalvarFiltro);
+  });
+
+  document.querySelectorAll('.modal-dialogo__fechar').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (modalSalvar) {
+        if (modalSalvar.close) modalSalvar.close();
+        else modalSalvar.setAttribute('hidden', '');
+      }
+    });
+  });
+
+  /* ─── Atualizar href de exportar conforme aba ativa ─────── */
+  function atualizarLinksExportar(abaAtiva) {
+    var relatorio = abaAtiva || 'atendimentos';
+    var base = '/relatorios/exportar?relatorio=' + relatorio;
+    var lnkXlsx = document.getElementById('rodape-btn-exportar-xlsx');
+    var lnkPdf = document.getElementById('rodape-btn-exportar-pdf');
+    if (lnkXlsx) lnkXlsx.href = base + '&formato=xlsx';
+    if (lnkPdf) lnkPdf.href = base + '&formato=pdf';
+  }
+
+  ABAS.forEach(function (aba) {
+    aba.addEventListener('click', function () {
+      atualizarLinksExportar(aba.getAttribute('data-aba'));
+    });
+  });
+
+}());
+</script>
+
+
+</body>
+</html>

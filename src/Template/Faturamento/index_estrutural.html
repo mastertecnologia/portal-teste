@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<!--
+  ESTRUTURA: Tela de Faturamento — ERP Interno
+  Arquivo-base para conversão em: src/Template/Faturamento/index.ctp
+  Layout pai esperado: src/Template/Layout/default.ctp
+  Controller: FaturamentoController::index()
+  Variáveis PHP esperadas (CakePHP):
+    $faturas          — ResultSet paginado
+    $clientes         — lista para select de filtros
+    $kpi              — array com totais dos cards (emitido_mes, recebido_mes, inadimplencia_valor, inadimplencia_pct, a_vencer_7d)
+    $filtros          — array com valores atuais dos filtros
+    $paginacao        — objeto de paginação do CakePHP
+    $permissoes       — array de permissões do usuário atual
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faturamento — ERP</title>
+  <!--
+    CSS já carregado pelo layout pai (default.ctp):
+    - bootstrap ou framework CSS do ERP
+    - estilo global do ERP
+    Arquivo de estilos específico desta tela (opcional):
+    <link rel="stylesheet" href="/css/faturamento.css">
+  -->
+</head>
+<body>
+
+<!--
+  ============================================================
+  NOTA: O layout pai (default.ctp) injeta neste ponto:
+    - <header> com logo, usuário logado e notificações
+    - <nav class="sidebar"> com menu lateral
+    - <main class="conteudo-principal"> que envolve este arquivo
+  O que está abaixo é o conteúdo interno do <main>.
+  ============================================================
+-->
+
+<!-- ============================================================
+     SEÇÃO 1 — CABEÇALHO DA PÁGINA
+     Título, breadcrumb e botões de ação principal
+     ============================================================ -->
+<section class="pagina-cabecalho">
+
+  <div class="pagina-cabecalho__breadcrumb">
+    <nav aria-label="Localização">
+      <ol class="breadcrumb-lista">
+        <li class="breadcrumb-item">
+          <a href="/dashboard">Início</a>
+        </li>
+        <li class="breadcrumb-item breadcrumb-item--ativo" aria-current="page">
+          Faturamento
+        </li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="pagina-cabecalho__corpo">
+
+    <div class="pagina-cabecalho__titulo-grupo">
+      <h1 class="pagina-titulo">
+        Faturamento
+      </h1>
+      <p class="pagina-subtitulo">
+        Gestão de faturas, cobranças e recebimentos
+      </p>
+    </div>
+
+    <!-- Ações principais — visibilidade controlada por permissão PHP -->
+    <div class="pagina-cabecalho__acoes">
+
+      <!-- Visível para: financeiro, gestor, admin -->
+      <!-- PHP: <?php if ($permissoes['faturamento.add']): ?> -->
+      <a href="/faturamento/add"
+         class="btn btn--primario btn--icone"
+         title="Criar nova fatura">
+        <span class="icone icone--mais" aria-hidden="true"></span>
+        Nova Fatura
+      </a>
+      <!-- PHP: <?php endif ?> -->
+
+      <!-- Gerar Lote — gera faturas em lote a partir de contratos -->
+      <!-- PHP: <?php if ($permissoes['faturamento.gerarLote']): ?> -->
+      <button type="button"
+              class="btn btn--secundario btn--icone"
+              id="btn-gerar-lote"
+              title="Gerar faturas em lote para o mês de competência"
+              aria-label="Gerar lote de faturas">
+        <span class="icone icone--lote" aria-hidden="true"></span>
+        Gerar Lote
+      </button>
+      <!-- PHP: <?php endif ?> -->
+
+      <!-- Exportar dropdown -->
+      <div class="btn-grupo">
+        <button type="button"
+                class="btn btn--neutro btn--icone dropdown-gatilho"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="menu-exportar-faturamento"
+                title="Exportar faturas">
+          <span class="icone icone--exportar" aria-hidden="true"></span>
+          Exportar
+          <span class="icone icone--seta-baixo" aria-hidden="true"></span>
+        </button>
+        <ul id="menu-exportar-faturamento"
+            class="dropdown-menu"
+            role="menu"
+            hidden>
+          <li role="none">
+            <a href="/faturamento/exportar?formato=xlsx"
+               role="menuitem"
+               class="dropdown-item">
+              <span class="icone icone--excel" aria-hidden="true"></span>
+              Exportar Excel (.xlsx)
+            </a>
+          </li>
+          <li role="none">
+            <a href="/faturamento/exportar?formato=pdf"
+               role="menuitem"
+               class="dropdown-item">
+              <span class="icone icone--pdf" aria-hidden="true"></span>
+              Exportar PDF
+            </a>
+          </li>
+          <li role="none">
+            <a href="/faturamento/exportar?formato=csv"
+               role="menuitem"
+               class="dropdown-item">
+              <span class="icone icone--csv" aria-hidden="true"></span>
+              Exportar CSV
+            </a>
+          </li>
+          <li class="dropdown-item--separador" role="separator"></li>
+          <li role="none">
+            <a href="/faturamento/exportar?formato=remessa"
+               role="menuitem"
+               class="dropdown-item">
+              <span class="icone icone--banco" aria-hidden="true"></span>
+              Remessa bancária
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /pagina-cabecalho__acoes -->
+
+  </div><!-- /pagina-cabecalho__corpo -->
+
+</section>
+<!-- /SEÇÃO 1 — CABEÇALHO -->
+
+
+<!-- ============================================================
+     SEÇÃO 2 — CARDS KPI
+     Totalizadores financeiros do período
+     Dados vindos de $kpi (calculado no controller ou service)
+     ============================================================ -->
+<section class="kpi-painel" aria-label="Resumo financeiro do período">
+
+  <!-- Card: Emitido no mês -->
+  <article class="kpi-card kpi-card--azul">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--fatura-emitida"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Emitido no mês</span>
+      <!-- PHP: <?= $this->Number->currency($kpi['emitido_mes'] ?? 0, 'BRL') ?> -->
+      <strong class="kpi-card__valor" id="kpi-emitido-mes">R$&nbsp;85.400,00</strong>
+      <!-- PHP: <?= $kpi['qtd_emitidas_mes'] ?? 0 ?> faturas -->
+      <span class="kpi-card__detalhe">32 faturas emitidas</span>
+    </div>
+    <a href="/faturamento?competencia_mes=atual"
+       class="kpi-card__link"
+       aria-label="Ver faturas emitidas neste mês">
+      Ver faturas
+    </a>
+  </article>
+
+  <!-- Card: Recebido no mês -->
+  <article class="kpi-card kpi-card--verde">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--recebido"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Recebido no mês</span>
+      <!-- PHP: <?= $this->Number->currency($kpi['recebido_mes'] ?? 0, 'BRL') ?> -->
+      <strong class="kpi-card__valor" id="kpi-recebido-mes">R$&nbsp;71.200,00</strong>
+      <!-- PHP: <?= $kpi['qtd_recebidas_mes'] ?? 0 ?> faturas pagas -->
+      <span class="kpi-card__detalhe">27 faturas pagas</span>
+    </div>
+    <a href="/faturamento?status=pago&competencia_mes=atual"
+       class="kpi-card__link"
+       aria-label="Ver faturas recebidas neste mês">
+      Ver recebidas
+    </a>
+  </article>
+
+  <!-- Card: Inadimplência (valor + percentual) -->
+  <article class="kpi-card kpi-card--vermelho" aria-live="polite">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--inadimplencia"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">Inadimplência</span>
+      <!-- PHP: <?= $this->Number->currency($kpi['inadimplencia_valor'] ?? 0, 'BRL') ?> -->
+      <strong class="kpi-card__valor kpi-card__valor--destaque" id="kpi-inadimplencia">R$&nbsp;14.200,00</strong>
+      <!-- PHP: <?= number_format($kpi['inadimplencia_pct'] ?? 0, 1) ?>% em atraso -->
+      <span class="kpi-card__detalhe">16,6% em atraso</span>
+    </div>
+    <a href="/faturamento?status=vencido"
+       class="kpi-card__link"
+       aria-label="Ver faturas vencidas e inadimplentes">
+      Ver vencidas
+    </a>
+  </article>
+
+  <!-- Card: A vencer em 7 dias -->
+  <article class="kpi-card kpi-card--amarelo">
+    <div class="kpi-card__icone" aria-hidden="true">
+      <span class="icone icone--alerta-prazo"></span>
+    </div>
+    <div class="kpi-card__corpo">
+      <span class="kpi-card__rotulo">A vencer em 7 dias</span>
+      <!-- PHP: <?= $this->Number->currency($kpi['a_vencer_7d_valor'] ?? 0, 'BRL') ?> -->
+      <strong class="kpi-card__valor" id="kpi-a-vencer">R$&nbsp;9.800,00</strong>
+      <!-- PHP: <?= $kpi['a_vencer_7d_qtd'] ?? 0 ?> faturas -->
+      <span class="kpi-card__detalhe">5 faturas próximas</span>
+    </div>
+    <a href="/faturamento?alerta=vencer_7d"
+       class="kpi-card__link"
+       aria-label="Ver faturas a vencer nos próximos 7 dias">
+      Ver a vencer
+    </a>
+  </article>
+
+</section>
+<!-- /SEÇÃO 2 — CARDS KPI -->
+
+
+<!-- ============================================================
+     SEÇÃO 3 — PAINEL DE FILTROS
+     Formulário GET para filtrar a listagem
+     O form envia para a própria URL (/faturamento)
+     ============================================================ -->
+<section class="filtros-painel" id="painel-filtros">
+
+  <div class="filtros-painel__cabecalho">
+    <h2 class="filtros-painel__titulo">
+      <span class="icone icone--filtro" aria-hidden="true"></span>
+      Filtros
+    </h2>
+    <button type="button"
+            class="btn btn--ghost btn--pequeno filtros-painel__toggle"
+            aria-expanded="true"
+            aria-controls="filtros-corpo-faturamento"
+            title="Recolher/expandir filtros">
+      <span class="icone icone--seta-cima" aria-hidden="true"></span>
+      <span class="sr-only">Recolher filtros</span>
+    </button>
+  </div>
+
+  <div class="filtros-painel__corpo" id="filtros-corpo-faturamento">
+
+    <!-- CakePHP: <?= $this->Form->create(null, ['type' => 'get', 'url' => ['action' => 'index']]) ?> -->
+    <form method="get"
+          action="/faturamento"
+          class="filtros-form"
+          id="form-filtros"
+          role="search"
+          aria-label="Filtrar faturas">
+
+      <div class="filtros-form__grade">
+
+        <!-- Filtro: Cliente (select com busca) -->
+        <div class="filtros-campo filtros-campo--largo">
+          <label for="filtro-cliente" class="filtros-campo__label">
+            Cliente
+          </label>
+          <!-- CakePHP: <?= $this->Form->select('idcliente', $clientes, ['empty' => 'Todos os clientes', ...]) ?> -->
+          <select name="idcliente"
+                  id="filtro-cliente"
+                  class="filtros-campo__input filtros-campo__input--select select-busca"
+                  data-placeholder="Todos os clientes">
+            <option value="">Todos os clientes</option>
+            <!-- PHP: foreach ($clientes as $id => $nome) -->
+            <option value="1">Alfa Sistemas Ltda</option>
+            <option value="2">Beta Comércio ME</option>
+            <option value="3">Gamma Tecnologia SA</option>
+            <!-- /foreach -->
+          </select>
+        </div>
+
+        <!-- Filtro: Competência — de (mês) -->
+        <div class="filtros-campo">
+          <label for="filtro-competencia-inicio" class="filtros-campo__label">
+            Competência — de
+          </label>
+          <input type="month"
+                 name="competencia_inicio"
+                 id="filtro-competencia-inicio"
+                 class="filtros-campo__input"
+                 value=""
+                 aria-label="Competência início (mês/ano)">
+        </div>
+
+        <!-- Filtro: Competência — até (mês) -->
+        <div class="filtros-campo">
+          <label for="filtro-competencia-fim" class="filtros-campo__label">
+            Competência — até
+          </label>
+          <input type="month"
+                 name="competencia_fim"
+                 id="filtro-competencia-fim"
+                 class="filtros-campo__input"
+                 value=""
+                 aria-label="Competência fim (mês/ano)">
+        </div>
+
+        <!-- Filtro: Valor mínimo -->
+        <div class="filtros-campo">
+          <label for="filtro-valor-min" class="filtros-campo__label">
+            Valor mínimo (R$)
+          </label>
+          <input type="number"
+                 name="valor_min"
+                 id="filtro-valor-min"
+                 class="filtros-campo__input"
+                 min="0"
+                 step="0.01"
+                 placeholder="0,00"
+                 aria-label="Valor mínimo em reais">
+        </div>
+
+        <!-- Filtro: Valor máximo -->
+        <div class="filtros-campo">
+          <label for="filtro-valor-max" class="filtros-campo__label">
+            Valor máximo (R$)
+          </label>
+          <input type="number"
+                 name="valor_max"
+                 id="filtro-valor-max"
+                 class="filtros-campo__input"
+                 min="0"
+                 step="0.01"
+                 placeholder="Sem limite"
+                 aria-label="Valor máximo em reais">
+        </div>
+
+      </div><!-- /filtros-form__grade -->
+
+      <!-- Filtros de múltipla escolha: Status e Tipo -->
+      <div class="filtros-form__grupos-checkbox">
+
+        <!-- Status (checkboxes) -->
+        <fieldset class="filtros-grupo-checkbox">
+          <legend class="filtros-grupo-checkbox__titulo">Status</legend>
+          <div class="filtros-grupo-checkbox__opcoes">
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="status[]"
+                     value="rascunho"
+                     class="checkbox"
+                     id="filtro-status-rascunho">
+              <span class="filtros-checkbox-opcao__label">
+                <span class="badge badge--status badge--rascunho" aria-hidden="true">●</span>
+                Rascunho
+              </span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="status[]"
+                     value="pendente"
+                     class="checkbox"
+                     id="filtro-status-pendente">
+              <span class="filtros-checkbox-opcao__label">
+                <span class="badge badge--status badge--pendente" aria-hidden="true">●</span>
+                Pendente
+              </span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="status[]"
+                     value="enviado"
+                     class="checkbox"
+                     id="filtro-status-enviado">
+              <span class="filtros-checkbox-opcao__label">
+                <span class="badge badge--status badge--enviado" aria-hidden="true">●</span>
+                Enviado
+              </span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="status[]"
+                     value="pago"
+                     class="checkbox"
+                     id="filtro-status-pago">
+              <span class="filtros-checkbox-opcao__label">
+                <span class="badge badge--status badge--pago" aria-hidden="true">●</span>
+                Pago
+              </span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="status[]"
+                     value="vencido"
+                     class="checkbox"
+                     id="filtro-status-vencido">
+              <span class="filtros-checkbox-opcao__label">
+                <span class="badge badge--status badge--vencido" aria-hidden="true">●</span>
+                Vencido
+              </span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="status[]"
+                     value="cancelado"
+                     class="checkbox"
+                     id="filtro-status-cancelado">
+              <span class="filtros-checkbox-opcao__label">
+                <span class="badge badge--status badge--cancelado" aria-hidden="true">●</span>
+                Cancelado
+              </span>
+            </label>
+
+          </div>
+        </fieldset>
+
+        <!-- Tipo (checkboxes) -->
+        <fieldset class="filtros-grupo-checkbox">
+          <legend class="filtros-grupo-checkbox__titulo">Tipo</legend>
+          <div class="filtros-grupo-checkbox__opcoes">
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="tipo[]"
+                     value="mensalidade"
+                     class="checkbox"
+                     id="filtro-tipo-mensalidade">
+              <span class="filtros-checkbox-opcao__label">Mensalidade</span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="tipo[]"
+                     value="os"
+                     class="checkbox"
+                     id="filtro-tipo-os">
+              <span class="filtros-checkbox-opcao__label">OS (Ordem de Serviço)</span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="tipo[]"
+                     value="avulso"
+                     class="checkbox"
+                     id="filtro-tipo-avulso">
+              <span class="filtros-checkbox-opcao__label">Avulso</span>
+            </label>
+
+            <label class="filtros-checkbox-opcao">
+              <input type="checkbox"
+                     name="tipo[]"
+                     value="locacao"
+                     class="checkbox"
+                     id="filtro-tipo-locacao">
+              <span class="filtros-checkbox-opcao__label">Locação</span>
+            </label>
+
+          </div>
+        </fieldset>
+
+      </div><!-- /filtros-form__grupos-checkbox -->
+
+      <!-- Ações do formulário de filtro -->
+      <div class="filtros-form__acoes">
+        <button type="submit"
+                class="btn btn--primario"
+                form="form-filtros">
+          <span class="icone icone--busca" aria-hidden="true"></span>
+          Aplicar filtros
+        </button>
+        <a href="/faturamento"
+           class="btn btn--ghost"
+           title="Remover todos os filtros">
+          <span class="icone icone--limpar" aria-hidden="true"></span>
+          Limpar filtros
+        </a>
+      </div>
+
+    </form>
+    <!-- CakePHP: <?= $this->Form->end() ?> -->
+
+  </div><!-- /filtros-painel__corpo -->
+
+</section>
+<!-- /SEÇÃO 3 — FILTROS -->
+
+
+<!-- ============================================================
+     SEÇÃO 4 — BARRA DE CONTROLE DA TABELA
+     Contador de resultados, busca rápida e ações em lote
+     ============================================================ -->
+<div class="tabela-controle">
+
+  <div class="tabela-controle__esquerda">
+
+    <!-- Contador de resultados -->
+    <!-- PHP: <?= $this->Paginator->counter('Exibindo {{start}}–{{end}} de {{count}} faturas') ?> -->
+    <span class="tabela-contador" id="tabela-contador" aria-live="polite">
+      Exibindo 1–25 de 87 faturas
+    </span>
+
+    <!-- Ações em lote — aparece só quando há checkboxes marcados -->
+    <div class="tabela-lote" id="acoes-lote" hidden aria-live="polite">
+      <span class="tabela-lote__info" id="lote-info">
+        <strong class="lote-qtd" id="lote-qtd">0</strong> selecionadas
+      </span>
+      <!-- Marcar como pagas em lote -->
+      <button type="button"
+              class="btn btn--pequeno btn--verde"
+              id="btn-lote-marcar-pagas"
+              title="Marcar faturas selecionadas como pagas">
+        <span class="icone icone--check" aria-hidden="true"></span>
+        Marcar pagas
+      </button>
+      <!-- Gerar PDFs em lote -->
+      <button type="button"
+              class="btn btn--pequeno btn--neutro"
+              id="btn-lote-gerar-pdfs"
+              title="Gerar PDFs das faturas selecionadas">
+        <span class="icone icone--pdf" aria-hidden="true"></span>
+        Gerar PDFs
+      </button>
+      <!-- Exportar seleção -->
+      <button type="button"
+              class="btn btn--pequeno btn--neutro"
+              id="btn-lote-exportar"
+              title="Exportar faturas selecionadas">
+        <span class="icone icone--exportar" aria-hidden="true"></span>
+        Exportar seleção
+      </button>
+    </div>
+
+  </div><!-- /tabela-controle__esquerda -->
+
+  <div class="tabela-controle__direita">
+
+    <!-- Busca rápida na tabela -->
+    <div class="busca-rapida">
+      <label for="busca-rapida-input" class="sr-only">
+        Buscar na tabela
+      </label>
+      <input type="search"
+             id="busca-rapida-input"
+             name="q"
+             class="busca-rapida__input"
+             placeholder="Buscar fatura ou cliente..."
+             autocomplete="off"
+             value=""
+             form="form-filtros">
+      <span class="icone icone--lupa busca-rapida__icone" aria-hidden="true"></span>
+    </div>
+
+    <!-- Registros por página -->
+    <div class="tabela-por-pagina">
+      <label for="por-pagina" class="tabela-por-pagina__label">
+        Exibir:
+      </label>
+      <select id="por-pagina"
+              name="limit"
+              class="tabela-por-pagina__select"
+              form="form-filtros">
+        <option value="15">15</option>
+        <option value="25" selected>25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+
+  </div><!-- /tabela-controle__direita -->
+
+</div>
+<!-- /SEÇÃO 4 — BARRA DE CONTROLE -->
+
+
+<!-- ============================================================
+     SEÇÃO 5 — TABELA PRINCIPAL DE FATURAS
+     ============================================================ -->
+<section class="tabela-secao" aria-label="Lista de faturas">
+
+  <!-- ── 5A. ESTADO: CARREGANDO ──────────────────────────── -->
+  <!--
+    PHP: mostrar somente quando a lista estiver sendo carregada via AJAX.
+    Classe controlada por JS: tabela-estado--visivel
+    No carregamento inicial (SSR), este bloco fica hidden.
+  -->
+  <div class="tabela-estado tabela-estado--carregando"
+       id="estado-carregando"
+       hidden
+       role="status"
+       aria-live="polite"
+       aria-label="Carregando faturas">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="tabela-estado__mensagem">Carregando faturas...</p>
+  </div>
+
+  <!-- ── 5B. ESTADO: ERRO AO CARREGAR ────────────────────── -->
+  <!--
+    PHP: <?php if (!empty($erroCarregamento)): ?>
+    Mostrar quando controller lançar exceção ou query falhar.
+  -->
+  <div class="tabela-estado tabela-estado--erro"
+       id="estado-erro"
+       hidden
+       role="alert">
+    <span class="icone icone--erro-circulo tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Erro ao carregar faturas</h3>
+    <p class="tabela-estado__mensagem">
+      Não foi possível carregar a lista de faturas.
+      <!-- PHP: <?= h($erroMensagem ?? 'Tente novamente em instantes.') ?> -->
+    </p>
+    <button type="button"
+            class="btn btn--primario"
+            id="btn-tentar-novamente">
+      Tentar novamente
+    </button>
+    <a href="/faturamento"
+       class="btn btn--ghost">
+      Recarregar página
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+  <!-- ── 5C. ESTADO: SEM PERMISSÃO ───────────────────────── -->
+  <!--
+    PHP: <?php if (!$permissoes['faturamento.index']): ?>
+  -->
+  <div class="tabela-estado tabela-estado--sem-permissao"
+       id="estado-sem-permissao"
+       hidden
+       role="alert">
+    <span class="icone icone--cadeado tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Acesso restrito</h3>
+    <p class="tabela-estado__mensagem">
+      Você não tem permissão para visualizar o faturamento.
+      Solicite acesso ao administrador do sistema.
+    </p>
+    <a href="/dashboard"
+       class="btn btn--primario">
+      Voltar ao início
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+  <!-- ── 5D. ESTADO: LISTA VAZIA (sem filtros ativos) ─────── -->
+  <!--
+    PHP: <?php if (empty($faturas) && empty($filtros_ativos)): ?>
+    Nenhuma fatura cadastrada ainda.
+  -->
+  <div class="tabela-estado tabela-estado--vazio"
+       id="estado-vazio-sem-filtro"
+       hidden>
+    <span class="icone icone--documento-vazio tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Nenhuma fatura cadastrada</h3>
+    <p class="tabela-estado__mensagem">
+      Ainda não há faturas registradas no sistema.
+      Comece criando a primeira fatura ou gerando um lote.
+    </p>
+    <a href="/faturamento/add"
+       class="btn btn--primario">
+      <span class="icone icone--mais" aria-hidden="true"></span>
+      Criar primeira fatura
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+  <!-- ── 5E. ESTADO: FILTRO SEM RESULTADO ────────────────── -->
+  <!--
+    PHP: <?php if (empty($faturas) && !empty($filtros_ativos)): ?>
+    Há filtros aplicados mas nenhum resultado retornou.
+  -->
+  <div class="tabela-estado tabela-estado--sem-resultado"
+       id="estado-sem-resultado"
+       hidden>
+    <span class="icone icone--busca-vazia tabela-estado__icone" aria-hidden="true"></span>
+    <h3 class="tabela-estado__titulo">Nenhuma fatura encontrada</h3>
+    <p class="tabela-estado__mensagem">
+      Nenhuma fatura corresponde aos filtros aplicados.
+      Tente ajustar ou remover os filtros.
+    </p>
+    <a href="/faturamento"
+       class="btn btn--neutro">
+      Limpar filtros e ver todas
+    </a>
+  </div>
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── 5F. TABELA PRINCIPAL ────────────────────────────── -->
+  <!--
+    PHP: <?php if (!empty($faturas)): ?>
+    Renderiza a tabela apenas quando há dados.
+  -->
+  <div class="tabela-wrapper" id="wrapper-tabela-faturas">
+    <table class="tabela"
+           id="tabela-faturas"
+           aria-label="Faturas de clientes"
+           aria-describedby="tabela-contador">
+
+      <!-- colgroup define larguras relativas das colunas -->
+      <colgroup>
+        <col class="col-checkbox">
+        <col class="col-numero">
+        <col class="col-cliente">
+        <col class="col-competencia">
+        <col class="col-vencimento">
+        <col class="col-valor">
+        <col class="col-tipo">
+        <col class="col-status">
+        <col class="col-acoes">
+      </colgroup>
+
+      <thead class="tabela__cabecalho">
+        <tr>
+
+          <!-- Checkbox selecionar todos -->
+          <th class="tabela__th tabela__th--checkbox" scope="col">
+            <input type="checkbox"
+                   id="selecionar-todos"
+                   class="checkbox"
+                   aria-label="Selecionar todas as faturas desta página">
+            <label for="selecionar-todos" class="sr-only">
+              Selecionar todas
+            </label>
+          </th>
+
+          <!-- Nº Fatura -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="descending"
+              data-coluna="numero">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="numero"
+                    form="form-filtros">
+              Nº Fatura
+              <span class="tabela__th-seta tabela__th-seta--desc" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Cliente -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="cliente">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="cliente"
+                    form="form-filtros">
+              Cliente
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Competência -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="competencia">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="competencia"
+                    form="form-filtros">
+              Competência
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Vencimento -->
+          <th class="tabela__th tabela__th--ordenavel"
+              scope="col"
+              aria-sort="none"
+              data-coluna="vencimento">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="dtvencimento"
+                    form="form-filtros">
+              Vencimento
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Valor -->
+          <th class="tabela__th tabela__th--ordenavel tabela__th--valor"
+              scope="col"
+              aria-sort="none"
+              data-coluna="valor">
+            <button type="button"
+                    class="tabela__th-btn"
+                    data-ordem="vltotal"
+                    form="form-filtros">
+              Valor
+              <span class="tabela__th-seta" aria-hidden="true"></span>
+            </button>
+          </th>
+
+          <!-- Tipo -->
+          <th class="tabela__th tabela__th--tipo" scope="col">
+            Tipo
+          </th>
+
+          <!-- Status -->
+          <th class="tabela__th tabela__th--status" scope="col">
+            Status
+          </th>
+
+          <!-- Ações -->
+          <th class="tabela__th tabela__th--acoes" scope="col">
+            <span class="sr-only">Ações</span>
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody class="tabela__corpo" id="tabela-faturas-corpo">
+
+        <!--
+          PHP: <?php foreach ($faturas as $fatura): ?>
+          Cada linha abaixo representa uma $fatura do ResultSet.
+          Classes modificadoras de linha aplicadas via PHP:
+            $classeLinha = match($fatura->status) {
+              'vencido'       => 'tabela__linha tabela__linha--vermelho',
+              'pendente'      => 'tabela__linha',
+              default         => 'tabela__linha'
+            };
+          Verificar também se vence hoje:
+            if ($fatura->dtvencimento->isToday() && $fatura->status === 'pendente')
+              $classeLinha .= ' tabela__linha--alerta';
+        -->
+
+        <!-- ── Linha padrão (enviada/pendente) ── -->
+        <tr class="tabela__linha"
+            id="linha-fatura-1001"
+            data-id="1001">
+
+          <td class="tabela__td tabela__td--checkbox">
+            <input type="checkbox"
+                   class="checkbox checkbox-linha"
+                   id="sel-1001"
+                   name="selecionados[]"
+                   value="1001"
+                   aria-label="Selecionar fatura FAT-2026-001 — Alfa Sistemas Ltda">
+            <label for="sel-1001" class="sr-only">Selecionar</label>
+          </td>
+
+          <td class="tabela__td tabela__td--numero">
+            <!-- PHP: <?= $this->Html->link($fatura->numero, ['action' => 'view', $fatura->id]) ?> -->
+            <a href="/faturamento/view/1001"
+               class="tabela__link-fatura"
+               aria-label="Abrir fatura FAT-2026-001">
+              FAT-2026-001
+            </a>
+          </td>
+
+          <td class="tabela__td tabela__td--cliente">
+            <div class="cliente-info">
+              <span class="cliente-info__nome">Alfa Sistemas Ltda</span>
+              <span class="cliente-info__cnpj">12.345.678/0001-90</span>
+            </div>
+          </td>
+
+          <td class="tabela__td tabela__td--competencia">
+            <!-- PHP: <?= $fatura->competencia->format('m/Y') ?> -->
+            03/2026
+          </td>
+
+          <td class="tabela__td tabela__td--data">
+            <!-- PHP: <?= $fatura->dtvencimento->format('d/m/Y') ?> -->
+            15/04/2026
+          </td>
+
+          <td class="tabela__td tabela__td--valor">
+            <!-- PHP: <?= $this->Number->currency($fatura->vltotal, 'BRL') ?> -->
+            <span class="valor-monetario">R$&nbsp;2.800,00</span>
+          </td>
+
+          <td class="tabela__td tabela__td--tipo">
+            <!-- PHP: badge de tipo baseado em $fatura->tipo -->
+            <span class="badge badge--tipo badge--mensalidade"
+                  title="Fatura de mensalidade de contrato">
+              Mensalidade
+            </span>
+          </td>
+
+          <td class="tabela__td tabela__td--status">
+            <!-- PHP: classe e texto controlados pelo status da fatura -->
+            <span class="badge badge--status badge--enviado"
+                  title="Fatura enviada ao cliente, aguardando pagamento">
+              Enviado
+            </span>
+          </td>
+
+          <!-- Ações inline por linha -->
+          <td class="tabela__td tabela__td--acoes">
+            <div class="acoes-linha" role="group" aria-label="Ações da fatura FAT-2026-001">
+
+              <!-- Ver detalhes -->
+              <a href="/faturamento/view/1001"
+                 class="btn-acao btn-acao--ver"
+                 title="Visualizar detalhes da fatura"
+                 aria-label="Ver fatura FAT-2026-001">
+                <span class="icone icone--ver" aria-hidden="true"></span>
+              </a>
+
+              <!-- Baixar PDF -->
+              <a href="/faturamento/pdf/1001"
+                 class="btn-acao btn-acao--pdf"
+                 title="Baixar PDF da fatura"
+                 aria-label="PDF da fatura FAT-2026-001"
+                 target="_blank"
+                 rel="noopener">
+                <span class="icone icone--pdf" aria-hidden="true"></span>
+              </a>
+
+              <!-- Registrar recebimento -->
+              <!-- PHP: <?php if (in_array($fatura->status, ['pendente','enviado','vencido'])): ?> -->
+              <button type="button"
+                      class="btn-acao btn-acao--receber"
+                      title="Registrar recebimento"
+                      aria-label="Receber fatura FAT-2026-001"
+                      data-id="1001"
+                      data-acao="receber">
+                <span class="icone icone--dinheiro" aria-hidden="true"></span>
+              </button>
+              <!-- PHP: <?php endif ?> -->
+
+              <!-- Enviar por e-mail -->
+              <button type="button"
+                      class="btn-acao btn-acao--email"
+                      title="Enviar fatura por e-mail"
+                      aria-label="Enviar fatura FAT-2026-001 por e-mail"
+                      data-id="1001"
+                      data-acao="enviar-email">
+                <span class="icone icone--email" aria-hidden="true"></span>
+              </button>
+
+              <!-- Dropdown: mais ações -->
+              <div class="acoes-linha__mais">
+                <button type="button"
+                        class="btn-acao btn-acao--mais dropdown-gatilho"
+                        title="Mais ações"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="menu-acao-1001"
+                        aria-label="Mais ações para FAT-2026-001">
+                  <span class="icone icone--reticencias" aria-hidden="true"></span>
+                </button>
+                <ul id="menu-acao-1001"
+                    class="dropdown-menu dropdown-menu--acao"
+                    role="menu"
+                    hidden>
+                  <li role="none">
+                    <a href="/faturamento/edit/1001"
+                       role="menuitem"
+                       class="dropdown-item">
+                      <span class="icone icone--editar" aria-hidden="true"></span>
+                      Editar
+                    </a>
+                  </li>
+                  <li role="none">
+                    <a href="/faturamento/boleto/1001"
+                       role="menuitem"
+                       class="dropdown-item"
+                       target="_blank"
+                       rel="noopener">
+                      <span class="icone icone--boleto" aria-hidden="true"></span>
+                      Gerar boleto
+                    </a>
+                  </li>
+                  <li class="dropdown-item--separador" role="separator"></li>
+                  <li role="none">
+                    <button type="button"
+                            role="menuitem"
+                            class="dropdown-item dropdown-item--perigo"
+                            data-id="1001"
+                            data-acao="cancelar">
+                      <span class="icone icone--cancelar" aria-hidden="true"></span>
+                      Cancelar fatura
+                    </button>
+                  </li>
+                </ul>
+              </div><!-- /acoes-linha__mais -->
+
+            </div><!-- /acoes-linha -->
+          </td>
+
+        </tr>
+
+        <!-- ── Linha vencida (linha--vermelho) ── -->
+        <!--
+          PHP: quando $fatura->status === 'vencido'
+          $classeLinha = 'tabela__linha tabela__linha--vermelho'
+        -->
+        <tr class="tabela__linha tabela__linha--vermelho"
+            id="linha-fatura-987"
+            data-id="987">
+
+          <td class="tabela__td tabela__td--checkbox">
+            <input type="checkbox"
+                   class="checkbox checkbox-linha"
+                   id="sel-987"
+                   name="selecionados[]"
+                   value="987"
+                   aria-label="Selecionar fatura FAT-2026-987 — vencida">
+            <label for="sel-987" class="sr-only">Selecionar</label>
+          </td>
+
+          <td class="tabela__td tabela__td--numero">
+            <a href="/faturamento/view/987"
+               class="tabela__link-fatura"
+               aria-label="Abrir fatura FAT-2025-987">
+              FAT-2025-987
+            </a>
+          </td>
+
+          <td class="tabela__td tabela__td--cliente">
+            <div class="cliente-info">
+              <span class="cliente-info__nome">Beta Comércio ME</span>
+              <span class="cliente-info__cnpj">98.765.432/0001-11</span>
+            </div>
+          </td>
+
+          <td class="tabela__td tabela__td--competencia">02/2026</td>
+
+          <!-- Vencimento com badge de vencida -->
+          <td class="tabela__td tabela__td--data tabela__td--data-alerta">
+            <span class="data-vencimento data-vencimento--vencida"
+                  title="Vencida há 15 dias">
+              <!-- PHP: <?= $fatura->dtvencimento->format('d/m/Y') ?> -->
+              15/03/2026
+            </span>
+            <span class="badge-alerta badge-alerta--vermelho"
+                  aria-label="Fatura vencida">
+              Vencida
+            </span>
+          </td>
+
+          <td class="tabela__td tabela__td--valor">
+            <span class="valor-monetario valor-monetario--vencido">R$&nbsp;1.500,00</span>
+          </td>
+
+          <td class="tabela__td tabela__td--tipo">
+            <span class="badge badge--tipo badge--mensalidade">Mensalidade</span>
+          </td>
+
+          <td class="tabela__td tabela__td--status">
+            <span class="badge badge--status badge--vencido"
+                  title="Fatura vencida e não paga">
+              Vencido
+            </span>
+          </td>
+
+          <td class="tabela__td tabela__td--acoes">
+            <div class="acoes-linha" role="group" aria-label="Ações da fatura FAT-2025-987">
+              <a href="/faturamento/view/987"
+                 class="btn-acao btn-acao--ver"
+                 title="Ver detalhes"
+                 aria-label="Ver fatura FAT-2025-987">
+                <span class="icone icone--ver" aria-hidden="true"></span>
+              </a>
+              <a href="/faturamento/pdf/987"
+                 class="btn-acao btn-acao--pdf"
+                 title="Baixar PDF"
+                 aria-label="PDF da fatura FAT-2025-987"
+                 target="_blank"
+                 rel="noopener">
+                <span class="icone icone--pdf" aria-hidden="true"></span>
+              </a>
+              <button type="button"
+                      class="btn-acao btn-acao--receber btn-acao--destaque"
+                      title="Registrar recebimento (URGENTE)"
+                      aria-label="Receber fatura vencida FAT-2025-987"
+                      data-id="987"
+                      data-acao="receber">
+                <span class="icone icone--dinheiro" aria-hidden="true"></span>
+              </button>
+              <div class="acoes-linha__mais">
+                <button type="button"
+                        class="btn-acao btn-acao--mais dropdown-gatilho"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="menu-acao-987"
+                        aria-label="Mais ações para FAT-2025-987">
+                  <span class="icone icone--reticencias" aria-hidden="true"></span>
+                </button>
+                <ul id="menu-acao-987"
+                    class="dropdown-menu dropdown-menu--acao"
+                    role="menu"
+                    hidden>
+                  <li role="none">
+                    <a href="/faturamento/edit/987" role="menuitem" class="dropdown-item">
+                      <span class="icone icone--editar" aria-hidden="true"></span>
+                      Editar
+                    </a>
+                  </li>
+                  <li role="none">
+                    <a href="/faturamento/boleto/987" role="menuitem" class="dropdown-item" target="_blank" rel="noopener">
+                      <span class="icone icone--boleto" aria-hidden="true"></span>
+                      Gerar boleto
+                    </a>
+                  </li>
+                  <li class="dropdown-item--separador" role="separator"></li>
+                  <li role="none">
+                    <button type="button" role="menuitem" class="dropdown-item dropdown-item--perigo" data-id="987" data-acao="cancelar">
+                      <span class="icone icone--cancelar" aria-hidden="true"></span>
+                      Cancelar fatura
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+
+        <!-- ── Linha vencendo hoje (linha--alerta) ── -->
+        <!--
+          PHP: quando $fatura->dtvencimento->isToday() && $fatura->status !== 'pago'
+          $classeLinha .= ' tabela__linha--alerta'
+        -->
+        <tr class="tabela__linha tabela__linha--alerta"
+            id="linha-fatura-1045"
+            data-id="1045">
+
+          <td class="tabela__td tabela__td--checkbox">
+            <input type="checkbox"
+                   class="checkbox checkbox-linha"
+                   id="sel-1045"
+                   name="selecionados[]"
+                   value="1045"
+                   aria-label="Selecionar fatura FAT-2026-045 — vence hoje">
+            <label for="sel-1045" class="sr-only">Selecionar</label>
+          </td>
+
+          <td class="tabela__td tabela__td--numero">
+            <a href="/faturamento/view/1045"
+               class="tabela__link-fatura"
+               aria-label="Abrir fatura FAT-2026-045">
+              FAT-2026-045
+            </a>
+          </td>
+
+          <td class="tabela__td tabela__td--cliente">
+            <div class="cliente-info">
+              <span class="cliente-info__nome">Gamma Tecnologia SA</span>
+            </div>
+          </td>
+
+          <td class="tabela__td tabela__td--competencia">03/2026</td>
+
+          <td class="tabela__td tabela__td--data">
+            <span class="data-vencimento data-vencimento--hoje"
+                  title="Vence hoje">
+              31/03/2026
+            </span>
+            <span class="badge-alerta badge-alerta--amarelo"
+                  aria-label="Vence hoje">
+              Hoje
+            </span>
+          </td>
+
+          <td class="tabela__td tabela__td--valor">
+            <span class="valor-monetario">R$&nbsp;3.200,00</span>
+          </td>
+
+          <td class="tabela__td tabela__td--tipo">
+            <span class="badge badge--tipo badge--os">OS</span>
+          </td>
+
+          <td class="tabela__td tabela__td--status">
+            <span class="badge badge--status badge--pendente">Pendente</span>
+          </td>
+
+          <td class="tabela__td tabela__td--acoes">
+            <div class="acoes-linha" role="group" aria-label="Ações da fatura FAT-2026-045">
+              <a href="/faturamento/view/1045" class="btn-acao btn-acao--ver" title="Ver detalhes">
+                <span class="icone icone--ver" aria-hidden="true"></span>
+              </a>
+              <a href="/faturamento/pdf/1045" class="btn-acao btn-acao--pdf" title="Baixar PDF" target="_blank" rel="noopener">
+                <span class="icone icone--pdf" aria-hidden="true"></span>
+              </a>
+              <button type="button"
+                      class="btn-acao btn-acao--receber"
+                      title="Registrar recebimento"
+                      data-id="1045"
+                      data-acao="receber">
+                <span class="icone icone--dinheiro" aria-hidden="true"></span>
+              </button>
+              <button type="button"
+                      class="btn-acao btn-acao--email"
+                      title="Enviar por e-mail"
+                      data-id="1045"
+                      data-acao="enviar-email">
+                <span class="icone icone--email" aria-hidden="true"></span>
+              </button>
+              <div class="acoes-linha__mais">
+                <button type="button"
+                        class="btn-acao btn-acao--mais dropdown-gatilho"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="menu-acao-1045"
+                        aria-label="Mais ações para FAT-2026-045">
+                  <span class="icone icone--reticencias" aria-hidden="true"></span>
+                </button>
+                <ul id="menu-acao-1045" class="dropdown-menu dropdown-menu--acao" role="menu" hidden>
+                  <li role="none">
+                    <a href="/faturamento/edit/1045" role="menuitem" class="dropdown-item">
+                      <span class="icone icone--editar" aria-hidden="true"></span>
+                      Editar
+                    </a>
+                  </li>
+                  <li role="none">
+                    <a href="/faturamento/boleto/1045" role="menuitem" class="dropdown-item" target="_blank" rel="noopener">
+                      <span class="icone icone--boleto" aria-hidden="true"></span>
+                      Gerar boleto
+                    </a>
+                  </li>
+                  <li class="dropdown-item--separador" role="separator"></li>
+                  <li role="none">
+                    <button type="button" role="menuitem" class="dropdown-item dropdown-item--perigo" data-id="1045" data-acao="cancelar">
+                      <span class="icone icone--cancelar" aria-hidden="true"></span>
+                      Cancelar fatura
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+        <!-- PHP: endforeach -->
+
+      </tbody><!-- /tabela__corpo -->
+
+    </table>
+  </div><!-- /tabela-wrapper -->
+
+  <!-- PHP: <?php endif ?> -->
+
+
+  <!-- ── PAGINAÇÃO ────────────────────────────────────────── -->
+  <!--
+    PHP: <?= $this->Paginator->numbers(['first' => 2, 'last' => 2]) ?>
+  -->
+  <nav class="paginacao" aria-label="Navegação entre páginas de faturas">
+    <div class="paginacao__info">
+      <!-- PHP: <?= $this->Paginator->counter('Página {{page}} de {{pages}}') ?> -->
+      Página 1 de 4
+    </div>
+    <ul class="paginacao__lista" role="list">
+      <li class="paginacao__item paginacao__item--anterior">
+        <a href="#" class="paginacao__link" aria-label="Página anterior" rel="prev">‹ Anterior</a>
+      </li>
+      <li class="paginacao__item paginacao__item--ativo" aria-current="page">
+        <span class="paginacao__link paginacao__link--atual">1</span>
+      </li>
+      <li class="paginacao__item">
+        <a href="?page=2" class="paginacao__link">2</a>
+      </li>
+      <li class="paginacao__item">
+        <a href="?page=3" class="paginacao__link">3</a>
+      </li>
+      <li class="paginacao__item">
+        <a href="?page=4" class="paginacao__link">4</a>
+      </li>
+      <li class="paginacao__item paginacao__item--proximo">
+        <a href="?page=2" class="paginacao__link" aria-label="Próxima página" rel="next">Próxima ›</a>
+      </li>
+    </ul>
+  </nav>
+
+</section>
+<!-- /SEÇÃO 5 — TABELA PRINCIPAL -->
+
+
+<!-- ============================================================
+     SEÇÃO 6 — MODAL DE DETALHES DA FATURA
+     Abre ao clicar em "Ver" ou no número da fatura.
+     Carrega via AJAX: GET /faturamento/view/{id}?formato=modal
+     ============================================================ -->
+<div class="modal-overlay"
+     id="modal-detalhe-fatura"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-fatura-titulo"
+     aria-describedby="modal-fatura-descricao"
+     hidden>
+
+  <div class="modal modal--largo">
+
+    <!-- Cabeçalho do modal -->
+    <header class="modal__cabecalho">
+      <div class="modal__cabecalho-info">
+        <h2 class="modal__titulo" id="modal-fatura-titulo">
+          <!-- PHP: FAT-2026-001 — Alfa Sistemas Ltda -->
+          <span class="modal__titulo-codigo" id="modal-fatura-codigo"></span>
+          <span class="modal__titulo-separador" aria-hidden="true">—</span>
+          <span class="modal__titulo-cliente" id="modal-fatura-cliente"></span>
+        </h2>
+        <p class="modal__subtitulo sr-only" id="modal-fatura-descricao">
+          Detalhes completos da fatura selecionada
+        </p>
+        <div class="modal__badges" id="modal-fatura-badges">
+          <!-- PHP: badges de status e tipo inseridos via AJAX -->
+          <span class="badge badge--status badge--enviado">Enviado</span>
+          <span class="badge badge--tipo badge--mensalidade">Mensalidade</span>
+        </div>
+      </div>
+      <div class="modal__cabecalho-acoes">
+        <a href="#"
+           class="btn btn--pequeno btn--neutro"
+           id="modal-btn-pdf"
+           target="_blank"
+           rel="noopener"
+           aria-label="Baixar PDF desta fatura">
+          <span class="icone icone--pdf" aria-hidden="true"></span>
+          PDF
+        </a>
+        <a href="#"
+           class="btn btn--pequeno btn--neutro"
+           id="modal-btn-editar"
+           aria-label="Editar esta fatura">
+          <span class="icone icone--editar" aria-hidden="true"></span>
+          Editar
+        </a>
+        <button type="button"
+                class="btn btn--ghost btn--icone modal__btn-fechar"
+                id="modal-fatura-fechar"
+                aria-label="Fechar painel de detalhes">
+          <span class="icone icone--fechar" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sistema de abas do modal -->
+    <div class="modal__abas" role="tablist" aria-label="Seções da fatura">
+
+      <button type="button"
+              role="tab"
+              class="modal__aba modal__aba--ativa"
+              id="aba-fatura-dados-gerais"
+              aria-selected="true"
+              aria-controls="painel-fatura-dados-gerais">
+        Dados Gerais
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-fatura-itens"
+              aria-selected="false"
+              aria-controls="painel-fatura-itens">
+        Itens da Cobrança
+        <!-- PHP: <span class="aba-contador"><?= count($fatura->itens) ?></span> -->
+        <span class="aba-contador" aria-label="3 itens">3</span>
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-fatura-pagamento"
+              aria-selected="false"
+              aria-controls="painel-fatura-pagamento">
+        Vencimento / Pagamento
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-fatura-historico"
+              aria-selected="false"
+              aria-controls="painel-fatura-historico">
+        Histórico de Status
+      </button>
+
+      <button type="button"
+              role="tab"
+              class="modal__aba"
+              id="aba-fatura-auditoria"
+              aria-selected="false"
+              aria-controls="painel-fatura-auditoria">
+        Auditoria
+      </button>
+
+    </div><!-- /modal__abas -->
+
+    <!-- Área de conteúdo das abas -->
+    <div class="modal__conteudo">
+
+      <!-- ── ABA 1: DADOS GERAIS ─────────────────────────── -->
+      <div id="painel-fatura-dados-gerais"
+           class="modal__painel modal__painel--ativo"
+           role="tabpanel"
+           aria-labelledby="aba-fatura-dados-gerais">
+
+        <div class="dados-gerais">
+
+          <div class="dados-gerais__grupo">
+            <h3 class="dados-gerais__secao-titulo">Identificação</h3>
+            <dl class="dados-lista">
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Nº Fatura</dt>
+                <dd class="dados-lista__valor" id="detalhe-fatura-numero">FAT-2026-001</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Cliente</dt>
+                <dd class="dados-lista__valor">
+                  <a href="/clientes/view/1" class="link-interno" id="detalhe-fatura-cliente-link">
+                    Alfa Sistemas Ltda
+                  </a>
+                </dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Tipo</dt>
+                <dd class="dados-lista__valor" id="detalhe-fatura-tipo">Mensalidade</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Contrato vinculado</dt>
+                <dd class="dados-lista__valor">
+                  <a href="/clicontratos/view/101" class="link-interno" id="detalhe-fatura-contrato">
+                    CTR-2024-012
+                  </a>
+                </dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Competência</dt>
+                <dd class="dados-lista__valor" id="detalhe-fatura-competencia">03/2026</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="dados-gerais__grupo">
+            <h3 class="dados-gerais__secao-titulo">Valores</h3>
+            <dl class="dados-lista">
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Subtotal</dt>
+                <dd class="dados-lista__valor" id="detalhe-fatura-subtotal">R$&nbsp;3.000,00</dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Desconto</dt>
+                <dd class="dados-lista__valor" id="detalhe-fatura-desconto">R$&nbsp;200,00</dd>
+              </div>
+              <div class="dados-lista__item dados-lista__item--destaque">
+                <dt class="dados-lista__chave">Total</dt>
+                <dd class="dados-lista__valor" id="detalhe-fatura-total">
+                  <strong>R$&nbsp;2.800,00</strong>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="dados-gerais__grupo dados-gerais__grupo--observacoes">
+            <h3 class="dados-gerais__secao-titulo">Observações</h3>
+            <div class="observacoes-texto" id="detalhe-fatura-observacoes">
+              <!-- PHP: <?= nl2br(h($fatura->observacoes ?? '—')) ?> -->
+              Mensalidade de março. Desconto de 200 reais por antecipação.
+            </div>
+          </div>
+
+        </div><!-- /dados-gerais -->
+
+      </div><!-- /painel-fatura-dados-gerais -->
+
+
+      <!-- ── ABA 2: ITENS DA COBRANÇA ───────────────────── -->
+      <div id="painel-fatura-itens"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-fatura-itens"
+           hidden>
+
+        <div class="itens-cobranca">
+
+          <!--
+            PHP: <?php foreach ($fatura->itens as $item): ?>
+          -->
+          <div class="tabela-wrapper">
+            <table class="tabela tabela--itens"
+                   aria-label="Itens da cobrança">
+              <thead class="tabela__cabecalho">
+                <tr>
+                  <th class="tabela__th" scope="col">Descrição</th>
+                  <th class="tabela__th tabela__th--numero" scope="col">Qtde</th>
+                  <th class="tabela__th tabela__th--valor" scope="col">Vlr. Unitário</th>
+                  <th class="tabela__th tabela__th--valor" scope="col">Vlr. Total</th>
+                </tr>
+              </thead>
+              <tbody class="tabela__corpo">
+
+                <!-- PHP: foreach ($fatura->itens as $item) -->
+                <tr class="tabela__linha">
+                  <td class="tabela__td">
+                    <!-- PHP: <?= h($item->descricao) ?> -->
+                    Mensalidade Suporte Gold — março/2026
+                  </td>
+                  <td class="tabela__td tabela__td--numero">
+                    <!-- PHP: <?= $item->qtde ?> -->
+                    1
+                  </td>
+                  <td class="tabela__td tabela__td--valor">
+                    <!-- PHP: <?= $this->Number->currency($item->vlr_unitario, 'BRL') ?> -->
+                    <span class="valor-monetario">R$&nbsp;2.800,00</span>
+                  </td>
+                  <td class="tabela__td tabela__td--valor">
+                    <!-- PHP: <?= $this->Number->currency($item->vlr_total, 'BRL') ?> -->
+                    <span class="valor-monetario">R$&nbsp;2.800,00</span>
+                  </td>
+                </tr>
+                <tr class="tabela__linha">
+                  <td class="tabela__td">Hora extra de suporte (2h além da franquia)</td>
+                  <td class="tabela__td tabela__td--numero">2</td>
+                  <td class="tabela__td tabela__td--valor"><span class="valor-monetario">R$&nbsp;120,00</span></td>
+                  <td class="tabela__td tabela__td--valor"><span class="valor-monetario">R$&nbsp;240,00</span></td>
+                </tr>
+                <tr class="tabela__linha">
+                  <td class="tabela__td">Deslocamento — visita técnica 15/03</td>
+                  <td class="tabela__td tabela__td--numero">1</td>
+                  <td class="tabela__td tabela__td--valor"><span class="valor-monetario">R$&nbsp;80,00</span></td>
+                  <td class="tabela__td tabela__td--valor"><span class="valor-monetario">R$&nbsp;80,00</span></td>
+                </tr>
+                <!-- PHP: endforeach -->
+
+              </tbody>
+
+              <!-- Rodapé com resumo financeiro -->
+              <tfoot class="tabela__rodape">
+                <tr class="tabela__linha tabela__linha--subtotal">
+                  <td colspan="3" class="tabela__td tabela__td--label-total">Subtotal</td>
+                  <td class="tabela__td tabela__td--valor">
+                    <!-- PHP: <?= $this->Number->currency($fatura->vlsubtotal, 'BRL') ?> -->
+                    <span class="valor-monetario">R$&nbsp;3.120,00</span>
+                  </td>
+                </tr>
+                <tr class="tabela__linha tabela__linha--desconto">
+                  <td colspan="3" class="tabela__td tabela__td--label-total">
+                    Desconto
+                    <!-- PHP: se houver percentual: (10%) -->
+                    <span class="valor-detalhe">(antecipação)</span>
+                  </td>
+                  <td class="tabela__td tabela__td--valor tabela__td--desconto">
+                    <!-- PHP: <?= $this->Number->currency($fatura->vldesconto, 'BRL') ?> -->
+                    <span class="valor-monetario valor-monetario--desconto">- R$&nbsp;320,00</span>
+                  </td>
+                </tr>
+                <tr class="tabela__linha tabela__linha--total">
+                  <td colspan="3" class="tabela__td tabela__td--label-total tabela__td--label-total-destaque">
+                    <strong>Total a pagar</strong>
+                  </td>
+                  <td class="tabela__td tabela__td--valor">
+                    <!-- PHP: <?= $this->Number->currency($fatura->vltotal, 'BRL') ?> -->
+                    <strong class="valor-monetario valor-monetario--total">R$&nbsp;2.800,00</strong>
+                  </td>
+                </tr>
+              </tfoot>
+
+            </table>
+          </div>
+
+        </div><!-- /itens-cobranca -->
+
+      </div><!-- /painel-fatura-itens -->
+
+
+      <!-- ── ABA 3: VENCIMENTO / PAGAMENTO ─────────────── -->
+      <div id="painel-fatura-pagamento"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-fatura-pagamento"
+           hidden>
+
+        <div class="fatura-pagamento">
+
+          <!-- Dados de vencimento atuais -->
+          <div class="fatura-pagamento__vencimento">
+            <h3 class="dados-gerais__secao-titulo">Dados de Vencimento</h3>
+            <dl class="dados-lista">
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Data de vencimento</dt>
+                <dd class="dados-lista__valor" id="detalhe-pagto-vencimento">
+                  <!-- PHP: <?= $fatura->dtvencimento->format('d/m/Y') ?> -->
+                  15/04/2026
+                </dd>
+              </div>
+              <div class="dados-lista__item">
+                <dt class="dados-lista__chave">Status atual</dt>
+                <dd class="dados-lista__valor">
+                  <span class="badge badge--status badge--enviado" id="detalhe-pagto-status">Enviado</span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Formulário para registrar pagamento -->
+          <!-- PHP: <?php if (in_array($fatura->status, ['pendente','enviado','vencido'])): ?> -->
+          <div class="fatura-pagamento__registrar">
+            <h3 class="dados-gerais__secao-titulo">Registrar Recebimento</h3>
+
+            <!--
+              CakePHP: <?= $this->Form->create(null, [
+                'url'  => ['action' => 'registrarPagamento', $fatura->id],
+                'type' => 'post',
+                'id'   => 'form-registrar-pagamento'
+              ]) ?>
+            -->
+            <form method="post"
+                  action="/faturamento/registrar-pagamento/1001"
+                  class="form-registrar-pagamento"
+                  id="form-registrar-pagamento"
+                  aria-label="Formulário de registro de pagamento">
+
+              <!-- PHP: <?= $this->Form->hidden('_method', ['value' => 'POST']) ?> -->
+              <!-- PHP: CSRF: <?= $this->Form->hidden('_csrfToken') ?> -->
+
+              <div class="filtros-form__grade">
+
+                <div class="filtros-campo">
+                  <label for="pagto-data" class="filtros-campo__label">
+                    Data do pagamento <span class="campo-obrigatorio" aria-hidden="true">*</span>
+                  </label>
+                  <input type="date"
+                         name="data_pagamento"
+                         id="pagto-data"
+                         class="filtros-campo__input"
+                         required
+                         aria-required="true"
+                         value="">
+                </div>
+
+                <div class="filtros-campo">
+                  <label for="pagto-valor" class="filtros-campo__label">
+                    Valor recebido (R$) <span class="campo-obrigatorio" aria-hidden="true">*</span>
+                  </label>
+                  <input type="number"
+                         name="valor_recebido"
+                         id="pagto-valor"
+                         class="filtros-campo__input"
+                         min="0"
+                         step="0.01"
+                         required
+                         aria-required="true"
+                         value="2800.00"
+                         placeholder="0,00">
+                </div>
+
+                <div class="filtros-campo">
+                  <label for="pagto-forma" class="filtros-campo__label">
+                    Forma de pagamento <span class="campo-obrigatorio" aria-hidden="true">*</span>
+                  </label>
+                  <!-- CakePHP: <?= $this->Form->select('forma_pagamento', $formasPagamento, ...) ?> -->
+                  <select name="forma_pagamento"
+                          id="pagto-forma"
+                          class="filtros-campo__input filtros-campo__input--select"
+                          required
+                          aria-required="true">
+                    <option value="">Selecione...</option>
+                    <option value="pix">PIX</option>
+                    <option value="boleto">Boleto</option>
+                    <option value="transferencia">Transferência bancária</option>
+                    <option value="cartao_credito">Cartão de crédito</option>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="cheque">Cheque</option>
+                  </select>
+                </div>
+
+                <div class="filtros-campo filtros-campo--largo">
+                  <label for="pagto-obs" class="filtros-campo__label">
+                    Observações
+                  </label>
+                  <textarea name="observacoes"
+                            id="pagto-obs"
+                            class="filtros-campo__input filtros-campo__textarea"
+                            rows="3"
+                            placeholder="Referência de pagamento, banco, etc."
+                            aria-label="Observações sobre o pagamento"></textarea>
+                </div>
+
+              </div><!-- /grade -->
+
+              <div class="filtros-form__acoes">
+                <button type="submit"
+                        class="btn btn--verde"
+                        form="form-registrar-pagamento">
+                  <span class="icone icone--check" aria-hidden="true"></span>
+                  Confirmar Recebimento
+                </button>
+                <button type="button"
+                        class="btn btn--ghost"
+                        id="btn-cancelar-registro">
+                  Cancelar
+                </button>
+              </div>
+
+            </form>
+            <!-- CakePHP: <?= $this->Form->end() ?> -->
+          </div>
+          <!-- PHP: <?php endif ?> -->
+
+        </div><!-- /fatura-pagamento -->
+
+      </div><!-- /painel-fatura-pagamento -->
+
+
+      <!-- ── ABA 4: HISTÓRICO DE STATUS ────────────────── -->
+      <div id="painel-fatura-historico"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-fatura-historico"
+           hidden>
+
+        <div class="historico-status">
+          <h3 class="dados-gerais__secao-titulo">Histórico de Alterações de Status</h3>
+
+          <!--
+            PHP: <?php foreach ($fatura->historico as $evento): ?>
+          -->
+          <ol class="historico-lista" aria-label="Histórico de status da fatura">
+
+            <li class="historico-item">
+              <div class="historico-item__icone historico-item__icone--criado" aria-hidden="true">
+                <span class="icone icone--mais-circulo"></span>
+              </div>
+              <div class="historico-item__conteudo">
+                <strong class="historico-item__acao">Fatura criada</strong>
+                <span class="historico-item__status">
+                  Status: <span class="badge badge--status badge--rascunho">Rascunho</span>
+                </span>
+                <!-- PHP: <?= $evento->usuario->nome ?> — <?= $evento->created->format('d/m/Y H:i') ?> -->
+                <span class="historico-item__meta">João Silva — 01/03/2026 09:15</span>
+              </div>
+            </li>
+
+            <li class="historico-item">
+              <div class="historico-item__icone historico-item__icone--enviado" aria-hidden="true">
+                <span class="icone icone--email"></span>
+              </div>
+              <div class="historico-item__conteudo">
+                <strong class="historico-item__acao">Fatura enviada ao cliente</strong>
+                <span class="historico-item__status">
+                  Status: <span class="badge badge--status badge--enviado">Enviado</span>
+                </span>
+                <span class="historico-item__meta">João Silva — 02/03/2026 10:30</span>
+              </div>
+            </li>
+
+            <!-- PHP: endforeach -->
+
+          </ol>
+
+        </div><!-- /historico-status -->
+
+      </div><!-- /painel-fatura-historico -->
+
+
+      <!-- ── ABA 5: AUDITORIA ────────────────────────── -->
+      <div id="painel-fatura-auditoria"
+           class="modal__painel"
+           role="tabpanel"
+           aria-labelledby="aba-fatura-auditoria"
+           hidden>
+
+        <div class="auditoria">
+          <h3 class="dados-gerais__secao-titulo">Registro de Auditoria</h3>
+          <dl class="dados-lista">
+            <div class="dados-lista__item">
+              <dt class="dados-lista__chave">Criado por</dt>
+              <!-- PHP: <?= h($fatura->criado_por->nome ?? '—') ?> -->
+              <dd class="dados-lista__valor" id="audit-criado-por">João Silva</dd>
+            </div>
+            <div class="dados-lista__item">
+              <dt class="dados-lista__chave">Criado em</dt>
+              <!-- PHP: <?= $fatura->created->format('d/m/Y H:i') ?> -->
+              <dd class="dados-lista__valor" id="audit-criado-em">01/03/2026 09:15</dd>
+            </div>
+            <div class="dados-lista__item">
+              <dt class="dados-lista__chave">Última alteração</dt>
+              <!-- PHP: <?= $fatura->modified->format('d/m/Y H:i') ?> -->
+              <dd class="dados-lista__valor" id="audit-modificado-em">02/03/2026 10:30</dd>
+            </div>
+            <div class="dados-lista__item">
+              <dt class="dados-lista__chave">Alterado por</dt>
+              <!-- PHP: <?= h($fatura->modificado_por->nome ?? '—') ?> -->
+              <dd class="dados-lista__valor" id="audit-modificado-por">João Silva</dd>
+            </div>
+            <div class="dados-lista__item">
+              <dt class="dados-lista__chave">IP de criação</dt>
+              <!-- PHP: <?= h($fatura->ip_criacao ?? '—') ?> -->
+              <dd class="dados-lista__valor">192.168.1.10</dd>
+            </div>
+          </dl>
+        </div><!-- /auditoria -->
+
+      </div><!-- /painel-fatura-auditoria -->
+
+    </div><!-- /modal__conteudo -->
+
+  </div><!-- /modal -->
+
+</div><!-- /modal-overlay — modal-detalhe-fatura -->
+<!-- /SEÇÃO 6 — MODAL DE DETALHES -->
+
+
+<!-- ============================================================
+     SEÇÃO 7 — MODAL: GERAR LOTE DE FATURAS
+     Abre ao clicar em "Gerar Lote" no cabeçalho.
+     POST para /faturamento/gerar-lote
+     ============================================================ -->
+<div class="modal-overlay"
+     id="modal-gerar-lote"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-lote-titulo"
+     hidden>
+
+  <div class="modal modal--medio">
+
+    <header class="modal__cabecalho">
+      <h2 class="modal__titulo" id="modal-lote-titulo">
+        <span class="icone icone--lote" aria-hidden="true"></span>
+        Gerar Lote de Faturas
+      </h2>
+      <button type="button"
+              class="btn btn--ghost btn--icone modal__btn-fechar"
+              id="modal-lote-fechar"
+              aria-label="Fechar modal de geração de lote">
+        <span class="icone icone--fechar" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <div class="modal__conteudo modal__conteudo--form">
+
+      <!--
+        CakePHP: <?= $this->Form->create(null, [
+          'url'  => ['action' => 'gerarLote'],
+          'type' => 'post',
+          'id'   => 'form-gerar-lote'
+        ]) ?>
+      -->
+      <form method="post"
+            action="/faturamento/gerar-lote"
+            id="form-gerar-lote"
+            aria-label="Formulário de geração de lote de faturas">
+
+        <!-- PHP: CSRF token -->
+
+        <div class="filtros-form__grade">
+
+          <div class="filtros-campo">
+            <label for="lote-competencia" class="filtros-campo__label">
+              Competência (mês) <span class="campo-obrigatorio" aria-hidden="true">*</span>
+            </label>
+            <input type="month"
+                   name="competencia"
+                   id="lote-competencia"
+                   class="filtros-campo__input"
+                   required
+                   aria-required="true"
+                   value="">
+          </div>
+
+          <div class="filtros-campo">
+            <label for="lote-vencimento" class="filtros-campo__label">
+              Data de vencimento <span class="campo-obrigatorio" aria-hidden="true">*</span>
+            </label>
+            <input type="date"
+                   name="dtvencimento"
+                   id="lote-vencimento"
+                   class="filtros-campo__input"
+                   required
+                   aria-required="true">
+          </div>
+
+          <div class="filtros-campo filtros-campo--largo">
+            <label for="lote-cliente-filtro" class="filtros-campo__label">
+              Restringir a cliente (opcional)
+            </label>
+            <select name="idcliente"
+                    id="lote-cliente-filtro"
+                    class="filtros-campo__input filtros-campo__input--select select-busca">
+              <option value="">Todos os clientes com contratos ativos</option>
+              <!-- PHP: foreach ($clientes as $id => $nome) -->
+              <option value="1">Alfa Sistemas Ltda</option>
+              <!-- /foreach -->
+            </select>
+          </div>
+
+        </div>
+
+        <div class="filtros-form__acoes">
+          <button type="submit"
+                  class="btn btn--primario"
+                  form="form-gerar-lote">
+            <span class="icone icone--lote" aria-hidden="true"></span>
+            Gerar Faturas
+          </button>
+          <button type="button"
+                  class="btn btn--ghost"
+                  id="btn-cancelar-lote">
+            Cancelar
+          </button>
+        </div>
+
+      </form>
+      <!-- CakePHP: <?= $this->Form->end() ?> -->
+
+    </div><!-- /modal__conteudo -->
+
+  </div><!-- /modal -->
+
+</div><!-- /modal-overlay — modal-gerar-lote -->
+<!-- /SEÇÃO 7 — MODAL GERAR LOTE -->
+
+</body>
+</html>

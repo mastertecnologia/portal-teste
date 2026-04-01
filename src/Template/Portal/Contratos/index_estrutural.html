@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<!--
+  ESTRUTURA: Portal do Cliente — Contratos e Faturas
+  ============================================================
+  Arquivo-base para conversão em: src/Template/Portal/Contratos/index.ctp
+  Layout pai esperado: src/Template/Layout/portal.ctp
+  Controller: ContratosController::cliente() e clienteFaturas()
+
+  Variáveis PHP esperadas (CakePHP):
+    $contratos         — array de itens de clicontratos do cliente logado
+                         (agrupados ou planos; SEM vlunit, vltotal, observacoes, codproduto)
+    $kpiContratos      — array: ativos_qtd, vencendo_30d, franquia_horas,
+                                franquia_consumida_h, nivel_sla_principal
+    $faturas           — ResultSet paginado de faturamento do cliente logado
+                         (SEM valor_subtotal, valor_desconto, descricao interna, hash, idordem, idautor)
+    $kpiFaturas        — array: em_aberto_valor, vencendo_valor, vencidas_valor, pagas_valor
+    $filtrosFaturas    — array com valores dos filtros ativos de faturas
+    $filtrosContratos  — array com valores dos filtros ativos de contratos
+    $permissoes        — array de permissões RBAC do usuário logado
+    $abaAtiva          — string: 'contratos' | 'faturas' (default: 'contratos')
+
+  SEGURANÇA — campos nunca exibidos ao cliente (role = 1):
+    - clicontratos: vlunit, vltotal, observacoes, codproduto
+    - faturamento:  valor_subtotal, valor_desconto, descricao (interna), hash, idordem, idautor
+    - idcliente e idempresa SEMPRE da sessão — nunca de GET/POST
+
+  SIDEBAR do layout pai (portal.ctp) — referência:
+    - Painel           /portal
+    - Meus Tickets     /portal/tickets
+    - Histórico        /portal/historico
+    - Contratos        /portal/contratos     ← ATIVO nesta tela
+    - Faturas          /portal/contratos?aba=faturas
+    - Relatórios       /portal/relatorios
+    - [Novo Chamado]   /portal/tickets/novo
+    - Logout
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contratos e Faturas — Portal</title>
+  <!--
+    CSS carregado pelo layout pai (portal.ctp).
+    Estilos específicos desta tela (opcional):
+    <link rel="stylesheet" href="/css/portal-contratos.css">
+  -->
+</head>
+<body class="portal-layout">
+
+<!--
+  ============================================================
+  NOTA: O layout pai (portal.ctp) já injeta:
+    - <header class="portal-header">
+    - <nav class="portal-sidebar"> com menu lateral
+    - <main class="portal-main"> que envolve este conteúdo
+  O que está abaixo vai dentro de <main class="portal-main">.
+  ============================================================
+-->
+
+
+<!-- ============================================================
+     SEÇÃO 1 — CABEÇALHO DA PÁGINA
+     Breadcrumb, título e ações principais do cliente
+     ============================================================ -->
+<header class="pcf-cabecalho">
+
+  <!-- Breadcrumb -->
+  <nav class="pcf-breadcrumb" aria-label="Você está em">
+    <ol class="pcf-breadcrumb__lista">
+      <li class="pcf-breadcrumb__item">
+        <!-- PHP: <?= $this->Html->link('Portal', '/portal') ?> -->
+        <a href="/portal">Portal</a>
+      </li>
+      <li class="pcf-breadcrumb__item pcf-breadcrumb__item--ativo" aria-current="page">
+        Contratos e Faturas
+      </li>
+    </ol>
+  </nav>
+
+  <div class="pcf-cabecalho__corpo">
+
+    <div class="pcf-cabecalho__titulo-grupo">
+      <h1 class="pcf-cabecalho__titulo">Contratos e Faturas</h1>
+      <p class="pcf-cabecalho__subtitulo">
+        Seus serviços contratados, franquias e cobranças em um só lugar
+      </p>
+    </div>
+
+    <!-- Ações do cabeçalho -->
+    <div class="pcf-cabecalho__acoes">
+
+      <!-- Abrir novo chamado (atalho contextual) -->
+      <a href="/portal/tickets/novo"
+         class="btn-portal btn-portal--secundario"
+         title="Abrir novo chamado de suporte">
+        <span class="pcf-icone pcf-icone--ticket-novo" aria-hidden="true"></span>
+        Novo Chamado
+      </a>
+
+      <!-- Download consolidado dos contratos (PDF resumo) — se tiver permissão -->
+      <!-- PHP: <?php if ($permissoes['contratos.cliente_download'] ?? false): ?> -->
+      <a href="/portal/contratos/resumo-pdf"
+         class="btn-portal btn-portal--fantasma"
+         title="Baixar resumo dos contratos em PDF">
+        <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+        Baixar resumo
+      </a>
+      <!-- PHP: <?php endif ?> -->
+
+    </div>
+
+  </div><!-- /pcf-cabecalho__corpo -->
+
+</header>
+<!-- /SEÇÃO 1 — CABEÇALHO -->
+
+
+<!-- ============================================================
+     SEÇÃO 2 — NAVEGAÇÃO POR ABAS
+     Contratos | Faturas
+     A aba ativa é controlada por $abaAtiva (PHP) e por JS para
+     troca sem reload; o form de filtros respeita a aba corrente.
+     ============================================================ -->
+<nav class="pcf-abas" aria-label="Navegar entre contratos e faturas" id="nav-abas">
+  <ul class="pcf-abas__lista" role="tablist">
+
+    <!-- Aba: Contratos -->
+    <li role="none">
+      <!--
+        PHP: ativa se $abaAtiva === 'contratos'
+        class="pcf-aba pcf-aba--ativa" aria-selected="true"
+      -->
+      <button type="button"
+              role="tab"
+              class="pcf-aba pcf-aba--ativa"
+              id="aba-contratos"
+              aria-selected="true"
+              aria-controls="painel-contratos"
+              data-aba="contratos">
+        <span class="pcf-icone pcf-icone--contrato" aria-hidden="true"></span>
+        Contratos
+        <!-- PHP: <?php if (!empty($kpiContratos['ativos_qtd'])): ?> -->
+        <span class="pcf-aba__badge" aria-label="47 contratos ativos">
+          <!-- PHP: <?= $kpiContratos['ativos_qtd'] ?> -->
+          47
+        </span>
+        <!-- PHP: <?php endif ?> -->
+      </button>
+    </li>
+
+    <!-- Aba: Faturas -->
+    <li role="none">
+      <button type="button"
+              role="tab"
+              class="pcf-aba"
+              id="aba-faturas"
+              aria-selected="false"
+              aria-controls="painel-faturas"
+              data-aba="faturas">
+        <span class="pcf-icone pcf-icone--fatura" aria-hidden="true"></span>
+        Faturas
+        <!-- Badge vermelho se houver faturas vencidas ou com atenção -->
+        <!-- PHP: <?php if (($kpiFaturas['vencidas_qtd'] ?? 0) > 0): ?> -->
+        <span class="pcf-aba__badge pcf-aba__badge--alerta"
+              aria-label="2 faturas vencidas — atenção necessária">
+          <!-- PHP: <?= $kpiFaturas['vencidas_qtd'] ?> -->
+          2
+        </span>
+        <!-- PHP: <?php endif ?> -->
+      </button>
+    </li>
+
+  </ul>
+
+  <!-- Campo oculto para preservar aba ativa no GET dos filtros -->
+  <input type="hidden" name="aba" id="input-aba-ativa" value="contratos">
+
+</nav>
+<!-- /SEÇÃO 2 — ABAS -->
+
+
+<!-- ============================================================
+     ÁREA PRINCIPAL: DOIS PAINÉIS, UM POR ABA
+     JS alterna [hidden] e aria-hidden conforme aba ativa.
+     PHP também pode renderizar somente o painel correto se
+     preferir servidor-side (verificar $abaAtiva).
+     ============================================================ -->
+<div class="pcf-area-principal" id="pcf-area-principal">
+
+
+  <!-- ===========================================================
+       PAINEL A — CONTRATOS
+       KPI cards + filtros + tabela + detalhe
+       =========================================================== -->
+  <section class="pcf-painel pcf-painel--ativo"
+           id="painel-contratos"
+           role="tabpanel"
+           aria-labelledby="aba-contratos"
+           tabindex="0">
+
+    <!-- ── SEÇÃO 3A. CARDS KPI DOS CONTRATOS ──────────────────
+         Dados do cliente logado — sem valores financeiros internos
+    ──────────────────────────────────────────────────────────── -->
+    <section class="pcf-kpi" aria-label="Resumo dos seus contratos">
+
+      <!-- KPI 1: Contratos ativos -->
+      <article class="pcf-kpi__card pcf-kpi__card--verde">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--contrato-ativo"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Contratos ativos</span>
+          <!-- PHP: <?= $kpiContratos['ativos_qtd'] ?? 0 ?> -->
+          <strong class="pcf-kpi__valor" id="kpi-contratos-ativos">3</strong>
+          <span class="pcf-kpi__detalhe">itens em vigor</span>
+        </div>
+      </article>
+
+      <!-- KPI 2: Vencendo em 30 dias (atenção) -->
+      <!-- PHP: $cor = ($kpiContratos['vencendo_30d'] > 0) ? 'amarelo' : 'cinza' -->
+      <article class="pcf-kpi__card pcf-kpi__card--amarelo">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--contrato-alerta"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Vencendo em 30 dias</span>
+          <!-- PHP: <?= $kpiContratos['vencendo_30d'] ?? 0 ?> -->
+          <strong class="pcf-kpi__valor" id="kpi-contratos-vencendo">1</strong>
+          <span class="pcf-kpi__detalhe">requer atenção</span>
+        </div>
+      </article>
+
+      <!-- KPI 3: Franquia de horas (mês atual) -->
+      <!-- PHP: <?php if (!empty($kpiContratos['franquia_horas'])): ?> -->
+      <article class="pcf-kpi__card pcf-kpi__card--azul">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--horas"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Franquia mensal</span>
+          <!--
+            PHP: <?= $kpiContratos['franquia_consumida_h'] ?>h de <?= $kpiContratos['franquia_horas'] ?>h
+          -->
+          <strong class="pcf-kpi__valor" id="kpi-franquia">14h <span class="pcf-kpi__de">de 20h</span></strong>
+          <span class="pcf-kpi__detalhe">utilizadas em
+            <!-- PHP: <?= date('F/Y') ?> -->
+            março/2026
+          </span>
+        </div>
+        <!-- Mini barra de consumo da franquia -->
+        <div class="pcf-kpi__barra" aria-hidden="true">
+          <!--
+            PHP: $pct = round(($kpiContratos['franquia_consumida_h'] / $kpiContratos['franquia_horas']) * 100);
+            Classe da barra:
+            0–60%   → pcf-kpi__barra-fill--normal
+            61–85%  → pcf-kpi__barra-fill--atencao
+            86–100% → pcf-kpi__barra-fill--critico
+            >100%   → pcf-kpi__barra-fill--excedente
+          -->
+          <div class="pcf-kpi__barra-fill pcf-kpi__barra-fill--atencao"
+               style="width: 70%">
+          </div>
+        </div>
+      </article>
+      <!-- PHP: <?php endif ?> -->
+
+      <!-- KPI 4: Nível de SLA contratado (informativo) -->
+      <article class="pcf-kpi__card pcf-kpi__card--roxo">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--sla"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">SLA contratado</span>
+          <!-- PHP: <?= h($kpiContratos['nivel_sla_principal'] ?? '—') ?> -->
+          <strong class="pcf-kpi__valor pcf-kpi__valor--texto" id="kpi-sla-contratado">Suporte Padrão</strong>
+          <span class="pcf-kpi__detalhe">nível de atendimento</span>
+        </div>
+        <a href="#detalhes-sla"
+           class="pcf-kpi__link"
+           data-acao="ver-sla"
+           aria-label="Ver detalhes do SLA contratado">
+          Ver SLA
+        </a>
+      </article>
+
+    </section>
+    <!-- /SEÇÃO 3A — KPI CONTRATOS -->
+
+
+    <!-- ── SEÇÃO 4A. FILTROS DOS CONTRATOS ────────────────────
+         Filtros simples — sem dados internos como codproduto ou vlunit
+    ──────────────────────────────────────────────────────────── -->
+    <section class="pcf-filtros" id="filtros-contratos">
+
+      <div class="pcf-filtros__cabecalho">
+        <h2 class="pcf-filtros__titulo">
+          <span class="pcf-icone pcf-icone--filtro" aria-hidden="true"></span>
+          Filtrar contratos
+        </h2>
+        <button type="button"
+                class="btn-portal btn-portal--fantasma btn-portal--mini pcf-filtros__toggle"
+                aria-expanded="false"
+                aria-controls="filtros-contratos-corpo"
+                title="Expandir filtros de contratos">
+          <span class="pcf-icone pcf-icone--seta-baixo" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <!--
+        PHP: <?= $this->Form->create(null, [
+          'type' => 'get',
+          'url'  => ['action' => 'cliente'],
+          'id'   => 'form-filtros-contratos',
+        ]) ?>
+        SEGURANÇA: idcliente e idempresa nunca vêm deste form.
+      -->
+      <form method="get"
+            action="/portal/contratos"
+            class="pcf-filtros__form"
+            id="form-filtros-contratos"
+            role="search"
+            aria-label="Filtrar contratos">
+
+        <!-- Preservar aba ativa na submissão -->
+        <input type="hidden" name="aba" value="contratos">
+
+        <div class="pcf-filtros__corpo" id="filtros-contratos-corpo" hidden>
+          <div class="pcf-filtros__grade">
+
+            <!-- Filtro: Tipo do item -->
+            <div class="pcf-campo">
+              <label for="filtro-cont-tipo" class="pcf-campo__label">Tipo</label>
+              <!--
+                PHP: <?= $this->Form->select('tipo_item', [
+                  'servico'  => 'Suporte técnico',
+                  'licenca'  => 'Licença de software',
+                  'hardware' => 'Hardware / Equipamento',
+                  'cloud'    => 'Serviço em nuvem',
+                  'suporte'  => 'Atendimento dedicado',
+                ], ['empty' => 'Todos os tipos', 'value' => $filtrosContratos['tipo_item'] ?? '']) ?>
+              -->
+              <select name="tipo_item"
+                      id="filtro-cont-tipo"
+                      class="pcf-campo__input pcf-campo__input--select">
+                <option value="">Todos os tipos</option>
+                <option value="servico">Suporte técnico</option>
+                <option value="licenca">Licença de software</option>
+                <option value="hardware">Hardware / Equipamento</option>
+                <option value="cloud">Serviço em nuvem</option>
+                <option value="suporte">Atendimento dedicado</option>
+              </select>
+            </div>
+
+            <!-- Filtro: Status -->
+            <div class="pcf-campo">
+              <label for="filtro-cont-status" class="pcf-campo__label">Status</label>
+              <select name="status"
+                      id="filtro-cont-status"
+                      class="pcf-campo__input pcf-campo__input--select">
+                <option value="">Todos</option>
+                <option value="ativo">Ativo</option>
+                <option value="a_vencer">Vencendo em breve</option>
+                <option value="encerrado">Encerrado</option>
+              </select>
+            </div>
+
+          </div><!-- /pcf-filtros__grade -->
+
+          <div class="pcf-filtros__acoes">
+            <button type="submit" class="btn-portal btn-portal--primario">
+              <span class="pcf-icone pcf-icone--busca" aria-hidden="true"></span>
+              Filtrar
+            </button>
+            <a href="/portal/contratos?aba=contratos"
+               class="btn-portal btn-portal--fantasma">
+              Limpar
+            </a>
+          </div>
+        </div><!-- /filtros-contratos-corpo -->
+
+      </form>
+      <!-- PHP: <?= $this->Form->end() ?> -->
+
+    </section>
+    <!-- /SEÇÃO 4A — FILTROS CONTRATOS -->
+
+
+    <!-- ── SEÇÃO 5A. ESTADOS VISUAIS — CONTRATOS ──────────────── -->
+
+    <!-- Estado: carregando -->
+    <div class="pcf-estado pcf-estado--carregando"
+         id="contratos-carregando"
+         hidden
+         role="status"
+         aria-live="polite">
+      <div class="pcf-spinner" aria-hidden="true"></div>
+      <p class="pcf-estado__mensagem">Carregando seus contratos...</p>
+    </div>
+
+    <!-- Estado: sem permissão -->
+    <!-- PHP: <?php if ($semPermissaoContratos ?? false): ?> -->
+    <div class="pcf-estado pcf-estado--sem-permissao"
+         id="contratos-sem-permissao"
+         role="alert">
+      <span class="pcf-icone pcf-icone--cadeado pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Acesso não autorizado</h2>
+      <p class="pcf-estado__mensagem">
+        Sua conta não tem acesso à visualização de contratos.
+        Entre em contato com o administrador do portal.
+      </p>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- Estado: erro -->
+    <!-- PHP: <?php if ($erroContratos ?? false): ?> -->
+    <div class="pcf-estado pcf-estado--erro"
+         id="contratos-erro"
+         role="alert">
+      <span class="pcf-icone pcf-icone--erro-circulo pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Erro ao carregar contratos</h2>
+      <p class="pcf-estado__mensagem">Não foi possível buscar seus contratos. Tente novamente.</p>
+      <button type="button"
+              class="btn-portal btn-portal--primario"
+              onclick="window.location.reload()">
+        Tentar novamente
+      </button>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- Estado: sem contratos (nenhum registro cadastrado) -->
+    <!-- PHP: <?php if (empty($contratos) && empty(array_filter($filtrosContratos))): ?> -->
+    <div class="pcf-estado pcf-estado--vazio"
+         id="contratos-vazio">
+      <span class="pcf-icone pcf-icone--contrato-vazio pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Nenhum contrato encontrado</h2>
+      <p class="pcf-estado__mensagem">
+        Sua empresa ainda não possui contratos cadastrados no sistema.
+        Entre em contato com nossa equipe para obter mais informações.
+      </p>
+      <a href="/portal/tickets/novo"
+         class="btn-portal btn-portal--primario">
+        Falar com o suporte
+      </a>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- Estado: sem resultado (filtros aplicados) -->
+    <!-- PHP: <?php if (empty($contratos) && !empty(array_filter($filtrosContratos))): ?> -->
+    <div class="pcf-estado pcf-estado--sem-resultado"
+         id="contratos-sem-resultado">
+      <span class="pcf-icone pcf-icone--busca-vazia pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Nenhum contrato corresponde aos filtros</h2>
+      <p class="pcf-estado__mensagem">Ajuste os filtros para encontrar seus contratos.</p>
+      <a href="/portal/contratos?aba=contratos" class="btn-portal btn-portal--secundario">
+        Limpar filtros
+      </a>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+
+    <!-- ── SEÇÃO 6A. TABELA DE CONTRATOS ──────────────────────
+         Colunas para o cliente: sem vlunit, vltotal, codproduto, observacoes
+    ──────────────────────────────────────────────────────────── -->
+    <!-- PHP: <?php if (!empty($contratos)): ?> -->
+    <section class="pcf-tabela-secao" aria-label="Seus contratos">
+
+      <div class="pcf-tabela-wrapper">
+        <table class="pcf-tabela"
+               id="tabela-contratos"
+               aria-label="Itens de contrato da sua empresa">
+          <colgroup>
+            <col class="pcf-col--servico">
+            <col class="pcf-col--vigencia">
+            <col class="pcf-col--tipo">
+            <col class="pcf-col--sla">
+            <col class="pcf-col--franquia">
+            <col class="pcf-col--status">
+            <col class="pcf-col--acoes">
+          </colgroup>
+          <thead class="pcf-tabela__cabecalho">
+            <tr>
+              <th class="pcf-tabela__th" scope="col">Serviço / Item</th>
+              <th class="pcf-tabela__th" scope="col">Vigência</th>
+              <th class="pcf-tabela__th" scope="col">Tipo</th>
+              <th class="pcf-tabela__th" scope="col">SLA</th>
+              <th class="pcf-tabela__th" scope="col">Franquia</th>
+              <th class="pcf-tabela__th" scope="col">Status</th>
+              <th class="pcf-tabela__th pcf-tabela__th--acoes" scope="col">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="pcf-tabela__corpo">
+
+            <!-- PHP: foreach ($contratos as $item): -->
+
+            <!-- Linha: item de contrato ativo -->
+            <tr class="pcf-tabela__linha" id="linha-contrato-12">
+              <td class="pcf-tabela__td pcf-tabela__td--descricao">
+                <div class="pcf-item-contrato">
+                  <span class="pcf-item-contrato__icone" aria-hidden="true">
+                    <!-- PHP: ícone conforme $item->tipo_item -->
+                    <span class="pcf-icone pcf-icone--servico"></span>
+                  </span>
+                  <div class="pcf-item-contrato__info">
+                    <!-- PHP: <?= h($item->descricao) ?> -->
+                    <strong class="pcf-item-contrato__nome">Suporte Remoto N1</strong>
+                    <!-- PHP: <?= h($item->qtde) ?> unidade(s) / h -->
+                    <span class="pcf-item-contrato__qtde">10 horas/mês</span>
+                  </div>
+                </div>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--vigencia">
+                <!-- PHP: <?= $item->dtcontratacao->format('d/m/Y') ?> -->
+                <time datetime="2026-01-01">01/01/2026</time>
+                <span class="pcf-tabela__separador" aria-hidden="true"> — </span>
+                <!--
+                  PHP: <?= !empty($item->dtvalidade)
+                    ? $item->dtvalidade->format('d/m/Y')
+                    : 'Indeterminado'
+                  ?>
+                -->
+                <span>Indeterminado</span>
+              </td>
+              <td class="pcf-tabela__td">
+                <!--
+                  PHP: badge conforme $item->tipo_item:
+                  servico   → pcf-badge--servico   "Suporte"
+                  licenca   → pcf-badge--licenca   "Licença"
+                  hardware  → pcf-badge--hardware  "Hardware"
+                  cloud     → pcf-badge--cloud     "Cloud"
+                  suporte   → pcf-badge--suporte   "Dedicado"
+                -->
+                <span class="pcf-badge pcf-badge--servico">Suporte</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--sla">
+                <!--
+                  PHP: <?= h($item->nivel_sla ?? '—') ?>
+                  Apenas nome — sem prazos em minutos
+                -->
+                <span class="pcf-badge pcf-badge--sla">Suporte Padrão</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--franquia">
+                <!--
+                  PHP: <?= $item->franquia_horas
+                    ? number_format($item->franquia_horas, 0) . 'h/mês'
+                    : '—'
+                  ?>
+                  Sem valor monetário ($/h oculto)
+                -->
+                10h/mês
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--status">
+                <!--
+                  PHP: badge conforme _statusContrato($item):
+                  ativo     → pcf-badge--ativo
+                  a_vencer  → pcf-badge--a-vencer
+                  encerrado → pcf-badge--encerrado
+                  cancelado → pcf-badge--cancelado
+                -->
+                <span class="pcf-badge pcf-badge--ativo">Ativo</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--acoes">
+                <div class="pcf-acoes-linha" role="group" aria-label="Ações do item Suporte Remoto N1">
+
+                  <!-- Ação: Visualizar detalhes -->
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--ver"
+                          data-acao="abrir-detalhe-contrato"
+                          data-contrato-id="12"
+                          title="Ver detalhes do item de contrato"
+                          aria-label="Ver detalhes de Suporte Remoto N1">
+                    <span class="pcf-icone pcf-icone--ver" aria-hidden="true"></span>
+                    Ver
+                  </button>
+
+                  <!-- Ação: Baixar contrato (documento PDF) — se disponível -->
+                  <!-- PHP: <?php if (!empty($item->arquivo_pdf)): ?> -->
+                  <a href="/portal/contratos/download/12"
+                     class="pcf-btn-acao pcf-btn-acao--download"
+                     download
+                     title="Baixar documento do contrato em PDF"
+                     aria-label="Baixar contrato de Suporte Remoto N1">
+                    <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+                    PDF
+                  </a>
+                  <!-- PHP: <?php endif ?> -->
+
+                  <!-- Ação: Ver consumo de franquia -->
+                  <!-- PHP: <?php if (!empty($item->franquia_horas)): ?> -->
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--consumo"
+                          data-acao="abrir-detalhe-contrato"
+                          data-contrato-id="12"
+                          data-aba-detalhe="franquia"
+                          title="Ver consumo de franquia de horas"
+                          aria-label="Ver consumo de franquia de Suporte Remoto N1">
+                    <span class="pcf-icone pcf-icone--horas" aria-hidden="true"></span>
+                    Consumo
+                  </button>
+                  <!-- PHP: <?php endif ?> -->
+
+                  <!-- Ação: Ver tickets vinculados a este contrato -->
+                  <a href="/portal/historico?idcontrato=12"
+                     class="pcf-btn-acao pcf-btn-acao--tickets"
+                     title="Ver chamados vinculados a este contrato"
+                     aria-label="Ver tickets vinculados a Suporte Remoto N1">
+                    <span class="pcf-icone pcf-icone--ticket" aria-hidden="true"></span>
+                    Tickets
+                  </a>
+
+                </div>
+              </td>
+            </tr>
+            <!-- /linha-contrato-12 -->
+
+            <!-- Linha: item vencendo em breve -->
+            <tr class="pcf-tabela__linha pcf-tabela__linha--alerta" id="linha-contrato-15">
+              <td class="pcf-tabela__td pcf-tabela__td--descricao">
+                <div class="pcf-item-contrato">
+                  <span class="pcf-item-contrato__icone" aria-hidden="true">
+                    <span class="pcf-icone pcf-icone--licenca"></span>
+                  </span>
+                  <div class="pcf-item-contrato__info">
+                    <strong class="pcf-item-contrato__nome">Licença ERP — 5 usuários</strong>
+                    <span class="pcf-item-contrato__qtde">5 licenças</span>
+                    <!-- Badge de aviso quando dtvalidade se aproxima -->
+                    <span class="pcf-badge pcf-badge--aviso-vencimento" role="alert">
+                      <span class="pcf-icone pcf-icone--relogio" aria-hidden="true"></span>
+                      Vence em 12 dias
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--vigencia">
+                <time datetime="2025-04-01">01/04/2025</time>
+                <span aria-hidden="true"> — </span>
+                <time datetime="2026-04-12" class="pcf-data--proxima">12/04/2026</time>
+              </td>
+              <td class="pcf-tabela__td">
+                <span class="pcf-badge pcf-badge--licenca">Licença</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--sla">—</td>
+              <td class="pcf-tabela__td pcf-tabela__td--franquia">—</td>
+              <td class="pcf-tabela__td pcf-tabela__td--status">
+                <span class="pcf-badge pcf-badge--a-vencer">Vencendo</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--acoes">
+                <div class="pcf-acoes-linha" role="group" aria-label="Ações do item Licença ERP">
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--ver"
+                          data-acao="abrir-detalhe-contrato"
+                          data-contrato-id="15"
+                          aria-label="Ver detalhes de Licença ERP">
+                    <span class="pcf-icone pcf-icone--ver" aria-hidden="true"></span>
+                    Ver
+                  </button>
+                  <a href="/portal/contratos/download/15"
+                     class="pcf-btn-acao pcf-btn-acao--download"
+                     download
+                     aria-label="Baixar contrato de Licença ERP">
+                    <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+                    PDF
+                  </a>
+                  <a href="/portal/historico?idcontrato=15"
+                     class="pcf-btn-acao pcf-btn-acao--tickets"
+                     aria-label="Ver tickets vinculados à Licença ERP">
+                    <span class="pcf-icone pcf-icone--ticket" aria-hidden="true"></span>
+                    Tickets
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <!-- /linha-contrato-15 -->
+
+            <!-- Linha: item encerrado -->
+            <tr class="pcf-tabela__linha pcf-tabela__linha--encerrado" id="linha-contrato-8">
+              <td class="pcf-tabela__td pcf-tabela__td--descricao">
+                <div class="pcf-item-contrato">
+                  <span class="pcf-item-contrato__icone" aria-hidden="true">
+                    <span class="pcf-icone pcf-icone--cloud"></span>
+                  </span>
+                  <div class="pcf-item-contrato__info">
+                    <!-- Itens encerrados aparecem riscados -->
+                    <strong class="pcf-item-contrato__nome pcf-item-contrato__nome--riscado">
+                      Backup Cloud — 1 TB
+                    </strong>
+                    <span class="pcf-item-contrato__qtde">1 TB</span>
+                  </div>
+                </div>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--vigencia">
+                <time datetime="2025-01-01">01/01/2025</time>
+                <span aria-hidden="true"> — </span>
+                <time datetime="2025-12-31">31/12/2025</time>
+              </td>
+              <td class="pcf-tabela__td">
+                <span class="pcf-badge pcf-badge--cloud">Cloud</span>
+              </td>
+              <td class="pcf-tabela__td">—</td>
+              <td class="pcf-tabela__td">—</td>
+              <td class="pcf-tabela__td pcf-tabela__td--status">
+                <span class="pcf-badge pcf-badge--encerrado">Encerrado</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--acoes">
+                <div class="pcf-acoes-linha" role="group" aria-label="Ações do item Backup Cloud">
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--ver"
+                          data-acao="abrir-detalhe-contrato"
+                          data-contrato-id="8"
+                          aria-label="Ver detalhes de Backup Cloud">
+                    <span class="pcf-icone pcf-icone--ver" aria-hidden="true"></span>
+                    Ver
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <!-- /linha-contrato-8 -->
+
+            <!-- PHP: endforeach -->
+
+          </tbody>
+        </table>
+      </div><!-- /pcf-tabela-wrapper -->
+
+    </section>
+    <!-- /SEÇÃO 6A — TABELA CONTRATOS -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- /PAINEL A — CONTRATOS -->
+
+
+  <!-- ===========================================================
+       PAINEL B — FATURAS
+       KPI cards + filtros + tabela + ações de download
+       =========================================================== -->
+  <section class="pcf-painel"
+           id="painel-faturas"
+           role="tabpanel"
+           aria-labelledby="aba-faturas"
+           tabindex="0"
+           hidden>
+
+    <!-- ── SEÇÃO 3B. CARDS KPI DAS FATURAS ────────────────────
+         valor_total exibido ao cliente; subtotal e desconto ocultos
+    ──────────────────────────────────────────────────────────── -->
+    <section class="pcf-kpi" aria-label="Resumo das suas faturas">
+
+      <!-- KPI 1: Em aberto (pendentes + enviadas) -->
+      <article class="pcf-kpi__card pcf-kpi__card--azul">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--fatura-aberta"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Em aberto</span>
+          <!-- PHP: <?= $this->Number->currency($kpiFaturas['em_aberto_valor'] ?? 0, 'BRL') ?> -->
+          <strong class="pcf-kpi__valor" id="kpi-fat-aberto">R$&nbsp;3.500</strong>
+          <!-- PHP: <?= $kpiFaturas['em_aberto_qtd'] ?? 0 ?> fatura(s) -->
+          <span class="pcf-kpi__detalhe">2 faturas pendentes</span>
+        </div>
+      </article>
+
+      <!-- KPI 2: Vencendo em 7 dias -->
+      <article class="pcf-kpi__card pcf-kpi__card--amarelo">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--fatura-alerta"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Vencendo em 7 dias</span>
+          <!-- PHP: <?= $this->Number->currency($kpiFaturas['vencendo_valor'] ?? 0, 'BRL') ?> -->
+          <strong class="pcf-kpi__valor" id="kpi-fat-vencendo">R$&nbsp;1.800</strong>
+          <!-- PHP: <?= $kpiFaturas['vencendo_qtd'] ?? 0 ?> fatura(s) -->
+          <span class="pcf-kpi__detalhe">1 fatura próxima</span>
+        </div>
+      </article>
+
+      <!-- KPI 3: Vencidas (inadimplência) -->
+      <article class="pcf-kpi__card pcf-kpi__card--vermelho">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--fatura-vencida"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Vencidas</span>
+          <!-- PHP: <?= $this->Number->currency($kpiFaturas['vencidas_valor'] ?? 0, 'BRL') ?> -->
+          <strong class="pcf-kpi__valor pcf-kpi__valor--alerta" id="kpi-fat-vencidas">R$&nbsp;0</strong>
+          <!-- PHP: <?= $kpiFaturas['vencidas_qtd'] ?? 0 ?> fatura(s) -->
+          <span class="pcf-kpi__detalhe">0 faturas vencidas</span>
+        </div>
+      </article>
+
+      <!-- KPI 4: Pagas no período -->
+      <article class="pcf-kpi__card pcf-kpi__card--verde">
+        <div class="pcf-kpi__icone" aria-hidden="true">
+          <span class="pcf-icone pcf-icone--fatura-paga"></span>
+        </div>
+        <div class="pcf-kpi__corpo">
+          <span class="pcf-kpi__rotulo">Pagas</span>
+          <!-- PHP: <?= $this->Number->currency($kpiFaturas['pagas_valor'] ?? 0, 'BRL') ?> -->
+          <strong class="pcf-kpi__valor" id="kpi-fat-pagas">R$&nbsp;42.800</strong>
+          <!-- PHP: <?= $kpiFaturas['pagas_qtd'] ?? 0 ?> fatura(s) -->
+          <span class="pcf-kpi__detalhe">12 faturas no período</span>
+        </div>
+      </article>
+
+    </section>
+    <!-- /SEÇÃO 3B — KPI FATURAS -->
+
+
+    <!-- ── SEÇÃO 4B. FILTROS DAS FATURAS ──────────────────────
+         Filtros disponíveis ao cliente: período e status
+    ──────────────────────────────────────────────────────────── -->
+    <section class="pcf-filtros" id="filtros-faturas">
+
+      <div class="pcf-filtros__cabecalho">
+        <h2 class="pcf-filtros__titulo">
+          <span class="pcf-icone pcf-icone--filtro" aria-hidden="true"></span>
+          Filtrar faturas
+        </h2>
+        <button type="button"
+                class="btn-portal btn-portal--fantasma btn-portal--mini pcf-filtros__toggle"
+                aria-expanded="true"
+                aria-controls="filtros-faturas-corpo"
+                title="Recolher filtros de faturas">
+          <span class="pcf-icone pcf-icone--seta-cima" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <!--
+        PHP: <?= $this->Form->create(null, [
+          'type' => 'get',
+          'url'  => ['action' => 'clienteFaturas'],
+          'id'   => 'form-filtros-faturas',
+        ]) ?>
+        SEGURANÇA: idcliente e idempresa nunca vêm deste form.
+      -->
+      <form method="get"
+            action="/portal/contratos/faturas"
+            class="pcf-filtros__form"
+            id="form-filtros-faturas"
+            role="search"
+            aria-label="Filtrar faturas">
+
+        <input type="hidden" name="aba" value="faturas">
+
+        <div class="pcf-filtros__corpo" id="filtros-faturas-corpo">
+          <div class="pcf-filtros__grade">
+
+            <!-- Filtro: Período — de (mês/ano) -->
+            <div class="pcf-campo">
+              <label for="filtro-fat-periodo-ini" class="pcf-campo__label">A partir de</label>
+              <!--
+                PHP: usar input month (YYYY-MM) conforme spec seção 11.5
+                value = $filtrosFaturas['periodo_ini'] ?? date('Y-m', strtotime('-6 months'))
+              -->
+              <input type="month"
+                     name="periodo_ini"
+                     id="filtro-fat-periodo-ini"
+                     class="pcf-campo__input"
+                     value=""
+                     aria-label="Mês/ano de início do filtro de faturas">
+            </div>
+
+            <!-- Filtro: Período — até (mês/ano) -->
+            <div class="pcf-campo">
+              <label for="filtro-fat-periodo-fim" class="pcf-campo__label">Até</label>
+              <input type="month"
+                     name="periodo_fim"
+                     id="filtro-fat-periodo-fim"
+                     class="pcf-campo__input"
+                     value=""
+                     aria-label="Mês/ano de fim do filtro de faturas">
+            </div>
+
+            <!-- Filtro: Status simplificado para o cliente -->
+            <div class="pcf-campo">
+              <label for="filtro-fat-status" class="pcf-campo__label">Status</label>
+              <!--
+                PHP: mapeamento simplificado:
+                'pendente' agrupa: rascunho, pendente, enviado
+                'pago'     = pago
+                'vencido'  = calculado: enviado + data_vencimento < hoje
+                'cancelado' = cancelado
+                O controller trata a tradução para o campo real do banco.
+              -->
+              <select name="status"
+                      id="filtro-fat-status"
+                      class="pcf-campo__input pcf-campo__input--select">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente / Em aberto</option>
+                <option value="pago">Pago</option>
+                <option value="vencido">Vencido</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+
+          </div><!-- /pcf-filtros__grade -->
+
+          <div class="pcf-filtros__acoes">
+            <button type="submit" class="btn-portal btn-portal--primario">
+              <span class="pcf-icone pcf-icone--busca" aria-hidden="true"></span>
+              Filtrar
+            </button>
+            <a href="/portal/contratos/faturas?aba=faturas"
+               class="btn-portal btn-portal--fantasma">
+              Limpar
+            </a>
+            <!-- Indicador de filtros ativos -->
+            <!-- PHP: <?php if (!empty(array_filter($filtrosFaturas))): ?> -->
+            <span class="pcf-filtros__ativos" role="status" aria-live="polite">
+              Filtros ativos
+            </span>
+            <!-- PHP: <?php endif ?> -->
+          </div>
+        </div><!-- /filtros-faturas-corpo -->
+
+      </form>
+      <!-- PHP: <?= $this->Form->end() ?> -->
+
+    </section>
+    <!-- /SEÇÃO 4B — FILTROS FATURAS -->
+
+
+    <!-- ── ESTADOS VISUAIS — FATURAS ─────────────────────────── -->
+
+    <div class="pcf-estado pcf-estado--carregando"
+         id="faturas-carregando"
+         hidden
+         role="status"
+         aria-live="polite">
+      <div class="pcf-spinner" aria-hidden="true"></div>
+      <p class="pcf-estado__mensagem">Carregando suas faturas...</p>
+    </div>
+
+    <!-- PHP: <?php if ($semPermissaoFaturas ?? false): ?> -->
+    <div class="pcf-estado pcf-estado--sem-permissao"
+         id="faturas-sem-permissao"
+         role="alert">
+      <span class="pcf-icone pcf-icone--cadeado pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Acesso não autorizado</h2>
+      <p class="pcf-estado__mensagem">
+        Sua conta não tem permissão para visualizar faturas.
+        Entre em contato com o administrador do portal.
+      </p>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- PHP: <?php if ($erroFaturas ?? false): ?> -->
+    <div class="pcf-estado pcf-estado--erro"
+         id="faturas-erro"
+         role="alert">
+      <span class="pcf-icone pcf-icone--erro-circulo pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Erro ao carregar faturas</h2>
+      <p class="pcf-estado__mensagem">Não foi possível buscar suas faturas. Tente novamente.</p>
+      <button type="button"
+              class="btn-portal btn-portal--primario"
+              onclick="window.location.reload()">
+        Tentar novamente
+      </button>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- PHP: <?php if (empty($faturas) && empty(array_filter($filtrosFaturas))): ?> -->
+    <div class="pcf-estado pcf-estado--vazio"
+         id="faturas-vazio">
+      <span class="pcf-icone pcf-icone--fatura-vazia pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Nenhuma fatura encontrada</h2>
+      <p class="pcf-estado__mensagem">
+        Sua empresa ainda não possui documentos de cobrança registrados.
+      </p>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+    <!-- PHP: <?php if (empty($faturas) && !empty(array_filter($filtrosFaturas))): ?> -->
+    <div class="pcf-estado pcf-estado--sem-resultado"
+         id="faturas-sem-resultado">
+      <span class="pcf-icone pcf-icone--busca-vazia pcf-estado__icone" aria-hidden="true"></span>
+      <h2 class="pcf-estado__titulo">Nenhuma fatura para os filtros aplicados</h2>
+      <p class="pcf-estado__mensagem">Ajuste o período ou o status para encontrar faturas.</p>
+      <a href="/portal/contratos/faturas?aba=faturas" class="btn-portal btn-portal--secundario">
+        Limpar filtros
+      </a>
+    </div>
+    <!-- PHP: <?php endif ?> -->
+
+
+    <!-- ── SEÇÃO 6B. TABELA DE FATURAS ────────────────────────
+         Colunas para o cliente: sem subtotal, desconto, descricao interna, hash
+    ──────────────────────────────────────────────────────────── -->
+    <!-- PHP: <?php if (!empty($faturas)): ?> -->
+    <section class="pcf-tabela-secao" aria-label="Suas faturas">
+
+      <!-- Contador de registros e paginação de topo -->
+      <div class="pcf-tabela-barra">
+        <span class="pcf-contador" aria-live="polite">
+          <!-- PHP: <?= $this->Paginator->counter('{{count}} fatura(s)') ?> -->
+          14 faturas
+        </span>
+        <label class="pcf-por-pagina">
+          <span class="pcf-por-pagina__rotulo">Exibir:</span>
+          <select name="limit"
+                  class="pcf-por-pagina__select"
+                  form="form-filtros-faturas">
+            <option value="12" selected>12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="pcf-tabela-wrapper">
+        <table class="pcf-tabela"
+               id="tabela-faturas"
+               aria-label="Faturas da sua empresa">
+          <colgroup>
+            <col class="pcf-col--numero">
+            <col class="pcf-col--referencia">
+            <col class="pcf-col--vencimento">
+            <col class="pcf-col--valor">
+            <col class="pcf-col--status">
+            <col class="pcf-col--download">
+          </colgroup>
+          <thead class="pcf-tabela__cabecalho">
+            <tr>
+              <th class="pcf-tabela__th" scope="col">
+                <!-- PHP: <?= $this->Paginator->sort('numero', 'Fatura') ?> -->
+                <a href="?sort=numero&aba=faturas" class="pcf-th-sort">Fatura</a>
+              </th>
+              <th class="pcf-tabela__th" scope="col">Referência</th>
+              <th class="pcf-tabela__th" scope="col">
+                <!-- PHP: <?= $this->Paginator->sort('data_vencimento', 'Vencimento') ?> -->
+                <a href="?sort=data_vencimento&aba=faturas" class="pcf-th-sort">Vencimento</a>
+              </th>
+              <th class="pcf-tabela__th pcf-tabela__th--num" scope="col">Valor</th>
+              <th class="pcf-tabela__th" scope="col">Status</th>
+              <th class="pcf-tabela__th pcf-tabela__th--acoes" scope="col">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="pcf-tabela__corpo">
+
+            <!-- PHP: foreach ($faturas as $fatura): -->
+
+            <!-- Linha: fatura paga -->
+            <tr class="pcf-tabela__linha" id="linha-fatura-FT0014">
+              <td class="pcf-tabela__td pcf-tabela__td--numero">
+                <button type="button"
+                        class="pcf-link-fatura"
+                        data-fatura-id="FT0014"
+                        data-acao="abrir-detalhe-fatura"
+                        aria-label="Ver detalhes da fatura FT-0014">
+                  <!-- PHP: <?= h($fatura->numero) ?> -->
+                  FT-0014
+                </button>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--referencia">
+                <!-- PHP: <?= $fatura->data_emissao->format('F/Y') ?> (formatado em pt-BR) -->
+                março/2026
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--vencimento">
+                <!-- PHP: <?= $fatura->data_vencimento->format('d/m/Y') ?> -->
+                <time datetime="2026-03-10">10/03/2026</time>
+                <!-- Badge de vencimento (sem prazo em dias — apenas contexto) -->
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--valor pcf-tabela__td--num">
+                <!--
+                  PHP: <?= $this->Number->currency($fatura->valor_total, 'BRL') ?>
+                  OCULTO: valor_subtotal e valor_desconto não exibidos
+                -->
+                R$&nbsp;3.500,00
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--status">
+                <!--
+                  PHP: status simplificado para cliente:
+                  rascunho/pendente/enviado → pcf-badge--pendente "Pendente"
+                  pago                     → pcf-badge--pago     "Pago"
+                  vencido (calculado)      → pcf-badge--vencido  "Vencido"
+                  cancelado                → pcf-badge--cancelado "Cancelado"
+                -->
+                <span class="pcf-badge pcf-badge--pago">Pago</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--acoes">
+                <div class="pcf-acoes-linha" role="group" aria-label="Ações da fatura FT-0014">
+
+                  <!-- Visualizar detalhe -->
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--ver"
+                          data-acao="abrir-detalhe-fatura"
+                          data-fatura-id="FT0014"
+                          aria-label="Ver detalhes da fatura FT-0014">
+                    <span class="pcf-icone pcf-icone--ver" aria-hidden="true"></span>
+                    Ver
+                  </button>
+
+                  <!-- Baixar PDF da fatura -->
+                  <!-- PHP: <?php if ($permissoes['faturas.cliente_download'] ?? false): ?> -->
+                  <a href="/portal/contratos/faturas/download/FT0014"
+                     class="pcf-btn-acao pcf-btn-acao--download"
+                     download
+                     title="Baixar fatura FT-0014 em PDF"
+                     aria-label="Baixar PDF da fatura FT-0014">
+                    <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+                    PDF
+                  </a>
+
+                  <!-- Baixar documento fiscal (NF-e/recibo) — se disponível -->
+                  <!-- PHP: <?php if (!empty($fatura->arquivo_nf)): ?> -->
+                  <a href="/portal/contratos/faturas/nf/FT0014"
+                     class="pcf-btn-acao pcf-btn-acao--nf"
+                     download
+                     title="Baixar documento fiscal da fatura FT-0014"
+                     aria-label="Baixar documento fiscal de FT-0014">
+                    <span class="pcf-icone pcf-icone--nf" aria-hidden="true"></span>
+                    NF
+                  </a>
+                  <!-- PHP: <?php endif ?> -->
+                  <!-- PHP: <?php endif ?> (faturas.cliente_download) -->
+
+                </div>
+              </td>
+            </tr>
+            <!-- /linha-fatura-FT0014 -->
+
+            <!-- Linha: fatura pendente próxima do vencimento -->
+            <tr class="pcf-tabela__linha pcf-tabela__linha--alerta" id="linha-fatura-FT0015">
+              <td class="pcf-tabela__td pcf-tabela__td--numero">
+                <button type="button"
+                        class="pcf-link-fatura"
+                        data-fatura-id="FT0015"
+                        data-acao="abrir-detalhe-fatura"
+                        aria-label="Ver detalhes da fatura FT-0015">
+                  FT-0015
+                </button>
+              </td>
+              <td class="pcf-tabela__td">abril/2026</td>
+              <td class="pcf-tabela__td pcf-tabela__td--vencimento">
+                <time datetime="2026-04-05" class="pcf-data--proxima">05/04/2026</time>
+                <!-- Badge: vence em breve -->
+                <span class="pcf-badge pcf-badge--vence-breve" role="status">
+                  <span class="pcf-icone pcf-icone--relogio" aria-hidden="true"></span>
+                  5 dias
+                </span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--valor pcf-tabela__td--num">R$&nbsp;3.500,00</td>
+              <td class="pcf-tabela__td">
+                <span class="pcf-badge pcf-badge--pendente">Pendente</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--acoes">
+                <div class="pcf-acoes-linha" role="group" aria-label="Ações da fatura FT-0015">
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--ver"
+                          data-acao="abrir-detalhe-fatura"
+                          data-fatura-id="FT0015"
+                          aria-label="Ver detalhes da fatura FT-0015">
+                    <span class="pcf-icone pcf-icone--ver" aria-hidden="true"></span>
+                    Ver
+                  </button>
+                  <a href="/portal/contratos/faturas/download/FT0015"
+                     class="pcf-btn-acao pcf-btn-acao--download"
+                     download
+                     aria-label="Baixar PDF da fatura FT-0015">
+                    <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+                    PDF
+                  </a>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Linha: fatura vencida -->
+            <tr class="pcf-tabela__linha pcf-tabela__linha--vencida" id="linha-fatura-FT0013">
+              <td class="pcf-tabela__td pcf-tabela__td--numero">
+                <button type="button"
+                        class="pcf-link-fatura"
+                        data-fatura-id="FT0013"
+                        data-acao="abrir-detalhe-fatura"
+                        aria-label="Ver detalhes da fatura FT-0013 — VENCIDA">
+                  FT-0013
+                </button>
+              </td>
+              <td class="pcf-tabela__td">fevereiro/2026</td>
+              <td class="pcf-tabela__td pcf-tabela__td--vencimento">
+                <time datetime="2026-02-10" class="pcf-data--vencida">10/02/2026</time>
+                <span class="pcf-badge pcf-badge--atraso" role="alert">
+                  49 dias
+                </span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--valor pcf-tabela__td--num pcf-tabela__td--alerta">
+                R$&nbsp;3.500,00
+              </td>
+              <td class="pcf-tabela__td">
+                <span class="pcf-badge pcf-badge--vencido">Vencida</span>
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--acoes">
+                <div class="pcf-acoes-linha" role="group" aria-label="Ações da fatura FT-0013">
+                  <button type="button"
+                          class="pcf-btn-acao pcf-btn-acao--ver"
+                          data-acao="abrir-detalhe-fatura"
+                          data-fatura-id="FT0013"
+                          aria-label="Ver detalhes da fatura FT-0013">
+                    <span class="pcf-icone pcf-icone--ver" aria-hidden="true"></span>
+                    Ver
+                  </button>
+                  <a href="/portal/contratos/faturas/download/FT0013"
+                     class="pcf-btn-acao pcf-btn-acao--download"
+                     download
+                     aria-label="Baixar PDF da fatura FT-0013">
+                    <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+                    PDF
+                  </a>
+                  <a href="/portal/contratos/faturas/nf/FT0013"
+                     class="pcf-btn-acao pcf-btn-acao--nf"
+                     download
+                     aria-label="Baixar NF da fatura FT-0013">
+                    <span class="pcf-icone pcf-icone--nf" aria-hidden="true"></span>
+                    NF
+                  </a>
+                  <!-- Contato urgente para faturas vencidas -->
+                  <a href="/portal/tickets/novo?assunto=Regulariza%C3%A7%C3%A3o+fatura+FT-0013"
+                     class="pcf-btn-acao pcf-btn-acao--contato"
+                     title="Abrir chamado para regularizar esta fatura"
+                     aria-label="Contatar suporte sobre fatura FT-0013 vencida">
+                    <span class="pcf-icone pcf-icone--chat" aria-hidden="true"></span>
+                    Contato
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <!-- /linha-fatura-FT0013 -->
+
+            <!-- PHP: endforeach -->
+
+          </tbody>
+        </table>
+      </div><!-- /pcf-tabela-wrapper -->
+
+      <!-- Paginação -->
+      <nav class="pcf-paginacao" aria-label="Páginas de faturas">
+        <!--
+          PHP:
+          <?= $this->Paginator->prev('← Anterior', ['class' => 'btn-portal btn-portal--fantasma']) ?>
+          <?= $this->Paginator->numbers() ?>
+          <?= $this->Paginator->next('Próximo →', ['class' => 'btn-portal btn-portal--fantasma']) ?>
+        -->
+        <a href="?page=1&aba=faturas" class="btn-portal btn-portal--fantasma">← Anterior</a>
+        <span class="pcf-paginacao__numeros">
+          <a href="?page=1&aba=faturas" class="pcf-paginacao__num pcf-paginacao__num--ativo" aria-current="page">1</a>
+          <a href="?page=2&aba=faturas" class="pcf-paginacao__num">2</a>
+        </span>
+        <a href="?page=2&aba=faturas" class="btn-portal btn-portal--fantasma">Próximo →</a>
+      </nav>
+
+    </section>
+    <!-- /SEÇÃO 6B — TABELA FATURAS -->
+    <!-- PHP: <?php endif ?> -->
+
+  </section>
+  <!-- /PAINEL B — FATURAS -->
+
+
+</div><!-- /pcf-area-principal -->
+
+
+<!-- ============================================================
+     SEÇÃO 7 — OVERLAY E PAINEL LATERAL DE DETALHE
+     Compartilhado entre detalhe de contrato e detalhe de fatura.
+     O conteúdo interno é alternado por JS conforme o gatilho.
+     ============================================================ -->
+
+<!-- Overlay de fundo -->
+<div class="pcf-overlay" id="overlay-detalhe" hidden aria-hidden="true"></div>
+
+<!-- Painel lateral (slide-in pela direita) -->
+<aside class="pcf-detalhe"
+       id="painel-detalhe"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="detalhe-titulo"
+       aria-hidden="true"
+       hidden>
+
+  <!-- Cabeçalho do painel -->
+  <div class="pcf-detalhe__cabecalho">
+    <button type="button"
+            class="btn-portal btn-portal--fantasma btn-portal--mini"
+            id="btn-fechar-detalhe"
+            aria-label="Fechar painel de detalhes">
+      <span class="pcf-icone pcf-icone--fechar" aria-hidden="true"></span>
+    </button>
+    <h2 class="pcf-detalhe__titulo" id="detalhe-titulo">Detalhes</h2>
+    <!-- Link para página completa (tab/janela nova) -->
+    <a href="#"
+       id="detalhe-link-completo"
+       class="btn-portal btn-portal--fantasma btn-portal--mini"
+       target="_blank"
+       rel="noopener"
+       aria-label="Abrir em página completa">
+      <span class="pcf-icone pcf-icone--abrir-externo" aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <!-- Estado: carregando -->
+  <div class="pcf-detalhe__carregando" id="detalhe-carregando" hidden role="status" aria-live="polite">
+    <div class="pcf-spinner" aria-hidden="true"></div>
+    <p>Carregando detalhes...</p>
+  </div>
+
+  <!-- Estado: erro -->
+  <div class="pcf-detalhe__erro" id="detalhe-erro" hidden role="alert">
+    <span class="pcf-icone pcf-icone--erro-circulo" aria-hidden="true"></span>
+    <p>Não foi possível carregar os detalhes.
+      <button type="button" class="btn-portal btn-portal--fantasma btn-portal--mini"
+              data-acao="retentar-detalhe">Tentar novamente</button>
+    </p>
+  </div>
+
+  <!-- Conteúdo do painel (preenchido via AJAX ou PHP parcial) -->
+  <div class="pcf-detalhe__conteudo" id="detalhe-conteudo">
+
+    <!-- ===========================================================
+         7A. DETALHE DO CONTRATO
+         Ativado quando data-acao="abrir-detalhe-contrato"
+         Campos ocultos: vlunit, vltotal, observacoes, codproduto
+    =========================================================== -->
+    <div class="pcf-detalhe__secao" id="detalhe-contrato" hidden>
+
+      <!-- Abas internas do detalhe do contrato -->
+      <nav class="pcf-detalhe-abas" aria-label="Seções do contrato">
+        <ul class="pcf-detalhe-abas__lista" role="tablist">
+          <li role="none">
+            <button type="button" role="tab"
+                    class="pcf-detalhe-aba pcf-detalhe-aba--ativa"
+                    id="daba-servicos" aria-selected="true"
+                    aria-controls="dpanel-servicos" data-aba="servicos">
+              O que está coberto
+            </button>
+          </li>
+          <li role="none">
+            <button type="button" role="tab"
+                    class="pcf-detalhe-aba"
+                    id="daba-franquia" aria-selected="false"
+                    aria-controls="dpanel-franquia" data-aba="franquia">
+              Franquia
+            </button>
+          </li>
+          <li role="none">
+            <button type="button" role="tab"
+                    class="pcf-detalhe-aba"
+                    id="daba-sla" aria-selected="false"
+                    aria-controls="dpanel-sla" data-aba="sla">
+              SLA
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Painel: Serviços cobertos -->
+      <div class="pcf-aba-painel pcf-aba-painel--ativo"
+           id="dpanel-servicos" role="tabpanel"
+           aria-labelledby="daba-servicos" tabindex="0">
+        <h3 class="pcf-detalhe__sub">O que está no seu plano</h3>
+        <ul class="pcf-servicos-lista" aria-label="Serviços contratados">
+          <!--
+            PHP: foreach ($itensContrato as $item):
+            Ocultar: codproduto, vlunit, vltotal, observacoes
+          -->
+          <li class="pcf-servicos-lista__item pcf-servicos-lista__item--ativo">
+            <span class="pcf-icone pcf-icone--check-circulo pcf-servicos-lista__check" aria-hidden="true"></span>
+            <div class="pcf-servicos-lista__info">
+              <!-- PHP: <?= h($item->descricao) ?> -->
+              <strong class="pcf-servicos-lista__nome">Suporte técnico remoto</strong>
+              <!--
+                PHP: exibir qtde com unidade inferida de tipo_item:
+                  servico → "X horas/mês"
+                  licenca → "X licença(s)"
+                  hardware → "X unidade(s)"
+                  cloud   → "X TB" / "X GB"
+              -->
+              <span class="pcf-servicos-lista__qtde">10 horas/mês</span>
+              <!-- Badge de vencimento próximo -->
+              <!-- PHP: <?php if ($statusItem === 'a_vencer'): ?> -->
+              <span class="pcf-badge pcf-badge--aviso-vencimento">Vence em breve</span>
+              <!-- PHP: <?php endif ?> -->
+            </div>
+          </li>
+          <!-- Exemplo: item encerrado (riscado) -->
+          <li class="pcf-servicos-lista__item pcf-servicos-lista__item--encerrado">
+            <span class="pcf-icone pcf-icone--check-circulo pcf-servicos-lista__check pcf-servicos-lista__check--encerrado" aria-hidden="true"></span>
+            <div class="pcf-servicos-lista__info">
+              <strong class="pcf-servicos-lista__nome pcf-servicos-lista__nome--riscado">Backup Cloud — 1 TB</strong>
+              <span class="pcf-badge pcf-badge--encerrado">Encerrado</span>
+            </div>
+          </li>
+          <!-- PHP: endforeach -->
+        </ul>
+      </div>
+
+      <!-- Painel: Franquia / Consumo de horas -->
+      <div class="pcf-aba-painel"
+           id="dpanel-franquia" role="tabpanel"
+           aria-labelledby="daba-franquia" tabindex="0" hidden>
+        <!-- PHP: <?php if (!empty($franquiaTotal)): ?> -->
+        <div class="pcf-franquia">
+          <h3 class="pcf-detalhe__sub">Franquia de horas —
+            <!-- PHP: <?= date('F/Y') ?> -->
+            março/2026
+          </h3>
+
+          <!-- Seletor de período (até 6 meses anteriores para role=1) -->
+          <!-- PHP: <?= $this->Form->create(null, ['type' => 'get', 'url' => ['action' => 'consumoFranquia']]) ?> -->
+          <form method="get" action="/portal/contratos/consumo" class="pcf-franquia__form-periodo">
+            <label for="franquia-periodo" class="pcf-campo__label">Período:</label>
+            <select name="periodo" id="franquia-periodo" class="pcf-campo__input pcf-campo__input--select pcf-campo__input--mini">
+              <!-- PHP: for ($m = 0; $m < 6; $m++): -->
+              <option value="2026-03" selected>março/2026</option>
+              <option value="2026-02">fevereiro/2026</option>
+              <option value="2026-01">janeiro/2026</option>
+              <!-- PHP: endfor -->
+            </select>
+            <button type="submit" class="btn-portal btn-portal--fantasma btn-portal--mini">Ver</button>
+          </form>
+          <!-- PHP: <?= $this->Form->end() ?> -->
+
+          <!-- Resumo numérico -->
+          <dl class="pcf-franquia__resumo">
+            <div class="pcf-franquia__item">
+              <dt class="pcf-franquia__rotulo">Horas incluídas no plano</dt>
+              <!-- PHP: <?= number_format($franquiaTotal, 0) ?>h/mês -->
+              <dd class="pcf-franquia__valor">20h/mês</dd>
+            </div>
+            <div class="pcf-franquia__item">
+              <dt class="pcf-franquia__rotulo">Horas utilizadas</dt>
+              <!-- PHP: <?= number_format($horasConsumidas, 1) ?>h -->
+              <dd class="pcf-franquia__valor">14h 30min</dd>
+            </div>
+            <div class="pcf-franquia__item">
+              <dt class="pcf-franquia__rotulo">Saldo restante</dt>
+              <!-- PHP: <?= number_format($franquiaTotal - $horasConsumidas, 1) ?>h -->
+              <dd class="pcf-franquia__valor pcf-franquia__valor--saldo">5h 30min</dd>
+            </div>
+          </dl>
+
+          <!-- Barra de consumo -->
+          <!--
+            PHP: $pct = $percentualConsumo; // calculado no controller
+            Cores: 0-60 → verde; 61-85 → amarelo; 86-100 → vermelho; >100 → vermelho piscante
+          -->
+          <div class="pcf-franquia__barra-label">
+            <span>Consumo do período</span>
+            <!-- PHP: <?= $percentualConsumo ?>% -->
+            <strong>72,5%</strong>
+          </div>
+          <div class="pcf-franquia__barra"
+               role="progressbar"
+               aria-valuenow="73"
+               aria-valuemin="0"
+               aria-valuemax="100"
+               aria-label="72,5% da franquia de horas consumida neste mês">
+            <div class="pcf-franquia__barra-fill pcf-franquia__barra-fill--atencao"
+                 style="width: 72.5%">
+            </div>
+          </div>
+          <p class="pcf-franquia__aviso">
+            <span class="pcf-icone pcf-icone--info" aria-hidden="true"></span>
+            Horas excedentes podem gerar cobrança adicional conforme contrato.
+          </p>
+        </div>
+        <!-- PHP: <?php else: ?> -->
+        <div class="pcf-franquia__nd">
+          <span class="pcf-icone pcf-icone--info" aria-hidden="true"></span>
+          <p>Franquia de horas não definida neste contrato.</p>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+      </div><!-- /dpanel-franquia -->
+
+      <!-- Painel: SLA contratual -->
+      <div class="pcf-aba-painel"
+           id="dpanel-sla" role="tabpanel"
+           aria-labelledby="daba-sla" tabindex="0" hidden>
+        <!-- PHP: <?php if (!empty($politicaSla)): ?> -->
+        <div class="pcf-sla-contratual" id="detalhes-sla">
+          <h3 class="pcf-detalhe__sub">Acordo de Nível de Serviço</h3>
+          <p class="pcf-sla-contratual__intro">
+            Seu plano garante os seguintes prazos de atendimento:
+          </p>
+          <!-- PHP: foreach ($politicaSla->niveis as $nivel): -->
+          <!-- Sem exibir resposta_minutos/resolucao_minutos brutos — apenas texto convertido -->
+          <div class="pcf-sla-nivel">
+            <div class="pcf-sla-nivel__cabecalho">
+              <!-- PHP: badge conforme prioridade -->
+              <span class="pcf-badge pcf-badge--p1">CRÍTICO</span>
+              <span class="pcf-sla-nivel__descricao">Sistema completamente parado</span>
+            </div>
+            <dl class="pcf-sla-nivel__prazos">
+              <div class="pcf-sla-nivel__prazo">
+                <dt>Primeiro contato</dt>
+                <!--
+                  PHP: _formatarMinutos($nivel->resposta_minutos)
+                  <= 60 → "X minutos"; > 60 → "X horas"; >= 1440 → "X dias"
+                -->
+                <dd>até <strong>30 minutos</strong></dd>
+              </div>
+              <div class="pcf-sla-nivel__prazo">
+                <dt>Resolução</dt>
+                <dd>até <strong>4 horas</strong></dd>
+              </div>
+            </dl>
+          </div>
+          <div class="pcf-sla-nivel">
+            <div class="pcf-sla-nivel__cabecalho">
+              <span class="pcf-badge pcf-badge--p2">ALTO</span>
+              <span class="pcf-sla-nivel__descricao">Impacto severo nos negócios</span>
+            </div>
+            <dl class="pcf-sla-nivel__prazos">
+              <div class="pcf-sla-nivel__prazo"><dt>Primeiro contato</dt><dd>até <strong>2 horas</strong></dd></div>
+              <div class="pcf-sla-nivel__prazo"><dt>Resolução</dt><dd>até <strong>8 horas</strong></dd></div>
+            </dl>
+          </div>
+          <div class="pcf-sla-nivel">
+            <div class="pcf-sla-nivel__cabecalho">
+              <span class="pcf-badge pcf-badge--p3">MÉDIO</span>
+              <span class="pcf-sla-nivel__descricao">Impacto moderado, operação continua</span>
+            </div>
+            <dl class="pcf-sla-nivel__prazos">
+              <div class="pcf-sla-nivel__prazo"><dt>Primeiro contato</dt><dd>até <strong>8 horas</strong></dd></div>
+              <div class="pcf-sla-nivel__prazo"><dt>Resolução</dt><dd>até <strong>24 horas</strong></dd></div>
+            </dl>
+          </div>
+          <div class="pcf-sla-nivel">
+            <div class="pcf-sla-nivel__cabecalho">
+              <span class="pcf-badge pcf-badge--p4">BAIXO</span>
+              <span class="pcf-sla-nivel__descricao">Dúvidas, melhorias e solicitações</span>
+            </div>
+            <dl class="pcf-sla-nivel__prazos">
+              <div class="pcf-sla-nivel__prazo"><dt>Primeiro contato</dt><dd>até <strong>24 horas</strong></dd></div>
+              <div class="pcf-sla-nivel__prazo"><dt>Resolução</dt><dd>até <strong>72 horas</strong></dd></div>
+            </dl>
+          </div>
+          <!-- PHP: endforeach -->
+        </div>
+        <!-- PHP: <?php else: ?> -->
+        <div class="pcf-sla-contratual__nd">
+          <span class="pcf-icone pcf-icone--info" aria-hidden="true"></span>
+          <p>SLA não especificado neste contrato. Entre em contato para mais informações.</p>
+        </div>
+        <!-- PHP: <?php endif ?> -->
+      </div><!-- /dpanel-sla -->
+
+    </div><!-- /detalhe-contrato -->
+
+
+    <!-- ===========================================================
+         7B. DETALHE DA FATURA
+         Ativado quando data-acao="abrir-detalhe-fatura"
+         Campos ocultos: valor_subtotal, valor_desconto, descricao interna, hash, idautor, idordem
+    =========================================================== -->
+    <div class="pcf-detalhe__secao" id="detalhe-fatura" hidden>
+
+      <!-- Meta-dados da fatura -->
+      <div class="pcf-fatura-resumo">
+        <div class="pcf-fatura-resumo__linha">
+          <!-- PHP: <?= h($fatura->numero) ?> -->
+          <span class="pcf-fatura-resumo__numero">FT-0014</span>
+          <!-- PHP: badge de status simplificado -->
+          <span class="pcf-badge pcf-badge--pago">Pago</span>
+        </div>
+        <dl class="pcf-fatura-resumo__meta">
+          <div class="pcf-fatura-resumo__meta-item">
+            <dt>Referência</dt>
+            <!-- PHP: <?= $fatura->data_emissao->format('F/Y') ?> -->
+            <dd>março/2026</dd>
+          </div>
+          <div class="pcf-fatura-resumo__meta-item">
+            <dt>Vencimento</dt>
+            <!-- PHP: <?= $fatura->data_vencimento->format('d/m/Y') ?> -->
+            <dd><time datetime="2026-03-10">10/03/2026</time></dd>
+          </div>
+          <div class="pcf-fatura-resumo__meta-item pcf-fatura-resumo__meta-item--valor">
+            <dt>Valor total</dt>
+            <!--
+              PHP: <?= $this->Number->currency($fatura->valor_total, 'BRL') ?>
+              OCULTO: valor_subtotal e valor_desconto
+            -->
+            <dd class="pcf-fatura-resumo__valor-total">R$&nbsp;3.500,00</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Itens da fatura -->
+      <div class="pcf-fatura-itens">
+        <h3 class="pcf-detalhe__sub">Itens</h3>
+        <table class="pcf-tabela pcf-tabela--itens"
+               aria-label="Itens da fatura">
+          <thead class="pcf-tabela__cabecalho">
+            <tr>
+              <th class="pcf-tabela__th" scope="col">Descrição</th>
+              <th class="pcf-tabela__th pcf-tabela__th--num" scope="col">Qtde</th>
+              <th class="pcf-tabela__th pcf-tabela__th--num" scope="col">Valor</th>
+            </tr>
+          </thead>
+          <tbody class="pcf-tabela__corpo">
+            <!--
+              PHP: foreach ($fatura->itens as $item):
+              OCULTO: vlunit interno, markup, custo
+            -->
+            <tr class="pcf-tabela__linha">
+              <td class="pcf-tabela__td">
+                <!-- PHP: <?= h($item->descricao) ?> -->
+                Mensalidade Suporte Remoto — março/2026
+              </td>
+              <td class="pcf-tabela__td pcf-tabela__td--num">1</td>
+              <td class="pcf-tabela__td pcf-tabela__td--num">
+                <!-- PHP: <?= $this->Number->currency($item->valor, 'BRL') ?> -->
+                R$&nbsp;1.500,00
+              </td>
+            </tr>
+            <tr class="pcf-tabela__linha">
+              <td class="pcf-tabela__td">Licença ERP — 5 usuários</td>
+              <td class="pcf-tabela__td pcf-tabela__td--num">5</td>
+              <td class="pcf-tabela__td pcf-tabela__td--num">R$&nbsp;2.000,00</td>
+            </tr>
+            <!-- PHP: endforeach -->
+          </tbody>
+          <tfoot class="pcf-tabela__rodape">
+            <tr>
+              <td class="pcf-tabela__td" colspan="2"><strong>Total</strong></td>
+              <!-- PHP: <?= $this->Number->currency($fatura->valor_total, 'BRL') ?> -->
+              <td class="pcf-tabela__td pcf-tabela__td--num pcf-tabela__td--destaque">
+                R$&nbsp;3.500,00
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div><!-- /pcf-fatura-itens -->
+
+      <!-- Histórico de status da fatura (eventos públicos) -->
+      <div class="pcf-fatura-historico">
+        <h3 class="pcf-detalhe__sub">Histórico</h3>
+        <ol class="pcf-timeline pcf-timeline--compacta" aria-label="Histórico da fatura">
+          <!--
+            PHP: foreach ($fatura->historico as $ev):
+            Exibir: data, status_de, status_para (sem notas internas)
+          -->
+          <li class="pcf-timeline__evento pcf-timeline__evento--status">
+            <time class="pcf-timeline__hora" datetime="2026-03-01">01/03/2026</time>
+            <span class="pcf-timeline__descricao">Fatura gerada</span>
+          </li>
+          <li class="pcf-timeline__evento pcf-timeline__evento--status">
+            <time class="pcf-timeline__hora" datetime="2026-03-02">02/03/2026</time>
+            <span class="pcf-timeline__descricao">Enviada para cobrança</span>
+          </li>
+          <li class="pcf-timeline__evento pcf-timeline__evento--pago">
+            <time class="pcf-timeline__hora" datetime="2026-03-09">09/03/2026</time>
+            <span class="pcf-timeline__descricao">Pagamento confirmado</span>
+          </li>
+          <!-- PHP: endforeach -->
+        </ol>
+      </div>
+
+      <!-- Ações de download dentro do detalhe -->
+      <!-- PHP: <?php if ($permissoes['faturas.cliente_download'] ?? false): ?> -->
+      <div class="pcf-fatura-acoes">
+        <a href="/portal/contratos/faturas/download/FT0014"
+           class="btn-portal btn-portal--primario"
+           download
+           aria-label="Baixar fatura FT-0014 em PDF">
+          <span class="pcf-icone pcf-icone--pdf" aria-hidden="true"></span>
+          Baixar PDF
+        </a>
+        <!-- PHP: <?php if (!empty($fatura->arquivo_nf)): ?> -->
+        <a href="/portal/contratos/faturas/nf/FT0014"
+           class="btn-portal btn-portal--secundario"
+           download
+           aria-label="Baixar documento fiscal de FT-0014">
+          <span class="pcf-icone pcf-icone--nf" aria-hidden="true"></span>
+          Baixar NF
+        </a>
+        <!-- PHP: <?php endif ?> -->
+      </div>
+      <!-- PHP: <?php endif ?> -->
+
+    </div><!-- /detalhe-fatura -->
+
+  </div><!-- /pcf-detalhe__conteudo -->
+
+</aside>
+<!-- /SEÇÃO 7 — PAINEL DE DETALHE -->
+
+
+<!-- ============================================================
+     SCRIPT: COMPORTAMENTOS DA TELA
+     JS inline mínimo, sem dependências externas.
+     Responsável por: alternância de abas principais,
+     abas internas do detalhe, abertura/fechamento do painel,
+     toggle de filtros.
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Referências ────────────────────────────────────────── */
+  var painel    = document.getElementById('painel-detalhe');
+  var overlay   = document.getElementById('overlay-detalhe');
+  var btnFechar = document.getElementById('btn-fechar-detalhe');
+  var inputAba  = document.getElementById('input-aba-ativa');
+
+  /* ─── Alternância de abas principais (Contratos / Faturas) ── */
+  var ABAS    = document.querySelectorAll('.pcf-aba');
+  var PAINEIS = document.querySelectorAll('.pcf-painel');
+
+  function ativarAba(abaId) {
+    ABAS.forEach(function (aba) {
+      var ativo = aba.id === abaId;
+      aba.setAttribute('aria-selected', String(ativo));
+      aba.classList.toggle('pcf-aba--ativa', ativo);
+    });
+    PAINEIS.forEach(function (p) {
+      var ctrlId = p.getAttribute('aria-labelledby');
+      p.hidden = ctrlId !== abaId;
+      p.classList.toggle('pcf-painel--ativo', ctrlId === abaId);
+    });
+    // Atualizar input oculto para preservar aba no submit de filtros
+    if (inputAba) {
+      var abaEl = document.getElementById(abaId);
+      inputAba.value = abaEl ? abaEl.getAttribute('data-aba') : 'contratos';
+    }
+    // Atualizar URL sem reload (pushState)
+    if (window.history && window.history.pushState) {
+      var url = new URL(window.location.href);
+      url.searchParams.set('aba', inputAba ? inputAba.value : 'contratos');
+      window.history.pushState({}, '', url.toString());
+    }
+  }
+
+  ABAS.forEach(function (aba) {
+    aba.addEventListener('click', function () { ativarAba(aba.id); });
+    aba.addEventListener('keydown', function (e) {
+      var lista = Array.from(ABAS);
+      var idx = lista.indexOf(aba);
+      if (e.key === 'ArrowRight' && idx < lista.length - 1) { lista[idx + 1].focus(); ativarAba(lista[idx + 1].id); }
+      if (e.key === 'ArrowLeft'  && idx > 0)                { lista[idx - 1].focus(); ativarAba(lista[idx - 1].id); }
+    });
+  });
+
+  // Restaurar aba ativa pela URL (?aba=faturas)
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var abaNome = params.get('aba') || 'contratos';
+    var abaEl = document.querySelector('[data-aba="' + abaNome + '"]');
+    if (abaEl) ativarAba(abaEl.id);
+  })();
+
+
+  /* ─── Painel lateral: abrir ─────────────────────────────── */
+  function abrirDetalhe(tipo, id, abaInicial) {
+    if (!painel) return;
+
+    var secContr = document.getElementById('detalhe-contrato');
+    var secFat   = document.getElementById('detalhe-fatura');
+    var carregEl = document.getElementById('detalhe-carregando');
+    var conteudo = document.getElementById('detalhe-conteudo');
+    var linkComp = document.getElementById('detalhe-link-completo');
+
+    // Mostrar overlay e painel
+    painel.hidden  = false;
+    overlay.hidden = false;
+    painel.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('pcf-sem-scroll');
+    painel.focus();
+
+    // Atualizar link "Abrir completo"
+    if (linkComp) {
+      linkComp.href = tipo === 'contrato'
+        ? '/portal/contratos/ver/' + id
+        : '/portal/contratos/faturas/ver/' + id;
+    }
+
+    // Mostrar seção correta e ocultar a outra
+    if (secContr) secContr.hidden = tipo !== 'contrato';
+    if (secFat)   secFat.hidden   = tipo !== 'fatura';
+
+    // Estado carregando
+    if (carregEl) carregEl.hidden = false;
+    if (conteudo) conteudo.hidden = true;
+
+    // Simular carregamento (substituir por fetch no .ctp real)
+    // fetch('/portal/contratos/' + (tipo === 'contrato' ? 'detalhe/' : 'faturas/detalhe/') + id)
+    //   .then(function(r) { return r.json(); })
+    //   .then(function(dados) { preencherDetalhe(tipo, dados); })
+    //   .catch(function() { document.getElementById('detalhe-erro').hidden = false; });
+    setTimeout(function () {
+      if (carregEl) carregEl.hidden = true;
+      if (conteudo) conteudo.hidden = false;
+      // Ativar aba interna se especificada
+      if (abaInicial && tipo === 'contrato') ativarAbaDetalheContrato(abaInicial);
+    }, 300);
+  }
+
+  /* ─── Painel lateral: fechar ────────────────────────────── */
+  function fecharDetalhe() {
+    if (!painel) return;
+    painel.hidden  = true;
+    overlay.hidden = true;
+    painel.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('pcf-sem-scroll');
+  }
+
+  if (btnFechar) btnFechar.addEventListener('click', fecharDetalhe);
+  if (overlay)   overlay.addEventListener('click', fecharDetalhe);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && painel && !painel.hidden) fecharDetalhe();
+  });
+
+  /* ─── Delegação de cliques para abrir detalhe ────────────── */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-acao="abrir-detalhe-contrato"]');
+    if (btn) {
+      abrirDetalhe('contrato', btn.getAttribute('data-contrato-id'),
+                   btn.getAttribute('data-aba-detalhe') || 'servicos');
+      return;
+    }
+    var btnF = e.target.closest('[data-acao="abrir-detalhe-fatura"]');
+    if (btnF) {
+      abrirDetalhe('fatura', btnF.getAttribute('data-fatura-id'), null);
+    }
+  });
+
+  /* ─── Abas internas do detalhe de contrato ───────────────── */
+  var ABAS_DETALHE    = document.querySelectorAll('.pcf-detalhe-aba');
+  var PAINEIS_DETALHE = document.querySelectorAll('.pcf-aba-painel');
+
+  function ativarAbaDetalheContrato(nomeAba) {
+    ABAS_DETALHE.forEach(function (aba) {
+      var ativo = aba.getAttribute('data-aba') === nomeAba;
+      aba.setAttribute('aria-selected', String(ativo));
+      aba.classList.toggle('pcf-detalhe-aba--ativa', ativo);
+    });
+    PAINEIS_DETALHE.forEach(function (p) {
+      var ctrlId = p.getAttribute('aria-labelledby');
+      var abaEl  = document.getElementById(ctrlId);
+      p.hidden   = !abaEl || abaEl.getAttribute('data-aba') !== nomeAba;
+    });
+  }
+
+  ABAS_DETALHE.forEach(function (aba) {
+    aba.addEventListener('click', function () {
+      ativarAbaDetalheContrato(aba.getAttribute('data-aba'));
+    });
+  });
+
+  /* ─── Toggle de filtros (expandir/recolher) ──────────────── */
+  document.querySelectorAll('.pcf-filtros__toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var alvoId  = btn.getAttribute('aria-controls');
+      var alvo    = document.getElementById(alvoId);
+      var exposto = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!exposto));
+      if (alvo) alvo.hidden = exposto;
+    });
+  });
+
+}());
+</script>
+
+
+</body>
+</html>
