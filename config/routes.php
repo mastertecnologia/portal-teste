@@ -88,6 +88,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/clientes/addAPI', ['controller' => 'Clientes', 'action' => 'addAPI'])->setMethods(['POST']);
     $routes->connect('/clientes/list-api', ['controller' => 'Clientes', 'action' => 'listAPI'])->setMethods(['GET']);
     $routes->connect('/clientes/listAPI', ['controller' => 'Clientes', 'action' => 'listAPI'])->setMethods(['GET']);
+    // UI ERP: mesmas URLs que DashedRoute geraria; explícito para não depender só do fallback e documentar o contrato.
+    $routes->connect('/clientes/reativar/*', ['controller' => 'Clientes', 'action' => 'reativar']);
+    $routes->connect('/clientes/inativar/*', ['controller' => 'Clientes', 'action' => 'inativar']);
     // API cadastro consolidado: dados empresa por CNPJ (Receita + IE + IM)
     $routes->connect('/api/cadastro/empresa/consultar', ['controller' => 'Cadastro', 'action' => 'consultar'])->setMethods(['POST']);
     $routes->connect('/api/cadastro/empresa/:cnpj', ['controller' => 'Cadastro', 'action' => 'empresa', 'cnpj'])->setPass(['cnpj'])->setMethods(['GET']);

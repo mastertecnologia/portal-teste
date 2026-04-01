@@ -383,6 +383,34 @@ class ClientesController extends AppController {
 		return $this->redirect(['action' => 'index', '#' => 'inativos']);
 	}
 
+	public function inativar($id = null) {
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			$this->Flash->error('Cliente não encontrado ou sem permissão.');
+			return $this->redirect(['action' => 'index']);
+		}
+		if ((int)$cliente->inativo === 1) {
+			$this->Flash->warning('Este cliente já está inativo.');
+			return $this->redirect(['action' => 'index', '#' => 'inativos']);
+		}
+		$cliente->inativo = 1;
+
+		if ($this->Clientes->save($cliente)) {
+			$this->sincronizacliente($id);
+			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $id);
+			$this->Flash->success('O cliente foi inativado com sucesso!');
+		} else {
+			$this->Flash->error('Não foi possível inativar o cliente.');
+		}
+
+		return $this->redirect(['action' => 'index', '#' => 'inativos']);
+	}
+
 	public function solicitantes($idcliente) {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');

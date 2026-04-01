@@ -138,7 +138,7 @@
                     <tbody>
                         <?php foreach ($clientesAtivosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -151,7 +151,16 @@
                                 <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
                                 <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
                             </td>
-                            <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+                            <td class="cli-td-arrow">
+                                <?php if (isset($role) && (int)$role === 0): ?>
+                                <?= $this->Html->link(
+                                    '<i class="fas fa-user-slash" title="Inativar cliente"></i>',
+                                    ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
+                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();']
+                                ) ?>
+                                <?php endif; ?>
+                                <span class="cli-td-arrow-chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -175,7 +184,7 @@
                     <tbody>
                         <?php foreach ($clientesAtivosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -188,7 +197,16 @@
                                 <?php if (!empty($reg->fone)) echo h(Mask("(###) ####-####", $reg->fone)); ?>
                                 <?php if (!empty($reg->fone2)) echo '<br>' . h(Mask("(###) #####-####", $reg->fone2)); ?>
                             </td>
-                            <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+                            <td class="cli-td-arrow">
+                                <?php if (isset($role) && (int)$role === 0): ?>
+                                <?= $this->Html->link(
+                                    '<i class="fas fa-user-slash" title="Inativar cliente"></i>',
+                                    ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
+                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();']
+                                ) ?>
+                                <?php endif; ?>
+                                <span class="cli-td-arrow-chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -212,7 +230,7 @@
                     <tbody>
                         <?php foreach ($clientesInativosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->razaosocial ?? '') ?></div>
@@ -255,7 +273,7 @@
                     <tbody>
                         <?php foreach ($clientesInativosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> onclick="window.location.href=<?= json_encode($url) ?>" style="cursor:pointer" role="button">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" style="cursor:pointer" role="button" tabindex="0">
                             <td>
                                 <div class="cli-td-name">
                                     <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->nome ?? '') ?></div>
@@ -287,7 +305,37 @@
 </div>
 
 <script>
-$(document).ready(function() {
+(function () {
+    if (typeof window.jQuery === 'undefined') {
+        console.error('[Clientes] jQuery não encontrado. Verifique no DevTools → Network se /assets/node_modules/jquery/jquery-3.2.1.min.js retorna 200 e se o layout carrega scripts antes desta view.');
+        return;
+    }
+    var $ = window.jQuery;
+    $(document).ready(function () {
+
+    // Navegação para edição — registrar ANTES do DataTables: se $.fn.dataTable ou o init falhar, o clique na linha ainda funciona (evita “erro JS silencioso” que quebra só parte da tela).
+    $('.cli-root').on('click', 'table.cli-table tbody tr[data-cli-edit-url]', function(e) {
+        if ($(e.target).closest('a, button, input, select, textarea').length) {
+            return;
+        }
+        var u = this.getAttribute('data-cli-edit-url');
+        if (u) {
+            window.location.href = u;
+        }
+    });
+    $('.cli-root').on('keydown', 'table.cli-table tbody tr[data-cli-edit-url]', function(e) {
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+        if ($(e.target).is('a, button')) {
+            return;
+        }
+        e.preventDefault();
+        var u = this.getAttribute('data-cli-edit-url');
+        if (u) {
+            window.location.href = u;
+        }
+    });
 
     // State
     var status = 'ativos';
@@ -298,6 +346,15 @@ $(document).ready(function() {
         'inativos': { pj: <?= $cntIPJ ?>, pf: <?= $cntIPF ?> }
     };
 
+    /** APIs mínimas quando DataTables não existe ou falha no init (evita TypeError em pills/busca). */
+    var dtStub = { draw: function () {}, search: function () {} };
+    var tables = {
+        ativosPJ: dtStub,
+        ativosPF: dtStub,
+        inativosPJ: dtStub,
+        inativosPF: dtStub
+    };
+
     function activeTableKey() {
         return status === 'ativos'
             ? (type === 'pj' ? 'ativosPJ' : 'ativosPF')
@@ -305,7 +362,10 @@ $(document).ready(function() {
     }
 
     function redrawActiveTable() {
-        tables[activeTableKey()].draw();
+        var t = tables[activeTableKey()];
+        if (t && typeof t.draw === 'function') {
+            t.draw();
+        }
     }
 
     function showPanel() {
@@ -406,15 +466,6 @@ $(document).ready(function() {
         return true;
     }
 
-    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-        var api = new $.fn.dataTable.Api(settings);
-        var row = api.row(dataIndex).node();
-        if (!row) return true;
-        var q = detectQueryType($('#cli-search').val());
-        return rowMatches($(row), q);
-    });
-
-    // DataTables (após registrar ext.search para o primeiro draw já respeitar o filtro)
     var dtOpts = {
         "pageLength": <?= $pagelength ?? 25 ?>,
         "language": {
@@ -431,16 +482,41 @@ $(document).ready(function() {
         "dom": '<"d-flex justify-content-between align-items-center"lf>rt<"d-flex justify-content-between align-items-center"ip>',
     };
 
-    var tables = {
-        'ativosPJ':   $('#tableAtivosPJ').DataTable(dtOpts),
-        'ativosPF':   $('#tableAtivosPF').DataTable(dtOpts),
-        'inativosPJ': $('#tableInativosPJ').DataTable(dtOpts),
-        'inativosPF': $('#tableInativosPF').DataTable(dtOpts)
-    };
-
-    $.each(tables, function(_, dt) {
-        dt.search('');
-    });
+    if (typeof $.fn.dataTable === 'undefined') {
+        console.error('[Clientes] DataTables não disponível ($.fn.dataTable). Verifique /assets/node_modules/datatables/datatables.min.js (Network → 404?) e ordem: jQuery antes do DataTables.');
+    } else {
+        try {
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                var api = new $.fn.dataTable.Api(settings);
+                var row = api.row(dataIndex).node();
+                if (!row) return true;
+                var q = detectQueryType($('#cli-search').val());
+                return rowMatches($(row), q);
+            });
+            tables = {
+                'ativosPJ':   $('#tableAtivosPJ').DataTable(dtOpts),
+                'ativosPF':   $('#tableAtivosPF').DataTable(dtOpts),
+                'inativosPJ': $('#tableInativosPJ').DataTable(dtOpts),
+                'inativosPF': $('#tableInativosPF').DataTable(dtOpts)
+            };
+            $.each(tables, function(_, dt) {
+                if (dt && typeof dt.search === 'function') {
+                    dt.search('');
+                }
+            });
+        } catch (err) {
+            console.error('[Clientes] Erro ao inicializar DataTables:', err && err.message ? err.message : err);
+            if (err && err.stack) {
+                console.debug(err.stack);
+            }
+            tables = {
+                ativosPJ: dtStub,
+                ativosPF: dtStub,
+                inativosPJ: dtStub,
+                inativosPF: dtStub
+            };
+        }
+    }
 
     function updateSearchModeUi() {
         var $inp = $('#cli-search');
@@ -482,7 +558,9 @@ $(document).ready(function() {
 
     // Persist pagelength
     $('#tableAtivosPJ, #tableAtivosPF, #tableInativosPJ, #tableInativosPF').on('length.dt', function(e, s, len) {
-        pagelength(len);
+        if (typeof pagelength === 'function') {
+            pagelength(len);
+        }
     });
 
     $('#cli-search').on('keyup input', function() {
@@ -498,5 +576,6 @@ $(document).ready(function() {
         updateSearchModeUi();
         redrawActiveTable();
     }
-});
+    }); // ready
+})(); // IIFE Clientes index
 </script>

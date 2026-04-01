@@ -80,7 +80,7 @@
 		</ul>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente">
-					<?=  $this->Form->create($cliente, ['class' => 'form-material']) ?>
+					<?=  $this->Form->create($cliente, ['class' => 'form-material', 'id' => 'form-edit-cliente']) ?>
 						<div class="row">
 							<div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
 								<label class="control-label text-muted"> Tipo </label>
@@ -917,7 +917,7 @@
 			e.preventDefault();
 			if (confirm('Você confirma a inativação deste cliente no portal e no ERP?')) {
 				$('#inativo').prop('checked', true);
-				$('form').first().submit();
+				$('#form-edit-cliente').submit();
 			}
 		});
 	// Funções auxiliares para e-mails de contato
