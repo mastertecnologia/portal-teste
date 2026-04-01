@@ -128,11 +128,7 @@ class PortalNotificationsController extends AppController {
 			$au = $r->action_url ? (string)$r->action_url : '';
 			$fullUrl = null;
 			if ($au !== '') {
-				if (strpos($au, 'http://') === 0 || strpos($au, 'https://') === 0) {
-					$fullUrl = $au;
-				} else {
-					$fullUrl = Router::url($au, true);
-				}
+				$fullUrl = $this->_absolutizeNotificationActionUrl($au);
 			}
 			$items[] = [
 				'id' => (int)$r->id,
@@ -147,6 +143,54 @@ class PortalNotificationsController extends AppController {
 		}
 
 		return $this->response->withStringBody(json_encode(['items' => $items], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * action_url no BD costuma ser caminho absoluto no host já com o base da app (ex.: /portal/clicontratos/edit/1),
+	 * gerado por Router::url([...], false) em web ou cron. Router::url($au, true) duplicaria o prefixo
+	 * (…/portal/portal/… → MissingController Portal).
+	 */
+	protected function _absolutizeNotificationActionUrl(string $au): string {
+		$au = trim($au);
+		if ($au === '') {
+			return '';
+		}
+		if (preg_match('#^https?://#i', $au)) {
+			return $this->_stripDuplicateAppBaseInUrl($au);
+		}
+		$fullBase = rtrim((string)Router::fullBaseUrl(), '/');
+		if ($au[0] !== '/') {
+			return Router::url($au, true);
+		}
+		$p = parse_url($fullBase);
+		$scheme = $p['scheme'] ?? 'http';
+		$host = $p['host'] ?? '';
+		if ($host === '') {
+			return Router::url($au, true);
+		}
+		$port = !empty($p['port']) ? ':' . $p['port'] : '';
+		$origin = $scheme . '://' . $host . $port;
+		$basePath = isset($p['path']) ? rtrim($p['path'], '/') : '';
+
+		if ($basePath !== '' && (strpos($au, $basePath . '/') === 0 || $au === $basePath)) {
+			return $this->_stripDuplicateAppBaseInUrl($origin . $au);
+		}
+
+		return $this->_stripDuplicateAppBaseInUrl($fullBase . $au);
+	}
+
+	/**
+	 * Remove padrão /{base}/{base}/ quando fullBaseUrl já foi aplicado por engano.
+	 */
+	protected function _stripDuplicateAppBaseInUrl(string $url): string {
+		$p = parse_url(Router::fullBaseUrl());
+		$basePath = isset($p['path']) ? trim($p['path'], '/') : '';
+		if ($basePath === '') {
+			return $url;
+		}
+		$dup = '/' . $basePath . '/' . $basePath . '/';
+
+		return strpos($url, $dup) !== false ? str_replace($dup, '/' . $basePath . '/', $url) : $url;
 	}
 
 	public function markRead($id = null) {
