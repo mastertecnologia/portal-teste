@@ -14,8 +14,14 @@
 	$pessoaFisica = $cliente->tipo == C_ClientesTipoFisica ? '' : 'hide';
 	$pessoaJuridica = $cliente->tipo == C_ClientesTipoJuridica ? '' : 'hide';
 
-	if($role == 1) $disabled = "disabled";
-	else $disabled = null;
+	// Equipe = não é portal cliente (C_RoleFuncionario pode ≠ 0 numérico; evita sumir abas Contratos/Token).
+	$isClientePortal = isset($role) && (int)$role === (int)C_RoleCliente;
+	$isEquipe = !$isClientePortal;
+	if ($isClientePortal) {
+		$disabled = 'disabled';
+	} else {
+		$disabled = null;
+	}
 
 ?>
 <style>
@@ -71,7 +77,7 @@
 				<h1><?= h($cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?: $cliente->nomefantasia)) ?></h1>
 				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
 			</div>
-			<?php if ($role == 0): ?>
+			<?php if ($isEquipe): ?>
 				<div class="d-flex align-items-center flex-wrap" style="gap:8px;">
 					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente']) ?>
 					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]) ?>
@@ -82,10 +88,10 @@
 		<!-- Tab nav -->
 		<ul class="nav cli-tabs-nav" role="tablist">
 			<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#cliente" role="tab"><i class="fas fa-user"></i> Cliente</a></li>
-			<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#<?= $role == 1 ? 'acessosCliente' : 'acessos' ?>" role="tab"><i class="fas fa-desktop"></i> Acessos</a></li><?php } ?>
-			<?php if($role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usuarios" role="tab"><i class="fas fa-users"></i> Usuários</a></li><?php } ?>
-			<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contratos" role="tab"><i class="fas fa-file-contract"></i> Contratos</a></li><?php } ?>
-			<?php if($permissaoacesso || $role == 0){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#token" role="tab"><i class="fas fa-key"></i> Token</a></li><?php } ?>
+			<?php if($isEquipe || !empty($permissaoacesso)){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#<?= $isClientePortal ? 'acessosCliente' : 'acessos' ?>" role="tab"><i class="fas fa-desktop"></i> Acessos</a></li><?php } ?>
+			<?php if($isEquipe){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#usuarios" role="tab"><i class="fas fa-users"></i> Usuários</a></li><?php } ?>
+			<?php if($isEquipe || !empty($permissaoacesso)){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contratos" role="tab"><i class="fas fa-file-contract"></i> Contratos</a></li><?php } ?>
+			<?php if($isEquipe || !empty($permissaoacesso)){ ?><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#token" role="tab"><i class="fas fa-key"></i> Token</a></li><?php } ?>
 		</ul>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente">
@@ -117,7 +123,7 @@
 								</div>
 							</div>
 						</div>
-						<?php if($role == 0){ ?>
+						<?php if($isEquipe){ ?>
 						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
 							<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
 								<div class="form-group">
@@ -251,7 +257,7 @@
 								</div>
 							</div>
 						</div>
-						<?php if($role == 0){ ?>
+						<?php if($isEquipe){ ?>
 							<div class="row">
 								<div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
 									<div class="form-group">
@@ -295,9 +301,9 @@
 						<?php } ?>
 					<?= $this->Form->end(); ?>
 				</div>
-				<?php if($permissaoacesso || $role == 0){ ?>
+				<?php if($isEquipe || !empty($permissaoacesso)){ ?>
 				<div class="tab-pane" id="acessos">
-					<?php if ($role == 0) { ?>
+					<?php if ($isEquipe) { ?>
 						<?= $this->Form->create(null, ['class' => 'form-material m-t-10', 'url' => ['controller' => 'Users', 'action' => 'permissaoacesso']]); ?>
 							<div class="row">
 								<div class="col-md-4 col-xs-12">
@@ -377,7 +383,7 @@
 								<th>Protocolo</th>
 								<th>Senha</th>
 								<th>Ativo</th>
-								<?php if ($role == 0) { ?> <th style="width:10%">Ações</th> <?php } ?>
+								<?php if ($isEquipe) { ?> <th style="width:10%">Ações</th> <?php } ?>
 								</tr>
 							</thead>
 							<tbody>
@@ -395,7 +401,7 @@
 										<td><?= $reg->protocolo ?></td>
 										<td><a class="link senha" data-id="<?=$reg->id?>" href="#"> ********** </a></td>
 										<td> <?= $reg->inativo ? 'Não' : 'Sim'; ?></td>
-										<?php if ($role == 0) { ?>
+										<?php if ($isEquipe) { ?>
 											<td class="td-actions">
 												<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "cliacessos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
 												<?php if($admin) echo $this->Html->link('<i class="fa fa-times"></i>', ["controller" => "cliacessos", "action" => "delete", $reg->id], ['confirm' => 'Você confirma a exclusão deste acesso?', 'rel' => 'tooltip', 'title' => 'Excluir', 'class' => 'btn btn-danger btn-simple btn-xs', 'escape' => false]) ?>
@@ -407,7 +413,7 @@
 						</table>
 					</div>
 				</div>
-				<?php } if($role == 0){ ?>
+				<?php } if($isEquipe){ ?>
 				<div class="tab-pane" id="usuarios">
 					<div class="table-responsive">
 						<table class="table table-hover" id="tableUsers">
@@ -440,9 +446,9 @@
 						</table>
 					</div>
 				</div>
-				<?php } if($permissaoacesso || $role == 0){ ?>
+				<?php } if($isEquipe || !empty($permissaoacesso)){ ?>
 				<div class="tab-pane" id="contratos">
-					<?php if ($role == 0) : ?>
+					<?php if ($isEquipe) : ?>
 					<?= $this->Html->link('Cadastrar item', ['controller' => 'Clicontratos', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success  m-r-5 m-b-20']) ?>
 					<?= $this->Html->link('Contratos de Horas Técnicas', ['controller' => 'ContratosHoras', 'action' => 'index', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-b-20']) ?>
 					<?= $this->Html->link('Cadastrar Contrato de Horas', ['controller' => 'ContratosHoras', 'action' => 'add', $cliente->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5 m-b-20']) ?>
@@ -482,7 +488,7 @@
 						</table>
 					</div>
 				</div>
-				<?php } if($role == 1 ){ ?>
+				<?php } if($isClientePortal ){ ?>
 				<div class="tab-pane" id="acessosCliente">
 					<div class="table-responsive">
 						<table class="table table-hover" id="tableAcessosClientes">
@@ -492,7 +498,7 @@
 								<th>Usuário</th>
 								<th>Senha</th>
 								<th>Ativo</th>
-								<?php if ($role == 0) echo '<th>Ações</th>' ; ?>
+								<?php if ($isEquipe) echo '<th>Ações</th>' ; ?>
 							</thead>
 							<tbody>
 								<?php foreach ($acessos as $reg):
@@ -505,7 +511,7 @@
 										<td><?= $reg->usuario ?></td>
 										<td><a class="link senha cli-senha-mask" data-id="<?=$reg->id?>" href="#" title="Clique para revelar">••••••••</a></td>
 										<td> <?= $reg->inativo == 1 ? 'Não' : 'Sim'; ?></td>
-										<?php if ($role == 0) { ?>
+										<?php if ($isEquipe) { ?>
 										<td class="td-actions">
 											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "cliacessos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false]) ?>
 											<?php if($admin){ ?>
@@ -519,12 +525,12 @@
 						</table>
 					</div>
 				</div>
-				<?php }if($permissaoacesso || $role == 0){ ?>
+				<?php }if($isEquipe || !empty($permissaoacesso)){ ?>
 				<div class="tab-pane" id="token">
 					<div class="cli-section-title">Token de Integração API</div>
 					<div class="cli-token-box" id="token-display"><?= h($cliente->token) ?></div>
 					<p class="cli-token-note">Este token é utilizado para autenticar integrações externas com a API do portal. Mantenha-o em segurança.</p>
-					<?php if($role == 0) { ?>
+					<?php if($isEquipe) { ?>
 					<div class="mt-3">
 						<?= $this->Html->link('<i class="fas fa-sync-alt"></i> Atualizar Token', [], ['class' => 'btn-atualizaToken btn btn-sm btn-outline-warning salvarcliente', 'escape' => false]) ?>
 					</div>
@@ -555,7 +561,7 @@
 			<div class="cli-sf-token">
 				<strong>Token:</strong> <?= h($cliFooter['token_note']) ?>
 			</div>
-			<?php if ($role == 0): ?>
+			<?php if ($isEquipe): ?>
 			<div class="text-md-right" style="min-width:200px;">
 				<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['escape' => false, 'class' => 'mr-2']) ?>
 				<?= $this->Html->link('<i class="fas fa-sliders-h"></i> Preferências de alertas', ['controller' => 'PortalNotifications', 'action' => 'preferences'], ['escape' => false]) ?>
@@ -678,7 +684,7 @@
 			}
 		}
 	// Disabled 
-		<?php if($role == 1) { ?> 	disabled = true;
+		<?php if($isClientePortal) { ?> 	disabled = true;
 		<?php } else { ?>			disabled = false; <?php } ?>
 
 	// Masks e Datatable 
