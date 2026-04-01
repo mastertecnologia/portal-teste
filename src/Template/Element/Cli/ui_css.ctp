@@ -35,4 +35,58 @@
 .cli-ficha-loading__box{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:12px;background:#161b22;border:1px solid #30363d;color:#e6edf3;font-size:.88rem;font-weight:600;}
 .cli-ficha-loading__spin{width:22px;height:22px;border:2px solid #30363d;border-top-color:#00c08b;border-radius:50%;animation:cliSpin .7s linear infinite;}
 @keyframes cliSpin{to{transform:rotate(360deg);}}
+/*
+ * pgm-theme-light.css usa .form-control { … !important } — anula o visual da ficha.
+ * pgm-portal-client (premium) também estiliza .form-control; reforçamos a ficha nos dois.
+ */
+body.pgm-theme-light #form-edit-cliente input.form-control,
+body.pgm-theme-light #form-edit-cliente textarea.form-control,
+body.pgm-theme-light #form-edit-cliente select.form-control,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente input.form-control,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente textarea.form-control,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente select.form-control{
+	background:#21262d!important;border-color:#30363d!important;color:#e6edf3!important;border-radius:8px!important;
+}
+body.pgm-theme-light #form-edit-cliente input.form-control:focus,
+body.pgm-theme-light #form-edit-cliente textarea.form-control:focus,
+body.pgm-theme-light #form-edit-cliente select.form-control:focus,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente input.form-control:focus,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente textarea.form-control:focus,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente select.form-control:focus{
+	border-color:#00c08b!important;box-shadow:0 0 0 2px rgba(0,192,139,.22)!important;
+}
+body.pgm-theme-light #form-edit-cliente input.form-control[readonly],
+body.pgm-theme-light #form-edit-cliente textarea.form-control[readonly],
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente input.form-control[readonly],
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente textarea.form-control[readonly]{
+	background:#21262d!important;border-color:#30363d!important;color:#e6edf3!important;cursor:default!important;
+}
+body.pgm-theme-light #form-edit-cliente .bootstrap-select > .dropdown-toggle,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente .bootstrap-select > .dropdown-toggle{
+	background:#21262d!important;border-color:#30363d!important;color:#e6edf3!important;
+}
+body.pgm-theme-light #form-edit-cliente .bootstrap-select > .dropdown-toggle:focus,
+body.pgm-theme-light #form-edit-cliente .bootstrap-select.open > .dropdown-toggle,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente .bootstrap-select > .dropdown-toggle:focus,
+body.layout-no-topbar.pgm-portal-client #form-edit-cliente .bootstrap-select.open > .dropdown-toggle{
+	border-color:#00c08b!important;box-shadow:0 0 0 2px rgba(0,192,139,.22)!important;
+}
+body.pgm-theme-light .cli-modal-cmp textarea.form-control,
+body.pgm-theme-light .cli-modal-cmp input.form-control,
+body.layout-no-topbar.pgm-portal-client .cli-modal-cmp textarea.form-control,
+body.layout-no-topbar.pgm-portal-client .cli-modal-cmp input.form-control{
+	background:#21262d!important;border-color:#30363d!important;color:#e6edf3!important;
+}
+body.pgm-theme-light .cli-modal-cmp textarea.form-control:focus,
+body.pgm-theme-light .cli-modal-cmp input.form-control:focus,
+body.layout-no-topbar.pgm-portal-client .cli-modal-cmp textarea.form-control:focus,
+body.layout-no-topbar.pgm-portal-client .cli-modal-cmp input.form-control:focus{
+	border-color:#00c08b!important;box-shadow:0 0 0 2px rgba(0,192,139,.22)!important;
+}
+body.pgm-theme-light .cli-cmp-label,
+body.pgm-theme-light .cli-cmp-label--row span,
+body.layout-no-topbar.pgm-portal-client .cli-cmp-label,
+body.layout-no-topbar.pgm-portal-client .cli-cmp-label--row span{color:#8b949e!important;}
+body.pgm-theme-light .cli-cmp-label--row,
+body.layout-no-topbar.pgm-portal-client .cli-cmp-label--row{color:#c9d1d9!important;}
 </style>
