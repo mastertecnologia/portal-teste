@@ -4,6 +4,10 @@ namespace App\Controller;
 use Cake\Database\Expression\QueryExpression;
 
 require_once ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+$ticketConstantsFile = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'TicketConstants.php';
+if (is_file($ticketConstantsFile)) {
+	require_once $ticketConstantsFile;
+}
 
 /**
  * Relatórios e Indicadores (ERP interno).
@@ -489,11 +493,16 @@ class RelatoriosController extends AppController {
 	 * @return array<int,array<string,string>>
 	 */
 	protected function _relatoriosSitLabels() {
+		$pend = defined('C_TicketSituacaoPendente') ? (int)C_TicketSituacaoPendente : 0;
+		$em = defined('C_TicketSituacaoEmandamento') ? (int)C_TicketSituacaoEmandamento : 1;
+		$res = defined('C_TicketSituacaoResolvido') ? (int)C_TicketSituacaoResolvido : 2;
+		$fec = defined('C_TicketSituacaoFechado') ? (int)C_TicketSituacaoFechado : 3;
+
 		return [
-			(int)C_TicketSituacaoPendente => 'Pendente',
-			(int)C_TicketSituacaoEmandamento => 'Em andamento',
-			(int)C_TicketSituacaoResolvido => 'Resolvido',
-			(int)C_TicketSituacaoFechado => 'Fechado',
+			$pend => 'Pendente',
+			$em => 'Em andamento',
+			$res => 'Resolvido',
+			$fec => 'Fechado',
 		];
 	}
 
