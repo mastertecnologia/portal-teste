@@ -7,6 +7,9 @@
 	$osOpen = ($ctrl === 'Ordensservico');
 	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
 	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
+	$ticketsOpen = ($ctrl === 'Tickets' || $ctrl === 'Servicedesk');
+	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
+	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 	$roleNav = (int)($role ?? 1);
 
 	$nameTrim = trim((string)($name ?? ''));
@@ -138,12 +141,26 @@
 					</ul>
 				</li>
 
-				<li class="<?= $ticketsActive ?>">
-					<?= $this->Html->link(
-						'<i class="fas fa-ticket-alt"></i><span class="hide-menu"> Tickets </span>',
-						['controller' => 'Servicedesk', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'aria-label' => 'Tickets', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
-					) ?>
+				<li class="pgm-ng <?= h($ticketsActive) ?> <?= $ticketsOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $ticketsOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $ticketsOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-ticket-alt ni-ico-fa"></i>
+						<span class="hide-menu">Tickets</span>
+						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Service Desk</span>',
+							['controller' => 'Servicedesk', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($ticketsServicedeskActive ? 'act' : ''), 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer', 'aria-label' => 'Service Desk']
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Histórico de atendimentos</span>',
+							['controller' => 'Tickets', 'action' => 'historico'],
+							['class' => 'pgm-nch ' . ($ticketsHistoricoActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Histórico de atendimentos']
+						) ?></li>
+					</ul>
 				</li>
 
 				<li class="pgm-nav-section-label" aria-hidden="true"><span>Operações</span></li>

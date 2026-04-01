@@ -417,6 +417,273 @@ class TicketsController extends AppController {
 		$this->set('responsaveisMap', $responsaveisMap);
 	}
 
+	/** @var int */
+	protected $_historicoLimiteLista = 500;
+
+	protected function _historicoParseBrDate($s) {
+		if ($s === null) {
+			return null;
+		}
+		$s = trim((string)$s);
+		if ($s === '') {
+			return null;
+		}
+		if (!preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $s, $m)) {
+			return null;
+		}
+		$d = (int)$m[1];
+		$mo = (int)$m[2];
+		$y = (int)$m[3];
+		if (!checkdate($mo, $d, $y)) {
+			return null;
+		}
+
+		return \DateTimeImmutable::createFromFormat('!Y-n-j', sprintf('%04d-%d-%d', $y, $mo, $d));
+	}
+
+	/**
+	 * Filtros do histórico (GET). Sem datas informadas: últimos 60 dias.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function _historicoFiltrosFromRequest() {
+		$req = $this->request->getQueryParams();
+		$iniStr = isset($req['periodo_ini']) ? trim((string)$req['periodo_ini']) : '';
+		$fimStr = isset($req['periodo_fim']) ? trim((string)$req['periodo_fim']) : '';
+		$dtIni = $this->_historicoParseBrDate($iniStr);
+		$dtFim = $this->_historicoParseBrDate($fimStr);
+		$periodoPadrao = false;
+		if ($dtIni === null && $dtFim === null) {
+			$periodoPadrao = true;
+			$dtFim = new \DateTimeImmutable('today');
+			$dtIni = $dtFim->modify('-60 days');
+		} elseif ($dtIni === null) {
+			$dtIni = $dtFim->modify('-60 days');
+		} elseif ($dtFim === null) {
+			$dtFim = new \DateTimeImmutable('today');
+		}
+		if ($dtIni > $dtFim) {
+			$t = $dtIni;
+			$dtIni = $dtFim;
+			$dtFim = $t;
+		}
+
+		$sit = null;
+		if (isset($req['situacao']) && $req['situacao'] !== '') {
+			$si = (int)$req['situacao'];
+			$permitidas = [
+				(int)C_TicketSituacaoPendente,
+				(int)C_TicketSituacaoEmandamento,
+				(int)C_TicketSituacaoResolvido,
+				(int)C_TicketSituacaoFechado,
+			];
+			if (in_array($si, $permitidas, true)) {
+				$sit = $si;
+			}
+		}
+
+		$idCliente = null;
+		if (isset($req['idcliente']) && $req['idcliente'] !== '' && ctype_digit((string)$req['idcliente'])) {
+			$cid = (int)$req['idcliente'];
+			if ($cid > 0) {
+				$idCliente = $cid;
+			}
+		}
+
+		$q = isset($req['q']) ? trim((string)$req['q']) : '';
+
+		return [
+			'created_start' => $dtIni->format('Y-m-d') . ' 00:00:00',
+			'created_end' => $dtFim->format('Y-m-d') . ' 23:59:59',
+			'situacao' => $sit,
+			'idcliente' => $idCliente,
+			'q' => $q,
+			'periodo_padrao' => $periodoPadrao,
+		];
+	}
+
+	/**
+	 * Clientes ativos visíveis ao usuário (ABAC), para o filtro.
+	 *
+	 * @return array<int,string>
+	 */
+	protected function _historicoClientesList() {
+		$clientesFis = $this->Clientes->find('all')
+			->where(['AND' => ['inativo' => '0', 'tipo' => '1']])
+			->order(['nome']);
+		$this->Abac->applyToQuery($clientesFis, 'Clientes');
+		$clientesJur = $this->Clientes->find('all')
+			->where(['AND' => ['inativo' => '0', 'tipo' => '2']])
+			->order(['razaosocial']);
+		$this->Abac->applyToQuery($clientesJur, 'Clientes');
+		$list = [];
+		foreach ($clientesJur->all() as $reg) {
+			$list[(int)$reg->id] = (string)$reg->razaosocial;
+		}
+		foreach ($clientesFis->all() as $reg) {
+			$list[(int)$reg->id] = (string)$reg->nome;
+		}
+
+		return $list;
+	}
+
+	/**
+	 * Busca livre: assunto/descrição, id numérico, autor ou nome de cliente (subconsultas com ABAC).
+	 *
+	 * @param \Cake\ORM\Query $query
+	 * @param string $qraw
+	 */
+	protected function _historicoApplyBuscaSubquery($query, $qraw) {
+		$t = trim((string)$qraw);
+		if ($t === '') {
+			return;
+		}
+		$term = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t) . '%';
+		$cols = $this->Tickets->getSchema()->columns();
+		$parts = [['Tickets.assunto LIKE' => $term]];
+		if (in_array('solicitacao', $cols, true)) {
+			$parts[] = ['Tickets.solicitacao LIKE' => $term];
+		}
+		if (ctype_digit($t)) {
+			$parts[] = ['Tickets.id' => (int)$t];
+		}
+
+		$qU = $this->Users->find()->select(['id'])
+			->where(['OR' => [
+				'Users.name LIKE' => $term,
+				'Users.username LIKE' => $term,
+			]]);
+		$this->Abac->applyToQuery($qU, 'Users', 'Users');
+		$uids = [];
+		foreach ($qU->enableHydration(false)->toArray() as $row) {
+			if (!empty($row['id'])) {
+				$uids[] = (int)$row['id'];
+			}
+		}
+		$uids = array_values(array_unique(array_filter($uids)));
+		if (!empty($uids)) {
+			$parts[] = ['Tickets.idautor IN' => $uids];
+		}
+
+		$qC = $this->Clientes->find()->select(['id'])
+			->where(['OR' => [
+				'Clientes.razaosocial LIKE' => $term,
+				'Clientes.nome LIKE' => $term,
+			]]);
+		$this->Abac->applyToQuery($qC, 'Clientes');
+		$cids = [];
+		foreach ($qC->enableHydration(false)->toArray() as $row) {
+			if (!empty($row['id'])) {
+				$cids[] = (int)$row['id'];
+			}
+		}
+		$cids = array_values(array_unique(array_filter($cids)));
+		if (!empty($cids)) {
+			$parts[] = ['Tickets.idcliente IN' => $cids];
+		}
+
+		$query->where(['OR' => $parts]);
+	}
+
+	/**
+	 * Query base do histórico (ABAC + filtros de tela + filtros opcionais de workflow na query string).
+	 *
+	 * @param array<string,mixed> $f
+	 * @param array<string,mixed> $opts
+	 * @return \Cake\ORM\Query
+	 */
+	protected function _historicoQueryComFiltros(array $f, array $opts = []) {
+		$q = $this->Tickets->find();
+		if (!empty($opts['contain'])) {
+			$q->contain($opts['contain']);
+		}
+		$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+		$q->where([
+			'Tickets.created >=' => $f['created_start'],
+			'Tickets.created <=' => $f['created_end'],
+		]);
+		if ($f['situacao'] !== null) {
+			$q->where(['Tickets.situacao' => $f['situacao']]);
+		}
+		if ($f['idcliente'] !== null) {
+			$q->where(['Tickets.idcliente' => $f['idcliente']]);
+		}
+		if ($f['q'] !== '') {
+			$this->_historicoApplyBuscaSubquery($q, $f['q']);
+		}
+		$this->_applyApiIndexWorkflowFilters($q);
+
+		return $q;
+	}
+
+	/**
+	 * @param array<string,mixed> $f
+	 */
+	protected function _historicoKpiSlaPct(array $f) {
+		$cols = $this->Tickets->getSchema()->columns();
+		if (!in_array('sla_status', $cols, true)) {
+			return '—';
+		}
+		$tracked = $this->_historicoQueryComFiltros($f)
+			->where(function (QueryExpression $exp) {
+				return $exp->isNotNull('Tickets.sla_status');
+			})
+			->count();
+		if ($tracked === 0) {
+			return 'n/d';
+		}
+		$viol = $this->_historicoQueryComFiltros($f)
+			->where(['Tickets.sla_status' => 'violado'])
+			->count();
+
+		return (string)(int)round(100 * ($tracked - $viol) / $tracked) . '%';
+	}
+
+	/**
+	 * Histórico de atendimentos (ERP) — listagem com filtros, KPIs e escopo ABAC.
+	 */
+	public function historico() {
+		$this->viewBuilder()->setLayout('default');
+		$this->set('title', 'Histórico de atendimentos');
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+
+		$filtros = $this->_historicoFiltrosFromRequest();
+		$clientesList = $this->_historicoClientesList();
+		if ($filtros['idcliente'] !== null && !isset($clientesList[$filtros['idcliente']])) {
+			$filtros['idcliente'] = null;
+		}
+
+		$total = $this->_historicoQueryComFiltros($filtros)->count();
+		$emExec = $this->_historicoQueryComFiltros($filtros)
+			->where(['Tickets.situacao' => C_TicketSituacaoEmandamento])
+			->count();
+		$finaliz = $this->_historicoQueryComFiltros($filtros)
+			->where(['Tickets.situacao IN' => [C_TicketSituacaoResolvido, C_TicketSituacaoFechado]])
+			->count();
+		$slaPct = $this->_historicoKpiSlaPct($filtros);
+
+		$ticketsHistorico = $this->_historicoQueryComFiltros($filtros, ['contain' => ['users', 'Clientes']])
+			->order(['Tickets.id' => 'DESC'])
+			->limit($this->_historicoLimiteLista)
+			->toArray();
+
+		$this->set('historicoKpis', [
+			'total_periodo' => (string)(int)$total,
+			'em_execucao' => (string)(int)$emExec,
+			'finalizados' => (string)(int)$finaliz,
+			'sla_atendido_pct' => $slaPct,
+		]);
+		$this->set('ticketsHistorico', $ticketsHistorico);
+		$this->set('historicoClientesList', $clientesList);
+		$this->set('historicoPeriodoPadrao', (bool)$filtros['periodo_padrao']);
+		$this->set('historicoQuery', $this->request->getQueryParams());
+		$this->set('historicoTotalMatched', (int)$total);
+		$this->set('historicoLimiteLista', (int)$this->_historicoLimiteLista);
+	}
+
 	/**
 	 * Visualização enxuta para modal (sem menu lateral/abas).
 	 */
