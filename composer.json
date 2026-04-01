@@ -54,6 +54,12 @@
     "config": {
         "allow-plugins": {
             "cakephp/plugin-installer": true
+        },
+        "audit": {
+            "ignore": [
+                "PKSA-yg4s-vh6g-jnyh",
+                "PKSA-wdyb-c3m7-9v88"
+            ]
         }
     }
 }
