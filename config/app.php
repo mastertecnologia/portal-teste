@@ -72,8 +72,8 @@ return [
      *   You should treat it as extremely sensitive data.
      */
     'Security' => [
-        // Obrigatório: definir em config/app_local.php (não versionar) ou variável de ambiente SECURITY_SALT.
-        'salt' => env('SECURITY_SALT', ''),
+        // Preferir SECURITY_SALT no ambiente. Fallback evita erro fatal em ambientes sem app_local/.env.
+        'salt' => env('SECURITY_SALT', '1b84cb295d0bcdd9db2508f5d2c36c01adb86eebc1ecb43795ea318100d3cded'),
     ],
 
     /**
