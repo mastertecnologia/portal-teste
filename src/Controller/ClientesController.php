@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\ClienteDomain\InfrastructureGuard;
+use App\Service\ClienteIntegration\ClienteErpSyncService;
 use App\Utility\ClienteDomainEventType;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
@@ -1106,54 +1107,17 @@ class ClientesController extends AppController {
 		$clienteEnt = $this->_findClienteForCurrentUser($idcliente);
 		if (empty($clienteEnt)) {
 			$this->Flash->error(__('Cliente não encontrado para sincronização.'));
+
 			return;
 		}
-		$cliente = ['Cliente' => $this->Clientes->clientesArr($clienteEnt)];
-
-		$json = json_encode($cliente, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
-		$soap = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WSPGMPessoas.wso?wsdl';
-		try {
-			@$soap = new CakeSoap(['wsdl' => $soap]);
-			if ($soap === null) throw new \Exception('Erro');
-		} catch (\Exception $e) {
-			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_INTEGRACAO_ERRO, [
-				'idcliente' => (int)$idcliente,
-				'idempresa' => (int)$this->Auth->user('idempresa'),
-				'actor_user_id' => (int)$this->Auth->user('id'),
-				'title' => __('Integração ERP indisponível'),
-				'message' => __('Não foi possível acessar o Web Service do ERP para sincronizar o cliente.'),
-				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
-				'entity_type' => 'Cliente',
-				'entity_id' => $idcliente,
-				'metadata' => ['ws_error' => $e->getMessage()],
-			]);
-			$this->Flash->error(__('O WS não pode ser acessado no momento!'));
-			return;
+		$err = ClienteErpSyncService::sincronizarCliente(
+			$clienteEnt,
+			(int)$idcliente,
+			(int)$this->Auth->user('idempresa'),
+			(int)$this->Auth->user('id')
+		);
+		if ($err !== null) {
+			$this->Flash->error($err);
 		}
-	
-		$response = $soap->sendRequest('GerenciaCliente', [
-			'Data' => [
-				'iEmpresa' => $this->Auth->user('idempresa'),
-				'sToken' => $this->Empresas->get($this->Auth->user('idempresa'))->token,
-				'sJSON' => $json,
-			]
-		]);
-
-		if(!in_array($response->GerenciaClienteResult->cStatus, [201, 200])) {
-			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_SINCRONIZACAO_FALHA, [
-				'idcliente' => (int)$idcliente,
-				'idempresa' => (int)$this->Auth->user('idempresa'),
-				'actor_user_id' => (int)$this->Auth->user('id'),
-				'title' => __('Falha na sincronização com o ERP'),
-				'message' => (string)$response->GerenciaClienteResult->sMsg,
-				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
-				'entity_type' => 'Cliente',
-				'entity_id' => $idcliente,
-				'metadata' => ['status' => (string)$response->GerenciaClienteResult->cStatus],
-			]);
-			$this->Flash->error($response->GerenciaClienteResult->sMsg);
-		}
-		// else  $this->Flash->success('Não foi possível sincronizar o cliente com o ERP!');
 	}
 }

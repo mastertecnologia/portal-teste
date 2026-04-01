@@ -32,8 +32,10 @@ class PortalNotificationService {
 			$metaJson = $metadata ? json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
 			$entityIdStr = $entityId !== null && $entityId !== '' ? (string)$entityId : null;
 
+			$wantsInApp = self::_batchWantsInApp($userIds, $eventType);
 			foreach ($userIds as $uid) {
-				if (!self::_userWantsInApp((int)$uid, $eventType)) {
+				$uid = (int)$uid;
+				if ($uid <= 0 || empty($wantsInApp[$uid])) {
 					continue;
 				}
 				$e = $Notif->newEntity([
@@ -79,20 +81,47 @@ class PortalNotificationService {
 		return array_values(array_unique(array_column($active, 'id')));
 	}
 
-	protected static function _userWantsInApp(int $userId, string $eventType): bool {
+	/**
+	 * Preferências in-app em lote (evita N+1). Sem linha salva => default true (igual ao legado).
+	 *
+	 * @param int[] $userIds
+	 * @return array<int,bool> user_id => deseja in-app
+	 */
+	protected static function _batchWantsInApp(array $userIds, string $eventType): array {
+		$ids = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+		$out = [];
+		foreach ($ids as $id) {
+			if ($id > 0) {
+				$out[$id] = true;
+			}
+		}
+		if (empty($out)) {
+			return [];
+		}
 		try {
 			$Prefs = TableRegistry::get('PortalNotificationPreferences');
-			$p = $Prefs->find()
-				->where(['user_id' => $userId, 'event_type' => $eventType])
-				->first();
-			if ($p === null) {
-				return true;
+			$rows = $Prefs->find()
+				->select(['user_id', 'send_in_app'])
+				->where(['user_id IN' => array_keys($out), 'event_type' => $eventType])
+				->enableHydration(false)
+				->toArray();
+			foreach ($rows as $r) {
+				$uid = (int)($r['user_id'] ?? 0);
+				if ($uid > 0) {
+					$out[$uid] = (int)($r['send_in_app'] ?? 0) === 1;
+				}
 			}
-
-			return (int)$p->send_in_app === 1;
 		} catch (\Throwable $e) {
-			return true;
+			return $out;
 		}
+
+		return $out;
+	}
+
+	protected static function _userWantsInApp(int $userId, string $eventType): bool {
+		$m = self::_batchWantsInApp([$userId], $eventType);
+
+		return !empty($m[(int)$userId]);
 	}
 
 	public static function mapEventToNotifType(string $eventType): string {

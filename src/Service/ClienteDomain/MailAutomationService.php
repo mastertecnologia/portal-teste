@@ -18,12 +18,17 @@ class MailAutomationService {
 		if (!InfrastructureGuard::isReady() || empty($userIds)) {
 			return;
 		}
-		foreach ($userIds as $uid) {
-			$uid = (int)$uid;
-			if ($uid <= 0 || !self::_userWantsEmail($uid, $eventType)) {
+		$ids = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+		if (empty($ids)) {
+			return;
+		}
+		$wantsEmail = self::_batchWantsEmail($ids, $eventType);
+		$emails = self::_batchEmailsForUsers($ids);
+		foreach ($ids as $uid) {
+			if ($uid <= 0 || empty($wantsEmail[$uid])) {
 				continue;
 			}
-			$to = self::_emailForUser($uid);
+			$to = $emails[$uid] ?? '';
 			if ($to === '') {
 				continue;
 			}
@@ -31,30 +36,79 @@ class MailAutomationService {
 		}
 	}
 
-	protected static function _userWantsEmail(int $userId, string $eventType): bool {
+	/**
+	 * E-mail habilitado em lote. Sem preferência salva => false (opt-in, igual ao legado).
+	 *
+	 * @param int[] $userIds
+	 * @return array<int,bool>
+	 */
+	protected static function _batchWantsEmail(array $userIds, string $eventType): array {
+		$out = [];
+		foreach ($userIds as $id) {
+			$id = (int)$id;
+			if ($id > 0) {
+				$out[$id] = false;
+			}
+		}
+		if (empty($out)) {
+			return [];
+		}
 		try {
 			$Prefs = TableRegistry::get('PortalNotificationPreferences');
-			$p = $Prefs->find()
-				->where(['user_id' => $userId, 'event_type' => $eventType])
-				->first();
-			if ($p === null) {
-				return false;
+			$rows = $Prefs->find()
+				->select(['user_id', 'send_email'])
+				->where(['user_id IN' => array_keys($out), 'event_type' => $eventType])
+				->enableHydration(false)
+				->toArray();
+			foreach ($rows as $r) {
+				$uid = (int)($r['user_id'] ?? 0);
+				if ($uid > 0) {
+					$out[$uid] = (int)($r['send_email'] ?? 0) === 1;
+				}
 			}
-
-			return (int)$p->send_email === 1;
 		} catch (\Throwable $e) {
-			return false;
+			return $out;
 		}
+
+		return $out;
+	}
+
+	/**
+	 * @param int[] $userIds
+	 * @return array<int,string>
+	 */
+	protected static function _batchEmailsForUsers(array $userIds): array {
+		$out = [];
+		try {
+			$Users = TableRegistry::get('Users');
+			$rows = $Users->find()
+				->select(['id', 'email'])
+				->where(['id IN' => $userIds])
+				->enableHydration(false)
+				->toArray();
+			foreach ($rows as $r) {
+				$id = (int)($r['id'] ?? 0);
+				if ($id > 0) {
+					$out[$id] = trim((string)($r['email'] ?? ''));
+				}
+			}
+		} catch (\Throwable $e) {
+			return $out;
+		}
+
+		return $out;
+	}
+
+	protected static function _userWantsEmail(int $userId, string $eventType): bool {
+		$m = self::_batchWantsEmail([$userId], $eventType);
+
+		return !empty($m[(int)$userId]);
 	}
 
 	protected static function _emailForUser(int $userId): string {
-		try {
-			$u = TableRegistry::get('Users')->get($userId, ['fields' => ['email', 'username']]);
+		$m = self::_batchEmailsForUsers([(int)$userId]);
 
-			return trim((string)($u->email ?? ''));
-		} catch (\Throwable $e) {
-			return '';
-		}
+		return $m[(int)$userId] ?? '';
 	}
 
 	protected static function _sendAndLog(string $eventType, string $to, string $subject, string $htmlBody): void {

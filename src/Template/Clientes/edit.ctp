@@ -695,6 +695,7 @@
 		</div>
 	</div>
 </div>
+<?= $this->Html->script('/js/modules/clientes/cliente-edit.js') ?>
 <script>
 <?= $this->element('Cli/toast_js') ?>
 <?= $this->element('Cli/edit_tabs_js') ?>
@@ -766,9 +767,9 @@
 				document.getElementById('form-edit-cliente').reset();
 				try { $('.selectpicker').selectpicker('refresh'); } catch (e) {}
 				var emailsFaturamentoRaw = $('#email').val() || '';
-				atualizaDisplayEmailsFaturamento(emailsFaturamentoRaw);
+				PgmClienteEditUtils.atualizaDisplayEmailsFaturamento(emailsFaturamentoRaw);
 				var emailsRaw = $('#emailresponsavel').val() || '';
-				atualizaDisplayEmails(emailsRaw);
+				PgmClienteEditUtils.atualizaDisplayEmails(emailsRaw);
 				tipo($("#tipo").val());
 				if ($('#cli-ff-switch-inativo').length && $('#inativo').length) {
 					$('#cli-ff-switch-inativo').prop('checked', $('#inativo').is(':checked'));
@@ -804,7 +805,7 @@
 		});
 		<?php endif; ?>
 
-	// Masks e Datatable 
+	// Máscaras (UX; validação final no servidor — ClientesController / entidades)
 		$(document).ready(function(){
 			$("#cnpj").mask("99.999.999/9999-99");
 			$("#fone").mask("(999) 9999-9999");
@@ -862,18 +863,18 @@
 
 			// Inicializa visualização dos e-mails de faturamento
 			var emailsFaturamentoRaw = $('#email').val() || '';
-			atualizaDisplayEmailsFaturamento(emailsFaturamentoRaw);
+			PgmClienteEditUtils.atualizaDisplayEmailsFaturamento(emailsFaturamentoRaw);
 
 			$('#modal-emails-faturamento').on('show.bs.modal', function () {
-				$('#email_faturamento_editor').val(formataEmailsParaEdicao($('#email').val() || ''));
+				$('#email_faturamento_editor').val(PgmClienteEditUtils.formataEmailsParaEdicao($('#email').val() || ''));
 			});
 
 			$('.btn-salvar-emails-faturamento').click(function(e) {
 				e.preventDefault();
 				var texto = $('#email_faturamento_editor').val() || '';
-				var normalizado = normalizaEmails(texto);
+				var normalizado = PgmClienteEditUtils.normalizaEmails(texto);
 				$('#email').val(normalizado);
-				atualizaDisplayEmailsFaturamento(normalizado);
+				PgmClienteEditUtils.atualizaDisplayEmailsFaturamento(normalizado);
 				$('#modal-emails-faturamento').modal('hide');
 				if (typeof window.cliUiToast === 'function') {
 					window.cliUiToast('E-mails de faturamento atualizados na tela. Use Salvar cliente para gravar no servidor.', 'success');
@@ -882,18 +883,18 @@
 
 			// Inicializa visualização dos e-mails de contato/responsáveis
 			var emailsRaw = $('#emailresponsavel').val() || '';
-			atualizaDisplayEmails(emailsRaw);
+			PgmClienteEditUtils.atualizaDisplayEmails(emailsRaw);
 
 			$('#modal-emails-contato').on('show.bs.modal', function () {
-				$('#emailresponsavel_editor').val(formataEmailsParaEdicao($('#emailresponsavel').val() || ''));
+				$('#emailresponsavel_editor').val(PgmClienteEditUtils.formataEmailsParaEdicao($('#emailresponsavel').val() || ''));
 			});
 
 			$('.btn-salvar-emails-contato').click(function(e) {
 				e.preventDefault();
 				var texto = $('#emailresponsavel_editor').val() || '';
-				var normalizado = normalizaEmails(texto);
+				var normalizado = PgmClienteEditUtils.normalizaEmails(texto);
 				$('#emailresponsavel').val(normalizado);
-				atualizaDisplayEmails(normalizado);
+				PgmClienteEditUtils.atualizaDisplayEmails(normalizado);
 				$('#modal-emails-contato').modal('hide');
 				if (typeof window.cliUiToast === 'function') {
 					window.cliUiToast('E-mails de contato atualizados na tela. Use Salvar cliente para gravar no servidor.', 'success');
@@ -1058,7 +1059,7 @@
 			$.ajax({
 				type:"post",
 				url: "<?= Router::url(['controller'=>'Cliacessos','action'=>'verificasenha']);?>/",
-				data: {id: id, senhaadm: senha, idcliente : idcliente},
+				data: {id: id, senhaadm: senha, idcliente : idcliente, _csrfToken: (window.PgmClienteEditUtils && PgmClienteEditUtils.pgmCsrfToken) ? PgmClienteEditUtils.pgmCsrfToken() : ''},
 				success: function(data){
 					$('#modal-senha').modal('toggle');
 					bootbox.alert(data);
@@ -1085,36 +1086,4 @@
 				$('#form-edit-cliente').submit();
 			}
 		});
-	// Funções auxiliares para e-mails de contato
-		function normalizaEmails(texto) {
-			if (!texto) return '';
-			var partes = texto
-				.replace(/[\r\n]+/g, ';')
-				.split(';')
-				.map(function(p) { return p.trim(); })
-				.filter(function(p) { return p.length > 0; });
-			return partes.join('; ');
-		}
-
-		function formataEmailsParaEdicao(texto) {
-			if (!texto) return '';
-			return texto.split(';').map(function(p){ return p.trim(); }).filter(function(p){ return p.length > 0; }).join('\n');
-		}
-
-		function atualizaDisplayEmails(texto) {
-			if (!texto) {
-				$('#emailresponsavel_display').val('');
-				$('#emailresponsavel_display').attr('placeholder', 'Nenhum e-mail de contato cadastrado');
-				return;
-			}
-			$('#emailresponsavel_display').val(texto.replace(/;/g, '; '));
-		}
-		function atualizaDisplayEmailsFaturamento(texto) {
-			if (!texto) {
-				$('#email_faturamento_display').val('');
-				$('#email_faturamento_display').attr('placeholder', 'Nenhum e-mail de faturamento cadastrado');
-				return;
-			}
-			$('#email_faturamento_display').val(texto.replace(/;/g, '; '));
-		}
 </script>
