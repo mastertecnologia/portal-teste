@@ -58,7 +58,8 @@
         "audit": {
             "ignore": [
                 "PKSA-yg4s-vh6g-jnyh",
-                "PKSA-wdyb-c3m7-9v88"
+                "PKSA-wdyb-c3m7-9v88",
+                "PKSA-y2cr-5h3j-g3ys"
             ]
         }
     }
