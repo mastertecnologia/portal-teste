@@ -51,6 +51,13 @@ return [
 			'clicontratos#listapi',
 			// JSON de catálogo (mesma regra que solicitar; gate em OrcamentosController::beforeFilter)
 			'orcamentos#catalogosugestoes',
+			// Notificações internas (JSON; equipe autenticada)
+			'portalnotifications#unreadcount',
+			'portalnotifications#listjson',
+			'portalnotifications#markread',
+			'portalnotifications#markallread',
+			'portalnotifications#preferences',
+			'portalnotifications#savepreferences',
 		],
 		// Em modo warn, também exibir Flash (pode ser repetitivo)
 		'warn_flash' => false,

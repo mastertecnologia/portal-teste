@@ -5,6 +5,14 @@
 	<?= $this->Html->charset() ?>
 	<?php use Cake\Routing\Router; ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+	<?php
+	$csrf = $this->request->getAttribute('csrfToken');
+	if (!$csrf && method_exists($this->request, 'getParam')) {
+		$csrf = $this->request->getParam('_csrfToken');
+	}
+	if ($csrf): ?>
+	<meta name="csrfToken" content="<?= h($csrf) ?>">
+	<?php endif; ?>
     <meta name="description" content="Portal PGM">
     <meta name="author" content="Grid Sistemas">
 

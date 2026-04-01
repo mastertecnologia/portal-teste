@@ -2,11 +2,14 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\Ticket\DashboardService;
+use App\Utility\ClienteDomainEventType;
 use App\Utility\RbacClientePortal;
 use App\Utility\SupportInboxMail;
 use Cake\Event\Event;
 use Cake\Http\Response;
+use Cake\Routing\Router;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -1650,6 +1653,16 @@ class UsersController extends AppController {
 					RbacClientePortal::syncUserIfEligible((int)$user->id);
 				}
 			}
+			ClienteDomainBridge::emit(ClienteDomainEventType::USUARIO_VINCULADO_CLIENTE, [
+				'idcliente' => (int)$data['idcliente'],
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Permissões de acesso ao cliente atualizadas'),
+				'message' => __('Usuários com acesso a senhas/contratos/token foram atualizados para este cliente.'),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $data['idcliente']]),
+				'entity_type' => 'Cliente',
+				'entity_id' => (int)$data['idcliente'],
+			]);
 			$this->Flash->success(__('Os usuários foram salvos.'));
 			return $this->redirect(['controller' => 'Clientes', 'action' => 'edit', $data['idcliente']]);
 		}

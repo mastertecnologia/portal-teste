@@ -2,7 +2,12 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\ClienteDomain\ClienteDomainBridge;
+use App\Service\ClienteDomain\InfrastructureGuard;
+use App\Utility\ClienteDomainEventType;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
 use CakeSoap\Network\CakeSoap;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -221,6 +226,17 @@ class ClientesController extends AppController {
 				if ($this->Clientes->save($cliente)) {
 					$this->sincronizacliente($cliente->id);
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $cliente->id);
+					$nomeCli = $cliente->tipo == C_ClientesTipoFisica ? ($cliente->nome ?? '') : ($cliente->razaosocial ?? '');
+					ClienteDomainBridge::emit(ClienteDomainEventType::CLIENTE_CRIADO, [
+						'idcliente' => (int)$cliente->id,
+						'idempresa' => (int)$this->Auth->user('idempresa'),
+						'actor_user_id' => (int)$this->Auth->user('id'),
+						'title' => __('Cliente cadastrado'),
+						'message' => __('Novo cliente: {0}', $nomeCli),
+						'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $cliente->id]),
+						'entity_type' => 'Cliente',
+						'entity_id' => $cliente->id,
+					]);
 					$this->Flash->success(__('O cliente foi salvo.'));
 					return $this->redirect(['action' => 'index']);
 				}
@@ -289,6 +305,17 @@ class ClientesController extends AppController {
 			if ($this->Clientes->save($cliente)) {
 				$this->sincronizacliente($id);
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $cliente->id);
+				$nomeCli = $cliente->tipo == C_ClientesTipoFisica ? ($cliente->nome ?? '') : ($cliente->razaosocial ?? '');
+				ClienteDomainBridge::emit(ClienteDomainEventType::CLIENTE_ATUALIZADO, [
+					'idcliente' => (int)$cliente->id,
+					'idempresa' => (int)$this->Auth->user('idempresa'),
+					'actor_user_id' => (int)$this->Auth->user('id'),
+					'title' => __('Cliente atualizado'),
+					'message' => __('Cadastro alterado: {0}', $nomeCli),
+					'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $cliente->id]),
+					'entity_type' => 'Cliente',
+					'entity_id' => $cliente->id,
+				]);
 
 				$this->Flash->success(__('O cliente foi salvo.'));
 				return $this->redirect(['action' => 'edit', $cliente->id]);
@@ -304,8 +331,41 @@ class ClientesController extends AppController {
 		$acessos = $this->Cliacessos->find('all')->order(['nome'])->where(['idcliente' => $id])->toArray();
 		$contratos = $this->Clicontratos->find('all')->where(['idcliente' => $id])->toArray();
 
+		$cliFooter = [
+			'status_label' => $cliente->inativo ? 'Inativo' : 'Ativo',
+			'status_class' => $cliente->inativo ? 'danger' : 'success',
+			'contratos_total' => count($contratos),
+			'contratos_vencidos' => 0,
+			'contratos_vencendo30' => 0,
+			'token_note' => 'Renove o token de integração periodicamente; não há data de validade cadastrada no sistema.',
+		];
+		$todayStr = (new \DateTimeImmutable('today'))->format('Y-m-d');
+		$lim30 = (new \DateTimeImmutable('today'))->add(new \DateInterval('P30D'))->format('Y-m-d');
+		foreach ($contratos as $c) {
+			if (!empty($c->dtcancelamento)) {
+				continue;
+			}
+			$raw = $c->dtvalidade ?? null;
+			$dv = null;
+			if ($raw instanceof \DateTimeInterface) {
+				$dv = $raw->format('Y-m-d');
+			} elseif (is_string($raw) && $raw !== '') {
+				$t = strtotime($raw);
+				$dv = $t ? date('Y-m-d', $t) : null;
+			}
+			if ($dv === null) {
+				continue;
+			}
+			if ($dv < $todayStr) {
+				$cliFooter['contratos_vencidos']++;
+			} elseif ($dv <= $lim30) {
+				$cliFooter['contratos_vencendo30']++;
+			}
+		}
+
 		$this->set('acessos', $acessos);
 		$this->set('contratos', $contratos);
+		$this->set('cliFooter', $cliFooter);
 		// UF do contribuinte (para consulta IE na edição): a partir da cidade do cliente
 		$ufContribuinte = null;
 		if (!empty($cliente->idcidade)) {
@@ -322,6 +382,40 @@ class ClientesController extends AppController {
 		$this->set('cliente', $cliente);	
 		$this->set('usuarios', $usuarios);	
 		$this->set('usuariosValue', $usuariosValue);	
+	}
+
+	/**
+	 * Histórico de eventos do domínio cliente (timeline; requer migration portal).
+	 */
+	public function eventos($id = null) {
+		if ($this->Auth->user('role') == 1) {
+			$this->Flash->error('Você não possui permissões para acessar esta página.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		$cliente = $this->_findClienteForCurrentUser($id);
+		if (empty($cliente)) {
+			$this->Flash->error(__('Cliente não encontrado ou sem permissão.'));
+			return $this->redirect(['action' => 'index']);
+		}
+		$titlenome = $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial;
+		$this->set('title', 'Histórico — ' . $titlenome);
+		$this->set('hideLayoutPageTitle', true);
+
+		$events = [];
+		if (InfrastructureGuard::isReady()) {
+			try {
+				$events = TableRegistry::get('ClientDomainEvents')
+					->find()
+					->where(['idcliente' => (int)$id])
+					->order(['created' => 'DESC'])
+					->limit(200)
+					->toArray();
+			} catch (\Throwable $e) {
+				$events = [];
+			}
+		}
+		$this->set(compact('cliente', 'events'));
+		$this->set('domainEventsReady', InfrastructureGuard::isReady());
 	}
 
 	public function cidadesestado($idcidade){
@@ -375,6 +469,17 @@ class ClientesController extends AppController {
 		if ($this->Clientes->save($cliente)) {
 			$this->sincronizacliente($id);
 			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $id);
+			$nomeCli = $cliente->tipo == C_ClientesTipoFisica ? ($cliente->nome ?? '') : ($cliente->razaosocial ?? '');
+			ClienteDomainBridge::emit(ClienteDomainEventType::CLIENTE_ATIVADO, [
+				'idcliente' => (int)$id,
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Cliente reativado'),
+				'message' => __('Cliente ativo novamente: {0}', $nomeCli),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $id]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $id,
+			]);
 			$this->Flash->success('O cliente foi reativado com sucesso!');
 		} else {
 			$this->Flash->error('Não foi possível reativar o cliente.');
@@ -403,6 +508,17 @@ class ClientesController extends AppController {
 		if ($this->Clientes->save($cliente)) {
 			$this->sincronizacliente($id);
 			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $id);
+			$nomeCli = $cliente->tipo == C_ClientesTipoFisica ? ($cliente->nome ?? '') : ($cliente->razaosocial ?? '');
+			ClienteDomainBridge::emit(ClienteDomainEventType::CLIENTE_INATIVADO, [
+				'idcliente' => (int)$id,
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Cliente inativado'),
+				'message' => __('Cliente inativado: {0}', $nomeCli),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $id]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $id,
+			]);
 			$this->Flash->success('O cliente foi inativado com sucesso!');
 		} else {
 			$this->Flash->error('Não foi possível inativar o cliente.');
@@ -685,6 +801,16 @@ class ClientesController extends AppController {
 		// Atualiza o token
 		$cliente->token = $this->Clientes->generateToken($string);
 		if($this->Clientes->save($cliente)){
+			ClienteDomainBridge::emit(ClienteDomainEventType::TOKEN_GERADO, [
+				'idcliente' => (int)$idcliente,
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Token do cliente renovado'),
+				'message' => __('Foi gerado um novo token de integração para este cliente.'),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $idcliente,
+			]);
 			$this->Flash->success(__('O token foi atualizado com sucesso.'));
 			return $this->redirect(['action' => 'edit', $idcliente]);
 		}
@@ -925,6 +1051,17 @@ class ClientesController extends AppController {
 			@$soap = new CakeSoap(['wsdl' => $soap]);
 			if ($soap === null) throw new \Exception('Erro');
 		} catch (\Exception $e) {
+			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_INTEGRACAO_ERRO, [
+				'idcliente' => (int)$idcliente,
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Integração ERP indisponível'),
+				'message' => __('Não foi possível acessar o Web Service do ERP para sincronizar o cliente.'),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $idcliente,
+				'metadata' => ['ws_error' => $e->getMessage()],
+			]);
 			$this->Flash->error(__('O WS não pode ser acessado no momento!'));
 			return;
 		}
@@ -937,7 +1074,20 @@ class ClientesController extends AppController {
 			]
 		]);
 
-		if(!in_array($response->GerenciaClienteResult->cStatus, [201, 200])) $this->Flash->error($response->GerenciaClienteResult->sMsg);
+		if(!in_array($response->GerenciaClienteResult->cStatus, [201, 200])) {
+			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_SINCRONIZACAO_FALHA, [
+				'idcliente' => (int)$idcliente,
+				'idempresa' => (int)$this->Auth->user('idempresa'),
+				'actor_user_id' => (int)$this->Auth->user('id'),
+				'title' => __('Falha na sincronização com o ERP'),
+				'message' => (string)$response->GerenciaClienteResult->sMsg,
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $idcliente,
+				'metadata' => ['status' => (string)$response->GerenciaClienteResult->cStatus],
+			]);
+			$this->Flash->error($response->GerenciaClienteResult->sMsg);
+		}
 		// else  $this->Flash->success('Não foi possível sincronizar o cliente com o ERP!');
 	}
 }

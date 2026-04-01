@@ -2,7 +2,10 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\ClienteDomain\ClienteDomainBridge;
+use App\Utility\ClienteDomainEventType;
 use Cake\Event\Event;
+use Cake\Routing\Router;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
@@ -52,6 +55,16 @@ class ClicontratosController extends AppController {
             if ($this->Clicontratos->save($contrato)) {
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $contrato->id);
 				$this->sincronizacontrato($contrato->idcliente);
+				ClienteDomainBridge::emit(ClienteDomainEventType::CONTRATO_CRIADO, [
+					'idcliente' => (int)$contrato->idcliente,
+					'idempresa' => (int)$this->Auth->user('idempresa'),
+					'actor_user_id' => (int)$this->Auth->user('id'),
+					'title' => __('Item de contrato cadastrado'),
+					'message' => __('Novo item de contrato vinculado ao cliente (id {0}).', $contrato->id),
+					'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $contrato->idcliente]),
+					'entity_type' => 'Clicontrato',
+					'entity_id' => $contrato->id,
+				]);
                 $this->Flash->success(__('O item do contrato foi cadastrado com sucesso!'));
                 return $this->redirect(["controller" => "Clientes", 'action' => 'edit', $contrato->idcliente]);
             }
@@ -91,6 +104,16 @@ class ClicontratosController extends AppController {
             if ($this->Clicontratos->save($contrato)) {
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $contrato->id);
 				$this->sincronizacontrato($contrato->idcliente);
+				ClienteDomainBridge::emit(ClienteDomainEventType::CONTRATO_ATUALIZADO, [
+					'idcliente' => (int)$contrato->idcliente,
+					'idempresa' => (int)$this->Auth->user('idempresa'),
+					'actor_user_id' => (int)$this->Auth->user('id'),
+					'title' => __('Item de contrato atualizado'),
+					'message' => __('Contrato alterado (item id {0}).', $contrato->id),
+					'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $contrato->idcliente]),
+					'entity_type' => 'Clicontrato',
+					'entity_id' => $contrato->id,
+				]);
                 $this->Flash->success(__('O item do contrato foi alterado com sucesso!'));
                 return $this->redirect(["controller" => "Clientes", 'action' => 'edit', $contrato->idcliente]);
             }

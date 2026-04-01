@@ -167,6 +167,13 @@ Router::scope('/', function ($routes) {
             'file' => '(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons)\.css',
         ]
     );
+    // Notificações internas (equipe) — JSON; não altera APIs ERP existentes
+    $routes->connect('/portal-notifications/unread-count', ['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
+    $routes->connect('/portal-notifications/list', ['controller' => 'PortalNotifications', 'action' => 'listJson']);
+    $routes->connect('/portal-notifications/mark-read/:id', ['controller' => 'PortalNotifications', 'action' => 'markRead'], ['pass' => ['id'], 'id' => '\d+'])->setMethods(['POST']);
+    $routes->connect('/portal-notifications/mark-all-read', ['controller' => 'PortalNotifications', 'action' => 'markAllRead'])->setMethods(['POST']);
+    $routes->connect('/portal-notifications/preferences', ['controller' => 'PortalNotifications', 'action' => 'preferences']);
+    $routes->connect('/portal-notifications/save-preferences', ['controller' => 'PortalNotifications', 'action' => 'savePreferences'])->setMethods(['POST']);
     $routes->fallbacks(DashedRoute::class);
 });
 

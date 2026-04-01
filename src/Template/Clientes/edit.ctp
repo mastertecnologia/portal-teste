@@ -52,6 +52,14 @@
 /* Token box */
 .cli-token-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:.8rem;color:#5cdbc0;word-break:break-all;letter-spacing:.04em;}
 .cli-token-note{font-size:.72rem;color:#6e7681;margin-top:8px;}
+/* Rodapé operacional (resumo + atalhos) */
+.cli-smart-footer{margin-top:20px;padding:14px 18px;border-radius:10px;border:1px solid #21262d;background:#0d1117;font-size:.78rem;color:#8b949e;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;}
+.cli-smart-footer strong{color:#c9d1d9;font-weight:600;}
+.cli-smart-footer .cli-sf-badges .badge{font-size:.65rem;font-weight:600;margin-left:4px;}
+.cli-smart-footer a{color:#5cdbc0!important;text-decoration:none!important;}
+.cli-smart-footer a:hover{text-decoration:underline!important;}
+.cli-smart-footer--alert{border-color:rgba(248,81,73,.45);background:rgba(248,81,73,.06);}
+.cli-smart-footer .cli-sf-token{flex:1 1 220px;max-width:100%;}
 </style>
 <div class="col-md-12">
 	<div class="cli-card">
@@ -64,7 +72,8 @@
 				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
 			</div>
 			<?php if ($role == 0): ?>
-				<div>
+				<div class="d-flex align-items-center flex-wrap" style="gap:8px;">
+					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente']) ?>
 					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]) ?>
 				</div>
 			<?php endif; ?>
@@ -523,6 +532,38 @@
 				</div>
 				<?php }  ?>
 		</div><!-- /tab-content -->
+
+		<?php if (!empty($cliFooter)): ?>
+		<?php
+			$sfAlert = !empty($cliFooter['contratos_vencidos']) || !empty($cliFooter['contratos_vencendo30']);
+		?>
+		<div class="cli-smart-footer<?= $sfAlert ? ' cli-smart-footer--alert' : '' ?>">
+			<div>
+				<strong>Status:</strong>
+				<span class="badge badge-<?= h($cliFooter['status_class']) ?>"><?= h($cliFooter['status_label']) ?></span>
+				<span class="mx-1">·</span>
+				<strong>Contratos:</strong> <?= (int)$cliFooter['contratos_total'] ?> na lista
+				<span class="cli-sf-badges">
+					<?php if (!empty($cliFooter['contratos_vencidos'])): ?>
+						<span class="badge badge-danger"><?= (int)$cliFooter['contratos_vencidos'] ?> vencido(s)</span>
+					<?php endif; ?>
+					<?php if (!empty($cliFooter['contratos_vencendo30'])): ?>
+						<span class="badge badge-warning text-dark"><?= (int)$cliFooter['contratos_vencendo30'] ?> vence(m) em 30 dias</span>
+					<?php endif; ?>
+				</span>
+			</div>
+			<div class="cli-sf-token">
+				<strong>Token:</strong> <?= h($cliFooter['token_note']) ?>
+			</div>
+			<?php if ($role == 0): ?>
+			<div class="text-md-right" style="min-width:200px;">
+				<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['escape' => false, 'class' => 'mr-2']) ?>
+				<?= $this->Html->link('<i class="fas fa-sliders-h"></i> Preferências de alertas', ['controller' => 'PortalNotifications', 'action' => 'preferences'], ['escape' => false]) ?>
+			</div>
+			<?php endif; ?>
+		</div>
+		<?php endif; ?>
+
 	</div><!-- /cli-card -->
 </div><!-- /col-md-12 -->
 <!-- Modal gerir e-mails de faturamento -->

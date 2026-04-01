@@ -49,6 +49,12 @@
 		) ?>
 	</div>
 
+	<?php if ($roleNav === 0): ?>
+	<div class="px-3 py-2 d-flex justify-content-end align-items-center" style="border-bottom:1px solid rgba(48,54,61,.6);">
+		<?= $this->element('portal_notification_bell') ?>
+	</div>
+	<?php endif; ?>
+
 	<!-- ── Workspace / Empresa ────────────────────────────── -->
 	<div class="pgm-sidebar-workspace">
 		<div class="pgm-ws-icon hide-menu" aria-hidden="true">

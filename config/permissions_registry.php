@@ -31,6 +31,7 @@ return [
 
 	// —— Portal: clientes e usuários cliente ——
 	['code' => 'clientes.manage', 'name' => 'Clientes (cadastro)', 'module' => 'Portal clientes', 'controller' => 'Clientes', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'CRUD de clientes; ABAC: restringe por empresa do workspace.', 'sort_order' => $n()],
+	['code' => 'portal.notifications', 'name' => 'Notificações internas (sino)', 'module' => 'Portal clientes', 'controller' => 'PortalNotifications', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'API JSON do sino e marcar lidas; eventos do domínio cliente.', 'sort_order' => $n()],
 	['code' => 'users.clientes_index', 'name' => 'Usuários do portal (cliente)', 'module' => 'Portal clientes', 'controller' => 'Users', 'action' => 'indexClientes', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'Lista logins de cliente.', 'sort_order' => $n()],
 	['code' => 'users.cliente_add', 'name' => 'Incluir usuário cliente', 'module' => 'Portal clientes', 'controller' => 'Users', 'action' => 'addcliente', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'Criar acesso ao portal para cliente.', 'sort_order' => $n()],
 	['code' => 'users.cliente_edit', 'name' => 'Editar usuário cliente', 'module' => 'Portal clientes', 'controller' => 'Users', 'action' => 'editcliente', 'perm_type' => 'rbac', 'abac_scope' => 'cliente', 'description' => 'ABAC: apenas clientes da carteira permitida.', 'sort_order' => $n()],
