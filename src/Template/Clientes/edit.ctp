@@ -354,15 +354,15 @@
 									$rowAcessoClass = 'vesetainativoAcessos ' . $inativo . ($reg->inativo ? ' cli-row-acesso-inativo' : '');
 								?>
 									<tr class="<?= h($rowAcessoClass) ?>">
-										<td><?= $reg->nomeservico ?></td>
-										<td><?= $reg->nome ?></td>
-										<td><?= $reg->ip ?></td>
-										<td><?= $reg->porta ?></td>
-										<td><?= $reg->usuario ?></td>
-										<td><?= $reg->url ?></td>
-										<td><?= $reg->protocolo ?></td>
-										<td><a class="link senha" data-id="<?=$reg->id?>" href="#"> ********** </a></td>
-										<td> <?= $reg->inativo ? 'Não' : 'Sim'; ?></td>
+										<td><?= h($reg->nomeservico) ?></td>
+										<td><?= h($reg->nome) ?></td>
+										<td><?= h($reg->ip) ?></td>
+										<td><?= h($reg->porta) ?></td>
+										<td><?= h($reg->usuario) ?></td>
+										<td><?= h($reg->url) ?></td>
+										<td><?= h($reg->protocolo) ?></td>
+										<td><a class="link senha" data-id="<?= (int)$reg->id ?>" href="#"> ********** </a></td>
+										<td><?= $reg->inativo ? 'Não' : 'Sim' ?></td>
 										<?php if ($isEquipe) { ?>
 											<td class="td-actions">
 												<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "cliacessos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
@@ -494,11 +494,11 @@
 								$rowPortalClass = 'vesetainativoAcessos ' . $inativo . ($reg->inativo ? ' cli-row-acesso-inativo' : '');
 								?>
 									<tr class="<?= h($rowPortalClass) ?>">
-										<td><?= $reg->nome ?></td>
-										<td><?= $reg->ip ?></td>
-										<td><?= $reg->usuario ?></td>
-										<td><a class="link senha cli-senha-mask" data-id="<?=$reg->id?>" href="#" title="Clique para revelar">••••••••</a></td>
-										<td> <?= $reg->inativo == 1 ? 'Não' : 'Sim'; ?></td>
+										<td><?= h($reg->nome) ?></td>
+										<td><?= h($reg->ip) ?></td>
+										<td><?= h($reg->usuario) ?></td>
+										<td><a class="link senha cli-senha-mask" data-id="<?= (int)$reg->id ?>" href="#" title="Clique para revelar">••••••••</a></td>
+										<td><?= $reg->inativo == 1 ? 'Não' : 'Sim' ?></td>
 										<?php if ($isEquipe) { ?>
 										<td class="td-actions">
 											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "cliacessos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false]) ?>

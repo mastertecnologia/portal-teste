@@ -13,6 +13,7 @@ Documentação técnica curta da entrega alinhada ao plano de refatoração grad
 - **Notificações:** carregamento em lote de preferências in-app e e-mail + e-mails dos usuários em `PortalNotificationService` / `MailAutomationService`.
 - **Front modular (1º passo):** `webroot/js/modules/clientes/cliente-edit.js` (helpers de e-mail + `pgmCsrfToken`); POST `verificasenha` com `_csrfToken`.
 - **Correções/contexto anterior:** shell escuro `Pgm/form_shell_dark`, notificações (URLs), etc. (histórico em commits anteriores na mesma linha).
+- **Fase 15 (hardening):** logs `Log::warning` em falhas do `ClienteErpSyncService`; escape `h()` nas células das tabelas de acessos em `edit.ctp`.
 
 ---
 
@@ -127,3 +128,14 @@ Documentação técnica curta da entrega alinhada ao plano de refatoração grad
 
 - Arquivo: **`docs/modulo-clientes-evolucao-fases-0-14.md`** (este).  
 - Commits recentes na linha de evolução: ver histórico `git log` em `main` (mensagens `refactor(clientes)`, `feat(clientes)`, etc.).
+
+---
+
+## ETAPA 15 — Hardening (1.º corte)
+
+| Área | Alteração |
+|------|-----------|
+| `ClienteErpSyncService` | `Log::warning` em falha de WSDL/init, exceção em `sendRequest`, resposta sem `cStatus`, e negativa do ERP (`status` + `msg` no texto do log). `try/catch` em `GerenciaCliente`; validação de `GerenciaClienteResult` antes de aceder a propriedades (evita fatal e emite evento de falha). |
+| `Clientes/edit.ctp` | Células das tabelas de **acessos** (equipe e portal cliente) passam a usar `h()` em texto vindo da BD; `data-id` do link de senha como inteiro. |
+
+**Testes sugeridos:** sincronizar cliente com ERP desligado / token inválido (ver log + Flash); abrir ficha com caracteres especiais nos campos de acesso (sem execução de HTML na tabela).

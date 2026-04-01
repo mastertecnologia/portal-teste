@@ -35,6 +35,12 @@ class ClienteErpSyncService {
 				throw new \Exception('Erro');
 			}
 		} catch (\Exception $e) {
+			\Cake\Log\Log::warning(sprintf(
+				'ClienteErpSyncService: WSDL/init falhou idcliente=%d idempresa=%d err=%s',
+				$idcliente,
+				$idempresa,
+				$e->getMessage()
+			));
 			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_INTEGRACAO_ERRO, [
 				'idcliente' => $idcliente,
 				'idempresa' => $idempresa,
@@ -50,28 +56,81 @@ class ClienteErpSyncService {
 			return __('O WS não pode ser acessado no momento!');
 		}
 
-		$response = $soap->sendRequest('GerenciaCliente', [
-			'Data' => [
-				'iEmpresa' => $idempresa,
-				'sToken' => $token,
-				'sJSON' => $json,
-			],
-		]);
+		try {
+			$response = $soap->sendRequest('GerenciaCliente', [
+				'Data' => [
+					'iEmpresa' => $idempresa,
+					'sToken' => $token,
+					'sJSON' => $json,
+				],
+			]);
+		} catch (\Throwable $e) {
+			\Cake\Log\Log::warning(sprintf(
+				'ClienteErpSyncService: sendRequest GerenciaCliente exceção idcliente=%d idempresa=%d err=%s',
+				$idcliente,
+				$idempresa,
+				$e->getMessage()
+			));
+			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_INTEGRACAO_ERRO, [
+				'idcliente' => $idcliente,
+				'idempresa' => $idempresa,
+				'actor_user_id' => $actorUserId,
+				'title' => __('Integração ERP indisponível'),
+				'message' => __('Erro ao enviar dados ao ERP. Tente novamente ou contate o suporte.'),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $idcliente,
+				'metadata' => ['soap_error' => $e->getMessage()],
+			]);
 
-		if (!in_array($response->GerenciaClienteResult->cStatus, [201, 200], true)) {
+			return __('Erro ao comunicar com o ERP. Tente novamente.');
+		}
+
+		$result = isset($response->GerenciaClienteResult) ? $response->GerenciaClienteResult : null;
+		if ($result === null || !isset($result->cStatus)) {
+			\Cake\Log\Log::warning(sprintf(
+				'ClienteErpSyncService: resposta SOAP sem cStatus idcliente=%d idempresa=%d',
+				$idcliente,
+				$idempresa
+			));
 			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_SINCRONIZACAO_FALHA, [
 				'idcliente' => $idcliente,
 				'idempresa' => $idempresa,
 				'actor_user_id' => $actorUserId,
 				'title' => __('Falha na sincronização com o ERP'),
-				'message' => (string)$response->GerenciaClienteResult->sMsg,
+				'message' => __('Resposta inválida do serviço de integração.'),
 				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
 				'entity_type' => 'Cliente',
 				'entity_id' => $idcliente,
-				'metadata' => ['status' => (string)$response->GerenciaClienteResult->cStatus],
+				'metadata' => [],
 			]);
 
-			return (string)$response->GerenciaClienteResult->sMsg;
+			return __('Resposta inválida do ERP.');
+		}
+
+		if (!in_array($result->cStatus, [201, 200], true)) {
+			$statusStr = (string)$result->cStatus;
+			$msgStr = isset($result->sMsg) ? (string)$result->sMsg : '';
+			\Cake\Log\Log::warning(sprintf(
+				'ClienteErpSyncService: GerenciaCliente negado idcliente=%d idempresa=%d status=%s msg=%s',
+				$idcliente,
+				$idempresa,
+				$statusStr,
+				$msgStr
+			));
+			ClienteDomainBridge::emit(ClienteDomainEventType::ERP_SINCRONIZACAO_FALHA, [
+				'idcliente' => $idcliente,
+				'idempresa' => $idempresa,
+				'actor_user_id' => $actorUserId,
+				'title' => __('Falha na sincronização com o ERP'),
+				'message' => $msgStr !== '' ? $msgStr : __('Falha na sincronização.'),
+				'action_url' => Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]),
+				'entity_type' => 'Cliente',
+				'entity_id' => $idcliente,
+				'metadata' => ['status' => $statusStr],
+			]);
+
+			return $msgStr !== '' ? $msgStr : __('Falha na sincronização.');
 		}
 
 		return null;
