@@ -135,6 +135,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/contas-receber', ['controller' => 'Financeiro', 'action' => 'contasReceber']);
     $routes->connect('/financeiro/registrar-recebimento/*', ['controller' => 'Financeiro', 'action' => 'registrarRecebimento'])->setMethods(['POST']);
+    // Relatórios e Indicadores (ERP)
+    $routes->connect('/relatorios', ['controller' => 'Relatorios', 'action' => 'index']);
+    $routes->connect('/relatorios/index', ['controller' => 'Relatorios', 'action' => 'index']);
     // CSS premium via Cake (leitura em WWW_ROOT/css) — evita 404 estático com APP_BASE=/portal e Alias Apache
     $routes->connect(
         '/pgm-assets/css/:name',

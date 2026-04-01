@@ -98,6 +98,13 @@
 						['class' => 'waves-effect waves-dark', 'aria-label' => 'Dashboard', 'escape' => false]
 					) ?>
 				</li>
+				<li class="<?= $relActive ?>">
+					<?= $this->Html->link(
+						'<i class="fas fa-chart-pie"></i><span class="hide-menu"> Relatórios </span>',
+						['controller' => 'Relatorios', 'action' => 'index'],
+						['class' => 'waves-effect waves-dark', 'aria-label' => 'Relatórios e Indicadores', 'escape' => false]
+					) ?>
+				</li>
 				<li class="<?= $clientesActive ?>">
 					<?= $this->Html->link(
 						'<i class="fa fa-building"></i><span class="hide-menu"> Clientes </span>',
