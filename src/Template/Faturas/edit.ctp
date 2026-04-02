@@ -291,8 +291,10 @@
 					$('#valoritem').val('');
 					$('#valortotal').val('');
 				},
-				error : function(error) {
-					alert(error.msg);
+				error : function(xhr) {
+					var j = xhr.responseJSON || {};
+					var m = j.msg || j.message || (xhr.statusText && xhr.status ? (xhr.status + ' ' + xhr.statusText) : null);
+					bootbox.alert(m || 'Não foi possível adicionar o item. Tente novamente.');
 				}
 			});
 		});
