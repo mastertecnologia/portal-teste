@@ -44,9 +44,97 @@ A migration `20260405130000_PortalAdvancedAttendanceContractsInvoicesAudit.php` 
 
 ---
 
+## 0.1 Estado atual do repositório (Git / `main`)
+
+Esta secção alinha a **especificação** ao que está **implementado no código**. As secções **§1–§16** abaixo continuam a descrever o **alvo de produto**; para *deliverables* já merged, usar esta tabela como referência.
+
+### Implementado (resumo)
+
+| Área | Situação |
+|------|----------|
+| **BD** | `config/Migrations/20260407100000_ContractModulePhase1Expand.php` (PostgreSQL): novas tabelas + expansão de `contracts` / `contract_services`. **Não existe** no repo o ficheiro `20260407100001_ContractNewTables.php` mencionado na §1.2 — o DDL “extra” da spec foi condensado/adaptado na Phase1. |
+| **ORM** | `ContractsTable` com associações (templates, signatários, renovações, notificações, pai/filhos, etc.), entities dedicadas, `ContractServicesTable` + `ContractService`. |
+| **ERP** | `AdvancedContractsController`: `index`, `view`, `exportPdf` (mPDF, grava `pdf_path`). `ContractTemplatesController`: CRUD. Rotas: **`/modulo-avancado/contratos`**, **`/modulo-avancado/modelos-contrato`**. |
+| **Portal** | `PortalAdvancedContractsController`: `index`, `view`, `exportPdf` (se `pdf_path` legível), **`franquia`**. Rotas: **`/cliente/contratos-avancados/*`**. |
+| **Config** | `config/app.php` → chave **`Contract`**: `autentique`, `pdf`, `notifications`, `alerts` (valores via `env`). |
+| **Services** | `ContractPdfService`, `ContractNotificationService`, `ContractRenewalService`; `AutentiqueService` **stub** (sem GraphQL real). |
+| **Cron** | `src/Shell/ContractAlertsShell.php` — `bin/cake contract_alerts`, `bin/cake contract_alerts sincronizarAutentique`. |
+| **E-mail** | Sete templates `src/Template/Email/html/contract_*.ctp`. |
+| **UI global** | `sidebar.ctp` / `sidebarcli.ctp` com links para contratos avançados, modelos e franquia. |
+
+### Ainda não implementado (conforme corpo deste documento)
+
+- `ContractManagementController` e toda a árvore **`/modulo-contratos/*`**.
+- `PortalContratosController` e **`/cliente/contratos`** (com redirect a partir de `contratos-avancados`).
+- SQL **RBAC** da §10 aplicado na base.
+- **Autentique** completo: `criarDocumento`, webhook, sincronização real no `AutentiqueService`.
+- **`deploy-portal.sh`** e árvore **`uploads/contratos/`** da §11 (por defeito o código usa `TMP/contracts` ou `CONTRACT_PDF_STORAGE_PATH`).
+- Views ERP “ricas”: KPIs na lista, wizard de criação, ecrã dedicado **enviar assinatura**, **preview/clonar** de template, TinyMCE nos modelos.
+
+---
+
+## 0.2 Divergências: spec (§1–§16) vs código atual
+
+| Tema | Documento (alvo) | Repositório atual |
+|------|------------------|-------------------|
+| Snippet SQL da §1.1 | Muitas colunas novas em `contracts` (`notes_client`, segundo `status`, `signature_provider`, `signed_file_url`, `fully_signed_at`, …) | Phase1 **não** duplica `status` (já existe na migration base); usa **`observacoes_cli`** em vez de `notes_client`; sem parte das colunas “extras” do snippet |
+| `contract_signatories` §1.2 | Campos `auth_type`, `action_type`, `autentique_signer_id`, várias datas | Versão **simplificada**: `autentique_id`, fluxo básico de assinatura |
+| `config/app.php` §2.1 | `Contract.Autentique`, `Contract.Pdf`, `Contract.Notifications` (aninhamento PascalCase no exemplo) | Chaves **`autentique`**, **`pdf`**, **`notifications`**, **`alerts`** (lowercase) e nomes de `env` próprios |
+| Estados do contrato | Vocabulário PT (`rascunho`, `ativo`, …) | Convivência com **`active`** / **`ativo`** (ex.: geração de faturas) |
+| Entrada ERP na spec | `/modulo-contratos` | **`/modulo-avancado/contratos`** |
+
+**Recomendação:** evoluir o schema e o código a partir da **Phase1 real** + esta tabela, e ir **atualizando** os snippets SQL deste doc ou marcando-os como “referência histórica” quando deixarem de refletir a BD.
+
+---
+
+## 0.3 Backlog priorizado (o que falta fazer)
+
+Ordenação por **dependência** e **valor operacional**. Itens podem ser tickets independentes desde que se respeitem pré-requisitos (ex.: webhook depois de API Autentique).
+
+### P0 — Operacional e alinhamento
+
+1. **Configurar ambiente:** `CONTRACT_NOTIFY_FROM_EMAIL`, `CONTRACT_NOTIFY_TEAM_EMAIL`, transporte de e-mail Cake, e `CONTRACT_PDF_STORAGE_PATH` em produção (fora de `TMP` se for requisito).
+2. **URLs:** decidir se se mantém só `/modulo-avancado/...` ou se se introduz `/modulo-contratos` com **redirect** / canonical para não partir links.
+3. **Migration opcional:** `ADD COLUMN IF NOT EXISTS` para fechar gaps face à §1.1 **sem** colisão com colunas existentes (`status`, `notes` vs `observacoes_cli` — escolher um nome canónico no ORM).
+4. **RBAC §10:** executar SQL (ou adaptar `ON CONFLICT`) e associar permissões a perfis; até lá, rotas actuais seguem **role 0** / regras já usadas em `AdvancedContracts`.
+
+### P1 — Gestão ERP completa (`ContractManagement` ou extensão forte de `AdvancedContracts`)
+
+5. **Lista + KPIs** (§7.1) e filtros; export CSV opcional.
+6. **Detalhe** (§7.2): acções aprovar, suspender, cancelar, renovações, download PDF/assinado com **caminho não exposto** na URL.
+7. **Criação / edição** mínima (dados + serviços); depois **wizard** 4 passos (§7.3).
+8. **CRUD de signatários** por contrato; alinhar nomes de colunas quando a BD Autentique for alargada.
+
+### P2 — Portal cliente (spec §5.3 e §7.6)
+
+9. **`PortalContratosController`** com ABAC: nunca expor `monthly_value`, `valor_total`, `notes`, IDs internos Autentique ao cliente.
+10. **Redirect** de `/cliente/contratos-avancados` → `/cliente/contratos` (mantendo compatibilidade temporária).
+11. **`faturas`** no portal de contratos: reutilizar ou encapsular `PortalAdvancedInvoices`; **solicitar renovação** exposto ao cliente com validações.
+
+### P3 — Templates e UX
+
+12. **`ContractTemplates`:** acções `preview`, `clonar`; **TinyMCE** e painel de variáveis `{{...}}` (§7.5).
+13. **E-mails:** reforçar layout (logo, CTA, suporte) conforme §7.7.
+
+### P4 — Autentique e produção (Fase 7)
+
+14. **`AutentiqueService`** completo (§2.3): multipart, `criarDocumento`, `statusDocumento`, download, `validarWebhook`.
+15. **`webhookAutentique`** + `Auth->allow` + rota pública com HMAC.
+16. **Crontab** em servidor (§12) e pastas persistentes (§11) alinhadas a `Contract.pdf.storage_path`.
+
+### P5 — Qualidade e modelo de dados
+
+17. **Entity `Contract`:** virtual fields `status_label`, `dias_para_vencer` (§6.3).
+18. **Validação `status`:** `inList` coerente com valores **reais** na BD (`active` + PT) quando o fluxo for unificado.
+19. **Testes de fumo:** PDF, shell com flags `CONTRACT_ALERTS_*`, fluxo `aprovarRenovacao` via UI.
+
+---
+
 ## 1. Banco de Dados — Migrations
 
 ### 1.1 `config/Migrations/20260407100000_ContractModulePhase1Expand.php`
+
+> **Repo atual:** a migration real está em PHP e **não replica linha-a-linha** o `ALTER` abaixo (evita duplicar `status`, usa `observacoes_cli`, etc.). Use o **ficheiro em `config/Migrations/`** como fonte de verdade para o DDL aplicado; o bloco SQL serve como **modelo conceptual**.
 
 ```sql
 -- ============================================================
@@ -114,6 +202,8 @@ ALTER TABLE contract_services
 ```
 
 ### 1.2 `config/Migrations/20260407100001_ContractNewTables.php`
+
+> **Repo atual:** este ficheiro de migration **não está presente**; tabelas análogas foram criadas pela **`20260407100000_ContractModulePhase1Expand.php`** com DDL ligeiramente diferente (ver **§0.2**). O SQL abaixo permanece como **referência** para futuras migrations incrementais ou para harmonizar colunas em falta.
 
 ```sql
 -- ============================================================
@@ -1419,6 +1509,8 @@ ATIVO/A_VENCER + auto_renew=true:
 ---
 
 ## 15. Ordem de Implementação (Cursor)
+
+**Estado mergeado e backlog vivo:** ver **§0.1–0.3** (o checklist abaixo é o plano original; cruza-se com P0–P5 para o que ainda falta).
 
 ### Fase 1 — Banco
 1. Criar e rodar `20260407100000_ContractModulePhase1Expand.php`
