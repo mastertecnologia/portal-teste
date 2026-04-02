@@ -33,7 +33,8 @@ return [
      *      /.htaccess
      *      /webroot/.htaccess
      *   And uncomment the baseUrl key below.
-     * - fullBaseUrl - A base URL to use for absolute links.
+     * - fullBaseUrl - URL absoluta para links (ex.: atrás de proxy). .env: APP_FULL_BASE_URL;
+     *   se vazio, o bootstrap tenta montar a partir de HTTP_HOST / HTTPS.
      * - imageBaseUrl - Web path to the public images directory under webroot.
      * - cssBaseUrl - Web path to the public css directory under webroot.
      * - jsBaseUrl - Web path to the public js directory under webroot.
@@ -44,14 +45,16 @@ return [
     'App' => [
         'namespace' => 'App',
         'encoding' => env('APP_ENCODING', 'UTF-8'),
-        'defaultLocale' => env('APP_DEFAULT_LOCALE', 'en_US'),
+        'defaultLocale' => env('APP_DEFAULT_LOCALE', 'pt_BR'),
         'base' => env('APP_BASE', false),
         'dir' => 'src',
         // No Linux com estrutura separada: defina WEBROOT_DIR=public no .env
         'webroot' => env('WEBROOT_DIR', 'webroot'),
         'wwwRoot' => WWW_ROOT,
         // 'baseUrl' => env('SCRIPT_NAME'),
-        'fullBaseUrl' => false,
+        'fullBaseUrl' => (($__fbu = env('APP_FULL_BASE_URL')) !== null && $__fbu !== '' && $__fbu !== false)
+            ? rtrim((string)$__fbu, '/')
+            : false,
         'imageBaseUrl' => 'img/',
         // Vazio: assets estão em dist/css/, assets/, plugins/ (não em public/css/ nem public/js/)
         'cssBaseUrl' => '',

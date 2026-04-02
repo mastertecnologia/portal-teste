@@ -213,6 +213,12 @@ class ContractManagementController extends AppController {
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
 			$data['idempresa'] = $idempresa;
+			if (empty($data['status'])) {
+				$data['status'] = 'rascunho';
+			}
+			if (empty($data['billing_cycle'])) {
+				$data['billing_cycle'] = 'monthly';
+			}
 			if (empty($data['idcliente'])) {
 				$this->Flash->error(__('Selecione o cliente.'));
 			} else {

@@ -95,7 +95,7 @@ class ContractsTable extends Table {
 		$validator
 			->integer('idcliente')
 			->requirePresence('idcliente', 'create')
-			->notEmpty('idcliente');
+			->notEmpty('idcliente', __('Selecione um cliente.'));
 
 		$validator
 			->scalar('code')

@@ -98,3 +98,70 @@ body.layout-no-topbar .pgm-adv-page .form-control {
 body.layout-no-topbar .pgm-adv-page label {
 	color: rgba(230, 237, 243, 0.85) !important;
 }
+
+/* Formulários: inputs/selects/textarea em largura útil (evita campos estreitos à esquerda) */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group {
+	width: 100%;
+	max-width: 100%;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input textarea,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select {
+	width: 100% !important;
+	max-width: 100% !important;
+	box-sizing: border-box;
+	min-width: 0;
+}
+/* DateTime: múltiplos selects lado a lado */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select[name*="[year]"],
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select[name*="[month]"],
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select[name*="[day]"],
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select[name*="[hour]"],
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select[name*="[minute]"],
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group .input select[name*="[meridian]"] {
+	width: auto !important;
+	min-width: 4.25rem;
+	margin-right: 0.35rem;
+	margin-bottom: 0.35rem;
+	display: inline-block;
+	vertical-align: middle;
+}
+/* Fallback se o helper não usar .input */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group > input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group > textarea,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .form-group > select {
+	width: 100% !important;
+	max-width: 100% !important;
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+/* Botões secundários legíveis no painel escuro (btn-default costuma parecer desativado) */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .btn-default {
+	background: rgba(255, 255, 255, 0.1) !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .btn-default:hover,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .btn-default:focus {
+	background: rgba(255, 255, 255, 0.16) !important;
+	border-color: rgba(255, 255, 255, 0.3) !important;
+	color: #fff !important;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel a.btn-default {
+	text-decoration: none;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-form-actions {
+	margin-top: 1rem;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-form-actions .btn,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-form-actions a.btn {
+	margin-right: 0.5rem;
+	margin-bottom: 0.5rem;
+}

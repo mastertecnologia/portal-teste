@@ -11,24 +11,26 @@ $this->assign('title', $title ?? 'Novo contrato');
 				<?= __('Ao gravar com "Continuar", segue para serviços; use "Abrir ficha" para ir direto à ficha do contrato.') ?>
 				<?= $this->Html->link(__('Modelos'), '/contract-templates', ['class' => 'alert-link']) ?>.
 			</div>
-			<?= $this->Form->create($contract) ?>
+			<?= $this->Form->create($contract, ['class' => 'contract-management-form']) ?>
 			<?= $this->Form->hidden('idempresa') ?>
-			<?= $this->Form->control('idcliente', ['options' => $clientesList, 'empty' => __('Selecione…'), 'label' => __('Cliente')]) ?>
-			<?= $this->Form->control('code', ['label' => __('Código')]) ?>
-			<?= $this->Form->control('name', ['label' => __('Nome')]) ?>
-			<?= $this->Form->control('type', ['label' => __('Tipo')]) ?>
-			<?= $this->Form->control('template_id', ['options' => $templatesList, 'empty' => true, 'label' => __('Modelo')]) ?>
-			<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início')]) ?>
-			<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim')]) ?>
-			<?= $this->Form->control('monthly_value', ['label' => __('Valor mensal')]) ?>
-			<?= $this->Form->control('valor_total', ['label' => __('Valor total')]) ?>
-			<?= $this->Form->control('nivel_sla', ['label' => __('Nível SLA')]) ?>
+			<?= $this->Form->control('idcliente', ['options' => $clientesList, 'empty' => __('Selecione…'), 'label' => __('Cliente'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('code', ['label' => __('Código'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('name', ['label' => __('Nome'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('type', ['label' => __('Tipo'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('template_id', ['options' => $templatesList, 'empty' => true, 'label' => __('Modelo'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim'), 'class' => 'form-control']) ?>
+			<?= $this->Form->control('monthly_value', ['label' => __('Valor mensal'), 'class' => 'form-control mascaramonetaria']) ?>
+			<?= $this->Form->control('valor_total', ['label' => __('Valor total'), 'class' => 'form-control mascaramonetaria']) ?>
+			<?= $this->Form->control('nivel_sla', ['label' => __('Nível SLA'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('auto_renew', ['type' => 'checkbox', 'label' => __('Renovação automática')]) ?>
-			<?= $this->Form->control('observacoes_cli', ['type' => 'textarea', 'label' => __('Obs. cliente')]) ?>
-			<?= $this->Form->control('notes', ['type' => 'textarea', 'label' => __('Notas internas')]) ?>
+			<?= $this->Form->control('observacoes_cli', ['type' => 'textarea', 'label' => __('Obs. cliente'), 'class' => 'form-control', 'rows' => 4]) ?>
+			<?= $this->Form->control('notes', ['type' => 'textarea', 'label' => __('Notas internas'), 'class' => 'form-control', 'rows' => 4]) ?>
+			<div class="btn-toolbar contract-form-actions">
 			<?= $this->Form->button(__('Gravar e continuar'), ['class' => 'btn btn-primary', 'name' => 'gravar_destino', 'value' => 'wizard']) ?>
 			<?= $this->Form->button(__('Gravar e abrir ficha'), ['class' => 'btn btn-default', 'name' => 'gravar_destino', 'value' => 'ficha']) ?>
 			<?= $this->Html->link(__('Cancelar'), ['action' => 'index'], ['class' => 'btn btn-default']) ?>
+			</div>
 			<?= $this->Form->end() ?>
 		</div>
 	</div>

@@ -151,6 +151,7 @@ mb_internal_encoding(Configure::read('App.encoding'));
  * formatted and sets the default language to use for translations.
  */
 ini_set('intl.default_locale', Configure::read('App.defaultLocale'));
+\Cake\I18n\I18n::setLocale(Configure::read('App.defaultLocale'));
 
 /*
  * Register application error and exception handlers.

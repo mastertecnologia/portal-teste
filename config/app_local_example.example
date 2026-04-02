@@ -8,6 +8,9 @@
  * 3. No bootstrap.php a linha que carrega app_local já deve estar ativa.
  *
  * O app_local.php sobrescreve apenas as chaves definidas aqui; o resto vem do app.php.
+ *
+ * URL pública: preferir APP_FULL_BASE_URL no .env (lido em app.php). Para forçar só neste ficheiro:
+ *   'App' => ['fullBaseUrl' => 'https://portal.exemplo.com'],
  */
 return [
     'debug' => true,
