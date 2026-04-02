@@ -220,12 +220,12 @@ $podeRenovar   = in_array($status, ['ativo', 'a_vencer', 'em_renovacao', 'suspen
 								<br><small class="text-muted"><?= h($cs->service_description) ?></small>
 								<?php endif; ?>
 							</td>
-							<td><span class="label label-default"><?= h($tipoLabel[$cs->tipo_item ?? ''] ?? ($cs->tipo_item ?? '—')) ?></span></td>
+							<td><span class="label label-info"><?= h($tipoLabel[$cs->tipo_item ?? ''] ?? ($cs->tipo_item ?? '—')) ?></span></td>
 							<td class="text-center"><?= h($cs->max_hours ?? '—') ?> <?= h($cs->unidade ?? '') ?></td>
 							<td class="text-center">
 								<?= !empty($cs->is_included)
 									? '<span class="label label-success">Sim</span>'
-									: '<span class="label label-default">Não</span>' ?>
+									: '<span class="label label-warning">Não</span>' ?>
 							</td>
 							<td class="text-right"><?= $cs->valor_unitario ? 'R$ ' . number_format((float)$cs->valor_unitario, 2, ',', '.') : '—' ?></td>
 							<td class="text-right"><?= $cs->valor_total ? 'R$ ' . number_format((float)$cs->valor_total, 2, ',', '.') : '—' ?></td>

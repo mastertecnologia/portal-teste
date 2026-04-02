@@ -18,32 +18,37 @@ $labels = [
 	3 => __('Signatários'),
 	4 => __('Ficha'),
 ];
+
+// Estilos explícitos para funcionar em tema claro e escuro
+$styleActive   = 'display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:600;background:#2979ff;color:#fff;text-decoration:none;white-space:nowrap;';
+$styleInactive = 'display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:600;background:#546e7a;color:#fff;text-decoration:none;white-space:nowrap;';
+$styleDisabled = 'display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:600;background:#37474f;color:#90a4ae;white-space:nowrap;cursor:default;';
 ?>
 <nav class="pgm-contract-wizard small mb-3" aria-label="<?= h(__('Passos do contrato')) ?>">
-	<ol class="list-inline mb-0 d-flex flex-wrap align-items-center" style="gap:6px;">
+	<ol class="list-inline mb-0" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;list-style:none;padding:0;margin:0;">
 		<?php for ($i = 1; $i <= 4; $i++): ?>
 		<?php
 		$isCurrent = ($i === $cur);
-		$lblClass = $isCurrent ? 'label label-primary' : 'label label-default';
+		$style = $isCurrent ? $styleActive : $styleInactive;
 		$text = $i . '. ' . h($labels[$i]);
 		?>
-		<li class="list-inline-item">
+		<li style="margin:0;">
 			<?php if ($contractId <= 0 && $i > 1): ?>
-			<span class="label label-default" style="opacity:0.65;"><?= $text ?></span>
+			<span style="<?= $styleDisabled ?>"><?= $text ?></span>
 			<?php elseif ($i === 1 && $contractId > 0): ?>
-			<?php if ($podeEditarDadosPasso): ?>
-			<?= $this->Html->link($text, ['action' => 'edit', $contractId], ['class' => $lblClass, 'escape' => false]) ?>
-			<?php else: ?>
-			<span class="<?= h($lblClass) ?>" style="opacity:0.65;cursor:not-allowed;" title="<?= h(__('Edição dos dados principais não disponível para o seu perfil neste estado.')) ?>"><?= $text ?></span>
-			<?php endif; ?>
+				<?php if ($podeEditarDadosPasso): ?>
+				<?= $this->Html->link($text, ['action' => 'edit', $contractId], ['escape' => false, 'style' => $style]) ?>
+				<?php else: ?>
+				<span style="<?= $styleDisabled ?>" title="<?= h(__('Edição dos dados principais não disponível para o seu perfil neste estado.')) ?>"><?= $text ?></span>
+				<?php endif; ?>
 			<?php elseif ($i === 2 && $contractId > 0): ?>
-			<?= $this->Html->link($text, ['action' => 'addServicos', $contractId], ['class' => $lblClass, 'escape' => false]) ?>
+			<?= $this->Html->link($text, ['action' => 'addServicos',    $contractId], ['escape' => false, 'style' => $style]) ?>
 			<?php elseif ($i === 3 && $contractId > 0): ?>
-			<?= $this->Html->link($text, ['action' => 'addSignatarios', $contractId], ['class' => $lblClass, 'escape' => false]) ?>
+			<?= $this->Html->link($text, ['action' => 'addSignatarios', $contractId], ['escape' => false, 'style' => $style]) ?>
 			<?php elseif ($i === 4 && $contractId > 0): ?>
-			<?= $this->Html->link($text, ['action' => 'view', $contractId], ['class' => $lblClass, 'escape' => false]) ?>
+			<?= $this->Html->link($text, ['action' => 'view',           $contractId], ['escape' => false, 'style' => $style]) ?>
 			<?php else: ?>
-			<span class="<?= h($lblClass) ?>"><?= $text ?></span>
+			<span style="<?= $style ?>"><?= $text ?></span>
 			<?php endif; ?>
 		</li>
 		<?php endfor; ?>

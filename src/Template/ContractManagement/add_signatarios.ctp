@@ -76,7 +76,7 @@ $actionOpts = [
 					<td class="text-center"><?= (int)$s->ordem ?></td>
 					<td><?= h($s->nome) ?></td>
 					<td><small><?= h($s->email) ?></small></td>
-					<td><span class="label label-default"><?= h($tipoOpts[$s->tipo ?? ''] ?? ($s->tipo ?? '—')) ?></span></td>
+					<td><span class="label label-info"><?= h($tipoOpts[$s->tipo ?? ''] ?? ($s->tipo ?? '—')) ?></span></td>
 					<td><small><?= h(strtoupper($s->auth_type ?? 'email')) ?></small></td>
 					<td><small><?= h($actionOpts[$s->action_type ?? ''] ?? ($s->action_type ?? '—')) ?></small></td>
 					<td><span class="label label-<?= $sigColor ?>"><?= h(ucfirst($s->status ?? 'pendente')) ?></span></td>
