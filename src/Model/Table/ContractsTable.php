@@ -1,6 +1,8 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -63,6 +65,66 @@ class ContractsTable extends Table {
 		$this->hasMany('ContractAutentiqueLogs', ['foreignKey' => 'contract_id', 'dependent' => true]);
 		$this->hasMany('ContractRenewals', ['foreignKey' => 'contract_id', 'dependent' => true]);
 		$this->hasMany('ContractNotifications', ['foreignKey' => 'contract_id', 'dependent' => true]);
+	}
+
+	/**
+	 * Converte valores monetários do formulário (ex.: 1.234,56 ou vazio após máscara) para número.
+	 * Evita NULL em colunas NOT NULL (monthly_value, valor_total).
+	 *
+	 * @param \Cake\Event\Event $event
+	 * @param \ArrayObject $data
+	 * @param \ArrayObject $options
+	 * @return void
+	 */
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+		foreach (['monthly_value', 'valor_total', 'overage_hour_value'] as $field) {
+			if (!isset($data[$field])) {
+				continue;
+			}
+			$raw = $data[$field];
+			if ($raw === null || $raw === '') {
+				if (in_array($field, ['monthly_value', 'valor_total', 'overage_hour_value'], true)) {
+					$data[$field] = 0;
+				}
+
+				continue;
+			}
+			if (is_numeric($raw) && !is_string($raw)) {
+				continue;
+			}
+			$parsed = static::_parseDecimalFromForm($raw);
+			if ($parsed === null) {
+				$data[$field] = in_array($field, ['monthly_value', 'valor_total', 'overage_hour_value'], true) ? 0 : null;
+			} else {
+				$data[$field] = $parsed;
+			}
+		}
+	}
+
+	/**
+	 * @param mixed $raw
+	 * @return float|null
+	 */
+	protected static function _parseDecimalFromForm($raw) {
+		if ($raw === null || $raw === '') {
+			return null;
+		}
+		if (is_int($raw) || is_float($raw)) {
+			return (float)$raw;
+		}
+		if (!is_string($raw)) {
+			return null;
+		}
+		$s = trim(preg_replace('/[^\d,.-]/', '', $raw));
+		if ($s === '' || $s === '-') {
+			return null;
+		}
+		if (strpos($s, ',') !== false) {
+			$s = str_replace('.', '', $s);
+			$s = str_replace(',', '.', $s);
+		}
+
+		return is_numeric($s) ? (float)$s : null;
 	}
 
 	/**

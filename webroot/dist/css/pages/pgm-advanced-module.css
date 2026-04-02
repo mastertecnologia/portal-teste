@@ -165,3 +165,34 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-form-actions a.btn 
 	margin-right: 0.5rem;
 	margin-bottom: 0.5rem;
 }
+
+/* Contratos: Início/Fim em duas colunas (Bootstrap 3) */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row.row {
+	margin-left: -8px;
+	margin-right: -8px;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row [class*="col-"] {
+	padding-left: 8px;
+	padding-right: 8px;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row .form-group {
+	margin-bottom: 1rem;
+}
+
+/* Selects do formulário de contrato: fundo escuro (evita lista/opções brancas no tema) */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form select,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form select.form-control {
+	background-color: #13161d !important;
+	background-image: none !important;
+	color: #e6edf3 !important;
+	color-scheme: dark;
+	border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form select:focus {
+	border-color: rgba(92, 219, 192, 0.45) !important;
+	outline: 0;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form select option {
+	background-color: #1a1f27;
+	color: #e6edf3;
+}

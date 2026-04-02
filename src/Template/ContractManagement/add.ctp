@@ -18,10 +18,26 @@ $this->assign('title', $title ?? 'Novo contrato');
 			<?= $this->Form->control('name', ['label' => __('Nome'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('type', ['label' => __('Tipo'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('template_id', ['options' => $templatesList, 'empty' => true, 'label' => __('Modelo'), 'class' => 'form-control']) ?>
-			<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início'), 'class' => 'form-control']) ?>
-			<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim'), 'class' => 'form-control']) ?>
-			<?= $this->Form->control('monthly_value', ['label' => __('Valor mensal'), 'class' => 'form-control mascaramonetaria']) ?>
-			<?= $this->Form->control('valor_total', ['label' => __('Valor total'), 'class' => 'form-control mascaramonetaria']) ?>
+			<div class="row contract-date-row">
+				<div class="col-sm-6">
+					<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início'), 'class' => 'form-control']) ?>
+				</div>
+				<div class="col-sm-6">
+					<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim'), 'class' => 'form-control']) ?>
+				</div>
+			</div>
+			<?= $this->Form->control('monthly_value', [
+				'label' => __('Valor mensal'),
+				'class' => 'form-control',
+				'placeholder' => '0,00',
+				'title' => __('Use vírgula para centavos (ex.: 1500,99)'),
+			]) ?>
+			<?= $this->Form->control('valor_total', [
+				'label' => __('Valor total'),
+				'class' => 'form-control',
+				'placeholder' => '0,00',
+				'title' => __('Use vírgula para centavos (ex.: 1500,99)'),
+			]) ?>
 			<?= $this->Form->control('nivel_sla', ['label' => __('Nível SLA'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('auto_renew', ['type' => 'checkbox', 'label' => __('Renovação automática')]) ?>
 			<?= $this->Form->control('observacoes_cli', ['type' => 'textarea', 'label' => __('Obs. cliente'), 'class' => 'form-control', 'rows' => 4]) ?>

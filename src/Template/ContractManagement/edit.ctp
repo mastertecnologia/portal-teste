@@ -1,5 +1,12 @@
 <?php
 $this->assign('title', $title ?? 'Editar');
+$__fmtContractMoney = static function ($v) {
+	if ($v === null || $v === '') {
+		return '';
+	}
+
+	return number_format((float)$v, 2, ',', '.');
+};
 ?>
 <div class="col-12 pgm-adv-page">
 	<div class="pgm-adv-panel card">
@@ -20,10 +27,34 @@ $this->assign('title', $title ?? 'Editar');
 			?>
 			<?= $this->Form->control('status', ['label' => __('Status'), 'options' => $__stEdit, 'class' => 'form-control']) ?>
 			<?= $this->Form->control('template_id', ['options' => $templatesList, 'empty' => true, 'label' => __('Modelo'), 'class' => 'form-control']) ?>
-			<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início'), 'class' => 'form-control']) ?>
-			<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim'), 'class' => 'form-control']) ?>
-			<?= $this->Form->control('monthly_value', ['label' => __('Valor mensal'), 'class' => 'form-control mascaramonetaria']) ?>
-			<?= $this->Form->control('valor_total', ['label' => __('Valor total'), 'class' => 'form-control mascaramonetaria']) ?>
+			<div class="row contract-date-row">
+				<div class="col-sm-6">
+					<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início'), 'class' => 'form-control']) ?>
+				</div>
+				<div class="col-sm-6">
+					<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim'), 'class' => 'form-control']) ?>
+				</div>
+			</div>
+			<?php
+			$__mvOpts = [
+				'label' => __('Valor mensal'),
+				'class' => 'form-control',
+				'placeholder' => '0,00',
+				'title' => __('Use vírgula para centavos (ex.: 1500,99)'),
+			];
+			$__vtOpts = [
+				'label' => __('Valor total'),
+				'class' => 'form-control',
+				'placeholder' => '0,00',
+				'title' => __('Use vírgula para centavos (ex.: 1500,99)'),
+			];
+			if (!$this->request->is(['post', 'put'])) {
+				$__mvOpts['value'] = $__fmtContractMoney($contract->monthly_value);
+				$__vtOpts['value'] = $__fmtContractMoney($contract->valor_total);
+			}
+			?>
+			<?= $this->Form->control('monthly_value', $__mvOpts) ?>
+			<?= $this->Form->control('valor_total', $__vtOpts) ?>
 			<?= $this->Form->control('nivel_sla', ['label' => __('Nível SLA'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('auto_renew', ['type' => 'checkbox', 'label' => __('Renovação automática')]) ?>
 			<?= $this->Form->control('observacoes_cli', ['type' => 'textarea', 'label' => __('Obs. cliente'), 'class' => 'form-control', 'rows' => 4]) ?>
