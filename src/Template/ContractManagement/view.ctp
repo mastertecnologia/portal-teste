@@ -1,9 +1,10 @@
 <?php
 $this->assign('title', $title ?? 'Contrato');
-$id     = (int)$contract->id;
-$status = $contract->status ?? 'rascunho';
+$id = (int)$contract->id;
+// Normalizar aliases EN (ex.: awaiting_signature) — sem isto o botão «Enviar assinatura» some na UI
+$st = \App\Service\ContractLifecycleService::normalizeStatus($contract->status ?? 'rascunho');
 
-// Status config: cor Bootstrap + rótulo
+// Status config: cor Bootstrap + rótulo (chaves em PT canónico)
 $statusCfg = [
     'rascunho'              => ['default',  'Rascunho'],
     'revisao'               => ['info',     'Em Revisão'],
@@ -17,15 +18,15 @@ $statusCfg = [
     'recusado'              => ['danger',   'Recusado'],
     'assinatura_expirada'   => ['danger',   'Assin. Expirada'],
 ];
-[$statusColor, $statusLabel] = $statusCfg[$status] ?? ['default', h($status)];
+[$statusColor, $statusLabel] = $statusCfg[$st] ?? ['default', h((string)($contract->status ?? $st))];
 
-// Quais ações fazem sentido por status
-$podeEditar    = in_array($status, ['rascunho', 'revisao']);
-$podeAprovar   = in_array($status, ['rascunho', 'revisao']);
-$podeAssinar   = in_array($status, ['rascunho', 'revisao', 'aguardando_assinatura']);
-$podeSuspender = in_array($status, ['ativo', 'a_vencer', 'em_renovacao', 'aguardando_assinatura']);
-$podeCancelar  = !in_array($status, ['cancelado', 'encerrado']);
-$podeRenovar   = in_array($status, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']);
+// Quais ações fazem sentido por status (sempre com $st normalizado)
+$podeEditar    = in_array($st, ['rascunho', 'revisao'], true);
+$podeAprovar   = in_array($st, ['rascunho', 'revisao'], true);
+$podeAssinar   = in_array($st, ['rascunho', 'revisao', 'aguardando_assinatura'], true);
+$podeSuspender = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'aguardando_assinatura'], true);
+$podeCancelar  = !in_array($st, ['cancelado', 'encerrado'], true);
+$podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso'], true);
 ?>
 
 <div class="col-12 pgm-adv-page">

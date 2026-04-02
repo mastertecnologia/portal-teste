@@ -367,6 +367,8 @@ class ContractManagementController extends AppController {
 		$this->set('title', __('Signatários'));
 		$this->set('contract', $contract);
 		$this->set('contractMayEditCore', $this->_contractMayEditCore($contract));
+		$stSig = ContractLifecycleService::normalizeStatus($contract->get('status'));
+		$this->set('podeEnviarAssinatura', in_array($stSig, ['rascunho', 'revisao', 'aguardando_assinatura'], true));
 
 		if ($this->request->is('post')) {
 			$row = $this->ContractSignatories->newEntity(array_merge(

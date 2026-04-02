@@ -5,11 +5,12 @@ $sigs       = $contract->contract_signatories ?? [];
 $contractId = (int)$contract->id;
 
 $tipoOpts = [
-    'cliente'       => 'Cliente',
-    'empresa'       => 'Empresa / Contratante',
+    'cliente'       => 'Cliente (PF ou contato)',
+    'empresa'       => 'Contratante (empresa que contrata)',
+    'contratada'    => 'Empresa contratada (prestadora / PGM)',
     'testemunha'    => 'Testemunha',
     'fiador'        => 'Fiador',
-    'representante' => 'Representante Legal',
+    'representante' => 'Representante legal',
 ];
 $authOpts = [
     'email'    => 'E-mail',
@@ -37,8 +38,11 @@ $actionOpts = [
 	]) ?>
 
 	<div class="mb-3" style="display:flex;flex-wrap:wrap;gap:6px;">
-		<?= $this->Html->link('Ir para ficha (PDF / assinatura)', ['action' => 'view',        $contractId], ['class' => 'btn btn-sm btn-primary']) ?>
-		<?= $this->Html->link('Voltar a serviços',                ['action' => 'addServicos', $contractId], ['class' => 'btn btn-sm btn-default']) ?>
+		<?= $this->Html->link('Ir para ficha (PDF / assinatura)', ['action' => 'view', $contractId], ['class' => 'btn btn-sm btn-primary']) ?>
+		<?php if (!empty($podeEnviarAssinatura) && !empty($sigs)): ?>
+		<?= $this->Html->link('📨 Enviar para assinatura', ['action' => 'enviarAssinatura', $contractId], ['class' => 'btn btn-sm btn-info']) ?>
+		<?php endif; ?>
+		<?= $this->Html->link('Voltar a serviços', ['action' => 'addServicos', $contractId], ['class' => 'btn btn-sm btn-default']) ?>
 	</div>
 
 	<?php /* ── LISTA DE SIGNATÁRIOS CADASTRADOS ─── */ ?>
