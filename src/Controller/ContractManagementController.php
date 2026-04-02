@@ -8,6 +8,7 @@ use App\Service\ContractPdfService;
 use App\Service\ContractRenewalService;
 use App\Service\ContractSigningService;
 use Cake\Core\Configure;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
@@ -70,12 +71,12 @@ class ContractManagementController extends AppController {
 		$id = (int)$id;
 		$idempresa = $this->_idempresa();
 		if ($id <= 0) {
-			throw new NotFoundException();
+			throw new NotFoundException(__('Contrato não encontrado.'));
 		}
 		try {
 			$c = $this->Contracts->get($id, ['contain' => $contain]);
-		} catch (\Throwable $e) {
-			throw new NotFoundException();
+		} catch (RecordNotFoundException $e) {
+			throw new NotFoundException(__('Contrato não encontrado.'));
 		}
 		if ((int)$c->idempresa !== $idempresa) {
 			throw new ForbiddenException();
@@ -224,13 +225,19 @@ class ContractManagementController extends AppController {
 			} else {
 				$contract = $this->Contracts->newEntity($data);
 				if ($this->Contracts->save($contract)) {
+					$newId = (int)$contract->get('id');
+					if ($newId <= 0) {
+						$this->log('Contracts->save retornou true sem id na entidade.', 'error');
+						$this->Flash->error(__('Contrato gravado mas não foi possível obter o número. Recarregue a lista.'));
+						return $this->redirect(['action' => 'index']);
+					}
 					if ($this->request->getData('gravar_destino') === 'ficha') {
 						$this->Flash->success(__('Contrato criado. Abra a ficha para PDF e assinatura.'));
-						return $this->redirect(['action' => 'view', $contract->id]);
+						return $this->redirect(['controller' => 'ContractManagement', 'action' => 'view', $newId]);
 					}
 					$this->Flash->success(__('Contrato criado. Adicione serviços ou avance para signatários.'));
 
-					return $this->redirect(['action' => 'addServicos', $contract->id]);
+					return $this->redirect(['controller' => 'ContractManagement', 'action' => 'addServicos', $newId]);
 				}
 				$this->Flash->error(__('Não foi possível gravar. Verifique os campos.'));
 			}
@@ -270,7 +277,13 @@ class ContractManagementController extends AppController {
 	}
 
 	public function addServicos($id = null) {
-		$contract = $this->_getContractOrFail($id, ['ContractServices']);
+		$contract = $this->_getContractOrFail($id, []);
+		try {
+			$this->Contracts->loadInto($contract, ['ContractServices']);
+		} catch (\Throwable $e) {
+			$this->log('ContractManagement::addServicos loadInto ContractServices: ' . $e->getMessage(), 'error');
+			$contract->contract_services = [];
+		}
 		$this->set('title', __('Serviços do contrato'));
 		$this->set('contract', $contract);
 
@@ -281,7 +294,7 @@ class ContractManagementController extends AppController {
 			));
 			if ($this->ContractServices->save($row)) {
 				$this->Flash->success(__('Serviço adicionado.'));
-				return $this->redirect(['action' => 'addServicos', $id]);
+				return $this->redirect(['controller' => 'ContractManagement', 'action' => 'addServicos', (int)$contract->id]);
 			}
 			$this->Flash->error(__('Não foi possível gravar o serviço.'));
 			$this->set('service', $row);

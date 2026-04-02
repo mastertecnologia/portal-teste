@@ -180,7 +180,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/modulo-contratos/view/*', ['controller' => 'ContractManagement', 'action' => 'view'], ['pass' => ['id']]);
     $routes->connect('/modulo-contratos/add', ['controller' => 'ContractManagement', 'action' => 'add']);
     $routes->connect('/modulo-contratos/edit/*', ['controller' => 'ContractManagement', 'action' => 'edit'], ['pass' => ['id']]);
-    $routes->connect('/modulo-contratos/servicos/*', ['controller' => 'ContractManagement', 'action' => 'addServicos'], ['pass' => ['id']]);
+    // :id numérico evita URL sem id e ajuda o Router a gerar o mesmo path no redirect
+    $routes->connect('/modulo-contratos/servicos/:id', ['controller' => 'ContractManagement', 'action' => 'addServicos'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->redirect('/modulo-contratos/servicos', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/signatarios/*', ['controller' => 'ContractManagement', 'action' => 'addSignatarios'], ['pass' => ['id']]);
     $routes->connect('/modulo-contratos/gerar-pdf/*', ['controller' => 'ContractManagement', 'action' => 'gerarPdf'], ['pass' => ['id']]);
     $routes->connect('/modulo-contratos/enviar-assinatura/*', ['controller' => 'ContractManagement', 'action' => 'enviarAssinatura'], ['pass' => ['id']]);
