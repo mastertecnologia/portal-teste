@@ -48,34 +48,45 @@ class ContractLifecycleService {
 
 	/**
 	 * Estados em que a equipa (ERP) pode editar o núcleo do contrato na UI.
-	 * Inclui rascunho/revisão, recusado, pré-assinatura e vigência operacional (ativo / a vencer).
+	 * Rascunho/revisão, recusado e pré-assinatura: qualquer utilizador com acesso ao módulo.
+	 * Ativo / a vencer: só se $allowOperationalForAdmin for true (ex.: users.admin = 1).
 	 *
 	 * @param \Cake\Datasource\EntityInterface $contract
+	 * @param bool $allowOperationalForAdmin
 	 * @return bool
 	 */
-	public static function mayEditCore(EntityInterface $contract) {
+	public static function mayEditCore(EntityInterface $contract, $allowOperationalForAdmin = false) {
 		$st = self::normalizeStatus($contract->get('status'));
 
-		return in_array($st, [
-			'rascunho',
-			'revisao',
-			'recusado',
-			'aguardando_assinatura',
-			'ativo',
-			'a_vencer',
-		], true);
+		$preOperational = ['rascunho', 'revisao', 'recusado', 'aguardando_assinatura'];
+		if (in_array($st, $preOperational, true)) {
+			return true;
+		}
+		if ($allowOperationalForAdmin && in_array($st, ['ativo', 'a_vencer'], true)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
 	 * @param \Cake\Datasource\EntityInterface $contract
+	 * @param bool $allowOperationalForAdmin utilizador administrador (legado): pode editar ativo / a vencer
 	 * @return void
 	 */
-	public static function assertMayEditCore(EntityInterface $contract) {
-		if (!self::mayEditCore($contract)) {
+	public static function assertMayEditCore(EntityInterface $contract, $allowOperationalForAdmin = false) {
+		if (self::mayEditCore($contract, $allowOperationalForAdmin)) {
+			return;
+		}
+		$st = self::normalizeStatus($contract->get('status'));
+		if (!$allowOperationalForAdmin && in_array($st, ['ativo', 'a_vencer'], true)) {
 			throw new \RuntimeException(
-				'Não é possível editar os dados principais deste contrato no estado atual (ex.: suspenso, encerrado ou cancelado).'
+				'Apenas administradores do sistema podem editar contratos ativos ou a vencer.'
 			);
 		}
+		throw new \RuntimeException(
+			'Não é possível editar os dados principais deste contrato no estado atual (ex.: suspenso, encerrado ou cancelado).'
+		);
 	}
 
 	/**

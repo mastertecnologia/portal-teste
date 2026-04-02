@@ -63,6 +63,15 @@ class ContractManagementController extends AppController {
 	}
 
 	/**
+	 * Legado: users.admin = 1 — pode editar núcleo de contrato ativo / a vencer.
+	 *
+	 * @return bool
+	 */
+	protected function _mayEditOperationalContract() {
+		return (int)$this->Auth->user('admin') === 1;
+	}
+
+	/**
 	 * @param int $id
 	 * @param array $contain
 	 * @return \App\Model\Entity\Contract
@@ -261,7 +270,7 @@ class ContractManagementController extends AppController {
 		$this->set('title', __('Editar contrato'));
 
 		try {
-			ContractLifecycleService::assertMayEditCore($contract);
+			ContractLifecycleService::assertMayEditCore($contract, $this->_mayEditOperationalContract());
 		} catch (\RuntimeException $e) {
 			$this->Flash->error($e->getMessage());
 			return $this->redirect(['action' => 'view', $id]);
