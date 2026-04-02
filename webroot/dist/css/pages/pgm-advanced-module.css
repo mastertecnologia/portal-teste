@@ -1,0 +1,100 @@
+/**
+ * Módulo avançado — painéis alinhados ao shell escuro (layout-no-topbar).
+ * O conteúdo deve ficar dentro de .col-12.pgm-adv-page (filho da .row do layout).
+ */
+body.layout-no-topbar .pgm-adv-page {
+	width: 100%;
+	max-width: 100%;
+	padding-left: 0;
+	padding-right: 0;
+	margin-bottom: 1.25rem;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel.card,
+body.layout-no-topbar .pgm-adv-page .card.pgm-adv-panel {
+	background: #161b22 !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25) !important;
+	color: #e6edf3 !important;
+	width: 100%;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .card-body {
+	color: #e6edf3 !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .card-title,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel h4,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel h5 {
+	color: #e6edf3 !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .text-muted {
+	color: rgba(230, 237, 243, 0.55) !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .table {
+	color: #e6edf3 !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .table thead th {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+	color: rgba(230, 237, 243, 0.85) !important;
+	background: rgba(255, 255, 255, 0.03) !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .table td,
+body.layout-no-topbar .pgm-adv-page .table th {
+	border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .table-striped tbody tr:nth-of-type(odd) {
+	background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .table a {
+	color: #5cdbc0 !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .pagination a,
+body.layout-no-topbar .pgm-adv-page .pagination span {
+	background: #13161d !important;
+	border-color: rgba(255, 255, 255, 0.12) !important;
+	color: #e6edf3 !important;
+}
+
+body.layout-no-topbar .pgm-adv-page code {
+	background: rgba(255, 255, 255, 0.08) !important;
+	color: #5cdbc0 !important;
+	padding: 0.15em 0.4em;
+	border-radius: 4px;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-section-label {
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: rgba(230, 237, 243, 0.45);
+	margin: 1.5rem 0 0.75rem;
+}
+
+body.layout-no-topbar .pgm-adv-page .pgm-adv-section-label:first-child {
+	margin-top: 0;
+}
+
+/* Portal cliente (tema premium) — mantém contraste */
+body.pgm-portal-client .pgm-adv-page .pgm-adv-panel.card {
+	background: rgba(22, 27, 34, 0.92) !important;
+	border: 1px solid rgba(0, 192, 139, 0.15) !important;
+}
+
+body.layout-no-topbar .pgm-adv-page .form-control {
+	background: #13161d !important;
+	border-color: rgba(255, 255, 255, 0.12) !important;
+	color: #e6edf3 !important;
+}
+
+body.layout-no-topbar .pgm-adv-page label {
+	color: rgba(230, 237, 243, 0.85) !important;
+}

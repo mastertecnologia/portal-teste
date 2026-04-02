@@ -24,11 +24,12 @@ class AdvancedContractsController extends AppController {
 	public function index() {
 		$this->set('title', 'Contratos (módulo avançado)');
 		$idempresa = (int)$this->Auth->user('idempresa');
+		$cid = (int)$this->request->getQuery('idcliente', 0);
 		try {
 			$q = $this->Contracts->find()
+				->contain(['Clientes'])
 				->where(['Contracts.idempresa' => $idempresa])
 				->order(['Contracts.modified' => 'DESC']);
-			$cid = (int)$this->request->getQuery('idcliente', 0);
 			if ($cid > 0) {
 				$q->where(['Contracts.idcliente' => $cid]);
 			}
@@ -38,6 +39,21 @@ class AdvancedContractsController extends AppController {
 			$this->Flash->error(__('Tabela contracts indisponível. Execute a migration do módulo avançado.'));
 			$this->set('contracts', []);
 		}
+
+		$clicontratosLegado = [];
+		try {
+			$this->loadModel('Clicontratos');
+			$legq = $this->Clicontratos->find()
+				->contain(['Clientes'])
+				->where(['Clicontratos.idempresa' => $idempresa]);
+			if ($cid > 0) {
+				$legq->where(['Clicontratos.idcliente' => $cid]);
+			}
+			$clicontratosLegado = $legq->order(['Clicontratos.modified' => 'DESC'])->limit(200)->all();
+		} catch (\Throwable $e) {
+			$clicontratosLegado = [];
+		}
+		$this->set('clicontratosLegado', $clicontratosLegado);
 	}
 
 	public function view($id = null) {

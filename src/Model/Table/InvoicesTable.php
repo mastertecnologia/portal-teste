@@ -15,8 +15,8 @@ class InvoicesTable extends Table {
 		$this->setDisplayField('code');
 		$this->addBehavior('Timestamp');
 
-		$this->belongsTo('Contracts', ['foreignKey' => 'contract_id', 'joinType' => 'INNER']);
-		$this->belongsTo('Clientes', ['foreignKey' => 'idcliente', 'joinType' => 'INNER']);
+		$this->belongsTo('Contracts', ['foreignKey' => 'contract_id', 'joinType' => 'LEFT']);
+		$this->belongsTo('Clientes', ['foreignKey' => 'idcliente', 'joinType' => 'LEFT']);
 		$this->belongsTo('Empresas', ['foreignKey' => 'idempresa', 'joinType' => 'LEFT']);
 
 		$this->hasMany('InvoiceItems', ['foreignKey' => 'invoice_id', 'dependent' => true]);

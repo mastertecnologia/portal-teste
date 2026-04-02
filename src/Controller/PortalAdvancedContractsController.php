@@ -34,6 +34,7 @@ class PortalAdvancedContractsController extends AppController {
 		}
 		try {
 			$q = $this->Contracts->find()
+				->contain(['Clientes'])
 				->where([
 					'Contracts.idcliente' => $idcliente,
 					'Contracts.idempresa' => $idempresa,
@@ -45,6 +46,23 @@ class PortalAdvancedContractsController extends AppController {
 			$this->Flash->error(__('Módulo indisponível.'));
 			$this->set('contracts', []);
 		}
+
+		$clicontratosLegado = [];
+		try {
+			$this->loadModel('Clicontratos');
+			$clicontratosLegado = $this->Clicontratos->find()
+				->contain(['Clientes'])
+				->where([
+					'Clicontratos.idempresa' => $idempresa,
+					'Clicontratos.idcliente' => $idcliente,
+				])
+				->order(['Clicontratos.modified' => 'DESC'])
+				->limit(150)
+				->all();
+		} catch (\Throwable $e) {
+			$clicontratosLegado = [];
+		}
+		$this->set('clicontratosLegado', $clicontratosLegado);
 	}
 
 	public function view($id = null) {

@@ -24,12 +24,12 @@ class AdvancedAttendanceController extends AppController {
 	public function index() {
 		$this->set('title', 'Histórico de atendimento (módulo avançado)');
 		$idempresa = (int)$this->Auth->user('idempresa');
+		$cid = (int)$this->request->getQuery('idcliente', 0);
 		try {
 			$q = $this->AttendanceHistories->find()
 				->contain(['Tickets', 'Clientes'])
 				->where(['AttendanceHistories.idempresa' => $idempresa])
 				->order(['AttendanceHistories.modified' => 'DESC']);
-			$cid = (int)$this->request->getQuery('idcliente', 0);
 			if ($cid > 0) {
 				$q->where(['AttendanceHistories.idcliente' => $cid]);
 			}
@@ -39,6 +39,21 @@ class AdvancedAttendanceController extends AppController {
 			$this->Flash->error(__('Tabela attendance_histories indisponível. Execute a migration do módulo avançado.'));
 			$this->set('histories', []);
 		}
+
+		$ticketsRecent = [];
+		try {
+			$this->loadModel('Tickets');
+			$tq = $this->Tickets->find()
+				->contain(['Clientes'])
+				->where(['Tickets.idempresa' => $idempresa]);
+			if ($cid > 0) {
+				$tq->where(['Tickets.idcliente' => $cid]);
+			}
+			$ticketsRecent = $tq->order(['Tickets.modified' => 'DESC'])->limit(50)->all();
+		} catch (\Throwable $e) {
+			$ticketsRecent = [];
+		}
+		$this->set('ticketsRecent', $ticketsRecent);
 	}
 
 	public function view($id = null) {

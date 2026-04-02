@@ -15,7 +15,7 @@ class ContractsTable extends Table {
 		$this->setDisplayField('name');
 		$this->addBehavior('Timestamp');
 
-		$this->belongsTo('Clientes', ['foreignKey' => 'idcliente', 'joinType' => 'INNER']);
+		$this->belongsTo('Clientes', ['foreignKey' => 'idcliente', 'joinType' => 'LEFT']);
 		$this->belongsTo('Empresas', ['foreignKey' => 'idempresa', 'joinType' => 'LEFT']);
 
 		$this->hasMany('ContractServices', ['foreignKey' => 'contract_id', 'dependent' => true]);

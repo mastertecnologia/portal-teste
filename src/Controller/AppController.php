@@ -105,11 +105,10 @@ class AppController extends Controller {
 	}
 
 	public function beforeRender(Event $event) {
-		// if (!array_key_exists('_serialize', $this->viewVars)
-		// 'authorize' => ['Controller'], && in_array($this->response->type(), ['application/json', 'application/xml'])
-		// ) {
-			// $this->set('_serialize', true);
-		// }
+		$c = (string)$this->request->getParam('controller');
+		if (preg_match('/^(Advanced|PortalAdvanced)/', $c)) {
+			$this->set('pgmAdvancedModuleStylesheet', true);
+		}
 	}
 
 	public function afterFilter(Event $event) {

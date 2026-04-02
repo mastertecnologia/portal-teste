@@ -47,6 +47,23 @@ class PortalAdvancedAttendanceController extends AppController {
 			$this->Flash->error(__('Módulo indisponível.'));
 			$this->set('histories', []);
 		}
+
+		$ticketsRecent = [];
+		try {
+			$this->loadModel('Tickets');
+			$ticketsRecent = $this->Tickets->find()
+				->contain(['Clientes'])
+				->where([
+					'Tickets.idempresa' => $idempresa,
+					'Tickets.idcliente' => $idcliente,
+				])
+				->order(['Tickets.modified' => 'DESC'])
+				->limit(40)
+				->all();
+		} catch (\Throwable $e) {
+			$ticketsRecent = [];
+		}
+		$this->set('ticketsRecent', $ticketsRecent);
 	}
 
 	public function view($id = null) {
