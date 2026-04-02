@@ -186,6 +186,7 @@ Router::scope('/', function ($routes) {
     $routes->redirect('/modulo-contratos/edit/', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     // :id numérico evita URL sem id e ajuda o Router a gerar o mesmo path no redirect
     $routes->connect('/modulo-contratos/servicos/:id', ['controller' => 'ContractManagement', 'action' => 'addServicos'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->connect('/modulo-contratos/servicos/delete/:svcId/:contractId', ['controller' => 'ContractManagement', 'action' => 'deleteServico'], ['pass' => ['svcId', 'contractId']])->setMethods(['POST']);
     $routes->redirect('/modulo-contratos/servicos', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/signatarios/*', ['controller' => 'ContractManagement', 'action' => 'addSignatarios'], ['pass' => ['id']]);
     $routes->connect('/modulo-contratos/gerar-pdf/*', ['controller' => 'ContractManagement', 'action' => 'gerarPdf'], ['pass' => ['id']]);
