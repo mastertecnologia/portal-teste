@@ -68,11 +68,18 @@ class ContractManagementController extends AppController {
 	 * @return \App\Model\Entity\Contract
 	 */
 	protected function _getContractOrFail($id, array $contain = []) {
-		$id = (int)$id;
+		if (is_array($id)) {
+			$id = reset($id);
+		}
+		if (is_string($id)) {
+			$id = trim($id);
+		}
+		$intId = is_scalar($id) && $id !== '' ? filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
 		$idempresa = $this->_idempresa();
-		if ($id <= 0) {
+		if ($intId === false) {
 			throw new NotFoundException(__('Contrato não encontrado.'));
 		}
+		$id = $intId;
 		try {
 			$c = $this->Contracts->get($id, ['contain' => $contain]);
 		} catch (RecordNotFoundException $e) {

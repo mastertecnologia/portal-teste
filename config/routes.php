@@ -177,7 +177,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/modulo-avancado/indicadores/exportar', ['controller' => 'AdvancedReports', 'action' => 'export'])->setMethods(['GET']);
     // Gestão de contratos (ERP) — spec /modulo-contratos
     $routes->connect('/modulo-contratos', ['controller' => 'ContractManagement', 'action' => 'index']);
-    $routes->connect('/modulo-contratos/view/*', ['controller' => 'ContractManagement', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/view/:id', ['controller' => 'ContractManagement', 'action' => 'view'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->redirect('/modulo-contratos/view', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
+    $routes->redirect('/modulo-contratos/view/', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/add', ['controller' => 'ContractManagement', 'action' => 'add']);
     $routes->connect('/modulo-contratos/edit/*', ['controller' => 'ContractManagement', 'action' => 'edit'], ['pass' => ['id']]);
     // :id numérico evita URL sem id e ajuda o Router a gerar o mesmo path no redirect
