@@ -20,9 +20,6 @@ $valorFmt     = 'R$ ' . number_format($fatura->valor,    2, ',', '.');
 $descontoFmt  = 'R$ ' . number_format($fatura->desconto, 2, ',', '.');
 $valorTotal   = $fatura->valor - $fatura->desconto;
 $totalFmt     = 'R$ ' . number_format($valorTotal, 2, ',', '.');
-
-// IBPT ≈ 31,45%
-$ibptFmt = 'R$ ' . number_format($valorTotal * 0.3145, 2, ',', '.');
 ?>
 <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 <style>
@@ -319,15 +316,7 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
         <?= nl2br(h($fatura->referente ?? '')) ?>
     </div>
 
-    <!-- ══ OBSERVAÇÕES FISCAIS ════════════════════════════════════════ -->
-    <div class="secao-titulo" style="margin-top:6px;">OBSERVAÇÕES FISCAIS</div>
-    <div style="border:1px solid #000;border-top:none;padding:5px 6px;font-size:9.5px;text-align:justify;line-height:1.4;">
-        DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL. NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI. LOCAÇÃO DE BENS MÓVEIS –
-        ATIVIDADE IMPOSSIBILIDADE DE EMISSÃO DE NOTA FISCAL. ESTE RECIBO DE LOCAÇÃO É VÁLIDO COMO DOCUMENTO EQUIVALENTE, NOS TERMOS DO
-        ARTIGO 1º DA LEI 8.846/94 E § 1º DESTE ARTIGO. NÃO INCIDÊNCIA DE ISS CONFORME SÚMULA VINCULANTE Nº 31 DO STF: "É INCONSTITUCIONAL A
-        INCIDÊNCIA DO IMPOSTO SOBRE SERVIÇOS DE QUALQUER NATUREZA – ISS SOBRE OPERAÇÕES DE LOCAÇÃO DE BENS MÓVEIS.<br>
-        <strong>Valor Aprox. Tributos: <?= $ibptFmt ?> Fonte IBPT</strong>
-    </div>
+    <?= $this->element('Faturas/observacoes_fiscais_ibpt', ['ibptBreakdown' => $ibptBreakdown ?? null, 'valorBaseIbpt' => $valorTotal]) ?>
 
     <!-- ══ RODAPÉ / ASSINATURA ════════════════════════════════════════ -->
     <div class="footer-wrap footer-print" style="margin-top:8px;">

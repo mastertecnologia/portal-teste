@@ -93,6 +93,17 @@
             </div>
 
             <div class="prd-fgroup">
+              <label for="ncm">NCM (IBPT — transparência fiscal)</label>
+              <?= $this->Form->text('ncm', [
+                'class'       => 'form-control',
+                'id'          => 'ncm',
+                'placeholder' => '8 dígitos, ex.: 84713012',
+                'maxlength'   => 12,
+              ]) ?>
+              <span class="hint">Opcional. Usado na fatura/recibo de locação para tributos aproximados (Lei 12.741/2012).</span>
+            </div>
+
+            <div class="prd-fgroup">
               <label for="ativo">Situação <span style="color:var(--prd-red)">*</span></label>
               <?= $this->Form->control('ativo', [
                 'options'  => C_ProdutosAtivo,

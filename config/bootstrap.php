@@ -125,6 +125,10 @@ if (file_exists(__DIR__ . DS . 'abac.php')) {
     Configure::load('abac', 'default');
 }
 
+if (file_exists(__DIR__ . DS . 'ibpt.php')) {
+    Configure::load('ibpt', 'default', false);
+}
+
 /*
  * When debug = true the metadata cache should only last
  * for a short time.

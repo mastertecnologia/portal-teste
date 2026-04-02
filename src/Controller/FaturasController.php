@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\IbptTributosService;
 use Cake\Event\Event;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -483,6 +484,7 @@ class FaturasController extends AppController {
 		$carrinho = $this->Faturasitens->findByIdfatura($id)->where(['idempresa' => $empresa->id])->order(['codigo'])->toArray();
 
 		$this->set('carrinho', $carrinho);
+		$this->set('ibptBreakdown', $this->ibptBreakdownForPrint($empresa, $carrinho, 1.0));
 		$this->set('idcliente', $idcliente);
 		$this->set('empresaObj', $empresa);
 		$this->set('fatura', $fatura);
@@ -515,6 +517,7 @@ class FaturasController extends AppController {
 		$carrinho = $this->Faturasitens->findByIdfatura($fatura->id)->where(['idempresa' => $empresa->id])->order(['codigo'])->toArray();
 
 		$this->set('carrinho', $carrinho);
+		$this->set('ibptBreakdown', $this->ibptBreakdownForPrint($empresa, $carrinho, 1.0));
 		$this->set('idcliente', $fatura->idcliente);
 		$this->set('empresaObj', $empresa);
 		$this->set('fatura', $fatura);
@@ -597,12 +600,18 @@ class FaturasController extends AppController {
 		$this->viewBuilder()->setLayout("print");
 		$empresa = $this->Empresas->findById($this->Auth->user('idempresa'))->contain(['Cidades', 'Cidades.Estados'])->first();
 		$idcliente = $this->Auth->user('idcliente');
-		$recibo = $this->Faturasrecibos->find('all')->where(['id' => $id])->first();
+		$recibo = $this->Faturasrecibos->find('all')->where(['id' => $id, 'idempresa' => $empresa->id])->first();
+		if (empty($recibo)) {
+			$this->Flash->error('Recibo não encontrado.');
+			return $this->redirect(['controller' => 'locacao', 'action' => 'index']);
+		}
 		$fatura = $this->Faturas->find('all', ['contain' => ['Clientes', 'Clientes.Cidades', 'Clientes.Cidades.Estados']])->where(['Faturas.id' => $recibo->idfatura, 'Faturas.idempresa' => $empresa->id])->first();
 
-		if(empty($fatura->outrosgastos)) $fatura->outrosgastos = 0;
-		if(empty($fatura->outrosgastos)) $fatura->desconto = 0;
-		$fatura->valor = $fatura->valor + $fatura->outrosgastos - $fatura->desconto;
+		if (empty($fatura->outrosgastos)) {
+			$fatura->outrosgastos = 0;
+		}
+		$fatura->desconto = (float)($fatura->desconto ?? 0);
+		$fatura->valor = (float)$fatura->valor + (float)$fatura->outrosgastos - (float)$fatura->desconto;
 
 		if ($empresa->id != $fatura->idempresa) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
@@ -614,10 +623,18 @@ class FaturasController extends AppController {
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
+		$carrinho = $this->Faturasitens->findByIdfatura((int)$recibo->idfatura)->where(['idempresa' => $empresa->id])->order(['codigo'])->toArray();
+
+		$fv = (float) $fatura->valor;
+		$vp = (float) $recibo->valorpago;
+		$fatorIbpt = $fv > 0 ? min(1.0, $vp / $fv) : 1.0;
+
 		$this->set('idcliente', $idcliente);
 		$this->set('empresaObj', $empresa);
 		$this->set('fatura', $fatura);
 		$this->set('recibo', $recibo);
+		$this->set('carrinho', $carrinho);
+		$this->set('ibptBreakdown', $this->ibptBreakdownForPrint($empresa, $carrinho, $fatorIbpt));
 		$this->set('title', 'Imprimir recibo');
 	}
 
@@ -696,5 +713,23 @@ class FaturasController extends AppController {
 				$this->log('[Prefat] vínculo fatura/os: ' . $e->getMessage(), 'warning');
 			}
 		}
+	}
+
+	/**
+	 * Tributos aproximados (IBPT) para fatura/recibo de locação.
+	 *
+	 * @param \Cake\Datasource\EntityInterface|object $empresa Com cidade/estado carregados.
+	 * @param array $carrinho Itens da fatura.
+	 * @param float $scaleFactor 1.0 = documento integral; &lt; 1 para recibo parcial.
+	 * @return array|null
+	 */
+	protected function ibptBreakdownForPrint($empresa, array $carrinho, $scaleFactor = 1.0) {
+		if (empty($carrinho)) {
+			return null;
+		}
+		$svc = new IbptTributosService();
+		$b = $svc->breakdownForCarrinho($empresa, $carrinho, (int) $empresa->id);
+
+		return $svc->scaleBreakdown($b, $scaleFactor);
 	}
 }
