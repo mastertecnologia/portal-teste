@@ -45,6 +45,10 @@ class Contract extends Entity {
 		'autentique_doc_id' => true,
 		'autentique_status' => true,
 		'autentique_url' => true,
+		'signature_provider' => true,
+		'signed_file_url' => true,
+		'sent_for_signature_at' => true,
+		'fully_signed_at' => true,
 		'pdf_path' => true,
 		'signed_pdf_path' => true,
 		'aprovado_por' => true,
@@ -57,6 +61,8 @@ class Contract extends Entity {
 		'created' => true,
 		'modified' => true,
 	];
+
+	protected $_virtual = ['status_label', 'dias_para_vencer'];
 
 	protected $_casts = [
 		'clausulas' => 'array',
@@ -74,5 +80,49 @@ class Contract extends Entity {
 		'aprovado_em' => 'datetime',
 		'assinado_em' => 'datetime',
 		'cancelado_em' => 'datetime',
+		'sent_for_signature_at' => 'datetime',
+		'fully_signed_at' => 'datetime',
 	];
+
+	/**
+	 * Rótulos PT para UI (lista, filtros, portal).
+	 *
+	 * @return array<string,string>
+	 */
+	public static function statusLabelMap() {
+		return [
+			'rascunho' => 'Rascunho',
+			'revisao' => 'Em revisão',
+			'aguardando_assinatura' => 'Aguard. assinatura',
+			'awaiting_signature' => 'Aguard. assinatura',
+			'ativo' => 'Ativo',
+			'active' => 'Ativo',
+			'a_vencer' => 'A vencer',
+			'em_renovacao' => 'Em renovação',
+			'suspenso' => 'Suspenso',
+			'encerrado' => 'Encerrado',
+			'cancelado' => 'Cancelado',
+			'recusado' => 'Recusado',
+			'assinatura_expirada' => 'Assin. expirada',
+		];
+	}
+
+	protected function _getStatusLabel() {
+		$s = (string)$this->status;
+		$labels = static::statusLabelMap();
+
+		return $labels[$s] ?? $s;
+	}
+
+	protected function _getDiasParaVencer() {
+		$vf = $this->end_date;
+		if ($vf === null || $vf === '') {
+			return null;
+		}
+		$vfStr = $vf instanceof \DateTimeInterface ? $vf->format('Y-m-d') : (string)$vf;
+		$today = strtotime('today UTC');
+		$end = strtotime($vfStr . ' UTC');
+
+		return (int)ceil(($end - $today) / 86400);
+	}
 }

@@ -8,7 +8,7 @@ $count = isset($params['count']) ? (int)$params['count'] : (is_countable($templa
 		<div class="card-body">
 			<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
 				<h4 class="card-title mb-0"><?= h($title) ?></h4>
-				<?= $this->Html->link('Novo modelo', '/modulo-avancado/modelos-contrato/add', ['class' => 'btn btn-sm btn-primary']) ?>
+				<?= $this->Html->link('Novo modelo', '/contract-templates/add', ['class' => 'btn btn-sm btn-primary']) ?>
 			</div>
 			<p class="text-muted small mb-3">
 				Modelos reutilizáveis para contratos do módulo avançado. JSON em <code>cláusulas</code> e <code>variáveis</code> deve ser array válido (ex.: <code>[]</code>).
@@ -34,10 +34,12 @@ $count = isset($params['count']) ? (int)$params['count'] : (is_countable($templa
 							<td><?= !empty($t->ativo) ? '<span class="badge badge-success">sim</span>' : '<span class="badge badge-secondary">não</span>' ?></td>
 							<td class="small"><?= h($t->modified ? $t->modified->format('d/m/Y H:i') : '') ?></td>
 							<td class="text-nowrap">
-								<?= $this->Html->link('Editar', '/modulo-avancado/modelos-contrato/edit/' . (int)$t->id, ['class' => 'btn btn-sm btn-outline-primary']) ?>
+								<?= $this->Html->link(__('Ver'), '/contract-templates/preview/' . (int)$t->id, ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+								<?= $this->Html->link(__('Clonar'), '/contract-templates/clonar/' . (int)$t->id, ['class' => 'btn btn-sm btn-outline-info', 'confirm' => __('Criar uma cópia deste modelo?')]) ?>
+								<?= $this->Html->link('Editar', '/contract-templates/edit/' . (int)$t->id, ['class' => 'btn btn-sm btn-outline-primary']) ?>
 								<?= $this->Form->postLink(
 									'Excluir',
-									'/modulo-avancado/modelos-contrato/delete/' . (int)$t->id,
+									'/contract-templates/delete/' . (int)$t->id,
 									['class' => 'btn btn-sm btn-outline-danger', 'confirm' => 'Excluir este modelo?']
 								) ?>
 							</td>
@@ -58,7 +60,7 @@ $count = isset($params['count']) ? (int)$params['count'] : (is_countable($templa
 			<nav class="mt-2"><?= $this->Paginator->numbers(['prev' => true, 'next' => true]) ?></nav>
 			<?php endif; ?>
 			<p class="mb-0 mt-2">
-				<?= $this->Html->link('← Contratos', '/modulo-avancado/contratos', ['class' => 'btn btn-sm btn-secondary']) ?>
+				<?= $this->Html->link('← Contratos', '/modulo-contratos', ['class' => 'btn btn-sm btn-secondary']) ?>
 			</p>
 		</div>
 	</div>

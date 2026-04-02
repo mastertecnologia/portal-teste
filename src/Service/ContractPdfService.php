@@ -60,6 +60,27 @@ class ContractPdfService {
 	}
 
 	/**
+	 * Gera PDF, grava pdf_path no contrato e persiste.
+	 *
+	 * @param \Cake\ORM\Table $contractsTable
+	 * @param \Cake\Datasource\EntityInterface $contract
+	 * @param \Cake\Datasource\EntityInterface|null $template
+	 * @param array $servicos
+	 * @return string Caminho absoluto do PDF
+	 */
+	public function gerarEPersistir($contractsTable, $contract, $template, array $servicos = []) {
+		$path = $this->gerar($contract, $template, $servicos);
+		$contractsTable->patchEntity($contract, ['pdf_path' => $path]);
+		if (!$contractsTable->save($contract)) {
+			$err = json_encode($contract->getErrors(), JSON_UNESCAPED_UNICODE);
+
+			throw new \RuntimeException('Falha ao gravar pdf_path: ' . $err);
+		}
+
+		return $path;
+	}
+
+	/**
 	 * @param mixed $x
 	 * @return object
 	 */

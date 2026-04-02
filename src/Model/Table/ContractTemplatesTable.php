@@ -30,7 +30,10 @@ class ContractTemplatesTable extends Table {
 			->notEmpty('idempresa');
 
 		$validator->scalar('tipo_contrato')->maxLength('tipo_contrato', 40)->allowEmpty('tipo_contrato');
-		$validator->scalar('conteudo_html')->allowEmpty('conteudo_html');
+		$validator
+			->scalar('conteudo_html')
+			->requirePresence('conteudo_html', 'create')
+			->notEmpty('conteudo_html', __('Informe o corpo HTML do modelo.'), 'create');
 		$validator->scalar('descricao')->allowEmpty('descricao');
 		$validator->boolean('ativo')->allowEmpty('ativo');
 		$validator->integer('versao')->allowEmpty('versao');

@@ -1,6 +1,9 @@
 <?php
 namespace App\Controller;
 
+use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\NotFoundException;
+
 /**
  * Modelos de contrato (contract_templates). Equipe interna (role 0).
  */
@@ -53,11 +56,12 @@ class ContractTemplatesController extends AppController {
 			$tpl = $this->ContractTemplates->patchEntity($tpl, $data);
 			if ($this->ContractTemplates->save($tpl)) {
 				$this->Flash->success(__('Modelo gravado.'));
-				return $this->redirect('/modulo-avancado/modelos-contrato');
+				return $this->redirect('/contract-templates');
 			}
 			$this->Flash->error(__('Não foi possível gravar. Verifique os campos.'));
 		}
 
+		$this->set('contractTemplatePlaceholders', $this->_placeholdersForTemplate($tpl));
 		$this->set('template', $tpl);
 	}
 
@@ -85,12 +89,48 @@ class ContractTemplatesController extends AppController {
 			$tpl = $this->ContractTemplates->patchEntity($tpl, $data);
 			if ($this->ContractTemplates->save($tpl)) {
 				$this->Flash->success(__('Modelo atualizado.'));
-				return $this->redirect('/modulo-avancado/modelos-contrato');
+				return $this->redirect('/contract-templates');
 			}
 			$this->Flash->error(__('Não foi possível salvar.'));
 		}
 
+		$this->set('contractTemplatePlaceholders', $this->_placeholdersForTemplate($tpl));
 		$this->set('template', $tpl);
+	}
+
+	public function clonar($id = null) {
+		$id = (int)$id;
+		$idempresa = (int)$this->Auth->user('idempresa');
+		if ($id <= 0) {
+			throw new NotFoundException();
+		}
+		try {
+			$src = $this->ContractTemplates->get($id);
+		} catch (\Throwable $e) {
+			throw new NotFoundException();
+		}
+		if ((int)$src->idempresa !== $idempresa) {
+			throw new ForbiddenException();
+		}
+		$copy = $this->ContractTemplates->newEntity([
+			'idempresa' => $idempresa,
+			'nome' => trim((string)$src->nome) . ' (cópia)',
+			'tipo_contrato' => $src->tipo_contrato,
+			'descricao' => $src->descricao,
+			'conteudo_html' => $src->conteudo_html,
+			'clausulas_padrao' => $src->clausulas_padrao,
+			'variaveis' => $src->variaveis,
+			'versao' => 1,
+			'ativo' => false,
+		]);
+		if ($this->ContractTemplates->save($copy)) {
+			$this->Flash->success(__('Modelo duplicado. Ajuste o nome e ative quando estiver pronto.'));
+
+			return $this->redirect('/contract-templates/edit/' . (int)$copy->id);
+		}
+		$this->Flash->error(__('Não foi possível duplicar o modelo.'));
+
+		return $this->redirect('/contract-templates');
 	}
 
 	public function delete($id = null) {
@@ -113,13 +153,56 @@ class ContractTemplatesController extends AppController {
 		} else {
 			$this->Flash->error(__('Não foi possível excluir.'));
 		}
-		return $this->redirect('/modulo-avancado/modelos-contrato');
+		return $this->redirect('/contract-templates');
+	}
+
+	public function preview($id = null) {
+		$id = (int)$id;
+		$idempresa = (int)$this->Auth->user('idempresa');
+		if ($id <= 0) {
+			throw new NotFoundException();
+		}
+		try {
+			$tpl = $this->ContractTemplates->get($id);
+		} catch (\Throwable $e) {
+			throw new NotFoundException();
+		}
+		if ((int)$tpl->idempresa !== $idempresa) {
+			throw new ForbiddenException();
+		}
+		$this->set('title', __('Pré-visualização: {0}', $tpl->nome));
+		$this->set('template', $tpl);
 	}
 
 	/**
 	 * @param array $data
 	 * @return array
 	 */
+	/**
+	 * @param \App\Model\Entity\ContractTemplate $tpl
+	 * @return string[]
+	 */
+	protected function _placeholdersForTemplate($tpl) {
+		$defaults = [
+			'nome_cliente', 'razao_social', 'cnpj', 'email_cliente',
+			'vigencia_inicio', 'vigencia_fim', 'valor_mensal', 'codigo_contrato',
+		];
+		$extra = [];
+		if ($tpl !== null && !empty($tpl->variaveis) && is_array($tpl->variaveis)) {
+			foreach ($tpl->variaveis as $k => $v) {
+				if (is_string($v) && $v !== '') {
+					$extra[] = $v;
+				} elseif (is_string($k) && $k !== '' && !is_numeric($k)) {
+					$extra[] = $k;
+				} elseif (is_array($v) && !empty($v['nome'])) {
+					$extra[] = (string)$v['nome'];
+				}
+			}
+		}
+
+		return array_values(array_unique(array_merge($extra, $defaults)));
+	}
+
 	protected function _normalizeTemplateData(array $data) {
 		foreach (['clausulas_padrao', 'variaveis'] as $key) {
 			if (!isset($data[$key])) {

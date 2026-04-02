@@ -10,6 +10,9 @@
 #   GIT_RESET=1            em vez de pull, faz fetch + reset --hard origin/main
 #                          (apaga alterações locais não commitadas — use só se souber o que faz)
 #
+# Contratos (Fase 6): cria uploads/contracts/{pdfs,signed,documents} e permissões.
+# Defina no .env: CONTRACT_PDF_STORAGE_PATH=/caminho/absoluto/portal/uploads/contracts/
+#
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -65,9 +68,19 @@ fix_perms() {
 	chown -R "$DEPLOY_USER:$DEPLOY_USER" /var/www/.npm
 }
 
+# Pastas de PDFs / assinados / documentos avulsos (Contract.pdf.storage_path em produção)
+ensure_contract_upload_dirs() {
+	local base="$REPO_ROOT/uploads/contracts"
+	echo "==> Contratos: $base/{pdfs,signed,documents}"
+	mkdir -p "$base/pdfs" "$base/signed" "$base/documents"
+	chown -R "$DEPLOY_USER:$DEPLOY_USER" "$REPO_ROOT/uploads"
+	chmod -R ug+rwx "$REPO_ROOT/uploads"
+}
+
 git_sync
 composer_install
 npm_tickets
+ensure_contract_upload_dirs
 fix_perms
 
 echo "OK — deploy concluído."

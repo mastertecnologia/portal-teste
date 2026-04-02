@@ -76,6 +76,8 @@ class AppController extends Controller {
 				'selectTheme',
 				// Faturamento: modal alterar status (POST sem _Token no corpo)
 				'alterarStatus',
+				// Webhook Autentique (corpo JSON; sem _Token)
+				'webhookAutentique',
 			],
 		]);
 		$this->loadComponent('Auth', [
@@ -106,7 +108,7 @@ class AppController extends Controller {
 
 	public function beforeRender(Event $event) {
 		$c = (string)$this->request->getParam('controller');
-		if (preg_match('/^(Advanced|PortalAdvanced)/', $c)) {
+		if (preg_match('/^(Advanced|PortalAdvanced|ContractManagement|PortalContratos)/', $c)) {
 			$this->set('pgmAdvancedModuleStylesheet', true);
 		}
 	}
@@ -204,7 +206,8 @@ class AppController extends Controller {
 			'tickets' => 'ticketsActive',
 			'portaladvancedattendance' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
-			'advancedcontracts' => 'advancedModuleActive',
+				'advancedcontracts' => 'advancedModuleActive',
+			'contractmanagement' => 'advancedModuleActive',
 			'contracttemplates' => 'advancedModuleActive',
 			'advancedinvoices' => 'advancedModuleActive',
 			'advancedreports' => 'relActive',

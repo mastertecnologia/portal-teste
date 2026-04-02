@@ -358,13 +358,19 @@ return [
     /**
      * Contratos (módulo avançado): Autentique, PDF, alertas.
      * Segredos e URLs reais: env / config/app_local.php (não commitar).
+     *
+     * Produção: CONTRACT_PDF_STORAGE_PATH → pasta persistente (ex.: ROOT/uploads/contracts/).
+     * Deploy: scripts/deploy-portal.sh cria uploads/contracts/{pdfs,signed,documents}.
+     * Cron: scripts/cron-contract-alerts.example — bin/cake contract_alerts
      */
     'Contract' => [
         'autentique' => [
             'enabled' => filter_var(env('CONTRACT_AUTENTIQUE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            // Vazio = endpoint oficial v2 (GraphQL + multipart upload).
             'api_base_url' => env('CONTRACT_AUTENTIQUE_API_BASE', ''),
             'api_key' => env('CONTRACT_AUTENTIQUE_API_KEY', ''),
             'webhook_secret' => env('CONTRACT_AUTENTIQUE_WEBHOOK_SECRET', ''),
+            'sandbox' => filter_var(env('CONTRACT_AUTENTIQUE_SANDBOX', false), FILTER_VALIDATE_BOOLEAN),
         ],
         'pdf' => [
             'storage_path' => env('CONTRACT_PDF_STORAGE_PATH', TMP . 'contracts' . DS),

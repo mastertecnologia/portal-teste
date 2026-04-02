@@ -19,16 +19,7 @@
         <!-- Add plugin test suites here. -->
     </testsuites>
 
-    <!-- Setup a listener for fixtures -->
-    <listeners>
-        <listener
-        class="\Cake\TestSuite\Fixture\FixtureInjector"
-        file="./vendor/cakephp/cakephp/src/TestSuite/Fixture/FixtureInjector.php">
-            <arguments>
-                <object class="\Cake\TestSuite\Fixture\FixtureManager" />
-            </arguments>
-        </listener>
-    </listeners>
+    <!-- FixtureInjector: reativar quando houver testes de integração com BD (Cake\TestSuite\TestCase + fixtures). -->
 
     <!-- Ignore vendor tests in code coverage reports -->
     <filter>

@@ -19,6 +19,7 @@ class EmpresasTable extends Table{
 		$this->hasMany('Orcamentos')->setForeignKey('idempresa');
 		$this->hasMany('Tickets')->setForeignKey('idempresa');
 		$this->hasMany('Faturas')->setForeignKey('idempresa');
+		$this->hasMany('ContractTemplates')->setForeignKey('idempresa');
 		$this->belongsTo('Cidades')->setForeignKey('idcidade');
 	}
 

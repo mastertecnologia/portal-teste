@@ -64,7 +64,7 @@ class ContractRenewalService {
 		unset($novoData['id'], $novoData['created'], $novoData['modified']);
 
 		$novoData['code'] = $this->proximoNumero((int)$original->get('idempresa'));
-		$novoData['status'] = 'draft';
+		$novoData['status'] = 'rascunho';
 		$novoData['contrato_pai_id'] = $original->get('id');
 		$novoData['versao'] = 1;
 		$novoData['start_date'] = $novos['vigencia_inicio'] ?? $renewal->get('nova_vigencia_inicio');
@@ -73,7 +73,9 @@ class ContractRenewalService {
 
 		foreach ([
 			'autentique_doc_id', 'autentique_status', 'autentique_url',
-			'pdf_path', 'signed_pdf_path', 'aprovado_por', 'aprovado_em',
+			'pdf_path', 'signed_pdf_path', 'signed_file_url', 'signature_provider',
+			'sent_for_signature_at', 'fully_signed_at',
+			'aprovado_por', 'aprovado_em',
 			'assinado_em', 'cancelado_em', 'motivo_cancelamento',
 		] as $k) {
 			$novoData[$k] = null;
@@ -151,5 +153,26 @@ class ContractRenewalService {
 		}
 
 		return 'CONT-0001/' . $ano;
+	}
+
+	/**
+	 * Recusa pedido de renovação.
+	 *
+	 * @param \Cake\Datasource\EntityInterface $renewal
+	 * @param string|null $obs
+	 * @return \Cake\Datasource\EntityInterface|false
+	 */
+	public function recusarRenovacao($renewal, $obs = null) {
+		$table = TableRegistry::get('ContractRenewals');
+		if ($renewal->get('status') !== 'pendente') {
+			throw new \RuntimeException('Só é possível recusar renovação pendente.');
+		}
+		$patch = ['status' => 'recusada'];
+		if ($obs !== null && $obs !== '') {
+			$patch['observacoes'] = $obs;
+		}
+		$table->patchEntity($renewal, $patch);
+
+		return $table->save($renewal);
 	}
 }

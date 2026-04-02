@@ -102,7 +102,7 @@ Dashboard do Cliente
 | Contexto | URL sugerida | Entrada de menu |
 |---------|-------------|----------------|
 | ERP — financeiro | `/faturamento/index` (existente) + novas abas | Financeiro → Contratos e Faturas |
-| Portal cliente | `/cliente/contratos-avancados` e `/cliente/faturas-avancadas` | Contratos & faturas (sidebar cliente) |
+| Portal cliente | `/cliente/contratos` (canónico; antigo `contratos-avancados` → 302) e `/cliente/faturas-avancadas` | Contratos & faturas (sidebar cliente) |
 
 **Diferença de visão:**
 - ERP: gestão completa, ações de cobrança, geração de boleto, relatório de inadimplência.

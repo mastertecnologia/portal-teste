@@ -2,6 +2,7 @@
 namespace App\Shell;
 
 use App\Service\AutentiqueService;
+use App\Service\ContractLifecycleService;
 use App\Service\ContractNotificationService;
 use App\Service\ContractRenewalService;
 use Cake\Console\Shell;
@@ -111,7 +112,7 @@ class ContractAlertsShell extends Shell {
 		$notif = new ContractNotificationService();
 		$hoje = date('Y-m-d');
 		$d30 = date('Y-m-d', strtotime('+30 days'));
-		$activeStatuses = ['active', 'ativo', 'a_vencer'];
+		$activeStatuses = ContractLifecycleService::statusesOpenForOperationalAlerts();
 
 		if (Configure::read('Contract.alerts.auto_close_expired')) {
 			foreach ($contracts->find()->where([
@@ -137,7 +138,8 @@ class ContractAlertsShell extends Shell {
 			$endTs = $vf instanceof \DateTimeInterface ? $vf->getTimestamp() : strtotime((string)$vf);
 			$startDay = strtotime($hoje . ' 00:00:00');
 			$dias = (int)ceil(($endTs - $startDay) / 86400);
-			if (Configure::read('Contract.alerts.auto_mark_ending_status') && in_array($c->get('status'), ['active', 'ativo'], true)) {
+			if (Configure::read('Contract.alerts.auto_mark_ending_status')
+				&& in_array($c->get('status'), ContractLifecycleService::statusesEligibleForBilling(), true)) {
 				$contracts->patchEntity($c, ['status' => 'a_vencer']);
 				$contracts->save($c);
 			}
@@ -165,7 +167,7 @@ class ContractAlertsShell extends Shell {
 			'Contracts.auto_renew' => true,
 			'Contracts.end_date >=' => $hoje,
 			'Contracts.end_date <=' => $d30,
-			'Contracts.status' => ['active', 'ativo', 'a_vencer'],
+			'Contracts.status' => ContractLifecycleService::statusesOpenForOperationalAlerts(),
 		])->all() as $c) {
 			$r = $renewal->solicitarRenovacao($c, null);
 			if ($r) {

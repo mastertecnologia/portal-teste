@@ -1,0 +1,14 @@
+# Exemplo de crontab — módulo de contratos (Fase 6)
+# Ajuste o caminho do projeto e o utilizador PHP (www-data).
+# Instalar: crontab -e e colar as linhas necessárias (sem # no início).
+#
+# Pré-requisitos:
+#   - .env com CONTRACT_NOTIFY_* e transporte de e-mail configurado
+#   - CONTRACT_PDF_STORAGE_PATH apontando para pasta persistente (ex.: .../uploads/contracts/)
+#   - Opcional: CONTRACT_ALERTS_AUTO_CLOSE, CONTRACT_ALERTS_MARK_ENDING (ver config/app.php)
+#
+# Diário — vencimentos, auto-renovação e sincronização Autentique (stub até API real)
+#0 8 * * * cd /var/www/portal && php bin/cake contract_alerts >> /var/log/portal/contract_alerts.log 2>&1
+#
+# Só sincronização Autentique (mais frequente quando API estiver ativa)
+#0 */2 * * * cd /var/www/portal && php bin/cake contract_alerts sincronizarAutentique >> /var/log/portal/contract_autentique.log 2>&1

@@ -153,12 +153,21 @@ Router::scope('/', function ($routes) {
     $routes->connect('/cliente/relatorios/exportar', ['controller' => 'PortalRelatorios', 'action' => 'exportar'])->setMethods(['GET']);
     $routes->connect('/cliente/relatorios/exportar-excel', ['controller' => 'PortalRelatorios', 'action' => 'exportarExcel'])->setMethods(['GET']);
     // Módulo avançado — ERP (equipe role 0)
-    $routes->connect('/modulo-avancado/contratos', ['controller' => 'AdvancedContracts', 'action' => 'index']);
-    $routes->connect('/modulo-avancado/contratos/view/*', ['controller' => 'AdvancedContracts', 'action' => 'view'], ['pass' => ['id']]);
-    $routes->connect('/modulo-avancado/contratos/export-pdf/*', ['controller' => 'AdvancedContracts', 'action' => 'exportPdf'], ['pass' => ['id']]);
-    $routes->connect('/modulo-avancado/modelos-contrato', ['controller' => 'ContractTemplates', 'action' => 'index']);
-    $routes->connect('/modulo-avancado/modelos-contrato/add', ['controller' => 'ContractTemplates', 'action' => 'add']);
-    $routes->connect('/modulo-avancado/modelos-contrato/edit/*', ['controller' => 'ContractTemplates', 'action' => 'edit'], ['pass' => ['id']]);
+    // Modelos de contrato — URL canónica /contract-templates
+    $routes->connect('/contract-templates', ['controller' => 'ContractTemplates', 'action' => 'index']);
+    $routes->connect('/contract-templates/add', ['controller' => 'ContractTemplates', 'action' => 'add']);
+    $routes->connect('/contract-templates/edit/*', ['controller' => 'ContractTemplates', 'action' => 'edit'], ['pass' => ['id']]);
+    $routes->connect('/contract-templates/delete/*', ['controller' => 'ContractTemplates', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/contract-templates/preview/*', ['controller' => 'ContractTemplates', 'action' => 'preview'], ['pass' => ['id']]);
+    $routes->connect('/contract-templates/clonar/*', ['controller' => 'ContractTemplates', 'action' => 'clonar'], ['pass' => ['id']]);
+    // Compat: paths antigos /modulo-avancado/contratos/* → gestão (/modulo-contratos)
+    $routes->redirect('/modulo-avancado/contratos', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
+    $routes->redirect('/modulo-avancado/contratos/view/*', ['controller' => 'ContractManagement', 'action' => 'view'], ['persist' => true, 'status' => 302]);
+    $routes->redirect('/modulo-avancado/contratos/export-pdf/*', ['controller' => 'ContractManagement', 'action' => 'gerarPdf'], ['persist' => true, 'status' => 302]);
+    // Compat: modelos antigos → /contract-templates (mantém POST delete no path legado)
+    $routes->redirect('/modulo-avancado/modelos-contrato', ['controller' => 'ContractTemplates', 'action' => 'index'], ['status' => 302]);
+    $routes->redirect('/modulo-avancado/modelos-contrato/add', ['controller' => 'ContractTemplates', 'action' => 'add'], ['status' => 302]);
+    $routes->redirect('/modulo-avancado/modelos-contrato/edit/*', ['controller' => 'ContractTemplates', 'action' => 'edit'], ['persist' => true, 'status' => 302]);
     $routes->connect('/modulo-avancado/modelos-contrato/delete/*', ['controller' => 'ContractTemplates', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/modulo-avancado/faturas', ['controller' => 'AdvancedInvoices', 'action' => 'index']);
     $routes->connect('/modulo-avancado/faturas/view/*', ['controller' => 'AdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
@@ -166,11 +175,40 @@ Router::scope('/', function ($routes) {
     $routes->connect('/modulo-avancado/faturas/marcar-paga/*', ['controller' => 'AdvancedInvoices', 'action' => 'markPaid'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/modulo-avancado/indicadores', ['controller' => 'AdvancedReports', 'action' => 'index']);
     $routes->connect('/modulo-avancado/indicadores/exportar', ['controller' => 'AdvancedReports', 'action' => 'export'])->setMethods(['GET']);
-    // Módulo avançado — portal cliente
-    $routes->connect('/cliente/contratos-avancados', ['controller' => 'PortalAdvancedContracts', 'action' => 'index']);
-    $routes->connect('/cliente/contratos-avancados/view/*', ['controller' => 'PortalAdvancedContracts', 'action' => 'view'], ['pass' => ['id']]);
-    $routes->connect('/cliente/contratos-avancados/export-pdf/*', ['controller' => 'PortalAdvancedContracts', 'action' => 'exportPdf'], ['pass' => ['id']]);
-    $routes->connect('/cliente/contratos-avancados/franquia', ['controller' => 'PortalAdvancedContracts', 'action' => 'franquia']);
+    // Gestão de contratos (ERP) — spec /modulo-contratos
+    $routes->connect('/modulo-contratos', ['controller' => 'ContractManagement', 'action' => 'index']);
+    $routes->connect('/modulo-contratos/view/*', ['controller' => 'ContractManagement', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/add', ['controller' => 'ContractManagement', 'action' => 'add']);
+    $routes->connect('/modulo-contratos/edit/*', ['controller' => 'ContractManagement', 'action' => 'edit'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/servicos/*', ['controller' => 'ContractManagement', 'action' => 'addServicos'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/signatarios/*', ['controller' => 'ContractManagement', 'action' => 'addSignatarios'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/gerar-pdf/*', ['controller' => 'ContractManagement', 'action' => 'gerarPdf'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/enviar-assinatura/*', ['controller' => 'ContractManagement', 'action' => 'enviarAssinatura'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/aprovar/*', ['controller' => 'ContractManagement', 'action' => 'aprovar'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-contratos/suspender/*', ['controller' => 'ContractManagement', 'action' => 'suspender'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-contratos/cancelar/*', ['controller' => 'ContractManagement', 'action' => 'cancelar'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-contratos/reenviar-link/*', ['controller' => 'ContractManagement', 'action' => 'reenviarLink'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-contratos/renovacoes/*', ['controller' => 'ContractManagement', 'action' => 'verRenovacoes'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/aprovar-renovacao/*', ['controller' => 'ContractManagement', 'action' => 'aprovarRenovacao'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/recusar-renovacao/*', ['controller' => 'ContractManagement', 'action' => 'recusarRenovacao'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-contratos/solicitar-renovacao/*', ['controller' => 'ContractManagement', 'action' => 'solicitarRenovacao'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-contratos/pdf/*', ['controller' => 'ContractManagement', 'action' => 'downloadPdf'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/pdf-assinado/*', ['controller' => 'ContractManagement', 'action' => 'downloadSigned'], ['pass' => ['id']]);
+    $routes->connect('/modulo-contratos/exportar', ['controller' => 'ContractManagement', 'action' => 'exportar'])->setMethods(['GET']);
+    $routes->connect('/modulo-contratos/webhook/autentique', ['controller' => 'ContractManagement', 'action' => 'webhookAutentique'])->setMethods(['POST']);
+    // Portal cliente — contratos (canónico /cliente/contratos)
+    $routes->connect('/cliente/contratos', ['controller' => 'PortalContratos', 'action' => 'index']);
+    $routes->connect('/cliente/contratos/ver/*', ['controller' => 'PortalContratos', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/cliente/contratos/pdf/*', ['controller' => 'PortalContratos', 'action' => 'downloadPdf'], ['pass' => ['id']]);
+    $routes->connect('/cliente/contratos/pdf-assinado/*', ['controller' => 'PortalContratos', 'action' => 'downloadSigned'], ['pass' => ['id']]);
+    $routes->connect('/cliente/contratos/faturas', ['controller' => 'PortalContratos', 'action' => 'faturas']);
+    $routes->connect('/cliente/contratos/renovar/*', ['controller' => 'PortalContratos', 'action' => 'solicitarRenovacao'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/cliente/contratos/franquia', ['controller' => 'PortalContratos', 'action' => 'franquia']);
+    // Compat: URLs antigas → canónico
+    $routes->redirect('/cliente/contratos-avancados', ['controller' => 'PortalContratos', 'action' => 'index'], ['status' => 302]);
+    $routes->redirect('/cliente/contratos-avancados/view/*', ['controller' => 'PortalContratos', 'action' => 'view'], ['persist' => true, 'status' => 302]);
+    $routes->redirect('/cliente/contratos-avancados/export-pdf/*', ['controller' => 'PortalContratos', 'action' => 'downloadPdf'], ['persist' => true, 'status' => 302]);
+    $routes->redirect('/cliente/contratos-avancados/franquia', ['controller' => 'PortalContratos', 'action' => 'franquia'], ['status' => 302]);
     $routes->connect('/cliente/faturas-avancadas', ['controller' => 'PortalAdvancedInvoices', 'action' => 'index']);
     $routes->connect('/cliente/faturas-avancadas/view/*', ['controller' => 'PortalAdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
     $routes->connect('/cliente/faturas-avancadas/exportar', ['controller' => 'PortalAdvancedInvoices', 'action' => 'exportar'])->setMethods(['GET']);

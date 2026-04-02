@@ -9,7 +9,7 @@ $advCount = isset($params['count']) ? (int)$params['count'] : (is_countable($con
 		<div class="card-body">
 			<h4 class="card-title"><?= h($title) ?></h4>
 			<p class="text-muted small">Contratos no módulo avançado vinculados à sua empresa.</p>
-			<p class="small mb-2"><?= $this->Html->link('Franquia de horas (por mês)', '/cliente/contratos-avancados/franquia', ['class' => '']) ?></p>
+			<p class="small mb-2"><?= $this->Html->link(__('Franquia de horas (por mês)'), '/cliente/contratos/franquia', ['class' => '']) ?></p>
 			<div class="table-responsive">
 				<table class="table table-sm table-striped mb-0">
 					<thead><tr><th>Código</th><th>Nome</th><th>Status</th><th></th></tr></thead>
@@ -19,7 +19,7 @@ $advCount = isset($params['count']) ? (int)$params['count'] : (is_countable($con
 							<td><?= h($c->code) ?></td>
 							<td><?= h($c->name) ?></td>
 							<td><?= h($c->status) ?></td>
-							<td><?= $this->Html->link('Ver', ['action' => 'view', $c->id], ['class' => 'btn btn-sm btn-outline-primary']) ?></td>
+							<td><?= $this->Html->link(__('Ver'), ['controller' => 'PortalContratos', 'action' => 'view', $c->id], ['class' => 'btn btn-sm btn-outline-primary']) ?></td>
 						</tr>
 						<?php endforeach; ?>
 						<?php if ($advCount === 0): ?>

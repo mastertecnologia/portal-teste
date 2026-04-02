@@ -1,6 +1,7 @@
 <?php
 namespace App\Service\PortalAdvanced;
 
+use App\Service\ContractLifecycleService;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 
@@ -38,7 +39,7 @@ class InvoiceGenerationService {
 		}
 
 		$q = $Contracts->find()
-			->where(['status IN' => ['active', 'ativo']]);
+			->where(['status IN' => ContractLifecycleService::statusesEligibleForBilling()]);
 		if ($idempresa !== null && $idempresa > 0) {
 			$q->where(['idempresa' => $idempresa]);
 		}

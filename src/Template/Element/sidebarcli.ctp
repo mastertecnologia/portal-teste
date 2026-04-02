@@ -126,10 +126,10 @@
 					</li>
 					<li class="<?= h($relatoriosCliActive) ?>"><?= $this->Html->link('<i class="fa fa-chart-bar"></i><span class="hide-menu">Relatórios</span>', '/cliente/relatorios', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 					<?php
-						$advCtrls = ['portaladvancedcontracts', 'portaladvancedinvoices'];
+						$advCtrls = ['portalcontratos', 'portaladvancedcontracts', 'portaladvancedinvoices'];
 						$portalAdvMenuActive = in_array($controllerCli, $advCtrls, true) ? 'active' : '';
-						$advContrLi = ($controllerCli === 'portaladvancedcontracts' && $actionCli !== 'franquia') ? 'active' : '';
-						$advFranqLi = ($controllerCli === 'portaladvancedcontracts' && $actionCli === 'franquia') ? 'active' : '';
+						$advContrLi = (in_array($controllerCli, ['portalcontratos', 'portaladvancedcontracts'], true) && $actionCli !== 'franquia') ? 'active' : '';
+						$advFranqLi = (in_array($controllerCli, ['portalcontratos', 'portaladvancedcontracts'], true) && $actionCli === 'franquia') ? 'active' : '';
 						$advInvLi = ($controllerCli === 'portaladvancedinvoices') ? 'active' : '';
 					?>
 					<li class="<?= h($portalAdvMenuActive) ?> has-arrow-sub <?= !empty($portalAdvMenuActive) ? 'selected' : '' ?>">
@@ -138,8 +138,8 @@
 							<span class="hide-menu">Contratos &amp; faturas</span>
 						</a>
 						<ul class="collapse <?= !empty($portalAdvMenuActive) ? 'in' : '' ?>">
-							<li class="<?= h($advContrLi) ?>"><?= $this->Html->link('Contratos', '/cliente/contratos-avancados', ['class' => 'waves-effect waves-dark']) ?></li>
-							<li class="<?= h($advFranqLi) ?>"><?= $this->Html->link('Franquia de horas', '/cliente/contratos-avancados/franquia', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($advContrLi) ?>"><?= $this->Html->link('Contratos', '/cliente/contratos', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($advFranqLi) ?>"><?= $this->Html->link('Franquia de horas', '/cliente/contratos/franquia', ['class' => 'waves-effect waves-dark']) ?></li>
 							<li class="<?= h($advInvLi) ?>"><?= $this->Html->link('Faturas', '/cliente/faturas-avancadas', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>

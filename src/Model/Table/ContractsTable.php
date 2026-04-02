@@ -10,6 +10,29 @@ use Cake\Validation\Validator;
  */
 class ContractsTable extends Table {
 
+	/**
+	 * Status permitidos (PT + active; alinhado a MODULO_CONTRATOS_COMPLETO e uso no código).
+	 *
+	 * @return string[]
+	 */
+	public static function allowedStatusValues() {
+		return [
+			'rascunho',
+			'revisao',
+			'aguardando_assinatura',
+			'awaiting_signature',
+			'ativo',
+			'active',
+			'a_vencer',
+			'em_renovacao',
+			'suspenso',
+			'encerrado',
+			'cancelado',
+			'recusado',
+			'assinatura_expirada',
+		];
+	}
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->setTable('contracts');
@@ -42,6 +65,32 @@ class ContractsTable extends Table {
 		$this->hasMany('ContractNotifications', ['foreignKey' => 'contract_id', 'dependent' => true]);
 	}
 
+	/**
+	 * Contratos em vigor operacional (ativo EN/PT).
+	 *
+	 * @param \Cake\ORM\Query $query
+	 * @param array $options
+	 * @return \Cake\ORM\Query
+	 */
+	public function findActive($query, array $options = []) {
+		return $query->where(['Contracts.status IN' => ['active', 'ativo']]);
+	}
+
+	/**
+	 * Contratos com ciclo de vida ainda relevante para alertas e UI.
+	 *
+	 * @param \Cake\ORM\Query $query
+	 * @param array $options
+	 * @return \Cake\ORM\Query
+	 */
+	public function findOpenLifecycle($query, array $options = []) {
+		return $query->where([
+			'Contracts.status IN' => [
+				'active', 'ativo', 'a_vencer', 'aguardando_assinatura', 'awaiting_signature', 'rascunho', 'revisao', 'em_renovacao',
+			],
+		]);
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator
 			->integer('idcliente')
@@ -70,7 +119,8 @@ class ContractsTable extends Table {
 			->scalar('status')
 			->maxLength('status', 50)
 			->requirePresence('status', 'create')
-			->notEmpty('status');
+			->notEmpty('status')
+			->inList('status', static::allowedStatusValues(), __('Status de contrato inválido.'));
 
 		$validator
 			->date('start_date')
@@ -83,10 +133,14 @@ class ContractsTable extends Table {
 			->notEmpty('end_date');
 
 		$validator->scalar('nivel_sla')->maxLength('nivel_sla', 30)->allowEmpty('nivel_sla');
-		$validator->scalar('autentique_doc_id')->maxLength('autentique_doc_id', 100)->allowEmpty('autentique_doc_id');
+		$validator->scalar('autentique_doc_id')->maxLength('autentique_doc_id', 255)->allowEmpty('autentique_doc_id');
 		$validator->scalar('autentique_status')->maxLength('autentique_status', 30)->allowEmpty('autentique_status');
 		$validator->scalar('pdf_path')->maxLength('pdf_path', 500)->allowEmpty('pdf_path');
 		$validator->scalar('signed_pdf_path')->maxLength('signed_pdf_path', 500)->allowEmpty('signed_pdf_path');
+		$validator->scalar('signature_provider')->maxLength('signature_provider', 50)->allowEmpty('signature_provider');
+		$validator->scalar('signed_file_url')->allowEmpty('signed_file_url');
+		$validator->dateTime('sent_for_signature_at')->allowEmpty('sent_for_signature_at');
+		$validator->dateTime('fully_signed_at')->allowEmpty('fully_signed_at');
 
 		return $validator;
 	}

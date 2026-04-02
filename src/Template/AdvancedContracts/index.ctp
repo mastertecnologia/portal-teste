@@ -11,7 +11,7 @@ $advContractsCount = isset($params['count']) ? (int)$params['count'] : (is_count
 			<p class="text-muted small mb-3">
 				Contratos no modelo avançado (<code>contracts</code>). Filtro opcional: <code>?idcliente=</code>.
 				Itens de contrato já usados no cadastro de clientes aparecem na segunda tabela.
-				<?= $this->Html->link('Modelos de contrato', '/modulo-avancado/modelos-contrato', ['class' => 'd-block mt-1']) ?>
+				<?= $this->Html->link('Modelos de contrato', '/contract-templates', ['class' => 'd-block mt-1']) ?>
 			</p>
 			<div class="table-responsive">
 				<table class="table table-sm table-striped mb-0">

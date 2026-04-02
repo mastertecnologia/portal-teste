@@ -54,22 +54,34 @@ Esta secção alinha a **especificação** ao que está **implementado no códig
 |------|----------|
 | **BD** | `config/Migrations/20260407100000_ContractModulePhase1Expand.php` (PostgreSQL): novas tabelas + expansão de `contracts` / `contract_services`. **Não existe** no repo o ficheiro `20260407100001_ContractNewTables.php` mencionado na §1.2 — o DDL “extra” da spec foi condensado/adaptado na Phase1. |
 | **ORM** | `ContractsTable` com associações (templates, signatários, renovações, notificações, pai/filhos, etc.), entities dedicadas, `ContractServicesTable` + `ContractService`. |
-| **ERP** | `AdvancedContractsController`: `index`, `view`, `exportPdf` (mPDF, grava `pdf_path`). `ContractTemplatesController`: CRUD. Rotas: **`/modulo-avancado/contratos`**, **`/modulo-avancado/modelos-contrato`**. |
-| **Portal** | `PortalAdvancedContractsController`: `index`, `view`, `exportPdf` (se `pdf_path` legível), **`franquia`**. Rotas: **`/cliente/contratos-avancados/*`**. |
+| **ERP** | **`ContractManagementController`**: gestão em **`/modulo-contratos/*`** (lista, KPIs, PDF, assinatura, webhook, etc.). **`ContractTemplatesController`**: CRUD em **`/contract-templates/*`** (canónico). **`AdvancedContractsController`**: ainda acessível pela rota inflectada do Cake (**`/advanced-contracts/*`**) para a listagem legada em `contracts`. **Compat:** **`/modulo-avancado/contratos`** (e `view/*`, `export-pdf/*`) → redirect **302** para **`/modulo-contratos`** (e acções equivalentes); **`/modulo-avancado/modelos-contrato`** (índice, add, edit) → **`/contract-templates`**; mantém-se **`POST /modulo-avancado/modelos-contrato/delete/*`** para formulários antigos. |
+| **Portal** | **`PortalContratosController`**: `index`, `view`, `downloadPdf`, `downloadSigned`, **`franquia`**, **`solicitarRenovacao`** (POST), **`faturas`** (redirect → faturas avançadas). Rotas canónicas **`/cliente/contratos/*`**; **`/cliente/contratos-avancados/*`** → redirect **302**. `PortalAdvancedContractsController` mantém-se para rotas inflectadas legadas. |
 | **Config** | `config/app.php` → chave **`Contract`**: `autentique`, `pdf`, `notifications`, `alerts` (valores via `env`). |
-| **Services** | `ContractPdfService`, `ContractNotificationService`, `ContractRenewalService`; `AutentiqueService` **stub** (sem GraphQL real). |
+| **Services** | `ContractPdfService`, `ContractNotificationService`, `ContractRenewalService`; `AutentiqueService` (GraphQL v2, multipart, webhook). |
 | **Cron** | `src/Shell/ContractAlertsShell.php` — `bin/cake contract_alerts`, `bin/cake contract_alerts sincronizarAutentique`. |
 | **E-mail** | Sete templates `src/Template/Email/html/contract_*.ctp`. |
 | **UI global** | `sidebar.ctp` / `sidebarcli.ctp` com links para contratos avançados, modelos e franquia. |
 
-### Ainda não implementado (conforme corpo deste documento)
+### Ainda em aberto / operação (não é “código em falta”)
 
-- `ContractManagementController` e toda a árvore **`/modulo-contratos/*`**.
-- `PortalContratosController` e **`/cliente/contratos`** (com redirect a partir de `contratos-avancados`).
-- SQL **RBAC** da §10 aplicado na base.
-- **Autentique** completo: `criarDocumento`, webhook, sincronização real no `AutentiqueService`.
-- **`deploy-portal.sh`** e árvore **`uploads/contratos/`** da §11 (por defeito o código usa `TMP/contracts` ou `CONTRACT_PDF_STORAGE_PATH`).
-- Views ERP “ricas”: KPIs na lista, wizard de criação, ecrã dedicado **enviar assinatura**, **preview/clonar** de template, TinyMCE nos modelos.
+- **Ambiente produção:** `.env` com e-mail (`CONTRACT_NOTIFY_*`), `CONTRACT_PDF_STORAGE_PATH`, opcional `RBAC_MODE=enforce` após matriz preenchida.
+- **Autentique:** fluxo implementado; validação final com **conta/sandbox** real e webhook público HTTPS.
+- **UX opcional:** e-mails com branding extra (§7.7); testes E2E/CI além do PHPUnit de `RbacChecker`.
+
+### Verificação de artefactos (checklist vs repositório)
+
+| Entrega (§16 / fases) | Ficheiros / notas |
+|----------------------|---------------------|
+| Migrations contratos | `20260405130000_*` (base `contracts`…), `20260407100000_ContractModulePhase1Expand`, `20260411100000_ContractModulePhase1bSchemaGaps`, `20260415120000_ContractCanonicalRbacPermissions` |
+| Models / services | Tables + Entities (templates, signatários, logs, renovações, notificações); `ContractPdfService`, `ContractNotificationService`, `ContractRenewalService`, `ContractSigningService`, `ContractLifecycleService`, `AutentiqueService` |
+| Controllers | `ContractManagementController`, `ContractTemplatesController`, `PortalContratosController` |
+| Shell / deploy | `ContractAlertsShell`; `scripts/deploy-portal.sh`; `scripts/cron-contract-alerts.example` |
+| Templates ERP | `ContractManagement/` — `index`, `view`, `add`, `edit`, `add_servicos`, `add_signatarios`, `enviar_assinatura`, `aprovar_renovacao`; **sem** `gerar_pdf.ctp` (ação devolve PDF em stream ou redirect) |
+| Templates modelos | `ContractTemplates/` — `index`, `add`, `edit`, `preview` |
+| Portal | `PortalContratos/` — `index`, `view`, `franquia`; **faturas** é só redirect (sem `.ctp`) |
+| E-mail | 7× `src/Template/Email/html/contract_*.ctp` |
+| Elementos | `src/Template/Element/ContractManagement/wizard_steps.ctp` |
+| Testes | `tests/TestCase/Utility/RbacCheckerTest.php` + `tests/bootstrap.php` |
 
 ---
 
@@ -81,7 +93,7 @@ Esta secção alinha a **especificação** ao que está **implementado no códig
 | `contract_signatories` §1.2 | Campos `auth_type`, `action_type`, `autentique_signer_id`, várias datas | Versão **simplificada**: `autentique_id`, fluxo básico de assinatura |
 | `config/app.php` §2.1 | `Contract.Autentique`, `Contract.Pdf`, `Contract.Notifications` (aninhamento PascalCase no exemplo) | Chaves **`autentique`**, **`pdf`**, **`notifications`**, **`alerts`** (lowercase) e nomes de `env` próprios |
 | Estados do contrato | Vocabulário PT (`rascunho`, `ativo`, …) | Convivência com **`active`** / **`ativo`** (ex.: geração de faturas) |
-| Entrada ERP na spec | `/modulo-contratos` | **`/modulo-avancado/contratos`** |
+| Entrada ERP na spec | `/modulo-contratos` | **`/modulo-contratos`** (canónico); **`/modulo-avancado/contratos`** apenas compat (302 → gestão) |
 
 **Recomendação:** evoluir o schema e o código a partir da **Phase1 real** + esta tabela, e ir **atualizando** os snippets SQL deste doc ou marcando-os como “referência histórica” quando deixarem de refletir a BD.
 
@@ -94,9 +106,9 @@ Ordenação por **dependência** e **valor operacional**. Itens podem ser ticket
 ### P0 — Operacional e alinhamento
 
 1. **Configurar ambiente:** `CONTRACT_NOTIFY_FROM_EMAIL`, `CONTRACT_NOTIFY_TEAM_EMAIL`, transporte de e-mail Cake, e `CONTRACT_PDF_STORAGE_PATH` em produção (fora de `TMP` se for requisito).
-2. **URLs:** decidir se se mantém só `/modulo-avancado/...` ou se se introduz `/modulo-contratos` com **redirect** / canonical para não partir links.
+2. **URLs:** **Feito** no repo: canónicas **`/modulo-contratos`** e **`/contract-templates`**; redirects **302** a partir de **`/modulo-avancado/contratos`** e **`/modulo-avancado/modelos-contrato`** (detalhe em `config/routes.php`).
 3. **Migration opcional:** `ADD COLUMN IF NOT EXISTS` para fechar gaps face à §1.1 **sem** colisão com colunas existentes (`status`, `notes` vs `observacoes_cli` — escolher um nome canónico no ORM).
-4. **RBAC §10:** executar SQL (ou adaptar `ON CONFLICT`) e associar permissões a perfis; até lá, rotas actuais seguem **role 0** / regras já usadas em `AdvancedContracts`.
+4. **RBAC §10:** migration **`ContractCanonicalRbacPermissions`** + entradas no **registry**; após `bin/cake migrations migrate`, correr sync da matriz se usarem `PermissoesController`. Modo **`RBAC_MODE=enforce`**: utilizadores com papéis em `rbac_users_roles` precisam das novas permissões (ou legado `erp.advanced.contracts` + cópia automática da migration).
 
 ### P1 — Gestão ERP completa (`ContractManagement` ou extensão forte de `AdvancedContracts`)
 
@@ -107,26 +119,26 @@ Ordenação por **dependência** e **valor operacional**. Itens podem ser ticket
 
 ### P2 — Portal cliente (spec §5.3 e §7.6)
 
-9. **`PortalContratosController`** com ABAC: nunca expor `monthly_value`, `valor_total`, `notes`, IDs internos Autentique ao cliente.
-10. **Redirect** de `/cliente/contratos-avancados` → `/cliente/contratos` (mantendo compatibilidade temporária).
-11. **`faturas`** no portal de contratos: reutilizar ou encapsular `PortalAdvancedInvoices`; **solicitar renovação** exposto ao cliente com validações.
+9. **`PortalContratosController`** com ABAC — **feito** (views sem valores internos / notas / links Autentique); RBAC alias em `RbacChecker`.
+10. **Redirect** de `/cliente/contratos-avancados` → `/cliente/contratos` — **feito** em `config/routes.php`.
+11. **`faturas`** — **feito** (redirect para `/cliente/faturas-avancadas`); **solicitar renovação** — **feito** (POST + `ContractRenewalService`).
 
 ### P3 — Templates e UX
 
-12. **`ContractTemplates`:** acções `preview`, `clonar`; **TinyMCE** e painel de variáveis `{{...}}` (§7.5).
+12. **`ContractTemplates`:** `preview`, `clonar`, **TinyMCE** e painel de variáveis — **feito** (§7.5); melhorias futuras: editor rico extra, `{{...}}` a partir só do JSON.
 13. **E-mails:** reforçar layout (logo, CTA, suporte) conforme §7.7.
 
 ### P4 — Autentique e produção (Fase 7)
 
-14. **`AutentiqueService`** completo (§2.3): multipart, `criarDocumento`, `statusDocumento`, download, `validarWebhook`.
-15. **`webhookAutentique`** + `Auth->allow` + rota pública com HMAC.
-16. **Crontab** em servidor (§12) e pastas persistentes (§11) alinhadas a `Contract.pdf.storage_path`.
+14. **`AutentiqueService`** — **feito no repo:** multipart `createDocument`, `statusDocumento`, download, `validarWebhook`, `applyWebhookEvent`. Validar com sandbox/conta real (schema GraphQL pode evoluir).
+15. **`webhookAutentique`** + `Auth->allow` + rota — **feito**; configurar endpoint e secret no painel Autentique.
+16. **Crontab** em servidor (§12; exemplo no repo) — operação no host; pastas + deploy **feitos** (§11).
 
 ### P5 — Qualidade e modelo de dados
 
-17. **Entity `Contract`:** virtual fields `status_label`, `dias_para_vencer` (§6.3).
-18. **Validação `status`:** `inList` coerente com valores **reais** na BD (`active` + PT) quando o fluxo for unificado.
-19. **Testes de fumo:** PDF, shell com flags `CONTRACT_ALERTS_*`, fluxo `aprovarRenovacao` via UI.
+17. **Entity `Contract`:** virtual fields `status_label`, `dias_para_vencer` + **`statusLabelMap()`** para UI — **feito** (§6.3, Fase 8).
+18. **Validação `status`:** `inList` via **`ContractsTable::allowedStatusValues()`** — **feito**; atualizar a lista se surgirem novos estados na BD.
+19. **Testes de fumo:** PDF, shell com flags `CONTRACT_ALERTS_*`, fluxo `aprovarRenovacao` via UI — opcional.
 
 ---
 
@@ -370,6 +382,8 @@ CONTRACT_TEAM_EMAIL=financeiro@pgm.com.br
 ```
 
 ### 2.3 `src/Service/AutentiqueService.php`
+
+**Código no repositório:** `Configure::read('Contract.autentique')` + env `CONTRACT_AUTENTIQUE_*`; mutation `createDocument(sandbox: …)` e campo de resposta `signatures` (não `signers`). O snippet abaixo é **referência antiga** — alinhar com o ficheiro real em `src/Service/AutentiqueService.php`.
 
 ```php
 <?php
@@ -995,6 +1009,7 @@ class ContractAlertsShell extends Shell
 | `verRenovacoes($id)` | GET | `/modulo-contratos/renovacoes/:id` | contracts.view |
 | `aprovarRenovacao($id)` | GET/POST | `/modulo-contratos/aprovar-renovacao/:id` | contracts.renovar |
 | `recusarRenovacao($id)` | POST | `/modulo-contratos/recusar-renovacao/:id` | contracts.renovar |
+| `solicitarRenovacao($id)` | POST | `/modulo-contratos/solicitar-renovacao/:id` | contracts.renovar |
 | `downloadPdf($id)` | GET | `/modulo-contratos/pdf/:id` | contracts.view |
 | `downloadSigned($id)` | GET | `/modulo-contratos/pdf-assinado/:id` | contracts.view |
 | `exportar()` | GET | `/modulo-contratos/exportar` | contracts.view |
@@ -1309,9 +1324,41 @@ Todos devem usar o layout de e-mail padrão do sistema e incluir logo, número d
 
 ## 8. Rotas — `config/routes.php`
 
-Adicionar **após as rotas existentes**, dentro do `$routes->scope('/', ...)`:
+No repositório actual, a **fonte de verdade** é o ficheiro `config/routes.php` (inclui **`/contract-templates`** e redirects de compat a partir de **`/modulo-avancado/...`**). O excerto abaixo resume o contrato ERP; ao copiar, alinhar com o ficheiro real.
+
+Adicionar **após as rotas existentes**, dentro do `$routes->scope('/', ...)` (a **ordem** abaixo espelha `config/routes.php` no repo):
 
 ```php
+// === TEMPLATES DE CONTRATO (canónico) =============================
+$routes->connect('/contract-templates',
+    ['controller' => 'ContractTemplates', 'action' => 'index']);
+$routes->connect('/contract-templates/add',
+    ['controller' => 'ContractTemplates', 'action' => 'add']);
+$routes->connect('/contract-templates/edit/*',
+    ['controller' => 'ContractTemplates', 'action' => 'edit'], ['pass' => ['id']]);
+$routes->connect('/contract-templates/delete/*',
+    ['controller' => 'ContractTemplates', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
+$routes->connect('/contract-templates/preview/*',
+    ['controller' => 'ContractTemplates', 'action' => 'preview'], ['pass' => ['id']]);
+$routes->connect('/contract-templates/clonar/*',
+    ['controller' => 'ContractTemplates', 'action' => 'clonar'], ['pass' => ['id']]);
+
+// === COMPAT /modulo-avancado (302 + POST delete legado) =========
+$routes->redirect('/modulo-avancado/contratos',
+    ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
+$routes->redirect('/modulo-avancado/contratos/view/*',
+    ['controller' => 'ContractManagement', 'action' => 'view'], ['persist' => true, 'status' => 302]);
+$routes->redirect('/modulo-avancado/contratos/export-pdf/*',
+    ['controller' => 'ContractManagement', 'action' => 'gerarPdf'], ['persist' => true, 'status' => 302]);
+$routes->redirect('/modulo-avancado/modelos-contrato',
+    ['controller' => 'ContractTemplates', 'action' => 'index'], ['status' => 302]);
+$routes->redirect('/modulo-avancado/modelos-contrato/add',
+    ['controller' => 'ContractTemplates', 'action' => 'add'], ['status' => 302]);
+$routes->redirect('/modulo-avancado/modelos-contrato/edit/*',
+    ['controller' => 'ContractTemplates', 'action' => 'edit'], ['persist' => true, 'status' => 302]);
+$routes->connect('/modulo-avancado/modelos-contrato/delete/*',
+    ['controller' => 'ContractTemplates', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
+
 // === GESTÃO DE CONTRATOS (ERP) ===================================
 $routes->connect('/modulo-contratos',
     ['controller' => 'ContractManagement', 'action' => 'index']);
@@ -1330,58 +1377,47 @@ $routes->connect('/modulo-contratos/gerar-pdf/*',
 $routes->connect('/modulo-contratos/enviar-assinatura/*',
     ['controller' => 'ContractManagement', 'action' => 'enviarAssinatura'], ['pass' => ['id']]);
 $routes->connect('/modulo-contratos/aprovar/*',
-    ['controller' => 'ContractManagement', 'action' => 'aprovar'], ['pass' => ['id']]);
+    ['controller' => 'ContractManagement', 'action' => 'aprovar'], ['pass' => ['id']])->setMethods(['POST']);
 $routes->connect('/modulo-contratos/suspender/*',
-    ['controller' => 'ContractManagement', 'action' => 'suspender'], ['pass' => ['id']]);
+    ['controller' => 'ContractManagement', 'action' => 'suspender'], ['pass' => ['id']])->setMethods(['POST']);
 $routes->connect('/modulo-contratos/cancelar/*',
-    ['controller' => 'ContractManagement', 'action' => 'cancelar'], ['pass' => ['id']]);
+    ['controller' => 'ContractManagement', 'action' => 'cancelar'], ['pass' => ['id']])->setMethods(['POST']);
 $routes->connect('/modulo-contratos/reenviar-link/*',
-    ['controller' => 'ContractManagement', 'action' => 'reenviarLink'], ['pass' => ['id']]);
+    ['controller' => 'ContractManagement', 'action' => 'reenviarLink'], ['pass' => ['id']])->setMethods(['POST']);
 $routes->connect('/modulo-contratos/renovacoes/*',
     ['controller' => 'ContractManagement', 'action' => 'verRenovacoes'], ['pass' => ['id']]);
 $routes->connect('/modulo-contratos/aprovar-renovacao/*',
     ['controller' => 'ContractManagement', 'action' => 'aprovarRenovacao'], ['pass' => ['id']]);
 $routes->connect('/modulo-contratos/recusar-renovacao/*',
-    ['controller' => 'ContractManagement', 'action' => 'recusarRenovacao'], ['pass' => ['id']]);
+    ['controller' => 'ContractManagement', 'action' => 'recusarRenovacao'], ['pass' => ['id']])->setMethods(['POST']);
+$routes->connect('/modulo-contratos/solicitar-renovacao/*',
+    ['controller' => 'ContractManagement', 'action' => 'solicitarRenovacao'], ['pass' => ['id']])->setMethods(['POST']);
 $routes->connect('/modulo-contratos/pdf/*',
     ['controller' => 'ContractManagement', 'action' => 'downloadPdf'], ['pass' => ['id']]);
 $routes->connect('/modulo-contratos/pdf-assinado/*',
     ['controller' => 'ContractManagement', 'action' => 'downloadSigned'], ['pass' => ['id']]);
 $routes->connect('/modulo-contratos/exportar',
-    ['controller' => 'ContractManagement', 'action' => 'exportar']);
+    ['controller' => 'ContractManagement', 'action' => 'exportar'])->setMethods(['GET']);
 // Webhook — sem sessão (liberar no beforeFilter do controller)
 $routes->connect('/modulo-contratos/webhook/autentique',
-    ['controller' => 'ContractManagement', 'action' => 'webhookAutentique']);
+    ['controller' => 'ContractManagement', 'action' => 'webhookAutentique'])->setMethods(['POST']);
 
-// === TEMPLATES DE CONTRATO =======================================
-$routes->connect('/contract-templates',
-    ['controller' => 'ContractTemplates', 'action' => 'index']);
-$routes->connect('/contract-templates/add',
-    ['controller' => 'ContractTemplates', 'action' => 'add']);
-$routes->connect('/contract-templates/edit/*',
-    ['controller' => 'ContractTemplates', 'action' => 'edit'], ['pass' => ['id']]);
-$routes->connect('/contract-templates/delete/*',
-    ['controller' => 'ContractTemplates', 'action' => 'delete'], ['pass' => ['id']]);
-$routes->connect('/contract-templates/preview/*',
-    ['controller' => 'ContractTemplates', 'action' => 'preview'], ['pass' => ['id']]);
-$routes->connect('/contract-templates/clonar/*',
-    ['controller' => 'ContractTemplates', 'action' => 'clonar'], ['pass' => ['id']]);
-
-// === PORTAL CLIENTE — CONTRATOS ==================================
-// (substituem /cliente/contratos-avancados — manter redirect no PortalAdvancedContractsController)
-$routes->connect('/cliente/contratos',
-    ['controller' => 'PortalContratos', 'action' => 'index']);
-$routes->connect('/cliente/contratos/ver',
-    ['controller' => 'PortalContratos', 'action' => 'view']);
-$routes->connect('/cliente/contratos/faturas',
-    ['controller' => 'PortalContratos', 'action' => 'faturas']);
-$routes->connect('/cliente/contratos/pdf',
-    ['controller' => 'PortalContratos', 'action' => 'downloadPdf']);
-$routes->connect('/cliente/contratos/renovar',
-    ['controller' => 'PortalContratos', 'action' => 'solicitarRenovacao']);
-$routes->connect('/cliente/contratos/franquia',
-    ['controller' => 'PortalContratos', 'action' => 'franquia']);
+// === PORTAL CLIENTE — CONTRATOS (canónico) =======================
+$routes->connect('/cliente/contratos', ['controller' => 'PortalContratos', 'action' => 'index']);
+$routes->connect('/cliente/contratos/ver/*', ['controller' => 'PortalContratos', 'action' => 'view'], ['pass' => ['id']]);
+$routes->connect('/cliente/contratos/pdf/*', ['controller' => 'PortalContratos', 'action' => 'downloadPdf'], ['pass' => ['id']]);
+$routes->connect('/cliente/contratos/pdf-assinado/*', ['controller' => 'PortalContratos', 'action' => 'downloadSigned'], ['pass' => ['id']]);
+$routes->connect('/cliente/contratos/faturas', ['controller' => 'PortalContratos', 'action' => 'faturas']);
+$routes->connect('/cliente/contratos/renovar/*', ['controller' => 'PortalContratos', 'action' => 'solicitarRenovacao'], ['pass' => ['id']])->setMethods(['POST']);
+$routes->connect('/cliente/contratos/franquia', ['controller' => 'PortalContratos', 'action' => 'franquia']);
+// Compat: /cliente/contratos-avancados/* → PortalContratos (302)
+$routes->redirect('/cliente/contratos-avancados', ['controller' => 'PortalContratos', 'action' => 'index'], ['status' => 302]);
+$routes->redirect('/cliente/contratos-avancados/view/*', ['controller' => 'PortalContratos', 'action' => 'view'], ['persist' => true, 'status' => 302]);
+$routes->redirect('/cliente/contratos-avancados/export-pdf/*', ['controller' => 'PortalContratos', 'action' => 'downloadPdf'], ['persist' => true, 'status' => 302]);
+$routes->redirect('/cliente/contratos-avancados/franquia', ['controller' => 'PortalContratos', 'action' => 'franquia'], ['status' => 302]);
 ```
+
+**Nota:** **TEMPLATES**, **COMPAT**, **GESTÃO** e **PORTAL CLIENTE** acima espelham `config/routes.php`. RBAC: permissão `portal.advanced.contracts` continua com `controller = PortalAdvancedContracts`; `RbacChecker::matchAction` aceita também **`PortalContratos`** como alias.
 
 ---
 
@@ -1415,6 +1451,10 @@ $routes->connect('/cliente/contratos/franquia',
 
 ## 10. Permissões RBAC
 
+**Repositório (P0):** catálogo mestre em **`config/permissions_registry.php`** (`erp.contracts.management`, `erp.contracts.templates`) + migration **`20260415120000_ContractCanonicalRbacPermissions.php`** (copia vínculos a partir de `erp.advanced.contracts`). **`RbacChecker::matchAction`** aceita **várias ações separadas por vírgula** na coluna `action`. Sincronizar matriz: **`PermissoesController::adminSyncRegistry`**.
+
+Modelo granular abaixo (referência; colunas reais incluem `name`, `module`, …):
+
 ```sql
 INSERT INTO rbac_permissions (code, description, controller, action) VALUES
   ('contracts.view',    'Visualizar contratos',           'ContractManagement', 'index,view,verRenovacoes,downloadPdf,downloadSigned,exportar'),
@@ -1425,7 +1465,7 @@ INSERT INTO rbac_permissions (code, description, controller, action) VALUES
   ('contracts.renovar', 'Gerenciar renovações',           'ContractManagement', 'aprovarRenovacao,recusarRenovacao'),
   ('contracts.templates','Gerenciar templates',           'ContractTemplates',  'index,add,edit,delete,preview,clonar'),
   ('contracts.cli_view','Cliente visualiza contratos',    'PortalContratos',    'index,view,faturas,franquia'),
-  ('contracts.cli_down','Cliente baixa PDF assinado',     'PortalContratos',    'downloadPdf'),
+  ('contracts.cli_down','Cliente baixa PDF (rascunho/assinado)', 'PortalContratos', 'downloadPdf,downloadSigned'),
   ('contracts.cli_renew','Cliente solicita renovação',    'PortalContratos',    'solicitarRenovacao')
 ON CONFLICT (code) DO NOTHING;
 
@@ -1443,31 +1483,32 @@ ON CONFLICT (code) DO NOTHING;
 
 ### Estrutura de pastas
 
+O `Contract.pdf.storage_path` (env **`CONTRACT_PDF_STORAGE_PATH`**) deve terminar com **`/`**. O **`ContractPdfService`** grava PDFs gerados em **`{storage_path}pdfs/`**; o shell **`contract_alerts`** e o fluxo de assinatura usam **`{storage_path}signed/`**; documentos avulsos em **`{storage_path}documents/`**.
+
 ```
-/var/www/portal/uploads/contratos/
+/var/www/portal/uploads/contracts/    ← exemplo com CONTRACT_PDF_STORAGE_PATH=/var/www/portal/uploads/contracts/
 ├── pdfs/          ← PDFs gerados (não assinados)
 ├── signed/        ← PDFs assinados (baixados do Autentique)
 └── documents/     ← Documentos avulsos (ContractDocuments)
     └── {contract_id}/
 ```
 
-### No `deploy-portal.sh`
+### `scripts/deploy-portal.sh` e crontab de exemplo
 
-```bash
-mkdir -p /var/www/portal/uploads/contratos/{pdfs,signed,documents}
-chmod -R 755 /var/www/portal/uploads/contratos
-```
+O deploy chama **`ensure_contract_upload_dirs`**: cria **`$REPO_ROOT/uploads/contracts/{pdfs,signed,documents}`**, `chown` para **`DEPLOY_USER`** e permissões de escrita para o grupo. Linhas de crontab comentadas: **`scripts/cron-contract-alerts.example`** (§12).
 
 ---
 
 ## 12. Crontab no Servidor
+
+Copie e adapte a partir de **`scripts/cron-contract-alerts.example`** (comentários e pré-requisitos).
 
 ```bash
 # Alertas diários — 08:00
 0 8    * * * cd /var/www/portal && php bin/cake contract_alerts >> /var/log/portal/contract_alerts.log 2>&1
 
 # Sincronizar status Autentique — a cada 2 horas
-0 */2  * * * cd /var/www/portal && php bin/cake contract_alerts sincronizarAutentique >> /var/log/portal/contract_alerts.log 2>&1
+0 */2  * * * cd /var/www/portal && php bin/cake contract_alerts sincronizarAutentique >> /var/log/portal/contract_autentique.log 2>&1
 ```
 
 ---
@@ -1481,7 +1522,7 @@ Painel: `https://app.autentique.com.br` → Configurações → Webhooks
 | URL | `https://seuportal.com/modulo-contratos/webhook/autentique` |
 | Método | POST |
 | Eventos | `document_signed`, `document_all_signed`, `signer_signed`, `document_rejected`, `document_canceled`, `document_expired`, `signer_reminder_sent` |
-| Secret | Valor de `AUTENTIQUE_WEBHOOK_SECRET` no `.env` |
+| Secret | Valor de **`CONTRACT_AUTENTIQUE_WEBHOOK_SECRET`** no `.env` (ver `config/app.php` → `Contract.autentique`) |
 
 ---
 
@@ -1553,41 +1594,48 @@ ATIVO/A_VENCER + auto_renew=true:
 30. `PortalContratos/franquia.ctp`
 
 ### Fase 6 — E-mails e Cron
-31. 7 templates de e-mail
-32. `ContractAlertsShell.php`
-33. Pastas de upload + `deploy-portal.sh`
-34. Configurar crontab
+31. 7 templates de e-mail — **feito**
+32. `ContractAlertsShell.php` — **feito**
+33. Pastas de upload + `deploy-portal.sh` — **feito** (`ensure_contract_upload_dirs`, `uploads/contracts/...`)
+34. Configurar crontab — **no servidor** (modelo em `scripts/cron-contract-alerts.example`)
 
 ### Fase 7 — Integração Autentique
-35. Preencher `.env` com token sandbox
-36. Testar `criarDocumento()` em sandbox
-37. Configurar webhook no painel Autentique (sandbox)
-38. Testar fluxo completo: criar → PDF → enviar → assinar → webhook → ativo
-39. Ativar produção (`AUTENTIQUE_SANDBOX=false`)
+35. Preencher `.env` com token sandbox — **variáveis:** `CONTRACT_AUTENTIQUE_*` (ver `.env.example`)
+36. **`AutentiqueService::criarDocumento`** (multipart GraphQL) + envio em **`ContractManagement::enviarAssinatura`** — **feito** (com `CONTRACT_AUTENTIQUE_ENABLED=true`)
+37. Webhook **`POST /modulo-contratos/webhook/autentique`** — **feito** (`document.finished` / `document.updated` concluído + `signature.rejected`; HMAC `x-autentique-signature`)
+38. Testar fluxo completo no sandbox/produção (painel Autentique + URL pública do portal)
+39. Produção: `CONTRACT_AUTENTIQUE_ENABLED=true`, `CONTRACT_AUTENTIQUE_SANDBOX=false`, credenciais reais e secret de webhook
+
+### Fase 8 — Encerramento (P5 + UX pós-módulo)
+40. **`Contract::statusLabelMap()`** + listas/filtros com rótulos PT (`ContractManagement/index`, `edit`; `PortalContratos/*`).
+41. **`dias_para_vencer`** visível na lista ERP, ficha ERP e ficha portal (texto com `__n`).
+42. Validação **`status` `inList`** já alinhada a `ContractsTable::allowedStatusValues()` — manter ao acrescentar estados.
+43. **Testes de fumo** (P5.19): PDF, shell `contract_alerts`, renovação — opcional / CI.
+44. **P0 RBAC:** `erp.contracts.management` / `erp.contracts.templates` no registry, migration `ContractCanonicalRbacPermissions`, `RbacChecker::matchAction` com CSV, PHPUnit `tests/TestCase/Utility/RbacCheckerTest.php` — **feito** (`composer install` + `vendor/bin/phpunit`).
 
 ---
 
 ## 16. Resumo dos Arquivos
 
-### Criar (42 arquivos)
+### Estado no repositório (substitui o plano “Criar (42 ficheiros)” da spec original)
 
-**Migrations:** `20260407100000_ContractModulePhase1Expand.php`, `20260407100001_ContractNewTables.php`
+**Migrations (PostgreSQL):** `20260405130000_PortalAdvancedAttendanceContractsInvoicesAudit` (tabela `contracts` e satélites base); `20260407100000_ContractModulePhase1Expand`; `20260411100000_ContractModulePhase1bSchemaGaps`; `20260415120000_ContractCanonicalRbacPermissions`. **Não usar** `20260407100001_ContractNewTables.php` (nunca existiu — DDL na Phase1).
 
-**Tables (5):** `ContractTemplatesTable`, `ContractSignatoriesTable`, `ContractAutentiqueLogsTable`, `ContractRenewalsTable`, `ContractNotificationsTable`
+**Tables (5) + Entities (5):** `ContractTemplates`, `ContractSignatories`, `ContractAutentiqueLogs`, `ContractRenewals`, `ContractNotifications` (+ entidades homónimas).
 
-**Entities (5):** `ContractTemplate`, `ContractSignatory`, `ContractAutentiqueLog`, `ContractRenewal`, `ContractNotification`
+**Services:** `AutentiqueService`, `ContractPdfService`, `ContractNotificationService`, `ContractRenewalService`, `ContractSigningService`, `ContractLifecycleService`.
 
-**Services (4):** `AutentiqueService`, `ContractPdfService`, `ContractNotificationService`, `ContractRenewalService`
+**Controllers (3):** `ContractManagementController`, `ContractTemplatesController`, `PortalContratosController`.
 
-**Controllers (3):** `ContractManagementController`, `ContractTemplatesController`, `PortalContratosController`
+**Shell (1):** `ContractAlertsShell`.
 
-**Shell (1):** `ContractAlertsShell`
+**Templates ERP:** `ContractManagement/` — `index`, `view`, `add`, `edit`, `add_servicos`, `add_signatarios`, `enviar_assinatura`, `aprovar_renovacao`; `gerarPdf` **não** usa `.ctp` (resposta PDF ou redirect). `ContractTemplates/` — `index`, `add`, `edit`, `preview`.
 
-**Templates ERP (11):** index, view, add, edit, add_signatarios, gerar_pdf, enviar_assinatura, templates/index, templates/add, templates/edit, templates/preview
+**Templates portal:** `PortalContratos/index`, `view`, `franquia`; `faturas` **só** redirect no controller.
 
-**Templates Portal (3):** PortalContratos/index, faturas, franquia
+**E-mails (7):** `contract_vencimento`, `contract_vencimento_cliente`, `contract_assinado_cliente`, `contract_novo_cliente`, `contract_lembrar_assinatura`, `contract_renovacao_aprovada`, `contract_cancelado_cliente`.
 
-**E-mails (7):** contract_vencimento, contract_vencimento_cliente, contract_assinado_cliente, contract_novo_cliente, contract_lembrar_assinatura, contract_renovacao_aprovada, contract_cancelado_cliente
+**Outros:** `Element/ContractManagement/wizard_steps.ctp`; `config/permissions_registry.php` (contratos canónicos); `tests/TestCase/Utility/RbacCheckerTest.php`.
 
 ### Modificar (7 arquivos)
 

@@ -77,18 +77,29 @@ class RbacChecker {
 	}
 
 	/**
-	 * Verifica se controller/ação batem com uma linha de permissão (action * = qualquer).
+	 * Verifica se controller/ação batem com uma linha de permissão.
+	 * action: "*" ou vazio = qualquer; várias ações podem vir separadas por vírgula (ex.: "index,view,exportar").
 	 */
 	public static function matchAction($controller, $action, array $permissionRow) {
 		$c = strtolower(isset($permissionRow['controller']) ? $permissionRow['controller'] : '');
-		$a = strtolower(isset($permissionRow['action']) ? (string)$permissionRow['action'] : '*');
-		if (strtolower($controller) !== $c) {
-			return false;
+		$actionsRaw = strtolower(trim(isset($permissionRow['action']) ? (string)$permissionRow['action'] : '*'));
+		$req = strtolower((string)$controller);
+		$act = strtolower((string)$action);
+		if ($req !== $c) {
+			// URLs canónicas /cliente/contratos → PortalContratos; RBAC legado usa PortalAdvancedContracts
+			if (!($req === 'portalcontratos' && $c === 'portaladvancedcontracts')) {
+				return false;
+			}
 		}
-		if ($a === '' || $a === '*') {
+		if ($actionsRaw === '' || $actionsRaw === '*') {
 			return true;
 		}
+		foreach (preg_split('/\s*,\s*/', $actionsRaw, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $part) {
+			if ($part === '*' || $part === $act) {
+				return true;
+			}
+		}
 
-		return strtolower($action) === $a;
+		return false;
 	}
 }

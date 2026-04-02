@@ -1,0 +1,662 @@
+<?php
+namespace App\Controller;
+
+use App\Service\AutentiqueService;
+use App\Service\ContractLifecycleService;
+use App\Service\ContractNotificationService;
+use App\Service\ContractPdfService;
+use App\Service\ContractRenewalService;
+use App\Service\ContractSigningService;
+use Cake\Core\Configure;
+use Cake\Event\Event;
+use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\NotFoundException;
+/**
+ * Gestão de contratos (ERP) — URLs /modulo-contratos/* (spec MODULO_CONTRATOS_COMPLETO).
+ * Equipe interna role 0; regras de negócio em App\Service\Contract*.
+ */
+class ContractManagementController extends AppController {
+
+	public function beforeFilter(Event $event) {
+		if ($this->request->getParam('action') === 'webhookAutentique') {
+			$this->Auth->allow(['webhookAutentique']);
+		}
+		parent::beforeFilter($event);
+	}
+
+	public function initialize() {
+		parent::initialize();
+		$this->loadComponent('Paginator');
+		$this->loadModel('Contracts');
+		$this->loadModel('ContractServices');
+		$this->loadModel('ContractSignatories');
+		$this->loadModel('ContractRenewals');
+		$this->loadModel('ContractTemplates');
+		$this->loadModel('Clientes');
+		$this->loadModel('Invoices');
+	}
+
+	public function isAuthorized($user) {
+		if ($this->request->getParam('action') === 'webhookAutentique') {
+			return true;
+		}
+		if (empty($user) || (int)($user['role'] ?? 1) !== 0) {
+			return false;
+		}
+
+		return parent::isAuthorized($user);
+	}
+
+	/**
+	 * @return int
+	 */
+	protected function _idempresa() {
+		return (int)$this->Auth->user('idempresa');
+	}
+
+	/**
+	 * @return int
+	 */
+	protected function _userId() {
+		return (int)$this->Auth->user('id');
+	}
+
+	/**
+	 * @param int $id
+	 * @param array $contain
+	 * @return \App\Model\Entity\Contract
+	 */
+	protected function _getContractOrFail($id, array $contain = []) {
+		$id = (int)$id;
+		$idempresa = $this->_idempresa();
+		if ($id <= 0) {
+			throw new NotFoundException();
+		}
+		try {
+			$c = $this->Contracts->get($id, ['contain' => $contain]);
+		} catch (\Throwable $e) {
+			throw new NotFoundException();
+		}
+		if ((int)$c->idempresa !== $idempresa) {
+			throw new ForbiddenException();
+		}
+
+		return $c;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function _pdfStorageBaseRealpath() {
+		$storage = (string)Configure::read('Contract.pdf.storage_path');
+		if ($storage === '') {
+			$storage = TMP . 'contracts' . DS;
+		}
+		$base = realpath($storage);
+
+		return $base !== false ? $base : '';
+	}
+
+	/**
+	 * @param string $path
+	 * @return bool
+	 */
+	protected function _pathUnderStorage($path) {
+		$path = (string)$path;
+		if ($path === '' || !is_file($path)) {
+			return false;
+		}
+		$base = $this->_pdfStorageBaseRealpath();
+		if ($base === '') {
+			return false;
+		}
+		$real = realpath($path);
+
+		return $real !== false && strpos($real, $base) === 0;
+	}
+
+	public function index() {
+		$this->set('title', __('Gestão de contratos'));
+		$idempresa = $this->_idempresa();
+		$cid = (int)$this->request->getQuery('idcliente', 0);
+		$st = trim((string)$this->request->getQuery('status', ''));
+
+		$kpis = [
+			'ativos' => 0,
+			'a_vencer' => 0,
+			'aguardando_assinatura' => 0,
+			'em_renovacao' => 0,
+			'valor_mensal_total' => 0.0,
+		];
+		try {
+			$T = $this->Contracts;
+			$kpis['ativos'] = $T->find()->where([
+				'idempresa' => $idempresa,
+				'status IN' => ['ativo', 'active'],
+			])->count();
+			$kpis['a_vencer'] = $T->find()->where(['idempresa' => $idempresa, 'status' => 'a_vencer'])->count();
+			$kpis['aguardando_assinatura'] = $T->find()->where([
+				'idempresa' => $idempresa,
+				'status IN' => ['aguardando_assinatura', 'awaiting_signature'],
+			])->count();
+			$kpis['em_renovacao'] = $T->find()->where(['idempresa' => $idempresa, 'status' => 'em_renovacao'])->count();
+			$qSum = $this->Contracts->find();
+			$sumRow = $qSum
+				->select(['s' => $qSum->func()->sum('monthly_value')])
+				->where([
+					'idempresa' => $idempresa,
+					'status IN' => ['ativo', 'active', 'a_vencer'],
+				])
+				->first();
+			$kpis['valor_mensal_total'] = (float)($sumRow && isset($sumRow->s) ? $sumRow->s : 0);
+
+			$q = $T->find()
+				->contain(['Clientes'])
+				->where(['Contracts.idempresa' => $idempresa])
+				->order(['Contracts.modified' => 'DESC']);
+			if ($cid > 0) {
+				$q->where(['Contracts.idcliente' => $cid]);
+			}
+			if ($st !== '') {
+				$q->where(['Contracts.status' => $st]);
+			}
+			$this->paginate = ['limit' => 30];
+			$this->set('contracts', $this->paginate($q));
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Tabela contracts indisponível.'));
+			$this->set('contracts', []);
+		}
+		$this->set('kpis', $kpis);
+		$this->set('clientesList', $this->_clientesList($idempresa));
+		$this->set('statusFilter', $st);
+		$this->set('idclienteFilter', $cid);
+	}
+
+	public function view($id = null) {
+		$c = $this->_getContractOrFail($id, [
+			'Clientes',
+			'ContractServices',
+			'ContractDocuments',
+			'ContractTemplates',
+			'ParentContracts',
+			'ContractSignatories',
+			'ContractRenewals' => ['NovoContracts', 'Solicitante', 'Aprovador'],
+			'ContractNotifications',
+			'Invoices' => function ($q) {
+				return $q->order(['Invoices.reference_month' => 'DESC'])->limit(24);
+			},
+		]);
+		$this->set('title', __('Contrato: {0}', $c->name));
+		$this->set('contract', $c);
+	}
+
+	public function add() {
+		$this->set('title', __('Novo contrato'));
+		$idempresa = $this->_idempresa();
+		$renewal = new ContractRenewalService();
+		$contract = $this->Contracts->newEntity([
+			'idempresa' => $idempresa,
+			'code' => $renewal->proximoNumero($idempresa),
+			'name' => 'Novo contrato',
+			'type' => 'servico',
+			'status' => 'rascunho',
+			'start_date' => date('Y-m-d'),
+			'end_date' => date('Y-m-d', strtotime('+1 year')),
+			'billing_cycle' => 'monthly',
+			'monthly_value' => 0,
+			'sla_hours' => 0,
+			'included_hours' => 0,
+			'overage_hour_value' => 0,
+			'auto_renew' => false,
+		]);
+
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$data['idempresa'] = $idempresa;
+			if (empty($data['idcliente'])) {
+				$this->Flash->error(__('Selecione o cliente.'));
+			} else {
+				$contract = $this->Contracts->newEntity($data);
+				if ($this->Contracts->save($contract)) {
+					if ($this->request->getData('gravar_destino') === 'ficha') {
+						$this->Flash->success(__('Contrato criado. Abra a ficha para PDF e assinatura.'));
+						return $this->redirect(['action' => 'view', $contract->id]);
+					}
+					$this->Flash->success(__('Contrato criado. Adicione serviços ou avance para signatários.'));
+
+					return $this->redirect(['action' => 'addServicos', $contract->id]);
+				}
+				$this->Flash->error(__('Não foi possível gravar. Verifique os campos.'));
+			}
+		}
+
+		$this->set('contract', $contract);
+		$this->set('clientesList', $this->_clientesList($idempresa));
+		$this->set('templatesList', $this->_templatesList($idempresa));
+	}
+
+	public function edit($id = null) {
+		$contract = $this->_getContractOrFail($id, ['Clientes']);
+		$idempresa = $this->_idempresa();
+		$this->set('title', __('Editar contrato'));
+
+		try {
+			ContractLifecycleService::assertMayEditCore($contract);
+		} catch (\RuntimeException $e) {
+			$this->Flash->error($e->getMessage());
+			return $this->redirect(['action' => 'view', $id]);
+		}
+
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			$data['idempresa'] = $idempresa;
+			$contract = $this->Contracts->patchEntity($contract, $data);
+			if ($this->Contracts->save($contract)) {
+				$this->Flash->success(__('Contrato atualizado.'));
+				return $this->redirect(['action' => 'view', $id]);
+			}
+			$this->Flash->error(__('Não foi possível salvar.'));
+		}
+
+		$this->set('contract', $contract);
+		$this->set('clientesList', $this->_clientesList($idempresa));
+		$this->set('templatesList', $this->_templatesList($idempresa));
+	}
+
+	public function addServicos($id = null) {
+		$contract = $this->_getContractOrFail($id, ['ContractServices']);
+		$this->set('title', __('Serviços do contrato'));
+		$this->set('contract', $contract);
+
+		if ($this->request->is('post')) {
+			$row = $this->ContractServices->newEntity(array_merge(
+				$this->request->getData(),
+				['contract_id' => (int)$contract->id]
+			));
+			if ($this->ContractServices->save($row)) {
+				$this->Flash->success(__('Serviço adicionado.'));
+				return $this->redirect(['action' => 'addServicos', $id]);
+			}
+			$this->Flash->error(__('Não foi possível gravar o serviço.'));
+			$this->set('service', $row);
+		} else {
+			$this->set('service', $this->ContractServices->newEntity(['contract_id' => $contract->id]));
+		}
+	}
+
+	public function addSignatarios($id = null) {
+		$contract = $this->_getContractOrFail($id, ['ContractSignatories']);
+		$this->set('title', __('Signatários'));
+		$this->set('contract', $contract);
+
+		if ($this->request->is('post')) {
+			$row = $this->ContractSignatories->newEntity(array_merge(
+				$this->request->getData(),
+				['contract_id' => (int)$contract->id]
+			));
+			if ($this->ContractSignatories->save($row)) {
+				$this->Flash->success(__('Signatário adicionado.'));
+				return $this->redirect(['action' => 'addSignatarios', $id]);
+			}
+			$this->Flash->error(__('Não foi possível gravar.'));
+			$this->set('signatory', $row);
+		} else {
+			$this->set('signatory', $this->ContractSignatories->newEntity(['contract_id' => $contract->id]));
+		}
+	}
+
+	public function gerarPdf($id = null) {
+		$this->request->allowMethod(['post', 'get']);
+		$c = $this->_getContractOrFail($id, ['Clientes', 'Empresas', 'ContractTemplates', 'ContractServices']);
+		try {
+			$svc = new ContractPdfService();
+			$tpl = !empty($c->contract_template) ? $c->contract_template : null;
+			$path = $svc->gerarEPersistir($this->Contracts, $c, $tpl, (array)$c->contract_services);
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Não foi possível gerar o PDF.') . ' ' . $e->getMessage());
+			return $this->redirect(['action' => 'view', $id]);
+		}
+
+		if ($this->request->is('get')) {
+			$this->autoRender = false;
+			$body = file_get_contents($path);
+
+			return $this->response
+				->withType('application/pdf')
+				->withDownload(basename($path))
+				->withStringBody($body !== false ? $body : '');
+		}
+		$this->Flash->success(__('PDF gerado.'));
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function enviarAssinatura($id = null) {
+		$contract = $this->_getContractOrFail($id, ['ContractSignatories', 'Clientes', 'Empresas', 'ContractTemplates', 'ContractServices']);
+		$this->set('title', __('Enviar para assinatura'));
+		$this->set('contract', $contract);
+
+		if ($this->request->is('post')) {
+			$signing = new ContractSigningService();
+			$errs = $signing->validateSignatoriesForSend($contract->contract_signatories ?? []);
+			if ($errs !== []) {
+				$this->Flash->error(implode(' ', $errs));
+				return;
+			}
+			try {
+				$pdf = new ContractPdfService();
+				$tpl = !empty($contract->contract_template) ? $contract->contract_template : null;
+				if (trim((string)$contract->get('pdf_path')) === '' || !is_file((string)$contract->get('pdf_path'))) {
+					$pdf->gerarEPersistir($this->Contracts, $contract, $tpl, (array)$contract->contract_services);
+				}
+			} catch (\Throwable $e) {
+				$this->Flash->error(__('Gere o PDF antes do envio.') . ' ' . $e->getMessage());
+				return;
+			}
+
+			$aut = new AutentiqueService();
+			if ($aut->isEnabled()) {
+				$signList = (array)($contract->contract_signatories ?? []);
+				$res = $aut->criarDocumento($contract, (string)$contract->get('pdf_path'), $signList);
+				if (!empty($res['errors'])) {
+					$parts = [];
+					foreach ($res['errors'] as $e) {
+						$parts[] = is_array($e) ? (string)($e['message'] ?? json_encode($e, JSON_UNESCAPED_UNICODE)) : (string)$e;
+					}
+					$this->Flash->error(__('Autentique: ') . implode(' ', $parts));
+
+					return;
+				}
+				$docId = (string)($res['id'] ?? '');
+				$firstLink = '';
+				foreach ($res['signatures'] as $sig) {
+					if (!empty($sig['link']['short_link'])) {
+						$firstLink = (string)$sig['link']['short_link'];
+						break;
+					}
+				}
+				$signing->markAwaitingSignature($this->Contracts, $contract, $docId !== '' ? $docId : null);
+				if ($firstLink !== '') {
+					$this->Contracts->patchEntity($contract, ['autentique_url' => $firstLink]);
+					$this->Contracts->save($contract);
+				}
+				$apiSigs = array_values($res['signatures']);
+				usort($signList, function ($a, $b) {
+					return ((int)$a->get('ordem') ?: 0) <=> ((int)$b->get('ordem') ?: 0);
+				});
+				foreach ($apiSigs as $i => $apiSig) {
+					if (!isset($signList[$i])) {
+						break;
+					}
+					$row = $signList[$i];
+					$this->ContractSignatories->patchEntity($row, [
+						'autentique_signer_id' => $apiSig['public_id'] ?? null,
+						'link_assinatura' => $apiSig['link']['short_link'] ?? null,
+						'status' => 'enviado',
+					]);
+					$this->ContractSignatories->save($row);
+				}
+				$signing->logEvent((int)$contract->id, 'envio_autentique', ['doc_id' => $docId], $this->_userId());
+				try {
+					$c2 = $this->Contracts->get($contract->id, ['contain' => ['Clientes']]);
+					(new ContractNotificationService())->notificarNovoContrato($c2);
+				} catch (\Throwable $e) {
+				}
+				$this->Flash->success(__('Contrato enviado à Autentique para assinatura.'));
+				return $this->redirect(['action' => 'view', $id]);
+			}
+
+			$signing->markAwaitingSignature($this->Contracts, $contract, null);
+			$signing->logEvent((int)$contract->id, 'envio_assinatura_preparado', ['stub' => true], $this->_userId());
+			try {
+				$c2 = $this->Contracts->get($contract->id, ['contain' => ['Clientes']]);
+				(new ContractNotificationService())->notificarNovoContrato($c2);
+			} catch (\Throwable $e) {
+			}
+			$this->Flash->success(__('Contrato marcado como aguardando assinatura (sem API Autentique — ligue CONTRACT_AUTENTIQUE_ENABLED).'));
+			return $this->redirect(['action' => 'view', $id]);
+		}
+	}
+
+	public function aprovar($id = null) {
+		$this->request->allowMethod(['post']);
+		$c = $this->_getContractOrFail($id);
+		$target = trim((string)$this->request->getData('target_status', 'aguardando_assinatura'));
+		if ($target === '') {
+			$target = 'aguardando_assinatura';
+		}
+		try {
+			$life = new ContractLifecycleService();
+			$life->aprovarInternamente($this->Contracts, $c, $this->_userId(), $target);
+			$this->Flash->success(__('Aprovação registada.'));
+		} catch (\Throwable $e) {
+			$this->Flash->error($e->getMessage());
+		}
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function suspender($id = null) {
+		$this->request->allowMethod(['post']);
+		$c = $this->_getContractOrFail($id);
+		try {
+			(new ContractLifecycleService())->suspender($this->Contracts, $c);
+			$this->Flash->success(__('Contrato suspenso.'));
+		} catch (\Throwable $e) {
+			$this->Flash->error($e->getMessage());
+		}
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function cancelar($id = null) {
+		$this->request->allowMethod(['post']);
+		$c = $this->_getContractOrFail($id);
+		$motivo = trim((string)$this->request->getData('motivo', ''));
+		try {
+			(new ContractLifecycleService())->cancelar($this->Contracts, $c, $motivo, true);
+			$this->Flash->success(__('Contrato cancelado.'));
+		} catch (\Throwable $e) {
+			$this->Flash->error($e->getMessage());
+		}
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function reenviarLink($id = null) {
+		$this->request->allowMethod(['post']);
+		$this->_getContractOrFail($id);
+		$this->Flash->warning(__('Reenvio de link Autentique ainda não implementado (API Fase 7).'));
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function verRenovacoes($id = null) {
+		$this->_getContractOrFail($id);
+		return $this->redirect('/modulo-contratos/view/' . (int)$id . '#renovacoes');
+	}
+
+	public function aprovarRenovacao($id = null) {
+		$rid = (int)$id;
+		$idempresa = $this->_idempresa();
+		if ($rid <= 0) {
+			throw new NotFoundException();
+		}
+		try {
+			$renewal = $this->ContractRenewals->get($rid, ['contain' => ['Contracts']]);
+		} catch (\Throwable $e) {
+			throw new NotFoundException();
+		}
+		if ((int)$renewal->contract->idempresa !== $idempresa) {
+			throw new ForbiddenException();
+		}
+		$this->set('renewal', $renewal);
+		$this->set('contract', $renewal->contract);
+		$this->set('title', __('Aprovar renovação'));
+
+		if ($this->request->is('post')) {
+			$svc = new ContractRenewalService();
+			try {
+				$svc->aprovarRenovacao($renewal, $this->request->getData(), $this->_userId());
+				$this->Flash->success(__('Renovação aprovada; novo contrato em rascunho.'));
+				return $this->redirect(['action' => 'view', $renewal->contract_id]);
+			} catch (\Throwable $e) {
+				$this->Flash->error($e->getMessage());
+			}
+		}
+	}
+
+	public function recusarRenovacao($id = null) {
+		$this->request->allowMethod(['post']);
+		$rid = (int)$id;
+		$idempresa = $this->_idempresa();
+		if ($rid <= 0) {
+			throw new NotFoundException();
+		}
+		try {
+			$renewal = $this->ContractRenewals->get($rid, ['contain' => ['Contracts']]);
+		} catch (\Throwable $e) {
+			throw new NotFoundException();
+		}
+		if ((int)$renewal->contract->idempresa !== $idempresa) {
+			throw new ForbiddenException();
+		}
+		$cid = (int)$renewal->contract_id;
+		try {
+			(new ContractRenewalService())->recusarRenovacao($renewal, $this->request->getData('observacoes'));
+			$this->Flash->success(__('Renovação recusada.'));
+		} catch (\Throwable $e) {
+			$this->Flash->error($e->getMessage());
+		}
+		return $this->redirect(['action' => 'view', $cid]);
+	}
+
+	public function solicitarRenovacao($id = null) {
+		$this->request->allowMethod(['post']);
+		$c = $this->_getContractOrFail($id);
+		$svc = new ContractRenewalService();
+		$r = $svc->solicitarRenovacao($c, $this->_userId());
+		if ($r) {
+			$this->Flash->success(__('Pedido de renovação registado.'));
+		} else {
+			$this->Flash->warning(__('Já existe renovação pendente ou aprovada.'));
+		}
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function downloadPdf($id = null) {
+		$c = $this->_getContractOrFail($id);
+		$path = (string)$c->get('pdf_path');
+		if (!$this->_pathUnderStorage($path)) {
+			throw new NotFoundException();
+		}
+		$code = preg_replace('/[^\w\-\.]+/', '_', (string)$c->get('code'));
+		$this->autoRender = false;
+		$body = file_get_contents($path);
+
+		return $this->response
+			->withType('application/pdf')
+			->withHeader('Content-Disposition', 'attachment; filename="Contrato-' . $code . '.pdf"')
+			->withStringBody($body !== false ? $body : '');
+	}
+
+	public function downloadSigned($id = null) {
+		$c = $this->_getContractOrFail($id);
+		$path = (string)$c->get('signed_pdf_path');
+		if (!$this->_pathUnderStorage($path)) {
+			throw new NotFoundException();
+		}
+		$code = preg_replace('/[^\w\-\.]+/', '_', (string)$c->get('code'));
+		$this->autoRender = false;
+		$body = file_get_contents($path);
+
+		return $this->response
+			->withType('application/pdf')
+			->withHeader('Content-Disposition', 'attachment; filename="Contrato-assinado-' . $code . '.pdf"')
+			->withStringBody($body !== false ? $body : '');
+	}
+
+	public function exportar() {
+		$this->autoRender = false;
+		$idempresa = $this->_idempresa();
+		$rows = $this->Contracts->find()
+			->contain(['Clientes'])
+			->where(['Contracts.idempresa' => $idempresa])
+			->order(['Contracts.code' => 'ASC'])
+			->all();
+
+		$csv = fopen('php://temp', 'r+');
+		fputcsv($csv, ['code', 'name', 'status', 'cliente', 'start_date', 'end_date', 'monthly_value']);
+		foreach ($rows as $c) {
+			$cli = '';
+			if (!empty($c->cliente)) {
+				$cli = (string)($c->cliente->razaosocial ?: $c->cliente->nome);
+			}
+			fputcsv($csv, [
+				$c->code,
+				$c->name,
+				$c->status,
+				$cli,
+				$c->start_date ? $c->start_date->format('Y-m-d') : '',
+				$c->end_date ? $c->end_date->format('Y-m-d') : '',
+				$c->monthly_value,
+			]);
+		}
+		rewind($csv);
+		$body = stream_get_contents($csv);
+		fclose($csv);
+
+		return $this->response
+			->withType('text/csv')
+			->withDownload('contratos-export.csv')
+			->withStringBody($body !== false ? $body : '');
+	}
+
+	public function webhookAutentique() {
+		$this->autoRender = false;
+		$raw = (string)file_get_contents('php://input');
+		$sig = (string)$this->request->getHeaderLine('X-Autentique-Signature');
+		if ($sig === '') {
+			$sig = (string)$this->request->getHeaderLine('x-autentique-signature');
+		}
+		$auth = new AutentiqueService();
+		if (!$auth->validarWebhook($raw, $sig)) {
+			return $this->response->withStatus(403)->withType('json')
+				->withStringBody(json_encode(['ok' => false, 'error' => 'invalid_signature']));
+		}
+		try {
+			$data = json_decode($raw, true);
+			if (is_array($data)) {
+				$auth->applyWebhookEvent($data);
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $this->response->withType('json')->withStringBody(json_encode(['ok' => true]));
+	}
+
+	/**
+	 * @param int $idempresa
+	 * @return array
+	 */
+	protected function _clientesList($idempresa) {
+		return $this->Clientes->find('list', [
+			'keyField' => 'id',
+			'valueField' => function ($row) {
+				return $row->razaosocial ?: $row->nome ?: ('#' . $row->id);
+			},
+		])
+			->where(['Clientes.idempresa' => $idempresa])
+			->order(['Clientes.razaosocial' => 'ASC', 'Clientes.nome' => 'ASC'])
+			->toArray();
+	}
+
+	/**
+	 * @param int $idempresa
+	 * @return array
+	 */
+	protected function _templatesList($idempresa) {
+		return $this->ContractTemplates->find('list', [
+			'keyField' => 'id',
+			'valueField' => 'nome',
+		])
+			->where(['ContractTemplates.idempresa' => $idempresa, 'ContractTemplates.ativo' => true])
+			->order(['ContractTemplates.nome' => 'ASC'])
+			->toArray();
+	}
+}

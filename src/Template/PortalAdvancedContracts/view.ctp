@@ -12,9 +12,12 @@
 			<p class="small text-muted mb-2">Modelo: <?= h($contract->contract_template->nome) ?></p>
 			<?php endif; ?>
 			<?php if (!empty($contract->pdf_path) && is_readable((string)$contract->pdf_path)): ?>
-			<?= $this->Html->link('Descarregar PDF', '/cliente/contratos-avancados/export-pdf/' . (int)$contract->id, ['class' => 'btn btn-sm btn-primary mr-1']) ?>
+			<?= $this->Html->link(__('Descarregar PDF'), '/cliente/contratos/pdf/' . (int)$contract->id, ['class' => 'btn btn-sm btn-primary mr-1']) ?>
 			<?php endif; ?>
-			<?= $this->Html->link('Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-secondary']) ?>
+			<?php if (!empty($contract->signed_pdf_path) && is_readable((string)$contract->signed_pdf_path)): ?>
+			<?= $this->Html->link(__('PDF assinado'), '/cliente/contratos/pdf-assinado/' . (int)$contract->id, ['class' => 'btn btn-sm btn-success mr-1']) ?>
+			<?php endif; ?>
+			<?= $this->Html->link(__('Voltar'), ['controller' => 'PortalContratos', 'action' => 'index'], ['class' => 'btn btn-sm btn-secondary']) ?>
 		</div>
 	</div>
 	<?php if (!empty($contract->contract_services)): ?>

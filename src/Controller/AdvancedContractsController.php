@@ -113,9 +113,7 @@ class AdvancedContractsController extends AppController {
 		try {
 			$svc = new ContractPdfService();
 			$tpl = !empty($c->contract_template) ? $c->contract_template : null;
-			$path = $svc->gerar($c, $tpl, (array)$c->contract_services);
-			$this->Contracts->patchEntity($c, ['pdf_path' => $path]);
-			$this->Contracts->save($c);
+			$path = $svc->gerarEPersistir($this->Contracts, $c, $tpl, (array)$c->contract_services);
 		} catch (\Throwable $e) {
 			$this->Flash->error(__('Não foi possível gerar o PDF.') . ' ' . $e->getMessage());
 

@@ -64,7 +64,7 @@ $this->assign('title', $title ?? 'Contrato');
 				<?php endif; ?>
 			</p>
 			<?php endif; ?>
-			<?= $this->Html->link('Gerar PDF', '/modulo-avancado/contratos/export-pdf/' . (int)$contract->id, ['class' => 'btn btn-sm btn-primary mt-2 mr-1', 'target' => '_blank']) ?>
+			<?= $this->Html->link('Gerar PDF', '/modulo-contratos/gerar-pdf/' . (int)$contract->id, ['class' => 'btn btn-sm btn-primary mt-2 mr-1', 'target' => '_blank']) ?>
 			<?php if (!empty($contract->pdf_path)): ?>
 			<span class="small text-muted d-block mt-1">Último ficheiro: <?= h(basename((string)$contract->pdf_path)) ?></span>
 			<?php endif; ?>

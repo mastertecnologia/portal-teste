@@ -2,6 +2,7 @@
 namespace App\Model\Table;
 
 use Cake\ORM\Table;
+use Cake\Validation\Validator;
 
 class ContractAutentiqueLogsTable extends Table {
 
@@ -13,5 +14,23 @@ class ContractAutentiqueLogsTable extends Table {
 
 		$this->belongsTo('Contracts', ['foreignKey' => 'contract_id', 'joinType' => 'INNER']);
 		$this->belongsTo('Users', ['foreignKey' => 'user_id', 'joinType' => 'LEFT']);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator
+			->integer('contract_id')
+			->requirePresence('contract_id', 'create')
+			->notEmpty('contract_id');
+
+		$validator
+			->scalar('evento')
+			->maxLength('evento', 100)
+			->requirePresence('evento', 'create')
+			->notEmpty('evento');
+
+		$validator->integer('user_id')->allowEmpty('user_id');
+		$validator->dateTime('created')->allowEmpty('created');
+
+		return $validator;
 	}
 }
