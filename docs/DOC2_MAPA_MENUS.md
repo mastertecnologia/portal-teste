@@ -1,5 +1,7 @@
 # Documento 2 — Mapa de Menus
 
+**Nota:** Os diagramas §§1–2 descrevem a visão de produto; rotas e itens **já implementados** no sidebar estão resumidos na §6 (fim do documento).
+
 ## 1. Menu ERP (Portal PGM — role = 0)
 
 ```
@@ -86,8 +88,8 @@ Dashboard do Cliente
 
 | Contexto | URL sugerida | Entrada de menu |
 |---------|-------------|----------------|
-| ERP — técnico/gestor | `/tickets/historico` | Atendimento → Histórico de Atendimentos |
-| Portal cliente | `/tickets/historico-cliente` | Atendimento → Histórico de Atendimentos |
+| ERP — técnico/gestor | `/tickets/historico` (clássico) e `/modulo-avancado/atendimentos` (PG) | Tickets → submenus no sidebar |
+| Portal cliente | `/cliente/historico-atendimento-avancado` (PG) | Tickets → Histórico de atendimento |
 
 **Diferença de visão:**
 - Técnico vê todos os tickets das empresas que gerencia, com SLA, auditoria e filtros avançados.
@@ -100,7 +102,7 @@ Dashboard do Cliente
 | Contexto | URL sugerida | Entrada de menu |
 |---------|-------------|----------------|
 | ERP — financeiro | `/faturamento/index` (existente) + novas abas | Financeiro → Contratos e Faturas |
-| Portal cliente | `/portal/contratos` e `/portal/faturas` | Contratos e Faturas (menu próprio) |
+| Portal cliente | `/cliente/contratos-avancados` e `/cliente/faturas-avancadas` | Contratos & faturas (sidebar cliente) |
 
 **Diferença de visão:**
 - ERP: gestão completa, ações de cobrança, geração de boleto, relatório de inadimplência.
@@ -112,8 +114,8 @@ Dashboard do Cliente
 
 | Contexto | URL sugerida | Entrada de menu |
 |---------|-------------|----------------|
-| ERP — gestor/técnico | `/relatorios/*` | Relatórios (menu principal) |
-| Portal cliente | `/portal/relatorios` | Relatórios (acesso restrito) |
+| ERP — gestor/técnico | `/relatorios/*` (painel) e `/modulo-avancado/indicadores` (PG) | Relatórios → submenu no sidebar |
+| Portal cliente | `/cliente/relatorios` (`PortalRelatorios`) | Relatórios (acesso restrito) |
 
 **Diferença de visão:**
 - ERP: todos os indicadores, sem filtro de empresa.
@@ -143,12 +145,26 @@ O `AppController::beforeFilter` define as seguintes variáveis injetadas em todo
 | `$dashboard` | Users::dashboard |
 | `$clientesActive` | Clientes |
 | `$ordensActive` | Ordensservico |
-| `$ticketsActive` | Tickets |
+| `$ticketsActive` | Tickets, AdvancedAttendance (ERP), PortalAdvancedAttendance (portal) |
 | `$orcamentosActive` | Orcamentos |
 | `$faturamentoActive` | Faturamento |
 | `$financeiroActive` | Financeiro |
 | `$faturasActive` | Faturas |
 | `$prefaturamentoActive` | Prefaturamento |
 | `$senhasActive` | Bancosenhas |
-| `$relActive` | Relatorios |
+| `$relActive` | Relatorios, AdvancedReports |
+| `$advancedModuleActive` | AdvancedContracts, AdvancedInvoices (submenu Operações → Módulo avançado) |
 | `$queuesAtendimentoActive` | Queues |
+
+---
+
+## 6. Implementação atual do sidebar (referência rápida)
+
+Árvores dos §§ 1–2 descrevem o produto alvo; **o que está ligado hoje** nos elementos:
+
+| Contexto | Ficheiro | Notas |
+|----------|----------|--------|
+| ERP | `src/Template/Element/sidebar.ctp` | **Relatórios:** submenu — Painel (`Relatorios/index`) + Indicadores PG (`/modulo-avancado/indicadores`, role 0). **Tickets:** histórico clássico + histórico consolidado PG (`/modulo-avancado/atendimentos`, role 0). **Operações → Módulo avançado:** apenas Contratos e Faturas PG. |
+| Portal cliente | `src/Template/Element/sidebarcli.ctp` | **Tickets:** meus tickets, abrir chamado, histórico PG (`/cliente/historico-atendimento-avancado`). **Contratos & faturas:** contratos/faturas PG (sem histórico neste grupo). **Relatórios:** `/cliente/relatorios`. |
+
+Mapeamento controller → variável de menu: `src/Controller/AppController.php` (`$controllerToMenuMap`).

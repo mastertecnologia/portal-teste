@@ -7,15 +7,17 @@
 	$osOpen = ($ctrl === 'Ordensservico');
 	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
 	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
-	$ticketsOpen = ($ctrl === 'Tickets' || $ctrl === 'Servicedesk');
+	$ticketsOpen = ($ctrl === 'Tickets' || $ctrl === 'Servicedesk' || $ctrl === 'AdvancedAttendance');
 	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
 	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
+	$ticketsHistAvancadoActive = ($ctrl === 'AdvancedAttendance');
+	$relatoriosOpen = ($ctrl === 'Relatorios' || $ctrl === 'AdvancedReports');
+	$relatoriosPainelActive = ($ctrl === 'Relatorios');
+	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
 	$roleNav = (int)($role ?? 1);
-	$advModOpen = in_array($ctrl, ['AdvancedContracts', 'AdvancedInvoices', 'AdvancedAttendance', 'AdvancedReports'], true);
+	$advModOpen = in_array($ctrl, ['AdvancedContracts', 'AdvancedInvoices'], true);
 	$advContrAct = ($ctrl === 'AdvancedContracts');
 	$advInvAct = ($ctrl === 'AdvancedInvoices');
-	$advAttAct = ($ctrl === 'AdvancedAttendance');
-	$advRepAct = ($ctrl === 'AdvancedReports');
 
 	$nameTrim = trim((string)($name ?? ''));
 	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
@@ -109,12 +111,28 @@
 						['class' => 'waves-effect waves-dark', 'aria-label' => 'Dashboard', 'escape' => false]
 					) ?>
 				</li>
-				<li class="<?= $relActive ?>">
-					<?= $this->Html->link(
-						'<i class="fas fa-chart-pie"></i><span class="hide-menu"> Relatórios </span>',
-						['controller' => 'Relatorios', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'aria-label' => 'Relatórios e Indicadores', 'escape' => false]
-					) ?>
+				<li class="pgm-ng <?= h($relActive) ?> <?= $relatoriosOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $relatoriosOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $relatoriosOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-chart-pie ni-ico-fa"></i>
+						<span class="hide-menu">Relatórios</span>
+						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Painel e indicadores</span>',
+							['controller' => 'Relatorios', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($relatoriosPainelActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Relatórios e indicadores']
+						) ?></li>
+						<?php if ($roleNav === 0) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Indicadores (módulo avançado)</span>',
+							'/modulo-avancado/indicadores',
+							['class' => 'pgm-nch ' . ($relatoriosIndicadoresAdvActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Indicadores módulo avançado']
+						) ?></li>
+						<?php endif; ?>
+					</ul>
 				</li>
 				<li class="<?= $clientesActive ?>">
 					<?= $this->Html->link(
@@ -178,6 +196,13 @@
 							['controller' => 'Tickets', 'action' => 'historico'],
 							['class' => 'pgm-nch ' . ($ticketsHistoricoActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Histórico de atendimentos']
 						) ?></li>
+						<?php if ($roleNav === 0) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Histórico consolidado (avançado)</span>',
+							'/modulo-avancado/atendimentos',
+							['class' => 'pgm-nch ' . ($ticketsHistAvancadoActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Histórico consolidado módulo avançado']
+						) ?></li>
+						<?php endif; ?>
 					</ul>
 				</li>
 
@@ -240,16 +265,6 @@
 							'<span class="pgm-ndot"></span><span>Faturas</span>',
 							'/modulo-avancado/faturas',
 							['class' => 'pgm-nch ' . ($advInvAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Histórico atendimento</span>',
-							'/modulo-avancado/atendimentos',
-							['class' => 'pgm-nch ' . ($advAttAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Indicadores</span>',
-							'/modulo-avancado/indicadores',
-							['class' => 'pgm-nch ' . ($advRepAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 					</ul>
 				</li>

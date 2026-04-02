@@ -719,6 +719,99 @@ body.layout-no-topbar.pgm-portal-client .relcli-chart-slot__hint {
 	line-height: 1.45;
 	margin: 0;
 }
+body.layout-no-topbar.pgm-portal-client .relcli-chart-body {
+	min-height: 200px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-figure {
+	margin: 0;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-svg {
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-bar {
+	fill: rgba(0, 192, 139, 0.78);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-axis {
+	stroke: var(--pgm-premium-border);
+	stroke-width: 1;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-label {
+	fill: var(--pgm-premium-muted);
+	font-size: 10px;
+	font-family: inherit;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-value {
+	fill: var(--pgm-premium-text);
+	font-size: 11px;
+	font-weight: 700;
+	font-family: inherit;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-caption {
+	font-size: 0.72rem;
+	color: var(--pgm-premium-muted);
+	margin: 10px 0 0;
+	line-height: 1.45;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-empty {
+	text-align: center;
+	padding: 28px 16px;
+	border-radius: 8px;
+	border: 1px dashed var(--pgm-premium-border);
+	background: linear-gradient(180deg, var(--pgm-premium-page) 0%, var(--pgm-premium-surface) 100%);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-empty__title {
+	font-size: 0.85rem;
+	font-weight: 700;
+	margin: 0 0 6px;
+	color: var(--pgm-premium-text);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-chart-empty__hint {
+	font-size: 0.75rem;
+	color: var(--pgm-premium-muted);
+	margin: 0;
+	line-height: 1.45;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-panel--amostra {
+	margin-bottom: 20px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-amostra-table thead th {
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--pgm-premium-muted);
+	border-bottom: 1px solid var(--pgm-premium-border);
+	padding: 8px 10px;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-amostra-table tbody td {
+	padding: 10px;
+	vertical-align: middle;
+	border-top: 1px solid var(--pgm-premium-border);
+	color: var(--pgm-premium-text);
+	font-size: 0.82rem;
+}
+body.layout-no-topbar.pgm-portal-client .relcli-amostra-link {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--pgm-teal, #00c08b);
+}
+body.layout-no-topbar.pgm-portal-client .relcli-amostra-link:hover {
+	color: var(--pgm-teal-light, #5cdbc0);
+}
 body.layout-no-topbar.pgm-portal-client .relcli-blocks {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

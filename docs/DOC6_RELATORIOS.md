@@ -29,7 +29,7 @@ Centralizar indicadores operacionais, financeiros e de atendimento em relatório
   ├── agenda          → Relatório de visitas técnicas
   └── exportar        → Endpoint de exportação (POST)
 
-/portal/relatorios/   → Versão cliente (dados filtrados por empresa)
+`/cliente/relatorios` (`PortalRelatorios`) → versão cliente: KPIs de tickets (escopo alinhado a `apiIndexCliente`), contratos e financeiro resumidos; período livre ou padrão 90 dias; gráfico SVG por semana (ou por mês quando há mais de 24 semanas no intervalo), com agregação **no MySQL** (`GROUP BY`) e fallback em PHP para outros drivers ou erro SQL; amostra de chamados (assunto/situação, link para `Tickets/view`) sem notas internas; export CSV/Excel inclui chamados recentes **sem coluna de ID**.
 ```
 
 ---

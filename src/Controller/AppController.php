@@ -202,11 +202,12 @@ class AppController extends Controller {
 			'faturas' => 'faturasActive',
 			'prefaturamento' => 'prefaturamentoActive',
 			'tickets' => 'ticketsActive',
+			'advancedattendance' => 'ticketsActive',
+			'portaladvancedattendance' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
 			'advancedcontracts' => 'advancedModuleActive',
 			'advancedinvoices' => 'advancedModuleActive',
-			'advancedattendance' => 'advancedModuleActive',
-			'advancedreports' => 'advancedModuleActive',
+			'advancedreports' => 'relActive',
 		];
 
 		if (isset($controllerToMenuMap[$controllerLower])) {

@@ -126,11 +126,10 @@
 					</li>
 					<li class="<?= h($relatoriosCliActive) ?>"><?= $this->Html->link('<i class="fa fa-chart-bar"></i><span class="hide-menu">Relatórios</span>', '/cliente/relatorios', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 					<?php
-						$advCtrls = ['portaladvancedcontracts', 'portaladvancedinvoices', 'portaladvancedattendance'];
+						$advCtrls = ['portaladvancedcontracts', 'portaladvancedinvoices'];
 						$portalAdvMenuActive = in_array($controllerCli, $advCtrls, true) ? 'active' : '';
 						$advContrLi = ($controllerCli === 'portaladvancedcontracts') ? 'active' : '';
 						$advInvLi = ($controllerCli === 'portaladvancedinvoices') ? 'active' : '';
-						$advAttLi = ($controllerCli === 'portaladvancedattendance') ? 'active' : '';
 					?>
 					<li class="<?= h($portalAdvMenuActive) ?> has-arrow-sub <?= !empty($portalAdvMenuActive) ? 'selected' : '' ?>">
 						<a href="javascript:void(0)" class="waves-effect waves-dark has-arrow" aria-expanded="<?= !empty($portalAdvMenuActive) ? 'true' : 'false' ?>">
@@ -140,14 +139,15 @@
 						<ul class="collapse <?= !empty($portalAdvMenuActive) ? 'in' : '' ?>">
 							<li class="<?= h($advContrLi) ?>"><?= $this->Html->link('Contratos', '/cliente/contratos-avancados', ['class' => 'waves-effect waves-dark']) ?></li>
 							<li class="<?= h($advInvLi) ?>"><?= $this->Html->link('Faturas', '/cliente/faturas-avancadas', ['class' => 'waves-effect waves-dark']) ?></li>
-							<li class="<?= h($advAttLi) ?>"><?= $this->Html->link('Histórico de atendimento', '/cliente/historico-atendimento-avancado', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>
 				<?php endif; ?>
 					<?php
 						$ticketsCliAction = $this->request->getParam('action');
+						$ticketsCtrlLower = strtolower((string)$this->request->getParam('controller'));
 						$ticketsSubIndexActive = ($ticketsCliAction === 'indexcliente') ? 'active' : '';
 						$ticketsSubAddActive = ($ticketsCliAction === 'add') ? 'active' : '';
+						$ticketsSubHistAdvActive = ($ticketsCtrlLower === 'portaladvancedattendance') ? 'active' : '';
 					?>
 					<li class="<?= $ticketsActive ?> has-arrow-sub <?= !empty($ticketsActive) ? 'selected' : '' ?>">
 						<a href="javascript:void(0)" class="waves-effect waves-dark has-arrow" aria-expanded="<?= !empty($ticketsActive) ? 'true' : 'false' ?>">
@@ -157,6 +157,7 @@
 						<ul class="collapse <?= !empty($ticketsActive) ? 'in' : '' ?>">
 							<li class="<?= h($ticketsSubIndexActive) ?>"><?= $this->Html->link('Meus tickets', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark']) ?></li>
 							<li class="<?= h($ticketsSubAddActive) ?>"><?= $this->Html->link('Abrir chamado', '/tickets/add', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($ticketsSubHistAdvActive) ?>"><?= $this->Html->link('Histórico de atendimento', '/cliente/historico-atendimento-avancado', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>
 				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>

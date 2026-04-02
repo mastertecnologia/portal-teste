@@ -6,6 +6,8 @@ $unidades = $empresasOptSidebar ?? [];
 $ra = $relResumoAtendimentos ?? [];
 $rc = $relResumoContratos ?? [];
 $rf = $relResumoFinanceiro ?? [];
+$relChartTemporal = $relChartTemporal ?? ['mode' => 'week', 'points' => []];
+$relTicketsAmostra = $relTicketsAmostra ?? [];
 $exportQuery = array_filter([
 	'periodo' => $f['periodo'],
 	'unidade' => $f['unidade'],
@@ -49,7 +51,7 @@ $exportExcelUrl = $this->Url->build([
 		<?= $this->Form->create(null, ['type' => 'get', 'url' => ['controller' => 'PortalRelatorios', 'action' => 'index'], 'class' => 'tkcli-filters']) ?>
 			<div class="tkcli-filter-group" style="min-width: 200px; flex: 1 1 200px;">
 				<label>Período</label>
-				<input type="text" name="periodo" class="form-control" placeholder="Ex.: 01/04/2026 a 30/04/2026" value="<?= h($f['periodo']) ?>">
+				<input type="text" name="periodo" class="form-control" placeholder="Ex.: 01/04/2026 a 30/04/2026 (vazio = últimos 90 dias)" value="<?= h($f['periodo']) ?>">
 			</div>
 			<div class="tkcli-filter-group" style="min-width: 160px;">
 				<label>Unidade</label>
@@ -102,13 +104,47 @@ $exportExcelUrl = $this->Url->build([
 
 		<section class="relcli-panel relcli-panel--chart" aria-labelledby="relcli-chart-title">
 			<div class="relcli-panel__head">
-				<h2 id="relcli-chart-title" class="relcli-panel__title">Visão geral</h2>
-				<p class="relcli-panel__sub">Evolução e distribuição aparecerão aqui quando os dados estiverem disponíveis.</p>
+				<h2 id="relcli-chart-title" class="relcli-panel__title">Chamados no período</h2>
+				<p class="relcli-panel__sub">Distribuição pelo tempo de abertura, com os mesmos filtros dos indicadores acima.</p>
 			</div>
-			<div class="relcli-chart-slot" role="img" aria-label="Área reservada para gráfico">
-				<span class="relcli-chart-slot__text">Gráfico</span>
-				<small class="relcli-chart-slot__hint">Placeholder — sem biblioteca externa; o portal pode injetar SVG ou imagem gerada no servidor.</small>
+			<div class="relcli-chart-body">
+				<?= $this->element('PortalRelatorios/chart_temporal', ['chart' => $relChartTemporal]) ?>
 			</div>
+		</section>
+
+		<section class="relcli-panel relcli-panel--amostra" aria-labelledby="relcli-amostra-title">
+			<div class="relcli-panel__head">
+				<h2 id="relcli-amostra-title" class="relcli-panel__title">Últimos chamados</h2>
+				<p class="relcli-panel__sub">Assunto e situação — sem notas internas nem dados operacionais.</p>
+			</div>
+			<?php if (empty($relTicketsAmostra)) : ?>
+				<p class="relcli-amostra-empty text-muted mb-0">Nenhum chamado no período com os filtros atuais.</p>
+			<?php else : ?>
+				<div class="table-responsive">
+					<table class="table relcli-amostra-table mb-0">
+						<thead>
+							<tr>
+								<th scope="col">Abertura</th>
+								<th scope="col">Assunto</th>
+								<th scope="col">Situação</th>
+								<th scope="col" class="text-right">Ação</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($relTicketsAmostra as $t) : ?>
+								<tr>
+									<td class="text-nowrap"><?= h($t['abertura']) ?></td>
+									<td><?= h($t['assunto']) ?></td>
+									<td><?= h($t['situacao']) ?></td>
+									<td class="text-right">
+										<?= $this->Html->link('Abrir', ['controller' => 'Tickets', 'action' => 'view', $t['id']], ['class' => 'relcli-amostra-link']) ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
 		</section>
 
 		<div class="relcli-blocks">
