@@ -189,6 +189,7 @@ Router::scope('/', function ($routes) {
     $routes->connect('/modulo-contratos/servicos/delete/:svcId/:contractId', ['controller' => 'ContractManagement', 'action' => 'deleteServico'], ['pass' => ['svcId', 'contractId']])->setMethods(['POST']);
     $routes->redirect('/modulo-contratos/servicos', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/signatarios/:id', ['controller' => 'ContractManagement', 'action' => 'addSignatarios'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->connect('/modulo-contratos/signatarios/delete/:sigId/:contractId', ['controller' => 'ContractManagement', 'action' => 'deleteSignatario'], ['pass' => ['sigId', 'contractId']])->setMethods(['POST']);
     $routes->redirect('/modulo-contratos/signatarios', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->redirect('/modulo-contratos/signatarios/', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/gerar-pdf/:id', ['controller' => 'ContractManagement', 'action' => 'gerarPdf'], ['pass' => ['id'], 'id' => '\d+']);
