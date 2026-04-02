@@ -6,7 +6,11 @@ $sig = $signatory;
 	<div class="pgm-adv-panel card mb-3">
 		<div class="card-body">
 			<h4 class="card-title"><?= h($title) ?> — <?= h($contract->code) ?></h4>
-			<?= $this->element('ContractManagement/wizard_steps', ['step' => 'signatarios', 'contractId' => (int)$contract->id]) ?>
+			<?= $this->element('ContractManagement/wizard_steps', [
+				'step' => 'signatarios',
+				'contractId' => (int)$contract->id,
+				'podeEditarDadosPasso' => !empty($contractMayEditCore),
+			]) ?>
 			<p class="mb-2">
 				<?= $this->Html->link(__('Ir para ficha (PDF / assinatura)'), ['action' => 'view', $contract->id], ['class' => 'btn btn-sm btn-primary']) ?>
 				<?= $this->Html->link(__('Voltar a serviços'), ['action' => 'addServicos', $contract->id], ['class' => 'btn btn-sm btn-default']) ?>

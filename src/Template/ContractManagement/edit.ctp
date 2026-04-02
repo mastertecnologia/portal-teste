@@ -12,7 +12,11 @@ $__fmtContractMoney = static function ($v) {
 	<div class="pgm-adv-panel card">
 		<div class="card-body">
 			<h4 class="card-title"><?= h($title) ?></h4>
-			<?= $this->element('ContractManagement/wizard_steps', ['step' => 'add', 'contractId' => (int)$contract->id]) ?>
+			<?= $this->element('ContractManagement/wizard_steps', [
+				'step' => 'add',
+				'contractId' => (int)$contract->id,
+				'podeEditarDadosPasso' => !empty($contractMayEditCore),
+			]) ?>
 			<?= $this->Form->create($contract, ['class' => 'contract-management-form']) ?>
 			<?= $this->Form->control('idcliente', ['options' => $clientesList, 'empty' => __('Selecione…'), 'label' => __('Cliente'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('code', ['label' => __('Código'), 'class' => 'form-control']) ?>

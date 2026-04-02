@@ -72,6 +72,16 @@ class ContractManagementController extends AppController {
 	}
 
 	/**
+	 * Se a UI pode oferecer link para editar o núcleo (alinhado a assertMayEditCore no edit).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $contract
+	 * @return bool
+	 */
+	protected function _contractMayEditCore($contract) {
+		return ContractLifecycleService::mayEditCore($contract, $this->_mayEditOperationalContract());
+	}
+
+	/**
 	 * @param int $id
 	 * @param array $contain
 	 * @return \App\Model\Entity\Contract
@@ -205,6 +215,7 @@ class ContractManagementController extends AppController {
 		]);
 		$this->set('title', __('Contrato: {0}', $c->name));
 		$this->set('contract', $c);
+		$this->set('contractMayEditCore', $this->_contractMayEditCore($c));
 	}
 
 	public function add() {
@@ -260,6 +271,7 @@ class ContractManagementController extends AppController {
 		}
 
 		$this->set('contract', $contract);
+		$this->set('contractMayEditCore', !empty($contract->id) ? $this->_contractMayEditCore($contract) : true);
 		$this->set('clientesList', $this->_clientesList($idempresa));
 		$this->set('templatesList', $this->_templatesList($idempresa));
 	}
@@ -288,6 +300,7 @@ class ContractManagementController extends AppController {
 		}
 
 		$this->set('contract', $contract);
+		$this->set('contractMayEditCore', $this->_contractMayEditCore($contract));
 		$this->set('clientesList', $this->_clientesList($idempresa));
 		$this->set('templatesList', $this->_templatesList($idempresa));
 	}
@@ -302,6 +315,7 @@ class ContractManagementController extends AppController {
 		}
 		$this->set('title', __('Serviços do contrato'));
 		$this->set('contract', $contract);
+		$this->set('contractMayEditCore', $this->_contractMayEditCore($contract));
 
 		if ($this->request->is('post')) {
 			$row = $this->ContractServices->newEntity(array_merge(
@@ -352,6 +366,7 @@ class ContractManagementController extends AppController {
 		$contract = $this->_getContractOrFail($id, ['ContractSignatories']);
 		$this->set('title', __('Signatários'));
 		$this->set('contract', $contract);
+		$this->set('contractMayEditCore', $this->_contractMayEditCore($contract));
 
 		if ($this->request->is('post')) {
 			$row = $this->ContractSignatories->newEntity(array_merge(
@@ -367,6 +382,35 @@ class ContractManagementController extends AppController {
 		} else {
 			$this->set('signatory', $this->ContractSignatories->newEntity(['contract_id' => $contract->id]));
 		}
+	}
+
+	public function deleteSignatario($sigId = null, $contractId = null) {
+		$this->request->allowMethod(['post']);
+		$sigId      = (int)$sigId;
+		$contractId = (int)$contractId;
+
+		$sig = $this->ContractSignatories->find()
+			->where(['ContractSignatories.id' => $sigId])
+			->contain(['Contracts'])
+			->first();
+
+		if (!$sig || (int)$sig->contract_id !== $contractId) {
+			$this->Flash->error(__('Signatário não encontrado.'));
+			return $this->redirect(['controller' => 'ContractManagement', 'action' => 'addSignatarios', $contractId]);
+		}
+
+		$idempresa = $this->_idempresa();
+		if (isset($sig->contract) && (int)$sig->contract->idempresa !== $idempresa) {
+			throw new ForbiddenException();
+		}
+
+		if ($this->ContractSignatories->delete($sig)) {
+			$this->Flash->success(__('Signatário removido.'));
+		} else {
+			$this->Flash->error(__('Não foi possível remover o signatário.'));
+		}
+
+		return $this->redirect(['controller' => 'ContractManagement', 'action' => 'addSignatarios', $contractId]);
 	}
 
 	public function gerarPdf($id = null) {

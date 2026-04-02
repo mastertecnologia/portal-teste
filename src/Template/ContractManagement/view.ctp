@@ -35,7 +35,11 @@ $podeRenovar   = in_array($status, ['ativo', 'a_vencer', 'em_renovacao', 'suspen
 		<div class="card-body">
 
 			<?php /* wizard */ ?>
-			<?= $this->element('ContractManagement/wizard_steps', ['step' => 'ficha', 'contractId' => $id]) ?>
+			<?= $this->element('ContractManagement/wizard_steps', [
+				'step' => 'ficha',
+				'contractId' => $id,
+				'podeEditarDadosPasso' => !empty($contractMayEditCore),
+			]) ?>
 
 			<?php /* título + badges */ ?>
 			<div class="d-flex align-items-start justify-content-between mb-2" style="flex-wrap:wrap;gap:8px;">
@@ -64,7 +68,9 @@ $podeRenovar   = in_array($status, ['ativo', 'a_vencer', 'em_renovacao', 'suspen
 			<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px;">
 
 				<?php /* Editar / Serviços / Signatários — sempre visíveis */ ?>
+				<?php if (!empty($contractMayEditCore)): ?>
 				<?= $this->Html->link('✏ Editar', ['action' => 'edit', $id], ['class' => 'btn btn-sm btn-default']) ?>
+				<?php endif; ?>
 				<?= $this->Html->link('📋 Serviços', ['action' => 'addServicos', $id], ['class' => 'btn btn-sm btn-default']) ?>
 				<?= $this->Html->link('✍ Signatários', ['action' => 'addSignatarios', $id], ['class' => 'btn btn-sm btn-default']) ?>
 

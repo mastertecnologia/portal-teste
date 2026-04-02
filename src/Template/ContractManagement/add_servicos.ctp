@@ -25,12 +25,18 @@ $unidOpts = [
 
 	<h4 class="card-title mb-1"><?= h($title) ?> — <span class="text-muted"><?= h($contract->code) ?></span></h4>
 
-	<?= $this->element('ContractManagement/wizard_steps', ['step' => 'servicos', 'contractId' => $contractId]) ?>
+	<?= $this->element('ContractManagement/wizard_steps', [
+		'step' => 'servicos',
+		'contractId' => $contractId,
+		'podeEditarDadosPasso' => !empty($contractMayEditCore),
+	]) ?>
 
 	<div class="mb-3" style="display:flex;flex-wrap:wrap;gap:6px;">
 		<?= $this->Html->link('Continuar para signatários', ['action' => 'addSignatarios', $contractId], ['class' => 'btn btn-sm btn-primary']) ?>
 		<?= $this->Html->link('Ir para ficha do contrato',  ['action' => 'view',           $contractId], ['class' => 'btn btn-sm btn-default']) ?>
-		<?= $this->Html->link('Ajustar dados',              ['action' => 'edit',           $contractId], ['class' => 'btn btn-sm btn-link']) ?>
+		<?php if (!empty($contractMayEditCore)): ?>
+		<?= $this->Html->link('Ajustar dados', ['action' => 'edit', $contractId], ['class' => 'btn btn-sm btn-link']) ?>
+		<?php endif; ?>
 	</div>
 
 	<?php /* ── LISTA DE SERVIÇOS CADASTRADOS ─── */ ?>

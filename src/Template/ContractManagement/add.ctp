@@ -5,7 +5,11 @@ $this->assign('title', $title ?? 'Novo contrato');
 	<div class="pgm-adv-panel card">
 		<div class="card-body">
 			<h4 class="card-title"><?= h($title) ?></h4>
-			<?= $this->element('ContractManagement/wizard_steps', ['step' => 'add', 'contractId' => (int)($contract->id ?? 0)]) ?>
+			<?= $this->element('ContractManagement/wizard_steps', [
+				'step' => 'add',
+				'contractId' => (int)($contract->id ?? 0),
+				'podeEditarDadosPasso' => !empty($contractMayEditCore),
+			]) ?>
 			<div class="alert alert-info small mb-3">
 				<strong><?= __('Fluxo sugerido') ?>:</strong>
 				<?= __('Ao gravar com "Continuar", segue para serviços; use "Abrir ficha" para ir direto à ficha do contrato.') ?>
