@@ -4,6 +4,12 @@ $params = $this->Paginator->params();
 $count = isset($params['count']) ? (int)$params['count'] : (is_countable($contracts) ? count($contracts) : 0);
 $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 'em_renovacao' => 0, 'valor_mensal_total' => 0];
 ?>
+<style>
+.pgm-adv-page .btn-default, .pgm-adv-page a.btn-default { background-color:#546e7a!important;border-color:#546e7a!important;color:#fff!important; }
+.pgm-adv-page .btn-default:hover, .pgm-adv-page a.btn-default:hover { background-color:#607d8b!important;border-color:#607d8b!important;color:#fff!important; }
+.pgm-adv-page .label-default, .pgm-adv-page span.label-default { background-color:#546e7a!important;color:#fff!important; }
+.pgm-adv-page .well { background-color:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.1)!important;color:inherit!important; }
+</style>
 <div class="col-12 pgm-adv-page">
 	<div class="row mb-3">
 		<div class="col-md-3 col-sm-6 mb-2"><div class="well well-sm"><small class="text-muted">Ativos</small><div class="h4 mb-0"><?= (int)$kpis['ativos'] ?></div></div></div>

@@ -1,6 +1,10 @@
 <?php
 $this->assign('title', $title ?? 'Assinatura');
 ?>
+<style>
+.pgm-adv-page .btn-default,.pgm-adv-page a.btn-default{background-color:#546e7a!important;border-color:#546e7a!important;color:#fff!important;}
+.pgm-adv-page .btn-default:hover,.pgm-adv-page a.btn-default:hover{background-color:#607d8b!important;border-color:#607d8b!important;color:#fff!important;}
+</style>
 <div class="col-12 pgm-adv-page">
 	<div class="pgm-adv-panel card">
 		<div class="card-body">

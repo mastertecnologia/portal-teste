@@ -24,6 +24,31 @@ $styleActive   = 'display:inline-block;padding:3px 10px;border-radius:3px;font-s
 $styleInactive = 'display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:600;background:#546e7a;color:#fff;text-decoration:none;white-space:nowrap;';
 $styleDisabled = 'display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:600;background:#37474f;color:#90a4ae;white-space:nowrap;cursor:default;';
 ?>
+<style>
+/* ── Módulo Contratos: corrige btn-default e label-default invisíveis no tema escuro ── */
+.pgm-adv-page .btn-default,
+.pgm-adv-page a.btn-default {
+    background-color: #546e7a !important;
+    border-color:     #546e7a !important;
+    color:            #fff    !important;
+}
+.pgm-adv-page .btn-default:hover,
+.pgm-adv-page a.btn-default:hover {
+    background-color: #607d8b !important;
+    border-color:     #607d8b !important;
+    color:            #fff    !important;
+}
+.pgm-adv-page .label-default,
+.pgm-adv-page span.label-default {
+    background-color: #546e7a !important;
+    color:            #fff    !important;
+}
+.pgm-adv-page .well {
+    background-color: rgba(255,255,255,.05) !important;
+    border-color:     rgba(255,255,255,.1)  !important;
+    color: inherit !important;
+}
+</style>
 <nav class="pgm-contract-wizard small mb-3" aria-label="<?= h(__('Passos do contrato')) ?>">
 	<ol class="list-inline mb-0" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;list-style:none;padding:0;margin:0;">
 		<?php for ($i = 1; $i <= 4; $i++): ?>
