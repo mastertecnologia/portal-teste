@@ -312,7 +312,7 @@ class ContractManagementController extends AppController {
 
 	public function deleteServico($svcId = null, $contractId = null) {
 		$this->request->allowMethod(['post']);
-		$svcId     = (int)$svcId;
+		$svcId = (int)$svcId;
 		$contractId = (int)$contractId;
 
 		$svc = $this->ContractServices->find()
@@ -322,10 +322,9 @@ class ContractManagementController extends AppController {
 
 		if (!$svc || (int)$svc->contract_id !== $contractId) {
 			$this->Flash->error(__('Serviço não encontrado.'));
-			return $this->redirect(['action' => 'addServicos', $contractId]);
+			return $this->redirect(['controller' => 'ContractManagement', 'action' => 'addServicos', $contractId]);
 		}
 
-		// Verifica que o contrato pertence à empresa logada
 		$idempresa = $this->_idempresa();
 		if (isset($svc->contract) && (int)$svc->contract->idempresa !== $idempresa) {
 			throw new ForbiddenException();
@@ -336,7 +335,8 @@ class ContractManagementController extends AppController {
 		} else {
 			$this->Flash->error(__('Não foi possível remover o serviço.'));
 		}
-		return $this->redirect(['action' => 'addServicos', $contractId]);
+
+		return $this->redirect(['controller' => 'ContractManagement', 'action' => 'addServicos', $contractId]);
 	}
 
 	public function addSignatarios($id = null) {
