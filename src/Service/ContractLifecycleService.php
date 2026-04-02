@@ -53,7 +53,12 @@ class ContractLifecycleService {
 	public static function mayEditCore(EntityInterface $contract) {
 		$st = self::normalizeStatus($contract->get('status'));
 
-		return in_array($st, ['rascunho', 'revisao', 'recusado'], true);
+		return in_array($st, [
+			'rascunho',
+			'revisao',
+			'recusado',
+			'aguardando_assinatura',
+		], true);
 	}
 
 	/**
@@ -62,7 +67,7 @@ class ContractLifecycleService {
 	 */
 	public static function assertMayEditCore(EntityInterface $contract) {
 		if (!self::mayEditCore($contract)) {
-			throw new \RuntimeException('Contrato não está em estado editável (rascunho, revisão ou recusado).');
+			throw new \RuntimeException('Contrato não está em estado editável (rascunho, revisão, recusado ou aguardando assinatura).');
 		}
 	}
 
