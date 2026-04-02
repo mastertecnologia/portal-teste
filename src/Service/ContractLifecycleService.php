@@ -47,6 +47,9 @@ class ContractLifecycleService {
 	}
 
 	/**
+	 * Estados em que a equipa (ERP) pode editar o núcleo do contrato na UI.
+	 * Inclui rascunho/revisão, recusado, pré-assinatura e vigência operacional (ativo / a vencer).
+	 *
 	 * @param \Cake\Datasource\EntityInterface $contract
 	 * @return bool
 	 */
@@ -58,6 +61,8 @@ class ContractLifecycleService {
 			'revisao',
 			'recusado',
 			'aguardando_assinatura',
+			'ativo',
+			'a_vencer',
 		], true);
 	}
 
@@ -67,7 +72,9 @@ class ContractLifecycleService {
 	 */
 	public static function assertMayEditCore(EntityInterface $contract) {
 		if (!self::mayEditCore($contract)) {
-			throw new \RuntimeException('Contrato não está em estado editável (rascunho, revisão, recusado ou aguardando assinatura).');
+			throw new \RuntimeException(
+				'Não é possível editar os dados principais deste contrato no estado atual (ex.: suspenso, encerrado ou cancelado).'
+			);
 		}
 	}
 
