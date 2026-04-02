@@ -202,7 +202,6 @@ class AppController extends Controller {
 			'faturas' => 'faturasActive',
 			'prefaturamento' => 'prefaturamentoActive',
 			'tickets' => 'ticketsActive',
-			'advancedattendance' => 'ticketsActive',
 			'portaladvancedattendance' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
 			'advancedcontracts' => 'advancedModuleActive',

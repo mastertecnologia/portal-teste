@@ -7,10 +7,9 @@
 	$osOpen = ($ctrl === 'Ordensservico');
 	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
 	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
-	$ticketsOpen = ($ctrl === 'Tickets' || $ctrl === 'Servicedesk' || $ctrl === 'AdvancedAttendance');
+	$ticketsOpen = ($ctrl === 'Tickets' || $ctrl === 'Servicedesk');
 	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
 	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
-	$ticketsHistAvancadoActive = ($ctrl === 'AdvancedAttendance');
 	$relatoriosOpen = ($ctrl === 'Relatorios' || $ctrl === 'AdvancedReports');
 	$relatoriosPainelActive = ($ctrl === 'Relatorios');
 	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
@@ -197,13 +196,6 @@
 							['controller' => 'Tickets', 'action' => 'historico'],
 							['class' => 'pgm-nch ' . ($ticketsHistoricoActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Histórico de atendimentos']
 						) ?></li>
-						<?php if ($roleNav === 0) : ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Histórico consolidado (avançado)</span>',
-							'/modulo-avancado/atendimentos',
-							['class' => 'pgm-nch ' . ($ticketsHistAvancadoActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Histórico consolidado módulo avançado']
-						) ?></li>
-						<?php endif; ?>
 					</ul>
 				</li>
 

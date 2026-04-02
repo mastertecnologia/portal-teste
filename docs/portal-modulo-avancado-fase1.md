@@ -65,7 +65,7 @@ Em `src/Model/Table/`: `Contracts`, `ContractServices`, `ContractDocuments`, `Co
 
 ## Fase 3 — telas, rotas e RBAC
 
-- **ERP (role 0):** `AdvancedContracts`, `AdvancedInvoices`, `AdvancedAttendance`, `AdvancedReports`. Rotas explícitas em `config/routes.php` sob `/modulo-avancado/…` (listagem, detalhe, export CSV de faturas/indicadores, POST `marcar-paga` para fatura).
+- **ERP (role 0):** `AdvancedContracts`, `AdvancedInvoices`, `AdvancedReports`. Rotas explícitas em `config/routes.php` sob `/modulo-avancado/…` (listagem, detalhe, export CSV de faturas/indicadores, POST `marcar-paga` para fatura). Histórico de atendimentos no ERP permanece em `Tickets/historico` (sem duplicata PG no menu interno).
 - **Portal cliente (`C_RoleCliente`):** `PortalAdvancedContracts`, `PortalAdvancedInvoices`, `PortalAdvancedAttendance` — URLs `/cliente/contratos-avancados`, `/cliente/faturas-avancadas`, `/cliente/historico-atendimento-avancado` (+ `view/*`, export de faturas).
 - **Catálogo:** `config/permissions_registry.php` — códigos `erp.advanced.*` (equipe) e `portal.advanced.*` (portal).
 - **PostgreSQL:** migration `20260406140000_PortalAdvancedRbacPermissions.php` grava as permissões em `rbac_permissions` e associa `portal.advanced.*` ao papel `cliente_portal`. As permissões `erp.advanced.*` não são atribuídas automaticamente; vincule-as aos papéis internos desejados na matriz RBAC.

@@ -164,8 +164,6 @@ Router::scope('/', function ($routes) {
     $routes->connect('/modulo-avancado/faturas/view/*', ['controller' => 'AdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
     $routes->connect('/modulo-avancado/faturas/exportar', ['controller' => 'AdvancedInvoices', 'action' => 'export'])->setMethods(['GET']);
     $routes->connect('/modulo-avancado/faturas/marcar-paga/*', ['controller' => 'AdvancedInvoices', 'action' => 'markPaid'], ['pass' => ['id']])->setMethods(['POST']);
-    $routes->connect('/modulo-avancado/atendimentos', ['controller' => 'AdvancedAttendance', 'action' => 'index']);
-    $routes->connect('/modulo-avancado/atendimentos/view/*', ['controller' => 'AdvancedAttendance', 'action' => 'view'], ['pass' => ['id']]);
     $routes->connect('/modulo-avancado/indicadores', ['controller' => 'AdvancedReports', 'action' => 'index']);
     $routes->connect('/modulo-avancado/indicadores/exportar', ['controller' => 'AdvancedReports', 'action' => 'export'])->setMethods(['GET']);
     // Módulo avançado — portal cliente

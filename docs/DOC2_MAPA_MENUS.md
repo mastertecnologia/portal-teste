@@ -88,7 +88,7 @@ Dashboard do Cliente
 
 | Contexto | URL sugerida | Entrada de menu |
 |---------|-------------|----------------|
-| ERP — técnico/gestor | `/tickets/historico` (clássico) e `/modulo-avancado/atendimentos` (PG) | Tickets → submenus no sidebar |
+| ERP — técnico/gestor | `/tickets/historico` (clássico) | Tickets → submenus no sidebar |
 | Portal cliente | `/cliente/historico-atendimento-avancado` (PG) | Tickets → Histórico de atendimento |
 
 **Diferença de visão:**
@@ -145,7 +145,7 @@ O `AppController::beforeFilter` define as seguintes variáveis injetadas em todo
 | `$dashboard` | Users::dashboard |
 | `$clientesActive` | Clientes |
 | `$ordensActive` | Ordensservico |
-| `$ticketsActive` | Tickets, AdvancedAttendance (ERP), PortalAdvancedAttendance (portal) |
+| `$ticketsActive` | Tickets, PortalAdvancedAttendance (portal) |
 | `$orcamentosActive` | Orcamentos |
 | `$faturamentoActive` | Faturamento |
 | `$financeiroActive` | Financeiro |
@@ -164,7 +164,7 @@ O `AppController::beforeFilter` define as seguintes variáveis injetadas em todo
 
 | Contexto | Ficheiro | Notas |
 |----------|----------|--------|
-| ERP | `src/Template/Element/sidebar.ctp` | **Relatórios:** submenu — Painel (`Relatorios/index`) + Indicadores PG (`/modulo-avancado/indicadores`, role 0). **Tickets:** histórico clássico + histórico consolidado PG (`/modulo-avancado/atendimentos`, role 0). **Operações → Módulo avançado:** apenas Contratos e Faturas PG. |
+| ERP | `src/Template/Element/sidebar.ctp` | **Relatórios:** submenu — Painel (`Relatorios/index`) + Indicadores PG (`/modulo-avancado/indicadores`, role 0). **Tickets:** histórico clássico (`/tickets/historico`). **Operações → Módulo avançado:** apenas Contratos e Faturas PG. |
 | Portal cliente | `src/Template/Element/sidebarcli.ctp` | **Tickets:** meus tickets, abrir chamado, histórico PG (`/cliente/historico-atendimento-avancado`). **Contratos & faturas:** contratos/faturas PG (sem histórico neste grupo). **Relatórios:** `/cliente/relatorios`. |
 
 Mapeamento controller → variável de menu: `src/Controller/AppController.php` (`$controllerToMenuMap`).

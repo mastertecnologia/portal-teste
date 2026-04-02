@@ -27,9 +27,6 @@ INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type,
 SELECT 'erp.advanced.invoices', 'Módulo avançado — faturas', 'Operações', 'AdvancedInvoices', '*', 'rbac', 'empresa', 'Faturas vinculadas a contracts; marcar paga e export CSV.', 0, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.invoices');
 INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type, abac_scope, description, sort_order, created, modified)
-SELECT 'erp.advanced.attendance', 'Módulo avançado — histórico atendimento', 'Operações', 'AdvancedAttendance', '*', 'rbac', 'empresa', 'attendance_histories + timeline (notas internas visíveis).', 0, NOW(), NOW()
-WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.attendance');
-INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type, abac_scope, description, sort_order, created, modified)
 SELECT 'erp.advanced.reports', 'Módulo avançado — indicadores', 'Operações', 'AdvancedReports', '*', 'rbac', 'empresa', 'Resumo tickets + contracts + invoices no período.', 0, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.reports');
 INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type, abac_scope, description, sort_order, created, modified)
@@ -51,9 +48,6 @@ WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.cont
 INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type, abac_scope, description, sort_order)
 SELECT 'erp.advanced.invoices', 'Módulo avançado — faturas', 'Operações', 'AdvancedInvoices', '*', 'rbac', 'empresa', 'Faturas vinculadas a contracts; marcar paga e export CSV.', 0
 WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.invoices');
-INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type, abac_scope, description, sort_order)
-SELECT 'erp.advanced.attendance', 'Módulo avançado — histórico atendimento', 'Operações', 'AdvancedAttendance', '*', 'rbac', 'empresa', 'attendance_histories + timeline (notas internas visíveis).', 0
-WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.attendance');
 INSERT INTO rbac_permissions (code, name, module, controller, action, perm_type, abac_scope, description, sort_order)
 SELECT 'erp.advanced.reports', 'Módulo avançado — indicadores', 'Operações', 'AdvancedReports', '*', 'rbac', 'empresa', 'Resumo tickets + contracts + invoices no período.', 0
 WHERE NOT EXISTS (SELECT 1 FROM rbac_permissions WHERE code = 'erp.advanced.reports');

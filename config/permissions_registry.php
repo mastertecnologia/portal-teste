@@ -72,7 +72,6 @@ return [
 	['code' => 'clicontratos.manage', 'name' => 'Contratos cliente', 'module' => 'Operações', 'controller' => 'Clicontratos', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'Contratos vinculados a clientes.', 'sort_order' => $n()],
 	['code' => 'erp.advanced.contracts', 'name' => 'Módulo avançado — contratos', 'module' => 'Operações', 'controller' => 'AdvancedContracts', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'Tabela contracts (comercial avançado).', 'sort_order' => $n()],
 	['code' => 'erp.advanced.invoices', 'name' => 'Módulo avançado — faturas', 'module' => 'Operações', 'controller' => 'AdvancedInvoices', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'Faturas vinculadas a contracts; marcar paga e export CSV.', 'sort_order' => $n()],
-	['code' => 'erp.advanced.attendance', 'name' => 'Módulo avançado — histórico atendimento', 'module' => 'Operações', 'controller' => 'AdvancedAttendance', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'attendance_histories + timeline (notas internas visíveis).', 'sort_order' => $n()],
 	['code' => 'erp.advanced.reports', 'name' => 'Módulo avançado — indicadores', 'module' => 'Operações', 'controller' => 'AdvancedReports', 'action' => '*', 'perm_type' => 'rbac', 'abac_scope' => 'empresa', 'description' => 'Resumo tickets + contracts + invoices no período.', 'sort_order' => $n()],
 
 	// —— Perfil & conta ——

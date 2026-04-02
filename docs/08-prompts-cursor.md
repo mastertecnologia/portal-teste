@@ -70,7 +70,7 @@ Audita alterações: PHP, rotas, layout, permissões. Classifica ficheiros segur
 
 | Conceito do chat | Implementação atual / alvo |
 |------------------|----------------------------|
-| Histórico ERP | `Tickets/historico` (clássico), `AdvancedAttendance` + `/modulo-avancado/atendimentos` (menu Tickets) |
+| Histórico ERP | `Tickets/historico` (clássico) |
 | Histórico portal (PG) | `PortalAdvancedAttendance` + `/cliente/historico-atendimento-avancado` (menu Tickets, não em Contratos & faturas) |
 | Contratos avançados | `AdvancedContracts`, `PortalAdvancedContracts` |
 | Faturas avançadas | `AdvancedInvoices`, `PortalAdvancedInvoices` |
