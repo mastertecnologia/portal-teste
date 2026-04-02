@@ -128,7 +128,8 @@
 					<?php
 						$advCtrls = ['portaladvancedcontracts', 'portaladvancedinvoices'];
 						$portalAdvMenuActive = in_array($controllerCli, $advCtrls, true) ? 'active' : '';
-						$advContrLi = ($controllerCli === 'portaladvancedcontracts') ? 'active' : '';
+						$advContrLi = ($controllerCli === 'portaladvancedcontracts' && $actionCli !== 'franquia') ? 'active' : '';
+						$advFranqLi = ($controllerCli === 'portaladvancedcontracts' && $actionCli === 'franquia') ? 'active' : '';
 						$advInvLi = ($controllerCli === 'portaladvancedinvoices') ? 'active' : '';
 					?>
 					<li class="<?= h($portalAdvMenuActive) ?> has-arrow-sub <?= !empty($portalAdvMenuActive) ? 'selected' : '' ?>">
@@ -138,6 +139,7 @@
 						</a>
 						<ul class="collapse <?= !empty($portalAdvMenuActive) ? 'in' : '' ?>">
 							<li class="<?= h($advContrLi) ?>"><?= $this->Html->link('Contratos', '/cliente/contratos-avancados', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($advFranqLi) ?>"><?= $this->Html->link('Franquia de horas', '/cliente/contratos-avancados/franquia', ['class' => 'waves-effect waves-dark']) ?></li>
 							<li class="<?= h($advInvLi) ?>"><?= $this->Html->link('Faturas', '/cliente/faturas-avancadas', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>

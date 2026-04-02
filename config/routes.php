@@ -155,6 +155,11 @@ Router::scope('/', function ($routes) {
     // Módulo avançado — ERP (equipe role 0)
     $routes->connect('/modulo-avancado/contratos', ['controller' => 'AdvancedContracts', 'action' => 'index']);
     $routes->connect('/modulo-avancado/contratos/view/*', ['controller' => 'AdvancedContracts', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/modulo-avancado/contratos/export-pdf/*', ['controller' => 'AdvancedContracts', 'action' => 'exportPdf'], ['pass' => ['id']]);
+    $routes->connect('/modulo-avancado/modelos-contrato', ['controller' => 'ContractTemplates', 'action' => 'index']);
+    $routes->connect('/modulo-avancado/modelos-contrato/add', ['controller' => 'ContractTemplates', 'action' => 'add']);
+    $routes->connect('/modulo-avancado/modelos-contrato/edit/*', ['controller' => 'ContractTemplates', 'action' => 'edit'], ['pass' => ['id']]);
+    $routes->connect('/modulo-avancado/modelos-contrato/delete/*', ['controller' => 'ContractTemplates', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/modulo-avancado/faturas', ['controller' => 'AdvancedInvoices', 'action' => 'index']);
     $routes->connect('/modulo-avancado/faturas/view/*', ['controller' => 'AdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
     $routes->connect('/modulo-avancado/faturas/exportar', ['controller' => 'AdvancedInvoices', 'action' => 'export'])->setMethods(['GET']);
@@ -166,6 +171,8 @@ Router::scope('/', function ($routes) {
     // Módulo avançado — portal cliente
     $routes->connect('/cliente/contratos-avancados', ['controller' => 'PortalAdvancedContracts', 'action' => 'index']);
     $routes->connect('/cliente/contratos-avancados/view/*', ['controller' => 'PortalAdvancedContracts', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/cliente/contratos-avancados/export-pdf/*', ['controller' => 'PortalAdvancedContracts', 'action' => 'exportPdf'], ['pass' => ['id']]);
+    $routes->connect('/cliente/contratos-avancados/franquia', ['controller' => 'PortalAdvancedContracts', 'action' => 'franquia']);
     $routes->connect('/cliente/faturas-avancadas', ['controller' => 'PortalAdvancedInvoices', 'action' => 'index']);
     $routes->connect('/cliente/faturas-avancadas/view/*', ['controller' => 'PortalAdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
     $routes->connect('/cliente/faturas-avancadas/exportar', ['controller' => 'PortalAdvancedInvoices', 'action' => 'exportar'])->setMethods(['GET']);

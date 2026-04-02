@@ -206,6 +206,7 @@ class AppController extends Controller {
 			'portaladvancedattendance' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
 			'advancedcontracts' => 'advancedModuleActive',
+			'contracttemplates' => 'advancedModuleActive',
 			'advancedinvoices' => 'advancedModuleActive',
 			'advancedreports' => 'relActive',
 		];

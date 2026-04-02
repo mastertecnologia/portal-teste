@@ -354,4 +354,30 @@ return [
         'checkAgent' => false,
         'autoRegenerate' => true,
     ],
+
+    /**
+     * Contratos (módulo avançado): Autentique, PDF, alertas.
+     * Segredos e URLs reais: env / config/app_local.php (não commitar).
+     */
+    'Contract' => [
+        'autentique' => [
+            'enabled' => filter_var(env('CONTRACT_AUTENTIQUE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'api_base_url' => env('CONTRACT_AUTENTIQUE_API_BASE', ''),
+            'api_key' => env('CONTRACT_AUTENTIQUE_API_KEY', ''),
+            'webhook_secret' => env('CONTRACT_AUTENTIQUE_WEBHOOK_SECRET', ''),
+        ],
+        'pdf' => [
+            'storage_path' => env('CONTRACT_PDF_STORAGE_PATH', TMP . 'contracts' . DS),
+        ],
+        'notifications' => [
+            'dias_padrao_aviso_vencimento' => (int)env('CONTRACT_AVISO_VENCIMENTO_DIAS', 30),
+            'from_email' => env('CONTRACT_NOTIFY_FROM_EMAIL', ''),
+            'from_name' => env('CONTRACT_NOTIFY_FROM_NAME', 'PGM Contratos'),
+            'team_email' => env('CONTRACT_NOTIFY_TEAM_EMAIL', ''),
+        ],
+        'alerts' => [
+            'auto_close_expired' => filter_var(env('CONTRACT_ALERTS_AUTO_CLOSE', false), FILTER_VALIDATE_BOOLEAN),
+            'auto_mark_ending_status' => filter_var(env('CONTRACT_ALERTS_MARK_ENDING', false), FILTER_VALIDATE_BOOLEAN),
+        ],
+    ],
 ];

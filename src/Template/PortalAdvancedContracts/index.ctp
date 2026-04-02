@@ -9,6 +9,7 @@ $advCount = isset($params['count']) ? (int)$params['count'] : (is_countable($con
 		<div class="card-body">
 			<h4 class="card-title"><?= h($title) ?></h4>
 			<p class="text-muted small">Contratos no módulo avançado vinculados à sua empresa.</p>
+			<p class="small mb-2"><?= $this->Html->link('Franquia de horas (por mês)', '/cliente/contratos-avancados/franquia', ['class' => '']) ?></p>
 			<div class="table-responsive">
 				<table class="table table-sm table-striped mb-0">
 					<thead><tr><th>Código</th><th>Nome</th><th>Status</th><th></th></tr></thead>

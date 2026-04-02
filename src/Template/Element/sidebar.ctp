@@ -15,8 +15,9 @@
 	$relatoriosPainelActive = ($ctrl === 'Relatorios');
 	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
 	$roleNav = (int)($role ?? 1);
-	$advModOpen = in_array($ctrl, ['AdvancedContracts', 'AdvancedInvoices'], true);
+	$advModOpen = in_array($ctrl, ['AdvancedContracts', 'AdvancedInvoices', 'ContractTemplates'], true);
 	$advContrAct = ($ctrl === 'AdvancedContracts');
+	$advTplAct = ($ctrl === 'ContractTemplates');
 	$advInvAct = ($ctrl === 'AdvancedInvoices');
 
 	$nameTrim = trim((string)($name ?? ''));
@@ -260,6 +261,11 @@
 							'<span class="pgm-ndot"></span><span>Contratos</span>',
 							'/modulo-avancado/contratos',
 							['class' => 'pgm-nch ' . ($advContrAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Modelos de contrato</span>',
+							'/modulo-avancado/modelos-contrato',
+							['class' => 'pgm-nch ' . ($advTplAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Faturas</span>',
