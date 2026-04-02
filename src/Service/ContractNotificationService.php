@@ -133,23 +133,68 @@ class ContractNotificationService {
 	}
 
 	/**
+	 * Envia e-mail ao signatário com o link de assinatura (Autentique ou outro).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $contract
+	 * @param \Cake\Datasource\EntityInterface $signatory
+	 * @return void
+	 * @throws \InvalidArgumentException remetente/destinatário/link inválidos ou não configurados
+	 */
+	public function enviarConviteAssinaturaEmail($contract, $signatory) {
+		$to = trim((string)($signatory->get('email') ?? ''));
+		$link = trim((string)($signatory->get('link_assinatura') ?? ''));
+		if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+			throw new \InvalidArgumentException('E-mail do signatário inválido ou vazio.');
+		}
+		if ($link === '') {
+			throw new \InvalidArgumentException('Link de assinatura ainda não disponível. Envie o contrato pela integração (Autentique) primeiro.');
+		}
+		$code = (string)($contract->get('code') ?? '');
+		$this->sendHtml(
+			$to,
+			'Assinatura necessária — contrato ' . $code,
+			'contract_lembrar_assinatura',
+			['contract' => $contract, 'signatory' => $signatory]
+		);
+	}
+
+	/**
+	 * Reenvio silencioso (ex.: cron) — ignora falhas de configuração ou link vazio.
+	 *
 	 * @param \Cake\Datasource\EntityInterface $contract
 	 * @param \Cake\Datasource\EntityInterface $signatory
 	 * @return void
 	 */
 	public function lembrarAssinatura($contract, $signatory) {
-		$to = (string)($signatory->get('email') ?? '');
-		$link = (string)($signatory->get('link_assinatura') ?? '');
-		if ($to === '' || $link === '') {
-			return;
+		try {
+			$this->enviarConviteAssinaturaEmail($contract, $signatory);
+		} catch (\Throwable $e) {
 		}
-		$code = (string)($contract->get('code') ?? '');
-		$this->sendHtml(
-			$to,
-			'Lembrete: assinatura necessária — ' . $code,
-			'contract_lembrar_assinatura',
-			['contract' => $contract, 'signatory' => $signatory]
-		);
+	}
+
+	/**
+	 * Envia convite por e-mail a todos os signatários com link preenchido e ainda não assinados.
+	 *
+	 * @param \Cake\Datasource\EntityInterface $contract Deve conter contract_signatories carregados
+	 * @return array{sent:int, errors:string[]}
+	 */
+	public function enviarConvitesAssinaturaTodosComLink($contract) {
+		$sent = 0;
+		$errors = [];
+		foreach ((array)($contract->get('contract_signatories') ?? []) as $s) {
+			$st = (string)($s->get('status') ?? '');
+			if ($st === 'assinado') {
+				continue;
+			}
+			try {
+				$this->enviarConviteAssinaturaEmail($contract, $s);
+				$sent++;
+			} catch (\Throwable $e) {
+				$errors[] = trim((string)($s->get('nome') ?: '#')) . ': ' . $e->getMessage();
+			}
+		}
+
+		return ['sent' => $sent, 'errors' => $errors];
 	}
 
 	/**

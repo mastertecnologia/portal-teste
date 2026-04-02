@@ -264,7 +264,28 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				$sigsOrdered = collection($contract->contract_signatories)->sortBy('ordem', SORT_ASC)->toList();
 			}
 			?>
+			<?php
+			$podeReenviarEmailsMassa = false;
+			foreach ($sigsOrdered as $sx) {
+				if (!empty($sx->link_assinatura) && ($sx->status ?? '') !== 'assinado') {
+					$podeReenviarEmailsMassa = true;
+					break;
+				}
+			}
+			?>
 			<?php if ($sigsOrdered !== []): ?>
+			<?php if ($podeReenviarEmailsMassa): ?>
+			<p class="small mb-2">
+				<?= $this->Form->postLink(
+					__('Reenviar e-mail com link a todos (pendentes)'),
+					['action' => 'reenviarLink', $id],
+					[
+						'class' => 'btn btn-xs btn-info',
+						'confirm' => __('Reenviar o e-mail com link de assinatura para todos os signatários que ainda não assinaram?'),
+					]
+				) ?>
+			</p>
+			<?php endif; ?>
 			<div class="table-responsive">
 				<table class="table table-sm table-striped mb-0">
 					<thead>
@@ -276,6 +297,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 							<th>Auth</th>
 							<th>Status</th>
 							<th>Assinado em</th>
+							<th style="min-width:120px;"><?= __('Convite') ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -289,6 +311,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 							'recusado'    => 'danger',
 						];
 						$sigColor = $sigStatusCfg[$s->status ?? ''] ?? 'default';
+						$podeReenviarEste = !empty($s->link_assinatura) && ($s->status ?? '') !== 'assinado';
 						?>
 						<tr>
 							<td class="text-center"><?= (int)$s->ordem ?></td>
@@ -298,6 +321,21 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 							<td><small><?= h(strtoupper($s->auth_type ?? 'email')) ?></small></td>
 							<td><span class="label label-<?= $sigColor ?>"><?= h(ucfirst($s->status ?? 'pendente')) ?></span></td>
 							<td class="small"><?= !empty($s->assinado_em) ? h($s->assinado_em->format('d/m/Y H:i')) : '—' ?></td>
+							<td class="small">
+								<?php if ($podeReenviarEste): ?>
+								<?= $this->Form->create(null, ['url' => ['action' => 'reenviarLink', $id], 'style' => 'display:inline;margin:0;padding:0;']) ?>
+								<?= $this->Form->hidden('signatory_id', ['value' => (int)$s->id]) ?>
+								<?= $this->Form->button(__('Reenviar link'), [
+									'type' => 'submit',
+									'class' => 'btn btn-xs btn-default',
+									'escape' => false,
+									'onclick' => 'return confirm(' . json_encode((string)__('Reenviar e-mail com link para {0}?', $s->nome)) . ');',
+								]) ?>
+								<?= $this->Form->end() ?>
+								<?php else: ?>
+								<span class="text-muted">—</span>
+								<?php endif; ?>
+							</td>
 						</tr>
 						<?php endforeach; ?>
 					</tbody>

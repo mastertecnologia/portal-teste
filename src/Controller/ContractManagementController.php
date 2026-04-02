@@ -82,6 +82,33 @@ class ContractManagementController extends AppController {
 	}
 
 	/**
+	 * E-mail aos signatários com link (após envio Autentique ou reenvio manual).
+	 *
+	 * @param int $contractId
+	 * @param bool $sendEmail
+	 * @return void
+	 */
+	protected function _enviarEmailsLinksAssinaturaSeSolicitado($contractId, $sendEmail) {
+		if (!$sendEmail) {
+			return;
+		}
+		try {
+			$cFresh = $this->Contracts->get((int)$contractId, ['contain' => ['ContractSignatories']]);
+			$r = (new ContractNotificationService())->enviarConvitesAssinaturaTodosComLink($cFresh);
+			if ($r['sent'] > 0) {
+				$this->Flash->success(__('Enviado(s) {0} e-mail(s) com link de assinatura aos signatários.', $r['sent']));
+			}
+			if ($r['errors'] !== []) {
+				$this->Flash->warning(implode(' ', array_slice($r['errors'], 0, 5)));
+			} elseif ($r['sent'] === 0 && $r['errors'] === []) {
+				$this->Flash->warning(__('Nenhum e-mail com link foi enviado: confirme links gravados (Autentique) e Contract.notifications (from_email) no configure.'));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('E-mail: {0}', $e->getMessage()));
+		}
+	}
+
+	/**
 	 * @param int $id
 	 * @param array $contain
 	 * @return \App\Model\Entity\Contract
@@ -446,6 +473,7 @@ class ContractManagementController extends AppController {
 		$this->set('contract', $contract);
 
 		if ($this->request->is('post')) {
+			$sendEmailSignatarios = (string)$this->request->getData('enviar_email_signatarios', '1') === '1';
 			$signing = new ContractSigningService();
 			$errs = $signing->validateSignatoriesForSend($contract->contract_signatories ?? []);
 			if ($errs !== []) {
@@ -512,6 +540,8 @@ class ContractManagementController extends AppController {
 				} catch (\Throwable $e) {
 				}
 				$this->Flash->success(__('Contrato enviado à Autentique para assinatura.'));
+				$this->_enviarEmailsLinksAssinaturaSeSolicitado((int)$id, $sendEmailSignatarios);
+
 				return $this->redirect(['action' => 'view', $id]);
 			}
 
@@ -523,6 +553,8 @@ class ContractManagementController extends AppController {
 			} catch (\Throwable $e) {
 			}
 			$this->Flash->success(__('Contrato marcado como aguardando assinatura (sem API Autentique — ligue CONTRACT_AUTENTIQUE_ENABLED).'));
+			$this->_enviarEmailsLinksAssinaturaSeSolicitado((int)$id, $sendEmailSignatarios);
+
 			return $this->redirect(['action' => 'view', $id]);
 		}
 	}
@@ -571,9 +603,41 @@ class ContractManagementController extends AppController {
 
 	public function reenviarLink($id = null) {
 		$this->request->allowMethod(['post']);
-		$this->_getContractOrFail($id);
-		$this->Flash->warning(__('Reenvio de link Autentique ainda não implementado (API Fase 7).'));
-		return $this->redirect(['action' => 'view', $id]);
+		$contract = $this->_getContractOrFail($id, ['ContractSignatories']);
+		$cid = (int)$contract->id;
+		$sigId = (int)$this->request->getData('signatory_id', 0);
+		$svc = new ContractNotificationService();
+
+		if ($sigId > 0) {
+			foreach ($contract->contract_signatories ?? [] as $s) {
+				if ((int)$s->id !== $sigId) {
+					continue;
+				}
+				try {
+					$svc->enviarConviteAssinaturaEmail($contract, $s);
+					$this->Flash->success(__('E-mail com link de assinatura reenviado para {0}.', $s->nome));
+				} catch (\Throwable $e) {
+					$this->Flash->error($e->getMessage());
+				}
+
+				return $this->redirect(['action' => 'view', $cid]);
+			}
+			$this->Flash->error(__('Signatário não encontrado.'));
+			return $this->redirect(['action' => 'view', $cid]);
+		}
+
+		$cFresh = $this->Contracts->get($cid, ['contain' => ['ContractSignatories']]);
+		$r = $svc->enviarConvitesAssinaturaTodosComLink($cFresh);
+		if ($r['sent'] > 0) {
+			$this->Flash->success(__('Reenviados {0} e-mail(s) com link de assinatura.', $r['sent']));
+		}
+		if ($r['errors'] !== []) {
+			$this->Flash->warning(implode(' ', array_slice($r['errors'], 0, 5)));
+		} elseif ($r['sent'] === 0 && $r['errors'] === []) {
+			$this->Flash->warning(__('Nenhum e-mail enviado. É necessário link por signatário (Autentique) e e-mail remetente configurado (Contract.notifications).'));
+		}
+
+		return $this->redirect(['action' => 'view', $cid]);
 	}
 
 	public function verRenovacoes($id = null) {
