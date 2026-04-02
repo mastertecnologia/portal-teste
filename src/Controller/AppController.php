@@ -173,6 +173,7 @@ class AppController extends Controller {
 			'prefaturamentoActive' => '',
 			'config' => '',
 			'queuesAtendimentoActive' => '',
+			'advancedModuleActive' => '',
 		];
 
 		if ($action === "dashboard") {
@@ -203,6 +204,10 @@ class AppController extends Controller {
 			'prefaturamento' => 'prefaturamentoActive',
 			'tickets' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
+			'advancedcontracts' => 'advancedModuleActive',
+			'advancedinvoices' => 'advancedModuleActive',
+			'advancedattendance' => 'advancedModuleActive',
+			'advancedreports' => 'advancedModuleActive',
 		];
 
 		if (isset($controllerToMenuMap[$controllerLower])) {

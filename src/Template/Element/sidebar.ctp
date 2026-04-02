@@ -11,6 +11,11 @@
 	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
 	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 	$roleNav = (int)($role ?? 1);
+	$advModOpen = in_array($ctrl, ['AdvancedContracts', 'AdvancedInvoices', 'AdvancedAttendance', 'AdvancedReports'], true);
+	$advContrAct = ($ctrl === 'AdvancedContracts');
+	$advInvAct = ($ctrl === 'AdvancedInvoices');
+	$advAttAct = ($ctrl === 'AdvancedAttendance');
+	$advRepAct = ($ctrl === 'AdvancedReports');
 
 	$nameTrim = trim((string)($name ?? ''));
 	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
@@ -216,6 +221,39 @@
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
+				<?php if ($roleNav === 0) : ?>
+				<li class="pgm-ng <?= h($advancedModuleActive) ?> <?= $advModOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $advModOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $advModOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-cubes ni-ico-fa"></i>
+						<span class="hide-menu">Módulo avançado</span>
+						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Contratos</span>',
+							'/modulo-avancado/contratos',
+							['class' => 'pgm-nch ' . ($advContrAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Faturas</span>',
+							'/modulo-avancado/faturas',
+							['class' => 'pgm-nch ' . ($advInvAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Histórico atendimento</span>',
+							'/modulo-avancado/atendimentos',
+							['class' => 'pgm-nch ' . ($advAttAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Indicadores</span>',
+							'/modulo-avancado/indicadores',
+							['class' => 'pgm-nch ' . ($advRepAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+					</ul>
+				</li>
+				<?php endif; ?>
 				<li class="<?= $faturasActive ?>">
 					<?= $this->Html->link(
 						'<i class="fas fa-file-invoice"></i><span class="hide-menu"> Locação </span>',

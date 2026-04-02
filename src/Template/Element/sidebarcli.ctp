@@ -125,6 +125,24 @@
 						</ul>
 					</li>
 					<li class="<?= h($relatoriosCliActive) ?>"><?= $this->Html->link('<i class="fa fa-chart-bar"></i><span class="hide-menu">Relatórios</span>', '/cliente/relatorios', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+					<?php
+						$advCtrls = ['portaladvancedcontracts', 'portaladvancedinvoices', 'portaladvancedattendance'];
+						$portalAdvMenuActive = in_array($controllerCli, $advCtrls, true) ? 'active' : '';
+						$advContrLi = ($controllerCli === 'portaladvancedcontracts') ? 'active' : '';
+						$advInvLi = ($controllerCli === 'portaladvancedinvoices') ? 'active' : '';
+						$advAttLi = ($controllerCli === 'portaladvancedattendance') ? 'active' : '';
+					?>
+					<li class="<?= h($portalAdvMenuActive) ?> has-arrow-sub <?= !empty($portalAdvMenuActive) ? 'selected' : '' ?>">
+						<a href="javascript:void(0)" class="waves-effect waves-dark has-arrow" aria-expanded="<?= !empty($portalAdvMenuActive) ? 'true' : 'false' ?>">
+							<i class="fa fa-layer-group"></i>
+							<span class="hide-menu">Contratos &amp; faturas</span>
+						</a>
+						<ul class="collapse <?= !empty($portalAdvMenuActive) ? 'in' : '' ?>">
+							<li class="<?= h($advContrLi) ?>"><?= $this->Html->link('Contratos', '/cliente/contratos-avancados', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($advInvLi) ?>"><?= $this->Html->link('Faturas', '/cliente/faturas-avancadas', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($advAttLi) ?>"><?= $this->Html->link('Histórico de atendimento', '/cliente/historico-atendimento-avancado', ['class' => 'waves-effect waves-dark']) ?></li>
+						</ul>
+					</li>
 				<?php endif; ?>
 					<?php
 						$ticketsCliAction = $this->request->getParam('action');

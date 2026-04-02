@@ -152,6 +152,25 @@ Router::scope('/', function ($routes) {
     $routes->connect('/cliente/relatorios/index', ['controller' => 'PortalRelatorios', 'action' => 'index']);
     $routes->connect('/cliente/relatorios/exportar', ['controller' => 'PortalRelatorios', 'action' => 'exportar'])->setMethods(['GET']);
     $routes->connect('/cliente/relatorios/exportar-excel', ['controller' => 'PortalRelatorios', 'action' => 'exportarExcel'])->setMethods(['GET']);
+    // Módulo avançado — ERP (equipe role 0)
+    $routes->connect('/modulo-avancado/contratos', ['controller' => 'AdvancedContracts', 'action' => 'index']);
+    $routes->connect('/modulo-avancado/contratos/view/*', ['controller' => 'AdvancedContracts', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/modulo-avancado/faturas', ['controller' => 'AdvancedInvoices', 'action' => 'index']);
+    $routes->connect('/modulo-avancado/faturas/view/*', ['controller' => 'AdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/modulo-avancado/faturas/exportar', ['controller' => 'AdvancedInvoices', 'action' => 'export'])->setMethods(['GET']);
+    $routes->connect('/modulo-avancado/faturas/marcar-paga/*', ['controller' => 'AdvancedInvoices', 'action' => 'markPaid'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/modulo-avancado/atendimentos', ['controller' => 'AdvancedAttendance', 'action' => 'index']);
+    $routes->connect('/modulo-avancado/atendimentos/view/*', ['controller' => 'AdvancedAttendance', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/modulo-avancado/indicadores', ['controller' => 'AdvancedReports', 'action' => 'index']);
+    $routes->connect('/modulo-avancado/indicadores/exportar', ['controller' => 'AdvancedReports', 'action' => 'export'])->setMethods(['GET']);
+    // Módulo avançado — portal cliente
+    $routes->connect('/cliente/contratos-avancados', ['controller' => 'PortalAdvancedContracts', 'action' => 'index']);
+    $routes->connect('/cliente/contratos-avancados/view/*', ['controller' => 'PortalAdvancedContracts', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/cliente/faturas-avancadas', ['controller' => 'PortalAdvancedInvoices', 'action' => 'index']);
+    $routes->connect('/cliente/faturas-avancadas/view/*', ['controller' => 'PortalAdvancedInvoices', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/cliente/faturas-avancadas/exportar', ['controller' => 'PortalAdvancedInvoices', 'action' => 'exportar'])->setMethods(['GET']);
+    $routes->connect('/cliente/historico-atendimento-avancado', ['controller' => 'PortalAdvancedAttendance', 'action' => 'index']);
+    $routes->connect('/cliente/historico-atendimento-avancado/view/*', ['controller' => 'PortalAdvancedAttendance', 'action' => 'view'], ['pass' => ['id']]);
     // CSS premium via Cake (leitura em WWW_ROOT/css) — evita 404 estático com APP_BASE=/portal e Alias Apache
     $routes->connect(
         '/pgm-assets/css/:name',

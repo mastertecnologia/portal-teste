@@ -1,0 +1,62 @@
+<?php
+namespace App\Controller;
+
+/**
+ * Contratos do módulo avançado (tabela contracts). Equipe interna (role 0).
+ * Legado: Clicontratos / contratos_horas.
+ */
+class AdvancedContractsController extends AppController {
+
+	public function initialize() {
+		parent::initialize();
+		$this->loadComponent('Paginator');
+		$this->loadModel('Contracts');
+	}
+
+	public function isAuthorized($user) {
+		if (empty($user) || (int)($user['role'] ?? 1) !== 0) {
+			return false;
+		}
+
+		return parent::isAuthorized($user);
+	}
+
+	public function index() {
+		$this->set('title', 'Contratos (módulo avançado)');
+		$idempresa = (int)$this->Auth->user('idempresa');
+		try {
+			$q = $this->Contracts->find()
+				->where(['Contracts.idempresa' => $idempresa])
+				->order(['Contracts.modified' => 'DESC']);
+			$cid = (int)$this->request->getQuery('idcliente', 0);
+			if ($cid > 0) {
+				$q->where(['Contracts.idcliente' => $cid]);
+			}
+			$this->paginate = ['limit' => 30];
+			$this->set('contracts', $this->paginate($q));
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Tabela contracts indisponível. Execute a migration do módulo avançado.'));
+			$this->set('contracts', []);
+		}
+	}
+
+	public function view($id = null) {
+		$id = (int)$id;
+		$idempresa = (int)$this->Auth->user('idempresa');
+		if ($id <= 0) {
+			throw new \Cake\Http\Exception\NotFoundException();
+		}
+		try {
+			$c = $this->Contracts->get($id, [
+				'contain' => ['Clientes', 'ContractServices', 'ContractDocuments'],
+			]);
+		} catch (\Throwable $e) {
+			throw new \Cake\Http\Exception\NotFoundException();
+		}
+		if ((int)$c->idempresa !== $idempresa) {
+			throw new \Cake\Http\Exception\ForbiddenException();
+		}
+		$this->set('title', 'Contrato: ' . h($c->name));
+		$this->set('contract', $c);
+	}
+}
