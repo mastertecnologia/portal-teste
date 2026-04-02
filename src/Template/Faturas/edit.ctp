@@ -148,6 +148,15 @@
 							</div>
 						<?php } ?>
 						<div id="carrinho" class='m-t-10'> </div>
+						<?php if ($fatura->status == C_LocacaoStatusPendente) : ?>
+						<div class="row m-t-5">
+							<div class="col-12">
+								<p class="alert alert-secondary small m-b-5" role="status">
+									Para registrar pagamento e gerar <strong>recibo de locação</strong> para o cliente: clique em <strong>Aprovar</strong> abaixo. Com a locação <strong>aprovada</strong>, o botão <strong>Receber</strong> aparece nesta mesma área; depois de salvar, os recibos ficam na aba <strong>Recibos</strong> (ícone de impressão).
+								</p>
+							</div>
+						</div>
+						<?php endif; ?>
 						<div class="row">
 							<div class="col-12">
 								<?= $this->Html->link('Imprimir', ['action' => 'imprimir', $fatura->id], ['target' => '_blank', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange float-right m-t-10']) ?>
@@ -177,19 +186,27 @@
 							<th> Ações </th>
 						</thead>
 						<tbody>
-							<?php foreach ($recibos as $reg): ?>
+							<?php if (empty($recibos)) : ?>
 								<tr>
-									<td> <?= $reg->nro ?></a> </td>
-									<td> <?= OrdensPagamento($reg->pagamento) ?> </td>
-									<td data-order="<?= date_format($reg->datarecebimento, 'Ymd') ?>"> <?= date_format($reg->datarecebimento, 'd/m/Y') ?> </td>
-									<td> <?= number_format($reg->desconto, 2, ',', '.') ?> </td>
-									<td> <?= number_format($reg->juros, 2, ',', '.') ?> </td>
-									<td> <?= number_format($reg->valorpago, 2, ',', '.') ?> </td>
-									<td> 
-										<?= $this->Html->link('<i class="fa fa-print"></i>', ['action' => 'recibo', $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir', 'id' => $reg->id, 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange btn-xs', 'target' => '_blank', 'escape' => false]) ?>
+									<td colspan="7" class="text-muted text-center p-15">
+										Nenhum recibo ainda. Na aba <strong>Contrato</strong>, com status <strong>Aprovado</strong>, use <strong>Receber</strong> para registrar o pagamento; o recibo impresso aparece aqui.
 									</td>
 								</tr>
-							<?php endforeach; ?>
+							<?php else : ?>
+								<?php foreach ($recibos as $reg): ?>
+									<tr>
+										<td> <?= h($reg->nro) ?> </td>
+										<td> <?= OrdensPagamento($reg->pagamento) ?> </td>
+										<td data-order="<?= date_format($reg->datarecebimento, 'Ymd') ?>"> <?= date_format($reg->datarecebimento, 'd/m/Y') ?> </td>
+										<td> <?= number_format($reg->desconto, 2, ',', '.') ?> </td>
+										<td> <?= number_format($reg->juros, 2, ',', '.') ?> </td>
+										<td> <?= number_format($reg->valorpago, 2, ',', '.') ?> </td>
+										<td>
+											<?= $this->Html->link('<i class="fa fa-print"></i>', ['action' => 'recibo', $reg->id], ['rel' => 'tooltip', 'title' => 'Imprimir recibo', 'id' => $reg->id, 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange btn-xs', 'target' => '_blank', 'escape' => false]) ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							<?php endif; ?>
 						</tbody>
 					</table>
 				</div>
