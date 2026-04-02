@@ -1,475 +1,368 @@
 <?php
-	use Cake\Routing\Router;
-	$logo = 'pgm.png';
+use Cake\Routing\Router;
 
-	$pessoaFisica = $fatura->cliente->tipo == C_ClientesTipoFisica;
-	$pessoaJuridica = $fatura->cliente->tipo == C_ClientesTipoJuridica;
+$pessoaFisica   = $fatura->cliente->tipo == C_ClientesTipoFisica;
+$pessoaJuridica = $fatura->cliente->tipo == C_ClientesTipoJuridica;
+
+$nomeCliente   = $pessoaJuridica ? $fatura->cliente->razaosocial : $fatura->cliente->nome;
+$fantasia      = $pessoaJuridica ? ($fatura->cliente->nomefantasia ?? '') : '';
+$docCliente    = $pessoaJuridica ? $fatura->cliente->cnpj : $fatura->cliente->cpf;
+$endCliente    = strtoupper(trim($fatura->cliente->endereco . ' ' . ($fatura->cliente->nroendereco ?? '') . ' ' . ($fatura->cliente->complemento ?? '')));
+$bairroCliente = strtoupper($fatura->cliente->bairro ?? '');
+$cepCliente    = $fatura->cliente->cep ?? '';
+$munCliente    = strtoupper($fatura->cliente->cidade->nome ?? '');
+$ufCliente     = strtoupper($fatura->cliente->cidade->estado->sigla ?? '');
+$foneCliente   = $fatura->cliente->fone ?? '';
+
+$dataEmissao  = !empty($fatura->dtemissao)  ? date_format($fatura->dtemissao,  'd/m/Y') : date('d/m/Y');
+$dataVencto   = !empty($fatura->vencimento) ? date_format($fatura->vencimento, 'd/m/Y') : '';
+$valorFmt     = 'R$ ' . number_format($fatura->valor,    2, ',', '.');
+$descontoFmt  = 'R$ ' . number_format($fatura->desconto, 2, ',', '.');
+$valorTotal   = $fatura->valor - $fatura->desconto;
+$totalFmt     = 'R$ ' . number_format($valorTotal, 2, ',', '.');
+
+// IBPT ≈ 31,45%
+$ibptFmt = 'R$ ' . number_format($valorTotal * 0.3145, 2, ',', '.');
 ?>
 <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 <style>
-	@media print {
-		body * , .main-wrapper{ visibility: hidden; }
-		#printable, #printable * { visibility: visible; }
-		#printable, button  * { visibility: hidden; }
-		.topbar, .page-titles, .navbar{
-			visibility: hidden;
-			overflow: hidden;
-		}
-		.page-wrapper{ padding: 0; }
-		#printable {
-			position: relative;
-			overflow: visible;
-			font-size: 85%;
-		}
+* { box-sizing: border-box; }
+body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px; color: #000; }
 
-		.footer-print {
-            position: fixed;
-            bottom: 0;
-            width: 95%;
-        }
-	}
-	
-	.table td, .table th {
-		padding: 0.2rem;
-		vertical-align: top;
-		border-top: 1px solid #dee2e6;
-		color: black;
-	}
+@media print {
+    body *, .main-wrapper { visibility: hidden; }
+    #printable, #printable * { visibility: visible; }
+    .hidden-print { display: none !important; }
+    .page-wrapper { padding: 0; }
+    #printable { position: relative; font-size: 10px; }
+    .footer-print { position: fixed; bottom: 0; width: 100%; }
+}
 
-	.header-empresa {
-		text-align: left;
-		margin-top: 2px;
-		margin-bottom: 2px;
-		font-weight: 500;
-	}
-	
-	.info-cliente {
-		text-align: left;
-		margin-top: 2px;
-		margin-bottom: 2px;
-		font-weight: 300;
-	}
+#printable { background: #fff; padding: 10px; max-width: 780px; margin: 0 auto; }
 
-	.header-empresa-center {
-		text-align: center;
-		margin-top: 2px;
-		margin-bottom: 2px;
-		font-weight: 500;
-	}
+/* Bordas */
+.b  { border: 1px solid #000; }
+.bt { border-top: 1px solid #000; }
+.bb { border-bottom: 1px solid #000; }
+.bl { border-left: 1px solid #000; }
+.br { border-right: 1px solid #000; }
 
-	.header-empresa-right {
-		text-align: right;
-		margin-top: 2px;
-		margin-bottom: 2px;
-		font-weight: 500;
-	}
+/* Células de campo (label + valor) */
+.campo { padding: 2px 4px; }
+.campo-label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #222; display: block; }
+.campo-valor { font-size: 11px; font-weight: 400; display: block; min-height: 14px; }
 
-	.row-valores {
-		background-color: #cbcaca;
-	}
+/* Cabeçalho de seção */
+.secao-titulo {
+    background: #f0f0f0;
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    letter-spacing: .5px;
+}
 
-	.row-valores p {
-		margin-top: 2px;
-		margin-bottom: 2px;
-		font-weight: 500;
-		font-size: 0.8rem;
-		text-align: center;
-	}
+/* Tabela de produtos */
+.tbl-produtos { width: 100%; border-collapse: collapse; }
+.tbl-produtos th {
+    background: #e8e8e8;
+    border: 1px solid #000;
+    padding: 3px 4px;
+    font-size: 10px;
+    text-align: left;
+}
+.tbl-produtos td {
+    border: 1px solid #ccc;
+    padding: 3px 4px;
+    font-size: 11px;
+    vertical-align: top;
+}
+.tbl-produtos tr:nth-child(even) td { background: #fafafa; }
 
-	.infos-minor {
-		font-size: 0.8rem;
-		text-align: justify;
-	}
+/* Totais */
+.totais-row { background: #d0d0d0; }
+.totais-row .campo-label { font-size: 9px; }
+.totais-row .campo-valor { font-size: 13px; font-weight: 700; }
 
-	.valores {
-		font-size: 0.6rem !important;
-	}
+/* Footer */
+.footer-wrap {
+    border: 1px solid #000;
+    display: flex;
+    margin-top: 6px;
+}
+.footer-left {
+    width: 25%;
+    padding: 6px;
+    border-right: 2px solid #000;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+}
+.footer-right {
+    flex: 1;
+    padding: 6px;
+    font-size: 10px;
+}
+.sig-line {
+    display: inline-block;
+    border-bottom: 1px solid #000;
+    min-width: 100px;
+}
+.credito-rodape { font-size: 9px; text-align: center; margin-top: 4px; color: #555; }
 
-	.footer-text {
-		text-align: center;
-		margin-top: 2px;
-		margin-bottom: 2px;
-		font-weight: 500;
-	}
-
-	.signature-field {
-		margin-bottom: 15px;
-		border: none;
-		border-bottom: 1px solid #000;
-	}
-	
-	.border-black {
-		border: 1px solid black;
-	}
+/* Linha de campos (usa flex) */
+.campo-row { display: flex; border: 1px solid #000; border-top: none; }
+.campo-row .campo { flex: 1; border-right: 1px solid #ccc; }
+.campo-row .campo:last-child { border-right: none; }
+.campo-row-first { border-top: 1px solid #000; }
 </style>
-<div class="row hidden-print">
-	<?= $this->Html->link('Imprimir', '#', ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-l-5 m-b-5']) ?>
-	<?php if($role == 0) echo $this->Html->link('Voltar para a locação', ["action" => "edit", $fatura->id], ['class' => 'm-b-5 btn btn-pgm btn-pgm-situacao btn-info']); ?>
+
+<!-- Botões (escondidos na impressão) -->
+<div class="row hidden-print" style="margin-bottom:10px;">
+    <?= $this->Html->link('🖨 Imprimir', '#', ['id' => 'btn-imprimir', 'class' => 'btn btn-warning m-r-5']) ?>
+    <?php if ($role == 0): ?>
+    <?= $this->Html->link('← Voltar', ['action' => 'edit', $fatura->id], ['class' => 'btn btn-info']) ?>
+    <?php endif; ?>
 </div>
+
 <div class="col-md-12">
-	<div id="printable">
-		<div class="card">
-			<div class="card-body">
-				<!-- Empresa -->
-				<div class="row border-black">
-					<div class="col-3 text-center">
-						<img src="<?=$this->request->getAttribute('webroot') . 'arquivos/empresas/logotipos/' . $empresaObj->id . '/logo.png' ?>" alt="homepage" style='width: 180px' class='p-l-20 m-t-10'><br>
-					</div>
-					<div class="col-7 text-center">
-						<p class='header-empresa'>
-							<?= strtoupper($empresaObj->razaosocial) ?>
-						</p>
-						<p class='header-empresa'>
-							CPNJ: <?= $empresaObj->cnpj ?>
-						</p>
-						<p class='header-empresa'>
-							INSCRIÇÃO ESTADUAL: <?= $empresaObj->inscricaoestadual ?>
-						</p>
-						<p class='header-empresa'>
-							<?= strtoupper($empresaObj->endereco) ?>, <?= strtoupper($empresaObj->nroendereco) ?> - <?= strtoupper($empresaObj->bairro) ?> 
-						</p>
-						<p class='header-empresa'>
-							<?= strtoupper($empresaObj->cidade->nome) ?> - <?= strtoupper($empresaObj->cidade->estado->sigla) ?> - CEP: <?= strtoupper($empresaObj->cep) ?> 
-						</p>
-						<p class='header-empresa'>
-							FONE: <?= $empresaObj->fone ?> SITE: <?= $empresaObj->site ?>
-						</p>
-						<p class='header-empresa'>
-							E-MAIL: <?= $empresaObj->email ?>
-						</p>
-					</div>
-					<div class="col-2 text-center">
-						<p class='border-black header-empresa-center'>
-							Contrato: <br>
-							<?= strtoupper($fatura->nro) ?> 
-						</p>
-						<br>
-						<br>
-						<br>
-						<br>
-						<p class='header-empresa-right'>
-							Emissão:
-							<?= date_format($fatura->created, 'd/m/Y') ?> 
-						</p>
-					</div>
-				</div>
-				<!-- Cliente -->
-				<p class='header-empresa'> DESTINATÁRIO DA LOCAÇÃO </p>
-				<div class="row border-black">
-					<div class="col-12">
-						<div class="row">
-							<div class="col-6">
-								<p class='header-empresa'>
-									Nome/Razão Social do Cliente: <br>
-									<span class='info-cliente'> <?= $pessoaJuridica ? $fatura->cliente->razaosocial : $fatura->cliente->nome ?> </span>
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='header-empresa'>
-									CPF/CNPJ do Cliente: <br>
-									<span class='info-cliente'> <?= $pessoaJuridica ? $fatura->cliente->cnpj : $fatura->cliente->cpf ?> </span>
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='header-empresa'>
-									Inscrição Estadual: <br>
-									<span class='info-cliente'> <?= $fatura->cliente->inscricaoestadual ?> </span>
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-4">
-								<p class='header-empresa'>
-									Endereço: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->endereco) ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Número: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->nroendereco) ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Complemento: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->complemento) ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Bairro: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->bairro) ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									CEP: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->cep) ?> </span>
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-4">
-								<p class='header-empresa'>
-									Município: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->cidade->nome) ?> </span>
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='header-empresa'>
-									Telefone: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->fone) ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									UF: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->cidade->estado->sigla) ?> </span>
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='header-empresa'>
-									Inscrição Municipal: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->inscricaomunicipal) ?> </span>
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-6">
-								<p class='header-empresa'>
-									E-mail: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->email) ?> </span>
-								</p>
-							</div>
-							<div class="col-6">
-								<p class='header-empresa'>
-									Site: <br>
-									<span class='info-cliente'> <?= strtoupper($fatura->cliente->site) ?> </span>
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-12">
-								<p class='header-empresa'>
-									Classificação do Contrato: <br>
-									<?= '' ?>
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- Datas -->
-				<div class="row">
-					<div class="col-12">
-						<div class="row">
-							<div class="col-2">
-								<p class='header-empresa'>
-									Emissão <br>
-									<span class='info-cliente'> <?= date_format($fatura->dtemissao, 'd/m/Y') ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Previsão Retorno <br>
-									<span class='info-cliente'> <?= date_format($fatura->dtretorno, 'd/m/Y') ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Data Devolução <br>
-									<span class='info-cliente'> <?= date_format($fatura->dtdevolucao, 'd/m/Y') ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Vencimento <br>
-									<span class='info-cliente'> <?= date_format($fatura->vencimento, 'd/m/Y') ?> </span>
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- <p class='header-empresa'> FATURA </p>
-				<div class="row">
-					<div class="col-12">
-						<div class="row">
-							<div class="col-2">
-								<p class='header-empresa'>
-									Nº Fatura <br>
-									<span class='info-cliente'> <?= $fatura->nro ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Venc. <br>
-									<span class='info-cliente'> <?= date_format($fatura->vencimento, 'd/m/Y') ?> </span>
-								</p>
-							</div>
-							<div class="col-2">
-								<p class='header-empresa'>
-									Valor <br>
-									<span class='info-cliente'> <?= number_format($fatura->valor, 2, ",", ".") ?> </span>
-								</p>
-							</div>
-						</div>
-					</div>
-				</div> -->
-				<!-- Itens -->
-				<div class="row">
-					<div class="col-12">
-						<div class="table-responsive" style='border-top: 3px solid black'>
-							<table class="table table-hover table-row-clickable" id="tableCarrinho">
-								<thead class="text-primary">
-									<th width="10%"> Código </th>
-									<th width="40%"> Descrição da Locação </th>
-									<th width="10%" class="text-right"> Quantidade </th>
-									<th width="10%" class="text-right"> Valor Unitário </th>
-									<th width="10%" class="text-right"> Valor Total</th>
-								</thead>
-								<tbody>
-									<!-- Itens -->
-									<?php foreach ($carrinho as $reg): ?>
-										<tr id='<?= $reg->id ?>'>
-											<td id="codigo<?= $reg->id ?>"> <?= $reg->codigo ?> </td>
-											<td id="descricao<?= $reg->id ?>"> <?= $reg->descricao ?> </td>
-											<td id="quantidade<?= $reg->id ?>" class="text-right"> <?= $reg->quantidade ?> </td>
-											<td id="valoritem<?= $reg->id ?>" class="text-right"> <?= 'R$ ' . number_format($reg->valoritem, 2, ",", ".") ?> </td>
-											<td id="valortotal<?= $reg->id ?>" class="text-right"> <?= 'R$ ' . number_format($reg->valortotal, 2, ",", ".") ?> </td>
-										</tr>
-									<?php endforeach; ?>
-									<!-- Outros -->
-									<tr>
-										<th class="text-right"> </th>
-										<th class="text-right"> </th>
-										<th class="text-right"> </th>
-										<th class="text-right"> Descontos: </th>
-										<th class="text-right valortotal"> <?= 'R$ ' . number_format($fatura->desconto, 2, ",", ".") ?> </th>
-									</tr>
-									<tr>
-										<th class="text-right"> </th>
-										<th class="text-right"> </th>
-										<th class="text-right" colspan='2'> Outros Gastos/Frete: </th>
-										<th class="text-right valortotal"> <?= 'R$ ' . number_format($fatura->outrosgastos, 2, ",", ".") ?> </th>
-									</tr>
-									<tr>
-										<th class="text-right"> </th>
-										<th class="text-right"> </th>
-										<th class="text-right"> </th>
-										<th class="text-right"> Valor Total: </th>
-										<th class="text-right valortotal"> <?= 'R$ ' . number_format($fatura->valor, 2, ",", ".") ?> </th>
-									</tr>
-									<!-- Fim Outros -->
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-				<!-- Valores -->
-				<div class="row border-black row-valores">
-					<div class="col-12">
-						<div class="row">
-							<div class="col-3">
-								<p class='valores'>
-									Valor PIS Retido: <br>
-									0,00
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='valores'>
-									Valor CSLL Retido: <br>
-									0,00
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='valores'>
-									Valor Caução: <br>
-									0,00
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='valores'>
-									Total da Fatura: <br>
-									<?= number_format($fatura->valor, 2, ",", ".") ?>
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-3">
-								<p class='valores'>
-									Valor COFINS Retido: <br>
-									0,00
-								</p>
-							</div>
-							<div class="col-3">
-								<p class='valores'>
-									Valor IR Retido: <br>
-									0,00
-								</p>
-							</div>
-							<div class="col-3">
-							</div>
-							<div class="col-3">
-								<p class='valores'>
-									Total da Fatura - Retenções - Descontos: <br>
-									<span style='font-size:1rem'> <?= number_format($fatura->valor, 2, ",", ".") ?> </span>
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- <p class='header-empresa'> Val Aprox Tributos R$78,63 (31,45%) Fonte:IBPT </p> -->
-				<!-- Outras infos -->
-				<p class='infos-minor'>
-					EQUIPAMENTO(S) INSTALADO(S) EM: <?= $fatura->local ?>, <br>
-					CONTRATO: <?= $fatura->contrato ?> <br>
-					REFERENTE: <?= $fatura->referente ?> <br>
-					PAGAMENTO: <?= OrdensPagamento($fatura->pagamento) ?> <br>
-					TIPO: <?= LocacaoTipo($fatura->tipo) ?> <br>
-					DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL. NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI. LOCAÇÃO DE BENS MÓVEIS –
-					ATIVIDADE IMPOSSIBILIDADE DE EMISSÃO DE NOTA FISCAL. ESTE RECIBO DE LOCAÇÃO É VALIDO COMO DOCUMENTO EQUIVALENTE, NOS TERMOS DO
-					ARTIGO 1º DA LEI 8.846/94 E § 1º DESTE ARTIGO. NÃO INCIDÊNCIA DE ISS CONFORME SÚMULA VINCULANTE Nº 31 DO STF: “É INCONSTITUCIONAL A
-					INCIDÊNCIA DO IMPOSTO SOBRE SERVIÇOS DE QUALQUER NATUREZA – ISS SOBRE OPERAÇÕES DE LOCAÇÃO DE BENS MÓVEIS.
-				</p>
-				<!-- Footer -->
-				<div class="row border-black footer-print">
-					<div class="col-3">
-						<p class='footer-text m-t-15'>
-							Fatura de Locação: <br>
-							<?= strtoupper($fatura->nro) ?> 
-						</p>
-					</div>
-					<div class="col-9" style='border-left: 2px solid black'>
-						<div class="row">
-							<div class="col-12">
-								<p class='footer-text'> Estamos de Acordo com a Emissão desta Fatura: </p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-6 float-left">
-								<span class='footer-text'> BENTO GONÇALVES, </span>
-								<input type="text" class="signature-field" style="width: 40%;" value="&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp/&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp/ ">
-							</div>
-							<div class="col-6 float-left">
-								<span class='footer-text'> Assinatura: </span>
-								<input type="text" class="signature-field" style="width: 70%;" value="">
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+<div id="printable">
+
+    <!-- ══ CABEÇALHO ══════════════════════════════════════════════════ -->
+    <div class="b" style="display:flex;align-items:stretch;margin-bottom:0;">
+        <!-- Logo -->
+        <div style="width:180px;min-width:150px;padding:8px;display:flex;align-items:center;justify-content:center;border-right:1px solid #000;">
+            <img src="<?= $this->request->getAttribute('webroot') . 'arquivos/empresas/logotipos/' . $empresaObj->id . '/logo.png' ?>"
+                 alt="Logo" style="max-width:160px;max-height:70px;">
+        </div>
+        <!-- Dados empresa -->
+        <div style="flex:1;padding:5px 8px;text-align:center;border-right:1px solid #000;">
+            <div style="font-weight:700;font-size:13px;text-transform:uppercase;"><?= h($empresaObj->razaosocial) ?></div>
+            <div><?= h(strtoupper($empresaObj->endereco)) ?>, <?= h($empresaObj->nroendereco) ?> - <?= h(strtoupper($empresaObj->bairro)) ?> - Cep: <?= h($empresaObj->cep) ?></div>
+            <div><?= h(strtoupper($empresaObj->cidade->nome)) ?> / <?= h($empresaObj->cidade->estado->sigla) ?> - SAO FRANCISCO</div>
+            <div>Fone/Fax: <?= h($empresaObj->fone) ?></div>
+            <div>Cnpj: <?= h($empresaObj->cnpj) ?> - I.e: <?= h($empresaObj->inscricaoestadual) ?></div>
+            <div>Email: <?= h($empresaObj->email) ?></div>
+        </div>
+    </div>
+
+    <!-- ══ TÍTULO FATURA ══════════════════════════════════════════════ -->
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border:1px solid #000;border-top:none;padding:4px 8px;">
+        <div style="font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.5px;">
+            FATURA DE LOCAÇÃO Nº:&nbsp;<?= h($fatura->nro) ?>
+        </div>
+        <div style="font-weight:700;font-size:12px;">
+            Data: <?= $dataEmissao ?>
+        </div>
+    </div>
+
+    <!-- ══ DADOS DO CLIENTE ═══════════════════════════════════════════ -->
+    <div class="secao-titulo">DADOS DO CLIENTE</div>
+
+    <div class="campo-row campo-row-first">
+        <div class="campo" style="flex:3;">
+            <span class="campo-label">Nome/Razão Social</span>
+            <span class="campo-valor"><?= h($nomeCliente) ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">Nome Fantasia</span>
+            <span class="campo-valor"><?= h($fantasia) ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">Contato</span>
+            <span class="campo-valor"><?= h($fatura->cliente->contato ?? '') ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">Cnpj/Cpf</span>
+            <span class="campo-valor"><?= h($docCliente) ?></span>
+        </div>
+    </div>
+
+    <div class="campo-row">
+        <div class="campo" style="flex:4;">
+            <span class="campo-label">Endereço</span>
+            <span class="campo-valor"><?= h($endCliente) ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">Bairro</span>
+            <span class="campo-valor"><?= h($bairroCliente) ?></span>
+        </div>
+        <div class="campo" style="flex:1;">
+            <span class="campo-label">Cep</span>
+            <span class="campo-valor"><?= h($cepCliente) ?></span>
+        </div>
+    </div>
+
+    <div class="campo-row">
+        <div class="campo" style="flex:3;">
+            <span class="campo-label">Município</span>
+            <span class="campo-valor"><?= h($munCliente) ?></span>
+        </div>
+        <div class="campo" style="flex:1;">
+            <span class="campo-label">UF</span>
+            <span class="campo-valor"><?= h($ufCliente) ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">Fone/Fax</span>
+            <span class="campo-valor"><?= h($foneCliente) ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">I.M.</span>
+            <span class="campo-valor"><?= h($fatura->cliente->inscricaomunicipal ?? '') ?></span>
+        </div>
+    </div>
+
+    <!-- ══ DADOS DA FATURA ════════════════════════════════════════════ -->
+    <div class="secao-titulo" style="margin-top:6px;">DADOS DA FATURA</div>
+
+    <div class="campo-row campo-row-first">
+        <?php foreach ([1, 2, 3] as $col): ?>
+        <div class="campo" style="flex:1;<?= $col < 3 ? 'border-right:1px solid #000;' : '' ?>">
+            <div style="display:flex;gap:0;">
+                <div style="flex:2;border-right:1px solid #ccc;padding:2px 4px;">
+                    <span class="campo-label">Fatura</span>
+                    <span class="campo-valor"><?= $col === 1 ? h($fatura->nro) : '' ?></span>
+                </div>
+                <div style="flex:1;border-right:1px solid #ccc;padding:2px 4px;">
+                    <span class="campo-label">Vencto.</span>
+                    <span class="campo-valor"><?= $col === 1 ? $dataVencto : '' ?></span>
+                </div>
+                <div style="flex:1;padding:2px 4px;">
+                    <span class="campo-label">Valor</span>
+                    <span class="campo-valor"><?= $col === 1 ? $valorFmt : '' ?></span>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- ══ DADOS DOS PRODUTOS ═════════════════════════════════════════ -->
+    <div class="secao-titulo" style="margin-top:6px;">DADOS DOS PRODUTOS</div>
+
+    <table class="tbl-produtos" style="margin-top:0;">
+        <thead>
+            <tr>
+                <th style="width:8%;">Código</th>
+                <th style="width:38%;">Descrição do Produto</th>
+                <th style="width:6%;">Unid.</th>
+                <th style="width:10%;text-align:right;">Quantidade</th>
+                <th style="width:13%;text-align:right;">Valor Unitário</th>
+                <th style="width:12%;text-align:right;">Desconto</th>
+                <th style="width:13%;text-align:right;">Valor Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($carrinho as $reg): ?>
+            <tr>
+                <td><?= h($reg->codigo) ?></td>
+                <td><?= h($reg->descricao) ?></td>
+                <td><?= h($reg->unidade ?? 'UN') ?></td>
+                <td style="text-align:right;"><?= number_format($reg->quantidade, 2, ',', '.') ?></td>
+                <td style="text-align:right;">R$ <?= number_format($reg->valoritem, 2, ',', '.') ?></td>
+                <td style="text-align:right;">R$ 0,00</td>
+                <td style="text-align:right;">R$ <?= number_format($reg->valortotal, 2, ',', '.') ?></td>
+            </tr>
+            <?php endforeach; ?>
+            <?php
+            // Preencher linhas em branco até pelo menos 5 linhas
+            $linhas = count($carrinho);
+            for ($i = $linhas; $i < 5; $i++):
+            ?>
+            <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <?php endfor; ?>
+        </tbody>
+    </table>
+
+    <!-- ══ TOTAIS DO RECIBO ═══════════════════════════════════════════ -->
+    <div class="secao-titulo" style="margin-top:6px;">TOTAIS DO RECIBO</div>
+
+    <div class="campo-row totais-row campo-row-first">
+        <div class="campo" style="flex:1;border-right:1px solid #000;">
+            <span class="campo-label">Valor dos Serviços</span>
+            <span class="campo-valor"><?= $valorFmt ?></span>
+        </div>
+        <div class="campo" style="flex:1;border-right:1px solid #000;">
+            <span class="campo-label">Valor do Desconto</span>
+            <span class="campo-valor"><?= $descontoFmt ?></span>
+        </div>
+        <div class="campo" style="flex:1;">
+            <span class="campo-label">Valor Total do Recibo</span>
+            <span class="campo-valor"><?= $totalFmt ?></span>
+        </div>
+    </div>
+
+    <!-- ══ FORMA PAGAMENTO / VALIDADE / ENTREGA / VENDEDOR ═══════════ -->
+    <div class="campo-row" style="margin-top:4px;border-top:1px solid #000;">
+        <div class="campo" style="flex:3;border-right:1px solid #ccc;">
+            <span class="campo-label">Forma de Pagamento</span>
+            <span class="campo-valor"><?= h(OrdensPagamento($fatura->pagamento)) ?></span>
+        </div>
+        <div class="campo" style="flex:2;border-right:1px solid #ccc;">
+            <span class="campo-label">Validade</span>
+            <span class="campo-valor"><?= $dataVencto ?></span>
+        </div>
+        <div class="campo" style="flex:2;border-right:1px solid #ccc;">
+            <span class="campo-label">Previsão de Entrega</span>
+            <span class="campo-valor"><?= !empty($fatura->dtretorno) ? date_format($fatura->dtretorno, 'd/m/Y') : '' ?></span>
+        </div>
+        <div class="campo" style="flex:2;">
+            <span class="campo-label">Vendedor</span>
+            <span class="campo-valor"><?= h($fatura->vendedor ?? '') ?></span>
+        </div>
+    </div>
+
+    <!-- ══ OBSERVAÇÕES DO RECIBO ══════════════════════════════════════ -->
+    <div class="secao-titulo" style="margin-top:6px;">OBSERVAÇÕES DO RECIBO</div>
+    <div style="border:1px solid #000;border-top:none;padding:4px 6px;min-height:40px;font-size:11px;">
+        <?= nl2br(h($fatura->referente ?? '')) ?>
+    </div>
+
+    <!-- ══ OBSERVAÇÕES FISCAIS ════════════════════════════════════════ -->
+    <div class="secao-titulo" style="margin-top:6px;">OBSERVAÇÕES FISCAIS</div>
+    <div style="border:1px solid #000;border-top:none;padding:5px 6px;font-size:9.5px;text-align:justify;line-height:1.4;">
+        DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL. NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI. LOCAÇÃO DE BENS MÓVEIS –
+        ATIVIDADE IMPOSSIBILIDADE DE EMISSÃO DE NOTA FISCAL. ESTE RECIBO DE LOCAÇÃO É VÁLIDO COMO DOCUMENTO EQUIVALENTE, NOS TERMOS DO
+        ARTIGO 1º DA LEI 8.846/94 E § 1º DESTE ARTIGO. NÃO INCIDÊNCIA DE ISS CONFORME SÚMULA VINCULANTE Nº 31 DO STF: "É INCONSTITUCIONAL A
+        INCIDÊNCIA DO IMPOSTO SOBRE SERVIÇOS DE QUALQUER NATUREZA – ISS SOBRE OPERAÇÕES DE LOCAÇÃO DE BENS MÓVEIS.<br>
+        <strong>Valor Aprox. Tributos: <?= $ibptFmt ?> Fonte IBPT</strong>
+    </div>
+
+    <!-- ══ RODAPÉ / ASSINATURA ════════════════════════════════════════ -->
+    <div class="footer-wrap footer-print" style="margin-top:8px;">
+        <div class="footer-left">
+            FATURA DE LOCAÇÃO<br>
+            Nº: <?= h($fatura->nro) ?><br><br>
+            Data: <?= $dataEmissao ?>
+        </div>
+        <div class="footer-right">
+            <div style="font-weight:700;margin-bottom:8px;">Estamos de Acordo com a Emissão dessa Fatura:</div>
+            <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+                <div>
+                    <?= h(strtoupper($empresaObj->cidade->nome ?? 'BENTO GONÇALVES')) ?>,&nbsp;
+                    <span class="sig-line" style="width:120px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </div>
+                <div>
+                    Assinatura:&nbsp;<span class="sig-line" style="width:200px;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crédito rodapé -->
+    <div class="credito-rodape">
+        DB9 Sistemas - Software de Gestão Empresarial Completo - www.db9sistemas.com.br - (51) 98419-5964
+    </div>
+
+</div><!-- #printable -->
 </div>
+
 <script>
-	$('#btn-imprimir').click(function(e) {
-		e.preventDefault();
-		$('.hidden-print').hide();
-		var $print = $('#printable')
-			.clone()
-			.addClass('print')
-		window.print();
-		$('.hidden-print').show();
-		$print.remove();
-	});
+$('#btn-imprimir').click(function (e) {
+    e.preventDefault();
+    $('.hidden-print').hide();
+    window.print();
+    $('.hidden-print').show();
+});
 </script>
