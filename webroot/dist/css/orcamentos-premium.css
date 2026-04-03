@@ -1,7 +1,8 @@
 /**
  * PGM Orçamentos — acentos visuais alinhados ao protótipo pgm_orcamentos_premium.html
  * Servido em /css/orcamentos-premium.css. Fonte: webroot/css/; com WEBROOT_DIR=public manter cópia em public/css/ (deploy em sync).
- * Escopo: .orc-premium-wrap (não altera o restante do ERP)
+ * Escopo: .orc-premium-wrap (não altera o restante do ERP).
+ * Tema escuro: bloco final com body.layout-no-topbar:not(.pgm-theme-light) (alinhado ao shell escuro).
  */
 .orc-premium-wrap {
   --orc-teal: #00C08B;
@@ -1172,7 +1173,8 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 10px;
+  margin: 10px 0 4px;
+  padding: 0 2px;
 }
 
 .orc-premium-wrap .btn-orc-compact {
@@ -2197,15 +2199,6 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   box-sizing: border-box;
 }
 
-.orc-premium-form .orc-inline-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 10px 0 4px;
-  padding: 0 2px;
-}
-
 .orc-premium-wrap .orc-th-acoes-placeholder,
 .orc-premium-wrap .orc-td-acoes-placeholder {
   background: transparent !important;
@@ -2338,3 +2331,250 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orc-premium-form .orc-version-item:last-child { border: none; }
+
+/* =============================================================================
+   ERP tema escuro (layout-no-topbar sem pgm-theme-light)
+   Anula fundos #f2f1ee / #fff do catálogo premium e alinha a layout-sidebar-shell.
+   Não afeta body.pgm-theme-light nem impressão/hash público sem esse layout.
+   ============================================================================= */
+
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root),
+html:has(body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-page-root) {
+  background-color: #0d1117 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) #main-wrapper,
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .page-wrapper,
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main {
+  background: #0d1117 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main .footer {
+  background: #13161d !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main .footer a,
+body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main .footer a strong {
+  color: #5cdbc0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-page-root {
+  background: transparent !important;
+  color: #e6edf3;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light).skin-green .orc-premium-page-root {
+  background: transparent !important;
+}
+
+/* Variáveis — índice / listagem */
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-index,
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-wrap.orc-premium-index {
+  --orc-teal-light: rgba(92, 219, 192, 0.22);
+  --orc-border: rgba(255, 255, 255, 0.1);
+  --orc-border-light: rgba(255, 255, 255, 0.06);
+  --orc-text: #e6edf3;
+  --orc-text-muted: rgba(230, 237, 243, 0.58);
+  --orc-text-hint: rgba(230, 237, 243, 0.42);
+  --orc-bg-page: transparent;
+  --orc-bg-surface: rgba(255, 255, 255, 0.05);
+  --orc-bg-card: #161b22;
+  --orc-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-wrap.orc-premium-index {
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index .dataTables_wrapper {
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.dataTable tbody td,
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.dataTable thead th,
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.orc-premium-tbl tbody td,
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th {
+  background-color: #161b22 !important;
+  color: #e6edf3 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th,
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.dataTable thead th {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index a.orc-premium-link,
+body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index a.orc-premium-id {
+  color: #5cdbc0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-search {
+  background: #13161d !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-btn-ghost {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #e6edf3 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(92, 219, 192, 0.45) !important;
+  color: #5cdbc0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-list-card .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: rgba(92, 219, 192, 0.22) !important;
+  color: #5cdbc0 !important;
+  border-color: rgba(92, 219, 192, 0.4) !important;
+}
+
+/* Formulários add/edit */
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-form {
+  --orc-teal-light: rgba(92, 219, 192, 0.18);
+  --orc-teal-mid: rgba(92, 219, 192, 0.45);
+  --orc-border: rgba(255, 255, 255, 0.1);
+  --orc-border-light: rgba(255, 255, 255, 0.06);
+  --orc-text: #e6edf3;
+  --orc-text-muted: rgba(230, 237, 243, 0.58);
+  --orc-text-hint: rgba(230, 237, 243, 0.42);
+  --orc-bg-surface: rgba(255, 255, 255, 0.05);
+  --orc-bg-card: #161b22;
+  --orc-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light).skin-green .orc-premium-wrap.orc-premium-form {
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form .orc-stp.done .orc-stp-c {
+  background: rgba(92, 219, 192, 0.2) !important;
+  color: #5cdbc0 !important;
+  border-color: rgba(92, 219, 192, 0.4) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form .orc-wf-ok {
+  background: rgba(92, 219, 192, 0.15) !important;
+  border-color: rgba(92, 219, 192, 0.35) !important;
+  color: #5cdbc0 !important;
+}
+
+/* Visualização */
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-view {
+  --orc-teal-light: rgba(92, 219, 192, 0.18);
+  --orc-teal-mid: rgba(92, 219, 192, 0.45);
+  --orc-border: rgba(255, 255, 255, 0.1);
+  --orc-border-light: rgba(255, 255, 255, 0.06);
+  --orc-text: #e6edf3;
+  --orc-text-muted: rgba(230, 237, 243, 0.58);
+  --orc-bg-surface: rgba(255, 255, 255, 0.05);
+  --orc-bg-card: #161b22;
+  --orc-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light).skin-green .orc-premium-wrap.orc-premium-view {
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-view .orc-wf-ok {
+  background: rgba(92, 219, 192, 0.15) !important;
+  border-color: rgba(92, 219, 192, 0.35) !important;
+  color: #5cdbc0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-v-old {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(230, 237, 243, 0.85) !important;
+}
+
+/* Form: textareas e botões secundários (forçavam #fff) */
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form .orc-obs-textarea {
+  background: #13161d !important;
+  color: #e6edf3 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.form-control,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material #observacao.form-control,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material .orc-item-obs-field.form-control {
+  background-color: #13161d !important;
+  color: #e6edf3 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.form-control:focus,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material #observacao.form-control:focus,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material .orc-item-obs-field.form-control:focus,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control:focus,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea#observacoes.form-control:focus {
+  background-color: #13161d !important;
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::selection,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea#observacoes.form-control::selection {
+  background: rgba(92, 219, 192, 0.35);
+  color: #fff;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::-moz-selection,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea#observacoes.form-control::-moz-selection {
+  background: rgba(92, 219, 192, 0.35);
+  color: #fff;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-form-secondary:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-form-secondary:focus {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #e6edf3 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-danger {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #ff8a8a !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-danger:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-danger:focus {
+  background: rgba(226, 75, 74, 0.15) !important;
+  border-color: #e24b4a !important;
+  color: #ffb4b4 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-teal {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(92, 219, 192, 0.45) !important;
+  color: #5cdbc0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-teal:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-teal:focus {
+  background: rgba(92, 219, 192, 0.12) !important;
+  border-color: #5cdbc0 !important;
+  color: #9ef5e0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-purple {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(166, 130, 230, 0.45) !important;
+  color: #c4b5f0 !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-purple:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-purple:focus {
+  background: rgba(166, 130, 230, 0.12) !important;
+  color: #ddd6f5 !important;
+}
