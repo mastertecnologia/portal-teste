@@ -53,9 +53,53 @@
 		margin-bottom: 10px;
 	}
 	.erp-additem-bar .control-label { font-size: 11px; color: rgba(255,255,255,.45); }
+
+	/* ── Card principal + tabs: fundo escuro do sistema ── */
+	.pgm-adv-panel.card {
+		background: #161b22 !important;
+		border: 1px solid rgba(255,255,255,.08) !important;
+		border-radius: 12px !important;
+		box-shadow: 0 4px 24px rgba(0,0,0,.25) !important;
+		color: #e6edf3 !important;
+	}
+	.pgm-adv-panel .card-body { background: transparent !important; color: #e6edf3 !important; }
+	/* Tabs */
+	.pgm-adv-panel .nav-tabs { border-color: rgba(255,255,255,.1) !important; background: transparent !important; }
+	.pgm-adv-panel .nav-tabs .nav-link { color: rgba(230,237,243,.55) !important; background: transparent !important; border-color: transparent !important; }
+	.pgm-adv-panel .nav-tabs .nav-link.active { color: #26c6da !important; border-color: rgba(255,255,255,.1) rgba(255,255,255,.1) transparent !important; background: rgba(255,255,255,.04) !important; }
+	.pgm-adv-panel .nav-tabs .nav-link:hover:not(.active) { color: rgba(230,237,243,.85) !important; background: rgba(255,255,255,.04) !important; }
+	/* Tab panes */
+	.pgm-adv-panel .tab-content,
+	.pgm-adv-panel .tab-pane { background: transparent !important; color: #e6edf3 !important; }
+	/* Inputs / selects / textarea */
+	.pgm-adv-panel .form-control,
+	.pgm-adv-panel select.form-control,
+	.pgm-adv-panel input.form-control,
+	.pgm-adv-panel textarea.form-control {
+		background: #13161d !important;
+		border-color: rgba(255,255,255,.12) !important;
+		color: #e6edf3 !important;
+	}
+	.pgm-adv-panel .form-control:focus { border-color: rgba(38,198,218,.45) !important; }
+	.pgm-adv-panel .form-control[readonly] { background: rgba(255,255,255,.05) !important; color: rgba(230,237,243,.5) !important; }
+	/* Labels */
+	.pgm-adv-panel label,
+	.pgm-adv-panel .control-label { color: rgba(230,237,243,.75) !important; }
+	.pgm-adv-panel .text-muted { color: rgba(230,237,243,.45) !important; }
+	/* Tabela */
+	.pgm-adv-panel .table { color: #e6edf3 !important; }
+	.pgm-adv-panel .table thead th { color: #26c6da !important; border-bottom: 2px solid rgba(38,198,218,.4) !important; background: rgba(255,255,255,.03) !important; }
+	.pgm-adv-panel .table td,
+	.pgm-adv-panel .table th { border-color: rgba(255,255,255,.07) !important; }
+	.pgm-adv-panel .table-hover tbody tr:hover td { background: rgba(255,255,255,.04) !important; }
+	/* Alert */
+	.pgm-adv-panel .alert-info { background: rgba(38,198,218,.12) !important; border-color: rgba(38,198,218,.25) !important; color: #9ef0f8 !important; }
+	.pgm-adv-panel .alert-secondary { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.1) !important; color: rgba(230,237,243,.7) !important; }
+	/* HR */
+	.pgm-adv-panel hr { border-color: rgba(255,255,255,.1) !important; }
 </style>
-<div class="col-md-12">
-	<div class="card">
+<div class="col-md-12 pgm-adv-page">
+	<div class="card pgm-adv-panel">
 		<div class="card-body">
 			<?php if (!empty($prefatOsIds)) : ?>
 			<div class="alert alert-info m-b-15" role="status">
