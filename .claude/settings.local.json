@@ -20,7 +20,9 @@
       "Bash(head -20 grep -n \"new Chart\\\\|Morris\\\\.\\\\|echarts\\\\.\" c:/Portal-git/portal-teste/src/Template/Financeiro/index.ctp)",
       "Bash(ls \"c:\\\\Portal-git\\\\portal-teste\\\\src\\\\Controller\"\" | grep -iE \"historico)",
       "Bash(contratos)",
-      "Bash(relatorio \")"
+      "Bash(relatorio \")",
+      "Bash(find /c/Portal-git/portal-teste/src/Template -name \"*.ctp\" -exec grep -l \"calendar\\\\|fullCalendar\\\\|#calendar\" {} \\\\;)",
+      "Bash(find /c/Portal-git/portal-teste/app_old/Template -name \"*.ctp\" -exec grep -l \"calendar\\\\|fullCalendar\\\\|#calendar\" {} \\\\;)"
     ]
   }
 }
