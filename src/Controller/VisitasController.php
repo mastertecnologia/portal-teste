@@ -242,7 +242,7 @@ class VisitasController extends AppController {
 				'start' => $d->format('Y-m-d'),
 				'allDay' => true,
 				'editable' => false,
-				'className' => 'pgm-fc-feriado pgm-fc-feriado-empresa',
+				'classNames' => ['pgm-fc-feriado', 'pgm-fc-feriado-empresa'],
 			];
 		}
 

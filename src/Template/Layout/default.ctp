@@ -47,7 +47,7 @@
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>
     <!-- page css -->
 	<?= $this->Html->css("/dist/css/pages/timeline-vertical-horizontal.css") ?>
-	<!-- calendar: FC v3 removido — v6 carregado na página Visitas/calendario -->
+	<!-- FullCalendar v6: bundle + locales só em Visitas/calendario.ctp -->
 	<!-- select multiple -->
 	<?= $this->Html->css("/dist/css/pages/bootstrap-select.css") ?>
 	<!-- fa iconpicker -->
@@ -100,7 +100,7 @@
 	<?= $this->Html->script('/plugins/tinymce/tinymce.min') ?>
 	<!-- Horizontal-timeline JavaScript -->
 	<?= $this->Html->script("/assets/node_modules/horizontal-timeline/js/horizontal-timeline.js") ?>
-	<!-- Calendar JavaScript: FC v3 removido — v6 carregado na página Visitas/calendario -->
+	<!-- FullCalendar v6 carregado na página da agenda (calendario.ctp) -->
 	<!-- select multiple-->
 	<?= $this->Html->script("/dist/js/pages/bootstrap-select") ?>
 	<!-- editor html -->

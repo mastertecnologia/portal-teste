@@ -37,7 +37,7 @@ class BrasilFeriadosService {
 	}
 
 	/**
-	 * Eventos no formato FullCalendar (v2+).
+	 * Eventos no formato FullCalendar v6+.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -45,13 +45,15 @@ class BrasilFeriadosService {
 		$events = [];
 		foreach ($this->listarNoPeriodo($dataInicio, $dataFim, $uf) as $row) {
 			$escopo = $row['escopo'] ?? 'nacional';
-			$class = $escopo === 'estadual' ? 'pgm-fc-feriado pgm-fc-feriado-estadual' : 'pgm-fc-feriado';
+			$classNames = $escopo === 'estadual'
+				? ['pgm-fc-feriado', 'pgm-fc-feriado-estadual']
+				: ['pgm-fc-feriado'];
 			$events[] = [
 				'title' => $row['titulo'],
 				'start' => $row['data'],
 				'allDay' => true,
 				'editable' => false,
-				'className' => $class,
+				'classNames' => $classNames,
 			];
 		}
 

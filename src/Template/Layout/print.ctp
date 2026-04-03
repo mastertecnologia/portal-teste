@@ -36,8 +36,7 @@
 	<?= $this->Html->css("/assets/node_modules/horizontal-timeline/css/horizontal-timeline.css") ?>
     <!-- page css -->
 	<?= $this->Html->css("/dist/css/pages/timeline-vertical-horizontal.css") ?>
-	<!-- calendar -->
-	<?= $this->Html->css("/assets/node_modules/calendar/dist/fullcalendar.css") ?>
+	<!-- Calendário: FullCalendar v6 carregado apenas nas páginas que usam (ex.: Agenda) -->
 	<!-- select multiple -->
 	<?= $this->Html->css("/dist/css/pages/bootstrap-select.css") ?>
 	<!-- fa iconpicker -->
@@ -90,11 +89,6 @@
 	<?= $this->Html->script('/plugins/tinymce/tinymce.min') ?>
 	<!-- Horizontal-timeline JavaScript -->
 	<?= $this->Html->script("/assets/node_modules/horizontal-timeline/js/horizontal-timeline.js") ?>
-	<!-- Calendar JavaScript -->
-	<?= $this->Html->script("/assets/node_modules/calendar/jquery-ui.min") ?>
-	<?= $this->Html->script("/assets/node_modules/moment/moment") ?>
-	<?= $this->Html->script("/assets/node_modules/calendar/dist/fullcalendar") ?>
-	<?= $this->Html->script("/assets/node_modules/calendar/dist/locale/pt-br.js") ?>
 	<!-- select multiple-->
 	<?= $this->Html->script("/dist/js/pages/bootstrap-select") ?>
 	<!-- editor html -->

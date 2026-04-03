@@ -1,8 +1,10 @@
 <?php
 	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Agenda', [], ['class' => 'breadcrumb-item active']);
-	// FullCalendar v6 — global bundle (dayGrid + timeGrid + list + multiMonth + interaction + pt-br)
-	$this->Html->script('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', ['block' => true]);
+	$fcVer = '6.1.20';
+	// FullCalendar v6 — arquivos locais (CSP / offline); espelhado em webroot e public/assets
+	$this->Html->script('/assets/fullcalendar/' . $fcVer . '/index.global.min', ['block' => true]);
+	$this->Html->script('/assets/fullcalendar/' . $fcVer . '/locales-all.global.min', ['block' => true]);
 	$labelsTipo = [0 => 'Visita', 1 => 'Reunião', 2 => 'Tarefa', 3 => 'Lembrete'];
 	$defaultEventsArray = [];
 	foreach ($visitas as $reg) {
@@ -31,8 +33,8 @@
 			'title' => $titulo,
 			'start' => $reg->data->format('Y-m-d') . 'T' . $reg->horaini->format('H:i:00'),
 			'end' => $reg->data->format('Y-m-d') . 'T' . $reg->horafim->format('H:i:00'),
-			'className' => $classname,
-			'id' => (int)$reg->id,
+			'classNames' => [$classname],
+			'id' => (string)$reg->id,
 		];
 	}
 	$feriadosUrl = Router::url(['controller' => 'Visitas', 'action' => 'feriados']);
@@ -249,11 +251,11 @@
 		},
 		eventClick: function(info) {
 			var ev  = info.event;
-			var cns = (ev.classNames || []).join(' ');
-			if (cns.indexOf('pgm-fc-feriado') !== -1 || !ev.id) return;
+			var cns = (typeof ev.classNames === 'object' && ev.classNames.join) ? ev.classNames.join(' ') : '';
+			if (cns.indexOf('pgm-fc-feriado') !== -1 || ev.id === undefined || ev.id === null || ev.id === '') return;
 			$.ajax({
 				type: "GET",
-				url: editUrl + '/' + ev.id,
+				url: editUrl + '/' + encodeURIComponent(String(ev.id)),
 				data: { id: ev.id },
 				success: function(data) {
 					$('#viewVisita').html(data);
