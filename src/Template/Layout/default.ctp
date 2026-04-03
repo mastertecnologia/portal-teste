@@ -36,9 +36,7 @@
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css") ?>
-	<?php if (!empty($pgmAdvancedModuleStylesheet)): ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
-	<?php endif; ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
 	<?php if (!empty($pgmPortalClient)): ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-client-premium") ?>
