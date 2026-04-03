@@ -29,6 +29,7 @@
 			<ul class="nav nav-tabs customtab" role="tablist">
 				<li class="nav-item"> <a class="nav-link <?= $aba == 1 ? 'active' : '' ?>" data-toggle="tab" href="#contratos" role="tab" aria-selected="true"><span class="hidden-sm-up"></span> <span class="hidden-xs-down"> Contrato </span></a> </li>
 				<li class="nav-item"> <a class="nav-link <?= $aba == 2 ? 'active' : '' ?>" data-toggle="tab" href="#recibos" role="tab" aria-selected="false"><span class="hidden-sm-up"></span> <span class="hidden-xs-down"> Recibos </span></a> </li>
+				<li class="nav-item"> <a class="nav-link <?= $aba == 3 ? 'active' : '' ?>" data-toggle="tab" href="#escritafiscal" role="tab" aria-selected="false"><span class="hidden-sm-up"></span> <span class="hidden-xs-down"> Escrita fiscal </span></a> </li>
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane <?= $aba == 1 ? 'active' : '' ?>" id="contratos">
@@ -209,6 +210,9 @@
 							<?php endif; ?>
 						</tbody>
 					</table>
+				</div>
+				<div class="tab-pane <?= $aba == 3 ? 'active' : '' ?>" id="escritafiscal" role="tabpanel">
+					<?= $this->element('Faturas/escrita_fiscal_form', ['escritaFiscal' => $escritaFiscal, 'fatura' => $fatura]) ?>
 				</div>
 			</div>
 		</div>

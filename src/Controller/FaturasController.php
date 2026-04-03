@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Fiscal\EscritaFiscalService;
 use App\Service\IbptTributosService;
 use Cake\Event\Event;
 
@@ -35,6 +36,7 @@ class FaturasController extends AppController {
 		$this->loadModel('Config');
 		$this->loadModel('Ordensservico');
 		$this->loadModel('FaturasOrdensServico');
+		$this->loadModel('FaturasEscritaFiscal');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -266,9 +268,35 @@ class FaturasController extends AppController {
 		$idempresa = $this->Auth->user('idempresa');
 		$fatura = $this->Faturas->find('all')->where(['id' => $id, 'idempresa' => $idempresa])->first();
 
-		if ($idempresa != $fatura->idempresa) {
-			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
+		if (empty($fatura)) {
+			$this->Flash->error(__('Locação não encontrada.'));
 			return $this->redirect(['controller' => 'locacao', 'action' => 'index']);
+		}
+
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			if (!empty($data['salvar_escrita_fiscal'])) {
+				$escritaSave = $this->saveEscritaFiscalFromRequest((int) $id, (int) $idempresa, $data);
+				if ($escritaSave === true) {
+					$this->request->getSession()->delete($this->escritaFiscalDraftSessionKey((int) $idempresa, (int) $id));
+					$this->Flash->success(__('Escrita fiscal salva.'));
+				} else {
+					$this->request->getSession()->write(
+						$this->escritaFiscalDraftSessionKey((int) $idempresa, (int) $id),
+						$this->extractEscritaFiscalDraftFromRequest($data)
+					);
+					$msgs = is_array($escritaSave) ? $escritaSave : [];
+					if ($msgs !== []) {
+						foreach ($msgs as $msg) {
+							$this->Flash->error((string) $msg);
+						}
+					} else {
+						$this->Flash->error(__('Não foi possível salvar a escrita fiscal.'));
+					}
+				}
+
+				return $this->redirect(['action' => 'edit', $id, 3]);
+			}
 		}
 
 		$prefatOsIds = [];
@@ -339,8 +367,9 @@ class FaturasController extends AppController {
 		$this->set('clientes', $clientesOpt);
 		$this->set('fatura', $fatura);
 		$this->set('produtosOpt', $produtosOpt);
-		$this->set('aba', $aba);
+		$this->set('aba', (int) $aba);
 		$this->set('recibos', $recibos);
+		$this->set('escritaFiscal', $this->loadEscritaFiscalForEdit((int) $id, (int) $idempresa));
 		$this->set('title', 'Editar locação');
 	}
 	
@@ -483,8 +512,14 @@ class FaturasController extends AppController {
 
 		$carrinho = $this->Faturasitens->findByIdfatura($id)->where(['idempresa' => $empresa->id])->order(['codigo'])->toArray();
 
+		$ibptBreakdown = $this->ibptBreakdownForPrint($empresa, $carrinho, 1.0);
+		$snapEscrita = (new EscritaFiscalService())->upsertSnapshot($fatura, $empresa, $carrinho, (int) $empresa->id, $ibptBreakdown);
+		if ($snapEscrita) {
+			$this->request->getSession()->delete($this->escritaFiscalDraftSessionKey((int) $empresa->id, (int) $fatura->id));
+		}
+
 		$this->set('carrinho', $carrinho);
-		$this->set('ibptBreakdown', $this->ibptBreakdownForPrint($empresa, $carrinho, 1.0));
+		$this->set('ibptBreakdown', $ibptBreakdown);
 		$this->set('idcliente', $idcliente);
 		$this->set('empresaObj', $empresa);
 		$this->set('fatura', $fatura);
@@ -516,8 +551,14 @@ class FaturasController extends AppController {
 
 		$carrinho = $this->Faturasitens->findByIdfatura($fatura->id)->where(['idempresa' => $empresa->id])->order(['codigo'])->toArray();
 
+		$ibptBreakdown = $this->ibptBreakdownForPrint($empresa, $carrinho, 1.0);
+		$snapEscrita = (new EscritaFiscalService())->upsertSnapshot($fatura, $empresa, $carrinho, (int) $empresa->id, $ibptBreakdown);
+		if ($snapEscrita) {
+			$this->request->getSession()->delete($this->escritaFiscalDraftSessionKey((int) $empresa->id, (int) $fatura->id));
+		}
+
 		$this->set('carrinho', $carrinho);
-		$this->set('ibptBreakdown', $this->ibptBreakdownForPrint($empresa, $carrinho, 1.0));
+		$this->set('ibptBreakdown', $ibptBreakdown);
 		$this->set('idcliente', $fatura->idcliente);
 		$this->set('empresaObj', $empresa);
 		$this->set('fatura', $fatura);
@@ -723,6 +764,147 @@ class FaturasController extends AppController {
 	 * @param float $scaleFactor 1.0 = documento integral; &lt; 1 para recibo parcial.
 	 * @return array|null
 	 */
+	protected function parseDecimalBr($value, $decimals = 2) {
+		if ($value === null || $value === '') {
+			return round(0.0, $decimals);
+		}
+		if (is_numeric($value) && strpos((string) $value, ',') === false) {
+			return round((float) $value, $decimals);
+		}
+		$s = trim((string) $value);
+		$s = str_replace([' ', '.'], ['', ''], $s);
+		$s = str_replace(',', '.', $s);
+
+		return round((float) $s, $decimals);
+	}
+
+	protected function escritaFiscalFieldGroups() {
+		return [
+			'money' => [
+				'valor_produtos', 'valor_total_nota', 'valor_servicos', 'valor_desconto', 'valor_frete', 'valor_seguro',
+				'icms_bc', 'icms_valor', 'icms_st_bc', 'icms_st_valor',
+				'valor_trib_aprox_total', 'valor_trib_aprox_federal', 'valor_trib_aprox_estadual', 'valor_trib_aprox_municipal',
+				'ipi_bc', 'ipi_valor', 'pis_bc', 'pis_valor', 'cofins_bc', 'cofins_valor',
+				'iss_bc', 'iss_valor', 'inss_bc', 'inss_valor',
+				'irrf_bc', 'irrf_valor', 'csll_bc', 'csll_valor',
+				'ii_valor', 'iof_valor',
+			],
+			'pct' => ['icms_cred_simples_pct', 'irrf_aliquota'],
+			'text' => ['fonte_calculo', 'fonte_ibpt_versao'],
+		];
+	}
+
+	protected function escritaFiscalDraftSessionKey($idempresa, $idfatura) {
+		return 'EscritaFiscal.draft.' . (int) $idempresa . '.' . (int) $idfatura;
+	}
+
+	protected function escritaFiscalDraftFieldSet() {
+		$g = $this->escritaFiscalFieldGroups();
+
+		return array_flip(array_merge($g['money'], $g['pct'], $g['text']));
+	}
+
+	protected function extractEscritaFiscalDraftFromRequest(array $data) {
+		$out = [];
+		foreach (array_keys($this->escritaFiscalDraftFieldSet()) as $field) {
+			if (array_key_exists($field, $data)) {
+				$out[$field] = $data[$field];
+			}
+		}
+
+		return $out;
+	}
+
+	protected function loadEscritaFiscalForEdit($idfatura, $idempresa) {
+		$row = $this->FaturasEscritaFiscal->find()->where(['idfatura' => $idfatura, 'idempresa' => $idempresa])->first();
+		if (!$row) {
+			$row = $this->FaturasEscritaFiscal->newEntity([
+				'idfatura' => $idfatura,
+				'idempresa' => $idempresa,
+			]);
+		}
+		$g = $this->escritaFiscalFieldGroups();
+		foreach ($g['money'] as $f) {
+			$row->set($f, number_format((float) $row->get($f), 2, ',', '.'));
+		}
+		foreach ($g['pct'] as $f) {
+			$row->set($f, number_format((float) $row->get($f), 4, ',', '.'));
+		}
+		foreach ($g['text'] as $f) {
+			$v = $row->get($f);
+			$row->set($f, $v !== null ? (string) $v : '');
+		}
+
+		$draft = $this->request->getSession()->read($this->escritaFiscalDraftSessionKey($idempresa, $idfatura));
+		if (is_array($draft) && $draft !== []) {
+			$allowed = $this->escritaFiscalDraftFieldSet();
+			foreach ($draft as $field => $val) {
+				if (!isset($allowed[$field])) {
+					continue;
+				}
+				$row->set($field, $val === null ? '' : (string) $val);
+			}
+		}
+
+		return $row;
+	}
+
+	/**
+	 * @return true|array true em sucesso; em falha, lista de mensagens (validação) ou [] se erro não mapeado
+	 */
+	protected function saveEscritaFiscalFromRequest($idfatura, $idempresa, array $data) {
+		$row = $this->FaturasEscritaFiscal->find()->where(['idfatura' => $idfatura, 'idempresa' => $idempresa])->first();
+		if (!$row) {
+			$row = $this->FaturasEscritaFiscal->newEntity([
+				'idfatura' => $idfatura,
+				'idempresa' => $idempresa,
+			]);
+		}
+
+		$g = $this->escritaFiscalFieldGroups();
+		foreach ($g['money'] as $f) {
+			if (array_key_exists($f, $data)) {
+				$row->set($f, $this->parseDecimalBr($data[$f], 2));
+			}
+		}
+		foreach ($g['pct'] as $f) {
+			if (array_key_exists($f, $data)) {
+				$row->set($f, $this->parseDecimalBr($data[$f], 4));
+			}
+		}
+		foreach ($g['text'] as $f) {
+			if (array_key_exists($f, $data)) {
+				$row->set($f, mb_substr(trim((string) $data[$f]), 0, 64) ?: null);
+			}
+		}
+
+		if ($this->FaturasEscritaFiscal->save($row)) {
+			return true;
+		}
+
+		return $this->flattenEntityErrors($row->getErrors());
+	}
+
+	protected function flattenEntityErrors(array $errors) {
+		$out = [];
+		foreach ($errors as $list) {
+			if (!is_array($list)) {
+				continue;
+			}
+			foreach ($list as $message) {
+				if (is_string($message)) {
+					$out[] = $message;
+				} elseif (is_array($message)) {
+					foreach ($this->flattenEntityErrors($message) as $m) {
+						$out[] = $m;
+					}
+				}
+			}
+		}
+
+		return $out;
+	}
+
 	protected function ibptBreakdownForPrint($empresa, array $carrinho, $scaleFactor = 1.0) {
 		if (empty($carrinho)) {
 			return null;
