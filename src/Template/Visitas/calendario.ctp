@@ -1,6 +1,8 @@
 <?php
 	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Agenda', [], ['class' => 'breadcrumb-item active']);
+	// FullCalendar v6 — global bundle (dayGrid + timeGrid + list + multiMonth + interaction + pt-br)
+	$this->Html->script('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', ['block' => true]);
 	$labelsTipo = [0 => 'Visita', 1 => 'Reunião', 2 => 'Tarefa', 3 => 'Lembrete'];
 	$defaultEventsArray = [];
 	foreach ($visitas as $reg) {
@@ -38,10 +40,13 @@
 <style>
 	.calendar-events { cursor: default; }
 	.fc-event { cursor: pointer; }
-	.fc-button-group { display: none; }
+	/* Feriados */
 	.fc-event.pgm-fc-feriado { background-color: #6f6f6f !important; border-color: #555 !important; color: #fff !important; opacity: 0.92; }
 	.fc-event.pgm-fc-feriado-estadual { box-shadow: inset 3px 0 0 #17a2b8; }
 	.fc-event.pgm-fc-feriado-empresa { box-shadow: inset 3px 0 0 #ffc107; }
+	/* Vista anual — ajustes de tamanho */
+	.fc-multimonth-month { min-width: 200px; }
+	.fc-multimonth .fc-daygrid-day-number { font-size: 11px; }
 </style>
 <div class="row">
 	<div class="col-md-12">
@@ -201,163 +206,67 @@
 </div>
 <script>
 	$('.datepicker').bootstrapMaterialDatePicker({ format : 'DD/MM/YYYY', lang : 'pt-br', time : false, switchOnClick : true, nowButton : true, cancelText : 'Cancelar' , 'setDate' : 'currentDate', nowText : 'Hoje'});
-
-	$('.clockpicker').clockpicker({ donetext: 'Confirmar' })
-
+	$('.clockpicker').clockpicker({ donetext: 'Confirmar' });
 	$('.hora').mask('99:99');
 
-	$('.role').hide();
 	var role = '<?= $role; ?>';
+	var defaultEvents = <?= json_encode($defaultEventsArray, JSON_UNESCAPED_UNICODE) ?>;
+	var feriadosUrl   = <?= json_encode($feriadosUrl, JSON_UNESCAPED_UNICODE) ?>;
+	var editUrl  = "<?php if($role == 0) echo Router::url(['controller'=>'Visitas','action'=>'edit']); else echo Router::url(['controller'=>'Visitas','action'=>'view']); ?>";
 
-	!function($) {
-
-		"use strict";
-
-		var CalendarApp = function() {
-			this.$locale = 'pt-br',
-			this.$body = $("body"),
-			this.$calendar = $('#calendar'),
-			this.$event = ('#calendar-events div.calendar-events'),
-			this.$categoryForm = $('#add-new-event form'),
-			this.$extEvents = $('#calendar-events'),
-			this.$modal = $('#my-event'),
-			this.$saveCategoryBtn = $('.save-category'),
-			this.$calendarObj = null
-		};
-
-
-		/* on drop */
-		CalendarApp.prototype.onDrop = function (eventObj, date) {
-			var $this = this;
-				// retrieve the dropped element's stored Event Object
-				var originalEventObject = eventObj.data('eventObject');
-				var $categoryClass = eventObj.attr('data-class');
-				// we need to copy it, so that multiple events don't have a reference to the same object
-				var copiedEventObject = $.extend({}, originalEventObject);
-				// assign it the date that was reported
-				copiedEventObject.start = date;
-				if ($categoryClass)
-					copiedEventObject['className'] = [$categoryClass];
-				// render the event on the calendar
-				$this.$calendar.fullCalendar('renderEvent', copiedEventObject, true);
-				// is the "remove after drop" checkbox checked?
-				if ($('#drop-remove').is(':checked')) {
-					// if so, remove the element from the "Draggable Events" list
-					eventObj.remove();
-				}
+	var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+		locale: 'pt-br',
+		initialView: 'dayGridMonth',
+		slotDuration: '00:15:00',
+		slotMinTime: '08:00:00',
+		slotMaxTime: '19:00:00',
+		headerToolbar: {
+			start: 'prev,next today',
+			center: 'title',
+			end: 'dayGridMonth,timeGridWeek,timeGridDay,multiMonthYear'
 		},
-		/* on click on event */
-		CalendarApp.prototype.onEventClick =  function (calEvent, jsEvent, view) {
-			var cn = calEvent.className || '';
-			var cns = (Array.isArray(cn) ? cn.join(' ') : String(cn));
-			if (cns.indexOf('pgm-fc-feriado') !== -1 || !calEvent.id) {
-				return false;
-			}
-			var url = "<?php if($role == 0) echo Router::url(array('controller'=>'Visitas','action'=>'edit'));
-							else			echo Router::url(array('controller'=>'Visitas','action'=>'view')) ?>";
-			url = url + '/' + calEvent.id;
-			$.ajax({
-				type: "GET",
-				url: url,
-				data: {'id' : calEvent.id},
-				success:function(data){
-					$('#viewVisita').html(data);
-					$('.selectpicker').selectpicker();
-					$('#edit-event').modal('toggle');
-					$('#edit-event').modal('show');
-					$('#edit-event').modal('hide');
-				},
-			});
+		buttonText: {
+			today:  'Hoje',
+			month:  'Mês',
+			week:   'Semana',
+			day:    'Dia',
+			year:   'Ano'
 		},
-
-		/* on select */
-
-		CalendarApp.prototype.onSelect = function (start, end, allDay) {
-			if(role == 0){
-				var date = new Date(start);
-				var start = moment(date).utc().format('DD/MM/YYYY');
+		multiMonthMaxColumns: 3,
+		eventSources: [
+			defaultEvents,
+			{ url: feriadosUrl, editable: false }
+		],
+		editable:    false,
+		selectable:  true,
+		dayMaxEvents: true,
+		select: function(info) {
+			if (role == 0) {
+				var start = moment(info.start).format('DD/MM/YYYY');
 				$("#data").val(start);
 				$('#add-new-event').modal('toggle');
 			}
 		},
-		CalendarApp.prototype.enableDrag = function() {
-			//init events
-			$(this.$event).each(function () {
-				// create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
-				// it doesn't need to have a start or end
-				var eventObject = {
-					title: $.trim($(this).text()) // use the element's text as the event title
-				};
-				// store the Event Object in the DOM element so we can get to it later
-				$(this).data('eventObject', eventObject);
-				// make the event draggable using jQuery UI
-				// $(this).draggable({
-				//     zIndex: 999,
-				//     revert: true,      // will cause the event to go back to its
-				//     revertDuration: 0  //  original position after the drag
-				// });
-			});
-		}
-
-
-		/* Initializing */
-		CalendarApp.prototype.init = function() {
-			this.enableDrag();
-			/*  Initialize the calendar  */
-			var date = new Date();
-			var d = date.getDate();
-			var m = date.getMonth();
-			var y = date.getFullYear();
-			var form = '';
-			var today = new Date($.now());
-			var defaultEvents = <?= json_encode($defaultEventsArray, JSON_UNESCAPED_UNICODE) ?>;
-			var feriadosUrl = <?= json_encode($feriadosUrl, JSON_UNESCAPED_UNICODE) ?>;
-			var $this = this;
-			$this.$calendarObj = $this.$calendar.fullCalendar({
-				slotDuration: '00:15:00', /* If we want to split day time each 15minutes */
-				minTime: '08:00:00',
-				maxTime: '19:00:00',
-				defaultView: 'month',
-				handleWindowResize: true,
-				locale: 'pt-br',
-				header: {
-					left: 'prev,next today',
-					center: 'title',
-					right: 'month,basicWeek,basicDay,agendaWeek,agendaDay'
-				},
-				eventSources: [
-					defaultEvents,
-					{ url: feriadosUrl, editable: false }
-				],
-				editable: false,
-				droppable: false, // this allows things to be dropped onto the calendar !!!
-				eventLimit: true, // allow "more" link when too many events
-				selectable: true,
-				drop: function(date) { $this.onDrop($(this), date); },
-				select: function (start, end, allDay) { $this.onSelect(start, end, allDay); },
-				eventClick: function(calEvent, jsEvent, view) { $this.onEventClick(calEvent, jsEvent, view); }
-			});
-			//on new event
-			this.$saveCategoryBtn.on('click', function(){
-				var categoryName = $this.$categoryForm.find("input[name='category-name']").val();
-				var categoryColor = $this.$categoryForm.find("select[name='category-color']").val();
-				if (categoryName !== null && categoryName.length != 0) {
-					$this.$extEvents.append('<div class="calendar-events" data-class="bg-' + categoryColor + '" style="position: relative;"><i class="fa fa-circle text-' + categoryColor + '"></i>' + categoryName + '</div>')
-					$this.enableDrag();
+		eventClick: function(info) {
+			var ev  = info.event;
+			var cns = (ev.classNames || []).join(' ');
+			if (cns.indexOf('pgm-fc-feriado') !== -1 || !ev.id) return;
+			$.ajax({
+				type: "GET",
+				url: editUrl + '/' + ev.id,
+				data: { id: ev.id },
+				success: function(data) {
+					$('#viewVisita').html(data);
+					$('.selectpicker').selectpicker();
+					$('#edit-event').modal('show');
 				}
 			});
-		},
-		//init CalendarApp
-		$.CalendarApp = new CalendarApp, $.CalendarApp.Constructor = CalendarApp;
-	}(window.jQuery),
+		}
+	});
 
-	//initializing CalendarApp
-	function($) {
-		"use strict";
-		$.CalendarApp.init();
-	}(window.jQuery);
+	calendar.render();
 
-	// Reseta os campos do modal
+	// Reseta os campos do modal "nova visita"
 	$("#novavisita").click(function() {
 		$('#idcliente').val(0);
 		$("#situacao").val(0);
