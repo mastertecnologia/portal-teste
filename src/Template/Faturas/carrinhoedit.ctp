@@ -21,7 +21,7 @@
 				<tbody>
 					<!-- Itens -->
 					<?php foreach ($carrinho as $reg): ?>
-						<tr <?= $reg->qtddevolvida ? 'style="background-color: #85eaff"' : '' ?> id='<?= $reg->id ?>'>
+						<tr <?= $reg->qtddevolvida ? 'style="background-color: rgba(29,158,117,.18); outline: 1px solid rgba(29,158,117,.35);"' : '' ?> id='<?= $reg->id ?>'>
 							<td id="codigo<?= $reg->id ?>"> <?= $reg->codigo ?> </td>
 							<td id="descricao<?= $reg->id ?>"> <?= $reg->descricao ?> </td>
 							<td id="quantidade<?= $reg->id ?>" class="text-right"> <?= $reg->quantidade ?> </td>

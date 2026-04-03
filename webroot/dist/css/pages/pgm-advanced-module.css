@@ -341,3 +341,83 @@ body.layout-no-topbar:not(.pgm-theme-light) .well {
 	border-color: rgba(255,255,255,.1) !important;
 	color: #e6edf3 !important;
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   MODALS — Bootstrap modal-content tem fundo branco por padrão
+   ══════════════════════════════════════════════════════════════════════════════ */
+body.layout-no-topbar:not(.pgm-theme-light) .modal-content {
+	background-color: #161b22 !important;
+	border: 1px solid rgba(255,255,255,.1) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-header {
+	background-color: rgba(255,255,255,.05) !important;
+	border-bottom-color: rgba(255,255,255,.08) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-header .modal-title,
+body.layout-no-topbar:not(.pgm-theme-light) .modal-header .close {
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body {
+	background-color: transparent !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-footer {
+	background-color: rgba(255,255,255,.03) !important;
+	border-top-color: rgba(255,255,255,.08) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body .form-control,
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body select.form-control,
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body input.form-control,
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body textarea.form-control {
+	background: #13161d !important;
+	border-color: rgba(255,255,255,.12) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body label,
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body .control-label {
+	color: rgba(230,237,243,.75) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .modal-body .text-muted {
+	color: rgba(230,237,243,.45) !important;
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   BOOTSTRAP-SELECT & DROPDOWNS — fora de .pgm-locacao-add-shell
+   ══════════════════════════════════════════════════════════════════════════════ */
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .dropdown-toggle,
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .btn {
+	background: #13161d !important;
+	border-color: rgba(255,255,255,.12) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .dropdown-toggle:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .btn:hover {
+	border-color: rgba(255,255,255,.22) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select .filter-option-inner-inner {
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu {
+	background-color: #1a1f27 !important;
+	border: 1px solid rgba(255,255,255,.12) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu .dropdown-item,
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu li > a {
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu .dropdown-item:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu li > a:hover,
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu .dropdown-item.active,
+body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu li.selected > a {
+	background-color: rgba(38,198,218,.15) !important;
+	color: #26c6da !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select .bs-searchbox input {
+	background: #13161d !important;
+	border-color: rgba(255,255,255,.12) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select .no-results {
+	background: transparent !important;
+	color: rgba(230,237,243,.5) !important;
+}
