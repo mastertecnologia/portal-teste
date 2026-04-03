@@ -49,6 +49,7 @@ Router::scope('/', function ($routes) {
     $routes->connect('/agenda/index', ['controller' => 'Visitas', 'action' => 'index']);
     $routes->connect('/agenda/indexcliente', ['controller' => 'Visitas', 'action' => 'indexcliente']);
     $routes->connect('/agenda/calendario', ['controller' => 'Visitas', 'action' => 'calendario']);
+    $routes->connect('/agenda/feriados', ['controller' => 'Visitas', 'action' => 'feriados']);
     $routes->connect('/agenda/add', ['controller' => 'Visitas', 'action' => 'add']);
     $routes->connect('/agenda/edit/*', ['controller' => 'Visitas', 'action' => 'edit']);
     $routes->connect('/agenda/delete/*', ['controller' => 'Visitas', 'action' => 'delete']);

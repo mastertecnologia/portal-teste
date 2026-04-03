@@ -25,6 +25,8 @@ class ClienteDomainEventType {
 	public const USUARIO_VINCULADO_CLIENTE = 'usuario.vinculado_cliente';
 	public const USUARIO_REMOVIDO_CLIENTE = 'usuario.removido_cliente';
 
+	public const AGENDA_LEMBRETE = 'agenda.lembrete';
+
 	/**
 	 * Tipos exibidos na tela de preferências (código estável => rótulo).
 	 *
@@ -46,6 +48,7 @@ class ClienteDomainEventType {
 			self::ERP_SINCRONIZACAO_FALHA => 'Falha de sincronização',
 			self::USUARIO_VINCULADO_CLIENTE => 'Usuário vinculado ao cliente',
 			self::USUARIO_REMOVIDO_CLIENTE => 'Usuário removido do cliente',
+			self::AGENDA_LEMBRETE => 'Lembretes da agenda (visitas / reuniões)',
 		];
 	}
 }

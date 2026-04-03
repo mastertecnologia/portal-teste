@@ -51,4 +51,33 @@ class FeriadosTable extends Table
         }
         return $result;
     }
+
+    /**
+     * Feriados cadastrados (empresa + globais) com descrição, para o calendário.
+     *
+     * @param string $dataInicio Y-m-d
+     * @param string $dataFim    Y-m-d
+     * @param int|null $idempresa
+     * @return \Cake\ORM\Query|\Cake\Database\Query
+     */
+    public function findParaCalendario($dataInicio, $dataFim, $idempresa = null)
+    {
+        $q = $this->find()
+            ->select(['data', 'descricao'])
+            ->where([
+                'data >=' => $dataInicio,
+                'data <=' => $dataFim,
+            ])
+            ->order(['data' => 'ASC']);
+        if ($idempresa !== null) {
+            $q->andWhere([
+                'OR' => [
+                    ['idempresa IS' => null],
+                    ['idempresa' => $idempresa],
+                ],
+            ]);
+        }
+
+        return $q;
+    }
 }

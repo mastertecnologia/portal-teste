@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Controller\Date;
+use App\Service\Agenda\BrasilFeriadosService;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
@@ -13,6 +14,7 @@ class VisitasController extends AppController {
 		$this->loadModel('Clientes');
 		$this->loadModel('Empresas');
 		$this->loadModel('Tickets');
+		$this->loadModel('Feriados');
 	}
 
 	public function index() {
@@ -56,6 +58,8 @@ class VisitasController extends AppController {
 		$visitaAdd = $this->Visitas->newEntity();
 		if ($this->request->is('post')) {
 			$visita = $this->Visitas->patchEntity($visitaAdd, $this->request->getData());
+			$this->normalizarCamposAgendaVisita($visitaAdd, $this->request->getData());
+			$visitaAdd->set('lembrete_notificado_em', null);
 
 			$originalDate = $this->request->getData()['data'];
 			$dataquebrada = explode('/', $originalDate);
@@ -83,6 +87,7 @@ class VisitasController extends AppController {
 		asort($clientesOpt);
 		$this->set('title', 'Agenda');
 		$this->set('clientes', $clientesOpt);
+		$this->set($this->opcoesAgendaFormulario());
 		$this->set(compact('visitas', 'users', 'visitaAdd'));
 	}
 
@@ -107,6 +112,8 @@ class VisitasController extends AppController {
 
 		if ($this->request->is('post')) {
 			$visita = $this->Visitas->patchEntity($visita, $this->request->getData());
+			$this->normalizarCamposAgendaVisita($visita, $this->request->getData());
+			$visita->set('lembrete_notificado_em', null);
 
 			$originalDate = $this->request->getData()['data'];
 			$dataquebrada = explode('/', $originalDate);
@@ -141,6 +148,7 @@ class VisitasController extends AppController {
 
 		$this->set('title', 'Cadastrar Visitas');
 		$this->set('clientes', $clientesOpt);
+		$this->set($this->opcoesAgendaFormulario());
 
 		$this->set(compact('visita', 'users'));
 	}
@@ -159,10 +167,15 @@ class VisitasController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+			$antes = $this->Visitas->get($id, ['contain' => []]);
 			if(isset($this->request->getData()['nomecliente'])) $visita->nomecliente = $this->request->getData()['nomecliente'];
 			if(isset($this->request->getData()['valor']))  $visita->valor = $this->request->getData()['valor'];
 
 			$this->Visitas->patchEntity($visita, $data);
+			$this->normalizarCamposAgendaVisita($visita, $data);
+			if ($this->visitaLembreteDeveResetar($antes, $visita)) {
+				$visita->set('lembrete_notificado_em', null);
+			}
 
 			if ($this->Visitas->save($visita)) {
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $visita->id);
@@ -183,7 +196,125 @@ class VisitasController extends AppController {
 
 		$this->set('title', 'Editar Visita');
 		$this->set('clientes', $clientesOpt);
+		$this->set($this->opcoesAgendaFormulario());
 		$this->set(compact('visita', 'users'));
+	}
+
+	public function feriados() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$start = $this->request->getQuery('start');
+		$end = $this->request->getQuery('end');
+		if (!is_string($start) || !is_string($end)) {
+			return $this->_agendaJsonCalendario([]);
+		}
+		$startYmd = substr($start, 0, 10);
+		$endYmd = substr($end, 0, 10);
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startYmd) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endYmd)) {
+			return $this->_agendaJsonCalendario([]);
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$uf = null;
+		if ($idempresa > 0) {
+			try {
+				$emp = $this->Empresas->find()
+					->where(['Empresas.id' => $idempresa])
+					->contain(['Cidades.Estados'])
+					->first();
+				if ($emp && !empty($emp->cidade) && !empty($emp->cidade->estado)) {
+					$sg = trim((string)$emp->cidade->estado->sigla);
+					if (strlen($sg) >= 2) {
+						$uf = strtoupper(substr($sg, 0, 2));
+					}
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$svc = new BrasilFeriadosService();
+		$events = $svc->fullCalendarEvents($startYmd, $endYmd, $uf);
+		foreach ($this->Feriados->findParaCalendario($startYmd, $endYmd, $idempresa) as $f) {
+			$d = $f->data;
+			if (!($d instanceof \DateTimeInterface)) {
+				continue;
+			}
+			$events[] = [
+				'title' => (string)$f->descricao,
+				'start' => $d->format('Y-m-d'),
+				'allDay' => true,
+				'editable' => false,
+				'className' => 'pgm-fc-feriado pgm-fc-feriado-empresa',
+			];
+		}
+
+		return $this->_agendaJsonCalendario($events);
+	}
+
+	protected function _agendaJsonCalendario(array $events) {
+		$this->response = $this->response->withType('application/json')
+			->withStringBody(json_encode($events, JSON_UNESCAPED_UNICODE));
+
+		return $this->response;
+	}
+
+	protected function opcoesAgendaFormulario() {
+		return [
+			'opLembrete' => [
+				'' => 'Sem lembrete',
+				'15' => '15 minutos antes',
+				'30' => '30 minutos antes',
+				'60' => '1 hora antes',
+				'120' => '2 horas antes',
+				'1440' => '1 dia antes',
+				'2880' => '2 dias antes',
+			],
+			'opAgendaTipo' => [
+				0 => 'Visita',
+				1 => 'Reunião',
+				2 => 'Tarefa',
+				3 => 'Lembrete',
+			],
+		];
+	}
+
+	protected function normalizarCamposAgendaVisita($visita, array $data) {
+		$tipo = isset($data['agenda_tipo']) ? (int)$data['agenda_tipo'] : (int)$visita->get('agenda_tipo');
+		if ($tipo < 0 || $tipo > 3) {
+			$tipo = 0;
+		}
+		$visita->set('agenda_tipo', $tipo);
+		$tit = isset($data['agenda_titulo']) ? trim((string)$data['agenda_titulo']) : '';
+		$visita->set('agenda_titulo', $tit !== '' ? $tit : null);
+		$lm = isset($data['lembrete_minutos']) ? $data['lembrete_minutos'] : '';
+		if ($lm === '' || $lm === null) {
+			$visita->set('lembrete_minutos', null);
+		} else {
+			$visita->set('lembrete_minutos', max(1, (int)$lm));
+		}
+	}
+
+	protected function visitaFingerprintInicio($visita) {
+		$d = $visita->get('data');
+		$h = $visita->get('horaini');
+		if ($d instanceof \DateTimeInterface && $h instanceof \DateTimeInterface) {
+			return $d->format('Y-m-d') . ' ' . $h->format('H:i:s');
+		}
+
+		return null;
+	}
+
+	protected function visitaLembreteDeveResetar($antes, $depois) {
+		$la = (int)($antes->get('lembrete_minutos') ?? 0);
+		$ld = (int)($depois->get('lembrete_minutos') ?? 0);
+		if ($la !== $ld) {
+			return true;
+		}
+		$fa = $this->visitaFingerprintInicio($antes);
+		$fd = $this->visitaFingerprintInicio($depois);
+		if ($fa !== null && $fd !== null && $fa !== $fd) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public function delete($id = null) {

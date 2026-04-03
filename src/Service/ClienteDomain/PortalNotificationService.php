@@ -56,6 +56,57 @@ class PortalNotificationService {
 		}
 	}
 
+	/**
+	 * Notifica usuários específicos (in-app), respeitando preferências por eventType.
+	 *
+	 * @param int[] $userIds
+	 */
+	public static function notifyUsers(
+		array $userIds,
+		string $eventType,
+		string $notifType,
+		string $title,
+		string $message,
+		?string $actionUrl = null,
+		?string $entityType = null,
+		$entityId = null,
+		array $metadata = []
+	): void {
+		if (!InfrastructureGuard::isReady()) {
+			return;
+		}
+		$userIds = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+		if (empty($userIds)) {
+			return;
+		}
+		try {
+			$Notif = TableRegistry::get('PortalInternalNotifications');
+			$metaJson = $metadata ? json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+			$entityIdStr = $entityId !== null && $entityId !== '' ? (string)$entityId : null;
+			$wantsInApp = self::_batchWantsInApp($userIds, $eventType);
+			foreach ($userIds as $uid) {
+				$uid = (int)$uid;
+				if ($uid <= 0 || empty($wantsInApp[$uid])) {
+					continue;
+				}
+				$e = $Notif->newEntity([
+					'user_id' => $uid,
+					'type' => $notifType,
+					'title' => $title,
+					'message' => $message,
+					'entity_type' => $entityType,
+					'entity_id' => $entityIdStr,
+					'action_url' => $actionUrl,
+					'is_read' => 0,
+					'metadata_json' => $metaJson,
+				]);
+				$Notif->save($e);
+			}
+		} catch (\Throwable $e) {
+			\Cake\Log\Log::warning('PortalNotificationService::notifyUsers: ' . $e->getMessage());
+		}
+	}
+
 	public static function staffUserIdsForEmpresa(int $idempresa): array {
 		return self::_staffUserIdsForEmpresa($idempresa);
 	}
@@ -136,6 +187,9 @@ class PortalNotificationService {
 		}
 		if ($eventType === ClienteDomainEventType::CONTRATO_VENCIDO) {
 			return 'error';
+		}
+		if ($eventType === ClienteDomainEventType::AGENDA_LEMBRETE) {
+			return 'info';
 		}
 		if (in_array($eventType, [
 			ClienteDomainEventType::CLIENTE_CRIADO,

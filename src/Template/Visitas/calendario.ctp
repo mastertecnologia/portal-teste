@@ -1,24 +1,47 @@
 <?php
 	use Cake\Routing\Router;
 	$this->Breadcrumbs->add('Agenda', [], ['class' => 'breadcrumb-item active']);
-	$i = 0;
-	foreach ($visitas as $reg){
-		@$visita1[$i]->id = $reg->id;
-		if($reg->cliente->razaosocial != null)  @$visita1[$i]->cliente = $reg->cliente->razaosocial ;
-		else @$visita1[$i]->cliente = $reg->cliente->nome ;
-		@$visita1[$i]->data = date_format($reg->data, 'Y/m/d');
-		@$visita1[$i]->horaini = date_format($reg->horaini, 'H:i');
-		@$visita1[$i]->horafim = date_format($reg->horafim, 'H:i');
-		@$visita1[$i]->situacao = $reg->situacao;
-
-		$visitasJS[] = $visita1[$i];
-		$i++;
+	$labelsTipo = [0 => 'Visita', 1 => 'Reunião', 2 => 'Tarefa', 3 => 'Lembrete'];
+	$defaultEventsArray = [];
+	foreach ($visitas as $reg) {
+		switch ($reg->situacao) {
+			case 0: $classname = 'bg-info'; break;
+			case 1: $classname = 'bg-success'; break;
+			case 2: $classname = 'bg-warning'; break;
+			case 3: $classname = 'bg-danger'; break;
+			default: $classname = 'bg-info';
+		}
+		$tipo = isset($reg->agenda_tipo) ? (int)$reg->agenda_tipo : 0;
+		$tituloCustom = isset($reg->agenda_titulo) ? trim((string)$reg->agenda_titulo) : '';
+		if ($tituloCustom !== '') {
+			$titulo = $tituloCustom;
+		} else {
+			$tipoName = $labelsTipo[$tipo] ?? $labelsTipo[0];
+			if (!empty($reg->cliente)) {
+				$c = $reg->cliente;
+				$cn = !empty($c->razaosocial) ? $c->razaosocial : ($c->nome ?? '');
+				$titulo = $tipoName . ': ' . $cn;
+			} else {
+				$titulo = $tipoName;
+			}
+		}
+		$defaultEventsArray[] = [
+			'title' => $titulo,
+			'start' => $reg->data->format('Y-m-d') . 'T' . $reg->horaini->format('H:i:00'),
+			'end' => $reg->data->format('Y-m-d') . 'T' . $reg->horafim->format('H:i:00'),
+			'className' => $classname,
+			'id' => (int)$reg->id,
+		];
 	}
+	$feriadosUrl = Router::url(['controller' => 'Visitas', 'action' => 'feriados']);
 ?>
 <style>
 	.calendar-events { cursor: default; }
 	.fc-event { cursor: pointer; }
 	.fc-button-group { display: none; }
+	.fc-event.pgm-fc-feriado { background-color: #6f6f6f !important; border-color: #555 !important; color: #fff !important; opacity: 0.92; }
+	.fc-event.pgm-fc-feriado-estadual { box-shadow: inset 3px 0 0 #17a2b8; }
+	.fc-event.pgm-fc-feriado-empresa { box-shadow: inset 3px 0 0 #ffc107; }
 </style>
 <div class="row">
 	<div class="col-md-12">
@@ -38,6 +61,10 @@
 										<div class="calendar-events" data-class="bg-success"><i class="fa fa-circle text-success"></i> Finalizada </div>
 										<div class="calendar-events" data-class="bg-warning"><i class="fa fa-circle text-warning"></i> Pendente</div>
 										<div class="calendar-events" data-class="bg-danger"><i class="fa fa-circle text-danger"></i> Cancelada </div>
+										<div class="calendar-events m-t-10" style="cursor:default"><i class="fa fa-circle" style="color:#6f6f6f"></i> Feriados nacionais </div>
+										<div class="calendar-events" style="cursor:default"><i class="fa fa-circle text-info"></i> Feriado estadual (UF da empresa) </div>
+										<div class="calendar-events" style="cursor:default"><i class="fa fa-circle" style="color:#ffc107"></i> Feriado cadastrado (empresa/global) </div>
+										<div class="small text-muted m-t-5">Municipais: inclua em Configurações → Feriados.</div>
 									</div>
 									<!-- checkbox -->
 									<div class="checkbox m-t-20 hide">
@@ -105,6 +132,7 @@
 							</div>
 						</div>
 					</div>
+					<?= $this->element('Visitas/agenda_campos_form') ?>
 					<br/>
 					<div class="row">
 						<div class="col-lg-4 ">
@@ -220,6 +248,11 @@
 		},
 		/* on click on event */
 		CalendarApp.prototype.onEventClick =  function (calEvent, jsEvent, view) {
+			var cn = calEvent.className || '';
+			var cns = (Array.isArray(cn) ? cn.join(' ') : String(cn));
+			if (cns.indexOf('pgm-fc-feriado') !== -1 || !calEvent.id) {
+				return false;
+			}
 			var url = "<?php if($role == 0) echo Router::url(array('controller'=>'Visitas','action'=>'edit'));
 							else			echo Router::url(array('controller'=>'Visitas','action'=>'view')) ?>";
 			url = url + '/' + calEvent.id;
@@ -277,25 +310,8 @@
 			var y = date.getFullYear();
 			var form = '';
 			var today = new Date($.now());
-			var defaultEvents =
-			[   <?php
-				if(isset($visitasJS)){
-					foreach($visitasJS as $visita){
-						switch($visita->situacao){
-							case 0: $classname = 'bg-info'; break;
-							case 1: $classname = 'bg-success'; break;
-							case 2: $classname = 'bg-warning'; break;
-							case 3: $classname = 'bg-danger'; break;
-						}?>
-						{
-							title: '<?= $visita->cliente ?>',
-							start: '"<?= $visita->data ?>" <?= $visita->horaini ?>',
-							end: '"<?= $visita->data ?>" <?= $visita->horafim ?>',
-							className: '<?= $classname ?>',
-							id: <?= $visita->id ?>
-						},
-				<?php }} ?>
-			];
+			var defaultEvents = <?= json_encode($defaultEventsArray, JSON_UNESCAPED_UNICODE) ?>;
+			var feriadosUrl = <?= json_encode($feriadosUrl, JSON_UNESCAPED_UNICODE) ?>;
 			var $this = this;
 			$this.$calendarObj = $this.$calendar.fullCalendar({
 				slotDuration: '00:15:00', /* If we want to split day time each 15minutes */
@@ -303,13 +319,16 @@
 				maxTime: '19:00:00',
 				defaultView: 'month',
 				handleWindowResize: true,
-
+				locale: 'pt-br',
 				header: {
 					left: 'prev,next today',
 					center: 'title',
-					right: 'month,agendaWeek,agendaDay'
+					right: 'month,basicWeek,basicDay,agendaWeek,agendaDay'
 				},
-				events: defaultEvents,
+				eventSources: [
+					defaultEvents,
+					{ url: feriadosUrl, editable: false }
+				],
 				editable: false,
 				droppable: false, // this allows things to be dropped onto the calendar !!!
 				eventLimit: true, // allow "more" link when too many events
@@ -338,9 +357,6 @@
 		$.CalendarApp.init();
 	}(window.jQuery);
 
-
-	$('#calendar').fullCalendar({ locale: 'pt-bt' });
-
 	// Reseta os campos do modal
 	$("#novavisita").click(function() {
 		$('#idcliente').val(0);
@@ -350,5 +366,8 @@
 		$('#horainicial').val("");
 		$('#horafinal').val("");
 		$("#motivovisita").val("");
+		$('#agenda-tipo').val('0');
+		$('#agenda-titulo').val('');
+		$('#lembrete-minutos').val('');
 	});
 </script>

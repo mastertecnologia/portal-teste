@@ -51,6 +51,7 @@
 					</div>
 				</div>
 			</div>
+			<?= $this->element('Visitas/agenda_campos_form') ?>
             <div class="row">
                 <div class="col-12">
                     <label class="control-label text-muted">Lista de membros</label>
