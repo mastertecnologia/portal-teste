@@ -1,0 +1,148 @@
+/**
+ * Layout Service Desk — usa tokens PGM (html[data-pgm-theme])
+ */
+.sd-shell {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+.sd-topbar {
+	padding: 0.65rem 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.sd-topbar .sd-brand {
+	font-weight: 700;
+	font-size: 1.05rem;
+	letter-spacing: 0.02em;
+}
+.sd-topbar .sd-actions {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+	font-size: 0.875rem;
+}
+.sd-main {
+	flex: 1;
+	width: 100%;
+	max-width: 100%;
+	padding: 0;
+}
+body.sd-body {
+	margin: 0;
+}
+
+html[data-pgm-theme="light"] .sd-shell {
+	background: var(--pgm-bg-page);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] .sd-shell {
+	background: var(--pgm-bg-page);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="light"] .sd-topbar {
+	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	color: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+html[data-pgm-theme="dark"] .sd-topbar {
+	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	color: #fff;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.sd-topbar a {
+	color: var(--pgm-topbar-link);
+	text-decoration: none;
+}
+
+.sd-topbar a:hover {
+	color: #fff;
+	text-decoration: underline;
+}
+
+.pgm-sd-theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.6rem;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.15s, border-color 0.15s;
+}
+
+.pgm-sd-theme-toggle:hover {
+	background: rgba(255, 255, 255, 0.18);
+	border-color: rgba(255, 255, 255, 0.5);
+	color: #fff;
+}
+
+html[data-pgm-theme="dark"] .sd-main .container-fluid,
+html[data-pgm-theme="dark"] .sd-main {
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.sd-body .card {
+	background: var(--pgm-bg-surface);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.sd-body .table {
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.sd-body .table thead th {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.sd-body .form-control {
+	background: var(--pgm-bg-surface);
+	border-color: var(--pgm-border-strong);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.sd-body .form-control:focus {
+	border-color: var(--pgm-primary);
+	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
+}
+
+html[data-pgm-theme="light"] body.sd-body .card {
+	background: var(--pgm-bg-surface);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="light"] body.sd-body .table {
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="light"] body.sd-body .table thead th {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+}
+
+html[data-pgm-theme="light"] body.sd-body .form-control {
+	background: var(--pgm-bg-surface);
+	border-color: var(--pgm-border-strong);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="light"] body.sd-body .form-control:focus {
+	border-color: var(--pgm-primary);
+	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
+}

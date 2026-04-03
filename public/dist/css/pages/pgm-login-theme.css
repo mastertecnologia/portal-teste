@@ -1,0 +1,156 @@
+/**
+ * Login / telas de autenticação — complemento ao login-modern.css (tokens PGM)
+ */
+html[data-pgm-theme="dark"] body.pgm-auth-page {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-wrap {
+	background: var(--pgm-bg-page);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-form-panel {
+	background: var(--pgm-bg-elevated);
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-form-card {
+	background: var(--pgm-bg-surface);
+	border: 1px solid var(--pgm-border);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-form-title,
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-form-eyebrow,
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-field-label {
+	color: var(--pgm-text);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-form-subtitle {
+	color: var(--pgm-text-muted);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-field-wrap {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-field-wrap .form-control,
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-field-wrap input {
+	background: var(--pgm-bg-surface) !important;
+	border-color: var(--pgm-border-strong) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-field-wrap .form-control:focus {
+	border-color: var(--pgm-primary) !important;
+	box-shadow: 0 0 0 3px var(--pgm-focus-ring) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .lm-field-icon {
+	color: var(--pgm-text-muted);
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .alert {
+	border-width: 1px;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .alert-success {
+	background: var(--pgm-success-bg) !important;
+	color: var(--pgm-success-text) !important;
+	border-color: var(--pgm-success) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .alert-danger {
+	background: var(--pgm-danger-bg) !important;
+	color: var(--pgm-danger-text) !important;
+	border-color: var(--pgm-danger) !important;
+}
+
+/* Alternador no canto do cartão */
+.pgm-auth-theme-bar {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 0.75rem;
+}
+
+.pgm-auth-theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.35rem 0.75rem;
+	border-radius: 999px;
+	border: 1px solid var(--pgm-border, #e1e4e8);
+	background: var(--pgm-bg-elevated, #f8f9fb);
+	color: var(--pgm-text-secondary, #374151);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.pgm-auth-theme-toggle:hover {
+	border-color: var(--pgm-primary, #00a876);
+	color: var(--pgm-text, #1a1f2e);
+}
+
+html[data-pgm-theme="dark"] .pgm-auth-theme-toggle {
+	border-color: var(--pgm-border);
+	background: var(--pgm-bg-elevated);
+	color: var(--pgm-text-secondary);
+}
+
+html[data-pgm-theme="dark"] .pgm-auth-theme-toggle:hover {
+	border-color: var(--pgm-primary);
+	color: var(--pgm-text);
+}
+
+/* login-erp / Service Desk login card */
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-wrap {
+	background: var(--pgm-bg-page) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-card,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp {
+	background: var(--pgm-bg-surface) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text) !important;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-title,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-subtitle {
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .form-control {
+	background: var(--pgm-bg-elevated) !important;
+	border-color: var(--pgm-border-strong) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .form-control:focus {
+	border-color: var(--pgm-primary) !important;
+	box-shadow: 0 0 0 3px var(--pgm-focus-ring) !important;
+}
+
+/* Política de privacidade / textos longos em layout login-register-lock */
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-register,
+html[data-pgm-theme="dark"] body.pgm-auth-page #page-wrapper,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-box {
+	background: transparent !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-register p,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-register li,
+html[data-pgm-theme="dark"] body.pgm-auth-page .privacy-policy-content {
+	color: var(--pgm-text-secondary) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-register h1,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-register h2,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-register h3 {
+	color: var(--pgm-text) !important;
+}

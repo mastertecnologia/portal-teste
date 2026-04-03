@@ -1,24 +1,41 @@
 <?php
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
- * @since         0.10.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * E-mail HTML: clientes de e-mail têm suporte limitado a CSS.
+ * Base clara PGM + realce opcional em prefers-color-scheme: dark.
  */
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html>
+<html lang="pt-BR">
 <head>
-    <title><?= $this->fetch('title') ?></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="color-scheme" content="light dark">
+	<meta name="supported-color-schemes" content="light dark">
+	<title><?= $this->fetch('title') ?></title>
+	<style type="text/css">
+		body {
+			margin: 0;
+			padding: 20px;
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 14px;
+			line-height: 1.5;
+			color: #1a1f2e;
+			background-color: #f4f6f8;
+		}
+		a {
+			color: #00a876;
+		}
+		@media (prefers-color-scheme: dark) {
+			body {
+				color: #e8eaed !important;
+				background-color: #12151c !important;
+			}
+			a {
+				color: #45e5ed !important;
+			}
+		}
+	</style>
 </head>
 <body>
-    <?= $this->fetch('content') ?>
+	<?= $this->fetch('content') ?>
 </body>
 </html>

@@ -1,0 +1,70 @@
+/**
+ * PGM Soluções — tokens semânticos (light / dark)
+ * Consumidos por novos estilos, login, Service Desk e integrações (ex.: React).
+ * Telas legadas continuam com pgm-theme-light.css e pgm-advanced-module.css.
+ */
+html[data-pgm-theme="light"] {
+	color-scheme: light;
+	--pgm-primary: #00a876;
+	--pgm-primary-hover: #007a55;
+	--pgm-primary-muted: rgba(0, 168, 118, 0.12);
+	--pgm-secondary: #0d5c63;
+	--pgm-accent: #00c9a7;
+	--pgm-bg-page: #f0f2f5;
+	--pgm-bg-surface: #ffffff;
+	--pgm-bg-elevated: #f8f9fb;
+	--pgm-text: #1a1f2e;
+	--pgm-text-secondary: #374151;
+	--pgm-text-muted: #6b7280;
+	--pgm-border: #e1e4e8;
+	--pgm-border-strong: #d0d7de;
+	--pgm-success: #059669;
+	--pgm-success-bg: #d1fae5;
+	--pgm-success-text: #065f46;
+	--pgm-warning: #d97706;
+	--pgm-warning-bg: #fef3c7;
+	--pgm-warning-text: #92400e;
+	--pgm-danger: #dc2626;
+	--pgm-danger-bg: #fee2e2;
+	--pgm-danger-text: #991b1b;
+	--pgm-info-bg: #e0f2fe;
+	--pgm-info-text: #0c4a6e;
+	--pgm-focus-ring: rgba(0, 168, 118, 0.35);
+	--pgm-link: #00a876;
+	--pgm-topbar-gradient-start: #0d5c63;
+	--pgm-topbar-gradient-end: #127a82;
+	--pgm-topbar-link: #e8fffc;
+}
+
+html[data-pgm-theme="dark"] {
+	color-scheme: dark;
+	--pgm-primary: #00d9a0;
+	--pgm-primary-hover: #5cecc4;
+	--pgm-primary-muted: rgba(0, 217, 160, 0.15);
+	--pgm-secondary: #127a82;
+	--pgm-accent: #45e5ed;
+	--pgm-bg-page: #12151c;
+	--pgm-bg-surface: #1e2329;
+	--pgm-bg-elevated: #262c35;
+	--pgm-text: #e8eaed;
+	--pgm-text-secondary: #c4c9d1;
+	--pgm-text-muted: #9aa0a8;
+	--pgm-border: #3d4554;
+	--pgm-border-strong: #4f5869;
+	--pgm-success: #34d399;
+	--pgm-success-bg: rgba(52, 211, 153, 0.15);
+	--pgm-success-text: #a7f3d0;
+	--pgm-warning: #fbbf24;
+	--pgm-warning-bg: rgba(251, 191, 36, 0.12);
+	--pgm-warning-text: #fde68a;
+	--pgm-danger: #f87171;
+	--pgm-danger-bg: rgba(248, 113, 113, 0.12);
+	--pgm-danger-text: #fecaca;
+	--pgm-info-bg: rgba(69, 229, 237, 0.1);
+	--pgm-info-text: #a5f3fc;
+	--pgm-focus-ring: rgba(0, 217, 160, 0.4);
+	--pgm-link: #45e5ed;
+	--pgm-topbar-gradient-start: #0a4a50;
+	--pgm-topbar-gradient-end: #0d5c63;
+	--pgm-topbar-link: #e8fffc;
+}

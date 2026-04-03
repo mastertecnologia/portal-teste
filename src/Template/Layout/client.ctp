@@ -1,5 +1,11 @@
+<?php
+use Cake\Routing\Router;
+$pgmLegacyTheme = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
+$pgmLegacyThemeClass = ($pgmLegacyTheme === 'light') ? 'pgm-theme-light' : '';
+$isLightLegacy = ($pgmLegacyTheme === 'light');
+?>
 <!doctype html>
-<html>
+<html lang="pt-BR" data-pgm-theme="<?= h($pgmLegacyTheme) ?>">
 <head>
 	<?= $this->Html->charset() ?>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -12,6 +18,9 @@
 
 	<?= $this->Html->css('bootstrap.min'); ?>
 	<?= $this->Html->css('material-dashboard'); ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens'); ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-legacy-material-theme'); ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-theme-light'); ?>
 
 	<?= $this->Html->css('http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css'); ?>
 	<?= $this->Html->css('http://fonts.googleapis.com/css?family=Roboto:400,700,300|Material+Icons'); ?>
@@ -27,7 +36,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body>
+<body class="<?= h($pgmLegacyThemeClass) ?>">
 	<div class="wrapper">
 	    <?= $this->element('sidebar'); ?>
 		<?= $this->assign('title', $title); ?>
@@ -41,6 +50,7 @@
 
 	<!--- Data Tables -->
 	<?= $this->Html->script('jquery-3.1.0.min'); ?>
+	<?= $this->Html->script('/js/pgm-portal-theme'); ?>
 	<?= $this->Html->script('bootstrap.min'); ?>
 	<?= $this->Html->script('material.min'); ?>
 	<?= $this->Html->script('chartist.min'); ?>
@@ -50,5 +60,10 @@
     <?= $this->Html->script('/plugins/datatables/dataTables.bootstrap.min') ?>
 	<?= $this->Html->script('maskedinput.min') ?>
 	<?= $this->Html->script('/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js') ?>
+	<script>
+	if (window.PgmPortalTheme) {
+		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
+	}
+	</script>
 </body>
 </html>

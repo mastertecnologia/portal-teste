@@ -1,0 +1,76 @@
+/**
+ * Layout clear.ctp — conteúdo solto (Bootstrap Material) com tokens PGM.
+ */
+html[data-pgm-theme="dark"] body.pgm-legacy-clear {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .card {
+	background: var(--pgm-bg-surface) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .card-title,
+html[data-pgm-theme="dark"] body.pgm-legacy-clear h1,
+html[data-pgm-theme="dark"] body.pgm-legacy-clear h2,
+html[data-pgm-theme="dark"] body.pgm-legacy-clear h3,
+html[data-pgm-theme="dark"] body.pgm-legacy-clear h4 {
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .form-control {
+	background: var(--pgm-bg-surface) !important;
+	border-color: var(--pgm-border-strong) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .table > thead > tr > th,
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .table > tbody > tr > td {
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .table > thead > tr > th {
+	background: var(--pgm-bg-elevated) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-legacy-clear .modal-content {
+	background: var(--pgm-bg-surface) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="light"] body.pgm-legacy-clear {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text) !important;
+}
+
+.pgm-legacy-theme-fab {
+	position: fixed;
+	bottom: 1.25rem;
+	right: 1.25rem;
+	z-index: 2000;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.45rem 0.85rem;
+	border-radius: 999px;
+	border: 1px solid var(--pgm-border, #e1e4e8);
+	background: var(--pgm-bg-surface, #fff);
+	color: var(--pgm-text, #1a1f2e);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+html[data-pgm-theme="dark"] .pgm-legacy-theme-fab {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+
+.pgm-legacy-theme-fab:hover {
+	filter: brightness(1.05);
+}

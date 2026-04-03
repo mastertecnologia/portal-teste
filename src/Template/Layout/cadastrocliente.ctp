@@ -1,8 +1,16 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="pt-BR">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
+	<script>
+	(function () {
+		var k = 'pgmPortalTheme', def = 'light', v;
+		try { v = localStorage.getItem(k); } catch (e) { v = null; }
+		var t = (v === 'dark' || v === 'light') ? v : def;
+		document.documentElement.setAttribute('data-pgm-theme', t);
+	})();
+	</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Cadastro de Cliente">
     <meta name="author" content="Grid Sistemas">
@@ -19,6 +27,11 @@
 	<?= $this->Html->css("assets/node_modules/toast-master/css/jquery.toast") ?>
 	<?= $this->Html->css("dist/css/style.min") ?>
 	<?= $this->Html->css("dist/css/css.css") ?>
+	<?= $this->Html->css("dist/css/pages/pgm-theme-tokens") ?>
+	<?= $this->Html->css("dist/css/pages/pgm-advanced-module") ?>
+	<?= $this->Html->css("dist/css/pages/pgm-theme-light") ?>
+	<?= $this->Html->css("dist/css/pages/pgm-cadastro-cliente-theme") ?>
+	<?= $this->Html->css("dist/css/pages/pgm-login-theme") ?>
 	<?= $this->Html->css("dist/css/pages/bootstrap-select.css") ?>
 	<?= $this->Html->css("assets/node_modules/register-steps/steps.css") ?>
 	<?= $this->Html->css("dist/css/pages/register3.css") ?>
@@ -26,6 +39,7 @@
 
 	<!--- Scripts -->
 	<?= $this->Html->script("assets/node_modules/jquery/jquery-3.2.1.min") ?>
+	<?= $this->Html->script("/js/pgm-portal-theme") ?>
     <!-- Bootstrap popper Core JavaScript -->
 	<?= $this->Html->script("assets/node_modules/popper/popper.min") ?>
 	<?= $this->Html->script("assets/node_modules/bootstrap/dist/js/bootstrap.min") ?>
@@ -66,7 +80,7 @@
     <?= $this->fetch('script') ?>
 	
 </head>
-<body>
+<body class="layout-no-topbar pgm-auth-page pgm-cadastro-legacy">
 	<!-- Plugins -->
 	<?= $this->Html->script('assets/node_modules/jquery/jquery-3.2.1.min'); ?>
 	<?= $this->Html->script('assets/node_modules/popper/popper.min'); ?>
@@ -84,6 +98,13 @@
 
 	<!-- Conteúdo -->
 	<?= $this->fetch('content') ?>
+	<script>
+	$(function () {
+		if (window.PgmPortalTheme) {
+			PgmPortalTheme.initGuest('light');
+		}
+	});
+	</script>
 </body>
 
 </html>

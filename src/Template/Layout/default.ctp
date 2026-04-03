@@ -1,9 +1,13 @@
+<?php
+use Cake\Routing\Router;
+$pgmThemeAttr = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
+$pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
+?>
 <!DOCTYPE HTML>
-<html>
+<html lang="pt-BR" data-pgm-theme="<?= h($pgmThemeAttr) ?>">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
-	<?php use Cake\Routing\Router; ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 	<?php
 	$csrf = $this->request->getAttribute('csrfToken');
@@ -35,6 +39,7 @@
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
@@ -57,6 +62,7 @@
 
 	<!--- Scripts -->
 	<?= $this->Html->script("/assets/node_modules/jquery/jquery-3.2.1.min") ?>
+	<?= $this->Html->script("/js/pgm-portal-theme") ?>
     <!-- Bootstrap popper Core JavaScript -->
 	<?= $this->Html->script("/assets/node_modules/popper/popper.min") ?>
 	<?= $this->Html->script("/assets/node_modules/bootstrap/dist/js/bootstrap.min") ?>
@@ -132,10 +138,9 @@
 	<?= $this->fetch('meta'); ?>
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
-	<!-- Tema claro (light mode) -->
+	<!-- Tema claro (light mode) — último para precedência -->
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 </head>
-<?php $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : ''; ?>
 <body class="fixed-layout skin-green mini layout-no-topbar <?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($pgmThemeClass) ?> <?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
 	<div class="preloader">

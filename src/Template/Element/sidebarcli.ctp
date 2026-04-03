@@ -171,6 +171,15 @@
 	<div class="pgm-sidebar-footer">
 		<div class="pgm-sidebar-collapse-row">
 			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
+			<?php $isLightCli = (($skin ?? '') === 'skin-pgm-light'); ?>
+			<button type="button" class="pgm-theme-toggle-btn hide-menu pgm-js-theme-toggle" id="pgmThemeToggle"
+				title="<?= $isLightCli ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
+				aria-pressed="<?= $isLightCli ? 'true' : 'false' ?>"
+				aria-label="<?= $isLightCli ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro' ?>"
+				data-current="<?= $isLightCli ? 'light' : 'dark' ?>">
+				<span class="pgm-tt-icon"><?= $isLightCli ? '☀️' : '🌙' ?></span>
+				<span class="pgm-tt-label"><?= $isLightCli ? 'Claro' : 'Escuro' ?></span>
+			</button>
 		</div>
 		<div class="user-profile">
 			<div class="user-pro-body">
@@ -192,3 +201,8 @@
 		</div>
 	</div>
 </aside>
+<script>
+	if (window.PgmPortalTheme) {
+		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
+	}
+</script>

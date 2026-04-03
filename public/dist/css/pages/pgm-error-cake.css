@@ -1,0 +1,63 @@
+/**
+ * Erros CakePHP (errorcake.ctp) — sobrescreve base/cake com tokens PGM.
+ */
+html[data-pgm-theme="dark"] body.pgm-error-cake,
+html[data-pgm-theme="dark"] body.pgm-error-cake #container {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text) !important;
+	min-height: 100vh;
+}
+html[data-pgm-theme="dark"] body.pgm-error-cake #header {
+	border-bottom: 1px solid var(--pgm-border);
+	padding: 1rem;
+}
+html[data-pgm-theme="dark"] body.pgm-error-cake #header h1 {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.pgm-error-cake #content {
+	padding: 1rem 1.25rem;
+	color: var(--pgm-text-secondary);
+}
+html[data-pgm-theme="dark"] body.pgm-error-cake #footer {
+	border-top: 1px solid var(--pgm-border);
+	padding: 1rem;
+	color: var(--pgm-text-muted);
+}
+html[data-pgm-theme="dark"] body.pgm-error-cake #footer a {
+	color: var(--pgm-link) !important;
+}
+
+html[data-pgm-theme="light"] body.pgm-error-cake,
+html[data-pgm-theme="light"] body.pgm-error-cake #container {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text) !important;
+	min-height: 100vh;
+}
+html[data-pgm-theme="light"] body.pgm-error-cake #header h1 {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="light"] body.pgm-error-cake #content {
+	color: var(--pgm-text-secondary);
+}
+html[data-pgm-theme="light"] body.pgm-error-cake #footer a {
+	color: var(--pgm-link) !important;
+}
+
+.pgm-error-cake-fab {
+	position: fixed;
+	bottom: 1.25rem;
+	right: 1.25rem;
+	z-index: 2000;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.45rem 0.85rem;
+	border-radius: 999px;
+	border: 1px solid var(--pgm-border);
+	background: var(--pgm-bg-surface);
+	color: var(--pgm-text);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}

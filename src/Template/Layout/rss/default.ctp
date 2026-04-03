@@ -1,4 +1,7 @@
 <?php
+/**
+ * RSS/XML: saída não é HTML — sem CSS nem data-pgm-theme (consumidores leem XML).
+ */
 if (!isset($channel)):
     $channel = [];
 endif;

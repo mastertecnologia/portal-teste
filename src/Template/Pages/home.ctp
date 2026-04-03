@@ -28,21 +28,40 @@ endif;
 $cakeDescription = 'CakePHP: the rapid development PHP framework';
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <?= $this->Html->charset() ?>
+    <script>
+    (function () {
+        var k = 'pgmPortalTheme';
+        try {
+            var v = localStorage.getItem(k);
+            var t = (v === 'light' || v === 'dark') ? v : 'light';
+            document.documentElement.setAttribute('data-pgm-theme', t);
+        } catch (e) {
+            document.documentElement.setAttribute('data-pgm-theme', 'light');
+        }
+    })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         <?= $cakeDescription ?>
     </title>
 
     <?= $this->Html->meta('icon') ?>
+    <?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
+    <?= $this->Html->css('/dist/css/pages/pgm-pages-home-theme') ?>
     <?= $this->Html->css('base.css') ?>
     <?= $this->Html->css('cake.css') ?>
     <?= $this->Html->css('home.css') ?>
     <link href="https://fonts.googleapis.com/css?family=Raleway:500i|Roboto:300,400,700|Roboto+Mono" rel="stylesheet">
 </head>
 <body class="home">
+<button type="button" class="pgm-pages-home-fab" id="pgmErrorThemeToggle"
+	aria-label="Alternar tema claro ou escuro">
+	<span class="pgm-tt-icon" aria-hidden="true">☀️</span>
+	<span class="pgm-tt-label">Claro</span>
+</button>
 
 <header class="row">
     <div class="header-image"><?= $this->Html->image('cake.logo.svg') ?></div>
@@ -272,5 +291,34 @@ $cakeDescription = 'CakePHP: the rapid development PHP framework';
     </div>
 </div>
 
+<script>
+(function () {
+	var KEY = 'pgmPortalTheme';
+	function write(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+	function syncButton(mode) {
+		var btn = document.getElementById('pgmErrorThemeToggle');
+		if (!btn) return;
+		var L = mode === 'light';
+		btn.setAttribute('aria-pressed', L ? 'true' : 'false');
+		btn.setAttribute('title', L ? 'Mudar para tema escuro' : 'Mudar para tema claro');
+		btn.setAttribute('aria-label', L ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro');
+		var ico = btn.querySelector('.pgm-tt-icon');
+		var lbl = btn.querySelector('.pgm-tt-label');
+		if (ico) ico.textContent = L ? '☀️' : '🌙';
+		if (lbl) lbl.textContent = L ? 'Claro' : 'Escuro';
+	}
+	function apply(mode) {
+		if (mode !== 'light' && mode !== 'dark') mode = 'light';
+		document.documentElement.setAttribute('data-pgm-theme', mode);
+		syncButton(mode);
+		write(mode);
+	}
+	syncButton(document.documentElement.getAttribute('data-pgm-theme') || 'light');
+	document.getElementById('pgmErrorThemeToggle').addEventListener('click', function () {
+		var c = document.documentElement.getAttribute('data-pgm-theme') || 'light';
+		apply(c === 'dark' ? 'light' : 'dark');
+	});
+})();
+</script>
 </body>
 </html>

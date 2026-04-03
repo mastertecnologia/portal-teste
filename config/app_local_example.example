@@ -11,6 +11,10 @@
  *
  * URL pública: preferir APP_FULL_BASE_URL no .env (lido em app.php). Para forçar só neste ficheiro:
  *   'App' => ['fullBaseUrl' => 'https://portal.exemplo.com'],
+ *
+ * Erro HTTP estático (nginx/apache apontando para src/Template/Layout/error.ctp.html):
+ * defina no HTML a meta pgm-app-base com o mesmo valor de APP_BASE (ex. content="/portal")
+ * ou deixe vazio se o app estiver na raiz do site. Ver comentário no próprio ficheiro.
  */
 return [
     'debug' => true,

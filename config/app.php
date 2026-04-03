@@ -46,6 +46,7 @@ return [
         'namespace' => 'App',
         'encoding' => env('APP_ENCODING', 'UTF-8'),
         'defaultLocale' => env('APP_DEFAULT_LOCALE', 'pt_BR'),
+        // Prefixo URL (ex. /portal). Alinhar com <meta name="pgm-app-base" content="..."> em Template/Layout/error.ctp.html se usar essa página estática.
         'base' => env('APP_BASE', false),
         'dir' => 'src',
         // No Linux com estrutura separada: defina WEBROOT_DIR=public no .env

@@ -307,8 +307,10 @@
 			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
 			<!-- Toggle tema claro/escuro -->
 			<?php $isLight = (($skin ?? '') === 'skin-pgm-light'); ?>
-			<button type="button" class="pgm-theme-toggle-btn hide-menu" id="pgmThemeToggle"
+			<button type="button" class="pgm-theme-toggle-btn hide-menu pgm-js-theme-toggle" id="pgmThemeToggle"
 				title="<?= $isLight ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
+				aria-pressed="<?= $isLight ? 'true' : 'false' ?>"
+				aria-label="<?= $isLight ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro' ?>"
 				data-current="<?= $isLight ? 'light' : 'dark' ?>">
 				<span class="pgm-tt-icon"><?= $isLight ? '☀️' : '🌙' ?></span>
 				<span class="pgm-tt-label"><?= $isLight ? 'Claro' : 'Escuro' ?></span>
@@ -416,17 +418,7 @@
 		$('.pgm-nc').removeClass('in');
 	}, 0);
 
-	// ── Toggle tema claro / escuro ────────────────────────────
-	$('#pgmThemeToggle').on('click', function() {
-		var $btn = $(this);
-		var current = $btn.data('current');
-		var next = (current === 'dark') ? 'light' : 'dark';
-		$.ajax({
-			type: 'POST',
-			url: "<?= Router::url(['controller' => 'Users', 'action' => 'selectTheme']) ?>",
-			data: { theme: next },
-			success: function() { location.reload(); },
-			error: function() { bootbox.alert('Erro ao trocar o tema. Tente novamente.'); }
-		});
-	});
+	if (window.PgmPortalTheme) {
+		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
+	}
 </script>

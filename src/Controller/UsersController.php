@@ -1358,12 +1358,17 @@ class UsersController extends AppController {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
 
-		if ($this->request->is('ajax')) {
+		if ($this->request->is('post')) {
 			$theme = $this->request->getData('theme');
 			$skin  = ($theme === 'light') ? 'skin-pgm-light' : 'skin-green';
 			$user  = $this->Users->get($this->Auth->user('id'));
 			$user->skin = $skin;
 			$this->Users->save($user);
+			$u = $this->Auth->user();
+			if (is_array($u)) {
+				$u['skin'] = $skin;
+				$this->Auth->setUser($u);
+			}
 		}
 		return $this->jsonResponse(['ok' => true]);
 	}

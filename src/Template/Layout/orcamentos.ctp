@@ -1,9 +1,13 @@
+<?php
+use Cake\Routing\Router;
+$pgmOrcTheme = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
+$pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
+?>
 <!DOCTYPE HTML>
-<html>
+<html lang="pt-BR" data-pgm-theme="<?= h($pgmOrcTheme) ?>">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
-	<?php use Cake\Routing\Router; ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="Portal PGM">
 	<meta name="author" content="Grid Sistemas">
@@ -17,6 +21,11 @@
 	<?= $this->Html->css("/dist/css/pages/stylish-tooltip") ?>
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
+	<?php if ($pgmOrcTheme === 'light') : ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
+	<?php endif; ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']) ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
@@ -59,7 +68,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-green mini">
+<body class="fixed-layout skin-green mini layout-no-topbar <?= h($pgmOrcThemeClass) ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
 		<div class="loader">

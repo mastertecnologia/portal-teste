@@ -77,3 +77,33 @@
   color: #9a9890 !important;
   border-top-color: #e5e4e0 !important;
 }
+
+/* Tema escuro (html[data-pgm-theme] definido pelo layout Cake / portal) */
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-strip {
+  background-color: var(--pgm-bg-surface, #1e2329) !important;
+  color: var(--pgm-text, #e8eaed) !important;
+  border-color: var(--pgm-border, #3d4554) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-strip h1,
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-title {
+  color: var(--pgm-text, #e8eaed) !important;
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-strip a {
+  color: var(--pgm-primary, #00d9a0) !important;
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-strip a:hover {
+  color: var(--pgm-primary-hover, #5cecc4) !important;
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-muted {
+  color: var(--pgm-text-muted, #9aa0a8) !important;
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-hint {
+  color: var(--pgm-text-muted, #9aa0a8) !important;
+  border-top-color: var(--pgm-border, #3d4554) !important;
+}

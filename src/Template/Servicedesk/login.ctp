@@ -28,6 +28,12 @@ $this->append(
 			<img src="<?= h($webroot) ?>assets/images/pgm.png" alt="PGM Soluções em TI" class="logo"/>
 		</div>
 		<span class="sd-login-badge">Central de Atendimento</span>
+		<div class="pgm-auth-theme-bar" style="margin-top:0.25rem;">
+			<button type="button" class="pgm-auth-theme-toggle" id="pgmAuthThemeToggle" aria-label="Alternar tema claro ou escuro">
+				<span class="pgm-auth-tt-ico" aria-hidden="true">☀️</span>
+				<span class="pgm-auth-tt-txt">Claro</span>
+			</button>
+		</div>
 		<div class="login-erp-title title" id="sd-login-title">Acesso PGM / Master</div>
 		<p class="login-erp-subtitle sd-login-hint" id="sd-login-subtitle">Equipe e usuários internos — use o mesmo usuário e senha do ERP.</p>
 

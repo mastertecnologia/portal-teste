@@ -15,6 +15,12 @@ $this->end();
 </style>
 <section id="wrapper" class="step-register cadastro-erp-wrap">
 	<div class="cadastro-erp-card">
+		<div class="pgm-auth-theme-bar">
+			<button type="button" class="pgm-auth-theme-toggle" id="pgmAuthThemeToggle" aria-label="Alternar tema claro ou escuro">
+				<span class="pgm-auth-tt-ico" aria-hidden="true">☀️</span>
+				<span class="pgm-auth-tt-txt">Claro</span>
+			</button>
+		</div>
 		<h1 class="cadastro-erp-title">Cadastre-se</h1>
 		<?= $this->Form->create($user, ['id' => "msform", 'method' => 'post', 'class' => '', 'autocomplete' => "nope"]) ?>
 			<div class="row justify-content-center">
