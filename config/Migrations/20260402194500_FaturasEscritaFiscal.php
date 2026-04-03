@@ -3,6 +3,9 @@
  * Snapshot de escrita fiscal da locação (espelho dos totais tributários / transparência).
  * Campos alinhados a telas tipo DB9; preenchimento automático inicial via IBPT nos totais aproximados.
  * Rodar: bin/cake migrations migrate
+ *
+ * MySQL: esta versão ignora adapters não-pgsql; use também
+ * 20260402194600_FaturasEscritaFiscalEnsureAllDrivers (idempotente se a tabela já existir).
  */
 use Migrations\AbstractMigration;
 
