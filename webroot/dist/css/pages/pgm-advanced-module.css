@@ -196,3 +196,148 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form sel
 	background-color: #1a1f27;
 	color: #e6edf3;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLOBAL DARK THEME — todos os .card no layout escuro (exclui pgm-theme-light)
+   Corrige pages que usam <div class="card"> sem a classe pgm-adv-panel.
+   ══════════════════════════════════════════════════════════════════════════════ */
+body.layout-no-topbar:not(.pgm-theme-light) .card {
+	background-color: #161b22 !important;
+	border: 1px solid rgba(255,255,255,.08) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card-body {
+	background-color: transparent !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card-header {
+	background-color: rgba(255,255,255,.05) !important;
+	border-color: rgba(255,255,255,.08) !important;
+	color: #e6edf3 !important;
+}
+/* Inputs / selects / textarea */
+body.layout-no-topbar:not(.pgm-theme-light) .card .form-control {
+	background: #13161d !important;
+	border-color: rgba(255,255,255,.12) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .form-control:focus {
+	border-color: rgba(38,198,218,.45) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .form-control[readonly] {
+	background: rgba(255,255,255,.05) !important;
+	color: rgba(230,237,243,.5) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .form-control option {
+	background: #1a1f27;
+	color: #e6edf3;
+}
+/* Labels */
+body.layout-no-topbar:not(.pgm-theme-light) .card label,
+body.layout-no-topbar:not(.pgm-theme-light) .card .control-label {
+	color: rgba(230,237,243,.75) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .text-muted {
+	color: rgba(230,237,243,.45) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card p {
+	color: #e6edf3;
+}
+/* Tabelas */
+body.layout-no-topbar:not(.pgm-theme-light) .card .table {
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .table thead th {
+	background: rgba(255,255,255,.03) !important;
+	border-color: rgba(255,255,255,.1) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .table td,
+body.layout-no-topbar:not(.pgm-theme-light) .card .table th {
+	border-color: rgba(255,255,255,.07) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .table-hover tbody tr:hover td {
+	background: rgba(255,255,255,.04) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .table .dataTables_empty {
+	color: rgba(230,237,243,.5) !important;
+}
+/* Nav tabs dentro de cards */
+body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs {
+	border-color: rgba(255,255,255,.1) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs .nav-link {
+	color: rgba(230,237,243,.55) !important;
+	background: transparent !important;
+	border-color: transparent !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs .nav-link.active {
+	color: #26c6da !important;
+	background: rgba(255,255,255,.04) !important;
+	border-color: rgba(255,255,255,.1) rgba(255,255,255,.1) transparent !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs .nav-link:hover:not(.active) {
+	color: rgba(230,237,243,.85) !important;
+	background: rgba(255,255,255,.04) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .tab-content,
+body.layout-no-topbar:not(.pgm-theme-light) .card .tab-pane {
+	background: transparent !important;
+	color: #e6edf3 !important;
+}
+/* HR e separadores */
+body.layout-no-topbar:not(.pgm-theme-light) .card hr {
+	border-color: rgba(255,255,255,.1) !important;
+}
+/* Alerts dentro de cards */
+body.layout-no-topbar:not(.pgm-theme-light) .card .alert-info {
+	background: rgba(38,198,218,.12) !important;
+	border-color: rgba(38,198,218,.25) !important;
+	color: #9ef0f8 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .alert-secondary {
+	background: rgba(255,255,255,.06) !important;
+	border-color: rgba(255,255,255,.1) !important;
+	color: rgba(230,237,243,.7) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .alert-warning {
+	background: rgba(255,193,7,.12) !important;
+	border-color: rgba(255,193,7,.25) !important;
+	color: #ffe082 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .alert-danger {
+	background: rgba(220,53,69,.12) !important;
+	border-color: rgba(220,53,69,.25) !important;
+	color: #ff8a9a !important;
+}
+/* DataTables */
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_length,
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_filter,
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_info,
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_paginate {
+	color: rgba(230,237,243,.6) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_filter input,
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_length select {
+	background: #13161d !important;
+	border-color: rgba(255,255,255,.12) !important;
+	color: #e6edf3 !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .paginate_button {
+	background: rgba(255,255,255,.05) !important;
+	border-color: rgba(255,255,255,.1) !important;
+	color: rgba(230,237,243,.7) !important;
+}
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .paginate_button.current,
+body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .paginate_button.current:hover {
+	background: rgba(38,198,218,.2) !important;
+	border-color: rgba(38,198,218,.35) !important;
+	color: #26c6da !important;
+}
+/* well (Bootstrap 3 legacy) */
+body.layout-no-topbar:not(.pgm-theme-light) .card .well,
+body.layout-no-topbar:not(.pgm-theme-light) .well {
+	background: rgba(255,255,255,.05) !important;
+	border-color: rgba(255,255,255,.1) !important;
+	color: #e6edf3 !important;
+}
