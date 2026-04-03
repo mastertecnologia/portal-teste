@@ -10,22 +10,22 @@
 		text-align: center	 !important;
 		padding: 0.5em 0.3em !important;
 	}
-	/* ── Seções do formulário ── */
+	/* ── Seções do formulário — cores transparentes p/ dark theme ── */
 	.erp-section {
-		border: 1px solid #e8ecef;
+		border: 1px solid rgba(255,255,255,.1);
 		border-radius: 4px;
 		margin-bottom: 14px;
 		overflow: hidden;
 	}
 	.erp-section-title {
-		background: #f5f7f9;
-		border-bottom: 1px solid #e8ecef;
+		background: rgba(255,255,255,.06);
+		border-bottom: 1px solid rgba(255,255,255,.08);
 		padding: 6px 14px;
 		font-size: 11px;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: .6px;
-		color: #455a64;
+		color: rgba(255,255,255,.55);
 	}
 	.erp-section-body {
 		padding: 12px 14px 4px;
@@ -38,7 +38,7 @@
 		flex-wrap: wrap;
 		gap: 6px;
 		padding: 10px 0 4px;
-		border-top: 1px solid #e8ecef;
+		border-top: 1px solid rgba(255,255,255,.1);
 		margin-top: 8px;
 	}
 	/* Tabela de itens */
@@ -46,13 +46,13 @@
 	#carrinho .table td { font-size: 13px; vertical-align: middle; }
 	/* Adicionar item */
 	.erp-additem-bar {
-		background: #f9fbfc;
-		border: 1px dashed #b0bec5;
+		background: rgba(255,255,255,.04);
+		border: 1px dashed rgba(255,255,255,.15);
 		border-radius: 4px;
 		padding: 10px 14px 6px;
 		margin-bottom: 10px;
 	}
-	.erp-additem-bar .control-label { font-size: 11px; color: #78909c; }
+	.erp-additem-bar .control-label { font-size: 11px; color: rgba(255,255,255,.45); }
 </style>
 <div class="col-md-12">
 	<div class="card">

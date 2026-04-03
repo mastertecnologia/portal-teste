@@ -40,20 +40,20 @@ $sectionEnd = function () {
 
 <style>
 .erp-ef-section {
-    border: 1px solid #e8ecef;
+    border: 1px solid rgba(255,255,255,.1);
     border-radius: 4px;
     margin-bottom: 12px;
     overflow: hidden;
 }
 .erp-ef-section-title {
-    background: #f5f7f9;
-    border-bottom: 1px solid #e8ecef;
+    background: rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.08);
     padding: 6px 14px;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .6px;
-    color: #455a64;
+    color: rgba(255,255,255,.55);
 }
 .erp-ef-section-body {
     padding: 12px 14px 4px;
