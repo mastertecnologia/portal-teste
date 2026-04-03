@@ -10,6 +10,49 @@
 		text-align: center	 !important;
 		padding: 0.5em 0.3em !important;
 	}
+	/* ── Seções do formulário ── */
+	.erp-section {
+		border: 1px solid #e8ecef;
+		border-radius: 4px;
+		margin-bottom: 14px;
+		overflow: hidden;
+	}
+	.erp-section-title {
+		background: #f5f7f9;
+		border-bottom: 1px solid #e8ecef;
+		padding: 6px 14px;
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: .6px;
+		color: #455a64;
+	}
+	.erp-section-body {
+		padding: 12px 14px 4px;
+	}
+	/* Linha de ação premium */
+	.erp-action-bar {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		flex-wrap: wrap;
+		gap: 6px;
+		padding: 10px 0 4px;
+		border-top: 1px solid #e8ecef;
+		margin-top: 8px;
+	}
+	/* Tabela de itens */
+	#carrinho .table thead th { font-size: 12px; color: #26c6da; font-weight: 600; border-bottom: 2px solid #26c6da; }
+	#carrinho .table td { font-size: 13px; vertical-align: middle; }
+	/* Adicionar item */
+	.erp-additem-bar {
+		background: #f9fbfc;
+		border: 1px dashed #b0bec5;
+		border-radius: 4px;
+		padding: 10px 14px 6px;
+		margin-bottom: 10px;
+	}
+	.erp-additem-bar .control-label { font-size: 11px; color: #78909c; }
 </style>
 <div class="col-md-12">
 	<div class="card">
@@ -33,122 +76,157 @@
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane <?= $aba == 1 ? 'active' : '' ?>" id="contratos">
-					<?= $this->Form->create($fatura, ['class' => 'form-material']); ?> 
-						<div class="row">
-							<div class="col-xl-6 col-lg-6 com-md-6 col-sm-12 col-xs-12">
-								<label class="control-label"> Cliente </label>
-								<?= $this->Form->control('idcliente', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'label' => false, 'required' => true]) ?>
-							</div>
-							<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
-								<label class="control-label"> Contrato: </label>
-								<?= $this->Form->control('contrato', ['class' => 'form-control', 'value' => $fatura->nro, 'label' => false, 'required' => true, 'readonly' => true]) ?>
-							</div>
-							<div class="col-xl-2 col-lg-2 com-md-3 col-sm-6 col-xs-12">
-								<label class="control-label"> Forma de Pagamento </label>
-								<?= $this->Form->control('pagamento', ['class' => 'form-control', 'label' => false, 'options' => C_OrdensPagamento]) ?>
-							</div>
-						</div>
-						<div class="row m-t-5">
-							<div class="col-xl-2 col-lg-2 com-md-3 col-sm-6 col-xs-12">
-								<div class="form-group">
-									<label class="control-label text-muted"> Data emissão </label>
-									<?= $this->Form->text('dtemissao', ['class' => 'form-control datepicker ', 'id' => 'dtemissao', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
-								</div>
-							</div>
-							<div class="col-xl-2 col-lg-2 com-md-3 col-sm-6 col-xs-12">
-								<div class="form-group">
-									<label class="control-label text-muted"> Previsão retorno </label>
-									<?= $this->Form->text('dtretorno', ['class' => 'form-control datepicker ', 'id' => 'dtretorno', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
-								</div>
-							</div>
-							<div class="col-xl-2 col-lg-2 com-md-3 col-sm-6 col-xs-12">
-								<div class="form-group">
-									<label class="control-label text-muted"> Data devolução </label>
-									<?= $this->Form->text('dtdevolucao', ['class' => 'form-control datepicker ', 'id' => 'dtdevolucao', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
-								</div>
-							</div>
-							<div class="col-xl-2 col-lg-2 com-md-3 col-sm-6 col-xs-12">
-								<div class="form-group">
-									<label class="control-label text-muted"> Data vencimento </label>
-									<?= $this->Form->text('vencimento', ['class' => 'form-control datepicker ', 'id' => 'vencimento', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-xl-3 col-lg-3 com-md-4 col-sm-6 col-xs-12">
-								<label class="control-label"> Equipamento(s) instalado(s) em: </label>
-								<?= $this->Form->control('local', ['data-live-search' => 'true', 'class' => 'selectpicker form-control', 'options' => $cidades, 'label' => false]) ?>
-							</div>
-							<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
-								<label class="control-label"> Referente: </label>
-								<?= $this->Form->control('referente', ['class' => 'form-control', 'label' => false, 'required' => true]) ?>
-							</div>
-							<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
-								<label class="control-label"> Tipo: </label>
-								<?= $this->Form->control('tipo', ['class' => 'form-control', 'label' => false, 'required' => true, 'options' => C_LocacaoTipoArray]) ?>
-							</div>
-							<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
-								<label class="control-label"> Status: </label> <br>
-								<?= LocacaoStatus($fatura->status) ?>
-							</div>
-						</div>
-						<hr>
-						<div class="row">
-							<div class="col-lg-2 col-sm-6">
-								<div class="form-group ">
-									<label class="control-label text-muted"> Desconto </label>
-									<?= $this->Form->text('desconto', ['onkeypress' => 'return SomenteNumero(event, "#desconto")', 'id' => 'desconto', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
-								</div>
-							</div>
-							<div class="col-lg-2 col-sm-6">
-								<div class="form-group ">
-									<label class="control-label text-muted"> Outros gastos/frete </label>
-									<?= $this->Form->text('outrosgastos', ['onkeypress' => 'return SomenteNumero(event, "#outrosgastos")', 'id' => 'outrosgastos', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-12">
-								<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10']) ?>
-							</div>
-						</div>
-						<?php if($fatura->status == C_LocacaoStatusPendente) { ?>
-							<h4 class='texte-center m-t-10'> Itens </h4>
-							<div class="row m-t-10">
-								<div class="col-xl-1 col-lg-2 com-md-4 col-sm-6 col-xs-12">
-									<label class="control-label text-muted"> Código </label>
-									<?= $this->Form->control('codigo', ['class' => 'form-control selectpicker', 'data-live-search', 'options' => $produtosOpt, 'label' => false]) ?>
-								</div>
-								<div class="col-xl-5 col-lg-5 com-md-4 col-sm-6 col-xs-12">
-									<label class="control-label text-muted"> Descrição da Locação </label>
-									<?= $this->Form->control('descricao', ['class' => 'descricao form-control', 'label' => false]) ?>
-								</div>
-								<div class="col-xl-1 col-lg-1 com-md-4 col-sm-6 col-xs-12">
-									<div class="form-group">
-										<label class="control-label text-muted"> Quantidade </label>
-										<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
+					<?= $this->Form->create($fatura, ['class' => 'form-material']); ?>
+
+						<!-- ── Identificação ── -->
+						<div class="erp-section">
+							<div class="erp-section-title">Identificação</div>
+							<div class="erp-section-body">
+								<div class="row">
+									<div class="col-xl-6 col-lg-6 com-md-6 col-sm-12 col-xs-12">
+										<label class="control-label"> Cliente </label>
+										<?= $this->Form->control('idcliente', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'label' => false, 'required' => true]) ?>
 									</div>
-								</div>
-								<div class="col-xl-2 col-lg-2 com-md-4 col-sm-6 col-xs-12">
-									<div class="form-group">
-										<label class="control-label text-muted"> Valor Unitário </label>
-										<?= $this->Form->control('valoritem', ['onkeypress' => 'return SomenteNumero(event, "#valoritem")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+									<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label"> Contrato </label>
+										<?= $this->Form->control('contrato', ['class' => 'form-control', 'value' => $fatura->nro, 'label' => false, 'required' => true, 'readonly' => true]) ?>
 									</div>
-								</div>
-								<div class="col-xl-2 col-lg-2 com-md-4 col-sm-6 col-xs-12">
-									<div class="form-group">
-										<label class="control-label text-muted"> Valor Total </label>
-										<?= $this->Form->control('valortotal', ['onkeypress' => 'return SomenteNumero(event, "#valortotal")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+									<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label"> Forma de Pagamento </label>
+										<?= $this->Form->control('pagamento', ['class' => 'form-control', 'label' => false, 'options' => C_OrdensPagamento]) ?>
 									</div>
 								</div>
 							</div>
-							<div class="row">
-								<div class="col-12">
-									<button class="btn btn-secondary float-right" id='btn-additem'> Adicionar </button>
+						</div>
+
+						<!-- ── Datas ── -->
+						<div class="erp-section">
+							<div class="erp-section-title">Datas</div>
+							<div class="erp-section-body">
+								<div class="row">
+									<div class="col-xl-2 col-lg-3 com-md-3 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Data emissão </label>
+											<?= $this->Form->text('dtemissao', ['class' => 'form-control datepicker ', 'id' => 'dtemissao', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
+										</div>
+									</div>
+									<div class="col-xl-2 col-lg-3 com-md-3 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Previsão retorno </label>
+											<?= $this->Form->text('dtretorno', ['class' => 'form-control datepicker ', 'id' => 'dtretorno', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
+										</div>
+									</div>
+									<div class="col-xl-2 col-lg-3 com-md-3 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Data devolução </label>
+											<?= $this->Form->text('dtdevolucao', ['class' => 'form-control datepicker ', 'id' => 'dtdevolucao', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
+										</div>
+									</div>
+									<div class="col-xl-2 col-lg-3 com-md-3 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Data vencimento </label>
+											<?= $this->Form->text('vencimento', ['class' => 'form-control datepicker ', 'id' => 'vencimento', 'default' => date('d/m/Y'), 'placeholder' => 'Insira a data', 'required' => true]) ?>
+										</div>
+									</div>
 								</div>
 							</div>
-						<?php } ?>
+						</div>
+
+						<!-- ── Configuração ── -->
+						<div class="erp-section">
+							<div class="erp-section-title">Configuração</div>
+							<div class="erp-section-body">
+								<div class="row">
+									<div class="col-xl-3 col-lg-3 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label"> Equipamento(s) instalado(s) em </label>
+										<?= $this->Form->control('local', ['data-live-search' => 'true', 'class' => 'selectpicker form-control', 'options' => $cidades, 'label' => false]) ?>
+									</div>
+									<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label"> Referente </label>
+										<?= $this->Form->control('referente', ['class' => 'form-control', 'label' => false, 'required' => true]) ?>
+									</div>
+									<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label"> Tipo </label>
+										<?= $this->Form->control('tipo', ['class' => 'form-control', 'label' => false, 'required' => true, 'options' => C_LocacaoTipoArray]) ?>
+									</div>
+									<div class="col-xl-2 col-lg-3 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label"> Status </label><br>
+										<?= LocacaoStatus($fatura->status) ?>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- ── Valores ── -->
+						<div class="erp-section">
+							<div class="erp-section-title">Valores</div>
+							<div class="erp-section-body">
+								<div class="row">
+									<div class="col-lg-2 col-sm-6">
+										<div class="form-group">
+											<label class="control-label text-muted"> Desconto </label>
+											<?= $this->Form->text('desconto', ['onkeypress' => 'return SomenteNumero(event, "#desconto")', 'id' => 'desconto', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+										</div>
+									</div>
+									<div class="col-lg-2 col-sm-6">
+										<div class="form-group">
+											<label class="control-label text-muted"> Outros gastos/frete </label>
+											<?= $this->Form->text('outrosgastos', ['onkeypress' => 'return SomenteNumero(event, "#outrosgastos")', 'id' => 'outrosgastos', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Salvar -->
+						<div class="erp-action-bar" style="border-top:none;margin-top:0;padding-top:0;">
+							<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
+						</div>
+
+						<!-- ── Itens (somente status pendente) ── -->
+						<?php if ($fatura->status == C_LocacaoStatusPendente) : ?>
+						<div class="erp-section m-t-15">
+							<div class="erp-section-title">Adicionar item</div>
+							<div class="erp-section-body erp-additem-bar" style="border:none;border-radius:0;">
+								<div class="row">
+									<div class="col-xl-1 col-lg-2 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label text-muted"> Código </label>
+										<?= $this->Form->control('codigo', ['class' => 'form-control selectpicker', 'data-live-search', 'options' => $produtosOpt, 'label' => false]) ?>
+									</div>
+									<div class="col-xl-5 col-lg-5 com-md-4 col-sm-6 col-xs-12">
+										<label class="control-label text-muted"> Descrição da Locação </label>
+										<?= $this->Form->control('descricao', ['class' => 'descricao form-control', 'label' => false]) ?>
+									</div>
+									<div class="col-xl-1 col-lg-1 com-md-4 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Quantidade </label>
+											<?= $this->Form->control('quantidade', ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false]) ?>
+										</div>
+									</div>
+									<div class="col-xl-2 col-lg-2 com-md-4 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Valor Unitário </label>
+											<?= $this->Form->control('valoritem', ['onkeypress' => 'return SomenteNumero(event, "#valoritem")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+										</div>
+									</div>
+									<div class="col-xl-2 col-lg-2 com-md-4 col-sm-6 col-xs-12">
+										<div class="form-group">
+											<label class="control-label text-muted"> Valor Total </label>
+											<?= $this->Form->control('valortotal', ['onkeypress' => 'return SomenteNumero(event, "#valortotal")', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-12">
+										<button class="btn btn-secondary float-right" id='btn-additem'> Adicionar </button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<?php endif; ?>
+
 						<div id="carrinho" class='m-t-10'> </div>
+
 						<?php if ($fatura->status == C_LocacaoStatusPendente) : ?>
 						<div class="row m-t-5">
 							<div class="col-12">
@@ -158,33 +236,33 @@
 							</div>
 						</div>
 						<?php endif; ?>
-						<div class="row">
-							<div class="col-12">
-								<?= $this->Html->link('Imprimir', ['action' => 'imprimir', $fatura->id], ['target' => '_blank', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange float-right m-t-10']) ?>
-								<?= $this->Html->link('Compartilhar', ['action' => 'view', $fatura->hash], ['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-compartilhar float-right m-t-10 m-r-5']) ?>
-								<?php
-									if($fatura->status == C_LocacaoStatusPendente) {
-										echo $this->Html->link('Aprovar', ['action' => 'aprovar', $fatura->id], ['id' => 'btn-aprovar', 'class' => 'btn btn-pgm btn-pgm-salvar btn-success float-right m-t-10 m-r-5']);
-										echo $this->Html->link('Rejeitar', ['action' => 'rejeitar', $fatura->id], ['id' => 'btn-rejeitar', 'class' => 'btn btn-danger float-right m-t-10 m-r-5']);
-									}
-									if($fatura->status == C_LocacaoStatusAprovado) {
-										echo $this->Html->link('Receber', ['action' => 'receber', $fatura->id], ['target' => '_blank', 'id' => 'btn-receber', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info float-right m-t-10 m-r-5']);
-									}
-								?>
-							</div>
+
+						<div class="erp-action-bar">
+							<?php if ($fatura->status == C_LocacaoStatusPendente): ?>
+							<?= $this->Html->link('Rejeitar',  ['action' => 'rejeitar', $fatura->id], ['id' => 'btn-rejeitar', 'class' => 'btn btn-danger']) ?>
+							<?= $this->Html->link('Aprovar',   ['action' => 'aprovar',  $fatura->id], ['id' => 'btn-aprovar',  'class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
+							<?php endif; ?>
+							<?php if ($fatura->status == C_LocacaoStatusAprovado): ?>
+							<?= $this->Html->link('Receber', ['action' => 'receber', $fatura->id], ['target' => '_blank', 'id' => 'btn-receber', 'class' => 'btn btn-pgm btn-pgm-situacao btn-info']) ?>
+							<?php endif; ?>
+							<?= $this->Html->link('Compartilhar', ['action' => 'view', $fatura->hash], ['class' => 'btn btn-pgm btn-pgm-email btn-purple btn-compartilhar']) ?>
+							<?= $this->Html->link('Imprimir',     ['action' => 'imprimir', $fatura->id], ['target' => '_blank', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange']) ?>
 						</div>
+
 					<?= $this->Form->end(); ?>
 				</div>
 				<div class="tab-pane <?= $aba == 2 ? 'active' : '' ?>" id="recibos">
 					<table class="table table-hover table-row-clickable" id="tableRecibos">
-						<thead class="text-primary">
-							<th> Número </th>
-							<th> Pagamento </th>
-							<th> Data Recebimento </th>
-							<th> Descontos </th>
-							<th> Juros </th>
-							<th> Valor Pago </th>
-							<th> Ações </th>
+						<thead>
+							<tr>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Número </th>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Pagamento </th>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Data Recebimento </th>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Descontos </th>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Juros </th>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Valor Pago </th>
+								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Ações </th>
+							</tr>
 						</thead>
 						<tbody>
 							<?php if (empty($recibos)) : ?>
