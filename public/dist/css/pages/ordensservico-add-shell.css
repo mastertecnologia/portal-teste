@@ -1,173 +1,393 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap');
 
-/* Área útil: alinha com o shell global sem “encostar” na sidebar */
+/* ═══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — ERP Premium Dark Theme
+   ═══════════════════════════════════════════════════════════════════ */
+.os-add-shell {
+	--os-bg:          #090b10;
+	--os-bg2:         #0f1117;
+	--os-bg3:         #161921;
+	--os-bg4:         #1d2130;
+	--os-bg5:         #232840;
+	--os-border:      rgba(255,255,255,.065);
+	--os-border2:     rgba(255,255,255,.11);
+	--os-border3:     rgba(255,255,255,.18);
+	--os-text:        #edf0fa;
+	--os-text2:       #8890a8;
+	--os-text3:       #4c5470;
+	--os-accent:      #3d7eff;
+	--os-accent2:     #2458d9;
+	--os-accent-glow: rgba(61,126,255,.13);
+	--os-success:     #22c55e;
+	--os-panel-radius:14px;
+
+	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	font-size: 13px;
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border);
+	border-radius: var(--os-panel-radius);
+	box-shadow: 0 8px 32px rgba(0,0,0,.35);
+	margin-bottom: .75rem;
+	overflow: hidden;
+	color: var(--os-text2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE WRAPPER
+   ═══════════════════════════════════════════════════════════════════ */
 body.os-add-page.layout-no-topbar .page-wrapper > .container-fluid {
-	padding-left: clamp(12px, 2.2vw, 28px);
+	padding-left:  clamp(12px, 2.2vw, 28px);
 	padding-right: clamp(12px, 2.2vw, 28px);
 	padding-bottom: 28px;
 }
 
-.os-add-page-root {
-	width: 100%;
-}
+.os-add-page-root { width: 100%; }
 
+/* ═══════════════════════════════════════════════════════════════════
+   OUTER SHELL (transparent structured wrapper)
+   ═══════════════════════════════════════════════════════════════════ */
 .os-add-shell.os-add-shell--structured {
-	background: transparent !important;
-	border: none !important;
-	box-shadow: none !important;
+	background:    transparent !important;
+	border:        none !important;
+	box-shadow:    none !important;
 	border-radius: 0 !important;
 	margin-bottom: 0 !important;
-	overflow: visible !important;
+	overflow:      visible !important;
 }
 
 .os-add-shell.os-add-shell--structured .os-add-shell-body {
 	padding: 0 0 12px !important;
 	max-width: min(1280px, 100%);
-	margin-left: auto;
+	margin-left:  auto;
 	margin-right: auto;
 }
 
-/* Painéis = blocos coesos dentro do fluxo vertical */
+/* ═══════════════════════════════════════════════════════════════════
+   PANELS  — card containers
+   ═══════════════════════════════════════════════════════════════════ */
 .os-add-panel {
-	background: var(--os-bg2);
-	border: 1px solid var(--os-border);
-	border-radius: 12px;
+	background:    var(--os-bg2);
+	border:        1px solid var(--os-border);
+	border-radius: var(--os-panel-radius);
 	margin-bottom: 20px;
-	box-shadow: 0 4px 28px rgba(0, 0, 0, 0.22);
-	overflow: hidden;
+	box-shadow:    0 2px 8px rgba(0,0,0,.18), 0 8px 32px rgba(0,0,0,.22);
+	overflow:      hidden;
+	position:      relative;
 }
 
-.os-add-panel--items {
-	margin-bottom: 16px;
+/* Accent top stripe on the form panel (not the grid panel) */
+.os-add-panel:not(.os-add-panel--items)::before {
+	content: '';
+	position: absolute;
+	top: 0; left: 0; right: 0;
+	height: 2px;
+	background: linear-gradient(90deg, var(--os-accent) 0%, rgba(61,126,255,.25) 60%, transparent 100%);
+	border-radius: var(--os-panel-radius) var(--os-panel-radius) 0 0;
 }
 
+.os-add-panel--items { margin-bottom: 16px; }
+
+/* — Panel header — */
 .os-add-panel__head {
-	padding: 16px 20px 14px;
+	padding: 18px 24px 15px;
 	border-bottom: 1px solid var(--os-border);
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, transparent 55%);
+	background: linear-gradient(180deg, rgba(61,126,255,.04) 0%, transparent 100%);
+}
+
+.os-add-panel__head--items {
+	background: linear-gradient(180deg, rgba(255,255,255,.018) 0%, transparent 100%);
 }
 
 .os-add-panel__headline {
-	display: flex;
-	flex-wrap: wrap;
+	display:     flex;
+	flex-wrap:   wrap;
 	align-items: center;
 	gap: 10px;
-	margin-bottom: 8px;
+	margin-bottom: 7px;
 }
 
 .os-add-panel__title {
-	font-size: 15px;
-	font-weight: 600;
-	color: var(--os-text);
-	margin: 0;
-	letter-spacing: 0.02em;
-	line-height: 1.3;
+	font-size:      16px;
+	font-weight:    650;
+	color:          var(--os-text);
+	margin:         0;
+	letter-spacing: .01em;
+	line-height:    1.3;
 }
 
 .os-add-panel__tag {
-	font-size: 10px;
-	font-weight: 600;
+	font-size:      10px;
+	font-weight:    700;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--os-accent);
-	border: 1px solid rgba(61, 126, 255, 0.38);
-	padding: 4px 11px;
-	border-radius: 999px;
-	background: rgba(61, 126, 255, 0.09);
+	letter-spacing: .09em;
+	color:          var(--os-accent);
+	border:         1px solid rgba(61,126,255,.28);
+	padding:        3px 10px;
+	border-radius:  999px;
+	background:     rgba(61,126,255,.08);
 }
 
 .os-add-panel__meta {
-	margin: 0;
-	font-size: 12px;
-	color: var(--os-text3);
+	margin:      0;
+	font-size:   12px;
+	color:       var(--os-text3);
 	line-height: 1.5;
-	max-width: 52rem;
+	max-width:   54rem;
 }
 
 .os-add-panel__meta strong {
-	color: var(--os-text2);
+	color:       var(--os-text2);
 	font-weight: 600;
 }
 
-.os-add-panel__body {
-	padding: 20px 22px 22px;
-}
+/* — Panel body — */
+.os-add-panel__body        { padding: 24px 26px 26px; }
+.os-add-panel__body--items { padding: 0; }
 
-.os-add-panel__body--items {
-	padding: 0;
-}
+/* ═══════════════════════════════════════════════════════════════════
+   FIELDSETS  — numbered sections via CSS counter
+   ═══════════════════════════════════════════════════════════════════ */
+.os-add-panel__body { counter-reset: os-section; }
 
 .os-add-fieldset {
-	border: none;
-	padding: 0;
-	margin: 0 0 24px;
+	border:   none;
+	padding:  0;
+	margin:   0 0 28px;
 	min-width: 0;
+	position: relative;
 }
 
-.os-add-fieldset--last {
-	margin-bottom: 4px;
-}
+.os-add-fieldset--last { margin-bottom: 4px; }
 
 .os-add-fieldset__legend {
-	float: none;
-	width: 100%;
-	font-size: 11px;
-	font-weight: 700;
+	counter-increment: os-section;
+	display:     flex;
+	align-items: center;
+	gap: 10px;
+	float:          none;
+	width:          100%;
+	font-size:      10.5px;
+	font-weight:    700;
 	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	color: var(--os-text2);
-	margin: 0 0 12px;
-	padding: 0 0 8px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.065);
-	line-height: 1.3;
+	letter-spacing: .1em;
+	color:          var(--os-text2);
+	margin:         0 0 16px;
+	padding:        0 0 11px;
+	border-bottom:  1px solid var(--os-border);
+	line-height:    1.3;
 }
 
+/* Numbered badge (01, 02, 03…) */
+.os-add-fieldset__legend::before {
+	counter-increment: os-section 0; /* value already incremented above */
+	content: "0" counter(os-section);
+	display:         inline-flex;
+	align-items:     center;
+	justify-content: center;
+	min-width:       26px;
+	height:          19px;
+	padding:         0 7px;
+	background:      rgba(61,126,255,.11);
+	color:           var(--os-accent);
+	border:          1px solid rgba(61,126,255,.2);
+	border-radius:   5px;
+	font-size:       9.5px;
+	font-weight:     800;
+	letter-spacing:  .05em;
+	flex-shrink:     0;
+	font-family:     'DM Mono', 'Fira Mono', ui-monospace, monospace;
+	line-height:     1;
+}
+
+/* Thin accent rule that fills the right side of the legend */
+.os-add-fieldset__legend::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(90deg, rgba(61,126,255,.18) 0%, transparent 80%);
+	margin-left: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM ROWS & GROUPS
+   ═══════════════════════════════════════════════════════════════════ */
 .os-add-row {
-	margin-left: -10px;
+	margin-left:  -10px;
 	margin-right: -10px;
 }
 
 .os-add-row > [class*="col-"] {
-	padding-left: 10px;
+	padding-left:  10px;
 	padding-right: 10px;
 }
 
-.os-add-fg {
-	margin-bottom: 14px !important;
-}
+.os-add-fg { margin-bottom: 16px !important; }
 
-.os-add-solicitante-outros {
-	margin-top: 4px;
-}
+.os-add-solicitante-outros { margin-top: 4px; }
 
 .os-add-textarea {
-	min-height: 92px !important;
-	line-height: 1.45;
+	min-height:  100px !important;
+	line-height: 1.5;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   FORM CONTROLS  (inside .os-add-shell)
+   ═══════════════════════════════════════════════════════════════════ */
+.os-add-shell .control-label,
+.os-add-shell label.control-label {
+	font-size:      10px !important;
+	font-weight:    700 !important;
+	text-transform: uppercase;
+	letter-spacing: .07em;
+	color:          var(--os-text3) !important;
+	margin-bottom:  4px !important;
+}
+
+.os-add-shell .form-control,
+.os-add-shell select.form-control {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--os-border) !important;
+	border-radius:    7px !important;
+	color:            var(--os-text) !important;
+	min-height:       36px;
+	padding:          6px 11px;
+	font-size:        12.5px;
+	box-shadow:       none !important;
+	transition:       border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.os-add-shell .form-control:focus,
+.os-add-shell select.form-control:focus {
+	border-color:     var(--os-accent) !important;
+	box-shadow:       0 0 0 3px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+}
+
+.os-add-shell textarea.form-control {
+	min-height: 80px;
+	resize:     vertical;
+}
+
+/* Bootstrap-select wrapper */
+.os-add-shell .bootstrap-select.form-control {
+	background:  transparent !important;
+	border:      none !important;
+	box-shadow:  none !important;
+	padding:     0 !important;
+	min-height:  0 !important;
+}
+
+.os-add-shell .bootstrap-select > .dropdown-toggle {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--os-border) !important;
+	border-radius:    7px !important;
+	min-height:       36px;
+	font-size:        12.5px;
+	color:            var(--os-text) !important;
+	transition:       border-color .15s ease, box-shadow .15s ease;
+}
+
+.os-add-shell .bootstrap-select > .dropdown-toggle:focus,
+.os-add-shell .bootstrap-select.show > .dropdown-toggle {
+	border-color: var(--os-accent) !important;
+	box-shadow:   0 0 0 3px var(--os-accent-glow) !important;
+}
+
+.os-add-shell .bootstrap-select .dropdown-menu {
+	background: var(--os-bg3) !important;
+	border:     1px solid var(--os-border2) !important;
+	border-radius: 8px !important;
+	box-shadow: 0 12px 32px rgba(0,0,0,.45) !important;
+}
+
+.os-add-shell .bootstrap-select .dropdown-menu li a { color: var(--os-text2) !important; }
+
+.os-add-shell .bootstrap-select .dropdown-menu li.active a,
+.os-add-shell .bootstrap-select .dropdown-menu li.selected a,
+.os-add-shell .bootstrap-select .dropdown-menu li a:hover {
+	background: var(--os-accent-glow) !important;
+	color:      var(--os-text) !important;
+}
+
+/* bs-container rendered in <body> */
+body.os-add-page .bs-container .dropdown-menu {
+	background:    #161921 !important;
+	border:        1px solid rgba(255,255,255,.12) !important;
+	border-radius: 8px !important;
+	box-shadow:    0 12px 32px rgba(0,0,0,.5) !important;
+}
+
+body.os-add-page .bs-container .dropdown-menu .dropdown-item,
+body.os-add-page .bs-container .dropdown-menu li a  { color: #8890a8 !important; }
+
+body.os-add-page .bs-container .dropdown-menu .active > a,
+body.os-add-page .bs-container .dropdown-menu li.selected > a,
+body.os-add-page .bs-container .dropdown-menu li > a:hover {
+	background: rgba(61,126,255,.15) !important;
+	color:      #edf0fa !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MISC ELEMENTS
+   ═══════════════════════════════════════════════════════════════════ */
+.os-add-shell hr {
+	border-color: var(--os-border);
+	margin: 20px 0 16px;
+}
+
+.os-add-shell .os-add-section-title {
+	font-size:    13px;
+	font-weight:  600;
+	color:        var(--os-text);
+	margin:       4px 0 12px;
+	padding-bottom: 8px;
+	border-bottom:  1px solid var(--os-border);
+}
+
+.os-add-shell p > i { color: var(--os-text3); }
+
+.os-add-shell .table {
+	font-size: 12px;
+	color:     var(--os-text2);
+}
+
+.os-add-shell .btn {
+	border-radius: 7px;
+	font-weight:   500;
+	font-size:     12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE CARRINHO
+   ═══════════════════════════════════════════════════════════════════ */
 .os-add-mobile-carrinho {
-	margin-top: 4px;
+	margin-top:    4px;
 	margin-bottom: 4px;
-	padding: 16px 16px 8px;
+	padding:       16px 16px 8px;
 	border-radius: 10px;
-	border: 1px dashed rgba(255, 255, 255, 0.14);
-	background: rgba(0, 0, 0, 0.12);
+	border:        1px dashed rgba(255,255,255,.12);
+	background:    rgba(0,0,0,.12);
 }
 
 .os-add-mobile-carrinho__title {
-	font-size: 14px;
+	font-size:   14px;
 	font-weight: 600;
-	color: var(--os-text);
-	margin: 0 0 6px;
+	color:       var(--os-text);
+	margin:      0 0 6px;
 }
 
 .os-add-mobile-carrinho__hint {
-	font-size: 11.5px;
-	color: var(--os-text3);
-	margin: 0 0 12px;
+	font-size:   11.5px;
+	color:       var(--os-text3);
+	margin:      0 0 12px;
 	line-height: 1.4;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   GRID SECTION  (jsGrid + total)
+   ═══════════════════════════════════════════════════════════════════ */
 .os-add-grid-wrap {
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
@@ -175,378 +395,313 @@ body.os-add-page.layout-no-topbar .page-wrapper > .container-fluid {
 }
 
 .os-add-grid-wrap .jsgrid {
-	border: none !important;
+	border:        none !important;
 	border-radius: 0 !important;
-	min-width: 1020px;
+	min-width:     1020px;
 }
 
+/* Total bar */
 .os-add-items-total {
-	padding: 14px 20px 16px;
-	background: rgba(0, 0, 0, 0.12);
-	border-top: 1px solid rgba(255, 255, 255, 0.04);
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-end;
+	gap:             12px;
+	padding:         13px 22px 15px;
+	background:      linear-gradient(90deg, rgba(0,0,0,.1) 0%, rgba(61,126,255,.04) 100%);
+	border-top:      1px solid rgba(61,126,255,.09);
 }
 
 .os-add-total-value {
-	font-size: 15px !important;
-	letter-spacing: 0.02em;
+	font-size:      15px !important;
+	letter-spacing: .02em;
 }
 
+.os-add-shell .valortotalordem    { color: var(--os-text) !important; }
+.os-add-shell .os-add-total-label { color: var(--os-text2); font-weight: 500; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACTIONS FOOTER BAR
+   ═══════════════════════════════════════════════════════════════════ */
 .os-add-actions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
+	display:         flex;
+	flex-wrap:       wrap;
+	align-items:     center;
 	justify-content: space-between;
 	gap: 16px;
-	padding: 18px 20px;
-	background: var(--os-bg2);
-	border: 1px solid var(--os-border);
-	border-radius: 12px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+	padding:         16px 22px;
+	background:      var(--os-bg2);
+	border:          1px solid var(--os-border);
+	border-radius:   var(--os-panel-radius);
+	box-shadow:      0 2px 8px rgba(0,0,0,.16), 0 8px 24px rgba(0,0,0,.2);
+	position:        relative;
+	overflow:        hidden;
+}
+
+/* Subtle accent glow at bottom */
+.os-add-actions::after {
+	content:    '';
+	position:   absolute;
+	bottom: 0; left: 0; right: 0;
+	height:     1px;
+	background: linear-gradient(90deg, transparent 0%, rgba(61,126,255,.35) 40%, rgba(61,126,255,.35) 60%, transparent 100%);
 }
 
 .os-add-actions__hint {
-	margin: 0;
-	flex: 1 1 220px;
-	font-size: 12px;
-	color: var(--os-text3);
+	margin:      0;
+	flex:        1 1 220px;
+	font-size:   12px;
+	color:       var(--os-text3);
 	line-height: 1.45;
 }
 
 .os-add-actions__toolbar {
-	display: flex;
-	flex-wrap: wrap;
+	display:         flex;
+	flex-wrap:       wrap;
 	gap: 10px;
 	justify-content: flex-end;
-	margin-left: auto;
+	margin-left:     auto;
 }
 
+/* Secondary button */
 .os-add-btn-secondary {
-	border: 1px solid var(--os-border2) !important;
+	border:     1px solid var(--os-border2) !important;
 	background: transparent !important;
-	color: var(--os-text2) !important;
+	color:      var(--os-text2) !important;
+	transition: all .15s ease !important;
 }
 
 .os-add-btn-secondary:hover,
 .os-add-btn-secondary:focus {
-	color: var(--os-text) !important;
-	border-color: rgba(255, 255, 255, 0.22) !important;
-	background: rgba(255, 255, 255, 0.05) !important;
+	color:        var(--os-text) !important;
+	border-color: rgba(255,255,255,.22) !important;
+	background:   rgba(255,255,255,.05) !important;
 }
 
+/* Primary / submit button — premium gradient */
 .os-add-btn-primary {
-	min-width: 200px;
-}
-
-/* Colunas numéricas na grade (dados + cabeçalho) */
-.os-add-shell .jsgrid-header-row > .jsgrid-header-cell.os-col-num,
-body.os-add-page .os-add-shell th.jsgrid-header-cell.os-col-num {
-	text-align: right !important;
-}
-
-.os-add-shell .jsgrid .jsgrid-cell.os-col-num,
-.os-add-shell .jsgrid .os-col-num {
-	text-align: right !important;
-}
-
-.os-add-shell .jsgrid .os-col-num input.form-control,
-.os-add-shell .jsgrid .os-col-num .form-control {
-	text-align: right !important;
-	font-variant-numeric: tabular-nums;
-}
-
-/* Botão pesquisa produto na grade — mais visível */
-.os-add-shell .os-add-grid-search-btn {
-	border-color: rgba(255, 255, 255, 0.18) !important;
-	color: var(--os-text) !important;
-	background: var(--os-bg4) !important;
-}
-
-.os-add-shell .os-add-grid-search-btn:hover {
-	background: #2d3548 !important;
-	border-color: rgba(61, 126, 255, 0.45) !important;
-	color: #fff !important;
-}
-
-body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
-	opacity: 1 !important;
-	border: 1px solid rgba(255, 255, 255, 0.2) !important;
-	background: var(--os-bg4) !important;
-	color: var(--os-text) !important;
-}
-
-body.os-add-page .os-add-shell .jsgrid .jsgrid-button:hover {
-	border-color: var(--os-accent) !important;
-	color: #fff !important;
-}
-
-@media (max-width: 991px) {
-	.os-add-panel__body {
-		padding: 16px 14px 18px;
-	}
-	.os-add-actions {
-		flex-direction: column;
-		align-items: stretch;
-	}
-	.os-add-actions__toolbar {
-		margin-left: 0;
-		justify-content: stretch;
-	}
-	.os-add-btn-primary,
-	.os-add-btn-secondary {
-		flex: 1 1 auto;
-		justify-content: center;
-	}
-}
-
-.os-add-shell {
-	--os-bg: #0d0f14;
-	--os-bg2: #13161d;
-	--os-bg3: #1a1e28;
-	--os-bg4: #222736;
-	--os-border: rgba(255, 255, 255, 0.07);
-	--os-border2: rgba(255, 255, 255, 0.12);
-	--os-text: #f0f2f8;
-	--os-text2: #8b92a8;
-	--os-text3: #555e78;
-	--os-accent: #3d7eff;
-	--os-accent2: #2563eb;
-	--os-accent-glow: rgba(61, 126, 255, 0.15);
-
-	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	font-size: 13px;
-	background: var(--os-bg2);
-	border: 1px solid var(--os-border);
-	border-radius: 12px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-	margin-bottom: 0.75rem;
-	overflow: hidden;
-	color: var(--os-text2);
-}
-
-.os-add-shell .os-add-shell-body {
-	padding: 12px 14px 16px;
-}
-
-.os-add-shell .control-label,
-.os-add-shell label.control-label {
-	font-size: 10px !important;
+	min-width:   210px;
+	background:  linear-gradient(135deg, #3d7eff 0%, #2457d4 100%) !important;
+	border:      1px solid rgba(61,126,255,.38) !important;
+	box-shadow:  0 3px 14px rgba(61,126,255,.3), 0 1px 3px rgba(0,0,0,.22) !important;
+	transition:  all .18s ease !important;
 	font-weight: 600 !important;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--os-text3) !important;
-	margin-bottom: 3px !important;
+	letter-spacing: .02em;
 }
 
-.os-add-shell .form-control,
-.os-add-shell select.form-control {
-	background-color: var(--os-bg3) !important;
-	background-image: none !important;
-	border: 1px solid var(--os-border) !important;
-	border-radius: 7px !important;
-	color: var(--os-text) !important;
-	min-height: 34px;
-	padding: 5px 10px;
-	font-size: 12.5px;
-	box-shadow: none !important;
+.os-add-btn-primary:hover,
+.os-add-btn-primary:focus {
+	background:  linear-gradient(135deg, #5090ff 0%, #3168e8 100%) !important;
+	box-shadow:  0 6px 22px rgba(61,126,255,.44), 0 2px 6px rgba(0,0,0,.25) !important;
+	transform:   translateY(-1px) !important;
 }
 
-.os-add-shell .form-control:focus,
-.os-add-shell select.form-control:focus {
-	border-color: var(--os-accent) !important;
-	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
-	background-color: var(--os-bg4) !important;
-}
-
-.os-add-shell textarea.form-control {
-	min-height: 72px;
-	resize: vertical;
-}
-
-.os-add-shell .bootstrap-select.form-control {
-	background: transparent !important;
-	border: none !important;
-	box-shadow: none !important;
-	padding: 0 !important;
-	min-height: 0 !important;
-}
-
-.os-add-shell .bootstrap-select > .dropdown-toggle {
-	background-color: var(--os-bg3) !important;
-	background-image: none !important;
-	border: 1px solid var(--os-border) !important;
-	border-radius: 7px !important;
-	min-height: 34px;
-	font-size: 12.5px;
-	color: var(--os-text) !important;
-}
-
-.os-add-shell .bootstrap-select .dropdown-menu {
-	background: var(--os-bg3) !important;
-	border: 1px solid var(--os-border2) !important;
-}
-
-.os-add-shell .bootstrap-select .dropdown-menu li a {
-	color: var(--os-text2) !important;
-}
-
-.os-add-shell .bootstrap-select .dropdown-menu li.active a,
-.os-add-shell .bootstrap-select .dropdown-menu li.selected a,
-.os-add-shell .bootstrap-select .dropdown-menu li a:hover {
-	background: var(--os-accent-glow) !important;
-	color: var(--os-text) !important;
-}
-
-body.os-add-page .bs-container .dropdown-menu {
-	background: #1a1e28 !important;
-	border: 1px solid rgba(255, 255, 255, 0.12) !important;
-	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45) !important;
-}
-
-body.os-add-page .bs-container .dropdown-menu .dropdown-item,
-body.os-add-page .bs-container .dropdown-menu li a {
-	color: #8b92a8 !important;
-}
-
-body.os-add-page .bs-container .dropdown-menu .active > a,
-body.os-add-page .bs-container .dropdown-menu li.selected > a,
-body.os-add-page .bs-container .dropdown-menu li > a:hover {
-	background: rgba(61, 126, 255, 0.15) !important;
-	color: #f0f2f8 !important;
-}
-
-.os-add-shell hr {
-	border-color: var(--os-border);
-	margin: 20px 0 16px;
-}
-
-.os-add-shell .os-add-section-title {
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--os-text);
-	margin: 4px 0 12px;
-	padding-bottom: 8px;
-	border-bottom: 1px solid var(--os-border);
-}
-
-/* Respiro antes da grade (evita “colado” no bloco Atendimento) */
-.os-add-shell #grid_table {
-	margin-top: 6px;
-}
-
-.os-add-shell .table {
-	font-size: 12px;
-	color: var(--os-text2);
-}
-
-.os-add-shell .btn {
-	border-radius: 7px;
-	font-weight: 500;
-	font-size: 12px;
-}
-
-.os-add-shell .valortotalordem {
-	color: var(--os-text) !important;
-}
-
-.os-add-shell .os-add-total-label {
-	color: var(--os-text2);
-	font-weight: 500;
-}
-
-.os-add-shell p > i {
-	color: var(--os-text3);
-}
+/* ═══════════════════════════════════════════════════════════════════
+   JSGRID  — full dark theme
+   ═══════════════════════════════════════════════════════════════════ */
+.os-add-shell #grid_table { margin-top: 6px; }
 
 .os-add-shell .jsgrid {
-	border: 1px solid var(--os-border);
+	border:       1px solid var(--os-border);
 	border-radius: 9px;
-	overflow: hidden;
-	background: var(--os-bg3);
-	max-height: min(60vh, 600px);
+	overflow:     hidden;
+	background:   var(--os-bg3);
+	max-height:   min(60vh, 600px);
 	color-scheme: dark;
 	scrollbar-color: #3d4454 var(--os-bg2);
 }
 
-/* Faixa branca à direita: área de scroll do cabeçalho (jsGrid usa overflow-y: scroll) */
+/* Header / body scroll containers */
 body.os-add-page .os-add-shell .jsgrid-grid-header,
 body.os-add-page .os-add-shell .jsgrid-grid-header.jsgrid-header-scrollbar {
 	background: var(--os-bg3) !important;
-	color: var(--os-text2);
+	color:      var(--os-text2);
 }
 
-body.os-add-page .os-add-shell .jsgrid-grid-body {
-	background: var(--os-bg3) !important;
-}
+body.os-add-page .os-add-shell .jsgrid-grid-body { background: var(--os-bg3) !important; }
 
 body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-table,
-body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
-	background: transparent !important;
-}
+body.os-add-page .os-add-shell .jsgrid-grid-body  .jsgrid-table { background: transparent !important; }
 
+/* Scrollbars */
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar,
-body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar {
-	width: 10px;
-	height: 10px;
-}
+body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar  { width: 10px; height: 10px; }
 
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar-track,
-body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar-track {
-	background: var(--os-bg2);
-}
+body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar-track  { background: var(--os-bg2); }
 
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar-thumb,
-body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar-thumb {
-	background: var(--os-bg4);
+body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar-thumb  {
+	background:    var(--os-bg4);
 	border-radius: 5px;
-	border: 2px solid var(--os-bg2);
+	border:        2px solid var(--os-bg2);
 }
 
+/* Header cells */
 .os-add-shell .jsgrid-header-row > .jsgrid-header-cell,
 body.os-add-page .os-add-shell th.jsgrid-header-cell {
-	background: var(--os-bg4) !important;
-	color: var(--os-text2) !important;
-	border-color: var(--os-border) !important;
-	font-size: 11px;
-	font-weight: 600;
+	background:     var(--os-bg4) !important;
+	color:          var(--os-text2) !important;
+	border-color:   var(--os-border) !important;
+	font-size:      11px;
+	font-weight:    700;
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	padding: 10px 10px !important;
+	letter-spacing: .04em;
+	padding:        10px 10px !important;
 	vertical-align: middle !important;
-	line-height: 1.25;
+	line-height:    1.25;
 }
 
-/* Células vazias da coluna controlo no <thead> */
-body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field {
+body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field { background: var(--os-bg4) !important; }
+
+.os-add-shell .jsgrid-header-sortable { padding-right: 18px !important; }
+
+/* Data cells */
+.os-add-shell .jsgrid-row       > .jsgrid-cell,
+.os-add-shell .jsgrid-alt-row   > .jsgrid-cell,
+.os-add-shell .jsgrid-filter-row> .jsgrid-cell,
+.os-add-shell .jsgrid-insert-row> .jsgrid-cell,
+.os-add-shell .jsgrid-edit-row  > .jsgrid-cell {
+	background:     var(--os-bg3);
+	border-color:   rgba(255,255,255,.05);
+	color:          var(--os-text2);
+	padding:        9px 10px !important;
+	vertical-align: middle !important;
+}
+
+.os-add-shell .jsgrid-row:hover     > .jsgrid-cell,
+.os-add-shell .jsgrid-alt-row:hover > .jsgrid-cell { background: #1e2335; }
+
+/* Pager */
+.os-add-shell .jsgrid-pager {
+	background:  var(--os-bg2);
+	color:       var(--os-text3);
+	padding:     8px 10px;
+	border-top:  1px solid var(--os-border);
+}
+
+.os-add-shell .jsgrid-pager a { color: var(--os-accent); }
+
+/* Grid inputs / selects */
+body.os-add-page .os-add-shell .jsgrid            input.form-control,
+body.os-add-page .os-add-shell .jsgrid-insert-row input.form-control,
+body.os-add-page .os-add-shell .jsgrid-edit-row   input.form-control,
+body.os-add-page .os-add-shell .jsgrid-insert-row select,
+body.os-add-page .os-add-shell .jsgrid-edit-row   select,
+body.os-add-page .os-add-shell .jsgrid .input-group .form-control {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--os-border) !important;
+	color:            var(--os-text) !important;
+	box-shadow:       none !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid-insert-row select.form-control,
+body.os-add-page .os-add-shell .jsgrid-edit-row   select.form-control {
+	min-height: 34px;
+	padding:    5px 8px;
+	font-size:  12.5px;
+}
+
+body.os-add-page .os-add-shell .jsgrid .input-group-append .btn,
+body.os-add-page .os-add-shell .jsgrid .input-group-append .btn-secondary {
+	background:   var(--os-bg4) !important;
+	border-color: var(--os-border2) !important;
+	color:        var(--os-text2) !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid            input.form-control:focus,
+body.os-add-page .os-add-shell .jsgrid-insert-row input.form-control:focus,
+body.os-add-page .os-add-shell .jsgrid-edit-row   input.form-control:focus,
+body.os-add-page .os-add-shell .jsgrid-insert-row select:focus,
+body.os-add-page .os-add-shell .jsgrid-edit-row   select:focus {
+	border-color:     var(--os-accent) !important;
+	box-shadow:       0 0 0 2px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+	color:            var(--os-text) !important;
+}
+
+body.os-add-page .os-add-shell .jsgrid input.form-control::placeholder { color: var(--os-text3); opacity: 1; }
+
+/* No-data row */
+body.os-add-page .os-add-shell .jsgrid-nodata-row > .jsgrid-cell {
+	background:  var(--os-bg2) !important;
+	color:       var(--os-text2) !important;
+	border-color: var(--os-border) !important;
+	padding:     12px 10px !important;
+}
+
+/* Grid action buttons */
+body.os-add-page .os-add-shell .jsgrid-control-field,
+body.os-add-page .os-add-shell .jsgrid .jsgrid-control-field {
+	display:     inline-flex;
+	flex-wrap:   nowrap;
+	align-items: center;
+	gap: 4px;
+	vertical-align: middle;
+}
+
+body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
+	margin:     0 2px 0 0;
+	opacity:    1 !important;
+	border:     1px solid rgba(255,255,255,.2) !important;
 	background: var(--os-bg4) !important;
+	color:      var(--os-text) !important;
 }
 
-.os-add-shell .jsgrid-header-sortable {
-	padding-right: 18px !important;
+body.os-add-page .os-add-shell .jsgrid .jsgrid-button:hover {
+	border-color: var(--os-accent) !important;
+	color:        #fff !important;
 }
 
-.os-add-shell .jsgrid-row > .jsgrid-cell,
-.os-add-shell .jsgrid-alt-row > .jsgrid-cell,
-.os-add-shell .jsgrid-filter-row > .jsgrid-cell,
-.os-add-shell .jsgrid-insert-row > .jsgrid-cell,
-.os-add-shell .jsgrid-edit-row > .jsgrid-cell {
-	background: var(--os-bg3);
-	border-color: rgba(255, 255, 255, 0.055);
-	color: var(--os-text2);
-	padding: 9px 10px !important;
-	vertical-align: middle !important;
+/* Grid buttons (general) */
+.os-add-shell .jsgrid .btn,
+.os-add-shell .jsgrid .btn-sm { padding: 2px 8px; font-size: 11px; }
+
+/* Search button in grid */
+.os-add-shell .os-add-grid-search-btn {
+	border-color: rgba(255,255,255,.18) !important;
+	color:        var(--os-text) !important;
+	background:   var(--os-bg4) !important;
 }
 
-/* Coluna “Referenciar”: alinhar rótulo do cabeçalho com células de texto */
-.os-add-shell .jsgrid .inputObservacao {
-	text-align: center;
+.os-add-shell .os-add-grid-search-btn:hover {
+	background:   #2d3548 !important;
+	border-color: rgba(61,126,255,.45) !important;
+	color:        #fff !important;
 }
 
-.os-add-shell .jsgrid .inputObservacao input.form-control {
-	text-align: center;
+/* input-group secondary inside grid */
+.os-add-shell .input-group .btn-secondary {
+	background:   var(--os-bg4);
+	border-color: var(--os-border2);
+	color:        var(--os-text2);
 }
 
+.os-add-shell .input-group .btn-secondary:hover {
+	background: #2a3247;
+	color:      var(--os-text);
+}
+
+/* Numeric column alignment */
+.os-add-shell .jsgrid-header-row > .jsgrid-header-cell.os-col-num,
+body.os-add-page .os-add-shell th.jsgrid-header-cell.os-col-num { text-align: right !important; }
+
+.os-add-shell .jsgrid .jsgrid-cell.os-col-num,
+.os-add-shell .jsgrid .os-col-num                               { text-align: right !important; }
+
+.os-add-shell .jsgrid .os-col-num input.form-control,
+.os-add-shell .jsgrid .os-col-num .form-control {
+	text-align:         right !important;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Observação / Referenciar center alignment */
+.os-add-shell .jsgrid .inputObservacao                   { text-align: center; }
+.os-add-shell .jsgrid .inputObservacao input.form-control { text-align: center; }
+
+/* input-group alignment in grid */
 .os-add-shell .jsgrid .input-group {
-	min-width: 0;
+	min-width:   0;
 	align-items: stretch;
 }
 
@@ -555,187 +710,89 @@ body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field {
 	font-size: 12px;
 }
 
-.os-add-shell .jsgrid-insert-row select.form-control,
-.os-add-shell .jsgrid-edit-row select.form-control {
-	min-height: 34px;
-	padding: 5px 8px;
-	font-size: 12.5px;
-}
-
-.os-add-shell .jsgrid-row:hover > .jsgrid-cell,
-.os-add-shell .jsgrid-alt-row:hover > .jsgrid-cell {
-	background: #202635;
-}
-
-.os-add-shell .jsgrid-pager {
-	background: var(--os-bg2);
-	color: var(--os-text3);
-	padding: 8px 10px;
-	border-top: 1px solid var(--os-border);
-}
-
-.os-add-shell .jsgrid-pager a {
-	color: var(--os-accent);
-}
-
-.os-add-shell .jsgrid .btn,
-.os-add-shell .jsgrid .btn-sm {
-	padding: 2px 8px;
-	font-size: 11px;
-}
-
-/* jsGrid: inputs/selects (tema global costuma forçar fundo branco aqui) */
-body.os-add-page .os-add-shell .jsgrid input.form-control,
-body.os-add-page .os-add-shell .jsgrid-insert-row input.form-control,
-body.os-add-page .os-add-shell .jsgrid-edit-row input.form-control,
-body.os-add-page .os-add-shell .jsgrid-insert-row select,
-body.os-add-page .os-add-shell .jsgrid-edit-row select,
-body.os-add-page .os-add-shell .jsgrid .input-group .form-control {
-	background-color: var(--os-bg3) !important;
-	background-image: none !important;
-	border: 1px solid var(--os-border) !important;
-	color: var(--os-text) !important;
-	box-shadow: none !important;
-}
-
-body.os-add-page .os-add-shell .jsgrid .input-group-append .btn,
-body.os-add-page .os-add-shell .jsgrid .input-group-append .btn-secondary {
-	background: var(--os-bg4) !important;
-	border-color: var(--os-border2) !important;
-	color: var(--os-text2) !important;
-}
-
-body.os-add-page .os-add-shell .jsgrid input.form-control:focus,
-body.os-add-page .os-add-shell .jsgrid-insert-row input.form-control:focus,
-body.os-add-page .os-add-shell .jsgrid-edit-row input.form-control:focus,
-body.os-add-page .os-add-shell .jsgrid-insert-row select:focus,
-body.os-add-page .os-add-shell .jsgrid-edit-row select:focus {
-	border-color: var(--os-accent) !important;
-	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
-	background-color: var(--os-bg4) !important;
-	color: var(--os-text) !important;
-}
-
-body.os-add-page .os-add-shell .jsgrid input.form-control::placeholder {
-	color: var(--os-text3);
-	opacity: 1;
-}
-
-/* Linha “Nenhum item adicionado” */
-body.os-add-page .os-add-shell .jsgrid-nodata-row > .jsgrid-cell {
-	background: var(--os-bg2) !important;
-	color: var(--os-text2) !important;
-	border-color: var(--os-border) !important;
-	padding: 12px 10px !important;
-}
-
-/* Botões + na coluna de controle: alinhar e evitar empilhar */
-body.os-add-page .os-add-shell .jsgrid-control-field,
-body.os-add-page .os-add-shell .jsgrid .jsgrid-control-field {
-	display: inline-flex;
-	flex-wrap: nowrap;
-	align-items: center;
-	gap: 4px;
-	vertical-align: middle;
-}
-
-body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
-	margin: 0 2px 0 0;
-}
-
-.os-add-shell .input-group .btn-secondary {
-	background: var(--os-bg4);
-	border-color: var(--os-border2);
-	color: var(--os-text2);
-}
-
-.os-add-shell .input-group .btn-secondary:hover {
-	background: #2a3247;
-	color: var(--os-text);
-}
-
+/* ═══════════════════════════════════════════════════════════════════
+   MODALS
+   ═══════════════════════════════════════════════════════════════════ */
 body.os-add-page .modal-content {
-	background: #13161d;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 10px;
-	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	background:    #111318;
+	border:        1px solid rgba(255,255,255,.08);
+	border-radius: 12px;
+	box-shadow:    0 16px 48px rgba(0,0,0,.6);
 }
 
 body.os-add-page .modal-header,
-body.os-add-page .modal-footer {
-	border-color: rgba(255, 255, 255, 0.08);
-}
+body.os-add-page .modal-footer { border-color: rgba(255,255,255,.08); }
 
-body.os-add-page .modal-title {
-	color: #f0f2f8;
-	font-size: 15px;
-	font-weight: 600;
-}
+body.os-add-page .modal-title { color: #edf0fa; font-size: 15px; font-weight: 600; }
 
 body.os-add-page .modal-body,
 body.os-add-page .modal-body label,
-body.os-add-page .modal-body small {
-	color: #8b92a8;
-}
+body.os-add-page .modal-body small { color: #8890a8; }
 
 body.os-add-page .modal-body .form-control,
 body.os-add-page .modal-body input,
 body.os-add-page .modal-body textarea {
-	background: #1a1e28 !important;
-	border: 1px solid rgba(255, 255, 255, 0.07) !important;
-	color: #f0f2f8 !important;
+	background: #161921 !important;
+	border:     1px solid rgba(255,255,255,.07) !important;
+	color:      #edf0fa !important;
 	box-shadow: none !important;
 }
 
 body.os-add-page .modal-body .form-control:focus {
 	border-color: #3d7eff !important;
-	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.15) !important;
+	box-shadow:   0 0 0 3px rgba(61,126,255,.15) !important;
 }
 
-body.os-add-page .modal .close {
-	color: #8b92a8;
-	text-shadow: none;
-	opacity: 1;
-}
+body.os-add-page .modal .close       { color: #8890a8; text-shadow: none; opacity: 1; }
+body.os-add-page .modal .close:hover { color: #edf0fa; }
 
-body.os-add-page .modal .close:hover {
-	color: #f0f2f8;
-}
-
-/* Modal pesquisa de produto */
+/* Pesquisa de produto modal table */
 body.os-add-page #modal-pesquisa-produto .table {
-	color: var(--os-text2);
+	color:      var(--os-text2);
 	background: var(--os-bg3);
 }
 
 body.os-add-page #modal-pesquisa-produto .table thead th {
-	background: var(--os-bg4);
-	color: var(--os-text3);
+	background:   var(--os-bg4);
+	color:        var(--os-text3);
 	border-color: var(--os-border) !important;
 }
 
 body.os-add-page #modal-pesquisa-produto .table td {
-	background: var(--os-bg3);
+	background:   var(--os-bg3);
 	border-color: var(--os-border) !important;
-	color: var(--os-text);
+	color:        var(--os-text);
 }
 
-/* Sem estoque: fundo tipo alerta Bootstrap — texto deve ser escuro (regra do modal acima vencia o <style> da view) */
+/* Sem estoque: red highlight — text must be dark for accessibility */
 body.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td {
 	background-color: #f8d7da !important;
-	color: #491217 !important;
-	border-color: rgba(114, 28, 36, 0.3) !important;
+	color:            #491217 !important;
+	border-color:     rgba(114,28,36,.3) !important;
 }
 
 body.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td .btn-success {
 	color: #fff !important;
 }
 
-/*
- * Tema claro (pgm-theme-light.css carrega depois do fetch('css')): regras globais
- * body.pgm-theme-light .form-control, labels, modais e bootstrap-select sobrescrevem
- * o card escuro .os-add-shell. Usamos html body + duas classes no body para vencer.
- */
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 991px) {
+	.os-add-panel__body    { padding: 18px 16px 20px; }
+	.os-add-actions        { flex-direction: column; align-items: stretch; }
+	.os-add-actions__toolbar { margin-left: 0; justify-content: stretch; }
+	.os-add-btn-primary,
+	.os-add-btn-secondary  { flex: 1 1 auto; justify-content: center; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES  (pgm-theme-light loads after)
+   All rules qualified with html + 2 body classes to beat light-theme
+   specificity without !important spam on the functional side.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Form controls */
 html body.pgm-theme-light.os-add-page .os-add-shell .form-control,
 html body.pgm-theme-light.os-add-page .os-add-shell select.form-control,
 html body.pgm-theme-light.os-add-page .os-add-shell input[type="text"],
@@ -745,146 +802,131 @@ html body.pgm-theme-light.os-add-page .os-add-shell input[type="tel"],
 html body.pgm-theme-light.os-add-page .os-add-shell textarea {
 	background-color: var(--os-bg3) !important;
 	background-image: none !important;
-	border: 1px solid var(--os-border) !important;
-	border-radius: 7px !important;
-	color: var(--os-text) !important;
-	box-shadow: none !important;
+	border:           1px solid var(--os-border) !important;
+	border-radius:    7px !important;
+	color:            var(--os-text) !important;
+	box-shadow:       none !important;
 }
 
 html body.pgm-theme-light.os-add-page .os-add-shell .form-control:focus,
 html body.pgm-theme-light.os-add-page .os-add-shell select.form-control:focus,
 html body.pgm-theme-light.os-add-page .os-add-shell textarea:focus {
-	border-color: var(--os-accent) !important;
-	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	border-color:     var(--os-accent) !important;
+	box-shadow:       0 0 0 3px var(--os-accent-glow) !important;
 	background-color: var(--os-bg4) !important;
 }
 
 html body.pgm-theme-light.os-add-page .os-add-shell .control-label,
-html body.pgm-theme-light.os-add-page .os-add-shell label.control-label {
-	color: var(--os-text3) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-shell label.control-label { color: var(--os-text3) !important; }
 
 html body.pgm-theme-light.os-add-page .os-add-shell .bootstrap-select.form-control {
 	background: transparent !important;
-	border: none !important;
+	border:     none !important;
 	box-shadow: none !important;
 }
 
 html body.pgm-theme-light.os-add-page .os-add-shell .bootstrap-select > .dropdown-toggle {
 	background-color: var(--os-bg3) !important;
 	background-image: none !important;
-	border: 1px solid var(--os-border) !important;
-	border-radius: 7px !important;
-	color: var(--os-text) !important;
+	border:           1px solid var(--os-border) !important;
+	border-radius:    7px !important;
+	color:            var(--os-text) !important;
 }
 
 html body.pgm-theme-light.os-add-page .os-add-shell h4,
 html body.pgm-theme-light.os-add-page .os-add-shell h5,
-html body.pgm-theme-light.os-add-page .os-add-shell .os-add-section-title {
-	color: var(--os-text) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-shell .os-add-section-title { color: var(--os-text) !important; }
 
 html body.pgm-theme-light.os-add-page .os-add-shell p,
-html body.pgm-theme-light.os-add-page .os-add-shell p > i {
-	color: var(--os-text3) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-shell p > i { color: var(--os-text3) !important; }
 
-html body.pgm-theme-light.os-add-page .os-add-shell .valortotalordem {
-	color: var(--os-text) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-shell .valortotalordem { color: var(--os-text) !important; }
 
-html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid input.form-control,
+/* Grid inputs — light theme */
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid            input.form-control,
 html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row input.form-control,
-html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row input.form-control,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row   input.form-control,
 html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row select,
-html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row select,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row   select,
 html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid .input-group .form-control {
 	background-color: var(--os-bg3) !important;
-	border: 1px solid var(--os-border) !important;
-	color: var(--os-text) !important;
-	box-shadow: none !important;
+	border:           1px solid var(--os-border) !important;
+	color:            var(--os-text) !important;
+	box-shadow:       none !important;
 }
 
-html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid input.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid            input.form-control:focus,
 html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row input.form-control:focus,
-html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row input.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row   input.form-control:focus,
 html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row select:focus,
-html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row select:focus {
-	border-color: var(--os-accent) !important;
-	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row   select:focus {
+	border-color:     var(--os-accent) !important;
+	box-shadow:       0 0 0 2px var(--os-accent-glow) !important;
 	background-color: var(--os-bg4) !important;
-	color: var(--os-text) !important;
+	color:            var(--os-text) !important;
 }
 
+/* Modals — light theme */
 html body.pgm-theme-light.os-add-page .modal-content {
-	background: #13161d !important;
-	border: 1px solid rgba(255, 255, 255, 0.08) !important;
-	color: #8b92a8 !important;
-	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
+	background: #111318 !important;
+	border:     1px solid rgba(255,255,255,.08) !important;
+	color:      #8890a8 !important;
+	box-shadow: 0 16px 48px rgba(0,0,0,.6) !important;
 }
 
 html body.pgm-theme-light.os-add-page .modal-header,
 html body.pgm-theme-light.os-add-page .modal-footer {
-	background: transparent !important;
-	border-color: rgba(255, 255, 255, 0.08) !important;
+	background:  transparent !important;
+	border-color: rgba(255,255,255,.08) !important;
 }
 
-html body.pgm-theme-light.os-add-page .modal-header .modal-title {
-	color: #f0f2f8 !important;
-}
+html body.pgm-theme-light.os-add-page .modal-header .modal-title { color: #edf0fa !important; }
 
 html body.pgm-theme-light.os-add-page .modal-body,
 html body.pgm-theme-light.os-add-page .modal-body label,
-html body.pgm-theme-light.os-add-page .modal-body small {
-	color: #8b92a8 !important;
-}
+html body.pgm-theme-light.os-add-page .modal-body small { color: #8890a8 !important; }
 
 html body.pgm-theme-light.os-add-page .modal-body .form-control,
 html body.pgm-theme-light.os-add-page .modal-body input,
 html body.pgm-theme-light.os-add-page .modal-body textarea {
-	background: #1a1e28 !important;
-	border: 1px solid rgba(255, 255, 255, 0.07) !important;
-	color: #f0f2f8 !important;
+	background: #161921 !important;
+	border:     1px solid rgba(255,255,255,.07) !important;
+	color:      #edf0fa !important;
 	box-shadow: none !important;
 }
 
 html body.pgm-theme-light.os-add-page .modal-body .form-control:focus {
 	border-color: #3d7eff !important;
-	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.15) !important;
+	box-shadow:   0 0 0 3px rgba(61,126,255,.15) !important;
 }
 
 html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table thead th {
-	background: #222736 !important;
-	color: #555e78 !important;
+	background: #1d2130 !important;
+	color:      #4c5470 !important;
 }
 
 html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table td {
-	background: #1a1e28 !important;
-	color: #f0f2f8 !important;
+	background: #161921 !important;
+	color:      #edf0fa !important;
 }
 
 html body.pgm-theme-light.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td {
 	background-color: #f8d7da !important;
-	color: #491217 !important;
-	border-color: rgba(114, 28, 36, 0.3) !important;
+	color:            #491217 !important;
+	border-color:     rgba(114,28,36,.3) !important;
 }
 
+/* Titles and legends — light theme */
 html body.pgm-theme-light.os-add-page .os-add-panel__title,
-html body.pgm-theme-light.os-add-page .os-add-mobile-carrinho__title {
-	color: var(--os-text) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-mobile-carrinho__title  { color: var(--os-text) !important; }
 
 html body.pgm-theme-light.os-add-page .os-add-panel__meta,
-html body.pgm-theme-light.os-add-page .os-add-fieldset__legend {
-	color: var(--os-text2) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-fieldset__legend        { color: var(--os-text2) !important; }
 
 html body.pgm-theme-light.os-add-page .os-add-actions__hint,
-html body.pgm-theme-light.os-add-page .os-add-actions__hint i {
-	color: var(--os-text3) !important;
-}
+html body.pgm-theme-light.os-add-page .os-add-actions__hint i         { color: var(--os-text3) !important; }
 
 html body.pgm-theme-light.os-add-page .os-add-btn-secondary {
 	border-color: var(--os-border2) !important;
-	color: var(--os-text2) !important;
+	color:        var(--os-text2) !important;
 }
