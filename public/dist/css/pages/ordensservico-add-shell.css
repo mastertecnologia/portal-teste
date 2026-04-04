@@ -381,3 +381,135 @@ body.os-add-page #modal-pesquisa-produto .table td {
 	border-color: var(--os-border) !important;
 	color: var(--os-text);
 }
+
+/*
+ * Tema claro (pgm-theme-light.css carrega depois do fetch('css')): regras globais
+ * body.pgm-theme-light .form-control, labels, modais e bootstrap-select sobrescrevem
+ * o card escuro .os-add-shell. Usamos html body + duas classes no body para vencer.
+ */
+html body.pgm-theme-light.os-add-page .os-add-shell .form-control,
+html body.pgm-theme-light.os-add-page .os-add-shell select.form-control,
+html body.pgm-theme-light.os-add-page .os-add-shell input[type="text"],
+html body.pgm-theme-light.os-add-page .os-add-shell input[type="email"],
+html body.pgm-theme-light.os-add-page .os-add-shell input[type="number"],
+html body.pgm-theme-light.os-add-page .os-add-shell input[type="tel"],
+html body.pgm-theme-light.os-add-page .os-add-shell textarea {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	color: var(--os-text) !important;
+	box-shadow: none !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell select.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell textarea:focus {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .control-label,
+html body.pgm-theme-light.os-add-page .os-add-shell label.control-label {
+	color: var(--os-text3) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .bootstrap-select.form-control {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .bootstrap-select > .dropdown-toggle {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	color: var(--os-text) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell h4,
+html body.pgm-theme-light.os-add-page .os-add-shell h5,
+html body.pgm-theme-light.os-add-page .os-add-shell .os-add-section-title {
+	color: var(--os-text) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell p,
+html body.pgm-theme-light.os-add-page .os-add-shell p > i {
+	color: var(--os-text3) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .valortotalordem {
+	color: var(--os-text) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid input.form-control,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row input.form-control,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row input.form-control,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row select,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row select,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid .input-group .form-control {
+	background-color: var(--os-bg3) !important;
+	border: 1px solid var(--os-border) !important;
+	color: var(--os-text) !important;
+	box-shadow: none !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid input.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row input.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row input.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-insert-row select:focus,
+html body.pgm-theme-light.os-add-page .os-add-shell .jsgrid-edit-row select:focus {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+	color: var(--os-text) !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-content {
+	background: #13161d !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
+	color: #8b92a8 !important;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-header,
+html body.pgm-theme-light.os-add-page .modal-footer {
+	background: transparent !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-header .modal-title {
+	color: #f0f2f8 !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-body,
+html body.pgm-theme-light.os-add-page .modal-body label,
+html body.pgm-theme-light.os-add-page .modal-body small {
+	color: #8b92a8 !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-body .form-control,
+html body.pgm-theme-light.os-add-page .modal-body input,
+html body.pgm-theme-light.os-add-page .modal-body textarea {
+	background: #1a1e28 !important;
+	border: 1px solid rgba(255, 255, 255, 0.07) !important;
+	color: #f0f2f8 !important;
+	box-shadow: none !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-body .form-control:focus {
+	border-color: #3d7eff !important;
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.15) !important;
+}
+
+html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table thead th {
+	background: #222736 !important;
+	color: #555e78 !important;
+}
+
+html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table td {
+	background: #1a1e28 !important;
+	color: #f0f2f8 !important;
+}

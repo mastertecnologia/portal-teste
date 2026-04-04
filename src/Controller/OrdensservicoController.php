@@ -547,6 +547,7 @@ class OrdensservicoController extends AppController {
 		$this->set('ordem', $ordem);
 		$this->set('title', 'Cadastro de ordem de serviços');
 		$this->set('hideLayoutPageTitle', true);
+		$this->set('bodyPageClass', 'os-add-page');
 		$this->set('authIdempresa', (int)$idempresa);
 		$this->set('osGridAjaxVerbose', $this->osGridDebugVerbose());
 	}

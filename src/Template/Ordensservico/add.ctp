@@ -302,7 +302,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	var osTiposComEstoqueErp = <?= json_encode($osTiposComEstoqueErp) ?>;
 	var osEstoquesLoteUrl = <?= json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
-	$('body').addClass('os-add-page');
 	function getEmpresaAtual() {
 		var v = $('#empresaSidebar').val();
 		if (v !== undefined && v !== null && v !== '') {
