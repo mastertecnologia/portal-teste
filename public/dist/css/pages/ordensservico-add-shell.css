@@ -720,6 +720,17 @@ body.os-add-page #modal-pesquisa-produto .table td {
 	color: var(--os-text);
 }
 
+/* Sem estoque: fundo tipo alerta Bootstrap — texto deve ser escuro (regra do modal acima vencia o <style> da view) */
+body.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td {
+	background-color: #f8d7da !important;
+	color: #491217 !important;
+	border-color: rgba(114, 28, 36, 0.3) !important;
+}
+
+body.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td .btn-success {
+	color: #fff !important;
+}
+
 /*
  * Tema claro (pgm-theme-light.css carrega depois do fetch('css')): regras globais
  * body.pgm-theme-light .form-control, labels, modais e bootstrap-select sobrescrevem
@@ -850,6 +861,12 @@ html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table thead th {
 html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table td {
 	background: #1a1e28 !important;
 	color: #f0f2f8 !important;
+}
+
+html body.pgm-theme-light.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td {
+	background-color: #f8d7da !important;
+	color: #491217 !important;
+	border-color: rgba(114, 28, 36, 0.3) !important;
 }
 
 html body.pgm-theme-light.os-add-page .os-add-panel__title,
