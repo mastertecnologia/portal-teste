@@ -27,12 +27,9 @@ body.layout-no-topbar.pgm-theme-light {
     --pgm-badge-status-text: #006d4a;
 }
 
-/* ── Área principal: canvas (.pgm-app-main) desacoplado da sidebar ───────── */
-html body.layout-no-topbar.pgm-theme-light #main-wrapper {
-    background: var(--pgm-sb-bg, #0d1117) !important;
-}
+/* ── Área principal: page-wrapper, shell-main ────────────────────────────── */
+html body.layout-no-topbar.pgm-theme-light #main-wrapper,
 html body.layout-no-topbar.pgm-theme-light,
-html body.layout-no-topbar.pgm-theme-light .pgm-app-main,
 html body.layout-no-topbar.pgm-theme-light .pgm-shell-main,
 html body.layout-no-topbar.pgm-theme-light.fixed-layout .page-wrapper,
 html body.layout-no-topbar.pgm-theme-light .page-wrapper {

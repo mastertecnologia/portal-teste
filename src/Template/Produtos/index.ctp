@@ -50,17 +50,13 @@
     return '<span class="prd-td-margin ' . $cls . '">' . $m . '%</span>';
   }
   }
-
-  /*
-   * Referência PGM layout-system (como Ordensservico/index):
-   * .pgm-layout-ref | .pgm-page-toolbar | .pgm-content-section | .pgm-page-section | .pgm-filter-bar | .pgm-data-region
-   */
 ?>
+
 <div class="col-md-12 p-0">
-<div class="prd-root pgm-layout-ref">
+<div class="prd-root">
 
   <!-- ── Topbar ─────────────────────────────────────────────── -->
-  <div class="prd-topbar pgm-page-toolbar">
+  <div class="prd-topbar">
     <div>
       <div class="prd-eyebrow">Cadastros &rsaquo; Catálogo</div>
       <h1 class="prd-h1">Produtos &amp; Serviços</h1>
@@ -85,7 +81,7 @@
   </div>
 
   <!-- ── Stats Bar ──────────────────────────────────────────── -->
-  <div class="prd-stats-bar pgm-content-section">
+  <div class="prd-stats-bar">
     <div class="prd-stat">
       <div class="prd-stat-icon teal"><i class="fas fa-cubes"></i></div>
       <div>
@@ -124,7 +120,7 @@
   </div>
 
   <!-- ── KPI Strip ──────────────────────────────────────────── -->
-  <div class="prd-kpi-strip pgm-page-section">
+  <div class="prd-kpi-strip">
     <div class="prd-kpi kpi-active" id="kpi-produtos" onclick="showPanel('produtos')">
       <div class="prd-kpi-icon"><i class="fas fa-box-open"></i></div>
       <div class="prd-kpi-value"><?= $cntProd ?></div>
@@ -148,7 +144,7 @@
   </div>
 
   <!-- ── Filter Bar ─────────────────────────────────────────── -->
-  <div class="prd-filter-bar pgm-filter-bar">
+  <div class="prd-filter-bar">
     <div class="prd-pill-group">
       <button class="prd-pill pill-active" id="pill-produtos"  onclick="showPanel('produtos')">
         <i class="fas fa-box-open" style="font-size:10px"></i> Produtos
@@ -183,7 +179,7 @@
   </div>
 
   <!-- ── Tables ─────────────────────────────────────────────── -->
-  <div class="prd-table-wrap pgm-data-region">
+  <div class="prd-table-wrap">
     <div class="prd-table-card">
 
       <!-- ─ Produtos ─ -->

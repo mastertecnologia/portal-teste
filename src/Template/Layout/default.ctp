@@ -41,8 +41,6 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css") ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell.css") ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-layout-system.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
 	<?php if (!empty($pgmPortalClient)): ?>
@@ -153,21 +151,19 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
     </div>
 	<?= $this->element('deleteModal'); ?>
 	<!-- Painel principal -->
-	<div class="main-wrapper pgm-app-shell pgm-app-shell--grid" id="main-wrapper">
+	<div class="main-wrapper" id="main-wrapper">
 		<!-- Header horizontal removido: empresa, data e perfil estão na sidebar (layout-sidebar-shell.css) -->
 		<!-- Sidebar -->
 		<?php
 			if ($role == 0) echo $this->element('sidebar');
 			else echo $this->element('sidebarcli');
 		?>
-		<div class="pgm-shell-main" id="pgm-shell-main">
+		<div class="pgm-shell-main">
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
-		<div class="pgm-app-main">
 		<div class="page-wrapper">
-			<div class="container-fluid pgm-app-container">
-				<main class="pgm-page-primary pgm-page-stack" role="main" id="pgm-primary-main">
+			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>
-				<div class="row page-titles pgm-page-header" style='padding-bottom: 8px;'>
+				<div class="row page-titles" style='padding-bottom: 8px;'>
 					<!-- Título -->
 		            <div class="col-md-5 align-self-center">
 						<h5 class="text-themecolor m-b-0"><?= $title ?></h5>
@@ -181,11 +177,9 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 	        	</div>
 				<?php endif; ?>
 				<?= $this->element('content'); ?>
-				</main>
 			</div>
 		</div>
 		<?= $this->element('footer'); ?>
-		</div>
 		</div>
 	</div>
 	<div class='hide' id='notificacao'></div>
@@ -408,10 +402,7 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 				return;
 			}
 			var h = Math.max(1, (window.innerHeight > 0 ? window.innerHeight : screen.height) - 1);
-			var $shell = $('.pgm-app-main');
-			if (!$shell.length) {
-				$shell = $('.pgm-shell-main');
-			}
+			var $shell = $('.pgm-shell-main');
 			if ($shell.length) {
 				$shell.css('min-height', h + 'px');
 			} else {

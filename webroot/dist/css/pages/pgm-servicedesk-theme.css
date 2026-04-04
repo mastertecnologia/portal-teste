@@ -32,36 +32,6 @@
 	max-width: 100%;
 	padding: 0;
 }
-
-/* ── App shell (alinhado ao portal): coluna única abaixo da topbar ─────────── */
-body.sd-body.layout-no-topbar .sd-shell > .pgm-sd-app-main {
-	flex: 1 1 auto;
-	min-height: 0;
-	min-width: 0;
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-}
-
-body.sd-body.layout-no-topbar .pgm-sd-app-main.pgm-app-main {
-	min-height: 0 !important;
-	background: transparent !important;
-}
-
-body.sd-body.layout-no-topbar .pgm-sd-app-main .sd-main.container-fluid {
-	flex: 1 1 auto;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-	padding-top: 1rem;
-	padding-bottom: 1.5rem;
-}
-
-body.sd-body .pgm-sd-page-body.pgm-page-body {
-	flex: 1 1 auto;
-	min-width: 0;
-	width: 100%;
-}
 body.sd-body {
 	margin: 0;
 }

@@ -39,7 +39,6 @@ $printAuth = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-print-layout-theme") ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
@@ -146,14 +145,10 @@ $printAuth = (bool)$this->request->getSession()->read('Auth.User.id');
 		<span class="pgm-tt-label"><?= $isLightPrint ? 'Claro' : 'Escuro' ?></span>
 	</button>
 	<?php endif; ?>
-	<!-- Painel principal (mesmo shell semântico do portal; sem sidebar) -->
-	<div class="main-wrapper pgm-app-shell" id="main-wrapper">
-		<div class="pgm-app-main pgm-app-main--no-sidebar pgm-print-app-main">
-			<div class="page-wrapper pgm-print-page-wrapper">
-				<div class="container-fluid pgm-app-container">
-					<?= $this->element('content'); ?>
-				</div>
-			</div>
+	<!-- Painel principal -->
+	<div class="main-wrapper">
+		<div class="container-fluid">
+			<?= $this->element('content'); ?>
 		</div>
 	</div>
 	<?php if ($printAuth) : ?>

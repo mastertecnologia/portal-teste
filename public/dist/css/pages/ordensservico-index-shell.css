@@ -1632,34 +1632,3 @@ button.os-drawer-btn {
 	justify-content: center;
 	padding: 0 10px;
 }
-
-/* ── Integração pgm-layout-system (referência em index.ctp) ───────────────── */
-.os-index-shell.pgm-layout-ref .os-page-head.pgm-page-toolbar {
-	margin-bottom: 14px;
-}
-
-.os-index-shell.pgm-layout-ref .os-kpi-grid.pgm-content-section {
-	margin-bottom: var(--pgm-section-gap-y, 1.25rem);
-}
-
-.os-index-shell.pgm-layout-ref .os-bulk-bar.pgm-page-section {
-	margin-bottom: var(--pgm-stack-gap, 1rem);
-}
-
-.os-index-shell.pgm-layout-ref > .os-toolbar.pgm-filter-bar {
-	margin-bottom: var(--pgm-stack-gap, 1rem);
-	padding: 0.85rem 1rem;
-	border-radius: var(--pgm-radius-section, 12px);
-	border: 1px solid var(--os-border);
-	background: var(--os-bg2);
-}
-
-.os-index-shell.pgm-layout-ref > .os-toolbar.pgm-filter-bar .os-filter-form {
-	width: 100%;
-}
-
-.os-index-shell.pgm-layout-ref .os-table-responsive.pgm-data-region {
-	min-width: 0;
-	overflow-x: auto;
-	-webkit-overflow-scrolling: touch;
-}

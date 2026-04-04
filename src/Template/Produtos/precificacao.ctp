@@ -23,15 +23,8 @@ body.prec-screen-active .pgm-shell-main .page-wrapper > .container-fluid{
   flex:1 1 auto!important;
   min-height:0!important;
 }
-body.prec-screen-active .pgm-shell-main .page-wrapper > .container-fluid > main.pgm-page-primary{
-  flex:1 1 auto!important;
-  min-height:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-}
 /* content.ctp envolve a view em .row sem .col-* no .prec-root — no flex do Bootstrap o bloco não estica */
-body.prec-screen-active .container-fluid > main .pgm-page-body.tirar-black-mode,
-body.prec-screen-active .container-fluid > .pgm-page-body.tirar-black-mode{
+body.prec-screen-active .container-fluid > .row.tirar-black-mode{
   display:flex!important;
   flex-direction:column!important;
   align-items:stretch!important;
@@ -40,8 +33,7 @@ body.prec-screen-active .container-fluid > .pgm-page-body.tirar-black-mode{
   margin-left:0!important;
   margin-right:0!important;
 }
-body.prec-screen-active .container-fluid > main .pgm-page-body.tirar-black-mode > .prec-root,
-body.prec-screen-active .container-fluid > .pgm-page-body.tirar-black-mode > .prec-root{
+body.prec-screen-active .container-fluid > .row.tirar-black-mode > .prec-root{
   width:100%!important;
   max-width:100%!important;
   flex:1 1 auto!important;

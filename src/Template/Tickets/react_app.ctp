@@ -24,7 +24,7 @@ $this->append(
 	. '<script type="module" src="' . h($w . 'tickets-app/assets/tickets.js?v=' . $ticketsAssetV) . '"></script>'
 );
 ?>
-<?php /* Dentro de .pgm-page-body (layout default): flex column + min-width:0 evita overflow horizontal */ ?>
-<div class="tickets-react-shell w-100 p-0">
-	<div id="tickets-react-root" class="tickets-react-host pgm-react-embed w-100"></div>
+<?php /* Filho direto de .row precisa ser .col-* no Bootstrap, senão largura/overflow quebram o React */ ?>
+<div class="col-md-12 tickets-react-shell p-0">
+	<div id="tickets-react-root" class="tickets-react-host w-100"></div>
 </div>

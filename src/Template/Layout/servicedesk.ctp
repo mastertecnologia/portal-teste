@@ -16,7 +16,6 @@ $isLightSd = ($pgmSdTheme === 'light');
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-advanced-module') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-servicedesk-theme') ?>
-	<?= $this->Html->css('/dist/css/pages/pgm-app-shell.css') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-light') ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 	<?= $this->Html->css('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', ['fullBase' => true]) ?>
@@ -58,14 +57,14 @@ $isLightSd = ($pgmSdTheme === 'light');
 			<?php endif; ?>
 		</nav>
 	</header>
-	<div class="pgm-app-main pgm-app-main--no-sidebar pgm-sd-app-main" role="presentation">
-		<main class="sd-main container-fluid pgm-app-container" role="main">
-			<div class="pgm-page-flash"><?= $this->Flash->render() ?></div>
-			<div class="pgm-page-body pgm-sd-page-body">
+	<main class="sd-main container-fluid p-0">
+		<div class="row no-gutters m-0">
+			<div class="col-12">
+				<?= $this->Flash->render() ?>
 				<?= $this->fetch('content') ?>
 			</div>
-		</main>
-	</div>
+		</div>
+	</main>
 </div>
 <?= $this->Html->script('/assets/node_modules/jquery/jquery-3.2.1.min') ?>
 <?= $this->Html->script('/js/pgm-portal-theme') ?>

@@ -50,15 +50,10 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 } elseif ((string)$situacao === (string)C_OrdensSituacaoLiberadaParaFaturamento) {
 	$kpiActive = 'lib';
 }
-
-/*
- * Referência PGM layout-system (replicar em outras listagens):
- * .pgm-layout-ref | .pgm-page-toolbar | .pgm-content-section | .pgm-page-section | .pgm-filter-bar | .pgm-data-region
- */
 ?>
 <div class="col-md-12 p-0">
-	<div class="os-index-shell pgm-layout-ref">
-		<header class="os-page-head pgm-page-toolbar">
+	<div class="os-index-shell">
+		<header class="os-page-head">
 			<div>
 				<h1 class="os-page-title">Ordens de Serviço</h1>
 				<p class="os-page-sub"><?= h(date('d/m/Y')) ?> — <?= h($nomeempresa ?? '') ?></p>
@@ -80,7 +75,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			</div>
 		</header>
 
-		<div class="os-kpi-grid pgm-content-section">
+		<div class="os-kpi-grid">
 			<div class="os-kpi-card os-kpi-blue os-kpi-click<?= $kpiActive === 'all' ? ' is-active' : '' ?>" role="button" tabindex="0" data-os-kpi="all" title="Mostrar todas (limpar filtro de situação)">
 				<div class="os-kpi-label">Total de OS</div>
 				<div class="os-kpi-value"><?= (int)$kpiTotal ?></div>
@@ -104,7 +99,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		</div>
 
 		<?php if ($role == 0) : ?>
-			<div class="os-bulk-bar pgm-page-section" id="os-bulk-bar">
+			<div class="os-bulk-bar" id="os-bulk-bar">
 				<span class="os-bulk-count" id="os-bulk-count"></span>
 				<?= $this->Html->link('Alterar situação', ['#'], ['class' => 'btn-acao os-btn-ghost hide']) ?>
 				<?= $this->Html->link('Imprimir', ['#'], ['class' => 'btn-imprimir os-btn-ghost hide', 'target' => '_blank']) ?>
@@ -116,7 +111,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		<?= $this->Form->control('idsimprimir', ['type' => 'hidden', 'label' => false]); ?>
 		<?= $this->Form->end() ?>
 
-		<div class="os-toolbar pgm-filter-bar">
+		<div class="os-toolbar">
 			<?= $this->Form->create(null, ['type' => 'get', 'class' => 'form-material os-filter-form w-100', 'url' => ['controller' => 'Ordensservico', 'action' => 'index']]); ?>
 			<div class="row">
 				<?php if ($role == 0) { ?>
@@ -161,7 +156,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					</label>
 				</div>
 			</div>
-			<div class="table-responsive os-table-responsive pgm-data-region">
+			<div class="table-responsive os-table-responsive">
 				<table class="table table-hover table-row-clickable" id="tableOrdens" style="margin:0">
 					<thead>
 						<tr>

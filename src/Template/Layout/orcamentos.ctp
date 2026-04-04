@@ -22,7 +22,6 @@ $pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php if ($pgmOrcTheme === 'light') : ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
@@ -77,15 +76,9 @@ $pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
 			<p class="loader__label">PGM</p>
 		</div>
 	</div>
-	<!-- Painel principal (shell alinhado ao default; sem sidebar neste layout) -->
-	<div class="main-wrapper pgm-app-shell" id="main-wrapper">
-		<div class="pgm-app-main pgm-app-main--no-sidebar pgm-orc-app-main">
-			<div class="page-wrapper pgm-orc-page-wrapper">
-				<div class="container-fluid pgm-app-container">
-					<?= $this->element('content'); ?>
-				</div>
-			</div>
-		</div>
+	<!-- Painel principal -->
+	<div class="main-wrapper">
+		<?= $this->element('content'); ?>
 	</div>
 </body>
 </html>

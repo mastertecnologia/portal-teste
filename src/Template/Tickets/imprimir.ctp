@@ -238,14 +238,14 @@ $emitidoEm = date('d/m/Y H:i');
 	}
 	@media print {
 		/* Conteúdo do layout print: row com Flash + este template */
-		.pgm-page-body.tirar-black-mode > *:not(.ticket-print-document),
-		.pgm-page-body.tirar-black-mode > script {
+		.row.tirar-black-mode > *:not(.ticket-print-document),
+		.row.tirar-black-mode > script {
 			display: none !important;
 			height: 0 !important;
 			overflow: hidden !important;
 			visibility: hidden !important;
 		}
-		.pgm-page-body.tirar-black-mode {
+		.row.tirar-black-mode {
 			display: block !important;
 			margin: 0 !important;
 			padding: 0 !important;
