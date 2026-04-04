@@ -266,6 +266,15 @@
 	background: transparent !important;
 }
 
+.os-edit-shell .jsgrid-header-cell {
+	vertical-align: middle !important;
+	line-height: 1.25;
+}
+
+.os-edit-shell .jsgrid-header-sortable {
+	padding-right: 18px !important;
+}
+
 .os-edit-shell .jsgrid-header-row > .jsgrid-header-cell {
 	background: var(--os-bg4) !important;
 	border-color: var(--os-border) !important;
@@ -274,7 +283,8 @@
 	font-size: 10px;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
-	padding: 6px 8px !important;
+	padding: 10px 10px !important;
+	vertical-align: middle !important;
 }
 
 .os-edit-shell .jsgrid-grid-header .jsgrid-control-field {
@@ -285,10 +295,32 @@
 .os-edit-shell .jsgrid-alt-row > .jsgrid-cell,
 .os-edit-shell .jsgrid-insert-row > .jsgrid-cell,
 .os-edit-shell .jsgrid-edit-row > .jsgrid-cell {
-	border-color: var(--os-border) !important;
+	border-color: rgba(255, 255, 255, 0.055) !important;
 	background: var(--os-bg3) !important;
 	color: var(--os-text2);
-	padding: 4px 6px !important;
+	padding: 9px 10px !important;
+	vertical-align: middle !important;
+}
+
+.os-edit-shell .jsgrid .inputObservacao {
+	text-align: center;
+}
+
+.os-edit-shell .jsgrid .input-group {
+	min-width: 0;
+	align-items: stretch;
+}
+
+.os-edit-shell .jsgrid .input-group .form-control.input-codigo-val {
+	min-width: 0;
+	font-size: 12px;
+}
+
+.os-edit-shell .jsgrid-insert-row select.form-control,
+.os-edit-shell .jsgrid-edit-row select.form-control {
+	min-height: 34px;
+	padding: 5px 8px;
+	font-size: 12.5px;
 }
 
 .os-edit-shell .jsgrid-row:hover > .jsgrid-cell,
@@ -313,6 +345,15 @@
 
 .os-edit-shell .jsgrid-pager a {
 	color: var(--os-accent);
+}
+
+.os-edit-shell .jsgrid .os-edit-ref-link {
+	color: var(--os-accent) !important;
+	text-decoration: none !important;
+}
+
+.os-edit-shell .jsgrid .os-edit-ref-link:hover {
+	color: #5a94ff !important;
 }
 
 .os-edit-shell .jsgrid input.form-control,

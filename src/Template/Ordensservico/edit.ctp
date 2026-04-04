@@ -958,6 +958,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "tipo",
 				title: "Tipo",
 				type: "select",
+				width: 108,
 				items: tiposOpt,
 				editing: false,
 				insertcss: 'cellInput inputTipo',
@@ -967,7 +968,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "codproduto",
 				title: "Código do Produto",
 				type: "text",
-				width: 200,
+				width: 220,
 				css: 'inputCodproduto',
 				validate: "required",
 				itemTemplate: function(value) {
@@ -1037,6 +1038,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "descricao",
 				title: "Descrição",
 				type: "text",
+				width: 240,
 				editing: false,
 				insertcss: 'cellInput inputDescricao',
 				editcss: "editDescricao"
@@ -1044,13 +1046,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 			{
 				name: "observacao",
-				title: "Referenciar ▼",
+				title: "Referenciar",
 				type: "text",
 				align: "center",
-				width: 100,
+				width: 132,
 				itemTemplate: function(value, item) {
 					return $("<div>")
-						.addClass("btn btn-sm btn-link text-dark")
+						.addClass("btn btn-sm btn-link os-edit-ref-link")
 						.css({
 							"cursor": "pointer",
 							"text-decoration": "none"
@@ -1097,6 +1099,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "unidade",
 				title: "Unidade",
 				type: "text",
+				width: 80,
 				editing: false,
 				insertcss: 'cellInput inputUnidade',
 				editcss: "editUnidade"
@@ -1105,6 +1108,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "quantidade",
 				title: "Qtde",
 				type: "text",
+				width: 72,
 				insertcss: 'cellInput inputQuantidade',
 				editcss: "editQuantidade"
 			},
@@ -1112,6 +1116,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "valorunitario",
 				title: "Vl. Unit.",
 				type: "text",
+				width: 108,
 				insertcss: 'cellInput inputValorunitario',
 				editcss: "editValorunitario"
 			},
@@ -1119,6 +1124,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "valordesconto",
 				title: "Desc.",
 				type: "text",
+				width: 108,
 				insertcss: 'cellInput inputValordesconto',
 				editcss: "editValordesconto"
 			},
@@ -1126,6 +1132,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "valortotal",
 				title: "Total",
 				type: "text",
+				width: 108,
 				editing: true,
 				insertcss: 'cellInput inputValortotal',
 				editcss: "editValortotal"

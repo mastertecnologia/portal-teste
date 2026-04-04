@@ -118,16 +118,21 @@ body.os-add-page .bs-container .dropdown-menu li > a:hover {
 
 .os-add-shell hr {
 	border-color: var(--os-border);
-	margin: 12px 0;
+	margin: 20px 0 16px;
 }
 
 .os-add-shell .os-add-section-title {
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--os-text);
-	margin: 10px 0 8px;
-	padding-bottom: 6px;
+	margin: 4px 0 12px;
+	padding-bottom: 8px;
 	border-bottom: 1px solid var(--os-border);
+}
+
+/* Respiro antes da grade (evita “colado” no bloco Atendimento) */
+.os-add-shell #grid_table {
+	margin-top: 6px;
 }
 
 .os-add-shell .table {
@@ -207,11 +212,18 @@ body.os-add-page .os-add-shell th.jsgrid-header-cell {
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
+	padding: 10px 10px !important;
+	vertical-align: middle !important;
+	line-height: 1.25;
 }
 
 /* Células vazias da coluna controlo no <thead> */
 body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field {
 	background: var(--os-bg4) !important;
+}
+
+.os-add-shell .jsgrid-header-sortable {
+	padding-right: 18px !important;
 }
 
 .os-add-shell .jsgrid-row > .jsgrid-cell,
@@ -220,8 +232,36 @@ body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field {
 .os-add-shell .jsgrid-insert-row > .jsgrid-cell,
 .os-add-shell .jsgrid-edit-row > .jsgrid-cell {
 	background: var(--os-bg3);
-	border-color: var(--os-border);
+	border-color: rgba(255, 255, 255, 0.055);
 	color: var(--os-text2);
+	padding: 9px 10px !important;
+	vertical-align: middle !important;
+}
+
+/* Coluna “Referenciar”: alinhar rótulo do cabeçalho com células de texto */
+.os-add-shell .jsgrid .inputObservacao {
+	text-align: center;
+}
+
+.os-add-shell .jsgrid .inputObservacao input.form-control {
+	text-align: center;
+}
+
+.os-add-shell .jsgrid .input-group {
+	min-width: 0;
+	align-items: stretch;
+}
+
+.os-add-shell .jsgrid .input-group .form-control.input-codigo-val {
+	min-width: 0;
+	font-size: 12px;
+}
+
+.os-add-shell .jsgrid-insert-row select.form-control,
+.os-add-shell .jsgrid-edit-row select.form-control {
+	min-height: 34px;
+	padding: 5px 8px;
+	font-size: 12.5px;
 }
 
 .os-add-shell .jsgrid-row:hover > .jsgrid-cell,
