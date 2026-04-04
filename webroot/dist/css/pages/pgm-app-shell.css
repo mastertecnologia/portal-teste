@@ -1,0 +1,130 @@
+/**
+ * PGM — App shell global: canvas principal desacoplado da sidebar (cor, borda, gutters).
+ * Depende de layout-sidebar-shell.css e pgm-theme-tokens.css; carregar antes de pgm-theme-light.css.
+ */
+html[data-pgm-theme="dark"] body.layout-no-topbar:not(.pgm-theme-light) {
+	--pgm-app-canvas-bg: var(--pgm-bg-page, #12151c);
+	--pgm-app-canvas-border: rgba(255, 255, 255, 0.08);
+	--pgm-app-gutter-x: clamp(1rem, 2.2vw, 1.75rem);
+}
+
+html[data-pgm-theme="light"] body.layout-no-topbar {
+	--pgm-app-canvas-bg: var(--pgm-bg-page, #f0f2f5);
+	--pgm-app-canvas-border: var(--pgm-border, #e1e4e8);
+	--pgm-app-gutter-x: clamp(1rem, 2.2vw, 1.75rem);
+}
+
+body.layout-no-topbar.pgm-theme-light {
+	--pgm-app-canvas-bg: var(--pgm-content-bg, #f0f2f5);
+	--pgm-app-canvas-border: var(--pgm-border, #e1e4e8);
+	--pgm-app-gutter-x: clamp(1rem, 2.2vw, 1.75rem);
+}
+
+/* Desktop: posição da sidebar — ver pgm-layout-system.css (grid + sticky) */
+
+body.layout-no-topbar #main-wrapper.pgm-app-shell,
+body.layout-no-topbar #main-wrapper {
+	background: var(--pgm-sb-bg, #0d1117) !important;
+}
+
+/* Sem sidebar fixa (Service Desk, print, orçamentos): sem borda de separação */
+body.layout-no-topbar .pgm-app-main.pgm-app-main--no-sidebar {
+	border-left: none !important;
+	box-shadow: none !important;
+}
+
+body.layout-no-topbar .pgm-shell-main {
+	background: transparent !important;
+}
+
+body.layout-no-topbar .pgm-app-main {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	min-width: 0;
+	width: 100%;
+	background: var(--pgm-app-canvas-bg, var(--pgm-bg-page, #12151c));
+	border-left: 1px solid var(--pgm-app-canvas-border);
+}
+
+body.layout-no-topbar .pgm-app-main .page-wrapper {
+	background: transparent !important;
+	flex: 1 1 auto;
+}
+
+body.layout-no-topbar .pgm-app-container.container-fluid {
+	padding-left: var(--pgm-app-gutter-x) !important;
+	padding-right: var(--pgm-app-gutter-x) !important;
+	max-width: 1920px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+body.layout-no-topbar .pgm-page-body {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+body.layout-no-topbar .pgm-page-primary {
+	min-width: 0;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+body.layout-no-topbar .pgm-page-flash {
+	width: 100%;
+	flex-shrink: 0;
+}
+
+body.layout-no-topbar .pgm-app-main > .footer {
+	background: var(--pgm-bg-elevated, #161b22) !important;
+	color: rgba(255, 255, 255, 0.58) !important;
+	border-top: 1px solid var(--pgm-app-canvas-border) !important;
+}
+
+body.layout-no-topbar .pgm-app-main > .footer a {
+	color: var(--pgm-teal-light, #5cdbc0) !important;
+}
+
+body.layout-no-topbar .pgm-app-main > .footer a strong {
+	color: var(--pgm-sb-text, #e6edf3) !important;
+}
+
+body.layout-no-topbar.pgm-theme-light .pgm-app-main > .footer {
+	background: var(--pgm-surface, #ffffff) !important;
+	color: var(--pgm-muted, #6b7280) !important;
+	border-top: 1px solid var(--pgm-border, #e1e4e8) !important;
+}
+
+body.layout-no-topbar.pgm-theme-light .pgm-app-main > .footer a {
+	color: var(--pgm-teal-btn, #00a876) !important;
+}
+
+body.layout-no-topbar.pgm-theme-light .pgm-app-main > .footer a strong {
+	color: var(--pgm-text, #1a1f2e) !important;
+}
+
+body.layout-no-topbar .pgm-react-embed {
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+	width: 100%;
+}
+
+body.layout-no-topbar .pgm-page-body > .tickets-react-shell {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+	width: 100%;
+}

@@ -7,6 +7,8 @@ html[data-pgm-theme="dark"] body.pgm-print-layout {
 }
 
 html[data-pgm-theme="dark"] body.pgm-print-layout .main-wrapper,
+html[data-pgm-theme="dark"] body.pgm-print-layout .pgm-app-main,
+html[data-pgm-theme="dark"] body.pgm-print-layout .page-wrapper,
 html[data-pgm-theme="dark"] body.pgm-print-layout .container-fluid {
 	background: transparent !important;
 	color: inherit;
@@ -15,6 +17,16 @@ html[data-pgm-theme="dark"] body.pgm-print-layout .container-fluid {
 html[data-pgm-theme="light"] body.pgm-print-layout {
 	background: var(--pgm-bg-page) !important;
 	color: var(--pgm-text) !important;
+}
+
+/* Shell compartilhado com default.ctp (sem sidebar) */
+body.pgm-print-layout.layout-no-topbar .pgm-print-app-main.pgm-app-main {
+	min-height: auto;
+}
+
+body.pgm-print-layout.layout-no-topbar .pgm-print-page-wrapper.page-wrapper {
+	flex: 1 1 auto;
+	min-height: 0;
 }
 
 /* Botão de tema na pré-visualização (mesmo padrão do layout clear) */
@@ -48,6 +60,8 @@ html[data-pgm-theme="dark"] .pgm-print-theme-fab.pgm-legacy-theme-fab {
 	body,
 	body.pgm-print-layout,
 	body.pgm-print-layout .main-wrapper,
+	body.pgm-print-layout .pgm-app-main,
+	body.pgm-print-layout .page-wrapper,
 	body.pgm-print-layout .container-fluid {
 		background: #fff !important;
 		color: #000 !important;

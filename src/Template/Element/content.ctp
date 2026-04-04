@@ -1,4 +1,4 @@
-<div class="row tirar-black-mode">
-	<div class="col-md-12 aquivaiosalert"><?= $this->Flash->render() ?></div>
+<div class="pgm-page-body tirar-black-mode">
+	<div class="pgm-page-flash aquivaiosalert"><?= $this->Flash->render() ?></div>
 	<?= $this->fetch('content') ?>
 </div>

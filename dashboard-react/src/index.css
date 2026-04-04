@@ -21,8 +21,10 @@
   max-width: 100%;
 }
 
-/* Coluna Bootstrap que envolve o root (evita row sem col) */
-.row > .tickets-react-shell {
+/* Shell do React no portal: .row, .pgm-page-body ou .pgm-page-primary (layout system) */
+.row > .tickets-react-shell,
+.pgm-page-body > .tickets-react-shell,
+.pgm-page-primary > .pgm-page-body > .tickets-react-shell {
   min-width: 0;
 }
 

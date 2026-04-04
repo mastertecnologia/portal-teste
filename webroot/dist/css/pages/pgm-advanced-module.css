@@ -374,6 +374,8 @@ body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper ta
 }
 
 /* Tabelas Bootstrap fora de .card */
+body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .container-fluid > main .pgm-page-body .table,
+body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .container-fluid > .pgm-page-body .table,
 body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .container-fluid > .row .table,
 body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .table.table-hover {
 	color: #e6edf3 !important;

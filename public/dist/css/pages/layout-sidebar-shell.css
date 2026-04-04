@@ -58,7 +58,7 @@ html body.layout-no-topbar.fixed-layout .page-wrapper,
 html body.layout-no-topbar .page-wrapper {
 	padding-top: 0 !important;
 	margin-top: 0 !important;
-	background: var(--pgm-sb-bg) !important;
+	background: transparent !important;
 	border-top: none !important;
 	box-shadow: none !important;
 }
@@ -662,7 +662,7 @@ body.layout-no-topbar .pgm-shell-main {
 	min-height: 100vh;
 	min-width: 0;
 	flex: 1 1 auto;
-	background: var(--pgm-sb-bg) !important;
+	background: transparent !important;
 }
 body.layout-no-topbar .pgm-shell-main .page-wrapper {
 	flex: 1 1 auto;
@@ -671,19 +671,21 @@ body.layout-no-topbar .pgm-shell-main .page-wrapper {
 	min-height: 0 !important;
 }
 body.layout-no-topbar .pgm-shell-main .page-wrapper > .container-fluid { flex: 1 1 auto; }
+body.layout-no-topbar .pgm-shell-main .page-wrapper > .container-fluid > main.pgm-page-primary {
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+}
 body.layout-no-topbar .pgm-shell-main .page-wrapper,
 body.layout-no-topbar .pgm-shell-main .footer { margin-left: 0 !important; }
 
-@media (min-width: 1024px) {
-	body.layout-no-topbar .pgm-shell-main { margin-left: 220px; }
-	body.layout-no-topbar.mini-sidebar .pgm-shell-main { margin-left: 70px; }
-}
+/* Offset horizontal do main: pgm-layout-system.css (grid) substitui margin-left legado. */
 
 /* ── Barra de título / breadcrumb ───────────────────────────────────────────── */
 body.layout-no-topbar .page-titles {
 	background: #13161d !important;
 	padding: 11px 18px !important;
-	margin: 0 -25px 20px -25px !important;
+	margin: 0 0 1.25rem 0 !important;
 	border: 1px solid rgba(255,255,255,0.06);
 	border-radius: 12px;
 	box-shadow: none !important;
@@ -697,7 +699,7 @@ body.layout-no-topbar .page-titles .breadcrumb-item + .breadcrumb-item::before {
 body.layout-no-topbar .page-titles .text-themecolor { color: var(--pgm-teal-light) !important; }
 
 @media (max-width: 767px) {
-	body.layout-no-topbar .page-titles { margin-left: -15px !important; margin-right: -15px !important; }
+	body.layout-no-topbar .page-titles { margin-left: 0 !important; margin-right: 0 !important; }
 	/* Menu móvel: botão fora da faixa da marca (layout sem topbar) */
 	body.layout-no-topbar .pgm-shell-mobile-nav {
 		position: fixed;
@@ -722,13 +724,8 @@ body.layout-no-topbar .page-titles .text-themecolor { color: var(--pgm-teal-ligh
 /* ── Rodapé ─────────────────────────────────────────────────────────────────── */
 body.layout-no-topbar .pgm-shell-main .footer {
 	flex-shrink: 0;
-	background: #13161d !important;
-	color: rgba(255,255,255,0.60) !important;
-	border-top: 1px solid var(--pgm-sb-border) !important;
-	padding: 13px 24px !important;
+	padding: 13px var(--pgm-app-gutter-x, clamp(1rem, 2.2vw, 1.75rem)) !important;
 }
-body.layout-no-topbar .pgm-shell-main .footer a { color: var(--pgm-teal-light) !important; }
-body.layout-no-topbar .pgm-shell-main .footer a strong { color: var(--pgm-sb-text) !important; }
 
 /* ── Retrocompatibilidade: pgm-sidebar-meta ─────────────────────────────────── */
 /* Mapeado para workspace no HTML novo; estilos herdados via .pgm-sidebar-workspace */

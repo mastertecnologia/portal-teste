@@ -720,3 +720,33 @@
 }
 .prd-loc-chip-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--prd-dim); }
 .prd-loc-chip-val { font-size: 13px; font-weight: 600; color: var(--prd-teal-lt); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* ══════════════════════════════════════════════════════════════
+   Integração pgm-layout-system (ref. Produtos/index — .pgm-layout-ref)
+══════════════════════════════════════════════════════════════ */
+.prd-root.pgm-layout-ref .prd-topbar.pgm-page-toolbar {
+  padding-bottom: 4px;
+}
+
+.prd-root.pgm-layout-ref .prd-stats-bar.pgm-content-section {
+  margin-bottom: var(--pgm-section-gap-y, 1.25rem);
+}
+
+.prd-root.pgm-layout-ref .prd-kpi-strip.pgm-page-section {
+  margin-bottom: var(--pgm-stack-gap, 1rem);
+}
+
+.prd-root.pgm-layout-ref .prd-filter-bar.pgm-filter-bar {
+  margin: 0 24px var(--pgm-stack-gap, 1rem);
+  padding: 12px 16px;
+  border-radius: var(--pgm-radius-section, 12px);
+  border: 1px solid var(--prd-border);
+  background: var(--prd-surface2);
+  box-sizing: border-box;
+}
+
+.prd-root.pgm-layout-ref .prd-table-wrap.pgm-data-region {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
