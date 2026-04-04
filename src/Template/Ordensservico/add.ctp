@@ -2,7 +2,7 @@
 	use Cake\Routing\Router;
 	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
-    $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
+    $this->Breadcrumbs->add('Nova ordem', [], ['class' => 'breadcrumb-item active']);
 ?>
 <style>
 	.jsgrid-grid-header, .jsgrid-grid-body {
@@ -17,100 +17,151 @@
 	.os-pesquisa-produto-sem-estoque { background-color: #f8d7da !important; }
 	.os-pesquisa-produto-sem-estoque td { color: #721c24; }
 </style>
-<div class="col-md-12 p-0">
-    <div class="os-add-shell form-material">
-        <div class="os-add-shell-body">
-            <?= $this->Form->create($ordem, ['class' => 'form-material', 'id' => 'form-os-add']) ?>
-			<div class="row">
-				<div class="col-lg-6 col-sm-12">
-					<label class="control-label m-b-0">Cliente</label>
-					<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
-				</div>
-				<div class="col-lg-6 col-sm-12">
-					<label class="control-label m-b-0">Solicitante</label>
-					<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
-					
-					<!-- Campo para "Outros" - inicialmente escondido -->
-					<div id="solicitante-outros-container" style="display: none; margin-top: 10px;">
-						<label class="control-label m-b-0">Nome do Solicitante (Outros)</label>
-						<?= $this->Form->control('solicitante_outros', [
-							'class' => 'form-control', 
-							'label' => false, 
-							'placeholder' => 'Digite o nome do solicitante',
-							'maxlength' => 255
-						]) ?>
+<div class="col-12 p-0 os-add-page-root">
+	<div class="os-add-shell os-add-shell--structured form-material">
+		<div class="os-add-shell-body">
+			<section class="os-add-panel" aria-labelledby="os-add-form-heading">
+				<header class="os-add-panel__head">
+					<h2 id="os-add-form-heading" class="os-add-panel__title">Dados da ordem</h2>
+					<p class="os-add-panel__meta">Cliente, prazos, classificação e descrição. Os itens são incluídos na seção seguinte.</p>
+				</header>
+				<div class="os-add-panel__body">
+			<?= $this->Form->create($ordem, ['class' => 'form-material os-add-form', 'id' => 'form-os-add']) ?>
+
+			<fieldset class="os-add-fieldset">
+				<legend class="os-add-fieldset__legend">Cliente e contato</legend>
+				<div class="row os-add-row">
+					<div class="col-lg-6 col-md-12">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Cliente</label>
+							<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+						</div>
+					</div>
+					<div class="col-lg-6 col-md-12">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Solicitante</label>
+							<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
+						</div>
+						<div id="solicitante-outros-container" class="os-add-solicitante-outros" style="display: none;">
+							<div class="form-group os-add-fg">
+								<label class="control-label m-b-0">Nome do solicitante (outros)</label>
+								<?= $this->Form->control('solicitante_outros', [
+									'class' => 'form-control',
+									'label' => false,
+									'placeholder' => 'Digite o nome do solicitante',
+									'maxlength' => 255
+								]) ?>
+							</div>
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class="row clienteTelemail m-t-10">
-					<div class="col-lg-3 col-sm-6">
-						<label class="control-label m-b-0">Telefone para contato</label>
-						<?= $this->Form->control('telefone', ['class' => 'telefone form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum telefone']) ?>
+				<div class="row os-add-row clienteTelemail">
+					<div class="col-lg-3 col-md-6">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Telefone para contato</label>
+							<?= $this->Form->control('telefone', ['class' => 'telefone form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum telefone']) ?>
+						</div>
 					</div>
-					<div class="col-lg-3 col-sm-6">
-						<label class="control-label m-b-0">Celular para contato</label>
-						<?= $this->Form->control('celular', ['class' => 'celular form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum celular']) ?>
+					<div class="col-lg-3 col-md-6">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Celular para contato</label>
+							<?= $this->Form->control('celular', ['class' => 'celular form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum celular']) ?>
+						</div>
 					</div>
-					<div class="col-lg-6 col-sm-12">
-						<label class="control-label m-b-0">E-mail para contato</label>
-						<?= $this->Form->email('email', ['type' => 'text', 'class' => 'email form-control clienteTelemail', 'label' => false, 'placeholder' =>'Nenhum email']) ?>
+					<div class="col-lg-6 col-md-12">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">E-mail para contato</label>
+							<?= $this->Form->email('email', ['type' => 'text', 'class' => 'email form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum email']) ?>
+						</div>
 					</div>
 				</div>
-				<div class="row m-t-10">
-					<div class="col-lg-3 col-sm-12">
-						<div class="form-group ">
-							<label class="control-label m-b-0">Data de Abertura</label>
+			</fieldset>
+
+			<fieldset class="os-add-fieldset">
+				<legend class="os-add-fieldset__legend">Prazos e contrato</legend>
+				<div class="row os-add-row">
+					<div class="col-lg-3 col-md-6">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Data de abertura</label>
 							<?= $this->Form->text('dataabertura', ['value' => date('d/m/Y'), 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
 						</div>
 					</div>
-					<div class="col-lg-3 col-sm-12">
-						<div class="form-group ">
-							<label class="control-label m-b-0">Data de Previsão</label>
+					<div class="col-lg-3 col-md-6">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Data de previsão</label>
 							<?= $this->Form->text('dataprevisao', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
 						</div>
 					</div>
-					<div class="col-lg-3 col-sm-12">
-						<label class="control-label m-b-0">Prioridade</label>
-						<?= $this->Form->control('prioridade', ['placeholder' => 'Data', 'options' => C_OrdensPrioridade,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
+					<div class="col-lg-3 col-md-6">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Prioridade</label>
+							<?= $this->Form->control('prioridade', ['placeholder' => 'Data', 'options' => C_OrdensPrioridade,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
+						</div>
 					</div>
-					<div class="col-lg-3 col-sm-12">
-						<label class="control-label m-b-0">Contrato</label>
-						<?= $this->Form->control('contrato', ['placeholder' => 'Data', 'options' => C_OrdensContrato,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-lg-6 col-sm-12">
-						<label class="control-label m-b-0">Status</label>
-						<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
-					</div>
-					<div class="col-lg-6 col-sm-12">
-						<label class="control-label m-b-0">Tipo de OS</label>
-						<?= $this->Form->control('idproblema', ['data-live-search' => true, 'options' => $problemas, 'title' => 'Selecione um Tipo de OS', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+					<div class="col-lg-3 col-md-6">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Contrato</label>
+							<?= $this->Form->control('contrato', ['placeholder' => 'Data', 'options' => C_OrdensContrato,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
+						</div>
 					</div>
 				</div>
-				<div class="row m-t-10">
+			</fieldset>
+
+			<fieldset class="os-add-fieldset">
+				<legend class="os-add-fieldset__legend">Classificação</legend>
+				<div class="row os-add-row">
 					<div class="col-lg-6 col-md-12">
-						<label class="control-label m-b-0">Descrição do Problema</label>
-						<?= $this->Form->textarea('relato', ['maxlength' => 200, 'placeholder' => 'Insira a descrição do problema da ordem', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Status</label>
+							<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+						</div>
 					</div>
 					<div class="col-lg-6 col-md-12">
-						<label class="control-label m-b-0">Observação</label>
-						<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Obs.', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Tipo de OS</label>
+							<?= $this->Form->control('idproblema', ['data-live-search' => true, 'options' => $problemas, 'title' => 'Selecione um Tipo de OS', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+						</div>
 					</div>
 				</div>
-				<div class="row m-t-10">
-					<div class="col-lg-4 col-sm-12">
-						<label class="control-label m-b-0">Atendimento</label>
-						<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
+			</fieldset>
+
+			<fieldset class="os-add-fieldset">
+				<legend class="os-add-fieldset__legend">Descrição e observação</legend>
+				<div class="row os-add-row">
+					<div class="col-lg-6 col-md-12">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Descrição do problema</label>
+							<?= $this->Form->textarea('relato', ['maxlength' => 200, 'placeholder' => 'Insira a descrição do problema da ordem', 'class' => 'form-control os-add-textarea', 'label' => false, 'required' => false]) ?>
+						</div>
 					</div>
-					<div>
+					<div class="col-lg-6 col-md-12">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Observação</label>
+							<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Observações adicionais', 'class' => 'form-control os-add-textarea', 'label' => false, 'required' => false]) ?>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+
+			<fieldset class="os-add-fieldset os-add-fieldset--last">
+				<legend class="os-add-fieldset__legend">Atendimento</legend>
+				<div class="row os-add-row">
+					<div class="col-lg-4 col-md-6 col-sm-12">
+						<div class="form-group os-add-fg">
+							<label class="control-label m-b-0">Modalidade</label>
+							<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
+						</div>
+					</div>
+					<div class="sr-only">
 						<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
 					</div>
 				</div>
-				<hr>
-				<!-- Campos pro mobile  -->
-					<h4 class='text-center os-add-section-title'>Adicionar Produtos/Serviços</h4>
-					<?php if(isMobile()){ ?>
+			</fieldset>
+
+					<?php if (isMobile()) { ?>
+						<div class="os-add-mobile-carrinho">
+							<h3 class="os-add-mobile-carrinho__title">Incluir item (mobile)</h3>
+							<p class="os-add-mobile-carrinho__hint">Preencha e use &quot;Adicionar item&quot;. A lista abaixo atualiza junto com a grade.</p>
 						<div class="row">
 							<div class="col-2">
 								<label class="form-group ">Tipo</label>
@@ -168,17 +219,41 @@
 							</div>
 						</div>
 						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
+						</div>
 					<?php } ?>
-				<?= $this->Form->end() ?>
-				<!-- jsGrid fora do form: Enter/botões não submetem "Abrir OS"; campos abaixo usam form="form-os-add" (HTML5). -->
-				<div id="grid_table"></div>
-				<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
-				<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-add">
-				<p class='m-t-10'><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
-				<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success" form="form-os-add"><?= __('Abrir Ordem de Serviço') ?></button>
-            <div class="clearfix"></div>
-        </div>
-    </div>
+			<?= $this->Form->end() ?>
+				</div>
+			</section>
+
+			<section class="os-add-panel os-add-panel--items" aria-labelledby="os-add-items-heading">
+				<header class="os-add-panel__head os-add-panel__head--items">
+					<div class="os-add-panel__headline">
+						<h2 id="os-add-items-heading" class="os-add-panel__title">Produtos e serviços</h2>
+						<span class="os-add-panel__tag">Itens da ordem</span>
+					</div>
+					<p class="os-add-panel__meta">Inclua itens na <strong>primeira linha</strong> da tabela e confirme com <strong>+</strong>. Valores numéricos ficam alinhados à direita para leitura mais clara.</p>
+				</header>
+				<div class="os-add-panel__body os-add-panel__body--items">
+					<!-- jsGrid fora do form: Enter/botões não submetem "Abrir OS"; campos usam form="form-os-add" (HTML5). -->
+					<div class="os-add-grid-wrap" role="region" aria-label="Itens da ordem de serviço">
+						<div id="grid_table"></div>
+					</div>
+					<div class="os-add-items-total">
+						<div class="valortotalordem os-add-total-value text-right text-success font-weight-bold" aria-live="polite"></div>
+						<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-add">
+					</div>
+				</div>
+			</section>
+
+			<footer class="os-add-actions">
+				<p class="os-add-actions__hint"><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da ordem de serviço.</i></p>
+				<div class="os-add-actions__toolbar">
+					<?= $this->Html->link(__('Voltar à lista'), ['action' => 'index'], ['class' => 'btn btn-pgm os-add-btn-secondary']) ?>
+					<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success os-add-btn-primary" form="form-os-add"><?= __('Abrir ordem de serviço') ?></button>
+				</div>
+			</footer>
+		</div>
+	</div>
 </div>
 <div class="modal fade none-border" id="modal-observacao">
     <div class="modal-dialog">
@@ -647,12 +722,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			},
 			fields: [
 				{ name: "id", title: "id", type: "text", css: 'hide', validade: 'required',  editing: false,},
-				{ name: "tipo", title: "Tipo", type: "select", width: 108, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
+				{ name: "tipo", title: "Tipo", type: "select", width: 120, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
 					title: "Código do Produto",
 					type: "text", 
-					width: 220,
+					width: 248,
 					css: 'inputCodproduto',
 					validate: "required",
 
@@ -666,7 +741,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					// Template para INSERÇÃO
 					insertTemplate: function() {
 						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true);
-						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
+						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm os-add-grid-search-btn").html('<i class="fa fa-search"></i>');
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
@@ -691,7 +766,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					// Template para EDIÇÃO
 					editTemplate: function(value) {
 						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true).val(value);
-						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
+						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm os-add-grid-search-btn").html('<i class="fa fa-search"></i>');
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
@@ -713,14 +788,14 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao",  fixed: true, width: 240, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
-                { name: "observacao",  width: 132, title: "Referenciar", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
-                { name: "unidade",  width: 80, title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
-                { name: "quantidade",  width: 72, title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
-                { name: "valorunitario",  width: 108, title: "Vl. Unitário", type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
-                { name: "valordesconto",  width: 108, title: "Vl. Desconto", type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
+				{ name: "descricao",  fixed: true, width: 268, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
+                { name: "observacao",  width: 140, title: "Referenciar", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
+                { name: "unidade",  width: 88, title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
+                { name: "quantidade",  width: 82, title: "Qtde", type: "text",  headercss: 'os-col-num', css: 'os-col-num', insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
+                { name: "valorunitario",  width: 118, title: "Vl. Unitário", type: "text",  headercss: 'os-col-num', css: 'os-col-num', insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
+                { name: "valordesconto",  width: 118, title: "Vl. Desconto", type: "text",  headercss: 'os-col-num', css: 'os-col-num', insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
                 /* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
-                { name: "valortotal",  width: 108, title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
+                { name: "valortotal",  width: 118, title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai os-col-num', css: 'fieldValortotal os-col-num' },
                 { name: "modelo", type: "text", css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
                 { name: "serialnumber", type: "text", css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
 				{ name: "productkey", type: "text", css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},
