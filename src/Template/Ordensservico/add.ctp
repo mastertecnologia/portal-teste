@@ -1,298 +1,185 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-v2.css', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
-    $this->Breadcrumbs->add('Nova ordem', [], ['class' => 'breadcrumb-item active']);
+    $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
 <style>
-	.jsgrid-grid-header, .jsgrid-grid-body { overflow: auto; }
-	.jsgrid-cell { min-height: 44px; height: auto; overflow: visible; }
+	.jsgrid-grid-header, .jsgrid-grid-body {
+		overflow: auto; 
+	} 
+	.jsgrid-cell {
+		min-height: 44px;
+		height: auto;
+		overflow: visible;
+	}
 	.jsgrid-cell > select > option { text-align: left; }
 	.os-pesquisa-produto-sem-estoque { background-color: #f8d7da !important; }
 	.os-pesquisa-produto-sem-estoque td { color: #721c24; }
 </style>
-
-<div class="os-v2-root col-12 p-0">
-
-	<!-- ══════════════════════════════════════════════════════════
-	     PAGE HEADER — title + actions
-	     ══════════════════════════════════════════════════════════ -->
-	<div class="os-v2-page-header">
-		<div class="os-v2-page-header__brand">
-			<div class="os-v2-page-header__icon" aria-hidden="true">
-				<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<rect x="5" y="2" width="14" height="20" rx="2"/>
-					<line x1="9" y1="7"  x2="15" y2="7"/>
-					<line x1="9" y1="11" x2="15" y2="11"/>
-					<line x1="9" y1="15" x2="13" y2="15"/>
-				</svg>
+<div class="col-md-12 p-0">
+    <div class="os-add-shell form-material">
+        <div class="os-add-shell-body">
+            <?= $this->Form->create($ordem, ['class' => 'form-material', 'id' => 'form-os-add']) ?>
+			<div class="row">
+				<div class="col-lg-6 col-sm-12">
+					<label class="control-label m-b-0">Cliente</label>
+					<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+				</div>
+				<div class="col-lg-6 col-sm-12">
+					<label class="control-label m-b-0">Solicitante</label>
+					<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
+					
+					<!-- Campo para "Outros" - inicialmente escondido -->
+					<div id="solicitante-outros-container" style="display: none; margin-top: 10px;">
+						<label class="control-label m-b-0">Nome do Solicitante (Outros)</label>
+						<?= $this->Form->control('solicitante_outros', [
+							'class' => 'form-control', 
+							'label' => false, 
+							'placeholder' => 'Digite o nome do solicitante',
+							'maxlength' => 255
+						]) ?>
+					</div>
+				</div>
 			</div>
-			<div>
-				<h1 class="os-v2-page-header__title">Nova Ordem de Serviço</h1>
-				<p class="os-v2-page-header__sub">Preencha os dados e adicione os itens para abrir a OS</p>
-			</div>
-		</div>
-		<div class="os-v2-page-header__actions">
-			<?= $this->Html->link('Voltar à lista', ['action' => 'index'], ['class' => 'btn btn-pgm os-v2-btn-back']) ?>
-			<button type="submit" form="form-os-add" class="btn btn-pgm btn-pgm-salvar os-v2-btn-submit">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-				Abrir ordem de serviço
-			</button>
-		</div>
-	</div>
-
-	<!-- ══════════════════════════════════════════════════════════
-	     MAIN LAYOUT — form (left) · grid (right, sticky)
-	     ══════════════════════════════════════════════════════════ -->
-	<div class="os-v2-layout">
-
-		<!-- ── LEFT COLUMN: form data ────────────────────────── -->
-		<div class="os-v2-form-col">
-			<div class="os-v2-card os-v2-form-card">
-				<div class="os-v2-card-head">
-					<span class="os-v2-card-head__title">Dados da ordem</span>
-					<span class="os-v2-card-head__meta">Cliente, prazos, classificação e atendimento</span>
-				</div>
-				<div class="os-v2-card-body form-material">
-
-				<?= $this->Form->create($ordem, ['class' => 'form-material os-add-form', 'id' => 'form-os-add']) ?>
-
-				<!-- ─── 01 · Cliente e contato ─────────────────────── -->
-				<div class="os-v2-section" id="os-sec-cliente">
-					<div class="os-v2-section__hd">
-						<span class="os-v2-section__num">01</span>
-						<span class="os-v2-section__title">Cliente e contato</span>
+			<div class="row clienteTelemail m-t-10">
+					<div class="col-lg-3 col-sm-6">
+						<label class="control-label m-b-0">Telefone para contato</label>
+						<?= $this->Form->control('telefone', ['class' => 'telefone form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum telefone']) ?>
 					</div>
-					<div class="os-v2-section__bd">
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Cliente <span class="os-v2-req" title="Obrigatório">*</span></label>
-							<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
-						</div>
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Solicitante</label>
-							<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
-						</div>
-						<div id="solicitante-outros-container" class="os-add-solicitante-outros" style="display: none;">
-							<div class="form-group os-v2-fg">
-								<label class="os-v2-label">Nome do solicitante (outros)</label>
-								<?= $this->Form->control('solicitante_outros', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Digite o nome do solicitante', 'maxlength' => 255]) ?>
-							</div>
-						</div>
-						<div class="row os-v2-row clienteTelemail">
-							<div class="col-6">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">Telefone</label>
-									<?= $this->Form->control('telefone', ['class' => 'telefone form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum telefone']) ?>
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">Celular</label>
-									<?= $this->Form->control('celular', ['class' => 'celular form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum celular']) ?>
-								</div>
-							</div>
-							<div class="col-12">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">E-mail para contato</label>
-									<?= $this->Form->email('email', ['type' => 'text', 'class' => 'email form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum email']) ?>
-								</div>
-							</div>
-						</div>
+					<div class="col-lg-3 col-sm-6">
+						<label class="control-label m-b-0">Celular para contato</label>
+						<?= $this->Form->control('celular', ['class' => 'celular form-control clienteTelemail', 'label' => false, 'placeholder' => 'Nenhum celular']) ?>
+					</div>
+					<div class="col-lg-6 col-sm-12">
+						<label class="control-label m-b-0">E-mail para contato</label>
+						<?= $this->Form->email('email', ['type' => 'text', 'class' => 'email form-control clienteTelemail', 'label' => false, 'placeholder' =>'Nenhum email']) ?>
 					</div>
 				</div>
-
-				<!-- ─── 02 · Prazos e contrato ─────────────────────── -->
-				<div class="os-v2-section" id="os-sec-prazos">
-					<div class="os-v2-section__hd">
-						<span class="os-v2-section__num">02</span>
-						<span class="os-v2-section__title">Prazos e contrato</span>
-					</div>
-					<div class="os-v2-section__bd">
-						<div class="row os-v2-row">
-							<div class="col-6">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">Data de abertura <span class="os-v2-req">*</span></label>
-									<?= $this->Form->text('dataabertura', ['value' => date('d/m/Y'), 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">Data de previsão <span class="os-v2-req">*</span></label>
-									<?= $this->Form->text('dataprevisao', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">Prioridade <span class="os-v2-req">*</span></label>
-									<?= $this->Form->control('prioridade', ['options' => C_OrdensPrioridade, 'class' => 'form-control', 'label' => false, 'required' => true]) ?>
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="form-group os-v2-fg">
-									<label class="os-v2-label">Contrato <span class="os-v2-req">*</span></label>
-									<?= $this->Form->control('contrato', ['options' => C_OrdensContrato, 'class' => 'form-control', 'label' => false, 'required' => true]) ?>
-								</div>
-							</div>
+				<div class="row m-t-10">
+					<div class="col-lg-3 col-sm-12">
+						<div class="form-group ">
+							<label class="control-label m-b-0">Data de Abertura</label>
+							<?= $this->Form->text('dataabertura', ['value' => date('d/m/Y'), 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
 						</div>
+					</div>
+					<div class="col-lg-3 col-sm-12">
+						<div class="form-group ">
+							<label class="control-label m-b-0">Data de Previsão</label>
+							<?= $this->Form->text('dataprevisao', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
+						</div>
+					</div>
+					<div class="col-lg-3 col-sm-12">
+						<label class="control-label m-b-0">Prioridade</label>
+						<?= $this->Form->control('prioridade', ['placeholder' => 'Data', 'options' => C_OrdensPrioridade,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
+					</div>
+					<div class="col-lg-3 col-sm-12">
+						<label class="control-label m-b-0">Contrato</label>
+						<?= $this->Form->control('contrato', ['placeholder' => 'Data', 'options' => C_OrdensContrato,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 					</div>
 				</div>
-
-				<!-- ─── 03 · Classificação ─────────────────────────── -->
-				<div class="os-v2-section" id="os-sec-class">
-					<div class="os-v2-section__hd">
-						<span class="os-v2-section__num">03</span>
-						<span class="os-v2-section__title">Classificação</span>
+				<div class="row">
+					<div class="col-lg-6 col-sm-12">
+						<label class="control-label m-b-0">Status</label>
+						<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
 					</div>
-					<div class="os-v2-section__bd">
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Status <span class="os-v2-req">*</span></label>
-							<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
-						</div>
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Tipo de OS <span class="os-v2-req">*</span></label>
-							<?= $this->Form->control('idproblema', ['data-live-search' => true, 'options' => $problemas, 'title' => 'Selecione um Tipo de OS', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
-						</div>
+					<div class="col-lg-6 col-sm-12">
+						<label class="control-label m-b-0">Tipo de OS</label>
+						<?= $this->Form->control('idproblema', ['data-live-search' => true, 'options' => $problemas, 'title' => 'Selecione um Tipo de OS', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
 					</div>
 				</div>
-
-				<!-- ─── 04 · Descrição e observação ────────────────── -->
-				<div class="os-v2-section" id="os-sec-desc">
-					<div class="os-v2-section__hd">
-						<span class="os-v2-section__num">04</span>
-						<span class="os-v2-section__title">Descrição e observação</span>
+				<div class="row m-t-10">
+					<div class="col-lg-6 col-md-12">
+						<label class="control-label m-b-0">Descrição do Problema</label>
+						<?= $this->Form->textarea('relato', ['maxlength' => 200, 'placeholder' => 'Insira a descrição do problema da ordem', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
 					</div>
-					<div class="os-v2-section__bd">
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Descrição do problema</label>
-							<?= $this->Form->textarea('relato', ['maxlength' => 200, 'placeholder' => 'Descreva o problema da ordem', 'class' => 'form-control os-v2-textarea', 'label' => false, 'required' => false]) ?>
-						</div>
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Observação</label>
-							<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Observações adicionais', 'class' => 'form-control os-v2-textarea', 'label' => false, 'required' => false]) ?>
-						</div>
+					<div class="col-lg-6 col-md-12">
+						<label class="control-label m-b-0">Observação</label>
+						<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Obs.', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
 					</div>
 				</div>
-
-				<!-- ─── 05 · Atendimento ───────────────────────────── -->
-				<div class="os-v2-section os-v2-section--last" id="os-sec-atend">
-					<div class="os-v2-section__hd">
-						<span class="os-v2-section__num">05</span>
-						<span class="os-v2-section__title">Atendimento</span>
+				<div class="row m-t-10">
+					<div class="col-lg-4 col-sm-12">
+						<label class="control-label m-b-0">Atendimento</label>
+						<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 					</div>
-					<div class="os-v2-section__bd">
-						<div class="form-group os-v2-fg">
-							<label class="os-v2-label">Modalidade <span class="os-v2-req">*</span></label>
-							<?= $this->Form->control('atendimento', ['options' => C_OrdensAtendimento, 'class' => 'form-control', 'label' => false, 'required' => true]) ?>
-						</div>
-						<div class="sr-only">
-							<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
-						</div>
+					<div>
+						<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
 					</div>
 				</div>
-
-				<?php if (isMobile()) { ?>
-					<div class="os-add-mobile-carrinho">
-						<h3 class="os-add-mobile-carrinho__title">Incluir item (mobile)</h3>
-						<p class="os-add-mobile-carrinho__hint">Preencha e use &quot;Adicionar item&quot;. A lista abaixo atualiza junto com a grade.</p>
+				<hr>
+				<!-- Campos pro mobile  -->
+					<h4 class='text-center os-add-section-title'>Adicionar Produtos/Serviços</h4>
+					<?php if(isMobile()){ ?>
 						<div class="row">
 							<div class="col-2">
 								<label class="form-group ">Tipo</label>
 								<?= $this->Form->control('tipo', ['data-live-search' => true, 'options' => $tiposMobile, 'title' => 'Código', 'class' => 'inputMobile form-control selectpicker p-0', 'label' => false]) ?>
 							</div>
 							<div class="col-2">
-								<label class="os-v2-label">Código</label>
+								<label class="control-label m-b-0 text-muted">Código</label>
 								<?= $this->Form->control('codproduto', ['data-live-search' => true, 'options' => $produtosMobile, 'title' => 'Código', 'class' => 'inputMobile form-control selectpicker p-0', 'label' => false]) ?>
 							</div>
 							<div class="col-2">
-								<label class="os-v2-label">Qtd. Estoque: <span class="qtdEstoque"></span></label>
+								<label class="control-label m-b-0 text-muted">Qtd. Estoque: <span class="qtdEstoque"></span></label>
 							</div>
 							<div class="col-7">
 								<div class="form-group ">
-									<label class="os-v2-label">Descrição</label>
+									<label class="control-label m-b-0 text-muted">Descrição</label>
 									<?= $this->Form->control('descricao', ['class' => 'form-control inputMobile', 'label' => false, 'readonly']) ?>
 								</div>
 							</div>
 							<div class="col-2">
 								<div class="form-group ">
-									<label class="os-v2-label">Unidade</label>
+									<label class="control-label m-b-0 text-muted">Unidade</label>
 									<?= $this->Form->control('unidade', ['class' => 'form-control inputMobile', 'label' => false, 'readonly']) ?>
 								</div>
 							</div>
 							<div class="col-5">
 								<div class="form-group ">
-									<label class="os-v2-label">Quantidade</label>
+									<label class="control-label m-b-0 text-muted">Quantidade</label>
 									<?= $this->Form->control('quantidade', ['class' => 'aquisicao form-control inputMobile', 'label' => false]) ?>
 								</div>
 							</div>
 							<div class="col-5">
 								<div class="form-group ">
-									<label class="os-v2-label">Valor Unitário (R$)</label>
-									<?= $this->Form->control('valorunitario', ['class' => 'aquisicao form-control inputMobile mascaramonetaria', 'label' => false]) ?>
+									<label class="control-label m-b-0 text-muted">Valor Unitário (R$)</label>
+									<?= $this->Form->control('valorunitario', ['class' => 'aquisicao form-control inputMobile mascaramonetaria', 'label' => false,]) ?>
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="form-group ">
-									<label class="os-v2-label">Valor Desconto (R$)</label>
+									<label class="control-label m-b-0 text-muted">Valor Desconto (R$)</label>
 									<?= $this->Form->control('valordesconto', ['class' => 'mensal form-control inputMobile mascaramonetaria', 'label' => false]) ?>
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="form-group ">
-									<label class="os-v2-label">Valor Total (R$)</label>
+									<label class="control-label m-b-0 text-muted">Valor Total (R$)</label>
 									<?= $this->Form->text('valortotal', ['id' => 'valortotal', 'class' => 'form-control inputMobile', 'label' => false, 'readonly']) ?>
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="form-group ">
-									<label class="os-v2-label">Serial Number</label>
+									<label class="control-label m-b-0 text-muted">Serial Number</label>
 									<?= $this->Form->control('serialnumber', ['list' => 'listaSN', 'id' => 'serialnumber', 'class' => 'form-control inputMobile', 'label' => false]) ?>
 									<datalist id="listaSN"> </datalist>
 								</div>
 							</div>
 						</div>
 						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
-					</div>
-				<?php } ?>
-
+					<?php } ?>
 				<?= $this->Form->end() ?>
-
-				</div><!-- .os-v2-card-body -->
-			</div><!-- .os-v2-form-card -->
-		</div><!-- .os-v2-form-col -->
-
-		<!-- ── RIGHT COLUMN: products grid (sticky) ──────────── -->
-		<div class="os-v2-grid-col">
-			<div class="os-v2-card os-v2-grid-card">
-				<div class="os-v2-grid-hd">
-					<div class="os-v2-grid-hd__row">
-						<h2 class="os-v2-grid-hd__title">Produtos e Serviços</h2>
-						<span class="os-v2-tag">Itens da ordem</span>
-					</div>
-					<p class="os-v2-grid-hd__meta">Inclua itens na <strong>primeira linha</strong> da tabela e confirme com <strong>+</strong>. Valores numéricos ficam alinhados à direita.</p>
-				</div>
-				<!-- jsGrid fora do form: Enter/botões não submetem "Abrir OS"; campos usam form="form-os-add" (HTML5). -->
-				<div class="os-v2-grid-body" role="region" aria-label="Itens da ordem de serviço">
-					<div id="grid_table"></div>
-				</div>
-				<div class="os-v2-grid-foot">
-					<div class="valortotalordem os-v2-total-val text-right text-success font-weight-bold" aria-live="polite"></div>
-					<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-add">
-				</div>
-			</div>
-		</div><!-- .os-v2-grid-col -->
-
-	</div><!-- .os-v2-layout -->
-
-	<!-- ── HINT BAR ──────────────────────────────────────────── -->
-	<div class="os-v2-hint-bar">
-		<p><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da ordem de serviço.</i></p>
-	</div>
-
-</div><!-- .os-v2-root -->
-
-<!-- ══════════════════════════════════════════════════════════════
-     MODAL: Detalhes do Item
-     ══════════════════════════════════════════════════════════════ -->
+				<!-- jsGrid fora do form: Enter/botões não submetem "Abrir OS"; campos abaixo usam form="form-os-add" (HTML5). -->
+				<div id="grid_table"></div>
+				<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
+				<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-add">
+				<p class='m-t-10'><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
+				<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success" form="form-os-add"><?= __('Abrir Ordem de Serviço') ?></button>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
 <div class="modal fade none-border" id="modal-observacao">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -342,9 +229,7 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════
-     MODAL: Serial Number
-     ══════════════════════════════════════════════════════════════ -->
+<!-- Modal Serial Number -->
 <div class="modal fade none-border" id="modal-serialnumber">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
@@ -364,10 +249,7 @@
 		</div>
 	</div>
 </div>
-
-<!-- ══════════════════════════════════════════════════════════════
-     MODAL: Pesquisa de Produtos
-     ══════════════════════════════════════════════════════════════ -->
+<!-- Modal para pesquisa de produtos -->
 <div class="modal fade" id="modal-pesquisa-produto" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -433,7 +315,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	$(function () {
 		$('#idEmpresaAtual').val(getEmpresaAtual());
 	});
-
+		
 	// Solicitantes e telemail
 		$(document).ready(function(){
 			$('.clienteTelemail').hide();
@@ -449,13 +331,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'solicitantes']);?>/" + idcliente,
 				success: function(data){
 					$('#idsolicitante').find('option').remove().end();
-
+					
 					// Adiciona a opção "Outros" como primeira opção
 					$('#idsolicitante').append($('<option>', {
 						value: 0,
 						text: 'Outros'
 					}));
-
+					
 					// Adiciona os demais solicitantes
 					$.each(data, function(key, array) {
 						$('#idsolicitante').append($('<option>', {
@@ -463,9 +345,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							text: array
 						}));
 					});
-
+					
 					$('#idsolicitante').selectpicker("refresh");
-
+					
 					// Esconde o campo "Outros" inicialmente
 					$('#solicitante-outros-container').hide();
 				},
@@ -509,7 +391,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				$('.celular').val('');
 				return;
 			}
-
+			
 			$.ajax({
 				dataType: "json",
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'solemail']);?>/" + idsolicitante,
@@ -529,13 +411,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$.ajax({
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'contrato']);?>/" + $(this).val(),
 				success:function(data){
-					if(data == 1) $('#contrato').val(1);
-					else $('#contrato').val(0);
+					if(data == 1) $('#contrato').val(1); 
+					else $('#contrato').val(0); 
 				},
 			});
 		});
 
-	// URLs
+	// URLsF
 		var urlLoadData = "<?= Router::url(['controller'=>'Ordensservico','action'=>'carrinho']);?>";
 		var urlAdd = "<?= Router::url(['controller'=>'Ordensservico','action'=>'carrinhoadd']);?>";
 		var urlEdit = "<?= Router::url(['controller'=>'Ordensservico','action'=>'carrinhoedititem']);?>";
@@ -638,7 +520,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					}
 					pgmOsGridAlertHtml(msg);
 				},
-			//
+			// 
 			controller: {
 				loadData: function(){
 					return $.ajax({
@@ -652,7 +534,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							success:function(data){
 								valortotal = parseFloat(data.valortotal);
 								$('#valortotalordem').val(valortotal); //formulário hidden
-								$('.valortotalordem').html('<span class="os-v2-total-label">Total geral:</span> R$ ' + numberToReal(valortotal)); //lugar que aparece escrito
+								$('.valortotalordem').html('<span class="os-add-total-label">Total geral:</span> R$ ' + numberToReal(valortotal)); //lugar que aparece escrito
 								if (data && data.warning === 'sessao_carrinho' && data.msg) {
 									console.warn('[OS grid valortotal]', data.msg);
 								}
@@ -723,7 +605,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						pgmOsGridAlertHtml('<p><strong>Resposta inesperada ao incluir item.</strong></p><pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
 							pgmOsGridEscapeHtml(String(snippet).substring(0, 1500)) + '</pre>');
 						$("#grid_table").jsGrid("loadData");
-					},
+					}, 
 					error: function(xhr) {
 						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível adicionar o item. Verifique os dados e tente novamente.'));
 						$("#grid_table").jsGrid("loadData");
@@ -765,12 +647,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			},
 			fields: [
 				{ name: "id", title: "id", type: "text", css: 'hide', validade: 'required',  editing: false,},
-				{ name: "tipo", title: "Tipo", type: "select", width: 120, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
+				{ name: "tipo", title: "Tipo", type: "select", items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
 					title: "Código do Produto",
-					type: "text",
-					width: 248,
+					type: "text", 
+					width: 200,
 					css: 'inputCodproduto',
 					validate: "required",
 
@@ -780,15 +662,15 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						});
 						return item ? item.descricao : value;
 					},
-
+					
 					// Template para INSERÇÃO
 					insertTemplate: function() {
 						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true);
-						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm os-add-grid-search-btn").html('<i class="fa fa-search"></i>');
-
+						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
+						
 						$btn.on("click", function(e) {
 							e.preventDefault();
-							window.activeInputCode = $input;
+							window.activeInputCode = $input; 
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
 							$('#modal-pesquisa-produto').modal('show');
@@ -798,7 +680,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						var $group = $("<div>").addClass("input-group").append($input).append(
 							$("<div>").addClass("input-group-append").append($btn)
 						);
-
+						
 						this.insertControl = $input;
 						return $group;
 					},
@@ -809,8 +691,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					// Template para EDIÇÃO
 					editTemplate: function(value) {
 						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true).val(value);
-						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm os-add-grid-search-btn").html('<i class="fa fa-search"></i>');
-
+						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
+						
 						$btn.on("click", function(e) {
 							e.preventDefault();
 							window.activeInputCode = $input;
@@ -831,20 +713,20 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao",  fixed: true, width: 268, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
-                { name: "observacao",  width: 140, title: "Referenciar", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
-                { name: "unidade",  width: 88, title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
-                { name: "quantidade",  width: 82, title: "Qtde", type: "text",  headercss: 'os-col-num', css: 'os-col-num', insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
-                { name: "valorunitario",  width: 118, title: "Vl. Unitário", type: "text",  headercss: 'os-col-num', css: 'os-col-num', insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
-                { name: "valordesconto",  width: 118, title: "Vl. Desconto", type: "text",  headercss: 'os-col-num', css: 'os-col-num', insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
+				{ name: "descricao",  fixed: true, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
+                { name: "observacao",  title: "Referenciar ▼", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
+                { name: "unidade",  title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
+                { name: "quantidade",  title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
+                { name: "valorunitario",  title: "Vl. Unitário", type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
+                { name: "valordesconto",  title: "Vl. Desconto", type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
                 /* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
-                { name: "valortotal",  width: 118, title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai os-col-num', css: 'fieldValortotal os-col-num' },
+                { name: "valortotal",  title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
                 { name: "modelo", type: "text", css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
                 { name: "serialnumber", type: "text", css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
 				{ name: "productkey", type: "text", css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},
 				{ name: "obsinterna", type: "text", css: 'hide', insertcss: 'hide inputObsInterna', editcss: 'hide editObsInterna'},
 				{ type: "control", modeSwitchButton: false }
-			],
+			], 
 			onRefreshed: function() {
 				try {
 					if ($(".jsgrid-select2").length) {
@@ -937,7 +819,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					var data = new FormData();
 					var j = 1;
 					$( ".inputMobile" ).each(function() {
-						data.append( $( this ).attr('id'), $( this ).val() );
+						data.append( $( this ).attr('id'), $( this ).val() ); 
 						j++;
 					});
 					return data;
@@ -946,7 +828,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					if(result == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 					$("#grid_table").jsGrid("loadData");
 					$( ".inputMobile" ).each(function() {
-						$( this ).val('');
+						$( this ).val(''); 
 					});
 				},
 			});
@@ -1040,10 +922,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
         window.isEditMode = false;
 
         // Ao clicar no input de observação (Grid)
-        $(document).on("click focus", ".inputObservacao > input, .editObservacao > input", function(e){
+        $(document).on("click focus", ".inputObservacao > input, .editObservacao > input", function(e){ 
             // Identifica se é insert ou edit baseado na classe do pai
             window.isEditMode = $(this).parent().hasClass('editObservacao');
-
+            
             // Pega a linha (TR) inteira
             window.targetRow = $(this).closest('tr');
 
@@ -1078,9 +960,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
         });
 
         // Ao clicar em Salvar no Modal
-        $(document).on("click", ".btn-observacao", function(e){
+        $(document).on("click", ".btn-observacao", function(e){ 
             e.preventDefault();
-
+            
             var obs = $('#observacaomodal').val();
             var mod = $('#modelomodal').val();
             var sn  = $('#serialnumbermodal').val();
@@ -1102,7 +984,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
                     window.targetRow.find('.inputObsInterna input').val(obsInt).trigger('change');
                 }
             }
-
+            
             $('#modal-observacao').modal('hide');
         });
 
@@ -1138,8 +1020,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		}
 		$(document).on('click', '.btn-exapndemuitotexto', function(e) {
 			e.preventDefault();
-			bootbox.alert({
-				message: $(this).attr('data-textointeiro'),
+			bootbox.alert({ 
+				message: $(this).attr('data-textointeiro'), 
 				size: 'xl',
 			})
 		})
@@ -1163,7 +1045,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			// AJUSTE A URL ABAIXO PARA O SEU CONTROLLER DE PESQUISA REAL
 			// Exemplo de URL: Produtos/pesquisar?termo=X
 			$.ajax({
-				url: "<?= Router::url(['controller'=>'Produtos','action'=>'pesquisar']);?>",
+				url: "<?= Router::url(['controller'=>'Produtos','action'=>'pesquisar']);?>", 
 				method: "GET",
 				data: { termo: termo },
 				dataType: "json",
@@ -1304,10 +1186,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			if(window.activeInputCode) {
 				// 1. Define o valor no input do Grid
 				window.activeInputCode.val(codigo);
-
+				
 				// 2. Fecha o modal
 				$('#modal-pesquisa-produto').modal('hide');
-
+				
 				// 3. IMPORTANTE: Dispara o evento 'change' manualmente
 				// O seu código original escuta "change" para preencher descrição, preço, etc.
 				// Como o JSGrid não dispara change nativo ao alterar valor via código, forçamos.
