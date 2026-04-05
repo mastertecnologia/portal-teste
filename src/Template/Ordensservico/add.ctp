@@ -6,12 +6,19 @@
 ?>
 <style>
 	.jsgrid-grid-header, .jsgrid-grid-body {
-		overflow: auto; 
-	} 
-	.jsgrid-cell {
-		min-height: 44px;
+		overflow: auto;
+	}
+	/* Linhas de inserção/edição: mantém overflow visível para dropdowns abrirem */
+	.jsgrid-insert-row .jsgrid-cell,
+	.jsgrid-edit-row .jsgrid-cell {
 		height: auto;
 		overflow: visible;
+	}
+	/* Linhas de dados: corta texto em vez de quebrar linha */
+	.jsgrid-row .jsgrid-cell,
+	.jsgrid-alt-row .jsgrid-cell {
+		overflow: hidden;
+		white-space: nowrap;
 	}
 	.jsgrid-cell > select > option { text-align: left; }
 	.os-pesquisa-produto-sem-estoque { background-color: #f8d7da !important; }
@@ -647,7 +654,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			},
 			fields: [
 				{ name: "id", title: "id", type: "text", css: 'hide', validade: 'required',  editing: false,},
-				{ name: "tipo", title: "Tipo", type: "select", width: 90, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
+				{ name: "tipo", title: "Tipo", type: "select", width: 110, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
 					title: "Código do Produto",
