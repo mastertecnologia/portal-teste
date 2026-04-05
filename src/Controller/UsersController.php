@@ -102,8 +102,8 @@ class UsersController extends AppController {
 		$mes = date('01/m/Y');
 		$empresa = $this->Auth->user('idempresa');
 
-		$iniSemana = primeiroDiaSemana();
-		$finSemana = ultimoDiaSemana();
+		$iniSemana = $this->_dataBrParaDb(primeiroDiaSemana());
+		$finSemana = $this->_dataBrParaDb(ultimoDiaSemana());
 
 		if($role == 0) { 
 			$ordensTable = $this->Ordensservico->findByIdempresa($empresa)
@@ -509,6 +509,35 @@ class UsersController extends AppController {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Converte data em formato BR (d/m/Y ou d-m-Y) para Y-m-d (PostgreSQL / campos date).
+	 *
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	protected function _dataBrParaDb($value) {
+		if ($value === null || $value === '') {
+			return $value;
+		}
+		if ($value instanceof \DateTimeInterface) {
+			return $value->format('Y-m-d');
+		}
+		$s = trim((string)$value);
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $s)) {
+			return $s;
+		}
+		if (preg_match('/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/', $s, $m)) {
+			$dd = (int)$m[1];
+			$mm = (int)$m[2];
+			$yy = (int)$m[3];
+			if (checkdate($mm, $dd, $yy)) {
+				return sprintf('%04d-%02d-%02d', $yy, $mm, $dd);
+			}
+		}
+
+		return $value;
 	}
 
 	/**
@@ -1326,13 +1355,21 @@ class UsersController extends AppController {
 		$this->set('dataini', $inicio);
 		$this->set('datafim', $fim);
 
-		$data = $inicio;
-
-		while ($data <= $fim) {
-			$nroAtendimentosDia = $this->Atendimentos->nroAtendimentosDia($data);
-			$atendimentos[] = $nroAtendimentosDia;
-
-			$data = date('d-m-Y', strtotime("+1 days", strtotime($data)));
+		$atendimentos = [];
+		$dataYmd = $this->_dataBrParaDb($inicio);
+		$fimYmd = $this->_dataBrParaDb($fim);
+		if (!is_string($dataYmd) || !is_string($fimYmd)
+			|| !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataYmd) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fimYmd)) {
+			return $atendimentos;
+		}
+		$t = strtotime($dataYmd . ' 00:00:00');
+		$tEnd = strtotime($fimYmd . ' 23:59:59');
+		if ($t === false || $tEnd === false) {
+			return $atendimentos;
+		}
+		while ($t <= $tEnd) {
+			$atendimentos[] = $this->Atendimentos->nroAtendimentosDia(date('Y-m-d', $t));
+			$t = strtotime('+1 day', $t);
 		}
 
 		return $atendimentos;

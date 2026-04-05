@@ -79,3 +79,36 @@ psql -U USUARIO -d pgm -f config/schema/postgres_queues_patch_idempotent.sql
 
 - Menu lateral (**admin**): **Filas / técnicos** → `queues/admin-index`.
 - Ou **Configurações** → cartão **Filas / técnicos**.
+
+---
+
+## Banco apagado ou sobrescrito (recuperação)
+
+1. **Schema legado (PGM)**  
+   Não existe no Git um `CREATE DATABASE` completo com todas as tabelas antigas (`users`, `empresas`, `tickets`, `ordensservico`, `orcamentosnovosdes`, etc.). As migrations **só acrescentam** tabelas/colunas em cima desse núcleo.
+
+2. **Primeiro passo**  
+   Restaurar **backup** (dump SQL, `pg_restore`, snapshot) do banco de produção/homologação. Sem isso, o portal não sobe de forma fiel.
+
+3. **Depois do restore**  
+   Aplicar tudo o que foi versionado em `config/Migrations/`:
+
+   ```bash
+   bin/cake migrations migrate
+   ```
+
+4. **Patches SQL opcionais (PostgreSQL)**  
+   - `scripts/postgres/pgm_dashboard_verify_and_patch_FULL.sql` — colunas/índices em `tickets` e utilitários (idempotente onde possível).  
+   - `config/schema/*.sql` — apenas se a migration equivalente não tiver corrido.
+
+5. **Conferir o que falta**  
+   Na raiz do projeto (PHP e `config/app_local.php` apontando para o banco):
+
+   ```bash
+   php scripts/postgres/verify_portal_schema.php
+   ```
+
+   O script lista tabelas **legadas** e de **migrations** ausentes; código de saída `0` = nada obrigatório faltando na lista de verificação.
+
+6. **Sincronização RBAC**  
+   Após migrations, use o fluxo de admin para sincronizar permissões (`PermissoesController::adminSyncRegistry` / catálogo em `config/permissions_registry.php`), se o ambiente exigir.
