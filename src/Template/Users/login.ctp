@@ -40,13 +40,6 @@ $this->end();
 	<!-- ══ Painel do Formulário (direita) ══ -->
 	<div class="lm-form-panel">
 		<div class="lm-form-card">
-			<div class="pgm-auth-theme-bar">
-				<button type="button" class="pgm-auth-theme-toggle" id="pgmAuthThemeToggle" aria-label="Alternar tema claro ou escuro">
-					<span class="pgm-auth-tt-ico" aria-hidden="true">☀️</span>
-					<span class="pgm-auth-tt-txt">Claro</span>
-				</button>
-			</div>
-
 			<div class="lm-form-header">
 				<p class="lm-form-eyebrow">Portal do Cliente</p>
 				<h2 class="lm-form-title">Bem-vindo de volta</h2>
