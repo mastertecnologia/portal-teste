@@ -5,29 +5,36 @@
  * com salt, DB e e-mail. Esse arquivo está no .gitignore.
  */
 
-/** Contexto SSL opcional para SMTP (cert CN ≠ host, ex.: *.skymail.net.br vs mail.pgm.inf.br). */
+/**
+ * Opções SSL para SMTP: o CakePHP 3 Socket move chaves `ssl_*` para context['ssl'] antes de
+ * definir peer_name = host (ver Network\Socket::_setSslContext). `context` aninhado no transport
+ * pode não surtir efeito no STARTTLS.
+ *
+ * Skymail: ligação a mail.pgm.inf.br com certificado CN *.skymail.net.br — usar ssl_peer_name.
+ */
 $smtpTransportExtra = function (string $prefix) {
     $insecure = filter_var(env('MAIL_' . $prefix . '_TLS_INSECURE', false), FILTER_VALIDATE_BOOLEAN);
     $peerName = env('MAIL_' . $prefix . '_TLS_PEER_NAME');
+    $hostKey = 'MAIL_' . $prefix . '_HOST';
+
     if ($insecure) {
         return [
-            'context' => [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                ],
-            ],
+            'ssl_verify_peer' => false,
+            'ssl_verify_peer_name' => false,
         ];
     }
-    if ($peerName !== null && $peerName !== false && trim((string)$peerName) !== '') {
-        return [
-            'context' => [
-                'ssl' => [
-                    'peer_name' => trim((string)$peerName),
-                ],
-            ],
-        ];
+
+    $peer = ($peerName !== null && $peerName !== false) ? trim((string)$peerName) : '';
+    if ($peer !== '') {
+        return ['ssl_peer_name' => $peer];
     }
+
+    // Desative com MAIL_PGM_SKIP_SKYMAIL_TLS_PEER=1 / MAIL_MASTER_SKIP_SKYMAIL_TLS_PEER=1 se o host não for Skymail.
+    $skipFallback = filter_var(env('MAIL_' . $prefix . '_SKIP_SKYMAIL_TLS_PEER', false), FILTER_VALIDATE_BOOLEAN);
+    if (!$skipFallback && trim((string)env($hostKey, '')) === 'mail.pgm.inf.br') {
+        return ['ssl_peer_name' => 'mail.skymail.net.br'];
+    }
+
     return [];
 };
 
