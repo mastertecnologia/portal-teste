@@ -10,17 +10,17 @@
 			</div>
 			<?= $this->Html->link('<i class="fa fa-plus"></i> Abrir Chamado', ['action' => 'add'], ['class' => 'tkcli-btn-abrir', 'escape' => false]) ?>
 		</div>
-		<div class="card-body" style="padding:0;background:transparent;">
+		<div class="card-body tkcli-tickets-card-body">
 			<?= $this->Form->create('Ticket', ['action' => 'indexcliente', 'type' => 'get', 'class' => 'tkcli-filters']); ?>
 				<div class="tkcli-filter-group">
 					<label>Assunto</label>
-					<?= $this->Form->control('assunto', ['data-live-search' => true, 'title' => 'Todos', 'value' => $assunto, 'id' => 'assunto', 'class' => 'form-control selectpicker', 'options' => C_TicketCategoriaClienteQuery, 'label' => false]) ?>
+					<?= $this->Form->control('assunto', ['title' => 'Todos', 'value' => $assunto, 'id' => 'assunto', 'class' => 'form-control tkcli-filter-native-select', 'options' => C_TicketCategoriaClienteQuery, 'label' => false]) ?>
 				</div>
 				<div class="tkcli-filter-group">
 					<label>Status</label>
-					<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Selecione', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control selectpicker', 'options' => [-1 => 'Todos'] + C_TicketSituacoes, 'label' => false]) ?>
+					<?= $this->Form->control('situacao', ['title' => 'Selecione', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control tkcli-filter-native-select', 'options' => [-1 => 'Todos'] + C_TicketSituacoes, 'label' => false]) ?>
 				</div>
-				<div class="tkcli-filter-group" style="padding-top:18px;">
+				<div class="tkcli-filter-group tkcli-filter-group--actions">
 					<?= $this->Html->link('Limpar filtros', ['action' => 'indexcliente'], ['class' => 'tkcli-btn-limpar']) ?>
 				</div>
 			<?= $this->Form->end(); ?>
@@ -49,11 +49,10 @@
 							<tr
 								class="ticket-row"
 								data-url-view="<?= h((string)$urlView) ?>"
-								style="cursor:pointer;"
 								rel="popover"
 								data-trigger="hover"
 								data-content='<div class="popover-big"><h4><?= AssuntoTicket($reg->assunto) ?> </h4><br><?= $reg->solicitacao ?></div>'
-								data-original-title="Ticket <?= $reg->id.' ' ?><small style='font-size: 12px;'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>"
+								data-original-title="Ticket <?= $reg->id.' ' ?><small class='pgm-popover-title-date'><i>(<?= date_format($reg->created, 'd/m/Y') ?>)</i></small>"
 								data-html="true"
 								data-placement="top"
 							>

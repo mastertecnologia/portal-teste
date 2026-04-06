@@ -97,6 +97,30 @@
 		border: none;
 		border-bottom: 1px solid #000;
 	}
+
+	.signature-field--w40 {
+		width: 40%;
+	}
+
+	.signature-field--w70 {
+		width: 70%;
+	}
+
+	.invoice-sign-col-border {
+		border-left: 2px solid black;
+	}
+
+	.invoice-logo-img {
+		width: 180px;
+	}
+
+	.invoice-table-top-border {
+		border-top: 3px solid black;
+	}
+
+	.invoice-valor-destaque {
+		font-size: 1rem;
+	}
 	
 	.border-black {
 		border: 1px solid black;
@@ -119,7 +143,7 @@
 				<!-- Empresa -->
 				<div class="row border-black">
 					<div class="col-3 text-center">
-						<img src="<?=$this->request->getAttribute('webroot') . 'arquivos/empresas/logotipos/' . $empresaObj->id . '/logo.png' ?>" alt="homepage" style='width: 180px' class='p-l-20 m-t-10'><br>
+						<img src="<?=$this->request->getAttribute('webroot') . 'arquivos/empresas/logotipos/' . $empresaObj->id . '/logo.png' ?>" alt="homepage" class="invoice-logo-img p-l-20 m-t-10"><br>
 					</div>
 					<div class="col-7 text-center">
 						<p class='header-empresa'>
@@ -324,7 +348,7 @@
 				<!-- Itens -->
 				<div class="row">
 					<div class="col-12">
-						<div class="table-responsive" style='border-top: 3px solid black'>
+						<div class="table-responsive invoice-table-top-border">
 							<table class="table table-hover table-row-clickable" id="tableCarrinho">
 								<thead class="text-primary">
 									<th width="10%"> Código </th>
@@ -418,7 +442,7 @@
 							<div class="col-3">
 								<p class='valores'>
 									Total da Fatura - Retenções - Descontos: <br>
-									<span style='font-size:1rem'> <?= number_format($fatura->valor, 2, ",", ".") ?> </span>
+									<span class="invoice-valor-destaque"> <?= number_format($fatura->valor, 2, ",", ".") ?> </span>
 								</p>
 							</div>
 						</div>
@@ -445,7 +469,7 @@
 							<?= strtoupper($fatura->nro) ?> 
 						</p>
 					</div>
-					<div class="col-9" style='border-left: 2px solid black'>
+					<div class="col-9 invoice-sign-col-border">
 						<div class="row">
 							<div class="col-12">
 								<p class='footer-text'> Estamos de Acordo com a Emissão desta Fatura: </p>
@@ -454,11 +478,11 @@
 						<div class="row">
 							<div class="col-6 float-left">
 								<span class='footer-text'> BENTO GONÇALVES, </span>
-								<input type="text" class="signature-field" style="width: 40%;" value="&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp/&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp/ ">
+								<input type="text" class="signature-field signature-field--w40" value="&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp/&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp/ ">
 							</div>
 							<div class="col-6 float-left">
 								<span class='footer-text'> Assinatura: </span>
-								<input type="text" class="signature-field" style="width: 70%;" value="">
+								<input type="text" class="signature-field signature-field--w70" value="">
 							</div>
 						</div>
 					</div>

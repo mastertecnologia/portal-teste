@@ -379,6 +379,26 @@ body.layout-no-topbar.pgm-portal-client .tkcli-filters {
 	padding-bottom: 16px;
 	border-bottom: 1px solid var(--pgm-premium-border);
 }
+body.layout-no-topbar.pgm-portal-client .tkcli-filter-group.tkcli-filter-group--grow {
+	min-width: 200px;
+	flex: 1 1 200px;
+}
+body.layout-no-topbar.pgm-portal-client .tkcli-filter-group.tkcli-filter-group--w160 {
+	min-width: 160px;
+}
+body.layout-no-topbar.pgm-portal-client .tkcli-filter-group.tkcli-filter-group--w180 {
+	min-width: 180px;
+}
+body.layout-no-topbar.pgm-portal-client .tkcli-filter-group.tkcli-filter-group--actions {
+	padding-top: 18px;
+}
+body.layout-no-topbar.pgm-portal-client .tkcli-tickets-card-body {
+	padding: 0;
+	background: transparent;
+}
+body.layout-no-topbar.pgm-portal-client tr.ticket-row[data-url-view] {
+	cursor: pointer;
+}
 body.layout-no-topbar.pgm-portal-client .tkcli-filter-group label {
 	font-size: 0.68rem;
 	font-weight: 600;
@@ -506,6 +526,17 @@ body.layout-no-topbar.pgm-portal-client .tkcli-filter-group .selectpicker {
 body.layout-no-topbar.pgm-portal-client .tkcli-filter-group .form-control:focus {
 	border-color: var(--pgm-teal) !important;
 	box-shadow: 0 0 0 2px rgba(0, 192, 139, 0.15) !important;
+}
+body.layout-no-topbar.pgm-portal-client .tkcli-filter-group select.form-control.tkcli-filter-native-select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	cursor: pointer;
+	padding-right: 2rem !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 0.65rem center !important;
+	background-size: 10px 10px !important;
 }
 body.layout-no-topbar.pgm-portal-client #table-todos tbody tr.ticket-row:hover td {
 	background: var(--pgm-premium-page);

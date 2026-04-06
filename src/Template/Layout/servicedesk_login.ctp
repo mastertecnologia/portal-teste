@@ -15,6 +15,7 @@
 	<?= $this->Html->meta('assets/images/favicon.ico?data=11/06/2021', 'favicon.ico?data=11/06/2021', ['type' => 'icon']); ?>
 	<title><?= h($title ?? 'Service Desk — Login') ?> &lsaquo; PGM</title>
 	<?= $this->Html->css('dist/css/pages/pgm-theme-tokens') ?>
+	<?= $this->Html->css('dist/css/pages/pgm-components-base') ?>
 	<?= $this->Html->css('dist/css/pages/pgm-login-theme') ?>
 	<?= $this->Html->script('assets/node_modules/jquery/jquery-3.2.1.min') ?>
 	<?= $this->Html->script('js/pgm-portal-theme') ?>

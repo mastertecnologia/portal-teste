@@ -24,12 +24,12 @@
           <div class="col-md-6 col-sm-12">
             <input type="text" class="form-control" id="filtro-finalizados" placeholder="Buscar por ID, cliente, autor, responsável..." />
           </div>
-          <div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
+          <div class="col-md-6 col-sm-12 text-right text-muted dash-erp-meta-align">
             Exibindo <span id="finalizados-count"><?= count($ticketsFinalizados ?? []) ?></span> registros
           </div>
         </div>
 
-        <div class="dash-erp-scroll" id="finalizados-scroll" style="max-height: 70dvh;">
+        <div class="dash-erp-scroll dash-erp-scroll--vh70" id="finalizados-scroll">
           <div class="table-responsive">
             <table class="dash-erp-table" id="table-finalizados">
               <thead>
@@ -39,7 +39,7 @@
                   <th>Autor</th>
                   <th>Responsável</th>
                   <th>Finalizado</th>
-                  <th style="width: 110px;">Abrir</th>
+                  <th class="dash-erp-th-actions">Abrir</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +109,7 @@
           <h5 class="modal-title m-0">Ticket <span id="modal-ticket-id">-</span></h5>
           <small class="text-muted">Visualização rápida. Use os botões para imprimir/PDF ou enviar por e-mail.</small>
         </div>
-        <div class="ml-auto d-flex align-items-center" style="gap:8px;">
+        <div class="ml-auto d-flex align-items-center pgm-gap-8">
           <a class="btn btn-outline-secondary btn-sm" id="modal-ticket-abrir" target="_blank" href="#">Abrir completo</a>
           <a class="btn btn-outline-info btn-sm" id="modal-ticket-imprimir" target="_blank" href="#">Imprimir / PDF</a>
           <a class="btn btn-outline-success btn-sm" id="modal-ticket-email" target="_blank" href="#">Enviar e-mail</a>
@@ -118,12 +118,12 @@
           </button>
         </div>
       </div>
-      <div class="modal-body p-0" style="height: 72vh;">
+      <div class="modal-body p-0 dash-erp-modal-body-preview">
         <iframe
           id="modal-ticket-iframe"
+          class="dash-erp-preview-iframe"
           title="Ticket"
           src="about:blank"
-          style="width:100%; height:100%; border:0;"
         ></iframe>
       </div>
     </div>

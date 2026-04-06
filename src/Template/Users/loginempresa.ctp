@@ -1,4 +1,7 @@
-<section id="wrapper" class="login-register login-sidebar" style="background-image:url(<?=$this->request->getAttribute('webroot') . 'assets/images/background/login-register.jpg'?>)">
+<?php
+$loginEmpresaBgUrl = $this->request->getAttribute('webroot') . 'assets/images/background/login-register.jpg';
+?>
+<section id="wrapper" class="login-register login-sidebar login-empresa-bg" style="--login-empresa-bg: url(<?= json_encode($loginEmpresaBgUrl) ?>)">
 
 	<div class="login-box card">
 		<div class="card-body">
@@ -23,13 +26,6 @@
 	</div>
 </section>
 <script>
-	$('.comeceausar').hover(function(){
-		$(this).css('cursor', 'pointer');
-	});
-	$('.comeceausar').click(function(){
-		window.location = 'cadastrocliente';
-	});
-	
 	$('.minsuculaOnly').hide()
 
 	function SemMaisuclaEEspaco(e){

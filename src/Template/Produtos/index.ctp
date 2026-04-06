@@ -29,8 +29,8 @@
   if (!function_exists('prdBadge')) {
   function prdBadge($ativo) {
     return $ativo
-      ? '<span class="prd-badge prd-badge-on"><i class="fas fa-circle" style="font-size:5px"></i> Ativo</span>'
-      : '<span class="prd-badge prd-badge-off"><i class="fas fa-circle" style="font-size:5px"></i> Inativo</span>';
+      ? '<span class="prd-badge prd-badge-on"><i class="fas fa-circle prd-badge-dot" aria-hidden="true"></i> Ativo</span>'
+      : '<span class="prd-badge prd-badge-off"><i class="fas fa-circle prd-badge-dot" aria-hidden="true"></i> Inativo</span>';
   }
   }
 
@@ -44,7 +44,7 @@
 
   if (!function_exists('prdMargin')) {
   function prdMargin($custo, $venda) {
-    if ($venda <= 0 || $custo <= 0) return '<span class="prd-td-margin" style="color:var(--prd-dim)">—</span>';
+    if ($venda <= 0 || $custo <= 0) return '<span class="prd-td-margin prd-td-margin--empty">—</span>';
     $m = round((($venda - $custo) / $venda) * 100, 1);
     $cls = $m >= 30 ? 'margin-good' : ($m >= 15 ? 'margin-ok' : 'margin-low');
     return '<span class="prd-td-margin ' . $cls . '">' . $m . '%</span>';
@@ -106,7 +106,7 @@
     <div class="prd-stat">
       <div class="prd-stat-icon blue"><i class="fas fa-dollar-sign"></i></div>
       <div>
-        <div class="prd-stat-val" style="font-size:14px">R$ <?= number_format($vlEstoque, 0, ',', '.') ?></div>
+        <div class="prd-stat-val prd-stat-val--sm">R$ <?= number_format($vlEstoque, 0, ',', '.') ?></div>
         <div class="prd-stat-lbl">Valor Estoque</div>
       </div>
     </div>
@@ -147,13 +147,13 @@
   <div class="prd-filter-bar">
     <div class="prd-pill-group">
       <button class="prd-pill pill-active" id="pill-produtos"  onclick="showPanel('produtos')">
-        <i class="fas fa-box-open" style="font-size:10px"></i> Produtos
+        <i class="fas fa-box-open pgm-icon-xs" aria-hidden="true"></i> Produtos
       </button>
       <button class="prd-pill" id="pill-servicos"  onclick="showPanel('servicos')">
-        <i class="fas fa-laptop-code" style="font-size:10px"></i> Serviços
+        <i class="fas fa-laptop-code pgm-icon-xs" aria-hidden="true"></i> Serviços
       </button>
       <button class="prd-pill" id="pill-contratos" onclick="showPanel('contratos')">
-        <i class="fas fa-file-contract" style="font-size:10px"></i> Contratos
+        <i class="fas fa-file-contract pgm-icon-xs" aria-hidden="true"></i> Contratos
       </button>
     </div>
 
@@ -187,15 +187,15 @@
         <table class="prd-table" id="tbl-produtos">
           <thead>
             <tr>
-              <th style="width:36px"></th>
+              <th class="prd-th-icon" aria-hidden="true"></th>
               <th>Código</th>
               <th>Descrição</th>
-              <th style="text-align:right">Custo</th>
-              <th style="text-align:right">Venda</th>
-              <th style="text-align:center">Margem</th>
-              <th style="text-align:center">Estoque</th>
+              <th class="prd-th-num">Custo</th>
+              <th class="prd-th-num">Venda</th>
+              <th class="prd-th-c">Margem</th>
+              <th class="prd-th-c">Estoque</th>
               <th>Status</th>
-              <th style="width:70px"></th>
+              <th class="prd-th-actions" aria-hidden="true"></th>
             </tr>
           </thead>
           <tfoot>
@@ -215,12 +215,12 @@
               <td><div class="prd-av prd-av-prod"><i class="fas fa-box-open"></i></div></td>
               <td class="prd-td-code"><?= h($reg->codigo) ?></td>
               <td class="prd-td-desc"><?= h($reg->descricao) ?></td>
-              <td class="prd-td-cost" style="text-align:right">
-                <?= $reg->nPrecoCusto > 0 ? 'R$ ' . number_format($reg->nPrecoCusto, 2, ',', '.') : '<span style="color:var(--prd-dim)">—</span>' ?>
+              <td class="prd-td-cost prd-td-num">
+                <?= $reg->nPrecoCusto > 0 ? 'R$ ' . number_format($reg->nPrecoCusto, 2, ',', '.') : '<span class="prd-char-dash">—</span>' ?>
               </td>
-              <td class="prd-td-val" style="text-align:right">R$ <?= number_format($reg->nPrecoVenda ?? $reg->vlunitario, 2, ',', '.') ?></td>
-              <td style="text-align:center"><?= prdMargin($reg->nPrecoCusto ?? 0, $reg->nPrecoVenda ?? $reg->vlunitario) ?></td>
-              <td style="text-align:center"><?= prdStock($reg->nQtdeAtual ?? 0) ?></td>
+              <td class="prd-td-val prd-td-num">R$ <?= number_format($reg->nPrecoVenda ?? $reg->vlunitario, 2, ',', '.') ?></td>
+              <td class="prd-td-c"><?= prdMargin($reg->nPrecoCusto ?? 0, $reg->nPrecoVenda ?? $reg->vlunitario) ?></td>
+              <td class="prd-td-c"><?= prdStock($reg->nQtdeAtual ?? 0) ?></td>
               <td><?= prdBadge($reg->ativo) ?></td>
               <td onclick="event.stopPropagation()">
                 <div class="prd-actions">
@@ -248,12 +248,12 @@
         <table class="prd-table" id="tbl-servicos">
           <thead>
             <tr>
-              <th style="width:36px"></th>
+              <th class="prd-th-icon" aria-hidden="true"></th>
               <th>Código</th>
               <th>Descrição</th>
-              <th style="text-align:right">Vl. Hora</th>
+              <th class="prd-th-num">Vl. Hora</th>
               <th>Status</th>
-              <th style="width:70px"></th>
+              <th class="prd-th-actions" aria-hidden="true"></th>
             </tr>
           </thead>
           <tfoot>
@@ -271,7 +271,7 @@
               <td><div class="prd-av prd-av-serv"><i class="fas fa-laptop-code"></i></div></td>
               <td class="prd-td-code"><?= h($reg->codigo) ?></td>
               <td class="prd-td-desc"><?= h($reg->descricao) ?></td>
-              <td class="prd-td-val" style="text-align:right">R$ <?= number_format($reg->vlunitario, 2, ',', '.') ?>/h</td>
+              <td class="prd-td-val prd-td-num">R$ <?= number_format($reg->vlunitario, 2, ',', '.') ?>/h</td>
               <td><?= prdBadge($reg->ativo) ?></td>
               <td onclick="event.stopPropagation()">
                 <div class="prd-actions">
@@ -289,12 +289,12 @@
         <table class="prd-table" id="tbl-contratos">
           <thead>
             <tr>
-              <th style="width:36px"></th>
+              <th class="prd-th-icon" aria-hidden="true"></th>
               <th>Código</th>
               <th>Descrição</th>
-              <th style="text-align:right">Vl. Mensal</th>
+              <th class="prd-th-num">Vl. Mensal</th>
               <th>Status</th>
-              <th style="width:70px"></th>
+              <th class="prd-th-actions" aria-hidden="true"></th>
             </tr>
           </thead>
           <tfoot>
@@ -312,7 +312,7 @@
               <td><div class="prd-av prd-av-contr"><i class="fas fa-file-contract"></i></div></td>
               <td class="prd-td-code"><?= h($reg->codigo) ?></td>
               <td class="prd-td-desc"><?= h($reg->descricao) ?></td>
-              <td class="prd-td-val" style="text-align:right">R$ <?= number_format($reg->vlunitario, 2, ',', '.') ?>/mês</td>
+              <td class="prd-td-val prd-td-num">R$ <?= number_format($reg->vlunitario, 2, ',', '.') ?>/mês</td>
               <td><?= prdBadge($reg->ativo) ?></td>
               <td onclick="event.stopPropagation()">
                 <div class="prd-actions">

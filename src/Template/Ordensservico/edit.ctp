@@ -94,7 +94,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							<?= $this->Form->control('idsolicitante', ['id' => 'idsolicitante', 'data-live-search' => true, 'options' => '', 'class' => 'form-control selectpicker', 'label' => false, 'required' => false, 'disabled' => !in_array($ordem->situacao, [C_OrdensSituacaoAberta, C_OrdensSituacaoEmExecucao, C_OrdensSituacaoLiberadaParaFaturamento])]) ?>
 
 							<!-- Campo para "Outros" -->
-							<div id="solicitante-outros-container" style="display: none; margin-top: 10px;">
+							<div id="solicitante-outros-container" class="pgm-solic-outros-wrap">
 								<label class="control-label">Nome do Solicitante (Outros)</label>
 								<?= $this->Form->control('solicitante_outros', [
 									'class' => 'form-control',
@@ -141,7 +141,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						</div>
 						<div class="col-md-2 col-xs-12">
 							<label class="control-label">Status</label>
-							<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
+							<?= $this->Form->control('idarea', ['options' => $areas, 'class' => 'form-control os-edit-native-select', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 						</div>
 						<div class="col-md-2 col-xs-12">
 							<label class="control-label">Tipo de OS</label>
@@ -333,7 +333,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						<div class="row">
 							<div class="col-md-4 col-xs-12">
 								<label class="control-label">Pagamento</label>
-								<?= $this->Form->control('pagamento', ['options' => C_OrdensPagamento, 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
+								<?= $this->Form->control('pagamento', ['options' => C_OrdensPagamento, 'class' => 'form-control os-edit-native-select', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
 							<div class="col-md-3 col-xs-12">
 								<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-10">
@@ -346,7 +346,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						<div class="row">
 							<div class="col-md-2 col-xs-6 ">
 								<label class="control-label">Parcelas</label>
-								<?= $this->Form->control('nmrparcelas', ['id' => 'nmrparcelas', 'options' => C_OrdensParcelas, 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
+								<?= $this->Form->control('nmrparcelas', ['id' => 'nmrparcelas', 'options' => C_OrdensParcelas, 'class' => 'form-control os-edit-native-select', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
 							<div class="col-md-2 col-xs-6 ">
 								<label class="control-label text-muted dataval1">Parcela 1 </label>
@@ -735,17 +735,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			if (j.msg) parts.push('<p>' + pgmOsGridEscapeHtml(j.msg) + '</p>');
 			if (j.warning) parts.push('<p><strong>Aviso:</strong> ' + pgmOsGridEscapeHtml(j.warning) + '</p>');
 			if (osGridAjaxVerbose && j.debug) {
-				parts.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+				parts.push('<pre class="pgm-pre-json pgm-pre-json--wrap">' +
 					pgmOsGridEscapeHtml(JSON.stringify(j.debug, null, 2)) + '</pre>');
 			}
 			if (osGridAjaxVerbose && j.validation) {
-				parts.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+				parts.push('<pre class="pgm-pre-json pgm-pre-json--wrap">' +
 					pgmOsGridEscapeHtml(JSON.stringify(j.validation, null, 2)) + '</pre>');
 			}
 		} else if (xhr.responseText) {
 			var t = xhr.responseText;
 			if (t.length < 800) {
-				parts.push('<pre style="text-align:left;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap">' +
+				parts.push('<pre class="pgm-pre-json pgm-pre-json--wrap pgm-pre-json--h200">' +
 					pgmOsGridEscapeHtml(t) + '</pre>');
 			} else {
 				parts.push('<p>' + pgmOsGridEscapeHtml(t.substring(0, 300)) + '…</p>');
@@ -886,11 +886,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							if (data.code) p.push('<p><strong>Código:</strong> ' + pgmOsGridEscapeHtml(data.code) + '</p>');
 							if (data.msg) p.push('<p>' + pgmOsGridEscapeHtml(data.msg) + '</p>');
 							if (osGridAjaxVerbose && data.debug) {
-								p.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto">' +
+								p.push('<pre class="pgm-pre-json">' +
 									pgmOsGridEscapeHtml(JSON.stringify(data.debug, null, 2)) + '</pre>');
 							}
 							if (osGridAjaxVerbose && data.validation) {
-								p.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto">' +
+								p.push('<pre class="pgm-pre-json">' +
 									pgmOsGridEscapeHtml(JSON.stringify(data.validation, null, 2)) + '</pre>');
 							}
 							pgmOsGridAlertHtml(p.join(''));
@@ -898,7 +898,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							return;
 						}
 						var snippet = (data === null || data === undefined) ? '(resposta vazia)' : (typeof data === 'string' ? data : JSON.stringify(data));
-						pgmOsGridAlertHtml('<p><strong>Resposta inesperada ao incluir item.</strong></p><pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+						pgmOsGridAlertHtml('<p><strong>Resposta inesperada ao incluir item.</strong></p><pre class="pgm-pre-json pgm-pre-json--wrap">' +
 							pgmOsGridEscapeHtml(String(snippet).substring(0, 1500)) + '</pre>');
 						$("#grid_table").jsGrid("loadData");
 					},
@@ -995,7 +995,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					var $group = $("<div>").addClass("input-group").append($input).append(
 						$("<div>").addClass("input-group-append").append($btn)
 					);
-					var $estoque = $("<small>").addClass("qtdEstoque").css("display", "block").html("&nbsp;");
+					var $estoque = $("<small>").addClass("qtdEstoque d-block").html("&nbsp;");
 					this.insertControl = $input;
 					return $("<div>").append($group).append($estoque);
 				},
@@ -1023,7 +1023,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					);
 
 					// --- CORREÇÃO: Cria o elemento para mostrar o estoque ---
-					var $estoque = $("<small>").addClass("qtdEstoque text-info font-weight-bold").css("display", "block").html("&nbsp;");
+					var $estoque = $("<small>").addClass("qtdEstoque text-info font-weight-bold d-block").html("&nbsp;");
 
 					this.editControl = $input;
 
@@ -1053,10 +1053,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				itemTemplate: function(value, item) {
 					return $("<div>")
 						.addClass("btn btn-sm btn-link os-edit-ref-link")
-						.css({
-							"cursor": "pointer",
-							"text-decoration": "none"
-						})
 						.html('<i class="fa fa-file-text-o"></i> Referenciar')
 						.on("click", function(e) {
 							e.stopPropagation();
@@ -1403,7 +1399,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					return data;
 				}(),
 				success: function(result) {
-					if (result == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
+					if (result == 'naopode') bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 					$("#grid_table").jsGrid("loadData");
 					$(".inputMobile").each(function() {
 						$(this).val('');

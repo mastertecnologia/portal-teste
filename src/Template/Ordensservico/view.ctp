@@ -7,6 +7,15 @@
 ?>
 <style>
 	.table td{padding: 0.7rem !important;}
+	.os-view-fat-heading {
+		font-size: 12px;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: #7d8590;
+	}
+	.os-view-fat-table {
+		font-size: 13px;
+	}
 </style>
 <div class="col-md-12">
     <div class="card">
@@ -43,7 +52,7 @@
 								<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false, 'disabled' => true]) ?>
 								
 								<!-- Campo para "Outros" -->
-								<div id="solicitante-outros-container" style="display: none; margin-top: 10px;">
+								<div id="solicitante-outros-container" class="pgm-solic-outros-wrap">
 									<label class="control-label">Nome do Solicitante (Outros)</label>
 									<?= $this->Form->control('solicitante_outros', [
 										'class' => 'form-control', 
@@ -90,7 +99,7 @@
 							</div>
 							<div class="col-md-2 col-xs-12">
 								<label class="control-label">Status</label>
-								<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => true]) ?>
+								<?= $this->Form->control('idarea', ['options' => $areas, 'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
 							<div class="col-md-2 col-xs-12">
 								<label class="control-label">Tipo de OS</label>
@@ -192,10 +201,10 @@
 					<?php if ($role == 0 && !empty($faturamentos)): ?>
 					<div class="row m-t-15">
 						<div class="col-12">
-							<h6 class="m-b-5" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#7d8590">
+							<h6 class="m-b-5 os-view-fat-heading">
 								<i class="fas fa-file-alt"></i> Documentos de Faturamento
 							</h6>
-							<table class="table table-sm" style="font-size:13px">
+							<table class="table table-sm os-view-fat-table">
 								<thead>
 									<tr>
 										<th>Número</th>

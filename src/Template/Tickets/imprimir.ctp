@@ -297,6 +297,30 @@ $emitidoEm = date('d/m/Y H:i');
 			max-height: none !important;
 		}
 	}
+	.ticket-print-root--screen {
+		margin-top: 52px;
+	}
+	.ticket-print-visita-date {
+		margin: 10px 0 0;
+		font-size: 10pt;
+	}
+	.ticket-print-table th.ticket-print-th-w55 {
+		width: 55%;
+	}
+	.ticket-print-table th.ticket-print-th-w130 {
+		width: 130px;
+	}
+	.ticket-print-table th.ticket-print-th-w160 {
+		width: 160px;
+	}
+	.ticket-print-table th.ticket-print-th-w90 {
+		width: 90px;
+	}
+	.ticket-print-empty-note {
+		margin: 0;
+		color: #64748b;
+		font-size: 10pt;
+	}
 	@media print {
 		html.ticket-print-ui-active .ticket-print-document {
 			position: static !important;
@@ -314,7 +338,7 @@ $emitidoEm = date('d/m/Y H:i');
 		<?= $this->Html->link('Imprimir / PDF', [], ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-sm']) ?>
 	</div>
 <?php } ?>
-<div class="ticket-print-root <?= $autoPrint ? '' : 'ticket-print-root--screen' ?>" style="<?= $autoPrint ? '' : 'margin-top:52px' ?>">
+<div class="ticket-print-root <?= $autoPrint ? '' : 'ticket-print-root--screen' ?>">
 	<div class="ticket-print-banner">
 		<span class="ticket-print-mark">PGM Soluções em TI</span>
 		<h1>Relatório de chamado · Ticket nº <?= (int)$ticket->id ?></h1>
@@ -382,7 +406,7 @@ $emitidoEm = date('d/m/Y H:i');
 				$__dv = $ticket->data;
 				$__dvs = $__dv instanceof \DateTimeInterface ? $__dv->format('d/m/Y') : h((string)$__dv);
 				?>
-				<p style="margin:10px 0 0;font-size:10pt;"><strong>Data solicitada para visita:</strong> <?= $__dvs ?></p>
+				<p class="ticket-print-visita-date"><strong>Data solicitada para visita:</strong> <?= $__dvs ?></p>
 			<?php endif; ?>
 		</div>
 
@@ -401,7 +425,7 @@ $emitidoEm = date('d/m/Y H:i');
 				<table class="ticket-print-table">
 					<thead>
 						<tr>
-							<th style="width:55%">Arquivo</th>
+							<th class="ticket-print-th-w55">Arquivo</th>
 							<th>Links (acesso no portal)</th>
 						</tr>
 					</thead>
@@ -419,7 +443,7 @@ $emitidoEm = date('d/m/Y H:i');
 					</tbody>
 				</table>
 			<?php else : ?>
-				<p style="margin:0;color:#64748b;font-size:10pt;">Nenhum anexo registrado neste chamado.</p>
+				<p class="ticket-print-empty-note">Nenhum anexo registrado neste chamado.</p>
 			<?php endif; ?>
 		</div>
 
@@ -429,9 +453,9 @@ $emitidoEm = date('d/m/Y H:i');
 				<table class="ticket-print-table">
 					<thead>
 						<tr>
-							<th style="width:130px">Data / hora</th>
-							<th style="width:160px">Participante</th>
-							<th style="width:90px">Papel</th>
+							<th class="ticket-print-th-w130">Data / hora</th>
+							<th class="ticket-print-th-w160">Participante</th>
+							<th class="ticket-print-th-w90">Papel</th>
 							<th>Mensagem</th>
 						</tr>
 					</thead>
@@ -455,7 +479,7 @@ $emitidoEm = date('d/m/Y H:i');
 					</tbody>
 				</table>
 			<?php else : ?>
-				<p style="margin:0;color:#64748b;font-size:10pt;">Nenhum comentário registrado.</p>
+				<p class="ticket-print-empty-note">Nenhum comentário registrado.</p>
 			<?php endif; ?>
 		</div>
 
@@ -465,8 +489,8 @@ $emitidoEm = date('d/m/Y H:i');
 				<table class="ticket-print-table">
 					<thead>
 						<tr>
-							<th style="width:130px">Data / hora</th>
-							<th style="width:160px">Usuário</th>
+							<th class="ticket-print-th-w130">Data / hora</th>
+							<th class="ticket-print-th-w160">Usuário</th>
 							<th>Registro</th>
 						</tr>
 					</thead>
@@ -543,7 +567,7 @@ $emitidoEm = date('d/m/Y H:i');
 					</tbody>
 				</table>
 			<?php else : ?>
-				<p style="margin:0;color:#64748b;font-size:10pt;">Nenhuma movimentação registrada.</p>
+				<p class="ticket-print-empty-note">Nenhuma movimentação registrada.</p>
 			<?php endif; ?>
 		</div>
 

@@ -134,7 +134,7 @@ $sitLabels = [
 						<label class="small text-muted m-b-5 d-block">Busca livre</label>
 						<input type="text" class="form-control" name="q" placeholder="ID, assunto, descrição, autor, cliente…" autocomplete="off" value="<?= h($hq['q'] ?? '') ?>">
 					</div>
-					<div class="col-md-4 col-sm-12 m-b-10" style="padding-top: 22px;">
+					<div class="col-md-4 col-sm-12 m-b-10 dash-erp-filter-actions">
 						<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-r-5">Aplicar filtros</button>
 						<a class="btn btn-outline-secondary" href="<?= $this->Url->build(['controller' => 'Tickets', 'action' => 'historico']) ?>">Limpar</a>
 					</div>
@@ -153,7 +153,7 @@ $sitLabels = [
 					<div class="col-md-6 col-sm-12">
 						<input type="text" class="form-control" id="filtro-historico-local" placeholder="Refinar na lista (cliente, assunto, situação…)" />
 					</div>
-					<div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
+					<div class="col-md-6 col-sm-12 text-right text-muted dash-erp-meta-align">
 						<?php if ($totalMatched > $limiteLista): ?>
 							Exibindo os <?= (int)$limiteLista ?> mais recentes entre <strong><?= (int)$totalMatched ?></strong> correspondentes.
 						<?php else: ?>
@@ -162,7 +162,7 @@ $sitLabels = [
 					</div>
 				</div>
 
-				<div class="dash-erp-scroll" id="historico-scroll" style="max-height: 70dvh;">
+				<div class="dash-erp-scroll dash-erp-scroll--vh70" id="historico-scroll">
 					<div class="table-responsive">
 						<table class="dash-erp-table" id="table-historico-atendimentos">
 							<thead>
@@ -172,13 +172,13 @@ $sitLabels = [
 									<th>Cliente</th>
 									<th>Assunto</th>
 									<th>Situação</th>
-									<th style="width: 110px;">Ações</th>
+									<th class="dash-erp-th-actions">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
 								<?php if (empty($rows)): ?>
 									<tr>
-										<td colspan="6" class="text-center text-muted" style="padding: 28px 12px;">
+										<td colspan="6" class="text-center text-muted dash-erp-empty-cell--lg">
 											Nenhum registro para os filtros atuais.
 										</td>
 									</tr>
@@ -271,7 +271,7 @@ $sitLabels = [
 					<h5 class="modal-title m-0">Ticket <span id="modal-ticket-hist-id">-</span></h5>
 					<small class="text-muted">Visualização rápida. Use os botões para abrir edição completa, imprimir/PDF ou e-mail.</small>
 				</div>
-				<div class="ml-auto d-flex align-items-center" style="gap:8px;">
+				<div class="ml-auto d-flex align-items-center pgm-gap-8">
 					<a class="btn btn-outline-secondary btn-sm" id="modal-ticket-hist-abrir" target="_blank" href="#">Abrir completo</a>
 					<a class="btn btn-outline-info btn-sm" id="modal-ticket-hist-imprimir" target="_blank" href="#">Imprimir / PDF</a>
 					<a class="btn btn-outline-success btn-sm" id="modal-ticket-hist-email" target="_blank" href="#">Enviar e-mail</a>
@@ -280,12 +280,12 @@ $sitLabels = [
 					</button>
 				</div>
 			</div>
-			<div class="modal-body p-0" style="height: 72vh;">
+			<div class="modal-body p-0 dash-erp-modal-body-preview">
 				<iframe
 					id="modal-ticket-hist-iframe"
+					class="dash-erp-preview-iframe"
 					title="Ticket"
 					src="about:blank"
-					style="width:100%; height:100%; border:0;"
 				></iframe>
 			</div>
 		</div>

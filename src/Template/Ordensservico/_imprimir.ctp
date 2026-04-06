@@ -47,6 +47,9 @@
         thead { /* margin-top:-200; */ display:table-header-group }
     }
 
+    .os-print-logo-w { width: 140px; }
+    .os-print-spacer { width: 1000px; margin: 0; }
+
     .table td, .table th {
         padding: 0.7rem;
         vertical-align: top;
@@ -189,7 +192,7 @@
                 <h2 class='titulo bg-dark text-white text-center p-2'> Ordem de Serviço </h2><br>
                 <div class="row">
                     <div class="col-3 text-center">
-                        <img src="<?=$this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="homepage" style='width: 140px' class='p-l-20 m-t-10'><br>
+                        <img src="<?=$this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="homepage" class='p-l-20 m-t-10 os-print-logo-w'><br>
                     </div>
                     <div class="col-3 text-center">
                         <table class="table m-t-10">
@@ -300,7 +303,7 @@
 				<!-- valortotal que é exibido -->
 				<h5 class="text-right font-weight-bold m-r-15 hide valortotalh5"> Total Geral: <span class="text-success valortotal"> </span></h5>
                 </div>
-                <p style="width:1000px"></p>
+                <p class="os-print-spacer"></p>
                 <br><div class="float-right">
                 <p class='m-b-0 text-right'>Bento Gonçalves, <?=  @date_format($ordem->dataabertura, 'd') . ' de ' . descricaoMes($ordem->dataabertura, 1) . ' de ' . @date_format($ordem->dataabertura, 'Y') ?></p>
                 <p class='m-b-0 text-right'>Obrigado pela sua atenção,</p>

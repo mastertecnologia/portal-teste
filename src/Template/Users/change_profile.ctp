@@ -66,7 +66,7 @@
 						$('.btn-success').prop('disabled', false);
 						$('.btn-success').removeClass('btn-disabled');
 					}else{
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário com este e-mail no sistema.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">Já existe um usuário com este e-mail no sistema.</p>');
 						$('.btn-success').prop('disabled', 'disabled');
 						$('.btn-success').addClass('btn-disabled');
 					}

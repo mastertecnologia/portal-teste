@@ -51,13 +51,15 @@
 <style>
 	.clicontrato-view-tabs .nav-tabs.customtab { margin-bottom: 0; }
 	.clicontrato-view-tabs .tab-content { padding-top: 1.25rem; }
+	.clicontrato-head-main { min-width: 0; }
+	.clicontrato-th-key { width: 220px; }
 </style>
 <div class="col-md-12">
 	<?php /* Cabeçalho — resumo do contrato */ ?>
 	<div class="card mb-3">
 		<div class="card-body">
 			<div class="d-flex flex-wrap justify-content-between align-items-start">
-				<div class="mb-2 mb-md-0 pr-md-3" style="min-width: 0;">
+				<div class="mb-2 mb-md-0 pr-md-3 clicontrato-head-main">
 					<h4 class="card-title mb-1"><?= h($title) ?></h4>
 					<p class="mb-1 text-muted small text-uppercase">Item #<?= (int)$contrato->id ?></p>
 					<p class="mb-1 font-weight-bold"><?= h((string)$contrato->descricao) ?></p>
@@ -110,7 +112,7 @@
 						<table class="table table-bordered table-sm mb-0">
 							<tbody>
 								<tr>
-									<th class="text-muted" style="width: 220px;">Cód. produto</th>
+									<th class="text-muted clicontrato-th-key">Cód. produto</th>
 									<td><?= h((string)$contrato->codproduto) ?></td>
 								</tr>
 								<tr>
@@ -160,7 +162,7 @@
 						<table class="table table-bordered table-sm mb-0">
 							<tbody>
 								<tr>
-									<th class="text-muted" style="width: 220px;">Metas de atendimento</th>
+									<th class="text-muted clicontrato-th-key">Metas de atendimento</th>
 									<td class="text-muted">—</td>
 								</tr>
 								<tr>
@@ -194,7 +196,7 @@
 						<table class="table table-bordered table-sm mb-0">
 							<tbody>
 								<tr>
-									<th class="text-muted" style="width: 220px;">Quantidade contratada</th>
+									<th class="text-muted clicontrato-th-key">Quantidade contratada</th>
 									<td><?= h((string)$contrato->qtde) ?></td>
 								</tr>
 								<tr>

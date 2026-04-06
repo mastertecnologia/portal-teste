@@ -117,7 +117,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				<?php if ($role == 0) { ?>
 					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Situação</p>
-						<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensSituacao, 'label' => false]) ?>
+						<?= $this->Form->control('situacao', ['title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false]) ?>
 					</div>
 					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Problema</p>
@@ -129,12 +129,12 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 					</div>
 					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Tipo</p>
-						<?= $this->Form->control('locacao', ['data-live-search' => true, 'title' => 'Todos', 'value' => $locacao, 'id' => 'locacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensLocacao, 'label' => false]) ?>
+						<?= $this->Form->control('locacao', ['title' => 'Todos', 'value' => $locacao, 'id' => 'locacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensLocacao, 'label' => false]) ?>
 					</div>
 				<?php } else { ?>
 					<div class="col-md-4 col-12">
 						<p>Situação</p>
-						<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensSituacao, 'label' => false]) ?>
+						<?= $this->Form->control('situacao', ['title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false]) ?>
 					</div>
 				<?php } ?>
 			</div>
@@ -157,7 +157,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				</div>
 			</div>
 			<div class="table-responsive os-table-responsive">
-				<table class="table table-hover table-row-clickable" id="tableOrdens" style="margin:0">
+				<table class="table table-hover table-row-clickable os-table-flush" id="tableOrdens">
 					<thead>
 						<tr>
 							<th class="os-th-num">
@@ -207,7 +207,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 										<?php if ($role == 0) : ?>
 										<div class="custom-control custom-checkbox os-row-checkbox mb-0">
 											<input data-id="<?= h($reg->id) ?>" type="checkbox" class="custom-control-input checkbox" id="checkbox<?= h($reg->id) ?>" value="check">
-											<label class="custom-control-label p-0 m-0" for="checkbox<?= h($reg->id) ?>" style="min-height:0"><span class="sr-only">Selecionar OS <?= h($reg->id) ?></span></label>
+											<label class="custom-control-label p-0 m-0 os-checkbox-label-flush" for="checkbox<?= h($reg->id) ?>"><span class="sr-only">Selecionar OS <?= h($reg->id) ?></span></label>
 										</div>
 										<?php endif; ?>
 										<span class="link os-num-cell" role="button" tabindex="0">#<?= h($reg->id) ?></span>
@@ -476,7 +476,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		var pillClass = osStatusClass(disp.situacao);
 		var pillShort = osStatusShort(disp.situacao);
 		$('#os-drawer-status').html('<span class="os-status ' + pillClass + '"><span class="os-status-dot"></span>' + osEscapeHtml(pillShort) + '</span>');
-		var contratoHtml = disp.contrato === 'Sim' ? '<span style="color:var(--os-green)">Sim</span>' : '<span style="color:var(--os-text3)">Não</span>';
+		var contratoHtml = disp.contrato === 'Sim' ? '<span class="os-dr-contract-yes">Sim</span>' : '<span class="os-dr-contract-no">Não</span>';
 		$('#os-drawer-body').html(
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Informações gerais</div>' +
 			'<div class="os-dr-row"><span class="os-dr-k">Cliente</span><span class="os-dr-v">' + osEscapeHtml(disp.cliente) + '</span></div>' +
@@ -486,7 +486,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			'<div class="os-dr-row"><span class="os-dr-k">Abertura</span><span class="os-dr-v">' + osEscapeHtml(disp.abertura) + '</span></div>' +
 			'<div class="os-dr-row"><span class="os-dr-k">Previsão</span><span class="os-dr-v">' + osEscapeHtml(disp.previsao) + '</span></div></div>' +
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Financeiro</div>' +
-			'<div class="os-dr-row"><span class="os-dr-k">Valor total</span><span class="os-dr-v" style="font-family:var(--os-mono);font-size:15px;color:var(--os-text)">R$ ' + osEscapeHtml(disp.valor) + '</span></div></div>' +
+			'<div class="os-dr-row"><span class="os-dr-k">Valor total</span><span class="os-dr-v os-dr-v-valor">R$ ' + osEscapeHtml(disp.valor) + '</span></div></div>' +
 			'<div class="os-dr-sec"><div class="os-dr-sec-t">Situação</div>' +
 			'<div class="os-dr-row"><span class="os-dr-k">Status</span><span class="os-dr-v">' + osEscapeHtml(disp.situacao) + '</span></div></div>'
 		);
@@ -511,9 +511,6 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				$('#situacao').val('');
 			} else if (osKpiSituacaoMap[k] != null) {
 				$('#situacao').val(String(osKpiSituacaoMap[k]));
-			}
-			if (typeof $.fn.selectpicker === 'function') {
-				$('#situacao').selectpicker('refresh');
 			}
 			osApplyClientFilters();
 		});
@@ -718,7 +715,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				var $host = $('#pgm-sidebar-dt-host');
 				if ($host.length) {
 					$('#pgm-sidebar-functions-search').hide();
-					$host.show().append($f);
+					$host.removeClass('pgm-sidebar-dt-host--pending').append($f);
 					$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
 				}
 				$f.find('input[type="search"]').attr('placeholder', 'Buscar OS, cliente, técnico…');
@@ -761,7 +758,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		if (osInitialFilters.problema) $('#problema').val(osInitialFilters.problema);
 		if (osInitialFilters.locacao) $('#locacao').val(osInitialFilters.locacao);
 		if (typeof $.fn.selectpicker === 'function') {
-			$('#situacao, #cliente, #problema, #locacao').selectpicker('refresh');
+			$('#cliente, #problema').selectpicker('refresh');
 		}
 		osApplyClientFilters();
 

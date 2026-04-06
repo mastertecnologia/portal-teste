@@ -330,7 +330,7 @@
 							? '<a class="dash-pgm-liberar" href="' . h($urlDesbloquear) . '" onclick="event.stopPropagation();">Liberar</a>'
 							: '<span class="dash-pgm-no-action" title="Somente administrador pode liberar.">—</span>';
 					?>
-					[<?= json_encode($nomeReq) ?>, "Acesso", <?= json_encode(!empty($u->created) ? date_format($u->created, 'd/m/Y') : date('d/m/Y')) ?>, <?= json_encode('<span class="sla-badge" style="background:#2d1f4e;color:#bc8cff">Pendente</span>') ?>, <?= json_encode($acaoHtml, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>],
+					[<?= json_encode($nomeReq) ?>, "Acesso", <?= json_encode(!empty($u->created) ? date_format($u->created, 'd/m/Y') : date('d/m/Y')) ?>, <?= json_encode('<span class="sla-badge sla-pending">Pendente</span>') ?>, <?= json_encode($acaoHtml, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>],
 					<?php endforeach; ?>
 				]
 			}
@@ -477,7 +477,26 @@
 .dcli-kpi-link{font-size:.7rem;color:#008f68;text-decoration:none;font-weight:600;}
 .dcli-kpi-link:hover{color:#00c08b;text-decoration:none;}
 .dcli-kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:#e5e4e0;}
-.dcli-kpi-bar-fill{height:100%;background:linear-gradient(90deg,#00c08b,#5cdbc0);}
+.dcli-kpi-bar-fill{width:0%;height:100%;background:linear-gradient(90deg,#00c08b,#5cdbc0);}
+.dcli-kpi-link--muted{color:#9a9890;font-weight:600;font-size:.7rem;}
+.dcli-title-ic-amber{color:#e3b341;margin-right:7px;}
+.dcli-title-ic-purple{color:#d2a8ff;margin-right:7px;}
+.dcli-card-actions{display:flex;align-items:center;gap:10px;}
+.dcli-empty-state--ok i{color:#3fb950;opacity:1;}
+.dcli-th-w70{width:70px;}
+.dcli-th-w100{width:100px;}
+.dcli-th-w130{width:130px;}
+.dcli-th-w110{width:110px;}
+.dcli-th-w70r{width:70px;text-align:right;}
+.dcli-th-w60{width:60px;}
+.dcli-th-w50{width:50px;}
+.dcli-th-w90{width:90px;}
+.dcli-th-w55{width:55px;}
+.dcli-td-assunto{font-weight:500;color:#1a1a18;}
+.dcli-td-assunto-preview{font-size:.68rem;color:#6b6a65;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;}
+.dcli-td-tech{font-size:.75rem;color:#9a9890;}
+.dcli-td-desc{color:#1a1a18;}
+.dcli-td-autor{font-size:.78rem;color:#5f5e5a;}
 .dcli-section-row{display:grid;gap:16px;}
 .dcli-section-row.two-col{grid-template-columns:1fr 1fr;}
 @media(max-width:768px){.dcli-section-row.two-col{grid-template-columns:1fr;}}
@@ -560,7 +579,7 @@
 				<p class="dcli-kpi-value"><?= (int)$ordensCliente ?></p>
 				<?= $this->Html->link('Ver ordens →', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'dcli-kpi-link']); ?>
 			</div>
-			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" style="width:<?= min(100, (int)$ordensCliente) ?>%"></div></div>
+			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" data-w="<?= min(100, (int)$ordensCliente) ?>"></div></div>
 		</div>
 		<div class="dcli-kpi">
 			<div class="dcli-kpi-icon orange"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -570,10 +589,10 @@
 				<?php if ($permissaoacesso) : ?>
 					<?= $this->Html->link('Ver orçamentos →', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'dcli-kpi-link']); ?>
 				<?php else : ?>
-					<span class="dcli-kpi-link" style="color:#9a9890;">Solicite por ticket</span>
+					<span class="dcli-kpi-link--muted">Solicite por ticket</span>
 				<?php endif; ?>
 			</div>
-			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" style="width:<?= min(100, (int)$orcamentosCliente * 4) ?>%"></div></div>
+			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" data-w="<?= min(100, (int)$orcamentosCliente * 4) ?>"></div></div>
 		</div>
 		<div class="dcli-kpi">
 			<div class="dcli-kpi-icon teal"><i class="fas fa-ticket-alt"></i></div>
@@ -582,7 +601,7 @@
 				<p class="dcli-kpi-value"><?= (int)$ticketsCliente ?></p>
 				<?= $this->Html->link('Abrir lista →', ['controller' => 'Tickets', 'action' => 'indexcliente'], ['class' => 'dcli-kpi-link']); ?>
 			</div>
-			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" style="width:<?= min(100, (int)$ticketsCliente * 10) ?>%"></div></div>
+			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" data-w="<?= min(100, (int)$ticketsCliente * 10) ?>"></div></div>
 		</div>
 		<?php if ($permissaoacesso) : ?>
 		<div class="dcli-kpi">
@@ -592,7 +611,7 @@
 				<p class="dcli-kpi-value"><?= count($contratos) ?></p>
 				<a href="#secao-contratos" class="dcli-kpi-link">Ver contratos →</a>
 			</div>
-			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" style="width:<?= min(100, count($contratos) * 20) ?>%"></div></div>
+			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" data-w="<?= min(100, count($contratos) * 20) ?>"></div></div>
 		</div>
 		<?php endif; ?>
 	</div>
@@ -600,15 +619,15 @@
 	<!-- Tickets em aberto -->
 	<div class="dcli-card">
 		<div class="dcli-card-head">
-			<span class="dcli-card-title"><i class="fas fa-tools" style="color:#e3b341;margin-right:7px;"></i>Tickets aguardando / em execução</span>
-			<div style="display:flex;align-items:center;gap:10px;">
+			<span class="dcli-card-title"><i class="fas fa-tools dcli-title-ic-amber"></i>Tickets aguardando / em execução</span>
+			<div class="dcli-card-actions">
 				<span class="dcli-card-badge"><?= count($ticketsPendentes) ?></span>
 				<?= $this->Html->link('Ver todos →', ['controller' => 'Tickets', 'action' => 'indexcliente'], ['class' => 'dcli-card-link']); ?>
 			</div>
 		</div>
 		<?php if (empty($ticketsPendentes)) : ?>
-			<div class="dcli-empty-state">
-				<i class="fas fa-check-circle" style="color:#3fb950;"></i>
+			<div class="dcli-empty-state dcli-empty-state--ok">
+				<i class="fas fa-check-circle"></i>
 				<p>Nenhum ticket aguardando no momento.</p>
 			</div>
 		<?php else : ?>
@@ -616,12 +635,12 @@
 			<table class="dcli-table">
 				<thead>
 					<tr>
-						<th style="width:70px;">#</th>
-						<th style="width:100px;">Data</th>
+						<th class="dcli-th-w70">#</th>
+						<th class="dcli-th-w100">Data</th>
 						<th>Assunto</th>
-						<th style="width:130px;">Status</th>
-						<th style="width:110px;">Técnico</th>
-						<th style="width:70px;text-align:right;">Ações</th>
+						<th class="dcli-th-w130">Status</th>
+						<th class="dcli-th-w110">Técnico</th>
+						<th class="dcli-th-w70r">Ações</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -633,9 +652,9 @@
 					<tr>
 						<td class="dcli-td-id">#<?= h($reg->id) ?></td>
 						<td class="dcli-td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
-						<td style="color:#1a1a18;font-weight:500;"><?= AssuntoTicket($reg->assunto) ?><div style="font-size:.68rem;color:#6b6a65;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"><?= h(mb_substr((string)($reg->solicitacao ?? ''), 0, 80)) ?></div></td>
+						<td class="dcli-td-assunto"><?= AssuntoTicket($reg->assunto) ?><div class="dcli-td-assunto-preview"><?= h(mb_substr((string)($reg->solicitacao ?? ''), 0, 80)) ?></div></td>
 						<td><span class="dcli-status <?= $stCls ?>"><span class="dcli-status-dot"></span><?= SituacaoTicket($reg->situacao) ?></span></td>
-						<td style="font-size:.75rem;color:#9a9890;"><?= h($tecnico) ?></td>
+						<td class="dcli-td-tech"><?= h($tecnico) ?></td>
 						<td>
 							<div class="dcli-td-actions">
 								<?= $this->Html->link('<i class="fas fa-eye"></i>', ['controller' => 'Tickets', 'action' => 'view', $reg->id], ['class' => 'dcli-btn-icon', 'title' => 'Ver ticket', 'escape' => false]); ?>
@@ -655,7 +674,7 @@
 		<!-- Contratos -->
 		<div class="dcli-card">
 			<div class="dcli-card-head">
-				<span class="dcli-card-title"><i class="fas fa-file-contract" style="color:#d2a8ff;margin-right:7px;"></i>Contratos da empresa</span>
+				<span class="dcli-card-title"><i class="fas fa-file-contract dcli-title-ic-purple"></i>Contratos da empresa</span>
 				<span class="dcli-card-badge"><?= count($contratos) ?></span>
 			</div>
 			<?php if (empty($contratos)) : ?>
@@ -668,17 +687,17 @@
 				<table class="dcli-table">
 					<thead>
 						<tr>
-							<th style="width:60px;">#</th>
+							<th class="dcli-th-w60">#</th>
 							<th>Descrição</th>
-							<th style="width:50px;">Qtd.</th>
-							<th style="width:90px;">Data</th>
+							<th class="dcli-th-w50">Qtd.</th>
+							<th class="dcli-th-w90">Data</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ($contratos as $reg): ?>
 						<tr>
 							<td class="dcli-td-id"><?= h($reg->id) ?></td>
-							<td style="color:#1a1a18;"><?= h($reg->descricao) ?></td>
+							<td class="dcli-td-desc"><?= h($reg->descricao) ?></td>
 							<td><span class="dcli-contrato-chip"><?= h($reg->qtde) ?></span></td>
 							<td class="dcli-td-date"><?= !empty($reg->dtcontratacao) ? date_format($reg->dtcontratacao, 'd/m/Y') : '—' ?></td>
 						</tr>
@@ -692,8 +711,8 @@
 		<!-- Orçamentos recentes -->
 		<div class="dcli-card">
 			<div class="dcli-card-head">
-				<span class="dcli-card-title"><i class="fas fa-file-invoice-dollar" style="color:#e3b341;margin-right:7px;"></i>Últimos orçamentos</span>
-				<div style="display:flex;align-items:center;gap:10px;">
+				<span class="dcli-card-title"><i class="fas fa-file-invoice-dollar dcli-title-ic-amber"></i>Últimos orçamentos</span>
+				<div class="dcli-card-actions">
 					<span class="dcli-card-badge"><?= count($orcamentosRecentes) ?></span>
 					<?= $this->Html->link('Ver todos →', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'dcli-card-link']); ?>
 				</div>
@@ -708,17 +727,17 @@
 				<table class="dcli-table">
 					<thead>
 						<tr>
-							<th style="width:55px;">#</th>
+							<th class="dcli-th-w55">#</th>
 							<th>Autor</th>
-							<th style="width:90px;">Abertura</th>
-							<th style="width:90px;">Validade</th>
+							<th class="dcli-th-w90">Abertura</th>
+							<th class="dcli-th-w90">Validade</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ($orcamentosRecentes as $reg): ?>
 						<tr>
 							<td><?= $this->Html->link('#' . h($reg->id), ['controller' => 'Orcamentos', 'action' => 'view', $reg->id], ['class' => 'dcli-td-link']); ?></td>
-							<td style="font-size:.78rem;color:#5f5e5a;"><?= h($autores[$reg->idautor] ?? '—') ?></td>
+							<td class="dcli-td-autor"><?= h($autores[$reg->idautor] ?? '—') ?></td>
 							<td class="dcli-td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
 							<td class="dcli-td-date"><?= date_format($reg->validoate, 'd/m/Y') ?></td>
 						</tr>
@@ -735,6 +754,10 @@
 </div>
 <?php } ?>
 <script>
+	document.querySelectorAll('.dcli-kpi-bar-fill[data-w]').forEach(function (el) {
+		el.style.width = el.getAttribute('data-w') + '%';
+		el.removeAttribute('data-w');
+	});
 	if (window.jQuery && $.fn && $.fn.perfectScrollbar && $("#tickets-pendentes").length && $("#tickets-sendo-resolvidos").length) {
 		$("#tickets-pendentes, #tickets-sendo-resolvidos").perfectScrollbar();
 	}

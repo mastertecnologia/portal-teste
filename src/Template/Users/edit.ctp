@@ -206,7 +206,7 @@ if (!empty($fromQueues)) {
 						$('#btnSalvarUsuario').prop('disabled', false);
 						$('#btnSalvarUsuario').removeClass('btn-disabled');
 					}else{
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário com este e-mail no sistema.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">Já existe um usuário com este e-mail no sistema.</p>');
 						$('#btnSalvarUsuario').prop('disabled', 'disabled');
 						$('#btnSalvarUsuario').addClass('btn-disabled');
 					}

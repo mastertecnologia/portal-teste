@@ -50,6 +50,7 @@ $cakeDescription = 'CakePHP: the rapid development PHP framework';
 
     <?= $this->Html->meta('icon') ?>
     <?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
+    <?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
     <?= $this->Html->css('/dist/css/pages/pgm-pages-home-theme') ?>
     <?= $this->Html->css('base.css') ?>
     <?= $this->Html->css('cake.css') ?>

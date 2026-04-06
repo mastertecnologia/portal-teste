@@ -43,12 +43,12 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 			]) ?>
 
 			<?php /* título + badges */ ?>
-			<div class="d-flex align-items-start justify-content-between mb-2" style="flex-wrap:wrap;gap:8px;">
+			<div class="adv-cm-title-row">
 				<div>
-					<h4 class="card-title mb-1" style="font-size:18px;"><?= h($contract->name) ?></h4>
+					<h4 class="card-title mb-1 adv-cm-contract-title"><?= h($contract->name) ?></h4>
 					<div class="small text-muted">
-						<span style="margin-right:6px;"><strong>Código:</strong> <?= h($contract->code) ?></span>
-						<span class="label label-<?= $statusColor ?>" style="font-size:11px;vertical-align:middle;"><?= $statusLabel ?></span>
+						<span class="adv-cm-code-inline"><strong>Código:</strong> <?= h($contract->code) ?></span>
+						<span class="label label-<?= $statusColor ?> adv-cm-status-lbl"><?= $statusLabel ?></span>
 						<?php if ($contract->dias_para_vencer !== null && $contract->end_date): ?>
 							<?php $d = (int)$contract->dias_para_vencer; ?>
 							&nbsp;·&nbsp;
@@ -60,13 +60,13 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 						<?php endif; ?>
 					</div>
 				</div>
-				<?= $this->Html->link('← Voltar à lista', ['action' => 'index'], ['class' => 'btn btn-sm btn-default', 'style' => 'white-space:nowrap;']) ?>
+				<?= $this->Html->link('← Voltar à lista', ['action' => 'index'], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
 			</div>
 
-			<hr style="margin:10px 0 14px;">
+			<hr class="adv-cm-hr">
 
 			<?php /* ── BOTÕES DE AÇÃO ─── */ ?>
-			<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px;">
+			<div class="adv-cm-actions-row">
 
 				<?php /* Editar / Serviços / Signatários — sempre visíveis */ ?>
 				<?php if (!empty($contractMayEditCore)): ?>
@@ -87,7 +87,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<?php endif; ?>
 
 				<?php /* Regenerar PDF */ ?>
-				<?= $this->Form->create(null, ['url' => ['action' => 'gerarPdf', $id], 'style' => 'display:inline-block;margin:0;']) ?>
+				<?= $this->Form->create(null, ['url' => ['action' => 'gerarPdf', $id], 'class' => 'adv-cm-form-inline']) ?>
 				<?= $this->Form->button('🔄 Regenerar PDF', ['class' => 'btn btn-sm btn-default']) ?>
 				<?= $this->Form->end() ?>
 
@@ -98,7 +98,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 
 				<?php /* Aprovar → só quando rascunho ou revisão */ ?>
 				<?php if ($podeAprovar): ?>
-				<?= $this->Form->create(null, ['url' => ['action' => 'aprovar', $id], 'style' => 'display:inline-block;margin:0;']) ?>
+				<?= $this->Form->create(null, ['url' => ['action' => 'aprovar', $id], 'class' => 'adv-cm-form-inline']) ?>
 				<?= $this->Form->hidden('target_status', ['value' => 'aguardando_assinatura']) ?>
 				<?= $this->Form->button('✔ Aprovar', ['class' => 'btn btn-sm btn-success', 'title' => 'Mover para Aguardando Assinatura']) ?>
 				<?= $this->Form->end() ?>
@@ -124,37 +124,36 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 
 			<?php /* ── CANCELAR — formulário separado abaixo dos demais botões */ ?>
 			<?php if ($podeCancelar): ?>
-			<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:rgba(200,0,0,.06);border-radius:6px;border:1px solid rgba(200,0,0,.15);">
-				<?= $this->Form->create(null, ['url' => ['action' => 'cancelar', $id], 'style' => 'display:contents;']) ?>
+			<div class="adv-cm-cancel-zone">
+				<?= $this->Form->create(null, ['url' => ['action' => 'cancelar', $id], 'class' => 'adv-cm-form-cancel']) ?>
 				<?= $this->Form->control('motivo', [
 					'type'        => 'text',
 					'label'       => false,
 					'placeholder' => 'Motivo do cancelamento (obrigatório)',
-					'class'       => 'form-control input-sm',
-					'style'       => 'flex:1;min-width:200px;max-width:400px;',
+					'class'       => 'form-control input-sm adv-cm-motivo-input',
 				]) ?>
 				<?= $this->Form->button('🚫 Cancelar contrato', ['class' => 'btn btn-sm btn-danger']) ?>
 				<?= $this->Form->end() ?>
 			</div>
 			<?php endif; ?>
 
-			<hr style="margin:14px 0 10px;">
+			<hr class="adv-cm-hr adv-cm-hr--loose">
 
 			<?php /* ── DADOS PRINCIPAIS ─── */ ?>
 			<div class="row small">
 				<div class="col-md-6">
-					<table class="table table-condensed mb-0" style="background:transparent;">
+					<table class="table table-condensed mb-0 adv-cm-kv-table">
 						<tbody>
 							<tr>
-								<td class="text-muted" style="width:40%;white-space:nowrap;">Cliente</td>
+								<td class="text-muted adv-cm-kv-label">Cliente</td>
 								<td><strong><?= h($contract->cliente->razaosocial ?? $contract->cliente->nome ?? '—') ?></strong></td>
 							</tr>
 							<tr>
-								<td class="text-muted">Tipo de contrato</td>
+								<td class="text-muted adv-cm-kv-label">Tipo de contrato</td>
 								<td><?= h(ucfirst($contract->type ?? '—')) ?></td>
 							</tr>
 							<tr>
-								<td class="text-muted">Vigência</td>
+								<td class="text-muted adv-cm-kv-label">Vigência</td>
 								<td>
 									<?= h($contract->start_date ? $contract->start_date->format('d/m/Y') : '—') ?>
 									→
@@ -165,18 +164,18 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 					</table>
 				</div>
 				<div class="col-md-6">
-					<table class="table table-condensed mb-0" style="background:transparent;">
+					<table class="table table-condensed mb-0 adv-cm-kv-table">
 						<tbody>
 							<tr>
-								<td class="text-muted" style="width:40%;white-space:nowrap;">Mensalidade</td>
+								<td class="text-muted adv-cm-kv-label">Mensalidade</td>
 								<td><strong><?= $contract->monthly_value ? 'R$ ' . number_format((float)$contract->monthly_value, 2, ',', '.') : '—' ?></strong></td>
 							</tr>
 							<tr>
-								<td class="text-muted">SLA (h)</td>
+								<td class="text-muted adv-cm-kv-label">SLA (h)</td>
 								<td><?= h($contract->sla_hours ?? '—') ?></td>
 							</tr>
 							<tr>
-								<td class="text-muted">Auto-renovar</td>
+								<td class="text-muted adv-cm-kv-label">Auto-renovar</td>
 								<td><?= !empty($contract->auto_renew) ? '<span class="label label-info">Sim</span>' : 'Não' ?></td>
 							</tr>
 						</tbody>
@@ -190,7 +189,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 	<?php /* ── SERVIÇOS ───────────────────────────────────────────── */ ?>
 	<div class="pgm-adv-panel card mb-3">
 		<div class="card-body">
-			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+			<div class="adv-cm-card-head">
 				<h5 class="card-title mb-0">Serviços contratados</h5>
 				<?= $this->Html->link('+ Gerenciar', ['action' => 'addServicos', $id], ['class' => 'btn btn-xs btn-default']) ?>
 			</div>
@@ -254,7 +253,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 	<?php /* ── SIGNATÁRIOS ─────────────────────────────────────────── */ ?>
 	<div class="pgm-adv-panel card mb-3">
 		<div class="card-body">
-			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+			<div class="adv-cm-card-head">
 				<h5 class="card-title mb-0">Signatários</h5>
 				<?= $this->Html->link('+ Gerenciar', ['action' => 'addSignatarios', $id], ['class' => 'btn btn-xs btn-default']) ?>
 			</div>
@@ -290,14 +289,14 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<table class="table table-sm table-striped mb-0">
 					<thead>
 						<tr>
-							<th style="width:40px;">#</th>
+							<th class="adv-cm-th-index">#</th>
 							<th>Nome</th>
 							<th>E-mail</th>
 							<th>Tipo</th>
 							<th>Auth</th>
 							<th>Status</th>
 							<th>Assinado em</th>
-							<th style="min-width:120px;"><?= __('Convite') ?></th>
+							<th class="adv-cm-th-convite"><?= __('Convite') ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -323,7 +322,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 							<td class="small"><?= !empty($s->assinado_em) ? h($s->assinado_em->format('d/m/Y H:i')) : '—' ?></td>
 							<td class="small">
 								<?php if ($podeReenviarEste): ?>
-								<?= $this->Form->create(null, ['url' => ['action' => 'reenviarLink', $id], 'style' => 'display:inline;margin:0;padding:0;']) ?>
+								<?= $this->Form->create(null, ['url' => ['action' => 'reenviarLink', $id], 'class' => 'adv-cm-form-reenvio']) ?>
 								<?= $this->Form->hidden('signatory_id', ['value' => (int)$s->id]) ?>
 								<?= $this->Form->button(__('Reenviar link'), [
 									'type' => 'submit',

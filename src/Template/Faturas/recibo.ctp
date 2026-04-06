@@ -44,6 +44,7 @@ if ($extenso !== '') {
 $obsRecibo[] = 'Parcela ' . (int) $recibo->nro . ' da locação ' . (string) $fatura->nro . '.';
 ?>
 <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+<?= $this->Html->css('/css/faturas-locacao-doc.css') ?>
 <style>
 * { box-sizing: border-box; }
 body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px; color: #000; }
@@ -127,7 +128,7 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 .campo-row-first { border-top: 1px solid #000; }
 </style>
 
-<div class="row hidden-print" style="margin-bottom:10px;">
+<div class="row hidden-print fat-loc-actions-bar">
 	<?= $this->Html->link('🖨 Imprimir', '#', ['id' => 'btn-imprimir', 'class' => 'btn btn-pgm btn-pgm-imprimir btn-orange m-r-5']) ?>
 	<?php if ($role == 0): ?>
 	<?= $this->Html->link('← Voltar para a locação', ['action' => 'edit', $fatura->id, 2], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info']) ?>
@@ -137,13 +138,13 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 <div class="col-md-12">
 <div id="printable">
 
-	<div class="b" style="display:flex;align-items:stretch;margin-bottom:0;">
-		<div style="width:180px;min-width:150px;padding:8px;display:flex;align-items:center;justify-content:center;border-right:1px solid #000;">
+	<div class="b fat-loc-header-b">
+		<div class="fat-loc-logo-cell">
 			<img src="<?= $this->request->getAttribute('webroot') . 'arquivos/empresas/logotipos/' . $empresaObj->id . '/logo.png' ?>"
-				 alt="Logo" style="max-width:160px;max-height:70px;">
+				 alt="Logo" class="fat-loc-logo-img">
 		</div>
-		<div style="flex:1;padding:5px 8px;text-align:center;border-right:1px solid #000;">
-			<div style="font-weight:700;font-size:13px;text-transform:uppercase;"><?= h($empresaObj->razaosocial) ?></div>
+		<div class="fat-loc-empresa-cell">
+			<div class="fat-loc-empresa-nome"><?= h($empresaObj->razaosocial) ?></div>
 			<div><?= h(strtoupper($empresaObj->endereco)) ?>, <?= h($empresaObj->nroendereco) ?> - <?= h(strtoupper($empresaObj->bairro)) ?> - Cep: <?= h($empresaObj->cep) ?></div>
 			<div><?= h(strtoupper($empresaObj->cidade->nome)) ?> / <?= h($empresaObj->cidade->estado->sigla) ?> - SAO FRANCISCO</div>
 			<div>Fone/Fax: <?= h($empresaObj->fone) ?></div>
@@ -152,11 +153,11 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 		</div>
 	</div>
 
-	<div style="display:flex;align-items:baseline;justify-content:space-between;border:1px solid #000;border-top:none;padding:4px 8px;flex-wrap:wrap;gap:6px;">
-		<div style="font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.5px;">
+	<div class="fat-loc-title-bar fat-loc-title-bar--wrap">
+		<div class="fat-loc-doc-title">
 			RECIBO DE LOCAÇÃO — Ref.&nbsp;<?= $faturaRef ?>
 		</div>
-		<div style="font-weight:700;font-size:12px;">
+		<div class="fat-loc-doc-meta">
 			Data recebimento: <?= h($dataRecebimento) ?> &nbsp;|&nbsp; Fatura: <?= h($fatura->nro) ?>
 		</div>
 	</div>
@@ -164,73 +165,73 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 	<div class="secao-titulo">DADOS DO CLIENTE</div>
 
 	<div class="campo-row campo-row-first">
-		<div class="campo" style="flex:3;">
+		<div class="campo fat-loc-f3">
 			<span class="campo-label">Nome/Razão Social</span>
 			<span class="campo-valor"><?= h($nomeCliente) ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">Nome Fantasia</span>
 			<span class="campo-valor"><?= h($fantasia) ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">Contato</span>
 			<span class="campo-valor"><?= h($fatura->cliente->contato ?? '') ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">Cnpj/Cpf</span>
 			<span class="campo-valor"><?= h($docCliente) ?></span>
 		</div>
 	</div>
 
 	<div class="campo-row">
-		<div class="campo" style="flex:4;">
+		<div class="campo fat-loc-f4">
 			<span class="campo-label">Endereço</span>
 			<span class="campo-valor"><?= h($endCliente) ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">Bairro</span>
 			<span class="campo-valor"><?= h($bairroCliente) ?></span>
 		</div>
-		<div class="campo" style="flex:1;">
+		<div class="campo fat-loc-f1">
 			<span class="campo-label">Cep</span>
 			<span class="campo-valor"><?= h($cepCliente) ?></span>
 		</div>
 	</div>
 
 	<div class="campo-row">
-		<div class="campo" style="flex:3;">
+		<div class="campo fat-loc-f3">
 			<span class="campo-label">Município</span>
 			<span class="campo-valor"><?= h($munCliente) ?></span>
 		</div>
-		<div class="campo" style="flex:1;">
+		<div class="campo fat-loc-f1">
 			<span class="campo-label">UF</span>
 			<span class="campo-valor"><?= h($ufCliente) ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">Fone/Fax</span>
 			<span class="campo-valor"><?= h($foneCliente) ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">I.M.</span>
 			<span class="campo-valor"><?= h($fatura->cliente->inscricaomunicipal ?? '') ?></span>
 		</div>
 	</div>
 
-	<div class="secao-titulo" style="margin-top:6px;">DADOS DA FATURA</div>
+	<div class="secao-titulo fat-loc-sec-mt">DADOS DA FATURA</div>
 
 	<div class="campo-row campo-row-first">
 		<?php foreach ([1, 2, 3] as $col): ?>
-		<div class="campo" style="flex:1;<?= $col < 3 ? 'border-right:1px solid #000;' : '' ?>">
-			<div style="display:flex;gap:0;">
-				<div style="flex:2;border-right:1px solid #ccc;padding:2px 4px;">
+		<div class="campo fat-loc-f1<?= $col < 3 ? ' fat-loc-fatura-col--sep' : '' ?>">
+			<div class="fat-loc-fatura-inner">
+				<div class="fat-loc-fic-2">
 					<span class="campo-label">Fatura</span>
 					<span class="campo-valor"><?= $col === 1 ? $faturaRef : '' ?></span>
 				</div>
-				<div style="flex:1;border-right:1px solid #ccc;padding:2px 4px;">
+				<div class="fat-loc-fic-1">
 					<span class="campo-label">Vencto.</span>
 					<span class="campo-valor"><?= $col === 1 ? h($dataVencto) : '' ?></span>
 				</div>
-				<div style="flex:1;padding:2px 4px;">
+				<div class="fat-loc-fic-1-end">
 					<span class="campo-label">Valor</span>
 					<span class="campo-valor"><?= $col === 1 ? $valorPagoFmt : '' ?></span>
 				</div>
@@ -239,18 +240,18 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 		<?php endforeach; ?>
 	</div>
 
-	<div class="secao-titulo" style="margin-top:6px;">DADOS DOS PRODUTOS</div>
+	<div class="secao-titulo fat-loc-sec-mt">DADOS DOS PRODUTOS</div>
 
-	<table class="tbl-produtos" style="margin-top:0;">
+	<table class="tbl-produtos fat-loc-tbl-mt0">
 		<thead>
 			<tr>
-				<th style="width:8%;">Código</th>
-				<th style="width:38%;">Descrição do Produto</th>
-				<th style="width:6%;">Unid.</th>
-				<th style="width:10%;text-align:right;">Quantidade</th>
-				<th style="width:13%;text-align:right;">Valor Unitário</th>
-				<th style="width:12%;text-align:right;">Desconto</th>
-				<th style="width:13%;text-align:right;">Valor Total</th>
+				<th class="fat-loc-w8">Código</th>
+				<th class="fat-loc-w38">Descrição do Produto</th>
+				<th class="fat-loc-w6">Unid.</th>
+				<th class="fat-loc-w10 fat-loc-tar">Quantidade</th>
+				<th class="fat-loc-w13 fat-loc-tar">Valor Unitário</th>
+				<th class="fat-loc-w12 fat-loc-tar">Desconto</th>
+				<th class="fat-loc-w13 fat-loc-tar">Valor Total</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -259,10 +260,10 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 				<td><?= h($reg->codigo) ?></td>
 				<td><?= h($reg->descricao) ?></td>
 				<td><?= h($reg->unidade ?? 'UN') ?></td>
-				<td style="text-align:right;"><?= number_format($reg->quantidade, 2, ',', '.') ?></td>
-				<td style="text-align:right;">R$ <?= number_format($reg->valoritem, 2, ',', '.') ?></td>
-				<td style="text-align:right;">R$ 0,00</td>
-				<td style="text-align:right;">R$ <?= number_format($reg->valortotal, 2, ',', '.') ?></td>
+				<td class="fat-loc-tar"><?= number_format($reg->quantidade, 2, ',', '.') ?></td>
+				<td class="fat-loc-tar">R$ <?= number_format($reg->valoritem, 2, ',', '.') ?></td>
+				<td class="fat-loc-tar">R$ 0,00</td>
+				<td class="fat-loc-tar">R$ <?= number_format($reg->valortotal, 2, ',', '.') ?></td>
 			</tr>
 			<?php endforeach; ?>
 			<?php
@@ -274,64 +275,64 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 		</tbody>
 	</table>
 
-	<div class="secao-titulo" style="margin-top:6px;">TOTAIS DO RECIBO</div>
+	<div class="secao-titulo fat-loc-sec-mt">TOTAIS DO RECIBO</div>
 
 	<div class="campo-row totais-row campo-row-first">
-		<div class="campo" style="flex:1;border-right:1px solid #000;">
+		<div class="campo fat-loc-f1 fat-loc-br-000">
 			<span class="campo-label">Valor dos Serviços</span>
 			<span class="campo-valor"><?= $valorServFmt ?></span>
 		</div>
-		<div class="campo" style="flex:1;border-right:1px solid #000;">
+		<div class="campo fat-loc-f1 fat-loc-br-000">
 			<span class="campo-label">Valor do Desconto</span>
 			<span class="campo-valor"><?= $descontoRecFmt ?></span>
 		</div>
-		<div class="campo" style="flex:1;">
+		<div class="campo fat-loc-f1">
 			<span class="campo-label">Valor Total do Recibo</span>
 			<span class="campo-valor"><?= $totalReciboFmt ?></span>
 		</div>
 	</div>
 
-	<div class="campo-row" style="margin-top:4px;border-top:1px solid #000;">
-		<div class="campo" style="flex:3;border-right:1px solid #ccc;">
+	<div class="campo-row fat-loc-meta-row">
+		<div class="campo fat-loc-f3 fat-loc-br-ccc">
 			<span class="campo-label">Forma de Pagamento</span>
 			<span class="campo-valor"><?= h(OrdensPagamento($recibo->pagamento)) ?></span>
 		</div>
-		<div class="campo" style="flex:2;border-right:1px solid #ccc;">
+		<div class="campo fat-loc-f2 fat-loc-br-ccc">
 			<span class="campo-label">Validade</span>
 			<span class="campo-valor"><?= h($dataVencto) ?></span>
 		</div>
-		<div class="campo" style="flex:2;border-right:1px solid #ccc;">
+		<div class="campo fat-loc-f2 fat-loc-br-ccc">
 			<span class="campo-label">Previsão de Entrega</span>
 			<span class="campo-valor"><?= !empty($fatura->dtretorno) ? date_format($fatura->dtretorno, 'd/m/Y') : '' ?></span>
 		</div>
-		<div class="campo" style="flex:2;">
+		<div class="campo fat-loc-f2">
 			<span class="campo-label">Vendedor</span>
 			<span class="campo-valor"><?= h($fatura->vendedor ?? '') ?></span>
 		</div>
 	</div>
 
-	<div class="secao-titulo" style="margin-top:6px;">OBSERVAÇÕES DO RECIBO</div>
-	<div style="border:1px solid #000;border-top:none;padding:4px 6px;min-height:40px;font-size:11px;">
+	<div class="secao-titulo fat-loc-sec-mt">OBSERVAÇÕES DO RECIBO</div>
+	<div class="fat-loc-obs-box">
 		<?= nl2br(h(implode("\n", $obsRecibo))) ?>
 	</div>
 
 	<?= $this->element('Faturas/observacoes_fiscais_ibpt', ['ibptBreakdown' => $ibptBreakdown ?? null, 'valorBaseIbpt' => $valorIbptRecibo]) ?>
 
-	<div class="footer-wrap footer-print" style="margin-top:8px;">
+	<div class="footer-wrap footer-print fat-loc-footer-mt">
 		<div class="footer-left">
 			RECIBO DE LOCAÇÃO<br>
 			Ref.: <?= $faturaRef ?><br><br>
 			Data: <?= h($dataRecebimento) ?>
 		</div>
 		<div class="footer-right">
-			<div style="font-weight:700;margin-bottom:8px;">Estamos de Acordo com a Emissão dessa Fatura:</div>
-			<div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+			<div class="fat-loc-sign-title">Estamos de Acordo com a Emissão dessa Fatura:</div>
+			<div class="fat-loc-sign-row">
 				<div>
 					<?= h(strtoupper($empresaObj->cidade->nome ?? 'BENTO GONÇALVES')) ?>,&nbsp;
-					<span class="sig-line" style="width:120px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<span class="sig-line fat-loc-sig-date">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 				</div>
 				<div>
-					Assinatura:&nbsp;<span class="sig-line" style="width:200px;"></span>
+					Assinatura:&nbsp;<span class="sig-line fat-loc-sig-full"></span>
 				</div>
 			</div>
 		</div>

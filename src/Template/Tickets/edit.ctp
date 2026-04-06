@@ -105,7 +105,7 @@
 									<div class="message-box bg-white">
 										<div class="message-widget message-scroll">
 											<a href="#" class='add-darkmode'>
-												<div class="mail-contnet" style="width:100%">
+												<div class="mail-contnet mail-contnet--full">
 													<div class="row">
 														<div class="col-12">
 															<h5><?= $user['Users']['name'] ?></h5>
@@ -168,9 +168,9 @@
 									}
 									$horaInicioTimer = (string)$horaInicioTimer;
 									?>
-									<div id="timer-cronometro" class="mb-2 p-2 bg-info text-white rounded" data-hora-inicio="<?= h($horaInicioTimer) ?>" style="font-family: monospace; font-size: 1.4rem;">00:00:00</div>
+									<div id="timer-cronometro" class="sd-timer-display mb-2 p-2 bg-info text-white rounded" data-hora-inicio="<?= h($horaInicioTimer) ?>">00:00:00</div>
 								<?php elseif (!empty($timerAtivo) && $timerPausado && !empty($timerPausadoElapsedTexto)): ?>
-									<div id="timer-cronometro-pausado" class="mb-2 p-2 bg-warning text-dark rounded" style="font-family: monospace; font-size: 1.4rem;"><?= h($timerPausadoElapsedTexto) ?> <small>(pausado)</small></div>
+									<div id="timer-cronometro-pausado" class="sd-timer-display mb-2 p-2 bg-warning text-dark rounded"><?= h($timerPausadoElapsedTexto) ?> <small>(pausado)</small></div>
 								<?php endif; ?>
 								<?php
 								$urlIniciar = $this->Url->build(['controller' => 'Tickets', 'action' => 'timerIniciar', $ticket->id]);
@@ -211,7 +211,7 @@
 										<br><p class='h5'> Descrição:  </p>
 										<div class="row">
 											<div class="col-lg-12">
-												<p class="form-control" style="border: none; background: transparent; height: auto;">
+												<p class="form-control ticket-reply-plain">
 													<?= nl2br($ticket->solicitacao) ?>
 												</p>
 											</div>
@@ -233,7 +233,7 @@
 									<div class="row">
 										<div class="col-lg-12">
 											<!-- Editor Quill -->
-											<div id="quill-editor" style="height: 200px; margin-bottom: 50px;"></div>
+											<div id="quill-editor" class="ticket-quill-editor-mount"></div>
 											<?= $this->Form->hidden('comentario', ['id' => 'comentario-hidden']); ?>
 											<?= $this->Form->hidden('comentario_texto', ['id' => 'comentario-texto']); ?>
 										</div>
@@ -340,7 +340,7 @@
 										</div>
 									</div>
 								</div>
-							<?= $this->Form->button('Adicionar Anexo', ['id' => 'submitfile', 'class' => 'btn btn-pgm btn-pgm-salvar btn-primary', 'style' => 'color:white', 'disabled']) ?>
+							<?= $this->Form->button('Adicionar Anexo', ['id' => 'submitfile', 'class' => 'btn btn-pgm btn-pgm-salvar btn-primary text-white', 'disabled']) ?>
 							<br>
 							<div class="clearfix"></div>
 							<?= $this->Form->end(); ?>

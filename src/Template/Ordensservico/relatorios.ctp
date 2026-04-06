@@ -83,7 +83,7 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 			<div class="row">
 				<div class="col-lg-3 col-md-6 col-12">
 					<p>Situação</p>
-					<?= $this->Form->control('situacao', ['data-live-search' => true, 'title' => 'Todas', 'value' => $situacao, 'id' => 'rel-situacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensSituacao, 'label' => false, 'empty' => false]) ?>
+					<?= $this->Form->control('situacao', ['title' => 'Todas', 'value' => $situacao, 'id' => 'rel-situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false, 'empty' => false]) ?>
 				</div>
 				<div class="col-lg-3 col-md-6 col-12">
 					<p>Problema</p>
@@ -95,7 +95,7 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 				</div>
 				<div class="col-lg-3 col-md-6 col-12">
 					<p>Tipo</p>
-					<?= $this->Form->control('locacao', ['data-live-search' => true, 'title' => 'Todos', 'value' => $locacao, 'id' => 'rel-locacao', 'class' => 'form-control selectpicker', 'options' => C_OrdensLocacao, 'label' => false, 'empty' => false]) ?>
+					<?= $this->Form->control('locacao', ['title' => 'Todos', 'value' => $locacao, 'id' => 'rel-locacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensLocacao, 'label' => false, 'empty' => false]) ?>
 				</div>
 				<div class="col-lg-3 col-md-6 col-12">
 					<p>Técnico responsável</p>
@@ -147,18 +147,18 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 			<h2>Selecionar ordens para imprimir/PDF/e-mail</h2>
 			<div class="os-table-outer">
 			<div class="table-responsive os-table-responsive">
-				<table class="table table-sm table-hover" style="margin-bottom:0;">
+				<table class="table table-sm table-hover os-rel-table-flush">
 					<thead>
 						<tr>
-							<th style="width:40px;">
+							<th class="os-rel-th-sel">
 								<input type="checkbox" id="rel-check-all" />
 							</th>
-							<th style="width:80px;">Nº</th>
-							<th style="width:110px;">Abertura</th>
+							<th class="os-rel-th-osno">Nº</th>
+							<th class="os-rel-th-abert">Abertura</th>
 							<th>Cliente</th>
 							<th>Técnico</th>
 							<th>Situação</th>
-							<th class="text-right" style="width:110px;">Valor</th>
+							<th class="text-right os-rel-th-valor">Valor</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -187,7 +187,7 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 				</table>
 			</div>
 			</div>
-			<div class="m-t-10 d-flex" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+			<div class="m-t-10 os-rel-toolbar-actions">
 				<button type="button" class="btn btn-success" id="rel-btn-pdf-selecionadas">PDF selecionadas</button>
 				<span class="os-rel-help m-b-0" id="rel-count-selected">0 selecionada(s)</span>
 			</div>

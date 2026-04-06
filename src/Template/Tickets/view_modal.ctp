@@ -256,7 +256,7 @@
           <thead>
             <tr>
               <th>Arquivo</th>
-              <th style="width:200px">Visualizar / baixar</th>
+              <th class="pgm-th-w-200">Visualizar / baixar</th>
             </tr>
           </thead>
           <tbody>

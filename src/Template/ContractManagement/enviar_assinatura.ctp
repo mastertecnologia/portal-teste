@@ -23,7 +23,7 @@ $this->assign('title', $title ?? 'Assinatura');
 			<p class="text-warning"><?= __('Cadastre signatários antes.') ?> <?= $this->Html->link(__('Ir'), ['action' => 'addSignatarios', $contract->id]) ?></p>
 			<?php endif; ?>
 			<?= $this->Form->create(null, ['url' => ['action' => 'enviarAssinatura', $contract->id]]) ?>
-			<div class="checkbox" style="margin:12px 0;">
+			<div class="checkbox adv-cm-checkbox-block">
 				<label>
 					<?= $this->Form->checkbox('enviar_email_signatarios', ['value' => '1', 'checked' => true]) ?>
 					<?= __('Enviar e-mail a cada signatário com o link de assinatura (após gerar links na Autentique). Requer Contract.notifications.from_email configurado.') ?>

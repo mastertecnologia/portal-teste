@@ -23,7 +23,7 @@ $placeholders = $contractTemplatePlaceholders ?? [
 <div class="form-group">
 	<label class="d-block"><?= __('Variáveis rápidas') ?></label>
 	<p class="text-muted small"><?= __('Clique para inserir no corpo do modelo (sincronize também o JSON de variáveis se usar novas chaves).') ?></p>
-	<div class="d-flex flex-wrap" style="gap:6px;">
+	<div class="d-flex flex-wrap pgm-gap-6">
 		<?php foreach ($placeholders as $phName): ?>
 		<button type="button" class="btn btn-sm btn-outline-secondary" onclick="pgmInsertContractTemplateVar(<?= json_encode((string)$phName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>); return false;">
 			<?= h($phName) ?>
@@ -40,11 +40,11 @@ $placeholders = $contractTemplatePlaceholders ?? [
 ]) ?>
 <div class="form-group">
 	<label>Cláusulas padrão (JSON array)</label>
-	<?= $this->Form->textarea('clausulas_padrao', ['class' => 'form-control small', 'rows' => 6, 'value' => $clausulasJson, 'escape' => false, 'style' => 'font-family:monospace']) ?>
+	<?= $this->Form->textarea('clausulas_padrao', ['class' => 'form-control small pgm-font-mono', 'rows' => 6, 'value' => $clausulasJson, 'escape' => false]) ?>
 </div>
 <div class="form-group">
 	<label>Variáveis (JSON array)</label>
-	<?= $this->Form->textarea('variaveis', ['class' => 'form-control small', 'rows' => 6, 'value' => $variaveisJson, 'escape' => false, 'style' => 'font-family:monospace']) ?>
+	<?= $this->Form->textarea('variaveis', ['class' => 'form-control small pgm-font-mono', 'rows' => 6, 'value' => $variaveisJson, 'escape' => false]) ?>
 </div>
 <?= $this->Form->control('versao', ['label' => 'Versão', 'type' => 'number', 'class' => 'form-control', 'min' => 1]) ?>
 <?= $this->Form->control('ativo', [

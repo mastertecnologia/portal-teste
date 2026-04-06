@@ -37,6 +37,11 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 .pgm-portal-notif-item .pgm-nt-meta { font-size:10px;color:#6e7681;margin-top:4px; }
 .pgm-portal-notif-footer { padding:8px 14px;border-top:1px solid #21262d;font-size:11px; }
 .pgm-portal-notif-footer a { color:#5cdbc0!important; }
+.pgm-portal-notif-mark-all { font-size:11px;color:#5cdbc0!important; }
+#pgmNotifListBody.pgm-notif-list-body { min-height:48px; }
+.pgm-notif-list-placeholder { font-size:12px; }
+.pgm-portal-notif-prefs-link { font-size:11px; }
+.pgm-nt-msg { opacity:.9; }
 </style>
 <div class="dropdown pgm-portal-notif-bell" id="pgmPortalNotifBell">
 	<a href="#" class="pgm-bell-btn dropdown-toggle" data-toggle="dropdown" data-display="static" aria-expanded="false" title="Notificações" id="pgmBellToggle">
@@ -46,14 +51,14 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 	<div class="dropdown-menu dropdown-menu-right pgm-portal-notif-dropdown" aria-labelledby="pgmBellToggle">
 		<div class="dropdown-header d-flex justify-content-between align-items-center">
 			<span>Notificações</span>
-			<a href="#" id="pgmMarkAllRead" style="font-size:11px;color:#5cdbc0!important;">Marcar todas</a>
+			<a href="#" id="pgmMarkAllRead" class="pgm-portal-notif-mark-all">Marcar todas</a>
 		</div>
-		<div id="pgmNotifListBody" style="min-height:48px;">
-			<div class="text-muted text-center py-3" style="font-size:12px;">Carregando…</div>
+		<div id="pgmNotifListBody" class="pgm-notif-list-body">
+			<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>
 		</div>
 		<div class="pgm-portal-notif-footer text-center">
 			<small class="text-muted">Eventos do módulo de clientes e integrações</small><br>
-			<a href="<?= h($urlPrefs) ?>" style="font-size:11px;">Preferências de alertas</a>
+			<a href="<?= h($urlPrefs) ?>" class="pgm-portal-notif-prefs-link">Preferências de alertas</a>
 		</div>
 	</div>
 </div>
@@ -96,11 +101,11 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 
 	function loadList() {
 		var $body = $('#pgmNotifListBody');
-		$body.html('<div class="text-muted text-center py-3" style="font-size:12px;">Carregando…</div>');
+		$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>');
 		$.getJSON(urlList).done(function(d) {
 			var items = (d && d.items) ? d.items : [];
 			if (!items.length) {
-				$body.html('<div class="text-muted text-center py-3" style="font-size:12px;">Nenhuma notificação</div>');
+				$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Nenhuma notificação</div>');
 				return;
 			}
 			var h = '';
@@ -109,7 +114,7 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 				var markId = (it.id && !it.is_read) ? it.id : '';
 				h += '<a class="' + cls + '" href="' + (it.action_url || '#') + '" data-mark-id="' + markId + '">';
 				h += '<div><i class="fas ' + iconForType(it.type) + ' mr-1"></i><span class="pgm-nt-title">' + $('<div>').text(it.title || '').html() + '</span></div>';
-				if (it.message) h += '<div style="opacity:.9;">' + $('<div>').text(it.message).html() + '</div>';
+				if (it.message) h += '<div class="pgm-nt-msg">' + $('<div>').text(it.message).html() + '</div>';
 				h += '<div class="pgm-nt-meta">' + (it.created_human || '') + '</div></a>';
 			});
 			$body.html(h);
@@ -128,7 +133,7 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 				}
 			});
 		}).fail(function() {
-			$body.html('<div class="text-muted text-center py-3" style="font-size:12px;">Indisponível</div>');
+			$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Indisponível</div>');
 		});
 	}
 

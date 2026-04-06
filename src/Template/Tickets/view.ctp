@@ -167,7 +167,7 @@ $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
 									</div>
 								</div>
 							</div>
-							<?= $this->Form->button('Enviar arquivos anexados acima', ['id' => 'submitfile', 'class' => 'btn btn-pgm btn-pgm-salvar btn-primary', 'style' => 'color:white', 'disabled']) ?>
+							<?= $this->Form->button('Enviar arquivos anexados acima', ['id' => 'submitfile', 'class' => 'btn btn-pgm btn-pgm-salvar btn-primary text-white', 'disabled']) ?>
 							<br>
 							<div class="clearfix"></div>
 							<?= $this->Form->end(); ?>

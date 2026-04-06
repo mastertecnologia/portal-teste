@@ -20,7 +20,7 @@ $this->assign('title', $title ?? 'Indicadores');
 			<?= $this->Form->end() ?>
 			<p class="small mb-3"><?= $this->Html->link('Exportar CSV', ['action' => 'export', '?' => $this->request->getQueryParams()], ['class' => 'btn btn-sm btn-outline-secondary']) ?></p>
 			<div class="table-responsive">
-				<table class="table table-sm table-striped mb-0" style="max-width:520px">
+				<table class="table table-sm table-striped mb-0 pgm-table-max-w-520">
 					<tbody>
 						<tr><th>Tickets (empresa)</th><td><?= h((string)$ticketsCount) ?></td></tr>
 						<tr><th>Contratos avançados (criados no período)</th><td><?= h((string)$contractsCount) ?></td></tr>

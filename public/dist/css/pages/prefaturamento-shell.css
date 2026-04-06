@@ -160,3 +160,11 @@ body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-succe
 body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-success.btn-pgm:hover {
 	filter: brightness(1.08);
 }
+
+.pgm-prefaturamento-shell #table-prefaturamento .pf-th-select {
+	width: 36px;
+}
+.pgm-prefaturamento-shell .pf-td-conferencias {
+	min-width: 220px;
+	vertical-align: middle;
+}

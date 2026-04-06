@@ -38,6 +38,11 @@ $nomeAutor = $autor ? trim((string)($autor->name ?? '') ?: (string)($autor->user
 		th { background: #f0f0f0; font-weight: bold; }
 		.num { text-align: right; }
 		.total { font-weight: bold; text-align: right; margin-top: 6px; }
+		.th-w-32 { width: 32%; }
+		.th-w-28 { width: 28%; }
+		.pdf-obs { margin: 4px 0; line-height: 1.35; }
+		.pdf-muted { color: #555; }
+		.pdf-discount { text-align: right; font-size: 10px; margin-top: 4px; }
 	</style>
 </head>
 <body>
@@ -47,7 +52,7 @@ $nomeAutor = $autor ? trim((string)($autor->name ?? '') ?: (string)($autor->user
 	<h2>Dados principais</h2>
 	<table>
 		<tbody>
-			<tr><th style="width:32%">Valor</th><td>R$ <?= number_format((float)$lancamento->valor, 2, ',', '.') ?></td></tr>
+			<tr><th class="th-w-32">Valor</th><td>R$ <?= number_format((float)$lancamento->valor, 2, ',', '.') ?></td></tr>
 			<tr><th>Vencimento</th><td><?= $lancamento->data_vencimento ? h($lancamento->data_vencimento->format('d/m/Y')) : '—' ?></td></tr>
 			<tr><th>Status</th><td><?= h($statusTxt) ?></td></tr>
 		</tbody>
@@ -56,7 +61,7 @@ $nomeAutor = $autor ? trim((string)($autor->name ?? '') ?: (string)($autor->user
 	<h2>Complementares</h2>
 	<table>
 		<tbody>
-			<tr><th style="width:32%">Cliente</th><td><?= h($nomeCli) ?></td></tr>
+			<tr><th class="th-w-32">Cliente</th><td><?= h($nomeCli) ?></td></tr>
 			<tr><th>Descrição</th><td><?= h((string)$lancamento->descricao) ?></td></tr>
 			<tr><th>Tipo</th><td><?= h((string)$lancamento->tipo) ?></td></tr>
 			<tr><th>Data lançamento</th><td><?= $lancamento->data_lancamento ? h($lancamento->data_lancamento->format('d/m/Y')) : '—' ?></td></tr>
@@ -73,14 +78,14 @@ $nomeAutor = $autor ? trim((string)($autor->name ?? '') ?: (string)($autor->user
 
 	<?php if (!empty($lancamento->observacoes)) : ?>
 	<h2>Observações</h2>
-	<p style="margin:4px 0;line-height:1.35"><?= nl2br(h((string)$lancamento->observacoes)) ?></p>
+	<p class="pdf-obs"><?= nl2br(h((string)$lancamento->observacoes)) ?></p>
 	<?php endif; ?>
 
 	<h2>Itens</h2>
 	<?php if (empty($fat)) : ?>
-		<p style="color:#555">Sem documento de faturamento vinculado.</p>
+		<p class="pdf-muted">Sem documento de faturamento vinculado.</p>
 	<?php elseif (empty($itensDoc)) : ?>
-		<p style="color:#555">Documento sem linhas de item.</p>
+		<p class="pdf-muted">Documento sem linhas de item.</p>
 		<div class="total">R$ <?= number_format((float)($fat->valor_total ?? 0), 2, ',', '.') ?></div>
 	<?php else : ?>
 		<table>
@@ -104,18 +109,18 @@ $nomeAutor = $autor ? trim((string)($autor->name ?? '') ?: (string)($autor->user
 			</tbody>
 		</table>
 		<?php if (!empty($fat->valor_desconto) && (float)$fat->valor_desconto > 0) : ?>
-		<div style="text-align:right;font-size:10px;margin-top:4px">Desconto: R$ <?= number_format((float)$fat->valor_desconto, 2, ',', '.') ?></div>
+		<div class="pdf-discount">Desconto: R$ <?= number_format((float)$fat->valor_desconto, 2, ',', '.') ?></div>
 		<?php endif; ?>
 		<div class="total">Total: R$ <?= number_format((float)($fat->valor_total ?? 0), 2, ',', '.') ?></div>
 	<?php endif; ?>
 
 	<h2>Histórico</h2>
 	<?php if (empty($historicoFatura)) : ?>
-		<p style="color:#555">Nenhum evento registrado.</p>
+		<p class="pdf-muted">Nenhum evento registrado.</p>
 	<?php else : ?>
 		<table>
 			<thead>
-				<tr><th style="width:28%">Data/Hora</th><th>Ocorrência</th></tr>
+				<tr><th class="th-w-28">Data/Hora</th><th>Ocorrência</th></tr>
 			</thead>
 			<tbody>
 				<?php foreach ($historicoFatura as $ev) :

@@ -154,3 +154,16 @@ html[data-pgm-theme="dark"] body.pgm-auth-page .login-register h2,
 html[data-pgm-theme="dark"] body.pgm-auth-page .login-register h3 {
 	color: var(--pgm-text) !important;
 }
+
+/* Política de privacidade — controlo de tema (sem style= no markup) */
+.pgm-privacy-theme-float {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	z-index: 9999;
+}
+
+/* Seleção de empresa — fundo via token (view define só --login-empresa-bg) */
+.login-register.login-sidebar.login-empresa-bg {
+	background-image: var(--login-empresa-bg);
+}

@@ -35,21 +35,21 @@ $orcTblFieldTpl = [
 
 	<div class="orc-margin-summary" id="orc-margin-summary">
 		<div class="orc-margin-card">
-			<div class="orc-margin-card-val" id="ms-subtotal" style="color:#1a1a18;">R$ 0,00</div>
+			<div class="orc-margin-card-val" id="ms-subtotal">R$ 0,00</div>
 			<div class="orc-margin-card-lbl">Subtotal venda</div>
 		</div>
 		<div class="orc-margin-card">
-			<div class="orc-margin-card-val" id="ms-custo" style="color:#6b6a65;">R$ 0,00</div>
+			<div class="orc-margin-card-val orc-margin-card-val--muted" id="ms-custo">R$ 0,00</div>
 			<div class="orc-margin-card-lbl">Custo total</div>
 		</div>
 		<div class="orc-margin-card">
-			<div class="orc-margin-card-val" id="ms-lucro" style="color:#00c08b;">R$ 0,00</div>
+			<div class="orc-margin-card-val orc-margin-card-val--teal" id="ms-lucro">R$ 0,00</div>
 			<div class="orc-margin-card-lbl">Lucro bruto</div>
 		</div>
 		<div class="orc-margin-card">
-			<div class="orc-margin-card-val" id="ms-margem" style="color:#00c08b;">0%</div>
+			<div class="orc-margin-card-val orc-margin-card-val--teal" id="ms-margem">0%</div>
 			<div class="orc-margin-card-lbl">Margem bruta</div>
-			<div class="orc-margin-bar"><div class="orc-margin-fill" id="ms-bar" style="width:0%;"></div></div>
+			<div class="orc-margin-bar"><div class="orc-margin-fill" id="ms-bar"></div></div>
 		</div>
 	</div>
 
@@ -102,7 +102,7 @@ $orcTblFieldTpl = [
 			</tbody>
 		</table>
 	</div>
-	<div class="orc-inline-actions" id="orc-item-edit-actions" style="display:none;">
+	<div class="orc-inline-actions orc-is-hidden" id="orc-item-edit-actions">
 		<button type="button" class="btn btn-orc-form-secondary btn-orc-compact" id="btn-cancelaredicao">
 			Cancelar edição
 		</button>

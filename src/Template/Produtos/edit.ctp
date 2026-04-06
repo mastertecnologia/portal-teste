@@ -17,7 +17,7 @@
   <div class="prd-form-topbar">
     <div class="prd-form-topbar-info">
       <div class="prd-eyebrow">Cadastros &rsaquo; Produtos &rsaquo; Editar</div>
-      <h1 class="prd-h1" style="font-size:20px"><?= h($produto->descricao ?? 'Editar Produto') ?></h1>
+      <h1 class="prd-h1 prd-h1--form"><?= h($produto->descricao ?? 'Editar Produto') ?></h1>
     </div>
 
     <!-- ERP sync indicator -->
@@ -80,7 +80,7 @@
             </div>
 
             <div class="prd-fgroup">
-              <label for="descricao">Descrição <span style="color:var(--prd-red)">*</span></label>
+              <label for="descricao">Descrição <span class="prd-req">*</span></label>
               <?= $this->Form->control('descricao', [
                 'class'       => 'form-control',
                 'id'          => 'descricao',
@@ -113,7 +113,7 @@
             </div>
 
             <div class="prd-fgroup">
-              <label for="ativo">Situação <span style="color:var(--prd-red)">*</span></label>
+              <label for="ativo">Situação <span class="prd-req">*</span></label>
               <?= $this->Form->control('ativo', [
                 'options'  => C_ProdutosAtivo,
                 'class'    => 'form-control',
@@ -157,7 +157,7 @@
             </div>
 
             <div class="prd-fgroup">
-              <label for="vlunitario">Preço de Venda <span style="color:var(--prd-red)">*</span></label>
+              <label for="vlunitario">Preço de Venda <span class="prd-req">*</span></label>
               <div class="prd-input-pfx" data-prefix="R$">
                 <?= $this->Form->text('vlunitario', [
                   'class'       => 'mascaramonetaria form-control',
@@ -187,11 +187,11 @@
               <label>Venda</label>
               <div class="val venda" id="fml-venda">R$ 0,00</div>
             </div>
-            <div style="flex:1;min-width:120px">
+            <div class="prd-price-formula-grow">
               <div class="prd-markup-bar">
-                <div class="prd-markup-bar-fill" id="markup-bar" style="width:0%"></div>
+                <div class="prd-markup-bar-fill" id="markup-bar"></div>
               </div>
-              <div style="font-size:10px;color:var(--prd-muted);margin-top:4px" id="fml-lucro">Lucro: R$ 0,00</div>
+              <div class="prd-fml-lucro" id="fml-lucro">Lucro: R$ 0,00</div>
             </div>
           </div>
 
@@ -199,7 +199,7 @@
       </div>
 
       <!-- Seção 4: Locação (só Produto) -->
-      <div class="prd-section" id="sectionLocacao" style="display:<?= $isTipoProduto ? '' : 'none' ?>">
+      <div class="prd-section<?= $isTipoProduto ? '' : ' prd-is-hidden' ?>" id="sectionLocacao">
         <div class="prd-section-head">
           <div class="prd-section-icon"><i class="fas fa-calendar-alt"></i></div>
           <span class="prd-section-title">Valores de Locação</span>
@@ -263,7 +263,7 @@
 
           </div>
 
-          <div class="prd-loc-preview" id="locPreview" style="display:none">
+          <div class="prd-loc-preview prd-is-hidden" id="locPreview">
             <div class="prd-loc-chip">
               <div class="prd-loc-chip-lbl">Mensal</div>
               <div class="prd-loc-chip-val" id="lc-mensal">—</div>
@@ -313,7 +313,7 @@
           </div>
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Preço Venda</span>
-            <span class="prd-preview-row-val" id="prev-preco" style="color:var(--prd-teal-lt)">—</span>
+            <span class="prd-preview-row-val prd-preview-val-teal" id="prev-preco">—</span>
           </div>
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Situação</span>
@@ -326,7 +326,7 @@
       <?php if ($produto->tipo == (defined('C_ProdutosTipoProduto') ? C_ProdutosTipoProduto : 1)): ?>
       <div class="prd-section">
         <div class="prd-section-head">
-          <div class="prd-section-icon" style="background:var(--prd-blue-dim);color:var(--prd-blue)">
+          <div class="prd-section-icon prd-section-icon--blue">
             <i class="fas fa-database"></i>
           </div>
           <span class="prd-section-title">Dados ERP</span>
@@ -334,13 +334,13 @@
         <div class="prd-section-body">
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Qtd. Atual</span>
-            <span class="prd-preview-row-val" style="color:var(--prd-blue)">
+            <span class="prd-preview-row-val prd-preview-val-blue">
               <?= h($produto->nQtdeAtual ?? '—') ?>
             </span>
           </div>
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Preço Custo ERP</span>
-            <span class="prd-preview-row-val" style="color:var(--prd-muted)">
+            <span class="prd-preview-row-val prd-preview-val-muted">
               <?= $produto->nPrecoCusto > 0
                 ? 'R$ ' . number_format($produto->nPrecoCusto, 2, ',', '.')
                 : '—' ?>
@@ -348,7 +348,7 @@
           </div>
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Preço Venda ERP</span>
-            <span class="prd-preview-row-val" style="color:var(--prd-teal-lt)">
+            <span class="prd-preview-row-val prd-preview-val-teal">
               <?= $produto->nPrecoVenda > 0
                 ? 'R$ ' . number_format($produto->nPrecoVenda, 2, ',', '.')
                 : '—' ?>
@@ -359,15 +359,15 @@
             <span class="prd-preview-row-label">Margem ERP</span>
             <?php
               $mERP = round((($produto->nPrecoVenda - $produto->nPrecoCusto) / $produto->nPrecoVenda) * 100, 1);
-              $mCls = $mERP >= 30 ? 'var(--prd-green)' : ($mERP >= 15 ? 'var(--prd-yellow)' : 'var(--prd-red)');
+              $mCls = $mERP >= 30 ? 'prd-preview-margem-good' : ($mERP >= 15 ? 'prd-preview-margem-ok' : 'prd-preview-margem-low');
             ?>
-            <span class="prd-preview-row-val" style="color:<?= $mCls ?>">
+            <span class="prd-preview-row-val <?= h($mCls) ?>">
               <?= $mERP ?>%
             </span>
           </div>
           <?php endif; ?>
-          <div style="margin-top:10px;font-size:11px;color:var(--prd-dim)">
-            <i class="fas fa-info-circle"></i>
+          <div class="prd-erp-hint">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
             Preço sincronizado automaticamente do ERP ao abrir esta tela.
           </div>
         </div>
@@ -381,7 +381,7 @@
   <!-- ── Footer fixo ────────────────────────────────────────── -->
   <div class="prd-form-footer">
     <div class="prd-form-footer-left">
-      <i class="fas fa-clock" style="color:var(--prd-muted)"></i>
+      <i class="fas fa-clock prd-form-footer-icon--muted" aria-hidden="true"></i>
       Última sincronização ERP: agora
     </div>
     <div class="prd-form-footer-right">
@@ -451,7 +451,7 @@
       c.el.classList.toggle('tipo-active', c.val === val);
     });
     var isProduct = cfg.label.toLowerCase().indexOf('produto') !== -1;
-    document.getElementById('sectionLocacao').style.display = isProduct ? '' : 'none';
+    document.getElementById('sectionLocacao').classList.toggle('prd-is-hidden', !isProduct);
 
     var av = document.getElementById('prev-av');
     av.className = 'prd-preview-av' + (cfg.avCls ? ' ' + cfg.avCls : '');
@@ -518,7 +518,7 @@
   window.locAutoFill = function() {
     var chk = document.getElementById('locAutoCalc').checked;
     var preview = document.getElementById('locPreview');
-    if (!chk) { preview.style.display = 'none'; return; }
+    if (!chk) { preview.classList.add('prd-is-hidden'); return; }
 
     var mensal    = parseMoeda(document.getElementById('vllocmensal').value);
     var quinzenal = mensal > 0 ? mensal * 0.6 : 0;
@@ -533,9 +533,9 @@
       document.getElementById('lc-quinzenal').textContent = 'R$ ' + fmtMoeda(quinzenal);
       document.getElementById('lc-semanal').textContent   = 'R$ ' + fmtMoeda(semanal);
       document.getElementById('lc-diario').textContent    = 'R$ ' + fmtMoeda(diario);
-      preview.style.display = '';
+      preview.classList.remove('prd-is-hidden');
     } else {
-      preview.style.display = 'none';
+      preview.classList.add('prd-is-hidden');
     }
   };
 

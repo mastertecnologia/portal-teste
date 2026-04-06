@@ -41,9 +41,9 @@
   <title>Contratos e Faturas — Portal</title>
   <!--
     CSS carregado pelo layout pai (portal.ctp).
-    Estilos específicos desta tela (opcional):
-    <link rel="stylesheet" href="/css/portal-contratos.css">
+    Barras (mock + dinâmico --pgm-bar-pct): portal-client-barras-estrutural.css
   -->
+  <link rel="stylesheet" href="/dist/css/pages/portal-client-barras-estrutural.css">
 </head>
 <body class="portal-layout">
 
@@ -257,8 +257,7 @@
             86–100% → pcf-kpi__barra-fill--critico
             >100%   → pcf-kpi__barra-fill--excedente
           -->
-          <div class="pcf-kpi__barra-fill pcf-kpi__barra-fill--atencao"
-               style="width: 70%">
+          <div class="pcf-kpi__barra-fill pcf-kpi__barra-fill--atencao pcf-kpi__pct--70">
           </div>
         </div>
       </article>
@@ -1456,8 +1455,7 @@
                aria-valuemin="0"
                aria-valuemax="100"
                aria-label="72,5% da franquia de horas consumida neste mês">
-            <div class="pcf-franquia__barra-fill pcf-franquia__barra-fill--atencao"
-                 style="width: 72.5%">
+            <div class="pcf-franquia__barra-fill pcf-franquia__barra-fill--atencao pcf-franquia__pct--725">
             </div>
           </div>
           <p class="pcf-franquia__aviso">

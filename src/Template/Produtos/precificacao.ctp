@@ -6,220 +6,6 @@
  */
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 ?>
-<style>
-/* ── Precificação: estilos específicos ─────────────────────────── */
-.prec-root{display:flex;flex-direction:column;gap:0;background:var(--prd-bg);isolation:isolate;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box;flex:1 1 auto;min-height:0;margin:0;color-scheme:dark;}
-/* Zera scroll de página — layout app-like */
-body.prec-screen-active{overflow:hidden!important;}
-body.prec-screen-active .page-wrapper{overflow:hidden!important;width:100%!important;max-width:100%!important;}
-body.prec-screen-active .container-fluid,
-body.prec-screen-active .row{overflow:visible!important;padding:0!important;margin:0!important;}
-/* Ocupa toda a largura da coluna principal (evita bloco “encostado” à esquerda com faixa vazia à direita) */
-body.prec-screen-active .pgm-shell-main .page-wrapper > .container-fluid{
-  width:100%!important;
-  max-width:100%!important;
-  display:flex!important;
-  flex-direction:column!important;
-  flex:1 1 auto!important;
-  min-height:0!important;
-}
-/* content.ctp envolve a view em .row sem .col-* no .prec-root — no flex do Bootstrap o bloco não estica */
-body.prec-screen-active .container-fluid > .row.tirar-black-mode{
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  width:100%!important;
-  max-width:100%!important;
-  margin-left:0!important;
-  margin-right:0!important;
-}
-body.prec-screen-active .container-fluid > .row.tirar-black-mode > .prec-root{
-  width:100%!important;
-  max-width:100%!important;
-  flex:1 1 auto!important;
-  min-height:0!important;
-}
-.prec-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--prd-surface);border-bottom:1px solid var(--prd-border);}
-.prec-topbar-left{display:flex;align-items:center;gap:12px;}
-.prec-topbar h1{font-size:1.1rem;font-weight:700;color:var(--prd-teal-lt);margin:0;}
-.prec-topbar .prec-badge-erp{font-size:.7rem;padding:2px 8px;background:var(--prd-teal-dim);color:var(--prd-teal-lt);border:1px solid var(--prd-teal);border-radius:99px;font-family:'DM Mono',monospace;}
-.prec-breadcrumb{font-size:.75rem;color:var(--prd-muted);margin:0;}
-.prec-body{display:flex;gap:0;flex:1;min-height:0;}
-/* ── Painel lateral (estratégia) ───────────────────────────────── */
-.prec-panel{width:300px;min-width:260px;background:var(--prd-surface);border-right:1px solid var(--prd-border);padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex-shrink:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.22) transparent;}
-.prec-panel::-webkit-scrollbar{width:8px;}
-.prec-panel::-webkit-scrollbar-track{background:transparent;}
-.prec-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px;}
-.prec-panel::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28);}
-.prec-panel-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--prd-text2);margin-bottom:4px;}
-/* Tabs de método */
-.prec-method-tabs{display:flex;gap:4px;background:var(--prd-bg);border-radius:8px;padding:3px;}
-.prec-method-tab{flex:1;padding:7px 4px;font-size:.72rem;font-weight:600;text-align:center;border-radius:6px;cursor:pointer;color:var(--prd-muted);border:none;background:transparent;transition:all .18s;}
-.prec-method-tab.active{background:var(--prd-teal);color:#fff;}
-/* Parâmetros */
-.prec-param-block{display:flex;flex-direction:column;gap:10px;}
-.prec-param-row{display:flex;flex-direction:column;gap:4px;}
-.prec-param-row label{font-size:.7rem;color:var(--prd-text2);font-weight:600;}
-.prec-param-input{width:100%;padding:8px 10px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:6px;color:var(--prd-text);font-family:'DM Mono',monospace;font-size:.9rem;}
-.prec-param-input:focus{outline:none;border-color:var(--prd-teal);box-shadow:0 0 0 2px var(--prd-teal-dim);}
-.prec-param-hint{font-size:.66rem;color:var(--prd-text2);line-height:1.4;}
-/* Formula display */
-.prec-formula{background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--prd-text);line-height:1.6;}
-.prec-formula .formula-label{font-size:.65rem;color:var(--prd-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
-.prec-formula .formula-eq{color:var(--prd-teal-lt);}
-.prec-formula .formula-val{color:var(--prd-text);}
-/* Custos operacionais */
-.prec-costs{display:flex;flex-direction:column;gap:8px;}
-.prec-cost-row{display:grid;grid-template-columns:1fr 72px;align-items:center;gap:8px;}
-.prec-cost-row label{font-size:.72rem;color:var(--prd-muted);}
-.prec-cost-input{padding:5px 8px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:5px;color:var(--prd-text);font-family:'DM Mono',monospace;font-size:.78rem;text-align:right;width:100%;}
-.prec-cost-input:focus{outline:none;border-color:var(--prd-teal);}
-.prec-costs-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--prd-border);font-size:.78rem;}
-.prec-costs-total .val{font-family:'DM Mono',monospace;color:var(--prd-teal-lt);font-weight:700;}
-/* Margem mínima */
-.prec-margin-alert{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:7px;font-size:.72rem;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);color:#fb923c;display:none;}
-.prec-margin-alert.show{display:flex;}
-/* Ações do painel */
-.prec-panel-actions{display:flex;flex-direction:column;gap:8px;margin-top:auto;}
-.prec-btn-apply-sel{padding:9px 14px;background:var(--prd-teal);color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .18s;}
-.prec-btn-apply-sel:hover{background:var(--prd-teal-lt);color:#111;}
-.prec-btn-apply-all{padding:9px 14px;background:transparent;color:var(--prd-teal-lt);border:1px solid var(--prd-teal);border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .18s;}
-.prec-btn-apply-all:hover{background:var(--prd-teal-dim);}
-.prec-btn-reset{padding:7px 14px;background:transparent;color:var(--prd-muted);border:1px solid var(--prd-border);border-radius:7px;font-size:.75rem;cursor:pointer;}
-/* ── Grade de produtos ─────────────────────────────────────────── */
-.prec-grid-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
-.prec-grid-toolbar{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--prd-surface2);border-bottom:1px solid var(--prd-border);}
-.prec-search{flex:1;max-width:280px;padding:7px 12px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:6px;color:var(--prd-text);font-size:.82rem;}
-.prec-search:focus{outline:none;border-color:var(--prd-teal);}
-.prec-tipo-pills{display:flex;gap:4px;}
-.prec-tipo-pill{padding:5px 12px;border-radius:99px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--prd-border);background:transparent;color:var(--prd-muted);transition:all .15s;}
-.prec-tipo-pill.active{background:var(--prd-teal-dim);color:var(--prd-teal-lt);border-color:var(--prd-teal);}
-.prec-sel-count{font-size:.72rem;color:var(--prd-muted);margin-left:auto;}
-.prec-grid-scroll{flex:1;overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.22) transparent;}
-.prec-grid-scroll::-webkit-scrollbar{width:8px;height:8px;}
-.prec-grid-scroll::-webkit-scrollbar-track{background:transparent;}
-.prec-grid-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px;}
-.prec-grid-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28);}
-.prec-grid-scroll::-webkit-scrollbar-corner{background:transparent;}
-/* Tabela */
-.prec-table{width:100%;border-collapse:collapse;font-size:.8rem;}
-.prec-table thead th{position:sticky;top:0;z-index:2;background:var(--prd-surface);padding:9px 10px;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--prd-text2);border-bottom:1px solid var(--prd-border);white-space:nowrap;}
-.prec-table tbody tr{border-bottom:1px solid var(--prd-border);transition:background .12s;}
-.prec-table tbody tr:hover{background:var(--prd-surface2);}
-.prec-table tbody tr.selected{background:var(--prd-teal-dim);}
-.prec-table td{padding:8px 10px;color:var(--prd-text);vertical-align:middle;background:transparent;}
-.prec-td-mono{font-family:'DM Mono',monospace;font-size:.78rem;}
-.prec-td-code{font-family:'DM Mono',monospace;font-size:.73rem;color:var(--prd-text2);}
-.prec-td-desc{max-width:220px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* Custo — cinza quando não tem dado ERP */
-.prec-td-custo{font-family:'DM Mono',monospace;font-size:.78rem;}
-.prec-td-custo.no-data{color:var(--prd-text2);font-style:italic;}
-/* Novo preço — editável */
-.prec-novo-preco{width:100px;padding:5px 7px;background:var(--prd-bg);border:1px solid var(--prd-border);border-radius:5px;color:var(--prd-text);font-family:'DM Mono',monospace;font-size:.78rem;text-align:right;}
-.prec-novo-preco:focus{outline:none;border-color:var(--prd-teal);box-shadow:0 0 0 2px var(--prd-teal-dim);}
-.prec-novo-preco.changed{border-color:var(--prd-teal);background:var(--prd-teal-dim);}
-/* Delta */
-.prec-delta{font-family:'DM Mono',monospace;font-size:.75rem;white-space:nowrap;}
-.prec-delta.up{color:#34d399;}
-.prec-delta.down{color:#f87171;}
-.prec-delta.same{color:var(--prd-text2);}
-/* Margem */
-.prec-td-margem{font-family:'DM Mono',monospace;font-size:.75rem;}
-.prec-td-margem.good{color:#34d399;}
-.prec-td-margem.ok{color:#fbbf24;}
-.prec-td-margem.low{color:#f87171;}
-.prec-td-margem.none{color:var(--prd-muted);}
-/* Warning */
-.prec-warn{display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(249,115,22,.2);color:#fb923c;font-size:.6rem;font-weight:900;text-align:center;line-height:18px;cursor:default;visibility:hidden;}
-.prec-warn.show{visibility:visible;}
-/* Zero-price row (tem custo ERP mas Preço Atual zerado) */
-.prec-table tbody tr.prec-row-zero-price td{background:rgba(210,153,34,.07);}
-.prec-table tbody tr.prec-row-zero-price:hover td{background:rgba(210,153,34,.13);}
-.prec-badge-zero{font-size:.68rem;font-weight:700;color:#d29922;background:rgba(210,153,34,.15);border:1px solid rgba(210,153,34,.3);border-radius:5px;padding:2px 6px;white-space:nowrap;}
-/* Floating selection bar */
-.prec-sel-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--prd-surface);border-top:2px solid var(--prd-teal);padding:12px 24px;display:flex;align-items:center;gap:12px;transform:translateY(100%);transition:transform .2s ease;box-shadow:0 -4px 24px rgba(0,0,0,.4);}
-.prec-sel-bar.visible{transform:translateY(0);}
-.prec-sel-bar-count{font-size:.85rem;font-weight:700;color:var(--prd-teal-lt);}
-.prec-sel-bar-label{font-size:.8rem;color:var(--prd-muted);}
-.prec-sel-bar-spacer{flex:1;}
-.prec-btn-sel-apply{padding:8px 18px;background:var(--prd-teal);color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .15s;}
-.prec-btn-sel-apply:hover{background:var(--prd-teal-lt);color:#111;}
-.prec-btn-sel-clear{padding:8px 14px;background:transparent;color:var(--prd-muted);border:1px solid var(--prd-border);border-radius:7px;font-size:.78rem;cursor:pointer;transition:border-color .15s,color .15s;}
-.prec-btn-sel-clear:hover{border-color:var(--prd-text2);color:var(--prd-text);}
-/* Avatar */
-.prec-avatar{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;}
-.prec-avatar.t1{background:rgba(29,158,117,.15);color:var(--prd-teal-lt);}
-.prec-avatar.t2{background:rgba(99,102,241,.15);color:#a5b4fc;}
-.prec-avatar.t3{background:rgba(251,191,36,.12);color:#fde68a;}
-/* Markup bar mini */
-.prec-bar-mini{width:60px;height:5px;background:var(--prd-border);border-radius:3px;overflow:hidden;}
-.prec-bar-fill{height:100%;background:linear-gradient(90deg,var(--prd-teal),var(--prd-teal-lt));border-radius:3px;transition:width .3s;}
-/* ── Footer ────────────────────────────────────────────────────── */
-.prec-footer{background:var(--prd-surface);border-top:1px solid var(--prd-border);padding:12px 24px;display:flex;align-items:center;gap:16px;}
-.prec-footer-stat{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--prd-muted);}
-.prec-footer-stat strong{font-family:'DM Mono',monospace;color:var(--prd-text);}
-.prec-footer-divider{width:1px;height:20px;background:var(--prd-border);}
-.prec-footer-actions{display:flex;gap:10px;margin-left:auto;}
-.prec-btn-save{padding:9px 22px;background:var(--prd-teal);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;}
-.prec-btn-save:hover{background:var(--prd-teal-lt);color:#111;}
-.prec-btn-save:disabled{opacity:.5;cursor:not-allowed;}
-.prec-btn-cancel{padding:9px 16px;background:transparent;color:var(--prd-muted);border:1px solid var(--prd-border);border-radius:7px;font-size:.78rem;cursor:pointer;}
-/* Toast */
-.prec-toast{position:fixed;bottom:20px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-.prec-toast-item{padding:11px 18px;border-radius:9px;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:toastIn .25s ease;}
-.prec-toast-item.success{background:#064e3b;color:#34d399;border:1px solid #065f46;}
-.prec-toast-item.error{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b;}
-@keyframes toastIn{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
-/* Checkbox */
-.prec-check{width:15px;height:15px;accent-color:var(--prd-teal);cursor:pointer;}
-
-/* Escudo de contraste para esta tela (evita herança de estados globais) */
-body.prec-screen-active .pgm-shell-main,
-body.prec-screen-active .page-wrapper,
-body.prec-screen-active .container-fluid {
-  opacity: 1 !important;
-  filter: none !important;
-}
-
-/* Sidebar nesta rota: sem hambúrguer ao lado da marca, sem badge de data, marca centralizada */
-body.prec-screen-active .pgm-sidebar-toggler,
-body.prec-screen-active a.pgm-sidebar-toggler {
-  display: none !important;
-}
-body.prec-screen-active .pgm-ws-date {
-  display: none !important;
-}
-body.prec-screen-active .pgm-sidebar-brand {
-  justify-content: center !important;
-}
-body.prec-screen-active .pgm-sidebar-logo-link {
-  justify-content: center !important;
-  flex: 0 1 auto !important;
-}
-body.prec-screen-active .pgm-sidebar-logo-link .pgm-sidebar-titles {
-  align-items: center !important;
-  text-align: center !important;
-}
-body.prec-screen-active .pgm-sidebar-logo-link .pgm-sidebar-titles strong {
-  white-space: normal !important;
-}
-
-/* Se o preloader/backdrop ficar órfão nesta tela, não pode cobrir o conteúdo */
-body.prec-screen-active .preloader,
-body.prec-screen-active .modal-backdrop {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-body.prec-screen-active .prec-overlay-killed {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-</style>
 
 <div class="prec-root">
 
@@ -232,7 +18,7 @@ body.prec-screen-active .prec-overlay-killed {
       </div>
       <span class="prec-badge-erp">ERP Integrado</span>
     </div>
-    <a href="<?= $this->Url->build(['controller' => 'Produtos', 'action' => 'index']) ?>" style="font-size:.78rem;color:var(--prd-muted);text-decoration:none;">
+    <a href="<?= $this->Url->build(['controller' => 'Produtos', 'action' => 'index']) ?>" class="prec-link-back">
       &larr; Voltar para Produtos
     </a>
   </div>
@@ -279,7 +65,7 @@ body.prec-screen-active .prec-overlay-killed {
       <div class="prec-formula" id="prec-formula">
         <div class="formula-label">Fórmula ativa</div>
         <div class="formula-eq" id="formula-txt">PV = Custo × (1 + Markup/100)</div>
-        <div style="margin-top:6px;color:var(--prd-muted);font-size:.7rem;">
+        <div class="prec-formula-meta">
           Markup: <span id="fml-markup-v">—</span> % &nbsp;·&nbsp;
           F.Mult: <span id="fml-fmult-v">—</span> &nbsp;·&nbsp;
           F.Div: <span id="fml-fdiv-v">—</span> &nbsp;·&nbsp;
@@ -290,7 +76,7 @@ body.prec-screen-active .prec-overlay-killed {
       <!-- Custos operacionais (Fator Divisor composto) -->
       <div>
         <div class="prec-panel-title">Custos Operacionais (opcional)</div>
-        <div class="prec-param-hint" style="margin-bottom:8px;">Preenchendo, o Fator Divisor é calculado automaticamente: FD = 1 − Σcustos/100</div>
+        <div class="prec-param-hint prec-param-hint--mb8">Preenchendo, o Fator Divisor é calculado automaticamente: FD = 1 − Σcustos/100</div>
         <div class="prec-costs" id="prec-costs">
           <div class="prec-cost-row">
             <label for="cost-impostos">Impostos (%)</label>
@@ -316,7 +102,7 @@ body.prec-screen-active .prec-overlay-killed {
             <span>Σ Custos</span>
             <span class="val" id="costs-sum">0,00 %</span>
           </div>
-          <div class="prec-costs-total" style="padding-top:2px;">
+          <div class="prec-costs-total prec-costs-total--fd">
             <span>Fator Divisor resultante</span>
             <span class="val" id="costs-fd">1,0000</span>
           </div>
@@ -348,7 +134,7 @@ body.prec-screen-active .prec-overlay-killed {
     <div class="prec-grid-wrap">
 
       <div class="prec-grid-toolbar">
-        <label for="prec-search" style="position:absolute;left:-9999px;">Buscar itens da precificação</label>
+        <label for="prec-search" class="prec-sr-only">Buscar itens da precificação</label>
         <input class="prec-search" id="prec-search" name="prec_search" type="text" placeholder="Buscar código ou descrição…" oninput="refreshTable()">
         <div class="prec-tipo-pills">
           <button class="prec-tipo-pill active" data-tipo="0" onclick="setTipo(0,this)">Todos</button>
@@ -356,7 +142,7 @@ body.prec-screen-active .prec-overlay-killed {
           <button class="prec-tipo-pill" data-tipo="2" onclick="setTipo(2,this)">Serviços</button>
           <button class="prec-tipo-pill" data-tipo="3" onclick="setTipo(3,this)">Contratos</button>
         </div>
-        <label style="font-size:.72rem;color:var(--prd-muted);display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <label class="prec-toolbar-label">
           <input type="checkbox" id="chk-only-changed" class="prec-check" onchange="refreshTable()"> Só alterados
         </label>
         <div class="prec-sel-count" id="sel-count">0 selecionados</div>
@@ -366,11 +152,11 @@ body.prec-screen-active .prec-overlay-killed {
         <table class="prec-table" id="prec-table">
           <thead>
             <tr>
-              <th style="width:30px;">
-                <label for="chk-all" style="position:absolute;left:-9999px;">Selecionar todos os itens</label>
+              <th class="prec-th-check">
+                <label for="chk-all" class="prec-sr-only">Selecionar todos os itens</label>
                 <input type="checkbox" class="prec-check" id="chk-all" name="chk_all" onchange="toggleAll(this)">
               </th>
-              <th style="width:36px;"></th>
+              <th class="prec-th-avatar"></th>
               <th>Código</th>
               <th>Descrição</th>
               <th>Tipo</th>
@@ -380,7 +166,7 @@ body.prec-screen-active .prec-overlay-killed {
               <th>Novo Preço</th>
               <th>Nova Margem</th>
               <th>Δ Diferença</th>
-              <th style="width:22px;"></th>
+              <th class="prec-th-warn"></th>
             </tr>
           </thead>
           <tbody id="prec-tbody"></tbody>
@@ -637,26 +423,31 @@ function refreshTable() {
       '<td>' + avatarHtml(p.tipo) + '</td>' +
       '<td class="prec-td-code">' + escHtml(p.codigo) + '</td>' +
       '<td class="prec-td-desc" title="' + escHtml(p.descricao) + '">' + escHtml(p.descricao) + '</td>' +
-      '<td><span style="font-size:.68rem;padding:2px 7px;border-radius:99px;background:var(--prd-surface2);color:var(--prd-muted);">' + tipoLabel(p.tipo) + '</span></td>' +
+      '<td><span class="prec-cell-tipo-pill">' + tipoLabel(p.tipo) + '</span></td>' +
       '<td class="prec-td-custo' + (!p.temCusto ? ' no-data' : '') + '">' + (p.temCusto ? fmtBRL(p.custo) : 'Sem dado ERP') + '</td>' +
       '<td class="prec-td-mono">' + (isPrecoZero ? '<span class="prec-badge-zero">⚠ Sem preço</span>' : fmtBRL(p.vendaAtual)) + '</td>' +
       '<td>' +
         (mkAtual !== null
-          ? ('<div style="display:flex;align-items:center;gap:5px;"><span class="prec-td-mono" style="font-size:.72rem;">' + fmt(mkAtual, 1) + '%</span><div class="prec-bar-mini"><div class="prec-bar-fill" style="width:' + Math.round(barW) + '%"></div></div></div>')
+          ? ('<div class="prec-mk-row"><span class="prec-td-mono prec-td-mono--sm">' + fmt(mkAtual, 1) + '%</span><div class="prec-bar-mini"><div class="prec-bar-fill" data-pct="' + Math.round(barW) + '"></div></div></div>')
           : (isPrecoZero
-              ? '<span style="color:#d29922;font-size:.68rem;font-weight:600;">Sem preço</span>'
-              : '<span style="color:var(--prd-muted);font-size:.72rem;">Sem custo ERP</span>')) +
+              ? '<span class="prec-mk-msg--amber">Sem preço</span>'
+              : '<span class="prec-mk-msg--muted">Sem custo ERP</span>')) +
       '</td>' +
       '<td><input type="number" class="prec-novo-preco' + (changed ? ' changed' : '') + '" data-id="' + p.id + '" name="novo_preco_' + p.id + '" aria-label="Novo preço para item ' + escHtml(p.codigo) + '" value="' + (novoPreco !== null ? novoPreco.toFixed(2) : '') + '" step="0.01" min="0" oninput="onPrecoEdit(this)" onblur="onPrecoBlur(this)"></td>' +
       '<td class="prec-td-margem ' + margemClass(novaMargem) + '">' + (novaMargem !== null ? fmt(novaMargem, 2) + '%' : '—') + '</td>' +
       '<td class="prec-delta ' + (delta === null ? 'same' : delta > 0 ? 'up' : delta < 0 ? 'down' : 'same') + '">' +
-        (delta !== null ? (delta >= 0 ? '+' : '') + fmtBRL(delta) + (deltaPct !== null ? '<br><span style="font-size:.65rem;">' + (deltaPct >= 0 ? '+' : '') + fmt(deltaPct, 1) + '%</span>' : '') : '—') +
+        (delta !== null ? (delta >= 0 ? '+' : '') + fmtBRL(delta) + (deltaPct !== null ? '<br><span class="prec-delta-pct">' + (deltaPct >= 0 ? '+' : '') + fmt(deltaPct, 1) + '%</span>' : '') : '—') +
       '</td>' +
       '<td><span class="prec-warn' + (showWarn ? ' show' : '') + '" title="Margem abaixo do mínimo">⚠</span></td>' +
     '</tr>';
   });
 
   tbody.innerHTML = rows.join('');
+  tbody.querySelectorAll('.prec-bar-fill[data-pct]').forEach(function (el) {
+    var w = el.getAttribute('data-pct');
+    if (w !== null && w !== '') el.style.width = w + '%';
+    el.removeAttribute('data-pct');
+  });
 
   // Atualizar footer
   document.getElementById('ft-total').textContent    = vis.length;

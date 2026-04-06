@@ -7,10 +7,10 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 ?>
 <div class="col-md-12 p-0 queues-page-ambient">
 	<div class="admin-rbac-wrap">
-		<header class="admin-panel-hero" style="border-bottom-color: rgba(255,255,255,0.08); margin-bottom: 16px;">
-			<h1 style="color: #f0f2f8; font-size: 1.2rem; margin: 0 0 8px;">Matriz papéis × permissões</h1>
-			<p style="margin: 0;">Visualização somente leitura. Use a ação abaixo para associar <strong>todas</strong> as permissões atuais ao papel <strong>Super administrador</strong> (útil após sincronizar o catálogo).</p>
-			<div class="admin-panel-hero-actions" style="margin-top: 12px;">
+		<header class="admin-panel-hero admin-rbac-hero--sub">
+			<h1>Matriz papéis × permissões</h1>
+			<p>Visualização somente leitura. Use a ação abaixo para associar <strong class="ap-text-bright">todas</strong> as permissões atuais ao papel <strong class="ap-text-bright">Super administrador</strong> (útil após sincronizar o catálogo).</p>
+			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Catálogo', ['action' => 'adminIndex'], ['class' => 'admin-panel-btn']) ?>
 				<?= $this->Html->link('Papéis por usuário', ['action' => 'adminUsers'], ['class' => 'admin-panel-btn admin-panel-btn--teal']) ?>
 				<?php if (empty($rbacMissing) && $permissions->count() > 0) : ?>
@@ -26,7 +26,7 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 		<?php if (!empty($rbacMissing)) : ?>
 			<div class="admin-rbac-callout">Execute a migration RBAC antes de usar a matriz.</div>
 		<?php elseif ($permissions->count() === 0) : ?>
-			<div class="admin-rbac-callout">Sincronize o catálogo em <a href="<?= $this->Url->build(['action' => 'adminIndex']) ?>" style="color:#93c5fd;">Permissões</a> primeiro.</div>
+			<div class="admin-rbac-callout">Sincronize o catálogo em <a href="<?= $this->Url->build(['action' => 'adminIndex']) ?>" class="admin-rbac-a-inline">Permissões</a> primeiro.</div>
 		<?php else : ?>
 			<div class="admin-rbac-matrix-outer">
 				<table class="admin-rbac-matrix">
@@ -46,7 +46,7 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 								$curMod = $p->module;
 								?>
 								<tr>
-									<td colspan="<?= 1 + $roles->count() ?>" style="background:#1a1e28; color:#6ee7c5; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.06em;">
+									<td colspan="<?= 1 + $roles->count() ?>" class="admin-rbac-mod-row">
 										<?= h($curMod ?: 'Outros') ?>
 									</td>
 								</tr>
@@ -64,7 +64,7 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 					</tbody>
 				</table>
 			</div>
-			<p style="font-size: 11px; color: #555e78; margin-top: 12px;">Vínculos usuário ↔ papel: tabela <code style="color:#8b92a8;">rbac_users_roles</code> (gestão dedicada pode ser adicionada depois).</p>
+			<p class="admin-rbac-footnote">Vínculos usuário ↔ papel: tabela <code class="ap-code-gray">rbac_users_roles</code> (gestão dedicada pode ser adicionada depois).</p>
 		<?php endif; ?>
 	</div>
 </div>

@@ -18,12 +18,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contratos — ERP</title>
   <!--
-    CSS já carregado pelo layout pai (default.ctp):
-    - bootstrap ou framework CSS do ERP
-    - estilo global do ERP
-    Arquivo de estilos específico desta tela (opcional):
-    <link rel="stylesheet" href="/css/clicontratos.css">
+    CSS já carregado pelo layout pai (default.ctp).
+    Franquias (mock): erp-clicontratos-estrutural.css
   -->
+  <link rel="stylesheet" href="/dist/css/pages/erp-clicontratos-estrutural.css">
 </head>
 <body>
 
@@ -794,8 +792,7 @@
                   PHP: $classeBarrinha = $pct >= 90 ? 'franquia-mini__barra--critico'
                                       : ($pct >= 70 ? 'franquia-mini__barra--atencao' : 'franquia-mini__barra--ok');
                 -->
-                <div class="franquia-mini__barra franquia-mini__barra--atencao"
-                     style="width: 80%"
+                <div class="franquia-mini__barra franquia-mini__barra--atencao franquia-mini__pct--80"
                      role="progressbar"
                      aria-valuenow="80"
                      aria-valuemin="0"
@@ -972,8 +969,7 @@
           <td class="tabela__td tabela__td--franquia">
             <div class="franquia-mini" title="28 de 30 horas consumidas">
               <div class="franquia-mini__barra-fundo">
-                <div class="franquia-mini__barra franquia-mini__barra--critico"
-                     style="width: 93%"
+                <div class="franquia-mini__barra franquia-mini__barra--critico franquia-mini__pct--93"
                      role="progressbar"
                      aria-valuenow="93"
                      aria-valuemin="0"
@@ -1451,8 +1447,7 @@
                  aria-valuemin="0"
                  aria-valuemax="100"
                  aria-label="80% da franquia do mês consumida">
-              <div class="franquia-barra-grande__preenchimento franquia-barra-grande__preenchimento--atencao"
-                   style="width: 80%">
+              <div class="franquia-barra-grande__preenchimento franquia-barra-grande__preenchimento--atencao franquia-barra-grande__pct--80">
               </div>
             </div>
             <div class="franquia-barra-grande__marcadores" aria-hidden="true">
@@ -1486,7 +1481,7 @@
                 <td>
                   <div class="franquia-mini">
                     <div class="franquia-mini__barra-fundo">
-                      <div class="franquia-mini__barra franquia-mini__barra--ok" style="width:70%"></div>
+                      <div class="franquia-mini__barra franquia-mini__barra--ok franquia-mini__pct--70"></div>
                     </div>
                     <span class="franquia-mini__texto">70%</span>
                   </div>
@@ -1500,7 +1495,7 @@
                 <td>
                   <div class="franquia-mini">
                     <div class="franquia-mini__barra-fundo">
-                      <div class="franquia-mini__barra franquia-mini__barra--critico" style="width:90%"></div>
+                      <div class="franquia-mini__barra franquia-mini__barra--critico franquia-mini__pct--90"></div>
                     </div>
                     <span class="franquia-mini__texto franquia-mini__texto--critico">90%</span>
                   </div>

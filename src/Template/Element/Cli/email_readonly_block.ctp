@@ -15,7 +15,7 @@ $colClass = $colClass ?? 'col-lg-6 col-md-6 col-sm-12';
 ?>
 <div class="<?= h($colClass) ?>">
 	<div class="form-group cli-cmp-field">
-		<label class="cli-cmp-label cli-cmp-label--row d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
+		<label class="cli-cmp-label cli-cmp-label--row d-flex justify-content-between align-items-center flex-wrap pgm-gap-8">
 			<span><?= h($labelTitle) ?></span>
 			<button type="button" class="<?= h($gerenciarClass) ?>" data-toggle="modal" data-target="<?= h($modalTarget) ?>">Adicionar e-mails</button>
 		</label>

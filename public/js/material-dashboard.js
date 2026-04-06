@@ -175,7 +175,7 @@ md = {
 
                     main_panel_height = $('.main-panel')[0].scrollHeight;
                     $layer = $('<div class="close-layer"></div>');
-                    $layer.css('height',main_panel_height + 'px');
+                    $layer[0].style.height = main_panel_height + 'px';
                     $layer.appendTo(".main-panel");
 
                     setTimeout(function(){

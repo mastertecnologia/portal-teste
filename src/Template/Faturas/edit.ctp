@@ -41,8 +41,14 @@
 		border-top: 1px solid rgba(255,255,255,.1);
 		margin-top: 8px;
 	}
+	.erp-action-bar.erp-action-bar--flush {
+		border-top: none;
+		margin-top: 0;
+		padding-top: 0;
+	}
 	/* Tabela de itens */
 	#carrinho .table thead th { font-size: 12px; color: #26c6da; font-weight: 600; border-bottom: 2px solid #26c6da; }
+	#tableRecibos thead th { font-size: 12px; color: #26c6da; font-weight: 600; border-bottom: 2px solid #26c6da; }
 	#carrinho .table td { font-size: 13px; vertical-align: middle; }
 	/* Adicionar item */
 	.erp-additem-bar {
@@ -53,6 +59,10 @@
 		margin-bottom: 10px;
 	}
 	.erp-additem-bar .control-label { font-size: 11px; color: rgba(255,255,255,.45); }
+	.erp-section-body.erp-additem-bar.erp-additem-bar--plain {
+		border: none;
+		border-radius: 0;
+	}
 
 	/* ── Card principal + tabs: fundo escuro do sistema ── */
 	.pgm-adv-panel.card {
@@ -223,7 +233,7 @@
 						</div>
 
 						<!-- Salvar -->
-						<div class="erp-action-bar" style="border-top:none;margin-top:0;padding-top:0;">
+						<div class="erp-action-bar erp-action-bar--flush">
 							<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
 						</div>
 
@@ -231,7 +241,7 @@
 						<?php if ($fatura->status == C_LocacaoStatusPendente) : ?>
 						<div class="erp-section m-t-15">
 							<div class="erp-section-title">Adicionar item</div>
-							<div class="erp-section-body erp-additem-bar" style="border:none;border-radius:0;">
+							<div class="erp-section-body erp-additem-bar erp-additem-bar--plain">
 								<div class="row">
 									<div class="col-xl-1 col-lg-2 com-md-4 col-sm-6 col-xs-12">
 										<label class="control-label text-muted"> Código </label>
@@ -299,13 +309,13 @@
 					<table class="table table-hover table-row-clickable" id="tableRecibos">
 						<thead>
 							<tr>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Número </th>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Pagamento </th>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Data Recebimento </th>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Descontos </th>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Juros </th>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Valor Pago </th>
-								<th style="color:#26c6da;font-weight:600;border-bottom:2px solid #26c6da;"> Ações </th>
+								<th> Número </th>
+								<th> Pagamento </th>
+								<th> Data Recebimento </th>
+								<th> Descontos </th>
+								<th> Juros </th>
+								<th> Valor Pago </th>
+								<th> Ações </th>
 							</tr>
 						</thead>
 						<tbody>

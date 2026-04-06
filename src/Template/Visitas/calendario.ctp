@@ -49,6 +49,8 @@
 	/* Vista anual — ajustes de tamanho */
 	.fc-multimonth-month { min-width: 200px; }
 	.fc-multimonth .fc-daygrid-day-number { font-size: 11px; }
+	.pgm-cal-legend-dot--national { color: #6f6f6f; }
+	.pgm-cal-legend-dot--empresa { color: #ffc107; }
 </style>
 <div class="row">
 	<div class="col-md-12">
@@ -68,9 +70,9 @@
 										<div class="calendar-events" data-class="bg-success"><i class="fa fa-circle text-success"></i> Finalizada </div>
 										<div class="calendar-events" data-class="bg-warning"><i class="fa fa-circle text-warning"></i> Pendente</div>
 										<div class="calendar-events" data-class="bg-danger"><i class="fa fa-circle text-danger"></i> Cancelada </div>
-										<div class="calendar-events m-t-10" style="cursor:default"><i class="fa fa-circle" style="color:#6f6f6f"></i> Feriados nacionais </div>
-										<div class="calendar-events" style="cursor:default"><i class="fa fa-circle text-info"></i> Feriado estadual (UF da empresa) </div>
-										<div class="calendar-events" style="cursor:default"><i class="fa fa-circle" style="color:#ffc107"></i> Feriado cadastrado (empresa/global) </div>
+										<div class="calendar-events m-t-10"><i class="fa fa-circle pgm-cal-legend-dot--national"></i> Feriados nacionais </div>
+										<div class="calendar-events"><i class="fa fa-circle text-info"></i> Feriado estadual (UF da empresa) </div>
+										<div class="calendar-events"><i class="fa fa-circle pgm-cal-legend-dot--empresa"></i> Feriado cadastrado (empresa/global) </div>
 										<div class="small text-muted m-t-5">Municipais: inclua em Configurações → Feriados.</div>
 									</div>
 									<!-- checkbox -->

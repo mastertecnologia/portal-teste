@@ -31,7 +31,11 @@ $(function () {
         height = height - topOffset;
         if (height < 1) height = 1;
         if (height > topOffset) {
-            $(".page-wrapper").css("min-height", (height) + "px");
+            var minH = height + "px";
+            var wrappers = document.querySelectorAll(".page-wrapper");
+            for (var w = 0; w < wrappers.length; w++) {
+                wrappers[w].style.minHeight = minH;
+            }
         }
         
     };

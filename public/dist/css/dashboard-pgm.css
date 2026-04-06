@@ -371,6 +371,7 @@ a.dash-pgm-notif-item-link:hover {
 .sla-ok { background: #1a3a25; color: var(--green); }
 .sla-warn { background: #3d2e0a; color: var(--orange); }
 .sla-overdue { background: #3d1515; color: var(--red); }
+.sla-pending { background: #2d1f4e; color: #bc8cff; }
 .dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
 .dot.green { background: var(--green); }
 .dot.orange { background: var(--orange); }

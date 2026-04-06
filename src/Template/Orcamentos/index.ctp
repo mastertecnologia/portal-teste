@@ -97,23 +97,23 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 		</header>
 
 		<div class="orc-premium-stats" role="tablist">
-			<button type="button" class="orc-premium-stat active" style="--orc-sc:#FFC107;" data-orc-tab="pendentes" aria-selected="true">
+			<button type="button" class="orc-premium-stat orc-premium-stat--pendentes active" data-orc-tab="pendentes" aria-selected="true">
 				<span class="orc-premium-stat-l">Andamento</span>
 				<span class="orc-premium-stat-n"><?= $tEm ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#00C08B;" data-orc-tab="enviados" aria-selected="false">
+			<button type="button" class="orc-premium-stat orc-premium-stat--enviados" data-orc-tab="enviados" aria-selected="false">
 				<span class="orc-premium-stat-l">Enviados</span>
 				<span class="orc-premium-stat-n"><?= $tEn ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#33CCFF;" data-orc-tab="aprovados" aria-selected="false">
+			<button type="button" class="orc-premium-stat orc-premium-stat--aprovados" data-orc-tab="aprovados" aria-selected="false">
 				<span class="orc-premium-stat-l">Aprovados</span>
 				<span class="orc-premium-stat-n"><?= $tAp ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#E24B4A;" data-orc-tab="recusados" aria-selected="false">
+			<button type="button" class="orc-premium-stat orc-premium-stat--recusados" data-orc-tab="recusados" aria-selected="false">
 				<span class="orc-premium-stat-l">Recusados</span>
 				<span class="orc-premium-stat-n"><?= $tRe ?></span>
 			</button>
-			<button type="button" class="orc-premium-stat" style="--orc-sc:#888780;" data-orc-tab="arquivados" aria-selected="false">
+			<button type="button" class="orc-premium-stat orc-premium-stat--arquivados" data-orc-tab="arquivados" aria-selected="false">
 				<span class="orc-premium-stat-l">Arquivados</span>
 				<span class="orc-premium-stat-n"><?= $tAr ?></span>
 			</button>
@@ -143,14 +143,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tablePendentes">
 							<thead>
 								<tr>
-									<th style="width:65px;">ID</th>
+									<th class="orc-premium-th-id">ID</th>
 									<th>Empresa</th>
-									<th style="width:75px;">Versão</th>
-									<th style="width:85px;">Status</th>
-									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
-									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
-									<th style="width:95px;">Data</th>
-									<th style="width:90px;">Ações</th>
+									<th class="orc-premium-th-ver">Versão</th>
+									<th class="orc-premium-th-st">Status</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+									<th class="orc-premium-th-data">Data</th>
+									<th class="orc-premium-th-acoes">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -186,14 +186,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableEnviados">
 							<thead>
 								<tr>
-									<th style="width:65px;">ID</th>
+									<th class="orc-premium-th-id">ID</th>
 									<th>Empresa</th>
-									<th style="width:75px;">Versão</th>
-									<th style="width:85px;">Status</th>
-									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
-									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
-									<th style="width:95px;">Data</th>
-									<th style="width:90px;">Ações</th>
+									<th class="orc-premium-th-ver">Versão</th>
+									<th class="orc-premium-th-st">Status</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+									<th class="orc-premium-th-data">Data</th>
+									<th class="orc-premium-th-acoes">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -229,14 +229,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableAprovados">
 							<thead>
 								<tr>
-									<th style="width:65px;">ID</th>
+									<th class="orc-premium-th-id">ID</th>
 									<th>Empresa</th>
-									<th style="width:75px;">Versão</th>
-									<th style="width:85px;">Status</th>
-									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
-									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
-									<th style="width:95px;">Data</th>
-									<th style="width:90px;">Ações</th>
+									<th class="orc-premium-th-ver">Versão</th>
+									<th class="orc-premium-th-st">Status</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+									<th class="orc-premium-th-data">Data</th>
+									<th class="orc-premium-th-acoes">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -272,14 +272,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableRecusados">
 							<thead>
 								<tr>
-									<th style="width:65px;">ID</th>
+									<th class="orc-premium-th-id">ID</th>
 									<th>Empresa</th>
-									<th style="width:75px;">Versão</th>
-									<th style="width:85px;">Status</th>
-									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
-									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
-									<th style="width:95px;">Data</th>
-									<th style="width:90px;">Ações</th>
+									<th class="orc-premium-th-ver">Versão</th>
+									<th class="orc-premium-th-st">Status</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+									<th class="orc-premium-th-data">Data</th>
+									<th class="orc-premium-th-acoes">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -315,14 +315,14 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 						<table class="table orc-premium-tbl" id="tableArquivados">
 							<thead>
 								<tr>
-									<th style="width:65px;">ID</th>
+									<th class="orc-premium-th-id">ID</th>
 									<th>Empresa</th>
-									<th style="width:75px;">Versão</th>
-									<th style="width:85px;">Status</th>
-									<th class="text-right orc-premium-th-r" style="width:100px;">Total</th>
-									<th class="text-right orc-premium-th-r" style="width:80px;">Margem</th>
-									<th style="width:95px;">Data</th>
-									<th style="width:90px;">Ações</th>
+									<th class="orc-premium-th-ver">Versão</th>
+									<th class="orc-premium-th-st">Status</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+									<th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+									<th class="orc-premium-th-data">Data</th>
+									<th class="orc-premium-th-acoes">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -379,13 +379,13 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 				<table class="table orc-premium-tbl" id="tableCliente">
 					<thead>
 						<tr>
-							<th style="width:65px;">ID</th>
+							<th class="orc-premium-th-id">ID</th>
 							<th>Consultor</th>
-							<th style="width:75px;">Versão</th>
-							<th style="width:85px;">Status</th>
-							<th class="text-right orc-premium-th-r" style="width:110px;">Total</th>
-							<th style="width:95px;">Data</th>
-							<th style="width:90px;">Ações</th>
+							<th class="orc-premium-th-ver">Versão</th>
+							<th class="orc-premium-th-st">Status</th>
+							<th class="text-right orc-premium-th-r orc-premium-th-total-wide">Total</th>
+							<th class="orc-premium-th-data">Data</th>
+							<th class="orc-premium-th-acoes">Ações</th>
 						</tr>
 					</thead>
 					<tbody>

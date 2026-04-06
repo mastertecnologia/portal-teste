@@ -100,12 +100,15 @@ materialKitDemo = {
         var current_scroll = $(this).scrollTop();
 
         oVal = ($(window).scrollTop() / 3);
-        big_image.css({
-            'transform':'translate3d(0,' + oVal +'px,0)',
-            '-webkit-transform':'translate3d(0,' + oVal +'px,0)',
-            '-ms-transform':'translate3d(0,' + oVal +'px,0)',
-            '-o-transform':'translate3d(0,' + oVal +'px,0)'
-        });
+        if (big_image && big_image.length) {
+            var t = 'translate3d(0,' + oVal + 'px,0)';
+            big_image.each(function () {
+                this.style.transform = t;
+                this.style.webkitTransform = t;
+                this.style.msTransform = t;
+                this.style.oTransform = t;
+            });
+        }
 
     }, 6)
 

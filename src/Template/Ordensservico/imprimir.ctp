@@ -130,6 +130,12 @@ function Mask($mask, $str)
         border-radius: 8px;
         overflow: hidden;
     }
+    .os-info-cell--span2 {
+        grid-column: span 2;
+    }
+    .os-total-row.valortotalh5 {
+        display: none;
+    }
     .os-info-cell {
         padding: 10px 14px;
         border-right: 1px solid #e5e7eb;
@@ -408,7 +414,7 @@ function Mask($mask, $str)
             <div class="os-section-label">Dados do Cliente</div>
             <div class="os-info-grid">
                 <!-- linha 1 -->
-                <div class="os-info-cell" style="grid-column: span 2;">
+                <div class="os-info-cell os-info-cell--span2">
                     <div class="os-field-label">Cliente</div>
                     <div class="os-field-value">
                         <?= h($ordem->cliente->tipo == C_ClientesTipoJuridica ? $ordem->cliente->razaosocial : $ordem->cliente->nome) ?>
@@ -421,7 +427,7 @@ function Mask($mask, $str)
                     </div>
                 </div>
                 <!-- linha 2 -->
-                <div class="os-info-cell" style="grid-column: span 2;">
+                <div class="os-info-cell os-info-cell--span2">
                     <div class="os-field-label">Endereço</div>
                     <div class="os-field-value">
                         <?= h($ordem->cliente->endereco . ', ' . $ordem->cliente->nroendereco . ' — Bairro ' . $ordem->cliente->bairro) ?>
@@ -507,7 +513,7 @@ function Mask($mask, $str)
         </div>
 
         <!-- Total -->
-        <div class="os-total-row valortotalh5" style="display:none;">
+        <div class="os-total-row valortotalh5">
             <span class="os-total-label">Total Geral</span>
             <span class="os-total-value valortotal"></span>
         </div>

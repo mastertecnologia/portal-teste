@@ -37,7 +37,7 @@ $actionOpts = [
 		'podeEditarDadosPasso' => !empty($contractMayEditCore),
 	]) ?>
 
-	<div class="mb-3" style="display:flex;flex-wrap:wrap;gap:6px;">
+	<div class="mb-3 adv-cm-toolbar">
 		<?= $this->Html->link('Ir para ficha (PDF / assinatura)', ['action' => 'view', $contractId], ['class' => 'btn btn-sm btn-primary']) ?>
 		<?php if (!empty($podeEnviarAssinatura) && !empty($sigs)): ?>
 		<?= $this->Html->link('📨 Enviar para assinatura', ['action' => 'enviarAssinatura', $contractId], ['class' => 'btn btn-sm btn-info']) ?>
@@ -63,14 +63,14 @@ $actionOpts = [
 		<table class="table table-sm table-striped table-bordered mb-0">
 			<thead>
 				<tr>
-					<th style="width:40px;">#</th>
+					<th class="adv-cm-th-index">#</th>
 					<th>Nome</th>
 					<th>E-mail</th>
 					<th>Tipo</th>
 					<th>Auth</th>
 					<th>Ação</th>
 					<th>Status</th>
-					<th style="width:50px;"></th>
+					<th class="adv-cm-th-icon"></th>
 				</tr>
 			</thead>
 			<tbody>

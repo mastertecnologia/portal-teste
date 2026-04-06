@@ -8,7 +8,7 @@
         <div class="custom-control custom-checkbox">
             <input <?= $checkado ?> type="checkbox" class="custom-control-input inputTarefas " data-id='<?= $reg->id ?>' id="customCheck<?= $reg->id ?>">
             <label class="custom-control-label task-done customCheck<?= $reg->id ?>" id="customCheck<?= $reg->id; ?>" for="customCheck<?= $reg->id ?>"> 
-                <p class="customCheck<?= $reg->id ?>" <?php if($reg->status == 1) echo 'style="text-decoration:line-through;"' ?>> <?= $reg->tarefa ?> </p>
+                <p class="customCheck<?= $reg->id ?><?= $reg->status == 1 ? ' users-tarefa-line-done' : '' ?>"> <?= $reg->tarefa ?> </p>
                 </label>
         </div>
     </li>
@@ -26,7 +26,7 @@ $(document).ready(function() {
 
 		if ($( this ).is(':checked')) {
 			$(idclasse).prop( "checked", true );
-			$(classeclasse).css('text-decoration', 'line-through');
+			$(classeclasse).addClass('users-tarefa-line-done');
 			var url = "<?= Router::url(array('controller'=>'users','action'=>'alterasituacaotarefa'));?>";
 			url = url + '/' + id + '/' + 1;
 			$.ajax({
@@ -34,7 +34,7 @@ $(document).ready(function() {
 			})
 		}else{
 			$(idclasse).prop( "checked", false );
-			$(classeclasse).css('text-decoration', 'none');
+			$(classeclasse).removeClass('users-tarefa-line-done');
 			var url = "<?= Router::url(array('controller'=>'users','action'=>'alterasituacaotarefa'));?>";
 			url = url + '/' + id + '/' + 0;
 			$.ajax({

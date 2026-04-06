@@ -18,6 +18,7 @@
 	<?= $this->Html->meta('favicon.ico','/favicon.ico',['type' => 'icon']); ?>
 
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
 	<?= $this->Html->css('base.css') ?>
 	<?= $this->Html->css('cake.css') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-error-cake') ?>

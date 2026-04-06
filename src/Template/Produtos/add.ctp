@@ -13,7 +13,7 @@
   <div class="prd-form-topbar">
     <div class="prd-form-topbar-info">
       <div class="prd-eyebrow">Cadastros &rsaquo; Produtos &rsaquo; Novo</div>
-      <h1 class="prd-h1" style="font-size:20px">Cadastrar Produto / Serviço / Contrato</h1>
+      <h1 class="prd-h1 prd-h1--form">Cadastrar Produto / Serviço / Contrato</h1>
     </div>
     <?= $this->Html->link(
       '<i class="fas fa-arrow-left"></i> Voltar',
@@ -71,7 +71,7 @@
             </div>
 
             <div class="prd-fgroup">
-              <label for="descricao">Descrição <span style="color:var(--prd-red)">*</span></label>
+              <label for="descricao">Descrição <span class="prd-req">*</span></label>
               <?= $this->Form->control('descricao', [
                 'class'       => 'form-control',
                 'id'          => 'descricao',
@@ -104,7 +104,7 @@
             </div>
 
             <div class="prd-fgroup">
-              <label for="ativo">Situação <span style="color:var(--prd-red)">*</span></label>
+              <label for="ativo">Situação <span class="prd-req">*</span></label>
               <?= $this->Form->control('ativo', [
                 'options'  => C_ProdutosAtivo,
                 'value'    => C_ProdutosAtivoSim,
@@ -150,7 +150,7 @@
             </div>
 
             <div class="prd-fgroup">
-              <label for="vlunitario">Preço de Venda <span style="color:var(--prd-red)">*</span></label>
+              <label for="vlunitario">Preço de Venda <span class="prd-req">*</span></label>
               <div class="prd-input-pfx" data-prefix="R$">
                 <?= $this->Form->text('vlunitario', [
                   'class'       => 'mascaramonetaria form-control',
@@ -180,11 +180,11 @@
               <label>Venda</label>
               <div class="val venda" id="fml-venda">R$ 0,00</div>
             </div>
-            <div style="flex:1;min-width:120px">
+            <div class="prd-price-formula-grow">
               <div class="prd-markup-bar">
-                <div class="prd-markup-bar-fill" id="markup-bar" style="width:0%"></div>
+                <div class="prd-markup-bar-fill" id="markup-bar"></div>
               </div>
-              <div style="font-size:10px;color:var(--prd-muted);margin-top:4px" id="fml-lucro">Lucro: R$ 0,00</div>
+              <div class="prd-fml-lucro" id="fml-lucro">Lucro: R$ 0,00</div>
             </div>
           </div>
 
@@ -192,7 +192,7 @@
       </div>
 
       <!-- Seção 4: Locação (só Produto) -->
-      <div class="prd-section" id="sectionLocacao" style="display:none">
+      <div class="prd-section prd-is-hidden" id="sectionLocacao">
         <div class="prd-section-head">
           <div class="prd-section-icon"><i class="fas fa-calendar-alt"></i></div>
           <span class="prd-section-title">Valores de Locação</span>
@@ -210,7 +210,7 @@
           <div class="prd-fg prd-fg-4">
 
             <div class="prd-fgroup">
-              <label for="vllocmensal">Mensal <span style="color:var(--prd-red)">*</span></label>
+              <label for="vllocmensal">Mensal <span class="prd-req">*</span></label>
               <div class="prd-input-pfx" data-prefix="R$">
                 <?= $this->Form->text('vllocmensal', [
                   'class'       => 'mascaramonetaria form-control',
@@ -257,7 +257,7 @@
           </div>
 
           <!-- Preview de valores calculados -->
-          <div class="prd-loc-preview" id="locPreview" style="display:none">
+          <div class="prd-loc-preview prd-is-hidden" id="locPreview">
             <div class="prd-loc-chip">
               <div class="prd-loc-chip-lbl">Mensal</div>
               <div class="prd-loc-chip-val" id="lc-mensal">—</div>
@@ -306,7 +306,7 @@
           </div>
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Preço Venda</span>
-            <span class="prd-preview-row-val" id="prev-preco" style="color:var(--prd-teal-lt)">—</span>
+            <span class="prd-preview-row-val prd-preview-val-teal" id="prev-preco">—</span>
           </div>
           <div class="prd-preview-row">
             <span class="prd-preview-row-label">Situação</span>
@@ -321,18 +321,18 @@
           <div class="prd-section-icon"><i class="fas fa-lightbulb"></i></div>
           <span class="prd-section-title">Dicas</span>
         </div>
-        <div class="prd-section-body" style="font-size:12px;color:var(--prd-muted);line-height:1.6">
-          <p style="margin:0 0 8px">
-            <i class="fas fa-box-open" style="color:var(--prd-teal);width:14px"></i>
-            <strong style="color:var(--prd-text2)">Produto</strong> — item físico com controle de estoque e opção de locação.
+        <div class="prd-section-body prd-tips-body">
+          <p class="prd-tips-p">
+            <i class="fas fa-box-open prd-tips-icon" aria-hidden="true"></i>
+            <strong class="prd-tips-strong">Produto</strong> — item físico com controle de estoque e opção de locação.
           </p>
-          <p style="margin:0 0 8px">
-            <i class="fas fa-laptop-code" style="color:var(--prd-blue);width:14px"></i>
-            <strong style="color:var(--prd-text2)">Serviço</strong> — prestação de serviço cobrada por hora ou unidade.
+          <p class="prd-tips-p">
+            <i class="fas fa-laptop-code prd-tips-icon prd-tips-icon--blue" aria-hidden="true"></i>
+            <strong class="prd-tips-strong">Serviço</strong> — prestação de serviço cobrada por hora ou unidade.
           </p>
-          <p style="margin:0">
-            <i class="fas fa-file-contract" style="color:var(--prd-orange);width:14px"></i>
-            <strong style="color:var(--prd-text2)">Contrato</strong> — cobrança recorrente (assinatura, mensalidade).
+          <p class="prd-tips-p">
+            <i class="fas fa-file-contract prd-tips-icon prd-tips-icon--orange" aria-hidden="true"></i>
+            <strong class="prd-tips-strong">Contrato</strong> — cobrança recorrente (assinatura, mensalidade).
           </p>
         </div>
       </div>
@@ -344,8 +344,8 @@
   <!-- ── Footer fixo ────────────────────────────────────────── -->
   <div class="prd-form-footer">
     <div class="prd-form-footer-left">
-      <i class="fas fa-shield-alt" style="color:var(--prd-teal)"></i>
-      Todos os campos obrigatórios marcados com <span style="color:var(--prd-red)">*</span>
+      <i class="fas fa-shield-alt prd-form-footer-icon" aria-hidden="true"></i>
+      Todos os campos obrigatórios marcados com <span class="prd-req">*</span>
     </div>
     <div class="prd-form-footer-right">
       <?= $this->Html->link(
@@ -423,7 +423,7 @@
     });
     // Locação só para Produto
     var isProduct = cfg.label.toLowerCase().indexOf('produto') !== -1;
-    document.getElementById('sectionLocacao').style.display = isProduct ? '' : 'none';
+    document.getElementById('sectionLocacao').classList.toggle('prd-is-hidden', !isProduct);
 
     // Update preview avatar
     var av = document.getElementById('prev-av');
@@ -507,7 +507,7 @@
     var chk = document.getElementById('locAutoCalc').checked;
     var preview = document.getElementById('locPreview');
 
-    if (!chk) { preview.style.display = 'none'; return; }
+    if (!chk) { preview.classList.add('prd-is-hidden'); return; }
 
     var mensal    = parseMoeda(document.getElementById('vllocmensal').value);
     var quinzenal = mensal > 0 ? mensal * 0.6 : 0;
@@ -523,9 +523,9 @@
       document.getElementById('lc-quinzenal').textContent = 'R$ ' + fmtMoeda(quinzenal);
       document.getElementById('lc-semanal').textContent   = 'R$ ' + fmtMoeda(semanal);
       document.getElementById('lc-diario').textContent    = 'R$ ' + fmtMoeda(diario);
-      preview.style.display = '';
+      preview.classList.remove('prd-is-hidden');
     } else {
-      preview.style.display = 'none';
+      preview.classList.add('prd-is-hidden');
     }
   };
 

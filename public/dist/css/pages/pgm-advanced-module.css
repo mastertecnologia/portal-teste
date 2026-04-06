@@ -660,3 +660,162 @@ body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-list-day-cushion {
 body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-list-event:hover td {
 	background: rgba(255, 255, 255, 0.04) !important;
 }
+
+/* ContractManagement — layout ficha (sem style= na view) */
+body.layout-no-topbar .pgm-adv-page .adv-cm-title-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 0.5rem;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-contract-title {
+	font-size: 18px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-code-inline {
+	margin-right: 6px;
+}
+body.layout-no-topbar .pgm-adv-page .label.adv-cm-status-lbl {
+	font-size: 11px;
+	vertical-align: middle;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-back-link {
+	white-space: nowrap;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-hr {
+	margin: 10px 0 14px;
+	border: 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-hr--loose {
+	margin: 14px 0 10px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-actions-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+	margin-bottom: 12px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-cancel-zone {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	padding: 8px 10px;
+	background: rgba(200, 0, 0, 0.06);
+	border-radius: 6px;
+	border: 1px solid rgba(200, 0, 0, 0.15);
+}
+body.layout-no-topbar .pgm-adv-page form.adv-cm-form-cancel {
+	display: contents;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-motivo-input {
+	flex: 1;
+	min-width: 200px;
+	max-width: 400px;
+}
+body.layout-no-topbar .pgm-adv-page form.adv-cm-form-inline {
+	display: inline-block;
+	margin: 0;
+}
+body.layout-no-topbar .pgm-adv-page form.adv-cm-form-reenvio {
+	display: inline;
+	margin: 0;
+	padding: 0;
+}
+body.layout-no-topbar .pgm-adv-page .table.adv-cm-kv-table {
+	background: transparent;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-kv-label {
+	width: 40%;
+	white-space: nowrap;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-card-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-th-index {
+	width: 40px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-th-icon {
+	width: 50px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-th-convite {
+	min-width: 120px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+body.layout-no-topbar .pgm-adv-page .adv-cm-checkbox-block {
+	margin: 12px 0;
+}
+
+/* ContractManagement — wizard (passos sem style= dinâmico) */
+body.layout-no-topbar .pgm-adv-page .pgm-contract-wizard-steps {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-contract-wizard-steps > li {
+	margin: 0;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-contract-wiz-pill {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #fff;
+	text-decoration: none;
+	white-space: nowrap;
+	background: #546e7a;
+}
+body.layout-no-topbar .pgm-adv-page a.pgm-contract-wiz-pill:hover {
+	color: #fff;
+	text-decoration: none;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-contract-wiz-pill--current {
+	background: #2979ff;
+}
+body.layout-no-topbar .pgm-adv-page span.pgm-contract-wiz-pill--disabled {
+	background: #37474f;
+	color: #90a4ae;
+	cursor: default;
+	pointer-events: none;
+}
+
+/* ContractTemplates/preview */
+body.layout-no-topbar .pgm-adv-page .pgm-template-preview-scroll {
+	max-height: 480px;
+	overflow: auto;
+	background: #fff;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-template-json-pre {
+	max-height: 200px;
+	overflow: auto;
+}
+
+/* ContractManagement/index — filtros inline (sem style= nos controls) */
+body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-status {
+	min-width: 200px;
+	margin-right: 8px;
+	margin-bottom: 8px;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-cliente {
+	min-width: 220px;
+	margin-right: 8px;
+	margin-bottom: 8px;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-mb {
+	margin-bottom: 8px;
+}

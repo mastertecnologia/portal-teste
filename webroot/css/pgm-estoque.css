@@ -5,13 +5,13 @@
 
 /* ── Tokens (alinhados ao design system solicitado) ───────────────────────── */
 body.estoque-screen-active {
-	--est-space-1: 8px;
-	--est-space-2: 12px;
-	--est-space-3: 16px;
-	--est-space-4: 24px;
-	--est-primary: #10b981;
-	--est-primary-hover: #0ea371;
-	--est-primary-active: #0c8f64;
+	--est-space-1: var(--pgm-space-2, 8px);
+	--est-space-2: var(--pgm-space-3, 12px);
+	--est-space-3: var(--pgm-space-4, 16px);
+	--est-space-4: var(--pgm-space-5, 24px);
+	--est-primary: var(--pgm-erp-teal, #10b981);
+	--est-primary-hover: var(--pgm-erp-teal-hover, #0ea371);
+	--est-primary-active: var(--pgm-erp-teal-active, #0c8f64);
 	--est-bg: #f3f6f9;
 	--est-card: #ffffff;
 	--est-text: #1e293b;

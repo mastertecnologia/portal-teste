@@ -18,6 +18,11 @@ th, td { border: 1px solid #d5d5d5; padding: 6px 7px; }
 th { background: #f2f2f2; text-transform: uppercase; font-size: 9px; letter-spacing: .04em; }
 td.num { text-align: right; }
 .foot { margin-top: 10px; color: #444; font-size: 10px; }
+.est-pdf-th-cod { width: 11%; }
+.est-pdf-th-qty { width: 12%; }
+.est-pdf-th-pc { width: 12%; }
+.est-pdf-th-pv { width: 12%; }
+.est-pdf-empty { text-align: center; }
 </style>
 
 <h1>Relatório de Estoque</h1>
@@ -35,11 +40,11 @@ td.num { text-align: right; }
 <table>
 	<thead>
 		<tr>
-			<th style="width: 11%;">Código</th>
+			<th class="est-pdf-th-cod">Código</th>
 			<th>Descrição</th>
-			<th style="width: 12%;">Quantidade Atual</th>
-			<th style="width: 12%;">Preço Custo</th>
-			<th style="width: 12%;">Preço Venda</th>
+			<th class="est-pdf-th-qty">Quantidade Atual</th>
+			<th class="est-pdf-th-pc">Preço Custo</th>
+			<th class="est-pdf-th-pv">Preço Venda</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -55,7 +60,7 @@ td.num { text-align: right; }
 			<?php endforeach; ?>
 		<?php else : ?>
 			<tr>
-				<td colspan="5" style="text-align:center;">Nenhum produto encontrado para os filtros informados.</td>
+				<td colspan="5" class="est-pdf-empty">Nenhum produto encontrado para os filtros informados.</td>
 			</tr>
 		<?php endif; ?>
 	</tbody>

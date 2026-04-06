@@ -40,6 +40,7 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
@@ -165,7 +166,7 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 		<div class="page-wrapper">
 			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>
-				<div class="row page-titles" style='padding-bottom: 8px;'>
+				<div class="row page-titles pgm-page-titles--pb-tight">
 					<!-- Título -->
 		            <div class="col-md-5 align-self-center">
 						<h5 class="text-themecolor m-b-0"><?= $title ?></h5>
@@ -196,15 +197,15 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 
 		// Verifica se é para ocultar o logo da sidebar
 		function verificaSidebar() {
-			if ($('body').hasClass('mini-sidebar')) {
-				$(".mini-itens").css('display', '');
-				$(".mini-itens").css('display', 'none');
+			var mini = $('body').hasClass('mini-sidebar');
+			if (mini) {
+				$('.mini-itens').addClass('d-none');
+				$('#mini-logout').removeClass('d-none');
 				$('.logo').addClass('imagem-sidebar-mini');
 				$('.logo').removeClass('imagem-sidebar-expandida');
-			}
-			else {
-				$("#mini-logout").css('display', 'none');
-				$("#mini-logout").css('display', '');
+			} else {
+				$('.mini-itens').removeClass('d-none');
+				$('#mini-logout').addClass('d-none');
 				$('.logo').addClass('imagem-sidebar-expandida');
 				$('.logo').removeClass('imagem-sidebar-mini');
 			} 
@@ -400,16 +401,17 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 		$('#empresaSidebar').on('changed.bs.select', handleEmpresaSidebarChange);
 
 		function pgmLayoutNoTopbarMinHeight() {
-			if (!$('body').hasClass('layout-no-topbar')) {
+			var root = document.documentElement;
+			var $body = $('body');
+			if (!$body.hasClass('layout-no-topbar')) {
+				root.style.removeProperty('--pgm-layout-min-h');
+				$body.removeClass('pgm-layout-min-h-legacy-wrapper');
 				return;
 			}
 			var h = Math.max(1, (window.innerHeight > 0 ? window.innerHeight : screen.height) - 1);
+			root.style.setProperty('--pgm-layout-min-h', h + 'px');
 			var $shell = $('.pgm-shell-main');
-			if ($shell.length) {
-				$shell.css('min-height', h + 'px');
-			} else {
-				$('.page-wrapper').css('min-height', h + 'px');
-			}
+			$body.toggleClass('pgm-layout-min-h-legacy-wrapper', $shell.length === 0);
 		}
 		$(window).on('resize', pgmLayoutNoTopbarMinHeight);
 		$(window).on('load', function () {

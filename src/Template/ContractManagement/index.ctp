@@ -37,8 +37,7 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 				'options' => $statusOpts,
 				'value' => $stF,
 				'label' => false,
-				'class' => 'form-control input-sm',
-				'style' => 'min-width:200px;margin-right:8px;margin-bottom:8px;',
+				'class' => 'form-control input-sm pgm-adv-contract-filter-status',
 				'empty' => false,
 			]) ?>
 			<?= $this->Form->control('idcliente', [
@@ -47,12 +46,11 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 				'value' => $cidF > 0 ? $cidF : '',
 				'empty' => __('Todos os clientes'),
 				'label' => false,
-				'class' => 'form-control input-sm',
-				'style' => 'min-width:220px;margin-right:8px;margin-bottom:8px;',
+				'class' => 'form-control input-sm pgm-adv-contract-filter-cliente',
 			]) ?>
-			<?= $this->Form->button(__('Filtrar'), ['class' => 'btn btn-sm btn-default', 'style' => 'margin-bottom:8px;']) ?>
+			<?= $this->Form->button(__('Filtrar'), ['class' => 'btn btn-sm btn-default pgm-adv-contract-filter-mb']) ?>
 			<?php if ($stF !== '' || $cidF > 0): ?>
-			<?= $this->Html->link(__('Limpar'), ['action' => 'index'], ['class' => 'btn btn-sm btn-link', 'style' => 'margin-bottom:8px;']) ?>
+			<?= $this->Html->link(__('Limpar'), ['action' => 'index'], ['class' => 'btn btn-sm btn-link pgm-adv-contract-filter-mb']) ?>
 			<?php endif; ?>
 			<?= $this->Form->end() ?>
 			<p class="mb-3">

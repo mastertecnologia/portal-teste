@@ -181,6 +181,17 @@
 		font-size: 0.875rem;
 	}
 	.sd-add-field .bootstrap-select { width: 100% !important; }
+	.sd-add-field select.form-control.sd-add-native-select {
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+		cursor: pointer;
+		padding-right: 2rem !important;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+		background-repeat: no-repeat !important;
+		background-position: right 0.75rem center !important;
+		background-size: 10px 10px !important;
+	}
 	.ticket-add-textarea.form-control {
 		min-height: 9rem;
 		border: 1px solid #e2e8f0;
@@ -236,6 +247,13 @@
 		padding: 0;
 		font-size: 0.8125rem;
 		color: #334155;
+	}
+	.ticket-files-chosen li > span.ticket-file-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		min-width: 0;
+		flex: 1 1 auto;
 	}
 	.ticket-files-chosen li {
 		display: flex;
@@ -438,6 +456,29 @@
 	select[multiple] {
 		max-width: 100%;
 	}
+	.ticket-add-lead--flush {
+		margin-top: 0;
+	}
+	.ticket-add-readonly-name {
+		background: #e2e8f0;
+		color: #475569;
+		cursor: default;
+	}
+	.sd-add-mt-075 {
+		margin-top: 0.75rem;
+	}
+	.sd-add-mt-1 {
+		margin-top: 1rem;
+	}
+	.sd-add-card-desc--tight {
+		margin-top: 0.25rem;
+	}
+	.sd-sum-select--static {
+		display: flex;
+		align-items: center;
+		color: #475569;
+		font-weight: 500;
+	}
 </style>
 <div class="col-md-12 tickets-add-wrap">
 	<div class="sd-add-page">
@@ -470,7 +511,7 @@
 					</div>
 
 					<?php if ($role == 1 && !empty($authUserName)) : ?>
-						<p class="ticket-add-lead" style="margin-top:0">
+						<p class="ticket-add-lead ticket-add-lead--flush">
 							Chamado em nome de <strong><?= h($authUserName) ?></strong>.
 						</p>
 					<?php endif; ?>
@@ -496,7 +537,7 @@
 						<?php } else { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Nome</label>
-								<input type="text" class="form-control" readonly value="<?= h($authUserName) ?>" style="background:#e2e8f0;color:#475569;cursor:default" tabindex="-1" aria-label="Nome do solicitante">
+								<input type="text" class="form-control ticket-add-readonly-name" readonly value="<?= h($authUserName) ?>" tabindex="-1" aria-label="Nome do solicitante">
 							</div>
 							<div class="sd-add-field">
 								<label class="control-label text-muted" for="email">E-mail</label>
@@ -519,7 +560,7 @@
 						<?php if ($role == 0) { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -527,7 +568,7 @@
 								<?= $this->Form->control('severidade', [
 									'type' => 'select',
 									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
-									'class' => 'selectpicker form-control',
+									'class' => 'form-control sd-add-native-select',
 									'title' => 'Grau de severidade',
 									'label' => false,
 									'required' => true,
@@ -539,7 +580,7 @@
 						<?php } else { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -547,7 +588,7 @@
 								<?= $this->Form->control('severidade', [
 									'type' => 'select',
 									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
-									'class' => 'selectpicker form-control',
+									'class' => 'form-control sd-add-native-select',
 									'title' => 'Grau de severidade',
 									'label' => false,
 									'required' => true,
@@ -559,14 +600,14 @@
 						<?php } ?>
 					</div>
 
-					<div class="row hide data m-t-10" style="margin-top:0.75rem">
+					<div class="row hide data sd-add-mt-075">
 						<div class="col-md-6 col-xs-12 sd-add-field">
 							<label class="control-label text-muted">Data da Visita</label>
 							<?= $this->Form->text('data', ['class' => 'form-control datepicker', 'label' => false]) ?>
 						</div>
 					</div>
 
-					<div style="margin-top:1rem">
+					<div class="sd-add-mt-1">
 						<label class="sd-add-label-block" for="solicitacao">Descrição do problema / solicitação</label>
 						<?= $this->Form->textarea('solicitacao', [
 							'id' => 'solicitacao',
@@ -577,7 +618,7 @@
 						]) ?>
 					</div>
 
-					<div style="margin-top:1rem">
+					<div class="sd-add-mt-1">
 						<label class="sd-add-label-block">Anexos</label>
 						<p class="ticket-add-hint">
 							Vários arquivos: <strong>Ctrl+clique</strong> (Windows) ou <strong>Cmd+clique</strong> (Mac). Também pode arrastar e soltar.
@@ -596,7 +637,7 @@
 			<div class="sd-add-stack">
 				<section class="sd-add-card">
 					<h2 class="sd-add-card-title">Resumo do chamado</h2>
-					<p class="sd-add-card-desc" style="margin-top:0.25rem">Altere assunto, urgência ou fila aqui ou na etapa 2 — os campos ficam sincronizados.</p>
+					<p class="sd-add-card-desc sd-add-card-desc--tight">Altere assunto, urgência ou fila aqui ou na etapa 2 — os campos ficam sincronizados.</p>
 					<div class="sd-sum-stack">
 						<?php
 							$__assuntoCur = ($ticket->assunto !== null && $ticket->assunto !== '') ? $ticket->assunto : $assunto;
@@ -639,7 +680,7 @@
 						<?php else : ?>
 						<div class="sd-sum-field">
 							<span class="sd-sum-field-label">Destino</span>
-							<div class="sd-sum-select" style="display:flex;align-items:center;color:#475569;font-weight:500">
+							<div class="sd-sum-select sd-sum-select--static">
 								Triagem — equipe de suporte
 							</div>
 						</div>
@@ -649,7 +690,7 @@
 
 				<section class="sd-rules-card">
 					<h2 class="sd-add-card-title">Regras de priorização</h2>
-					<div style="margin-top:0.75rem">
+					<div class="sd-add-mt-075">
 						<div class="sd-rule">
 							<span class="sd-rule-pill sd-rule-pill--u">Urgente</span>
 							<p>Empresa parada ou serviço essencial indisponível.</p>
@@ -705,23 +746,13 @@
 		var v = $('#sd-sum-assunto-select').val();
 		var $a = $('#assunto');
 		if ($a.length) {
-			if (typeof $a.selectpicker === 'function') {
-				$a.selectpicker('val', v);
-				$a.selectpicker('refresh');
-			} else {
-				$a.val(v);
-			}
+			$a.val(v != null ? v : '');
 		}
 		var $s = $('#severidade');
 		var $ss = $('#sd-sum-severidade-select');
 		if ($s.length && $ss.length) {
 			var sv = $ss.val();
-			if (typeof $s.selectpicker === 'function') {
-				$s.selectpicker('val', sv);
-				$s.selectpicker('refresh');
-			} else {
-				$s.val(sv);
-			}
+			$s.val(sv != null ? sv : '');
 		}
 	}
 
@@ -774,7 +805,7 @@
 			sdTicketAddRefreshAtendimentoStatus();
 		});
 
-		$('#assunto, #severidade').on('changed.bs.select change', function () {
+		$('#assunto, #severidade').on('change', function () {
 			sdTicketAddMirrorFromMain();
 			sdTicketAddRefreshAtendimentoStatus();
 		});
@@ -835,7 +866,7 @@
 					(function (idx) {
 						var name = fileStore[idx].name;
 						var $li = $('<li/>');
-						$li.append($('<span/>').text(name).css({overflow: 'hidden', 'text-overflow': 'ellipsis', 'white-space': 'nowrap'}));
+						$li.append($('<span/>').addClass('ticket-file-name').text(name));
 						var $rm = $('<button type="button" class="ticket-file-remove"/>').text('Remover');
 						$rm.on('click', function () {
 							fileStore.splice(idx, 1);
@@ -894,7 +925,9 @@
 							text: array
 						}));
 					})
-					$('#idsolicitante').selectpicker("refresh");
+					if ($.fn.selectpicker && $('#idsolicitante').hasClass('selectpicker')) {
+						$('#idsolicitante').selectpicker('refresh');
+					}
 				},
 				error: function (tab) { $('#idsolicitante').append("<option value='' selected>Indefinido</option>"); }
 			});

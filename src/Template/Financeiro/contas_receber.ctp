@@ -41,11 +41,21 @@ body.pgm-theme-light .cr-table td { color:#374151; border-color:#f3f4f6; }
 body.pgm-theme-light .cr-table tr:hover td { background:rgba(0,168,118,.04); }
 body.pgm-theme-light .cr-total-row { background:rgba(0,168,118,.06) !important; }
 body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
+.cr-h1-ico { color:#5cdbc0; margin-right:8px; }
+.cr-form-filters { display:contents; }
+.cr-zero { text-align:center; padding:48px; color:#484f58; }
+.cr-zero-ico { font-size:32px; display:block; margin-bottom:10px; opacity:.3; }
+.cr-id-muted { color:#7d8590; }
+.cr-td-ellipsis { max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cr-td-vencido { color:#f85149; font-weight:600; }
+.cr-total-label { text-align:right; padding-right:12px; }
+body.pgm-theme-light .cr-zero { color:#6b7280; }
+body.pgm-theme-light .cr-id-muted { color:#6b7280; }
 </style>
 
 <div class="cr-root">
     <div class="cr-topbar">
-        <div class="cr-h1"><i class="fas fa-hand-holding-usd" style="color:#5cdbc0;margin-right:8px"></i>Contas a Receber</div>
+        <div class="cr-h1"><i class="fas fa-hand-holding-usd cr-h1-ico"></i>Contas a Receber</div>
         <div>
             <?= $this->Html->link('<i class="fas fa-arrow-left"></i> Dashboard', ['action' => 'index'], ['class' => 'btn btn-default btn-sm', 'escape' => false]) ?>
         </div>
@@ -53,7 +63,7 @@ body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
 
     <!-- Filtros -->
     <div class="cr-filters">
-        <?= $this->Form->create(null, ['type' => 'get', 'style' => 'display:contents']) ?>
+        <?= $this->Form->create(null, ['type' => 'get', 'class' => 'cr-form-filters']) ?>
         <select name="status" onchange="this.form.submit()">
             <option value="">Todos os status</option>
             <?php foreach (['aberto','recebido','vencido','cancelado'] as $s): ?>
@@ -72,8 +82,8 @@ body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
     <!-- Tabela -->
     <div class="cr-table-wrap">
         <?php if (empty($lancamentos)): ?>
-            <div style="text-align:center;padding:48px;color:#484f58">
-                <i class="fas fa-hand-holding-usd" style="font-size:32px;display:block;margin-bottom:10px;opacity:.3"></i>
+            <div class="cr-zero">
+                <i class="fas fa-hand-holding-usd cr-zero-ico"></i>
                 Nenhum lançamento encontrado.
             </div>
         <?php else: ?>
@@ -106,16 +116,16 @@ body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
                     $vencido = $l->status === 'aberto' && $l->data_vencimento && $l->data_vencimento->format('Y-m-d') < $hoje;
                 ?>
                 <tr>
-                    <td><small style="color:#7d8590">#<?= $l->id ?></small></td>
+                    <td><small class="cr-id-muted">#<?= $l->id ?></small></td>
                     <td><?= h($l->descricao) ?></td>
-                    <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= h($nomeCli) ?></td>
+                    <td class="cr-td-ellipsis"><?= h($nomeCli) ?></td>
                     <td>
                         <?php if (!empty($l->faturamento)): ?>
                         <?= $this->Html->link(h($l->faturamento->numero ?? '#' . $l->faturamento->id), ['controller' => 'Faturamento', 'action' => 'view', $l->faturamento->id]) ?>
                         <?php else: ?>—<?php endif; ?>
                     </td>
                     <td><strong>R$ <?= number_format($l->valor, 2, ',', '.') ?></strong></td>
-                    <td <?= $vencido ? 'style="color:#f85149;font-weight:600"' : '' ?>>
+                    <td<?= $vencido ? ' class="cr-td-vencido"' : '' ?>>
                         <?= $l->data_vencimento ? $l->data_vencimento->format('d/m/Y') : '—' ?>
                     </td>
                     <td><?= $l->data_recebimento ? $l->data_recebimento->format('d/m/Y') : '—' ?></td>
@@ -140,7 +150,7 @@ body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
             </tbody>
             <tfoot>
                 <tr class="cr-total-row">
-                    <td colspan="4" style="text-align:right;padding-right:12px">TOTAL</td>
+                    <td colspan="4" class="cr-total-label">TOTAL</td>
                     <td>R$ <?= number_format($total, 2, ',', '.') ?></td>
                     <td colspan="4"></td>
                 </tr>

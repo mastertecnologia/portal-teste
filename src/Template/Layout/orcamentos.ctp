@@ -22,6 +22,7 @@ $pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
 	<?= $this->Html->css("/assets/node_modules/datatables/datatables.min") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php if ($pgmOrcTheme === 'light') : ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>

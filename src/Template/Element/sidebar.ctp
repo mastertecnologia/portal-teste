@@ -70,7 +70,7 @@
 				<path d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21v-5h6v5M8 11h1m-1 4h1m6-4h1m-1 4h1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 			</svg>
 		</div>
-		<div class="hide-menu" style="flex:1;min-width:0;">
+		<div class="hide-menu pgm-sidebar-flex-min">
 			<div class="pgm-ws-label">Empresa</div>
 			<?= $this->Form->control('empresaSidebar', [
 				'id' => 'empresaSidebar',
@@ -87,7 +87,7 @@
 	<div class="pgm-sb-search-block">
 		<div class="pgm-sidebar-functions-search" id="pgm-sidebar-functions-search">
 			<div class="pgm-sb-sbox">
-				<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="color:#555e78;flex-shrink:0">
+				<svg class="pgm-sb-search-svg" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 					<circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
 					<path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 				</svg>
@@ -95,7 +95,7 @@
 			</div>
 			<ul class="pgm-sb-typeahead htmlpesquisa list-unstyled m-0 p-0"></ul>
 		</div>
-		<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host" style="display:none" aria-label="Busca na listagem"></div>
+		<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host pgm-sidebar-dt-host--pending" aria-label="Busca na listagem"></div>
 	</div>
 
 	<!-- ── Navegação ──────────────────────────────────────── -->
@@ -290,8 +290,7 @@
 					) ?>
 				</li>
 
-				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>
-				<li id="mini-logout" style="display:<?= $display ?>;">
+				<li id="mini-logout" class="<?= $sidebar != 'mini-sidebar' ? 'd-none' : '' ?>">
 					<?= $this->Html->link(
 						'<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>',
 						'/users/logout',
@@ -343,7 +342,7 @@
 							<span class="pgm-sf-user-name"><?= h($name) ?></span>
 							<span class="pgm-sf-user-role"><?= !empty($admin) ? 'Administrador' : 'Usuário' ?></span>
 						</div>
-						<span class="caret hide-menu" style="margin-left:auto;"></span>
+						<span class="caret hide-menu pgm-sidebar-caret-push"></span>
 					</a>
 					<div class="dropdown-menu animated flipInY">
 						<?= $this->Html->link('<i class="fas fa-user"></i> Alterar Perfil', ['controller' => 'Users', 'action' => 'change_profile'], ['class' => 'dropdown-item', 'escape' => false]) ?>

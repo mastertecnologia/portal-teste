@@ -49,6 +49,8 @@
 .cli-acessos-table tbody tr{border-bottom:1px solid #21262d;}
 .cli-acessos-table tbody tr:hover{background:#1c2230;}
 .cli-acessos-table td{padding:9px 10px;color:#c9d1d9;vertical-align:middle;}
+.cli-acessos-table th.cli-col-actions{width:10%;}
+.cli-section-title.cli-section-title--mt12{margin-top:12px;}
 .cli-senha-mask{font-family:'DM Mono',monospace;letter-spacing:.1em;cursor:pointer;color:#8b949e;}
 .cli-senha-mask:hover{color:#5cdbc0;}
 /* Token box */
@@ -125,7 +127,7 @@
 				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
 			</div>
 			<?php if ($isEquipe): ?>
-				<div class="d-flex align-items-center flex-wrap" style="gap:8px;">
+				<div class="d-flex align-items-center flex-wrap pgm-gap-8">
 					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente']) ?>
 					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]) ?>
 				</div>
@@ -142,7 +144,7 @@
 						</div>
 						<?= $this->element('Cli/card', ['title' => 'Dados da empresa']) ?>
 						<div class="row">
-							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'selectpicker form-control']]) ?>
+							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
 						</div>
 						<br>
 						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
@@ -204,7 +206,7 @@
 							]) ?>
 						</div>
 						<?php
-						$cliLabelHtmlIe = '<label class="cli-cmp-label d-flex justify-content-between align-items-center flex-wrap" style="gap:6px;"><span>Inscrição Estadual <small class="text-muted">(somente números)</small></span>';
+						$cliLabelHtmlIe = '<label class="cli-cmp-label d-flex justify-content-between align-items-center flex-wrap pgm-gap-6"><span>Inscrição Estadual <small class="text-muted">(somente números)</small></span>';
 						if (!empty($isEquipe)) {
 							$cliLabelHtmlIe .= '<button type="button" class="btn btn-sm btn-outline-info d-none" id="btn-buscar-ie-edit" title="Consultar IE na SEFAZ/SINTEGRA">Buscar IE</button>';
 						}
@@ -319,7 +321,7 @@
 									</div>
 									<?= $this->Form->hidden('idcliente', ['value' => $cliente->id]); ?>
 									<div class="row m-t-10">
-										<div class="col-12 d-flex flex-wrap align-items-center" style="gap:8px;">
+										<div class="col-12 d-flex flex-wrap align-items-center pgm-gap-8">
 											<a role="button" class="btn btn-danger btn-inativoAcessos text-white">Exibir inativos</a>
 											<?= $this->Form->button('Adicionar acesso', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success ml-auto'], $cliente->id) ?>
 										</div>
@@ -328,7 +330,7 @@
 							</div>
 						</div>
 					<?php } ?>
-					<div class="cli-section-title" style="margin-top:12px;">Acessos cadastrados</div>
+					<div class="cli-section-title cli-section-title--mt12">Acessos cadastrados</div>
 					<div class="table-responsive">
 						<table class="cli-acessos-table" id="tableAtivos">
 							<thead>
@@ -342,7 +344,7 @@
 								<th>Protocolo</th>
 								<th>Senha</th>
 								<th>Ativo</th>
-								<?php if ($isEquipe) { ?> <th style="width:10%">Ações</th> <?php } ?>
+								<?php if ($isEquipe) { ?> <th class="cli-col-actions">Ações</th> <?php } ?>
 								</tr>
 							</thead>
 							<tbody>
@@ -379,7 +381,7 @@
 				<?php } if($isEquipe){ ?>
 				<div class="tab-pane" id="usuarios" role="tabpanel" aria-labelledby="cli-tab-usuarios">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-users"></i> Usuários do cliente', 'extraClass' => 'mb-3']) ?>
-					<div class="d-flex flex-wrap align-items-center justify-content-between mb-2" style="gap:8px;">
+					<div class="d-flex flex-wrap align-items-center justify-content-between mb-2 pgm-gap-8">
 						<p class="text-muted small mb-0">Edição abre em nova aba. Novo usuário escolhe o cliente no formulário de cadastro.</p>
 						<?= $this->Html->link('<i class="fas fa-user-plus"></i> Novo usuário', ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 					</div>
@@ -391,7 +393,7 @@
 									<th>E-mail</th>
 									<th>Nome</th>
 									<th>Status</th>
-									<th style="width:10%">Ações</th>
+									<th class="cli-col-actions">Ações</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -584,8 +586,8 @@
 		</div>
 		<div class="cli-ff-actions">
 			<?= $this->element('Cli/button', ['text' => 'Editar cliente', 'iconHtml' => '<i class="fas fa-pen"></i>', 'class' => 'btn-sm btn-outline-primary', 'attrs' => ['id' => 'btn-cli-ficha-edit']]) ?>
-			<?= $this->element('Cli/button', ['text' => 'Cancelar', 'iconHtml' => '<i class="fas fa-undo"></i>', 'class' => 'btn-sm btn-outline-secondary', 'attrs' => ['id' => 'btn-cli-ficha-cancel', 'style' => 'display:none']]) ?>
-			<?= $this->element('Cli/button', ['text' => 'Salvar cliente', 'iconHtml' => '<i class="fas fa-save"></i>', 'class' => 'btn-sm btn-success', 'attrs' => ['id' => 'btn-cli-ficha-save', 'style' => 'display:none']]) ?>
+			<?= $this->element('Cli/button', ['text' => 'Cancelar', 'iconHtml' => '<i class="fas fa-undo"></i>', 'class' => 'btn-sm btn-outline-secondary d-none', 'attrs' => ['id' => 'btn-cli-ficha-cancel']]) ?>
+			<?= $this->element('Cli/button', ['text' => 'Salvar cliente', 'iconHtml' => '<i class="fas fa-save"></i>', 'class' => 'btn-sm btn-success d-none', 'attrs' => ['id' => 'btn-cli-ficha-save']]) ?>
 			<?php if ($isEquipe && empty($cliente->inativo)): ?>
 			<?= $this->element('Cli/button', ['text' => 'Inativar…', 'class' => 'btn-sm btn-outline-danger btn-inativar-cliente', 'attrs' => ['type' => 'button']]) ?>
 			<?php endif; ?>

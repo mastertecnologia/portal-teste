@@ -30,9 +30,9 @@
     <div class="cli-form-topbar">
         <div>
             <div class="cli-eyebrow">Módulo comercial</div>
-            <div style="font-size:11px;color:#8b949e;margin-bottom:3px;">
-                <?= $this->Html->link('Clientes', ['action' => 'index'], ['escape' => false, 'style' => 'color:#9aa7b8;text-decoration:none;']) ?>
-                › <span style="color:#5cdbc0;">Novo cliente</span>
+            <div class="cli-form-crumb">
+                <?= $this->Html->link('Clientes', ['action' => 'index'], ['escape' => false, 'class' => false]) ?>
+                › <span class="cli-form-crumb-current">Novo cliente</span>
             </div>
             <h1 class="cli-h1">Cadastrar cliente</h1>
         </div>
@@ -58,7 +58,7 @@
             </div>
             <div class="cli-section-body">
                 <?= $this->Form->control('tipo', ['id' => 'tipo', 'options' => C_ClientesTipo, 'required' => false, 'label' => false, 'class' => 'form-control']) ?>
-                <div class="cli-tipo-group" style="margin-top:12px;">
+                <div class="cli-tipo-group cli-tipo-group--mt">
                     <button type="button" class="cli-tipo-btn active" id="btn-tipo-pj" onclick="cliSetTipo(2)">
                         <i class="fas fa-building"></i> Pessoa Jurídica
                     </button>
@@ -76,7 +76,7 @@
                 <div class="cli-section-title">Dados da empresa</div>
             </div>
             <div class="cli-section-body">
-                <div class="cli-fg" style="grid-template-columns: 5fr 4fr 3fr; margin-bottom:14px;">
+                <div class="cli-fg cli-fg-5-4-3">
                     <div class="cli-fgroup">
                         <label>Razão Social <span class="req">*</span></label>
                         <?= $this->Form->control('razaosocial', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome empresarial completo']) ?>
@@ -86,7 +86,7 @@
                         <?= $this->Form->control('nomefantasia', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome comercial']) ?>
                     </div>
                     <div class="cli-fgroup">
-                        <label style="display:flex;justify-content:space-between;align-items:center;">
+                        <label class="cli-label-between">
                             <span>CNPJ <span class="req">*</span></span>
                             <button type="button" class="btn-cli-outline" id="btn-buscar-cnpj">
                                 <i class="fas fa-search"></i> Buscar
@@ -120,7 +120,7 @@
                 <div class="cli-section-title">Dados pessoais</div>
             </div>
             <div class="cli-section-body">
-                <div class="cli-fg" style="grid-template-columns: 3fr 1fr;">
+                <div class="cli-fg cli-fg-3-1">
                     <div class="cli-fgroup">
                         <label>Nome completo <span class="req">*</span></label>
                         <?= $this->Form->control('nome', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Nome completo']) ?>
@@ -140,7 +140,7 @@
                 <div class="cli-section-title">Endereço</div>
             </div>
             <div class="cli-section-body">
-                <div class="cli-fg" style="grid-template-columns: 4fr 1fr 2fr 2fr 1.5fr; margin-bottom:14px;">
+                <div class="cli-fg cli-fg-addr">
                     <div class="cli-fgroup">
                         <label>Logradouro <span class="req">*</span></label>
                         <?= $this->Form->control('endereco', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Rua, Av., Trav…', 'required' => true]) ?>
@@ -204,12 +204,12 @@
             <div class="cli-section-body">
                 <div class="cli-fg cli-fg-2">
                     <div class="cli-fgroup">
-                        <label>Inscrição Municipal <small style="text-transform:none;letter-spacing:0;">(somente números)</small></label>
+                        <label>Inscrição Municipal <small class="cli-label-note">(somente números)</small></label>
                         <?= $this->Form->control('inscricaomunicipal', ['onkeypress' => 'return SomenteNumero(event)', 'class' => 'form-control', 'label' => false, 'placeholder' => 'Inscrição municipal']) ?>
                     </div>
                     <div class="cli-fgroup">
-                        <label style="display:flex;justify-content:space-between;align-items:center;">
-                            <span>Inscrição Estadual <small style="text-transform:none;letter-spacing:0;">(somente números)</small></span>
+                        <label class="cli-label-between">
+                            <span>Inscrição Estadual <small class="cli-label-note">(somente números)</small></span>
                             <button type="button" class="btn-cli-outline" id="btn-buscar-ie" title="Consultar IE na SEFAZ/SINTEGRA">
                                 <i class="fas fa-search"></i> Buscar IE
                             </button>
@@ -227,12 +227,12 @@
                 <div class="cli-section-title">Configurações</div>
             </div>
             <div class="cli-section-body">
-                <div class="cli-fg" style="grid-template-columns: 1fr 1fr; align-items:center;">
+                <div class="cli-fg cli-fg-1-1-ac">
                     <div class="cli-fgroup">
                         <label>Empresa dominante</label>
                         <?= $this->Form->control('empresadominante', ['class' => 'form-control', 'label' => false, 'options' => $empresasOptSidebar, 'default' => $defaultEmpresaDominanteId]) ?>
                     </div>
-                    <div style="display:flex;align-items:center;padding-top:22px;">
+                    <div class="cli-fg-config-check">
                         <div class="cli-check-row">
                             <?= $this->Form->checkbox('contrato', ['class' => 'custom-control-input', 'id' => 'contrato']) ?>
                             <label for="contrato">Possui contrato de serviço</label>
@@ -247,7 +247,7 @@
     <!-- ── Footer com botão salvar ───────────────────────── -->
     <div class="cli-form-footer">
         <div class="cli-form-footer-left">
-            <i class="fas fa-shield-alt" style="color:#00c08b;margin-right:5px;"></i>
+            <i class="fas fa-shield-alt cli-form-footer-icon" aria-hidden="true"></i>
             Dados salvos com segurança no ERP
         </div>
         <div class="cli-form-footer-right">

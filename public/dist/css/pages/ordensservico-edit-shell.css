@@ -124,6 +124,32 @@
 	color: var(--os-text2) !important;
 }
 
+/* <select> nativo (sem bootstrap-select) — mesma “caixa” que .dropdown-toggle */
+.os-edit-shell select.form-control.os-edit-native-select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-color: var(--os-bg3) !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	padding-right: 28px;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	box-shadow: none !important;
+	min-height: 34px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	padding-left: 10px;
+	font-size: 12.5px;
+	color: var(--os-text) !important;
+}
+.os-edit-shell select.form-control.os-edit-native-select:focus {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	outline: none !important;
+}
+
 /*
  * bootstrap-select copia "form-control" do <select> para o wrapper .bootstrap-select.
  * Sem isso, .os-edit-shell .form-control desenha uma caixa no wrapper E outra no .dropdown-toggle.
@@ -348,6 +374,7 @@
 }
 
 .os-edit-shell .jsgrid .os-edit-ref-link {
+	cursor: pointer;
 	color: var(--os-accent) !important;
 	text-decoration: none !important;
 }

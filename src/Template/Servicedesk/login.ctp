@@ -19,16 +19,20 @@ $this->append(
 		.sd-login-hint { font-size: 0.8rem; color: #64748b; margin: 0 0 1rem; min-height: 2.5rem; }
 		.sd-login-back { margin-top: 1rem; text-align: center; font-size: 0.8rem; }
 		.sd-login-back a { color: #0f766e; font-weight: 500; }
+		.sd-login-card-narrow { max-width: 440px; }
+		.pgm-auth-theme-bar.sd-auth-theme-bar--tight { margin-top: 0.25rem; }
+		.sd-login-hidden { display: none !important; }
+		.comeceausar, .recuperasenha, .desativarautenticacao { cursor: pointer; }
 	</style>'
 );
 ?>
 <div class="login-erp-wrap">
-	<div class="login-erp-card login-erp" style="max-width: 440px;">
+	<div class="login-erp-card login-erp sd-login-card-narrow">
 		<div class="login-erp-logo">
 			<img src="<?= h($webroot) ?>assets/images/pgm.png" alt="PGM Soluções em TI" class="logo"/>
 		</div>
 		<span class="sd-login-badge">Central de Atendimento</span>
-		<div class="pgm-auth-theme-bar" style="margin-top:0.25rem;">
+		<div class="pgm-auth-theme-bar sd-auth-theme-bar--tight">
 			<button type="button" class="pgm-auth-theme-toggle" id="pgmAuthThemeToggle" aria-label="Alternar tema claro ou escuro">
 				<span class="pgm-auth-tt-ico" aria-hidden="true">☀️</span>
 				<span class="pgm-auth-tt-txt">Claro</span>
@@ -77,14 +81,14 @@ $this->append(
 			<div class="support sd-support-equipe">
 				<a href="#" class="support-btn recuperasenha"><span class="support-icon"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'fill' => 'currentColor', 'width' => '18', 'height' => '18']) ?></span> Recuperar Senha</a>
 			</div>
-			<div class="support sd-support-cliente" style="display:none;">
+			<div class="support sd-support-cliente sd-login-hidden">
 				<a href="#" class="support-btn recuperasenha"><span class="support-icon"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'fill' => 'currentColor', 'width' => '18', 'height' => '18']) ?></span> Recuperar Senha</a>
 				<a href="https://download.anydesk.com/AnyDesk.exe?_ga=2.75375893.662073418.1568052070-1217284854.1568052070" target="_blank" rel="noopener" class="support-btn"><span class="support-icon"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'fill' => 'currentColor', 'width' => '18', 'height' => '18']) ?></span> Suporte Remoto</a>
 			</div>
 			<div class="mfa">
 				Deseja desativar a autenticação de dois fatores? <span class="link-mfa desativarautenticacao">Desativar!</span>
 			</div>
-			<div class="login-erp-cadastro sd-support-cliente" style="display:none;">
+			<div class="login-erp-cadastro sd-support-cliente sd-login-hidden">
 				<a href="#" class="comeceausar">Cadastre-se</a>
 			</div>
 		<?= $this->Form->end() ?>
@@ -165,13 +169,13 @@ function sdSetTab(tab) {
 	if (tab === 'equipe') {
 		$('#sd-login-title').text('Acesso PGM / Master');
 		$('#sd-login-subtitle').text('Equipe e usuários internos — use o mesmo usuário e senha do ERP.').show();
-		$('.sd-support-equipe').show();
-		$('.sd-support-cliente').hide();
+		$('.sd-support-equipe').removeClass('sd-login-hidden');
+		$('.sd-support-cliente').addClass('sd-login-hidden');
 	} else {
 		$('#sd-login-title').text('Acesso cliente');
 		$('#sd-login-subtitle').hide().text('');
-		$('.sd-support-equipe').hide();
-		$('.sd-support-cliente').show();
+		$('.sd-support-equipe').addClass('sd-login-hidden');
+		$('.sd-support-cliente').removeClass('sd-login-hidden');
 	}
 }
 $(document).ready(function(){
@@ -203,9 +207,6 @@ $(document).ready(function(){
 			if (!remember) localStorage.removeItem('portal_remember_username');
 		} catch (e) {}
 	});
-});
-$('.comeceausar, .recuperasenha, .desativarautenticacao').hover(function(){
-	$(this).css('cursor', 'pointer');
 });
 $('.comeceausar').click(function(e){
 	e.preventDefault();

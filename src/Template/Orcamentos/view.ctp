@@ -7,6 +7,7 @@
 ?>
 <style>
 .orc-premium-wrap.orc-premium-view {
+  --orc-teal: var(--pgm-erp-teal, #00c08b);
   --orc-teal-light: #e6faf4;
   --orc-teal-mid: #5cdbc0;
   --orc-border: #e5e4e0;
@@ -20,7 +21,7 @@
 .orc-info-cell:last-child { border-right:none; }
 .orc-info-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6b6a65; font-weight:600; margin-bottom:4px; }
 .orc-info-value { font-size:13px; font-weight:600; color:#1a1a18; }
-.orc-obs-box { background:#f9f9f8; border-radius:8px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; border-left:3px solid #00c08b; }
+.orc-obs-box { background:#f9f9f8; border-radius:8px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; border-left:3px solid var(--orc-teal, #00c08b); }
 .orc-obs-html p { margin: 0 0 0.65em; }
 .orc-obs-html p:last-child { margin-bottom: 0; }
 </style>
@@ -31,13 +32,13 @@
     <div class="orc-page-head">
         <div>
             <div class="orc-eyebrow">Módulo comercial</div>
-            <div style="font-size:11px;color:#6b6a65;margin-bottom:3px;">
-                <?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#00c08b;">Orçamento #<?= $orcamento->id ?></span>
+            <div class="orc-form-crumb">
+                <?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Orçamento #<?= $orcamento->id ?></span>
             </div>
             <h1 class="orc-h1">
-                Orçamento <span style="color:#00c08b;">#<?= $orcamento->id ?></span>
+                Orçamento <span class="orc-id-accent">#<?= $orcamento->id ?></span>
                 <?php if(!empty($orcamento->versao)): ?>
-                    <span class="badge" style="background:#00c08b;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
+                    <span class="badge orc-ver-pill">v<?= $orcamento->versao ?></span>
                 <?php endif; ?>
                 <span><?= orcamentoStatus($orcamento->status) ?></span>
             </h1>
@@ -57,7 +58,7 @@
     <?= $this->element('orcamentos_stepper') ?>
 
     <!-- Card: Dados da proposta -->
-    <div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+    <div class="card orc-premium-card-inner orc-card-mb-14">
         <div class="card-body">
             <div class="orc-sec-title">Dados da proposta</div>
             <div class="orc-info-row">
@@ -75,11 +76,11 @@
                 </div>
                 <div class="orc-info-cell">
                     <div class="orc-info-label">Válido até</div>
-                    <div class="orc-info-value" style="color:#FFC107;"><?= $orcamento->validoate ?></div>
+                    <div class="orc-info-value orc-info-value--amber"><?= $orcamento->validoate ?></div>
                 </div>
                 <div class="orc-info-cell">
                     <div class="orc-info-label">Status</div>
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <div class="orc-flex-gap-8">
                         <?= orcamentoStatus($orcamento->status) ?>
                         <?php if(isset($temordem) && $temordem != 'nao'): ?>
                             <?= $this->Html->link('<i class="fa fa-list-alt"></i> OS Nº ' . $temordem, ['controller' => 'Ordensservico', 'action' => 'view', $temordem], ['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]) ?>
@@ -88,14 +89,14 @@
                 </div>
             </div>
             <?php if(!empty($orcamento->solicitacao)): ?>
-                <div class="orc-sec-title" style="margin-top:10px;">Observações / condições</div>
+                <div class="orc-sec-title orc-sec-title--mt10">Observações / condições</div>
                 <div class="orc-obs-box orc-obs-html"><?= $orcamento->solicitacao ?></div>
             <?php endif; ?>
         </div>
     </div>
 
     <!-- Card: Itens -->
-    <div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+    <div class="card orc-premium-card-inner orc-card-mb-14">
         <div class="card-body">
             <div class="orc-sec-title">Itens do orçamento</div>
             <div id="carrinho" class="m-t-10"></div>
@@ -104,7 +105,7 @@
 
     <!-- Card: Fluxo de aprovação (admin) -->
     <?php if(isset($role) && $role == 0): ?>
-    <div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+    <div class="card orc-premium-card-inner orc-card-mb-14">
         <div class="card-body">
             <div class="orc-sec-title">Fluxo de aprovação</div>
             <div class="orc-wf-list">
@@ -120,7 +121,7 @@
                         <i class="fa fa-<?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'check' : 'clock-o' ?>"></i>
                     </div>
                     <div class="orc-wf-body">
-                        <div class="orc-wf-title" <?= $orcamento->status < C_OrcamentoStatusEnviado ? 'style="color:#9a9890;"' : '' ?>>Enviado ao cliente</div>
+                        <div class="orc-wf-title<?= $orcamento->status < C_OrcamentoStatusEnviado ? ' orc-wf-title--muted' : '' ?>">Enviado ao cliente</div>
                         <div class="orc-wf-sub"><?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'Proposta enviada por e-mail' : 'Aguardando envio' ?></div>
                     </div>
                 </div>
@@ -128,10 +129,10 @@
                     <div class="orc-wf-dot <?= $orcamento->status == C_OrcamentoStatusAprovado ? 'orc-wf-ok' : ($orcamento->status == C_OrcamentoStatusRecusado ? 'orc-wf-pend' : '') ?>">
                         <?php if($orcamento->status == C_OrcamentoStatusAprovado): ?><i class="fa fa-check"></i>
                         <?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?><i class="fa fa-times"></i>
-                        <?php else: ?><div style="width:7px;height:7px;border-radius:50%;background:#e5e4e0;"></div><?php endif; ?>
+                        <?php else: ?><div class="orc-wf-dot-inner" role="presentation"></div><?php endif; ?>
                     </div>
                     <div class="orc-wf-body">
-                        <div class="orc-wf-title" <?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? 'style="color:#9a9890;"' : '' ?>>Decisão do cliente</div>
+                        <div class="orc-wf-title<?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? ' orc-wf-title--muted' : '' ?>">Decisão do cliente</div>
                         <div class="orc-wf-sub">
                             <?php
                             if($orcamento->status == C_OrcamentoStatusAprovado) echo 'Aprovado' . (!empty($orcamento->ipaprovacao) ? ' · IP: ' . $orcamento->ipaprovacao : '');
@@ -148,7 +149,7 @@
 
     <!-- Footer -->
     <div class="orc-footer-bar">
-        <span style="font-size:11px;color:#6b6a65;">Orçamento #<?= $orcamento->id ?></span>
+        <span class="orc-footer-meta">Orçamento #<?= $orcamento->id ?></span>
         <div class="orc-footer-bar-actions">
             <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
                 <?= $this->Html->Link('<i class="fa fa-check"></i> Aprovar', ['action' => 'aprovar', $orcamento->id], ['class' => 'btn btn-orc-premium-primary btn-orc-compact', 'escape' => false]) ?>

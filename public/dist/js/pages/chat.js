@@ -8,7 +8,10 @@ $(function() {
         var topOffset = 450;
         var height = ((window.innerHeight > 0) ? window.innerHeight : this.screen.height) - 1;
         height = height - topOffset;
-        $(".chat-list").css("height", (height) + "px");
+        var hPx = height + "px";
+        $(".chat-list").each(function () {
+            this.style.height = hPx;
+        });
     };
     $(window).ready(cht);
     $(window).on("resize", cht);
@@ -18,7 +21,10 @@ $(function() {
         var topOffset = 270;
         var height = ((window.innerHeight > 0) ? window.innerHeight : this.screen.height) - 1;
         height = height - topOffset;
-        $(".chat-left-inner").css("height", (height) + "px");
+        var hInnerPx = height + "px";
+        $(".chat-left-inner").each(function () {
+            this.style.height = hInnerPx;
+        });
     };
     $(window).ready(chtin);
     $(window).on("resize", chtin);

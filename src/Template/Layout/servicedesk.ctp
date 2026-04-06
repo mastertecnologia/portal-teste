@@ -14,6 +14,7 @@ $isLightSd = ($pgmSdTheme === 'light');
 	<?= $this->Html->meta('icon') ?>
 	<?= $this->Html->css('/dist/css/style.min') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-advanced-module') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-servicedesk-theme') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-light') ?>

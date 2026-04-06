@@ -398,3 +398,41 @@
   font-weight: 600;
 }
 
+/* Relatórios / histórico tickets — sem style= nas views */
+.dash-erp-scroll--h260{
+  max-height:260px;
+}
+.dash-erp-scroll--vh70{
+  max-height:70dvh;
+}
+.dash-erp-card-title--tab{
+  font-size:14px;
+  margin:0 0 12px;
+}
+.dash-erp-filter-actions{
+  padding-top:22px;
+}
+.dash-erp-meta-align{
+  padding-top:8px;
+}
+.dash-erp-empty-cell{
+  padding:20px;
+}
+.dash-erp-empty-cell--lg{
+  padding:28px 12px;
+}
+.dash-erp-th-actions{
+  width:110px;
+}
+.dash-erp-th-w140{
+  width:140px;
+}
+.dash-erp-modal-body-preview{
+  height:72vh;
+}
+.dash-erp-preview-iframe{
+  width:100%;
+  height:100%;
+  border:0;
+}
+

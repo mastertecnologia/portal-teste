@@ -6,6 +6,32 @@
   }
   $autorNome = $ticket->user->name ?? $ticket->user->username ?? '';
 ?>
+<style>
+  .ticket-email-sug-panel {
+    display: none;
+    position: relative;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    margin-top: 10px;
+    padding: 12px;
+  }
+  .ticket-email-sug-panel.is-open {
+    display: block;
+  }
+  .ticket-email-sug-list {
+    max-height: 240px;
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .ticket-email-preva-alert {
+    border: 1px solid #e5e7eb;
+  }
+  .ticket-email-preva-hint {
+    font-size: 12px;
+  }
+</style>
 
 <div class="col-md-12">
   <div class="card">
@@ -65,9 +91,9 @@
 
                 <div
                   id="email-sugestoes-panel"
-                  style="display:none; position: relative; background: #fff; border: 1px solid rgba(15,23,42,.10); border-radius: 12px; box-shadow: 0 10px 24px rgba(15,23,42,.08); margin-top: 10px; padding: 12px;"
+                  class="ticket-email-sug-panel"
                 >
-                  <div class="d-flex" style="gap:10px; align-items:center; margin-bottom: 10px;">
+                  <div class="d-flex pgm-gap-10 align-items-center m-b-10">
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="email-sugestoes-select-all">
                       Selecionar tudo
                     </button>
@@ -78,7 +104,7 @@
 
                   <div
                     id="email-sugestoes-list"
-                    style="max-height: 240px; overflow:auto; padding-right: 4px;"
+                    class="ticket-email-sug-list"
                   >
                     <?php foreach (($sugestoes ?? []) as $i => $e): ?>
                       <div
@@ -111,14 +137,14 @@
           <div class="col-12">
             <div class="form-group">
               <label class="font-weight-bold">Prévia</label>
-              <div class="alert alert-light" style="border:1px solid #e5e7eb;">
-                <div class="text-muted" style="font-size:12px;">O conteúdo será o mesmo padrão do sistema (ticket resolvido/cancelado/andamento).</div>
+              <div class="alert alert-light ticket-email-preva-alert">
+                <div class="text-muted ticket-email-preva-hint">O conteúdo será o mesmo padrão do sistema (ticket resolvido/cancelado/andamento).</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="d-flex" style="gap:10px;">
+        <div class="d-flex pgm-gap-10">
           <?= $this->Form->button('Enviar e-mail', ['class' => 'btn btn-pgm btn-pgm-email btn-success']) ?>
           <?= $this->Html->link('Cancelar', ['action' => !empty($redirectAfter) ? 'edit' : 'finalizados', $ticketId], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
@@ -144,11 +170,11 @@
     }
 
     function openPanel(){
-      if (panelEl) panelEl.style.display = 'block';
+      if (panelEl) panelEl.classList.add('is-open');
     }
 
     function closePanel(){
-      if (panelEl) panelEl.style.display = 'none';
+      if (panelEl) panelEl.classList.remove('is-open');
     }
 
     if (searchEl && panelEl) {

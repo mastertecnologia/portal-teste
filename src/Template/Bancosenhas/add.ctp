@@ -8,7 +8,7 @@ echo $this->Html->css('/css/vault-cofre.css');
 $this->end();
 ?>
 <div class="col-12 p-0 vault-form-page">
-	<div class="vault-cofre" style="min-height: auto;">
+	<div class="vault-cofre vault-cofre--compact">
 		<header class="vault-cofre-header">
 			<h1>
 				<i class="fa fa-plus-circle" aria-hidden="true"></i>
@@ -26,11 +26,11 @@ $this->end();
 		<div class="vault-form-body">
 			<div class="vault-form-card">
 				<?php if (!empty($vaultDedicatedKey)): ?>
-					<p class="vault-form-note" style="margin-top:0;">
+					<p class="vault-form-note vault-form-note--flush">
 						<strong>AES-256-CBC ativo:</strong> esta credencial será gravada com o formato <code>v2:</code> (chave <code>VAULT_ENCRYPTION_KEY</code> no servidor).
 					</p>
 				<?php else: ?>
-					<p class="vault-form-note" style="margin-top:0;">
+					<p class="vault-form-note vault-form-note--flush">
 						<strong>Modo legado:</strong> criptografia PGM padrão. Para AES-256-CBC dedicado, defina <code>VAULT_ENCRYPTION_KEY</code> no <code>.env</code> (mín. 16 caracteres).
 					</p>
 				<?php endif; ?>
@@ -102,7 +102,7 @@ $this->end();
 					</div>
 				</div>
 				<div class="vault-form-actions">
-					<?= $this->Form->button('Salvar no cofre', ['class' => 'btn btn-success vault-btn-copy', 'style' => 'color:#fff !important;']) ?>
+					<?= $this->Form->button('Salvar no cofre', ['class' => 'btn btn-success vault-btn-copy']) ?>
 				</div>
 				<?= $this->Form->end(); ?>
 			</div>

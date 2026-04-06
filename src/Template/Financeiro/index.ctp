@@ -55,13 +55,16 @@ body.pgm-theme-light .fin-tbl th { color:#6b7280; border-color:#e5e7eb; }
 body.pgm-theme-light .fin-tbl td { color:#374151; border-color:#f3f4f6; }
 body.pgm-theme-light .fin-empty { color:#9ca3af; }
 @media(max-width:768px){ .fin-body { grid-template-columns:1fr; } }
+.fin-h1-ico { color:#5cdbc0; margin-right:8px; }
+.fin-topbar-actions { display:flex; gap:8px; }
+.fin-td-ellipsis { max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 </style>
 
 <div class="fin-root">
     <!-- Topbar -->
     <div class="fin-topbar">
-        <div class="fin-h1"><i class="fas fa-chart-line" style="color:#5cdbc0;margin-right:8px"></i>Financeiro</div>
-        <div style="display:flex;gap:8px">
+        <div class="fin-h1"><i class="fas fa-chart-line fin-h1-ico"></i>Financeiro</div>
+        <div class="fin-topbar-actions">
             <?= $this->Html->link('<i class="fas fa-list"></i> Contas a Receber', ['action' => 'contasReceber'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-sm', 'escape' => false]) ?>
             <?= $this->Html->link('<i class="fas fa-plus"></i> Novo Lançamento', ['controller' => 'Faturamento', 'action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-sm', 'escape' => false]) ?>
         </div>
@@ -112,7 +115,7 @@ body.pgm-theme-light .fin-empty { color:#9ca3af; }
                 <tbody>
                     <?php foreach (array_slice($vencimentos, 0, 10) as $v): ?>
                     <tr>
-                        <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                        <td class="fin-td-ellipsis">
                             <?php
                                 $nomeCli = '—';
                                 if (!empty($v->cliente)) {

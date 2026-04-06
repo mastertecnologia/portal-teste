@@ -51,9 +51,9 @@
 		window.cliFichaEditing = false;
 		$('#form-edit-cliente').addClass('cli-ficha--readonly');
 		$('#cli-ficha-mode-label').text('Modo leitura');
-		$('#btn-cli-ficha-edit').show();
-		$('#btn-cli-ficha-cancel').hide();
-		$('#btn-cli-ficha-save').hide();
+		$('#btn-cli-ficha-edit').removeClass('d-none');
+		$('#btn-cli-ficha-cancel').addClass('d-none');
+		$('#btn-cli-ficha-save').addClass('d-none');
 		$('#form-edit-cliente select').prop('disabled', true);
 		try {
 			$('.selectpicker').selectpicker('refresh');
@@ -81,9 +81,9 @@
 		window.cliFichaEditing = true;
 		$('#form-edit-cliente').removeClass('cli-ficha--readonly');
 		$('#cli-ficha-mode-label').text('Modo edição');
-		$('#btn-cli-ficha-edit').hide();
-		$('#btn-cli-ficha-cancel').show();
-		$('#btn-cli-ficha-save').show();
+		$('#btn-cli-ficha-edit').addClass('d-none');
+		$('#btn-cli-ficha-cancel').removeClass('d-none');
+		$('#btn-cli-ficha-save').removeClass('d-none');
 		$('#form-edit-cliente select').prop('disabled', false);
 		try {
 			$('.selectpicker').selectpicker('refresh');

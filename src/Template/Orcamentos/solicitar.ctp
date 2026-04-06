@@ -138,6 +138,8 @@ $tipoLabel = static function ($t) {
 .pgm-sol-note{
 	font-size:.78rem;color:var(--sol-muted);padding:14px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;line-height:1.5;
 }
+.pgm-sol-field--mt16{margin-top:16px;}
+.pgm-sol-item-row input[type="number"].pgm-sol-input{text-align:center;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,11 +220,11 @@ $tipoLabel = static function ($t) {
 						<input class="pgm-sol-input" id="sol-prazo" name="prazo" type="text" placeholder="<?= h(__('Data ou prazo em dias')) ?>">
 					</div>
 				</div>
-				<div class="pgm-sol-field" style="margin-top:16px;">
+				<div class="pgm-sol-field pgm-sol-field--mt16">
 					<label for="sol-descricao"><?= __('Descrição / contexto') ?> <span class="req">*</span></label>
 					<textarea class="pgm-sol-textarea" id="sol-descricao" name="descricao" required placeholder="<?= h(__('Objetivo, escopo, volume, restrições…')) ?>"></textarea>
 				</div>
-				<div class="pgm-sol-field" style="margin-top:16px;">
+				<div class="pgm-sol-field pgm-sol-field--mt16">
 					<label><?= __('Urgência') ?></label>
 					<div class="pgm-sol-urg" id="urgencyRow">
 						<button type="button" class="active-n" data-sev="n" data-value="<?= h(__('Normal')) ?>"><?= __('Normal') ?></button>
@@ -241,7 +243,7 @@ $tipoLabel = static function ($t) {
 					<div class="pgm-sol-item-row" id="item-0" data-sol-focus="1">
 						<div>
 							<div class="lbl"><?= __('Código') ?></div>
-							<input class="pgm-sol-input sol-inp-cod" name="itens[0][codigo]" type="text" placeholder="—" style="background:#f8fafc;">
+							<input class="pgm-sol-input sol-inp-cod" name="itens[0][codigo]" type="text" placeholder="—">
 						</div>
 						<div>
 							<div class="lbl"><?= __('Descrição') ?></div>
@@ -249,7 +251,7 @@ $tipoLabel = static function ($t) {
 						</div>
 						<div>
 							<div class="lbl"><?= __('Qtd') ?></div>
-							<input class="pgm-sol-input" name="itens[0][quantidade]" type="number" min="1" value="1" style="text-align:center;">
+							<input class="pgm-sol-input" name="itens[0][quantidade]" type="number" min="1" value="1">
 						</div>
 						<div>
 							<div class="lbl"><?= __('Obs.') ?></div>
@@ -364,9 +366,9 @@ $tipoLabel = static function ($t) {
 		row.className = 'pgm-sol-item-row';
 		row.id = 'item-' + idx;
 		row.innerHTML =
-			'<div><div class="lbl"><?= h(__('Código')) ?></div><input class="pgm-sol-input sol-inp-cod" name="itens[' + idx + '][codigo]" type="text" placeholder="—" style="background:#f8fafc;"></div>' +
+			'<div><div class="lbl"><?= h(__('Código')) ?></div><input class="pgm-sol-input sol-inp-cod" name="itens[' + idx + '][codigo]" type="text" placeholder="—"></div>' +
 			'<div><div class="lbl"><?= h(__('Descrição')) ?></div><input class="pgm-sol-input sol-inp-desc" name="itens[' + idx + '][descricao]" type="text" placeholder="<?= h(__('Descrição do item')) ?>"></div>' +
-			'<div><div class="lbl"><?= h(__('Qtd')) ?></div><input class="pgm-sol-input" name="itens[' + idx + '][quantidade]" type="number" min="1" value="1" style="text-align:center;"></div>' +
+			'<div><div class="lbl"><?= h(__('Qtd')) ?></div><input class="pgm-sol-input" name="itens[' + idx + '][quantidade]" type="number" min="1" value="1"></div>' +
 			'<div><div class="lbl"><?= h(__('Obs.')) ?></div><input class="pgm-sol-input" name="itens[' + idx + '][obs]" type="text" placeholder="<?= h(__('Opcional')) ?>"></div>' +
 			'<button type="button" class="pgm-sol-btn-rm" onclick="rmItem(\'item-' + idx + '\')" title="<?= h(__('Remover')) ?>"><i class="fas fa-times"></i></button>';
 		document.getElementById('itensList').appendChild(row);

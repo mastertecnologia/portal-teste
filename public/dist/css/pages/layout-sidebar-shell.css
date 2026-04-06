@@ -63,6 +63,11 @@ html body.layout-no-topbar .page-wrapper {
 	box-shadow: none !important;
 }
 
+/* Legado: sem .pgm-shell-main — altura mínima só via token (default.ctp pgmLayoutNoTopbarMinHeight) */
+body.layout-no-topbar.pgm-layout-min-h-legacy-wrapper .page-wrapper {
+	min-height: var(--pgm-layout-min-h, 100vh);
+}
+
 /* ── Sidebar shell ──────────────────────────────────────────────────────────── */
 body.layout-no-topbar .left-sidebar {
 	top: 0 !important;
@@ -306,6 +311,24 @@ body.layout-no-topbar .pgm-sb-sbox input {
 	width: 100%;
 }
 body.layout-no-topbar .pgm-sb-sbox input::placeholder { color: #555e78; }
+
+.pgm-sidebar-shell .pgm-sidebar-flex-min {
+	flex: 1;
+	min-width: 0;
+}
+body.layout-no-topbar .pgm-sb-sbox svg.pgm-sb-search-svg {
+	color: #555e78;
+	flex-shrink: 0;
+}
+body.layout-no-topbar #pgm-sidebar-dt-host.pgm-sidebar-dt-host--pending {
+	display: none;
+}
+body.layout-no-topbar .pgm-sidebar-caret-push {
+	margin-left: auto;
+}
+.pgm-sidebar-shell .pgm-cli-name-truncate {
+	max-width: 140px;
+}
 
 body.layout-no-topbar .pgm-sb-typeahead {
 	max-height: 200px;
@@ -674,7 +697,7 @@ body.layout-no-topbar .page-wrapper > .container-fluid { padding-top: 16px; }
 body.layout-no-topbar .pgm-shell-main {
 	display: flex;
 	flex-direction: column;
-	min-height: 100vh;
+	min-height: var(--pgm-layout-min-h, 100vh);
 	min-width: 0;
 	flex: 1 1 auto;
 	background: var(--pgm-sb-bg) !important;
@@ -710,6 +733,10 @@ body.layout-no-topbar .page-titles .breadcrumb-item a { color: rgba(255,255,255,
 body.layout-no-topbar .page-titles .breadcrumb-item.active { color: var(--pgm-teal-light) !important; }
 body.layout-no-topbar .page-titles .breadcrumb-item + .breadcrumb-item::before { color: rgba(255,255,255,0.30) !important; }
 body.layout-no-topbar .page-titles .text-themecolor { color: var(--pgm-teal-light) !important; }
+
+body.layout-no-topbar .page-titles.pgm-page-titles--pb-tight {
+	padding-bottom: 8px !important;
+}
 
 @media (max-width: 767px) {
 	body.layout-no-topbar .page-titles { margin-left: -15px !important; margin-right: -15px !important; }

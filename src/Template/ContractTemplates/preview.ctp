@@ -30,7 +30,7 @@ $vaJson = json_encode(is_array($va) ? $va : [], JSON_PRETTY_PRINT | JSON_UNESCAP
 		<div class="card-body">
 			<h5 class="card-title"><?= __('Conteúdo HTML') ?></h5>
 			<p class="text-muted small"><?= __('Pré-visualização interna (equipe). HTML gravado no modelo.') ?></p>
-			<div class="pgm-template-preview well well-sm" style="max-height:480px;overflow:auto;background:#fff;">
+			<div class="pgm-template-preview well well-sm pgm-template-preview-scroll">
 				<?= $template->conteudo_html ?>
 			</div>
 		</div>
@@ -38,13 +38,13 @@ $vaJson = json_encode(is_array($va) ? $va : [], JSON_PRETTY_PRINT | JSON_UNESCAP
 	<div class="pgm-adv-panel card mb-3">
 		<div class="card-body">
 			<h5 class="card-title"><?= __('Variáveis (JSON)') ?></h5>
-			<pre class="small mb-0" style="max-height:200px;overflow:auto;"><?= h($vaJson) ?></pre>
+			<pre class="small mb-0 pgm-template-json-pre"><?= h($vaJson) ?></pre>
 		</div>
 	</div>
 	<div class="pgm-adv-panel card mb-3">
 		<div class="card-body">
 			<h5 class="card-title"><?= __('Cláusulas padrão (JSON)') ?></h5>
-			<pre class="small mb-0" style="max-height:200px;overflow:auto;"><?= h($clJson) ?></pre>
+			<pre class="small mb-0 pgm-template-json-pre"><?= h($clJson) ?></pre>
 		</div>
 	</div>
 </div>

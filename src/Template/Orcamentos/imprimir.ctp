@@ -161,13 +161,13 @@ $totGeral = $totUnico + $totMensal;
 						Nº <?= h((string)$orcamento->id) ?> <?= $versaoLbl ?> · <?= h($emissao) ?>
 					</div>
 					<div class="orc-paper-badges">
-						<div class="orc-paper-badge" style="color:#00c08b;">
-							<span class="dot" style="background:#00c08b;"></span>
+						<div class="orc-paper-badge orc-paper-badge--teal">
+							<span class="dot"></span>
 							<?= h($statusPaper) ?>
 						</div>
 						<?php if ($validadeFmt !== '') : ?>
-							<div class="orc-paper-badge" style="color:#ffc107;">
-								<span class="dot" style="background:#ffc107;"></span>
+							<div class="orc-paper-badge orc-paper-badge--amber">
+								<span class="dot"></span>
 								Válido até <?= h($validadeFmt) ?>
 							</div>
 						<?php endif; ?>
@@ -201,7 +201,7 @@ $totGeral = $totUnico + $totMensal;
 					</div>
 					<div>
 						<div class="orc-paper-lbl">Validade</div>
-						<div class="orc-paper-val" style="color:#ffc107;"><?= h($validadeFmt ?: '—') ?></div>
+						<div class="orc-paper-val orc-paper-val--amber"><?= h($validadeFmt ?: '—') ?></div>
 					</div>
 				</div>
 			</div>
@@ -209,12 +209,12 @@ $totGeral = $totUnico + $totMensal;
 			<table class="orc-ptbl" id="tableCarrinho">
 				<thead>
 					<tr>
-						<th style="width:60px;">Código</th>
+						<th class="orc-ptbl-w60">Código</th>
 						<th>Produto / Serviço</th>
-						<th style="width:56px;">Tipo</th>
-						<th class="r" style="width:38px;">Qtd.</th>
-						<th class="r" style="width:80px;">Vl. Unit.</th>
-						<th class="r" style="width:90px;">Vl. Total</th>
+						<th class="orc-ptbl-w56">Tipo</th>
+						<th class="r orc-ptbl-w38">Qtd.</th>
+						<th class="r orc-ptbl-w80">Vl. Unit.</th>
+						<th class="r orc-ptbl-w90">Vl. Total</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -231,7 +231,7 @@ $totGeral = $totUnico + $totMensal;
 							<td><?= h((string)$reg->idproduto) ?></td>
 							<td class="b"><?= h($reg->servico) ?>
 								<?php if (!empty($reg->observacao)) : ?>
-									<div style="font-size:9px;color:#666;font-weight:400;margin-top:2px;"><?= h($reg->observacao) ?></div>
+									<div class="orc-ptbl-item-obs"><?= h($reg->observacao) ?></div>
 								<?php endif; ?>
 							</td>
 							<td><?= h($tipoLbl) ?></td>
@@ -268,21 +268,21 @@ $totGeral = $totUnico + $totMensal;
 
 			<div class="orc-paper-sig">
 				<div class="orc-paper-sig-b">
-					<div style="height:28px;"></div>
+					<div class="orc-paper-sig-spacer" aria-hidden="true"></div>
 					<div class="orc-paper-sig-line"></div>
-					<div style="font-size:11px;font-weight:700;color:#111;"><?= $empNome ?></div>
-					<div style="font-size:9px;color:#999;">Fornecedor<?= ($emp && !empty($emp->cnpj)) ? ' · CNPJ: ' . h($emp->cnpj) : '' ?></div>
+					<div class="orc-paper-sig-name"><?= $empNome ?></div>
+					<div class="orc-paper-sig-role">Fornecedor<?= ($emp && !empty($emp->cnpj)) ? ' · CNPJ: ' . h($emp->cnpj) : '' ?></div>
 				</div>
 				<div class="orc-paper-sig-b">
-					<div style="height:28px;"></div>
+					<div class="orc-paper-sig-spacer" aria-hidden="true"></div>
 					<div class="orc-paper-sig-line"></div>
-					<div style="font-size:11px;font-weight:700;color:#111;">Cliente</div>
-					<div style="font-size:9px;color:#999;">Contratante</div>
+					<div class="orc-paper-sig-name">Cliente</div>
+					<div class="orc-paper-sig-role">Contratante</div>
 				</div>
 			</div>
 
 			<div class="orc-paper-foot">
-				<span style="color:#00c08b;font-weight:600;"><?= $empNome ?></span>
+				<span class="orc-paper-foot-em"><?= $empNome ?></span>
 				<?php if ($emp && !empty($emp->site)) : ?>
 					· <?= h($emp->site) ?>
 				<?php endif; ?>

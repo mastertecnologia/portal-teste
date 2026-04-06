@@ -22,7 +22,7 @@ $iconShield = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill=
 	<div class="admin-panel-wrap">
 		<header class="admin-panel-hero">
 			<h1>Painel administrativo</h1>
-			<p>Hub central do PGM/Master: separação entre <strong style="color:#f0f2f8;">operação interna (empresas &amp; equipe)</strong> e <strong style="color:#f0f2f8;">portal de clientes</strong>, além de parâmetros de sistema, OS e suporte.</p>
+			<p>Hub central do PGM/Master: separação entre <strong class="admin-text-bright">operação interna (empresas &amp; equipe)</strong> e <strong class="admin-text-bright">portal de clientes</strong>, além de parâmetros de sistema, OS e suporte.</p>
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('<i class="fa fa-users"></i> Usuários da equipe', ['controller' => 'Users', 'action' => 'index'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
 				<?= $this->Html->link('<i class="fa fa-building"></i> Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'admin-panel-btn admin-panel-btn--accent', 'escape' => false]) ?>
@@ -85,7 +85,7 @@ $iconShield = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill=
 					<p class="admin-section-card-value">RBAC + ABAC</p>
 					<p class="admin-section-card-meta">Catálogo de telas/funções, papéis e matriz. Escopos: empresa, cliente, próprio.</p>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminIndex']) ?>" class="admin-section-card-link">Catálogo e matriz</a>
-					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminUsers']) ?>" class="admin-section-card-link" style="margin-top:6px;">Papéis por usuário</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminUsers']) ?>" class="admin-section-card-link admin-section-card-link--stack">Papéis por usuário</a>
 				</div>
 				<div class="admin-section-card">
 					<span class="admin-section-card-label"><?= $iconFolder ?> Login externo</span>

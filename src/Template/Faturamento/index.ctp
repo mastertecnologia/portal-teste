@@ -61,13 +61,18 @@ body.pgm-theme-light .fat-table td { color:#374151; border-color:#f3f4f6; }
 body.pgm-theme-light .fat-table tr:hover td { background:rgba(0,168,118,.04); }
 body.pgm-theme-light .fat-filters select, body.pgm-theme-light .fat-filters input { background:#fff; border-color:#d0d7de; color:#1a1f2e; }
 body.pgm-theme-light .fat-empty { color:#9ca3af; }
+.fat-h1-ico { color:#5cdbc0; margin-right:8px; }
+.fat-empty-ico { font-size:36px; margin-bottom:12px; display:block; opacity:.3; }
+.fat-id-muted { color:#7d8590; }
+.fat-form-filters { display:contents; }
+body.pgm-theme-light .fat-id-muted { color:#6b7280; }
 </style>
 
 <div class="fat-root">
     <!-- Topbar -->
     <div class="fat-topbar">
         <div>
-            <div class="fat-h1"><i class="fas fa-file-alt" style="color:#5cdbc0;margin-right:8px"></i>Faturamento</div>
+            <div class="fat-h1"><i class="fas fa-file-alt fat-h1-ico"></i>Faturamento</div>
         </div>
         <div>
             <?= $this->Html->link(
@@ -104,7 +109,7 @@ body.pgm-theme-light .fat-empty { color:#9ca3af; }
 
     <!-- Filtros -->
     <div class="fat-filters">
-        <?= $this->Form->create(null, ['type' => 'get', 'style' => 'display:contents']) ?>
+        <?= $this->Form->create(null, ['type' => 'get', 'class' => 'fat-form-filters']) ?>
         <select name="status" onchange="this.form.submit()">
             <option value="">Todos os status</option>
             <?php foreach (['rascunho','pendente','enviado','pago','cancelado'] as $s): ?>
@@ -126,7 +131,7 @@ body.pgm-theme-light .fat-empty { color:#9ca3af; }
     <div class="fat-table-wrap">
         <?php if (empty($documentos)): ?>
             <div class="fat-empty">
-                <i class="fas fa-file-alt" style="font-size:36px;margin-bottom:12px;display:block;opacity:.3"></i>
+                <i class="fas fa-file-alt fat-empty-ico"></i>
                 Nenhum documento encontrado.
             </div>
         <?php else: ?>
@@ -147,7 +152,7 @@ body.pgm-theme-light .fat-empty { color:#9ca3af; }
             <tbody>
                 <?php foreach ($documentos as $d): ?>
                 <tr>
-                    <td><small style="color:#7d8590">#<?= $d->id ?></small></td>
+                    <td><small class="fat-id-muted">#<?= $d->id ?></small></td>
                     <td><strong><?= h($d->numero ?? '—') ?></strong></td>
                     <td><?= h(nomeCliente($d)) ?></td>
                     <td><small><?= ucfirst(h($d->tipo)) ?></small></td>

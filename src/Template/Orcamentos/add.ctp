@@ -18,8 +18,8 @@
 	<div class="orc-page-head">
 		<div>
 			<div class="orc-eyebrow">Módulo comercial</div>
-			<div style="font-size:11px;color:var(--orc-text-muted,#6b6a65);margin-bottom:3px;">
-				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#00c08b;">Novo</span>
+			<div class="orc-form-crumb">
+				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Novo</span>
 			</div>
 			<h1 class="orc-h1" id="orc-novo-proposta-title">Proposta de Orçamento</h1>
 		</div>
@@ -35,7 +35,7 @@
 
 	<?= $this->element('orcamentos_stepper') ?>
 
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<div class="orc-sec-title">Dados do cliente</div>
 			<div class="row">
@@ -50,7 +50,7 @@
 							<?= $this->Form->control('formapagamento', [
 								'type' => 'select',
 								'options' => $orcFormaPagamentoOpcoes ?? [],
-								'class' => 'form-control selectpicker',
+								'class' => 'form-control orc-native-select',
 								'label' => false,
 								'id' => 'formapagamento',
 								'empty' => false,
@@ -68,7 +68,7 @@
 			<div class="row m-t-10">
 				<div class="col-md-4 col-sm-12">
 					<label class="control-label" id="orc-cli-doc-lbl">CNPJ / CPF</label>
-					<input type="text" class="form-control" id="orc-cli-doc" readonly style="background:#f2f1ee;color:#6b6a65;" placeholder="Auto-preenchido" />
+					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-doc" readonly placeholder="Auto-preenchido" />
 				</div>
 				<div class="col-md-4 col-sm-12">
 					<label class="control-label">E-mail do cliente</label>
@@ -76,13 +76,13 @@
 				</div>
 				<div class="col-md-4 col-sm-12">
 					<label class="control-label">Contato / responsável</label>
-					<input type="text" class="form-control" id="orc-cli-contato" readonly style="background:#f2f1ee;color:#6b6a65;" placeholder="Auto-preenchido" />
+					<input type="text" class="form-control orc-input-readonly-fill" id="orc-cli-contato" readonly placeholder="Auto-preenchido" />
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<?= $this->element('orcamentos_secao_produtos_form', ['orcModo' => 'add']); ?>
 

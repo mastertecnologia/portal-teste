@@ -90,10 +90,10 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 }
 </style>
 
-<div class="os-index-shell no-print" style="margin:0 0 12px;border-radius:12px;padding:12px 16px;">
-	<div class="os-page-head-actions" style="flex-wrap:wrap;gap:10px;">
-		<button type="button" class="os-btn-ghost" style="border:none;cursor:pointer;font-family:inherit;" onclick="window.print()">Imprimir</button>
-		<?= $this->Html->link('PDF', ['action' => 'relatorioPdf', $modeloRelatorio, '?' => $qRelFiltros], ['class' => 'btn btn-success', 'style' => 'border-radius:8px;padding:6px 14px;font-size:12.5px;']) ?>
+<div class="os-index-shell no-print os-rel-ver-toolbar">
+	<div class="os-page-head-actions os-rel-ver-actions">
+		<button type="button" class="os-btn-ghost os-btn-print-plain" onclick="window.print()">Imprimir</button>
+		<?= $this->Html->link('PDF', ['action' => 'relatorioPdf', $modeloRelatorio, '?' => $qRelFiltros], ['class' => 'btn btn-success os-rel-pdf-link']) ?>
 		<?= $this->Html->link(
 			'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Relatórios</span>',
 			['action' => 'relatorios', '?' => $qRelFiltros],

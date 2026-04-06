@@ -10,8 +10,8 @@
 	--vault-border: #e5e4e0;
 	--vault-text: #1a1a18;
 	--vault-muted: #6b6a65;
-	--vault-accent: #00c08b;
-	--vault-accent-dim: rgba(0, 192, 139, 0.12);
+	--vault-accent: var(--pgm-erp-teal, #00c08b);
+	--vault-accent-dim: var(--pgm-erp-teal-muted, rgba(0, 192, 139, 0.12));
 	--vault-card: #ffffff;
 	--vault-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 	font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
@@ -23,6 +23,10 @@
 	box-shadow: var(--vault-shadow);
 	background: var(--vault-bg);
 	border: 1px solid var(--vault-border);
+}
+
+.vault-cofre--compact {
+	min-height: auto;
 }
 
 .vault-cofre-header {
@@ -390,4 +394,23 @@
 	background: #f9f9f8;
 	border-radius: 8px;
 	border-left: 4px solid #00c08b;
+}
+
+.vault-form-note--flush {
+	margin-top: 0;
+}
+
+.vault-is-hidden {
+	display: none !important;
+}
+
+.vault-btn-hide-reveal {
+	display: inline-block;
+}
+
+.vault-list-empty-msg {
+	margin: 0;
+	padding: 1rem;
+	font-size: 0.875rem;
+	color: var(--vault-muted);
 }

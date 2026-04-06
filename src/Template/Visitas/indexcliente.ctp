@@ -15,7 +15,7 @@
                         	</thead>
                         	<tbody>
 								<?php foreach ($visitas as $reg): ?>
-									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><?= nl2br(str_replace("'", "", $reg->motivo)) ?></div>' data-original-title="Visita <small style='font-size: 12px;'><i>(<?= date_format($reg->data, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
+									<tr rel="popover" data-trigger="hover" data-content='<div class="popover-big"><?= nl2br(str_replace("'", "", $reg->motivo)) ?></div>' data-original-title="Visita <small class='pgm-popover-title-date'><i>(<?= date_format($reg->data, 'd/m/Y') ?>)</i></small>" data-html="true" data-placement="top">
 										<td><a class='link' href='<?= $this->Url->build(["controller" => "Agenda", "action" => "view", $reg->id]) ?>'><?= $reg->id ?></td>
 										<td>   
 											<?php

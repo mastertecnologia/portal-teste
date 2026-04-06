@@ -38,6 +38,7 @@ $printAuth = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?= $this->Html->css("/dist/css/pages/file-upload.css") ?>
 	<?= $this->Html->css("/dist/css/css.css") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-print-layout-theme") ?>

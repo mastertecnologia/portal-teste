@@ -115,18 +115,18 @@ $this->end();
 			confirmasenha = $('#confirmasenha').val();
 			if( senha == confirmasenha){
 				if(senha.length < 6){
-					bootbox.alert('<p class="text-center" style="font-size: 1.2rem">A  senha deve conter pelo menos 6 caracteres.</p>');
+					bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">A  senha deve conter pelo menos 6 caracteres.</p>');
 					deuerrado('sim', 'senha');
 				}else{
 					var hasNumber = /\d/;
 					if(!hasNumber.test(senha) || !senha.match(/[a-z]/i) ){
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">A senha deve conter pelo menos 1 letra e 1 número.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">A senha deve conter pelo menos 1 letra e 1 número.</p>');
 						deuerrado('sim', 'senha');
 					}
 					else deuerrado('nao', 'senha');
 				}
 			} else {
-				bootbox.alert('<p class="text-center" style="font-size: 1.2rem">As senhas nao conincidem.</p>');
+				bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">As senhas nao conincidem.</p>');
 				deuerrado('sim', 'senha');
 			}
 		}
@@ -150,17 +150,17 @@ $this->end();
 				error: function(xhr) {
 					var resp = xhr && xhr.responseJSON ? xhr.responseJSON : {};
 					if(resp.Mensagem == 'jatem'){
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário para este cliente.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">Já existe um usuário para este cliente.</p>');
 						deuerrado('sim', 'cpf');
 					} else if(resp.Mensagem == 'inativo'){
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">O cliente encontra-se inativado no banco de dados.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">O cliente encontra-se inativado no banco de dados.</p>');
 						deuerrado('sim', 'cpf');
 					} else if(resp.Mensagem == 'naopode'){
 						// Auto-cadastro: permite digitar o nome da empresa e seguir.
 						$('#cliente').val('');
 						$('#razaosocial').val('');
 						$('#razaosocial').prop('readonly', false);
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">CNPJ não encontrado. Informe o Nome da Empresa para criar o cadastro automaticamente.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">CNPJ não encontrado. Informe o Nome da Empresa para criar o cadastro automaticamente.</p>');
 						deuerrado('nao', 'cnpj');
 					}
 				}
@@ -186,17 +186,17 @@ $this->end();
 				error: function(xhr) {
 					var resp = xhr && xhr.responseJSON ? xhr.responseJSON : {};
 					if(resp.Mensagem == 'jatem'){
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Já existe um usuário para este cliente.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">Já existe um usuário para este cliente.</p>');
 						deuerrado('sim', 'cpf');
 					} else if(resp.Mensagem == 'inativo'){
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">O cliente encontra-se inativado no banco de dados.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">O cliente encontra-se inativado no banco de dados.</p>');
 						deuerrado('sim', 'cpf');
 					} else if(resp.Mensagem == 'naopode'){
 						// Auto-cadastro: permite digitar o nome do cliente e seguir.
 						$('#cliente').val('');
 						$('#nomecliente').val('');
 						$('#nomecliente').prop('readonly', false);
-						bootbox.alert('<p class="text-center" style="font-size: 1.2rem">CPF não encontrado. Informe o Nome do cliente para criar o cadastro automaticamente.</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">CPF não encontrado. Informe o Nome do cliente para criar o cadastro automaticamente.</p>');
 						deuerrado('nao', 'cpf');
 					}
 				}
@@ -210,7 +210,7 @@ $this->end();
 			success: function(data){
 				if(data == 'podecadastrar') deuerrado('nao', 'email');
 				else{
-					bootbox.alert('<p class="text-center" style="font-size: 1.2rem">Esse usuário já existe e não é possível criar outro com o mesmo nome.</p>');
+					bootbox.alert('<p class="text-center pgm-bootbox-msg-lg">Esse usuário já existe e não é possível criar outro com o mesmo nome.</p>');
 					deuerrado('sim', 'email');
 				}
 			},

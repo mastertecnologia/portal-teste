@@ -50,7 +50,7 @@ $pfBool = static function ($reg, $prop) {
 				<table class="table table-hover" id="table-prefaturamento">
 					<thead>
 						<tr>
-							<th style="width:36px"><span class="sr-only">Selecionar</span></th>
+							<th class="pf-th-select"><span class="sr-only">Selecionar</span></th>
 							<th>OS</th>
 							<th>Cliente</th>
 							<th>Técnico</th>
@@ -89,7 +89,7 @@ $pfBool = static function ($reg, $prop) {
 										<?= $reg->dataabertura ? h(date_format($reg->dataabertura, 'd/m/Y')) : '—' ?>
 									</td>
 									<td><?= $reg->valortotal !== null ? h(number_format((float)$reg->valortotal, 2, ',', '.')) : '—' ?></td>
-									<td colspan="3" style="min-width:220px;vertical-align:middle">
+									<td colspan="3" class="pf-td-conferencias">
 										<?= $this->Form->create(null, ['url' => ['action' => 'conferencia'], 'class' => 'form-inline d-flex flex-wrap align-items-center']); ?>
 										<?= $this->Form->hidden('idordem', ['value' => $reg->id]); ?>
 										<label class="small m-r-10 m-b-0"><?= $this->Form->checkbox('prefat_conf_exec', ['value' => '1', 'checked' => $pfBool($reg, 'prefat_conf_exec')]) ?> Exec.</label>

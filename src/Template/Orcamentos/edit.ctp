@@ -78,13 +78,13 @@
 	<div class="orc-page-head">
 		<div>
 			<div class="orc-eyebrow">Módulo comercial</div>
-			<div style="font-size:11px;color:var(--orc-text-muted,#6b6a65);margin-bottom:3px;">
-				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span style="color:#00c08b;">Editar #<?= $orcamento->id ?></span>
+			<div class="orc-form-crumb">
+				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Editar #<?= $orcamento->id ?></span>
 			</div>
 			<h1 class="orc-h1">
-				Orçamento <span style="color:#00c08b;">#<?= $orcamento->id ?></span>
+				Orçamento <span class="orc-id-accent">#<?= $orcamento->id ?></span>
 				<?php if(!empty($orcamento->versao)): ?>
-					<span class="badge" style="background:#00c08b;color:#fff;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:99px;letter-spacing:.3px;font-weight:700;">v<?= $orcamento->versao ?></span>
+					<span class="badge orc-ver-pill">v<?= $orcamento->versao ?></span>
 				<?php endif; ?>
 				<span><?= orcamentoStatus($orcamento->status) ?></span>
 			</h1>
@@ -109,13 +109,13 @@
 	<?= $this->Form->hidden('item_edit_id', ['id' => 'item_edit_id']); ?>
 
 	<!-- Card: Dados do cliente -->
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<div class="orc-sec-title">Dados do cliente</div>
 			<div class="row">
 				<div class="col-lg-6 col-md-12 col-sm-12">
 					<label class="control-label">Cliente</label>
-					<div style="font-size:14px;font-weight:500;color:#1a1a18;padding:6px 0;">
+					<div class="orc-readonly-val">
 						<?= empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->nome : $orcamento->cliente->razaosocial ?>
 					</div>
 				</div>
@@ -124,7 +124,7 @@
 					<?= $this->Form->control('formapagamento', [
 						'type' => 'select',
 						'options' => $orcFormaPagamentoOpcoes ?? [],
-						'class' => 'form-control selectpicker',
+						'class' => 'form-control orc-native-select',
 						'label' => false,
 						'id' => 'formapagamento',
 						'empty' => false,
@@ -146,10 +146,10 @@
 	</div>
 
 	<!-- Card: Status + Fluxo de aprovação -->
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<div class="orc-sec-title">Status</div>
-			<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+			<div class="orc-flex-mb-12">
 				<span><?= orcamentoStatus($orcamento->status) ?></span>
 				<?php if(isset($temordem) && $temordem != 'nao'): ?>
 					<?= $this->Html->link(
@@ -158,7 +158,7 @@
 						['class' => 'btn btn-orc-outline-teal btn-orc-compact', 'escape' => false]
 					); ?>
 				<?php else: ?>
-					<span style="font-size:12px;color:#9a9890;">Sem ordem de serviço vinculada</span>
+					<span class="orc-muted-12">Sem ordem de serviço vinculada</span>
 				<?php endif; ?>
 			</div>
 			<div class="orc-wf-list">
@@ -174,11 +174,11 @@
 						<i class="fa fa-<?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'check' : 'circle-o' ?>"></i>
 					</div>
 					<div class="orc-wf-body">
-						<div class="orc-wf-title" <?= $orcamento->status < C_OrcamentoStatusEnviado ? 'style="color:#9a9890;"' : '' ?>>Enviado ao cliente</div>
+						<div class="orc-wf-title<?= $orcamento->status < C_OrcamentoStatusEnviado ? ' orc-wf-title--muted' : '' ?>">Enviado ao cliente</div>
 						<div class="orc-wf-sub"><?= $orcamento->status >= C_OrcamentoStatusEnviado ? 'Proposta enviada por e-mail' : 'Aguardando envio por e-mail' ?></div>
 					</div>
 					<?php if($orcamento->status < C_OrcamentoStatusEnviado): ?>
-						<button type="button" class="btn btn-orc-outline-teal btn-orc-compact btn-email" style="font-size:11px;margin-left:auto;">
+						<button type="button" class="btn btn-orc-outline-teal btn-orc-compact btn-email orc-btn-email-step">
 							<i class="fa fa-paper-plane"></i> Enviar agora
 						</button>
 					<?php endif; ?>
@@ -187,10 +187,10 @@
 					<div class="orc-wf-dot <?= $orcamento->status == C_OrcamentoStatusAprovado ? 'orc-wf-ok' : ($orcamento->status == C_OrcamentoStatusRecusado ? 'orc-wf-pend' : '') ?>">
 						<?php if($orcamento->status == C_OrcamentoStatusAprovado): ?><i class="fa fa-check"></i>
 						<?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?><i class="fa fa-times"></i>
-						<?php else: ?><div style="width:7px;height:7px;border-radius:50%;background:#e5e4e0;"></div><?php endif; ?>
+						<?php else: ?><div class="orc-wf-dot-inner" role="presentation"></div><?php endif; ?>
 					</div>
 					<div class="orc-wf-body">
-						<div class="orc-wf-title" <?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? 'style="color:#9a9890;"' : '' ?>>Decisão do cliente</div>
+						<div class="orc-wf-title<?= !in_array($orcamento->status, [C_OrcamentoStatusAprovado, C_OrcamentoStatusRecusado]) ? ' orc-wf-title--muted' : '' ?>">Decisão do cliente</div>
 						<div class="orc-wf-sub">
 							<?php if($orcamento->status == C_OrcamentoStatusAprovado): ?>
 								Aprovado<?php if(!empty($orcamento->ipaprovacao)): ?> · IP: <?= $orcamento->ipaprovacao ?><?php endif; ?>
@@ -207,7 +207,7 @@
 	</div>
 
 	<!-- Card: Controle de versões -->
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<div class="orc-sec-title orc-sec-title--split">
 				<span>Controle de versões</span>
@@ -217,26 +217,26 @@
 					['class' => 'btn btn-orc-form-secondary btn-orc-compact', 'escape' => false]
 				) ?>
 			</div>
-			<div class="orc-version-panel" style="margin-bottom:12px;">
+			<div class="orc-version-panel orc-version-panel-mb">
 				<div class="orc-version-item">
-					<div style="display:flex;align-items:center;gap:10px;">
+					<div class="orc-flex-gap-10">
 						<span class="orc-version-badge orc-v-current">v<?= !empty($orcamento->versao) ? $orcamento->versao : '1' ?> — atual</span>
-						<span style="font-size:12px;font-weight:500;color:#1a1a18;">Versão atual</span>
+						<span class="orc-version-lbl">Versão atual</span>
 					</div>
-					<div style="display:flex;align-items:center;gap:8px;">
-						<span style="font-size:11px;color:#9a9890;"><?= $orcamento->created->format('d/m/Y') ?></span>
+					<div class="orc-flex-gap-8">
+						<span class="orc-version-date"><?= $orcamento->created->format('d/m/Y') ?></span>
 						<span><?= orcamentoStatus($orcamento->status) ?></span>
 					</div>
 				</div>
 			</div>
-			<div style="padding:10px 12px;background:#f9f9f8;border-radius:8px;border:1px solid #f0efec;font-size:11px;color:#6b6a65;line-height:1.6;">
-				<strong style="color:#1a1a18;">Criar nova versão</strong> duplica o orçamento atual para ajustes sem perder o histórico. Cada versão mantém seus próprios itens, valores e status.
+			<div class="orc-hint-panel">
+				<strong>Criar nova versão</strong> duplica o orçamento atual para ajustes sem perder o histórico. Cada versão mantém seus próprios itens, valores e status.
 			</div>
 		</div>
 	</div>
 
 	<!-- Card: Produtos e serviços / Itens (mesmo bloco que Novo orçamento) -->
-	<div class="card orc-premium-card-inner" style="margin-bottom:14px;">
+	<div class="card orc-premium-card-inner orc-card-mb-14">
 		<div class="card-body">
 			<?= $this->element('orcamentos_secao_produtos_form', [
 				'orcModo' => 'edit',
@@ -248,8 +248,8 @@
 				<div class="orc-alcada-block">
 					<div class="orc-alcada-icon"><i class="fa fa-check"></i></div>
 					<div>
-						<div style="font-size:12px;font-weight:600;color:#0f6e56;margin-bottom:3px;">Aprovado pelo cliente</div>
-						<div style="font-size:11px;color:#00c08b;">
+						<div class="orc-alcada-kicker">Aprovado pelo cliente</div>
+						<div class="orc-alcada-detail">
 							IP: <?= $orcamento->ipaprovacao ?>
 							&nbsp;·&nbsp; Navegador: <?= $orcamento->navegadoraprovacao ?>
 						</div>

@@ -81,7 +81,12 @@
 		$('#t-sub').text('R$ ' + numberToReal(subVenda));
 		$('#t-cus').text('R$ ' + numberToReal(subCusto));
 		$('#t-disc').text('— R$ ' + numberToReal(discAbs));
-		$('#t-marg').text(margem + '%').css('color', margem >= 15 ? '#00c08b' : '#FFC107');
+		var $tm = $('#t-marg');
+		if ($tm.length) {
+			$tm.text(margem + '%');
+			$tm.toggleClass('orc-tot-val--teal', margem >= 15);
+			$tm.toggleClass('orc-marg-pct--warn', margem < 15);
+		}
 		$('#t-tot').text('R$ ' + numberToReal(afterDisc));
 	}
 
@@ -109,7 +114,10 @@
 		$('#ms-lucro').text('R$ ' + numberToReal(lucro));
 		$('#ms-margem').text(margem + '%');
 		var w = Math.min(100, Math.max(0, margem));
-		$('#ms-bar').css('width', w + '%');
+		var msBar = document.getElementById('ms-bar');
+		if (msBar) {
+			msBar.style.setProperty('--orc-margin-pct', w + '%');
+		}
 		orcApplyDiscountRow(subVenda, subCusto);
 	};
 
@@ -396,13 +404,13 @@
 		editando = modo;
 		if (modo) {
 			$('#btn-addservico').hide();
-			$('#orc-item-edit-actions').show();
+			$('#orc-item-edit-actions').removeClass('orc-is-hidden');
 			if ($('#orc-novo-proposta-title').length) {
 				$('#orc-novo-proposta-title').text(cfg.toggleTitleEdit);
 			}
 		} else {
 			$('#btn-addservico').show();
-			$('#orc-item-edit-actions').hide();
+			$('#orc-item-edit-actions').addClass('orc-is-hidden');
 			if ($('#orc-novo-proposta-title').length) {
 				$('#orc-novo-proposta-title').text(cfg.toggleTitleNew);
 			}
@@ -579,7 +587,10 @@
 		$('#ms-custo').text('R$ ' + numberToReal(0));
 		$('#ms-lucro').text('R$ ' + numberToReal(0));
 		$('#ms-margem').text('0%');
-		$('#ms-bar').css('width', '0%');
+		var msBarInit = document.getElementById('ms-bar');
+		if (msBarInit) {
+			msBarInit.style.setProperty('--orc-margin-pct', '0%');
+		}
 		orcApplyDiscountRow(0, 0);
 	});
 

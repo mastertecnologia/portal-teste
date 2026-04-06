@@ -46,7 +46,7 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 					<p class="text-muted small">As senhas permanecem criptografadas no banco até você confirmar com a <strong>senha administrativa da empresa</strong>.</p>
 				</div>
 
-				<div id="vaultDetailContent" style="display:none;">
+				<div id="vaultDetailContent" class="vault-is-hidden">
 					<div class="vault-detail-header">
 						<div>
 							<h2 id="vaultTitle">—</h2>
@@ -95,7 +95,7 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 							<button type="button" class="btn vault-btn-copy" id="btnVaultCopy" disabled>
 								<i class="fa fa-copy"></i> Copiar
 							</button>
-							<button type="button" class="btn btn-default btn-sm" id="btnVaultHide" style="display:none;">
+							<button type="button" class="btn btn-default btn-sm vault-is-hidden" id="btnVaultHide">
 								<i class="fa fa-eye-slash"></i> Ocultar
 							</button>
 						</div>
@@ -178,7 +178,7 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 		});
 		listEl.appendChild(frag);
 		if (n === 0) {
-			listEl.innerHTML = '<p class="p-3 small text-muted" style="color:#6b6a65;">Nenhuma credencial encontrada.</p>';
+			listEl.innerHTML = '<p class="vault-list-empty-msg">Nenhuma credencial encontrada.</p>';
 		}
 	}
 
@@ -196,7 +196,8 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 		document.getElementById('vSecretDisplay').textContent = '••••••••••••';
 		document.getElementById('vSecretDisplay').classList.add('vault-secret-mask');
 		document.getElementById('btnVaultCopy').disabled = true;
-		document.getElementById('btnVaultHide').style.display = 'none';
+		document.getElementById('btnVaultHide').classList.add('vault-is-hidden');
+		document.getElementById('btnVaultHide').classList.remove('vault-btn-hide-reveal');
 	}
 
 	function selectEntry(id) {
@@ -204,8 +205,8 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 		var e = findEntry(id);
 		if (!e) return;
 		renderList(searchEl.value);
-		emptyEl.style.display = 'none';
-		contentEl.style.display = 'block';
+		emptyEl.classList.add('vault-is-hidden');
+		contentEl.classList.remove('vault-is-hidden');
 		document.getElementById('vaultTitle').textContent = e.nomeservico || 'Credencial';
 		document.getElementById('vaultSubtitle').textContent = e.provedor ? e.provedor : '';
 		document.getElementById('vProvedor').textContent = e.provedor || '—';
@@ -290,7 +291,8 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 					el.textContent = data.password;
 					el.classList.remove('vault-secret-mask');
 					document.getElementById('btnVaultCopy').disabled = false;
-					document.getElementById('btnVaultHide').style.display = 'inline-block';
+					document.getElementById('btnVaultHide').classList.remove('vault-is-hidden');
+					document.getElementById('btnVaultHide').classList.add('vault-btn-hide-reveal');
 					if (revealTimer) clearTimeout(revealTimer);
 					revealTimer = setTimeout(function () { clearReveal(); }, 120000);
 				} else {

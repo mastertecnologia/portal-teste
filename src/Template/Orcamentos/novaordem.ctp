@@ -47,7 +47,7 @@
 				<div class="row">
 					<div class="col-lg-6 col-sm-12">
 						<label class="control-label">Status</label>
-						<?= $this->Form->control('idarea', ['disabled', 'data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+						<?= $this->Form->control('idarea', ['disabled', 'options' => $areas, 'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 						<?= $this->Form->text('idarea', ['type' => 'hidden', 'value' => $novaordem->idarea, 'label' => false, 'required' => true]) ?>
 					</div>
 					<div class="col-lg-6 col-sm-12">
@@ -607,7 +607,7 @@
         $('.jsgrid-cell').each(function() {
             if(!$(this).hasClass('cellInput') && $(this).text().length > 50) {
                 $(this).attr('data-textointeiro', $(this).text());
-                $(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-xs btn-orc-outline-teal btn-exapndemuitotexto btn-'+i+'" style="display:inline-flex;padding:2px 8px;"><i class="fa fa-search"></i></div>');
+                $(this).html($(this).text().substr(0, 49) + '... <div class="btn btn-xs btn-orc-outline-teal btn-orc-expand-text btn-exapndemuitotexto btn-'+i+'"><i class="fa fa-search"></i></div>');
                 i++;
             }
         });

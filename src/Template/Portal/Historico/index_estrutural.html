@@ -43,9 +43,9 @@
   <title>Histórico de Atendimentos — Portal</title>
   <!--
     CSS carregado pelo layout pai (portal.ctp).
-    Estilos específicos desta tela (opcional):
-    <link rel="stylesheet" href="/css/portal-historico.css">
+    Barra SLA: portal-client-barras-estrutural.css (dinâmico: --pgm-bar-pct + phist-sla__barra-fill--dyn)
   -->
+  <link rel="stylesheet" href="/dist/css/pages/portal-client-barras-estrutural.css">
 </head>
 <body class="portal-layout">
 
@@ -1436,8 +1436,7 @@
                aria-valuemin="0"
                aria-valuemax="100"
                aria-label="Tempo consumido do prazo de atendimento: 62%">
-            <div class="phist-sla__barra-fill phist-sla__barra-fill--risco"
-                 style="width: 62%">
+            <div class="phist-sla__barra-fill phist-sla__barra-fill--risco phist-sla__pct--62">
             </div>
           </div>
           <!--

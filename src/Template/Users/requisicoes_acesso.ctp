@@ -23,11 +23,11 @@
           <div class="col-md-6 col-sm-12">
             <input type="text" class="form-control" id="filtro-req-acesso" placeholder="Buscar por login, cliente, CPF/CNPJ, empresa..." />
           </div>
-          <div class="col-md-6 col-sm-12 text-right text-muted" style="padding-top:8px;">
+          <div class="col-md-6 col-sm-12 text-right text-muted dash-erp-meta-align">
             Exibindo <span id="req-acesso-count"><?= count($usuariosBloqueadosTable ?? []) ?></span> registros
           </div>
         </div>
-        <div class="dash-erp-scroll" id="req-acesso-scroll" style="max-height: 70dvh;">
+        <div class="dash-erp-scroll dash-erp-scroll--vh70" id="req-acesso-scroll">
           <div class="table-responsive">
             <table class="dash-erp-table" id="table-req-acesso">
               <thead>
@@ -36,7 +36,7 @@
                   <th>Nome do Cliente</th>
                   <th>CNPJ do Cliente</th>
                   <th>Empresa</th>
-                  <th style="width: 140px;">Ação</th>
+                  <th class="dash-erp-th-w140">Ação</th>
                 </tr>
               </thead>
               <tbody>

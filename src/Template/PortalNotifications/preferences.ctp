@@ -34,8 +34,7 @@ $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'brea
 									<?= $this->Form->checkbox("prefs.$i.send_in_app", [
 										'value' => 1,
 										'checked' => !empty($r['send_in_app']),
-										'class' => 'form-check-input',
-										'style' => 'position:relative;margin:0',
+										'class' => 'form-check-input pgm-checkbox-table-cell',
 										'label' => false,
 									]) ?>
 								</td>
@@ -43,8 +42,7 @@ $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'brea
 									<?= $this->Form->checkbox("prefs.$i.send_email", [
 										'value' => 1,
 										'checked' => !empty($r['send_email']),
-										'class' => 'form-check-input',
-										'style' => 'position:relative;margin:0',
+										'class' => 'form-check-input pgm-checkbox-table-cell',
 										'label' => false,
 									]) ?>
 								</td>

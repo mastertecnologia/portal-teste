@@ -49,11 +49,11 @@ $exportExcelUrl = $this->Url->build([
 		</div>
 
 		<?= $this->Form->create(null, ['type' => 'get', 'url' => ['controller' => 'PortalRelatorios', 'action' => 'index'], 'class' => 'tkcli-filters']) ?>
-			<div class="tkcli-filter-group" style="min-width: 200px; flex: 1 1 200px;">
+			<div class="tkcli-filter-group tkcli-filter-group--grow">
 				<label>Período</label>
 				<input type="text" name="periodo" class="form-control" placeholder="Ex.: 01/04/2026 a 30/04/2026 (vazio = últimos 90 dias)" value="<?= h($f['periodo']) ?>">
 			</div>
-			<div class="tkcli-filter-group" style="min-width: 160px;">
+			<div class="tkcli-filter-group tkcli-filter-group--w160">
 				<label>Unidade</label>
 				<select name="unidade" class="form-control">
 					<option value="">Todas</option>
@@ -62,7 +62,7 @@ $exportExcelUrl = $this->Url->build([
 					<?php endforeach; ?>
 				</select>
 			</div>
-			<div class="tkcli-filter-group" style="min-width: 180px;">
+			<div class="tkcli-filter-group tkcli-filter-group--w180">
 				<label>Contrato</label>
 				<select name="contrato" class="form-control">
 					<option value="">Todos</option>
@@ -71,10 +71,10 @@ $exportExcelUrl = $this->Url->build([
 					<?php endforeach; ?>
 				</select>
 			</div>
-			<div class="tkcli-filter-group" style="padding-top:18px;">
-				<button type="submit" class="tkcli-btn-abrir" style="border:none;">Aplicar</button>
+			<div class="tkcli-filter-group tkcli-filter-group--actions">
+				<button type="submit" class="tkcli-btn-abrir">Aplicar</button>
 			</div>
-			<div class="tkcli-filter-group" style="padding-top:18px;">
+			<div class="tkcli-filter-group tkcli-filter-group--actions">
 				<?= $this->Html->link('Limpar filtros', ['controller' => 'PortalRelatorios', 'action' => 'index'], ['class' => 'tkcli-btn-limpar']) ?>
 			</div>
 		<?= $this->Form->end() ?>

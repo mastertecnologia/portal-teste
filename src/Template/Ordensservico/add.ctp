@@ -38,7 +38,7 @@
 					<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
 					
 					<!-- Campo para "Outros" - inicialmente escondido -->
-					<div id="solicitante-outros-container" style="display: none; margin-top: 10px;">
+					<div id="solicitante-outros-container" class="pgm-solic-outros-wrap">
 						<label class="control-label m-b-0">Nome do Solicitante (Outros)</label>
 						<?= $this->Form->control('solicitante_outros', [
 							'class' => 'form-control', 
@@ -88,7 +88,7 @@
 				<div class="row">
 					<div class="col-lg-6 col-sm-12">
 						<label class="control-label m-b-0">Status</label>
-						<?= $this->Form->control('idarea', ['data-live-search' => true, 'options' => $areas, 'title' => 'Selecione um status', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
+						<?= $this->Form->control('idarea', ['options' => $areas, 'class' => 'form-control os-add-native-select', 'label' => false, 'required' => true]) ?>
 					</div>
 					<div class="col-lg-6 col-sm-12">
 						<label class="control-label m-b-0">Tipo de OS</label>
@@ -445,17 +445,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if (j.msg) parts.push('<p>' + pgmOsGridEscapeHtml(j.msg) + '</p>');
 				if (j.warning) parts.push('<p><strong>Aviso:</strong> ' + pgmOsGridEscapeHtml(j.warning) + '</p>');
 				if (osGridAjaxVerbose && j.debug) {
-					parts.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+					parts.push('<pre class="pgm-pre-json pgm-pre-json--wrap">' +
 						pgmOsGridEscapeHtml(JSON.stringify(j.debug, null, 2)) + '</pre>');
 				}
 				if (osGridAjaxVerbose && j.validation) {
-					parts.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+					parts.push('<pre class="pgm-pre-json pgm-pre-json--wrap">' +
 						pgmOsGridEscapeHtml(JSON.stringify(j.validation, null, 2)) + '</pre>');
 				}
 			} else if (xhr.responseText) {
 				var t = xhr.responseText;
 				if (t.length < 800) {
-					parts.push('<pre style="text-align:left;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap">' +
+					parts.push('<pre class="pgm-pre-json pgm-pre-json--wrap pgm-pre-json--h200">' +
 						pgmOsGridEscapeHtml(t) + '</pre>');
 				} else {
 					parts.push('<p>' + pgmOsGridEscapeHtml(t.substring(0, 300)) + '…</p>');
@@ -582,14 +582,14 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 								return;
 							}
 							if (t === 'naopode') {
-								bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 								$("#grid_table").jsGrid("loadData");
 								return;
 							}
 						}
 						if (data && typeof data === 'object' && data.ok === false) {
 							if (data.code === 'os_grid_produto_duplicado' && data.msg) {
-								bootbox.alert('<p class="text-center" style="font-weight:300;font-size:1.1rem">' + pgmOsGridEscapeHtml(data.msg) + '</p>');
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + pgmOsGridEscapeHtml(data.msg) + '</p>');
 								$("#grid_table").jsGrid("loadData");
 								return;
 							}
@@ -597,11 +597,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							if (data.code) p.push('<p><strong>Código:</strong> ' + pgmOsGridEscapeHtml(data.code) + '</p>');
 							if (data.msg) p.push('<p>' + pgmOsGridEscapeHtml(data.msg) + '</p>');
 							if (osGridAjaxVerbose && data.debug) {
-								p.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto">' +
+								p.push('<pre class="pgm-pre-json">' +
 									pgmOsGridEscapeHtml(JSON.stringify(data.debug, null, 2)) + '</pre>');
 							}
 							if (osGridAjaxVerbose && data.validation) {
-								p.push('<pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto">' +
+								p.push('<pre class="pgm-pre-json">' +
 									pgmOsGridEscapeHtml(JSON.stringify(data.validation, null, 2)) + '</pre>');
 							}
 							pgmOsGridAlertHtml(p.join(''));
@@ -609,7 +609,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							return;
 						}
 						var snippet = (data === null || data === undefined) ? '(resposta vazia)' : (typeof data === 'string' ? data : JSON.stringify(data));
-						pgmOsGridAlertHtml('<p><strong>Resposta inesperada ao incluir item.</strong></p><pre style="text-align:left;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap">' +
+						pgmOsGridAlertHtml('<p><strong>Resposta inesperada ao incluir item.</strong></p><pre class="pgm-pre-json pgm-pre-json--wrap">' +
 							pgmOsGridEscapeHtml(String(snippet).substring(0, 1500)) + '</pre>');
 						$("#grid_table").jsGrid("loadData");
 					}, 
@@ -832,7 +832,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					return data;
 				}(),
 				success: function(result) {
-					if(result == 'naopode') bootbox.alert('<p style="font-weight: 300; font-size: 1.1rem" class="text-center">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
+					if(result == 'naopode') bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Este produto já foi adicionado à ordem de serviço, não é possível adicioná-lo novamente.</p>');
 					$("#grid_table").jsGrid("loadData");
 					$( ".inputMobile" ).each(function() {
 						$( this ).val(''); 

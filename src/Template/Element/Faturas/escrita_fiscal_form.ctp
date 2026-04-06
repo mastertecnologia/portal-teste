@@ -8,7 +8,7 @@ $view = $this;
 
 $feMoney = function ($field, $label) use ($view) {
 	echo '<div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12 m-b-10">';
-	echo '<label class="control-label text-muted" style="font-size:11px;">' . h($label) . '</label>';
+	echo '<label class="control-label text-muted erp-ef-label-sm">' . h($label) . '</label>';
 	echo $view->Form->control($field, [
 		'class'      => 'form-control mascaramonetaria',
 		'label'      => false,
@@ -19,7 +19,7 @@ $feMoney = function ($field, $label) use ($view) {
 };
 $fePct = function ($field, $label) use ($view) {
 	echo '<div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12 m-b-10">';
-	echo '<label class="control-label text-muted" style="font-size:11px;">' . h($label) . '</label>';
+	echo '<label class="control-label text-muted erp-ef-label-sm">' . h($label) . '</label>';
 	echo $view->Form->control($field, [
 		'class' => 'form-control',
 		'label' => false,
@@ -30,7 +30,7 @@ $fePct = function ($field, $label) use ($view) {
 
 $section = function ($title, $icon = '') {
 	echo '<div class="erp-ef-section">';
-	echo '<div class="erp-ef-section-title">' . ($icon ? '<span style="margin-right:5px;">' . $icon . '</span>' : '') . h($title) . '</div>';
+	echo '<div class="erp-ef-section-title">' . ($icon ? '<span class="erp-ef-title-ico">' . $icon . '</span>' : '') . h($title) . '</div>';
 	echo '<div class="erp-ef-section-body"><div class="row">';
 };
 $sectionEnd = function () {
@@ -57,6 +57,13 @@ $sectionEnd = function () {
 }
 .erp-ef-section-body {
     padding: 12px 14px 4px;
+}
+.erp-ef-label-sm {
+	font-size: 11px;
+}
+.erp-ef-title-ico {
+	margin-right: 5px;
+	display: inline-block;
 }
 </style>
 
@@ -128,11 +135,11 @@ $sectionEnd = function () {
 
 <?php $section('Rastreabilidade'); ?>
 	<div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 m-b-10">
-		<label class="control-label text-muted" style="font-size:11px;">Fonte do cálculo</label>
+		<label class="control-label text-muted erp-ef-label-sm">Fonte do cálculo</label>
 		<?= $this->Form->control('fonte_calculo', ['class' => 'form-control', 'label' => false, 'placeholder' => 'ex.: IBPT_LEI12741, MANUAL, ERP_DB9']) ?>
 	</div>
 	<div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 m-b-10">
-		<label class="control-label text-muted" style="font-size:11px;">Versão IBPT (se aplicável)</label>
+		<label class="control-label text-muted erp-ef-label-sm">Versão IBPT (se aplicável)</label>
 		<?= $this->Form->control('fonte_ibpt_versao', ['class' => 'form-control', 'label' => false]) ?>
 	</div>
 <?php $sectionEnd(); ?>

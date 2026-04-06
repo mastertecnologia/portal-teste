@@ -42,6 +42,23 @@
 			position: absolute !important;
 		}
 	} */
+	.topbar .nav-empresa-select-row {
+		padding-bottom: 0 !important;
+	}
+	.topbar .nav-empresa-sidebar-label {
+		margin-left: 4px;
+	}
+	.topbar .nav-item--navbar-date {
+		margin-left: 80px;
+	}
+	.topbar .nav-item--navbar-profile {
+		margin-top: -20%;
+	}
+	.topbar-select-empresa {
+		height: 21px;
+		background-color: #004640;
+		border: none;
+	}
 </style>
 <header class="topbar skin-pgm">
 	<nav class="navbar top-navbar navbar-expand-md skin-pgm">
@@ -57,14 +74,14 @@
 				<li class="nav-item"> <a class="text-white nav-link nav-toggler d-block d-md-none waves-effect waves-dark" href="javascript:void(0)"><i class="ti-menu"></i></a> </li>
 				<li class="nav-item"> <a class="text-white nav-link sidebartoggler d-none d-lg-block d-md-block waves-effect waves-dark" href="javascript:void(0)"><i class="icon-menu"></i></a> </li>
 				<li class="nav-item text-white m-l-20">
-					<div class="row m-t-13 m-b-0" style='padding-bottom: 0px !important;'>
-						<?= $this->Form->control('empresaSidebar', ['id' => 'empresaSidebar', 'class' => 'p-0 text-white', 'label' => false, 'value' => $empresa, 'options' => $empresasOptSidebar, 'style' => 'height: 21px; background-color: #004640; border: none', 'readonly' => count($empresasOptSidebar) <= 1]) ?>
+					<div class="row m-t-13 m-b-0 nav-empresa-select-row">
+						<?= $this->Form->control('empresaSidebar', ['id' => 'empresaSidebar', 'class' => 'p-0 text-white topbar-select-empresa', 'label' => false, 'value' => $empresa, 'options' => $empresasOptSidebar, 'readonly' => count($empresasOptSidebar) <= 1]) ?>
 					</div>
 					<div class="row">
-						<small style='margin-left:4px'> Empresa </small>
+						<small class="nav-empresa-sidebar-label"> Empresa </small>
 					</div>
 				</li>
-				<li class="nav-item text-white" style='margin-left: 80px;'>
+				<li class="nav-item text-white nav-item--navbar-date">
 					<div class="row m-t-5 p-b-0">
 						<p class="text-white nav-link h5 m-t-10 mb-0 p-0"> <?= date('d/m/Y') ?>  </p>
 					</div>
@@ -75,7 +92,7 @@
 			</ul>
 			<!-- Perfil do usuário -->
 			<ul class="navbar-nav">
-				<li class="nav-item" style='margin-top:-20%'>
+				<li class="nav-item nav-item--navbar-profile">
 					<div class="user-profile">
 						<div class="user-pro-body">
 							<div class="dropdown">

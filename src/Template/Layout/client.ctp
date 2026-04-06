@@ -19,6 +19,7 @@ $isLightLegacy = ($pgmLegacyTheme === 'light');
 	<?= $this->Html->css('bootstrap.min'); ?>
 	<?= $this->Html->css('material-dashboard'); ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens'); ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-components-base'); ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-legacy-material-theme'); ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-light'); ?>
 

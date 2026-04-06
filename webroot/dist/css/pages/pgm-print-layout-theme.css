@@ -17,6 +17,7 @@ html[data-pgm-theme="light"] body.pgm-print-layout {
 	color: var(--pgm-text) !important;
 }
 
+/* Botão de tema na pré-visualização (mesmo padrão do layout clear) */
 .pgm-print-theme-fab.pgm-legacy-theme-fab {
 	position: fixed;
 	bottom: 1.25rem;

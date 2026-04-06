@@ -43,7 +43,7 @@
 ?>
 
 <div class="col-md-12 p-0">
-<div class="cli-root">
+<div class="cli-root pgm-ds-pilot" data-pgm-ds-pilot="clientes-index">
 
     <!-- ── Topbar ─────────────────────────────────────────── -->
     <div class="cli-topbar">
@@ -92,22 +92,22 @@
         <div class="cli-filter-bar" id="cli-filter-bar">
             <div class="cli-pill-group" id="cli-status-pills">
                 <button class="cli-pill active" data-status="ativos">
-                    <i class="fas fa-circle" style="font-size:6px;"></i> Ativos
+                    <i class="fas fa-circle pgm-pill-dot" aria-hidden="true"></i> Ativos
                     <span class="cnt"><?= $cntAPJ + $cntAPF ?></span>
                 </button>
                 <button class="cli-pill" data-status="inativos">
-                    <i class="fas fa-circle" style="font-size:6px;color:#f85149;"></i> Inativos
+                    <i class="fas fa-circle pgm-pill-dot pgm-pill-dot--danger" aria-hidden="true"></i> Inativos
                     <span class="cnt"><?= $cntIPJ + $cntIPF ?></span>
                 </button>
             </div>
             <div class="cli-filter-divider"></div>
             <div class="cli-pill-group" id="cli-type-pills">
                 <button class="cli-pill active" data-type="pj">
-                    <i class="fas fa-building" style="font-size:10px;"></i> Pessoa Jurídica
+                    <i class="fas fa-building pgm-icon-xs" aria-hidden="true"></i> Pessoa Jurídica
                     <span class="cnt" id="cnt-pj"><?= $cntAPJ ?></span>
                 </button>
                 <button class="cli-pill" data-type="pf">
-                    <i class="fas fa-user" style="font-size:10px;"></i> Pessoa Física
+                    <i class="fas fa-user pgm-icon-xs" aria-hidden="true"></i> Pessoa Física
                     <span class="cnt" id="cnt-pf"><?= $cntAPF ?></span>
                 </button>
             </div>
@@ -131,17 +131,17 @@
                     <thead>
                         <tr>
                             <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th style="width:42%">Razão Social</th>
-                            <th style="width:18%">CNPJ</th>
-                            <th style="width:24%">E-mail</th>
-                            <th style="width:14%">Telefone</th>
-                            <th style="width:2%"></th>
+                            <th class="cli-col-rs">Razão Social</th>
+                            <th class="cli-col-doc">CNPJ</th>
+                            <th class="cli-col-mail">E-mail</th>
+                            <th class="cli-col-phone">Telefone</th>
+                            <th class="cli-col-icon" aria-hidden="true"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php $idxPjA = 0; foreach ($clientesAtivosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjA ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjA ?>" role="button" tabindex="0">
                             <td class="cli-dt-rank"><?= (int)$idxPjA ?></td>
                             <td>
                                 <div class="cli-td-name">
@@ -179,17 +179,17 @@
                     <thead>
                         <tr>
                             <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th style="width:42%">Nome</th>
-                            <th style="width:18%">CPF</th>
-                            <th style="width:24%">E-mail</th>
-                            <th style="width:14%">Telefone</th>
-                            <th style="width:2%"></th>
+                            <th class="cli-col-rs">Nome</th>
+                            <th class="cli-col-doc">CPF</th>
+                            <th class="cli-col-mail">E-mail</th>
+                            <th class="cli-col-phone">Telefone</th>
+                            <th class="cli-col-icon" aria-hidden="true"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php $idxPfA = 0; foreach ($clientesAtivosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfA ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfA ?>" role="button" tabindex="0">
                             <td class="cli-dt-rank"><?= (int)$idxPfA ?></td>
                             <td>
                                 <div class="cli-td-name">
@@ -227,21 +227,21 @@
                     <thead>
                         <tr>
                             <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th style="width:38%">Razão Social</th>
-                            <th style="width:16%">CNPJ</th>
-                            <th style="width:22%">E-mail</th>
-                            <th style="width:14%">Telefone</th>
-                            <th style="width:10%">Ação</th>
+                            <th class="cli-col-rs-sm">Razão Social</th>
+                            <th class="cli-col-doc-sm">CNPJ</th>
+                            <th class="cli-col-mail-sm">E-mail</th>
+                            <th class="cli-col-phone">Telefone</th>
+                            <th class="cli-col-act">Ação</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php $idxPjI = 0; foreach ($clientesInativosPJ as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjI ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPjI ?>" role="button" tabindex="0">
                             <td class="cli-dt-rank"><?= (int)$idxPjI ?></td>
                             <td>
                                 <div class="cli-td-name">
-                                    <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->razaosocial ?? '') ?></div>
+                                    <div class="cli-av cli-av--inactive"><?= cliInitials($reg->razaosocial ?? '') ?></div>
                                     <span class="cli-name-main"><?= h($reg->razaosocial) ?></span>
                                 </div>
                             </td>
@@ -272,21 +272,21 @@
                     <thead>
                         <tr>
                             <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th style="width:38%">Nome</th>
-                            <th style="width:16%">CPF</th>
-                            <th style="width:22%">E-mail</th>
-                            <th style="width:14%">Telefone</th>
-                            <th style="width:10%">Ação</th>
+                            <th class="cli-col-rs-sm">Nome</th>
+                            <th class="cli-col-doc-sm">CPF</th>
+                            <th class="cli-col-mail-sm">E-mail</th>
+                            <th class="cli-col-phone">Telefone</th>
+                            <th class="cli-col-act">Ação</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php $idxPfI = 0; foreach ($clientesInativosPF as $reg): ?>
                         <?php $url = $this->Url->build(['controller' => 'Clientes', 'action' => 'edit', $reg->id]); ?>
-                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfI ?>" style="cursor:pointer" role="button" tabindex="0">
+                        <tr<?= cliRowDataAttrs($reg) ?> data-cli-edit-url="<?= h($url) ?>" data-cli-ord="<?= (int)$idxPfI ?>" role="button" tabindex="0">
                             <td class="cli-dt-rank"><?= (int)$idxPfI ?></td>
                             <td>
                                 <div class="cli-td-name">
-                                    <div class="cli-av" style="background:rgba(248,81,73,.10);color:#f85149;"><?= cliInitials($reg->nome ?? '') ?></div>
+                                    <div class="cli-av cli-av--inactive"><?= cliInitials($reg->nome ?? '') ?></div>
                                     <span class="cli-name-main"><?= h($reg->nome) ?></span>
                                 </div>
                             </td>

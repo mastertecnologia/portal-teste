@@ -21,7 +21,7 @@ echo $this->Flash->render();
 	<div class="message-box bg-white">
 		<div class="message-widget message-scroll">
 			<a href="#" class='add-darkmode'>
-				<div class="mail-contnet" style="width:100%">
+				<div class="mail-contnet mail-contnet--full">
 					<div class="row">
 						<div class="col-12">
 							<h5><?= h($user['Users']['name'] ?? '') ?></h5>
@@ -85,9 +85,9 @@ if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPe
 	}
 	$horaInicioTimer = (string)$horaInicioTimer;
 	?>
-	<div id="timer-cronometro" class="mb-2 p-2 bg-info text-white rounded" data-hora-inicio="<?= h($horaInicioTimer) ?>" style="font-family: monospace; font-size: 1.4rem;">00:00:00</div>
+	<div id="timer-cronometro" class="sd-timer-display mb-2 p-2 bg-info text-white rounded" data-hora-inicio="<?= h($horaInicioTimer) ?>">00:00:00</div>
 <?php elseif (!empty($timerAtivo) && $timerPausado && !empty($timerPausadoElapsedTexto)): ?>
-	<div id="timer-cronometro-pausado" class="mb-2 p-2 bg-warning text-dark rounded" style="font-family: monospace; font-size: 1.4rem;"><?= h($timerPausadoElapsedTexto) ?> <small>(pausado)</small></div>
+	<div id="timer-cronometro-pausado" class="sd-timer-display mb-2 p-2 bg-warning text-dark rounded"><?= h($timerPausadoElapsedTexto) ?> <small>(pausado)</small></div>
 <?php endif; ?>
 <?php
 $urlIniciar = $this->Url->build(['controller' => 'Tickets', 'action' => 'timerIniciar', $ticket->id]);

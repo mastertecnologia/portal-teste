@@ -5,9 +5,9 @@
  * Com WEBROOT_DIR=public manter cópia em sync: public/css/pgm-action-buttons.css
  */
 :root {
-  /* PGM Soluções em TI — pgm_orcamentos_premium.html (--teal / --teal-dark) */
-  --pgm-btn-teal: #00c08b;
-  --pgm-btn-teal-hover: #008f68;
+  /* ERP teal alinhado a pgm-theme-tokens (--pgm-erp-teal*) */
+  --pgm-btn-teal: var(--pgm-erp-teal, #00c08b);
+  --pgm-btn-teal-hover: var(--pgm-erp-teal-hover, #008f68);
   --pgm-btn-sky: #33ccff;
   --pgm-btn-sky-hover: #1ab8e8;
   --pgm-btn-orange: #ff8833;

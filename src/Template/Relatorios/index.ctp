@@ -57,7 +57,7 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 				<h2 class="dash-erp-title">Relatórios e Indicadores</h2>
 				<p class="dash-erp-subtitle">Indicadores consolidados por período (criação do ticket), escopo ABAC e empresa. Receita e inadimplência vêm dos lançamentos financeiros.</p>
 			</div>
-			<div class="d-flex flex-wrap align-items-center" style="gap:8px;">
+			<div class="d-flex flex-wrap align-items-center pgm-gap-8">
 				<a class="btn btn-outline-secondary" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Voltar ao dashboard</a>
 				<button type="button" class="btn btn-outline-info" onclick="window.location.reload()">Atualizar</button>
 				<button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir</button>
@@ -154,7 +154,7 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 							<?php } ?>
 						</select>
 					</div>
-					<div class="col-md-3 col-sm-6 m-b-10" style="padding-top:22px;">
+					<div class="col-md-3 col-sm-6 m-b-10 dash-erp-filter-actions">
 						<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-r-5">Aplicar</button>
 						<a href="<?= $this->Url->build(['controller' => 'Relatorios', 'action' => 'index']) ?>" class="btn btn-outline-secondary">Limpar</a>
 					</div>
@@ -182,18 +182,18 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 					?>
 					<div class="rel-tabpanel-wrap" data-rel-panel="<?= h($tabKey) ?>" <?= $hidden ? 'hidden' : '' ?>>
 						<div class="rel-panel-inner">
-							<p class="dash-erp-card-title" style="font-size:14px;margin:0 0 12px;"><?= h($tit) ?></p>
+							<p class="dash-erp-card-title dash-erp-card-title--tab"><?= h($tit) ?></p>
 							<?php if ($tabKey === 'atendimento') { ?>
 								<p class="rel-block-label">Gráfico</p>
 								<div class="rel-placeholder m-b-10">Gráfico será adicionado em etapa seguinte.</div>
 								<p class="rel-block-label rel-block-label--gap">Tickets (amostra, até 50)</p>
-								<div class="dash-erp-scroll" style="max-height:260px;">
+								<div class="dash-erp-scroll dash-erp-scroll--h260">
 									<div class="table-responsive">
 										<table class="dash-erp-table">
 											<thead><tr><th>ID</th><th>Abertura</th><th>Cliente</th><th>Assunto</th><th>Situação</th></tr></thead>
 											<tbody>
 												<?php if (empty($ticketsAmostra)) { ?>
-													<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Nenhum ticket no período com os filtros atuais.</td></tr>
+													<tr><td colspan="5" class="text-center text-muted dash-erp-empty-cell">Nenhum ticket no período com os filtros atuais.</td></tr>
 												<?php } else { ?>
 													<?php foreach ($ticketsAmostra as $reg) {
 														$clienteNome = '—';
@@ -229,13 +229,13 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 								</div>
 							<?php } elseif ($tabKey === 'contratos') { ?>
 								<p class="rel-block-label">Contratos no escopo (amostra)</p>
-								<div class="dash-erp-scroll" style="max-height:260px;">
+								<div class="dash-erp-scroll dash-erp-scroll--h260">
 									<div class="table-responsive">
 										<table class="dash-erp-table">
 											<thead><tr><th>ID</th><th>Cliente</th><th>Descrição</th><th>Validade</th></tr></thead>
 											<tbody>
 												<?php if (empty($ctrRows)) { ?>
-													<tr><td colspan="4" class="text-center text-muted" style="padding:20px;">Nenhum contrato listável ou tabela indisponível.</td></tr>
+													<tr><td colspan="4" class="text-center text-muted dash-erp-empty-cell">Nenhum contrato listável ou tabela indisponível.</td></tr>
 												<?php } else { ?>
 													<?php foreach ($ctrRows as $cr) {
 														$cn = '—';
@@ -269,7 +269,7 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 								</div>
 							<?php } elseif ($tabKey === 'financeiro') { ?>
 								<p class="rel-block-label">Resumo (mesmos números dos KPIs)</p>
-								<div class="dash-erp-scroll" style="max-height:260px;">
+								<div class="dash-erp-scroll dash-erp-scroll--h260">
 									<div class="table-responsive">
 										<table class="dash-erp-table">
 											<thead><tr><th>Indicador</th><th>Valor</th></tr></thead>
@@ -283,13 +283,13 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 								</div>
 							<?php } else { ?>
 								<p class="rel-block-label">Tickets por técnico responsável (período e filtros atuais)</p>
-								<div class="dash-erp-scroll" style="max-height:260px;">
+								<div class="dash-erp-scroll dash-erp-scroll--h260">
 									<div class="table-responsive">
 										<table class="dash-erp-table">
 											<thead><tr><th>Técnico</th><th>Tickets</th></tr></thead>
 											<tbody>
 												<?php if (empty($tecRows)) { ?>
-													<tr><td colspan="2" class="text-center text-muted" style="padding:20px;">Sem agrupamento (sem responsável ou sem dados).</td></tr>
+													<tr><td colspan="2" class="text-center text-muted dash-erp-empty-cell">Sem agrupamento (sem responsável ou sem dados).</td></tr>
 												<?php } else { ?>
 													<?php foreach ($tecRows as $tr) { ?>
 														<tr><td><?= h($tr['nome']) ?></td><td><?= (int)$tr['tickets'] ?></td></tr>

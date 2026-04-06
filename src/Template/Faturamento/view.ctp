@@ -52,9 +52,21 @@ body.pgm-theme-light .fatview-items th { color:#6b7280; border-color:#e5e7eb; }
 body.pgm-theme-light .fatview-items td { color:#374151; border-color:#f3f4f6; }
 body.pgm-theme-light .fatview-header { border-color:#e1e4e8; }
 body.pgm-theme-light .fatview-total-val { color:#00a876; }
+.fatview-header-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.fatview-badge--dyn {
+	color: var(--fat-st);
+	border: 1px solid color-mix(in srgb, var(--fat-st) 35%, transparent);
+	background: color-mix(in srgb, var(--fat-st) 12%, rgba(255,255,255,.07));
+}
+.fatview-status-text { color: var(--fat-st); }
+.fatview-field--full { flex-basis:100%; }
+.fatview-items th.num, .fatview-items td.num { text-align:right; }
+.fatview-discount-line { font-size:12px; color:#7d8590; margin-bottom:4px; }
+body.pgm-theme-light .fatview-discount-line { color:#6b7280; }
+.fatview-financ-tbl { margin:0; }
 </style>
 
-<div class="fatview-root">
+<div class="fatview-root" style="--fat-st: <?= h($st['color']) ?>">
     <!-- Header -->
     <div class="fatview-header">
         <div>
@@ -66,8 +78,8 @@ body.pgm-theme-light .fatview-total-val { color:#00a876; }
                 <?= $doc->data_emissao ? $doc->data_emissao->format('d/m/Y') : '—' ?>
             </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <span class="fatview-badge" style="color:<?= $st['color'] ?>;border-color:<?= $st['color'] ?>20;background:<?= $st['color'] ?>15">
+        <div class="fatview-header-actions">
+            <span class="fatview-badge fatview-badge--dyn">
                 <?= $st['label'] ?>
             </span>
             <div class="fatview-actions">
@@ -96,7 +108,7 @@ body.pgm-theme-light .fatview-total-val { color:#00a876; }
             </div>
             <div class="fatview-field">
                 <label>Status</label>
-                <span style="color:<?= $st['color'] ?>"><?= $st['label'] ?></span>
+                <span class="fatview-status-text"><?= $st['label'] ?></span>
             </div>
             <div class="fatview-field">
                 <label>Emissão</label>
@@ -126,7 +138,7 @@ body.pgm-theme-light .fatview-total-val { color:#00a876; }
             </div>
             <?php endif; ?>
             <?php if (!empty($doc->descricao)): ?>
-            <div class="fatview-field" style="flex-basis:100%">
+            <div class="fatview-field fatview-field--full">
                 <label>Descrição</label>
                 <span><?= h($doc->descricao) ?></span>
             </div>
@@ -142,25 +154,25 @@ body.pgm-theme-light .fatview-total-val { color:#00a876; }
             <thead>
                 <tr>
                     <th>Descrição</th>
-                    <th style="text-align:right">Qtd</th>
-                    <th style="text-align:right">Vlr Unit.</th>
-                    <th style="text-align:right">Total</th>
+                    <th class="num">Qtd</th>
+                    <th class="num">Vlr Unit.</th>
+                    <th class="num">Total</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($doc->faturamento_itens as $item): ?>
                 <tr>
                     <td><?= h($item->descricao) ?></td>
-                    <td style="text-align:right"><?= number_format($item->quantidade, 2, ',', '.') ?></td>
-                    <td style="text-align:right">R$ <?= number_format($item->valor_unitario, 2, ',', '.') ?></td>
-                    <td style="text-align:right"><strong>R$ <?= number_format($item->valor_total, 2, ',', '.') ?></strong></td>
+                    <td class="num"><?= number_format($item->quantidade, 2, ',', '.') ?></td>
+                    <td class="num">R$ <?= number_format($item->valor_unitario, 2, ',', '.') ?></td>
+                    <td class="num"><strong>R$ <?= number_format($item->valor_total, 2, ',', '.') ?></strong></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
         <div class="fatview-total">
             <?php if ($doc->valor_desconto > 0): ?>
-            <div style="font-size:12px;color:#7d8590;margin-bottom:4px">
+            <div class="fatview-discount-line">
                 Desconto: R$ <?= number_format($doc->valor_desconto, 2, ',', '.') ?>
             </div>
             <?php endif; ?>
@@ -180,7 +192,7 @@ body.pgm-theme-light .fatview-total-val { color:#00a876; }
     <?php if (!empty($doc->financeiro_lancamentos)): ?>
     <div class="fatview-card fatview-financ">
         <div class="fatview-card-title">Lançamentos Financeiros</div>
-        <table class="table table-sm" style="margin:0">
+        <table class="table table-sm fatview-financ-tbl">
             <thead>
                 <tr>
                     <th>Descrição</th>

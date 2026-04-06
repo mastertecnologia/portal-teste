@@ -10,7 +10,7 @@ $this->Breadcrumbs->add('Editar', ['controller' => 'Clientes', 'action' => 'edit
 $this->Breadcrumbs->add('Histórico', [], ['class' => 'breadcrumb-item active']);
 ?>
 <div class="col-md-12">
-	<div class="card" style="background:#161b22;border-color:#21262d;">
+	<div class="card pgm-cli-eventos-card">
 		<div class="card-body">
 			<div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 				<div>
@@ -27,9 +27,9 @@ $this->Breadcrumbs->add('Histórico', [], ['class' => 'breadcrumb-item active'])
 				<p class="text-muted mb-0"><?= !empty($domainEventsReady) ? 'Nenhum evento registrado ainda.' : 'Execute a migration do módulo (portal_internal_notifications / client_domain_events) para habilitar o histórico.' ?></p>
 			<?php else: ?>
 				<div class="table-responsive">
-					<table class="table table-sm table-hover" style="color:#c9d1d9;">
+					<table class="table table-sm table-hover pgm-cli-eventos-table">
 						<thead>
-							<tr style="border-color:#21262d;">
+							<tr>
 								<th>Quando</th>
 								<th>Tipo</th>
 								<th>Descrição</th>
@@ -37,11 +37,11 @@ $this->Breadcrumbs->add('Histórico', [], ['class' => 'breadcrumb-item active'])
 						</thead>
 						<tbody>
 							<?php foreach ($events as $ev): ?>
-							<tr style="border-color:#21262d;">
-								<td style="white-space:nowrap;font-size:12px;">
+							<tr>
+								<td class="pgm-cli-eventos-timestamp">
 									<?= $ev->created ? h($ev->created->i18nFormat('dd/MM/yyyy HH:mm')) : '—' ?>
 								</td>
-								<td><code style="font-size:11px;color:#5cdbc0;"><?= h($ev->event_type) ?></code></td>
+								<td><code class="pgm-cli-eventos-code"><?= h($ev->event_type) ?></code></td>
 								<td><?= nl2br(h($ev->description ?? '')) ?></td>
 							</tr>
 							<?php endforeach; ?>

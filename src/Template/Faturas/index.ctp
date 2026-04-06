@@ -1,6 +1,9 @@
 <?php use Cake\Routing\Router; ?>
 <style>
 	.table td, .table th { padding: 0.2rem;	}
+	.fat-index-cliente-label {
+		font-weight: 500;
+	}
 </style>
 <div class="col-md-12">
 	<div class="card">
@@ -10,10 +13,10 @@
 				<div class="row">
 					<?php if($role == 0){ ?>
 						<div class="col-md-1 col-xs-12 m-t-10 p-r-0 float-left">
-							<p style='font-weight: 500;'> Cliente: </p>
+							<p class="fat-index-cliente-label"> Cliente: </p>
 						</div>
 						<div class="col-md-5 col-xs-12 p-l-0 float-right">
-							<?= $this->Form->control('cliente', ['data-live-search' => true, 'title' => 'Todos', 'data-live-search' => true, 'value' => strtoupper($cliente), 'class' => 'form-control selectpicker', 'id' => 'cliente', 'options' => $clientes, 'label' => false]) ?>
+							<?= $this->Form->control('cliente', ['data-live-search' => true, 'title' => 'Todos', 'value' => strtoupper($cliente), 'class' => 'form-control selectpicker', 'id' => 'cliente', 'options' => $clientes, 'label' => false]) ?>
 						</div>
 					<?php } ?>
 				</div>

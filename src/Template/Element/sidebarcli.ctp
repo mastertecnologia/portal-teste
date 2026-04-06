@@ -86,7 +86,7 @@
 
 	<div class="pgm-sidebar-meta">
 		<div class="pgm-meta-row">
-			<div style="flex:1;min-width:0">
+			<div class="pgm-sidebar-flex-min">
 				<label>Empresa</label>
 				<?php if (count($empresasOptSidebar) > 1) : ?>
 					<?= $this->Form->control('empresaSidebar', [
@@ -166,8 +166,7 @@
 							<li class="<?= h($ticketsSubHistAdvActive) ?>"><?= $this->Html->link('Histórico de atendimento', '/cliente/historico-atendimento-avancado', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>
-				<?php $display = $sidebar != 'mini-sidebar' ? 'none' : ''; ?>
-				<li id="mini-logout" style="display:<?= $display ?>;"><?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', '/users/logout', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
+				<li id="mini-logout" class="<?= $sidebar != 'mini-sidebar' ? 'd-none' : '' ?>"><?= $this->Html->link('<i class="far fa-circle text-danger"></i><span class="hide-menu">Sair</span>', '/users/logout', ['class' => 'waves-effect waves-dark', 'aria-expanded' => 'false', 'escape' => false]); ?></li>
 			</ul>
 		</nav>
 	</div>
@@ -181,7 +180,7 @@
 				<div class="dropdown dropup">
 					<a href="javascript:void(0)" class="dropdown-toggle u-dropdown link hide-menu text-white d-flex align-items-center" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
 						<span class="pgm-user-av"><?= h($userInitials ?: '?') ?></span>
-						<span class="hide-menu text-truncate" style="max-width:140px"><?= h($name) ?></span>
+						<span class="hide-menu text-truncate pgm-cli-name-truncate"><?= h($name) ?></span>
 						<span class="caret hide-menu"></span>
 					</a>
 					<div class="dropdown-menu animated flipInY">

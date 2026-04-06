@@ -35,21 +35,28 @@ if (!empty($carrinho)) {
 		.text-right { text-align: right; }
 		.area-observacao { padding: 8px 12px; font-size: 11px; }
 		.rodape-data { text-align: right; margin-top: 20px; }
+		.table-dados--header-block { margin-bottom: 12px; }
+		.table-dados--nested { margin: 0; }
+		.td-pdf-logo { width: 22%; vertical-align: top; }
+		.td-pdf-main { vertical-align: top; }
+		.table-dados th.th-pdf-w30 { width: 30%; }
+		.pdf-logo-img { width: 110px; }
+		.rodape-data p { margin: 2px 0; }
 	</style>
 </head>
 <body>
 	<h2>Proposta de Orçamento</h2>
-	<table class="table-dados" style="margin-bottom: 12px;">
+	<table class="table-dados table-dados--header-block">
 		<tr>
-			<td style="width: 22%; vertical-align: top;">
+			<td class="td-pdf-logo">
 				<?php if ($logoSrc) : ?>
-					<img src="<?= $logoSrc ?>" style="width: 110px;" alt="">
+					<img src="<?= $logoSrc ?>" class="pdf-logo-img" alt="">
 				<?php endif; ?>
 			</td>
-			<td style="vertical-align: top;">
-				<table class="table-dados" style="margin: 0;">
+			<td class="td-pdf-main">
+				<table class="table-dados table-dados--nested">
 					<tr>
-						<th style="width: 30%;">Nº do Orçamento</th>
+						<th class="th-pdf-w30">Nº do Orçamento</th>
 						<td><?= h($orcamento->id) ?></td>
 					</tr>
 					<tr>
@@ -114,9 +121,9 @@ if (!empty($carrinho)) {
 	</table>
 
 	<div class="rodape-data">
-		<p style="margin: 2px 0;">Bento Gonçalves, <?= @date_format($orcamento->created, 'd') . ' de ' . descricaoMes($orcamento->created, 1) . ' de ' . @date_format($orcamento->created, 'Y') ?></p>
-		<p style="margin: 2px 0;">Obrigado pela sua atenção,</p>
-		<p style="margin: 2px 0;"><?= h($orcamento->user->name) ?></p>
+		<p>Bento Gonçalves, <?= @date_format($orcamento->created, 'd') . ' de ' . descricaoMes($orcamento->created, 1) . ' de ' . @date_format($orcamento->created, 'Y') ?></p>
+		<p>Obrigado pela sua atenção,</p>
+		<p><?= h($orcamento->user->name) ?></p>
 	</div>
 </body>
 </html>

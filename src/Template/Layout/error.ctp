@@ -10,6 +10,7 @@
 	<title>We've got some trouble | {{code}} - {{title}}</title>
 
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-error-http') ?>
 	<script>
 	(function () {

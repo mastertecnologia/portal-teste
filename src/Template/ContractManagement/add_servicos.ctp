@@ -31,7 +31,7 @@ $unidOpts = [
 		'podeEditarDadosPasso' => !empty($contractMayEditCore),
 	]) ?>
 
-	<div class="mb-3" style="display:flex;flex-wrap:wrap;gap:6px;">
+	<div class="mb-3 adv-cm-toolbar">
 		<?= $this->Html->link('Continuar para signatários', ['action' => 'addSignatarios', $contractId], ['class' => 'btn btn-sm btn-primary']) ?>
 		<?= $this->Html->link('Ir para ficha do contrato',  ['action' => 'view',           $contractId], ['class' => 'btn btn-sm btn-default']) ?>
 		<?php if (!empty($contractMayEditCore)): ?>
@@ -55,7 +55,7 @@ $unidOpts = [
 					<th class="text-center">Incluso</th>
 					<th class="text-right">Vl. Unit.</th>
 					<th class="text-right">Vl. Total</th>
-					<th class="text-center" style="width:50px;"></th>
+					<th class="text-center adv-cm-th-icon"></th>
 				</tr>
 			</thead>
 			<tbody>

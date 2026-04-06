@@ -113,6 +113,47 @@
 .orc-security-item { display:flex; align-items:center; gap:5px; }
 .orc-security-item svg { color:#00C08B; }
 
+.orc-portal-header-badge--ok { background:rgba(0,192,139,.15); color:#5CDBC0; }
+.orc-portal-header-badge--ok .dot { background:#00C08B; animation:none; }
+.orc-portal-header-badge--no { background:rgba(226,75,74,.15); color:#E24B4A; }
+.orc-portal-header-badge--no .dot { background:#E24B4A; animation:none; }
+.orc-progress-fill--w33 { width:33%; }
+.orc-progress-fill--w100 { width:100%; }
+.orc-plab-amber { color:#FFC107; font-weight:600; }
+.orc-plab-teal { color:#00C08B; font-weight:600; }
+.orc-items-scroll { overflow-x:auto; }
+.orc-items-tbl th.orc-th-w60 { width:60px; }
+.orc-items-tbl th.orc-th-w80 { width:80px; }
+.orc-items-tbl th.orc-th-w50 { width:50px; }
+.orc-items-tbl th.orc-th-w110 { width:110px; }
+.orc-items-tbl th.orc-th-w120 { width:120px; }
+.orc-item-code { font-size:11px; color:#6b6a65; font-family:monospace; }
+.orc-item-vtot { font-weight:700; color:#00C08B; }
+.orc-dec-sub { font-size:11px; font-weight:400; }
+.orc-dec-sub--a { opacity:.85; }
+.orc-dec-sub--d { opacity:.7; }
+.orc-portal-card--txtcenter { text-align:center; }
+.orc-state-ico { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+.orc-state-ico--ok { background:#E6FAF4; }
+.orc-state-ico--no { background:#FCEBEB; }
+.orc-state-ico--amb { background:#FFF8E1; }
+.orc-state-h { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:6px; }
+.orc-state-h--lg { font-size:18px; }
+.orc-state-p { font-size:13px; color:#6b6a65; }
+.orc-stack-center { text-align:center; margin-bottom:24px; }
+.orc-stack-mb16 { margin-bottom:16px; }
+.orc-stack-mb20 { margin-bottom:20px; }
+.orc-stack-mb14 { margin-bottom:14px; }
+.orc-fld-h { font-size:13px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
+.orc-fld-h--tight { margin-bottom:6px; }
+.orc-radio-opt input { accent-color:#00C08B; }
+.orc-neg-2col { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.orc-neg-lbl { font-size:11px; font-weight:600; color:#6b6a65; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.orc-neg-inp { width:100%; padding:10px 14px; border:1.5px solid #e8e7e3; border-radius:10px; font-size:13px; outline:none; font-family:inherit; background:#fff; }
+.orc-neg-inp:focus { border-color:#00C08B; box-shadow:0 0 0 3px rgba(0,192,139,.1); }
+.orc-success-icon--no { background:#FCEBEB; }
+.orc-success-icon--amb { background:#FFF8E1; }
+
 @media(max-width:600px){
   .orc-hero{padding:20px 18px;}
   .orc-portal-card{padding:18px 16px;}
@@ -140,13 +181,13 @@
     Proposta aguardando sua resposta
   </div>
   <?php elseif($orcamento->status == C_OrcamentoStatusAprovado): ?>
-  <div class="orc-portal-header-badge" style="background:rgba(0,192,139,.15);color:#5CDBC0;">
-    <span class="dot" style="background:#00C08B;animation:none;"></span>
+  <div class="orc-portal-header-badge orc-portal-header-badge--ok">
+    <span class="dot"></span>
     Proposta aprovada
   </div>
   <?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?>
-  <div class="orc-portal-header-badge" style="background:rgba(226,75,74,.15);color:#E24B4A;">
-    <span class="dot" style="background:#E24B4A;animation:none;"></span>
+  <div class="orc-portal-header-badge orc-portal-header-badge--no">
+    <span class="dot"></span>
     Proposta recusada
   </div>
   <?php endif; ?>
@@ -198,18 +239,18 @@
     </div>
 
     <?php if($orcamento->status == C_OrcamentoStatusEnviado): ?>
-    <div class="orc-progress-bar"><div class="orc-progress-fill" style="width:33%;"></div></div>
+    <div class="orc-progress-bar"><div class="orc-progress-fill orc-progress-fill--w33"></div></div>
     <div class="orc-progress-labels">
       <span>Proposta enviada</span>
-      <span style="color:#FFC107;font-weight:600;">Aguardando sua resposta</span>
+      <span class="orc-plab-amber">Aguardando sua resposta</span>
       <span>Contrato finalizado</span>
     </div>
     <?php elseif($orcamento->status == C_OrcamentoStatusAprovado): ?>
-    <div class="orc-progress-bar"><div class="orc-progress-fill" style="width:100%;"></div></div>
+    <div class="orc-progress-bar"><div class="orc-progress-fill orc-progress-fill--w100"></div></div>
     <div class="orc-progress-labels">
       <span>Proposta enviada</span>
       <span>Resposta recebida</span>
-      <span style="color:#00C08B;font-weight:600;">Proposta aprovada ✓</span>
+      <span class="orc-plab-teal">Proposta aprovada ✓</span>
     </div>
     <?php endif; ?>
   </div>
@@ -217,16 +258,16 @@
   <!-- Produtos -->
   <div class="orc-portal-card">
     <div class="orc-portal-card-title">Produtos e serviços inclusos</div>
-    <div style="overflow-x:auto;">
+    <div class="orc-items-scroll">
       <table class="orc-items-tbl">
         <thead>
           <tr>
-            <th style="width:60px;">Código</th>
+            <th class="orc-th-w60">Código</th>
             <th>Produto / Serviço</th>
-            <th style="width:80px;">Tipo</th>
-            <th class="r" style="width:50px;">Qtd.</th>
-            <th class="r" style="width:110px;">Vl. Unit.</th>
-            <th class="r" style="width:120px;">Vl. Total</th>
+            <th class="orc-th-w80">Tipo</th>
+            <th class="r orc-th-w50">Qtd.</th>
+            <th class="r orc-th-w110">Vl. Unit.</th>
+            <th class="r orc-th-w120">Vl. Total</th>
           </tr>
         </thead>
         <tbody>
@@ -239,7 +280,7 @@
             $totalMensal += $reg->valormensal;
           ?>
           <tr>
-            <td style="font-size:11px;color:#6b6a65;font-family:monospace;"><?= $reg->idproduto ?: '—' ?></td>
+            <td class="orc-item-code"><?= $reg->idproduto ?: '—' ?></td>
             <td>
               <div class="orc-item-name"><?= htmlspecialchars($reg->servico) ?></div>
               <?php if(!empty($reg->observacao)): ?><div class="orc-item-desc"><?= htmlspecialchars($reg->observacao) ?></div><?php endif; ?>
@@ -253,7 +294,7 @@
             </td>
             <td class="r"><?= $reg->quantidade ?></td>
             <td class="r">R$ <?= number_format($vUnit, 2, ',', '.') ?></td>
-            <td class="r" style="font-weight:700;color:#00C08B;">R$ <?= number_format($reg->valordoservico, 2, ',', '.') ?></td>
+            <td class="r orc-item-vtot">R$ <?= number_format($reg->valordoservico, 2, ',', '.') ?></td>
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -285,12 +326,12 @@
       <a href="<?= $this->Url->build(['action' => 'aprovarhash', $orcamento->hash]) ?>" class="orc-decision-btn orc-btn-approve" id="btn-aprovar-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         Aprovar proposta
-        <span style="font-size:11px;font-weight:400;opacity:.85;">Aceito as condições acima</span>
+        <span class="orc-dec-sub orc-dec-sub--a">Aceito as condições acima</span>
       </a>
       <button type="button" class="orc-decision-btn orc-btn-decline" onclick="orcGoTo('orc-pg-recusar')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         Recusar proposta
-        <span style="font-size:11px;font-weight:400;opacity:.7;">Não tenho interesse</span>
+        <span class="orc-dec-sub orc-dec-sub--d">Não tenho interesse</span>
       </button>
     </div>
     <button type="button" class="orc-btn-negotiate" onclick="orcGoTo('orc-pg-negociar')">
@@ -299,20 +340,20 @@
     </button>
   </div>
   <?php elseif($orcamento->status == C_OrcamentoStatusAprovado): ?>
-  <div class="orc-portal-card" style="text-align:center;">
-    <div style="width:52px;height:52px;background:#E6FAF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+  <div class="orc-portal-card orc-portal-card--txtcenter">
+    <div class="orc-state-ico orc-state-ico--ok">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#008F68" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div style="font-size:16px;font-weight:700;color:#1a1a18;margin-bottom:6px;">Proposta já aprovada</div>
-    <div style="font-size:13px;color:#6b6a65;">Esta proposta foi aprovada. A PGM Soluções irá entrar em contato em breve.</div>
+    <div class="orc-state-h">Proposta já aprovada</div>
+    <div class="orc-state-p">Esta proposta foi aprovada. A PGM Soluções irá entrar em contato em breve.</div>
   </div>
   <?php elseif($orcamento->status == C_OrcamentoStatusRecusado): ?>
-  <div class="orc-portal-card" style="text-align:center;">
-    <div style="width:52px;height:52px;background:#FCEBEB;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+  <div class="orc-portal-card orc-portal-card--txtcenter">
+    <div class="orc-state-ico orc-state-ico--no">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#791F1F" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
-    <div style="font-size:16px;font-weight:700;color:#1a1a18;margin-bottom:6px;">Proposta recusada</div>
-    <div style="font-size:13px;color:#6b6a65;">Se mudar de ideia, entre em contato com nossa equipe.</div>
+    <div class="orc-state-h">Proposta recusada</div>
+    <div class="orc-state-p">Se mudar de ideia, entre em contato com nossa equipe.</div>
   </div>
   <?php endif; ?>
 
@@ -321,23 +362,23 @@
 <!-- ===== TELA: RECUSAR ===== -->
 <div class="orc-pg" id="orc-pg-recusar">
   <div class="orc-portal-card">
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="width:52px;height:52px;background:#FCEBEB;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+    <div class="orc-stack-center">
+      <div class="orc-state-ico orc-state-ico--no">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#791F1F" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </div>
-      <div style="font-size:18px;font-weight:700;color:#1a1a18;margin-bottom:6px;">Recusar proposta</div>
-      <div style="font-size:13px;color:#6b6a65;">Lamentamos que não tenha dado certo. Poderia nos informar o motivo?</div>
+      <div class="orc-state-h orc-state-h--lg">Recusar proposta</div>
+      <div class="orc-state-p">Lamentamos que não tenha dado certo. Poderia nos informar o motivo?</div>
     </div>
-    <div style="margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:10px;">Motivo da recusa</div>
-      <label class="orc-radio-opt"><input type="radio" name="motivo" value="preco" style="accent-color:#00C08B;"/> Preço acima do orçamento disponível</label>
+    <div class="orc-stack-mb16">
+      <div class="orc-fld-h">Motivo da recusa</div>
+      <label class="orc-radio-opt"><input type="radio" name="motivo" value="preco" /> Preço acima do orçamento disponível</label>
       <label class="orc-radio-opt"><input type="radio" name="motivo" value="prazo"/> Prazo de entrega não atende</label>
       <label class="orc-radio-opt"><input type="radio" name="motivo" value="spec"/> Especificações técnicas não atendem</label>
       <label class="orc-radio-opt"><input type="radio" name="motivo" value="outro"/> Escolhemos outro fornecedor</label>
       <label class="orc-radio-opt"><input type="radio" name="motivo" value="cancelado"/> Projeto cancelado internamente</label>
     </div>
-    <div style="margin-bottom:20px;">
-      <div style="font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:6px;">Observação adicional (opcional)</div>
+    <div class="orc-stack-mb20">
+      <div class="orc-fld-h orc-fld-h--tight">Observação adicional (opcional)</div>
       <textarea class="orc-textarea" id="rec-obs" placeholder="Deixe um comentário para nossa equipe..."></textarea>
     </div>
     <button type="button" class="orc-btn-main red" onclick="orcConfirmarRecusa()">
@@ -351,25 +392,25 @@
 <!-- ===== TELA: NEGOCIAR ===== -->
 <div class="orc-pg" id="orc-pg-negociar">
   <div class="orc-portal-card">
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="width:52px;height:52px;background:#FFF8E1;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+    <div class="orc-stack-center">
+      <div class="orc-state-ico orc-state-ico--amb">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8A6A00" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       </div>
-      <div style="font-size:18px;font-weight:700;color:#1a1a18;margin-bottom:6px;">Solicitar ajustes</div>
-      <div style="font-size:13px;color:#6b6a65;">Informe o que precisa ser ajustado. Nossa equipe retornará em até 24h.</div>
+      <div class="orc-state-h orc-state-h--lg">Solicitar ajustes</div>
+      <div class="orc-state-p">Informe o que precisa ser ajustado. Nossa equipe retornará em até 24h.</div>
     </div>
-    <div style="margin-bottom:14px;">
-      <div style="font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:6px;">Descreva os ajustes necessários</div>
+    <div class="orc-stack-mb14">
+      <div class="orc-fld-h orc-fld-h--tight">Descreva os ajustes necessários</div>
       <textarea class="orc-textarea" id="neg-obs" placeholder="Ex: Preciso de desconto adicional, prazo máximo de entrega de 15 dias..."></textarea>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div class="orc-neg-2col">
       <div>
-        <div style="font-size:11px;font-weight:600;color:#6b6a65;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Seu nome</div>
-        <input type="text" id="neg-nome" placeholder="Nome completo" style="width:100%;padding:10px 14px;border:1.5px solid #e8e7e3;border-radius:10px;font-size:13px;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#00C08B'" onblur="this.style.borderColor='#e8e7e3'"/>
+        <div class="orc-neg-lbl">Seu nome</div>
+        <input type="text" id="neg-nome" class="orc-neg-inp" placeholder="Nome completo" />
       </div>
       <div>
-        <div style="font-size:11px;font-weight:600;color:#6b6a65;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Telefone</div>
-        <input type="tel" id="neg-tel" placeholder="(54) 99999-9999" style="width:100%;padding:10px 14px;border:1.5px solid #e8e7e3;border-radius:10px;font-size:13px;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#00C08B'" onblur="this.style.borderColor='#e8e7e3'"/>
+        <div class="orc-neg-lbl">Telefone</div>
+        <input type="tel" id="neg-tel" class="orc-neg-inp" placeholder="(54) 99999-9999" />
       </div>
     </div>
     <button type="button" class="orc-btn-main amber" onclick="orcConfirmarNeg()">
@@ -383,10 +424,10 @@
 <!-- ===== SUCESSO RECUSA ===== -->
 <div class="orc-pg" id="orc-pg-recusado">
   <div class="orc-success-card">
-    <div class="orc-success-icon" style="background:#FCEBEB;">
+    <div class="orc-success-icon orc-success-icon--no">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#791F1F" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
-    <div class="orc-success-title" style="color:#1a1a18;">Recusa registrada</div>
+    <div class="orc-success-title">Recusa registrada</div>
     <div class="orc-success-sub">Agradecemos o retorno. Se mudar de ideia, entre em contato com nossa equipe.</div>
   </div>
 </div>
@@ -394,10 +435,10 @@
 <!-- ===== SUCESSO NEGOCIAÇÃO ===== -->
 <div class="orc-pg" id="orc-pg-negociado">
   <div class="orc-success-card">
-    <div class="orc-success-icon" style="background:#FFF8E1;">
+    <div class="orc-success-icon orc-success-icon--amb">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8A6A00" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div class="orc-success-title" style="color:#1a1a18;">Solicitação enviada!</div>
+    <div class="orc-success-title">Solicitação enviada!</div>
     <div class="orc-success-sub">Sua solicitação de ajuste foi registrada. Nossa equipe entrará em contato em até 24h com uma nova proposta.</div>
   </div>
 </div>

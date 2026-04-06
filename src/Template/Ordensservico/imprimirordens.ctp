@@ -47,6 +47,8 @@
 		.quebrapaginas {page-break-after: always !important; }
 	}
 
+	.os-print-logo-w { width: 140px; }
+
 	.table td, .table th {
 		padding: 0.7rem;
 		vertical-align: top;
@@ -65,7 +67,7 @@
 					<h2 class='titulo bg-dark text-white text-center p-2'> Ordem de Serviço </h2><br>
 					<div class="row">
 						<div class="col-3 text-center">
-							<img src="<?=$this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="homepage" style='width: 140px' class='p-l-20 m-t-10'><br>
+							<img src="<?=$this->request->getAttribute('webroot') . 'assets/images/' . $logo ?>" alt="homepage" class='p-l-20 m-t-10 os-print-logo-w'><br>
 						</div>
 						<div class="col-3 text-center">
 							<table class="table m-t-10">

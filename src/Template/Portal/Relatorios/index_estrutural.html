@@ -34,6 +34,8 @@
   Gráficos: esta estrutura usa APENAS blocos reservados (div.prel-grafico-slot).
   O CakePHP pode injetar SVG, imagem gerada no servidor ou JS do próprio portal — sem CDN.
 
+  CSS: public/dist/css/pages/portal-relatorios-estrutural.css (espelho webroot/dist).
+
   O conteúdo abaixo situa-se dentro de <main class="portal-main"> (layout pai).
   ============================================================
 -->
@@ -42,90 +44,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Relatórios — Portal do Cliente</title>
-  <!-- CSS global do portal vem do layout. Opcional: $this->Html->css('portal/prel-relatorios') -->
-  <style>
-    /* ========== Estrutural (prefixo prel-) — mover para CSS externo em produção ========== */
-    .prel-page { max-width: 1200px; margin: 0 auto; padding: 1rem 1rem 2rem; }
-    .prel-breadcrumb { font-size: 0.8125rem; color: #6b7280; margin-bottom: 0.75rem; }
-    .prel-breadcrumb ol { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .prel-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.35rem; color: #d1d5db; }
-    .prel-breadcrumb a { color: #2563eb; text-decoration: none; }
-    .prel-breadcrumb a:hover { text-decoration: underline; }
-
-    .prel-cabecalho { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-    .prel-cabecalho__titulo { font-size: 1.5rem; font-weight: 700; margin: 0; color: #111827; }
-    .prel-cabecalho__subtitulo { font-size: 0.875rem; color: #6b7280; margin: 0.35rem 0 0; max-width: 36rem; }
-    .prel-cabecalho__acoes { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-
-    .prel-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.9rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; text-decoration: none; background: #fff; color: #374151; }
-    .prel-btn:hover { background: #f9fafb; }
-    .prel-btn--primario { background: #2563eb; color: #fff; border-color: #2563eb; }
-    .prel-btn--primario:hover { background: #1d4ed8; }
-    .prel-btn--borda { border-color: #d1d5db; }
-
-    .prel-dropdown { position: relative; display: inline-block; }
-    .prel-dropdown__menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 0.25rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.375rem; box-shadow: 0 4px 12px rgba(0,0,0,.08); min-width: 11rem; z-index: 50; }
-    .prel-dropdown.is-open .prel-dropdown__menu { display: block; }
-    .prel-dropdown__item { display: block; width: 100%; padding: 0.5rem 0.875rem; font-size: 0.8125rem; color: #374151; text-align: left; border: none; background: none; cursor: pointer; text-decoration: none; }
-    .prel-dropdown__item:hover { background: #f3f4f6; }
-
-    /* Filtros globais */
-    .prel-filtros { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
-    .prel-filtros__titulo { font-size: 0.875rem; font-weight: 600; color: #374151; margin: 0 0 0.75rem; }
-    .prel-filtros__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.75rem 1rem; align-items: end; }
-    .prel-filtros label { display: block; font-size: 0.75rem; font-weight: 500; color: #6b7280; margin-bottom: 0.25rem; }
-    .prel-filtros input[type="text"],
-    .prel-filtros input[type="date"],
-    .prel-filtros select { width: 100%; padding: 0.45rem 0.5rem; font-size: 0.875rem; border: 1px solid #d1d5db; border-radius: 0.375rem; box-sizing: border-box; }
-    .prel-filtros__atalhos { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
-    .prel-filtros__atalho { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 999px; border: 1px solid #e5e7eb; background: #f9fafb; cursor: pointer; }
-    .prel-filtros__atalho[aria-pressed="true"] { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
-    .prel-filtros__acoes { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
-
-    /* KPIs */
-    .prel-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 0.875rem; margin-bottom: 1.25rem; }
-    .prel-kpi { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem 1.1rem; }
-    .prel-kpi__label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin: 0 0 0.35rem; }
-    .prel-kpi__valor { font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0; line-height: 1.1; }
-    .prel-kpi__hint { font-size: 0.6875rem; color: #9ca3af; margin: 0.35rem 0 0; }
-
-    /* Abas */
-    .prel-tabs { border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.25rem; }
-    .prel-tabs__tab { padding: 0.6rem 1rem; font-size: 0.875rem; font-weight: 500; color: #6b7280; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -1px; }
-    .prel-tabs__tab:hover { color: #111827; }
-    .prel-tabs__tab[aria-selected="true"] { color: #2563eb; border-bottom-color: #2563eb; }
-    .prel-tabs__tab[disabled] { opacity: 0.45; cursor: not-allowed; }
-
-    .prel-painel { display: none; }
-    .prel-painel.is-active { display: block; }
-
-    /* Blocos de conteúdo */
-    .prel-bloco { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem 1.15rem; margin-bottom: 1rem; }
-    .prel-bloco__titulo { font-size: 0.9375rem; font-weight: 600; color: #111827; margin: 0 0 0.75rem; }
-    .prel-bloco__desc { font-size: 0.8125rem; color: #6b7280; margin: -0.5rem 0 0.75rem; }
-
-    .prel-grafico-slot { min-height: 14rem; background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%); border: 1px dashed #d1d5db; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.8125rem; text-align: center; padding: 1rem; }
-    .prel-grafico-slot small { display: block; max-width: 18rem; line-height: 1.4; }
-
-    .prel-tabela { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
-    .prel-tabela th, .prel-tabela td { padding: 0.5rem 0.6rem; text-align: left; border-bottom: 1px solid #f3f4f6; }
-    .prel-tabela th { font-weight: 600; color: #6b7280; background: #fafafa; }
-
-    /* Estados globais da página / painel */
-    .prel-estado { padding: 2rem 1rem; text-align: center; border: 1px dashed #e5e7eb; border-radius: 0.5rem; background: #fafafa; }
-    .prel-estado--erro { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
-    .prel-estado--aviso { border-color: #fde68a; background: #fffbeb; color: #92400e; }
-    .prel-estado__titulo { font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.35rem; }
-    .prel-estado__texto { font-size: 0.8125rem; margin: 0; opacity: 0.9; }
-    .prel-spinner { width: 2rem; height: 2rem; border: 3px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; margin: 0 auto 0.75rem; animation: prel-spin 0.7s linear infinite; }
-    @keyframes prel-spin { to { transform: rotate(360deg); } }
-
-    .prel-rodape-acoes { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
-
-    .prel-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
-
-    .prel-lista-rels { margin: 0; padding-left: 1.15rem; font-size: 0.8125rem; color: #4b5563; line-height: 1.6; }
-  </style>
+  <!-- Produção: $this->Html->css('/dist/css/pages/portal-relatorios-estrutural') -->
+  <link rel="stylesheet" href="/dist/css/pages/portal-relatorios-estrutural.css">
 </head>
 <body class="portal-layout">
 
@@ -191,7 +111,7 @@
          ============================================================ -->
     <section class="prel-filtros" aria-labelledby="prel-filtros-titulo">
       <h2 class="prel-filtros__titulo" id="prel-filtros-titulo">Filtros</h2>
-      <p class="prel-bloco__desc" style="margin:0 0 0.5rem;">Atalhos de período (apenas UI; o servidor valida e aplica o intervalo).</p>
+      <p class="prel-bloco__desc prel-bloco__desc--atalhos-flush">Atalhos de período (apenas UI; o servidor valida e aplica o intervalo).</p>
       <div class="prel-filtros__atalhos" role="group" aria-label="Atalhos de período">
         <button type="button" class="prel-filtros__atalho" data-prel-periodo="mes">Mês atual</button>
         <button type="button" class="prel-filtros__atalho" data-prel-periodo="trimestre">Trimestre</button>
@@ -354,7 +274,7 @@
           <div class="prel-grafico-slot" id="prel-slot-grafico-tickets-periodo" aria-label="Gráfico de tickets por período">
             <small>Espaço reservado para gráfico (SVG, imagem gerada no servidor ou componente do portal). Sem bibliotecas externas neste HTML.</small>
           </div>
-          <div style="overflow-x:auto;margin-top:0.75rem;">
+          <div class="prel-scroll-x--mt">
             <table class="prel-tabela">
               <thead>
                 <tr>
@@ -377,7 +297,7 @@
           <div class="prel-grafico-slot" id="prel-slot-grafico-categorias">
             <small>Gráfico por categoria (placeholder).</small>
           </div>
-          <table class="prel-tabela" style="margin-top:0.75rem;">
+          <table class="prel-tabela prel-tabela--mt-sm">
             <thead>
               <tr><th scope="col">Categoria</th><th scope="col">Tickets</th><th scope="col">% do total</th></tr>
             </thead>
@@ -392,10 +312,10 @@
         <div class="prel-bloco">
           <h3 class="prel-bloco__titulo">SLA no período</h3>
           <p class="prel-bloco__desc">Resumo para o cliente — sem tempos internos nem filas.</p>
-          <div class="prel-grafico-slot" id="prel-slot-grafico-sla" style="min-height:10rem;">
+          <div class="prel-grafico-slot prel-grafico-slot--h10" id="prel-slot-grafico-sla">
             <small>Indicadores visuais (ex.: donut ou barras) gerados no servidor ou CSS.</small>
           </div>
-          <table class="prel-tabela" style="margin-top:0.75rem;">
+          <table class="prel-tabela prel-tabela--mt-sm">
             <thead>
               <tr><th scope="col">Indicador</th><th scope="col">Valor</th></tr>
             </thead>
@@ -494,10 +414,10 @@
       <div id="prel-fin-conteudo">
         <div class="prel-bloco">
           <h3 class="prel-bloco__titulo">Faturas pagas × pendentes</h3>
-          <div class="prel-grafico-slot" id="prel-slot-grafico-faturas" style="min-height:12rem;">
+          <div class="prel-grafico-slot prel-grafico-slot--h12" id="prel-slot-grafico-faturas">
             <small>Resumo visual (quantidades ou valores totais autorizados — sem discriminação interna).</small>
           </div>
-          <ul class="prel-lista-rels" style="list-style:none;padding-left:0;">
+          <ul class="prel-lista-rels prel-lista-rels--plain">
             <!-- PHP: $dadosFinanceiro['resumo'] -->
             <li><strong>Pagas:</strong> 12 notas</li>
             <li><strong>Pendentes:</strong> 3 notas</li>
@@ -507,7 +427,7 @@
         <div class="prel-bloco">
           <h3 class="prel-bloco__titulo">Lista de faturas</h3>
           <p class="prel-bloco__desc">Exibir número, emissão, vencimento, status e valor total da nota. Download de PDF/NF apenas com rota verificada.</p>
-          <div style="overflow-x:auto;">
+          <div class="prel-scroll-x">
             <table class="prel-tabela">
               <thead>
                 <tr>
@@ -528,7 +448,7 @@
                   <td>R$ 1.200,00</td>
                   <td>
                     <!-- PHP: if ($permissoes['faturas.download'] ?? false) -->
-                    <a href="/portal/faturas/download/123" class="prel-btn prel-btn--borda" style="padding:0.25rem 0.5rem;font-size:0.75rem;">PDF</a>
+                    <a href="/portal/faturas/download/123" class="prel-btn prel-btn--borda prel-btn--pdf-xs">PDF</a>
                     <!-- PHP: endif -->
                   </td>
                 </tr>

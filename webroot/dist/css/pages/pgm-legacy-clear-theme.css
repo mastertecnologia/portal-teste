@@ -46,6 +46,7 @@ html[data-pgm-theme="light"] body.pgm-legacy-clear {
 	color: var(--pgm-text) !important;
 }
 
+/* Botão flutuante de tema (layout sem sidebar PGM) */
 .pgm-legacy-theme-fab {
 	position: fixed;
 	bottom: 1.25rem;

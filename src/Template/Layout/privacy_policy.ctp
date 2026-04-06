@@ -34,6 +34,7 @@ $isLightPrivacy = ($privacyTheme === 'light');
 	<?= $this->Html->css("/dist/css/pages/login-register-lock") ?>
 	<?= $this->Html->css("/dist/css/style.min") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-login-theme") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 	<?php if ($privacyAuth) : ?>
@@ -57,7 +58,7 @@ $isLightPrivacy = ($privacyTheme === 'light');
 	<?= $this->Html->script("/dist/js/custom") ?>
 
 	<?php if ($privacyAuth) : ?>
-	<div class="pgm-privacy-theme-float" style="position:fixed;top:10px;right:10px;z-index:9999;">
+	<div class="pgm-privacy-theme-float">
 		<button type="button" class="pgm-auth-theme-toggle pgm-js-theme-toggle"
 			title="<?= $isLightPrivacy ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
 			aria-pressed="<?= $isLightPrivacy ? 'true' : 'false' ?>"
@@ -68,7 +69,7 @@ $isLightPrivacy = ($privacyTheme === 'light');
 		</button>
 	</div>
 	<?php else : ?>
-	<div class="pgm-privacy-theme-float" style="position:fixed;top:10px;right:10px;z-index:9999;">
+	<div class="pgm-privacy-theme-float">
 		<button type="button" class="pgm-auth-theme-toggle" id="pgmAuthThemeToggle" aria-label="Alternar tema claro ou escuro">
 			<span class="pgm-auth-tt-ico" aria-hidden="true">☀️</span>
 			<span class="pgm-auth-tt-txt">Claro</span>

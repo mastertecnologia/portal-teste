@@ -2,10 +2,12 @@
  * PGM Soluções — botões de ação (paleta referência ERP)
  * Uso: <button type="button" class="btn btn-pgm btn-pgm-salvar">Salvar</button>
  * Incluído globalmente via Layout/default.ctp → /css/pgm-action-buttons.css
+ * Com WEBROOT_DIR=public manter cópia em sync: public/css/pgm-action-buttons.css
  */
 :root {
-  --pgm-btn-teal: #00c08b;
-  --pgm-btn-teal-hover: #008f68;
+  /* ERP teal alinhado a pgm-theme-tokens (--pgm-erp-teal*) */
+  --pgm-btn-teal: var(--pgm-erp-teal, #00c08b);
+  --pgm-btn-teal-hover: var(--pgm-erp-teal-hover, #008f68);
   --pgm-btn-sky: #33ccff;
   --pgm-btn-sky-hover: #1ab8e8;
   --pgm-btn-orange: #ff8833;

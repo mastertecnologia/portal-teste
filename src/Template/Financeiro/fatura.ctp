@@ -122,12 +122,28 @@ body.pgm-theme-light .cr-audit-dt,
 body.pgm-theme-light .cr-audit-hr { color:#6b7280; }
 .cr-obs { color:#c9d1d9; font-size:13px; line-height:1.5; }
 body.pgm-theme-light .cr-obs { color:#374151; }
+.cr-h1-ico { color:#5cdbc0; margin-right:8px; }
+.cr-h1-id { color:#7d8590; font-weight:400; }
+.cr-principal-val--accent { color:#5cdbc0; }
+.cr-status-wrap { margin-top:4px; }
+.cr-empty--pb12 { padding-bottom:12px; }
+.cr-items-val-unico { text-align:right; font-size:15px; font-weight:700; color:#5cdbc0; padding:0 10px 8px; }
+body.pgm-theme-light .cr-items-val-unico { color:#00a876; }
+.cr-items th.cr-num, .cr-items td.cr-num { text-align:right; }
+.cr-discount-line { text-align:right; font-size:12px; color:#7d8590; margin-top:8px; padding-right:10px; }
+body.pgm-theme-light .cr-discount-line { color:#6b7280; }
+.cr-empty--p18 { padding:18px; }
+.cr-anexo-scroll { margin:0 -4px; }
+.cr-anexo-user { font-size:11px; color:#9ca3af; max-width:120px; }
+.cr-anexo-when { font-size:11px; color:#7d8590; white-space:nowrap; }
+body.pgm-theme-light .cr-anexo-user { color:#6b7280; }
+body.pgm-theme-light .cr-anexo-when { color:#6b7280; }
 </style>
 
 <div class="cr-root">
 	<div class="cr-topbar">
-		<div class="cr-h1"><i class="fas fa-file-invoice-dollar" style="color:#5cdbc0;margin-right:8px"></i><?= h($title) ?> <small style="color:#7d8590;font-weight:400">#<?= (int)$lancamento->id ?></small></div>
-		<div class="d-flex flex-wrap align-items-center" style="gap:6px">
+		<div class="cr-h1"><i class="fas fa-file-invoice-dollar cr-h1-ico"></i><?= h($title) ?> <small class="cr-h1-id">#<?= (int)$lancamento->id ?></small></div>
+		<div class="d-flex flex-wrap align-items-center pgm-gap-6">
 			<?= $this->Html->link('<i class="fas fa-download"></i> CSV', ['action' => 'exportarFatura', $lancamento->id], ['class' => 'btn btn-default btn-sm', 'escape' => false, 'title' => 'Exportar resumo em CSV (UTF-8)']) ?>
 			<?= $this->Html->link('<i class="fas fa-file-pdf"></i> PDF', ['action' => 'exportarFaturaPdf', $lancamento->id], ['class' => 'btn btn-default btn-sm', 'escape' => false, 'title' => 'Baixar detalhe em PDF']) ?>
 			<?php if ($lancamento->status === 'aberto') : ?>
@@ -146,7 +162,7 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 		<div class="cr-principal">
 			<div class="cr-principal-box">
 				<div class="cr-principal-label">Valor</div>
-				<div class="cr-principal-val" style="color:#5cdbc0">R$ <?= number_format((float)$lancamento->valor, 2, ',', '.') ?></div>
+				<div class="cr-principal-val cr-principal-val--accent">R$ <?= number_format((float)$lancamento->valor, 2, ',', '.') ?></div>
 			</div>
 			<div class="cr-principal-box">
 				<div class="cr-principal-label">Vencimento</div>
@@ -154,7 +170,7 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 			</div>
 			<div class="cr-principal-box">
 				<div class="cr-principal-label">Status</div>
-				<div class="cr-principal-val sm" style="margin-top:4px">
+				<div class="cr-principal-val sm cr-status-wrap">
 					<?php if ($vencido) : ?>
 						<span class="cr-badge badge-danger">Vencido</span>
 					<?php else : ?>
@@ -219,8 +235,8 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 			<?php if (empty($fat)) : ?>
 				<div class="cr-empty">Sem documento de faturamento vinculado. Os itens aparecem quando houver vínculo com um faturamento.</div>
 			<?php elseif (empty($itensDoc)) : ?>
-				<div class="cr-empty" style="padding-bottom:12px">Documento sem linhas de item — valor único do faturamento.</div>
-				<div style="text-align:right;font-size:15px;font-weight:700;color:#5cdbc0;padding:0 10px 8px">
+				<div class="cr-empty cr-empty--pb12">Documento sem linhas de item — valor único do faturamento.</div>
+				<div class="cr-items-val-unico">
 					R$ <?= number_format((float)($fat->valor_total ?? 0), 2, ',', '.') ?>
 				</div>
 			<?php else : ?>
@@ -228,24 +244,24 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 					<thead>
 						<tr>
 							<th>Descrição</th>
-							<th style="text-align:right">Qtd</th>
-							<th style="text-align:right">Vlr unit.</th>
-							<th style="text-align:right">Total</th>
+							<th class="cr-num">Qtd</th>
+							<th class="cr-num">Vlr unit.</th>
+							<th class="cr-num">Total</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ($itensDoc as $item) : ?>
 						<tr>
 							<td><?= h($item->descricao) ?></td>
-							<td style="text-align:right"><?= number_format((float)$item->quantidade, 2, ',', '.') ?></td>
-							<td style="text-align:right">R$ <?= number_format((float)$item->valor_unitario, 2, ',', '.') ?></td>
-							<td style="text-align:right"><strong>R$ <?= number_format((float)$item->valor_total, 2, ',', '.') ?></strong></td>
+							<td class="cr-num"><?= number_format((float)$item->quantidade, 2, ',', '.') ?></td>
+							<td class="cr-num">R$ <?= number_format((float)$item->valor_unitario, 2, ',', '.') ?></td>
+							<td class="cr-num"><strong>R$ <?= number_format((float)$item->valor_total, 2, ',', '.') ?></strong></td>
 						</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
 				<?php if (!empty($fat->valor_desconto) && (float)$fat->valor_desconto > 0) : ?>
-				<div style="text-align:right;font-size:12px;color:#7d8590;margin-top:8px;padding-right:10px">
+				<div class="cr-discount-line">
 					Desconto: R$ <?= number_format((float)$fat->valor_desconto, 2, ',', '.') ?>
 				</div>
 				<?php endif; ?>
@@ -316,9 +332,9 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 			<?= $this->Form->end() ?>
 
 			<?php if (empty($anexosLista)) : ?>
-				<div class="cr-empty" style="padding:18px">Nenhum anexo neste lançamento.</div>
+				<div class="cr-empty cr-empty--p18">Nenhum anexo neste lançamento.</div>
 			<?php else : ?>
-				<div class="table-responsive" style="margin:0 -4px">
+				<div class="table-responsive cr-anexo-scroll">
 					<table class="cr-anexo-tbl">
 						<thead>
 							<tr>
@@ -344,8 +360,8 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 										['escape' => false, 'title' => 'Baixar']
 									) ?>
 								</td>
-								<td style="font-size:11px;color:#9ca3af;max-width:120px" class="text-truncate" title="<?= h($nomeUx) ?>"><?= h($nomeUx) ?></td>
-								<td style="font-size:11px;color:#7d8590;white-space:nowrap"><?= h($dtAx) ?></td>
+								<td class="text-truncate cr-anexo-user" title="<?= h($nomeUx) ?>"><?= h($nomeUx) ?></td>
+								<td class="cr-anexo-when"><?= h($dtAx) ?></td>
 								<td class="cr-anexo-actions">
 									<?= $this->Html->link('<i class="fas fa-download"></i>', ['action' => 'baixarAnexoFatura', $ax->id], [
 										'class' => 'btn btn-default btn-xs m-r-5',
@@ -371,7 +387,7 @@ body.pgm-theme-light .cr-obs { color:#374151; }
 			<div class="cr-card-title">Auditoria</div>
 			<p class="cr-side-hint mb-0">Ações registradas no módulo Financeiro para este lançamento (usuário e data).</p>
 			<?php if (empty($auditoriaFatura)) : ?>
-				<div class="cr-empty" style="padding:18px">Nenhum registro de auditoria para este item.</div>
+				<div class="cr-empty cr-empty--p18">Nenhum registro de auditoria para este item.</div>
 			<?php else : ?>
 				<table class="cr-audit-tbl">
 					<thead>
