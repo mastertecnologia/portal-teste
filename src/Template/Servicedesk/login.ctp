@@ -272,7 +272,7 @@ $('#username, #password').keyup(function(e){
 $('#codigo').keyup(function() {
 	if($(this).val().length == 6) {
 		$.ajax({
-			url: "<?= Router::url(['controller'=>'Users','action'=>'verificacodigo']); ?>/"+$('#username').val()+'/'+$('#codigo').val(),
+			url: "<?= Router::url(['controller'=>'Users','action'=>'verificacodigo']); ?>/"+encodeURIComponent($('#username').val())+'/'+encodeURIComponent($('#codigo').val()),
 			async: false,
 			success: function(data) {
 				if(data == 'sucesso') $('.signin-form').submit();
@@ -302,7 +302,7 @@ $('#modal-duasetapas').on('shown.bs.modal', function () {
 });
 function verificaduasetapas(acao) {
 	$.ajax({
-		url: "<?= Router::url(['controller'=>'Users','action'=>'verificaloginduasetapas']); ?>/"+$('#username').val(),
+		url: "<?= Router::url(['controller'=>'Users','action'=>'verificaloginduasetapas']); ?>/"+encodeURIComponent($('#username').val()),
 		async: false,
 		success: function(data) {
 			if(data == 'temcodigo') $('#modal-duasetapas').modal('toggle');

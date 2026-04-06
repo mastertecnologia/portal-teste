@@ -1019,6 +1019,28 @@ class UsersController extends AppController {
 		return null;
 	}
 
+	/**
+	 * Localiza usuário ativo pelo login digitado (e-mail ou username).
+	 * No PostgreSQL a comparação de texto é sensível a maiúsculas; sem LOWER() o login por e-mail falha.
+	 *
+	 * @param string $login
+	 * @return \Cake\Datasource\EntityInterface|null
+	 */
+	protected function _findActiveUserForLogin($login) {
+		$login = trim((string)$login);
+		if ($login === '') {
+			return null;
+		}
+		$lower = strtolower($login);
+		return $this->Users->find()
+			->where(['inativo' => 0])
+			->where(['OR' => [
+				['LOWER(Users.email)' => $lower],
+				['LOWER(Users.username)' => $lower],
+			]])
+			->first();
+	}
+
 	public function login() {
 		$this->viewBuilder()->setLayout("login");
 		$this->_rememberServicedeskRedirectFromQuery();
@@ -1027,15 +1049,14 @@ class UsersController extends AppController {
 	
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
-			$user = $this->Users->findByEmail($data['username'])->where(['inativo' => 0])->first();
-			if(empty($user)) $user = $this->Users->findByUsername($data['username'])->where(['inativo' => 0])->first();
+			$user = $this->_findActiveUserForLogin($data['username']);
 	
 			if(!empty($user)) $data['username'] = $user->username;
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
 				// Só clientes (role = C_RoleCliente) podem logar aqui. Qualquer outro role é rejeitado.
-				if (!isset($user['role']) || $user['role'] !== C_RoleCliente) {
+				if (!isset($user['role']) || (int)$user['role'] !== (int)C_RoleCliente) {
 					$this->Flash->error(__('Este acesso é para clientes. Use o link "Acesso PGM / Master" para entrar com usuário da equipe.'));
 					$r = $this->_redirectServicedeskLoginIfEmbedded();
 					if ($r !== null) {
@@ -1077,15 +1098,14 @@ class UsersController extends AppController {
 	
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
-			$user = $this->Users->findByEmail($data['username'])->where(['inativo' => 0])->first();
-			if(empty($user)) $user = $this->Users->findByUsername($data['username'])->where(['inativo' => 0])->first();
+			$user = $this->_findActiveUserForLogin($data['username']);
 	
 			if(!empty($user)) $data['username'] = $user->username;
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
 				// Só equipe PGM/Master (role = C_RoleFuncionario) pode logar aqui. Qualquer outro role é rejeitado.
-				if (!isset($user['role']) || $user['role'] !== C_RoleFuncionario) {
+				if (!isset($user['role']) || (int)$user['role'] !== (int)C_RoleFuncionario) {
 					$this->Flash->error(__('Este acesso é para a equipe PGM / Master. Use o acesso para clientes.'));
 					$r = $this->_redirectServicedeskLoginIfEmbedded();
 					if ($r !== null) {
@@ -1858,12 +1878,15 @@ class UsersController extends AppController {
 
 	public function verificacodigo($username, $code) {
 		$this->autoRender = false;
-		$user = $this->Users->findByUsername($username)->first();
-		if(empty($user)) $user = $this->Users->findByEmail(trim($username))->first();
+		$username = rawurldecode((string)$username);
+		$code = str_replace(' ', '', rawurldecode((string)$code));
+		$user = $this->_findActiveUserForLogin($username);
+		if (empty($user)) {
+			echo 'erro';
+			return;
+		}
 		$g = new \Google\Authenticator\GoogleAuthenticator();
 		$secret = $user->secret;
-
-		$code = str_replace(' ', '', $code);
 
 		if ($g->checkCode($secret, $code)) echo 'sucesso';
 		else echo 'erro';
@@ -1871,10 +1894,13 @@ class UsersController extends AppController {
 
 	public function verificaloginduasetapas($username) {
 		$this->autoRender = false;
-		$user = $this->Users->findByUsername(trim($username))->first();
-		if(empty($user)) $user = $this->Users->findByEmail(trim($username))->first();
-		if (empty($user->secret)) echo 'naotemcodigo';
-		else echo 'temcodigo';
+		$username = rawurldecode((string)$username);
+		$user = $this->_findActiveUserForLogin(trim($username));
+		if (empty($user) || empty($user->secret)) {
+			echo 'naotemcodigo';
+		} else {
+			echo 'temcodigo';
+		}
 	}
 
 	public function desativaverificacao() {

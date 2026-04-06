@@ -42,6 +42,7 @@ class AppController extends Controller {
 		$this->loadComponent('Security', [
 			'unlockedActions' => [
 				'login', 'logout', 'loginempresa', 'acessoEmpresa', 'loginduasetapas',
+				'verificaloginduasetapas', 'verificacodigo',
 				'add', 'edit',
 				// Troca de empresa via dropdown (AJAX) não envia _Token.
 				'alteraempresa',
