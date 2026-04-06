@@ -241,19 +241,25 @@ class AppController extends Controller {
 		$this->set('idcliente', $idcliente);
 		$this->set('iduser', $iduser);
 
-		$url = $this->request->getAttribute('src') . 'template/notificacoes/notificacoes/';
+		$srcBase = $this->request->getAttribute('src');
+		$url = (string)($srcBase !== null ? $srcBase : '') . 'template/notificacoes/notificacoes/';
 		$this->set('url', $url);
 
 		$empresasOptSidebar = [];
-		foreach (
-			$this->Empresasusers
-				->find('all')
-				->where(['iduser' => $iduser])
-				->contain(['Empresas' => ['fields' => ['nomefantasia']]])
-				->order(['Empresas.nomefantasia' => 'ASC'])
-				->toArray() as $reg
-		) {
-			$empresasOptSidebar[$reg->idempresa] = $reg->empresa->nomefantasia;
+		// Sem iduser, não buscar (evita WHERE iduser IS NULL e erro ao acessar empresa nula no PHP 8+).
+		if (!empty($iduser)) {
+			foreach (
+				$this->Empresasusers
+					->find('all')
+					->where(['iduser' => $iduser])
+					->contain(['Empresas' => ['fields' => ['nomefantasia']]])
+					->order(['Empresas.nomefantasia' => 'ASC'])
+					->toArray() as $reg
+			) {
+				if (!empty($reg->empresa)) {
+					$empresasOptSidebar[$reg->idempresa] = $reg->empresa->nomefantasia;
+				}
+			}
 		}
 		$this->set('empresasOptSidebar', $empresasOptSidebar);
 		
