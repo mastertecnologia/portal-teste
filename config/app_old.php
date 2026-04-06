@@ -183,7 +183,7 @@ return [
             'port' => 587,
             'timeout' => 30,
             'username' => 'email',
-            'password' => 'pass',
+            'password' => env('MAIL_DEFAULT_PASSWORD', ''),
             'client' => null,
             'tls' => true,
         ],
@@ -191,7 +191,7 @@ return [
             'host' => 'mail.pgm.inf.br',
             'port' => 587,
             'username' => 'helpdesk@pgm.inf.br',
-            'password' => '}1e$9t-5',
+            'password' => env('MAIL_MASTER_PASSWORD', ''),
             'tls' => false,
             'client' => null,
             'className' => 'Smtp'
@@ -200,7 +200,7 @@ return [
             'host' => 'mail.pgm.inf.br',
             'port' => 587,
             'username' => 'helpdesk@pgm.inf.br',
-            'password' => '}1e$9t-5',
+            'password' => env('MAIL_PGM_PASSWORD', ''),
             'tls' => false,
             'client' => null,
             'className' => 'Smtp'
@@ -238,16 +238,16 @@ return [
             'className' => 'Cake\Database\Connection',
             'driver' => 'Cake\Database\Driver\Postgres',
             'persistent' => false,
-            'host' => 'localhost',
+            'host' => env('DB_HOST', 'localhost'),
             /**
              * CakePHP will use the default DB port based on the driver selected
              * MySQL on MAMP uses port 8889, MAMP users will want to uncomment
              * the following line and set the port accordingly
              */
-            'port' => '5432',
-            'username' => 'postgres',
-            'password' => 'pgm@postgres',
-            'database' => 'pgm',
+            'port' => env('DB_PORT', '5432'),
+            'username' => env('DB_USERNAME', ''),
+            'password' => env('DB_PASSWORD', ''),
+            'database' => env('DB_DATABASE', 'pgm'),
             'encoding' => 'utf8',
             'timezone' => 'UTC',
             'flags' => [],

@@ -17,12 +17,16 @@ return [
         'salt' => env('SECURITY_SALT', 'gere-uma-string-aleatoria-longa-aqui'),
     ],
 
+    /**
+     * Credenciais NUNCA em texto fixo aqui — só via .env (ver .env.example).
+     * Em produção: chmod 600 /var/www/portal/.env
+     */
     'Datasources' => [
         'default' => [
-            'host' => env('DB_HOST', '10.0.2.23'),
+            'host' => env('DB_HOST', 'localhost'),
             'port' => env('DB_PORT', '5432'),
-            'username' => env('DB_USERNAME', 'postgres'),
-            'password' => env('DB_PASSWORD', 'pgm@postgres'),
+            'username' => env('DB_USERNAME', ''),
+            'password' => env('DB_PASSWORD', ''),
             'database' => env('DB_DATABASE', 'pgm'),
         ],
     ],

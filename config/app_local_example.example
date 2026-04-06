@@ -23,13 +23,17 @@ return [
         'salt' => 'troque-por-uma-string-aleatoria-longa-para-teste-local',
     ],
 
+    /**
+     * Banco: definir DB_* no .env (não colocar senha neste ficheiro).
+     * Opcional: omitir este bloco e usar só config/app.php + .env.
+     */
     'Datasources' => [
         'default' => [
-            'host' => 'localhost',
-            'port' => '5432',
-            'username' => 'postgres',
-            'password' => 'sua_senha_local',
-            'database' => 'pgm_local',
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', '5432'),
+            'username' => env('DB_USERNAME', ''),
+            'password' => env('DB_PASSWORD', ''),
+            'database' => env('DB_DATABASE', 'pgm_local'),
         ],
     ],
 
