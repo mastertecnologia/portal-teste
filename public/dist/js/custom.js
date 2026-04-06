@@ -135,9 +135,12 @@ $(function () {
         $(this).closest('.card').removeClass().slideUp('fast');
     });
     // ==============================================================
-    // ecommerce sidebar
+    // ecommerce sidebar (#eco-spark) — layouts sem jquery.sparkline.js não definem $.fn.sparkline
     // ==============================================================
     var sparklineLogin = function () {
+            if (typeof $.fn.sparkline !== 'function' || !$('#eco-spark').length) {
+                return;
+            }
             $('#eco-spark').sparkline([6, 10, 9, 11, 9, 10, 12, 11, 10, 7, 11, 9, 8, 10, 9, 12], {
                 type: 'bar',
                 height: '50',
