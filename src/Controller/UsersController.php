@@ -10,6 +10,7 @@ use App\Utility\SupportInboxMail;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\Http\Response;
+use Cake\Log\Log;
 use Cake\Routing\Router;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -2092,6 +2093,8 @@ class UsersController extends AppController {
 			$email->send($message);
 			$this->Flash->success(__('Email para redefiniçao de senha enviado!'));
 		} catch (\Exception $e) {
+			// Motivo real em logs/error.log (não expor ao browser). Ver MAIL_PGM_* / MAIL_MASTER_* no .env.
+			Log::error('resetPassword email: ' . $e->getMessage());
 			$this->Flash->error(__('Não foi possível enviar o e-mail. Tente mais tarde ou contate o suporte.'));
 		}
 
