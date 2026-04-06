@@ -88,7 +88,9 @@ class AppController extends Controller {
 			 'authenticate' => [
 				  'Form' => [
 					  'userModel' => 'Users',
-					  'fields' => ['username' => 'username', 'password' => 'password', 'idempresa' => 'idempresa']
+					  // Apenas username/senha: idempresa é escolhido após o login (getEmpresaPreferencial).
+					  // Incluir idempresa aqui exige o campo no POST — os logins atuais não enviam e o identify falhava.
+					  'fields' => ['username' => 'username', 'password' => 'password'],
 				  ]
 			 ],
 			'loginRedirect' => [
