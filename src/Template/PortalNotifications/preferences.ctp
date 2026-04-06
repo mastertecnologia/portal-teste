@@ -31,12 +31,22 @@ $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'brea
 									<div class="small text-muted"><?= h($r['code']) ?></div>
 								</td>
 								<td class="text-center align-middle">
-									<input type="hidden" name="prefs[<?= (int)$i ?>][send_in_app]" value="0">
-									<input type="checkbox" name="prefs[<?= (int)$i ?>][send_in_app]" value="1" class="form-check-input" style="position:relative;margin:0" <?= !empty($r['send_in_app']) ? 'checked' : '' ?>>
+									<?= $this->Form->checkbox("prefs.$i.send_in_app", [
+										'value' => 1,
+										'checked' => !empty($r['send_in_app']),
+										'class' => 'form-check-input',
+										'style' => 'position:relative;margin:0',
+										'label' => false,
+									]) ?>
 								</td>
 								<td class="text-center align-middle">
-									<input type="hidden" name="prefs[<?= (int)$i ?>][send_email]" value="0">
-									<input type="checkbox" name="prefs[<?= (int)$i ?>][send_email]" value="1" class="form-check-input" style="position:relative;margin:0" <?= !empty($r['send_email']) ? 'checked' : '' ?>>
+									<?= $this->Form->checkbox("prefs.$i.send_email", [
+										'value' => 1,
+										'checked' => !empty($r['send_email']),
+										'class' => 'form-check-input',
+										'style' => 'position:relative;margin:0',
+										'label' => false,
+									]) ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>
