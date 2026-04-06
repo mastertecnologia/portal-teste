@@ -5,6 +5,7 @@ use App\Controller\AppController;
 use App\Service\Ticket\DashboardService;
 use App\Service\Ticket\SlaService;
 use App\Service\Ticket\TicketHistoryLogger;
+use App\Service\Ticket\TicketInternalNotificationHelper;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Mailer\Email;
 use Cake\ORM\TableRegistry;
@@ -1022,6 +1023,15 @@ class TicketsController extends AppController {
 					}
 				// Not
 					$this->criaNot($ticket->situacao, $ticket->id, $ticket->idcliente);
+					try {
+						TicketInternalNotificationHelper::afterTicketAberto(
+							$ticket,
+							(int)$this->Auth->user('role'),
+							(int)$this->Auth->user('id')
+						);
+					} catch (\Throwable $e) {
+						$this->log('[Tickets::add] TicketInternalNotificationHelper: ' . $e->getMessage(), 'warning');
+					}
 				// 
 
 				if ($this->Auth->user('role') == C_RoleCliente && !$emailSuporteOk) {

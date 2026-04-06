@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Ticket\TicketInternalNotificationHelper;
 use Cake\Mailer\Email;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -253,6 +254,15 @@ class TicketcomentariosController extends AppController {
 					} catch (\Throwable $e) {
 						$this->log('Ticketcomentarios::add criaNot: ' . $e->getMessage(), 'error');
 					}
+					try {
+						TicketInternalNotificationHelper::afterComentarioTicket(
+							$ticket,
+							(int)$this->Auth->user('role'),
+							(int)$this->Auth->user('id')
+						);
+					} catch (\Throwable $e) {
+						$this->log('Ticketcomentarios::add internal notif: ' . $e->getMessage(), 'warning');
+					}
 				}
 				$this->Flash->success(__("Comentário enviado com sucesso!"));
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $comentario->id);
@@ -310,6 +320,15 @@ class TicketcomentariosController extends AppController {
 				$this->criaNot($ticketReload->situacao, $ticketReload->id, $ticketReload->idcliente);
 			} catch (\Throwable $e) {
 				$this->log('Ticketcomentarios::apiAdd criaNot: ' . $e->getMessage(), 'error');
+			}
+			try {
+				TicketInternalNotificationHelper::afterComentarioTicket(
+					$ticketReload,
+					(int)$this->Auth->user('role'),
+					(int)$this->Auth->user('id')
+				);
+			} catch (\Throwable $e) {
+				$this->log('Ticketcomentarios::apiAdd internal notif: ' . $e->getMessage(), 'warning');
 			}
 		}
 		$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $comentario->id);

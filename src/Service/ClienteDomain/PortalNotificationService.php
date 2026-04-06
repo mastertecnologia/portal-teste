@@ -2,6 +2,7 @@
 namespace App\Service\ClienteDomain;
 
 use App\Utility\ClienteDomainEventType;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 class PortalNotificationService {
@@ -49,10 +50,13 @@ class PortalNotificationService {
 					'is_read' => 0,
 					'metadata_json' => $metaJson,
 				]);
-				$Notif->save($e);
+				$saved = $Notif->save($e);
+				if ($saved === false) {
+					Log::warning('PortalNotificationService::notifyEmpresaStaff save failed: ' . json_encode($e->getErrors()));
+				}
 			}
 		} catch (\Throwable $e) {
-			\Cake\Log\Log::warning('PortalNotificationService: ' . $e->getMessage());
+			Log::warning('PortalNotificationService: ' . $e->getMessage());
 		}
 	}
 
@@ -100,10 +104,13 @@ class PortalNotificationService {
 					'is_read' => 0,
 					'metadata_json' => $metaJson,
 				]);
-				$Notif->save($e);
+				$saved = $Notif->save($e);
+				if ($saved === false) {
+					Log::warning('PortalNotificationService::notifyUsers save failed: ' . json_encode($e->getErrors()));
+				}
 			}
 		} catch (\Throwable $e) {
-			\Cake\Log\Log::warning('PortalNotificationService::notifyUsers: ' . $e->getMessage());
+			Log::warning('PortalNotificationService::notifyUsers: ' . $e->getMessage());
 		}
 	}
 
@@ -123,9 +130,14 @@ class PortalNotificationService {
 			return [];
 		}
 		$Users = TableRegistry::get('Users');
+		// inativo NULL costuma significar ativo em bases legadas; só excluir inativo = 1
 		$active = $Users->find()
 			->select(['id'])
-			->where(['id IN' => $ids, 'role' => 0, 'inativo' => 0])
+			->where([
+				'id IN' => $ids,
+				'role' => 0,
+				'OR' => [['inativo' => 0], ['inativo IS' => null]],
+			])
 			->enableHydration(false)
 			->toArray();
 
@@ -189,6 +201,10 @@ class PortalNotificationService {
 			return 'error';
 		}
 		if ($eventType === ClienteDomainEventType::AGENDA_LEMBRETE) {
+			return 'info';
+		}
+		if ($eventType === ClienteDomainEventType::TICKET_ABERTO
+			|| $eventType === ClienteDomainEventType::TICKET_COMENTARIO) {
 			return 'info';
 		}
 		if (in_array($eventType, [

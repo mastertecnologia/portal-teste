@@ -114,7 +114,11 @@ class AgendaReminderService {
 			$Users = TableRegistry::get('Users');
 			$staff = $Users->find()
 				->select(['id'])
-				->where(['id IN' => $userIds, 'role' => 0, 'inativo' => 0])
+				->where([
+					'id IN' => $userIds,
+					'role' => 0,
+					'OR' => [['inativo' => 0], ['inativo IS' => null]],
+				])
 				->enableHydration(false)
 				->toArray();
 			$target = array_values(array_unique(array_column($staff, 'id')));

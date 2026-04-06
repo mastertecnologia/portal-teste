@@ -27,6 +27,9 @@ class ClienteDomainEventType {
 
 	public const AGENDA_LEMBRETE = 'agenda.lembrete';
 
+	public const TICKET_ABERTO = 'ticket.aberto';
+	public const TICKET_COMENTARIO = 'ticket.comentario';
+
 	/**
 	 * Tipos exibidos na tela de preferências (código estável => rótulo).
 	 *
@@ -49,6 +52,8 @@ class ClienteDomainEventType {
 			self::USUARIO_VINCULADO_CLIENTE => 'Usuário vinculado ao cliente',
 			self::USUARIO_REMOVIDO_CLIENTE => 'Usuário removido do cliente',
 			self::AGENDA_LEMBRETE => 'Lembretes da agenda (visitas / reuniões)',
+			self::TICKET_ABERTO => 'Ticket aberto (novo chamado)',
+			self::TICKET_COMENTARIO => 'Comentário em ticket',
 		];
 	}
 }

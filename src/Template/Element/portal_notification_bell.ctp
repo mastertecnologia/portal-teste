@@ -17,6 +17,7 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 	transition:color .15s,border-color .15s,background .15s;
 }
 .pgm-portal-notif-bell .pgm-bell-btn:hover { color:#5cdbc0;border-color:#1d9e75;background:#1c2230; }
+.pgm-portal-notif-bell.pgm-notif-api-error .pgm-bell-btn { border-color:#d29922!important; }
 .pgm-portal-notif-bell .pgm-bell-badge {
 	position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
 	font-size:10px;font-weight:700;line-height:18px;text-align:center;background:#f85149;color:#fff;
@@ -71,11 +72,19 @@ $urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' =
 	}
 
 	function refreshCount() {
-		$.getJSON(urlCount).done(function(d) {
-			var n = (d && typeof d.count !== 'undefined') ? parseInt(d.count, 10) : 0;
-			var $b = $('#pgmBellBadge');
-			if (n > 0) { $b.text(n > 99 ? '99+' : n).show(); } else { $b.hide(); }
-		});
+		$.getJSON(urlCount)
+			.done(function(d) {
+				var n = (d && typeof d.count !== 'undefined') ? parseInt(d.count, 10) : 0;
+				var $b = $('#pgmBellBadge');
+				$('#pgmPortalNotifBell').removeClass('pgm-notif-api-error');
+				if (n > 0) { $b.text(n > 99 ? '99+' : n).show(); } else { $b.hide(); }
+			})
+			.fail(function(xhr) {
+				if (window.console && console.warn) {
+					console.warn('PGM: falha ao obter contagem de notificações', xhr && xhr.status);
+				}
+				$('#pgmPortalNotifBell').addClass('pgm-notif-api-error');
+			});
 	}
 
 	function iconForType(t) {
