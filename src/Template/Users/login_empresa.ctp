@@ -46,7 +46,7 @@ $this->end();
 				<p class="lm-form-subtitle">Área restrita — somente equipe autorizada</p>
 			</div>
 
-			<?= $this->Form->create(null, ['id' => 'login', 'class' => 'signin-form', 'url' => ['action' => 'acessoEmpresa']]) ?>
+			<?= $this->Form->create(null, ['id' => 'login', 'class' => 'signin-form', 'url' => ['action' => 'acessoEmpresa'], 'autocomplete' => 'on']) ?>
 
 				<?= $this->Flash->render() ?>
 
@@ -61,6 +61,7 @@ $this->end();
 							'class'      => 'form-control',
 							'placeholder'=> 'Usuário interno',
 							'label'      => false,
+							'autocomplete' => 'username',
 						]) ?>
 					</div>
 					<small class="lm-uppercase-warn minsuculaOnly">Letras maiúsculas não são permitidas</small>
@@ -76,6 +77,7 @@ $this->end();
 							'class'      => 'form-control',
 							'placeholder'=> 'Senha de acesso',
 							'label'      => false,
+							'autocomplete' => 'current-password',
 						]) ?>
 						<button type="button" class="lm-pwd-toggle" id="btn-toggle-pwd" title="Mostrar/ocultar senha" aria-label="Alternar visibilidade da senha">
 							<span class="lm-eye-on"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'width' => '18', 'height' => '18']) ?></span>
@@ -87,9 +89,10 @@ $this->end();
 				<!-- Lembrar -->
 				<div class="lm-form-row">
 					<div class="lm-remember">
-						<input type="checkbox" id="remember-me" name="remember" value="1"/>
+						<input type="checkbox" id="remember-me" name="remember_username" value="1" autocomplete="off"/>
 						<label for="remember-me">Lembrar de mim</label>
 					</div>
+					<p class="lm-link-small lm-login-privacy-hint">Com HTTPS, a senha vai cifrada até o servidor (o que aparece no DevTools é o formulário antes do envio). O servidor guarda só hash (bcrypt), não a senha em texto. O portal só grava o <strong>usuário</strong> neste aparelho se “Lembrar” estiver marcado; a senha não é gravada pelo site. Se o navegador oferecer “guardar senha”, isso é o gerenciador do próprio Firefox/Chrome.</p>
 				</div>
 
 				<!-- Botão entrar -->
