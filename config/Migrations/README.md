@@ -99,6 +99,7 @@ psql -U USUARIO -d pgm -f config/schema/postgres_queues_patch_idempotent.sql
 
 4. **Patches SQL opcionais (PostgreSQL)**  
    - `scripts/postgres/pgm_dashboard_verify_and_patch_FULL.sql` — colunas/índices em `tickets` e utilitários (idempotente onde possível).  
+   - `config/schema/postgres_ticketsservicos_ticketsmodulos_books_minimal.sql` — cria `ticketsservicos`, `ticketsmodulos` e `books` mínimas se o backup não as trouxe (junctions usadas em `TicketsController::viewfaturas`).  
    - `config/schema/*.sql` — apenas se a migration equivalente não tiver corrido.
 
 5. **Conferir o que falta**  

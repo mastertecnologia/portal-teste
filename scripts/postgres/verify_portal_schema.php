@@ -23,7 +23,14 @@ $LEGACY_TABLES = [
 	'ordensservico', 'ordemservicositens', 'itensordem', 'orcamentosnovosdes', 'orcamentosnovosdesservicos',
 	'orcamentosnovositens', 'orcamentosnovosdesmovs', 'visitas', 'listamembros', 'atividades', 'produtos',
 	'problemas', 'areas', 'faturas', 'clicontratos', 'config', 'cidades', 'feriados', 'ordemmovs',
-	'ordemparcelas', 'ordemhoras', 'cliacessos', 'books', 'tarefas',
+	'ordemparcelas', 'ordemhoras', 'cliacessos', 'tarefas',
+];
+
+/**
+ * Legado opcional (só aviso; não falha o código de saída). Ex.: books só é loadModel em UsersController.
+ */
+$LEGACY_OPTIONAL_TABLES = [
+	'books',
 ];
 
 /**
@@ -46,7 +53,7 @@ $MIGRATION_TABLES = [
 	'faturas_escrita_fiscal',
 ];
 
-$EXPECTED = array_values(array_unique(array_merge($LEGACY_TABLES, $MIGRATION_TABLES)));
+$EXPECTED = array_values(array_unique(array_merge($LEGACY_TABLES, $MIGRATION_TABLES, $LEGACY_OPTIONAL_TABLES)));
 sort($EXPECTED);
 
 try {
@@ -75,6 +82,13 @@ foreach ($LEGACY_TABLES as $t) {
 	}
 }
 
+$missingLegacyOptional = [];
+foreach ($LEGACY_OPTIONAL_TABLES as $t) {
+	if (empty($have[$t])) {
+		$missingLegacyOptional[] = $t;
+	}
+}
+
 $missingMigration = [];
 foreach ($MIGRATION_TABLES as $t) {
 	if (empty($have[$t])) {
@@ -92,14 +106,23 @@ sort($extra);
 
 echo "=== Verificação de schema (schema public) ===\n";
 echo 'Tabelas no banco: ' . count($have) . "\n";
-echo 'Lista esperada (legado + migrations): ' . count($EXPECTED) . "\n\n";
+echo 'Lista esperada (legado + migrations + opcionais): ' . count($EXPECTED) . "\n\n";
 
 if ($missingLegacy !== []) {
 	echo ">>> CRÍTICO — tabelas LEGADAS ausentes (" . count($missingLegacy) . "):\n";
 	foreach ($missingLegacy as $t) {
 		echo "  - {$t}\n";
 	}
-	echo "\nO projeto não versiona o DDL completo do ERP legado. Restaure um backup (.dump / .sql) do banco antes de continuar.\n\n";
+	echo "\nO projeto não versiona o DDL completo do ERP legado. Restaure um backup (.dump / .sql) do banco antes de continuar.\n";
+	echo "Junctions ticketsservicos/ticketsmodulos: ver config/schema/postgres_ticketsservicos_ticketsmodulos_books_minimal.sql\n\n";
+}
+
+if ($missingLegacyOptional !== []) {
+	echo ">>> AVISO — tabelas legadas opcionais ausentes (" . count($missingLegacyOptional) . "):\n";
+	foreach ($missingLegacyOptional as $t) {
+		echo "  - {$t}\n";
+	}
+	echo "\n";
 }
 
 if ($missingMigration !== []) {
