@@ -1,0 +1,183 @@
+/**
+ * Faturas — impressão recibo / fatura de locação (#printable).
+ * Usado por recibo.ctp e imprimir.ctp; manter public/css em sync.
+ */
+.fat-loc-actions-bar {
+	margin-bottom: 10px;
+}
+
+#printable .fat-loc-header-b {
+	display: flex;
+	align-items: stretch;
+	margin-bottom: 0;
+}
+
+#printable .fat-loc-logo-cell {
+	width: 180px;
+	min-width: 150px;
+	padding: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-right: 1px solid #000;
+}
+
+#printable .fat-loc-logo-img {
+	max-width: 160px;
+	max-height: 70px;
+}
+
+#printable .fat-loc-empresa-cell {
+	flex: 1;
+	padding: 5px 8px;
+	text-align: center;
+	border-right: 1px solid #000;
+}
+
+#printable .fat-loc-empresa-nome {
+	font-weight: 700;
+	font-size: 13px;
+	text-transform: uppercase;
+}
+
+#printable .fat-loc-title-bar {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	border: 1px solid #000;
+	border-top: none;
+	padding: 4px 8px;
+}
+
+#printable .fat-loc-title-bar--wrap {
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+#printable .fat-loc-doc-title {
+	font-weight: 700;
+	font-size: 14px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+#printable .fat-loc-doc-meta {
+	font-weight: 700;
+	font-size: 12px;
+}
+
+/* Fatores flex em .campo (sobrescreve .campo-row .campo { flex:1 }) */
+#printable .campo-row .campo.fat-loc-f1 {
+	flex: 1;
+}
+#printable .campo-row .campo.fat-loc-f2 {
+	flex: 2;
+}
+#printable .campo-row .campo.fat-loc-f3 {
+	flex: 3;
+}
+#printable .campo-row .campo.fat-loc-f4 {
+	flex: 4;
+}
+
+#printable .campo-row .campo.fat-loc-br-000 {
+	border-right: 1px solid #000;
+}
+#printable .campo-row .campo.fat-loc-br-ccc {
+	border-right: 1px solid #ccc;
+}
+
+#printable .secao-titulo.fat-loc-sec-mt {
+	margin-top: 6px;
+}
+
+#printable .campo-row .campo.fat-loc-fatura-col--sep {
+	border-right: 1px solid #000;
+}
+
+#printable .fat-loc-fatura-inner {
+	display: flex;
+	gap: 0;
+}
+
+#printable .fat-loc-fic-2 {
+	flex: 2;
+	border-right: 1px solid #ccc;
+	padding: 2px 4px;
+}
+
+#printable .fat-loc-fic-1 {
+	flex: 1;
+	border-right: 1px solid #ccc;
+	padding: 2px 4px;
+}
+
+#printable .fat-loc-fic-1-end {
+	flex: 1;
+	padding: 2px 4px;
+}
+
+#printable .tbl-produtos.fat-loc-tbl-mt0 {
+	margin-top: 0;
+}
+
+#printable .tbl-produtos th.fat-loc-w8 {
+	width: 8%;
+}
+#printable .tbl-produtos th.fat-loc-w38 {
+	width: 38%;
+}
+#printable .tbl-produtos th.fat-loc-w6 {
+	width: 6%;
+}
+#printable .tbl-produtos th.fat-loc-w10 {
+	width: 10%;
+}
+#printable .tbl-produtos th.fat-loc-w12 {
+	width: 12%;
+}
+#printable .tbl-produtos th.fat-loc-w13 {
+	width: 13%;
+}
+
+#printable .tbl-produtos th.fat-loc-tar,
+#printable .tbl-produtos td.fat-loc-tar {
+	text-align: right;
+}
+
+#printable .campo-row.fat-loc-meta-row {
+	margin-top: 4px;
+	border-top: 1px solid #000;
+}
+
+#printable .fat-loc-obs-box {
+	border: 1px solid #000;
+	border-top: none;
+	padding: 4px 6px;
+	min-height: 40px;
+	font-size: 11px;
+}
+
+#printable .footer-wrap.fat-loc-footer-mt {
+	margin-top: 8px;
+}
+
+#printable .fat-loc-sign-title {
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+#printable .fat-loc-sign-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+#printable .sig-line.fat-loc-sig-date {
+	width: 120px;
+}
+
+#printable .sig-line.fat-loc-sig-full {
+	width: 200px;
+}

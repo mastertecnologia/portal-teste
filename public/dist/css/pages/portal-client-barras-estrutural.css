@@ -1,0 +1,22 @@
+/**
+ * Barras de progresso — mocks portal (Contratos, Histórico).
+ * Largura fixa (protótipo): classes `*__pct--NN`.
+ * Largura dinâmica (Cake): adicionar `--dyn` e definir `style="--pgm-bar-pct: 62%"` no mesmo elemento.
+ */
+.pcf-kpi__pct--70 {
+	width: 70%;
+}
+.pcf-franquia__pct--725 {
+	width: 72.5%;
+}
+.pcf-kpi__barra-fill--dyn,
+.pcf-franquia__barra-fill--dyn {
+	width: var(--pgm-bar-pct, 0%);
+}
+
+.phist-sla__pct--62 {
+	width: 62%;
+}
+.phist-sla__barra-fill--dyn {
+	width: var(--pgm-bar-pct, 0%);
+}

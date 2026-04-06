@@ -1,0 +1,26 @@
+/**
+ * Contratos ERP — mock `Clicontratos/index_estrutural.html`.
+ * Franquia: percentuais fixos ou `--dyn` + `--pgm-bar-pct`.
+ */
+.franquia-barra-grande__pct--80 {
+	width: 80%;
+}
+.franquia-barra-grande__preenchimento--dyn {
+	width: var(--pgm-bar-pct, 0%);
+}
+
+.franquia-mini__pct--80 {
+	width: 80%;
+}
+.franquia-mini__pct--93 {
+	width: 93%;
+}
+.franquia-mini__pct--70 {
+	width: 70%;
+}
+.franquia-mini__pct--90 {
+	width: 90%;
+}
+.franquia-mini__barra--dyn {
+	width: var(--pgm-bar-pct, 0%);
+}

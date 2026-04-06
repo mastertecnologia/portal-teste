@@ -1,0 +1,38 @@
+/**
+ * Relatórios ERP — mock `Relatorios/index_estrutural.html`.
+ * Barras mini / satisfação: percentuais fixos ou `--dyn` + `--pgm-bar-pct`.
+ */
+.barra-mini__pct--26 {
+	width: 26%;
+}
+.barra-mini__pct--16 {
+	width: 16%;
+}
+.barra-mini__pct--21 {
+	width: 21%;
+}
+.barra-mini__pct--18 {
+	width: 18%;
+}
+.barra-mini__pct--93 {
+	width: 93%;
+}
+.barra-mini__pct--96 {
+	width: 96%;
+}
+.barra-mini__fill--dyn {
+	width: var(--pgm-bar-pct, 0%);
+}
+
+.barra-satisfacao__pct--79 {
+	width: 79%;
+}
+.barra-satisfacao__pct--17 {
+	width: 17%;
+}
+.barra-satisfacao__pct--4 {
+	width: 4%;
+}
+.barra-satisfacao__seg--dyn {
+	width: var(--pgm-bar-pct, 0%);
+}

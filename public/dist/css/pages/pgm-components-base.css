@@ -1,0 +1,178 @@
+/**
+ * PGM — utilitários e padrões base (Fase 3).
+ * Requer pgm-theme-tokens.css (variáveis em html[data-pgm-theme]).
+ * Piloto de adoção: lista de Clientes — wrapper .pgm-ds-pilot em cli-root.
+ */
+
+/* Tipografia herdada dos tokens */
+.pgm-font-sans {
+	font-family: var(--pgm-font-sans, "DM Sans", system-ui, sans-serif);
+}
+.pgm-font-mono {
+	font-family: var(--pgm-font-mono, ui-monospace, monospace);
+}
+
+/* Espaçamento vertical (stack) */
+.pgm-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pgm-stack-gap, 1rem);
+}
+.pgm-stack--tight {
+	gap: var(--pgm-space-3, 12px);
+}
+
+/* Raio / superfície */
+.pgm-rounded-card {
+	border-radius: var(--pgm-radius-lg, 12px);
+}
+.pgm-rounded-input {
+	border-radius: var(--pgm-radius-sm, 8px);
+}
+
+/* Texto semântico */
+.pgm-text-muted {
+	color: var(--pgm-text-muted, #6b7280);
+}
+.pgm-text-secondary {
+	color: var(--pgm-text-secondary, #374151);
+}
+
+/* Pílulas / indicadores (substitui inline font-size em ícones FA) */
+.pgm-pill-dot {
+	font-size: 6px;
+	vertical-align: middle;
+	line-height: 1;
+}
+.pgm-pill-dot--danger {
+	color: var(--pgm-danger, #dc2626);
+}
+html[data-pgm-theme="dark"] .pgm-pill-dot--danger {
+	color: var(--pgm-danger, #f87171);
+}
+
+/* Ícones FA compactos (lista clientes, filtros) */
+.pgm-icon-xs {
+	font-size: 10px;
+	vertical-align: middle;
+	line-height: 1;
+}
+
+/* Flex / grid — substitui style="gap:…" em layouts Bootstrap */
+.pgm-gap-6 {
+	gap: 6px;
+}
+.pgm-gap-8 {
+	gap: var(--pgm-space-2, 8px);
+}
+.pgm-gap-10 {
+	gap: 10px;
+}
+
+/* Checkboxes centrados em células de tabela (ex.: preferências portal) */
+.pgm-checkbox-table-cell {
+	position: relative;
+	margin: 0;
+}
+
+/* Lista de tarefas (Users/tarefas) — alternar via classList no jQuery */
+.users-tarefa-line-done {
+	text-decoration: line-through;
+}
+
+/* Bootbox / strings em modais (evitar style= no HTML gerado) */
+.pgm-bootbox-msg-lg {
+	font-size: 1.2rem;
+}
+.pgm-bootbox-msg-md {
+	font-weight: 300;
+	font-size: 1.1rem;
+}
+
+/* <pre> em alertas de debug (ex.: inclusão de item em OS) */
+.pgm-pre-json {
+	text-align: left;
+	font-size: 11px;
+	max-height: 220px;
+	overflow: auto;
+}
+.pgm-pre-json--wrap {
+	white-space: pre-wrap;
+}
+.pgm-pre-json--h200 {
+	max-height: 200px;
+}
+
+/* Solicitante “outros” — inicial oculto; jQuery .show()/.hide() funcionam */
+.pgm-solic-outros-wrap {
+	display: none;
+	margin-top: 10px;
+}
+
+/* Clientes/eventos — cartão e tabela escuros (sem style= na view) */
+.pgm-cli-eventos-card {
+	background: #161b22;
+	border-color: #21262d;
+}
+.pgm-cli-eventos-table {
+	color: #c9d1d9;
+}
+.pgm-cli-eventos-table > thead > tr > th,
+.pgm-cli-eventos-table > tbody > tr > td {
+	border-color: #21262d;
+}
+.pgm-cli-eventos-timestamp {
+	white-space: nowrap;
+	font-size: 12px;
+}
+.pgm-cli-eventos-code {
+	font-size: 11px;
+	color: #5cdbc0;
+}
+
+/* Tabela / layout — evitar style= em relatórios e detalhe */
+.pgm-table-max-w-520 {
+	max-width: 520px;
+}
+.pgm-popover-title-date {
+	font-size: 12px;
+}
+.pgm-min-w-0 {
+	min-width: 0;
+}
+.pgm-th-w-220 {
+	width: 220px;
+}
+.pgm-th-w-200 {
+	width: 200px;
+}
+
+/* Ticket — técnico responsável (Element/ticket_tecnico_responsavel) */
+.ticket-resp-tecnicos.ticket-resp-tecnicos--soft {
+	border-color: #e9ecef !important;
+}
+.ticket-resp-tecnicos--soft .ticket-resp-tecnicos-title {
+	font-size: 12px;
+}
+.ticket-resp-tecnicos--soft .ticket-resp-tecnicos-hint {
+	font-size: 11px;
+	line-height: 1.35;
+}
+
+/* Ticket — edição / painel / anexos */
+.mail-contnet.mail-contnet--full {
+	width: 100%;
+}
+.sd-timer-display {
+	font-family: monospace;
+	font-size: 1.4rem;
+}
+.ticket-reply-plain {
+	border: none;
+	background: transparent;
+	height: auto;
+}
+.ticket-quill-editor-mount {
+	height: 200px;
+	margin-bottom: 50px;
+}
