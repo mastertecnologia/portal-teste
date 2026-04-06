@@ -4,6 +4,33 @@
  * No servidor: crie config/app_local.php (a partir de app_local_SERVIDOR.php)
  * com salt, DB e e-mail. Esse arquivo está no .gitignore.
  */
+
+/** Contexto SSL opcional para SMTP (cert CN ≠ host, ex.: *.skymail.net.br vs mail.pgm.inf.br). */
+$smtpTransportExtra = function (string $prefix) {
+    $insecure = filter_var(env('MAIL_' . $prefix . '_TLS_INSECURE', false), FILTER_VALIDATE_BOOLEAN);
+    $peerName = env('MAIL_' . $prefix . '_TLS_PEER_NAME');
+    if ($insecure) {
+        return [
+            'context' => [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ],
+            ],
+        ];
+    }
+    if ($peerName !== null && $peerName !== false && trim((string)$peerName) !== '') {
+        return [
+            'context' => [
+                'ssl' => [
+                    'peer_name' => trim((string)$peerName),
+                ],
+            ],
+        ];
+    }
+    return [];
+};
+
 return [
     /**
      * Debug Level:
@@ -201,7 +228,7 @@ return [
             'client' => null,
             'tls' => filter_var(env('MAIL_DEFAULT_TLS', true), FILTER_VALIDATE_BOOLEAN),
         ],
-        'master' => [
+        'master' => array_merge([
             'className' => 'Smtp',
             // Defaults herdados do projeto original (config/app_old.php)
             'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
@@ -212,8 +239,8 @@ return [
             // Porta 587 costuma exigir STARTTLS; defina MAIL_MASTER_TLS=false só se o servidor for realmente sem TLS.
             'tls' => filter_var(env('MAIL_MASTER_TLS', true), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
-        ],
-        'pgm' => [
+        ], $smtpTransportExtra('MASTER')),
+        'pgm' => array_merge([
             'className' => 'Smtp',
             // Defaults herdados do projeto original (config/app_old.php)
             'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
@@ -223,7 +250,7 @@ return [
             'password' => env('MAIL_PGM_PASSWORD', ''),
             'tls' => filter_var(env('MAIL_PGM_TLS', true), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
-        ],
+        ], $smtpTransportExtra('PGM')),
     ],
 
     /**
