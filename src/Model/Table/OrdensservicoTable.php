@@ -5,6 +5,7 @@ use App\Utility\AbacQuery;
 use Cake\Core\Configure;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use DateTime;
 
 class OrdensservicoTable extends Table {
 	public function initialize(array $config) {
@@ -28,6 +29,24 @@ class OrdensservicoTable extends Table {
 			unset($_SESSION['PGM_Idcarrinhoadd']);
 		}
 	}
+
+	/**
+	 * Intervalo d/m/Y (legado) → limites ISO para comparar dataabertura no PostgreSQL.
+	 * A chave ORM `dataabertura::date` não gera SQL válido; isso evita 500 no dashboard.
+	 *
+	 * @return array|null com chaves ini, fin (datetime ISO) ou null se parse falhar
+	 */
+	protected function _boundsDataaberturaBrToIso($dIniBr, $dFinBr) {
+		$d1 = DateTime::createFromFormat('d/m/Y', trim((string)$dIniBr));
+		$d2 = DateTime::createFromFormat('d/m/Y', trim((string)$dFinBr));
+		if ($d1 === false || $d2 === false) {
+			return null;
+		}
+		return [
+			'ini' => $d1->format('Y-m-d') . ' 00:00:00',
+			'fin' => $d2->format('Y-m-d') . ' 23:59:59',
+		];
+	}
 	
 	/**
 	 * Retorna string JSON-like para gráfico (4 meses).
@@ -44,11 +63,14 @@ class OrdensservicoTable extends Table {
 		$historico = "";
 
 		for ($i = 1; $i <= 4; $i++) {
-			$q = $this->find()->where([
-				'iduser' => $idUser,
-				'dataabertura::date >=' => $dIni,
-				'dataabertura::date <=' => $dFin,
-			]);
+			$bounds = $this->_boundsDataaberturaBrToIso($dIni, $dFin);
+			$q = $this->find()->where(['iduser' => $idUser]);
+			if ($bounds !== null) {
+				$q->where([
+					'dataabertura >=' => $bounds['ini'],
+					'dataabertura <=' => $bounds['fin'],
+				]);
+			}
 			if ($controller !== null) {
 				$user = [];
 				if (method_exists($controller, 'Auth')) {

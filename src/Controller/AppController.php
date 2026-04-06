@@ -16,6 +16,7 @@ namespace App\Controller;
 
 use App\Utility\RbacChecker;
 use Cake\Controller\Controller;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 
 class AppController extends Controller {
@@ -224,8 +225,15 @@ class AppController extends Controller {
 		$this->set('admin', $admin);
 		$this->set('setor', $setor);
 		$this->set('empresa', $empresa);
-		if (!empty($empresa)) $this->set('nomeempresa', $this->Empresas->get($empresa)->razaosocial);
-		else $this->set('nomeempresa', 'Grid Sistemas');
+		if (!empty($empresa)) {
+			try {
+				$this->set('nomeempresa', $this->Empresas->get($empresa)->razaosocial);
+			} catch (RecordNotFoundException $e) {
+				$this->set('nomeempresa', 'Grid Sistemas');
+			}
+		} else {
+			$this->set('nomeempresa', 'Grid Sistemas');
+		}
 		$this->set('idempresa', $this->Auth->user('idempresa'));
 		$this->set('name', $this->Auth->user('name'));
 		$this->set('permissaoacesso', $this->Auth->user('permissaoacesso'));
@@ -265,10 +273,16 @@ class AppController extends Controller {
 		
 		// Obtém os dados atualizados do usuário logado
 		if ($this->Auth->user('id') > 0) {
-			$user = $this->Users->get($this->Auth->user('id'));
-			$this->set('skin', $user->skin);
-			$this->set('sidebar', $user->sidebar);
-			$this->set('pagelength', $user->pagelength);
+			try {
+				$user = $this->Users->get($this->Auth->user('id'));
+				$this->set('skin', $user->skin);
+				$this->set('sidebar', $user->sidebar);
+				$this->set('pagelength', $user->pagelength);
+			} catch (RecordNotFoundException $e) {
+				$this->set('skin', '');
+				$this->set('sidebar', 1);
+				$this->set('pagelength', 25);
+			}
 		}
 
 		if ($this->components()->has('Rbac') && $this->Auth->user('id') > 0) {
