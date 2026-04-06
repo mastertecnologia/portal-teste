@@ -46,7 +46,7 @@ $this->end();
 				<p class="lm-form-subtitle">Entre com suas credenciais para continuar</p>
 			</div>
 
-			<?= $this->Form->create('', ['id' => 'login', 'class' => 'signin-form']) ?>
+			<?= $this->Form->create(null, ['id' => 'login', 'class' => 'signin-form']) ?>
 
 				<?= $this->Flash->render() ?>
 

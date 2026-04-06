@@ -46,7 +46,7 @@ $this->end();
 				<p class="lm-form-subtitle">Área restrita — somente equipe autorizada</p>
 			</div>
 
-			<?= $this->Form->create('', ['id' => 'login', 'class' => 'signin-form', 'url' => ['action' => 'acessoEmpresa']]) ?>
+			<?= $this->Form->create(null, ['id' => 'login', 'class' => 'signin-form', 'url' => ['action' => 'acessoEmpresa']]) ?>
 
 				<?= $this->Flash->render() ?>
 

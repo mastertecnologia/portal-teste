@@ -1020,6 +1020,27 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Lê usuário e senha do POST. O FormHelper pode emitir `username`/`password` ou `Users[username]`/`Users[password]`.
+	 *
+	 * @return array username (string), password (string|null)
+	 */
+	protected function _extractLoginCredentials(): array {
+		$req = $this->request;
+		$username = $req->getData('username');
+		if ($username === null || $username === '') {
+			$username = $req->getData('Users.username');
+		}
+		$password = $req->getData('password');
+		if ($password === null) {
+			$password = $req->getData('Users.password');
+		}
+		return [
+			'username' => trim((string)$username),
+			'password' => $password !== null ? (string)$password : null,
+		];
+	}
+
+	/**
 	 * Localiza usuário ativo pelo login digitado (e-mail ou username).
 	 * No PostgreSQL a comparação de texto é sensível a maiúsculas; sem LOWER() o login por e-mail falha.
 	 *
@@ -1048,7 +1069,11 @@ class UsersController extends AppController {
 		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
 	
 		if ($this->request->is('post')) {
-			$data = $this->request->getData();
+			$creds = $this->_extractLoginCredentials();
+			$data = [
+				'username' => $creds['username'],
+				'password' => $creds['password'],
+			];
 			$user = $this->_findActiveUserForLogin($data['username']);
 	
 			if(!empty($user)) $data['username'] = $user->username;
@@ -1097,7 +1122,11 @@ class UsersController extends AppController {
 		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
 	
 		if ($this->request->is('post')) {
-			$data = $this->request->getData();
+			$creds = $this->_extractLoginCredentials();
+			$data = [
+				'username' => $creds['username'],
+				'password' => $creds['password'],
+			];
 			$user = $this->_findActiveUserForLogin($data['username']);
 	
 			if(!empty($user)) $data['username'] = $user->username;
@@ -2063,20 +2092,21 @@ class UsersController extends AppController {
 
 			if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
 
-			$data = $this->request->getData();
-	
-			$user = $this->Users->findByEmail($data['username'])->where(['inativo' => 0])->first();
-			if(empty($user)) $user = $this->Users->findByUsername($data['username'])->where(['inativo' => 0])->first();
-		
-			if(!empty($user)) $data['username'] = $user->username;
-	
+			$creds = $this->_extractLoginCredentials();
+			$data = [
+				'username' => $creds['username'],
+				'password' => $creds['password'],
+			];
+			$user = $this->_findActiveUserForLogin($data['username']);
+			if (!empty($user)) {
+				$data['username'] = $user->username;
+			}
 			$logou = $this->Auth->identify($data);
-	
-			if (!$logou) {
+			if (!$logou || empty($user)) {
 				$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
-			} 
-			
-			$user['secret'] = null;
+				return;
+			}
+			$user->secret = null;
 
 			if($this->Users->save($user)){
 				$this->Flash->success('A verificação em duas etapas foi desativada com sucesso! Remova a conta no Google Authenticator App');
