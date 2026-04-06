@@ -6,11 +6,10 @@
  */
 
 /**
- * Opções SSL para SMTP: o CakePHP 3 Socket move chaves `ssl_*` para context['ssl'] antes de
- * definir peer_name = host (ver Network\Socket::_setSslContext). `context` aninhado no transport
- * pode não surtir efeito no STARTTLS.
+ * SMTP + TLS: após STARTTLS o PHP valida o CN do cert contra o hostname da ligação TCP.
+ * Só `ssl_peer_name` não basta se o cert for *.skymail.net.br e o host for mail.pgm.inf.br.
  *
- * Skymail: ligação a mail.pgm.inf.br com certificado CN *.skymail.net.br — usar ssl_peer_name.
+ * Skymail: forçar host (e peer) para mail.skymail.net.br quando o .env usa o host padrão PGM.
  */
 $smtpTransportExtra = function (string $prefix) {
     $insecure = filter_var(env('MAIL_' . $prefix . '_TLS_INSECURE', false), FILTER_VALIDATE_BOOLEAN);
@@ -29,10 +28,16 @@ $smtpTransportExtra = function (string $prefix) {
         return ['ssl_peer_name' => $peer];
     }
 
-    // Desative com MAIL_PGM_SKIP_SKYMAIL_TLS_PEER=1 / MAIL_MASTER_SKIP_SKYMAIL_TLS_PEER=1 se o host não for Skymail.
     $skipFallback = filter_var(env('MAIL_' . $prefix . '_SKIP_SKYMAIL_TLS_PEER', false), FILTER_VALIDATE_BOOLEAN);
-    if (!$skipFallback && trim((string)env($hostKey, '')) === 'mail.pgm.inf.br') {
-        return ['ssl_peer_name' => 'mail.skymail.net.br'];
+    $h = trim((string)env($hostKey, ''));
+    if ($h === '') {
+        $h = 'mail.pgm.inf.br';
+    }
+    if (!$skipFallback && $h === 'mail.pgm.inf.br') {
+        return [
+            'host' => 'mail.skymail.net.br',
+            'ssl_peer_name' => 'mail.skymail.net.br',
+        ];
     }
 
     return [];
