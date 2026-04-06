@@ -28,14 +28,29 @@ body.estoque-screen-active {
 	--est-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Área principal: fundo SaaS */
-body.estoque-screen-active.layout-no-topbar .page-wrapper {
+/*
+ * Área principal: fundo claro — precisa vencer layout-sidebar-shell
+ * (html body.layout-no-topbar.fixed-layout .page-wrapper e .pgm-shell-main com !important).
+ */
+html body.estoque-screen-active.layout-no-topbar #main-wrapper {
 	background: var(--est-bg) !important;
 }
 
-body.estoque-screen-active.layout-no-topbar .page-wrapper > .container-fluid {
+html body.estoque-screen-active.layout-no-topbar .pgm-shell-main {
+	background: var(--est-bg) !important;
+	color: var(--est-text) !important;
+}
+
+html body.estoque-screen-active.layout-no-topbar.fixed-layout .page-wrapper,
+html body.estoque-screen-active.layout-no-topbar .page-wrapper {
+	background: var(--est-bg) !important;
+	color: var(--est-text) !important;
+}
+
+html body.estoque-screen-active.layout-no-topbar .page-wrapper > .container-fluid {
 	padding-top: var(--est-space-3);
 	padding-bottom: var(--est-space-4);
+	color: var(--est-text) !important;
 }
 
 /* Sidebar um pouco menos “pesada” só nesta tela */
@@ -53,8 +68,8 @@ body.estoque-screen-active .est-root {
 	--est-surface: var(--est-card);
 	--est-surface2: var(--est-row-alt);
 	font-family: var(--est-font);
-	color: var(--est-text);
-	background: var(--est-surface);
+	color: var(--est-text) !important;
+	background: var(--est-surface) !important;
 	border: 1px solid var(--est-border);
 	border-radius: var(--est-radius-lg);
 	padding: var(--est-space-4);
@@ -63,6 +78,39 @@ body.estoque-screen-active .est-root {
 	gap: var(--est-space-3);
 	min-height: calc(100vh - 168px);
 	box-shadow: var(--est-shadow);
+}
+
+/* Texto legível no tema escuro global (skin-green): evita cinza-claro sobre fundo escuro */
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title h1 {
+	color: var(--est-primary) !important;
+}
+
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title p,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-field label,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-footer,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-empty {
+	color: var(--est-muted) !important;
+}
+
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-table tbody td,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-col-code {
+	color: var(--est-text) !important;
+}
+
+/* Inputs / selectpicker: tema escuro do portal deixa form-control escuro */
+html body.estoque-screen-active .est-root .est-input,
+html body.estoque-screen-active .est-root input.est-input,
+html body.estoque-screen-active .est-root textarea.est-input,
+html body.estoque-screen-active .est-root .form-control.est-input {
+	background-color: #ffffff !important;
+	color: #1e293b !important;
+	border-color: #e5e7eb !important;
+}
+
+html body.estoque-screen-active .est-root .form-control.est-input::placeholder,
+html body.estoque-screen-active .est-root input.est-input::placeholder {
+	color: #94a3b8 !important;
+	opacity: 1;
 }
 
 /* Cabeçalho da página */
@@ -101,7 +149,8 @@ body.estoque-screen-active .est-header__actions {
 }
 
 /* ── Botões (altura/radius unificados) ──────────────────────────────────── */
-body.estoque-screen-active .est-btn {
+html body.estoque-screen-active a.est-btn,
+html body.estoque-screen-active button.est-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -115,64 +164,77 @@ body.estoque-screen-active .est-btn {
 	line-height: 1.2;
 	text-decoration: none !important;
 	border: 1px solid var(--est-border);
-	background: var(--est-card);
-	color: var(--est-text);
+	background: #ffffff !important;
+	color: #1e293b !important;
 	cursor: pointer;
 	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 	box-sizing: border-box;
 	-webkit-tap-highlight-color: transparent;
 }
 
-body.estoque-screen-active .est-btn:hover {
-	background: var(--est-row-hover);
-	border-color: #cbd5e1;
+html body.estoque-screen-active a.est-btn:hover,
+html body.estoque-screen-active button.est-btn:hover {
+	background: var(--est-row-hover) !important;
+	border-color: #cbd5e1 !important;
+	color: #1e293b !important;
 }
 
-body.estoque-screen-active .est-btn:focus-visible {
+html body.estoque-screen-active .est-btn:focus-visible {
 	outline: 2px solid var(--est-primary);
 	outline-offset: 2px;
 }
 
-body.estoque-screen-active .est-btn:active {
+html body.estoque-screen-active .est-btn:active {
 	transform: translateY(1px);
 }
 
-body.estoque-screen-active .est-btn--primary {
-	background: var(--est-primary);
-	border-color: var(--est-primary);
-	color: #fff;
+html body.estoque-screen-active a.est-btn--primary,
+html body.estoque-screen-active button.est-btn--primary {
+	background: var(--est-primary) !important;
+	border-color: var(--est-primary) !important;
+	color: #ffffff !important;
 }
 
-body.estoque-screen-active .est-btn--primary:hover {
-	background: var(--est-primary-hover);
-	border-color: var(--est-primary-hover);
+html body.estoque-screen-active a.est-btn--primary:hover,
+html body.estoque-screen-active button.est-btn--primary:hover {
+	background: var(--est-primary-hover) !important;
+	border-color: var(--est-primary-hover) !important;
+	color: #ffffff !important;
 }
 
-body.estoque-screen-active .est-btn--primary:active {
-	background: var(--est-primary-active);
-	border-color: var(--est-primary-active);
+html body.estoque-screen-active a.est-btn--primary:active,
+html body.estoque-screen-active button.est-btn--primary:active {
+	background: var(--est-primary-active) !important;
+	border-color: var(--est-primary-active) !important;
+	color: #ffffff !important;
 }
 
-body.estoque-screen-active .est-btn--secondary {
-	background: #e2e8f0;
-	border-color: #e2e8f0;
-	color: var(--est-text);
+html body.estoque-screen-active a.est-btn--secondary,
+html body.estoque-screen-active button.est-btn--secondary {
+	background: #e2e8f0 !important;
+	border-color: #e2e8f0 !important;
+	color: #1e293b !important;
 }
 
-body.estoque-screen-active .est-btn--secondary:hover {
-	background: #cbd5e1;
-	border-color: #cbd5e1;
+html body.estoque-screen-active a.est-btn--secondary:hover,
+html body.estoque-screen-active button.est-btn--secondary:hover {
+	background: #cbd5e1 !important;
+	border-color: #cbd5e1 !important;
+	color: #1e293b !important;
 }
 
-body.estoque-screen-active .est-btn--outline {
-	background: transparent;
-	border-color: var(--est-border);
-	color: var(--est-text);
+html body.estoque-screen-active a.est-btn--outline,
+html body.estoque-screen-active button.est-btn--outline {
+	background: transparent !important;
+	border-color: #e5e7eb !important;
+	color: #1e293b !important;
 }
 
-body.estoque-screen-active .est-btn--outline:hover {
-	background: var(--est-row-alt);
-	border-color: #cbd5e1;
+html body.estoque-screen-active a.est-btn--outline:hover,
+html body.estoque-screen-active button.est-btn--outline:hover {
+	background: var(--est-row-alt) !important;
+	border-color: #cbd5e1 !important;
+	color: #1e293b !important;
 }
 
 /* ── Painel de filtros ───────────────────────────────────────────────────── */
@@ -307,7 +369,7 @@ body.estoque-screen-active .est-table-wrap {
 	overflow: auto;
 	border: 1px solid var(--est-border);
 	border-radius: var(--est-radius);
-	background: var(--est-card);
+	background: #ffffff !important;
 }
 
 body.estoque-screen-active .est-table-wrap::-webkit-scrollbar {
@@ -331,14 +393,14 @@ body.estoque-screen-active .est-table thead th {
 	position: sticky;
 	top: 0;
 	z-index: 1;
-	background: var(--est-header-bg);
+	background: var(--est-header-bg) !important;
 	padding: var(--est-space-2) var(--est-space-3);
 	text-align: left;
 	font-size: 0.6875rem;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
-	color: var(--est-muted);
+	color: var(--est-muted) !important;
 	border-bottom: 1px solid var(--est-border);
 	white-space: nowrap;
 }
@@ -347,11 +409,12 @@ body.estoque-screen-active .est-table tbody td {
 	padding: var(--est-space-2) var(--est-space-3);
 	border-bottom: 1px solid var(--est-border);
 	vertical-align: middle;
-	color: var(--est-text);
+	color: var(--est-text) !important;
+	background-color: #ffffff !important;
 }
 
 body.estoque-screen-active .est-table tbody tr:nth-child(even) td {
-	background: var(--est-row-alt);
+	background: var(--est-row-alt) !important;
 }
 
 body.estoque-screen-active .est-table tbody tr:hover td {
@@ -412,7 +475,7 @@ body.estoque-screen-active .est-footer__stats {
 }
 
 body.estoque-screen-active .est-footer__stats strong {
-	color: var(--est-text);
+	color: var(--est-text) !important;
 	font-weight: 600;
 }
 

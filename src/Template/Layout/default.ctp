@@ -138,8 +138,10 @@ $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 	<?= $this->fetch('meta'); ?>
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
-	<!-- Tema claro (light mode) — último para precedência -->
+	<!-- Tema claro (light mode) -->
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
+	<!-- Páginas que precisam vencer o tema global (ex.: estoque em modo escuro) -->
+	<?= $this->fetch('css_late'); ?>
 </head>
 <body class="fixed-layout skin-green mini layout-no-topbar <?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($pgmThemeClass) ?> <?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
