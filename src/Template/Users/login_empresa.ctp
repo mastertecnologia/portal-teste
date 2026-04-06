@@ -225,7 +225,7 @@ $('.recuperasenha').on('click', function(e){
 $('#btn-enviar-recuperar').on('click', function(){
 	var email = $('#email-recuperar').val();
 	if (email && email.trim()) {
-		window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'resetPassword']); ?>' + '/' + encodeURIComponent(email.trim());
+		window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'resetPassword']); ?>' + '/' + encodeURIComponent(email.trim()) + '?from=empresa';
 	}
 });
 $('#email-recuperar').on('keypress', function(e){ if (e.which === 13) $('#btn-enviar-recuperar').click(); });

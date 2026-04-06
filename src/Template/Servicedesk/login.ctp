@@ -221,7 +221,9 @@ $('.recuperasenha').click(function(e){
 $('#btn-enviar-recuperar').click(function(){
 	var email = $('#email-recuperar').val();
 	if(email && email.trim()) {
-		window.location = '<?= Router::url(['controller' => 'Users', 'action' => 'resetPassword']); ?>' + '/' + encodeURIComponent(email.trim());
+		var base = '<?= Router::url(['controller' => 'Users', 'action' => 'resetPassword']); ?>' + '/' + encodeURIComponent(email.trim());
+		var fromParam = ($('.sd-login-tabs button.active').data('sd-tab') === 'equipe') ? '?from=empresa' : '';
+		window.location = base + fromParam;
 	}
 });
 $('#email-recuperar').on('keypress', function(e){ if(e.which === 13) $('#btn-enviar-recuperar').click(); });

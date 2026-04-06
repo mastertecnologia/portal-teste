@@ -1071,6 +1071,27 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Após solicitar reset de senha (sem sessão): volta ao login certo — equipe (acesso-empresa) ou cliente (login).
+	 * Usa users.role quando disponível; senão ?from=empresa na URL (tela de equipe).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|null $user
+	 */
+	protected function _redirectGuestAfterPasswordReset($user = null) {
+		if ($user !== null && isset($user->role)) {
+			if ((int)$user->role === (int)C_RoleFuncionario) {
+				return $this->redirect(['action' => 'acessoEmpresa']);
+			}
+			if ((int)$user->role === (int)C_RoleCliente) {
+				return $this->redirect(['action' => 'login']);
+			}
+		}
+		if ($this->request->getQuery('from') === 'empresa') {
+			return $this->redirect(['action' => 'acessoEmpresa']);
+		}
+		return $this->redirect(['action' => 'login']);
+	}
+
+	/**
 	 * Portal do cliente — URL típica: /portal/users/login
 	 * Espera users.role = C_RoleCliente (1). Equipe (role 0) deve usar acessoEmpresa().
 	 */
@@ -1994,7 +2015,10 @@ class UsersController extends AppController {
 		$token = rawurldecode(trim((string)$iduser));
 		if ($token === '') {
 			$this->Flash->error(__('Informe um e-mail válido.'));
-			return $this->redirect(['action' => 'login']);
+			if ($this->Auth->user()) {
+				return $this->redirect(['action' => 'dashboard']);
+			}
+			return $this->_redirectGuestAfterPasswordReset(null);
 		}
 
 		if (is_numeric($token)) {
@@ -2008,7 +2032,10 @@ class UsersController extends AppController {
 
 		if (empty($user)) {
 			$this->Flash->error(__('Não foi encontrado um usuário com o email informado!'));
-			return $this->redirect($this->Auth->user() ? ['action' => 'dashboard'] : ['action' => 'login']);
+			if ($this->Auth->user()) {
+				return $this->redirect(['action' => 'dashboard']);
+			}
+			return $this->_redirectGuestAfterPasswordReset(null);
 		}
 
 		if (empty($this->Auth->user('idempresa'))) {
@@ -2045,7 +2072,10 @@ class UsersController extends AppController {
 		$user->hashreset = removeCaracteres($user->hashreset);
 		if (!$this->Users->save($user)) {
 			$this->Flash->error(__('Não foi possível gerar o link de redefinição. Tente novamente.'));
-			return $this->redirect($this->Auth->user() ? ['action' => 'dashboard'] : ['action' => 'login']);
+			if ($this->Auth->user()) {
+				return $this->redirect(['action' => 'dashboard']);
+			}
+			return $this->_redirectGuestAfterPasswordReset($user);
 		}
 
 		$link = $urlfora . '/Users/resetPasswordNew?hash=' . rawurlencode((string)$user->hashreset);
@@ -2065,7 +2095,10 @@ class UsersController extends AppController {
 			$this->Flash->error(__('Não foi possível enviar o e-mail. Tente mais tarde ou contate o suporte.'));
 		}
 
-		return $this->redirect($this->Auth->user() ? ['action' => 'dashboard'] : ['action' => 'login']);
+		if ($this->Auth->user()) {
+			return $this->redirect(['action' => 'dashboard']);
+		}
+		return $this->_redirectGuestAfterPasswordReset($user);
 	}
 
 	public function resetPasswordNew() {
