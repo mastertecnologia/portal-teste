@@ -50,16 +50,18 @@ $this->end();
 
 				<?= $this->Flash->render() ?>
 
-				<!-- Usuário -->
+				<!-- E-mail (nome do campo no POST continua username; Auth usa users.email) -->
 				<div class="lm-field">
-					<label class="lm-field-label" for="username">Usuário</label>
+					<label class="lm-field-label" for="username">E-mail</label>
 					<div class="lm-field-wrap">
 						<span class="lm-field-icon"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'width' => '18', 'height' => '18']) ?></span>
 						<?= $this->Form->control('username', [
 							'id'         => 'username',
+							'type'       => 'email',
+							'required'   => true,
 							'onkeypress' => 'return SemMaisuclaEEspaco(event)',
 							'class'      => 'form-control',
-							'placeholder'=> 'Digite seu usuário',
+							'placeholder'=> 'Digite seu e-mail',
 							'label'      => false,
 							'autocomplete' => 'username',
 						]) ?>
@@ -93,7 +95,7 @@ $this->end();
 						<input type="checkbox" id="remember-me" name="remember_username" value="1" autocomplete="off"/>
 						<label for="remember-me">Lembrar de mim</label>
 					</div>
-					<p class="lm-link-small lm-login-privacy-hint">Com HTTPS, a senha vai cifrada até o servidor (o que aparece no DevTools é o formulário antes do envio). O servidor guarda só hash (bcrypt), não a senha em texto. O portal só grava o <strong>usuário</strong> neste aparelho se “Lembrar” estiver marcado; a senha não é gravada pelo site. Se o navegador oferecer “guardar senha”, isso é o gerenciador do próprio Firefox/Chrome.</p>
+					<p class="lm-link-small lm-login-privacy-hint">Com HTTPS, a senha vai cifrada até o servidor (o que aparece no DevTools é o formulário antes do envio). O servidor guarda só hash (bcrypt), não a senha em texto. O portal só grava o <strong>e-mail</strong> (campo de login) neste aparelho se “Lembrar” estiver marcado; a senha não é gravada pelo site. Se o navegador oferecer “guardar senha”, isso é o gerenciador do próprio Firefox/Chrome.</p>
 				</div>
 
 				<!-- Botão entrar -->

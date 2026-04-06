@@ -39,7 +39,7 @@ $this->append(
 			</button>
 		</div>
 		<div class="login-erp-title title" id="sd-login-title">Acesso PGM / Master</div>
-		<p class="login-erp-subtitle sd-login-hint" id="sd-login-subtitle">Equipe e usuários internos — use o mesmo usuário e senha do ERP.</p>
+		<p class="login-erp-subtitle sd-login-hint" id="sd-login-subtitle">Equipe e usuários internos — use o mesmo e-mail e senha do ERP.</p>
 
 		<div class="sd-login-tabs" role="tablist">
 			<button type="button" class="active" data-sd-tab="equipe" role="tab" aria-selected="true">Equipe</button>
@@ -52,9 +52,11 @@ $this->append(
 				<span class="input-icon" aria-hidden="true"><?= $this->Html->tag('svg', $this->Html->tag('path', null, ['d' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z']), ['xmlns' => 'http://www.w3.org/2000/svg', 'viewBox' => '0 0 24 24', 'fill' => 'currentColor', 'width' => '20', 'height' => '20']) ?></span>
 				<?= $this->Form->control('username', [
 					'id' => 'username',
+					'type' => 'email',
+					'required' => true,
 					'onkeypress' => 'return SemMaisuclaEEspaco(event)',
 					'class' => 'form-control',
-					'placeholder' => 'Usuário',
+					'placeholder' => 'Digite seu e-mail',
 					'label' => false,
 					'autocomplete' => 'username',
 				]) ?>
@@ -168,7 +170,7 @@ function sdSetTab(tab) {
 	$('#login').attr('action', SD_LOGIN_URLS[tab]);
 	if (tab === 'equipe') {
 		$('#sd-login-title').text('Acesso PGM / Master');
-		$('#sd-login-subtitle').text('Equipe e usuários internos — use o mesmo usuário e senha do ERP.').show();
+		$('#sd-login-subtitle').text('Equipe e usuários internos — use o mesmo e-mail e senha do ERP.').show();
 		$('.sd-support-equipe').removeClass('sd-login-hidden');
 		$('.sd-support-cliente').addClass('sd-login-hidden');
 	} else {

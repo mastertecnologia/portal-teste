@@ -1052,7 +1052,8 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * Localiza usuário ativo pelo login digitado (e-mail ou username).
+	 * Localiza usuário ativo pelo login digitado (e-mail ou username, fase de compatibilidade).
+	 * O Auth\Form autentica na coluna users.email; antes do identify o controller repõe $data['username'] com o e-mail do registo.
 	 * No PostgreSQL a comparação de texto é sensível a maiúsculas; sem LOWER() o login por e-mail falha.
 	 *
 	 * @param string $login
@@ -1112,7 +1113,9 @@ class UsersController extends AppController {
 			];
 			$user = $this->_findActiveUserForLogin($data['username']);
 	
-			if(!empty($user)) $data['username'] = $user->username;
+			if (!empty($user)) {
+				$data['username'] = strtolower(trim((string)$user->email));
+			}
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
@@ -1165,7 +1168,9 @@ class UsersController extends AppController {
 			];
 			$user = $this->_findActiveUserForLogin($data['username']);
 	
-			if(!empty($user)) $data['username'] = $user->username;
+			if (!empty($user)) {
+				$data['username'] = strtolower(trim((string)$user->email));
+			}
 			$user = $this->Auth->identify($data);
 			
 			if ($user) {
@@ -2199,7 +2204,7 @@ class UsersController extends AppController {
 			];
 			$user = $this->_findActiveUserForLogin($data['username']);
 			if (!empty($user)) {
-				$data['username'] = $user->username;
+				$data['username'] = strtolower(trim((string)$user->email));
 			}
 			$logou = $this->Auth->identify($data);
 			if (!$logou || empty($user)) {
