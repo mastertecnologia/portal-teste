@@ -269,8 +269,44 @@ body.pgm-theme-light .bootstrap-select .dropdown-toggle {
     color: var(--pgm-text, #1a1f2e) !important;
 }
 
-/* ── Botão toggle de tema (na sidebar) ───────────────────────────────────── */
+/* ── Botão toggle de tema ────────────────────────────────────────────────── */
 .pgm-theme-toggle-btn {
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+    user-select: none;
+}
+/* Ícone 40×40, mesmo padrão visual do sino (portal_notification_bell) */
+.pgm-theme-toggle-btn.pgm-theme-toggle-btn--icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #8b949e;
+    line-height: 1;
+}
+.pgm-theme-toggle-btn.pgm-theme-toggle-btn--icon:hover {
+    color: #5cdbc0;
+    border-color: #1d9e75;
+    background: #1c2230;
+}
+.pgm-theme-toggle-btn.pgm-theme-toggle-btn--icon .pgm-tt-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.pgm-theme-toggle-btn.pgm-theme-toggle-btn--icon .pgm-tt-icon i { font-size: 15px; }
+.pgm-theme-toggle-btn.pgm-theme-toggle-btn--icon:focus {
+	outline: 2px solid #1d9e75;
+	outline-offset: 2px;
+}
+/* Variante com rótulo (layouts que ainda exibem texto) */
+.pgm-theme-toggle-btn:not(.pgm-theme-toggle-btn--icon) {
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -281,15 +317,27 @@ body.pgm-theme-light .bootstrap-select .dropdown-toggle {
     color: #c9d1d9;
     font-size: 11.5px;
     font-weight: 500;
-    cursor: pointer;
-    transition: background .15s, border-color .15s;
     white-space: nowrap;
-    user-select: none;
 }
-.pgm-theme-toggle-btn:hover {
+.pgm-theme-toggle-btn:not(.pgm-theme-toggle-btn--icon):hover {
     background: rgba(255,255,255,.10);
     border-color: rgba(255,255,255,.22);
     color: #e6edf3;
 }
-.pgm-theme-toggle-btn .pgm-tt-icon { font-size: 12px; line-height: 1; }
-.pgm-theme-toggle-btn .pgm-tt-label { font-size: 11px; }
+.pgm-theme-toggle-btn:not(.pgm-theme-toggle-btn--icon) .pgm-tt-icon { font-size: 12px; line-height: 1; }
+.pgm-theme-toggle-btn:not(.pgm-theme-toggle-btn--icon) .pgm-tt-label { font-size: 11px; }
+
+/* Toolbar topo sidebar (fallback se layout-sidebar-shell.css não for carregado) */
+body.layout-no-topbar .pgm-sidebar-top-tools {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.6);
+    padding: 8px 14px;
+}
+body.layout-no-topbar.mini-sidebar .pgm-sidebar-top-tools {
+    padding: 8px 10px;
+    justify-content: center;
+}

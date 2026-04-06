@@ -57,7 +57,8 @@
 	</div>
 
 	<?php if ($roleNav === 0): ?>
-	<div class="px-3 py-2 d-flex justify-content-end align-items-center" style="border-bottom:1px solid rgba(48,54,61,.6);">
+	<div class="pgm-sidebar-top-tools">
+		<?= $this->element('pgm_theme_toggle_icon') ?>
 		<?= $this->element('portal_notification_bell') ?>
 	</div>
 	<?php endif; ?>
@@ -305,16 +306,6 @@
 	<div class="pgm-sidebar-footer">
 		<div class="pgm-sidebar-collapse-row">
 			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
-			<!-- Toggle tema claro/escuro -->
-			<?php $isLight = (($skin ?? '') === 'skin-pgm-light'); ?>
-			<button type="button" class="pgm-theme-toggle-btn hide-menu pgm-js-theme-toggle" id="pgmThemeToggle"
-				title="<?= $isLight ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
-				aria-pressed="<?= $isLight ? 'true' : 'false' ?>"
-				aria-label="<?= $isLight ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro' ?>"
-				data-current="<?= $isLight ? 'light' : 'dark' ?>">
-				<span class="pgm-tt-icon"><?= $isLight ? '☀️' : '🌙' ?></span>
-				<span class="pgm-tt-label"><?= $isLight ? 'Claro' : 'Escuro' ?></span>
-			</button>
 		</div>
 		<!-- Ações rápidas (visíveis apenas sidebar expandida) -->
 		<div class="pgm-sf-actions hide-menu">

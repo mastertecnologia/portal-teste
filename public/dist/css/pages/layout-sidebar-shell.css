@@ -501,6 +501,21 @@ body.layout-no-topbar .sidebar-nav ul li a:hover {
 }
 body.layout-no-topbar .sidebar-nav ul li a:hover i { color: #a8b0c4 !important; }
 
+/* ── Toolbar topo sidebar (tema + notificações equipe) ───────────────────── */
+body.layout-no-topbar .pgm-sidebar-top-tools {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	flex-shrink: 0;
+	border-bottom: 1px solid var(--pgm-sb-border);
+	padding: 8px 14px;
+}
+body.layout-no-topbar.mini-sidebar .pgm-sidebar-top-tools {
+	padding: 8px 10px;
+	justify-content: center;
+}
+
 /* ── Recolher menu (substitui toggler ao lado da marca) ─────────────────────── */
 body.layout-no-topbar .pgm-sidebar-collapse-row {
 	padding: 0 14px 10px;

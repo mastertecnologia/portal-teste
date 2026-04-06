@@ -32,8 +32,18 @@
 		$btn.attr('title', isLight ? 'Mudar para tema escuro' : 'Mudar para tema claro');
 		$btn.attr('aria-pressed', isLight ? 'true' : 'false');
 		$btn.attr('aria-label', isLight ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro');
-		$btn.find('.pgm-tt-icon').text(isLight ? '☀️' : '🌙');
-		$btn.find('.pgm-tt-label').text(isLight ? 'Claro' : 'Escuro');
+		var $icon = $btn.find('.pgm-tt-icon');
+		if ($icon.length) {
+			if ($btn.hasClass('pgm-theme-toggle-btn--icon')) {
+				$icon.html(isLight ? '<i class="fas fa-sun" aria-hidden="true"></i>' : '<i class="fas fa-moon" aria-hidden="true"></i>');
+			} else {
+				$icon.text(isLight ? '☀️' : '🌙');
+			}
+		}
+		var $lbl = $btn.find('.pgm-tt-label');
+		if ($lbl.length) {
+			$lbl.text(isLight ? 'Claro' : 'Escuro');
+		}
 	}
 
 	function persistLocal(mode) {
