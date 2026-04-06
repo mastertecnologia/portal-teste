@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\ErpSoapUrl;
 use Cake\Event\Event;
 use Cake\View\View;
 use CakeSoap\Network\CakeSoap;
@@ -689,7 +690,14 @@ class ProdutosController extends AppController {
 			[$produtos, $produtosOpt, $sCodProduto] = $this->carregarDadosEstoque($bApenasComSaldo, $sCodProduto, $sDescricao);
 		} catch (\Throwable $e) {
 			$this->log('Produtos::estoque: ' . $e->getMessage(), 'error');
-			$this->Flash->error(__('O estoque não pôde ser carregado. Erro: ') . $e->getMessage());
+			$urlerp = '';
+			try {
+				$urlerp = (string)$this->Empresas->get((int)$this->Auth->user('idempresa'))->urlerp;
+			} catch (\Throwable $ignore) {
+			}
+			$this->Flash->error(
+				__('O estoque não pôde ser carregado. Erro: ') . $e->getMessage() . ErpSoapUrl::hintIfLocalhostUrlErp($urlerp)
+			);
 			return $this->redirect(['controller' => 'Produtos', 'action' => 'index']);
 		}
 
