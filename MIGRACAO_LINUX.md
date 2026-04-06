@@ -28,7 +28,7 @@ Este guia descreve a migração do portal de XAMPP/Windows para Linux, com banco
 - **Host:** 10.0.2.23  
 - **Porta:** 5432  
 - **Usuário:** postgres  
-- **Senha:** pgm@postgres  
+- **Senha:** definir no `.env` (`DB_PASSWORD`), não documentar valor real  
 - **Database:** pgm (ou o nome que você usar)
 
 ### Configuração da aplicação
@@ -48,7 +48,7 @@ Copie `.env.example` para `.env` e ajuste:
 DB_HOST=10.0.2.23
 DB_PORT=5432
 DB_USERNAME=postgres
-DB_PASSWORD=pgm@postgres
+DB_PASSWORD=
 DB_DATABASE=pgm
 SECURITY_SALT=<gere-uma-string-aleatoria-longa>
 DEBUG=false
@@ -100,7 +100,7 @@ Document root apontando para a pasta **public** (estrutura recomendada):
     SetEnv DB_HOST "10.0.2.23"
     SetEnv DB_PORT "5432"
     SetEnv DB_USERNAME "postgres"
-    SetEnv DB_PASSWORD "pgm@postgres"
+    SetEnv DB_PASSWORD "<definir-senha-postgres>"
     SetEnv DB_DATABASE "pgm"
     SetEnv SECURITY_SALT "sua-salt-aleatoria-longa"
     SetEnv WEBROOT_DIR "public"
@@ -131,7 +131,7 @@ server {
         fastcgi_param DB_HOST 10.0.2.23;
         fastcgi_param DB_PORT 5432;
         fastcgi_param DB_USERNAME postgres;
-        fastcgi_param DB_PASSWORD pgm@postgres;
+        fastcgi_param DB_PASSWORD "<definir-senha-postgres>";
         fastcgi_param DB_DATABASE pgm;
         fastcgi_param SECURITY_SALT "sua-salt-aleatoria-longa";
         fastcgi_param WEBROOT_DIR "public";
@@ -166,7 +166,7 @@ Na raiz do projeto (Windows ou Linux). No Windows use `copy` em vez de `cp` se p
 ```bash
 # 1. Criar config local (escolha uma opção)
 cp .env.example .env
-# e edite .env com DB_HOST=10.0.2.23, DB_PASSWORD=pgm@postgres, SECURITY_SALT=...
+# e edite .env com DB_HOST=..., DB_PASSWORD=..., SECURITY_SALT=...
 # OU para produção Linux:
 cp config/app_local_linux.example config/app_local.php
 

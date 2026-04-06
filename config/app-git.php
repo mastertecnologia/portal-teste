@@ -64,7 +64,7 @@ return [
      *   You should treat it as extremely sensitive data.
      */
     'Security' => [
-        'salt' => env('SECURITY_SALT', '1b84cb295d0bcdd9db2508f5d2c36c01adb86eebc1ecb43795ea318100d3cded'),
+        'salt' => env('SECURITY_SALT', 'cakephp-local-dev-only-set-SECURITY_SALT-in-dotenv-not-for-production'),
     ],
 
     /**

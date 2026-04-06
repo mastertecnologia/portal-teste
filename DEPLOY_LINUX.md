@@ -45,7 +45,7 @@ rsync -av --exclude=tmp --exclude=logs --exclude=.git \
 ## Pré-requisitos no Linux
 
 - PHP 5.6+ com extensões: intl, mbstring, pdo_pgsql
-- PostgreSQL acessível no servidor 10.0.2.23 (usuário postgres, senha pgm@postgres). Portal em 10.0.2.25; ERP/Grid em 10.0.2.7. Ver docs/INFRAESTRUTURA_SERVIDORES.md.
+- PostgreSQL acessível (ex.: host em `DB_HOST`; credenciais só no `.env`, nunca no Git). Ver docs/INFRAESTRUTURA_SERVIDORES.md.
 - Banco `pgm` criado no PostgreSQL (ou outro nome; ajuste em `config/app_local.php`)
 
 ## 1. Copiar o projeto para o Linux
@@ -120,7 +120,7 @@ Se aparecer **Ambiente OK**, siga para o passo 3.
 
 - **Diretório não existe:** o script já cria; rode de novo.  
 - **Diretório não gravável:** use `./scripts/preparar_linux.sh www-data` ou `sudo chown -R www-data:www-data /var/www/portal/tmp /var/www/portal/logs /var/www/portal/public/arquivos`.  
-- **Banco de dados:** confira em `config/app_local.php` (host 10.0.2.23, usuário postgres, senha pgm@postgres, database pgm). Teste a conexão: `psql -h 10.0.2.23 -U postgres -d pgm -c "SELECT 1"`.  
+- **Banco de dados:** credenciais em `.env` (`DB_*`) ou `app_local.php` sem commitar. Teste: `psql -h <DB_HOST> -U <usuário> -d <database> -c "SELECT 1"`.  
 - **Arquivo UserConstants.php não encontrado:** no Linux é case-sensitive; a pasta deve ser `vendor` (minúsculo) e o arquivo `UserConstants.php` (U e C maiúsculos). Não renomeie; o código já está ajustado.
 
 ## 3. Ajustar config (se precisar)
@@ -133,7 +133,7 @@ nano config/app_local.php
 
 - `host` → IP do PostgreSQL (10.0.2.23 com servidores separados)  
 - `database` → nome do banco (padrão pgm)  
-- `password` → senha do postgres (padrão pgm@postgres)  
+- `password` → definir no `.env` como `DB_PASSWORD` (não versionar)  
 - `Security.salt` → troque por uma string longa e aleatória (obrigatório em produção)
 
 **URL do ERP (Grid em 10.0.2.7):** não fica no app_local; fica no **banco** (tabela `empresas`, coluna `urlerp`). Use `http://10.0.2.7:85/WebGridPGM/`. Atualize pela tela **Empresas → Editar empresa** ou execute o script `config/sql_atualizar_urlerp_para_grid_remoto.sql`. Ver `docs/INFRAESTRUTURA_SERVIDORES.md`.

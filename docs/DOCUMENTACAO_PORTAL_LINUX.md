@@ -115,7 +115,7 @@ APP_BASE=/portal
 DB_HOST=10.0.2.23
 DB_PORT=5432
 DB_USERNAME=postgres
-DB_PASSWORD=pgm@postgres
+DB_PASSWORD=
 DB_DATABASE=pgm
 
 SECURITY_SALT=<string-aleatoria-longa>
