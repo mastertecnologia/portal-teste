@@ -1958,10 +1958,17 @@ class UsersController extends AppController {
 		else echo 'erro';
 	}
 
-	public function verificaloginduasetapas($username) {
+	public function verificaloginduasetapas($username = null) {
 		$this->autoRender = false;
-		$username = rawurldecode((string)$username);
-		$user = $this->_findActiveUserForLogin(trim($username));
+		if ($username === null || $username === '') {
+			$username = $this->request->getQuery('username');
+		}
+		$username = rawurldecode(trim((string)$username));
+		if ($username === '') {
+			echo 'naotemcodigo';
+			return;
+		}
+		$user = $this->_findActiveUserForLogin($username);
 		if (empty($user) || empty($user->secret)) {
 			echo 'naotemcodigo';
 		} else {
