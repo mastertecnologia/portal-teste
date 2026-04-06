@@ -57,7 +57,7 @@ class PortalAdvancedAttendanceController extends AppController {
 					'Tickets.idempresa' => $idempresa,
 					'Tickets.idcliente' => $idcliente,
 				])
-				->order(['Tickets.modified' => 'DESC'])
+				->order(['Tickets.created' => 'DESC'])
 				->limit(40)
 				->all();
 		} catch (\Throwable $e) {

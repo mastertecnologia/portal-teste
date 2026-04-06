@@ -404,8 +404,9 @@ class UsersController extends AppController {
 							[
 								'AND' => [
 									'Tickets.data_resolucao IS' => null,
-									'Tickets.modified >=' => $ds,
-									'Tickets.modified <=' => $de,
+									'Tickets.data_fechamento IS NOT' => null,
+									'Tickets.data_fechamento >=' => $ds,
+									'Tickets.data_fechamento <=' => $de,
 								],
 							],
 						],
@@ -416,8 +417,8 @@ class UsersController extends AppController {
 				$qTrC2 = $this->Tickets->find()
 					->where([
 						'Tickets.situacao IN' => $closedSit,
-						'Tickets.modified >=' => $ds,
-						'Tickets.modified <=' => $de,
+						'Tickets.data_fechamento >=' => $ds,
+						'Tickets.data_fechamento <=' => $de,
 					]);
 				$this->Abac->applyToQuery($qTrC2, 'Tickets', 'Tickets');
 				$trendClosed[] = $qTrC2->count();
@@ -550,7 +551,7 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * Mesma janela de datas do ranking (data_resolucao ou modified).
+	 * Mesma janela de datas do ranking (data_resolucao ou data_fechamento).
 	 *
 	 * @param \Cake\ORM\Query $q
 	 * @param string[] $cols
@@ -572,16 +573,17 @@ class UsersController extends AppController {
 					[
 						'AND' => [
 							'Tickets.data_resolucao IS' => null,
-							'Tickets.modified >=' => $rangeStart,
-							'Tickets.modified <=' => $rangeEnd,
+							'Tickets.data_fechamento IS NOT' => null,
+							'Tickets.data_fechamento >=' => $rangeStart,
+							'Tickets.data_fechamento <=' => $rangeEnd,
 						],
 					],
 				],
 			]);
 		} else {
 			$q->where([
-				'Tickets.modified >=' => $rangeStart,
-				'Tickets.modified <=' => $rangeEnd,
+				'Tickets.data_fechamento >=' => $rangeStart,
+				'Tickets.data_fechamento <=' => $rangeEnd,
 			]);
 		}
 	}
@@ -644,7 +646,7 @@ class UsersController extends AppController {
 
 	/**
 	 * Tickets fechados por técnico no intervalo.
-	 * Data: com data_resolucao, usa resolução; se for NULL, cai para modified (legado).
+	 * Data: com data_resolucao, usa resolução; se for NULL, usa data_fechamento.
 	 * Técnico: COALESCE(idtecnico_responsavel, owner_id, último idusuario em ticketsmovs com sitnova encerrada).
 	 *
 	 * @param int $idempresa
