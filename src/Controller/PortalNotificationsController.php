@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Utility\ClienteDomainEventType;
+use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 
@@ -11,6 +12,19 @@ use Cake\Routing\Router;
  * API JSON para o sino de notificações (camada nova; não altera NotificacoesController legado).
  */
 class PortalNotificationsController extends AppController {
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		// Form com muitas linhas dinâmicas (codes/prefs) falha _validatePost em alguns ambientes;
+		// alinhado a solicitar/alterarStatus. POST continua exigindo sessão + whitelist no savePreferences.
+		if ($this->components()->has('Security')) {
+			$unlocked = array_merge(
+				(array)$this->Security->getConfig('unlockedActions'),
+				['savePreferences']
+			);
+			$this->Security->setConfig('unlockedActions', array_values(array_unique($unlocked)));
+		}
+	}
 
 	public function isAuthorized($user) {
 		if (empty($user) || (int)($user['role'] ?? 1) !== 0) {
@@ -49,7 +63,9 @@ class PortalNotificationsController extends AppController {
 	}
 
 	public function savePreferences() {
-		$this->request->allowMethod(['post']);
+		if (!$this->request->is('post')) {
+			return $this->redirect(['action' => 'preferences']);
+		}
 		if (!InfrastructureGuard::isReady()) {
 			$this->Flash->error('Módulo de notificações indisponível.');
 
