@@ -37,7 +37,7 @@ done
 # 2. Config local: criar a partir do exemplo se não existir
 if [ ! -f config/app_local.php ]; then
     cp config/app_local_linux.example config/app_local.php
-    echo "  Criado: config/app_local.php (edite SECURITY_SALT e DB se necessário)"
+    echo "  Criado: config/app_local.php (mínimo; credenciais no .env — ver .env.example)"
 else
     echo "  config/app_local.php já existe"
 fi

@@ -4,7 +4,7 @@
 
 1. **Ficheiro `/var/www/portal/.env`** (ou equivalente), **fora do Git** (`.gitignore` inclui `.env`).
 2. **`config/app.php`** já lê `DB_*`, `MAIL_*`, `SECURITY_SALT` via `env()` — não duplicar senhas aí.
-3. **`config/app_local.php`** no servidor: pode sobrescrever `debug`, `Security.salt` via `env('SECURITY_SALT')`, etc. **Evitar** `'password' => '...'` em texto fixo; usar só `env('DB_PASSWORD', '')` ou omitir o bloco `Datasources` e deixar o `app.php` + `.env`.
+3. **`config/app_local.php`** no servidor: com `.env` já preenchido, use o modelo **`config/app_local_linux.example`** (só `'debug' => false`). **Não** declare `Datasources` nem `Security.salt` aqui se o `.env` tiver `DB_*` e `SECURITY_SALT` — evita duplicar segredos. Se existir `app_local.php` antigo com `'password' => '...'`, remova o bloco `Datasources` inteiro ou substitua o ficheiro pelo exemplo mínimo.
 
 ## Permissões no Linux
 

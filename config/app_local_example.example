@@ -1,79 +1,41 @@
 <?php
 /**
- * Configuração LOCAL – não versionar este arquivo com dados reais.
+ * Configuração local (dev) — não versionar `app_local.php` com dados reais.
  *
- * Para testar em ambiente local sem afetar produção:
- * 1. Copie este arquivo para app_local.php:  copy app_local.php.example app_local.php
- * 2. Ajuste os valores abaixo (banco local, salt de teste, etc.)
- * 3. No bootstrap.php a linha que carrega app_local já deve estar ativa.
+ *   copy app_local_example.example app_local.php
  *
- * O app_local.php sobrescreve apenas as chaves definidas aqui; o resto vem do app.php.
+ * Banco, salt e e-mail: preferir `.env` (DB_*, SECURITY_SALT, MAIL_*). Este ficheiro não deve
+ * repetir `Datasources` com senha em texto; omitir o bloco e usar só `config/app.php` + `.env`.
  *
- * URL pública: preferir APP_FULL_BASE_URL no .env (lido em app.php). Para forçar só neste ficheiro:
- *   'App' => ['fullBaseUrl' => 'https://portal.exemplo.com'],
- *
- * Erro HTTP estático (nginx/apache apontando para src/Template/Layout/error.ctp.html):
- * defina no HTML a meta pgm-app-base com o mesmo valor de APP_BASE (ex. content="/portal")
- * ou deixe vazio se o app estiver na raiz do site. Ver comentário no próprio ficheiro.
+ * O CakePHP faz merge: o que não estiver aqui vem de `config/app.php`.
  */
 return [
-    'debug' => true,
+	'debug' => true,
 
-    'Security' => [
-        'salt' => 'troque-por-uma-string-aleatoria-longa-para-teste-local',
-    ],
+	/**
+	 * SMTP opcional — só se precisar de sobrescrever `config/app.php`; senhas via env.
+	 */
+	'EmailTransport' => [
+		'master' => [
+			'className' => 'Smtp',
+			'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
+			'port' => (int)env('MAIL_MASTER_PORT', 587),
+			'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
+			'password' => env('MAIL_MASTER_PASSWORD', ''),
+			'tls' => filter_var(env('MAIL_MASTER_TLS', true), FILTER_VALIDATE_BOOLEAN),
+			'client' => null,
+		],
+		'pgm' => [
+			'className' => 'Smtp',
+			'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
+			'port' => (int)env('MAIL_PGM_PORT', 587),
+			'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
+			'password' => env('MAIL_PGM_PASSWORD', ''),
+			'tls' => filter_var(env('MAIL_PGM_TLS', true), FILTER_VALIDATE_BOOLEAN),
+			'client' => null,
+		],
+	],
 
-    /**
-     * Banco: definir DB_* no .env (não colocar senha neste ficheiro).
-     * Opcional: omitir este bloco e usar só config/app.php + .env.
-     */
-    'Datasources' => [
-        'default' => [
-            'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', '5432'),
-            'username' => env('DB_USERNAME', ''),
-            'password' => env('DB_PASSWORD', ''),
-            'database' => env('DB_DATABASE', 'pgm_local'),
-        ],
-    ],
-
-    /**
-     * E-mail (SMTP) para ambientes que usam app_local.php
-     *
-     * Este bloco sobrescreve os transports do app.php.
-     * Use env(...) para não salvar senha em texto plano.
-     */
-    'EmailTransport' => [
-        'master' => [
-            'className' => 'Smtp',
-            'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
-            'port' => (int)env('MAIL_MASTER_PORT', 587),
-            'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
-            'password' => env('MAIL_MASTER_PASSWORD', ''),
-            'tls' => filter_var(env('MAIL_MASTER_TLS', true), FILTER_VALIDATE_BOOLEAN),
-            'client' => null,
-        ],
-        'pgm' => [
-            'className' => 'Smtp',
-            'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
-            'port' => (int)env('MAIL_PGM_PORT', 587),
-            'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
-            'password' => env('MAIL_PGM_PASSWORD', ''),
-            'tls' => filter_var(env('MAIL_PGM_TLS', true), FILTER_VALIDATE_BOOLEAN),
-            'client' => null,
-        ],
-    ],
-
-    // Opcional: desabilitar envio real de e-mail em teste
-    // 'EmailTransport' => ['default' => ['className' => 'Debug']],
-
-    // Opcional: consulta de Inscrição Estadual (IE) na SEFAZ/SINTEGRA (telas Clientes)
-    // Obtenha a chave em https://sintegrapi.com.br e defina no .env como SINTEGRA_API_KEY
-    // ou aqui: 'Sintegra' => ['apiKey' => 'sua-chave-api'],
-
-    // Opcional: dados cadastrais por CNPJ via Speedio (prioridade sobre Receita quando configurado)
-    // Login em https://www.speedio.com.br – use usuário + token (ou senha). No .env:
-    //   SPEEDIO_USERNAME=seu_usuario
-    //   SPEEDIO_TOKEN=seu_token
-    // ou aqui: 'Speedio' => ['username' => '...', 'token' => '...'],
+	// Opcional: desabilitar envio real de e-mail em teste
+	// 'EmailTransport' => ['default' => ['className' => 'Debug']],
 ];

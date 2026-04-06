@@ -1,39 +1,18 @@
 <?php
 /**
- * Exemplo de configuração LOCAL para produção Linux.
- * Estrutura: /var/www/portal com public/, config/, logs/, src/ (sem app).
- * Portal: 10.0.2.25 | PostgreSQL: 10.0.2.23 | ERP/Grid: 10.0.2.7 (ECS-MASTER).
- * Banco PostgreSQL em servidor remoto (10.0.2.23). Integração ERP: urlerp e token no banco (empresas); chave/filial em UserConstants.php. urlerp = http://10.0.2.7:85/WebGridPGM/
+ * Produção Linux — modelo mínimo quando o `.env` já define DB_*, SECURITY_SALT, MAIL_*.
  *
- * Uso:
- * 1. Copie para app_local.php: cp app_local_linux.example config/app_local.php
- * 2. Ajuste SECURITY_SALT, banco e fullBaseUrl (SSL) se necessário.
- * 3. Nunca versionar app_local.php (deve estar no .gitignore).
+ *   cp config/app_local_linux.example config/app_local.php
+ *
+ * Não coloque aqui password/username/host do PostgreSQL: o Cake lê `config/app.php` + `.env`.
+ * Se `app_local.php` antigo tiver `'Datasources' => ['default' => ['password' => '...']]`, apague
+ * esse bloco ou substitua por este ficheiro para não duplicar segredos em disco.
+ *
+ * Permissões: chmod 600 /var/www/portal/.env
  */
 return [
-    'debug' => false,
+	'debug' => false,
 
-    'Security' => [
-        'salt' => env('SECURITY_SALT', 'gere-uma-string-aleatoria-longa-aqui'),
-    ],
-
-    /**
-     * Credenciais NUNCA em texto fixo aqui — só via .env (ver .env.example).
-     * Em produção: chmod 600 /var/www/portal/.env
-     */
-    'Datasources' => [
-        'default' => [
-            'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', '5432'),
-            'username' => env('DB_USERNAME', ''),
-            'password' => env('DB_PASSWORD', ''),
-            'database' => env('DB_DATABASE', 'pgm'),
-        ],
-    ],
-
-    // SSL/HTTPS: se já configurou SSL no servidor, o CakePHP usa env('HTTPS') para fullBaseUrl.
-    // Se estiver atrás de proxy que não repassa HTTPS, descomente e ajuste:
-    // 'App' => [
-    //     'fullBaseUrl' => 'https://portal.seudominio.com',
-    // ],
+	// Opcional: URL absoluta se o proxy não repassar HTTPS ao PHP
+	// 'App' => [ 'fullBaseUrl' => 'https://portal.seudominio.com' ],
 ];
