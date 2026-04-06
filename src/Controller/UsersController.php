@@ -7,6 +7,7 @@ use App\Service\Ticket\DashboardService;
 use App\Utility\ClienteDomainEventType;
 use App\Utility\RbacClientePortal;
 use App\Utility\SupportInboxMail;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\Http\Response;
 use Cake\Routing\Router;
@@ -20,6 +21,7 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants
 if (!defined('C_RoleCliente'))             define('C_RoleCliente', 1);
 if (!defined('C_RoleFuncionario'))          define('C_RoleFuncionario', 0);
 if (!defined('C_EmpresaPGM'))               define('C_EmpresaPGM', 2);
+if (!defined('C_EmpresaMaster'))            define('C_EmpresaMaster', 1);
 
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
@@ -1989,41 +1991,81 @@ class UsersController extends AppController {
 	}
 
 	public function resetPassword($iduser) {
-		if(!is_numeric($iduser)) $user = $this->Users->findByEmail($iduser)->first();
-		else $user = $this->Users->findById($iduser)->first();
-
-		if(empty($user)) {
-			$this->Flash->error('Não foi encontrado um usuário com o email informado!');
-			return $this->redirect(['action' => 'dashboard']);
+		$token = rawurldecode(trim((string)$iduser));
+		if ($token === '') {
+			$this->Flash->error(__('Informe um e-mail válido.'));
+			return $this->redirect(['action' => 'login']);
 		}
 
-		if(empty($this->Auth->user('idempresa'))) $idempresa = 2;
-		else $idempresa = $this->Auth->user('idempresa');
-		$urlfora = $this->Config->get(1)->urlfora;
-		$empresa = $this->Empresas->get($idempresa);
+		if (is_numeric($token)) {
+			$user = $this->Users->find()->where(['id' => (int)$token])->first();
+		} else {
+			$lower = strtolower($token);
+			$user = $this->Users->find()
+				->where(['LOWER(Users.email)' => $lower])
+				->first();
+		}
 
-		if(isset($empresa->nomefantasia)) $nomeempresa = $empresa->nomefantasia;
-		else $nomeempresa = $empresa->razaosocial;
+		if (empty($user)) {
+			$this->Flash->error(__('Não foi encontrado um usuário com o email informado!'));
+			return $this->redirect($this->Auth->user() ? ['action' => 'dashboard'] : ['action' => 'login']);
+		}
 
-		$user->hashreset = criptografaSenha($user->id.$user->name.date('d/m/Y|H:i:s'));
+		if (empty($this->Auth->user('idempresa'))) {
+			$idempresa = (int)C_EmpresaPGM;
+		} else {
+			$idempresa = (int)$this->Auth->user('idempresa');
+		}
+
+		$urlfora = '';
+		try {
+			$cfg = $this->Config->get(1);
+			if (!empty($cfg->urlfora)) {
+				$urlfora = (string)$cfg->urlfora;
+			}
+		} catch (RecordNotFoundException $e) {
+		}
+		$urlfora = rtrim($urlfora, '/');
+		if ($urlfora === '') {
+			$urlfora = rtrim(Router::url('/', true), '/');
+		}
+
+		$nomeempresa = 'PGM';
+		try {
+			$empresa = $this->Empresas->get($idempresa);
+			if (!empty($empresa->nomefantasia)) {
+				$nomeempresa = (string)$empresa->nomefantasia;
+			} elseif (!empty($empresa->razaosocial)) {
+				$nomeempresa = (string)$empresa->razaosocial;
+			}
+		} catch (RecordNotFoundException $e) {
+		}
+
+		$user->hashreset = criptografaSenha($user->id . $user->name . date('d/m/Y|H:i:s'));
 		$user->hashreset = removeCaracteres($user->hashreset);
-		$this->Users->save($user);
+		if (!$this->Users->save($user)) {
+			$this->Flash->error(__('Não foi possível gerar o link de redefinição. Tente novamente.'));
+			return $this->redirect($this->Auth->user() ? ['action' => 'dashboard'] : ['action' => 'login']);
+		}
 
-		$link = $urlfora . "Users/resetPasswordNew?hash=$user->hashreset";
-		
-		$message = 
-		"<h3> Redefinição de senha! </h3>
-		<h3> Redefina sua senha <a href='$link'> clicando aqui </a>!";
-		
+		$link = $urlfora . '/Users/resetPasswordNew?hash=' . rawurlencode((string)$user->hashreset);
+
+		$message =
+			'<h3> Redefinição de senha! </h3>
+		<h3> Redefina sua senha <a href="' . h($link) . '"> clicando aqui </a>!';
+
 		$email = new Email();
-
 		$email->transport(((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
 		$from = 'helpdesk@pgm.inf.br';
-		$email->from([$from => $nomeempresa])->to($user->email)->emailFormat('html')->subject('Redefinição de senha');
-		$email->send($message);
+		try {
+			$email->from([$from => $nomeempresa])->to($user->email)->emailFormat('html')->subject('Redefinição de senha');
+			$email->send($message);
+			$this->Flash->success(__('Email para redefiniçao de senha enviado!'));
+		} catch (\Exception $e) {
+			$this->Flash->error(__('Não foi possível enviar o e-mail. Tente mais tarde ou contate o suporte.'));
+		}
 
-		$this->Flash->success('Email para redefiniçao de senha enviado!');
-		return $this->redirect(['action' => 'dashboard']);
+		return $this->redirect($this->Auth->user() ? ['action' => 'dashboard'] : ['action' => 'login']);
 	}
 
 	public function resetPasswordNew() {
