@@ -15,6 +15,12 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php')
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
 
+// Fallbacks se UserConstants não definir (Linux/case do vendor). Alinhado a docs e FaturasController::C_RoleCliente.
+// Não há troca de banco por empresa: um único Datasource; idempresa na sessão escopos dados.
+if (!defined('C_RoleCliente'))             define('C_RoleCliente', 1);
+if (!defined('C_RoleFuncionario'))          define('C_RoleFuncionario', 0);
+if (!defined('C_EmpresaPGM'))               define('C_EmpresaPGM', 2);
+
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
@@ -1062,6 +1068,10 @@ class UsersController extends AppController {
 			->first();
 	}
 
+	/**
+	 * Portal do cliente — URL típica: /portal/users/login
+	 * Espera users.role = C_RoleCliente (1). Equipe (role 0) deve usar acessoEmpresa().
+	 */
 	public function login() {
 		$this->viewBuilder()->setLayout("login");
 		$this->_rememberServicedeskRedirectFromQuery();
@@ -1111,8 +1121,8 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * Tela de login exclusiva para usuários das empresas (PGM / Master).
-	 * Apenas role = C_RoleFuncionario pode logar aqui. Clientes devem usar login().
+	 * Equipe PGM/Master — URL típica: /portal/users/acesso-empresa
+	 * Espera users.role = C_RoleFuncionario (0). Clientes (role 1) devem usar login().
 	 */
 	public function acessoEmpresa() {
 		$this->viewBuilder()->setLayout("login");
@@ -1170,18 +1180,21 @@ class UsersController extends AppController {
 			->order(['Empresas.id' => 'ASC'])
 			->toArray();
 		
-		// Se for admin prioriza PGM (ID 2)
+		// Equipe: prioriza vínculo com empresa PGM (C_EmpresaPGM)
 		$user = $this->Users->get($userId);
-		if ($user->role == C_RoleFuncionario) { 
+		if ((int)$user->role === (int)C_RoleFuncionario) {
 			foreach ($relacoes as $rel) {
-				if ($rel->empresa->id == C_EmpresaPGM) {
-					return $rel->empresa->id;
+				if (!empty($rel->empresa) && (int)$rel->empresa->id === (int)C_EmpresaPGM) {
+					return (int)$rel->empresa->id;
 				}
 			}
 		}
 		
-		// Se não encontrou PGM ou não é admin, retorna a primeira da lista
-		return !empty($relacoes) ? $relacoes[0]->idempresa : null;
+		// Primeira empresa do vínculo (ordem por id da empresa)
+		if (!empty($relacoes[0]->idempresa)) {
+			return (int)$relacoes[0]->idempresa;
+		}
+		return null;
 	}
 
 	public function loginempresa($string) {

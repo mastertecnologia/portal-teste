@@ -14,6 +14,11 @@ chdir($root);
 require $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 require $root . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
+require_once ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (!defined('C_RoleCliente'))             define('C_RoleCliente', 1);
+if (!defined('C_RoleFuncionario'))          define('C_RoleFuncionario', 0);
+if (!defined('C_EmpresaPGM'))               define('C_EmpresaPGM', 2);
+
 use Cake\ORM\TableRegistry;
 
 $login = isset($argv[1]) ? trim((string)$argv[1]) : '';
@@ -53,6 +58,22 @@ echo "  role:       " . json_encode($user->get('role')) . " (ERP/equipe costuma 
 echo "  inativo:    " . json_encode($user->get('inativo')) . "\n";
 echo "  bloqueado:  " . json_encode($user->get('bloqueado')) . "\n";
 echo "  senha hash: " . ($hashOk ? 'parece bcrypt ($2...)' : 'NÃO parece bcrypt — login com DefaultPasswordHasher pode falhar') . "\n";
+
+echo "\nConstantes (UserConstants + fallback):\n";
+echo "  C_RoleFuncionario (equipe ERP): " . C_RoleFuncionario . "\n";
+echo "  C_RoleCliente (portal cliente):   " . C_RoleCliente . "\n";
+echo "  C_EmpresaPGM:                     " . C_EmpresaPGM . "\n";
+
+$ur = (int)$user->get('role');
+echo "\nURL de login esperada para este usuário:\n";
+if ($ur === (int)C_RoleFuncionario) {
+	echo "  Equipe -> POST /portal/users/acesso-empresa (não use /users/login).\n";
+} elseif ($ur === (int)C_RoleCliente) {
+	echo "  Cliente -> POST /portal/users/login (não use acesso-empresa).\n";
+} else {
+	echo "  Role " . $ur . " não é 0 nem 1 — conferir coluna users.role no banco.\n";
+}
+echo "  (Um único banco PostgreSQL; idempresa na sessão após login — não há outro host por empresa.)\n";
 echo "\n";
 
 exit(0);
