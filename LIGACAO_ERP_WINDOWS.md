@@ -33,7 +33,7 @@ Cada chamada segue o padrão:
 3. Instanciar SOAP: `new CakeSoap(['wsdl' => $url])`.
 4. Chamar método: `$soap->sendRequest('NomeDoMetodo', ['Data' => [...]])`.
 
-Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserConstants.php). A URL vem sempre do banco (urlerp).
+Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserConstants.php). A URL efetiva do WSDL é montada por `App\Utility\ErpGridUrl::wsdl($empresa->urlerp, …)` usando `empresas.urlerp` e, se vazio ou loopback (`localhost` / `127.0.0.1`), o padrão em `config/grid.php` (`GRID_ERP_BASE_URL` ou `http://10.0.2.7:85/WebGridPGM/`).
 
 ---
 
@@ -41,7 +41,7 @@ Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserCo
 
 **Arquivo:** `src/Controller/ProdutosController.php`  
 **Serviço:** `WsProdutos.wso`  
-**URL:** `$this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl'`  
+**URL:** `ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp)` → WSDL `WsProdutos.wso?wsdl`  
 **Dados do servidor:** `urlerp` do banco (empresa do usuário); `C_Filial` e `C_ChaveAcesso` do `UserConstants.php`.
 
 | Método do controller | Método SOAP no ERP | Parâmetros enviados (Data) |
@@ -59,7 +59,7 @@ Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserCo
 
 **Arquivo:** `src/Controller/OrdensservicoController.php`  
 **Serviço:** `WsProdutos.wso`  
-**URL:** `$this->Empresas->get($idempresa)->urlerp . 'WsProdutos.wso?wsdl'`  
+**URL:** `ErpGridUrl::wsdl($this->Empresas->get($idempresa)->urlerp)`  
 **Dados do servidor:** `urlerp` do banco (empresa da ordem); `C_Filial` e `C_ChaveAcesso` do `UserConstants.php`.
 
 | Método do controller | Método SOAP no ERP | Parâmetros enviados (Data) |
@@ -68,16 +68,16 @@ Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserCo
 
 ---
 
-### 2.3 ClientesController.php
+### 2.3 ClienteErpSyncService (sincronização de cliente)
 
-**Arquivo:** `src/Controller/ClientesController.php`  
+**Arquivo:** `src/Service/ClienteIntegration/ClienteErpSyncService.php` (chamado por `ClientesController::sincronizacliente`)  
 **Serviço:** `WSPGMPessoas.wso`  
-**URL:** `$this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WSPGMPessoas.wso?wsdl'`  
+**URL:** `ErpGridUrl::wsdl($emp->urlerp, ErpGridUrl::WSDL_PESSOAS)`  
 **Dados do servidor:** `urlerp` e `token` do banco (empresa do usuário). Não usa C_Filial/C_Chave neste método.
 
-| Método do controller | Método SOAP no ERP | Parâmetros enviados (Data) |
+| Origem | Método SOAP no ERP | Parâmetros enviados (Data) |
 |----------------------|--------------------|----------------------------|
-| `sincronizacliente($idcliente)` | `GerenciaCliente` | `iEmpresa`, `sToken` (empresa->token), `sJSON` (dados do cliente) |
+| `ClientesController::sincronizacliente` | `GerenciaCliente` | `iEmpresa`, `sToken` (empresa->token), `sJSON` (dados do cliente) |
 
 ---
 
@@ -85,7 +85,7 @@ Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserCo
 
 **Arquivo:** `src/Controller/ClicontratosController.php`  
 **Serviço:** `WSPGMContratos.wso`  
-**URL:** `$this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WSPGMContratos.wso?wsdl'`  
+**URL:** `ErpGridUrl::wsdl(..., ErpGridUrl::WSDL_CONTRATOS)`  
 **Dados do servidor:** `urlerp` e `token` do banco (empresa do usuário). Não usa C_Filial/C_Chave neste método.
 
 | Método do controller | Método SOAP no ERP | Parâmetros enviados (Data) |
@@ -98,14 +98,14 @@ Os parâmetros `iFilial` e `sChave` vêm de `C_Filial` e `C_ChaveAcesso` (UserCo
 
 | Arquivo | Serviço ERP | URL do servidor | Chave/Filial | Token |
 |---------|-------------|-----------------|--------------|-------|
-| `src/Controller/ProdutosController.php` | WsProdutos.wso | Banco: `empresas.urlerp` | UserConstants.php | — |
-| `src/Controller/OrdensservicoController.php` | WsProdutos.wso | Banco: `empresas.urlerp` | UserConstants.php | — |
-| `src/Controller/ClientesController.php` | WSPGMPessoas.wso | Banco: `empresas.urlerp` | — | Banco: `empresas.token` |
-| `src/Controller/ClicontratosController.php` | WSPGMContratos.wso | Banco: `empresas.urlerp` | — | Banco: `empresas.token` |
+| `src/Controller/ProdutosController.php` | WsProdutos.wso | `ErpGridUrl::wsdl(urlerp)` + `config/grid.php` se vazio/loopback | UserConstants.php | — |
+| `src/Controller/OrdensservicoController.php` | WsProdutos.wso | idem | UserConstants.php | — |
+| `src/Service/ClienteIntegration/ClienteErpSyncService.php` | WSPGMPessoas.wso | idem | — | Banco: `empresas.token` |
+| `src/Controller/ClicontratosController.php` | WSPGMContratos.wso | idem | — | Banco: `empresas.token` |
 | `vendor/PGMPackages/UserConstants.php` | — | — | **Aqui:** `C_ChaveAcesso`, `C_Filial` | — |
 | `src/Template/Empresas/edit.ctp` | — | **Tela** para editar `urlerp` | — | — |
 
-Conclusão: **a URL e o token do servidor ERP estão no banco (cadastro da empresa).** Só as constantes de chave e filial estão no código, em `UserConstants.php`. Nenhum controller tem a URL do ERP escrita fixa no arquivo.
+Conclusão: **o token e o `urlerp` por empresa vêm do banco** (tela Empresas). O **host padrão do Grid** quando `urlerp` está vazio ou é loopback fica em **`config/grid.php`** / `GRID_ERP_BASE_URL` (padrão `http://10.0.2.7:85/WebGridPGM/`). Chave e filial SOAP continuam em `UserConstants.php`.
 
 ---
 

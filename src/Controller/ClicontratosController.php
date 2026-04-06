@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\ErpGridUrl;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Utility\ClienteDomainEventType;
 use Cake\Event\Event;
@@ -194,9 +195,9 @@ class ClicontratosController extends AppController {
 
 	public function sincronizacontrato($idcliente) {
 		// Objeto de  comunicação
-		$soap = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WSPGMContratos.wso?wsdl';
+		$wsdlContratos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp, ErpGridUrl::WSDL_CONTRATOS);
 		try {
-			$soap = new CakeSoap(['wsdl' => $soap]);
+			$soap = new CakeSoap(['wsdl' => $wsdlContratos]);
 			if ($soap === null) throw new \Exception('Erro');
 		} catch (\Exception $e) {
 			$this->Flash->error(__('O WS não pode ser acessado no momento!.'));

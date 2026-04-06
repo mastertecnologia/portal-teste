@@ -129,6 +129,10 @@ if (file_exists(__DIR__ . DS . 'ibpt.php')) {
     Configure::load('ibpt', 'default', false);
 }
 
+if (file_exists(__DIR__ . DS . 'grid.php')) {
+    Configure::load('grid', 'default', false);
+}
+
 /*
  * When debug = true the metadata cache should only last
  * for a short time.

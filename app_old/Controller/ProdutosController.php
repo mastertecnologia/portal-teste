@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\ErpGridUrl;
 use Cake\Event\Event;
 use CakeSoap\Network\CakeSoap;
 
@@ -36,7 +37,7 @@ class ProdutosController extends AppController {
 		$this->set('title', 'Produtos e Serviços');
         $produtos = $this->Produtos->findByTipo(1)->where(['idempresa' => $this->Auth->user('idempresa')])->toArray();
 
-		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
+		$soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp);
 
 		try {
 			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
@@ -107,7 +108,7 @@ class ProdutosController extends AppController {
         // Para produtos (tipo 1), atualizar Valor Unitário com Preço de Venda do ERP ao abrir a edição
         if ($produto->tipo == 1 && !$this->request->is(['post', 'put'])) {
             try {
-                $soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
+                $soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp);
                 $soap = new CakeSoap(['wsdl' => $soapprodutos]);
                 $response = $soap->sendRequest('GetEstoqueProdutos', [
                     'Data' => [
@@ -200,7 +201,7 @@ class ProdutosController extends AppController {
 				$idempresa = $this->Auth->user('idempresa');
 				$empresa = $this->Empresas->get($idempresa);
 				if (!empty($empresa->urlerp)) {
-					$soapprodutos = $empresa->urlerp . 'WsProdutos.wso?wsdl';
+					$soapprodutos = ErpGridUrl::wsdl($empresa->urlerp);
 					$soap = new CakeSoap(['wsdl' => $soapprodutos]);
 					if ($soap !== null) {
 						$response = $soap->sendRequest('GetEstoqueProdutos', [
@@ -327,7 +328,7 @@ class ProdutosController extends AppController {
 		error_reporting(0);
 		$this->autoRender = false;
 
-		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
+		$soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp);
 
 		try {
 			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
@@ -353,7 +354,7 @@ class ProdutosController extends AppController {
 		error_reporting(0);
 		$this->autoRender = false;
 
-		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
+		$soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp);
 		try {
 			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
 			if ($soap === null) throw new \Exception('Erro');
@@ -389,7 +390,7 @@ class ProdutosController extends AppController {
 			$opt = 't';
         }
 
-		$soapprodutos = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WsProdutos.wso?wsdl';
+		$soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp);
 		try {
 			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
 			if ($soap === null) throw new \Exception('Erro');

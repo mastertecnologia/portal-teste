@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\ErpGridUrl;
 use Cake\Event\Event;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -496,7 +497,7 @@ class OrdensservicoController extends AppController {
 				$tipo = $produto->tipo;
 				$precoDoErp = null;
 				try {
-					$soapprodutos = $this->Empresas->get($idempresa)->urlerp . 'WsProdutos.wso?wsdl';
+					$soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($idempresa)->urlerp);
 					$soap = new CakeSoap(['wsdl' => $soapprodutos]);
 					$response = $soap->sendRequest('GetEstoqueProdutos', [
 						'Data' => [

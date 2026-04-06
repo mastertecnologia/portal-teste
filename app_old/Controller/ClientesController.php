@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\ErpGridUrl;
 use Cake\Event\Event;
 Use Cake\Datasource\ConnectionManager;
 use CakeSoap\Network\CakeSoap;
@@ -439,9 +440,9 @@ class ClientesController extends AppController {
 
 		$json = json_encode($cliente, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-		$soap = $this->Empresas->get($this->Auth->user('idempresa'))->urlerp . 'WSPGMPessoas.wso?wsdl';
+		$wsdl = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp, ErpGridUrl::WSDL_PESSOAS);
 		try {
-			@$soap = new CakeSoap(['wsdl' => $soap]);
+			@$soap = new CakeSoap(['wsdl' => $wsdl]);
 			if ($soap === null) throw new \Exception('Erro');
 		} catch (\Exception $e) {
 			$this->Flash->error(__('O WS não pode ser acessado no momento!'));

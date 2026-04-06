@@ -11,11 +11,12 @@ class ErpSoapUrl {
 	 */
 	public static function hintIfLocalhostUrlErp(string $urlerp): string {
 		$u = strtolower(trim($urlerp));
+		$ex = ErpGridUrl::defaultBaseUrl();
 		if ($u === '') {
-			return ' Configure a URL do ERP em Empresas → Editar empresa (campo URL ERP), ex.: http://IP-DO-WINDOWS:85/WebGridPGM/';
+			return ' Configure a URL do ERP em Empresas → Editar empresa (campo URL ERP), ex.: ' . $ex;
 		}
 		if (preg_match('#\b(localhost|127\.0\.0\.1)\b#', $u)) {
-			return ' A URL ERP usa localhost — no servidor do Portal, localhost é este computador, não o IIS do Grid. Defina em Empresas → URL ERP o IP ou hostname do Windows onde roda o WebGrid (ex.: http://10.0.2.7:85/WebGridPGM/).';
+			return ' A URL ERP usa localhost — no servidor do Portal, localhost é este computador, não o IIS do Grid. Defina em Empresas → URL ERP o host acessível ao servidor (ex.: ' . $ex . ').';
 		}
 
 		return '';

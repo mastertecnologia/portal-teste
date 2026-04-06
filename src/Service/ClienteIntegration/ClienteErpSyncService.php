@@ -4,6 +4,7 @@ namespace App\Service\ClienteIntegration;
 require_once ROOT . DS . 'vendor' . DS . 'queencitycodefactory' . DS . 'cakesoap' . DS . 'src' . DS . 'Network' . DS . 'CakeSoap.php';
 
 use App\Service\ClienteDomain\ClienteDomainBridge;
+use App\Utility\ErpGridUrl;
 use App\Utility\ClienteDomainEventType;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
@@ -26,7 +27,7 @@ class ClienteErpSyncService {
 		$json = json_encode($cliente, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 		$emp = $Empresas->get($idempresa);
-		$wsdl = $emp->urlerp . 'WSPGMPessoas.wso?wsdl';
+		$wsdl = ErpGridUrl::wsdl($emp->urlerp, ErpGridUrl::WSDL_PESSOAS);
 		$token = $emp->token;
 
 		try {
