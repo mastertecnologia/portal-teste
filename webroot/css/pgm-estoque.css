@@ -624,9 +624,202 @@ body.estoque-screen-active input.est-check:focus-visible {
 	outline-offset: 2px;
 }
 
+/* ── Barra superior: voltar + alternar lista/catálogo ──────────────────── */
+body.estoque-screen-active .est-topbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--est-space-3);
+	margin-bottom: var(--est-space-2);
+}
+
+body.estoque-screen-active .est-back-link.est-btn {
+	gap: var(--est-space-2);
+	text-decoration: none !important;
+}
+
+body.estoque-screen-active .est-view-toggle {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--est-space-2);
+}
+
+/* ── Coluna ações (tabela) ───────────────────────────────────────────────── */
+body.estoque-screen-active .est-col-actions {
+	width: 88px;
+	text-align: center;
+	white-space: nowrap;
+}
+
+body.estoque-screen-active .est-col-actions .est-act {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	margin: 0 2px;
+	border-radius: var(--est-radius);
+	color: var(--est-text) !important;
+	background: var(--est-row-alt);
+	border: 1px solid var(--est-border);
+	text-decoration: none !important;
+	vertical-align: middle;
+	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+body.estoque-screen-active .est-col-actions .est-act:hover {
+	background: var(--est-row-hover);
+	border-color: #cbd5e1;
+	color: var(--est-primary) !important;
+}
+
+body.estoque-screen-active .est-col-actions .est-act--muted {
+	cursor: default;
+	color: var(--est-muted) !important;
+	background: transparent;
+	border-style: dashed;
+}
+
+body.estoque-screen-active .est-col-actions .sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ── Vista catálogo (cartões) ───────────────────────────────────────────── */
+body.estoque-screen-active .est-catalog-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+	gap: var(--est-space-3);
+	padding: 2px 0 var(--est-space-2);
+}
+
+body.estoque-screen-active .est-card {
+	background: var(--est-card);
+	border: 1px solid var(--est-border);
+	border-radius: var(--est-radius-lg);
+	box-shadow: var(--est-shadow);
+	padding: var(--est-space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--est-space-2);
+	min-height: 100%;
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+body.estoque-screen-active .est-card:hover {
+	border-color: #cbd5e1;
+	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+body.estoque-screen-active .est-card__head {
+	display: flex;
+	align-items: center;
+	gap: var(--est-space-2);
+	flex-wrap: wrap;
+}
+
+body.estoque-screen-active .est-card__check {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+}
+
+body.estoque-screen-active .est-card__code {
+	font-weight: 700;
+	font-size: 0.9375rem;
+	color: var(--est-text) !important;
+	font-variant-numeric: tabular-nums;
+}
+
+body.estoque-screen-active .est-card__desc {
+	font-size: 0.8125rem;
+	line-height: 1.45;
+	color: var(--est-text) !important;
+	word-break: break-word;
+	flex: 1 1 auto;
+}
+
+body.estoque-screen-active .est-card__meta {
+	margin: 0;
+	display: grid;
+	gap: var(--est-space-1);
+	font-size: 0.8125rem;
+}
+
+body.estoque-screen-active .est-card__meta > div {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: var(--est-space-2);
+	border-top: 1px solid var(--est-border);
+	padding-top: var(--est-space-1);
+}
+
+body.estoque-screen-active .est-card__meta dt {
+	margin: 0;
+	font-weight: 600;
+	color: var(--est-muted) !important;
+	font-size: 0.6875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+body.estoque-screen-active .est-card__meta dd {
+	margin: 0;
+	text-align: right;
+}
+
+body.estoque-screen-active .est-card__foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--est-space-2);
+	margin-top: auto;
+	padding-top: var(--est-space-2);
+	border-top: 1px solid var(--est-border);
+}
+
+body.estoque-screen-active .est-card__no-portal {
+	font-size: 0.75rem;
+	color: var(--est-muted) !important;
+	font-style: italic;
+}
+
+html body.estoque-screen-active a.est-btn--sm,
+html body.estoque-screen-active button.est-btn--sm {
+	min-height: 34px;
+	padding: 0 var(--est-space-2);
+	font-size: 0.75rem;
+}
+
+body.estoque-screen-active .est-results.est-mode-catalog .est-table-view[hidden] {
+	display: none !important;
+}
+
+body.estoque-screen-active .est-results.est-mode-list .est-catalog-view[hidden] {
+	display: none !important;
+}
+
+body.estoque-screen-active .est-row-checked.est-card {
+	box-shadow: 0 0 0 2px var(--est-primary);
+	border-color: var(--est-primary);
+}
+
 /* Seleção para impressão (classe no body via JS) */
 body.est-print-selected .est-row-not-selected {
 	display: none;
+}
+
+body.est-print-selected .est-card:not(.est-row-checked) {
+	display: none !important;
 }
 
 /* ── Responsivo ─────────────────────────────────────────────────────────── */
@@ -713,5 +906,29 @@ body.est-print-selected .est-row-not-selected {
 
 	body.estoque-screen-active .est-table .est-col-check {
 		display: none;
+	}
+
+	body.estoque-screen-active .est-table .est-col-actions {
+		display: none;
+	}
+
+	body.estoque-screen-active .est-topbar .est-view-toggle {
+		display: none !important;
+	}
+
+	body.estoque-screen-active .est-catalog-view {
+		display: none !important;
+	}
+
+	body.estoque-screen-active .est-table-view {
+		display: block !important;
+	}
+
+	body.estoque-screen-active .est-table-view[hidden] {
+		display: block !important;
+	}
+
+	body.estoque-screen-active .est-card__check {
+		display: none !important;
 	}
 }

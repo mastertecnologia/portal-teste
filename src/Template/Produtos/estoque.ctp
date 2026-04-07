@@ -16,6 +16,15 @@ $toggleLabel = $bApenasComSaldo ? 'Exibir todos' : 'Apenas com estoque';
 $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn--primary';
 ?>
 <div class="est-root" id="estoque-printable">
+	<div class="est-topbar">
+		<a href="<?= Router::url(['controller' => 'Produtos', 'action' => 'index']) ?>" class="est-back-link est-btn est-btn--outline">
+			<i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar aos produtos
+		</a>
+		<div class="est-view-toggle" role="group" aria-label="Modo de visualização">
+			<button type="button" class="est-btn est-btn--primary est-view-btn" data-est-view="list" id="btn-est-view-list">Lista</button>
+			<button type="button" class="est-btn est-btn--outline est-view-btn" data-est-view="catalog" id="btn-est-view-catalog">Catálogo</button>
+		</div>
+	</div>
 	<header class="est-header">
 		<div class="est-header__title">
 			<h1>Produtos em Estoque</h1>
@@ -69,8 +78,12 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	</div>
 	<?= $this->Form->end() ?>
 
-	<div class="est-results" id="est-results">
-		<?= $this->element('Produtos/estoque_lista', ['produtos' => $produtos, 'bApenasComSaldo' => $bApenasComSaldo]) ?>
+	<div class="est-results est-mode-list" id="est-results">
+		<?= $this->element('Produtos/estoque_lista', [
+			'produtos' => $produtos,
+			'bApenasComSaldo' => $bApenasComSaldo,
+			'mapCodigoId' => $mapCodigoId ?? [],
+		]) ?>
 	</div>
 </div>
 
@@ -86,6 +99,29 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	var $results = $('#est-results');
 	var descTimer;
 	var activeRequest = null;
+	var VIEW_KEY = 'pgmEstoqueView';
+
+	function applyEstoqueViewMode() {
+		if (!$results.length) {
+			return;
+		}
+		var mode = localStorage.getItem(VIEW_KEY) || 'list';
+		$results.toggleClass('est-mode-catalog', mode === 'catalog').toggleClass('est-mode-list', mode !== 'catalog');
+		$('.est-view-btn').each(function() {
+			var v = String($(this).data('est-view') || '');
+			var on = v === mode;
+			$(this).toggleClass('est-btn--primary', on).toggleClass('est-btn--outline', !on);
+		});
+		var $cat = $results.find('.est-catalog-view');
+		var $tbl = $results.find('.est-table-view');
+		if (mode === 'catalog') {
+			$cat.removeAttr('hidden').attr('aria-hidden', 'false');
+			$tbl.attr('hidden', 'hidden').attr('aria-hidden', 'true');
+		} else {
+			$tbl.removeAttr('hidden').attr('aria-hidden', 'false');
+			$cat.attr('hidden', 'hidden').attr('aria-hidden', 'true');
+		}
+	}
 
 	function getFilterQueryString() {
 		if (!$form.length) {
@@ -96,10 +132,15 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 
 	function selectedCodes() {
 		var codes = [];
-		$('.est-check-item:checked').each(function() {
+		var seen = {};
+		$results.find('.est-check-item:checked').each(function() {
 			var c = $(this).data('codigo');
 			if (c !== undefined && c !== null && String(c).trim() !== '') {
-				codes.push(String(c).trim());
+				var k = String(c).trim();
+				if (!seen[k]) {
+					seen[k] = true;
+					codes.push(k);
+				}
 			}
 		});
 		return codes;
@@ -108,7 +149,7 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	function refreshSelectedState() {
 		var count = selectedCodes().length;
 		$('#est-selected-count').text(count);
-		$('.est-row').each(function() {
+		$('.est-row, .est-card').each(function() {
 			var code = String($(this).data('codigo'));
 			var checked = $('.est-check-item[data-codigo="' + code.replace(/"/g, '\\"') + '"]').is(':checked');
 			$(this).toggleClass('est-row-checked', checked);
@@ -142,6 +183,7 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 			.done(function(html) {
 				$results.html(html);
 				$('#est-check-all').prop('checked', false);
+				applyEstoqueViewMode();
 				refreshSelectedState();
 				var newUrl = url + (query ? ('?' + query) : '');
 				window.history.replaceState({}, '', newUrl);
@@ -169,14 +211,14 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	}
 
 	$(document).on('change', '#est-check-all', function() {
-		$('.est-check-item').prop('checked', $(this).is(':checked'));
+		$results.find('.est-check-item').prop('checked', $(this).is(':checked'));
 		refreshSelectedState();
 	});
 
 	$(document).on('change', '.est-check-item', function() {
-		var total = $('.est-check-item').length;
-		var checked = $('.est-check-item:checked').length;
-		$('#est-check-all').prop('checked', total > 0 && total === checked);
+		var n = $results.find('.est-row').length;
+		var checkedU = selectedCodes().length;
+		$('#est-check-all').prop('checked', n > 0 && checkedU === n);
 		refreshSelectedState();
 	});
 
@@ -203,6 +245,17 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	});
 
 	refreshSelectedState();
+
+	$(document).on('click', '.est-view-btn', function() {
+		var v = String($(this).data('est-view') || '');
+		if (v !== 'list' && v !== 'catalog') {
+			return;
+		}
+		localStorage.setItem(VIEW_KEY, v);
+		applyEstoqueViewMode();
+	});
+
+	applyEstoqueViewMode();
 
 	$(document).on('submit', '#estoque-filter-form', function(e) {
 		e.preventDefault();

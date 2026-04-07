@@ -697,6 +697,7 @@ class ProdutosController extends AppController {
 		$this->set('produtosOpt', $produtosOpt);
 		$this->set('bApenasComSaldo', $bApenasComSaldo);
 		$this->set('produtos', $produtos);
+		$this->set('mapCodigoId', $this->mapCodigoEstoqueParaIdPortal($produtos));
 		$this->set('title', 'Produtos em Estoque');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'estoque-screen-active');
@@ -765,6 +766,39 @@ class ProdutosController extends AppController {
 			->withType('application/pdf')
 			->withDownload($filename)
 			->withStringBody($pdf);
+	}
+
+	/**
+	 * Cruza códigos ERP da listagem de estoque com o cadastro local (mesma empresa).
+	 *
+	 * @param array|\ArrayObject $produtosErp Lista de objetos SOAP (sCodProduto, …)
+	 * @return array<string,int> codigo => id do produto no portal
+	 */
+	private function mapCodigoEstoqueParaIdPortal($produtosErp): array {
+		$codigos = [];
+		foreach ((array)$produtosErp as $p) {
+			$c = trim((string)($p->sCodProduto ?? ''));
+			if ($c !== '') {
+				$codigos[$c] = true;
+			}
+		}
+		$lista = array_keys($codigos);
+		if ($lista === []) {
+			return [];
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$q = $this->Produtos->find()
+			->select(['id', 'codigo'])
+			->where(['idempresa' => $idempresa, 'codigo IN' => $lista]);
+		$out = [];
+		foreach ($q as $row) {
+			$ck = trim((string)$row->codigo);
+			if ($ck !== '') {
+				$out[$ck] = (int)$row->id;
+			}
+		}
+
+		return $out;
 	}
 
 	private function carregarDadosEstoque($bApenasComSaldo, $sCodProduto, $sDescricao) {

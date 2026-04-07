@@ -727,5 +727,17 @@ document.addEventListener('DOMContentLoaded', function() {
   // Markup padrão 30% — exibe colunas "Novo Preço / Nova Margem / Δ Diferença" imediatamente
   silentSet('inp-markup', '30');
   syncParams('markup'); // já chama refreshTable() internamente
+
+  try {
+    var qs = new URLSearchParams(window.location.search || '');
+    var cod = qs.get('codigo');
+    if (cod) {
+      var ps = document.getElementById('prec-search');
+      if (ps) {
+        ps.value = cod;
+        refreshTable();
+      }
+    }
+  } catch (e) { /* ignore */ }
 });
 </script>
