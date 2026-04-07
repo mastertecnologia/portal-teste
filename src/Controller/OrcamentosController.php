@@ -68,7 +68,7 @@ class OrcamentosController extends AppController {
 		if (!in_array($this->request->getParam('action'), ['solicitar', 'catalogoSugestoes'], true)) {
 			$this->set('title', 'Orçamentos');
 		}
-		$this->Auth->allow(['viewhash', 'carrinhoedit', 'aprovarhash']);
+		$this->Auth->allow(['viewhash', 'carrinhoedit', 'aprovarhash', 'seguroProposta']);
 	}
 
 	public function criarMov($idorcamento = null, $sitantiga = null, $sitnova = null, $observacao = null, $idempresa = null) {
@@ -1009,7 +1009,7 @@ class OrcamentosController extends AppController {
 
 	public function viewhash($hash = null) {
 		$this->viewBuilder()->setLayout('orcamentos');
-		$orcamento = $this->Orcamentos->findByHash($hash)->contain(['Users' => ['fields' => ['Users.name']], 'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome']]])->first();
+		$orcamento = $this->Orcamentos->findByHash($hash)->contain(['Users' => ['fields' => ['Users.name', 'Users.email']], 'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome', 'Clientes.cpfcnpj', 'Clientes.fone', 'Clientes.fone2']]])->first();
 		if(empty($orcamento)) {
 			$this->Flash->error(__('Não foi encontrado um orçamento!'));
 			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
@@ -1021,6 +1021,392 @@ class OrcamentosController extends AppController {
 		$this->set('title', 'Visualização de Orçamento');
 		$this->set('orcamento', $orcamento);
 		$this->set('carrinho', $carrinho);
+	}
+
+	/**
+	 * Portal autenticado — fluxo alinhado a pgm_portal_autenticado.html.
+	 * Identidade e OTP validados no servidor; código enviado por e-mail (não exposto no HTML).
+	 * URL: /orcamentos/seguro-proposta/{hash}
+	 */
+	public function seguroProposta($hash = null) {
+		$this->viewBuilder()->setLayout(false);
+		if (empty($hash)) {
+			$this->Flash->error(__('Não foi encontrado um orçamento!'));
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+
+		$session = $this->request->getSession();
+
+		if ($this->request->getQuery('reiniciar') === '1') {
+			$this->_seguroPortalMerge($session, (string)$hash, [
+				'awaiting_otp' => false,
+				'otp_hash' => null,
+				'otp_exp' => null,
+				'otp_failures' => 0,
+				'reenviar_count' => 0,
+				'email_masked' => null,
+			]);
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		if ($this->request->is('post')) {
+			$orcamentoPost = $this->_findOrcamentoSeguroProposta($hash);
+			if (empty($orcamentoPost)) {
+				$this->Flash->error(__('Não foi encontrado um orçamento!'));
+				return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+			}
+			$acao = (string)$this->request->getData('portal_acao');
+			if ($acao === 'identidade') {
+				return $this->_seguroPropostaHandleIdentidade($orcamentoPost, (string)$hash);
+			}
+			if ($acao === 'otp') {
+				return $this->_seguroPropostaHandleOtp($orcamentoPost, (string)$hash);
+			}
+			if ($acao === 'reenviar_otp') {
+				return $this->_seguroPropostaHandleReenviarOtp($orcamentoPost, (string)$hash);
+			}
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$orcamento = $this->_findOrcamentoSeguroProposta($hash);
+		if (empty($orcamento)) {
+			$this->Flash->error(__('Não foi encontrado um orçamento!'));
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+
+		$st = $this->_seguroPortalRead($session, (string)$hash);
+		$blockedUntil = isset($st['blocked_until']) ? (int)$st['blocked_until'] : 0;
+		$lockRemainingSec = ($blockedUntil > time()) ? max(0, $blockedUntil - time()) : 0;
+		if ($blockedUntil > time()) {
+			$passoSeguro = 'bloqueio';
+			$otpExpiresIn = 0;
+			$emailMaskedSeguro = '';
+		} elseif (!empty($st['awaiting_otp']) && !empty($st['otp_hash']) && !empty($st['otp_exp'])) {
+			$passoSeguro = 'otp';
+			$otpExpiresIn = max(0, (int)$st['otp_exp'] - time());
+			$emailMaskedSeguro = (string)($st['email_masked'] ?? '');
+		} else {
+			$passoSeguro = 'destino';
+			$otpExpiresIn = 0;
+			$emailMaskedSeguro = '';
+		}
+
+		$carrinhoItem = $this->Orcamentositens->find('all')->where(['idorcamento' => $orcamento->id])->first();
+		$carrinho = [];
+		if ($carrinhoItem) {
+			$carrinho = $this->Orcamentosservicos->find('all')->where(['idorcamento' => $carrinhoItem->iditem])->order(['id'])->toArray();
+		}
+		$nomeClienteSeg = !empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->razaosocial : $orcamento->cliente->nome;
+		$cnpjDigits = preg_replace('/\D/', '', (string)($orcamento->cliente->cpfcnpj ?? ''));
+		$cnpj4 = strlen($cnpjDigits) >= 4 ? substr($cnpjDigits, -4) : '0000';
+		$nomeClienteLower = mb_strtolower(trim((string)$nomeClienteSeg), 'UTF-8');
+		$parts = preg_split('/\s+/u', $nomeClienteLower, -1, PREG_SPLIT_NO_EMPTY);
+		$nomePartial = $parts[0] ?? 'cliente';
+		if (mb_strlen($nomePartial, 'UTF-8') > 12) {
+			$nomePartial = mb_substr($nomePartial, 0, 12, 'UTF-8');
+		}
+		$totalGeral = 0.0;
+		foreach ($carrinho as $linha) {
+			$totalGeral += (float)($linha->valordoservico ?? 0);
+		}
+		$descontoPct = 5;
+		$descontoValor = round($totalGeral * ($descontoPct / 100), 2);
+		$totalVista = max(0, $totalGeral - $descontoValor);
+		$fmt = function ($v) {
+			return 'R$ ' . number_format((float)$v, 2, ',', '.');
+		};
+		$validadeFmtSeguro = '';
+		if (!empty($orcamento->validoate)) {
+			$v = $orcamento->validoate;
+			$validadeFmtSeguro = ($v instanceof \DateTimeInterface) ? $v->format('d/m/Y') : (string)$v;
+		}
+		$primeiroServicoSeguro = $carrinho[0] ?? null;
+		$vendedorEmailSeguro = !empty($orcamento->user->email) ? $orcamento->user->email : 'contato@pgm.inf.br';
+
+		$this->set('title', 'Acesso Seguro — Proposta PGM Soluções');
+		$this->set('totalPrazoFmtSeguro', $fmt($totalGeral));
+		$this->set('totalVistaFmtSeguro', $fmt($totalVista));
+		$emailMaskedPreview = $this->_maskEmailForDisplay((string)($orcamento->cliente->email ?? ''));
+		$this->set(compact(
+			'orcamento',
+			'nomeClienteSeg',
+			'cnpj4',
+			'nomePartial',
+			'validadeFmtSeguro',
+			'primeiroServicoSeguro',
+			'vendedorEmailSeguro',
+			'passoSeguro',
+			'otpExpiresIn',
+			'emailMaskedSeguro',
+			'emailMaskedPreview',
+			'lockRemainingSec'
+		));
+		$this->render('seguro_proposta');
+	}
+
+	/**
+	 * @param string $hash
+	 * @return \App\Model\Entity\Orcamento|null
+	 */
+	protected function _findOrcamentoSeguroProposta($hash) {
+		return $this->Orcamentos->findByHash($hash)->contain([
+			'Users' => ['fields' => ['Users.name', 'Users.email']],
+			'Clientes' => ['fields' => ['Clientes.razaosocial', 'Clientes.tipo', 'Clientes.nome', 'Clientes.cpfcnpj', 'Clientes.fone', 'Clientes.fone2', 'Clientes.email']],
+		])->first();
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function _seguroPortalRead($session, string $hash) {
+		$all = $session->read('SeguroPortal');
+		if (!is_array($all) || !isset($all[$hash]) || !is_array($all[$hash])) {
+			return [];
+		}
+		return $all[$hash];
+	}
+
+	/**
+	 * @param array<string, mixed> $merge
+	 */
+	protected function _seguroPortalMerge($session, string $hash, array $merge) {
+		$all = $session->read('SeguroPortal');
+		if (!is_array($all)) {
+			$all = [];
+		}
+		$cur = isset($all[$hash]) && is_array($all[$hash]) ? $all[$hash] : [];
+		foreach ($merge as $k => $v) {
+			if ($v === null) {
+				unset($cur[$k]);
+			} else {
+				$cur[$k] = $v;
+			}
+		}
+		$all[$hash] = $cur;
+		$session->write('SeguroPortal', $all);
+	}
+
+	protected function _seguroPortalUnsetHash($session, string $hash) {
+		$all = $session->read('SeguroPortal');
+		if (!is_array($all) || !isset($all[$hash])) {
+			return;
+		}
+		unset($all[$hash]);
+		$session->write('SeguroPortal', $all);
+	}
+
+	protected function _maskEmailForDisplay(string $email) {
+		$email = trim($email);
+		if ($email === '' || strpos($email, '@') === false) {
+			return '••••@••••';
+		}
+		list($u, $d) = explode('@', $email, 2);
+		$uLen = mb_strlen($u, 'UTF-8');
+		if ($uLen <= 2) {
+			return '••@' . $d;
+		}
+		$first = mb_substr($u, 0, 1, 'UTF-8');
+		$last = mb_substr($u, -1, 1, 'UTF-8');
+		return $first . '••••' . $last . '@' . $d;
+	}
+
+	protected function _sendSeguroOtpEmail($orcamento, string $toEmail, string $code) {
+		try {
+			$empresa = $this->Empresas->get($orcamento->idempresa);
+			$nomeempresa = (isset($empresa->nomefantasia) && (string)$empresa->nomefantasia !== '') ? $empresa->nomefantasia : $empresa->razaosocial;
+			$email = new Email();
+			$email->transport(((int)$orcamento->idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
+			$from = 'helpdesk@pgm.inf.br';
+			$email->from([$from => $nomeempresa]);
+			$esc = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
+			$msg = '<p>Seu código de verificação para acessar a proposta comercial:</p>'
+				. '<p style="font-size:24px;font-weight:bold;letter-spacing:4px;">' . $esc . '</p>'
+				. '<p>Válido por 10 minutos. Se você não solicitou este código, ignore este e-mail.</p>';
+			$email->to($toEmail)
+				->emailFormat('html')
+				->subject('Código de verificação — Proposta PGM nº ' . (int)$orcamento->id);
+			return (bool)$email->send($msg);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	protected function _seguroClienteEmailValido($orcamento) {
+		$e = trim((string)($orcamento->cliente->email ?? ''));
+		if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL)) {
+			return null;
+		}
+		return $e;
+	}
+
+	protected function _seguroPropostaValidateNomeParcial(string $nomeInput, string $nomeClienteSeg) {
+		$nomeIn = mb_strtolower(trim($nomeInput), 'UTF-8');
+		$nomeClienteLower = mb_strtolower(trim($nomeClienteSeg), 'UTF-8');
+		$parts = preg_split('/\s+/u', $nomeClienteLower, -1, PREG_SPLIT_NO_EMPTY);
+		$nomePartial = $parts[0] ?? 'cliente';
+		if (mb_strlen($nomePartial, 'UTF-8') > 12) {
+			$nomePartial = mb_substr($nomePartial, 0, 12, 'UTF-8');
+		}
+		if (mb_strpos($nomeIn, $nomePartial) !== false) {
+			return true;
+		}
+		return mb_strlen($nomeIn, 'UTF-8') >= 2;
+	}
+
+	protected function _seguroPropostaHandleIdentidade($orcamento, string $hash) {
+		$session = $this->request->getSession();
+		$st = $this->_seguroPortalRead($session, $hash);
+		$blockedUntil = isset($st['blocked_until']) ? (int)$st['blocked_until'] : 0;
+		if ($blockedUntil > time()) {
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$cnpjDigits = preg_replace('/\D/', '', (string)($orcamento->cliente->cpfcnpj ?? ''));
+		$cnpj4Expected = strlen($cnpjDigits) >= 4 ? substr($cnpjDigits, -4) : '0000';
+		$cnpjIn = preg_replace('/\D/', '', (string)$this->request->getData('cnpj_input'));
+		$nomeIn = (string)$this->request->getData('nome_input');
+		$nomeClienteSeg = !empty($orcamento->cliente->razaosocial) ? $orcamento->cliente->razaosocial : $orcamento->cliente->nome;
+
+		$okCnpj = ($cnpjIn === $cnpj4Expected);
+		$okNome = $this->_seguroPropostaValidateNomeParcial($nomeIn, (string)$nomeClienteSeg);
+		if (!$okCnpj || !$okNome) {
+			$fail = (int)($st['identity_failures'] ?? 0) + 1;
+			$merge = ['identity_failures' => $fail];
+			if ($fail >= 3) {
+				$merge['blocked_until'] = time() + 1800;
+				$merge['awaiting_otp'] = false;
+				$merge['otp_hash'] = null;
+				$merge['otp_exp'] = null;
+				$this->Flash->error(__('Muitas tentativas incorretas. Acesso bloqueado por 30 minutos.'));
+			} else {
+				$this->Flash->error(__('Dados não conferem. Verifique os últimos dígitos do CNPJ e o nome cadastrado.'));
+			}
+			$this->_seguroPortalMerge($session, $hash, $merge);
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$to = $this->_seguroClienteEmailValido($orcamento);
+		if ($to === null) {
+			$this->Flash->error(__('Não há e-mail de faturamento cadastrado para este cliente. Entre em contato com o vendedor.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+		$otpHash = password_hash($code, PASSWORD_DEFAULT);
+		if ($otpHash === false) {
+			$this->Flash->error(__('Não foi possível gerar o código. Tente novamente.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		if (!$this->_sendSeguroOtpEmail($orcamento, $to, $code)) {
+			$this->Flash->error(__('Não foi possível enviar o e-mail com o código. Tente novamente ou contate o vendedor.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$this->_seguroPortalMerge($session, $hash, [
+			'identity_failures' => 0,
+			'awaiting_otp' => true,
+			'otp_hash' => $otpHash,
+			'otp_exp' => time() + 600,
+			'otp_failures' => 0,
+			'reenviar_count' => 0,
+			'email_masked' => $this->_maskEmailForDisplay($to),
+		]);
+		$this->Flash->success(__('Enviamos um código de 6 dígitos para o e-mail cadastrado.'));
+		return $this->redirect(['action' => 'seguroProposta', $hash]);
+	}
+
+	protected function _seguroPropostaHandleOtp($orcamento, string $hash) {
+		$session = $this->request->getSession();
+		$st = $this->_seguroPortalRead($session, $hash);
+		if (empty($st['awaiting_otp']) || empty($st['otp_hash']) || empty($st['otp_exp'])) {
+			$this->Flash->error(__('Sessão expirada. Informe novamente seus dados para receber um novo código.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+		$blockedUntil = isset($st['blocked_until']) ? (int)$st['blocked_until'] : 0;
+		if ($blockedUntil > time()) {
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+		if (time() > (int)$st['otp_exp']) {
+			$this->Flash->error(__('Código expirado. Solicite um novo código.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$digits = preg_replace('/\D/', '', (string)$this->request->getData('otp_code'));
+		if (strlen($digits) !== 6) {
+			$this->Flash->error(__('Informe os 6 dígitos do código.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		if (!password_verify($digits, (string)$st['otp_hash'])) {
+			$fail = (int)($st['otp_failures'] ?? 0) + 1;
+			$merge = ['otp_failures' => $fail];
+			if ($fail >= 5) {
+				$merge['blocked_until'] = time() + 1800;
+				$merge['awaiting_otp'] = false;
+				$merge['otp_hash'] = null;
+				$merge['otp_exp'] = null;
+				$this->Flash->error(__('Muitas tentativas incorretas. Acesso bloqueado por 30 minutos.'));
+			} else {
+				$this->Flash->error(__('Código incorreto.'));
+			}
+			$this->_seguroPortalMerge($session, $hash, $merge);
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$this->_seguroPortalUnsetHash($session, $hash);
+		$pv = $session->read('PortalSeguroVerificado');
+		if (!is_array($pv)) {
+			$pv = [];
+		}
+		$pv[$hash] = time() + 28800;
+		$session->write('PortalSeguroVerificado', $pv);
+
+		return $this->redirect(['action' => 'viewhash', $hash]);
+	}
+
+	protected function _seguroPropostaHandleReenviarOtp($orcamento, string $hash) {
+		$session = $this->request->getSession();
+		$st = $this->_seguroPortalRead($session, $hash);
+		if (empty($st['awaiting_otp'])) {
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+		$blockedUntil = isset($st['blocked_until']) ? (int)$st['blocked_until'] : 0;
+		if ($blockedUntil > time()) {
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+		$n = (int)($st['reenviar_count'] ?? 0);
+		if ($n >= 3) {
+			$this->Flash->error(__('Limite de reenvios atingido. Aguarde ou contate o vendedor.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$to = $this->_seguroClienteEmailValido($orcamento);
+		if ($to === null) {
+			$this->Flash->error(__('Não há e-mail cadastrado para reenvio.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+		$otpHash = password_hash($code, PASSWORD_DEFAULT);
+		if ($otpHash === false) {
+			$this->Flash->error(__('Não foi possível gerar o código.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+		if (!$this->_sendSeguroOtpEmail($orcamento, $to, $code)) {
+			$this->Flash->error(__('Falha ao reenviar o e-mail.'));
+			return $this->redirect(['action' => 'seguroProposta', $hash]);
+		}
+
+		$this->_seguroPortalMerge($session, $hash, [
+			'otp_hash' => $otpHash,
+			'otp_exp' => time() + 600,
+			'otp_failures' => 0,
+			'reenviar_count' => $n + 1,
+			'email_masked' => $this->_maskEmailForDisplay($to),
+		]);
+		$this->Flash->success(__('Novo código enviado por e-mail.'));
+		return $this->redirect(['action' => 'seguroProposta', $hash]);
 	}
 
 	public function addservico($edit = null){
@@ -1422,8 +1808,24 @@ class OrcamentosController extends AppController {
 
 	public function aprovarhash($hash){
 		$orcamento = $this->Orcamentos->findByHash($hash)->first();
+		if (empty($orcamento)) {
+			$this->Flash->error(__('Não foi encontrado um orçamento!'));
+			return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+		}
+		$obsExtra = '';
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$nome = trim((string)($data['sign_nome'] ?? ''));
+			$cpfDigits = preg_replace('/\D/', '', (string)($data['sign_cpf'] ?? ''));
+			$termos = !empty($data['aceite_termos']);
+			if ($nome === '' || strlen($cpfDigits) < 11 || !$termos) {
+				$this->Flash->error(__('Informe nome completo, CPF válido e aceite os termos para aprovar.'));
+				return $this->redirect(['action' => 'viewhash', $orcamento->hash]);
+			}
+			$obsExtra = ' Signatário: ' . $nome . '. CPF informado pelo portal.';
+		}
 		$sitantiga = $orcamento->status;
-		$observacao = "O orçamento foi aprovado pelo cliente.";
+		$observacao = 'O orçamento foi aprovado pelo cliente.' . $obsExtra;
 		$orcamento->ipaprovacao = get_client_ip();
 		$orcamento->navegadoraprovacao = VerificaNavegadorSO();
 		$orcamento->status = C_OrcamentoStatusAprovado;
@@ -1431,7 +1833,10 @@ class OrcamentosController extends AppController {
 		if ($this->Orcamentos->save($orcamento)) {
 			$this->Flash->success('O orçamento foi aprovado com sucesso!');
 			$this->criarMov($orcamento->id, $sitantiga, C_OrcamentoStatusAprovado, $observacao, $orcamento->idempresa);
-			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
+			$uid = $this->Auth->user('id');
+			if (!empty($uid)) {
+				$this->Atividades->registrar($uid, $this->request->getParam('controller'), $this->request->getParam('action'), $orcamento->id);
+			}
 			// Email
 				$empresa = $this->Empresas->get($orcamento->idempresa);
 				// Mensagem 
@@ -1600,12 +2005,12 @@ class OrcamentosController extends AppController {
 		$versaoMap = $this->_versaoRotuloPorOrcamentoIds($this->Auth->user('idempresa'), [(int)$orcamento->id]);
 		$orcVersaoLabel = $versaoMap[(int)$orcamento->id] ?? 'v1';
 
-		// Link do portal onde o cliente assina (viewhash).
+		// Link do portal do cliente (acesso seguro → depois viewhash).
 		$assinarUrl = null;
 		try {
 			$base = $this->Config->get(1)->urlfora ?? null;
 			if (!empty($base) && !empty($orcamento->hash)) {
-				$assinarUrl = $base . 'orcamentos/viewhash/' . $orcamento->hash;
+				$assinarUrl = $base . 'orcamentos/seguro-proposta/' . $orcamento->hash;
 			}
 		} catch (\Throwable $e) {
 			$assinarUrl = null;
@@ -1657,8 +2062,8 @@ class OrcamentosController extends AppController {
 				$idorcamento = $data['idorcamento'];
 				$url = $this->Config->get(1)->urlfora."orcamentos/view/$idorcamento/$orcamento->idempresa";
 				$linkacesso = "<a href='$url'>Portal Web - Orçamentos</a>";
-				$urlHash = $this->Config->get(1)->urlfora.'orcamentos/viewhash/'.$orcamento->hash;
-				$linkacesso .= " ou se não possuir login, acesse <a href='$urlHash'>este link</a>";
+				$urlHash = $this->Config->get(1)->urlfora.'orcamentos/seguro-proposta/'.$orcamento->hash;
+				$linkacesso .= " ou se não possuir login, acesse <a href='$urlHash'>este link</a> (acesso seguro com verificação)";
 			// Subistitui as tags 
 				$mensagem = $empresa->orcamentomensagem;
 				$mensagem = str_replace("#LINKACESSO#", $linkacesso, $empresa->orcamentomensagem);

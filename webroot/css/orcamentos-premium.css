@@ -5,14 +5,14 @@
  * Tema escuro: bloco final com body.layout-no-topbar:not(.pgm-theme-light) (alinhado ao shell escuro).
  */
 .orc-premium-wrap {
-  --orc-teal: var(--pgm-erp-teal, #00c08b);
-  --orc-teal-dark: var(--pgm-erp-teal-hover, #008f68);
-  --orc-teal-dim: var(--pgm-erp-teal-muted, rgba(0, 192, 139, 0.15));
-  --orc-amber: #FFC107;
-  --orc-amber-dim: rgba(255, 193, 7, 0.15);
-  --orc-blue: #33CCFF;
-  --orc-blue-dim: rgba(51, 204, 255, 0.15);
-  --orc-green: var(--orc-teal, #00c08b);
+  --orc-teal: var(--pgm-erp-teal, #1d9e75);
+  --orc-teal-dark: var(--pgm-erp-teal-hover, #0f6e56);
+  --orc-teal-dim: rgba(29, 158, 117, 0.15);
+  --orc-amber: #e9a025;
+  --orc-amber-dim: rgba(233, 160, 37, 0.15);
+  --orc-blue: #378add;
+  --orc-blue-dim: rgba(55, 138, 221, 0.15);
+  --orc-green: var(--orc-teal, #1d9e75);
   --orc-red: #e24b4a;
   --orc-red-dim: rgba(226, 75, 74, 0.12);
   --orc-purple: #A682E6;
@@ -203,17 +203,17 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {
 
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a,
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a strong {
-  color: var(--pgm-erp-teal, #00c08b) !important;
+  color: var(--pgm-erp-teal, #1d9e75) !important;
 }
 
 .orc-premium-wrap.orc-premium-index {
-  /* :root do protótipo */
-  --orc-teal: var(--pgm-erp-teal, #00c08b);
-  --orc-teal-dark: var(--pgm-erp-teal-hover, #008f68);
-  --orc-teal-light: #e6faf4;
-  --orc-teal-mid: #5cdbc0;
-  --orc-amber: #ffc107;
-  --orc-blue: #33ccff;
+  /* :root do protótipo pgm_orcamentos_premium.html */
+  --orc-teal: #1d9e75;
+  --orc-teal-dark: #0f6e56;
+  --orc-teal-light: #e1f5ee;
+  --orc-teal-mid: #5dcaa5;
+  --orc-amber: #e9a025;
+  --orc-blue: #378add;
   --orc-red: #e24b4a;
   --orc-border: #e5e4e0;
   --orc-border-light: #f0efec;
@@ -259,7 +259,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 
 #orc-premium-container.orc-premium-index a.orc-premium-link,
 #orc-premium-container.orc-premium-index a.orc-premium-id {
-  color: var(--orc-teal, #00c08b) !important;
+  color: var(--orc-teal, #1d9e75) !important;
 }
 
 /* Abas tipo pill (protótipo .tabs / .tab) */
@@ -326,7 +326,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   border-radius: 999px;
   font-size: 10px;
   font-weight: 600;
-  background: var(--orc-teal, #00c08b);
+  background: var(--orc-teal, #1d9e75);
   color: #fff;
 }
 
@@ -336,11 +336,11 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 .orc-premium-index .orc-premium-margem--good {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
 }
 
 .orc-premium-index .orc-premium-margem--warn {
-  color: #ffc107;
+  color: #e9a025;
 }
 
 .orc-premium-index .orc-premium-margem--bad {
@@ -496,9 +496,9 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 /* Stats — cores sem inline style (--orc-sc) */
-.orc-premium-index .orc-premium-stat--pendentes { --orc-sc: var(--orc-amber, #ffc107); }
-.orc-premium-index .orc-premium-stat--enviados { --orc-sc: var(--orc-teal, #00c08b); }
-.orc-premium-index .orc-premium-stat--aprovados { --orc-sc: var(--orc-blue, #33ccff); }
+.orc-premium-index .orc-premium-stat--pendentes { --orc-sc: var(--orc-amber, #e9a025); }
+.orc-premium-index .orc-premium-stat--enviados { --orc-sc: var(--orc-teal, #1d9e75); }
+.orc-premium-index .orc-premium-stat--aprovados { --orc-sc: var(--orc-blue, #378add); }
 .orc-premium-index .orc-premium-stat--recusados { --orc-sc: var(--orc-red, #e24b4a); }
 .orc-premium-index .orc-premium-stat--arquivados { --orc-sc: #888780; }
 
@@ -707,13 +707,13 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   text-decoration: underline;
 }
 .orc-premium-form .orc-form-crumb-current {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
 }
 .orc-premium-form .orc-id-accent {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
 }
 .orc-premium-form .orc-ver-pill {
-  background: var(--orc-teal, #00c08b);
+  background: var(--orc-teal, #1d9e75);
   color: #fff;
   font-family: monospace;
   font-size: 10px;
@@ -814,7 +814,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 }
 .orc-premium-form .orc-alcada-detail {
   font-size: 11px;
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
 }
 .orc-premium-form .orc-info-value--amber {
   color: #ffc107;
@@ -993,7 +993,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   color: var(--orc-text-muted, #6b6a65);
 }
 .orc-premium-form .orc-margin-card-val--teal {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
 }
 
 /* Add-row dashed button */
@@ -1631,7 +1631,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 .orc-catalog-item-price {
   font-size: 16px;
   font-weight: 700;
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
   line-height: 1.2;
 }
 
@@ -1659,7 +1659,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 
 .orc-catalog-stock-line,
 .orc-catalog-margem-line {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
   font-weight: 600;
 }
 
@@ -1727,7 +1727,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 }
 
 .orc-catalog-stock-line--ok {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
   font-weight: 600;
 }
 
@@ -2014,7 +2014,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 .orc-premium-wrap .orc-paper-logo {
   width: 34px;
   height: 34px;
-  background: var(--orc-teal, #00c08b);
+  background: var(--orc-teal, #1d9e75);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -2197,7 +2197,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orc-premium-wrap .orc-ptbl thead tr {
-  background: var(--orc-teal, #00c08b);
+  background: var(--orc-teal, #1d9e75);
 }
 
 .orc-premium-wrap .orc-ptbl thead th {
@@ -2269,7 +2269,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orc-premium-wrap .orc-paper-tot-row.grand span:last-child {
-  color: var(--orc-teal, #00c08b);
+  color: var(--orc-teal, #1d9e75);
 }
 
 .orc-premium-wrap .orc-paper-obs {
@@ -2314,7 +2314,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--orc-teal, #00c08b);
+  background: var(--orc-teal, #1d9e75);
   margin-top: 4px;
   flex-shrink: 0;
 }

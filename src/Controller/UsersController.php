@@ -36,6 +36,7 @@ require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src'
 
 use Cake\Core\Configure;
 use Cake\Mailer\Email;
+use Cake\Mailer\TransportFactory;
 
 class UsersController extends AppController {
 	public function initialize() {
@@ -2119,7 +2120,7 @@ class UsersController extends AppController {
 		foreach ($candidates as $transport) {
 			$t0 = microtime(true);
 			try {
-				$cfg = Configure::read('EmailTransport.' . $transport);
+				$cfg = TransportFactory::getConfig($transport);
 				if (!is_array($cfg) || ($cfg['className'] ?? '') !== 'Smtp') {
 					Log::warning(sprintf('[email] Transporte "%s": configuração em falta ou não-SMTP.', $transport));
 					continue;
