@@ -21,15 +21,17 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 			<h1>Produtos em Estoque</h1>
 			<p>Consulta ao ERP — selecione linhas para imprimir ou gerar PDF.</p>
 		</div>
-		<div class="est-header__actions">
-			<a href="#" id="btn-imprimir" class="est-btn est-btn--outline">Imprimir</a>
-			<a href="#" id="btn-pdf" class="est-btn est-btn--secondary">PDF</a>
-			<a
-				href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $toggleTarget === 'estoque' ? 't' : 'f', '?' => $queryAtual]) ?>"
-				class="<?= h($toggleClass) ?>"
-				id="btn-toggle-estoque"
-				data-target="<?= h($toggleTarget) ?>"
-			><?= h($toggleLabel) ?></a>
+		<div class="est-header__actions" role="toolbar" aria-label="Impressão e escopo da listagem">
+			<div class="est-header__actions-inner">
+				<a href="#" id="btn-imprimir" class="est-btn est-btn--outline">Imprimir</a>
+				<a href="#" id="btn-pdf" class="est-btn est-btn--secondary">PDF</a>
+				<a
+					href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $toggleTarget === 'estoque' ? 't' : 'f', '?' => $queryAtual]) ?>"
+					class="<?= h($toggleClass) ?>"
+					id="btn-toggle-estoque"
+					data-target="<?= h($toggleTarget) ?>"
+				><?= h($toggleLabel) ?></a>
+			</div>
 		</div>
 	</header>
 
@@ -52,12 +54,12 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 					'label' => false
 				]) ?>
 			</div>
-			<div class="est-field">
+			<div class="est-field est-field--descricao">
 				<label for="sDescricao">Filtro por descrição</label>
 				<?= $this->Form->control('sDescricao', ['id' => 'sDescricao', 'class' => 'est-input', 'value' => $sDescricao, 'label' => false, 'autocomplete' => 'off', 'placeholder' => 'Buscar por texto na descrição']) ?>
 			</div>
 			<div class="est-field est-field--actions">
-				<span class="est-label-spacer" aria-hidden="true">Ações</span>
+				<span class="est-field__actions-heading">Ações</span>
 				<div class="est-filter-actions">
 					<?= $this->Form->button('Buscar', ['class' => 'est-btn est-btn--primary', 'type' => 'button', 'id' => 'btn-buscar']) ?>
 					<a class="est-btn est-btn--outline" href="<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', $bApenasComSaldo ? 't' : 'f']) ?>" id="btn-limpar">Limpar</a>

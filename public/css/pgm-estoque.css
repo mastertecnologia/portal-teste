@@ -28,29 +28,53 @@ body.estoque-screen-active {
 	--est-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Tema escuro (portal): “ilha” clara na área principal — contraste forte vs. sidebar */
+html[data-pgm-theme="dark"] body.estoque-screen-active {
+	--est-bg: #e4e9f1;
+	--est-card: #ffffff;
+	--est-text: #0f172a;
+	--est-muted: #475569;
+	--est-border: #d1d9e6;
+	--est-row-hover: #e8eef7;
+	--est-row-alt: #f1f5fb;
+	--est-header-bg: #eef2f9;
+	--est-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
 /*
  * Área principal: fundo claro — precisa vencer layout-sidebar-shell
  * (html body.layout-no-topbar.fixed-layout .page-wrapper e .pgm-shell-main com !important).
  */
-html body.estoque-screen-active.layout-no-topbar #main-wrapper {
+html body.estoque-screen-active.layout-no-topbar #main-wrapper,
+html[data-pgm-theme="dark"] body.estoque-screen-active.layout-no-topbar #main-wrapper {
 	background: var(--est-bg) !important;
 }
 
-html body.estoque-screen-active.layout-no-topbar .pgm-shell-main {
+html body.estoque-screen-active.layout-no-topbar .pgm-shell-main,
+html[data-pgm-theme="dark"] body.estoque-screen-active.layout-no-topbar .pgm-shell-main {
 	background: var(--est-bg) !important;
 	color: var(--est-text) !important;
 }
 
 html body.estoque-screen-active.layout-no-topbar.fixed-layout .page-wrapper,
-html body.estoque-screen-active.layout-no-topbar .page-wrapper {
+html body.estoque-screen-active.layout-no-topbar .page-wrapper,
+html[data-pgm-theme="dark"] body.estoque-screen-active.layout-no-topbar.fixed-layout .page-wrapper,
+html[data-pgm-theme="dark"] body.estoque-screen-active.layout-no-topbar .page-wrapper {
 	background: var(--est-bg) !important;
 	color: var(--est-text) !important;
 }
 
-html body.estoque-screen-active.layout-no-topbar .page-wrapper > .container-fluid {
+html body.estoque-screen-active.layout-no-topbar .page-wrapper > .container-fluid,
+html[data-pgm-theme="dark"] body.estoque-screen-active.layout-no-topbar .page-wrapper > .container-fluid {
 	padding-top: var(--est-space-3);
 	padding-bottom: var(--est-space-4);
 	color: var(--est-text) !important;
+}
+
+/* Evita herdar tom “apagado” dos tokens globais dark no wrapper da view */
+html[data-pgm-theme="dark"] body.estoque-screen-active.layout-no-topbar .page-wrapper > .container-fluid > .row {
+	color: var(--est-text) !important;
+	opacity: 1 !important;
 }
 
 /* Sidebar um pouco menos “pesada” só nesta tela */
@@ -80,20 +104,36 @@ body.estoque-screen-active .est-root {
 	box-shadow: var(--est-shadow);
 }
 
-/* Texto legível no tema escuro global (skin-green): evita cinza-claro sobre fundo escuro */
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title h1 {
-	color: var(--est-primary) !important;
+/* Tipografia: superfícies claras dentro do card — mesmo em skin escura global */
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root {
+	opacity: 1 !important;
 }
 
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-header__title h1,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title h1 {
+	color: var(--est-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-header__title p,
 body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title p,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-field label,
 body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-field label,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-field__actions-heading,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-field__actions-heading,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-footer,
 body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-footer,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-empty,
 body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-empty {
 	color: var(--est-muted) !important;
 }
 
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-table tbody td,
 body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-table tbody td,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-col-code {
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-col-code,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-col-code,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-table thead th,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-table thead th {
 	color: var(--est-text) !important;
 }
 
@@ -111,6 +151,51 @@ html body.estoque-screen-active .est-root .form-control.est-input::placeholder,
 html body.estoque-screen-active .est-root input.est-input::placeholder {
 	color: #94a3b8 !important;
 	opacity: 1;
+}
+
+/*
+ * Vence pgm-advanced-module.css (.bootstrap-select escuro em layout-no-topbar:not(.pgm-theme-light)).
+ * Especificidade alta + mesma ordem (css_late) garante controles claros dentro do card.
+ */
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle.btn-light,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle.btn-default,
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .btn,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .dropdown-toggle,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .dropdown-toggle.btn-light,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .dropdown-toggle.btn-default,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .btn {
+	background: var(--est-card) !important;
+	background-color: var(--est-card) !important;
+	border: 1px solid var(--est-border) !important;
+	border-color: var(--est-border) !important;
+	color: var(--est-text) !important;
+	box-shadow: none !important;
+}
+
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .filter-option-inner-inner,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .filter-option-inner-inner {
+	color: var(--est-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .dropdown-menu,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .dropdown-menu {
+	background: var(--est-card) !important;
+	background-color: var(--est-card) !important;
+	border: 1px solid var(--est-border) !important;
+	color: var(--est-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .dropdown-menu .dropdown-item,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .dropdown-menu .dropdown-item {
+	color: var(--est-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .bs-searchbox input,
+body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .bs-searchbox input {
+	background: #ffffff !important;
+	border: 1px solid var(--est-border) !important;
+	color: var(--est-text) !important;
 }
 
 /* Cabeçalho da página */
@@ -146,6 +231,19 @@ body.estoque-screen-active .est-header__actions {
 	align-items: center;
 	justify-content: flex-end;
 	gap: var(--est-space-2);
+}
+
+body.estoque-screen-active .est-header__actions-inner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--est-space-2);
+	padding: var(--est-space-2) var(--est-space-3);
+	background: var(--est-header-bg);
+	border: 1px solid var(--est-border);
+	border-radius: var(--est-radius);
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 /* ── Botões (altura/radius unificados) ──────────────────────────────────── */
@@ -226,15 +324,20 @@ html body.estoque-screen-active button.est-btn--secondary:hover {
 html body.estoque-screen-active a.est-btn--outline,
 html body.estoque-screen-active button.est-btn--outline {
 	background: transparent !important;
-	border-color: #e5e7eb !important;
+	border-color: #cbd5e1 !important;
 	color: #1e293b !important;
 }
 
 html body.estoque-screen-active a.est-btn--outline:hover,
 html body.estoque-screen-active button.est-btn--outline:hover {
 	background: var(--est-row-alt) !important;
-	border-color: #cbd5e1 !important;
+	border-color: #94a3b8 !important;
 	color: #1e293b !important;
+}
+
+html[data-pgm-theme="dark"] body.estoque-screen-active a.est-btn--outline,
+html[data-pgm-theme="dark"] body.estoque-screen-active button.est-btn--outline {
+	border-color: #94a3b8 !important;
 }
 
 /* ── Painel de filtros ───────────────────────────────────────────────────── */
@@ -247,8 +350,8 @@ body.estoque-screen-active .est-filters-panel {
 
 body.estoque-screen-active .est-filters-grid {
 	display: grid;
-	grid-template-columns: minmax(200px, 260px) minmax(0, 1fr) auto;
-	gap: var(--est-space-3);
+	grid-template-columns: minmax(220px, 300px) minmax(280px, 1fr) auto;
+	gap: var(--est-space-4);
 	align-items: end;
 }
 
@@ -269,6 +372,21 @@ body.estoque-screen-active .est-label-spacer {
 	visibility: hidden;
 	line-height: 1.4;
 	user-select: none;
+}
+
+body.estoque-screen-active .est-field__actions-heading {
+	display: block;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--est-muted);
+	margin-bottom: var(--est-space-1);
+	line-height: 1.4;
+	letter-spacing: 0.01em;
+}
+
+body.estoque-screen-active .est-field--descricao .est-input {
+	min-width: 0;
+	width: 100%;
 }
 
 body.estoque-screen-active .est-input {
@@ -394,23 +512,29 @@ body.estoque-screen-active .est-table thead th {
 	top: 0;
 	z-index: 1;
 	background: var(--est-header-bg) !important;
-	padding: var(--est-space-2) var(--est-space-3);
+	padding: var(--est-space-3) var(--est-space-3);
 	text-align: left;
 	font-size: 0.6875rem;
 	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--est-muted) !important;
-	border-bottom: 1px solid var(--est-border);
+	letter-spacing: 0.07em;
+	color: var(--est-text) !important;
+	border-bottom: 2px solid var(--est-border);
 	white-space: nowrap;
+	box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+}
+
+body.estoque-screen-active .est-table thead th.est-num {
+	text-align: right;
 }
 
 body.estoque-screen-active .est-table tbody td {
-	padding: var(--est-space-2) var(--est-space-3);
+	padding: var(--est-space-3) var(--est-space-3);
 	border-bottom: 1px solid var(--est-border);
 	vertical-align: middle;
 	color: var(--est-text) !important;
 	background-color: #ffffff !important;
+	transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 body.estoque-screen-active .est-table tbody tr:nth-child(even) td {
@@ -419,6 +543,10 @@ body.estoque-screen-active .est-table tbody tr:nth-child(even) td {
 
 body.estoque-screen-active .est-table tbody tr:hover td {
 	background: var(--est-row-hover) !important;
+}
+
+body.estoque-screen-active .est-table tbody tr.est-row-checked:hover td {
+	background: var(--est-row-checked) !important;
 }
 
 body.estoque-screen-active .est-table tr.est-row-checked td {
@@ -437,9 +565,11 @@ body.estoque-screen-active .est-col-code {
 }
 
 body.estoque-screen-active .est-col-desc {
-	min-width: 160px;
-	max-width: 520px;
+	min-width: 180px;
+	max-width: 560px;
 	word-break: break-word;
+	line-height: 1.5;
+	color: var(--est-text) !important;
 }
 
 body.estoque-screen-active .est-num {
@@ -447,6 +577,9 @@ body.estoque-screen-active .est-num {
 	font-variant-numeric: tabular-nums;
 	font-feature-settings: "tnum";
 	white-space: nowrap;
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--est-text) !important;
 }
 
 body.estoque-screen-active .est-empty {
@@ -522,7 +655,13 @@ body.est-print-selected .est-row-not-selected {
 		justify-content: stretch;
 	}
 
-	body.estoque-screen-active .est-header__actions .est-btn {
+	body.estoque-screen-active .est-header__actions-inner {
+		width: 100%;
+		justify-content: stretch;
+	}
+
+	body.estoque-screen-active .est-header__actions .est-btn,
+	body.estoque-screen-active .est-header__actions-inner .est-btn {
 		flex: 1 1 auto;
 		min-width: 0;
 	}
