@@ -2259,11 +2259,13 @@ class UsersController extends AppController {
 
 				$email = new Email();
 				$email->transport($transport);
+				// ViewBuilder: Email não tem ->layout(); template() com 1 arg não desliga o layout padrão.
+				$email->viewBuilder()
+					->setTemplate('reset_password')
+					->setLayout(false);
 				$email->from($from)
 					->to($to)
 					->subject($subject)
-					->template('reset_password')
-					->layout(false)
 					->emailFormat('both')
 					->viewVars($viewVars);
 				$email->send();
