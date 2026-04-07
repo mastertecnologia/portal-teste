@@ -7,6 +7,7 @@ use App\Service\Ticket\DashboardService;
 use App\Utility\ClienteDomainEventType;
 use App\Utility\RbacClientePortal;
 use App\Utility\SupportInboxMail;
+use Cake\Auth\DefaultPasswordHasher;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\Http\Response;
@@ -1052,26 +1053,62 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * Localiza usuário ativo pelo login digitado (e-mail ou username, fase de compatibilidade).
-	 * O Auth\Form autentica na coluna users.email; antes do identify o controller repõe $data['username'] com o e-mail do registo.
-	 * No PostgreSQL a comparação de texto é sensível a maiúsculas; sem LOWER() o login por e-mail falha.
+	 * Usuários ativos que batem com o login digitado (e-mail ou username).
+	 * Ordem fixa por id: importante quando há e-mails duplicados na base.
 	 *
 	 * @param string $login
-	 * @return \Cake\Datasource\EntityInterface|null
+	 * @return \App\Model\Entity\User[]
 	 */
-	protected function _findActiveUserForLogin($login) {
+	protected function _findActiveUsersForLogin($login): array {
 		$login = trim((string)$login);
 		if ($login === '') {
-			return null;
+			return [];
 		}
 		$lower = strtolower($login);
+
 		return $this->Users->find()
 			->where(['inativo' => 0])
 			->where(['OR' => [
 				['LOWER(Users.email)' => $lower],
 				['LOWER(Users.username)' => $lower],
 			]])
-			->first();
+			->order(['Users.id' => 'ASC'])
+			->toArray();
+	}
+
+	/**
+	 * Localiza um usuário ativo pelo login (primeiro id em caso de duplicidade).
+	 * Para autenticação use {@see _identifyUserByCredentials()}.
+	 *
+	 * @param string $login
+	 * @return \Cake\Datasource\EntityInterface|null
+	 */
+	protected function _findActiveUserForLogin($login) {
+		$users = $this->_findActiveUsersForLogin($login);
+
+		return !empty($users) ? $users[0] : null;
+	}
+
+	/**
+	 * Autentica login+senha percorrendo todos os candidatos ativos.
+	 * Evita falha quando há dois users com o mesmo e-mail: Auth->identify() podia validar outra linha que a de ->first().
+	 *
+	 * @param string $login
+	 * @param string|null $password
+	 * @return array<string, mixed>|null Mesmo formato de AuthComponent::identify()
+	 */
+	protected function _identifyUserByCredentials(string $login, $password): ?array {
+		if ($password === null || $password === '') {
+			return null;
+		}
+		$hasher = new DefaultPasswordHasher();
+		foreach ($this->_findActiveUsersForLogin($login) as $entity) {
+			if ($hasher->check((string)$password, (string)$entity->get('password'))) {
+				return $entity->toArray();
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -1107,16 +1144,7 @@ class UsersController extends AppController {
 	
 		if ($this->request->is('post')) {
 			$creds = $this->_extractLoginCredentials();
-			$data = [
-				'username' => $creds['username'],
-				'password' => $creds['password'],
-			];
-			$user = $this->_findActiveUserForLogin($data['username']);
-	
-			if (!empty($user)) {
-				$data['username'] = strtolower(trim((string)$user->email));
-			}
-			$user = $this->Auth->identify($data);
+			$user = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
 			
 			if ($user) {
 				// Só clientes (role = C_RoleCliente) podem logar aqui. Qualquer outro role é rejeitado.
@@ -1162,16 +1190,7 @@ class UsersController extends AppController {
 	
 		if ($this->request->is('post')) {
 			$creds = $this->_extractLoginCredentials();
-			$data = [
-				'username' => $creds['username'],
-				'password' => $creds['password'],
-			];
-			$user = $this->_findActiveUserForLogin($data['username']);
-	
-			if (!empty($user)) {
-				$data['username'] = strtolower(trim((string)$user->email));
-			}
-			$user = $this->Auth->identify($data);
+			$user = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
 			
 			if ($user) {
 				// Só equipe PGM/Master (role = C_RoleFuncionario) pode logar aqui. Qualquer outro role é rejeitado.
@@ -2198,19 +2217,12 @@ class UsersController extends AppController {
 			if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
 
 			$creds = $this->_extractLoginCredentials();
-			$data = [
-				'username' => $creds['username'],
-				'password' => $creds['password'],
-			];
-			$user = $this->_findActiveUserForLogin($data['username']);
-			if (!empty($user)) {
-				$data['username'] = strtolower(trim((string)$user->email));
-			}
-			$logou = $this->Auth->identify($data);
-			if (!$logou || empty($user)) {
+			$logou = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
+			if (!$logou) {
 				$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
 				return;
 			}
+			$user = $this->Users->get($logou['id']);
 			$user->secret = null;
 
 			if($this->Users->save($user)){
