@@ -51,27 +51,42 @@
 	.fc-multimonth .fc-daygrid-day-number { font-size: 11px; }
 	.pgm-cal-legend-dot--national { color: #6f6f6f; }
 	.pgm-cal-legend-dot--empresa { color: #ffc107; }
+	.pgm-cal-legend-dot--estadual { color: #5cecc4; }
+	.pgm-agenda-page .pgm-agenda-legend .calendar-events {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 10px;
+		margin-bottom: 6px;
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+	}
+	html[data-pgm-theme="light"] .pgm-agenda-page .pgm-agenda-legend .calendar-events {
+		background: rgba(0, 0, 0, 0.03);
+		border-color: rgba(0, 0, 0, 0.06);
+	}
 </style>
-<div class="row">
+<div class="row pgm-agenda-page">
 	<div class="col-md-12">
 		<div class="card">
 			<div class="">
-				<div class="row">
-					<div class="col-lg-3">
+				<div class="row no-gutters">
+					<div class="col-12 col-xl-3">
 						<div class="card-body">
-							<h4 class="card-title m-t-10">
+							<h4 class="card-title m-t-10 pgm-agenda-sidebar-title">
 								<?php  if($role == 0) echo $this->Html->link('Lista completa de visitas', ['action' => 'index']);
  										else echo $this->Html->link('Lista completa de visitas', ['action' => 'indexcliente']); ?>
 							</h4>
 							<div class="row">
 								<div class="col-md-12">
-									<div id="calendar-events" class="">
+									<div id="calendar-events" class="pgm-agenda-legend">
 									<div class="calendar-events" data-class="bg-info"><i class="fa fa-circle text-info"></i> Agendada </div>
 										<div class="calendar-events" data-class="bg-success"><i class="fa fa-circle text-success"></i> Finalizada </div>
 										<div class="calendar-events" data-class="bg-warning"><i class="fa fa-circle text-warning"></i> Pendente</div>
 										<div class="calendar-events" data-class="bg-danger"><i class="fa fa-circle text-danger"></i> Cancelada </div>
 										<div class="calendar-events m-t-10"><i class="fa fa-circle pgm-cal-legend-dot--national"></i> Feriados nacionais </div>
-										<div class="calendar-events"><i class="fa fa-circle text-info"></i> Feriado estadual (UF da empresa) </div>
+										<div class="calendar-events"><i class="fa fa-circle pgm-cal-legend-dot--estadual"></i> Feriado estadual (UF da empresa) </div>
 										<div class="calendar-events"><i class="fa fa-circle pgm-cal-legend-dot--empresa"></i> Feriado cadastrado (empresa/global) </div>
 										<div class="small text-muted m-t-5">Municipais: inclua em Configurações → Feriados.</div>
 									</div>
@@ -91,7 +106,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-lg-9">
+					<div class="col-12 col-xl-9 pgm-agenda-calendar-col">
 						<div class="card-body b-l">
 							<div id="calendar"></div>
 						</div>
@@ -221,6 +236,7 @@
 	var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
 		locale: 'pt-br',
 		initialView: 'dayGridMonth',
+		dayMinHeight: 104,
 		slotDuration: '00:15:00',
 		slotMinTime: '08:00:00',
 		slotMaxTime: '19:00:00',

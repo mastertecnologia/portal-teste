@@ -584,8 +584,11 @@ body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .form-material select.
 	color: #e6edf3;
 }
 
-/* FullCalendar v6 (Agenda — #calendar) — tema escuro via CSS variables + ajustes pontuais */
-body.layout-no-topbar:not(.pgm-theme-light) #calendar {
+/* FullCalendar v6 (Agenda — #calendar) — tema escuro via CSS variables + ajustes pontuais
+   O bundle do FC redefine --fc-* em .fc; repetir no .fc garante fundo/texto escuros nas células. */
+body.layout-no-topbar:not(.pgm-theme-light) #calendar,
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc,
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-theme-standard {
 	--fc-small-font-size: 0.85em;
 	--fc-page-bg-color: #161b22;
 	--fc-neutral-bg-color: rgba(255, 255, 255, 0.06);
@@ -616,6 +619,48 @@ body.layout-no-topbar:not(.pgm-theme-light) #calendar {
 
 body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc {
 	color: inherit;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-daygrid-day:not(.fc-day-today),
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-col-header-cell {
+	background-color: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-scrollgrid-section-sticky > * {
+	background: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-toolbar {
+	align-items: center !important;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.75rem;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-toolbar-chunk {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-daygrid-block-event .fc-event-title,
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-h-event .fc-event-title {
+	white-space: normal;
+	overflow: visible;
+	max-width: none;
+	line-height: 1.25;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .pgm-agenda-page .pgm-agenda-sidebar-title a {
+	color: var(--pgm-link, #45e5ed) !important;
+}
+
+body.layout-no-topbar.pgm-theme-light .pgm-agenda-page .pgm-agenda-sidebar-title a {
+	color: var(--pgm-link, #00a876) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) .pgm-agenda-page .pgm-agenda-calendar-col {
+	min-width: 0;
 }
 
 body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-toolbar-title {
