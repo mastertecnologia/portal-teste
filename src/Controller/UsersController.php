@@ -1314,7 +1314,14 @@ class UsersController extends AppController {
 	public function logout() {
 		$this->Ordensservico->limpacarrinho();
 		$this->Orcamentos->limpacarrinho();
-		return $this->redirect($this->Auth->logout());
+		$redirectEmpresa = $this->Auth->user()
+			&& (int)$this->Auth->user('role') === (int)C_RoleFuncionario;
+		$this->Auth->logout();
+		if ($redirectEmpresa) {
+			return $this->redirect(['action' => 'acessoEmpresa']);
+		}
+
+		return $this->redirect(['action' => 'login']);
 	}
 
 	public function isAuthorized($user) {
