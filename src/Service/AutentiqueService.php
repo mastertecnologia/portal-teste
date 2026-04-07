@@ -211,27 +211,68 @@ class AutentiqueService {
 		if ($publicId === '') {
 			return null;
 		}
+		$hexOnly = preg_replace('/[^a-f0-9]/i', '', $publicId);
+		$idVariants = [$publicId];
+		if (strlen($hexOnly) === 32 && strpos($publicId, '-') === false) {
+			$idVariants[] = substr($hexOnly, 0, 8) . '-' . substr($hexOnly, 8, 4) . '-' . substr($hexOnly, 12, 4)
+				. '-' . substr($hexOnly, 16, 4) . '-' . substr($hexOnly, 20, 12);
+		}
+		// Schema Autentique v2 usa UUID! em várias mutations; ID!/String! podem falhar na validação.
 		$attempts = [
+			'mutation ($public_id: UUID!) { createLinkToSignature(public_id: $public_id) { short_link } }',
 			'mutation ($public_id: ID!) { createLinkToSignature(public_id: $public_id) { short_link } }',
 			'mutation ($public_id: String!) { createLinkToSignature(public_id: $public_id) { short_link } }',
 		];
-		foreach ($attempts as $mutation) {
-			$decoded = $this->graphqlJson($mutation, ['public_id' => $publicId]);
-			if ($decoded === null || !empty($decoded['errors'])) {
-				continue;
-			}
-			$payload = $decoded['data']['createLinkToSignature'] ?? null;
-			if (!is_array($payload)) {
-				continue;
-			}
-			foreach (['short_link', 'shortLink'] as $k) {
-				if (!empty($payload[$k])) {
-					$s = trim((string)$payload[$k]);
-					if ($s !== '') {
-						return $s;
+		$lastErrors = null;
+		foreach ($idVariants as $tryId) {
+			foreach ($attempts as $mutation) {
+				$decoded = $this->graphqlJson($mutation, ['public_id' => $tryId]);
+				if ($decoded === null) {
+					continue;
+				}
+				if (!empty($decoded['errors'])) {
+					$lastErrors = $decoded['errors'];
+					continue;
+				}
+				$payload = $decoded['data']['createLinkToSignature'] ?? null;
+				if (!is_array($payload)) {
+					continue;
+				}
+				foreach (['short_link', 'shortLink'] as $k) {
+					if (!empty($payload[$k])) {
+						$s = trim((string)$payload[$k]);
+						if ($s !== '') {
+							return $s;
+						}
 					}
 				}
 			}
+		}
+		if (strlen($hexOnly) === 32) {
+			$literal = 'mutation { createLinkToSignature(public_id: "' . $publicId . '") { short_link } }';
+			$decoded = $this->graphqlJson($literal, []);
+			if (is_array($decoded) && empty($decoded['errors'])) {
+				$payload = $decoded['data']['createLinkToSignature'] ?? null;
+				if (is_array($payload)) {
+					foreach (['short_link', 'shortLink'] as $k) {
+						if (!empty($payload[$k])) {
+							$s = trim((string)$payload[$k]);
+							if ($s !== '') {
+								return $s;
+							}
+						}
+					}
+				}
+			} elseif (is_array($decoded) && !empty($decoded['errors'])) {
+				$lastErrors = $decoded['errors'];
+			}
+		}
+		if ($lastErrors !== null) {
+			Log::warning(sprintf(
+				'Autentique createLinkToSignature erros (public_id=%s): %s',
+				$publicId,
+				json_encode($lastErrors, JSON_UNESCAPED_UNICODE)
+			));
 		}
 
 		return null;
@@ -529,10 +570,12 @@ class AutentiqueService {
 			$email = trim((string)$s->get('email'));
 			$nome = trim((string)$s->get('nome'));
 			$action = $this->mapSignerAction($s);
+			// DELIVERY_METHOD_LINK: API devolve short_link na resposta (e-mail sozinho costuma ser só convite Autentique, sem link).
+			$linkDelivery = ['delivery_method' => 'DELIVERY_METHOD_LINK'];
 			if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-				$out[] = ['email' => $email, 'action' => $action];
+				$out[] = array_merge(['email' => $email, 'action' => $action], $linkDelivery);
 			} elseif ($nome !== '') {
-				$out[] = ['name' => $nome, 'action' => $action];
+				$out[] = array_merge(['name' => $nome, 'action' => $action], $linkDelivery);
 			}
 		}
 
