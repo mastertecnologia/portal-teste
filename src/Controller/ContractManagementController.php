@@ -498,7 +498,19 @@ class ContractManagementController extends AppController {
 				if (!empty($res['errors'])) {
 					$parts = [];
 					foreach ($res['errors'] as $e) {
-						$parts[] = is_array($e) ? (string)($e['message'] ?? json_encode($e, JSON_UNESCAPED_UNICODE)) : (string)$e;
+						if (!is_array($e)) {
+							$parts[] = (string)$e;
+							continue;
+						}
+						$msg = trim((string)($e['message'] ?? ''));
+						$ext = $e['extensions'] ?? null;
+						if (is_array($ext) && $ext !== []) {
+							$msg .= ($msg !== '' ? ' — ' : '') . json_encode($ext, JSON_UNESCAPED_UNICODE);
+						}
+						if ($msg === '' || strtolower($msg) === 'validation') {
+							$msg = json_encode($e, JSON_UNESCAPED_UNICODE);
+						}
+						$parts[] = $msg;
 					}
 					$this->Flash->error(__('Autentique: ') . implode(' ', $parts));
 

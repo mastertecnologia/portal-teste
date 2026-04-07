@@ -86,6 +86,7 @@ class AutentiqueService {
 		}
 		if (!empty($decoded['errors'])) {
 			$result['errors'] = $decoded['errors'];
+			Log::warning('Autentique createDocument GraphQL: ' . json_encode($decoded['errors'], JSON_UNESCAPED_UNICODE));
 
 			return $result;
 		}
@@ -566,16 +567,23 @@ class AutentiqueService {
 		});
 
 		$out = [];
+		$forceLinkDelivery = (bool)Configure::read('Contract.autentique.signers_delivery_method_link');
 		foreach ($list as $s) {
 			$email = trim((string)$s->get('email'));
 			$nome = trim((string)$s->get('nome'));
 			$action = $this->mapSignerAction($s);
-			// DELIVERY_METHOD_LINK: API devolve short_link na resposta (e-mail sozinho costuma ser só convite Autentique, sem link).
-			$linkDelivery = ['delivery_method' => 'DELIVERY_METHOD_LINK'];
 			if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-				$out[] = array_merge(['email' => $email, 'action' => $action], $linkDelivery);
+				$row = ['email' => $email, 'action' => $action];
+				if ($forceLinkDelivery) {
+					$row['delivery_method'] = 'DELIVERY_METHOD_LINK';
+				}
+				$out[] = $row;
 			} elseif ($nome !== '') {
-				$out[] = array_merge(['name' => $nome, 'action' => $action], $linkDelivery);
+				$row = ['name' => $nome, 'action' => $action];
+				if ($forceLinkDelivery) {
+					$row['delivery_method'] = 'DELIVERY_METHOD_LINK';
+				}
+				$out[] = $row;
 			}
 		}
 

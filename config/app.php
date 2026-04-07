@@ -456,6 +456,8 @@ return [
             'api_key' => env('CONTRACT_AUTENTIQUE_API_KEY', ''),
             'webhook_secret' => env('CONTRACT_AUTENTIQUE_WEBHOOK_SECRET', ''),
             'sandbox' => filter_var(env('CONTRACT_AUTENTIQUE_SANDBOX', false), FILTER_VALIDATE_BOOLEAN),
+            // true = envia signers com DELIVERY_METHOD_LINK (só se a Autentique aceitar; senão falha com "validation").
+            'signers_delivery_method_link' => filter_var(env('CONTRACT_AUTENTIQUE_SIGNERS_DELIVERY_METHOD_LINK', false), FILTER_VALIDATE_BOOLEAN),
         ],
         'pdf' => [
             'storage_path' => env('CONTRACT_PDF_STORAGE_PATH', TMP . 'contracts' . DS),
