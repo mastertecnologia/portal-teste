@@ -3,7 +3,7 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
-class RbacRole extends Entity {
+class RbacGroup extends Entity {
 
 	protected $_accessible = [
 		'slug' => true,
@@ -12,6 +12,7 @@ class RbacRole extends Entity {
 		'is_system' => true,
 		'active' => true,
 		'sort_order' => true,
-		'hierarchy_level' => true,
+		'created' => true,
+		'modified' => true,
 	];
 }

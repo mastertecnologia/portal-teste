@@ -13,6 +13,7 @@ $this->Breadcrumbs->add('Papéis por usuário', [], ['class' => 'breadcrumb-item
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Catálogo', ['action' => 'adminIndex'], ['class' => 'admin-panel-btn']) ?>
 				<?= $this->Html->link('Matriz', ['action' => 'adminMatrix'], ['class' => 'admin-panel-btn admin-panel-btn--accent']) ?>
+				<?= $this->Html->link('Grupos RBAC', ['action' => 'adminGroups'], ['class' => 'admin-panel-btn admin-panel-btn--teal']) ?>
 			</div>
 		</header>
 
@@ -39,6 +40,7 @@ $this->Breadcrumbs->add('Papéis por usuário', [], ['class' => 'breadcrumb-item
 								<td><?= $cnt > 0 ? '<span class="cell-yes">' . $cnt . '</span>' : '<span class="cell-no">0</span>' ?></td>
 								<td>
 									<?= $this->Html->link('Editar papéis', ['action' => 'adminUserRoles', $u->id], ['class' => 'admin-section-card-link admin-rbac-table-link']) ?>
+									<?= $this->Html->link('Efetivo', ['action' => 'adminUserEffective', $u->id], ['class' => 'admin-section-card-link admin-rbac-table-link']) ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>

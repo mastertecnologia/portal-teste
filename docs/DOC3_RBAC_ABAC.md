@@ -1,5 +1,7 @@
 # Documento 3 — RBAC e ABAC
 
+**Catálogo e fases:** o código-fonte de verdade do catálogo é `config/permissions_registry.php`; o estado das fases de evolução (incl. aliases e resolver em runtime) está em [`IMPLEMENTATION_LOG.md`](../IMPLEMENTATION_LOG.md) na secção **Roadmap**. Checklist de testes: [`TEST_CHECKLIST_RBAC.md`](TEST_CHECKLIST_RBAC.md). Este documento mantém visão conceitual; exemplos de códigos podem estar desatualizados face ao registry.
+
 ## 1. Visão Geral do Modelo de Permissões
 
 O sistema usa dois mecanismos complementares:

@@ -86,6 +86,8 @@ $iconShield = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill=
 					<p class="admin-section-card-meta">Catálogo de telas/funções, papéis e matriz. Escopos: empresa, cliente, próprio.</p>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminIndex']) ?>" class="admin-section-card-link">Catálogo e matriz</a>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminUsers']) ?>" class="admin-section-card-link admin-section-card-link--stack">Papéis por usuário</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminGroups']) ?>" class="admin-section-card-link admin-section-card-link--stack">Grupos RBAC</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminRbacAudit']) ?>" class="admin-section-card-link admin-section-card-link--stack">Auditoria RBAC</a>
 				</div>
 				<div class="admin-section-card">
 					<span class="admin-section-card-label"><?= $iconFolder ?> Login externo</span>

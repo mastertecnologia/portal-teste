@@ -13,6 +13,8 @@ $this->Breadcrumbs->add('Permissões RBAC/ABAC', [], ['class' => 'breadcrumb-ite
 				<?= $this->Html->link('<i class="fa fa-th-large"></i> Painel administrativo', ['controller' => 'Config', 'action' => 'index'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
 				<?php if (empty($rbacMissing)) : ?>
 					<?= $this->Html->link('<i class="fa fa-user-tag"></i> Papéis por usuário', ['action' => 'adminUsers'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fa fa-users"></i> Grupos RBAC', ['action' => 'adminGroups'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fa fa-history"></i> Auditoria RBAC', ['action' => 'adminRbacAudit'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
 					<?= $this->Html->link('<i class="fa fa-table"></i> Matriz papéis × permissões', ['action' => 'adminMatrix'], ['class' => 'admin-panel-btn admin-panel-btn--accent', 'escape' => false]) ?>
 					<?= $this->Form->postLink(
 						'<i class="fa fa-refresh"></i> Sincronizar catálogo',

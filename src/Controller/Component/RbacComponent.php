@@ -2,13 +2,16 @@
 namespace App\Controller\Component;
 
 use App\Utility\RbacChecker;
+use App\Utility\RbacPermissionResolver;
+use App\Utility\RbacUserRolesResolver;
 use Cake\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 /**
- * Verifica catálogo RBAC quando o usuário possui papéis em rbac_users_roles.
+ * Verifica catálogo RBAC quando o utilizador tem papéis em rbac_users_roles
+ * e/ou papéis herdados via rbac_user_groups + rbac_group_roles (Fase 3).
  */
 class RbacComponent extends Component {
 
@@ -17,7 +20,10 @@ class RbacComponent extends Component {
 	 */
 	public function checkRequest($controller, $action) {
 		$cfg = Configure::read('Rbac');
-		if (empty($cfg) || empty($cfg['mode']) || $cfg['mode'] === 'off') {
+		if (!is_array($cfg)) {
+			$cfg = [];
+		}
+		if (empty($cfg['mode']) || $cfg['mode'] === 'off') {
 			return null;
 		}
 		if (empty($cfg['skip_action_prefixes']) || !is_array($cfg['skip_action_prefixes'])) {
@@ -57,12 +63,32 @@ class RbacComponent extends Component {
 		$uid = (int)$user['id'];
 		$roleIds = $this->_userRoleIds($uid);
 		if (empty($roleIds)) {
+			if (!empty($cfg['log_unassigned_rbac_users']) && $cfg['mode'] !== 'off') {
+				Log::info(sprintf('RBAC hybrid skip: user_id=%d has no rbac_users_roles', $uid));
+			}
+			if ($cfg['mode'] === 'enforce' && !empty($cfg['enforce_block_without_roles'])) {
+				$equipeOnly = !array_key_exists('enforce_block_without_roles_equipe_only', $cfg)
+					|| $cfg['enforce_block_without_roles_equipe_only'];
+				$isEquipe = (int)($user['role'] ?? -1) === 0;
+				if (!$equipeOnly || $isEquipe) {
+					$this->_persistRbacAuditIfConfigured($uid, false, $controller, $action, $cfg, [], 'no_rbac_roles');
+					$msg = 'Sua conta ainda não tem papéis atribuídos no novo controle de acesso. Contate um administrador.';
+					$this->getController()->Flash->error($msg);
+
+					return $this->getController()->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+				}
+			}
+
 			return null;
 		}
 
 		if ($this->_userCanAccess($roleIds, $controller, $action)) {
+			$this->_persistRbacAuditIfConfigured($uid, true, $controller, $action, $cfg, $roleIds);
+
 			return null;
 		}
+
+		$this->_persistRbacAuditIfConfigured($uid, false, $controller, $action, $cfg, $roleIds, 'no_matching_permission');
 
 		$msg = 'Seu papel não inclui permissão para esta função. Contate um administrador.';
 
@@ -122,13 +148,7 @@ class RbacComponent extends Component {
 
 
 	protected function _userRoleIds($uid) {
-		$rows = TableRegistry::get('RbacUsersRoles')->find()
-			->select(['role_id'])
-			->where(['user_id' => $uid])
-			->extract('role_id')
-			->toList();
-
-		return array_values(array_unique(array_map('intval', $rows)));
+		return RbacUserRolesResolver::effectiveRoleIds((int)$uid);
 	}
 
 	protected function _userCanAccess($roleIds, $controller, $action) {
@@ -160,6 +180,20 @@ class RbacComponent extends Component {
 			return null;
 		}
 
+		$cfg = Configure::read('Rbac');
+		if (!is_array($cfg)) {
+			$cfg = [];
+		}
+		$expandAliases = array_key_exists('expand_legacy_aliases', $cfg)
+			? (bool)$cfg['expand_legacy_aliases']
+			: true;
+		if ($expandAliases) {
+			$permIds = RbacPermissionResolver::expandPermissionIds($permIds);
+		}
+		if (empty($permIds)) {
+			return null;
+		}
+
 		$perms = TableRegistry::get('RbacPermissions')->find()
 			->where(['id IN' => $permIds])
 			->all();
@@ -186,6 +220,79 @@ class RbacComponent extends Component {
 			}
 		}
 
+		if (!empty($cfg['legacy_permission_log']) && $best !== null && !empty($best->code)) {
+			try {
+				$conn = TableRegistry::get('RbacPermissions')->getConnection();
+				if (RbacPermissionResolver::isLegacyBundleCode($best->code, $conn)) {
+					Log::info(sprintf(
+						'RBAC legacy bundle matched: code=%s controller=%s action=%s',
+						$best->code,
+						$controller,
+						$action
+					));
+				}
+			} catch (\Exception $e) {
+				// não interromper request
+			}
+		}
+
 		return $best;
+	}
+
+	/**
+	 * Fase 9 parcial: rbac_audit_authorizations (config audit_decisions_db).
+	 *
+	 * @param int[] $roleIds
+	 * @param string|null $denyReason chave curta em context_json quando granted=false
+	 */
+	protected function _persistRbacAuditIfConfigured($userId, $granted, $controller, $action, array $cfg, array $roleIds = [], $denyReason = null) {
+		$mode = isset($cfg['audit_decisions_db']) ? $cfg['audit_decisions_db'] : false;
+		if ($mode === false || $mode === null || $mode === '') {
+			return;
+		}
+		if ($mode !== 'all' && $granted) {
+			return;
+		}
+		if (!$this->_auditTableExists()) {
+			return;
+		}
+		try {
+			$code = null;
+			if ($granted) {
+				$code = $this->getController()->rbacAbacPermissionCode;
+				if ($code !== null) {
+					$code = substr((string)$code, 0, 120);
+				}
+			}
+			$ctx = ['role_ids' => array_values(array_map('intval', $roleIds))];
+			if ($denyReason !== null && $denyReason !== '') {
+				$ctx['reason'] = (string)$denyReason;
+			}
+			$json = json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+			if ($json === false) {
+				$json = null;
+			}
+			$row = TableRegistry::get('RbacAuditAuthorizations')->newEntity([
+				'user_id' => (int)$userId,
+				'granted' => (bool)$granted,
+				'controller' => substr(strtolower((string)$controller), 0, 80),
+				'action' => substr(strtolower((string)$action), 0, 80),
+				'permission_code' => $code,
+				'context_json' => $json,
+			]);
+			TableRegistry::get('RbacAuditAuthorizations')->save($row);
+		} catch (\Exception $e) {
+			// não interromper request
+		}
+	}
+
+	protected function _auditTableExists() {
+		try {
+			$tables = TableRegistry::get('RbacPermissions')->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('rbac_audit_authorizations', $tables, true);
+		} catch (\Exception $e) {
+			return false;
+		}
 	}
 }

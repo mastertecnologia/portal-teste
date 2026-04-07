@@ -13,6 +13,7 @@ $this->Breadcrumbs->add(h($user->username), [], ['class' => 'breadcrumb-item act
 			<p>Login: <code class="ap-code-violet"><?= h($user->username) ?></code></p>
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Lista de usuários', ['action' => 'adminUsers'], ['class' => 'admin-panel-btn']) ?>
+				<?= $this->Html->link('Relatório efetivo', ['action' => 'adminUserEffective', $user->id], ['class' => 'admin-panel-btn admin-panel-btn--accent']) ?>
 			</div>
 		</header>
 
