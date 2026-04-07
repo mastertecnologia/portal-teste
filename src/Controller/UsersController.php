@@ -35,6 +35,7 @@ require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src'
 require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'GoogleAuthenticator.php');
 
 use Cake\Core\Configure;
+use Cake\I18n\FrozenTime;
 use Cake\Mailer\Email;
 use Cake\Mailer\TransportFactory;
 
@@ -1162,6 +1163,34 @@ class UsersController extends AppController {
 		}
 
 		return null;
+	}
+
+	/** Texto exibido no e-mail de reset (bloco de validade do link). */
+	protected const PASSWORD_RESET_EXPIRATION_EMAIL_TEXT = '10 minutos ou até a primeira utilização bem-sucedida do link';
+
+	/**
+	 * Link de reset com hashreset_expires definido expirou (10 minutos).
+	 * Tokens sem data (NULL) mantêm compatibilidade com links antigos.
+	 */
+	protected function _isPasswordResetLinkExpired($user): bool {
+		$exp = $user->get('hashreset_expires');
+		if ($exp === null || $exp === '') {
+			return false;
+		}
+		if ($exp instanceof \DateTimeInterface) {
+			return $exp->getTimestamp() < FrozenTime::now()->getTimestamp();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Remove hash de reset expirado para o link deixar de ser reutilizado.
+	 */
+	protected function _invalidateExpiredPasswordResetToken($user): void {
+		$user->set('hashreset', null);
+		$user->set('hashreset_expires', null);
+		$this->Users->save($user);
 	}
 
 	/**
@@ -2380,6 +2409,7 @@ class UsersController extends AppController {
 
 		$user->hashreset = criptografaSenha($user->id . $user->name . date('d/m/Y|H:i:s'));
 		$user->hashreset = removeCaracteres($user->hashreset);
+		$user->hashreset_expires = FrozenTime::now()->addMinutes(10);
 		if (!$this->Users->save($user)) {
 			$this->Flash->error(__('Não foi possível gerar o link de redefinição. Tente novamente.'));
 			if ($this->Auth->user()) {
@@ -2406,7 +2436,7 @@ class UsersController extends AppController {
 		if ($this->_sendResetPasswordEmailWithTransportFallback($user->email, [$fromAddr => $nomeempresa], $subject, $idempresa, [
 			'name' => $name,
 			'resetUrl' => $link,
-			'expirationText' => 'até a primeira utilização bem-sucedida do link',
+			'expirationText' => self::PASSWORD_RESET_EXPIRATION_EMAIL_TEXT,
 			'currentYear' => (int)date('Y'),
 		])) {
 			$this->Flash->success(__('Email para redefiniçao de senha enviado!'));
@@ -2425,6 +2455,13 @@ class UsersController extends AppController {
 		extract($this->request->getQuery());
 
 		$user = $this->Users->findByHashreset($hash)->first();
+
+		if (!empty($user) && $this->_isPasswordResetLinkExpired($user)) {
+			$this->_invalidateExpiredPasswordResetToken($user);
+			$this->Flash->error(__('O link de redefinição expirou ou já foi utilizado. Solicite um novo e-mail de redefinição de senha.'));
+
+			return $this->redirect($this->_guestLoginRouteAfterPasswordReset(null));
+		}
 
 		if (empty($user)) {
 			$this->Flash->success('Não foi encontrado um usuário válido!');
@@ -2445,6 +2482,7 @@ class UsersController extends AppController {
 			['validate' => 'password']);
 			// Invalida o hash de redefinição após o uso para evitar reutilização do link
 			$user->hashreset = null;
+			$user->hashreset_expires = null;
 
 			if ($this->Users->save($user)) {
 				$this->Flash->success('A senha foi alterada com sucesso!');

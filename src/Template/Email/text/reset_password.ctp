@@ -17,7 +17,7 @@ Para continuar, acesse o link abaixo:
 
 Este link é válido por <?= h($expirationText) ?>.
 
-Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará segura até que a redefinição seja concluída.
+Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará segura até a redefinição ser concluída.
 
 Atenciosamente,
 Equipe Portal PGM
