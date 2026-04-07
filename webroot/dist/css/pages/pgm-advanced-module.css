@@ -714,6 +714,57 @@ body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-list-event:hover td {
 	background: rgba(255, 255, 255, 0.04) !important;
 }
 
+/*
+ * Vista timeGrid (Semana / Dia) vs dayGrid (Mês) / multiMonth (Ano) / list:
+ * — Mês/Ano: fundo nas células .fc-daygrid-day (regras acima).
+ * — Semana/Dia: FC só pinta .fc-timegrid-col.fc-day-today; .fc-timegrid-slot fica
+ *   transparente e o branco aparece (tabela dentro de .card / reboot).
+ */
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-body,
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-scrollgrid-sync-table {
+	background-color: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid table {
+	background-color: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-scrollgrid-sync-table td,
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-scrollgrid-sync-table th {
+	background-color: var(--fc-page-bg-color) !important;
+	border-color: var(--fc-border-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot,
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot-lane {
+	background: var(--fc-page-bg-color) !important;
+	border-color: var(--fc-border-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot-minor {
+	border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-col {
+	background-color: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-col.fc-day-today {
+	background-color: var(--fc-today-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-divider {
+	background: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-daygrid-day:not(.fc-day-today) {
+	background-color: var(--fc-page-bg-color) !important;
+}
+
+body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-daygrid-day.fc-day-today {
+	background-color: var(--fc-today-bg-color) !important;
+}
+
 /* ContractManagement — layout ficha (sem style= na view) */
 body.layout-no-topbar .pgm-adv-page .adv-cm-title-row {
 	display: flex;
