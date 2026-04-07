@@ -147,6 +147,17 @@ class ContractNotificationService {
 			throw new \InvalidArgumentException('E-mail do signatário inválido ou vazio.');
 		}
 		if ($link === '') {
+			$fallback = trim((string)($contract->get('autentique_url') ?? ''));
+			if ($fallback !== '') {
+				$n = TableRegistry::get('ContractSignatories')->find()
+					->where(['contract_id' => (int)$contract->get('id')])
+					->count();
+				if ($n === 1) {
+					$link = $fallback;
+				}
+			}
+		}
+		if ($link === '') {
 			throw new \InvalidArgumentException('Link de assinatura ainda não disponível. Envie o contrato pela integração (Autentique) primeiro.');
 		}
 		$code = (string)($contract->get('code') ?? '');

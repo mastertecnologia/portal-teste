@@ -103,6 +103,34 @@ class AutentiqueService {
 	}
 
 	/**
+	 * Obtém o link curto de assinatura a partir de um item de `createDocument.signatures`.
+	 * Aceita variações comuns da API (snake_case / camelCase, link como string).
+	 *
+	 * @param array $signature
+	 * @return string|null
+	 */
+	public static function extractShortLinkFromSignature(array $signature) {
+		$link = $signature['link'] ?? null;
+		if (is_string($link)) {
+			$link = trim($link);
+
+			return $link !== '' ? $link : null;
+		}
+		if (is_array($link)) {
+			foreach (['short_link', 'shortLink'] as $k) {
+				if (isset($link[$k])) {
+					$s = trim((string)$link[$k]);
+					if ($s !== '') {
+						return $s;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * @param string $documentId
 	 * @return array{status:string, signed_url?:string}
 	 */

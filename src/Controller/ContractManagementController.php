@@ -511,9 +511,8 @@ class ContractManagementController extends AppController {
 					if (!is_array($sig)) {
 						continue;
 					}
-					$linkArr = isset($sig['link']) && is_array($sig['link']) ? $sig['link'] : [];
-					$sl = isset($linkArr['short_link']) ? trim((string)$linkArr['short_link']) : '';
-					if ($sl !== '') {
+					$sl = AutentiqueService::extractShortLinkFromSignature($sig);
+					if ($sl !== null && $sl !== '') {
 						$firstLink = $sl;
 						break;
 					}
@@ -546,11 +545,8 @@ class ContractManagementController extends AppController {
 				$matchedApi = array_fill(0, $nApi, false);
 				$matchedRow = array_fill(0, $nSign, false);
 				$applyApiToRow = function ($row, $apiSig) {
-					$shortLink = null;
-					if (isset($apiSig['link']) && is_array($apiSig['link'])) {
-						$sl = isset($apiSig['link']['short_link']) ? trim((string)$apiSig['link']['short_link']) : '';
-						$shortLink = $sl !== '' ? $sl : null;
-					}
+					$sl = is_array($apiSig) ? AutentiqueService::extractShortLinkFromSignature($apiSig) : null;
+					$shortLink = ($sl !== null && $sl !== '') ? $sl : null;
 					$patch = [
 						'autentique_signer_id' => isset($apiSig['public_id']) ? $apiSig['public_id'] : null,
 						'status' => 'enviado',
@@ -563,7 +559,7 @@ class ContractManagementController extends AppController {
 				for ($i = 0; $i < $nSign; $i++) {
 					$row = $signList[$i];
 					$em = $normEmail($row->get('email') ?? '');
-					if ($em === '' || !filter_var($em, FILTER_VALIDATE_EMAIL)) {
+					if ($em === '') {
 						continue;
 					}
 					for ($j = 0; $j < $nApi; $j++) {
@@ -618,8 +614,47 @@ class ContractManagementController extends AppController {
 						$applyApiToRow($signList[$unmatchedRows[$k]], $apiSigs[$unmatchedApiIdx[$k]]);
 					}
 				}
+				if ($nApi > 0) {
+					$distinctLinks = [];
+					foreach ($apiSigs as $s) {
+						$l = AutentiqueService::extractShortLinkFromSignature($s);
+						if ($l !== null && $l !== '') {
+							$distinctLinks[$l] = true;
+						}
+					}
+					if (count($distinctLinks) === 1) {
+						$keys = array_keys($distinctLinks);
+						$onlyLink = (string)reset($keys);
+						foreach ($signList as $row) {
+							if (trim((string)($row->get('link_assinatura') ?? '')) === '') {
+								$this->ContractSignatories->patchEntity($row, [
+									'link_assinatura' => $onlyLink,
+								]);
+							}
+						}
+					}
+				}
 				if ($signList !== []) {
-					$this->ContractSignatories->saveMany($signList);
+					$saved = $this->ContractSignatories->saveMany($signList, ['atomic' => false]);
+					if ($saved === false) {
+						foreach ($signList as $row) {
+							if (!$row->isDirty()) {
+								continue;
+							}
+							if ($this->ContractSignatories->save($row)) {
+								continue;
+							}
+							$this->log(
+								sprintf(
+									'ContractSignatory id=%s contract_id=%s save falhou: %s',
+									(string)$row->get('id'),
+									(string)$row->get('contract_id'),
+									json_encode($row->getErrors(), JSON_UNESCAPED_UNICODE)
+								),
+								'warning'
+							);
+						}
+					}
 				}
 				$signing->logEvent((int)$contract->id, 'envio_autentique', ['doc_id' => $docId], $this->_userId());
 				try {
