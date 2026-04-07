@@ -918,6 +918,14 @@ class ContractManagementController extends AppController {
 
 	public function webhookAutentique() {
 		$this->autoRender = false;
+		if ($this->request->is('get') || $this->request->is('head')) {
+			$msg = 'Webhook Autentique: endpoint ativo. A Autentique deve enviar eventos em POST (JSON). '
+				. 'Abrir esta página no browser só confirma a rota; não substitui o POST.';
+
+			return $this->response
+				->withType('text/plain; charset=UTF-8')
+				->withStringBody($this->request->is('head') ? '' : $msg);
+		}
 		$raw = (string)file_get_contents('php://input');
 		$sig = (string)$this->request->getHeaderLine('X-Autentique-Signature');
 		if ($sig === '') {

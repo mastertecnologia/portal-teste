@@ -230,7 +230,12 @@ Router::scope('/', function ($routes) {
     $routes->redirect('/modulo-contratos/pdf-assinado', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->redirect('/modulo-contratos/pdf-assinado/', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/exportar', ['controller' => 'ContractManagement', 'action' => 'exportar'])->setMethods(['GET']);
-    $routes->connect('/modulo-contratos/webhook/autentique', ['controller' => 'ContractManagement', 'action' => 'webhookAutentique'])->setMethods(['POST']);
+    // POST = Autentique; GET/HEAD = verificação no browser (antes só POST → 404 ao "abrir" o link)
+    $routes->connect('/modulo-contratos/webhook/autentique', ['controller' => 'ContractManagement', 'action' => 'webhookAutentique'])
+        ->setMethods(['POST', 'GET', 'HEAD']);
+    // Alguns vhosts enviam o path completo com /portal sem APP_BASE no Cake
+    $routes->connect('/portal/modulo-contratos/webhook/autentique', ['controller' => 'ContractManagement', 'action' => 'webhookAutentique'])
+        ->setMethods(['POST', 'GET', 'HEAD']);
     // Portal cliente — contratos (canónico /cliente/contratos)
     $routes->connect('/cliente/contratos', ['controller' => 'PortalContratos', 'action' => 'index']);
     $routes->connect('/cliente/contratos/ver/*', ['controller' => 'PortalContratos', 'action' => 'view'], ['pass' => ['id']]);
