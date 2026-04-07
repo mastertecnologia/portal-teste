@@ -66,6 +66,14 @@ class UsersController extends AppController {
 		parent::beforeFilter($event);
 		$this->set('title', 'Usuários');
 		$this->Auth->allow(['login', 'acessoEmpresa', 'desativaverificacaosemlogin', 'enviaEmailAutenticacaoSemLogin', 'loginempresa', 'logout', 'privacyPolicy', 'cadastrocliente', 'verificacnpjcliente', 'verificacpfcliente', 'verificalogincadastro', 'resetPassword', 'resetPasswordNew', 'verificacpf', 'verificacodigo', 'verificaloginduasetapas']);
+
+		if ($this->request->getParam('action') === 'resetPasswordNew' && in_array('Security', $this->components()->loaded(), true)) {
+			$existing = $this->Security->getConfig('unlockedFields');
+			$this->Security->setConfig('unlockedFields', array_values(array_unique(array_merge(
+				is_array($existing) ? $existing : [],
+				['password', 'confirmPassword']
+			))));
+		}
 		
 		if (in_array('Security', $this->components()->loaded())) {
             $this->Security->setConfig('unlockedActions', ['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente']);
@@ -2283,7 +2291,7 @@ class UsersController extends AppController {
 	}
 
 	public function resetPasswordNew() {
-		$this->viewBuilder()->setLayout("login");
+		$this->viewBuilder()->setLayout('reset_password_canvas');
 		extract($this->request->getQuery());
 
 		$user = $this->Users->findByHashreset($hash)->first();
@@ -2293,12 +2301,15 @@ class UsersController extends AppController {
 			return $this->redirect(['action' => 'login']);
 		}
 
-		if (!empty($this->request->data)) {
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$pw = $data['password'] ?? $data['password1'] ?? '';
+			$pw2 = $data['confirmPassword'] ?? $data['password2'] ?? '';
 
 			$user = $this->Users->patchEntity($user, [
-				'password'      => $this->request->data['password1'],
-				'password1'     => $this->request->data['password1'],
-				'password2'     => $this->request->data['password2']
+				'password'      => $pw,
+				'password1'     => $pw,
+				'password2'     => $pw2
 			],
 			['validate' => 'password']);
 			// Invalida o hash de redefinição após o uso para evitar reutilização do link
@@ -2309,13 +2320,62 @@ class UsersController extends AppController {
 
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $user->id);
 
-				if ($this->Auth->user('id') == $user->id) return $this->redirect(['action' => 'logout']);
-				else return $this->redirect(['action' => 'dashboard']);
-			} else $this->Flash->error('Ocorreu um erro ao salvar a senha!');
+				if ($this->Auth->user('id') == $user->id) {
+					$target = ['action' => 'logout'];
+				} elseif ($this->Auth->user()) {
+					$target = ['action' => 'dashboard'];
+				} else {
+					$target = ['action' => 'login'];
+				}
+
+				if ($this->request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+					return $this->response->withType('application/json')
+						->withStringBody(json_encode([
+							'success' => true,
+							'redirect' => Router::url($target, true),
+						]));
+				}
+
+				return $this->redirect($target);
+			}
+
+			$this->Flash->error('Ocorreu um erro ao salvar a senha!');
+
+			if ($this->request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+				$err = $user->getErrors();
+				$msg = 'Ocorreu um erro ao salvar a senha.';
+				foreach (['password1', 'password2'] as $ek) {
+					if (empty($err[$ek]) || !is_array($err[$ek])) {
+						continue;
+					}
+					foreach ($err[$ek] as $v) {
+						if (is_string($v)) {
+							$msg = $v;
+							break 2;
+						}
+						if (is_array($v)) {
+							foreach ($v as $vv) {
+								if (is_string($vv)) {
+									$msg = $vv;
+									break 3;
+								}
+							}
+						}
+					}
+				}
+
+				return $this->response->withType('application/json')
+					->withStatus(422)
+					->withStringBody(json_encode([
+						'success' => false,
+						'message' => $msg,
+						'errors' => $err,
+					]));
+			}
 		}
 
 		$this->set('user', $user);
-		$this->set('title', 'Redefinição de senha');
+		$this->set('title', 'Redefinir senha');
 	}
 
 	public function enviaEmailAutenticacaoSemLogin($destinatario) {
