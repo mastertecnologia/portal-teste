@@ -230,7 +230,7 @@ Router::scope('/', function ($routes) {
     $routes->redirect('/modulo-contratos/pdf-assinado', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->redirect('/modulo-contratos/pdf-assinado/', ['controller' => 'ContractManagement', 'action' => 'index'], ['status' => 302]);
     $routes->connect('/modulo-contratos/exportar', ['controller' => 'ContractManagement', 'action' => 'exportar'])->setMethods(['GET']);
-    // POST = Autentique; GET/HEAD = verificação no browser (antes só POST → 404 ao "abrir" o link)
+    // POST = Autentique; GET/HEAD = verificação no browser. Fallback URL: /webhook-autentique.php (public/)
     $routes->connect('/modulo-contratos/webhook/autentique', ['controller' => 'ContractManagement', 'action' => 'webhookAutentique'])
         ->setMethods(['POST', 'GET', 'HEAD']);
     // Alguns vhosts enviam o path completo com /portal sem APP_BASE no Cake
