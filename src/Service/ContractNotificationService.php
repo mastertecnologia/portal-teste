@@ -24,11 +24,12 @@ class ContractNotificationService {
 		if ($transport === '') {
 			$transport = 'default';
 		}
-		if (filter_var((string)Configure::read('Contract.notifications.force_from_smtp_user'), FILTER_VALIDATE_BOOLEAN)) {
-			$smtpUser = trim((string)Configure::read('EmailTransport.' . $transport . '.username'));
-			if ($smtpUser !== '') {
-				$from = $smtpUser;
-			}
+		$smtpUser = trim((string)Configure::read('EmailTransport.' . $transport . '.username'));
+		$forceFrom = filter_var((string)Configure::read('Contract.notifications.force_from_smtp_user'), FILTER_VALIDATE_BOOLEAN);
+		$skipAlign = filter_var((string)Configure::read('Contract.notifications.skip_from_smtp_align'), FILTER_VALIDATE_BOOLEAN);
+		// Skymail/PGM: 554 se From != utilizador autenticado — alinhar quando diferente (sem depender só do .env).
+		if ($smtpUser !== '' && !$skipAlign && ($forceFrom || $from === '' || strcasecmp($from, $smtpUser) !== 0)) {
+			$from = $smtpUser;
 		}
 		if ($from === '' || $to === '') {
 			throw new \InvalidArgumentException('E-mail remetente ou destinatário vazio (configure Contract.notifications).');

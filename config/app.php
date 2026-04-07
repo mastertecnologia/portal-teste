@@ -467,9 +467,11 @@ return [
             'from_email' => env('CONTRACT_NOTIFY_FROM_EMAIL', ''),
             'from_name' => env('CONTRACT_NOTIFY_FROM_NAME', 'PGM Contratos'),
             'team_email' => env('CONTRACT_NOTIFY_TEAM_EMAIL', ''),
-            // E-mail contratos: transporte SMTP (default|pgm|master). Skymail/PGM costuma exigir From = utilizador SMTP.
-            'smtp_transport' => env('CONTRACT_NOTIFY_SMTP_TRANSPORT', 'default'),
+            // E-mail contratos: transporte SMTP (default|pgm|master). Skymail/PGM exige From = login SMTP.
+            'smtp_transport' => env('CONTRACT_NOTIFY_SMTP_TRANSPORT', 'pgm'),
             'force_from_smtp_user' => filter_var(env('CONTRACT_NOTIFY_FORCE_FROM_SMTP_USER', false), FILTER_VALIDATE_BOOLEAN),
+            // 1 = não forçar From = username (só se o servidor permitir remetente diferente do login).
+            'skip_from_smtp_align' => filter_var(env('CONTRACT_NOTIFY_SKIP_FROM_SMTP_ALIGN', false), FILTER_VALIDATE_BOOLEAN),
         ],
         'alerts' => [
             'auto_close_expired' => filter_var(env('CONTRACT_ALERTS_AUTO_CLOSE', false), FILTER_VALIDATE_BOOLEAN),
