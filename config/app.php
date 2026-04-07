@@ -10,6 +10,9 @@
  * Só `ssl_peer_name` não basta se o cert for *.skymail.net.br e o host for mail.pgm.inf.br.
  *
  * Skymail: forçar host (e peer) para mail.skymail.net.br quando o .env usa o host padrão PGM.
+ *
+ * Recuperação de senha / e-mails transacionais: se o transporte pgm/master falhar (TLS, credenciais),
+ * o código tenta também o transporte `default` (MAIL_DEFAULT_*), salvo MAIL_RESET_FALLBACK_DEFAULT=0 no .env.
  */
 $smtpTransportExtra = function (string $prefix) {
     $insecure = filter_var(env('MAIL_' . $prefix . '_TLS_INSECURE', false), FILTER_VALIDATE_BOOLEAN);

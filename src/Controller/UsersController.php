@@ -34,6 +34,7 @@ require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src'
 require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'GoogleAuthenticatorInterface.php');
 require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'GoogleAuthenticator.php');
 
+use Cake\Core\Configure;
 use Cake\Mailer\Email;
 
 class UsersController extends AppController {
@@ -2095,6 +2096,61 @@ class UsersController extends AppController {
 		}
 	}
 
+	/**
+	 * SMTP: tenta PGM ou Master conforme empresa; se falhar, tenta transporte `default` (MAIL_DEFAULT_*).
+	 * Controlar com MAIL_RESET_FALLBACK_DEFAULT (default true). Erros em logs/error.log.
+	 */
+	protected function _sendEmailWithTransportFallback(
+		string $to,
+		array $from,
+		string $subject,
+		string $htmlBody,
+		int $idempresa
+	): bool {
+		$primary = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
+		$candidates = [$primary];
+		if (filter_var(env('MAIL_RESET_FALLBACK_DEFAULT', true), FILTER_VALIDATE_BOOLEAN)) {
+			if (!in_array('default', $candidates, true)) {
+				$candidates[] = 'default';
+			}
+		}
+		$last = null;
+		foreach ($candidates as $transport) {
+			try {
+				$cfg = Configure::read('EmailTransport.' . $transport);
+				if (is_array($cfg) && ($cfg['className'] ?? '') === 'Smtp') {
+					$pwd = isset($cfg['password']) ? trim((string)$cfg['password']) : '';
+					$usr = isset($cfg['username']) ? trim((string)$cfg['username']) : '';
+					if ($usr !== '' && $pwd === '') {
+						$hint = ['master' => 'MAIL_MASTER_PASSWORD', 'pgm' => 'MAIL_PGM_PASSWORD', 'default' => 'MAIL_DEFAULT_PASSWORD'][$transport] ?? 'MAIL_*_PASSWORD';
+						Log::warning(sprintf('[email] Transporte "%s": utilizador SMTP definido mas senha vazia — defina %s no .env.', $transport, $hint));
+					}
+				}
+				$email = new Email();
+				$email->transport($transport);
+				$email->from($from)
+					->to($to)
+					->emailFormat('html')
+					->subject($subject);
+				$email->send($htmlBody);
+				if ($transport !== $primary) {
+					Log::info(sprintf('[email] Enviado via fallback "%s" (falhou "%s").', $transport, $primary));
+				}
+
+				return true;
+			} catch (\Throwable $e) {
+				$last = $e;
+				Log::warning(sprintf('[email] Transporte "%s": %s', $transport, $e->getMessage()));
+			}
+		}
+		if ($last !== null) {
+			Log::error('[email] Todos os transportes falharam. Último: ' . $last->getMessage()
+				. ' | Confira .env: MAIL_PGM_*, MAIL_MASTER_*, MAIL_DEFAULT_*, MAIL_*_TLS_PEER_NAME, MAIL_*_TLS_INSECURE.');
+		}
+
+		return false;
+	}
+
 	public function resetPassword($iduser) {
 		$token = rawurldecode(trim((string)$iduser));
 		if ($token === '') {
@@ -2168,16 +2224,10 @@ class UsersController extends AppController {
 			'<h3> Redefinição de senha! </h3>
 		<h3> Redefina sua senha <a href="' . h($link) . '"> clicando aqui </a>!';
 
-		$email = new Email();
-		$email->transport(((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm');
-		$from = 'helpdesk@pgm.inf.br';
-		try {
-			$email->from([$from => $nomeempresa])->to($user->email)->emailFormat('html')->subject('Redefinição de senha');
-			$email->send($message);
+		$fromAddr = 'helpdesk@pgm.inf.br';
+		if ($this->_sendEmailWithTransportFallback($user->email, [$fromAddr => $nomeempresa], __('Redefinição de senha'), $message, $idempresa)) {
 			$this->Flash->success(__('Email para redefiniçao de senha enviado!'));
-		} catch (\Exception $e) {
-			// Motivo real em logs/error.log (não expor ao browser). Ver MAIL_PGM_* / MAIL_MASTER_* no .env.
-			Log::error('resetPassword email: ' . $e->getMessage());
+		} else {
 			$this->Flash->error(__('Não foi possível enviar o e-mail. Tente mais tarde ou contate o suporte.'));
 		}
 
@@ -2232,30 +2282,26 @@ class UsersController extends AppController {
 			$this->Flash->error('Não foi encontrado um usuário com o email informado!');
 			return $this->redirect(['action' => 'logout']);
 		}
-			$email = new Email();
 			$idempresaEmail = !empty($user->idempresa) ? (int)$user->idempresa : (int)$this->Auth->user('idempresa');
-			if (empty($idempresaEmail)) $idempresaEmail = (int)C_EmpresaPGM;
-			$email->transport($idempresaEmail === (int)C_EmpresaMaster ? 'master' : 'pgm');
+			if (empty($idempresaEmail)) {
+				$idempresaEmail = (int)C_EmpresaPGM;
+			}
 			$from = 'helpdesk@pgm.inf.br';
-			
+
 			$urlfora = $this->Config->get(1)->urlfora;
 
 			$link = $urlfora . "Users/desativaverificacaosemlogin?hash=$user->hashreset";
-			
-			$message = 
+
+			$message =
 			"<h3>Desativação de autenticação em duas etapas</h3>
 			<h3>Desative sua autenticação 2FA <a href='$link'>clicando aqui</a>.</h3>";
 
-			$email->from([$from => 'PGM']);
-			$email->to($destinatario)
-				->emailFormat('html')
-				->subject('Desativação de autenticação 2FA - PGM');
-	
-			if($email->send($message)) {
+			if ($this->_sendEmailWithTransportFallback($destinatario, [$from => 'PGM'], 'Desativação de autenticação 2FA - PGM', $message, $idempresaEmail)) {
 				$this->Flash->success('Email para desativação de 2FA enviado!');
 				return $this->redirect(['action' => 'dashboard']);
 			}
-			else echo 'Não foi encontrado nenhum usuário válido com este email!';
+			$this->Flash->error(__('Não foi possível enviar o e-mail. Tente mais tarde ou contate o suporte.'));
+			return $this->redirect(['action' => 'login']);
 	}
 
 	//possibilita qualquer usuario desabilitar sua 2FA sem fazer login
