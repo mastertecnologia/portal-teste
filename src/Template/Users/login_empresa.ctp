@@ -95,7 +95,6 @@ $this->end();
 						<input type="checkbox" id="remember-me" name="remember_username" value="1" autocomplete="off"/>
 						<label for="remember-me">Lembrar de mim</label>
 					</div>
-					<p class="lm-link-small lm-login-privacy-hint">Com HTTPS, a senha vai cifrada até o servidor (o que aparece no DevTools é o formulário antes do envio). O servidor guarda só hash (bcrypt), não a senha em texto. O portal só grava o <strong>e-mail</strong> (campo de login) neste aparelho se “Lembrar” estiver marcado; a senha não é gravada pelo site. Se o navegador oferecer “guardar senha”, isso é o gerenciador do próprio Firefox/Chrome.</p>
 				</div>
 
 				<!-- Botão entrar -->

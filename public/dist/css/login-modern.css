@@ -609,13 +609,6 @@
   border-color: rgba(239, 68, 68, 0.2);
 }
 
-/* Texto explicativo (HTTPS / hash / lembrar usuário) */
-.lm-login-privacy-hint {
-  margin-top: 0.35rem;
-  line-height: 1.35;
-  max-width: 100%;
-}
-
 /* ═══════════════════════════════════════════════
    RESPONSIVIDADE
    ═══════════════════════════════════════════════ */
