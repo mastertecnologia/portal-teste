@@ -3,6 +3,7 @@ namespace App\Service;
 
 use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -97,9 +98,32 @@ class AutentiqueService {
 		}
 
 		$result['id'] = (string)$created['id'];
-		$result['signatures'] = is_array($created['signatures'] ?? null) ? $created['signatures'] : [];
+		$rawSigs = is_array($created['signatures'] ?? null) ? $created['signatures'] : [];
+		if ($rawSigs === [] && $result['id'] !== '') {
+			$rawSigs = $this->fetchSignaturesFromDocument($result['id']);
+		}
+		$result['signatures'] = $this->enrichSignaturesWithShortLinks($rawSigs);
 
 		return $result;
+	}
+
+	/**
+	 * Normaliza chaves comuns da resposta GraphQL (camelCase / aliases).
+	 *
+	 * @param array $sig
+	 * @return array
+	 */
+	public static function normalizeSignatureFromGraphql(array $sig) {
+		if (isset($sig['publicId']) && !isset($sig['public_id'])) {
+			$sig['public_id'] = $sig['publicId'];
+		}
+		if (isset($sig['link']) && is_array($sig['link'])) {
+			if (isset($sig['link']['shortLink']) && !isset($sig['link']['short_link'])) {
+				$sig['link']['short_link'] = $sig['link']['shortLink'];
+			}
+		}
+
+		return $sig;
 	}
 
 	/**
@@ -110,6 +134,16 @@ class AutentiqueService {
 	 * @return string|null
 	 */
 	public static function extractShortLinkFromSignature(array $signature) {
+		$signature = self::normalizeSignatureFromGraphql($signature);
+		foreach (['short_link', 'shortLink', 'signing_url', 'signingUrl', 'url'] as $k) {
+			if (!isset($signature[$k]) || $signature[$k] === null || $signature[$k] === '') {
+				continue;
+			}
+			$s = trim((string)$signature[$k]);
+			if ($s !== '') {
+				return $s;
+			}
+		}
 		$link = $signature['link'] ?? null;
 		if (is_string($link)) {
 			$link = trim($link);
@@ -117,7 +151,7 @@ class AutentiqueService {
 			return $link !== '' ? $link : null;
 		}
 		if (is_array($link)) {
-			foreach (['short_link', 'shortLink'] as $k) {
+			foreach (['short_link', 'shortLink', 'url'] as $k) {
 				if (isset($link[$k])) {
 					$s = trim((string)$link[$k]);
 					if ($s !== '') {
@@ -128,6 +162,113 @@ class AutentiqueService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Quando createDocument não traz link (ex.: envio por e-mail na Autentique), gera via API.
+	 *
+	 * @param array<int,array<string,mixed>> $signatures
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function enrichSignaturesWithShortLinks(array $signatures) {
+		$out = [];
+		foreach ($signatures as $sig) {
+			if (!is_array($sig)) {
+				continue;
+			}
+			$sig = self::normalizeSignatureFromGraphql($sig);
+			$existing = self::extractShortLinkFromSignature($sig);
+			if (($existing === null || $existing === '') && $this->isEnabled()) {
+				$pid = trim((string)($sig['public_id'] ?? ''));
+				if ($pid !== '') {
+					$fetched = $this->fetchShortLinkByPublicId($pid);
+					if ($fetched !== null && $fetched !== '') {
+						$prevLink = isset($sig['link']) && is_array($sig['link']) ? $sig['link'] : [];
+						$sig['link'] = array_merge($prevLink, ['short_link' => $fetched]);
+					} else {
+						Log::warning(sprintf(
+							'Autentique: sem short_link na criação e createLinkToSignature falhou (public_id=%s).',
+							$pid
+						));
+					}
+				}
+			}
+			$out[] = $sig;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Mutation oficial quando o link não vem em createDocument.
+	 *
+	 * @param string $publicId
+	 * @return string|null
+	 * @see https://docs.autentique.com.br/api/2/mutations/criar-link-de-assinatura
+	 */
+	protected function fetchShortLinkByPublicId($publicId) {
+		$publicId = trim((string)$publicId);
+		if ($publicId === '') {
+			return null;
+		}
+		$attempts = [
+			'mutation ($public_id: ID!) { createLinkToSignature(public_id: $public_id) { short_link } }',
+			'mutation ($public_id: String!) { createLinkToSignature(public_id: $public_id) { short_link } }',
+		];
+		foreach ($attempts as $mutation) {
+			$decoded = $this->graphqlJson($mutation, ['public_id' => $publicId]);
+			if ($decoded === null || !empty($decoded['errors'])) {
+				continue;
+			}
+			$payload = $decoded['data']['createLinkToSignature'] ?? null;
+			if (!is_array($payload)) {
+				continue;
+			}
+			foreach (['short_link', 'shortLink'] as $k) {
+				if (!empty($payload[$k])) {
+					$s = trim((string)$payload[$k]);
+					if ($s !== '') {
+						return $s;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Lista assinaturas do documento (fallback se createDocument vier sem signatures).
+	 *
+	 * @param string $documentId
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function fetchSignaturesFromDocument($documentId) {
+		$documentId = trim((string)$documentId);
+		if ($documentId === '') {
+			return [];
+		}
+		$q = 'query DocSignaturesForLinks($id: ID!) {
+  document(id: $id) {
+    signatures {
+      public_id
+      name
+      email
+      link { short_link }
+    }
+  }
+}';
+		$decoded = $this->graphqlJson($q, ['id' => $documentId]);
+		if ($decoded === null || !empty($decoded['errors'])) {
+			return [];
+		}
+		$doc = $decoded['data']['document'] ?? null;
+		if (!is_array($doc)) {
+			return [];
+		}
+		$list = $doc['signatures'] ?? null;
+
+		return is_array($list) ? $list : [];
 	}
 
 	/**
