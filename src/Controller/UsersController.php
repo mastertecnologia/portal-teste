@@ -1165,24 +1165,38 @@ class UsersController extends AppController {
 	}
 
 	/**
+	 * Rota de login pós-reset (convidado): equipe → acessoEmpresa; cliente → login.
+	 * Usa users.role; se ambíguo, ?from=empresa na URL (link do e-mail ou tela de equipe).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|null $user
+	 * @return array<string, string> URL array para Router::url / redirect
+	 */
+	protected function _guestLoginRouteAfterPasswordReset($user = null): array {
+		if ($user !== null) {
+			$role = $user->get('role');
+			if ($role !== null && $role !== '') {
+				if ((int)$role === (int)C_RoleFuncionario) {
+					return ['controller' => 'Users', 'action' => 'acessoEmpresa'];
+				}
+				if ((int)$role === (int)C_RoleCliente) {
+					return ['controller' => 'Users', 'action' => 'login'];
+				}
+			}
+		}
+		if ($this->request->getQuery('from') === 'empresa') {
+			return ['controller' => 'Users', 'action' => 'acessoEmpresa'];
+		}
+
+		return ['controller' => 'Users', 'action' => 'login'];
+	}
+
+	/**
 	 * Após solicitar reset de senha (sem sessão): volta ao login certo — equipe (acesso-empresa) ou cliente (login).
-	 * Usa users.role quando disponível; senão ?from=empresa na URL (tela de equipe).
 	 *
 	 * @param \Cake\Datasource\EntityInterface|null $user
 	 */
 	protected function _redirectGuestAfterPasswordReset($user = null) {
-		if ($user !== null && isset($user->role)) {
-			if ((int)$user->role === (int)C_RoleFuncionario) {
-				return $this->redirect(['action' => 'acessoEmpresa']);
-			}
-			if ((int)$user->role === (int)C_RoleCliente) {
-				return $this->redirect(['action' => 'login']);
-			}
-		}
-		if ($this->request->getQuery('from') === 'empresa') {
-			return $this->redirect(['action' => 'acessoEmpresa']);
-		}
-		return $this->redirect(['action' => 'login']);
+		return $this->redirect($this->_guestLoginRouteAfterPasswordReset($user));
 	}
 
 	/**
@@ -2375,6 +2389,9 @@ class UsersController extends AppController {
 		}
 
 		$link = $urlfora . '/Users/resetPasswordNew?hash=' . rawurlencode((string)$user->hashreset);
+		if ((int)$user->get('role') === (int)C_RoleFuncionario) {
+			$link .= '&from=empresa';
+		}
 
 		$name = trim((string)($user->name ?? ''));
 		if ($name === '') {
@@ -2409,9 +2426,10 @@ class UsersController extends AppController {
 
 		$user = $this->Users->findByHashreset($hash)->first();
 
-		if(empty($user)) {
+		if (empty($user)) {
 			$this->Flash->success('Não foi encontrado um usuário válido!');
-			return $this->redirect(['action' => 'login']);
+
+			return $this->redirect($this->_guestLoginRouteAfterPasswordReset(null));
 		}
 
 		if ($this->request->is('post')) {
@@ -2438,7 +2456,7 @@ class UsersController extends AppController {
 				} elseif ($this->Auth->user()) {
 					$target = ['action' => 'dashboard'];
 				} else {
-					$target = ['action' => 'login'];
+					$target = $this->_guestLoginRouteAfterPasswordReset($user);
 				}
 
 				if ($this->request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
@@ -2489,6 +2507,7 @@ class UsersController extends AppController {
 
 		$this->set('user', $user);
 		$this->set('title', 'Redefinir senha');
+		$this->set('voltarLoginUrl', Router::url($this->_guestLoginRouteAfterPasswordReset($user)));
 	}
 
 	public function enviaEmailAutenticacaoSemLogin($destinatario) {

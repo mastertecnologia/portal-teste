@@ -434,7 +434,7 @@ $this->end();
       <?= $this->Form->end() ?>
 
       <div class="footer">
-        <a href="<?= h(Router::url(['controller' => 'Users', 'action' => 'login'])) ?>">Voltar para o login</a>
+        <a href="<?= h($voltarLoginUrl ?? Router::url(['controller' => 'Users', 'action' => 'login'])) ?>">Voltar para o login</a>
       </div>
     </section>
   </main>
