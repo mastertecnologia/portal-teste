@@ -59,6 +59,10 @@ if (is_file($envFile) && is_readable($envFile)) {
         list($name, $value) = explode('=', $line, 2);
         $name = ltrim(trim($name), "\xEF\xBB\xBF");
         $value = trim($value, " \t\"'");
+        // Senhas copiadas de PDF/Word às vezes trazem zero-width / NBSP — quebram SMTP mesmo “corretas”.
+        if (stripos($name, 'PASSWORD') !== false || stripos($name, 'AUTH_PASS') !== false) {
+            $value = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}\x{00A0}]/u', '', $value);
+        }
         if ($name !== '') {
             putenv("$name=$value");
             $_ENV[$name] = $value;

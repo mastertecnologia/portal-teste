@@ -17,6 +17,10 @@
  * MAIL_SMTP_TIMEOUT — segundos (5–120, default 15). Reduz espera se o SMTP não responde.
  * MAIL_EMAIL_VERBOSE_LOG=1 — regista stack trace em logs/error.log por tentativa falhada.
  * Diagnóstico CLI: php scripts/smtp_reachability.php pgm
+ *
+ * Se o webmail diz credenciais certas mas o SMTP responde "did not accept the password":
+ * - MAIL_PGM_AUTH_USER / MAIL_PGM_AUTH_PASS — login SMTP pode ser só "helpdesk" ou outro ID (Skymail).
+ * - O bootstrap remove zero-width/NBSP de variáveis *PASSWORD* / *AUTH_PASS*.
  */
 $smtpTransportExtra = function (string $prefix) {
     $insecure = filter_var(env('MAIL_' . $prefix . '_TLS_INSECURE', false), FILTER_VALIDATE_BOOLEAN);
@@ -52,6 +56,32 @@ $smtpTransportExtra = function (string $prefix) {
 
 // Segundos — ligação + handshake SMTP; reduz espera do utilizador se o host não responde (antes ~30s × 2 transportes).
 $smtpTimeout = max(5, min(120, (int)env('MAIL_SMTP_TIMEOUT', 15)));
+
+// Alguns servidores SMTP exigem login distinto do e-mail (ex.: só parte local) — opcional no .env.
+$mailPgmUser = trim((string)env('MAIL_PGM_AUTH_USER', ''));
+if ($mailPgmUser === '') {
+    $mailPgmUser = env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br');
+}
+$mailPgmPass = trim((string)env('MAIL_PGM_AUTH_PASS', ''));
+if ($mailPgmPass === '') {
+    $mailPgmPass = env('MAIL_PGM_PASSWORD', '');
+}
+$mailMasterUser = trim((string)env('MAIL_MASTER_AUTH_USER', ''));
+if ($mailMasterUser === '') {
+    $mailMasterUser = env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br');
+}
+$mailMasterPass = trim((string)env('MAIL_MASTER_AUTH_PASS', ''));
+if ($mailMasterPass === '') {
+    $mailMasterPass = env('MAIL_MASTER_PASSWORD', '');
+}
+$mailDefaultUser = trim((string)env('MAIL_DEFAULT_AUTH_USER', ''));
+if ($mailDefaultUser === '') {
+    $mailDefaultUser = env('MAIL_DEFAULT_USERNAME', '');
+}
+$mailDefaultPass = trim((string)env('MAIL_DEFAULT_AUTH_PASS', ''));
+if ($mailDefaultPass === '') {
+    $mailDefaultPass = env('MAIL_DEFAULT_PASSWORD', '');
+}
 
 return [
     /**
@@ -245,8 +275,8 @@ return [
             'host' => env('MAIL_DEFAULT_HOST', 'smtp.gmail.com'),
             'port' => (int)env('MAIL_DEFAULT_PORT', 587),
             'timeout' => $smtpTimeout,
-            'username' => env('MAIL_DEFAULT_USERNAME', ''),
-            'password' => env('MAIL_DEFAULT_PASSWORD', ''),
+            'username' => $mailDefaultUser,
+            'password' => $mailDefaultPass,
             'client' => null,
             'tls' => filter_var(env('MAIL_DEFAULT_TLS', true), FILTER_VALIDATE_BOOLEAN),
         ],
@@ -256,9 +286,9 @@ return [
             'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
             'port' => (int)env('MAIL_MASTER_PORT', 587),
             'timeout' => $smtpTimeout,
-            'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
-            // Senha deve vir do ambiente (não versionar).
-            'password' => env('MAIL_MASTER_PASSWORD', ''),
+            'username' => $mailMasterUser,
+            // Senha deve vir do ambiente (não versionar). Opcional: MAIL_MASTER_AUTH_USER / MAIL_MASTER_AUTH_PASS.
+            'password' => $mailMasterPass,
             // Porta 587 costuma exigir STARTTLS; defina MAIL_MASTER_TLS=false só se o servidor for realmente sem TLS.
             'tls' => filter_var(env('MAIL_MASTER_TLS', true), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
@@ -269,9 +299,9 @@ return [
             'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
             'port' => (int)env('MAIL_PGM_PORT', 587),
             'timeout' => $smtpTimeout,
-            'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
-            // Senha deve vir do ambiente (não versionar).
-            'password' => env('MAIL_PGM_PASSWORD', ''),
+            'username' => $mailPgmUser,
+            // Senha: MAIL_PGM_PASSWORD ou MAIL_PGM_AUTH_PASS. Utilizador SMTP: MAIL_PGM_AUTH_USER se diferente do e-mail.
+            'password' => $mailPgmPass,
             'tls' => filter_var(env('MAIL_PGM_TLS', true), FILTER_VALIDATE_BOOLEAN),
             'client' => null,
         ], $smtpTransportExtra('PGM')),
