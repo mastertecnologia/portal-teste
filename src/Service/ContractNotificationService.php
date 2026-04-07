@@ -18,12 +18,23 @@ class ContractNotificationService {
 	 * @return void
 	 */
 	protected function sendHtml($to, $subject, $template, array $vars) {
-		$from = (string)Configure::read('Contract.notifications.from_email');
+		$from = trim((string)Configure::read('Contract.notifications.from_email'));
 		$name = (string)Configure::read('Contract.notifications.from_name');
+		$transport = trim((string)Configure::read('Contract.notifications.smtp_transport'));
+		if ($transport === '') {
+			$transport = 'default';
+		}
+		if (filter_var((string)Configure::read('Contract.notifications.force_from_smtp_user'), FILTER_VALIDATE_BOOLEAN)) {
+			$smtpUser = trim((string)Configure::read('EmailTransport.' . $transport . '.username'));
+			if ($smtpUser !== '') {
+				$from = $smtpUser;
+			}
+		}
 		if ($from === '' || $to === '') {
 			throw new \InvalidArgumentException('E-mail remetente ou destinatário vazio (configure Contract.notifications).');
 		}
 		$email = new Email('default');
+		$email->transport($transport);
 		$email->setFrom([$from => $name ?: $from])
 			->setTo($to)
 			->setSubject($subject)
