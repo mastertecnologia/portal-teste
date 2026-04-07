@@ -35,23 +35,34 @@ if (!extension_loaded('mbstring')) {
 /*
  * Carrega .env (se existir) para que paths.php e app.php usem getenv()/env().
  * Formato: uma variável por linha, KEY=VALUE. Linhas vazias e # comentários são ignoradas.
+ * Espelha em $_SERVER também (CakePHP / PHP-FPM). Remove BOM UTF-8 no início do ficheiro.
+ * Linhas no estilo "export KEY=value" são aceites (o "export " é removido).
  */
 $envFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env';
 if (is_file($envFile) && is_readable($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $raw = file_get_contents($envFile);
+    if ($raw !== false && strncmp($raw, "\xEF\xBB\xBF", 3) === 0) {
+        $raw = substr($raw, 3);
+    }
+    $lines = preg_split('/\R/', $raw) ?: [];
     foreach ($lines as $line) {
         $line = trim($line);
         if ($line === '' || strpos($line, '#') === 0) {
             continue;
         }
-        if (strpos($line, '=') !== false) {
-            list($name, $value) = explode('=', $line, 2);
-            $name = trim($name);
-            $value = trim($value, " \t\"'");
-            if ($name !== '') {
-                putenv("$name=$value");
-                $_ENV[$name] = $value;
-            }
+        if (stripos($line, 'export ') === 0) {
+            $line = trim(substr($line, 7));
+        }
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+        list($name, $value) = explode('=', $line, 2);
+        $name = ltrim(trim($name), "\xEF\xBB\xBF");
+        $value = trim($value, " \t\"'");
+        if ($name !== '') {
+            putenv("$name=$value");
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
         }
     }
 }
