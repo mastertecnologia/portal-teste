@@ -2173,6 +2173,15 @@ class UsersController extends AppController {
 					$chain .= ' | causa: ' . $prev->getMessage();
 				}
 				Log::warning(sprintf('[email] Transporte "%s" falhou após %d ms: %s', $transport, $ms, $chain));
+				if (stripos($chain, 'password') !== false || stripos($chain, 'authentication') !== false || stripos($chain, '535') !== false) {
+					$ep = ['pgm' => 'PGM', 'master' => 'MASTER', 'default' => 'DEFAULT'][$transport] ?? strtoupper($transport);
+					Log::warning(sprintf(
+						'[email] SMTP rejeitou credenciais (transporte "%s"). Confirme no .env MAIL_%s_USERNAME e MAIL_%s_PASSWORD (senha da caixa no Skymail/webmail; se for Gmail use "app password").',
+						$transport,
+						$ep,
+						$ep
+					));
+				}
 				if ($verbose) {
 					Log::error('[email] MAIL_EMAIL_VERBOSE_LOG trace transporte ' . $transport . ":\n" . $e->getTraceAsString());
 				}
