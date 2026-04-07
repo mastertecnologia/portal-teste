@@ -303,8 +303,12 @@ function verificaduasetapas(acao) {
 		url: "<?= Router::url(['controller'=>'Users','action'=>'verificaloginduasetapas']); ?>/"+encodeURIComponent($('#username').val()),
 		async: false,
 		success: function(data) {
-			if (data == 'temcodigo') $('#modal-duasetapas').modal('toggle');
-			else if (acao == 'login') $('.signin-form').submit();
+			var d = (data == null ? '' : String(data)).replace(/^\s+|\s+$/g, '');
+			if (d === 'temcodigo') $('#modal-duasetapas').modal('toggle');
+			else if (acao === 'login') $('.signin-form').submit();
+		},
+		error: function() {
+			if (acao === 'login') $('.signin-form').submit();
 		},
 	});
 }

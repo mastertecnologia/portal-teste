@@ -1048,8 +1048,46 @@ class UsersController extends AppController {
 		}
 		return [
 			'username' => trim((string)$username),
-			'password' => $password !== null ? (string)$password : null,
+			'password' => $password !== null ? trim((string)$password) : null,
 		];
+	}
+
+	/**
+	 * users.inativo: 0 ou NULL = ativo no portal; 1 = inativo.
+	 * Aceita também boolean/string vinda do PostgreSQL/PDO.
+	 */
+	protected function _isUserInactiveForLogin($inativo): bool {
+		if ($inativo === null || $inativo === '') {
+			return false;
+		}
+		if (is_bool($inativo)) {
+			return $inativo;
+		}
+		if (is_int($inativo)) {
+			return $inativo !== 0;
+		}
+		$s = strtolower(trim((string)$inativo));
+
+		return !in_array($s, ['0', 'f', 'false', 'no', 'off', ''], true);
+	}
+
+	/**
+	 * users.bloqueado: só bloqueia quando explicitamente verdadeiro (1, t, true…).
+	 * Evita tratar 'f' (boolean PG em string) como bloqueado — !$v falharia em PHP.
+	 */
+	protected function _isUserBlockedForLogin($bloqueado): bool {
+		if ($bloqueado === null || $bloqueado === '') {
+			return false;
+		}
+		if (is_bool($bloqueado)) {
+			return $bloqueado;
+		}
+		if (is_int($bloqueado)) {
+			return $bloqueado !== 0;
+		}
+		$s = strtolower(trim((string)$bloqueado));
+
+		return in_array($s, ['1', 't', 'true', 'yes', 'on', 'sim'], true);
 	}
 
 	/**
@@ -1067,7 +1105,12 @@ class UsersController extends AppController {
 		$lower = strtolower($login);
 
 		return $this->Users->find()
-			->where(['inativo' => 0])
+			->where([
+				'OR' => [
+					'Users.inativo IS' => null,
+					'Users.inativo' => 0,
+				],
+			])
 			->where(['OR' => [
 				['LOWER(Users.email)' => $lower],
 				['LOWER(Users.username)' => $lower],
@@ -1156,17 +1199,17 @@ class UsersController extends AppController {
 					}
 					return $this->redirect(['action' => 'acessoEmpresa']);
 				}
-				if(!$user['inativo'] && !$user['bloqueado']){
+				if (!$this->_isUserInactiveForLogin($user['inativo'] ?? null) && !$this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
 					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
-				} else if($user['inativo']){
+				} elseif ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
 					$this->Flash->error(__('Seu usuário está inativo!'));
 					return $this->redirect($this->Auth->redirectUrl());
-				} else if($user['bloqueado']){
+				} elseif ($this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
 					$this->Flash->error(__('Seu usuário está bloqueado! Aguarde a liberação de um administrador.'));
 					return $this->redirect($this->Auth->redirectUrl());
-				} 
+				}
 			}
 	
 			$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
@@ -1202,17 +1245,17 @@ class UsersController extends AppController {
 					}
 					return $this->redirect(['action' => 'login']);
 				}
-				if(!$user['inativo'] && !$user['bloqueado']){
+				if (!$this->_isUserInactiveForLogin($user['inativo'] ?? null) && !$this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
 					$user['idempresa'] = $this->getEmpresaPreferencial($user['id']);
 					$this->Auth->setUser($user);
 					return $this->redirect($this->Auth->redirectUrl());
-				} else if($user['inativo']){
+				} elseif ($this->_isUserInactiveForLogin($user['inativo'] ?? null)) {
 					$this->Flash->error(__('Seu usuário está inativo!'));
 					return $this->redirect($this->Auth->redirectUrl());
-				} else if($user['bloqueado']){
+				} elseif ($this->_isUserBlockedForLogin($user['bloqueado'] ?? null)) {
 					$this->Flash->error(__('Seu usuário está bloqueado! Aguarde a liberação de um administrador.'));
 					return $this->redirect($this->Auth->redirectUrl());
-				} 
+				}
 			}
 	
 			$this->Flash->error(__('Usuário e/ou senha incorretos. Tente novamente.'));
