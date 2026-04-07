@@ -18,6 +18,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
       </div>
       <span class="prec-badge-erp">ERP Integrado</span>
     </div>
+    <?php if (empty($embedEstoque)) : ?>
     <div class="prec-topbar-back">
     <?php if (!empty($returnUrlEstoque)) : ?>
       <a href="<?= h($returnUrlEstoque) ?>" class="prec-link-back">&larr; Voltar ao estoque</a>
@@ -28,6 +29,7 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
       </a>
     <?php endif; ?>
     </div>
+    <?php endif; ?>
   </div>
 
   <div class="prec-body">
@@ -229,6 +231,7 @@ var state = {
   selected: new Set()
 };
 var saveUrl = <?= json_encode($this->Url->build(['controller' => 'Produtos', 'action' => 'salvarPrecos'])) ?>;
+var PREC_EMBED_RETURN = <?= json_encode(!empty($embedEstoque) && !empty($returnUrlEstoque) ? $returnUrlEstoque : null) ?>;
 
 /* ── Formatação ────────────────────────────────────────────────── */
 function fmt(n, dec) {
@@ -620,6 +623,14 @@ function salvarPrecos() {
       state.novosPrecos = {};
       showToast(data.salvos + ' preço(s) salvo(s) com sucesso!', 'success');
       refreshTable();
+      if (PREC_EMBED_RETURN) {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = PREC_EMBED_RETURN;
+        } else {
+          window.location.href = PREC_EMBED_RETURN;
+        }
+        return;
+      }
     }
     if (data.erros && data.erros.length) {
       showToast(data.erros.length + ' erro(s) ao salvar', 'error');

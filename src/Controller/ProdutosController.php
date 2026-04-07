@@ -129,6 +129,14 @@ class ProdutosController extends AppController {
 		if ($returnUrlEstoque === null) {
 			$returnUrlEstoque = $this->sanitizeEstoqueReturnUrl($this->request->getQuery('return'));
 		}
+		$embedWanted = ($this->request->getQuery('embed_estoque') === '1');
+		if ($this->request->is(['post', 'put'])) {
+			$embedWanted = $embedWanted || ($this->request->getData('embed_estoque') === '1');
+		}
+		$embedEstoque = $embedWanted && $returnUrlEstoque !== null;
+		if ($embedEstoque) {
+			$this->viewBuilder()->setLayout('estoque_embed');
+		}
         // Para produtos (tipo 1), atualizar Valor Unitário com Preço de Venda do ERP ao abrir a edição
         if ($produto->tipo == 1 && !$this->request->is(['post', 'put'])) {
             try {
@@ -186,6 +194,8 @@ class ProdutosController extends AppController {
         
 		$this->set('produto', $produto);
 		$this->set('returnUrlEstoque', $returnUrlEstoque);
+		$this->set('embedEstoque', $embedEstoque);
+		$this->set('estoqueEmbedReturnUrl', $embedEstoque ? $returnUrlEstoque : null);
         $this->set('title', 'Editar Produto');
     }
 
@@ -203,7 +213,14 @@ class ProdutosController extends AppController {
 		$this->set('title', 'Gestão de Preços');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'prec-screen-active');
-		$this->set('returnUrlEstoque', $this->sanitizeEstoqueReturnUrl($this->request->getQuery('return')));
+		$returnUrlEstoque = $this->sanitizeEstoqueReturnUrl($this->request->getQuery('return'));
+		$embedEstoque = ($this->request->getQuery('embed_estoque') === '1') && $returnUrlEstoque !== null;
+		if ($embedEstoque) {
+			$this->viewBuilder()->setLayout('estoque_embed');
+		}
+		$this->set('returnUrlEstoque', $returnUrlEstoque);
+		$this->set('embedEstoque', $embedEstoque);
+		$this->set('estoqueEmbedReturnUrl', $embedEstoque ? $returnUrlEstoque : null);
 
 		$idempresa = $this->Auth->user('idempresa');
 		$todos = $this->Produtos->find('all')

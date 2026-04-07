@@ -11,9 +11,18 @@
 ?>
 
 <div class="prd-form-root">
-<?= $this->Form->create($produto, ['id' => 'prdForm', 'novalidate' => true]) ?>
+<?php
+$_prdFormOpts = ['id' => 'prdForm', 'novalidate' => true];
+if (!empty($embedEstoque)) {
+	$_prdFormOpts['target'] = '_top';
+}
+?>
+<?= $this->Form->create($produto, $_prdFormOpts) ?>
 <?php if (!empty($returnUrlEstoque)) : ?>
 	<?= $this->Form->hidden('return', ['value' => $returnUrlEstoque]) ?>
+<?php endif; ?>
+<?php if (!empty($embedEstoque)) : ?>
+	<?= $this->Form->hidden('embed_estoque', ['value' => '1']) ?>
 <?php endif; ?>
 
   <!-- ── Topbar ─────────────────────────────────────────────── -->
@@ -30,6 +39,7 @@
     </div>
     <?php endif; ?>
 
+    <?php if (empty($embedEstoque)) : ?>
     <div class="prd-form-topbar-actions">
     <?php if (!empty($returnUrlEstoque)) : ?>
     <?= $this->Html->link(
@@ -50,6 +60,7 @@
     ) ?>
     <?php endif; ?>
     </div>
+    <?php endif; ?>
   </div>
 
   <!-- ── Layout: main + aside ───────────────────────────────── -->
@@ -403,11 +414,25 @@
       Última sincronização ERP: agora
     </div>
     <div class="prd-form-footer-right">
-      <?= $this->Html->link(
-        '<i class="fas fa-times"></i> Cancelar',
-        ['action' => 'index'],
-        ['class' => 'btn-prd-secondary', 'escape' => false]
-      ) ?>
+      <?php
+      if (!empty($returnUrlEstoque)) {
+        $_cancelOpts = ['class' => 'btn-prd-secondary', 'escape' => false];
+        if (!empty($embedEstoque)) {
+          $_cancelOpts['target'] = '_top';
+        }
+        echo $this->Html->link(
+          '<i class="fas fa-times"></i> Cancelar',
+          $returnUrlEstoque,
+          $_cancelOpts
+        );
+      } else {
+        echo $this->Html->link(
+          '<i class="fas fa-times"></i> Cancelar',
+          ['action' => 'index'],
+          ['class' => 'btn-prd-secondary', 'escape' => false]
+        );
+      }
+      ?>
       <?= $this->Form->button(
         '<i class="fas fa-save"></i> Salvar Alterações',
         ['class' => 'btn-prd-primary', 'escape' => false]

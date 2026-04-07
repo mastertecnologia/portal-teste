@@ -88,6 +88,20 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	</div>
 </div>
 
+<div class="modal fade est-embed-modal" id="estEmbedModal" tabindex="-1" role="dialog" aria-labelledby="estEmbedModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="true">
+	<div class="modal-dialog est-embed-modal__dialog modal-dialog-centered" role="document">
+		<div class="modal-content est-embed-modal__content">
+			<div class="modal-header est-embed-modal__header py-2">
+				<h5 class="modal-title mb-0" id="estEmbedModalLabel">Estoque</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+			</div>
+			<div class="modal-body est-embed-modal__body">
+				<iframe id="estEmbedFrame" class="est-embed-frame" title="Conteúdo do estoque" src="about:blank"></iframe>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script>
 (function() {
 	var estoqueUrlComSaldo = "<?= Router::url(['controller' => 'Produtos', 'action' => 'estoque', 't']) ?>";
@@ -307,5 +321,45 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 	});
 
 	atualizarBotaoModo();
+
+	var estEmbedDefaultTitle = 'Estoque';
+
+	$(document).on('click', '.js-est-embed-open', function(e) {
+		if (e.ctrlKey || e.metaKey || e.shiftKey || e.which === 2) {
+			return;
+		}
+		e.preventDefault();
+		var $el = $(this);
+		var url = $el.data('est-embed-url') || $el.attr('href');
+		if (!url) {
+			return;
+		}
+		var title = $el.attr('data-est-embed-title');
+		if (!title || !String(title).trim()) {
+			if (String(url).indexOf('precificacao') !== -1) {
+				title = 'Ajustar preços';
+			} else if (String(url).indexOf('/edit') !== -1 || String(url).indexOf('edit/') !== -1) {
+				title = 'Editar cadastro';
+			} else {
+				title = estEmbedDefaultTitle;
+			}
+		}
+		var $frame = $('#estEmbedFrame');
+		var $modal = $('#estEmbedModal');
+		var $titleEl = $('#estEmbedModalLabel');
+		if (!$frame.length || !$modal.length) {
+			window.location.href = url;
+			return;
+		}
+		$titleEl.text(title);
+		$frame.attr('title', title);
+		$frame.attr('src', url);
+		$modal.modal('show');
+	});
+
+	$('#estEmbedModal').on('hidden.bs.modal', function() {
+		$('#estEmbedFrame').attr('src', 'about:blank').attr('title', 'Conteúdo do estoque');
+		$('#estEmbedModalLabel').text(estEmbedDefaultTitle);
+	});
 })();
 </script>

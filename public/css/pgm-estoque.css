@@ -932,3 +932,31 @@ body.est-print-selected .est-card:not(.est-row-checked) {
 		display: none !important;
 	}
 }
+
+/* Modal: editar / precificar mantendo a URL na listagem de estoque */
+.est-embed-modal .modal-dialog {
+	max-width: min(96vw, 1100px);
+	width: 100%;
+	margin: 0.75rem auto;
+}
+.est-embed-modal__content {
+	min-height: min(90vh, 880px);
+	display: flex;
+	flex-direction: column;
+}
+.est-embed-modal__body {
+	flex: 1;
+	min-height: 0;
+	padding: 0 !important;
+	overflow: hidden;
+}
+.est-embed-frame {
+	width: 100%;
+	height: min(82vh, 800px);
+	border: 0;
+	display: block;
+	background: var(--est-bg, #f3f6f9);
+}
+html[data-pgm-theme="dark"] .est-embed-frame {
+	background: #e4e9f1;
+}

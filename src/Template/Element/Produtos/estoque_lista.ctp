@@ -12,6 +12,10 @@ use Cake\Routing\Router;
 $mapCodigoId = $mapCodigoId ?? [];
 $produtos = $produtos ?? [];
 $estoqueReturnUrl = $estoqueReturnUrl ?? '';
+$estCtxQuery = [];
+if ($estoqueReturnUrl !== '') {
+	$estCtxQuery = ['return' => $estoqueReturnUrl, 'embed_estoque' => '1'];
+}
 ?>
 <?php if (empty($produtos)) : ?>
 	<div class="est-table-view">
@@ -49,14 +53,13 @@ $estoqueReturnUrl = $estoqueReturnUrl ?? '';
 						<td class="est-num"><?= number_format((float)$reg->nPrecoVenda, 2, ',', '.') ?></td>
 						<td class="est-col-actions">
 							<?php if ($pid) :
-								$qEdit = $estoqueReturnUrl !== '' ? ['return' => $estoqueReturnUrl] : [];
-								$qPrec = ['codigo' => $cod];
-								if ($estoqueReturnUrl !== '') {
-									$qPrec['return'] = $estoqueReturnUrl;
-								}
+								$qEdit = $estCtxQuery;
+								$qPrec = array_merge(['codigo' => $cod], $estCtxQuery);
+								$urlEdit = Router::url(['action' => 'edit', $pid, '?' => $qEdit]);
+								$urlPrec = Router::url(['action' => 'precificacao', '?' => $qPrec]);
 								?>
-								<a href="<?= h(Router::url(['action' => 'edit', $pid, '?' => $qEdit])) ?>" class="est-act est-act--edit" title="Editar cadastro no portal"><span class="sr-only">Editar cadastro</span><i class="fas fa-pen" aria-hidden="true"></i></a>
-								<a href="<?= h(Router::url(['action' => 'precificacao', '?' => $qPrec])) ?>" class="est-act est-act--price" title="Ajustar preços (precificação)"><span class="sr-only">Preços</span><i class="fas fa-tags" aria-hidden="true"></i></a>
+								<a href="<?= h($urlEdit) ?>" class="est-act est-act--edit js-est-embed-open" data-est-embed-url="<?= h($urlEdit) ?>" data-est-embed-title="Editar cadastro" title="Editar cadastro no portal"><span class="sr-only">Editar cadastro</span><i class="fas fa-pen" aria-hidden="true"></i></a>
+								<a href="<?= h($urlPrec) ?>" class="est-act est-act--price js-est-embed-open" data-est-embed-url="<?= h($urlPrec) ?>" data-est-embed-title="Ajustar preços" title="Ajustar preços (precificação)"><span class="sr-only">Preços</span><i class="fas fa-tags" aria-hidden="true"></i></a>
 							<?php else : ?>
 								<span class="est-act est-act--muted" title="Sem item correspondente no cadastro do portal para este código ERP"><i class="fas fa-minus" aria-hidden="true"></i></span>
 							<?php endif; ?>
@@ -72,10 +75,13 @@ $estoqueReturnUrl = $estoqueReturnUrl ?? '';
 			<?php foreach ($produtos as $reg) :
 				$cod = trim((string)($reg->sCodProduto ?? ''));
 				$pid = $mapCodigoId[$cod] ?? null;
-				$qEditCard = $estoqueReturnUrl !== '' ? ['return' => $estoqueReturnUrl] : [];
-				$qPrecCard = ['codigo' => $cod];
-				if ($estoqueReturnUrl !== '') {
-					$qPrecCard['return'] = $estoqueReturnUrl;
+				$qEditCard = $estCtxQuery;
+				$qPrecCard = array_merge(['codigo' => $cod], $estCtxQuery);
+				$urlEditCard = '';
+				$urlPrecCard = '';
+				if ($pid) {
+					$urlEditCard = Router::url(['action' => 'edit', $pid, '?' => $qEditCard]);
+					$urlPrecCard = Router::url(['action' => 'precificacao', '?' => $qPrecCard]);
 				}
 				?>
 			<article class="est-card" data-codigo="<?= h($cod) ?>">
@@ -93,8 +99,8 @@ $estoqueReturnUrl = $estoqueReturnUrl ?? '';
 				</dl>
 				<footer class="est-card__foot">
 					<?php if ($pid) : ?>
-						<a href="<?= h(Router::url(['action' => 'edit', $pid, '?' => $qEditCard])) ?>" class="est-btn est-btn--outline est-btn--sm">Editar</a>
-						<a href="<?= h(Router::url(['action' => 'precificacao', '?' => $qPrecCard])) ?>" class="est-btn est-btn--secondary est-btn--sm">Preços</a>
+						<a href="<?= h($urlEditCard) ?>" class="est-btn est-btn--outline est-btn--sm js-est-embed-open" data-est-embed-url="<?= h($urlEditCard) ?>" data-est-embed-title="Editar cadastro">Editar</a>
+						<a href="<?= h($urlPrecCard) ?>" class="est-btn est-btn--secondary est-btn--sm js-est-embed-open" data-est-embed-url="<?= h($urlPrecCard) ?>" data-est-embed-title="Ajustar preços">Preços</a>
 					<?php else : ?>
 						<span class="est-card__no-portal">Sem cadastro no portal</span>
 					<?php endif; ?>
