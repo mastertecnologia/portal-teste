@@ -505,10 +505,16 @@ class ContractManagementController extends AppController {
 					return;
 				}
 				$docId = (string)($res['id'] ?? '');
+				$signaturesRaw = is_array($res['signatures'] ?? null) ? $res['signatures'] : [];
 				$firstLink = '';
-				foreach ($res['signatures'] as $sig) {
-					if (!empty($sig['link']['short_link'])) {
-						$firstLink = (string)$sig['link']['short_link'];
+				foreach ($signaturesRaw as $sig) {
+					if (!is_array($sig)) {
+						continue;
+					}
+					$linkArr = isset($sig['link']) && is_array($sig['link']) ? $sig['link'] : [];
+					$sl = isset($linkArr['short_link']) ? trim((string)$linkArr['short_link']) : '';
+					if ($sl !== '') {
+						$firstLink = $sl;
 						break;
 					}
 				}
@@ -517,21 +523,103 @@ class ContractManagementController extends AppController {
 					$this->Contracts->patchEntity($contract, ['autentique_url' => $firstLink]);
 					$this->Contracts->save($contract);
 				}
-				$apiSigs = array_values($res['signatures']);
+				$signList = array_values((array)($contract->contract_signatories ?? []));
 				usort($signList, function ($a, $b) {
 					return ((int)$a->get('ordem') ?: 0) <=> ((int)$b->get('ordem') ?: 0);
 				});
-				foreach ($apiSigs as $i => $apiSig) {
-					if (!isset($signList[$i])) {
-						break;
+				$apiSigs = [];
+				foreach ($signaturesRaw as $apiSig) {
+					if (is_array($apiSig)) {
+						$apiSigs[] = $apiSig;
+					}
+				}
+				$normEmail = static function ($e) {
+					return strtolower(trim((string)$e));
+				};
+				$normName = static function ($n) {
+					$n = trim((string)$n);
+
+					return function_exists('mb_strtolower') ? mb_strtolower($n, 'UTF-8') : strtolower($n);
+				};
+				$nApi = count($apiSigs);
+				$nSign = count($signList);
+				$matchedApi = array_fill(0, $nApi, false);
+				$matchedRow = array_fill(0, $nSign, false);
+				$applyApiToRow = function ($row, $apiSig) {
+					$shortLink = null;
+					if (isset($apiSig['link']) && is_array($apiSig['link'])) {
+						$sl = isset($apiSig['link']['short_link']) ? trim((string)$apiSig['link']['short_link']) : '';
+						$shortLink = $sl !== '' ? $sl : null;
+					}
+					$patch = [
+						'autentique_signer_id' => isset($apiSig['public_id']) ? $apiSig['public_id'] : null,
+						'status' => 'enviado',
+					];
+					if ($shortLink !== null) {
+						$patch['link_assinatura'] = $shortLink;
+					}
+					$this->ContractSignatories->patchEntity($row, $patch);
+				};
+				for ($i = 0; $i < $nSign; $i++) {
+					$row = $signList[$i];
+					$em = $normEmail($row->get('email') ?? '');
+					if ($em === '' || !filter_var($em, FILTER_VALIDATE_EMAIL)) {
+						continue;
+					}
+					for ($j = 0; $j < $nApi; $j++) {
+						if ($matchedApi[$j]) {
+							continue;
+						}
+						if ($normEmail($apiSigs[$j]['email'] ?? '') === $em) {
+							$applyApiToRow($row, $apiSigs[$j]);
+							$matchedApi[$j] = true;
+							$matchedRow[$i] = true;
+							break;
+						}
+					}
+				}
+				for ($i = 0; $i < $nSign; $i++) {
+					if ($matchedRow[$i]) {
+						continue;
 					}
 					$row = $signList[$i];
-					$this->ContractSignatories->patchEntity($row, [
-						'autentique_signer_id' => $apiSig['public_id'] ?? null,
-						'link_assinatura' => $apiSig['link']['short_link'] ?? null,
-						'status' => 'enviado',
-					]);
-					$this->ContractSignatories->save($row);
+					$nm = $normName($row->get('nome') ?? '');
+					if ($nm === '') {
+						continue;
+					}
+					for ($j = 0; $j < $nApi; $j++) {
+						if ($matchedApi[$j]) {
+							continue;
+						}
+						if ($normName($apiSigs[$j]['name'] ?? '') === $nm) {
+							$applyApiToRow($row, $apiSigs[$j]);
+							$matchedApi[$j] = true;
+							$matchedRow[$i] = true;
+							break;
+						}
+					}
+				}
+				$unmatchedRows = [];
+				$unmatchedApiIdx = [];
+				for ($i = 0; $i < $nSign; $i++) {
+					if (!$matchedRow[$i]) {
+						$unmatchedRows[] = $i;
+					}
+				}
+				for ($j = 0; $j < $nApi; $j++) {
+					if (!$matchedApi[$j]) {
+						$unmatchedApiIdx[] = $j;
+					}
+				}
+				$uR = count($unmatchedRows);
+				$uA = count($unmatchedApiIdx);
+				if ($uR > 0 && $uR === $uA) {
+					for ($k = 0; $k < $uR; $k++) {
+						$applyApiToRow($signList[$unmatchedRows[$k]], $apiSigs[$unmatchedApiIdx[$k]]);
+					}
+				}
+				if ($signList !== []) {
+					$this->ContractSignatories->saveMany($signList);
 				}
 				$signing->logEvent((int)$contract->id, 'envio_autentique', ['doc_id' => $docId], $this->_userId());
 				try {
