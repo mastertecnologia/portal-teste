@@ -2204,6 +2204,107 @@ class UsersController extends AppController {
 		return false;
 	}
 
+	/**
+	 * E-mail multipart (HTML + texto) usando templates Email/html/reset_password e Email/text/reset_password.
+	 * Mesma política de transporte/fallback que _sendEmailWithTransportFallback.
+	 */
+	protected function _sendResetPasswordEmailWithTransportFallback(
+		string $to,
+		array $from,
+		string $subject,
+		int $idempresa,
+		array $viewVars
+	): bool {
+		$primary = ((int)$idempresa === (int)C_EmpresaMaster) ? 'master' : 'pgm';
+		$candidates = [$primary];
+		if (filter_var(env('MAIL_RESET_FALLBACK_DEFAULT', true), FILTER_VALIDATE_BOOLEAN)) {
+			if (!in_array('default', $candidates, true)) {
+				$candidates[] = 'default';
+			}
+		}
+		$verbose = filter_var(env('MAIL_EMAIL_VERBOSE_LOG', false), FILTER_VALIDATE_BOOLEAN);
+		$last = null;
+		foreach ($candidates as $transport) {
+			$t0 = microtime(true);
+			try {
+				$cfg = TransportFactory::getConfig($transport);
+				if (!is_array($cfg) || ($cfg['className'] ?? '') !== 'Smtp') {
+					Log::warning(sprintf('[email] Transporte "%s": configuração em falta ou não-SMTP.', $transport));
+					continue;
+				}
+				$pwd = isset($cfg['password']) ? trim((string)$cfg['password']) : '';
+				$usr = isset($cfg['username']) ? trim((string)$cfg['username']) : '';
+				if ($transport === 'default' && $usr === '' && $pwd === '') {
+					Log::info('[email] Ignorado transporte "default": MAIL_DEFAULT_USERNAME/PASSWORD vazios (evita espera de timeout).');
+
+					continue;
+				}
+				if ($usr !== '' && $pwd === '') {
+					$hint = ['master' => 'MAIL_MASTER_PASSWORD', 'pgm' => 'MAIL_PGM_PASSWORD', 'default' => 'MAIL_DEFAULT_PASSWORD'][$transport] ?? 'MAIL_*_PASSWORD';
+					Log::warning(sprintf('[email] Transporte "%s": utilizador SMTP definido mas senha vazia — defina %s no .env.', $transport, $hint));
+				}
+				$host = (string)($cfg['host'] ?? '');
+				$port = (int)($cfg['port'] ?? 0);
+				$timeout = (int)($cfg['timeout'] ?? 0);
+				$tls = !empty($cfg['tls']);
+				Log::info(sprintf(
+					'[email] reset_password: tentativa transporte=%s host=%s port=%d timeout=%ds tls=%s auth_user=%s',
+					$transport,
+					$host !== '' ? $host : '(vazio)',
+					$port,
+					$timeout,
+					$tls ? 'yes' : 'no',
+					$usr !== '' ? 'yes' : 'no'
+				));
+
+				$email = new Email();
+				$email->transport($transport);
+				$email->from($from)
+					->to($to)
+					->subject($subject)
+					->template('reset_password')
+					->layout(false)
+					->emailFormat('both')
+					->viewVars($viewVars);
+				$email->send();
+				$ms = (int)round((microtime(true) - $t0) * 1000);
+				if ($transport !== $primary) {
+					Log::info(sprintf('[email] Enviado via fallback "%s" (falhou "%s") em %d ms.', $transport, $primary, $ms));
+				} else {
+					Log::info(sprintf('[email] Enviado via "%s" em %d ms.', $transport, $ms));
+				}
+
+				return true;
+			} catch (\Throwable $e) {
+				$last = $e;
+				$ms = (int)round((microtime(true) - $t0) * 1000);
+				$chain = $e->getMessage();
+				$prev = $e->getPrevious();
+				for ($i = 0; $prev && $i < 4; $i++, $prev = $prev->getPrevious()) {
+					$chain .= ' | causa: ' . $prev->getMessage();
+				}
+				Log::warning(sprintf('[email] Transporte "%s" falhou após %d ms: %s', $transport, $ms, $chain));
+				if (stripos($chain, 'password') !== false || stripos($chain, 'authentication') !== false || stripos($chain, '535') !== false) {
+					$ep = ['pgm' => 'PGM', 'master' => 'MASTER', 'default' => 'DEFAULT'][$transport] ?? strtoupper($transport);
+					Log::warning(sprintf(
+						'[email] SMTP rejeitou credenciais (transporte "%s"). Confirme no .env MAIL_%s_USERNAME e MAIL_%s_PASSWORD (senha da caixa no Skymail/webmail; se for Gmail use "app password").',
+						$transport,
+						$ep,
+						$ep
+					));
+				}
+				if ($verbose) {
+					Log::error('[email] MAIL_EMAIL_VERBOSE_LOG trace transporte ' . $transport . ":\n" . $e->getTraceAsString());
+				}
+			}
+		}
+		if ($last !== null) {
+			Log::error('[email] Todos os transportes falharam (reset_password). Último: ' . $last->getMessage());
+		}
+
+		return false;
+	}
+
 	public function resetPassword($iduser) {
 		$token = rawurldecode(trim((string)$iduser));
 		if ($token === '') {
@@ -2273,12 +2374,22 @@ class UsersController extends AppController {
 
 		$link = $urlfora . '/Users/resetPasswordNew?hash=' . rawurlencode((string)$user->hashreset);
 
-		$message =
-			'<h3> Redefinição de senha! </h3>
-		<h3> Redefina sua senha <a href="' . h($link) . '"> clicando aqui </a>!';
+		$name = trim((string)($user->name ?? ''));
+		if ($name === '') {
+			$name = trim((string)($user->username ?? ''));
+		}
+		if ($name === '') {
+			$name = __('usuário');
+		}
 
 		$fromAddr = 'helpdesk@pgm.inf.br';
-		if ($this->_sendEmailWithTransportFallback($user->email, [$fromAddr => $nomeempresa], __('Redefinição de senha'), $message, $idempresa)) {
+		$subject = 'Portal PGM — Redefinição de senha';
+		if ($this->_sendResetPasswordEmailWithTransportFallback($user->email, [$fromAddr => $nomeempresa], $subject, $idempresa, [
+			'name' => $name,
+			'resetUrl' => $link,
+			'expirationText' => 'até a primeira utilização bem-sucedida do link',
+			'currentYear' => (int)date('Y'),
+		])) {
 			$this->Flash->success(__('Email para redefiniçao de senha enviado!'));
 		} else {
 			$this->Flash->error(__('Não foi possível enviar o e-mail. Tente mais tarde ou contate o suporte.'));
