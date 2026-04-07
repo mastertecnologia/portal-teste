@@ -14,6 +14,7 @@ class PgmAssetsController extends AppController
 		'clientes-premium' => 'clientes-premium.css',
 		'orcamentos-premium' => 'orcamentos-premium.css',
 		'pgm-action-buttons' => 'pgm-action-buttons.css',
+		'pgm-estoque' => 'pgm-estoque.css',
 	];
 
 	public function initialize()
@@ -43,6 +44,7 @@ class PgmAssetsController extends AppController
 			'clientes-premium.css' => 'clientes-premium',
 			'orcamentos-premium.css' => 'orcamentos-premium',
 			'pgm-action-buttons.css' => 'pgm-action-buttons',
+			'pgm-estoque.css' => 'pgm-estoque',
 		];
 		if ($file === null || !isset($map[$file])) {
 			throw new NotFoundException();

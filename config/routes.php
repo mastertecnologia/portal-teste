@@ -266,7 +266,7 @@ Router::scope('/', function ($routes) {
         ['controller' => 'PgmAssets', 'action' => 'legacyCss'],
         [
             'pass' => ['file'],
-            'file' => '(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons)\.css',
+            'file' => '(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons|pgm-estoque)\.css',
         ]
     );
     // Notificações internas (equipe) — JSON; não altera APIs ERP existentes

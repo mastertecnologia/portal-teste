@@ -1,7 +1,7 @@
 <?php
 use Cake\Routing\Router;
 
-$this->Html->css('pgm-estoque', ['block' => 'css_late']);
+$this->append('css_late', $this->element('pgm_premium_css', ['name' => 'pgm-estoque']));
 
 $this->Breadcrumbs->add('Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Estoque', [], ['class' => 'breadcrumb-item active']);
