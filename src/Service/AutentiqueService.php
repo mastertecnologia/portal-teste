@@ -402,6 +402,44 @@ class AutentiqueService {
 	}
 
 	/**
+	 * Variações do ID de documento para bater com contracts.autentique_doc_id
+	 * (webhook/API podem usar maiúsculas, UUID com ou sem hífenes, etc.).
+	 *
+	 * @param string $docId
+	 * @return string[]
+	 */
+	public static function autentiqueDocumentIdVariants(string $docId): array {
+		$docId = trim($docId);
+		if ($docId === '') {
+			return [];
+		}
+		$candidates = [$docId];
+		$lower = strtolower($docId);
+		if ($lower !== $docId) {
+			$candidates[] = $lower;
+		}
+		$hexOnly = strtolower((string)preg_replace('/[^a-f0-9]/i', '', $docId));
+		if ($hexOnly !== '' && !in_array($hexOnly, $candidates, true)) {
+			$candidates[] = $hexOnly;
+		}
+		if (strlen($hexOnly) === 32 && ctype_xdigit($hexOnly)) {
+			$hy = sprintf(
+				'%s-%s-%s-%s-%s',
+				substr($hexOnly, 0, 8),
+				substr($hexOnly, 8, 4),
+				substr($hexOnly, 12, 4),
+				substr($hexOnly, 16, 4),
+				substr($hexOnly, 20, 12)
+			);
+			if (!in_array($hy, $candidates, true)) {
+				$candidates[] = $hy;
+			}
+		}
+
+		return array_values(array_unique($candidates));
+	}
+
+	/**
 	 * Processa payload oficial do webhook (objeto envelope com "event": { type, data }).
 	 *
 	 * @param array $webhookPayload
@@ -421,8 +459,13 @@ class AutentiqueService {
 			return;
 		}
 
+		$variants = self::autentiqueDocumentIdVariants($docId);
+		if ($variants === []) {
+			return;
+		}
+
 		$contracts = TableRegistry::get('Contracts');
-		$contract = $contracts->find()->where(['autentique_doc_id' => $docId])->first();
+		$contract = $contracts->find()->where(['autentique_doc_id IN' => $variants])->first();
 		if (!$contract) {
 			return;
 		}
@@ -441,7 +484,11 @@ class AutentiqueService {
 		}
 
 		if ($this->eventIndicatesFullySigned($type, $docPayload)) {
-			$this->finalizeContractSigned($contracts, $contract, $docId, is_array($docPayload) ? $docPayload : []);
+			$apiDocId = trim((string)$contract->get('autentique_doc_id'));
+			if ($apiDocId === '') {
+				$apiDocId = $docId;
+			}
+			$this->finalizeContractSigned($contracts, $contract, $apiDocId, is_array($docPayload) ? $docPayload : []);
 		}
 	}
 
