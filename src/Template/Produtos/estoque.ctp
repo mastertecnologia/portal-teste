@@ -83,6 +83,7 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 			'produtos' => $produtos,
 			'bApenasComSaldo' => $bApenasComSaldo,
 			'mapCodigoId' => $mapCodigoId ?? [],
+			'estoqueReturnUrl' => $estoqueReturnUrl ?? '',
 		]) ?>
 	</div>
 </div>

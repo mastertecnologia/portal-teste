@@ -18,9 +18,16 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
       </div>
       <span class="prec-badge-erp">ERP Integrado</span>
     </div>
-    <a href="<?= $this->Url->build(['controller' => 'Produtos', 'action' => 'index']) ?>" class="prec-link-back">
-      &larr; Voltar para Produtos
-    </a>
+    <div class="prec-topbar-back">
+    <?php if (!empty($returnUrlEstoque)) : ?>
+      <a href="<?= h($returnUrlEstoque) ?>" class="prec-link-back">&larr; Voltar ao estoque</a>
+      <a href="<?= $this->Url->build(['controller' => 'Produtos', 'action' => 'index']) ?>" class="prec-link-back prec-link-back--secondary">Cadastro de produtos</a>
+    <?php else : ?>
+      <a href="<?= $this->Url->build(['controller' => 'Produtos', 'action' => 'index']) ?>" class="prec-link-back">
+        &larr; Voltar para Produtos
+      </a>
+    <?php endif; ?>
+    </div>
   </div>
 
   <div class="prec-body">

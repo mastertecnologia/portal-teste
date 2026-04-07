@@ -122,6 +122,13 @@ class ProdutosController extends AppController {
 
 	public function edit($id = null) {
         $produto = $this->Produtos->get($id);
+		$returnUrlEstoque = null;
+		if ($this->request->is(['post', 'put'])) {
+			$returnUrlEstoque = $this->sanitizeEstoqueReturnUrl($this->request->getData('return'));
+		}
+		if ($returnUrlEstoque === null) {
+			$returnUrlEstoque = $this->sanitizeEstoqueReturnUrl($this->request->getQuery('return'));
+		}
         // Para produtos (tipo 1), atualizar Valor Unitário com Preço de Venda do ERP ao abrir a edição
         if ($produto->tipo == 1 && !$this->request->is(['post', 'put'])) {
             try {
@@ -168,6 +175,9 @@ class ProdutosController extends AppController {
                 if($produto->tipo == 1)  $this->Flash->success(__('O produto foi salvo com sucesso!.'));
                 else  $this->Flash->success(__('O serviço foi salvo com sucesso!.'));
 
+				if ($returnUrlEstoque !== null) {
+					return $this->redirect($returnUrlEstoque);
+				}
                 return $this->redirect(['action' => 'edit', $id]);
             }
             if($produto->tipo == 1)  $this->Flash->error(__('Não foi possível salvar o produto.'));
@@ -175,6 +185,7 @@ class ProdutosController extends AppController {
         }
         
 		$this->set('produto', $produto);
+		$this->set('returnUrlEstoque', $returnUrlEstoque);
         $this->set('title', 'Editar Produto');
     }
 
@@ -192,6 +203,7 @@ class ProdutosController extends AppController {
 		$this->set('title', 'Gestão de Preços');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'prec-screen-active');
+		$this->set('returnUrlEstoque', $this->sanitizeEstoqueReturnUrl($this->request->getQuery('return')));
 
 		$idempresa = $this->Auth->user('idempresa');
 		$todos = $this->Produtos->find('all')
@@ -698,6 +710,7 @@ class ProdutosController extends AppController {
 		$this->set('bApenasComSaldo', $bApenasComSaldo);
 		$this->set('produtos', $produtos);
 		$this->set('mapCodigoId', $this->mapCodigoEstoqueParaIdPortal($produtos));
+		$this->set('estoqueReturnUrl', $this->buildEstoqueListReturnUrl($bApenasComSaldo, $sCodProduto, $sDescricao));
 		$this->set('title', 'Produtos em Estoque');
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('bodyPageClass', 'estoque-screen-active');
@@ -766,6 +779,56 @@ class ProdutosController extends AppController {
 			->withType('application/pdf')
 			->withDownload($filename)
 			->withStringBody($pdf);
+	}
+
+	/**
+	 * URL canónica da listagem de estoque (filtros atuais) para retorno após editar/precificar.
+	 */
+	private function buildEstoqueListReturnUrl(bool $bApenasComSaldo, $sCodProduto, $sDescricao): string {
+		$pass = $bApenasComSaldo ? 't' : 'f';
+		$q = [];
+		if ($sCodProduto !== null && $sCodProduto !== '' && (string)$sCodProduto !== '0') {
+			$q['sCodProduto'] = $sCodProduto;
+		}
+		if ($sDescricao !== null && trim((string)$sDescricao) !== '') {
+			$q['sDescricao'] = $sDescricao;
+		}
+
+		return \Cake\Routing\Router::url([
+			'controller' => 'Produtos',
+			'action' => 'estoque',
+			$pass,
+			'?' => $q,
+		]);
+	}
+
+	/**
+	 * Evita open redirect: só caminhos relativos para a action de estoque.
+	 *
+	 * @param mixed $url
+	 */
+	private function sanitizeEstoqueReturnUrl($url): ?string {
+		if (!is_string($url)) {
+			return null;
+		}
+		$url = trim(rawurldecode($url));
+		if ($url === '') {
+			return null;
+		}
+		if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $url)) {
+			return null;
+		}
+		if (strpos($url, '//') === 0) {
+			return null;
+		}
+		if (!isset($url[0]) || $url[0] !== '/') {
+			return null;
+		}
+		if (stripos($url, 'produtos/estoque') === false) {
+			return null;
+		}
+
+		return $url;
 	}
 
 	/**

@@ -5,11 +5,13 @@
  * @var array $produtos Objetos ERP (sCodProduto, sDescProduto, nQtdeAtual, nPrecoCusto, nPrecoVenda)
  * @var bool $bApenasComSaldo
  * @var array<string,int> $mapCodigoId código ERP => id portal (para editar / precificar)
+ * @var string $estoqueReturnUrl URL da listagem atual (query return em edit/precificação)
  */
 use Cake\Routing\Router;
 
 $mapCodigoId = $mapCodigoId ?? [];
 $produtos = $produtos ?? [];
+$estoqueReturnUrl = $estoqueReturnUrl ?? '';
 ?>
 <?php if (empty($produtos)) : ?>
 	<div class="est-table-view">
@@ -46,9 +48,15 @@ $produtos = $produtos ?? [];
 						<td class="est-num"><?= number_format((float)$reg->nPrecoCusto, 2, ',', '.') ?></td>
 						<td class="est-num"><?= number_format((float)$reg->nPrecoVenda, 2, ',', '.') ?></td>
 						<td class="est-col-actions">
-							<?php if ($pid) : ?>
-								<a href="<?= h(Router::url(['action' => 'edit', $pid])) ?>" class="est-act est-act--edit" title="Editar cadastro no portal" target="_blank" rel="noopener noreferrer"><span class="sr-only">Editar cadastro</span><i class="fas fa-pen" aria-hidden="true"></i></a>
-								<a href="<?= h(Router::url(['action' => 'precificacao', '?' => ['codigo' => $cod]])) ?>" class="est-act est-act--price" title="Ajustar preços (precificação)" target="_blank" rel="noopener noreferrer"><span class="sr-only">Preços</span><i class="fas fa-tags" aria-hidden="true"></i></a>
+							<?php if ($pid) :
+								$qEdit = $estoqueReturnUrl !== '' ? ['return' => $estoqueReturnUrl] : [];
+								$qPrec = ['codigo' => $cod];
+								if ($estoqueReturnUrl !== '') {
+									$qPrec['return'] = $estoqueReturnUrl;
+								}
+								?>
+								<a href="<?= h(Router::url(['action' => 'edit', $pid, '?' => $qEdit])) ?>" class="est-act est-act--edit" title="Editar cadastro no portal"><span class="sr-only">Editar cadastro</span><i class="fas fa-pen" aria-hidden="true"></i></a>
+								<a href="<?= h(Router::url(['action' => 'precificacao', '?' => $qPrec])) ?>" class="est-act est-act--price" title="Ajustar preços (precificação)"><span class="sr-only">Preços</span><i class="fas fa-tags" aria-hidden="true"></i></a>
 							<?php else : ?>
 								<span class="est-act est-act--muted" title="Sem item correspondente no cadastro do portal para este código ERP"><i class="fas fa-minus" aria-hidden="true"></i></span>
 							<?php endif; ?>
@@ -64,6 +72,11 @@ $produtos = $produtos ?? [];
 			<?php foreach ($produtos as $reg) :
 				$cod = trim((string)($reg->sCodProduto ?? ''));
 				$pid = $mapCodigoId[$cod] ?? null;
+				$qEditCard = $estoqueReturnUrl !== '' ? ['return' => $estoqueReturnUrl] : [];
+				$qPrecCard = ['codigo' => $cod];
+				if ($estoqueReturnUrl !== '') {
+					$qPrecCard['return'] = $estoqueReturnUrl;
+				}
 				?>
 			<article class="est-card" data-codigo="<?= h($cod) ?>">
 				<header class="est-card__head">
@@ -80,8 +93,8 @@ $produtos = $produtos ?? [];
 				</dl>
 				<footer class="est-card__foot">
 					<?php if ($pid) : ?>
-						<a href="<?= h(Router::url(['action' => 'edit', $pid])) ?>" class="est-btn est-btn--outline est-btn--sm" target="_blank" rel="noopener noreferrer">Editar</a>
-						<a href="<?= h(Router::url(['action' => 'precificacao', '?' => ['codigo' => $cod]])) ?>" class="est-btn est-btn--secondary est-btn--sm" target="_blank" rel="noopener noreferrer">Preços</a>
+						<a href="<?= h(Router::url(['action' => 'edit', $pid, '?' => $qEditCard])) ?>" class="est-btn est-btn--outline est-btn--sm">Editar</a>
+						<a href="<?= h(Router::url(['action' => 'precificacao', '?' => $qPrecCard])) ?>" class="est-btn est-btn--secondary est-btn--sm">Preços</a>
 					<?php else : ?>
 						<span class="est-card__no-portal">Sem cadastro no portal</span>
 					<?php endif; ?>

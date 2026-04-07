@@ -439,6 +439,19 @@
 }
 .prd-form-topbar-info { flex: 1; min-width: 0; }
 
+.prd-form-topbar-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.prd-form-back-alt { font-size: 12px; line-height: 1.2; }
+.prd-form-back-alt-link {
+  color: var(--prd-muted, #64748b);
+  text-decoration: underline;
+}
+.prd-form-back-alt-link:hover { color: var(--prd-teal, #00a876); }
+
 /* ── Two-column layout ─ */
 .prd-form-layout {
   display: grid;
@@ -1027,6 +1040,20 @@ body.prec-screen-active .prec-overlay-killed {
 .prec-root .prec-link-back:hover {
   color: var(--prd-text2);
   text-decoration: none;
+}
+.prec-root .prec-topbar-back {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.prec-root .prec-link-back--secondary {
+  font-size: 0.72rem;
+  text-decoration: underline;
+  color: var(--prd-muted);
+}
+.prec-root .prec-link-back--secondary:hover {
+  color: var(--prd-text2);
 }
 .prec-root .prec-formula-meta {
   margin-top: 6px;

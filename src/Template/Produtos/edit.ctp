@@ -12,6 +12,9 @@
 
 <div class="prd-form-root">
 <?= $this->Form->create($produto, ['id' => 'prdForm', 'novalidate' => true]) ?>
+<?php if (!empty($returnUrlEstoque)) : ?>
+	<?= $this->Form->hidden('return', ['value' => $returnUrlEstoque]) ?>
+<?php endif; ?>
 
   <!-- ── Topbar ─────────────────────────────────────────────── -->
   <div class="prd-form-topbar">
@@ -27,11 +30,26 @@
     </div>
     <?php endif; ?>
 
+    <div class="prd-form-topbar-actions">
+    <?php if (!empty($returnUrlEstoque)) : ?>
+    <?= $this->Html->link(
+      '<i class="fas fa-arrow-left"></i> Voltar ao estoque',
+      $returnUrlEstoque,
+      ['class' => 'btn-prd-secondary', 'escape' => false]
+    ) ?>
+    <div class="prd-form-back-alt"><?= $this->Html->link(
+      'Ir para cadastro de produtos',
+      ['action' => 'index'],
+      ['class' => 'prd-form-back-alt-link']
+    ) ?></div>
+    <?php else : ?>
     <?= $this->Html->link(
       '<i class="fas fa-arrow-left"></i> Voltar',
       ['action' => 'index'],
       ['class' => 'btn-prd-secondary', 'escape' => false]
     ) ?>
+    <?php endif; ?>
+    </div>
   </div>
 
   <!-- ── Layout: main + aside ───────────────────────────────── -->
