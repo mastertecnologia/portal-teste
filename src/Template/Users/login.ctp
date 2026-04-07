@@ -43,7 +43,6 @@ $this->end();
 			<div class="lm-form-header">
 				<p class="lm-form-eyebrow">Portal do Cliente</p>
 				<h2 class="lm-form-title">Bem-vindo de volta</h2>
-				<p class="lm-form-subtitle">Entre com suas credenciais para continuar</p>
 			</div>
 
 			<?= $this->Form->create(null, ['id' => 'login', 'class' => 'signin-form', 'autocomplete' => 'on']) ?>
