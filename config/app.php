@@ -13,6 +13,10 @@
  *
  * Recuperação de senha / e-mails transacionais: se o transporte pgm/master falhar (TLS, credenciais),
  * o código tenta também o transporte `default` (MAIL_DEFAULT_*), salvo MAIL_RESET_FALLBACK_DEFAULT=0 no .env.
+ *
+ * MAIL_SMTP_TIMEOUT — segundos (5–120, default 15). Reduz espera se o SMTP não responde.
+ * MAIL_EMAIL_VERBOSE_LOG=1 — regista stack trace em logs/error.log por tentativa falhada.
+ * Diagnóstico CLI: php scripts/smtp_reachability.php pgm
  */
 $smtpTransportExtra = function (string $prefix) {
     $insecure = filter_var(env('MAIL_' . $prefix . '_TLS_INSECURE', false), FILTER_VALIDATE_BOOLEAN);
@@ -45,6 +49,9 @@ $smtpTransportExtra = function (string $prefix) {
 
     return [];
 };
+
+// Segundos — ligação + handshake SMTP; reduz espera do utilizador se o host não responde (antes ~30s × 2 transportes).
+$smtpTimeout = max(5, min(120, (int)env('MAIL_SMTP_TIMEOUT', 15)));
 
 return [
     /**
@@ -237,7 +244,7 @@ return [
             'className' => 'Smtp',
             'host' => env('MAIL_DEFAULT_HOST', 'smtp.gmail.com'),
             'port' => (int)env('MAIL_DEFAULT_PORT', 587),
-            'timeout' => 30,
+            'timeout' => $smtpTimeout,
             'username' => env('MAIL_DEFAULT_USERNAME', ''),
             'password' => env('MAIL_DEFAULT_PASSWORD', ''),
             'client' => null,
@@ -248,6 +255,7 @@ return [
             // Defaults herdados do projeto original (config/app_old.php)
             'host' => env('MAIL_MASTER_HOST', 'mail.pgm.inf.br'),
             'port' => (int)env('MAIL_MASTER_PORT', 587),
+            'timeout' => $smtpTimeout,
             'username' => env('MAIL_MASTER_USERNAME', 'helpdesk@pgm.inf.br'),
             // Senha deve vir do ambiente (não versionar).
             'password' => env('MAIL_MASTER_PASSWORD', ''),
@@ -260,6 +268,7 @@ return [
             // Defaults herdados do projeto original (config/app_old.php)
             'host' => env('MAIL_PGM_HOST', 'mail.pgm.inf.br'),
             'port' => (int)env('MAIL_PGM_PORT', 587),
+            'timeout' => $smtpTimeout,
             'username' => env('MAIL_PGM_USERNAME', 'helpdesk@pgm.inf.br'),
             // Senha deve vir do ambiente (não versionar).
             'password' => env('MAIL_PGM_PASSWORD', ''),

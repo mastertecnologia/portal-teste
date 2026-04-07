@@ -2114,18 +2114,41 @@ class UsersController extends AppController {
 				$candidates[] = 'default';
 			}
 		}
+		$verbose = filter_var(env('MAIL_EMAIL_VERBOSE_LOG', false), FILTER_VALIDATE_BOOLEAN);
 		$last = null;
 		foreach ($candidates as $transport) {
+			$t0 = microtime(true);
 			try {
 				$cfg = Configure::read('EmailTransport.' . $transport);
-				if (is_array($cfg) && ($cfg['className'] ?? '') === 'Smtp') {
-					$pwd = isset($cfg['password']) ? trim((string)$cfg['password']) : '';
-					$usr = isset($cfg['username']) ? trim((string)$cfg['username']) : '';
-					if ($usr !== '' && $pwd === '') {
-						$hint = ['master' => 'MAIL_MASTER_PASSWORD', 'pgm' => 'MAIL_PGM_PASSWORD', 'default' => 'MAIL_DEFAULT_PASSWORD'][$transport] ?? 'MAIL_*_PASSWORD';
-						Log::warning(sprintf('[email] Transporte "%s": utilizador SMTP definido mas senha vazia — defina %s no .env.', $transport, $hint));
-					}
+				if (!is_array($cfg) || ($cfg['className'] ?? '') !== 'Smtp') {
+					Log::warning(sprintf('[email] Transporte "%s": configuração em falta ou não-SMTP.', $transport));
+					continue;
 				}
+				$pwd = isset($cfg['password']) ? trim((string)$cfg['password']) : '';
+				$usr = isset($cfg['username']) ? trim((string)$cfg['username']) : '';
+				if ($transport === 'default' && $usr === '' && $pwd === '') {
+					Log::info('[email] Ignorado transporte "default": MAIL_DEFAULT_USERNAME/PASSWORD vazios (evita espera de timeout).');
+
+					continue;
+				}
+				if ($usr !== '' && $pwd === '') {
+					$hint = ['master' => 'MAIL_MASTER_PASSWORD', 'pgm' => 'MAIL_PGM_PASSWORD', 'default' => 'MAIL_DEFAULT_PASSWORD'][$transport] ?? 'MAIL_*_PASSWORD';
+					Log::warning(sprintf('[email] Transporte "%s": utilizador SMTP definido mas senha vazia — defina %s no .env.', $transport, $hint));
+				}
+				$host = (string)($cfg['host'] ?? '');
+				$port = (int)($cfg['port'] ?? 0);
+				$timeout = (int)($cfg['timeout'] ?? 0);
+				$tls = !empty($cfg['tls']);
+				Log::info(sprintf(
+					'[email] Tentativa transporte=%s host=%s port=%d timeout=%ds tls=%s auth_user=%s',
+					$transport,
+					$host !== '' ? $host : '(vazio)',
+					$port,
+					$timeout,
+					$tls ? 'yes' : 'no',
+					$usr !== '' ? 'yes' : 'no'
+				));
+
 				$email = new Email();
 				$email->transport($transport);
 				$email->from($from)
@@ -2133,19 +2156,31 @@ class UsersController extends AppController {
 					->emailFormat('html')
 					->subject($subject);
 				$email->send($htmlBody);
+				$ms = (int)round((microtime(true) - $t0) * 1000);
 				if ($transport !== $primary) {
-					Log::info(sprintf('[email] Enviado via fallback "%s" (falhou "%s").', $transport, $primary));
+					Log::info(sprintf('[email] Enviado via fallback "%s" (falhou "%s") em %d ms.', $transport, $primary, $ms));
+				} else {
+					Log::info(sprintf('[email] Enviado via "%s" em %d ms.', $transport, $ms));
 				}
 
 				return true;
 			} catch (\Throwable $e) {
 				$last = $e;
-				Log::warning(sprintf('[email] Transporte "%s": %s', $transport, $e->getMessage()));
+				$ms = (int)round((microtime(true) - $t0) * 1000);
+				$chain = $e->getMessage();
+				$prev = $e->getPrevious();
+				for ($i = 0; $prev && $i < 4; $i++, $prev = $prev->getPrevious()) {
+					$chain .= ' | causa: ' . $prev->getMessage();
+				}
+				Log::warning(sprintf('[email] Transporte "%s" falhou após %d ms: %s', $transport, $ms, $chain));
+				if ($verbose) {
+					Log::error('[email] MAIL_EMAIL_VERBOSE_LOG trace transporte ' . $transport . ":\n" . $e->getTraceAsString());
+				}
 			}
 		}
 		if ($last !== null) {
 			Log::error('[email] Todos os transportes falharam. Último: ' . $last->getMessage()
-				. ' | Confira .env: MAIL_PGM_*, MAIL_MASTER_*, MAIL_DEFAULT_*, MAIL_*_TLS_PEER_NAME, MAIL_*_TLS_INSECURE.');
+				. ' | .env: MAIL_SMTP_TIMEOUT (s), MAIL_PGM_*, MAIL_RESET_FALLBACK_DEFAULT=0 para só testar pgm, MAIL_EMAIL_VERBOSE_LOG=1 para trace em error.log');
 		}
 
 		return false;
