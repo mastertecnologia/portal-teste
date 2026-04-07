@@ -465,11 +465,22 @@ class AutentiqueService {
 
 		$docId = '';
 		$docPayload = null;
+		// Formato plano (ex. secção "Document Object" na doc Autentique): data.id + data.object === "document"
 		if (($data['object'] ?? '') === 'document') {
 			$docId = (string)($data['id'] ?? '');
 			$docPayload = $data;
 		} elseif (($data['object'] ?? '') === 'signature') {
 			$docId = (string)($data['document'] ?? '');
+		} elseif (isset($data['object']) && is_array($data['object'])) {
+			// Formato aninhado (ex. exemplo "Event Object" na doc): data.object = { id, object: "document"|"signature", ... }
+			$inner = $data['object'];
+			$innerObj = (string)($inner['object'] ?? '');
+			if ($innerObj === 'document') {
+				$docId = (string)($inner['id'] ?? '');
+				$docPayload = $inner;
+			} elseif ($innerObj === 'signature') {
+				$docId = (string)($inner['document'] ?? '');
+			}
 		}
 
 		return ['type' => $type, 'document_id' => $docId, 'document_payload' => $docPayload];
