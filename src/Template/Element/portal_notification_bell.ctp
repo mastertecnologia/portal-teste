@@ -3,14 +3,32 @@
  * Sino de notificações internas (equipe role 0). Sem migration: badge 0 e lista vazia.
  * @var \App\View\AppView $this
  */
-// fullBase: com App em subpasta (/portal), paths só com "/" inicial viram pedidos à raiz do host
-// (ex.: /portal-notifications/... → 404). URL absoluta inclui o prefixo correto.
-$_pnFull = ['fullBase' => true];
-$urlCount = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'unreadCount'], $_pnFull);
-$urlList = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'listJson'], $_pnFull);
-$urlMarkAll = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'markAllRead'], $_pnFull);
-$urlMarkReadBase = rtrim($this->Url->build(['controller' => 'PortalNotifications', 'action' => 'markRead'], $_pnFull), '/');
-$urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'preferences'], $_pnFull);
+$req = $this->request;
+$__pnBase = '';
+if (method_exists($req, 'getAttribute')) {
+	$__pnBase = (string)($req->getAttribute('base') ?? '');
+}
+if ($__pnBase === '' && isset($req->base)) {
+	$__pnBase = (string)$req->base;
+}
+$__pnBase = rtrim($__pnBase, '/');
+// Url->build e até fullBase podem omitir a subpasta (/portal) → GET na raiz /portal-notifications/... (404).
+$__pnFix = function (array $opts) use ($__pnBase) {
+	$u = $this->Url->build($opts);
+	if (preg_match('#^https?://[^/]+(/.*)$#i', $u, $m)) {
+		$u = $m[1];
+	}
+	if ($__pnBase !== '' && $u !== '' && $u[0] === '/' && strpos($u, $__pnBase . '/') !== 0) {
+		return $__pnBase . $u;
+	}
+
+	return $u;
+};
+$urlCount = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
+$urlList = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'listJson']);
+$urlMarkAll = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'markAllRead']);
+$urlMarkReadBase = rtrim($__pnFix(['controller' => 'PortalNotifications', 'action' => 'markRead']), '/');
+$urlPrefs = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'preferences']);
 ?>
 <style>
 .pgm-portal-notif-bell { position: relative; }
