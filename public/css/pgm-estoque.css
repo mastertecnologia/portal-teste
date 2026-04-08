@@ -423,6 +423,26 @@ body.estoque-screen-active .est-field--actions .est-filter-actions {
 /* Bootstrap-select no filtro código */
 body.estoque-screen-active .est-field--codigo .bootstrap-select {
 	width: 100% !important;
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+}
+
+/*
+ * O plugin mantém o <select> no DOM (position absolute, opacity 0, display block).
+ * .est-input / .form-control.est-input aplicam fundo + borda ao select → segunda “caixa”
+ * visível por trás do .dropdown-toggle.
+ */
+html body.estoque-screen-active .est-root .est-field--codigo .bootstrap-select > select.form-control.est-input,
+html body.estoque-screen-active .est-root .est-field--codigo .bootstrap-select > select.selectpicker {
+	background: transparent !important;
+	background-color: transparent !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	min-height: 0 !important;
+	padding: 0 !important;
 }
 
 body.estoque-screen-active .est-field--codigo .bootstrap-select > .dropdown-toggle,
