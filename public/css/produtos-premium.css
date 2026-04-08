@@ -545,6 +545,11 @@
   font-size: 11px; color: var(--prd-muted); pointer-events: none; z-index: 1;
 }
 .prd-input-pfx input { padding-left: 30px !important; }
+/* form-control + .prd-input: padding shorthand do bloco acima ganha da regra anterior */
+.prd-form-root .prd-input-pfx input.form-control,
+.prd-form-root .prd-input-pfx input.prd-input {
+	padding-left: 38px !important;
+}
 
 /* Input with suffix */
 .prd-input-sfx { position: relative; }
@@ -554,6 +559,10 @@
   font-size: 11px; color: var(--prd-muted); pointer-events: none;
 }
 .prd-input-sfx input { padding-right: 30px !important; }
+.prd-form-root .prd-input-sfx input.form-control,
+.prd-form-root .prd-input-sfx input.prd-input {
+	padding-right: 38px !important;
+}
 
 /* Readonly / computed input */
 .prd-input-computed,
