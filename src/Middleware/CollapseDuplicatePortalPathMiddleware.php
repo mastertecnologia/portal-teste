@@ -21,16 +21,28 @@ class CollapseDuplicatePortalPathMiddleware {
 			return $next($request, $response);
 		}
 
-		$uri = $request->getUri();
-		$path = $uri->getPath();
+		// CakePHP 3 retira App.base do PSR-7 URI antes do middleware: com
+		// /portal/portal/produtos/... o getPath() vira /portal/produtos/... e a
+		// detecção do duplicado falha. Usar REQUEST_URI bruto do SAPI.
+		$reqUri = $request->getServerParam('REQUEST_URI', '');
+		if ($reqUri === '' || $reqUri[0] !== '/') {
+			return $next($request, $response);
+		}
+
+		$parsedPath = parse_url($reqUri, PHP_URL_PATH);
+		if (!is_string($parsedPath) || $parsedPath === '') {
+			return $next($request, $response);
+		}
+
+		$path = rawurldecode($parsedPath);
 		$fixed = PortalUrlPath::normalizePath($path);
 		if ($fixed === $path) {
 			return $next($request, $response);
 		}
 
 		$target = $fixed;
-		$query = $uri->getQuery();
-		if ($query !== '') {
+		$query = parse_url($reqUri, PHP_URL_QUERY);
+		if (is_string($query) && $query !== '') {
 			$target .= '?' . $query;
 		}
 
