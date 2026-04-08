@@ -3,11 +3,14 @@
  * Sino de notificações internas (equipe role 0). Sem migration: badge 0 e lista vazia.
  * @var \App\View\AppView $this
  */
-$urlCount = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
-$urlList = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'listJson']);
-$urlMarkAll = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'markAllRead']);
-$urlMarkReadBase = rtrim($this->Url->build(['controller' => 'PortalNotifications', 'action' => 'markRead']), '/');
-$urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'preferences']);
+// fullBase: com App em subpasta (/portal), paths só com "/" inicial viram pedidos à raiz do host
+// (ex.: /portal-notifications/... → 404). URL absoluta inclui o prefixo correto.
+$_pnFull = ['fullBase' => true];
+$urlCount = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'unreadCount'], $_pnFull);
+$urlList = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'listJson'], $_pnFull);
+$urlMarkAll = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'markAllRead'], $_pnFull);
+$urlMarkReadBase = rtrim($this->Url->build(['controller' => 'PortalNotifications', 'action' => 'markRead'], $_pnFull), '/');
+$urlPrefs = $this->Url->build(['controller' => 'PortalNotifications', 'action' => 'preferences'], $_pnFull);
 ?>
 <style>
 .pgm-portal-notif-bell { position: relative; }
