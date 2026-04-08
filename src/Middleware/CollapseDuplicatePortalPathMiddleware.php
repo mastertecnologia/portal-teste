@@ -4,10 +4,31 @@ namespace App\Middleware;
 use App\Utility\PortalUrlPath;
 
 /**
- * CakePHP 3: invocável ($request, $response, $next) — não usar PSR-15 (inexistente no stack 3.10).
- * Redireciona GET/HEAD com /portal/portal/... para /portal/...
+ * CakePHP 3: invocável ($request, $response, $next).
+ *
+ * Só redireciona GET/HEAD quando o path real do browser começa com /portal/portal/
+ * (link relativo mal resolvido). Não usar getServerParam() — não existe no
+ * ServerRequest do Cake 3; quebrava todo o site com fatal error.
  */
 class CollapseDuplicatePortalPathMiddleware {
+
+	/**
+	 * REQUEST_URI compatível com CakePHP 3 / PSR-7.
+	 *
+	 * @param \Psr\Http\Message\ServerRequestInterface $request
+	 * @return string
+	 */
+	private static function requestUriRaw($request) {
+		if (method_exists($request, 'getEnv')) {
+			$v = $request->getEnv('REQUEST_URI');
+			if ($v !== null && $v !== false && $v !== '') {
+				return (string)$v;
+			}
+		}
+		$params = $request->getServerParams();
+
+		return isset($params['REQUEST_URI']) ? (string)$params['REQUEST_URI'] : '';
+	}
 
 	/**
 	 * @param \Psr\Http\Message\ServerRequestInterface $request
@@ -21,11 +42,8 @@ class CollapseDuplicatePortalPathMiddleware {
 			return $next($request, $response);
 		}
 
-		// CakePHP 3 retira App.base do PSR-7 URI antes do middleware: com
-		// /portal/portal/produtos/... o getPath() vira /portal/produtos/... e a
-		// detecção do duplicado falha. Usar REQUEST_URI bruto do SAPI.
-		$reqUri = $request->getServerParam('REQUEST_URI', '');
-		if ($reqUri === '' || $reqUri[0] !== '/') {
+		$reqUri = self::requestUriRaw($request);
+		if ($reqUri === '' || !isset($reqUri[0]) || $reqUri[0] !== '/') {
 			return $next($request, $response);
 		}
 
@@ -35,6 +53,15 @@ class CollapseDuplicatePortalPathMiddleware {
 		}
 
 		$path = rawurldecode($parsedPath);
+		if ($path !== '' && $path[0] !== '/') {
+			$path = '/' . ltrim($path, '/');
+		}
+
+		// Só age no caso conhecido do bug; não reescreve outras URLs.
+		if (strpos($path, '/portal/portal') !== 0) {
+			return $next($request, $response);
+		}
+
 		$fixed = PortalUrlPath::normalizePath($path);
 		if ($fixed === $path) {
 			return $next($request, $response);
@@ -44,6 +71,10 @@ class CollapseDuplicatePortalPathMiddleware {
 		$query = parse_url($reqUri, PHP_URL_QUERY);
 		if (is_string($query) && $query !== '') {
 			$target .= '?' . $query;
+		}
+
+		if (method_exists($response, 'withRedirect')) {
+			return $response->withRedirect($target, 302);
 		}
 
 		return $response->withStatus(302)->withHeader('Location', $target);
