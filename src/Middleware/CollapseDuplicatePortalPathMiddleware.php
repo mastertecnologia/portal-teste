@@ -1,31 +1,31 @@
 <?php
-declare(strict_types=1);
-
 namespace App\Middleware;
 
 use App\Utility\PortalUrlPath;
-use Cake\Http\Response;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Redireciona GET/HEAD com /portal/portal/... para /portal/... (404 → rota válida).
+ * CakePHP 3: invocável ($request, $response, $next) — não usar PSR-15 (inexistente no stack 3.10).
+ * Redireciona GET/HEAD com /portal/portal/... para /portal/...
  */
-class CollapseDuplicatePortalPathMiddleware implements MiddlewareInterface {
+class CollapseDuplicatePortalPathMiddleware {
 
-	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+	/**
+	 * @param \Psr\Http\Message\ServerRequestInterface $request
+	 * @param \Psr\Http\Message\ResponseInterface      $response
+	 * @param callable                                 $next
+	 * @return \Psr\Http\Message\ResponseInterface
+	 */
+	public function __invoke($request, $response, $next) {
 		$method = $request->getMethod();
 		if ($method !== 'GET' && $method !== 'HEAD') {
-			return $handler->handle($request);
+			return $next($request, $response);
 		}
 
 		$uri = $request->getUri();
 		$path = $uri->getPath();
 		$fixed = PortalUrlPath::normalizePath($path);
 		if ($fixed === $path) {
-			return $handler->handle($request);
+			return $next($request, $response);
 		}
 
 		$target = $fixed;
@@ -34,8 +34,6 @@ class CollapseDuplicatePortalPathMiddleware implements MiddlewareInterface {
 			$target .= '?' . $query;
 		}
 
-		return (new Response())
-			->withStatus(302)
-			->withHeader('Location', $target);
+		return $response->withStatus(302)->withHeader('Location', $target);
 	}
 }
