@@ -231,8 +231,22 @@ var state = {
   selected: new Set()
 };
 var saveUrl = <?= json_encode($this->Url->build(['controller' => 'Produtos', 'action' => 'salvarPrecos'])) ?>;
-var PREC_EMBED_RETURN = <?= json_encode(!empty($embedEstoque) && !empty($returnUrlEstoque) ? $returnUrlEstoque : null) ?>;
-var PREC_RETURN_URL = <?= json_encode(!empty($returnUrlEstoque) ? $returnUrlEstoque : null) ?>;
+
+function precNormalizeReturnPath(u) {
+  if (u === null || u === undefined || u === '') return u;
+  var s = String(u).trim();
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return s;
+  if (s.charAt(0) !== '/') s = '/' + s.replace(/^\/+/, '');
+  var dup = '/portal/portal';
+  while (s.length >= dup.length && s.indexOf(dup) === 0) {
+    s = '/portal' + s.substring(dup.length);
+  }
+  return s;
+}
+var _precEmbRaw = <?= json_encode(!empty($embedEstoque) && !empty($returnUrlEstoque) ? $returnUrlEstoque : null) ?>;
+var _precRetRaw = <?= json_encode(!empty($returnUrlEstoque) ? $returnUrlEstoque : null) ?>;
+var PREC_EMBED_RETURN = _precEmbRaw ? precNormalizeReturnPath(_precEmbRaw) : null;
+var PREC_RETURN_URL = _precRetRaw ? precNormalizeReturnPath(_precRetRaw) : null;
 
 /* ── Formatação ────────────────────────────────────────────────── */
 function fmt(n, dec) {

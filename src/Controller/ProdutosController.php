@@ -811,12 +811,37 @@ class ProdutosController extends AppController {
 			$q['sDescricao'] = $sDescricao;
 		}
 
-		return \Cake\Routing\Router::url([
+		$path = \Cake\Routing\Router::url([
 			'controller' => 'Produtos',
 			'action' => 'estoque',
 			$pass,
 			'?' => $q,
 		]);
+
+		return $this->normalizeEstoqueReturnPath($path);
+	}
+
+	/**
+	 * Garante caminho absoluto no host (/portal/...) para uso em location.href e redirects.
+	 * Sem barra inicial, o browser resolve contra /portal/ e duplica o prefixo (/portal/portal/...).
+	 */
+	private function normalizeEstoqueReturnPath(string $url): string {
+		$url = trim($url);
+		if ($url === '') {
+			return $url;
+		}
+		if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $url)) {
+			return $url;
+		}
+		if ($url[0] !== '/') {
+			$url = '/' . ltrim($url, '/');
+		}
+		$dup = '/portal/portal';
+		while (strlen($url) >= strlen($dup) && strpos($url, $dup) === 0) {
+			$url = '/portal' . substr($url, strlen($dup));
+		}
+
+		return $url;
 	}
 
 	/**
@@ -838,9 +863,7 @@ class ProdutosController extends AppController {
 		if (strpos($url, '//') === 0) {
 			return null;
 		}
-		if (!isset($url[0]) || $url[0] !== '/') {
-			return null;
-		}
+		$url = $this->normalizeEstoqueReturnPath($url);
 		if (stripos($url, 'produtos/estoque') === false) {
 			return null;
 		}

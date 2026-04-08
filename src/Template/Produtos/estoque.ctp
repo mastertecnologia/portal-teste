@@ -201,6 +201,13 @@ $toggleClass = $bApenasComSaldo ? 'est-btn est-btn--outline' : 'est-btn est-btn-
 				applyEstoqueViewMode();
 				refreshSelectedState();
 				var newUrl = url + (query ? ('?' + query) : '');
+				if (newUrl.indexOf('http') !== 0 && newUrl.charAt(0) !== '/') {
+					newUrl = '/' + newUrl.replace(/^\/+/, '');
+				}
+				var dupSeg = '/portal/portal';
+				while (newUrl.indexOf(dupSeg) === 0) {
+					newUrl = '/portal' + newUrl.substring(dupSeg.length);
+				}
 				window.history.replaceState({}, '', newUrl);
 			});
 	}
