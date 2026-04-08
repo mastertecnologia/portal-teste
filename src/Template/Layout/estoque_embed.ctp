@@ -6,11 +6,14 @@
  * @var string|null $estoqueEmbedReturnUrl URL sanitizada da listagem de estoque
  * @var string|null $bodyPageClass ex.: prec-screen-active
  */
+use App\Utility\PortalUrlPath;
 use Cake\Routing\Router;
 
 $pgmThemeAttr = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
 $pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
-$toolbarUrl = !empty($estoqueEmbedReturnUrl) ? $estoqueEmbedReturnUrl : Router::url(['controller' => 'Produtos', 'action' => 'estoque', 't']);
+$toolbarUrl = !empty($estoqueEmbedReturnUrl)
+	? $estoqueEmbedReturnUrl
+	: PortalUrlPath::normalizeRelativeUrl(Router::url(['controller' => 'Produtos', 'action' => 'estoque', 't']));
 $bodyExtra = isset($bodyPageClass) ? h((string)$bodyPageClass) : '';
 ?>
 <!DOCTYPE HTML>

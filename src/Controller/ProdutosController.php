@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use App\Utility\ErpGridUrl;
 use App\Utility\ErpSoapUrl;
+use App\Utility\PortalUrlPath;
 use Cake\Event\Event;
 use Cake\View\View;
 use CakeSoap\Network\CakeSoap;
@@ -818,30 +819,7 @@ class ProdutosController extends AppController {
 			'?' => $q,
 		]);
 
-		return $this->normalizeEstoqueReturnPath($path);
-	}
-
-	/**
-	 * Garante caminho absoluto no host (/portal/...) para uso em location.href e redirects.
-	 * Sem barra inicial, o browser resolve contra /portal/ e duplica o prefixo (/portal/portal/...).
-	 */
-	private function normalizeEstoqueReturnPath(string $url): string {
-		$url = trim($url);
-		if ($url === '') {
-			return $url;
-		}
-		if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $url)) {
-			return $url;
-		}
-		if ($url[0] !== '/') {
-			$url = '/' . ltrim($url, '/');
-		}
-		$dup = '/portal/portal';
-		while (strlen($url) >= strlen($dup) && strpos($url, $dup) === 0) {
-			$url = '/portal' . substr($url, strlen($dup));
-		}
-
-		return $url;
+		return PortalUrlPath::normalizeRelativeUrl($path);
 	}
 
 	/**
@@ -863,7 +841,7 @@ class ProdutosController extends AppController {
 		if (strpos($url, '//') === 0) {
 			return null;
 		}
-		$url = $this->normalizeEstoqueReturnPath($url);
+		$url = PortalUrlPath::normalizeRelativeUrl($url);
 		if (stripos($url, 'produtos/estoque') === false) {
 			return null;
 		}

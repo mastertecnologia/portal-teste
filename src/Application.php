@@ -17,6 +17,7 @@ namespace App;
 use Cake\Core\Configure;
 use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
+use App\Middleware\CollapseDuplicatePortalPathMiddleware;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
@@ -56,6 +57,9 @@ class Application extends BaseApplication
 
             // Handle plugin/theme assets like CakePHP normally does.
             ->add(new AssetMiddleware())
+
+            // Corrige /portal/portal/... antes do roteamento (links relativos mal formados).
+            ->add(new CollapseDuplicatePortalPathMiddleware())
 
             // Apply routing
             ->add(new RoutingMiddleware($this));
