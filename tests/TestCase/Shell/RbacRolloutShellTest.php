@@ -2,6 +2,7 @@
 namespace App\Test\TestCase\Shell;
 
 use App\Shell\RbacRolloutShell;
+use Cake\Console\ConsoleIo;
 use PHPUnit\Framework\TestCase;
 
 class RbacRolloutShellTest extends TestCase {
@@ -30,5 +31,17 @@ class RbacRolloutShellTest extends TestCase {
 		$this->assertStringContainsString('rbac-verify-noninteractive', $blob);
 		$this->assertStringContainsString('rbac_verify_noninteractive', $blob);
 		$this->assertStringContainsString('rbac-http', $blob);
+	}
+
+	/**
+	 * O ShellDispatcher chama Inflector::camelize no 1.º argumento; métodos reais são snake_case.
+	 */
+	public function testHasMethodMapsCamelCaseSubcommandToSnakeCaseHandlers() {
+		$io = $this->createMock(ConsoleIo::class);
+		$shell = new RbacRolloutShell($io);
+		$this->assertTrue($shell->hasMethod('MenuGatesCheck'));
+		$this->assertTrue($shell->hasMethod('menu_gates_check'));
+		$this->assertTrue($shell->hasMethod('UnassignedEquipe'));
+		$this->assertTrue($shell->hasMethod('PreDeploy'));
 	}
 }

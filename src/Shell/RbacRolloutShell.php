@@ -8,6 +8,7 @@ use Cake\Console\Shell;
 use Cake\Core\Configure;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 /**
  * Fase 8 — diagnóstico de rollout RBAC (rbac_users_roles + herdados via grupos Fase 3).
@@ -47,6 +48,31 @@ use Cake\ORM\TableRegistry;
  *   bin/cake rbac_rollout report
  */
 class RbacRolloutShell extends Shell {
+
+	/**
+	 * O dispatcher converte o subcomando com Inflector::camelize (ex.: menu_gates_check → MenuGatesCheck)
+	 * e chama esse método; aqui os handlers estão em snake_case. Expõe ambos os formatos.
+	 */
+	public function hasMethod($name) {
+		if (parent::hasMethod($name)) {
+			return true;
+		}
+		$snake = Inflector::underscore($name);
+		if ($snake !== $name && parent::hasMethod($snake)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function __call($name, $args) {
+		$snake = Inflector::underscore($name);
+		if ($snake !== $name && parent::hasMethod($snake)) {
+			return $this->{$snake}(...$args);
+		}
+
+		throw new \BadMethodCallException(sprintf('Unknown method `%s`', $name));
+	}
 
 	public function getOptionParser() {
 		$parser = parent::getOptionParser();
