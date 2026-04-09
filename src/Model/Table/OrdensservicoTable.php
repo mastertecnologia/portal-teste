@@ -57,8 +57,8 @@ class OrdensservicoTable extends Table {
 	 */
 	public function historicoOrdens($idUser = null, $idempresa = null, $controller = null) {
 
-		$dIni = decreaseMonths(primeiroDiaMes(dataAtual()), 3);
-		$dFin = decreaseMonths(ultimoDiaMes(dataAtual()), 3);
+		$dIni = \decreaseMonths(\primeiroDiaMes(\dataAtual()), 3);
+		$dFin = \decreaseMonths(\ultimoDiaMes(\dataAtual()), 3);
 
 		$historico = "";
 
@@ -89,11 +89,11 @@ class OrdensservicoTable extends Table {
 			}
 			$xKey1 = sizeof($q->toArray());
 
-			$historico .= "{ mes: '" . descricaoMes($dIni) . "', xKey1: " . $xKey1. " },";
+			$historico .= "{ mes: '" . \descricaoMes($dIni) . "', xKey1: " . $xKey1. " },";
 			
 			// Desconta 1 mês
-			$dIni = increaseMonths($dIni);
-			$dFin = ultimoDiaMes($dIni);
+			$dIni = \increaseMonths($dIni);
+			$dFin = \ultimoDiaMes($dIni);
 		}
 		
 		return (substr($historico, 0, -1));
