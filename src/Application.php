@@ -18,6 +18,7 @@ use Cake\Core\Configure;
 use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use App\Middleware\CollapseDuplicatePortalPathMiddleware;
+use App\Middleware\PortalNotificationsBasePathMiddleware;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
@@ -60,6 +61,9 @@ class Application extends BaseApplication
 
             // Corrige /portal/portal/... antes do roteamento (links relativos mal formados).
             ->add(new CollapseDuplicatePortalPathMiddleware())
+
+            // /portal-notifications/* sem prefixo App.base → redireciona para /portal/portal-notifications/*
+            ->add(new PortalNotificationsBasePathMiddleware())
 
             // Apply routing
             ->add(new RoutingMiddleware($this));

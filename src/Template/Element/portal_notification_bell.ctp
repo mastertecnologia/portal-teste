@@ -3,38 +3,11 @@
  * Sino de notificações internas (equipe role 0). Sem migration: badge 0 e lista vazia.
  * @var \App\View\AppView $this
  */
-$req = $this->request;
-$__pnBase = '';
-if (method_exists($req, 'getAttribute')) {
-	$__pnBase = (string)($req->getAttribute('base') ?? '');
-}
-if ($__pnBase === '' && isset($req->base)) {
-	$__pnBase = (string)$req->base;
-}
-if ($__pnBase === '' && class_exists('\Cake\Core\Configure')) {
-	$__pnBase = rtrim((string)\Cake\Core\Configure::read('App.base'), '/');
-}
-$__pnBase = rtrim($__pnBase, '/');
-// Url->build e até fullBase podem omitir a subpasta (/portal) → GET na raiz /portal-notifications/... (404).
-// Paths como /portal-notifications/... começam com /portal mas não com /portal/ — têm de receber o base antes.
-$__pnFix = function (array $opts) use ($__pnBase) {
-	$u = $this->Url->build($opts);
-	if (preg_match('#^https?://[^/]+(/.*)$#i', $u, $m)) {
-		$u = $m[1];
-	}
-	if ($__pnBase !== '' && $u !== '' && $u[0] === '/') {
-		if (strpos($u, $__pnBase . '/') !== 0) {
-			return $__pnBase . $u;
-		}
-	}
-
-	return $u;
-};
-$urlCount = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
-$urlList = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'listJson']);
-$urlMarkAll = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'markAllRead']);
-$urlMarkReadBase = rtrim($__pnFix(['controller' => 'PortalNotifications', 'action' => 'markRead']), '/');
-$urlPrefs = $__pnFix(['controller' => 'PortalNotifications', 'action' => 'preferences']);
+$urlCount = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
+$urlList = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'listJson']);
+$urlMarkAll = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'markAllRead']);
+$urlMarkReadBase = rtrim($this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'markRead']), '/');
+$urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']);
 ?>
 <style>
 .pgm-portal-notif-bell { position: relative; }

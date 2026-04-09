@@ -628,7 +628,7 @@
 			<?php endif; ?>
 			<?php if ($isEquipe): ?>
 			<?= $this->Html->link('<i class="fas fa-history"></i>', ['action' => 'eventos', $cliente->id], ['escape' => false, 'class' => 'btn btn-sm btn-outline-info', 'title' => 'Histórico']) ?>
-			<?= $this->Html->link('<i class="fas fa-sliders-h"></i>', ['controller' => 'PortalNotifications', 'action' => 'preferences'], ['escape' => false, 'class' => 'btn btn-sm btn-outline-secondary', 'title' => 'Preferências de alertas']) ?>
+			<?= $this->Html->link('<i class="fas fa-sliders-h"></i>', $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']), ['escape' => false, 'class' => 'btn btn-sm btn-outline-secondary', 'title' => 'Preferências de alertas']) ?>
 			<?php endif; ?>
 		</div>
 	</div>
