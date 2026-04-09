@@ -69,7 +69,7 @@
 						<?php if(count($empresasOptSidebar) > 1) { ?>
 							<?= $this->Form->control('empresaSidebar', ['id' => 'empresaSidebar', 'class' => 'p-0 text-white topbar-select-empresa', 'label' => false, 'value' => $empresa, 'options' => $empresasOptSidebar]) ?>
 						<?php } else { ?>
-							<p class="text-white nav-link h5 m-t-5 mb-0 p-0" > <?= EmpresaNome($empresa) ?>  </p>
+							<p class="text-white nav-link h5 m-t-5 mb-0 p-0"><?= h($empresasOptSidebar[$empresa] ?? $nomeempresa ?? '') ?></p>
 						<?php }  ?>
 					</div>
 					<div class="row">

@@ -97,7 +97,7 @@
 						'options' => $empresasOptSidebar,
 					]) ?>
 				<?php else : ?>
-					<p class="pgm-meta-date m-0"><?= h(EmpresaNome($empresa)) ?></p>
+					<p class="pgm-meta-date m-0"><?= h($empresasOptSidebar[$empresa] ?? $nomeempresa ?? '') ?></p>
 					<?= $this->Form->hidden('empresaSidebar', ['id' => 'empresaSidebar', 'value' => $empresa]); ?>
 				<?php endif; ?>
 			</div>
