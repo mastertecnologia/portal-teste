@@ -78,6 +78,8 @@ class RbacPhase3GroupsPoliciesAudit extends AbstractMigration {
 		}
 
 		if (!$this->hasTable('rbac_audit_authorizations')) {
+			// Explicit created/modified before index on created — addTimestamps()+ix in one chain
+			// breaks PostgreSQL DDL ordering (index references column not yet emitted).
 			$this->table('rbac_audit_authorizations')
 				->addColumn('user_id', 'integer', ['null' => false])
 				->addColumn('granted', 'boolean', ['null' => false, 'default' => false])
@@ -85,7 +87,8 @@ class RbacPhase3GroupsPoliciesAudit extends AbstractMigration {
 				->addColumn('action', 'string', ['limit' => 80, 'null' => false, 'default' => ''])
 				->addColumn('permission_code', 'string', ['limit' => 120, 'null' => true, 'default' => null])
 				->addColumn('context_json', 'text', ['null' => true, 'default' => null])
-				->addTimestamps()
+				->addColumn('created', 'datetime', ['null' => true, 'default' => null])
+				->addColumn('modified', 'datetime', ['null' => true, 'default' => null])
 				->addIndex(['user_id'], ['name' => 'ix_raa_user'])
 				->addIndex(['created'], ['name' => 'ix_raa_created'])
 				->create();
