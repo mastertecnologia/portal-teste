@@ -414,6 +414,26 @@
 	box-shadow: inset 0 0 0 1px rgba(29, 158, 117, 0.35);
 }
 
+.admin-rbac-matrix-td-cb {
+	text-align: center;
+	vertical-align: middle;
+	padding: 4px 6px !important;
+}
+
+.admin-rbac-matrix-cb {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	accent-color: #1d9e75;
+}
+
+.admin-rbac-matrix-actions {
+	padding: 14px 16px;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+	background: #13161d;
+	border-radius: 0 0 12px 12px;
+}
+
 /* Matriz RBAC (Permissoes/admin_matrix) */
 .admin-rbac-wrap {
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

@@ -9,7 +9,7 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 	<div class="admin-rbac-wrap">
 		<header class="admin-panel-hero admin-rbac-hero--sub">
 			<h1>Matriz papéis × permissões</h1>
-			<p>Visualização somente leitura. Use a ação abaixo para associar <strong class="ap-text-bright">todas</strong> as permissões atuais ao papel <strong class="ap-text-bright">Super administrador</strong> (útil após sincronizar o catálogo). Opcionalmente mostre uma coluna com o conjunto <strong class="ap-text-bright">efetivo</strong> de um utilizador da equipe (papéis + grupos + aliases), alinhado ao runtime — exceto <code class="ap-code-violet">rbac_permission_policies</code>.</p>
+			<p>Marque ou desmarque as <strong class="ap-text-bright">caixinhas</strong> por papel (colunas editáveis conforme o seu nível hierárquico). Linhas agrupadas por <strong class="ap-text-bright">módulo</strong> do catálogo. Utilizadores recebem permissões via <strong class="ap-text-bright">papéis</strong> em «Papéis por usuário» — não por célula direta no utilizador. Pode associar <strong class="ap-text-bright">todas</strong> as permissões ao papel Super administrador após sincronizar o catálogo. Coluna <strong class="ap-text-bright">Efetivo</strong>: conjunto de um utilizador da equipe (papéis + grupos + aliases), exceto <code class="ap-code-violet">rbac_permission_policies</code>.</p>
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Catálogo', ['action' => 'adminIndex'], ['class' => 'admin-panel-btn']) ?>
 				<?= $this->Html->link('Definir papéis', ['action' => 'adminRoles'], ['class' => 'admin-panel-btn']) ?>
@@ -58,6 +58,16 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 				</div>
 			<?php endif; ?>
 			<div class="admin-rbac-matrix-outer">
+				<?php
+				$matrixCanEdit = !empty($matrixCanEdit);
+				$matrixRoleEditable = isset($matrixRoleEditable) && is_array($matrixRoleEditable) ? $matrixRoleEditable : [];
+				?>
+				<?php if ($matrixCanEdit) : ?>
+					<?= $this->Form->create(null, ['url' => ['action' => 'adminMatrixSave'], 'class' => 'admin-rbac-matrix-form']) ?>
+					<?php if ($spotOn) : ?>
+						<?= $this->Form->hidden('return_user_id', ['value' => (int)$matrixSpotlightUser->id]) ?>
+					<?php endif; ?>
+				<?php endif; ?>
 				<table class="admin-rbac-matrix">
 					<thead>
 						<tr>
@@ -69,8 +79,14 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 								if (!empty($r->description)) {
 									$tip .= ' — ' . $r->description;
 								}
+								$colEdit = !empty($matrixRoleEditable[(int)$r->id]);
+								if ($colEdit) {
+									$tip .= ' — editável';
+								} else {
+									$tip .= ' — só leitura (nível)';
+								}
 								?>
-								<th title="<?= h($tip) ?>"><?= h($r->name) ?><?php if ($hl > 0) : ?><span class="admin-rbac-perm-code"> · <?= $hl ?></span><?php endif; ?></th>
+								<th title="<?= h($tip) ?>"><?= h($r->name) ?><?php if ($hl > 0) : ?><span class="admin-rbac-perm-code"> · <?= $hl ?></span><?php endif; ?><?php if (!$colEdit && $matrixCanEdit) : ?><span class="admin-rbac-perm-code"> · só leitura</span><?php endif; ?></th>
 							<?php endforeach; ?>
 							<?php if ($spotOn) : ?>
 								<th title="União efetiva (papéis + grupos + expand_legacy_aliases)">Efetivo<br><span class="admin-rbac-perm-code"><?= h($matrixSpotlightUser->username) ?></span></th>
@@ -93,10 +109,21 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 							}
 							?>
 							<tr>
-								<td title="<?= h($p->code) ?>"><?= h($p->name) ?></td>
+								<td title="<?= h($p->code) ?>"><span class="admin-rbac-perm-code"><?= h($p->code) ?></span><br><?= h($p->name) ?></td>
 								<?php foreach ($roles as $r) : ?>
-									<?php $on = !empty($map[(int)$r->id][(int)$p->id]); ?>
-									<td class="<?= $on ? 'cell-yes' : 'cell-no' ?>"><?= $on ? '●' : '·' ?></td>
+									<?php
+									$on = !empty($map[(int)$r->id][(int)$p->id]);
+									$colEdit = !empty($matrixRoleEditable[(int)$r->id]);
+									?>
+									<?php if ($matrixCanEdit && $colEdit) : ?>
+										<td class="admin-rbac-matrix-td-cb">
+											<label class="admin-rbac-matrix-cb-label">
+												<input type="checkbox" class="admin-rbac-matrix-cb" name="matrix[<?= (int)$r->id ?>][]" value="<?= (int)$p->id ?>"<?= $on ? ' checked="checked"' : '' ?> aria-label="<?= h($r->name . ' — ' . $p->name) ?>" />
+											</label>
+										</td>
+									<?php else : ?>
+										<td class="<?= $on ? 'cell-yes' : 'cell-no' ?>"><?= $on ? '●' : '·' ?></td>
+									<?php endif; ?>
 								<?php endforeach; ?>
 								<?php if ($spotOn) : ?>
 									<?php $ue = !empty($matrixSpotlightPermIds[(int)$p->id]); ?>
@@ -106,6 +133,14 @@ $this->Breadcrumbs->add('Matriz', [], ['class' => 'breadcrumb-item active']);
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				<?php if ($matrixCanEdit) : ?>
+					<div class="admin-rbac-matrix-actions">
+						<?= $this->Form->button('Gravar matriz', ['class' => 'admin-panel-btn admin-panel-btn--teal']) ?>
+					</div>
+					<?= $this->Form->end() ?>
+				<?php else : ?>
+					<p class="admin-rbac-callout">Para editar a matriz é necessário <code class="ap-code-gray">permissoes.matrix.edit</code> no seu papel RBAC ou ser administrador legado (<code class="ap-code-gray">users.admin</code>).</p>
+				<?php endif; ?>
 			</div>
 			<p class="admin-rbac-footnote">Vínculos usuário ↔ papel: <code class="ap-code-gray">rbac_users_roles</code> e grupos (<code class="ap-code-gray">rbac_user_groups</code> / <code class="ap-code-gray">rbac_group_roles</code>). A coluna <strong>Efetivo</strong> não reflete negações por <code class="ap-code-gray">rbac_permission_policies</code> em runtime.</p>
 		<?php endif; ?>

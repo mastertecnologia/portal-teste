@@ -50,6 +50,7 @@ class PermissoesController extends AppController {
 			'adminIndex' => ['permissoes.catalog.view'],
 			'adminSyncRegistry' => ['permissoes.registry.sync'],
 			'adminMatrix' => ['permissoes.matrix.view'],
+			'adminMatrixSave' => ['permissoes.matrix.edit'],
 			'adminGrantSuperAll' => ['permissoes.matrix.grant_super'],
 			'adminRoles' => ['permissoes.roles.edit'],
 			'adminRoleEdit' => ['permissoes.roles.edit'],
@@ -174,7 +175,100 @@ class PermissoesController extends AppController {
 			}
 		}
 
-		$this->set(compact('permissions', 'roles', 'map', 'matrixSpotlightUser', 'matrixSpotlightPermIds', 'matrixEquipeUserOptions'));
+		$authUser = $this->Auth->user();
+		$matrixCanEdit = !empty($authUser['admin'])
+			|| RbacChecker::userHasPermissionCode((int)($authUser['id'] ?? 0), 'permissoes.matrix.edit');
+		$matrixHierarchyCap = RbacHierarchy::operatorAssignHierarchyCap($authUser['admin'] ?? null, (int)($authUser['id'] ?? 0));
+		$matrixRoleEditable = [];
+		foreach ($roles as $r) {
+			$rid = (int)$r->id;
+			$lvl = (int)($r->hierarchy_level ?? 0);
+			$matrixRoleEditable[$rid] = $matrixCanEdit && ($matrixHierarchyCap === null || $lvl <= $matrixHierarchyCap);
+		}
+
+		$this->set(compact(
+			'permissions',
+			'roles',
+			'map',
+			'matrixSpotlightUser',
+			'matrixSpotlightPermIds',
+			'matrixEquipeUserOptions',
+			'matrixCanEdit',
+			'matrixRoleEditable'
+		));
+	}
+
+	/**
+	 * Grava vínculos rbac_roles_permissions a partir da matriz (POST).
+	 * Só altera colunas de papéis permitidos ao operador (hierarchy_level).
+	 */
+	public function adminMatrixSave() {
+		$this->request->allowMethod(['post']);
+		if (!$this->_rbacTablesExist()) {
+			$this->Flash->error('Tabelas RBAC ausentes.');
+
+			return $this->redirect(['action' => 'adminMatrix']);
+		}
+		$authUser = $this->Auth->user();
+		$opId = (int)($authUser['id'] ?? 0);
+		if (empty($authUser['admin']) && !RbacChecker::userHasPermissionCode($opId, 'permissoes.matrix.edit')) {
+			$this->Flash->error('Sem permissão para gravar a matriz.');
+
+			return $this->redirect(['action' => 'adminMatrix']);
+		}
+		$this->_ensureDefaultRoles();
+		$cap = RbacHierarchy::operatorAssignHierarchyCap($authUser['admin'] ?? null, $opId);
+
+		$matrix = $this->request->getData('matrix');
+		if (!is_array($matrix)) {
+			$matrix = [];
+		}
+
+		$editableRoleIds = [];
+		foreach ($this->RbacRoles->find()->where(['active' => true])->all() as $rRow) {
+			$rid = (int)$rRow->id;
+			$lvl = (int)($rRow->hierarchy_level ?? 0);
+			if ($cap === null || $lvl <= $cap) {
+				$editableRoleIds[] = $rid;
+			}
+		}
+
+		$allPermIds = $this->RbacPermissions->find()->select(['id'])->all()->extract('id')->toList();
+		$validPermSet = array_fill_keys(array_map('intval', $allPermIds), true);
+
+		$updatedRoles = 0;
+		foreach ($editableRoleIds as $roleId) {
+			$permList = $matrix[$roleId] ?? $matrix[(string)$roleId] ?? [];
+			$ids = is_array($permList) ? $permList : [];
+			$ids = array_values(array_unique(array_map('intval', $ids)));
+			$ids = array_values(array_filter($ids, static function ($pid) use ($validPermSet) {
+				return $pid > 0 && isset($validPermSet[$pid]);
+			}));
+
+			$this->RbacRolesPermissions->deleteAll(['role_id' => $roleId]);
+			foreach ($ids as $pid) {
+				$link = $this->RbacRolesPermissions->newEntity([
+					'role_id' => $roleId,
+					'permission_id' => $pid,
+				]);
+				$this->RbacRolesPermissions->save($link);
+			}
+			$updatedRoles++;
+		}
+
+		if ($updatedRoles === 0) {
+			$this->Flash->warning('Nenhum papel editável encontrado.');
+		} else {
+			$this->Flash->success(sprintf('Matriz gravada: %d papel(is) atualizado(s).', $updatedRoles));
+		}
+
+		$q = [];
+		$retUid = (int)$this->request->getData('return_user_id');
+		if ($retUid > 0) {
+			$q['user_id'] = $retUid;
+		}
+
+		return $this->redirect(['action' => 'adminMatrix', '?' => $q]);
 	}
 
 	public function adminGrantSuperAll() {
