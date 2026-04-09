@@ -788,6 +788,9 @@ class UsersController extends AppController {
 			}
 			unset($data['from']);
 
+			$empresaVinculoIds = $this->_normalizeEmpresaVinculoPost($data);
+			unset($data['empresa_vinculo_ids']);
+
 			$this->usuarioExistente($data['username']);
 
 			if (strcmp($data['password'], $data['confirm_password']) != 0) {
@@ -798,6 +801,14 @@ class UsersController extends AppController {
 				$user->role = 0;
 
 				if ($this->Users->save($user)) {
+					$allowedEmp = $this->_empresaIdsAllowedForEquipeVinculo();
+					if ($allowedEmp === []) {
+						$allowedEmp = [(int)C_EmpresaPGM];
+					}
+					$pickedEmp = $this->_resolveEmpresaVinculoForNewUser($empresaVinculoIds, $allowedEmp);
+					if (!$this->_syncEmpresasVinculoEquipe((int)$user->id, $pickedEmp, $allowedEmp)) {
+						$this->Flash->warning(__('Usuário criado, mas faltou vínculo com empresa (empresasusers). Edite o usuário e marque ao menos uma empresa.'));
+					}
 					$this->_syncQueuesUsuario((int)$user->id, (int)$this->Auth->user('idempresa'));
 					$this->Flash->success(__('O usuário foi salvo.'));
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $user->id);
@@ -819,7 +830,13 @@ class UsersController extends AppController {
 			$queuesList = $queuesListQ->toArray();
 		}
 		$supportLevelsList = $this->_supportLevelsListForTechnicians();
-		$this->set(compact('queuesList', 'supportLevelsList', 'fromQueues'));
+		$empresasVinculoOptions = $this->_empresasOptionsForEquipeVinculo();
+		$defaultEmpresaVinculoId = (int)$this->Auth->user('idempresa');
+		if ($defaultEmpresaVinculoId <= 0) {
+			$pref = $this->getEmpresaPreferencial((int)$this->Auth->user('id'));
+			$defaultEmpresaVinculoId = $pref !== null ? (int)$pref : (int)C_EmpresaPGM;
+		}
+		$this->set(compact('queuesList', 'supportLevelsList', 'fromQueues', 'empresasVinculoOptions', 'defaultEmpresaVinculoId'));
 		$this->set('user', $user);
 		$this->set('hideLayoutPageTitle', true);
 	}
@@ -899,6 +916,12 @@ class UsersController extends AppController {
 			}
 			unset($data['from']);
 
+			$empresaVinculoPost = null;
+			if ((int)$user->role === 0 && !empty($data['process_empresa_vinculo'])) {
+				$empresaVinculoPost = $this->_normalizeEmpresaVinculoPost($data);
+			}
+			unset($data['empresa_vinculo_ids'], $data['process_empresa_vinculo']);
+
 			// Se o usuário permanecer ativo (inativo vazio ou 0), mantém a validação rígida de e-mail duplicado.
 			// Se ele estiver sendo inativado, permitimos salvar mesmo com e-mail duplicado, para justamente
 			// conseguir desativar o usuário conflitante.
@@ -930,6 +953,17 @@ class UsersController extends AppController {
 
 			if ($this->Users->save($user)) {
 				if ((int)$user->role === 0) {
+					if ($empresaVinculoPost !== null) {
+						$allowedEv = $this->_empresaIdsAllowedForEquipeVinculo();
+						if ($allowedEv === []) {
+							$allowedEv = [(int)C_EmpresaPGM];
+						}
+						if ($empresaVinculoPost === []) {
+							$this->Flash->warning('Marque ao menos uma empresa de acesso (obrigatório para login da equipe e Service Desk).');
+						} else {
+							$this->_replaceEmpresasVinculoEquipe((int)$id, $empresaVinculoPost, $allowedEv);
+						}
+					}
 					$this->_syncQueuesUsuario((int)$id, (int)$this->Auth->user('idempresa'));
 				}
 				$this->Flash->success('As informações do usuário foram alteradas com sucesso!');
@@ -971,8 +1005,25 @@ class UsersController extends AppController {
 
 		$supportLevelsList = ((int)$user->role === 0) ? $this->_supportLevelsListForTechnicians() : [];
 		$showQueueLevelOverrides = !empty($supportLevelsList) && $this->_queuesUsersSupportLevelColumn();
+		$empresasVinculoOptions = [];
+		$selectedEmpresaVinculoIds = [];
+		if ((int)$user->role === 0) {
+			$empresasVinculoOptions = $this->_empresasOptionsForEquipeVinculo();
+			foreach ($this->Empresasusers->find()->where(['iduser' => $user->id])->all() as $evr) {
+				$selectedEmpresaVinculoIds[] = (int)$evr->idempresa;
+			}
+		}
 		$this->set('user', $user);
-		$this->set(compact('queuesList', 'selectedQueues', 'supportLevelsList', 'queuesUserSupportLevels', 'showQueueLevelOverrides', 'fromQueues'));
+		$this->set(compact(
+			'queuesList',
+			'selectedQueues',
+			'supportLevelsList',
+			'queuesUserSupportLevels',
+			'showQueueLevelOverrides',
+			'fromQueues',
+			'empresasVinculoOptions',
+			'selectedEmpresaVinculoIds'
+		));
 		$this->set('hideLayoutPageTitle', true);
 		$this->set('title', 'Editar Usuário');
 	}
@@ -2671,6 +2722,146 @@ class UsersController extends AppController {
 		if($this->Users->save($user)){
 			$this->Flash->success('A verificação em duas etapas foi desativada com sucesso! Remova a conta no Google Authenticator App');
 			return $this->redirect(['action' => 'index']);
+		}
+	}
+
+	/**
+	 * Empresas que o utilizador autenticado pode atribuir a um colega da equipe (empresasusers).
+	 *
+	 * @return array<int,string>
+	 */
+	protected function _empresasOptionsForEquipeVinculo(): array {
+		try {
+			if (!empty($this->Auth->user('admin'))) {
+				return $this->Empresas->find('list', [
+					'keyField' => 'id',
+					'valueField' => 'nomefantasia',
+				])->order(['nomefantasia' => 'ASC', 'id' => 'ASC'])->toArray();
+			}
+			$uid = (int)$this->Auth->user('id');
+			if ($uid <= 0) {
+				return [];
+			}
+			$opts = [];
+			foreach (
+				$this->Empresasusers->find()
+					->where(['iduser' => $uid])
+					->contain(['Empresas' => ['fields' => ['id', 'nomefantasia']]])
+					->order(['Empresas.nomefantasia' => 'ASC'])
+					->all() as $r
+			) {
+				if (!empty($r->empresa)) {
+					$opts[(int)$r->empresa->id] = (string)$r->empresa->nomefantasia;
+				}
+			}
+
+			return $opts;
+		} catch (\Throwable $e) {
+			return [];
+		}
+	}
+
+	/**
+	 * @return int[]
+	 */
+	protected function _empresaIdsAllowedForEquipeVinculo(): array {
+		return array_map('intval', array_keys($this->_empresasOptionsForEquipeVinculo()));
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return int[]
+	 */
+	protected function _normalizeEmpresaVinculoPost(array $data): array {
+		$raw = $data['empresa_vinculo_ids'] ?? [];
+		if (!is_array($raw)) {
+			$raw = $raw !== null && $raw !== '' ? [(int)$raw] : [];
+		}
+
+		return array_values(array_unique(array_filter(array_map('intval', $raw), static function ($v) {
+			return $v > 0;
+		})));
+	}
+
+	/**
+	 * @param int[] $picked
+	 * @param int[] $allowed
+	 * @return int[]
+	 */
+	protected function _resolveEmpresaVinculoForNewUser(array $picked, array $allowed): array {
+		$allowed = array_values(array_unique(array_filter(array_map('intval', $allowed))));
+		if ($allowed === []) {
+			$allowed = [(int)C_EmpresaPGM];
+		}
+		$picked = array_values(array_intersect($picked, $allowed));
+		if ($picked !== []) {
+			return $picked;
+		}
+		$def = (int)$this->Auth->user('idempresa');
+		if ($def > 0 && in_array($def, $allowed, true)) {
+			return [$def];
+		}
+		$pref = $this->getEmpresaPreferencial((int)$this->Auth->user('id'));
+		if ($pref !== null && in_array((int)$pref, $allowed, true)) {
+			return [(int)$pref];
+		}
+
+		return [(int)$allowed[0]];
+	}
+
+	/**
+	 * @param int[] $empresaIds
+	 * @param int[] $allowed
+	 */
+	protected function _syncEmpresasVinculoEquipe(int $userId, array $empresaIds, array $allowed): bool {
+		$allowed = array_values(array_unique(array_filter(array_map('intval', $allowed))));
+		if ($allowed === []) {
+			return false;
+		}
+		$empresaIds = array_values(array_intersect(array_unique(array_map('intval', $empresaIds)), $allowed));
+		if ($empresaIds === []) {
+			return false;
+		}
+		$ok = false;
+		foreach ($empresaIds as $eid) {
+			$n = $this->Empresasusers->find()->where(['iduser' => $userId, 'idempresa' => $eid])->count();
+			if ($n === 0) {
+				$eu = $this->Empresasusers->newEntity(['idempresa' => $eid, 'iduser' => $userId]);
+				if ($this->Empresasusers->save($eu)) {
+					$ok = true;
+				}
+			} else {
+				$ok = true;
+			}
+		}
+
+		return $ok;
+	}
+
+	/**
+	 * @param int[] $empresaIds
+	 * @param int[] $allowed
+	 */
+	protected function _replaceEmpresasVinculoEquipe(int $userId, array $empresaIds, array $allowed): void {
+		$allowed = array_values(array_unique(array_filter(array_map('intval', $allowed))));
+		if ($allowed === []) {
+			return;
+		}
+		$empresaIds = array_values(array_intersect(array_unique(array_map('intval', $empresaIds)), $allowed));
+		if ($empresaIds === []) {
+			return;
+		}
+		foreach ($this->Empresasusers->find()->where(['iduser' => $userId])->all() as $row) {
+			if (!in_array((int)$row->idempresa, $empresaIds, true)) {
+				$this->Empresasusers->delete($row);
+			}
+		}
+		foreach ($empresaIds as $eid) {
+			$n = $this->Empresasusers->find()->where(['iduser' => $userId, 'idempresa' => $eid])->count();
+			if ($n === 0) {
+				$eu = $this->Empresasusers->newEntity(['idempresa' => $eid, 'iduser' => $userId]);
+				$this->Empresasusers->save($eu);
+			}
 		}
 	}
 

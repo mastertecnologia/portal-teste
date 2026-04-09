@@ -487,9 +487,9 @@ class RbacCheckerTest extends TestCase {
 		$this->assertTrue(RbacChecker::shouldShowSidebarGate(1, 0, 0, ['', '  ']));
 	}
 
-	public function testShouldShowSidebarGateEquipeNonAdminBypassesStrictMenuWithoutDb() {
+	public function testShouldShowSidebarGateEquipeNonAdminStrictMenuInvalidUserIdFalse() {
 		Configure::write('Rbac', ['menu_filter_sidebar' => true]);
-		$this->assertTrue(RbacChecker::shouldShowSidebarGate(0, 0, 42, 'dashboard.view'));
+		$this->assertFalse(RbacChecker::shouldShowSidebarGate(0, 0, 0, 'dashboard.view'));
 	}
 
 	public function testBuildSidebarMenuGatesOmitsBlankKeys() {

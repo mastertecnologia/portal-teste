@@ -75,6 +75,33 @@ if (!empty($fromQueues)) {
 				</div>
 			</div>
 
+			<?php if (!empty($empresasVinculoOptions)) :
+				$evOpts = $empresasVinculoOptions;
+				$evDef = (int)($defaultEmpresaVinculoId ?? 0);
+				$evIds = array_map('intval', array_keys($evOpts));
+				$evFirst = $evIds !== [] ? $evIds[0] : 0;
+				?>
+				<h6 class="text-muted m-t-20 m-b-10">Empresas de acesso</h6>
+				<p class="small text-muted m-b-10">Marque PGM, Master ou ambas. Isto grava o vínculo em <code class="text-muted">empresasusers</code> e define a empresa da sessão no login (Service Desk, relatórios, etc.).</p>
+				<div class="row">
+					<div class="col-12">
+						<div class="queues-queues-box queues-checkboxes">
+							<?php foreach ($evOpts as $eid => $enome) :
+								$eid = (int)$eid;
+								$evChecked = count($evOpts) === 1
+									|| ($evDef > 0 && $eid === $evDef)
+									|| (($evDef <= 0 || !in_array($evDef, $evIds, true)) && $eid === $evFirst);
+								?>
+								<div class="custom-control custom-checkbox mb-1">
+									<input type="checkbox" class="custom-control-input" name="empresa_vinculo_ids[]" id="empresa_vinc_add_<?= $eid ?>" value="<?= $eid ?>"<?= $evChecked ? ' checked' : '' ?>>
+									<label class="custom-control-label" for="empresa_vinc_add_<?= $eid ?>"><?= h($enome) ?></label>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+
 			<?php if (!empty($supportLevelsList)) : ?>
 				<h6 class="text-muted m-t-20 m-b-10">Nível de suporte</h6>
 				<div class="row">

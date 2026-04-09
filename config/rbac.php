@@ -238,10 +238,10 @@ return [
 		'evaluate_permission_policies' => $evaluatePermissionPolicies,
 		// Fase 6: filtrar atalho Config na sidebar por permissão config.manage (ver docblock; env RBAC_MENU_FILTER_CONFIG)
 		'menu_filter_config' => $menuFilterConfig,
-		// Fase 6b: filtrar blocos da sidebar (só equipe admin; ver docblock; env RBAC_MENU_FILTER_SIDEBAR)
+		// Fase 6b: filtrar blocos da sidebar (equipe role=0; env RBAC_MENU_FILTER_SIDEBAR); híbrido sem papéis RBAC mantém itens.
 		'menu_filter_sidebar' => $menuFilterSidebar,
 		'menu_sidebar_gates' => [
-			// Só aplica a equipe com users.admin (ver RbacChecker::shouldShowSidebarGate); alinhado a users/dashboard no catálogo.
+			// shouldShowSidebarGate: toda a equipe; exceção bypass_legacy_super + users.admin (menu completo).
 			'dashboard' => 'dashboard.view',
 			'sidebar_functions_search' => 'pesquisa.sidebar_search',
 			// Fase 6c: painel clássico vs indicadores avançados (cada ligação); secção visível se qualquer for true.

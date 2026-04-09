@@ -220,17 +220,17 @@ class RbacChecker {
 
 	/**
 	 * Bloco da sidebar (equipe): com menu_filter_sidebar true, exige pelo menos um dos códigos OU híbrido sem papéis RBAC.
-	 * Utilizadores não equipe (ex.: portal) — sempre true (visibilidade continua a ser regida por role/menu existente).
+	 * Equipe com users.admin + bypass_legacy_super: menu completo. Utilizadores não equipe (role≠0) — sempre true.
 	 *
 	 * @param string|string[] $codes um código ou lista em OR
 	 */
 	public static function shouldShowSidebarGate($admin, $role, $userId, $codes): bool {
-		if (empty($admin) || (int)$role !== 0) {
+		if ((int)$role !== 0) {
 			return true;
 		}
 		$rb = Configure::read('Rbac');
-		// Alinhado a RbacComponent::checkRequest: super-admin legado não fica sem menu por gates RBAC.
-		if (is_array($rb) && !empty($rb['bypass_legacy_super'])) {
+		// Equipe com users.admin + bypass_legacy_super: menu completo (paridade com RbacComponent).
+		if (is_array($rb) && !empty($rb['bypass_legacy_super']) && !empty($admin)) {
 			return true;
 		}
 		$list = is_array($codes) ? $codes : [$codes];

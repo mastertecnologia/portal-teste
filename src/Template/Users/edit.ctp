@@ -74,6 +74,29 @@ if (!empty($fromQueues)) {
 				</div>
 			</div>
 
+			<?php if (!empty($empresasVinculoOptions) && (int)$user->role === 0) : ?>
+				<input type="hidden" name="process_empresa_vinculo" value="1">
+				<h6 class="text-muted m-t-20 m-b-10">Empresas de acesso</h6>
+				<p class="small text-muted m-b-10">Obrigatório pelo menos uma. Sem vínculo em <code class="text-muted">empresasusers</code> o login da equipe fica sem empresa na sessão (Service Desk não carrega dados).</p>
+				<div class="row">
+					<div class="col-12">
+						<div class="queues-queues-box queues-checkboxes">
+							<?php
+							$evSel = array_map('intval', $selectedEmpresaVinculoIds ?? []);
+							foreach ($empresasVinculoOptions as $eid => $enome) :
+								$eid = (int)$eid;
+								$evMk = in_array($eid, $evSel, true);
+								?>
+								<div class="custom-control custom-checkbox mb-1">
+									<input type="checkbox" class="custom-control-input" name="empresa_vinculo_ids[]" id="empresa_vinc_ed_<?= $eid ?>" value="<?= $eid ?>"<?= $evMk ? ' checked' : '' ?>>
+									<label class="custom-control-label" for="empresa_vinc_ed_<?= $eid ?>"><?= h($enome) ?></label>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+
 			<?php if (!empty($supportLevelsList) && (int)$user->role === 0) : ?>
 			<h6 class="text-muted m-t-20 m-b-10">Nível de suporte</h6>
 			<div class="row">
