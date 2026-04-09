@@ -3,15 +3,15 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
-use Cake\Routing\Router; 
+use Cake\Routing\Router;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
-
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
+$__pgmDir = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS;
+foreach (['Utilities.php', 'UserConstants.php', 'TicketConstants.php'] as $__pgmFile) {
+	$__pgmPath = $__pgmDir . $__pgmFile;
+	if (is_file($__pgmPath)) {
+		require_once $__pgmPath;
+	}
+}
 
 
 class NotificacoesController extends AppController {
@@ -85,7 +85,8 @@ class NotificacoesController extends AppController {
 				$recebidasporArray = explode('|', $tags);
 				
 				if (!in_array($userid, $recebidasporArray)) {
-					$scriptNot[] = ['texto' => $not->texto, 'img' => $img, 'titulo' => $not->titulo, 'url' => $urlfora . NotificacaoLink($not->tipo, $not->idacao)['controller'] . '/' . NotificacaoLink($not->tipo, $not->idacao)['action'] . '/' . $not->idacao];
+					$__nl = \NotificacaoLink($not->tipo, $not->idacao);
+					$scriptNot[] = ['texto' => $not->texto, 'img' => $img, 'titulo' => $not->titulo, 'url' => $urlfora . $__nl['controller'] . '/' . $__nl['action'] . '/' . $not->idacao];
 				
 					$recebidapor = $not->recebidapor.'|'.$userid;
 					$query = $this->Notificacoes->query();

@@ -164,3 +164,104 @@ if (!function_exists('decreaseMonths')) {
 		return $d->format('d/m/Y');
 	}
 }
+
+/**
+ * Helpers globais do legado PGM (Utilities.php). Sem eles, ClientesController::edit
+ * e outros quebram com "Call to undefined function" se PGMPackages não estiver no deploy.
+ * removeCaracteres: alinhado ao mutator em src/Model/Entity/Cliente.php.
+ * Senha: se PGMPackages já definiu criptografaSenha/descriptografaSenha, não redeclara.
+ * Caso contrário, tenta Cake\Utility\Security (mesmo salt do app) + base64 na coluna;
+ * fallbacks evitam 500 quando o formato legado difere (exibe valor bruto / base64 simples).
+ */
+if (!function_exists('removeCaracteres')) {
+	function removeCaracteres($string) {
+		if ($string === null) {
+			return '';
+		}
+		$chars = ['?', '+', '-', ',', '(', ')', '*', '&', ';', '=', '/', '.', ':', ' '];
+
+		return str_replace($chars, '', (string) $string);
+	}
+}
+
+if (!function_exists('criptografaSenha')) {
+	function criptografaSenha($plain) {
+		$plain = (string) ($plain ?? '');
+		if ($plain === '') {
+			return '';
+		}
+		$key = \Cake\Core\Configure::read('Security.salt');
+		if (!is_string($key) || $key === '') {
+			return base64_encode($plain);
+		}
+		$keyLen = function_exists('mb_strlen') ? mb_strlen($key, '8bit') : strlen($key);
+		if ($keyLen < 32) {
+			return base64_encode($plain);
+		}
+		try {
+			$cipher = \Cake\Utility\Security::encrypt($plain, $key);
+			if (!is_string($cipher) || $cipher === '') {
+				return base64_encode($plain);
+			}
+
+			return base64_encode($cipher);
+		} catch (\Throwable $e) {
+			return base64_encode($plain);
+		}
+	}
+}
+
+if (!function_exists('descriptografaSenha')) {
+	function descriptografaSenha($stored) {
+		if ($stored === null || $stored === '') {
+			return '';
+		}
+		$s = (string) $stored;
+		$key = \Cake\Core\Configure::read('Security.salt');
+		if (is_string($key) && $key !== '') {
+			$keyLen = function_exists('mb_strlen') ? mb_strlen($key, '8bit') : strlen($key);
+			if ($keyLen >= 32) {
+				try {
+					$bin = base64_decode($s, true);
+					if ($bin !== false && $bin !== '') {
+						$out = \Cake\Utility\Security::decrypt($bin, $key);
+						if ($out !== false && $out !== null) {
+							return (string) $out;
+						}
+					}
+					if (strlen($s) > 64) {
+						$out = \Cake\Utility\Security::decrypt($s, $key);
+						if ($out !== false && $out !== null) {
+							return (string) $out;
+						}
+					}
+				} catch (\Throwable $e) {
+					// formato legado diferente do Cake Security
+				}
+			}
+		}
+		$decoded = base64_decode($s, true);
+		if ($decoded !== false && $decoded !== '') {
+			return $decoded;
+		}
+
+		return $s;
+	}
+}
+
+/**
+ * Link para notificações de ticket (legado Utilities.php). TicketsController::criaNot e
+ * TicketcomentariosController::criaNot usam idacao = id do ticket nos dois tipos.
+ */
+if (!function_exists('NotificacaoLink')) {
+	/**
+	 * @param int|string $tipo
+	 * @param int|string $idacao id do ticket
+	 * @return array{controller: string, action: string}
+	 */
+	function NotificacaoLink($tipo, $idacao) {
+		unset($tipo, $idacao);
+
+		return ['controller' => 'tickets', 'action' => 'view'];
+	}
+}

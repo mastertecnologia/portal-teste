@@ -302,11 +302,11 @@ class ClientesController extends AppController {
 				$cliente = $this->Clientes->patchEntity($cliente, $data);
 				$cliente->membrodesde = date('d/m/y');
 				$cliente->idempresa = $this->Auth->user('idempresa');
-				if(!empty($data['cnpj'])) $cliente->cnpj = removeCaracteres($data['cnpj']);
-				if(!empty($data['cpf'])) $cliente->cpf = removeCaracteres($data['cpf']);
-				if(!empty($data['inscricaoestadual'])) $cliente->inscricaoestadual = removeCaracteres($data['inscricaoestadual']);
-				if(!empty($data['inscricaomunicipal'])) $cliente->inscricaomunicipal = removeCaracteres($data['inscricaomunicipal']);
-				if(!empty($data['cep'])) $cliente->cep = removeCaracteres($data['cep']);
+				if(!empty($data['cnpj'])) $cliente->cnpj = \removeCaracteres($data['cnpj']);
+				if(!empty($data['cpf'])) $cliente->cpf = \removeCaracteres($data['cpf']);
+				if(!empty($data['inscricaoestadual'])) $cliente->inscricaoestadual = \removeCaracteres($data['inscricaoestadual']);
+				if(!empty($data['inscricaomunicipal'])) $cliente->inscricaomunicipal = \removeCaracteres($data['inscricaomunicipal']);
+				if(!empty($data['cep'])) $cliente->cep = \removeCaracteres($data['cep']);
 	
 				if ($this->Clientes->save($cliente)) {
 					$this->sincronizacliente($cliente->id);
@@ -389,7 +389,7 @@ class ClientesController extends AppController {
 		}
 		$cliente->users = $this->Users->find('all')->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$usuariosValue = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
-		$cliente->senha = descriptografasenha($cliente->senha);
+		$cliente->senha = \descriptografasenha($cliente->senha);
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
@@ -401,8 +401,8 @@ class ClientesController extends AppController {
 			}
 
 			$cliente = $this->Clientes->patchEntity($cliente, $data);
-			if(!empty($data['cpf'])) $cliente->cpf = removeCaracteres($data['cpf']);
-			if(!empty($data['senha'])) $cliente->senha = criptografasenha($data['senha']);
+			if(!empty($data['cpf'])) $cliente->cpf = \removeCaracteres($data['cpf']);
+			if(!empty($data['senha'])) $cliente->senha = \criptografasenha($data['senha']);
 
 			if ($this->Clientes->save($cliente)) {
 				$this->sincronizacliente($id);
@@ -986,7 +986,7 @@ class ClientesController extends AppController {
 				return $apiRet('Autenticação Inválida', 401);
 			}
 
-			$retorno['CNPJ'] = removeCaracteres($json->cnpj);
+			$retorno['CNPJ'] = \removeCaracteres($json->cnpj);
 			$retorno['Empresa'] = $empresa;
 			$tipo = strlen($retorno['CNPJ']) > 11 ? 'j' : 'f';
 
@@ -1020,12 +1020,12 @@ class ClientesController extends AppController {
 			$cliente->nroendereco = $json->nroendereco ?? null;
 			$cliente->complemento = $json->complemento ?? null;
 			$cliente->bairro = $json->bairro ?? null;
-			$cliente->cep = isset($json->cep) ? removeCaracteres((string)$json->cep) : null;
+			$cliente->cep = isset($json->cep) ? \removeCaracteres((string)$json->cep) : null;
 			if (isset($json->telefone)) {
-				$cliente->fone = removeCaracteres((string)$json->telefone);
+				$cliente->fone = \removeCaracteres((string)$json->telefone);
 			}
 			if (isset($json->celular)) {
-				$cliente->fone2 = removeCaracteres((string)$json->celular);
+				$cliente->fone2 = \removeCaracteres((string)$json->celular);
 			}
 			$cliente->email = $json->email ?? null;
 			$cliente->contrato = $json->contrato ?? null;
@@ -1121,7 +1121,7 @@ class ClientesController extends AppController {
 
 			if(empty($this->Empresas->findById($empresa)->first())) return $apiRetList('Parâmetros da requisição inválidos', 400);
 			if($token == $this->Empresas->get($empresa)->token){
-				$retorno['CNPJ'] = removeCaracteres($cnpj);
+				$retorno['CNPJ'] = \removeCaracteres($cnpj);
 				$retorno['Empresa'] = $empresa;
 
 				if(!empty($cnpj)){
