@@ -59,8 +59,9 @@
 
 			return false;
 		};
-		$showDashTickets = $dgOr(['tickets_servicedesk', 'tickets_historico']);
-		$showDashReq = $dg('dashboard_requisicoes');
+		$dashPgmEmpresaOk = ($dashPgmSemEmpresaSessao ?? false) !== true;
+		$showDashTickets = $dgOr(['tickets_servicedesk', 'tickets_historico']) && $dashPgmEmpresaOk;
+		$showDashReq = $dg('dashboard_requisicoes') && $dashPgmEmpresaOk;
 		$showDashStatsRow = $showDashTickets || $showDashReq;
 	?>
 	<div class="col-12 p-0">
@@ -112,6 +113,7 @@
 				</div>
 			<?php endif; ?>
 
+			<?php if ($dashPgmEmpresaOk) : ?>
 			<!-- Módulos rápidos -->
 			<div class="dash-pgm-modules">
 				<?php
@@ -140,6 +142,7 @@
 				) ?>
 				<?php endforeach; ?>
 			</div>
+			<?php endif; ?>
 
 				<?php if ($showDashStatsRow) : ?>
 				<div class="dash-pgm-stats-grid">
