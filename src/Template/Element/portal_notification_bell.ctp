@@ -11,15 +11,21 @@ if (method_exists($req, 'getAttribute')) {
 if ($__pnBase === '' && isset($req->base)) {
 	$__pnBase = (string)$req->base;
 }
+if ($__pnBase === '' && class_exists('\Cake\Core\Configure')) {
+	$__pnBase = rtrim((string)\Cake\Core\Configure::read('App.base'), '/');
+}
 $__pnBase = rtrim($__pnBase, '/');
 // Url->build e até fullBase podem omitir a subpasta (/portal) → GET na raiz /portal-notifications/... (404).
+// Paths como /portal-notifications/... começam com /portal mas não com /portal/ — têm de receber o base antes.
 $__pnFix = function (array $opts) use ($__pnBase) {
 	$u = $this->Url->build($opts);
 	if (preg_match('#^https?://[^/]+(/.*)$#i', $u, $m)) {
 		$u = $m[1];
 	}
-	if ($__pnBase !== '' && $u !== '' && $u[0] === '/' && strpos($u, $__pnBase . '/') !== 0) {
-		return $__pnBase . $u;
+	if ($__pnBase !== '' && $u !== '' && $u[0] === '/') {
+		if (strpos($u, $__pnBase . '/') !== 0) {
+			return $__pnBase . $u;
+		}
 	}
 
 	return $u;

@@ -483,6 +483,7 @@
 										<td class="td-actions">
 											<?= $this->Html->link('<i class="fa fa-eye"></i>', ['controller' => 'Clicontratos', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Detalhe', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
 											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "clicontratos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+										</td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>
@@ -535,6 +536,7 @@
 					</div>
 					<?= $this->element('Cli/card_end') ?>
 				</div>
+				<?php } ?>
 				<?php if ($showClienteApiTokenTab) { ?>
 				<div class="tab-pane" id="token" role="tabpanel" aria-labelledby="cli-tab-token">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-key"></i> Token de integração API', 'extraClass' => 'mb-3']) ?>
