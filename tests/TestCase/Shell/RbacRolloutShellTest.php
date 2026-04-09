@@ -26,6 +26,7 @@ class RbacRolloutShellTest extends AppCompatTestCase {
 		$this->assertStringContainsString('rbac_rollout sync_registry', $blob);
 		$this->assertStringContainsString('menu_sidebar_gates', $blob);
 		$this->assertStringContainsString('assign_equipe --role_slug=operacao', $blob);
+		$this->assertStringContainsString('assign_equipe --role_slug=super_admin --user_id=1', $blob);
 		$this->assertStringContainsString('--limit=5000', $blob);
 		$this->assertStringContainsString('Matriz', $blob);
 		$this->assertStringContainsString('composer test-rbac', $blob);

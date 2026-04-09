@@ -113,7 +113,7 @@ class RbacRolloutShell extends Shell {
 		]);
 		$parser->addOption('user_id', [
 			'default' => '',
-			'help' => 'user_effective: id em users (obrigatório).',
+			'help' => 'user_effective: id em users (obrigatório). assign_equipe / assign_portal: restringe a um utilizador (deve ser role 0/1 conforme o comando e sem papel RBAC efetivo).',
 		]);
 		$parser->addOption('full', [
 			'boolean' => true,
@@ -150,6 +150,7 @@ class RbacRolloutShell extends Shell {
 		$this->out('    bin/cake rbac_rollout unassigned_portal --limit=50');
 		$this->out('    bin/cake rbac_rollout unassigned_portal --csv');
 		$this->out('    bin/cake rbac_rollout assign_equipe --role_slug=operacao --dry-run');
+		$this->out('    bin/cake rbac_rollout assign_equipe --role_slug=super_admin --user_id=1');
 		$this->out('    bin/cake rbac_rollout assign_portal --role_slug=cliente_portal --dry-run');
 		$this->out('    bin/cake rbac_rollout list_roles');
 		$this->out('    bin/cake rbac_rollout user_effective --user_id=42');
@@ -200,6 +201,7 @@ class RbacRolloutShell extends Shell {
 			'7) Atribuição (piloto; usar slugs de list_roles)',
 			'   bin/cake rbac_rollout list_roles',
 			'   bin/cake rbac_rollout assign_equipe --role_slug=operacao --dry-run',
+			'   bin/cake rbac_rollout assign_equipe --role_slug=super_admin --user_id=1 (conta admin; depois operacao/leitura aos restantes)',
 			'   bin/cake rbac_rollout assign_equipe --role_slug=leitura --limit=5000 (backfill em massa após validar dry-run)',
 			'   bin/cake rbac_rollout assign_portal --role_slug=cliente_portal --dry-run',
 			'',
@@ -671,14 +673,19 @@ class RbacRolloutShell extends Shell {
 		if ($assignedIds !== []) {
 			$q->where(['id NOT IN' => $assignedIds]);
 		}
+		$onlyUserId = isset($this->params['user_id']) ? (int)trim((string)$this->params['user_id']) : 0;
+		if ($onlyUserId > 0) {
+			$q->where(['id' => $onlyUserId]);
+		}
 		$rows = $q->toArray();
 		$this->out(sprintf(
-			'--- %s: users.role=%d | papel id=%d slug=%s | dry_run=%s | até %d utilizadores ---',
+			'--- %s: users.role=%d | papel id=%d slug=%s | dry_run=%s | user_id=%s | até %d utilizadores ---',
 			$logPrefix,
 			$usersRole,
 			(int)$role->id,
 			$slug,
 			$dry ? 'yes' : 'no',
+			$onlyUserId > 0 ? (string)$onlyUserId : 'all',
 			$limit
 		));
 		if ($rows === []) {
