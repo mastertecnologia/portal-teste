@@ -42,7 +42,6 @@
         "post-create-project-cmd": "App\\Console\\Installer::postInstall",
         "post-update-cmd": "@sync-webroot-css",
         "sync-webroot-css": "php bin/sync_webroot_css_to_public.php",
-        "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
         "check": [
             "@test",
             "@cs-check"
