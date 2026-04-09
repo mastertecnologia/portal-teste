@@ -1757,19 +1757,34 @@ class UsersController extends AppController {
 	public function selectTheme() {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
+		$this->request->allowMethod(['post']);
 
-		if ($this->request->is('post')) {
-			$theme = $this->request->getData('theme');
-			$skin  = ($theme === 'light') ? 'skin-pgm-light' : 'skin-green';
-			$user  = $this->Users->get($this->Auth->user('id'));
-			$user->skin = $skin;
-			$this->Users->save($user);
-			$u = $this->Auth->user();
-			if (is_array($u)) {
-				$u['skin'] = $skin;
-				$this->Auth->setUser($u);
-			}
+		if (!$this->Auth->user('id')) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'auth'], 403);
 		}
+
+		// POST sem _Token de formulário (Security unlocked); CSRF obrigatório como em verificadadoscliente.
+		$posted = (string)$this->request->getData('_csrfToken');
+		$trusted = (string)($this->request->getAttribute('csrfToken') ?: $this->request->getParam('_csrfToken'));
+		if ($posted === '' || $trusted === '' || !hash_equals($trusted, $posted)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'csrf'], 403);
+		}
+
+		$theme = $this->request->getData('theme');
+		if ($theme !== 'light' && $theme !== 'dark') {
+			return $this->jsonResponse(['ok' => false, 'error' => 'theme'], 400);
+		}
+
+		$skin = ($theme === 'light') ? 'skin-pgm-light' : 'skin-green';
+		$user = $this->Users->get($this->Auth->user('id'));
+		$user->skin = $skin;
+		$this->Users->save($user);
+		$u = $this->Auth->user();
+		if (is_array($u)) {
+			$u['skin'] = $skin;
+			$this->Auth->setUser($u);
+		}
+
 		return $this->jsonResponse(['ok' => true]);
 	}
 

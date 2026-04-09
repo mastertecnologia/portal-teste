@@ -923,3 +923,76 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-cliente {
 body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-mb {
 	margin-bottom: 8px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * DataTables dentro de .card — modo escuro com tokens PGM (html[data-pgm-theme])
+ * Corrige células ilegíveis: o CSS legado cobria .page-wrapper mas não .card + .dataTable.
+ * Mobile-first: mesmas regras (sem media obrigatória; inputs já fluídos).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead th,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead td {
+	background: var(--pgm-bg-elevated) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody td,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody th {
+	background: transparent !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody tr {
+	background: var(--pgm-bg-surface) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody tr:nth-child(odd) {
+	background: var(--pgm-bg-elevated) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody tr:hover > td {
+	background: var(--pgm-primary-muted) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable a,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable a.link {
+	color: var(--pgm-link) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .table thead.text-primary th,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .table thead th.text-primary {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_length,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_info,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_paginate {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter input,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_length select {
+	background: var(--pgm-bg-elevated) !important;
+	border-color: var(--pgm-border-strong) !important;
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .paginate_button {
+	background: var(--pgm-bg-elevated) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text-secondary) !important;
+}
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current,
+html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current:hover {
+	background: var(--pgm-primary-muted) !important;
+	border-color: var(--pgm-primary) !important;
+	color: var(--pgm-primary) !important;
+}
+
+/* Modo claro: DataTables em .card com tokens (consistência com Guia PGM) */
+html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead th,
+html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead td {
+	background: var(--pgm-bg-elevated) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody td {
+	color: var(--pgm-text-secondary) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable a.link {
+	color: var(--pgm-link) !important;
+}

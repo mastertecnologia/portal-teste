@@ -133,7 +133,19 @@
 					type: 'POST',
 					url: postUrl,
 					data: payload,
-					success: function () {},
+					dataType: 'json',
+					success: function (data) {
+						if (!data || data.ok !== true) {
+							applyTheme(prev);
+							$(LOGGED_TOGGLE_SEL).each(function () {
+								updateToggleButton($(this), prev);
+							});
+							persistLocal(prev);
+							if (window.bootbox) {
+								bootbox.alert('Erro ao trocar o tema. Tente novamente.');
+							}
+						}
+					},
 					error: function () {
 						applyTheme(prev);
 						$(LOGGED_TOGGLE_SEL).each(function () {

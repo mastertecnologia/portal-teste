@@ -75,7 +75,9 @@ class AppController extends Controller {
 				'vaultReveal',
 				'verificasenha',
 				'verificadadoscliente',
-				// selectTheme: POST com _csrfToken (meta csrfToken + public/js/pgm-portal-theme.js)
+				// selectTheme: desbloqueado do _Token do Security (POST AJAX só com theme);
+				// CSRF validado manualmente em UsersController::selectTheme (hash_equals _csrfToken).
+				'selectTheme',
 				// Faturamento: modal alterar status (POST sem _Token no corpo)
 				'alterarStatus',
 				// Webhook Autentique (corpo JSON; sem _Token)
