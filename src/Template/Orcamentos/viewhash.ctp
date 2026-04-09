@@ -2,7 +2,7 @@
     use Cake\Routing\Router;
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']));
 
-    $dval = date_format(date_create($orcamento['validoate']), "d/m/Y");
+    $dval = pgm_format_date_br($orcamento['validoate'] ?? null);
     $orcamento['validoate'] = $dval;
     $nomeCliente = $orcamento->cliente->tipo == C_ClientesTipoJuridica ? $orcamento->cliente->razaosocial : $orcamento->cliente->nome;
 	$contatoFone = '';

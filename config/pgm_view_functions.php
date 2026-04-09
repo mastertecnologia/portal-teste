@@ -23,3 +23,144 @@ if (!function_exists('LocacaoStatus')) {
 		return htmlspecialchars($out, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 	}
 }
+
+/**
+ * Polyfills usados em .ctp e em OrdensservicoTable::historicoOrdens quando
+ * vendor/PGMPackages/Utilities.php não está presente no deploy.
+ * Não redeclara se o legado já definiu a função.
+ */
+if (!function_exists('formatCnpjCpf')) {
+	/**
+	 * @param mixed $value CPF/CNPJ com ou sem máscara
+	 */
+	function formatCnpjCpf($value): string {
+		if ($value === null || $value === '') {
+			return '';
+		}
+		$digits = preg_replace('/\D/', '', (string) $value);
+		if (strlen($digits) === 11) {
+			return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $digits);
+		}
+		if (strlen($digits) === 14) {
+			return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $digits);
+		}
+
+		return (string) $value;
+	}
+}
+
+if (!function_exists('pgm_format_date_br')) {
+	/**
+	 * Normaliza para d/m/Y (entrada: FrozenDate, DateTime, Y-m-d, d/m/Y, etc.).
+	 */
+	function pgm_format_date_br($value): string {
+		if ($value instanceof \DateTimeInterface) {
+			return $value->format('d/m/Y');
+		}
+		if ($value === null || $value === '') {
+			return '';
+		}
+		$s = trim((string) $value);
+		if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}/', $s)) {
+			$d = \DateTime::createFromFormat('d/m/Y', substr($s, 0, 10));
+			if ($d instanceof \DateTime) {
+				return $d->format('d/m/Y');
+			}
+		}
+		$d = date_create($s);
+		if ($d instanceof \DateTime) {
+			return $d->format('d/m/Y');
+		}
+
+		return '';
+	}
+}
+
+if (!function_exists('descricaoMes')) {
+	/**
+	 * Nome do mês em português. $abbr: 0 = completo, 1 = abreviado (3 letras).
+	 *
+	 * @param mixed $date d/m/Y, Y-m-d, DateTime ou timestamp numérico
+	 */
+	function descricaoMes($date, $abbr = 0): string {
+		$ts = null;
+		if ($date instanceof \DateTimeInterface) {
+			$ts = $date->getTimestamp();
+		} elseif (is_int($date) || (is_float($date) && $date > 1000000000)) {
+			$ts = (int) $date;
+		}
+		if ($ts === null && is_string($date) && trim($date) !== '') {
+			$s = trim($date);
+			$d = \DateTime::createFromFormat('d/m/Y', $s);
+			if (!($d instanceof \DateTime)) {
+				$d = date_create($s);
+			}
+			$ts = ($d instanceof \DateTime) ? $d->getTimestamp() : null;
+		}
+		if ($ts === null) {
+			return '';
+		}
+		$n = (int) date('n', $ts);
+		$full = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+		$short = ['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+		if ((int) $abbr === 1) {
+			return $short[$n] ?? '';
+		}
+
+		return $full[$n] ?? '';
+	}
+}
+
+if (!function_exists('dataAtual')) {
+	function dataAtual(): string {
+		return date('d/m/Y');
+	}
+}
+
+if (!function_exists('primeiroDiaMes')) {
+	function primeiroDiaMes(string $dataBr): string {
+		$d = \DateTime::createFromFormat('d/m/Y', trim($dataBr));
+		if (!($d instanceof \DateTime)) {
+			return $dataBr;
+		}
+		$d->modify('first day of this month');
+
+		return $d->format('d/m/Y');
+	}
+}
+
+if (!function_exists('ultimoDiaMes')) {
+	function ultimoDiaMes(string $dataBr): string {
+		$d = \DateTime::createFromFormat('d/m/Y', trim($dataBr));
+		if (!($d instanceof \DateTime)) {
+			return $dataBr;
+		}
+		$d->modify('last day of this month');
+
+		return $d->format('d/m/Y');
+	}
+}
+
+if (!function_exists('increaseMonths')) {
+	function increaseMonths(string $dataBr, int $meses = 1): string {
+		$d = \DateTime::createFromFormat('d/m/Y', trim($dataBr));
+		if (!($d instanceof \DateTime)) {
+			return $dataBr;
+		}
+		$d->modify('+' . $meses . ' months');
+
+		return $d->format('d/m/Y');
+	}
+}
+
+if (!function_exists('decreaseMonths')) {
+	function decreaseMonths(string $dataBr, int $meses = 1): string {
+		$d = \DateTime::createFromFormat('d/m/Y', trim($dataBr));
+		if (!($d instanceof \DateTime)) {
+			return $dataBr;
+		}
+		$d->modify('-' . $meses . ' months');
+
+		return $d->format('d/m/Y');
+	}
+}

@@ -17,7 +17,7 @@ $versaoLbl = isset($orcVersaoLabel) ? h($orcVersaoLabel) : 'v1';
 $emissao = $orcamento->created ? date_format($orcamento->created, 'd/m/Y') : '';
 $validadeFmt = '';
 if (!empty($orcamento->validoate)) {
-	$validadeFmt = date_format(date_create($orcamento->validoate), 'd/m/Y');
+	$validadeFmt = pgm_format_date_br($orcamento->validoate);
 }
 
 $nomeCliente = $orcamento->cliente->tipo == C_ClientesTipoJuridica

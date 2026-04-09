@@ -6,7 +6,7 @@
 	$this->Breadcrumbs->add('Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Editar Orçamento', [], ['class' => 'breadcrumb-item active']);
 
-	$dval = date_format(date_create($orcamento['validoate']), "d/m/Y");
+	$dval = pgm_format_date_br($orcamento['validoate'] ?? null);
 	$orcamento['validoate'] = $dval;
 ?>
 <style>

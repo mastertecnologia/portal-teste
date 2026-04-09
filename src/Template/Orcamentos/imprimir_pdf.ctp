@@ -69,7 +69,7 @@ if (!empty($carrinho)) {
 					</tr>
 					<tr>
 						<th>Validade</th>
-						<td><?= date_format(date_create($orcamento->validoate), 'd/m/Y') ?></td>
+						<td><?= h(pgm_format_date_br($orcamento->validoate ?? null)) ?></td>
 					</tr>
 				</table>
 			</td>
