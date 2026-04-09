@@ -4,10 +4,6 @@
  * Requer TicketConstants.php carregado antes das chamadas que usam C_*.
  */
 
-use DateTime;
-use DateTimeImmutable;
-use DateTimeZone;
-
 /**
  * @param string $dmY
  * @return DateTimeImmutable|null
