@@ -168,6 +168,35 @@ class RbacPermissoesHttpTest extends TestCase {
 	}
 
 	/**
+	 * Admin legado: export CSV da matriz (UTF-8 BOM + cabeçalho).
+	 */
+	public function testAdminLegacyAdminMatrixExportCsvOk(): void {
+		self::_seedUser(1, ['admin' => 1, 'role' => 0]);
+		$this->session([
+			'Auth' => [
+				'User' => [
+					'id' => 1,
+					'username' => 'admin_csv_http',
+					'name' => 'Admin CSV',
+					'role' => 0,
+					'admin' => 1,
+					'idcliente' => null,
+					'idempresa' => null,
+					'setor' => null,
+					'permissaoacesso' => null,
+				],
+			],
+		]);
+		$this->get($this->permissoesPath('admin-matrix-export-csv'));
+		$this->assertResponseOk();
+		$this->assertHeaderContains('Content-Type', 'csv');
+		$body = (string)$this->_response->getBody();
+		$this->assertStringStartsWith("\xEF\xBB\xBF", $body);
+		$this->assertStringContainsString('module', $body);
+		$this->assertStringContainsString('permission_id', $body);
+	}
+
+	/**
 	 * Admin legado: catálogo adminIndex (permissoes.catalog.view bypass via admin).
 	 */
 	public function testAdminLegacyAdminCatalogLoads(): void {
@@ -243,7 +272,7 @@ class RbacPermissoesHttpTest extends TestCase {
 		self::_seedUser(3, ['admin' => 0, 'role' => 0]);
 		self::$conn->execute(
 			'INSERT INTO rbac_permissions (code, name, module, controller, action, sort_order) VALUES (?,?,?,?,?,?)',
-			['permissoes.matrix.view', 'Matriz', 'Painel administrativo', 'Permissoes', 'adminMatrix,admin_matrix', 0]
+			['permissoes.matrix.view', 'Matriz', 'Painel administrativo', 'Permissoes', 'adminMatrix,admin_matrix,adminMatrixExportCsv,admin_matrix_export_csv', 0]
 		);
 		$pid = (int)self::$conn->lastInsertId();
 		self::$conn->execute(
@@ -336,7 +365,7 @@ class RbacPermissoesHttpTest extends TestCase {
 		self::_seedUser(13, ['admin' => 0, 'role' => 0]);
 		self::$conn->execute(
 			'INSERT INTO rbac_permissions (code, name, module, controller, action, sort_order) VALUES (?,?,?,?,?,?)',
-			['permissoes.matrix.view', 'Matriz só', 'Painel administrativo', 'Permissoes', 'adminMatrix,admin_matrix', 0]
+			['permissoes.matrix.view', 'Matriz só', 'Painel administrativo', 'Permissoes', 'adminMatrix,admin_matrix,adminMatrixExportCsv,admin_matrix_export_csv', 0]
 		);
 		$pid = (int)self::$conn->lastInsertId();
 		self::$conn->execute(

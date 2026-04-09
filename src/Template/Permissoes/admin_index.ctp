@@ -33,10 +33,60 @@ $this->Breadcrumbs->add('Permissões RBAC/ABAC', [], ['class' => 'breadcrumb-ite
 				<strong>Tabelas não encontradas.</strong> Execute a migration <code class="ap-code-blue">20260327140000_RbacPermissionsFoundation</code> (bin/cake migrations migrate) e recarregue esta página.
 			</div>
 		<?php else : ?>
+			<?php
+			$catalogModuleOptions = isset($catalogModuleOptions) && is_array($catalogModuleOptions) ? $catalogModuleOptions : [];
+			$catalogFilterModule = isset($catalogFilterModule) ? (string)$catalogFilterModule : '';
+			$catalogFilterQ = isset($catalogFilterQ) ? (string)$catalogFilterQ : '';
+			$nPermShown = isset($nPermShown) ? (int)$nPermShown : (int)$nPerm;
+			$catalogFilterActive = ($catalogFilterModule !== '' || $catalogFilterQ !== '');
+			?>
 			<p class="admin-rbac-meta">
-				<strong><?= (int)$nPerm ?></strong> permissões no banco ·
+				<?php if ($catalogFilterActive) : ?>
+					A mostrar <strong><?= (int)$nPermShown ?></strong> de <strong><?= (int)$nPerm ?></strong> permissões ·
+				<?php else : ?>
+					<strong><?= (int)$nPerm ?></strong> permissões no banco ·
+				<?php endif; ?>
 				<strong><?= (int)$nRoles ?></strong> papéis ativos
 			</p>
+			<div class="admin-rbac-callout admin-rbac-callout--matrix-toolbar admin-rbac-catalog-filter">
+				<?= $this->Form->create(null, ['type' => 'get', 'url' => ['action' => 'adminIndex'], 'class' => 'admin-rbac-matrix-toolbar-form']) ?>
+				<div class="admin-rbac-matrix-toolbar-row">
+					<div class="admin-rbac-matrix-toolbar-field">
+						<label for="catalog-module" class="admin-rbac-matrix-filter-label">Módulo</label>
+						<?= $this->Form->control('module', [
+							'type' => 'select',
+							'label' => false,
+							'id' => 'catalog-module',
+							'options' => $catalogModuleOptions,
+							'empty' => 'Todos',
+							'value' => $catalogFilterModule,
+							'class' => 'form-control input-sm',
+						]) ?>
+					</div>
+					<div class="admin-rbac-matrix-toolbar-field admin-rbac-matrix-toolbar-field--grow">
+						<label for="catalog-q" class="admin-rbac-matrix-filter-label">Pesquisar</label>
+						<?= $this->Form->control('q', [
+							'type' => 'text',
+							'label' => false,
+							'id' => 'catalog-q',
+							'value' => $catalogFilterQ,
+							'placeholder' => 'Código, nome, controller…',
+							'class' => 'form-control input-sm',
+							'autocomplete' => 'off',
+						]) ?>
+					</div>
+					<div class="admin-rbac-matrix-toolbar-actions">
+						<?= $this->Form->button('<i class="fa fa-search"></i> Filtrar', ['class' => 'btn btn-primary btn-sm', 'escape' => false]) ?>
+					</div>
+				</div>
+				<?= $this->Form->end() ?>
+				<?php if ($catalogFilterActive) : ?>
+					<?= $this->Html->link('Limpar filtros', ['action' => 'adminIndex'], ['class' => 'admin-rbac-matrix-clear-link']) ?>
+				<?php endif; ?>
+			</div>
+			<?php if ($catalogFilterActive && $nPermShown === 0) : ?>
+				<div class="admin-rbac-callout">Nenhuma permissão corresponde ao filtro. <?= $this->Html->link('Limpar', ['action' => 'adminIndex'], ['class' => 'admin-rbac-a-inline']) ?>.</div>
+			<?php endif; ?>
 			<?php foreach ($byModule as $module => $items) : ?>
 				<h3 class="admin-rbac-mod-title"><?= h($module) ?></h3>
 				<ul class="admin-rbac-perm-list">

@@ -50,6 +50,7 @@ class PermissoesController extends AppController {
 			'adminIndex' => ['permissoes.catalog.view'],
 			'adminSyncRegistry' => ['permissoes.registry.sync'],
 			'adminMatrix' => ['permissoes.matrix.view'],
+			'adminMatrixExportCsv' => ['permissoes.matrix.view'],
 			'adminMatrixSave' => ['permissoes.matrix.edit'],
 			'adminGrantSuperAll' => ['permissoes.matrix.grant_super'],
 			'adminRoles' => ['permissoes.roles.edit'],
@@ -95,20 +96,47 @@ class PermissoesController extends AppController {
 		$permissions = $this->RbacPermissions->find()
 			->order(['module' => 'ASC', 'sort_order' => 'ASC', 'name' => 'ASC'])
 			->all();
-		$byModule = [];
+		$moduleOptions = [];
 		foreach ($permissions as $p) {
 			$m = $p->module ?: 'Outros';
+			$moduleOptions[$m] = $m;
+		}
+		ksort($moduleOptions, SORT_NATURAL | SORT_FLAG_CASE);
+		$moduleFilter = trim((string)$this->request->getQuery('module'));
+		$qFilter = trim((string)$this->request->getQuery('q'));
+		$qNorm = $qFilter !== '' ? mb_strtolower($qFilter) : '';
+		$byModule = [];
+		$nShown = 0;
+		foreach ($permissions as $p) {
+			$m = $p->module ?: 'Outros';
+			if ($moduleFilter !== '' && $m !== $moduleFilter) {
+				continue;
+			}
+			if ($qNorm !== '') {
+				$blob = mb_strtolower(
+					(string)$p->code . ' ' . (string)$p->name . ' ' . (string)($p->controller ?? '') . ' ' . (string)($p->action ?? '')
+				);
+				if (mb_strpos($blob, $qNorm) === false) {
+					continue;
+				}
+			}
 			if (!isset($byModule[$m])) {
 				$byModule[$m] = [];
 			}
 			$byModule[$m][] = $p;
+			$nShown++;
 		}
+		ksort($byModule, SORT_NATURAL | SORT_FLAG_CASE);
 		$roles = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
 		$this->set([
 			'byModule' => $byModule,
 			'roles' => $roles,
 			'nPerm' => $permissions->count(),
+			'nPermShown' => $nShown,
 			'nRoles' => $roles->count(),
+			'catalogModuleOptions' => $moduleOptions,
+			'catalogFilterModule' => $moduleFilter,
+			'catalogFilterQ' => $qFilter,
 		]);
 	}
 
@@ -141,9 +169,24 @@ class PermissoesController extends AppController {
 			return;
 		}
 		$this->_ensureDefaultRoles();
-		$permissions = $this->RbacPermissions->find()
-			->order(['module' => 'ASC', 'sort_order' => 'ASC', 'name' => 'ASC'])
-			->all();
+		$matrixFilterModule = trim((string)$this->request->getQuery('module'));
+		$matrixFilterQ = trim((string)$this->request->getQuery('q'));
+		$matrixCtx = $this->_rbacMatrixFilteredPermissions($matrixFilterModule, $matrixFilterQ);
+		$permissions = $matrixCtx['permissionsList'];
+		$matrixModuleOptions = $matrixCtx['matrixModuleOptions'];
+		$matrixPermTotal = $matrixCtx['matrixPermTotal'];
+		$matrixPermShown = $matrixCtx['matrixPermShown'];
+		$matrixFilterActive = $matrixCtx['matrixFilterActive'];
+		$matrixPermissionsByModule = [];
+		foreach ($permissions as $p) {
+			$mk = $p->module ?: 'Outros';
+			if (!isset($matrixPermissionsByModule[$mk])) {
+				$matrixPermissionsByModule[$mk] = [];
+			}
+			$matrixPermissionsByModule[$mk][] = $p;
+		}
+		ksort($matrixPermissionsByModule, SORT_NATURAL | SORT_FLAG_CASE);
+
 		$roles = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
 		$map = [];
 		foreach ($this->RbacRolesPermissions->find()->all() as $l) {
@@ -195,8 +238,96 @@ class PermissoesController extends AppController {
 			'matrixSpotlightPermIds',
 			'matrixEquipeUserOptions',
 			'matrixCanEdit',
-			'matrixRoleEditable'
+			'matrixRoleEditable',
+			'matrixModuleOptions',
+			'matrixFilterModule',
+			'matrixFilterQ',
+			'matrixPermTotal',
+			'matrixPermShown',
+			'matrixFilterActive',
+			'matrixPermissionsByModule'
 		));
+	}
+
+	/**
+	 * Exporta CSV da vista atual da matriz (mesmos filtros GET: module, q, user_id opcional para coluna efetiva).
+	 */
+	public function adminMatrixExportCsv() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		if (!$this->_rbacTablesExist()) {
+			return $this->response->withStatus(404);
+		}
+		$this->_ensureDefaultRoles();
+		$module = trim((string)$this->request->getQuery('module'));
+		$q = trim((string)$this->request->getQuery('q'));
+		$ctx = $this->_rbacMatrixFilteredPermissions($module, $q);
+		$list = $ctx['permissionsList'];
+		$roles = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
+		$map = [];
+		foreach ($this->RbacRolesPermissions->find()->all() as $l) {
+			$map[(int)$l->role_id][(int)$l->permission_id] = true;
+		}
+		$uid = 0;
+		$spotIds = [];
+		$hasEffectiveCol = false;
+		if ($this->_rbacUsersTablesExist()) {
+			$uid = (int)$this->request->getQuery('user_id');
+			if ($uid > 0) {
+				$spotUser = $this->Users->find()
+					->select(['id'])
+					->where(['id' => $uid, 'role' => 0, 'idcliente IS' => null])
+					->first();
+				if ($spotUser) {
+					$spotIds = RbacEffectivePermissionIds::effectivePermissionIdMapForUser($uid);
+					$hasEffectiveCol = true;
+				}
+			}
+		}
+
+		$header = ['module', 'code', 'name', 'controller', 'action', 'permission_id'];
+		foreach ($roles as $r) {
+			$slugPart = preg_replace('/[^a-z0-9_]+/i', '_', (string)$r->slug);
+			$slugPart = $slugPart !== '' ? $slugPart : 'role';
+			$header[] = 'role_' . (int)$r->id . '_' . $slugPart;
+		}
+		if ($hasEffectiveCol) {
+			$header[] = 'effective_user_' . $uid;
+		}
+
+		$fh = fopen('php://temp', 'r+');
+		if ($fh === false) {
+			return $this->response->withStatus(500);
+		}
+		fputcsv($fh, $header);
+		foreach ($list as $p) {
+			$row = [
+				$p->module ?: 'Outros',
+				(string)$p->code,
+				(string)$p->name,
+				(string)($p->controller ?? ''),
+				(string)($p->action ?? ''),
+				(int)$p->id,
+			];
+			foreach ($roles as $r) {
+				$row[] = !empty($map[(int)$r->id][(int)$p->id]) ? '1' : '0';
+			}
+			if ($hasEffectiveCol) {
+				$row[] = !empty($spotIds[(int)$p->id]) ? '1' : '0';
+			}
+			fputcsv($fh, $row);
+		}
+		rewind($fh);
+		$csv = stream_get_contents($fh);
+		fclose($fh);
+		$csv = "\xEF\xBB\xBF" . $csv;
+
+		$fn = 'matriz-rbac-' . date('Ymd-His') . '.csv';
+
+		return $this->response
+			->withType('csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fn . '"')
+			->withStringBody($csv);
 	}
 
 	/**
@@ -237,6 +368,13 @@ class PermissoesController extends AppController {
 		$allPermIds = $this->RbacPermissions->find()->select(['id'])->all()->extract('id')->toList();
 		$validPermSet = array_fill_keys(array_map('intval', $allPermIds), true);
 
+		$visibleRaw = (string)$this->request->getData('matrix_visible_perm_ids');
+		$visibleIds = array_values(array_unique(array_filter(array_map('intval', explode(',', $visibleRaw)), static function ($v) {
+			return $v > 0;
+		})));
+		$visibleSet = array_fill_keys($visibleIds, true);
+		$usePartialMerge = $visibleIds !== [];
+
 		$updatedRoles = 0;
 		foreach ($editableRoleIds as $roleId) {
 			$permList = $matrix[$roleId] ?? $matrix[(string)$roleId] ?? [];
@@ -245,6 +383,23 @@ class PermissoesController extends AppController {
 			$ids = array_values(array_filter($ids, static function ($pid) use ($validPermSet) {
 				return $pid > 0 && isset($validPermSet[$pid]);
 			}));
+
+			if ($usePartialMerge) {
+				$existing = $this->RbacRolesPermissions->find()
+					->select(['permission_id'])
+					->where(['role_id' => $roleId])
+					->all()
+					->extract('permission_id')
+					->toList();
+				$keep = [];
+				foreach ($existing as $pid) {
+					$pid = (int)$pid;
+					if ($pid > 0 && !isset($visibleSet[$pid])) {
+						$keep[] = $pid;
+					}
+				}
+				$ids = array_values(array_unique(array_merge($keep, $ids)));
+			}
 
 			$this->RbacRolesPermissions->deleteAll(['role_id' => $roleId]);
 			foreach ($ids as $pid) {
@@ -267,6 +422,14 @@ class PermissoesController extends AppController {
 		$retUid = (int)$this->request->getData('return_user_id');
 		if ($retUid > 0) {
 			$q['user_id'] = $retUid;
+		}
+		$savedModule = trim((string)$this->request->getData('return_matrix_module'));
+		$savedQ = trim((string)$this->request->getData('return_matrix_q'));
+		if ($savedModule !== '') {
+			$q['module'] = $savedModule;
+		}
+		if ($savedQ !== '') {
+			$q['q'] = $savedQ;
 		}
 
 		return $this->redirect(['action' => 'adminMatrix', '?' => $q]);
@@ -1110,6 +1273,48 @@ class PermissoesController extends AppController {
 			'readonly' => 'readonly — só leitura se tiver a permissão; ocultar se não tiver',
 		];
 		$this->set(compact('fieldPerm', 'permList', 'id', 'accessModes'));
+	}
+
+	/**
+	 * Catálogo completo ordenado + lista filtrada (módulo exato + texto em code/name/controller/action).
+	 *
+	 * @return array{permissionsList:\App\Model\Entity\RbacPermission[], matrixModuleOptions:array<string,string>, matrixPermTotal:int, matrixPermShown:int, matrixFilterActive:bool}
+	 */
+	protected function _rbacMatrixFilteredPermissions(string $matrixFilterModule, string $matrixFilterQ): array {
+		$permissionsAll = $this->RbacPermissions->find()
+			->order(['module' => 'ASC', 'sort_order' => 'ASC', 'name' => 'ASC'])
+			->all();
+		$matrixModuleOptions = [];
+		foreach ($permissionsAll as $p) {
+			$m = $p->module ?: 'Outros';
+			$matrixModuleOptions[$m] = $m;
+		}
+		ksort($matrixModuleOptions, SORT_NATURAL | SORT_FLAG_CASE);
+		$qNorm = $matrixFilterQ !== '' ? mb_strtolower($matrixFilterQ) : '';
+		$permissionsList = [];
+		foreach ($permissionsAll as $p) {
+			$m = $p->module ?: 'Outros';
+			if ($matrixFilterModule !== '' && $m !== $matrixFilterModule) {
+				continue;
+			}
+			if ($qNorm !== '') {
+				$blob = mb_strtolower(
+					(string)$p->code . ' ' . (string)$p->name . ' ' . (string)($p->controller ?? '') . ' ' . (string)($p->action ?? '')
+				);
+				if (mb_strpos($blob, $qNorm) === false) {
+					continue;
+				}
+			}
+			$permissionsList[] = $p;
+		}
+
+		return [
+			'permissionsList' => $permissionsList,
+			'matrixModuleOptions' => $matrixModuleOptions,
+			'matrixPermTotal' => $permissionsAll->count(),
+			'matrixPermShown' => count($permissionsList),
+			'matrixFilterActive' => $matrixFilterModule !== '' || $matrixFilterQ !== '',
+		];
 	}
 
 	protected function _rbacPermissionPoliciesTableExists() {
