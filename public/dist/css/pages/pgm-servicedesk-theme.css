@@ -146,3 +146,104 @@ html[data-pgm-theme="light"] body.sd-body .form-control:focus {
 	border-color: var(--pgm-primary);
 	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
 }
+
+/* ── Abertura de chamado: tema claro força campos claros (evita textarea “escura” com utilitários globais) ── */
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .form-control,
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap textarea.form-control {
+	background-color: #f8fafc !important;
+	color: #0f172a !important;
+	border-color: #e2e8f0 !important;
+}
+
+/* ── Abertura de chamado: tema escuro coerente com tokens PGM ── */
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-kicker,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-sub,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-sum-field-label {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-title {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status {
+	background: var(--pgm-bg-surface) !important;
+	border: 1px solid var(--pgm-border);
+	box-shadow: none;
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card .sd-rule {
+	background: var(--pgm-bg-surface) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card {
+	background: rgba(0, 168, 118, 0.08) !important;
+	border: 1px solid var(--pgm-border);
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-title,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-label-block,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-field label.control-label {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-desc,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-hint {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .form-control,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-textarea.form-control,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-field .form-control,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-email.form-control {
+	background: var(--pgm-bg-elevated) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border-strong) !important;
+	-webkit-text-fill-color: var(--pgm-text) !important;
+	box-shadow: none !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-dropzone,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-sum-item,
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-lead {
+	background: var(--pgm-bg-elevated) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status-value.is-ok {
+	color: var(--pgm-primary) !important;
+}
+
+/* ── React tickets (Vite): reforço quando alguma utility Tailwind não tiver variante dark ── */
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white {
+	background-color: var(--pgm-bg-surface) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white\/90 {
+	background-color: color-mix(in srgb, var(--pgm-bg-surface) 92%, transparent) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/40,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/80,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/90 {
+	background-color: color-mix(in srgb, var(--pgm-bg-elevated) 88%, transparent) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-900,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-800 {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-700,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-600 {
+	color: var(--pgm-text-secondary) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-500,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-400 {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-100,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-200 {
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+	border-color: var(--pgm-border) !important;
+}

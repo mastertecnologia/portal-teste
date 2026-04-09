@@ -75,10 +75,10 @@
 		margin: 0.15rem 0 0;
 		font-size: 0.875rem;
 		font-weight: 600;
-		color: #00c08b;
+		color: #00a876;
 		transition: color 0.15s ease;
 	}
-	.sd-add-status-value.is-ok { color: #00c08b; }
+	.sd-add-status-value.is-ok { color: #00a876; }
 	.sd-add-status-value.is-warn { color: #d97706; }
 	.sd-add-status-value.is-muted { color: #64748b; }
 	.sd-add-status-value.is-danger { color: #dc2626; }
@@ -234,8 +234,8 @@
 		transition: border-color 0.2s, background 0.2s;
 	}
 	.ticket-dropzone.ticket-dropzone--drag {
-		border-color: #00c08b;
-		background: rgba(29, 158, 117, 0.08);
+		border-color: #00a876;
+		background: rgba(0, 168, 118, 0.1);
 	}
 	.ticket-dropzone:hover {
 		border-color: #94a3b8;
@@ -421,9 +421,9 @@
 		font-weight: 700;
 		cursor: pointer;
 		transition: filter 0.15s ease, opacity 0.15s;
-		background: linear-gradient(135deg, #00c08b 0%, #008f68 100%) !important;
+		background: linear-gradient(135deg, #00a876 0%, #007a55 100%) !important;
 		color: #fff !important;
-		box-shadow: 0 2px 10px rgba(29, 158, 117, 0.28);
+		box-shadow: 0 2px 10px rgba(0, 168, 118, 0.28);
 	}
 	.sd-actions-card .sd-btn-submit:hover:not(:disabled):not(.disabled) {
 		filter: brightness(1.06);

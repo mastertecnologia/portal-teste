@@ -26,5 +26,5 @@ $this->append(
 ?>
 <?php /* Filho direto de .row precisa ser .col-* no Bootstrap, senão largura/overflow quebram o React */ ?>
 <div class="col-md-12 tickets-react-shell p-0">
-	<div id="tickets-react-root" class="tickets-react-host w-100"></div>
+	<div id="tickets-react-root" class="tickets-react-host tickets-react-sd w-100"></div>
 </div>

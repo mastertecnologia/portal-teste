@@ -188,11 +188,11 @@ function TicketActionsMenu({
 
   const toneCls = {
     default:
-      'text-slate-700 hover:bg-teal-50 hover:text-teal-900 focus-visible:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-400/60',
+      'text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus-visible:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#00a876]/45 dark:text-[var(--pgm-text)] dark:hover:bg-emerald-950/40 dark:hover:text-emerald-100 dark:focus-visible:bg-emerald-950/40 dark:focus-visible:ring-[var(--pgm-primary)]/40',
     muted:
-      'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300',
+      'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 dark:text-[var(--pgm-text-muted)] dark:hover:bg-[var(--pgm-bg-elevated)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:ring-[var(--pgm-border)]',
     danger:
-      'text-slate-700 hover:bg-red-50 hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-300/70',
+      'text-slate-700 hover:bg-red-50 hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-300/70 dark:text-red-200 dark:hover:bg-red-950/40 dark:hover:text-red-100',
   };
 
   const rowBase =
@@ -203,12 +203,12 @@ function TicketActionsMenu({
       ref={menuRef}
       role="menu"
       aria-label={`Ações do ticket ${ticket.id}`}
-      className="fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5"
+      className="fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65)] dark:ring-white/10"
       style={{ top: pos.top, left: pos.left }}
     >
-      <div className="border-b border-slate-100 bg-gradient-to-r from-teal-50/90 to-slate-50/80 px-3 py-2">
+      <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 px-3 py-2 dark:border-[var(--pgm-border)] dark:from-emerald-950/50 dark:to-[var(--pgm-bg-elevated)]">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-800/90">Chamado</p>
-        <p className="text-sm font-bold tabular-nums text-slate-900">#{ticket.id}</p>
+        <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-[var(--pgm-text)]">#{ticket.id}</p>
       </div>
       <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto py-1">
         {acoesOrd.map((a) => {
@@ -339,9 +339,14 @@ function techRowHighlightClass(ticket) {
       ticket.tecnicos === '—' ||
       ticket.tecnicos === '');
   const parts = ['align-middle', 'transition'];
-  if (label.includes('aguardando')) parts.push('bg-amber-50/70');
-  else if (label.includes('execução') || label.includes('andamento')) parts.push('bg-sky-50/60');
-  if (semResp) parts.push('ring-1', 'ring-inset', 'ring-slate-300/80');
+  if (label.includes('aguardando')) {
+    parts.push('bg-emerald-50/90', 'dark:bg-emerald-950/35');
+  } else if (label.includes('execução') || label.includes('andamento')) {
+    parts.push('bg-teal-50/80', 'dark:bg-teal-950/30');
+  }
+  if (semResp) {
+    parts.push('ring-1', 'ring-inset', 'ring-slate-300/80', 'dark:ring-slate-600/50');
+  }
   return parts.join(' ');
 }
 
@@ -643,27 +648,27 @@ export default function TechDashboard({ boot }) {
 
   /** Campos compactos (Service Desk embutido). */
   const sdField =
-    'h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-1 focus:ring-teal-500/30';
+    'h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#00a876] focus:ring-1 focus:ring-[#00a876]/30 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:placeholder:text-[var(--pgm-text-muted)] dark:focus:border-[var(--pgm-primary)] dark:focus:ring-[var(--pgm-primary)]/35';
 
   const tableSection = (
     <section
       className={
         embedded
-          ? 'overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm'
-          : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
+          ? 'overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
+          : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]'
       }
     >
       {loadError ? (
-        <div className="border-b border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950">
+        <div className="border-b border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/35 dark:text-amber-100">
           <span className="font-semibold">Lista não carregou: </span>
           {loadError}
         </div>
       ) : null}
       {!embedded ? (
-        <div className="flex flex-col gap-3 border-b border-slate-100 p-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-3 dark:border-[var(--pgm-border)] lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Fila</h3>
-            <p className="text-sm text-slate-500">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-[var(--pgm-text)]">Fila</h3>
+            <p className="text-sm text-slate-500 dark:text-[var(--pgm-text-muted)]">
               {totalTodos} ticket(s) na empresa · integração JSON ativa quando embutido no CakePHP
             </p>
           </div>
@@ -672,12 +677,12 @@ export default function TechDashboard({ boot }) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar nº, cliente ou assunto"
-              className="h-9 w-full min-w-[180px] rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-xs"
+              className="h-9 w-full min-w-[180px] rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:placeholder:text-[var(--pgm-text-muted)] dark:focus:border-[var(--pgm-primary)] sm:max-w-xs"
             />
             <select
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
-              className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-teal-500"
+              className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
             >
               <option value="todos">Todos</option>
               <option value="ativos">Aguardando + Em execução</option>
@@ -689,12 +694,12 @@ export default function TechDashboard({ boot }) {
           </div>
         </div>
       ) : wfEnabled ? (
-        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto">
+        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
           <span
-            className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500"
+            className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500 dark:text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
           >
-            <span className="font-semibold text-slate-800">{totalTodos}</span> na empresa
+            <span className="font-semibold text-slate-800 dark:text-[var(--pgm-text)]">{totalTodos}</span> na empresa
           </span>
           <input
             id="sd-tech-q"
@@ -762,12 +767,12 @@ export default function TechDashboard({ boot }) {
           </select>
         </div>
       ) : (
-        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto">
+        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
           <span
-            className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500"
+            className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500 dark:text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
           >
-            <span className="font-semibold text-slate-800">{totalTodos}</span> na empresa
+            <span className="font-semibold text-slate-800 dark:text-[var(--pgm-text)]">{totalTodos}</span> na empresa
           </span>
           <input
             id="sd-tech-q"
@@ -796,7 +801,7 @@ export default function TechDashboard({ boot }) {
 
       {transferOkHint ? (
         <div
-          className="border-b border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+          className="border-b border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-100"
           role="status"
           aria-live="polite"
         >
@@ -806,11 +811,11 @@ export default function TechDashboard({ boot }) {
 
       {wfEnabled ? (
         !embedded ? (
-          <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/40 p-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/40 p-3 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/40 sm:flex-row sm:flex-wrap sm:items-center">
             <select
               value={filaSuporte}
               onChange={(e) => setFilaSuporte(e.target.value)}
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
             >
               <option value="">Todas as filas</option>
               {filasMeta.map((f) => (
@@ -822,7 +827,7 @@ export default function TechDashboard({ boot }) {
             <select
               value={nivelAtendimento}
               onChange={(e) => setNivelAtendimento(e.target.value)}
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
             >
               <option value="">Todos os níveis</option>
               {[1, 2, 3, 4, 5].map((n) => (
@@ -834,7 +839,7 @@ export default function TechDashboard({ boot }) {
             <select
               value={idResponsavel}
               onChange={(e) => setIdResponsavel(e.target.value)}
-              className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-teal-500"
+              className="h-9 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
             >
               <option value="">Qualquer técnico</option>
               {tecnicosOpcoes.map((t) => (
@@ -847,10 +852,16 @@ export default function TechDashboard({ boot }) {
         ) : null
       ) : null}
 
-      <div className={embedded ? 'overflow-hidden' : 'mt-5 overflow-hidden rounded-2xl border border-slate-200'}>
+      <div
+        className={
+          embedded
+            ? 'overflow-hidden'
+            : 'mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-[var(--pgm-border)]'
+        }
+      >
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
-            <thead className="bg-slate-50 text-left text-xs text-slate-500">
+          <table className="min-w-full divide-y divide-slate-200 text-xs dark:divide-[var(--pgm-border)] sm:text-sm">
+            <thead className="bg-slate-50 text-left text-xs text-slate-500 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)]">
               <tr>
                 <th className="px-2 py-1.5 font-semibold sm:px-3">Ticket</th>
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Autor</th>
@@ -868,10 +879,13 @@ export default function TechDashboard({ boot }) {
                 <th className="w-[7.25rem] min-w-[7.25rem] px-2 py-1.5 text-right font-semibold sm:px-3">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-slate-100 bg-white dark:divide-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={colCount} className="px-4 py-8 text-center text-slate-500">
+                  <td
+                    colSpan={colCount}
+                    className="px-4 py-8 text-center text-slate-500 dark:text-[var(--pgm-text-muted)]"
+                  >
                     {loadError
                       ? 'Ajuste o problema indicado acima e atualize a página.'
                       : 'Nenhum ticket neste filtro.'}
@@ -884,15 +898,21 @@ export default function TechDashboard({ boot }) {
                   return (
                     <tr
                       key={ticket.id}
-                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-50/80`}
+                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-50/80 dark:hover:bg-[var(--pgm-bg-elevated)]/90`}
                     >
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.edit ? (
-                          <a className="text-teal-700 hover:underline" href={ticket.urls.edit}>
+                          <a
+                            className="text-[#00a876] hover:underline dark:text-[var(--pgm-primary)]"
+                            href={ticket.urls.edit}
+                          >
                             #{ticket.id}
                           </a>
                         ) : (
-                          <Link className="text-teal-700 hover:underline" to={`/cliente/ticket/${ticket.id}`}>
+                          <Link
+                            className="text-[#00a876] hover:underline dark:text-[var(--pgm-primary)]"
+                            to={`/cliente/ticket/${ticket.id}`}
+                          >
                             #{ticket.id}
                           </Link>
                         )}
@@ -972,8 +992,8 @@ export default function TechDashboard({ boot }) {
 
       {transferOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h4 className="text-lg font-bold text-slate-900">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
+            <h4 className="text-lg font-bold text-slate-900 dark:text-[var(--pgm-text)]">
               Transferir ticket #{transferTicket?.id}
             </h4>
             <p className="mt-1 text-sm text-slate-500">
@@ -987,12 +1007,12 @@ export default function TechDashboard({ boot }) {
               {queuesRelacional ? (
                 <>
                   {transferQueuesErr ? <p className="text-sm text-amber-800">{transferQueuesErr}</p> : null}
-                  <label className="block text-sm font-medium text-slate-700">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
                     Fila de destino
                     <select
                       value={transferQueueId}
                       onChange={(e) => setTransferQueueId(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
                     >
                       <option value="">Selecione…</option>
                       {transferQueues.map((fq) => (
@@ -1002,10 +1022,12 @@ export default function TechDashboard({ boot }) {
                       ))}
                     </select>
                   </label>
-                  <fieldset className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                    <legend className="px-1 text-sm font-medium text-slate-700">Responsável</legend>
+                  <fieldset className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/60">
+                    <legend className="px-1 text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
+                      Responsável
+                    </legend>
                     <div className="mt-2 space-y-2">
-                      <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                      <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700 dark:text-[var(--pgm-text)]">
                         <input
                           type="radio"
                           name="transferAssign"
@@ -1018,7 +1040,7 @@ export default function TechDashboard({ boot }) {
                         />
                         <span>Somente mover para a fila (sem definir técnico responsável)</span>
                       </label>
-                      <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                      <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700 dark:text-[var(--pgm-text)]">
                         <input
                           type="radio"
                           name="transferAssign"
@@ -1031,12 +1053,12 @@ export default function TechDashboard({ boot }) {
                     </div>
                   </fieldset>
                   {transferAssignMode === 'com' ? (
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
                       Técnico
                       <select
                         value={transferDest}
                         onChange={(e) => setTransferDest(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
                       >
                         <option value="">Selecione o técnico…</option>
                         {tecnicosModal.map((tm) => (
@@ -1056,12 +1078,12 @@ export default function TechDashboard({ boot }) {
               ) : (
                 <>
                   {wfEnabled ? (
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
                       Fila de destino
                       <select
                         value={transferFila}
                         onChange={(e) => setTransferFila(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
                       >
                         {filasMeta.map((f) => (
                           <option key={f.code} value={f.code}>
@@ -1072,10 +1094,12 @@ export default function TechDashboard({ boot }) {
                     </label>
                   ) : null}
                   {wfEnabled ? (
-                    <fieldset className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                      <legend className="px-1 text-sm font-medium text-slate-700">Responsável</legend>
+                    <fieldset className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/60">
+                      <legend className="px-1 text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
+                        Responsável
+                      </legend>
                       <div className="mt-2 space-y-2">
-                        <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                        <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700 dark:text-[var(--pgm-text)]">
                           <input
                             type="radio"
                             name="transferAssignLegacy"
@@ -1088,7 +1112,7 @@ export default function TechDashboard({ boot }) {
                           />
                           <span>Só alterar a fila; deixar sem técnico responsável (aguardando na fila)</span>
                         </label>
-                        <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                        <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700 dark:text-[var(--pgm-text)]">
                           <input
                             type="radio"
                             name="transferAssignLegacy"
@@ -1102,12 +1126,12 @@ export default function TechDashboard({ boot }) {
                     </fieldset>
                   ) : null}
                   {(!wfEnabled || transferAssignMode === 'com') && (
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
                       {wfEnabled ? 'Técnico de destino' : 'Novo técnico responsável'}
                       <select
                         value={transferDest}
                         onChange={(e) => setTransferDest(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
                       >
                         <option value="">Selecione…</option>
                         {tecnicosOpcoes.map((t) => (
@@ -1120,13 +1144,13 @@ export default function TechDashboard({ boot }) {
                   )}
                 </>
               )}
-              <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-[var(--pgm-text)]">
                 Motivo
                 <textarea
                   value={transferMotivo}
                   onChange={(e) => setTransferMotivo(e.target.value)}
                   rows={3}
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#00a876] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:focus:border-[var(--pgm-primary)]"
                   placeholder="Ex.: Escalação para N2 — necessidade de visita presencial."
                 />
               </label>
@@ -1135,7 +1159,7 @@ export default function TechDashboard({ boot }) {
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-[var(--pgm-border)] dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-bg-elevated)]"
                 onClick={() => setTransferOpen(false)}
                 disabled={transferSaving}
               >
@@ -1143,7 +1167,7 @@ export default function TechDashboard({ boot }) {
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
+                className="rounded-lg bg-[#00a876] px-4 py-2 text-sm font-semibold text-white hover:bg-[#007a55] disabled:opacity-50 dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
                 onClick={() => submitTransfer()}
                 disabled={transferSaving}
               >
@@ -1158,16 +1182,16 @@ export default function TechDashboard({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-tech w-full overflow-visible pt-1 text-slate-800">
+      <div className="tickets-react-tech w-full overflow-visible pt-1 text-slate-800 dark:text-[var(--pgm-text)]">
         <header className="mb-2 flex min-h-[2.75rem] flex-wrap items-center justify-between gap-3 overflow-visible py-1">
-          <h2 className="m-0 min-w-0 self-center text-lg font-semibold leading-snug tracking-tight text-slate-900">
+          <h2 className="m-0 min-w-0 self-center text-lg font-semibold leading-snug tracking-tight text-slate-900 dark:text-[var(--pgm-text)]">
             {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
           </h2>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             {!boot?.servicedesk && boot?.paths?.ticketsOperacional ? (
               <a
                 href={boot.paths.ticketsOperacional}
-                className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold leading-none text-slate-700 shadow-sm hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold leading-none text-slate-700 shadow-sm hover:bg-slate-50 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-bg-surface)]"
               >
                 Painel operacional
               </a>
@@ -1175,7 +1199,7 @@ export default function TechDashboard({ boot }) {
             {addTicket ? (
               <a
                 href={addTicket}
-                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-teal-800"
+                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[#00a876] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[#007a55] dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
               >
                 Abrir ticket
               </a>

@@ -60,12 +60,12 @@
 }
 
 #tickets-react-root .tickets-react-ticket-strip a {
-  color: #00c08b !important;
+  color: #00a876 !important;
   text-decoration: none;
 }
 
 #tickets-react-root .tickets-react-ticket-strip a:hover {
-  color: #008f68 !important;
+  color: #007a55 !important;
   text-decoration: underline;
 }
 
