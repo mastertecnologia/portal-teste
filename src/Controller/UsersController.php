@@ -165,8 +165,8 @@ class UsersController extends AppController {
 		$mes = date('01/m/Y');
 		$empresa = $this->Auth->user('idempresa');
 
-		$iniSemana = $this->_dataBrParaDb(primeiroDiaSemana());
-		$finSemana = $this->_dataBrParaDb(ultimoDiaSemana());
+		$iniSemana = $this->_dataBrParaDb(\primeiroDiaSemana());
+		$finSemana = $this->_dataBrParaDb(\ultimoDiaSemana());
 
 		if($role == 0) { 
 			$ordensTable = $this->Ordensservico->findByIdempresa($empresa)
@@ -1606,8 +1606,8 @@ class UsersController extends AppController {
 	}
 
 	public function atendimentosSemana() {
-		$inicio = primeiroDiaSemana();
-		$fim = ultimoDiaSemana();
+		$inicio = \primeiroDiaSemana();
+		$fim = \ultimoDiaSemana();
 
 		$this->set('dataini', $inicio);
 		$this->set('datafim', $fim);
@@ -1721,8 +1721,8 @@ class UsersController extends AppController {
 
 			$cliente = null;
 
-			$cnpj = removeCaracteres(trim((string)($data['cnpj'] ?? '')));
-			$cpf = removeCaracteres(trim((string)($data['cpfcliente'] ?? '')));
+			$cnpj = \removeCaracteres(trim((string)($data['cnpj'] ?? '')));
+			$cpf = \removeCaracteres(trim((string)($data['cpfcliente'] ?? '')));
 
 			if (!empty($cnpj)) {
 				$cliente = $this->Clientes
@@ -1826,7 +1826,7 @@ class UsersController extends AppController {
 			$empresaIdCadastro = !empty($data['idempresa']) ? (int)$data['idempresa'] : null;
 			$empresaId = $empresaIdAtual ?: $empresaIdCadastro;
 		
-			$clientes = $this->Clientes->findByCnpj(removeCaracteres($cnpj))->toArray();
+			$clientes = $this->Clientes->findByCnpj(\removeCaracteres($cnpj))->toArray();
 			$cliente = null;
 
 			// Prioriza a empresa selecionada pelo usuário (quando houver contexto).
@@ -1861,7 +1861,7 @@ class UsersController extends AppController {
 			$empresaIdAtual = !empty($this->Auth->user('idempresa')) ? (int)$this->Auth->user('idempresa') : null;
 			$empresaIdCadastro = !empty($data['idempresa']) ? (int)$data['idempresa'] : null;
 			$empresaId = $empresaIdAtual ?: $empresaIdCadastro;
-			$clientes = $this->Clientes->findByCpf(removeCaracteres($cpf))->toArray();
+			$clientes = $this->Clientes->findByCpf(\removeCaracteres($cpf))->toArray();
 			$cliente = null;
 
 			if ($empresaId) {
@@ -1914,7 +1914,7 @@ class UsersController extends AppController {
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout("ajax");
 
-		$cpf = removeCaracteres($cpf);
+		$cpf = \removeCaracteres($cpf);
 		$user = $this->Users->findByCpf($cpf)->first();
 
 		if(empty($user)) $tudocerto = 'Não foi encontrado um usuário com este CPF!';
@@ -1982,10 +1982,10 @@ class UsersController extends AppController {
 		if (mb_strtoupper($nomeresponsavel, 'UTF-8') !== mb_strtoupper((string)$cliente->nomeresponsavel, 'UTF-8')) {
 			$tudocerto = 'nao';
 		}
-		if (removeCaracteres($cpf) !== removeCaracteres($cliente->cpf ?? '')) {
+		if (\removeCaracteres($cpf) !== \removeCaracteres($cliente->cpf ?? '')) {
 			$tudocerto = 'nao';
 		}
-		if (removeCaracteres($rg) !== removeCaracteres($cliente->rg ?? '')) {
+		if (\removeCaracteres($rg) !== \removeCaracteres($cliente->rg ?? '')) {
 			$tudocerto = 'nao';
 		}
 
@@ -2082,7 +2082,7 @@ class UsersController extends AppController {
 	public function verificasenha($senhaadm) {
         $this->autoRender = false;
 		$empresa = $this->Empresas->get(C_EmpresaPGM);
-        if($empresa->senhaadministrativa == criptografasenha($senhaadm)) return $this->jsonResponse(['Mensagem' => 'Senha correta'], 200);
+        if($empresa->senhaadministrativa == \criptografasenha($senhaadm)) return $this->jsonResponse(['Mensagem' => 'Senha correta'], 200);
 		else return $this->jsonResponse(['Mensagem' => 'Senha administrativa incorreta'], 400);
 	}
 
@@ -2452,8 +2452,8 @@ class UsersController extends AppController {
 		} catch (RecordNotFoundException $e) {
 		}
 
-		$user->hashreset = criptografaSenha($user->id . $user->name . date('d/m/Y|H:i:s'));
-		$user->hashreset = removeCaracteres($user->hashreset);
+		$user->hashreset = \criptografaSenha($user->id . $user->name . date('d/m/Y|H:i:s'));
+		$user->hashreset = \removeCaracteres($user->hashreset);
 		$user->hashreset_expires = FrozenTime::now()->addMinutes(10);
 		if (!$this->Users->save($user)) {
 			$this->Flash->error(__('Não foi possível gerar o link de redefinição. Tente novamente.'));
