@@ -243,6 +243,8 @@ return [
 		'menu_sidebar_gates' => [
 			// shouldShowSidebarGate: toda a equipe; exceção bypass_legacy_super + users.admin (menu completo).
 			'dashboard' => 'dashboard.view',
+			// Só painel PGM (cards requisições / notificações); não aparece na sidebar.
+			'dashboard_requisicoes' => 'users.requisicoes_acesso',
 			'sidebar_functions_search' => 'pesquisa.sidebar_search',
 			// Fase 6c: painel clássico vs indicadores avançados (cada ligação); secção visível se qualquer for true.
 			'relatorios_painel' => 'relatorios.painel.view',

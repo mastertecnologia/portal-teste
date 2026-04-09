@@ -41,6 +41,27 @@
 		}
 		arsort($topClientesCount);
 		$topClientes = array_slice($topClientesCount, 0, 6, true);
+
+		$sgDash = isset($sidebarMenuGates) && is_array($sidebarMenuGates) ? $sidebarMenuGates : [];
+		$dg = function (string $k) use ($sgDash): bool {
+			if ($sgDash === []) {
+				return true;
+			}
+
+			return (bool)($sgDash[$k] ?? true);
+		};
+		$dgOr = function (array $keys) use ($dg): bool {
+			foreach ($keys as $k) {
+				if ($dg((string)$k)) {
+					return true;
+				}
+			}
+
+			return false;
+		};
+		$showDashTickets = $dgOr(['tickets_servicedesk', 'tickets_historico']);
+		$showDashReq = $dg('dashboard_requisicoes');
+		$showDashStatsRow = $showDashTickets || $showDashReq;
 	?>
 	<div class="col-12 p-0">
 		<div class="dash-pgm">
@@ -48,13 +69,16 @@
 				<div class="dash-pgm-topbar-title">Dashboard</div>
 				<div class="dash-pgm-topbar-right">
 					<div class="dash-pgm-clock" id="dashPgmClock"><?= date('d/m/Y') ?> — <?= date('H:i') ?></div>
+					<?php if ($showDashReq) : ?>
 					<button class="dash-pgm-notif-btn" id="dashPgmNotifBtn" type="button">
 						<i class="fas fa-bell"></i>
 						<span class="dash-pgm-notif-dot<?= $reqCount === 0 ? ' is-hidden' : '' ?>" id="dashPgmNotifDot"></span>
 					</button>
+					<?php endif; ?>
 				</div>
 			</div>
 
+			<?php if ($showDashReq) : ?>
 			<div class="dash-pgm-notif-panel" id="dashPgmNotifPanel">
 				<div class="dash-pgm-notif-header">
 					Notificações <span id="dashPgmNotifCount"><?= $reqCount === 0 ? 'nenhuma pendente' : ((int)$reqCount . ' nova' . ((int)$reqCount !== 1 ? 's' : '')) ?></span>
@@ -77,24 +101,37 @@
 					<a href="<?= h($urlReqAcesso) ?>" class="dash-pgm-notif-footer">Gerenciar requisições de acesso</a>
 				<?php endif; ?>
 			</div>
+			<?php endif; ?>
 
 			<div class="dash-pgm-content" id="dashPgmContent">
+
+			<?php if (!empty($dashPgmSemEmpresaSessao)) : ?>
+				<div class="alert alert-warning m-b-20" role="alert" style="border-radius:8px;">
+					<strong>Sessão sem empresa válida.</strong> O utilizador não tem vínculo em <code>empresasusers</code> ou a empresa da sessão está vazia.
+					Troque de empresa no menu lateral (se disponível) ou peça a um administrador para editar o utilizador e marcar <strong>Empresas de acesso</strong>, depois faça login de novo.
+				</div>
+			<?php endif; ?>
 
 			<!-- Módulos rápidos -->
 			<div class="dash-pgm-modules">
 				<?php
 					$_ctrl = $this->request->getParam('controller');
 					$modulos = [
-						['label' => 'Clientes',   'icon' => 'fa-building',             'url' => ['controller'=>'Clientes','action'=>'index'],       'active' => $_ctrl === 'Clientes'],
-						['label' => 'Produtos',   'icon' => 'fa-boxes',                'url' => ['controller'=>'Produtos','action'=>'index'],        'active' => $_ctrl === 'Produtos'],
-						['label' => 'OS',         'icon' => 'fa-file-signature',       'url' => ['controller'=>'Ordensservico','action'=>'index'],   'active' => $_ctrl === 'Ordensservico'],
-						['label' => 'Tickets',    'icon' => 'fa-ticket-alt',           'url' => ['controller'=>'Servicedesk','action'=>'index'],     'active' => $_ctrl === 'Servicedesk'],
-						['label' => 'Orçamentos', 'icon' => 'fa-file-invoice-dollar',  'url' => ['controller'=>'Orcamentos','action'=>'index'],      'active' => $_ctrl === 'Orcamentos'],
-						['label' => 'Locação',    'icon' => 'fa-file-invoice',         'url' => ['controller'=>'Faturas','action'=>'index'],         'active' => $_ctrl === 'Faturas'],
-						['label' => 'Agenda',     'icon' => 'fa-calendar-alt',         'url' => ['controller'=>'Agenda','action'=>'calendario'],     'active' => $_ctrl === 'Agenda'],
-						['label' => 'Senhas',     'icon' => 'fa-lock',                 'url' => ['controller'=>'Bancosenhas','action'=>'index'],     'active' => $_ctrl === 'Bancosenhas'],
+						['label' => 'Clientes',   'icon' => 'fa-building',             'url' => ['controller'=>'Clientes','action'=>'index'],       'active' => $_ctrl === 'Clientes', 'gate' => ['clientes']],
+						['label' => 'Produtos',   'icon' => 'fa-boxes',                'url' => ['controller'=>'Produtos','action'=>'index'],        'active' => $_ctrl === 'Produtos', 'gate' => ['produtos']],
+						['label' => 'OS',         'icon' => 'fa-file-signature',       'url' => ['controller'=>'Ordensservico','action'=>'index'],   'active' => $_ctrl === 'Ordensservico', 'gate' => ['ordensservico_list', 'ordensservico_nova'], 'gate_or' => true],
+						['label' => 'Tickets',    'icon' => 'fa-ticket-alt',           'url' => ['controller'=>'Servicedesk','action'=>'index'],     'active' => $_ctrl === 'Servicedesk', 'gate' => ['tickets_servicedesk', 'tickets_historico'], 'gate_or' => true],
+						['label' => 'Orçamentos', 'icon' => 'fa-file-invoice-dollar',  'url' => ['controller'=>'Orcamentos','action'=>'index'],      'active' => $_ctrl === 'Orcamentos', 'gate' => ['orcamentos']],
+						['label' => 'Locação',    'icon' => 'fa-file-invoice',         'url' => ['controller'=>'Faturas','action'=>'index'],         'active' => $_ctrl === 'Faturas', 'gate' => ['faturas_locacao']],
+						['label' => 'Agenda',     'icon' => 'fa-calendar-alt',         'url' => ['controller'=>'Agenda','action'=>'calendario'],     'active' => $_ctrl === 'Agenda', 'gate' => ['visitas_agenda']],
+						['label' => 'Senhas',     'icon' => 'fa-lock',                 'url' => ['controller'=>'Bancosenhas','action'=>'index'],     'active' => $_ctrl === 'Bancosenhas', 'gate' => ['bancosenhas']],
 					];
 					foreach ($modulos as $mod):
+						$gk = $mod['gate'];
+						$passMod = !empty($mod['gate_or']) ? $dgOr($gk) : $dg($gk[0]);
+						if (!$passMod) {
+							continue;
+						}
 				?>
 				<?= $this->Html->link(
 					'<div class="dash-pgm-mod-icon"><i class="fas ' . $mod['icon'] . '"></i></div>' . h($mod['label']),
@@ -104,7 +141,9 @@
 				<?php endforeach; ?>
 			</div>
 
+				<?php if ($showDashStatsRow) : ?>
 				<div class="dash-pgm-stats-grid">
+					<?php if ($showDashTickets) : ?>
 					<div class="dash-pgm-stat-card" data-filter="aguardando">
 						<div class="dash-pgm-stat-icon orange"><i class="fas fa-tools"></i></div>
 						<div class="dash-pgm-stat-info">
@@ -129,6 +168,8 @@
 							<div class="dash-pgm-stat-hint">Clique para filtrar</div>
 						</div>
 					</div>
+					<?php endif; ?>
+					<?php if ($showDashReq) : ?>
 					<div class="dash-pgm-stat-card" data-filter="requisicoes" id="dashPgmReqCard">
 						<div class="dash-pgm-stat-icon purple"><i class="fas fa-user-lock"></i></div>
 						<div class="dash-pgm-stat-info">
@@ -137,6 +178,7 @@
 							<div class="dash-pgm-stat-hint">Clique para filtrar</div>
 						</div>
 					</div>
+					<?php endif; ?>
 				</div>
 
 				<div class="dash-pgm-filter-section" id="dashPgmFilterSection">
@@ -157,7 +199,9 @@
 						</div>
 					</div>
 				</div>
+				<?php endif; ?>
 
+				<?php if ($showDashTickets) : ?>
 				<div class="dash-pgm-mid-row">
 					<div class="dash-pgm-mini-card">
 						<div class="dash-pgm-mini-title">SLA em Tempo Real</div>
@@ -263,14 +307,18 @@
 						</div>
 					</div>
 				</div>
+				<?php endif; ?>
 			</div>
 		</div>
 	</div>
+	<?php if ($showDashTickets) : ?>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+	<?php endif; ?>
 	<script>
 	(function() {
-		var filterData = {
-			aguardando: {
+		var filterData = {};
+<?php if ($showDashTickets) : ?>
+		filterData.aguardando = {
 				color: '#d29922',
 				title: 'Tickets Aguardando Técnico',
 				subtitle: '<?= count($ticketsPend) ?> tickets aguardando atribuição',
@@ -289,8 +337,8 @@
 					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteCellAg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
-			},
-			execucao: {
+			};
+		filterData.execucao = {
 				color: '#388bfd',
 				title: 'Tickets Em Execução',
 				subtitle: '<?= count($ticketsExec) ?> tickets em andamento',
@@ -311,8 +359,8 @@
 					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteCellExec, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
-			},
-			finalizados: {
+			};
+		filterData.finalizados = {
 				color: '#3fb950',
 				title: 'Tickets Finalizados',
 				subtitle: '<?= (int)($ticketsFinalizadosCount ?? 0) ?> na empresa · detalhe: até <?= count($ticketsFin) ?> mais recentes',
@@ -326,8 +374,10 @@
 					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($refData, 'd/m/Y')) ?>, "Finalizado"],
 					<?php endforeach; ?>
 				]
-			},
-			requisicoes: {
+			};
+<?php endif; ?>
+<?php if ($showDashReq) : ?>
+		filterData.requisicoes = {
 				color: '#bc8cff',
 				title: 'Requisições de Acesso',
 				subtitle: '<?= $reqCount ?> requisições aguardando aprovação',
@@ -344,8 +394,8 @@
 					[<?= json_encode($nomeReq) ?>, "Acesso", <?= json_encode(!empty($u->created) ? date_format($u->created, 'd/m/Y') : date('d/m/Y')) ?>, <?= json_encode('<span class="sla-badge sla-pending">Pendente</span>') ?>, <?= json_encode($acaoHtml, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>],
 					<?php endforeach; ?>
 				]
-			}
-		};
+			};
+<?php endif; ?>
 
 		var activeFilter = null;
 		var filterSection = document.getElementById('dashPgmFilterSection');
@@ -364,21 +414,36 @@
 		function closeFilter() {
 			activeFilter = null;
 			statCards.forEach(function(c){ c.classList.remove('active-filter'); });
-			filterSection.classList.remove('visible');
+			if (filterSection) {
+				filterSection.classList.remove('visible');
+			}
 		}
 
 		function openFilter(key) {
+			if (!filterSection || !filterThead || !filterTbody) {
+				return;
+			}
+			var d = filterData[key];
+			if (!d) {
+				return;
+			}
 			if (activeFilter === key) {
 				closeFilter();
 				return;
 			}
 			activeFilter = key;
-			var d = filterData[key];
+			var card = document.querySelector('.dash-pgm-stat-card[data-filter="' + key + '"]');
+			if (!card) {
+				return;
+			}
 			statCards.forEach(function(c){ c.classList.remove('active-filter'); });
-			document.querySelector('.dash-pgm-stat-card[data-filter="' + key + '"]').classList.add('active-filter');
-			document.getElementById('dashPgmFilterTitle').textContent = d.title;
-			document.getElementById('dashPgmFilterSubtitle').textContent = d.subtitle;
-			document.getElementById('dashPgmFilterDot').style.background = d.color;
+			card.classList.add('active-filter');
+			var ft = document.getElementById('dashPgmFilterTitle');
+			var fs = document.getElementById('dashPgmFilterSubtitle');
+			var fd = document.getElementById('dashPgmFilterDot');
+			if (ft) ft.textContent = d.title;
+			if (fs) fs.textContent = d.subtitle;
+			if (fd) fd.style.background = d.color;
 			filterThead.innerHTML = '<tr>' + d.head.map(function(h){ return '<th>' + h + '</th>'; }).join('') + '</tr>';
 			filterTbody.innerHTML = d.rows.length ? d.rows.map(function(r){
 				return '<tr class="dash-pgm-row" onclick="dashPgmSelectRow(this)">' + r.map(function(c, i){
@@ -389,12 +454,17 @@
 			filterSection.classList.add('visible');
 		}
 
-		statCards.forEach(function(card){
-			card.addEventListener('click', function(){
-				openFilter(card.getAttribute('data-filter'));
+		if (filterSection && filterThead && filterTbody) {
+			statCards.forEach(function(card){
+				card.addEventListener('click', function(){
+					openFilter(card.getAttribute('data-filter'));
+				});
 			});
-		});
-		document.getElementById('dashPgmFilterClose').addEventListener('click', closeFilter);
+			var filterClose = document.getElementById('dashPgmFilterClose');
+			if (filterClose) {
+				filterClose.addEventListener('click', closeFilter);
+			}
+		}
 
 		document.querySelectorAll('#dashPgmContent .dash-pgm-row').forEach(function(row) {
 			row.addEventListener('click', function() { selectRow(row); });
@@ -402,28 +472,33 @@
 
 		var notifBtn = document.getElementById('dashPgmNotifBtn');
 		var notifPanel = document.getElementById('dashPgmNotifPanel');
-		notifBtn.addEventListener('click', function(e) {
-			e.stopPropagation();
-			notifPanel.classList.toggle('open');
-		});
-		document.addEventListener('click', function(e) {
-			if (!e.target.closest('#dashPgmNotifPanel') && !e.target.closest('#dashPgmNotifBtn')) {
-				notifPanel.classList.remove('open');
-			}
-		});
+		if (notifBtn && notifPanel) {
+			notifBtn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				notifPanel.classList.toggle('open');
+			});
+			document.addEventListener('click', function(e) {
+				if (!e.target.closest('#dashPgmNotifPanel') && !e.target.closest('#dashPgmNotifBtn')) {
+					notifPanel.classList.remove('open');
+				}
+			});
+		}
 
 		var clock = document.getElementById('dashPgmClock');
-		setInterval(function() {
-			var now = new Date();
-			var pad = function(v){ return (v < 10 ? '0' : '') + v; };
-			clock.textContent = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' — ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-		}, 30000);
+		if (clock) {
+			setInterval(function() {
+				var now = new Date();
+				var pad = function(v){ return (v < 10 ? '0' : '') + v; };
+				clock.textContent = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' — ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+			}, 30000);
+		}
 
-		if (window.Chart) {
+		var trendChartEl = document.getElementById('dashPgmTrendChart');
+		if (window.Chart && trendChartEl) {
 			var labels = <?= json_encode($trendLabels) ?>;
 			var opened = <?= json_encode($trendOpened) ?>;
 			var closed = <?= json_encode($trendClosed) ?>;
-			new Chart(document.getElementById('dashPgmTrendChart'), {
+			new Chart(trendChartEl, {
 				type: 'line',
 				data: {
 					labels: labels,

@@ -168,7 +168,17 @@ class UsersController extends AppController {
 		$iniSemana = $this->_dataBrParaDb(\primeiroDiaSemana());
 		$finSemana = $this->_dataBrParaDb(\ultimoDiaSemana());
 
-		if($role == 0) { 
+		if ($role == 0) {
+			$empresaInt = (int)$empresa;
+			$this->set('dashPgmSemEmpresaSessao', $empresaInt <= 0);
+			if ($empresaInt <= 0) {
+				$this->set('ticketsPendentesTable', []);
+				$this->set('ticketsSendoResolvidosTable', []);
+				$this->set('ticketsFinalizadosCount', 0);
+				$this->set('ticketsFinalizadosTable', []);
+				$this->set('usuariosBloqueadosTable', []);
+				$this->set('dashPgmKpi', $this->_dashPgmKpiEmpty());
+			} else {
 			$ordensTable = $this->Ordensservico->findByIdempresa($empresa)
 				->contain(['Clientes'])
 				->where([
@@ -202,14 +212,15 @@ class UsersController extends AppController {
 				->limit(50);
 			$this->Abac->applyToQuery($qTft, 'Tickets', 'Tickets');
 			$ticketsFinalizadosTable = $qTft->toArray();
-			$usuariosBloqueadosTable = $this->_usuariosBloqueadosEmpresa((int)$empresa);
+			$usuariosBloqueadosTable = $this->_usuariosBloqueadosEmpresa($empresaInt);
 
 			$this->set('ticketsPendentesTable', $ticketsPendentesTable);
 			$this->set('ticketsSendoResolvidosTable', $ticketsSendoResolvidosTable);
 			$this->set('ticketsFinalizadosCount', $ticketsFinalizadosCount);
 			$this->set('ticketsFinalizadosTable', $ticketsFinalizadosTable);
 			$this->set('usuariosBloqueadosTable', $usuariosBloqueadosTable);
-			$this->set('dashPgmKpi', $this->_dashPgmKpiData((int)$empresa));
+			$this->set('dashPgmKpi', $this->_dashPgmKpiData($empresaInt));
+			}
 		} else {
 			if(!$this->Auth->user('permissaoacesso')) return $this->redirect(['controller' => 'Tickets', 'action' => 'indexcliente']);
 
@@ -257,7 +268,11 @@ class UsersController extends AppController {
 		}
 
 		// Desempenho pessoal (ABAC em Ordensservico quando habilitado)
-		$this->set('historico', $this->Ordensservico->historicoOrdens($this->Auth->user('id'), $empresa, $this));
+		if ((int)$role === 0 && (int)$empresa <= 0) {
+			$this->set('historico', []);
+		} else {
+			$this->set('historico', $this->Ordensservico->historicoOrdens($this->Auth->user('id'), $empresa, $this));
+		}
 		// Label para o gráfico
 		$this->set('labelHist', ['Ordens de Serviço']);
 	}
@@ -295,6 +310,41 @@ class UsersController extends AppController {
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * KPIs vazios quando não há empresa na sessão (evita consultas com id 0).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function _dashPgmKpiEmpty(): array {
+		$trendLabels = [];
+		$trendOpened = [];
+		$trendClosed = [];
+		for ($i = 29; $i >= 0; $i--) {
+			$ts = strtotime('-' . $i . ' days');
+			$trendLabels[] = date('d/m', $ts);
+			$trendOpened[] = 0;
+			$trendClosed[] = 0;
+		}
+
+		return [
+			'sla_usa_enterprise' => false,
+			'sla_no_prazo' => 0,
+			'sla_em_risco' => 0,
+			'sla_vencido' => 0,
+			'sla_pct' => 0,
+			'abertos_hoje' => 0,
+			'fechados_hoje' => 0,
+			'saldo_dia' => 0,
+			'ranking' => [],
+			'ranking_period_label' => 'mês',
+			'ranking_month_closed_count' => 0,
+			'ranking_month_hint' => date('m/Y'),
+			'trend_labels' => $trendLabels,
+			'trend_opened' => $trendOpened,
+			'trend_closed' => $trendClosed,
+		];
 	}
 
 	/**
