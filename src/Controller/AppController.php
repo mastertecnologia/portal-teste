@@ -68,7 +68,7 @@ class AppController extends Controller {
 				'apiForTicket', 'getAvailableQueues', 'apiEnsureDefaults', 'apiSupportLevels', 'apiSave',
 				'adminIndex', 'adminEdit', 'adminTechnicians', 'adminDelete', 'adminEnsureDefaults',
 				'apiAdd',
-				'adminSyncRegistry', 'adminMatrix', 'adminGrantSuperAll',
+				'adminSyncRegistry', 'adminMatrix', 'adminMatrixSave', 'adminGrantSuperAll',
 				'adminUsers', 'adminUserRoles', 'adminUserEffective',
 				'adminPermissionPolicies', 'adminPermissionPolicyEdit', 'adminPermissionPolicyDelete',
 				// Cofre de senhas: revelar segredo via POST JSON (senha admin nunca na URL)
