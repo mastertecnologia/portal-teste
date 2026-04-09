@@ -2,10 +2,28 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\RbacChecker;
+use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
-require_once ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
+if (!defined('C_RoleCliente')) {
+	define('C_RoleCliente', 1);
+}
+if (!defined('C_ClientesTipoJuridica')) {
+	define('C_ClientesTipoJuridica', 2);
+}
+if (!defined('C_ClientesTipoFisica')) {
+	define('C_ClientesTipoFisica', 1);
+}
 
 /**
  * Fila de pré-faturamento: ordens com situação "Liberada para faturamento".
@@ -72,6 +90,7 @@ class PrefaturamentoController extends AppController {
 		$this->set('clientesOpt1', $clientesOpt1);
 		$this->set('title', 'Pré-faturamento');
 		$this->set('bodyPageClass', 'pgm-prefaturamento-page');
+		$this->set('showPrefaturamentoConferencia', $this->_canEditPrefaturamentoConferencia());
 	}
 
 	/**
@@ -82,6 +101,10 @@ class PrefaturamentoController extends AppController {
 		if ($this->Auth->user('role') == C_RoleCliente) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
+		if (!$this->_canEditPrefaturamentoConferencia()) {
+			$this->Flash->error(__('Sem permissão para alterar conferências de pré-faturamento.'));
+			return $this->redirect(['action' => 'index']);
 		}
 		$idempresa = (int)$this->Auth->user('idempresa');
 		$idordem = (int)$this->request->getData('idordem');
@@ -122,5 +145,31 @@ class PrefaturamentoController extends AppController {
 	protected function _boolFromRequest($key) {
 		$v = $this->request->getData($key);
 		return $v === '1' || $v === 1 || $v === true || $v === 'true' || $v === 'on';
+	}
+
+	/**
+	 * Alinha a UI e o POST conferencia a menu_sidebar_gates.prefaturamento_conferencia (Fase 6e).
+	 *
+	 * @return string|string[]
+	 */
+	protected function _prefaturamentoConferenciaGateCodes() {
+		$rb = Configure::read('Rbac');
+		if (!is_array($rb) || empty($rb['menu_sidebar_gates']['prefaturamento_conferencia'])) {
+			return ['prefaturamento.conferencia', 'prefaturamento.manage'];
+		}
+
+		return $rb['menu_sidebar_gates']['prefaturamento_conferencia'];
+	}
+
+	protected function _canEditPrefaturamentoConferencia(): bool {
+		$u = $this->Auth->user();
+		$uid = (int)($u['id'] ?? 0);
+
+		return RbacChecker::shouldShowSidebarGate(
+			$u['admin'] ?? null,
+			(int)($u['role'] ?? 1),
+			$uid,
+			$this->_prefaturamentoConferenciaGateCodes()
+		);
 	}
 }

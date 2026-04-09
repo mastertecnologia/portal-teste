@@ -2,7 +2,9 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
-use App\Utility\RbacPermissionResolver;
+use App\Utility\RbacChecker;
+use App\Utility\RbacHierarchy;
+use App\Utility\RbacEffectivePermissionIds;
 use App\Utility\RbacUserRolesResolver;
 use Cake\Core\Configure;
 use Cake\Event\Event;
@@ -25,6 +27,8 @@ class PermissoesController extends AppController {
 		$this->loadModel('RbacGroupRoles');
 		$this->loadModel('Users');
 		$this->loadModel('RbacAuditAuthorizations');
+		$this->loadModel('RbacPermissionPolicies');
+		$this->loadModel('RbacFieldPermissions');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -35,7 +39,47 @@ class PermissoesController extends AppController {
 	}
 
 	public function isAuthorized($user) {
-		return !empty($user['admin']) && (int)$user['role'] === 0;
+		if (empty($user) || (int)($user['role'] ?? -1) !== 0) {
+			return false;
+		}
+		if (!empty($user['admin'])) {
+			return true;
+		}
+		$action = (string)$this->request->getParam('action');
+		$delegate = [
+			'adminIndex' => ['permissoes.catalog.view'],
+			'adminSyncRegistry' => ['permissoes.registry.sync'],
+			'adminMatrix' => ['permissoes.matrix.view'],
+			'adminGrantSuperAll' => ['permissoes.matrix.grant_super'],
+			'adminRoles' => ['permissoes.roles.edit'],
+			'adminRoleEdit' => ['permissoes.roles.edit'],
+			'adminUsers' => ['permissoes.users.list', 'usuarios.roles.assign'],
+			'adminUserRoles' => ['permissoes.users.assign_roles', 'usuarios.roles.assign'],
+			'adminUserEffective' => ['permissoes.users.effective', 'usuarios.roles.assign'],
+			'adminPermissionPolicies' => ['permissoes.policies.manage'],
+			'adminPermissionPolicyEdit' => ['permissoes.policies.manage'],
+			'adminPermissionPolicyDelete' => ['permissoes.policies.manage'],
+			'adminFieldPermissions' => ['permissoes.fields.manage'],
+			'adminFieldPermissionEdit' => ['permissoes.fields.manage'],
+			'adminFieldPermissionDelete' => ['permissoes.fields.manage'],
+			'adminRbacAudit' => ['permissoes.audit.view'],
+			'adminGroups' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
+			'adminGroupEdit' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
+			'adminGroupRoles' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
+			'adminGroupUsers' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
+			'adminGroupDelete' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
+		];
+		if (!isset($delegate[$action])) {
+			return false;
+		}
+		$uid = (int)$user['id'];
+		foreach ($delegate[$action] as $code) {
+			if (RbacChecker::userHasPermissionCode($uid, $code)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public function adminIndex() {
@@ -131,7 +175,34 @@ class PermissoesController extends AppController {
 		foreach ($this->RbacRolesPermissions->find()->all() as $l) {
 			$map[(int)$l->role_id][(int)$l->permission_id] = true;
 		}
-		$this->set(compact('permissions', 'roles', 'map'));
+
+		$matrixSpotlightUser = null;
+		$matrixSpotlightPermIds = [];
+		$matrixEquipeUserOptions = [];
+		if ($this->_rbacUsersTablesExist()) {
+			foreach ($this->Users->find()
+				->select(['id', 'username', 'name'])
+				->where(['role' => 0, 'idcliente IS' => null])
+				->order(['name' => 'ASC', 'username' => 'ASC'])
+				->all() as $u) {
+				$matrixEquipeUserOptions[(int)$u->id] = ($u->name ?: $u->username) . ' (' . $u->username . ')';
+			}
+			$uid = (int)$this->request->getQuery('user_id');
+			if ($uid > 0) {
+				$spotUser = $this->Users->find()
+					->select(['id', 'username', 'name'])
+					->where(['id' => $uid, 'role' => 0, 'idcliente IS' => null])
+					->first();
+				if ($spotUser) {
+					$matrixSpotlightUser = $spotUser;
+					$matrixSpotlightPermIds = RbacEffectivePermissionIds::effectivePermissionIdMapForUser($uid);
+				} else {
+					$this->Flash->error(__('Utilizador da equipe não encontrado para o ID indicado.'));
+				}
+			}
+		}
+
+		$this->set(compact('permissions', 'roles', 'map', 'matrixSpotlightUser', 'matrixSpotlightPermIds', 'matrixEquipeUserOptions'));
 	}
 
 	public function adminGrantSuperAll() {
@@ -159,6 +230,83 @@ class PermissoesController extends AppController {
 		$this->Flash->success('Todas as permissões do catálogo foram associadas ao papel Super administrador.');
 
 		return $this->redirect(['action' => 'adminMatrix']);
+	}
+
+	public function adminRoles() {
+		$this->set('title', 'Papéis RBAC');
+		if (!$this->_rbacTablesExist()) {
+			$this->set('rbacMissing', true);
+
+			return;
+		}
+		$this->_ensureDefaultRoles();
+		$roles = $this->RbacRoles->find()->order(['sort_order' => 'ASC', 'name' => 'ASC'])->all();
+		$this->set(compact('roles'));
+	}
+
+	public function adminRoleEdit($id = null) {
+		$this->set('title', 'Editar papel RBAC');
+		if (!$this->_rbacTablesExist()) {
+			$this->set('rbacMissing', true);
+
+			return;
+		}
+		$this->_ensureDefaultRoles();
+		$rid = (int)($id !== null ? $id : 0);
+		if ($rid <= 0) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Papel inválido.'));
+		}
+		$role = $this->RbacRoles->find()->where(['id' => $rid])->first();
+		if (empty($role)) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Papel não encontrado.'));
+		}
+
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			if (!array_key_exists('active', $data)) {
+				$data['active'] = false;
+			}
+			$fields = ['name', 'description', 'sort_order', 'active', 'hierarchy_level'];
+			if (empty($role->is_system)) {
+				$fields[] = 'slug';
+			}
+			$this->RbacRoles->patchEntity($role, $data, ['fields' => $fields]);
+			$role->hierarchy_level = max(0, min(999999, (int)$role->hierarchy_level));
+			$role->sort_order = (int)$role->sort_order;
+			if (empty($role->is_system)) {
+				$slug = strtolower(trim((string)$role->slug));
+				if ($slug === '' || !preg_match('/^[a-z0-9][a-z0-9_-]*$/', $slug)) {
+					$this->Flash->error('Slug inválido: use letras minúsculas, números, _ e -.');
+					$this->set(compact('role'));
+
+					return;
+				}
+				$dup = $this->RbacRoles->find()
+					->where(['slug' => $slug, 'id !=' => $rid])
+					->first();
+				if ($dup) {
+					$this->Flash->error('Já existe um papel com este slug.');
+					$this->set(compact('role'));
+
+					return;
+				}
+				$role->slug = $slug;
+			}
+			if (trim((string)$role->name) === '') {
+				$this->Flash->error('Nome é obrigatório.');
+				$this->set(compact('role'));
+
+				return;
+			}
+			if ($this->RbacRoles->save($role)) {
+				$this->Flash->success('Papel atualizado.');
+
+				return $this->redirect(['action' => 'adminRoles']);
+			}
+			$this->Flash->error('Não foi possível salvar.');
+		}
+
+		$this->set(compact('role'));
 	}
 
 	public function adminUsers() {
@@ -204,14 +352,34 @@ class PermissoesController extends AppController {
 			throw new \Cake\Http\Exception\NotFoundException(__('Usuário da equipe não encontrado.'));
 		}
 
+		$selected = $this->RbacUsersRoles->find()
+			->select(['role_id'])
+			->where(['user_id' => $id])
+			->extract('role_id')
+			->toList();
+		$selected = array_map('intval', $selected);
+
 		if ($this->request->is(['post', 'put'])) {
 			$ids = $this->request->getData('role_ids');
 			if (!is_array($ids)) {
 				$ids = [];
 			}
 			$ids = array_values(array_unique(array_map('intval', $ids)));
+			$opId = (int)$this->Auth->user('id');
+			$cap = RbacHierarchy::operatorAssignHierarchyCap($this->Auth->user('admin'), $opId);
+			$allIds = array_values(array_unique(array_merge($selected, $ids)));
+			$roleIdToLevel = [];
+			if ($allIds !== []) {
+				foreach ($this->RbacRoles->find()->where(['id IN' => $allIds])->all() as $rRow) {
+					$roleIdToLevel[(int)$rRow->id] = (int)($rRow->hierarchy_level ?? 0);
+				}
+			}
+			list($finalIds, $stripped) = RbacHierarchy::finalizeRoleIdsForSave($cap, $selected, $ids, $roleIdToLevel);
+			if ($stripped !== []) {
+				$this->Flash->warning('Alguns papéis excedem seu nível hierárquico (hierarchy_level) e não foram aplicados.');
+			}
 			$this->RbacUsersRoles->deleteAll(['user_id' => $id]);
-			foreach ($ids as $rid) {
+			foreach ($finalIds as $rid) {
 				if ($rid <= 0) {
 					continue;
 				}
@@ -227,13 +395,10 @@ class PermissoesController extends AppController {
 			return $this->redirect(['action' => 'adminUsers']);
 		}
 
-		$roles = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
-		$selected = $this->RbacUsersRoles->find()
-			->select(['role_id'])
-			->where(['user_id' => $id])
-			->extract('role_id')
-			->toList();
-		$selected = array_map('intval', $selected);
+		$rolesAll = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
+		$capView = RbacHierarchy::operatorAssignHierarchyCap($this->Auth->user('admin'), (int)$this->Auth->user('id'));
+		$roles = RbacHierarchy::rolesVisibleForAssign($capView, $selected, $rolesAll);
+		$this->set('rbacHierarchyCap', $capView);
 		$this->set(compact('user', 'roles', 'selected'));
 	}
 
@@ -289,17 +454,11 @@ class PermissoesController extends AppController {
 			}
 		}
 
-		$permIdsRaw = [];
-		if ($roleIds !== []) {
-			$raw = $this->RbacRolesPermissions->find()
-				->select(['permission_id'])
-				->where(['role_id IN' => $roleIds])
-				->extract('permission_id')
-				->toList();
-			$permIdsRaw = array_values(array_unique(array_map('intval', $raw)));
-		}
+		$permIdsRaw = RbacEffectivePermissionIds::roleLinkPermissionIds($id);
 		$nPermLinks = count($permIdsRaw);
-		$permIdsExpanded = RbacPermissionResolver::expandPermissionIds($permIdsRaw);
+		$effMap = RbacEffectivePermissionIds::effectivePermissionIdMapForUser($id);
+		$permIdsExpanded = array_keys($effMap);
+		sort($permIdsExpanded, SORT_NUMERIC);
 		$nPermExpanded = count($permIdsExpanded);
 
 		$byModule = [];
@@ -435,14 +594,33 @@ class PermissoesController extends AppController {
 			throw new \Cake\Http\Exception\NotFoundException(__('Grupo não encontrado.'));
 		}
 
+		$selected = $this->RbacGroupRoles->find()
+			->select(['role_id'])
+			->where(['group_id' => $gid])
+			->extract('role_id')
+			->toList();
+		$selected = array_map('intval', $selected);
+
 		if ($this->request->is(['post', 'put'])) {
 			$ids = $this->request->getData('role_ids');
 			if (!is_array($ids)) {
 				$ids = [];
 			}
 			$ids = array_values(array_unique(array_map('intval', $ids)));
+			$cap = RbacHierarchy::operatorAssignHierarchyCap($this->Auth->user('admin'), (int)$this->Auth->user('id'));
+			$allIds = array_values(array_unique(array_merge($selected, $ids)));
+			$roleIdToLevel = [];
+			if ($allIds !== []) {
+				foreach ($this->RbacRoles->find()->where(['id IN' => $allIds])->all() as $rRow) {
+					$roleIdToLevel[(int)$rRow->id] = (int)($rRow->hierarchy_level ?? 0);
+				}
+			}
+			list($finalIds, $stripped) = RbacHierarchy::finalizeRoleIdsForSave($cap, $selected, $ids, $roleIdToLevel);
+			if ($stripped !== []) {
+				$this->Flash->warning('Alguns papéis excedem seu nível hierárquico (hierarchy_level) e não foram aplicados ao grupo.');
+			}
 			$this->RbacGroupRoles->deleteAll(['group_id' => $gid]);
-			foreach ($ids as $rid) {
+			foreach ($finalIds as $rid) {
 				if ($rid <= 0) {
 					continue;
 				}
@@ -458,13 +636,10 @@ class PermissoesController extends AppController {
 			return $this->redirect(['action' => 'adminGroups']);
 		}
 
-		$roles = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
-		$selected = $this->RbacGroupRoles->find()
-			->select(['role_id'])
-			->where(['group_id' => $gid])
-			->extract('role_id')
-			->toList();
-		$selected = array_map('intval', $selected);
+		$rolesAll = $this->RbacRoles->find()->where(['active' => true])->order(['sort_order' => 'ASC'])->all();
+		$capView = RbacHierarchy::operatorAssignHierarchyCap($this->Auth->user('admin'), (int)$this->Auth->user('id'));
+		$roles = RbacHierarchy::rolesVisibleForAssign($capView, $selected, $rolesAll);
+		$this->set('rbacHierarchyCap', $capView);
 		$this->set(compact('group', 'roles', 'selected'));
 	}
 
@@ -551,6 +726,217 @@ class PermissoesController extends AppController {
 		return $this->redirect(['action' => 'adminGroups']);
 	}
 
+	public function adminPermissionPolicies() {
+		$this->set('title', 'Políticas por permissão');
+		if (!$this->_rbacPermissionPoliciesTableExists()) {
+			$this->set('rbacPoliciesMissing', true);
+
+			return;
+		}
+		$query = $this->RbacPermissionPolicies->find()
+			->contain(['RbacPermissions'])
+			->order(['RbacPermissionPolicies.priority' => 'DESC', 'RbacPermissionPolicies.id' => 'DESC']);
+		$this->paginate = [
+			'limit' => 40,
+			'maxLimit' => 100,
+		];
+		$this->set('policyRows', $this->paginate($query));
+	}
+
+	public function adminPermissionPolicyEdit($id = null) {
+		$this->set('title', 'Política RBAC');
+		if (!$this->_rbacPermissionPoliciesTableExists()) {
+			$this->set('rbacPoliciesMissing', true);
+
+			return;
+		}
+		$id = (int)($id !== null ? $id : 0);
+		if ($id > 0) {
+			$policy = $this->RbacPermissionPolicies->find()
+				->contain(['RbacPermissions'])
+				->where(['RbacPermissionPolicies.id' => $id])
+				->first();
+			if (empty($policy)) {
+				throw new \Cake\Http\Exception\NotFoundException(__('Política não encontrada.'));
+			}
+		} else {
+			$policy = $this->RbacPermissionPolicies->newEntity([
+				'active' => true,
+				'priority' => 0,
+			]);
+		}
+
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			if (isset($data['conditions_json']) && is_string($data['conditions_json'])) {
+				$t = trim($data['conditions_json']);
+				if ($t === '') {
+					$data['conditions_json'] = null;
+				} else {
+					json_decode($t);
+					if (json_last_error() !== JSON_ERROR_NONE) {
+						$this->Flash->error('conditions_json não é JSON válido.');
+						$this->RbacPermissionPolicies->patchEntity($policy, $data);
+						$this->_setPermissionPolicyFormVars($policy, $id);
+
+						return;
+					}
+					$data['conditions_json'] = $t;
+				}
+			}
+			if ($id <= 0 && (empty($data['rbac_permission_id']) || (int)$data['rbac_permission_id'] <= 0)) {
+				$this->Flash->error('Selecione a permissão de catálogo.');
+				$this->RbacPermissionPolicies->patchEntity($policy, $data);
+				$this->_setPermissionPolicyFormVars($policy, $id);
+
+				return;
+			}
+			$this->RbacPermissionPolicies->patchEntity($policy, $data);
+			$permProbe = $this->RbacPermissions->find()
+				->where(['id' => (int)$policy->rbac_permission_id])
+				->first();
+			if (!$permProbe) {
+				$this->Flash->error('Permissão inválida.');
+				$this->_setPermissionPolicyFormVars($policy, $id);
+
+				return;
+			}
+			if ($this->RbacPermissionPolicies->save($policy)) {
+				$this->Flash->success($id > 0 ? 'Política atualizada.' : 'Política criada.');
+
+				return $this->redirect(['action' => 'adminPermissionPolicies']);
+			}
+			$this->Flash->error('Não foi possível salvar.');
+		}
+
+		$this->_setPermissionPolicyFormVars($policy, $id);
+	}
+
+	public function adminPermissionPolicyDelete($id = null) {
+		$this->request->allowMethod(['post']);
+		$pid = (int)($id !== null ? $id : 0);
+		if ($pid <= 0) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Política inválida.'));
+		}
+		if (!$this->_rbacPermissionPoliciesTableExists()) {
+			$this->Flash->error('Tabela de políticas ausente.');
+
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		$policy = $this->RbacPermissionPolicies->find()->where(['id' => $pid])->first();
+		if (empty($policy)) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Política não encontrada.'));
+		}
+		$this->RbacPermissionPolicies->delete($policy);
+		$this->Flash->success('Política excluída.');
+
+		return $this->redirect(['action' => 'adminPermissionPolicies']);
+	}
+
+	public function adminFieldPermissions() {
+		$this->set('title', 'Campos por permissão');
+		if (!$this->_rbacFieldPermissionsTableExists()) {
+			$this->set('rbacFieldPermsMissing', true);
+
+			return;
+		}
+		$query = $this->RbacFieldPermissions->find()
+			->contain(['RbacPermissions'])
+			->order(['RbacFieldPermissions.sort_order' => 'DESC', 'RbacFieldPermissions.id' => 'DESC']);
+		$this->paginate = [
+			'limit' => 40,
+			'maxLimit' => 100,
+		];
+		$this->set('fieldRows', $this->paginate($query));
+	}
+
+	public function adminFieldPermissionEdit($id = null) {
+		$this->set('title', 'Campo RBAC');
+		if (!$this->_rbacFieldPermissionsTableExists()) {
+			$this->set('rbacFieldPermsMissing', true);
+
+			return;
+		}
+		$id = (int)($id !== null ? $id : 0);
+		if ($id > 0) {
+			$fieldPerm = $this->RbacFieldPermissions->find()
+				->contain(['RbacPermissions'])
+				->where(['RbacFieldPermissions.id' => $id])
+				->first();
+			if (empty($fieldPerm)) {
+				throw new \Cake\Http\Exception\NotFoundException(__('Regra não encontrada.'));
+			}
+		} else {
+			$fieldPerm = $this->RbacFieldPermissions->newEntity([
+				'active' => true,
+				'sort_order' => 0,
+				'access_mode' => 'hidden',
+			]);
+		}
+
+		if ($this->request->is(['post', 'put'])) {
+			$data = $this->request->getData();
+			$this->RbacFieldPermissions->patchEntity($fieldPerm, $data);
+			$mode = (string)$fieldPerm->access_mode;
+			if ($mode !== 'inherit' && (empty($fieldPerm->rbac_permission_id) || (int)$fieldPerm->rbac_permission_id <= 0)) {
+				$this->Flash->error('Para modos hidden ou readonly selecione a permissão de catálogo.');
+				$this->_setFieldPermissionFormVars($fieldPerm, $id);
+
+				return;
+			}
+			if ($mode === 'inherit') {
+				$fieldPerm->rbac_permission_id = null;
+			}
+			if (trim((string)$fieldPerm->resource_key) === '') {
+				$this->Flash->error('Indique a chave do recurso/campo.');
+				$this->_setFieldPermissionFormVars($fieldPerm, $id);
+
+				return;
+			}
+			$permProbe = null;
+			if ($fieldPerm->rbac_permission_id) {
+				$permProbe = $this->RbacPermissions->find()
+					->where(['id' => (int)$fieldPerm->rbac_permission_id])
+					->first();
+			}
+			if ($mode !== 'inherit' && !$permProbe) {
+				$this->Flash->error('Permissão inválida.');
+				$this->_setFieldPermissionFormVars($fieldPerm, $id);
+
+				return;
+			}
+			if ($this->RbacFieldPermissions->save($fieldPerm)) {
+				$this->Flash->success($id > 0 ? 'Regra atualizada.' : 'Regra criada.');
+
+				return $this->redirect(['action' => 'adminFieldPermissions']);
+			}
+			$this->Flash->error('Não foi possível salvar.');
+		}
+
+		$this->_setFieldPermissionFormVars($fieldPerm, $id);
+	}
+
+	public function adminFieldPermissionDelete($id = null) {
+		$this->request->allowMethod(['post']);
+		$fid = (int)($id !== null ? $id : 0);
+		if ($fid <= 0) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Regra inválida.'));
+		}
+		if (!$this->_rbacFieldPermissionsTableExists()) {
+			$this->Flash->error('Tabela de campos ausente.');
+
+			return $this->redirect(['action' => 'adminIndex']);
+		}
+		$row = $this->RbacFieldPermissions->find()->where(['id' => $fid])->first();
+		if (empty($row)) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Regra não encontrada.'));
+		}
+		$this->RbacFieldPermissions->delete($row);
+		$this->Flash->success('Regra excluída.');
+
+		return $this->redirect(['action' => 'adminFieldPermissions']);
+	}
+
 	public function adminRbacAudit() {
 		$this->set('title', 'Auditoria RBAC');
 		if (!$this->_rbacAuditTableExists()) {
@@ -570,11 +956,52 @@ class PermissoesController extends AppController {
 		$this->set('auditRows', $this->paginate($query));
 	}
 
+	protected function _setPermissionPolicyFormVars($policy, $id) {
+		$permList = [];
+		foreach ($this->RbacPermissions->find()->order(['RbacPermissions.code' => 'ASC'])->all() as $r) {
+			$permList[(int)$r->id] = $r->code . ' — ' . $r->name;
+		}
+		$this->set(compact('policy', 'permList', 'id'));
+	}
+
+	protected function _setFieldPermissionFormVars($fieldPerm, $id) {
+		$permList = [];
+		foreach ($this->RbacPermissions->find()->order(['RbacPermissions.code' => 'ASC'])->all() as $r) {
+			$permList[(int)$r->id] = $r->code . ' — ' . $r->name;
+		}
+		$accessModes = [
+			'inherit' => 'inherit — não aplicar regra (herda da tela)',
+			'hidden' => 'hidden — ocultar se o utilizador não tiver a permissão',
+			'readonly' => 'readonly — só leitura se tiver a permissão; ocultar se não tiver',
+		];
+		$this->set(compact('fieldPerm', 'permList', 'id', 'accessModes'));
+	}
+
+	protected function _rbacPermissionPoliciesTableExists() {
+		try {
+			$tables = $this->RbacPermissions->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('rbac_permission_policies', $tables, true);
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
 	protected function _rbacAuditTableExists() {
 		try {
 			$tables = $this->RbacPermissions->getConnection()->getSchemaCollection()->listTables();
 
 			return in_array('rbac_audit_authorizations', $tables, true);
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	protected function _rbacFieldPermissionsTableExists() {
+		try {
+			$tables = $this->RbacPermissions->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('rbac_field_permissions', $tables, true);
 		} catch (\Exception $e) {
 			return false;
 		}
@@ -617,12 +1044,12 @@ class PermissoesController extends AppController {
 
 	protected function _ensureDefaultRoles() {
 		$defaults = [
-			['slug' => 'super_admin', 'name' => 'Super administrador', 'description' => 'Acesso total ao catálogo quando vinculado.', 'sort_order' => 10],
-			['slug' => 'admin_equipe', 'name' => 'Administrador da equipe', 'description' => 'Usuários internos, filas e parâmetros.', 'sort_order' => 20],
-			['slug' => 'operacao', 'name' => 'Operação', 'description' => 'OS, tickets, orçamentos, agenda.', 'sort_order' => 30],
-			['slug' => 'financeiro', 'name' => 'Financeiro', 'description' => 'Locação e faturas.', 'sort_order' => 40],
-			['slug' => 'leitura', 'name' => 'Somente leitura', 'description' => 'Consulta sem alteração.', 'sort_order' => 50],
-			['slug' => 'cliente_portal', 'name' => 'Cliente portal', 'description' => 'Usuário externo (ABAC por cliente).', 'sort_order' => 60],
+			['slug' => 'super_admin', 'name' => 'Super administrador', 'description' => 'Acesso total ao catálogo quando vinculado.', 'sort_order' => 10, 'hierarchy_level' => 10000],
+			['slug' => 'admin_equipe', 'name' => 'Administrador da equipe', 'description' => 'Usuários internos, filas e parâmetros.', 'sort_order' => 20, 'hierarchy_level' => 8000],
+			['slug' => 'operacao', 'name' => 'Operação', 'description' => 'OS, tickets, orçamentos, agenda.', 'sort_order' => 30, 'hierarchy_level' => 5000],
+			['slug' => 'financeiro', 'name' => 'Financeiro', 'description' => 'Locação e faturas.', 'sort_order' => 40, 'hierarchy_level' => 5000],
+			['slug' => 'leitura', 'name' => 'Somente leitura', 'description' => 'Consulta sem alteração.', 'sort_order' => 50, 'hierarchy_level' => 500],
+			['slug' => 'cliente_portal', 'name' => 'Cliente portal', 'description' => 'Usuário externo (ABAC por cliente).', 'sort_order' => 60, 'hierarchy_level' => 100],
 		];
 		foreach ($defaults as $d) {
 			$exists = $this->RbacRoles->find()->where(['slug' => $d['slug']])->first();

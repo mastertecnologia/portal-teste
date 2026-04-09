@@ -41,6 +41,7 @@ $this->Breadcrumbs->add('Papéis por usuário', [], ['class' => 'breadcrumb-item
 								<td>
 									<?= $this->Html->link('Editar papéis', ['action' => 'adminUserRoles', $u->id], ['class' => 'admin-section-card-link admin-rbac-table-link']) ?>
 									<?= $this->Html->link('Efetivo', ['action' => 'adminUserEffective', $u->id], ['class' => 'admin-section-card-link admin-rbac-table-link']) ?>
+									<?= $this->Html->link('Na matriz', ['action' => 'adminMatrix', '?' => ['user_id' => $u->id]], ['class' => 'admin-section-card-link admin-rbac-table-link']) ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>

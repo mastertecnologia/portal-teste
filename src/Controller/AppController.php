@@ -70,6 +70,7 @@ class AppController extends Controller {
 				'apiAdd',
 				'adminSyncRegistry', 'adminMatrix', 'adminGrantSuperAll',
 				'adminUsers', 'adminUserRoles', 'adminUserEffective',
+				'adminPermissionPolicies', 'adminPermissionPolicyEdit', 'adminPermissionPolicyDelete',
 				// Cofre de senhas: revelar segredo via POST JSON (senha admin nunca na URL)
 				'vaultReveal',
 				'verificasenha',
@@ -156,6 +157,9 @@ class AppController extends Controller {
 		$idcliente = $this->Auth->user('idcliente');
 		$empresa = $this->Auth->user('idempresa');
 
+		$showConfigAdminHub = RbacChecker::shouldShowConfigAdminHub($admin, $role, $iduser);
+		$showPermissoesRbacShortcut = RbacChecker::shouldShowPermissoesRbacShortcut($admin, $role, $iduser);
+
 		$menuStates = [
 			'dashboard' => '',
 			'usuarios' => '',
@@ -208,6 +212,7 @@ class AppController extends Controller {
 			'faturas' => 'faturasActive',
 			'prefaturamento' => 'prefaturamentoActive',
 			'tickets' => 'ticketsActive',
+			'servicedesk' => 'ticketsActive',
 			'portaladvancedattendance' => 'ticketsActive',
 			'queues' => 'queuesAtendimentoActive',
 				'advancedcontracts' => 'advancedModuleActive',
@@ -237,6 +242,9 @@ class AppController extends Controller {
 		$this->set('idempresa', $this->Auth->user('idempresa'));
 		$this->set('name', $this->Auth->user('name'));
 		$this->set('permissaoacesso', $this->Auth->user('permissaoacesso'));
+		$this->set('showConfigAdminHub', $showConfigAdminHub);
+		$this->set('showPermissoesRbacShortcut', $showPermissoesRbacShortcut);
+		$this->set('sidebarMenuGates', RbacChecker::buildSidebarMenuGates($admin, $role, $iduser));
 		$canClienteSolicitarOrcamento = false;
 		if ((int)$role === 1) {
 			$canClienteSolicitarOrcamento = RbacChecker::clientePodeSolicitarOrcamento(

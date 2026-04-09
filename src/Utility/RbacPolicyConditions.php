@@ -6,9 +6,11 @@ namespace App\Utility;
  * Formato suportado (extensível):
  *   { "all": [ { "path": "user.role", "eq": 0 }, { "path": "user.admin", "eq": true } ] }
  *   { "all": [ { "path": "request.prefix", "in": ["admin", ""] } ] }
+ *   { "all": [ { "path": "user.idempresa", "in": [1, 2] } ] } — sessão (empresa ativa)
  * path aponta para chaves em $context (mapa plano com pontos na chave).
  *
- * JSON vazio ou inválido: em modo estrito retorna false; se null/'' trata-se como «sem política» → true em matchesOrEmpty.
+ * JSON vazio ou inválido em `matches`: false. Em `matchesOrEmpty`, null ou string só espaços = «sem condição nesta linha» → true.
+ * No RBAC runtime, várias linhas em `rbac_permission_policies` para a mesma permissão funcionam em **OR**: basta uma linha satisfazer.
  */
 class RbacPolicyConditions {
 

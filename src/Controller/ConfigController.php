@@ -2,9 +2,13 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Utility\RbacChecker;
 use Cake\Event\Event;
 
 class ConfigController extends AppController {
+
+	/** @var bool hub só RBAC (equipe sem users.admin com permissões delegadas) */
+	protected $_configHubRbacDelegateOnly = false;
 
 	public function initialize() {
 		parent::initialize();
@@ -21,10 +25,59 @@ class ConfigController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Configurações');
-		if(!$this->Auth->user('admin')) return $this->redirect(['controller' => 'users','action' => 'dashboard']);
+		$this->_configHubRbacDelegateOnly = false;
+
+		$user = $this->Auth->user();
+		$role = (int)($user['role'] ?? -1);
+		$action = strtolower((string)$this->request->getParam('action'));
+		$isAdmin = !empty($user['admin']);
+		$uid = (int)($user['id'] ?? 0);
+
+		if (!$isAdmin) {
+			$permShortcut = RbacChecker::shouldShowPermissoesRbacShortcut(
+				$user['admin'] ?? null,
+				$role,
+				$uid
+			);
+			if ($role !== 0 || $action !== 'index' || !$permShortcut) {
+				$this->Flash->error('Acesso negado.');
+
+				return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+			}
+			$this->_configHubRbacDelegateOnly = true;
+			$this->set('configHubPermissoesDelegate', true);
+
+			return;
+		}
+
+		// Mesmo critério do atalho Config na sidebar (fonte única: RbacChecker::shouldShowConfigAdminHub).
+		if ($role === 0
+			&& !RbacChecker::shouldShowConfigAdminHub(
+				$user['admin'],
+				$role,
+				$uid
+			)) {
+			$this->Flash->error('Seu papel não inclui acesso ao painel administrativo.');
+
+			return $this->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+		}
 	}
 
 	public function index() {
+		if ($this->_configHubRbacDelegateOnly) {
+			$this->set([
+				'nroUsuarios' => 0,
+				'nroEmpresas' => 0,
+				'nroEmpresasusers' => 0,
+				'nroClientes' => 0,
+				'nroUsuariosEquipe' => 0,
+				'nroUsuariosClientes' => 0,
+				'hideLayoutPageTitle' => true,
+			]);
+
+			return;
+		}
+
 		$nroUsuarios = $this->Users->find();
 		$nroEmpresas = $this->Empresas->find();
 		$nroEmpresasusers = $this->Empresasusers->find();

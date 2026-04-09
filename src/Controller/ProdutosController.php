@@ -9,14 +9,27 @@ use Cake\Event\Event;
 use Cake\View\View;
 use CakeSoap\Network\CakeSoap;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-require_once (ROOT . DS . 'vendor' . DS  . '/queencitycodefactory/cakesoap/src/Network/CakeSoap.php');
-
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/queencitycodefactory/cakesoap/src/Network/CakeSoap.php';
-
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+$__cakeSoap = ROOT . DS . 'vendor' . DS . 'queencitycodefactory' . DS . 'cakesoap' . DS . 'src' . DS . 'Network' . DS . 'CakeSoap.php';
+if (is_file($__cakeSoap)) {
+	require_once $__cakeSoap;
+}
+if (!defined('C_RoleCliente')) {
+	define('C_RoleCliente', 1);
+}
+if (!defined('C_Filial')) {
+	define('C_Filial', 1);
+}
+if (!defined('C_ChaveAcesso')) {
+	define('C_ChaveAcesso', '');
+}
 
 class ProdutosController extends AppController {
 	public function initialize() {

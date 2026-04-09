@@ -1,0 +1,890 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ═══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS  — ERP Premium dark (self-contained, theme-proof)
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-root {
+	--v2-bg0:     #070910;
+	--v2-bg1:     #0c0e15;
+	--v2-bg2:     #111420;
+	--v2-bg3:     #181c29;
+	--v2-bg4:     #1e2336;
+	--v2-bg5:     #252c42;
+	--v2-bdr:     rgba(255,255,255,.065);
+	--v2-bdr2:    rgba(255,255,255,.11);
+	--v2-bdr3:    rgba(255,255,255,.18);
+	--v2-txt:     #edf0fb;
+	--v2-txt2:    #8892ac;
+	--v2-txt3:    #4d5676;
+	--v2-acc:     #3d7eff;
+	--v2-acc2:    #2358d8;
+	--v2-acc-g:   rgba(61,126,255,.13);
+	--v2-ok:      #22c55e;
+	--v2-ok-g:    rgba(34,197,94,.12);
+	--v2-rad:     13px;
+	--v2-rad-sm:  8px;
+	--v2-form-w:  430px;       /* left column width */
+	--v2-hdr-h:   70px;        /* page header height (approx) */
+
+	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	font-size:   13px;
+	color:       var(--v2-txt2);
+	width:       100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE WRAPPER
+   ═══════════════════════════════════════════════════════════════════ */
+body.os-add-page.layout-no-topbar .page-wrapper > .container-fluid {
+	padding-left:   clamp(10px, 1.8vw, 22px);
+	padding-right:  clamp(10px, 1.8vw, 22px);
+	padding-bottom: 28px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE HEADER BAR
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-page-header {
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	flex-wrap:       wrap;
+	gap: 14px;
+	padding:         13px 22px;
+	background:      var(--v2-bg2);
+	border:          1px solid var(--v2-bdr);
+	border-radius:   var(--v2-rad);
+	margin-bottom:   18px;
+	box-shadow:      0 2px 6px rgba(0,0,0,.2), 0 8px 28px rgba(0,0,0,.2);
+	position:        relative;
+	overflow:        hidden;
+}
+
+/* Accent stripe at top */
+.os-v2-page-header::before {
+	content:  '';
+	position: absolute;
+	top: 0; left: 0; right: 0;
+	height:     2px;
+	background: linear-gradient(90deg, var(--v2-acc) 0%, rgba(61,126,255,.2) 55%, transparent 100%);
+}
+
+.os-v2-page-header__brand {
+	display:     flex;
+	align-items: center;
+	gap: 14px;
+}
+
+/* Icon badge */
+.os-v2-page-header__icon {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	width:           40px;
+	height:          40px;
+	background:      rgba(61,126,255,.12);
+	border:          1px solid rgba(61,126,255,.22);
+	border-radius:   10px;
+	color:           var(--v2-acc);
+	flex-shrink:     0;
+}
+
+.os-v2-page-header__title {
+	font-size:      17px;
+	font-weight:    700;
+	color:          var(--v2-txt);
+	margin:         0 0 3px;
+	line-height:    1.2;
+	letter-spacing: -.01em;
+}
+
+.os-v2-page-header__sub {
+	font-size:   12px;
+	color:       var(--v2-txt3);
+	margin:      0;
+	line-height: 1.4;
+}
+
+.os-v2-page-header__actions {
+	display:     flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACTION BUTTONS
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-btn-back {
+	display:       inline-flex !important;
+	align-items:   center !important;
+	gap: 6px;
+	background:    transparent !important;
+	border:        1px solid var(--v2-bdr2) !important;
+	color:         var(--v2-txt2) !important;
+	border-radius: var(--v2-rad-sm) !important;
+	font-size:     13px !important;
+	font-weight:   500 !important;
+	padding:       7px 15px !important;
+	transition:    all .15s ease !important;
+}
+
+.os-v2-btn-back:hover,
+.os-v2-btn-back:focus {
+	background:   rgba(255,255,255,.05) !important;
+	border-color: var(--v2-bdr3) !important;
+	color:        var(--v2-txt) !important;
+}
+
+.os-v2-btn-submit {
+	display:       inline-flex !important;
+	align-items:   center !important;
+	gap: 7px;
+	background:    linear-gradient(135deg, #3d7eff 0%, #2358d8 100%) !important;
+	border:        1px solid rgba(61,126,255,.38) !important;
+	color:         #fff !important;
+	border-radius: var(--v2-rad-sm) !important;
+	font-size:     13px !important;
+	font-weight:   600 !important;
+	padding:       7px 20px !important;
+	box-shadow:    0 3px 14px rgba(61,126,255,.32), 0 1px 3px rgba(0,0,0,.2) !important;
+	transition:    all .18s ease !important;
+	letter-spacing: .01em;
+}
+
+.os-v2-btn-submit:hover,
+.os-v2-btn-submit:focus {
+	background:  linear-gradient(135deg, #528fff 0%, #2d6bf0 100%) !important;
+	box-shadow:  0 6px 24px rgba(61,126,255,.46), 0 2px 6px rgba(0,0,0,.24) !important;
+	color:       #fff !important;
+	transform:   translateY(-1px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TWO-COLUMN LAYOUT
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-layout {
+	display:               grid;
+	grid-template-columns: var(--v2-form-w) 1fr;
+	gap: 18px;
+	align-items:           start;
+	margin-bottom: 14px;
+}
+
+/* ── Form column ─────────────────────────────────────────────────── */
+.os-v2-form-col { min-width: 0; }
+
+/* ── Grid column (sticky) ────────────────────────────────────────── */
+.os-v2-grid-col {
+	position:  sticky;
+	top:       16px;
+	min-width: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARDS  — shared dark card container
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-card {
+	background:    var(--v2-bg2);
+	border:        1px solid var(--v2-bdr);
+	border-radius: var(--v2-rad);
+	box-shadow:    0 2px 8px rgba(0,0,0,.18), 0 8px 28px rgba(0,0,0,.2);
+	overflow:      hidden;
+}
+
+/* ── Form card ───────────────────────────────────────────────────── */
+.os-v2-form-card { position: relative; }
+
+.os-v2-card-head {
+	display:         flex;
+	align-items:     baseline;
+	gap: 12px;
+	flex-wrap:       wrap;
+	padding:         16px 22px 14px;
+	border-bottom:   1px solid var(--v2-bdr);
+	background:      linear-gradient(180deg, rgba(255,255,255,.016) 0%, transparent 100%);
+}
+
+.os-v2-card-head__title {
+	font-size:      14px;
+	font-weight:    700;
+	color:          var(--v2-txt);
+	margin:         0;
+	letter-spacing: .005em;
+}
+
+.os-v2-card-head__meta {
+	font-size:   12px;
+	color:       var(--v2-txt3);
+	margin:      0;
+	line-height: 1.4;
+}
+
+.os-v2-card-body { padding: 20px 22px 22px; }
+
+/* ── Grid card ───────────────────────────────────────────────────── */
+.os-v2-grid-card {
+	display:        flex;
+	flex-direction: column;
+	max-height:     calc(100vh - 190px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM SECTIONS  — numbered dividers
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-section {
+	margin-bottom:  24px;
+	padding-bottom: 22px;
+	border-bottom:  1px solid var(--v2-bdr);
+}
+
+.os-v2-section--last,
+.os-v2-section:last-of-type {
+	margin-bottom:  0;
+	padding-bottom: 0;
+	border-bottom:  none;
+}
+
+.os-v2-section__hd {
+	display:       flex;
+	align-items:   center;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.os-v2-section__num {
+	display:         inline-flex;
+	align-items:     center;
+	justify-content: center;
+	min-width:       28px;
+	height:          22px;
+	padding:         0 7px;
+	background:      rgba(61,126,255,.1);
+	color:           var(--v2-acc);
+	border:          1px solid rgba(61,126,255,.2);
+	border-radius:   6px;
+	font-size:       10px;
+	font-weight:     800;
+	letter-spacing:  .06em;
+	font-family:     'DM Mono', monospace;
+	flex-shrink:     0;
+	line-height:     1;
+}
+
+.os-v2-section__title {
+	font-size:      11px;
+	font-weight:    700;
+	text-transform: uppercase;
+	letter-spacing: .09em;
+	color:          var(--v2-txt2);
+	line-height:    1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM CONTROLS
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-label,
+.os-v2-root .control-label,
+.os-v2-root label.control-label {
+	display:        block;
+	font-size:      10px !important;
+	font-weight:    700 !important;
+	text-transform: uppercase;
+	letter-spacing: .07em;
+	color:          var(--v2-txt3) !important;
+	margin-bottom:  4px !important;
+}
+
+.os-v2-req {
+	color:      rgba(239,68,68,.65);
+	font-size:  11px;
+	margin-left: 2px;
+}
+
+.os-v2-root .form-control,
+.os-v2-root select.form-control {
+	background-color: var(--v2-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--v2-bdr) !important;
+	border-radius:    var(--v2-rad-sm) !important;
+	color:            var(--v2-txt) !important;
+	min-height:       36px;
+	padding:          6px 11px;
+	font-size:        13px;
+	box-shadow:       none !important;
+	transition:       border-color .15s, box-shadow .15s, background-color .15s;
+}
+
+.os-v2-root .form-control:focus,
+.os-v2-root select.form-control:focus {
+	border-color:     var(--v2-acc) !important;
+	box-shadow:       0 0 0 3px var(--v2-acc-g) !important;
+	background-color: var(--v2-bg4) !important;
+}
+
+.os-v2-root .form-control::placeholder {
+	color: var(--v2-txt3);
+	opacity: 1;
+}
+
+.os-v2-root textarea.form-control,
+.os-v2-textarea {
+	min-height:  96px !important;
+	resize:      vertical;
+	line-height: 1.5;
+}
+
+.os-v2-fg { margin-bottom: 14px !important; }
+
+.os-v2-row {
+	margin-left:  -8px;
+	margin-right: -8px;
+}
+
+.os-v2-row > [class*="col-"] {
+	padding-left:  8px;
+	padding-right: 8px;
+}
+
+/* Bootstrap-select */
+.os-v2-root .bootstrap-select.form-control {
+	background:  transparent !important;
+	border:      none !important;
+	box-shadow:  none !important;
+	padding:     0 !important;
+	min-height:  0 !important;
+}
+
+.os-v2-root .bootstrap-select > .dropdown-toggle {
+	background-color: var(--v2-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--v2-bdr) !important;
+	border-radius:    var(--v2-rad-sm) !important;
+	min-height:       36px;
+	font-size:        13px;
+	color:            var(--v2-txt) !important;
+	transition:       border-color .15s, box-shadow .15s;
+}
+
+.os-v2-root .bootstrap-select > .dropdown-toggle:focus,
+.os-v2-root .bootstrap-select.show > .dropdown-toggle {
+	border-color: var(--v2-acc) !important;
+	box-shadow:   0 0 0 3px var(--v2-acc-g) !important;
+}
+
+.os-v2-root .bootstrap-select .dropdown-menu {
+	background:    var(--v2-bg3) !important;
+	border:        1px solid var(--v2-bdr2) !important;
+	border-radius: var(--v2-rad-sm) !important;
+	box-shadow:    0 12px 36px rgba(0,0,0,.55) !important;
+}
+
+.os-v2-root .bootstrap-select .dropdown-menu li a { color: var(--v2-txt2) !important; }
+
+.os-v2-root .bootstrap-select .dropdown-menu li.active a,
+.os-v2-root .bootstrap-select .dropdown-menu li.selected a,
+.os-v2-root .bootstrap-select .dropdown-menu li a:hover {
+	background: var(--v2-acc-g) !important;
+	color:      var(--v2-txt) !important;
+}
+
+/* bs-container rendered at <body> */
+body.os-add-page .bs-container .dropdown-menu {
+	background:    var(--v2-bg3, #181c29) !important;
+	border:        1px solid rgba(255,255,255,.12) !important;
+	border-radius: var(--v2-rad-sm, 8px) !important;
+	box-shadow:    0 14px 36px rgba(0,0,0,.56) !important;
+}
+
+body.os-add-page .bs-container .dropdown-menu li a,
+body.os-add-page .bs-container .dropdown-menu .dropdown-item { color: #8892ac !important; }
+
+body.os-add-page .bs-container .dropdown-menu .active > a,
+body.os-add-page .bs-container .dropdown-menu li.selected > a,
+body.os-add-page .bs-container .dropdown-menu li > a:hover {
+	background: rgba(61,126,255,.15) !important;
+	color:      #edf0fb !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GRID PANEL HEADER
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-grid-hd {
+	padding:       17px 22px 13px;
+	border-bottom: 1px solid var(--v2-bdr);
+	background:    linear-gradient(180deg, rgba(61,126,255,.04) 0%, transparent 100%);
+	flex-shrink:   0;
+}
+
+.os-v2-grid-hd__row {
+	display:       flex;
+	align-items:   center;
+	gap: 10px;
+	margin-bottom: 7px;
+}
+
+.os-v2-grid-hd__title {
+	font-size:      15px;
+	font-weight:    700;
+	color:          var(--v2-txt);
+	margin:         0;
+	letter-spacing: .01em;
+}
+
+.os-v2-tag {
+	font-size:      10px;
+	font-weight:    700;
+	text-transform: uppercase;
+	letter-spacing: .09em;
+	color:          var(--v2-acc);
+	border:         1px solid rgba(61,126,255,.28);
+	padding:        3px 10px;
+	border-radius:  999px;
+	background:     rgba(61,126,255,.08);
+}
+
+.os-v2-grid-hd__meta {
+	font-size:   12px;
+	color:       var(--v2-txt3);
+	margin:      0;
+	line-height: 1.45;
+}
+
+.os-v2-grid-hd__meta strong { color: var(--v2-txt2); font-weight: 600; }
+
+/* ── Grid body ──────────────────────────────────────────────────── */
+.os-v2-grid-body {
+	flex:       1;
+	overflow:   hidden;
+	min-height: 0;
+}
+
+/* ── Grid footer (total) ────────────────────────────────────────── */
+.os-v2-grid-foot {
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-end;
+	gap: 12px;
+	padding:         12px 22px 14px;
+	background:      linear-gradient(90deg, rgba(0,0,0,.1) 0%, rgba(61,126,255,.04) 100%);
+	border-top:      1px solid rgba(61,126,255,.1);
+	flex-shrink:     0;
+}
+
+.os-v2-total-val {
+	font-size:      15px !important;
+	font-weight:    700;
+	letter-spacing: .02em;
+	color:          var(--v2-txt) !important;
+}
+
+.os-v2-total-label {
+	color:       var(--v2-txt2);
+	font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HINT BAR  — bottom note
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-hint-bar {
+	padding:    0 4px;
+	text-align: center;
+}
+
+.os-v2-hint-bar p {
+	font-size:   12px;
+	color:       var(--v2-txt3);
+	margin:      0;
+	line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE CARRINHO
+   ═══════════════════════════════════════════════════════════════════ */
+.os-add-mobile-carrinho {
+	margin-top:    8px;
+	padding:       16px 16px 8px;
+	border-radius: 10px;
+	border:        1px dashed rgba(255,255,255,.12);
+	background:    rgba(0,0,0,.12);
+}
+
+.os-add-mobile-carrinho__title { font-size: 14px; font-weight: 600; color: var(--v2-txt); margin: 0 0 6px; }
+.os-add-mobile-carrinho__hint  { font-size: 11.5px; color: var(--v2-txt3); margin: 0 0 12px; line-height: 1.4; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   JSGRID  — full dark override inside .os-v2-root
+   ═══════════════════════════════════════════════════════════════════ */
+.os-v2-root .jsgrid {
+	border:        none !important;
+	border-radius: 0 !important;
+	background:    var(--v2-bg3);
+	min-width:     1020px;
+	color-scheme:  dark;
+	scrollbar-color: #3a4259 var(--v2-bg2);
+}
+
+/* Scrollable containers */
+.os-v2-root .jsgrid-grid-header,
+.os-v2-root .jsgrid-grid-body { overflow: auto; }
+
+body.os-add-page .os-v2-root .jsgrid-grid-header,
+body.os-add-page .os-v2-root .jsgrid-grid-header.jsgrid-header-scrollbar {
+	background: var(--v2-bg4) !important;
+}
+
+body.os-add-page .os-v2-root .jsgrid-grid-body { background: var(--v2-bg3) !important; }
+
+body.os-add-page .os-v2-root .jsgrid-grid-header .jsgrid-table,
+body.os-add-page .os-v2-root .jsgrid-grid-body  .jsgrid-table { background: transparent !important; }
+
+/* Webkit scrollbar */
+body.os-add-page .os-v2-root .jsgrid-grid-header::-webkit-scrollbar,
+body.os-add-page .os-v2-root .jsgrid-grid-body::-webkit-scrollbar  { width: 9px; height: 9px; }
+
+body.os-add-page .os-v2-root .jsgrid-grid-header::-webkit-scrollbar-track,
+body.os-add-page .os-v2-root .jsgrid-grid-body::-webkit-scrollbar-track  { background: var(--v2-bg2); }
+
+body.os-add-page .os-v2-root .jsgrid-grid-header::-webkit-scrollbar-thumb,
+body.os-add-page .os-v2-root .jsgrid-grid-body::-webkit-scrollbar-thumb  {
+	background:    var(--v2-bg5);
+	border-radius: 5px;
+	border:        2px solid var(--v2-bg2);
+}
+
+/* Header cells */
+.os-v2-root .jsgrid-header-row > .jsgrid-header-cell,
+body.os-add-page .os-v2-root th.jsgrid-header-cell {
+	background:     var(--v2-bg4) !important;
+	color:          var(--v2-txt2) !important;
+	border-color:   var(--v2-bdr) !important;
+	font-size:      11px;
+	font-weight:    700;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	padding:        10px 10px !important;
+	vertical-align: middle !important;
+	line-height:    1.25;
+}
+
+body.os-add-page .os-v2-root .jsgrid-grid-header .jsgrid-control-field { background: var(--v2-bg4) !important; }
+
+.os-v2-root .jsgrid-header-sortable { padding-right: 18px !important; }
+
+/* Data rows */
+.os-v2-root .jsgrid-row       > .jsgrid-cell,
+.os-v2-root .jsgrid-alt-row   > .jsgrid-cell,
+.os-v2-root .jsgrid-filter-row> .jsgrid-cell,
+.os-v2-root .jsgrid-insert-row> .jsgrid-cell,
+.os-v2-root .jsgrid-edit-row  > .jsgrid-cell {
+	background:     var(--v2-bg3);
+	border-color:   rgba(255,255,255,.05);
+	color:          var(--v2-txt2);
+	padding:        9px 10px !important;
+	vertical-align: middle !important;
+}
+
+.os-v2-root .jsgrid-row:hover     > .jsgrid-cell,
+.os-v2-root .jsgrid-alt-row:hover > .jsgrid-cell { background: #1e2436; }
+
+/* Pager */
+.os-v2-root .jsgrid-pager {
+	background:  var(--v2-bg2);
+	color:       var(--v2-txt3);
+	padding:     8px 12px;
+	border-top:  1px solid var(--v2-bdr);
+}
+
+.os-v2-root .jsgrid-pager a { color: var(--v2-acc); }
+
+/* Grid inputs / selects */
+body.os-add-page .os-v2-root .jsgrid            input.form-control,
+body.os-add-page .os-v2-root .jsgrid-insert-row input.form-control,
+body.os-add-page .os-v2-root .jsgrid-edit-row   input.form-control,
+body.os-add-page .os-v2-root .jsgrid-insert-row select,
+body.os-add-page .os-v2-root .jsgrid-edit-row   select,
+body.os-add-page .os-v2-root .jsgrid .input-group .form-control {
+	background-color: var(--v2-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--v2-bdr) !important;
+	color:            var(--v2-txt) !important;
+	box-shadow:       none !important;
+}
+
+body.os-add-page .os-v2-root .jsgrid-insert-row select.form-control,
+body.os-add-page .os-v2-root .jsgrid-edit-row   select.form-control {
+	min-height: 34px;
+	padding:    5px 8px;
+}
+
+body.os-add-page .os-v2-root .jsgrid .input-group-append .btn,
+body.os-add-page .os-v2-root .jsgrid .input-group-append .btn-secondary {
+	background:   var(--v2-bg4) !important;
+	border-color: var(--v2-bdr2) !important;
+	color:        var(--v2-txt2) !important;
+}
+
+body.os-add-page .os-v2-root .jsgrid            input.form-control:focus,
+body.os-add-page .os-v2-root .jsgrid-insert-row input.form-control:focus,
+body.os-add-page .os-v2-root .jsgrid-edit-row   input.form-control:focus,
+body.os-add-page .os-v2-root .jsgrid-insert-row select:focus,
+body.os-add-page .os-v2-root .jsgrid-edit-row   select:focus {
+	border-color:     var(--v2-acc) !important;
+	box-shadow:       0 0 0 2px var(--v2-acc-g) !important;
+	background-color: var(--v2-bg4) !important;
+	color:            var(--v2-txt) !important;
+}
+
+body.os-add-page .os-v2-root .jsgrid input.form-control::placeholder { color: var(--v2-txt3); opacity: 1; }
+
+/* No-data row */
+body.os-add-page .os-v2-root .jsgrid-nodata-row > .jsgrid-cell {
+	background:   var(--v2-bg2) !important;
+	color:        var(--v2-txt2) !important;
+	border-color: var(--v2-bdr) !important;
+	padding:      14px 10px !important;
+	text-align:   center;
+}
+
+/* Action buttons column */
+body.os-add-page .os-v2-root .jsgrid-control-field,
+body.os-add-page .os-v2-root .jsgrid .jsgrid-control-field {
+	display:     inline-flex;
+	flex-wrap:   nowrap;
+	align-items: center;
+	gap: 4px;
+	vertical-align: middle;
+}
+
+body.os-add-page .os-v2-root .jsgrid .jsgrid-button {
+	margin:     0 2px 0 0;
+	opacity:    1 !important;
+	border:     1px solid rgba(255,255,255,.18) !important;
+	background: var(--v2-bg4) !important;
+	color:      var(--v2-txt) !important;
+}
+
+body.os-add-page .os-v2-root .jsgrid .jsgrid-button:hover {
+	border-color: var(--v2-acc) !important;
+	color:        #fff !important;
+}
+
+.os-v2-root .jsgrid .btn,
+.os-v2-root .jsgrid .btn-sm { padding: 2px 8px; font-size: 11px; }
+
+.os-v2-root .input-group .btn-secondary {
+	background:   var(--v2-bg4);
+	border-color: var(--v2-bdr2);
+	color:        var(--v2-txt2);
+}
+
+.os-v2-root .input-group .btn-secondary:hover { background: #28304a; color: var(--v2-txt); }
+
+/* Search button in grid */
+.os-v2-root .os-add-grid-search-btn {
+	border-color: rgba(255,255,255,.18) !important;
+	color:        var(--v2-txt) !important;
+	background:   var(--v2-bg4) !important;
+}
+
+.os-v2-root .os-add-grid-search-btn:hover {
+	background:   #2d3650 !important;
+	border-color: rgba(61,126,255,.45) !important;
+	color:        #fff !important;
+}
+
+/* Numeric columns */
+.os-v2-root .jsgrid-header-row > .jsgrid-header-cell.os-col-num,
+body.os-add-page .os-v2-root th.jsgrid-header-cell.os-col-num { text-align: right !important; }
+
+.os-v2-root .jsgrid .jsgrid-cell.os-col-num,
+.os-v2-root .jsgrid .os-col-num { text-align: right !important; }
+
+.os-v2-root .jsgrid .os-col-num input.form-control,
+.os-v2-root .jsgrid .os-col-num .form-control {
+	text-align:           right !important;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Observação / Referenciar — centered */
+.os-v2-root .jsgrid .inputObservacao                    { text-align: center; }
+.os-v2-root .jsgrid .inputObservacao input.form-control  { text-align: center; }
+
+/* input-group in grid */
+.os-v2-root .jsgrid .input-group                                  { min-width: 0; align-items: stretch; }
+.os-v2-root .jsgrid .input-group .form-control.input-codigo-val   { min-width: 0; font-size: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MODALS
+   ═══════════════════════════════════════════════════════════════════ */
+body.os-add-page .modal-content {
+	background:    #111420;
+	border:        1px solid rgba(255,255,255,.08);
+	border-radius: 12px;
+	box-shadow:    0 18px 52px rgba(0,0,0,.65);
+}
+
+body.os-add-page .modal-header,
+body.os-add-page .modal-footer { border-color: rgba(255,255,255,.08); }
+
+body.os-add-page .modal-title  { color: #edf0fb; font-size: 15px; font-weight: 600; }
+
+body.os-add-page .modal-body,
+body.os-add-page .modal-body label,
+body.os-add-page .modal-body small { color: #8892ac; }
+
+body.os-add-page .modal-body .form-control,
+body.os-add-page .modal-body input,
+body.os-add-page .modal-body textarea {
+	background: #181c29 !important;
+	border:     1px solid rgba(255,255,255,.07) !important;
+	color:      #edf0fb !important;
+	box-shadow: none !important;
+}
+
+body.os-add-page .modal-body .form-control:focus {
+	border-color: #3d7eff !important;
+	box-shadow:   0 0 0 3px rgba(61,126,255,.15) !important;
+}
+
+body.os-add-page .modal .close       { color: #8892ac; text-shadow: none; opacity: 1; }
+body.os-add-page .modal .close:hover { color: #edf0fb; }
+
+/* Product search modal table */
+body.os-add-page #modal-pesquisa-produto .table                  { color: #8892ac; background: #181c29; }
+body.os-add-page #modal-pesquisa-produto .table thead th          { background: #1e2336; color: #4d5676; border-color: rgba(255,255,255,.06) !important; }
+body.os-add-page #modal-pesquisa-produto .table td                { background: #181c29; border-color: rgba(255,255,255,.06) !important; color: #edf0fb; }
+
+body.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td {
+	background-color: #f8d7da !important;
+	color:            #491217 !important;
+	border-color:     rgba(114,28,36,.3) !important;
+}
+
+body.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td .btn-success { color: #fff !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 1299px) {
+	.os-v2-root { --v2-form-w: 390px; }
+}
+
+@media (max-width: 1099px) {
+	.os-v2-root { --v2-form-w: 360px; }
+}
+
+@media (max-width: 991px) {
+	/* Collapse to single column */
+	.os-v2-layout { grid-template-columns: 1fr; }
+	.os-v2-grid-col { position: static; }
+	.os-v2-grid-card { max-height: none; }
+	.os-v2-page-header { flex-direction: column; align-items: flex-start; }
+	.os-v2-page-header__actions { width: 100%; justify-content: flex-end; }
+	.os-v2-btn-submit { flex: 1 1 auto; justify-content: center; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES  — keep dark card on light background
+   ═══════════════════════════════════════════════════════════════════ */
+html body.pgm-theme-light.os-add-page .os-v2-root .form-control,
+html body.pgm-theme-light.os-add-page .os-v2-root select.form-control,
+html body.pgm-theme-light.os-add-page .os-v2-root input[type="text"],
+html body.pgm-theme-light.os-add-page .os-v2-root input[type="email"],
+html body.pgm-theme-light.os-add-page .os-v2-root input[type="number"],
+html body.pgm-theme-light.os-add-page .os-v2-root input[type="tel"],
+html body.pgm-theme-light.os-add-page .os-v2-root textarea {
+	background-color: var(--v2-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--v2-bdr) !important;
+	border-radius:    var(--v2-rad-sm) !important;
+	color:            var(--v2-txt) !important;
+	box-shadow:       none !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-v2-root .form-control:focus,
+html body.pgm-theme-light.os-add-page .os-v2-root select.form-control:focus,
+html body.pgm-theme-light.os-add-page .os-v2-root textarea:focus {
+	border-color:     var(--v2-acc) !important;
+	box-shadow:       0 0 0 3px var(--v2-acc-g) !important;
+	background-color: var(--v2-bg4) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-v2-root .control-label,
+html body.pgm-theme-light.os-add-page .os-v2-root label.control-label,
+html body.pgm-theme-light.os-add-page .os-v2-root .os-v2-label { color: var(--v2-txt3) !important; }
+
+html body.pgm-theme-light.os-add-page .os-v2-root .bootstrap-select.form-control {
+	background: transparent !important;
+	border:     none !important;
+	box-shadow: none !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-v2-root .bootstrap-select > .dropdown-toggle {
+	background-color: var(--v2-bg3) !important;
+	background-image: none !important;
+	border:           1px solid var(--v2-bdr) !important;
+	border-radius:    var(--v2-rad-sm) !important;
+	color:            var(--v2-txt) !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-content {
+	background: #111420 !important;
+	border:     1px solid rgba(255,255,255,.08) !important;
+	color:      #8892ac !important;
+	box-shadow: 0 18px 52px rgba(0,0,0,.65) !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-header,
+html body.pgm-theme-light.os-add-page .modal-footer {
+	background:   transparent !important;
+	border-color: rgba(255,255,255,.08) !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-header .modal-title { color: #edf0fb !important; }
+
+html body.pgm-theme-light.os-add-page .modal-body,
+html body.pgm-theme-light.os-add-page .modal-body label,
+html body.pgm-theme-light.os-add-page .modal-body small { color: #8892ac !important; }
+
+html body.pgm-theme-light.os-add-page .modal-body .form-control,
+html body.pgm-theme-light.os-add-page .modal-body input,
+html body.pgm-theme-light.os-add-page .modal-body textarea {
+	background: #181c29 !important;
+	border:     1px solid rgba(255,255,255,.07) !important;
+	color:      #edf0fb !important;
+	box-shadow: none !important;
+}
+
+html body.pgm-theme-light.os-add-page .modal-body .form-control:focus {
+	border-color: #3d7eff !important;
+	box-shadow:   0 0 0 3px rgba(61,126,255,.15) !important;
+}
+
+html body.pgm-theme-light.os-add-page .os-v2-root .jsgrid            input.form-control,
+html body.pgm-theme-light.os-add-page .os-v2-root .jsgrid-insert-row input.form-control,
+html body.pgm-theme-light.os-add-page .os-v2-root .jsgrid-edit-row   input.form-control,
+html body.pgm-theme-light.os-add-page .os-v2-root .jsgrid-insert-row select,
+html body.pgm-theme-light.os-add-page .os-v2-root .jsgrid-edit-row   select,
+html body.pgm-theme-light.os-add-page .os-v2-root .jsgrid .input-group .form-control {
+	background-color: var(--v2-bg3) !important;
+	border:           1px solid var(--v2-bdr) !important;
+	color:            var(--v2-txt) !important;
+	box-shadow:       none !important;
+}
+
+html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table thead th {
+	background: #1e2336 !important;
+	color:      #4d5676 !important;
+}
+
+html body.pgm-theme-light.os-add-page #modal-pesquisa-produto .table td {
+	background: #181c29 !important;
+	color:      #edf0fb !important;
+}
+
+html body.pgm-theme-light.os-add-page #modal-pesquisa-produto tbody tr.os-pesquisa-produto-sem-estoque td {
+	background-color: #f8d7da !important;
+	color:            #491217 !important;
+	border-color:     rgba(114,28,36,.3) !important;
+}

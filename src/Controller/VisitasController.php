@@ -5,8 +5,22 @@ use App\Controller\AppController;
 use App\Controller\Date;
 use App\Service\Agenda\BrasilFeriadosService;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+if (!defined('C_RoleCliente')) {
+	define('C_RoleCliente', 1);
+}
+if (!defined('C_RoleFuncionario')) {
+	define('C_RoleFuncionario', 0);
+}
+if (!defined('C_ClientesTipoJuridica')) {
+	define('C_ClientesTipoJuridica', 2);
+}
+if (!defined('C_ClientesTipoFisica')) {
+	define('C_ClientesTipoFisica', 1);
+}
 
 class VisitasController extends AppController { 
 	public function initialize() {

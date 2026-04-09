@@ -3,6 +3,7 @@ namespace App\Controller\Component;
 
 use App\Utility\RbacChecker;
 use App\Utility\RbacPermissionResolver;
+use App\Utility\RbacPolicyConditions;
 use App\Utility\RbacUserRolesResolver;
 use Cake\Controller\Component;
 use Cake\Core\Configure;
@@ -37,6 +38,7 @@ class RbacComponent extends Component {
 
 		$this->getController()->rbacAbacScope = null;
 		$this->getController()->rbacAbacPermissionCode = null;
+		$this->getController()->rbacDenyReason = null;
 
 		$c = strtolower((string)$controller);
 		$a = strtolower((string)$action);
@@ -44,6 +46,10 @@ class RbacComponent extends Component {
 		foreach ($cfg['skip_action_prefixes'] as $prefix) {
 			$prefix = strtolower((string)$prefix);
 			if ($prefix !== '' && strpos($a, $prefix) === 0) {
+				if ($prefix === 'api' && $this->_isRbacEnforcedApiAction($c, $a, $cfg)) {
+					continue;
+				}
+
 				return null;
 			}
 		}
@@ -75,7 +81,7 @@ class RbacComponent extends Component {
 					$msg = 'Sua conta ainda não tem papéis atribuídos no novo controle de acesso. Contate um administrador.';
 					$this->getController()->Flash->error($msg);
 
-					return $this->getController()->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+					return $this->getController()->redirect(['controller' => 'Users', 'action' => 'accessDenied']);
 				}
 			}
 
@@ -88,7 +94,8 @@ class RbacComponent extends Component {
 			return null;
 		}
 
-		$this->_persistRbacAuditIfConfigured($uid, false, $controller, $action, $cfg, $roleIds, 'no_matching_permission');
+		$denyReason = $this->getController()->rbacDenyReason ?: 'no_matching_permission';
+		$this->_persistRbacAuditIfConfigured($uid, false, $controller, $action, $cfg, $roleIds, $denyReason);
 
 		$msg = 'Seu papel não inclui permissão para esta função. Contate um administrador.';
 
@@ -109,8 +116,9 @@ class RbacComponent extends Component {
 
 		if ($cfg['mode'] === 'enforce') {
 			$this->getController()->Flash->error($msg);
+			// Destino em whitelist: users#accessdenied (config/rbac.php), para não depender de dashboard.view.
 
-			return $this->getController()->redirect(['controller' => 'Users', 'action' => 'dashboard']);
+			return $this->getController()->redirect(['controller' => 'Users', 'action' => 'accessDenied']);
 		}
 
 		return null;
@@ -152,8 +160,15 @@ class RbacComponent extends Component {
 	}
 
 	protected function _userCanAccess($roleIds, $controller, $action) {
+		$this->getController()->rbacDenyReason = null;
 		$matched = $this->_findBestMatchingPermission($roleIds, $controller, $action);
 		if ($matched === null) {
+			return false;
+		}
+
+		if (!$this->_permissionPoliciesAllow($matched)) {
+			$this->getController()->rbacDenyReason = 'policy_denied';
+
 			return false;
 		}
 
@@ -291,6 +306,92 @@ class RbacComponent extends Component {
 			$tables = TableRegistry::get('RbacPermissions')->getConnection()->getSchemaCollection()->listTables();
 
 			return in_array('rbac_audit_authorizations', $tables, true);
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * rbac_permission_policies: pelo menos uma linha ativa deve satisfazer conditions_json (OR por linha).
+	 *
+	 * @param \App\Model\Entity\RbacPermission $matched
+	 */
+	protected function _permissionPoliciesAllow($matched) {
+		$cfg = Configure::read('Rbac');
+		if (!is_array($cfg) || empty($cfg['evaluate_permission_policies'])) {
+			return true;
+		}
+		if (!$this->_permissionPoliciesTableExists()) {
+			return true;
+		}
+		try {
+			$rows = TableRegistry::get('RbacPermissionPolicies')->find()
+				->where(['rbac_permission_id' => (int)$matched->id, 'active' => true])
+				->order(['priority' => 'DESC', 'id' => 'ASC'])
+				->all();
+			if ($rows->count() === 0) {
+				return true;
+			}
+			$ctx = $this->_policyContextForRequest();
+			foreach ($rows as $pol) {
+				if (RbacPolicyConditions::matchesOrEmpty($pol->conditions_json, $ctx)) {
+					return true;
+				}
+			}
+
+			return false;
+		} catch (\Exception $e) {
+			return true;
+		}
+	}
+
+	protected function _policyContextForRequest(): array {
+		$user = $this->getController()->Auth->user();
+		$req = $this->getController()->getRequest();
+		$prefix = $req->getParam('prefix');
+		$prefixStr = ($prefix !== null && $prefix !== false) ? strtolower((string)$prefix) : '';
+		$idEmp = isset($user['idempresa']) && $user['idempresa'] !== '' && $user['idempresa'] !== null
+			? (int)$user['idempresa'] : 0;
+		$idCli = isset($user['idcliente']) && $user['idcliente'] !== '' && $user['idcliente'] !== null
+			? (int)$user['idcliente'] : 0;
+		$setor = array_key_exists('setor', $user) && $user['setor'] !== null && $user['setor'] !== ''
+			? $user['setor'] : '';
+
+		return [
+			'user.id' => (int)($user['id'] ?? 0),
+			'user.username' => (string)($user['username'] ?? ''),
+			'user.role' => (int)($user['role'] ?? -1),
+			'user.admin' => !empty($user['admin']),
+			'user.idempresa' => $idEmp,
+			'user.idcliente' => $idCli,
+			'user.setor' => $setor,
+			'request.prefix' => $prefixStr,
+			'request.plugin' => strtolower((string)($req->getParam('plugin') ?: '')),
+		];
+	}
+
+	/**
+	 * Lista rbac_api_enforced_actions em config: controller#action minúsculo.
+	 */
+	protected function _isRbacEnforcedApiAction(string $controllerLower, string $actionLower, array $cfg): bool {
+		if (empty($cfg['rbac_api_enforced_actions']) || !is_array($cfg['rbac_api_enforced_actions'])) {
+			return false;
+		}
+		$key = $controllerLower . '#' . $actionLower;
+		foreach ($cfg['rbac_api_enforced_actions'] as $entry) {
+			if (strtolower(trim((string)$entry)) === $key) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	protected function _permissionPoliciesTableExists() {
+		try {
+			$tables = TableRegistry::get('RbacPermissions')->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('rbac_permission_policies', $tables, true);
 		} catch (\Exception $e) {
 			return false;
 		}

@@ -49,7 +49,10 @@
         ],
         "cs-check": "phpcs --colors -p --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
         "cs-fix": "phpcbf --colors --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
-        "test": "phpunit --colors=always"
+        "test": "phpunit --colors=always",
+        "test-rbac": "phpunit --colors=always --testsuite rbac && phpunit --colors=always --testsuite rbac-integration && phpunit --colors=always --bootstrap tests/bootstrap_http.php --testsuite rbac-http",
+        "rbac-verify-noninteractive": "@test-rbac",
+        "rbac-verify-with-pre-deploy": "php bin/cake rbac_rollout pre_deploy"
     },
     "prefer-stable": true,
     "config": {

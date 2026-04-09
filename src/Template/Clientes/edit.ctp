@@ -18,6 +18,16 @@
 	$isClientePortal = isset($role) && (int)$role === (int)C_RoleCliente;
 	$isEquipe = !$isClientePortal;
 	// Fase 1 UX: sem disabled no HTML do cadastro; modo leitura via readonly + barra inferior (JS).
+	$_uidRbacField = isset($iduser) ? (int)$iduser : 0;
+	$_rbacClienteApiToken = \App\Utility\RbacChecker::resourceFieldAccess($_uidRbacField, 'Clientes.field.api_token');
+	$showClienteApiTokenTab = ($isEquipe || !empty($permissaoacesso));
+	if ($showClienteApiTokenTab && $_rbacClienteApiToken !== null && empty($_rbacClienteApiToken['visible'])) {
+		$showClienteApiTokenTab = false;
+	}
+	$cliAllowTokenRenewal = $isEquipe && ($_rbacClienteApiToken === null || (!empty($_rbacClienteApiToken['visible']) && !empty($_rbacClienteApiToken['editable'])));
+	$_rbacClienteInativo = $isEquipe ? \App\Utility\RbacChecker::resourceFieldAccess($_uidRbacField, 'Clientes.field.inativo') : null;
+	$cliInativoRbacHidden = $isEquipe && $_rbacClienteInativo !== null && empty($_rbacClienteInativo['visible']);
+	$cliInativoRbacReadonly = $isEquipe && $_rbacClienteInativo !== null && !empty($_rbacClienteInativo['visible']) && empty($_rbacClienteInativo['editable']);
 
 ?>
 <style>
@@ -135,7 +145,7 @@
 		</div>
 
 		<!-- Tab nav (element reutilizável + deep-link #hash) -->
-		<?= $this->element('Cli/edit_tabs_nav', compact('isEquipe', 'isClientePortal', 'permissaoacesso')) ?>
+		<?= $this->element('Cli/edit_tabs_nav', array_merge(compact('isEquipe', 'isClientePortal', 'permissaoacesso'), ['showTokenTab' => $showClienteApiTokenTab])) ?>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente" role="tabpanel" aria-labelledby="cli-tab-cliente">
 					<?=  $this->Form->create($cliente, ['class' => 'form-material', 'id' => 'form-edit-cliente']) ?>
@@ -229,12 +239,21 @@
 							<?= $this->element('Cli/select', ['label' => 'Empresa dominante', 'field' => 'empresadominante', 'colClass' => 'col-lg-3 col-md-3 col-sm-3 col-xs-12', 'selectOptions' => $empresasOptSidebar, 'options' => ['class' => 'form-control']]) ?>
 							</div>
 							<div class="row align-items-center">
+								<?php if (!$cliInativoRbacHidden) : ?>
 								<div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
 									<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-5">
-										<?= $this->Form->checkbox('inativo', ['class' => 'custom-control-input', 'id' => 'inativo']); ?>
+										<?= $this->Form->checkbox('inativo', [
+											'class' => 'custom-control-input',
+											'id' => 'inativo',
+											'disabled' => $cliInativoRbacReadonly,
+										]); ?>
 										<label class="custom-control-label text-muted" for="inativo">Inativo </label>
 									</div>
+									<?php if ($cliInativoRbacReadonly) : ?>
+										<p class="text-muted small mb-0 mt-1">Status inativo bloqueado por regra RBAC (<code class="ap-code-violet">Clientes.field.inativo</code>).</p>
+									<?php endif; ?>
 								</div>
+								<?php endif; ?>
 								<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
 									<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-5">
 										<?= $this->Form->checkbox('contrato', ['class' => 'custom-control-input', 'id' => 'contrato']); ?>
@@ -516,7 +535,7 @@
 					</div>
 					<?= $this->element('Cli/card_end') ?>
 				</div>
-				<?php }if($isEquipe || !empty($permissaoacesso)){ ?>
+				<?php if ($showClienteApiTokenTab) { ?>
 				<div class="tab-pane" id="token" role="tabpanel" aria-labelledby="cli-tab-token">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-key"></i> Token de integração API', 'extraClass' => 'mb-3']) ?>
 					<div class="cli-token-panel cli-token-panel--split">
@@ -526,11 +545,15 @@
 							<p class="cli-token-note mb-0">Usado para autenticar integrações externas com a API do portal. <strong>Não há data de expiração cadastrada</strong> — a renovação é manual.</p>
 						</div>
 						<div class="cli-token-panel__col">
-							<?php if ($isEquipe) { ?>
+							<?php if ($cliAllowTokenRenewal) { ?>
 								<div class="cli-sf-kicker">Renovação (equipe)</div>
 								<p class="cli-token-note">Gerar um novo token <strong>invalida o valor anterior</strong> nas integrações que ainda o utilizam.</p>
 								<div class="mt-2">
 									<?= $this->Html->link('<i class="fas fa-sync-alt"></i> Atualizar token', [], ['class' => 'btn-atualizaToken btn btn-sm btn-outline-warning salvarcliente', 'escape' => false]) ?>
+								</div>
+							<?php } elseif ($isEquipe) { ?>
+								<div class="cli-token-callout">
+									<strong>Só leitura.</strong> A renovação do token exige permissão adicional no catálogo RBAC (regra <code class="ap-code-violet">Clientes.field.api_token</code>).
 								</div>
 							<?php } else { ?>
 								<div class="cli-token-callout">
@@ -556,11 +579,19 @@
 			<div class="cli-sf-block">
 				<div class="cli-sf-kicker">Status do cliente</div>
 				<?php if ($isEquipe): ?>
+					<?php if ($cliInativoRbacHidden): ?>
+				<span class="badge badge-<?= !empty($cliFooter['status_class']) ? h($cliFooter['status_class']) : 'secondary' ?>"><?= !empty($cliFooter['status_label']) ? h($cliFooter['status_label']) : '—' ?></span>
+				<p class="cli-sf-token-note mb-0 mt-1">Alteração de inativo não disponível (RBAC <code class="ap-code-violet">Clientes.field.inativo</code>).</p>
+					<?php elseif ($cliInativoRbacReadonly): ?>
+				<span class="badge badge-<?= !empty($cliFooter['status_class']) ? h($cliFooter['status_class']) : 'secondary' ?>"><?= !empty($cliFooter['status_label']) ? h($cliFooter['status_label']) : '—' ?></span>
+				<p class="cli-sf-token-note mb-0 mt-1">Somente leitura — regra <code class="ap-code-violet">Clientes.field.inativo</code>.</p>
+					<?php else: ?>
 				<div class="custom-control custom-switch mt-1">
 					<input type="checkbox" class="custom-control-input" id="cli-ff-switch-inativo" <?= !empty($cliente->inativo) ? 'checked' : '' ?> aria-describedby="cli-ff-status-hint">
 					<label class="custom-control-label" for="cli-ff-switch-inativo">Cliente inativo</label>
 				</div>
 				<p class="cli-sf-token-note mb-0 mt-1 d-md-none" id="cli-ff-status-hint">Altere o switch e use <strong>Salvar</strong> na barra para persistir.</p>
+					<?php endif; ?>
 				<?php else: ?>
 				<span class="badge badge-<?= !empty($cliFooter['status_class']) ? h($cliFooter['status_class']) : 'secondary' ?>"><?= !empty($cliFooter['status_label']) ? h($cliFooter['status_label']) : '—' ?></span>
 				<?php endif; ?>
@@ -578,17 +609,19 @@
 					<?php endif; ?>
 				</div>
 			</div>
+			<?php if (!empty($showClienteApiTokenTab)) : ?>
 			<div class="cli-sf-block cli-sf-token d-none d-md-block">
 				<div class="cli-sf-kicker">Token / integração</div>
 				<p class="cli-sf-token-note mb-0"><?= h($cliFooter['token_note']) ?></p>
 			</div>
+			<?php endif; ?>
 			<?php endif; ?>
 		</div>
 		<div class="cli-ff-actions">
 			<?= $this->element('Cli/button', ['text' => 'Editar cliente', 'iconHtml' => '<i class="fas fa-pen"></i>', 'class' => 'btn-sm btn-outline-primary', 'attrs' => ['id' => 'btn-cli-ficha-edit']]) ?>
 			<?= $this->element('Cli/button', ['text' => 'Cancelar', 'iconHtml' => '<i class="fas fa-undo"></i>', 'class' => 'btn-sm btn-outline-secondary d-none', 'attrs' => ['id' => 'btn-cli-ficha-cancel']]) ?>
 			<?= $this->element('Cli/button', ['text' => 'Salvar cliente', 'iconHtml' => '<i class="fas fa-save"></i>', 'class' => 'btn-sm btn-success d-none', 'attrs' => ['id' => 'btn-cli-ficha-save']]) ?>
-			<?php if ($isEquipe && empty($cliente->inativo)): ?>
+			<?php if ($isEquipe && empty($cliente->inativo) && !$cliInativoRbacHidden && !$cliInativoRbacReadonly): ?>
 			<?= $this->element('Cli/button', ['text' => 'Inativar…', 'class' => 'btn-sm btn-outline-danger btn-inativar-cliente', 'attrs' => ['type' => 'button']]) ?>
 			<?php endif; ?>
 			<?php if ($isEquipe): ?>

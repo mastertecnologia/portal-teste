@@ -112,6 +112,14 @@ class UsersController extends AppController {
 		$this->set('clients', $qClients->toArray());
 	}
 
+	/**
+	 * Página de fallback quando RBAC (enforce) nega acesso; rota em whitelist (config/rbac.php).
+	 */
+	public function accessDenied() {
+		$this->set('title', 'Acesso não autorizado');
+		$this->set('hideLayoutPageTitle', true);
+	}
+
 	public function dashboard($erro = null) {
 		$this->set('title', 'Dashboard');
 		// Título e breadcrumb próprios em dashboard.ctp (evita duplicar "Dashboard" com .page-titles).

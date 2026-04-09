@@ -64,7 +64,7 @@ Esta secção alinha a **especificação** ao que está **implementado no códig
 
 ### Ainda em aberto / operação (não é “código em falta”)
 
-- **Ambiente produção:** `.env` com e-mail (`CONTRACT_NOTIFY_*`), `CONTRACT_PDF_STORAGE_PATH`, opcional `RBAC_MODE=enforce` após matriz preenchida.
+- **Ambiente produção:** `.env` com e-mail (`CONTRACT_NOTIFY_*`), `CONTRACT_PDF_STORAGE_PATH`. RBAC: o repositório já usa **`enforce`** por defeito em `config/rbac.php` sem `RBAC_MODE`; para legado/dev use `RBAC_MODE=warn|off` (ver `config/rbac.env.example`).
 - **Autentique:** fluxo implementado; validação final com **conta/sandbox** real e webhook público HTTPS.
 - **UX opcional:** e-mails com branding extra (§7.7); testes E2E/CI além do PHPUnit de `RbacChecker`.
 

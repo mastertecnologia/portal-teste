@@ -20,6 +20,32 @@ $iconShield = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill=
 ?>
 <div class="col-12 p-0 admin-panel-ambient">
 	<div class="admin-panel-wrap">
+		<?php if (!empty($configHubPermissoesDelegate)) : ?>
+		<header class="admin-panel-hero">
+			<h1>Permissões e acesso</h1>
+			<p>Hub reduzido: atalhos para <strong class="admin-text-bright">RBAC / ABAC</strong> conforme as permissões do seu papel. O restante do painel administrativo continua reservado a administradores.</p>
+			<div class="admin-panel-hero-actions">
+				<?= $this->Html->link('<i class="fa fa-shield-alt"></i> Catálogo RBAC', ['controller' => 'Permissoes', 'action' => 'adminIndex'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
+			</div>
+		</header>
+		<section class="admin-section">
+			<h2 class="admin-section-title">Permissionamento</h2>
+			<div class="admin-section-grid">
+				<div class="admin-section-card admin-section-card--perm">
+					<span class="admin-section-card-label"><?= $iconShield ?> RBAC + ABAC</span>
+					<p class="admin-section-card-value">Papéis e políticas</p>
+					<p class="admin-section-card-meta">Use apenas os itens para os quais foi delegado; outras rotas podem recusar acesso.</p>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminIndex']) ?>" class="admin-section-card-link">Catálogo e matriz</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminRoles']) ?>" class="admin-section-card-link admin-section-card-link--stack">Papéis RBAC (níveis)</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminUsers']) ?>" class="admin-section-card-link admin-section-card-link--stack">Papéis por usuário</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminGroups']) ?>" class="admin-section-card-link admin-section-card-link--stack">Grupos RBAC</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminPermissionPolicies']) ?>" class="admin-section-card-link admin-section-card-link--stack">Políticas por permissão</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminFieldPermissions']) ?>" class="admin-section-card-link admin-section-card-link--stack">Campos por permissão</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminRbacAudit']) ?>" class="admin-section-card-link admin-section-card-link--stack">Auditoria RBAC</a>
+				</div>
+			</div>
+		</section>
+		<?php else : ?>
 		<header class="admin-panel-hero">
 			<h1>Painel administrativo</h1>
 			<p>Hub central do PGM/Master: separação entre <strong class="admin-text-bright">operação interna (empresas &amp; equipe)</strong> e <strong class="admin-text-bright">portal de clientes</strong>, além de parâmetros de sistema, OS e suporte.</p>
@@ -85,8 +111,11 @@ $iconShield = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill=
 					<p class="admin-section-card-value">RBAC + ABAC</p>
 					<p class="admin-section-card-meta">Catálogo de telas/funções, papéis e matriz. Escopos: empresa, cliente, próprio.</p>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminIndex']) ?>" class="admin-section-card-link">Catálogo e matriz</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminRoles']) ?>" class="admin-section-card-link admin-section-card-link--stack">Papéis RBAC (níveis)</a>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminUsers']) ?>" class="admin-section-card-link admin-section-card-link--stack">Papéis por usuário</a>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminGroups']) ?>" class="admin-section-card-link admin-section-card-link--stack">Grupos RBAC</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminPermissionPolicies']) ?>" class="admin-section-card-link admin-section-card-link--stack">Políticas por permissão</a>
+					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminFieldPermissions']) ?>" class="admin-section-card-link admin-section-card-link--stack">Campos por permissão</a>
 					<a href="<?= $this->Url->build(['controller' => 'Permissoes', 'action' => 'adminRbacAudit']) ?>" class="admin-section-card-link admin-section-card-link--stack">Auditoria RBAC</a>
 				</div>
 				<div class="admin-section-card">
@@ -139,5 +168,6 @@ $iconShield = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill=
 				</div>
 			</div>
 		</section>
+		<?php endif; ?>
 	</div>
 </div>

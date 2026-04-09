@@ -15,11 +15,51 @@
     <testsuites>
         <testsuite name="App Test Suite">
             <directory>./tests/TestCase</directory>
+            <exclude>./tests/TestCase/Integration</exclude>
         </testsuite>
-        <!-- Add plugin test suites here. -->
+        <!-- Autorização RBAC/ABAC — alinhar com `composer test-rbac`; acrescente ficheiros aqui ao criar testes novos neste âmbito. -->
+        <testsuite name="rbac">
+            <file>tests/TestCase/Utility/RbacCheckerTest.php</file>
+            <file>tests/TestCase/Utility/RbacPolicyConditionsTest.php</file>
+            <file>tests/TestCase/Utility/RbacPermissionResolverTest.php</file>
+            <file>tests/TestCase/Utility/RbacUserRolesResolverTest.php</file>
+            <file>tests/TestCase/Utility/RbacEffectivePermissionIdsTest.php</file>
+            <file>tests/TestCase/Utility/RbacClientePortalTest.php</file>
+            <file>tests/TestCase/Utility/RbacHierarchyTest.php</file>
+            <file>tests/TestCase/Utility/AbacQueryTest.php</file>
+            <file>tests/TestCase/Controller/Component/RbacComponentWhitelistTest.php</file>
+            <file>tests/TestCase/Controller/Component/RbacComponentApiEnforcedTest.php</file>
+            <file>tests/TestCase/Shell/RbacRolloutShellTest.php</file>
+            <file>tests/TestCase/Config/RbacPhpConfigTest.php</file>
+            <file>tests/TestCase/Config/AbacPhpConfigTest.php</file>
+        </testsuite>
+        <!-- Integração mínima ORM + SQLite em memória (pdo_sqlite); composer test-rbac corre este suite num segundo processo -->
+        <testsuite name="rbac-integration">
+            <file>tests/TestCase/Integration/RbacEffectivePermissionIdsSqliteTest.php</file>
+        </testsuite>
+        <!-- Stack HTTP + SQLite (:memory:); requer bootstrap dedicado (composer test-rbac). -->
+        <testsuite name="rbac-http">
+            <file>tests/TestCase/Integration/RbacPermissoesHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacAreasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacEmpresasusersHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacProblemasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacFeriadosHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacContratosHorasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacNormasempresaHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacFinanceiroHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacFaturamentoHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacClientesHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacPrefaturamentoHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacBancosenhasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacEmpresasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacOrcamentosHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacProdutosHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacVisitasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacOrdensservicoHttpTest.php</file>
+        </testsuite>
     </testsuites>
 
-    <!-- FixtureInjector: reativar quando houver testes de integração com BD (Cake\TestSuite\TestCase + fixtures). -->
+    <!-- FixtureInjector: reativar para fixtures Cake completas + PostgreSQL de teste, se necessário. -->
 
     <!-- Ignore vendor tests in code coverage reports -->
     <filter>

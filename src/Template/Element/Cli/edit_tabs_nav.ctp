@@ -5,10 +5,12 @@
  * @var bool $isEquipe
  * @var bool $isClientePortal
  * @var mixed $permissaoacesso
+ * @var bool|null $showTokenTab se definido, controla só o separador Token (aba Contratos mantém-se com acessos)
  */
 $showAcessos = !empty($isEquipe) || !empty($permissaoacesso);
 $showUsuarios = !empty($isEquipe);
 $showContratosToken = $showAcessos;
+$showTokenTab = isset($showTokenTab) ? (bool)$showTokenTab : $showContratosToken;
 $acessosPaneId = !empty($isClientePortal) ? 'acessosCliente' : 'acessos';
 ?>
 <ul class="nav cli-tabs-nav cli-edit-tabs-nav" role="tablist" id="cli-edit-tabs-nav" aria-label="Seções do cadastro de cliente">
@@ -37,10 +39,12 @@ $acessosPaneId = !empty($isClientePortal) ? 'acessosCliente' : 'acessos';
 			<i class="fas fa-file-contract" aria-hidden="true"></i> Contratos
 		</a>
 	</li>
+	<?php if ($showTokenTab) : ?>
 	<li class="nav-item" role="presentation">
 		<a class="nav-link" id="cli-tab-token" data-toggle="tab" href="#token" role="tab" aria-controls="token" aria-selected="false">
 			<i class="fas fa-key" aria-hidden="true"></i> Token
 		</a>
 	</li>
+	<?php endif; ?>
 	<?php endif; ?>
 </ul>

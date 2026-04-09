@@ -1,0 +1,129 @@
+# Testes RBAC/ABAC: `rbac` (sem BD) + `rbac-integration` (ORM/SQLite) + `rbac-http` (IntegrationTestTrait, bootstrap_http).
+name: RBAC PHPUnit
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/**'
+      - 'config/rbac.php'
+      - 'config/abac.php'
+      - 'src/Controller/AppController.php'
+      - 'src/Controller/AreasController.php'
+      - 'src/Controller/EmpresasusersController.php'
+      - 'src/Controller/PermissoesController.php'
+      - 'src/Controller/ProblemasController.php'
+      - 'src/Controller/FeriadosController.php'
+      - 'src/Controller/ContratosHorasController.php'
+      - 'src/Controller/NormasempresaController.php'
+      - 'src/Controller/FinanceiroController.php'
+      - 'src/Controller/FaturamentoController.php'
+      - 'src/Controller/ClientesController.php'
+      - 'src/Controller/PrefaturamentoController.php'
+      - 'src/Controller/BancosenhasController.php'
+      - 'src/Controller/EmpresasController.php'
+      - 'src/Controller/OrcamentosController.php'
+      - 'src/Controller/ProdutosController.php'
+      - 'src/Controller/VisitasController.php'
+      - 'src/Controller/OrdensservicoController.php'
+      - 'src/Template/Normasempresa/**'
+      - 'src/Template/Prefaturamento/**'
+      - 'src/Template/Bancosenhas/**'
+      - 'src/Template/Empresas/**'
+      - 'src/Template/Orcamentos/**'
+      - 'src/Template/Produtos/**'
+      - 'src/Template/Visitas/**'
+      - 'src/Template/Ordensservico/**'
+      - 'src/Utility/Rbac*.php'
+      - 'src/Utility/Abac*.php'
+      - 'src/Controller/Component/Rbac*.php'
+      - 'src/Controller/Component/Abac*.php'
+      - 'src/Model/Entity/Rbac*.php'
+      - 'src/Model/Table/Rbac*.php'
+      - 'src/Model/Table/UsersTable.php'
+      - 'src/Shell/RbacRolloutShell.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpunit.xml.dist'
+      - 'tests/bootstrap_http.php'
+      - 'config/bootstrap.php'
+      - '.github/workflows/rbac-phpunit.yml'
+  pull_request:
+    paths:
+      - 'tests/**'
+      - 'config/rbac.php'
+      - 'config/abac.php'
+      - 'src/Controller/AppController.php'
+      - 'src/Controller/AreasController.php'
+      - 'src/Controller/EmpresasusersController.php'
+      - 'src/Controller/PermissoesController.php'
+      - 'src/Controller/ProblemasController.php'
+      - 'src/Controller/FeriadosController.php'
+      - 'src/Controller/ContratosHorasController.php'
+      - 'src/Controller/NormasempresaController.php'
+      - 'src/Controller/FinanceiroController.php'
+      - 'src/Controller/FaturamentoController.php'
+      - 'src/Controller/ClientesController.php'
+      - 'src/Controller/PrefaturamentoController.php'
+      - 'src/Controller/BancosenhasController.php'
+      - 'src/Controller/EmpresasController.php'
+      - 'src/Controller/OrcamentosController.php'
+      - 'src/Controller/ProdutosController.php'
+      - 'src/Controller/VisitasController.php'
+      - 'src/Controller/OrdensservicoController.php'
+      - 'src/Template/Normasempresa/**'
+      - 'src/Template/Prefaturamento/**'
+      - 'src/Template/Bancosenhas/**'
+      - 'src/Template/Empresas/**'
+      - 'src/Template/Orcamentos/**'
+      - 'src/Template/Produtos/**'
+      - 'src/Template/Visitas/**'
+      - 'src/Template/Ordensservico/**'
+      - 'src/Utility/Rbac*.php'
+      - 'src/Utility/Abac*.php'
+      - 'src/Controller/Component/Rbac*.php'
+      - 'src/Controller/Component/Abac*.php'
+      - 'src/Model/Entity/Rbac*.php'
+      - 'src/Model/Table/Rbac*.php'
+      - 'src/Model/Table/UsersTable.php'
+      - 'src/Shell/RbacRolloutShell.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpunit.xml.dist'
+      - 'tests/bootstrap_http.php'
+      - 'config/bootstrap.php'
+      - '.github/workflows/rbac-phpunit.yml'
+
+concurrency:
+  group: rbac-phpunit-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rbac-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: intl, mbstring, pdo_sqlite
+          coverage: none
+
+      - name: Cache vendor
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php74-rbac-vendor-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php74-rbac-vendor-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run RBAC test suite
+        run: composer test-rbac

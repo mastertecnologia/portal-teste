@@ -8,8 +8,28 @@ use Cake\Mailer\Email;
 use Cake\Routing\Router;
 use Cake\View\View;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+if (!defined('C_RoleCliente')) {
+	define('C_RoleCliente', 1);
+}
+if (!defined('C_OrcamentoStatusPendente')) {
+	define('C_OrcamentoStatusPendente', 0);
+}
+if (!defined('C_OrcamentoStatusEnviado')) {
+	define('C_OrcamentoStatusEnviado', 1);
+}
+if (!defined('C_OrcamentoStatusAprovado')) {
+	define('C_OrcamentoStatusAprovado', 2);
+}
+if (!defined('C_OrcamentoStatusRecusado')) {
+	define('C_OrcamentoStatusRecusado', 3);
+}
+if (!defined('C_OrcamentoStatusArquivado')) {
+	define('C_OrcamentoStatusArquivado', 4);
+}
 
 class OrcamentosController extends AppController {
 	public function initialize() {

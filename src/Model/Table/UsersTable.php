@@ -6,7 +6,10 @@ use Cake\Validation\Validator;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Mailer\Email;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
 
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 

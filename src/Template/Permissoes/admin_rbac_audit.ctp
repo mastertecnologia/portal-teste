@@ -11,7 +11,7 @@ $auditCount = isset($auditRows) ? count($auditRows) : 0;
 	<div class="admin-rbac-wrap">
 		<header class="admin-panel-hero admin-rbac-hero--sub">
 			<h1>Auditoria RBAC</h1>
-			<p>Registos gravados pelo <code class="ap-code-violet">RbacComponent</code> quando <code class="ap-code-blue">Rbac.audit_decisions_db</code> está ativo (<strong>true</strong> = negações; <strong>all</strong> = também concessões). CLI: <code class="ap-code-blue">bin/cake rbac_rollout audit_recent</code>.</p>
+			<p>Registos gravados pelo <code class="ap-code-violet">RbacComponent</code> quando <code class="ap-code-blue">Rbac.audit_decisions_db</code> está ativo (<strong>true</strong> = negações; <strong>all</strong> = também concessões), ou via ambiente <code class="ap-code-blue">RBAC_AUDIT_DECISIONS_DB</code>. CLI: <code class="ap-code-blue">bin/cake rbac_rollout audit_recent</code>; retenção: <code class="ap-code-blue">audit_purge --days=N [--dry-run]</code> (ou <code class="ap-code-blue">Rbac.audit_retention_days</code> em config).</p>
 			<p class="admin-rbac-meta">Modo atual em config: <strong><?= h(var_export($auditDecisionsDbMode, true)) ?></strong>
 				<?php if (empty($auditDecisionsDbMode)) : ?>
 					— <span class="ap-text-bright">nenhum registo novo será criado até ativar.</span>
@@ -25,7 +25,7 @@ $auditCount = isset($auditRows) ? count($auditRows) : 0;
 		<?php if (!empty($rbacAuditMissing)) : ?>
 			<div class="admin-rbac-callout">Tabela <code class="ap-code-blue">rbac_audit_authorizations</code> ausente — execute a migration da Fase 3.</div>
 		<?php elseif ($auditCount === 0) : ?>
-			<div class="admin-rbac-callout">Nenhum registo ainda. Ative <code class="ap-code-blue">audit_decisions_db</code> em <code class="ap-code-blue">config/rbac.php</code> e use RBAC em modo <strong>warn</strong> ou <strong>enforce</strong> para gerar entradas.</div>
+			<div class="admin-rbac-callout">Nenhum registo ainda. Ative <code class="ap-code-blue">audit_decisions_db</code> em <code class="ap-code-blue">config/rbac.php</code> (ou <code class="ap-code-blue">RBAC_AUDIT_DECISIONS_DB</code>) e use RBAC em modo <strong>warn</strong> ou <strong>enforce</strong> para gerar entradas.</div>
 		<?php else : ?>
 			<p class="admin-rbac-meta">
 				Página <strong><?= (int)($params['page'] ?? 1) ?></strong> de <strong><?= max(1, (int)($params['pageCount'] ?? 1)) ?></strong>

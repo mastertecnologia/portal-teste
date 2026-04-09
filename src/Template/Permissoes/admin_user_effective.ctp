@@ -11,9 +11,10 @@ $this->Breadcrumbs->add('Efetivo: ' . h($user->username), [], ['class' => 'bread
 		<header class="admin-panel-hero admin-rbac-hero--sub">
 			<h1>Permissões efetivas</h1>
 			<p><?= h($user->name ?: $user->username) ?> — <code class="ap-code-violet"><?= h($user->username) ?></code></p>
-			<p class="admin-rbac-role-intro">União dos papéis <strong>diretos</strong> e dos papéis dos <strong>grupos</strong>, com IDs de permissão na matriz expandidos como no runtime (<code class="ap-code-blue">expand_legacy_aliases</code>).</p>
+			<p class="admin-rbac-role-intro">União dos papéis <strong>diretos</strong> e dos papéis dos <strong>grupos</strong>; contagem “após expansão” segue <code class="ap-code-blue">Rbac.expand_legacy_aliases</code> em <code class="ap-code-blue">config/rbac.php</code> (como o <code class="ap-code-violet">RbacComponent</code>).</p>
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Editar papéis', ['action' => 'adminUserRoles', $user->id], ['class' => 'admin-panel-btn admin-panel-btn--teal']) ?>
+				<?= $this->Html->link('Matriz (coluna efetiva)', ['action' => 'adminMatrix', '?' => ['user_id' => $user->id]], ['class' => 'admin-panel-btn admin-panel-btn--accent']) ?>
 				<?= $this->Html->link('Lista de usuários', ['action' => 'adminUsers'], ['class' => 'admin-panel-btn']) ?>
 			</div>
 		</header>

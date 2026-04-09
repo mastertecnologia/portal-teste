@@ -65,3 +65,9 @@ Estrutura no servidor: **public/** (Document root), **config/**, **logs/**, **sr
 5. No banco, confira/atualize `empresas.urlerp` para o Grid (script: `config/sql_atualizar_urlerp_para_grid_remoto.sql`).
 
 Documentação: **docs/INFRAESTRUTURA_SERVIDORES.md** (IPs e configurações), **DEPLOY_LINUX.md** (passo a passo), **MIGRACAO_LINUX.md** (detalhes), **DIAGNOSTICO_ERRO_500.md** (erros 500), **ESTRUTURA_LINUX.md** (pastas fora do public).
+
+## RBAC / ABAC (PGM)
+
+- Plano de rollout e índice **P0–P3:** **`IMPLEMENTATION_LOG.md`** (âncoras `rbac-priority-p0` … no topo do ficheiro).
+- Checklist manual: **`docs/TEST_CHECKLIST_RBAC.md`** · Variáveis `RBAC_*` para `.env`: **`config/rbac.env.example`**.
+- Testes PHPUnit focados em autorização: `composer test-rbac` (suites **`rbac`** sem BD e **`rbac-integration`** com SQLite em memória, ver `phpunit.xml.dist`). GitHub Actions: **RBAC PHPUnit** (`.github/workflows/rbac-phpunit.yml`) — push/PR nos paths definidos no YAML ou execução manual (*Run workflow*).

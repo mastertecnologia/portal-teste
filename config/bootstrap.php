@@ -213,6 +213,23 @@ if (!Configure::read('App.fullBaseUrl')) {
 }
 
 Cache::setConfig(Configure::consume('Cache'));
+
+/*
+ * Testes HTTP (phpunit --bootstrap tests/bootstrap_http.php): datasource default em SQLite :memory:
+ * sem depender de PostgreSQL (ver suite rbac-http em phpunit.xml.dist).
+ */
+if (defined('PGM_HTTP_TEST_DATASOURCE') && PGM_HTTP_TEST_DATASOURCE === true) {
+    Configure::write('Datasources.default', [
+        'className' => 'Cake\Database\Connection',
+        'driver' => 'Cake\Database\Driver\Sqlite',
+        'database' => ':memory:',
+        'encoding' => 'utf8',
+        'cacheMetadata' => false,
+        'log' => false,
+        'quoteIdentifiers' => false,
+    ]);
+}
+
 ConnectionManager::setConfig(Configure::consume('Datasources'));
 TransportFactory::setConfig(Configure::consume('EmailTransport'));
 Email::setConfig(Configure::consume('Email'));

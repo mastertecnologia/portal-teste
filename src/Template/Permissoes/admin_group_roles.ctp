@@ -22,6 +22,9 @@ $this->Breadcrumbs->add('Papéis: ' . h($group->name), [], ['class' => 'breadcru
 			<div class="queues-form-panel queues-form-panel--wide admin-rbac-role-panel">
 				<?= $this->Form->create(null, ['url' => ['action' => 'adminGroupRoles', $group->id]]) ?>
 				<p class="admin-rbac-role-intro">Membros deste grupo herdam a <strong class="ap-text-bright">união</strong> destes papéis (além dos papéis diretos do utilizador).</p>
+				<?php if (isset($rbacHierarchyCap) && $rbacHierarchyCap !== null) : ?>
+				<p class="admin-rbac-callout">Limite do seu usuário: só pode alterar papéis com <code class="ap-code-blue">hierarchy_level</code> ≤ <?= (int)$rbacHierarchyCap ?>. Papéis mais elevados já ligados ao grupo mantêm-se até um administrador ajustar.</p>
+				<?php endif; ?>
 				<?php foreach ($roles as $r) : ?>
 					<div class="custom-control custom-checkbox mb-2">
 						<?php
@@ -31,7 +34,7 @@ $this->Breadcrumbs->add('Papéis: ' . h($group->name), [], ['class' => 'breadcru
 						<input type="checkbox" class="custom-control-input" name="role_ids[]" value="<?= $rid ?>" id="gr_role_<?= $rid ?>" <?= $checked ? 'checked' : '' ?>>
 						<label class="custom-control-label admin-rbac-role-lbl" for="gr_role_<?= $rid ?>">
 							<strong class="admin-rbac-role-name"><?= h($r->name) ?></strong>
-							<span class="admin-rbac-role-slug"> (<?= h($r->slug) ?>)</span>
+							<span class="admin-rbac-role-slug"> (<?= h($r->slug) ?>) · nível <?= (int)($r->hierarchy_level ?? 0) ?></span>
 						</label>
 					</div>
 				<?php endforeach; ?>

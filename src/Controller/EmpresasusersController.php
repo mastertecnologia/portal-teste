@@ -4,10 +4,17 @@
     use App\Controller\AppController;
     use Cake\Event\Event;
     Use Cake\Datasource\ConnectionManager;
-    
-    require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-    //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
-    
+
+    $__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+    if (is_file($__pgmUserConstants)) {
+        require_once $__pgmUserConstants;
+    }
+    if (!defined('C_RoleCliente')) {
+        define('C_RoleCliente', 1);
+    }
+    if (!defined('C_RoleFuncionario')) {
+        define('C_RoleFuncionario', 0);
+    }
 
 class EmpresasusersController extends AppController{
 

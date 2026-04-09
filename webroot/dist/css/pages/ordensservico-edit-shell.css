@@ -1,0 +1,466 @@
+/**
+ * Edição de OS — mesmo vocabulário visual da listagem (.os-index-shell) e sidebar PGM.
+ * Layout compacto (menos padding / alturas de campo).
+ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+
+.os-edit-shell {
+	--os-bg: #0d0f14;
+	--os-bg2: #13161d;
+	--os-bg3: #1a1e28;
+	--os-bg4: #222736;
+	--os-border: rgba(255, 255, 255, 0.07);
+	--os-border2: rgba(255, 255, 255, 0.12);
+	--os-text: #f0f2f8;
+	--os-text2: #8b92a8;
+	--os-text3: #555e78;
+	--os-accent: #3d7eff;
+	--os-accent2: #2563eb;
+	--os-accent-glow: rgba(61, 126, 255, 0.15);
+
+	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	font-size: 13px;
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border);
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+	margin-bottom: 0.75rem;
+	overflow: hidden;
+	color: var(--os-text2);
+}
+
+/* Abas — faixa como sidebar / listagem */
+.os-edit-shell .os-edit-tabs {
+	border-bottom: 1px solid var(--os-border);
+	padding: 0 4px 0 10px;
+	margin-bottom: 0 !important;
+	flex-wrap: wrap;
+	background: var(--os-bg);
+}
+
+.os-edit-shell .os-edit-tabs .nav-item {
+	margin-bottom: -1px;
+}
+
+.os-edit-shell .os-edit-tabs .nav-link {
+	border: none !important;
+	border-radius: 0 !important;
+	padding: 8px 12px 6px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--os-text2) !important;
+	background: transparent !important;
+}
+
+.os-edit-shell .os-edit-tabs .nav-link:hover {
+	color: var(--os-text) !important;
+}
+
+.os-edit-shell .os-edit-tabs .nav-link.active {
+	color: var(--os-accent) !important;
+	background: var(--os-bg2) !important;
+	border-bottom: 2px solid var(--os-accent) !important;
+	padding-bottom: 4px;
+}
+
+.os-edit-shell .tab-content {
+	padding: 12px 14px 16px;
+	background: var(--os-bg2);
+}
+
+/* Título OS nº */
+.os-edit-shell .os-edit-os-legend {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 0 0 10px 0;
+	padding: 0;
+	border: none;
+	width: 100%;
+	line-height: 1.3;
+}
+
+.os-edit-shell .os-edit-os-legend .btn {
+	vertical-align: middle;
+	margin-top: -1px;
+	font-size: 11px;
+	padding: 4px 8px;
+}
+
+/* Labels */
+.os-edit-shell .control-label,
+.os-edit-shell label.control-label {
+	font-size: 10px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--os-text3) !important;
+	margin-bottom: 3px !important;
+}
+
+/* Campos */
+.os-edit-shell .form-control,
+.os-edit-shell select.form-control {
+	background-color: var(--os-bg3) !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	color: var(--os-text) !important;
+	min-height: 34px;
+	padding: 5px 10px;
+	font-size: 12.5px;
+}
+
+.os-edit-shell .form-control:focus,
+.os-edit-shell select.form-control:focus {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	background-color: var(--os-bg4) !important;
+}
+
+.os-edit-shell .form-control:disabled,
+.os-edit-shell select.form-control:disabled,
+.os-edit-shell .form-control[readonly] {
+	opacity: 0.85;
+	color: var(--os-text2) !important;
+}
+
+/* <select> nativo (sem bootstrap-select) — mesma “caixa” que .dropdown-toggle */
+.os-edit-shell select.form-control.os-edit-native-select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-color: var(--os-bg3) !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	padding-right: 28px;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	box-shadow: none !important;
+	min-height: 34px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	padding-left: 10px;
+	font-size: 12.5px;
+	color: var(--os-text) !important;
+}
+.os-edit-shell select.form-control.os-edit-native-select:focus {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	outline: none !important;
+}
+
+/*
+ * bootstrap-select copia "form-control" do <select> para o wrapper .bootstrap-select.
+ * Sem isso, .os-edit-shell .form-control desenha uma caixa no wrapper E outra no .dropdown-toggle.
+ */
+.os-edit-shell .bootstrap-select.form-control {
+	background: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	min-height: 0 !important;
+	padding: 0 !important;
+}
+
+.os-edit-shell .bootstrap-select > select.form-control {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	min-height: 0 !important;
+}
+
+.os-edit-shell textarea.form-control {
+	min-height: 64px;
+	padding: 8px 10px;
+}
+
+.os-edit-shell .form-group {
+	margin-bottom: 8px;
+}
+
+.os-edit-shell.form-material .form-group {
+	margin-bottom: 8px;
+}
+
+/* Bootstrap-select — só o botão é a “caixa”; remove sombra do .btn do tema */
+.os-edit-shell .bootstrap-select > .dropdown-toggle {
+	background-color: var(--os-bg3) !important;
+	background-image: none !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	box-shadow: none !important;
+	min-height: 34px;
+	padding: 4px 10px;
+	font-size: 12.5px;
+	color: var(--os-text) !important;
+}
+
+.os-edit-shell .bootstrap-select > .dropdown-toggle:focus,
+.os-edit-shell .bootstrap-select > .dropdown-toggle:active,
+.os-edit-shell .bootstrap-select.show > .dropdown-toggle {
+	border-color: var(--os-accent) !important;
+	box-shadow: 0 0 0 2px var(--os-accent-glow) !important;
+	outline: none !important;
+}
+
+.os-edit-shell .bootstrap-select .filter-option {
+	color: var(--os-text) !important;
+}
+
+.os-edit-shell .bootstrap-select .dropdown-menu {
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border2);
+}
+
+.os-edit-shell .bootstrap-select .dropdown-menu .dropdown-item {
+	color: var(--os-text2);
+}
+
+.os-edit-shell .bootstrap-select .dropdown-menu .dropdown-item:hover,
+.os-edit-shell .bootstrap-select .dropdown-menu .dropdown-item:focus {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+
+/* Seção produtos */
+.os-edit-shell .os-edit-section-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 14px 0 8px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--os-border);
+}
+
+/* Menos respiro entre blocos do template */
+.os-edit-shell .tab-pane#ordem > .row:first-of-type {
+	margin-bottom: 4px;
+}
+
+/* Tabelas */
+.os-edit-shell .table {
+	font-size: 12px;
+	color: var(--os-text2);
+	margin-bottom: 0.5rem;
+}
+
+.os-edit-shell .table thead th {
+	background: var(--os-bg3) !important;
+	color: var(--os-text3) !important;
+	font-weight: 600;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	border-bottom: 1px solid var(--os-border) !important;
+	border-color: var(--os-border) !important;
+	padding: 8px 10px !important;
+}
+
+.os-edit-shell .table td {
+	border-color: var(--os-border) !important;
+	padding: 8px 10px !important;
+	color: var(--os-text2);
+}
+
+.os-edit-shell .table.text-primary thead th {
+	color: var(--os-text3) !important;
+}
+
+/* jsGrid — mesmo tratamento da tela add (evita faixa clara na linha de inserção / vazio / pager) */
+.os-edit-shell .jsgrid {
+	border: 1px solid var(--os-border);
+	border-radius: 9px;
+	overflow: hidden;
+	background: var(--os-bg3);
+	color-scheme: dark;
+}
+
+.os-edit-shell .jsgrid-grid-header,
+.os-edit-shell .jsgrid-grid-header.jsgrid-header-scrollbar {
+	background: var(--os-bg3) !important;
+	color: var(--os-text2);
+}
+
+.os-edit-shell .jsgrid-grid-body {
+	background: var(--os-bg3) !important;
+}
+
+.os-edit-shell .jsgrid-grid-header .jsgrid-table,
+.os-edit-shell .jsgrid-grid-body .jsgrid-table {
+	background: transparent !important;
+}
+
+.os-edit-shell .jsgrid-header-cell {
+	vertical-align: middle !important;
+	line-height: 1.25;
+}
+
+.os-edit-shell .jsgrid-header-sortable {
+	padding-right: 18px !important;
+}
+
+.os-edit-shell .jsgrid-header-row > .jsgrid-header-cell {
+	background: var(--os-bg4) !important;
+	border-color: var(--os-border) !important;
+	color: var(--os-text3) !important;
+	font-weight: 600;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding: 10px 10px !important;
+	vertical-align: middle !important;
+}
+
+.os-edit-shell .jsgrid-grid-header .jsgrid-control-field {
+	background: var(--os-bg4) !important;
+}
+
+.os-edit-shell .jsgrid-row > .jsgrid-cell,
+.os-edit-shell .jsgrid-alt-row > .jsgrid-cell,
+.os-edit-shell .jsgrid-insert-row > .jsgrid-cell,
+.os-edit-shell .jsgrid-edit-row > .jsgrid-cell {
+	border-color: rgba(255, 255, 255, 0.055) !important;
+	background: var(--os-bg3) !important;
+	color: var(--os-text2);
+	padding: 9px 10px !important;
+	vertical-align: middle !important;
+}
+
+.os-edit-shell .jsgrid .inputObservacao {
+	text-align: center;
+}
+
+.os-edit-shell .jsgrid .input-group {
+	min-width: 0;
+	align-items: stretch;
+}
+
+.os-edit-shell .jsgrid .input-group .form-control.input-codigo-val {
+	min-width: 0;
+	font-size: 12px;
+}
+
+.os-edit-shell .jsgrid-insert-row select.form-control,
+.os-edit-shell .jsgrid-edit-row select.form-control {
+	min-height: 34px;
+	padding: 5px 8px;
+	font-size: 12.5px;
+}
+
+.os-edit-shell .jsgrid-row:hover > .jsgrid-cell,
+.os-edit-shell .jsgrid-alt-row:hover > .jsgrid-cell {
+	background: #202635 !important;
+}
+
+/* Texto “Nenhum item adicionado” — linha nodata herdava fundo claro do tema */
+.os-edit-shell .jsgrid-nodata-row > .jsgrid-cell {
+	background: var(--os-bg2) !important;
+	color: var(--os-text2) !important;
+	border-color: var(--os-border) !important;
+	padding: 12px 10px !important;
+}
+
+.os-edit-shell .jsgrid-pager {
+	background: var(--os-bg2);
+	color: var(--os-text3);
+	padding: 8px 10px;
+	border-top: 1px solid var(--os-border);
+}
+
+.os-edit-shell .jsgrid-pager a {
+	color: var(--os-accent);
+}
+
+.os-edit-shell .jsgrid .os-edit-ref-link {
+	cursor: pointer;
+	color: var(--os-accent) !important;
+	text-decoration: none !important;
+}
+
+.os-edit-shell .jsgrid .os-edit-ref-link:hover {
+	color: #5a94ff !important;
+}
+
+.os-edit-shell .jsgrid input.form-control,
+.os-edit-shell .jsgrid-insert-row input.form-control,
+.os-edit-shell .jsgrid-edit-row input.form-control,
+.os-edit-shell .jsgrid-insert-row select,
+.os-edit-shell .jsgrid-edit-row select,
+.os-edit-shell .jsgrid .input-group .form-control {
+	background-color: var(--os-bg3) !important;
+	border: 1px solid var(--os-border) !important;
+	color: var(--os-text) !important;
+	box-shadow: none !important;
+}
+
+.os-edit-shell .jsgrid .input-group-append .btn,
+.os-edit-shell .jsgrid .input-group-append .btn-secondary {
+	background: var(--os-bg4) !important;
+	border-color: var(--os-border2) !important;
+	color: var(--os-text2) !important;
+}
+
+.os-edit-shell .jsgrid-cell .form-control {
+	min-height: 30px;
+	font-size: 12px;
+	padding: 3px 8px;
+}
+
+.os-edit-shell .jsgrid-cell {
+	height: auto !important;
+	min-height: 40px;
+}
+
+/* Botões */
+.os-edit-shell .tab-pane#ordem .btn {
+	border-radius: 7px;
+	font-weight: 500;
+	font-size: 12px;
+	padding: 6px 12px;
+}
+
+.os-edit-shell #movimentacoes {
+	color: var(--os-text2);
+	font-size: 12.5px;
+}
+
+.os-edit-shell #movimentacoes hr {
+	border-color: var(--os-border);
+	margin: 0.5rem 0;
+}
+
+.os-edit-shell #movimentacoes strong {
+	color: var(--os-text);
+}
+
+.os-edit-shell .sideh {
+	color: var(--os-text3);
+	font-weight: 600;
+	font-size: 11px;
+}
+
+/* Links dentro do painel */
+.os-edit-shell a.link,
+.os-edit-shell .tab-pane a:not(.btn):not(.nav-link) {
+	color: var(--os-accent);
+}
+
+.os-edit-shell a.link:hover,
+.os-edit-shell .tab-pane a:not(.btn):not(.nav-link):hover {
+	color: var(--os-accent2);
+}
+
+/* Checkbox / texto auxiliar */
+.os-edit-shell .custom-control-label,
+.os-edit-shell .text-muted {
+	color: var(--os-text3) !important;
+}
+
+.os-edit-shell legend:not(.os-edit-os-legend) {
+	font-size: 12px;
+	color: var(--os-text2);
+	border: none;
+	margin-bottom: 6px;
+}

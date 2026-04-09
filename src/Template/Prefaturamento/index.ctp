@@ -3,7 +3,6 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Ordensservico[] $ordens
  */
-require_once ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
 
 $this->Html->css('/dist/css/pages/prefaturamento-shell.css', ['block' => true]);
 
@@ -56,14 +55,16 @@ $pfBool = static function ($reg, $prop) {
 							<th>Técnico</th>
 							<th>Abertura</th>
 							<th>Valor</th>
+							<?php if (!empty($showPrefaturamentoConferencia)) : ?>
 							<th colspan="3">Conferências</th>
+							<?php endif; ?>
 							<th class="text-right">Ações</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if (empty($ordens)) : ?>
 							<tr>
-								<td colspan="10" class="text-center text-muted">Nenhuma OS nesta fila.</td>
+								<td colspan="<?= !empty($showPrefaturamentoConferencia) ? 10 : 7 ?>" class="text-center text-muted">Nenhuma OS nesta fila.</td>
 							</tr>
 						<?php else : ?>
 							<?php foreach ($ordens as $reg) :
@@ -89,6 +90,7 @@ $pfBool = static function ($reg, $prop) {
 										<?= $reg->dataabertura ? h(date_format($reg->dataabertura, 'd/m/Y')) : '—' ?>
 									</td>
 									<td><?= $reg->valortotal !== null ? h(number_format((float)$reg->valortotal, 2, ',', '.')) : '—' ?></td>
+									<?php if (!empty($showPrefaturamentoConferencia)) : ?>
 									<td colspan="3" class="pf-td-conferencias">
 										<?= $this->Form->create(null, ['url' => ['action' => 'conferencia'], 'class' => 'form-inline d-flex flex-wrap align-items-center']); ?>
 										<?= $this->Form->hidden('idordem', ['value' => $reg->id]); ?>
@@ -98,6 +100,7 @@ $pfBool = static function ($reg, $prop) {
 										<?= $this->Form->button('Salvar', ['class' => 'btn btn-xs btn-secondary m-l-5']); ?>
 										<?= $this->Form->end(); ?>
 									</td>
+									<?php endif; ?>
 									<td class="text-right">
 										<?= $this->Html->link(
 											'<i class="fas fa-file-alt"></i> Gerar Faturamento',

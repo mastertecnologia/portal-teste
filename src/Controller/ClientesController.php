@@ -6,18 +6,36 @@ use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Service\ClienteIntegration\ClienteErpSyncService;
 use App\Utility\ClienteDomainEventType;
+use App\Utility\RbacChecker;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use CakeSoap\Network\CakeSoap;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
-require_once (ROOT . DS . 'vendor' . DS  . '/queencitycodefactory/cakesoap/src/Network/CakeSoap.php');
-
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/queencitycodefactory/cakesoap/src/Network/CakeSoap.php';
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
+$__cakeSoap = ROOT . DS . 'vendor' . DS . 'queencitycodefactory' . DS . 'cakesoap' . DS . 'src' . DS . 'Network' . DS . 'CakeSoap.php';
+if (is_file($__cakeSoap)) {
+	require_once $__cakeSoap;
+}
+if (!defined('C_RoleCliente')) {
+	define('C_RoleCliente', 1);
+}
+if (!defined('C_RoleFuncionario')) {
+	define('C_RoleFuncionario', 0);
+}
+if (!defined('C_ClientesTipoJuridica')) {
+	define('C_ClientesTipoJuridica', 2);
+}
+if (!defined('C_ClientesTipoFisica')) {
+	define('C_ClientesTipoFisica', 1);
+}
 
 class ClientesController extends AppController {
 	public function initialize() {
@@ -375,6 +393,12 @@ class ClientesController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+			if ((int)$this->Auth->user('role') === C_RoleFuncionario) {
+				$inativoGate = RbacChecker::resourceFieldAccess((int)$this->Auth->user('id'), 'Clientes.field.inativo');
+				if ($inativoGate !== null && (empty($inativoGate['visible']) || empty($inativoGate['editable']))) {
+					unset($data['inativo']);
+				}
+			}
 
 			$cliente = $this->Clientes->patchEntity($cliente, $data);
 			if(!empty($data['cpf'])) $cliente->cpf = removeCaracteres($data['cpf']);
@@ -873,6 +897,12 @@ class ClientesController extends AppController {
 		if (empty($cliente)) {
 			$this->Flash->error(__('Cliente não encontrado.'));
 			return $this->redirect(['action' => 'index']);
+		}
+		$uidTok = (int)$this->Auth->user('id');
+		$apiTokGate = RbacChecker::resourceFieldAccess($uidTok, 'Clientes.field.api_token');
+		if ($apiTokGate !== null && (empty($apiTokGate['visible']) || empty($apiTokGate['editable']))) {
+			$this->Flash->error(__('Sem permissão para renovar o token.'));
+			return $this->redirect(['action' => 'edit', $idcliente]);
 		}
 		// Gera o token
 		$cpfoucnpj = isset($cliente->cnpj) ? $cliente->cnpj : $cliente->cpf;

@@ -1,0 +1,1712 @@
+/* UI Ordens de Serviço — alinhado a ordens_servico_premium.html (escopo .os-index-shell) */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+
+.os-index-shell {
+	/* Espelho das variáveis do mock premium (--os-* + aliases --bg/--text para drawer/JS inline) */
+	--os-bg: #0d0f14;
+	--os-bg2: #13161d;
+	--os-bg3: #1a1e28;
+	--os-bg4: #222736;
+	--os-border: rgba(255, 255, 255, 0.07);
+	--os-border2: rgba(255, 255, 255, 0.12);
+	--os-text: #f0f2f8;
+	--os-text2: #8b92a8;
+	--os-text3: #555e78;
+	--os-accent: #00c08b;
+	--os-accent2: #009e74;
+	--os-accent-glow: rgba(0, 192, 139, 0.18);
+	--os-green: #22c55e;
+	--os-green-bg: rgba(34, 197, 94, 0.1);
+	--os-amber: #f59e0b;
+	--os-amber-bg: rgba(245, 158, 11, 0.1);
+	--os-orange: #ff8833;
+	--os-orange-bg: rgba(255, 136, 51, 0.12);
+	--os-purple: #a682e6;
+	--os-purple-bg: rgba(166, 130, 230, 0.12);
+	--os-radius-lg: 14px;
+	--os-font: 'DM Sans', sans-serif;
+	--os-mono: 'DM Mono', monospace;
+	--bg: var(--os-bg);
+	--bg2: var(--os-bg2);
+	--bg3: var(--os-bg3);
+	--bg4: var(--os-bg4);
+	--border: var(--os-border);
+	--border2: var(--os-border2);
+	--text: var(--os-text);
+	--text2: var(--os-text2);
+	--text3: var(--os-text3);
+	--accent: var(--os-accent);
+	--accent2: var(--os-accent2);
+	--aglow: var(--os-accent-glow);
+	--green: var(--os-green);
+	--gbg: var(--os-green-bg);
+	--amber: var(--os-amber);
+	--ambg: var(--os-amber-bg);
+	--orange: var(--os-orange);
+	--obg: var(--os-orange-bg);
+	--purple: var(--os-purple);
+	--pbg: var(--os-purple-bg);
+	--font: var(--os-font);
+	--mono: var(--os-mono);
+	font-family: var(--os-font);
+	font-size: 13px;
+	line-height: 1.2;
+	color: var(--os-text2);
+	background: var(--os-bg);
+	border-radius: var(--os-radius-lg);
+	padding: 0 0 20px;
+	margin-bottom: 1rem;
+}
+
+.os-index-shell * {
+	box-sizing: border-box;
+}
+
+.os-index-shell .os-page-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 14px;
+	padding: 0 4px;
+}
+
+.os-index-shell .os-page-title {
+	font-size: 17px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 0;
+	line-height: 1.2;
+}
+
+.os-index-shell .os-page-sub {
+	font-size: 11px;
+	color: var(--os-text3);
+	margin: 3px 0 0 0;
+}
+
+.os-index-shell .os-page-head-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.os-index-shell .os-icon-btn {
+	width: 34px;
+	height: 34px;
+	border-radius: 8px;
+	border: 1px solid var(--os-border);
+	background: var(--os-bg3);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: default;
+	color: var(--os-text2);
+	flex-shrink: 0;
+}
+
+.os-index-shell .os-btn-primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	padding: 0 16px;
+	height: 36px;
+	border-radius: 8px;
+	border: none;
+	background: var(--os-accent);
+	color: #fff !important;
+	font-family: var(--os-font);
+	font-size: 13px;
+	font-weight: 500;
+	text-decoration: none !important;
+	white-space: nowrap;
+	transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.os-index-shell .os-btn-primary:hover {
+	background: var(--os-accent2);
+	color: #fff !important;
+	transform: translateY(-1px);
+}
+
+.os-index-shell .os-btn-ghost {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 14px;
+	height: 34px;
+	border-radius: 8px;
+	border: 1px solid var(--os-border);
+	background: var(--os-bg3);
+	color: var(--os-text2) !important;
+	font-size: 13px;
+	font-weight: 500;
+	text-decoration: none !important;
+}
+
+.os-index-shell .os-btn-ghost:hover {
+	background: var(--os-bg4);
+	color: var(--os-text) !important;
+}
+
+.os-index-shell .os-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+	margin-bottom: 12px;
+	padding: 0 4px;
+	background: var(--os-bg);
+	border-left: none;
+	border-right: none;
+}
+
+@media (max-width: 1100px) {
+	.os-index-shell .os-kpi-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 520px) {
+	.os-index-shell .os-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.os-index-shell .os-kpi-card {
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border);
+	border-radius: var(--os-radius-lg);
+	padding: 12px 14px;
+	position: relative;
+	overflow: hidden;
+	cursor: default;
+	transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.os-index-shell .os-kpi-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	border-radius: 2px 2px 0 0;
+}
+
+.os-index-shell .os-kpi-card.os-kpi-blue::before {
+	background: var(--os-accent);
+}
+.os-index-shell .os-kpi-card.os-kpi-amber::before {
+	background: var(--os-amber);
+}
+.os-index-shell .os-kpi-card.os-kpi-green::before {
+	background: var(--os-green);
+}
+.os-index-shell .os-kpi-card.os-kpi-purple::before {
+	background: var(--os-purple);
+}
+
+.os-index-shell .os-kpi-label {
+	font-size: 10.5px;
+	color: var(--os-text3);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-weight: 500;
+	margin-bottom: 4px;
+	line-height: 1.1;
+}
+
+.os-index-shell .os-kpi-value {
+	font-size: 21px;
+	font-weight: 600;
+	color: var(--os-text);
+	font-family: var(--os-mono);
+	line-height: 1;
+	margin-bottom: 2px;
+}
+
+.os-index-shell .os-kpi-sub {
+	font-size: 10px;
+	color: var(--os-text3);
+	line-height: 1.2;
+}
+
+.os-index-shell .os-bulk-bar {
+	display: none;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	background: var(--os-accent-glow);
+	border: 1px solid rgba(61, 126, 255, 0.3);
+	border-radius: 10px;
+	padding: 10px 16px;
+	margin: 0 20px 14px;
+}
+
+.os-index-shell .os-bulk-bar.visible {
+	display: flex;
+}
+
+.os-index-shell .os-bulk-count {
+	font-size: 13px;
+	color: var(--os-accent);
+	font-weight: 500;
+	flex: 1;
+}
+
+.os-index-shell .os-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 8px;
+	margin-bottom: 8px;
+	padding: 0 4px;
+	background: var(--os-bg);
+	border-left: none;
+	border-right: none;
+}
+
+.os-index-shell .os-filter-form .row {
+	margin: 0 -4px;
+	width: calc(100% + 8px);
+}
+
+.os-index-shell .os-filter-form .form-group,
+.os-index-shell .os-filter-form [class*='col-'] {
+	margin-bottom: 0;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+.os-index-shell .os-filter-form p {
+	font-size: 10px !important;
+	font-weight: 600 !important;
+	color: var(--os-text3) !important;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin: 0 !important;
+	line-height: 1.05;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select > .dropdown-toggle,
+.os-index-shell .os-filter-form select.form-control {
+	background: var(--os-bg2) !important;
+	background-image: none !important;
+	background-size: auto !important;
+	background-position: initial !important;
+	box-shadow: none !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	color: var(--os-text2) !important;
+	font-size: 12px !important;
+	height: 30px !important;
+	min-height: 30px !important;
+	padding: 0 10px !important;
+	line-height: 30px !important;
+}
+
+/* <select> nativo nos filtros (ex.: tipo/locação — lista curta, sem bootstrap-select) */
+.os-index-shell .os-filter-form select.form-control.os-filter-native-select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	padding-right: 28px !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%238b92a8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 8px center !important;
+	background-size: 10px 10px !important;
+	cursor: pointer;
+}
+.os-index-shell .os-filter-form select.form-control.os-filter-native-select:focus {
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.22) !important;
+	outline: none !important;
+}
+
+/* Neutraliza sublinhado herdado de .form-material nos filtros da OS */
+.os-index-shell .os-filter-form.form-material .form-control,
+.os-index-shell .os-filter-form.form-material .form-control:focus,
+.os-index-shell .os-filter-form.form-material .form-control.focus {
+	background-image: none !important;
+	background-size: auto !important;
+	background-position: initial !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 8px !important;
+	box-shadow: none !important;
+	float: none !important;
+}
+
+.os-index-shell .os-filter-form.form-material .bootstrap-select.form-control {
+	background: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+	color: var(--os-text2) !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select > .dropdown-toggle:focus,
+.os-index-shell .os-filter-form .bootstrap-select > .dropdown-toggle:active {
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.22) !important;
+	outline: none !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu {
+	background: var(--os-bg3) !important;
+	border: 1px solid var(--os-border2) !important;
+	border-radius: 8px !important;
+	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
+	margin-top: 4px !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu li a {
+	color: var(--os-text2) !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu .dropdown-item {
+	color: var(--os-text2) !important;
+	background: transparent !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu li.active a,
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu li.selected a,
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu li a:hover,
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu li a:focus {
+	background: var(--os-accent-glow) !important;
+	color: var(--os-text) !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu .dropdown-item:hover,
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu .dropdown-item:focus,
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu .active .dropdown-item,
+.os-index-shell .os-filter-form .bootstrap-select .dropdown-menu .selected .dropdown-item {
+	background: var(--os-accent-glow) !important;
+	color: var(--os-text) !important;
+}
+
+/*
+ * O selectpicker dos filtros usa container no body (bs-container),
+ * então os estilos escopados em .os-index-shell não alcançam o dropdown aberto.
+ * Escopo global protegido por body.os-index-page para não afetar outras telas.
+ */
+body.os-index-page .bs-container .dropdown-menu,
+body.os-index-page .bootstrap-select .dropdown-menu {
+	background: #1a1e28 !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	border-radius: 8px !important;
+	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.os-index-page .bs-container .dropdown-menu li a,
+body.os-index-page .bootstrap-select .dropdown-menu li a,
+body.os-index-page .bs-container .dropdown-menu .dropdown-item,
+body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item {
+	color: #8b92a8 !important;
+	background: transparent !important;
+}
+
+body.os-index-page .bs-container .dropdown-menu li.active a,
+body.os-index-page .bs-container .dropdown-menu li.selected a,
+body.os-index-page .bs-container .dropdown-menu li a:hover,
+body.os-index-page .bs-container .dropdown-menu li a:focus,
+body.os-index-page .bs-container .dropdown-menu .dropdown-item:hover,
+body.os-index-page .bs-container .dropdown-menu .dropdown-item:focus,
+body.os-index-page .bs-container .dropdown-menu .active .dropdown-item,
+body.os-index-page .bs-container .dropdown-menu .selected .dropdown-item,
+body.os-index-page .bootstrap-select .dropdown-menu li.active a,
+body.os-index-page .bootstrap-select .dropdown-menu li.selected a,
+body.os-index-page .bootstrap-select .dropdown-menu li a:hover,
+body.os-index-page .bootstrap-select .dropdown-menu li a:focus,
+body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item:hover,
+body.os-index-page .bootstrap-select .dropdown-menu .dropdown-item:focus,
+body.os-index-page .bootstrap-select .dropdown-menu .active .dropdown-item,
+body.os-index-page .bootstrap-select .dropdown-menu .selected .dropdown-item {
+	background: rgba(61, 126, 255, 0.15) !important;
+	color: #f0f2f8 !important;
+}
+
+body.os-index-page .bs-container .bs-searchbox .form-control,
+body.os-index-page .bootstrap-select .bs-searchbox .form-control {
+	background: #13161d !important;
+	border: 1px solid rgba(255, 255, 255, 0.07) !important;
+	color: #8b92a8 !important;
+}
+
+body.os-index-page .bs-container .bs-searchbox .form-control::placeholder,
+body.os-index-page .bootstrap-select .bs-searchbox .form-control::placeholder {
+	color: #555e78 !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .bs-searchbox .form-control {
+	background: var(--os-bg2) !important;
+	border: 1px solid var(--os-border) !important;
+	color: var(--os-text2) !important;
+}
+
+.os-index-shell .os-filter-form .bootstrap-select .bs-searchbox .form-control::placeholder {
+	color: var(--os-text3) !important;
+}
+
+/* Checkboxes em massa (tema escuro) */
+.os-index-shell .os-row-checkbox .custom-control-label::before {
+	background-color: var(--os-bg3) !important;
+	border-color: var(--os-border2) !important;
+}
+
+.os-index-shell .os-row-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+	background-color: var(--os-accent) !important;
+	border-color: var(--os-accent) !important;
+}
+
+.os-index-shell .os-row-checkbox .custom-control-input:focus ~ .custom-control-label::before {
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.25) !important;
+}
+
+.os-index-shell .os-table-outer {
+	margin: 0 4px 20px;
+	background: var(--os-bg2);
+	border: none !important;
+	border-radius: var(--os-radius-lg);
+	overflow: hidden;
+}
+
+.os-index-shell .os-table-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 8px 12px;
+	border-bottom: none;
+}
+
+.os-index-shell .os-table-head-l {
+	font-size: 11px;
+	color: var(--os-text2);
+}
+
+.os-index-shell .os-table-head-l strong {
+	color: var(--os-text);
+	font-weight: 600;
+}
+
+.os-index-shell .os-table-head-r {
+	display: flex;
+	align-items: center;
+}
+
+.os-index-shell .os-per-page {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	color: var(--os-text3);
+	margin: 0;
+}
+
+.os-index-shell .os-per-page select {
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border);
+	border-radius: 6px;
+	color: var(--os-text2);
+	padding: 2px 5px;
+	font-family: var(--os-mono);
+	font-size: 12px;
+	outline: none;
+}
+
+.os-index-shell .os-table-responsive {
+	padding: 0;
+	border-top: none !important;
+}
+
+.os-index-shell .dataTables_wrapper {
+	padding: 0;
+	color: var(--os-text2);
+	border-top: none !important;
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_length {
+	display: none;
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_length select {
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border);
+	border-radius: 6px;
+	color: var(--os-text2);
+	padding: 2px 8px;
+	margin: 0 6px;
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_info {
+	display: none;
+	padding-top: 12px;
+	font-size: 12px;
+	color: var(--os-text3);
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_paginate {
+	padding-top: 8px;
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_paginate .paginate_button {
+	background: transparent !important;
+	border: 1px solid var(--os-border) !important;
+	color: var(--os-text2) !important;
+	border-radius: 6px !important;
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+	background: var(--os-accent-glow) !important;
+	border-color: var(--os-accent) !important;
+	color: var(--os-accent) !important;
+}
+
+.os-index-shell .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+	background: var(--os-bg3) !important;
+	border-color: var(--os-border2) !important;
+	color: var(--os-text) !important;
+}
+
+/* Esconde filtro duplicado no rodapé do wrapper (usa slot no topbar) */
+.os-index-shell .dataTables_wrapper > .dataTables_filter {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.os-index-shell table.dataTable,
+.os-index-shell table.table {
+	width: 100% !important;
+	border-collapse: collapse;
+	margin: 0 !important;
+}
+
+.os-index-shell table.dataTable thead th,
+.os-index-shell table.table thead th {
+	text-align: left;
+	padding: 7px 12px !important;
+	font-size: 10.5px !important;
+	font-weight: 500 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--os-text3) !important;
+	background: var(--os-bg3) !important;
+	border-bottom: 1px solid var(--os-border) !important;
+	border-top: none !important;
+	vertical-align: middle;
+}
+
+/* Remove indicadores/sombras de ordenação do DataTables (setas no header) */
+.os-index-shell table.dataTable thead th.sorting,
+.os-index-shell table.dataTable thead th.sorting_asc,
+.os-index-shell table.dataTable thead th.sorting_desc,
+.os-index-shell table.dataTable thead th.sorting_asc_disabled,
+.os-index-shell table.dataTable thead th.sorting_desc_disabled {
+	background-image: none !important;
+}
+
+.os-index-shell table.dataTable thead th.sorting::before,
+.os-index-shell table.dataTable thead th.sorting::after,
+.os-index-shell table.dataTable thead th.sorting_asc::before,
+.os-index-shell table.dataTable thead th.sorting_asc::after,
+.os-index-shell table.dataTable thead th.sorting_desc::before,
+.os-index-shell table.dataTable thead th.sorting_desc::after,
+.os-index-shell table.dataTable thead th.sorting_asc_disabled::before,
+.os-index-shell table.dataTable thead th.sorting_asc_disabled::after,
+.os-index-shell table.dataTable thead th.sorting_desc_disabled::before,
+.os-index-shell table.dataTable thead th.sorting_desc_disabled::after {
+	display: none !important;
+	content: none !important;
+}
+
+.os-index-shell table.dataTable tbody td,
+.os-index-shell table.table tbody td {
+	padding: 8px 12px !important;
+	font-size: 12px !important;
+	color: var(--os-text2) !important;
+	border-color: var(--os-border) !important;
+	vertical-align: middle;
+	background: transparent !important;
+}
+
+.os-index-shell table.dataTable tbody tr,
+.os-index-shell table.table tbody tr {
+	background: transparent !important;
+	transition: background 0.15s ease;
+}
+
+.os-index-shell table.dataTable tbody tr:hover,
+.os-index-shell table.table tbody tr:hover {
+	background: var(--os-bg3) !important;
+}
+
+.os-index-shell table.dataTable tbody tr.os-row-locacao,
+.os-index-shell table.table tbody tr.os-row-locacao {
+	background: rgba(167, 139, 250, 0.08) !important;
+}
+
+.os-index-shell table .link {
+	color: var(--os-text2) !important;
+	font-family: var(--os-font);
+	font-weight: 500;
+	text-decoration: none !important;
+	cursor: pointer;
+}
+
+.os-index-shell table tbody tr.os-row-drawer .link {
+	user-select: none;
+}
+
+.os-index-shell table .link:hover {
+	text-decoration: none !important;
+	color: var(--os-text) !important;
+}
+
+.os-index-shell .os-num-cell {
+	font-family: var(--os-mono);
+	font-weight: 600;
+	color: var(--os-accent) !important;
+}
+
+.os-index-shell .os-client-cell {
+	color: var(--os-text);
+	font-weight: 500;
+	max-width: 280px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: inline-block;
+	vertical-align: bottom;
+}
+
+.os-index-shell .os-valor-cell {
+	font-family: var(--os-mono);
+	text-align: right;
+	color: var(--os-text);
+	font-weight: 500;
+}
+
+/* Datas no padrão premium: discreto/mono, não azul */
+.os-index-shell table#tableOrdens tbody td:nth-child(2) .link,
+.os-index-shell table#tableOrdens tbody td:nth-child(3) .link {
+	color: var(--os-text3) !important;
+	font-family: var(--os-mono);
+	font-size: 11.5px;
+	font-weight: 400;
+}
+
+.os-index-shell .os-status,
+.os-drawer .os-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 9px;
+	border-radius: 20px;
+	font-size: 10px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.os-index-shell .os-status-dot,
+.os-drawer .os-status-dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.os-index-shell .os-st-exec,
+.os-drawer .os-st-exec {
+	background: var(--os-amber-bg);
+	color: var(--os-amber);
+}
+.os-index-shell .os-st-exec .os-status-dot,
+.os-drawer .os-st-exec .os-status-dot {
+	background: var(--os-amber);
+}
+
+.os-index-shell .os-st-sync,
+.os-drawer .os-st-sync {
+	background: var(--os-green-bg);
+	color: var(--os-green);
+}
+.os-index-shell .os-st-sync .os-status-dot,
+.os-drawer .os-st-sync .os-status-dot {
+	background: var(--os-green);
+}
+
+.os-index-shell .os-st-lib,
+.os-drawer .os-st-lib {
+	background: var(--os-orange-bg);
+	color: var(--os-orange);
+}
+.os-index-shell .os-st-lib .os-status-dot,
+.os-drawer .os-st-lib .os-status-dot {
+	background: var(--os-orange);
+}
+
+.os-index-shell .os-st-pen,
+.os-drawer .os-st-pen {
+	background: var(--os-purple-bg);
+	color: var(--os-purple);
+}
+.os-index-shell .os-st-pen .os-status-dot,
+.os-drawer .os-st-pen .os-status-dot {
+	background: var(--os-purple);
+}
+
+.os-index-shell .os-st-default,
+.os-drawer .os-st-default {
+	background: var(--os-bg4);
+	color: var(--os-text3);
+}
+.os-index-shell .os-st-default .os-status-dot,
+.os-drawer .os-st-default .os-status-dot {
+	background: var(--os-text3);
+}
+
+.os-index-shell .contract-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 20px;
+	font-size: 11px;
+	font-weight: 500;
+	font-family: var(--os-mono);
+}
+
+.os-index-shell .contract-yes {
+	background: var(--os-green-bg);
+	color: var(--os-green);
+}
+
+.os-index-shell .contract-no {
+	background: var(--os-bg4);
+	color: var(--os-text3);
+}
+
+.os-index-shell .os-tech {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	color: var(--os-text);
+}
+
+.os-index-shell .os-tech-av {
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: var(--os-bg4);
+	border: 1px solid var(--os-border2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 9px;
+	font-weight: 600;
+	color: var(--os-accent);
+	flex-shrink: 0;
+}
+
+.os-index-shell .custom-control-label::before,
+.os-index-shell .custom-control-label::after {
+	border-color: var(--os-border2);
+	background-color: var(--os-bg3);
+}
+
+.os-index-shell .custom-control-input:checked ~ .custom-control-label::before {
+	background-color: var(--os-accent);
+	border-color: var(--os-accent);
+}
+
+.os-index-shell ::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+.os-index-shell ::-webkit-scrollbar-thumb {
+	background: var(--os-bg4);
+	border-radius: 3px;
+}
+
+/* KPI clicável + destaque ativo (filtro GET) */
+.os-index-shell .os-kpi-click {
+	cursor: pointer;
+}
+
+.os-index-shell .os-kpi-click:hover {
+	border-color: var(--os-border2) !important;
+	background: var(--os-bg3) !important;
+}
+
+.os-index-shell .os-kpi-card.is-active {
+	border-color: rgba(61, 126, 255, 0.45) !important;
+	box-shadow: 0 0 0 1px rgba(61, 126, 255, 0.2);
+}
+
+.os-index-shell .os-kpi-value-accent {
+	font-variant-numeric: tabular-nums;
+}
+
+.os-index-shell .os-kpi-amber .os-kpi-value-accent {
+	color: var(--os-amber);
+}
+
+.os-index-shell .os-kpi-green .os-kpi-value-accent {
+	color: var(--os-green);
+}
+
+.os-index-shell .os-kpi-purple .os-kpi-value-accent {
+	color: var(--os-purple);
+}
+
+.os-index-shell .os-icon-btn--btn {
+	cursor: pointer;
+	border: none;
+	padding: 0;
+}
+
+.os-index-shell .os-icon-btn--btn:hover {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+
+/* Link com rótulo no cabeçalho (não usar .os-icon-btn — aquele é só ícone 34×34) */
+.os-index-shell .os-page-head-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 34px;
+	padding: 0 14px;
+	border-radius: 8px;
+	border: 1px solid var(--os-border);
+	background: var(--os-bg3);
+	color: var(--os-text2);
+	text-decoration: none !important;
+	font-size: 12.5px;
+	font-weight: 500;
+	flex-shrink: 0;
+	white-space: nowrap;
+	line-height: 1;
+}
+.os-index-shell .os-page-head-link:hover {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+.os-index-shell .os-page-head-link svg {
+	flex-shrink: 0;
+	display: block;
+}
+
+/* —— Relatórios OS (Template/Ordensservico/relatorios) —— */
+.os-index-shell .os-rel-inner {
+	padding: 0 16px 24px;
+	max-width: 1120px;
+	margin: 0 auto;
+}
+.os-index-shell .os-rel-headline {
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-headline .os-page-title {
+	margin-bottom: 4px;
+}
+.os-index-shell .os-rel-panel {
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border);
+	border-radius: 12px;
+	padding: 16px 18px;
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-panel h2 {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 0 0 10px;
+}
+.os-index-shell .os-rel-panel .os-rel-help {
+	font-size: 11px;
+	color: var(--os-text3);
+	margin: 0 0 12px;
+	line-height: 1.45;
+}
+.os-index-shell .os-rel-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	margin-bottom: 16px;
+}
+.os-index-shell .os-rel-card {
+	border: 1px solid var(--os-border);
+	border-radius: 12px;
+	padding: 14px 16px;
+	background: var(--os-bg3);
+}
+.os-index-shell .os-rel-card h3 {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--os-text);
+	margin: 0 0 6px;
+}
+.os-index-shell .os-rel-card p {
+	font-size: 11px;
+	color: var(--os-text2);
+	margin: 0 0 12px;
+	line-height: 1.45;
+}
+.os-index-shell .os-rel-card .os-rel-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.os-index-shell .os-rel-card .btn {
+	font-size: 11.5px;
+	padding: 6px 12px;
+	border-radius: 8px;
+}
+/* Filtros de relatório: mesmas convenções da lista (index) — os-filter-form dentro do painel */
+.os-index-shell .os-rel-panel.os-rel-filtros .os-toolbar {
+	background: transparent;
+	margin-bottom: 0;
+	padding: 0;
+}
+.os-index-shell .os-rel-filtros .os-filter-form p {
+	font-size: 10px !important;
+	font-weight: 600 !important;
+	color: var(--os-text3) !important;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin: 0 0 6px !important;
+	line-height: 1.05;
+}
+.os-index-shell .os-rel-email .form-control {
+	background: var(--os-bg);
+	border-color: var(--os-border2);
+	color: var(--os-text) !important;
+	font-size: 12px;
+}
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-date,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-month {
+	background: var(--os-bg2) !important;
+	background-color: var(--os-bg2) !important;
+	background-image: none !important;
+	color: var(--os-text2) !important;
+	border: 1px solid var(--os-border) !important;
+	border-radius: 7px !important;
+	font-size: 12px !important;
+	height: 30px !important;
+	min-height: 30px !important;
+	line-height: 30px !important;
+	padding: 0 10px !important;
+	opacity: 1 !important;
+	-webkit-text-fill-color: var(--os-text2) !important;
+	caret-color: var(--os-text2) !important;
+	box-shadow: none !important;
+}
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date:focus,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-date:active,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month:focus,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.rel-month:active,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-date:focus,
+.os-index-shell .os-rel-filtros .os-filter-form.form-material input.form-control.rel-month:focus,
+.os-index-shell .os-rel-filtros .os-filter-form .form-group.is-focused input.rel-date,
+.os-index-shell .os-rel-filtros .os-filter-form .form-group.is-focused input.rel-month {
+	background: var(--os-bg2) !important;
+	background-image: none !important;
+	border: 1px solid var(--os-border) !important;
+	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.22) !important;
+	color: var(--os-text2) !important;
+	-webkit-text-fill-color: var(--os-text2) !important;
+	outline: none !important;
+}
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date::placeholder,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month::placeholder {
+	color: var(--os-text3) !important;
+}
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date:-webkit-autofill,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date:-webkit-autofill:hover,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-date:-webkit-autofill:focus,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month:-webkit-autofill,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month:-webkit-autofill:hover,
+.os-index-shell .os-rel-filtros .os-filter-form input.rel-month:-webkit-autofill:focus {
+	-webkit-box-shadow: 0 0 0 1000px var(--os-bg2) inset !important;
+	-webkit-text-fill-color: var(--os-text2) !important;
+}
+.os-index-shell .os-rel-filtros input[type="date"],
+.os-index-shell .os-rel-filtros input[type="month"],
+.os-index-shell .os-rel-email input[type="date"],
+.os-index-shell .os-rel-email input[type="month"] {
+	background: var(--os-bg);
+	color: var(--os-text);
+	border: 1px solid var(--os-border2);
+}
+.os-index-shell .os-rel-filtros input[type="date"]::-webkit-calendar-picker-indicator,
+.os-index-shell .os-rel-filtros input[type="month"]::-webkit-calendar-picker-indicator,
+.os-index-shell .os-rel-email input[type="date"]::-webkit-calendar-picker-indicator,
+.os-index-shell .os-rel-email input[type="month"]::-webkit-calendar-picker-indicator {
+	filter: invert(0.85);
+	opacity: 0.8;
+	cursor: pointer;
+}
+.os-index-shell .os-rel-email .bootstrap-select > .dropdown-toggle {
+	background: var(--os-bg) !important;
+	border: 1px solid var(--os-border2) !important;
+	color: var(--os-text) !important;
+}
+.os-index-shell .os-rel-email .bootstrap-select .dropdown-menu {
+	background: var(--os-bg2);
+	border: 1px solid var(--os-border2);
+}
+.os-index-shell .os-rel-email .bootstrap-select .dropdown-menu li a {
+	color: var(--os-text2);
+}
+.os-index-shell .os-rel-email .bootstrap-select .dropdown-menu li a:hover,
+.os-index-shell .os-rel-email .bootstrap-select .dropdown-menu li.selected a {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+body.os-index-page .datepicker.dropdown-menu {
+	background: #13161d !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	color: #8b92a8 !important;
+	z-index: 14000 !important;
+	box-shadow: 0 14px 48px rgba(0, 0, 0, 0.45) !important;
+	opacity: 1 !important;
+}
+body.os-index-page .datepicker,
+body.os-index-page .datepicker-dropdown,
+body.os-index-page .datepicker-dropdown.dropdown-menu {
+	z-index: 14000 !important;
+}
+body.os-index-page .datepicker:before {
+	border-bottom-color: rgba(255, 255, 255, 0.18) !important;
+}
+body.os-index-page .datepicker:after {
+	border-bottom-color: #13161d !important;
+}
+body.os-index-page .datepicker table {
+	background: #13161d !important;
+}
+body.os-index-page .datepicker thead tr:first-child th {
+	background: #1a1e28 !important;
+	color: #f0f2f8 !important;
+	font-weight: 600 !important;
+	border-radius: 6px !important;
+}
+/* material-kit usa th.switch-datepicker (não .switch) no datepicker do /public/js */
+body.os-index-page .datepicker thead tr:first-child th.switch,
+body.os-index-page .datepicker thead tr:first-child th.switch-datepicker {
+	color: #f0f2f8 !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.prev,
+body.os-index-page .datepicker thead tr:first-child th.next,
+body.os-index-page .datepicker thead tr:first-child th.prev p,
+body.os-index-page .datepicker thead tr:first-child th.next p {
+	color: #00c08b !important;
+	font-size: 16px !important;
+	width: auto !important;
+	min-width: 28px !important;
+}
+body.os-index-page .datepicker thead tr:first-child th:hover {
+	background: #222736 !important;
+	color: #ffffff !important;
+}
+body.os-index-page .datepicker thead tr th.dow {
+	color: #c5cad8 !important;
+	font-weight: 600 !important;
+	font-size: 11px !important;
+	background: #13161d !important;
+}
+body.os-index-page .datepicker tbody tr td.day,
+body.os-index-page .datepicker tbody tr td.month,
+body.os-index-page .datepicker tbody tr td.year,
+body.os-index-page .datepicker tbody tr td span {
+	color: #8b92a8 !important;
+}
+body.os-index-page .datepicker tbody tr td.old,
+body.os-index-page .datepicker tbody tr td.new {
+	color: #555e78 !important;
+}
+/* Não aplicar cinza em thead — a regra genérica apagava título e navegação */
+body.os-index-page .datepicker table tbody tr td {
+	color: #8b92a8 !important;
+}
+body.os-index-page .datepicker table tbody tr td.day:hover,
+body.os-index-page .datepicker table tbody tr td.month:hover,
+body.os-index-page .datepicker table tbody tr td.year:hover {
+	background: #222736 !important;
+	color: #f0f2f8 !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.prev:hover,
+body.os-index-page .datepicker thead tr:first-child th.next:hover,
+body.os-index-page .datepicker thead tr:first-child th.switch-datepicker:hover {
+	background: #222736 !important;
+	color: #ffffff !important;
+}
+body.os-index-page .datepicker thead tr:first-child th.prev:hover p,
+body.os-index-page .datepicker thead tr:first-child th.next:hover p {
+	color: #ffffff !important;
+}
+body.os-index-page .datepicker table tr td.active,
+body.os-index-page .datepicker table tr td.active:hover,
+body.os-index-page .datepicker table tr td span.active,
+body.os-index-page .datepicker table tr td span.active:hover {
+	background: #00c08b !important;
+	color: #fff !important;
+}
+body.os-index-page .datepicker table tr td.disabled,
+body.os-index-page .datepicker table tr td span.disabled {
+	color: #555e78 !important;
+}
+body.os-index-page .datepicker table thead tr th.switch,
+body.os-index-page .datepicker table thead tr th.switch-datepicker {
+	color: #f0f2f8 !important;
+}
+body.os-index-page .datepicker.dropdown-menu.open {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+body.os-index-page .datepicker p:hover {
+	background: transparent !important;
+}
+.os-index-shell .os-rel-email .form-control:focus {
+	border-color: var(--os-accent);
+	box-shadow: 0 0 0 2px var(--os-accent-glow);
+}
+.os-index-shell .os-rel-panel code,
+.os-index-shell .os-rel-email code {
+	background: var(--os-bg4);
+	color: var(--os-accent);
+	padding: 1px 6px;
+	border-radius: 4px;
+	font-size: 10px;
+}
+.os-index-shell .os-rel-email .control-label,
+.os-index-shell .os-rel-email label {
+	color: var(--os-text3);
+	font-size: 11px;
+	font-weight: 500;
+}
+.os-index-shell .os-rel-warn {
+	color: var(--os-amber);
+	margin: 0;
+	font-size: 12px;
+}
+
+.os-index-shell tr.os-row-drawer {
+	cursor: pointer;
+}
+
+/* Linha com drawer aberto (mock: row-active) */
+.os-index-shell table tbody tr.os-row-drawer-active {
+	background: rgba(61, 126, 255, 0.09) !important;
+	box-shadow: inset 2px 0 0 0 var(--os-accent);
+}
+
+/* Linha com checkbox de massa marcado (mock: row-sel) */
+.os-index-shell table tbody tr.os-row-sel {
+	background: var(--os-accent-glow) !important;
+}
+
+/* Primeira coluna: checkbox + #Nº (premium) */
+.os-index-shell .os-th-num {
+	width: 1%;
+	white-space: nowrap;
+	padding-left: 14px !important;
+	vertical-align: middle !important;
+}
+
+.os-index-shell thead .os-th-num .os-num-wrap > span {
+	color: var(--os-text3) !important;
+	font-family: var(--os-font);
+	font-size: 10.5px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+}
+
+.os-index-shell .os-num-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.os-index-shell .os-check-all {
+	width: 15px;
+	height: 15px;
+	margin: 0;
+	cursor: pointer;
+	accent-color: var(--os-accent);
+	flex-shrink: 0;
+}
+
+.os-index-shell .os-num-wrap .os-num-cell {
+	flex-shrink: 0;
+	color: var(--os-accent) !important;
+	font-family: var(--os-mono);
+	font-weight: 600;
+	font-size: 12.5px;
+	letter-spacing: 0;
+}
+
+.os-index-shell .os-num-wrap .os-num-cell:hover,
+.os-index-shell .os-row-drawer-active .os-num-wrap .os-num-cell,
+.os-index-shell table tbody tr:hover .os-num-wrap .os-num-cell {
+	color: var(--os-accent) !important;
+	text-decoration: none !important;
+}
+
+.os-index-shell .os-btn-primary[type='button'] {
+	cursor: pointer;
+}
+
+.os-index-shell input.os-invalid,
+.os-index-shell textarea.os-invalid {
+	border-color: #f87171 !important;
+	box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.35);
+}
+
+/* Modal Nova OS (renderizado fora de .os-index-shell — fontes explícitas) */
+.os-modal-nova-overlay {
+	--os-modal-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	position: fixed;
+	inset: 0;
+	z-index: 1100;
+	background: rgba(0, 0, 0, 0);
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	transition: background 0.22s ease;
+	font-family: var(--os-modal-font);
+}
+
+.os-modal-nova-overlay.open {
+	background: rgba(0, 0, 0, 0.5);
+	pointer-events: auto;
+}
+
+.os-modal-nova {
+	width: 100%;
+	max-width: 440px;
+	background: #13161d;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 16px;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+	font-family: var(--os-modal-font);
+	color: #8b92a8;
+	transform: scale(0.96) translateY(8px);
+	opacity: 0;
+	transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.os-modal-nova-overlay.open .os-modal-nova {
+	transform: scale(1) translateY(0);
+	opacity: 1;
+}
+
+.os-modal-nova-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 18px 20px 12px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.os-modal-nova-bc {
+	font-size: 11px;
+	color: #555e78;
+	margin-bottom: 6px;
+}
+
+.os-modal-nova-bc em {
+	font-style: normal;
+	color: var(--os-accent, #00c08b);
+	font-weight: 500;
+}
+
+.os-modal-nova-head h2 {
+	margin: 0;
+	font-size: 17px;
+	font-weight: 600;
+	color: #f0f2f8;
+}
+
+.os-modal-nova-x {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: #1a1e28;
+	color: #8b92a8;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.os-modal-nova-x:hover {
+	background: #222736;
+	color: #f0f2f8;
+}
+
+.os-modal-nova-inner {
+	padding: 16px 20px 20px;
+}
+
+.os-modal-nova-hint {
+	font-size: 12.5px;
+	line-height: 1.45;
+	margin: 0 0 16px 0;
+	color: #8b92a8;
+}
+
+.os-modal-nova-field {
+	margin-bottom: 14px;
+}
+
+.os-modal-nova-field label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #555e78;
+	margin-bottom: 6px;
+}
+
+.os-modal-nova-field input,
+.os-modal-nova-field textarea {
+	width: 100%;
+	background: #0d0f14;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 8px;
+	padding: 10px 12px;
+	font-family: var(--os-modal-font);
+	font-size: 13px;
+	color: #f0f2f8;
+}
+
+.os-modal-nova-field textarea {
+	resize: vertical;
+	min-height: 72px;
+}
+
+.os-modal-nova-foot {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 20px;
+}
+
+.os-modal-nova-btn {
+	height: 38px;
+	padding: 0 16px;
+	border-radius: 8px;
+	font-family: var(--os-modal-font);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	border: none;
+}
+
+.os-modal-nova-btn-ghost {
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	color: #8b92a8;
+}
+
+.os-modal-nova-btn-ghost:hover {
+	background: rgba(255, 255, 255, 0.05);
+	color: #f0f2f8;
+}
+
+.os-modal-nova-btn-primary {
+	background: var(--os-accent, #00c08b);
+	color: #fff;
+}
+
+.os-modal-nova-btn-primary:hover {
+	background: var(--os-accent2, #009e74);
+}
+
+/* Lista com painel aberto: evita scroll duplo no conteúdo principal */
+body.os-drawer-active {
+	overflow: hidden;
+}
+
+/*
+ * Drawer é movido para document.body (JS): fora de .os-index-shell, as custom properties
+ * não herdavam — var(--os-bg2) virava inválido e o painel ficava transparente.
+ */
+.os-drawer-backdrop,
+.os-drawer {
+	--os-bg: #0d0f14;
+	--os-bg2: #13161d;
+	--os-bg3: #1a1e28;
+	--os-bg4: #222736;
+	--os-border: rgba(255, 255, 255, 0.07);
+	--os-border2: rgba(255, 255, 255, 0.12);
+	--os-text: #f0f2f8;
+	--os-text2: #8b92a8;
+	--os-text3: #555e78;
+	--os-accent: #00c08b;
+	--os-accent2: #009e74;
+	--os-green: #22c55e;
+	--os-green-bg: rgba(34, 197, 94, 0.1);
+	--os-amber: #f59e0b;
+	--os-amber-bg: rgba(245, 158, 11, 0.1);
+	--os-orange: #ff8833;
+	--os-orange-bg: rgba(255, 136, 51, 0.12);
+	--os-purple: #a682e6;
+	--os-purple-bg: rgba(166, 130, 230, 0.12);
+	--os-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	--os-mono: 'DM Mono', ui-monospace, monospace;
+}
+
+/* Drawer lateral (detalhe da OS) — acima da sidebar PGM (z-index ~1001) */
+.os-drawer-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0);
+	z-index: 12040;
+	pointer-events: none;
+	transition: background 0.25s ease;
+}
+
+.os-drawer-backdrop.open {
+	background: rgba(0, 0, 0, 0.45);
+	pointer-events: auto;
+}
+
+.os-drawer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 420px;
+	max-width: 100vw;
+	background: var(--os-bg2, #13161d);
+	border-left: 1px solid var(--os-border2, rgba(255, 255, 255, 0.12));
+	z-index: 12050;
+	transform: translateX(100%);
+	transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+	display: flex;
+	flex-direction: column;
+	font-family: var(--os-font);
+	color: var(--os-text2);
+	box-shadow: -8px 0 32px rgba(0, 0, 0, 0.35);
+}
+
+.os-drawer.open {
+	transform: translateX(0);
+}
+
+.os-drawer-head {
+	padding: 18px 20px 14px;
+	border-bottom: 1px solid var(--os-border);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.os-drawer-num {
+	font-family: var(--os-mono);
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--os-accent);
+	flex: 1;
+}
+
+.os-drawer-x {
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	background: var(--os-bg3);
+	border: 1px solid var(--os-border);
+	color: var(--os-text3);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 1;
+	transition: background 0.18s ease, color 0.18s ease;
+}
+
+.os-drawer-x:hover {
+	background: var(--os-bg4);
+	color: var(--os-text);
+}
+
+.os-drawer-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 18px 20px;
+}
+
+.os-dr-sec {
+	margin-bottom: 20px;
+}
+
+.os-dr-sec-t {
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	color: var(--os-text3);
+	font-weight: 500;
+	margin-bottom: 8px;
+}
+
+.os-dr-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--os-border);
+	font-size: 13px;
+}
+
+.os-dr-row:last-child {
+	border-bottom: none;
+}
+
+.os-dr-k {
+	color: var(--os-text3);
+	font-size: 12.5px;
+	flex-shrink: 0;
+}
+
+.os-dr-v {
+	color: var(--os-text);
+	font-weight: 500;
+	text-align: right;
+	max-width: 220px;
+	font-size: 12.5px;
+	word-break: break-word;
+}
+
+.os-drawer-foot {
+	padding: 14px 20px 18px;
+	border-top: 1px solid var(--os-border);
+	display: flex;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.os-drawer-btn {
+	flex: 1;
+	height: 36px;
+	border-radius: 8px;
+	font-family: var(--os-font);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	text-align: center;
+	line-height: 36px;
+	text-decoration: none !important;
+	transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.os-drawer-btn-ghost {
+	border: 1px solid var(--os-border);
+	background: none;
+	color: var(--os-text2);
+}
+
+.os-drawer-btn-ghost:hover {
+	background: var(--os-bg3);
+	color: var(--os-text);
+}
+
+.os-drawer-btn-primary {
+	border: none;
+	background: var(--os-accent);
+	color: #fff !important;
+}
+
+.os-drawer-btn-primary:hover {
+	background: var(--os-accent2);
+	color: #fff !important;
+}
+
+button.os-drawer-btn {
+	line-height: 1.2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 10px;
+}
+
+/* Listagem OS — utilitários (evitar style= na view) */
+.os-index-shell #tableOrdens.os-table-flush {
+	margin: 0;
+}
+.os-index-shell .os-checkbox-label-flush.custom-control-label {
+	min-height: 0;
+}
+#os-drawer-body .os-dr-contract-yes {
+	color: var(--os-green);
+}
+#os-drawer-body .os-dr-contract-no {
+	color: var(--os-text3);
+}
+#os-drawer-body .os-dr-v-valor {
+	font-family: var(--os-mono);
+	font-size: 15px;
+	color: var(--os-text);
+}
+
+/* Relatórios OS — toolbar / tabela seleção (sem style= nas views) */
+.os-index-shell.os-rel-ver-toolbar {
+	margin: 0 0 12px;
+	border-radius: 12px;
+	padding: 12px 16px;
+}
+.os-index-shell .os-page-head-actions.os-rel-ver-actions {
+	flex-wrap: wrap;
+	gap: 10px;
+}
+.os-index-shell .os-btn-ghost.os-btn-print-plain {
+	border: none;
+	cursor: pointer;
+	font-family: inherit;
+}
+.os-index-shell a.os-rel-pdf-link.btn {
+	border-radius: 8px;
+	padding: 6px 14px;
+	font-size: 12.5px;
+}
+.os-index-shell table.os-rel-table-flush {
+	margin-bottom: 0;
+}
+.os-index-shell .os-rel-th-sel {
+	width: 40px;
+}
+.os-index-shell .os-rel-th-osno {
+	width: 80px;
+}
+.os-index-shell .os-rel-th-abert {
+	width: 110px;
+}
+.os-index-shell .os-rel-th-valor {
+	width: 110px;
+}
+.os-index-shell .os-rel-toolbar-actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}

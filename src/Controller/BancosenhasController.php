@@ -9,12 +9,20 @@ use Cake\Event\Event;
  * Cofre de senhas: persistência via VaultCrypto (legado PGM ou AES-256-CBC com VAULT_ENCRYPTION_KEY).
  * Transporte: vaultReveal em POST + JSON — não enviar senha administrativa na query string.
  */
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
-//require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
-
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
+$__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php';
+if (is_file($__pgmUserConstants)) {
+	require_once $__pgmUserConstants;
+}
+if (!defined('C_RoleCliente')) {
+	define('C_RoleCliente', 1);
+}
+if (!defined('C_RoleFuncionario')) {
+	define('C_RoleFuncionario', 0);
+}
 
 class BancosenhasController extends AppController {
 	public function initialize() {
