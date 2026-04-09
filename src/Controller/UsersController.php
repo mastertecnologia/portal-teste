@@ -29,15 +29,7 @@ if (!defined('C_EmpresaMaster'))            define('C_EmpresaMaster', 1);
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
 
-// GoogleAuthenticator: em produção Linux costuma estar em public/plugins; com WEBROOT_DIR=webroot o require falhava (500).
-$__gaSrc = WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS;
-if (!is_file($__gaSrc . 'GoogleAuthenticator.php')) {
-	$__gaSrc = ROOT . DS . 'public' . DS . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS;
-}
-require_once $__gaSrc . 'FixedBitNotation.php';
-require_once $__gaSrc . 'GoogleQrUrl.php';
-require_once $__gaSrc . 'GoogleAuthenticatorInterface.php';
-require_once $__gaSrc . 'GoogleAuthenticator.php';
+// GoogleAuthenticator: carregamento lazy em _loadGoogleAuthenticatorLibs() — evita 500 em login/acessoEmpresa se o path falhar.
 
 use Cake\Core\Configure;
 use Cake\I18n\FrozenTime;
@@ -83,8 +75,11 @@ class UsersController extends AppController {
 		
 		if (in_array('Security', $this->components()->loaded(), true)) {
 			$existingUnlocked = $this->Security->getConfig('unlockedActions');
+			if (!is_array($existingUnlocked)) {
+				$existingUnlocked = [];
+			}
 			$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
-				is_array($existingUnlocked) ? $existingUnlocked : [],
+				$existingUnlocked,
 				['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente']
 			))));
 		}
@@ -94,6 +89,38 @@ class UsersController extends AppController {
                 $this->getEventManager()->off($this->Csrf);
             }
         }
+	}
+
+	/**
+	 * Inclui Sonata/Google libs só nas ações 2FA — login/acessoEmpresa não dependem disto (evita fatal se path errado).
+	 */
+	protected function _loadGoogleAuthenticatorLibs(): void {
+		static $done = false;
+		if ($done) {
+			return;
+		}
+		$bases = [
+			WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS,
+			ROOT . DS . 'public' . DS . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS,
+			ROOT . DS . 'webroot' . DS . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS,
+		];
+		$dir = null;
+		foreach ($bases as $base) {
+			if (is_file($base . 'GoogleAuthenticator.php')) {
+				$dir = $base;
+				break;
+			}
+		}
+		if ($dir === null) {
+			throw new \RuntimeException(
+				'GoogleAuthenticator não encontrado. Verifique WEBROOT_DIR=public ou a pasta plugins/GoogleAuthenticator-2.x.'
+			);
+		}
+		require_once $dir . 'FixedBitNotation.php';
+		require_once $dir . 'GoogleQrUrl.php';
+		require_once $dir . 'GoogleAuthenticatorInterface.php';
+		require_once $dir . 'GoogleAuthenticator.php';
+		$done = true;
 	}
 
 	public function index() {
@@ -2062,6 +2089,7 @@ class UsersController extends AppController {
 	}
 
 	public function loginduasetapas() {
+		$this->_loadGoogleAuthenticatorLibs();
 		$user = $this->Users->get($this->Auth->user('id'));
 		if(empty($user->secret)) $this->set('bAutenticacao', false);
 		else {
@@ -2089,6 +2117,7 @@ class UsersController extends AppController {
 	}
 
 	public function verificacodigo($username, $code) {
+		$this->_loadGoogleAuthenticatorLibs();
 		$this->autoRender = false;
 		$username = rawurldecode((string)$username);
 		$code = str_replace(' ', '', rawurldecode((string)$code));
@@ -2123,6 +2152,7 @@ class UsersController extends AppController {
 	}
 
 	public function desativaverificacao() {
+		$this->_loadGoogleAuthenticatorLibs();
 		$user = $this->Users->get($this->Auth->user('id'));
 	
 		if ($this->request->is(['post', 'put'])) {

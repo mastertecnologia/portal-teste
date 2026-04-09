@@ -78,7 +78,7 @@ class RbacChecker {
 				->count();
 
 			return $n > 0;
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			return true;
 		}
 	}
@@ -134,7 +134,7 @@ class RbacChecker {
 			$set = array_flip(array_values(array_unique(array_filter(array_map('strval', $codes)))));
 
 			return isset($set[$code]);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			return false;
 		}
 	}
@@ -164,7 +164,11 @@ class RbacChecker {
 			return true;
 		}
 
-		return RbacUserRolesResolver::effectiveRoleIds($uid) === [];
+		try {
+			return RbacUserRolesResolver::effectiveRoleIds($uid) === [];
+		} catch (\Throwable $e) {
+			return true;
+		}
 	}
 
 	/**
@@ -242,7 +246,11 @@ class RbacChecker {
 			}
 		}
 
-		return RbacUserRolesResolver::effectiveRoleIds($uid) === [];
+		try {
+			return RbacUserRolesResolver::effectiveRoleIds($uid) === [];
+		} catch (\Throwable $e) {
+			return true;
+		}
 	}
 
 	/**
@@ -261,7 +269,11 @@ class RbacChecker {
 			if ($key === '') {
 				continue;
 			}
-			$out[$key] = self::shouldShowSidebarGate($admin, $role, $userId, $codes);
+			try {
+				$out[$key] = self::shouldShowSidebarGate($admin, $role, $userId, $codes);
+			} catch (\Throwable $e) {
+				$out[$key] = true;
+			}
 		}
 
 		return $out;
