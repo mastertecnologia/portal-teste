@@ -10,6 +10,15 @@ $isLightSd = ($pgmSdTheme === 'light');
 <head>
 	<?= $this->Html->charset() ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<?php
+	$csrf = $this->request->getAttribute('csrfToken');
+	if (!$csrf && method_exists($this->request, 'getParam')) {
+		$csrf = $this->request->getParam('_csrfToken');
+	}
+	if ($csrf) :
+	?>
+	<meta name="csrfToken" content="<?= h($csrf) ?>">
+	<?php endif; ?>
 	<title><?= h($title ?? 'Service Desk') ?> — PGM</title>
 	<?= $this->Html->meta('icon') ?>
 	<?= $this->Html->css('/dist/css/style.min') ?>

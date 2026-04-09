@@ -343,6 +343,16 @@ a.dash-pgm-notif-item-link:hover {
 .dash-pgm-empty { text-align: center; color: var(--text-muted); }
 
 .td-id { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); white-space: nowrap; }
+a.dash-pgm-ticket-id-link {
+  font-family: inherit;
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+a.dash-pgm-ticket-id-link:hover {
+  color: #1d9e75;
+  text-decoration: underline;
+}
 .td-client { color: var(--blue); font-weight: 500; max-width: 0; }
 .td-client-inner {
   display: inline-flex;

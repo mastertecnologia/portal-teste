@@ -247,3 +247,129 @@ html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-1
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
 	border-color: var(--pgm-border) !important;
 }
+
+/* ── Flash / mensagens (CakePHP Element/Flash/*.ctp → .alert) ───────────────── */
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert {
+	border-width: 1px;
+}
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert-success {
+	background: var(--pgm-success-bg) !important;
+	color: var(--pgm-success-text) !important;
+	border-color: var(--pgm-success) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert-danger {
+	background: var(--pgm-danger-bg) !important;
+	color: var(--pgm-danger-text) !important;
+	border-color: var(--pgm-danger) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert-warning {
+	background: var(--pgm-warning-bg) !important;
+	color: var(--pgm-warning-text) !important;
+	border-color: var(--pgm-warning) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert-info {
+	background: var(--pgm-info-bg) !important;
+	color: var(--pgm-info-text) !important;
+	border-color: var(--pgm-accent) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert .close,
+html[data-pgm-theme="dark"] body.sd-body .sd-main .alert button.close {
+	color: inherit;
+	opacity: 0.85;
+	text-shadow: none;
+}
+html[data-pgm-theme="light"] body.sd-body .sd-main .alert .close {
+	color: inherit;
+	opacity: 0.65;
+}
+
+/* Flash default.ctp → .message (sem .alert) */
+html[data-pgm-theme="dark"] body.sd-body .sd-main .message {
+	background: var(--pgm-bg-elevated);
+	color: var(--pgm-text);
+	border: 1px solid var(--pgm-border);
+	border-radius: 8px;
+	padding: 0.65rem 1rem;
+	margin-bottom: 0.75rem;
+}
+html[data-pgm-theme="light"] body.sd-body .sd-main .message {
+	color: var(--pgm-text);
+	border-radius: 8px;
+	padding: 0.65rem 1rem;
+	margin-bottom: 0.75rem;
+}
+
+/* ── Tickets clássicos (edit/view no layout servicedesk): tipografia e Quill ─ */
+html[data-pgm-theme="dark"] body.sd-body .text-muted,
+html[data-pgm-theme="dark"] body.sd-body .breadcrumb,
+html[data-pgm-theme="dark"] body.sd-body .breadcrumb-item,
+html[data-pgm-theme="dark"] body.sd-body .breadcrumb-item a {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .breadcrumb-item.active {
+	color: var(--pgm-text-secondary) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .page-titles,
+html[data-pgm-theme="dark"] body.sd-body .page-titles h5 {
+	background: var(--pgm-bg-surface) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .ql-toolbar.ql-snow,
+html[data-pgm-theme="dark"] body.sd-body .ql-container.ql-snow {
+	border-color: var(--pgm-border) !important;
+	background: var(--pgm-bg-elevated) !important;
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .ql-snow .ql-stroke {
+	stroke: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .ql-snow .ql-fill {
+	fill: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .ql-editor {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body .ql-editor.ql-blank::before {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body select.form-control,
+html[data-pgm-theme="dark"] body.sd-body select.form-control option {
+	background-color: var(--pgm-bg-elevated);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="light"] body.sd-body .text-muted {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="light"] body.sd-body .breadcrumb-item a {
+	color: var(--pgm-link) !important;
+}
+
+/* ── React: tema claro — evita texto cinza ilegível sobre fundo claro ──────── */
+html[data-pgm-theme="light"] #tickets-react-root.tickets-react-sd .text-slate-500,
+html[data-pgm-theme="light"] #tickets-react-root.tickets-react-sd .text-slate-400 {
+	color: var(--pgm-text-muted) !important;
+}
+html[data-pgm-theme="light"] #tickets-react-root.tickets-react-sd .text-slate-600,
+html[data-pgm-theme="light"] #tickets-react-root.tickets-react-sd .text-slate-700 {
+	color: var(--pgm-text-secondary) !important;
+}
+html[data-pgm-theme="light"] #tickets-react-root.tickets-react-sd .text-slate-800,
+html[data-pgm-theme="light"] #tickets-react-root.tickets-react-sd .text-slate-900 {
+	color: var(--pgm-text) !important;
+}
+
+/* ── Shell React: fundo alinhado ao token em ambos os temas ───────────────── */
+html[data-pgm-theme="light"] body.sd-body .tickets-react-shell {
+	background: var(--pgm-bg-page);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .tickets-react-shell {
+	background: var(--pgm-bg-page);
+	color: var(--pgm-text);
+}
+
+/* ── Topbar: subtítulo ao lado da marca (legível no gradiente) ─────────────── */
+.sd-topbar .opacity-90.small {
+	color: rgba(255, 255, 255, 0.92);
+}

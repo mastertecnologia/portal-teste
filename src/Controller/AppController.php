@@ -75,8 +75,7 @@ class AppController extends Controller {
 				'vaultReveal',
 				'verificasenha',
 				'verificadadoscliente',
-				// Troca de tema claro/escuro via AJAX
-				'selectTheme',
+				// selectTheme: POST com _csrfToken (meta csrfToken + public/js/pgm-portal-theme.js)
 				// Faturamento: modal alterar status (POST sem _Token no corpo)
 				'alterarStatus',
 				// Webhook Autentique (corpo JSON; sem _Token)

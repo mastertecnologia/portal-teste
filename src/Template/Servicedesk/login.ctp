@@ -8,23 +8,6 @@ $urlCliente = Router::url(['controller' => 'Users', 'action' => 'login', '?' => 
 
 $this->append('css', $this->Html->css('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap', ['fullBase' => true]));
 $this->append('css', $this->Html->css('dist/css/login-erp'));
-$this->append(
-	'css',
-	'<style>
-		.sd-login-tabs { display: flex; gap: 0.35rem; margin: 0 0 1.15rem; padding: 0.2rem; background: rgba(0,0,0,.06); border-radius: 12px; }
-		.sd-login-tabs button { flex: 1; border: 0; border-radius: 10px; padding: 0.55rem 0.5rem; font-size: 0.8rem; font-weight: 600; color: #334155; background: transparent; cursor: pointer; transition: background .15s, color .15s; }
-		.sd-login-tabs button:hover { background: rgba(255,255,255,.7); }
-		.sd-login-tabs button.active { background: #0d9488; color: #fff; box-shadow: 0 2px 8px rgba(13,148,136,.35); }
-		.sd-login-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #0d9488; margin-bottom: 0.35rem; }
-		.sd-login-hint { font-size: 0.8rem; color: #64748b; margin: 0 0 1rem; min-height: 2.5rem; }
-		.sd-login-back { margin-top: 1rem; text-align: center; font-size: 0.8rem; }
-		.sd-login-back a { color: #0f766e; font-weight: 500; }
-		.sd-login-card-narrow { max-width: 440px; }
-		.pgm-auth-theme-bar.sd-auth-theme-bar--tight { margin-top: 0.25rem; }
-		.sd-login-hidden { display: none !important; }
-		.comeceausar, .recuperasenha, .desativarautenticacao { cursor: pointer; }
-	</style>'
-);
 ?>
 <div class="login-erp-wrap">
 	<div class="login-erp-card login-erp sd-login-card-narrow">

@@ -167,3 +167,133 @@ html[data-pgm-theme="dark"] body.pgm-auth-page .login-register h3 {
 .login-register.login-sidebar.login-empresa-bg {
 	background-image: var(--login-empresa-bg);
 }
+
+/* ── Service Desk — login (Servicedesk/login.ctp): abas e textos em claro e escuro ── */
+body.pgm-auth-page .sd-login-tabs {
+	display: flex;
+	gap: 0.35rem;
+	margin: 0 0 1.15rem;
+	padding: 0.2rem;
+	background: var(--pgm-bg-elevated, #f1f5f9);
+	border: 1px solid var(--pgm-border, #e2e8f0);
+	border-radius: 12px;
+}
+body.pgm-auth-page .sd-login-tabs button {
+	flex: 1;
+	border: 0;
+	border-radius: 10px;
+	padding: 0.55rem 0.5rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--pgm-text-secondary, #334155);
+	background: transparent;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s;
+}
+body.pgm-auth-page .sd-login-tabs button:hover {
+	background: var(--pgm-primary-muted, rgba(13, 148, 136, 0.12));
+	color: var(--pgm-text, #0f172a);
+}
+body.pgm-auth-page .sd-login-tabs button.active {
+	background: var(--pgm-primary, #0d9488);
+	color: #fff;
+	box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35);
+}
+body.pgm-auth-page .sd-login-badge {
+	display: inline-block;
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--pgm-primary, #0d9488);
+	margin-bottom: 0.35rem;
+}
+body.pgm-auth-page .sd-login-hint {
+	font-size: 0.8rem;
+	color: var(--pgm-text-muted, #64748b);
+	margin: 0 0 1rem;
+	min-height: 2.5rem;
+}
+body.pgm-auth-page .sd-login-back {
+	margin-top: 1rem;
+	text-align: center;
+	font-size: 0.8rem;
+}
+body.pgm-auth-page .sd-login-back a {
+	color: var(--pgm-primary-hover, #0f766e);
+	font-weight: 500;
+}
+body.pgm-auth-page .sd-login-card-narrow {
+	max-width: 440px;
+}
+body.pgm-auth-page .pgm-auth-theme-bar.sd-auth-theme-bar--tight {
+	margin-top: 0.25rem;
+}
+body.pgm-auth-page .sd-login-hidden {
+	display: none !important;
+}
+body.pgm-auth-page .comeceausar,
+body.pgm-auth-page .recuperasenha,
+body.pgm-auth-page .desativarautenticacao {
+	cursor: pointer;
+}
+
+html[data-pgm-theme="dark"] body.pgm-auth-page .sd-login-tabs {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .sd-login-tabs button {
+	color: var(--pgm-text-muted);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .sd-login-tabs button:hover {
+	background: var(--pgm-bg-page);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .sd-login-tabs button.active {
+	color: #fff;
+	box-shadow: 0 2px 12px rgba(0, 217, 160, 0.25);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .sd-login-hint {
+	color: var(--pgm-text-muted);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .sd-login-back a {
+	color: var(--pgm-primary);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .remember label,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-footer,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .mfa,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .link-mfa {
+	color: var(--pgm-text-secondary) !important;
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .minsuculaOnly {
+	color: var(--pgm-warning-text) !important;
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp .input-group .eye-icon {
+	color: var(--pgm-text-muted);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .modal-content {
+	background: var(--pgm-bg-surface);
+	border: 1px solid var(--pgm-border);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .modal-header {
+	border-bottom-color: var(--pgm-border);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .modal-title,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .login-erp-modal-label {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .login-erp-modal-input,
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .form-control {
+	background: var(--pgm-bg-elevated) !important;
+	border-color: var(--pgm-border-strong) !important;
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .login-erp-modal .btn-close-login-erp {
+	color: var(--pgm-text-muted);
+}
+html[data-pgm-theme="dark"] body.pgm-auth-page .alert-warning {
+	background: var(--pgm-warning-bg) !important;
+	color: var(--pgm-warning-text) !important;
+	border-color: var(--pgm-warning) !important;
+}

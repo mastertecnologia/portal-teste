@@ -18,6 +18,15 @@ $clearAuth = (bool)$this->request->getSession()->read('Auth.User.id');
 	<title><?= 'PGM - ' . h($pageTitle); ?></title>
 
 	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+	<?php
+	$csrf = $this->request->getAttribute('csrfToken');
+	if (!$csrf && method_exists($this->request, 'getParam')) {
+		$csrf = $this->request->getParam('_csrfToken');
+	}
+	if ($csrf) :
+	?>
+	<meta name="csrfToken" content="<?= h($csrf) ?>">
+	<?php endif; ?>
 
 	<?= $this->Html->css('bootstrap.min'); ?>
 	<?= $this->Html->css('material-dashboard'); ?>

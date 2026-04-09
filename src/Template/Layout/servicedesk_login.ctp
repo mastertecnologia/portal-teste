@@ -29,7 +29,7 @@
 	<?= $this->fetch('script') ?>
 </head>
 <body class="sd-login-body pgm-auth-page">
-	<?= $this->Html->script('assets/node_modules/jquery/jquery-3.2.1.min'); ?>
+	<?php /* jQuery já carregado no <head> — evita duplicar e ordem inconsistente */ ?>
 	<?= $this->Html->script('assets/node_modules/popper/popper.min'); ?>
 	<?= $this->Html->script('assets/node_modules/bootstrap/dist/js/bootstrap.min'); ?>
 	<?= $this->Html->script('dist/js/custom') ?>

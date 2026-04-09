@@ -244,7 +244,11 @@
 											$clienteNome = $pgmClienteNome($reg);
 										?>
 										<tr class="dash-pgm-row">
-											<td class="td-id">#<?= h($reg->id) ?></td>
+											<td class="td-id"><?= $this->Html->link(
+												'#' . h($reg->id),
+												['controller' => 'Tickets', 'action' => 'edit', $reg->id],
+												['class' => 'dash-pgm-ticket-id-link', 'onclick' => 'event.stopPropagation();', 'escape' => false]
+											) ?></td>
 											<td class="td-client"><span class="td-client-inner"><span class="td-client-name"><?= h($clienteNome) ?></span></span></td>
 											<td class="td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
 											<td><span class="sla-badge <?= $slaClass ?>"><span class="dot <?= $dotClass ?>"></span><?= $dias ?>d</span></td>
@@ -275,7 +279,11 @@
 											$clienteNome = $pgmClienteNome($reg);
 										?>
 										<tr class="dash-pgm-row <?= $isStagnant ? 'stagnant' : '' ?>">
-											<td class="td-id">#<?= h($reg->id) ?></td>
+											<td class="td-id"><?= $this->Html->link(
+												'#' . h($reg->id),
+												['controller' => 'Tickets', 'action' => 'edit', $reg->id],
+												['class' => 'dash-pgm-ticket-id-link', 'onclick' => 'event.stopPropagation();', 'escape' => false]
+											) ?></td>
 											<td class="td-client"><span class="td-client-inner"><span class="td-client-name"><?= h($clienteNome) ?></span><?= $isStagnant ? '<span class="stagnant-tag">+24h</span>' : '' ?></span></td>
 											<td class="td-date"><?= date_format($reg->created, 'd/m/Y') ?></td>
 											<td><span class="sla-badge <?= $slaClass ?>"><span class="dot <?= $dotClass ?>"></span><?= $dias ?>d</span></td>
@@ -336,8 +344,10 @@
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 						$clienteNome = $pgmClienteNome($reg);
 						$clienteCellAg = '<span class="td-client-inner"><span class="td-client-name">' . h($clienteNome) . '</span></span>';
+						$urlEditTicketAg = $this->Url->build(['controller' => 'Tickets', 'action' => 'edit', $reg->id]);
+						$idCellAg = '<a href="' . h($urlEditTicketAg) . '" class="dash-pgm-ticket-id-link" onclick="event.stopPropagation();">#' . h($reg->id) . '</a>';
 					?>
-					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteCellAg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
+					[<?= json_encode($idCellAg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode($clienteCellAg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
 			};
@@ -358,8 +368,10 @@
 						$stagnantTag = (function_exists('pgm_seconds_since') ? pgm_seconds_since($refMod) : (time() - strtotime((string) $refMod))) >= 86400 ? '<span class="stagnant-tag">+24h</span>' : '';
 						$clienteNome = $pgmClienteNome($reg);
 						$clienteCellExec = '<span class="td-client-inner"><span class="td-client-name">' . h($clienteNome) . '</span>' . $stagnantTag . '</span>';
+						$urlEditTicketExec = $this->Url->build(['controller' => 'Tickets', 'action' => 'edit', $reg->id]);
+						$idCellExec = '<a href="' . h($urlEditTicketExec) . '" class="dash-pgm-ticket-id-link" onclick="event.stopPropagation();">#' . h($reg->id) . '</a>';
 					?>
-					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteCellExec, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
+					[<?= json_encode($idCellExec, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode($clienteCellExec, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode(date_format($reg->created, 'd/m/Y')) ?>, <?= json_encode('<span class="sla-badge ' . $slaClass . '"><span class="dot ' . $dotClass . '"></span>' . $dias . ' dias</span>') ?>],
 					<?php endforeach; ?>
 				]
 			};
@@ -373,8 +385,10 @@
 					<?php
 						$clienteNome = $pgmClienteNome($reg);
 						$refData = (isset($reg->modified) && $reg->modified !== null) ? $reg->modified : $reg->created;
+						$urlEditTicketFin = $this->Url->build(['controller' => 'Tickets', 'action' => 'edit', $reg->id]);
+						$idCellFin = '<a href="' . h($urlEditTicketFin) . '" class="dash-pgm-ticket-id-link" onclick="event.stopPropagation();">#' . h($reg->id) . '</a>';
 					?>
-					[<?= json_encode('#' . $reg->id) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($refData, 'd/m/Y')) ?>, "Finalizado"],
+					[<?= json_encode($idCellFin, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode($clienteNome) ?>, <?= json_encode(date_format($refData, 'd/m/Y')) ?>, "Finalizado"],
 					<?php endforeach; ?>
 				]
 			};

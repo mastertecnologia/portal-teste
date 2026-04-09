@@ -8,6 +8,19 @@
 	var STORAGE_KEY = 'pgmPortalTheme';
 	var LOGGED_TOGGLE_SEL = '.pgm-js-theme-toggle';
 
+	/** Token CSRF CakePHP (Security): meta[name="csrfToken"] ou input hidden do formulário. */
+	function readCsrfToken() {
+		var m = document.querySelector('meta[name="csrfToken"]');
+		if (m && m.getAttribute('content')) {
+			return m.getAttribute('content');
+		}
+		var inp = document.querySelector('input[name="_csrfToken"]');
+		if (inp && inp.value) {
+			return inp.value;
+		}
+		return '';
+	}
+
 	function applyTheme(mode) {
 		if (mode !== 'light' && mode !== 'dark') {
 			return;
@@ -111,10 +124,15 @@
 					updateToggleButton($(this), next);
 				});
 				persistLocal(next);
+				var payload = { theme: next };
+				var tok = readCsrfToken();
+				if (tok) {
+					payload._csrfToken = tok;
+				}
 				$.ajax({
 					type: 'POST',
 					url: postUrl,
-					data: { theme: next },
+					data: payload,
 					success: function () {},
 					error: function () {
 						applyTheme(prev);

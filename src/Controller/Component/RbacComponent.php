@@ -227,6 +227,9 @@ class RbacComponent extends Component {
 			return null;
 		}
 
+		$userRole = (int)$this->getController()->Auth->user('role');
+		$this->_sortMatchesByAbacScopePreference($matches, $userRole);
+
 		$best = $matches[0];
 		foreach ($matches as $p) {
 			if ($p->abac_scope !== null && $p->abac_scope !== '') {
@@ -252,6 +255,55 @@ class RbacComponent extends Component {
 		}
 
 		return $best;
+	}
+
+	/**
+	 * Quando várias permissões fazem match (ex.: tickets.update + tickets.portal.update em Tickets#edit),
+	 * a ordem de iteração da BD era arbitrária e a primeira com abac_scope não vazio podia ser "cliente",
+	 * aplicando filtro por idcliente à equipe (role 0) e devolvendo zero linhas no find do ticket.
+	 * Equipe prioriza empresa; portal (role 1) prioriza cliente.
+	 *
+	 * @param \App\Model\Entity\RbacPermission[] $matches
+	 * @param int $userRole users.role (0 equipe, 1 portal)
+	 */
+	protected function _sortMatchesByAbacScopePreference(array &$matches, $userRole) {
+		usort($matches, function ($a, $b) use ($userRole) {
+			$ra = $this->_abacScopePreferenceRank($a->abac_scope, $userRole);
+			$rb = $this->_abacScopePreferenceRank($b->abac_scope, $userRole);
+			if ($ra !== $rb) {
+				return $ra - $rb;
+			}
+
+			return (int)$a->id - (int)$b->id;
+		});
+	}
+
+	/**
+	 * Menor = preferido na ordenação.
+	 *
+	 * @param string|null $scope
+	 * @param int $userRole
+	 * @return int
+	 */
+	protected function _abacScopePreferenceRank($scope, $userRole) {
+		$empty = ($scope === null || $scope === '');
+		$key = $empty ? '' : strtolower((string)$scope);
+		if ($empty) {
+			return 10;
+		}
+		if ((int)$userRole === 0) {
+			$order = ['empresa' => 0, 'own' => 1, 'cliente' => 2];
+
+			return isset($order[$key]) ? $order[$key] : 5;
+		}
+		if ((int)$userRole === 1) {
+			$order = ['cliente' => 0, 'own' => 1, 'empresa' => 2];
+
+			return isset($order[$key]) ? $order[$key] : 5;
+		}
+		$order = ['empresa' => 0, 'own' => 1, 'cliente' => 2];
+
+		return isset($order[$key]) ? $order[$key] : 5;
 	}
 
 	/**
