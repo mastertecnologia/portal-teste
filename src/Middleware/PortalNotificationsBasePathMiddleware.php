@@ -11,6 +11,40 @@ use App\Utility\PgmAppUrlBase;
  */
 class PortalNotificationsBasePathMiddleware {
 
+	/**
+	 * Path público do browser (inclui /portal/...). getUri()->getPath() na subpasta costuma vir
+	 * sem o prefixo App.base — usar só ele provoca 302 para a mesma URL e loop infinito.
+	 *
+	 * @param \Psr\Http\Message\ServerRequestInterface $request
+	 * @return string
+	 */
+	private static function browserRequestPath($request) {
+		if (method_exists($request, 'getEnv')) {
+			$v = $request->getEnv('REQUEST_URI');
+			if ($v !== null && $v !== false && $v !== '') {
+				$reqUri = (string)$v;
+			} else {
+				$reqUri = '';
+			}
+		} else {
+			$params = $request->getServerParams();
+			$reqUri = isset($params['REQUEST_URI']) ? (string)$params['REQUEST_URI'] : '';
+		}
+		if ($reqUri === '') {
+			return '';
+		}
+		$parsedPath = parse_url($reqUri, PHP_URL_PATH);
+		if (!is_string($parsedPath) || $parsedPath === '') {
+			return '';
+		}
+		$path = rawurldecode($parsedPath);
+		if ($path !== '' && (!isset($path[0]) || $path[0] !== '/')) {
+			$path = '/' . ltrim($path, '/');
+		}
+
+		return $path;
+	}
+
 	public function __invoke($request, $response, $next) {
 		$method = $request->getMethod();
 		if ($method !== 'GET' && $method !== 'HEAD') {
@@ -20,11 +54,12 @@ class PortalNotificationsBasePathMiddleware {
 		if ($base === '') {
 			return $next($request, $response);
 		}
-		$path = $request->getUri()->getPath();
+		$browserPath = self::browserRequestPath($request);
+		$path = $browserPath !== '' ? $browserPath : $request->getUri()->getPath();
 		if ($path === '' || (isset($path[0]) && $path[0] !== '/')) {
 			return $next($request, $response);
 		}
-		if (strpos($path, $base . '/') === 0) {
+		if (strpos($path, $base . '/') === 0 || $path === $base) {
 			return $next($request, $response);
 		}
 		$needsBase = (strpos($path, '/pgm-notifications') === 0 || strpos($path, '/portal-notifications') === 0);
