@@ -53,6 +53,7 @@ class PermissoesController extends AppController {
 			'adminMatrixSave' => ['permissoes.matrix.edit'],
 			'adminGrantSuperAll' => ['permissoes.matrix.grant_super'],
 			'adminRoles' => ['permissoes.roles.edit'],
+			'adminRoleAdd' => ['permissoes.roles.edit'],
 			'adminRoleEdit' => ['permissoes.roles.edit'],
 			'adminUsers' => ['permissoes.users.list', 'usuarios.roles.assign'],
 			'adminUserRoles' => ['permissoes.users.assign_roles', 'usuarios.roles.assign'],
@@ -308,6 +309,74 @@ class PermissoesController extends AppController {
 		$this->_ensureDefaultRoles();
 		$roles = $this->RbacRoles->find()->order(['sort_order' => 'ASC', 'name' => 'ASC'])->all();
 		$this->set(compact('roles'));
+	}
+
+	/**
+	 * Criar papel RBAC custom (não-sistema). Permissões na Matriz.
+	 */
+	public function adminRoleAdd() {
+		$this->set('title', 'Novo papel RBAC');
+		if (!$this->_rbacTablesExist()) {
+			$this->set('rbacMissing', true);
+
+			return;
+		}
+		$this->_ensureDefaultRoles();
+		$role = $this->RbacRoles->newEntity([
+			'name' => '',
+			'slug' => '',
+			'description' => '',
+			'active' => true,
+			'hierarchy_level' => 4000,
+			'sort_order' => 35,
+			'is_system' => false,
+		]);
+
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			if (!array_key_exists('active', $data)) {
+				$data['active'] = false;
+			}
+			$role = $this->RbacRoles->patchEntity($role, $data, [
+				'fields' => ['name', 'description', 'sort_order', 'active', 'hierarchy_level', 'slug'],
+			]);
+			$role->is_system = false;
+			$role->hierarchy_level = max(0, min(999999, (int)$role->hierarchy_level));
+			$role->sort_order = (int)$role->sort_order;
+			$slug = strtolower(trim((string)$role->slug));
+			if ($slug === '' || !preg_match('/^[a-z0-9][a-z0-9_-]*$/', $slug)) {
+				$this->Flash->error('Slug inválido: use letras minúsculas, números, _ e -.');
+				$this->set(compact('role'));
+				$this->render('admin_role_edit');
+
+				return;
+			}
+			$dup = $this->RbacRoles->find()->where(['slug' => $slug])->first();
+			if ($dup) {
+				$this->Flash->error('Já existe um papel com este slug.');
+				$this->set(compact('role'));
+				$this->render('admin_role_edit');
+
+				return;
+			}
+			$role->slug = $slug;
+			if (trim((string)$role->name) === '') {
+				$this->Flash->error('Nome é obrigatório.');
+				$this->set(compact('role'));
+				$this->render('admin_role_edit');
+
+				return;
+			}
+			if ($this->RbacRoles->save($role)) {
+				$this->Flash->success('Papel criado. Defina as permissões na Matriz.');
+
+				return $this->redirect(['action' => 'adminRoles']);
+			}
+			$this->Flash->error('Não foi possível salvar.');
+		}
+
+		$this->set(compact('role'));
+		$this->render('admin_role_edit');
 	}
 
 	public function adminRoleEdit($id = null) {

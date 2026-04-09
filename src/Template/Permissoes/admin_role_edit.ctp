@@ -4,12 +4,17 @@ $this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
 $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Permissões', ['action' => 'adminIndex'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Papéis RBAC', ['action' => 'adminRoles'], ['class' => 'breadcrumb-item']);
-$this->Breadcrumbs->add(h($role->name), [], ['class' => 'breadcrumb-item active']);
+$isNew = $role->isNew();
+$this->Breadcrumbs->add(
+	$isNew ? 'Novo' : h($role->name),
+	[],
+	['class' => 'breadcrumb-item active']
+);
 ?>
 <div class="col-md-12 col-lg-8 p-0 queues-page-ambient">
 	<div class="admin-rbac-wrap">
 		<header class="admin-panel-hero admin-rbac-hero--sub">
-			<h1>Editar papel</h1>
+			<h1><?= $isNew ? 'Novo papel RBAC' : 'Editar papel' ?></h1>
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Lista de papéis', ['action' => 'adminRoles'], ['class' => 'admin-panel-btn']) ?>
 			</div>
@@ -20,7 +25,9 @@ $this->Breadcrumbs->add(h($role->name), [], ['class' => 'breadcrumb-item active'
 		<?php else : ?>
 			<p class="admin-rbac-role-intro">O campo <strong class="ap-text-bright">Nível hierárquico</strong> controla quem pode atribuir este papel a outros (operadores só concedem papéis com nível ≤ ao máximo dos seus).</p>
 			<div class="queues-form-panel queues-form-panel--wide">
-				<?= $this->Form->create($role, ['url' => ['action' => 'adminRoleEdit', $role->id]]) ?>
+				<?= $this->Form->create($role, [
+					'url' => $isNew ? ['action' => 'adminRoleAdd'] : ['action' => 'adminRoleEdit', $role->id],
+				]) ?>
 				<?php if (!empty($role->is_system)) : ?>
 					<p class="admin-rbac-role-intro">Papel de <strong>sistema</strong>: o slug não pode ser alterado.</p>
 					<div class="form-group">
@@ -42,7 +49,7 @@ $this->Breadcrumbs->add(h($role->name), [], ['class' => 'breadcrumb-item active'
 				<?= $this->Form->control('sort_order', ['label' => 'Ordem na lista']) ?>
 				<?= $this->Form->control('active', ['label' => 'Ativo', 'type' => 'checkbox']) ?>
 				<div class="queues-form-actions m-t-20">
-					<?= $this->Form->button('Salvar', ['class' => 'queues-btn queues-btn--success']) ?>
+					<?= $this->Form->button($isNew ? 'Criar papel' : 'Salvar', ['class' => 'queues-btn queues-btn--success']) ?>
 				</div>
 				<?= $this->Form->end() ?>
 			</div>

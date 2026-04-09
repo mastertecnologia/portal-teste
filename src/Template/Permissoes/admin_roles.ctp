@@ -13,6 +13,13 @@ $this->Breadcrumbs->add('Papéis RBAC', [], ['class' => 'breadcrumb-item active'
 			<div class="admin-panel-hero-actions">
 				<?= $this->Html->link('← Catálogo', ['action' => 'adminIndex'], ['class' => 'admin-panel-btn']) ?>
 				<?= $this->Html->link('Matriz', ['action' => 'adminMatrix'], ['class' => 'admin-panel-btn admin-panel-btn--accent']) ?>
+				<?php if (empty($rbacMissing)) : ?>
+					<?= $this->Html->link(
+						'<i class="fa fa-plus"></i> Novo papel',
+						['action' => 'adminRoleAdd'],
+						['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]
+					) ?>
+				<?php endif; ?>
 			</div>
 		</header>
 
