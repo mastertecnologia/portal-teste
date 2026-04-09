@@ -1,14 +1,21 @@
 <?php
-function Mask($mask,$str){
-
-    $str = str_replace(" ","",$str);
-
-    for($i=0;$i<strlen($str);$i++){
-        $mask[strpos($mask,"#")] = $str[$i];
+function Mask($mask, $str)
+{
+    if ($str === null || $str === '') {
+        return '';
+    }
+    $mask = (string)$mask;
+    $str = str_replace(' ', '', (string)$str);
+    $len = strlen($str);
+    for ($i = 0; $i < $len; $i++) {
+        $pos = strpos($mask, '#');
+        if ($pos === false) {
+            break;
+        }
+        $mask[$pos] = $str[$i];
     }
 
     return $mask;
-
 }
 
 // Breadcumbs
