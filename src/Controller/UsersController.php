@@ -29,10 +29,15 @@ if (!defined('C_EmpresaMaster'))            define('C_EmpresaMaster', 1);
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
 
-require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'FixedBitNotation.php');
-require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'GoogleQrUrl.php');
-require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'GoogleAuthenticatorInterface.php');
-require_once (WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS . 'GoogleAuthenticator.php');
+// GoogleAuthenticator: em produção Linux costuma estar em public/plugins; com WEBROOT_DIR=webroot o require falhava (500).
+$__gaSrc = WWW_ROOT . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS;
+if (!is_file($__gaSrc . 'GoogleAuthenticator.php')) {
+	$__gaSrc = ROOT . DS . 'public' . DS . 'plugins' . DS . 'GoogleAuthenticator-2.x' . DS . 'src' . DS;
+}
+require_once $__gaSrc . 'FixedBitNotation.php';
+require_once $__gaSrc . 'GoogleQrUrl.php';
+require_once $__gaSrc . 'GoogleAuthenticatorInterface.php';
+require_once $__gaSrc . 'GoogleAuthenticator.php';
 
 use Cake\Core\Configure;
 use Cake\I18n\FrozenTime;
@@ -76,9 +81,13 @@ class UsersController extends AppController {
 			))));
 		}
 		
-		if (in_array('Security', $this->components()->loaded())) {
-            $this->Security->setConfig('unlockedActions', ['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente']);
-        }
+		if (in_array('Security', $this->components()->loaded(), true)) {
+			$existingUnlocked = $this->Security->getConfig('unlockedActions');
+			$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
+				is_array($existingUnlocked) ? $existingUnlocked : [],
+				['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente']
+			))));
+		}
 
 		if (in_array('Csrf', $this->components()->loaded())) {
             if (in_array($this->request->getParam('action'), ['verificacnpjcliente', 'verificacpfcliente', 'cadastrocliente'])) {
