@@ -29,6 +29,7 @@
 		$rankingTecnicos = $kpi['ranking'] ?? [];
 		$rankingPeriodLabel = $kpi['ranking_period_label'] ?? 'mês';
 		$rankingMonthClosedCount = (int)($kpi['ranking_month_closed_count'] ?? 0);
+		$rankingMonthHint = $kpi['ranking_month_hint'] ?? date('m/Y');
 		$trendLabels = $kpi['trend_labels'] ?? [];
 		$trendOpened = $kpi['trend_opened'] ?? [];
 		$trendClosed = $kpi['trend_closed'] ?? [];
@@ -188,7 +189,9 @@
 								<tbody>
 									<?php foreach ($ticketsPend as $reg): ?>
 										<?php
-											$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
+											$dias = function_exists('pgm_ticket_open_age_days')
+												? pgm_ticket_open_age_days($reg->created)
+												: max(0, (int) floor((time() - strtotime((string) $reg->created)) / 86400));
 											$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 											$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 											$clienteNome = $pgmClienteNome($reg);
@@ -213,11 +216,15 @@
 								<tbody>
 									<?php foreach ($ticketsExec as $reg): ?>
 										<?php
-											$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
+											$dias = function_exists('pgm_ticket_open_age_days')
+												? pgm_ticket_open_age_days($reg->created)
+												: max(0, (int) floor((time() - strtotime((string) $reg->created)) / 86400));
 											$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 											$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 											$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
-											$isStagnant = (time() - strtotime((string)$refMod)) >= 86400;
+											$isStagnant = function_exists('pgm_seconds_since')
+												? (pgm_seconds_since($refMod) >= 86400)
+												: ((time() - strtotime((string) $refMod)) >= 86400);
 											$clienteNome = $pgmClienteNome($reg);
 										?>
 										<tr class="dash-pgm-row <?= $isStagnant ? 'stagnant' : '' ?>">
@@ -240,7 +247,7 @@
 									<div class="dash-pgm-ranking-item"><span><?= (int)$row['place'] ?></span><strong><?= h($row['nome']) ?></strong><small><?= (int)$row['tickets'] ?> tickets</small></div>
 								<?php endforeach; ?>
 							<?php elseif ($rankingMonthClosedCount === 0): ?>
-								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados</strong><small>nenhum ticket finalizado no mês calendário (mesma janela do ranking)</small></div>
+								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem dados no período</strong><small>nenhum ticket encerrado em <?= h($rankingMonthHint) ?> (mês calendário; não é perda de histórico)</small></div>
 							<?php else: ?>
 								<div class="dash-pgm-ranking-item dash-pgm-ranking-empty"><span>—</span><strong>Sem ranking</strong><small><?= (int)$rankingMonthClosedCount ?> fechamento(s) no período sem técnico responsável atribuído ao ticket.</small></div>
 							<?php endif; ?>
@@ -271,7 +278,9 @@
 				rows: [
 					<?php foreach ($ticketsPend as $reg): ?>
 					<?php
-						$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
+						$dias = function_exists('pgm_ticket_open_age_days')
+							? pgm_ticket_open_age_days($reg->created)
+							: max(0, (int) floor((time() - strtotime((string) $reg->created)) / 86400));
 						$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 						$clienteNome = $pgmClienteNome($reg);
@@ -289,11 +298,13 @@
 				rows: [
 					<?php foreach ($ticketsExec as $reg): ?>
 					<?php
-						$dias = max(0, (int) floor((time() - strtotime((string)$reg->created)) / 86400));
+						$dias = function_exists('pgm_ticket_open_age_days')
+							? pgm_ticket_open_age_days($reg->created)
+							: max(0, (int) floor((time() - strtotime((string) $reg->created)) / 86400));
 						$slaClass = $dias <= 3 ? 'sla-ok' : ($dias <= 10 ? 'sla-warn' : 'sla-overdue');
 						$dotClass = $dias <= 3 ? 'green' : ($dias <= 10 ? 'orange' : 'red');
 						$refMod = !empty($reg->modified) ? $reg->modified : $reg->created;
-						$stagnantTag = (time() - strtotime((string)$refMod)) >= 86400 ? '<span class="stagnant-tag">+24h</span>' : '';
+						$stagnantTag = (function_exists('pgm_seconds_since') ? pgm_seconds_since($refMod) : (time() - strtotime((string) $refMod))) >= 86400 ? '<span class="stagnant-tag">+24h</span>' : '';
 						$clienteNome = $pgmClienteNome($reg);
 						$clienteCellExec = '<span class="td-client-inner"><span class="td-client-name">' . h($clienteNome) . '</span>' . $stagnantTag . '</span>';
 					?>

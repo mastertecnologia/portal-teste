@@ -355,7 +355,9 @@ class UsersController extends AppController {
 			$this->Abac->applyToQuery($qOpen, 'Tickets', 'Tickets');
 			$openList = $qOpen->toArray();
 			foreach ($openList as $t) {
-				$dias = max(0, (int)floor((time() - strtotime((string)$t->created)) / 86400));
+				$dias = function_exists('pgm_ticket_open_age_days')
+					? pgm_ticket_open_age_days($t->created)
+					: max(0, (int) floor((time() - strtotime((string) $t->created)) / 86400));
 				if ($dias <= 3) {
 					$slaNoPrazo++;
 				} elseif ($dias <= 10) {
@@ -383,10 +385,8 @@ class UsersController extends AppController {
 			if ($byCount !== []) {
 				if ($tecMap !== []) {
 					$byCount = array_intersect_key($byCount, $tecMap);
-					arsort($byCount);
-				} else {
-					$byCount = [];
 				}
+				arsort($byCount);
 			}
 			$idToNome = [];
 			if ($byCount !== []) {
@@ -493,6 +493,7 @@ class UsersController extends AppController {
 			'ranking' => $ranking,
 			'ranking_period_label' => $rankingPeriodLabel,
 			'ranking_month_closed_count' => $rankingMonthClosedCount,
+			'ranking_month_hint' => date('m/Y'),
 			'trend_labels' => $trendLabels,
 			'trend_opened' => $trendOpened,
 			'trend_closed' => $trendClosed,

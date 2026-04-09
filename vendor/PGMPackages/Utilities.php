@@ -5,6 +5,45 @@
  */
 
 /**
+ * Dias desde a data de criação (tickets abertos no dashboard). Nunca negativo.
+ * Evita strtotime() em objetos DateTime/Chronos, que em alguns ambientes gerava valores absurdos.
+ *
+ * @param \DateTimeInterface|string|null $created
+ */
+function pgm_ticket_open_age_days($created): int {
+	if ($created === null || $created === '') {
+		return 0;
+	}
+	if ($created instanceof \DateTimeInterface) {
+		$ts = $created->getTimestamp();
+	} else {
+		$ts = strtotime((string) $created);
+		if ($ts === false) {
+			return 0;
+		}
+	}
+
+	return max(0, (int) floor((time() - $ts) / 86400));
+}
+
+/**
+ * Segundos decorridos desde $ref (ex.: modified para tag +24h).
+ *
+ * @param \DateTimeInterface|string|null $ref
+ */
+function pgm_seconds_since($ref): int {
+	if ($ref === null || $ref === '') {
+		return 0;
+	}
+	if ($ref instanceof \DateTimeInterface) {
+		return time() - $ref->getTimestamp();
+	}
+	$ts = strtotime((string) $ref);
+
+	return $ts === false ? 0 : (time() - $ts);
+}
+
+/**
  * @param string $dmY
  * @return DateTimeImmutable|null
  */
