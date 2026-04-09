@@ -46,6 +46,7 @@ use Cake\Utility\Inflector;
  *   bin/cake rbac_rollout enforce_readiness --csv
  *   bin/cake rbac_rollout pre_deploy
  *   bin/cake rbac_rollout report
+ *   bin/cake rbac_rollout sync_registry
  */
 class RbacRolloutShell extends Shell {
 
@@ -141,7 +142,7 @@ class RbacRolloutShell extends Shell {
 	}
 
 	public function main() {
-		$this->out('Comandos: stats | enforce_readiness | pre_deploy | checklist | list_roles | role_stats | user_effective | who_has | menu_gates_check | unassigned_equipe | unassigned_portal | assign_equipe | assign_portal | audit_recent | audit_purge | report');
+		$this->out('Comandos: stats | enforce_readiness | pre_deploy | checklist | sync_registry | list_roles | role_stats | user_effective | who_has | menu_gates_check | unassigned_equipe | unassigned_portal | assign_equipe | assign_portal | audit_recent | audit_purge | report');
 		$this->out('Ex.: bin/cake rbac_rollout stats');
 		$this->out('    bin/cake rbac_rollout stats --csv');
 		$this->out('    bin/cake rbac_rollout unassigned_equipe --limit=50');
@@ -161,6 +162,7 @@ class RbacRolloutShell extends Shell {
 		$this->out('    bin/cake rbac_rollout enforce_readiness [--strict] [--csv]');
 		$this->out('    bin/cake rbac_rollout pre_deploy');
 		$this->out('    bin/cake rbac_rollout report');
+		$this->out('    bin/cake rbac_rollout sync_registry');
 	}
 
 	/**
@@ -177,6 +179,7 @@ class RbacRolloutShell extends Shell {
 			'',
 			'2) Catálogo na base',
 			'   Permissões → Sincronizar catálogo (após alterar config/permissions_registry.php ou migrations de permissões).',
+			'   bin/cake rbac_rollout sync_registry — mesmo efeito (CLI; útil em produção).',
 			'',
 			'3) Config efectiva + env',
 			'   bin/cake rbac_rollout report',
@@ -226,6 +229,25 @@ class RbacRolloutShell extends Shell {
 	public function checklist() {
 		foreach (static::playbookChecklistLines() as $line) {
 			$this->out($line);
+		}
+	}
+
+	/**
+	 * Importa permissões em falta a partir de config/permissions_registry.php (paridade com Permissoes::adminSyncRegistry).
+	 */
+	public function sync_registry() {
+		if (!$this->_rbacTablesOk() || !$this->_rbacRolesTableOk()) {
+			$this->err('Tabelas rbac_permissions / rbac_users_roles / rbac_roles indisponíveis.');
+			exit(1);
+		}
+		TableRegistry::get('RbacRoles')->ensureDefaultSystemRoles();
+		$result = TableRegistry::get('RbacPermissions')->syncMissingFromRegistry();
+		foreach (array_slice($result['errors'], 0, 25) as $errLine) {
+			$this->err($errLine);
+		}
+		$this->out(sprintf('--- sync_registry: %d permissão(ões) nova(s) ---', $result['inserted']));
+		if ($result['errors'] !== [] && $result['inserted'] === 0) {
+			exit(1);
 		}
 	}
 

@@ -23,6 +23,7 @@ class RbacRolloutShellTest extends AppCompatTestCase {
 		$this->assertStringContainsString('pre_deploy', $blob);
 		$this->assertStringContainsString('TEST_CHECKLIST_RBAC.md', $blob);
 		$this->assertStringContainsString('bin/cake rbac_rollout report', $blob);
+		$this->assertStringContainsString('rbac_rollout sync_registry', $blob);
 		$this->assertStringContainsString('menu_sidebar_gates', $blob);
 		$this->assertStringContainsString('assign_equipe --role_slug=operacao', $blob);
 		$this->assertStringContainsString('--limit=5000', $blob);

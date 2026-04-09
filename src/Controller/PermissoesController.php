@@ -118,42 +118,14 @@ class PermissoesController extends AppController {
 			return $this->redirect(['action' => 'adminIndex']);
 		}
 		$this->_ensureDefaultRoles();
-		$file = CONFIG . 'permissions_registry.php';
-		if (!is_file($file)) {
-			$this->Flash->error('Arquivo config/permissions_registry.php não encontrado.');
-
-			return $this->redirect(['action' => 'adminIndex']);
-		}
-		$registry = require $file;
-		if (!is_array($registry)) {
-			$this->Flash->error('Registry inválido.');
-
-			return $this->redirect(['action' => 'adminIndex']);
-		}
-		$n = 0;
-		foreach ($registry as $row) {
-			if (empty($row['code'])) {
-				continue;
-			}
-			$exists = $this->RbacPermissions->find()->where(['code' => $row['code']])->first();
-			if ($exists) {
-				continue;
-			}
-			$entity = $this->RbacPermissions->newEntity([
-				'code' => $row['code'],
-				'name' => isset($row['name']) ? $row['name'] : $row['code'],
-				'module' => isset($row['module']) ? $row['module'] : 'Outros',
-				'controller' => isset($row['controller']) ? $row['controller'] : '',
-				'action' => isset($row['action']) ? $row['action'] : '*',
-				'perm_type' => isset($row['perm_type']) ? $row['perm_type'] : 'rbac',
-				'abac_scope' => isset($row['abac_scope']) ? $row['abac_scope'] : null,
-				'description' => isset($row['description']) ? $row['description'] : null,
-				'sort_order' => isset($row['sort_order']) ? (int)$row['sort_order'] : 0,
-			]);
-			if ($this->RbacPermissions->save($entity)) {
-				$n++;
+		$result = $this->RbacPermissions->syncMissingFromRegistry();
+		if ($result['errors'] !== []) {
+			$this->Flash->error('Sincronização com erros: ' . implode(' | ', array_slice($result['errors'], 0, 8)));
+			if ($result['inserted'] === 0) {
+				return $this->redirect(['action' => 'adminIndex']);
 			}
 		}
+		$n = $result['inserted'];
 		$this->Flash->success("Catálogo sincronizado: {$n} nova(s) permissão(ões). Registros existentes foram preservados.");
 
 		return $this->redirect(['action' => 'adminIndex']);
@@ -1043,21 +1015,6 @@ class PermissoesController extends AppController {
 	}
 
 	protected function _ensureDefaultRoles() {
-		$defaults = [
-			['slug' => 'super_admin', 'name' => 'Super administrador', 'description' => 'Acesso total ao catálogo quando vinculado.', 'sort_order' => 10, 'hierarchy_level' => 10000],
-			['slug' => 'admin_equipe', 'name' => 'Administrador da equipe', 'description' => 'Usuários internos, filas e parâmetros.', 'sort_order' => 20, 'hierarchy_level' => 8000],
-			['slug' => 'operacao', 'name' => 'Operação', 'description' => 'OS, tickets, orçamentos, agenda.', 'sort_order' => 30, 'hierarchy_level' => 5000],
-			['slug' => 'financeiro', 'name' => 'Financeiro', 'description' => 'Locação e faturas.', 'sort_order' => 40, 'hierarchy_level' => 5000],
-			['slug' => 'leitura', 'name' => 'Somente leitura', 'description' => 'Consulta sem alteração.', 'sort_order' => 50, 'hierarchy_level' => 500],
-			['slug' => 'cliente_portal', 'name' => 'Cliente portal', 'description' => 'Usuário externo (ABAC por cliente).', 'sort_order' => 60, 'hierarchy_level' => 100],
-		];
-		foreach ($defaults as $d) {
-			$exists = $this->RbacRoles->find()->where(['slug' => $d['slug']])->first();
-			if ($exists) {
-				continue;
-			}
-			$e = $this->RbacRoles->newEntity($d + ['is_system' => true, 'active' => true]);
-			$this->RbacRoles->save($e);
-		}
+		$this->RbacRoles->ensureDefaultSystemRoles();
 	}
 }

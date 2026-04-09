@@ -4,7 +4,7 @@
  * RBAC: acesso por papel a controller/ação.
  * ABAC: escopo (empresa, cliente, próprio) para filtrar recurso no runtime.
  *
- * Sincronizar com a base: PermissoesController::adminSyncRegistry
+ * Sincronizar com a base: PermissoesController::adminSyncRegistry ou bin/cake rbac_rollout sync_registry
  */
 $order = 0;
 $n = static function () use (&$order) {
