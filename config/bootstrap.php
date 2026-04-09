@@ -77,6 +77,8 @@ if (is_file($envFile) && is_readable($envFile)) {
  */
 require __DIR__ . '/paths.php';
 
+require __DIR__ . '/pgmpackages_require.php';
+
 /*
  * Bootstrap CakePHP.
  *

@@ -14,9 +14,7 @@ use Cake\Http\Response;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
-require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
+// PGMPackages: config/pgmpackages_require.php (incluído a partir de bootstrap.php).
 
 // Fallbacks se UserConstants não definir (Linux/case do vendor). Alinhado a docs e FaturasController::C_RoleCliente.
 // Não há troca de banco por empresa: um único Datasource; idempresa na sessão escopos dados.
