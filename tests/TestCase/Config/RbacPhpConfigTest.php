@@ -1,7 +1,7 @@
 <?php
 namespace App\Test\TestCase\Config;
 
-use PHPUnit\Framework\TestCase;
+use App\Test\TestCase\AppCompatTestCase;
 
 /**
  * Garante que os defaults de rollout em config/rbac.php permanecem alinhados ao IMPLEMENTATION_LOG.
@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
  * Isola variáveis `RBAC_*` (getenv / $_ENV / $_SERVER) para o `require` de `config/rbac.php` não herdar
  * `.env` ou ambiente CI — alinhado a `config/bootstrap.php`, que espelha variáveis nestes três sítios.
  */
-class RbacPhpConfigTest extends TestCase {
+class RbacPhpConfigTest extends AppCompatTestCase {
 
 	private const RBAC_ENV_KEYS = [
 		'RBAC_MODE',

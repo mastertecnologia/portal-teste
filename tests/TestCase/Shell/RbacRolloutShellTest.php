@@ -2,10 +2,10 @@
 namespace App\Test\TestCase\Shell;
 
 use App\Shell\RbacRolloutShell;
+use App\Test\TestCase\AppCompatTestCase;
 use Cake\Console\ConsoleIo;
-use PHPUnit\Framework\TestCase;
 
-class RbacRolloutShellTest extends TestCase {
+class RbacRolloutShellTest extends AppCompatTestCase {
 
 	public function testPlaybookChecklistLinesNonEmpty() {
 		$lines = RbacRolloutShell::playbookChecklistLines();

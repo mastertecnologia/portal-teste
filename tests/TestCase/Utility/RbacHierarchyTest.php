@@ -1,10 +1,10 @@
 <?php
 namespace App\Test\TestCase\Utility;
 
+use App\Test\TestCase\AppCompatTestCase;
 use App\Utility\RbacHierarchy;
-use PHPUnit\Framework\TestCase;
 
-class RbacHierarchyTest extends TestCase {
+class RbacHierarchyTest extends AppCompatTestCase {
 
 	public function testFinalizeAdminUnlimited() {
 		list($final, $stripped) = RbacHierarchy::finalizeRoleIdsForSave(null, [1, 2], [10, 20], []);

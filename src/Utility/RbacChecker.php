@@ -23,7 +23,13 @@ class RbacChecker {
 	 *   uma permissão entre orcamentos.solicitar ou orcamentos.portal_cliente (catálogo amplo).
 	 */
 	public static function clientePodeSolicitarOrcamento($userId, $permissaoAcesso) {
-		if (empty($permissaoAcesso)) {
+		if ($permissaoAcesso === null || $permissaoAcesso === false) {
+			return false;
+		}
+		if (is_string($permissaoAcesso)) {
+			$permissaoAcesso = trim($permissaoAcesso);
+		}
+		if ($permissaoAcesso === '' || $permissaoAcesso === 0 || $permissaoAcesso === '0') {
 			return false;
 		}
 		$userId = (int)$userId;
