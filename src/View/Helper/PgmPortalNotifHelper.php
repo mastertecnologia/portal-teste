@@ -1,7 +1,7 @@
 <?php
 namespace App\View\Helper;
 
-use Cake\Core\Configure;
+use App\Utility\PgmAppUrlBase;
 use Cake\View\Helper;
 
 /**
@@ -28,7 +28,7 @@ class PgmPortalNotifHelper extends Helper {
 			$base = (string)$req->base;
 		}
 		if ($base === '') {
-			$base = rtrim((string)Configure::read('App.base'), '/');
+			$base = PgmAppUrlBase::path();
 		}
 		$base = rtrim($base, '/');
 		if ($base !== '' && $u !== '' && isset($u[0]) && $u[0] === '/' && strpos($u, $base . '/') !== 0) {

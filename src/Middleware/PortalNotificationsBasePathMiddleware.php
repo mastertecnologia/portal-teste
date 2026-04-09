@@ -1,11 +1,13 @@
 <?php
 namespace App\Middleware;
 
-use Cake\Core\Configure;
+use App\Utility\PgmAppUrlBase;
 
 /**
  * Redireciona GET/HEAD de /portal-notifications/* para /{App.base}/portal-notifications/*
  * quando a app está em subpasta (ex.: /portal) e o browser pediu sem o prefixo (404 / "Não encontrado").
+ *
+ * Base: APP_BASE no .env; se vazio, dirname(SCRIPT_NAME) (ex.: /portal/index.php → /portal).
  */
 class PortalNotificationsBasePathMiddleware {
 
@@ -14,7 +16,7 @@ class PortalNotificationsBasePathMiddleware {
 		if ($method !== 'GET' && $method !== 'HEAD') {
 			return $next($request, $response);
 		}
-		$base = rtrim((string)Configure::read('App.base'), '/');
+		$base = PgmAppUrlBase::path();
 		if ($base === '') {
 			return $next($request, $response);
 		}
