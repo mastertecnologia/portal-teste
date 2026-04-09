@@ -1278,7 +1278,9 @@ class UsersController extends AppController {
 		$this->viewBuilder()->setLayout("login");
 		$this->_rememberServicedeskRedirectFromQuery();
 
-		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
+		if ($this->Auth->user()) {
+			return $this->redirect($this->Auth->redirectUrl());
+		}
 	
 		if ($this->request->is('post')) {
 			$creds = $this->_extractLoginCredentials();
@@ -1324,8 +1326,10 @@ class UsersController extends AppController {
 		$this->viewBuilder()->setTemplate("login_empresa");
 		$this->_rememberServicedeskRedirectFromQuery();
 
-		if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
-	
+		if ($this->Auth->user()) {
+			return $this->redirect($this->Auth->redirectUrl());
+		}
+
 		if ($this->request->is('post')) {
 			$creds = $this->_extractLoginCredentials();
 			$user = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
@@ -2630,7 +2634,9 @@ class UsersController extends AppController {
 	
 		if ($this->request->is(['post', 'put'])) {
 
-			if ($this->Auth->user()) $this->redirect($this->Auth->redirectUrl());
+			if ($this->Auth->user()) {
+				return $this->redirect($this->Auth->redirectUrl());
+			}
 
 			$creds = $this->_extractLoginCredentials();
 			$logou = $this->_identifyUserByCredentials($creds['username'], $creds['password']);
