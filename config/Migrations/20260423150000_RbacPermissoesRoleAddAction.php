@@ -3,6 +3,7 @@ use Migrations\AbstractMigration;
 
 /**
  * Inclui Permissoes#adminRoleAdd na permissão permissoes.roles.edit (sync do registry não atualiza action existente).
+ * Versão 20260423150000: evita colisão com 20260410120000_RemoveErpAdvancedAttendancePermission (mesmo prefixo Phinx).
  */
 class RbacPermissoesRoleAddAction extends AbstractMigration {
 
