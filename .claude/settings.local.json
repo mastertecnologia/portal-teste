@@ -22,7 +22,8 @@
       "Bash(contratos)",
       "Bash(relatorio \")",
       "Bash(find /c/Portal-git/portal-teste/src/Template -name \"*.ctp\" -exec grep -l \"calendar\\\\|fullCalendar\\\\|#calendar\" {} \\\\;)",
-      "Bash(find /c/Portal-git/portal-teste/app_old/Template -name \"*.ctp\" -exec grep -l \"calendar\\\\|fullCalendar\\\\|#calendar\" {} \\\\;)"
+      "Bash(find /c/Portal-git/portal-teste/app_old/Template -name \"*.ctp\" -exec grep -l \"calendar\\\\|fullCalendar\\\\|#calendar\" {} \\\\;)",
+      "WebFetch(domain:portal.pgm.inf.br)"
     ]
   }
 }
