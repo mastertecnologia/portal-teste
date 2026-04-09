@@ -62,7 +62,7 @@ class Application extends BaseApplication
             // Corrige /portal/portal/... antes do roteamento (links relativos mal formados).
             ->add(new CollapseDuplicatePortalPathMiddleware())
 
-            // /portal-notifications/* sem prefixo App.base → redireciona para /portal/portal-notifications/*
+            // /pgm-notifications/* (e legado /portal-notifications/*) sem App.base → redireciona com prefixo
             ->add(new PortalNotificationsBasePathMiddleware())
 
             // Apply routing

@@ -4,7 +4,7 @@ namespace App\Middleware;
 use App\Utility\PgmAppUrlBase;
 
 /**
- * Redireciona GET/HEAD de /portal-notifications/* para /{App.base}/portal-notifications/*
+ * Redireciona GET/HEAD de /pgm-notifications/* ou /portal-notifications/* para /{App.base}/...
  * quando a app está em subpasta (ex.: /portal) e o browser pediu sem o prefixo (404 / "Não encontrado").
  *
  * Base: APP_BASE no .env; se vazio, dirname(SCRIPT_NAME) (ex.: /portal/index.php → /portal).
@@ -27,7 +27,8 @@ class PortalNotificationsBasePathMiddleware {
 		if (strpos($path, $base . '/') === 0) {
 			return $next($request, $response);
 		}
-		if (strpos($path, '/portal-notifications') !== 0) {
+		$needsBase = (strpos($path, '/pgm-notifications') === 0 || strpos($path, '/portal-notifications') === 0);
+		if (!$needsBase) {
 			return $next($request, $response);
 		}
 		$query = $request->getUri()->getQuery();

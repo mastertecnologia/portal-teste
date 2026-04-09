@@ -137,6 +137,65 @@ Router::scope('/', function ($routes) {
         ['controller' => 'Faturamento', 'action' => 'gerarDeOS'],
         ['pass' => ['idordem'], 'idordem' => '\d+']
     );
+    // Módulo Fiscal — URLs canônicas (equipe; templates/rotas explícitas)
+    $routes->connect('/fiscal', ['controller' => 'Fiscal', 'action' => 'index']);
+    $routes->connect('/fiscal/status-sefaz', ['controller' => 'Fiscal', 'action' => 'statusSefaz'])->setMethods(['GET', 'POST']);
+    $routes->connect('/fiscal-notas', ['controller' => 'FiscalNotas', 'action' => 'index']);
+    $routes->connect('/fiscal-notas/index', ['controller' => 'FiscalNotas', 'action' => 'index']);
+    $routes->connect('/fiscal-notas/add', ['controller' => 'FiscalNotas', 'action' => 'add']);
+    $routes->connect('/fiscal-notas/view/*', ['controller' => 'FiscalNotas', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/edit/*', ['controller' => 'FiscalNotas', 'action' => 'edit'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/delete/*', ['controller' => 'FiscalNotas', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas/emitir/*', ['controller' => 'FiscalNotas', 'action' => 'emitir'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/cancelar/*', ['controller' => 'FiscalNotas', 'action' => 'cancelar'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/carta-correcao/*', ['controller' => 'FiscalNotas', 'action' => 'cartaCorrecao'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/danfe/*', ['controller' => 'FiscalNotas', 'action' => 'danfe'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/download-xml/*', ['controller' => 'FiscalNotas', 'action' => 'downloadXml'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/buscar-ncm', ['controller' => 'FiscalNotas', 'action' => 'buscarNcm'])->setMethods(['GET']);
+    $routes->connect('/fiscal-notas/buscar-cfop', ['controller' => 'FiscalNotas', 'action' => 'buscarCfop'])->setMethods(['GET']);
+    $routes->connect('/fiscal-notas/controle-series', ['controller' => 'FiscalNotas', 'action' => 'controleSeries']);
+    $routes->connect('/fiscal-notas-entrada', ['controller' => 'FiscalNotasEntrada', 'action' => 'index']);
+    $routes->connect('/fiscal-notas-entrada/index', ['controller' => 'FiscalNotasEntrada', 'action' => 'index']);
+    $routes->connect('/fiscal-notas-entrada/add', ['controller' => 'FiscalNotasEntrada', 'action' => 'add']);
+    $routes->connect('/fiscal-notas-entrada/view/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/edit/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'edit'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/delete/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas-entrada/controle-series', ['controller' => 'FiscalNotasEntrada', 'action' => 'controleSeries']);
+    $routes->connect('/fiscal-notas-entrada/emitir/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'emitir'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/cancelar/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'cancelar'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/carta-correcao/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'cartaCorrecao'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/danfe/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'danfe'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/download-xml/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'downloadXml'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/buscar-ncm', ['controller' => 'FiscalNotasEntrada', 'action' => 'buscarNcm'])->setMethods(['GET']);
+    $routes->connect('/fiscal-notas-entrada/buscar-cfop', ['controller' => 'FiscalNotasEntrada', 'action' => 'buscarCfop'])->setMethods(['GET']);
+    $routes->connect('/fiscal-certificados', ['controller' => 'FiscalCertificados', 'action' => 'index']);
+    $routes->connect('/fiscal-certificados/add', ['controller' => 'FiscalCertificados', 'action' => 'add']);
+    $routes->connect('/fiscal-certificados/view/*', ['controller' => 'FiscalCertificados', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-certificados/toggle-ativo/*', ['controller' => 'FiscalCertificados', 'action' => 'toggleAtivo'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-certificados/delete/*', ['controller' => 'FiscalCertificados', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-config', ['controller' => 'FiscalConfig', 'action' => 'index']);
+    $routes->connect('/fiscal-config/naturezas', ['controller' => 'FiscalConfig', 'action' => 'naturezas']);
+    $routes->connect('/fiscal-config/natureza-add', ['controller' => 'FiscalConfig', 'action' => 'naturezaAdd']);
+    $routes->connect('/fiscal-config/natureza-edit/*', ['controller' => 'FiscalConfig', 'action' => 'naturezaEdit'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-config/natureza-delete/*', ['controller' => 'FiscalConfig', 'action' => 'naturezaDelete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-config/aliquotas', ['controller' => 'FiscalConfig', 'action' => 'aliquotas']);
+    $routes->connect('/fiscal-config/aliquota-add', ['controller' => 'FiscalConfig', 'action' => 'aliquotaAdd']);
+    $routes->connect('/fiscal-config/aliquota-edit/*', ['controller' => 'FiscalConfig', 'action' => 'aliquotaEdit'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-config/aliquota-delete/*', ['controller' => 'FiscalConfig', 'action' => 'aliquotaDelete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-config/cfop', ['controller' => 'FiscalConfig', 'action' => 'cfop']);
+    $routes->connect('/fiscal-config/cfop-add', ['controller' => 'FiscalConfig', 'action' => 'cfopAdd']);
+    $routes->connect('/fiscal-config/cfop-edit/*', ['controller' => 'FiscalConfig', 'action' => 'cfopEdit'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-config/cfop-delete/*', ['controller' => 'FiscalConfig', 'action' => 'cfopDelete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-config/ncm', ['controller' => 'FiscalConfig', 'action' => 'ncm']);
+    $routes->connect('/fiscal-config/ncm-add', ['controller' => 'FiscalConfig', 'action' => 'ncmAdd']);
+    $routes->connect('/fiscal-config/ncm-edit/*', ['controller' => 'FiscalConfig', 'action' => 'ncmEdit'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-config/ncm-delete/*', ['controller' => 'FiscalConfig', 'action' => 'ncmDelete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-relatorios', ['controller' => 'FiscalRelatorios', 'action' => 'index']);
+    $routes->connect('/fiscal-relatorios/livro-saidas', ['controller' => 'FiscalRelatorios', 'action' => 'livroSaidas']);
+    $routes->connect('/fiscal-relatorios/livro-entradas', ['controller' => 'FiscalRelatorios', 'action' => 'livroEntradas']);
+    $routes->connect('/fiscal-relatorios/resumo-mensal', ['controller' => 'FiscalRelatorios', 'action' => 'resumoMensal']);
+    $routes->connect('/fiscal-relatorios/por-cliente', ['controller' => 'FiscalRelatorios', 'action' => 'porCliente']);
+    $routes->connect('/fiscal-relatorios/por-numero-serie', ['controller' => 'FiscalRelatorios', 'action' => 'porNumeroSerie']);
     // Financeiro — dashboard e contas a receber/pagar
     $routes->connect('/financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);
@@ -269,7 +328,15 @@ Router::scope('/', function ($routes) {
             'file' => '(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons|pgm-estoque)\.css',
         ]
     );
-    // Notificações internas (equipe) — JSON; não altera APIs ERP existentes
+    // Notificações internas (equipe) — JSON. Prefixo /pgm-notifications/ evita URLs /portal/portal-notifications
+    // que alguns proxies/JS tratam com strip de /^\/portal/ e quebram em "-notifications/...".
+    $routes->connect('/pgm-notifications/unread-count', ['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
+    $routes->connect('/pgm-notifications/list', ['controller' => 'PortalNotifications', 'action' => 'listJson']);
+    $routes->connect('/pgm-notifications/mark-read/:id', ['controller' => 'PortalNotifications', 'action' => 'markRead'], ['pass' => ['id'], 'id' => '\d+'])->setMethods(['POST']);
+    $routes->connect('/pgm-notifications/mark-all-read', ['controller' => 'PortalNotifications', 'action' => 'markAllRead'])->setMethods(['POST']);
+    $routes->connect('/pgm-notifications/preferences', ['controller' => 'PortalNotifications', 'action' => 'preferences']);
+    $routes->connect('/pgm-notifications/save-preferences', ['controller' => 'PortalNotifications', 'action' => 'savePreferences'])->setMethods(['POST']);
+    // Compat: caminho antigo (integrações / bookmarks)
     $routes->connect('/portal-notifications/unread-count', ['controller' => 'PortalNotifications', 'action' => 'unreadCount']);
     $routes->connect('/portal-notifications/list', ['controller' => 'PortalNotifications', 'action' => 'listJson']);
     $routes->connect('/portal-notifications/mark-read/:id', ['controller' => 'PortalNotifications', 'action' => 'markRead'], ['pass' => ['id'], 'id' => '\d+'])->setMethods(['POST']);

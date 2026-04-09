@@ -5,7 +5,7 @@ use App\Utility\PgmAppUrlBase;
 use Cake\View\Helper;
 
 /**
- * URLs do módulo portal-notifications com App.base (/portal) quando Url->build omite o prefixo.
+ * URLs das rotas /pgm-notifications/* com App.base quando Url->build omite o prefixo.
  */
 class PgmPortalNotifHelper extends Helper {
 
