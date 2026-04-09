@@ -152,6 +152,9 @@ class RbacChecker {
 			return false;
 		}
 		$rb = Configure::read('Rbac');
+		if (is_array($rb) && !empty($rb['bypass_legacy_super'])) {
+			return true;
+		}
 		$strictMenu = is_array($rb) && !empty($rb['menu_filter_config']);
 		if (!$strictMenu) {
 			return true;
@@ -225,6 +228,11 @@ class RbacChecker {
 		if (empty($admin) || (int)$role !== 0) {
 			return true;
 		}
+		$rb = Configure::read('Rbac');
+		// Alinhado a RbacComponent::checkRequest: super-admin legado não fica sem menu por gates RBAC.
+		if (is_array($rb) && !empty($rb['bypass_legacy_super'])) {
+			return true;
+		}
 		$list = is_array($codes) ? $codes : [$codes];
 		$list = array_values(array_filter(array_map('trim', array_map('strval', $list)), static function ($c) {
 			return $c !== '';
@@ -232,7 +240,6 @@ class RbacChecker {
 		if ($list === []) {
 			return true;
 		}
-		$rb = Configure::read('Rbac');
 		if (!is_array($rb) || empty($rb['menu_filter_sidebar'])) {
 			return true;
 		}
