@@ -214,7 +214,14 @@ return [
 			'clicontratos#addapi',
 			'clicontratos#listapi',
 			// catalogoSugestoes: fora da whitelist — orcamentos.solicitar / portal.view / view (equipe passa RBAC antes do redirect)
-			// PortalNotifications: fora da whitelist — exige portal.notifications.read/write (migration 20260421140000 nos papéis padrão equipe)
+			// PortalNotifications (sino / prefs): isAuthorized restringe a equipe (role 0); dados filtrados por user_id.
+			// Fora da whitelist, RBAC enforce devolvia redirect HTML e $.getJSON falhava (sino vazio / “Indisponível”).
+			'portalnotifications#unreadcount',
+			'portalnotifications#listjson',
+			'portalnotifications#markread',
+			'portalnotifications#markallread',
+			'portalnotifications#preferences',
+			'portalnotifications#savepreferences',
 		],
 		// Em modo warn, também exibir Flash (pode ser repetitivo); env RBAC_WARN_FLASH
 		'warn_flash' => $warnFlash,

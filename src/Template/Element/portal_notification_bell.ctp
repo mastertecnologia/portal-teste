@@ -77,7 +77,12 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 	}
 
 	function refreshCount() {
-		$.getJSON(urlCount)
+		$.ajax({
+			url: urlCount,
+			dataType: 'json',
+			cache: false,
+			headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+		})
 			.done(function(d) {
 				var n = (d && typeof d.count !== 'undefined') ? parseInt(d.count, 10) : 0;
 				var $b = $('#pgmBellBadge');
@@ -102,7 +107,12 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 	function loadList() {
 		var $body = $('#pgmNotifListBody');
 		$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>');
-		$.getJSON(urlList).done(function(d) {
+		$.ajax({
+			url: urlList,
+			dataType: 'json',
+			cache: false,
+			headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+		}).done(function(d) {
 			var items = (d && d.items) ? d.items : [];
 			if (!items.length) {
 				$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Nenhuma notificação</div>');

@@ -4,7 +4,10 @@ namespace App\Service\ClienteDomain;
 use Cake\Datasource\ConnectionManager;
 
 /**
- * Verifica se as tabelas da camada portal foram migradas (ambiente sem migrate = no-op seguro).
+ * Verifica se a camada mínima de notificações internas existe (ambiente sem migrate = no-op seguro).
+ *
+ * Exige só portal_internal_notifications: o sino e a API JSON usam esta tabela. client_domain_events
+ * é opcional para gravação de histórico (ClientEventRecorder trata falhas localmente).
  */
 class InfrastructureGuard {
 
@@ -16,8 +19,7 @@ class InfrastructureGuard {
 		try {
 			$conn = ConnectionManager::get('default');
 			$tables = $conn->getSchemaCollection()->listTables();
-			$cached = in_array('portal_internal_notifications', $tables, true)
-				&& in_array('client_domain_events', $tables, true);
+			$cached = in_array('portal_internal_notifications', $tables, true);
 		} catch (\Throwable $e) {
 			$cached = false;
 		}
