@@ -352,7 +352,7 @@ export default function ClientTicketDetail({ boot }) {
         <button
           type="submit"
           disabled={enviando}
-          className="mt-2 rounded-lg bg-[var(--pgm-primary)] px-4 py-2 text-sm font-semibold text-[#0a0f14] shadow-sm hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50"
+          className="mt-2 rounded-lg bg-[var(--pgm-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50"
         >
           {enviando ? 'Enviando…' : 'Enviar comentário'}
         </button>

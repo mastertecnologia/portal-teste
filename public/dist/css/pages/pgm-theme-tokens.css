@@ -7,11 +7,12 @@
 html[data-pgm-theme="dark"],
 html:not([data-pgm-theme]) {
 	color-scheme: dark;
-	--pgm-primary: #00d9a0;
-	--pgm-primary-hover: #5cecc4;
-	--pgm-primary-muted: rgba(0, 217, 160, 0.15);
-	--pgm-secondary: #127a82;
-	--pgm-accent: #45e5ed;
+	/* Alinhado ao shell ERP (layout-sidebar-shell --pgm-teal / --pgm-teal-light) */
+	--pgm-primary: #1d9e75;
+	--pgm-primary-hover: #5cdbc0;
+	--pgm-primary-muted: rgba(29, 158, 117, 0.14);
+	--pgm-secondary: #13715a;
+	--pgm-accent: #5cdbc0;
 	--pgm-bg-page: #12151c;
 	--pgm-bg-surface: #1e2329;
 	--pgm-bg-elevated: #262c35;
@@ -31,10 +32,10 @@ html:not([data-pgm-theme]) {
 	--pgm-danger-text: #fecaca;
 	--pgm-info-bg: rgba(69, 229, 237, 0.1);
 	--pgm-info-text: #a5f3fc;
-	--pgm-focus-ring: rgba(0, 217, 160, 0.4);
-	--pgm-link: #45e5ed;
-	--pgm-topbar-gradient-start: #0a4a50;
-	--pgm-topbar-gradient-end: #0d5c63;
+	--pgm-focus-ring: rgba(29, 158, 117, 0.35);
+	--pgm-link: #5cdbc0;
+	--pgm-topbar-gradient-start: #13715a;
+	--pgm-topbar-gradient-end: #1d9e75;
 	--pgm-topbar-link: #e8fffc;
 	/* Layout system (estrutural) */
 	--pgm-sidebar-width: 220px;
@@ -58,6 +59,6 @@ html:not([data-pgm-theme]) {
 	/* ERP teal segue a primária dark para reduzir dispersão de verdes */
 	--pgm-erp-teal: var(--pgm-primary);
 	--pgm-erp-teal-hover: var(--pgm-primary-hover);
-	--pgm-erp-teal-active: #00b589;
+	--pgm-erp-teal-active: #0f6e56;
 	--pgm-erp-teal-muted: var(--pgm-primary-muted);
 }

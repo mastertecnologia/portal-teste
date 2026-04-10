@@ -108,7 +108,7 @@ export default function OperationalDashboard({ boot }) {
             type="button"
             onClick={() => load()}
             disabled={loading}
-            className="rounded-lg bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold text-[#0a0f14] hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50 dark:text-[#0a0f14] dark:hover:brightness-110"
+            className="rounded-lg bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50 dark:hover:brightness-110"
           >
             {loading ? 'Atualizando…' : 'Atualizar'}
           </button>

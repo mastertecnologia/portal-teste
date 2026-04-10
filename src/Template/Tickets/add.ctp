@@ -76,10 +76,10 @@
 		margin: 0.15rem 0 0;
 		font-size: 0.875rem;
 		font-weight: 600;
-		color: #5cecc4;
+		color: var(--pgm-primary-hover, #5cdbc0);
 		transition: color 0.15s ease;
 	}
-	.sd-add-status-value.is-ok { color: #5cecc4; }
+	.sd-add-status-value.is-ok { color: var(--pgm-primary-hover, #5cdbc0); }
 	.sd-add-status-value.is-warn { color: #d97706; }
 	.sd-add-status-value.is-muted { color: #9aa0a8; }
 	.sd-add-status-value.is-danger { color: #dc2626; }
@@ -104,9 +104,9 @@
 		min-height: 2.5rem;
 	}
 	.sd-sum-select:focus {
-		border-color: var(--pgm-primary, #00d9a0) !important;
+		border-color: var(--pgm-primary, #1d9e75) !important;
 		outline: none;
-		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(0, 217, 160, 0.4));
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(29, 158, 117, 0.35));
 	}
 	.sd-add-grid {
 		display: grid;
@@ -200,8 +200,8 @@
 	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle:focus,
 	.tickets-add-wrap .sd-add-field .bootstrap-select.show > .dropdown-toggle,
 	.tickets-add-wrap .sd-add-field .bootstrap-select.open > .dropdown-toggle {
-		border-color: var(--pgm-primary, #00d9a0) !important;
-		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(0, 217, 160, 0.4)) !important;
+		border-color: var(--pgm-primary, #1d9e75) !important;
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(29, 158, 117, 0.35)) !important;
 		outline: none !important;
 	}
 	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle .caret {
@@ -220,7 +220,7 @@
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li.selected a,
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li a:hover,
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li a:focus {
-		background: var(--pgm-primary-muted, rgba(0, 217, 160, 0.15)) !important;
+		background: var(--pgm-primary-muted, rgba(29, 158, 117, 0.14)) !important;
 		color: #e8eaed !important;
 	}
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li.disabled a,
@@ -259,7 +259,7 @@
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li.selected a,
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li a:hover,
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li a:focus {
-		background: var(--pgm-primary-muted, rgba(0, 217, 160, 0.15)) !important;
+		background: var(--pgm-primary-muted, rgba(29, 158, 117, 0.14)) !important;
 		color: #e8eaed !important;
 	}
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li.disabled a,
@@ -308,8 +308,8 @@
 		transition: border-color 0.15s ease, box-shadow 0.15s ease;
 	}
 	.ticket-add-textarea.form-control:focus {
-		border-color: var(--pgm-primary, #00d9a0);
-		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(0, 217, 160, 0.4));
+		border-color: var(--pgm-primary, #1d9e75);
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(29, 158, 117, 0.35));
 		outline: 0;
 	}
 	.sd-add-label-block {
@@ -338,11 +338,11 @@
 		transition: border-color 0.2s, background 0.2s;
 	}
 	.ticket-dropzone.ticket-dropzone--drag {
-		border-color: var(--pgm-primary, #00d9a0);
-		background: var(--pgm-primary-muted, rgba(0, 217, 160, 0.15));
+		border-color: var(--pgm-primary, #1d9e75);
+		background: var(--pgm-primary-muted, rgba(29, 158, 117, 0.14));
 	}
 	.ticket-dropzone:hover {
-		border-color: var(--pgm-primary-hover, #5cecc4);
+		border-color: var(--pgm-primary-hover, #5cdbc0);
 		background: #262c35;
 	}
 	.ticket-files-chosen {
@@ -529,11 +529,11 @@
 		transition: filter 0.15s ease, opacity 0.15s;
 		background: linear-gradient(
 			135deg,
-			var(--pgm-primary, #00d9a0) 0%,
-			var(--pgm-erp-teal-active, #00b589) 100%
+			var(--pgm-primary, #1d9e75) 0%,
+			var(--pgm-erp-teal-active, #0f6e56) 100%
 		) !important;
-		color: #0a0f14 !important;
-		box-shadow: 0 2px 12px var(--pgm-primary-muted, rgba(0, 217, 160, 0.25));
+		color: #fff !important;
+		box-shadow: 0 2px 12px var(--pgm-primary-muted, rgba(29, 158, 117, 0.22));
 	}
 	.sd-actions-card .sd-btn-submit:hover:not(:disabled):not(.disabled) {
 		filter: brightness(1.06);

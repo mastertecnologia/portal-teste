@@ -7,11 +7,12 @@
  * No portal Cake o <html> já carrega os mesmos valores.
  */
 html[data-pgm-theme='dark'] {
-  --pgm-primary: #00d9a0;
-  --pgm-primary-hover: #5cecc4;
-  --pgm-primary-muted: rgba(0, 217, 160, 0.15);
-  --pgm-secondary: #127a82;
-  --pgm-accent: #45e5ed;
+  /* Espelho de pgm-theme-tokens — mesmo verde do shell ERP (sidebar Clientes/Produtos/OS) */
+  --pgm-primary: #1d9e75;
+  --pgm-primary-hover: #5cdbc0;
+  --pgm-primary-muted: rgba(29, 158, 117, 0.14);
+  --pgm-secondary: #13715a;
+  --pgm-accent: #5cdbc0;
   --pgm-bg-page: #12151c;
   --pgm-bg-surface: #1e2329;
   --pgm-bg-elevated: #262c35;
@@ -28,7 +29,7 @@ html[data-pgm-theme='dark'] {
   --pgm-danger-text: #fecaca;
   --pgm-info-bg: rgba(69, 229, 237, 0.1);
   --pgm-info-text: #a5f3fc;
-  --pgm-erp-teal-active: #00b589;
+  --pgm-erp-teal-active: #0f6e56;
 }
 
 /* Embed no portal Cake: células de grid/flex com min-height:auto esticam pela conversa */
@@ -89,13 +90,14 @@ html[data-pgm-theme='dark'] {
 }
 
 #tickets-react-root .tickets-react-ticket-strip a {
-  color: var(--pgm-primary, #5cecc4) !important;
+  color: var(--pgm-primary-hover, #5cdbc0) !important;
   text-decoration: none;
 }
 
 #tickets-react-root .tickets-react-ticket-strip a:hover {
-  color: var(--pgm-primary-hover, #7ef0d0) !important;
+  color: var(--pgm-primary-hover, #5cdbc0) !important;
   text-decoration: underline;
+  filter: brightness(1.12);
 }
 
 #tickets-react-root .tickets-react-ticket-strip .tickets-react-ticket-strip-muted {

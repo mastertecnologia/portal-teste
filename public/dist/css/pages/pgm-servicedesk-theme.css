@@ -15,19 +15,10 @@
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	/* Alinhado aos tokens: secundário + mistura com primária (mesma família do portal) */
-	background: linear-gradient(
-		90deg,
-		color-mix(in srgb, var(--pgm-secondary) 88%, #000) 0%,
-		color-mix(in srgb, var(--pgm-secondary) 55%, var(--pgm-primary)) 100%
-	);
+	/* Mesmo degradê do ERP (botões primários / shell — layout-sidebar-shell) */
+	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
 	color: #fff;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-}
-@supports not (background: color-mix(in srgb, red, blue)) {
-	.sd-topbar {
-		background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
-	}
 }
 .sd-topbar .sd-brand {
 	font-weight: 700;

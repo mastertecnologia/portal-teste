@@ -296,8 +296,8 @@ function TicketActionsMenu({
           aria-label={`Abrir menu de ações do ticket ${ticket.id}`}
           className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pgm-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-page)] ${
             open
-              ? 'bg-[var(--pgm-erp-teal-active)] text-[#0a0f14] ring-2 ring-[var(--pgm-primary)]/45'
-              : 'bg-[var(--pgm-primary)] text-[#0a0f14] hover:brightness-110'
+              ? 'bg-[var(--pgm-erp-teal-active)] text-white ring-2 ring-[var(--pgm-primary)]/45'
+              : 'bg-[var(--pgm-primary)] text-white hover:brightness-110'
           }`}
           onClick={(e) => {
             e.stopPropagation();
@@ -1169,7 +1169,7 @@ export default function TechDashboard({ boot }) {
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-[var(--pgm-primary)] px-4 py-2 text-sm font-semibold text-[#0a0f14] hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50 dark:text-[#0a0f14] dark:hover:brightness-110"
+                className="rounded-lg bg-[var(--pgm-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50 dark:hover:brightness-110"
                 onClick={() => submitTransfer()}
                 disabled={transferSaving}
               >
@@ -1201,7 +1201,7 @@ export default function TechDashboard({ boot }) {
             {addTicket ? (
               <a
                 href={addTicket}
-                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold leading-none text-[#0a0f14] shadow-sm hover:bg-[var(--pgm-erp-teal-active)] dark:text-[#0a0f14] dark:hover:brightness-110"
+                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)] dark:hover:brightness-110"
               >
                 Abrir ticket
               </a>
