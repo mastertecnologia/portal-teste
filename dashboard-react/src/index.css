@@ -21,6 +21,7 @@ html[data-pgm-theme='dark'] {
   --pgm-text-muted: #9aa0a8;
   --pgm-border: #3d4554;
   --pgm-border-strong: #4f5869;
+  --pgm-success: #34d399;
   --pgm-success-bg: rgba(52, 211, 153, 0.15);
   --pgm-success-text: #a7f3d0;
   --pgm-warning-bg: rgba(251, 191, 36, 0.12);
@@ -29,6 +30,8 @@ html[data-pgm-theme='dark'] {
   --pgm-danger-text: #fecaca;
   --pgm-info-bg: rgba(69, 229, 237, 0.1);
   --pgm-info-text: #a5f3fc;
+  --pgm-erp-teal: var(--pgm-primary);
+  --pgm-erp-teal-hover: #13715a;
   --pgm-erp-teal-active: #0f6e56;
 }
 
