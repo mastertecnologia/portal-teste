@@ -46,6 +46,15 @@ return [
         // Retenção sugerida (dias) para cópias em disco — uso futuro / política interna; XML em BD: fiscal_notas_xmls
         'xml_retention_days_hint' => (int)env('FISCAL_XML_RETENTION_DAYS', 365),
 
+        // SPED Fiscal (EFD-ICMS/IPI) — registro 0100: omitir_sem_dados (sem cadastro completo não gera linha) | sempre_stub (linha vazia como antes)
+        'sped' => [
+            'registro_0100_modo' => env('FISCAL_SPED_0100_MODO', 'omitir_sem_dados'),
+            // TIPO_ITEM do registro 0200 (00=revenda … 99=outras); ver Guia Prático EFD
+            'tipo_item_padrao' => env('FISCAL_SPED_TIPO_ITEM_PADRAO', '00'),
+            // Limite de linhas H010 por arquivo (evita JSON abusivo)
+            'inventario_max_itens' => min(20000, max(1, (int)env('FISCAL_SPED_INVENTARIO_MAX_ITENS', 5000))),
+        ],
+
         // E-mail fiscal: envio de DANFE + XML ao cliente
         'email' => [
             'smtp_transport' => env('FISCAL_SMTP_TRANSPORT', 'pgm'),

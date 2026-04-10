@@ -9,6 +9,7 @@ echo $this->element('Fiscal/styles');
         <h1 class="fpm-h1"><?= h($certificado->nome) ?></h1>
         <?= $this->Html->link('Lista', ['action' => 'index'], ['class' => 'btn btn-default btn-sm']) ?>
     </div>
+    <?= $this->element('Fiscal/regime_context') ?>
     <div class="fpm-card mx-3">
         <div class="fpm-row">
             <div class="fpm-field"><span class="fpm-muted">Tipo</span><div><?= h($certificado->tipo) ?></div></div>

@@ -33,9 +33,14 @@ $fiscalDfeRecebidoOrigem = $fiscalDfeRecebidoOrigem ?? null;
                 <?= $this->Html->link('DANFE', ['action' => 'danfe', $nota->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-sm', 'target' => '_blank']) ?>
                 <?= $this->Html->link('XML', ['action' => 'downloadXml', $nota->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-sm']) ?>
                 <button type="button" class="btn btn-pgm btn-sm" onclick="document.getElementById('fpm-email-panel').style.display='block'" title="Enviar DANFE + XML por e-mail"><i class="fas fa-envelope"></i> E-mail</button>
+                <?= $this->Form->postLink('<i class="fas fa-sync-alt"></i> Sincronizar ERP', ['controller' => $fpmCtrl, 'action' => 'sincronizarErp', $nota->id], [
+                    'class' => 'btn btn-pgm btn-sm', 'escape' => false, 'confirm' => 'Enviar esta nota para o ERP WebGridPGM?', 'title' => 'Sincronizar com ERP',
+                ]) ?>
             <?php endif; ?>
         </div>
     </div>
+
+    <?= $this->element('Fiscal/regime_context') ?>
 
     <?php if ($isEntrada && !empty($fiscalDfeRecebidoOrigem)) : ?>
     <div class="fpm-card mx-3 mb-2">

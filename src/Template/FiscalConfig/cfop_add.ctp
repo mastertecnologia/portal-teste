@@ -10,6 +10,7 @@ echo $this->element('Fiscal/styles');
         <h1 class="fpm-h1">Novo CFOP</h1>
         <?= $this->Html->link('Voltar', ['action' => 'cfop'], ['class' => 'btn btn-default btn-sm']) ?>
     </div>
+    <?= $this->element('Fiscal/regime_context') ?>
     <div class="px-3">
         <?= $this->Form->create($cfop) ?>
         <div class="fpm-card">

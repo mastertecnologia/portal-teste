@@ -15,6 +15,8 @@ $configFiscal = $configFiscal ?? null;
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <div class="fpm-card mx-3">
         <div class="fpm-card-title">Modo Atual</div>
         <?php if ($modoAtual === null): ?>

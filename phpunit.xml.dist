@@ -43,6 +43,11 @@
             <file>tests/TestCase/Utility/FiscalProducaoGateTest.php</file>
             <file>tests/TestCase/Utility/FiscalRegimeHelperTest.php</file>
             <file>tests/TestCase/Utility/FiscalResNfeImportParserTest.php</file>
+            <file>tests/TestCase/Utility/FiscalSpedGeneratorBloco9Test.php</file>
+            <file>tests/TestCase/Utility/FiscalSpedGeneratorEncerramentoTest.php</file>
+            <file>tests/TestCase/Utility/FiscalSpedGenerator0100Test.php</file>
+            <file>tests/TestCase/Utility/FiscalSpedGeneratorBlocoHTest.php</file>
+            <file>tests/TestCase/Utility/FiscalSpedGeneratorBlocoCTest.php</file>
             <file>tests/TestCase/Utility/FiscalValidatorEmitenteTest.php</file>
             <file>tests/TestCase/Utility/FiscalValidatorNfseTest.php</file>
             <file>tests/TestCase/Utility/FiscalXmlBuilderManifestacaoTest.php</file>

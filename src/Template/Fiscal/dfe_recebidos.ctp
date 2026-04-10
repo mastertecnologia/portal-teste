@@ -18,6 +18,8 @@ if ($chaveFiltro !== '') {
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <p class="fpm-muted mx-3 mb-2">
         Documentos extraídos automaticamente após consultas bem-sucedidas à <strong>Distribuição DF-e</strong> (AN).
         Em documentos pendentes do tipo <strong>resNFe</strong> ou <strong>nfeProc</strong>, pode gerar um <strong>rascunho de nota de entrada</strong> quando o XML incluir o corpo da NF-e (<code>infNFe</code> com itens).

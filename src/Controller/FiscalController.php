@@ -23,6 +23,8 @@ use Cake\Log\Log;
  */
 class FiscalController extends AppController {
 
+    use FiscalRegimeViewTrait;
+
     public function initialize() {
         parent::initialize();
         $this->loadModel('FiscalNotas');
@@ -243,14 +245,11 @@ class FiscalController extends AppController {
         } catch (\Exception $e) {
         }
 
-        if ($configFiscal && (int)($configFiscal->get('regime_tributario') ?? 0) === 3) {
-            $enq = $configFiscal->get('regime_normal_enquadramento');
-            if (!in_array((int)$enq, [1, 2], true)) {
-                $items[] = [
-                    'level' => 'warn',
-                    'message' => 'Regime Normal (CRT 3) sem enquadramento Lucro presumido / Lucro real — preencha em Configuração fiscal para PIS/COFINS de referência corretos.',
-                ];
-            }
+        if ($configFiscal && !FiscalRegimeHelper::empresaRegimeNormalProntaParaNfe($configFiscal->toArray())) {
+            $items[] = [
+                'level' => 'warn',
+                'message' => FiscalRegimeHelper::mensagemChecklistHomologacaoRegimeNormalIncompleto(),
+            ];
         }
 
         if (FiscalRegimeHelper::reformaTributariaEstudoIbscbsAtivo()) {

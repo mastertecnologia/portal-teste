@@ -9,6 +9,7 @@ echo $this->element('Fiscal/styles');
         <h1 class="fpm-h1"><i class="fas fa-chart-bar"></i>Relatórios fiscais</h1>
         <?= $this->Html->link('Voltar', ['controller' => 'Fiscal', 'action' => 'index'], ['class' => 'btn btn-default btn-sm']) ?>
     </div>
+    <?= $this->element('Fiscal/regime_context') ?>
     <div class="fpm-nav-cards">
         <?= $this->Html->link('<i class="fas fa-arrow-up"></i>Livro de saídas', ['action' => 'livroSaidas'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
         <?= $this->Html->link('<i class="fas fa-arrow-down"></i>Livro de entradas', ['action' => 'livroEntradas'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>

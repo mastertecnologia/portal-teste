@@ -13,6 +13,8 @@ $resultados = $resultados ?? [];
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <div class="fpm-card mx-3">
         <p class="fpm-muted">
             Selecione arquivos XML de NF-e (nfeProc ou infNFe) para criar rascunhos de notas de entrada automaticamente.

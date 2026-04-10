@@ -14,6 +14,8 @@ $this->Paginator->options(['url' => ['?' => $this->request->getQueryParams()]]);
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <?= $this->Form->create(null, ['type' => 'get', 'class' => 'fpm-filters']) ?>
     <div>
         <label>Número de série</label>

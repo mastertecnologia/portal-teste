@@ -16,6 +16,8 @@ $ambOpts = [1 => 'Produção', 2 => 'Homologação'];
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <div class="px-3">
     <?= $this->Form->create($config) ?>
     <div class="fpm-card">
@@ -32,7 +34,7 @@ $ambOpts = [1 => 'Produção', 2 => 'Homologação'];
                     'class' => 'form-control',
                     'empty' => false,
                 ]) ?>
-                <small class="text-muted d-block mt-1">Define alíquotas PIS/COFINS de referência quando não há linha em Alíquotas. CST e bases continuam por operação.</small>
+                <small class="fpm-muted d-block mt-1">Define alíquotas PIS/COFINS de referência quando não há linha em Alíquotas. CST e bases continuam por operação.</small>
             </div>
             <div class="fpm-field">
                 <?= $this->Form->control('ambiente', ['type' => 'select', 'options' => $ambOpts, 'label' => 'Ambiente SEFAZ', 'class' => 'form-control']) ?>
@@ -72,6 +74,88 @@ $ambOpts = [1 => 'Produção', 2 => 'Homologação'];
         <div class="fpm-row">
             <div class="fpm-field" style="max-width:200px;"><?= $this->Form->control('aliquota_simples', ['label' => 'Alíquota Simples (%)', 'class' => 'form-control']) ?></div>
         </div>
+    </div>
+
+    <div class="fpm-card">
+        <div class="fpm-card-title">SPED Fiscal — contabilista (registro 0100)</div>
+        <p class="fpm-muted small mb-2">Usado na exportação EFD-ICMS/IPI. Com todos os campos obrigatórios preenchidos, o arquivo inclui a linha 0100; caso contrário, a linha é omitida (exceto se <code>FISCAL_SPED_0100_MODO=sempre_stub</code> no ambiente).</p>
+        <div class="fpm-row">
+            <div class="fpm-field"><?= $this->Form->control('sped_contabilista_nome', ['label' => 'Nome do contabilista', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:160px;"><?= $this->Form->control('sped_contabilista_cpf', ['label' => 'CPF (11 dígitos)', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:200px;"><?= $this->Form->control('sped_contabilista_crc', ['label' => 'CRC', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:180px;"><?= $this->Form->control('sped_contabilista_cnpj', ['label' => 'CNPJ escritório (opc.)', 'class' => 'form-control']) ?></div>
+        </div>
+        <div class="fpm-row">
+            <div class="fpm-field" style="max-width:140px;"><?= $this->Form->control('sped_contabilista_cep', ['label' => 'CEP (opc.)', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field"><?= $this->Form->control('sped_contabilista_logradouro', ['label' => 'Logradouro (opc.)', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:120px;"><?= $this->Form->control('sped_contabilista_numero', ['label' => 'Nº', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field"><?= $this->Form->control('sped_contabilista_complemento', ['label' => 'Complemento', 'class' => 'form-control']) ?></div>
+        </div>
+        <div class="fpm-row">
+            <div class="fpm-field"><?= $this->Form->control('sped_contabilista_bairro', ['label' => 'Bairro (opc.)', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:160px;"><?= $this->Form->control('sped_contabilista_fone', ['label' => 'Telefone (opc.)', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:160px;"><?= $this->Form->control('sped_contabilista_fax', ['label' => 'Fax (opc.)', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field"><?= $this->Form->control('sped_contabilista_email', ['label' => 'E-mail', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:140px;"><?= $this->Form->control('sped_contabilista_cod_municipio', ['label' => 'Município IBGE (7)', 'class' => 'form-control']) ?></div>
+        </div>
+    </div>
+
+    <div class="fpm-card">
+        <div class="fpm-card-title">SPED Fiscal — inventário (bloco H)</div>
+        <p class="fpm-muted small mb-2">Se ativado, o arquivo inclui <strong>H001=0</strong>, <strong>H005</strong> e linhas <strong>H010</strong> (conforme JSON). Caso contrário permanece <strong>H001=1</strong> (sem movimento). Valide no PVA e alinhe <code>COD_ITEM</code> ao registro 0200 quando aplicável.</p>
+        <div class="fpm-row">
+            <div class="fpm-field" style="max-width:220px;">
+                <?= $this->Form->control('sped_inventario_declarar', [
+                    'type' => 'checkbox',
+                    'label' => 'Declarar inventário neste leiaute',
+                ]) ?>
+            </div>
+            <div class="fpm-field" style="max-width:200px;"><?= $this->Form->control('sped_inventario_dt_inv', ['type' => 'date', 'label' => 'Data do inventário', 'class' => 'form-control']) ?></div>
+            <div class="fpm-field" style="max-width:320px;">
+                <?= $this->Form->control('sped_inventario_mot_inv', [
+                    'type' => 'select',
+                    'options' => [
+                        '' => '—',
+                        '01' => '01 — Final do período',
+                        '02' => '02 — Mudança de tributação',
+                        '03' => '03',
+                        '04' => '04',
+                        '05' => '05',
+                        '06' => '06 — ST / restituição (legislação)',
+                    ],
+                    'label' => 'MOT_INV (H005)',
+                    'class' => 'form-control',
+                ]) ?>
+            </div>
+        </div>
+        <div class="fpm-row">
+            <div class="fpm-field" style="flex:1;min-width:280px;">
+                <?= $this->Form->control('sped_inventario_itens_json', [
+                    'type' => 'textarea',
+                    'label' => 'Itens (JSON)',
+                    'class' => 'form-control font-monospace',
+                    'rows' => 6,
+                    'placeholder' => '[{"cod_item":"SKU1","unid":"UN","qtd":10,"vl_unit":5.5,"ind_prop":"0"}]',
+                ]) ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="fpm-card">
+        <div class="fpm-card-title">SPED Fiscal — apuração ICMS (E111)</div>
+        <p class="fpm-muted small mb-2">Opcional: discriminar ajustes da apuração (registro <strong>E111</strong>) e lançar valores nos campos correspondentes do <strong>E110</strong>. Use códigos válidos na tabela de ajustes da UF (3.º caractere = 0 para ICMS próprio). Valide no PVA.</p>
+        <div class="fpm-row">
+            <div class="fpm-field" style="flex:1;min-width:280px;">
+                <?= $this->Form->control('sped_e111_ajustes_json', [
+                    'type' => 'textarea',
+                    'label' => 'Ajustes (JSON)',
+                    'class' => 'form-control font-monospace',
+                    'rows' => 5,
+                    'placeholder' => '[{"cod_aj_apur":"SP000001","descr_compl_aj":"","vl_aj_apur":100.5,"e110_campo":"VL_TOT_AJ_DEBITOS"}]',
+                ]) ?>
+            </div>
+        </div>
+        <p class="fpm-muted small mb-0"><code>e110_campo</code>: VL_AJ_DEBITOS, VL_TOT_AJ_DEBITOS, VL_ESTORNOS_CRED, VL_AJ_CREDITOS, VL_TOT_AJ_CREDITOS, VL_ESTORNOS_DEB, VL_TOT_DED, DEB_ESP</p>
     </div>
 
     <div class="fpm-card">

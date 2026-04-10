@@ -10,6 +10,7 @@ echo $this->element('Fiscal/styles');
         <h1 class="fpm-h1"><i class="fas fa-barcode"></i>Relatório por número de série</h1>
         <?= $this->Html->link('Voltar', ['action' => 'index'], ['class' => 'btn btn-default btn-sm']) ?>
     </div>
+    <?= $this->element('Fiscal/regime_context') ?>
 
     <?= $this->Form->create(null, ['type' => 'get', 'class' => 'fpm-filters']) ?>
     <div style="flex:1;min-width:220px;">

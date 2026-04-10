@@ -303,6 +303,8 @@
 					$fiscalRelAct = ($ctrl === 'FiscalRelatorios');
 					$fiscalConsultaChaveAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarChave');
 					$fiscalConsultaCadastroAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarCadastro');
+					$fiscalContingenciaAct = ($ctrl === 'Fiscal' && $act === 'contingencia');
+					$fiscalImportarXmlAct = ($ctrl === 'Fiscal' && $act === 'importarXmlLote');
 				?>
 				<li class="pgm-ng <?= h($fiscalModuleActive) ?> <?= $fiscalOpen ? 'open' : '' ?>">
 					<div class="pgm-np <?= $fiscalOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $fiscalOpen ? 'true' : 'false' ?>">
@@ -381,6 +383,20 @@
 							'<span class="pgm-ndot"></span><span>Consulta cadastral</span>',
 							['controller' => 'FiscalNotas', 'action' => 'consultarCadastro'],
 							['class' => 'pgm-nch ' . ($fiscalConsultaCadastroAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Consultar cadastro CNPJ/IE na SEFAZ']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_contingencia'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Contingência</span>',
+							['controller' => 'Fiscal', 'action' => 'contingencia'],
+							['class' => 'pgm-nch ' . ($fiscalContingenciaAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Gerenciar modo de contingência SEFAZ']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_importar_xml'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Importar XMLs</span>',
+							['controller' => 'Fiscal', 'action' => 'importarXmlLote'],
+							['class' => 'pgm-nch ' . ($fiscalImportarXmlAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Importar XMLs de NF-e em lote']
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_certificados'] ?? true)) : ?>

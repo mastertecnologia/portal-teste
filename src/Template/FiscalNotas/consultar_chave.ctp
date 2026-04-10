@@ -17,6 +17,8 @@ $chaveInput = $chaveInput ?? '';
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <div class="fpm-card mx-3">
         <?= $this->Form->create(null, ['url' => ['controller' => $fpmCtrl, 'action' => 'consultarChave']]) ?>
         <div class="fpm-row">

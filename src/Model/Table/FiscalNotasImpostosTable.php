@@ -19,7 +19,7 @@ class FiscalNotasImpostosTable extends Table {
     public function validationDefault(Validator $validator) {
         return $validator
             ->notEmpty('imposto', 'Tipo de imposto é obrigatório')
-            ->inList('imposto', ['ICMS', 'ICMS_ST', 'IPI', 'PIS', 'COFINS', 'ISS', 'IRPJ', 'CSLL', 'II', 'DIFAL'])
+            ->inList('imposto', ['ICMS', 'ICMS_ST', 'FCP', 'FCP_ST', 'IPI', 'PIS', 'COFINS', 'ISS', 'IRPJ', 'CSLL', 'II', 'DIFAL'])
             ->decimal('base_calculo')
             ->decimal('aliquota')
             ->decimal('valor');

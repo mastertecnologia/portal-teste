@@ -9,6 +9,7 @@ echo $this->element('Fiscal/styles');
         <h1 class="fpm-h1">Editar alíquota</h1>
         <?= $this->Html->link('Voltar', ['action' => 'aliquotas'], ['class' => 'btn btn-default btn-sm']) ?>
     </div>
+    <?= $this->element('Fiscal/regime_context') ?>
     <div class="px-3">
         <?= $this->Form->create($aliquota) ?>
         <div class="fpm-card">

@@ -37,6 +37,8 @@ if ((int)($dfeFc['vinculado'] ?? 0) > 0) {
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <?php if (!empty($fiscalHomologacaoChecklist)) : ?>
     <div class="fpm-homolog-wrap">
         <?php foreach ($fiscalHomologacaoChecklist as $item) :

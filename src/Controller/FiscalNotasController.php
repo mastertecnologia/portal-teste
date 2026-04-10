@@ -25,6 +25,8 @@ use Cake\Log\Log;
  */
 class FiscalNotasController extends AppController {
 
+    use FiscalRegimeViewTrait;
+
     /** @var int 1 = saída (padrão), 0 = entrada */
     protected $tipoOperacaoPadrao = 1;
 
@@ -1368,20 +1370,10 @@ class FiscalNotasController extends AppController {
 
         $configFiscal = $this->FiscalEmpresasConfig->getOrCreate($idempresa);
         $regime = (int)($configFiscal->regime_tributario ?? 3);
-        $regimesMap = Configure::read('Fiscal.regimes') ?: [];
-        $fiscalRegimeLabel = $regimesMap[$regime] ?? ('Regime #' . $regime);
-        $enqRaw = $configFiscal->regime_normal_enquadramento;
-        $fiscalConfigRegimeIncomplete = ($regime === 3 && !in_array((int)$enqRaw, [1, 2], true));
-        $enqMap = Configure::read('Fiscal.regime_normal_enquadramento') ?: [];
-        $fiscalRegimeNormalEnquadLabel = null;
-        if ($regime === 3 && !$fiscalConfigRegimeIncomplete) {
-            $fiscalRegimeNormalEnquadLabel = $enqMap[(int)$enqRaw] ?? null;
-        }
-
         $this->set(compact(
             'clientes', 'naturezas', 'modelos', 'formasPagamento', 'bandeirasCartao',
             'origens', 'cstIcms', 'csosn', 'cstPisCofins', 'cstIpi', 'configFiscal', 'regime',
-            'cfopListTipo', 'fiscalRegimeLabel', 'fiscalConfigRegimeIncomplete', 'fiscalRegimeNormalEnquadLabel'
+            'cfopListTipo'
         ));
     }
 

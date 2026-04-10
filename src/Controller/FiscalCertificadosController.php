@@ -13,6 +13,8 @@ use Cake\Event\Event;
  */
 class FiscalCertificadosController extends AppController {
 
+    use FiscalRegimeViewTrait;
+
     public function initialize() {
         parent::initialize();
         $this->loadModel('FiscalCertificados');

@@ -54,7 +54,35 @@ class FiscalEmpresasConfigTable extends Table {
             ->allowEmpty('cnae_fiscal')
             ->maxLength('uf', 2)
             ->allowEmpty('dfe_ult_nsu')
-            ->maxLength('dfe_ult_nsu', 15);
+            ->maxLength('dfe_ult_nsu', 15)
+            ->allowEmpty('sped_contabilista_nome')
+            ->allowEmpty('sped_contabilista_cpf')
+            ->allowEmpty('sped_contabilista_crc')
+            ->allowEmpty('sped_contabilista_cnpj')
+            ->allowEmpty('sped_contabilista_cep')
+            ->allowEmpty('sped_contabilista_logradouro')
+            ->allowEmpty('sped_contabilista_numero')
+            ->allowEmpty('sped_contabilista_complemento')
+            ->allowEmpty('sped_contabilista_bairro')
+            ->allowEmpty('sped_contabilista_fone')
+            ->allowEmpty('sped_contabilista_fax')
+            ->allowEmpty('sped_contabilista_email')
+            ->allowEmpty('sped_contabilista_cod_municipio')
+            ->allowEmpty('sped_inventario_dt_inv')
+            ->allowEmpty('sped_inventario_mot_inv')
+            ->allowEmpty('sped_inventario_itens_json')
+            ->allowEmpty('sped_e111_ajustes_json')
+            ->add('sped_inventario_mot_inv', 'motInvSped', [
+                'rule' => function ($value, $context) {
+                    if ($value === null || $value === '') {
+                        return true;
+                    }
+                    $v = str_pad(preg_replace('/\D/', '', (string)$value), 2, '0', STR_PAD_LEFT);
+
+                    return in_array($v, ['01', '02', '03', '04', '05', '06'], true);
+                },
+                'message' => 'MOT_INV deve ser 01 a 06 (SPED).',
+            ]);
     }
 
     /**

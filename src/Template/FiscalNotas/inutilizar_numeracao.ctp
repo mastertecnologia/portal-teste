@@ -26,6 +26,8 @@ $modelos = $modelos ?? [];
         </div>
     </div>
 
+    <?= $this->element('Fiscal/regime_context') ?>
+
     <div class="fpm-card mx-3">
         <?php if (!empty($empresa)) : ?>
         <p class="mb-2"><span class="fpm-muted">Emitente</span> <?= h($empresa->razaosocial ?? $empresa->nomefantasia ?? '—') ?></p>

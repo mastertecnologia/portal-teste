@@ -12,6 +12,8 @@ use Cake\Event\Event;
  */
 class FiscalConfigController extends AppController {
 
+    use FiscalRegimeViewTrait;
+
     public function initialize() {
         parent::initialize();
         $this->loadModel('FiscalEmpresasConfig');

@@ -35,6 +35,57 @@ class FiscalRegimeHelper {
     }
 
     /**
+     * Regime normal (CRT 3) com Lucro presumido ou Lucro real definidos na configuração.
+     */
+    public static function empresaRegimeNormalProntaParaNfe(array $configEmpresa): bool {
+        $rt = (int)($configEmpresa['regime_tributario'] ?? 0);
+        if ($rt !== 3) {
+            return true;
+        }
+        $enq = $configEmpresa['regime_normal_enquadramento'] ?? null;
+
+        return in_array((int)$enq, [self::ENQUADRAMENTO_PRESUMIDO, self::ENQUADRAMENTO_REAL], true);
+    }
+
+    /**
+     * Variáveis para o elemento Template/Element/Fiscal/regime_context.ctp.
+     *
+     * @return array{fiscalRegimeLabel: string, fiscalConfigRegimeIncomplete: bool, fiscalRegimeNormalEnquadLabel: string|null}
+     */
+    public static function viewContextFromEmpresaConfig(array $configEmpresa): array {
+        $regime = (int)($configEmpresa['regime_tributario'] ?? 3);
+        $regimesMap = Configure::read('Fiscal.regimes') ?: [];
+        $fiscalRegimeLabel = $regimesMap[$regime] ?? ('Regime #' . $regime);
+        $enqRaw = $configEmpresa['regime_normal_enquadramento'] ?? null;
+        $fiscalConfigRegimeIncomplete = ($regime === 3 && !self::empresaRegimeNormalProntaParaNfe($configEmpresa));
+        $enqMap = Configure::read('Fiscal.regime_normal_enquadramento') ?: [];
+        $fiscalRegimeNormalEnquadLabel = null;
+        if ($regime === 3 && !$fiscalConfigRegimeIncomplete) {
+            $fiscalRegimeNormalEnquadLabel = $enqMap[(int)$enqRaw] ?? null;
+        }
+
+        return compact(
+            'fiscalRegimeLabel',
+            'fiscalConfigRegimeIncomplete',
+            'fiscalRegimeNormalEnquadLabel'
+        );
+    }
+
+    /**
+     * Texto do checklist de homologação (painel fiscal) quando CRT 3 sem enquadramento.
+     */
+    public static function mensagemChecklistHomologacaoRegimeNormalIncompleto(): string {
+        return 'Regime Normal (CRT 3) sem enquadramento Lucro presumido / Lucro real — preencha em Configuração fiscal para PIS/COFINS de referência corretos.';
+    }
+
+    /**
+     * Mensagem de validação ao emitir NF-e/NFC-e com regime normal incompleto.
+     */
+    public static function mensagemBloqueioEmissaoRegimeNormalIncompleto(): string {
+        return 'Regime Normal (CRT 3): defina Lucro presumido ou Lucro real em Configuração fiscal antes de emitir NF-e/NFC-e.';
+    }
+
+    /**
      * Flag de estudo para IBS/CBS (LC 214/2025) — não altera XML até NT/Convênio vigente.
      */
     public static function reformaTributariaEstudoIbscbsAtivo(): bool {

@@ -1,6 +1,7 @@
 <?php
 namespace App\Utility\Fiscal;
 
+use App\Utility\Fiscal\FiscalRegimeHelper;
 use App\Utility\Fiscal\Nfse\NfseEmissorResolver;
 use App\Utility\Fiscal\Nfse\NfseEmissorStub;
 
@@ -150,6 +151,11 @@ class FiscalValidator {
         }
         if (empty($config['codigo_municipio_ibge'])) {
             $erros[] = 'Código município IBGE não configurado.';
+        }
+
+        $modeloNota = strtoupper((string)($nota['modelo'] ?? ''));
+        if ($modeloNota !== 'NFSE' && !FiscalRegimeHelper::empresaRegimeNormalProntaParaNfe($config)) {
+            $erros[] = FiscalRegimeHelper::mensagemBloqueioEmissaoRegimeNormalIncompleto();
         }
 
         // Certificado

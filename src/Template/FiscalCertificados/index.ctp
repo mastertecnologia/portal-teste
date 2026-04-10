@@ -12,6 +12,7 @@ echo $this->element('Fiscal/styles');
             <?= $this->Html->link('Voltar', ['controller' => 'Fiscal', 'action' => 'index'], ['class' => 'btn btn-default btn-sm']) ?>
         </div>
     </div>
+    <?= $this->element('Fiscal/regime_context') ?>
     <div class="fpm-table-wrap">
         <?php if (empty($certificados)): ?>
             <div class="fpm-empty">Nenhum certificado cadastrado.</div>

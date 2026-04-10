@@ -29,6 +29,7 @@ class FiscalValidatorEmitenteTest extends TestCase {
             'fiscal_notas_pagamentos' => [],
         ];
         $config = [
+            'regime_tributario' => 1,
             'inscricao_estadual' => '123456789',
             'uf' => 'SP',
             'codigo_municipio_ibge' => '3550308',
@@ -73,6 +74,30 @@ class FiscalValidatorEmitenteTest extends TestCase {
         $this->assertTrue(
             (bool)array_filter($erros, function ($e) {
                 return stripos((string)$e, 'verificadores') !== false;
+            })
+        );
+    }
+
+    public function testRegimeNormalSemEnquadramentoBloqueiaNfe(): void {
+        [$nota, $config] = $this->baseNotaEConfig();
+        $config['regime_tributario'] = 3;
+        unset($config['regime_normal_enquadramento']);
+        $erros = FiscalValidator::validarNotaParaEmissao($nota, $config, ['cnpj' => '11.222.333/0001-81']);
+        $this->assertTrue(
+            (bool)array_filter($erros, function ($e) {
+                return stripos((string)$e, 'CRT 3') !== false;
+            })
+        );
+    }
+
+    public function testRegimeNormalComEnquadramentoPermiteNfe(): void {
+        [$nota, $config] = $this->baseNotaEConfig();
+        $config['regime_tributario'] = 3;
+        $config['regime_normal_enquadramento'] = 2;
+        $erros = FiscalValidator::validarNotaParaEmissao($nota, $config, ['cnpj' => '11.222.333/0001-81']);
+        $this->assertFalse(
+            (bool)array_filter($erros, function ($e) {
+                return stripos((string)$e, 'CRT 3') !== false;
             })
         );
     }
