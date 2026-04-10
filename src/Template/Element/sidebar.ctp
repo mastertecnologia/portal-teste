@@ -292,8 +292,8 @@
 					$fiscalOpen = in_array($ctrl, $fiscalCtrls, true);
 					$fiscalDashAct = ($ctrl === 'Fiscal' && $act === 'index');
 					$fiscalDfeRecAct = ($ctrl === 'Fiscal' && $act === 'dfeRecebidos');
-					$fiscalNotasAct = ($ctrl === 'FiscalNotas' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao');
-					$fiscalEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao');
+					$fiscalNotasAct = ($ctrl === 'FiscalNotas' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao' && $act !== 'consultarChave' && $act !== 'consultarCadastro');
+					$fiscalEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao' && $act !== 'consultarChave' && $act !== 'consultarCadastro');
 					$fiscalInutActSaida = ($ctrl === 'FiscalNotas' && $act === 'inutilizarNumeracao');
 					$fiscalInutActEntrada = ($ctrl === 'FiscalNotasEntrada' && $act === 'inutilizarNumeracao');
 					$fiscalSeriesSaidaAct = ($ctrl === 'FiscalNotas' && $act === 'controleSeries');
@@ -301,6 +301,8 @@
 					$fiscalCertAct = ($ctrl === 'FiscalCertificados');
 					$fiscalCfgAct = ($ctrl === 'FiscalConfig');
 					$fiscalRelAct = ($ctrl === 'FiscalRelatorios');
+					$fiscalConsultaChaveAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarChave');
+					$fiscalConsultaCadastroAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarCadastro');
 				?>
 				<li class="pgm-ng <?= h($fiscalModuleActive) ?> <?= $fiscalOpen ? 'open' : '' ?>">
 					<div class="pgm-np <?= $fiscalOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $fiscalOpen ? 'true' : 'false' ?>">
@@ -365,6 +367,20 @@
 							'<span class="pgm-ndot"></span><span>Séries (entrada)</span>',
 							['controller' => 'FiscalNotasEntrada', 'action' => 'controleSeries'],
 							['class' => 'pgm-nch ' . ($fiscalSeriesEntradaAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_consulta_chave'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Consultar chave</span>',
+							['controller' => 'FiscalNotas', 'action' => 'consultarChave'],
+							['class' => 'pgm-nch ' . ($fiscalConsultaChaveAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Consultar NF-e por chave de acesso']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_consulta_cadastro'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Consulta cadastral</span>',
+							['controller' => 'FiscalNotas', 'action' => 'consultarCadastro'],
+							['class' => 'pgm-nch ' . ($fiscalConsultaCadastroAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Consultar cadastro CNPJ/IE na SEFAZ']
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_certificados'] ?? true)) : ?>

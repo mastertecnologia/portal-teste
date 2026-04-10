@@ -35,6 +35,9 @@ bin/cake rbac_rollout unassigned_equipe
 bin/cake rbac_rollout report
 bin/cake rbac_rollout audit_purge --days 30
 
+# Fiscal — checklist “terminado” (NF-e, NFS-e, SPED, go-live): `docs/FISCAL_MODULO_CHECKLIST_TERMINADO.md`
+# NFS-e piloto GISS/Itu-SP: `docs/FISCAL_NFSE_PILOTO.md` | SPED backlog código: `docs/FISCAL_SPED_PROXIMAS_ENTREGAS.md`
+
 # Fiscal (NF-e) — manutenção
 bin/cake fiscal_maintenance purge_xmls                    # simula purge fiscal_notas_xmls (BD)
 bin/cake fiscal_maintenance purge_xmls --execute        # efetivar
@@ -47,10 +50,14 @@ bin/cake fiscal_maintenance purge_dfe_recebidos --execute
 
 # Tests
 ./vendor/bin/phpunit                          # all tests
+composer test-fiscal                          # suite fiscal (utilitários + PermissionsRegistryFiscalTest; bootstrap padrão)
+composer test-fiscal-http                     # só os 3 testes Integration HTTP fiscal (idem subset em composer test-rbac)
+composer fiscal-verify                        # test-fiscal + test-fiscal-http (smoke fiscal sem suite rbac completa)
+# Smoke local (migrate + fiscal + HTTP fiscal): bin/fiscal_dev.ps1 (Windows) ou bash bin/fiscal_dev.sh
 composer test-rbac                            # rbac + rbac-integration + rbac-http (bootstrap tests/bootstrap_http.php; URLs alinham a App.base / APP_BASE)
 composer rbac-verify-noninteractive           # alias do anterior (sem prompts)
 composer rbac-verify-with-pre-deploy          # bin/cake rbac_rollout pre_deploy (requer PostgreSQL)
-# Scripts: bin/rbac_verify_noninteractive.ps1 | .sh — idem test-rbac; RBAC_RUN_PRE_DEPLOY=1 acrescenta pre_deploy
+# Scripts: bin/rbac_verify_noninteractive.ps1 | .sh — idem test-rbac; RBAC_RUN_PRE_DEPLOY=1 acrescenta pre_deploy; fiscal: bin/fiscal_dev.ps1 | bin/fiscal_dev.sh
 # GitHub Actions: .github/workflows/rbac-phpunit.yml (push/PR nos paths do YAML ou workflow_dispatch)
 
 ./vendor/bin/phpunit tests/TestCase/Utility/  # specific directory

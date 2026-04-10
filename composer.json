@@ -51,6 +51,12 @@
         "cs-fix": "phpcbf --colors --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
         "test": "phpunit --colors=always",
         "test-rbac": "phpunit --colors=always --testsuite rbac && phpunit --colors=always --testsuite rbac-integration && phpunit --colors=always --bootstrap tests/bootstrap_http.php --testsuite rbac-http",
+        "test-fiscal": "phpunit --colors=always --testsuite fiscal",
+        "test-fiscal-http": "phpunit --colors=always --bootstrap tests/bootstrap_http.php tests/TestCase/Integration/RbacFiscalHttpTest.php tests/TestCase/Integration/RbacFiscalMoreHttpTest.php tests/TestCase/Integration/RbacFiscalNotasHttpTest.php",
+        "fiscal-verify": [
+            "@test-fiscal",
+            "@test-fiscal-http"
+        ],
         "rbac-verify-noninteractive": "@test-rbac",
         "rbac-verify-with-pre-deploy": "php bin/cake rbac_rollout pre_deploy"
     },

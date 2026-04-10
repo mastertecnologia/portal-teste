@@ -35,6 +35,20 @@
             <file>tests/TestCase/Config/PermissionsRegistryFiscalTest.php</file>
         </testsuite>
         <!-- Integração mínima ORM + SQLite em memória (pdo_sqlite); composer test-rbac corre este suite num segundo processo -->
+        <!-- Utilitários e registry fiscal (bootstrap padrão tests/bootstrap.php). HTTP fiscal: composer test-fiscal-http, bin/fiscal_dev.sh | fiscal_dev.ps1, ou suite rbac-http. -->
+        <testsuite name="fiscal">
+            <file>tests/TestCase/Config/PermissionsRegistryFiscalTest.php</file>
+            <file>tests/TestCase/Utility/FiscalCertificadoSecretTest.php</file>
+            <file>tests/TestCase/Utility/FiscalDfeDocZipSummaryTest.php</file>
+            <file>tests/TestCase/Utility/FiscalProducaoGateTest.php</file>
+            <file>tests/TestCase/Utility/FiscalRegimeHelperTest.php</file>
+            <file>tests/TestCase/Utility/FiscalResNfeImportParserTest.php</file>
+            <file>tests/TestCase/Utility/FiscalValidatorEmitenteTest.php</file>
+            <file>tests/TestCase/Utility/FiscalValidatorNfseTest.php</file>
+            <file>tests/TestCase/Utility/FiscalXmlBuilderManifestacaoTest.php</file>
+            <file>tests/TestCase/Utility/NfseEmissorResolverTest.php</file>
+            <file>tests/TestCase/Utility/NfseEmissorGinfesTest.php</file>
+        </testsuite>
         <testsuite name="rbac-integration">
             <file>tests/TestCase/Integration/RbacEffectivePermissionIdsSqliteTest.php</file>
         </testsuite>

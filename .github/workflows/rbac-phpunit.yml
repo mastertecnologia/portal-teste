@@ -11,7 +11,9 @@ on:
       - 'tests/**'
       - 'config/rbac.php'
       - 'config/abac.php'
+      - 'config/permissions_registry.php'
       - 'src/Controller/AppController.php'
+      - 'src/Template/Element/sidebar.ctp'
       - 'src/Controller/AreasController.php'
       - 'src/Controller/EmpresasusersController.php'
       - 'src/Controller/PermissoesController.php'
@@ -29,6 +31,12 @@ on:
       - 'src/Controller/ProdutosController.php'
       - 'src/Controller/VisitasController.php'
       - 'src/Controller/OrdensservicoController.php'
+      - 'src/Controller/Fiscal*.php'
+      - 'src/Utility/Fiscal/**'
+      - 'config/fiscal.php'
+      - 'config/Migrations/*Fiscal*.php'
+      - 'bin/fiscal_dev.sh'
+      - 'bin/fiscal_dev.ps1'
       - 'src/Template/Normasempresa/**'
       - 'src/Template/Prefaturamento/**'
       - 'src/Template/Bancosenhas/**'
@@ -56,7 +64,9 @@ on:
       - 'tests/**'
       - 'config/rbac.php'
       - 'config/abac.php'
+      - 'config/permissions_registry.php'
       - 'src/Controller/AppController.php'
+      - 'src/Template/Element/sidebar.ctp'
       - 'src/Controller/AreasController.php'
       - 'src/Controller/EmpresasusersController.php'
       - 'src/Controller/PermissoesController.php'
@@ -74,6 +84,12 @@ on:
       - 'src/Controller/ProdutosController.php'
       - 'src/Controller/VisitasController.php'
       - 'src/Controller/OrdensservicoController.php'
+      - 'src/Controller/Fiscal*.php'
+      - 'src/Utility/Fiscal/**'
+      - 'config/fiscal.php'
+      - 'config/Migrations/*Fiscal*.php'
+      - 'bin/fiscal_dev.sh'
+      - 'bin/fiscal_dev.ps1'
       - 'src/Template/Normasempresa/**'
       - 'src/Template/Prefaturamento/**'
       - 'src/Template/Bancosenhas/**'
@@ -127,3 +143,6 @@ jobs:
 
       - name: Run RBAC test suite
         run: composer test-rbac
+
+      - name: Run fiscal utility test suite
+        run: composer test-fiscal

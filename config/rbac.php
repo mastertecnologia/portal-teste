@@ -286,6 +286,8 @@ return [
 			'fiscal_menu_notas_entrada' => 'fiscal.notas_entrada',
 			'fiscal_menu_series_saida' => 'fiscal.notas',
 			'fiscal_menu_series_entrada' => 'fiscal.notas_entrada',
+			'fiscal_menu_consulta_chave' => 'fiscal.notas',
+			'fiscal_menu_consulta_cadastro' => 'fiscal.notas',
 			'fiscal_menu_certificados' => 'fiscal.certificados',
 			'fiscal_menu_config' => 'fiscal.config',
 			'fiscal_menu_relatorios' => 'fiscal.relatorios',

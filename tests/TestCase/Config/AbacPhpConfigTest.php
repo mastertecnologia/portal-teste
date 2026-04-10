@@ -28,7 +28,7 @@ class AbacPhpConfigTest extends TestCase {
 			$this->assertArrayHasKey($key, $tables, 'Mapa ABAC deve incluir ' . $key);
 			$this->assertArrayHasKey('empresa_column', $tables[$key]);
 		}
-		foreach (['FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalEmpresasConfig', 'FiscalNaturezaOperacao', 'FiscalAliquotas'] as $key) {
+		foreach (['FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalEmpresasConfig', 'FiscalNaturezaOperacao', 'FiscalAliquotas', 'FiscalDfeRecebidos'] as $key) {
 			$this->assertArrayHasKey($key, $tables, 'Mapa ABAC deve incluir ' . $key);
 			$this->assertArrayHasKey('empresa_column', $tables[$key]);
 		}

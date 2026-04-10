@@ -92,6 +92,10 @@ return [
 				'alias' => 'FiscalAliquotas',
 				'empresa_column' => 'idempresa',
 			],
+			'FiscalDfeRecebidos' => [
+				'alias' => 'FiscalDfeRecebidos',
+				'empresa_column' => 'idempresa',
+			],
 		],
 	],
 ];

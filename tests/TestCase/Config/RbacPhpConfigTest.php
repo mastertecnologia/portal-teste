@@ -96,5 +96,31 @@ class RbacPhpConfigTest extends AppCompatTestCase {
 		$this->assertSame('fiscal.dashboard', $cfg['menu_sidebar_gates']['fiscal_menu_dashboard']);
 		$this->assertArrayHasKey('fiscal_menu_dfe_recebidos', $cfg['menu_sidebar_gates']);
 		$this->assertSame('fiscal.dashboard', $cfg['menu_sidebar_gates']['fiscal_menu_dfe_recebidos']);
+		$this->assertArrayHasKey('fiscal_menu_consulta_chave', $cfg['menu_sidebar_gates']);
+		$this->assertSame('fiscal.notas', $cfg['menu_sidebar_gates']['fiscal_menu_consulta_chave']);
+		$this->assertArrayHasKey('fiscal_menu_consulta_cadastro', $cfg['menu_sidebar_gates']);
+		$this->assertSame('fiscal.notas', $cfg['menu_sidebar_gates']['fiscal_menu_consulta_cadastro']);
+
+		$fiscalMenuKeys = [
+			'fiscal_menu_dashboard',
+			'fiscal_menu_dfe_recebidos',
+			'fiscal_menu_notas',
+			'fiscal_menu_notas_entrada',
+			'fiscal_menu_series_saida',
+			'fiscal_menu_series_entrada',
+			'fiscal_menu_consulta_chave',
+			'fiscal_menu_consulta_cadastro',
+			'fiscal_menu_certificados',
+			'fiscal_menu_config',
+			'fiscal_menu_relatorios',
+		];
+		foreach ($fiscalMenuKeys as $fk) {
+			$this->assertArrayHasKey($fk, $cfg['menu_sidebar_gates'], 'menu_sidebar_gates deve definir ' . $fk . ' (sidebar Fiscal)');
+			$v = $cfg['menu_sidebar_gates'][$fk];
+			$this->assertTrue(
+				(is_string($v) && $v !== '') || (is_array($v) && $v !== []),
+				$fk . ' deve mapear código(s) RBAC não vazio(s)'
+			);
+		}
 	}
 }

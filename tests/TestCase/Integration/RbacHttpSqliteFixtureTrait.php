@@ -307,6 +307,10 @@ trait RbacHttpSqliteFixtureTrait {
 			// SQLite: coluna já existe em esquemas antigos
 		}
 		try {
+			$conn->execute('ALTER TABLE fiscal_empresas_config ADD COLUMN regime_normal_enquadramento INTEGER NULL');
+		} catch (\Throwable $e) {
+		}
+		try {
 			$conn->execute('CREATE TABLE IF NOT EXISTS fiscal_dfe_recebidos (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				idempresa INTEGER NOT NULL,
@@ -335,6 +339,7 @@ trait RbacHttpSqliteFixtureTrait {
 			'ALTER TABLE empresas ADD COLUMN cnpj VARCHAR(18) NULL',
 			'ALTER TABLE clientes ADD COLUMN cnpj VARCHAR(18) NULL',
 			'ALTER TABLE fiscal_empresas_config ADD COLUMN uf VARCHAR(2) NULL',
+			'ALTER TABLE fiscal_empresas_config ADD COLUMN regime_normal_enquadramento INTEGER NULL',
 			'ALTER TABLE fiscal_notas ADD COLUMN user_id INTEGER NULL',
 			'ALTER TABLE fiscal_notas ADD COLUMN chave_acesso VARCHAR(50) NULL',
 			'ALTER TABLE fiscal_notas ADD COLUMN natureza_operacao VARCHAR(255) NULL',

@@ -145,6 +145,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal/dfe-recebidos/xml/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoXml'], ['pass' => ['id']]);
     $routes->connect('/fiscal/dfe-recebidos/ignorar/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoIgnorar'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/fiscal/dfe-recebidos/criar-entrada/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoCriarEntrada'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal/dfe-recebidos/baixar-completo/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoBaixarCompleto'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal/contingencia', ['controller' => 'Fiscal', 'action' => 'contingencia']);
+    $routes->connect('/fiscal/importar-xml-lote', ['controller' => 'Fiscal', 'action' => 'importarXmlLote']);
     $routes->connect('/fiscal-notas', ['controller' => 'FiscalNotas', 'action' => 'index']);
     $routes->connect('/fiscal-notas/index', ['controller' => 'FiscalNotas', 'action' => 'index']);
     $routes->connect('/fiscal-notas/add', ['controller' => 'FiscalNotas', 'action' => 'add']);
@@ -160,6 +163,10 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-notas/download-xml/*', ['controller' => 'FiscalNotas', 'action' => 'downloadXml'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas/buscar-ncm', ['controller' => 'FiscalNotas', 'action' => 'buscarNcm'])->setMethods(['GET']);
     $routes->connect('/fiscal-notas/buscar-cfop', ['controller' => 'FiscalNotas', 'action' => 'buscarCfop'])->setMethods(['GET']);
+    $routes->connect('/fiscal-notas/enviar-email/*', ['controller' => 'FiscalNotas', 'action' => 'enviarEmail'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas/sincronizar-erp/*', ['controller' => 'FiscalNotas', 'action' => 'sincronizarErp'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas/consultar-chave', ['controller' => 'FiscalNotas', 'action' => 'consultarChave'])->setMethods(['GET', 'POST']);
+    $routes->connect('/fiscal-notas/consultar-cadastro', ['controller' => 'FiscalNotas', 'action' => 'consultarCadastro'])->setMethods(['GET', 'POST']);
     $routes->connect('/fiscal-notas/controle-series', ['controller' => 'FiscalNotas', 'action' => 'controleSeries']);
     $routes->connect('/fiscal-notas-entrada', ['controller' => 'FiscalNotasEntrada', 'action' => 'index']);
     $routes->connect('/fiscal-notas-entrada/index', ['controller' => 'FiscalNotasEntrada', 'action' => 'index']);
@@ -177,6 +184,10 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-notas-entrada/download-xml/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'downloadXml'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas-entrada/buscar-ncm', ['controller' => 'FiscalNotasEntrada', 'action' => 'buscarNcm'])->setMethods(['GET']);
     $routes->connect('/fiscal-notas-entrada/buscar-cfop', ['controller' => 'FiscalNotasEntrada', 'action' => 'buscarCfop'])->setMethods(['GET']);
+    $routes->connect('/fiscal-notas-entrada/enviar-email/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'enviarEmail'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas-entrada/sincronizar-erp/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'sincronizarErp'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas-entrada/consultar-chave', ['controller' => 'FiscalNotasEntrada', 'action' => 'consultarChave'])->setMethods(['GET', 'POST']);
+    $routes->connect('/fiscal-notas-entrada/consultar-cadastro', ['controller' => 'FiscalNotasEntrada', 'action' => 'consultarCadastro'])->setMethods(['GET', 'POST']);
     $routes->connect('/fiscal-certificados', ['controller' => 'FiscalCertificados', 'action' => 'index']);
     $routes->connect('/fiscal-certificados/add', ['controller' => 'FiscalCertificados', 'action' => 'add']);
     $routes->connect('/fiscal-certificados/view/*', ['controller' => 'FiscalCertificados', 'action' => 'view'], ['pass' => ['id']]);
@@ -205,6 +216,8 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-relatorios/resumo-mensal', ['controller' => 'FiscalRelatorios', 'action' => 'resumoMensal']);
     $routes->connect('/fiscal-relatorios/por-cliente', ['controller' => 'FiscalRelatorios', 'action' => 'porCliente']);
     $routes->connect('/fiscal-relatorios/por-numero-serie', ['controller' => 'FiscalRelatorios', 'action' => 'porNumeroSerie']);
+    $routes->connect('/fiscal-relatorios/exportar-sped', ['controller' => 'FiscalRelatorios', 'action' => 'exportarSped']);
+    $routes->connect('/fiscal-relatorios/exportar-excel', ['controller' => 'FiscalRelatorios', 'action' => 'exportarExcel']);
     // Financeiro — dashboard e contas a receber/pagar
     $routes->connect('/financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);
