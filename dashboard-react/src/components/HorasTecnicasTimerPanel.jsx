@@ -156,7 +156,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
               type="button"
               disabled={disabled || busy}
               onClick={() => runAction('finalizar')}
-              className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+              className="rounded-lg bg-[var(--pgm-primary)] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50"
             >
               Finalizar e registrar
             </button>

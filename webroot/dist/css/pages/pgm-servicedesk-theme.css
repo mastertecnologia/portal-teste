@@ -15,8 +15,8 @@
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	/* Mesmo degradê do ERP (botões primários / shell — layout-sidebar-shell) */
-	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	/* Igual à marca PGM no sidebar ERP (.pgm-sidebar-mark): 135deg, sem cinza azulado */
+	background: linear-gradient(135deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
 	color: #fff;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }

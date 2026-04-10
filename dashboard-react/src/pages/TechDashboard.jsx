@@ -188,7 +188,7 @@ function TicketActionsMenu({
 
   const toneCls = {
     default:
-      'text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus-visible:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--pgm-primary)]/45 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-primary-muted)] dark:hover:text-[var(--pgm-primary-hover)] dark:focus-visible:bg-[var(--pgm-primary-muted)] dark:focus-visible:ring-[var(--pgm-primary)]/40',
+      'text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus-visible:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--pgm-primary)]/45 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-primary-muted)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:bg-[var(--pgm-primary-muted)] dark:focus-visible:ring-[var(--pgm-primary)]/40',
     muted:
       'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 dark:text-[var(--pgm-text-muted)] dark:hover:bg-[var(--pgm-bg-elevated)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:ring-[var(--pgm-border)]',
     danger:
@@ -206,8 +206,8 @@ function TicketActionsMenu({
       className="fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65)] dark:ring-white/10"
       style={{ top: pos.top, left: pos.left }}
     >
-      <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 px-3 py-2 dark:border-[var(--pgm-border)] dark:from-[var(--pgm-primary-muted)] dark:to-[var(--pgm-bg-elevated)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-800/90 dark:text-[var(--pgm-primary-hover)]">
+      <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 px-3 py-2 dark:border-[var(--pgm-border)] dark:bg-[linear-gradient(135deg,rgba(29,158,117,0.28)_0%,rgba(19,113,90,0.72)_100%)]">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-800/90 dark:text-white/90">
           Chamado
         </p>
         <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-[var(--pgm-text)]">#{ticket.id}</p>
@@ -342,9 +342,9 @@ function techRowHighlightClass(ticket) {
       ticket.tecnicos === '');
   const parts = ['align-middle', 'transition'];
   if (label.includes('aguardando')) {
-    parts.push('bg-emerald-50/90', 'dark:bg-[var(--pgm-primary-muted)]');
+    parts.push('bg-emerald-50/90', 'dark:bg-[rgba(29,158,117,0.12)]');
   } else if (label.includes('execução') || label.includes('andamento')) {
-    parts.push('bg-teal-50/80', 'dark:bg-[var(--pgm-info-bg)]');
+    parts.push('bg-teal-50/80', 'dark:bg-[rgba(29,158,117,0.09)]');
   }
   if (semResp) {
     parts.push('ring-1', 'ring-inset', 'ring-slate-300/80', 'dark:ring-slate-600/50');
@@ -803,7 +803,7 @@ export default function TechDashboard({ boot }) {
 
       {transferOkHint ? (
         <div
-          className="border-b border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-primary-muted)] dark:text-[var(--pgm-primary-hover)]"
+          className="border-b border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-[color:rgba(29,158,117,0.45)] dark:bg-[linear-gradient(135deg,rgba(29,158,117,0.2)_0%,rgba(19,113,90,0.55)_100%)] dark:text-white/95"
           role="status"
           aria-live="polite"
         >
@@ -1216,7 +1216,7 @@ export default function TechDashboard({ boot }) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 dark:bg-[var(--pgm-bg-page)] dark:text-[var(--pgm-text)]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 bg-gradient-to-b from-[var(--pgm-secondary)] to-[var(--pgm-bg-page)] text-white lg:flex lg:flex-col">
+        <aside className="hidden w-72 shrink-0 bg-gradient-to-b from-[var(--pgm-primary)] to-[var(--pgm-secondary)] text-white lg:flex lg:flex-col">
           <div className="border-b border-white/10 px-6 py-6">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/95 text-[var(--pgm-secondary)] shadow-lg">
@@ -1253,7 +1253,7 @@ export default function TechDashboard({ boot }) {
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]/95">
             <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-sm font-medium text-[var(--pgm-primary)] dark:text-[var(--pgm-primary-hover)]">
+                <p className="text-sm font-medium text-[var(--pgm-primary)] dark:text-[var(--pgm-text-secondary)]">
                   {MOCK_SESSION_TECNICO.empresa}
                 </p>
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-[var(--pgm-text)]">

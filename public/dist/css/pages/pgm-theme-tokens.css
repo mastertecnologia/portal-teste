@@ -34,8 +34,9 @@ html:not([data-pgm-theme]) {
 	--pgm-info-text: #a5f3fc;
 	--pgm-focus-ring: rgba(29, 158, 117, 0.35);
 	--pgm-link: #5cdbc0;
-	--pgm-topbar-gradient-start: #13715a;
-	--pgm-topbar-gradient-end: #1d9e75;
+	/* Mesma direção/cores da marca .pgm-sidebar-mark (135deg #1d9e75 → #13715a) */
+	--pgm-topbar-gradient-start: #1d9e75;
+	--pgm-topbar-gradient-end: #13715a;
 	--pgm-topbar-link: #e8fffc;
 	/* Layout system (estrutural) */
 	--pgm-sidebar-width: 220px;
