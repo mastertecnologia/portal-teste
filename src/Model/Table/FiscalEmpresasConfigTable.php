@@ -72,6 +72,19 @@ class FiscalEmpresasConfigTable extends Table {
             ->allowEmpty('sped_inventario_mot_inv')
             ->allowEmpty('sped_inventario_itens_json')
             ->allowEmpty('sped_e111_ajustes_json')
+            ->allowEmpty('sped_0460_c190_json')
+            ->add('sped_inventario_itens_json', 'jsonValidoSpedInv', [
+                'rule' => [$this, 'spedJsonOpcionalValido'],
+                'message' => 'JSON inválido (SPED inventário — itens).',
+            ])
+            ->add('sped_e111_ajustes_json', 'jsonValidoSpedE111', [
+                'rule' => [$this, 'spedJsonOpcionalValido'],
+                'message' => 'JSON inválido (SPED E111).',
+            ])
+            ->add('sped_0460_c190_json', 'jsonValidoSped0460', [
+                'rule' => [$this, 'spedJsonOpcionalValido'],
+                'message' => 'JSON inválido (SPED 0460/C190).',
+            ])
             ->add('sped_inventario_mot_inv', 'motInvSped', [
                 'rule' => function ($value, $context) {
                     if ($value === null || $value === '') {
@@ -83,6 +96,29 @@ class FiscalEmpresasConfigTable extends Table {
                 },
                 'message' => 'MOT_INV deve ser 01 a 06 (SPED).',
             ]);
+    }
+
+    /**
+     * Regra de validação: campo vazio ou string JSON válida (campos SPED opcionais em textarea).
+     *
+     * @param mixed $value Valor do campo.
+     * @param array<string,mixed> $context Contexto do Validator.
+     * @return bool
+     */
+    public function spedJsonOpcionalValido($value, array $context) {
+        if ($value === null || $value === '') {
+            return true;
+        }
+        if (!is_string($value)) {
+            return false;
+        }
+        $s = trim($value);
+        if ($s === '') {
+            return true;
+        }
+        json_decode($s);
+
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**

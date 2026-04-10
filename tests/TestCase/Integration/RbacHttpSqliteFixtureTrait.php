@@ -340,6 +340,7 @@ trait RbacHttpSqliteFixtureTrait {
 			'ALTER TABLE clientes ADD COLUMN cnpj VARCHAR(18) NULL',
 			'ALTER TABLE fiscal_empresas_config ADD COLUMN uf VARCHAR(2) NULL',
 			'ALTER TABLE fiscal_empresas_config ADD COLUMN regime_normal_enquadramento INTEGER NULL',
+			'ALTER TABLE fiscal_empresas_config ADD COLUMN sped_0460_c190_json TEXT NULL',
 			'ALTER TABLE fiscal_notas ADD COLUMN user_id INTEGER NULL',
 			'ALTER TABLE fiscal_notas ADD COLUMN chave_acesso VARCHAR(50) NULL',
 			'ALTER TABLE fiscal_notas ADD COLUMN natureza_operacao VARCHAR(255) NULL',

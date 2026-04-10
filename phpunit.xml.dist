@@ -48,6 +48,7 @@
             <file>tests/TestCase/Utility/FiscalSpedGenerator0100Test.php</file>
             <file>tests/TestCase/Utility/FiscalSpedGeneratorBlocoHTest.php</file>
             <file>tests/TestCase/Utility/FiscalSpedGeneratorBlocoCTest.php</file>
+            <file>tests/TestCase/Utility/FiscalSpedGeneratorGerarSmokeTest.php</file>
             <file>tests/TestCase/Utility/FiscalValidatorEmitenteTest.php</file>
             <file>tests/TestCase/Utility/FiscalValidatorNfseTest.php</file>
             <file>tests/TestCase/Utility/FiscalXmlBuilderManifestacaoTest.php</file>

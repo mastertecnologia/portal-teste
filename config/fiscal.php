@@ -48,6 +48,8 @@ return [
 
         // SPED Fiscal (EFD-ICMS/IPI) — registro 0100: omitir_sem_dados (sem cadastro completo não gera linha) | sempre_stub (linha vazia como antes)
         'sped' => [
+            // COD_VER do registro 0000 (ex.: 015, 017) — alinhar à versão do PVA em uso
+            'cod_ver_layout' => env('FISCAL_SPED_COD_VER', '015'),
             'registro_0100_modo' => env('FISCAL_SPED_0100_MODO', 'omitir_sem_dados'),
             // TIPO_ITEM do registro 0200 (00=revenda … 99=outras); ver Guia Prático EFD
             'tipo_item_padrao' => env('FISCAL_SPED_TIPO_ITEM_PADRAO', '00'),

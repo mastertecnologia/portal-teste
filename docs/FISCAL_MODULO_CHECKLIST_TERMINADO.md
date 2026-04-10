@@ -41,16 +41,16 @@ Documento operacional para fechar **NF-e (núcleo)**, **NFS-e municipal**, **SPE
 
 ## C — SPED Fiscal (EFD-ICMS/IPI) — `FiscalSpedGenerator`
 
-Roteiro de evolução do código: [`docs/FISCAL_SPED_PROXIMAS_ENTREGAS.md`](FISCAL_SPED_PROXIMAS_ENTREGAS.md).
+Roteiro de código: [`docs/FISCAL_SPED_PROXIMAS_ENTREGAS.md`](FISCAL_SPED_PROXIMAS_ENTREGAS.md) (**escopo de implementação encerrado**; segue só validação operacional no PVA).
 
-1. **Versão do layout** — confirmar `COD_VER` (ex. 015 vs exigência vigente do PVA).
-2. **Bloco 0** — `0100` contabilista hoje é stub; preencher com dados reais ou omitir conforme regra do perfil.
-3. **Bloco C** — revisar `C100`/itens vs operação de vocês (CFOP, CST, entradas/saídas, NFC-e).
-4. **Bloco E** — `E110` hoje agrega de forma simplificada; validar com apuração e ajustes (créditos, ST, diferimento).
-5. **Bloco H** — hoje `H001=1` (sem inventário); se obrigatório, implementar `H005`/`H010` (e movimentação física).
-6. **Bloco 9** — conferir contagem de registros e linhas (`9900`, `9990`, `9999`) com o PVA (há simplificações no gerador).
-7. **Validação oficial** — importar no Programa Validador e corrigir até “sem erro” (ou aceitar pendências documentadas).
-8. **Processo contábil** — responsável técnico assina entrega; integração com escrituração.
+1. **Versão do layout** — confirmar `COD_VER` (`FISCAL_SPED_COD_VER` / `config/fiscal.php`) face ao PVA instalado.
+2. **Bloco 0** — cadastro + `0100` opcional (dados do contabilista em config fiscal ou modo `sempre_stub` por env).
+3. **Blocos estruturais** — `B`/`D`/`G`/`K`/`1` com abertura+encerramento sem movimento; **H** com inventário opcional (config fiscal).
+4. **Bloco C** — validar negócio real (CFOP, CST, entradas/saídas, NFC-e, totais) contra operação da empresa.
+5. **Bloco E** — `E110`/`E111` (ajustes JSON); confrontar com apuração do contador.
+6. **Bloco 9** — contagens `9900`/`9990`/`9999` geradas por soma das linhas; conferir no PVA após importação.
+7. **Validação oficial** — importar o `.txt` no PVA e corrigir até “sem erro” (ou documentar pendências aceites).
+8. **Processo contábil** — assinatura e entrega pelo responsável técnico; integração com escrituração contábil.
 
 ---
 

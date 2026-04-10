@@ -48,6 +48,7 @@ class FiscalEmpresasConfig extends Entity {
         'sped_inventario_mot_inv' => true,
         'sped_inventario_itens_json' => true,
         'sped_e111_ajustes_json' => true,
+        'sped_0460_c190_json' => true,
         'created' => true,
         'modified' => true,
         'empresa' => true,

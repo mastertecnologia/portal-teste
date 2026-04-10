@@ -11,6 +11,7 @@ class FiscalSpedGenerator0100Test extends TestCase {
 
     public function tearDown(): void {
         Configure::delete('Fiscal.sped.registro_0100_modo');
+        Configure::delete('Fiscal.sped.cod_ver_layout');
         parent::tearDown();
     }
 
@@ -29,6 +30,24 @@ class FiscalSpedGenerator0100Test extends TestCase {
         $this->assertArrayHasKey('0100', $regs);
         $parts = explode('|', $regs['0100']);
         $this->assertSame('', $parts[2] ?? 'x', 'primeiro campo NOME vazio no stub');
+    }
+
+    public function test0000RespeitaCodVerLayout(): void {
+        Configure::write('Fiscal.sped.cod_ver_layout', '016');
+        $gen = $this->criarGerador([]);
+        $this->invocarBloco0($gen);
+        $regs = $this->registrosPorLinha($this->linhasDo($gen));
+        $parts = explode('|', $regs['0000']);
+        $this->assertSame('016', $parts[2] ?? '', 'COD_VER no registro 0000');
+    }
+
+    public function test0000CodVerInvalidoUsa015(): void {
+        Configure::write('Fiscal.sped.cod_ver_layout', 'bad');
+        $gen = $this->criarGerador([]);
+        $this->invocarBloco0($gen);
+        $regs = $this->registrosPorLinha($this->linhasDo($gen));
+        $parts = explode('|', $regs['0000']);
+        $this->assertSame('015', $parts[2] ?? '');
     }
 
     public function testCadastroCompleto(): void {

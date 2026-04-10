@@ -76,6 +76,13 @@ $ambOpts = [1 => 'Produção', 2 => 'Homologação'];
         </div>
     </div>
 
+    <p class="fpm-muted small mb-3" style="padding:10px 14px;border-radius:8px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.22);">
+        <i class="fas fa-file-download" style="color:#58a6ff;margin-right:6px;"></i>
+        <strong>Exportação SPED</strong> — gerar o arquivo .txt em
+        <?= $this->Html->link('Relatórios fiscais', ['controller' => 'FiscalRelatorios', 'action' => 'index'], ['style' => 'color:#58a6ff;font-weight:600;']) ?>
+        (mês de referência → Baixar .txt). Os blocos abaixo alimentam registros opcionais do mesmo leiaute.
+    </p>
+
     <div class="fpm-card">
         <div class="fpm-card-title">SPED Fiscal — contabilista (registro 0100)</div>
         <p class="fpm-muted small mb-2">Usado na exportação EFD-ICMS/IPI. Com todos os campos obrigatórios preenchidos, o arquivo inclui a linha 0100; caso contrário, a linha é omitida (exceto se <code>FISCAL_SPED_0100_MODO=sempre_stub</code> no ambiente).</p>
@@ -156,6 +163,22 @@ $ambOpts = [1 => 'Produção', 2 => 'Homologação'];
             </div>
         </div>
         <p class="fpm-muted small mb-0"><code>e110_campo</code>: VL_AJ_DEBITOS, VL_TOT_AJ_DEBITOS, VL_ESTORNOS_CRED, VL_AJ_CREDITOS, VL_TOT_AJ_CREDITOS, VL_ESTORNOS_DEB, VL_TOT_DED, DEB_ESP</p>
+    </div>
+
+    <div class="fpm-card">
+        <div class="fpm-card-title">SPED Fiscal — observações C190 (0460)</div>
+        <p class="fpm-muted small mb-2">Opcional: quando a UF exige <strong>COD_OBS</strong> no registro <strong>C190</strong>, cadastre a tabela <strong>0460</strong> e vínculos por CST + CFOP + alíquota ICMS (mesma chave usada no agrupamento do arquivo). Só use códigos previstos na legislação da UF.</p>
+        <div class="fpm-row">
+            <div class="fpm-field" style="flex:1;min-width:280px;">
+                <?= $this->Form->control('sped_0460_c190_json', [
+                    'type' => 'textarea',
+                    'label' => '0460 + vínculos C190 (JSON)',
+                    'class' => 'form-control font-monospace',
+                    'rows' => 6,
+                    'placeholder' => '{"observacoes":[{"cod_obs":"UF0001","txt":"Fundamento legal…"}],"c190":[{"cst":"000","cfop":"5102","aliq_icms":18,"cod_obs":"UF0001"}]}',
+                ]) ?>
+            </div>
+        </div>
     </div>
 
     <div class="fpm-card">

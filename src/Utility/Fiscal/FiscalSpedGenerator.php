@@ -8,11 +8,13 @@ use Cake\ORM\TableRegistry;
  * Gerador de arquivo SPED Fiscal (EFD-ICMS/IPI) — Registros básicos.
  *
  * Gera o arquivo texto no layout definido pelo Guia Prático EFD-ICMS/IPI.
- * Blocos implementados: 0 (0150, 0190, 0200, 0400, 0450), C (C100/C110/C170/C190), E (E100/E110/E111), H, 9.
- * Encerramentos 0990/C990/E990/H990 com QTD_LIN do bloco; bloco 9 com 9900/9990/9999 por contagem real das linhas.
+ * Blocos implementados: 0 (0150…0460), B/D/G/K/1 (abertura+encerramento sem movimento), C (C100/C110/C170/C190), E (E100/E110/E111), H, 9.
+ * Encerramentos 0990/C990/E990/H990/K990 com QTD_LIN do bloco; bloco 9 com 9900/9990/9999 por contagem real das linhas.
+ * Registro 0000: COD_VER via Fiscal.sped.cod_ver_layout / FISCAL_SPED_COD_VER (3 dígitos; padrão 015).
  * Registro 0100: dados em fiscal_empresas_config (sped_contabilista_*) e Fiscal.sped.registro_0100_modo (omitir_sem_dados | sempre_stub).
  * Bloco H: H001=1 sem inventário; com sped_inventario_declarar + data + MOT_INV + JSON de itens válido → H001=0, H005, H010(s).
- * Bloco C: C100 + C110 (NF-e 55 com informações complementares → 0450); C170 (COD_NAT → 0400) / C190; COD_ITEM no 0200; 0150/COD_PART (exceto 65);
+ * Bloco K: K001/K990 sem movimento (K001 IND_MOV=1) quando não há RCPE; registros K010/K100/… ficam fora até necessidade explícita.
+ * Bloco C: C100 + C110 (NF-e 55 → 0450); C170 (COD_NAT → 0400) / C190 (COD_OBS → 0460, opcional via sped_0460_c190_json); COD_ITEM no 0200; 0150/COD_PART (exceto 65);
  *   NFC-e (65) dispensa ST/IPI/PIS/COFINS no mestre C100; C190 agrupa CST/CFOP/alíquota com VL_OPR coerente aos itens.
  *
  * NOTA: O SPED Fiscal tem centenas de registros. Esta implementação cobre os registros
@@ -34,7 +36,7 @@ class FiscalSpedGenerator {
     private $periodoFim;
 
     /** @var array Notas fiscais do período */
-    private $notas;
+    protected $notas;
 
     /** @var array Linhas do arquivo SPED */
     private $linhas = [];
@@ -65,6 +67,12 @@ class FiscalSpedGenerator {
     /** @var array<string, string> chave interna da nota → COD_NAT */
     private $codNat0400PorChaveNota = [];
 
+    /** @var array<string, string> COD_OBS (≤6) → texto (registro 0460) */
+    private $mapa0460TextoPorCod = [];
+
+    /** @var array<string, string> chave CST|CFOP|ALIQ → COD_OBS para C190 */
+    private $mapaC190CodObsPorChaveBucket = [];
+
     public function __construct(array $empresa, array $configFiscal, string $periodoInicio, string $periodoFim) {
         $this->empresa = $empresa;
         $this->configFiscal = $configFiscal;
@@ -87,22 +95,30 @@ class FiscalSpedGenerator {
         $this->codInf0450PorChaveNota = [];
         $this->mapa0400Naturezas = [];
         $this->codNat0400PorChaveNota = [];
+        $this->mapa0460TextoPorCod = [];
+        $this->mapaC190CodObsPorChaveBucket = [];
         $this->carregarNotas();
         $this->prepararMapaParticipantesCodPart();
         $this->prepararMapaItens0200e0190();
         $this->prepararMapa0400Naturezas();
         $this->prepararMapa0450Informacoes();
+        $this->prepararMapa0460C190();
 
         $this->bloco0();
+        $this->blocoB();
         $this->blocoC();
+        $this->blocoD();
         $this->blocoE();
+        $this->blocoG();
         $this->blocoH();
+        $this->blocoK();
+        $this->bloco1();
         $this->bloco9();
 
         return implode("\r\n", $this->linhas) . "\r\n";
     }
 
-    private function carregarNotas() {
+    protected function carregarNotas() {
         $FiscalNotas = TableRegistry::getTableLocator()->get('FiscalNotas');
         $idempresa = $this->empresa['id'] ?? 0;
 
@@ -135,7 +151,7 @@ class FiscalSpedGenerator {
 
     /**
      * Linhas já em $this->linhas cujo código de registro começa com o caractere indicado
-     * (Bloco 0 → "0", C → "C", E → "E", H → "H").
+     * (Bloco 0 → "0", B → "B", C → "C", D → "D", E → "E", G → "G", H → "H", K → "K", bloco 1 → "1").
      */
     private function contarLinhasRegistroPrefixo(string $primeiroChar): int {
         $n = 0;
@@ -554,6 +570,85 @@ class FiscalSpedGenerator {
         return $this->codInf0450PorChaveNota[$k] ?? '';
     }
 
+    /**
+     * COD_OBS alfanumérico até 6 posições (0460 / campo 12 do C190).
+     */
+    private function normalizarCodObsSped0460(string $raw): string {
+        $s = strtoupper(preg_replace('/[^A-Z0-9]/', '', $raw));
+
+        return mb_substr($s, 0, 6);
+    }
+
+    private function cfopQuatroDigitosFromString(string $raw): string {
+        $cfopRaw = preg_replace('/\D/', '', $raw);
+        if ($cfopRaw === '') {
+            return '0000';
+        }
+
+        return str_pad(substr($cfopRaw, 0, 4), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Tabela 0460 + vínculos opcionais CST+CFOP+alíquota → COD_OBS no C190 (fiscal_empresas_config.sped_0460_c190_json).
+     */
+    private function prepararMapa0460C190(): void {
+        $this->mapa0460TextoPorCod = [];
+        $this->mapaC190CodObsPorChaveBucket = [];
+        $raw = trim((string)($this->configFiscal['sped_0460_c190_json'] ?? ''));
+        if ($raw === '') {
+            return;
+        }
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            return;
+        }
+        $listaObs = $data['observacoes'] ?? $data['0460'] ?? [];
+        if (!is_array($listaObs)) {
+            $listaObs = [];
+        }
+        foreach ($listaObs as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $codRaw = trim((string)($row['cod_obs'] ?? $row['COD_OBS'] ?? ''));
+            $txt = trim((string)($row['txt'] ?? $row['TXT'] ?? $row['texto'] ?? $row['descr'] ?? ''));
+            $cod = $this->normalizarCodObsSped0460($codRaw);
+            if ($cod === '' || $txt === '') {
+                continue;
+            }
+            $this->mapa0460TextoPorCod[$cod] = mb_substr($txt, 0, 4000);
+        }
+        $vinc = $data['c190'] ?? $data['vinculos'] ?? [];
+        if (!is_array($vinc)) {
+            $vinc = [];
+        }
+        foreach ($vinc as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $codObs = $this->normalizarCodObsSped0460(trim((string)($row['cod_obs'] ?? $row['COD_OBS'] ?? '')));
+            if ($codObs === '' || !isset($this->mapa0460TextoPorCod[$codObs])) {
+                continue;
+            }
+            $cst = $this->cstTresDigitos((string)($row['cst'] ?? $row['CST_ICMS'] ?? ''));
+            $cfop = $this->cfopQuatroDigitosFromString((string)($row['cfop'] ?? $row['CFOP'] ?? ''));
+            $aliq = (float)($row['aliq_icms'] ?? $row['ALIQ_ICMS'] ?? $row['aliq'] ?? 0);
+            $chave = $cst . '|' . $cfop . '|' . $this->fmtSped($aliq, 2);
+            $this->mapaC190CodObsPorChaveBucket[$chave] = $codObs;
+        }
+        ksort($this->mapa0460TextoPorCod, SORT_STRING);
+    }
+
+    private function emitirRegistros0460(): void {
+        foreach ($this->mapa0460TextoPorCod as $codObs => $txt) {
+            $this->addLinha('0460', [$codObs, $txt]);
+        }
+    }
+
+    private function codObs0460ParaChaveBucket(string $chaveBucket): string {
+        return $this->mapaC190CodObsPorChaveBucket[$chaveBucket] ?? '';
+    }
+
     // ── Bloco 0 — Abertura ──────────────────────────────
 
     private function bloco0() {
@@ -567,9 +662,14 @@ class FiscalSpedGenerator {
         $dtIni = date('dmY', strtotime($this->periodoInicio));
         $dtFin = date('dmY', strtotime($this->periodoFim));
 
+        $codVer = trim((string)(Configure::read('Fiscal.sped.cod_ver_layout') ?? '015'));
+        if (!preg_match('/^\d{3}$/', $codVer)) {
+            $codVer = '015';
+        }
+
         // 0000 — Abertura
         $this->addLinha('0000', [
-            '015',       // COD_VER layout 015
+            $codVer,
             '0',         // COD_FIN (0=remessa original)
             $dtIni,
             $dtFin,
@@ -612,10 +712,57 @@ class FiscalSpedGenerator {
         $this->emitirRegistros0200();
         $this->emitirRegistros0400();
         $this->emitirRegistros0450();
+        $this->emitirRegistros0460();
 
         // 0990 — Encerramento bloco 0 (QTD_LIN inclui a própria linha 0990)
         $qtdLin0 = $this->contarLinhasRegistroPrefixo('0') + 1;
         $this->addLinha('0990', [(string)$qtdLin0]);
+    }
+
+    /**
+     * Bloco B — documentos fiscais de serviços (ICMS IPI): sem dados nesta versão do gerador.
+     * B001 IND_DAD=1 conforme Guia Prático (apenas abertura e encerramento).
+     */
+    private function blocoB() {
+        $this->addLinha('B001', ['1']);
+        $qtdLinB = $this->contarLinhasRegistroPrefixo('B') + 1;
+        $this->addLinha('B990', [(string)$qtdLinB]);
+    }
+
+    /**
+     * Bloco D — documentos fiscais II: sem dados nesta versão.
+     */
+    private function blocoD() {
+        $this->addLinha('D001', ['1']);
+        $qtdLinD = $this->contarLinhasRegistroPrefixo('D') + 1;
+        $this->addLinha('D990', [(string)$qtdLinD]);
+    }
+
+    /**
+     * Bloco G — CIAP / controle do crédito de ICMS no ativo permanente: sem dados nesta versão.
+     */
+    private function blocoG() {
+        $this->addLinha('G001', ['1']);
+        $qtdLinG = $this->contarLinhasRegistroPrefixo('G') + 1;
+        $this->addLinha('G990', [(string)$qtdLinG]);
+    }
+
+    /**
+     * Bloco K — controle da produção e do estoque (RCPE): sem dados nesta versão (K001 IND_MOV=1).
+     */
+    private function blocoK() {
+        $this->addLinha('K001', ['1']);
+        $qtdLinK = $this->contarLinhasRegistroPrefixo('K') + 1;
+        $this->addLinha('K990', [(string)$qtdLinK]);
+    }
+
+    /**
+     * Bloco 1 — informações complementares: sem dados nesta versão (1001 IND_MOV=1).
+     */
+    private function bloco1() {
+        $this->addLinha('1001', ['1']);
+        $qtdLin1 = $this->contarLinhasRegistroPrefixo('1') + 1;
+        $this->addLinha('1990', [(string)$qtdLin1]);
     }
 
     // ── Bloco C — Documentos Fiscais ──────────────────
@@ -1009,7 +1156,7 @@ class FiscalSpedGenerator {
 
         $nB = max(1, count($buckets));
         $linhas = [];
-        foreach ($buckets as $b) {
+        foreach ($buckets as $chaveBucket => $b) {
             $ratio = $totMerc > 0 ? ($b['vl_merc'] / $totMerc) : (1.0 / $nB);
             $vlOpr = $b['vl_merc'] + $acc * $ratio + $b['vl_st'] + $b['vl_ipi'];
             $aliqFmt = $this->fmtSped($b['aliq'], 2);
@@ -1027,7 +1174,7 @@ class FiscalSpedGenerator {
                 $this->fmtSped($b['vl_st']),
                 $this->fmtSped(0),
                 $this->fmtSped($b['vl_ipi']),
-                '',
+                $this->codObs0460ParaChaveBucket((string)$chaveBucket),
             ];
         }
 
@@ -1328,7 +1475,7 @@ class FiscalSpedGenerator {
 
     /**
      * Monta 9001, 9900 (por tipo de registro), 9990 e 9999 conforme EFD-ICMS/IPI:
-     * contagens por código de registro nas linhas já geradas (blocos 0–H) + linhas do próprio bloco 9.
+     * contagens por código de registro nas linhas já geradas (todos os blocos antes do 9, excl. o 9) + linhas do próprio bloco 9.
      */
     private function bloco9() {
         $linhasAntes = $this->linhas;

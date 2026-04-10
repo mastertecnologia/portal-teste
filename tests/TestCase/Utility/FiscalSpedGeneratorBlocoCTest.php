@@ -196,6 +196,41 @@ class FiscalSpedGeneratorBlocoCTest extends TestCase {
         $this->assertSame('60,00', $linhas[1][3]);
     }
 
+    public function testC190PreencheCodObsVia0460Json(): void {
+        $json = json_encode([
+            'observacoes' => [['cod_obs' => 'OB0001', 'txt' => 'Fundamento legal XYZ']],
+            'c190' => [['cst' => '000', 'cfop' => '5102', 'aliq_icms' => 18, 'cod_obs' => 'OB0001']],
+        ], JSON_UNESCAPED_UNICODE);
+        $gen = new FiscalSpedGenerator(['id' => 1], [
+            'uf' => 'SP',
+            'codigo_municipio_ibge' => '3550308',
+            'sped_0460_c190_json' => $json,
+        ], '2024-01-01', '2024-01-31');
+        $ref = new ReflectionClass(FiscalSpedGenerator::class);
+        $pPrep = $ref->getMethod('prepararMapa0460C190');
+        $pPrep->setAccessible(true);
+        $pPrep->invoke($gen);
+
+        $m = $ref->getMethod('montarLinhasC190');
+        $m->setAccessible(true);
+
+        $i1 = $this->itemComImpostos([
+            ['imposto' => 'ICMS', 'base_calculo' => 50, 'aliquota' => 18, 'valor' => 9],
+        ]);
+        $i1->icms_cst = '00';
+        $i1->cfop = '5102';
+        $i1->valor_total = 50;
+        $i1->valor_desconto = 0;
+
+        $nota = $this->notaStub([
+            'valor_frete' => 0.0,
+            'fiscal_notas_itens' => [$i1],
+        ]);
+        $linhas = $m->invoke($gen, $nota);
+        $this->assertCount(1, $linhas);
+        $this->assertSame('OB0001', $linhas[0][10] ?? '', 'COD_OBS campo 12 do C190');
+    }
+
     public function testPrepararMapa0190E0200AlinhaComC170(): void {
         $gen = new FiscalSpedGenerator(['id' => 1], [], '2024-01-01', '2024-01-31');
         $ref = new ReflectionClass(FiscalSpedGenerator::class);

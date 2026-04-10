@@ -17,4 +17,17 @@ echo $this->element('Fiscal/styles');
         <?= $this->Html->link('<i class="fas fa-users"></i>Por cliente', ['action' => 'porCliente'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
         <?= $this->Html->link('<i class="fas fa-barcode"></i>Por número de série', ['action' => 'porNumeroSerie'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
     </div>
+    <div style="padding:0 20px 24px;">
+        <div class="fpm-card" style="margin:0;">
+            <div class="fpm-card-title"><i class="fas fa-file-export" style="color:#1D9E75;margin-right:6px;"></i>SPED Fiscal (EFD-ICMS/IPI)</div>
+            <p class="fpm-muted small" style="margin:0 0 12px;">Gera arquivo texto (EFD-ICMS/IPI) com notas <strong>autorizadas</strong> no mês selecionado, incluindo blocos estruturais previstos no leiaute (entre eles B, D, G, H, K e 1 quando sem movimento). Conferir no PVA da Receita Federal antes da entrega; o contador assina e encaminha o arquivo oficial.</p>
+            <?= $this->Form->create(null, ['type' => 'get', 'url' => ['action' => 'exportarSped'], 'class' => 'fpm-filters', 'style' => 'padding:0;border:0;']) ?>
+            <div>
+                <label>Mês de referência</label>
+                <input type="month" name="mes_ano" value="<?= h(date('Y-m')) ?>" required>
+            </div>
+            <div><button type="submit" class="btn btn-pgm btn-sm" style="margin-top:18px;">Baixar .txt</button></div>
+            <?= $this->Form->end() ?>
+        </div>
+    </div>
 </div>
