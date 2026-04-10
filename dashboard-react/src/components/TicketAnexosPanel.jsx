@@ -46,20 +46,20 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
   const list = anexos || [];
 
   const shell = embed
-    ? 'rounded-xl border border-[#3d4554] bg-[#1e2329] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
+    ? 'rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
     : 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm';
-  const titleCls = embed ? 'text-sm font-bold text-[#e8eaed]' : 'text-sm font-bold text-slate-900';
+  const titleCls = embed ? 'text-sm font-bold text-[var(--pgm-text)]' : 'text-sm font-bold text-slate-900';
   const linkUpload = embed
-    ? 'text-xs font-semibold text-[#5cecc4] hover:text-[#7ef0d0] hover:underline disabled:opacity-50'
+    ? 'text-xs font-semibold text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline disabled:opacity-50'
     : 'text-xs font-semibold text-teal-700 hover:underline disabled:opacity-50';
-  const errCls = embed ? 'mt-2 text-xs text-red-300' : 'mt-2 text-xs text-rose-600';
+  const errCls = embed ? 'mt-2 text-xs text-[var(--pgm-danger-text)]' : 'mt-2 text-xs text-rose-600';
   const rowCls = embed
-    ? 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#3d4554] bg-[#262c35] px-2 py-1.5'
+    ? 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2 py-1.5'
     : 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5';
-  const nameCls = embed ? 'min-w-0 flex-1 truncate font-medium text-[#e8eaed]' : 'min-w-0 flex-1 truncate font-medium text-slate-800';
-  const visCls = embed ? 'font-semibold text-[#c4c9d1] hover:underline' : 'font-semibold text-slate-700 hover:underline';
-  const dlCls = embed ? 'font-semibold text-[#5cecc4] hover:text-[#7ef0d0] hover:underline' : 'font-semibold text-teal-700 hover:underline';
-  const emptyCls = embed ? 'mt-2 text-xs text-[#9aa0a8]' : 'mt-2 text-xs text-slate-500';
+  const nameCls = embed ? 'min-w-0 flex-1 truncate font-medium text-[var(--pgm-text)]' : 'min-w-0 flex-1 truncate font-medium text-slate-800';
+  const visCls = embed ? 'font-semibold text-[var(--pgm-text-secondary)] hover:underline' : 'font-semibold text-slate-700 hover:underline';
+  const dlCls = embed ? 'font-semibold text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline' : 'font-semibold text-teal-700 hover:underline';
+  const emptyCls = embed ? 'mt-2 text-xs text-[var(--pgm-text-muted)]' : 'mt-2 text-xs text-slate-500';
 
   return (
     <div className={shell}>

@@ -116,24 +116,24 @@ export default function ClientTicketList({ boot }) {
     <section
       className={
         embedded
-          ? 'rounded-xl border border-[#3d4554] bg-[#1e2329] shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
+          ? 'rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
           : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm'
       }
     >
       <div
         className={
           embedded
-            ? 'border-b border-[#3d4554] p-3'
+            ? 'border-b border-[var(--pgm-border)] p-3'
             : 'flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between'
         }
       >
         {embedded ? (
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold leading-tight text-[#e8eaed]">
+              <h2 className="text-lg font-bold leading-tight text-[var(--pgm-text)]">
                 {boot?.servicedesk ? 'Service Desk — meus chamados' : 'Tickets — cliente'}
               </h2>
-              <p className="mt-0.5 text-xs text-[#9aa0a8]">
+              <p className="mt-0.5 text-xs text-[var(--pgm-text-muted)]">
                 {boot?.servicedesk
                   ? `Atualização a cada 10 s · ${totalFila} ticket(s) neste filtro`
                   : `Fila · ${totalFila} ticket(s) neste filtro`}
@@ -144,12 +144,12 @@ export default function ClientTicketList({ boot }) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar nº, cliente ou assunto"
-                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-[#3d4554] bg-[#161b22] px-2.5 text-sm text-[#e8eaed] outline-none placeholder:text-[#9aa0a8] focus:border-[#1d9e75] sm:min-w-[180px]"
+                className="h-9 w-full min-w-0 flex-1 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none placeholder:text-[var(--pgm-text-muted)] focus:border-[var(--pgm-primary)] sm:min-w-[180px]"
               />
               <select
                 value={fila}
                 onChange={(e) => setFila(e.target.value)}
-                className="h-9 w-full shrink-0 rounded-lg border border-[#3d4554] bg-[#161b22] px-2.5 text-sm text-[#e8eaed] outline-none focus:border-[#1d9e75] sm:w-44"
+                className="h-9 w-full shrink-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none focus:border-[var(--pgm-primary)] sm:w-44"
               >
                 <option value="todos">Todos</option>
                 <option value="ativos">Aguardando + Em execução</option>
@@ -199,14 +199,14 @@ export default function ClientTicketList({ boot }) {
           <table
             className={
               embedded
-                ? 'min-w-full divide-y divide-[#3d4554] text-xs text-[#9aa0a8] sm:text-sm'
+                ? 'min-w-full divide-y divide-[var(--pgm-border)] text-xs text-[var(--pgm-text-muted)] sm:text-sm'
                 : 'min-w-full divide-y divide-slate-200 text-xs sm:text-sm'
             }
           >
             <thead
               className={
                 embedded
-                  ? 'bg-[#262c35] text-left text-xs text-[#9aa0a8]'
+                  ? 'bg-[var(--pgm-bg-elevated)] text-left text-xs text-[var(--pgm-text-muted)]'
                   : 'bg-slate-50 text-left text-xs text-slate-500'
               }
             >
@@ -223,14 +223,16 @@ export default function ClientTicketList({ boot }) {
             </thead>
             <tbody
               className={
-                embedded ? 'divide-y divide-[#3d4554] bg-[#1e2329]' : 'divide-y divide-slate-100 bg-white'
+                embedded
+                  ? 'divide-y divide-[var(--pgm-border)] bg-[var(--pgm-bg-surface)]'
+                  : 'divide-y divide-slate-100 bg-white'
               }
             >
               {loading ? (
                 <tr>
                   <td
                     colSpan={8}
-                    className={`px-4 py-8 text-center ${embedded ? 'text-[#9aa0a8]' : 'text-slate-500'}`}
+                    className={`px-4 py-8 text-center ${embedded ? 'text-[var(--pgm-text-muted)]' : 'text-slate-500'}`}
                   >
                     Carregando…
                   </td>
@@ -239,7 +241,7 @@ export default function ClientTicketList({ boot }) {
                 <tr>
                   <td
                     colSpan={8}
-                    className={`px-4 py-8 text-center ${embedded ? 'text-[#9aa0a8]' : 'text-slate-500'}`}
+                    className={`px-4 py-8 text-center ${embedded ? 'text-[var(--pgm-text-muted)]' : 'text-slate-500'}`}
                   >
                     Nenhum ticket neste filtro.
                   </td>
@@ -251,9 +253,9 @@ export default function ClientTicketList({ boot }) {
                   const dest = ticket.urls?.view || `/cliente/ticket/${ticket.id}`;
                   const acoesOrd = sortTicketAcoes(ticket.acoes || []);
                   const idLinkCls = embedded
-                    ? 'text-[#5cecc4] hover:text-[#7ef0d0] hover:underline'
+                    ? 'text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline'
                     : 'text-cyan-700 hover:underline';
-                  const rowHover = embedded ? 'hover:bg-[#262c35]' : 'hover:bg-slate-50/80';
+                  const rowHover = embedded ? 'hover:bg-[var(--pgm-bg-elevated)]' : 'hover:bg-slate-50/80';
                   return (
                     <tr key={ticket.id} className={`align-middle transition ${rowHover}`}>
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
@@ -271,20 +273,20 @@ export default function ClientTicketList({ boot }) {
                         {ticket.autor || '—'}
                       </td>
                       <td
-                        className={`whitespace-nowrap px-2 py-1.5 sm:px-3 ${embedded ? 'text-[#9aa0a8]' : 'text-slate-600'}`}
+                        className={`whitespace-nowrap px-2 py-1.5 sm:px-3 ${embedded ? 'text-[var(--pgm-text-muted)]' : 'text-slate-600'}`}
                       >
                         {ticket.created || '—'}
                       </td>
                       <td className="max-w-[14rem] px-2 py-1.5 sm:max-w-xs sm:px-3">
                         <div
-                          className={`truncate font-medium ${embedded ? 'text-[#e8eaed]' : 'text-slate-800'}`}
+                          className={`truncate font-medium ${embedded ? 'text-[var(--pgm-text)]' : 'text-slate-800'}`}
                           title={assuntoLinha}
                         >
                           {assuntoLinha}
                         </div>
                         {ticket.solicitacaoPreview ? (
                           <div
-                            className={`line-clamp-1 text-[11px] leading-tight ${embedded ? 'text-[#9aa0a8]' : 'text-slate-500'}`}
+                            className={`line-clamp-1 text-[11px] leading-tight ${embedded ? 'text-[var(--pgm-text-muted)]' : 'text-slate-500'}`}
                             title={ticket.solicitacaoPreview}
                           >
                             {ticket.solicitacaoPreview}
@@ -303,7 +305,7 @@ export default function ClientTicketList({ boot }) {
                         </span>
                       </td>
                       <td
-                        className={`max-w-[7rem] truncate px-2 py-1.5 sm:px-3 ${embedded ? 'text-[#c4c9d1]' : 'text-slate-700'}`}
+                        className={`max-w-[7rem] truncate px-2 py-1.5 sm:px-3 ${embedded ? 'text-[var(--pgm-text-secondary)]' : 'text-slate-700'}`}
                         title={ticket.tecnicos || ''}
                       >
                         {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
@@ -313,7 +315,7 @@ export default function ClientTicketList({ boot }) {
                       </td>
                       <td className="px-2 py-1 sm:px-3">
                         {acoesOrd.length === 0 ? (
-                          <span className={embedded ? 'text-[#9aa0a8]' : 'text-slate-400'}>—</span>
+                          <span className={embedded ? 'text-[var(--pgm-text-muted)]' : 'text-slate-400'}>—</span>
                         ) : (
                           <div className="flex max-w-[42vw] flex-nowrap items-center gap-0.5 overflow-x-auto py-0.5 sm:max-w-none sm:overflow-visible [scrollbar-width:thin]">
                             {acoesOrd.map((a) => (
@@ -343,7 +345,7 @@ export default function ClientTicketList({ boot }) {
   );
 
   if (embedded) {
-    return <div className="tickets-react-client w-full text-[#e8eaed]">{tableSection}</div>;
+    return <div className="tickets-react-client w-full text-[var(--pgm-text)]">{tableSection}</div>;
   }
 
   return (

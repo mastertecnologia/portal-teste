@@ -5,10 +5,10 @@ import { fetchDashboardOperacional } from '../lib/api';
 function StatCard({ label, value, tone }) {
   const toneCls =
     tone === 'critical'
-      ? 'border-rose-200 bg-rose-50/80 dark:border-rose-900/50 dark:bg-rose-950/35'
+      ? 'border-rose-200 bg-rose-50/80 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)]'
       : tone === 'warn'
-        ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800/40 dark:bg-amber-950/25'
-        : 'border-emerald-200/80 bg-white dark:border-emerald-900/35 dark:bg-[var(--pgm-bg-surface)]';
+        ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800/40 dark:bg-[var(--pgm-warning-bg)]'
+        : 'border-slate-200/80 bg-white dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]';
   return (
     <div className={`rounded-xl border p-4 shadow-sm ${toneCls}`}>
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-[var(--pgm-text-muted)]">
@@ -108,7 +108,7 @@ export default function OperationalDashboard({ boot }) {
             type="button"
             onClick={() => load()}
             disabled={loading}
-            className="rounded-lg bg-[#1d9e75] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0f6e56] disabled:opacity-50 dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
+            className="rounded-lg bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold text-[#0a0f14] hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50 dark:text-[#0a0f14] dark:hover:brightness-110"
           >
             {loading ? 'Atualizando…' : 'Atualizar'}
           </button>
@@ -116,7 +116,7 @@ export default function OperationalDashboard({ boot }) {
       </header>
 
       {err ? (
-        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/35 dark:text-red-200">
+        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]">
           {err}
         </p>
       ) : null}
@@ -187,7 +187,7 @@ export default function OperationalDashboard({ boot }) {
                       <td className="px-4 py-2">
                         <a
                           href={ticketHref(row.id)}
-                          className="font-medium text-[#00a876] hover:underline dark:text-[var(--pgm-primary)]"
+                          className="font-medium text-[var(--pgm-primary)] hover:underline"
                         >
                           Abrir
                         </a>

@@ -15,9 +15,19 @@
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	/* Alinhado aos tokens: secundário + mistura com primária (mesma família do portal) */
+	background: linear-gradient(
+		90deg,
+		color-mix(in srgb, var(--pgm-secondary) 88%, #000) 0%,
+		color-mix(in srgb, var(--pgm-secondary) 55%, var(--pgm-primary)) 100%
+	);
 	color: #fff;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+@supports not (background: color-mix(in srgb, red, blue)) {
+	.sd-topbar {
+		background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	}
 }
 .sd-topbar .sd-brand {
 	font-weight: 700;
@@ -130,7 +140,7 @@ html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card .sd-ru
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card {
-	background: rgba(0, 168, 118, 0.08) !important;
+	background: var(--pgm-primary-muted) !important;
 	border: 1px solid var(--pgm-border);
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-title,
@@ -195,4 +205,36 @@ html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-2
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
 	border-color: var(--pgm-border) !important;
+}
+
+/* Flash / alerts Bootstrap no shell Service Desk */
+html[data-pgm-theme="dark"] body.sd-body .alert {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .alert-success {
+	background: var(--pgm-success-bg);
+	border-color: rgba(52, 211, 153, 0.35);
+	color: var(--pgm-success-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .alert-warning {
+	background: var(--pgm-warning-bg);
+	border-color: rgba(251, 191, 36, 0.35);
+	color: var(--pgm-warning-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .alert-danger {
+	background: var(--pgm-danger-bg);
+	border-color: rgba(248, 113, 113, 0.35);
+	color: var(--pgm-danger-text);
+}
+html[data-pgm-theme="dark"] body.sd-body .alert-info {
+	background: var(--pgm-info-bg);
+	border-color: rgba(69, 229, 237, 0.25);
+	color: var(--pgm-info-text);
+}
+
+html[data-pgm-theme="dark"] body.sd-body .tickets-react-shell,
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd {
+	color: var(--pgm-text);
 }

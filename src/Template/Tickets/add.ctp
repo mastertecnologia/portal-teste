@@ -104,9 +104,9 @@
 		min-height: 2.5rem;
 	}
 	.sd-sum-select:focus {
-		border-color: #1d9e75 !important;
+		border-color: var(--pgm-primary, #00d9a0) !important;
 		outline: none;
-		box-shadow: 0 0 0 1px rgba(29, 158, 117, 0.35);
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(0, 217, 160, 0.4));
 	}
 	.sd-add-grid {
 		display: grid;
@@ -200,8 +200,8 @@
 	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle:focus,
 	.tickets-add-wrap .sd-add-field .bootstrap-select.show > .dropdown-toggle,
 	.tickets-add-wrap .sd-add-field .bootstrap-select.open > .dropdown-toggle {
-		border-color: #1d9e75 !important;
-		box-shadow: 0 0 0 1px rgba(29, 158, 117, 0.35) !important;
+		border-color: var(--pgm-primary, #00d9a0) !important;
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(0, 217, 160, 0.4)) !important;
 		outline: none !important;
 	}
 	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle .caret {
@@ -220,7 +220,7 @@
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li.selected a,
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li a:hover,
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li a:focus {
-		background: rgba(29, 158, 117, 0.22) !important;
+		background: var(--pgm-primary-muted, rgba(0, 217, 160, 0.15)) !important;
 		color: #e8eaed !important;
 	}
 	.tickets-add-wrap .sd-add-field .bootstrap-select .dropdown-menu li.disabled a,
@@ -259,7 +259,7 @@
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li.selected a,
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li a:hover,
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li a:focus {
-		background: rgba(29, 158, 117, 0.22) !important;
+		background: var(--pgm-primary-muted, rgba(0, 217, 160, 0.15)) !important;
 		color: #e8eaed !important;
 	}
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li.disabled a,
@@ -308,8 +308,8 @@
 		transition: border-color 0.15s ease, box-shadow 0.15s ease;
 	}
 	.ticket-add-textarea.form-control:focus {
-		border-color: #1d9e75;
-		box-shadow: 0 0 0 1px rgba(29, 158, 117, 0.35);
+		border-color: var(--pgm-primary, #00d9a0);
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(0, 217, 160, 0.4));
 		outline: 0;
 	}
 	.sd-add-label-block {
@@ -338,11 +338,11 @@
 		transition: border-color 0.2s, background 0.2s;
 	}
 	.ticket-dropzone.ticket-dropzone--drag {
-		border-color: #1d9e75;
-		background: rgba(29, 158, 117, 0.15);
+		border-color: var(--pgm-primary, #00d9a0);
+		background: var(--pgm-primary-muted, rgba(0, 217, 160, 0.15));
 	}
 	.ticket-dropzone:hover {
-		border-color: #5cecc4;
+		border-color: var(--pgm-primary-hover, #5cecc4);
 		background: #262c35;
 	}
 	.ticket-files-chosen {
@@ -527,9 +527,13 @@
 		font-weight: 700;
 		cursor: pointer;
 		transition: filter 0.15s ease, opacity 0.15s;
-		background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%) !important;
-		color: #fff !important;
-		box-shadow: 0 2px 10px rgba(0, 168, 118, 0.28);
+		background: linear-gradient(
+			135deg,
+			var(--pgm-primary, #00d9a0) 0%,
+			var(--pgm-erp-teal-active, #00b589) 100%
+		) !important;
+		color: #0a0f14 !important;
+		box-shadow: 0 2px 12px var(--pgm-primary-muted, rgba(0, 217, 160, 0.25));
 	}
 	.sd-actions-card .sd-btn-submit:hover:not(:disabled):not(.disabled) {
 		filter: brightness(1.06);
