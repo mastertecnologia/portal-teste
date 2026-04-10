@@ -203,7 +203,7 @@ function TicketActionsMenu({
       ref={menuRef}
       role="menu"
       aria-label={`Ações do ticket ${ticket.id}`}
-      className="fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65)] dark:ring-white/10"
+      className="tickets-sd-action-menu fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 text-slate-800 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:text-[var(--pgm-text)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65)] dark:ring-white/10"
       style={{ top: pos.top, left: pos.left }}
     >
       <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 px-3 py-2 dark:border-[var(--pgm-border)] dark:bg-[linear-gradient(135deg,rgba(29,158,117,0.28)_0%,rgba(19,113,90,0.72)_100%)]">
@@ -342,9 +342,9 @@ function techRowHighlightClass(ticket) {
       ticket.tecnicos === '');
   const parts = ['align-middle', 'transition'];
   if (label.includes('aguardando')) {
-    parts.push('bg-emerald-50/90', 'dark:bg-[rgba(29,158,117,0.12)]');
+    parts.push('bg-emerald-50/90', 'dark:bg-[rgba(29,158,117,0.18)]');
   } else if (label.includes('execução') || label.includes('andamento')) {
-    parts.push('bg-teal-50/80', 'dark:bg-[rgba(29,158,117,0.09)]');
+    parts.push('bg-teal-50/80', 'dark:bg-[rgba(29,158,117,0.14)]');
   }
   if (semResp) {
     parts.push('ring-1', 'ring-inset', 'ring-slate-300/80', 'dark:ring-slate-600/50');
@@ -900,38 +900,44 @@ export default function TechDashboard({ boot }) {
                   return (
                     <tr
                       key={ticket.id}
-                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-50/80 dark:hover:bg-[var(--pgm-bg-elevated)]/90`}
+                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-50/80 dark:hover:bg-[rgba(29,158,117,0.14)]`}
                     >
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.edit ? (
                           <a
-                            className="text-[var(--pgm-primary)] hover:underline dark:text-[var(--pgm-primary)]"
+                            className="tickets-sd-ticket-link font-semibold text-[#1d9e75] no-underline hover:underline dark:text-[#6ee7b7]"
                             href={ticket.urls.edit}
                           >
                             #{ticket.id}
                           </a>
                         ) : (
                           <Link
-                            className="text-[var(--pgm-primary)] hover:underline dark:text-[var(--pgm-primary)]"
+                            className="tickets-sd-ticket-link font-semibold text-[#1d9e75] no-underline hover:underline dark:text-[#6ee7b7]"
                             to={`/cliente/ticket/${ticket.id}`}
                           >
                             #{ticket.id}
                           </Link>
                         )}
                       </td>
-                      <td className="max-w-[7rem] truncate px-2 py-1.5 sm:px-3" title={ticket.autor || ''}>
+                      <td
+                        className="max-w-[7rem] truncate px-2 py-1.5 text-slate-800 dark:text-[var(--pgm-text)] sm:px-3"
+                        title={ticket.autor || ''}
+                      >
                         {ticket.autor || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 sm:px-3">
+                      <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 dark:text-[var(--pgm-text-secondary)] sm:px-3">
                         {ticket.created || ticket.atualizado || '—'}
                       </td>
                       <td className="max-w-[14rem] px-2 py-1.5 sm:max-w-xs sm:px-3">
-                        <div className="truncate font-medium text-slate-800" title={assuntoLinha}>
+                        <div
+                          className="truncate font-medium text-slate-800 dark:text-[var(--pgm-text)]"
+                          title={assuntoLinha}
+                        >
                           {assuntoLinha}
                         </div>
                         {ticket.solicitacaoPreview ? (
                           <div
-                            className="line-clamp-1 text-[11px] leading-tight text-slate-500"
+                            className="line-clamp-1 text-[11px] leading-tight text-slate-500 dark:text-[var(--pgm-text-muted)]"
                             title={ticket.solicitacaoPreview}
                           >
                             {ticket.solicitacaoPreview}
@@ -951,7 +957,7 @@ export default function TechDashboard({ boot }) {
                       {wfEnabled ? (
                         <>
                           <td
-                            className="max-w-[9rem] truncate px-2 py-1.5 text-slate-700 sm:px-3"
+                            className="max-w-[9rem] truncate px-2 py-1.5 text-slate-700 dark:text-[var(--pgm-text-secondary)] sm:px-3"
                             title={ticket.filaLabel || ''}
                           >
                             <span className="line-clamp-2">{ticket.filaLabel || '—'}</span>
@@ -959,7 +965,7 @@ export default function TechDashboard({ boot }) {
                               <span className="mt-0.5 block text-[10px] font-semibold text-amber-700">Transferido</span>
                             ) : null}
                           </td>
-                          <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 sm:px-3">
+                          <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 dark:text-[var(--pgm-text-secondary)] sm:px-3">
                             {ticket.supportLevelLabel
                               ? ticket.supportLevelLabel
                               : ticket.nivelAtendimento != null
@@ -968,10 +974,13 @@ export default function TechDashboard({ boot }) {
                           </td>
                         </>
                       ) : null}
-                      <td className="max-w-[7rem] truncate px-2 py-1.5 text-slate-700 sm:px-3" title={ticket.tecnicos || ''}>
+                      <td className="max-w-[7rem] truncate px-2 py-1.5 text-slate-700 dark:text-[var(--pgm-text-secondary)] sm:px-3" title={ticket.tecnicos || ''}>
                         {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
                       </td>
-                      <td className="max-w-[8rem] truncate px-2 py-1.5 sm:px-3" title={ticket.cliente || ''}>
+                      <td
+                        className="max-w-[8rem] truncate px-2 py-1.5 text-slate-800 dark:text-[var(--pgm-text)] sm:px-3"
+                        title={ticket.cliente || ''}
+                      >
                         {ticket.cliente || '—'}
                       </td>
                       <td className="px-2 py-1 text-right sm:px-3">

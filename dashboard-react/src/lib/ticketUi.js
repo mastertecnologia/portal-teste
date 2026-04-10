@@ -1,24 +1,24 @@
 /** Classes Tailwind para badges — reutilizado em técnico e cliente. */
 
-/** Dark: borda/fundo na primária ERP (#1d9e75); texto em --pgm-success (evita --pgm-primary-hover = ciano “apagado” em pills). */
+/** Dark: pills saturadas (primária PGM + texto branco) — evita fundo mint/ciano “apagado”. */
 const BADGE_LIGHT = {
   success:
-    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:border-[color:rgba(29,158,117,0.55)] dark:bg-[rgba(29,158,117,0.16)] dark:text-[var(--pgm-success)]',
+    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:border-[color:rgba(29,158,117,0.78)] dark:bg-[rgba(29,158,117,0.38)] dark:text-white',
   warning:
     'bg-amber-50 text-amber-700 border-amber-200 dark:border-amber-800/40 dark:bg-[var(--pgm-warning-bg)] dark:text-[var(--pgm-warning-text)]',
   critical:
     'bg-rose-50 text-rose-700 border-rose-200 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
   high: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-200 dark:border-orange-800',
   medium:
-    'bg-emerald-50/80 text-emerald-800 border-emerald-200 dark:border-[color:rgba(29,158,117,0.55)] dark:bg-[rgba(29,158,117,0.16)] dark:text-[var(--pgm-success)]',
+    'bg-emerald-50/80 text-emerald-800 border-emerald-200 dark:border-[color:rgba(29,158,117,0.78)] dark:bg-[rgba(29,158,117,0.38)] dark:text-white',
   low: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)] dark:border-[var(--pgm-border)]',
   progress:
-    'bg-teal-50 text-teal-800 border-teal-200 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-info-bg)] dark:text-[var(--pgm-info-text)]',
+    'bg-teal-50 text-teal-800 border-teal-200 dark:border-[color:rgba(29,158,117,0.78)] dark:bg-[rgba(29,158,117,0.42)] dark:text-white',
   waiting: 'bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-950/35 dark:text-violet-200 dark:border-violet-800',
   pendingTech:
-    'bg-emerald-100 text-emerald-900 border-emerald-300 dark:border-[color:rgba(29,158,117,0.55)] dark:bg-[rgba(29,158,117,0.16)] dark:text-[var(--pgm-success)]',
+    'bg-emerald-100 text-emerald-900 border-emerald-300 dark:border-[color:rgba(29,158,117,0.78)] dark:bg-[rgba(29,158,117,0.36)] dark:text-white',
   resolved:
-    'bg-emerald-100 text-emerald-900 border-emerald-300 dark:border-[color:rgba(29,158,117,0.55)] dark:bg-[rgba(29,158,117,0.16)] dark:text-[var(--pgm-success)]',
+    'bg-emerald-100 text-emerald-900 border-emerald-300 dark:border-[color:rgba(29,158,117,0.72)] dark:bg-[rgba(29,158,117,0.32)] dark:text-white',
   escalated: 'bg-rose-50 text-rose-800 border-rose-300 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
   closed: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)] dark:border-[var(--pgm-border)]',
   cancelled:
@@ -28,17 +28,17 @@ const BADGE_LIGHT = {
 /** Badges no embed portal cliente — superfície escura PGM. */
 const BADGE_EMBED = {
   success:
-    'border border-[color:rgba(29,158,117,0.6)] bg-[rgba(29,158,117,0.22)] text-[var(--pgm-success)]',
+    'border border-[color:rgba(29,158,117,0.75)] bg-[rgba(29,158,117,0.35)] text-white',
   warning: 'border border-amber-700/50 bg-amber-950/35 text-amber-200',
   critical: 'border border-rose-700/50 bg-rose-950/35 text-rose-200',
   high: 'border border-orange-700/50 bg-orange-950/35 text-orange-200',
   medium: 'border border-sky-700/50 bg-sky-950/35 text-sky-200',
   low: 'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]',
-  progress: 'border border-sky-700/50 bg-sky-950/35 text-sky-200',
+  progress: 'border border-[color:rgba(29,158,117,0.75)] bg-[rgba(29,158,117,0.35)] text-white',
   waiting: 'border border-violet-700/50 bg-violet-950/35 text-violet-200',
   pendingTech: 'border border-amber-700/50 bg-amber-950/40 text-amber-100',
   resolved:
-    'border border-[color:rgba(29,158,117,0.6)] bg-[rgba(29,158,117,0.22)] text-[var(--pgm-success)]',
+    'border border-[color:rgba(29,158,117,0.72)] bg-[rgba(29,158,117,0.32)] text-white',
   escalated: 'border border-rose-700/50 bg-rose-950/40 text-rose-200',
   closed: 'border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text-muted)]',
   cancelled: 'border border-red-800/50 bg-red-950/40 text-red-200',
@@ -111,7 +111,7 @@ export function acaoLinkClassName(key, embed = false) {
   const base =
     'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
   if (embed && k === 'imprimir') {
-    return `${base} border-[color:rgba(29,158,117,0.55)] bg-[rgba(29,158,117,0.16)] text-[var(--pgm-success)] hover:brightness-110`;
+    return `${base} border-[color:rgba(29,158,117,0.75)] bg-[rgba(29,158,117,0.32)] text-white hover:brightness-110`;
   }
   if (embed && k === 'cancelar') {
     return `${base} ${badgeClass('cancelled', true)}`;

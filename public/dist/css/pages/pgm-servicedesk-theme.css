@@ -229,3 +229,18 @@ html[data-pgm-theme="dark"] body.sd-body .tickets-react-shell,
 html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd {
 	color: var(--pgm-text);
 }
+
+/* Menu de ações (React portal em document.body): garante tema escuro mesmo com .bg-white / Bootstrap */
+html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
+	background-color: var(--pgm-bg-surface) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+
+/* Nº do ticket: evita azul/ciano de links globais (style.min / tema legado) */
+html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link {
+	color: #6ee7b7 !important;
+}
+html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link:hover {
+	color: #a7f3d0 !important;
+}
