@@ -37,8 +37,8 @@ class ClienteDomainShell extends Shell {
 
 		if (empty($r['infra_ready'])) {
 			$this->out('');
-			$this->out('*** AVISO *** Módulo de notificações inativo: tabelas portal_internal_notifications e client_domain_events ausentes ou inacessíveis na conexão default.');
-			$this->out('A migration do repositório só cria essas tabelas em PostgreSQL. Em MySQL/MariaDB, crie o equivalente ou use default em PG com migration aplicada.');
+			$this->out('*** AVISO *** Módulo de notificações inativo: tabela portal_internal_notifications ausente ou inacessível na conexão default.');
+			$this->out('Aplique as migrations do repositório (PostgreSQL) em produção: bin/cake migrations migrate');
 			$this->out('Nenhum alerta foi processado.');
 			$this->out('');
 

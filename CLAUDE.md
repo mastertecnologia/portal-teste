@@ -79,7 +79,7 @@ composer install
 - **Tickets**: hybrid — classic CakePHP views + React UI (`src/Template/Tickets/operacional.ctp`); JSON APIs at `/tickets/api-*` use session auth but are unlocked from CSRF (`Security` component `unlockedActions`).
 - **Contratos/Contracts**: `ContractManagement` (ERP staff) + `PortalContratos` (client). Autentique webhook at `/modulo-contratos/webhook/autentique`.
 - **Orcamentos**: `OrcamentosController`; client can request via `solicitar` action; PDF via mPDF; catalog suggestions via `catalogoSugestoes` (GET).
-- **Notifications**: `PortalNotificationsController` — JSON endpoints for the bell icon in the sidebar.
+- **Notifications**: `PortalNotificationsController` — JSON endpoints for the bell icon in the sidebar. Doc operacional: `docs/NOTIFICACOES_INTERNAS_SINO.md`.
 
 ### Config files
 - `config/rbac.php` — RBAC runtime config (mode, phases, feature flags)
