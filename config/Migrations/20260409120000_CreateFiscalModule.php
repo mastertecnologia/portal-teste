@@ -49,8 +49,8 @@ class CreateFiscalModule extends AbstractMigration {
         if (!$this->hasTable('fiscal_empresas_config')) {
             $t = $this->table('fiscal_empresas_config');
             $t->addColumn('idempresa', 'integer', ['null' => false])
-              ->addColumn('regime_tributario', 'smallinteger', ['null' => false, 'default' => 1, 'comment' => '1=Simples Nacional, 2=SN Exc.Sublimite, 3=Regime Normal'])
-              ->addColumn('ambiente', 'smallinteger', ['null' => false, 'default' => 2, 'comment' => '1=Produção, 2=Homologação'])
+              ->addColumn('regime_tributario', 'integer', ['null' => false, 'default' => 1, 'comment' => '1=Simples Nacional, 2=SN Exc.Sublimite, 3=Regime Normal'])
+              ->addColumn('ambiente', 'integer', ['null' => false, 'default' => 2, 'comment' => '1=Produção, 2=Homologação'])
               ->addColumn('serie_nfe', 'integer', ['null' => false, 'default' => 1])
               ->addColumn('prox_numero_nfe', 'integer', ['null' => false, 'default' => 1])
               ->addColumn('serie_nfse', 'integer', ['null' => false, 'default' => 1])
@@ -148,9 +148,9 @@ class CreateFiscalModule extends AbstractMigration {
               ->addColumn('chave_acesso', 'string', ['limit' => 50, 'null' => true])
               ->addColumn('natureza_operacao', 'string', ['limit' => 255, 'null' => true])
               ->addColumn('natureza_operacao_id', 'integer', ['null' => true])
-              ->addColumn('tipo_operacao', 'smallinteger', ['null' => false, 'default' => 1, 'comment' => '0=Entrada, 1=Saída'])
-              ->addColumn('finalidade', 'smallinteger', ['null' => false, 'default' => 1, 'comment' => '1=Normal, 2=Complementar, 3=Ajuste, 4=Devolução'])
-              ->addColumn('presenca', 'smallinteger', ['null' => false, 'default' => 9, 'comment' => '0=Não se aplica, 1=Presencial, 9=Outros'])
+              ->addColumn('tipo_operacao', 'integer', ['null' => false, 'default' => 1, 'comment' => '0=Entrada, 1=Saída'])
+              ->addColumn('finalidade', 'integer', ['null' => false, 'default' => 1, 'comment' => '1=Normal, 2=Complementar, 3=Ajuste, 4=Devolução'])
+              ->addColumn('presenca', 'integer', ['null' => false, 'default' => 9, 'comment' => '0=Não se aplica, 1=Presencial, 9=Outros'])
               ->addColumn('data_emissao', 'datetime', ['null' => true])
               ->addColumn('data_saida', 'datetime', ['null' => true])
               ->addColumn('valor_produtos', 'decimal', ['precision' => 15, 'scale' => 2, 'null' => false, 'default' => '0.00'])
@@ -169,7 +169,7 @@ class CreateFiscalModule extends AbstractMigration {
               ->addColumn('informacoes_complementares', 'text', ['null' => true])
               ->addColumn('informacoes_fisco', 'text', ['null' => true])
               // Transporte
-              ->addColumn('frete_modalidade', 'smallinteger', ['null' => false, 'default' => 9, 'comment' => '0=Emitente,1=Destinatário,2=Terceiros,9=Sem frete'])
+              ->addColumn('frete_modalidade', 'integer', ['null' => false, 'default' => 9, 'comment' => '0=Emitente,1=Destinatário,2=Terceiros,9=Sem frete'])
               ->addColumn('transportadora_cnpj', 'string', ['limit' => 18, 'null' => true])
               ->addColumn('transportadora_nome', 'string', ['limit' => 255, 'null' => true])
               ->addColumn('veiculo_placa', 'string', ['limit' => 10, 'null' => true])

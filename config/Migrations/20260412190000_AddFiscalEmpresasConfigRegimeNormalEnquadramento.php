@@ -15,7 +15,7 @@ class AddFiscalEmpresasConfigRegimeNormalEnquadramento extends AbstractMigration
         if ($table->hasColumn('regime_normal_enquadramento')) {
             return;
         }
-        $table->addColumn('regime_normal_enquadramento', 'smallinteger', [
+        $table->addColumn('regime_normal_enquadramento', 'integer', [
             'null' => true,
             'default' => null,
             'comment' => '1=Lucro Presumido 2=Lucro Real; apenas regime_tributario=3',
