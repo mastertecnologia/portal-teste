@@ -651,6 +651,9 @@ export default function TechDashboard({ boot }) {
   /** Campos compactos (Service Desk embutido). */
   const sdField =
     'h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--pgm-primary)] focus:ring-1 focus:ring-[var(--pgm-primary)]/30 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:placeholder:text-[var(--pgm-text-muted)] dark:focus:border-[var(--pgm-primary)] dark:focus:ring-[var(--pgm-primary)]/35';
+  /** Barra de filtros: sem w-full para permitir flex-wrap na largura do painel (evita scroll horizontal na barra). */
+  const sdFieldToolbar =
+    'h-9 min-w-0 rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[var(--pgm-primary)] focus:ring-1 focus:ring-[var(--pgm-primary)]/30 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text)] dark:placeholder:text-[var(--pgm-text-muted)] dark:focus:border-[var(--pgm-primary)] dark:focus:ring-[var(--pgm-primary)]/35';
 
   const tableSection = (
     <section
@@ -696,7 +699,7 @@ export default function TechDashboard({ boot }) {
           </div>
         </div>
       ) : wfEnabled ? (
-        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
           <span
             className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500 dark:text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
@@ -709,14 +712,14 @@ export default function TechDashboard({ boot }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar nº, cliente ou assunto"
             aria-label="Buscar na lista"
-            className={`${sdField} min-w-[9rem] flex-1 basis-[10rem]`}
+            className={`${sdFieldToolbar} min-w-[8rem] flex-[1_1_12rem] max-w-full`}
           />
           <select
             id="sd-tech-status"
             value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
             aria-label="Situação"
-            className={`${sdField} w-[12rem] shrink-0 cursor-pointer sm:w-[13rem]`}
+            className={`${sdFieldToolbar} min-w-[6.5rem] flex-[1_1_9rem] max-w-[min(100%,13.5rem)] cursor-pointer`}
           >
             <option value="todos">Todos</option>
             <option value="ativos">Aguardando + Em execução</option>
@@ -730,7 +733,7 @@ export default function TechDashboard({ boot }) {
             value={filaSuporte}
             onChange={(e) => setFilaSuporte(e.target.value)}
             aria-label="Fila de suporte"
-            className={`${sdField} w-[10.5rem] shrink-0 cursor-pointer sm:w-[11.5rem]`}
+            className={`${sdFieldToolbar} min-w-[6.5rem] flex-[1_1_9rem] max-w-[min(100%,12rem)] cursor-pointer`}
           >
             <option value="">Todas as filas</option>
             {filasMeta.map((f) => (
@@ -744,7 +747,7 @@ export default function TechDashboard({ boot }) {
             value={nivelAtendimento}
             onChange={(e) => setNivelAtendimento(e.target.value)}
             aria-label="Nível de atendimento"
-            className={`${sdField} w-[7.25rem] shrink-0 cursor-pointer`}
+            className={`${sdFieldToolbar} min-w-[5.5rem] flex-[1_1_7rem] max-w-[min(100%,9rem)] cursor-pointer`}
           >
             <option value="">Todos os níveis</option>
             {[1, 2, 3, 4, 5].map((n) => (
@@ -758,7 +761,7 @@ export default function TechDashboard({ boot }) {
             value={idResponsavel}
             onChange={(e) => setIdResponsavel(e.target.value)}
             aria-label="Técnico responsável"
-            className={`${sdField} w-[10rem] shrink-0 cursor-pointer sm:w-[11rem]`}
+            className={`${sdFieldToolbar} min-w-[6.5rem] flex-[1_1_9rem] max-w-[min(100%,12rem)] cursor-pointer`}
           >
             <option value="">Qualquer técnico</option>
             {tecnicosOpcoes.map((t) => (
@@ -769,7 +772,7 @@ export default function TechDashboard({ boot }) {
           </select>
         </div>
       ) : (
-        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
           <span
             className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500 dark:text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
@@ -782,14 +785,14 @@ export default function TechDashboard({ boot }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar nº, cliente ou assunto"
             aria-label="Buscar na lista"
-            className={`${sdField} min-w-[9rem] flex-1 basis-[10rem]`}
+            className={`${sdFieldToolbar} min-w-[8rem] flex-[1_1_12rem] max-w-full`}
           />
           <select
             id="sd-tech-status"
             value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
             aria-label="Situação"
-            className={`${sdField} w-[12rem] shrink-0 cursor-pointer sm:w-[13rem]`}
+            className={`${sdFieldToolbar} min-w-[6.5rem] flex-[1_1_9rem] max-w-[min(100%,13.5rem)] cursor-pointer`}
           >
             <option value="todos">Todos</option>
             <option value="ativos">Aguardando + Em execução</option>
