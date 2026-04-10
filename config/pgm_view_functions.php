@@ -25,6 +25,27 @@ if (!function_exists('LocacaoStatus')) {
 }
 
 /**
+ * Detecção mobile em templates (.ctp). Ordensservico/add, edit, ticketordem e
+ * Orcamentos/novaordem chamam isMobile(); sem esta função o PHP encerra com
+ * "Call to undefined function isMobile()" após renderizar o topo do formulário.
+ */
+if (!function_exists('isMobile')) {
+	function isMobile(): bool {
+		if (class_exists(\Cake\Routing\Router::class)) {
+			$req = \Cake\Routing\Router::getRequest();
+			if ($req !== null) {
+				return (bool) $req->is('mobile');
+			}
+		}
+		if (class_exists(\Detection\MobileDetect::class)) {
+			return (new \Detection\MobileDetect())->isMobile();
+		}
+
+		return false;
+	}
+}
+
+/**
  * Polyfills usados em .ctp e em OrdensservicoTable::historicoOrdens quando
  * vendor/PGMPackages/Utilities.php não está presente no deploy.
  * Não redeclara se o legado já definiu a função.
