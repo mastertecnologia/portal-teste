@@ -93,7 +93,17 @@ html[data-pgm-theme="dark"] body .modal-content {
 	border-color: var(--pgm-border) !important;
 }
 
-html[data-pgm-theme="light"] body .main-panel > .content {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text) !important;
+html[data-pgm-theme="dark"] body .message-box.bg-white {
+	background: var(--pgm-bg-elevated, #262c35) !important;
+	border: 1px solid var(--pgm-border, #3d4554) !important;
+	color: var(--pgm-text, #e8eaed) !important;
+}
+html[data-pgm-theme="dark"] body .message-box.bg-white .mail-contnet h5,
+html[data-pgm-theme="dark"] body .message-box.bg-white a {
+	color: var(--pgm-text, #e8eaed) !important;
+}
+html[data-pgm-theme="dark"] body .ticket-resp-tecnicos.ticket-resp-tecnicos--soft.bg-white {
+	background: var(--pgm-bg-elevated, #262c35) !important;
+	border-color: var(--pgm-border, #3d4554) !important;
+	color: var(--pgm-text, #e8eaed) !important;
 }

@@ -1,61 +1,30 @@
-/**
- * Layout print.ctp — tela segue tokens; impressão força papel claro.
- */
-html[data-pgm-theme="dark"] body.pgm-print-layout {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text) !important;
-}
-
-html[data-pgm-theme="dark"] body.pgm-print-layout .main-wrapper,
-html[data-pgm-theme="dark"] body.pgm-print-layout .container-fluid {
-	background: transparent !important;
-	color: inherit;
-}
-
-html[data-pgm-theme="light"] body.pgm-print-layout {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text) !important;
-}
-
-/* Botão de tema na pré-visualização (mesmo padrão do layout clear) */
-.pgm-print-theme-fab.pgm-legacy-theme-fab {
-	position: fixed;
-	bottom: 1.25rem;
-	right: 1.25rem;
-	z-index: 2000;
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	padding: 0.45rem 0.85rem;
-	border-radius: 999px;
-	border: 1px solid var(--pgm-border, #e1e4e8);
-	background: var(--pgm-bg-surface, #fff);
-	color: var(--pgm-text, #1a1f2e);
-	font-size: 0.8125rem;
-	font-weight: 600;
-	cursor: pointer;
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
-
-html[data-pgm-theme="dark"] .pgm-print-theme-fab.pgm-legacy-theme-fab {
-	background: var(--pgm-bg-elevated);
-	border-color: var(--pgm-border);
-	color: var(--pgm-text);
-}
-
-@media print {
-	html,
-	body,
-	body.pgm-print-layout,
-	body.pgm-print-layout .main-wrapper,
-	body.pgm-print-layout .container-fluid {
-		background: #fff !important;
-		color: #000 !important;
-		box-shadow: none !important;
-	}
-	.pgm-js-theme-toggle,
-	.pgm-legacy-theme-fab,
-	.pgm-print-theme-fab {
-		display: none !important;
-	}
-}
+/**
+ * Layout print.ctp — tela segue tokens; impressão força papel claro.
+ */
+html[data-pgm-theme="dark"] body.pgm-print-layout {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text) !important;
+}
+
+html[data-pgm-theme="dark"] body.pgm-print-layout .main-wrapper,
+html[data-pgm-theme="dark"] body.pgm-print-layout .container-fluid {
+	background: transparent !important;
+	color: inherit;
+}
+
+@media print {
+	html,
+	body,
+	body.pgm-print-layout,
+	body.pgm-print-layout .main-wrapper,
+	body.pgm-print-layout .container-fluid {
+		background: #fff !important;
+		color: #000 !important;
+		box-shadow: none !important;
+	}
+	.pgm-js-theme-toggle,
+	.pgm-legacy-theme-fab,
+	.pgm-print-theme-fab {
+		display: none !important;
+	}
+}

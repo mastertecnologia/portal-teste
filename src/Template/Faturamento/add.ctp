@@ -22,22 +22,13 @@ $this->Breadcrumbs->add('Novo Documento');
 .fatadd-items-table td input.fatadd-input-qtd { width:70px; }
 .fatadd-items-table td input.fatadd-input-vuni { width:100px; }
 .fatadd-items-table td input.fatadd-input-vtot { width:100px; background:rgba(0,0,0,.2); cursor:default; }
-body.pgm-theme-light .fatadd-items-table td input.fatadd-input-vtot { background:#f3f4f6; }
 .fatadd-add-item { margin-top:10px; }
-/* Modo claro */
-body.pgm-theme-light .fatadd-card { background:#fff; border-color:#e1e4e8; }
-body.pgm-theme-light .fatadd-card-title { color:#6b7280; }
-body.pgm-theme-light .fatadd-field label { color:#374151; }
-body.pgm-theme-light .fatadd-field .form-control { background:#fff; border-color:#d0d7de; color:#1a1f2e; }
-body.pgm-theme-light .fatadd-items-table th { color:#6b7280; border-color:#e5e7eb; }
-body.pgm-theme-light .fatadd-items-table td input { background:#fff; border-color:#d0d7de; color:#1a1f2e; }
 .fatadd-th-w45 { width:45%; }
 .fatadd-th-w12 { width:12%; }
 .fatadd-th-w18 { width:18%; }
 .fatadd-th-w7 { width:7%; }
 .fatadd-total-row { text-align:right; margin-top:12px; }
 .fatadd-total-strong { font-size:15px; color:#5cdbc0; }
-body.pgm-theme-light .fatadd-total-strong { color:#00a876; }
 .fatadd-footer-actions { display:flex; gap:10px; justify-content:flex-end; padding:8px 0 24px; }
 </style>
 

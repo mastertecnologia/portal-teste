@@ -12,21 +12,21 @@ $verOrc = isset($orcamento->versao) && $orcamento->versao !== '' && $orcamento->
 $propostaRotuloSeg = 'Nº ' . (int)$orcamento->id . ($verOrc !== '' ? ' v' . $verOrc : '');
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title><?= h($title ?? 'Acesso Seguro — Proposta PGM Soluções') ?></title>
 <style>
 :root{
-  --teal:#1D9E75;--teal-dark:#0F6E56;--teal-light:#E1F5EE;--teal-mid:#5DCAA5;
-  --amber:#E9A025;--amber-light:#FAEEDA;--amber-dark:#633806;
-  --red:#E24B4A;--red-light:#FCEBEB;--red-dark:#791F1F;
-  --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#0C447C;
-  --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#3C3489;
-  --border:#e8e7e3;--border-light:#f0efec;
-  --text:#1a1a18;--text-muted:#6b6a65;--text-hint:#9a9890;
-  --bg:#f2f1ee;--card:#ffffff;
+  --teal:#1d9e75;--teal-dark:#0f6e56;--teal-light:rgba(29,158,117,.18);--teal-mid:#5cecc4;
+  --amber:#f59e0b;--amber-light:rgba(245,158,11,.18);--amber-dark:#fcd34d;
+  --red:#f87171;--red-light:rgba(248,113,113,.14);--red-dark:#fca5a5;
+  --blue:#38bdf8;--blue-light:rgba(56,189,248,.15);--blue-dark:#7dd3fc;
+  --purple:#a78bfa;--purple-light:rgba(167,139,250,.18);--purple-dark:#c4b5fd;
+  --border:#3d4554;--border-light:#4f5869;
+  --text:#e8eaed;--text-muted:#9aa0a8;--text-hint:#9aa0a8;
+  --bg:#12151c;--card:#1e2329;--topbar:#0d1117;
   --r:10px;--rl:16px;--rxl:22px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -35,7 +35,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 .pg{display:none;}.pg.show{display:block;}
 
 /* TOPBAR */
-.topbar{background:var(--text);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;}
+.topbar{background:var(--topbar);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;}
 .logo{display:flex;align-items:center;gap:10px;}
 .logo-box{width:32px;height:32px;background:var(--teal);border-radius:7px;display:flex;align-items:center;justify-content:center;}
 .logo-name{font-size:14px;font-weight:700;color:#fff;}
@@ -65,20 +65,20 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 .field-wrap{padding:0 32px 22px;}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;}
-.field input{padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--text);outline:none;font-family:inherit;background:#fff;transition:all .15s;}
-.field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.1);}
-.field input.error{border-color:var(--red);background:#fff9f9;}
-.field input.success{border-color:var(--teal);background:#f9fefc;}
+.field input{padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--text);outline:none;font-family:inherit;background:#161b22;transition:all .15s;}
+.field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.2);}
+.field input.error{border-color:var(--red);background:rgba(248,113,113,.08);}
+.field input.success{border-color:var(--teal);background:rgba(29,158,117,.1);}
 .field-hint{font-size:11px;color:var(--text-muted);margin-top:3px;}
 .field-error{font-size:11px;color:var(--red-dark);margin-top:3px;display:none;}
 .field-error.show{display:block;}
 
 /* OTP INPUT */
 .otp-group{display:flex;gap:10px;justify-content:center;margin:20px 0;}
-.otp-digit{width:50px;height:58px;border:1.5px solid var(--border);border-radius:var(--r);text-align:center;font-size:22px;font-weight:700;color:var(--text);outline:none;font-family:inherit;background:#fff;transition:all .15s;caret-color:var(--teal);}
-.otp-digit:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.1);}
-.otp-digit.filled{border-color:var(--teal-mid);background:var(--teal-light);color:var(--teal-dark);}
-.otp-digit.error{border-color:var(--red);background:#fff5f5;}
+.otp-digit{width:50px;height:58px;border:1.5px solid var(--border);border-radius:var(--r);text-align:center;font-size:22px;font-weight:700;color:var(--text);outline:none;font-family:inherit;background:#161b22;transition:all .15s;caret-color:var(--teal);}
+.otp-digit:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,.2);}
+.otp-digit.filled{border-color:var(--teal-mid);background:var(--teal-light);color:var(--teal-mid);}
+.otp-digit.error{border-color:var(--red);background:rgba(248,113,113,.1);}
 
 /* TIMER */
 .timer-row{text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:16px;}
@@ -91,7 +91,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 .channel-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
 .channel-opt{border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:all .15s;text-align:center;}
 .channel-opt:hover{border-color:var(--teal);}
-.channel-opt.selected{border-color:var(--teal);background:var(--teal-light);}
+.channel-opt.selected{border-color:var(--teal);background:rgba(29,158,117,.15);}
 .channel-opt-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
 .channel-opt-label{font-size:13px;font-weight:600;color:var(--text);}
 .channel-opt-val{font-size:11px;color:var(--text-muted);margin-top:2px;}
@@ -133,13 +133,13 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
-.b-green{background:#E1F5EE;color:#085041;}
-.b-blue{background:#E6F1FB;color:#0C447C;}
-.b-purple{background:#EEEDFE;color:#3C3489;}
-.b-amber{background:#FAEEDA;color:#633806;}
+.b-green{background:rgba(29,158,117,.2);color:var(--teal-mid);}
+.b-blue{background:var(--blue-light);color:var(--blue-dark);}
+.b-purple{background:var(--purple-light);color:var(--purple-dark);}
+.b-amber{background:var(--amber-light);color:var(--amber-dark);}
 
 /* SIGN CANVAS */
-.sign-canvas{border:1.5px solid var(--border);border-radius:var(--r);width:100%;height:100px;cursor:crosshair;background:#fff;display:block;touch-action:none;}
+.sign-canvas{border:1.5px solid var(--border);border-radius:var(--r);width:100%;height:100px;cursor:crosshair;background:#161b22;display:block;touch-action:none;}
 
 /* PROPOSE SUMMARY */
 .prop-summary{background:var(--bg);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
@@ -477,7 +477,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--
   <div class="field-wrap">
     <div class="field">
       <label>Descreva os ajustes necessários</label>
-      <textarea style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--text);outline:none;font-family:inherit;resize:vertical;min-height:100px;line-height:1.6;background:#fff;" id="neg-txt" placeholder="Ex: Preciso de 16GB de RAM, prazo máximo 10 dias, ou desconto de 10%..."></textarea>
+      <textarea style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--text);outline:none;font-family:inherit;resize:vertical;min-height:100px;line-height:1.6;background:#161b22;" id="neg-txt" placeholder="Ex: Preciso de 16GB de RAM, prazo máximo 10 dias, ou desconto de 10%..."></textarea>
     </div>
     <div class="field">
       <label>Seu nome e contato</label>

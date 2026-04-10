@@ -62,10 +62,6 @@
 		background: rgba(255, 255, 255, 0.04);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 	}
-	html[data-pgm-theme="light"] .pgm-agenda-page .pgm-agenda-legend .calendar-events {
-		background: rgba(0, 0, 0, 0.03);
-		border-color: rgba(0, 0, 0, 0.06);
-	}
 </style>
 <div class="row pgm-agenda-page">
 	<div class="col-md-12">

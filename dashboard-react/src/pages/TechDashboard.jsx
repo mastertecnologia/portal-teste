@@ -1167,7 +1167,7 @@ export default function TechDashboard({ boot }) {
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-[#00a876] px-4 py-2 text-sm font-semibold text-white hover:bg-[#007a55] disabled:opacity-50 dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
+                className="rounded-lg bg-[#1d9e75] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0f6e56] disabled:opacity-50 dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
                 onClick={() => submitTransfer()}
                 disabled={transferSaving}
               >
@@ -1199,7 +1199,7 @@ export default function TechDashboard({ boot }) {
             {addTicket ? (
               <a
                 href={addTicket}
-                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[#00a876] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[#007a55] dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
+                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[#1d9e75] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[#0f6e56] dark:bg-[var(--pgm-primary)] dark:hover:bg-[var(--pgm-primary-hover)]"
               >
                 Abrir ticket
               </a>

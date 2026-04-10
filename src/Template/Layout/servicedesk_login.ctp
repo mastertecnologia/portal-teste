@@ -1,15 +1,7 @@
 <!DOCTYPE HTML>
-<html lang="pt-BR">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<?= $this->Html->charset() ?>
-	<script>
-	(function () {
-		var k = 'pgmPortalTheme', def = 'light', v;
-		try { v = localStorage.getItem(k); } catch (e) { v = null; }
-		var t = (v === 'dark' || v === 'light') ? v : def;
-		document.documentElement.setAttribute('data-pgm-theme', t);
-	})();
-	</script>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="Service Desk — Login">
 	<?= $this->Html->meta('assets/images/favicon.ico?data=11/06/2021', 'favicon.ico?data=11/06/2021', ['type' => 'icon']); ?>
@@ -45,7 +37,7 @@
 	<script>
 	$(function () {
 		if (window.PgmPortalTheme) {
-			PgmPortalTheme.initGuest('light');
+			PgmPortalTheme.initGuest();
 		}
 	});
 	</script>

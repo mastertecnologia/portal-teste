@@ -1775,7 +1775,8 @@ class UsersController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'theme'], 400);
 		}
 
-		$skin = ($theme === 'light') ? 'skin-pgm-light' : 'skin-green';
+		// Portal em tema escuro único; mantém compatibilidade com POST antigo (light/dark).
+		$skin = 'skin-green';
 		$user = $this->Users->get($this->Auth->user('id'));
 		$user->skin = $skin;
 		$this->Users->save($user);

@@ -313,7 +313,7 @@ $vaultEntries = isset($vaultMetaJson) ? $vaultMetaJson : '[]';
 		if (navigator.clipboard && navigator.clipboard.writeText) {
 			navigator.clipboard.writeText(revealedPlain).then(function () {
 				if (typeof $.toast !== 'undefined') {
-					$.toast({ text: 'Copiado para a área de transferência.', position: 'top-right', loaderBg: '#00c08b', bgColor: '#1a1a18' });
+					$.toast({ text: 'Copiado para a área de transferência.', position: 'top-right', loaderBg: '#1d9e75', bgColor: '#1a1a18' });
 				}
 			});
 		} else {

@@ -126,6 +126,85 @@ body, #printable { font-family: 'Open Sans', Arial, sans-serif; font-size: 11px;
 .campo-row .campo { flex: 1; border-right: 1px solid #ccc; }
 .campo-row .campo:last-child { border-right: none; }
 .campo-row-first { border-top: 1px solid #000; }
+
+@media screen {
+    html[data-pgm-theme="dark"] body.pgm-print-layout {
+        background: var(--pgm-bg-page, #0f1218) !important;
+        color: #e8eaed;
+    }
+    html[data-pgm-theme="dark"] #printable {
+        background: #13161d !important;
+        color: #e8eaed !important;
+    }
+    html[data-pgm-theme="dark"] #printable .b {
+        border-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .fat-loc-logo-cell,
+    html[data-pgm-theme="dark"] #printable .fat-loc-empresa-cell {
+        border-right-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .fat-loc-title-bar {
+        border-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-row {
+        border-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-row .campo {
+        border-right-color: #3d4554 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-row-first {
+        border-top-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-label {
+        color: #a8b0bd !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-valor {
+        color: #e8eaed !important;
+    }
+    html[data-pgm-theme="dark"] #printable .secao-titulo {
+        background: #1e2430 !important;
+        color: #e8eaed !important;
+        border-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .tbl-produtos th {
+        background: #1e2430 !important;
+        color: #e8eaed !important;
+        border-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .tbl-produtos td {
+        border-color: #3d4554 !important;
+        color: #e8eaed !important;
+    }
+    html[data-pgm-theme="dark"] #printable .tbl-produtos tr:nth-child(even) td {
+        background: #181c24 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .totais-row {
+        background: #252b36 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .footer-wrap {
+        border-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .footer-left {
+        border-right-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .sig-line {
+        border-bottom-color: #8b93a0 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .credito-rodape {
+        color: #8b93a0 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .fat-loc-fic-1,
+    html[data-pgm-theme="dark"] #printable .fat-loc-fic-2 {
+        border-right-color: #3d4554 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-row .campo.fat-loc-br-000,
+    html[data-pgm-theme="dark"] #printable .campo-row .campo.fat-loc-fatura-col--sep {
+        border-right-color: #5c6575 !important;
+    }
+    html[data-pgm-theme="dark"] #printable .campo-row .campo.fat-loc-br-ccc {
+        border-right-color: #3d4554 !important;
+    }
+}
 </style>
 
 <div class="row hidden-print fat-loc-actions-bar">

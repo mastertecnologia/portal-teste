@@ -1,16 +1,8 @@
 <!DOCTYPE HTML>
-<html lang="pt-BR">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
-	<script>
-	(function () {
-		var k = 'pgmPortalTheme', def = 'light', v;
-		try { v = localStorage.getItem(k); } catch (e) { v = null; }
-		var t = (v === 'dark' || v === 'light') ? v : def;
-		document.documentElement.setAttribute('data-pgm-theme', t);
-	})();
-	</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Cadastro de Cliente">
     <meta name="author" content="Grid Sistemas">
@@ -30,7 +22,6 @@
 	<?= $this->Html->css("dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("dist/css/pages/pgm-advanced-module") ?>
-	<?= $this->Html->css("dist/css/pages/pgm-theme-light") ?>
 	<?= $this->Html->css("dist/css/pages/pgm-cadastro-cliente-theme") ?>
 	<?= $this->Html->css("dist/css/pages/pgm-login-theme") ?>
 	<?= $this->Html->css("dist/css/pages/bootstrap-select.css") ?>
@@ -102,7 +93,7 @@
 	<script>
 	$(function () {
 		if (window.PgmPortalTheme) {
-			PgmPortalTheme.initGuest('light');
+			PgmPortalTheme.initGuest();
 		}
 	});
 	</script>

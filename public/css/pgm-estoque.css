@@ -106,34 +106,34 @@ body.estoque-screen-active .est-root {
 
 /* Tipografia: superfícies claras dentro do card — mesmo em skin escura global */
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root {
+body.estoque-screen-active .est-root {
 	opacity: 1 !important;
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-header__title h1,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title h1 {
+body.estoque-screen-active .est-root .est-header__title h1 {
 	color: var(--est-text) !important;
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-header__title p,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-header__title p,
+body.estoque-screen-active .est-root .est-header__title p,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-field label,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-field label,
+body.estoque-screen-active .est-root .est-field label,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-field__actions-heading,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-field__actions-heading,
+body.estoque-screen-active .est-root .est-field__actions-heading,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-footer,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-footer,
+body.estoque-screen-active .est-root .est-footer,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-empty,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-empty {
+body.estoque-screen-active .est-root .est-empty {
 	color: var(--est-muted) !important;
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-table tbody td,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-table tbody td,
+body.estoque-screen-active .est-root .est-table tbody td,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-col-code,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-col-code,
+body.estoque-screen-active .est-root .est-col-code,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .est-table thead th,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .est-table thead th {
+body.estoque-screen-active .est-root .est-table thead th {
 	color: var(--est-text) !important;
 }
 
@@ -154,17 +154,17 @@ html body.estoque-screen-active .est-root input.est-input::placeholder {
 }
 
 /*
- * Vence pgm-advanced-module.css (.bootstrap-select escuro em layout-no-topbar:not(.pgm-theme-light)).
+ * Vence pgm-advanced-module.css (.bootstrap-select escuro em layout-no-topbar).
  * Especificidade alta + mesma ordem (css_late) garante controles claros dentro do card.
  */
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle.btn-light,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle.btn-default,
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select > .btn,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .dropdown-toggle,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .dropdown-toggle.btn-light,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .dropdown-toggle.btn-default,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .btn {
+body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle,
+body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle.btn-light,
+body.estoque-screen-active .est-root .bootstrap-select > .dropdown-toggle.btn-default,
+body.estoque-screen-active .est-root .bootstrap-select > .btn {
 	background: var(--est-card) !important;
 	background-color: var(--est-card) !important;
 	border: 1px solid var(--est-border) !important;
@@ -174,12 +174,12 @@ body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select > .
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .filter-option-inner-inner,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .filter-option-inner-inner {
+body.estoque-screen-active .est-root .bootstrap-select .filter-option-inner-inner {
 	color: var(--est-text) !important;
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .dropdown-menu,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .dropdown-menu {
+body.estoque-screen-active .est-root .bootstrap-select .dropdown-menu {
 	background: var(--est-card) !important;
 	background-color: var(--est-card) !important;
 	border: 1px solid var(--est-border) !important;
@@ -187,12 +187,12 @@ body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .dr
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .dropdown-menu .dropdown-item,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .dropdown-menu .dropdown-item {
+body.estoque-screen-active .est-root .bootstrap-select .dropdown-menu .dropdown-item {
 	color: var(--est-text) !important;
 }
 
 html[data-pgm-theme="dark"] body.estoque-screen-active .est-root .bootstrap-select .bs-searchbox input,
-body.estoque-screen-active:not(.pgm-theme-light) .est-root .bootstrap-select .bs-searchbox input {
+body.estoque-screen-active .est-root .bootstrap-select .bs-searchbox input {
 	background: #ffffff !important;
 	border: 1px solid var(--est-border) !important;
 	color: var(--est-text) !important;

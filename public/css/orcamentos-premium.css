@@ -2,7 +2,7 @@
  * PGM Orçamentos — acentos visuais alinhados ao protótipo pgm_orcamentos_premium.html
  * Servido em /css/orcamentos-premium.css. Fonte: webroot/css/; com WEBROOT_DIR=public manter cópia em public/css/ (deploy em sync).
  * Escopo: .orc-premium-wrap (não altera o restante do ERP).
- * Tema escuro: bloco final com body.layout-no-topbar:not(.pgm-theme-light) (alinhado ao shell escuro).
+ * Tema escuro: bloco final com body.layout-no-topbar (alinhado ao shell escuro).
  */
 .orc-premium-wrap {
   --orc-teal: var(--pgm-erp-teal, #1d9e75);
@@ -113,7 +113,7 @@
 
 .btn-orc-premium-primary,
 .orc-premium-wrap .btn-orc-premium-primary {
-  background: linear-gradient(180deg, var(--orc-teal, #00c08b) 0%, var(--orc-teal-dark, #008f68) 100%);
+  background: linear-gradient(180deg, var(--orc-teal, #1d9e75) 0%, var(--orc-teal-dark, #0f6e56) 100%);
   border: none;
   color: #fff !important;
   font-weight: 700;
@@ -238,7 +238,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   min-height: 0;
 }
 
-/* DataTables: células e wrapper no tema claro (não aplicar em `tr` — quebra layout) */
+/* DataTables: células e wrapper na listagem premium (fundo claro local; não aplicar em `tr` — quebra layout) */
 #orc-premium-container.orc-premium-index .dataTables_wrapper {
   color: #1a1a18 !important;
 }
@@ -667,8 +667,8 @@ body.skin-green .orc-premium-wrap.orc-premium-index {
 
 /* ========== Form pages (add / edit) — variante clara ========== */
 .orc-premium-wrap.orc-premium-form {
-  --orc-teal: var(--pgm-erp-teal, #00c08b);
-  --orc-teal-dark: var(--pgm-erp-teal-hover, #008f68);
+  --orc-teal: var(--pgm-erp-teal, #1d9e75);
+  --orc-teal-dark: var(--pgm-erp-teal-hover, #0f6e56);
   --orc-teal-light: #e6faf4;
   --orc-teal-mid: #5cdbc0;
   --orc-amber: #e9a025;
@@ -1052,7 +1052,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 .orc-premium-form .orc-tot-l .orc-tot-g { color: var(--orc-teal); font-weight: 600; }
 .orc-premium-form .orc-tot-l .orc-tot-rd { color: var(--orc-red); }
 .orc-premium-form .orc-tot-l .orc-tot-val--muted { color: #6b6a65; }
-.orc-premium-form .orc-tot-l .orc-tot-val--teal { color: var(--orc-teal, #00c08b); }
+.orc-premium-form .orc-tot-l .orc-tot-val--teal { color: var(--orc-teal, #1d9e75); }
 .orc-premium-form .orc-tot-l .orc-marg-pct--warn { color: #FFC107; }
 
 .orc-premium-form .orc-discount-row {
@@ -1312,7 +1312,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 .orc-premium-wrap .btn-orc-outline-teal {
   background: #fff;
   border: 1px solid var(--orc-teal-mid, #5dcaa5);
-  color: var(--orc-teal-dark, #008f68);
+  color: var(--orc-teal-dark, #0f6e56);
   border-radius: 10px;
   font-weight: 600;
   font-size: 12px;
@@ -1324,8 +1324,8 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 .orc-premium-wrap .btn-orc-outline-teal:hover,
 .orc-premium-wrap .btn-orc-outline-teal:focus {
   background: var(--orc-teal-light, #e1f5ee);
-  border-color: var(--orc-teal, #00c08b);
-  color: var(--orc-teal-dark, #008f68);
+  border-color: var(--orc-teal, #1d9e75);
+  color: var(--orc-teal-dark, #0f6e56);
 }
 
 .orc-premium-wrap .btn-orc-outline-purple {
@@ -1492,7 +1492,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 }
 
 .orc-catalog-search-inner:focus-within {
-  border-color: var(--orc-teal, #00c08b);
+  border-color: var(--orc-teal, #1d9e75);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(0, 192, 139, 0.08);
 }
@@ -1585,7 +1585,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 
 .orc-cat-badge--prod {
   background: #e1f5ee;
-  color: #008f68;
+  color: #0f6e56;
 }
 
 .orc-cat-badge--srv {
@@ -1684,7 +1684,7 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--orc-teal, #00c08b);
+  border: 1px solid var(--orc-teal, #1d9e75);
   background: #ffffff;
   color: #00a878;
   font-size: 11px;
@@ -1733,8 +1733,8 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
 
 /* ========== View page ========== */
 .orc-premium-wrap.orc-premium-view {
-  --orc-teal: var(--pgm-erp-teal, #00c08b);
-  --orc-teal-dark: var(--pgm-erp-teal-hover, #008f68);
+  --orc-teal: var(--pgm-erp-teal, #1d9e75);
+  --orc-teal-dark: var(--pgm-erp-teal-hover, #0f6e56);
   --orc-teal-light: #e1f5ee;
   --orc-teal-mid: #5dcaa5;
   --orc-amber: #e9a025;
@@ -1788,7 +1788,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   font-family: monospace;
 }
 
-.orc-v-current { background: var(--orc-teal, #00c08b); color: #fff; }
+.orc-v-current { background: var(--orc-teal, #1d9e75); color: #fff; }
 .orc-v-old { background: #e5e4e0; color: #5f5e5a; }
 
 /* Workflow */
@@ -1963,7 +1963,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 
 .orc-premium-carrinho-tbl .btn-orc-tbl-icon--edit {
   border-color: rgba(0, 192, 139, 0.4);
-  color: #008f68;
+  color: #0f6e56;
 }
 
 .orc-premium-carrinho-tbl .btn-orc-tbl-icon--edit:hover {
@@ -2001,7 +2001,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   align-items: flex-start;
   margin-bottom: 22px;
   padding-bottom: 18px;
-  border-bottom: 2.5px solid var(--orc-teal, #00c08b);
+  border-bottom: 2.5px solid var(--orc-teal, #1d9e75);
 }
 
 .orc-premium-wrap .orc-paper-brand {
@@ -2080,10 +2080,10 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 }
 
 .orc-premium-wrap .orc-paper-badge--teal {
-  color: #00c08b;
+  color: #1d9e75;
 }
 .orc-premium-wrap .orc-paper-badge--teal .dot {
-  background: #00c08b;
+  background: #1d9e75;
 }
 .orc-premium-wrap .orc-paper-badge--amber {
   color: #ffc107;
@@ -2128,7 +2128,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   color: #999;
 }
 .orc-premium-wrap .orc-paper-foot-em {
-  color: #00c08b;
+  color: #1d9e75;
   font-weight: 600;
 }
 
@@ -2275,7 +2275,7 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 .orc-premium-wrap .orc-paper-obs {
   background: #f9f9f9;
   border-radius: 6px;
-  border-left: 3px solid var(--orc-teal, #00c08b);
+  border-left: 3px solid var(--orc-teal, #1d9e75);
   padding: 10px 13px;
   margin-bottom: 16px;
   font-size: 10px;
@@ -2590,45 +2590,45 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
 .orc-premium-form .orc-version-item:last-child { border: none; }
 
 /* =============================================================================
-   ERP tema escuro (layout-no-topbar sem pgm-theme-light)
+   ERP tema escuro (layout-no-topbar)
    Anula fundos #f2f1ee / #fff do catálogo premium e alinha a layout-sidebar-shell.
-   Não afeta body.pgm-theme-light nem impressão/hash público sem esse layout.
+   Não afeta impressão/hash público sem esse layout.
    ============================================================================= */
 
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root),
-html:has(body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-page-root) {
+body.layout-no-topbar:has(.orc-premium-page-root),
+html:has(body.layout-no-topbar .orc-premium-page-root) {
   background-color: #0d1117 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) #main-wrapper,
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .page-wrapper,
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main {
+body.layout-no-topbar:has(.orc-premium-page-root) #main-wrapper,
+body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper,
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main {
   background: #0d1117 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main .footer {
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {
   background: #13161d !important;
   color: rgba(255, 255, 255, 0.6) !important;
   border-top-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main .footer a,
-body.layout-no-topbar:not(.pgm-theme-light):has(.orc-premium-page-root) .pgm-shell-main .footer a strong {
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a,
+body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a strong {
   color: #5cdbc0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-page-root {
+body.layout-no-topbar .orc-premium-page-root {
   background: transparent !important;
   color: #e6edf3;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light).skin-green .orc-premium-page-root {
+body.layout-no-topbar.skin-green .orc-premium-page-root {
   background: transparent !important;
 }
 
 /* Variáveis — índice / listagem */
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-index,
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-wrap.orc-premium-index {
+body.layout-no-topbar .orc-premium-wrap.orc-premium-index,
+body.layout-no-topbar #orc-premium-container.orc-premium-wrap.orc-premium-index {
   --orc-teal-light: rgba(92, 219, 192, 0.22);
   --orc-border: rgba(255, 255, 255, 0.1);
   --orc-border-light: rgba(255, 255, 255, 0.06);
@@ -2642,58 +2642,58 @@ body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-w
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-wrap.orc-premium-index {
+body.layout-no-topbar #orc-premium-container.orc-premium-wrap.orc-premium-index {
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index .dataTables_wrapper {
+body.layout-no-topbar #orc-premium-container.orc-premium-index .dataTables_wrapper {
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.dataTable tbody td,
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.dataTable thead th,
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.orc-premium-tbl tbody td,
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th {
+body.layout-no-topbar #orc-premium-container.orc-premium-index table.dataTable tbody td,
+body.layout-no-topbar #orc-premium-container.orc-premium-index table.dataTable thead th,
+body.layout-no-topbar #orc-premium-container.orc-premium-index table.orc-premium-tbl tbody td,
+body.layout-no-topbar #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th {
   background-color: #161b22 !important;
   color: #e6edf3 !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th,
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index table.dataTable thead th {
+body.layout-no-topbar #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th,
+body.layout-no-topbar #orc-premium-container.orc-premium-index table.dataTable thead th {
   background: rgba(255, 255, 255, 0.06) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index a.orc-premium-link,
-body.layout-no-topbar:not(.pgm-theme-light) #orc-premium-container.orc-premium-index a.orc-premium-id {
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-link,
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-id {
   color: #5cdbc0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-search {
+body.layout-no-topbar .orc-premium-index .orc-premium-search {
   background: #13161d !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-btn-ghost {
+body.layout-no-topbar .orc-premium-index .orc-premium-btn-ghost {
   background: rgba(255, 255, 255, 0.06) !important;
   color: #e6edf3 !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-btn-ghost:hover {
+body.layout-no-topbar .orc-premium-index .orc-premium-btn-ghost:hover {
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(92, 219, 192, 0.45) !important;
   color: #5cdbc0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-index .orc-premium-list-card .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+body.layout-no-topbar .orc-premium-index .orc-premium-list-card .dataTables_wrapper .dataTables_paginate .paginate_button.current {
   background: rgba(92, 219, 192, 0.22) !important;
   color: #5cdbc0 !important;
   border-color: rgba(92, 219, 192, 0.4) !important;
 }
 
 /* Formulários add/edit */
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-form {
+body.layout-no-topbar .orc-premium-wrap.orc-premium-form {
   --orc-teal-light: rgba(92, 219, 192, 0.18);
   --orc-teal-mid: rgba(92, 219, 192, 0.45);
   --orc-border: rgba(255, 255, 255, 0.1);
@@ -2708,25 +2708,25 @@ body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-form {
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light).skin-green .orc-premium-wrap.orc-premium-form {
+body.layout-no-topbar.skin-green .orc-premium-wrap.orc-premium-form {
   background: #161b22 !important;
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form .orc-stp.done .orc-stp-c {
+body.layout-no-topbar .orc-premium-form .orc-stp.done .orc-stp-c {
   background: rgba(92, 219, 192, 0.2) !important;
   color: #5cdbc0 !important;
   border-color: rgba(92, 219, 192, 0.4) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form .orc-wf-ok {
+body.layout-no-topbar .orc-premium-form .orc-wf-ok {
   background: rgba(92, 219, 192, 0.15) !important;
   border-color: rgba(92, 219, 192, 0.35) !important;
   color: #5cdbc0 !important;
 }
 
 /* Visualização */
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-view {
+body.layout-no-topbar .orc-premium-wrap.orc-premium-view {
   --orc-teal-light: rgba(92, 219, 192, 0.18);
   --orc-teal-mid: rgba(92, 219, 192, 0.45);
   --orc-border: rgba(255, 255, 255, 0.1);
@@ -2740,98 +2740,120 @@ body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap.orc-premium-view {
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light).skin-green .orc-premium-wrap.orc-premium-view {
+body.layout-no-topbar.skin-green .orc-premium-wrap.orc-premium-view {
   background: #161b22 !important;
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-view .orc-wf-ok {
+body.layout-no-topbar .orc-premium-view .orc-wf-ok {
   background: rgba(92, 219, 192, 0.15) !important;
   border-color: rgba(92, 219, 192, 0.35) !important;
   color: #5cdbc0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-v-old {
+body.layout-no-topbar .orc-v-old {
   background: rgba(255, 255, 255, 0.1) !important;
   color: rgba(230, 237, 243, 0.85) !important;
 }
 
 /* Form: textareas e botões secundários (forçavam #fff) */
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form .orc-obs-textarea {
+body.layout-no-topbar .orc-premium-form .orc-obs-textarea {
   background: #13161d !important;
   color: #e6edf3 !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.form-control,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material #observacao.form-control,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material .orc-item-obs-field.form-control {
+body.layout-no-topbar .orc-premium-form form.form-material textarea.form-control,
+body.layout-no-topbar .orc-premium-form form.form-material #observacao.form-control,
+body.layout-no-topbar .orc-premium-form form.form-material .orc-item-obs-field.form-control {
   background-color: #13161d !important;
   color: #e6edf3 !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.form-control:focus,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material #observacao.form-control:focus,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material .orc-item-obs-field.form-control:focus,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control:focus,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea#observacoes.form-control:focus {
+body.layout-no-topbar .orc-premium-form form.form-material textarea.form-control:focus,
+body.layout-no-topbar .orc-premium-form form.form-material #observacao.form-control:focus,
+body.layout-no-topbar .orc-premium-form form.form-material .orc-item-obs-field.form-control:focus,
+body.layout-no-topbar .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control:focus,
+body.layout-no-topbar .orc-premium-form form.form-material textarea#observacoes.form-control:focus {
   background-color: #13161d !important;
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::selection,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea#observacoes.form-control::selection {
+body.layout-no-topbar .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::selection,
+body.layout-no-topbar .orc-premium-form form.form-material textarea#observacoes.form-control::selection {
   background: rgba(92, 219, 192, 0.35);
   color: #fff;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::-moz-selection,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-form form.form-material textarea#observacoes.form-control::-moz-selection {
+body.layout-no-topbar .orc-premium-form form.form-material textarea.orc-obs-textarea.form-control::-moz-selection,
+body.layout-no-topbar .orc-premium-form form.form-material textarea#observacoes.form-control::-moz-selection {
   background: rgba(92, 219, 192, 0.35);
   color: #fff;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-form-secondary:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-form-secondary:focus {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-form-secondary:hover,
+body.layout-no-topbar .orc-premium-wrap .btn-orc-form-secondary:focus {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.18) !important;
   color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-danger {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-danger {
   background: rgba(255, 255, 255, 0.04) !important;
   color: #ff8a8a !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-danger:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-danger:focus {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-danger:hover,
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-danger:focus {
   background: rgba(226, 75, 74, 0.15) !important;
   border-color: #e24b4a !important;
   color: #ffb4b4 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-teal {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-teal {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(92, 219, 192, 0.45) !important;
   color: #5cdbc0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-teal:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-teal:focus {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-teal:hover,
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-teal:focus {
   background: rgba(92, 219, 192, 0.12) !important;
   border-color: #5cdbc0 !important;
   color: #9ef5e0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-purple {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-purple {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(166, 130, 230, 0.45) !important;
   color: #c4b5f0 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-purple:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .orc-premium-wrap .btn-orc-outline-purple:focus {
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-purple:hover,
+body.layout-no-topbar .orc-premium-wrap .btn-orc-outline-purple:focus {
   background: rgba(166, 130, 230, 0.12) !important;
   color: #ddd6f5 !important;
+}
+
+/* Form/view — selects e leitura (ainda herdavam #fff do bloco claro) */
+body.layout-no-topbar .orc-premium-form .orc-readonly-val {
+  color: #e6edf3 !important;
+}
+body.layout-no-topbar .orc-premium-form select.form-control.orc-native-select {
+  background-color: #13161d !important;
+  color: #e6edf3 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%239aa0a8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+}
+body.layout-no-topbar .orc-premium-form .form-control.orc-input-readonly-fill[readonly] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(230, 237, 243, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.layout-no-topbar .orc-premium-view .orc-wf-pend,
+body.layout-no-topbar .orc-premium-form .orc-wf-pend {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #fcd34d !important;
 }

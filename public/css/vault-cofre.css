@@ -10,7 +10,7 @@
 	--vault-border: #e5e4e0;
 	--vault-text: #1a1a18;
 	--vault-muted: #6b6a65;
-	--vault-accent: var(--pgm-erp-teal, #00c08b);
+	--vault-accent: var(--pgm-erp-teal, #1d9e75);
 	--vault-accent-dim: var(--pgm-erp-teal-muted, rgba(0, 192, 139, 0.12));
 	--vault-card: #ffffff;
 	--vault-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -59,7 +59,7 @@
 	padding: 4px 8px;
 	border-radius: 6px;
 	background: var(--vault-accent-dim);
-	color: #008f68;
+	color: #0f6e56;
 	border: 1px solid rgba(0, 192, 139, 0.35);
 }
 
@@ -70,7 +70,7 @@
 }
 
 .vault-cofre-header .btn-vault-primary {
-	background: linear-gradient(135deg, #00c08b 0%, #008f68 100%) !important;
+	background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%) !important;
 	border: none !important;
 	color: #fff !important;
 	font-weight: 600;
@@ -293,7 +293,7 @@
 }
 
 .vault-btn-copy {
-	background: linear-gradient(135deg, #00c08b 0%, #008f68 100%) !important;
+	background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%) !important;
 	color: #fff !important;
 	border: none !important;
 	border-radius: 8px;
@@ -393,7 +393,7 @@
 	padding: 12px 14px;
 	background: #f9f9f8;
 	border-radius: 8px;
-	border-left: 4px solid #00c08b;
+	border-left: 4px solid #1d9e75;
 }
 
 .vault-form-note--flush {

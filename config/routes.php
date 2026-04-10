@@ -140,6 +140,11 @@ Router::scope('/', function ($routes) {
     // Módulo Fiscal — URLs canônicas (equipe; templates/rotas explícitas)
     $routes->connect('/fiscal', ['controller' => 'Fiscal', 'action' => 'index']);
     $routes->connect('/fiscal/status-sefaz', ['controller' => 'Fiscal', 'action' => 'statusSefaz'])->setMethods(['GET', 'POST']);
+    $routes->connect('/fiscal/distribuicao-dfe', ['controller' => 'Fiscal', 'action' => 'distribuicaoDfe'])->setMethods(['GET']);
+    $routes->connect('/fiscal/dfe-recebidos', ['controller' => 'Fiscal', 'action' => 'dfeRecebidos']);
+    $routes->connect('/fiscal/dfe-recebidos/xml/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoXml'], ['pass' => ['id']]);
+    $routes->connect('/fiscal/dfe-recebidos/ignorar/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoIgnorar'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal/dfe-recebidos/criar-entrada/*', ['controller' => 'Fiscal', 'action' => 'dfeRecebidoCriarEntrada'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/fiscal-notas', ['controller' => 'FiscalNotas', 'action' => 'index']);
     $routes->connect('/fiscal-notas/index', ['controller' => 'FiscalNotas', 'action' => 'index']);
     $routes->connect('/fiscal-notas/add', ['controller' => 'FiscalNotas', 'action' => 'add']);
@@ -149,6 +154,8 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-notas/emitir/*', ['controller' => 'FiscalNotas', 'action' => 'emitir'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas/cancelar/*', ['controller' => 'FiscalNotas', 'action' => 'cancelar'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas/carta-correcao/*', ['controller' => 'FiscalNotas', 'action' => 'cartaCorrecao'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas/manifestar-destinatario/*', ['controller' => 'FiscalNotas', 'action' => 'manifestarDestinatario'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas/inutilizar-numeracao', ['controller' => 'FiscalNotas', 'action' => 'inutilizarNumeracao']);
     $routes->connect('/fiscal-notas/danfe/*', ['controller' => 'FiscalNotas', 'action' => 'danfe'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas/download-xml/*', ['controller' => 'FiscalNotas', 'action' => 'downloadXml'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas/buscar-ncm', ['controller' => 'FiscalNotas', 'action' => 'buscarNcm'])->setMethods(['GET']);
@@ -164,6 +171,8 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-notas-entrada/emitir/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'emitir'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas-entrada/cancelar/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'cancelar'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas-entrada/carta-correcao/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'cartaCorrecao'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-notas-entrada/manifestar-destinatario/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'manifestarDestinatario'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-notas-entrada/inutilizar-numeracao', ['controller' => 'FiscalNotasEntrada', 'action' => 'inutilizarNumeracao']);
     $routes->connect('/fiscal-notas-entrada/danfe/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'danfe'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas-entrada/download-xml/*', ['controller' => 'FiscalNotasEntrada', 'action' => 'downloadXml'], ['pass' => ['id']]);
     $routes->connect('/fiscal-notas-entrada/buscar-ncm', ['controller' => 'FiscalNotasEntrada', 'action' => 'buscarNcm'])->setMethods(['GET']);

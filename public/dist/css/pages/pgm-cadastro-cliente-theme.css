@@ -37,7 +37,3 @@ html[data-pgm-theme="dark"] body.pgm-cadastro-legacy .register-steps .nav-link,
 html[data-pgm-theme="dark"] body.pgm-cadastro-legacy .register-steps a {
 	color: var(--pgm-text-secondary) !important;
 }
-
-html[data-pgm-theme="light"] body.pgm-cadastro-legacy #wrapper.step-register {
-	background: var(--pgm-bg-page) !important;
-}

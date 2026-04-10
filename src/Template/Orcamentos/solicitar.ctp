@@ -21,24 +21,31 @@ $tipoLabel = static function ($t) {
 ?>
 <style>
 .pgm-solicitar-wrap{
-	--sol-navy:#0c2340;
-	--sol-cyan:#00b4d8;
-	--sol-green:#00a878;
-	--sol-border:#e2e8f0;
-	--sol-muted:#64748b;
+	--sol-navy:#0a1628;
+	--sol-cyan:#45e5ed;
+	--sol-green:#1d9e75;
+	--sol-border:#3d4554;
+	--sol-muted:#9aa0a8;
+	--sol-page:#12151c;
+	--sol-card:#1e2329;
+	--sol-card-h:#262c35;
+	--sol-input:#161b22;
+	--sol-text:#e8eaed;
 	margin:-15px -15px 0;
 	padding:0 0 48px;
 	min-height:calc(100vh - 64px);
 	font-family:'DM Sans',system-ui,sans-serif;
+	background:var(--sol-page);
+	color:var(--sol-text);
 }
 .pgm-solicitar-wrap *{ box-sizing:border-box; }
 .pgm-sol-hero{
-	background:linear-gradient(135deg,var(--sol-navy) 0%,#153a5f 100%);
+	background:linear-gradient(135deg,var(--sol-navy) 0%,#122a45 100%);
 	color:#fff;
 	padding:28px 32px 32px;
 	border-radius:0 0 18px 18px;
 	margin-bottom:28px;
-	box-shadow:0 12px 40px rgba(12,35,64,.25);
+	box-shadow:0 12px 40px rgba(0,0,0,.35);
 }
 .pgm-sol-hero-inner{ max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start; }
 .pgm-sol-hero h1{ font-size:1.55rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em; }
@@ -52,12 +59,12 @@ $tipoLabel = static function ($t) {
 .pgm-sol-main{ max-width:1100px;margin:0 auto;padding:0 24px; display:flex;flex-direction:column;gap:22px; }
 .pgm-sol-section-title{ font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--sol-muted);margin:0 0 12px; }
 .pgm-sol-card{
-	background:#fff;border:1px solid var(--sol-border);border-radius:14px;
-	box-shadow:0 1px 3px rgba(15,23,42,.06); overflow:hidden;
+	background:var(--sol-card);border:1px solid var(--sol-border);border-radius:14px;
+	box-shadow:0 4px 20px rgba(0,0,0,.25); overflow:hidden;
 }
 .pgm-sol-card-h{
-	padding:14px 20px;border-bottom:1px solid var(--sol-border);background:#f8fafc;
-	font-weight:700;font-size:.9rem;color:var(--sol-navy);
+	padding:14px 20px;border-bottom:1px solid var(--sol-border);background:var(--sol-card-h);
+	font-weight:700;font-size:.9rem;color:var(--sol-text);
 }
 .pgm-sol-card-b{ padding:20px; }
 .pgm-sol-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
@@ -65,57 +72,59 @@ $tipoLabel = static function ($t) {
 @media(max-width:520px){ .pgm-sol-grid{ grid-template-columns:1fr;} }
 .pgm-sol-pcard{
 	border:1px solid var(--sol-border);border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;gap:10px;
-	min-height:200px;background:#fff;transition:box-shadow .15s,border-color .15s;
+	min-height:200px;background:var(--sol-card);transition:box-shadow .15s,border-color .15s;
 }
-.pgm-sol-pcard:hover{ box-shadow:0 8px 24px rgba(12,35,64,.08); border-color:#cbd5e1; }
-.pgm-sol-pcard h3{ font-size:.82rem;font-weight:800;color:var(--sol-navy);margin:0;line-height:1.35;min-height:2.6em; }
+.pgm-sol-pcard:hover{ box-shadow:0 8px 24px rgba(0,0,0,.35); border-color:#4f5869; }
+.pgm-sol-pcard h3{ font-size:.82rem;font-weight:800;color:var(--sol-text);margin:0;line-height:1.35;min-height:2.6em; }
 .pgm-sol-badge{
 	display:inline-block;font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-	padding:4px 10px;border-radius:999px;background:rgba(0,180,216,.15);color:#0077a8;
+	padding:4px 10px;border-radius:999px;background:rgba(69,229,237,.12);color:#7ef0f5;
 }
 .pgm-sol-pcard .pgm-sol-sub{ font-size:.72rem;color:var(--sol-muted);line-height:1.45;flex:1; }
 .pgm-sol-preco{ font-size:.8rem;color:var(--sol-muted); }
-.pgm-sol-preco strong{ color:var(--sol-navy);font-weight:700; }
+.pgm-sol-preco strong{ color:var(--sol-text);font-weight:700; }
 .pgm-sol-btn-outline{
 	display:block;width:100%;text-align:center;padding:9px 12px;border-radius:9px;border:2px solid var(--sol-green);
-	background:#fff;color:var(--sol-green);font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;
+	background:transparent;color:#5cecc4;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;
 }
-.pgm-sol-btn-outline:hover{ background:rgba(0,168,120,.08); }
+.pgm-sol-btn-outline:hover{ background:rgba(29,158,117,.15); }
 .pgm-sol-search-row{ display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start; }
 .pgm-sol-search-row input[type="search"]{
 	flex:1;min-width:200px;padding:12px 14px;border:1px solid var(--sol-border);border-radius:10px;font-size:.88rem;
+	background:var(--sol-input);color:var(--sol-text);
 }
 .pgm-sol-search-hint{ font-size:.75rem;color:var(--sol-muted);margin-top:8px; }
 .pgm-sol-cat-table-wrap{
 	margin-top:12px;max-height:240px;overflow:auto;border:1px solid var(--sol-border);border-radius:10px;display:none;
+	background:var(--sol-card);
 }
 .pgm-sol-cat-table-wrap.open{ display:block; }
 .pgm-sol-cat-table{ width:100%;border-collapse:collapse;font-size:.8rem; }
-.pgm-sol-cat-table th{ text-align:left;padding:10px 12px;background:#e2e8f0;color:#334155;font-weight:700;position:sticky;top:0; }
-.pgm-sol-cat-table td{ padding:10px 12px;border-top:1px solid var(--sol-border);cursor:pointer; }
-.pgm-sol-cat-table tr:hover td{ background:#f1f5f9; }
-.pgm-sol-cat-table .c-cod{ width:28%;font-weight:600;color:var(--sol-navy);white-space:nowrap; }
+.pgm-sol-cat-table th{ text-align:left;padding:10px 12px;background:var(--sol-card-h);color:var(--sol-muted);font-weight:700;position:sticky;top:0; }
+.pgm-sol-cat-table td{ padding:10px 12px;border-top:1px solid var(--sol-border);cursor:pointer;color:var(--sol-text); }
+.pgm-sol-cat-table tr:hover td{ background:#262c35; }
+.pgm-sol-cat-table .c-cod{ width:28%;font-weight:600;color:#c4c9d1;white-space:nowrap; }
 .pgm-sol-form-grid{ display:grid;grid-template-columns:1fr 1fr;gap:16px; }
 @media(max-width:640px){ .pgm-sol-form-grid{ grid-template-columns:1fr;} }
 .pgm-sol-field label{ display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sol-muted);margin-bottom:6px; }
-.pgm-sol-field .req{ color:#dc2626; }
+.pgm-sol-field .req{ color:#f87171; }
 .pgm-sol-input,.pgm-sol-textarea{
 	width:100%;padding:10px 12px;border:1px solid var(--sol-border);border-radius:9px;font-size:.85rem;font-family:inherit;
-	background:#f8fafc;
+	background:var(--sol-input);color:var(--sol-text);
 }
-.pgm-sol-input:focus,.pgm-sol-textarea:focus{ outline:none;border-color:var(--sol-cyan);box-shadow:0 0 0 3px rgba(0,180,216,.15);background:#fff; }
+.pgm-sol-input:focus,.pgm-sol-textarea:focus{ outline:none;border-color:var(--sol-green);box-shadow:0 0 0 3px rgba(29,158,117,.2);background:var(--sol-card); }
 .pgm-sol-textarea{ min-height:100px;resize:vertical; }
 .pgm-sol-urg{ display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
 @media(max-width:480px){ .pgm-sol-urg{ grid-template-columns:1fr;} }
 .pgm-sol-urg button{
-	padding:11px;border-radius:10px;border:1px solid var(--sol-border);background:#fff;cursor:pointer;font-size:.78rem;font-weight:600;font-family:inherit;
+	padding:11px;border-radius:10px;border:1px solid var(--sol-border);background:var(--sol-card);cursor:pointer;font-size:.78rem;font-weight:600;font-family:inherit;color:var(--sol-text);
 }
-.pgm-sol-urg button.active-n{ border-color:var(--sol-green);background:#ecfdf5;color:#047857; }
-.pgm-sol-urg button.active-m{ border-color:#f59e0b;background:#fffbeb;color:#b45309; }
-.pgm-sol-urg button.active-h{ border-color:#ef4444;background:#fef2f2;color:#b91c1c; }
+.pgm-sol-urg button.active-n{ border-color:var(--sol-green);background:rgba(29,158,117,.15);color:#5cecc4; }
+.pgm-sol-urg button.active-m{ border-color:#f59e0b;background:rgba(245,158,11,.12);color:#fcd34d; }
+.pgm-sol-urg button.active-h{ border-color:#ef4444;background:rgba(239,68,68,.12);color:#fca5a5; }
 .pgm-sol-item-row{
 	display:grid;grid-template-columns:100px 1fr 72px 1fr 36px;gap:10px;align-items:end;
-	background:#f8fafc;border:1px solid var(--sol-border);border-radius:10px;padding:12px;
+	background:var(--sol-input);border:1px solid var(--sol-border);border-radius:10px;padding:12px;
 }
 @media(max-width:700px){ .pgm-sol-item-row{ grid-template-columns:1fr; } }
 .pgm-sol-item-row .lbl{ font-size:.58rem;font-weight:700;text-transform:uppercase;color:var(--sol-muted);margin-bottom:4px; }
@@ -123,20 +132,20 @@ $tipoLabel = static function ($t) {
 	margin-top:10px;padding:9px 16px;border:1px dashed var(--sol-border);border-radius:9px;background:transparent;
 	cursor:pointer;font-size:.78rem;color:var(--sol-muted);font-family:inherit;
 }
-.pgm-sol-btn-add:hover{ border-color:var(--sol-green);color:var(--sol-green); }
+.pgm-sol-btn-add:hover{ border-color:var(--sol-green);color:#5cecc4; }
 .pgm-sol-btn-rm{
-	width:34px;height:34px;border-radius:8px;border:1px solid var(--sol-border);background:#fff;cursor:pointer;color:var(--sol-muted);
+	width:34px;height:34px;border-radius:8px;border:1px solid var(--sol-border);background:var(--sol-card);cursor:pointer;color:var(--sol-muted);
 }
 .pgm-sol-actions{ display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;padding-top:8px; }
 .pgm-sol-btn-cancel{
-	padding:11px 20px;border-radius:10px;border:1px solid var(--sol-border);background:#fff;color:var(--sol-muted);font-size:.85rem;text-decoration:none;
+	padding:11px 20px;border-radius:10px;border:1px solid var(--sol-border);background:var(--sol-card);color:var(--sol-muted);font-size:.85rem;text-decoration:none;
 }
 .pgm-sol-btn-submit{
-	padding:12px 28px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--sol-green),#008f68);color:#fff;font-size:.88rem;font-weight:800;
-	cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(0,168,120,.25);
+	padding:12px 28px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--sol-green),#0f6e56);color:#fff;font-size:.88rem;font-weight:800;
+	cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(29,158,117,.35);
 }
 .pgm-sol-note{
-	font-size:.78rem;color:var(--sol-muted);padding:14px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;line-height:1.5;
+	font-size:.78rem;color:var(--sol-muted);padding:14px 16px;background:rgba(29,158,117,.1);border:1px solid rgba(29,158,117,.35);border-radius:10px;line-height:1.5;
 }
 .pgm-sol-field--mt16{margin-top:16px;}
 .pgm-sol-item-row input[type="number"].pgm-sol-input{text-align:center;}

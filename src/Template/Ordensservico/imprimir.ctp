@@ -40,7 +40,7 @@ function Mask($mask, $str)
         align-items: center;
         gap: 6px;
     }
-    .btn-os-pdf    { background: linear-gradient(135deg,#00c08b,#007a56); border:none; color:#fff !important; box-shadow:0 2px 10px rgba(0,192,139,.35); }
+    .btn-os-pdf    { background: linear-gradient(135deg,#1d9e75,#0f6e56); border:none; color:#fff !important; box-shadow:0 2px 10px rgba(29,158,117,.35); }
     .btn-os-pdf:hover { filter:brightness(1.08); color:#fff !important; }
     .btn-os-print  { background: linear-gradient(135deg,#ff8800,#cc6600); border:none; color:#fff !important; box-shadow:0 2px 10px rgba(255,136,0,.30); }
     .btn-os-print:hover { filter:brightness(1.08); color:#fff !important; }
@@ -58,7 +58,7 @@ function Mask($mask, $str)
     /* ── Document top accent bar ──────────────────────────── */
     .os-doc-topbar {
         height: 5px;
-        background: linear-gradient(90deg, #00c08b 0%, #007a56 100%);
+        background: linear-gradient(90deg, #1d9e75 0%, #0f6e56 100%);
     }
 
     /* ── Document header (logo + title + info) ────────────── */
@@ -89,7 +89,7 @@ function Mask($mask, $str)
         font-weight: 500;
     }
     .os-doc-header .os-number-badge {
-        background: linear-gradient(135deg,#00c08b,#007a56);
+        background: linear-gradient(135deg,#1d9e75,#0f6e56);
         color: #fff;
         border-radius: 10px;
         padding: 10px 20px;
@@ -171,7 +171,7 @@ function Mask($mask, $str)
     .os-section-header .os-section-icon {
         width: 4px;
         height: 20px;
-        background: linear-gradient(180deg,#00c08b,#007a56);
+        background: linear-gradient(180deg,#1d9e75,#0f6e56);
         border-radius: 2px;
         flex-shrink: 0;
     }
@@ -367,6 +367,108 @@ function Mask($mask, $str)
         .os-doc-header .os-number-badge {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+    }
+
+    /* Tema escuro: só na tela (PDF captura com .pdf-mode permanece claro) */
+    @media screen {
+        html[data-pgm-theme="dark"] body {
+            background: #0f1218 !important;
+            color: #e8eaed;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) {
+            background: #13161d !important;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+        }
+        html[data-pgm-theme="dark"] .btn-os-back {
+            background: #1e2430 !important;
+            border-color: #3d4554 !important;
+            color: #e8eaed !important;
+        }
+        html[data-pgm-theme="dark"] .btn-os-back:hover {
+            background: #252b38 !important;
+            color: #f1f5f9 !important;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-header {
+            border-bottom-color: #2d3544;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-header .os-title-block h1 {
+            color: #e8eaed;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-header .os-title-block .os-subtitle {
+            color: #9ca3af;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-client-section {
+            border-bottom-color: #2d3544;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-info-grid {
+            border-color: #3d4554;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-info-cell {
+            border-right-color: #3d4554;
+            border-bottom-color: #3d4554;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-info-cell .os-field-label {
+            color: #8b93a0;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-info-cell .os-field-value {
+            color: #e8eaed;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-section-header {
+            background: #1a1f28;
+            border-color: #2d3544;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-section-header h3 {
+            color: #c5cad3;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-relato-body {
+            color: #c5cad3;
+            border-bottom-color: #2d3544;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-relato-body .os-obs {
+            background: rgba(245, 158, 11, 0.12);
+            border-left-color: #f59e0b;
+            color: #fcd34d;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-products-body .table {
+            border-color: #3d4554;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-products-body .table thead tr th {
+            background: #1e2430 !important;
+            color: #c5cad3 !important;
+            border-bottom-color: #1d9e75 !important;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-products-body .table tbody tr td {
+            border-top-color: #2d3544;
+            color: #e8eaed;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-products-body .table tbody tr:nth-child(even) td {
+            background: #181c24 !important;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-products-body .table tbody tr:nth-child(odd) td {
+            background: #13161d !important;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-products-body .table tbody tr:hover td {
+            background: rgba(29, 158, 117, 0.12) !important;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-total-row {
+            border-top-color: #2d3544;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-total-row .os-total-label {
+            color: #8b93a0;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-footer {
+            background: #1a1f28;
+            border-top-color: #2d3544;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-footer .os-footer-brand {
+            color: #6b7280;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-footer .os-signature p {
+            color: #8b93a0;
+        }
+        html[data-pgm-theme="dark"] #printable:not(.pdf-mode) .os-doc-footer .os-signature p.os-sig-name {
+            color: #e8eaed;
         }
     }
 </style>

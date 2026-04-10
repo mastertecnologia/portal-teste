@@ -84,8 +84,8 @@ foreach (['cliente', 'situacao', 'problema', 'locacao', 'solicitante', 'data_ini
 	padding: 2px 8px;
 	border-radius: 4px;
 	font-size: 11px;
-	background: rgba(0, 192, 139, 0.18);
-	color: #00c08b;
+	background: rgba(29, 158, 117, 0.18);
+	color: #1d9e75;
 	font-weight: 500;
 }
 </style>

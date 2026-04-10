@@ -1,68 +1,11 @@
 /**
- * PGM Soluções — tokens semânticos (light / dark)
+ * PGM Soluções — tokens semânticos (tema escuro único).
  * Consumidos por novos estilos, login, Service Desk e integrações (ex.: React).
- * Telas legadas continuam com pgm-theme-light.css e pgm-advanced-module.css.
  *
  * Inventário e mapeamento módulos → tokens: docs/DESIGN_TOKENS_FASE1.md
  */
-html[data-pgm-theme="light"] {
-	color-scheme: light;
-	--pgm-primary: #00a876;
-	--pgm-primary-hover: #007a55;
-	--pgm-primary-muted: rgba(0, 168, 118, 0.12);
-	--pgm-secondary: #0d5c63;
-	--pgm-accent: #00c9a7;
-	--pgm-bg-page: #f0f2f5;
-	--pgm-bg-surface: #ffffff;
-	--pgm-bg-elevated: #f8f9fb;
-	--pgm-text: #1a1f2e;
-	--pgm-text-secondary: #374151;
-	--pgm-text-muted: #6b7280;
-	--pgm-border: #e1e4e8;
-	--pgm-border-strong: #d0d7de;
-	--pgm-success: #059669;
-	--pgm-success-bg: #d1fae5;
-	--pgm-success-text: #065f46;
-	--pgm-warning: #d97706;
-	--pgm-warning-bg: #fef3c7;
-	--pgm-warning-text: #92400e;
-	--pgm-danger: #dc2626;
-	--pgm-danger-bg: #fee2e2;
-	--pgm-danger-text: #991b1b;
-	--pgm-info-bg: #e0f2fe;
-	--pgm-info-text: #0c4a6e;
-	--pgm-focus-ring: rgba(0, 168, 118, 0.35);
-	--pgm-link: #00a876;
-	--pgm-topbar-gradient-start: #0d5c63;
-	--pgm-topbar-gradient-end: #127a82;
-	--pgm-topbar-link: #e8fffc;
-	/* Layout system (estrutural) */
-	--pgm-sidebar-width: 220px;
-	--pgm-sidebar-width-mini: 70px;
-	--pgm-section-gap-y: 1.25rem;
-	--pgm-stack-gap: 1rem;
-	--pgm-radius-section: 12px;
-	/* Fase 1 — escala espacial / radius / tipografia (adoção gradual) */
-	--pgm-space-1: 4px;
-	--pgm-space-2: 8px;
-	--pgm-space-3: 12px;
-	--pgm-space-4: 16px;
-	--pgm-space-5: 24px;
-	--pgm-space-6: 32px;
-	--pgm-radius-sm: 8px;
-	--pgm-radius-md: 10px;
-	--pgm-radius-lg: 12px;
-	--pgm-radius-xl: 16px;
-	--pgm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	--pgm-font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-	/* Ação alinhada ao ERP / orçamentos / pgm-action-buttons (#00c08b) — distinta da primária marca */
-	--pgm-erp-teal: #00c08b;
-	--pgm-erp-teal-hover: #008f68;
-	--pgm-erp-teal-active: #0c8f64;
-	--pgm-erp-teal-muted: rgba(0, 192, 139, 0.15);
-}
-
-html[data-pgm-theme="dark"] {
+html[data-pgm-theme="dark"],
+html:not([data-pgm-theme]) {
 	color-scheme: dark;
 	--pgm-primary: #00d9a0;
 	--pgm-primary-hover: #5cecc4;

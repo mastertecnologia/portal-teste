@@ -12,7 +12,7 @@
 	--os-text: #f0f2f8;
 	--os-text2: #8b92a8;
 	--os-text3: #555e78;
-	--os-accent: #00c08b;
+	--os-accent: #1d9e75;
 	--os-accent2: #009e74;
 	--os-accent-glow: rgba(0, 192, 139, 0.18);
 	--os-green: #22c55e;
@@ -1109,7 +1109,7 @@ body.os-index-page .datepicker thead tr:first-child th.prev,
 body.os-index-page .datepicker thead tr:first-child th.next,
 body.os-index-page .datepicker thead tr:first-child th.prev p,
 body.os-index-page .datepicker thead tr:first-child th.next p {
-	color: #00c08b !important;
+	color: #1d9e75 !important;
 	font-size: 16px !important;
 	width: auto !important;
 	min-width: 28px !important;
@@ -1158,7 +1158,7 @@ body.os-index-page .datepicker table tr td.active,
 body.os-index-page .datepicker table tr td.active:hover,
 body.os-index-page .datepicker table tr td span.active,
 body.os-index-page .datepicker table tr td span.active:hover {
-	background: #00c08b !important;
+	background: #1d9e75 !important;
 	color: #fff !important;
 }
 body.os-index-page .datepicker table tr td.disabled,
@@ -1331,7 +1331,7 @@ body.os-index-page .datepicker p:hover {
 
 .os-modal-nova-bc em {
 	font-style: normal;
-	color: var(--os-accent, #00c08b);
+	color: var(--os-accent, #1d9e75);
 	font-weight: 500;
 }
 
@@ -1432,7 +1432,7 @@ body.os-index-page .datepicker p:hover {
 }
 
 .os-modal-nova-btn-primary {
-	background: var(--os-accent, #00c08b);
+	background: var(--os-accent, #1d9e75);
 	color: #fff;
 }
 
@@ -1460,7 +1460,7 @@ body.os-drawer-active {
 	--os-text: #f0f2f8;
 	--os-text2: #8b92a8;
 	--os-text3: #555e78;
-	--os-accent: #00c08b;
+	--os-accent: #1d9e75;
 	--os-accent2: #009e74;
 	--os-green: #22c55e;
 	--os-green-bg: rgba(34, 197, 94, 0.1);

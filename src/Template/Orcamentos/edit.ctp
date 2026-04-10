@@ -24,7 +24,7 @@
 		width: 100%;
 		max-width: 100%;
 		padding: 4px;
-		border-bottom: 1px solid #E9ECEF;
+		border-bottom: 1px solid #3d4554;
 		/* border-radius: 3px; */
 		transition: 0.2s;
     }
@@ -43,6 +43,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		color: #c4c9d1;
     }
     .file-input {
 		position: absolute;
@@ -56,20 +57,20 @@
 </style>
 <style>
 .orc-premium-wrap.orc-premium-form {
-  --orc-teal-light: #e6faf4;
-  --orc-teal-mid: #5cdbc0;
-  --orc-border: #e5e4e0;
-  --orc-border-light: #f0efec;
-  --orc-text: #1a1a18;
-  --orc-text-muted: #6b6a65;
-  --orc-text-hint: #9a9890;
-  --orc-bg-card: #ffffff;
-  --orc-bg-surface: #f9f9f8;
+  --orc-teal-light: rgba(29, 158, 117, 0.15);
+  --orc-teal-mid: #5cecc4;
+  --orc-border: #3d4554;
+  --orc-border-light: #4f5869;
+  --orc-text: #e8eaed;
+  --orc-text-muted: #9aa0a8;
+  --orc-text-hint: #9aa0a8;
+  --orc-bg-card: #1e2329;
+  --orc-bg-surface: #262c35;
 }
 .orc-premium-form .orc-premium-card-inner,
 .orc-premium-view .orc-premium-card-inner {
-  border: 1px solid #e5e4e0 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04) !important;
+  border: 1px solid #3d4554 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,.28) !important;
 }
 </style>
 <div class="col-md-12 orc-premium-page-root">

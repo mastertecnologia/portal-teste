@@ -1,28 +1,11 @@
 <?php
-use Cake\Routing\Router;
 $privacyAuth = (bool)$this->request->getSession()->read('Auth.User.id');
-$privacyTheme = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
-$privacyThemeClass = ($privacyTheme === 'light') ? 'pgm-theme-light' : '';
-$isLightPrivacy = ($privacyTheme === 'light');
 ?>
 <!DOCTYPE HTML>
-<html lang="pt-BR">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
-	<script>
-	(function () {
-		var server = <?= json_encode($privacyAuth ? $privacyTheme : null) ?>;
-		var k = 'pgmPortalTheme', def = 'light', v, t;
-		if (server === 'light' || server === 'dark') {
-			t = server;
-		} else {
-			try { v = localStorage.getItem(k); } catch (e) { v = null; }
-			t = (v === 'dark' || v === 'light') ? v : def;
-		}
-		document.documentElement.setAttribute('data-pgm-theme', t);
-	})();
-	</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 	<?php
 	$csrf = $this->request->getAttribute('csrfToken');
@@ -45,7 +28,6 @@ $isLightPrivacy = ($privacyTheme === 'light');
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-login-theme") ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 	<?php if ($privacyAuth) : ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php endif; ?>
@@ -57,7 +39,7 @@ $isLightPrivacy = ($privacyTheme === 'light');
     <?= $this->fetch('script') ?>
 </head>
 
-<body class="pgm-auth-page layout-no-topbar <?= h($privacyThemeClass) ?>">
+<body class="pgm-auth-page layout-no-topbar">
 	<!-- Plugins -->
 	<?= $this->Html->script('/assets/node_modules/jquery/jquery-3.2.1.min'); ?>
 	<?= $this->Html->script('/js/pgm-portal-theme'); ?>
@@ -65,26 +47,6 @@ $isLightPrivacy = ($privacyTheme === 'light');
 	<?= $this->Html->script('/assets/node_modules/bootstrap/dist/js/bootstrap.min'); ?>
 	<!-- Custom JavaScript -->
 	<?= $this->Html->script("/dist/js/custom") ?>
-
-	<?php if ($privacyAuth) : ?>
-	<div class="pgm-privacy-theme-float">
-		<button type="button" class="pgm-auth-theme-toggle pgm-js-theme-toggle"
-			title="<?= $isLightPrivacy ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
-			aria-pressed="<?= $isLightPrivacy ? 'true' : 'false' ?>"
-			aria-label="<?= $isLightPrivacy ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro' ?>"
-			data-current="<?= $isLightPrivacy ? 'light' : 'dark' ?>">
-			<span class="pgm-tt-icon" aria-hidden="true"><?= $isLightPrivacy ? '☀️' : '🌙' ?></span>
-			<span class="pgm-tt-label"><?= $isLightPrivacy ? 'Claro' : 'Escuro' ?></span>
-		</button>
-	</div>
-	<?php else : ?>
-	<div class="pgm-privacy-theme-float">
-		<button type="button" class="pgm-auth-theme-toggle" id="pgmAuthThemeToggle" aria-label="Alternar tema claro ou escuro">
-			<span class="pgm-auth-tt-ico" aria-hidden="true">☀️</span>
-			<span class="pgm-auth-tt-txt">Claro</span>
-		</button>
-	</div>
-	<?php endif; ?>
 
 	<!-- Pre laoder -->
 	<div class="preloader">
@@ -99,12 +61,9 @@ $isLightPrivacy = ($privacyTheme === 'light');
 
 	<script>
 	$(function () {
-		if (!window.PgmPortalTheme) return;
-		<?php if ($privacyAuth) : ?>
-		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
-		<?php else : ?>
-		PgmPortalTheme.initGuest('light');
-		<?php endif; ?>
+		if (window.PgmPortalTheme) {
+			PgmPortalTheme.initGuest();
+		}
 	});
 	</script>
 </body>

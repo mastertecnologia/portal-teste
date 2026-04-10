@@ -1,10 +1,5 @@
-<?php
-use Cake\Routing\Router;
-$pgmOrcTheme = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
-$pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
-?>
 <!DOCTYPE HTML>
-<html lang="pt-BR" data-pgm-theme="<?= h($pgmOrcTheme) ?>">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
@@ -24,9 +19,6 @@ $pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
-	<?php if ($pgmOrcTheme === 'light') : ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
-	<?php endif; ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']) ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
@@ -69,7 +61,7 @@ $pgmOrcThemeClass = ($pgmOrcTheme === 'light') ? 'pgm-theme-light' : '';
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-green mini layout-no-topbar <?= h($pgmOrcThemeClass) ?>">
+<body class="fixed-layout skin-green mini layout-no-topbar">
 	<!--- Pre loader -->
 	<div class="preloader">
 		<div class="loader">

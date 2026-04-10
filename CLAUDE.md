@@ -23,7 +23,7 @@ The ERP URL is stored in `empresas.urlerp` in the database, not in config files.
 bin/cake server -p 8765                   # built-in dev server
 bin/cake routes                           # list all registered routes
 bin/cake cache clear_all                  # clear all cache
-bin/cake migrations migrate               # apply pending migrations
+bin/cake migrations migrate               # apply pending migrations (incl. fiscal: dfe_ult_nsu, fiscal_dfe_recebidos)
 bin/cake bake migration NomeDaMigration   # scaffold a new migration
 bin/cake bake model NomeDoModel          # scaffold model + entity + table
 bin/cake bake controller NomeDoController
@@ -34,6 +34,16 @@ bin/cake rbac_rollout stats
 bin/cake rbac_rollout unassigned_equipe
 bin/cake rbac_rollout report
 bin/cake rbac_rollout audit_purge --days 30
+
+# Fiscal (NF-e) — manutenção
+bin/cake fiscal_maintenance purge_xmls                    # simula purge fiscal_notas_xmls (BD)
+bin/cake fiscal_maintenance purge_xmls --execute        # efetivar
+bin/cake fiscal_maintenance purge_inutilizacao           # simula purge ficheiros xml/inutilizacao
+bin/cake fiscal_maintenance purge_inutilizacao --execute
+bin/cake fiscal_maintenance purge_distribuicao           # simula purge ficheiros xml/distribuicao (DF-e)
+bin/cake fiscal_maintenance purge_distribuicao --execute
+bin/cake fiscal_maintenance purge_dfe_recebidos          # simula purge fila fiscal_dfe_recebidos (só pendente|ignorado antigos)
+bin/cake fiscal_maintenance purge_dfe_recebidos --execute
 
 # Tests
 ./vendor/bin/phpunit                          # all tests

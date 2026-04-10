@@ -1,16 +1,16 @@
 <style>
-  body { background: #f6f8fb; }
+  body { background: #12151c; color: #e8eaed; }
   .tv-wrap { padding: 14px; }
   .tv-card {
-    background:#fff;
-    border:1px solid rgba(15,23,42,.10);
+    background:#1e2329;
+    border:1px solid #3d4554;
     border-radius: 14px;
-    box-shadow: 0 10px 24px rgba(15,23,42,.08);
+    box-shadow: 0 10px 28px rgba(0,0,0,.35);
     overflow:hidden;
   }
   .tv-head{
     padding: 14px 16px;
-    border-bottom:1px solid rgba(15,23,42,.10);
+    border-bottom:1px solid #3d4554;
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
@@ -20,11 +20,11 @@
     margin:0;
     font-weight: 900;
     letter-spacing:-.02em;
-    color:#0f172a;
+    color:#e8eaed;
   }
   .tv-sub{
     margin: 4px 0 0;
-    color:#64748b;
+    color:#9aa0a8;
     font-size: 12px;
   }
   .tv-grid{
@@ -35,13 +35,13 @@
   }
   .tv-item{
     grid-column: span 4;
-    border:1px solid rgba(15,23,42,.08);
+    border:1px solid #3d4554;
     border-radius: 12px;
     padding: 10px 12px;
-    background: #f8fafc;
+    background: #262c35;
   }
-  .tv-label{ font-size: 11px; color:#64748b; font-weight:800; text-transform: uppercase; letter-spacing:.04em; margin:0; }
-  .tv-value{ margin:4px 0 0; font-size: 13px; color:#0f172a; font-weight:700; word-break: break-word; }
+  .tv-label{ font-size: 11px; color:#9aa0a8; font-weight:800; text-transform: uppercase; letter-spacing:.04em; margin:0; }
+  .tv-value{ margin:4px 0 0; font-size: 13px; color:#e8eaed; font-weight:700; word-break: break-word; }
   .tv-desc{
     padding: 0 16px 16px;
   }
@@ -49,26 +49,27 @@
     margin: 10px 0 8px;
     font-size: 13px;
     font-weight: 900;
-    color:#0f172a;
+    color:#e8eaed;
   }
   .tv-desc .tv-box{
-    border:1px solid rgba(15,23,42,.08);
+    border:1px solid #3d4554;
     border-radius: 12px;
     padding: 12px;
-    background:#fff;
+    background:#161b22;
+    color:#c4c9d1;
   }
   .tv-desc img{ max-width: 100%; height:auto; }
   .tv-section{ padding: 0 16px 16px; }
-  .tv-section h3{ margin: 16px 0 10px; font-size: 13px; font-weight: 900; color:#0f172a; }
+  .tv-section h3{ margin: 16px 0 10px; font-size: 13px; font-weight: 900; color:#e8eaed; }
   .tv-list{
-    border:1px solid rgba(15,23,42,.08);
+    border:1px solid #3d4554;
     border-radius: 12px;
-    background:#fff;
+    background:#1e2329;
     overflow:hidden;
   }
   .tv-row{
     padding: 10px 12px;
-    border-top:1px solid rgba(15,23,42,.08);
+    border-top:1px solid #3d4554;
   }
   .tv-row:first-child{ border-top:0; }
   .tv-row-top{
@@ -78,27 +79,27 @@
     gap:10px;
     margin-bottom:6px;
   }
-  .tv-row-title{ font-weight: 900; color:#0f172a; font-size: 12px; }
-  .tv-row-meta{ color:#64748b; font-size: 11px; white-space: nowrap; }
-  .tv-row-body{ color:#0f172a; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+  .tv-row-title{ font-weight: 900; color:#e8eaed; font-size: 12px; }
+  .tv-row-meta{ color:#9aa0a8; font-size: 11px; white-space: nowrap; }
+  .tv-row-body{ color:#c4c9d1; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
   .tv-table-wrap{
-    border:1px solid rgba(15,23,42,.08);
+    border:1px solid #3d4554;
     border-radius: 12px;
     overflow:auto;
-    background:#fff;
+    background:#1e2329;
   }
   .tv-table{ width:100%; border-collapse: collapse; }
-  .tv-table th, .tv-table td{ padding: 10px 12px; border-bottom:1px solid rgba(15,23,42,.08); font-size: 12px; text-align:left; }
-  .tv-table th{ font-size: 11px; color:#64748b; text-transform: uppercase; letter-spacing:.04em; }
-  .tv-table td{ color:#0f172a; }
+  .tv-table th, .tv-table td{ padding: 10px 12px; border-bottom:1px solid #3d4554; font-size: 12px; text-align:left; }
+  .tv-table th{ font-size: 11px; color:#9aa0a8; text-transform: uppercase; letter-spacing:.04em; }
+  .tv-table td{ color:#e8eaed; }
   .tv-pill{
     display:inline-block;
     padding: 2px 8px;
     border-radius: 999px;
     font-size: 11px;
     font-weight: 800;
-    background:#eef2ff;
-    color:#3730a3;
+    background:rgba(99,102,241,.25);
+    color:#c7d2fe;
   }
   @media (max-width: 900px){
     .tv-item{ grid-column: span 6; }

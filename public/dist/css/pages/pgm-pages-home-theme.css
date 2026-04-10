@@ -1,42 +1,19 @@
-/**
- * Página de boas-vindas Cake (debug) — tokens PGM.
- */
-html[data-pgm-theme="dark"] body.home {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text) !important;
-}
-html[data-pgm-theme="dark"] body.home .header-title h1,
-html[data-pgm-theme="dark"] body.home h2,
-html[data-pgm-theme="dark"] body.home h3 {
-	color: var(--pgm-text) !important;
-}
-html[data-pgm-theme="dark"] body.home .ctp-warning,
-html[data-pgm-theme="dark"] body.home p {
-	color: var(--pgm-text-secondary) !important;
-}
-html[data-pgm-theme="dark"] body.home a {
-	color: var(--pgm-link) !important;
-}
-html[data-pgm-theme="light"] body.home {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text) !important;
-}
-
-.pgm-pages-home-fab {
-	position: fixed;
-	bottom: 1.25rem;
-	right: 1.25rem;
-	z-index: 2000;
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	padding: 0.45rem 0.85rem;
-	border-radius: 999px;
-	border: 1px solid var(--pgm-border);
-	background: var(--pgm-bg-surface);
-	color: var(--pgm-text);
-	font-size: 0.8125rem;
-	font-weight: 600;
-	cursor: pointer;
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
+/**
+ * Página de boas-vindas Cake (debug) — tokens PGM.
+ */
+html[data-pgm-theme="dark"] body.home {
+	background: var(--pgm-bg-page) !important;
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.home .header-title h1,
+html[data-pgm-theme="dark"] body.home h2,
+html[data-pgm-theme="dark"] body.home h3 {
+	color: var(--pgm-text) !important;
+}
+html[data-pgm-theme="dark"] body.home .ctp-warning,
+html[data-pgm-theme="dark"] body.home p {
+	color: var(--pgm-text-secondary) !important;
+}
+html[data-pgm-theme="dark"] body.home a {
+	color: var(--pgm-link) !important;
+}

@@ -1,12 +1,5 @@
-<?php
-use Cake\Routing\Router;
-$pgmPrintTheme = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
-$pgmPrintThemeClass = ($pgmPrintTheme === 'light') ? 'pgm-theme-light' : '';
-$isLightPrint = ($pgmPrintTheme === 'light');
-$printAuth = (bool)$this->request->getSession()->read('Auth.User.id');
-?>
 <!DOCTYPE HTML>
-<html lang="pt-BR" data-pgm-theme="<?= h($pgmPrintTheme) ?>">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
@@ -49,7 +42,6 @@ $printAuth = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-theme-light") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-print-layout-theme") ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
@@ -143,30 +135,12 @@ $printAuth = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="pgm-print-layout layout-no-topbar <?= h($pgmPrintThemeClass) ?>">
-	<?php if ($printAuth) : ?>
-	<button type="button" class="pgm-print-theme-fab pgm-legacy-theme-fab pgm-js-theme-toggle"
-		id="pgmThemeTogglePrint"
-		title="<?= $isLightPrint ? 'Mudar para tema escuro' : 'Mudar para tema claro' ?>"
-		aria-pressed="<?= $isLightPrint ? 'true' : 'false' ?>"
-		aria-label="<?= $isLightPrint ? 'Tema claro ativo. Ativar escuro' : 'Tema escuro ativo. Ativar claro' ?>"
-		data-current="<?= $isLightPrint ? 'light' : 'dark' ?>">
-		<span class="pgm-tt-icon" aria-hidden="true"><?= $isLightPrint ? '☀️' : '🌙' ?></span>
-		<span class="pgm-tt-label"><?= $isLightPrint ? 'Claro' : 'Escuro' ?></span>
-	</button>
-	<?php endif; ?>
+<body class="pgm-print-layout layout-no-topbar">
 	<!-- Painel principal -->
 	<div class="main-wrapper">
 		<div class="container-fluid">
 			<?= $this->element('content'); ?>
 		</div>
 	</div>
-	<?php if ($printAuth) : ?>
-	<script>
-	if (window.PgmPortalTheme) {
-		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
-	}
-	</script>
-	<?php endif; ?>
 </body>
 </html>

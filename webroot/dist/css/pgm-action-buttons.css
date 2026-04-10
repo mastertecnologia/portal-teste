@@ -6,8 +6,8 @@
  */
 :root {
   /* ERP teal alinhado a pgm-theme-tokens (--pgm-erp-teal*) */
-  --pgm-btn-teal: var(--pgm-erp-teal, #00c08b);
-  --pgm-btn-teal-hover: var(--pgm-erp-teal-hover, #008f68);
+  --pgm-btn-teal: var(--pgm-erp-teal, #1d9e75);
+  --pgm-btn-teal-hover: var(--pgm-erp-teal-hover, #0f6e56);
   --pgm-btn-sky: #33ccff;
   --pgm-btn-sky-hover: #1ab8e8;
   --pgm-btn-orange: #ff8833;

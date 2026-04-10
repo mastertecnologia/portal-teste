@@ -54,11 +54,11 @@ $emitidoEm = date('d/m/Y H:i');
 		padding-top: 20px;
 	}
 	.ticket-print-banner {
-		background: linear-gradient(135deg, #00c08b 0%, #008f68 100%);
+		background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%);
 		color: #fff;
 		padding: 18px 22px;
 		border-radius: 8px 8px 0 0;
-		border: 1px solid #008f68;
+		border: 1px solid #0f6e56;
 		border-bottom: none;
 	}
 	.ticket-print-banner h1 {
@@ -101,7 +101,7 @@ $emitidoEm = date('d/m/Y H:i');
 		font-weight: 800;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: #00c08b;
+		color: #1d9e75;
 	}
 	.ticket-print-meta {
 		width: 100%;
@@ -133,7 +133,7 @@ $emitidoEm = date('d/m/Y H:i');
 		font-size: 9pt;
 		font-weight: 700;
 		background: rgba(29, 158, 117, 0.12);
-		color: #008f68;
+		color: #0f6e56;
 		border: 1px solid rgba(29, 158, 117, 0.35);
 	}
 	.ticket-print-box {
@@ -330,6 +330,90 @@ $emitidoEm = date('d/m/Y H:i');
 			z-index: auto !important;
 			overflow: visible !important;
 			padding: 0 !important;
+		}
+	}
+
+	/* Tema escuro: só na tela; @media print acima mantém papel claro */
+	@media screen {
+		html[data-pgm-theme="dark"] .ticket-print-actions {
+			background: #1a1f28;
+			border-bottom-color: #2d3544;
+			color: #e8eaed;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-root {
+			background: #13161d;
+			color: #e8eaed;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-root a {
+			color: #7dd3fc;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-sheet {
+			border-color: #3d4554;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+		}
+		html[data-pgm-theme="dark"] .ticket-print-section {
+			border-bottom-color: #2d3544;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-section h2 {
+			color: #5cdbc0;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-meta th,
+		html[data-pgm-theme="dark"] .ticket-print-meta td {
+			border-color: #3d4554;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-meta th {
+			background: #1e2430;
+			color: #a8b0bd;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-meta td {
+			background: #13161d;
+			color: #e8eaed;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-status {
+			background: rgba(92, 219, 192, 0.15);
+			color: #9ef5e0;
+			border-color: rgba(92, 219, 192, 0.4);
+		}
+		html[data-pgm-theme="dark"] .ticket-print-box {
+			background: #1a1f28;
+			border-color: #3d4554;
+			color: #e8eaed;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-box.ticket-print-box--tech {
+			background: rgba(29, 158, 117, 0.14);
+			border-color: rgba(92, 219, 192, 0.35);
+		}
+		html[data-pgm-theme="dark"] .ticket-print-table th,
+		html[data-pgm-theme="dark"] .ticket-print-table td {
+			border-color: #3d4554;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-table thead th {
+			background: #1e2430;
+			color: #c5cad3;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-table tbody td {
+			background: #13161d;
+			color: #e8eaed;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-table tbody tr:nth-child(even) td {
+			background: #181c24;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-foot {
+			color: #8b93a0;
+			border-top-color: #3d4554;
+		}
+		html[data-pgm-theme="dark"] .ticket-print-empty-note {
+			color: #8b93a0;
+		}
+		html[data-pgm-theme="dark"] body.ticket-autoprint-screen {
+			background: #0f1218 !important;
+		}
+		html[data-pgm-theme="dark"] html.ticket-print-ui-active,
+		html[data-pgm-theme="dark"] html.ticket-print-ui-active body {
+			background: #0f1218 !important;
+		}
+		html[data-pgm-theme="dark"] html.ticket-print-ui-active .ticket-print-document {
+			background: #0f1218 !important;
 		}
 	}
 </style>

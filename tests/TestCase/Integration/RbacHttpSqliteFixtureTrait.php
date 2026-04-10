@@ -6,7 +6,7 @@ use Cake\Database\Connection;
 
 /**
  * DDL + truncate + seed mínimos para integração HTTP RBAC com SQLite (:memory:).
- * Tabelas de domínio: areas, bancosenhas, clientes, contratos_horas, empresas (incl. urlerp), empresasusers, faturamento, feriados, financeiro_lancamentos, listamembros, ordensservico (incl. idproblema, locacao, dataprevisao, contrato para Ordensservico::index), orcamentosnovosdes, produtos, problemas, visitas (+ rbac_*, users).
+ * Tabelas de domínio: areas, bancosenhas, clientes, contratos_horas, empresas (incl. urlerp), empresasusers, fiscal_* (index + itens/séries p/ controleSeries), faturamento, feriados, financeiro_lancamentos, listamembros, ordensservico (incl. idproblema, locacao, dataprevisao, contrato para Ordensservico::index), orcamentosnovosdes, produtos, problemas, visitas (+ rbac_*, users).
  */
 trait RbacHttpSqliteFixtureTrait {
 
@@ -198,10 +198,199 @@ trait RbacHttpSqliteFixtureTrait {
 				role_id INTEGER NOT NULL,
 				PRIMARY KEY (user_id, role_id)
 			)',
+			'CREATE TABLE IF NOT EXISTS fiscal_empresas_config (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL UNIQUE,
+				regime_tributario INTEGER NOT NULL DEFAULT 1,
+				ambiente INTEGER NOT NULL DEFAULT 2,
+				serie_nfe INTEGER NOT NULL DEFAULT 1,
+				prox_numero_nfe INTEGER NOT NULL DEFAULT 1,
+				serie_nfse INTEGER NOT NULL DEFAULT 1,
+				prox_numero_nfse INTEGER NOT NULL DEFAULT 1,
+				serie_nfce INTEGER NOT NULL DEFAULT 1,
+				prox_numero_nfce INTEGER NOT NULL DEFAULT 1,
+				certificado_id INTEGER NULL,
+				dfe_ult_nsu VARCHAR(15) NULL,
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)',
+			'CREATE TABLE IF NOT EXISTS fiscal_certificados (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL,
+				nome VARCHAR(255) NOT NULL DEFAULT \'\',
+				tipo VARCHAR(10) NOT NULL DEFAULT \'A1\',
+				arquivo_pfx BLOB NULL,
+				senha_hash VARCHAR(255) NULL,
+				serial_number VARCHAR(100) NULL,
+				cn_subject VARCHAR(500) NULL,
+				cnpj_certificado VARCHAR(18) NULL,
+				validade_inicio DATETIME NULL,
+				validade_fim DATETIME NULL,
+				ativo INTEGER NOT NULL DEFAULT 0,
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)',
+			'CREATE TABLE IF NOT EXISTS fiscal_notas (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL,
+				idcliente INTEGER NULL,
+				modelo VARCHAR(5) NOT NULL DEFAULT \'55\',
+				serie INTEGER NOT NULL DEFAULT 1,
+				numero INTEGER NULL,
+				tipo_operacao INTEGER NOT NULL DEFAULT 1,
+				finalidade INTEGER NOT NULL DEFAULT 1,
+				presenca INTEGER NOT NULL DEFAULT 9,
+				data_emissao DATETIME NULL,
+				data_saida DATETIME NULL,
+				valor_produtos REAL NOT NULL DEFAULT 0,
+				valor_frete REAL NOT NULL DEFAULT 0,
+				valor_seguro REAL NOT NULL DEFAULT 0,
+				valor_desconto REAL NOT NULL DEFAULT 0,
+				valor_outras_despesas REAL NOT NULL DEFAULT 0,
+				valor_total_impostos REAL NOT NULL DEFAULT 0,
+				valor_total REAL NOT NULL DEFAULT 0,
+				valor_icms REAL NOT NULL DEFAULT 0,
+				valor_icms_st REAL NOT NULL DEFAULT 0,
+				valor_ipi REAL NOT NULL DEFAULT 0,
+				valor_pis REAL NOT NULL DEFAULT 0,
+				valor_cofins REAL NOT NULL DEFAULT 0,
+				valor_iss REAL NOT NULL DEFAULT 0,
+				frete_modalidade INTEGER NOT NULL DEFAULT 9,
+				status VARCHAR(30) NOT NULL DEFAULT \'rascunho\',
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)',
+			'CREATE TABLE IF NOT EXISTS fiscal_notas_itens (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				fiscal_nota_id INTEGER NOT NULL,
+				numero_item INTEGER NOT NULL DEFAULT 1,
+				codigo_produto VARCHAR(60) NULL,
+				descricao VARCHAR(500) NOT NULL DEFAULT \'\',
+				ncm VARCHAR(10) NULL,
+				cfop VARCHAR(5) NOT NULL DEFAULT \'5102\',
+				unidade VARCHAR(10) NOT NULL DEFAULT \'UN\',
+				quantidade REAL NOT NULL DEFAULT 1,
+				valor_unitario REAL NOT NULL DEFAULT 0,
+				valor_total REAL NOT NULL DEFAULT 0,
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)',
+			'CREATE TABLE IF NOT EXISTS fiscal_notas_itens_series (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				fiscal_nota_item_id INTEGER NOT NULL,
+				numero_serie VARCHAR(120) NOT NULL DEFAULT \'\',
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)',
+			'CREATE TABLE IF NOT EXISTS fiscal_dfe_recebidos (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL,
+				nsu_doc VARCHAR(20) NULL,
+				schema VARCHAR(80) NOT NULL DEFAULT \'\',
+				chave_acesso VARCHAR(44) NULL,
+				tipo_documento VARCHAR(40) NOT NULL DEFAULT \'\',
+				conteudo_hash VARCHAR(32) NOT NULL,
+				xml_conteudo TEXT NOT NULL,
+				status VARCHAR(20) NOT NULL DEFAULT \'pendente\',
+				fiscal_nota_id INTEGER NULL,
+				created DATETIME NULL,
+				modified DATETIME NULL,
+				UNIQUE(idempresa, conteudo_hash)
+			)',
 		];
 		foreach ($stmts as $sql) {
 			$conn->execute($sql);
 		}
+		try {
+			$conn->execute('ALTER TABLE fiscal_empresas_config ADD COLUMN dfe_ult_nsu VARCHAR(15) NULL');
+		} catch (\Throwable $e) {
+			// SQLite: coluna já existe em esquemas antigos
+		}
+		try {
+			$conn->execute('CREATE TABLE IF NOT EXISTS fiscal_dfe_recebidos (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL,
+				nsu_doc VARCHAR(20) NULL,
+				schema VARCHAR(80) NOT NULL DEFAULT \'\',
+				chave_acesso VARCHAR(44) NULL,
+				tipo_documento VARCHAR(40) NOT NULL DEFAULT \'\',
+				conteudo_hash VARCHAR(32) NOT NULL,
+				xml_conteudo TEXT NOT NULL,
+				status VARCHAR(20) NOT NULL DEFAULT \'pendente\',
+				fiscal_nota_id INTEGER NULL,
+				created DATETIME NULL,
+				modified DATETIME NULL,
+				UNIQUE(idempresa, conteudo_hash)
+			)');
+		} catch (\Throwable $e) {
+		}
+		self::rbacHttpSqliteEnsureFiscalSchemaForDfeImport($conn);
+	}
+
+	/**
+	 * Colunas/tabelas extra para testes HTTP de importação DF-e → rascunho de nota de entrada (SQLite).
+	 */
+	protected static function rbacHttpSqliteEnsureFiscalSchemaForDfeImport(Connection $conn): void {
+		$alters = [
+			'ALTER TABLE empresas ADD COLUMN cnpj VARCHAR(18) NULL',
+			'ALTER TABLE clientes ADD COLUMN cnpj VARCHAR(18) NULL',
+			'ALTER TABLE fiscal_empresas_config ADD COLUMN uf VARCHAR(2) NULL',
+			'ALTER TABLE fiscal_notas ADD COLUMN user_id INTEGER NULL',
+			'ALTER TABLE fiscal_notas ADD COLUMN chave_acesso VARCHAR(50) NULL',
+			'ALTER TABLE fiscal_notas ADD COLUMN natureza_operacao VARCHAR(255) NULL',
+			'ALTER TABLE fiscal_notas ADD COLUMN natureza_operacao_id INTEGER NULL',
+			'ALTER TABLE fiscal_notas ADD COLUMN informacoes_complementares TEXT NULL',
+			'ALTER TABLE fiscal_notas ADD COLUMN protocolo_autorizacao VARCHAR(20) NULL',
+		];
+		foreach ($alters as $sql) {
+			try {
+				$conn->execute($sql);
+			} catch (\Throwable $e) {
+				// coluna já existe
+			}
+		}
+		$conn->execute(
+			'CREATE TABLE IF NOT EXISTS fiscal_natureza_operacao (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL,
+				codigo VARCHAR(20) NOT NULL DEFAULT \'\',
+				descricao VARCHAR(255) NOT NULL DEFAULT \'\',
+				tipo VARCHAR(20) NOT NULL DEFAULT \'saida\',
+				cfop_padrao VARCHAR(5) NULL,
+				gera_financeiro INTEGER NOT NULL DEFAULT 1,
+				ativo INTEGER NOT NULL DEFAULT 1,
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)'
+		);
+		$conn->execute(
+			'CREATE TABLE IF NOT EXISTS fiscal_notas_xmls (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				fiscal_nota_id INTEGER NOT NULL,
+				tipo VARCHAR(30) NOT NULL,
+				xml_envio TEXT NULL,
+				xml_retorno TEXT NULL,
+				created DATETIME NULL
+			)'
+		);
+		$conn->execute(
+			'CREATE TABLE IF NOT EXISTS fiscal_aliquotas (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				idempresa INTEGER NOT NULL,
+				uf_origem VARCHAR(2) NOT NULL,
+				uf_destino VARCHAR(2) NOT NULL,
+				ncm_codigo VARCHAR(10) NULL,
+				icms_aliquota REAL NULL,
+				icms_reducao REAL NULL,
+				icms_st_mva REAL NULL,
+				ipi_aliquota REAL NULL,
+				pis_aliquota REAL NULL,
+				cofins_aliquota REAL NULL,
+				iss_aliquota REAL NULL,
+				created DATETIME NULL,
+				modified DATETIME NULL
+			)'
+		);
 	}
 
 	protected static function rbacHttpSqliteTruncate(Connection $conn): void {
@@ -209,6 +398,24 @@ trait RbacHttpSqliteFixtureTrait {
 		$conn->execute('DELETE FROM rbac_users_roles');
 		$conn->execute('DELETE FROM rbac_permissions');
 		$conn->execute('DELETE FROM rbac_roles');
+		$conn->execute('DELETE FROM fiscal_notas_itens_series');
+		$conn->execute('DELETE FROM fiscal_notas_itens');
+		try {
+			$conn->execute('DELETE FROM fiscal_notas_xmls');
+		} catch (\Throwable $e) {
+		}
+		$conn->execute('DELETE FROM fiscal_dfe_recebidos');
+		$conn->execute('DELETE FROM fiscal_notas');
+		try {
+			$conn->execute('DELETE FROM fiscal_natureza_operacao');
+		} catch (\Throwable $e) {
+		}
+		try {
+			$conn->execute('DELETE FROM fiscal_aliquotas');
+		} catch (\Throwable $e) {
+		}
+		$conn->execute('DELETE FROM fiscal_certificados');
+		$conn->execute('DELETE FROM fiscal_empresas_config');
 		$conn->execute('DELETE FROM bancosenhas');
 		$conn->execute('DELETE FROM financeiro_lancamentos');
 		$conn->execute('DELETE FROM faturamento');

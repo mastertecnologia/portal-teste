@@ -53,15 +53,15 @@
 	background:rgba(255,255,255,.06);
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li > a:hover:before{
-	background:var(--pgm-teal, #00c08b);
+	background:var(--pgm-teal, #1d9e75);
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li.active > a,
 .pgm-sidebar-shell .has-arrow-sub > ul > li > a.active{
 	color:var(--pgm-teal-light, #5cdbc0);
-	background:var(--pgm-teal-dim, rgba(0,192,139,.14));
+	background:var(--pgm-teal-dim, rgba(29,158,117,.14));
 }
 .pgm-sidebar-shell .has-arrow-sub > ul > li.active > a:before{
-	background:var(--pgm-teal, #00c08b);
+	background:var(--pgm-teal, #1d9e75);
 }
 /* Linha separadora acima do submenu */
 .pgm-sidebar-shell .has-arrow-sub.active > a,
@@ -78,10 +78,6 @@
 			['controller' => 'Users', 'action' => 'dashboard'],
 			['class' => 'pgm-sidebar-logo-link navbar-brand', 'escape' => false]
 		) ?>
-	</div>
-
-	<div class="pgm-sidebar-top-tools">
-		<?= $this->element('pgm_theme_toggle_icon') ?>
 	</div>
 
 	<div class="pgm-sidebar-meta">
@@ -195,8 +191,3 @@
 		</div>
 	</div>
 </aside>
-<script>
-	if (window.PgmPortalTheme) {
-		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
-	}
-</script>

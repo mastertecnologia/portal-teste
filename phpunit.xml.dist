@@ -32,6 +32,7 @@
             <file>tests/TestCase/Shell/RbacRolloutShellTest.php</file>
             <file>tests/TestCase/Config/RbacPhpConfigTest.php</file>
             <file>tests/TestCase/Config/AbacPhpConfigTest.php</file>
+            <file>tests/TestCase/Config/PermissionsRegistryFiscalTest.php</file>
         </testsuite>
         <!-- Integração mínima ORM + SQLite em memória (pdo_sqlite); composer test-rbac corre este suite num segundo processo -->
         <testsuite name="rbac-integration">
@@ -47,6 +48,9 @@
             <file>tests/TestCase/Integration/RbacContratosHorasHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacNormasempresaHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacFinanceiroHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacFiscalHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacFiscalNotasHttpTest.php</file>
+            <file>tests/TestCase/Integration/RbacFiscalMoreHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacFaturamentoHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacClientesHttpTest.php</file>
             <file>tests/TestCase/Integration/RbacPrefaturamentoHttpTest.php</file>

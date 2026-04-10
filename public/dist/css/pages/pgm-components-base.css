@@ -176,3 +176,24 @@ html[data-pgm-theme="dark"] .pgm-pill-dot--danger {
 	height: 200px;
 	margin-bottom: 50px;
 }
+
+/* Tickets view/edit — caixas que ainda usavam Bootstrap .bg-white */
+html[data-pgm-theme="dark"] body .message-box.bg-white {
+	background: var(--pgm-bg-elevated, #262c35) !important;
+	border: 1px solid var(--pgm-border, #3d4554) !important;
+	color: var(--pgm-text, #e8eaed) !important;
+}
+html[data-pgm-theme="dark"] body .message-box.bg-white .mail-contnet h5,
+html[data-pgm-theme="dark"] body .message-box.bg-white a {
+	color: var(--pgm-text, #e8eaed) !important;
+}
+html[data-pgm-theme="dark"] body .ticket-resp-tecnicos.ticket-resp-tecnicos--soft.bg-white {
+	background: var(--pgm-bg-elevated, #262c35) !important;
+	border-color: var(--pgm-border, #3d4554) !important;
+	color: var(--pgm-text, #e8eaed) !important;
+}
+html[data-pgm-theme="dark"] body .tab-pane#ticket .col-4.bg-secondary,
+html[data-pgm-theme="dark"] body .col-4.bg-secondary#ticket-panel-left {
+	background-color: var(--pgm-bg-elevated, #262c35) !important;
+	color: var(--pgm-text, #e8eaed);
+}

@@ -83,10 +83,10 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-section-label:first-child {
 	margin-top: 0;
 }
 
-/* Portal cliente (tema premium) — mantém contraste */
+/* Portal cliente — painéis alinhados ao shell escuro */
 body.pgm-portal-client .pgm-adv-page .pgm-adv-panel.card {
 	background: rgba(22, 27, 34, 0.92) !important;
-	border: 1px solid rgba(0, 192, 139, 0.15) !important;
+	border: 1px solid rgba(29, 158, 117, 0.2) !important;
 }
 
 body.layout-no-topbar .pgm-adv-page .form-control {
@@ -198,397 +198,397 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form sel
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   GLOBAL DARK THEME — escopo interno (exclui body.pgm-theme-light carregado depois)
+   GLOBAL DARK THEME — escopo interno (layout-no-topbar)
    Sincronizado com webroot; cobre .card, modais, dropdowns e listagens fora de .card.
    ══════════════════════════════════════════════════════════════════════════════ */
-body.layout-no-topbar:not(.pgm-theme-light) .card {
+body.layout-no-topbar .card {
 	background-color: #161b22 !important;
 	border: 1px solid rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card-body {
+body.layout-no-topbar .card-body {
 	background-color: transparent !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card-header {
+body.layout-no-topbar .card-header {
 	background-color: rgba(255, 255, 255, 0.05) !important;
 	border-color: rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .form-control {
+body.layout-no-topbar .card .form-control {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .form-control:focus {
+body.layout-no-topbar .card .form-control:focus {
 	border-color: rgba(38, 198, 218, 0.45) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .form-control[readonly] {
+body.layout-no-topbar .card .form-control[readonly] {
 	background: rgba(255, 255, 255, 0.05) !important;
 	color: rgba(230, 237, 243, 0.5) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .form-control option {
+body.layout-no-topbar .card .form-control option {
 	background: #1a1f27;
 	color: #e6edf3;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card label,
-body.layout-no-topbar:not(.pgm-theme-light) .card .control-label {
+body.layout-no-topbar .card label,
+body.layout-no-topbar .card .control-label {
 	color: rgba(230, 237, 243, 0.75) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .text-muted {
+body.layout-no-topbar .card .text-muted {
 	color: rgba(230, 237, 243, 0.45) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card p {
+body.layout-no-topbar .card p {
 	color: #e6edf3;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .table {
+body.layout-no-topbar .card .table {
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .table thead th {
+body.layout-no-topbar .card .table thead th {
 	background: rgba(255, 255, 255, 0.03) !important;
 	border-color: rgba(255, 255, 255, 0.1) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .table td,
-body.layout-no-topbar:not(.pgm-theme-light) .card .table th {
+body.layout-no-topbar .card .table td,
+body.layout-no-topbar .card .table th {
 	border-color: rgba(255, 255, 255, 0.07) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .table-hover tbody tr:hover td {
+body.layout-no-topbar .card .table-hover tbody tr:hover td {
 	background: rgba(255, 255, 255, 0.04) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .table .dataTables_empty {
+body.layout-no-topbar .card .table .dataTables_empty {
 	color: rgba(230, 237, 243, 0.5) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs {
+body.layout-no-topbar .card .nav-tabs {
 	border-color: rgba(255, 255, 255, 0.1) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs .nav-link {
+body.layout-no-topbar .card .nav-tabs .nav-link {
 	color: rgba(230, 237, 243, 0.55) !important;
 	background: transparent !important;
 	border-color: transparent !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs .nav-link.active {
+body.layout-no-topbar .card .nav-tabs .nav-link.active {
 	color: #26c6da !important;
 	background: rgba(255, 255, 255, 0.04) !important;
 	border-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.1) transparent !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .nav-tabs .nav-link:hover:not(.active) {
+body.layout-no-topbar .card .nav-tabs .nav-link:hover:not(.active) {
 	color: rgba(230, 237, 243, 0.85) !important;
 	background: rgba(255, 255, 255, 0.04) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .tab-content,
-body.layout-no-topbar:not(.pgm-theme-light) .card .tab-pane {
+body.layout-no-topbar .card .tab-content,
+body.layout-no-topbar .card .tab-pane {
 	background: transparent !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card hr {
+body.layout-no-topbar .card hr {
 	border-color: rgba(255, 255, 255, 0.1) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .alert-info {
+body.layout-no-topbar .card .alert-info {
 	background: rgba(38, 198, 218, 0.12) !important;
 	border-color: rgba(38, 198, 218, 0.25) !important;
 	color: #9ef0f8 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .alert-secondary {
+body.layout-no-topbar .card .alert-secondary {
 	background: rgba(255, 255, 255, 0.06) !important;
 	border-color: rgba(255, 255, 255, 0.1) !important;
 	color: rgba(230, 237, 243, 0.7) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .alert-warning {
+body.layout-no-topbar .card .alert-warning {
 	background: rgba(255, 193, 7, 0.12) !important;
 	border-color: rgba(255, 193, 7, 0.25) !important;
 	color: #ffe082 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .alert-danger {
+body.layout-no-topbar .card .alert-danger {
 	background: rgba(220, 53, 69, 0.12) !important;
 	border-color: rgba(220, 53, 69, 0.25) !important;
 	color: #ff8a9a !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_length,
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_filter,
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_info,
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_paginate {
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_length,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_info,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_paginate {
 	color: rgba(230, 237, 243, 0.6) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_filter input,
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .dataTables_length select {
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter input,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_length select {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .paginate_button {
+body.layout-no-topbar .card .dataTables_wrapper .paginate_button {
 	background: rgba(255, 255, 255, 0.05) !important;
 	border-color: rgba(255, 255, 255, 0.1) !important;
 	color: rgba(230, 237, 243, 0.7) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .paginate_button.current,
-body.layout-no-topbar:not(.pgm-theme-light) .card .dataTables_wrapper .paginate_button.current:hover {
+body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current,
+body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current:hover {
 	background: rgba(38, 198, 218, 0.2) !important;
 	border-color: rgba(38, 198, 218, 0.35) !important;
 	color: #26c6da !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .card .well,
-body.layout-no-topbar:not(.pgm-theme-light) .well {
+body.layout-no-topbar .card .well,
+body.layout-no-topbar .well {
 	background: rgba(255, 255, 255, 0.05) !important;
 	border-color: rgba(255, 255, 255, 0.1) !important;
 	color: #e6edf3 !important;
 }
 
 /* DataTables / tabelas na área principal sem .card (listagens, relatórios) */
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .dataTables_length,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .dataTables_filter,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .dataTables_info,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .dataTables_paginate {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .dataTables_length,
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .dataTables_filter,
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .dataTables_info,
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .dataTables_paginate {
 	color: rgba(230, 237, 243, 0.65) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .dataTables_filter input,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .dataTables_length select {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .dataTables_filter input,
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .dataTables_length select {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper .paginate_button {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper .paginate_button {
 	background: rgba(255, 255, 255, 0.06) !important;
 	border-color: rgba(255, 255, 255, 0.1) !important;
 	color: rgba(230, 237, 243, 0.75) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper table.dataTable thead th,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper table.dataTable thead td {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper table.dataTable thead th,
+body.layout-no-topbar .page-wrapper .dataTables_wrapper table.dataTable thead td {
 	background: rgba(255, 255, 255, 0.04) !important;
 	color: rgba(230, 237, 243, 0.9) !important;
 	border-color: rgba(255, 255, 255, 0.08) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper table.dataTable tbody td {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper table.dataTable tbody td {
 	background: transparent !important;
 	color: #e6edf3 !important;
 	border-color: rgba(255, 255, 255, 0.07) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper table.dataTable tbody tr {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper table.dataTable tbody tr {
 	background: rgba(22, 27, 34, 0.6) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper table.dataTable tbody tr:nth-child(odd) {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper table.dataTable tbody tr:nth-child(odd) {
 	background: rgba(255, 255, 255, 0.03) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .dataTables_wrapper table.dataTable tbody tr:hover > td {
+body.layout-no-topbar .page-wrapper .dataTables_wrapper table.dataTable tbody tr:hover > td {
 	background: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Tabelas Bootstrap fora de .card */
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .container-fluid > .row .table,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .table.table-hover {
+body.layout-no-topbar .page-wrapper .container-fluid > .row .table,
+body.layout-no-topbar .page-wrapper .table.table-hover {
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .table thead th {
+body.layout-no-topbar .page-wrapper .table thead th {
 	background: rgba(255, 255, 255, 0.04) !important;
 	border-color: rgba(255, 255, 255, 0.1) !important;
 	color: rgba(230, 237, 243, 0.88) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .table td,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .table th {
+body.layout-no-topbar .page-wrapper .table td,
+body.layout-no-topbar .page-wrapper .table th {
 	border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Painéis Bootstrap 3 */
-body.layout-no-topbar:not(.pgm-theme-light) .panel {
+body.layout-no-topbar .panel {
 	background-color: #161b22 !important;
 	border-color: rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .panel-default > .panel-heading,
-body.layout-no-topbar:not(.pgm-theme-light) .panel-heading {
+body.layout-no-topbar .panel-default > .panel-heading,
+body.layout-no-topbar .panel-heading {
 	background-color: rgba(255, 255, 255, 0.05) !important;
 	border-color: rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .panel-body {
+body.layout-no-topbar .panel-body {
 	background: transparent !important;
 	color: #e6edf3 !important;
 }
 
 /* Modais */
-body.layout-no-topbar:not(.pgm-theme-light) .modal-content {
+body.layout-no-topbar .modal-content {
 	background-color: #161b22 !important;
 	border: 1px solid rgba(255, 255, 255, 0.1) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-header {
+body.layout-no-topbar .modal-header {
 	background-color: rgba(255, 255, 255, 0.05) !important;
 	border-bottom-color: rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-header .modal-title,
-body.layout-no-topbar:not(.pgm-theme-light) .modal-header .close {
+body.layout-no-topbar .modal-header .modal-title,
+body.layout-no-topbar .modal-header .close {
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body {
+body.layout-no-topbar .modal-body {
 	background-color: transparent !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-footer {
+body.layout-no-topbar .modal-footer {
 	background-color: rgba(255, 255, 255, 0.03) !important;
 	border-top-color: rgba(255, 255, 255, 0.08) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body .form-control,
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body select.form-control,
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body input.form-control,
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body textarea.form-control {
+body.layout-no-topbar .modal-body .form-control,
+body.layout-no-topbar .modal-body select.form-control,
+body.layout-no-topbar .modal-body input.form-control,
+body.layout-no-topbar .modal-body textarea.form-control {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body label,
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body .control-label {
+body.layout-no-topbar .modal-body label,
+body.layout-no-topbar .modal-body .control-label {
 	color: rgba(230, 237, 243, 0.75) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .modal-body .text-muted {
+body.layout-no-topbar .modal-body .text-muted {
 	color: rgba(230, 237, 243, 0.45) !important;
 }
 
 /* Bootstrap-select e dropdowns */
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .dropdown-toggle,
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .btn {
+body.layout-no-topbar .bootstrap-select > .dropdown-toggle,
+body.layout-no-topbar .bootstrap-select > .btn {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .dropdown-toggle:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select > .btn:hover {
+body.layout-no-topbar .bootstrap-select > .dropdown-toggle:hover,
+body.layout-no-topbar .bootstrap-select > .btn:hover {
 	border-color: rgba(255, 255, 255, 0.22) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select .filter-option-inner-inner {
+body.layout-no-topbar .bootstrap-select .filter-option-inner-inner {
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu {
+body.layout-no-topbar .dropdown-menu {
 	background-color: #1a1f27 !important;
 	border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu .dropdown-item,
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu li > a {
+body.layout-no-topbar .dropdown-menu .dropdown-item,
+body.layout-no-topbar .dropdown-menu li > a {
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu .dropdown-item:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu li > a:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu .dropdown-item.active,
-body.layout-no-topbar:not(.pgm-theme-light) .dropdown-menu li.selected > a {
+body.layout-no-topbar .dropdown-menu .dropdown-item:hover,
+body.layout-no-topbar .dropdown-menu li > a:hover,
+body.layout-no-topbar .dropdown-menu .dropdown-item.active,
+body.layout-no-topbar .dropdown-menu li.selected > a {
 	background-color: rgba(38, 198, 218, 0.15) !important;
 	color: #26c6da !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select .bs-searchbox input {
+body.layout-no-topbar .bootstrap-select .bs-searchbox input {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .bootstrap-select .no-results {
+body.layout-no-topbar .bootstrap-select .no-results {
 	background: transparent !important;
 	color: rgba(230, 237, 243, 0.5) !important;
 }
 
 /* Select2 (layout default) */
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-selection--single,
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-selection--multiple {
+body.layout-no-topbar .select2-container--default .select2-selection--single,
+body.layout-no-topbar .select2-container--default .select2-selection--multiple {
 	background-color: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 	min-height: 36px;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-selection--single .select2-selection__rendered {
+body.layout-no-topbar .select2-container--default .select2-selection--single .select2-selection__rendered {
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-selection--single .select2-selection__arrow b {
+body.layout-no-topbar .select2-container--default .select2-selection--single .select2-selection__arrow b {
 	border-color: rgba(230, 237, 243, 0.5) transparent transparent transparent !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .select2-dropdown {
+body.layout-no-topbar .select2-dropdown {
 	background-color: #1a1f27 !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-results__option {
+body.layout-no-topbar .select2-container--default .select2-results__option {
 	background-color: #1a1f27;
 	color: #e6edf3;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-results__option--highlighted[aria-selected] {
+body.layout-no-topbar .select2-container--default .select2-results__option--highlighted[aria-selected] {
 	background-color: rgba(38, 198, 218, 0.2) !important;
 	color: #26c6da !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .select2-container--default .select2-search--dropdown .select2-search__field {
+body.layout-no-topbar .select2-container--default .select2-search--dropdown .select2-search__field {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
 
 /* JSGrid */
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid-header-row > .jsgrid-header-cell {
+body.layout-no-topbar .jsgrid-header-row > .jsgrid-header-cell {
 	background: rgba(255, 255, 255, 0.05) !important;
 	color: #e6edf3 !important;
 	border-color: rgba(255, 255, 255, 0.08) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid-row > .jsgrid-cell {
+body.layout-no-topbar .jsgrid-row > .jsgrid-cell {
 	background: #161b22 !important;
 	color: #e6edf3 !important;
 	border-color: rgba(255, 255, 255, 0.07) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid-alt-row > .jsgrid-cell {
+body.layout-no-topbar .jsgrid-alt-row > .jsgrid-cell {
 	background: rgba(255, 255, 255, 0.03) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid-edit-row > .jsgrid-cell,
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid-insert-row > .jsgrid-cell {
+body.layout-no-topbar .jsgrid-edit-row > .jsgrid-cell,
+body.layout-no-topbar .jsgrid-insert-row > .jsgrid-cell {
 	background: #13161d !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid input,
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid select,
-body.layout-no-topbar:not(.pgm-theme-light) .jsgrid textarea {
+body.layout-no-topbar .jsgrid input,
+body.layout-no-topbar .jsgrid select,
+body.layout-no-topbar .jsgrid textarea {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
 
 /* Input groups / listas / popovers */
-body.layout-no-topbar:not(.pgm-theme-light) .input-group-addon {
+body.layout-no-topbar .input-group-addon {
 	background: rgba(255, 255, 255, 0.06) !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: rgba(230, 237, 243, 0.8) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .list-group-item {
+body.layout-no-topbar .list-group-item {
 	background-color: #161b22 !important;
 	border-color: rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .popover {
+body.layout-no-topbar .popover {
 	background-color: #1a1f27 !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .popover-title {
+body.layout-no-topbar .popover-title {
 	background: rgba(255, 255, 255, 0.05) !important;
 	border-bottom-color: rgba(255, 255, 255, 0.08) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .popover-content {
+body.layout-no-topbar .popover-content {
 	color: #e6edf3 !important;
 }
 
 /* Paginação fora de .card */
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .pagination > li > a,
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .pagination > li > span {
+body.layout-no-topbar .page-wrapper .pagination > li > a,
+body.layout-no-topbar .page-wrapper .pagination > li > span {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
 
 /* Formulários com .form-material fora de .card (cadastros simples) */
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .form-material .form-control {
+body.layout-no-topbar .page-wrapper .form-material .form-control {
 	background: #13161d !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
-body.layout-no-topbar:not(.pgm-theme-light) .page-wrapper .form-material select.form-control option {
+body.layout-no-topbar .page-wrapper .form-material select.form-control option {
 	background: #1a1f27;
 	color: #e6edf3;
 }
 
 /* FullCalendar v6 (Agenda — #calendar) — tema escuro via CSS variables + ajustes pontuais
    O bundle do FC redefine --fc-* em .fc; repetir no .fc garante fundo/texto escuros nas células. */
-body.layout-no-topbar:not(.pgm-theme-light) #calendar,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-theme-standard {
+body.layout-no-topbar #calendar,
+body.layout-no-topbar #calendar .fc,
+body.layout-no-topbar #calendar .fc-theme-standard {
 	--fc-small-font-size: 0.85em;
 	--fc-page-bg-color: #161b22;
 	--fc-neutral-bg-color: rgba(255, 255, 255, 0.06);
@@ -618,99 +618,95 @@ body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-theme-standard {
 	color: #e6edf3;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc {
+body.layout-no-topbar #calendar .fc {
 	color: inherit;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-daygrid-day:not(.fc-day-today),
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-col-header-cell {
+body.layout-no-topbar #calendar .fc-daygrid-day:not(.fc-day-today),
+body.layout-no-topbar #calendar .fc-col-header-cell {
 	background-color: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-scrollgrid-section-sticky > * {
+body.layout-no-topbar #calendar .fc-scrollgrid-section-sticky > * {
 	background: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-toolbar {
+body.layout-no-topbar #calendar .fc-toolbar {
 	align-items: center !important;
 	flex-wrap: wrap;
 	gap: 0.5rem 0.75rem;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-toolbar-chunk {
+body.layout-no-topbar #calendar .fc-toolbar-chunk {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 0.35rem;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc .fc-button-active {
+body.layout-no-topbar #calendar .fc .fc-button-active {
 	background-color: var(--fc-button-active-bg-color) !important;
 	border-color: var(--fc-button-active-border-color) !important;
 	color: var(--fc-button-text-color) !important;
 	box-shadow: none !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-daygrid-block-event .fc-event-title,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-h-event .fc-event-title {
+body.layout-no-topbar #calendar .fc-daygrid-block-event .fc-event-title,
+body.layout-no-topbar #calendar .fc-h-event .fc-event-title {
 	white-space: normal;
 	overflow: visible;
 	max-width: none;
 	line-height: 1.25;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-agenda-page .pgm-agenda-sidebar-title a {
+body.layout-no-topbar .pgm-agenda-page .pgm-agenda-sidebar-title a {
 	color: var(--pgm-link, #45e5ed) !important;
 }
 
-body.layout-no-topbar.pgm-theme-light .pgm-agenda-page .pgm-agenda-sidebar-title a {
-	color: var(--pgm-link, #00a876) !important;
-}
-
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-agenda-page .pgm-agenda-calendar-col {
+body.layout-no-topbar .pgm-agenda-page .pgm-agenda-calendar-col {
 	min-width: 0;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-toolbar-title {
+body.layout-no-topbar #calendar .fc-toolbar-title {
 	color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-col-header-cell-cushion,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-daygrid-day-number,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-multimonth-title {
+body.layout-no-topbar #calendar .fc-col-header-cell-cushion,
+body.layout-no-topbar #calendar .fc-daygrid-day-number,
+body.layout-no-topbar #calendar .fc-multimonth-title {
 	color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-day-other .fc-daygrid-day-number {
+body.layout-no-topbar #calendar .fc-day-other .fc-daygrid-day-number {
 	color: rgba(230, 237, 243, 0.38) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot-label-cushion,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-axis-cushion {
+body.layout-no-topbar #calendar .fc-timegrid-slot-label-cushion,
+body.layout-no-topbar #calendar .fc-timegrid-axis-cushion {
 	color: rgba(230, 237, 243, 0.65) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-popover {
+body.layout-no-topbar #calendar .fc-popover {
 	background: #1a1f27 !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
 	color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-popover-header {
+body.layout-no-topbar #calendar .fc-popover-header {
 	background: rgba(255, 255, 255, 0.06) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-popover-close {
+body.layout-no-topbar #calendar .fc-popover-close {
 	opacity: 0.85;
 	color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-list-day-cushion {
+body.layout-no-topbar #calendar .fc-list-day-cushion {
 	background: rgba(255, 255, 255, 0.06) !important;
 	color: #e6edf3 !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-list-event:hover td {
+body.layout-no-topbar #calendar .fc-list-event:hover td {
 	background: rgba(255, 255, 255, 0.04) !important;
 }
 
@@ -720,48 +716,48 @@ body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-list-event:hover td {
  * — Semana/Dia: FC só pinta .fc-timegrid-col.fc-day-today; .fc-timegrid-slot fica
  *   transparente e o branco aparece (tabela dentro de .card / reboot).
  */
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-body,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-scrollgrid-sync-table {
+body.layout-no-topbar #calendar .fc-timegrid-body,
+body.layout-no-topbar #calendar .fc-timegrid .fc-scrollgrid-sync-table {
 	background-color: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid table {
+body.layout-no-topbar #calendar .fc-timegrid table {
 	background-color: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-scrollgrid-sync-table td,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-scrollgrid-sync-table th {
+body.layout-no-topbar #calendar .fc-timegrid .fc-scrollgrid-sync-table td,
+body.layout-no-topbar #calendar .fc-timegrid .fc-scrollgrid-sync-table th {
 	background-color: var(--fc-page-bg-color) !important;
 	border-color: var(--fc-border-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot,
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot-lane {
+body.layout-no-topbar #calendar .fc-timegrid-slot,
+body.layout-no-topbar #calendar .fc-timegrid-slot-lane {
 	background: var(--fc-page-bg-color) !important;
 	border-color: var(--fc-border-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-slot-minor {
+body.layout-no-topbar #calendar .fc-timegrid-slot-minor {
 	border-top-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-col {
+body.layout-no-topbar #calendar .fc-timegrid-col {
 	background-color: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-col.fc-day-today {
+body.layout-no-topbar #calendar .fc-timegrid-col.fc-day-today {
 	background-color: var(--fc-today-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid-divider {
+body.layout-no-topbar #calendar .fc-timegrid-divider {
 	background: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-daygrid-day:not(.fc-day-today) {
+body.layout-no-topbar #calendar .fc-timegrid .fc-daygrid-day:not(.fc-day-today) {
 	background-color: var(--fc-page-bg-color) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) #calendar .fc-timegrid .fc-daygrid-day.fc-day-today {
+body.layout-no-topbar #calendar .fc-timegrid .fc-daygrid-day.fc-day-today {
 	background-color: var(--fc-today-bg-color) !important;
 }
 
@@ -922,77 +918,4 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-cliente {
 }
 body.layout-no-topbar .pgm-adv-page .pgm-adv-contract-filter-mb {
 	margin-bottom: 8px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
- * DataTables dentro de .card — modo escuro com tokens PGM (html[data-pgm-theme])
- * Corrige células ilegíveis: o CSS legado cobria .page-wrapper mas não .card + .dataTable.
- * Mobile-first: mesmas regras (sem media obrigatória; inputs já fluídos).
- * ═══════════════════════════════════════════════════════════════════════════ */
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead th,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead td {
-	background: var(--pgm-bg-elevated) !important;
-	color: var(--pgm-text) !important;
-	border-color: var(--pgm-border) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody td,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody th {
-	background: transparent !important;
-	color: var(--pgm-text) !important;
-	border-color: var(--pgm-border) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody tr {
-	background: var(--pgm-bg-surface) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody tr:nth-child(odd) {
-	background: var(--pgm-bg-elevated) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody tr:hover > td {
-	background: var(--pgm-primary-muted) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable a,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable a.link {
-	color: var(--pgm-link) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .table thead.text-primary th,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .table thead th.text-primary {
-	color: var(--pgm-text) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_length,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_info,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_paginate {
-	color: var(--pgm-text-muted) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter input,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .dataTables_length select {
-	background: var(--pgm-bg-elevated) !important;
-	border-color: var(--pgm-border-strong) !important;
-	color: var(--pgm-text) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .paginate_button {
-	background: var(--pgm-bg-elevated) !important;
-	border-color: var(--pgm-border) !important;
-	color: var(--pgm-text-secondary) !important;
-}
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current,
-html[data-pgm-theme="dark"] body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current:hover {
-	background: var(--pgm-primary-muted) !important;
-	border-color: var(--pgm-primary) !important;
-	color: var(--pgm-primary) !important;
-}
-
-/* Modo claro: DataTables em .card com tokens (consistência com Guia PGM) */
-html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead th,
-html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable thead td {
-	background: var(--pgm-bg-elevated) !important;
-	color: var(--pgm-text) !important;
-	border-color: var(--pgm-border) !important;
-}
-html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable tbody td {
-	color: var(--pgm-text-secondary) !important;
-	border-color: var(--pgm-border) !important;
-}
-html[data-pgm-theme="light"] body.layout-no-topbar .card .dataTables_wrapper table.dataTable a.link {
-	color: var(--pgm-link) !important;
 }

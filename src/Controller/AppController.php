@@ -181,6 +181,7 @@ class AppController extends Controller {
 			'senhasActive' => '',
 			'faturasActive' => '',
 			'prefaturamentoActive' => '',
+			'fiscalModuleActive' => '',
 			'config' => '',
 			'queuesAtendimentoActive' => '',
 			'advancedModuleActive' => '',
@@ -212,6 +213,12 @@ class AppController extends Controller {
 			'bancosenhas' => 'senhasActive',
 			'faturas' => 'faturasActive',
 			'prefaturamento' => 'prefaturamentoActive',
+			'fiscal' => 'fiscalModuleActive',
+			'fiscalnotas' => 'fiscalModuleActive',
+			'fiscalnotasentrada' => 'fiscalModuleActive',
+			'fiscalcertificados' => 'fiscalModuleActive',
+			'fiscalconfig' => 'fiscalModuleActive',
+			'fiscalrelatorios' => 'fiscalModuleActive',
 			'tickets' => 'ticketsActive',
 			'servicedesk' => 'ticketsActive',
 			'portaladvancedattendance' => 'ticketsActive',
@@ -284,11 +291,23 @@ class AppController extends Controller {
 		if ($this->Auth->user('id') > 0) {
 			try {
 				$user = $this->Users->get($this->Auth->user('id'));
-				$this->set('skin', $user->skin);
+				// Tema exclusivamente escuro (skin-pgm-light descontinuado na UI).
+				$this->set('skin', 'skin-green');
+				if (($user->skin ?? '') === 'skin-pgm-light') {
+					$this->Users->updateAll(
+						['skin' => 'skin-green'],
+						['id' => $user->id, 'skin' => 'skin-pgm-light']
+					);
+				}
+				$u = $this->Auth->user();
+				if (is_array($u) && (($u['skin'] ?? '') === 'skin-pgm-light')) {
+					$u['skin'] = 'skin-green';
+					$this->Auth->setUser($u);
+				}
 				$this->set('sidebar', $user->sidebar);
 				$this->set('pagelength', $user->pagelength);
 			} catch (RecordNotFoundException $e) {
-				$this->set('skin', '');
+				$this->set('skin', 'skin-green');
 				$this->set('sidebar', 1);
 				$this->set('pagelength', 25);
 			}

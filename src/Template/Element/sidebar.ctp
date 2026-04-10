@@ -58,12 +58,7 @@
 
 	<?php if ($roleNav === 0 && ($sg['sidebar_notifications_bell'] ?? true)) : ?>
 	<div class="pgm-sidebar-top-tools">
-		<?= $this->element('pgm_theme_toggle_icon') ?>
 		<?= $this->element('portal_notification_bell') ?>
-	</div>
-	<?php elseif ($roleNav === 0) : ?>
-	<div class="pgm-sidebar-top-tools">
-		<?= $this->element('pgm_theme_toggle_icon') ?>
 	</div>
 	<?php endif; ?>
 
@@ -291,6 +286,112 @@
 				</li>
 				<?php endif; ?>
 				<?php
+				$sgFiscalSec = ($sg['fiscal_modulo'] ?? true);
+				if ($roleNav === 0 && $sgFiscalSec) :
+					$fiscalCtrls = ['Fiscal', 'FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalConfig', 'FiscalRelatorios'];
+					$fiscalOpen = in_array($ctrl, $fiscalCtrls, true);
+					$fiscalDashAct = ($ctrl === 'Fiscal' && $act === 'index');
+					$fiscalDfeRecAct = ($ctrl === 'Fiscal' && $act === 'dfeRecebidos');
+					$fiscalNotasAct = ($ctrl === 'FiscalNotas' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao');
+					$fiscalEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao');
+					$fiscalInutActSaida = ($ctrl === 'FiscalNotas' && $act === 'inutilizarNumeracao');
+					$fiscalInutActEntrada = ($ctrl === 'FiscalNotasEntrada' && $act === 'inutilizarNumeracao');
+					$fiscalSeriesSaidaAct = ($ctrl === 'FiscalNotas' && $act === 'controleSeries');
+					$fiscalSeriesEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act === 'controleSeries');
+					$fiscalCertAct = ($ctrl === 'FiscalCertificados');
+					$fiscalCfgAct = ($ctrl === 'FiscalConfig');
+					$fiscalRelAct = ($ctrl === 'FiscalRelatorios');
+				?>
+				<li class="pgm-ng <?= h($fiscalModuleActive) ?> <?= $fiscalOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $fiscalOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $fiscalOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-receipt ni-ico-fa"></i>
+						<span class="hide-menu">Fiscal</span>
+						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<?php if (($sg['fiscal_menu_dashboard'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Painel</span>',
+							['controller' => 'Fiscal', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($fiscalDashAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Módulo fiscal — painel']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_dfe_recebidos'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>DF-e recebidos</span>',
+							['controller' => 'Fiscal', 'action' => 'dfeRecebidos'],
+							['class' => 'pgm-nch ' . ($fiscalDfeRecAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Fila de documentos Distribuição DF-e']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_notas'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Notas de saída</span>',
+							['controller' => 'FiscalNotas', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($fiscalNotasAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_notas_entrada'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Notas de entrada</span>',
+							['controller' => 'FiscalNotasEntrada', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($fiscalEntradaAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_notas'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Inutilizar numeração (saída)</span>',
+							['controller' => 'FiscalNotas', 'action' => 'inutilizarNumeracao'],
+							['class' => 'pgm-nch ' . ($fiscalInutActSaida ? 'act' : ''), 'escape' => false, 'aria-label' => 'Inutilização de numeração NF-e — permissão notas de saída']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_notas_entrada'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Inutilizar numeração (entrada)</span>',
+							['controller' => 'FiscalNotasEntrada', 'action' => 'inutilizarNumeracao'],
+							['class' => 'pgm-nch ' . ($fiscalInutActEntrada ? 'act' : ''), 'escape' => false, 'aria-label' => 'Inutilização de numeração NF-e — permissão notas de entrada']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_series_saida'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Séries (saída)</span>',
+							['controller' => 'FiscalNotas', 'action' => 'controleSeries'],
+							['class' => 'pgm-nch ' . ($fiscalSeriesSaidaAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_series_entrada'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Séries (entrada)</span>',
+							['controller' => 'FiscalNotasEntrada', 'action' => 'controleSeries'],
+							['class' => 'pgm-nch ' . ($fiscalSeriesEntradaAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_certificados'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Certificados</span>',
+							['controller' => 'FiscalCertificados', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($fiscalCertAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_config'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Configuração</span>',
+							['controller' => 'FiscalConfig', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($fiscalCfgAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['fiscal_menu_relatorios'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Relatórios</span>',
+							['controller' => 'FiscalRelatorios', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($fiscalRelAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+					</ul>
+				</li>
+				<?php endif; ?>
+				<?php
 				$sgAdvSec = ($sg['advanced_module_gestao'] ?? true)
 					|| ($sg['advanced_module_modelos'] ?? true)
 					|| ($sg['advanced_module_faturas'] ?? true);
@@ -491,7 +592,4 @@
 		$('.pgm-nc').removeClass('in');
 	}, 0);
 
-	if (window.PgmPortalTheme) {
-		PgmPortalTheme.initSidebarToggle(<?= json_encode(Router::url(['controller' => 'Users', 'action' => 'selectTheme'])) ?>);
-	}
 </script>

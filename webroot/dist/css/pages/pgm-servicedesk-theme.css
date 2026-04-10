@@ -5,6 +5,8 @@
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
+	background: var(--pgm-bg-page);
+	color: var(--pgm-text);
 }
 .sd-topbar {
 	padding: 0.65rem 1.25rem;
@@ -13,6 +15,9 @@
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
+	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	color: #fff;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 .sd-topbar .sd-brand {
 	font-weight: 700;
@@ -34,28 +39,6 @@
 }
 body.sd-body {
 	margin: 0;
-}
-
-html[data-pgm-theme="light"] .sd-shell {
-	background: var(--pgm-bg-page);
-	color: var(--pgm-text);
-}
-
-html[data-pgm-theme="dark"] .sd-shell {
-	background: var(--pgm-bg-page);
-	color: var(--pgm-text);
-}
-
-html[data-pgm-theme="light"] .sd-topbar {
-	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
-	color: #fff;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-html[data-pgm-theme="dark"] .sd-topbar {
-	background: linear-gradient(90deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
-	color: #fff;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .sd-topbar a {
@@ -121,41 +104,7 @@ html[data-pgm-theme="dark"] body.sd-body .form-control:focus {
 	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
 }
 
-html[data-pgm-theme="light"] body.sd-body .card {
-	background: var(--pgm-bg-surface);
-	border-color: var(--pgm-border);
-	color: var(--pgm-text);
-}
-
-html[data-pgm-theme="light"] body.sd-body .table {
-	color: var(--pgm-text);
-}
-
-html[data-pgm-theme="light"] body.sd-body .table thead th {
-	background: var(--pgm-bg-elevated);
-	border-color: var(--pgm-border);
-}
-
-html[data-pgm-theme="light"] body.sd-body .form-control {
-	background: var(--pgm-bg-surface);
-	border-color: var(--pgm-border-strong);
-	color: var(--pgm-text);
-}
-
-html[data-pgm-theme="light"] body.sd-body .form-control:focus {
-	border-color: var(--pgm-primary);
-	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
-}
-
-/* ── Abertura de chamado: tema claro força campos claros (evita textarea “escura” com utilitários globais) ── */
-html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .form-control,
-html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap textarea.form-control {
-	background-color: #f8fafc !important;
-	color: #0f172a !important;
-	border-color: #e2e8f0 !important;
-}
-
-/* ── Abertura de chamado: tema escuro coerente com tokens PGM ── */
+/* ── Abertura de chamado: tokens PGM ── */
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap {
 	background: var(--pgm-bg-page) !important;
 	color: var(--pgm-text);

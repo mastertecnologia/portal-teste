@@ -9,15 +9,13 @@
 use App\Utility\PortalUrlPath;
 use Cake\Routing\Router;
 
-$pgmThemeAttr = (($skin ?? '') === 'skin-pgm-light') ? 'light' : 'dark';
-$pgmThemeClass = (($skin ?? '') === 'skin-pgm-light') ? 'pgm-theme-light' : '';
 $toolbarUrl = !empty($estoqueEmbedReturnUrl)
 	? $estoqueEmbedReturnUrl
 	: PortalUrlPath::normalizeRelativeUrl(Router::url(['controller' => 'Produtos', 'action' => 'estoque', 't']));
 $bodyExtra = isset($bodyPageClass) ? h((string)$bodyPageClass) : '';
 ?>
 <!DOCTYPE HTML>
-<html lang="pt-BR" data-pgm-theme="<?= h($pgmThemeAttr) ?>">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<?= $this->Html->charset() ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -46,7 +44,6 @@ $bodyExtra = isset($bodyPageClass) ? h((string)$bodyPageClass) : '';
 	<?= $this->fetch('script') ?>
 	<?= $this->Html->css('/dist/css/pages/bootstrap-select.css') ?>
 	<?= $this->Html->script('/dist/js/pages/bootstrap-select') ?>
-	<?= $this->Html->css('/dist/css/pages/pgm-theme-light') ?>
 	<?= $this->fetch('css_late') ?>
 	<style>
 		body.estoque-embed-shell { margin: 0; min-height: 100vh; background: var(--pgm-bg-page, #f0f2f5); }
@@ -56,7 +53,7 @@ $bodyExtra = isset($bodyPageClass) ? h((string)$bodyPageClass) : '';
 		.est-embed-main { padding: 12px 16px 32px; max-width: 100%; }
 	</style>
 </head>
-<body class="estoque-embed-shell layout-no-topbar <?= h($pgmThemeClass) ?> <?= $bodyExtra ?>">
+<body class="estoque-embed-shell layout-no-topbar <?= $bodyExtra ?>">
 	<div class="est-embed-toolbar">
 		<a class="est-embed-toolbar__back" target="_top" href="<?= h($toolbarUrl) ?>">← Voltar ao estoque</a>
 	</div>

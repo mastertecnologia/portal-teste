@@ -32,7 +32,7 @@ $graficoDespesa = array_column($grafico, 'despesa');
 .fin-nav { display:flex; gap:10px; padding:12px 24px 0; }
 .fin-nav a { padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:500; color:#7d8590; text-decoration:none; transition:all .15s; }
 .fin-nav a:hover { color:#e6edf3; background:rgba(255,255,255,.06); }
-.fin-nav a.active { background:rgba(0,192,139,.14); color:#5cdbc0; }
+.fin-nav a.active { background:rgba(29,158,117,.14); color:#5cdbc0; }
 /* Tabela vencimentos */
 .fin-tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
 .fin-tbl th { color:#7d8590; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:600; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; }
@@ -40,20 +40,6 @@ $graficoDespesa = array_column($grafico, 'despesa');
 .fin-tbl tr:hover td { background:rgba(255,255,255,.02); }
 .fin-badge-venc { display:inline-block; padding:1px 7px; border-radius:9px; font-size:11px; font-weight:600; background:rgba(248,81,73,.13); color:#f85149; }
 .fin-empty { text-align:center; padding:32px; color:#484f58; font-size:13px; }
-/* Modo claro */
-body.pgm-theme-light .fin-h1 { color:#1a1f2e; }
-body.pgm-theme-light .fin-kpi-label { color:#6b7280; }
-body.pgm-theme-light .fin-kpi-val { color:#1a1f2e; }
-body.pgm-theme-light .fin-topbar, body.pgm-theme-light .fin-kpi-grid,
-body.pgm-theme-light .fin-kpi { border-color:#e1e4e8; }
-body.pgm-theme-light .fin-card { background:#fff; border-color:#e1e4e8; }
-body.pgm-theme-light .fin-card-title { color:#6b7280; }
-body.pgm-theme-light .fin-nav a { color:#6b7280; }
-body.pgm-theme-light .fin-nav a:hover { color:#1a1f2e; background:rgba(0,0,0,.04); }
-body.pgm-theme-light .fin-nav a.active { background:rgba(0,168,118,.10); color:#00a876; }
-body.pgm-theme-light .fin-tbl th { color:#6b7280; border-color:#e5e7eb; }
-body.pgm-theme-light .fin-tbl td { color:#374151; border-color:#f3f4f6; }
-body.pgm-theme-light .fin-empty { color:#9ca3af; }
 @media(max-width:768px){ .fin-body { grid-template-columns:1fr; } }
 .fin-h1-ico { color:#5cdbc0; margin-right:8px; }
 .fin-topbar-actions { display:flex; gap:8px; }

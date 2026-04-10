@@ -29,9 +29,9 @@
 	};
 ?>
 <style>
-/* Portal cliente — isolado da layout do ERP */
-.orc-portal-root { font-family:-apple-system,'Segoe UI',sans-serif; font-size:14px; color:#1a1a18; background:#f5f4f0; min-height:100vh; margin:-20px -30px; }
-.orc-portal-header { background:#1a1a18; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+/* Portal cliente — tema escuro (hash público) */
+.orc-portal-root { font-family:-apple-system,'Segoe UI',sans-serif; font-size:14px; color:#e8eaed; background:#12151c; min-height:100vh; margin:-20px -30px; }
+.orc-portal-header { background:#0d1117; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #3d4554; }
 .orc-portal-logo { display:flex; align-items:center; gap:10px; }
 .orc-portal-logo-box { width:34px; height:34px; background:#1D9E75; border-radius:8px; display:flex; align-items:center; justify-content:center; }
 .orc-portal-logo-name { font-size:15px; font-weight:700; color:#fff; }
@@ -46,48 +46,48 @@
 .orc-pg.show { display:block; }
 
 /* Hero */
-.orc-hero { background:#fff; border-radius:20px; padding:28px 32px; margin-bottom:16px; border:1px solid #e8e7e3; }
+.orc-hero { background:#1e2329; border-radius:20px; padding:28px 32px; margin-bottom:16px; border:1px solid #3d4554; box-shadow:0 4px 24px rgba(0,0,0,.35); }
 .orc-hero-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
-.orc-prop-num { font-size:12px; color:#6b6a65; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
-.orc-prop-title { font-size:22px; font-weight:700; color:#1a1a18; }
-.orc-validity-pill { display:flex; align-items:center; gap:6px; background:#FAEEDA; border:1px solid #FAC775; padding:8px 14px; border-radius:99px; font-size:12px; color:#633806; font-weight:600; white-space:nowrap; }
-.orc-client-block { background:#f5f4f0; border-radius:10px; padding:14px 18px; margin-bottom:20px; }
-.orc-client-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6b6a65; font-weight:600; margin-bottom:6px; }
-.orc-client-name { font-size:16px; font-weight:700; color:#1a1a18; }
-.orc-client-doc { font-size:12px; color:#6b6a65; margin-top:2px; }
-.orc-info-row { display:flex; gap:0; border:1px solid #e8e7e3; border-radius:10px; overflow:hidden; flex-wrap:wrap; }
-.orc-info-cell { flex:1; min-width:120px; padding:12px 16px; border-right:1px solid #e8e7e3; }
+.orc-prop-num { font-size:12px; color:#9aa0a8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.orc-prop-title { font-size:22px; font-weight:700; color:#e8eaed; }
+.orc-validity-pill { display:flex; align-items:center; gap:6px; background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.45); padding:8px 14px; border-radius:99px; font-size:12px; color:#fcd34d; font-weight:600; white-space:nowrap; }
+.orc-client-block { background:#161b22; border-radius:10px; padding:14px 18px; margin-bottom:20px; border:1px solid #3d4554; }
+.orc-client-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#9aa0a8; font-weight:600; margin-bottom:6px; }
+.orc-client-name { font-size:16px; font-weight:700; color:#e8eaed; }
+.orc-client-doc { font-size:12px; color:#9aa0a8; margin-top:2px; }
+.orc-info-row { display:flex; gap:0; border:1px solid #3d4554; border-radius:10px; overflow:hidden; flex-wrap:wrap; }
+.orc-info-cell { flex:1; min-width:120px; padding:12px 16px; border-right:1px solid #3d4554; }
 .orc-info-cell:last-child { border-right:none; }
-.orc-info-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6b6a65; font-weight:600; margin-bottom:4px; }
-.orc-info-value { font-size:13px; font-weight:600; color:#1a1a18; }
-.orc-progress-bar { height:4px; background:#e8e7e3; border-radius:2px; margin:20px 0 6px; overflow:hidden; }
+.orc-info-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#9aa0a8; font-weight:600; margin-bottom:4px; }
+.orc-info-value { font-size:13px; font-weight:600; color:#e8eaed; }
+.orc-progress-bar { height:4px; background:#3d4554; border-radius:2px; margin:20px 0 6px; overflow:hidden; }
 .orc-progress-fill { height:100%; background:#1D9E75; border-radius:2px; }
-.orc-progress-labels { display:flex; justify-content:space-between; font-size:10px; color:#6b6a65; }
+.orc-progress-labels { display:flex; justify-content:space-between; font-size:10px; color:#9aa0a8; }
 
 /* Cards */
-.orc-portal-card { background:#fff; border-radius:14px; padding:22px 26px; margin-bottom:14px; border:1px solid #e8e7e3; }
-.orc-portal-card-title { font-size:13px; font-weight:700; color:#1a1a18; text-transform:uppercase; letter-spacing:.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-.orc-portal-card-title::after { content:''; flex:1; height:1px; background:#f0efec; }
+.orc-portal-card { background:#1e2329; border-radius:14px; padding:22px 26px; margin-bottom:14px; border:1px solid #3d4554; box-shadow:0 4px 20px rgba(0,0,0,.28); }
+.orc-portal-card-title { font-size:13px; font-weight:700; color:#e8eaed; text-transform:uppercase; letter-spacing:.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.orc-portal-card-title::after { content:''; flex:1; height:1px; background:#3d4554; }
 
 /* Items table */
 .orc-items-tbl { width:100%; border-collapse:collapse; font-size:13px; }
-.orc-items-tbl thead th { font-size:11px; color:#6b6a65; text-transform:uppercase; letter-spacing:.4px; padding:8px 12px; text-align:left; border-bottom:1px solid #e8e7e3; font-weight:600; background:#fafaf8; }
+.orc-items-tbl thead th { font-size:11px; color:#9aa0a8; text-transform:uppercase; letter-spacing:.4px; padding:8px 12px; text-align:left; border-bottom:1px solid #3d4554; font-weight:600; background:#262c35; }
 .orc-items-tbl thead th.r { text-align:right; }
-.orc-items-tbl tbody tr { border-bottom:1px solid #f0efec; }
+.orc-items-tbl tbody tr { border-bottom:1px solid #3d4554; }
 .orc-items-tbl tbody tr:last-child { border-bottom:none; }
 .orc-items-tbl td { padding:12px; vertical-align:middle; }
 .orc-items-tbl td.r { text-align:right; }
-.orc-item-name { font-weight:600; color:#1a1a18; margin-bottom:3px; }
-.orc-item-desc { font-size:12px; color:#6b6a65; line-height:1.5; }
+.orc-item-name { font-weight:600; color:#e8eaed; margin-bottom:3px; }
+.orc-item-desc { font-size:12px; color:#9aa0a8; line-height:1.5; }
 .orc-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:600; }
-.orc-b-prod { background:#E1F5EE; color:#085041; }
-.orc-b-serv { background:#E6F1FB; color:#0C447C; }
-.orc-totals { display:flex; justify-content:flex-end; padding-top:14px; border-top:1px solid #e8e7e3; margin-top:8px; }
+.orc-b-prod { background:rgba(29,158,117,.2); color:#5cecc4; }
+.orc-b-serv { background:rgba(56,189,248,.15); color:#7dd3fc; }
+.orc-totals { display:flex; justify-content:flex-end; padding-top:14px; border-top:1px solid #3d4554; margin-top:8px; }
 .orc-totals-inner { min-width:260px; }
-.orc-tot-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; color:#6b6a65; border-bottom:1px solid #f0efec; }
-.orc-tot-row:last-child { border:none; font-size:17px; font-weight:700; color:#1a1a18; padding-top:10px; }
-.orc-tot-row .g { color:#1D9E75; }
-.orc-tot-row .rd { color:#E24B4A; }
+.orc-tot-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; color:#9aa0a8; border-bottom:1px solid #3d4554; }
+.orc-tot-row:last-child { border:none; font-size:17px; font-weight:700; color:#e8eaed; padding-top:10px; }
+.orc-tot-row .g { color:#5cecc4; }
+.orc-tot-row .rd { color:#f87171; }
 
 /* Decision */
 .orc-decision-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
@@ -95,119 +95,119 @@
 .orc-decision-btn svg { width:24px; height:24px; }
 .orc-btn-approve { background:#1D9E75; color:#fff; }
 .orc-btn-approve:hover { background:#0F6E56; transform:translateY(-1px); }
-.orc-btn-decline { background:#FCEBEB; color:#791F1F; border:2px solid #F7C1C1; }
-.orc-btn-decline:hover { background:#F7C1C1; }
-.orc-btn-negotiate { width:100%; padding:14px; border-radius:14px; font-size:14px; font-weight:600; cursor:pointer; border:2px solid #E9A025; background:#FAEEDA; color:#633806; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; font-family:inherit; }
-.orc-btn-negotiate:hover { background:#FAC775; }
+.orc-btn-decline { background:rgba(248,113,113,.12); color:#fca5a5; border:2px solid rgba(248,113,113,.35); }
+.orc-btn-decline:hover { background:rgba(248,113,113,.22); }
+.orc-btn-negotiate { width:100%; padding:14px; border-radius:14px; font-size:14px; font-weight:600; cursor:pointer; border:2px solid rgba(245,158,11,.5); background:rgba(245,158,11,.12); color:#fcd34d; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; font-family:inherit; }
+.orc-btn-negotiate:hover { background:rgba(245,158,11,.22); }
 .orc-btn-main { width:100%; padding:14px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; border:none; background:#1D9E75; color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; font-family:inherit; margin-top:12px; }
 .orc-btn-main:hover { background:#0F6E56; }
-.orc-btn-main.red { background:#E24B4A; }
-.orc-btn-main.amber { background:#E9A025; color:#633806; }
-.orc-btn-ghost { width:100%; padding:10px; border-radius:10px; font-size:13px; font-weight:500; cursor:pointer; border:1px solid #e5e4e0; background:transparent; color:#6b6a65; font-family:inherit; transition:all .15s; margin-top:8px; }
-.orc-btn-ghost:hover { background:#f5f4f0; }
+.orc-btn-main.red { background:#dc2626; }
+.orc-btn-main.amber { background:#d97706; color:#fff; }
+.orc-btn-ghost { width:100%; padding:10px; border-radius:10px; font-size:13px; font-weight:500; cursor:pointer; border:1px solid #3d4554; background:transparent; color:#9aa0a8; font-family:inherit; transition:all .15s; margin-top:8px; }
+.orc-btn-ghost:hover { background:#262c35; }
 
 /* Conditions */
-.orc-cond-text { background:#f5f4f0; border-radius:10px; padding:14px 16px; font-size:13px; color:#1a1a18; line-height:1.8; margin-bottom:12px; border-left:3px solid #1D9E75; }
+.orc-cond-text { background:#161b22; border-radius:10px; padding:14px 16px; font-size:13px; color:#c4c9d1; line-height:1.8; margin-bottom:12px; border:1px solid #3d4554; border-left:3px solid #1D9E75; }
 .orc-obs-html p { margin: 0 0 0.65em; }
 .orc-obs-html p:last-child { margin-bottom: 0; }
 
 /* Motivos recusa */
-.orc-radio-opt { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1.5px solid #e8e7e3; border-radius:10px; cursor:pointer; font-size:13px; margin-bottom:8px; transition:all .15px; }
+.orc-radio-opt { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1.5px solid #3d4554; border-radius:10px; cursor:pointer; font-size:13px; margin-bottom:8px; transition:all .15px; color:#e8eaed; }
 .orc-radio-opt:hover { border-color:#1D9E75; }
 
 /* Negociar textarea */
-.orc-textarea { width:100%; padding:12px 14px; border:1.5px solid #e8e7e3; border-radius:10px; font-size:13px; color:#1a1a18; outline:none; font-family:inherit; resize:vertical; min-height:90px; line-height:1.6; background:#fff; }
-.orc-textarea:focus { border-color:#1D9E75; box-shadow:0 0 0 3px rgba(29,158,117,.1); }
+.orc-textarea { width:100%; padding:12px 14px; border:1.5px solid #3d4554; border-radius:10px; font-size:13px; color:#e8eaed; outline:none; font-family:inherit; resize:vertical; min-height:90px; line-height:1.6; background:#161b22; }
+.orc-textarea:focus { border-color:#1D9E75; box-shadow:0 0 0 3px rgba(29,158,117,.2); }
 
 /* Success */
-.orc-success-card { background:#fff; border-radius:20px; padding:40px 32px; text-align:center; border:1px solid #e8e7e3; }
+.orc-success-card { background:#1e2329; border-radius:20px; padding:40px 32px; text-align:center; border:1px solid #3d4554; box-shadow:0 4px 24px rgba(0,0,0,.35); }
 .orc-success-icon { width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
-.orc-success-title { font-size:26px; font-weight:800; margin-bottom:8px; }
-.orc-success-sub { font-size:14px; color:#6b6a65; line-height:1.7; max-width:420px; margin:0 auto 28px; }
-.orc-contract-preview { background:#f5f4f0; border:1px solid #e8e7e3; border-radius:10px; padding:16px 20px; margin-bottom:20px; text-align:left; }
-.orc-contract-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-bottom:1px solid #f0efec; }
+.orc-success-title { font-size:26px; font-weight:800; margin-bottom:8px; color:#e8eaed; }
+.orc-success-sub { font-size:14px; color:#9aa0a8; line-height:1.7; max-width:420px; margin:0 auto 28px; }
+.orc-contract-preview { background:#161b22; border:1px solid #3d4554; border-radius:10px; padding:16px 20px; margin-bottom:20px; text-align:left; }
+.orc-contract-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-bottom:1px solid #3d4554; }
 .orc-contract-row:last-child { border:none; }
-.orc-contract-label { color:#6b6a65; }
-.orc-contract-value { font-weight:600; color:#1a1a18; }
+.orc-contract-label { color:#9aa0a8; }
+.orc-contract-value { font-weight:600; color:#e8eaed; }
 
 /* Security footer */
-.orc-portal-footer { text-align:center; padding:24px 0 12px; font-size:12px; color:#6b6a65; }
-.orc-security-bar { background:#fff; border-top:1px solid #e8e7e3; padding:12px 24px; display:flex; align-items:center; justify-content:center; gap:16px; font-size:11px; color:#6b6a65; flex-wrap:wrap; }
+.orc-portal-footer { text-align:center; padding:24px 0 12px; font-size:12px; color:#9aa0a8; }
+.orc-security-bar { background:#1e2329; border-top:1px solid #3d4554; padding:12px 24px; display:flex; align-items:center; justify-content:center; gap:16px; font-size:11px; color:#9aa0a8; flex-wrap:wrap; }
 .orc-security-item { display:flex; align-items:center; gap:5px; }
 .orc-security-item svg { color:#1D9E75; }
 
-.orc-portal-header-badge--ok { background:rgba(29,158,117,.15); color:#5DCAA5; }
+.orc-portal-header-badge--ok { background:rgba(29,158,117,.15); color:#5cecc4; }
 .orc-portal-header-badge--ok .dot { background:#1D9E75; animation:none; }
-.orc-portal-header-badge--no { background:rgba(226,75,74,.15); color:#E24B4A; }
-.orc-portal-header-badge--no .dot { background:#E24B4A; animation:none; }
+.orc-portal-header-badge--no { background:rgba(248,113,113,.15); color:#f87171; }
+.orc-portal-header-badge--no .dot { background:#f87171; animation:none; }
 .orc-progress-fill--w33 { width:33%; }
 .orc-progress-fill--w100 { width:100%; }
-.orc-plab-amber { color:#E9A025; font-weight:600; }
+.orc-plab-amber { color:#fcd34d; font-weight:600; }
 .orc-plab-teal { color:#1D9E75; font-weight:600; }
 .orc-items-scroll { overflow-x:auto; }
 .orc-items-tbl th.orc-th-w60 { width:60px; }
 .orc-items-tbl th.orc-th-w80 { width:80px; }
 .orc-items-tbl th.orc-th-w46 { width:46px; }
-.orc-b-lic { background:#EEEDFE; color:#3C3489; }
+.orc-b-lic { background:rgba(167,139,250,.2); color:#c4b5fd; }
 .orc-payment-opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.orc-payment-opt { border:2px solid #e8e7e3; border-radius:14px; padding:16px 20px; cursor:pointer; transition:all .2s; position:relative; }
-.orc-payment-opt:hover { border-color:#1D9E75; background:#E1F5EE; }
-.orc-payment-opt.selected { border-color:#1D9E75; background:#E1F5EE; }
-.orc-payment-check { position:absolute; top:12px; right:12px; width:20px; height:20px; border-radius:50%; border:2px solid #e8e7e3; background:#fff; display:flex; align-items:center; justify-content:center; }
+.orc-payment-opt { border:2px solid #3d4554; border-radius:14px; padding:16px 20px; cursor:pointer; transition:all .2s; position:relative; background:#161b22; }
+.orc-payment-opt:hover { border-color:#1D9E75; background:rgba(29,158,117,.12); }
+.orc-payment-opt.selected { border-color:#1D9E75; background:rgba(29,158,117,.15); }
+.orc-payment-check { position:absolute; top:12px; right:12px; width:20px; height:20px; border-radius:50%; border:2px solid #3d4554; background:#1e2329; display:flex; align-items:center; justify-content:center; }
 .orc-payment-opt.selected .orc-payment-check { background:#1D9E75; border-color:#1D9E75; }
-.orc-payment-opt-label { font-size:13px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
-.orc-payment-opt-val { font-size:20px; font-weight:800; color:#1D9E75; margin-bottom:4px; }
-.orc-payment-opt-desc { font-size:12px; color:#6b6a65; }
+.orc-payment-opt-label { font-size:13px; font-weight:700; color:#e8eaed; margin-bottom:4px; }
+.orc-payment-opt-val { font-size:20px; font-weight:800; color:#5cecc4; margin-bottom:4px; }
+.orc-payment-opt-desc { font-size:12px; color:#9aa0a8; }
 .orc-payment-opt-tag { display:inline-flex; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:700; background:#1D9E75; color:#fff; margin-bottom:6px; }
-.orc-cond-bullets { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; color:#6b6a65; }
+.orc-cond-bullets { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; color:#9aa0a8; }
 .orc-cond-li { display:flex; gap:6px; align-items:flex-start; }
 .orc-cond-dot { width:5px; height:5px; border-radius:50%; background:#1D9E75; margin-top:5px; flex-shrink:0; }
-.orc-q-block { background:#f5f4f0; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
-.orc-q-text { font-size:13px; font-weight:600; color:#1a1a18; margin-bottom:10px; }
+.orc-q-block { background:#161b22; border:1px solid #3d4554; border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+.orc-q-text { font-size:13px; font-weight:600; color:#e8eaed; margin-bottom:10px; }
 .orc-q-opts { display:flex; gap:8px; flex-wrap:wrap; }
-.orc-q-opt { padding:7px 16px; border-radius:99px; font-size:12px; font-weight:500; border:1.5px solid #e8e7e3; cursor:pointer; background:#fff; color:#6b6a65; transition:all .15s; }
-.orc-q-opt:hover { border-color:#1D9E75; color:#1D9E75; }
+.orc-q-opt { padding:7px 16px; border-radius:99px; font-size:12px; font-weight:500; border:1.5px solid #3d4554; cursor:pointer; background:#1e2329; color:#9aa0a8; transition:all .15s; }
+.orc-q-opt:hover { border-color:#1D9E75; color:#5cecc4; }
 .orc-q-opt.selected { background:#1D9E75; border-color:#1D9E75; color:#fff; }
-.orc-q-opt.selected-red { background:#FCEBEB; border-color:#E24B4A; color:#791F1F; }
-.orc-q-opt.selected-amber { background:#FAEEDA; border-color:#E9A025; color:#633806; }
-.orc-sign-canvas { border:1.5px solid #e8e7e3; border-radius:10px; width:100%; height:110px; cursor:crosshair; background:#fff; touch-action:none; display:block; }
+.orc-q-opt.selected-red { background:rgba(248,113,113,.15); border-color:#f87171; color:#fca5a5; }
+.orc-q-opt.selected-amber { background:rgba(245,158,11,.15); border-color:#f59e0b; color:#fcd34d; }
+.orc-sign-canvas { border:1.5px solid #3d4554; border-radius:10px; width:100%; height:110px; cursor:crosshair; background:#161b22; touch-action:none; display:block; }
 .orc-doc-badge { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:99px; font-size:12px; font-weight:700; border:1px solid; }
-.orc-doc-valid { background:#E1F5EE; color:#085041; border-color:#5DCAA5; }
-.orc-doc-icp { background:#EEEDFE; color:#3C3489; border-color:#CECBF6; }
+.orc-doc-valid { background:rgba(29,158,117,.2); color:#5cecc4; border-color:rgba(29,158,117,.45); }
+.orc-doc-icp { background:rgba(167,139,250,.2); color:#c4b5fd; border-color:rgba(167,139,250,.4); }
 .orc-items-tbl th.orc-th-w110 { width:110px; }
 .orc-items-tbl th.orc-th-w120 { width:120px; }
-.orc-item-code { font-size:11px; color:#6b6a65; font-family:monospace; }
-.orc-item-vtot { font-weight:700; color:#1D9E75; }
+.orc-item-code { font-size:11px; color:#9aa0a8; font-family:monospace; }
+.orc-item-vtot { font-weight:700; color:#5cecc4; }
 .orc-dec-sub { font-size:11px; font-weight:400; }
 .orc-dec-sub--a { opacity:.85; }
 .orc-dec-sub--d { opacity:.7; }
 .orc-portal-card--txtcenter { text-align:center; }
 .orc-state-ico { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
-.orc-state-ico--ok { background:#E1F5EE; }
-.orc-state-ico--no { background:#FCEBEB; }
-.orc-state-ico--amb { background:#FAEEDA; }
-.orc-state-h { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:6px; }
+.orc-state-ico--ok { background:rgba(29,158,117,.2); }
+.orc-state-ico--no { background:rgba(248,113,113,.15); }
+.orc-state-ico--amb { background:rgba(245,158,11,.15); }
+.orc-state-h { font-size:16px; font-weight:700; color:#e8eaed; margin-bottom:6px; }
 .orc-state-h--lg { font-size:18px; }
-.orc-state-p { font-size:13px; color:#6b6a65; }
+.orc-state-p { font-size:13px; color:#9aa0a8; }
 .orc-stack-center { text-align:center; margin-bottom:24px; }
 .orc-stack-mb16 { margin-bottom:16px; }
 .orc-stack-mb20 { margin-bottom:20px; }
 .orc-stack-mb14 { margin-bottom:14px; }
-.orc-fld-h { font-size:13px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
+.orc-fld-h { font-size:13px; font-weight:700; color:#e8eaed; margin-bottom:10px; }
 .orc-fld-h--tight { margin-bottom:6px; }
 .orc-radio-opt input { accent-color:#1D9E75; }
 .orc-neg-2col { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
-.orc-neg-lbl { font-size:11px; font-weight:600; color:#6b6a65; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
-.orc-neg-inp { width:100%; padding:10px 14px; border:1.5px solid #e8e7e3; border-radius:10px; font-size:13px; outline:none; font-family:inherit; background:#fff; }
-.orc-neg-inp:focus { border-color:#1D9E75; box-shadow:0 0 0 3px rgba(29,158,117,.1); }
-.orc-success-icon--no { background:#FCEBEB; }
-.orc-success-icon--amb { background:#FAEEDA; }
+.orc-neg-lbl { font-size:11px; font-weight:600; color:#9aa0a8; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.orc-neg-inp { width:100%; padding:10px 14px; border:1.5px solid #3d4554; border-radius:10px; font-size:13px; outline:none; font-family:inherit; background:#161b22; color:#e8eaed; }
+.orc-neg-inp:focus { border-color:#1D9E75; box-shadow:0 0 0 3px rgba(29,158,117,.2); }
+.orc-success-icon--no { background:rgba(248,113,113,.15); }
+.orc-success-icon--amb { background:rgba(245,158,11,.15); }
 
 @media(max-width:600px){
   .orc-hero{padding:20px 18px;}
   .orc-portal-card{padding:18px 16px;}
   .orc-decision-grid{grid-template-columns:1fr;}
-  .orc-info-cell{min-width:50%;border-right:none;border-bottom:1px solid #e8e7e3;}
+  .orc-info-cell{min-width:50%;border-right:none;border-bottom:1px solid #3d4554;}
 }
 </style>
 
@@ -481,12 +481,12 @@
       <div class="orc-state-h orc-state-h--lg">Assinar e aprovar proposta</div>
       <div class="orc-state-p">Ao assinar, você confirma a aceitação das condições desta proposta comercial com validade jurídica.</div>
     </div>
-    <div style="background:#f5f4f0;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
-      <div style="font-size:12px;font-weight:700;color:#1a1a18;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;">Resumo do que está sendo aprovado</div>
+    <div style="background:#161b22;border:1px solid #3d4554;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#e8eaed;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;">Resumo do que está sendo aprovado</div>
       <div class="orc-contract-row"><span class="orc-contract-label">Proposta</span><span class="orc-contract-value">Nº <?= (int)$orcamento->id ?> — PGM Soluções</span></div>
       <div class="orc-contract-row"><span class="orc-contract-label">Cliente</span><span class="orc-contract-value"><?= h($nomeCliente) ?></span></div>
       <div class="orc-contract-row"><span class="orc-contract-label">Pagamento escolhido</span><span class="orc-contract-value" id="orc-resumo-pag">À vista — <?= h($portalFmt($portalTotalVista)) ?></span></div>
-      <div class="orc-contract-row"><span class="orc-contract-label">Validade</span><span class="orc-contract-value" style="color:#E9A025;"><?= h($orcamento->validoate) ?></span></div>
+      <div class="orc-contract-row"><span class="orc-contract-label">Validade</span><span class="orc-contract-value" style="color:#fcd34d;"><?= h($orcamento->validoate) ?></span></div>
     </div>
     <?= $this->Form->create(null, ['url' => ['action' => 'aprovarhash', $orcamento->hash], 'id' => 'form-orc-assinar']) ?>
     <div class="orc-stack-mb20">
@@ -499,21 +499,21 @@
     </div>
     <div class="orc-stack-mb20">
       <div class="orc-fld-h orc-fld-h--tight">Assinatura digital</div>
-      <div style="font-size:12px;color:#6b6a65;margin-bottom:8px;">Assine com o mouse ou dedo (tela touch) no espaço abaixo:</div>
+      <div style="font-size:12px;color:#9aa0a8;margin-bottom:8px;">Assine com o mouse ou dedo (tela touch) no espaço abaixo:</div>
       <canvas id="orc-client-canvas" class="orc-sign-canvas" width="700" height="110"></canvas>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-        <div style="font-size:12px;color:#6b6a65;">← Assine aqui dentro →</div>
-        <button type="button" onclick="orcClearClientCanvas()" style="background:none;border:none;color:#6b6a65;font-size:12px;cursor:pointer;text-decoration:underline;">Limpar</button>
+        <div style="font-size:12px;color:#9aa0a8;">← Assine aqui dentro →</div>
+        <button type="button" onclick="orcClearClientCanvas()" style="background:none;border:none;color:#9aa0a8;font-size:12px;cursor:pointer;text-decoration:underline;">Limpar</button>
       </div>
       <?= $this->Form->hidden('sign_pad', ['id' => 'orc-sign-pad', 'value' => '']) ?>
     </div>
-    <div style="background:#E6F1FB;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0C447C" stroke-width="1.5" style="flex-shrink:0;margin-top:1px;"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="#0C447C"/></svg>
-      <div style="font-size:12px;color:#0C447C;line-height:1.6;">Sua assinatura tem validade jurídica conforme a <strong>MP 2.200-2/2001</strong> e é processada sob os padrões <strong>ICP-Brasil</strong>. O documento assinado será enviado para seu e-mail.</div>
+    <div style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.35);border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#7dd3fc" stroke-width="1.5" style="flex-shrink:0;margin-top:1px;"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="#7dd3fc"/></svg>
+      <div style="font-size:12px;color:#c4c9d1;line-height:1.6;">Sua assinatura tem validade jurídica conforme a <strong>MP 2.200-2/2001</strong> e é processada sob os padrões <strong>ICP-Brasil</strong>. O documento assinado será enviado para seu e-mail.</div>
     </div>
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;">
       <input type="checkbox" id="orc-check-termos" name="aceite_termos" value="1" style="width:16px;height:16px;margin-top:2px;cursor:pointer;accent-color:#1D9E75;"/>
-      <label for="orc-check-termos" style="font-size:12px;color:#6b6a65;line-height:1.6;cursor:pointer;">Li e aceito as condições desta proposta comercial, incluindo prazo de entrega, garantia e condições de pagamento selecionadas.</label>
+      <label for="orc-check-termos" style="font-size:12px;color:#9aa0a8;line-height:1.6;cursor:pointer;">Li e aceito as condições desta proposta comercial, incluindo prazo de entrega, garantia e condições de pagamento selecionadas.</label>
     </div>
     <button type="button" class="orc-btn-main" id="orc-btn-assinar" onclick="orcConfirmarAssinatura()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -594,7 +594,7 @@
     </div>
     <div class="orc-success-title">Recusa registrada</div>
     <div class="orc-success-sub">Agradecemos o retorno. Sua resposta foi enviada à equipe da PGM Soluções. Esperamos poder atendê-lo em uma próxima oportunidade.</div>
-    <div style="background:#f5f4f0;border-radius:10px;padding:14px 18px;max-width:440px;margin:0 auto;font-size:13px;color:#6b6a65;">Se mudar de ideia ou precisar de algo, entre em contato:<br><strong style="color:#1a1a18;">contato@pgm.inf.br</strong></div>
+    <div style="background:#161b22;border:1px solid #3d4554;border-radius:10px;padding:14px 18px;max-width:440px;margin:0 auto;font-size:13px;color:#9aa0a8;">Se mudar de ideia ou precisar de algo, entre em contato:<br><strong style="color:#e8eaed;">contato@pgm.inf.br</strong></div>
   </div>
 </div>
 
@@ -604,9 +604,9 @@
     <div class="orc-success-icon orc-success-icon--amb">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#633806" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     </div>
-    <div class="orc-success-title" style="color:#633806;">Solicitação enviada!</div>
+    <div class="orc-success-title" style="color:#fcd34d;">Solicitação enviada!</div>
     <div class="orc-success-sub">Recebemos sua solicitação de ajuste. Nossa equipe comercial analisará e retornará com uma nova proposta em até <strong>24 horas úteis</strong>.</div>
-    <div style="background:#FAEEDA;border-radius:10px;padding:14px 18px;max-width:440px;margin:0 auto;font-size:13px;color:#633806;line-height:1.7;border:1px solid #FAC775;">
+    <div style="background:rgba(245,158,11,.12);border-radius:10px;padding:14px 18px;max-width:440px;margin:0 auto;font-size:13px;color:#fcd34d;line-height:1.7;border:1px solid rgba(245,158,11,.4);">
       <strong>O que acontece agora:</strong><br>
       1. Vendedor recebe notificação imediata<br>
       2. Proposta atualizada enviada por e-mail em até 24h<br>
@@ -617,7 +617,7 @@
 
 <div class="orc-portal-footer">
   <strong>PGM Soluções em TI Ltda</strong> · CNPJ: 00.000.000/0001-00<br>
-  Bento Gonçalves, RS · <a href="#" style="color:#1D9E75;text-decoration:none;">contato@pgm.inf.br</a> · (54) 0000-0000<br>
+  Bento Gonçalves, RS · <a href="#" style="color:#5cecc4;text-decoration:none;">contato@pgm.inf.br</a> · (54) 0000-0000<br>
   <span style="font-size:11px;opacity:.7;">Este portal é exclusivo para aprovação da proposta Nº <?= (int)$orcamento->id ?>. Link válido até <?= h($orcamento->validoate) ?>.</span>
 </div>
 
@@ -709,7 +709,7 @@ function orcInitClientCanvas() {
   c.height = 110 * dpr;
   orcCtx = c.getContext('2d');
   orcCtx.scale(dpr, dpr);
-  orcCtx.strokeStyle = '#1a1a18';
+  orcCtx.strokeStyle = '#e8eaed';
   orcCtx.lineWidth = 2.2;
   orcCtx.lineCap = 'round';
   orcCtx.lineJoin = 'round';

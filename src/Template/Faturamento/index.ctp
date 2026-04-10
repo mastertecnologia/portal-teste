@@ -49,23 +49,10 @@ table.fat-table { width:100%; border-collapse:collapse; font-size:13px; }
 .fat-badge.badge-success { background:rgba(63,185,80,.13); color:#3fb950; }
 .fat-badge.badge-danger { background:rgba(248,81,73,.13); color:#f85149; }
 .fat-empty { text-align:center; padding:48px; color:#484f58; }
-/* Modo claro */
-body.pgm-theme-light .fat-topbar, body.pgm-theme-light .fat-kpi-strip,
-body.pgm-theme-light .fat-filters, body.pgm-theme-light .fat-table-wrap { border-color:#e1e4e8; }
-body.pgm-theme-light .fat-h1 { color:#1a1f2e; }
-body.pgm-theme-light .fat-kpi-label { color:#6b7280; }
-body.pgm-theme-light .fat-kpi-val { color:#1a1f2e; }
-body.pgm-theme-light .fat-kpi { border-color:#e1e4e8; }
-body.pgm-theme-light .fat-table th { background:#f3f4f6; color:#6b7280; border-color:#e5e7eb; }
-body.pgm-theme-light .fat-table td { color:#374151; border-color:#f3f4f6; }
-body.pgm-theme-light .fat-table tr:hover td { background:rgba(0,168,118,.04); }
-body.pgm-theme-light .fat-filters select, body.pgm-theme-light .fat-filters input { background:#fff; border-color:#d0d7de; color:#1a1f2e; }
-body.pgm-theme-light .fat-empty { color:#9ca3af; }
 .fat-h1-ico { color:#5cdbc0; margin-right:8px; }
 .fat-empty-ico { font-size:36px; margin-bottom:12px; display:block; opacity:.3; }
 .fat-id-muted { color:#7d8590; }
 .fat-form-filters { display:contents; }
-body.pgm-theme-light .fat-id-muted { color:#6b7280; }
 </style>
 
 <div class="fat-root">

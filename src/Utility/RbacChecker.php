@@ -140,6 +140,53 @@ class RbacChecker {
 	}
 
 	/**
+	 * Tabelas mínimas RBAC presentes (permissions, roles_permissions, users_roles).
+	 */
+	public static function rbacCoreTablesExist(): bool {
+		try {
+			$permissionsTable = TableRegistry::get('RbacPermissions');
+			$conn = $permissionsTable->getConnection();
+			$tables = $conn->getSchemaCollection()->listTables();
+
+			return in_array('rbac_permissions', $tables, true)
+				&& in_array('rbac_roles_permissions', $tables, true)
+				&& in_array('rbac_users_roles', $tables, true);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Utilizador com modo RBAC ativo (não-off), tabelas presentes e pelo menos um papel efetivo.
+	 */
+	public static function utilizadorComPapeisRbacAtivos(int $userId): bool {
+		if ($userId <= 0) {
+			return false;
+		}
+		$cfg = Configure::read('Rbac');
+		if (!is_array($cfg) || ($cfg['mode'] ?? 'off') === 'off') {
+			return false;
+		}
+		if (!self::rbacCoreTablesExist()) {
+			return false;
+		}
+
+		return RbacUserRolesResolver::effectiveRoleIds($userId) !== [];
+	}
+
+	/**
+	 * Criar rascunho de entrada a partir do DF-e: exige fiscal.notas_entrada quando o utilizador já está sob RBAC com papéis.
+	 * Caso contrário mantém comportamento legado/híbrido (sem papéis RBAC).
+	 */
+	public static function podeImportarDfeParaRascunhoEntrada(int $userId): bool {
+		if (!self::utilizadorComPapeisRbacAtivos($userId)) {
+			return true;
+		}
+
+		return self::userHasPermissionCode($userId, 'fiscal.notas_entrada');
+	}
+
+	/**
 	 * Atalho do hub Config (sidebar + ConfigController): equipe admin com menu_filter_config
 	 * exige config.manage salvo híbrido (sem papéis RBAC ainda) ou filtro desligado.
 	 *

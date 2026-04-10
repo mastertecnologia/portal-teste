@@ -842,7 +842,8 @@ class TicketsController extends AppController {
 		$this->set(compact('empresatickets'));
 	}
 
-	public function add($assunto = null) { 
+	public function add($assunto = null) {
+		$this->set('bodyPageClass', 'tickets-add-page');
 		$this->set('title', 'Abertura de Ticket');
 		$ticket = $this->Tickets->newEntity();
 		if (in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {

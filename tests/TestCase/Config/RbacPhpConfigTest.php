@@ -87,5 +87,14 @@ class RbacPhpConfigTest extends AppCompatTestCase {
 		$this->assertIsArray($cfg['menu_sidebar_gates']);
 		$this->assertArrayHasKey('dashboard', $cfg['menu_sidebar_gates']);
 		$this->assertArrayHasKey('clientes', $cfg['menu_sidebar_gates']);
+		$this->assertArrayHasKey('fiscal_modulo', $cfg['menu_sidebar_gates']);
+		$fiscalGates = $cfg['menu_sidebar_gates']['fiscal_modulo'];
+		$this->assertIsArray($fiscalGates);
+		$this->assertContains('fiscal.dashboard', $fiscalGates);
+		$this->assertContains('fiscal.notas', $fiscalGates);
+		$this->assertArrayHasKey('fiscal_menu_dashboard', $cfg['menu_sidebar_gates']);
+		$this->assertSame('fiscal.dashboard', $cfg['menu_sidebar_gates']['fiscal_menu_dashboard']);
+		$this->assertArrayHasKey('fiscal_menu_dfe_recebidos', $cfg['menu_sidebar_gates']);
+		$this->assertSame('fiscal.dashboard', $cfg['menu_sidebar_gates']['fiscal_menu_dfe_recebidos']);
 	}
 }

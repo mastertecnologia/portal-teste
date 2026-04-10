@@ -1,28 +1,25 @@
 /**
- * Portal cliente — tema claro PGM (pgm_orcamentos_premium.html)
- * Ativo com body.layout-no-topbar.pgm-portal-client (role ≠ admin interno)
- *
- * layout-sidebar-shell.css usa --pgm-sb-bg no .page-wrapper (alta especificidade);
- * aqui forçamos área principal com --pgm-premium-page e sidebar clara.
+ * Portal cliente (.pgm-portal-client) — mesmo shell escuro que o ERP (sidebar + área principal).
+ * Tokens alinhados a layout-sidebar-shell + pgm-theme-tokens; só aplica com body.pgm-portal-client.
  */
 body.layout-no-topbar.pgm-portal-client {
-	--pgm-teal: #00c08b;
+	--pgm-teal: #1d9e75;
 	--pgm-teal-light: #5cdbc0;
-	--pgm-teal-dim: rgba(0, 192, 139, 0.14);
-	--pgm-teal-semi: rgba(0, 192, 139, 0.4);
-	--pgm-teal-glow: rgba(0, 192, 139, 0.22);
-	--pgm-sb-bg: #ffffff;
-	--pgm-sb-surface: #f9f9f8;
-	--pgm-sb-border: #e5e4e0;
-	--pgm-sb-text: #1a1a18;
-	--pgm-sb-muted: #6b6a65;
-	--pgm-sb-dim: #9a9890;
-	--pgm-premium-page: #f2f1ee;
-	--pgm-premium-surface: #f9f9f8;
-	--pgm-premium-border: #e5e4e0;
-	--pgm-premium-text: #1a1a18;
-	--pgm-premium-muted: #6b6a65;
-	--pgm-premium-card: #ffffff;
+	--pgm-teal-dim: rgba(29, 158, 117, 0.14);
+	--pgm-teal-semi: rgba(29, 158, 117, 0.4);
+	--pgm-teal-glow: rgba(29, 158, 117, 0.22);
+	--pgm-sb-bg: #0d1117;
+	--pgm-sb-surface: #161b22;
+	--pgm-sb-border: rgba(255, 255, 255, 0.07);
+	--pgm-sb-text: #e6edf3;
+	--pgm-sb-muted: #7d8590;
+	--pgm-sb-dim: #484f58;
+	--pgm-premium-page: #12151c;
+	--pgm-premium-surface: #1e2329;
+	--pgm-premium-border: #3d4554;
+	--pgm-premium-text: #e8eaed;
+	--pgm-premium-muted: #9aa0a8;
+	--pgm-premium-card: #1e2329;
 }
 
 html:has(body.layout-no-topbar.pgm-portal-client) {
@@ -50,13 +47,13 @@ body.layout-no-topbar.pgm-portal-client .scroll-sidebar {
 }
 
 body.layout-no-topbar.pgm-portal-client .scroll-sidebar {
-	scrollbar-color: rgba(26, 26, 24, 0.2) transparent;
+	scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 body.layout-no-topbar.pgm-portal-client .scroll-sidebar::-webkit-scrollbar-thumb {
-	background: rgba(26, 26, 24, 0.18);
+	background: rgba(255, 255, 255, 0.16);
 }
 body.layout-no-topbar.pgm-portal-client .scroll-sidebar::-webkit-scrollbar-thumb:hover {
-	background: rgba(26, 26, 24, 0.28);
+	background: rgba(255, 255, 255, 0.26);
 }
 
 body.layout-no-topbar.pgm-portal-client .pgm-sb-sbox {
@@ -72,19 +69,19 @@ body.layout-no-topbar.pgm-portal-client .pgm-sb-sbox input::placeholder {
 	color: var(--pgm-sb-muted) !important;
 }
 
-/* ── Sidebar + faixa de título: sobrescreve layout-sidebar-shell (tema escuro) ── */
+/* ── Sidebar + faixa de título ── */
 body.layout-no-topbar.pgm-portal-client .page-titles {
 	background: var(--pgm-premium-surface) !important;
 	border: 1px solid var(--pgm-premium-border) !important;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
 }
 body.layout-no-topbar.pgm-portal-client .page-titles .breadcrumb {
 	background: transparent !important;
 }
 
 body.layout-no-topbar.pgm-portal-client .pgm-sidebar-mark {
-	background: linear-gradient(135deg, #00c08b 0%, #008f68 100%);
-	box-shadow: 0 2px 8px rgba(0, 192, 139, 0.3);
+	background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%);
+	box-shadow: 0 2px 10px rgba(29, 158, 117, 0.35);
 }
 body.layout-no-topbar.pgm-portal-client .pgm-sidebar-logo-link .pgm-sidebar-titles strong {
 	color: var(--pgm-sb-text) !important;
@@ -93,7 +90,7 @@ body.layout-no-topbar.pgm-portal-client .pgm-sidebar-logo-link .pgm-sidebar-sub 
 	color: var(--pgm-sb-muted) !important;
 }
 body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace {
-	color-scheme: light;
+	color-scheme: dark;
 	border-bottom-color: var(--pgm-sb-border) !important;
 }
 body.layout-no-topbar.pgm-portal-client .pgm-ws-label {
@@ -113,7 +110,7 @@ body.layout-no-topbar.pgm-portal-client .pgm-ws-date-mon {
 body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select.pgm-empresa-select,
 body.layout-no-topbar.pgm-portal-client .pgm-sidebar-workspace select#empresaSidebar {
 	background-color: var(--pgm-premium-card) !important;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6a65' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa0a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
 	border-color: var(--pgm-premium-border) !important;
 	color: var(--pgm-premium-text) !important;
 }
@@ -152,8 +149,8 @@ body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a:hover i {
 }
 body.layout-no-topbar.pgm-portal-client .sidebar-nav > ul > li.active > a,
 body.layout-no-topbar.pgm-portal-client .sidebar-nav ul li a.active {
-	color: #008f68 !important;
-	background: rgba(0, 192, 139, 0.1) !important;
+	color: var(--pgm-teal-light) !important;
+	background: rgba(29, 158, 117, 0.18) !important;
 	border-left-color: var(--pgm-teal) !important;
 }
 body.layout-no-topbar.pgm-portal-client .sidebar-nav > ul > li.active > a i,
@@ -169,8 +166,8 @@ body.layout-no-topbar.pgm-portal-client .pgm-np:hover {
 	color: var(--pgm-sb-text) !important;
 }
 body.layout-no-topbar.pgm-portal-client .pgm-np.open-p {
-	background: rgba(0, 192, 139, 0.12) !important;
-	color: #008f68 !important;
+	background: rgba(29, 158, 117, 0.16) !important;
+	color: var(--pgm-teal-light) !important;
 }
 body.layout-no-topbar.pgm-portal-client a.pgm-nch {
 	color: var(--pgm-sb-muted) !important;
@@ -186,8 +183,8 @@ body.layout-no-topbar.pgm-portal-client .pgm-nc::before {
 	background: var(--pgm-sb-border) !important;
 }
 body.layout-no-topbar.pgm-portal-client .sidebar-nav > ul > li.pgm-ng.active > .pgm-np {
-	background: rgba(0, 192, 139, 0.12) !important;
-	color: #008f68 !important;
+	background: rgba(29, 158, 117, 0.16) !important;
+	color: var(--pgm-teal-light) !important;
 }
 body.layout-no-topbar.pgm-portal-client a.pgm-nch.pgm-nch-nova {
 	color: var(--pgm-teal) !important;
@@ -244,14 +241,14 @@ body.layout-no-topbar.pgm-portal-client .pgm-sidebar-collapse-btn:hover {
 		background: var(--pgm-premium-card) !important;
 		border-color: var(--pgm-premium-border) !important;
 		color: var(--pgm-premium-muted) !important;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
 	}
 	body.layout-no-topbar.pgm-portal-client .pgm-shell-mobile-nav:hover {
 		color: var(--pgm-teal) !important;
 	}
 }
 
-/* Área principal: títulos e breadcrumb (texto escuro sobre fundo claro) */
+/* Área principal: títulos e breadcrumb */
 body.layout-no-topbar.pgm-portal-client .page-titles h5,
 body.layout-no-topbar.pgm-portal-client .page-titles h4 {
 	color: var(--pgm-premium-text) !important;
@@ -270,7 +267,7 @@ body.layout-no-topbar.pgm-portal-client .page-titles .breadcrumb-item.active {
 }
 
 body.layout-no-topbar.pgm-portal-client .page-titles .breadcrumb-item + .breadcrumb-item::before {
-	color: rgba(26, 26, 24, 0.35) !important;
+	color: rgba(232, 234, 237, 0.35) !important;
 }
 
 /* Cards e painéis */
@@ -278,7 +275,7 @@ body.layout-no-topbar.pgm-portal-client .card {
 	background: var(--pgm-premium-card) !important;
 	border-color: var(--pgm-premium-border) !important;
 	color: var(--pgm-premium-text) !important;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
 body.layout-no-topbar.pgm-portal-client .card .card-title,
@@ -309,7 +306,7 @@ body.layout-no-topbar.pgm-portal-client .table th {
 }
 
 body.layout-no-topbar.pgm-portal-client .table-striped tbody tr:nth-of-type(odd) {
-	background-color: rgba(249, 249, 248, 0.85);
+	background-color: rgba(255, 255, 255, 0.035);
 }
 
 /* Formulários */
@@ -321,7 +318,7 @@ body.layout-no-topbar.pgm-portal-client .form-control {
 
 body.layout-no-topbar.pgm-portal-client .form-control:focus {
 	border-color: var(--pgm-teal);
-	box-shadow: 0 0 0 0.15rem rgba(0, 192, 139, 0.2);
+	box-shadow: 0 0 0 0.15rem var(--pgm-teal-glow);
 }
 
 /* Rodapé */
@@ -360,7 +357,7 @@ body.layout-no-topbar.pgm-portal-client .tkcli-wrap {
 	border: 1px solid var(--pgm-premium-border);
 	border-radius: 12px;
 	padding: 24px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 body.layout-no-topbar.pgm-portal-client .tkcli-head {
 	display: flex;
@@ -409,7 +406,7 @@ body.layout-no-topbar.pgm-portal-client .tkcli-filter-group label {
 	color: var(--pgm-premium-muted);
 }
 body.layout-no-topbar.pgm-portal-client .tkcli-btn-abrir {
-	background: linear-gradient(135deg, var(--pgm-teal) 0%, #008f68 100%);
+	background: linear-gradient(135deg, var(--pgm-teal) 0%, #0f6e56 100%);
 	color: #fff;
 	border: none;
 	border-radius: 8px;
@@ -479,7 +476,7 @@ body.layout-no-topbar.pgm-portal-client .ticket-id {
 	font-weight: 900;
 	font-size: 13px;
 	font-family: "DM Mono", monospace;
-	color: #008f68;
+	color: var(--pgm-teal-light);
 }
 body.layout-no-topbar.pgm-portal-client .ticket-assunto {
 	font-weight: 700;
@@ -525,7 +522,7 @@ body.layout-no-topbar.pgm-portal-client .tkcli-filter-group .selectpicker {
 }
 body.layout-no-topbar.pgm-portal-client .tkcli-filter-group .form-control:focus {
 	border-color: var(--pgm-teal) !important;
-	box-shadow: 0 0 0 2px rgba(0, 192, 139, 0.15) !important;
+	box-shadow: 0 0 0 2px var(--pgm-teal-glow) !important;
 }
 body.layout-no-topbar.pgm-portal-client .tkcli-filter-group select.form-control.tkcli-filter-native-select {
 	-webkit-appearance: none;
@@ -592,10 +589,10 @@ body.layout-no-topbar.pgm-portal-client .cli-tabs-nav .nav-link.active {
 body.layout-no-topbar.pgm-portal-client .cli-card {
 	background: var(--pgm-premium-card);
 	border-color: var(--pgm-premium-border);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 body.layout-no-topbar.pgm-portal-client .cli-label {
-	color: #9a9890;
+	color: var(--pgm-premium-muted);
 }
 body.layout-no-topbar.pgm-portal-client .cli-field-ro {
 	background: var(--pgm-premium-surface);
@@ -630,13 +627,13 @@ body.layout-no-topbar.pgm-portal-client .cli-senha-mask:hover {
 body.layout-no-topbar.pgm-portal-client .cli-token-box {
 	background: var(--pgm-premium-surface);
 	border-color: var(--pgm-premium-border);
-	color: #008f68;
+	color: var(--pgm-teal-light);
 }
 body.layout-no-topbar.pgm-portal-client .cli-token-note {
 	color: var(--pgm-premium-muted);
 }
 
-/* Orçamentos /index — integra com fundo #f2f1ee do portal (sem faixa duplicada) */
+/* Orçamentos /index — fundo da área principal (sem faixa duplicada) */
 body.layout-no-topbar.pgm-portal-client .orc-premium-page-root {
 	background: transparent !important;
 	padding-top: 8px;
@@ -653,14 +650,14 @@ body.layout-no-topbar.pgm-portal-client .relcli-page .relcli-head-actions {
 body.layout-no-topbar.pgm-portal-client .relcli-export-dd .dropdown-menu {
 	min-width: 12rem;
 	border-radius: 8px;
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
 }
 body.layout-no-topbar.pgm-portal-client .relcli-export-dd .dropdown-item {
 	font-size: 0.85rem;
 	padding: 0.45rem 1rem;
 }
 body.layout-no-topbar.pgm-portal-client .relcli-export-dd .dropdown-item:hover {
-	background: rgba(0, 143, 104, 0.08);
+	background: rgba(29, 158, 117, 0.15);
 }
 body.layout-no-topbar.pgm-portal-client .relcli-kpis {
 	display: grid;
@@ -763,7 +760,7 @@ body.layout-no-topbar.pgm-portal-client .relcli-chart-svg {
 	display: block;
 }
 body.layout-no-topbar.pgm-portal-client .relcli-chart-bar {
-	fill: rgba(0, 192, 139, 0.78);
+	fill: rgba(29, 158, 117, 0.85);
 }
 body.layout-no-topbar.pgm-portal-client .relcli-chart-axis {
 	stroke: var(--pgm-premium-border);
@@ -838,7 +835,7 @@ body.layout-no-topbar.pgm-portal-client .relcli-amostra-table tbody td {
 body.layout-no-topbar.pgm-portal-client .relcli-amostra-link {
 	font-size: 0.78rem;
 	font-weight: 700;
-	color: var(--pgm-teal, #00c08b);
+	color: var(--pgm-teal, #1d9e75);
 }
 body.layout-no-topbar.pgm-portal-client .relcli-amostra-link:hover {
 	color: var(--pgm-teal-light, #5cdbc0);

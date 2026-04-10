@@ -10,27 +10,27 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 <style>
 	/* Escopo para garantir que o layout do passo 6 espelhe o mock */
 	.orc-esign {
-		--teal: #00C08B;
-		--teal-dark: #008F68;
-		--teal-light: #E6FAF4;
-		--teal-mid: #5CDBC0;
-		--amber: #FFC107;
-		--amber-light: #FFF8E1;
-		--red: #E24B4A;
-		--red-light: #FCEBEB;
-		--blue: #33CCFF;
-		--blue-light: #E6F9FF;
-		--blue-dark: #006B88;
-		--purple: #A682E6;
-		--purple-light: #F3EDFC;
-		--purple-dark: #4A3488;
-		--border: #e5e4e0;
-		--border-light: #f0efec;
-		--text: #1a1a18;
-		--text-muted: #6b6a65;
-		--bg: #ffffff;
-		--bg-surface: #f9f9f8;
-		--bg-card: #ffffff;
+		--teal: #1d9e75;
+		--teal-dark: #0f6e56;
+		--teal-light: rgba(29, 158, 117, 0.18);
+		--teal-mid: #5cecc4;
+		--amber: #f59e0b;
+		--amber-light: rgba(245, 158, 11, 0.18);
+		--red: #f87171;
+		--red-light: rgba(248, 113, 113, 0.14);
+		--blue: #38bdf8;
+		--blue-light: rgba(56, 189, 248, 0.15);
+		--blue-dark: #7dd3fc;
+		--purple: #a78bfa;
+		--purple-light: rgba(167, 139, 250, 0.18);
+		--purple-dark: #c4b5fd;
+		--border: #3d4554;
+		--border-light: #4f5869;
+		--text: #e8eaed;
+		--text-muted: #9aa0a8;
+		--bg: #12151c;
+		--bg-surface: #1e2329;
+		--bg-card: #1e2329;
 		--radius: 10px;
 		--radius-lg: 14px;
 		--radius-xl: 20px;
@@ -81,9 +81,9 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		font-weight: 600;
 		white-space: nowrap;
 	}
-	.orc-esign .b-env { background: var(--teal-light); color: #085041; }
-	.orc-esign .b-pend { background: #FAEEDA; color: #633806; }
-	.orc-esign .b-aprov { background: #E6F1FB; color: #0C447C; }
+	.orc-esign .b-env { background: var(--teal-light); color: var(--teal-mid); }
+	.orc-esign .b-pend { background: var(--amber-light); color: #fcd34d; }
+	.orc-esign .b-aprov { background: var(--blue-light); color: var(--blue-dark); }
 
 	.orc-esign .sign-canvas {
 		border: 1px solid var(--border);
@@ -92,7 +92,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		height: 100px;
 		cursor: crosshair;
 		touch-action: none;
-		background: #fff;
+		background: #161b22;
 	}
 
 	.orc-esign .footer-bar {
@@ -231,7 +231,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 		border-radius: var(--radius);
 		padding: 10px 13px;
 		font-size: 11px;
-		color: var(--teal-dark);
+		color: var(--teal-mid);
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
@@ -267,7 +267,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 	}
 	.orc-esign #sign-ok span {
 		font-size: 12px;
-		color: var(--teal-dark);
+		color: var(--teal-mid);
 		font-weight: 500;
 	}
 	.orc-esign .es-cli-wrap {
@@ -284,7 +284,7 @@ $versaoLbl = isset($orcVersaoLabel) && $orcVersaoLabel ? (string)$orcVersaoLabel
 	}
 	.orc-esign .es-cli-url {
 		font-size: 11px;
-		background: #fff;
+		background: #161b22;
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 8px 12px;

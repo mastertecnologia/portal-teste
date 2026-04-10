@@ -1,7 +1,7 @@
 (function () {
 	window.cliUiToast = function (message, kind) {
 		kind = kind || 'info';
-		var loader = '#00c08b', bg = '#161b22';
+		var loader = '#1d9e75', bg = '#161b22';
 		if (kind === 'error') { loader = '#f85149'; bg = '#2d1418'; }
 		else if (kind === 'success') { loader = '#3fb950'; bg = '#0d2818'; }
 		else if (kind === 'warning') { loader = '#d29922'; bg = '#2d2a1a'; }

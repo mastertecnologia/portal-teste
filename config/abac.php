@@ -65,6 +65,33 @@ return [
 				'empresa_column' => 'idempresa',
 				'cliente_column' => 'idcliente',
 			],
+			// Módulo fiscal (escopo empresa nas permissões fiscal.*; CFOP/NCM são globais)
+			'FiscalNotas' => [
+				'alias' => 'FiscalNotas',
+				'empresa_column' => 'idempresa',
+				'cliente_column' => 'idcliente',
+			],
+			'FiscalNotasEntrada' => [
+				'alias' => 'FiscalNotas',
+				'empresa_column' => 'idempresa',
+				'cliente_column' => 'idcliente',
+			],
+			'FiscalCertificados' => [
+				'alias' => 'FiscalCertificados',
+				'empresa_column' => 'idempresa',
+			],
+			'FiscalEmpresasConfig' => [
+				'alias' => 'FiscalEmpresasConfig',
+				'empresa_column' => 'idempresa',
+			],
+			'FiscalNaturezaOperacao' => [
+				'alias' => 'FiscalNaturezaOperacao',
+				'empresa_column' => 'idempresa',
+			],
+			'FiscalAliquotas' => [
+				'alias' => 'FiscalAliquotas',
+				'empresa_column' => 'idempresa',
+			],
 		],
 	],
 ];

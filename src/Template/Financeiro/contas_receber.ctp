@@ -32,15 +32,6 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
 .cr-badge.badge-secondary{ background:rgba(255,255,255,.08); color:#9ca3af; }
 .cr-total-row { font-size:13.5px; font-weight:700; background:rgba(29,158,117,.07) !important; }
 .cr-total-row td { color:#5cdbc0 !important; border-top:1px solid rgba(29,158,117,.2); }
-/* Modo claro */
-body.pgm-theme-light .cr-h1 { color:#1a1f2e; }
-body.pgm-theme-light .cr-topbar, body.pgm-theme-light .cr-filters { border-color:#e1e4e8; }
-body.pgm-theme-light .cr-filters select { background:#fff; border-color:#d0d7de; color:#1a1f2e; }
-body.pgm-theme-light .cr-table th { background:#f3f4f6; color:#6b7280; border-color:#e5e7eb; }
-body.pgm-theme-light .cr-table td { color:#374151; border-color:#f3f4f6; }
-body.pgm-theme-light .cr-table tr:hover td { background:rgba(0,168,118,.04); }
-body.pgm-theme-light .cr-total-row { background:rgba(0,168,118,.06) !important; }
-body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
 .cr-h1-ico { color:#5cdbc0; margin-right:8px; }
 .cr-form-filters { display:contents; }
 .cr-zero { text-align:center; padding:48px; color:#484f58; }
@@ -49,8 +40,6 @@ body.pgm-theme-light .cr-total-row td { color:#006d4a !important; }
 .cr-td-ellipsis { max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cr-td-vencido { color:#f85149; font-weight:600; }
 .cr-total-label { text-align:right; padding-right:12px; }
-body.pgm-theme-light .cr-zero { color:#6b7280; }
-body.pgm-theme-light .cr-id-muted { color:#6b7280; }
 </style>
 
 <div class="cr-root">

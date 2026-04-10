@@ -213,7 +213,7 @@ $(function () {
     }
 
     /**
-     * Troca de skin: só aceita tema claro; demais caem em skin-green.
+     * Troca de cor da skin (Material): só aceita classes sem sufixo -dark; inválidas caem em skin-green.
      */
     function changeSkin(cls) {
         if ($.inArray(cls, lightSkins) === -1) {

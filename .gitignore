@@ -11,3 +11,6 @@ dashboard-react/.vite/
 /yes
 /yes.pub
 .cursorrules*
+# Fiscal: certificados/XML em disco (FISCAL_STORAGE_PATH padrão: storage/fiscal)
+/storage/fiscal/*
+!/storage/fiscal/.gitkeep

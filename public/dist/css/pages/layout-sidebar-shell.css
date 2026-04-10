@@ -1,7 +1,7 @@
 /**
  * Layout sem barra superior: logo, empresa, data e usuário ficam na sidebar.
  * Ativado com body.layout-no-topbar
- * Interno: teal #1d9e75. Portal cliente (.pgm-portal-client): pgm-client-premium.css (#00c08b + cinzas quentes).
+ * Interno e portal cliente (.pgm-portal-client): shell escuro; pgm-client-premium.css alinha tokens ao mesmo tema.
  */
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap");
 

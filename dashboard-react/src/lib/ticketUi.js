@@ -16,26 +16,26 @@ const BADGE_LIGHT = {
   cancelled: 'bg-red-50 text-red-800 border-red-300',
 };
 
-/** Badges no embed portal cliente — paleta pgm_orcamentos_premium (fundo claro). */
+/** Badges no embed portal cliente — superfície escura PGM. */
 const BADGE_EMBED = {
-  success: 'border border-emerald-200 bg-emerald-50 text-emerald-800',
-  warning: 'border border-amber-200 bg-amber-50 text-amber-900',
-  critical: 'border border-rose-200 bg-rose-50 text-rose-800',
-  high: 'border border-orange-200 bg-orange-50 text-orange-900',
-  medium: 'border border-sky-200 bg-sky-50 text-sky-900',
-  low: 'border border-[#e5e4e0] bg-[#f9f9f8] text-[#6b6a65]',
-  progress: 'border border-sky-200 bg-sky-50 text-sky-900',
-  waiting: 'border border-violet-200 bg-violet-50 text-violet-900',
-  pendingTech: 'border border-amber-200 bg-amber-50 text-amber-950',
-  resolved: 'border border-emerald-200 bg-emerald-50 text-emerald-900',
-  escalated: 'border border-rose-200 bg-rose-50 text-rose-900',
-  closed: 'border border-[#e5e4e0] bg-[#f2f1ee] text-[#5f5e5a]',
-  cancelled: 'border border-red-200 bg-red-50 text-red-800',
+  success: 'border border-emerald-700/50 bg-emerald-950/40 text-emerald-200',
+  warning: 'border border-amber-700/50 bg-amber-950/35 text-amber-200',
+  critical: 'border border-rose-700/50 bg-rose-950/35 text-rose-200',
+  high: 'border border-orange-700/50 bg-orange-950/35 text-orange-200',
+  medium: 'border border-sky-700/50 bg-sky-950/35 text-sky-200',
+  low: 'border border-[#3d4554] bg-[#262c35] text-[#c4c9d1]',
+  progress: 'border border-sky-700/50 bg-sky-950/35 text-sky-200',
+  waiting: 'border border-violet-700/50 bg-violet-950/35 text-violet-200',
+  pendingTech: 'border border-amber-700/50 bg-amber-950/40 text-amber-100',
+  resolved: 'border border-emerald-700/50 bg-emerald-950/45 text-emerald-100',
+  escalated: 'border border-rose-700/50 bg-rose-950/40 text-rose-200',
+  closed: 'border border-[#3d4554] bg-[#1e2329] text-[#9aa0a8]',
+  cancelled: 'border border-red-800/50 bg-red-950/40 text-red-200',
 };
 
 /**
  * @param {string} type
- * @param {boolean} [embed] lista/detalhe embutidos no shell cliente (tema premium claro)
+ * @param {boolean} [embed] lista/detalhe embutidos no shell cliente (tema escuro)
  */
 export function badgeClass(type, embed = false) {
   const map = embed ? BADGE_EMBED : BADGE_LIGHT;
@@ -100,7 +100,7 @@ export function acaoLinkClassName(key, embed = false) {
   const base =
     'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
   if (embed && k === 'imprimir') {
-    return `${base} border-[rgba(0,192,139,0.45)] bg-[#e6faf4] text-[#008f68] hover:bg-[rgba(0,192,139,0.18)]`;
+    return `${base} border-[rgba(29,158,117,0.45)] bg-[rgba(29,158,117,0.15)] text-[#5cecc4] hover:bg-[rgba(29,158,117,0.28)]`;
   }
   if (embed && k === 'cancelar') {
     return `${base} ${badgeClass('cancelled', true)}`;

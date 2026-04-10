@@ -41,17 +41,6 @@ if (!empty($doc->cliente)) {
 .fatview-total-val { font-size:20px; font-weight:700; color:#5cdbc0; }
 .fatview-financ { }
 .fatview-financ td { font-size:12.5px; }
-/* Modo claro */
-body.pgm-theme-light .fatview-num { color:#1a1f2e; }
-body.pgm-theme-light .fatview-sub { color:#6b7280; }
-body.pgm-theme-light .fatview-card { background:#fff; border-color:#e1e4e8; }
-body.pgm-theme-light .fatview-card-title { color:#6b7280; }
-body.pgm-theme-light .fatview-field label { color:#6b7280; }
-body.pgm-theme-light .fatview-field span { color:#1a1f2e; }
-body.pgm-theme-light .fatview-items th { color:#6b7280; border-color:#e5e7eb; }
-body.pgm-theme-light .fatview-items td { color:#374151; border-color:#f3f4f6; }
-body.pgm-theme-light .fatview-header { border-color:#e1e4e8; }
-body.pgm-theme-light .fatview-total-val { color:#00a876; }
 .fatview-header-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .fatview-badge--dyn {
 	color: var(--fat-st);
@@ -62,7 +51,6 @@ body.pgm-theme-light .fatview-total-val { color:#00a876; }
 .fatview-field--full { flex-basis:100%; }
 .fatview-items th.num, .fatview-items td.num { text-align:right; }
 .fatview-discount-line { font-size:12px; color:#7d8590; margin-bottom:4px; }
-body.pgm-theme-light .fatview-discount-line { color:#6b7280; }
 .fatview-financ-tbl { margin:0; }
 </style>
 

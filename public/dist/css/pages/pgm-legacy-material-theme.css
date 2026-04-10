@@ -1,99 +1,222 @@
 /**
+
  * Material Dashboard (Creative Tim) legado — área principal e cartões alinhados aos tokens PGM.
+
  * Carregar após material-dashboard.css e pgm-theme-tokens.css.
+
  */
+
 html[data-pgm-theme="dark"] body .wrapper {
+
 	background: var(--pgm-bg-page) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .main-panel {
+
 	background: var(--pgm-bg-page) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .main-panel > .content {
+
 	background: var(--pgm-bg-page) !important;
+
 	color: var(--pgm-text) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .main-panel > .footer {
+
 	background: var(--pgm-bg-elevated) !important;
+
 	border-color: var(--pgm-border) !important;
+
 	color: var(--pgm-text-muted) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .card {
+
 	background: var(--pgm-bg-surface) !important;
+
 	color: var(--pgm-text) !important;
+
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .card .card-header,
+
 html[data-pgm-theme="dark"] body .card .card-footer {
+
 	background: var(--pgm-bg-elevated) !important;
+
 	color: var(--pgm-text) !important;
+
 	border-color: var(--pgm-border) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .table > thead > tr > th {
+
 	background: var(--pgm-bg-elevated) !important;
+
 	color: var(--pgm-text) !important;
+
 	border-color: var(--pgm-border) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .table > tbody > tr > td {
+
 	background: var(--pgm-bg-surface) !important;
+
 	color: var(--pgm-text-secondary) !important;
+
 	border-color: var(--pgm-border) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .table-hover > tbody > tr:hover > td {
+
 	background: var(--pgm-bg-elevated) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .form-control {
+
 	background: var(--pgm-bg-surface) !important;
+
 	border-color: var(--pgm-border-strong) !important;
+
 	color: var(--pgm-text) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .form-control:focus {
+
 	border-color: var(--pgm-primary) !important;
+
 	box-shadow: 0 0 0 2px var(--pgm-focus-ring) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .navbar.navbar-transparent,
+
 html[data-pgm-theme="dark"] body .navbar.navbar-absolute,
+
 html[data-pgm-theme="dark"] body .navbar-default {
+
 	background: var(--pgm-bg-surface) !important;
+
 	border-color: var(--pgm-border) !important;
+
 	color: var(--pgm-text) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .navbar .navbar-brand,
+
 html[data-pgm-theme="dark"] body .navbar a:not(.btn) {
+
 	color: var(--pgm-text) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .dropdown-menu {
+
 	background: var(--pgm-bg-surface) !important;
+
 	border-color: var(--pgm-border) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .dropdown-menu > li > a {
+
 	color: var(--pgm-text) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .dropdown-menu > li > a:hover {
+
 	background: var(--pgm-bg-elevated) !important;
+
 }
+
+
 
 html[data-pgm-theme="dark"] body .modal-content {
+
 	background: var(--pgm-bg-surface) !important;
+
 	color: var(--pgm-text) !important;
+
 	border-color: var(--pgm-border) !important;
+
 }
 
-html[data-pgm-theme="light"] body .main-panel > .content {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text) !important;
+
+
+html[data-pgm-theme="dark"] body .message-box.bg-white {
+
+	background: var(--pgm-bg-elevated, #262c35) !important;
+
+	border: 1px solid var(--pgm-border, #3d4554) !important;
+
+	color: var(--pgm-text, #e8eaed) !important;
+
 }
+
+
+
+html[data-pgm-theme="dark"] body .message-box.bg-white .mail-contnet h5,
+
+html[data-pgm-theme="dark"] body .message-box.bg-white a {
+
+	color: var(--pgm-text, #e8eaed) !important;
+
+}
+
+
+
+html[data-pgm-theme="dark"] body .ticket-resp-tecnicos.ticket-resp-tecnicos--soft.bg-white {
+
+	background: var(--pgm-bg-elevated, #262c35) !important;
+
+	border-color: var(--pgm-border, #3d4554) !important;
+
+	color: var(--pgm-text, #e8eaed) !important;
+
+}
+

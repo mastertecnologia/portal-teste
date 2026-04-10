@@ -1,100 +1,99 @@
 /**
  * Pré-faturamento — área principal alinhada ao tema escuro da sidebar
  * (body.layout-no-topbar, variáveis --pgm-sb-*, --pgm-teal*).
- * Ignora quando body.pgm-theme-light (tema claro do utilizador).
  */
-body.layout-no-topbar:not(.pgm-theme-light).pgm-prefaturamento-page .page-titles h5,
-body.layout-no-topbar:not(.pgm-theme-light).pgm-prefaturamento-page .page-titles .text-themecolor {
+body.layout-no-topbar.pgm-prefaturamento-page .page-titles h5,
+body.layout-no-topbar.pgm-prefaturamento-page .page-titles .text-themecolor {
 	color: var(--pgm-sb-text, #e6edf3) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light).pgm-prefaturamento-page .breadcrumb,
-body.layout-no-topbar:not(.pgm-theme-light).pgm-prefaturamento-page .breadcrumb-item,
-body.layout-no-topbar:not(.pgm-theme-light).pgm-prefaturamento-page .breadcrumb-item a {
+body.layout-no-topbar.pgm-prefaturamento-page .breadcrumb,
+body.layout-no-topbar.pgm-prefaturamento-page .breadcrumb-item,
+body.layout-no-topbar.pgm-prefaturamento-page .breadcrumb-item a {
 	color: var(--pgm-sb-muted, #7d8590) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .card {
+body.layout-no-topbar .pgm-prefaturamento-shell .card {
 	background: var(--pgm-sb-surface, #161b22) !important;
 	border: 1px solid var(--pgm-sb-border, rgba(255, 255, 255, 0.07)) !important;
 	border-radius: 12px;
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .card-body {
+body.layout-no-topbar .pgm-prefaturamento-shell .card-body {
 	color: var(--pgm-sb-text, #e6edf3) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .pf-intro {
+body.layout-no-topbar .pgm-prefaturamento-shell .pf-intro {
 	color: var(--pgm-sb-muted, #7d8590) !important;
 	margin-bottom: 1rem !important;
 	line-height: 1.55;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .pf-intro strong {
+body.layout-no-topbar .pgm-prefaturamento-shell .pf-intro strong {
 	color: var(--pgm-teal-light, #5cdbc0);
 	font-weight: 600;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .pf-field-label {
+body.layout-no-topbar .pgm-prefaturamento-shell .pf-field-label {
 	color: var(--pgm-sb-text, #e6edf3) !important;
 	font-weight: 500 !important;
 	margin: 0;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle {
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle {
 	background: #21262d !important;
 	border: 1px solid var(--pgm-sb-border, rgba(255, 255, 255, 0.12)) !important;
 	color: var(--pgm-sb-text, #e6edf3) !important;
 	border-radius: 8px !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle:focus,
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle:hover {
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle:focus,
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle:hover {
 	border-color: var(--pgm-teal, #1d9e75) !important;
 	outline: none !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select .filter-option-inner-inner {
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .filter-option-inner-inner {
 	color: var(--pgm-sb-text, #e6edf3);
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .dropdown-menu {
+body.layout-no-topbar .pgm-prefaturamento-shell .dropdown-menu {
 	background: #21262d !important;
 	border: 1px solid var(--pgm-sb-border, rgba(255, 255, 255, 0.12)) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li a {
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li a {
 	color: var(--pgm-sb-text, #e6edf3) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li a:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li.selected a {
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li a:hover,
+body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li.selected a {
 	background: var(--pgm-teal-dim, rgba(29, 158, 117, 0.2)) !important;
 	color: var(--pgm-teal-light, #5cdbc0) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-outline-success {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-outline-success {
 	color: var(--pgm-teal-light, #5cdbc0) !important;
 	border-color: var(--pgm-teal, #1d9e75) !important;
 	background: transparent !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-outline-success:hover:not(:disabled) {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-outline-success:hover:not(:disabled) {
 	background: var(--pgm-teal-dim, rgba(29, 158, 117, 0.18)) !important;
 	color: #fff !important;
 	border-color: var(--pgm-teal-light, #5cdbc0) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-outline-success:disabled {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-outline-success:disabled {
 	opacity: 0.45;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .table {
+body.layout-no-topbar .pgm-prefaturamento-shell .table {
 	color: var(--pgm-sb-text, #e6edf3);
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .table thead th {
+body.layout-no-topbar .pgm-prefaturamento-shell .table thead th {
 	color: var(--pgm-teal-light, #5cdbc0) !important;
 	border-bottom: 1px solid var(--pgm-sb-border, rgba(255, 255, 255, 0.1)) !important;
 	background: rgba(0, 0, 0, 0.22) !important;
@@ -104,60 +103,60 @@ body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .table the
 	letter-spacing: 0.04em;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .table td {
+body.layout-no-topbar .pgm-prefaturamento-shell .table td {
 	border-color: var(--pgm-sb-border, rgba(255, 255, 255, 0.07)) !important;
 	color: var(--pgm-sb-text, #e6edf3) !important;
 	vertical-align: middle;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .table tbody tr:hover td {
+body.layout-no-topbar .pgm-prefaturamento-shell .table tbody tr:hover td {
 	background: rgba(255, 255, 255, 0.04) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .table .text-muted {
+body.layout-no-topbar .pgm-prefaturamento-shell .table .text-muted {
 	color: var(--pgm-sb-muted, #7d8590) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell a.link {
+body.layout-no-topbar .pgm-prefaturamento-shell a.link {
 	color: var(--pgm-teal-light, #5cdbc0) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell a.link:hover {
+body.layout-no-topbar .pgm-prefaturamento-shell a.link:hover {
 	color: #fff !important;
 	text-decoration: underline !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell label.small {
+body.layout-no-topbar .pgm-prefaturamento-shell label.small {
 	color: var(--pgm-sb-muted, #7d8590) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell label.small input[type="checkbox"] {
+body.layout-no-topbar .pgm-prefaturamento-shell label.small input[type="checkbox"] {
 	margin-right: 4px;
 	vertical-align: middle;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-secondary.btn-xs {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-secondary.btn-xs {
 	background: transparent !important;
 	color: var(--pgm-sb-text, #e6edf3) !important;
 	border: 1px solid var(--pgm-sb-border, rgba(255, 255, 255, 0.18)) !important;
 	border-radius: 6px !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-secondary.btn-xs:hover {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-secondary.btn-xs:hover {
 	background: rgba(255, 255, 255, 0.08) !important;
 	border-color: var(--pgm-teal-semi, rgba(29, 158, 117, 0.45)) !important;
 	color: var(--pgm-teal-light, #5cdbc0) !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-success.btn-sm,
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-success.btn-pgm {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-success.btn-sm,
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-success.btn-pgm {
 	background: var(--pgm-teal, #1d9e75) !important;
 	border-color: var(--pgm-teal, #1d9e75) !important;
 	color: #fff !important;
 }
 
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-success.btn-sm:hover,
-body.layout-no-topbar:not(.pgm-theme-light) .pgm-prefaturamento-shell .btn-success.btn-pgm:hover {
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-success.btn-sm:hover,
+body.layout-no-topbar .pgm-prefaturamento-shell .btn-success.btn-pgm:hover {
 	filter: brightness(1.08);
 }
 
