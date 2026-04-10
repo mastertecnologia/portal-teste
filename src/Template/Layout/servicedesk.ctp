@@ -20,16 +20,16 @@ $authSd = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?= $this->Html->css('/dist/css/style.min') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
+	<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-advanced-module') ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-servicedesk-theme') ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
-	<?= $this->Html->css('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', ['fullBase' => true]) ?>
 	<?= $this->fetch('meta') ?>
 	<?= $this->fetch('css') ?>
 	<?= $this->fetch('script') ?>
 </head>
 <body class="sd-body layout-no-topbar <?= h(trim($bodyPageClass ?? '')) ?>">
-<div class="sd-shell">
+<div class="sd-shell prd-root">
 	<header class="sd-topbar">
 		<div class="d-flex align-items-center gap-3 flex-wrap">
 			<span class="sd-brand">Service Desk</span>

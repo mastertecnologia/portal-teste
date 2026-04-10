@@ -157,7 +157,7 @@ export default function OperationalDashboard({ boot }) {
             <KeyValList title="Por fila (id)" obj={dash.por_fila_id} />
           </div>
           {(dash.alertas_sla_violado || []).length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-none">
+            <div className="min-w-0 max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-none">
               <h3 className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-[var(--pgm-border)] dark:text-[var(--pgm-text)]">
                 Alertas — SLA violado
               </h3>
@@ -205,7 +205,7 @@ export default function OperationalDashboard({ boot }) {
 
   if (shellEmbedded) {
     return (
-      <div className="tickets-react-tech w-full overflow-visible px-2 pb-6 pt-1 text-slate-800 dark:text-[var(--pgm-text)] md:px-3">
+      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-2 pb-6 pt-1 text-slate-800 dark:text-[var(--pgm-text)] md:px-3">
         {inner}
       </div>
     );

@@ -656,8 +656,8 @@ export default function TechDashboard({ boot }) {
     <section
       className={
         embedded
-          ? 'overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
-          : 'rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]'
+          ? 'w-full min-w-0 max-w-full overflow-x-clip rounded-xl border border-slate-200 bg-white shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
+          : 'w-full min-w-0 max-w-full rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]'
       }
     >
       {loadError ? (
@@ -696,7 +696,7 @@ export default function TechDashboard({ boot }) {
           </div>
         </div>
       ) : wfEnabled ? (
-        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
+        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
           <span
             className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500 dark:text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
@@ -769,7 +769,7 @@ export default function TechDashboard({ boot }) {
           </select>
         </div>
       ) : (
-        <div className="flex flex-nowrap items-center gap-2 border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] overflow-x-auto dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
+        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto border-b border-slate-100 bg-slate-50/40 px-3 py-2.5 [scrollbar-width:thin] dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]/50">
           <span
             className="shrink-0 whitespace-nowrap text-xs tabular-nums text-slate-500 dark:text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
@@ -857,11 +857,11 @@ export default function TechDashboard({ boot }) {
       <div
         className={
           embedded
-            ? 'overflow-hidden'
-            : 'mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-[var(--pgm-border)]'
+            ? 'min-w-0 max-w-full'
+            : 'mt-5 min-w-0 max-w-full overflow-x-clip rounded-2xl border border-slate-200 dark:border-[var(--pgm-border)]'
         }
       >
-        <div className="overflow-x-auto">
+        <div className="min-w-0 max-w-full overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-xs dark:divide-[var(--pgm-border)] sm:text-sm">
             <thead className="bg-slate-50 text-left text-xs text-slate-500 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)]">
               <tr>
@@ -905,14 +905,14 @@ export default function TechDashboard({ boot }) {
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.edit ? (
                           <a
-                            className="tickets-sd-ticket-link font-semibold text-[#1d9e75] no-underline hover:underline dark:text-[#6ee7b7]"
+                            className="tickets-sd-ticket-link font-semibold no-underline hover:underline"
                             href={ticket.urls.edit}
                           >
                             #{ticket.id}
                           </a>
                         ) : (
                           <Link
-                            className="tickets-sd-ticket-link font-semibold text-[#1d9e75] no-underline hover:underline dark:text-[#6ee7b7]"
+                            className="tickets-sd-ticket-link font-semibold no-underline hover:underline"
                             to={`/cliente/ticket/${ticket.id}`}
                           >
                             #{ticket.id}
@@ -1193,7 +1193,7 @@ export default function TechDashboard({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-tech w-full overflow-visible pt-1 text-slate-800 dark:text-[var(--pgm-text)]">
+      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible pt-1 text-slate-800 dark:text-[var(--pgm-text)]">
         <header className="mb-2 flex min-h-[2.75rem] flex-wrap items-center justify-between gap-3 overflow-visible py-1">
           <h2 className="m-0 min-w-0 self-center text-lg font-semibold leading-snug tracking-tight text-slate-900 dark:text-[var(--pgm-text)]">
             {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}

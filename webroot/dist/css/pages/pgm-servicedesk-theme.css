@@ -1,12 +1,15 @@
 /**
- * Layout Service Desk — usa tokens PGM (html[data-pgm-theme])
+ * Layout Service Desk — mesma base visual que Produtos (.prd-root + produtos-premium.css).
+ * Cores: --prd-* (aliases de --pgm-* na folha premium); fallbacks se .prd-root ausente.
  */
-.sd-shell {
+.sd-shell.prd-root {
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
-	background: var(--pgm-bg-page);
-	color: var(--pgm-text);
+	background: var(--prd-bg, var(--pgm-bg-page));
+	color: var(--prd-text, var(--pgm-text));
+	max-width: 100%;
+	box-sizing: border-box;
 }
 .sd-topbar {
 	padding: 0.65rem 1.25rem;
@@ -15,8 +18,8 @@
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	/* Igual à marca PGM no sidebar ERP (.pgm-sidebar-mark): 135deg, sem cinza azulado */
-	background: linear-gradient(135deg, var(--pgm-topbar-gradient-start) 0%, var(--pgm-topbar-gradient-end) 100%);
+	/* Marca PGM: mesmo degradê da tela Produtos / sidebar (.pgm-sidebar-mark) */
+	background: linear-gradient(135deg, var(--prd-teal, var(--pgm-primary)) 0%, var(--pgm-secondary) 100%);
 	color: #fff;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
@@ -36,10 +39,26 @@
 	flex: 1;
 	width: 100%;
 	max-width: 100%;
+	min-width: 0;
 	padding: 0;
+	box-sizing: border-box;
+}
+.sd-main .container-fluid,
+.sd-main .row,
+.sd-main .col-12 {
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+.tickets-react-shell {
+	min-width: 0;
+	max-width: 100%;
 }
 body.sd-body {
 	margin: 0;
+}
+html[data-pgm-theme="dark"] body.sd-body {
+	overflow-x: clip;
 }
 
 .sd-topbar a {
@@ -75,134 +94,159 @@ body.sd-body {
 
 html[data-pgm-theme="dark"] .sd-main .container-fluid,
 html[data-pgm-theme="dark"] .sd-main {
-	color: var(--pgm-text);
+	color: var(--prd-text, var(--pgm-text));
 }
 
 html[data-pgm-theme="dark"] body.sd-body .card {
-	background: var(--pgm-bg-surface);
-	border-color: var(--pgm-border);
-	color: var(--pgm-text);
+	background: var(--prd-surface, var(--pgm-bg-surface));
+	border-color: var(--prd-border, var(--pgm-border));
+	color: var(--prd-text, var(--pgm-text));
 }
 
 html[data-pgm-theme="dark"] body.sd-body .table {
-	color: var(--pgm-text);
+	color: var(--prd-text, var(--pgm-text));
 }
 
 html[data-pgm-theme="dark"] body.sd-body .table thead th {
-	background: var(--pgm-bg-elevated);
-	border-color: var(--pgm-border);
-	color: var(--pgm-text);
+	background: var(--prd-surface2, var(--pgm-bg-elevated));
+	border-color: var(--prd-border, var(--pgm-border));
+	color: var(--prd-text, var(--pgm-text));
 }
 
 html[data-pgm-theme="dark"] body.sd-body .form-control {
-	background: var(--pgm-bg-surface);
-	border-color: var(--pgm-border-strong);
-	color: var(--pgm-text);
+	background: var(--prd-surface, var(--pgm-bg-surface));
+	border-color: var(--prd-border2, var(--pgm-border-strong));
+	color: var(--prd-text, var(--pgm-text));
 }
 
 html[data-pgm-theme="dark"] body.sd-body .form-control:focus {
-	border-color: var(--pgm-primary);
+	border-color: var(--prd-teal, var(--pgm-primary));
 	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
 }
 
-/* ── Abertura de chamado: tokens PGM ── */
+html[data-pgm-theme="dark"] body.sd-body .form-control:disabled,
+html[data-pgm-theme="dark"] body.sd-body select.form-control:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+
+html[data-pgm-theme="dark"] body.sd-body .modal-content {
+	background: var(--prd-surface, var(--pgm-bg-surface));
+	border-color: var(--prd-border, var(--pgm-border));
+	color: var(--prd-text, var(--pgm-text));
+}
+
+html[data-pgm-theme="dark"] body.sd-body .modal-header {
+	border-bottom-color: var(--prd-border, var(--pgm-border));
+}
+
+html[data-pgm-theme="dark"] body.sd-body .modal-footer {
+	border-top-color: var(--prd-border, var(--pgm-border));
+}
+
+html[data-pgm-theme="dark"] body.sd-body .close {
+	color: var(--prd-text, var(--pgm-text));
+	opacity: 0.75;
+}
+
+/* ── Abertura de chamado: mesmos tokens que Produtos (.prd-*) ── */
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap {
-	background: var(--pgm-bg-page) !important;
-	color: var(--pgm-text);
+	background: var(--prd-bg, var(--pgm-bg-page)) !important;
+	color: var(--prd-text, var(--pgm-text));
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-kicker,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-sub,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-sum-field-label {
-	color: var(--pgm-text-muted) !important;
+	color: var(--prd-muted, var(--pgm-text-muted)) !important;
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-title {
-	color: var(--pgm-text) !important;
+	color: var(--prd-text, var(--pgm-text)) !important;
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status {
-	background: var(--pgm-bg-surface) !important;
-	border: 1px solid var(--pgm-border);
+	background: var(--prd-surface, var(--pgm-bg-surface)) !important;
+	border: 1px solid var(--prd-border, var(--pgm-border));
 	box-shadow: none;
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card .sd-rule {
-	background: var(--pgm-bg-surface) !important;
-	border-color: var(--pgm-border) !important;
-	color: var(--pgm-text);
+	background: var(--prd-surface, var(--pgm-bg-surface)) !important;
+	border-color: var(--prd-border, var(--pgm-border)) !important;
+	color: var(--prd-text, var(--pgm-text));
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card {
-	background: var(--pgm-primary-muted) !important;
-	border: 1px solid var(--pgm-border);
+	background: var(--prd-teal-dim, var(--pgm-primary-muted)) !important;
+	border: 1px solid var(--prd-border, var(--pgm-border));
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-title,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-label-block,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-field label.control-label {
-	color: var(--pgm-text) !important;
+	color: var(--prd-text, var(--pgm-text)) !important;
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-desc,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-hint {
-	color: var(--pgm-text-muted) !important;
+	color: var(--prd-muted, var(--pgm-text-muted)) !important;
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .form-control,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-textarea.form-control,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-field .form-control,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-email.form-control {
-	background: var(--pgm-bg-elevated) !important;
-	color: var(--pgm-text) !important;
-	border-color: var(--pgm-border-strong) !important;
-	-webkit-text-fill-color: var(--pgm-text) !important;
+	background: var(--prd-surface2, var(--pgm-bg-elevated)) !important;
+	color: var(--prd-text, var(--pgm-text)) !important;
+	border-color: var(--prd-border2, var(--pgm-border-strong)) !important;
+	-webkit-text-fill-color: var(--prd-text, var(--pgm-text)) !important;
 	box-shadow: none !important;
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-dropzone,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-sum-item,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-lead {
-	background: var(--pgm-bg-elevated) !important;
-	border-color: var(--pgm-border) !important;
-	color: var(--pgm-text);
+	background: var(--prd-surface2, var(--pgm-bg-elevated)) !important;
+	border-color: var(--prd-border, var(--pgm-border)) !important;
+	color: var(--prd-text, var(--pgm-text));
 }
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status-value.is-ok {
-	color: var(--pgm-primary) !important;
+	color: var(--prd-teal-lt, var(--pgm-primary-hover)) !important;
 }
 
-/* ── React tickets (Vite): reforço quando alguma utility Tailwind não tiver variante dark ── */
+/* ── React tickets (Vite): map para --prd-* (Produtos) ── */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white {
-	background-color: var(--pgm-bg-surface) !important;
+	background-color: var(--prd-surface, var(--pgm-bg-surface)) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white\/90 {
-	background-color: color-mix(in srgb, var(--pgm-bg-surface) 92%, transparent) !important;
+	background-color: color-mix(in srgb, var(--prd-surface, var(--pgm-bg-surface)) 92%, transparent) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/40,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/80,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/90 {
-	background-color: color-mix(in srgb, var(--pgm-bg-elevated) 88%, transparent) !important;
+	background-color: color-mix(in srgb, var(--prd-surface2, var(--pgm-bg-elevated)) 88%, transparent) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-900,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-800 {
-	color: var(--pgm-text) !important;
+	color: var(--prd-text, var(--pgm-text)) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-700,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-600 {
-	color: var(--pgm-text-secondary) !important;
+	color: var(--prd-text2, var(--pgm-text-secondary)) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-500,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-400 {
-	color: var(--pgm-text-muted) !important;
+	color: var(--prd-muted, var(--pgm-text-muted)) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-100,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-200 {
-	border-color: var(--pgm-border) !important;
+	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-	border-color: var(--pgm-border) !important;
+	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 
 /* Flash / alerts Bootstrap no shell Service Desk */
 html[data-pgm-theme="dark"] body.sd-body .alert {
-	background: var(--pgm-bg-elevated);
-	border-color: var(--pgm-border);
-	color: var(--pgm-text);
+	background: var(--prd-surface2, var(--pgm-bg-elevated));
+	border-color: var(--prd-border, var(--pgm-border));
+	color: var(--prd-text, var(--pgm-text));
 }
 html[data-pgm-theme="dark"] body.sd-body .alert-success {
 	background: var(--pgm-success-bg);
@@ -227,20 +271,22 @@ html[data-pgm-theme="dark"] body.sd-body .alert-info {
 
 html[data-pgm-theme="dark"] body.sd-body .tickets-react-shell,
 html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd {
-	color: var(--pgm-text);
+	min-width: 0;
+	max-width: 100%;
+	color: var(--prd-text, var(--pgm-text));
 }
 
 /* Menu de ações (React portal em document.body): garante tema escuro mesmo com .bg-white / Bootstrap */
 html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
-	background-color: var(--pgm-bg-surface) !important;
-	color: var(--pgm-text) !important;
-	border-color: var(--pgm-border) !important;
+	background-color: var(--prd-surface, var(--pgm-bg-surface)) !important;
+	color: var(--prd-text, var(--pgm-text)) !important;
+	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 
-/* Nº do ticket: evita azul/ciano de links globais (style.min / tema legado) */
+/* Links de ticket: mesmo tom de link das tabelas em Produtos / pgm-advanced-module */
 html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link {
-	color: #6ee7b7 !important;
+	color: var(--pgm-link) !important;
 }
 html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link:hover {
-	color: #a7f3d0 !important;
+	color: var(--pgm-primary-hover) !important;
 }
