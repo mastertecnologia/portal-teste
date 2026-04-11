@@ -164,12 +164,14 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 		var $panel = $('#pgmNotifPanel');
 		if (!$btn.length) return;
 		var off = $btn.offset();
-		var btnH = $btn.outerHeight();
-		var panelH = $panel.outerHeight();
+		var winH = $(window).height();
+		var scrollTop = $(window).scrollTop();
 		var left = off.left + $btn.outerWidth() + 8;
-		var top = off.top - panelH + btnH;
-		// Se sai da tela pelo topo, ajusta
-		if (top < 8) top = 8;
+		// Altura máxima: quase toda a janela visível
+		var maxH = winH - 40;
+		$panel.css('max-height', maxH + 'px');
+		// Posicionar no topo da janela visível + margem
+		var top = scrollTop + 20;
 		// Se sai da tela pela direita, abre à esquerda do botão
 		if (left + 340 > $(window).width()) {
 			left = off.left - 340 - 8;
