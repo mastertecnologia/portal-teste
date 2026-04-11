@@ -7,30 +7,45 @@ $this->Breadcrumbs->add('Início', ['controller' => 'Users', 'action' => 'dashbo
 $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index']);
 $this->Breadcrumbs->add('Gestão de clientes');
 
-// Carrega o mesmo CSS premium de Clientes
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
 
-// Helper iniciais
-function ucInitials($str) {
+if (!defined('C_ClientesTipoJuridica')) define('C_ClientesTipoJuridica', 2);
+if (!defined('C_ClientesTipoFisica'))   define('C_ClientesTipoFisica', 1);
+
+function ucInitials2($str) {
 	$parts = preg_split('/\s+/', trim($str), -1, PREG_SPLIT_NO_EMPTY);
 	$a = mb_strtoupper(mb_substr($parts[0] ?? 'C', 0, 1));
 	$b = mb_strtoupper(mb_substr($parts[1] ?? '', 0, 1));
 	return $a . $b;
 }
 
-// Agrupar por empresa
+// Agrupar por empresa com tipo PJ/PF
 $groups = [];
-$totalAtivos = 0;
-$totalInativos = 0;
+$cntAtivosPJ = 0; $cntAtivosPF = 0;
+$cntInativosPJ = 0; $cntInativosPF = 0;
 foreach ($clients as $c) {
 	$ativo = $c->inativo != 1;
-	if ($ativo) { $totalAtivos++; } else { $totalInativos++; }
+	$isPJ = ($c->cliente && (int)$c->cliente->tipo === C_ClientesTipoJuridica);
+	if ($ativo) { if ($isPJ) $cntAtivosPJ++; else $cntAtivosPF++; }
+	else { if ($isPJ) $cntInativosPJ++; else $cntInativosPF++; }
+
 	$nome = '(sem empresa)';
 	if ($c->cliente) {
-		$nome = !empty($c->cliente->razaosocial) ? trim($c->cliente->razaosocial) : (trim($c->cliente->nome) ?: '(sem empresa)');
+		$nome = $isPJ
+			? (!empty($c->cliente->razaosocial) ? trim($c->cliente->razaosocial) : '(sem nome)')
+			: (!empty($c->cliente->nome) ? trim($c->cliente->nome) : '(sem nome)');
 	}
 	if (!isset($groups[$nome])) {
-		$groups[$nome] = ['users' => [], 'ativos' => 0, 'inativos' => 0, 'email' => $c->email];
+		$tipo = $c->cliente ? (int)$c->cliente->tipo : 0;
+		$groups[$nome] = [
+			'users' => [], 'ativos' => 0, 'inativos' => 0,
+			'tipo' => $tipo,
+			'email' => ($c->cliente->email ?? $c->email ?? ''),
+			'cnpj' => ($c->cliente->cnpj ?? ''),
+			'cpf' => ($c->cliente->cpf ?? ''),
+			'fone' => ($c->cliente->fone ?? ''),
+			'clienteInativo' => ($c->cliente->inativo ?? 0),
+		];
 	}
 	$groups[$nome]['users'][] = $c;
 	if ($ativo) { $groups[$nome]['ativos']++; } else { $groups[$nome]['inativos']++; }
@@ -38,10 +53,12 @@ foreach ($clients as $c) {
 ksort($groups);
 $totalClients = count($clients);
 $totalEmpresas = count($groups);
+$cntAtivos = $cntAtivosPJ + $cntAtivosPF;
+$cntInativos = $cntInativosPJ + $cntInativosPF;
 ?>
 
 <style>
-/* Extensões para a tela de gestão de usuários (detail rows) */
+/* Extensões para detail rows (gestão de usuários) */
 .cli-usr-detail { display: none; }
 .cli-usr-detail.cli-usr-open { display: table-row; }
 .cli-usr-detail > td { padding: 0 !important; background: var(--cli-bg) !important; border-bottom: 1px solid var(--cli-border) !important; }
@@ -82,19 +99,17 @@ $totalEmpresas = count($groups);
 	background: var(--cli-surface2); color: var(--cli-muted);
 	border: 1px solid var(--cli-border2);
 }
-.cli-usr-expand {
-	transition: transform .2s ease;
-}
-.cli-row-open .cli-usr-expand {
-	transform: rotate(90deg);
-	color: var(--cli-teal-lt);
-}
+.cli-usr-expand { transition: transform .2s ease; }
+.cli-row-open .cli-usr-expand { transform: rotate(90deg); color: var(--cli-teal-lt); }
 .cli-row-open td { background: var(--cli-surface2) !important; }
 .cli-usr-empty {
 	padding: 20px 12px; text-align: center; color: var(--cli-dim); font-size: 12.5px;
 }
 .cli-usr-empty a { color: var(--cli-teal-lt) !important; text-decoration: none !important; font-weight: 600; }
 .cli-usr-empty a:hover { text-decoration: underline !important; }
+.cli-usr-doc {
+	font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--cli-muted); white-space: nowrap;
+}
 </style>
 
 <div class="col-md-12 p-0">
@@ -105,7 +120,7 @@ $totalEmpresas = count($groups);
 		<div class="cli-topbar-left">
 			<div class="cli-eyebrow">Painel administrativo</div>
 			<h1 class="cli-h1">Gestão de Clientes</h1>
-			<div class="cli-subtitle">Empresas clientes e seus usuários vinculados ao portal</div>
+			<div class="cli-subtitle">Empresas e pessoas vinculadas ao portal — usuários e acessos</div>
 		</div>
 		<div class="cli-topbar-right">
 			<?php if ($admin): ?>
@@ -118,39 +133,51 @@ $totalEmpresas = count($groups);
 		</div>
 	</div>
 
-	<!-- ── KPI Strip ── -->
+	<!-- ── KPI Strip (clicáveis) ── -->
 	<div class="cli-kpi-strip">
-		<div class="cli-kpi active" data-kpi="empresas">
-			<div class="cli-kpi-label">Empresas</div>
-			<div class="cli-kpi-val teal"><?= $totalEmpresas ?></div>
-			<div class="cli-kpi-sub">Clientes ativos</div>
+		<div class="cli-kpi active" data-kpi="ativos-pj">
+			<div class="cli-kpi-label">Ativos · PJ</div>
+			<div class="cli-kpi-val teal"><?= $cntAtivosPJ ?></div>
+			<div class="cli-kpi-sub">Pessoa Jurídica</div>
 		</div>
-		<div class="cli-kpi" data-kpi="usuarios">
-			<div class="cli-kpi-label">Usuários</div>
-			<div class="cli-kpi-val"><?= $totalClients ?></div>
-			<div class="cli-kpi-sub">Total do portal</div>
-		</div>
-		<div class="cli-kpi" data-kpi="ativos">
-			<div class="cli-kpi-label">Ativos</div>
-			<div class="cli-kpi-val teal"><?= $totalAtivos ?></div>
-			<div class="cli-kpi-sub">Usuários ativos</div>
+		<div class="cli-kpi" data-kpi="ativos-pf">
+			<div class="cli-kpi-label">Ativos · PF</div>
+			<div class="cli-kpi-val teal"><?= $cntAtivosPF ?></div>
+			<div class="cli-kpi-sub">Pessoa Física</div>
 		</div>
 		<div class="cli-kpi" data-kpi="inativos">
 			<div class="cli-kpi-label">Inativos</div>
-			<div class="cli-kpi-val muted"><?= $totalInativos ?></div>
-			<div class="cli-kpi-sub">Usuários inativos</div>
+			<div class="cli-kpi-val muted"><?= $cntInativos ?></div>
+			<div class="cli-kpi-sub">PJ + PF</div>
+		</div>
+		<div class="cli-kpi" data-kpi="total">
+			<div class="cli-kpi-label">Total cadastros</div>
+			<div class="cli-kpi-val"><?= $totalClients ?></div>
+			<div class="cli-kpi-sub">Todos</div>
 		</div>
 	</div>
 
 	<!-- ── Filter bar ── -->
 	<div class="cli-filter-bar">
 		<div class="cli-pill-group" id="uc-status-pills">
-			<button class="cli-pill active" data-filter="todos">
-				<i class="fas fa-circle pgm-pill-dot" aria-hidden="true"></i> Todos
-				<span class="cnt"><?= $totalEmpresas ?></span>
+			<button class="cli-pill active" data-status="ativos">
+				<i class="fas fa-circle pgm-pill-dot" aria-hidden="true"></i> Ativos
+				<span class="cnt"><?= $cntAtivos ?></span>
 			</button>
-			<button class="cli-pill" data-filter="com-inativos">
-				<i class="fas fa-circle pgm-pill-dot pgm-pill-dot--danger" aria-hidden="true"></i> Com inativos
+			<button class="cli-pill" data-status="inativos">
+				<i class="fas fa-circle pgm-pill-dot pgm-pill-dot--danger" aria-hidden="true"></i> Inativos
+				<span class="cnt"><?= $cntInativos ?></span>
+			</button>
+		</div>
+		<div class="cli-filter-divider"></div>
+		<div class="cli-pill-group" id="uc-type-pills">
+			<button class="cli-pill active" data-type="pj">
+				<i class="fas fa-building pgm-icon-xs" aria-hidden="true"></i> Pessoa Jurídica
+				<span class="cnt" id="uc-cnt-pj"><?= $cntAtivosPJ ?></span>
+			</button>
+			<button class="cli-pill" data-type="pf">
+				<i class="fas fa-user pgm-icon-xs" aria-hidden="true"></i> Pessoa Física
+				<span class="cnt" id="uc-cnt-pf"><?= $cntAtivosPF ?></span>
 			</button>
 		</div>
 		<div class="cli-filter-divider"></div>
@@ -159,7 +186,7 @@ $totalEmpresas = count($groups);
 				<circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
 				<path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 			</svg>
-			<input type="text" id="uc-search" placeholder="Nome da empresa, e-mail ou usuário" autocomplete="off" />
+			<input type="text" id="uc-search" placeholder="Nome, CNPJ, CPF ou e-mail" autocomplete="off" />
 		</div>
 	</div>
 
@@ -169,38 +196,51 @@ $totalEmpresas = count($groups);
 			<table class="cli-table" id="tableEmpresas">
 				<thead>
 					<tr>
-						<th style="width:40px"></th>
-						<th class="cli-col-rs">Empresa</th>
-						<th style="width:24%">Contato principal</th>
-						<th class="text-center" style="width:90px">Usuários</th>
-						<th class="text-center" style="width:100px">Status</th>
-						<th style="width:80px"></th>
+						<th style="width:36px"></th>
+						<th>Razão Social / Nome</th>
+						<th style="width:16%">CNPJ / CPF</th>
+						<th style="width:20%">E-mail</th>
+						<th class="text-center" style="width:80px">Usuários</th>
+						<th class="text-center" style="width:90px">Status</th>
+						<th style="width:60px"></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php $idx = 0; foreach ($groups as $nome => $info): $idx++;
+						$isPJ = (int)$info['tipo'] === C_ClientesTipoJuridica;
 						$hasInativos = $info['inativos'] > 0;
 						$allInactive = $info['ativos'] === 0 && $info['inativos'] > 0;
-						if ($allInactive) { $statusClass = 'cli-usr-badge--off'; $statusText = 'Inativa'; }
+						if ($allInactive) { $statusClass = 'cli-usr-badge--off'; $statusText = 'Inativo'; }
 						elseif ($hasInativos) { $statusClass = 'cli-usr-badge--mixed'; $statusText = $info['ativos'].'/'.(count($info['users'])); }
-						else { $statusClass = 'cli-usr-badge--on'; $statusText = 'Ativa'; }
-						// Build search blob
-						$searchText = mb_strtolower($nome . ' ' . $info['email']);
+						else { $statusClass = 'cli-usr-badge--on'; $statusText = 'Ativo'; }
+
+						$doc = $isPJ ? ($info['cnpj'] ?? '') : ($info['cpf'] ?? '');
+						$cliEmail = $info['email'] ?? '';
+
+						// Search blob
+						$searchText = mb_strtolower($nome . ' ' . $doc . ' ' . $cliEmail);
 						foreach ($info['users'] as $u) {
 							$searchText .= ' ' . mb_strtolower($u->email . ' ' . $u->username);
 						}
+
+						// Determinar se a row do cliente é "ativa" ou "inativa"
+						$clienteInativo = !empty($info['clienteInativo']);
+						$rowStatus = $clienteInativo ? 'inativos' : 'ativos';
+						$rowType = $isPJ ? 'pj' : 'pf';
 					?>
-					<tr class="cli-usr-row" data-detail="ucDetail<?= $idx ?>" data-search="<?= h($searchText) ?>" data-has-inativos="<?= $hasInativos ? '1' : '0' ?>">
+					<tr class="cli-usr-row" data-detail="ucDetail<?= $idx ?>" data-search="<?= h($searchText) ?>"
+						data-status="<?= $rowStatus ?>" data-type="<?= $rowType ?>">
 						<td class="text-center">
 							<span class="cli-usr-expand cli-td-arrow-chev"><i class="fas fa-chevron-right"></i></span>
 						</td>
 						<td>
 							<div class="cli-td-name">
-								<div class="cli-av"><?= ucInitials($nome) ?></div>
+								<div class="cli-av<?= $clienteInativo ? ' cli-av--inactive' : '' ?>"><?= ucInitials2($nome) ?></div>
 								<span class="cli-name-main"><?= h($nome) ?></span>
 							</div>
 						</td>
-						<td class="cli-td-email"><?= h($info['email']) ?></td>
+						<td class="cli-usr-doc"><?= h($doc) ?></td>
+						<td class="cli-td-email"><?= h($cliEmail) ?></td>
 						<td class="text-center">
 							<span class="cli-usr-count"><?= count($info['users']) ?></span>
 						</td>
@@ -218,7 +258,7 @@ $totalEmpresas = count($groups);
 						</td>
 					</tr>
 					<tr class="cli-usr-detail" id="ucDetail<?= $idx ?>">
-						<td colspan="6">
+						<td colspan="7">
 							<div class="cli-usr-inner">
 								<?php if (count($info['users']) > 0): ?>
 								<table class="cli-usr-table">
@@ -276,6 +316,75 @@ $totalEmpresas = count($groups);
 	var $ = window.jQuery;
 	$(document).ready(function() {
 
+		var status = 'ativos';
+		var type = 'pj';
+
+		var counts = {
+			ativos:   { pj: <?= $cntAtivosPJ ?>, pf: <?= $cntAtivosPF ?> },
+			inativos: { pj: <?= $cntInativosPJ ?>, pf: <?= $cntInativosPF ?> }
+		};
+
+		function applyFilters() {
+			var q = $('#uc-search').val().toLowerCase();
+			$('.cli-usr-row').each(function() {
+				var $row = $(this);
+				var rowStatus = $row.data('status');
+				var rowType = $row.data('type');
+				var matchStatus = (rowStatus === status);
+				var matchType = (rowType === type);
+				var matchSearch = !q || $row.data('search').indexOf(q) !== -1;
+				var show = matchStatus && matchType && matchSearch;
+				$row.toggle(show);
+				var $det = $('#' + $row.data('detail'));
+				if (!show) {
+					$det.removeClass('cli-usr-open');
+					$row.removeClass('cli-row-open');
+				}
+				$det.toggle(show && $row.hasClass('cli-row-open'));
+			});
+		}
+
+		function updateTypePills() {
+			$('#uc-type-pills .cli-pill').removeClass('active');
+			$('#uc-type-pills .cli-pill[data-type="' + type + '"]').addClass('active');
+			var c = counts[status];
+			$('#uc-cnt-pj').text(c.pj);
+			$('#uc-cnt-pf').text(c.pf);
+		}
+
+		// KPI clicks
+		$('.cli-kpi').on('click', function() {
+			var kpi = $(this).data('kpi');
+			if (kpi === 'ativos-pj')  { status = 'ativos';   type = 'pj'; }
+			else if (kpi === 'ativos-pf')  { status = 'ativos';   type = 'pf'; }
+			else if (kpi === 'inativos')   { status = 'inativos'; type = 'pj'; }
+			else if (kpi === 'total')      { status = 'ativos';   type = 'pj'; }
+			$('.cli-kpi').removeClass('active');
+			$(this).addClass('active');
+			$('#uc-status-pills .cli-pill').removeClass('active');
+			$('#uc-status-pills .cli-pill[data-status="' + status + '"]').addClass('active');
+			updateTypePills();
+			applyFilters();
+		});
+
+		// Status pills
+		$('#uc-status-pills .cli-pill').on('click', function() {
+			status = $(this).data('status');
+			$('#uc-status-pills .cli-pill').removeClass('active');
+			$(this).addClass('active');
+			type = 'pj';
+			updateTypePills();
+			applyFilters();
+		});
+
+		// Type pills
+		$('#uc-type-pills .cli-pill').on('click', function() {
+			type = $(this).data('type');
+			$('#uc-type-pills .cli-pill').removeClass('active');
+			$(this).addClass('active');
+			applyFilters();
+		});
+
 		// Expand/collapse
 		$(document).on('click', '.cli-usr-row', function(e) {
 			if ($(e.target).closest('a, button').length) return;
@@ -285,37 +394,13 @@ $totalEmpresas = count($groups);
 			$detail.toggleClass('cli-usr-open');
 		});
 
-		// Busca global
+		// Busca
 		$('#uc-search').on('input', function() {
-			var q = $(this).val().toLowerCase();
-			$('.cli-usr-row').each(function() {
-				var match = !q || $(this).data('search').indexOf(q) !== -1;
-				$(this).toggle(match);
-				var $det = $('#' + $(this).data('detail'));
-				if (!match) {
-					$det.removeClass('cli-usr-open');
-					$(this).removeClass('cli-row-open');
-				}
-				$det.toggle(match && $(this).hasClass('cli-row-open'));
-			});
+			applyFilters();
 		});
 
-		// Filtro por status
-		$('#uc-status-pills .cli-pill').on('click', function() {
-			$('#uc-status-pills .cli-pill').removeClass('active');
-			$(this).addClass('active');
-			var filter = $(this).data('filter');
-			$('.cli-usr-row').each(function() {
-				var show = filter === 'todos' || $(this).data('has-inativos') === '1';
-				$(this).toggle(show);
-				var $det = $('#' + $(this).data('detail'));
-				if (!show) {
-					$det.removeClass('cli-usr-open');
-					$(this).removeClass('cli-row-open');
-				}
-				$det.toggle(show && $(this).hasClass('cli-row-open'));
-			});
-		});
+		// Initial render
+		applyFilters();
 	});
 })();
 </script>
