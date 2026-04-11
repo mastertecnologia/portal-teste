@@ -74,6 +74,10 @@ if ((int)($dfeFc['vinculado'] ?? 0) > 0) {
         <?= $this->Html->link('<i class="fas fa-sliders-h"></i>Configuração fiscal', ['controller' => 'FiscalConfig', 'action' => 'index'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
         <?= $this->Html->link('<i class="fas fa-chart-bar"></i>Relatórios fiscais', ['controller' => 'FiscalRelatorios', 'action' => 'index'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
         <?= $this->Html->link($dfeRecebidosLabel, ['controller' => 'Fiscal', 'action' => 'dfeRecebidos'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
+        <?= $this->Html->link('<i class="fas fa-file-upload"></i>Importar XMLs', ['controller' => 'Fiscal', 'action' => 'importarXmlLote'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
+        <?= $this->Html->link('<i class="fas fa-exclamation-triangle"></i>Contingência', ['controller' => 'Fiscal', 'action' => 'contingencia'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
+        <?= $this->Html->link('<i class="fas fa-search"></i>Consultar chave', ['controller' => 'FiscalNotas', 'action' => 'consultarChave'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
+        <?= $this->Html->link('<i class="fas fa-building"></i>Consulta cadastral', ['controller' => 'FiscalNotas', 'action' => 'consultarCadastro'], ['class' => 'fpm-nav-card', 'escape' => false]) ?>
     </div>
 
     <div class="fpm-card" style="margin:16px 20px;">
