@@ -641,95 +641,154 @@
 	color: #ddd6fe !important;
 }
 
-/* ── Stats row (indicadores compactos) ── */
-.qc-stats-row {
+/* ── Empresa filter (search + cards grid) ── */
+.qc-empresa-filter {
 	display: flex;
-	gap: 10px;
-	margin-bottom: 16px;
 	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 12px;
 }
 
-.qc-stat {
+.qc-empresa-search-wrap {
+	position: relative;
 	flex: 1;
-	min-width: 100px;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 4px;
-	padding: 14px 12px;
-	background: var(--q-bg2);
-	border: 1px solid var(--q-border);
-	border-radius: 10px;
+	min-width: 200px;
+	max-width: 320px;
 }
 
-.qc-stat-value {
-	font-size: 22px;
-	font-weight: 700;
-	color: var(--q-text);
-	line-height: 1;
-}
-
-.qc-stat-value--success { color: #6ee7c5; }
-.qc-stat-value--danger  { color: #fca5a5; }
-
-.qc-stat-label {
-	font-size: 10.5px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--q-dim);
-}
-
-/* ── Filter bar (select + counter) ── */
-.qc-filter-bar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 10px;
-	margin-bottom: 16px;
-	padding: 10px 14px;
-	background: var(--q-bg2);
-	border: 1px solid var(--q-border);
-	border-radius: 10px;
-}
-
-.qc-filter-label {
+.qc-empresa-search-ico {
+	position: absolute;
+	left: 11px;
+	top: 50%;
+	transform: translateY(-50%);
 	font-size: 12px;
-	font-weight: 600;
 	color: var(--q-dim);
-	white-space: nowrap;
+	pointer-events: none;
 }
 
-.qc-filter-label .fa, .qc-filter-label .fas {
-	color: var(--q-accent);
-	margin-right: 4px;
-}
-
-.qc-filter-select {
-	flex: 1;
-	min-width: 220px;
-	max-width: 480px;
-	padding: 7px 12px;
+.qc-empresa-search {
+	width: 100%;
+	padding: 8px 12px 8px 32px;
 	font-size: 13px;
 	font-family: inherit;
 	color: var(--q-text);
-	background: var(--q-bg);
+	background: var(--q-bg2);
 	border: 1px solid var(--q-border2);
 	border-radius: 8px;
-	appearance: auto;
-	cursor: pointer;
 	transition: border-color 0.15s;
 }
 
-.qc-filter-select:focus {
+.qc-empresa-search:focus {
 	outline: none;
 	border-color: var(--q-accent);
 	box-shadow: 0 0 0 2px var(--q-accent-dim);
 }
 
-.qc-filter-count {
-	font-size: 11.5px;
+.qc-empresa-search::placeholder {
 	color: var(--q-dim);
-	margin-left: auto;
+}
+
+.qc-btn-limpar { font-size: 12px !important; }
+
+.qc-filter-info {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--q-accent);
+	white-space: nowrap;
+}
+
+/* Cards grid */
+.qc-empresa-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 8px;
+	margin-bottom: 16px;
+	max-height: 240px;
+	overflow-y: auto;
+	padding: 2px;
+}
+
+.qc-empresa-grid::-webkit-scrollbar { width: 6px; }
+.qc-empresa-grid::-webkit-scrollbar-track { background: transparent; }
+.qc-empresa-grid::-webkit-scrollbar-thumb {
+	background: var(--q-border2);
+	border-radius: 3px;
+}
+
+.qc-empresa-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 14px;
+	background: var(--q-bg2);
+	border: 1px solid var(--q-border);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.15s, border-color 0.15s, transform 0.1s;
+	text-align: left;
+	font-family: inherit;
+	color: var(--q-muted);
+}
+
+.qc-empresa-card:hover {
+	background: var(--q-bg3);
+	border-color: var(--q-border2);
+}
+
+.qc-empresa-card--active {
+	background: var(--q-accent-dim) !important;
+	border-color: var(--q-accent) !important;
+	color: var(--q-text) !important;
+}
+
+.qc-empresa-card--active .qc-empresa-card-nome {
+	color: var(--q-text);
+}
+
+.qc-empresa-card--active .qc-empresa-card-count {
+	background: var(--q-accent);
+	color: #fff;
+	border-color: transparent;
+}
+
+.qc-empresa-card-nome {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--q-muted);
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+}
+
+.qc-empresa-card-meta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+.qc-empresa-card-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 22px;
+	padding: 0 7px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 700;
+	background: var(--q-bg3);
+	color: var(--q-muted);
+	border: 1px solid var(--q-border2);
+	transition: background 0.15s, color 0.15s;
+}
+
+.qc-empresa-card-inactive {
+	font-size: 10px;
+	color: #fca5a5;
 	white-space: nowrap;
 }

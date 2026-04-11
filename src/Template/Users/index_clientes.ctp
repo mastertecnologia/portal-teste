@@ -5,19 +5,23 @@ $this->Breadcrumbs->add('Usuários clientes');
 
 $this->Html->css('/dist/css/pages/queues-admin-shell.css', ['block' => true]);
 
-// Agregar stats
+// Agrupar por empresa
 $totalClients = count($clients);
 $totalAtivos = 0;
 $totalInativos = 0;
-$empresaMap = [];
+$empresaMap = []; // nome => ['total' => n, 'ativos' => n, 'inativos' => n]
 foreach ($clients as $c) {
-	if ($c->inativo == 1) { $totalInativos++; } else { $totalAtivos++; }
-	$nome = '—';
+	$ativo = $c->inativo != 1;
+	if ($ativo) { $totalAtivos++; } else { $totalInativos++; }
+	$nome = '(sem empresa)';
 	if ($c->cliente) {
-		$nome = !empty($c->cliente->razaosocial) ? $c->cliente->razaosocial : ($c->cliente->nome ?? '—');
+		$nome = !empty($c->cliente->razaosocial) ? trim($c->cliente->razaosocial) : (trim($c->cliente->nome) ?: '(sem empresa)');
 	}
-	if (!isset($empresaMap[$nome])) { $empresaMap[$nome] = 0; }
-	$empresaMap[$nome]++;
+	if (!isset($empresaMap[$nome])) {
+		$empresaMap[$nome] = ['total' => 0, 'ativos' => 0, 'inativos' => 0];
+	}
+	$empresaMap[$nome]['total']++;
+	if ($ativo) { $empresaMap[$nome]['ativos']++; } else { $empresaMap[$nome]['inativos']++; }
 }
 ksort($empresaMap);
 $totalEmpresas = count($empresaMap);
@@ -28,8 +32,11 @@ $totalEmpresas = count($empresaMap);
 			<div>
 				<h1>Usuários do portal</h1>
 				<p class="queues-page-sub">
-					Gestão dos usuários clientes vinculados às empresas do portal.
-					Selecione uma empresa para filtrar a visualização.
+					<?= $totalEmpresas ?> empresas &middot; <?= $totalClients ?> usuários
+					<span style="color:#6ee7c5;">(<?= $totalAtivos ?> ativos)</span>
+					<?php if ($totalInativos > 0): ?>
+						<span style="color:#fca5a5;">(<?= $totalInativos ?> inativos)</span>
+					<?php endif; ?>
 				</p>
 			</div>
 			<div class="queues-page-actions">
@@ -40,38 +47,31 @@ $totalEmpresas = count($empresaMap);
 			</div>
 		</header>
 
-		<!-- Stats -->
-		<div class="qc-stats-row">
-			<div class="qc-stat">
-				<span class="qc-stat-value"><?= $totalEmpresas ?></span>
-				<span class="qc-stat-label">Empresas</span>
+		<!-- Busca de empresa -->
+		<div class="qc-empresa-filter">
+			<div class="qc-empresa-search-wrap">
+				<i class="fas fa-search qc-empresa-search-ico"></i>
+				<input type="text" id="buscaEmpresa" class="qc-empresa-search" placeholder="Buscar empresa...">
 			</div>
-			<div class="qc-stat">
-				<span class="qc-stat-value"><?= $totalClients ?></span>
-				<span class="qc-stat-label">Usuários</span>
-			</div>
-			<div class="qc-stat">
-				<span class="qc-stat-value qc-stat-value--success"><?= $totalAtivos ?></span>
-				<span class="qc-stat-label">Ativos</span>
-			</div>
-			<div class="qc-stat">
-				<span class="qc-stat-value qc-stat-value--danger"><?= $totalInativos ?></span>
-				<span class="qc-stat-label">Inativos</span>
-			</div>
+			<button type="button" id="btnLimpar" class="queues-btn qc-btn-limpar" style="display:none;">
+				<i class="fas fa-times"></i> Limpar filtro
+			</button>
+			<span class="qc-filter-info" id="filterInfo"></span>
 		</div>
 
-		<!-- Filtro por empresa -->
-		<div class="qc-filter-bar">
-			<label class="qc-filter-label" for="filtroEmpresa">
-				<i class="fas fa-building"></i> Filtrar por empresa:
-			</label>
-			<select id="filtroEmpresa" class="qc-filter-select">
-				<option value="">Todas as empresas (<?= $totalClients ?>)</option>
-				<?php foreach ($empresaMap as $nome => $qty): ?>
-				<option value="<?= h($nome) ?>"><?= h($nome) ?> (<?= $qty ?>)</option>
-				<?php endforeach; ?>
-			</select>
-			<span class="qc-filter-count" id="filtroCount">Exibindo <?= $totalClients ?> de <?= $totalClients ?> usuários</span>
+		<!-- Grid de empresas -->
+		<div class="qc-empresa-grid" id="empresaGrid">
+			<?php foreach ($empresaMap as $nome => $info): ?>
+			<button type="button" class="qc-empresa-card" data-empresa="<?= h($nome) ?>">
+				<span class="qc-empresa-card-nome"><?= h($nome) ?></span>
+				<span class="qc-empresa-card-meta">
+					<span class="qc-empresa-card-count"><?= $info['total'] ?></span>
+					<?php if ($info['inativos'] > 0): ?>
+						<span class="qc-empresa-card-inactive" title="Inativos"><?= $info['inativos'] ?> inativo<?= $info['inativos'] > 1 ? 's' : '' ?></span>
+					<?php endif; ?>
+				</span>
+			</button>
+			<?php endforeach; ?>
 		</div>
 
 		<!-- Tabela -->
@@ -90,19 +90,19 @@ $totalEmpresas = count($empresaMap);
 						<?php foreach ($clients as $client): ?>
 						<?php
 							$isInativo = $client->inativo == 1;
-							$nomeEmpresa = '—';
+							$nomeEmpresa = '(sem empresa)';
 							if ($client->cliente) {
-								$nomeEmpresa = !empty($client->cliente->razaosocial) ? $client->cliente->razaosocial : ($client->cliente->nome ?? '—');
+								$nomeEmpresa = !empty($client->cliente->razaosocial) ? trim($client->cliente->razaosocial) : (trim($client->cliente->nome) ?: '(sem empresa)');
 							}
 						?>
-						<tr>
+						<tr data-empresa="<?= h($nomeEmpresa) ?>">
 							<td>
 								<a class="users-table-link" href="<?= $this->Url->build(['action' => 'editcliente', $client->id]) ?>"><?= h($client->username) ?></a>
 							</td>
 							<td>
 								<a class="users-table-link" href="<?= $this->Url->build(['action' => 'editcliente', $client->id]) ?>"><?= h($client->email) ?></a>
 							</td>
-							<td><?= h($nomeEmpresa) ?></td>
+							<td class="td-empresa"><?= h($nomeEmpresa) ?></td>
 							<td class="text-center">
 								<span class="queues-badge <?= $isInativo ? 'queues-badge--danger' : 'queues-badge--success' ?>">
 									<?= $isInativo ? 'Inativo' : 'Ativo' ?>
@@ -122,6 +122,16 @@ $totalEmpresas = count($empresaMap);
 
 <script>
 $(document).ready(function() {
+	var activeEmpresa = null;
+
+	// Custom DataTables filter
+	$.fn.dataTable.ext.search.push(function(settings, data, dataIndex, rowData, counter) {
+		if (settings.nTable.id !== 'tableClients') return true;
+		if (!activeEmpresa) return true;
+		var row = settings.aoData[dataIndex].nTr;
+		return $(row).attr('data-empresa') === activeEmpresa;
+	});
+
 	var table = $('#tableClients').DataTable({
 		pageLength: <?= isset($pagelength) ? (int)$pagelength : 100 ?>,
 		order: [[2, 'asc'], [0, 'asc']],
@@ -135,14 +145,41 @@ $(document).ready(function() {
 		}
 	});
 
-	var totalAll = <?= $totalClients ?>;
+	// Click em card de empresa
+	$(document).on('click', '.qc-empresa-card', function() {
+		var emp = $(this).data('empresa');
+		if (activeEmpresa === emp) {
+			// deselect
+			activeEmpresa = null;
+			$('.qc-empresa-card').removeClass('qc-empresa-card--active');
+			$('#btnLimpar').hide();
+			$('#filterInfo').text('');
+		} else {
+			activeEmpresa = emp;
+			$('.qc-empresa-card').removeClass('qc-empresa-card--active');
+			$(this).addClass('qc-empresa-card--active');
+			$('#btnLimpar').show();
+			$('#filterInfo').text(emp);
+		}
+		table.draw();
+	});
 
-	$('#filtroEmpresa').on('change', function() {
-		var val = $(this).val();
-		// Coluna 2 = Empresa; regex exact match
-		table.column(2).search(val ? '^' + $.fn.dataTable.util.escapeRegex(val) + '$' : '', true, false).draw();
-		var shown = table.rows({ search: 'applied' }).count();
-		$('#filtroCount').text('Exibindo ' + shown + ' de ' + totalAll + ' usuários');
+	// Limpar filtro
+	$('#btnLimpar').on('click', function() {
+		activeEmpresa = null;
+		$('.qc-empresa-card').removeClass('qc-empresa-card--active');
+		$(this).hide();
+		$('#filterInfo').text('');
+		table.draw();
+	});
+
+	// Busca de empresa (filtra os cards)
+	$('#buscaEmpresa').on('input', function() {
+		var q = $(this).val().toLowerCase();
+		$('.qc-empresa-card').each(function() {
+			var nome = $(this).data('empresa').toLowerCase();
+			$(this).toggle(nome.indexOf(q) !== -1);
+		});
 	});
 });
 </script>
