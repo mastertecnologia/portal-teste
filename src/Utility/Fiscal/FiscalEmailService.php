@@ -72,11 +72,17 @@ class FiscalEmailService {
             return ['ok' => false, 'message' => 'Erro ao gerar DANFE: ' . $e->getMessage()];
         }
 
-        // Obter XML de autorização
+        // Obter XML de autorização (fallback: xml_import / dfe_import para notas importadas)
         $xmlEntity = $FiscalNotasXmls->find()
             ->where(['fiscal_nota_id' => $notaId, 'tipo' => 'autorizacao'])
             ->order(['created' => 'DESC'])
             ->first();
+        if (!$xmlEntity) {
+            $xmlEntity = $FiscalNotasXmls->find()
+                ->where(['fiscal_nota_id' => $notaId, 'tipo IN' => ['xml_import', 'dfe_import']])
+                ->order(['created' => 'DESC'])
+                ->first();
+        }
         $xmlContent = $xmlEntity ? ($xmlEntity->xml_retorno ?: $xmlEntity->xml_envio) : null;
 
         // Montar nomes de arquivo

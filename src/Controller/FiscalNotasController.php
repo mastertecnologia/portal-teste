@@ -1158,6 +1158,14 @@ class FiscalNotasController extends AppController {
             ->order(['created' => 'DESC'])
             ->first();
 
+        // Fallback: notas importadas de outro ERP têm tipo xml_import ou dfe_import
+        if (!$xml && $tipo === 'autorizacao') {
+            $xml = $this->FiscalNotasXmls->find()
+                ->where(['fiscal_nota_id' => $id, 'tipo IN' => ['xml_import', 'dfe_import']])
+                ->order(['created' => 'DESC'])
+                ->first();
+        }
+
         if (!$xml) {
             $this->Flash->error('XML não encontrado.');
             return $this->redirect(['action' => 'view', $id]);

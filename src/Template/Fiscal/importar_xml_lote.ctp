@@ -17,13 +17,21 @@ $resultados = $resultados ?? [];
 
     <div class="fpm-card mx-3">
         <p class="fpm-muted">
-            Selecione arquivos XML de NF-e (nfeProc ou infNFe) para criar rascunhos de notas de entrada automaticamente.
+            Selecione arquivos XML de NF-e (nfeProc ou infNFe) ou um arquivo .zip contendo XMLs.
+            Notas de entrada serão criadas automaticamente.
         </p>
         <?= $this->Form->create(null, ['url' => ['action' => 'importarXmlLote'], 'type' => 'file']) ?>
         <div class="fpm-field">
-            <label>Arquivos XML</label>
-            <input type="file" name="xml_files[]" accept=".xml,application/xml,text/xml" multiple required class="form-control" />
-            <small class="fpm-muted">Pode selecionar múltiplos arquivos de uma vez.</small>
+            <label>Arquivos XML ou ZIP</label>
+            <input type="file" name="xml_files[]" accept=".xml,.zip,application/xml,text/xml,application/zip" multiple required class="form-control" />
+            <small class="fpm-muted">Pode selecionar múltiplos XMLs ou um arquivo .zip com todos os XMLs dentro.</small>
+        </div>
+        <div class="fpm-field mt-2">
+            <label class="mb-0" style="font-weight:normal;">
+                <input type="checkbox" name="como_autorizada" value="1" />
+                Marcar como <strong>autorizada</strong> (notas já autorizadas na SEFAZ por outro sistema)
+            </label>
+            <small class="fpm-muted">Se desmarcado, as notas entram como rascunho para revisão.</small>
         </div>
         <div class="mt-2">
             <?= $this->Form->button('<i class="fas fa-upload"></i> Importar', [

@@ -735,6 +735,8 @@ class FiscalController extends AppController {
         $resultados = [];
 
         if ($this->request->is('post')) {
+            $comoAutorizada = (bool)$this->request->getData('como_autorizada');
+
             $files = $this->request->getData('xml_files');
             if (empty($files)) {
                 $files = $this->request->getUploadedFiles();
@@ -744,39 +746,32 @@ class FiscalController extends AppController {
                 $files = [$files];
             }
 
-            $this->loadModel('FiscalNotas');
-            foreach ($files as $file) {
-                $item = ['filename' => '', 'ok' => false, 'message' => ''];
-                if ($file instanceof \Psr\Http\Message\UploadedFileInterface) {
-                    $item['filename'] = $file->getClientFilename() ?? 'desconhecido';
-                    if ($file->getError() !== UPLOAD_ERR_OK) {
-                        $item['message'] = 'Erro no upload.';
-                        $resultados[] = $item;
-                        continue;
-                    }
-                    $xmlContent = (string)$file->getStream();
-                } elseif (is_array($file) && !empty($file['tmp_name'])) {
-                    $item['filename'] = $file['name'] ?? 'desconhecido';
-                    if (($file['error'] ?? 0) !== UPLOAD_ERR_OK) {
-                        $item['message'] = 'Erro no upload.';
-                        $resultados[] = $item;
-                        continue;
-                    }
-                    $xmlContent = @file_get_contents($file['tmp_name']);
-                } else {
-                    continue;
-                }
+            // Expandir ZIPs: se algum arquivo é .zip, extrair XMLs de dentro
+            $xmlContents = $this->_expandirArquivosParaXml($files);
 
-                if (empty($xmlContent)) {
+            $this->loadModel('FiscalNotas');
+            foreach ($xmlContents as $entry) {
+                $item = ['filename' => $entry['filename'], 'ok' => false, 'message' => ''];
+
+                if (empty($entry['content'])) {
                     $item['message'] = 'Arquivo vazio.';
                     $resultados[] = $item;
                     continue;
                 }
 
-                $result = FiscalImportacaoDfeEntrada::criarRascunhoDeXmlString($idempresa, $userId, $xmlContent);
+                $result = FiscalImportacaoDfeEntrada::criarRascunhoDeXmlString($idempresa, $userId, $entry['content']);
                 if (!empty($result['ok'])) {
+                    $notaId = (int)($result['nota_id'] ?? 0);
+                    $status = 'rascunho';
+
+                    // Promover para autorizada se solicitado
+                    if ($comoAutorizada && $notaId > 0) {
+                        $this->_promoverNotaAutorizada($notaId, $entry['content']);
+                        $status = 'autorizada';
+                    }
+
                     $item['ok'] = true;
-                    $item['message'] = 'Nota de entrada #' . ($result['nota_id'] ?? '') . ' criada.';
+                    $item['message'] = "Nota de entrada #{$notaId} criada ({$status}).";
                 } else {
                     $item['message'] = implode(' | ', $result['errors'] ?? ['Falha na importação.']);
                 }
@@ -789,6 +784,78 @@ class FiscalController extends AppController {
         }
 
         $this->set(compact('resultados'));
+    }
+
+    /**
+     * Expande lista de uploads: se algum é .zip, extrai XMLs de dentro.
+     * Retorna array de ['filename' => ..., 'content' => ...].
+     */
+    private function _expandirArquivosParaXml(array $files): array {
+        $result = [];
+        foreach ($files as $file) {
+            $filename = '';
+            $content = '';
+
+            if ($file instanceof \Psr\Http\Message\UploadedFileInterface) {
+                $filename = $file->getClientFilename() ?? 'desconhecido';
+                if ($file->getError() !== UPLOAD_ERR_OK) {
+                    $result[] = ['filename' => $filename, 'content' => ''];
+                    continue;
+                }
+                $content = (string)$file->getStream();
+            } elseif (is_array($file) && !empty($file['tmp_name'])) {
+                $filename = $file['name'] ?? 'desconhecido';
+                if (($file['error'] ?? 0) !== UPLOAD_ERR_OK) {
+                    $result[] = ['filename' => $filename, 'content' => ''];
+                    continue;
+                }
+                $content = @file_get_contents($file['tmp_name']);
+            } else {
+                continue;
+            }
+
+            // Se é ZIP, extrair XMLs de dentro
+            if (strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'zip' && class_exists('ZipArchive')) {
+                $tmpFile = tempnam(sys_get_temp_dir(), 'fxml_');
+                file_put_contents($tmpFile, $content);
+
+                $zip = new \ZipArchive();
+                if ($zip->open($tmpFile) === true) {
+                    for ($i = 0; $i < $zip->numFiles; $i++) {
+                        $name = $zip->getNameIndex($i);
+                        if (strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== 'xml') {
+                            continue;
+                        }
+                        $xmlContent = $zip->getFromIndex($i);
+                        $result[] = [
+                            'filename' => basename($name) . " (do ZIP {$filename})",
+                            'content' => $xmlContent ?: '',
+                        ];
+                    }
+                    $zip->close();
+                } else {
+                    $result[] = ['filename' => $filename, 'content' => ''];
+                }
+                @unlink($tmpFile);
+                continue;
+            }
+
+            $result[] = ['filename' => $filename, 'content' => $content];
+        }
+        return $result;
+    }
+
+    /**
+     * Promove nota importada de rascunho para autorizada usando dados do XML.
+     */
+    private function _promoverNotaAutorizada(int $notaId, string $xmlContent) {
+        $parsed = FiscalResNfeImportParser::parse($xmlContent);
+        $nota = $this->FiscalNotas->get($notaId);
+        $nota->status = 'autorizada';
+        if ($parsed['dados'] !== null && !empty($parsed['dados']['protocolo_autorizacao'])) {
+            $nota->protocolo_autorizacao = $parsed['dados']['protocolo_autorizacao'];
+        }
+        $this->FiscalNotas->save($nota);
     }
 
     /**
