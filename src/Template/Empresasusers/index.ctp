@@ -1,108 +1,108 @@
-<?php use Cake\Routing\Router; ?>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-body">
-			<ul class="nav nav-tabs customtab" role="tablist">
-                <li class="nav-item"> <a class="nav-link active" data-toggle="tab" href="#funcrelacoes" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="fa fa-user"></i></span> <span class="hidden-xs-down"> Funcionários</span></a> </li>
-                <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#clirelacoes" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="fa fa-building"></i></span> <span class="hidden-xs-down"> Clientes</span></a> </li>
-            </ul>
-			<div class="tab-content">
-				<div class="tab-pane active" id="funcrelacoes">
-					<div class="table-responsive">	
-						<table class="table table-hover table-row-clickable" id="tableFuncrelacoes">
-							<thead class="text-primary">
+<?php
+use Cake\Routing\Router;
+$this->Breadcrumbs->add('Início', ['controller' => 'Users', 'action' => 'dashboard']);
+$this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index']);
+$this->Breadcrumbs->add('Vínculos empresa / usuário');
+
+$this->start('css');
+echo $this->Html->css('/dist/css/pages/config-admin-shell.css');
+$this->end();
+?>
+<div class="col-12 p-0 admin-panel-ambient">
+	<div class="admin-panel-wrap">
+		<header class="admin-panel-hero">
+			<div class="ap-hero-top">
+				<div>
+					<h1><i class="fas fa-link ap-hero-ico"></i> Vínculos empresa / usuário</h1>
+					<p>Relações que definem qual usuário pode atuar em qual empresa (multi-empresa).</p>
+				</div>
+				<div class="admin-panel-hero-actions">
+					<?php if ($admin): ?>
+					<?= $this->Html->link('<i class="fas fa-plus"></i> Adicionar vínculo', ['action' => 'add'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false, 'target' => '_blank']) ?>
+					<?php endif; ?>
+					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Configurações', ['controller' => 'Config', 'action' => 'index'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
+				</div>
+			</div>
+		</header>
+
+		<ul class="ap-tabs" role="tablist">
+			<li><a class="ap-tab active" data-toggle="tab" href="#funcrelacoes" role="tab"><i class="fas fa-user-tie"></i> Equipe</a></li>
+			<li><a class="ap-tab" data-toggle="tab" href="#clirelacoes" role="tab"><i class="fas fa-user"></i> Clientes</a></li>
+		</ul>
+
+		<div class="tab-content">
+			<div class="tab-pane active" id="funcrelacoes">
+				<div class="ap-table-wrap">
+					<table class="ap-table" id="tableFuncrelacoes">
+						<thead>
+							<tr>
 								<th>Empresa</th>
 								<th>Usuário</th>
-								<th></th>
-							</thead>
-							<tbody>
-								<?php foreach ($funcrelacoes as $funcrelacao): ?>
-									<tr>
-										<td width="40%"><a class="link"><?= $funcrelacao['empresa']['nomefantasia'] ?></a></td>
-										<td width="45%"><a class="link"><?= $funcrelacao['user']['name'] ?></a></td>
-										<td width="5%"><?= $this->Html->link('Excluir', ["controller" => "Empresasusers", "action" => "delete", $funcrelacao->id], ['class' => 'label label-danger']) ?></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-					<?php if($admin){
-						echo $this->Html->link('Adicionar relação', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 m-r-5 m-b-20', 'target' => '_blank']);
-						echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary m-t-20 m-b-20']);
-					} ?>
-                </div>
-				<div class="tab-pane" id="clirelacoes">
-					<div class="table-responsive">	
-						<table class="table table-hover table-row-clickable" id="tableClirelacoes">
-							<thead class="text-primary">
+								<th style="width:80px;"></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($funcrelacoes as $funcrelacao): ?>
+							<tr>
+								<td><?= h($funcrelacao['empresa']['nomefantasia']) ?></td>
+								<td><?= h($funcrelacao['user']['name']) ?></td>
+								<td>
+									<?= $this->Html->link('<i class="fas fa-trash-alt"></i> Excluir', ['action' => 'delete', $funcrelacao->id], [
+										'class' => 'ap-btn-danger',
+										'escape' => false,
+										'confirm' => 'Tem certeza que deseja excluir este vínculo?'
+									]) ?>
+								</td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="tab-pane" id="clirelacoes">
+				<div class="ap-table-wrap">
+					<table class="ap-table" id="tableClirelacoes">
+						<thead>
+							<tr>
 								<th>Empresa</th>
 								<th>Usuário</th>
-								<th></th>
-							</thead>
-							<tbody>
-								<?php foreach ($clirelacoes as $clirelacao): ?>
-									<tr>
-										<td width="40%"><a class="link"><?= $clirelacao['empresa']['nomefantasia'] ?></a></td>
-										<td width="45%"><a class="link"><?= $clirelacao['user']['name'] ?></a></td>
-										<td width="5%"><?= $this->Html->link('Excluir', ["controller" => "Empresasusers", "action" => "delete", $clirelacao->id], ['class' => 'label label-danger']) ?></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-					<?php if($admin){
-						echo $this->Html->link('Adicionar relação', ['action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-t-20 m-r-5 m-b-20', 'target' => '_blank']);
-						echo $this->Html->link('Voltar para as configurações', ["controller" => "config", "action" => "index"], ['class' => 'btn btn-pgm btn-pgm-situacao btn-primary m-t-20 m-b-20']);
-					} ?>
-                </div>
-            </div>      	
+								<th style="width:80px;"></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($clirelacoes as $clirelacao): ?>
+							<tr>
+								<td><?= h($clirelacao['empresa']['nomefantasia']) ?></td>
+								<td><?= h($clirelacao['user']['name']) ?></td>
+								<td>
+									<?= $this->Html->link('<i class="fas fa-trash-alt"></i> Excluir', ['action' => 'delete', $clirelacao->id], [
+										'class' => 'ap-btn-danger',
+										'escape' => false,
+										'confirm' => 'Tem certeza que deseja excluir este vínculo?'
+									]) ?>
+								</td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
 
 <script>
 $(document).ready(function() {
-	var $window = $(window);
-
-	table = $('#tableFuncrelacoes, #tableClirelacoes');
-	table.on( 'length.dt', function ( e, settings, len ) {
-		pagelength(len);
-	} )
-	table.DataTable({
-		"pageLength": <?= $pagelength ?>,
-		"language": {
-			"sProcessing":    "Procesando...",
-			"sLengthMenu":    "Mostrar _MENU_ registros",
-			"sZeroRecords":   "Nenhum registro encontrado",
-			"sEmptyTable":    "Nenhum dado disponível",
-			"sInfo":          "Mostrando registros de _START_ até _END_ de um total de _TOTAL_ registros",
-			"sInfoEmpty":     "Mostrando registros de 0 a 0 de um total de 0 registros",
-			"sInfoFiltered":  "(filtrado de um total de _MAX_ registros)",
-			"sInfoPostFix":   "",
-			"sSearch":        "Buscar:",
-			"sUrl":           "",
-			"sInfoThousands":  ",",
-			"sLoadingRecords": "Carregando...",
-			"oPaginate": {
-				"sFirst":    "<<",
-				"sLast":    ">>",
-				"sNext":    ">",
-				"sPrevious": "<"
-			},
-			"oAria": {
-				"sSortAscending":  ": Ordem Ascendente",
-				"sSortDescending": ": Ordem descendente"
-			},
-			"drawCallback": function( settings ) {
-				$('td').removeClass('dark-mode');
-			},
+	$('#tableFuncrelacoes, #tableClirelacoes').DataTable({
+		pageLength: <?= $pagelength ?>,
+		language: {
+			sProcessing: "Processando...", sLengthMenu: "Mostrar _MENU_ registros",
+			sZeroRecords: "Nenhum registro encontrado", sEmptyTable: "Nenhum dado disponível",
+			sInfo: "Mostrando _START_ até _END_ de _TOTAL_ registros",
+			sInfoEmpty: "Nenhum registro", sInfoFiltered: "(filtrado de _MAX_)",
+			sSearch: "Buscar:",
+			oPaginate: { sFirst: "<<", sLast: ">>", sNext: ">", sPrevious: "<" }
 		}
-	});
-    table.search(filters).draw();
+	}).search(filters).draw();
 });
-
-window.onload = function() {
-	$('#funcrelacoes [type="search"]').focus();
-}
-
 </script>

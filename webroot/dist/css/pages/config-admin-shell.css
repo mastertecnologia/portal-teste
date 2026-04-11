@@ -832,3 +832,277 @@
 	font-size: 11px;
 	color: #8b92a8;
 }
+
+/* ══════════════════════════════════════════════════════
+   Tabelas administrativas (Empresas, Vínculos, Clientes)
+   ══════════════════════════════════════════════════════ */
+
+/* ── Tabs ──────────────────────────────────────────── */
+.ap-tabs {
+	list-style: none;
+	margin: 0 0 16px;
+	padding: 0;
+	display: flex;
+	gap: 4px;
+	border-bottom: 1px solid var(--ap-border);
+}
+
+.ap-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 16px;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--ap-muted) !important;
+	text-decoration: none !important;
+	border-bottom: 2px solid transparent;
+	transition: color .15s, border-color .15s;
+}
+
+.ap-tab:hover { color: var(--ap-text) !important; }
+.ap-tab.active { color: var(--ap-text) !important; border-bottom-color: var(--ap-teal); }
+.ap-tab .fas, .ap-tab .far, .ap-tab .fa { font-size: 12px; opacity: .8; }
+
+/* ── Table wrap ────────────────────────────────────── */
+.ap-table-wrap {
+	overflow-x: auto;
+	border: 1px solid var(--ap-border);
+	border-radius: 10px;
+	background: var(--ap-bg2);
+}
+
+table.ap-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.ap-table thead th {
+	background: var(--ap-bg3);
+	color: var(--ap-dim);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .05em;
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--ap-border);
+	text-align: left;
+}
+
+.ap-table tbody td {
+	padding: 10px 14px;
+	color: #c9d1d9;
+	border-bottom: 1px solid rgba(255,255,255,.04);
+	vertical-align: middle;
+}
+
+.ap-table tbody tr:hover td { background: rgba(255,255,255,.03); }
+
+/* ── Links dentro de tabelas ───────────────────────── */
+.ap-link {
+	color: #6ee7c5 !important;
+	text-decoration: none !important;
+	font-weight: 500;
+}
+.ap-link:hover { color: #a7f3d0 !important; text-decoration: underline !important; }
+
+.ap-link-token {
+	color: #93c5fd !important;
+	text-decoration: none !important;
+	font-weight: 600;
+	font-size: 12px;
+	cursor: pointer;
+}
+.ap-link-token:hover { color: #bfdbfe !important; }
+
+/* ── Badges ────────────────────────────────────────── */
+.ap-badge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .03em;
+}
+
+.ap-badge--success { background: rgba(63,185,80,.15); color: #3fb950; }
+.ap-badge--danger { background: rgba(248,81,73,.15); color: #f85149; }
+.ap-badge--muted { background: rgba(139,148,168,.1); color: #8b949e; }
+
+/* ── Botão excluir ─────────────────────────────────── */
+.ap-btn-danger {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #f85149 !important;
+	text-decoration: none !important;
+	padding: 3px 8px;
+	border-radius: 6px;
+	border: 1px solid rgba(248,81,73,.25);
+	background: rgba(248,81,73,.08);
+	transition: background .15s, border-color .15s;
+}
+.ap-btn-danger:hover { background: rgba(248,81,73,.18); border-color: rgba(248,81,73,.45); }
+.ap-btn-danger .fas { font-size: 10px; }
+
+/* ── DataTables overrides no admin ─────────────────── */
+.admin-panel-wrap .dataTables_wrapper { color: var(--ap-muted); }
+.admin-panel-wrap .dataTables_wrapper .dataTables_length,
+.admin-panel-wrap .dataTables_wrapper .dataTables_filter,
+.admin-panel-wrap .dataTables_wrapper .dataTables_info,
+.admin-panel-wrap .dataTables_wrapper .dataTables_paginate {
+	color: var(--ap-muted) !important;
+	font-size: 12px;
+	padding: 8px 4px;
+}
+
+.admin-panel-wrap .dataTables_wrapper .dataTables_filter input,
+.admin-panel-wrap .dataTables_wrapper .dataTables_length select {
+	background: var(--ap-bg) !important;
+	border: 1px solid var(--ap-border) !important;
+	color: var(--ap-text) !important;
+	border-radius: 6px;
+	padding: 4px 8px;
+	font-size: 12px;
+}
+
+.admin-panel-wrap .dataTables_wrapper .dataTables_paginate .paginate_button {
+	color: var(--ap-muted) !important;
+	background: transparent !important;
+	border: 1px solid var(--ap-border) !important;
+	border-radius: 6px;
+	margin: 0 2px;
+	padding: 4px 10px;
+	font-size: 12px;
+}
+
+.admin-panel-wrap .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+	color: var(--ap-text) !important;
+	background: var(--ap-bg3) !important;
+	border-color: var(--ap-teal) !important;
+}
+
+.admin-panel-wrap .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+	color: var(--ap-text) !important;
+	background: var(--ap-bg3) !important;
+}
+
+/* ── Sorting arrows ────────────────────────────────── */
+.admin-panel-wrap table.dataTable thead .sorting,
+.admin-panel-wrap table.dataTable thead .sorting_asc,
+.admin-panel-wrap table.dataTable thead .sorting_desc {
+	background-image: none !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   Fix global: .card genérico em telas admin legadas
+   (Empresas edit/add, Empresasusers add, etc.)
+   ══════════════════════════════════════════════════════ */
+body.layout-no-topbar .card {
+	background: #0d1117;
+	border: 1px solid rgba(255,255,255,.08);
+	border-radius: 12px;
+}
+
+body.layout-no-topbar .card .card-body {
+	color: #c9d1d9;
+}
+
+body.layout-no-topbar .card .card-body .card-title {
+	color: #e6edf3;
+}
+
+body.layout-no-topbar .card .card-body a.link,
+body.layout-no-topbar .card .card-body .link {
+	color: #6ee7c5 !important;
+	text-decoration: none !important;
+}
+
+body.layout-no-topbar .card .card-body a.link:hover {
+	color: #a7f3d0 !important;
+}
+
+body.layout-no-topbar .card .card-body .form-control {
+	background: #161b22;
+	border-color: rgba(255,255,255,.10);
+	color: #c9d1d9;
+}
+
+body.layout-no-topbar .card .card-body label,
+body.layout-no-topbar .card .card-body .control-label {
+	color: #8b949e !important;
+}
+
+body.layout-no-topbar .card .card-body .text-muted {
+	color: #8b949e !important;
+}
+
+body.layout-no-topbar .card .card-body .nav-tabs.customtab .nav-link {
+	color: #8b949e;
+}
+
+body.layout-no-topbar .card .card-body .nav-tabs.customtab .nav-link.active {
+	color: #e6edf3;
+	border-bottom-color: #1d9e75;
+}
+
+body.layout-no-topbar .card .card-body .table thead th {
+	background: #161b22;
+	color: #7d8590;
+	border-bottom-color: rgba(255,255,255,.07);
+}
+
+body.layout-no-topbar .card .card-body .table tbody td {
+	color: #c9d1d9;
+	border-bottom-color: rgba(255,255,255,.04);
+}
+
+body.layout-no-topbar .card .card-body .table tbody tr:hover td {
+	background: rgba(255,255,255,.03);
+}
+
+body.layout-no-topbar .card .card-body .label-danger {
+	background: rgba(248,81,73,.15);
+	color: #f85149;
+	border-radius: 6px;
+	padding: 3px 8px;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+body.layout-no-topbar .card .card-body .label-success {
+	background: rgba(63,185,80,.15);
+	color: #3fb950;
+}
+
+/* DataTables dentro de .card legado */
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_length,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_info,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_paginate {
+	color: #8b949e !important;
+	font-size: 12px;
+}
+
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_filter input,
+body.layout-no-topbar .card .dataTables_wrapper .dataTables_length select {
+	background: #161b22 !important;
+	border: 1px solid rgba(255,255,255,.10) !important;
+	color: #c9d1d9 !important;
+	border-radius: 6px;
+}
+
+body.layout-no-topbar .card .dataTables_wrapper .paginate_button {
+	color: #8b949e !important;
+	border: 1px solid rgba(255,255,255,.08) !important;
+	background: transparent !important;
+}
+
+body.layout-no-topbar .card .dataTables_wrapper .paginate_button.current {
+	color: #e6edf3 !important;
+	background: #1a1e28 !important;
+	border-color: #1d9e75 !important;
+}

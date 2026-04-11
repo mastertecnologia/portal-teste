@@ -133,6 +133,8 @@ use Cake\Routing\Router;
     <?= $this->Html->css("/assets/node_modules/select2/dist/css/select2") ?>
     <?= $this->Html->script("/assets/node_modules/select2/dist/js/select2") ?>
 
+	<!-- Fix global de visibilidade para telas legadas (card, table, form) -->
+	<?= $this->Html->css('/dist/css/pages/config-admin-shell.css') ?>
 	<!-- Leitura dos componentes -->
 	<?= $this->fetch('meta'); ?>
 	<?= $this->fetch('css'); ?>
