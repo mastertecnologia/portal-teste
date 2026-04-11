@@ -142,7 +142,7 @@ class UsersController extends AppController {
 			->where(['role' => 1, 'idcliente IS NOT' => null])
 			->contain(['Clientes' => ['fields' => ['razaosocial', 'nome']]])
 			->order(['username' => 'ASC']);
-		$this->Abac->applyToQuery($qClients, 'Users', 'Users');
+		// ABAC desabilitado: tabela users não possui coluna idempresa
 		$this->set('clients', $qClients->toArray());
 	}
 
