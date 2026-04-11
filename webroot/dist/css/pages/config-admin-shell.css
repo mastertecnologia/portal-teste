@@ -120,166 +120,162 @@
 	color: #ecfdf5 !important;
 }
 
-/* Dois pilares: operadora vs portal cliente */
-.admin-pillars {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 16px;
-	margin-bottom: 22px;
-}
-
-@media (max-width: 991px) {
-	.admin-pillars {
-		grid-template-columns: 1fr;
-	}
-}
-
-.admin-pillar {
-	border-radius: var(--ap-card-radius);
-	padding: 16px 16px 18px;
-	border: 1px solid var(--ap-border);
-	position: relative;
-	overflow: hidden;
-}
-
-.admin-pillar::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 3px;
-	border-radius: var(--ap-card-radius) var(--ap-card-radius) 0 0;
-}
-
-.admin-pillar--operator {
-	background: linear-gradient(165deg, rgba(0, 192, 139, 0.08) 0%, var(--ap-bg2) 42%);
-}
-
-.admin-pillar--operator::before {
-	background: linear-gradient(90deg, var(--ap-teal), #34d399);
-}
-
-.admin-pillar--portal {
-	background: linear-gradient(165deg, var(--ap-indigo-dim) 0%, var(--ap-bg2) 42%);
-}
-
-.admin-pillar--portal::before {
-	background: linear-gradient(90deg, #6366f1, #818cf8);
-}
-
-.admin-pillar-head {
-	margin-bottom: 12px;
-}
-
-.admin-pillar-kicker {
-	font-size: 0.65rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	color: var(--ap-dim);
-	margin-bottom: 4px;
-}
-
-.admin-pillar-title {
-	font-size: 1rem;
-	font-weight: 700;
-	color: var(--ap-text);
-	margin: 0 0 6px;
-}
-
-.admin-pillar-desc {
-	font-size: 0.75rem;
-	color: var(--ap-muted);
-	line-height: 1.45;
-	margin: 0;
-}
-
-.admin-pillar-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 10px;
-}
-
-.admin-pillar--portal .admin-pillar-grid {
-	grid-template-columns: repeat(2, 1fr);
-}
-
-@media (max-width: 576px) {
-	.admin-pillar-grid {
-		grid-template-columns: 1fr;
-	}
-}
-
-.admin-pillar-card {
-	background: var(--ap-bg);
-	border: 1px solid var(--ap-border);
-	border-radius: 10px;
-	padding: 12px 12px 10px;
+/* ── Hero redesign ─────────────────────────────────── */
+.ap-hero-top {
 	display: flex;
-	flex-direction: column;
-	min-height: 108px;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
 }
 
-.admin-pillar-card:hover {
-	border-color: rgba(255, 255, 255, 0.14);
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+.ap-hero-ico {
+	color: var(--ap-teal);
+	margin-right: 8px;
+	font-size: 1.1rem;
 }
 
-.admin-pillar-card-label {
-	font-size: 0.625rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--ap-dim);
+.ap-hero-stats {
 	display: flex;
-	align-items: center;
 	gap: 6px;
-	margin-bottom: 6px;
-}
-
-.admin-pillar-card-label svg {
-	width: 14px;
-	height: 14px;
-	opacity: 0.85;
 	flex-shrink: 0;
 }
 
-.admin-pillar-card-value {
-	font-size: 1.25rem;
+.ap-stat {
+	background: var(--ap-bg2);
+	border: 1px solid var(--ap-border);
+	border-radius: 10px;
+	padding: 10px 18px;
+	text-align: center;
+	min-width: 80px;
+}
+
+.ap-stat-num {
+	display: block;
+	font-size: 1.4rem;
 	font-weight: 700;
 	color: var(--ap-text);
-	margin: 0 0 auto 0;
 	line-height: 1.2;
 }
 
-.admin-pillar-card-link {
+.ap-stat-label {
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--ap-dim);
+}
+
+/* ── Section icon ──────────────────────────────────── */
+.ap-sec-ico {
+	color: var(--ap-teal);
+	margin-right: 6px;
+	opacity: 0.85;
+}
+
+/* ── Grid variants ─────────────────────────────────── */
+.ap-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.ap-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 1200px) {
+	.ap-grid-4 { grid-template-columns: repeat(2, 1fr); }
+	.ap-grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 576px) {
+	.ap-grid-4, .ap-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Card accents ──────────────────────────────────── */
+.ap-card-accent--teal {
+	border-color: rgba(0, 192, 139, 0.25);
+	background: linear-gradient(155deg, rgba(0, 192, 139, 0.07) 0%, var(--ap-bg2) 50%);
+}
+
+.ap-card-accent--indigo {
+	border-color: rgba(99, 102, 241, 0.25);
+	background: linear-gradient(155deg, var(--ap-indigo-dim) 0%, var(--ap-bg2) 50%);
+}
+
+.ap-card-span2 {
+	grid-column: span 2;
+}
+
+@media (max-width: 576px) {
+	.ap-card-span2 { grid-column: span 1; }
+}
+
+/* ── Card value small ──────────────────────────────── */
+.admin-section-card-value small {
+	font-size: 0.7rem;
+	font-weight: 500;
+	color: var(--ap-muted);
+}
+
+/* ── Card actions ──────────────────────────────────── */
+.ap-card-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.ap-card-link-primary {
 	font-size: 0.75rem;
 	font-weight: 600;
-	margin-top: 10px;
-	text-decoration: none !important;
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.admin-pillar--operator .admin-pillar-card-link {
 	color: #6ee7c5 !important;
+	text-decoration: none !important;
+}
+.ap-card-link-primary:hover { color: #a7f3d0 !important; text-decoration: underline !important; }
+
+.ap-card-link-secondary {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: #93c5fd !important;
+	text-decoration: none !important;
+}
+.ap-card-link-secondary:hover { color: #bfdbfe !important; text-decoration: underline !important; }
+
+.ap-card-link-add {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--ap-muted) !important;
+	text-decoration: none !important;
+	background: var(--ap-bg);
+	border: 1px solid var(--ap-border);
+	border-radius: 6px;
+	padding: 2px 8px;
+	transition: color .15s, border-color .15s;
+}
+.ap-card-link-add:hover { color: var(--ap-text) !important; border-color: rgba(255,255,255,.18); }
+.ap-card-link-add .fas { font-size: 9px; margin-right: 2px; }
+
+/* ── Link group (RBAC sub-links) ───────────────────── */
+.ap-link-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 10px;
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--ap-border);
 }
 
-.admin-pillar--operator .admin-pillar-card-link:hover {
-	color: #a7f3d0 !important;
-	text-decoration: underline !important;
+.ap-link-group a {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: #93c5fd !important;
+	text-decoration: none !important;
 }
+.ap-link-group a:hover { color: #bfdbfe !important; text-decoration: underline !important; }
 
-.admin-pillar--portal .admin-pillar-card-link {
-	color: #a5b4fc !important;
-}
-
-.admin-pillar--portal .admin-pillar-card-link:hover {
-	color: #c7d2fe !important;
-	text-decoration: underline !important;
+/* ── Card label with FA icons ──────────────────────── */
+.admin-section-card-label .fas,
+.admin-section-card-label .far,
+.admin-section-card-label .fa {
+	width: 14px;
+	text-align: center;
+	font-size: 11px;
+	margin-right: 4px;
+	opacity: 0.8;
 }
 
 /* Seções horizontais abaixo dos pilares */
