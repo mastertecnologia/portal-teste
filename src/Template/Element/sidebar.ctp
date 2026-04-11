@@ -4,36 +4,80 @@
 
 	$ctrl = $this->request->getParam('controller');
 	$act = $this->request->getParam('action');
+
+	/* ── Active-state helpers ─────────────────────────────────────────── */
+	$roleNav = (int)($role ?? 1);
+	$sg = isset($sidebarMenuGates) && is_array($sidebarMenuGates) ? $sidebarMenuGates : [];
+
+	// Atendimento
 	$osOpen = ($ctrl === 'Ordensservico');
 	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
 	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
 	$ticketsOpen = ($ctrl === 'Tickets' || $ctrl === 'Servicedesk');
 	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
 	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
-	$relatoriosOpen = ($ctrl === 'Relatorios' || $ctrl === 'AdvancedReports');
-	$relatoriosPainelActive = ($ctrl === 'Relatorios');
-	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
-	$roleNav = (int)($role ?? 1);
-	$sg = isset($sidebarMenuGates) && is_array($sidebarMenuGates) ? $sidebarMenuGates : [];
+	$atendimentoOpen = $osOpen || $ticketsOpen;
+
+	// Comercial
 	$advModOpen = in_array($ctrl, ['AdvancedContracts', 'AdvancedInvoices', 'ContractTemplates', 'ContractManagement'], true);
 	$advMgmtAct = ($ctrl === 'ContractManagement');
 	$advTplAct = ($ctrl === 'ContractTemplates');
 	$advInvAct = ($ctrl === 'AdvancedInvoices');
+	$comercialCtrls = ['Orcamentos', 'Prefaturamento', 'Faturamento', 'Faturas', 'AdvancedContracts', 'AdvancedInvoices', 'ContractTemplates', 'ContractManagement'];
+	$comercialOpen = in_array($ctrl, $comercialCtrls, true);
+
+	// Relatórios
+	$relatoriosOpen = ($ctrl === 'Relatorios' || $ctrl === 'AdvancedReports');
+	$relatoriosPainelActive = ($ctrl === 'Relatorios');
+	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
+
+	// Financeiro
+	$finCtrls = ['Financeiro', 'FinanceiroConfig', 'FinanceiroRelatorios'];
+	$finOpen = in_array($ctrl, $finCtrls, true);
+	$finDashAct = ($ctrl === 'Financeiro' && $act === 'index');
+	$finRecAct = ($ctrl === 'Financeiro' && in_array($act, ['contasReceber', 'addReceita', 'editReceita'], true));
+	$finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true));
+	$finFluxoAct = ($ctrl === 'Financeiro' && $act === 'fluxoCaixa');
+	$finRecorAct = ($ctrl === 'Financeiro' && in_array($act, ['recorrentes', 'addRecorrente', 'editRecorrente'], true));
+	$finConcAct = ($ctrl === 'Financeiro' && $act === 'conciliacao');
+	$finDreAct = ($ctrl === 'Financeiro' && $act === 'dre');
+	$finRelAct = ($ctrl === 'FinanceiroRelatorios');
+	$finPlanoAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['planoContas', 'planoContasAdd', 'planoContasEdit'], true));
+	$finCcAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['centrosCusto', 'centroCustoAdd', 'centroCustoEdit'], true));
+
+	// Fiscal
+	$fiscalCtrls = ['Fiscal', 'FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalConfig', 'FiscalRelatorios'];
+	$fiscalOpen = in_array($ctrl, $fiscalCtrls, true);
+	$fiscalDashAct = ($ctrl === 'Fiscal' && $act === 'index');
+	$fiscalDfeRecAct = ($ctrl === 'Fiscal' && $act === 'dfeRecebidos');
+	$fiscalNotasAct = ($ctrl === 'FiscalNotas' && !in_array($act, ['controleSeries', 'inutilizarNumeracao', 'consultarChave', 'consultarCadastro'], true));
+	$fiscalEntradaAct = ($ctrl === 'FiscalNotasEntrada' && !in_array($act, ['controleSeries', 'inutilizarNumeracao', 'consultarChave', 'consultarCadastro'], true));
+	$fiscalInutActSaida = ($ctrl === 'FiscalNotas' && $act === 'inutilizarNumeracao');
+	$fiscalInutActEntrada = ($ctrl === 'FiscalNotasEntrada' && $act === 'inutilizarNumeracao');
+	$fiscalSeriesSaidaAct = ($ctrl === 'FiscalNotas' && $act === 'controleSeries');
+	$fiscalSeriesEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act === 'controleSeries');
+	$fiscalCertAct = ($ctrl === 'FiscalCertificados');
+	$fiscalCfgAct = ($ctrl === 'FiscalConfig');
+	$fiscalRelAct = ($ctrl === 'FiscalRelatorios');
+	$fiscalConsultaChaveAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarChave');
+	$fiscalConsultaCadastroAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarCadastro');
+	$fiscalContingenciaAct = ($ctrl === 'Fiscal' && $act === 'contingencia');
+	$fiscalImportarXmlAct = ($ctrl === 'Fiscal' && $act === 'importarXmlLote');
+
+	// User initials
 	$nameTrim = trim((string)($name ?? ''));
 	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
 	$u0 = $partsName[0] ?? '';
 	$u1 = $partsName[1] ?? '';
 	$userInitials = '';
-	if ($u0 !== '') {
-		$userInitials .= strtoupper($u0[0]);
-	}
-	if ($u1 !== '') {
-		$userInitials .= strtoupper($u1[0]);
-	} elseif (strlen($u0) > 1) {
-		$userInitials = strtoupper(substr($u0, 0, 2));
-	}
+	if ($u0 !== '') { $userInitials .= strtoupper($u0[0]); }
+	if ($u1 !== '') { $userInitials .= strtoupper($u1[0]); }
+	elseif (strlen($u0) > 1) { $userInitials = strtoupper(substr($u0, 0, 2)); }
 
 	$multiEmpresa = count($empresasOptSidebar ?? []) > 1;
+
+	/* ── Chevron SVG reutilizável ─────────────────────────────────────── */
+	$chevronSvg = '<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 ?>
 <aside class="left-sidebar skin-pgm pgm-sidebar-shell">
 
@@ -82,7 +126,7 @@
 		</div>
 	</div>
 
-	<!-- ── Busca de funções (Fase 6b: pesquisa.sidebar_search) ── -->
+	<!-- ── Busca de funções ───────────────────────────────── -->
 	<?php if (($sg['sidebar_functions_search'] ?? true)) : ?>
 	<div class="pgm-sb-search-block">
 		<div class="pgm-sidebar-functions-search" id="pgm-sidebar-functions-search">
@@ -99,77 +143,93 @@
 	</div>
 	<?php endif; ?>
 
-	<!-- ── Navegação ──────────────────────────────────────── -->
+	<!-- ══════════════════════════════════════════════════════
+	     NAVEGAÇÃO
+	     ══════════════════════════════════════════════════════ -->
 	<div class="scroll-sidebar ps ps--theme_default ps--active-y" data-ps-id="5c23612c-2012-1d1a-2b77-a7091df065d9">
 		<nav class="sidebar-nav">
 			<ul id="sidebarnav">
 
-				<li class="pgm-nav-section-label" aria-hidden="true"><span>Menu principal</span></li>
+				<!-- ─────────────── INÍCIO ─────────────── -->
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Início</span></li>
 
 				<?php if (($sg['dashboard'] ?? true)) : ?>
 				<li class="<?= $dashboard ?>">
 					<?= $this->Html->link(
-						'<i class="fa fa-columns"></i><span class="hide-menu"> Dashboard </span>',
+						'<i class="fa fa-columns"></i><span class="hide-menu"> Dashboard</span>',
 						['controller' => 'Users', 'action' => 'dashboard'],
 						['class' => 'waves-effect waves-dark', 'aria-label' => 'Dashboard', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
+
+				<!-- ─────────────── CADASTROS ─────────────── -->
 				<?php
-				// Indicadores avançados só na equipa (role 0); evita secção vazia no portal.
-				$sgRelSec = ($sg['relatorios_painel'] ?? true)
-					|| ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true));
-				if ($sgRelSec) :
+				$sgCadSec = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true);
+				if ($sgCadSec) :
 				?>
-				<li class="pgm-ng <?= h($relActive) ?> <?= $relatoriosOpen ? 'open' : '' ?>">
-					<div class="pgm-np <?= $relatoriosOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $relatoriosOpen ? 'true' : 'false' ?>">
-						<i class="fas fa-chart-pie ni-ico-fa"></i>
-						<span class="hide-menu">Relatórios</span>
-						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-					<ul class="pgm-nc list-unstyled">
-						<?php if (($sg['relatorios_painel'] ?? true)) : ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Painel e indicadores</span>',
-							['controller' => 'Relatorios', 'action' => 'index'],
-							['class' => 'pgm-nch ' . ($relatoriosPainelActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Relatórios e indicadores']
-						) ?></li>
-						<?php endif; ?>
-						<?php if ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true)) : ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Indicadores (módulo avançado)</span>',
-							'/modulo-avancado/indicadores',
-							['class' => 'pgm-nch ' . ($relatoriosIndicadoresAdvActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Indicadores módulo avançado']
-						) ?></li>
-						<?php endif; ?>
-					</ul>
-				</li>
-				<?php endif; ?>
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Cadastros</span></li>
+
 				<?php if (($sg['clientes'] ?? true)) : ?>
 				<li class="<?= $clientesActive ?>">
 					<?= $this->Html->link(
-						'<i class="fa fa-building"></i><span class="hide-menu"> Clientes </span>',
+						'<i class="fa fa-building"></i><span class="hide-menu"> Clientes</span>',
 						['controller' => 'Clientes', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'aria-label' => 'Clientes', 'escape' => false]
+						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
 				<?php if (($sg['produtos'] ?? true)) : ?>
 				<li class="<?= $produtosActive ?>">
 					<?= $this->Html->link(
-						'<i class="fa fa-boxes"></i><span class="hide-menu"> Produtos </span>',
+						'<i class="fa fa-boxes"></i><span class="hide-menu"> Produtos</span>',
 						['controller' => 'Produtos', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'aria-label' => 'Produtos', 'escape' => false]
+						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
+				<?php endif; ?>
 
-				<!-- Ordens de Serviço (collapsible); Fase 6c: listar vs nova -->
+				<!-- ─────────────── ATENDIMENTO ─────────────── -->
 				<?php
-				$sgOsSec = ($sg['ordensservico_list'] ?? true)
-					|| ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true));
+				$sgAtenSec = ($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true)
+					|| ($sg['ordensservico_list'] ?? true) || ($sg['ordensservico_nova'] ?? true)
+					|| ($sg['visitas_agenda'] ?? true);
+				if ($sgAtenSec) :
+				?>
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Atendimento</span></li>
+
+				<?php
+				$sgTkSec = ($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true);
+				if ($sgTkSec) :
+				?>
+				<li class="pgm-ng <?= h($ticketsActive) ?> <?= $ticketsOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $ticketsOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $ticketsOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-ticket-alt ni-ico-fa"></i>
+						<span class="hide-menu">Tickets</span>
+						<?= $chevronSvg ?>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<?php if (($sg['tickets_servicedesk'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Service Desk</span>',
+							['controller' => 'Servicedesk', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($ticketsServicedeskActive ? 'act' : ''), 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['tickets_historico'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Histórico de atendimentos</span>',
+							['controller' => 'Tickets', 'action' => 'historico'],
+							['class' => 'pgm-nch ' . ($ticketsHistoricoActive ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+					</ul>
+				</li>
+				<?php endif; ?>
+
+				<?php
+				$sgOsSec = ($sg['ordensservico_list'] ?? true) || ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true));
 				if ($sgOsSec) :
 				?>
 				<li class="pgm-ng <?= h($ordensActive) ?> <?= $osOpen ? 'open' : '' ?>">
@@ -179,9 +239,7 @@
 						<?php if ($osIndexActive) : ?>
 							<span class="pgm-os-badge hide-menu" id="badge-exec-os">—</span>
 						<?php endif; ?>
-						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
+						<?= $chevronSvg ?>
 					</div>
 					<ul class="pgm-nc list-unstyled">
 						<?php if (($sg['ordensservico_list'] ?? true)) : ?>
@@ -202,101 +260,125 @@
 				</li>
 				<?php endif; ?>
 
-				<?php
-				$sgTkSec = ($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true);
-				if ($sgTkSec) :
-				?>
-				<li class="pgm-ng <?= h($ticketsActive) ?> <?= $ticketsOpen ? 'open' : '' ?>">
-					<div class="pgm-np <?= $ticketsOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $ticketsOpen ? 'true' : 'false' ?>">
-						<i class="fas fa-ticket-alt ni-ico-fa"></i>
-						<span class="hide-menu">Tickets</span>
-						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-					<ul class="pgm-nc list-unstyled">
-						<?php if (($sg['tickets_servicedesk'] ?? true)) : ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Service Desk</span>',
-							['controller' => 'Servicedesk', 'action' => 'index'],
-							['class' => 'pgm-nch ' . ($ticketsServicedeskActive ? 'act' : ''), 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer', 'aria-label' => 'Service Desk']
-						) ?></li>
-						<?php endif; ?>
-						<?php if (($sg['tickets_historico'] ?? true)) : ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Histórico de atendimentos</span>',
-							['controller' => 'Tickets', 'action' => 'historico'],
-							['class' => 'pgm-nch ' . ($ticketsHistoricoActive ? 'act' : ''), 'escape' => false, 'aria-label' => 'Histórico de atendimentos']
-						) ?></li>
-						<?php endif; ?>
-					</ul>
-				</li>
-				<?php endif; ?>
-
-				<li class="pgm-nav-section-label" aria-hidden="true"><span>Operações</span></li>
-
 				<?php if (!empty($admin) && ($sg['queues'] ?? true)) : ?>
 				<li class="<?= $queuesAtendimentoActive ?>">
 					<?= $this->Html->link(
-						'<i class="fas fa-layer-group"></i><span class="hide-menu"> Filas / técnicos </span>',
+						'<i class="fas fa-layer-group"></i><span class="hide-menu"> Filas / técnicos</span>',
 						['controller' => 'Queues', 'action' => 'adminIndex'],
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
 
+				<?php if (($sg['visitas_agenda'] ?? true)) : ?>
+				<li class="<?= $visitasActive ?>">
+					<?= $this->Html->link(
+						'<i class="fa fa-calendar"></i><span class="hide-menu"> Agenda</span>',
+						['controller' => 'Visitas', 'action' => 'calendario'],
+						['class' => 'waves-effect waves-dark', 'escape' => false]
+					) ?>
+				</li>
+				<?php endif; ?>
+				<?php endif; ?>
+
+				<!-- ─────────────── COMERCIAL ─────────────── -->
+				<?php
+				$sgComSec = ($sg['orcamentos'] ?? true) || ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true)
+					|| ($sg['faturamento'] ?? true) || ($sg['faturas_locacao'] ?? true)
+					|| ($roleNav === 0 && (($sg['advanced_module_gestao'] ?? true) || ($sg['advanced_module_modelos'] ?? true) || ($sg['advanced_module_faturas'] ?? true)));
+				if ($sgComSec) :
+				?>
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Comercial</span></li>
+
 				<?php if (($sg['orcamentos'] ?? true)) : ?>
 				<li class="<?= $orcamentosActive ?>">
 					<?= $this->Html->link(
-						'<i class="fas fa-file-invoice-dollar"></i><span class="hide-menu"> Orçamentos </span>',
+						'<i class="fas fa-file-invoice-dollar"></i><span class="hide-menu"> Orçamentos</span>',
 						['controller' => 'Orcamentos', 'action' => 'index'],
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
+
 				<?php
-				// 6e: conferência é POST na mesma página (index); menu = fila; ver coluna conferências em index.ctp.
 				$sgPrefSec = ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true);
 				if ($sgPrefSec) :
 				?>
 				<li class="<?= $prefaturamentoActive ?>">
 					<?= $this->Html->link(
-						'<i class="fas fa-clipboard-check"></i><span class="hide-menu"> Pré-faturamento </span>',
+						'<i class="fas fa-clipboard-check"></i><span class="hide-menu"> Pré-faturamento</span>',
 						['controller' => 'Prefaturamento', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'escape' => false, 'aria-label' => 'Pré-faturamento']
+						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
+
 				<?php if (($sg['faturamento'] ?? true)) : ?>
 				<li class="<?= $faturamentoActive ?>">
 					<?= $this->Html->link(
-						'<i class="fas fa-file-alt"></i><span class="hide-menu"> Faturamento </span>',
+						'<i class="fas fa-file-alt"></i><span class="hide-menu"> Faturamento</span>',
 						['controller' => 'Faturamento', 'action' => 'index'],
 						['class' => 'waves-effect waves-dark', 'escape' => false]
 					) ?>
 				</li>
 				<?php endif; ?>
-				<?php if (($sg['financeiro'] ?? true)) :
-					$finCtrls = ['Financeiro', 'FinanceiroConfig', 'FinanceiroRelatorios'];
-					$finOpen = in_array($ctrl, $finCtrls, true);
-					$finDashAct = ($ctrl === 'Financeiro' && $act === 'index');
-					$finRecAct = ($ctrl === 'Financeiro' && $act === 'contasReceber');
-					$finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true));
-					$finFluxoAct = ($ctrl === 'Financeiro' && $act === 'fluxoCaixa');
-					$finRecorAct = ($ctrl === 'Financeiro' && in_array($act, ['recorrentes', 'addRecorrente', 'editRecorrente'], true));
-					$finConcAct = ($ctrl === 'Financeiro' && $act === 'conciliacao');
-					$finDreAct = ($ctrl === 'Financeiro' && $act === 'dre');
-					$finRelAct = ($ctrl === 'FinanceiroRelatorios');
-					$finPlanoAct = ($ctrl === 'FinanceiroConfig' && $act === 'planoContas');
-					$finCcAct = ($ctrl === 'FinanceiroConfig' && $act === 'centrosCusto');
+
+				<?php if (($sg['faturas_locacao'] ?? true)) : ?>
+				<li class="<?= $faturasActive ?>">
+					<?= $this->Html->link(
+						'<i class="fas fa-file-invoice"></i><span class="hide-menu"> Locação</span>',
+						['controller' => 'Faturas', 'action' => 'index'],
+						['class' => 'waves-effect waves-dark', 'escape' => false]
+					) ?>
+				</li>
+				<?php endif; ?>
+
+				<?php
+				$sgAdvSec = ($sg['advanced_module_gestao'] ?? true) || ($sg['advanced_module_modelos'] ?? true) || ($sg['advanced_module_faturas'] ?? true);
+				if ($roleNav === 0 && $sgAdvSec) :
 				?>
+				<li class="pgm-ng <?= h($advancedModuleActive) ?> <?= $advModOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $advModOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $advModOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-cubes ni-ico-fa"></i>
+						<span class="hide-menu">Contratos</span>
+						<?= $chevronSvg ?>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<?php if (($sg['advanced_module_gestao'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Gestão de contratos</span>',
+							'/modulo-contratos',
+							['class' => 'pgm-nch ' . ($advMgmtAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['advanced_module_modelos'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Modelos de contrato</span>',
+							'/contract-templates',
+							['class' => 'pgm-nch ' . ($advTplAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+						<?php if (($sg['advanced_module_faturas'] ?? true)) : ?>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Faturas</span>',
+							'/modulo-avancado/faturas',
+							['class' => 'pgm-nch ' . ($advInvAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<?php endif; ?>
+					</ul>
+				</li>
+				<?php endif; ?>
+				<?php endif; ?>
+
+				<!-- ─────────────── FINANCEIRO ─────────────── -->
+				<?php if (($sg['financeiro'] ?? true)) : ?>
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Financeiro</span></li>
+
 				<li class="pgm-ng <?= $financeiroActive ?> <?= $finOpen ? 'open' : '' ?>">
 					<div class="pgm-np <?= $finOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $finOpen ? 'true' : 'false' ?>">
-						<i class="fas fa-chart-line ni-ico-fa"></i>
+						<i class="fas fa-wallet ni-ico-fa"></i>
 						<span class="hide-menu">Financeiro</span>
-						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
+						<?= $chevronSvg ?>
 					</div>
 					<ul class="pgm-nc list-unstyled">
 						<li><?= $this->Html->link(
@@ -352,48 +434,33 @@
 					</ul>
 				</li>
 				<?php endif; ?>
+
+				<!-- ─────────────── FISCAL ─────────────── -->
 				<?php
 				$sgFiscalSec = ($sg['fiscal_modulo'] ?? true);
 				if ($roleNav === 0 && $sgFiscalSec) :
-					$fiscalCtrls = ['Fiscal', 'FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalConfig', 'FiscalRelatorios'];
-					$fiscalOpen = in_array($ctrl, $fiscalCtrls, true);
-					$fiscalDashAct = ($ctrl === 'Fiscal' && $act === 'index');
-					$fiscalDfeRecAct = ($ctrl === 'Fiscal' && $act === 'dfeRecebidos');
-					$fiscalNotasAct = ($ctrl === 'FiscalNotas' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao' && $act !== 'consultarChave' && $act !== 'consultarCadastro');
-					$fiscalEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act !== 'controleSeries' && $act !== 'inutilizarNumeracao' && $act !== 'consultarChave' && $act !== 'consultarCadastro');
-					$fiscalInutActSaida = ($ctrl === 'FiscalNotas' && $act === 'inutilizarNumeracao');
-					$fiscalInutActEntrada = ($ctrl === 'FiscalNotasEntrada' && $act === 'inutilizarNumeracao');
-					$fiscalSeriesSaidaAct = ($ctrl === 'FiscalNotas' && $act === 'controleSeries');
-					$fiscalSeriesEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act === 'controleSeries');
-					$fiscalCertAct = ($ctrl === 'FiscalCertificados');
-					$fiscalCfgAct = ($ctrl === 'FiscalConfig');
-					$fiscalRelAct = ($ctrl === 'FiscalRelatorios');
-					$fiscalConsultaChaveAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarChave');
-					$fiscalConsultaCadastroAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarCadastro');
-					$fiscalContingenciaAct = ($ctrl === 'Fiscal' && $act === 'contingencia');
-					$fiscalImportarXmlAct = ($ctrl === 'Fiscal' && $act === 'importarXmlLote');
 				?>
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Fiscal</span></li>
+
 				<li class="pgm-ng <?= h($fiscalModuleActive) ?> <?= $fiscalOpen ? 'open' : '' ?>">
 					<div class="pgm-np <?= $fiscalOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $fiscalOpen ? 'true' : 'false' ?>">
 						<i class="fas fa-receipt ni-ico-fa"></i>
-						<span class="hide-menu">Fiscal</span>
-						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
+						<span class="hide-menu">Módulo Fiscal</span>
+						<?= $chevronSvg ?>
 					</div>
 					<ul class="pgm-nc list-unstyled">
 						<?php if (($sg['fiscal_menu_dashboard'] ?? true)) : ?>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Painel</span>',
 							['controller' => 'Fiscal', 'action' => 'index'],
-							['class' => 'pgm-nch ' . ($fiscalDashAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Módulo fiscal — painel']
+							['class' => 'pgm-nch ' . ($fiscalDashAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_dfe_recebidos'] ?? true)) : ?>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>DF-e recebidos</span>',
 							['controller' => 'Fiscal', 'action' => 'dfeRecebidos'],
-							['class' => 'pgm-nch ' . ($fiscalDfeRecAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Fila de documentos Distribuição DF-e']
+							['class' => 'pgm-nch ' . ($fiscalDfeRecAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_notas'] ?? true)) : ?>
@@ -412,16 +479,16 @@
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_notas'] ?? true)) : ?>
 						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Inutilizar numeração (saída)</span>',
+							'<span class="pgm-ndot"></span><span>Inutilizar num. (saída)</span>',
 							['controller' => 'FiscalNotas', 'action' => 'inutilizarNumeracao'],
-							['class' => 'pgm-nch ' . ($fiscalInutActSaida ? 'act' : ''), 'escape' => false, 'aria-label' => 'Inutilização de numeração NF-e — permissão notas de saída']
+							['class' => 'pgm-nch ' . ($fiscalInutActSaida ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_notas_entrada'] ?? true)) : ?>
 						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Inutilizar numeração (entrada)</span>',
+							'<span class="pgm-ndot"></span><span>Inutilizar num. (entrada)</span>',
 							['controller' => 'FiscalNotasEntrada', 'action' => 'inutilizarNumeracao'],
-							['class' => 'pgm-nch ' . ($fiscalInutActEntrada ? 'act' : ''), 'escape' => false, 'aria-label' => 'Inutilização de numeração NF-e — permissão notas de entrada']
+							['class' => 'pgm-nch ' . ($fiscalInutActEntrada ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_series_saida'] ?? true)) : ?>
@@ -442,28 +509,28 @@
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Consultar chave</span>',
 							['controller' => 'FiscalNotas', 'action' => 'consultarChave'],
-							['class' => 'pgm-nch ' . ($fiscalConsultaChaveAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Consultar NF-e por chave de acesso']
+							['class' => 'pgm-nch ' . ($fiscalConsultaChaveAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_consulta_cadastro'] ?? true)) : ?>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Consulta cadastral</span>',
 							['controller' => 'FiscalNotas', 'action' => 'consultarCadastro'],
-							['class' => 'pgm-nch ' . ($fiscalConsultaCadastroAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Consultar cadastro CNPJ/IE na SEFAZ']
+							['class' => 'pgm-nch ' . ($fiscalConsultaCadastroAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_contingencia'] ?? true)) : ?>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Contingência</span>',
 							['controller' => 'Fiscal', 'action' => 'contingencia'],
-							['class' => 'pgm-nch ' . ($fiscalContingenciaAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Gerenciar modo de contingência SEFAZ']
+							['class' => 'pgm-nch ' . ($fiscalContingenciaAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_importar_xml'] ?? true)) : ?>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Importar XMLs</span>',
 							['controller' => 'Fiscal', 'action' => 'importarXmlLote'],
-							['class' => 'pgm-nch ' . ($fiscalImportarXmlAct ? 'act' : ''), 'escape' => false, 'aria-label' => 'Importar XMLs de NF-e em lote']
+							['class' => 'pgm-nch ' . ($fiscalImportarXmlAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_certificados'] ?? true)) : ?>
@@ -490,71 +557,53 @@
 					</ul>
 				</li>
 				<?php endif; ?>
+
+				<!-- ─────────────── FERRAMENTAS ─────────────── -->
 				<?php
-				$sgAdvSec = ($sg['advanced_module_gestao'] ?? true)
-					|| ($sg['advanced_module_modelos'] ?? true)
-					|| ($sg['advanced_module_faturas'] ?? true);
-				if ($roleNav === 0 && $sgAdvSec) :
+				$sgFerrSec = ($sg['bancosenhas'] ?? true) || ($sg['relatorios_painel'] ?? true)
+					|| ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true));
+				if ($sgFerrSec) :
 				?>
-				<li class="pgm-ng <?= h($advancedModuleActive) ?> <?= $advModOpen ? 'open' : '' ?>">
-					<div class="pgm-np <?= $advModOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $advModOpen ? 'true' : 'false' ?>">
-						<i class="fas fa-cubes ni-ico-fa"></i>
-						<span class="hide-menu">Módulo avançado</span>
-						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
+				<li class="pgm-nav-section-label" aria-hidden="true"><span>Ferramentas</span></li>
+
+				<?php if (($sg['bancosenhas'] ?? true)) : ?>
+				<li class="<?= $senhasActive ?>">
+					<?= $this->Html->link(
+						'<i class="fa fa-lock"></i><span class="hide-menu"> Banco de Senhas</span>',
+						['controller' => 'Bancosenhas', 'action' => 'index'],
+						['class' => 'waves-effect waves-dark', 'escape' => false]
+					) ?>
+				</li>
+				<?php endif; ?>
+
+				<?php
+				$sgRelSec = ($sg['relatorios_painel'] ?? true) || ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true));
+				if ($sgRelSec) :
+				?>
+				<li class="pgm-ng <?= h($relActive) ?> <?= $relatoriosOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $relatoriosOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $relatoriosOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-chart-pie ni-ico-fa"></i>
+						<span class="hide-menu">Relatórios</span>
+						<?= $chevronSvg ?>
 					</div>
 					<ul class="pgm-nc list-unstyled">
-						<?php if (($sg['advanced_module_gestao'] ?? true)) : ?>
+						<?php if (($sg['relatorios_painel'] ?? true)) : ?>
 						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Gestão de contratos</span>',
-							'/modulo-contratos',
-							['class' => 'pgm-nch ' . ($advMgmtAct ? 'act' : ''), 'escape' => false]
+							'<span class="pgm-ndot"></span><span>Painel e indicadores</span>',
+							['controller' => 'Relatorios', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($relatoriosPainelActive ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
-						<?php if (($sg['advanced_module_modelos'] ?? true)) : ?>
+						<?php if ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true)) : ?>
 						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Modelos de contrato</span>',
-							'/contract-templates',
-							['class' => 'pgm-nch ' . ($advTplAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
-						<?php endif; ?>
-						<?php if (($sg['advanced_module_faturas'] ?? true)) : ?>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Faturas</span>',
-							'/modulo-avancado/faturas',
-							['class' => 'pgm-nch ' . ($advInvAct ? 'act' : ''), 'escape' => false]
+							'<span class="pgm-ndot"></span><span>Indicadores avançados</span>',
+							'/modulo-avancado/indicadores',
+							['class' => 'pgm-nch ' . ($relatoriosIndicadoresAdvActive ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<?php endif; ?>
 					</ul>
 				</li>
 				<?php endif; ?>
-				<?php if (($sg['faturas_locacao'] ?? true)) : ?>
-				<li class="<?= $faturasActive ?>">
-					<?= $this->Html->link(
-						'<i class="fas fa-file-invoice"></i><span class="hide-menu"> Locação </span>',
-						['controller' => 'Faturas', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'escape' => false]
-					) ?>
-				</li>
-				<?php endif; ?>
-				<?php if (($sg['visitas_agenda'] ?? true)) : ?>
-				<li class="<?= $visitasActive ?>">
-					<?= $this->Html->link(
-						'<i class="fa fa-calendar"></i><span class="hide-menu"> Agenda </span>',
-						['controller' => 'Visitas', 'action' => 'calendario'],
-						['class' => 'waves-effect waves-dark', 'escape' => false]
-					) ?>
-				</li>
-				<?php endif; ?>
-				<?php if (($sg['bancosenhas'] ?? true)) : ?>
-				<li class="<?= $senhasActive ?>">
-					<?= $this->Html->link(
-						'<i class="fa fa-lock"></i><span class="hide-menu"> Banco de Senhas </span>',
-						['controller' => 'Bancosenhas', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'escape' => false]
-					) ?>
-				</li>
 				<?php endif; ?>
 
 				<li id="mini-logout" class="<?= $sidebar != 'mini-sidebar' ? 'd-none' : '' ?>">
@@ -573,7 +622,6 @@
 		<div class="pgm-sidebar-collapse-row">
 			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn" title="Recolher menu" aria-label="Recolher menu lateral"><i class="ti-angle-double-left"></i></a>
 		</div>
-		<!-- Ações rápidas (visíveis apenas sidebar expandida) -->
 		<div class="pgm-sf-actions hide-menu">
 			<?php if (($sg['footer_perfil_senha'] ?? true)) : ?>
 			<?= $this->Html->link(
@@ -607,7 +655,6 @@
 			) ?>
 		</div>
 
-		<!-- Avatar + nome + dropdown -->
 		<div class="user-profile">
 			<div class="user-pro-body">
 				<div class="dropdown dropup">
