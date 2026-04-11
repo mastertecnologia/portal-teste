@@ -130,12 +130,7 @@ class FiscalSefazClient {
         }
 
         $wsNs = 'http://www.portalfiscal.inf.br/nfe/wsdl/CadConsultaCadastro4';
-        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs, [
-            'nfe_cabec_msg' => true,
-            'cabec_namespace' => $wsNs,
-            'cabec_cuf' => (int)$cuf,
-            'cabec_versao_dados' => '4.00',
-        ]);
+        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs);
         $result['cadastro'] = $this->parseCadastroRetorno($result['xml_retorno'] ?? '');
         return $result;
     }
