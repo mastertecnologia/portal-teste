@@ -313,4 +313,69 @@ class FiscalConfigController extends AppController {
         }
         return $this->redirect(['action' => 'ncm']);
     }
+
+    /**
+     * Importa tabela NCM completa via BrasilAPI (upsert).
+     */
+    public function importarNcm() {
+        $this->request->allowMethod(['post']);
+
+        $apiUrl = 'https://brasilapi.com.br/api/ncm/v1';
+        $ch = curl_init($apiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 120,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $json = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($json === false || $httpCode !== 200) {
+            $this->Flash->error('Falha ao consultar BrasilAPI (HTTP ' . $httpCode . '). Verifique a conectividade do servidor.');
+            return $this->redirect(['action' => 'ncm']);
+        }
+
+        $items = json_decode($json, true);
+        if (!is_array($items) || empty($items)) {
+            $this->Flash->error('Resposta vazia ou inválida da BrasilAPI.');
+            return $this->redirect(['action' => 'ncm']);
+        }
+
+        $inserted = 0;
+        $updated = 0;
+
+        foreach ($items as $item) {
+            $codigo = preg_replace('/[^0-9]/', '', trim($item['codigo'] ?? ''));
+            $descricao = trim($item['descricao'] ?? '');
+            if ($codigo === '' || $descricao === '' || strlen($codigo) < 2 || strlen($codigo) > 10) {
+                continue;
+            }
+            if (mb_strlen($descricao) > 500) {
+                $descricao = mb_substr($descricao, 0, 497) . '...';
+            }
+
+            $existing = $this->FiscalNcm->find()->where(['codigo' => $codigo])->first();
+            if ($existing) {
+                if ($existing->descricao !== $descricao) {
+                    $existing->descricao = $descricao;
+                    $this->FiscalNcm->save($existing);
+                    $updated++;
+                }
+            } else {
+                $entity = $this->FiscalNcm->newEntity(['codigo' => $codigo, 'descricao' => $descricao]);
+                if ($this->FiscalNcm->save($entity)) {
+                    $inserted++;
+                }
+            }
+        }
+
+        $this->Flash->success(sprintf(
+            'Importação concluída: %d novos, %d atualizados (total da API: %d).',
+            $inserted, $updated, count($items)
+        ));
+        return $this->redirect(['action' => 'ncm']);
+    }
 }

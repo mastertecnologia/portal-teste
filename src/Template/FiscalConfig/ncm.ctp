@@ -10,6 +10,11 @@ $this->Paginator->options(['url' => ['?' => $this->request->getQueryParams()]]);
     <div class="fpm-topbar">
         <h1 class="fpm-h1"><i class="fas fa-list"></i>Tabela NCM</h1>
         <div class="fpm-actions">
+            <?= $this->Form->postLink(
+                '<i class="fas fa-download"></i> Importar tabela NCM',
+                ['action' => 'importarNcm'],
+                ['class' => 'btn btn-pgm btn-sm', 'escape' => false, 'confirm' => 'Importar/atualizar todos os NCMs da Receita Federal via BrasilAPI? Pode demorar alguns segundos.']
+            ) ?>
             <?= $this->Html->link('Novo NCM', ['action' => 'ncmAdd'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-sm']) ?>
             <?= $this->Html->link('Voltar', ['action' => 'index'], ['class' => 'btn btn-default btn-sm']) ?>
         </div>

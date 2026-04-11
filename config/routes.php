@@ -210,6 +210,7 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-config/ncm-add', ['controller' => 'FiscalConfig', 'action' => 'ncmAdd']);
     $routes->connect('/fiscal-config/ncm-edit/*', ['controller' => 'FiscalConfig', 'action' => 'ncmEdit'], ['pass' => ['id']]);
     $routes->connect('/fiscal-config/ncm-delete/*', ['controller' => 'FiscalConfig', 'action' => 'ncmDelete'], ['pass' => ['id']])->setMethods(['POST']);
+    $routes->connect('/fiscal-config/importar-ncm', ['controller' => 'FiscalConfig', 'action' => 'importarNcm'])->setMethods(['POST']);
     $routes->connect('/fiscal-relatorios', ['controller' => 'FiscalRelatorios', 'action' => 'index']);
     $routes->connect('/fiscal-relatorios/livro-saidas', ['controller' => 'FiscalRelatorios', 'action' => 'livroSaidas']);
     $routes->connect('/fiscal-relatorios/livro-entradas', ['controller' => 'FiscalRelatorios', 'action' => 'livroEntradas']);
