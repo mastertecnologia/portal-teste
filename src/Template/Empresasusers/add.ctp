@@ -1,5 +1,8 @@
-<?php $this->Breadcrumbs->add('Relações', ['controller' => 'empresasusers', 'action' => 'index'], ['class' => 'breadcrumb-item']); ?>
-<?php $this->Breadcrumbs->add('Adicionar relação', [], ['class' => 'breadcrumb-item active']); ?>
+<?php
+$this->Breadcrumbs->add('Relações', ['controller' => 'empresasusers', 'action' => 'index'], ['class' => 'breadcrumb-item']);
+$this->Breadcrumbs->add('Adicionar relação', [], ['class' => 'breadcrumb-item active']);
+$this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
+?>
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">

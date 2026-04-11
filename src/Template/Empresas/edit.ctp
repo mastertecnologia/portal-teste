@@ -1,6 +1,7 @@
-<?php 
-	$this->Breadcrumbs->add('Empresas', ['controller' => 'empresas', 'action' => 'index'], ['class' => 'breadcrumb-item']); 
-	$this->Breadcrumbs->add('Editar empresa', [], ['class' => 'breadcrumb-item active']);
+<?php
+$this->Breadcrumbs->add('Empresas', ['controller' => 'empresas', 'action' => 'index'], ['class' => 'breadcrumb-item']);
+$this->Breadcrumbs->add('Editar empresa', [], ['class' => 'breadcrumb-item active']);
+$this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
 ?>
 <div class="col-md-12">
 	<div class="card" >

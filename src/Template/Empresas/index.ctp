@@ -4,9 +4,7 @@ $this->Breadcrumbs->add('Início', ['controller' => 'Users', 'action' => 'dashbo
 $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' => 'index']);
 $this->Breadcrumbs->add('Empresas');
 
-$this->start('css');
-echo $this->Html->css('/dist/css/pages/config-admin-shell.css');
-$this->end();
+$this->Html->css('/dist/css/pages/config-admin-shell.css', ['block' => true]);
 ?>
 <div class="col-12 p-0 admin-panel-ambient">
 	<div class="admin-panel-wrap">

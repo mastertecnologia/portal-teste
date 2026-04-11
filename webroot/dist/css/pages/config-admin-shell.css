@@ -838,17 +838,23 @@
    ══════════════════════════════════════════════════════ */
 
 /* ── Tabs ──────────────────────────────────────────── */
-.ap-tabs {
-	list-style: none;
-	margin: 0 0 16px;
-	padding: 0;
-	display: flex;
+ul.ap-tabs {
+	list-style: none !important;
+	margin: 0 0 16px !important;
+	padding: 0 !important;
+	display: flex !important;
 	gap: 4px;
 	border-bottom: 1px solid var(--ap-border);
 }
 
-.ap-tab {
-	display: inline-flex;
+ul.ap-tabs li {
+	list-style: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+a.ap-tab {
+	display: inline-flex !important;
 	align-items: center;
 	gap: 6px;
 	padding: 8px 16px;
@@ -858,11 +864,12 @@
 	text-decoration: none !important;
 	border-bottom: 2px solid transparent;
 	transition: color .15s, border-color .15s;
+	cursor: pointer;
 }
 
-.ap-tab:hover { color: var(--ap-text) !important; }
-.ap-tab.active { color: var(--ap-text) !important; border-bottom-color: var(--ap-teal); }
-.ap-tab .fas, .ap-tab .far, .ap-tab .fa { font-size: 12px; opacity: .8; }
+a.ap-tab:hover { color: var(--ap-text) !important; }
+a.ap-tab.active { color: var(--ap-text) !important; border-bottom-color: var(--ap-teal); }
+a.ap-tab .fas, a.ap-tab .far, a.ap-tab .fa { font-size: 12px; opacity: .8; }
 
 /* ── Table wrap ────────────────────────────────────── */
 .ap-table-wrap {
