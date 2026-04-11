@@ -4,12 +4,16 @@ namespace App\Shell;
 use App\Utility\Fiscal\FiscalAudit;
 use App\Utility\Fiscal\FiscalCertificadoSecret;
 use App\Utility\Fiscal\FiscalDfeDocZipSummary;
+use App\Utility\Fiscal\FiscalImportacaoDfeEntrada;
+use App\Utility\Fiscal\FiscalNotificacaoService;
+use App\Utility\Fiscal\FiscalResNfeImportParser;
 use App\Utility\Fiscal\FiscalSefazClient;
 use App\Utility\Fiscal\FiscalSigner;
 use App\Utility\Fiscal\FiscalStorage;
 use Cake\Console\Shell;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 /**
  * Cron para consulta automática de Distribuição DF-e (NFeDistribuicaoDFe — AN).
@@ -156,6 +160,11 @@ class FiscalDfeCronShell extends Shell {
                     'ult_nsu' => $ultNsu,
                 ]);
 
+                // Auto-importação: criar notas de entrada a partir da fila pendente
+                if ($totalDocs > 0 && !empty($configFiscal->dfe_auto_import)) {
+                    $this->_autoImportarPendentes($idempresa, $configFiscal);
+                }
+
             } catch (\Exception $e) {
                 $this->err("  Erro: " . $e->getMessage());
                 Log::error("FiscalDfeCron empresa={$idempresa}: " . $e->getMessage());
@@ -163,6 +172,73 @@ class FiscalDfeCronShell extends Shell {
         }
 
         $this->out("DF-e Cron concluído.");
+    }
+
+    /**
+     * Auto-importa documentos pendentes na fila DF-e como notas de entrada autorizadas.
+     * Notifica a equipe no sino com a lista de notas criadas.
+     */
+    private function _autoImportarPendentes(int $idempresa, $configFiscal) {
+        $pendentes = $this->FiscalDfeRecebidos->find()
+            ->where([
+                'idempresa' => $idempresa,
+                'status' => 'pendente',
+            ])
+            ->order(['id' => 'ASC'])
+            ->toArray();
+
+        if (empty($pendentes)) {
+            return;
+        }
+
+        $this->out("  Auto-importação: " . count($pendentes) . " documento(s) pendentes...");
+
+        $notasImportadas = [];
+        $erros = 0;
+
+        foreach ($pendentes as $dfe) {
+            // Só importar XMLs com infNFe (NF-e completas, não resumos)
+            $xmlContent = (string)$dfe->xml_conteudo;
+            $parsed = FiscalResNfeImportParser::parse($xmlContent);
+            if ($parsed['dados'] === null) {
+                // Resumo sem corpo (resNFe) — ignorar na auto-importação
+                continue;
+            }
+
+            $result = FiscalImportacaoDfeEntrada::criarRascunhoDeDfe($idempresa, 1, (int)$dfe->id);
+
+            if (!empty($result['ok']) && !empty($result['nota_id'])) {
+                $notaId = (int)$result['nota_id'];
+
+                // Promover para autorizada
+                $Notas = TableRegistry::get('FiscalNotas');
+                $nota = $Notas->get($notaId);
+                $nota->status = 'autorizada';
+                if (!empty($parsed['dados']['protocolo_autorizacao'])) {
+                    $nota->protocolo_autorizacao = $parsed['dados']['protocolo_autorizacao'];
+                }
+                $Notas->save($nota);
+
+                $notasImportadas[] = [
+                    'nota_id' => $notaId,
+                    'chave_acesso' => $parsed['dados']['chave_acesso'] ?? '',
+                    'emit_nome' => $parsed['dados']['emit_xnome'] ?? 'Desconhecido',
+                    'valor' => $parsed['dados']['valor_total'] ?? 0,
+                ];
+
+                $this->out("    Nota #{$notaId} criada (autorizada) — " . ($parsed['dados']['emit_xnome'] ?? ''));
+            } else {
+                $erros++;
+            }
+        }
+
+        $this->out("  Auto-importação concluída: " . count($notasImportadas) . " notas, {$erros} erros/ignorados.");
+
+        // Notificar equipe no sino
+        if (!empty($notasImportadas) && !empty($configFiscal->dfe_auto_import_notificar)) {
+            FiscalNotificacaoService::notificarNotasRecebidas($idempresa, $notasImportadas);
+            $this->out("  Notificação enviada para equipe.");
+        }
     }
 
     public function main() {

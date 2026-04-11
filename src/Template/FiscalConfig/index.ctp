@@ -198,6 +198,25 @@ $ambOpts = [1 => 'Produção', 2 => 'Homologação'];
         </div>
     </div>
 
+    <div class="fpm-card">
+        <div class="fpm-card-title">Distribuição DF-e — Auto-importação</div>
+        <p class="fpm-muted">Quando ativo, o cron automático cria notas de entrada para cada NF-e recebida via Distribuição DF-e e notifica a equipe no sino.</p>
+        <div class="fpm-row">
+            <div class="fpm-field">
+                <label class="mb-0" style="font-weight:normal;">
+                    <?= $this->Form->checkbox('dfe_auto_import', ['value' => 1, 'hiddenField' => true]) ?>
+                    Criar notas de entrada automaticamente (como <strong>autorizada</strong>)
+                </label>
+            </div>
+            <div class="fpm-field">
+                <label class="mb-0" style="font-weight:normal;">
+                    <?= $this->Form->checkbox('dfe_auto_import_notificar', ['value' => 1, 'hiddenField' => true]) ?>
+                    Notificar equipe no sino quando houver novas notas
+                </label>
+            </div>
+        </div>
+    </div>
+
     <div class="fpm-footer">
         <button type="submit" class="btn btn-pgm btn-pgm-salvar"><i class="fas fa-save"></i> Salvar</button>
     </div>
