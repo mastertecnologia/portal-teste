@@ -7,6 +7,8 @@ use App\Utility\Fiscal\FiscalSigner;
 use App\Utility\Fiscal\FiscalStorage;
 use Cake\Core\Configure;
 use Cake\Event\Event;
+use Cake\Log\Log;
+use Psr\Http\Message\UploadedFileInterface;
 
 /**
  * Gestão de certificados digitais A1/A3.
@@ -57,24 +59,45 @@ class FiscalCertificadosController extends AppController {
         $certificado = $this->FiscalCertificados->newEntity();
 
         if ($this->request->is('post')) {
+            if ($idempresa === null || $idempresa === '') {
+                $this->Flash->error('Sessão sem empresa vinculada. Selecione a empresa e tente novamente.');
+                $this->set(compact('certificado'));
+                return;
+            }
+
             $data = $this->request->getData();
             $arquivo = $data['arquivo_upload'] ?? null;
 
-            if (!$arquivo || $arquivo->getError() !== UPLOAD_ERR_OK) {
+            if (!$arquivo instanceof UploadedFileInterface) {
                 $this->Flash->error('Selecione um arquivo de certificado (.pfx ou .p12).');
                 $this->set(compact('certificado'));
                 return;
             }
 
-            $ext = strtolower(pathinfo($arquivo->getClientFilename(), PATHINFO_EXTENSION));
-            if (!in_array($ext, ['pfx', 'p12'])) {
+            if ($arquivo->getError() !== UPLOAD_ERR_OK) {
+                $this->Flash->error('Selecione um arquivo de certificado (.pfx ou .p12).');
+                $this->set(compact('certificado'));
+                return;
+            }
+
+            $ext = strtolower(pathinfo((string)$arquivo->getClientFilename(), PATHINFO_EXTENSION));
+            if (!in_array($ext, ['pfx', 'p12'], true)) {
                 $this->Flash->error('Formato de arquivo inválido. Envie .pfx ou .p12.');
                 $this->set(compact('certificado'));
                 return;
             }
 
             $senha = $data['senha'] ?? '';
-            $pfxContent = file_get_contents($arquivo->getStream()->getMetadata('uri'));
+            $stream = $arquivo->getStream();
+            if ($stream->isSeekable()) {
+                $stream->rewind();
+            }
+            $pfxContent = (string)$stream->getContents();
+            if ($pfxContent === '') {
+                $this->Flash->error('O arquivo enviado está vazio ou não pôde ser lido. Tente outro .pfx/.p12.');
+                $this->set(compact('certificado'));
+                return;
+            }
 
             // Validar certificado
             try {
@@ -86,7 +109,7 @@ class FiscalCertificadosController extends AppController {
                     $this->set(compact('certificado'));
                     return;
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->Flash->error('Erro ao ler o certificado: ' . $e->getMessage());
                 $this->set(compact('certificado'));
                 return;
@@ -98,30 +121,57 @@ class FiscalCertificadosController extends AppController {
                 ['idempresa' => $idempresa]
             );
 
-            $certEntity = $this->FiscalCertificados->newEntity([
-                'idempresa' => $idempresa,
-                'nome' => $data['nome'] ?? $arquivo->getClientFilename(),
-                'tipo' => 'A1',
-                'arquivo_pfx' => $pfxContent,
-                'senha_hash' => FiscalCertificadoSecret::encryptForStorage($senha, $idempresa),
-                'serial_number' => $info['serial_number'] ?? null,
-                'cn_subject' => $info['subject'] ?? null,
-                'cnpj_certificado' => $info['cnpj'] ?? null,
-                'validade_inicio' => $info['valid_from'] ?? null,
-                'validade_fim' => $info['valid_to'] ?? null,
-                'ativo' => true,
-            ]);
+            try {
+                $senhaStored = FiscalCertificadoSecret::encryptForStorage($senha, $idempresa);
+                $serial = isset($info['serial_number']) ? (string)$info['serial_number'] : '';
+                if (strlen($serial) > 255) {
+                    $serial = substr($serial, 0, 255);
+                }
+                $cn = isset($info['subject']) ? (string)$info['subject'] : '';
+                if (strlen($cn) > 1000) {
+                    $cn = substr($cn, 0, 1000);
+                }
+                $cnpjCert = isset($info['cnpj']) ? (string)$info['cnpj'] : '';
+                if (strlen($cnpjCert) > 18) {
+                    $cnpjCert = substr($cnpjCert, 0, 18);
+                }
 
-            if ($this->FiscalCertificados->save($certEntity)) {
-                // Vincular à configuração fiscal
-                $config = $this->FiscalEmpresasConfig->getOrCreate($idempresa);
-                $config->certificado_id = $certEntity->id;
-                $this->FiscalEmpresasConfig->save($config);
+                $certEntity = $this->FiscalCertificados->newEntity([
+                    'idempresa' => $idempresa,
+                    'nome' => $data['nome'] ?? $arquivo->getClientFilename(),
+                    'tipo' => 'A1',
+                    'arquivo_pfx' => $pfxContent,
+                    'senha_hash' => $senhaStored,
+                    'serial_number' => $serial !== '' ? $serial : null,
+                    'cn_subject' => $cn !== '' ? $cn : null,
+                    'cnpj_certificado' => $cnpjCert !== '' ? $cnpjCert : null,
+                    'validade_inicio' => $info['valid_from'] ?? null,
+                    'validade_fim' => $info['valid_to'] ?? null,
+                    'ativo' => true,
+                ]);
 
-                $this->Flash->success('Certificado digital instalado com sucesso. Válido até: ' . ($info['valid_to'] ?? ''));
-                return $this->redirect(['action' => 'index']);
+                if ($this->FiscalCertificados->save($certEntity)) {
+                    $config = $this->FiscalEmpresasConfig->getOrCreate($idempresa);
+                    $config->certificado_id = $certEntity->id;
+                    if (!$this->FiscalEmpresasConfig->save($config)) {
+                        Log::warning(sprintf(
+                            'FiscalCertificados: certificado %s gravado mas falha ao vincular fiscal_empresas_config (empresa %s): %s',
+                            (string)$certEntity->id,
+                            (string)$idempresa,
+                            json_encode($config->getErrors(), JSON_UNESCAPED_UNICODE)
+                        ));
+                        $this->Flash->warning('Certificado gravado, mas não foi possível atualizar a configuração fiscal automaticamente. Ajuste em Configurações fiscais se necessário.');
+                    }
+
+                    $this->Flash->success('Certificado digital instalado com sucesso. Válido até: ' . ($info['valid_to'] ?? ''));
+                    return $this->redirect(['action' => 'index']);
+                }
+                Log::warning('FiscalCertificados::add validação ao salvar: ' . json_encode($certEntity->getErrors(), JSON_UNESCAPED_UNICODE));
+                $this->Flash->error('Erro ao salvar certificado. Confira o nome e tente novamente; detalhes foram registrados no log.');
+            } catch (\Throwable $e) {
+                Log::error('FiscalCertificados::add falha ao persistir: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+                $this->Flash->error('Não foi possível gravar o certificado. Verifique os logs do servidor ou contacte o suporte.');
             }
-            $this->Flash->error('Erro ao salvar certificado.');
         }
 
         $this->set(compact('certificado'));

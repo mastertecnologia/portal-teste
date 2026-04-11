@@ -95,7 +95,8 @@ class FiscalSigner {
         // Assinar
         $signature = '';
         if (!openssl_sign($canonicalSignedInfo, $signature, $this->privateKey, OPENSSL_ALGO_SHA1)) {
-            throw new \RuntimeException('Falha ao assinar o XML: ' . openssl_error_string());
+            $sslErr = openssl_error_string();
+            throw new \RuntimeException('Falha ao assinar o XML: ' . ($sslErr !== false ? $sslErr : '(sem detalhe OpenSSL)'));
         }
         $signatureValue = base64_encode($signature);
 
@@ -141,7 +142,7 @@ class FiscalSigner {
     public function getCertificateInfo() {
         $certData = openssl_x509_parse($this->publicKey);
         if (!$certData) {
-            return null;
+            return [];
         }
         return [
             'subject' => $certData['subject']['CN'] ?? '',
