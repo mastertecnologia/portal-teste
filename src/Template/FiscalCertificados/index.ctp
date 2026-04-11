@@ -37,9 +37,9 @@ echo $this->element('Fiscal/styles');
                     <td><?= $c->validade_fim ? h($c->validade_fim->format('d/m/Y')) : '—' ?></td>
                     <td><?= $c->ativo ? '<span class="fpm-badge ok">Sim</span>' : '<span class="fpm-badge muted">Não</span>' ?></td>
                     <td>
-                        <?= $this->Html->link('Ver', ['action' => 'view', $c->id], ['class' => 'btn btn-xs btn-pgm btn-pgm-situacao']) ?>
-                        <?= $this->Form->postLink($c->ativo ? 'Desativar' : 'Ativar', ['action' => 'toggleAtivo', $c->id], ['class' => 'btn btn-xs btn-default']) ?>
-                        <?= $this->Form->postLink('Excluir', ['action' => 'delete', $c->id], [
+                        <?= $this->Html->link('Ver', ['controller' => 'FiscalCertificados', 'action' => 'view', $c->id], ['class' => 'btn btn-xs btn-pgm btn-pgm-situacao']) ?>
+                        <?= $this->Form->postLink($c->ativo ? 'Desativar' : 'Ativar', ['controller' => 'FiscalCertificados', 'action' => 'toggleAtivo', $c->id], ['class' => 'btn btn-xs btn-default']) ?>
+                        <?= $this->Form->postLink('Excluir', ['controller' => 'FiscalCertificados', 'action' => 'delete', $c->id], [
                             'class' => 'btn btn-xs btn-outline-danger', 'confirm' => 'Excluir certificado?',
                         ]) ?>
                     </td>

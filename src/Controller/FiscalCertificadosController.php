@@ -169,6 +169,15 @@ class FiscalCertificadosController extends AppController {
      * Visualizar detalhes do certificado.
      */
     public function view($id = null) {
+        if ($id === null || $id === '') {
+            $id = $this->request->getQuery('id');
+        }
+        if ($id === null || $id === '' || !ctype_digit((string)$id)) {
+            $this->Flash->error('Certificado não encontrado.');
+            return $this->redirect(['action' => 'index']);
+        }
+        $id = (int)$id;
+
         $idempresa = $this->Auth->user('idempresa');
         $certificado = $this->FiscalCertificados->get($id);
 

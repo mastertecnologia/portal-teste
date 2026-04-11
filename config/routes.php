@@ -190,7 +190,9 @@ Router::scope('/', function ($routes) {
     $routes->connect('/fiscal-notas-entrada/consultar-cadastro', ['controller' => 'FiscalNotasEntrada', 'action' => 'consultarCadastro'])->setMethods(['GET', 'POST']);
     $routes->connect('/fiscal-certificados', ['controller' => 'FiscalCertificados', 'action' => 'index']);
     $routes->connect('/fiscal-certificados/add', ['controller' => 'FiscalCertificados', 'action' => 'add']);
+    // Path canónico: /view/123. Sem segmento, aceita ?id= (links antigos / reverse routing).
     $routes->connect('/fiscal-certificados/view/*', ['controller' => 'FiscalCertificados', 'action' => 'view'], ['pass' => ['id']]);
+    $routes->connect('/fiscal-certificados/view', ['controller' => 'FiscalCertificados', 'action' => 'view'])->setMethods(['GET']);
     $routes->connect('/fiscal-certificados/toggle-ativo/*', ['controller' => 'FiscalCertificados', 'action' => 'toggleAtivo'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/fiscal-certificados/delete/*', ['controller' => 'FiscalCertificados', 'action' => 'delete'], ['pass' => ['id']])->setMethods(['POST']);
     $routes->connect('/fiscal-config', ['controller' => 'FiscalConfig', 'action' => 'index']);
