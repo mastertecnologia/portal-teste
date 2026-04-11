@@ -82,6 +82,8 @@ class AppController extends Controller {
 				'alterarStatus',
 				// Fiscal: consultas SEFAZ (form POST sem _Token completo)
 				'consultarCadastro', 'consultarChave',
+				// Fiscal dashboard: fetch JSON (GET sem _Token)
+				'statusSefaz', 'distribuicaoDfe',
 				// Financeiro: ações AJAX (registrar recebimento/pagamento, cancelar)
 				'registrarRecebimento', 'registrarPagamento', 'cancelarDespesa', 'conciliarExtrato',
 				// Webhook Autentique (corpo JSON; sem _Token)

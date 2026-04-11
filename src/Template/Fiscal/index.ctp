@@ -144,9 +144,17 @@ if ((int)($dfeFc['vinculado'] ?? 0) > 0) {
     btn.addEventListener('click', function() {
         btn.disabled = true;
         fetch('<?= $this->Url->build(['controller' => 'Fiscal', 'action' => 'statusSefaz']) ?>', { credentials: 'same-origin' })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                alert((d.mensagem || d.message || (d.success ? 'Serviço respondeu.' : 'Falha')));
+            .then(function(r) {
+                return r.text().then(function(t) {
+                    try { return { ok: r.ok, d: JSON.parse(t) }; } catch (e) { return { ok: r.ok, d: null, raw: t, status: r.status }; }
+                });
+            })
+            .then(function(x) {
+                if (x.d) {
+                    alert((x.d.mensagem || x.d.message || (x.d.success ? 'Serviço respondeu.' : 'Falha')));
+                    return;
+                }
+                alert(x.raw ? ('HTTP ' + (x.status || '') + ': ' + x.raw.slice(0, 200)) : 'Resposta inválida do servidor.');
             })
             .catch(function() { alert('Erro de rede.'); })
             .finally(function() { btn.disabled = false; });
@@ -197,12 +205,16 @@ if ((int)($dfeFc['vinculado'] ?? 0) > 0) {
             }
             btnD.disabled = true;
             fetch(u, { credentials: 'same-origin' })
-                .then(function(r) { return r.json(); })
+                .then(function(r) {
+                    return r.text().then(function(t) {
+                        try { return JSON.parse(t); } catch (e) { throw new Error(t ? t.slice(0, 300) : ('HTTP ' + r.status)); }
+                    });
+                })
                 .then(function(d) {
                     fpmShowDfeResult(d);
                     if (d.success && d.dfe_ult_nsu_guardado) { savedNsu = d.dfe_ult_nsu_guardado; }
                 })
-                .catch(function() { alert('Erro de rede.'); })
+                .catch(function(e) { alert(e.message || 'Erro de rede.'); })
                 .finally(function() { btnD.disabled = false; });
         });
     }
@@ -212,13 +224,17 @@ if ((int)($dfeFc['vinculado'] ?? 0) > 0) {
             if (!confirm('Zerar o NSU DF-e guardado para esta empresa e consultar desde o início (0)?')) return;
             btnDr.disabled = true;
             fetch(baseDfe + '?reset_nsu=1', { credentials: 'same-origin' })
-                .then(function(r) { return r.json(); })
+                .then(function(r) {
+                    return r.text().then(function(t) {
+                        try { return JSON.parse(t); } catch (e) { throw new Error(t ? t.slice(0, 300) : ('HTTP ' + r.status)); }
+                    });
+                })
                 .then(function(d) {
                     fpmShowDfeResult(d);
                     if (d.success && d.dfe_ult_nsu_guardado) { savedNsu = d.dfe_ult_nsu_guardado; }
                     else if (d.success) { savedNsu = ''; }
                 })
-                .catch(function() { alert('Erro de rede.'); })
+                .catch(function(e) { alert(e.message || 'Erro de rede.'); })
                 .finally(function() { btnDr.disabled = false; });
         });
     }

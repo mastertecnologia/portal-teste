@@ -109,7 +109,7 @@ class FiscalSefazClient {
         }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<ConsCad xmlns="http://www.portalfiscal.inf.br/nfe" versao="2.00">'
+            . '<ConsCad xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
             . '<infCons>'
             . '<xServ>CONS-CAD</xServ>'
             . '<UF>' . strtoupper($uf) . '</UF>'
@@ -117,7 +117,25 @@ class FiscalSefazClient {
             . '</infCons>'
             . '</ConsCad>';
 
-        $result = $this->send('CadConsultaCadastro', $xml, 'consultaCadastro');
+        $url = $this->getServiceUrl('CadConsultaCadastro');
+        if (!$url) {
+            return [
+                'success' => false,
+                'xml_retorno' => '',
+                'codigo' => '999',
+                'mensagem' => "URL do serviço 'CadConsultaCadastro' não configurada.",
+                'protocolo' => null,
+                'cadastro' => [],
+            ];
+        }
+
+        $wsNs = 'http://www.portalfiscal.inf.br/nfe/wsdl/CadConsultaCadastro4';
+        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs, [
+            'nfe_cabec_msg' => true,
+            'cabec_namespace' => $wsNs,
+            'cabec_cuf' => (int)$cuf,
+            'cabec_versao_dados' => '4.00',
+        ]);
         $result['cadastro'] = $this->parseCadastroRetorno($result['xml_retorno'] ?? '');
         return $result;
     }
@@ -315,9 +333,10 @@ class FiscalSefazClient {
      * @param string $method Nome do método SOAP (ex.: nfeAutorizacaoLote)
      * @param string $servico Rótulo para logs (ex.: NfeAutorizacao ou NFeDistribuicaoDFe)
      * @param string|null $nfeDadosMsgNs xmlns do envelope nfeDadosMsg; null = padrão por método
+     * @param array        $soapExtras    nfe_cabec_msg, cabec_namespace, cabec_cuf, cabec_versao_dados (CadConsultaCadastro4)
      * @return array
      */
-    private function sendAtUrl($url, $xml, $method, $servico, $nfeDadosMsgNs = null) {
+    private function sendAtUrl($url, $xml, $method, $servico, $nfeDadosMsgNs = null, array $soapExtras = []) {
         $maxAttempts = 1 + max(0, min(3, $this->retryMax));
         $delayMs = (int)Configure::read('Fiscal.soap_retry_delay_ms', 500);
 
@@ -357,7 +376,24 @@ class FiscalSefazClient {
                         XSD_ANYXML
                     );
 
-                    $response = $client->__soapCall($method, [$params]);
+                    $inputHeaders = null;
+                    if (!empty($soapExtras['nfe_cabec_msg'])) {
+                        $hdrNs = (string)($soapExtras['cabec_namespace'] ?? $msgNs);
+                        $cUFcab = (int)($soapExtras['cabec_cuf'] ?? 35);
+                        $verDados = (string)($soapExtras['cabec_versao_dados'] ?? '4.00');
+                        $cabecXml = '<nfeCabecMsg xmlns="' . htmlspecialchars($hdrNs, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '">'
+                            . '<cUF>' . $cUFcab . '</cUF>'
+                            . '<versaoDados>' . htmlspecialchars($verDados, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</versaoDados>'
+                            . '</nfeCabecMsg>';
+                        $cabecVar = new \SoapVar($cabecXml, XSD_ANYXML);
+                        $inputHeaders = [
+                            new \SoapHeader($hdrNs, 'nfeCabecMsg', $cabecVar, false),
+                        ];
+                    }
+
+                    $response = $inputHeaders === null
+                        ? $client->__soapCall($method, [$params])
+                        : $client->__soapCall($method, [$params], null, $inputHeaders);
 
                     $xmlRetorno = '';
                     if ($response instanceof \stdClass) {
@@ -509,6 +545,13 @@ class FiscalSefazClient {
 
             return (string)$response->nfeDistDFeInteresseResult;
         }
+        if (isset($response->consultaCadastroResult)) {
+            if ($response->consultaCadastroResult instanceof \DOMDocument) {
+                return $response->consultaCadastroResult->saveXML();
+            }
+
+            return (string)$response->consultaCadastroResult;
+        }
 
         return json_encode($response);
     }
@@ -541,7 +584,7 @@ class FiscalSefazClient {
         }
 
         // Tenta extrair cStat e xMotivo de vários formatos de retorno
-        $tags = ['retEnviNFe', 'retConsSitNFe', 'retConsStatServ', 'retInutNFe', 'retEvento', 'retEnvEvento', 'retDistDFeInt'];
+        $tags = ['retEnviNFe', 'retConsSitNFe', 'retConsStatServ', 'retInutNFe', 'retEvento', 'retEnvEvento', 'retDistDFeInt', 'retConsCad'];
         foreach ($tags as $tag) {
             $nodes = $doc->getElementsByTagName($tag);
             if ($nodes->length > 0) {
@@ -553,6 +596,11 @@ class FiscalSefazClient {
 
                 // Códigos de sucesso: 100 (autorizado), 101 (cancelado), 102 (inutilizado), 107 (serviço OK), 135 (evento registrado), 128 (lote processado)
                 $result['success'] = in_array((int)$cStat, [100, 101, 102, 107, 128, 135]);
+
+                if ($tag === 'retConsCad') {
+                    // 111 = uma ocorrência; 112 = mais de uma (SVRS / manual consulta cadastro)
+                    $result['success'] = in_array((int)$cStat, [111, 112], true);
+                }
 
                 if ($tag === 'retDistDFeInt') {
                     // 137 = sem documento; 138 = documento localizado (656 = consumo indevido — tratar como falha operacional)
