@@ -68,19 +68,17 @@ class FiscalCertificadosController extends AppController {
             $data = $this->request->getData();
             $arquivo = $data['arquivo_upload'] ?? null;
 
-            if (!$arquivo instanceof UploadedFileInterface) {
-                $this->Flash->error('Selecione um arquivo de certificado (.pfx ou .p12).');
+            $resolved = $this->_resolveUploadedCertificado($arquivo);
+            if ($resolved['err'] !== null) {
+                $this->Flash->error($resolved['err']);
                 $this->set(compact('certificado'));
                 return;
             }
 
-            if ($arquivo->getError() !== UPLOAD_ERR_OK) {
-                $this->Flash->error('Selecione um arquivo de certificado (.pfx ou .p12).');
-                $this->set(compact('certificado'));
-                return;
-            }
+            $clientFilename = $resolved['name'];
+            $pfxContent = $resolved['binary'];
 
-            $ext = strtolower(pathinfo((string)$arquivo->getClientFilename(), PATHINFO_EXTENSION));
+            $ext = strtolower(pathinfo($clientFilename, PATHINFO_EXTENSION));
             if (!in_array($ext, ['pfx', 'p12'], true)) {
                 $this->Flash->error('Formato de arquivo inválido. Envie .pfx ou .p12.');
                 $this->set(compact('certificado'));
@@ -88,16 +86,6 @@ class FiscalCertificadosController extends AppController {
             }
 
             $senha = $data['senha'] ?? '';
-            $stream = $arquivo->getStream();
-            if ($stream->isSeekable()) {
-                $stream->rewind();
-            }
-            $pfxContent = (string)$stream->getContents();
-            if ($pfxContent === '') {
-                $this->Flash->error('O arquivo enviado está vazio ou não pôde ser lido. Tente outro .pfx/.p12.');
-                $this->set(compact('certificado'));
-                return;
-            }
 
             // Validar certificado
             try {
@@ -138,7 +126,7 @@ class FiscalCertificadosController extends AppController {
 
                 $certEntity = $this->FiscalCertificados->newEntity([
                     'idempresa' => $idempresa,
-                    'nome' => $data['nome'] ?? $arquivo->getClientFilename(),
+                    'nome' => $data['nome'] ?? ($clientFilename !== '' ? $clientFilename : 'Certificado A1'),
                     'tipo' => 'A1',
                     'arquivo_pfx' => $pfxContent,
                     'senha_hash' => $senhaStored,
@@ -247,5 +235,75 @@ class FiscalCertificadosController extends AppController {
             $this->Flash->success('Certificado excluído.');
         }
         return $this->redirect(['action' => 'index']);
+    }
+
+    /**
+     * CakePHP 3 entrega o campo file como array estilo $_FILES; ambientes PSR-7 usam UploadedFileInterface.
+     *
+     * @param mixed $arquivo
+     * @return array{err:?string,name:string,binary:string}
+     */
+    protected function _resolveUploadedCertificado($arquivo): array {
+        $missing = ['err' => 'Selecione um arquivo de certificado (.pfx ou .p12).', 'name' => '', 'binary' => ''];
+
+        if ($arquivo instanceof UploadedFileInterface) {
+            $code = $arquivo->getError();
+            $name = (string)($arquivo->getClientFilename() ?: '');
+            if ($code !== UPLOAD_ERR_OK) {
+                return ['err' => $this->_phpUploadErrorMessage($code), 'name' => $name, 'binary' => ''];
+            }
+            $stream = $arquivo->getStream();
+            if ($stream->isSeekable()) {
+                $stream->rewind();
+            }
+            $binary = (string)$stream->getContents();
+            if ($binary === '') {
+                return ['err' => 'O arquivo enviado está vazio ou não pôde ser lido. Tente outro .pfx/.p12.', 'name' => $name, 'binary' => ''];
+            }
+
+            return ['err' => null, 'name' => $name, 'binary' => $binary];
+        }
+
+        if (is_array($arquivo) && !empty($arquivo['tmp_name'])) {
+            $code = (int)($arquivo['error'] ?? UPLOAD_ERR_NO_FILE);
+            $name = (string)($arquivo['name'] ?? '');
+            if ($code !== UPLOAD_ERR_OK) {
+                return ['err' => $this->_phpUploadErrorMessage($code), 'name' => $name, 'binary' => ''];
+            }
+            $binary = @file_get_contents($arquivo['tmp_name']);
+            if ($binary === false) {
+                $binary = '';
+            }
+            if ($binary === '') {
+                return ['err' => 'O arquivo enviado está vazio ou não pôde ser lido. Tente outro .pfx/.p12.', 'name' => $name, 'binary' => ''];
+            }
+
+            return ['err' => null, 'name' => $name, 'binary' => $binary];
+        }
+
+        return $missing;
+    }
+
+    /**
+     * @param int $code Constante UPLOAD_ERR_*
+     */
+    protected function _phpUploadErrorMessage(int $code): string {
+        switch ($code) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'O arquivo excede o tamanho máximo permitido pelo servidor.';
+            case UPLOAD_ERR_PARTIAL:
+                return 'O upload foi interrompido (arquivo parcial). Tente novamente.';
+            case UPLOAD_ERR_NO_FILE:
+                return 'Selecione um arquivo de certificado (.pfx ou .p12).';
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return 'Servidor sem pasta temporária para upload. Contacte o suporte.';
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Não foi possível gravar o arquivo temporário no servidor.';
+            case UPLOAD_ERR_EXTENSION:
+                return 'Uma extensão PHP bloqueou o upload.';
+            default:
+                return 'Falha no envio do arquivo.';
+        }
     }
 }
