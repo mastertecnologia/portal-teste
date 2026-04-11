@@ -10,11 +10,9 @@ $urlMarkReadBase = rtrim($this->PgmPortalNotif->url(['controller' => 'PortalNoti
 $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']);
 ?>
 <style>
-.pgm-portal-notif-bell { position: relative; }
-.pgm-portal-notif-bell { display:inline-block; }
+.pgm-portal-notif-bell { position:relative;display:inline-block; }
 .pgm-sf-actions .pgm-portal-notif-bell .pgm-bell-btn {
-	width:28px;height:28px;border-radius:6px;border:none;background:transparent;font-size:15px;
-	padding:0;
+	width:28px;height:28px;border-radius:6px;border:none;background:transparent;font-size:15px;padding:0;
 }
 .pgm-portal-notif-bell .pgm-bell-btn {
 	display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;
@@ -28,11 +26,21 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 	font-size:10px;font-weight:700;line-height:18px;text-align:center;background:#f85149;color:#fff;
 	display:none;
 }
-.pgm-portal-notif-dropdown {
-	background:#161b22!important;border:1px solid #30363d!important;box-shadow:0 8px 24px rgba(0,0,0,.35);
-	padding:0!important;min-width:320px;max-height:420px;overflow-y:auto;
+/* Painel flutuante fixo — escapa overflow da sidebar */
+.pgm-notif-panel-fixed {
+	display:none;position:fixed;z-index:9999;
+	width:340px;max-height:420px;overflow-y:auto;
+	background:#161b22;border:1px solid #30363d;border-radius:10px;
+	box-shadow:0 8px 24px rgba(0,0,0,.45);
+	font-family:'DM Sans',sans-serif;
 }
-.pgm-portal-notif-dropdown .dropdown-header { color:#8b949e;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #21262d;padding:10px 14px; }
+.pgm-notif-panel-fixed.is-open { display:block; }
+.pgm-notif-panel-header {
+	display:flex;justify-content:space-between;align-items:center;
+	padding:10px 14px;border-bottom:1px solid #21262d;
+	color:#8b949e;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+}
+.pgm-portal-notif-mark-all { font-size:11px;color:#5cdbc0!important;cursor:pointer;text-decoration:none; }
 .pgm-portal-notif-item {
 	display:block;padding:10px 14px;border-bottom:1px solid #21262d;color:#c9d1d9!important;font-size:12px;text-decoration:none!important;
 }
@@ -40,31 +48,30 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 .pgm-portal-notif-item.unread { border-left:3px solid #1d9e75;padding-left:11px; }
 .pgm-portal-notif-item .pgm-nt-title { font-weight:600;color:#e6edf3;margin-bottom:2px; }
 .pgm-portal-notif-item .pgm-nt-meta { font-size:10px;color:#6e7681;margin-top:4px; }
-.pgm-portal-notif-footer { padding:8px 14px;border-top:1px solid #21262d;font-size:11px; }
+.pgm-portal-notif-footer { padding:8px 14px;border-top:1px solid #21262d;font-size:11px;text-align:center; }
 .pgm-portal-notif-footer a { color:#5cdbc0!important; }
-.pgm-portal-notif-mark-all { font-size:11px;color:#5cdbc0!important; }
-#pgmNotifListBody.pgm-notif-list-body { min-height:48px; }
 .pgm-notif-list-placeholder { font-size:12px; }
 .pgm-portal-notif-prefs-link { font-size:11px; }
 .pgm-nt-msg { opacity:.9; }
 </style>
-<div class="dropdown dropup pgm-portal-notif-bell" id="pgmPortalNotifBell">
-	<a href="#" class="pgm-bell-btn dropdown-toggle" data-toggle="dropdown" data-display="static" aria-expanded="false" title="Notificações" id="pgmBellToggle">
+<div class="pgm-portal-notif-bell" id="pgmPortalNotifBell">
+	<a href="#" class="pgm-bell-btn" title="Notificações" id="pgmBellToggle">
 		<i class="fas fa-bell"></i>
 		<span class="pgm-bell-badge" id="pgmBellBadge">0</span>
 	</a>
-	<div class="dropdown-menu dropdown-menu-right pgm-portal-notif-dropdown" aria-labelledby="pgmBellToggle">
-		<div class="dropdown-header d-flex justify-content-between align-items-center">
-			<span>Notificações</span>
-			<a href="#" id="pgmMarkAllRead" class="pgm-portal-notif-mark-all">Marcar todas</a>
-		</div>
-		<div id="pgmNotifListBody" class="pgm-notif-list-body">
-			<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>
-		</div>
-		<div class="pgm-portal-notif-footer text-center">
-			<small class="text-muted">Eventos do módulo de clientes e integrações</small><br>
-			<a href="<?= h($urlPrefs) ?>" class="pgm-portal-notif-prefs-link">Preferências de alertas</a>
-		</div>
+</div>
+<!-- Painel fixo (fora do sidebar overflow) -->
+<div class="pgm-notif-panel-fixed" id="pgmNotifPanel">
+	<div class="pgm-notif-panel-header">
+		<span>Notificações</span>
+		<a href="#" id="pgmMarkAllRead" class="pgm-portal-notif-mark-all">Marcar todas</a>
+	</div>
+	<div id="pgmNotifListBody" class="pgm-notif-list-body" style="min-height:48px;">
+		<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>
+	</div>
+	<div class="pgm-portal-notif-footer">
+		<small class="text-muted">Eventos do módulo de clientes e integrações</small><br>
+		<a href="<?= h($urlPrefs) ?>" class="pgm-portal-notif-prefs-link">Preferências de alertas</a>
 	</div>
 </div>
 <script>
@@ -152,10 +159,49 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 		});
 	}
 
+	function positionPanel() {
+		var $btn = $('#pgmBellToggle');
+		var $panel = $('#pgmNotifPanel');
+		if (!$btn.length) return;
+		var off = $btn.offset();
+		var btnH = $btn.outerHeight();
+		var panelH = $panel.outerHeight();
+		var left = off.left + $btn.outerWidth() + 8;
+		var top = off.top - panelH + btnH;
+		// Se sai da tela pelo topo, ajusta
+		if (top < 8) top = 8;
+		// Se sai da tela pela direita, abre à esquerda do botão
+		if (left + 340 > $(window).width()) {
+			left = off.left - 340 - 8;
+		}
+		$panel.css({ top: top + 'px', left: left + 'px' });
+	}
+
 	$(function() {
 		refreshCount();
 		setInterval(refreshCount, 60000);
-		$('#pgmPortalNotifBell').on('show.bs.dropdown', function() { loadList(); });
+
+		$('#pgmBellToggle').on('click', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			var $panel = $('#pgmNotifPanel');
+			var wasOpen = $panel.hasClass('is-open');
+			if (wasOpen) {
+				$panel.removeClass('is-open');
+			} else {
+				loadList();
+				$panel.addClass('is-open');
+				positionPanel();
+			}
+		});
+
+		$(document).on('click', function(e) {
+			var $panel = $('#pgmNotifPanel');
+			if (!$(e.target).closest('#pgmNotifPanel, #pgmBellToggle').length) {
+				$panel.removeClass('is-open');
+			}
+		});
+
 		$('#pgmMarkAllRead').on('click', function(e) {
 			e.preventDefault();
 			var tok = csrfToken();
