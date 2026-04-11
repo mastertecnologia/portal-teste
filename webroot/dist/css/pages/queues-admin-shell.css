@@ -562,3 +562,81 @@
 	cursor: not-allowed;
 	pointer-events: none;
 }
+
+/* ── Tabs (admin sub-pages) ── */
+.queues-tabs {
+	display: flex;
+	gap: 4px;
+	list-style: none;
+	margin: 0 0 16px;
+	padding: 4px;
+	background: var(--q-bg2);
+	border: 1px solid var(--q-border);
+	border-radius: 10px;
+}
+
+.queues-tabs li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.queues-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 16px;
+	border-radius: 8px;
+	font-size: 12.5px;
+	font-weight: 500;
+	color: var(--q-dim) !important;
+	text-decoration: none !important;
+	border: 1px solid transparent;
+	background: transparent;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+	cursor: pointer;
+}
+
+.queues-tab:hover {
+	color: var(--q-muted) !important;
+	background: var(--q-bg3);
+}
+
+.queues-tab.active {
+	color: var(--q-text) !important;
+	background: var(--q-bg3);
+	border-color: var(--q-border2);
+	font-weight: 600;
+}
+
+.queues-tab .fa, .queues-tab .fas, .queues-tab .far {
+	font-size: 12px;
+	opacity: 0.7;
+}
+
+.queues-tab.active .fa, .queues-tab.active .fas, .queues-tab.active .far {
+	opacity: 1;
+	color: var(--q-accent);
+}
+
+/* Token link */
+.queues-token-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 10px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #c4b5fd !important;
+	background: rgba(167, 139, 250, 0.1);
+	border: 1px solid rgba(167, 139, 250, 0.25);
+	text-decoration: none !important;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s;
+}
+
+.queues-token-link:hover {
+	background: rgba(167, 139, 250, 0.2);
+	color: #ddd6fe !important;
+}
