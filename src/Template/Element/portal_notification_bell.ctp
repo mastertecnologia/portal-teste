@@ -12,9 +12,9 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 <style>
 .pgm-portal-notif-bell { position: relative; }
 .pgm-portal-notif-bell .pgm-bell-btn {
-	display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;
+	display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;
 	border:1px solid #30363d;background:#161b22;color:#8b949e;text-decoration:none!important;
-	transition:color .15s,border-color .15s,background .15s;
+	transition:color .15s,border-color .15s,background .15s;font-size:14px;
 }
 .pgm-portal-notif-bell .pgm-bell-btn:hover { color:#5cdbc0;border-color:#1d9e75;background:#1c2230; }
 .pgm-portal-notif-bell.pgm-notif-api-error .pgm-bell-btn { border-color:#d29922!important; }

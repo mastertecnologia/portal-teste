@@ -100,11 +100,7 @@
 		) ?>
 	</div>
 
-	<?php if ($roleNav === 0 && ($sg['sidebar_notifications_bell'] ?? true)) : ?>
-	<div class="pgm-sidebar-top-tools">
-		<?= $this->element('portal_notification_bell') ?>
-	</div>
-	<?php endif; ?>
+	<?php /* Sino de notificações movido para o header da página (default.ctp) */ ?>
 
 	<!-- ── Workspace / Empresa ────────────────────────────── -->
 	<div class="pgm-sidebar-workspace">

@@ -167,10 +167,13 @@ use Cake\Routing\Router;
 		            <div class="col-md-5 align-self-center">
 						<h5 class="text-themecolor m-b-0"><?= $title ?></h5>
 					</div>
-					<!-- Breadcumbs -->
+					<!-- Breadcumbs + Sino -->
 		            <div class="col-md-7 align-self-center text-right">
-		                <div class="d-flex justify-content-end align-items-center">
+		                <div class="d-flex justify-content-end align-items-center" style="gap:12px;">
 							<?= $this->Breadcrumbs->render(); ?>
+							<?php if ($role == 0 && (!(isset($sidebarMenuGates) && is_array($sidebarMenuGates)) || ($sidebarMenuGates['sidebar_notifications_bell'] ?? true))): ?>
+							<?= $this->element('portal_notification_bell') ?>
+							<?php endif; ?>
 		                </div>
 		            </div>
 	        	</div>
