@@ -40,12 +40,14 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
 .cr-td-ellipsis { max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cr-td-vencido { color:#f85149; font-weight:600; }
 .cr-total-label { text-align:right; padding-right:12px; }
+.cr-conta-muted { font-size:11px; color:#7d8590; }
 </style>
 
 <div class="cr-root">
     <div class="cr-topbar">
         <div class="cr-h1"><i class="fas fa-hand-holding-usd cr-h1-ico"></i>Contas a Receber</div>
         <div>
+            <?= $this->Html->link('<i class="fas fa-plus"></i> Nova receita', ['action' => 'addReceita'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-sm', 'escape' => false]) ?>
             <?= $this->Html->link('<i class="fas fa-arrow-left"></i> Dashboard', ['action' => 'index'], ['class' => 'btn btn-default btn-sm', 'escape' => false]) ?>
         </div>
     </div>
@@ -86,6 +88,8 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
                     <th>Descrição</th>
                     <th>Cliente</th>
                     <th>Faturamento</th>
+                    <th>Plano de contas</th>
+                    <th>Centro de custo</th>
                     <th>Valor</th>
                     <th>Vencimento</th>
                     <th>Recebimento</th>
@@ -113,6 +117,17 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
                         <?= $this->Html->link(h($l->faturamento->numero ?? '#' . $l->faturamento->id), ['controller' => 'Faturamento', 'action' => 'view', $l->faturamento->id]) ?>
                         <?php else: ?>—<?php endif; ?>
                     </td>
+                    <td>
+                        <?php if (!empty($l->financeiro_plano_conta)): ?>
+                            <span class="cr-conta-muted"><?= h($l->financeiro_plano_conta->codigo) ?></span>
+                            <?= h($l->financeiro_plano_conta->descricao) ?>
+                        <?php else: ?>—<?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if (!empty($l->financeiro_centros_custo)): ?>
+                            <?= h($l->financeiro_centros_custo->codigo) ?> — <?= h($l->financeiro_centros_custo->descricao) ?>
+                        <?php else: ?>—<?php endif; ?>
+                    </td>
                     <td><strong>R$ <?= number_format($l->valor, 2, ',', '.') ?></strong></td>
                     <td<?= $vencido ? ' class="cr-td-vencido"' : '' ?>>
                         <?= $l->data_vencimento ? $l->data_vencimento->format('d/m/Y') : '—' ?>
@@ -125,9 +140,10 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
                             <span class="cr-badge <?= $stMap['class'] ?>"><?= $stMap['label'] ?></span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td style="white-space:nowrap;">
                         <?= $this->Html->link('<i class="fas fa-eye"></i>', ['action' => 'fatura', $l->id], ['class' => 'btn btn-default btn-xs m-r-5', 'escape' => false, 'title' => 'Detalhe da fatura']) ?>
                         <?php if ($l->status === 'aberto'): ?>
+                        <?= $this->Html->link('<i class="fas fa-edit"></i>', ['action' => 'editReceita', $l->id], ['class' => 'btn btn-default btn-xs m-r-5', 'escape' => false, 'title' => 'Editar']) ?>
                         <button type="button" class="btn btn-pgm btn-pgm-salvar btn-xs btn-receber"
                             data-id="<?= $l->id ?>" title="Registrar Recebimento">
                             <i class="fas fa-check"></i> Receber
@@ -139,7 +155,7 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
             </tbody>
             <tfoot>
                 <tr class="cr-total-row">
-                    <td colspan="4" class="cr-total-label">TOTAL</td>
+                    <td colspan="6" class="cr-total-label">TOTAL</td>
                     <td>R$ <?= number_format($total, 2, ',', '.') ?></td>
                     <td colspan="4"></td>
                 </tr>
@@ -153,7 +169,7 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
 $(function() {
     if ($.fn.DataTable) {
         $('#tabContasReceber').DataTable({
-            order: [[5, 'asc']],
+            order: [[7, 'asc']],
             pageLength: <?= $pagelength ?? 25 ?>,
             language: { url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json' }
         });

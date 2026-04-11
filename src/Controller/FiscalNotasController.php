@@ -455,7 +455,12 @@ class FiscalNotasController extends AppController {
                     ]);
                     $dups = $this->FiscalDuplicatas->gerarDeNota($notaComPag);
                     if (!empty($dups)) {
-                        $this->Flash->success(count($dups) . ' duplicata(s) financeira(s) gerada(s).');
+                        $nLanc = $this->FiscalDuplicatas->sincronizarFinanceiro($dups, $notaComPag);
+                        $msg = count($dups) . ' duplicata(s) financeira(s) gerada(s).';
+                        if ($nLanc > 0) {
+                            $msg .= ' ' . $nLanc . ' lançamento(s) financeiro(s) criado(s).';
+                        }
+                        $this->Flash->success($msg);
                     }
                 } catch (\Exception $e) {
                     \Cake\Log\Log::warning('FiscalDuplicatas auto: ' . $e->getMessage());

@@ -276,13 +276,80 @@
 					) ?>
 				</li>
 				<?php endif; ?>
-				<?php if (($sg['financeiro'] ?? true)) : ?>
-				<li class="<?= $financeiroActive ?>">
-					<?= $this->Html->link(
-						'<i class="fas fa-chart-line"></i><span class="hide-menu"> Financeiro </span>',
-						['controller' => 'Financeiro', 'action' => 'index'],
-						['class' => 'waves-effect waves-dark', 'escape' => false]
-					) ?>
+				<?php if (($sg['financeiro'] ?? true)) :
+					$finCtrls = ['Financeiro', 'FinanceiroConfig', 'FinanceiroRelatorios'];
+					$finOpen = in_array($ctrl, $finCtrls, true);
+					$finDashAct = ($ctrl === 'Financeiro' && $act === 'index');
+					$finRecAct = ($ctrl === 'Financeiro' && $act === 'contasReceber');
+					$finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true));
+					$finFluxoAct = ($ctrl === 'Financeiro' && $act === 'fluxoCaixa');
+					$finRecorAct = ($ctrl === 'Financeiro' && in_array($act, ['recorrentes', 'addRecorrente', 'editRecorrente'], true));
+					$finConcAct = ($ctrl === 'Financeiro' && $act === 'conciliacao');
+					$finDreAct = ($ctrl === 'Financeiro' && $act === 'dre');
+					$finRelAct = ($ctrl === 'FinanceiroRelatorios');
+					$finPlanoAct = ($ctrl === 'FinanceiroConfig' && $act === 'planoContas');
+					$finCcAct = ($ctrl === 'FinanceiroConfig' && $act === 'centrosCusto');
+				?>
+				<li class="pgm-ng <?= $financeiroActive ?> <?= $finOpen ? 'open' : '' ?>">
+					<div class="pgm-np <?= $finOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $finOpen ? 'true' : 'false' ?>">
+						<i class="fas fa-chart-line ni-ico-fa"></i>
+						<span class="hide-menu">Financeiro</span>
+						<svg class="pgm-chevron hide-menu" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+							<path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					</div>
+					<ul class="pgm-nc list-unstyled">
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Painel</span>',
+							['controller' => 'Financeiro', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($finDashAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Contas a receber</span>',
+							['controller' => 'Financeiro', 'action' => 'contasReceber'],
+							['class' => 'pgm-nch ' . ($finRecAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Contas a pagar</span>',
+							['controller' => 'Financeiro', 'action' => 'contasPagar'],
+							['class' => 'pgm-nch ' . ($finPagAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Fluxo de caixa</span>',
+							['controller' => 'Financeiro', 'action' => 'fluxoCaixa'],
+							['class' => 'pgm-nch ' . ($finFluxoAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Recorrentes</span>',
+							['controller' => 'Financeiro', 'action' => 'recorrentes'],
+							['class' => 'pgm-nch ' . ($finRecorAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Conciliação bancária</span>',
+							['controller' => 'Financeiro', 'action' => 'conciliacao'],
+							['class' => 'pgm-nch ' . ($finConcAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>DRE</span>',
+							['controller' => 'Financeiro', 'action' => 'dre'],
+							['class' => 'pgm-nch ' . ($finDreAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Relatórios</span>',
+							['controller' => 'FinanceiroRelatorios', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($finRelAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Plano de contas</span>',
+							['controller' => 'FinanceiroConfig', 'action' => 'planoContas'],
+							['class' => 'pgm-nch ' . ($finPlanoAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Centros de custo</span>',
+							['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'],
+							['class' => 'pgm-nch ' . ($finCcAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+					</ul>
 				</li>
 				<?php endif; ?>
 				<?php

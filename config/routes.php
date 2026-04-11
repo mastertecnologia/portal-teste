@@ -223,10 +223,43 @@ Router::scope('/', function ($routes) {
     $routes->connect('/financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/index', ['controller' => 'Financeiro', 'action' => 'index']);
     $routes->connect('/financeiro/contas-receber', ['controller' => 'Financeiro', 'action' => 'contasReceber']);
+    $routes->connect('/financeiro/add-receita', ['controller' => 'Financeiro', 'action' => 'addReceita']);
+    $routes->connect('/financeiro/edit-receita/:id', ['controller' => 'Financeiro', 'action' => 'editReceita'], ['pass' => ['id'], 'id' => '\d+']);
     $routes->connect('/financeiro/fatura/:id', ['controller' => 'Financeiro', 'action' => 'fatura'], ['pass' => ['id'], 'id' => '\d+']);
     $routes->connect('/financeiro/fatura/:id/exportar', ['controller' => 'Financeiro', 'action' => 'exportarFatura'], ['pass' => ['id'], 'id' => '\d+']);
     $routes->connect('/financeiro/fatura/:id/exportar-pdf', ['controller' => 'Financeiro', 'action' => 'exportarFaturaPdf'], ['pass' => ['id'], 'id' => '\d+']);
     $routes->connect('/financeiro/registrar-recebimento/*', ['controller' => 'Financeiro', 'action' => 'registrarRecebimento'])->setMethods(['POST']);
+    $routes->connect('/financeiro/fluxo-caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa']);
+    $routes->connect('/financeiro/recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes']);
+    $routes->connect('/financeiro/add-recorrente', ['controller' => 'Financeiro', 'action' => 'addRecorrente']);
+    $routes->connect('/financeiro/edit-recorrente/:id', ['controller' => 'Financeiro', 'action' => 'editRecorrente'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->connect('/financeiro/delete-recorrente/*', ['controller' => 'Financeiro', 'action' => 'deleteRecorrente'])->setMethods(['POST']);
+    $routes->connect('/financeiro/dre', ['controller' => 'Financeiro', 'action' => 'dre']);
+    $routes->connect('/financeiro/conciliacao', ['controller' => 'Financeiro', 'action' => 'conciliacao']);
+    $routes->connect('/financeiro/importar-extrato', ['controller' => 'Financeiro', 'action' => 'importarExtrato'])->setMethods(['POST']);
+    $routes->connect('/financeiro/conciliar-extrato/*', ['controller' => 'Financeiro', 'action' => 'conciliarExtrato'])->setMethods(['POST']);
+    $routes->connect('/financeiro/contas-pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar']);
+    $routes->connect('/financeiro/add-despesa', ['controller' => 'Financeiro', 'action' => 'addDespesa']);
+    $routes->connect('/financeiro/edit-despesa/:id', ['controller' => 'Financeiro', 'action' => 'editDespesa'], ['pass' => ['id'], 'id' => '\d+']);
+    $routes->connect('/financeiro/registrar-pagamento/*', ['controller' => 'Financeiro', 'action' => 'registrarPagamento'])->setMethods(['POST']);
+    $routes->connect('/financeiro/cancelar-despesa/*', ['controller' => 'Financeiro', 'action' => 'cancelarDespesa'])->setMethods(['POST']);
+    // Configuração financeira (Plano de Contas + Centros de Custo)
+    // Relatórios financeiros
+    $routes->connect('/financeiro-relatorios', ['controller' => 'FinanceiroRelatorios', 'action' => 'index']);
+    $routes->connect('/financeiro-relatorios/aging', ['controller' => 'FinanceiroRelatorios', 'action' => 'aging']);
+    $routes->connect('/financeiro-relatorios/inadimplencia', ['controller' => 'FinanceiroRelatorios', 'action' => 'inadimplencia']);
+    $routes->connect('/financeiro-relatorios/por-centro-custo', ['controller' => 'FinanceiroRelatorios', 'action' => 'porCentroCusto']);
+    $routes->connect('/financeiro-relatorios/exportar-aging-excel', ['controller' => 'FinanceiroRelatorios', 'action' => 'exportarAgingExcel']);
+    $routes->connect('/financeiro-relatorios/exportar-inadimplencia-excel', ['controller' => 'FinanceiroRelatorios', 'action' => 'exportarInadimplenciaExcel']);
+    $routes->connect('/financeiro-relatorios/exportar-centro-custo-excel', ['controller' => 'FinanceiroRelatorios', 'action' => 'exportarCentroCustoExcel']);
+    $routes->connect('/financeiro-config/plano-contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas']);
+    $routes->connect('/financeiro-config/plano-contas-add', ['controller' => 'FinanceiroConfig', 'action' => 'planoContasAdd']);
+    $routes->connect('/financeiro-config/plano-contas-edit/*', ['controller' => 'FinanceiroConfig', 'action' => 'planoContasEdit']);
+    $routes->connect('/financeiro-config/plano-contas-delete/*', ['controller' => 'FinanceiroConfig', 'action' => 'planoContasDelete'])->setMethods(['POST']);
+    $routes->connect('/financeiro-config/centros-custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto']);
+    $routes->connect('/financeiro-config/centro-custo-add', ['controller' => 'FinanceiroConfig', 'action' => 'centroCustoAdd']);
+    $routes->connect('/financeiro-config/centro-custo-edit/*', ['controller' => 'FinanceiroConfig', 'action' => 'centroCustoEdit']);
+    $routes->connect('/financeiro-config/centro-custo-delete/*', ['controller' => 'FinanceiroConfig', 'action' => 'centroCustoDelete'])->setMethods(['POST']);
     // Relatórios e Indicadores (ERP)
     $routes->connect('/relatorios', ['controller' => 'Relatorios', 'action' => 'index']);
     $routes->connect('/relatorios/index', ['controller' => 'Relatorios', 'action' => 'index']);

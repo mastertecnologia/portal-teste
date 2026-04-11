@@ -2,6 +2,7 @@
 namespace App\Model\Table;
 
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 class FiscalDuplicatasTable extends Table {
@@ -17,6 +18,9 @@ class FiscalDuplicatasTable extends Table {
         ]);
         $this->belongsTo('Clientes', [
             'foreignKey' => 'idcliente',
+        ]);
+        $this->belongsTo('FinanceiroLancamentos', [
+            'foreignKey' => 'financeiro_lancamento_id',
         ]);
     }
 
@@ -82,5 +86,58 @@ class FiscalDuplicatasTable extends Table {
         }
 
         return $criadas;
+    }
+
+    /**
+     * Gera lançamentos financeiros a partir das duplicatas de uma nota.
+     * Vincula cada duplicata ao lançamento criado via financeiro_lancamento_id.
+     *
+     * @param array<\App\Model\Entity\FiscalDuplicata> $duplicatas
+     * @param \App\Model\Entity\FiscalNota $nota
+     * @return int Quantidade de lançamentos criados
+     */
+    public function sincronizarFinanceiro(array $duplicatas, $nota): int {
+        $lancTable = TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
+        $count = 0;
+
+        foreach ($duplicatas as $dup) {
+            if (!empty($dup->financeiro_lancamento_id)) {
+                continue;
+            }
+
+            $tipoFin = ($dup->tipo === 'receber') ? 'receita' : 'despesa';
+            $statusFin = 'aberto';
+            $dataReceb = null;
+            if ($dup->status === 'paga') {
+                $statusFin = ($tipoFin === 'receita') ? 'recebido' : 'pago';
+                $dataReceb = $dup->data_pagamento ?? date('Y-m-d');
+            }
+
+            $descricao = 'NF ' . ($nota->numero ?? $nota->id);
+            if (!empty($dup->numero_duplicata)) {
+                $descricao .= ' — Dup ' . $dup->numero_duplicata;
+            }
+
+            $lanc = $lancTable->newEntity([
+                'idempresa'       => $dup->idempresa,
+                'idcliente'       => $dup->idcliente,
+                'tipo'            => $tipoFin,
+                'descricao'       => $descricao,
+                'valor'           => (float)$dup->valor,
+                'data_vencimento' => $dup->data_vencimento,
+                'data_lancamento' => $nota->data_emissao ? $nota->data_emissao->format('Y-m-d') : date('Y-m-d'),
+                'data_recebimento' => $dataReceb,
+                'status'          => $statusFin,
+                'observacoes'     => 'Gerado automaticamente a partir da nota fiscal #' . $nota->id,
+            ]);
+
+            if ($lancTable->save($lanc)) {
+                $dup->financeiro_lancamento_id = $lanc->id;
+                $this->save($dup);
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }

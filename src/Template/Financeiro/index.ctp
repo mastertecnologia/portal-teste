@@ -51,8 +51,9 @@ $graficoDespesa = array_column($grafico, 'despesa');
     <div class="fin-topbar">
         <div class="fin-h1"><i class="fas fa-chart-line fin-h1-ico"></i>Financeiro</div>
         <div class="fin-topbar-actions">
-            <?= $this->Html->link('<i class="fas fa-list"></i> Contas a Receber', ['action' => 'contasReceber'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-sm', 'escape' => false]) ?>
-            <?= $this->Html->link('<i class="fas fa-plus"></i> Novo Lançamento', ['controller' => 'Faturamento', 'action' => 'add'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-sm', 'escape' => false]) ?>
+            <?= $this->Html->link('<i class="fas fa-hand-holding-usd"></i> Contas a Receber', ['action' => 'contasReceber'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-sm', 'escape' => false]) ?>
+            <?= $this->Html->link('<i class="fas fa-file-invoice-dollar"></i> Contas a Pagar', ['action' => 'contasPagar'], ['class' => 'btn btn-pgm btn-pgm-situacao btn-sm', 'escape' => false]) ?>
+            <?= $this->Html->link('<i class="fas fa-plus"></i> Nova Despesa', ['action' => 'addDespesa'], ['class' => 'btn btn-pgm btn-pgm-salvar btn-sm', 'escape' => false]) ?>
         </div>
     </div>
 
@@ -77,6 +78,14 @@ $graficoDespesa = array_column($grafico, 'despesa');
         <div class="fin-kpi">
             <div class="fin-kpi-label">Total Despesas</div>
             <div class="fin-kpi-val"><?= $kpi['total_despesas'] > 0 ? 'R$ ' . number_format($kpi['total_despesas'], 2, ',', '.') : '—' ?></div>
+        </div>
+        <div class="fin-kpi">
+            <div class="fin-kpi-label">A Pagar</div>
+            <div class="fin-kpi-val orange">R$ <?= number_format($kpi['a_pagar'], 2, ',', '.') ?></div>
+        </div>
+        <div class="fin-kpi">
+            <div class="fin-kpi-label">Pago (mês)</div>
+            <div class="fin-kpi-val">R$ <?= number_format($kpi['pago_mes'], 2, ',', '.') ?></div>
         </div>
     </div>
 

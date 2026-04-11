@@ -27,6 +27,9 @@ class FinanceiroController extends AppController {
 		$this->loadModel('Clientes');
 		$this->loadModel('Faturamento');
 		$this->loadModel('FinanceiroLancamentoAnexos');
+		$this->loadModel('FinanceiroPlanoContas');
+		$this->loadModel('FinanceiroCentrosCusto');
+		$this->loadModel('FinanceiroRecorrentes');
 		$this->loadModel('Atividades');
 	}
 
@@ -60,6 +63,7 @@ class FinanceiroController extends AppController {
 			'a_pagar'         => 0,
 			'vencidos'        => 0,
 			'recebido_mes'    => 0,
+			'pago_mes'        => 0,
 		];
 		$hoje = date('Y-m-d');
 		$mesAtual = date('Y-m');
@@ -79,7 +83,13 @@ class FinanceiroController extends AppController {
 				}
 			} else {
 				$kpi['total_despesas'] += $l->valor;
-				if ($l->status === 'aberto') $kpi['a_pagar'] += $l->valor;
+				if ($l->status === 'aberto') {
+					$kpi['a_pagar'] += $l->valor;
+				}
+				if ($l->status === 'pago' && $l->data_recebimento
+					&& $l->data_recebimento->format('Y-m') === $mesAtual) {
+					$kpi['pago_mes'] += $l->valor;
+				}
 			}
 		}
 
@@ -107,6 +117,476 @@ class FinanceiroController extends AppController {
 		$this->set('hideLayoutPageTitle', true);
 	}
 
+	/* ── Fluxo de Caixa ───────────────────────────────────────────────── */
+	public function fluxoCaixa() {
+		$idempresa = $this->Auth->user('idempresa');
+		$meses = (int)($this->request->getQuery('meses') ?: 6);
+		if ($meses < 1) $meses = 6;
+		if ($meses > 24) $meses = 24;
+
+		$lancamentos = $this->FinanceiroLancamentos->find('all')
+			->where(['FinanceiroLancamentos.idempresa' => $idempresa])
+			->order(['FinanceiroLancamentos.data_vencimento' => 'ASC'])
+			->toArray();
+
+		// Build month buckets: past $meses/2 + future $meses/2
+		$passado = (int)floor($meses / 2);
+		$futuro = $meses - $passado;
+		$buckets = [];
+		for ($i = -$passado; $i < $futuro; $i++) {
+			$m = date('Y-m', strtotime("$i months"));
+			$buckets[$m] = [
+				'receita_prevista' => 0,
+				'despesa_prevista' => 0,
+				'receita_realizada' => 0,
+				'despesa_realizada' => 0,
+			];
+		}
+
+		foreach ($lancamentos as $l) {
+			// Previsto: baseado em data_vencimento
+			$mesVenc = $l->data_vencimento ? $l->data_vencimento->format('Y-m') : null;
+			if ($mesVenc && isset($buckets[$mesVenc])) {
+				if ($l->tipo === 'receita') {
+					$buckets[$mesVenc]['receita_prevista'] += (float)$l->valor;
+				} else {
+					$buckets[$mesVenc]['despesa_prevista'] += (float)$l->valor;
+				}
+			}
+
+			// Realizado: baseado em data_recebimento (para recebidos/pagos)
+			$mesReal = $l->data_recebimento ? $l->data_recebimento->format('Y-m') : null;
+			if ($mesReal && isset($buckets[$mesReal]) && in_array($l->status, ['recebido', 'pago'], true)) {
+				if ($l->tipo === 'receita') {
+					$buckets[$mesReal]['receita_realizada'] += (float)$l->valor;
+				} else {
+					$buckets[$mesReal]['despesa_realizada'] += (float)$l->valor;
+				}
+			}
+		}
+
+		// Saldo acumulado
+		$saldo = 0;
+		$saldoAcumulado = [];
+		foreach ($buckets as $mes => $b) {
+			$saldo += ($b['receita_realizada'] - $b['despesa_realizada']);
+			$saldoAcumulado[$mes] = $saldo;
+		}
+
+		$this->set(compact('buckets', 'saldoAcumulado', 'meses'));
+		$this->set('title', 'Fluxo de Caixa');
+		$this->set('hideLayoutPageTitle', true);
+	}
+
+	/* ── Lançamentos recorrentes ──────────────────────────────────────── */
+	public function recorrentes() {
+		$idempresa = (int)$this->Auth->user('idempresa');
+
+		$templates = $this->FinanceiroRecorrentes->find()
+			->where(['FinanceiroRecorrentes.idempresa' => $idempresa])
+			->contain([
+				'Clientes' => ['fields' => ['id', 'razaosocial', 'tipo', 'nome']],
+				'FinanceiroPlanoContas' => ['fields' => ['id', 'codigo', 'descricao']],
+				'FinanceiroCentrosCusto' => ['fields' => ['id', 'codigo', 'descricao']],
+			])
+			->order(['FinanceiroRecorrentes.ativo' => 'DESC', 'FinanceiroRecorrentes.descricao' => 'ASC'])
+			->toArray();
+
+		$this->set(compact('templates'));
+		$this->set('title', 'Lançamentos Recorrentes');
+	}
+
+	public function addRecorrente() {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$recorrente = $this->FinanceiroRecorrentes->newEntity();
+
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$data['idempresa'] = $idempresa;
+			$recorrente = $this->FinanceiroRecorrentes->patchEntity($recorrente, $data);
+			if ($this->FinanceiroRecorrentes->save($recorrente)) {
+				$this->Flash->success(__('Lançamento recorrente criado.'));
+				return $this->redirect(['action' => 'recorrentes']);
+			}
+			$this->Flash->error(__('Não foi possível salvar.'));
+		}
+
+		$planoContas = $this->FinanceiroPlanoContas->listByEmpresa($idempresa, null, true);
+		$centrosCusto = $this->FinanceiroCentrosCusto->listByEmpresa($idempresa);
+		$clientes = $this->Clientes->find('list', [
+			'keyField' => 'id', 'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('recorrente', 'planoContas', 'centrosCusto', 'clientes'));
+		$this->set('title', 'Novo Recorrente');
+	}
+
+	public function editRecorrente($id = null) {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$recorrente = $this->FinanceiroRecorrentes->find()
+			->where(['id' => $id, 'idempresa' => $idempresa])
+			->first();
+
+		if (empty($recorrente)) {
+			$this->Flash->error(__('Não encontrado.'));
+			return $this->redirect(['action' => 'recorrentes']);
+		}
+
+		if ($this->request->is(['put', 'patch', 'post'])) {
+			$data = $this->request->getData();
+			unset($data['idempresa']);
+			$recorrente = $this->FinanceiroRecorrentes->patchEntity($recorrente, $data);
+			if ($this->FinanceiroRecorrentes->save($recorrente)) {
+				$this->Flash->success(__('Recorrente atualizado.'));
+				return $this->redirect(['action' => 'recorrentes']);
+			}
+			$this->Flash->error(__('Não foi possível salvar.'));
+		}
+
+		$planoContas = $this->FinanceiroPlanoContas->listByEmpresa($idempresa, null, true);
+		$centrosCusto = $this->FinanceiroCentrosCusto->listByEmpresa($idempresa);
+		$clientes = $this->Clientes->find('list', [
+			'keyField' => 'id', 'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('recorrente', 'planoContas', 'centrosCusto', 'clientes'));
+		$this->set('title', 'Editar Recorrente');
+	}
+
+	public function deleteRecorrente($id = null) {
+		$this->request->allowMethod(['post']);
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$recorrente = $this->FinanceiroRecorrentes->find()
+			->where(['id' => $id, 'idempresa' => $idempresa])
+			->first();
+
+		if (!empty($recorrente)) {
+			$this->FinanceiroRecorrentes->delete($recorrente);
+			$this->Flash->success(__('Recorrente removido.'));
+		} else {
+			$this->Flash->error(__('Não encontrado.'));
+		}
+		return $this->redirect(['action' => 'recorrentes']);
+	}
+
+	/* ── Conciliação bancária ─────────────────────────────────────────── */
+	public function conciliacao() {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$this->loadModel('FinanceiroExtratoBancario');
+
+		$filtro = $this->request->getQuery('filtro') ?? 'pendentes';
+
+		$q = $this->FinanceiroExtratoBancario->find()
+			->where(['FinanceiroExtratoBancario.idempresa' => $idempresa])
+			->contain(['FinanceiroLancamentos' => ['fields' => ['id', 'descricao', 'valor', 'status']]])
+			->order(['FinanceiroExtratoBancario.data' => 'DESC']);
+
+		if ($filtro === 'pendentes') {
+			$q->where(['FinanceiroExtratoBancario.conciliado' => false]);
+		} elseif ($filtro === 'conciliados') {
+			$q->where(['FinanceiroExtratoBancario.conciliado' => true]);
+		}
+
+		$extratos = $q->toArray();
+
+		// Lançamentos não conciliados para matching
+		$lancNaoConciliados = $this->FinanceiroLancamentos->find()
+			->where([
+				'FinanceiroLancamentos.idempresa' => $idempresa,
+				'FinanceiroLancamentos.status IN' => ['aberto'],
+			])
+			->order(['data_vencimento' => 'ASC'])
+			->toArray();
+
+		$this->set(compact('extratos', 'filtro', 'lancNaoConciliados'));
+		$this->set('title', 'Conciliação Bancária');
+	}
+
+	/**
+	 * POST — importar arquivo OFX ou CSV.
+	 */
+	public function importarExtrato() {
+		$this->request->allowMethod(['post']);
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$this->loadModel('FinanceiroExtratoBancario');
+
+		$file = $this->request->getData('arquivo');
+		if (empty($file) || !is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+			$this->Flash->error(__('Selecione um arquivo OFX ou CSV.'));
+			return $this->redirect(['action' => 'conciliacao']);
+		}
+
+		$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+		$conteudo = file_get_contents($file['tmp_name']);
+
+		$importados = 0;
+		$duplicados = 0;
+
+		if ($ext === 'ofx') {
+			$result = $this->_parseOfx($conteudo, $idempresa);
+		} elseif ($ext === 'csv') {
+			$result = $this->_parseCsv($conteudo, $idempresa);
+		} else {
+			$this->Flash->error(__('Formato não suportado. Use OFX ou CSV.'));
+			return $this->redirect(['action' => 'conciliacao']);
+		}
+
+		foreach ($result as $row) {
+			// Dedup by fitid
+			if (!empty($row['fitid'])) {
+				$exists = $this->FinanceiroExtratoBancario->find()
+					->where(['idempresa' => $idempresa, 'fitid' => $row['fitid']])
+					->first();
+				if ($exists) {
+					$duplicados++;
+					continue;
+				}
+			}
+
+			$entity = $this->FinanceiroExtratoBancario->newEntity($row);
+			if ($this->FinanceiroExtratoBancario->save($entity)) {
+				$importados++;
+			}
+		}
+
+		$msg = "$importados transação(ões) importada(s).";
+		if ($duplicados > 0) {
+			$msg .= " $duplicados duplicada(s) ignorada(s).";
+		}
+		$this->Flash->success($msg);
+		return $this->redirect(['action' => 'conciliacao']);
+	}
+
+	/**
+	 * POST AJAX — conciliar extrato com lançamento.
+	 */
+	public function conciliarExtrato($idExtrato = null) {
+		$this->request->allowMethod(['post']);
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$this->loadModel('FinanceiroExtratoBancario');
+
+		$extrato = $this->FinanceiroExtratoBancario->find()
+			->where(['id' => $idExtrato, 'idempresa' => $idempresa])
+			->first();
+
+		if (empty($extrato)) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Extrato não encontrado.'], 404);
+		}
+
+		$idLanc = (int)$this->request->getData('financeiro_lancamento_id');
+		if (!$idLanc) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Lançamento não informado.'], 400);
+		}
+
+		$lanc = $this->FinanceiroLancamentos->find()
+			->where(['id' => $idLanc, 'idempresa' => $idempresa])
+			->first();
+
+		if (empty($lanc)) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Lançamento não encontrado.'], 404);
+		}
+
+		$extrato->financeiro_lancamento_id = $lanc->id;
+		$extrato->conciliado = true;
+		$this->FinanceiroExtratoBancario->save($extrato);
+
+		// Marcar lançamento como recebido/pago
+		if ($lanc->status === 'aberto') {
+			$lanc->status = ($lanc->tipo === 'receita') ? 'recebido' : 'pago';
+			$lanc->data_recebimento = $extrato->data ? $extrato->data->format('Y-m-d') : date('Y-m-d');
+			$this->FinanceiroLancamentos->save($lanc);
+		}
+
+		return $this->jsonResponse(['ok' => true]);
+	}
+
+	/**
+	 * Parse OFX content into array of rows.
+	 */
+	protected function _parseOfx(string $content, int $idempresa): array {
+		$rows = [];
+		$conta = '';
+
+		// Extract account number
+		if (preg_match('/<ACCTID>([^<\n]+)/i', $content, $m)) {
+			$conta = trim($m[1]);
+		}
+
+		// Extract transactions
+		preg_match_all('/<STMTTRN>(.*?)<\/STMTTRN>/si', $content, $matches);
+		foreach ($matches[1] as $block) {
+			$tipo = 'credito';
+			$valor = 0;
+			$data = null;
+			$descricao = '';
+			$fitid = '';
+
+			if (preg_match('/<TRNTYPE>([^<\n]+)/i', $block, $m)) {
+				$tipo = (strtoupper(trim($m[1])) === 'DEBIT') ? 'debito' : 'credito';
+			}
+			if (preg_match('/<TRNAMT>([^<\n]+)/i', $block, $m)) {
+				$valor = abs((float)str_replace(',', '.', trim($m[1])));
+				if ((float)str_replace(',', '.', trim($m[1])) < 0) {
+					$tipo = 'debito';
+				}
+			}
+			if (preg_match('/<DTPOSTED>(\d{8})/i', $block, $m)) {
+				$data = substr($m[1], 0, 4) . '-' . substr($m[1], 4, 2) . '-' . substr($m[1], 6, 2);
+			}
+			if (preg_match('/<MEMO>([^<\n]+)/i', $block, $m)) {
+				$descricao = trim($m[1]);
+			}
+			if (preg_match('/<FITID>([^<\n]+)/i', $block, $m)) {
+				$fitid = trim($m[1]);
+			}
+
+			$rows[] = [
+				'idempresa' => $idempresa,
+				'data' => $data,
+				'descricao' => $descricao,
+				'valor' => $valor,
+				'tipo' => $tipo,
+				'fitid' => $fitid,
+				'conta_bancaria' => $conta,
+				'origem' => 'ofx',
+				'conciliado' => false,
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Parse CSV (data;descricao;valor) into array of rows.
+	 */
+	protected function _parseCsv(string $content, int $idempresa): array {
+		$rows = [];
+		$lines = preg_split('/\r?\n/', $content);
+		$header = true;
+
+		foreach ($lines as $line) {
+			$line = trim($line);
+			if ($line === '') continue;
+
+			// Skip header
+			if ($header) {
+				$header = false;
+				if (stripos($line, 'data') !== false || stripos($line, 'date') !== false) {
+					continue;
+				}
+			}
+
+			$sep = (strpos($line, ';') !== false) ? ';' : ',';
+			$cols = str_getcsv($line, $sep);
+			if (count($cols) < 3) continue;
+
+			$dataStr = trim($cols[0]);
+			$descricao = trim($cols[1]);
+			$valorStr = str_replace(['.', ','], ['', '.'], trim($cols[2]));
+			$valor = (float)$valorStr;
+			$tipo = $valor >= 0 ? 'credito' : 'debito';
+			$valor = abs($valor);
+
+			// Try to parse date
+			$data = null;
+			if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $dataStr, $m)) {
+				$data = $m[3] . '-' . $m[2] . '-' . $m[1];
+			} elseif (preg_match('/(\d{4})-(\d{2})-(\d{2})/', $dataStr, $m)) {
+				$data = $dataStr;
+			}
+
+			$rows[] = [
+				'idempresa' => $idempresa,
+				'data' => $data,
+				'descricao' => $descricao,
+				'valor' => $valor,
+				'tipo' => $tipo,
+				'fitid' => md5($dataStr . $descricao . $valorStr),
+				'conta_bancaria' => null,
+				'origem' => 'csv',
+				'conciliado' => false,
+			];
+		}
+
+		return $rows;
+	}
+
+	/* ── DRE — Demonstrativo de Resultado do Exercício ────────────────── */
+	public function dre() {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$periodo = $this->request->getQuery('periodo') ?? date('Y-m');
+
+		// Parse período: pode ser "YYYY-MM" (mês) ou "YYYY" (anual)
+		$anoFiltro = null;
+		$mesFiltro = null;
+		if (preg_match('/^(\d{4})-(\d{2})$/', $periodo, $m)) {
+			$anoFiltro = $m[1];
+			$mesFiltro = $m[2];
+			$dataInicio = "$anoFiltro-$mesFiltro-01";
+			$dataFim = date('Y-m-t', strtotime($dataInicio));
+			$labelPeriodo = date('F/Y', strtotime($dataInicio));
+		} elseif (preg_match('/^(\d{4})$/', $periodo, $m)) {
+			$anoFiltro = $m[1];
+			$dataInicio = "$anoFiltro-01-01";
+			$dataFim = "$anoFiltro-12-31";
+			$labelPeriodo = "Ano $anoFiltro";
+		} else {
+			$dataInicio = date('Y-m-01');
+			$dataFim = date('Y-m-t');
+			$labelPeriodo = date('F/Y');
+		}
+
+		// Buscar lançamentos realizados (recebido/pago) no período
+		$lancamentos = $this->FinanceiroLancamentos->find()
+			->where([
+				'FinanceiroLancamentos.idempresa' => $idempresa,
+				'FinanceiroLancamentos.status IN' => ['recebido', 'pago'],
+				'FinanceiroLancamentos.data_recebimento >=' => $dataInicio,
+				'FinanceiroLancamentos.data_recebimento <=' => $dataFim,
+			])
+			->contain([
+				'FinanceiroPlanoContas' => ['fields' => ['id', 'codigo', 'descricao', 'tipo']],
+			])
+			->toArray();
+
+		// Agrupar por plano de contas
+		$receitas = [];
+		$despesas = [];
+		$totalReceitas = 0;
+		$totalDespesas = 0;
+
+		foreach ($lancamentos as $l) {
+			$contaLabel = '(Sem classificação)';
+			$contaCodigo = '999';
+			if (!empty($l->financeiro_plano_conta)) {
+				$contaLabel = $l->financeiro_plano_conta->codigo . ' — ' . $l->financeiro_plano_conta->descricao;
+				$contaCodigo = $l->financeiro_plano_conta->codigo;
+			}
+
+			if ($l->tipo === 'receita') {
+				if (!isset($receitas[$contaCodigo])) {
+					$receitas[$contaCodigo] = ['label' => $contaLabel, 'valor' => 0];
+				}
+				$receitas[$contaCodigo]['valor'] += (float)$l->valor;
+				$totalReceitas += (float)$l->valor;
+			} else {
+				if (!isset($despesas[$contaCodigo])) {
+					$despesas[$contaCodigo] = ['label' => $contaLabel, 'valor' => 0];
+				}
+				$despesas[$contaCodigo]['valor'] += (float)$l->valor;
+				$totalDespesas += (float)$l->valor;
+			}
+		}
+
+		ksort($receitas);
+		ksort($despesas);
+		$resultado = $totalReceitas - $totalDespesas;
+
+		$this->set(compact('receitas', 'despesas', 'totalReceitas', 'totalDespesas', 'resultado', 'periodo', 'labelPeriodo'));
+		$this->set('title', 'DRE');
+		$this->set('hideLayoutPageTitle', true);
+	}
+
 	/* ── Contas a receber ──────────────────────────────────────────────── */
 	public function contasReceber() {
 		$idempresa = $this->Auth->user('idempresa');
@@ -119,8 +599,10 @@ class FinanceiroController extends AppController {
 				'FinanceiroLancamentos.tipo'      => 'receita',
 			])
 			->contain([
-				'Clientes'    => ['fields' => ['id', 'razaosocial', 'tipo', 'nome']],
-				'Faturamento' => ['fields' => ['id', 'numero']],
+				'Clientes'               => ['fields' => ['id', 'razaosocial', 'tipo', 'nome']],
+				'Faturamento'            => ['fields' => ['id', 'numero']],
+				'FinanceiroPlanoContas'   => ['fields' => ['id', 'codigo', 'descricao']],
+				'FinanceiroCentrosCusto'  => ['fields' => ['id', 'codigo', 'descricao']],
 			])
 			->order(['FinanceiroLancamentos.data_vencimento' => 'ASC']);
 
@@ -136,6 +618,84 @@ class FinanceiroController extends AppController {
 
 		$this->set(compact('lancamentos', 'clientes', 'status', 'cliente'));
 		$this->set('title', 'Contas a Receber');
+	}
+
+	/**
+	 * Formulário para novo lançamento de receita.
+	 */
+	public function addReceita() {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$lancamento = $this->FinanceiroLancamentos->newEntity();
+
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$data['idempresa'] = $idempresa;
+			$data['tipo'] = 'receita';
+			$data['status'] = 'aberto';
+			$data['idautor'] = (int)$this->Auth->user('id');
+			$data['data_lancamento'] = date('Y-m-d');
+
+			$lancamento = $this->FinanceiroLancamentos->patchEntity($lancamento, $data);
+			if ($this->FinanceiroLancamentos->save($lancamento)) {
+				$uid = $this->Auth->user('id');
+				if ($uid) {
+					$this->Atividades->registrar($uid, 'Financeiro', 'addReceita', (int)$lancamento->id);
+				}
+				$this->Flash->success(__('Receita registrada.'));
+				return $this->redirect(['action' => 'contasReceber']);
+			}
+			$this->Flash->error(__('Não foi possível salvar. Verifique os campos.'));
+		}
+
+		$planoContas = $this->FinanceiroPlanoContas->listByEmpresa($idempresa, 'receita', true);
+		$centrosCusto = $this->FinanceiroCentrosCusto->listByEmpresa($idempresa);
+		$clientes = $this->Clientes->find('list', [
+			'keyField'   => 'id',
+			'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('lancamento', 'planoContas', 'centrosCusto', 'clientes'));
+		$this->set('title', 'Nova Receita');
+	}
+
+	/**
+	 * Edição de lançamento de receita.
+	 */
+	public function editReceita($id = null) {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$lancamento = $this->FinanceiroLancamentos->find()
+			->where(['id' => $id, 'idempresa' => $idempresa, 'tipo' => 'receita'])
+			->first();
+
+		if (empty($lancamento)) {
+			$this->Flash->error(__('Lançamento não encontrado.'));
+			return $this->redirect(['action' => 'contasReceber']);
+		}
+
+		if ($this->request->is(['put', 'patch', 'post'])) {
+			$data = $this->request->getData();
+			unset($data['idempresa'], $data['tipo'], $data['idautor']);
+			$lancamento = $this->FinanceiroLancamentos->patchEntity($lancamento, $data);
+			if ($this->FinanceiroLancamentos->save($lancamento)) {
+				$uid = $this->Auth->user('id');
+				if ($uid) {
+					$this->Atividades->registrar($uid, 'Financeiro', 'editReceita', (int)$lancamento->id);
+				}
+				$this->Flash->success(__('Receita atualizada.'));
+				return $this->redirect(['action' => 'contasReceber']);
+			}
+			$this->Flash->error(__('Não foi possível salvar.'));
+		}
+
+		$planoContas = $this->FinanceiroPlanoContas->listByEmpresa($idempresa, 'receita', true);
+		$centrosCusto = $this->FinanceiroCentrosCusto->listByEmpresa($idempresa);
+		$clientes = $this->Clientes->find('list', [
+			'keyField'   => 'id',
+			'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('lancamento', 'planoContas', 'centrosCusto', 'clientes'));
+		$this->set('title', 'Editar Receita');
 	}
 
 	/**
@@ -434,6 +994,168 @@ class FinanceiroController extends AppController {
 		}
 		$this->Flash->success(__('Anexo removido.'));
 		return $this->redirect(['action' => 'fatura', $idLanc]);
+	}
+
+	/* ── Contas a pagar ───────────────────────────────────────────────── */
+	public function contasPagar() {
+		$idempresa = $this->Auth->user('idempresa');
+		$status    = $this->request->getQuery('status') ?? 'aberto';
+		$fornecedor = $this->request->getQuery('fornecedor') ?? '';
+
+		$q = $this->FinanceiroLancamentos->find('all')
+			->where([
+				'FinanceiroLancamentos.idempresa' => $idempresa,
+				'FinanceiroLancamentos.tipo'      => 'despesa',
+			])
+			->contain([
+				'Clientes'               => ['fields' => ['id', 'razaosocial', 'tipo', 'nome']],
+				'FinanceiroPlanoContas'   => ['fields' => ['id', 'codigo', 'descricao']],
+				'FinanceiroCentrosCusto'  => ['fields' => ['id', 'codigo', 'descricao']],
+			])
+			->order(['FinanceiroLancamentos.data_vencimento' => 'ASC']);
+
+		if ($status !== '') $q->where(['FinanceiroLancamentos.status' => $status]);
+		if ($fornecedor !== '' && $fornecedor !== '0') $q->where(['FinanceiroLancamentos.idcliente' => $fornecedor]);
+
+		$lancamentos = $q->toArray();
+
+		$fornecedores = $this->Clientes->find('list', [
+			'keyField'   => 'id',
+			'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('lancamentos', 'fornecedores', 'status', 'fornecedor'));
+		$this->set('title', 'Contas a Pagar');
+	}
+
+	/**
+	 * Formulário para novo lançamento de despesa.
+	 */
+	public function addDespesa() {
+		$idempresa = (int)$this->Auth->user('idempresa');
+
+		$lancamento = $this->FinanceiroLancamentos->newEntity();
+
+		if ($this->request->is('post')) {
+			$data = $this->request->getData();
+			$data['idempresa'] = $idempresa;
+			$data['tipo'] = 'despesa';
+			$data['status'] = 'aberto';
+			$data['idautor'] = (int)$this->Auth->user('id');
+			$data['data_lancamento'] = date('Y-m-d');
+
+			$lancamento = $this->FinanceiroLancamentos->patchEntity($lancamento, $data);
+			if ($this->FinanceiroLancamentos->save($lancamento)) {
+				$uid = $this->Auth->user('id');
+				if ($uid) {
+					$this->Atividades->registrar($uid, 'Financeiro', 'addDespesa', (int)$lancamento->id);
+				}
+				$this->Flash->success(__('Despesa registrada.'));
+				return $this->redirect(['action' => 'contasPagar']);
+			}
+			$this->Flash->error(__('Não foi possível salvar. Verifique os campos.'));
+		}
+
+		$planoContas = $this->FinanceiroPlanoContas->listByEmpresa($idempresa, 'despesa', true);
+		$centrosCusto = $this->FinanceiroCentrosCusto->listByEmpresa($idempresa);
+		$fornecedores = $this->Clientes->find('list', [
+			'keyField'   => 'id',
+			'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('lancamento', 'planoContas', 'centrosCusto', 'fornecedores'));
+		$this->set('title', 'Nova Despesa');
+	}
+
+	/**
+	 * Edição de lançamento de despesa.
+	 */
+	public function editDespesa($id = null) {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$lancamento = $this->FinanceiroLancamentos->find()
+			->where(['id' => $id, 'idempresa' => $idempresa, 'tipo' => 'despesa'])
+			->first();
+
+		if (empty($lancamento)) {
+			$this->Flash->error(__('Lançamento não encontrado.'));
+			return $this->redirect(['action' => 'contasPagar']);
+		}
+
+		if ($this->request->is(['put', 'patch', 'post'])) {
+			$data = $this->request->getData();
+			unset($data['idempresa'], $data['tipo'], $data['idautor']);
+			$lancamento = $this->FinanceiroLancamentos->patchEntity($lancamento, $data);
+			if ($this->FinanceiroLancamentos->save($lancamento)) {
+				$uid = $this->Auth->user('id');
+				if ($uid) {
+					$this->Atividades->registrar($uid, 'Financeiro', 'editDespesa', (int)$lancamento->id);
+				}
+				$this->Flash->success(__('Despesa atualizada.'));
+				return $this->redirect(['action' => 'contasPagar']);
+			}
+			$this->Flash->error(__('Não foi possível salvar.'));
+		}
+
+		$planoContas = $this->FinanceiroPlanoContas->listByEmpresa($idempresa, 'despesa', true);
+		$centrosCusto = $this->FinanceiroCentrosCusto->listByEmpresa($idempresa);
+		$fornecedores = $this->Clientes->find('list', [
+			'keyField'   => 'id',
+			'valueField' => 'razaosocial',
+		])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+
+		$this->set(compact('lancamento', 'planoContas', 'centrosCusto', 'fornecedores'));
+		$this->set('title', 'Editar Despesa');
+	}
+
+	/* ── Registrar pagamento (despesa) ────────────────────────────────── */
+	public function registrarPagamento($id = null) {
+		$this->request->allowMethod(['post']);
+		$idempresa = $this->Auth->user('idempresa');
+
+		$lancamento = $this->FinanceiroLancamentos->find('all')
+			->where(['id' => $id, 'idempresa' => $idempresa, 'tipo' => 'despesa'])->first();
+
+		if (empty($lancamento)) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Não encontrado.'], 404);
+		}
+
+		$lancamento->status = 'pago';
+		$lancamento->data_recebimento = $this->request->getData('data_pagamento') ?? date('Y-m-d');
+		if (!$this->FinanceiroLancamentos->save($lancamento)) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Não foi possível salvar.'], 500);
+		}
+
+		$uid = $this->Auth->user('id');
+		if ($uid) {
+			$this->Atividades->registrar($uid, 'Financeiro', 'registrarPagamento', (int)$lancamento->id);
+		}
+
+		return $this->jsonResponse(['ok' => true]);
+	}
+
+	/* ── Cancelar lançamento (despesa) ────────────────────────────────── */
+	public function cancelarDespesa($id = null) {
+		$this->request->allowMethod(['post']);
+		$idempresa = $this->Auth->user('idempresa');
+
+		$lancamento = $this->FinanceiroLancamentos->find('all')
+			->where(['id' => $id, 'idempresa' => $idempresa, 'tipo' => 'despesa'])->first();
+
+		if (empty($lancamento)) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Não encontrado.'], 404);
+		}
+
+		$lancamento->status = 'cancelado';
+		if (!$this->FinanceiroLancamentos->save($lancamento)) {
+			return $this->jsonResponse(['ok' => false, 'msg' => 'Não foi possível salvar.'], 500);
+		}
+
+		$uid = $this->Auth->user('id');
+		if ($uid) {
+			$this->Atividades->registrar($uid, 'Financeiro', 'cancelarDespesa', (int)$lancamento->id);
+		}
+
+		return $this->jsonResponse(['ok' => true]);
 	}
 
 	/* ── Registrar recebimento ─────────────────────────────────────────── */

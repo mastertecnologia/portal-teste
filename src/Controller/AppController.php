@@ -80,6 +80,8 @@ class AppController extends Controller {
 				'selectTheme',
 				// Faturamento: modal alterar status (POST sem _Token no corpo)
 				'alterarStatus',
+				// Financeiro: ações AJAX (registrar recebimento/pagamento, cancelar)
+				'registrarRecebimento', 'registrarPagamento', 'cancelarDespesa', 'conciliarExtrato',
 				// Webhook Autentique (corpo JSON; sem _Token)
 				'webhookAutentique',
 			],
