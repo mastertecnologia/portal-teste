@@ -140,7 +140,7 @@ class UsersController extends AppController {
 		$qClients = $this->Users
 			->find('all')
 			->where(['role' => 1, 'idcliente IS NOT' => null])
-			->contain(['Clientes' => ['fields' => ['razaosocial', 'nome']]])
+			->contain(['Clientes' => ['fields' => ['razaosocial', 'nome', 'tipo', 'email', 'cnpj', 'cpf', 'fone', 'fone2', 'inativo']]])
 			->order(['username' => 'ASC']);
 		// ABAC desabilitado: tabela users não possui coluna idempresa
 		$this->set('clients', $qClients->toArray());
