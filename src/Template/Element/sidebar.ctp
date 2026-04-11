@@ -100,7 +100,6 @@
 		) ?>
 	</div>
 
-	<?php /* Sino de notificações movido para o header da página (default.ctp) */ ?>
 
 	<!-- ── Workspace / Empresa ────────────────────────────── -->
 	<div class="pgm-sidebar-workspace">
@@ -643,6 +642,9 @@
 				['controller' => 'config', 'action' => 'index'],
 				['class' => 'pgm-sf-act', 'escape' => false, 'title' => 'Permissões RBAC / catálogo']
 			) ?>
+			<?php endif; ?>
+			<?php if ($roleNav === 0 && ($sg['sidebar_notifications_bell'] ?? true)) : ?>
+			<?= $this->element('portal_notification_bell') ?>
 			<?php endif; ?>
 			<?= $this->Html->link(
 				'<i class="fa fa-power-off"></i>',

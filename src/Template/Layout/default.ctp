@@ -157,11 +157,8 @@ use Cake\Routing\Router;
 			if ($role == 0) echo $this->element('sidebar');
 			else echo $this->element('sidebarcli');
 		?>
-		<div class="pgm-shell-main" style="position:relative;">
+		<div class="pgm-shell-main">
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
-		<?php if ($role == 0 && (!(isset($sidebarMenuGates) && is_array($sidebarMenuGates)) || ($sidebarMenuGates['sidebar_notifications_bell'] ?? true))): ?>
-		<div class="pgm-notif-floating"><?= $this->element('portal_notification_bell') ?></div>
-		<?php endif; ?>
 		<div class="page-wrapper">
 			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>

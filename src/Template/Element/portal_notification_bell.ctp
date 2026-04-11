@@ -10,10 +10,12 @@ $urlMarkReadBase = rtrim($this->PgmPortalNotif->url(['controller' => 'PortalNoti
 $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']);
 ?>
 <style>
-.pgm-notif-floating {
-	position:fixed;top:12px;right:18px;z-index:1050;
-}
 .pgm-portal-notif-bell { position: relative; }
+.pgm-portal-notif-bell { display:inline-block; }
+.pgm-sf-actions .pgm-portal-notif-bell .pgm-bell-btn {
+	width:28px;height:28px;border-radius:6px;border:none;background:transparent;font-size:15px;
+	padding:0;
+}
 .pgm-portal-notif-bell .pgm-bell-btn {
 	display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;
 	border:1px solid #30363d;background:#161b22;color:#8b949e;text-decoration:none!important;
@@ -28,7 +30,7 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 }
 .pgm-portal-notif-dropdown {
 	background:#161b22!important;border:1px solid #30363d!important;box-shadow:0 8px 24px rgba(0,0,0,.35);
-	padding:0!important;
+	padding:0!important;min-width:320px;max-height:420px;overflow-y:auto;
 }
 .pgm-portal-notif-dropdown .dropdown-header { color:#8b949e;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #21262d;padding:10px 14px; }
 .pgm-portal-notif-item {
@@ -46,7 +48,7 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 .pgm-portal-notif-prefs-link { font-size:11px; }
 .pgm-nt-msg { opacity:.9; }
 </style>
-<div class="dropdown pgm-portal-notif-bell" id="pgmPortalNotifBell">
+<div class="dropdown dropup pgm-portal-notif-bell" id="pgmPortalNotifBell">
 	<a href="#" class="pgm-bell-btn dropdown-toggle" data-toggle="dropdown" data-display="static" aria-expanded="false" title="Notificações" id="pgmBellToggle">
 		<i class="fas fa-bell"></i>
 		<span class="pgm-bell-badge" id="pgmBellBadge">0</span>
