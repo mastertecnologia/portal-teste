@@ -157,8 +157,11 @@ use Cake\Routing\Router;
 			if ($role == 0) echo $this->element('sidebar');
 			else echo $this->element('sidebarcli');
 		?>
-		<div class="pgm-shell-main">
+		<div class="pgm-shell-main" style="position:relative;">
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
+		<?php if ($role == 0 && (!(isset($sidebarMenuGates) && is_array($sidebarMenuGates)) || ($sidebarMenuGates['sidebar_notifications_bell'] ?? true))): ?>
+		<div class="pgm-notif-floating"><?= $this->element('portal_notification_bell') ?></div>
+		<?php endif; ?>
 		<div class="page-wrapper">
 			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>
@@ -167,13 +170,10 @@ use Cake\Routing\Router;
 		            <div class="col-md-5 align-self-center">
 						<h5 class="text-themecolor m-b-0"><?= $title ?></h5>
 					</div>
-					<!-- Breadcumbs + Sino -->
+					<!-- Breadcumbs -->
 		            <div class="col-md-7 align-self-center text-right">
-		                <div class="d-flex justify-content-end align-items-center" style="gap:12px;">
+		                <div class="d-flex justify-content-end align-items-center">
 							<?= $this->Breadcrumbs->render(); ?>
-							<?php if ($role == 0 && (!(isset($sidebarMenuGates) && is_array($sidebarMenuGates)) || ($sidebarMenuGates['sidebar_notifications_bell'] ?? true))): ?>
-							<?= $this->element('portal_notification_bell') ?>
-							<?php endif; ?>
 		                </div>
 		            </div>
 	        	</div>

@@ -10,6 +10,9 @@ $urlMarkReadBase = rtrim($this->PgmPortalNotif->url(['controller' => 'PortalNoti
 $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']);
 ?>
 <style>
+.pgm-notif-floating {
+	position:fixed;top:12px;right:18px;z-index:1050;
+}
 .pgm-portal-notif-bell { position: relative; }
 .pgm-portal-notif-bell .pgm-bell-btn {
 	display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;
