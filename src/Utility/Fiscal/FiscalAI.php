@@ -20,7 +20,7 @@ class FiscalAI {
             throw new \Exception('O motor de Inteligência Artificial requer uma GEMINI_API_KEY configurada.');
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
 
         $payload = [
             'contents' => [
