@@ -92,7 +92,10 @@ $p0 = $pags[0] ?? null;
                     <td><?= (int)$i + 1 ?></td>
                     <td>
                         <input type="hidden" name="fiscal_notas_itens[<?= (int)$i ?>][id]" value="<?= (int)$it->id ?>">
-                        <input name="fiscal_notas_itens[<?= (int)$i ?>][descricao]" required class="form-control" value="<?= h($it->descricao) ?>">
+                        <div style="display:flex; gap:4px;">
+                            <input name="fiscal_notas_itens[<?= (int)$i ?>][descricao]" required class="form-control" value="<?= h($it->descricao) ?>" style="flex:1;">
+                            <button type="button" class="btn btn-sm btn-pgm" onclick="fpmSugerirIa(this)" title="Sugerir NCM e CFOP com IA" style="padding:4px 8px; font-size:12px; background:#e0a024; border:none;  margin-bottom: 5px;"><i class="fas fa-magic"></i></button>
+                        </div>
                     </td>
                     <td><input name="fiscal_notas_itens[<?= (int)$i ?>][cfop]" required class="form-control" value="<?= h($it->cfop) ?>" maxlength="5"></td>
                     <td><input name="fiscal_notas_itens[<?= (int)$i ?>][ncm]" class="form-control" value="<?= h($it->ncm) ?>"></td>
@@ -106,7 +109,7 @@ $p0 = $pags[0] ?? null;
                 <?php if (count($itens) === 0): ?>
                 <tr class="fpm-item-row" data-idx="0">
                     <td>1</td>
-                    <td><input name="fiscal_notas_itens[0][descricao]" required class="form-control"></td>
+                    <td><div style="display:flex; gap:4px;"><input name="fiscal_notas_itens[0][descricao]" required class="form-control" style="flex:1;"><button type="button" class="btn btn-sm btn-pgm" onclick="fpmSugerirIa(this)" title="Sugerir NCM e CFOP com IA" style="padding:4px 8px; font-size:12px; background:#e0a024; border:none; margin-bottom: 5px;"><i class="fas fa-magic"></i></button></div></td>
                     <td><input name="fiscal_notas_itens[0][cfop]" required class="form-control" maxlength="5"></td>
                     <td><input name="fiscal_notas_itens[0][ncm]" class="form-control"></td>
                     <td><input name="fiscal_notas_itens[0][unidade]" class="form-control" value="UN"></td>
@@ -190,7 +193,7 @@ $p0 = $pags[0] ?? null;
         var tr = document.createElement('tr');
         tr.className = 'fpm-item-row';
         tr.innerHTML = '<td></td>' +
-            '<td><input name="fiscal_notas_itens[' + itemIdx + '][descricao]" required class="form-control"></td>' +
+            '<td><div style="display:flex; gap:4px;"><input name="fiscal_notas_itens[' + itemIdx + '][descricao]" required class="form-control" style="flex:1;"><button type="button" class="btn btn-sm btn-pgm" onclick="fpmSugerirIa(this)" title="Sugerir NCM e CFOP com IA" style="padding:4px 8px; font-size:12px; background:#e0a024; border:none; margin-bottom: 5px;"><i class="fas fa-magic"></i></button></div></td>' +
             '<td><input name="fiscal_notas_itens[' + itemIdx + '][cfop]" required class="form-control" maxlength="5"></td>' +
             '<td><input name="fiscal_notas_itens[' + itemIdx + '][ncm]" class="form-control"></td>' +
             '<td><input name="fiscal_notas_itens[' + itemIdx + '][unidade]" class="form-control" value="UN"></td>' +
@@ -235,4 +238,43 @@ $p0 = $pags[0] ?? null;
         });
     });
 })();
+
+function fpmSugerirIa(btn) {
+    let tr = btn.closest('tr');
+    let descInp = tr.querySelector('input[name$="[descricao]"]');
+    if(!descInp || !descInp.value.trim()) { alert("Escreva a descrição do produto antes de pedir sugestão à IA."); return; }
+    
+    let originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    let csrfInput = document.querySelector('input[name="_csrfToken"]');
+    let cToken = csrfInput ? csrfInput.value : '';
+
+    fetch('<?= $this->Url->build(['action' => 'ajaxSugerirNcm']) ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': cToken
+        },
+        body: JSON.stringify({descricao: descInp.value.trim()})
+    }).then(r => r.json()).then(res => {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        if (res.error) {
+            alert("⚠️ " + res.error);
+        } else {
+            let ncmInp = tr.querySelector('input[name$="[ncm]"]');
+            let cfopInp = tr.querySelector('input[name$="[cfop]"]');
+            if(ncmInp && res.ncm) ncmInp.value = res.ncm;
+            if(cfopInp && res.cfop) cfopInp.value = res.cfop;
+            btn.style.background = '#1D9E75';
+            setTimeout(() => btn.style.background = '#e0a024', 2000);
+        }
+    }).catch(e => {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        alert("Falha de conexão com a infraestrutura de IA.");
+    });
+}
 </script>

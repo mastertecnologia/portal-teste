@@ -60,6 +60,10 @@ class FiscalNotasController extends AppController {
         parent::beforeFilter($event);
         $this->set('title', 'Notas Fiscais');
         $this->set('pgmAdvancedModuleStylesheet', true);
+        if (isset($this->Security)) {
+            $unlocked = (array)$this->Security->getConfig('unlockedActions');
+            $this->Security->setConfig('unlockedActions', array_merge($unlocked, ['ajaxSugerirNcm', 'ajaxAuditoriaIa']));
+        }
     }
 
     public function isAuthorized($user) {
@@ -1451,5 +1455,62 @@ class FiscalNotasController extends AppController {
 
     private function recalcularNota($nota, $idempresa) {
         return FiscalNotaRecalculo::aplicar($nota, $idempresa, $this->FiscalEmpresasConfig, $this->FiscalAliquotas);
+    }
+
+    public function ajaxSugerirNcm() {
+        $this->request->allowMethod(['post']);
+        $this->autoRender = false;
+        $descricao = $this->request->getData('descricao');
+        if (empty($descricao)) {
+            return $this->response->withType('application/json')->withStringBody(json_encode(['error' => 'Descrição vazia']));
+        }
+        try {
+            $json = \App\Utility\Fiscal\FiscalAI::sugerirNcm($descricao);
+            return $this->response->withType('application/json')->withStringBody(json_encode($json));
+        } catch (\Throwable $e) {
+            return $this->response->withStatus(500)->withType('application/json')->withStringBody(json_encode(['error' => $e->getMessage()]));
+        }
+    }
+
+    public function ajaxAuditoriaIa($id = null) {
+        $this->request->allowMethod(['post']);
+        $this->autoRender = false;
+        
+        $idempresa = $this->Auth->user('idempresa');
+        $nota = $this->FiscalNotas->get($id, [
+            'contain' => ['Clientes', 'FiscalNotasItens']
+        ]);
+
+        if ((int)$nota->idempresa !== (int)$idempresa) {
+            return $this->response->withStatus(403)->withType('application/json')->withStringBody(json_encode(['error' => 'Acesso negado']));
+        }
+
+        $this->loadModel('FiscalEmpresasConfig');
+        $config = $this->FiscalEmpresasConfig->getOrCreate($idempresa);
+        $regime = ((int)$config->regime_tributario === 1) ? 'Simples Nacional' : 'Regime Normal (Lucro Presumido/Real)';
+
+        try {
+            $itensLimp = [];
+            foreach ($nota->fiscal_notas_itens as $i) {
+                $itensLimp[] = [
+                    'cfop' => $i->cfop,
+                    'ncm' => $i->ncm,
+                    'descricao' => $i->descricao,
+                    'cst_csosn' => $i->cst_csosn_icms ?? 'Padrao da emissao'
+                ];
+            }
+            $jsonSchema = json_encode([
+                'tipo_operacao' => $nota->tipo_operacao === 0 ? 'Entrada' : 'Saida',
+                'natureza_operacao' => $nota->natureza_operacao,
+                'cliente_uf' => $nota->cliente->estado ?? 'Desconhecido',
+                'cliente_tipo' => $nota->cliente->tipo ?? 1,
+                'itens' => $itensLimp
+            ], JSON_UNESCAPED_UNICODE);
+
+            $result = \App\Utility\Fiscal\FiscalAI::auditarNota($jsonSchema, $regime);
+            return $this->response->withType('application/json')->withStringBody(json_encode($result));
+        } catch (\Throwable $e) {
+            return $this->response->withStatus(500)->withType('application/json')->withStringBody(json_encode(['error' => $e->getMessage()]));
+        }
     }
 }

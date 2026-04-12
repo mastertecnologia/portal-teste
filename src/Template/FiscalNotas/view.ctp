@@ -26,6 +26,7 @@ $fiscalDfeRecebidoOrigem = $fiscalDfeRecebidoOrigem ?? null;
         <h1 class="fpm-h1"><i class="fas fa-file-invoice"></i>Nota #<?= (int)$nota->id ?></h1>
         <div class="fpm-actions">
             <?= $this->Html->link('Lista', ['controller' => $fpmCtrl, 'action' => 'index'], ['class' => 'btn btn-default btn-sm']) ?>
+            <button type="button" class="btn btn-sm" style="background:#e0a024; color:#fff; font-weight: bold; border: none;" onclick="fpmAuditarIa(<?= (int)$nota->id ?>)"><i class="fas fa-robot"></i> Auditoria IA</button>
             <?php if ($editavel): ?>
                 <?= $this->Html->link('Editar', ['controller' => $fpmCtrl, 'action' => 'edit', $nota->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-sm']) ?>
             <?php endif; ?>
@@ -378,3 +379,70 @@ $fiscalDfeRecebidoOrigem = $fiscalDfeRecebidoOrigem ?? null;
 })();
 </script>
 <?php endif; ?>
+
+<!-- MODAL AUDITORIA IA -->
+<div class="modal fade" id="fpmModalAuditoriaIa" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-robot" style="color:#e0a024;"></i> Auditoria Inteligente (Preventiva)</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="fpmAuditoriaIaBody">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color:#e0a024;"></i>
+                    <p class="mt-3">A Inteligência Artificial está escaneando a nota. Aguarde...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fpmAuditarIa(notaId) {
+    $('#fpmModalAuditoriaIa').modal('show');
+    let body = document.getElementById('fpmAuditoriaIaBody');
+    body.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-3x" style="color:#e0a024;"></i><p class="mt-3 fpm-muted">A Inteligência Artificial está escaneando estruturalmente a nota e seus itens em busca de problemas conhecidos de emissão. Aguarde alguns segundos...</p></div>';
+
+    // Capturando form fake de csrf
+    let csrfInput = document.querySelector('input[name="_csrfToken"]');
+    let cToken = csrfInput ? csrfInput.value : '';
+
+    fetch('<?= $this->Url->build(['controller' => $fpmCtrl, 'action' => 'ajaxAuditoriaIa']) ?>/' + notaId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': cToken
+        }
+    }).then(r => r.json()).then(res => {
+        if (res.error) {
+            body.innerHTML = '<div class="alert alert-danger">⚠️ Falha na comunicação com o motor de IA: ' + res.error + '</div>';
+            return;
+        }
+        
+        let html = '';
+        if (res.status && res.status.toLowerCase() === 'ok') {
+            html += '<div class="alert alert-success" style="background-color:#d4edda; color:#155724; border-color:#c3e6cb;"><i class="fas fa-check-circle"></i> <strong>Tudo parece ótimo!</strong> A IA não encontrou nenhum problema gritante nesta nota. Ela tem grandes chances de ser autorizada pela SEFAZ.</div>';
+        } else {
+            html += '<div class="alert alert-warning" style="background-color:#fff3cd; color:#856404; border-color:#ffeeba;"><i class="fas fa-exclamation-triangle"></i> <strong>Atenção!</strong> A IA detectou possíveis problemas antes de enviar para a SEFAZ. Verifique os apontamentos:</div>';
+        }
+
+        if (res.mensagens && res.mensagens.length > 0) {
+            html += '<ul class="list-group" style="border-radius:0;">';
+            res.mensagens.forEach(function(msg) {
+                html += '<li class="list-group-item" style="border-left: 4px solid #e0a024; margin-bottom: 5px;">' + msg + '</li>';
+            });
+            html += '</ul>';
+        } else if (res.status && res.status.toLowerCase() !== 'ok') {
+            html += '<p class="text-muted">Nenhum detalhe adicional informado.</p>';
+        }
+        
+        body.innerHTML = html;
+    }).catch(e => {
+        body.innerHTML = '<div class="alert alert-danger">⚠️ Ocorreu um erro catastrófico ao invocar a inteligência artificial. Tente novamente mais tarde.</div>';
+    });
+}
+</script>
