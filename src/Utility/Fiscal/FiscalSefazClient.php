@@ -55,7 +55,20 @@ class FiscalSefazClient {
         $this->signer = $signer;
         $this->config = $config;
         $this->ambiente = (int)($config['ambiente'] ?? 2);
-        $this->wsGroup = 'svrs';
+        
+        // Roteamento de WebService SEFAZ de acordo com a UF da empresa
+        $uf = trim(strtoupper($this->config['uf'] ?? 'SP'));
+        if (empty($uf)) {
+            $uf = 'SP';
+        }
+        // Identifica UFs com ambiente próprio mapeadas em config/fiscal.php
+        if ($uf === 'RS') {
+            $this->wsGroup = 'rs';
+        } else {
+            // Em implantações futuras, mapear SP, PR, MG. Para agora, SVRS é o default do sistema original
+            $this->wsGroup = 'svrs';
+        }
+        
         $this->timeout = (int)Configure::read('Fiscal.soap_timeout', 30);
         $this->retryMax = (int)Configure::read('Fiscal.soap_retry_max', 0);
     }

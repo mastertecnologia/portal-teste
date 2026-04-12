@@ -115,6 +115,27 @@ return [
                     'CadConsultaCadastro'     => 'https://cad-homologacao.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx',
                 ],
             ],
+            // NFe 4.00 — SEFAZ RS (própria do Rio Grande do Sul)
+            'rs' => [
+                1 => [
+                    'NfeAutorizacao'          => 'https://nfe.sefazrs.rs.gov.br/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
+                    'NfeRetAutorizacao'       => 'https://nfe.sefazrs.rs.gov.br/ws/NfeRetAutorizacao/NFeRetAutorizacao4.asmx',
+                    'NfeConsultaProtocolo'    => 'https://nfe.sefazrs.rs.gov.br/ws/NfeConsulta/NfeConsulta4.asmx',
+                    'NfeStatusServico'        => 'https://nfe.sefazrs.rs.gov.br/ws/NfeStatusServico/NfeStatusServico4.asmx',
+                    'NfeInutilizacao'         => 'https://nfe.sefazrs.rs.gov.br/ws/nfeinutilizacao/nfeinutilizacao4.asmx',
+                    'RecepcaoEvento'          => 'https://nfe.sefazrs.rs.gov.br/ws/recepcaoevento/recepcaoevento4.asmx',
+                    'CadConsultaCadastro'     => 'https://cad.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx', // RS usa os labs da SVRS p/ cad
+                ],
+                2 => [
+                    'NfeAutorizacao'          => 'https://nfe-homologacao.sefazrs.rs.gov.br/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
+                    'NfeRetAutorizacao'       => 'https://nfe-homologacao.sefazrs.rs.gov.br/ws/NfeRetAutorizacao/NFeRetAutorizacao4.asmx',
+                    'NfeConsultaProtocolo'    => 'https://nfe-homologacao.sefazrs.rs.gov.br/ws/NfeConsulta/NfeConsulta4.asmx',
+                    'NfeStatusServico'        => 'https://nfe-homologacao.sefazrs.rs.gov.br/ws/NfeStatusServico/NfeStatusServico4.asmx',
+                    'NfeInutilizacao'         => 'https://nfe-homologacao.sefazrs.rs.gov.br/ws/nfeinutilizacao/nfeinutilizacao4.asmx',
+                    'RecepcaoEvento'          => 'https://nfe-homologacao.sefazrs.rs.gov.br/ws/recepcaoevento/recepcaoevento4.asmx',
+                    'CadConsultaCadastro'     => 'https://cad-homologacao.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx',
+                ],
+            ],
             // SVC-RS — SEFAZ Virtual de Contingência (RS)
             'svc_rs' => [
                 1 => [
