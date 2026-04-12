@@ -928,13 +928,44 @@ class UsersController extends AppController {
 				$user->role = 1;
 
 				if ($this->Users->save($user)) {
-					$empresauser = $this->Empresasusers->newEntity();
-					$empresauser->idempresa = $idempresa; //$this->Auth->user('idempresa');
-					$empresauser->iduser = $user->id;
-					$this->Empresasusers->save($empresauser);
+					// Coleta todas as empresas onde este cliente está cadastrado (mesmo CNPJ/CPF).
+					$empresaIds = [$idempresa];
+					if (isset($cliente[0])) {
+						$cli = $cliente[0];
+						$docField = ((int)$cli['tipo'] === C_ClientesTipoJuridica) ? 'cnpj' : 'cpf';
+						$docVal = !empty($cli[$docField]) ? \removeCaracteres($cli[$docField]) : '';
+						if ($docVal !== '') {
+							$outrosClientes = $this->Clientes->find()
+								->select(['idempresa'])
+								->where([$docField => $docVal, 'inativo' => 0])
+								->group(['idempresa'])
+								->all();
+							foreach ($outrosClientes as $oc) {
+								if (!empty($oc->idempresa)) {
+									$empresaIds[] = (int)$oc->idempresa;
+								}
+							}
+						}
+					}
+					$empresaIds = array_unique(array_filter($empresaIds));
+
+					$vinculosCriados = 0;
+					foreach ($empresaIds as $eid) {
+						$existe = $this->Empresasusers->find()->where(['iduser' => $user->id, 'idempresa' => $eid])->count();
+						if (!$existe) {
+							$eu = $this->Empresasusers->newEntity(['idempresa' => $eid, 'iduser' => $user->id]);
+							if ($this->Empresasusers->save($eu)) {
+								$vinculosCriados++;
+							}
+						}
+					}
 					RbacClientePortal::syncUserIfEligible((int)$user->id);
 
-					$this->Flash->success(__('O usuário foi salvo.'));
+					$msg = __('O usuário foi salvo.');
+					if ($vinculosCriados > 1) {
+						$msg .= ' ' . __('Vinculado automaticamente a {0} empresas.', $vinculosCriados);
+					}
+					$this->Flash->success($msg);
 					$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $user->id);
 					return $this->redirect(['action' => 'index']);
 				}
