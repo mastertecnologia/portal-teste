@@ -1,40 +1,54 @@
 /**
- * Layout Service Desk — mesma base visual que Produtos (.prd-root + produtos-premium.css).
+ * Layout Service Desk — Redesign Premium Glassmorphism
  * Cores: --prd-* (aliases de --pgm-* na folha premium); fallbacks se .prd-root ausente.
  */
+
+/* =========================================================================
+   1. TOKENS PREDOMINANTES E ESTRUTURA BASE (Premium Midnight & Teal)
+========================================================================= */
 .sd-shell.prd-root {
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
-	background: var(--prd-bg, var(--pgm-bg-page));
-	color: var(--prd-text, var(--pgm-text));
+	background: radial-gradient(circle at top right, #111827, #0f172a, #020617);
+	color: var(--prd-text, #f8fafc);
 	max-width: 100%;
 	box-sizing: border-box;
 }
+
 .sd-topbar {
-	padding: 0.65rem 1.25rem;
+	padding: 0.8rem 1.5rem;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	/* Marca PGM: mesmo degradê da tela Produtos / sidebar (.pgm-sidebar-mark) */
-	background: linear-gradient(135deg, var(--prd-teal, var(--pgm-primary)) 0%, var(--pgm-secondary) 100%);
+	/* Degradê vibrante estilo Neon/Midnight */
+	background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 	color: #fff;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(10px);
 }
+
 .sd-topbar .sd-brand {
-	font-weight: 700;
-	font-size: 1.05rem;
-	letter-spacing: 0.02em;
+	font-weight: 800;
+	font-size: 1.15rem;
+	letter-spacing: 0.03em;
+	background: linear-gradient(90deg, #38bdf8, #818cf8);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
 }
+
 .sd-topbar .sd-actions {
 	display: flex;
 	align-items: center;
-	gap: 1rem;
+	gap: 1.5rem;
 	flex-wrap: wrap;
-	font-size: 0.875rem;
+	font-size: 0.9rem;
+	font-weight: 500;
 }
+
 .sd-main {
 	flex: 1;
 	width: 100%;
@@ -43,250 +57,319 @@
 	padding: 0;
 	box-sizing: border-box;
 }
-.sd-main .container-fluid,
-.sd-main .row,
-.sd-main .col-12 {
-	max-width: 100%;
-	min-width: 0;
-	box-sizing: border-box;
-}
+
 .tickets-react-shell {
 	min-width: 0;
 	max-width: 100%;
 }
+
 body.sd-body {
 	margin: 0;
 }
+
 html[data-pgm-theme="dark"] body.sd-body {
 	overflow-x: clip;
 }
 
 .sd-topbar a {
-	color: var(--pgm-topbar-link);
+	color: #94a3b8;
 	text-decoration: none;
+	transition: color 0.2s, transform 0.2s;
 }
 
 .sd-topbar a:hover {
-	color: #fff;
-	text-decoration: underline;
+	color: #38bdf8;
+	transform: translateY(-1px);
 }
 
 .pgm-sd-theme-toggle {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
-	padding: 0.25rem 0.6rem;
+	padding: 0.35rem 0.8rem;
 	border-radius: 999px;
-	border: 1px solid rgba(255, 255, 255, 0.35);
-	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.05);
 	color: #fff;
-	font-size: 0.8125rem;
-	font-weight: 500;
+	font-size: 0.85rem;
+	font-weight: 600;
 	cursor: pointer;
-	transition: background 0.15s, border-color 0.15s;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	backdrop-filter: blur(4px);
 }
 
 .pgm-sd-theme-toggle:hover {
-	background: rgba(255, 255, 255, 0.18);
-	border-color: rgba(255, 255, 255, 0.5);
-	color: #fff;
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(56, 189, 248, 0.6);
+	box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+	transform: scale(1.02);
 }
 
-html[data-pgm-theme="dark"] .sd-main .container-fluid,
-html[data-pgm-theme="dark"] .sd-main {
-	color: var(--prd-text, var(--pgm-text));
-}
+/* =========================================================================
+   2. TRATAMENTO GLASSMORPHISM EM CARDS E PAINEIS
+========================================================================= */
 
 html[data-pgm-theme="dark"] body.sd-body .card {
-	background: var(--prd-surface, var(--pgm-bg-surface));
-	border-color: var(--prd-border, var(--pgm-border));
-	color: var(--prd-text, var(--pgm-text));
+	background: rgba(30, 41, 59, 0.65);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	color: #f1f5f9;
+	border-radius: 12px;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	transition: all 0.25s ease-in-out;
+}
+
+html[data-pgm-theme="dark"] body.sd-body .card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.3), 0 8px 10px -4px rgba(0, 0, 0, 0.2);
+	border-color: rgba(56, 189, 248, 0.3);
 }
 
 html[data-pgm-theme="dark"] body.sd-body .table {
-	color: var(--prd-text, var(--pgm-text));
+	color: #e2e8f0;
 }
 
 html[data-pgm-theme="dark"] body.sd-body .table thead th {
-	background: var(--prd-surface2, var(--pgm-bg-elevated));
-	border-color: var(--prd-border, var(--pgm-border));
-	color: var(--prd-text, var(--pgm-text));
+	background: rgba(15, 23, 42, 0.85);
+	border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+	color: #94a3b8;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-size: 0.75rem;
 }
 
+/* Formulários Elevados */
 html[data-pgm-theme="dark"] body.sd-body .form-control {
-	background: var(--prd-surface, var(--pgm-bg-surface));
-	border-color: var(--prd-border2, var(--pgm-border-strong));
-	color: var(--prd-text, var(--pgm-text));
+	background: rgba(15, 23, 42, 0.6);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #f8fafc;
+	border-radius: 8px;
+	transition: all 0.2s;
 }
 
 html[data-pgm-theme="dark"] body.sd-body .form-control:focus {
-	border-color: var(--prd-teal, var(--pgm-primary));
-	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
+	border-color: #38bdf8;
+	background: rgba(15, 23, 42, 0.9);
+	box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
 }
 
 html[data-pgm-theme="dark"] body.sd-body .form-control:disabled,
 html[data-pgm-theme="dark"] body.sd-body select.form-control:disabled {
-	opacity: 0.65;
+	opacity: 0.5;
+	background: rgba(0, 0, 0, 0.2);
 	cursor: not-allowed;
 }
 
+/* Modais Glass */
 html[data-pgm-theme="dark"] body.sd-body .modal-content {
-	background: var(--prd-surface, var(--pgm-bg-surface));
-	border-color: var(--prd-border, var(--pgm-border));
-	color: var(--prd-text, var(--pgm-text));
+	background: rgba(30, 41, 59, 0.95);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 16px;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(12px);
+	color: #f1f5f9;
 }
 
 html[data-pgm-theme="dark"] body.sd-body .modal-header {
-	border-bottom-color: var(--prd-border, var(--pgm-border));
+	border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 html[data-pgm-theme="dark"] body.sd-body .modal-footer {
-	border-top-color: var(--prd-border, var(--pgm-border));
+	border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 html[data-pgm-theme="dark"] body.sd-body .close {
-	color: var(--prd-text, var(--pgm-text));
-	opacity: 0.75;
+	color: #cbd5e1;
+	opacity: 0.8;
+	text-shadow: none;
+	transition: color 0.2s;
+}
+html[data-pgm-theme="dark"] body.sd-body .close:hover {
+	color: #f87171;
 }
 
-/* ── Abertura de chamado: mesmos tokens que Produtos (.prd-*) ── */
+/* =========================================================================
+   3. ABERTURA DE TICKET (Native Views / ADD.CTP)
+========================================================================= */
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap {
-	background: var(--prd-bg, var(--pgm-bg-page)) !important;
-	color: var(--prd-text, var(--pgm-text));
+	background: transparent !important;
+	color: #f8fafc;
 }
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-kicker,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-sub,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-sum-field-label {
-	color: var(--prd-muted, var(--pgm-text-muted)) !important;
+	color: #94a3b8 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 0.75rem;
 }
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-title {
-	color: var(--prd-text, var(--pgm-text)) !important;
+	color: #f8fafc !important;
+	font-weight: 800;
 }
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status {
-	background: var(--prd-surface, var(--pgm-bg-surface)) !important;
-	border: 1px solid var(--prd-border, var(--pgm-border));
-	box-shadow: none;
+	background: rgba(30, 41, 59, 0.6) !important;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+	backdrop-filter: blur(8px);
 }
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card .sd-rule {
-	background: var(--prd-surface, var(--pgm-bg-surface)) !important;
-	border-color: var(--prd-border, var(--pgm-border)) !important;
-	color: var(--prd-text, var(--pgm-text));
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+	background: rgba(30, 41, 59, 0.65) !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
+	border-radius: 12px;
+	color: #f1f5f9;
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	transition: border-color 0.3s;
 }
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-rules-card {
-	background: var(--prd-teal-dim, var(--pgm-primary-muted)) !important;
-	border: 1px solid var(--prd-border, var(--pgm-border));
+	background: rgba(13, 148, 136, 0.15) !important;
+	border: 1px solid rgba(45, 212, 191, 0.3);
 }
-html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-title,
-html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-label-block,
-html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-field label.control-label {
-	color: var(--prd-text, var(--pgm-text)) !important;
-}
-html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-card-desc,
-html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-hint {
-	color: var(--prd-muted, var(--pgm-text-muted)) !important;
-}
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .form-control,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-textarea.form-control,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-field .form-control,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-email.form-control {
-	background: var(--prd-surface2, var(--pgm-bg-elevated)) !important;
-	color: var(--prd-text, var(--pgm-text)) !important;
-	border-color: var(--prd-border2, var(--pgm-border-strong)) !important;
-	-webkit-text-fill-color: var(--prd-text, var(--pgm-text)) !important;
-	box-shadow: none !important;
+	background: rgba(15, 23, 42, 0.8) !important;
+	color: #f8fafc !important;
+	border: 1px solid rgba(255, 255, 255, 0.1) !important;
+	border-radius: 6px;
 }
+
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-dropzone,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-sum-item,
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .ticket-add-lead {
-	background: var(--prd-surface2, var(--pgm-bg-elevated)) !important;
-	border-color: var(--prd-border, var(--pgm-border)) !important;
-	color: var(--prd-text, var(--pgm-text));
-}
-html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status-value.is-ok {
-	color: var(--prd-teal-lt, var(--pgm-primary-hover)) !important;
+	background: rgba(30, 41, 59, 0.5) !important;
+	border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+	color: #cbd5e1;
 }
 
-/* ── React tickets (Vite): map para --prd-* (Produtos) ── */
-html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white {
-	background-color: var(--prd-surface, var(--pgm-bg-surface)) !important;
+html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status-value.is-ok {
+	color: #34d399 !important;
+	text-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
 }
+
+/* =========================================================================
+   4. REACT TICKETS (Vite Tailwind Overrides) - Mapeamento para o Universo Premium
+========================================================================= */
+
+/* Fundo das listas e abas React */
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white\/90 {
-	background-color: color-mix(in srgb, var(--prd-surface, var(--pgm-bg-surface)) 92%, transparent) !important;
+	background-color: rgba(30, 41, 59, 0.6) !important;
+	backdrop-filter: blur(10px);
 }
+
+/* Fundos de cards aninhados */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/40,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/80,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/90 {
-	background-color: color-mix(in srgb, var(--prd-surface2, var(--pgm-bg-elevated)) 88%, transparent) !important;
+	background-color: rgba(15, 23, 42, 0.65) !important;
 }
+
+/* Títulos / Textos Principais */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-900,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-800 {
-	color: var(--prd-text, var(--pgm-text)) !important;
+	color: #f8fafc !important;
+	font-weight: 600;
 }
+
+/* Subtextos */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-700,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-600 {
-	color: var(--prd-text2, var(--pgm-text-secondary)) !important;
+	color: #cbd5e1 !important;
 }
+
+/* Mutados (Datas, labels pequenas) */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-500,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-slate-400 {
-	color: var(--prd-muted, var(--pgm-text-muted)) !important;
+	color: #94a3b8 !important;
 }
+
+/* Bordas em listas */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-100,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-slate-200 {
-	border-color: var(--prd-border, var(--pgm-border)) !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
 }
+
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-	border-color: var(--prd-border, var(--pgm-border)) !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Flash / alerts Bootstrap no shell Service Desk */
+/* Cores Táticas para Status React */
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-orange-600,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-orange-500 {
+	color: #fb923c !important; /* Laranja vibrante para pendências */
+	text-shadow: 0 0 10px rgba(251, 146, 60, 0.3);
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-blue-600,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-blue-500 {
+	color: #38bdf8 !important; /* Azul elétrico para Em Andamento */
+	text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-green-600,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-green-500 {
+	color: #34d399 !important; /* Verde neon para Resolvidos/Fechados */
+}
+
+/* =========================================================================
+   5. COMPONENTES GLOBAIS / BOOTSTRAP OVERRIDES
+========================================================================= */
+
 html[data-pgm-theme="dark"] body.sd-body .alert {
-	background: var(--prd-surface2, var(--pgm-bg-elevated));
-	border-color: var(--prd-border, var(--pgm-border));
-	color: var(--prd-text, var(--pgm-text));
+	background: rgba(30, 41, 59, 0.85);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #f1f5f9;
+	border-radius: 10px;
+	backdrop-filter: blur(8px);
 }
 html[data-pgm-theme="dark"] body.sd-body .alert-success {
-	background: var(--pgm-success-bg);
-	border-color: rgba(52, 211, 153, 0.35);
-	color: var(--pgm-success-text);
+	background: rgba(6, 78, 59, 0.6);
+	border-color: rgba(52, 211, 153, 0.4);
+	color: #34d399;
 }
 html[data-pgm-theme="dark"] body.sd-body .alert-warning {
-	background: var(--pgm-warning-bg);
-	border-color: rgba(251, 191, 36, 0.35);
-	color: var(--pgm-warning-text);
+	background: rgba(120, 53, 15, 0.6);
+	border-color: rgba(251, 146, 60, 0.4);
+	color: #fbbf24;
 }
 html[data-pgm-theme="dark"] body.sd-body .alert-danger {
-	background: var(--pgm-danger-bg);
-	border-color: rgba(248, 113, 113, 0.35);
-	color: var(--pgm-danger-text);
+	background: rgba(127, 29, 29, 0.6);
+	border-color: rgba(248, 113, 113, 0.4);
+	color: #fca5a5;
 }
 html[data-pgm-theme="dark"] body.sd-body .alert-info {
-	background: var(--pgm-info-bg);
-	border-color: rgba(69, 229, 237, 0.25);
-	color: var(--pgm-info-text);
+	background: rgba(12, 74, 110, 0.6);
+	border-color: rgba(56, 189, 248, 0.4);
+	color: #7dd3fc;
 }
 
-html[data-pgm-theme="dark"] body.sd-body .tickets-react-shell,
-html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd {
-	min-width: 0;
-	max-width: 100%;
-	color: var(--prd-text, var(--pgm-text));
-}
-
-/* Menu de ações (React portal em document.body): garante tema escuro mesmo com .bg-white / Bootstrap */
 html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
-	background-color: var(--prd-surface, var(--pgm-bg-surface)) !important;
-	color: var(--prd-text, var(--pgm-text)) !important;
-	border-color: var(--prd-border, var(--pgm-border)) !important;
+	background-color: rgba(30, 41, 59, 0.95) !important;
+	color: #f1f5f9 !important;
+	border: 1px solid rgba(255, 255, 255, 0.1) !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+	border-radius: 12px;
+	backdrop-filter: blur(10px);
 }
 
-/* Links de ticket: mesmo tom de link das tabelas em Produtos / pgm-advanced-module */
 html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link {
-	color: var(--pgm-link) !important;
+	color: #38bdf8 !important;
+	font-weight: 600;
+	transition: all 0.2s;
 }
 html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link:hover {
-	color: var(--pgm-primary-hover) !important;
+	color: #818cf8 !important; /* Tom vibrante puxando pro roxo na ação over */
+	text-decoration: underline;
 }
