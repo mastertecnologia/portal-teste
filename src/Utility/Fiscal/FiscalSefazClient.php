@@ -325,9 +325,7 @@ class FiscalSefazClient {
             . ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
             . ' xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">'
             . '<soap12:Body>'
-            . '<' . $method . ' xmlns="' . $wsdlNs . '">'
-            . '<nfeDadosMsg>' . $xmlClean . '</nfeDadosMsg>'
-            . '</' . $method . '>'
+            . '<nfeDadosMsg xmlns="' . $wsdlNs . '">' . $xmlClean . '</nfeDadosMsg>'
             . '</soap12:Body>'
             . '</soap12:Envelope>';
     }
