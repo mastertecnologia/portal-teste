@@ -172,7 +172,8 @@ export default function ClientTicketDetail({ boot }) {
         <span
           className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
             statusType(statusPlain),
-            true
+            true,
+            Boolean(boot?.servicedesk)
           )}`}
         >
           {statusPlain}
@@ -183,7 +184,8 @@ export default function ClientTicketDetail({ boot }) {
           <span
             className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badgeClass(
               priorityType(ticket.prioridade),
-              true
+              true,
+              Boolean(boot?.servicedesk)
             )}`}
           >
             Severidade: {ticket.prioridade}

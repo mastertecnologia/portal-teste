@@ -133,6 +133,7 @@ function TicketActionsMenu({
   openTransfer,
   handleStartAtendimento,
   startBusyId,
+  servicedesk = false,
 }) {
   const acoesOrd = sortTicketAcoes(acoes || []);
   const [open, setOpen] = useState(false);
@@ -194,6 +195,13 @@ function TicketActionsMenu({
     danger:
       'text-slate-700 hover:bg-red-50 hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-300/70 dark:text-red-200 dark:hover:bg-red-950/40 dark:hover:text-red-100',
   };
+  const toneClsSd = {
+    default:
+      'text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-bg-elevated)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:bg-[var(--pgm-bg-elevated)] dark:focus-visible:ring-[var(--pgm-border)]/55',
+    muted: toneCls.muted,
+    danger: toneCls.danger,
+  };
+  const tc = servicedesk ? toneClsSd : toneCls;
 
   const rowBase =
     'flex w-full items-center gap-3 border-0 bg-transparent px-3 py-2.5 text-left text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-45';
@@ -207,7 +215,7 @@ function TicketActionsMenu({
       style={{ top: pos.top, left: pos.left }}
     >
       <div className="border-b border-slate-100 bg-slate-100 px-3 py-2 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[var(--pgm-primary-hover)]">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[var(--pgm-text-muted)]">
           Chamado
         </p>
         <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-[var(--pgm-text)]">#{ticket.id}</p>
@@ -220,14 +228,16 @@ function TicketActionsMenu({
               ? 'text-red-500/90'
               : tone === 'muted'
                 ? 'text-slate-400'
-                : 'text-[var(--pgm-primary)]';
+                : servicedesk
+                  ? 'text-[var(--pgm-text-secondary)]'
+                  : 'text-[var(--pgm-primary)]';
           if (a.behavior === 'reactTransfer') {
             return (
               <li key={`${a.key}-${a.label}`} role="none">
                 <button
                   type="button"
                   role="menuitem"
-                  className={`${rowBase} ${toneCls[tone]}`}
+                  className={`${rowBase} ${tc[tone]}`}
                   onClick={() => {
                     setOpen(false);
                     openTransfer(ticket);
@@ -248,7 +258,7 @@ function TicketActionsMenu({
                 <button
                   type="button"
                   role="menuitem"
-                  className={`${rowBase} ${toneCls.default}`}
+                  className={`${rowBase} ${tc.default}`}
                   disabled={busy}
                   onClick={() => {
                     setOpen(false);
@@ -270,7 +280,7 @@ function TicketActionsMenu({
                 href={a.url}
                 target={a.target || '_self'}
                 rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                className={`${rowBase} ${toneCls[tone]} no-underline`}
+                className={`${rowBase} ${tc[tone]} no-underline`}
                 onClick={() => setOpen(false)}
               >
                 <span className={iconWrap}>
@@ -294,10 +304,14 @@ function TicketActionsMenu({
           aria-expanded={open}
           aria-haspopup="menu"
           aria-label={`Abrir menu de ações do ticket ${ticket.id}`}
-          className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pgm-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-page)] ${
-            open
-              ? 'bg-[var(--pgm-erp-teal-active)] text-white ring-2 ring-[var(--pgm-primary)]/45'
-              : 'bg-[var(--pgm-primary)] text-white hover:brightness-110'
+          className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-page)] ${
+            servicedesk
+              ? open
+                ? 'border border-[var(--pgm-border-strong)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text)] ring-2 ring-[var(--pgm-border)]/80 focus-visible:ring-[var(--pgm-border)]'
+                : 'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-surface)] focus-visible:ring-[var(--pgm-border)]'
+              : open
+                ? 'bg-[var(--pgm-erp-teal-active)] text-white ring-2 ring-[var(--pgm-primary)]/45 focus-visible:ring-[var(--pgm-primary)]'
+                : 'bg-[var(--pgm-primary)] text-white hover:brightness-110 focus-visible:ring-[var(--pgm-primary)]'
           }`}
           onClick={(e) => {
             e.stopPropagation();
@@ -330,7 +344,7 @@ function TicketActionsMenu({
 }
 
 /** Destaques operacionais na fila (Service Desk / técnico). */
-function techRowHighlightClass(ticket) {
+function techRowHighlightClass(ticket, servicedesk = false) {
   const label = String(ticket.situacaoLabel || ticket.status || '').toLowerCase();
   const closed =
     label.includes('resolvido') || label.includes('fechado') || label.includes('cancelado');
@@ -341,10 +355,14 @@ function techRowHighlightClass(ticket) {
       ticket.tecnicos === '—' ||
       ticket.tecnicos === '');
   const parts = ['align-middle', 'transition'];
-  if (label.includes('aguardando')) {
-    parts.push('bg-[var(--pgm-primary-muted)]');
-  } else if (label.includes('execução') || label.includes('andamento')) {
-    parts.push('bg-[color-mix(in_srgb,var(--pgm-primary)_10%,var(--pgm-bg-surface)_90%)]');
+  if (!servicedesk) {
+    if (label.includes('aguardando')) {
+      parts.push('bg-[var(--pgm-primary-muted)]');
+    } else if (label.includes('execução') || label.includes('andamento')) {
+      parts.push('bg-[color-mix(in_srgb,var(--pgm-primary)_10%,var(--pgm-bg-surface)_90%)]');
+    }
+  } else if (label.includes('aguardando') || label.includes('execução') || label.includes('andamento')) {
+    parts.push('bg-[color-mix(in_srgb,var(--pgm-bg-elevated)_42%,var(--pgm-bg-surface)_58%)]');
   }
   if (semResp) {
     parts.push('ring-1', 'ring-inset', 'ring-[var(--pgm-border)]');
@@ -903,7 +921,7 @@ export default function TechDashboard({ boot }) {
                   return (
                     <tr
                       key={ticket.id}
-                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-100/90 dark:hover:bg-[var(--pgm-bg-elevated)]`}
+                      className={`${techRowHighlightClass(ticket, Boolean(boot?.servicedesk))} hover:bg-slate-100/90 dark:hover:bg-[var(--pgm-bg-elevated)]`}
                     >
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.edit ? (
@@ -951,7 +969,8 @@ export default function TechDashboard({ boot }) {
                         <span
                           className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
                             statusType(st),
-                            embedded
+                            embedded,
+                            Boolean(boot?.servicedesk)
                           )}`}
                           title={st}
                         >
@@ -994,6 +1013,7 @@ export default function TechDashboard({ boot }) {
                           openTransfer={openTransfer}
                           handleStartAtendimento={handleStartAtendimento}
                           startBusyId={startBusyId}
+                          servicedesk={Boolean(boot?.servicedesk)}
                         />
                       </td>
                     </tr>
@@ -1214,7 +1234,11 @@ export default function TechDashboard({ boot }) {
             {addTicket ? (
               <a
                 href={addTicket}
-                className="inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)] dark:hover:brightness-110"
+                className={
+                  boot?.servicedesk
+                    ? 'inline-flex shrink-0 items-center justify-center self-center rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm font-semibold leading-none text-[var(--pgm-text)] shadow-sm hover:bg-[var(--pgm-bg-surface)]'
+                    : 'inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)] dark:hover:brightness-110'
+                }
               >
                 Abrir ticket
               </a>

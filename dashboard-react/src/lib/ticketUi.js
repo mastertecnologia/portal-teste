@@ -25,6 +25,29 @@ const BADGE_LIGHT = {
     'bg-red-50 text-red-800 border-red-300 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
 };
 
+/** Service Desk (fila técnica): pills neutras — sem preenchimento teal/emerald. */
+const SD_NEUTRAL =
+  'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]';
+const SD_NEUTRAL_SOFT =
+  'border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text-muted)]';
+
+const BADGE_SERVICEDESK = {
+  success: SD_NEUTRAL,
+  warning:
+    'border border-amber-700/50 bg-amber-950/35 text-amber-200',
+  critical: 'border border-rose-700/50 bg-rose-950/35 text-rose-200',
+  high: 'border border-orange-700/50 bg-orange-950/35 text-orange-200',
+  medium: SD_NEUTRAL,
+  low: SD_NEUTRAL_SOFT,
+  progress: SD_NEUTRAL,
+  waiting: SD_NEUTRAL,
+  pendingTech: SD_NEUTRAL,
+  resolved: SD_NEUTRAL_SOFT,
+  escalated: 'border border-rose-700/50 bg-rose-950/40 text-rose-200',
+  closed: SD_NEUTRAL_SOFT,
+  cancelled: 'border border-red-800/50 bg-red-950/40 text-red-200',
+};
+
 /** Badges no embed portal cliente — superfície escura PGM. */
 const BADGE_EMBED = {
   success:
@@ -50,8 +73,12 @@ const BADGE_EMBED = {
 /**
  * @param {string} type
  * @param {boolean} [embed] lista/detalhe embutidos no shell cliente (tema escuro)
+ * @param {boolean} [servicedesk] fila técnica no Service Desk — badges neutros (sem tons esverdeados)
  */
-export function badgeClass(type, embed = false) {
+export function badgeClass(type, embed = false, servicedesk = false) {
+  if (servicedesk) {
+    return BADGE_SERVICEDESK[type] || BADGE_SERVICEDESK.low;
+  }
   const map = embed ? BADGE_EMBED : BADGE_LIGHT;
   return map[type] || (embed ? BADGE_EMBED.low : BADGE_LIGHT.low);
 }
@@ -108,18 +135,22 @@ export function acaoKeyToBadgeType(key) {
 /**
  * @param {string} key
  * @param {boolean} [embed]
+ * @param {boolean} [servicedesk]
  */
-export function acaoLinkClassName(key, embed = false) {
+export function acaoLinkClassName(key, embed = false, servicedesk = false) {
   const k = String(key || '').toLowerCase();
   const base =
     'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
   if (embed && k === 'imprimir') {
+    if (servicedesk) {
+      return `${base} border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)] hover:bg-[var(--pgm-bg-surface)]`;
+    }
     return `${base} border-[var(--pgm-primary)] bg-[var(--pgm-primary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:brightness-110`;
   }
   if (embed && k === 'cancelar') {
-    return `${base} ${badgeClass('cancelled', true)}`;
+    return `${base} ${badgeClass('cancelled', true, servicedesk)}`;
   }
-  return `${base} ${badgeClass(acaoKeyToBadgeType(key), embed)}`;
+  return `${base} ${badgeClass(acaoKeyToBadgeType(key), embed, servicedesk)}`;
 }
 
 /** Mesma ordem visual para qualquer status (como na fila “Em execução”). */

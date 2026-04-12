@@ -208,7 +208,8 @@ export default function TechTicketEdit({ boot }) {
             <span
               className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass(
                 statusType(statusLine),
-                embedded
+                embedded,
+                Boolean(boot?.servicedesk)
               )}`}
             >
               {statusLine}

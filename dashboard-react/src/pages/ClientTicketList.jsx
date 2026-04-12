@@ -297,7 +297,8 @@ export default function ClientTicketList({ boot }) {
                         <span
                           className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
                             statusType(st),
-                            embedded
+                            embedded,
+                            Boolean(boot?.servicedesk)
                           )}`}
                           title={st}
                         >
@@ -324,7 +325,7 @@ export default function ClientTicketList({ boot }) {
                                 href={a.url}
                                 target={a.target || '_self'}
                                 rel={a.target === '_blank' ? 'noreferrer' : undefined}
-                                className={acaoLinkClassName(a.key, embedded)}
+                                className={acaoLinkClassName(a.key, embedded, Boolean(boot?.servicedesk))}
                                 title={a.label}
                               >
                                 {a.label}

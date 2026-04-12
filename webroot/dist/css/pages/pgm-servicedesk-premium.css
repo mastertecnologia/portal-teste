@@ -8,8 +8,8 @@
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
-	background: radial-gradient(circle at top right, #111827, #0f172a, #020617);
-	color: var(--prd-text, #f8fafc);
+	background: var(--prd-bg, var(--pgm-bg-page));
+	color: var(--prd-text, var(--pgm-text));
 	max-width: 100%;
 	box-sizing: border-box;
 }
@@ -306,10 +306,10 @@ html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
 	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 
-/* Links de ticket: mesmo tom de link das tabelas em Produtos / pgm-advanced-module */
+/* Links na fila SD: texto neutro (sem ciano/teal de --pgm-link) */
 html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link {
-	color: var(--pgm-link) !important;
+	color: var(--pgm-text-secondary) !important;
 }
 html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link:hover {
-	color: var(--pgm-primary-hover) !important;
+	color: var(--pgm-text) !important;
 }
