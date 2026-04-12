@@ -18,10 +18,10 @@
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	/* Marca PGM: mesmo degradê da tela Produtos / sidebar (.pgm-sidebar-mark) */
-	background: linear-gradient(135deg, var(--prd-teal, var(--pgm-primary)) 0%, var(--pgm-secondary) 100%);
-	color: #fff;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+	background: var(--prd-surface2, var(--pgm-bg-elevated));
+	color: var(--prd-text, var(--pgm-text));
+	border-bottom: 1px solid var(--prd-border, var(--pgm-border));
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 .sd-topbar .sd-brand {
 	font-weight: 700;
@@ -62,12 +62,12 @@ html[data-pgm-theme="dark"] body.sd-body {
 }
 
 .sd-topbar a {
-	color: var(--pgm-topbar-link);
+	color: var(--pgm-link);
 	text-decoration: none;
 }
 
 .sd-topbar a:hover {
-	color: #fff;
+	color: var(--pgm-primary-hover);
 	text-decoration: underline;
 }
 
