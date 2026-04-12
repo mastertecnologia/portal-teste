@@ -263,8 +263,7 @@ html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap .sd-add-status-value.
 /* Fundo das listas e abas React */
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-white\/90 {
-	background-color: rgba(30, 41, 59, 0.6) !important;
-	backdrop-filter: blur(10px);
+	background-color: #1e293b !important; /* solid deep slate to prevent stacking crashes */
 }
 
 /* Fundos de cards aninhados */
@@ -272,7 +271,7 @@ html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/40,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/80,
 html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-slate-50\/90 {
-	background-color: rgba(15, 23, 42, 0.65) !important;
+	background-color: #0f172a !important; /* solid navy */
 }
 
 /* Títulos / Textos Principais */
