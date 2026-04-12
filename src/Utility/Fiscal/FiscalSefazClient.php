@@ -524,22 +524,26 @@ class FiscalSefazClient {
             return '';
         }
 
-        // Navega: Body > {method}Response > {method}Result > conteudo XML
+        // As respostas de negócio da SEFAZ sempre possuem raiz iniciada em 'ret' (ex.: retConsStatServ, retConsCad, retEnviNFe).
+        $xpath = new \DOMXPath($doc);
+        $nodes = $xpath->query('.//*[starts-with(local-name(), "ret")]', $body);
+        if ($nodes && $nodes->length > 0) {
+            return trim($doc->saveXML($nodes->item(0)));
+        }
+
+        // Fallback caso seja outro formato: extrai o primeiro nozinho debaixo da Response
         foreach ($body->childNodes as $responseNode) {
             if ($responseNode->nodeType !== XML_ELEMENT_NODE) {
                 continue;
             }
-            foreach ($responseNode->childNodes as $resultNode) {
-                if ($resultNode->nodeType !== XML_ELEMENT_NODE) {
-                    continue;
-                }
-                // Constroi XML a partir dos filhos do nó Result
-                $innerParts = [];
-                foreach ($resultNode->childNodes as $child) {
-                    $innerParts[] = $doc->saveXML($child);
-                }
-                return trim(implode('', $innerParts));
+            $payload = $responseNode;
+            foreach ($responseNode->childNodes as $rn) {
+                 if ($rn->nodeType === XML_ELEMENT_NODE) {
+                     $payload = $rn;
+                     break;
+                 }
             }
+            return trim($doc->saveXML($payload));
         }
 
         return '';
