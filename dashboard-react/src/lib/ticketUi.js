@@ -44,20 +44,26 @@ const SD_PRD_VAL = `${SD_BADGE_BASE} border border-[var(--prd-border)] bg-[var(-
 const SD_PRD_MUTED = `${SD_BADGE_BASE} border border-[var(--prd-border)] bg-[var(--prd-surface2)] text-[color:var(--prd-muted)]`;
 /** .prd-td-margin margin-ok */
 const SD_PRD_ORANGE = `${SD_BADGE_BASE} border-[color:rgba(255,136,51,0.35)] bg-[var(--prd-orange-dim)] text-[color:var(--prd-orange)]`;
+/** Prioridade média — amarelo Produtos */
+const SD_PRD_YELLOW = `${SD_BADGE_BASE} border-[color:rgba(210,153,34,0.45)] bg-[var(--prd-yellow-dim)] text-[color:var(--prd-yellow)]`;
+/** Fechado — roxo Produtos */
+const SD_PRD_PURPLE = `${SD_BADGE_BASE} border-[color:rgba(166,130,230,0.45)] bg-[rgba(166,130,230,0.14)] text-[color:var(--prd-purple)]`;
+/** Escalado — violeta (distinto de cancelado) */
+const SD_PRD_VIOLET = `${SD_BADGE_BASE} border-[color:rgba(139,92,246,0.45)] bg-[rgba(139,92,246,0.12)] text-violet-200`;
 
 const BADGE_SERVICEDESK = {
   success: SD_PRD_ON,
   warning: 'border border-amber-700/50 bg-amber-950/35 text-amber-200 tracking-wide shadow-none',
   critical: SD_PRD_OFF,
   high: SD_PRD_ORANGE,
-  medium: SD_PRD_ORANGE,
+  medium: SD_PRD_YELLOW,
   low: SD_PRD_MUTED,
   progress: SD_PRD_ON,
   waiting: SD_PRD_BLUE,
   pendingTech: SD_PRD_TEAL,
   resolved: SD_PRD_VAL,
-  escalated: SD_PRD_OFF,
-  closed: SD_PRD_MUTED,
+  escalated: SD_PRD_VIOLET,
+  closed: SD_PRD_PURPLE,
   cancelled: SD_PRD_OFF,
 };
 
@@ -86,7 +92,7 @@ const BADGE_EMBED = {
 /**
  * @param {string} type
  * @param {boolean} [embed] lista/detalhe embutidos no shell cliente (tema escuro)
- * @param {boolean} [servicedesk] fila técnica no Service Desk — badges como tela Produtos (.prd-badge*)
+ * @param {boolean} [servicedesk] fila Service Desk — badge por status (cores distintas); colunas sem tinta
  */
 export function badgeClass(type, embed = false, servicedesk = false) {
   if (servicedesk) {
@@ -156,7 +162,7 @@ export function acaoLinkClassName(key, embed = false, servicedesk = false) {
     'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
   if (embed && k === 'imprimir') {
     if (servicedesk) {
-      return `${base} border-[color:rgba(29,158,117,0.35)] bg-[var(--prd-teal-dim)] text-[color:var(--prd-teal)] hover:bg-[var(--prd-surface2)]`;
+      return `${base} border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)] hover:bg-[var(--pgm-bg-surface)]`;
     }
     return `${base} border-[var(--pgm-primary)] bg-[var(--pgm-primary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:brightness-110`;
   }
