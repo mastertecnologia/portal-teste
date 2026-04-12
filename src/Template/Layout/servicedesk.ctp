@@ -22,7 +22,7 @@ $authSd = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-advanced-module') ?>
-	<link rel="stylesheet" href="<?= $this->Url->build('/dist/css/pages/pgm-servicedesk-theme.css?v=2.1') ?>">
+	<link rel="stylesheet" href="<?= $this->Url->build('/dist/css/pages/pgm-servicedesk-premium.css') ?>">
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 	<?= $this->fetch('meta') ?>
 	<?= $this->fetch('css') ?>
