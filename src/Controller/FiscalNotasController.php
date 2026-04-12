@@ -1322,7 +1322,8 @@ class FiscalNotasController extends AppController {
             }
         }
 
-        $ufs = array_keys(Configure::read('Fiscal.ufs'));
+        $ufsMap = Configure::read('Fiscal.ufs');
+        $ufs = is_array($ufsMap) ? array_keys($ufsMap) : [];
         $this->set(compact('resultado', 'docInput', 'ufInput', 'tipoInput', 'ufs'));
     }
 

@@ -22,7 +22,7 @@ class FiscalSefazClientSoapTest extends TestCase {
         Configure::write('Fiscal.webservices.svrs', [
             2 => [
                 'NfeStatusServico'    => 'https://nfe-homologacao.svrs.rs.gov.br/ws/NfeStatusServico/NfeStatusServico4.asmx',
-                'CadConsultaCadastro' => 'https://cad.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx',
+                'CadConsultaCadastro' => 'https://cad-homologacao.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx',
                 'NfeConsultaProtocolo'=> 'https://nfe-homologacao.svrs.rs.gov.br/ws/NfeConsulta/NfeConsulta4.asmx',
             ],
         ]);
@@ -116,9 +116,9 @@ class FiscalSefazClientSoapTest extends TestCase {
     }
 
     /**
-     * Envelope status: nfeDadosMsg em CDATA, sem Header (NFe 4.00).
+     * Envelope: nfeDadosMsg com XML cru (sem CDATA), sem Header — padrao Cad4 / status SVRS.
      */
-    public function testBuildSoap12EnvelopeStatusUsesCdataNoHeader() {
+    public function testBuildSoap12EnvelopeEmbedsRawXmlInNfeDadosMsg() {
         $class = new \ReflectionClass(\App\Utility\Fiscal\FiscalSefazClient::class);
         $method = $class->getMethod('buildSoap12Envelope');
         $method->setAccessible(true);
@@ -129,34 +129,11 @@ class FiscalSefazClientSoapTest extends TestCase {
         $inner = '<consStatServ xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
             . '<tpAmb>2</tpAmb><cUF>35</cUF><xServ>STATUS</xServ></consStatServ>';
         $ns = 'http://www.portalfiscal.inf.br/nfe/wsdl/NFeStatusServico4';
-        $env = $method->invoke($instance, 'nfeStatusServicoNF', $ns, $inner, null);
+        $env = $method->invoke($instance, 'nfeStatusServicoNF', $ns, $inner);
 
         $this->assertStringNotContainsString('<soap12:Header>', $env);
-        $this->assertStringContainsString('<nfeDadosMsg><![CDATA[' . $inner . ']]></nfeDadosMsg>', $env);
-    }
-
-    /**
-     * Envelope consulta cadastro: Header nfeCabecMsg + CDATA (ConsCad 2.00).
-     */
-    public function testBuildSoap12EnvelopeCadastroHasCabecAndCdata() {
-        $class = new \ReflectionClass(\App\Utility\Fiscal\FiscalSefazClient::class);
-        $method = $class->getMethod('buildSoap12Envelope');
-        $method->setAccessible(true);
-
-        $signerStub = $this->createMock(\App\Utility\Fiscal\FiscalSigner::class);
-        $instance = new \App\Utility\Fiscal\FiscalSefazClient($signerStub, ['ambiente' => 2, 'uf' => 'SP']);
-
-        $inner = '<ConsCad xmlns="http://www.portalfiscal.inf.br/nfe" versao="2.00">'
-            . '<infCons><xServ>CONS-CAD</xServ><UF>SP</UF><CNPJ>12345678000190</CNPJ></infCons></ConsCad>';
-        $ns = 'http://www.portalfiscal.inf.br/nfe/wsdl/CadConsultaCadastro4';
-        $cabec = ['cUF' => '35', 'versaoDados' => '2.00'];
-        $env = $method->invoke($instance, 'consultaCadastro', $ns, $inner, $cabec);
-
-        $this->assertStringContainsString('<soap12:Header>', $env);
-        $this->assertStringContainsString('<nfeCabecMsg xmlns="' . $ns . '">', $env);
-        $this->assertStringContainsString('<cUF>35</cUF>', $env);
-        $this->assertStringContainsString('<versaoDados>2.00</versaoDados>', $env);
-        $this->assertStringContainsString('<nfeDadosMsg><![CDATA[' . $inner . ']]></nfeDadosMsg>', $env);
+        $this->assertStringNotContainsString('<![CDATA[', $env);
+        $this->assertStringContainsString('<nfeDadosMsg>' . $inner . '</nfeDadosMsg>', $env);
     }
 
     /**

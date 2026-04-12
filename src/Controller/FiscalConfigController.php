@@ -57,8 +57,9 @@ class FiscalConfigController extends AppController {
 
         $regimes = Configure::read('Fiscal.regimes');
         $regimeNormalEnquadramentoOptions = Configure::read('Fiscal.regime_normal_enquadramento') ?: [];
-        $ufs = array_keys(Configure::read('Fiscal.ufs'));
-        $ufsOptions = array_combine($ufs, $ufs);
+        $ufsMap = Configure::read('Fiscal.ufs');
+        $ufs = is_array($ufsMap) ? array_keys($ufsMap) : [];
+        $ufsOptions = $ufs !== [] ? array_combine($ufs, $ufs) : [];
 
         $certificados = $this->FiscalCertificados->find('list', [
             'keyField' => 'id',
@@ -143,7 +144,8 @@ class FiscalConfigController extends AppController {
             ->order(['uf_origem' => 'ASC', 'uf_destino' => 'ASC'])
             ->toArray();
 
-        $ufs = array_keys(Configure::read('Fiscal.ufs'));
+        $ufsMap = Configure::read('Fiscal.ufs');
+        $ufs = is_array($ufsMap) ? array_keys($ufsMap) : [];
         $this->set(compact('aliquotas', 'ufs'));
     }
 
@@ -161,8 +163,9 @@ class FiscalConfigController extends AppController {
             }
         }
 
-        $ufs = array_keys(Configure::read('Fiscal.ufs'));
-        $ufsOptions = array_combine($ufs, $ufs);
+        $ufsMap = Configure::read('Fiscal.ufs');
+        $ufs = is_array($ufsMap) ? array_keys($ufsMap) : [];
+        $ufsOptions = $ufs !== [] ? array_combine($ufs, $ufs) : [];
         $this->set(compact('aliquota', 'ufsOptions'));
     }
 
@@ -182,8 +185,9 @@ class FiscalConfigController extends AppController {
             }
         }
 
-        $ufs = array_keys(Configure::read('Fiscal.ufs'));
-        $ufsOptions = array_combine($ufs, $ufs);
+        $ufsMap = Configure::read('Fiscal.ufs');
+        $ufs = is_array($ufsMap) ? array_keys($ufsMap) : [];
+        $ufsOptions = $ufs !== [] ? array_combine($ufs, $ufs) : [];
         $this->set(compact('aliquota', 'ufsOptions'));
     }
 

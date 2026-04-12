@@ -111,7 +111,8 @@ return [
                     'NfeStatusServico'        => 'https://nfe-homologacao.svrs.rs.gov.br/ws/NfeStatusServico/NfeStatusServico4.asmx',
                     'NfeInutilizacao'         => 'https://nfe-homologacao.svrs.rs.gov.br/ws/nfeinutilizacao/nfeinutilizacao4.asmx',
                     'RecepcaoEvento'          => 'https://nfe-homologacao.svrs.rs.gov.br/ws/recepcaoevento/recepcaoevento4.asmx',
-                    'CadConsultaCadastro'     => 'https://cad.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx',
+                    // Homologacao: endpoint dedicado SVRS (evita 239 misturando tpAmb=2 com URL de producao)
+                    'CadConsultaCadastro'     => 'https://cad-homologacao.svrs.rs.gov.br/ws/cadconsultacadastro/cadconsultacadastro4.asmx',
                 ],
             ],
             // SVC-RS — SEFAZ Virtual de Contingência (RS)

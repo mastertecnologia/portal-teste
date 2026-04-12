@@ -149,11 +149,8 @@ class FiscalSefazClient {
         }
 
         $wsNs = 'http://www.portalfiscal.inf.br/nfe/wsdl/CadConsultaCadastro4';
-        // Cabecalho SOAP nfeCabecMsg (cUF + versaoDados) exigido para ConsCad 2.00 — mesmo padrao NFePHP/sefazCadastro
-        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs, [
-            'cUF' => (string)$cuf,
-            'versaoDados' => '2.00',
-        ]);
+        // CadConsultaCadastro4: sem nfeCabecMsg no SOAP (layout legado v2); corpo ConsCad permanece versao 2.00 (XSD consCad).
+        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs);
         $result['cadastro'] = $this->parseCadastroRetorno($result['xml_retorno'] ?? '');
         return $result;
     }
@@ -320,38 +317,16 @@ class FiscalSefazClient {
     // ── Transporte SOAP 1.2 via cURL ─────────────────────────────────
 
     /**
-     * Conteudo de nfeDadosMsg como CDATA (WSDL trata como string; evita falha de parse/serializacao no ASMX).
+     * Envelope SOAP 1.2 (Body apenas). XML interno em nfeDadosMsg sem CDATA — alinhado ao SoapClient / ASMX SVRS.
      */
-    private function wrapInnerXmlForNfeDadosMsg($xmlClean) {
-        $s = str_replace(']]>', ']]]]><![CDATA[>', (string)$xmlClean);
-
-        return '<![CDATA[' . $s . ']]>';
-    }
-
-    /**
-     * Envelope SOAP 1.2 com Body; opcional Header nfeCabecMsg (ConsCad 2.00 + versaoDados 2.00).
-     *
-     * @param array|null $cabec ['cUF'=>string,'versaoDados'=>string]
-     */
-    private function buildSoap12Envelope($method, $wsdlNs, $xmlClean, $cabec = null) {
-        $headerBlock = '';
-        if (is_array($cabec) && isset($cabec['cUF'], $cabec['versaoDados'])) {
-            $headerBlock = '<soap12:Header>'
-                . '<nfeCabecMsg xmlns="' . $wsdlNs . '">'
-                . '<cUF>' . htmlspecialchars((string)$cabec['cUF'], ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</cUF>'
-                . '<versaoDados>' . htmlspecialchars((string)$cabec['versaoDados'], ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</versaoDados>'
-                . '</nfeCabecMsg>'
-                . '</soap12:Header>';
-        }
-
+    private function buildSoap12Envelope($method, $wsdlNs, $xmlClean) {
         return '<?xml version="1.0" encoding="UTF-8"?>'
             . '<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
             . ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
             . ' xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">'
-            . $headerBlock
             . '<soap12:Body>'
             . '<' . $method . ' xmlns="' . $wsdlNs . '">'
-            . '<nfeDadosMsg>' . $this->wrapInnerXmlForNfeDadosMsg($xmlClean) . '</nfeDadosMsg>'
+            . '<nfeDadosMsg>' . $xmlClean . '</nfeDadosMsg>'
             . '</' . $method . '>'
             . '</soap12:Body>'
             . '</soap12:Envelope>';
@@ -394,10 +369,9 @@ class FiscalSefazClient {
      * @param string      $method        Nome do metodo SOAP (ex.: nfeStatusServicoNF)
      * @param string      $servico       Rotulo para logs e lookup (ex.: NfeStatusServico)
      * @param string|null $nfeDadosMsgNs xmlns do wrapper; null = lookup em SERVICE_MAP
-     * @param array|null  $nfeCabecMsg   Se informado: ['cUF'=>'35','versaoDados'=>'2.00'] para <soap:Header><nfeCabecMsg> (ConsCad)
      * @return array
      */
-    private function sendAtUrl($url, $xml, $method, $servico, $nfeDadosMsgNs = null, $nfeCabecMsg = null) {
+    private function sendAtUrl($url, $xml, $method, $servico, $nfeDadosMsgNs = null) {
         $maxAttempts = 1 + max(0, min(3, $this->retryMax));
         $delayMs = (int)Configure::read('Fiscal.soap_retry_delay_ms', 500);
 
@@ -414,7 +388,7 @@ class FiscalSefazClient {
         // Remove XML declaration do conteudo interno (nao pode estar dentro do envelope SOAP)
         $xmlClean = preg_replace('/<\?xml[^?]*\?\>\s*/', '', $xml);
 
-        $envelope = $this->buildSoap12Envelope($method, $wsdlNs, $xmlClean, $nfeCabecMsg);
+        $envelope = $this->buildSoap12Envelope($method, $wsdlNs, $xmlClean);
 
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             try {
@@ -428,7 +402,7 @@ class FiscalSefazClient {
                     if (!$ch) {
                         throw new \RuntimeException('Falha ao inicializar cURL.');
                     }
-                    curl_setopt_array($ch, [
+                    $curlOpts = [
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_POST           => true,
                         CURLOPT_POSTFIELDS     => $envelope,
@@ -437,13 +411,16 @@ class FiscalSefazClient {
                             'Content-Length: ' . strlen($envelope),
                         ],
                         CURLOPT_SSLCERT        => $certPem,
-                        CURLOPT_SSLCERTTYPE    => 'PEM',
                         CURLOPT_SSLKEY         => $certPem,
                         CURLOPT_TIMEOUT        => $this->timeout,
                         CURLOPT_CONNECTTIMEOUT => $this->timeout,
                         CURLOPT_SSL_VERIFYPEER => false,
                         CURLOPT_SSL_VERIFYHOST => 0,
-                    ]);
+                    ];
+                    if (defined('CURLOPT_SSLCERTTYPE')) {
+                        $curlOpts[CURLOPT_SSLCERTTYPE] = 'PEM';
+                    }
+                    curl_setopt_array($ch, $curlOpts);
 
                     $response = curl_exec($ch);
                     $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
