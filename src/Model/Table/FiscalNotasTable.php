@@ -80,7 +80,11 @@ class FiscalNotasTable extends Table {
             $query->where(['FiscalNotas.data_emissao >=' => $filters['data_inicio']]);
         }
         if (!empty($filters['data_fim'])) {
-            $query->where(['FiscalNotas.data_emissao <=' => $filters['data_fim']]);
+            $dfim = $filters['data_fim'];
+            if (strlen($dfim) === 10 && strpos($dfim, '-') !== false) {
+                $dfim .= ' 23:59:59';
+            }
+            $query->where(['FiscalNotas.data_emissao <=' => $dfim]);
         }
         if (!empty($filters['numero'])) {
             $query->where(['FiscalNotas.numero' => $filters['numero']]);
@@ -89,7 +93,7 @@ class FiscalNotasTable extends Table {
             $query->where(['FiscalNotas.tipo_operacao' => (int)$filters['tipo_operacao']]);
         }
         if (!empty($filters['numero_serie'])) {
-            $serie = $filters['numero_serie'];
+            $serie = trim($filters['numero_serie']);
             $conn = $this->getConnection();
             $query->matching('FiscalNotasItens.FiscalNotasItensSeries', function ($q) use ($serie, $conn) {
                 return $q->where(FiscalSqlConditions::caseInsensitiveLike(

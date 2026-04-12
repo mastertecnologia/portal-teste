@@ -142,10 +142,10 @@ class FinanceiroRelatoriosController extends AppController {
 
 		if (preg_match('/^(\d{4})-(\d{2})$/', $periodo)) {
 			$dataInicio = $periodo . '-01';
-			$dataFim = date('Y-m-t', strtotime($dataInicio));
+			$dataFim = date('Y-m-t', strtotime($dataInicio)) . ' 23:59:59';
 		} else {
 			$dataInicio = $periodo . '-01-01';
-			$dataFim = $periodo . '-12-31';
+			$dataFim = $periodo . '-12-31 23:59:59';
 		}
 
 		$lancamentos = $this->FinanceiroLancamentos->find()

@@ -10,14 +10,15 @@
 .fpm-h1 i { color:#1D9E75; margin-right:8px; }
 .fpm-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .fpm-filters { display:flex; gap:10px; flex-wrap:wrap; padding:12px 20px; border-bottom:1px solid rgba(255,255,255,.06); align-items:flex-end; }
-.fpm-filters label { font-size:11px; color:#7d8590; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:4px; }
+.fpm-filters label { font-size:11px; color:#a1aab5; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:4px; }
 .fpm-filters input, .fpm-filters select {
     background:#161b22; border:1px solid rgba(255,255,255,.10); border-radius:7px; color:#c9d1d9;
-    padding:6px 10px; font-size:13px; min-height:34px;
+    padding:6px 10px; font-size:13px; min-height:34px; height: 34px;
 }
+.fpm-filters button { height: 34px; display: inline-flex; align-items: center; justify-content: center; }
 .fpm-table-wrap { padding:16px 20px 24px; overflow-x:auto; }
 .fpm-table { width:100%; border-collapse:collapse; font-size:13px; }
-.fpm-table th { background:#161b22; color:#7d8590; font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.07); }
+.fpm-table th { background:#161b22; color:#a1aab5; font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.07); }
 .fpm-table td { padding:10px; border-bottom:1px solid rgba(255,255,255,.05); color:#c9d1d9; vertical-align:middle; }
 .fpm-table tr:hover td { background:rgba(255,255,255,.03); }
 .fpm-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
@@ -26,21 +27,21 @@
 .fpm-badge.muted { background:rgba(255,255,255,.08); color:#9ca3af; }
 .fpm-empty { text-align:center; padding:40px; color:#484f58; }
 .fpm-card { background:#161b22; border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:18px 20px; margin-bottom:16px; }
-.fpm-card-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#7d8590; font-weight:600; margin:0 0 14px; }
+.fpm-card-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#a1aab5; font-weight:600; margin:0 0 14px; }
 .fpm-row { display:flex; gap:14px; flex-wrap:wrap; }
 .fpm-field { flex:1; min-width:200px; }
-.fpm-field label { font-size:12px; color:#7d8590; font-weight:600; display:block; margin-bottom:4px; }
+.fpm-field label { font-size:12px; color:#a1aab5; font-weight:600; display:block; margin-bottom:4px; }
 .fpm-field .form-control { background:#0d1117; border:1px solid rgba(255,255,255,.10); border-radius:7px; color:#e6edf3; }
 .fpm-field .form-control:focus { border-color:rgba(29,158,117,.45); box-shadow:0 0 0 3px rgba(29,158,117,.12); outline:none; }
 .fpm-footer { display:flex; gap:10px; justify-content:flex-end; padding:8px 0 28px; flex-wrap:wrap; }
 .fpm-items-table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:8px; }
-.fpm-items-table th { color:#7d8590; font-size:10px; text-transform:uppercase; padding:6px 4px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; }
+.fpm-items-table th { color:#a1aab5; font-size:10px; text-transform:uppercase; padding:6px 4px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; }
 .fpm-items-table td { padding:6px 4px; vertical-align:top; }
 .fpm-items-table input, .fpm-items-table textarea, .fpm-items-table select {
     width:100%; background:#0d1117; border:1px solid rgba(255,255,255,.08); border-radius:5px; color:#e6edf3; padding:5px 8px; font-size:12px;
 }
 .fpm-items-table textarea.fpm-serial-area { min-height:52px; resize:vertical; font-family:ui-monospace,monospace; }
-.fpm-muted { color:#7d8590; font-size:12px; }
+.fpm-muted { color:#a1aab5; font-size:12px; }
 .fpm-nav-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; padding:16px 20px; }
 .fpm-nav-card {
     display:block; padding:16px; border-radius:10px; border:1px solid rgba(255,255,255,.08); background:#161b22;
