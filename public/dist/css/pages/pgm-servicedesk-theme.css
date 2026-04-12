@@ -303,10 +303,29 @@ html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
 	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 
-/* Links na fila SD: texto neutro (sem ciano/teal de --pgm-link) */
-html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link {
-	color: var(--pgm-text-secondary) !important;
+/* Colunas Ticket / Status / Ações + link # — espelho de pgm-servicedesk-premium (Produtos) */
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd table.tickets-sd-table-prd .sd-prd-th-ticket,
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd table.tickets-sd-table-prd .sd-prd-td-ticket {
+	background-color: color-mix(in srgb, var(--prd-teal-dim) 40%, var(--prd-surface, var(--pgm-bg-surface)) 60%) !important;
+	border-left: 2px solid color-mix(in srgb, var(--prd-teal) 50%, transparent);
 }
-html[data-pgm-theme="dark"] body.sd-body a.tickets-sd-ticket-link:hover {
-	color: var(--pgm-text) !important;
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd table.tickets-sd-table-prd .sd-prd-th-status,
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd table.tickets-sd-table-prd .sd-prd-td-status {
+	background-color: color-mix(in srgb, rgba(63, 185, 80, 0.16) 32%, var(--prd-surface, var(--pgm-bg-surface)) 68%) !important;
+	border-left: 2px solid rgba(63, 185, 80, 0.4);
+}
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd table.tickets-sd-table-prd .sd-prd-th-acoes,
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd table.tickets-sd-table-prd .sd-prd-td-acoes {
+	background-color: color-mix(in srgb, var(--prd-teal-dim) 36%, var(--prd-surface, var(--pgm-bg-surface)) 64%) !important;
+	border-left: 2px solid var(--prd-teal);
+}
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd a.tickets-sd-ticket-link {
+	font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--prd-teal-lt) !important;
+}
+html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd a.tickets-sd-ticket-link:hover {
+	color: var(--prd-teal) !important;
+	text-decoration: underline;
 }

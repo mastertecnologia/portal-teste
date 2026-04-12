@@ -25,27 +25,40 @@ const BADGE_LIGHT = {
     'bg-red-50 text-red-800 border-red-300 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
 };
 
-/** Service Desk (fila técnica): pills neutras — sem preenchimento teal/emerald. */
-const SD_NEUTRAL =
-  'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]';
-const SD_NEUTRAL_SOFT =
-  'border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text-muted)]';
+/**
+ * Service Desk — badges alinhados a produtos-premium.css (.prd-badge-on / .prd-teal / .prd-av-*).
+ * Base comum: pill compacta (equivalente a .prd-badge 10.5px / semibold).
+ */
+const SD_BADGE_BASE =
+  'tracking-wide shadow-none';
+/** .prd-badge-on — stock OK / ativo */
+const SD_PRD_ON = `${SD_BADGE_BASE} border-[color:rgba(63,185,80,0.25)] bg-[rgba(63,185,80,0.13)] text-[#3fb950]`;
+/** .prd-badge-off */
+const SD_PRD_OFF = `${SD_BADGE_BASE} border-[color:rgba(248,81,73,0.22)] bg-[rgba(248,81,73,0.10)] text-[#f85149]`;
+/** .prd-av-prod — ênfase teal */
+const SD_PRD_TEAL = `${SD_BADGE_BASE} border-[color:rgba(29,158,117,0.35)] bg-[var(--prd-teal-dim)] text-[color:var(--prd-teal)]`;
+/** .prd-av-serv — fila cliente / aguardando resposta */
+const SD_PRD_BLUE = `${SD_BADGE_BASE} border-[color:rgba(88,166,255,0.3)] bg-[var(--prd-blue-dim)] text-[color:var(--prd-blue)]`;
+/** Valor / fechado — .prd-td-val + muted */
+const SD_PRD_VAL = `${SD_BADGE_BASE} border border-[var(--prd-border)] bg-[var(--prd-surface2)] text-[color:var(--prd-teal-lt)]`;
+const SD_PRD_MUTED = `${SD_BADGE_BASE} border border-[var(--prd-border)] bg-[var(--prd-surface2)] text-[color:var(--prd-muted)]`;
+/** .prd-td-margin margin-ok */
+const SD_PRD_ORANGE = `${SD_BADGE_BASE} border-[color:rgba(255,136,51,0.35)] bg-[var(--prd-orange-dim)] text-[color:var(--prd-orange)]`;
 
 const BADGE_SERVICEDESK = {
-  success: SD_NEUTRAL,
-  warning:
-    'border border-amber-700/50 bg-amber-950/35 text-amber-200',
-  critical: 'border border-rose-700/50 bg-rose-950/35 text-rose-200',
-  high: 'border border-orange-700/50 bg-orange-950/35 text-orange-200',
-  medium: SD_NEUTRAL,
-  low: SD_NEUTRAL_SOFT,
-  progress: SD_NEUTRAL,
-  waiting: SD_NEUTRAL,
-  pendingTech: SD_NEUTRAL,
-  resolved: SD_NEUTRAL_SOFT,
-  escalated: 'border border-rose-700/50 bg-rose-950/40 text-rose-200',
-  closed: SD_NEUTRAL_SOFT,
-  cancelled: 'border border-red-800/50 bg-red-950/40 text-red-200',
+  success: SD_PRD_ON,
+  warning: 'border border-amber-700/50 bg-amber-950/35 text-amber-200 tracking-wide shadow-none',
+  critical: SD_PRD_OFF,
+  high: SD_PRD_ORANGE,
+  medium: SD_PRD_ORANGE,
+  low: SD_PRD_MUTED,
+  progress: SD_PRD_ON,
+  waiting: SD_PRD_BLUE,
+  pendingTech: SD_PRD_TEAL,
+  resolved: SD_PRD_VAL,
+  escalated: SD_PRD_OFF,
+  closed: SD_PRD_MUTED,
+  cancelled: SD_PRD_OFF,
 };
 
 /** Badges no embed portal cliente — superfície escura PGM. */
@@ -73,7 +86,7 @@ const BADGE_EMBED = {
 /**
  * @param {string} type
  * @param {boolean} [embed] lista/detalhe embutidos no shell cliente (tema escuro)
- * @param {boolean} [servicedesk] fila técnica no Service Desk — badges neutros (sem tons esverdeados)
+ * @param {boolean} [servicedesk] fila técnica no Service Desk — badges como tela Produtos (.prd-badge*)
  */
 export function badgeClass(type, embed = false, servicedesk = false) {
   if (servicedesk) {
@@ -143,7 +156,7 @@ export function acaoLinkClassName(key, embed = false, servicedesk = false) {
     'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-tight transition hover:opacity-90';
   if (embed && k === 'imprimir') {
     if (servicedesk) {
-      return `${base} border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)] hover:bg-[var(--pgm-bg-surface)]`;
+      return `${base} border-[color:rgba(29,158,117,0.35)] bg-[var(--prd-teal-dim)] text-[color:var(--prd-teal)] hover:bg-[var(--prd-surface2)]`;
     }
     return `${base} border-[var(--pgm-primary)] bg-[var(--pgm-primary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:brightness-110`;
   }

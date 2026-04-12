@@ -197,7 +197,7 @@ function TicketActionsMenu({
   };
   const toneClsSd = {
     default:
-      'text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-bg-elevated)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:bg-[var(--pgm-bg-elevated)] dark:focus-visible:ring-[var(--pgm-border)]/55',
+      'text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--prd-teal-dim)] dark:hover:text-[var(--prd-text)] dark:focus-visible:bg-[var(--prd-teal-dim)] dark:focus-visible:ring-[color:rgba(29,158,117,0.35)]',
     muted: toneCls.muted,
     danger: toneCls.danger,
   };
@@ -215,7 +215,7 @@ function TicketActionsMenu({
       style={{ top: pos.top, left: pos.left }}
     >
       <div className="border-b border-slate-100 bg-slate-100 px-3 py-2 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[var(--pgm-text-muted)]">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[color:var(--prd-muted)]">
           Chamado
         </p>
         <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-[var(--pgm-text)]">#{ticket.id}</p>
@@ -229,7 +229,7 @@ function TicketActionsMenu({
               : tone === 'muted'
                 ? 'text-slate-400'
                 : servicedesk
-                  ? 'text-[var(--pgm-text-secondary)]'
+                  ? 'text-[color:var(--prd-teal)]'
                   : 'text-[var(--pgm-primary)]';
           if (a.behavior === 'reactTransfer') {
             return (
@@ -307,8 +307,8 @@ function TicketActionsMenu({
           className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-page)] ${
             servicedesk
               ? open
-                ? 'border border-[var(--pgm-border-strong)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text)] ring-2 ring-[var(--pgm-border)]/80 focus-visible:ring-[var(--pgm-border)]'
-                : 'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-surface)] focus-visible:ring-[var(--pgm-border)]'
+                ? 'border border-[var(--prd-border2)] bg-[var(--prd-surface2)] text-[var(--prd-text)] ring-2 ring-[color:rgba(29,158,117,0.4)] focus-visible:ring-[color:rgba(29,158,117,0.45)]'
+                : 'border border-transparent bg-[color:var(--prd-teal)] text-white shadow-[0_1px_4px_rgba(29,158,117,0.35)] hover:brightness-110 focus-visible:ring-[color:rgba(29,158,117,0.45)]'
               : open
                 ? 'bg-[var(--pgm-erp-teal-active)] text-white ring-2 ring-[var(--pgm-primary)]/45 focus-visible:ring-[var(--pgm-primary)]'
                 : 'bg-[var(--pgm-primary)] text-white hover:brightness-110 focus-visible:ring-[var(--pgm-primary)]'
@@ -361,8 +361,6 @@ function techRowHighlightClass(ticket, servicedesk = false) {
     } else if (label.includes('execução') || label.includes('andamento')) {
       parts.push('bg-[color-mix(in_srgb,var(--pgm-primary)_10%,var(--pgm-bg-surface)_90%)]');
     }
-  } else if (label.includes('aguardando') || label.includes('execução') || label.includes('andamento')) {
-    parts.push('bg-[color-mix(in_srgb,var(--pgm-bg-elevated)_42%,var(--pgm-bg-surface)_58%)]');
   }
   if (semResp) {
     parts.push('ring-1', 'ring-inset', 'ring-[var(--pgm-border)]');
@@ -883,14 +881,24 @@ export default function TechDashboard({ boot }) {
         }
       >
         <div className="min-w-0 max-w-full overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-xs dark:divide-[var(--pgm-border)] sm:text-sm">
+          <table
+            className={`min-w-full divide-y divide-slate-200 text-xs dark:divide-[var(--pgm-border)] sm:text-sm${boot?.servicedesk ? ' tickets-sd-table-prd' : ''}`}
+          >
             <thead className="bg-slate-50 text-left text-xs text-slate-500 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)]">
               <tr>
-                <th className="px-2 py-1.5 font-semibold sm:px-3">Ticket</th>
+                <th
+                  className={`px-2 py-1.5 font-semibold sm:px-3${boot?.servicedesk ? ' sd-prd-th-ticket' : ''}`}
+                >
+                  Ticket
+                </th>
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Autor</th>
                 <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Data</th>
                 <th className="min-w-[8rem] px-2 py-1.5 font-semibold sm:min-w-[10rem] sm:px-3">Assunto</th>
-                <th className="whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3">Status</th>
+                <th
+                  className={`whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3${boot?.servicedesk ? ' sd-prd-th-status' : ''}`}
+                >
+                  Status
+                </th>
                 {wfEnabled ? (
                   <>
                     <th className="max-w-[9rem] px-2 py-1.5 font-semibold sm:px-3">Fila</th>
@@ -899,7 +907,11 @@ export default function TechDashboard({ boot }) {
                 ) : null}
                 <th className="max-w-[7rem] px-2 py-1.5 font-semibold sm:px-3">Técnico</th>
                 <th className="max-w-[8rem] px-2 py-1.5 font-semibold sm:px-3">Cliente</th>
-                <th className="w-[7.25rem] min-w-[7.25rem] px-2 py-1.5 text-right font-semibold sm:px-3">Ações</th>
+                <th
+                  className={`w-[7.25rem] min-w-[7.25rem] px-2 py-1.5 text-right font-semibold sm:px-3${boot?.servicedesk ? ' sd-prd-th-acoes' : ''}`}
+                >
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white dark:divide-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)]">
@@ -923,7 +935,9 @@ export default function TechDashboard({ boot }) {
                       key={ticket.id}
                       className={`${techRowHighlightClass(ticket, Boolean(boot?.servicedesk))} hover:bg-slate-100/90 dark:hover:bg-[var(--pgm-bg-elevated)]`}
                     >
-                      <td className="px-2 py-1.5 font-semibold sm:px-3">
+                      <td
+                        className={`px-2 py-1.5 font-semibold sm:px-3${boot?.servicedesk ? ' sd-prd-td-ticket' : ''}`}
+                      >
                         {ticket.urls?.edit ? (
                           <a
                             className="tickets-sd-ticket-link font-semibold no-underline hover:underline"
@@ -965,7 +979,9 @@ export default function TechDashboard({ boot }) {
                           </div>
                         ) : null}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-1.5 sm:px-3">
+                      <td
+                        className={`whitespace-nowrap px-2 py-1.5 sm:px-3${boot?.servicedesk ? ' sd-prd-td-status' : ''}`}
+                      >
                         <span
                           className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
                             statusType(st),
@@ -1006,7 +1022,9 @@ export default function TechDashboard({ boot }) {
                       >
                         {ticket.cliente || '—'}
                       </td>
-                      <td className="px-2 py-1 text-right sm:px-3">
+                      <td
+                        className={`px-2 py-1 text-right sm:px-3${boot?.servicedesk ? ' sd-prd-td-acoes' : ''}`}
+                      >
                         <TicketActionsMenu
                           ticket={ticket}
                           acoes={ticket.acoes}
@@ -1236,7 +1254,7 @@ export default function TechDashboard({ boot }) {
                 href={addTicket}
                 className={
                   boot?.servicedesk
-                    ? 'inline-flex shrink-0 items-center justify-center self-center rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm font-semibold leading-none text-[var(--pgm-text)] shadow-sm hover:bg-[var(--pgm-bg-surface)]'
+                    ? 'inline-flex shrink-0 items-center justify-center self-center rounded-md border border-transparent bg-[color:var(--prd-teal)] px-3 py-2 text-sm font-semibold leading-none text-white shadow-[0_1px_4px_rgba(29,158,117,0.35)] hover:brightness-110'
                     : 'inline-flex shrink-0 items-center justify-center self-center rounded-md bg-[var(--pgm-primary)] px-3 py-2 text-sm font-semibold leading-none text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)] dark:hover:brightness-110'
                 }
               >
