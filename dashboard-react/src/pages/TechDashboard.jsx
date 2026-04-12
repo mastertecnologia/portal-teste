@@ -188,7 +188,7 @@ function TicketActionsMenu({
 
   const toneCls = {
     default:
-      'text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 focus-visible:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--pgm-primary)]/45 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-primary-muted)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:bg-[var(--pgm-primary-muted)] dark:focus-visible:ring-[var(--pgm-primary)]/40',
+      'text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--pgm-primary)]/45 dark:text-[var(--pgm-text)] dark:hover:bg-[var(--pgm-primary-muted)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:bg-[var(--pgm-primary-muted)] dark:focus-visible:ring-[var(--pgm-primary)]/40',
     muted:
       'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 dark:text-[var(--pgm-text-muted)] dark:hover:bg-[var(--pgm-bg-elevated)] dark:hover:text-[var(--pgm-text)] dark:focus-visible:ring-[var(--pgm-border)]',
     danger:
@@ -206,8 +206,8 @@ function TicketActionsMenu({
       className="tickets-sd-action-menu fixed z-[60] w-[268px] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 text-slate-800 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-surface)] dark:text-[var(--pgm-text)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65)] dark:ring-white/10"
       style={{ top: pos.top, left: pos.left }}
     >
-      <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 px-3 py-2 dark:border-[var(--pgm-border)] dark:bg-[linear-gradient(135deg,rgba(29,158,117,0.28)_0%,rgba(19,113,90,0.72)_100%)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-800/90 dark:text-white/90">
+      <div className="border-b border-slate-100 bg-slate-100 px-3 py-2 dark:border-[var(--pgm-border)] dark:bg-[var(--pgm-bg-elevated)]">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[var(--pgm-primary-hover)]">
           Chamado
         </p>
         <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-[var(--pgm-text)]">#{ticket.id}</p>
@@ -342,12 +342,12 @@ function techRowHighlightClass(ticket) {
       ticket.tecnicos === '');
   const parts = ['align-middle', 'transition'];
   if (label.includes('aguardando')) {
-    parts.push('bg-emerald-50/90', 'dark:bg-[rgba(29,158,117,0.18)]');
+    parts.push('bg-[var(--pgm-primary-muted)]');
   } else if (label.includes('execução') || label.includes('andamento')) {
-    parts.push('bg-teal-50/80', 'dark:bg-[rgba(29,158,117,0.14)]');
+    parts.push('bg-[color-mix(in_srgb,var(--pgm-primary)_10%,var(--pgm-bg-surface)_90%)]');
   }
   if (semResp) {
-    parts.push('ring-1', 'ring-inset', 'ring-slate-300/80', 'dark:ring-slate-600/50');
+    parts.push('ring-1', 'ring-inset', 'ring-[var(--pgm-border)]');
   }
   return parts.join(' ');
 }
@@ -806,7 +806,7 @@ export default function TechDashboard({ boot }) {
 
       {transferOkHint ? (
         <div
-          className="border-b border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-[color:rgba(29,158,117,0.45)] dark:bg-[linear-gradient(135deg,rgba(29,158,117,0.2)_0%,rgba(19,113,90,0.55)_100%)] dark:text-white/95"
+          className="border-b border-[var(--pgm-border)] bg-[var(--pgm-success-bg)] px-3 py-2 text-sm text-[var(--pgm-success-text)] dark:border-[color:rgba(52,211,153,0.35)]"
           role="status"
           aria-live="polite"
         >
@@ -903,7 +903,7 @@ export default function TechDashboard({ boot }) {
                   return (
                     <tr
                       key={ticket.id}
-                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-50/80 dark:hover:bg-[rgba(29,158,117,0.14)]`}
+                      className={`${techRowHighlightClass(ticket)} hover:bg-slate-100/90 dark:hover:bg-[var(--pgm-bg-elevated)]`}
                     >
                       <td className="px-2 py-1.5 font-semibold sm:px-3">
                         {ticket.urls?.edit ? (
@@ -950,7 +950,8 @@ export default function TechDashboard({ boot }) {
                       <td className="whitespace-nowrap px-2 py-1.5 sm:px-3">
                         <span
                           className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
-                            statusType(st)
+                            statusType(st),
+                            embedded
                           )}`}
                           title={st}
                         >

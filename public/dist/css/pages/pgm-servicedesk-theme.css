@@ -242,6 +242,26 @@ html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .divide-slate-2
 	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 
+/* Fila técnica SD: Tailwind emerald/teal “50” → tokens Produtos (sem menta claro) */
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-emerald-50,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-emerald-50\/90,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-emerald-100,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-teal-50,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .bg-teal-50\/80 {
+	background-color: var(--prd-teal-dim, var(--pgm-primary-muted)) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-emerald-700,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-emerald-800,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-emerald-900,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .text-teal-800 {
+	color: var(--prd-text, var(--pgm-text)) !important;
+}
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-emerald-200,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-emerald-300,
+html[data-pgm-theme="dark"] #tickets-react-root.tickets-react-sd .border-teal-200 {
+	border-color: var(--prd-border, var(--pgm-border)) !important;
+}
+
 /* Flash / alerts Bootstrap no shell Service Desk */
 html[data-pgm-theme="dark"] body.sd-body .alert {
 	background: var(--prd-surface2, var(--pgm-bg-elevated));
