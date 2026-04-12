@@ -5,19 +5,23 @@ use Cake\Core\Configure;
 use Cake\Log\Log;
 
 /**
- * Cliente SOAP para comunicação com os Web Services da SEFAZ.
+ * Cliente SOAP 1.2 para comunicacao com os Web Services da SEFAZ.
  *
- * Suporta NFe 4.00 e eventos (cancelamento, CCe, inutilização).
+ * Usa cURL com envelope SOAP 1.2 montado manualmente (padrao das bibliotecas
+ * NFe brasileiras — sped-nfe, nfe-api) para controle total sobre namespaces,
+ * versoes e mTLS com certificado A1.
+ *
+ * Suporta NFe 4.00 e eventos (cancelamento, CCe, inutilizacao).
  */
 class FiscalSefazClient {
 
     /** @var FiscalSigner */
     private $signer;
 
-    /** @var array Configuração fiscal da empresa */
+    /** @var array Configuracao fiscal da empresa */
     private $config;
 
-    /** @var int Ambiente (1=Produção, 2=Homologação) */
+    /** @var int Ambiente (1=Producao, 2=Homologacao) */
     private $ambiente;
 
     /** @var string Grupo de webservices (svrs, svan, etc.) */
@@ -26,11 +30,26 @@ class FiscalSefazClient {
     /** @var int Timeout SOAP */
     private $timeout;
 
-    /** @var int Retentativas extra em falhas de rede (Fase 2) */
+    /** @var int Retentativas extra em falhas de rede */
     private $retryMax;
 
-    /** @var string Caminho temporário do PEM (certificado + chave) */
+    /** @var string|null Caminho temporario do PEM (certificado + chave) */
     private $tempCertPath;
+
+    /**
+     * Mapa servico → [metodo SOAP, namespace WSDL].
+     * Usado quando o chamador nao fornece namespace explicitamente.
+     */
+    private static $SERVICE_MAP = [
+        'NfeAutorizacao'       => ['nfeAutorizacaoLote',   'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4'],
+        'NfeRetAutorizacao'    => ['nfeRetAutorizacaoLote', 'http://www.portalfiscal.inf.br/nfe/wsdl/NFeRetAutorizacao4'],
+        'NfeConsultaProtocolo' => ['nfeConsultaNF',         'http://www.portalfiscal.inf.br/nfe/wsdl/NFeConsultaProtocolo4'],
+        'NfeStatusServico'     => ['nfeStatusServicoNF',    'http://www.portalfiscal.inf.br/nfe/wsdl/NFeStatusServico4'],
+        'NfeInutilizacao'      => ['nfeInutilizacaoNF',     'http://www.portalfiscal.inf.br/nfe/wsdl/NFeInutilizacao4'],
+        'RecepcaoEvento'       => ['nfeRecepcaoEvento',     'http://www.portalfiscal.inf.br/nfe/wsdl/NFeRecepcaoEvento4'],
+        'CadConsultaCadastro'  => ['consultaCadastro',      'http://www.portalfiscal.inf.br/nfe/wsdl/CadConsultaCadastro4'],
+        'NFeDistribuicaoDFe'   => ['nfeDistDFeInteresse',   'http://www.portalfiscal.inf.br/nfe/wsdl/NFeDistribuicaoDFe'],
+    ];
 
     public function __construct(FiscalSigner $signer, array $config) {
         $this->signer = $signer;
@@ -41,12 +60,13 @@ class FiscalSefazClient {
         $this->retryMax = (int)Configure::read('Fiscal.soap_retry_max', 0);
     }
 
+    // ── Servicos publicos ────────────────────────────────────────────
+
     /**
-     * Consulta status do serviço SEFAZ.
+     * Consulta status do servico SEFAZ.
      */
     public function statusServico() {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<consStatServ xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
+        $xml = '<consStatServ xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
             . '<tpAmb>' . $this->ambiente . '</tpAmb>'
             . '<cUF>' . $this->getCodigoUF() . '</cUF>'
             . '<xServ>STATUS</xServ>'
@@ -56,7 +76,7 @@ class FiscalSefazClient {
     }
 
     /**
-     * Envia NFe para autorização (síncrono).
+     * Envia NFe para autorizacao (sincrono).
      */
     public function autorizar($xmlAssinado) {
         $builder = new FiscalXmlBuilder([], $this->config, [], []);
@@ -65,11 +85,10 @@ class FiscalSefazClient {
     }
 
     /**
-     * Consulta protocolo de autorização.
+     * Consulta protocolo de autorizacao.
      */
     public function consultarProtocolo($chaveAcesso) {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<consSitNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
+        $xml = '<consSitNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
             . '<tpAmb>' . $this->ambiente . '</tpAmb>'
             . '<xServ>CONSULTAR</xServ>'
             . '<chNFe>' . $chaveAcesso . '</chNFe>'
@@ -79,7 +98,7 @@ class FiscalSefazClient {
     }
 
     /**
-     * Envia evento (cancelamento, carta de correção, etc.).
+     * Envia evento (cancelamento, carta de correcao, etc.).
      */
     public function enviarEvento($xmlEventoAssinado) {
         return $this->send('RecepcaoEvento', $xmlEventoAssinado, 'nfeRecepcaoEvento');
@@ -88,7 +107,7 @@ class FiscalSefazClient {
     /**
      * Consulta cadastro do contribuinte (CNPJ/IE) na SEFAZ.
      *
-     * @param string $cnpjOuIe Documento (14 dígitos CNPJ ou IE)
+     * @param string $cnpjOuIe Documento (14 digitos CNPJ ou IE)
      * @param string $uf UF do contribuinte (ex.: SP)
      * @param string $tipo 'cnpj' ou 'ie'
      * @return array
@@ -102,14 +121,14 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => 'VAL',
-                'mensagem' => 'UF inválida: ' . $uf,
+                'mensagem' => 'UF invalida: ' . $uf,
                 'protocolo' => null,
                 'cadastro' => [],
             ];
         }
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<ConsCad xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">'
+        // ConsCad usa versao 2.00 (consCad_v2.00.xsd), NAO a versao da NFe
+        $xml = '<ConsCad xmlns="http://www.portalfiscal.inf.br/nfe" versao="2.00">'
             . '<infCons>'
             . '<xServ>CONS-CAD</xServ>'
             . '<UF>' . strtoupper($uf) . '</UF>'
@@ -123,14 +142,18 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => '999',
-                'mensagem' => "URL do serviço 'CadConsultaCadastro' não configurada.",
+                'mensagem' => "URL do servico 'CadConsultaCadastro' nao configurada.",
                 'protocolo' => null,
                 'cadastro' => [],
             ];
         }
 
         $wsNs = 'http://www.portalfiscal.inf.br/nfe/wsdl/CadConsultaCadastro4';
-        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs);
+        // Cabecalho SOAP nfeCabecMsg (cUF + versaoDados) exigido para ConsCad 2.00 — mesmo padrao NFePHP/sefazCadastro
+        $result = $this->sendAtUrl($url, $xml, 'consultaCadastro', 'CadConsultaCadastro', $wsNs, [
+            'cUF' => (string)$cuf,
+            'versaoDados' => '2.00',
+        ]);
         $result['cadastro'] = $this->parseCadastroRetorno($result['xml_retorno'] ?? '');
         return $result;
     }
@@ -169,18 +192,18 @@ class FiscalSefazClient {
     }
 
     /**
-     * Envia inutilização de numeração.
+     * Envia inutilizacao de numeracao.
      */
     public function inutilizar($xmlInutAssinado) {
         return $this->send('NfeInutilizacao', $xmlInutAssinado, 'nfeInutilizacaoNF');
     }
 
     /**
-     * Distribuição DF-e (serviço nacional AN — consulta de documentos fiscais eletrônicos).
+     * Distribuicao DF-e (servico nacional AN).
      *
-     * @param string $cnpjInteressado CNPJ do destinatário (14 dígitos)
-     * @param string $ultNsu Último NSU recebido (15 dígitos; use 0 na primeira consulta)
-     * @return array Mesmo formato de send + ult_nsu, max_nsu, doc_zip_count quando aplicável
+     * @param string $cnpjInteressado CNPJ do destinatario (14 digitos)
+     * @param string $ultNsu Ultimo NSU recebido (15 digitos; use 0 na primeira consulta)
+     * @return array
      */
     public function distribuicaoDfeInteresse($cnpjInteressado, $ultNsu = '0') {
         $cnpj = preg_replace('/\D/', '', (string)$cnpjInteressado);
@@ -189,7 +212,7 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => 'VAL',
-                'mensagem' => 'CNPJ do interessado inválido (14 dígitos).',
+                'mensagem' => 'CNPJ do interessado invalido (14 digitos).',
                 'protocolo' => null,
                 'ult_nsu' => null,
                 'max_nsu' => null,
@@ -199,8 +222,7 @@ class FiscalSefazClient {
         $ultNsuLimpo = preg_replace('/\D/', '', (string)$ultNsu);
         $ultNsu15 = str_pad(substr($ultNsuLimpo, 0, 15), 15, '0', STR_PAD_LEFT);
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01">'
+        $xml = '<distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01">'
             . '<tpAmb>' . $this->ambiente . '</tpAmb>'
             . '<cUFAutor>91</cUFAutor>'
             . '<CNPJ>' . $cnpj . '</CNPJ>'
@@ -213,7 +235,7 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => 'CFG',
-                'mensagem' => 'URL NFeDistribuicaoDFe (nacional) não configurada.',
+                'mensagem' => 'URL NFeDistribuicaoDFe (nacional) nao configurada.',
                 'protocolo' => null,
                 'ult_nsu' => null,
                 'max_nsu' => null,
@@ -231,11 +253,11 @@ class FiscalSefazClient {
     }
 
     /**
-     * Distribuição DF-e por chave de acesso (consChNFe) — obtém XML completo quando a AN disponibilizar (ex.: após manifestação).
+     * Distribuicao DF-e por chave de acesso (consChNFe).
      *
-     * @param string $cnpjInteressado CNPJ do destinatário (14 dígitos)
-     * @param string $chaveAcesso Chave da NF-e (44 dígitos)
-     * @return array Mesmo formato de distribuicaoDfeInteresse()
+     * @param string $cnpjInteressado CNPJ do destinatario (14 digitos)
+     * @param string $chaveAcesso Chave da NF-e (44 digitos)
+     * @return array
      */
     public function distribuicaoDfePorChaveNfe($cnpjInteressado, $chaveAcesso) {
         $cnpj = preg_replace('/\D/', '', (string)$cnpjInteressado);
@@ -244,7 +266,7 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => 'VAL',
-                'mensagem' => 'CNPJ do interessado inválido (14 dígitos).',
+                'mensagem' => 'CNPJ do interessado invalido (14 digitos).',
                 'protocolo' => null,
                 'ult_nsu' => null,
                 'max_nsu' => null,
@@ -257,7 +279,7 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => 'VAL',
-                'mensagem' => 'Chave de acesso deve ter 44 dígitos.',
+                'mensagem' => 'Chave de acesso deve ter 44 digitos.',
                 'protocolo' => null,
                 'ult_nsu' => null,
                 'max_nsu' => null,
@@ -265,8 +287,7 @@ class FiscalSefazClient {
             ];
         }
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01">'
+        $xml = '<distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01">'
             . '<tpAmb>' . $this->ambiente . '</tpAmb>'
             . '<cUFAutor>91</cUFAutor>'
             . '<CNPJ>' . $cnpj . '</CNPJ>'
@@ -279,7 +300,7 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => 'CFG',
-                'mensagem' => 'URL NFeDistribuicaoDFe (nacional) não configurada.',
+                'mensagem' => 'URL NFeDistribuicaoDFe (nacional) nao configurada.',
                 'protocolo' => null,
                 'ult_nsu' => null,
                 'max_nsu' => null,
@@ -296,13 +317,53 @@ class FiscalSefazClient {
         );
     }
 
+    // ── Transporte SOAP 1.2 via cURL ─────────────────────────────────
+
     /**
-     * Envia SOAP request para a SEFAZ.
+     * Conteudo de nfeDadosMsg como CDATA (WSDL trata como string; evita falha de parse/serializacao no ASMX).
+     */
+    private function wrapInnerXmlForNfeDadosMsg($xmlClean) {
+        $s = str_replace(']]>', ']]]]><![CDATA[>', (string)$xmlClean);
+
+        return '<![CDATA[' . $s . ']]>';
+    }
+
+    /**
+     * Envelope SOAP 1.2 com Body; opcional Header nfeCabecMsg (ConsCad 2.00 + versaoDados 2.00).
      *
-     * @param string $servico Nome do serviço (NfeAutorizacao, NfeStatusServico, etc.)
-     * @param string $xml XML a enviar
-     * @param string $method Método SOAP
-     * @return array ['success' => bool, 'xml_retorno' => string, 'codigo' => string, 'mensagem' => string, 'protocolo' => string|null]
+     * @param array|null $cabec ['cUF'=>string,'versaoDados'=>string]
+     */
+    private function buildSoap12Envelope($method, $wsdlNs, $xmlClean, $cabec = null) {
+        $headerBlock = '';
+        if (is_array($cabec) && isset($cabec['cUF'], $cabec['versaoDados'])) {
+            $headerBlock = '<soap12:Header>'
+                . '<nfeCabecMsg xmlns="' . $wsdlNs . '">'
+                . '<cUF>' . htmlspecialchars((string)$cabec['cUF'], ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</cUF>'
+                . '<versaoDados>' . htmlspecialchars((string)$cabec['versaoDados'], ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</versaoDados>'
+                . '</nfeCabecMsg>'
+                . '</soap12:Header>';
+        }
+
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            . ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+            . ' xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">'
+            . $headerBlock
+            . '<soap12:Body>'
+            . '<' . $method . ' xmlns="' . $wsdlNs . '">'
+            . '<nfeDadosMsg>' . $this->wrapInnerXmlForNfeDadosMsg($xmlClean) . '</nfeDadosMsg>'
+            . '</' . $method . '>'
+            . '</soap12:Body>'
+            . '</soap12:Envelope>';
+    }
+
+    /**
+     * Envia SOAP request para a SEFAZ (rota interna via getServiceUrl).
+     *
+     * @param string $servico Nome do servico (NfeAutorizacao, NfeStatusServico, etc.)
+     * @param string $xml XML a enviar (corpo interno, sem XML declaration)
+     * @param string $method Metodo SOAP
+     * @return array
      */
     private function send($servico, $xml, $method) {
         $url = $this->getServiceUrl($servico);
@@ -311,7 +372,7 @@ class FiscalSefazClient {
                 'success' => false,
                 'xml_retorno' => '',
                 'codigo' => '999',
-                'mensagem' => "URL do serviço '{$servico}' não configurada.",
+                'mensagem' => "URL do servico '{$servico}' nao configurada.",
                 'protocolo' => null,
                 'ult_nsu' => null,
                 'max_nsu' => null,
@@ -319,116 +380,108 @@ class FiscalSefazClient {
             ];
         }
 
-        return $this->sendAtUrl($url, $xml, $method, $servico, null);
+        return $this->sendAtUrl($url, $xml, $method, $servico);
     }
 
     /**
-     * @param string $url URL base .asmx (sem ?WSDL)
-     * @param string $xml Corpo interno (nfeDadosMsg)
-     * @param string $method Nome do método SOAP (ex.: nfeAutorizacaoLote)
-     * @param string $servico Rótulo para logs (ex.: NfeAutorizacao ou NFeDistribuicaoDFe)
-     * @param string|null $nfeDadosMsgNs xmlns do envelope nfeDadosMsg; null = padrão por método
-     * @param array        $soapExtras    nfe_cabec_msg, cabec_namespace, cabec_cuf, cabec_versao_dados (CadConsultaCadastro4)
+     * Envia SOAP 1.2 via cURL com mTLS (certificado A1).
+     *
+     * Monta o envelope SOAP manualmente para controle total sobre namespaces
+     * e versoes, evitando problemas do SoapClient com WSDL + XSD_ANYXML.
+     *
+     * @param string      $url           URL do servico .asmx (sem ?WSDL)
+     * @param string      $xml           Corpo interno (nfeDadosMsg), sem <?xml ...?>
+     * @param string      $method        Nome do metodo SOAP (ex.: nfeStatusServicoNF)
+     * @param string      $servico       Rotulo para logs e lookup (ex.: NfeStatusServico)
+     * @param string|null $nfeDadosMsgNs xmlns do wrapper; null = lookup em SERVICE_MAP
+     * @param array|null  $nfeCabecMsg   Se informado: ['cUF'=>'35','versaoDados'=>'2.00'] para <soap:Header><nfeCabecMsg> (ConsCad)
      * @return array
      */
-    private function sendAtUrl($url, $xml, $method, $servico, $nfeDadosMsgNs = null, array $soapExtras = []) {
+    private function sendAtUrl($url, $xml, $method, $servico, $nfeDadosMsgNs = null, $nfeCabecMsg = null) {
         $maxAttempts = 1 + max(0, min(3, $this->retryMax));
         $delayMs = (int)Configure::read('Fiscal.soap_retry_delay_ms', 500);
 
+        // Resolve namespace WSDL
+        $wsdlNs = $nfeDadosMsgNs;
+        if (!$wsdlNs && isset(self::$SERVICE_MAP[$servico])) {
+            $wsdlNs = self::$SERVICE_MAP[$servico][1];
+        }
+        if (!$wsdlNs) {
+            $wsdlNs = 'http://www.portalfiscal.inf.br/nfe/wsdl/' . $servico;
+        }
+        $soapAction = $wsdlNs . '/' . $method;
+
+        // Remove XML declaration do conteudo interno (nao pode estar dentro do envelope SOAP)
+        $xmlClean = preg_replace('/<\?xml[^?]*\?\>\s*/', '', $xml);
+
+        $envelope = $this->buildSoap12Envelope($method, $wsdlNs, $xmlClean, $nfeCabecMsg);
+
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             try {
+                $certPem = $this->prepareCertFile();
+                $certSize = @filesize($certPem);
+                if ($certSize === false || $certSize < 100) {
+                    throw new \RuntimeException('Certificado PEM temporario invalido ou vazio para mTLS.');
+                }
                 try {
-                    $certPem = $this->prepareCertFile();
-
-                    $context = stream_context_create([
-                        'ssl' => [
-                            'local_cert' => $certPem,
-                            'verify_peer' => false,
-                            'verify_peer_name' => false,
-                            'allow_self_signed' => true,
+                    $ch = curl_init($url);
+                    if (!$ch) {
+                        throw new \RuntimeException('Falha ao inicializar cURL.');
+                    }
+                    curl_setopt_array($ch, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_POST           => true,
+                        CURLOPT_POSTFIELDS     => $envelope,
+                        CURLOPT_HTTPHEADER     => [
+                            'Content-Type: application/soap+xml;charset=UTF-8;action="' . $soapAction . '"',
+                            'Content-Length: ' . strlen($envelope),
                         ],
-                        'http' => [
-                            'timeout' => $this->timeout,
-                        ],
+                        CURLOPT_SSLCERT        => $certPem,
+                        CURLOPT_SSLCERTTYPE    => 'PEM',
+                        CURLOPT_SSLKEY         => $certPem,
+                        CURLOPT_TIMEOUT        => $this->timeout,
+                        CURLOPT_CONNECTTIMEOUT => $this->timeout,
+                        CURLOPT_SSL_VERIFYPEER => false,
+                        CURLOPT_SSL_VERIFYHOST => 0,
                     ]);
 
-                    $soapParams = [
-                        'encoding' => 'UTF-8',
-                        'trace' => true,
-                        'exceptions' => true,
-                        'connection_timeout' => $this->timeout,
-                        'stream_context' => $context,
-                        'soap_version' => SOAP_1_2,
-                        'style' => SOAP_DOCUMENT,
-                        'use' => SOAP_LITERAL,
-                    ];
+                    $response = curl_exec($ch);
+                    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $curlError = curl_error($ch);
+                    $curlErrno = (int)curl_errno($ch);
+                    curl_close($ch);
 
-                    $client = new \SoapClient($url . '?WSDL', $soapParams);
-
-                    $msgNs = $nfeDadosMsgNs ?? ('http://www.portalfiscal.inf.br/nfe/wsdl/' . $method);
-                    $params = new \SoapVar(
-                        '<nfeDadosMsg xmlns="' . $msgNs . '">' . $xml . '</nfeDadosMsg>',
-                        XSD_ANYXML
-                    );
-
-                    $inputHeaders = null;
-                    if (!empty($soapExtras['nfe_cabec_msg'])) {
-                        $hdrNs = (string)($soapExtras['cabec_namespace'] ?? $msgNs);
-                        $cUFcab = (int)($soapExtras['cabec_cuf'] ?? 35);
-                        $verDados = (string)($soapExtras['cabec_versao_dados'] ?? '4.00');
-                        $cabecXml = '<nfeCabecMsg xmlns="' . htmlspecialchars($hdrNs, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '">'
-                            . '<cUF>' . $cUFcab . '</cUF>'
-                            . '<versaoDados>' . htmlspecialchars($verDados, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</versaoDados>'
-                            . '</nfeCabecMsg>';
-                        $cabecVar = new \SoapVar($cabecXml, XSD_ANYXML);
-                        $inputHeaders = [
-                            new \SoapHeader($hdrNs, 'nfeCabecMsg', $cabecVar, false),
-                        ];
+                    if ($response === false || $curlErrno) {
+                        throw new \RuntimeException(
+                            'cURL erro ' . $curlErrno . ': ' . ($curlError ?: 'Sem resposta do servidor')
+                        );
                     }
 
-                    $response = $inputHeaders === null
-                        ? $client->__soapCall($method, [$params])
-                        : $client->__soapCall($method, [$params], null, $inputHeaders);
+                    Log::debug(sprintf(
+                        'SEFAZ cURL servico=%s HTTP=%d bytes=%d',
+                        $servico, $httpCode, strlen($response)
+                    ));
 
-                    $xmlRetorno = '';
-                    if ($response instanceof \stdClass) {
-                        $xmlRetorno = $this->extractXmlFromResponse($response);
-                    } elseif (is_string($response)) {
-                        $xmlRetorno = $response;
+                    // Verifica SOAP Fault
+                    $faultMsg = $this->extractSoapFault($response);
+                    if ($faultMsg) {
+                        throw new \RuntimeException('SEFAZ SOAP Fault: ' . $faultMsg);
                     }
+                    if ($httpCode >= 500) {
+                        throw new \RuntimeException(
+                            'HTTP ' . $httpCode . ': ' . mb_substr($response, 0, 300)
+                        );
+                    }
+
+                    // Extrai XML de retorno do envelope SOAP
+                    $xmlRetorno = $this->extractXmlFromSoapResponse($response);
 
                     $result = $this->parseRetorno($xmlRetorno);
                     $result['xml_retorno'] = $xmlRetorno;
-
                     return $result;
                 } finally {
                     $this->cleanupCertFile();
                 }
-            } catch (\SoapFault $e) {
-                Log::error(sprintf(
-                    'SEFAZ SOAP Fault ambiente=%d servico=%s tentativa=%d/%d: %s',
-                    $this->ambiente,
-                    $servico,
-                    $attempt,
-                    $maxAttempts,
-                    $e->getMessage()
-                ));
-                if ($attempt < $maxAttempts && self::isTransientSoapFault($e)) {
-                    Log::warning(sprintf('SEFAZ retentativa (rede) servico=%s tentativa=%d', $servico, $attempt + 1));
-                    usleep($delayMs * 1000);
-                    continue;
-                }
-
-                return [
-                    'success' => false,
-                    'xml_retorno' => '',
-                    'codigo' => 'SOAP_FAULT',
-                    'mensagem' => $e->getMessage(),
-                    'protocolo' => null,
-                    'ult_nsu' => null,
-                    'max_nsu' => null,
-                    'doc_zip_count' => 0,
-                ];
             } catch (\Exception $e) {
                 Log::error(sprintf(
                     'SEFAZ Error ambiente=%d servico=%s tentativa=%d/%d: %s',
@@ -438,7 +491,8 @@ class FiscalSefazClient {
                     $maxAttempts,
                     $e->getMessage()
                 ));
-                if ($attempt < $maxAttempts && self::isTransientNetworkException($e)) {
+                if ($attempt < $maxAttempts && self::isTransientException($e)) {
+                    Log::warning(sprintf('SEFAZ retentativa servico=%s tentativa=%d', $servico, $attempt + 1));
                     usleep($delayMs * 1000);
                     continue;
                 }
@@ -460,7 +514,7 @@ class FiscalSefazClient {
             'success' => false,
             'xml_retorno' => '',
             'codigo' => 'ERROR',
-            'mensagem' => 'Falha após retentativas SEFAZ.',
+            'mensagem' => 'Falha apos retentativas SEFAZ.',
             'protocolo' => null,
             'ult_nsu' => null,
             'max_nsu' => null,
@@ -468,91 +522,103 @@ class FiscalSefazClient {
         ];
     }
 
-    /**
-     * Apenas falhas típicas de rede/timeout — não retentar rejeição fiscal.
-     */
-    private static function isTransientSoapFault(\SoapFault $e) {
-        return self::messageLooksTransient($e->getMessage());
-    }
-
-    private static function isTransientNetworkException(\Exception $e) {
-        return self::messageLooksTransient($e->getMessage());
-    }
+    // ── Parse da resposta SOAP ───────────────────────────────────────
 
     /**
-     * @param string $message
-     * @return bool
+     * Extrai o XML de retorno de dentro do envelope SOAP.
+     *
+     * Estrutura esperada:
+     *   soap:Envelope > soap:Body > {method}Response > {method}Result > <retXxx ...>
      */
-    private static function messageLooksTransient($message) {
-        $m = strtolower((string)$message);
-        foreach (['timeout', 'timed out', 'connection', 'could not connect', 'failed to load', 'reset by peer', 'ssl', 'eof', 'temporar'] as $frag) {
+    private function extractXmlFromSoapResponse($soapXml) {
+        if (empty($soapXml)) {
+            return '';
+        }
+
+        $doc = new \DOMDocument();
+        if (!@$doc->loadXML($soapXml)) {
+            return '';
+        }
+
+        // Localiza soap:Body (SOAP 1.2 ou 1.1)
+        $body = $doc->getElementsByTagNameNS('http://www.w3.org/2003/05/soap-envelope', 'Body')->item(0);
+        if (!$body) {
+            $body = $doc->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Body')->item(0);
+        }
+        if (!$body) {
+            return '';
+        }
+
+        // Navega: Body > {method}Response > {method}Result > conteudo XML
+        foreach ($body->childNodes as $responseNode) {
+            if ($responseNode->nodeType !== XML_ELEMENT_NODE) {
+                continue;
+            }
+            foreach ($responseNode->childNodes as $resultNode) {
+                if ($resultNode->nodeType !== XML_ELEMENT_NODE) {
+                    continue;
+                }
+                // Constroi XML a partir dos filhos do nó Result
+                $innerParts = [];
+                foreach ($resultNode->childNodes as $child) {
+                    $innerParts[] = $doc->saveXML($child);
+                }
+                return trim(implode('', $innerParts));
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Extrai mensagem de erro de um SOAP Fault, ou '' se nao houver fault.
+     */
+    private function extractSoapFault($soapXml) {
+        if (empty($soapXml)) {
+            return '';
+        }
+        // Verificacao rapida antes de parsear DOM
+        if (strpos($soapXml, 'Fault') === false) {
+            return '';
+        }
+
+        $doc = new \DOMDocument();
+        if (!@$doc->loadXML($soapXml)) {
+            return '';
+        }
+
+        // SOAP 1.2: <env:Fault><env:Reason><env:Text>...</env:Text></env:Reason>
+        $reason = $doc->getElementsByTagNameNS('http://www.w3.org/2003/05/soap-envelope', 'Reason');
+        if ($reason->length > 0) {
+            return trim($reason->item(0)->textContent);
+        }
+
+        // SOAP 1.1: <Fault><faultstring>...</faultstring>
+        $faultstring = $doc->getElementsByTagName('faultstring');
+        if ($faultstring->length > 0) {
+            return trim($faultstring->item(0)->textContent);
+        }
+
+        return '';
+    }
+
+    /**
+     * Apenas falhas tipicas de rede/timeout — nao retentar rejeicao fiscal.
+     */
+    private static function isTransientException(\Exception $e) {
+        $m = strtolower((string)$e->getMessage());
+        foreach (['timeout', 'timed out', 'connection', 'could not connect', 'reset by peer', 'curl erro', 'eof', 'temporar'] as $frag) {
             if (strpos($m, $frag) !== false) {
                 return true;
             }
         }
-
         return false;
     }
 
-    /**
-     * Obtém URL do serviço.
-     */
-    private function getServiceUrl($servico) {
-        $urls = Configure::read("Fiscal.webservices.{$this->wsGroup}.{$this->ambiente}");
-        return $urls[$servico] ?? null;
-    }
+    // ── Parse retorno SEFAZ (XML interno) ────────────────────────────
 
     /**
-     * Prepara arquivo temporário PEM com cert + key.
-     */
-    private function prepareCertFile() {
-        $tempDir = sys_get_temp_dir();
-        $this->tempCertPath = $tempDir . DIRECTORY_SEPARATOR . 'pgm_fiscal_' . uniqid('', true) . '.pem';
-        file_put_contents($this->tempCertPath, $this->signer->exportSslPemBundle());
-        chmod($this->tempCertPath, 0600);
-        return $this->tempCertPath;
-    }
-
-    /**
-     * Remove arquivo temporário do certificado.
-     */
-    private function cleanupCertFile() {
-        if ($this->tempCertPath && file_exists($this->tempCertPath)) {
-            unlink($this->tempCertPath);
-            $this->tempCertPath = null;
-        }
-    }
-
-    /**
-     * Extrai XML da resposta SOAP.
-     */
-    private function extractXmlFromResponse($response) {
-        if (isset($response->nfeResultMsg)) {
-            if ($response->nfeResultMsg instanceof \DOMDocument) {
-                return $response->nfeResultMsg->saveXML();
-            }
-            return (string)$response->nfeResultMsg;
-        }
-        if (isset($response->nfeDistDFeInteresseResult)) {
-            if ($response->nfeDistDFeInteresseResult instanceof \DOMDocument) {
-                return $response->nfeDistDFeInteresseResult->saveXML();
-            }
-
-            return (string)$response->nfeDistDFeInteresseResult;
-        }
-        if (isset($response->consultaCadastroResult)) {
-            if ($response->consultaCadastroResult instanceof \DOMDocument) {
-                return $response->consultaCadastroResult->saveXML();
-            }
-
-            return (string)$response->consultaCadastroResult;
-        }
-
-        return json_encode($response);
-    }
-
-    /**
-     * Faz parse do XML de retorno da SEFAZ.
+     * Faz parse do XML de retorno da SEFAZ (conteudo dentro do SOAP).
      */
     private function parseRetorno($xmlRetorno) {
         $result = [
@@ -574,11 +640,10 @@ class FiscalSefazClient {
 
         $doc = new \DOMDocument();
         if (!@$doc->loadXML($xmlRetorno)) {
-            $result['mensagem'] = 'XML de retorno inválido';
+            $result['mensagem'] = 'XML de retorno invalido';
             return $result;
         }
 
-        // Tenta extrair cStat e xMotivo de vários formatos de retorno
         $tags = ['retEnviNFe', 'retConsSitNFe', 'retConsStatServ', 'retInutNFe', 'retEvento', 'retEnvEvento', 'retDistDFeInt', 'retConsCad'];
         foreach ($tags as $tag) {
             $nodes = $doc->getElementsByTagName($tag);
@@ -589,16 +654,16 @@ class FiscalSefazClient {
                 $result['codigo'] = $cStat;
                 $result['mensagem'] = $xMotivo;
 
-                // Códigos de sucesso: 100 (autorizado), 101 (cancelado), 102 (inutilizado), 107 (serviço OK), 135 (evento registrado), 128 (lote processado)
+                // Codigos de sucesso: 100 (autorizado), 101 (cancelado), 102 (inutilizado), 107 (servico OK), 135 (evento registrado), 128 (lote processado)
                 $result['success'] = in_array((int)$cStat, [100, 101, 102, 107, 128, 135]);
 
                 if ($tag === 'retConsCad') {
-                    // 111 = uma ocorrência; 112 = mais de uma (SVRS / manual consulta cadastro)
+                    // 111 = uma ocorrencia; 112 = mais de uma
                     $result['success'] = in_array((int)$cStat, [111, 112], true);
                 }
 
                 if ($tag === 'retDistDFeInt') {
-                    // 137 = sem documento; 138 = documento localizado (656 = consumo indevido — tratar como falha operacional)
+                    // 137 = sem documento; 138 = documento localizado
                     $result['success'] = in_array((int)$cStat, [137, 138], true);
                     $result['ult_nsu'] = $this->getTagValue($node, 'ultNSU');
                     $result['max_nsu'] = $this->getTagValue($node, 'maxNSU');
@@ -655,6 +720,31 @@ class FiscalSefazClient {
             return $tags->item(0)->nodeValue;
         }
         return null;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+
+    private function getServiceUrl($servico) {
+        $urls = Configure::read("Fiscal.webservices.{$this->wsGroup}.{$this->ambiente}");
+        return $urls[$servico] ?? null;
+    }
+
+    /**
+     * Prepara arquivo temporario PEM com cert + key para cURL mTLS.
+     */
+    private function prepareCertFile() {
+        $tempDir = sys_get_temp_dir();
+        $this->tempCertPath = $tempDir . DIRECTORY_SEPARATOR . 'pgm_fiscal_' . uniqid('', true) . '.pem';
+        file_put_contents($this->tempCertPath, $this->signer->exportSslPemBundle());
+        chmod($this->tempCertPath, 0600);
+        return $this->tempCertPath;
+    }
+
+    private function cleanupCertFile() {
+        if ($this->tempCertPath && file_exists($this->tempCertPath)) {
+            unlink($this->tempCertPath);
+            $this->tempCertPath = null;
+        }
     }
 
     private function getCodigoUF() {
