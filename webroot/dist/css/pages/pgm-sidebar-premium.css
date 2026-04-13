@@ -1,23 +1,22 @@
 /**
- * PGM Sidebar Premium - Refined Green & Slate Theme 
- * Matches user's exact specification for active states and submenus.
+ * PGM Sidebar Premium - Refined Green & Slate Theme
+ * Remove all conflicts so "Nova Ordem" gets white text and proper backgrounds.
  */
 
 :root {
     --pgm-sb-bg: #111827;           /* Fundo principal escuro */
     --pgm-sb-border: #1f2937;       /* Bordas sutis */
     --pgm-sb-text-main: #f3f4f6;    /* Texto claro */
-    --pgm-sb-text-muted: #9ca3af;     /* Texto cinza/inativo */
+    --pgm-sb-text-muted: #9ca3af;   /* Texto cinza/inativo */
     
-    /* Cores das imagens */
     --pgm-sb-parent-active-bg: #0d271f;    /* Fundo verde bem escuro do item pai aberto */
     --pgm-sb-parent-active-text: #34d399;  /* Texto verde claro do item pai aberto */
     
     --pgm-sb-sub-active-bg: #1f2937;       /* Fundo cinza chumbo do submenu ativo (Nova Ordem) */
-    --pgm-sb-sub-active-text: #ffffff;     /* Texto branco do submenu ativo */
+    --pgm-sb-sub-active-text: #ffffff;     /* Texto branco exato */
     
-    --pgm-sb-dot-inactive: #6b7280;        /* Bolinha cinza inativa */
-    --pgm-sb-dot-active: #10b981;          /* Bolinha verde neon ativa */
+    --pgm-sb-dot-inactive: #6b7280;        
+    --pgm-sb-dot-active: #10b981;          
     
     --pgm-sb-hover-bg: #1f2937;
 }
@@ -31,101 +30,45 @@ html body .pgm-sidebar-shell.left-sidebar {
     font-family: 'Roboto', 'Inter', sans-serif !important;
 }
 
-/* Hide default scroll styling */
-html body .pgm-sidebar-shell .scroll-sidebar {
-    background: transparent !important;
-}
+html body .pgm-sidebar-shell .scroll-sidebar { background: transparent !important; }
 
 /* Brand area */
-html body .pgm-sidebar-shell .pgm-sidebar-brand {
-    border-bottom: 1px solid var(--pgm-sb-border) !important;
-    padding: 24px 20px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-}
-html body .pgm-sidebar-shell .pgm-sidebar-logo-link {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    text-decoration: none !important;
-    width: 100% !important;
-}
-html body .pgm-sidebar-shell .pgm-sidebar-mark {
-    width: 32px !important; 
-    height: 32px !important;
-    background: var(--pgm-sb-dot-active) !important;
-    border-radius: 8px !important;
-    color: white !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
-}
-html body .pgm-sidebar-shell .pgm-sidebar-mark svg {
-    width: 16px !important; height: 16px !important; margin:0 !important;
-}
-html body .pgm-sidebar-shell .pgm-sidebar-titles strong {
-    font-size: 15px !important; font-weight: 600 !important; color: #fff !important; text-transform: none !important; display: block !important;
-}
-html body .pgm-sidebar-shell .pgm-sidebar-sub {
-    font-size: 11px !important; color: var(--pgm-sb-text-muted) !important; text-transform: uppercase !important; margin-top:2px !important;
-}
+html body .pgm-sidebar-shell .pgm-sidebar-brand { border-bottom: 1px solid var(--pgm-sb-border) !important; padding: 24px 20px !important; display: flex !important; align-items: center !important; gap: 12px !important; background: transparent !important;}
+html body .pgm-sidebar-shell .pgm-sidebar-logo-link { display: flex !important; align-items: center !important; gap: 12px !important; text-decoration: none !important; width: 100% !important; }
+html body .pgm-sidebar-shell .pgm-sidebar-mark { width: 32px !important; height: 32px !important; background: var(--pgm-sb-dot-active) !important; border-radius: 8px !important; color: white !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important; }
+html body .pgm-sidebar-shell .pgm-sidebar-mark svg { width: 16px !important; height: 16px !important; margin:0 !important; }
+html body .pgm-sidebar-shell .pgm-sidebar-titles strong { font-size: 15px !important; font-weight: 600 !important; color: #fff !important; text-transform: none !important; display: block !important; }
+html body .pgm-sidebar-shell .pgm-sidebar-sub { font-size: 11px !important; color: var(--pgm-sb-text-muted) !important; text-transform: uppercase !important; margin-top:2px !important; }
 
 /* Workspace selector */
-html body .pgm-sidebar-shell .pgm-sidebar-workspace {
-    padding: 16px 20px !important;
-    border-bottom: 1px solid var(--pgm-sb-border) !important;
-    display: flex !important; align-items: center !important; gap: 8px !important;
-}
-html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-ws-icon {
-    color: var(--pgm-sb-text-muted) !important; width: auto !important;
-}
-html body .pgm-sidebar-shell .pgm-empresa-select {
-    background: transparent !important;
-    border: 1px solid var(--pgm-sb-border) !important;
-    color: var(--pgm-sb-text-main) !important;
-    border-radius: 6px !important;
-    font-size: 12px !important;
-    height: 32px !important;
-    padding: 0 12px !important;
-}
-html body .pgm-sidebar-shell .pgm-empresa-select:hover {
-    border-color: #4b5563 !important; background: rgba(255,255,255,0.02) !important; color: #fff !important;
-}
+html body .pgm-sidebar-shell .pgm-sidebar-workspace { padding: 16px 20px !important; border-bottom: 1px solid var(--pgm-sb-border) !important; display: flex !important; align-items: center !important; gap: 8px !important; background: transparent !important; }
+html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-ws-icon { color: var(--pgm-sb-text-muted) !important; width: auto !important; }
+html body .pgm-sidebar-shell .pgm-empresa-select { background: transparent !important; border: 1px solid var(--pgm-sb-border) !important; color: var(--pgm-sb-text-main) !important; border-radius: 6px !important; font-size: 12px !important; height: 32px !important; padding: 0 12px !important; }
+html body .pgm-sidebar-shell .pgm-empresa-select:hover { border-color: #4b5563 !important; background: rgba(255,255,255,0.02) !important; color: #fff !important; }
 html body .pgm-sidebar-shell .pgm-ws-label { display: none !important; }
 
 /* Search */
-html body .pgm-sidebar-shell .pgm-sb-search-block {
-    padding: 16px 20px !important;
-    border-bottom: 1px solid var(--pgm-sb-border) !important;
-}
-html body .pgm-sidebar-shell .pgm-sb-sbox {
-    position: relative !important; display: flex !important; align-items: center !important;
-}
-html body .pgm-sidebar-shell .pgm-sb-search-svg {
-    position: absolute !important; left: 10px !important; color: var(--pgm-sb-text-muted) !important; z-index: 2 !important; width: 14px !important; height: 14px !important;
-}
-html body .pgm-sidebar-shell .pgm-sb-sbox input {
-    background: transparent !important; border: 1px solid var(--pgm-sb-border) !important; color: var(--pgm-sb-text-main) !important; border-radius: 6px !important; padding: 8px 10px 8px 30px !important; width: 100% !important; font-size: 12px !important; height: 34px !important;
-}
+html body .pgm-sidebar-shell .pgm-sb-search-block { padding: 16px 20px !important; border-bottom: 1px solid var(--pgm-sb-border) !important; background: transparent !important; }
+html body .pgm-sidebar-shell .pgm-sb-sbox { position: relative !important; display: flex !important; align-items: center !important; }
+html body .pgm-sidebar-shell .pgm-sb-search-svg { position: absolute !important; left: 10px !important; color: var(--pgm-sb-text-muted) !important; z-index: 2 !important; width: 14px !important; height: 14px !important; }
+html body .pgm-sidebar-shell .pgm-sb-sbox input { background: transparent !important; border: 1px solid var(--pgm-sb-border) !important; color: var(--pgm-sb-text-main) !important; border-radius: 6px !important; padding: 8px 10px 8px 30px !important; width: 100% !important; font-size: 12px !important; height: 34px !important; }
 html body .pgm-sidebar-shell .pgm-sb-sbox input:focus { border-color: var(--pgm-sb-dot-active) !important; }
 
-/* Nullify Legacy Backgrounds */
+/* ZERO OUT ALL LEGACY ACTIVE / OPEN GREEN BACKGROUNDS */
 html body .pgm-sidebar-shell .pgm-ng,
-html body .pgm-sidebar-shell .sidebar-nav ul li.active {
-    background: transparent !important; border: none !important; box-shadow: none !important;
-}
-html body .pgm-sidebar-shell .pgm-nc {
+html body .pgm-sidebar-shell .pgm-nc,
+html body .pgm-sidebar-shell .sidebar-nav ul li,
+html body .pgm-sidebar-shell .sidebar-nav ul li.active,
+html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open {
     background: transparent !important; border: none !important; box-shadow: none !important;
 }
 
-/* Navigation Base */
+/* Base Nav */
 html body .pgm-sidebar-shell .sidebar-nav { padding: 12px 0 20px 0 !important; }
 html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-nav-section-label { padding: 20px 0 8px 20px !important; background: transparent !important; }
 html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-nav-section-label span { font-size: 10px !important; font-weight: 700 !important; color: var(--pgm-sb-text-muted) !important; text-transform: uppercase !important; letter-spacing: 1.5px !important; }
 
-/* Parent Links (Ordens de serviço, Tickets, etc) */
+/* PARENT items (Ordens de Serviço, Tickets) */
 html body .pgm-sidebar-shell .sidebar-nav ul li:not(.pgm-nav-section-label) > a,
 html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng .pgm-np {
     color: var(--pgm-sb-text-muted) !important;
@@ -138,7 +81,7 @@ html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng .pgm-np {
     background: transparent !important; text-decoration: none !important; border: none !important;
 }
 html body .pgm-sidebar-shell .sidebar-nav ul li > a i,
-html body .pgm-sidebar-shell .sidebar-nav ul li .pgm-np i { font-size: 15px !important; width: 20px !important; text-align: center !important; }
+html body .pgm-sidebar-shell .sidebar-nav ul li .pgm-np i { font-size: 15px !important; width: 20px !important; text-align: center !important; color: var(--pgm-sb-text-muted) !important; }
 
 /* Parent Links - Hover */
 html body .pgm-sidebar-shell .sidebar-nav ul li:not(.pgm-nav-section-label) > a:hover,
@@ -146,12 +89,14 @@ html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng .pgm-np:hover {
     color: #fff !important; background: var(--pgm-sb-hover-bg) !important;
 }
 
-/* Parent Links - Active/Opened */
-html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np {
+/* Parent Links - ACTIVE/OPENED (Fundo verde escuro, texto claro neon) */
+html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np,
+html body .pgm-sidebar-shell .sidebar-nav ul li.active:not(.pgm-ng) > a {
     background: var(--pgm-sb-parent-active-bg) !important;
     color: var(--pgm-sb-parent-active-text) !important;
 }
-html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np i {
+html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np i,
+html body .pgm-sidebar-shell .sidebar-nav ul li.active:not(.pgm-ng) > a i {
     color: var(--pgm-sb-parent-active-text) !important;
 }
 
@@ -159,9 +104,9 @@ html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np i {
 html body .pgm-sidebar-shell .pgm-chevron { transition: transform 0.2s !important; margin-left: auto !important; width: 10px !important; height: 10px !important; opacity: 0.6 !important; }
 html body .pgm-sidebar-shell .pgm-ng.open .pgm-chevron { transform: rotate(180deg) !important; opacity: 1 !important; color: var(--pgm-sb-parent-active-text) !important; }
 
-/* Submenu Wrapper with vertical line */
+/* SUBMENU WRAPPER (pgm-nc) */
 html body .pgm-sidebar-shell .pgm-nc {
-    margin: 4px 12px 4px 28px !important; /* recuado pra alinhar */
+    margin: 4px 12px 4px 28px !important;
     padding: 6px 0 6px 16px !important;
     max-height: 0 !important;
     overflow: hidden !important;
@@ -186,7 +131,7 @@ html body .pgm-sidebar-shell .pgm-nc li {
 }
 html body .pgm-sidebar-shell .pgm-nc li:last-child { margin-bottom: 0 !important; }
 
-/* Submenu Links */
+/* Submenu Links - Inactive */
 html body .pgm-sidebar-shell .pgm-nc li a {
     font-size: 13px !important; 
     padding: 8px 12px 8px 16px !important; 
@@ -195,7 +140,8 @@ html body .pgm-sidebar-shell .pgm-nc li a {
     background: transparent !important;
     color: var(--pgm-sb-text-muted) !important;
     display: flex !important;
-    align-items: center !important; /* To align dots */
+    align-items: center !important; 
+    border-left: 2px solid transparent !important; /* To keep padding consistent when active */
 }
 html body .pgm-sidebar-shell .pgm-nc li a:hover {
     color: var(--pgm-sb-text-main) !important;
@@ -216,49 +162,39 @@ html body .pgm-sidebar-shell .pgm-ndot {
     opacity: 1 !important; visibility: visible !important; margin: 0 !important;
 }
 
-/* Submenu Active Link (Listar Ordens / Nova ordem) */
+/* SUBMENU - ACTIVE LINK ("Nova ordem")
+ * USING MAX SPECIFICITY TO BEAT CAKEPHP ".active" CASCADES 
+ */
+html body .pgm-sidebar-shell .pgm-nc li a.active,
 html body .pgm-sidebar-shell .pgm-nc li a.act,
-html body .pgm-sidebar-shell .sidebar-nav ul li.active > a {
-    color: var(--pgm-sb-sub-active-text) !important;
+html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng ul li.active > a {
+    color: var(--pgm-sb-sub-active-text) !important; /* BRANCO! */
     font-weight: 600 !important;
-    background: var(--pgm-sb-sub-active-bg) !important;
-    border-left: 3px solid var(--pgm-sb-dot-active) !important;
+    background: var(--pgm-sb-sub-active-bg) !important; /* FUNDO CINZA CHUMBO */
+    border-left: 3px solid var(--pgm-sb-dot-active) !important; /* LINHA VERDE NEON NO CANTO */
     border-top-left-radius: 8px !important;
     border-bottom-left-radius: 8px !important;
 }
 
-/* Make dot green ONLY for the active item */
-html body .pgm-sidebar-shell .pgm-nc li a.act .pgm-ndot {
-    background: var(--pgm-sb-dot-active) !important;
-}
-/* If pgm-ndot is outside the a tag, adjust selector */
-html body .pgm-sidebar-shell .pgm-nc li:has(a.act) .pgm-ndot,
-html body .pgm-sidebar-shell .pgm-nc li a.act + .pgm-ndot,
-html body .pgm-sidebar-shell .pgm-nc li .pgm-ndot:has(~ a.act) {
+/* ACTIVE DOT ("Nova ordem") */
+html body .pgm-sidebar-shell .pgm-nc li.active .pgm-ndot,
+html body .pgm-sidebar-shell .pgm-nc li a.act .pgm-ndot,
+html body .pgm-sidebar-shell .pgm-nc li a.active .pgm-ndot {
     background: var(--pgm-sb-dot-active) !important;
 }
 
-/* Wait, looking at sidebar.ctp, the dot is INSIDE the a tag:
-   <span class="pgm-ndot"></span><span>Listar Ordens</span>
-*/
+/* Reposition dot because it's inside the 'a' tag */
 html body .pgm-sidebar-shell .pgm-nc li a .pgm-ndot {
-    /* Since it's inside the 'a' tag, we must reposition it carefully to hit the left line */
     position: absolute !important;
     left: -16px !important; /* move outside the 'a' padding to hit the vertical guide */
     top: 50% !important;
     transform: translateY(-50%) !important;
 }
-html body .pgm-sidebar-shell .pgm-nc li a.act .pgm-ndot {
-    background: var(--pgm-sb-dot-active) !important;
-    /* Move dot slightly if we have a border-left?
-       Actually, the image shows the active item having the rounded green border-left,
-       AND the dot on the vertical guide! */
-}
 
-/* OS Badge fixes */
+/* OS Badge */
 html body .pgm-sidebar-shell .pgm-os-badge { background: var(--pgm-sb-parent-active-text) !important; color: var(--pgm-sb-parent-active-bg) !important; border-radius: 4px !important; padding: 2px 6px !important; font-size: 10px !important; font-weight: 700 !important; margin-left: auto !important; margin-right: 8px !important; }
 
-/* Footer Profile */
+/* Footer */
 html body .pgm-sidebar-shell .pgm-sidebar-footer { border-top: 1px solid var(--pgm-sb-border) !important; background: transparent !important; padding: 16px 20px !important; display: flex !important; flex-direction: column !important; gap: 12px !important; }
 html body .pgm-sidebar-shell .user-profile .dropdown { width: 100% !important; }
 html body .pgm-sidebar-shell .user-profile .dropdown-toggle { display: flex !important; align-items: center !important; gap: 12px !important; text-decoration: none !important; border-bottom: none !important; width: 100% !important; }
