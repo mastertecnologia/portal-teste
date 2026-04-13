@@ -9,14 +9,14 @@
     --pgm-sb-text-main: #f3f4f6;    /* Texto claro */
     --pgm-sb-text-muted: #9ca3af;   /* Texto cinza/inativo */
     
-    --pgm-sb-parent-active-bg: #0d271f;    /* Fundo verde bem escuro do item pai aberto */
-    --pgm-sb-parent-active-text: #34d399;  /* Texto verde claro do item pai aberto */
+    --pgm-sb-parent-active-bg: rgba(37, 99, 235, 0.15);    /* Fundo azul escuro sutil do item pai aberto */
+    --pgm-sb-parent-active-text: #60a5fa;  /* Texto azul elegante do item pai aberto */
     
     --pgm-sb-sub-active-bg: #1f2937;       /* Fundo cinza chumbo do submenu ativo (Nova Ordem) */
     --pgm-sb-sub-active-text: #ffffff;     /* Texto branco exato */
     
     --pgm-sb-dot-inactive: #6b7280;        
-    --pgm-sb-dot-active: #10b981;          
+    --pgm-sb-dot-active: #3b82f6;          /* Bolinha azul ativa */
     
     --pgm-sb-hover-bg: #1f2937;
 }
@@ -171,9 +171,17 @@ html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng ul li.active > a {
     color: var(--pgm-sb-sub-active-text) !important; /* BRANCO! */
     font-weight: 600 !important;
     background: var(--pgm-sb-sub-active-bg) !important; /* FUNDO CINZA CHUMBO */
-    border-left: 3px solid var(--pgm-sb-dot-active) !important; /* LINHA VERDE NEON NO CANTO */
+    border-left: 3px solid var(--pgm-sb-dot-active) !important; /* LINHA AZUL NO CANTO */
     border-top-left-radius: 8px !important;
     border-bottom-left-radius: 8px !important;
+}
+
+/* Force text inside span to not inherit legacy green! */
+html body .pgm-sidebar-shell .pgm-nc li a.active span,
+html body .pgm-sidebar-shell .pgm-nc li a.act span,
+html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng ul li.active > a span,
+html body .pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np span {
+    color: inherit !important;
 }
 
 /* ACTIVE DOT ("Nova ordem") */
