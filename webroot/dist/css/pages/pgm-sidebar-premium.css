@@ -1,0 +1,277 @@
+/**
+ * PGM Sidebar Premium - Dark Theme Elegante Override
+ * Applying styles directly to the existing pgm-sidebar-shell classes.
+ */
+
+:root {
+    --pgm-sb-bg: #1e1e1e;
+    --pgm-sb-border: #2c2c2c;
+    --pgm-sb-text-main: #e0e0e0;
+    --pgm-sb-text-muted: #8d8d8d;
+    --pgm-sb-accent: #2563eb;
+    --pgm-sb-accent-glow: rgba(37, 99, 235, 0.4);
+    --pgm-sb-hover: #2a2a2a;
+    --pgm-sb-active-bg: linear-gradient(90deg, rgba(37,99,235,0.15) 0%, transparent 100%);
+}
+
+/* Base override for the sidebar */
+.pgm-sidebar-shell.left-sidebar {
+    background: var(--pgm-sb-bg) !important;
+    border-right: 1px solid var(--pgm-sb-border);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    color: var(--pgm-sb-text-main);
+    font-family: 'Roboto', 'Inter', sans-serif;
+}
+
+/* Hide default borders or shadows from older theme that might conflict */
+.pgm-sidebar-shell .scroll-sidebar {
+    background: transparent !important;
+}
+
+/* Brand area */
+.pgm-sidebar-shell .pgm-sidebar-brand {
+    border-bottom: 1px solid var(--pgm-sb-border);
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.pgm-sidebar-shell .pgm-sidebar-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    width: 100%;
+}
+.pgm-sidebar-shell .pgm-sidebar-mark,
+.pgm-sidebar-shell .pgm-sidebar-mark svg {
+    /* Retain size, apply elegant style to logo icon block */
+    width: 34px; 
+    height: 34px;
+    background: var(--pgm-sb-accent);
+    border-radius: 6px;
+    box-shadow: 0 4px 8px var(--pgm-sb-accent-glow);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pgm-sidebar-shell .pgm-sidebar-mark svg {
+    width: 18px; height: 18px;
+    box-shadow: none; background: transparent;
+}
+.pgm-sidebar-shell .pgm-sidebar-titles strong {
+    font-size: 15px; font-weight: 700; color: #fff; text-transform: none; display: block;
+}
+.pgm-sidebar-shell .pgm-sidebar-sub {
+    font-size: 11px; color: var(--pgm-sb-text-muted); text-transform: uppercase;
+}
+
+/* Workspace selector */
+.pgm-sidebar-shell .pgm-sidebar-workspace {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--pgm-sb-border);
+    display: flex; align-items: center; gap: 8px;
+    background: #181818;
+}
+.pgm-sidebar-shell .pgm-sidebar-workspace .pgm-ws-icon {
+    color: var(--pgm-sb-text-muted);
+    width: auto;
+}
+.pgm-sidebar-shell .pgm-empresa-select {
+    background: #252525 !important;
+    border: 1px solid var(--pgm-sb-border) !important;
+    color: var(--pgm-sb-text-main) !important;
+    border-radius: 6px;
+    font-size: 12px;
+    height: 32px;
+    padding: 0 12px;
+}
+.pgm-sidebar-shell .pgm-empresa-select:focus,
+.pgm-sidebar-shell .pgm-empresa-select:hover {
+    border-color: #444 !important; background: #2c2c2c !important; color: #fff !important;
+}
+.pgm-sidebar-shell .pgm-ws-label { display: none; }
+
+/* Search */
+.pgm-sidebar-shell .pgm-sb-search-block {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--pgm-sb-border);
+    background: #181818;
+}
+.pgm-sidebar-shell .pgm-sb-sbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.pgm-sidebar-shell .pgm-sb-search-svg {
+    position: absolute; left: 10px; color: var(--pgm-sb-text-muted); z-index: 2;
+    width: 14px; height: 14px;
+}
+.pgm-sidebar-shell .pgm-sb-sbox input {
+    background: #181818 !important;
+    border: 1px solid var(--pgm-sb-border) !important;
+    color: var(--pgm-sb-text-main) !important;
+    border-radius: 6px;
+    padding: 8px 10px 8px 30px !important;
+    width: 100%;
+    font-size: 13px;
+    height: 34px;
+}
+.pgm-sidebar-shell .pgm-sb-sbox input:focus {
+    border-color: var(--pgm-sb-accent) !important;
+}
+
+/* Navigation labels */
+.pgm-sidebar-shell .sidebar-nav {
+    padding: 12px 0 20px 0;
+}
+.pgm-sidebar-shell .sidebar-nav ul li.pgm-nav-section-label {
+    padding: 20px 0 8px 20px;
+}
+.pgm-sidebar-shell .sidebar-nav ul li.pgm-nav-section-label span {
+    font-size: 10px; font-weight: 700; color: var(--pgm-sb-text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+}
+
+/* Default links and parents */
+.pgm-sidebar-shell .sidebar-nav ul li:not(.pgm-nav-section-label) > a,
+.pgm-sidebar-shell .sidebar-nav ul li.pgm-ng .pgm-np {
+    color: var(--pgm-sb-text-muted) !important;
+    padding: 9px 12px !important;
+    border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    margin: 2px 12px !important;
+    display: flex; align-items: center; gap: 12px;
+    background: transparent !important;
+    text-decoration: none;
+}
+
+.pgm-sidebar-shell .sidebar-nav ul li > a i,
+.pgm-sidebar-shell .sidebar-nav ul li .pgm-np i {
+    font-size: 14px; width: 18px; text-align: center;
+}
+
+/* Hover */
+.pgm-sidebar-shell .sidebar-nav ul li:not(.pgm-nav-section-label) > a:hover,
+.pgm-sidebar-shell .sidebar-nav ul li.pgm-ng .pgm-np:hover {
+    color: #fff !important; background: var(--pgm-sb-hover) !important;
+}
+
+/* Active */
+.pgm-sidebar-shell .sidebar-nav ul li.active > a,
+.pgm-sidebar-shell .sidebar-nav ul li a.act,
+.pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np {
+    color: var(--pgm-sb-accent) !important;
+    background: var(--pgm-sb-active-bg) !important;
+    border-left-color: var(--pgm-sb-accent) !important;
+}
+
+.pgm-sidebar-shell .sidebar-nav ul li.active > a i,
+.pgm-sidebar-shell .sidebar-nav ul li a.act i,
+.pgm-sidebar-shell .sidebar-nav ul li.pgm-ng.open .pgm-np i {
+    color: var(--pgm-sb-accent) !important;
+}
+
+/* Chevron */
+.pgm-sidebar-shell .pgm-chevron { 
+    transition: transform 0.2s; 
+    margin-left: auto; 
+    width: 10px; height: 10px;
+    opacity: 0.5;
+}
+.pgm-sidebar-shell .pgm-ng.open .pgm-chevron { transform: rotate(180deg); opacity: 1; }
+
+/* Submenu / pgm-nc */
+.pgm-sidebar-shell .pgm-nc {
+    padding-left: 45px;
+    margin: 0; padding-top: 4px; padding-bottom: 4px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+.pgm-sidebar-shell .pgm-ng.open .pgm-nc {
+    max-height: 500px;
+    display: block !important;
+}
+
+.pgm-sidebar-shell .pgm-nc li {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.pgm-sidebar-shell .pgm-nc li a {
+    font-size: 12px !important; 
+    padding: 6px 0 !important; 
+    margin: 0 !important; 
+    border: none !important; 
+    background: transparent !important;
+    color: var(--pgm-sb-text-muted) !important;
+    display: block;
+}
+.pgm-sidebar-shell .pgm-nc li a:hover {
+    color: #fff !important;
+}
+.pgm-sidebar-shell .pgm-nc li a.act {
+    color: #fff !important; font-weight: 500;
+}
+.pgm-sidebar-shell .pgm-ndot { display: none !important; }
+
+/* OS Badge */
+.pgm-sidebar-shell .pgm-os-badge {
+    background: var(--pgm-sb-accent);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    margin-left: auto;
+    margin-right: 8px; /* space before chevron */
+}
+
+/* Quick Fix: Some raw <li> might output an <a> wrapper naturally if it is an active CakePHP li. */
+.pgm-sidebar-shell .sidebar-nav ul li.active { background: transparent !important; border:none; }
+
+/* Footer Profile */
+.pgm-sidebar-shell .pgm-sidebar-footer {
+    border-top: 1px solid var(--pgm-sb-border);
+    background: #181818;
+    padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 12px;
+}
+.pgm-sidebar-shell .user-profile .dropdown {
+    width: 100%;
+}
+.pgm-sidebar-shell .user-profile .dropdown-toggle {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; border-bottom: none;
+    width: 100%;
+}
+.pgm-sidebar-shell .pgm-user-av {
+    width: 34px; height: 34px; border-radius: 6px; 
+    background: #2a2a2a; border: 1px solid #444; 
+    color: #fff;
+    display: flex; align-items: center; justify-content: center; 
+    font-weight: 500; font-size: 14px;
+    flex-shrink: 0;
+}
+.pgm-sidebar-shell .pgm-sf-user-info {
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.pgm-sidebar-shell .pgm-sf-user-name { font-size: 12px; font-weight: 500; color: #fff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.pgm-sidebar-shell .pgm-sf-user-role { font-size: 10px; color: var(--pgm-sb-text-muted); }
+
+.pgm-sidebar-shell .pgm-sf-actions { 
+    display: flex; gap: 4px; padding-top: 8px; border-top: 1px solid var(--pgm-sb-border);
+    justify-content: flex-end;
+}
+.pgm-sidebar-shell .pgm-sf-actions a {
+    color: var(--pgm-sb-text-muted); padding: 4px 6px; transition: all 0.2s; border-radius: 4px; font-size: 12px;
+}
+.pgm-sidebar-shell .pgm-sf-actions a:hover { color: #fff; background: #2c2c2c; }
+.pgm-sidebar-shell .pgm-sf-actions a.pgm-sf-act-danger { color: rgba(239, 68, 68, 0.8); }
+.pgm-sidebar-shell .pgm-sf-actions a.pgm-sf-act-danger:hover { color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important;}
+
+.pgm-sidebar-shell .pgm-sidebar-collapse-row { display: none; }
+.pgm-sidebar-shell .caret { opacity: 0; }
