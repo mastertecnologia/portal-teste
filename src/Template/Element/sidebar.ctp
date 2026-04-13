@@ -1,5 +1,4 @@
 <?php
-	$this->Html->css('pages/pgm-sidebar-premium.css', ['block' => true]);
 	use Cake\Routing\Router;
 	require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php');
 
