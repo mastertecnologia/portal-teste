@@ -306,6 +306,21 @@ html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
 	border-color: var(--prd-border, var(--pgm-border)) !important;
 }
 
+/* ── Modal / dropdown entrance animation ── */
+@keyframes pgm-modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── KPI glow pulse (SLA violado) ── */
+@keyframes sd-kpi-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(248, 81, 73, 0.15), var(--pgm-shadow-sm); }
+  50% { box-shadow: 0 0 24px rgba(248, 81, 73, 0.30), var(--pgm-shadow-sm); }
+}
+.sd-kpi-glow {
+  animation: sd-kpi-glow-pulse 3s ease-in-out infinite;
+}
+
 /* Só o número do ticket (link) — estilo .prd-td-val / mono Produtos; célula sem tinta */
 html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd a.tickets-sd-ticket-link {
 	font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

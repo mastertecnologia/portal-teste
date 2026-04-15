@@ -262,7 +262,6 @@ export default function ClientTicketDetail({ boot }) {
       anexos={ticket.anexos}
       onAnexosChange={(next) => setTicket((prev) => (prev ? { ...prev, anexos: next } : prev))}
       disabled={false}
-      embed={embedded}
     />
   );
 
@@ -331,7 +330,7 @@ export default function ClientTicketDetail({ boot }) {
                 </div>
                 <time className={embedded ? 'flex-shrink-0 text-[var(--pgm-text-muted)]' : 'flex-shrink-0 text-slate-500'}>{c.quando}</time>
               </div>
-              <CommentMessage texto={c.texto} embed={embedded} />
+              <CommentMessage texto={c.texto} />
             </li>
           ))
         )}

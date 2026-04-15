@@ -48,6 +48,52 @@ html[data-pgm-theme='dark'] {
   --pgm-erp-teal: var(--pgm-primary);
   --pgm-erp-teal-hover: #13715a;
   --pgm-erp-teal-active: #0f6e56;
+
+  /* ── Service Desk Premium v2 ── */
+  --pgm-bg-base: #0c0f14;
+  --pgm-bg-raised: #141820;
+  --pgm-bg-overlay: #2a3140;
+  --pgm-border-subtle: rgba(255, 255, 255, 0.06);
+  --pgm-border-accent: rgba(29, 158, 117, 0.35);
+  --pgm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --pgm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --pgm-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --pgm-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --pgm-shadow-glow: 0 0 20px rgba(29, 158, 117, 0.12);
+  --pgm-glass-bg: rgba(26, 31, 40, 0.72);
+  --pgm-glass-border: rgba(255, 255, 255, 0.08);
+  --pgm-glass-blur: 12px;
+  --pgm-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --pgm-transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --pgm-transition-smooth: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --pgm-radius-2xl: 20px;
+  --pgm-badge-teal-bg: rgba(29, 158, 117, 0.15);
+  --pgm-badge-teal-text: #5cdbc0;
+  --pgm-badge-teal-ring: rgba(29, 158, 117, 0.30);
+  --pgm-badge-blue-bg: rgba(88, 166, 255, 0.12);
+  --pgm-badge-blue-text: #79b8ff;
+  --pgm-badge-blue-ring: rgba(88, 166, 255, 0.25);
+  --pgm-badge-amber-bg: rgba(210, 153, 34, 0.14);
+  --pgm-badge-amber-text: #f0c060;
+  --pgm-badge-amber-ring: rgba(210, 153, 34, 0.30);
+  --pgm-badge-red-bg: rgba(248, 81, 73, 0.12);
+  --pgm-badge-red-text: #ff9492;
+  --pgm-badge-red-ring: rgba(248, 81, 73, 0.25);
+  --pgm-badge-green-bg: rgba(63, 185, 80, 0.14);
+  --pgm-badge-green-text: #7ee787;
+  --pgm-badge-green-ring: rgba(63, 185, 80, 0.25);
+  --pgm-badge-purple-bg: rgba(166, 130, 230, 0.14);
+  --pgm-badge-purple-text: #d2a8ff;
+  --pgm-badge-purple-ring: rgba(166, 130, 230, 0.25);
+  --pgm-badge-orange-bg: rgba(255, 136, 51, 0.14);
+  --pgm-badge-orange-text: #ffaa66;
+  --pgm-badge-orange-ring: rgba(255, 136, 51, 0.30);
+  --pgm-badge-violet-bg: rgba(139, 92, 246, 0.12);
+  --pgm-badge-violet-text: #c4b5fd;
+  --pgm-badge-violet-ring: rgba(139, 92, 246, 0.25);
+  --pgm-badge-muted-bg: rgba(255, 255, 255, 0.06);
+  --pgm-badge-muted-text: #9aa0a8;
+  --pgm-badge-muted-ring: rgba(255, 255, 255, 0.10);
 }
 
 /* Embed no portal Cake: células de grid/flex com min-height:auto esticam pela conversa */

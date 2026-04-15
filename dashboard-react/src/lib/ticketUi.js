@@ -25,46 +25,22 @@ const BADGE_LIGHT = {
     'bg-red-50 text-red-800 border-red-300 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
 };
 
-/**
- * Service Desk — badges alinhados a produtos-premium.css (.prd-badge-on / .prd-teal / .prd-av-*).
- * Base comum: pill compacta (equivalente a .prd-badge 10.5px / semibold).
- */
-const SD_BADGE_BASE =
-  'tracking-wide shadow-none';
-/** .prd-badge-on — stock OK / ativo */
-const SD_PRD_ON = `${SD_BADGE_BASE} border-[color:rgba(63,185,80,0.25)] bg-[rgba(63,185,80,0.13)] text-[#3fb950]`;
-/** .prd-badge-off */
-const SD_PRD_OFF = `${SD_BADGE_BASE} border-[color:rgba(248,81,73,0.22)] bg-[rgba(248,81,73,0.10)] text-[#f85149]`;
-/** .prd-av-prod — ênfase teal */
-const SD_PRD_TEAL = `${SD_BADGE_BASE} border-[color:rgba(29,158,117,0.35)] bg-[var(--prd-teal-dim)] text-[color:var(--prd-teal)]`;
-/** .prd-av-serv — fila cliente / aguardando resposta */
-const SD_PRD_BLUE = `${SD_BADGE_BASE} border-[color:rgba(88,166,255,0.3)] bg-[var(--prd-blue-dim)] text-[color:var(--prd-blue)]`;
-/** Valor / fechado — .prd-td-val + muted */
-const SD_PRD_VAL = `${SD_BADGE_BASE} border border-[var(--prd-border)] bg-[var(--prd-surface2)] text-[color:var(--prd-teal-lt)]`;
-const SD_PRD_MUTED = `${SD_BADGE_BASE} border border-[var(--prd-border)] bg-[var(--prd-surface2)] text-[color:var(--prd-muted)]`;
-/** .prd-td-margin margin-ok */
-const SD_PRD_ORANGE = `${SD_BADGE_BASE} border-[color:rgba(255,136,51,0.35)] bg-[var(--prd-orange-dim)] text-[color:var(--prd-orange)]`;
-/** Prioridade média — amarelo Produtos */
-const SD_PRD_YELLOW = `${SD_BADGE_BASE} border-[color:rgba(210,153,34,0.45)] bg-[var(--prd-yellow-dim)] text-[color:var(--prd-yellow)]`;
-/** Fechado — roxo Produtos */
-const SD_PRD_PURPLE = `${SD_BADGE_BASE} border-[color:rgba(166,130,230,0.45)] bg-[rgba(166,130,230,0.14)] text-[color:var(--prd-purple)]`;
-/** Escalado — violeta (distinto de cancelado) */
-const SD_PRD_VIOLET = `${SD_BADGE_BASE} border-[color:rgba(139,92,246,0.45)] bg-[rgba(139,92,246,0.12)] text-violet-200`;
+const SD_BASE = 'tracking-[0.04em] shadow-[inset_0_0_0_1px_currentColor] backdrop-blur-[2px] transition-all duration-[120ms] hover:brightness-110';
 
 const BADGE_SERVICEDESK = {
-  success: SD_PRD_ON,
-  warning: 'border border-amber-700/50 bg-amber-950/35 text-amber-200 tracking-wide shadow-none',
-  critical: SD_PRD_OFF,
-  high: SD_PRD_ORANGE,
-  medium: SD_PRD_YELLOW,
-  low: SD_PRD_MUTED,
-  progress: SD_PRD_ON,
-  waiting: SD_PRD_BLUE,
-  pendingTech: SD_PRD_TEAL,
-  resolved: SD_PRD_VAL,
-  escalated: SD_PRD_VIOLET,
-  closed: SD_PRD_PURPLE,
-  cancelled: SD_PRD_OFF,
+  success:   `${SD_BASE} bg-[var(--pgm-badge-green-bg)] text-[var(--pgm-badge-green-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-green-ring)]`,
+  warning:   `${SD_BASE} bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-amber-ring)]`,
+  critical:  `${SD_BASE} bg-[var(--pgm-badge-red-bg)] text-[var(--pgm-badge-red-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-red-ring)]`,
+  high:      `${SD_BASE} bg-[var(--pgm-badge-orange-bg)] text-[var(--pgm-badge-orange-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-orange-ring)]`,
+  medium:    `${SD_BASE} bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-amber-ring)]`,
+  low:       `${SD_BASE} bg-[var(--pgm-badge-muted-bg)] text-[var(--pgm-badge-muted-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-muted-ring)]`,
+  progress:  `${SD_BASE} bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-teal-ring)]`,
+  waiting:   `${SD_BASE} bg-[var(--pgm-badge-blue-bg)] text-[var(--pgm-badge-blue-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-blue-ring)]`,
+  pendingTech: `${SD_BASE} bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-teal-ring)]`,
+  resolved:  `${SD_BASE} bg-[var(--pgm-badge-green-bg)] text-[var(--pgm-badge-green-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-green-ring)]`,
+  escalated: `${SD_BASE} bg-[var(--pgm-badge-violet-bg)] text-[var(--pgm-badge-violet-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-violet-ring)]`,
+  closed:    `${SD_BASE} bg-[var(--pgm-badge-purple-bg)] text-[var(--pgm-badge-purple-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-purple-ring)]`,
+  cancelled: `${SD_BASE} bg-[var(--pgm-badge-red-bg)] text-[var(--pgm-badge-red-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-red-ring)]`,
 };
 
 /** Badges no embed portal cliente — superfície escura PGM. */

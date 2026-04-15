@@ -4,7 +4,7 @@ import { deleteTicketAnexo, getBoot, uploadTicketAnexo, USE_MOCK } from '../lib/
 /**
  * Lista anexos com envio, download, abrir no navegador e exclusão (API CakePHP).
  */
-export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, disabled, embed = false }) {
+export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, disabled }) {
   const inputRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -45,71 +45,77 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
 
   const list = anexos || [];
 
-  const shell = embed
-    ? 'rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.35)]'
-    : 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm';
-  const titleCls = embed ? 'text-sm font-bold text-[var(--pgm-text)]' : 'text-sm font-bold text-slate-900';
-  const linkUpload = embed
-    ? 'text-xs font-semibold text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline disabled:opacity-50'
-    : 'text-xs font-semibold text-teal-700 hover:underline disabled:opacity-50';
-  const errCls = embed ? 'mt-2 text-xs text-[var(--pgm-danger-text)]' : 'mt-2 text-xs text-rose-600';
-  const rowCls = embed
-    ? 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2 py-1.5'
-    : 'flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5';
-  const nameCls = embed ? 'min-w-0 flex-1 truncate font-medium text-[var(--pgm-text)]' : 'min-w-0 flex-1 truncate font-medium text-slate-800';
-  const visCls = embed ? 'font-semibold text-[var(--pgm-text-secondary)] hover:underline' : 'font-semibold text-slate-700 hover:underline';
-  const dlCls = embed ? 'font-semibold text-[var(--pgm-primary-hover)] hover:text-[var(--pgm-primary)] hover:underline' : 'font-semibold text-teal-700 hover:underline';
-  const emptyCls = embed ? 'mt-2 text-xs text-[var(--pgm-text-muted)]' : 'mt-2 text-xs text-slate-500';
-
   return (
-    <div className={shell}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className={titleCls}>Anexos</h3>
+    <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
+        <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">Anexos</h3>
         {canApi && (
           <>
             <input ref={inputRef} type="file" className="hidden" onChange={onFileChange} disabled={disabled || busy} />
-            <button type="button" disabled={disabled || busy} onClick={() => inputRef.current?.click()} className={linkUpload}>
+            <button
+              type="button"
+              disabled={disabled || busy}
+              onClick={() => inputRef.current?.click()}
+              className="text-xs font-semibold text-[var(--pgm-accent,#5cdbc0)] transition hover:text-white hover:underline disabled:opacity-50"
+            >
               {busy ? 'Aguarde…' : '+ Enviar arquivo'}
             </button>
           </>
         )}
       </div>
-      {err && <p className={errCls}>{err}</p>}
-      {list.length > 0 ? (
-        <ul className="mt-2 space-y-2 text-sm">
-          {list.map((a) => (
-            <li key={a.id} className={rowCls}>
-              <span className={nameCls} title={a.nome}>
-                {a.nome}
-              </span>
-              <span className="flex flex-shrink-0 flex-wrap items-center gap-2 text-xs">
-                {a.urlView && (
-                  <a href={a.urlView} className={visCls} target="_blank" rel="noreferrer" title="Abrir no navegador (PDF, imagens)">
-                    Visualizar
-                  </a>
-                )}
-                {a.url && (
-                  <a href={a.url} className={dlCls} target="_blank" rel="noreferrer" title="Baixar arquivo">
-                    Baixar
-                  </a>
-                )}
-                {canApi && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => remove(a.id)}
-                    className={embed ? 'font-semibold text-red-700 hover:underline disabled:opacity-50' : 'font-semibold text-rose-600 hover:underline disabled:opacity-50'}
-                  >
-                    Remover
-                  </button>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className={emptyCls}>Nenhum anexo ainda.</p>
-      )}
+      <div className="p-4">
+        {err && <p className="mb-2 text-xs text-[var(--pgm-badge-red-text,#ff9492)]">{err}</p>}
+        {list.length > 0 ? (
+          <ul className="space-y-2 text-[0.8125rem]">
+            {list.map((a) => (
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-3 py-2"
+              >
+                <span className="min-w-0 flex-1 truncate font-medium text-[var(--pgm-text,#e8eaed)]" title={a.nome}>
+                  {a.nome}
+                </span>
+                <span className="flex flex-shrink-0 flex-wrap items-center gap-2 text-xs">
+                  {a.urlView && (
+                    <a
+                      href={a.urlView}
+                      className="font-semibold text-[var(--pgm-text-secondary,#c4c9d1)] transition hover:text-white hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Abrir no navegador (PDF, imagens)"
+                    >
+                      Visualizar
+                    </a>
+                  )}
+                  {a.url && (
+                    <a
+                      href={a.url}
+                      className="font-semibold text-[var(--pgm-accent,#5cdbc0)] transition hover:text-white hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Baixar arquivo"
+                    >
+                      Baixar
+                    </a>
+                  )}
+                  {canApi && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => remove(a.id)}
+                      className="font-semibold text-[var(--pgm-badge-red-text,#ff9492)] transition hover:text-white hover:underline disabled:opacity-50"
+                    >
+                      Remover
+                    </button>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-[var(--pgm-text-muted,#9aa0a8)]">Nenhum anexo ainda.</p>
+        )}
+      </div>
     </div>
   );
 }

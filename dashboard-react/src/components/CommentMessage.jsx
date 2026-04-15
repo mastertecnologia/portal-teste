@@ -2,15 +2,14 @@
  * Exibe texto do comentário: escapa HTML quando for texto puro (como no legado);
  * se já houver marcação salva no banco, renderiza como HTML (cuidado com XSS — origem confiável).
  */
-export default function CommentMessage({ texto, embed = false }) {
+export default function CommentMessage({ texto }) {
   if (texto == null || texto === '') return null;
   const s = String(texto);
-  const textCls = embed ? 'text-[var(--pgm-text-secondary)]' : 'text-slate-700';
   const looksLikeHtml = /<[a-z][\s\S]*>/i.test(s);
   if (looksLikeHtml) {
     return (
-      <div className={`prose prose-sm mt-1 max-w-none ${textCls}`} dangerouslySetInnerHTML={{ __html: s }} />
+      <div className="prose prose-sm max-w-none text-inherit" dangerouslySetInnerHTML={{ __html: s }} />
     );
   }
-  return <div className={`mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed ${textCls}`}>{s}</div>;
+  return <div className="whitespace-pre-wrap break-words text-inherit leading-relaxed">{s}</div>;
 }

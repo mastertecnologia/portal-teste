@@ -91,9 +91,9 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
 
   if (!disponivel) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900">
+      <div className="rounded-xl border border-[var(--pgm-badge-amber-ring,rgba(210,153,34,0.30))] bg-[var(--pgm-badge-amber-bg,rgba(210,153,34,0.14))] p-4 text-sm text-[var(--pgm-badge-amber-text,#f0c060)]">
         <h2 className="text-sm font-bold">Horas técnicas</h2>
-        <p className="mt-1 text-xs text-amber-800">
+        <p className="mt-1 text-xs">
           Timer indisponível (tabela ou colunas). Use o formulário clássico ou execute o script de verificação do
           atendimento_timer.
         </p>
@@ -104,65 +104,71 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const registrados = snap.minutosRegistrados ?? 0;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-bold text-slate-900">Horas técnicas e contrato</h2>
-      <p className="mt-1 text-xs text-slate-500">
-        Tempo já lançado neste ticket (após finalizar o cronômetro): <span className="font-semibold text-slate-700">{minutosLabel(registrados)}</span>. Ao
-        finalizar, o sistema grava em Horas cadastradas e desconta do contrato do cliente, como no painel clássico.
-      </p>
+    <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
+      <div className="border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
+        <h2 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">Horas técnicas e contrato</h2>
+      </div>
+      <div className="p-4">
+        <p className="text-xs text-[var(--pgm-text-muted,#9aa0a8)]">
+          Tempo já lançado neste ticket: <span className="font-semibold text-[var(--pgm-text,#e8eaed)]">{minutosLabel(registrados)}</span>. Ao
+          finalizar, o sistema grava em Horas cadastradas e desconta do contrato do cliente.
+        </p>
 
-      {!sessao ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            disabled={disabled || busy}
-            onClick={() => runAction('iniciar')}
-            className="rounded-lg bg-cyan-700 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {busy ? '…' : 'Iniciar cronômetro'}
-          </button>
-        </div>
-      ) : (
-        <div className="mt-3 space-y-3">
-          <div
-            className={`rounded-lg px-3 py-2 font-mono text-2xl font-semibold tracking-tight ${
-              sessao.pausado ? 'bg-amber-100 text-amber-950' : 'bg-cyan-600 text-white'
-            }`}
-          >
-            {formatHms(elapsedSeconds)}
-            {sessao.pausado ? <span className="ml-2 text-sm font-sans font-normal">(pausado)</span> : null}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {!sessao.pausado ? (
-              <button
-                type="button"
-                disabled={disabled || busy}
-                onClick={() => runAction('pausar')}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 disabled:opacity-50"
-              >
-                Pausar
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={disabled || busy}
-                onClick={() => runAction('retomar')}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 disabled:opacity-50"
-              >
-                Retomar
-              </button>
-            )}
+        {!sessao ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               type="button"
               disabled={disabled || busy}
-              onClick={() => runAction('finalizar')}
-              className="rounded-lg bg-[var(--pgm-primary)] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50"
+              onClick={() => runAction('iniciar')}
+              className="inline-flex items-center rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-1.5 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] disabled:opacity-50"
             >
-              Finalizar e registrar
+              {busy ? '…' : 'Iniciar cronômetro'}
             </button>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="mt-3 space-y-3">
+            <div
+              className={`rounded-lg px-3 py-2 font-mono text-2xl font-semibold tracking-tight ${
+                sessao.pausado
+                  ? 'border border-[var(--pgm-badge-amber-ring)] bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)]'
+                  : 'bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] text-white shadow-[var(--pgm-shadow-glow)]'
+              }`}
+            >
+              {formatHms(elapsedSeconds)}
+              {sessao.pausado ? <span className="ml-2 font-sans text-sm font-normal">(pausado)</span> : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {!sessao.pausado ? (
+                <button
+                  type="button"
+                  disabled={disabled || busy}
+                  onClick={() => runAction('pausar')}
+                  className="inline-flex items-center rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] disabled:opacity-50"
+                >
+                  Pausar
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={disabled || busy}
+                  onClick={() => runAction('retomar')}
+                  className="inline-flex items-center rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] disabled:opacity-50"
+                >
+                  Retomar
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={disabled || busy}
+                onClick={() => runAction('finalizar')}
+                className="inline-flex items-center rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-1.5 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] disabled:opacity-50"
+              >
+                Finalizar e registrar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
