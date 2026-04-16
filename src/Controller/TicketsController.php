@@ -3512,13 +3512,18 @@ class TicketsController extends AppController {
 			'anexos' => $anexos,
 			'urls' => [
 				'indexCliente' => $this->_ticketUrl(['action' => 'indexcliente']),
+				'indexTecnico' => $role === 0 ? $this->_ticketUrl(['action' => 'operacional']) : null,
 				'edit' => $this->_ticketUrl(['action' => 'edit', $idticket]),
+				'cancelar' => $this->_ticketUrl(['action' => 'cancelar', $idticket]),
 				'imprimir' => $this->_ticketUrl(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
 			],
+			'situacao' => (int)$ticket->situacao,
 			'flags' => [
 				'role' => $role,
 				'canEditDescricao' => $role === 0 && (int)$this->Auth->user('admin') === 1,
 				'canEditDescricaoAtendimento' => $role === 0,
+				'canCancel' => (int)$ticket->situacao !== (int)C_TicketSituacaoResolvido
+					&& (int)$ticket->situacao !== (int)C_TicketSituacaoFechado,
 			],
 			'horasTecnicas' => $this->_apiHorasTecnicasPayload((int)$idticket, $ticket),
 		];

@@ -279,7 +279,8 @@ export async function fetchTicketDetail(id) {
         cliente: t.cliente,
         comentarios: t.comentarios || [],
         anexos: t.anexos || [],
-        flags: { role: 0, canEditDescricao: true, canEditDescricaoAtendimento: true },
+        urls: { indexTecnico: '#/', cancelar: `#/mock-ticket/${t.id}/cancelar`, imprimir: '#' },
+        flags: { role: 0, canEditDescricao: true, canEditDescricaoAtendimento: true, canCancel: true },
         horasTecnicas,
       },
     };
