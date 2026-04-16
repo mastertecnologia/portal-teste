@@ -4,6 +4,90 @@
  * não redefinir --pgm-primary/--prd-teal aqui (evita desvio face à tela Produtos).
  */
 
+/* ── Tema claro Service Desk (paleta PGM corporativa — ref. página de impressão) ── */
+html[data-pgm-theme="light"] body.sd-body {
+	--pgm-bg-base: #f8fafc;
+	--pgm-bg-raised: #ffffff;
+	--pgm-bg-surface: #ffffff;
+	--pgm-bg-elevated: #f1f5f9;
+	--pgm-bg-overlay: #e2e8f0;
+	--pgm-bg-page: #f8fafc;
+
+	--pgm-primary: #1d9e75;
+	--pgm-primary-hover: #0f6e56;
+	--pgm-primary-muted: rgba(29, 158, 117, 0.10);
+	--pgm-secondary: #0f6e56;
+	--pgm-accent: #0f6e56;
+
+	--pgm-text: #0f172a;
+	--pgm-text-secondary: #334155;
+	--pgm-text-muted: #64748b;
+
+	--pgm-border: #cbd5e1;
+	--pgm-border-subtle: #e2e8f0;
+	--pgm-border-strong: #94a3b8;
+	--pgm-border-accent: rgba(29, 158, 117, 0.35);
+
+	--pgm-link: #1d9e75;
+
+	--pgm-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+	--pgm-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.05);
+	--pgm-shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10), 0 2px 8px rgba(15, 23, 42, 0.06);
+	--pgm-shadow-xl: 0 16px 48px rgba(15, 23, 42, 0.12), 0 4px 16px rgba(15, 23, 42, 0.06);
+	--pgm-shadow-glow: 0 0 20px rgba(29, 158, 117, 0.10);
+
+	--pgm-glass-bg: rgba(255, 255, 255, 0.85);
+	--pgm-glass-border: rgba(15, 23, 42, 0.08);
+	--pgm-glass-blur: 12px;
+
+	--pgm-focus-ring: rgba(29, 158, 117, 0.25);
+
+	/* Badges — light */
+	--pgm-badge-teal-bg: rgba(29, 158, 117, 0.10);
+	--pgm-badge-teal-text: #0f6e56;
+	--pgm-badge-teal-ring: rgba(29, 158, 117, 0.30);
+	--pgm-badge-blue-bg: rgba(37, 99, 235, 0.08);
+	--pgm-badge-blue-text: #1e40af;
+	--pgm-badge-blue-ring: rgba(37, 99, 235, 0.20);
+	--pgm-badge-amber-bg: rgba(217, 119, 6, 0.10);
+	--pgm-badge-amber-text: #92400e;
+	--pgm-badge-amber-ring: rgba(217, 119, 6, 0.25);
+	--pgm-badge-red-bg: rgba(220, 38, 38, 0.08);
+	--pgm-badge-red-text: #b91c1c;
+	--pgm-badge-red-ring: rgba(220, 38, 38, 0.20);
+	--pgm-badge-green-bg: rgba(22, 163, 74, 0.10);
+	--pgm-badge-green-text: #15803d;
+	--pgm-badge-green-ring: rgba(22, 163, 74, 0.25);
+	--pgm-badge-purple-bg: rgba(124, 58, 237, 0.08);
+	--pgm-badge-purple-text: #6d28d9;
+	--pgm-badge-purple-ring: rgba(124, 58, 237, 0.20);
+	--pgm-badge-muted-bg: rgba(15, 23, 42, 0.05);
+	--pgm-badge-muted-text: #64748b;
+	--pgm-badge-muted-ring: rgba(15, 23, 42, 0.10);
+
+	/* prd-* alias para Produtos premium */
+	--prd-bg: #f8fafc;
+	--prd-text: #0f172a;
+	--prd-muted: #64748b;
+	--prd-surface: #ffffff;
+	--prd-surface2: #f1f5f9;
+	--prd-border: #cbd5e1;
+	--prd-border2: #94a3b8;
+	--prd-teal: #1d9e75;
+	--prd-teal-lt: #0f6e56;
+	--prd-teal-dim: rgba(29, 158, 117, 0.08);
+
+	color-scheme: light;
+	background: #f8fafc;
+	color: #0f172a;
+}
+
+/* Prevenir que overrides dark afetem o SD light */
+html[data-pgm-theme="light"] body.sd-body .sd-shell {
+	background: var(--pgm-bg-base);
+	color: var(--pgm-text);
+}
+
 .sd-shell.prd-root {
 	min-height: 100vh;
 	display: flex;
@@ -83,6 +167,10 @@ body.sd-body {
 body.sd-body--fullpage {
 	height: 100vh;
 	overflow: hidden;
+}
+html[data-pgm-theme="light"] body.sd-body {
+	overflow-x: clip;
+	background: var(--pgm-bg-base, #f8fafc);
 }
 html[data-pgm-theme="dark"] body.sd-body {
 	overflow-x: clip;
@@ -176,7 +264,82 @@ html[data-pgm-theme="dark"] body.sd-body .close {
 	opacity: 0.75;
 }
 
-/* ΓöÇΓöÇ Abertura de chamado: mesmos tokens que Produtos (.prd-*) ΓöÇΓöÇ */
+/* ── Light theme: Bootstrap + forms (mesmos tokens via var) ── */
+html[data-pgm-theme="light"] body.sd-body .card,
+html[data-pgm-theme="light"] body.sd-body .modal-content {
+	background: var(--pgm-bg-surface);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="light"] body.sd-body .table { color: var(--pgm-text); }
+html[data-pgm-theme="light"] body.sd-body .table thead th {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text-secondary);
+}
+html[data-pgm-theme="light"] body.sd-body .form-control {
+	background: var(--pgm-bg-surface);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="light"] body.sd-body .form-control:focus {
+	border-color: var(--pgm-primary);
+	box-shadow: 0 0 0 3px var(--pgm-focus-ring);
+}
+html[data-pgm-theme="light"] body.sd-body .alert {
+	background: var(--pgm-bg-elevated);
+	border-color: var(--pgm-border);
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="light"] body.sd-body .alert-success { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.25); color: #15803d; }
+html[data-pgm-theme="light"] body.sd-body .alert-warning { background: rgba(217,119,6,0.08); border-color: rgba(217,119,6,0.25); color: #92400e; }
+html[data-pgm-theme="light"] body.sd-body .alert-danger  { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.25); color: #b91c1c; }
+
+/* Abertura de chamado light */
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap {
+	background: var(--pgm-bg-base) !important;
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .sd-add-card,
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .sd-rules-card .sd-rule {
+	background: var(--pgm-bg-surface) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text);
+	box-shadow: var(--pgm-shadow-md);
+}
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .form-control {
+	background: var(--pgm-bg-surface) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .ticket-dropzone,
+html[data-pgm-theme="light"] body.sd-body .tickets-add-wrap .sd-sum-item {
+	background: var(--pgm-bg-elevated) !important;
+	border-color: var(--pgm-border) !important;
+	color: var(--pgm-text);
+}
+
+/* React no light: garantir fundo + texto corretos */
+html[data-pgm-theme="light"] body.sd-body .tickets-react-shell,
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd {
+	min-width: 0;
+	max-width: 100%;
+	color: var(--pgm-text);
+}
+html[data-pgm-theme="light"] body.sd-body .tickets-sd-action-menu {
+	background-color: var(--pgm-bg-surface) !important;
+	color: var(--pgm-text) !important;
+	border-color: var(--pgm-border) !important;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd a.tickets-sd-ticket-link {
+	color: var(--pgm-primary) !important;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd a.tickets-sd-ticket-link:hover {
+	color: var(--pgm-primary-hover) !important;
+	text-decoration: underline;
+}
+
+/* ── Abertura de chamado dark: mesmos tokens que Produtos (.prd-*) ── */
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap {
 	background: var(--prd-bg, var(--pgm-bg-page)) !important;
 	color: var(--prd-text, var(--pgm-text));
