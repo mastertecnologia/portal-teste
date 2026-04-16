@@ -158,6 +158,7 @@ export default function TechTicketEdit({ boot }) {
   }
 
   const statusLine = stripHtml(ticket.status);
+  const techListUrl = resolveTechIndexUrl(boot);
 
   const headerActions = (
     <div className="flex flex-shrink-0 flex-wrap gap-2">
@@ -199,8 +200,6 @@ export default function TechTicketEdit({ boot }) {
       )}
     </div>
   );
-
-  const techListUrl = resolveTechIndexUrl(boot);
 
   const header = embedded ? (
     <div className="relative z-20 mb-4 flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 pb-3 pt-3">
