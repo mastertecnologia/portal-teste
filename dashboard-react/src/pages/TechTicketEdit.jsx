@@ -439,7 +439,7 @@ export default function TechTicketEdit({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-edit flex min-h-0 w-full max-w-full flex-col overflow-x-hidden text-[var(--pgm-text,#e8eaed)]">
+      <div className="tickets-react-edit flex min-h-0 w-full max-w-full flex-1 flex-col overflow-x-hidden text-[var(--pgm-text,#e8eaed)]">
         {header}
         <div className="min-h-0 flex-1 px-0">
           {alerts}

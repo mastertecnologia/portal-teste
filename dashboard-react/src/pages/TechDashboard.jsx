@@ -675,7 +675,7 @@ export default function TechDashboard({ boot }) {
     <section
       className={
         embedded
-          ? 'w-full min-w-0 max-w-full overflow-x-clip overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]'
+          ? 'flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]'
           : 'w-full min-w-0 max-w-full rounded-[28px] border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] p-5 shadow-[var(--pgm-shadow-md)]'
       }
     >
@@ -876,11 +876,11 @@ export default function TechDashboard({ boot }) {
       <div
         className={
           embedded
-            ? 'min-w-0 max-w-full'
+            ? 'flex min-w-0 max-w-full flex-1 flex-col overflow-hidden'
             : 'mt-5 min-w-0 max-w-full overflow-x-clip rounded-2xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))]'
         }
       >
-        <div className="min-w-0 max-w-full overflow-x-auto">
+        <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-auto">
           <table className="min-w-full text-[0.8125rem]">
             <thead className="bg-[var(--pgm-bg-elevated,#222834)]">
               <tr>
@@ -1227,7 +1227,7 @@ export default function TechDashboard({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-3 pt-3 text-[var(--pgm-text,#e8eaed)] md:px-4">
+      <div className="tickets-react-tech flex w-full min-w-0 max-w-full flex-1 flex-col overflow-visible px-3 pt-3 text-[var(--pgm-text,#e8eaed)] md:px-4">
         <header className="mb-3 flex min-h-[2.75rem] flex-wrap items-center justify-between gap-3 overflow-visible py-1">
           <div>
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">
