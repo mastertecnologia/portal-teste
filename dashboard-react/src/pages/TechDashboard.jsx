@@ -1025,18 +1025,28 @@ export default function TechDashboard({ boot }) {
 
       {transferOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-[4px] p-4" role="dialog" aria-modal="true">
-          <div className="max-h-[90vh] w-full max-w-md overflow-hidden overflow-y-auto rounded-[var(--pgm-radius-2xl,20px)] border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-surface,#1a1f28)] shadow-[var(--pgm-shadow-xl)]" style={{animation:'pgm-modal-in 0.3s cubic-bezier(0.16,1,0.3,1)'}}>
-            <div className="border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-5 py-4">
-              <h4 className="text-[0.95rem] font-bold text-[var(--pgm-text,#e8eaed)]">
-                Transferir ticket #{transferTicket?.id}
-              </h4>
-              <p className="mt-1 text-[0.8rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+          <div className="max-h-[90vh] w-full max-w-[520px] overflow-hidden overflow-y-auto rounded-[var(--pgm-radius-2xl,20px)] border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-surface,#1a1f28)] shadow-[var(--pgm-shadow-xl)]" style={{animation:'pgm-modal-in 0.3s cubic-bezier(0.16,1,0.3,1)', borderTop:'2px solid transparent', borderImage:'linear-gradient(90deg,var(--pgm-primary,#1d9e75),#2ec4a0,var(--pgm-primary,#1d9e75)) 1'}}>
+            <div className="flex items-start justify-between border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-5 py-4">
+              <div>
+                <h4 className="text-[0.95rem] font-bold text-[var(--pgm-text,#e8eaed)]">
+                  Transferir ticket #{transferTicket?.id}
+                </h4>
+                <p className="mt-1 text-[0.8rem] text-[var(--pgm-text-muted,#9aa0a8)]">
               {queuesRelacional
                 ? 'Escolha a fila da mesma empresa. Depois defina se o ticket fica só na fila (sem responsável) ou se já vai para um técnico.'
                 : wfEnabled
                   ? 'Escolha se deseja só mudar a fila de suporte (sem trocar o responsável) ou encaminhar a um técnico. O histórico registra motivo e data/hora.'
                   : 'O histórico registrará técnico anterior, novo técnico, data/hora e motivo.'}
               </p>
+              </div>
+              <button
+                type="button"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--pgm-radius-sm,6px)] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:text-[var(--pgm-text,#e8eaed)]"
+                onClick={() => setTransferOpen(false)}
+                aria-label="Fechar"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
             </div>
             <div className="space-y-3 p-5">
               {queuesRelacional ? (

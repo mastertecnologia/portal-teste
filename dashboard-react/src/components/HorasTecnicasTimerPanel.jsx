@@ -115,36 +115,47 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         </p>
 
         {!sessao ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-3 text-center">
+            <div className="mb-3 rounded-lg border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-base,#0c0f14)] px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.1em] text-[var(--pgm-text-muted,#9aa0a8)] transition-all duration-300">
+              00:00:00
+            </div>
             <button
               type="button"
               disabled={disabled || busy}
               onClick={() => runAction('iniciar')}
-              className="inline-flex items-center rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-1.5 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-4 py-1.5 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] disabled:opacity-50"
             >
-              {busy ? '…' : 'Iniciar cronômetro'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+              {busy ? '…' : 'Iniciar'}
             </button>
           </div>
         ) : (
-          <div className="mt-3 space-y-3">
+          <div className="mt-3 text-center">
             <div
-              className={`rounded-lg px-3 py-2 font-mono text-2xl font-semibold tracking-tight ${
+              className={`relative mb-3 rounded-lg border px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.1em] transition-all duration-300 ${
                 sessao.pausado
-                  ? 'border border-[var(--pgm-badge-amber-ring)] bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)]'
-                  : 'bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] text-white shadow-[var(--pgm-shadow-glow)]'
+                  ? 'border-[var(--pgm-badge-amber-ring)] bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)]'
+                  : 'border-[rgba(29,158,117,0.25)] bg-[var(--pgm-bg-base,#0c0f14)] text-[var(--pgm-badge-teal-text,#5cdbc0)] shadow-[0_0_20px_rgba(29,158,117,0.08)]'
               }`}
             >
+              {!sessao.pausado && (
+                <span className="absolute right-3 top-3 flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--pgm-primary,#1d9e75)] opacity-50" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--pgm-primary,#1d9e75)]" />
+                </span>
+              )}
               {formatHms(elapsedSeconds)}
-              {sessao.pausado ? <span className="ml-2 font-sans text-sm font-normal">(pausado)</span> : null}
+              {sessao.pausado ? <span className="ml-2 font-sans text-sm font-normal opacity-80">(pausado)</span> : null}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               {!sessao.pausado ? (
                 <button
                   type="button"
                   disabled={disabled || busy}
                   onClick={() => runAction('pausar')}
-                  className="inline-flex items-center rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pgm-border,#3d4554)] bg-transparent px-4 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)] disabled:opacity-50"
                 >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
                   Pausar
                 </button>
               ) : (
@@ -152,8 +163,9 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                   type="button"
                   disabled={disabled || busy}
                   onClick={() => runAction('retomar')}
-                  className="inline-flex items-center rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pgm-border,#3d4554)] bg-transparent px-4 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)] disabled:opacity-50"
                 >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
                   Retomar
                 </button>
               )}
@@ -161,9 +173,10 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                 type="button"
                 disabled={disabled || busy}
                 onClick={() => runAction('finalizar')}
-                className="inline-flex items-center rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-1.5 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pgm-badge-red-ring,rgba(248,81,73,0.25))] bg-transparent px-4 py-1.5 text-sm font-medium text-[var(--pgm-badge-red-text,#ff9492)] transition hover:bg-[var(--pgm-badge-red-bg)] hover:border-[rgba(248,81,73,0.45)] hover:shadow-[0_0_12px_rgba(248,81,73,0.12)] disabled:opacity-50"
               >
-                Finalizar e registrar
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                Parar
               </button>
             </div>
           </div>

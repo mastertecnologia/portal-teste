@@ -332,11 +332,16 @@ export default function TechTicketEdit({ boot }) {
 
   const comentariosBlock = (
     <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
-      <div className="shrink-0 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-2.5">
-        <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">Conversa</h3>
-        <p className="text-[0.65rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-          Nome do autor vem do cadastro de usuário. Comentários ficam em ticket + movimentações.
-        </p>
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-2.5">
+        <div>
+          <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">Comentários</h3>
+          <p className="text-[0.65rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+            Histórico de mensagens entre equipe e cliente.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1 rounded-full border border-[var(--pgm-badge-muted-ring,rgba(255,255,255,0.10))] bg-[var(--pgm-badge-muted-bg,rgba(255,255,255,0.06))] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--pgm-badge-muted-text,#9aa0a8)]">
+          {comentarios.length} {comentarios.length === 1 ? 'mensagem' : 'mensagens'}
+        </span>
       </div>
       <ul
         ref={listRef}
@@ -353,7 +358,7 @@ export default function TechTicketEdit({ boot }) {
             return (
               <li
                 key={c.id}
-                className={`flex gap-3 ${isTech ? '' : 'flex-row-reverse'}`}
+                className={`flex gap-3 animate-pgm-fade-in-up ${isTech ? '' : 'flex-row-reverse'}`}
                 style={{ maxWidth: '85%', alignSelf: isTech ? 'flex-start' : 'flex-end', marginLeft: isTech ? 0 : 'auto' }}
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
@@ -389,16 +394,27 @@ export default function TechTicketEdit({ boot }) {
           <textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && texto.trim()) {
+                e.preventDefault();
+                handleComentario(e);
+              }
+            }}
             rows={2}
-            placeholder="Novo comentário…"
+            placeholder="Novo comentário… (Ctrl+Enter para enviar)"
             className="min-h-[42px] flex-1 resize-vertical rounded-[var(--pgm-radius-lg,12px)] border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-raised,#141820)] p-2.5 text-[0.8125rem] leading-relaxed text-[var(--pgm-text,#e8eaed)] outline-none transition placeholder:text-[var(--pgm-text-muted)] focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.20),var(--pgm-shadow-glow)]"
           />
           <button
             type="submit"
             disabled={enviando}
-            className="self-end rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-2 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] disabled:opacity-50"
+            title="Enviar comentário"
+            className="self-end rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] p-2.5 text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] active:translate-y-0 disabled:opacity-50"
           >
-            {enviando ? '…' : 'Enviar'}
+            {enviando ? (
+              <svg className="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+            ) : (
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+            )}
           </button>
         </form>
       </div>
