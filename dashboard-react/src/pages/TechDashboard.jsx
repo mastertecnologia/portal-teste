@@ -1261,7 +1261,7 @@ export default function TechDashboard({ boot }) {
             {addTicket ? (
               <a
                 href={addTicket}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#18F64C] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:-translate-y-px hover:brightness-110 hover:shadow-[0_4px_12px_rgba(24,246,76,0.30)] active:translate-y-0"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#006D5B] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:-translate-y-px hover:brightness-110 hover:shadow-[0_4px_12px_rgba(0,109,91,0.30)] active:translate-y-0"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14m-7-7h14" /></svg>
                 Abrir ticket
