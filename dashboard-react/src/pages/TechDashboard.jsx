@@ -1261,11 +1261,7 @@ export default function TechDashboard({ boot }) {
             {addTicket ? (
               <a
                 href={addTicket}
-                className={
-                  boot?.servicedesk
-                    ? 'inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)]'
-                    : 'inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] active:translate-y-0'
-                }
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#18F64C] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:-translate-y-px hover:brightness-110 hover:shadow-[0_4px_12px_rgba(24,246,76,0.30)] active:translate-y-0"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14m-7-7h14" /></svg>
                 Abrir ticket

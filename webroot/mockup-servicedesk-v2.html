@@ -205,14 +205,14 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
 }
 .badge-dot.pulse{animation:pgm-pulse 2s ease-in-out infinite}
 
-.badge-teal{background:var(--pgm-badge-teal-bg);color:var(--pgm-badge-teal-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-teal-ring)}
-.badge-blue{background:var(--pgm-badge-blue-bg);color:var(--pgm-badge-blue-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-blue-ring)}
-.badge-amber{background:var(--pgm-badge-amber-bg);color:var(--pgm-badge-amber-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-amber-ring)}
-.badge-red{background:var(--pgm-badge-red-bg);color:var(--pgm-badge-red-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-red-ring)}
-.badge-green{background:var(--pgm-badge-green-bg);color:var(--pgm-badge-green-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-green-ring)}
-.badge-purple{background:var(--pgm-badge-purple-bg);color:var(--pgm-badge-purple-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-purple-ring)}
-.badge-orange{background:var(--pgm-badge-orange-bg);color:var(--pgm-badge-orange-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-orange-ring)}
-.badge-violet{background:var(--pgm-badge-violet-bg);color:var(--pgm-badge-violet-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-violet-ring)}
+.badge-teal{background:#1d9e75;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-blue{background:#2DAAE1;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-amber{background:#F39C12;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-red{background:#dc330f;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-green{background:#27AE60;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-purple{background:#8a5ac2;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-orange{background:#F39C12;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.badge-violet{background:#8a5ac2;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
 .badge-muted{background:var(--pgm-badge-muted-bg);color:var(--pgm-badge-muted-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-muted-ring)}
 
 /* ===== KPI STAT CARDS ===== */
@@ -687,16 +687,16 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
       <div class="section-heading">Status Indicators com Frosted Glass + Dots Pulsantes</div>
 
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.5rem">
-        <span class="badge badge-teal"><span class="badge-dot pulse"></span>Em execucao</span>
-        <span class="badge badge-teal"><span class="badge-dot pulse"></span>Aguardando tecnico</span>
+        <span class="badge badge-blue"><span class="badge-dot pulse"></span>Em execucao</span>
+        <span class="badge badge-amber"><span class="badge-dot pulse"></span>Aguardando tecnico</span>
         <span class="badge badge-blue"><span class="badge-dot"></span>Aguardando cliente</span>
         <span class="badge badge-green"><span class="badge-dot"></span>Resolvido</span>
         <span class="badge badge-amber"><span class="badge-dot"></span>Alta prioridade</span>
         <span class="badge badge-red"><span class="badge-dot pulse"></span>Critica</span>
-        <span class="badge badge-violet"><span class="badge-dot"></span>Escalado</span>
-        <span class="badge badge-orange"><span class="badge-dot"></span>Urgente</span>
+        <span class="badge badge-red"><span class="badge-dot"></span>Escalado</span>
+        <span class="badge badge-amber"><span class="badge-dot"></span>Urgente</span>
         <span class="badge badge-purple"><span class="badge-dot"></span>Fechado</span>
-        <span class="badge badge-muted">Cancelado</span>
+        <span class="badge badge-red">Cancelado</span>
         <span class="badge badge-muted">Baixa</span>
       </div>
 
@@ -812,7 +812,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
                 <td class="td-muted">Maria Costa</td>
                 <td class="td-date">11/04 14:32</td>
                 <td class="td-subject">Erro ao emitir NF-e serie 1 — rejeicao 301</td>
-                <td><span class="badge badge-teal"><span class="badge-dot pulse"></span>Em execucao</span></td>
+                <td><span class="badge badge-blue"><span class="badge-dot pulse"></span>Em execucao</span></td>
                 <td class="td-muted">N2</td>
                 <td class="td-muted">2</td>
                 <td class="text-sm">Carlos Silva</td>
@@ -836,7 +836,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
                 <td class="td-muted">Pedro Alves</td>
                 <td class="td-date">11/04 09:18</td>
                 <td class="td-subject">Cadastro de produto duplicando codigo</td>
-                <td><span class="badge badge-teal"><span class="badge-dot pulse"></span>Aguard. tecnico</span></td>
+                <td><span class="badge badge-amber"><span class="badge-dot pulse"></span>Aguard. tecnico</span></td>
                 <td class="td-muted">N1</td>
                 <td class="td-muted">1</td>
                 <td class="text-sm">—</td>
@@ -942,7 +942,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
 
         <!-- Buttons -->
         <div style="display:flex;flex-direction:column;gap:12px">
-          <button class="btn-primary">
+          <button class="btn-primary" style="background:#18F64C;box-shadow:0 1px 3px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.18)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
             Abrir Chamado
           </button>
@@ -1009,7 +1009,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
           </div>
           <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.5rem">
             <button class="btn-ghost">Cancelar</button>
-            <button class="btn-primary">Abrir Chamado</button>
+            <button class="btn-primary" style="background:#18F64C;box-shadow:0 1px 3px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.18)">Abrir Chamado</button>
           </div>
         </div>
       </div>
@@ -1147,7 +1147,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
           <div>
             <div style="display:flex;align-items:center;gap:10px">
               <span class="ticket-strip-id">Ticket #4821</span>
-              <span class="badge badge-teal"><span class="badge-dot pulse"></span>Em execucao</span>
+              <span class="badge badge-blue"><span class="badge-dot pulse"></span>Em execucao</span>
             </div>
             <div class="ticket-strip-meta mt-1">
               Aberto por Maria Costa &middot; 11/04/2026 14:32 &middot; Metalurgica ABC

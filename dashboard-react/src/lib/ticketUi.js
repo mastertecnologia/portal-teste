@@ -1,68 +1,55 @@
 /** Classes Tailwind para badges — reutilizado em técnico e cliente. */
 
-/** Dark: mesma família do header/topbar (--pgm-primary / --pgm-secondary), texto branco. */
+/** Preenchimento sólido com cores de status padrão + texto branco. */
 const BADGE_LIGHT = {
-  success:
-    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:border-[var(--pgm-primary)] dark:bg-[var(--pgm-primary)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]',
-  warning:
-    'bg-amber-50 text-amber-700 border-amber-200 dark:border-amber-800/40 dark:bg-[var(--pgm-warning-bg)] dark:text-[var(--pgm-warning-text)]',
-  critical:
-    'bg-rose-50 text-rose-700 border-rose-200 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
-  high: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-200 dark:border-orange-800',
-  medium:
-    'bg-emerald-50/80 text-emerald-800 border-emerald-200 dark:border-[var(--pgm-secondary)] dark:bg-[var(--pgm-secondary)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]',
-  low: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)] dark:border-[var(--pgm-border)]',
-  progress:
-    'bg-teal-50 text-teal-800 border-teal-200 dark:border-[var(--pgm-primary)] dark:bg-[var(--pgm-primary)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]',
-  waiting: 'bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-950/35 dark:text-violet-200 dark:border-violet-800',
-  pendingTech:
-    'bg-emerald-100 text-emerald-900 border-emerald-300 dark:border-[var(--pgm-secondary)] dark:bg-[var(--pgm-secondary)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]',
-  resolved:
-    'bg-emerald-100 text-emerald-900 border-emerald-300 dark:border-[var(--pgm-erp-teal-active)] dark:bg-[var(--pgm-erp-teal-active)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]',
-  escalated: 'bg-rose-50 text-rose-800 border-rose-300 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
-  closed: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-[var(--pgm-bg-elevated)] dark:text-[var(--pgm-text-muted)] dark:border-[var(--pgm-border)]',
-  cancelled:
-    'bg-red-50 text-red-800 border-red-300 dark:border-red-800/45 dark:bg-[var(--pgm-danger-bg)] dark:text-[var(--pgm-danger-text)]',
+  success:     'bg-[#27AE60] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  warning:     'bg-[#F39C12] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  critical:    'bg-[#dc330f] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  high:        'bg-[#F39C12] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  medium:      'bg-[#F39C12] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  low:         'bg-slate-200 text-slate-700 border-slate-300',
+  progress:    'bg-[#2DAAE1] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  waiting:     'bg-[#2DAAE1] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  pendingTech: 'bg-[#F39C12] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  resolved:    'bg-[#27AE60] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  escalated:   'bg-[#dc330f] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  closed:      'bg-[#8a5ac2] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
+  cancelled:   'bg-[#dc330f] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
 };
 
-const SD_BASE = 'tracking-[0.04em] shadow-[inset_0_0_0_1px_currentColor] backdrop-blur-[2px] transition-all duration-[120ms] hover:brightness-110';
+const SD_BASE = 'tracking-[0.04em] backdrop-blur-[2px] transition-all duration-[120ms] hover:brightness-110 shadow-[0_1px_3px_rgba(0,0,0,0.25)]';
 
 const BADGE_SERVICEDESK = {
-  success:   `${SD_BASE} bg-[var(--pgm-badge-green-bg)] text-[var(--pgm-badge-green-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-green-ring)]`,
-  warning:   `${SD_BASE} bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-amber-ring)]`,
-  critical:  `${SD_BASE} bg-[var(--pgm-badge-red-bg)] text-[var(--pgm-badge-red-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-red-ring)]`,
-  high:      `${SD_BASE} bg-[var(--pgm-badge-orange-bg)] text-[var(--pgm-badge-orange-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-orange-ring)]`,
-  medium:    `${SD_BASE} bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-amber-ring)]`,
-  low:       `${SD_BASE} bg-[var(--pgm-badge-muted-bg)] text-[var(--pgm-badge-muted-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-muted-ring)]`,
-  progress:  `${SD_BASE} bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-teal-ring)]`,
-  waiting:   `${SD_BASE} bg-[var(--pgm-badge-blue-bg)] text-[var(--pgm-badge-blue-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-blue-ring)]`,
-  pendingTech: `${SD_BASE} bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-teal-ring)]`,
-  resolved:  `${SD_BASE} bg-[var(--pgm-badge-green-bg)] text-[var(--pgm-badge-green-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-green-ring)]`,
-  escalated: `${SD_BASE} bg-[var(--pgm-badge-violet-bg)] text-[var(--pgm-badge-violet-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-violet-ring)]`,
-  closed:    `${SD_BASE} bg-[var(--pgm-badge-purple-bg)] text-[var(--pgm-badge-purple-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-purple-ring)]`,
-  cancelled: `${SD_BASE} bg-[var(--pgm-badge-red-bg)] text-[var(--pgm-badge-red-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-red-ring)]`,
+  success:     `${SD_BASE} bg-[#27AE60] text-white`,
+  warning:     `${SD_BASE} bg-[#F39C12] text-white`,
+  critical:    `${SD_BASE} bg-[#dc330f] text-white`,
+  high:        `${SD_BASE} bg-[#F39C12] text-white`,
+  medium:      `${SD_BASE} bg-[#F39C12] text-white`,
+  low:         `${SD_BASE} bg-[var(--pgm-badge-muted-bg)] text-[var(--pgm-badge-muted-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-muted-ring)]`,
+  progress:    `${SD_BASE} bg-[#2DAAE1] text-white`,
+  waiting:     `${SD_BASE} bg-[#2DAAE1] text-white`,
+  pendingTech: `${SD_BASE} bg-[#F39C12] text-white`,
+  resolved:    `${SD_BASE} bg-[#27AE60] text-white`,
+  escalated:   `${SD_BASE} bg-[#dc330f] text-white`,
+  closed:      `${SD_BASE} bg-[#8a5ac2] text-white`,
+  cancelled:   `${SD_BASE} bg-[#dc330f] text-white`,
 };
 
-/** Badges no embed portal cliente — superfície escura PGM. */
+/** Badges no embed portal cliente — preenchimento sólido + texto branco. */
 const BADGE_EMBED = {
-  success:
-    'border border-[var(--pgm-primary)] bg-[var(--pgm-primary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]',
-  warning: 'border border-amber-700/50 bg-amber-950/35 text-amber-200',
-  critical: 'border border-rose-700/50 bg-rose-950/35 text-rose-200',
-  high: 'border border-orange-700/50 bg-orange-950/35 text-orange-200',
-  medium:
-    'border border-[var(--pgm-secondary)] bg-[var(--pgm-secondary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]',
-  low: 'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]',
-  progress:
-    'border border-[var(--pgm-primary)] bg-[var(--pgm-primary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]',
-  waiting: 'border border-violet-700/50 bg-violet-950/35 text-violet-200',
-  pendingTech:
-    'border border-[var(--pgm-secondary)] bg-[var(--pgm-secondary)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]',
-  resolved:
-    'border border-[var(--pgm-erp-teal-active)] bg-[var(--pgm-erp-teal-active)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]',
-  escalated: 'border border-rose-700/50 bg-rose-950/40 text-rose-200',
-  closed: 'border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text-muted)]',
-  cancelled: 'border border-red-800/50 bg-red-950/40 text-red-200',
+  success:     'border border-transparent bg-[#27AE60] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  warning:     'border border-transparent bg-[#F39C12] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  critical:    'border border-transparent bg-[#dc330f] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  high:        'border border-transparent bg-[#F39C12] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  medium:      'border border-transparent bg-[#F39C12] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  low:         'border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]',
+  progress:    'border border-transparent bg-[#2DAAE1] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  waiting:     'border border-transparent bg-[#2DAAE1] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  pendingTech: 'border border-transparent bg-[#F39C12] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  resolved:    'border border-transparent bg-[#27AE60] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  escalated:   'border border-transparent bg-[#dc330f] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  closed:      'border border-transparent bg-[#8a5ac2] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
+  cancelled:   'border border-transparent bg-[#dc330f] text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)]',
 };
 
 /**
