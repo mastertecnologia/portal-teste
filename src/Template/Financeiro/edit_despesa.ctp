@@ -55,6 +55,12 @@ $this->Breadcrumbs->add('Editar despesa');
             </div>
         </div>
         <div class="fin-row">
+            <div class="fin-field">
+                <label>Banco</label>
+                <?= $this->Form->select('financeiro_banco_id', $bancos, ['empty' => '— Selecione (opcional) —', 'class' => 'form-control']) ?>
+            </div>
+        </div>
+        <div class="fin-row">
             <div class="fin-field fin-field-full">
                 <label>Observações</label>
                 <?= $this->Form->textarea('observacoes', ['class' => 'form-control', 'rows' => 3]) ?>

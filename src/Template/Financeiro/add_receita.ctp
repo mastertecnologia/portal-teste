@@ -53,6 +53,10 @@ $this->Breadcrumbs->add('Nova receita');
                 <label>Centro de custo</label>
                 <?= $this->Form->select('centro_custo_id', $centrosCusto, ['empty' => '— Selecione (opcional) —', 'class' => 'form-control']) ?>
             </div>
+            <div class="fin-field">
+                <label>Banco</label>
+                <?= $this->Form->select('financeiro_banco_id', $bancos ?? [], ['empty' => '— Selecione (opcional) —', 'class' => 'form-control']) ?>
+            </div>
         </div>
         <div class="fin-row">
             <div class="fin-field fin-field-full">

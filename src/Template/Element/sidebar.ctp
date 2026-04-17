@@ -32,7 +32,7 @@
 	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
 
 	// Financeiro
-	$finCtrls = ['Financeiro', 'FinanceiroConfig', 'FinanceiroRelatorios'];
+	$finCtrls = ['Financeiro', 'FinanceiroConfig', 'FinanceiroRelatorios', 'FinanceiroBancos'];
 	$finOpen = in_array($ctrl, $finCtrls, true);
 	$finDashAct = ($ctrl === 'Financeiro' && $act === 'index');
 	$finRecAct = ($ctrl === 'Financeiro' && in_array($act, ['contasReceber', 'addReceita', 'editReceita'], true));
@@ -44,6 +44,10 @@
 	$finRelAct = ($ctrl === 'FinanceiroRelatorios');
 	$finPlanoAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['planoContas', 'planoContasAdd', 'planoContasEdit'], true));
 	$finCcAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['centrosCusto', 'centroCustoAdd', 'centroCustoEdit'], true));
+	$finBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['index', 'cadastrar', 'add', 'edit', 'delete', 'buscarCatalogo', 'bootstrapBancoPorCodigo'], true));
+	$finRemessaAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['remessa', 'remessaMultiempresas'], true));
+	$finRetornoAct = ($ctrl === 'FinanceiroBancos' && $act === 'retorno');
+	$finRelBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['relatorios', 'relacaoBancos', 'relacaoRemessas', 'historicoRetorno', 'previsaoRecebimentosPorBanco', 'previsaoPorBancos'], true));
 
 	// Fiscal
 	$fiscalCtrls = ['Fiscal', 'FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalConfig', 'FiscalRelatorios'];
@@ -415,6 +419,26 @@
 							'<span class="pgm-ndot"></span><span>Relatórios</span>',
 							['controller' => 'FinanceiroRelatorios', 'action' => 'index'],
 							['class' => 'pgm-nch ' . ($finRelAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Bancos</span>',
+							['controller' => 'FinanceiroBancos', 'action' => 'index'],
+							['class' => 'pgm-nch ' . ($finBancosAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Remessa bancária</span>',
+							['controller' => 'FinanceiroBancos', 'action' => 'remessa'],
+							['class' => 'pgm-nch ' . ($finRemessaAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Retornos bancários</span>',
+							['controller' => 'FinanceiroBancos', 'action' => 'retorno'],
+							['class' => 'pgm-nch ' . ($finRetornoAct ? 'act' : ''), 'escape' => false]
+						) ?></li>
+						<li><?= $this->Html->link(
+							'<span class="pgm-ndot"></span><span>Relatórios bancários</span>',
+							['controller' => 'FinanceiroBancos', 'action' => 'relatorios'],
+							['class' => 'pgm-nch ' . ($finRelBancosAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Plano de contas</span>',

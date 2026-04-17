@@ -87,6 +87,7 @@ table.cp-table { width:100%; border-collapse:collapse; font-size:13px; }
                     <th>#</th>
                     <th>Descrição</th>
                     <th>Fornecedor</th>
+                    <th>Banco</th>
                     <th>Plano de contas</th>
                     <th>Centro de custo</th>
                     <th>Valor</th>
@@ -111,6 +112,11 @@ table.cp-table { width:100%; border-collapse:collapse; font-size:13px; }
                     <td><small class="cp-id-muted">#<?= $l->id ?></small></td>
                     <td><?= h($l->descricao) ?></td>
                     <td class="cp-td-ellipsis"><?= h($nomeForn) ?></td>
+                    <td>
+                        <?php if (!empty($l->financeiro_banco)): ?>
+                            <?= h($l->financeiro_banco->codigo_banco) ?> — <?= h($l->financeiro_banco->nome) ?>
+                        <?php else: ?>—<?php endif; ?>
+                    </td>
                     <td>
                         <?php if (!empty($l->financeiro_plano_conta)): ?>
                             <span class="cp-conta-muted"><?= h($l->financeiro_plano_conta->codigo) ?></span>
@@ -153,7 +159,7 @@ table.cp-table { width:100%; border-collapse:collapse; font-size:13px; }
             </tbody>
             <tfoot>
                 <tr class="cp-total-row">
-                    <td colspan="5" class="cp-total-label">TOTAL</td>
+                    <td colspan="6" class="cp-total-label">TOTAL</td>
                     <td>R$ <?= number_format($total, 2, ',', '.') ?></td>
                     <td colspan="4"></td>
                 </tr>

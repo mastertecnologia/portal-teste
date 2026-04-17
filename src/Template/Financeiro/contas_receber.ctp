@@ -90,6 +90,7 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
                     <th>Faturamento</th>
                     <th>Plano de contas</th>
                     <th>Centro de custo</th>
+                    <th>Banco</th>
                     <th>Valor</th>
                     <th>Vencimento</th>
                     <th>Recebimento</th>
@@ -128,6 +129,12 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
                             <?= h($l->financeiro_centros_custo->codigo) ?> — <?= h($l->financeiro_centros_custo->descricao) ?>
                         <?php else: ?>—<?php endif; ?>
                     </td>
+                    <td>
+                        <?php if (!empty($l->financeiro_banco)): ?>
+                            <span class="cr-conta-muted"><?= h($l->financeiro_banco->codigo_banco) ?></span>
+                            <?= h($l->financeiro_banco->nome) ?>
+                        <?php else: ?>—<?php endif; ?>
+                    </td>
                     <td><strong>R$ <?= number_format($l->valor, 2, ',', '.') ?></strong></td>
                     <td<?= $vencido ? ' class="cr-td-vencido"' : '' ?>>
                         <?= $l->data_vencimento ? $l->data_vencimento->format('d/m/Y') : '—' ?>
@@ -155,7 +162,7 @@ table.cr-table { width:100%; border-collapse:collapse; font-size:13px; }
             </tbody>
             <tfoot>
                 <tr class="cr-total-row">
-                    <td colspan="6" class="cr-total-label">TOTAL</td>
+                    <td colspan="7" class="cr-total-label">TOTAL</td>
                     <td>R$ <?= number_format($total, 2, ',', '.') ?></td>
                     <td colspan="4"></td>
                 </tr>

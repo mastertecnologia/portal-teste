@@ -3,6 +3,9 @@ use Cake\Routing\Router;
 $this->Breadcrumbs->add('Início', ['controller' => 'Users', 'action' => 'dashboard']);
 $this->Breadcrumbs->add('Financeiro', ['controller' => 'Financeiro', 'action' => 'index']);
 $this->Breadcrumbs->add('Conciliação Bancária');
+
+$sugestoesConciliacao = $sugestoesConciliacao ?? [];
+$lancamentosCompativeis = $lancamentosCompativeis ?? [];
 ?>
 <style>
 .cb-root { font-family:'DM Sans',sans-serif; }
@@ -25,6 +28,10 @@ table.cb-table { width:100%; border-collapse:collapse; font-size:13px; }
 .cb-debito { color:#f85149; }
 .cb-zero { text-align:center; padding:48px; color:#484f58; }
 .cb-zero-ico { font-size:32px; display:block; margin-bottom:10px; opacity:.3; }
+.cb-match-hint { display:block; margin-top:4px; font-size:11px; color:#8b949e; line-height:1.45; }
+.cb-match-hint strong { color:#5cdbc0; }
+.cb-select-match { min-width:320px; max-width:420px; width:100%; display:inline-block; font-size:12px; background:#161b22; color:#c9d1d9; border:1px solid rgba(255,255,255,.1); border-radius:5px; padding:3px 6px; }
+.cb-match-none { color:#8b949e; font-size:12px; }
 </style>
 
 <div class="cb-root">
@@ -78,6 +85,40 @@ table.cb-table { width:100%; border-collapse:collapse; font-size:13px; }
             </thead>
             <tbody>
                 <?php foreach ($extratos as $e): ?>
+                <?php
+                    $sugestoes = $sugestoesConciliacao[(int)$e->id] ?? [];
+                    $compativeis = $lancamentosCompativeis[(int)$e->id] ?? [];
+                    $temSugestoes = !empty($sugestoes);
+                    $temCompativeis = !empty($compativeis);
+                    $hintMatch = 'Sem sugestão automática.';
+
+                    if ($temSugestoes) {
+                        $primeira = $sugestoes[0];
+                        $partesHint = [];
+
+                        if (!empty($primeira['banco_match'])) {
+                            $partesHint[] = 'mesmo banco/conta';
+                        }
+                        if (!empty($primeira['motivos']) && is_array($primeira['motivos'])) {
+                            foreach ($primeira['motivos'] as $motivo) {
+                                if ($motivo === 'mesma conta bancária') {
+                                    continue;
+                                }
+                                $partesHint[] = $motivo;
+                            }
+                        }
+
+                        $partesHint = array_values(array_unique($partesHint));
+
+                        if (!empty($partesHint)) {
+                            $hintMatch = 'Melhor sugestão: <strong>' . h(implode(' • ', $partesHint)) . '</strong>.';
+                        } else {
+                            $hintMatch = 'Melhor sugestão baseada em compatibilidade operacional.';
+                        }
+                    } elseif ($temCompativeis) {
+                        $hintMatch = 'Sem sugestão forte; exibindo lançamentos compatíveis por tipo.';
+                    }
+                ?>
                 <tr>
                     <td><?= $e->data ? $e->data->format('d/m/Y') : '—' ?></td>
                     <td><?= h($e->descricao) ?></td>
@@ -99,13 +140,37 @@ table.cb-table { width:100%; border-collapse:collapse; font-size:13px; }
                         <?php else: ?>—<?php endif; ?>
                     </td>
                     <td>
-                        <?php if (!$e->conciliado && !empty($lancNaoConciliados)): ?>
-                        <select class="form-control input-sm sel-conciliar" data-extrato="<?= $e->id ?>" style="width:auto; display:inline-block; font-size:12px; background:#161b22; color:#c9d1d9; border:1px solid rgba(255,255,255,.1); border-radius:5px; padding:3px 6px;">
+                        <?php if (!$e->conciliado && ($temSugestoes || $temCompativeis)): ?>
+                        <select class="form-control input-sm sel-conciliar cb-select-match" data-extrato="<?= $e->id ?>">
                             <option value="">Vincular...</option>
-                            <?php foreach ($lancNaoConciliados as $lnc): ?>
-                            <option value="<?= $lnc->id ?>">#<?= $lnc->id ?> — <?= h(mb_substr($lnc->descricao, 0, 40)) ?> (R$ <?= number_format((float)$lnc->valor, 2, ',', '.') ?>)</option>
-                            <?php endforeach; ?>
+                            <?php if ($temSugestoes): ?>
+                                <optgroup label="Sugestões recomendadas">
+                                    <?php foreach ($sugestoes as $item): ?>
+                                        <?php $lnc = $item['lancamento']; ?>
+                                        <option value="<?= (int)$item['id'] ?>">
+                                            #<?= (int)$item['id'] ?> — <?= h(mb_substr($lnc->descricao, 0, 50)) ?>
+                                            (R$ <?= number_format((float)$lnc->valor, 2, ',', '.') ?>)
+                                            <?php if (!empty($item['motivos']) && is_array($item['motivos'])): ?>
+                                                — <?= h(implode(' • ', $item['motivos'])) ?>
+                                            <?php endif; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                            <?php endif; ?>
+                            <?php if ($temCompativeis): ?>
+                                <optgroup label="Outros lançamentos compatíveis">
+                                    <?php foreach ($compativeis as $lnc): ?>
+                                        <option value="<?= $lnc->id ?>">
+                                            #<?= $lnc->id ?> — <?= h(mb_substr($lnc->descricao, 0, 50)) ?>
+                                            (R$ <?= number_format((float)$lnc->valor, 2, ',', '.') ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                            <?php endif; ?>
                         </select>
+                        <span class="cb-match-hint"><?= $hintMatch ?></span>
+                        <?php elseif (!$e->conciliado): ?>
+                            <span class="cb-match-none">Nenhum lançamento compatível encontrado para este extrato.</span>
                         <?php endif; ?>
                     </td>
                 </tr>
