@@ -121,8 +121,11 @@ function ActionMenuIcon({ actionKey }) {
 
 function actionItemTone(key) {
   const k = String(key || '').toLowerCase();
+  if (k === 'emandamento' || k === 'execucao') return 'execucao';
+  if (k === 'pendente') return 'pendente';
+  if (k === 'resolvido') return 'resolvido';
   if (k === 'cancelar') return 'danger';
-  if (k === 'imprimir') return 'muted';
+  if (k === 'imprimir') return 'imprimir';
   return 'default';
 }
 
@@ -190,10 +193,16 @@ function TicketActionsMenu({
   const tc = {
     default:
       'text-[var(--pgm-text-secondary,#c4c9d1)] hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:text-[var(--pgm-text,#e8eaed)] border-l-transparent hover:border-l-[var(--pgm-primary)] focus-visible:outline-none',
-    muted:
-      'text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:text-[var(--pgm-text,#e8eaed)] border-l-transparent hover:border-l-[var(--pgm-text-muted)] focus-visible:outline-none',
+    execucao:
+      'text-[#2DAAE1] hover:bg-[rgba(45,170,225,0.08)] hover:text-[#2DAAE1] border-l-transparent hover:border-l-[#2DAAE1] focus-visible:outline-none',
+    pendente:
+      'text-[#F39C12] hover:bg-[rgba(243,156,18,0.08)] hover:text-[#F39C12] border-l-transparent hover:border-l-[#F39C12] focus-visible:outline-none',
+    resolvido:
+      'text-[#27AE60] hover:bg-[rgba(39,174,96,0.08)] hover:text-[#27AE60] border-l-transparent hover:border-l-[#27AE60] focus-visible:outline-none',
     danger:
-      'text-[var(--pgm-text-secondary,#c4c9d1)] hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:text-[var(--pgm-badge-red-text,#ff9492)] border-l-transparent hover:border-l-[var(--pgm-badge-red-text)] focus-visible:outline-none',
+      'text-[#dc330f] hover:bg-[rgba(220,51,15,0.08)] hover:text-[#dc330f] border-l-transparent hover:border-l-[#dc330f] focus-visible:outline-none',
+    imprimir:
+      'text-[#8a5ac2] hover:bg-[rgba(138,90,194,0.08)] hover:text-[#8a5ac2] border-l-transparent hover:border-l-[#8a5ac2] focus-visible:outline-none',
   };
 
   const rowBase =
@@ -217,12 +226,14 @@ function TicketActionsMenu({
       <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto py-1">
         {acoesOrd.map((a) => {
           const tone = actionItemTone(a.key);
-          const iconWrap =
-            tone === 'danger'
-              ? 'text-[var(--pgm-badge-red-text,#ff9492)] opacity-70'
-              : tone === 'muted'
-                ? 'text-[var(--pgm-text-muted,#9aa0a8)] opacity-70'
-                : 'text-[var(--pgm-text-muted,#9aa0a8)] opacity-70';
+          const iconColors = {
+            execucao: 'text-[#2DAAE1]',
+            pendente: 'text-[#F39C12]',
+            resolvido: 'text-[#27AE60]',
+            danger: 'text-[#dc330f]',
+            imprimir: 'text-[#8a5ac2]',
+          };
+          const iconWrap = `${iconColors[tone] || 'text-[var(--pgm-text-muted,#9aa0a8)]'} opacity-70`;
           if (a.behavior === 'reactTransfer') {
             return (
               <li key={`${a.key}-${a.label}`} role="none">

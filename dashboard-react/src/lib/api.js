@@ -354,6 +354,57 @@ export async function postComentario(ticketId, texto) {
   return { ok: true, data: json.data };
 }
 
+export async function editComentario(comentarioId, texto) {
+  if (USE_MOCK) {
+    await new Promise((res) => setTimeout(res, 300));
+    return {
+      ok: true,
+      data: {
+        id: comentarioId,
+        idautor: 1,
+        autor: MOCK_SESSION_CLIENTE.name,
+        papel: 'cliente',
+        texto,
+        quando: 'agora',
+      },
+    };
+  }
+  const boot = getBoot();
+  if (!boot?.paths?.apiEditComentario) {
+    return { ok: false, error: 'api_edit_disabled' };
+  }
+  const r = await fetch(`${boot.paths.apiEditComentario}${encodeURIComponent(comentarioId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ comentario: texto }),
+  });
+  if (!r.ok) return { ok: false, error: r.statusText };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return { ok: true, data: json.data };
+}
+
+export async function deleteComentario(comentarioId) {
+  if (USE_MOCK) {
+    await new Promise((res) => setTimeout(res, 200));
+    return { ok: true };
+  }
+  const boot = getBoot();
+  if (!boot?.paths?.apiDeleteComentario) {
+    return { ok: false, error: 'api_delete_disabled' };
+  }
+  const r = await fetch(`${boot.paths.apiDeleteComentario}${encodeURIComponent(comentarioId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  if (!r.ok) return { ok: false, error: r.statusText };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  return { ok: true };
+}
+
 export async function uploadTicketAnexo(ticketId, file) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 250));

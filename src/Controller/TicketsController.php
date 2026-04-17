@@ -2335,6 +2335,7 @@ class TicketsController extends AppController {
 			'webroot' => $w,
 			'role' => (int)$this->Auth->user('role'),
 			'admin' => (int)$this->Auth->user('admin'),
+			'userId' => (int)$this->Auth->user('id'),
 			'userName' => (string)($this->Auth->user('name') ?? ''),
 			'paths' => [
 				'apiIndex' => $w . 'tickets/api-index',
@@ -2357,6 +2358,8 @@ class TicketsController extends AppController {
 				'apiSupportLevels' => $w . 'queues/api-support-levels',
 				'apiQueuesSave' => $w . 'queues/api-save',
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
+				'apiEditComentario' => $w . 'ticket-comentarios/api-edit/',
+				'apiDeleteComentario' => $w . 'ticket-comentarios/api-delete/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'ticketsOperacional' => Router::url(['controller' => 'Tickets', 'action' => 'operacional']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -3426,6 +3429,7 @@ class TicketsController extends AppController {
 			}
 			$comentarios[] = [
 				'id' => (int)$c->id,
+				'idautor' => (int)$c->idautor,
 				'autor' => $autor,
 				'papel' => $papel,
 				'texto' => (string)($c->comentario ?? ''),

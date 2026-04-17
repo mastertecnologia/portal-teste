@@ -111,6 +111,8 @@ Router::scope('/', function ($routes) {
     $routes->connect('/queues/get-available-queues/*', ['controller' => 'Queues', 'action' => 'getAvailableQueues'], ['pass' => ['ticketId']])->setMethods(['GET']);
     $routes->connect('/queues/getAvailableQueues/*', ['controller' => 'Queues', 'action' => 'getAvailableQueues'], ['pass' => ['ticketId']])->setMethods(['GET']);
     $routes->connect('/ticket-comentarios/api-add/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiAdd'], ['pass' => ['idticket']])->setMethods(['POST']);
+    $routes->connect('/ticket-comentarios/api-edit/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiEdit'])->setMethods(['POST']);
+    $routes->connect('/ticket-comentarios/api-delete/*', ['controller' => 'Ticketcomentarios', 'action' => 'apiDelete'])->setMethods(['POST']);
     // Central de Atendimento (layout dedicado; mesma sessão e APIs de tickets)
     $routes->connect('/servicedesk', ['controller' => 'Servicedesk', 'action' => 'index']);
     $routes->connect('/servicedesk/', ['controller' => 'Servicedesk', 'action' => 'index']);

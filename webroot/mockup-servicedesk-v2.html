@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-pgm-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PGM ServiceDesk v2 — Preview de Reestilizacao Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark;scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--pgm-bg-base);color:var(--pgm-text);line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ===== DESIGN TOKENS v2 ===== */
+:root{
+  /* Background scale (5 niveis) */
+  --pgm-bg-base:#0c0f14;
+  --pgm-bg-raised:#141820;
+  --pgm-bg-surface:#1a1f28;
+  --pgm-bg-elevated:#222834;
+  --pgm-bg-overlay:#2a3140;
+
+  /* Brand */
+  --pgm-primary:#1d9e75;
+  --pgm-primary-hover:#5cdbc0;
+  --pgm-primary-muted:rgba(29,158,117,0.14);
+  --pgm-secondary:#13715a;
+  --pgm-accent:#5cdbc0;
+
+  /* Text */
+  --pgm-text:#e8eaed;
+  --pgm-text-secondary:#c4c9d1;
+  --pgm-text-muted:#9aa0a8;
+
+  /* Borders */
+  --pgm-border:#3d4554;
+  --pgm-border-subtle:rgba(255,255,255,0.06);
+  --pgm-border-strong:#4f5869;
+  --pgm-border-accent:rgba(29,158,117,0.35);
+
+  /* Shadows */
+  --pgm-shadow-sm:0 1px 2px rgba(0,0,0,0.3),0 1px 3px rgba(0,0,0,0.15);
+  --pgm-shadow-md:0 4px 12px rgba(0,0,0,0.25),0 1px 3px rgba(0,0,0,0.2);
+  --pgm-shadow-lg:0 8px 32px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2);
+  --pgm-shadow-xl:0 16px 48px rgba(0,0,0,0.45),0 4px 16px rgba(0,0,0,0.25);
+  --pgm-shadow-glow:0 0 20px rgba(29,158,117,0.12);
+
+  /* Glass */
+  --pgm-glass-bg:rgba(26,31,40,0.72);
+  --pgm-glass-border:rgba(255,255,255,0.08);
+  --pgm-glass-blur:12px;
+
+  /* Transitions */
+  --pgm-transition-fast:120ms cubic-bezier(0.4,0,0.2,1);
+  --pgm-transition-normal:200ms cubic-bezier(0.4,0,0.2,1);
+  --pgm-transition-smooth:300ms cubic-bezier(0.16,1,0.3,1);
+
+  /* Typography */
+  --pgm-font-sans:'DM Sans',system-ui,sans-serif;
+  --pgm-font-mono:'DM Mono','JetBrains Mono',ui-monospace,monospace;
+
+  /* Radius */
+  --pgm-radius-sm:6px;
+  --pgm-radius-md:8px;
+  --pgm-radius-lg:12px;
+  --pgm-radius-xl:16px;
+  --pgm-radius-2xl:20px;
+
+  /* Badge tokens */
+  --pgm-badge-teal-bg:rgba(29,158,117,0.15);
+  --pgm-badge-teal-text:#5cdbc0;
+  --pgm-badge-teal-ring:rgba(29,158,117,0.30);
+  --pgm-badge-blue-bg:rgba(88,166,255,0.12);
+  --pgm-badge-blue-text:#79b8ff;
+  --pgm-badge-blue-ring:rgba(88,166,255,0.25);
+  --pgm-badge-amber-bg:rgba(210,153,34,0.14);
+  --pgm-badge-amber-text:#f0c060;
+  --pgm-badge-amber-ring:rgba(210,153,34,0.30);
+  --pgm-badge-red-bg:rgba(248,81,73,0.12);
+  --pgm-badge-red-text:#ff9492;
+  --pgm-badge-red-ring:rgba(248,81,73,0.25);
+  --pgm-badge-green-bg:rgba(63,185,80,0.14);
+  --pgm-badge-green-text:#7ee787;
+  --pgm-badge-green-ring:rgba(63,185,80,0.25);
+  --pgm-badge-purple-bg:rgba(166,130,230,0.14);
+  --pgm-badge-purple-text:#d2a8ff;
+  --pgm-badge-purple-ring:rgba(166,130,230,0.25);
+  --pgm-badge-orange-bg:rgba(255,136,51,0.14);
+  --pgm-badge-orange-text:#ffaa66;
+  --pgm-badge-orange-ring:rgba(255,136,51,0.30);
+  --pgm-badge-violet-bg:rgba(139,92,246,0.12);
+  --pgm-badge-violet-text:#c4b5fd;
+  --pgm-badge-violet-ring:rgba(139,92,246,0.25);
+  --pgm-badge-muted-bg:rgba(255,255,255,0.06);
+  --pgm-badge-muted-text:#9aa0a8;
+  --pgm-badge-muted-ring:rgba(255,255,255,0.10);
+}
+
+/* ===== KEYFRAMES ===== */
+@keyframes pgm-pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(.85)}
+}
+@keyframes pgm-modal-in{
+  from{opacity:0;transform:translateY(16px) scale(0.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes pgm-fade-in{
+  from{opacity:0;transform:translateY(-8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pgm-glow-pulse{
+  0%,100%{box-shadow:0 0 12px rgba(29,158,117,0.15)}
+  50%{box-shadow:0 0 24px rgba(29,158,117,0.30)}
+}
+
+/* ===== LAYOUT SHELL ===== */
+.sd-shell{
+  min-height:100vh;display:flex;flex-direction:column;
+  background:var(--pgm-bg-base);
+}
+.sd-shell::before{
+  content:'';display:block;height:2px;flex-shrink:0;
+  background:linear-gradient(90deg,var(--pgm-primary),var(--pgm-accent),var(--pgm-primary));
+}
+
+/* ===== TOPBAR ===== */
+.sd-topbar{
+  padding:0.75rem 1.5rem;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:0.5rem;
+  background:var(--pgm-glass-bg);
+  backdrop-filter:blur(var(--pgm-glass-blur));
+  -webkit-backdrop-filter:blur(var(--pgm-glass-blur));
+  border-bottom:1px solid var(--pgm-glass-border);
+  box-shadow:0 1px 0 rgba(0,0,0,0.3),0 4px 12px rgba(0,0,0,0.15);
+  position:sticky;top:0;z-index:40;
+}
+.sd-brand{font-weight:700;font-size:1.05rem;letter-spacing:0.02em;color:var(--pgm-text)}
+.sd-brand-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:8px;margin-right:8px;
+  background:linear-gradient(135deg,var(--pgm-primary),var(--pgm-secondary));
+  color:#fff;font-weight:700;font-size:12px;
+}
+.sd-actions{display:flex;align-items:center;gap:1rem;font-size:0.875rem}
+.sd-actions a{color:var(--pgm-accent);text-decoration:none;transition:color var(--pgm-transition-fast)}
+.sd-actions a:hover{color:#fff;text-decoration:underline}
+.sd-theme-toggle{
+  display:inline-flex;align-items:center;gap:0.35rem;
+  padding:0.25rem 0.65rem;border-radius:999px;
+  border:1px solid var(--pgm-glass-border);
+  background:rgba(255,255,255,0.06);color:var(--pgm-text-muted);
+  font-size:0.8rem;font-weight:500;cursor:pointer;
+  transition:all var(--pgm-transition-fast);
+}
+.sd-theme-toggle:hover{background:rgba(255,255,255,0.12);color:var(--pgm-text);border-color:rgba(255,255,255,0.15)}
+
+/* ===== MAIN CONTENT ===== */
+.sd-main{flex:1;padding:1.5rem;max-width:100%}
+
+/* ===== SECTION HEADERS ===== */
+.section-preview{
+  margin-bottom:3rem;padding-bottom:2rem;
+  border-bottom:1px solid var(--pgm-border-subtle);
+}
+.section-preview:last-child{border-bottom:none}
+.section-title{
+  font-size:0.7rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--pgm-primary);margin-bottom:0.5rem;
+}
+.section-heading{font-size:1.35rem;font-weight:700;color:var(--pgm-text);margin-bottom:1.25rem}
+
+/* ===== CARDS ===== */
+.pgm-card{
+  background:linear-gradient(180deg,var(--pgm-bg-surface) 0%,color-mix(in srgb,var(--pgm-bg-surface) 97%,rgba(255,255,255,0.03)) 100%);
+  border:1px solid var(--pgm-border-subtle);
+  border-radius:var(--pgm-radius-xl);
+  box-shadow:var(--pgm-shadow-md);
+  overflow:hidden;
+}
+.pgm-card-header{
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--pgm-border-subtle);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--pgm-bg-elevated);
+}
+.pgm-card-title{font-size:0.85rem;font-weight:600;color:var(--pgm-text)}
+.pgm-card-body{padding:0}
+
+/* ===== BADGES ===== */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:999px;
+  font-size:11px;font-weight:600;letter-spacing:0.04em;
+  line-height:1.4;white-space:nowrap;
+  box-shadow:inset 0 0 0 1px currentColor;
+  backdrop-filter:blur(2px);
+  transition:all var(--pgm-transition-fast);
+}
+.badge:hover{filter:brightness(1.1);transform:scale(1.03)}
+.badge-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:currentColor;flex-shrink:0;
+}
+.badge-dot.pulse{animation:pgm-pulse 2s ease-in-out infinite}
+
+.badge-teal{background:var(--pgm-badge-teal-bg);color:var(--pgm-badge-teal-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-teal-ring)}
+.badge-blue{background:var(--pgm-badge-blue-bg);color:var(--pgm-badge-blue-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-blue-ring)}
+.badge-amber{background:var(--pgm-badge-amber-bg);color:var(--pgm-badge-amber-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-amber-ring)}
+.badge-red{background:var(--pgm-badge-red-bg);color:var(--pgm-badge-red-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-red-ring)}
+.badge-green{background:var(--pgm-badge-green-bg);color:var(--pgm-badge-green-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-green-ring)}
+.badge-purple{background:var(--pgm-badge-purple-bg);color:var(--pgm-badge-purple-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-purple-ring)}
+.badge-orange{background:var(--pgm-badge-orange-bg);color:var(--pgm-badge-orange-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-orange-ring)}
+.badge-violet{background:var(--pgm-badge-violet-bg);color:var(--pgm-badge-violet-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-violet-ring)}
+.badge-muted{background:var(--pgm-badge-muted-bg);color:var(--pgm-badge-muted-text);box-shadow:inset 0 0 0 1px var(--pgm-badge-muted-ring)}
+
+/* ===== KPI STAT CARDS ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
+.kpi-card{
+  padding:1.25rem;border-radius:var(--pgm-radius-xl);
+  background:linear-gradient(180deg,var(--pgm-bg-surface),var(--pgm-bg-raised));
+  border:1px solid var(--pgm-border-subtle);
+  box-shadow:var(--pgm-shadow-sm);
+  display:flex;align-items:flex-start;gap:1rem;
+  transition:all var(--pgm-transition-normal);
+}
+.kpi-card:hover{box-shadow:var(--pgm-shadow-md);border-color:var(--pgm-border);transform:translateY(-1px)}
+.kpi-icon{
+  width:40px;height:40px;border-radius:var(--pgm-radius-md);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-size:18px;
+}
+.kpi-icon-default{background:var(--pgm-badge-teal-bg);color:var(--pgm-badge-teal-text)}
+.kpi-icon-warn{background:var(--pgm-badge-amber-bg);color:var(--pgm-badge-amber-text)}
+.kpi-icon-critical{background:var(--pgm-badge-red-bg);color:var(--pgm-badge-red-text)}
+.kpi-icon-success{background:var(--pgm-badge-green-bg);color:var(--pgm-badge-green-text)}
+.kpi-label{font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--pgm-text-muted)}
+.kpi-value{font-size:1.75rem;font-weight:700;color:var(--pgm-text);font-family:var(--pgm-font-mono);line-height:1.2;margin-top:2px}
+.kpi-card.tone-warn{border-left:3px solid var(--pgm-badge-amber-text)}
+.kpi-card.tone-critical{border-left:3px solid var(--pgm-badge-red-text);animation:pgm-glow-pulse 3s ease-in-out infinite}
+
+/* ===== FILTER TOOLBAR ===== */
+.filter-toolbar{
+  display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;
+  padding:0.65rem 1rem;
+  background:var(--pgm-bg-elevated);
+  border-bottom:1px solid var(--pgm-border-subtle);
+}
+.filter-separator{width:1px;height:20px;background:var(--pgm-border);flex-shrink:0;margin:0 4px}
+.filter-stat{
+  font-size:0.75rem;color:var(--pgm-text-muted);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.filter-stat strong{color:var(--pgm-text);font-weight:600}
+.filter-input,.filter-select{
+  height:32px;padding:0 10px;border-radius:var(--pgm-radius-sm);
+  border:1px solid var(--pgm-border);
+  background:var(--pgm-bg-raised);color:var(--pgm-text);
+  font-size:0.8rem;font-family:var(--pgm-font-sans);
+  outline:none;transition:all var(--pgm-transition-fast);
+  min-width:0;
+}
+.filter-input{flex:1 1 12rem;max-width:280px}
+.filter-input::placeholder{color:var(--pgm-text-muted)}
+.filter-input:focus,.filter-select:focus{
+  border-color:var(--pgm-primary);
+  box-shadow:0 0 0 3px rgba(29,158,117,0.20),var(--pgm-shadow-glow);
+}
+.filter-search-wrap{position:relative;flex:1 1 12rem;max-width:280px}
+.filter-search-icon{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  color:var(--pgm-text-muted);pointer-events:none;
+}
+.filter-search-wrap .filter-input{padding-left:32px;width:100%;max-width:none}
+
+/* ===== TABLE ===== */
+.pgm-table{width:100%;border-collapse:collapse;font-size:0.8125rem}
+.pgm-table thead{background:var(--pgm-bg-elevated)}
+.pgm-table thead th{
+  padding:0.6rem 0.75rem;text-align:left;
+  font-size:0.65rem;font-weight:600;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--pgm-text-muted);
+  border-bottom:1px solid var(--pgm-border-subtle);
+  white-space:nowrap;
+}
+.pgm-table tbody tr{
+  border-bottom:1px solid var(--pgm-border-subtle);
+  transition:all var(--pgm-transition-fast);
+  cursor:pointer;
+}
+.pgm-table tbody tr:hover{
+  background:var(--pgm-bg-overlay);
+  box-shadow:inset 3px 0 0 var(--pgm-primary);
+}
+.pgm-table tbody td{padding:0.65rem 0.75rem;color:var(--pgm-text-secondary);vertical-align:middle}
+.pgm-table .td-ticket{
+  font-family:var(--pgm-font-mono);font-size:11.5px;font-weight:600;
+  color:var(--pgm-badge-teal-text);
+}
+.pgm-table .td-ticket:hover{color:var(--pgm-primary-hover);text-decoration:underline}
+.pgm-table .td-subject{color:var(--pgm-text);font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgm-table .td-muted{color:var(--pgm-text-muted);font-size:0.75rem}
+.pgm-table .td-date{font-family:var(--pgm-font-mono);font-size:0.75rem;color:var(--pgm-text-muted);white-space:nowrap}
+
+/* Row accent for waiting */
+.pgm-table tbody tr.row-waiting{box-shadow:inset 3px 0 0 var(--pgm-badge-blue-ring)}
+.pgm-table tbody tr.row-waiting:hover{box-shadow:inset 3px 0 0 var(--pgm-badge-blue-text)}
+.pgm-table tbody tr.row-no-tech{box-shadow:inset 3px 0 0 var(--pgm-badge-amber-ring)}
+.pgm-table tbody tr.row-no-tech:hover{box-shadow:inset 3px 0 0 var(--pgm-badge-amber-text)}
+
+/* ===== ACTION MENU ===== */
+.action-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:var(--pgm-radius-sm);
+  border:1px solid var(--pgm-border-subtle);background:transparent;
+  color:var(--pgm-text-muted);cursor:pointer;
+  transition:all var(--pgm-transition-fast);
+}
+.action-btn:hover{background:var(--pgm-bg-overlay);color:var(--pgm-text);border-color:var(--pgm-border)}
+.action-menu{
+  position:absolute;right:0;top:calc(100% + 4px);
+  width:240px;border-radius:var(--pgm-radius-lg);
+  background:var(--pgm-bg-surface);
+  border:1px solid var(--pgm-border);
+  box-shadow:var(--pgm-shadow-xl);
+  overflow:hidden;z-index:50;
+  animation:pgm-modal-in 0.2s var(--pgm-transition-smooth);
+}
+.action-menu-item{
+  display:flex;align-items:center;gap:10px;
+  padding:0.6rem 0.85rem;color:var(--pgm-text-secondary);
+  font-size:0.8125rem;cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all var(--pgm-transition-fast);
+}
+.action-menu-item:hover{
+  background:var(--pgm-bg-overlay);color:var(--pgm-text);
+  border-left-color:var(--pgm-primary);
+}
+.action-menu-item.execucao{color:#2DAAE1}
+.action-menu-item.execucao:hover{background:rgba(45,170,225,0.08);color:#2DAAE1;border-left-color:#2DAAE1}
+.action-menu-item.pendente{color:#F39C12}
+.action-menu-item.pendente:hover{background:rgba(243,156,18,0.08);color:#F39C12;border-left-color:#F39C12}
+.action-menu-item.resolvido{color:#27AE60}
+.action-menu-item.resolvido:hover{background:rgba(39,174,96,0.08);color:#27AE60;border-left-color:#27AE60}
+.action-menu-item.danger{color:#dc330f}
+.action-menu-item.danger:hover{background:rgba(220,51,15,0.08);color:#dc330f;border-left-color:#dc330f}
+.action-menu-item.imprimir{color:#8a5ac2}
+.action-menu-item.imprimir:hover{background:rgba(138,90,194,0.08);color:#8a5ac2;border-left-color:#8a5ac2}
+.action-menu-item .ami-icon{width:16px;height:16px;flex-shrink:0;opacity:0.7}
+.action-menu-divider{height:1px;background:var(--pgm-border-subtle);margin:0.25rem 0}
+
+/* ===== BUTTONS ===== */
+.btn-primary{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:0.5rem 1.1rem;border-radius:var(--pgm-radius-md);
+  background:linear-gradient(180deg,var(--pgm-primary),#168a64);
+  color:#fff;font-size:0.8125rem;font-weight:600;
+  border:none;cursor:pointer;
+  box-shadow:var(--pgm-shadow-sm),inset 0 1px 0 rgba(255,255,255,0.12);
+  transition:all var(--pgm-transition-fast);
+}
+.btn-primary:hover{
+  box-shadow:var(--pgm-shadow-md),0 0 16px rgba(29,158,117,0.25);
+  transform:translateY(-1px);filter:brightness(1.08);
+}
+.btn-primary:active{transform:translateY(0);box-shadow:var(--pgm-shadow-sm)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:0.45rem 0.9rem;border-radius:var(--pgm-radius-md);
+  background:transparent;color:var(--pgm-text);
+  font-size:0.8125rem;font-weight:500;
+  border:1px solid var(--pgm-border);cursor:pointer;
+  transition:all var(--pgm-transition-fast);
+}
+.btn-ghost:hover{background:var(--pgm-bg-overlay);border-color:var(--pgm-border-strong)}
+
+/* ===== FORM CONTROLS ===== */
+.form-group{margin-bottom:1rem}
+.form-label{
+  display:block;margin-bottom:0.35rem;
+  font-size:0.7rem;font-weight:600;letter-spacing:0.06em;
+  text-transform:uppercase;color:var(--pgm-text-muted);
+}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:0.55rem 0.75rem;border-radius:var(--pgm-radius-md);
+  border:1px solid var(--pgm-border);
+  background:var(--pgm-bg-raised);color:var(--pgm-text);
+  font-size:0.875rem;font-family:var(--pgm-font-sans);
+  outline:none;transition:all var(--pgm-transition-fast);
+}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--pgm-text-muted)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--pgm-primary);
+  box-shadow:0 0 0 3px rgba(29,158,117,0.20),var(--pgm-shadow-glow);
+}
+.form-textarea{min-height:100px;resize:vertical;line-height:1.6}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+}
+.modal-overlay.active{display:flex}
+.modal-dialog{
+  width:95%;max-width:520px;border-radius:var(--pgm-radius-2xl);
+  background:var(--pgm-bg-surface);
+  border:1px solid var(--pgm-border-subtle);
+  box-shadow:var(--pgm-shadow-xl);
+  animation:pgm-modal-in 0.3s var(--pgm-transition-smooth);
+  overflow:hidden;
+}
+.modal-header{
+  padding:1.1rem 1.25rem;
+  background:var(--pgm-bg-elevated);
+  border-bottom:1px solid var(--pgm-border-subtle);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-title{font-size:0.95rem;font-weight:700;color:var(--pgm-text)}
+.modal-close{
+  width:28px;height:28px;border-radius:var(--pgm-radius-sm);
+  border:none;background:transparent;color:var(--pgm-text-muted);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all var(--pgm-transition-fast);
+}
+.modal-close:hover{background:var(--pgm-bg-overlay);color:var(--pgm-text)}
+.modal-body{padding:1.25rem}
+.modal-footer{
+  padding:0.85rem 1.25rem;
+  border-top:1px solid var(--pgm-border-subtle);
+  display:flex;justify-content:flex-end;gap:0.5rem;
+}
+
+/* ===== CHAT / COMMENTS ===== */
+.chat-container{
+  max-height:400px;overflow-y:auto;padding:1rem;
+  display:flex;flex-direction:column;gap:0.75rem;
+  background:var(--pgm-bg-base);border-radius:var(--pgm-radius-lg);
+}
+.chat-message{display:flex;gap:0.75rem;max-width:85%}
+.chat-message.from-tech{align-self:flex-start}
+.chat-message.from-client{align-self:flex-end;flex-direction:row-reverse}
+.chat-avatar{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+}
+.chat-avatar.tech{background:var(--pgm-badge-teal-bg);color:var(--pgm-badge-teal-text);border:1px solid var(--pgm-badge-teal-ring)}
+.chat-avatar.client{background:var(--pgm-badge-blue-bg);color:var(--pgm-badge-blue-text);border:1px solid var(--pgm-badge-blue-ring)}
+.chat-bubble{
+  padding:0.65rem 0.85rem;border-radius:var(--pgm-radius-lg);
+  font-size:0.8125rem;line-height:1.55;
+}
+.from-tech .chat-bubble{
+  background:var(--pgm-bg-surface);border:1px solid var(--pgm-border-subtle);
+  color:var(--pgm-text);border-top-left-radius:4px;
+  border-left:2px solid var(--pgm-primary);
+}
+.from-client .chat-bubble{
+  background:var(--pgm-bg-elevated);border:1px solid var(--pgm-border-subtle);
+  color:var(--pgm-text-secondary);border-top-right-radius:4px;
+}
+.chat-meta{
+  display:flex;gap:0.5rem;align-items:center;margin-top:4px;
+  font-size:0.65rem;color:var(--pgm-text-muted);
+}
+.chat-role{
+  font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  padding:1px 6px;border-radius:999px;
+}
+.chat-role.tech{background:var(--pgm-badge-teal-bg);color:var(--pgm-badge-teal-text)}
+.chat-role.client{background:var(--pgm-badge-blue-bg);color:var(--pgm-badge-blue-text)}
+.chat-input-area{
+  display:flex;gap:0.5rem;padding:0.75rem 1rem;
+  background:var(--pgm-bg-surface);
+  border-top:1px solid var(--pgm-border-subtle);
+  border-radius:0 0 var(--pgm-radius-xl) var(--pgm-radius-xl);
+}
+.chat-input-area .form-textarea{min-height:42px;flex:1;border-radius:var(--pgm-radius-lg)}
+
+/* ===== LOGIN ===== */
+.login-page{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0c0f14 0%,#121820 40%,#0c1612 100%);
+  position:relative;overflow:hidden;
+}
+.login-page::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 600px 400px at 50% 30%,rgba(29,158,117,0.06),transparent);
+}
+.login-card{
+  width:380px;max-width:95%;position:relative;
+  border-radius:var(--pgm-radius-2xl);
+  background:var(--pgm-bg-surface);
+  border:1px solid var(--pgm-glass-border);
+  box-shadow:var(--pgm-shadow-xl);
+  overflow:hidden;
+}
+.login-card::before{
+  content:'';display:block;height:2px;
+  background:linear-gradient(90deg,var(--pgm-primary),var(--pgm-accent),var(--pgm-primary));
+}
+.login-card-body{padding:2rem 1.75rem 1.5rem}
+.login-logo{
+  text-align:center;margin-bottom:1.25rem;
+}
+.login-logo-mark{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,var(--pgm-primary),var(--pgm-secondary));
+  color:#fff;font-weight:700;font-size:18px;
+  box-shadow:0 4px 16px rgba(29,158,117,0.3);
+}
+.login-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  margin:0.75rem auto 0;padding:3px 12px;border-radius:999px;
+  background:var(--pgm-glass-bg);border:1px solid var(--pgm-glass-border);
+  font-size:0.7rem;font-weight:600;color:var(--pgm-text-muted);letter-spacing:0.04em;
+}
+.login-title{
+  text-align:center;font-size:1.15rem;font-weight:700;
+  color:var(--pgm-text);margin:1rem 0 0.25rem;
+}
+.login-subtitle{text-align:center;font-size:0.8rem;color:var(--pgm-text-muted);margin-bottom:1.5rem}
+.login-tabs{
+  display:flex;gap:4px;margin-bottom:1.5rem;
+  padding:3px;border-radius:var(--pgm-radius-md);
+  background:var(--pgm-bg-raised);
+}
+.login-tab{
+  flex:1;padding:0.45rem;border-radius:6px;border:none;
+  background:transparent;color:var(--pgm-text-muted);
+  font-size:0.8rem;font-weight:600;cursor:pointer;
+  font-family:var(--pgm-font-sans);
+  transition:all var(--pgm-transition-fast);
+}
+.login-tab.active{background:var(--pgm-bg-elevated);color:var(--pgm-text);box-shadow:var(--pgm-shadow-sm)}
+.login-tab:hover:not(.active){color:var(--pgm-text-secondary)}
+.login-input-group{position:relative;margin-bottom:0.85rem}
+.login-input-icon{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  color:var(--pgm-text-muted);pointer-events:none;font-size:14px;
+}
+.login-input{
+  width:100%;padding:0.6rem 0.75rem 0.6rem 38px;border-radius:var(--pgm-radius-md);
+  border:1px solid var(--pgm-border);
+  background:var(--pgm-bg-raised);color:var(--pgm-text);
+  font-size:0.875rem;font-family:var(--pgm-font-sans);
+  outline:none;transition:all var(--pgm-transition-fast);
+}
+.login-input::placeholder{color:var(--pgm-text-muted)}
+.login-input:focus{border-color:var(--pgm-primary);box-shadow:0 0 0 3px rgba(29,158,117,0.20),var(--pgm-shadow-glow)}
+.login-btn{
+  width:100%;padding:0.65rem;border:none;border-radius:var(--pgm-radius-md);
+  background:linear-gradient(180deg,var(--pgm-primary),#168a64);
+  color:#fff;font-size:0.875rem;font-weight:700;
+  font-family:var(--pgm-font-sans);letter-spacing:0.04em;cursor:pointer;
+  box-shadow:var(--pgm-shadow-sm),inset 0 1px 0 rgba(255,255,255,0.12);
+  transition:all var(--pgm-transition-fast);margin-top:0.5rem;
+}
+.login-btn:hover{box-shadow:var(--pgm-shadow-md),0 0 20px rgba(29,158,117,0.3);transform:translateY(-1px)}
+.login-btn:active{transform:translateY(0)}
+.login-footer{
+  text-align:center;padding:1rem;
+  border-top:1px solid var(--pgm-border-subtle);
+  font-size:0.7rem;color:var(--pgm-text-muted);
+}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;top:1rem;right:1rem;z-index:200;
+  display:flex;align-items:center;gap:8px;
+  padding:0.65rem 1rem;border-radius:var(--pgm-radius-lg);
+  background:var(--pgm-bg-surface);
+  border:1px solid var(--pgm-badge-green-ring);
+  box-shadow:var(--pgm-shadow-lg);
+  font-size:0.8125rem;color:var(--pgm-badge-green-text);font-weight:500;
+  animation:pgm-fade-in 0.3s var(--pgm-transition-smooth);
+}
+.toast-icon{font-size:16px}
+
+/* ===== TICKET DETAIL STRIP ===== */
+.ticket-strip{
+  padding:1.1rem 1.25rem;
+  background:var(--pgm-bg-surface);border:1px solid var(--pgm-border-subtle);
+  border-radius:var(--pgm-radius-xl);
+  box-shadow:var(--pgm-shadow-md);
+  border-left:3px solid var(--pgm-primary);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;
+}
+.ticket-strip-id{
+  font-family:var(--pgm-font-mono);font-size:1.1rem;font-weight:700;
+  color:var(--pgm-text);
+}
+.ticket-strip-meta{font-size:0.8rem;color:var(--pgm-text-muted)}
+
+/* ===== UTILITY ===== */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.flex-center{display:flex;align-items:center;gap:0.5rem}
+.mt-1{margin-top:0.5rem}
+.mt-2{margin-top:1rem}
+.mt-3{margin-top:1.5rem}
+.mb-2{margin-bottom:1rem}
+.gap-1{gap:0.5rem}
+.gap-2{gap:1rem}
+.text-sm{font-size:0.8125rem}
+.text-xs{font-size:0.75rem}
+.text-muted{color:var(--pgm-text-muted)}
+.text-teal{color:var(--pgm-badge-teal-text)}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--pgm-border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--pgm-border-strong)}
+
+/* ===== NAV ===== */
+.mockup-nav{
+  position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:200;
+  display:flex;gap:4px;padding:4px;border-radius:999px;
+  background:var(--pgm-glass-bg);backdrop-filter:blur(12px);
+  border:1px solid var(--pgm-glass-border);box-shadow:var(--pgm-shadow-lg);
+}
+.mockup-nav a{
+  padding:6px 14px;border-radius:999px;font-size:0.7rem;font-weight:600;
+  color:var(--pgm-text-muted);text-decoration:none;white-space:nowrap;
+  transition:all var(--pgm-transition-fast);
+}
+.mockup-nav a:hover,.mockup-nav a.active{background:var(--pgm-bg-overlay);color:var(--pgm-text)}
+
+@media(max-width:768px){
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .mockup-nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST DEMO -->
+<div class="toast">
+  <span class="toast-icon">&#10003;</span>
+  Ticket #4821 transferido com sucesso para Fila N2
+</div>
+
+<!-- FLOATING NAV -->
+<nav class="mockup-nav">
+  <a href="#topbar" class="active">Topbar</a>
+  <a href="#badges">Badges</a>
+  <a href="#kpis">KPIs</a>
+  <a href="#fila">Fila</a>
+  <a href="#actions">Actions</a>
+  <a href="#forms">Forms</a>
+  <a href="#chat">Chat</a>
+  <a href="#modal-section">Modal</a>
+  <a href="#detail">Detail</a>
+  <a href="#login-section">Login</a>
+</nav>
+
+<!-- ========================= SHELL ========================= -->
+<div class="sd-shell" id="topbar">
+  <!-- ACCENT BAR (via ::before) + TOPBAR -->
+  <div class="sd-topbar">
+    <div class="flex-center">
+      <span class="sd-brand-icon">SD</span>
+      <span class="sd-brand">PGM Service Desk</span>
+    </div>
+    <div class="sd-actions">
+      <a href="#">Dashboard Operacional</a>
+      <a href="#">Abrir Chamado</a>
+      <a href="#">Historico</a>
+      <button class="sd-theme-toggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        Tema
+      </button>
+    </div>
+  </div>
+
+  <div class="sd-main">
+
+    <!-- ========================= BADGES SHOWCASE ========================= -->
+    <div class="section-preview" id="badges">
+      <div class="section-title">Sistema de Badges v2</div>
+      <div class="section-heading">Status Indicators com Frosted Glass + Dots Pulsantes</div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.5rem">
+        <span class="badge badge-teal"><span class="badge-dot pulse"></span>Em execucao</span>
+        <span class="badge badge-teal"><span class="badge-dot pulse"></span>Aguardando tecnico</span>
+        <span class="badge badge-blue"><span class="badge-dot"></span>Aguardando cliente</span>
+        <span class="badge badge-green"><span class="badge-dot"></span>Resolvido</span>
+        <span class="badge badge-amber"><span class="badge-dot"></span>Alta prioridade</span>
+        <span class="badge badge-red"><span class="badge-dot pulse"></span>Critica</span>
+        <span class="badge badge-violet"><span class="badge-dot"></span>Escalado</span>
+        <span class="badge badge-orange"><span class="badge-dot"></span>Urgente</span>
+        <span class="badge badge-purple"><span class="badge-dot"></span>Fechado</span>
+        <span class="badge badge-muted">Cancelado</span>
+        <span class="badge badge-muted">Baixa</span>
+      </div>
+
+      <div class="section-title mt-2">Prioridades</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <span class="badge badge-red"><span class="badge-dot pulse"></span>P1 — Critica</span>
+        <span class="badge badge-orange"><span class="badge-dot"></span>P2 — Alta</span>
+        <span class="badge badge-amber"><span class="badge-dot"></span>P3 — Media</span>
+        <span class="badge badge-muted">P4 — Baixa</span>
+      </div>
+    </div>
+
+    <!-- ========================= KPIs ========================= -->
+    <div class="section-preview" id="kpis">
+      <div class="section-title">Painel Operacional</div>
+      <div class="section-heading">KPI Cards com Gradiente + Icones</div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-default">&#9776;</div>
+          <div>
+            <div class="kpi-label">Backlog</div>
+            <div class="kpi-value">47</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-success">&#10003;</div>
+          <div>
+            <div class="kpi-label">Resolvidos hoje</div>
+            <div class="kpi-value">12</div>
+          </div>
+        </div>
+        <div class="kpi-card tone-warn">
+          <div class="kpi-icon kpi-icon-warn">&#9888;</div>
+          <div>
+            <div class="kpi-label">P1 Abertos</div>
+            <div class="kpi-value">3</div>
+          </div>
+        </div>
+        <div class="kpi-card tone-critical">
+          <div class="kpi-icon kpi-icon-critical">&#9889;</div>
+          <div>
+            <div class="kpi-label">SLA Violado</div>
+            <div class="kpi-value">5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= FILA TECNICA ========================= -->
+    <div class="section-preview" id="fila">
+      <div class="section-title">Fila Tecnica</div>
+      <div class="section-heading">Tabela Premium com Left-Border Hover (estilo Linear)</div>
+
+      <div class="pgm-card">
+        <div class="filter-toolbar">
+          <div class="filter-stat"><strong>47</strong> na empresa</div>
+          <div class="filter-separator"></div>
+          <div class="filter-search-wrap">
+            <span class="filter-search-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </span>
+            <input type="text" class="filter-input" placeholder="Buscar n, cliente ou assunto">
+          </div>
+          <select class="filter-select">
+            <option>Todos</option>
+            <option>Aguardando + Em execucao</option>
+            <option>Aguardando tecnico</option>
+            <option>Em execucao</option>
+            <option>Resolvidos</option>
+            <option>Cancelados / fechados</option>
+          </select>
+          <div class="filter-separator"></div>
+          <select class="filter-select">
+            <option>Todas as filas</option>
+            <option>N1 — Suporte Basico</option>
+            <option>N2 — Suporte Avancado</option>
+            <option>N3 — Desenvolvimento</option>
+          </select>
+          <select class="filter-select">
+            <option>Todos os niveis</option>
+            <option>Nivel 1</option>
+            <option>Nivel 2</option>
+            <option>Nivel 3</option>
+          </select>
+          <select class="filter-select">
+            <option>Qualquer tecnico</option>
+            <option>Carlos Silva</option>
+            <option>Ana Rodrigues</option>
+            <option>Felipe Santos</option>
+          </select>
+        </div>
+
+        <div class="pgm-card-body">
+          <table class="pgm-table">
+            <thead>
+              <tr>
+                <th>Ticket</th>
+                <th>Autor</th>
+                <th>Data</th>
+                <th>Assunto</th>
+                <th>Status</th>
+                <th>Fila</th>
+                <th>Nivel</th>
+                <th>Tecnico</th>
+                <th>Cliente</th>
+                <th>Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="td-ticket">#4821</span></td>
+                <td class="td-muted">Maria Costa</td>
+                <td class="td-date">11/04 14:32</td>
+                <td class="td-subject">Erro ao emitir NF-e serie 1 — rejeicao 301</td>
+                <td><span class="badge badge-teal"><span class="badge-dot pulse"></span>Em execucao</span></td>
+                <td class="td-muted">N2</td>
+                <td class="td-muted">2</td>
+                <td class="text-sm">Carlos Silva</td>
+                <td class="td-muted">Metalurgica ABC</td>
+                <td><div style="position:relative"><button class="action-btn">&#8942;</button></div></td>
+              </tr>
+              <tr class="row-waiting">
+                <td><span class="td-ticket">#4820</span></td>
+                <td class="td-muted">Joao Mendes</td>
+                <td class="td-date">11/04 11:05</td>
+                <td class="td-subject">Relatorio de estoque nao abre — tela branca</td>
+                <td><span class="badge badge-blue"><span class="badge-dot"></span>Aguard. cliente</span></td>
+                <td class="td-muted">N1</td>
+                <td class="td-muted">1</td>
+                <td class="text-sm">Ana Rodrigues</td>
+                <td class="td-muted">Loja Eletronica XY</td>
+                <td><button class="action-btn">&#8942;</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-ticket">#4819</span></td>
+                <td class="td-muted">Pedro Alves</td>
+                <td class="td-date">11/04 09:18</td>
+                <td class="td-subject">Cadastro de produto duplicando codigo</td>
+                <td><span class="badge badge-teal"><span class="badge-dot pulse"></span>Aguard. tecnico</span></td>
+                <td class="td-muted">N1</td>
+                <td class="td-muted">1</td>
+                <td class="text-sm">—</td>
+                <td class="td-muted">Distribuidora MN</td>
+                <td><button class="action-btn">&#8942;</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-ticket">#4818</span></td>
+                <td class="td-muted">Lucia Ferreira</td>
+                <td class="td-date">10/04 16:44</td>
+                <td class="td-subject">Integracao com ERP retornando timeout SOAP</td>
+                <td><span class="badge badge-red"><span class="badge-dot pulse"></span>Critica</span></td>
+                <td class="td-muted">N3</td>
+                <td class="td-muted">3</td>
+                <td class="text-sm">Felipe Santos</td>
+                <td class="td-muted">Industria QR Ltda</td>
+                <td><button class="action-btn">&#8942;</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-ticket">#4817</span></td>
+                <td class="td-muted">Roberto Lima</td>
+                <td class="td-date">10/04 10:22</td>
+                <td class="td-subject">Solicitar acesso ao modulo financeiro</td>
+                <td><span class="badge badge-green"><span class="badge-dot"></span>Resolvido</span></td>
+                <td class="td-muted">N1</td>
+                <td class="td-muted">1</td>
+                <td class="text-sm">Ana Rodrigues</td>
+                <td class="td-muted">Padaria Central</td>
+                <td><button class="action-btn">&#8942;</button></td>
+              </tr>
+              <tr class="row-no-tech">
+                <td><span class="td-ticket">#4816</span></td>
+                <td class="td-muted">Sandra Oliveira</td>
+                <td class="td-date">10/04 08:50</td>
+                <td class="td-subject">Boleto vencido nao aparece no portal cliente</td>
+                <td><span class="badge badge-amber"><span class="badge-dot"></span>Alta</span></td>
+                <td class="td-muted">N2</td>
+                <td class="td-muted">2</td>
+                <td class="text-sm" style="color:var(--pgm-badge-amber-text)">Nao atribuido</td>
+                <td class="td-muted">Comercio Fast</td>
+                <td><button class="action-btn">&#8942;</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-ticket">#4815</span></td>
+                <td class="td-muted">Andre Souza</td>
+                <td class="td-date">09/04 17:30</td>
+                <td class="td-subject">Atualizacao do sistema — versao 4.2.1</td>
+                <td><span class="badge badge-purple"><span class="badge-dot"></span>Fechado</span></td>
+                <td class="td-muted">N1</td>
+                <td class="td-muted">1</td>
+                <td class="text-sm">Carlos Silva</td>
+                <td class="td-muted">Tech Solutions SP</td>
+                <td><button class="action-btn">&#8942;</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= ACTIONS MENU ========================= -->
+    <div class="section-preview" id="actions">
+      <div class="section-title">Componentes Interativos</div>
+      <div class="section-heading">Menu de Acoes + Botoes Premium</div>
+
+      <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start">
+        <!-- Action Menu -->
+        <div style="position:relative;width:240px">
+          <div class="action-menu" style="position:relative;top:0">
+            <div style="padding:0.5rem 0.85rem;font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--pgm-text-muted)">Ticket #4821</div>
+            <div class="action-menu-divider"></div>
+            <div class="action-menu-item">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
+              Iniciar atendimento
+            </div>
+            <div class="action-menu-item pendente">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Pendente
+            </div>
+            <div class="action-menu-item execucao">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75v-6z"/></svg>
+              Em andamento
+            </div>
+            <div class="action-menu-item resolvido">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Resolvido
+            </div>
+            <div class="action-menu-item">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+              Transferir
+            </div>
+            <div class="action-menu-divider"></div>
+            <div class="action-menu-item danger">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+              Cancelar
+            </div>
+            <div class="action-menu-item imprimir">
+              <svg class="ami-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.159 48.159 0 0110.5 0m-10.5 0V5.25A2.25 2.25 0 019.5 3h5a2.25 2.25 0 012.25 2.25v3.231"/></svg>
+              Imprimir
+            </div>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <button class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+            Abrir Chamado
+          </button>
+          <button class="btn-primary" style="background:linear-gradient(180deg,#168a64,#0f6e56)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Salvar Alteracoes
+          </button>
+          <button class="btn-ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+            Voltar a Fila
+          </button>
+          <button class="btn-ghost" style="color:var(--pgm-badge-red-text);border-color:var(--pgm-badge-red-ring)">
+            Cancelar Ticket
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= FORMS ========================= -->
+    <div class="section-preview" id="forms">
+      <div class="section-title">Formularios</div>
+      <div class="section-heading">Inputs com Focus Glow Teal + Dropzone</div>
+
+      <div class="pgm-card" style="max-width:640px">
+        <div class="pgm-card-header">
+          <span class="pgm-card-title">Abertura de Chamado</span>
+          <span class="badge badge-teal"><span class="badge-dot"></span>Obrigatorio</span>
+        </div>
+        <div style="padding:1.25rem">
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Cliente</label>
+              <select class="form-select">
+                <option>Selecione o cliente...</option>
+                <option>Metalurgica ABC</option>
+                <option>Loja Eletronica XY</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prioridade</label>
+              <select class="form-select">
+                <option>Media</option>
+                <option>Baixa</option>
+                <option>Alta</option>
+                <option>Critica</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assunto</label>
+            <input type="text" class="form-input" placeholder="Descreva brevemente o chamado...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descricao</label>
+            <textarea class="form-textarea" placeholder="Detalhe o problema ou solicitacao..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Anexos</label>
+            <div style="padding:2rem;border:2px dotted var(--pgm-border);border-radius:var(--pgm-radius-lg);text-align:center;color:var(--pgm-text-muted);background:var(--pgm-bg-raised);cursor:pointer;transition:all var(--pgm-transition-fast)" onmouseover="this.style.borderColor='var(--pgm-primary)';this.style.background='var(--pgm-primary-muted)'" onmouseout="this.style.borderColor='var(--pgm-border)';this.style.background='var(--pgm-bg-raised)'">
+              <div style="font-size:24px;margin-bottom:4px;opacity:0.5">&#128206;</div>
+              <div style="font-size:0.8rem;font-weight:500">Arraste arquivos ou clique para selecionar</div>
+              <div style="font-size:0.7rem;margin-top:4px;opacity:0.7">PDF, imagens, documentos (max 10 MB)</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.5rem">
+            <button class="btn-ghost">Cancelar</button>
+            <button class="btn-primary">Abrir Chamado</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= CHAT ========================= -->
+    <div class="section-preview" id="chat">
+      <div class="section-title">Conversacao</div>
+      <div class="section-heading">Chat Estilo Messaging App com Role Badges</div>
+
+      <div class="pgm-card" style="max-width:600px">
+        <div class="pgm-card-header">
+          <span class="pgm-card-title">Comentarios</span>
+          <span class="badge badge-muted">4 mensagens</span>
+        </div>
+        <div class="chat-container">
+          <div class="chat-message from-client">
+            <div class="chat-avatar client">MC</div>
+            <div>
+              <div class="chat-bubble">
+                Boa tarde, nao estou conseguindo emitir NF-e na serie 1. O sistema retorna rejeicao 301. Ja tentei reenviar varias vezes mas sempre o mesmo erro.
+              </div>
+              <div class="chat-meta">
+                <span class="chat-role client">Cliente</span>
+                Maria Costa &middot; 11/04 14:32
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-message from-tech">
+            <div class="chat-avatar tech">CS</div>
+            <div>
+              <div class="chat-bubble">
+                Ola Maria, vou verificar. A rejeicao 301 indica uso indevido de IE. Pode confirmar se o CNPJ/IE do destinatario esta correto no cadastro?
+              </div>
+              <div class="chat-meta">
+                <span class="chat-role tech">Suporte</span>
+                Carlos Silva &middot; 11/04 14:45
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-message from-client">
+            <div class="chat-avatar client">MC</div>
+            <div>
+              <div class="chat-bubble">
+                Verifiquei e o campo IE do cliente estava com "ISENTO" mas ele tem inscricao estadual ativa. Ja corrigi no cadastro. Devo tentar emitir novamente?
+              </div>
+              <div class="chat-meta">
+                <span class="chat-role client">Cliente</span>
+                Maria Costa &middot; 11/04 15:10
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-message from-tech">
+            <div class="chat-avatar tech">CS</div>
+            <div>
+              <div class="chat-bubble">
+                Perfeito! Sim, pode tentar emitir novamente. Se persistir, nos avise com o XML de retorno que a gente analisa aqui.
+              </div>
+              <div class="chat-meta">
+                <span class="chat-role tech">Suporte</span>
+                Carlos Silva &middot; 11/04 15:15
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="form-textarea" style="min-height:42px;max-height:120px" placeholder="Digite sua resposta..."></textarea>
+          <button class="btn-primary" style="align-self:flex-end;padding:0.5rem 0.85rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= MODAL ========================= -->
+    <div class="section-preview" id="modal-section">
+      <div class="section-title">Modal</div>
+      <div class="section-heading">Transferencia com Slide-Up + Glass Header</div>
+
+      <div style="max-width:520px">
+        <div class="modal-dialog" style="animation:none">
+          <div class="modal-header">
+            <span class="modal-title">Transferir Ticket #4821</span>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">Fila de destino</label>
+              <select class="form-select">
+                <option>N2 — Suporte Avancado</option>
+                <option>N3 — Desenvolvimento</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Atribuicao de tecnico</label>
+              <div style="display:flex;gap:12px;margin-top:4px">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.8125rem;color:var(--pgm-text-secondary)">
+                  <input type="radio" name="assign" checked style="accent-color:var(--pgm-primary)"> Com tecnico
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.8125rem;color:var(--pgm-text-secondary)">
+                  <input type="radio" name="assign" style="accent-color:var(--pgm-primary)"> Sem tecnico
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tecnico de destino</label>
+              <select class="form-select">
+                <option>Felipe Santos (N2, N3)</option>
+                <option>Ana Rodrigues (N1, N2)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Motivo da transferencia</label>
+              <textarea class="form-textarea" placeholder="Informe o motivo..." style="min-height:80px"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-ghost">Cancelar</button>
+            <button class="btn-primary">Transferir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= TICKET DETAIL ========================= -->
+    <div class="section-preview" id="detail">
+      <div class="section-title">Detalhe do Ticket</div>
+      <div class="section-heading">Strip com Accent Bar + Metadados</div>
+
+      <div style="max-width:700px">
+        <div class="ticket-strip">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="ticket-strip-id">Ticket #4821</span>
+              <span class="badge badge-teal"><span class="badge-dot pulse"></span>Em execucao</span>
+            </div>
+            <div class="ticket-strip-meta mt-1">
+              Aberto por Maria Costa &middot; 11/04/2026 14:32 &middot; Metalurgica ABC
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" style="font-size:0.75rem;padding:0.35rem 0.75rem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.72 13.829v-.63A1.125 1.125 0 017.848 12h11.304a1.125 1.125 0 011.128 1.198v.63"/></svg>
+              Imprimir
+            </button>
+            <button class="btn-primary" style="font-size:0.75rem;padding:0.35rem 0.75rem">Resolver</button>
+          </div>
+        </div>
+
+        <div class="pgm-card mt-2">
+          <div style="padding:1.25rem">
+            <div class="form-label" style="margin-bottom:0.5rem">Assunto</div>
+            <div style="font-size:0.95rem;font-weight:600;color:var(--pgm-text);margin-bottom:1.25rem">
+              Erro ao emitir NF-e serie 1 — rejeicao 301
+            </div>
+
+            <div class="grid-3" style="margin-bottom:1.25rem">
+              <div>
+                <div class="form-label">Prioridade</div>
+                <span class="badge badge-amber"><span class="badge-dot"></span>Alta</span>
+              </div>
+              <div>
+                <div class="form-label">Fila</div>
+                <span style="font-size:0.8125rem;color:var(--pgm-text)">N2 — Suporte Avancado</span>
+              </div>
+              <div>
+                <div class="form-label">Tecnico</div>
+                <span style="font-size:0.8125rem;color:var(--pgm-text)">Carlos Silva</span>
+              </div>
+            </div>
+
+            <div class="form-label" style="margin-bottom:0.35rem">Descricao</div>
+            <div style="padding:0.85rem;background:var(--pgm-bg-raised);border:1px solid var(--pgm-border-subtle);border-radius:var(--pgm-radius-md);font-size:0.8125rem;color:var(--pgm-text-secondary);line-height:1.65">
+              Nao estou conseguindo emitir NF-e na serie 1. O sistema retorna rejeicao 301 (uso indevido de inscricao estadual). Ja tentei reenviar varias vezes mas sempre o mesmo erro. O cliente destinatario e a empresa XYZ Ltda, CNPJ 12.345.678/0001-99.
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer panel preview -->
+        <div class="pgm-card mt-2" style="max-width:320px">
+          <div class="pgm-card-header">
+            <span class="pgm-card-title">Horas Tecnicas</span>
+          </div>
+          <div style="padding:1rem;text-align:center">
+            <div style="font-family:var(--pgm-font-mono);font-size:2rem;font-weight:700;color:var(--pgm-badge-teal-text);padding:0.75rem;background:var(--pgm-bg-base);border-radius:var(--pgm-radius-md);border:1px solid var(--pgm-border-subtle);letter-spacing:0.1em;margin-bottom:0.75rem">
+              01:23:45
+            </div>
+            <div style="display:flex;gap:6px;justify-content:center">
+              <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.75rem;border-radius:999px">&#9654; Iniciar</button>
+              <button class="btn-ghost" style="padding:0.4rem 1rem;font-size:0.75rem;border-radius:999px">&#9646;&#9646; Pausar</button>
+              <button class="btn-ghost" style="padding:0.4rem 1rem;font-size:0.75rem;border-radius:999px;color:var(--pgm-badge-red-text);border-color:var(--pgm-badge-red-ring)">&#9632; Parar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================= LOGIN ========================= -->
+    <div class="section-preview" id="login-section">
+      <div class="section-title">Login</div>
+      <div class="section-heading">Card Dark com Glass Border + Gradient Bar</div>
+
+      <div class="login-page" style="min-height:auto;padding:3rem 1rem;border-radius:var(--pgm-radius-xl)">
+        <div class="login-card">
+          <div class="login-card-body">
+            <div class="login-logo">
+              <div class="login-logo-mark">PGM</div>
+            </div>
+            <div style="text-align:center">
+              <span class="login-badge">&#128274; Central de Atendimento</span>
+            </div>
+            <div class="login-title">Acesso PGM / Master</div>
+            <div class="login-subtitle">Entre com suas credenciais para acessar o Service Desk</div>
+            <div class="login-tabs">
+              <button class="login-tab active">Equipe</button>
+              <button class="login-tab">Cliente</button>
+            </div>
+            <div class="login-input-group">
+              <span class="login-input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+              </span>
+              <input type="email" class="login-input" placeholder="usuario@email.com">
+            </div>
+            <div class="login-input-group">
+              <span class="login-input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+              </span>
+              <input type="password" class="login-input" placeholder="Senha">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin:0.75rem 0">
+              <input type="checkbox" id="remember" style="accent-color:var(--pgm-primary)">
+              <label for="remember" style="font-size:0.8rem;color:var(--pgm-text-muted);cursor:pointer">Lembrar de mim</label>
+            </div>
+            <button class="login-btn">ACESSAR SERVICE DESK</button>
+            <div style="text-align:center;margin-top:1rem">
+              <a href="#" style="font-size:0.8rem;color:var(--pgm-accent);text-decoration:none">Recuperar Senha</a>
+            </div>
+          </div>
+          <div class="login-footer">PGM Solucoes em TI &bull; Service Desk &bull; 2026</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- sd-main -->
+</div><!-- sd-shell -->
+
+<script>
+// Simple scroll spy for mockup nav
+document.addEventListener('scroll', () => {
+  const links = document.querySelectorAll('.mockup-nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+  let current = 0;
+  sections.forEach((s, i) => {
+    if (s && s.getBoundingClientRect().top < 200) current = i;
+  });
+  links.forEach((a, i) => a.classList.toggle('active', i === current));
+});
+</script>
+
+</body>
+</html>

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import {
   fetchTicketDetail,
   postComentario,
+  editComentario,
+  deleteComentario,
   saveTicketSolicitacao,
   saveTicketDescricaoAtendimento,
   getBoot,
@@ -51,6 +53,9 @@ export default function TechTicketEdit({ boot }) {
   const [salvando, setSalvando] = useState(false);
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editTexto, setEditTexto] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => {
     let c = false;
@@ -133,6 +138,35 @@ export default function TechTicketEdit({ boot }) {
       setErro(null);
     } else {
       setErro(res.error || 'Falha ao salvar o relatório. Confira se o banco tem a coluna descricao_atendimento (SQL em config/schema).');
+    }
+  }
+
+  async function handleEditComentario(comentarioId) {
+    const t = editTexto.trim();
+    if (!t) return;
+    setEditSaving(true);
+    setErro(null);
+    const res = await editComentario(comentarioId, t);
+    setEditSaving(false);
+    if (res.ok) {
+      setComentarios((prev) =>
+        prev.map((c) => (c.id === comentarioId ? { ...c, texto: res.data.texto } : c))
+      );
+      setEditingId(null);
+      setEditTexto('');
+    } else {
+      setErro(res.error || 'Falha ao editar comentário.');
+    }
+  }
+
+  async function handleDeleteComentario(comentarioId) {
+    if (!window.confirm('Excluir este comentário?')) return;
+    setErro(null);
+    const res = await deleteComentario(comentarioId);
+    if (res.ok) {
+      setComentarios((prev) => prev.filter((c) => c.id !== comentarioId));
+    } else {
+      setErro(res.error || 'Falha ao excluir comentário.');
     }
   }
 
@@ -371,10 +405,12 @@ export default function TechTicketEdit({ boot }) {
         ) : (
           comentarios.map((c) => {
             const isTech = c.papel === 'tecnico';
+            const isOwn = !c.pending && c.idautor != null && c.idautor === boot?.userId;
+            const isEditing = editingId === c.id;
             return (
               <li
                 key={c.id}
-                className={`flex gap-3 animate-pgm-fade-in-up ${isTech ? '' : 'flex-row-reverse'}`}
+                className={`group flex gap-3 animate-pgm-fade-in-up ${isTech ? '' : 'flex-row-reverse'}`}
                 style={{ maxWidth: '85%', alignSelf: isTech ? 'flex-start' : 'flex-end', marginLeft: isTech ? 0 : 'auto' }}
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
@@ -385,14 +421,73 @@ export default function TechTicketEdit({ boot }) {
                   {(c.autor || '?')[0].toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className={`rounded-[var(--pgm-radius-lg,12px)] border px-3 py-2.5 text-[0.8125rem] leading-relaxed ${
+                  <div className={`relative rounded-[var(--pgm-radius-lg,12px)] border px-3 py-2.5 text-[0.8125rem] leading-relaxed ${
                     c.pending
                       ? 'border-[var(--pgm-badge-amber-ring)] bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)]'
                       : isTech
                         ? 'border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] border-l-2 border-l-[var(--pgm-primary)] bg-[var(--pgm-bg-surface,#1a1f28)] text-[var(--pgm-text,#e8eaed)]'
                         : 'border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] text-[var(--pgm-text-secondary,#c4c9d1)]'
                   }`} style={{ borderTopLeftRadius: isTech ? '4px' : undefined, borderTopRightRadius: isTech ? undefined : '4px' }}>
-                    <CommentMessage texto={c.texto} />
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editTexto}
+                          onChange={(e) => setEditTexto(e.target.value)}
+                          rows={3}
+                          className="w-full rounded-md border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-raised,#141820)] p-2 text-[0.8125rem] text-[var(--pgm-text,#e8eaed)] outline-none focus:border-[var(--pgm-primary)]"
+                          onKeyDown={(e) => {
+                            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && editTexto.trim()) {
+                              e.preventDefault();
+                              handleEditComentario(c.id);
+                            }
+                            if (e.key === 'Escape') {
+                              setEditingId(null);
+                              setEditTexto('');
+                            }
+                          }}
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={editSaving}
+                            onClick={() => handleEditComentario(c.id)}
+                            className="rounded-md bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-2.5 py-1 text-[0.7rem] font-semibold text-white shadow-sm transition hover:-translate-y-px disabled:opacity-50"
+                          >
+                            {editSaving ? 'Salvando…' : 'Salvar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setEditingId(null); setEditTexto(''); }}
+                            className="rounded-md border border-[var(--pgm-border,#3d4554)] bg-transparent px-2.5 py-1 text-[0.7rem] font-medium text-[var(--pgm-text-muted,#9aa0a8)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)]"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <CommentMessage texto={c.texto} />
+                    )}
+                    {isOwn && !isEditing && (
+                      <div className="absolute -top-2 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          type="button"
+                          title="Editar"
+                          onClick={() => { setEditingId(c.id); setEditTexto(c.texto); }}
+                          className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-surface,#1a1f28)] text-[var(--pgm-text-muted,#9aa0a8)] shadow-sm transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:text-[var(--pgm-text,#e8eaed)]"
+                        >
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                        </button>
+                        <button
+                          type="button"
+                          title="Excluir"
+                          onClick={() => handleDeleteComentario(c.id)}
+                          className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-surface,#1a1f28)] text-[var(--pgm-text-muted,#9aa0a8)] shadow-sm transition hover:bg-[rgba(220,51,15,0.08)] hover:text-[#dc330f] hover:border-[rgba(220,51,15,0.3)]"
+                        >
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-1 flex items-center gap-2 text-[0.65rem] text-[var(--pgm-text-muted,#9aa0a8)]">
                     <span className="font-semibold text-[var(--pgm-text-secondary,#c4c9d1)]">{c.autor || '—'}</span>

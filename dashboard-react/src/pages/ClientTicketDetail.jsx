@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchTicketDetail, postComentario, getBoot, USE_MOCK } from '../lib/api';
+import { fetchTicketDetail, postComentario, editComentario, deleteComentario, getBoot, USE_MOCK } from '../lib/api';
 import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
 import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
@@ -55,6 +55,9 @@ export default function ClientTicketDetail({ boot }) {
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editTexto, setEditTexto] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => {
     let c = false;
@@ -108,6 +111,35 @@ export default function ClientTicketDetail({ boot }) {
     } else {
       setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
       setTexto(t);
+    }
+  }
+
+  async function handleEditComentario(comentarioId) {
+    const t = editTexto.trim();
+    if (!t) return;
+    setEditSaving(true);
+    setErro(null);
+    const res = await editComentario(comentarioId, t);
+    setEditSaving(false);
+    if (res.ok) {
+      setComentarios((prev) =>
+        prev.map((c) => (c.id === comentarioId ? { ...c, texto: res.data.texto } : c))
+      );
+      setEditingId(null);
+      setEditTexto('');
+    } else {
+      setErro(res.error || 'Falha ao editar comentário.');
+    }
+  }
+
+  async function handleDeleteComentario(comentarioId) {
+    if (!window.confirm('Excluir este comentário?')) return;
+    setErro(null);
+    const res = await deleteComentario(comentarioId);
+    if (res.ok) {
+      setComentarios((prev) => prev.filter((c) => c.id !== comentarioId));
+    } else {
+      setErro(res.error || 'Falha ao excluir comentário.');
     }
   }
 
@@ -298,41 +330,122 @@ export default function ClientTicketDetail({ boot }) {
             Nenhuma mensagem ainda. Escreva abaixo para falar com o suporte.
           </li>
         ) : (
-          comentarios.map((c) => (
-            <li
-              key={c.id}
-              className={
-                c.pending
-                  ? embedded
-                    ? 'rounded-lg border border-amber-700/50 bg-amber-950/35 px-3 py-2 text-sm text-amber-100'
-                    : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
-                  : c.papel === 'tecnico'
+          comentarios.map((c) => {
+            const isOwn = !c.pending && c.idautor != null && c.idautor === boot?.userId;
+            const isEditing = editingId === c.id;
+            return (
+              <li
+                key={c.id}
+                className={`group relative ${
+                  c.pending
                     ? embedded
-                      ? 'rounded-lg border border-cyan-700/50 bg-cyan-950/40 px-3 py-2 text-sm text-cyan-100'
-                      : 'rounded-lg border border-cyan-200 bg-cyan-50/50 px-3 py-2 text-sm'
-                    : embedded
-                      ? 'rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm'
-                      : 'rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm'
-              }
-            >
-              <div
-                className={
-                  embedded
-                    ? 'flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]'
-                    : 'flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500'
-                }
+                      ? 'rounded-lg border border-amber-700/50 bg-amber-950/35 px-3 py-2 text-sm text-amber-100'
+                      : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
+                    : c.papel === 'tecnico'
+                      ? embedded
+                        ? 'rounded-lg border border-cyan-700/50 bg-cyan-950/40 px-3 py-2 text-sm text-cyan-100'
+                        : 'rounded-lg border border-cyan-200 bg-cyan-50/50 px-3 py-2 text-sm'
+                      : embedded
+                        ? 'rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm'
+                        : 'rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm'
+                }`}
               >
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className={embedded ? 'font-semibold text-[var(--pgm-text)]' : 'font-semibold text-slate-900'}>
-                    {c.autor || '—'}
-                  </span>
-                  <PapelBadge papel={c.papel} embed={embedded} />
+                <div
+                  className={
+                    embedded
+                      ? 'flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]'
+                      : 'flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500'
+                  }
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className={embedded ? 'font-semibold text-[var(--pgm-text)]' : 'font-semibold text-slate-900'}>
+                      {c.autor || '—'}
+                    </span>
+                    <PapelBadge papel={c.papel} embed={embedded} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isOwn && !isEditing && (
+                      <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          type="button"
+                          title="Editar"
+                          onClick={() => { setEditingId(c.id); setEditTexto(c.texto); }}
+                          className={`flex h-5 w-5 items-center justify-center rounded transition ${
+                            embedded
+                              ? 'text-[var(--pgm-text-muted)] hover:text-[var(--pgm-text)]'
+                              : 'text-slate-400 hover:text-slate-700'
+                          }`}
+                        >
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                        </button>
+                        <button
+                          type="button"
+                          title="Excluir"
+                          onClick={() => handleDeleteComentario(c.id)}
+                          className={`flex h-5 w-5 items-center justify-center rounded transition ${
+                            embedded
+                              ? 'text-[var(--pgm-text-muted)] hover:text-[#dc330f]'
+                              : 'text-slate-400 hover:text-red-600'
+                          }`}
+                        >
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                        </button>
+                      </div>
+                    )}
+                    <time className={embedded ? 'flex-shrink-0 text-[var(--pgm-text-muted)]' : 'flex-shrink-0 text-slate-500'}>{c.quando}</time>
+                  </div>
                 </div>
-                <time className={embedded ? 'flex-shrink-0 text-[var(--pgm-text-muted)]' : 'flex-shrink-0 text-slate-500'}>{c.quando}</time>
-              </div>
-              <CommentMessage texto={c.texto} />
-            </li>
-          ))
+                {isEditing ? (
+                  <div className="mt-1 space-y-2">
+                    <textarea
+                      value={editTexto}
+                      onChange={(e) => setEditTexto(e.target.value)}
+                      rows={3}
+                      className={`w-full rounded-md border p-2 text-sm outline-none ${
+                        embedded
+                          ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text)] focus:border-[var(--pgm-primary)]'
+                          : 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500'
+                      }`}
+                      onKeyDown={(e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && editTexto.trim()) {
+                          e.preventDefault();
+                          handleEditComentario(c.id);
+                        }
+                        if (e.key === 'Escape') {
+                          setEditingId(null);
+                          setEditTexto('');
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={editSaving}
+                        onClick={() => handleEditComentario(c.id)}
+                        className="rounded-md bg-[var(--pgm-primary,#1d9e75)] px-2.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {editSaving ? 'Salvando…' : 'Salvar'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setEditingId(null); setEditTexto(''); }}
+                        className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                          embedded
+                            ? 'border-[var(--pgm-border)] text-[var(--pgm-text-muted)] hover:bg-[var(--pgm-bg-overlay)]'
+                            : 'border-slate-300 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <CommentMessage texto={c.texto} />
+                )}
+              </li>
+            );
+          })
         )}
       </ul>
       <form

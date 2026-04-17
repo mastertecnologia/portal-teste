@@ -16,7 +16,7 @@ class TicketcomentariosController extends AppController {
 
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
-		if ($action === 'apiAdd') {
+		if (in_array($action, ['apiAdd', 'apiEdit', 'apiDelete'], true)) {
 			return in_array((int)($user['role'] ?? -1), [0, 1], true);
 		}
 		return parent::isAuthorized($user);
@@ -368,6 +368,68 @@ class TicketcomentariosController extends AppController {
 			$this->log('Ticketcomentarios::apiAdd e-mail: ' . $e->getMessage(), 'error');
 		}
 		return $this->jsonResponse($payload);
+	}
+
+	public function apiEdit($id = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+
+		if (empty($id)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'missing_id'], 400);
+		}
+		try {
+			$comentario = $this->Ticketcomentarios->get($id);
+		} catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if ((int)$comentario->idautor !== (int)$this->Auth->user('id') || (int)$comentario->idempresa !== (int)$this->Auth->user('idempresa')) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$data = $this->request->getData();
+		$json = $this->request->input('json_decode', true);
+		if (is_array($json)) {
+			$data = array_merge($data, $json);
+		}
+		$texto = trim((string)($data['comentario'] ?? ''));
+		if ($texto === '') {
+			return $this->jsonResponse(['ok' => false, 'error' => 'empty_comment'], 400);
+		}
+		$comentario->comentario = $texto;
+		if (!$this->Ticketcomentarios->save($comentario)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		$u = $this->Users->findById($this->Auth->user('id'))->select(['name', 'role'])->first();
+		$roleU = $u ? (int)$u->role : (int)$this->Auth->user('role');
+		$out = [
+			'id' => (int)$comentario->id,
+			'idautor' => (int)$comentario->idautor,
+			'autor' => $u ? $u->name : '',
+			'papel' => $roleU === 0 ? 'tecnico' : 'cliente',
+			'texto' => $comentario->comentario,
+			'quando' => $comentario->created ? date('d/m/Y H:i', strtotime($comentario->created)) : '',
+		];
+		return $this->jsonResponse(['ok' => true, 'data' => $out]);
+	}
+
+	public function apiDelete($id = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+
+		if (empty($id)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'missing_id'], 400);
+		}
+		try {
+			$comentario = $this->Ticketcomentarios->get($id);
+		} catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if ((int)$comentario->idautor !== (int)$this->Auth->user('id') || (int)$comentario->idempresa !== (int)$this->Auth->user('idempresa')) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if (!$this->Ticketcomentarios->delete($comentario)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
+		}
+		return $this->jsonResponse(['ok' => true]);
 	}
 
 	public function delete($id = null) {

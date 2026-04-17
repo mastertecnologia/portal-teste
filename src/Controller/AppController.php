@@ -67,7 +67,7 @@ class AppController extends Controller {
 				'apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket',
 				'apiForTicket', 'getAvailableQueues', 'apiEnsureDefaults', 'apiSupportLevels', 'apiSave',
 				'adminIndex', 'adminEdit', 'adminTechnicians', 'adminDelete', 'adminEnsureDefaults',
-				'apiAdd',
+				'apiAdd', 'apiEdit', 'apiDelete',
 				'adminSyncRegistry', 'adminMatrix', 'adminMatrixSave', 'adminGrantSuperAll',
 				'adminUsers', 'adminUserRoles', 'adminUserEffective',
 				'adminPermissionPolicies', 'adminPermissionPolicyEdit', 'adminPermissionPolicyDelete',
