@@ -101,7 +101,7 @@ $graficoDespesa = array_column($grafico, 'despesa');
         <div class="fin-shortcut-grid">
             <a href="<?= $this->Url->build(['controller' => 'FinanceiroBancos', 'action' => 'index']) ?>" class="fin-shortcut-card">
                 <span class="fin-shortcut-ico"><i class="fas fa-university"></i></span>
-                <div class="fin-shortcut-title">Módulo Bancos</div>
+                <div class="fin-shortcut-title">Cadastrar Bancos</div>
                 <div class="fin-shortcut-desc">Acesse cadastro de bancos, remessas, retornos e relatórios bancários do financeiro.</div>
                 <div class="fin-shortcut-meta">Financeiro → Bancos</div>
             </a>

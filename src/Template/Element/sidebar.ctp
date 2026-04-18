@@ -48,6 +48,7 @@
 	$finRemessaAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['remessa', 'remessaMultiempresas'], true));
 	$finRetornoAct = ($ctrl === 'FinanceiroBancos' && $act === 'retorno');
 	$finRelBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['relatorios', 'relacaoBancos', 'relacaoRemessas', 'historicoRetorno', 'previsaoRecebimentosPorBanco', 'previsaoPorBancos'], true));
+	$finBancosOpen = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
 
 	// Fiscal
 	$fiscalCtrls = ['Fiscal', 'FiscalNotas', 'FiscalNotasEntrada', 'FiscalCertificados', 'FiscalConfig', 'FiscalRelatorios'];
@@ -420,26 +421,35 @@
 							['controller' => 'FinanceiroRelatorios', 'action' => 'index'],
 							['class' => 'pgm-nch ' . ($finRelAct ? 'act' : ''), 'escape' => false]
 						) ?></li>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Bancos</span>',
-							['controller' => 'FinanceiroBancos', 'action' => 'index'],
-							['class' => 'pgm-nch ' . ($finBancosAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Remessa bancária</span>',
-							['controller' => 'FinanceiroBancos', 'action' => 'remessa'],
-							['class' => 'pgm-nch ' . ($finRemessaAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Retornos bancários</span>',
-							['controller' => 'FinanceiroBancos', 'action' => 'retorno'],
-							['class' => 'pgm-nch ' . ($finRetornoAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
-						<li><?= $this->Html->link(
-							'<span class="pgm-ndot"></span><span>Relatórios bancários</span>',
-							['controller' => 'FinanceiroBancos', 'action' => 'relatorios'],
-							['class' => 'pgm-nch ' . ($finRelBancosAct ? 'act' : ''), 'escape' => false]
-						) ?></li>
+						<li class="pgm-ng <?= $finBancosOpen ? 'open' : '' ?>">
+							<div class="pgm-np <?= $finBancosOpen ? 'open-p' : '' ?>" role="button" tabindex="0" aria-expanded="<?= $finBancosOpen ? 'true' : 'false' ?>">
+								<i class="fas fa-university ni-ico-fa"></i>
+								<span class="hide-menu">Bancos</span>
+								<?= $chevronSvg ?>
+							</div>
+							<ul class="pgm-nc list-unstyled">
+								<li><?= $this->Html->link(
+									'<span class="pgm-ndot"></span><span>Cadastrar Bancos</span>',
+									['controller' => 'FinanceiroBancos', 'action' => 'index'],
+									['class' => 'pgm-nch ' . ($finBancosAct ? 'act' : ''), 'escape' => false]
+								) ?></li>
+								<li><?= $this->Html->link(
+									'<span class="pgm-ndot"></span><span>Remessa</span>',
+									['controller' => 'FinanceiroBancos', 'action' => 'remessa'],
+									['class' => 'pgm-nch ' . ($finRemessaAct ? 'act' : ''), 'escape' => false]
+								) ?></li>
+								<li><?= $this->Html->link(
+									'<span class="pgm-ndot"></span><span>Retorno</span>',
+									['controller' => 'FinanceiroBancos', 'action' => 'retorno'],
+									['class' => 'pgm-nch ' . ($finRetornoAct ? 'act' : ''), 'escape' => false]
+								) ?></li>
+								<li><?= $this->Html->link(
+									'<span class="pgm-ndot"></span><span>Relatórios</span>',
+									['controller' => 'FinanceiroBancos', 'action' => 'relatorios'],
+									['class' => 'pgm-nch ' . ($finRelBancosAct ? 'act' : ''), 'escape' => false]
+								) ?></li>
+							</ul>
+						</li>
 						<li><?= $this->Html->link(
 							'<span class="pgm-ndot"></span><span>Plano de contas</span>',
 							['controller' => 'FinanceiroConfig', 'action' => 'planoContas'],
