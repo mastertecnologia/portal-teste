@@ -1024,3 +1024,45 @@ body.layout-no-topbar.mini-sidebar
     > div:first-child {
     display: none;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * PGM Full-Width Global
+ * Substitui o visual de "folha sobreposta" por uma página que ocupa a tela
+ * toda: fundo cinza-claro #f2f1ee unificado + container-fluid sem max-width.
+ * Sidebar continua escura; o conteúdo à direita é sempre claro.
+ * --------------------------------------------------------------------------- */
+body.layout-no-topbar {
+    background-color: #f2f1ee !important;
+}
+html:has(body.layout-no-topbar) {
+    background-color: #f2f1ee;
+}
+body.layout-no-topbar #main-wrapper,
+body.layout-no-topbar .pgm-shell-main,
+body.layout-no-topbar .pgm-shell-main .page-wrapper {
+    background: #f2f1ee !important;
+}
+body.layout-no-topbar .page-wrapper > .container-fluid,
+body.layout-no-topbar .page-wrapper > .container,
+body.layout-no-topbar .pgm-shell-main .page-wrapper > .container-fluid,
+body.layout-no-topbar .pgm-shell-main .page-wrapper > .container,
+body.layout-no-topbar .page-wrapper .container-fluid,
+body.layout-no-topbar .page-wrapper .container {
+    max-width: none !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+body.layout-no-topbar .pgm-shell-main .footer {
+    background: #e8e6e1 !important;
+    color: #5f5e5a !important;
+    border-top: 1px solid #d5d4d0 !important;
+}
+body.layout-no-topbar .pgm-shell-main .footer a,
+body.layout-no-topbar .pgm-shell-main .footer a strong {
+    color: var(--pgm-erp-teal, #1d9e75) !important;
+}
