@@ -124,6 +124,9 @@ class FinanceiroBancosController extends AppController
         $codigo = trim((string) $this->request->getQuery("codigo"));
         $nome = trim((string) $this->request->getQuery("nome"));
         $ativo = (string) $this->request->getQuery("ativo", "");
+        $contaStatus = trim(
+            (string) $this->request->getQuery("conta_status", ""),
+        );
 
         $conditions = [
             "FinanceiroBancos.idempresa" => $idempresa,
@@ -157,11 +160,64 @@ class FinanceiroBancosController extends AppController
             ])
             ->toArray();
 
+        if ($contaStatus !== "") {
+            $bancos = array_values(
+                array_filter($bancos, function ($banco) use ($contaStatus) {
+                    $incompleta = $this->_bancoContaIncompleta($banco);
+
+                    if ($contaStatus === "completa") {
+                        return !$incompleta;
+                    }
+
+                    if ($contaStatus === "incompleta") {
+                        return $incompleta;
+                    }
+
+                    return true;
+                }),
+            );
+        }
+
+        $metricasCadastro = [
+            "bancos" => count($bancos),
+            "ativos" => 0,
+            "inativos" => 0,
+            "conta_completa" => 0,
+            "conta_incompleta" => 0,
+        ];
+
+        foreach ($bancos as $banco) {
+            if (!empty($banco->ativo)) {
+                $metricasCadastro["ativos"]++;
+            } else {
+                $metricasCadastro["inativos"]++;
+            }
+
+            if ($this->_bancoContaIncompleta($banco)) {
+                $metricasCadastro["conta_incompleta"]++;
+            } else {
+                $metricasCadastro["conta_completa"]++;
+            }
+        }
+
         $catalogo = FinanceiroBancosCatalogo::buscar(
             $codigo !== "" ? $codigo : $nome,
         );
 
-        $this->set(compact("bancos", "catalogo", "codigo", "nome", "ativo"));
+        $bancoSelecionado = !empty($bancos) ? $bancos[0] : null;
+
+        $this->set(
+            compact(
+                "bancos",
+                "catalogo",
+                "codigo",
+                "nome",
+                "ativo",
+                "contaStatus",
+                "metricasCadastro",
+                "bancoSelecionado",
+            ),
+        );
         $this->set("title", "Cadastro de Bancos");
         $this->set("hideLayoutPageTitle", true);
     }
@@ -172,7 +228,25 @@ class FinanceiroBancosController extends AppController
     public function add()
     {
         $idempresa = (int) $this->Auth->user("idempresa");
-        $banco = $this->FinanceiroBancos->newEntity();
+
+        $codigoPrefill = trim((string) $this->request->getQuery("codigo"));
+        $dadosIniciais = [];
+        if ($codigoPrefill !== "") {
+            $catalogoPrefill = FinanceiroBancosCatalogo::porCodigo(
+                $codigoPrefill,
+            );
+            if (!empty($catalogoPrefill)) {
+                $dadosIniciais = [
+                    "codigo_banco" => $catalogoPrefill["codigo"] ?? "",
+                    "numero_banco" => $catalogoPrefill["codigo"] ?? "",
+                    "cnab" => $catalogoPrefill["cnab"] ?? "",
+                    "nome" => $catalogoPrefill["nome"] ?? "",
+                    "ativo" => true,
+                ];
+            }
+        }
+
+        $banco = $this->FinanceiroBancos->newEntity($dadosIniciais);
 
         if ($this->request->is("post")) {
             $data = $this->_normalizarDadosBanco(
@@ -213,7 +287,7 @@ class FinanceiroBancosController extends AppController
         }
 
         $catalogo = FinanceiroBancosCatalogo::todos();
-        $this->set(compact("banco", "catalogo"));
+        $this->set(compact("banco", "catalogo", "codigoPrefill"));
         $this->set("title", "Novo Banco");
         $this->set("hideLayoutPageTitle", true);
     }
@@ -706,6 +780,10 @@ class FinanceiroBancosController extends AppController
         $idempresa = (int) $this->Auth->user("idempresa");
         $resumo = [];
 
+        $codigo = trim((string) $this->request->getQuery("codigo"));
+        $nome = trim((string) $this->request->getQuery("nome"));
+        $situacao = trim((string) $this->request->getQuery("situacao", ""));
+
         $bancos = $this->FinanceiroBancos
             ->find()
             ->where([
@@ -782,7 +860,112 @@ class FinanceiroBancosController extends AppController
             ];
         }
 
-        $this->set(compact("resumo"));
+        if ($codigo !== "") {
+            $resumo = array_values(
+                array_filter($resumo, function ($item) use ($codigo) {
+                    $banco = $item["banco"] ?? null;
+                    if (empty($banco)) {
+                        return false;
+                    }
+
+                    return trim((string) ($banco->codigo_banco ?? "")) ===
+                        $codigo ||
+                        trim((string) ($banco->numero_banco ?? "")) ===
+                            $codigo ||
+                        trim((string) ($banco->cnab ?? "")) === $codigo;
+                }),
+            );
+        }
+
+        if ($nome !== "") {
+            $nomeLower = mb_strtolower($nome);
+            $resumo = array_values(
+                array_filter($resumo, function ($item) use ($nomeLower) {
+                    $banco = $item["banco"] ?? null;
+                    $nomeBanco = mb_strtolower(
+                        trim((string) ($banco->nome ?? "")),
+                    );
+
+                    return $nomeBanco !== "" &&
+                        mb_strpos($nomeBanco, $nomeLower) !== false;
+                }),
+            );
+        }
+
+        if ($situacao !== "") {
+            $resumo = array_values(
+                array_filter($resumo, function ($item) use ($situacao) {
+                    $quantidade = (int) ($item["quantidade"] ?? 0);
+                    $contaIncompleta = !empty($item["conta_incompleta"]);
+
+                    if ($situacao === "com_remessa") {
+                        return $quantidade > 0;
+                    }
+
+                    if ($situacao === "sem_remessa") {
+                        return $quantidade <= 0;
+                    }
+
+                    if ($situacao === "conta_incompleta") {
+                        return $contaIncompleta;
+                    }
+
+                    return true;
+                }),
+            );
+        }
+
+        $metricasRemessas = [
+            "bancos" => count($resumo),
+            "com_remessa" => 0,
+            "sem_remessa" => 0,
+            "conta_incompleta" => 0,
+            "qtd_titulos" => 0,
+            "valor_total" => 0.0,
+        ];
+
+        foreach ($resumo as $item) {
+            $quantidade = (int) ($item["quantidade"] ?? 0);
+            $total = (float) ($item["total"] ?? 0);
+
+            if ($quantidade > 0) {
+                $metricasRemessas["com_remessa"]++;
+            } else {
+                $metricasRemessas["sem_remessa"]++;
+            }
+
+            if (!empty($item["conta_incompleta"])) {
+                $metricasRemessas["conta_incompleta"]++;
+            }
+
+            $metricasRemessas["qtd_titulos"] += $quantidade;
+            $metricasRemessas["valor_total"] += $total;
+        }
+
+        usort($resumo, function ($a, $b) {
+            $aQtd = (int) ($a["quantidade"] ?? 0);
+            $bQtd = (int) ($b["quantidade"] ?? 0);
+
+            if ($aQtd !== $bQtd) {
+                return $bQtd <=> $aQtd;
+            }
+
+            $aTotal = (float) ($a["total"] ?? 0);
+            $bTotal = (float) ($b["total"] ?? 0);
+
+            if ($aTotal !== $bTotal) {
+                return $bTotal <=> $aTotal;
+            }
+
+            $aNome = (string) ($a["banco"]->nome ?? "");
+            $bNome = (string) ($b["banco"]->nome ?? "");
+
+            return strcmp($aNome, $bNome);
+        });
+
+        $this->set(
+            compact("resumo", "codigo", "nome", "situacao", "metricasRemessas"),
+        );
         $this->set("title", "Relação de Remessas Bancárias");
         $this->set("hideLayoutPageTitle", true);
     }
@@ -805,6 +988,16 @@ class FinanceiroBancosController extends AppController
 
         $historico = [];
         $resumoRetorno = $this->_resumoRetornosPorBanco($idempresa, $bancos);
+        $metricasHistorico = [
+            "bancos" => count($bancos),
+            "com_extrato" => 0,
+            "sem_extrato" => 0,
+            "com_pendencia" => 0,
+            "conciliados" => 0,
+            "pendentes" => 0,
+            "total_eventos" => 0,
+            "ultimo_evento_geral" => null,
+        ];
 
         foreach ($bancos as $banco) {
             $resumoBanco = $resumoRetorno[(int) $banco->id] ?? [
@@ -814,39 +1007,75 @@ class FinanceiroBancosController extends AppController
                 "ultimo_evento" => null,
             ];
 
+            $quantidade = (int) ($resumoBanco["quantidade"] ?? 0);
+            $conciliados = (int) ($resumoBanco["conciliados"] ?? 0);
+            $pendentes = (int) ($resumoBanco["pendentes"] ?? 0);
+            $ultimoEvento = $resumoBanco["ultimo_evento"] ?? null;
+            $contaIncompleta = $this->_bancoContaIncompleta($banco);
+
             $status = "Em implantação";
-            if ((int) $resumoBanco["quantidade"] > 0) {
-                $status =
-                    (int) $resumoBanco["pendentes"] > 0
-                        ? "Pendente"
-                        : "Sucesso";
+            if ($quantidade > 0) {
+                $status = $pendentes > 0 ? "Pendente" : "Sucesso";
+            } elseif ($contaIncompleta) {
+                $status = "Conta incompleta";
             }
 
             $descricao =
-                (int) $resumoBanco["quantidade"] > 0
+                $quantidade > 0
                     ? sprintf(
                         "%d lançamento(s) de extrato vinculados a esta conta bancária, sendo %d conciliado(s) e %d pendente(s).",
-                        (int) $resumoBanco["quantidade"],
-                        (int) $resumoBanco["conciliados"],
-                        (int) $resumoBanco["pendentes"],
+                        $quantidade,
+                        $conciliados,
+                        $pendentes,
                     )
                     : "Nenhum extrato importado ainda para esta conta bancária.";
 
-            if (!empty($resumoBanco["ultimo_evento"])) {
+            if ($contaIncompleta) {
+                $descricao .=
+                    " Cadastro bancário incompleto para conciliação automática.";
+            }
+
+            if (!empty($ultimoEvento)) {
                 $descricao .=
                     " Último movimento em " .
-                    $resumoBanco["ultimo_evento"]->format("d/m/Y") .
+                    $ultimoEvento->format("d/m/Y") .
                     ".";
+
+                if (
+                    $metricasHistorico["ultimo_evento_geral"] === null ||
+                    $ultimoEvento > $metricasHistorico["ultimo_evento_geral"]
+                ) {
+                    $metricasHistorico["ultimo_evento_geral"] = $ultimoEvento;
+                }
             }
+
+            if ($quantidade > 0) {
+                $metricasHistorico["com_extrato"]++;
+            } else {
+                $metricasHistorico["sem_extrato"]++;
+            }
+
+            if ($pendentes > 0) {
+                $metricasHistorico["com_pendencia"]++;
+            }
+
+            $metricasHistorico["conciliados"] += $conciliados;
+            $metricasHistorico["pendentes"] += $pendentes;
+            $metricasHistorico["total_eventos"] += $quantidade;
 
             $historico[] = [
                 "banco" => $banco,
                 "status" => $status,
                 "descricao" => $descricao,
+                "quantidade" => $quantidade,
+                "conciliados" => $conciliados,
+                "pendentes" => $pendentes,
+                "ultimo_evento" => $ultimoEvento,
+                "conta_incompleta" => $contaIncompleta,
             ];
         }
 
-        $this->set(compact("historico"));
+        $this->set(compact("historico", "metricasHistorico"));
         $this->set("title", "Histórico de Retorno Bancário");
         $this->set("hideLayoutPageTitle", true);
     }
@@ -858,6 +1087,10 @@ class FinanceiroBancosController extends AppController
     {
         $idempresa = (int) $this->Auth->user("idempresa");
         $previsao = [];
+
+        $codigo = trim((string) $this->request->getQuery("codigo"));
+        $nome = trim((string) $this->request->getQuery("nome"));
+        $situacao = trim((string) $this->request->getQuery("situacao", ""));
 
         $bancos = $this->FinanceiroBancos
             ->find()
@@ -924,7 +1157,185 @@ class FinanceiroBancosController extends AppController
             ];
         }
 
-        $this->set(compact("previsao"));
+        if ($codigo !== "") {
+            $previsao = array_values(
+                array_filter($previsao, function ($item) use ($codigo) {
+                    $banco = $item["banco"] ?? null;
+                    if (empty($banco)) {
+                        return false;
+                    }
+
+                    return trim((string) ($banco->codigo_banco ?? "")) ===
+                        $codigo ||
+                        trim((string) ($banco->numero_banco ?? "")) ===
+                            $codigo ||
+                        trim((string) ($banco->cnab ?? "")) === $codigo;
+                }),
+            );
+        }
+
+        if ($nome !== "") {
+            $nomeLower = mb_strtolower($nome);
+            $previsao = array_values(
+                array_filter($previsao, function ($item) use ($nomeLower) {
+                    $banco = $item["banco"] ?? null;
+                    $nomeBanco = mb_strtolower(
+                        trim((string) ($banco->nome ?? "")),
+                    );
+
+                    return $nomeBanco !== "" &&
+                        mb_strpos($nomeBanco, $nomeLower) !== false;
+                }),
+            );
+        }
+
+        if ($situacao !== "") {
+            $previsao = array_values(
+                array_filter($previsao, function ($item) use ($situacao) {
+                    $qtd = (int) ($item["qtd"] ?? 0);
+                    $contaIncompleta = !empty($item["conta_incompleta"]);
+                    $dias = $item["dias_para_proximo_vencimento"] ?? null;
+
+                    if ($situacao === "com_previsao") {
+                        return $qtd > 0;
+                    }
+
+                    if ($situacao === "sem_previsao") {
+                        return $qtd <= 0;
+                    }
+
+                    if ($situacao === "conta_incompleta") {
+                        return $contaIncompleta;
+                    }
+
+                    if ($situacao === "vence_hoje") {
+                        return $qtd > 0 && $dias !== null && (int) $dias === 0;
+                    }
+
+                    if ($situacao === "vence_semana") {
+                        return $qtd > 0 &&
+                            $dias !== null &&
+                            (int) $dias >= 0 &&
+                            (int) $dias <= 7;
+                    }
+
+                    if ($situacao === "vencido") {
+                        return $qtd > 0 && $dias !== null && (int) $dias < 0;
+                    }
+
+                    return true;
+                }),
+            );
+        }
+
+        $metricasPrevisao = [
+            "bancos" => count($previsao),
+            "com_previsao" => 0,
+            "sem_previsao" => 0,
+            "conta_incompleta" => 0,
+            "qtd_titulos" => 0,
+            "valor_total" => 0.0,
+            "vence_hoje" => 0,
+            "vence_semana" => 0,
+            "vencidos" => 0,
+        ];
+
+        foreach ($previsao as $item) {
+            $qtd = (int) ($item["qtd"] ?? 0);
+            $total = (float) ($item["total"] ?? 0);
+            $dias = $item["dias_para_proximo_vencimento"] ?? null;
+
+            if ($qtd > 0) {
+                $metricasPrevisao["com_previsao"]++;
+            } else {
+                $metricasPrevisao["sem_previsao"]++;
+            }
+
+            if (!empty($item["conta_incompleta"])) {
+                $metricasPrevisao["conta_incompleta"]++;
+            }
+
+            if ($qtd > 0 && $dias !== null && (int) $dias === 0) {
+                $metricasPrevisao["vence_hoje"]++;
+            }
+
+            if (
+                $qtd > 0 &&
+                $dias !== null &&
+                (int) $dias >= 0 &&
+                (int) $dias <= 7
+            ) {
+                $metricasPrevisao["vence_semana"]++;
+            }
+
+            if ($qtd > 0 && $dias !== null && (int) $dias < 0) {
+                $metricasPrevisao["vencidos"]++;
+            }
+
+            $metricasPrevisao["qtd_titulos"] += $qtd;
+            $metricasPrevisao["valor_total"] += $total;
+        }
+
+        usort($previsao, function ($a, $b) {
+            $aQtd = (int) ($a["qtd"] ?? 0);
+            $bQtd = (int) ($b["qtd"] ?? 0);
+
+            $aDias = $a["dias_para_proximo_vencimento"];
+            $bDias = $b["dias_para_proximo_vencimento"];
+
+            $aPrioridade = 4;
+            $bPrioridade = 4;
+
+            if ($aQtd > 0) {
+                if ($aDias !== null && (int) $aDias < 0) {
+                    $aPrioridade = 1;
+                } elseif ($aDias !== null && (int) $aDias <= 7) {
+                    $aPrioridade = 2;
+                } else {
+                    $aPrioridade = 3;
+                }
+            }
+
+            if ($bQtd > 0) {
+                if ($bDias !== null && (int) $bDias < 0) {
+                    $bPrioridade = 1;
+                } elseif ($bDias !== null && (int) $bDias <= 7) {
+                    $bPrioridade = 2;
+                } else {
+                    $bPrioridade = 3;
+                }
+            }
+
+            if ($aPrioridade !== $bPrioridade) {
+                return $aPrioridade <=> $bPrioridade;
+            }
+
+            if ($aQtd !== $bQtd) {
+                return $bQtd <=> $aQtd;
+            }
+
+            $aTotal = (float) ($a["total"] ?? 0);
+            $bTotal = (float) ($b["total"] ?? 0);
+
+            if ($aTotal !== $bTotal) {
+                return $bTotal <=> $aTotal;
+            }
+
+            $aNome = (string) ($a["banco"]->nome ?? "");
+            $bNome = (string) ($b["banco"]->nome ?? "");
+
+            return strcmp($aNome, $bNome);
+        });
+
+        $this->set(
+            compact(
+                "previsao",
+                "codigo",
+                "nome",
+                "situacao",
+                "metricasPrevisao",
+            ),
+        );
         $this->set("title", "Previsão de Recebimentos por Banco");
         $this->set("hideLayoutPageTitle", true);
     }
@@ -935,6 +1346,10 @@ class FinanceiroBancosController extends AppController
     public function previsaoPorBancos()
     {
         $idempresa = (int) $this->Auth->user("idempresa");
+        $codigo = trim((string) $this->request->getQuery("codigo"));
+        $nome = trim((string) $this->request->getQuery("nome"));
+        $situacao = trim((string) $this->request->getQuery("situacao", ""));
+
         $bancos = $this->FinanceiroBancos
             ->find()
             ->where(["FinanceiroBancos.idempresa" => $idempresa])
@@ -943,7 +1358,160 @@ class FinanceiroBancosController extends AppController
 
         $resumo = $this->_resumoMovimentosPorBanco($idempresa, $bancos);
 
-        $this->set(compact("resumo"));
+        if ($codigo !== "") {
+            $resumo = array_values(
+                array_filter($resumo, function ($item) use ($codigo) {
+                    $banco = $item["banco"] ?? null;
+                    if (empty($banco)) {
+                        return false;
+                    }
+
+                    return trim((string) ($banco->codigo_banco ?? "")) ===
+                        $codigo ||
+                        trim((string) ($banco->numero_banco ?? "")) ===
+                            $codigo ||
+                        trim((string) ($banco->cnab ?? "")) === $codigo;
+                }),
+            );
+        }
+
+        if ($nome !== "") {
+            $nomeLower = mb_strtolower($nome);
+            $resumo = array_values(
+                array_filter($resumo, function ($item) use ($nomeLower) {
+                    $banco = $item["banco"] ?? null;
+                    $nomeBanco = mb_strtolower(
+                        trim((string) ($banco->nome ?? "")),
+                    );
+
+                    return $nomeBanco !== "" &&
+                        mb_strpos($nomeBanco, $nomeLower) !== false;
+                }),
+            );
+        }
+
+        if ($situacao !== "") {
+            $resumo = array_values(
+                array_filter($resumo, function ($item) use ($situacao) {
+                    $receber = (float) ($item["receber"] ?? 0);
+                    $recebido = (float) ($item["recebido"] ?? 0);
+                    $pagar = (float) ($item["pagar"] ?? 0);
+                    $pago = (float) ($item["pago"] ?? 0);
+                    $saldo = $receber + $recebido - ($pagar + $pago);
+                    $contaIncompleta = !empty($item["conta_incompleta"]);
+
+                    if ($situacao === "saldo_positivo") {
+                        return $saldo >= 0;
+                    }
+
+                    if ($situacao === "saldo_negativo") {
+                        return $saldo < 0;
+                    }
+
+                    if ($situacao === "conta_incompleta") {
+                        return $contaIncompleta;
+                    }
+
+                    if ($situacao === "com_movimento") {
+                        return $receber > 0 ||
+                            $recebido > 0 ||
+                            $pagar > 0 ||
+                            $pago > 0;
+                    }
+
+                    if ($situacao === "sem_movimento") {
+                        return $receber <= 0 &&
+                            $recebido <= 0 &&
+                            $pagar <= 0 &&
+                            $pago <= 0;
+                    }
+
+                    return true;
+                }),
+            );
+        }
+
+        $metricasResumo = [
+            "bancos" => count($resumo),
+            "saldo_positivo" => 0,
+            "saldo_negativo" => 0,
+            "conta_incompleta" => 0,
+            "com_movimento" => 0,
+            "sem_movimento" => 0,
+            "total_receber" => 0.0,
+            "total_recebido" => 0.0,
+            "total_pagar" => 0.0,
+            "total_pago" => 0.0,
+            "saldo_total" => 0.0,
+        ];
+
+        foreach ($resumo as $item) {
+            $receber = (float) ($item["receber"] ?? 0);
+            $recebido = (float) ($item["recebido"] ?? 0);
+            $pagar = (float) ($item["pagar"] ?? 0);
+            $pago = (float) ($item["pago"] ?? 0);
+            $saldo = $receber + $recebido - ($pagar + $pago);
+
+            if ($saldo >= 0) {
+                $metricasResumo["saldo_positivo"]++;
+            } else {
+                $metricasResumo["saldo_negativo"]++;
+            }
+
+            if (!empty($item["conta_incompleta"])) {
+                $metricasResumo["conta_incompleta"]++;
+            }
+
+            if ($receber > 0 || $recebido > 0 || $pagar > 0 || $pago > 0) {
+                $metricasResumo["com_movimento"]++;
+            } else {
+                $metricasResumo["sem_movimento"]++;
+            }
+
+            $metricasResumo["total_receber"] += $receber;
+            $metricasResumo["total_recebido"] += $recebido;
+            $metricasResumo["total_pagar"] += $pagar;
+            $metricasResumo["total_pago"] += $pago;
+            $metricasResumo["saldo_total"] += $saldo;
+        }
+
+        usort($resumo, function ($a, $b) {
+            $aReceber = (float) ($a["receber"] ?? 0);
+            $aRecebido = (float) ($a["recebido"] ?? 0);
+            $aPagar = (float) ($a["pagar"] ?? 0);
+            $aPago = (float) ($a["pago"] ?? 0);
+            $aSaldo = $aReceber + $aRecebido - ($aPagar + $aPago);
+
+            $bReceber = (float) ($b["receber"] ?? 0);
+            $bRecebido = (float) ($b["recebido"] ?? 0);
+            $bPagar = (float) ($b["pagar"] ?? 0);
+            $bPago = (float) ($b["pago"] ?? 0);
+            $bSaldo = $bReceber + $bRecebido - ($bPagar + $bPago);
+
+            $aMovimento = $aReceber + $aRecebido + $aPagar + $aPago;
+            $bMovimento = $bReceber + $bRecebido + $bPagar + $bPago;
+
+            if ($aSaldo < 0 !== $bSaldo < 0) {
+                return $aSaldo < 0 ? -1 : 1;
+            }
+
+            if ($aMovimento !== $bMovimento) {
+                return $bMovimento <=> $aMovimento;
+            }
+
+            if ($aSaldo !== $bSaldo) {
+                return $aSaldo <=> $bSaldo;
+            }
+
+            $aNome = (string) ($a["banco"]->nome ?? "");
+            $bNome = (string) ($b["banco"]->nome ?? "");
+
+            return strcmp($aNome, $bNome);
+        });
+
+        $this->set(
+            compact("resumo", "codigo", "nome", "situacao", "metricasResumo"),
+        );
         $this->set("title", "Previsão por Bancos");
         $this->set("hideLayoutPageTitle", true);
     }

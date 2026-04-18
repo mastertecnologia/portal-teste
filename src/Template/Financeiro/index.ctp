@@ -33,6 +33,14 @@ $graficoDespesa = array_column($grafico, 'despesa');
 .fin-nav a { padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:500; color:#7d8590; text-decoration:none; transition:all .15s; }
 .fin-nav a:hover { color:#e6edf3; background:rgba(255,255,255,.06); }
 .fin-nav a.active { background:rgba(29,158,117,.14); color:#5cdbc0; }
+.fin-shortcuts { padding:16px 24px 0; }
+.fin-shortcut-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+.fin-shortcut-card { display:block; background:#161b22; border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:18px 20px; text-decoration:none !important; color:inherit; transition:all .18s ease; }
+.fin-shortcut-card:hover { border-color:rgba(92,219,192,.35); transform:translateY(-1px); }
+.fin-shortcut-ico { display:inline-flex; width:42px; height:42px; align-items:center; justify-content:center; border-radius:10px; background:rgba(29,158,117,.12); color:#5cdbc0; font-size:18px; margin-bottom:12px; }
+.fin-shortcut-title { font-size:15px; font-weight:700; color:#e6edf3; margin-bottom:6px; }
+.fin-shortcut-desc { color:#8b949e; font-size:12.5px; line-height:1.55; }
+.fin-shortcut-meta { margin-top:10px; color:#5cdbc0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
 /* Tabela vencimentos */
 .fin-tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
 .fin-tbl th { color:#7d8590; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:600; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; }
@@ -86,6 +94,17 @@ $graficoDespesa = array_column($grafico, 'despesa');
         <div class="fin-kpi">
             <div class="fin-kpi-label">Pago (mês)</div>
             <div class="fin-kpi-val">R$ <?= number_format($kpi['pago_mes'], 2, ',', '.') ?></div>
+        </div>
+    </div>
+
+    <div class="fin-shortcuts">
+        <div class="fin-shortcut-grid">
+            <a href="<?= $this->Url->build(['controller' => 'FinanceiroBancos', 'action' => 'index']) ?>" class="fin-shortcut-card">
+                <span class="fin-shortcut-ico"><i class="fas fa-university"></i></span>
+                <div class="fin-shortcut-title">Módulo Bancos</div>
+                <div class="fin-shortcut-desc">Acesse cadastro de bancos, remessas, retornos e relatórios bancários do financeiro.</div>
+                <div class="fin-shortcut-meta">Financeiro → Bancos</div>
+            </a>
         </div>
     </div>
 
