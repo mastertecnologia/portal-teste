@@ -17,22 +17,27 @@ const BADGE_LIGHT = {
   cancelled:   'bg-[#dc330f] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
 };
 
-const SD_BASE = 'tracking-[0.04em] backdrop-blur-[2px] transition-all duration-[120ms] hover:brightness-110 shadow-[0_1px_3px_rgba(0,0,0,0.25)]';
+const SD_BASE = 'tracking-[0.04em] backdrop-blur-[4px] transition-all duration-[120ms] hover:brightness-110';
 
+/**
+ * Service Desk — Frosted Glass + Dots por cor de status.
+ * Bg translúcido tintado do status + texto/dot na cor cheia do status
+ * → cada status leva um dot de cor distinta (bg-current no <StatusDot />).
+ */
 const BADGE_SERVICEDESK = {
-  success:     `${SD_BASE} bg-[#27AE60] text-white`,
-  warning:     `${SD_BASE} bg-[#F39C12] text-white`,
-  critical:    `${SD_BASE} bg-[#dc330f] text-white`,
-  high:        `${SD_BASE} bg-[#F39C12] text-white`,
-  medium:      `${SD_BASE} bg-[#F39C12] text-white`,
+  success:     `${SD_BASE} bg-[rgba(39,174,96,0.16)] text-[#3ddc7f] shadow-[inset_0_0_0_1px_rgba(39,174,96,0.40)]`,
+  warning:     `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
+  critical:    `${SD_BASE} bg-[rgba(220,51,15,0.18)] text-[#ff6b4a] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.45)]`,
+  high:        `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
+  medium:      `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
   low:         `${SD_BASE} bg-[var(--pgm-badge-muted-bg)] text-[var(--pgm-badge-muted-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-muted-ring)]`,
-  progress:    `${SD_BASE} bg-[#2DAAE1] text-white`,
-  waiting:     `${SD_BASE} bg-[#2DAAE1] text-white`,
-  pendingTech: `${SD_BASE} bg-[#F39C12] text-white`,
-  resolved:    `${SD_BASE} bg-[#27AE60] text-white`,
-  escalated:   `${SD_BASE} bg-[#dc330f] text-white`,
-  closed:      `${SD_BASE} bg-[#8a5ac2] text-white`,
-  cancelled:   `${SD_BASE} bg-[#dc330f] text-white`,
+  progress:    `${SD_BASE} bg-[rgba(45,170,225,0.16)] text-[#5ec4ea] shadow-[inset_0_0_0_1px_rgba(45,170,225,0.40)]`,
+  waiting:     `${SD_BASE} bg-[rgba(45,170,225,0.16)] text-[#5ec4ea] shadow-[inset_0_0_0_1px_rgba(45,170,225,0.40)]`,
+  pendingTech: `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
+  resolved:    `${SD_BASE} bg-[rgba(39,174,96,0.16)] text-[#3ddc7f] shadow-[inset_0_0_0_1px_rgba(39,174,96,0.40)]`,
+  escalated:   `${SD_BASE} bg-[rgba(220,51,15,0.18)] text-[#ff6b4a] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.45)]`,
+  closed:      `${SD_BASE} bg-[rgba(138,90,194,0.16)] text-[#b085e3] shadow-[inset_0_0_0_1px_rgba(138,90,194,0.40)]`,
+  cancelled:   `${SD_BASE} bg-[rgba(220,51,15,0.18)] text-[#ff6b4a] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.45)]`,
 };
 
 /** Badges no embed portal cliente — preenchimento sólido + texto branco. */
