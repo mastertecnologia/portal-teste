@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 .dash-pgm {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #1c2230;
-  --border: #21262d;
-  --border2: #30363d;
-  --text: #e6edf3;
-  --text-muted: #7d8590;
-  --text-dim: #484f58;
-  --blue: #33CCFF;
-  --green: #00C08B;
-  --orange: #FF8833;
-  --red: #f85149;
-  --purple: #A682E6;
+  --bg: #f2f1ee;
+  --surface: #ffffff;
+  --surface2: #f9f9f8;
+  --border: #e5e4e0;
+  --border2: #d5d4d0;
+  --text: #1a1a18;
+  --text-muted: #6b6a65;
+  --text-dim: #9a9890;
+  --blue: #378add;
+  --green: #1d9e75;
+  --orange: #e9a025;
+  --red: #e24b4a;
+  --purple: #7a5eb8;
 
   font-family: 'IBM Plex Sans', sans-serif;
   color: var(--text);
@@ -72,7 +72,7 @@
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, .55);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   z-index: 1000;
   display: none;
   overflow: hidden;
@@ -122,7 +122,7 @@ a.dash-pgm-notif-item-link:hover {
   width: 30px; height: 30px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
 }
-.dash-pgm-notif-icon.purple { background: #2d1f4e; color: var(--purple); }
+.dash-pgm-notif-icon.purple { background: rgba(122, 94, 184, 0.15); color: var(--purple); }
 .dash-pgm-notif-body strong { font-size: 12px; font-weight: 500; display: block; }
 .dash-pgm-notif-body p { font-size: 11px; color: var(--text-muted); margin: 1px 0 0; }
 .dash-pgm-notif-time { font-size: 10px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
@@ -179,10 +179,10 @@ a.dash-pgm-notif-item-link:hover {
   align-items: center;
   justify-content: center;
 }
-.dash-pgm-stat-icon.blue { background: #1f3a5f; color: var(--blue); }
-.dash-pgm-stat-icon.green { background: #1a3a25; color: var(--green); }
-.dash-pgm-stat-icon.orange { background: #3d2e0a; color: var(--orange); }
-.dash-pgm-stat-icon.purple { background: #2d1f4e; color: var(--purple); }
+.dash-pgm-stat-icon.blue { background: rgba(55, 138, 221, 0.12); color: var(--blue); }
+.dash-pgm-stat-icon.green { background: rgba(29, 158, 117, 0.12); color: var(--green); }
+.dash-pgm-stat-icon.orange { background: rgba(233, 160, 37, 0.15); color: var(--orange); }
+.dash-pgm-stat-icon.purple { background: rgba(122, 94, 184, 0.15); color: var(--purple); }
 .dash-pgm-stat-label { font-size: 10.5px; color: var(--text-muted); }
 .dash-pgm-stat-value {
   font-family: 'IBM Plex Mono', monospace;
@@ -294,7 +294,7 @@ a.dash-pgm-notif-item-link:hover {
 .dash-pgm-clients-scroll,
 .dash-pgm-content {
   scrollbar-width: thin;
-  scrollbar-color: #30363d #161b22;
+  scrollbar-color: #c4c3c0 #ffffff;
 }
 .dash-pgm-table-scroll::-webkit-scrollbar,
 .dash-pgm-ranking-scroll::-webkit-scrollbar,
@@ -307,21 +307,21 @@ a.dash-pgm-notif-item-link:hover {
 .dash-pgm-ranking-scroll::-webkit-scrollbar-track,
 .dash-pgm-clients-scroll::-webkit-scrollbar-track,
 .dash-pgm-content::-webkit-scrollbar-track {
-  background: #161b22;
+  background: #ffffff;
 }
 .dash-pgm-table-scroll::-webkit-scrollbar-thumb,
 .dash-pgm-ranking-scroll::-webkit-scrollbar-thumb,
 .dash-pgm-clients-scroll::-webkit-scrollbar-thumb,
 .dash-pgm-content::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: #c4c3c0;
   border-radius: 10px;
-  border: 2px solid #161b22;
+  border: 2px solid #ffffff;
 }
 .dash-pgm-table-scroll::-webkit-scrollbar-thumb:hover,
 .dash-pgm-ranking-scroll::-webkit-scrollbar-thumb:hover,
 .dash-pgm-clients-scroll::-webkit-scrollbar-thumb:hover,
 .dash-pgm-content::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: #9a9890;
 }
 .dash-pgm-table { width: 100%; border-collapse: collapse; }
 .dash-pgm-table thead th {
@@ -378,10 +378,10 @@ a.dash-pgm-ticket-id-link:hover {
   padding: 2px 5px;
   border-radius: 4px;
 }
-.sla-ok { background: #1a3a25; color: var(--green); }
-.sla-warn { background: #3d2e0a; color: var(--orange); }
-.sla-overdue { background: #3d1515; color: var(--red); }
-.sla-pending { background: #2d1f4e; color: #bc8cff; }
+.sla-ok { background: #e1f5ee; color: #085041; }
+.sla-warn { background: #faeeda; color: #633806; }
+.sla-overdue { background: #fcebeb; color: #791f1f; }
+.sla-pending { background: #f0eafc; color: #5a3b99; }
 .dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
 .dot.green { background: var(--green); }
 .dot.orange { background: var(--orange); }
@@ -390,7 +390,7 @@ a.dash-pgm-ticket-id-link:hover {
   display: inline-flex;
   flex-shrink: 0;
   font-size: 9px;
-  background: #1f3a5f;
+  background: rgba(55, 138, 221, 0.12);
   color: var(--blue);
   border-radius: 3px;
   padding: 1px 4px;
@@ -421,14 +421,14 @@ a.dash-pgm-liberar {
   font-size: 11px;
   font-weight: 600;
   border-radius: 6px;
-  background: rgba(63, 185, 80, 0.15);
+  background: rgba(29, 158, 117, 0.12);
   color: var(--green);
-  border: 1px solid rgba(63, 185, 80, 0.35);
+  border: 1px solid rgba(29, 158, 117, 0.35);
   text-decoration: none;
 }
 a.dash-pgm-liberar:hover {
-  background: rgba(63, 185, 80, 0.28);
-  color: #56d364;
+  background: rgba(29, 158, 117, 0.22);
+  color: #0f6e56;
   text-decoration: none;
 }
 .dash-pgm-no-action {
@@ -479,7 +479,7 @@ a.dash-pgm-liberar:hover {
 .dash-pgm-mod:hover {
   background: var(--surface2);
   border-color: rgba(29,158,117,0.35);
-  color: #5cdbc0 !important;
+  color: #0f6e56 !important;
   transform: translateY(-1px);
   text-decoration: none !important;
 }
@@ -487,7 +487,7 @@ a.dash-pgm-liberar:hover {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -497,20 +497,20 @@ a.dash-pgm-liberar:hover {
 }
 .dash-pgm-mod:hover .dash-pgm-mod-icon {
   background: rgba(29,158,117,0.12);
-  color: #5cdbc0;
+  color: #0f6e56;
 }
 .dash-pgm-mod.mod-active {
   border-color: rgba(29,158,117,0.40);
-  color: #5cdbc0 !important;
+  color: #0f6e56 !important;
 }
 .dash-pgm-mod.mod-active .dash-pgm-mod-icon {
   background: rgba(29,158,117,0.14);
-  color: #5cdbc0;
+  color: #0f6e56;
 }
 
 /* ── Badge/label verde teal nos módulos ─────────────────────────── */
 .dash-pgm .badge.teal {
   background: rgba(29,158,117,0.15);
-  color: #5cdbc0;
+  color: #0f6e56;
 }
 
