@@ -98,10 +98,17 @@ function ensureCoreActions(ticket) {
     label.includes('resolvido') || label.includes('fechado') || label.includes('cancelado');
   if (closed) return list;
   const has = (k) => list.some((a) => String(a.key || '').toLowerCase() === k);
+  const inProgress =
+    label.includes('em execucao') ||
+    label.includes('em execução') ||
+    label.includes('em andamento');
+  // Iniciar só aparece em tickets pendentes (aguardando técnico / sem responsável);
+  // se já está em execução, o atendimento foi assumido e a ação não faz sentido.
   const isPendente =
-    label.includes('aguardando tecnico') ||
-    label.includes('aguardando técnico') ||
-    !ticket.idtecnico_responsavel;
+    !inProgress &&
+    (label.includes('aguardando tecnico') ||
+      label.includes('aguardando técnico') ||
+      !ticket.idtecnico_responsavel);
   if (isPendente && !has('iniciar')) {
     list.push({
       key: 'iniciar',
@@ -719,7 +726,9 @@ export default function TechDashboard({ boot }) {
       const r = await postStartTicket(id);
       if (!r.ok) {
         const code = r.error;
-        window.alert(API_ERR_START[code] || code || 'Não foi possível iniciar o atendimento.');
+        const friendly = API_ERR_START[code];
+        const detail = r.message ? ` (${r.message})` : '';
+        window.alert((friendly || code || 'Não foi possível iniciar o atendimento.') + detail);
         return;
       }
       setTransferOkHint('Atendimento iniciado.');

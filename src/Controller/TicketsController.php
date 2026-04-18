@@ -4215,6 +4215,15 @@ class TicketsController extends AppController {
 	}
 
 	protected function _apiStartTicketResponse(int $idticket) {
+		try {
+			return $this->_apiStartTicketResponseInternal($idticket);
+		} catch (\Throwable $e) {
+			$this->log('apiStartTicket exception: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(), 'error');
+			return $this->jsonResponse(['ok' => false, 'error' => 'exception', 'message' => $e->getMessage()], 500);
+		}
+	}
+
+	protected function _apiStartTicketResponseInternal(int $idticket) {
 		$qTm = $this->Tickets->find()->where(['id' => $idticket]);
 		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
 		$ticket = $qTm->first();
@@ -4228,6 +4237,11 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_fila'], 403);
 		}
 		$sitantiga = (int)$ticket->situacao;
+		if ($sitantiga === (int)C_TicketSituacaoEmandamento
+			&& (int)($ticket->idtecnico_responsavel ?? 0) === (int)$this->Auth->user('id')) {
+			// Ticket já está em execução com este técnico — operação idempotente, nada a fazer.
+			return $this->jsonResponse(['ok' => true, 'noop' => true]);
+		}
 		$ticket->situacao = C_TicketSituacaoEmandamento;
 		$this->_assignTecnicoEmExecucao($ticket, $idticket);
 		$fields = ['situacao'];

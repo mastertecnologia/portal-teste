@@ -182,14 +182,14 @@ export async function postStartTicket(ticketId) {
     const jPut = await readBody(rPut);
     if (rPut.ok && jPut.ok) return { ok: true };
     if (rPut.status !== 405 && rPut.status !== 404) {
-      return { ok: false, error: jPut.error || rPut.statusText };
+      return { ok: false, error: jPut.error || rPut.statusText, message: jPut.message };
     }
   }
   if (!legacy) return { ok: false, error: 'no_api' };
   const r = await fetch(`${legacy}${encodeURIComponent(ticketId)}`, { method: 'POST', ...init });
   const json = await readBody(r);
-  if (!r.ok) return { ok: false, error: json.error || r.statusText };
-  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  if (!r.ok) return { ok: false, error: json.error || r.statusText, message: json.message };
+  if (!json.ok) return { ok: false, error: json.error || 'erro', message: json.message };
   return { ok: true };
 }
 
