@@ -157,8 +157,8 @@
 							<span class="hide-menu">Tickets</span>
 						</a>
 						<ul class="collapse <?= !empty($ticketsActive) ? 'in' : '' ?>">
-							<li class="<?= h($ticketsSubIndexActive) ?>"><?= $this->Html->link('Meus tickets', '/tickets/indexcliente', ['class' => 'waves-effect waves-dark']) ?></li>
-							<li class="<?= h($ticketsSubAddActive) ?>"><?= $this->Html->link('Abrir chamado', '/tickets/add', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($ticketsSubIndexActive) ?>"><?= $this->Html->link('Meus tickets', '/servicedesk', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li class="<?= h($ticketsSubAddActive) ?>"><?= $this->Html->link('Abrir chamado', '/servicedesk/add', ['class' => 'waves-effect waves-dark']) ?></li>
 							<li class="<?= h($ticketsSubHistAdvActive) ?>"><?= $this->Html->link('Histórico de atendimento', '/cliente/historico-atendimento-avancado', ['class' => 'waves-effect waves-dark']) ?></li>
 						</ul>
 					</li>

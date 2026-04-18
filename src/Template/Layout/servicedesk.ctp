@@ -2,7 +2,7 @@
 $authSd = (bool)$this->request->getSession()->read('Auth.User.id');
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR" data-pgm-theme="light">
+<html lang="pt-BR" data-pgm-theme="dark">
 <head>
 	<?= $this->Html->charset() ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,13 +17,11 @@ $authSd = (bool)$this->request->getSession()->read('Auth.User.id');
 	<?php endif; ?>
 	<title><?= h($title ?? 'Service Desk') ?> — PGM</title>
 	<?= $this->Html->meta('icon') ?>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 	<?= $this->Html->css('/dist/css/style.min') ?>
-	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens') ?>
-	<?= $this->Html->css('/dist/css/pages/pgm-components-base') ?>
-	<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
-	<?= $this->Html->css('/dist/css/pages/pgm-advanced-module') ?>
 	<link rel="stylesheet" href="<?= $this->Url->build('/dist/css/pages/pgm-servicedesk-premium.css') ?>">
-	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 	<?= $this->fetch('meta') ?>
 	<?= $this->fetch('css') ?>
 	<?= $this->fetch('script') ?>

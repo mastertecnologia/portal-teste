@@ -42,7 +42,7 @@ function resolveClienteIndexUrl(boot, ticket) {
   const fromTicket = ticket?.urls?.indexCliente;
   if (fromTicket) return fromTicket;
   const w = boot?.webroot;
-  if (w) return `${String(w).replace(/\/$/, '')}/tickets/indexcliente`;
+  if (w) return `${String(w).replace(/\/$/, '')}/servicedesk`;
   return null;
 }
 

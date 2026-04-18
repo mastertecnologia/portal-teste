@@ -268,11 +268,12 @@ Router::scope("/", function ($routes) {
         ])
         ->setPass(["cnpj"])
         ->setMethods(["GET"]);
-    // Tickets — UI React (JSON com sessão; desbloqueado no Security)
-    $routes->connect("/tickets/operacional", [
-        "controller" => "Tickets",
-        "action" => "operacional",
-    ]);
+    // Tickets — rotas legadas redirecionam para /servicedesk (consolidação da UI React).
+    $routes->redirect("/tickets", "/servicedesk", ["status" => 301]);
+    $routes->redirect("/tickets/", "/servicedesk", ["status" => 301]);
+    $routes->redirect("/tickets/index", "/servicedesk", ["status" => 301]);
+    $routes->redirect("/tickets/indexcliente", "/servicedesk", ["status" => 301]);
+    $routes->redirect("/tickets/operacional", "/servicedesk/operacional", ["status" => 301]);
     $routes->connect("/tickets/historico", [
         "controller" => "Tickets",
         "action" => "historico",
@@ -1051,9 +1052,25 @@ Router::scope("/", function ($routes) {
         "controller" => "FinanceiroBancos",
         "action" => "relacaoRemessas",
     ]);
+    $routes->connect("/financeiro-bancos/download-remessa/*", [
+        "controller" => "FinanceiroBancos",
+        "action" => "downloadRemessa",
+    ]);
+    $routes->connect("/financeiro-bancos/detalhe-remessa/*", [
+        "controller" => "FinanceiroBancos",
+        "action" => "detalheRemessa",
+    ]);
     $routes->connect("/financeiro-bancos/historico-retorno", [
         "controller" => "FinanceiroBancos",
         "action" => "historicoRetorno",
+    ]);
+    $routes->connect("/financeiro-bancos/detalhe-retorno/*", [
+        "controller" => "FinanceiroBancos",
+        "action" => "detalheRetorno",
+    ]);
+    $routes->connect("/financeiro-bancos/download-retorno/*", [
+        "controller" => "FinanceiroBancos",
+        "action" => "downloadRetorno",
     ]);
     $routes->connect("/financeiro-bancos/previsao-recebimentos-por-banco", [
         "controller" => "FinanceiroBancos",
@@ -1063,6 +1080,36 @@ Router::scope("/", function ($routes) {
         "controller" => "FinanceiroBancos",
         "action" => "previsaoPorBancos",
     ]);
+    $routes
+        ->connect("/financeiro-bancos/api-lista", [
+            "controller" => "FinanceiroBancos",
+            "action" => "apiLista",
+        ])
+        ->setMethods(["GET"]);
+    $routes
+        ->connect("/financeiro-bancos/api-salvar", [
+            "controller" => "FinanceiroBancos",
+            "action" => "apiSalvar",
+        ])
+        ->setMethods(["POST", "PUT", "PATCH"]);
+    $routes
+        ->connect("/financeiro/remessas/listar-titulos", [
+            "controller" => "Remessas",
+            "action" => "listarTitulos",
+        ])
+        ->setMethods(["GET"]);
+    $routes
+        ->connect("/financeiro/remessas/gerar", [
+            "controller" => "Remessas",
+            "action" => "gerarRemessa",
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/financeiro/retornos/processar", [
+            "controller" => "Retornos",
+            "action" => "processar",
+        ])
+        ->setMethods(["POST"]);
     // Configuração financeira (Plano de Contas + Centros de Custo)
     // Relatórios financeiros
     $routes->connect("/financeiro-relatorios", [
