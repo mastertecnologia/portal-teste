@@ -297,7 +297,7 @@ html[data-pgm-theme="dark"] body.sd-body {
 	--pgm-text-muted: #9aa0a8;
 
 	--pgm-border: #3d4554;
-	--pgm-border-subtle: rgba(255, 255, 255, 0.06);
+	--pgm-border-subtle: rgba(0, 0, 0, 0.35);
 	--pgm-border-strong: #4f5869;
 	--pgm-border-accent: rgba(29, 158, 117, 0.35);
 
@@ -310,7 +310,7 @@ html[data-pgm-theme="dark"] body.sd-body {
 	--pgm-shadow-glow: 0 0 20px rgba(29, 158, 117, 0.12);
 
 	--pgm-glass-bg: rgba(26, 31, 40, 0.72);
-	--pgm-glass-border: rgba(255, 255, 255, 0.08);
+	--pgm-glass-border: rgba(0, 0, 0, 0.40);
 	--pgm-glass-blur: 12px;
 
 	--pgm-focus-ring: rgba(29, 158, 117, 0.25);
@@ -830,7 +830,7 @@ html[data-pgm-theme="dark"] body.sd-body .section-heading {
 
 /* Cards premium v2 */
 html[data-pgm-theme="dark"] body.sd-body .pgm-card {
-	background: linear-gradient(180deg, var(--pgm-bg-surface) 0%, color-mix(in srgb, var(--pgm-bg-surface) 97%, rgba(255, 255, 255, 0.03)) 100%);
+	background: var(--pgm-bg-surface);
 	border: 1px solid var(--pgm-border-subtle);
 	border-radius: var(--pgm-radius-xl);
 	box-shadow: var(--pgm-shadow-md);
