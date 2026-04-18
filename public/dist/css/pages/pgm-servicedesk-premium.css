@@ -203,9 +203,8 @@ html[data-pgm-theme="light"] .sd-shell.prd-root {
 	box-sizing: border-box;
 }
 
-/* Shell sem topbar: ocupa 100% da viewport */
+/* Shell sem topbar: ocupa pelo menos 100% da viewport (permite crescer com conteúdo) */
 .sd-shell--no-topbar {
-	height: 100vh;
 	min-height: 100vh;
 }
 
@@ -270,8 +269,7 @@ body.sd-body {
 	margin: 0;
 }
 body.sd-body--fullpage {
-	height: 100vh;
-	overflow: hidden;
+	min-height: 100vh;
 }
 html[data-pgm-theme="light"] body.sd-body {
 	overflow-x: clip;

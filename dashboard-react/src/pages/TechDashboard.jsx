@@ -307,7 +307,7 @@ function TicketActionsMenu({
           aria-expanded={open}
           aria-haspopup="menu"
           aria-label={`Abrir menu de ações do ticket ${ticket.id}`}
-          className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--pgm-radius-sm,6px)] border transition-all duration-[120ms] focus:outline-none ${
+          className={`inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--pgm-radius-sm,6px)] border px-2.5 text-[0.75rem] font-medium transition-all duration-[120ms] focus:outline-none ${
             open
               ? 'border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-overlay,#2a3140)] text-[var(--pgm-text,#e8eaed)]'
               : 'border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:text-[var(--pgm-text,#e8eaed)] hover:border-[var(--pgm-border,#3d4554)]'
