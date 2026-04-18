@@ -198,9 +198,9 @@ export async function fetchTecnicosParaTransferencia(queueId) {
     return {
       ok: true,
       tecnicos: [
-        { id: 1, name: 'NOC 02' },
-        { id: 2, name: 'Service Desk' },
-        { id: 3, name: 'Suporte N2' },
+        { id: 1, name: 'NOC 02', nivel_id: 4, nivel_label: 'NOC', nivel_sort: 4 },
+        { id: 2, name: 'Service Desk', nivel_id: 1, nivel_label: 'N1', nivel_sort: 1 },
+        { id: 3, name: 'Suporte N2', nivel_id: 2, nivel_label: 'N2', nivel_sort: 2 },
       ],
     };
   }

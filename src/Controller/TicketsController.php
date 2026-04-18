@@ -3755,7 +3755,9 @@ class TicketsController extends AppController {
 			// transferência ainda exige queues_users ao atribuir alguém; “só fila” funciona).
 			$queueUserFilter = !empty($linkedIds) ? $linkedIds : null;
 		}
-		$qry = $this->Empresasusers->find('all', ['contain' => ['Users']])
+		$levelsReady = $this->_supportLevelsRoutingReady();
+		$contain = $levelsReady ? ['Users' => ['SupportLevels']] : ['Users'];
+		$qry = $this->Empresasusers->find('all', ['contain' => $contain])
 			->where(['Empresasusers.idempresa' => $empresa, 'Users.role' => 0, 'Users.inativo' => 0]);
 		if ($queueUserFilter !== null) {
 			$qry->where(['Users.id IN' => $queueUserFilter]);
@@ -3776,7 +3778,20 @@ class TicketsController extends AppController {
 			if ($nm === '') {
 				$nm = 'Usuário #' . (int)$u->id;
 			}
-			$list[] = ['id' => (int)$u->id, 'name' => $nm];
+			$entry = ['id' => (int)$u->id, 'name' => $nm];
+			if ($levelsReady) {
+				$sl = $u->support_level ?? null;
+				if ($sl) {
+					$entry['nivel_id'] = (int)($sl->id ?? 0);
+					$entry['nivel_label'] = (string)($sl->name ?? '');
+					$entry['nivel_sort'] = (int)($sl->sort_order ?? 0);
+				} elseif (!empty($u->support_level_id)) {
+					$entry['nivel_id'] = (int)$u->support_level_id;
+					$entry['nivel_label'] = $this->_supportLevelName((int)$u->support_level_id);
+					$entry['nivel_sort'] = $this->_supportLevelSortById((int)$u->support_level_id);
+				}
+			}
+			$list[] = $entry;
 		}
 
 		return $this->jsonResponse(['ok' => true, 'tecnicos' => $list]);

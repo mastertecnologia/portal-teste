@@ -62,6 +62,65 @@ function statusLabel(row) {
 
 const ACTION_MENU_WIDTH = 268;
 
+/** Status que devem pulsar no badge (urgência/ação imediata). */
+const PULSE_STATUS = new Set(['progress', 'pendingTech', 'critical']);
+/** Status sem indicador visual (texto puro). */
+const NO_DOT_STATUS = new Set(['low']);
+
+/** “Nome — N2” quando existe nivel; cai para só o nome caso contrário. */
+function tecnicoLabel(t) {
+  const nm = t?.name || `Usuário #${t?.id}`;
+  const level = t?.nivel_label || t?.supportLevelLabel || t?.supportLevel || '';
+  return level ? `${nm} — ${level}` : nm;
+}
+
+function StatusDot({ type }) {
+  if (NO_DOT_STATUS.has(type)) return null;
+  const pulse = PULSE_STATUS.has(type)
+    ? ' [animation:pgm-pulse_2s_ease-in-out_infinite]'
+    : '';
+  return (
+    <span
+      aria-hidden
+      className={`inline-block h-[6px] w-[6px] shrink-0 rounded-full bg-current${pulse}`}
+    />
+  );
+}
+
+/**
+ * Garante que tickets abertos exponham Iniciar atendimento (quando pendente) e Transferir
+ * (sempre). Backend pode esconder conforme flags — UI sempre mostra para alinhar ao mockup.
+ */
+function ensureCoreActions(ticket) {
+  const list = Array.isArray(ticket.acoes) ? [...ticket.acoes] : [];
+  const label = String(ticket.situacaoLabel || ticket.status || '').toLowerCase();
+  const closed =
+    label.includes('resolvido') || label.includes('fechado') || label.includes('cancelado');
+  if (closed) return list;
+  const has = (k) => list.some((a) => String(a.key || '').toLowerCase() === k);
+  const isPendente =
+    label.includes('aguardando tecnico') ||
+    label.includes('aguardando técnico') ||
+    !ticket.idtecnico_responsavel;
+  if (isPendente && !has('iniciar')) {
+    list.push({
+      key: 'iniciar',
+      label: 'Iniciar atendimento',
+      behavior: 'reactStart',
+      url: ticket.urls?.edit || '#',
+    });
+  }
+  if (!has('transferir')) {
+    list.push({
+      key: 'transferir',
+      label: 'Transferir',
+      behavior: 'reactTransfer',
+      url: ticket.urls?.edit || '#',
+    });
+  }
+  return list;
+}
+
 function ActionMenuIcon({ actionKey }) {
   const k = String(actionKey || '').toLowerCase();
   const c = 'h-4 w-4 shrink-0';
@@ -547,7 +606,7 @@ export default function TechDashboard({ boot }) {
     setTransferQueuesErr('');
     setTransferQueues([]);
     setTransferQueueId('');
-    setTransferAssignMode('sem');
+    setTransferAssignMode('com');
     if (queuesRelacional) {
       const useEscalation = Boolean(workflow?.supportLevelsEnabled);
       const rq = await fetchQueuesForTicket(ticket.id, { escalationOnly: useEscalation });
@@ -976,14 +1035,15 @@ export default function TechDashboard({ boot }) {
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">
                         <span
-                          className={`inline-flex max-w-[10rem] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-[11px] ${badgeClass(
+                          className={`inline-flex max-w-[10rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-[11px] ${badgeClass(
                             statusType(st),
                             embedded,
                             isSD
                           )}`}
                           title={st}
                         >
-                          {st}
+                          <StatusDot type={statusType(st)} />
+                          <span className="truncate">{st}</span>
                         </span>
                       </td>
                       {wfEnabled ? (
@@ -1018,7 +1078,7 @@ export default function TechDashboard({ boot }) {
                       <td className="px-3 py-2 text-right">
                         <TicketActionsMenu
                           ticket={ticket}
-                          acoes={ticket.acoes}
+                          acoes={ensureCoreActions(ticket)}
                           openTransfer={openTransfer}
                           handleStartAtendimento={handleStartAtendimento}
                           startBusyId={startBusyId}
@@ -1119,7 +1179,7 @@ export default function TechDashboard({ boot }) {
                         <option value="">Selecione o técnico…</option>
                         {tecnicosModal.map((tm) => (
                           <option key={tm.id} value={String(tm.id)}>
-                            {tm.name}
+                            {tecnicoLabel(tm)}
                           </option>
                         ))}
                       </select>
@@ -1192,7 +1252,7 @@ export default function TechDashboard({ boot }) {
                         <option value="">Selecione…</option>
                         {tecnicosOpcoes.map((t) => (
                           <option key={t.id} value={String(t.id)}>
-                            {t.name}
+                            {tecnicoLabel(t)}
                           </option>
                         ))}
                       </select>
