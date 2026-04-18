@@ -2,7 +2,7 @@
 use Cake\Routing\Router;
 ?>
 <!DOCTYPE HTML>
-<html lang="pt-BR" data-pgm-theme="dark">
+<html lang="pt-BR" data-pgm-theme="light">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>

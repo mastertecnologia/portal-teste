@@ -1,6 +1,9 @@
 /**
- * PGM Soluções — tokens semânticos (tema escuro único).
+ * PGM Soluções — tokens semânticos (dark + light).
  * Consumidos por novos estilos, login, Service Desk e integrações (ex.: React).
+ *
+ * - data-pgm-theme="dark" OU ausente → paleta escura (legado — Service Desk, login, etc.)
+ * - data-pgm-theme="light" → paleta clara unificada (ERP padrão desde Fase 1 do plano)
  *
  * Inventário e mapeamento módulos → tokens: docs/DESIGN_TOKENS_FASE1.md
  */
@@ -122,4 +125,115 @@ html:not([data-pgm-theme]) {
 	--pgm-badge-muted-bg: rgba(255, 255, 255, 0.06);
 	--pgm-badge-muted-text: #9aa0a8;
 	--pgm-badge-muted-ring: rgba(255, 255, 255, 0.10);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Tema CLARO — paleta unificada do ERP (Fase 1 da unificação visual).
+ * Espelha todos os tokens semânticos em versão light, preservando a identidade
+ * teal (#1d9e75). Layouts que devem permanecer escuros (login, servicedesk_login)
+ * continuam usando data-pgm-theme="dark".
+ * ──────────────────────────────────────────────────────────────────────── */
+html[data-pgm-theme="light"] {
+	color-scheme: light;
+	--pgm-primary: #1d9e75;
+	--pgm-primary-hover: #0f6e56;
+	--pgm-primary-muted: rgba(29, 158, 117, 0.12);
+	--pgm-secondary: #13715a;
+	--pgm-accent: #1d9e75;
+	--pgm-bg-page: #f2f1ee;
+	--pgm-bg-surface: #ffffff;
+	--pgm-bg-elevated: #f9f9f8;
+	--pgm-text: #1a1a18;
+	--pgm-text-secondary: #3d3d3a;
+	--pgm-text-muted: #6b6a65;
+	--pgm-border: #e5e4e0;
+	--pgm-border-strong: #d5d4d0;
+	--pgm-success: #1d9e75;
+	--pgm-success-bg: #e1f5ee;
+	--pgm-success-text: #085041;
+	--pgm-warning: #e9a025;
+	--pgm-warning-bg: #faeeda;
+	--pgm-warning-text: #633806;
+	--pgm-danger: #e24b4a;
+	--pgm-danger-bg: #fcebeb;
+	--pgm-danger-text: #791f1f;
+	--pgm-info-bg: #e6f1fb;
+	--pgm-info-text: #0c447c;
+	--pgm-focus-ring: rgba(29, 158, 117, 0.35);
+	--pgm-link: #1d9e75;
+	--pgm-topbar-gradient-start: #1d9e75;
+	--pgm-topbar-gradient-end: #13715a;
+	--pgm-topbar-link: #e8fffc;
+	--pgm-sidebar-width: 220px;
+	--pgm-sidebar-width-mini: 70px;
+	--pgm-section-gap-y: 1.25rem;
+	--pgm-stack-gap: 1rem;
+	--pgm-radius-section: 12px;
+	--pgm-space-1: 4px;
+	--pgm-space-2: 8px;
+	--pgm-space-3: 12px;
+	--pgm-space-4: 16px;
+	--pgm-space-5: 24px;
+	--pgm-space-6: 32px;
+	--pgm-radius-sm: 8px;
+	--pgm-radius-md: 10px;
+	--pgm-radius-lg: 12px;
+	--pgm-radius-xl: 16px;
+	--pgm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--pgm-font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	--pgm-erp-teal: var(--pgm-primary);
+	--pgm-erp-teal-hover: #13715a;
+	--pgm-erp-teal-active: #0f6e56;
+	--pgm-erp-teal-muted: var(--pgm-primary-muted);
+
+	--pgm-bg-base: #ffffff;
+	--pgm-bg-raised: #f9f9f8;
+	--pgm-bg-overlay: #eceae5;
+
+	--pgm-border-subtle: rgba(0, 0, 0, 0.06);
+	--pgm-border-accent: rgba(29, 158, 117, 0.35);
+
+	--pgm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+	--pgm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+	--pgm-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+	--pgm-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.14), 0 4px 16px rgba(0, 0, 0, 0.08);
+	--pgm-shadow-glow: 0 0 20px rgba(29, 158, 117, 0.15);
+
+	--pgm-glass-bg: rgba(255, 255, 255, 0.72);
+	--pgm-glass-border: rgba(0, 0, 0, 0.08);
+	--pgm-glass-blur: 12px;
+
+	--pgm-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+	--pgm-transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+	--pgm-transition-smooth: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+
+	--pgm-radius-2xl: 20px;
+
+	--pgm-badge-teal-bg: rgba(29, 158, 117, 0.12);
+	--pgm-badge-teal-text: #085041;
+	--pgm-badge-teal-ring: rgba(29, 158, 117, 0.30);
+	--pgm-badge-blue-bg: rgba(55, 138, 221, 0.12);
+	--pgm-badge-blue-text: #0c447c;
+	--pgm-badge-blue-ring: rgba(55, 138, 221, 0.30);
+	--pgm-badge-amber-bg: rgba(233, 160, 37, 0.15);
+	--pgm-badge-amber-text: #633806;
+	--pgm-badge-amber-ring: rgba(233, 160, 37, 0.35);
+	--pgm-badge-red-bg: rgba(226, 75, 74, 0.12);
+	--pgm-badge-red-text: #791f1f;
+	--pgm-badge-red-ring: rgba(226, 75, 74, 0.30);
+	--pgm-badge-green-bg: rgba(29, 158, 117, 0.12);
+	--pgm-badge-green-text: #085041;
+	--pgm-badge-green-ring: rgba(29, 158, 117, 0.30);
+	--pgm-badge-purple-bg: rgba(122, 94, 184, 0.14);
+	--pgm-badge-purple-text: #5a3b99;
+	--pgm-badge-purple-ring: rgba(122, 94, 184, 0.30);
+	--pgm-badge-orange-bg: rgba(233, 121, 25, 0.15);
+	--pgm-badge-orange-text: #8a3a00;
+	--pgm-badge-orange-ring: rgba(233, 121, 25, 0.35);
+	--pgm-badge-violet-bg: rgba(139, 92, 246, 0.12);
+	--pgm-badge-violet-text: #4c1d95;
+	--pgm-badge-violet-ring: rgba(139, 92, 246, 0.30);
+	--pgm-badge-muted-bg: rgba(0, 0, 0, 0.05);
+	--pgm-badge-muted-text: #6b6a65;
+	--pgm-badge-muted-ring: rgba(0, 0, 0, 0.10);
 }
