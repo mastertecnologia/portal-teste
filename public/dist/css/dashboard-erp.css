@@ -1,18 +1,18 @@
 :root{
-  --erp-teal:#3d7eff;
-  --erp-teal-2:#2563eb;
-  --erp-bg:#13161d;
-  --erp-card:#1a1e28;
-  --erp-text:#f0f2f8;
-  --erp-muted:#8b92a8;
-  --erp-border:rgba(255,255,255,.10);
-  --erp-shadow:0 10px 30px rgba(0,0,0,.35);
+  --erp-teal:#1d9e75;
+  --erp-teal-2:#13715a;
+  --erp-bg:#f2f1ee;
+  --erp-card:#ffffff;
+  --erp-text:#1a1a18;
+  --erp-muted:#6b6a65;
+  --erp-border:#e5e4e0;
+  --erp-shadow:0 4px 16px rgba(0,0,0,0.08);
   --erp-radius:12px;
 }
 
 .dash-erp{
   padding: clamp(12px, 2.4vw, 22px);
-  background: linear-gradient(180deg, rgba(61,126,255,.12) 0%, rgba(19,22,29,0) 190px);
+  background: linear-gradient(180deg, rgba(29,158,117,.10) 0%, rgba(242,241,238,0) 190px);
 }
 
 .dash-erp-header{
@@ -96,10 +96,10 @@
   opacity: .55;
 }
 .dash-erp-kpi-value.dim{
-  color:#6b738a;
+  color:#9a9890;
 }
 .dash-erp-kpi-link.dimmed{
-  color:#6b738a;
+  color:#9a9890;
   pointer-events:none;
   cursor:default;
   text-decoration:none;
@@ -131,8 +131,8 @@
   font-size:12px;
   font-weight:800;
   color: var(--erp-teal);
-  background: rgba(11,107,99,.10);
-  border: 1px solid rgba(11,107,99,.18);
+  background: rgba(29,158,117,.12);
+  border: 1px solid rgba(29,158,117,.30);
   padding: 4px 10px;
   border-radius: 999px;
 }
@@ -156,7 +156,7 @@
 }
 .table-scroll::-webkit-scrollbar{ width:4px; }
 .table-scroll::-webkit-scrollbar-track{ background:transparent; }
-.table-scroll::-webkit-scrollbar-thumb{ background:#30363d; border-radius:2px; }
+.table-scroll::-webkit-scrollbar-thumb{ background:#c4c3c0; border-radius:2px; }
 
 .dash-erp-table{
   width:100%;
@@ -166,7 +166,7 @@
 .dash-erp-table thead th{
   position: sticky;
   top: 0;
-  background: #222736;
+  background: #f9f9f8;
   color:var(--erp-muted);
   font-weight:800;
   font-size:12px;
@@ -177,19 +177,19 @@
 }
 .dash-erp-table tbody td{
   padding: 10px 10px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(0,0,0,.06);
   font-size: 13px;
   color: var(--erp-text);
   vertical-align: middle;
 }
 .dash-erp-table tbody tr:hover td{
-  background: rgba(61,126,255,.10);
+  background: rgba(29,158,117,.08);
 }
 .dash-erp-table tbody tr.selected td{
-  background: rgba(56, 139, 253, 0.10);
+  background: rgba(29,158,117,.10);
 }
 .dash-erp-table tbody tr.selected td:first-child{
-  border-left: 2px solid #388bfd;
+  border-left: 2px solid var(--erp-teal);
 }
 .dash-erp-link{
   color: var(--erp-text);
@@ -201,7 +201,7 @@
   text-decoration: underline;
 }
 .td-client{
-  color:#388bfd;
+  color: var(--erp-teal);
   font-weight:500;
   cursor:pointer;
 }
@@ -219,16 +219,16 @@
   white-space:nowrap;
 }
 .sla-ok{
-  background:#1a3a25;
-  color:#3fb950;
+  background:#e1f5ee;
+  color:#085041;
 }
 .sla-warn{
-  background:#3d2e0a;
-  color:#d29922;
+  background:#faeeda;
+  color:#633806;
 }
 .sla-overdue{
-  background:#3d1515;
-  color:#f85149;
+  background:#fcebeb;
+  color:#791f1f;
 }
 .dot{
   width:6px;
@@ -236,11 +236,11 @@
   border-radius:50%;
   display:inline-block;
 }
-.dot.green{ background:#3fb950; }
-.dot.orange{ background:#d29922; }
+.dot.green{ background:#1d9e75; }
+.dot.orange{ background:#e9a025; }
 .dot.red{
-  background:#f85149;
-  box-shadow:0 0 6px #f85149;
+  background:#e24b4a;
+  box-shadow:0 0 6px rgba(226,75,74,0.6);
   animation:pulse 1.5s ease-in-out infinite;
 }
 @keyframes pulse{
@@ -269,7 +269,7 @@
 /* ---------- Painel administrador do cliente (role != funcionário) ---------- */
 .dash-cli{
   padding: clamp(12px, 2.4vw, 22px);
-  background: linear-gradient(180deg, rgba(61,126,255,.10) 0%, rgba(19,22,29,0) 170px);
+  background: linear-gradient(180deg, rgba(29,158,117,.10) 0%, rgba(242,241,238,0) 170px);
 }
 .dash-cli-quick{
   display:flex;
@@ -286,16 +286,16 @@
   font-weight:700;
   font-size:13px;
   text-decoration:none;
-  border:1px solid rgba(61,126,255,.35);
+  border:1px solid rgba(29,158,117,.35);
   background:var(--erp-card);
   color:var(--erp-teal);
-  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
   transition: background .15s ease, border-color .15s ease, transform .12s ease;
 }
 .dash-cli-quick a:hover{
-  background:rgba(61,126,255,.14);
-  border-color:rgba(61,126,255,.55);
-  color:var(--erp-text);
+  background:rgba(29,158,117,.08);
+  border-color:rgba(29,158,117,.55);
+  color:var(--erp-teal-2);
   text-decoration:none;
   transform: translateY(-1px);
 }
@@ -330,16 +330,16 @@
   letter-spacing:0;
   border-bottom:1px solid var(--erp-border);
   padding:12px 14px;
-  background:#222736;
+  background:#f9f9f8;
 }
 .dash-cli-table tbody td{
   padding:12px 14px;
   vertical-align:middle;
-  border-color:rgba(255,255,255,.06);
+  border-color:rgba(0,0,0,.06);
   font-size:13px;
 }
 .dash-cli-table tbody tr:hover{
-  background:rgba(61,126,255,.10);
+  background:rgba(29,158,117,.08);
 }
 .dash-cli-badge{
   display:inline-flex;
@@ -351,24 +351,24 @@
   letter-spacing:.02em;
 }
 .dash-cli-badge--info{
-  background:rgba(14,165,233,.20);
-  color:#d5f1ff;
+  background:#e6f1fb;
+  color:#0c447c;
   border:1px solid rgba(14,165,233,.35);
 }
 .dash-cli-badge--warn{
-  background:rgba(245,158,11,.18);
-  color:#ffe7b0;
-  border:1px solid rgba(245,158,11,.35);
+  background:#faeeda;
+  color:#633806;
+  border:1px solid rgba(245,158,11,.40);
 }
 .dash-cli-badge--ok{
-  background:rgba(34,197,94,.18);
-  color:#d4ffe3;
-  border:1px solid rgba(34,197,94,.30);
+  background:#e1f5ee;
+  color:#085041;
+  border:1px solid rgba(34,197,94,.35);
 }
 .dash-cli-badge--muted{
-  background:rgba(139,146,168,.18);
-  color:#d8dbea;
-  border:1px solid rgba(139,146,168,.28);
+  background:rgba(139,146,168,.12);
+  color:#5f5e5a;
+  border:1px solid rgba(139,146,168,.30);
 }
 .dash-cli-btn-icon{
   border-radius:10px !important;
@@ -435,4 +435,3 @@
   height:100%;
   border:0;
 }
-
