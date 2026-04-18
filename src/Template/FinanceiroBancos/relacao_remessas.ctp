@@ -16,7 +16,11 @@ $metricasRemessas = $metricasRemessas ?? [
     'conta_incompleta' => 0,
     'qtd_titulos' => 0,
     'valor_total' => 0.0,
+    'sem_retorno' => 0,
+    'retorno_parcial' => 0,
+    'retorno_concluido' => 0,
 ];
+$historicoDisponivel = !empty($historicoDisponivel);
 
 $linhas = [];
 $maiorQuantidade = 0;
@@ -30,11 +34,19 @@ foreach ($resumo as $item) {
         continue;
     }
 
+    $remessa = $item['remessa'] ?? null;
     $quantidade = (int)($item['quantidade'] ?? 0);
     $total = (float)($item['total'] ?? 0);
     $contaIncompleta = !empty($item['conta_incompleta']);
     $proximoVencimento = $item['proximo_vencimento'] ?? null;
     $ultimoRecebimento = $item['ultimo_recebimento'] ?? null;
+    $downloadDisponivel = !empty($item['download_disponivel']);
+    $retornoArquivo = $item['retorno_arquivo'] ?? null;
+    $retornoStatus = (string)($item['retorno_status'] ?? 'sem_retorno');
+    $retornoLabel = (string)($item['retorno_label'] ?? 'Sem retorno');
+    $retornoAjuda = (string)($item['retorno_ajuda'] ?? 'Remessa gerada sem arquivo de retorno processado até o momento.');
+    $retornoClass = (string)($item['retorno_class'] ?? 'fb-badge fb-badge--neutral');
+    $retornoPendencias = (int)($item['retorno_pendencias'] ?? 0);
 
     if ($quantidade > $maiorQuantidade) {
         $maiorQuantidade = $quantidade;
@@ -51,12 +63,83 @@ foreach ($resumo as $item) {
         $ultimoRecebimentoGeral = $ultimoRecebimento;
     }
 
-    $statusLabel = 'Sem títulos pendentes';
+    $statusLabel = 'Sem histórico';
     $statusClass = 'fb-badge fb-badge--neutral';
     $prioridade = 4;
-    $statusAjuda = 'Sem carteira aberta para geração de remessa neste momento.';
+    $statusAjuda = 'Ainda não há remessa gerada para este banco no ambiente atual.';
+    $sequencialFmt = '—';
+    $arquivoNome = '—';
+    $usuarioNome = '—';
+    $dataBaseLabel = 'Sem data registrada';
+    $cicloLabel = 'Sem retorno';
+    $cicloClass = 'fb-badge fb-badge--neutral';
+    $cicloAjuda = 'Remessa gerada sem arquivo de retorno processado até o momento.';
 
-    if ($quantidade > 0 && $contaIncompleta) {
+    if ($historicoDisponivel && $remessa) {
+        $status = trim((string)($remessa->status ?? 'gerada'));
+        $sequencialFmt = trim((string)($remessa->numero_remessa ?? '')) !== ''
+            ? (string)$remessa->numero_remessa
+            : str_pad((string)($remessa->sequencial_arquivo ?? 0), 6, '0', STR_PAD_LEFT);
+        $arquivoNome = trim((string)($remessa->nome_arquivo ?? '')) !== ''
+            ? (string)$remessa->nome_arquivo
+            : 'Arquivo não informado';
+        $usuarioNome = trim((string)($remessa->user->name ?? $remessa->user->username ?? ''));
+        if ($usuarioNome === '') {
+            $usuarioNome = 'Usuário não identificado';
+        }
+
+        if (!empty($proximoVencimento)) {
+            $dataBaseLabel = $proximoVencimento->format('d/m/Y');
+        }
+
+        if ($status === 'processada') {
+            $statusLabel = 'Processada';
+            $statusClass = 'fb-badge fb-badge--ok';
+            $prioridade = 1;
+            $statusAjuda = 'Arquivo gerado e já marcado como processado no histórico.';
+        } elseif ($status === 'enviada') {
+            $statusLabel = 'Enviada';
+            $statusClass = 'fb-badge fb-badge--ok';
+            $prioridade = 2;
+            $statusAjuda = 'Arquivo gerado e expedido, aguardando retorno ou baixa.';
+        } elseif ($status === 'erro') {
+            $statusLabel = 'Com erro';
+            $statusClass = 'fb-badge fb-badge--warn';
+            $prioridade = 1;
+            $statusAjuda = 'Há uma remessa registrada com status de erro.';
+        } elseif ($status === 'cancelada') {
+            $statusLabel = 'Cancelada';
+            $statusClass = 'fb-badge fb-badge--neutral';
+            $prioridade = 3;
+            $statusAjuda = 'Remessa cancelada e mantida apenas para rastreabilidade.';
+        } else {
+            $statusLabel = 'Gerada';
+            $statusClass = 'fb-badge fb-badge--ok';
+            $prioridade = 2;
+            $statusAjuda = 'Arquivo pronto para conferência e download.';
+        }
+
+        $cicloLabel = $retornoLabel;
+        $cicloClass = $retornoClass;
+        $cicloAjuda = $retornoAjuda;
+
+        if ($retornoStatus === 'retorno_concluido') {
+            $prioridade = 3;
+        } elseif ($retornoStatus === 'retorno_parcial') {
+            $prioridade = 1;
+        } elseif ($retornoStatus === 'sem_retorno') {
+            $prioridade = min($prioridade, 2);
+        }
+
+        if ($retornoPendencias > 0) {
+            $cicloAjuda .= ' Pendências identificadas: ' . number_format($retornoPendencias, 0, ',', '.') . '.';
+        }
+
+        if ($contaIncompleta) {
+            $statusAjuda .= ' O cadastro bancário ainda precisa de revisão.';
+            $cicloAjuda .= ' O cadastro bancário ainda precisa de revisão.';
+        }
+    } elseif ($quantidade > 0 && $contaIncompleta) {
         $statusLabel = 'Remessa com atenção';
         $statusClass = 'fb-badge fb-badge--warn';
         $prioridade = 1;
@@ -102,6 +185,18 @@ foreach ($resumo as $item) {
         'prioridade' => $prioridade,
         'agencia_fmt' => $agenciaFmt,
         'conta_fmt' => $contaFmt,
+        'remessa' => $remessa,
+        'download_disponivel' => $downloadDisponivel,
+        'sequencial_fmt' => $sequencialFmt,
+        'arquivo_nome' => $arquivoNome,
+        'usuario_nome' => $usuarioNome,
+        'data_base_label' => $dataBaseLabel,
+        'retorno_arquivo' => $retornoArquivo,
+        'retorno_status' => $retornoStatus,
+        'ciclo_label' => $cicloLabel,
+        'ciclo_class' => $cicloClass,
+        'ciclo_ajuda' => $cicloAjuda,
+        'retorno_pendencias' => $retornoPendencias,
     ];
 }
 
@@ -512,6 +607,9 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                         'com_remessa' => 'Com remessa prevista',
                         'sem_remessa' => 'Sem remessa',
                         'conta_incompleta' => 'Conta incompleta',
+                        'sem_retorno' => 'Sem retorno',
+                        'retorno_parcial' => 'Retorno parcial',
+                        'retorno_concluido' => 'Retorno concluído',
                     ], [
                         'label' => false,
                         'id' => 'filtro-situacao',
@@ -541,7 +639,8 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
 
         <div class="fb-filter-note">
             A grade é priorizada automaticamente pelos bancos com maior necessidade operacional:
-            primeiro os que têm remessa com atenção, depois os com carteira pronta, em seguida os com conta incompleta e por fim os sem títulos pendentes.
+            primeiro os que têm retorno parcial ou remessa com atenção, depois os com carteira pronta sem retorno,
+            em seguida os já concluídos e por fim os sem títulos pendentes.
         </div>
     </div>
 
@@ -555,19 +654,37 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
         <div class="fb-kpi">
             <div class="fb-kpi-label">Com remessa prevista</div>
             <div class="fb-kpi-value"><?= number_format((int)$metricasRemessas['com_remessa'], 0, ',', '.') ?></div>
-            <div class="fb-kpi-help">Bancos com títulos em aberto e carteira pronta para análise de remessa.</div>
+            <div class="fb-kpi-help">Bancos/remessas já gerados e disponíveis para acompanhamento do ciclo bancário.</div>
+        </div>
+
+        <div class="fb-kpi">
+            <div class="fb-kpi-label">Sem retorno</div>
+            <div class="fb-kpi-value"><?= number_format((int)$metricasRemessas['sem_retorno'], 0, ',', '.') ?></div>
+            <div class="fb-kpi-help">Remessas geradas que ainda não têm arquivo de retorno processado.</div>
+        </div>
+
+        <div class="fb-kpi">
+            <div class="fb-kpi-label">Retorno parcial</div>
+            <div class="fb-kpi-value"><?= number_format((int)$metricasRemessas['retorno_parcial'], 0, ',', '.') ?></div>
+            <div class="fb-kpi-help">Remessas com retorno processado, mas ainda com rejeições, ignorados ou erros.</div>
+        </div>
+
+        <div class="fb-kpi">
+            <div class="fb-kpi-label">Retorno concluído</div>
+            <div class="fb-kpi-value"><?= number_format((int)$metricasRemessas['retorno_concluido'], 0, ',', '.') ?></div>
+            <div class="fb-kpi-help">Remessas com retorno processado sem pendências operacionais.</div>
         </div>
 
         <div class="fb-kpi">
             <div class="fb-kpi-label">Qtd. total de títulos</div>
             <div class="fb-kpi-value"><?= number_format((int)$metricasRemessas['qtd_titulos'], 0, ',', '.') ?></div>
-            <div class="fb-kpi-help">Soma de títulos abertos vinculados aos bancos do relatório.</div>
+            <div class="fb-kpi-help">Soma de títulos vinculados às remessas ou carteiras abertas do relatório atual.</div>
         </div>
 
         <div class="fb-kpi">
             <div class="fb-kpi-label">Valor total previsto</div>
             <div class="fb-kpi-value">R$ <?= number_format((float)$metricasRemessas['valor_total'], 2, ',', '.') ?></div>
-            <div class="fb-kpi-help">Valor financeiro total das remessas potenciais encontradas.</div>
+            <div class="fb-kpi-help">Valor financeiro total das remessas exibidas na relação atual.</div>
         </div>
 
         <div class="fb-kpi">
@@ -602,7 +719,8 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
             <div class="fb-pill-list">
                 <span class="fb-pill"><i class="fas fa-layer-group"></i><?= number_format((int)$metricasRemessas['bancos'], 0, ',', '.') ?> banco(s)</span>
                 <span class="fb-pill"><i class="fas fa-file-invoice-dollar"></i><?= number_format((int)$metricasRemessas['qtd_titulos'], 0, ',', '.') ?> título(s)</span>
-                <span class="fb-pill fb-pill--warn"><i class="fas fa-exclamation-triangle"></i><?= number_format((int)$metricasRemessas['conta_incompleta'], 0, ',', '.') ?> com atenção</span>
+                <span class="fb-pill"><i class="fas fa-reply"></i><?= number_format((int)$metricasRemessas['retorno_concluido'], 0, ',', '.') ?> concluído(s)</span>
+                <span class="fb-pill fb-pill--warn"><i class="fas fa-exclamation-triangle"></i><?= number_format((int)$metricasRemessas['retorno_parcial'], 0, ',', '.') ?> parcial(is)</span>
             </div>
         </div>
 
@@ -610,8 +728,8 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
             <div class="fb-summary-box">
                 <div class="fb-summary-title">Priorização da rotina</div>
                 <div class="fb-summary-text">
-                    Comece pelos bancos com <strong>remessa com atenção</strong>, pois eles combinam carteira aberta com necessidade de ajuste cadastral.
-                    Em seguida, avance para os bancos com remessa prevista e cadastro completo.
+                    Comece pelas remessas com <strong>retorno parcial</strong>, pois elas já receberam arquivo de retorno, mas ainda possuem pendências.
+                    Em seguida, avance para as remessas <strong>sem retorno</strong> e depois para as já <strong>concluídas</strong>.
                 </div>
             </div>
 
@@ -626,9 +744,9 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
             <div class="fb-summary-box">
                 <div class="fb-summary-title">Rastreabilidade financeira</div>
                 <div class="fb-summary-text">
-                    O último recebimento identificado na amostra atual foi em
+                    O último movimento identificado na amostra atual foi em
                     <strong><?= $ultimoRecebimentoGeral ? h($ultimoRecebimentoGeral->format('d/m/Y')) : '—' ?></strong>.
-                    Isso ajuda a comparar bancos com carteira aberta versus histórico recente de liquidação.
+                    Isso ajuda a comparar remessas sem retorno, parciais e concluídas no mesmo ciclo operacional.
                 </div>
             </div>
         </div>
@@ -637,9 +755,17 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
     <div class="fb-card">
         <div class="fb-card-head">
             <div>
-                <h2 class="fb-card-title">Grade detalhada por banco</h2>
+                <h2 class="fb-card-title"><?= $historicoDisponivel ? 'Histórico real de remessas' : 'Grade detalhada por banco' ?></h2>
                 <div class="fb-card-sub">
-                    <?= $temFiltros ? 'Resultado filtrado da relação de remessas bancárias.' : 'Visão completa e priorizada dos bancos ativos com potencial de remessa.' ?>
+                    <?=
+                        $historicoDisponivel
+                            ? ($temFiltros
+                                ? 'Resultado filtrado do histórico de arquivos CNAB já gerados.'
+                                : 'Visão completa das remessas geradas com rastreabilidade de arquivo, banco e usuário.')
+                            : ($temFiltros
+                                ? 'Resultado filtrado da relação de remessas bancárias.'
+                                : 'Visão completa e priorizada dos bancos ativos com potencial de remessa.')
+                    ?>
                 </div>
             </div>
         </div>
@@ -647,7 +773,7 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
         <?php if (empty($linhas)): ?>
             <div class="fb-zero">
                 <i class="fas fa-folder-open"></i>
-                Nenhuma previsão de remessa bancária encontrada.
+                <?= $historicoDisponivel ? 'Nenhuma remessa bancária gerada foi encontrada.' : 'Nenhuma previsão de remessa bancária encontrada.' ?>
             </div>
         <?php else: ?>
             <div class="fb-table-wrap">
@@ -659,11 +785,12 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                             <th>CNAB</th>
                             <th>Agência</th>
                             <th>Conta</th>
-                            <th>Qtd. títulos</th>
-                            <th>Total previsto</th>
-                            <th>Próx. vencimento</th>
-                            <th>Últ. recebimento</th>
-                            <th>Status</th>
+                            <th><?= $historicoDisponivel ? 'Qtd. títulos' : 'Qtd. títulos' ?></th>
+                            <th><?= $historicoDisponivel ? 'Valor remessa' : 'Total previsto' ?></th>
+                            <th><?= $historicoDisponivel ? 'Data geração' : 'Próx. vencimento' ?></th>
+                            <th><?= $historicoDisponivel ? 'Atualização' : 'Últ. recebimento' ?></th>
+                            <th>Status remessa</th>
+                            <th>Status retorno</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -671,6 +798,7 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                         <?php foreach ($linhas as $linha): ?>
                             <?php
                             $banco = $linha['banco'];
+                            $remessa = $linha['remessa'] ?? null;
                             $qtdPercent = $maiorQuantidade > 0 ? (($linha['quantidade'] / $maiorQuantidade) * 100) : 0;
                             ?>
                             <tr>
@@ -679,12 +807,18 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                                     <?php if (!empty($banco->numero_banco) && (string)$banco->numero_banco !== (string)$banco->codigo_banco): ?>
                                         <div class="fb-muted">Núm.: <?= h($banco->numero_banco) ?></div>
                                     <?php endif; ?>
+                                    <?php if ($historicoDisponivel && $remessa): ?>
+                                        <div class="fb-muted">Remessa: <?= h($linha['sequencial_fmt']) ?></div>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
                                     <div class="fb-bank-name"><?= h($banco->nome ?: '—') ?></div>
                                     <?php if (!empty($banco->codigo_banco_interno)): ?>
                                         <div class="fb-muted">Código interno: <?= h($banco->codigo_banco_interno) ?></div>
+                                    <?php endif; ?>
+                                    <?php if ($historicoDisponivel && $remessa): ?>
+                                        <div class="fb-muted"><?= h($linha['arquivo_nome']) ?></div>
                                     <?php endif; ?>
                                     <?php if ($linha['conta_incompleta']): ?>
                                         <div class="fb-muted">Cadastro incompleto para conciliação/retorno.</div>
@@ -693,7 +827,9 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
 
                                 <td>
                                     <?= h($banco->cnab ?: '—') ?>
-                                    <?php if (empty($banco->cnab)): ?>
+                                    <?php if (!empty($remessa) && !empty($remessa->cnab_layout)): ?>
+                                        <div class="fb-muted">Layout: <?= h($remessa->cnab_layout) ?></div>
+                                    <?php elseif (empty($banco->cnab)): ?>
                                         <div class="fb-muted">CNAB não informado</div>
                                     <?php endif; ?>
                                 </td>
@@ -710,6 +846,9 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                                     <?php if ($linha['conta_fmt'] === '—'): ?>
                                         <div class="fb-muted">Conta não informada</div>
                                     <?php endif; ?>
+                                    <?php if (!empty($banco->convenio)): ?>
+                                        <div class="fb-muted">Convênio: <?= h($banco->convenio) ?></div>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
@@ -718,9 +857,11 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                                         <div class="fb-bar">
                                             <div class="fb-bar-fill" style="width:<?= number_format($qtdPercent, 2, '.', '') ?>%;"></div>
                                         </div>
-                                        <div class="fb-muted">Participação relativa na carteira aberta</div>
+                                        <div class="fb-muted">
+                                            <?= $historicoDisponivel ? 'Quantidade registrada nesta remessa' : 'Participação relativa na carteira aberta' ?>
+                                        </div>
                                     <?php else: ?>
-                                        <div class="fb-muted">Sem títulos em aberto</div>
+                                        <div class="fb-muted"><?= $historicoDisponivel ? 'Nenhum título registrado' : 'Sem títulos em aberto' ?></div>
                                     <?php endif; ?>
                                 </td>
 
@@ -731,18 +872,25 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                                 <td>
                                     <?php if (!empty($linha['proximo_vencimento'])): ?>
                                         <?= h($linha['proximo_vencimento']->format('d/m/Y')) ?>
-                                        <div class="fb-muted">Título mais próximo para cobrança/remessa</div>
+                                        <div class="fb-muted">
+                                            <?= $historicoDisponivel ? 'Data de geração da remessa' : 'Título mais próximo para cobrança/remessa' ?>
+                                        </div>
                                     <?php else: ?>
-                                        <span class="fb-muted">Sem vencimento previsto</span>
+                                        <span class="fb-muted"><?= $historicoDisponivel ? 'Sem data de geração' : 'Sem vencimento previsto' ?></span>
                                     <?php endif; ?>
                                 </td>
 
                                 <td>
                                     <?php if (!empty($linha['ultimo_recebimento'])): ?>
                                         <?= h($linha['ultimo_recebimento']->format('d/m/Y')) ?>
-                                        <div class="fb-muted">Última liquidação registrada</div>
+                                        <div class="fb-muted">
+                                            <?= $historicoDisponivel ? 'Última atualização do histórico' : 'Última liquidação registrada' ?>
+                                        </div>
+                                        <?php if ($historicoDisponivel && !empty($linha['usuario_nome'])): ?>
+                                            <div class="fb-muted">Por: <?= h($linha['usuario_nome']) ?></div>
+                                        <?php endif; ?>
                                     <?php else: ?>
-                                        <span class="fb-muted">Sem recebimento encontrado</span>
+                                        <span class="fb-muted"><?= $historicoDisponivel ? 'Sem atualização registrada' : 'Sem recebimento encontrado' ?></span>
                                     <?php endif; ?>
                                 </td>
 
@@ -752,9 +900,37 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                                 </td>
 
                                 <td>
+                                    <?php if ($historicoDisponivel && $remessa): ?>
+                                        <span class="<?= h($linha['ciclo_class']) ?>"><?= h($linha['ciclo_label']) ?></span>
+                                        <div class="fb-muted" style="margin-top:6px;"><?= h($linha['ciclo_ajuda']) ?></div>
+                                        <?php if (!empty($linha['retorno_arquivo']) && !empty($linha['retorno_arquivo']->nome_arquivo_original)): ?>
+                                            <div class="fb-muted" style="margin-top:6px;">Arquivo: <?= h($linha['retorno_arquivo']->nome_arquivo_original) ?></div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="fb-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td>
                                     <div class="fb-row-actions">
+                                        <?php if ($historicoDisponivel && $remessa && !empty($linha['retorno_arquivo']) && !empty($linha['retorno_arquivo']->id)): ?>
+                                            <?= $this->Html->link(
+                                                'Detalhe retorno',
+                                                ['controller' => 'FinanceiroBancos', 'action' => 'detalheRetorno', $linha['retorno_arquivo']->id],
+                                                ['class' => 'btn btn-xs btn-default']
+                                            ) ?>
+                                        <?php endif; ?>
+
+                                        <?php if ($historicoDisponivel && $remessa && !empty($linha['download_disponivel'])): ?>
+                                            <?= $this->Html->link(
+                                                'Download',
+                                                ['controller' => 'FinanceiroBancos', 'action' => 'downloadRemessa', $remessa->id],
+                                                ['class' => 'btn btn-xs btn-pgm btn-pgm-salvar']
+                                            ) ?>
+                                        <?php endif; ?>
+
                                         <?= $this->Html->link(
-                                            'Ver remessa',
+                                            $historicoDisponivel && $remessa ? 'Nova remessa' : 'Ver remessa',
                                             ['controller' => 'FinanceiroBancos', 'action' => 'remessa', '?' => ['banco_id' => $banco->id]],
                                             ['class' => 'btn btn-xs btn-pgm btn-pgm-salvar']
                                         ) ?>
@@ -774,7 +950,7 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
                             <td colspan="5" class="fb-total">Totais</td>
                             <td class="fb-total"><?= number_format((int)$metricasRemessas['qtd_titulos'], 0, ',', '.') ?></td>
                             <td class="fb-total">R$ <?= number_format((float)$metricasRemessas['valor_total'], 2, ',', '.') ?></td>
-                            <td colspan="4"></td>
+                            <td colspan="5"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -783,7 +959,8 @@ $temFiltros = $codigo !== '' || $nome !== '' || $situacao !== '';
     </div>
 
     <p class="fb-footer-note">
-        Esta relação foi organizada para apoiar a rotina de remessa com leitura mais prática: filtre a carteira,
-        priorize bancos com atenção cadastral e use os atalhos da grade para abrir a remessa ou ajustar rapidamente o cadastro bancário.
+        <?= $historicoDisponivel
+            ? 'Esta relação foi organizada para apoiar o ciclo completo da cobrança bancária: acompanhe a remessa gerada, identifique rapidamente se ela está sem retorno, com retorno parcial ou concluído, e use os atalhos da grade para abrir o detalhe do retorno, baixar arquivos e preparar novas emissões.'
+            : 'Esta relação foi organizada para apoiar a rotina de remessa com leitura mais prática: filtre a carteira, priorize bancos com atenção cadastral e use os atalhos da grade para abrir a remessa ou ajustar rapidamente o cadastro bancário.' ?>
     </p>
 </div>

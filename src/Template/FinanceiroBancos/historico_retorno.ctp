@@ -521,6 +521,22 @@ foreach ($historico as $item) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
+                                    <?php if (!empty($item['retorno_arquivo_id'])): ?>
+                                        <?= $this->Html->link(
+                                            'Detalhe retorno',
+                                            ['controller' => 'FinanceiroBancos', 'action' => 'detalheRetorno', $item['retorno_arquivo_id']],
+                                            ['class' => 'btn btn-xs btn-pgm btn-pgm-salvar']
+                                        ) ?>
+                                        <?php if (!empty($item['download_disponivel'])): ?>
+                                            <?= $this->Html->link(
+                                                'Download',
+                                                ['controller' => 'FinanceiroBancos', 'action' => 'downloadRetorno', $item['retorno_arquivo_id']],
+                                                ['class' => 'btn btn-xs btn-default', 'style' => 'margin-left:6px;']
+                                            ) ?>
+                                        <?php endif; ?>
+                                        <div style="height:6px;"></div>
+                                    <?php endif; ?>
+
                                     <?= $this->Html->link(
                                         'Abrir cadastro',
                                         ['controller' => 'FinanceiroBancos', 'action' => 'edit', $banco->id ?? null],
@@ -538,6 +554,7 @@ foreach ($historico as $item) {
     <p class="fb-footer-note">
         Este relatório foi preparado para acompanhar a evolução do módulo de retornos bancários.
         Conforme novas rotinas de importação e processamento forem integradas, esta grade poderá refletir
-        com mais precisão ocorrências, liquidações, rejeições e reconciliações por banco.
+        com mais precisão ocorrências, liquidações, rejeições e reconciliações por banco. Quando houver
+        arquivo persistido, use os atalhos de detalhe e download para auditoria operacional do retorno.
     </p>
 </div>

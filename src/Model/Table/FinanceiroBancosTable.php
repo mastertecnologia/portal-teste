@@ -200,6 +200,77 @@ class FinanceiroBancosTable extends Table
             ->allowEmptyString("utiliza_endosso");
 
         $validator
+            ->scalar("convenio")
+            ->maxLength(
+                "convenio",
+                50,
+                "Convênio deve ter no máximo 50 caracteres.",
+            )
+            ->allowEmptyString("convenio");
+
+        $validator->add("convenio", "formato", [
+            "rule" => function ($value, $context) {
+                if ($value === null || $value === "") {
+                    return true;
+                }
+                return preg_match('/^[0-9A-Za-z.-]+$/', (string) $value) === 1;
+            },
+            "message" =>
+                "Convênio deve conter apenas letras, números, ponto ou hífen.",
+        ]);
+
+        $validator
+            ->scalar("carteira")
+            ->maxLength(
+                "carteira",
+                20,
+                "Carteira deve ter no máximo 20 caracteres.",
+            )
+            ->allowEmptyString("carteira");
+
+        $validator->add("carteira", "formato", [
+            "rule" => function ($value, $context) {
+                if ($value === null || $value === "") {
+                    return true;
+                }
+                return preg_match('/^[0-9A-Za-z.-]+$/', (string) $value) === 1;
+            },
+            "message" =>
+                "Carteira deve conter apenas letras, números, ponto ou hífen.",
+        ]);
+
+        $validator
+            ->scalar("cnab_tipo")
+            ->maxLength(
+                "cnab_tipo",
+                10,
+                "Tipo CNAB deve ter no máximo 10 caracteres.",
+            )
+            ->allowEmptyString("cnab_tipo");
+
+        $validator->add("cnab_tipo", "dominio", [
+            "rule" => function ($value, $context) {
+                if ($value === null || $value === "") {
+                    return true;
+                }
+                return in_array((string) $value, ["240", "400"], true);
+            },
+            "message" => "Tipo CNAB deve ser 240 ou 400.",
+        ]);
+
+        $validator
+            ->integer("proxima_remessa", "Próxima remessa inválida.")
+            ->allowEmptyString("proxima_remessa");
+
+        $validator
+            ->greaterThan(
+                "proxima_remessa",
+                0,
+                "Próxima remessa deve ser maior que zero.",
+            )
+            ->allowEmptyString("proxima_remessa");
+
+        $validator
             ->boolean("ativo", "Status ativo inválido.")
             ->allowEmptyString("ativo");
 
@@ -282,6 +353,46 @@ class FinanceiroBancosTable extends Table
             ],
         );
 
+        $rules->add(
+            function ($entity) {
+                $convenio = trim((string) ($entity->convenio ?? ""));
+                $carteira = trim((string) ($entity->carteira ?? ""));
+                $cnabTipo = trim((string) ($entity->cnab_tipo ?? ""));
+                $codigoBanco = trim((string) ($entity->codigo_banco ?? ""));
+
+                if (
+                    $convenio === "" ||
+                    $carteira === "" ||
+                    $cnabTipo === "" ||
+                    $codigoBanco === ""
+                ) {
+                    return true;
+                }
+
+                $conditions = [
+                    "idempresa" => (int) $entity->idempresa,
+                    "codigo_banco" => $codigoBanco,
+                    "convenio" => $convenio,
+                    "carteira" => $carteira,
+                    "cnab_tipo" => $cnabTipo,
+                ];
+
+                $query = $this->find()->where($conditions);
+
+                if (!$entity->isNew()) {
+                    $query->where(["id <>" => (int) $entity->id]);
+                }
+
+                return $query->count() === 0;
+            },
+            "uniqueConvenioCarteiraPorEmpresa",
+            [
+                "errorField" => "convenio",
+                "message" =>
+                    "Já existe um banco com o mesmo convênio, carteira e layout CNAB para esta empresa.",
+            ],
+        );
+
         return $rules;
     }
 
@@ -318,6 +429,21 @@ class FinanceiroBancosTable extends Table
                         "Cc. " .
                         $conta .
                         ($digitoConta !== "" ? "-" . $digitoConta : "");
+                }
+
+                $convenio = trim((string) ($row->convenio ?? ""));
+                if ($convenio !== "") {
+                    $extras[] = "Conv. " . $convenio;
+                }
+
+                $carteira = trim((string) ($row->carteira ?? ""));
+                if ($carteira !== "") {
+                    $extras[] = "Cart. " . $carteira;
+                }
+
+                $cnabTipo = trim((string) ($row->cnab_tipo ?? ""));
+                if ($cnabTipo !== "") {
+                    $extras[] = "CNAB " . $cnabTipo;
                 }
 
                 if (!empty($extras)) {

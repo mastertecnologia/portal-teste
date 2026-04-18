@@ -2284,11 +2284,35 @@ return [
         "module" => "Financeiro",
         "controller" => "FinanceiroBancos",
         "action" =>
-            "index,cadastrar,add,edit,delete,buscarCatalogo,buscar_catalogo,bootstrapBancoPorCodigo,bootstrap_banco_por_codigo,remessa,remessaMultiempresas,remessa_multiempresas,retorno,relatorios,relacaoBancos,relacao_bancos,relacaoRemessas,relacao_remessas,historicoRetorno,historico_retorno,previsaoRecebimentosPorBanco,previsao_recebimentos_por_banco,previsaoPorBancos,previsao_por_bancos",
+            "index,cadastrar,add,edit,delete,buscarCatalogo,buscar_catalogo,bootstrapBancoPorCodigo,bootstrap_banco_por_codigo,remessa,remessaMultiempresas,remessa_multiempresas,detalheRemessa,detalhe_remessa,retorno,relatorios,relacaoBancos,relacao_bancos,relacaoRemessas,relacao_remessas,downloadRemessa,download_remessa,historicoRetorno,historico_retorno,detalheRetorno,detalhe_retorno,downloadRetorno,download_retorno,previsaoRecebimentosPorBanco,previsao_recebimentos_por_banco,previsaoPorBancos,previsao_por_bancos",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
-            "Cadastro de bancos por empresa, busca por código bancário, remessa, retorno e relatórios bancários.",
+            "Cadastro de bancos por empresa, busca por código bancário, remessa, detalhe da remessa, retorno, detalhe/download de arquivos processados e relatórios bancários.",
+        "sort_order" => $n(),
+    ],
+    [
+        "code" => "financeiro.remessas_api",
+        "name" => "Financeiro — API CNAB de remessas bancárias",
+        "module" => "Financeiro",
+        "controller" => "Remessas",
+        "action" => "listarTitulos,listar_titulos,gerarRemessa,gerar_remessa",
+        "perm_type" => "rbac",
+        "abac_scope" => "empresa",
+        "description" =>
+            "APIs JSON para listar títulos elegíveis e gerar arquivos CNAB de remessa por banco/empresa.",
+        "sort_order" => $n(),
+    ],
+    [
+        "code" => "financeiro.retornos_api",
+        "name" => "Financeiro — API CNAB de retornos bancários",
+        "module" => "Financeiro",
+        "controller" => "Retornos",
+        "action" => "processar",
+        "perm_type" => "rbac",
+        "abac_scope" => "empresa",
+        "description" =>
+            "API JSON para upload e processamento de arquivos CNAB de retorno com baixa, rejeição e log operacional.",
         "sort_order" => $n(),
     ],
     [

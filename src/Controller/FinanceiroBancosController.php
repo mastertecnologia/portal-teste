@@ -53,6 +53,30 @@ class FinanceiroBancosController extends AppController
         } catch (\Exception $e) {
             // Atividades é opcional neste módulo.
         }
+
+        try {
+            $this->loadModel("FinanceiroRemessas");
+        } catch (\Exception $e) {
+            // Histórico de remessas é opcional durante rollout.
+        }
+
+        try {
+            $this->loadModel("FinanceiroRemessaTitulos");
+        } catch (\Exception $e) {
+            // Itens de remessa são opcionais durante rollout.
+        }
+
+        try {
+            $this->loadModel("FinanceiroRetornoArquivos");
+        } catch (\Exception $e) {
+            // Histórico persistido de retorno é opcional durante rollout.
+        }
+
+        try {
+            $this->loadModel("FinanceiroRetornoItens");
+        } catch (\Exception $e) {
+            // Itens persistidos de retorno são opcionais durante rollout.
+        }
     }
 
     public function beforeFilter(Event $event)
@@ -452,8 +476,7 @@ class FinanceiroBancosController extends AppController
     }
 
     /**
-     * Busca rápida de dados do catálogo por código bancário.
-     * Responde JSON para autofill do formulário.
+     * Endpoint de catálogo bancário.
      *
      * @return \Cake\Http\Response
      */
@@ -477,6 +500,244 @@ class FinanceiroBancosController extends AppController
             "ok" => true,
             "item" => $item,
         ]);
+    }
+
+    /**
+     * API JSON para listagem dos bancos do financeiro.
+     *
+     * @return \Cake\Http\Response
+     */
+    public function apiLista()
+    {
+        $this->request->allowMethod(["get"]);
+        $idempresa = (int) $this->Auth->user("idempresa");
+
+        $codigo = trim((string) $this->request->getQuery("codigo", ""));
+        $nome = trim((string) $this->request->getQuery("nome", ""));
+        $q = trim((string) $this->request->getQuery("q", ""));
+        $ativo = (string) $this->request->getQuery("ativo", "");
+
+        $conditions = [
+            "FinanceiroBancos.idempresa" => $idempresa,
+        ];
+
+        if ($codigo !== "") {
+            $conditions["OR"] = [
+                "FinanceiroBancos.codigo_banco" => $codigo,
+                "FinanceiroBancos.numero_banco" => $codigo,
+                "FinanceiroBancos.cnab" => $codigo,
+                "FinanceiroBancos.numero_agencia" => $codigo,
+                "FinanceiroBancos.numero_conta" => $codigo,
+            ];
+        }
+
+        if ($nome !== "") {
+            $conditions["FinanceiroBancos.nome ILIKE"] = "%" . $nome . "%";
+        }
+
+        if ($q !== "") {
+            $conditions[] = [
+                "OR" => [
+                    "FinanceiroBancos.codigo_banco" => $q,
+                    "FinanceiroBancos.numero_banco" => $q,
+                    "FinanceiroBancos.cnab" => $q,
+                    "FinanceiroBancos.numero_agencia" => $q,
+                    "FinanceiroBancos.numero_conta" => $q,
+                    "FinanceiroBancos.nome ILIKE" => "%" . $q . "%",
+                ],
+            ];
+        }
+
+        if ($ativo !== "") {
+            $conditions["FinanceiroBancos.ativo"] = (int) $ativo;
+        }
+
+        $bancos = $this->FinanceiroBancos
+            ->find()
+            ->where($conditions)
+            ->order([
+                "FinanceiroBancos.ativo" => "DESC",
+                "FinanceiroBancos.codigo_banco" => "ASC",
+                "FinanceiroBancos.nome" => "ASC",
+            ])
+            ->toArray();
+
+        $items = [];
+        foreach ($bancos as $banco) {
+            $items[] = [
+                "id" => (int) $banco->id,
+                "idempresa" => (int) $banco->idempresa,
+                "codigo_banco" => (string) ($banco->codigo_banco ?? ""),
+                "numero_banco" => (string) ($banco->numero_banco ?? ""),
+                "cnab" => (string) ($banco->cnab ?? ""),
+                "nome" => (string) ($banco->nome ?? ""),
+                "numero_agencia" => (string) ($banco->numero_agencia ?? ""),
+                "digito_agencia" => (string) ($banco->digito_agencia ?? ""),
+                "numero_conta" => (string) ($banco->numero_conta ?? ""),
+                "digito_conta" => (string) ($banco->digito_conta ?? ""),
+                "codigo_banco_interno" =>
+                    (string) ($banco->codigo_banco_interno ?? ""),
+                "verifica_receber" => (string) ($banco->verifica_receber ?? ""),
+                "utiliza_endosso" => (string) ($banco->utiliza_endosso ?? ""),
+                "convenio" => (string) ($banco->convenio ?? ""),
+                "carteira" => (string) ($banco->carteira ?? ""),
+                "cnab_tipo" => (string) ($banco->cnab_tipo ?? "240"),
+                "proxima_remessa" => (int) ($banco->proxima_remessa ?? 1),
+                "logotipo" => (string) ($banco->logotipo ?? ""),
+                "observacoes" => (string) ($banco->observacoes ?? ""),
+                "ativo" => !empty($banco->ativo),
+                "conta_formatada" => $this->_formatarContaBanco($banco),
+                "conta_incompleta" => $this->_bancoContaIncompleta($banco),
+            ];
+        }
+
+        return $this->jsonResponse([
+            "ok" => true,
+            "data" => [
+                "items" => $items,
+                "totais" => [
+                    "quantidade" => count($items),
+                    "ativos" => count(
+                        array_filter($items, function ($item) {
+                            return !empty($item["ativo"]);
+                        }),
+                    ),
+                    "inativos" => count(
+                        array_filter($items, function ($item) {
+                            return empty($item["ativo"]);
+                        }),
+                    ),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * API JSON para criação/edição de banco.
+     *
+     * @param int|null $id
+     * @return \Cake\Http\Response
+     */
+    public function apiSalvar($id = null)
+    {
+        $this->request->allowMethod(["post", "put", "patch"]);
+        $idempresa = (int) $this->Auth->user("idempresa");
+
+        $data = $this->_normalizarDadosBanco((array) $this->request->getData());
+        $payloadId = (int) Hash::get($data, "id", 0);
+
+        if ($id === null && $payloadId > 0) {
+            $id = $payloadId;
+        }
+
+        $banco = null;
+        if ($id !== null) {
+            $banco = $this->FinanceiroBancos
+                ->find()
+                ->where([
+                    "FinanceiroBancos.id" => (int) $id,
+                    "FinanceiroBancos.idempresa" => $idempresa,
+                ])
+                ->first();
+
+            if (empty($banco)) {
+                throw new NotFoundException(__("Banco não encontrado."));
+            }
+        }
+
+        if ($banco === null) {
+            $banco = $this->FinanceiroBancos->newEntity();
+        }
+
+        unset($data["id"]);
+        $data["idempresa"] = $idempresa;
+        $data["convenio"] = trim((string) Hash::get($data, "convenio", ""));
+        $data["carteira"] = trim((string) Hash::get($data, "carteira", ""));
+        $data["cnab_tipo"] = trim(
+            (string) Hash::get($data, "cnab_tipo", "240"),
+        );
+        $data["proxima_remessa"] = (int) Hash::get($data, "proxima_remessa", 1);
+
+        if ($data["proxima_remessa"] <= 0) {
+            $data["proxima_remessa"] = 1;
+        }
+
+        if (!in_array($data["cnab_tipo"], ["240", "400"], true)) {
+            $data["cnab_tipo"] = "240";
+        }
+
+        if (empty($data["nome"]) && !empty($data["codigo_banco"])) {
+            $catalogo = FinanceiroBancosCatalogo::porCodigo(
+                $data["codigo_banco"],
+            );
+            if (!empty($catalogo)) {
+                $data["nome"] = (string) ($catalogo["nome"] ?? "");
+                $data["numero_banco"] =
+                    $data["numero_banco"] ?:
+                    (string) ($catalogo["codigo"] ?? "");
+                $data["cnab"] =
+                    $data["cnab"] ?: (string) ($catalogo["cnab"] ?? "");
+            }
+        }
+
+        $banco = $this->FinanceiroBancos->patchEntity($banco, $data);
+
+        if (!$this->FinanceiroBancos->save($banco)) {
+            return $this->jsonResponse(
+                [
+                    "ok" => false,
+                    "error" => "Não foi possível salvar o banco.",
+                    "fields" => $banco->getErrors(),
+                ],
+                422,
+            );
+        }
+
+        if (!empty($this->Atividades) && $this->Auth->user("id")) {
+            try {
+                $this->Atividades->registrar(
+                    (int) $this->Auth->user("id"),
+                    $this->request->getParam("controller"),
+                    $this->request->getParam("action"),
+                    (int) $banco->id,
+                );
+            } catch (\Exception $e) {
+                // Auditoria não deve bloquear a API.
+            }
+        }
+
+        return $this->jsonResponse(
+            [
+                "ok" => true,
+                "data" => [
+                    "id" => (int) $banco->id,
+                    "idempresa" => (int) $banco->idempresa,
+                    "codigo_banco" => (string) ($banco->codigo_banco ?? ""),
+                    "numero_banco" => (string) ($banco->numero_banco ?? ""),
+                    "cnab" => (string) ($banco->cnab ?? ""),
+                    "nome" => (string) ($banco->nome ?? ""),
+                    "numero_agencia" => (string) ($banco->numero_agencia ?? ""),
+                    "digito_agencia" => (string) ($banco->digito_agencia ?? ""),
+                    "numero_conta" => (string) ($banco->numero_conta ?? ""),
+                    "digito_conta" => (string) ($banco->digito_conta ?? ""),
+                    "codigo_banco_interno" =>
+                        (string) ($banco->codigo_banco_interno ?? ""),
+                    "verifica_receber" =>
+                        (string) ($banco->verifica_receber ?? ""),
+                    "utiliza_endosso" =>
+                        (string) ($banco->utiliza_endosso ?? ""),
+                    "convenio" => (string) ($banco->convenio ?? ""),
+                    "carteira" => (string) ($banco->carteira ?? ""),
+                    "cnab_tipo" => (string) ($banco->cnab_tipo ?? "240"),
+                    "proxima_remessa" => (int) ($banco->proxima_remessa ?? 1),
+                    "logotipo" => (string) ($banco->logotipo ?? ""),
+                    "observacoes" => (string) ($banco->observacoes ?? ""),
+                    "ativo" => !empty($banco->ativo),
+                    "conta_formatada" => $this->_formatarContaBanco($banco),
+                ],
+            ],
+            200,
+        );
     }
 
     /**
@@ -773,7 +1034,9 @@ class FinanceiroBancosController extends AppController
     /**
      * Relação de remessas bancárias.
      *
-     * Primeira versão baseada em previsão de remessa por banco.
+     * Entrega histórico real quando a tabela `financeiro_remessas` está
+     * disponível e mantém fallback operacional quando o rollout ainda não foi
+     * aplicado no ambiente.
      */
     public function relacaoRemessas()
     {
@@ -784,135 +1047,365 @@ class FinanceiroBancosController extends AppController
         $nome = trim((string) $this->request->getQuery("nome"));
         $situacao = trim((string) $this->request->getQuery("situacao", ""));
 
-        $bancos = $this->FinanceiroBancos
-            ->find()
-            ->where([
-                "FinanceiroBancos.idempresa" => $idempresa,
-                "FinanceiroBancos.ativo" => true,
-            ])
-            ->order(["FinanceiroBancos.codigo_banco" => "ASC"])
-            ->toArray();
+        $historicoDisponivel = !empty($this->FinanceiroRemessas);
+        if ($historicoDisponivel) {
+            try {
+                $query = $this->FinanceiroRemessas
+                    ->find()
+                    ->contain([
+                        "FinanceiroBancos",
+                        "Users",
+                    ])
+                    ->where([
+                        "FinanceiroRemessas.idempresa" => $idempresa,
+                    ])
+                    ->order([
+                        "FinanceiroRemessas.data_geracao" => "DESC",
+                        "FinanceiroRemessas.id" => "DESC",
+                    ]);
 
-        foreach ($bancos as $banco) {
-            $quantidade = 0;
-            $total = 0.0;
-            $proximoVencimento = null;
-            $ultimoRecebimento = null;
-            $contaIncompleta = $this->_bancoContaIncompleta($banco);
+                if ($codigo !== "") {
+                    $query->matching("FinanceiroBancos", function ($q) use (
+                        $codigo
+                    ) {
+                        return $q->where([
+                            "OR" => [
+                                "FinanceiroBancos.codigo_banco" => $codigo,
+                                "FinanceiroBancos.numero_banco" => $codigo,
+                                "FinanceiroBancos.cnab" => $codigo,
+                            ],
+                        ]);
+                    });
+                }
 
-            if ($this->financeiroLancamentosDisponivel) {
-                try {
-                    $rows = $this->FinanceiroLancamentos
-                        ->find()
-                        ->where([
-                            "FinanceiroLancamentos.idempresa" => $idempresa,
-                            "FinanceiroLancamentos.tipo" => "receita",
-                            "FinanceiroLancamentos.status" => "aberto",
-                            "FinanceiroLancamentos.financeiro_banco_id" =>
-                                (int) $banco->id,
-                        ])
-                        ->order([
-                            "FinanceiroLancamentos.data_vencimento" => "ASC",
-                        ])
-                        ->toArray();
+                if ($nome !== "") {
+                    $query->matching("FinanceiroBancos", function ($q) use (
+                        $nome
+                    ) {
+                        return $q->where([
+                            "FinanceiroBancos.nome ILIKE" =>
+                                "%" . $nome . "%",
+                        ]);
+                    });
+                }
 
-                    $quantidade = count($rows);
-                    foreach ($rows as $row) {
-                        $total += (float) $row->valor;
+                $rows = $query->toArray();
+                $retornosPorRemessa = [];
+
+                if (!empty($this->FinanceiroRetornoArquivos) && !empty($rows)) {
+                    $remessaIds = array_values(
+                        array_filter(
+                            array_map(function ($row) {
+                                return (int) ($row->id ?? 0);
+                            }, $rows),
+                        ),
+                    );
+
+                    if (!empty($remessaIds)) {
+                        $retornos = $this->FinanceiroRetornoArquivos
+                            ->find()
+                            ->where([
+                                "FinanceiroRetornoArquivos.idempresa" => $idempresa,
+                                "FinanceiroRetornoArquivos.financeiro_remessa_id IN" =>
+                                    $remessaIds,
+                            ])
+                            ->order([
+                                "FinanceiroRetornoArquivos.data_processamento" =>
+                                    "DESC",
+                                "FinanceiroRetornoArquivos.id" => "DESC",
+                            ])
+                            ->toArray();
+
+                        foreach ($retornos as $retorno) {
+                            $remessaId = (int) (
+                                $retorno->financeiro_remessa_id ?? 0
+                            );
+                            if (
+                                $remessaId > 0 &&
+                                !isset($retornosPorRemessa[$remessaId])
+                            ) {
+                                $pendencias =
+                                    (int) ($retorno->rejeitados ?? 0) +
+                                    (int) ($retorno->ignorados ?? 0) +
+                                    (int) ($retorno->erros ?? 0);
+                                $statusRetorno = "sem_retorno";
+                                $statusLabelRetorno = "Sem retorno";
+                                $statusAjudaRetorno =
+                                    "Remessa gerada sem arquivo de retorno processado até o momento.";
+                                $statusClasseRetorno = "fb-badge fb-badge--neutral";
+
+                                if ((int) ($retorno->baixados ?? 0) > 0) {
+                                    if ($pendencias > 0) {
+                                        $statusRetorno = "retorno_parcial";
+                                        $statusLabelRetorno = "Retorno parcial";
+                                        $statusAjudaRetorno =
+                                            "Arquivo de retorno processado com baixa parcial e pendências operacionais.";
+                                        $statusClasseRetorno =
+                                            "fb-badge fb-badge--warn";
+                                    } else {
+                                        $statusRetorno = "retorno_concluido";
+                                        $statusLabelRetorno = "Retorno concluído";
+                                        $statusAjudaRetorno =
+                                            "Arquivo de retorno processado sem pendências para esta remessa.";
+                                        $statusClasseRetorno =
+                                            "fb-badge fb-badge--ok";
+                                    }
+                                } elseif ($pendencias > 0) {
+                                    $statusRetorno = "retorno_parcial";
+                                    $statusLabelRetorno = "Retorno com pendência";
+                                    $statusAjudaRetorno =
+                                        "Arquivo de retorno processado, mas ainda existem rejeições, ignorados ou erros.";
+                                    $statusClasseRetorno =
+                                        "fb-badge fb-badge--warn";
+                                }
+
+                                $retornosPorRemessa[$remessaId] = [
+                                    "arquivo" => $retorno,
+                                    "status" => $statusRetorno,
+                                    "label" => $statusLabelRetorno,
+                                    "ajuda" => $statusAjudaRetorno,
+                                    "class" => $statusClasseRetorno,
+                                    "pendencias" => $pendencias,
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                foreach ($rows as $row) {
+                    $banco = $row->financeiro_banco ?? null;
+                    if (empty($banco)) {
+                        continue;
+                    }
+
+                    $contaIncompleta = $this->_bancoContaIncompleta($banco);
+                    $status = trim((string) ($row->status ?? "gerada"));
+                    $retornoInfo = $retornosPorRemessa[(int) ($row->id ?? 0)] ?? [
+                        "arquivo" => null,
+                        "status" => "sem_retorno",
+                        "label" => "Sem retorno",
+                        "ajuda" =>
+                            "Remessa gerada sem arquivo de retorno processado até o momento.",
+                        "class" => "fb-badge fb-badge--neutral",
+                        "pendencias" => 0,
+                    ];
+
+                    if ($situacao !== "") {
                         if (
-                            $proximoVencimento === null &&
-                            !empty($row->data_vencimento)
+                            $situacao === "com_remessa" &&
+                            !in_array(
+                                $status,
+                                ["gerada", "enviada", "processada"],
+                                true,
+                            )
                         ) {
-                            $proximoVencimento = $row->data_vencimento;
+                            continue;
+                        }
+
+                        if (
+                            $situacao === "sem_remessa" &&
+                            in_array(
+                                $status,
+                                ["gerada", "enviada", "processada"],
+                                true,
+                            )
+                        ) {
+                            continue;
+                        }
+
+                        if (
+                            $situacao === "conta_incompleta" &&
+                            !$contaIncompleta
+                        ) {
+                            continue;
+                        }
+
+                        if (
+                            $situacao === "sem_retorno" &&
+                            $retornoInfo["status"] !== "sem_retorno"
+                        ) {
+                            continue;
+                        }
+
+                        if (
+                            $situacao === "retorno_parcial" &&
+                            $retornoInfo["status"] !== "retorno_parcial"
+                        ) {
+                            continue;
+                        }
+
+                        if (
+                            $situacao === "retorno_concluido" &&
+                            $retornoInfo["status"] !== "retorno_concluido"
+                        ) {
+                            continue;
                         }
                     }
 
-                    $ultimoRecebido = $this->FinanceiroLancamentos
-                        ->find()
-                        ->where([
-                            "FinanceiroLancamentos.idempresa" => $idempresa,
-                            "FinanceiroLancamentos.tipo" => "receita",
-                            "FinanceiroLancamentos.status" => "recebido",
-                            "FinanceiroLancamentos.financeiro_banco_id" =>
-                                (int) $banco->id,
-                        ])
-                        ->order([
-                            "FinanceiroLancamentos.data_recebimento" => "DESC",
-                            "FinanceiroLancamentos.id" => "DESC",
-                        ])
-                        ->first();
-
-                    if (!empty($ultimoRecebido->data_recebimento)) {
-                        $ultimoRecebimento = $ultimoRecebido->data_recebimento;
-                    }
-                } catch (\Exception $e) {
-                    // ignora
+                    $resumo[] = [
+                        "banco" => $banco,
+                        "quantidade" => (int) ($row->quantidade_titulos ?? 0),
+                        "total" => (float) ($row->valor_total ?? 0),
+                        "proximo_vencimento" => $row->data_geracao ?? null,
+                        "ultimo_recebimento" => $row->modified ?? $row->created,
+                        "conta_incompleta" => $contaIncompleta,
+                        "remessa" => $row,
+                        "download_disponivel" =>
+                            $this->_arquivoRemessaDisponivel($row),
+                        "retorno_arquivo" => $retornoInfo["arquivo"],
+                        "retorno_status" => $retornoInfo["status"],
+                        "retorno_label" => $retornoInfo["label"],
+                        "retorno_ajuda" => $retornoInfo["ajuda"],
+                        "retorno_class" => $retornoInfo["class"],
+                        "retorno_pendencias" => (int) (
+                            $retornoInfo["pendencias"] ?? 0
+                        ),
+                    ];
                 }
+            } catch (\Exception $e) {
+                $historicoDisponivel = false;
+                $resumo = [];
+            }
+        }
+
+        if (!$historicoDisponivel) {
+            $bancos = $this->FinanceiroBancos
+                ->find()
+                ->where([
+                    "FinanceiroBancos.idempresa" => $idempresa,
+                    "FinanceiroBancos.ativo" => true,
+                ])
+                ->order(["FinanceiroBancos.codigo_banco" => "ASC"])
+                ->toArray();
+
+            foreach ($bancos as $banco) {
+                $quantidade = 0;
+                $total = 0.0;
+                $proximoVencimento = null;
+                $ultimoRecebimento = null;
+                $contaIncompleta = $this->_bancoContaIncompleta($banco);
+
+                if ($this->financeiroLancamentosDisponivel) {
+                    try {
+                        $rows = $this->FinanceiroLancamentos
+                            ->find()
+                            ->where([
+                                "FinanceiroLancamentos.idempresa" => $idempresa,
+                                "FinanceiroLancamentos.tipo" => "receita",
+                                "FinanceiroLancamentos.status" => "aberto",
+                                "FinanceiroLancamentos.financeiro_banco_id" =>
+                                    (int) $banco->id,
+                            ])
+                            ->order([
+                                "FinanceiroLancamentos.data_vencimento" =>
+                                    "ASC",
+                            ])
+                            ->toArray();
+
+                        $quantidade = count($rows);
+                        foreach ($rows as $row) {
+                            $total += (float) $row->valor;
+                            if (
+                                $proximoVencimento === null &&
+                                !empty($row->data_vencimento)
+                            ) {
+                                $proximoVencimento = $row->data_vencimento;
+                            }
+                        }
+
+                        $ultimoRecebido = $this->FinanceiroLancamentos
+                            ->find()
+                            ->where([
+                                "FinanceiroLancamentos.idempresa" => $idempresa,
+                                "FinanceiroLancamentos.tipo" => "receita",
+                                "FinanceiroLancamentos.status" => "recebido",
+                                "FinanceiroLancamentos.financeiro_banco_id" =>
+                                    (int) $banco->id,
+                            ])
+                            ->order([
+                                "FinanceiroLancamentos.data_recebimento" =>
+                                    "DESC",
+                                "FinanceiroLancamentos.id" => "DESC",
+                            ])
+                            ->first();
+
+                        if (!empty($ultimoRecebido->data_recebimento)) {
+                            $ultimoRecebimento =
+                                $ultimoRecebido->data_recebimento;
+                        }
+                    } catch (\Exception $e) {
+                        // ignora
+                    }
+                }
+
+                $resumo[] = [
+                    "banco" => $banco,
+                    "quantidade" => $quantidade,
+                    "total" => $total,
+                    "proximo_vencimento" => $proximoVencimento,
+                    "ultimo_recebimento" => $ultimoRecebimento,
+                    "conta_incompleta" => $contaIncompleta,
+                    "remessa" => null,
+                    "download_disponivel" => false,
+                ];
             }
 
-            $resumo[] = [
-                "banco" => $banco,
-                "quantidade" => $quantidade,
-                "total" => $total,
-                "proximo_vencimento" => $proximoVencimento,
-                "ultimo_recebimento" => $ultimoRecebimento,
-                "conta_incompleta" => $contaIncompleta,
-            ];
-        }
+            if ($codigo !== "") {
+                $resumo = array_values(
+                    array_filter($resumo, function ($item) use ($codigo) {
+                        $banco = $item["banco"] ?? null;
+                        if (empty($banco)) {
+                            return false;
+                        }
 
-        if ($codigo !== "") {
-            $resumo = array_values(
-                array_filter($resumo, function ($item) use ($codigo) {
-                    $banco = $item["banco"] ?? null;
-                    if (empty($banco)) {
-                        return false;
-                    }
-
-                    return trim((string) ($banco->codigo_banco ?? "")) ===
-                        $codigo ||
-                        trim((string) ($banco->numero_banco ?? "")) ===
+                        return trim((string) ($banco->codigo_banco ?? "")) ===
                             $codigo ||
-                        trim((string) ($banco->cnab ?? "")) === $codigo;
-                }),
-            );
-        }
+                            trim((string) ($banco->numero_banco ?? "")) ===
+                                $codigo ||
+                            trim((string) ($banco->cnab ?? "")) === $codigo;
+                    }),
+                );
+            }
 
-        if ($nome !== "") {
-            $nomeLower = mb_strtolower($nome);
-            $resumo = array_values(
-                array_filter($resumo, function ($item) use ($nomeLower) {
-                    $banco = $item["banco"] ?? null;
-                    $nomeBanco = mb_strtolower(
-                        trim((string) ($banco->nome ?? "")),
-                    );
+            if ($nome !== "") {
+                $nomeLower = mb_strtolower($nome);
+                $resumo = array_values(
+                    array_filter($resumo, function ($item) use ($nomeLower) {
+                        $banco = $item["banco"] ?? null;
+                        $nomeBanco = mb_strtolower(
+                            trim((string) ($banco->nome ?? "")),
+                        );
 
-                    return $nomeBanco !== "" &&
-                        mb_strpos($nomeBanco, $nomeLower) !== false;
-                }),
-            );
-        }
+                        return $nomeBanco !== "" &&
+                            mb_strpos($nomeBanco, $nomeLower) !== false;
+                    }),
+                );
+            }
 
-        if ($situacao !== "") {
-            $resumo = array_values(
-                array_filter($resumo, function ($item) use ($situacao) {
-                    $quantidade = (int) ($item["quantidade"] ?? 0);
-                    $contaIncompleta = !empty($item["conta_incompleta"]);
+            if ($situacao !== "") {
+                $resumo = array_values(
+                    array_filter($resumo, function ($item) use ($situacao) {
+                        $quantidade = (int) ($item["quantidade"] ?? 0);
+                        $contaIncompleta = !empty(
+                            $item["conta_incompleta"],
+                        );
 
-                    if ($situacao === "com_remessa") {
-                        return $quantidade > 0;
-                    }
+                        if ($situacao === "com_remessa") {
+                            return $quantidade > 0;
+                        }
 
-                    if ($situacao === "sem_remessa") {
-                        return $quantidade <= 0;
-                    }
+                        if ($situacao === "sem_remessa") {
+                            return $quantidade <= 0;
+                        }
 
-                    if ($situacao === "conta_incompleta") {
-                        return $contaIncompleta;
-                    }
+                        if ($situacao === "conta_incompleta") {
+                            return $contaIncompleta;
+                        }
 
-                    return true;
-                }),
-            );
+                        return true;
+                    }),
+                );
+            }
         }
 
         $metricasRemessas = [
@@ -922,13 +1415,16 @@ class FinanceiroBancosController extends AppController
             "conta_incompleta" => 0,
             "qtd_titulos" => 0,
             "valor_total" => 0.0,
+            "sem_retorno" => 0,
+            "retorno_parcial" => 0,
+            "retorno_concluido" => 0,
         ];
 
         foreach ($resumo as $item) {
             $quantidade = (int) ($item["quantidade"] ?? 0);
             $total = (float) ($item["total"] ?? 0);
 
-            if ($quantidade > 0) {
+            if (!empty($item["remessa"])) {
                 $metricasRemessas["com_remessa"]++;
             } else {
                 $metricasRemessas["sem_remessa"]++;
@@ -938,11 +1434,40 @@ class FinanceiroBancosController extends AppController
                 $metricasRemessas["conta_incompleta"]++;
             }
 
+            if (!empty($item["remessa"])) {
+                $statusRetorno = (string) ($item["retorno_status"] ?? "sem_retorno");
+                if ($statusRetorno === "retorno_concluido") {
+                    $metricasRemessas["retorno_concluido"]++;
+                } elseif ($statusRetorno === "retorno_parcial") {
+                    $metricasRemessas["retorno_parcial"]++;
+                } else {
+                    $metricasRemessas["sem_retorno"]++;
+                }
+            }
+
             $metricasRemessas["qtd_titulos"] += $quantidade;
             $metricasRemessas["valor_total"] += $total;
         }
 
         usort($resumo, function ($a, $b) {
+            $aRemessa = $a["remessa"] ?? null;
+            $bRemessa = $b["remessa"] ?? null;
+
+            if (!empty($aRemessa) && !empty($bRemessa)) {
+                $aData = $aRemessa->data_geracao ?? null;
+                $bData = $bRemessa->data_geracao ?? null;
+
+                if (!empty($aData) && !empty($bData) && $aData != $bData) {
+                    return $aData > $bData ? -1 : 1;
+                }
+
+                return ((int) ($bRemessa->id ?? 0)) <=> ((int) ($aRemessa->id ?? 0));
+            }
+
+            if (!empty($aRemessa) || !empty($bRemessa)) {
+                return !empty($aRemessa) ? -1 : 1;
+            }
+
             $aQtd = (int) ($a["quantidade"] ?? 0);
             $bQtd = (int) ($b["quantidade"] ?? 0);
 
@@ -964,10 +1489,253 @@ class FinanceiroBancosController extends AppController
         });
 
         $this->set(
-            compact("resumo", "codigo", "nome", "situacao", "metricasRemessas"),
+            compact(
+                "resumo",
+                "codigo",
+                "nome",
+                "situacao",
+                "metricasRemessas",
+                "historicoDisponivel",
+            ),
         );
         $this->set("title", "Relação de Remessas Bancárias");
         $this->set("hideLayoutPageTitle", true);
+    }
+
+    /**
+     * Exibe o detalhe de uma remessa com os títulos incluídos e o status do
+     * último retorno relacionado a cada item.
+     *
+     * @param int|null $id
+     * @return void
+     */
+    public function detalheRemessa($id = null)
+    {
+        $this->request->allowMethod(["get"]);
+        $idempresa = (int) $this->Auth->user("idempresa");
+
+        if (
+            empty($this->FinanceiroRemessas) ||
+            empty($this->FinanceiroRemessaTitulos)
+        ) {
+            throw new NotFoundException(
+                __("Detalhe de remessa indisponível."),
+            );
+        }
+
+        $remessa = $this->FinanceiroRemessas
+            ->find()
+            ->contain([
+                "FinanceiroBancos",
+                "Users",
+                "FinanceiroRemessaTitulos" => function ($q) {
+                    return $q
+                        ->contain([
+                            "FinanceiroLancamentos",
+                        ])
+                        ->order([
+                            "FinanceiroRemessaTitulos.id" => "ASC",
+                        ]);
+                },
+            ])
+            ->where([
+                "FinanceiroRemessas.id" => (int) $id,
+                "FinanceiroRemessas.idempresa" => $idempresa,
+            ])
+            ->first();
+
+        if (empty($remessa)) {
+            throw new NotFoundException(__("Remessa não encontrada."));
+        }
+
+        $retornosPorItemRemessa = [];
+        $retornosPorLancamento = [];
+
+        if (!empty($this->FinanceiroRetornoItens)) {
+            try {
+                $retornos = $this->FinanceiroRetornoItens
+                    ->find()
+                    ->contain([
+                        "FinanceiroRetornoArquivos",
+                    ])
+                    ->where([
+                        "OR" => [
+                            "FinanceiroRetornoItens.financeiro_remessa_id" =>
+                                (int) $remessa->id,
+                            "FinanceiroRetornoArquivos.financeiro_remessa_id" =>
+                                (int) $remessa->id,
+                        ],
+                    ])
+                    ->matching("FinanceiroRetornoArquivos", function ($q) use (
+                        $idempresa,
+                    ) {
+                        return $q->where([
+                            "FinanceiroRetornoArquivos.idempresa" => $idempresa,
+                        ]);
+                    })
+                    ->order([
+                        "FinanceiroRetornoItens.id" => "DESC",
+                    ])
+                    ->toArray();
+
+                foreach ($retornos as $retornoItem) {
+                    $remessaTituloId = (int) (
+                        $retornoItem->financeiro_remessa_titulo_id ?? 0
+                    );
+                    if (
+                        $remessaTituloId > 0 &&
+                        !isset($retornosPorItemRemessa[$remessaTituloId])
+                    ) {
+                        $retornosPorItemRemessa[$remessaTituloId] = $retornoItem;
+                    }
+
+                    $lancamentoId = (int) (
+                        $retornoItem->financeiro_lancamento_id ?? 0
+                    );
+                    if (
+                        $lancamentoId > 0 &&
+                        !isset($retornosPorLancamento[$lancamentoId])
+                    ) {
+                        $retornosPorLancamento[$lancamentoId] = $retornoItem;
+                    }
+                }
+            } catch (\Exception $e) {
+                $retornosPorItemRemessa = [];
+                $retornosPorLancamento = [];
+            }
+        }
+
+        $itensDetalhados = [];
+        $resumoDetalhe = [
+            "titulos" => 0,
+            "valor_total" => 0.0,
+            "baixados" => 0,
+            "rejeitados" => 0,
+            "ignorados" => 0,
+            "erros" => 0,
+            "sem_retorno" => 0,
+        ];
+
+        foreach ((array) ($remessa->financeiro_remessa_titulos ?? []) as $item) {
+            $lancamento = $item->financeiro_lancamento ?? null;
+            $retornoItem =
+                $retornosPorItemRemessa[(int) ($item->id ?? 0)] ??
+                $retornosPorLancamento[(int) ($item->financeiro_lancamento_id ?? 0)] ??
+                null;
+
+            $statusRetorno = "sem_retorno";
+            $statusRetornoLabel = "Sem retorno";
+            $statusRetornoClass = "fb-badge fb-badge--neutral";
+            $statusRetornoAjuda =
+                "Nenhum arquivo de retorno foi associado a este título até o momento.";
+
+            if (!empty($retornoItem)) {
+                $statusItem = trim((string) ($retornoItem->status_item ?? "ignorado"));
+
+                if ($statusItem === "baixado") {
+                    $statusRetorno = "baixado";
+                    $statusRetornoLabel = "Baixado";
+                    $statusRetornoClass = "fb-badge fb-badge--ok";
+                    $statusRetornoAjuda =
+                        "Título liquidado automaticamente pelo arquivo de retorno.";
+                } elseif ($statusItem === "rejeitado") {
+                    $statusRetorno = "rejeitado";
+                    $statusRetornoLabel = "Rejeitado";
+                    $statusRetornoClass = "fb-badge fb-badge--danger";
+                    $statusRetornoAjuda =
+                        "Banco rejeitou o item no retorno e a ocorrência foi persistida.";
+                } elseif ($statusItem === "erro") {
+                    $statusRetorno = "erro";
+                    $statusRetornoLabel = "Erro";
+                    $statusRetornoClass = "fb-badge fb-badge--danger";
+                    $statusRetornoAjuda =
+                        "Falha operacional ao aplicar o retorno deste título.";
+                } elseif ($statusItem === "aceito") {
+                    $statusRetorno = "aceito";
+                    $statusRetornoLabel = "Aceito";
+                    $statusRetornoClass = "fb-badge fb-badge--info";
+                    $statusRetornoAjuda =
+                        "Ocorrência recebida e registrada sem baixa/rejeição automática.";
+                } else {
+                    $statusRetorno = "ignorado";
+                    $statusRetornoLabel = "Ignorado";
+                    $statusRetornoClass = "fb-badge fb-badge--warn";
+                    $statusRetornoAjuda =
+                        "Ocorrência recebida e mantida para análise manual.";
+                }
+            }
+
+            if ($statusRetorno === "baixado") {
+                $resumoDetalhe["baixados"]++;
+            } elseif ($statusRetorno === "rejeitado") {
+                $resumoDetalhe["rejeitados"]++;
+            } elseif ($statusRetorno === "ignorado" || $statusRetorno === "aceito") {
+                $resumoDetalhe["ignorados"]++;
+            } elseif ($statusRetorno === "erro") {
+                $resumoDetalhe["erros"]++;
+            } else {
+                $resumoDetalhe["sem_retorno"]++;
+            }
+
+            $resumoDetalhe["titulos"]++;
+            $resumoDetalhe["valor_total"] += (float) ($item->valor_titulo ?? 0);
+
+            $itensDetalhados[] = [
+                "item" => $item,
+                "lancamento" => $lancamento,
+                "retorno_item" => $retornoItem,
+                "status_retorno" => $statusRetorno,
+                "status_retorno_label" => $statusRetornoLabel,
+                "status_retorno_class" => $statusRetornoClass,
+                "status_retorno_ajuda" => $statusRetornoAjuda,
+            ];
+        }
+
+        $this->set(compact("remessa", "itensDetalhados", "resumoDetalhe"));
+        $this->set("title", "Detalhe da Remessa");
+        $this->set("hideLayoutPageTitle", true);
+    }
+
+    /**
+     * Faz o download seguro de um arquivo de remessa já gerado para a empresa
+     * atual.
+     *
+     * @param int|null $id
+     * @return \Cake\Http\Response
+     */
+    public function downloadRemessa($id = null)
+    {
+        $this->request->allowMethod(["get"]);
+        $idempresa = (int) $this->Auth->user("idempresa");
+
+        if (empty($this->FinanceiroRemessas)) {
+            throw new NotFoundException(__("Histórico de remessas indisponível."));
+        }
+
+        $remessa = $this->FinanceiroRemessas
+            ->find()
+            ->contain(["FinanceiroBancos"])
+            ->where([
+                "FinanceiroRemessas.id" => (int) $id,
+                "FinanceiroRemessas.idempresa" => $idempresa,
+            ])
+            ->first();
+
+        if (empty($remessa)) {
+            throw new NotFoundException(__("Remessa não encontrada."));
+        }
+
+        if (!$this->_arquivoRemessaDisponivel($remessa)) {
+            throw new NotFoundException(__("Arquivo da remessa não encontrado."));
+        }
+
+        $caminhoRelativo = trim((string) ($remessa->caminho_arquivo ?? ""));
+        $arquivo = WWW_ROOT . str_replace(["/", "\\"], DS, $caminhoRelativo);
+
+        return $this->response->withFile($arquivo, [
+            "download" => true,
+            "name" => trim((string) ($remessa->nome_arquivo ?? basename($arquivo))),
+        ]);
     }
 
     /**
@@ -987,7 +1755,6 @@ class FinanceiroBancosController extends AppController
             ->toArray();
 
         $historico = [];
-        $resumoRetorno = $this->_resumoRetornosPorBanco($idempresa, $bancos);
         $metricasHistorico = [
             "bancos" => count($bancos),
             "com_extrato" => 0,
@@ -999,85 +1766,463 @@ class FinanceiroBancosController extends AppController
             "ultimo_evento_geral" => null,
         ];
 
-        foreach ($bancos as $banco) {
-            $resumoBanco = $resumoRetorno[(int) $banco->id] ?? [
-                "quantidade" => 0,
-                "conciliados" => 0,
-                "pendentes" => 0,
-                "ultimo_evento" => null,
-            ];
+        $resumoPersistido = [];
+        if (!empty($this->FinanceiroRetornoArquivos)) {
+            try {
+                $arquivos = $this->FinanceiroRetornoArquivos
+                    ->find()
+                    ->contain([
+                        "FinanceiroBancos",
+                        "FinanceiroRetornoItens",
+                    ])
+                    ->where([
+                        "FinanceiroRetornoArquivos.idempresa" => $idempresa,
+                    ])
+                    ->order([
+                        "FinanceiroRetornoArquivos.data_processamento" => "DESC",
+                        "FinanceiroRetornoArquivos.id" => "DESC",
+                    ])
+                    ->toArray();
 
-            $quantidade = (int) ($resumoBanco["quantidade"] ?? 0);
-            $conciliados = (int) ($resumoBanco["conciliados"] ?? 0);
-            $pendentes = (int) ($resumoBanco["pendentes"] ?? 0);
-            $ultimoEvento = $resumoBanco["ultimo_evento"] ?? null;
-            $contaIncompleta = $this->_bancoContaIncompleta($banco);
+                foreach ($arquivos as $arquivo) {
+                    $bancoId = (int) ($arquivo->financeiro_banco_id ?? 0);
+                    if ($bancoId <= 0) {
+                        continue;
+                    }
 
-            $status = "Em implantação";
-            if ($quantidade > 0) {
-                $status = $pendentes > 0 ? "Pendente" : "Sucesso";
-            } elseif ($contaIncompleta) {
-                $status = "Conta incompleta";
-            }
+                    if (!isset($resumoPersistido[$bancoId])) {
+                        $resumoPersistido[$bancoId] = [
+                            "quantidade" => 0,
+                            "conciliados" => 0,
+                            "pendentes" => 0,
+                            "ultimo_evento" => null,
+                            "ultimo_arquivo" => null,
+                            "ultimo_status" => null,
+                            "processados" => 0,
+                            "baixados" => 0,
+                            "rejeitados" => 0,
+                            "ignorados" => 0,
+                            "erros" => 0,
+                        ];
+                    }
 
-            $descricao =
-                $quantidade > 0
-                    ? sprintf(
-                        "%d lançamento(s) de extrato vinculados a esta conta bancária, sendo %d conciliado(s) e %d pendente(s).",
-                        $quantidade,
-                        $conciliados,
-                        $pendentes,
-                    )
-                    : "Nenhum extrato importado ainda para esta conta bancária.";
+                    $resumoPersistido[$bancoId]["quantidade"] += (int) (
+                        $arquivo->processados ?? 0
+                    );
+                    $resumoPersistido[$bancoId]["conciliados"] += (int) (
+                        $arquivo->baixados ?? 0
+                    );
+                    $resumoPersistido[$bancoId]["pendentes"] +=
+                        (int) ($arquivo->rejeitados ?? 0) +
+                        (int) ($arquivo->ignorados ?? 0) +
+                        (int) ($arquivo->erros ?? 0);
+                    $resumoPersistido[$bancoId]["processados"] += (int) (
+                        $arquivo->processados ?? 0
+                    );
+                    $resumoPersistido[$bancoId]["baixados"] += (int) (
+                        $arquivo->baixados ?? 0
+                    );
+                    $resumoPersistido[$bancoId]["rejeitados"] += (int) (
+                        $arquivo->rejeitados ?? 0
+                    );
+                    $resumoPersistido[$bancoId]["ignorados"] += (int) (
+                        $arquivo->ignorados ?? 0
+                    );
+                    $resumoPersistido[$bancoId]["erros"] += (int) (
+                        $arquivo->erros ?? 0
+                    );
 
-            if ($contaIncompleta) {
-                $descricao .=
-                    " Cadastro bancário incompleto para conciliação automática.";
-            }
-
-            if (!empty($ultimoEvento)) {
-                $descricao .=
-                    " Último movimento em " .
-                    $ultimoEvento->format("d/m/Y") .
-                    ".";
-
-                if (
-                    $metricasHistorico["ultimo_evento_geral"] === null ||
-                    $ultimoEvento > $metricasHistorico["ultimo_evento_geral"]
-                ) {
-                    $metricasHistorico["ultimo_evento_geral"] = $ultimoEvento;
+                    $dataArquivo = $arquivo->data_processamento ?? null;
+                    if (
+                        !empty($dataArquivo) &&
+                        (
+                            $resumoPersistido[$bancoId]["ultimo_evento"] ===
+                                null ||
+                            $dataArquivo >
+                                $resumoPersistido[$bancoId]["ultimo_evento"]
+                        )
+                    ) {
+                        $resumoPersistido[$bancoId]["ultimo_evento"] =
+                            $dataArquivo;
+                        $resumoPersistido[$bancoId]["ultimo_arquivo"] =
+                            $arquivo;
+                        $resumoPersistido[$bancoId]["ultimo_status"] = (string) (
+                            $arquivo->status_processamento ?? "processado"
+                        );
+                    }
                 }
+            } catch (\Exception $e) {
+                $resumoPersistido = [];
             }
+        }
 
-            if ($quantidade > 0) {
-                $metricasHistorico["com_extrato"]++;
-            } else {
-                $metricasHistorico["sem_extrato"]++;
+        if (empty($resumoPersistido)) {
+            $resumoRetorno = $this->_resumoRetornosPorBanco($idempresa, $bancos);
+
+            foreach ($bancos as $banco) {
+                $resumoBanco = $resumoRetorno[(int) $banco->id] ?? [
+                    "quantidade" => 0,
+                    "conciliados" => 0,
+                    "pendentes" => 0,
+                    "ultimo_evento" => null,
+                ];
+
+                $quantidade = (int) ($resumoBanco["quantidade"] ?? 0);
+                $conciliados = (int) ($resumoBanco["conciliados"] ?? 0);
+                $pendentes = (int) ($resumoBanco["pendentes"] ?? 0);
+                $ultimoEvento = $resumoBanco["ultimo_evento"] ?? null;
+                $contaIncompleta = $this->_bancoContaIncompleta($banco);
+
+                $status = "Em implantação";
+                if ($quantidade > 0) {
+                    $status = $pendentes > 0 ? "Pendente" : "Sucesso";
+                } elseif ($contaIncompleta) {
+                    $status = "Conta incompleta";
+                }
+
+                $descricao =
+                    $quantidade > 0
+                        ? sprintf(
+                            "%d lançamento(s) de extrato vinculados a esta conta bancária, sendo %d conciliado(s) e %d pendente(s).",
+                            $quantidade,
+                            $conciliados,
+                            $pendentes,
+                        )
+                        : "Nenhum extrato importado ainda para esta conta bancária.";
+
+                if ($contaIncompleta) {
+                    $descricao .=
+                        " Cadastro bancário incompleto para conciliação automática.";
+                }
+
+                if (!empty($ultimoEvento)) {
+                    $descricao .=
+                        " Último movimento em " .
+                        $ultimoEvento->format("d/m/Y") .
+                        ".";
+
+                    if (
+                        $metricasHistorico["ultimo_evento_geral"] === null ||
+                        $ultimoEvento >
+                            $metricasHistorico["ultimo_evento_geral"]
+                    ) {
+                        $metricasHistorico["ultimo_evento_geral"] =
+                            $ultimoEvento;
+                    }
+                }
+
+                if ($quantidade > 0) {
+                    $metricasHistorico["com_extrato"]++;
+                } else {
+                    $metricasHistorico["sem_extrato"]++;
+                }
+
+                if ($pendentes > 0) {
+                    $metricasHistorico["com_pendencia"]++;
+                }
+
+                $metricasHistorico["conciliados"] += $conciliados;
+                $metricasHistorico["pendentes"] += $pendentes;
+                $metricasHistorico["total_eventos"] += $quantidade;
+
+                $historico[] = [
+                    "banco" => $banco,
+                    "status" => $status,
+                    "descricao" => $descricao,
+                    "quantidade" => $quantidade,
+                    "conciliados" => $conciliados,
+                    "pendentes" => $pendentes,
+                    "ultimo_evento" => $ultimoEvento,
+                    "conta_incompleta" => $contaIncompleta,
+                    "retorno_arquivo_id" => null,
+                    "download_disponivel" => false,
+                ];
             }
+        } else {
+            foreach ($bancos as $banco) {
+                $resumoBanco = $resumoPersistido[(int) $banco->id] ?? [
+                    "quantidade" => 0,
+                    "conciliados" => 0,
+                    "pendentes" => 0,
+                    "ultimo_evento" => null,
+                    "ultimo_arquivo" => null,
+                    "ultimo_status" => null,
+                    "processados" => 0,
+                    "baixados" => 0,
+                    "rejeitados" => 0,
+                    "ignorados" => 0,
+                    "erros" => 0,
+                ];
 
-            if ($pendentes > 0) {
-                $metricasHistorico["com_pendencia"]++;
+                $quantidade = (int) ($resumoBanco["quantidade"] ?? 0);
+                $conciliados = (int) ($resumoBanco["conciliados"] ?? 0);
+                $pendentes = (int) ($resumoBanco["pendentes"] ?? 0);
+                $ultimoEvento = $resumoBanco["ultimo_evento"] ?? null;
+                $ultimoArquivo = $resumoBanco["ultimo_arquivo"] ?? null;
+                $ultimoStatus = trim(
+                    (string) ($resumoBanco["ultimo_status"] ?? ""),
+                );
+                $contaIncompleta = $this->_bancoContaIncompleta($banco);
+
+                $status = "Em implantação";
+                if ($ultimoStatus === "erro") {
+                    $status = "Erro";
+                } elseif ($pendentes > 0) {
+                    $status = "Pendente";
+                } elseif ($quantidade > 0) {
+                    $status = "Sucesso";
+                } elseif ($contaIncompleta) {
+                    $status = "Conta incompleta";
+                }
+
+                $descricao =
+                    $quantidade > 0
+                        ? sprintf(
+                            "%d item(ns) processado(s) em retorno persistido, sendo %d conciliado(s) e %d pendente(s).",
+                            $quantidade,
+                            $conciliados,
+                            $pendentes,
+                        )
+                        : "Nenhum arquivo de retorno processado ainda para esta conta bancária.";
+
+                if (!empty($ultimoArquivo)) {
+                    $descricao .=
+                        " Último arquivo: " .
+                        trim(
+                            (string) (
+                                $ultimoArquivo->nome_arquivo_original ?? "N/D"
+                            ),
+                        ) .
+                        ".";
+                }
+
+                if ((int) ($resumoBanco["rejeitados"] ?? 0) > 0) {
+                    $descricao .=
+                        " Rejeitados: " .
+                        (int) $resumoBanco["rejeitados"] .
+                        ".";
+                }
+
+                if ((int) ($resumoBanco["ignorados"] ?? 0) > 0) {
+                    $descricao .=
+                        " Ignorados: " .
+                        (int) $resumoBanco["ignorados"] .
+                        ".";
+                }
+
+                if ((int) ($resumoBanco["erros"] ?? 0) > 0) {
+                    $descricao .=
+                        " Erros: " .
+                        (int) $resumoBanco["erros"] .
+                        ".";
+                }
+
+                if ($contaIncompleta) {
+                    $descricao .=
+                        " Cadastro bancário incompleto para conciliação automática.";
+                }
+
+                if (!empty($ultimoEvento)) {
+                    if (
+                        $metricasHistorico["ultimo_evento_geral"] === null ||
+                        $ultimoEvento >
+                            $metricasHistorico["ultimo_evento_geral"]
+                    ) {
+                        $metricasHistorico["ultimo_evento_geral"] =
+                            $ultimoEvento;
+                    }
+                }
+
+                if ($quantidade > 0) {
+                    $metricasHistorico["com_extrato"]++;
+                } else {
+                    $metricasHistorico["sem_extrato"]++;
+                }
+
+                if ($pendentes > 0 || $ultimoStatus === "erro") {
+                    $metricasHistorico["com_pendencia"]++;
+                }
+
+                $metricasHistorico["conciliados"] += $conciliados;
+                $metricasHistorico["pendentes"] += $pendentes;
+                $metricasHistorico["total_eventos"] += $quantidade;
+
+                $historico[] = [
+                    "banco" => $banco,
+                    "status" => $status,
+                    "descricao" => $descricao,
+                    "quantidade" => $quantidade,
+                    "conciliados" => $conciliados,
+                    "pendentes" => $pendentes,
+                    "ultimo_evento" => $ultimoEvento,
+                    "conta_incompleta" => $contaIncompleta,
+                    "retorno_arquivo_id" => !empty($ultimoArquivo->id)
+                        ? (int) $ultimoArquivo->id
+                        : null,
+                    "download_disponivel" => !empty($ultimoArquivo)
+                        ? $this->_arquivoRetornoDisponivel($ultimoArquivo)
+                        : false,
+                ];
             }
-
-            $metricasHistorico["conciliados"] += $conciliados;
-            $metricasHistorico["pendentes"] += $pendentes;
-            $metricasHistorico["total_eventos"] += $quantidade;
-
-            $historico[] = [
-                "banco" => $banco,
-                "status" => $status,
-                "descricao" => $descricao,
-                "quantidade" => $quantidade,
-                "conciliados" => $conciliados,
-                "pendentes" => $pendentes,
-                "ultimo_evento" => $ultimoEvento,
-                "conta_incompleta" => $contaIncompleta,
-            ];
         }
 
         $this->set(compact("historico", "metricasHistorico"));
         $this->set("title", "Histórico de Retorno Bancário");
         $this->set("hideLayoutPageTitle", true);
+    }
+
+    /**
+     * Verifica se o arquivo físico da remessa existe e está dentro da área
+     * permitida do projeto.
+     *
+     * @param object $remessa
+     * @return bool
+     */
+    public function detalheRetorno($id = null)
+    {
+        $this->request->allowMethod(["get"]);
+        $idempresa = (int) $this->Auth->user("idempresa");
+
+        if (
+            empty($this->FinanceiroRetornoArquivos) ||
+            empty($this->FinanceiroRetornoItens)
+        ) {
+            throw new NotFoundException(
+                __("Histórico detalhado de retorno indisponível."),
+            );
+        }
+
+        $retornoArquivo = $this->FinanceiroRetornoArquivos
+            ->find()
+            ->contain([
+                "FinanceiroBancos",
+                "Users",
+                "FinanceiroRemessas",
+                "FinanceiroRetornoItens" => function ($q) {
+                    return $q
+                        ->contain([
+                            "FinanceiroLancamentos",
+                            "FinanceiroRemessas",
+                            "FinanceiroRemessaTitulos",
+                        ])
+                        ->order([
+                            "FinanceiroRetornoItens.id" => "ASC",
+                        ]);
+                },
+            ])
+            ->where([
+                "FinanceiroRetornoArquivos.id" => (int) $id,
+                "FinanceiroRetornoArquivos.idempresa" => $idempresa,
+            ])
+            ->first();
+
+        if (empty($retornoArquivo)) {
+            throw new NotFoundException(__("Arquivo de retorno não encontrado."));
+        }
+
+        $itens = $retornoArquivo->financeiro_retorno_itens ?? [];
+        $resumoDetalhe = [
+            "processados" => (int) ($retornoArquivo->processados ?? 0),
+            "baixados" => (int) ($retornoArquivo->baixados ?? 0),
+            "rejeitados" => (int) ($retornoArquivo->rejeitados ?? 0),
+            "ignorados" => (int) ($retornoArquivo->ignorados ?? 0),
+            "erros" => (int) ($retornoArquivo->erros ?? 0),
+            "download_disponivel" => $this->_arquivoRetornoDisponivel(
+                $retornoArquivo,
+            ),
+        ];
+
+        $this->set(compact("retornoArquivo", "itens", "resumoDetalhe"));
+        $this->set("title", "Detalhe do Arquivo de Retorno");
+        $this->set("hideLayoutPageTitle", true);
+    }
+
+    public function downloadRetorno($id = null)
+    {
+        $this->request->allowMethod(["get"]);
+        $idempresa = (int) $this->Auth->user("idempresa");
+
+        if (empty($this->FinanceiroRetornoArquivos)) {
+            throw new NotFoundException(
+                __("Histórico de retorno indisponível."),
+            );
+        }
+
+        $retornoArquivo = $this->FinanceiroRetornoArquivos
+            ->find()
+            ->where([
+                "FinanceiroRetornoArquivos.id" => (int) $id,
+                "FinanceiroRetornoArquivos.idempresa" => $idempresa,
+            ])
+            ->first();
+
+        if (empty($retornoArquivo)) {
+            throw new NotFoundException(__("Arquivo de retorno não encontrado."));
+        }
+
+        if (!$this->_arquivoRetornoDisponivel($retornoArquivo)) {
+            throw new NotFoundException(
+                __("Arquivo físico do retorno não encontrado."),
+            );
+        }
+
+        $caminhoRelativo = trim(
+            (string) ($retornoArquivo->caminho_arquivo ?? ""),
+        );
+        $arquivo = WWW_ROOT . str_replace(["/", "\\"], DS, $caminhoRelativo);
+
+        return $this->response->withFile($arquivo, [
+            "download" => true,
+            "name" => trim(
+                (string) (
+                    $retornoArquivo->nome_arquivo_salvo ??
+                    $retornoArquivo->nome_arquivo_original ??
+                    basename($arquivo)
+                ),
+            ),
+        ]);
+    }
+
+    protected function _arquivoRemessaDisponivel($remessa)
+    {
+        $caminhoRelativo = trim((string) ($remessa->caminho_arquivo ?? ""));
+        if ($caminhoRelativo === "") {
+            return false;
+        }
+
+        $caminhoNormalizado = str_replace(["/", "\\"], DS, $caminhoRelativo);
+        if (
+            strpos($caminhoNormalizado, ".." . DS) !== false ||
+            strpos($caminhoNormalizado, "../") !== false ||
+            strpos($caminhoNormalizado, "..\\") !== false
+        ) {
+            return false;
+        }
+
+        $arquivo = WWW_ROOT . ltrim($caminhoNormalizado, DS);
+        return is_file($arquivo);
+    }
+
+    protected function _arquivoRetornoDisponivel($retornoArquivo)
+    {
+        $caminhoRelativo = trim(
+            (string) ($retornoArquivo->caminho_arquivo ?? ""),
+        );
+        if ($caminhoRelativo === "") {
+            return false;
+        }
+
+        $caminhoNormalizado = str_replace(["/", "\\"], DS, $caminhoRelativo);
+        if (
+            strpos($caminhoNormalizado, ".." . DS) !== false ||
+            strpos($caminhoNormalizado, "../") !== false ||
+            strpos($caminhoNormalizado, "..\\") !== false
+        ) {
+            return false;
+        }
+
+        $arquivo = WWW_ROOT . ltrim($caminhoNormalizado, DS);
+        return is_file($arquivo);
     }
 
     /**
@@ -1645,6 +2790,12 @@ class FinanceiroBancosController extends AppController
         $data["utiliza_endosso"] = trim(
             (string) Hash::get($data, "utiliza_endosso", ""),
         );
+        $data["convenio"] = trim((string) Hash::get($data, "convenio", ""));
+        $data["carteira"] = trim((string) Hash::get($data, "carteira", ""));
+        $data["cnab_tipo"] = trim(
+            (string) Hash::get($data, "cnab_tipo", "240"),
+        );
+        $data["proxima_remessa"] = (int) Hash::get($data, "proxima_remessa", 1);
         $data["logotipo"] = trim((string) Hash::get($data, "logotipo", ""));
         $data["observacoes"] = trim(
             (string) Hash::get($data, "observacoes", ""),
@@ -1662,6 +2813,14 @@ class FinanceiroBancosController extends AppController
             if (!empty($catalogo["cnab"])) {
                 $data["cnab"] = (string) $catalogo["cnab"];
             }
+        }
+
+        if (!in_array($data["cnab_tipo"], ["240", "400"], true)) {
+            $data["cnab_tipo"] = "240";
+        }
+
+        if ($data["proxima_remessa"] <= 0) {
+            $data["proxima_remessa"] = 1;
         }
 
         return $data;
