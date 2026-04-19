@@ -12,7 +12,7 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
 
-class TicketcomentariosController extends AppController {
+class TicketcomentariosController extends BaseController {
 
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
@@ -22,18 +22,8 @@ class TicketcomentariosController extends AppController {
 		return parent::isAuthorized($user);
 	}
 
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
-		$this->loadModel('Tickets');
-		$this->loadModel('Users');
-		$this->loadModel('Ticketsusers');
-		$this->loadModel('Ticketcomentarios');
-		$this->loadModel('Ticketsmovs');
-		$this->loadModel('Ticketslogemail');
-		$this->loadModel('Clientes');
-		$this->loadModel('Empresas');
-		$this->loadModel('Config');
-		$this->loadModel('Notificacoes');
 	}
 
 	public function criarMov($idticket = null, $sitantiga = null, $sitnova = null, $observacao = null, $enviarEmailComentario = true) {

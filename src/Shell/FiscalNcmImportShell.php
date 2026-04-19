@@ -1,6 +1,7 @@
 <?php
 namespace App\Shell;
 
+use App\Service\Common\HttpClientService;
 use Cake\Console\Shell;
 use Cake\Log\Log;
 
@@ -39,13 +40,11 @@ class FiscalNcmImportShell extends Shell {
         $dryRun = (bool)$this->param('dry-run');
         $this->out('Buscando NCMs na BrasilAPI...');
 
-        $json = $this->_fetchApi();
-        if ($json === false) {
+        $items = $this->_fetchApi();
+        if ($items === false) {
             $this->err('Falha ao consultar a BrasilAPI. Verifique conectividade.');
             return Shell::CODE_ERROR;
         }
-
-        $items = json_decode($json, true);
         if (!is_array($items) || empty($items)) {
             $this->err('Resposta vazia ou inválida da API.');
             return Shell::CODE_ERROR;
@@ -126,38 +125,24 @@ class FiscalNcmImportShell extends Shell {
     }
 
     /**
-     * Fetch da API com cURL (fallback file_get_contents).
+     * Fetch da API via HttpClientService. Retorna array decodificado ou false em erro.
      */
     protected function _fetchApi() {
-        if (function_exists('curl_init')) {
-            $ch = curl_init($this->apiUrl);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 120,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTPHEADER => ['Accept: application/json'],
-                CURLOPT_SSL_VERIFYPEER => true,
-            ]);
-            $result = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $error = curl_error($ch);
-            curl_close($ch);
+        $result = HttpClientService::get($this->apiUrl, [], [
+            'timeout' => 120,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
 
-            if ($result === false || $httpCode !== 200) {
-                $this->err("cURL erro: HTTP {$httpCode} — {$error}");
-                return false;
-            }
-            return $result;
+        if (!$result['success']) {
+            $this->err(sprintf(
+                'HTTP erro: status %d — %s',
+                $result['status'],
+                $result['error'] ?? 'sem detalhe'
+            ));
+            return false;
         }
 
-        $ctx = stream_context_create([
-            'http' => [
-                'timeout' => 120,
-                'header' => "Accept: application/json\r\n",
-            ],
-        ]);
-        $result = @file_get_contents($this->apiUrl, false, $ctx);
-        return $result !== false ? $result : false;
+        return is_array($result['data']) ? $result['data'] : false;
     }
 
     public function main() {

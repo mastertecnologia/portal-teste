@@ -11,13 +11,9 @@ require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'TicketConstants.
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
 
 
-class TicketsanexosController extends AppController {
-    public function initialize() {
+class TicketsanexosController extends BaseController {
+    public function initialize(): void {
         parent::initialize();
-        $this->loadModel('Tickets');
-		$this->loadModel('Ticketsanexos');
-		$this->loadModel('Ticketsmovs');
-		$this->loadModel('Empresas');
     }
 
     public function beforeFilter(Event $event) {

@@ -14,18 +14,10 @@ require_once ROOT . DS . 'config' . DS . 'ticket_workflow_constants.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/TicketConstants.php';
 
-class TicketsusersController extends AppController
+class TicketsusersController extends BaseController
 {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
-        $this->loadModel('Empresas');
-        $this->loadModel('Tickets');
-        $this->loadModel('Users');
-        $this->loadModel('Ticketsusers');
-		$this->loadModel('Ticketsmovs');
-		$this->loadModel('Ticketslogemail');
-        $this->loadModel('Clientes');
-        $this->loadModel('Config');
     }
 
 	public function criarMov($idticket = null, $sitantiga = null, $sitnova = null, $observacao = null) {

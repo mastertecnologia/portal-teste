@@ -14,13 +14,9 @@ foreach (['Utilities.php', 'UserConstants.php', 'TicketConstants.php'] as $__pgm
 }
 
 
-class NotificacoesController extends AppController {
-	public function initialize() {
+class NotificacoesController extends BaseController {
+	public function initialize(): void {
 		parent::initialize();
-		$this->loadModel('Empresas');
-		$this->loadModel('Users');
-		$this->loadModel('Ticketsusers');
-		$this->loadModel('Config');
 	}
 
 	public function beforeFilter(Event $event) {

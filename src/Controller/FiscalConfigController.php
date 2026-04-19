@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Common\HttpClientService;
 use App\Utility\Fiscal\FiscalSqlConditions;
 use App\Utility\Fiscal\FiscalStorage;
 use Cake\Core\Configure;
@@ -325,24 +326,17 @@ class FiscalConfigController extends AppController {
         $this->request->allowMethod(['post']);
 
         $apiUrl = 'https://brasilapi.com.br/api/ncm/v1';
-        $ch = curl_init($apiUrl);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 120,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPHEADER => ['Accept: application/json'],
-            CURLOPT_SSL_VERIFYPEER => true,
+        $result = HttpClientService::get($apiUrl, [], [
+            'timeout' => 120,
+            'headers' => ['Accept' => 'application/json'],
         ]);
-        $json = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
-        if ($json === false || $httpCode !== 200) {
-            $this->Flash->error('Falha ao consultar BrasilAPI (HTTP ' . $httpCode . '). Verifique a conectividade do servidor.');
+        if (!$result['success']) {
+            $this->Flash->error('Falha ao consultar BrasilAPI (HTTP ' . $result['status'] . '). Verifique a conectividade do servidor.');
             return $this->redirect(['action' => 'ncm']);
         }
 
-        $items = json_decode($json, true);
+        $items = $result['data'];
         if (!is_array($items) || empty($items)) {
             $this->Flash->error('Resposta vazia ou inválida da BrasilAPI.');
             return $this->redirect(['action' => 'ncm']);

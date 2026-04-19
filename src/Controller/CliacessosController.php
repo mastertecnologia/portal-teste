@@ -10,13 +10,9 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.p
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/UserConstants.php';
 
-class CliacessosController extends AppController {
-	public function initialize() {
+class CliacessosController extends BaseController {
+	public function initialize(): void {
 		parent::initialize();
-		$this->loadModel('Clientes');
-		$this->loadModel('Cliacessos');
-		$this->loadModel('Empresas');
-		$this->loadModel('Users');
 	}
 
 	public function beforeFilter(Event $event) {
