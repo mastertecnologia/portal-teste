@@ -1,31 +1,31 @@
 /**
  * Pré-faturamento — área principal alinhada à paleta clara unificada do ERP
- * (body.layout-no-topbar, variáveis --pgm-sb-*, --pgm-teal*).
+ * (body.layout-no-topbar + data-pgm-theme="light"; tokens --pgm-* e --pgm-teal*).
  */
 body.layout-no-topbar.pgm-prefaturamento-page .page-titles h5,
 body.layout-no-topbar.pgm-prefaturamento-page .page-titles .text-themecolor {
-	color: var(--pgm-sb-text, #1a1a18) !important;
+	color: var(--pgm-text, #1a1a18) !important;
 }
 
 body.layout-no-topbar.pgm-prefaturamento-page .breadcrumb,
 body.layout-no-topbar.pgm-prefaturamento-page .breadcrumb-item,
 body.layout-no-topbar.pgm-prefaturamento-page .breadcrumb-item a {
-	color: var(--pgm-sb-muted, #6b6a65) !important;
+	color: var(--pgm-text-muted, #6b6a65) !important;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .card {
-	background: var(--pgm-sb-surface, #ffffff) !important;
-	border: 1px solid var(--pgm-sb-border, #e5e4e0) !important;
+	background: var(--pgm-bg-surface, #ffffff) !important;
+	border: 1px solid var(--pgm-border, #e5e4e0) !important;
 	border-radius: 12px;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .card-body {
-	color: var(--pgm-sb-text, #1a1a18) !important;
+	color: var(--pgm-text, #1a1a18) !important;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .pf-intro {
-	color: var(--pgm-sb-muted, #6b6a65) !important;
+	color: var(--pgm-text-muted, #6b6a65) !important;
 	margin-bottom: 1rem !important;
 	line-height: 1.55;
 }
@@ -36,15 +36,15 @@ body.layout-no-topbar .pgm-prefaturamento-shell .pf-intro strong {
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .pf-field-label {
-	color: var(--pgm-sb-text, #1a1a18) !important;
+	color: var(--pgm-text, #1a1a18) !important;
 	font-weight: 500 !important;
 	margin: 0;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select > .dropdown-toggle {
 	background: #ffffff !important;
-	border: 1px solid var(--pgm-sb-border, #d5d4d0) !important;
-	color: var(--pgm-sb-text, #1a1a18) !important;
+	border: 1px solid var(--pgm-border-strong, #d5d4d0) !important;
+	color: var(--pgm-text, #1a1a18) !important;
 	border-radius: 8px !important;
 }
 
@@ -55,16 +55,16 @@ body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select > .dropdown-to
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .filter-option-inner-inner {
-	color: var(--pgm-sb-text, #1a1a18);
+	color: var(--pgm-text, #1a1a18);
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .dropdown-menu {
 	background: #ffffff !important;
-	border: 1px solid var(--pgm-sb-border, #d5d4d0) !important;
+	border: 1px solid var(--pgm-border-strong, #d5d4d0) !important;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li a {
-	color: var(--pgm-sb-text, #1a1a18) !important;
+	color: var(--pgm-text, #1a1a18) !important;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .bootstrap-select .dropdown-menu li a:hover,
@@ -90,12 +90,12 @@ body.layout-no-topbar .pgm-prefaturamento-shell .btn-outline-success:disabled {
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .table {
-	color: var(--pgm-sb-text, #1a1a18);
+	color: var(--pgm-text, #1a1a18);
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .table thead th {
 	color: var(--pgm-teal-light, #0f6e56) !important;
-	border-bottom: 1px solid var(--pgm-sb-border, #e5e4e0) !important;
+	border-bottom: 1px solid var(--pgm-border, #e5e4e0) !important;
 	background: #f2f1ee !important;
 	font-weight: 600;
 	font-size: 0.78rem;
@@ -104,8 +104,8 @@ body.layout-no-topbar .pgm-prefaturamento-shell .table thead th {
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .table td {
-	border-color: var(--pgm-sb-border, #e5e4e0) !important;
-	color: var(--pgm-sb-text, #1a1a18) !important;
+	border-color: var(--pgm-border, #e5e4e0) !important;
+	color: var(--pgm-text, #1a1a18) !important;
 	vertical-align: middle;
 }
 
@@ -114,7 +114,7 @@ body.layout-no-topbar .pgm-prefaturamento-shell .table tbody tr:hover td {
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell .table .text-muted {
-	color: var(--pgm-sb-muted, #6b6a65) !important;
+	color: var(--pgm-text-muted, #6b6a65) !important;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell a.link {
@@ -127,7 +127,7 @@ body.layout-no-topbar .pgm-prefaturamento-shell a.link:hover {
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell label.small {
-	color: var(--pgm-sb-muted, #6b6a65) !important;
+	color: var(--pgm-text-muted, #6b6a65) !important;
 }
 
 body.layout-no-topbar .pgm-prefaturamento-shell label.small input[type="checkbox"] {
@@ -137,8 +137,8 @@ body.layout-no-topbar .pgm-prefaturamento-shell label.small input[type="checkbox
 
 body.layout-no-topbar .pgm-prefaturamento-shell .btn-secondary.btn-xs {
 	background: transparent !important;
-	color: var(--pgm-sb-text, #1a1a18) !important;
-	border: 1px solid var(--pgm-sb-border, #d5d4d0) !important;
+	color: var(--pgm-text, #1a1a18) !important;
+	border: 1px solid var(--pgm-border-strong, #d5d4d0) !important;
 	border-radius: 6px !important;
 }
 
