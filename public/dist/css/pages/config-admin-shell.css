@@ -11,17 +11,17 @@
 
 .admin-panel-wrap {
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	--ap-bg: #0d0f14;
-	--ap-bg2: #13161d;
-	--ap-bg3: #1a1e28;
-	--ap-border: rgba(255, 255, 255, 0.08);
-	--ap-text: #f0f2f8;
-	--ap-muted: #8b92a8;
-	--ap-dim: #555e78;
+	--ap-bg: #f2f1ee;
+	--ap-bg2: #ffffff;
+	--ap-bg3: #f9f9f8;
+	--ap-border: #e5e4e0;
+	--ap-text: #1a1a18;
+	--ap-muted: #6b6a65;
+	--ap-dim: #9a9890;
 	--ap-teal: #1d9e75;
-	--ap-teal-dim: rgba(0, 192, 139, 0.12);
+	--ap-teal-dim: rgba(29, 158, 117, 0.12);
 	--ap-indigo: #6366f1;
-	--ap-indigo-dim: rgba(99, 102, 241, 0.14);
+	--ap-indigo-dim: rgba(99, 102, 241, 0.12);
 	--ap-radius: 16px;
 	--ap-card-radius: 12px;
 	background: var(--ap-bg);
@@ -29,8 +29,8 @@
 	border-radius: var(--ap-radius);
 	padding: 22px 22px 28px;
 	box-shadow:
-		0 16px 48px rgba(0, 0, 0, 0.14),
-		0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+		0 16px 48px rgba(0, 0, 0, 0.08),
+		0 0 0 1px rgba(0, 0, 0, 0.04) inset;
 	box-sizing: border-box;
 }
 
@@ -95,29 +95,29 @@
 }
 
 .admin-panel-btn:hover {
-	background: #222736;
+	background: #eceae5;
 	color: var(--ap-text) !important;
-	border-color: rgba(255, 255, 255, 0.15);
+	border-color: #d5d4d0;
 }
 
 .admin-panel-btn--accent {
 	background: var(--ap-indigo-dim);
 	border-color: rgba(99, 102, 241, 0.45);
-	color: #a5b4fc !important;
+	color: #3f3eb8 !important;
 }
 
 .admin-panel-btn--accent:hover {
-	color: #c7d2fe !important;
+	color: #2c2b7c !important;
 }
 
 .admin-panel-btn--teal {
 	background: var(--ap-teal-dim);
 	border-color: rgba(0, 192, 139, 0.45);
-	color: #6ee7c5 !important;
+	color: #0f6e56 !important;
 }
 
 .admin-panel-btn--teal:hover {
-	color: #ecfdf5 !important;
+	color: #085041 !important;
 }
 
 /* Dois pilares: operadora vs portal cliente */
@@ -223,7 +223,7 @@
 }
 
 .admin-pillar-card:hover {
-	border-color: rgba(255, 255, 255, 0.14);
+	border-color: #d5d4d0;
 	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -265,20 +265,20 @@
 }
 
 .admin-pillar--operator .admin-pillar-card-link {
-	color: #6ee7c5 !important;
+	color: #0f6e56 !important;
 }
 
 .admin-pillar--operator .admin-pillar-card-link:hover {
-	color: #a7f3d0 !important;
+	color: #085041 !important;
 	text-decoration: underline !important;
 }
 
 .admin-pillar--portal .admin-pillar-card-link {
-	color: #a5b4fc !important;
+	color: #3f3eb8 !important;
 }
 
 .admin-pillar--portal .admin-pillar-card-link:hover {
-	color: #c7d2fe !important;
+	color: #2c2b7c !important;
 	text-decoration: underline !important;
 }
 
@@ -332,7 +332,7 @@
 }
 
 .admin-section-card:hover {
-	border-color: rgba(255, 255, 255, 0.12);
+	border-color: #d5d4d0;
 }
 
 .admin-section-card--perm {
@@ -367,12 +367,12 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	margin-top: 10px;
-	color: #93c5fd !important;
+	color: #1e5ea8 !important;
 	text-decoration: none !important;
 }
 
 .admin-section-card-link:hover {
-	color: #bfdbfe !important;
+	color: #12447a !important;
 	text-decoration: underline !important;
 }
 
@@ -400,12 +400,12 @@
 .admin-rbac-matrix-filter-label {
 	margin: 0;
 	font-weight: 600;
-	color: #a5b4fc;
+	color: #3f3eb8;
 }
 
 .admin-rbac-matrix-filter-meta {
 	font-size: 0.75rem;
-	color: #8b92a8;
+	color: #6b6a65;
 	flex-basis: 100%;
 	width: 100%;
 }
@@ -445,8 +445,8 @@
 }
 
 .admin-rbac-matrix-toolbar-field .form-control {
-	background: #1a1e28;
-	border-color: rgba(255, 255, 255, 0.12);
+	background: #f9f9f8;
+	border-color: #d5d4d0;
 	color: var(--ap-text);
 }
 
@@ -456,12 +456,12 @@
 
 .admin-rbac-matrix-toolbar-meta {
 	font-size: 0.8125rem;
-	color: #8b92a8;
+	color: #6b6a65;
 	margin-top: 4px;
 }
 
 .admin-rbac-matrix-toolbar-meta strong {
-	color: #c7d2fe;
+	color: #2c2b7c;
 }
 
 .admin-rbac-matrix-clear-link {
@@ -469,12 +469,12 @@
 	margin-top: 6px;
 	font-size: 0.8125rem;
 	font-weight: 600;
-	color: #6ee7c5 !important;
+	color: #0f6e56 !important;
 	text-decoration: none !important;
 }
 
 .admin-rbac-matrix-clear-link:hover {
-	color: #ecfdf5 !important;
+	color: #085041 !important;
 	text-decoration: underline !important;
 }
 
@@ -482,7 +482,7 @@
 	margin: 10px 0 0;
 	font-size: 0.75rem;
 	line-height: 1.45;
-	color: #a5b4fc;
+	color: #3f3eb8;
 	max-width: 720px;
 }
 
@@ -510,29 +510,29 @@
 
 .admin-rbac-matrix-actions {
 	padding: 14px 16px;
-	border-top: 1px solid rgba(255, 255, 255, 0.08);
-	background: #13161d;
+	border-top: 1px solid #e5e4e0;
+	background: #ffffff;
 	border-radius: 0 0 12px 12px;
 }
 
 /* Matriz RBAC (Permissoes/admin_matrix) */
 .admin-rbac-wrap {
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	background: #0d0f14;
-	color: #8b92a8;
+	background: #f2f1ee;
+	color: #6b6a65;
 	border-radius: 16px;
 	padding: 20px 22px 24px;
 	box-shadow:
 		0 16px 48px rgba(0, 0, 0, 0.14),
-		0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+		0 0 0 1px rgba(0, 0, 0, 0.04) inset;
 }
 
 .admin-rbac-matrix-outer {
 	overflow-x: auto;
 	max-width: 100%;
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	border: 1px solid #e5e4e0;
 	border-radius: 12px;
-	background: #13161d;
+	background: #ffffff;
 }
 
 .admin-rbac-matrix {
@@ -543,15 +543,15 @@
 
 .admin-rbac-matrix th,
 .admin-rbac-matrix td {
-	border: 1px solid rgba(255, 255, 255, 0.06);
+	border: 1px solid #e5e4e0;
 	padding: 6px 8px;
 	text-align: center;
 	vertical-align: middle;
 }
 
 .admin-rbac-matrix th {
-	background: #1a1e28;
-	color: #555e78;
+	background: #f9f9f8;
+	color: #9a9890;
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -568,30 +568,30 @@
 	max-width: 320px;
 	position: sticky;
 	left: 0;
-	background: #13161d;
+	background: #ffffff;
 	z-index: 2;
-	color: #c4b5fd;
+	color: #5a3b99;
 	font-weight: 500;
 }
 
 .admin-rbac-matrix th:first-child {
 	z-index: 3;
-	background: #1a1e28;
+	background: #f9f9f8;
 }
 
 .admin-rbac-matrix .cell-yes {
-	color: #6ee7c5;
+	color: #0f6e56;
 	font-weight: 700;
 }
 
 .admin-rbac-matrix .cell-no {
-	color: #3d4454;
+	color: #9a9890;
 }
 
 .admin-rbac-callout {
 	font-size: 12px;
 	line-height: 1.5;
-	color: #8b92a8;
+	color: #6b6a65;
 	background: rgba(99, 102, 241, 0.1);
 	border: 1px solid rgba(99, 102, 241, 0.25);
 	border-radius: 10px;
@@ -600,21 +600,21 @@
 }
 
 .admin-rbac-callout strong {
-	color: #f0f2f8;
+	color: #1a1a18;
 }
 
 /* Permissoes/admin_index — catálogo */
 .admin-rbac-wrap > .admin-panel-hero {
 	margin-bottom: 18px;
 	padding-bottom: 18px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	border-bottom: 1px solid #e5e4e0;
 }
 
 .admin-rbac-wrap > .admin-panel-hero h1 {
 	margin: 0 0 8px;
 	font-size: 1.25rem;
 	font-weight: 700;
-	color: #f0f2f8;
+	color: #1a1a18;
 	letter-spacing: -0.02em;
 }
 
@@ -626,15 +626,15 @@
 }
 
 .admin-rbac-wrap code.ap-code-violet {
-	color: #c4b5fd;
+	color: #5a3b99;
 }
 
 .admin-rbac-wrap code.ap-code-blue {
-	color: #93c5fd;
+	color: #1e5ea8;
 }
 
 .admin-rbac-wrap .ap-text-teal {
-	color: #6ee7c5;
+	color: #0f6e56;
 }
 
 .admin-rbac-wrap > .admin-panel-hero .admin-panel-hero-actions {
@@ -644,21 +644,21 @@
 .admin-rbac-meta {
 	font-size: 12px;
 	margin: 0 0 16px;
-	color: #8b92a8;
+	color: #6b6a65;
 }
 
 .admin-rbac-meta strong {
-	color: #f0f2f8;
+	color: #1a1a18;
 }
 
 .admin-rbac-mod-title {
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
-	color: #555e78;
+	color: #9a9890;
 	margin: 20px 0 10px;
 	padding-bottom: 6px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	border-bottom: 1px solid #e5e4e0;
 }
 
 .admin-rbac-perm-list {
@@ -670,40 +670,40 @@
 .admin-rbac-perm-item {
 	padding: 10px 12px;
 	margin-bottom: 6px;
-	background: #13161d;
-	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: #ffffff;
+	border: 1px solid #e5e4e0;
 	border-radius: 8px;
 	font-size: 13px;
 }
 
 .admin-rbac-perm-item > strong:first-of-type {
-	color: #f0f2f8;
+	color: #1a1a18;
 }
 
 .admin-rbac-perm-code {
-	color: #555e78;
+	color: #9a9890;
 	font-size: 11px;
 	margin-left: 8px;
 }
 
 .admin-rbac-perm-meta {
 	font-size: 11px;
-	color: #8b92a8;
+	color: #6b6a65;
 	margin-top: 4px;
 }
 
 .admin-rbac-txt-blue {
-	color: #93c5fd;
+	color: #1e5ea8;
 }
 
 .admin-rbac-txt-teal {
-	color: #6ee7c5;
+	color: #0f6e56;
 }
 
 .admin-rbac-perm-desc {
 	font-size: 11px;
 	margin-top: 4px;
-	color: #555e78;
+	color: #9a9890;
 }
 
 .admin-rbac-callout--mt {
@@ -724,22 +724,22 @@
 }
 
 .admin-rbac-wrap .ap-text-bright {
-	color: #f0f2f8;
+	color: #1a1a18;
 }
 
 .admin-rbac-a-inline {
-	color: #93c5fd;
+	color: #1e5ea8;
 	text-decoration: none;
 }
 
 .admin-rbac-a-inline:hover {
-	color: #bfdbfe;
+	color: #12447a;
 	text-decoration: underline;
 }
 
 .admin-rbac-matrix td.admin-rbac-mod-row {
-	background: #1a1e28;
-	color: #6ee7c5;
+	background: #f9f9f8;
+	color: #0f6e56;
 	font-weight: 700;
 	font-size: 10px;
 	text-transform: uppercase;
@@ -796,7 +796,7 @@
 	gap: 10px;
 	margin-top: 10px;
 	padding-top: 10px;
-	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	border-top: 1px solid #e5e4e0;
 }
 
 .admin-rbac-matrix-mod-bulk {
@@ -815,13 +815,13 @@
 
 .admin-rbac-footnote {
 	font-size: 11px;
-	color: #555e78;
+	color: #9a9890;
 	margin-top: 12px;
 	margin-bottom: 0;
 }
 
 .admin-rbac-wrap code.ap-code-gray {
-	color: #8b92a8;
+	color: #6b6a65;
 }
 
 .admin-rbac-table-link {
@@ -829,30 +829,30 @@
 }
 
 .admin-rbac-wrap .queues-form-panel.queues-form-panel--wide.admin-rbac-role-panel {
-	background: #13161d;
-	border-color: rgba(255, 255, 255, 0.08);
+	background: #ffffff;
+	border-color: #e5e4e0;
 }
 
 .admin-rbac-role-intro {
 	font-size: 12px;
-	color: #8b92a8;
+	color: #6b6a65;
 	margin: 0 0 14px;
 }
 
 .admin-rbac-wrap .custom-control-label.admin-rbac-role-lbl {
-	color: #c4cad9;
+	color: #3d3d3a;
 }
 
 .admin-rbac-role-name {
-	color: #f0f2f8;
+	color: #1a1a18;
 }
 
 .admin-rbac-role-slug {
-	color: #555e78;
+	color: #9a9890;
 	font-size: 11px;
 }
 
 .admin-rbac-role-desc {
 	font-size: 11px;
-	color: #8b92a8;
+	color: #6b6a65;
 }

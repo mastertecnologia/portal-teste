@@ -1,7 +1,7 @@
-/* Filas de atendimento — admin (Filas / técnicos) — tema escuro alinhado ao premium OS */
+/* Filas de atendimento — admin (Filas / técnicos) — tema light alinhado ao premium OS */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
-/* Contraste no layout claro: “ilha” escura com elevação suave */
+/* Contraste no layout claro: “ilha” clara com elevação suave */
 .queues-page-ambient {
 	padding: 6px 0 28px;
 	margin-bottom: 0.5rem;
@@ -9,22 +9,22 @@
 
 .queues-shell--elevated {
 	box-shadow:
-		0 16px 48px rgba(0, 0, 0, 0.14),
-		0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+		0 16px 48px rgba(0, 0, 0, 0.08),
+		0 0 0 1px rgba(0, 0, 0, 0.04) inset;
 }
 
 .queues-shell {
-	--q-bg: #0d0f14;
-	--q-bg2: #13161d;
-	--q-bg3: #1a1e28;
-	--q-border: rgba(255, 255, 255, 0.08);
-	--q-border2: rgba(255, 255, 255, 0.12);
-	--q-text: #f0f2f8;
-	--q-muted: #8b92a8;
-	--q-dim: #555e78;
+	--q-bg: #f2f1ee;
+	--q-bg2: #ffffff;
+	--q-bg3: #f9f9f8;
+	--q-border: #e5e4e0;
+	--q-border2: #d5d4d0;
+	--q-text: #1a1a18;
+	--q-muted: #6b6a65;
+	--q-dim: #9a9890;
 	--q-accent: #1d9e75;
-	--q-accent-dim: rgba(0, 192, 139, 0.15);
-	--q-blue: #3b82f6;
+	--q-accent-dim: rgba(29, 158, 117, 0.14);
+	--q-blue: #378add;
 	--q-radius: 14px;
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	font-size: 13px;
@@ -103,64 +103,64 @@
 }
 
 .queues-btn:hover {
-	background: #222736;
+	background: #eceae5;
 	color: var(--q-text) !important;
-	border-color: rgba(255, 255, 255, 0.18);
+	border-color: #d5d4d0;
 }
 
 .queues-btn--primary {
-	background: rgba(59, 130, 246, 0.12);
-	border-color: rgba(59, 130, 246, 0.35);
-	color: #93c5fd !important;
+	background: rgba(55, 138, 221, 0.10);
+	border-color: rgba(55, 138, 221, 0.32);
+	color: #1e5ea8 !important;
 }
 
 .queues-btn--primary:hover {
-	background: rgba(59, 130, 246, 0.2);
-	color: #bfdbfe !important;
+	background: rgba(55, 138, 221, 0.18);
+	color: #12447a !important;
 }
 
 .queues-btn--success {
 	background: var(--q-accent-dim);
-	border-color: rgba(0, 192, 139, 0.45);
-	color: #6ee7c5 !important;
+	border-color: rgba(29, 158, 117, 0.35);
+	color: #0f6e56 !important;
 }
 
 .queues-btn--success:hover {
-	background: rgba(0, 192, 139, 0.22);
-	color: #ecfdf5 !important;
+	background: rgba(29, 158, 117, 0.22);
+	color: #085041 !important;
 }
 
 .queues-btn--warn {
-	background: rgba(245, 158, 11, 0.12);
-	border-color: rgba(245, 158, 11, 0.4);
-	color: #fcd34d !important;
+	background: rgba(233, 160, 37, 0.12);
+	border-color: rgba(233, 160, 37, 0.40);
+	color: #633806 !important;
 }
 
 .queues-btn--warn:hover {
-	background: rgba(245, 158, 11, 0.2);
-	color: #fffbeb !important;
+	background: rgba(233, 160, 37, 0.22);
+	color: #3f2200 !important;
 }
 
 .queues-btn--warning {
-	background: rgba(245, 158, 11, 0.12);
-	border-color: rgba(245, 158, 11, 0.4);
-	color: #fcd34d !important;
+	background: rgba(233, 160, 37, 0.12);
+	border-color: rgba(233, 160, 37, 0.40);
+	color: #633806 !important;
 }
 
 .queues-btn--warning:hover {
-	background: rgba(245, 158, 11, 0.22);
-	color: #fffbeb !important;
+	background: rgba(233, 160, 37, 0.22);
+	color: #3f2200 !important;
 }
 
 .queues-btn--danger {
-	background: rgba(248, 113, 113, 0.1);
-	border-color: rgba(248, 113, 113, 0.4);
-	color: #fca5a5 !important;
+	background: rgba(226, 75, 74, 0.10);
+	border-color: rgba(226, 75, 74, 0.35);
+	color: #791f1f !important;
 }
 
 .queues-btn--danger:hover {
-	background: rgba(248, 113, 113, 0.2);
-	color: #fecaca !important;
+	background: rgba(226, 75, 74, 0.20);
+	color: #5a1313 !important;
 }
 
 .queues-callout {
@@ -180,7 +180,7 @@
 }
 
 .queues-callout em {
-	color: #a8b0c4;
+	color: #3d3d3a;
 	font-style: normal;
 }
 
@@ -225,7 +225,7 @@
 }
 
 .queues-shell table tbody tr:hover {
-	background: rgba(255, 255, 255, 0.03) !important;
+	background: rgba(29, 158, 117, 0.06) !important;
 }
 
 .queues-shell table tbody tr:hover td {
@@ -238,9 +238,9 @@
 	font-size: 11.5px;
 	padding: 2px 8px;
 	border-radius: 6px;
-	background: rgba(167, 139, 250, 0.12);
-	color: #c4b5fd;
-	border: 1px solid rgba(167, 139, 250, 0.25);
+	background: rgba(122, 94, 184, 0.10);
+	color: #5a3b99;
+	border: 1px solid rgba(122, 94, 184, 0.25);
 }
 
 .queues-badge {
@@ -250,9 +250,9 @@
 	border-radius: 20px;
 	font-size: 11px;
 	font-weight: 600;
-	background: rgba(59, 130, 246, 0.15);
-	color: #93c5fd;
-	border: 1px solid rgba(59, 130, 246, 0.35);
+	background: rgba(55, 138, 221, 0.12);
+	color: #1e5ea8;
+	border: 1px solid rgba(55, 138, 221, 0.32);
 }
 
 .queues-badge--muted {
@@ -262,25 +262,25 @@
 }
 
 .queues-badge--success {
-	background: rgba(0, 192, 139, 0.14);
-	color: #6ee7c5;
-	border: 1px solid rgba(0, 192, 139, 0.4);
+	background: rgba(29, 158, 117, 0.14);
+	color: #0f6e56;
+	border: 1px solid rgba(29, 158, 117, 0.35);
 }
 
 .queues-badge--danger {
-	background: rgba(248, 113, 113, 0.12);
-	color: #fca5a5;
-	border: 1px solid rgba(248, 113, 113, 0.35);
+	background: rgba(226, 75, 74, 0.12);
+	color: #791f1f;
+	border: 1px solid rgba(226, 75, 74, 0.32);
 }
 
 .queues-shell a.users-table-link {
-	color: #93c5fd;
+	color: #1e5ea8;
 	text-decoration: none;
 	font-weight: 500;
 }
 
 .queues-shell a.users-table-link:hover {
-	color: #bfdbfe;
+	color: #12447a;
 	text-decoration: underline;
 }
 
@@ -306,25 +306,25 @@
 }
 
 .queues-icon-btn:hover {
-	background: #222736;
+	background: #eceae5;
 	color: var(--q-text) !important;
-	border-color: rgba(255, 255, 255, 0.18);
+	border-color: #d5d4d0;
 }
 
 .queues-icon-btn--edit:hover {
-	border-color: rgba(59, 130, 246, 0.45);
-	color: #93c5fd !important;
+	border-color: rgba(55, 138, 221, 0.45);
+	color: #1e5ea8 !important;
 }
 
 .queues-icon-btn--danger {
-	border-color: rgba(248, 113, 113, 0.35);
-	color: #fca5a5 !important;
-	background: rgba(248, 113, 113, 0.08);
+	border-color: rgba(226, 75, 74, 0.32);
+	color: #791f1f !important;
+	background: rgba(226, 75, 74, 0.06);
 }
 
 .queues-icon-btn--danger:hover {
-	background: rgba(248, 113, 113, 0.18);
-	color: #fecaca !important;
+	background: rgba(226, 75, 74, 0.16);
+	color: #5a1313 !important;
 }
 
 .queues-empty {
@@ -483,7 +483,7 @@
 }
 
 .queues-warn-inline {
-	color: #fcd34d;
+	color: #633806;
 	font-size: 12px;
 }
 
@@ -508,23 +508,23 @@
 }
 
 .queues-form-panel a:not(.queues-btn) {
-	color: #93c5fd;
+	color: #1e5ea8;
 	text-decoration: none;
 }
 
 .queues-form-panel a:not(.queues-btn):hover {
-	color: #bfdbfe;
+	color: #12447a;
 	text-decoration: underline;
 }
 
 .queues-form-panel .btn-link {
-	color: #93c5fd !important;
+	color: #1e5ea8 !important;
 	font-size: 12px;
 	padding: 0 !important;
 }
 
 .queues-form-panel .btn-link:hover {
-	color: #bfdbfe !important;
+	color: #12447a !important;
 }
 
 .queues-queues-box {
@@ -553,8 +553,8 @@
 	font-size: 11px;
 	padding: 2px 6px;
 	border-radius: 4px;
-	background: rgba(167, 139, 250, 0.12);
-	color: #c4b5fd;
+	background: rgba(122, 94, 184, 0.10);
+	color: #5a3b99;
 }
 
 .queues-form-panel #btnSalvarUsuario.btn-disabled {
@@ -562,82 +562,3 @@
 	cursor: not-allowed;
 	pointer-events: none;
 }
-
-/* ── Tabs (admin sub-pages) ── */
-.queues-tabs {
-	display: flex;
-	gap: 4px;
-	list-style: none;
-	margin: 0 0 16px;
-	padding: 4px;
-	background: var(--q-bg2);
-	border: 1px solid var(--q-border);
-	border-radius: 10px;
-}
-
-.queues-tabs li {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.queues-tab {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 8px 16px;
-	border-radius: 8px;
-	font-size: 12.5px;
-	font-weight: 500;
-	color: var(--q-dim) !important;
-	text-decoration: none !important;
-	border: 1px solid transparent;
-	background: transparent;
-	transition: background 0.15s, color 0.15s, border-color 0.15s;
-	cursor: pointer;
-}
-
-.queues-tab:hover {
-	color: var(--q-muted) !important;
-	background: var(--q-bg3);
-}
-
-.queues-tab.active {
-	color: var(--q-text) !important;
-	background: var(--q-bg3);
-	border-color: var(--q-border2);
-	font-weight: 600;
-}
-
-.queues-tab .fa, .queues-tab .fas, .queues-tab .far {
-	font-size: 12px;
-	opacity: 0.7;
-}
-
-.queues-tab.active .fa, .queues-tab.active .fas, .queues-tab.active .far {
-	opacity: 1;
-	color: var(--q-accent);
-}
-
-/* Token link */
-.queues-token-link {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 10px;
-	border-radius: 6px;
-	font-size: 11px;
-	font-weight: 600;
-	color: #c4b5fd !important;
-	background: rgba(167, 139, 250, 0.1);
-	border: 1px solid rgba(167, 139, 250, 0.25);
-	text-decoration: none !important;
-	cursor: pointer;
-	transition: background 0.15s, color 0.15s;
-}
-
-.queues-token-link:hover {
-	background: rgba(167, 139, 250, 0.2);
-	color: #ddd6fe !important;
-}
-

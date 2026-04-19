@@ -5,25 +5,25 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
 .os-edit-shell {
-	--os-bg: #0d0f14;
-	--os-bg2: #13161d;
-	--os-bg3: #1a1e28;
-	--os-bg4: #222736;
-	--os-border: rgba(255, 255, 255, 0.07);
-	--os-border2: rgba(255, 255, 255, 0.12);
-	--os-text: #f0f2f8;
-	--os-text2: #8b92a8;
-	--os-text3: #555e78;
-	--os-accent: #3d7eff;
-	--os-accent2: #2563eb;
-	--os-accent-glow: rgba(61, 126, 255, 0.15);
+	--os-bg: #f2f1ee;
+	--os-bg2: #ffffff;
+	--os-bg3: #f9f9f8;
+	--os-bg4: #eceae5;
+	--os-border: #e5e4e0;
+	--os-border2: #d5d4d0;
+	--os-text: #1a1a18;
+	--os-text2: #6b6a65;
+	--os-text3: #9a9890;
+	--os-accent: #1d9e75;
+	--os-accent2: #13715a;
+	--os-accent-glow: rgba(29, 158, 117, 0.14);
 
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	font-size: 13px;
 	background: var(--os-bg2);
 	border: 1px solid var(--os-border);
 	border-radius: 12px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 	margin-bottom: 0.75rem;
 	overflow: hidden;
 	color: var(--os-text2);
@@ -130,7 +130,7 @@
 	-moz-appearance: none;
 	appearance: none;
 	background-color: var(--os-bg3) !important;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6a65' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 10px center;
 	padding-right: 28px;
@@ -274,7 +274,7 @@
 	border-radius: 9px;
 	overflow: hidden;
 	background: var(--os-bg3);
-	color-scheme: dark;
+	color-scheme: light;
 }
 
 .os-edit-shell .jsgrid-grid-header,
@@ -321,7 +321,7 @@
 .os-edit-shell .jsgrid-alt-row > .jsgrid-cell,
 .os-edit-shell .jsgrid-insert-row > .jsgrid-cell,
 .os-edit-shell .jsgrid-edit-row > .jsgrid-cell {
-	border-color: rgba(255, 255, 255, 0.055) !important;
+	border-color: rgba(0, 0, 0, 0.055) !important;
 	background: var(--os-bg3) !important;
 	color: var(--os-text2);
 	padding: 9px 10px !important;
@@ -351,7 +351,7 @@
 
 .os-edit-shell .jsgrid-row:hover > .jsgrid-cell,
 .os-edit-shell .jsgrid-alt-row:hover > .jsgrid-cell {
-	background: #202635 !important;
+	background: rgba(29, 158, 117, 0.08) !important;
 }
 
 /* Texto “Nenhum item adicionado” — linha nodata herdava fundo claro do tema */
@@ -380,7 +380,7 @@
 }
 
 .os-edit-shell .jsgrid .os-edit-ref-link:hover {
-	color: #5a94ff !important;
+	color: var(--os-accent2) !important;
 }
 
 .os-edit-shell .jsgrid input.form-control,

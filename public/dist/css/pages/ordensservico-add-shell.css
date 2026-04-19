@@ -1,25 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
 .os-add-shell {
-	--os-bg: #0d0f14;
-	--os-bg2: #13161d;
-	--os-bg3: #1a1e28;
-	--os-bg4: #222736;
-	--os-border: rgba(255, 255, 255, 0.07);
-	--os-border2: rgba(255, 255, 255, 0.12);
-	--os-text: #f0f2f8;
-	--os-text2: #8b92a8;
-	--os-text3: #555e78;
-	--os-accent: #3d7eff;
-	--os-accent2: #2563eb;
-	--os-accent-glow: rgba(61, 126, 255, 0.15);
+	--os-bg: #f2f1ee;
+	--os-bg2: #ffffff;
+	--os-bg3: #f9f9f8;
+	--os-bg4: #eceae5;
+	--os-border: #e5e4e0;
+	--os-border2: #d5d4d0;
+	--os-text: #1a1a18;
+	--os-text2: #6b6a65;
+	--os-text3: #9a9890;
+	--os-accent: #1d9e75;
+	--os-accent2: #13715a;
+	--os-accent-glow: rgba(29, 158, 117, 0.14);
 
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	font-size: 13px;
 	background: var(--os-bg2);
 	border: 1px solid var(--os-border);
 	border-radius: 12px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 	margin-bottom: 0.75rem;
 	overflow: hidden;
 	color: var(--os-text2);
@@ -65,7 +65,7 @@
 	-moz-appearance: none;
 	appearance: none;
 	background-color: var(--os-bg3) !important;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6a65' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 10px center;
 	padding-right: 28px;
@@ -126,21 +126,21 @@
 }
 
 body.os-add-page .bs-container .dropdown-menu {
-	background: #1a1e28 !important;
-	border: 1px solid rgba(255, 255, 255, 0.12) !important;
-	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45) !important;
+	background: #ffffff !important;
+	border: 1px solid #d5d4d0 !important;
+	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
 body.os-add-page .bs-container .dropdown-menu .dropdown-item,
 body.os-add-page .bs-container .dropdown-menu li a {
-	color: #8b92a8 !important;
+	color: #6b6a65 !important;
 }
 
 body.os-add-page .bs-container .dropdown-menu .active > a,
 body.os-add-page .bs-container .dropdown-menu li.selected > a,
 body.os-add-page .bs-container .dropdown-menu li > a:hover {
-	background: rgba(61, 126, 255, 0.15) !important;
-	color: #f0f2f8 !important;
+	background: rgba(29, 158, 117, 0.14) !important;
+	color: #1a1a18 !important;
 }
 
 .os-add-shell hr {
@@ -186,8 +186,8 @@ body.os-add-page .bs-container .dropdown-menu li > a:hover {
 	border-radius: 9px;
 	overflow: hidden;
 	background: var(--os-bg3);
-	color-scheme: dark;
-	scrollbar-color: #3d4454 var(--os-bg2);
+	color-scheme: light;
+	scrollbar-color: #c4c3c0 var(--os-bg2);
 }
 
 .os-add-shell .jsgrid-grid-body {
@@ -267,7 +267,7 @@ body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-control-field {
 
 .os-add-shell .jsgrid-row:hover > .jsgrid-cell,
 .os-add-shell .jsgrid-alt-row:hover > .jsgrid-cell {
-	background: #202635;
+	background: rgba(29, 158, 117, 0.08);
 }
 
 .os-add-shell .jsgrid-pager {
@@ -353,24 +353,24 @@ body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
 }
 
 .os-add-shell .input-group .btn-secondary:hover {
-	background: #2a3247;
+	background: #dcdad5;
 	color: var(--os-text);
 }
 
 body.os-add-page .modal-content {
-	background: #13161d;
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: #ffffff;
+	border: 1px solid #e5e4e0;
 	border-radius: 10px;
-	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
 }
 
 body.os-add-page .modal-header,
 body.os-add-page .modal-footer {
-	border-color: rgba(255, 255, 255, 0.08);
+	border-color: #e5e4e0;
 }
 
 body.os-add-page .modal-title {
-	color: #f0f2f8;
+	color: #1a1a18;
 	font-size: 15px;
 	font-weight: 600;
 }
@@ -378,31 +378,31 @@ body.os-add-page .modal-title {
 body.os-add-page .modal-body,
 body.os-add-page .modal-body label,
 body.os-add-page .modal-body small {
-	color: #8b92a8;
+	color: #6b6a65;
 }
 
 body.os-add-page .modal-body .form-control,
 body.os-add-page .modal-body input,
 body.os-add-page .modal-body textarea {
-	background: #1a1e28 !important;
-	border: 1px solid rgba(255, 255, 255, 0.07) !important;
-	color: #f0f2f8 !important;
+	background: #f9f9f8 !important;
+	border: 1px solid #e5e4e0 !important;
+	color: #1a1a18 !important;
 	box-shadow: none !important;
 }
 
 body.os-add-page .modal-body .form-control:focus {
-	border-color: #3d7eff !important;
-	box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.15) !important;
+	border-color: #1d9e75 !important;
+	box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.14) !important;
 }
 
 body.os-add-page .modal .close {
-	color: #8b92a8;
+	color: #6b6a65;
 	text-shadow: none;
 	opacity: 1;
 }
 
 body.os-add-page .modal .close:hover {
-	color: #f0f2f8;
+	color: #1a1a18;
 }
 
 /* Modal pesquisa de produto */
