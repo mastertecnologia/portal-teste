@@ -2,7 +2,7 @@
 
 use Cake\Routing\Router;
 
-$this->Html->css('/dist/css/pages/ordensservico-edit-shell.css', ['block' => true]);
+$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css', ['block' => true]);
 
 $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Edit', [], ['class' => 'breadcrumb-item active']);
