@@ -243,3 +243,21 @@ function SituacaoTicket($situacao) {
 
 	return '<span class="ticket-situacao">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</span>';
 }
+
+if (!function_exists('orcamentoStatus')) {
+	function orcamentoStatus($status) {
+		$labels = [
+			-1 => ['Rascunho', 'secondary'],
+			 0 => ['Pendente', 'warning'],
+			 1 => ['Enviado',  'info'],
+			 2 => ['Aprovado', 'success'],
+			 3 => ['Recusado', 'danger'],
+			 4 => ['Arquivado','dark'],
+		];
+		$k = (int)$status;
+		[$txt, $cls] = $labels[$k] ?? ['Desconhecido', 'secondary'];
+		return '<span class="badge badge-' . $cls . ' orc-status-badge">'
+			. htmlspecialchars($txt, ENT_QUOTES, 'UTF-8')
+			. '</span>';
+	}
+}

@@ -44,8 +44,8 @@ class AtividadesTable extends Table
 		$atividade->controller = $controller;
 		$atividade->action = $action;
 		$atividade->idtable = $idtable;
-		$atividade->data = date('d/m/Y');
-		$atividade->hora = date('H:i');
+		$atividade->data = date('Y-m-d');
+		$atividade->hora = date('H:i:s');
 
 		// Table não possui Flash/redirect; em caso de falha, apenas sinaliza.
 		if (!$this->save($atividade)) {

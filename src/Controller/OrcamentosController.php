@@ -12,6 +12,10 @@ $__pgmUserConstants = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserCons
 if (is_file($__pgmUserConstants)) {
 	require_once $__pgmUserConstants;
 }
+$__pgmUtilities = ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'Utilities.php';
+if (is_file($__pgmUtilities)) {
+	require_once $__pgmUtilities;
+}
 if (!defined('C_RoleCliente')) {
 	define('C_RoleCliente', 1);
 }
