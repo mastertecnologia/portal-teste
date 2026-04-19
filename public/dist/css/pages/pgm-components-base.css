@@ -109,17 +109,17 @@ html[data-pgm-theme="dark"] .pgm-pill-dot--danger {
 	margin-top: 10px;
 }
 
-/* Clientes/eventos — cartão e tabela escuros (sem style= na view) */
+/* Clientes/eventos — cartão e tabela na paleta clara (sem style= na view) */
 .pgm-cli-eventos-card {
-	background: #161b22;
-	border-color: #21262d;
+	background: var(--pgm-bg-surface, #ffffff);
+	border-color: var(--pgm-border, #e5e4e0);
 }
 .pgm-cli-eventos-table {
-	color: #c9d1d9;
+	color: var(--pgm-text, #1a1a18);
 }
 .pgm-cli-eventos-table > thead > tr > th,
 .pgm-cli-eventos-table > tbody > tr > td {
-	border-color: #21262d;
+	border-color: var(--pgm-border, #e5e4e0);
 }
 .pgm-cli-eventos-timestamp {
 	white-space: nowrap;
@@ -127,7 +127,7 @@ html[data-pgm-theme="dark"] .pgm-pill-dot--danger {
 }
 .pgm-cli-eventos-code {
 	font-size: 11px;
-	color: #5cdbc0;
+	color: var(--pgm-erp-teal-active, #085041);
 }
 
 /* Tabela / layout — evitar style= em relatórios e detalhe */
