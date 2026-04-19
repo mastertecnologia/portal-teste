@@ -194,3 +194,14 @@ composer show mpdf/mpdf
 - Time de infraestrutura: TLS, firewall, backups e observabilidade.
 - Time de operacao: execucao do checklist e registro de mudancas.
 
+---
+
+## 12) API de integracao ERP (token, query e CORS)
+
+Configuracao: `config/erp_api.php` (carregada em `config/bootstrap.php`) e variaveis em `.env` (exemplos em `.env.example`).
+
+- **`ERP_API_HEADER_ONLY=1`**: o Portal rejeita pedidos que enviem `empresa` ou `token` na query string (evita vazamento em logs de proxy, historico e `Referer`). O integrador Windows/IIS deve enviar credenciais apenas nos headers HTTP `empresa` e `token`.
+- **`ERP_API_CORS_ORIGINS`**: lista separada por virgulas de origens permitidas para `Access-Control-Allow-Origin` nas rotas JSON do ERP (`Clientes`, `Produtos`, `Ordensservico`, `Clicontratos`). Se vazio, mantem o comportamento legado `*`. Se preenchido, pedidos de browser com `Origin` fora da lista nao recebem cabecalho CORS (preflight falha).
+
+Codigo de referencia: `src/Utility/ErpIntegrationRequest.php`, `src/Utility/ErpApiRoutes.php`, `src/Controller/AppController.php`.
+

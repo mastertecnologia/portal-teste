@@ -6,6 +6,8 @@ permissions:
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
   push:
     paths:
       - 'tests/**'
@@ -64,6 +66,9 @@ on:
       - 'phpunit.xml.dist'
       - 'tests/bootstrap_http.php'
       - 'config/bootstrap.php'
+      - 'config/erp_api.php'
+      - 'src/Utility/ErpApiRoutes.php'
+      - 'src/Utility/ErpIntegrationRequest.php'
       - '.github/workflows/rbac-phpunit.yml'
   pull_request:
     paths:
@@ -123,6 +128,9 @@ on:
       - 'phpunit.xml.dist'
       - 'tests/bootstrap_http.php'
       - 'config/bootstrap.php'
+      - 'config/erp_api.php'
+      - 'src/Utility/ErpApiRoutes.php'
+      - 'src/Utility/ErpIntegrationRequest.php'
       - '.github/workflows/rbac-phpunit.yml'
 
 concurrency:

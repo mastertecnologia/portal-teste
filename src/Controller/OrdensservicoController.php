@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Utility\ErpGridUrl;
+use App\Utility\ErpIntegrationRequest;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Mailer\Email;
@@ -1288,15 +1289,19 @@ class OrdensservicoController extends AppController {
 	public function listAPI() {
         $this->autoRender = false;
         if ($this->request->is('get')) {
-			// Suporta credenciais via headers (ERP) e também via query string (fallback)
-			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
-			$token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+			list($empresa, $token, $erpCredErr) = ErpIntegrationRequest::readEmpresaAndToken(
+				$this->request,
+			);
 			$situacao = $this->request->getHeaderLine('situacao') ?: $this->request->getQuery('situacao');
 			$id = $this->request->getHeaderLine('id') ?: $this->request->getQuery('id');
 
 			$apiRet = function ($msg, $status = 200) {
 				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
 			};
+
+			if ($erpCredErr !== null) {
+				return $apiRet($erpCredErr, 400);
+			}
 
 			$empresa = is_string($empresa) ? trim($empresa) : $empresa;
 			$token = is_string($token) ? trim($token) : $token;
@@ -1433,8 +1438,14 @@ class OrdensservicoController extends AppController {
             $this->log('[API-ORDENS refreshAPI] resposta 405 metodo nao permitido', 'info');
 			return $apiRet('Método não permitido. Use PUT.', 405);
 		}
-		$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
-		$token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+		list($empresa, $token, $erpCredErr) = ErpIntegrationRequest::readEmpresaAndToken(
+			$this->request,
+		);
+		if ($erpCredErr !== null) {
+			$this->log('[API-ORDENS refreshAPI] resposta 400 ' . $erpCredErr, 'info');
+
+			return $apiRet($erpCredErr, 400);
+		}
 		// Aceitar JSON do body: getData() ou input('json_decode')
 		$json = $this->request->getData();
 		if (empty($json) || !is_array($json)) {

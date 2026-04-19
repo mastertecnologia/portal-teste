@@ -27,6 +27,7 @@
             <file>tests/TestCase/Utility/RbacClientePortalTest.php</file>
             <file>tests/TestCase/Utility/RbacHierarchyTest.php</file>
             <file>tests/TestCase/Utility/AbacQueryTest.php</file>
+            <file>tests/TestCase/Utility/ErpIntegrationRequestTest.php</file>
             <file>tests/TestCase/Controller/Component/RbacComponentWhitelistTest.php</file>
             <file>tests/TestCase/Controller/Component/RbacComponentApiEnforcedTest.php</file>
             <file>tests/TestCase/Shell/RbacRolloutShellTest.php</file>

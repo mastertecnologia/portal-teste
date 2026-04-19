@@ -14,6 +14,8 @@
  */
 namespace App\Controller;
 
+use App\Utility\ErpApiRoutes;
+use App\Utility\ErpIntegrationRequest;
 use App\Utility\RbacChecker;
 use App\Service\Common\ModelService;
 use Cake\Controller\Controller;
@@ -80,13 +82,8 @@ class AppController extends Controller
                 "produto",
                 "qtdestoque",
                 "estoquesLote", // Orçamentos: produto, estoque e catálogo (lote)
-                // APIs de integração ERP (sem sessão web; token em header)
-                "addApi",
-                "listApi",
-                "refreshApi",
-                "addAPI",
-                "listAPI",
-                "refreshAPI",
+                // APIs de integração ERP (sem sessão web; token em header) — ver ErpApiRoutes
+                ...ErpApiRoutes::securityUnlockedActionNames(),
                 // Clientes: consulta CNPJ (Receita) e IE (SEFAZ/SINTEGRA) via AJAX
                 "consultacnpj",
                 "consultaIe",
@@ -198,28 +195,15 @@ class AppController extends Controller
 
     public function afterFilter(Event $event)
     {
-        $controllerLower = strtolower($this->request->getParam("controller"));
-        $actionLower = strtolower($this->request->getParam("action"));
-        $apiControllers = [
-            "ordensservico" => ["listapi", "refreshapi"],
-            "clientes" => ["addapi", "listapi"],
-            "produtos" => ["addapi", "listapi"],
-            "clicontratos" => ["addapi", "listapi"],
-        ];
-        if (
-            isset($apiControllers[$controllerLower]) &&
-            in_array($actionLower, $apiControllers[$controllerLower], true)
-        ) {
-            $this->response = $this->response
-                ->withHeader("Access-Control-Allow-Origin", "*")
-                ->withHeader(
-                    "Access-Control-Allow-Methods",
-                    "GET, POST, PUT, OPTIONS",
-                )
-                ->withHeader(
-                    "Access-Control-Allow-Headers",
-                    "Content-Type, empresa, token, situacao, id, cnpj, codigo",
-                );
+        $controllerLower = strtolower(
+            (string) $this->request->getParam("controller"),
+        );
+        $actionLower = strtolower((string) $this->request->getParam("action"));
+        if (ErpApiRoutes::matches($controllerLower, $actionLower)) {
+            $this->response = ErpIntegrationRequest::applyCorsHeaders(
+                $this->response,
+                $this->request,
+            );
         }
     }
 
@@ -233,28 +217,11 @@ class AppController extends Controller
         $controllerLower = strtolower($controller);
         $actionLower = strtolower($action);
 
-        // APIs de integração ERP: CORS para o ERP conseguir chamar de outro domínio
-        $apiControllers = [
-            "ordensservico" => ["listapi", "refreshapi"],
-            "clientes" => ["addapi", "listapi"],
-            "produtos" => ["addapi", "listapi"],
-            "clicontratos" => ["addapi", "listapi"],
-        ];
-        if (
-            isset($apiControllers[$controllerLower]) &&
-            in_array($actionLower, $apiControllers[$controllerLower], true)
-        ) {
-            $this->response = $this->response
-                ->withHeader("Access-Control-Allow-Origin", "*")
-                ->withHeader(
-                    "Access-Control-Allow-Methods",
-                    "GET, POST, PUT, OPTIONS",
-                )
-                ->withHeader(
-                    "Access-Control-Allow-Headers",
-                    "Content-Type, empresa, token, situacao, id, cnpj, codigo",
-                )
-                ->withHeader("Access-Control-Max-Age", "86400");
+        if (ErpApiRoutes::matches($controllerLower, $actionLower)) {
+            $this->response = ErpIntegrationRequest::applyCorsHeaders(
+                $this->response,
+                $this->request,
+            );
             if ($this->request->is("options")) {
                 return $this->response->withStatus(204);
             }
@@ -473,18 +440,9 @@ class AppController extends Controller
     public function isAuthorized($user)
     {
         // APIs de integração ERP: permitir mesmo sem usuário logado (auth por token no header)
-        $controller = strtolower($this->request->getParam("controller"));
-        $action = strtolower($this->request->getParam("action"));
-        $apiActions = [
-            "ordensservico" => ["listapi", "refreshapi"],
-            "clientes" => ["addapi", "listapi"],
-            "produtos" => ["addapi", "listapi"],
-            "clicontratos" => ["addapi", "listapi"],
-        ];
-        if (
-            isset($apiActions[$controller]) &&
-            in_array($action, $apiActions[$controller], true)
-        ) {
+        $controller = strtolower((string) $this->request->getParam("controller"));
+        $action = strtolower((string) $this->request->getParam("action"));
+        if (ErpApiRoutes::matches($controller, $action)) {
             return true;
         }
 

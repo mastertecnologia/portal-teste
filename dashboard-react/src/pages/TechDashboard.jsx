@@ -202,7 +202,6 @@ function TicketActionsMenu({
   openTransfer,
   handleStartAtendimento,
   startBusyId,
-  servicedesk = false,
 }) {
   const acoesOrd = sortTicketAcoes(acoes || []);
   const [open, setOpen] = useState(false);
@@ -743,9 +742,6 @@ export default function TechDashboard({ boot }) {
 
   const isSD = Boolean(boot?.servicedesk);
 
-  /** Campos compactos (Service Desk embutido). */
-  const sdField =
-    'h-8 w-full rounded-md border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-raised,#141820)] px-2.5 text-[0.8rem] text-[var(--pgm-text,#e8eaed)] outline-none transition placeholder:text-[var(--pgm-text-muted,#9aa0a8)] focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.20),var(--pgm-shadow-glow)]';
   /** Barra de filtros: sem w-full para permitir flex-wrap na largura do painel (evita scroll horizontal na barra). */
   const sdFieldToolbar =
     'h-8 min-w-0 rounded-md border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-raised,#141820)] px-2.5 text-[0.8rem] text-[var(--pgm-text,#e8eaed)] outline-none transition placeholder:text-[var(--pgm-text-muted,#9aa0a8)] focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.20),var(--pgm-shadow-glow)]';
@@ -1091,7 +1087,6 @@ export default function TechDashboard({ boot }) {
                           openTransfer={openTransfer}
                           handleStartAtendimento={handleStartAtendimento}
                           startBusyId={startBusyId}
-                          servicedesk={Boolean(boot?.servicedesk)}
                         />
                       </td>
                     </tr>

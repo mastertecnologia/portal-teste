@@ -1,0 +1,42 @@
+# Build e lint do SPA de tickets (Vite + React).
+name: Dashboard React
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'dashboard-react/**'
+      - '.github/workflows/dashboard-react-build.yml'
+  pull_request:
+    paths:
+      - 'dashboard-react/**'
+      - '.github/workflows/dashboard-react-build.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dashboard-react-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard-react
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: dashboard-react/package-lock.json
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run lint
+          npm run build

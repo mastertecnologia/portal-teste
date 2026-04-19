@@ -99,6 +99,7 @@ composer install
 - **Notifications**: `PortalNotificationsController` — JSON endpoints for the bell icon in the sidebar. Doc operacional: `docs/NOTIFICACOES_INTERNAS_SINO.md`.
 
 ### Config files
+- `config/erp_api.php` — APIs JSON ERP→Portal: CORS por lista de origens e modo `ERP_API_HEADER_ONLY` (credenciais só em headers; ver `.env.example`)
 - `config/rbac.php` — RBAC runtime config (mode, phases, feature flags)
 - `config/abac.php` — ABAC rules
 - `config/permissions_registry.php` — canonical permission codes registry

@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Utility\ErpIntegrationRequest;
 use App\Controller\AppController;
 use App\Service\Common\CryptoService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
@@ -957,8 +958,12 @@ class ClientesController extends AppController {
 		}
 
 		try {
-			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
-			$token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+			list($empresa, $token, $erpCredErr) = ErpIntegrationRequest::readEmpresaAndToken(
+				$this->request,
+			);
+			if ($erpCredErr !== null) {
+				return $apiRet($erpCredErr, 400);
+			}
 			$json = $this->request->getData();
 			if (empty($json) || !is_array($json)) {
 				$raw = $this->request->input('json_decode');
@@ -1110,13 +1115,17 @@ class ClientesController extends AppController {
 	public function listAPI() {
         $this->autoRender = false;
         if ($this->request->is('get')) {
-			$empresa = $this->request->getHeaderLine('empresa') ?: $this->request->getQuery('empresa');
-            $token = $this->request->getHeaderLine('token') ?: $this->request->getQuery('token');
+			list($empresa, $token, $erpCredErr) = ErpIntegrationRequest::readEmpresaAndToken(
+				$this->request,
+			);
             $cnpj = $this->request->getHeaderLine('cnpj') ?: $this->request->getQuery('cnpj');
 
 			$apiRetList = function ($msg, $status = 200) {
 				return $this->jsonResponse(['mensagem' => $msg, 'retorno' => $msg], $status);
 			};
+			if ($erpCredErr !== null) {
+				return $apiRetList($erpCredErr, 400);
+			}
 			if(empty($token) || empty($empresa)) 
 			return $apiRetList('Parâmetros da requisição inválidos', 400);
 
