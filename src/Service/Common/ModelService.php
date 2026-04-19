@@ -231,9 +231,7 @@ class ModelService
         }
 
         foreach ($models as $model) {
-            if (method_exists(self::class, 'get' . $model)) {
-                $controller->loadModel($model);
-            }
+            $controller->loadModel($model);
         }
     }
 }
