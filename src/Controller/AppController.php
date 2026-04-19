@@ -15,6 +15,7 @@
 namespace App\Controller;
 
 use App\Utility\RbacChecker;
+use App\Service\Common\ModelService;
 use Cake\Controller\Controller;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
@@ -30,10 +31,9 @@ class AppController extends Controller
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel("Atividades");
-        $this->loadModel("Users");
-        $this->loadModel("Empresas");
-        $this->loadModel("Empresasusers");
+        // Use ModelService instead of repetitive loadModel calls
+        // This reduces code duplication and improves performance through caching
+        ModelService::loadModelsIntoController($this, ["Atividades", "Users", "Empresas", "Empresasusers"]);
 
         $this->loadComponent("RequestHandler", [
             "enableBeforeRedirect" => false,

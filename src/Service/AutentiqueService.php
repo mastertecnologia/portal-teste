@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Service\Common\HttpClientService;
 use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
 use Cake\Log\Log;
@@ -689,22 +690,22 @@ class AutentiqueService {
 			return null;
 		}
 		$body = json_encode(['query' => $query, 'variables' => $variables], JSON_UNESCAPED_UNICODE);
-		$ch = curl_init($this->getEndpoint());
-		curl_setopt_array($ch, [
-			CURLOPT_POST => true,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_HTTPHEADER => [
+		
+		// Usar HttpClientService seguro em vez de curl_exec
+		$result = HttpClientService::post($this->getEndpoint(), $body, [
+			'timeout' => 120,
+			'headers' => [
 				'Content-Type: application/json',
 				'Authorization: Bearer ' . $key,
 			],
-			CURLOPT_POSTFIELDS => $body,
-			CURLOPT_TIMEOUT => 120,
+			'type' => 'json'
 		]);
-		$raw = curl_exec($ch);
-		curl_close($ch);
-		if ($raw === false || $raw === '') {
+		
+		if (!$result['success'] || empty($result['data'])) {
 			return null;
 		}
+		
+		$raw = $result['data'];
 		$decoded = json_decode($raw, true);
 
 		return is_array($decoded) ? $decoded : null;
@@ -735,20 +736,20 @@ class AutentiqueService {
 			'map' => $map,
 			'0' => new \CURLFile($pdfPath, 'application/pdf', 'contrato.pdf'),
 		];
-		curl_setopt_array($ch, [
-			CURLOPT_POST => true,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_HTTPHEADER => [
+		// Usar HttpClientService seguro em vez de curl_exec para upload multipart
+		$result = HttpClientService::post($this->getEndpoint(), $post, [
+			'timeout' => 300,
+			'headers' => [
 				'Authorization: Bearer ' . $key,
 			],
-			CURLOPT_POSTFIELDS => $post,
-			CURLOPT_TIMEOUT => 300,
+			'type' => 'multipart'
 		]);
-		$raw = curl_exec($ch);
-		curl_close($ch);
-		if ($raw === false || $raw === '') {
+		
+		if (!$result['success'] || empty($result['data'])) {
 			return null;
 		}
+		
+		$raw = $result['data'];
 		$decoded = json_decode($raw, true);
 
 		return is_array($decoded) ? $decoded : null;

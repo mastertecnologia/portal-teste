@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Common\CryptoService;
 use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 use Cake\Utility\Crypto\Mcrypt;
@@ -273,13 +274,14 @@ class EmpresasController extends AppController{
 				return $this->redirect(['action' => 'changePassword', $id]);
 			}
 
-			$senhaatual = descriptografaSenha($empresa->senhaadministrativa); 
+			// Use CryptoService for secure AES-256 encryption instead of legacy functions
+			$senhaatual = CryptoService::decrypt($empresa->senhaadministrativa, $empresa->idempresa); 
 
 			if($data['old_password'] !== $senhaatual){
 				$this->Flash->error('A senha antiga não confere!');
 				return $this->redirect(['action' => 'changePassword', $id]);
 			}
-			$encryptionNova = criptografaSenha($data['password1']); 
+			$encryptionNova = CryptoService::encrypt($data['password1'], $empresa->idempresa); 
 
 			$empresa->senhaadministrativa = $encryptionNova;
 			$empresa = $this->Users->patchEntity($empresa, $data);

@@ -1,6 +1,7 @@
 <?php
 namespace App\Utility\Fiscal;
 
+use App\Service\Common\HttpClientService;
 use Cake\Log\Log;
 
 /**
@@ -34,20 +35,18 @@ class FiscalAI {
             ];
         }
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_UNICODE));
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20); // 20s caso a API demore
+        // Use secure HttpClientService instead of curl_exec
+        $result = HttpClientService::post($url, $payload, [
+            'timeout' => 20,
+            'headers' => ['Content-Type: application/json'],
+            'type' => 'json'
+        ]);
 
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($error) {
-            throw new \Exception('Falha de conexão com a IA: ' . $error);
+        if (!$result['success']) {
+            throw new \Exception('Falha de conexão com a IA: ' . ($result['error'] ?? 'Unknown error'));
         }
+
+        $response = $result['data'];
 
         $decoded = json_decode($response, true);
         if (!empty($decoded['error'])) {

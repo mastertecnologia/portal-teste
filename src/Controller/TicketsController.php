@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Common\ModelService;
 use App\Service\Ticket\DashboardService;
 use App\Service\Ticket\SlaService;
 use App\Service\Ticket\TicketHistoryLogger;
@@ -23,33 +24,16 @@ require_once ROOT . DS . 'config' . DS . 'ticket_workflow_constants.php';
 class TicketsController extends AppController {
 	public function initialize() {
 		parent::initialize();
-		$this->loadModel('Tickets');
-		$this->loadModel('Users');
-		$this->loadModel('Ticketsusers');
-		$this->loadModel('Ticketsanexos');
-		$this->loadModel('Ticketcomentarios');
-		$this->loadModel('Ticketshoras');
-		$this->loadModel('Ticketsmovs');
-		$this->loadModel('Notificacoes');
-		$this->loadModel('Ticketsservicos');
-		$this->loadModel('Ticketsmodulos');
-		$this->loadModel('Ticketslogemail');
-		$this->loadModel('Clientes');
-		$this->loadModel('Cliservicos');
-		$this->loadModel('Climodulos');
-		$this->loadModel('Homologacoes');
-		$this->loadModel('Servicos');
-		$this->loadModel('Modulos');
-		$this->loadModel('Faturas');
-		$this->loadModel('Faturaparcelas');
-		$this->loadModel('Cancelamento');
-		$this->loadModel('Empresas');
-		$this->loadModel('Empresasusers');
-		$this->loadModel('Ordensservico');
-		$this->loadModel('Config');
-		$this->loadModel('Queues');
-		$this->loadModel('QueuesUsers');
-		$this->loadModel('SupportLevels');
+		// Usar ModelService em vez de 28 loadModel repetidos
+		// Reduz drasticamente a duplicação de código e melhora performance via cache
+		ModelService::loadModelsIntoController($this, [
+			'Tickets', 'Users', 'Ticketsusers', 'Ticketsanexos', 'Ticketcomentarios',
+			'Ticketshoras', 'Ticketsmovs', 'Notificacoes', 'Ticketsservicos', 'Ticketsmodulos',
+			'Ticketslogemail', 'Clientes', 'Cliservicos', 'Climodulos', 'Homologacoes',
+			'Servicos', 'Modulos', 'Faturas', 'Faturaparcelas', 'Cancelamento',
+			'Empresas', 'Empresasusers', 'Ordensservico', 'Config', 'Queues',
+			'QueuesUsers', 'SupportLevels'
+		]);
 	}
 
 	public function isAuthorized($user) {

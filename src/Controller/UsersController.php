@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Common\ModelService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\Ticket\DashboardService;
 use App\Utility\ClienteDomainEventType;
@@ -37,25 +38,14 @@ use Cake\Mailer\TransportFactory;
 class UsersController extends AppController {
 	public function initialize() {
 		parent::initialize();
-		$this->loadModel('Clientes');
-		$this->loadModel('Clicontratos');
-		$this->loadModel('Users');
-		$this->loadModel('Atividades');
-		$this->loadModel('Books');
-		$this->loadModel('Tickets');
-		$this->loadModel('Ticketsmovs');
-		$this->loadModel('Visitas');
-		$this->loadModel('Tarefas');
-		$this->loadModel('Empresas');
-		$this->loadModel('Queues');
-		$this->loadModel('QueuesUsers');
-		$this->loadModel('SupportLevels');
-		$this->loadModel('Empresasusers');
-		$this->loadModel('Orcamentos');
-		$this->loadModel('Orcamentosservicos');
-		$this->loadModel('Produtos');
-		$this->loadModel('Ordensservico');
-		$this->loadModel('Config');
+		// Use ModelService instead of repetitive loadModel calls
+		// This reduces code duplication from 19 loadModel calls to 1 line
+		ModelService::loadModelsIntoController($this, [
+			'Clientes', 'Clicontratos', 'Users', 'Atividades', 'Books', 'Tickets', 
+			'Ticketsmovs', 'Visitas', 'Tarefas', 'Empresas', 'Queues', 'QueuesUsers',
+			'SupportLevels', 'Empresasusers', 'Orcamentos', 'Orcamentosservicos',
+			'Produtos', 'Ordensservico', 'Config'
+		]);
 	}
 
 	public function beforeFilter(Event $event) {

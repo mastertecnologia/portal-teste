@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Common\CryptoService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Service\ClienteIntegration\ClienteErpSyncService;
@@ -389,7 +390,7 @@ class ClientesController extends AppController {
 		}
 		$cliente->users = $this->Users->find('all')->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
 		$usuariosValue = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where(['idcliente' => $id, 'permissaoacesso' => 1])->toArray();
-		$cliente->senha = \descriptografasenha($cliente->senha);
+		$cliente->senha = CryptoService::decrypt($cliente->senha, $cliente->idempresa ?? 0);
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
@@ -402,7 +403,7 @@ class ClientesController extends AppController {
 
 			$cliente = $this->Clientes->patchEntity($cliente, $data);
 			if(!empty($data['cpf'])) $cliente->cpf = \removeCaracteres($data['cpf']);
-			if(!empty($data['senha'])) $cliente->senha = \criptografasenha($data['senha']);
+			if(!empty($data['senha'])) $cliente->senha = CryptoService::encrypt($data['senha'], $cliente->idempresa ?? 0);
 
 			if ($this->Clientes->save($cliente)) {
 				$this->sincronizacliente($id);

@@ -1,6 +1,7 @@
 <?php
 namespace App\Utility\Fiscal;
 
+use App\Service\Common\HttpClientService;
 use Cake\Core\Configure;
 use Cake\Log\Log;
 
@@ -431,19 +432,19 @@ class FiscalSefazClient {
                     if (defined('CURLOPT_SSLCERTTYPE')) {
                         $curlOpts[CURLOPT_SSLCERTTYPE] = 'PEM';
                     }
-                    curl_setopt_array($ch, $curlOpts);
+                    // Usar HttpClientService seguro em vez de curl_exec direto
+                    $result = HttpClientService::curlExec($url, $curlOpts);
 
-                    $response = curl_exec($ch);
-                    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    $curlError = curl_error($ch);
-                    $curlErrno = (int)curl_errno($ch);
-                    curl_close($ch);
-
-                    if ($response === false || $curlErrno) {
+                    if (!$result['success']) {
                         throw new \RuntimeException(
-                            'cURL erro ' . $curlErrno . ': ' . ($curlError ?: 'Sem resposta do servidor')
+                            'HTTP erro: ' . ($result['error'] ?? 'Sem resposta do servidor')
                         );
                     }
+
+                    $response = $result['data'];
+                    $httpCode = $result['status'];
+                    $curlError = $result['error'] ?? null;
+                    $curlErrno = $result['errno'] ?? 0;
 
                     Log::debug(sprintf(
                         'SEFAZ cURL servico=%s HTTP=%d bytes=%d',
