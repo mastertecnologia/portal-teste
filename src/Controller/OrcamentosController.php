@@ -551,6 +551,28 @@ class OrcamentosController extends AppController {
 	}
 
 	/**
+	 * Garante formapagamento coerente com as opções da proposta (evita lixo/BOM na coluna).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|null $orcamento
+	 */
+	protected function _orcNormalizeFormaPagamento($orcamento): void {
+		if ($orcamento === null) {
+			return;
+		}
+		$opcoes = $this->_orcFormaPagamentoOpcoes();
+		$v = $orcamento->get('formapagamento');
+		$s = is_string($v) ? trim(str_replace("\0", '', $v)) : '';
+		if ($s !== '') {
+			$s = preg_replace('/^\xEF\xBB\xBF/', '', $s);
+		}
+		if ($s === '' || !array_key_exists($s, $opcoes)) {
+			$orcamento->set('formapagamento', 'À vista');
+		} else {
+			$orcamento->set('formapagamento', $s);
+		}
+	}
+
+	/**
 	 * Resolve o iditem do carrinho (Orcamentosservicos.idorcamento) a partir do id do orçamento.
 	 * Espelha a lógica de edit() — necessário quando $_SESSION['idcarrinho'] foi limpa (ex.: limpasession no beforeunload).
 	 *
@@ -856,6 +878,7 @@ class OrcamentosController extends AppController {
 
 		if ($this->request->is('post')) { 
 			$orcamento = $this->Orcamentos->patchEntity($orcamento, $this->request->getData());
+			$this->_orcNormalizeFormaPagamento($orcamento);
 			$orcamento->created = date("Y-m-d H:i:s");
 			$orcamento->idautor = $this->Auth->user('id');
 			$orcamento->id = $this->Empresas->incrementOrcamento($this->Auth->user('idempresa'));
@@ -885,9 +908,7 @@ class OrcamentosController extends AppController {
 			$this->Flash->error(__('Não foi possível gerar o orçamento.'));
 		} else $this->limpacarrinho();
 
-		if ($orcamento->get('formapagamento') === null || $orcamento->get('formapagamento') === '') {
-			$orcamento->set('formapagamento', 'À vista');
-		}
+		$this->_orcNormalizeFormaPagamento($orcamento);
 
 		// Combos 
 		$clientes = $this->Clientes->find('all')
@@ -948,6 +969,9 @@ class OrcamentosController extends AppController {
 			'Clientes.Cidades' 
 		])
 		->first();
+		if ($orcamento) {
+			$this->_orcNormalizeFormaPagamento($orcamento);
+		}
 		$carrinho = $this->Orcamentositens->find('all')->where(['AND' => ['idempresa' => $this->Auth->user('idempresa'), 'idorcamento' => $id]])->first();
 
 
@@ -962,6 +986,7 @@ class OrcamentosController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$orcamento = $this->Orcamentos->patchEntity($orcamento, $this->request->getData());
+			$this->_orcNormalizeFormaPagamento($orcamento);
 
 			if ($this->Orcamentos->save($orcamento)) {
 				$this->Flash->success(__('Orçamento alterado com sucesso!'));

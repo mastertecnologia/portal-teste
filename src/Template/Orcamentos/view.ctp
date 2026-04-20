@@ -21,7 +21,6 @@
     <!-- Cabeçalho -->
     <div class="orc-page-head">
         <div>
-            <div class="orc-eyebrow">Módulo comercial</div>
             <div class="orc-form-crumb">
                 <?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Orçamento #<?= $orcamento->id ?></span>
             </div>

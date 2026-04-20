@@ -1263,6 +1263,23 @@ body.skin-green .orc-premium-wrap.orc-premium-form {
   margin-bottom: 8px;
 }
 
+.orc-premium-form .orc-obs-source-hint {
+  font-size: 11px;
+  color: var(--orc-text-muted, #6b6a65);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.orc-premium-form .orc-obs-preview-frame {
+  display: block;
+  width: 100%;
+  min-height: 160px;
+  margin: 0 0 10px;
+  border: 1px solid var(--orc-border, #e5e4e0);
+  border-radius: var(--orc-radius-sm, 8px);
+  background: #fafaf9;
+}
+
 .orc-premium-form .orc-obs-textarea {
   min-height: 140px;
   resize: vertical;
@@ -2539,6 +2556,15 @@ body.skin-green .orc-premium-wrap.orc-premium-view {
   color: #9a9890;
   text-align: center;
   font-size: 11px;
+}
+
+.orc-premium-form .orc-item-insert-tbl tbody td.orc-insert-desc-preview {
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #1a1a18;
+  word-break: break-word;
+  vertical-align: middle;
 }
 
 .orc-premium-form .orc-item-insert-tbl tbody td.orc-insert-td-input .form-group {

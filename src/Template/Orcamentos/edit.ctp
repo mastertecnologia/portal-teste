@@ -68,7 +68,6 @@
 	<!-- Cabeçalho -->
 	<div class="orc-page-head">
 		<div>
-			<div class="orc-eyebrow">Módulo comercial</div>
 			<div class="orc-form-crumb">
 				<?= $this->Html->link('Orçamentos', ['action' => 'index'], ['escape' => false]) ?> › <span class="orc-form-crumb-current">Editar #<?= $orcamento->id ?></span>
 			</div>
@@ -133,6 +132,8 @@
 	<div class="orc-obs-block">
 		<div class="orc-sec-title">Observações</div>
 		<label class="control-label" for="observacoes">Condições, prazos, garantias</label>
+		<p class="orc-obs-source-hint">Pré-visualização do texto (inclui HTML gravado no orçamento). Edite o conteúdo no campo abaixo.</p>
+		<iframe id="orc-obs-solicitacao-preview" class="orc-obs-preview-frame" title="Pré-visualização das condições" sandbox=""></iframe>
 		<?= $this->Form->textarea('solicitacao', ['novalidate' => true, 'id' => 'observacoes', 'class' => 'form-control orc-obs-textarea', 'label' => false, 'rows' => 6, 'placeholder' => 'Condições, prazos, garantias...']) ?>
 	</div>
 

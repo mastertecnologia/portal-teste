@@ -34,6 +34,27 @@
 		return parseFloat(String(txt).split('R$').join('').replace(/\./g, '').replace(',', '.').trim()) || 0;
 	}
 
+	function orcInsertDescPreviewSync() {
+		var el = document.getElementById('orc-insert-desc-preview');
+		if (!el) {
+			return;
+		}
+		var t = ($('#observacao').val() || '').toString().trim();
+		el.textContent = t ? t : '—';
+	}
+
+	function orcObsSolicitacaoPreviewSync() {
+		var $ta = $('#observacoes');
+		var $iframe = $('#orc-obs-solicitacao-preview');
+		if (!$ta.length || !$iframe.length) {
+			return;
+		}
+		var raw = String($ta.val() == null ? '' : $ta.val());
+		raw = raw.replace(/<\/script/gi, '<\\/script').replace(/<\/iframe/gi, '<\\/iframe');
+		var doc = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:13px;line-height:1.45;color:#1a1a18;margin:12px;}p{margin:.5em 0}ul,ol{padding-left:1.25em}</style></head><body>' + raw + '</body></html>';
+		$iframe.attr('srcdoc', doc);
+	}
+
 	function orcClienteMetaFill() {
 		var id = $('#idcliente').val();
 		var m = window.orcClientesMeta && window.orcClientesMeta[id];
@@ -156,6 +177,17 @@
 
 	window.carrinho();
 
+	$('#observacao').on('input change', function () {
+		orcInsertDescPreviewSync();
+	});
+	$('#observacoes').on('input change', function () {
+		orcObsSolicitacaoPreviewSync();
+	});
+	$(function () {
+		orcInsertDescPreviewSync();
+		orcObsSolicitacaoPreviewSync();
+	});
+
 	$('#idproduto').change(function () {
 		if ($(this).val() != 0) {
 			$('#valoruni').attr('disabled', true);
@@ -171,9 +203,15 @@
 						$('.qtdEstoque').text(data.mensagem).show();
 						$('#valoruni').prop('disabled', false);
 						$('.mensal').prop('disabled', false);
+						orcInsertDescPreviewSync();
 						return;
 					}
-					$('#servico').val((data.descricao || '').toString().trim());
+					var descLinha = (data.descricao || '').toString().trim();
+					$('#servico').val(descLinha);
+					if (!($('#observacao').val() || '').toString().trim()) {
+						$('#observacao').val(descLinha);
+					}
+					orcInsertDescPreviewSync();
 					$('#quantidade').val('');
 					$('#valordoservico').val('');
 					if (data.tipo == cfg.tipoServico) {
@@ -223,6 +261,7 @@
 					$('.qtdEstoque').text(msg).show();
 					$('#valoruni').val('').prop('disabled', false);
 					$('.mensal').prop('disabled', false);
+					orcInsertDescPreviewSync();
 				}
 			});
 		} else {
@@ -230,6 +269,7 @@
 			$('#valoruni').val('');
 			$('#valoruni').attr('disabled', false);
 			$('.mensal').attr('disabled', false);
+			orcInsertDescPreviewSync();
 		}
 	});
 
@@ -319,6 +359,7 @@
 				$('.qtdEstoque').text('').hide();
 				$('#valormensal').attr('disabled', false);
 				$('#valoruni').attr('disabled', false);
+				orcInsertDescPreviewSync();
 				$('#servico').focus();
 			},
 			error: function (xhr) {
@@ -381,6 +422,7 @@
 		}
 		calcularValorTotal();
 		$('#idproduto').selectpicker('refresh');
+		orcInsertDescPreviewSync();
 	}
 
 	function limparFormularioEdicao() {
@@ -398,6 +440,7 @@
 		$('#valormensal').prop('disabled', false);
 		$('.qtdEstoque').hide();
 		$('#quantidade').mask('0000000');
+		orcInsertDescPreviewSync();
 	}
 
 	function toggleModoEdicao(modo) {
@@ -564,11 +607,16 @@
 	$('#btn-orc-limpar-novo').on('click', function (e) {
 		e.preventDefault();
 		$('#idcliente').val('').selectpicker('refresh');
-		$('#formapagamento').val('À vista').selectpicker('refresh');
+		var $fp = $('#formapagamento');
+		$fp.val('À vista');
+		if ($fp.data('selectpicker')) {
+			$fp.selectpicker('refresh');
+		}
 		orcClienteMetaFill();
 		$('#disc-val').val(0);
 		$('#disc-tipo').val('pct');
 		$('#observacoes').val('');
+		orcObsSolicitacaoPreviewSync();
 		$.ajax({
 			type: 'POST',
 			url: cfg.limpacarrinhoUrl,

@@ -79,14 +79,14 @@ $orcTblFieldTpl = [
 					<td class="orc-insert-td-input"><?= $this->Form->control('servico', array_merge($orcTblFieldTpl, ['class' => 'form-control', 'label' => false])) ?>
 						<small class="qtdEstoque text-muted"></small>
 					</td>
-					<td class="orc-insert-muted">—</td>
-					<td class="orc-insert-td-input"><?= $this->Form->control('tipo', array_merge($orcTblFieldTpl, ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false])) ?></td>
-					<td class="orc-insert-td-input"><?= $this->Form->control('quantidade', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false])) ?></td>
-					<td class="orc-insert-td-input"><?= $this->Form->control('valormensal', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false])) ?></td>
-					<td class="orc-insert-td-input"><?= $this->Form->control('valoruni', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false])) ?></td>
-					<td class="orc-insert-td-input"><?= $this->Form->control('valordoservico', array_merge($orcTblFieldTpl, ['class' => 'form-control', 'label' => false, 'disabled' => true])) ?></td>
-					<td class="orc-insert-muted">—</td>
-					<td class="orc-insert-muted">—</td>
+					<td class="orc-insert-desc-preview" id="orc-insert-desc-preview" title="Descrição adicional do item (espelha o campo abaixo da tabela)">—</td>
+					<td class="orc-insert-td-input text-right"><?= $this->Form->control('tipo', array_merge($orcTblFieldTpl, ['class' => 'quantidade form-control', 'options' => ['Unidade', 'Hora'], 'label' => false])) ?></td>
+					<td class="orc-insert-td-input text-right"><?= $this->Form->control('quantidade', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#quantidade")', 'class' => 'quantidade form-control', 'label' => false])) ?></td>
+					<td class="orc-insert-td-input text-right"><?= $this->Form->control('valormensal', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valormensal")', 'class' => 'mensal form-control mascaramonetaria', 'label' => false])) ?></td>
+					<td class="orc-insert-td-input text-right"><?= $this->Form->control('valoruni', array_merge($orcTblFieldTpl, ['onkeypress' => 'return SomenteNumero(event, "#valoruni")', 'class' => 'form-control mascaramonetaria', 'label' => false])) ?></td>
+					<td class="orc-insert-td-input text-right"><?= $this->Form->control('valordoservico', array_merge($orcTblFieldTpl, ['class' => 'form-control', 'label' => false, 'disabled' => true])) ?></td>
+					<td class="orc-insert-muted text-right">—</td>
+					<td class="orc-insert-muted text-right">—</td>
 					<td class="orc-insert-acoes text-center">
 						<button type="button" class="orc-add-row" id="btn-addservico" title="Adicionar item ao orçamento">
 							<i class="fa fa-plus orc-add-row-ic"></i><span class="orc-add-row-txt"> Adicionar</span>
