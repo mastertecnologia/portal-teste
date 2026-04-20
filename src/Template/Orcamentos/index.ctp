@@ -62,10 +62,15 @@ $orcPremiumVersao = function ($id) use ($versaoRotuloPorOrcamentoId) {
 	return is_string($v) && $v !== '' ? $v : 'v1';
 };
 
-$orcPremiumMargemHtml = function ($id) use ($margemBrutaPctPorOrcamentoId) {
+$orcPremiumMargemHtml = function ($id) use ($margemBrutaPctPorOrcamentoId, $valorTotalPorOrcamentoId) {
 	$id = (int)$id;
 	$m = $margemBrutaPctPorOrcamentoId[$id] ?? null;
+	$v = (float)($valorTotalPorOrcamentoId[$id] ?? 0);
 	if ($m === null) {
+		if ($v > 0.0001) {
+			return '<span class="orc-premium-margem orc-premium-margem--good" title="' . h(__('Sem custo total registrado — margem exibida como 100%')) . '">100%</span>';
+		}
+
 		return '<span class="orc-premium-muted">—</span>';
 	}
 	$cls = $m > 30 ? 'orc-premium-margem--good' : ($m > 15 ? 'orc-premium-margem--warn' : 'orc-premium-margem--bad');
@@ -73,10 +78,15 @@ $orcPremiumMargemHtml = function ($id) use ($margemBrutaPctPorOrcamentoId) {
 	return '<span class="orc-premium-margem ' . $cls . '">' . h((string)$m) . '%</span>';
 };
 
-$orcPremiumMargemOrder = function ($id) use ($margemBrutaPctPorOrcamentoId) {
-	$m = $margemBrutaPctPorOrcamentoId[(int)$id] ?? null;
+$orcPremiumMargemOrder = function ($id) use ($margemBrutaPctPorOrcamentoId, $valorTotalPorOrcamentoId) {
+	$id = (int)$id;
+	$m = $margemBrutaPctPorOrcamentoId[$id] ?? null;
+	if ($m !== null) {
+		return (int)$m;
+	}
+	$v = (float)($valorTotalPorOrcamentoId[$id] ?? 0);
 
-	return $m === null ? -1 : (int)$m;
+	return $v > 0.0001 ? 100 : -1;
 };
 
 $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
@@ -171,7 +181,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
-										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -214,7 +224,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
-										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -257,7 +267,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
-										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -300,7 +310,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
-										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -343,7 +353,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 										<td><?= $orcPremiumBadge($reg->status) ?></td>
 										<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
 										<td class="text-right orc-premium-margem-cell" data-order="<?= (int)$orcPremiumMargemOrder($reg->id) ?>"><?= $orcPremiumMargemHtml($reg->id) ?></td>
-										<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+										<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($editUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 										<td>
 											<?= $this->Html->link('Editar', ['action' => 'edit', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 										</td>
@@ -405,7 +415,7 @@ $totalListaAdmin = $tEm + $tEn + $tAp + $tRe + $tAr;
 								<td><span class="orc-premium-ver"><?= h($orcPremiumVersao($reg->id)) ?></span></td>
 								<td><?= $orcPremiumBadge($reg->status) ?></td>
 								<td class="text-right orc-premium-valor"><?= h($orcPremiumFmtValor($reg->id)) ?></td>
-								<td class="orc-premium-muted"><a class="orc-premium-link" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
+								<td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" target="_blank" rel="noopener noreferrer" href="<?= h($viewUrl) ?>"><?= @date_format($reg->created, 'd/m/Y') ?></a></td>
 								<td>
 									<?= $this->Html->link('Abrir', ['action' => 'view', $reg->id], ['class' => 'btn btn-sm orc-premium-btn-ghost', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
 								</td>
@@ -445,7 +455,7 @@ $(document).ready(function() {
 			oAria: { sSortAscending: ': Ordem Ascendente', sSortDescending: ': Ordem descendente' }
 		},
 		drawCallback: function() {
-			$('td').removeClass('dark-mode');
+			$('#orc-premium-container td').removeClass('dark-mode');
 		}
 	});
 	if (typeof filters !== 'undefined' && filters) {
@@ -453,7 +463,7 @@ $(document).ready(function() {
 	}
 
 	function activeTableSelector() {
-		var id = $('.orc-premium-tab-panels .tab-pane.active table').attr('id');
+		var id = $('#orc-premium-container .orc-premium-tab-panels .tab-pane.active table').attr('id');
 		if (id) return '#' + id;
 		return $('#tableCliente').length ? '#tableCliente' : null;
 	}
@@ -469,24 +479,40 @@ $(document).ready(function() {
 		$('#tableCliente').DataTable().search(this.value).draw();
 	});
 
-	$('a[data-toggle="tab"][href^="#"]').on('shown.bs.tab', function() {
+	var $orcBox = $('#orc-premium-container');
+
+	/** Um único status ativo: pills + cards KPI + painel Bootstrap correspondente */
+	function orcPremiumSetActiveStatus(pane) {
+		if (!$orcBox.length || !pane) {
+			return;
+		}
+		$orcBox.find('.orc-premium-tab-pill').removeClass('active').attr('aria-selected', 'false');
+		$orcBox.find('.orc-premium-tab-pill[href="#' + pane + '"]').addClass('active').attr('aria-selected', 'true');
+		$orcBox.find('.orc-premium-stat').removeClass('active').attr('aria-selected', 'false');
+		$orcBox.find('.orc-premium-stat[data-orc-tab="' + pane + '"]').addClass('active').attr('aria-selected', 'true');
+	}
+
+	$orcBox.on('shown.bs.tab', 'a.orc-premium-tab-pill[data-toggle="tab"]', function() {
 		$('#orc-list-search').val('');
+		var href = $(this).attr('href') || '';
+		var pane = href.replace(/^#/, '');
+		orcPremiumSetActiveStatus(pane);
 		var sel = activeTableSelector();
 		if (sel && $.fn.DataTable.isDataTable(sel)) {
 			$(sel).DataTable().search('').draw();
 		}
-		var href = $(this).attr('href') || '';
-		var pane = href.replace('#', '');
-		$('.orc-premium-stat').removeClass('active').attr('aria-selected', 'false');
-		$('.orc-premium-stat[data-orc-tab="' + pane + '"]').addClass('active').attr('aria-selected', 'true');
 	});
 
-	$('.orc-premium-stat').on('click', function() {
+	$orcBox.on('click', '.orc-premium-stat', function() {
 		var pane = $(this).data('orc-tab');
-		if (!pane) return;
-		$('.orc-premium-stat').removeClass('active').attr('aria-selected', 'false');
-		$(this).addClass('active').attr('aria-selected', 'true');
-		$('a[href="#' + pane + '"]').tab('show');
+		if (!pane) {
+			return;
+		}
+		orcPremiumSetActiveStatus(pane);
+		var $link = $orcBox.find('a.orc-premium-tab-pill[href="#' + pane + '"]');
+		if ($link.length) {
+			$link.tab('show');
+		}
 	});
 });
 

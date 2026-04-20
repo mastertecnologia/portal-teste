@@ -377,7 +377,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 .orc-premium-index .orc-premium-margem {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
 }
 
@@ -403,6 +403,20 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #1a1a18;
+}
+
+.orc-premium-index a.orc-premium-empresa-name:hover {
+  color: #00c08b;
+}
+
+.orc-premium-index .orc-premium-date-cell,
+.orc-premium-index .orc-premium-date-link {
+  color: #1a1a18 !important;
+}
+
+.orc-premium-index a.orc-premium-date-link:hover {
+  color: #00c08b;
 }
 
 .orc-premium-index .orc-badge {
