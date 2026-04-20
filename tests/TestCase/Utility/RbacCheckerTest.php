@@ -386,16 +386,16 @@ class RbacCheckerTest extends TestCase {
 		$this->assertTrue($gates['dashboard']);
 	}
 
-	public function testBuildSidebarMenuGatesIncludesFinanceiroWhenFilterOff() {
+	public function testBuildSidebarMenuGatesIncludesSidebarFunctionsSearchWhenFilterOff() {
 		Configure::write('Rbac', [
 			'menu_filter_sidebar' => false,
 			'menu_sidebar_gates' => [
-				'financeiro' => 'financeiro.view',
+				'sidebar_functions_search' => 'pesquisa.sidebar_search',
 			],
 		]);
 		$gates = RbacChecker::buildSidebarMenuGates(1, 0, 999);
-		$this->assertArrayHasKey('financeiro', $gates);
-		$this->assertTrue($gates['financeiro']);
+		$this->assertArrayHasKey('sidebar_functions_search', $gates);
+		$this->assertTrue($gates['sidebar_functions_search']);
 	}
 
 	public function testBuildSidebarMenuGatesIncludesPhase6fKeysWhenFilterOff() {

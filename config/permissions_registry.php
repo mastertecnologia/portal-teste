@@ -1092,7 +1092,7 @@ return [
         "perm_type" => "rbac",
         "abac_scope" => null,
         "description" =>
-            "Typeahead AJAX (Pesquisa/pesquisa e Pesquisa/link); enforce por permissão.",
+            "Typeahead AJAX da sidebar (Pesquisa/pesquisa e Pesquisa/link); gate Fase 6b sidebar_functions_search.",
         "sort_order" => $n(),
     ],
     // —— Normas da empresa / colaborador (dropdown perfil; NormasempresaController) ——
