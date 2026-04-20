@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Portal-git/portal-teste/**)",
+      "Bash(php -l src/Shell/FiscalNcmImportShell.php src/Controller/FiscalConfigController.php)",
+      "Bash(php -l src/Model/Table/AtividadesTable.php)",
+      "Bash(php -l vendor/PGMPackages/Utilities.php)",
+      "Bash(php -l src/Controller/OrcamentosController.php)",
+      "Read(//c/xampp/php/**)",
+      "Bash(git check-ignore *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Portal-git\\portal-teste\\src"
+    ]
+  }
+}

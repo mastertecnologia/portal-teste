@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PGM — Módulo Orçamentos (mockup + paleta)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/orcamentos-premium.css">
+<style>
+  /* Apenas o mockup desta página: barra de paleta + shell ERP escuro de contexto */
+  :root {
+    --pgm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mock-erp-shell: #0d0f14;
+  }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: var(--pgm-font-sans);
+    background: var(--mock-erp-shell);
+    color: #1a1a18;
+  }
+  .mock-erp-frame {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 16px 12px 32px;
+  }
+  .mock-palette {
+    background: #1a1f28;
+    border: 1px solid #2a3140;
+    border-radius: 12px;
+    padding: 16px 18px 18px;
+    margin-bottom: 16px;
+    color: #e8eaed;
+  }
+  .mock-palette h2 {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9aa0a8;
+    margin: 0 0 4px;
+  }
+  .mock-palette p {
+    font-size: 12px;
+    color: #c4c9d1;
+    margin: 0 0 14px;
+    line-height: 1.45;
+  }
+  .mock-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .mock-swatch {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: #141820;
+  }
+  .mock-swatch-color { height: 44px; }
+  .mock-swatch-meta {
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #e8eaed;
+    line-height: 1.35;
+  }
+  .mock-swatch-meta span {
+    display: block;
+    font-weight: 500;
+    color: #9aa0a8;
+    font-size: 10px;
+    margin-top: 2px;
+    word-break: break-all;
+  }
+  .mock-map {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #2a3140;
+    font-size: 11px;
+    color: #c4c9d1;
+    line-height: 1.55;
+  }
+  .mock-map code {
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    background: #0c0f14;
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: #5cdbc0;
+  }
+  /* Subconjunto mínimo das utilidades Bootstrap usadas em Orcamentos/index.ctp */
+  .table { width: 100%; max-width: 100%; margin-bottom: 0; border-collapse: collapse; }
+  .table-responsive { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .text-right { text-align: right !important; }
+  .btn {
+    display: inline-block;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; line-height: 1.5; border-radius: 0.2rem; }
+</style>
+</head>
+<body>
+<div class="mock-erp-frame">
+  <section class="mock-palette" aria-labelledby="mock-palette-title">
+    <h2 id="mock-palette-title">Paleta — Orçamentos premium</h2>
+    <p>Tokens definidos em <code style="font-size:11px;background:#0c0f14;padding:2px 6px;border-radius:4px;color:#5cdbc0;">webroot/css/orcamentos-premium.css</code> (classe <code style="font-size:11px;background:#0c0f14;padding:2px 6px;border-radius:4px;color:#5cdbc0;">.orc-premium-wrap</code>). Uso: fundo de página, cartões, status e ações.</p>
+    <div class="mock-palette-grid">
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#f2f1ee"></div><div class="mock-swatch-meta">Página<span>--orc-bg-page / área lista</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#ffffff;border-bottom:1px solid #e5e4e0"></div><div class="mock-swatch-meta">Cartão / tabela<span>--orc-bg-card</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#f8f8f7"></div><div class="mock-swatch-meta">Superfície / linhas<span>--orc-bg-surface / --orc-border-light</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#e5e4e0"></div><div class="mock-swatch-meta">Borda<span>--orc-border</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#1a1a18"></div><div class="mock-swatch-meta">Texto<span>--orc-text</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#6b6a65"></div><div class="mock-swatch-meta">Texto secundário<span>--orc-text-muted</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#9a9890"></div><div class="mock-swatch-meta">Hint / ícone busca<span>--orc-text-hint</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#00c08b"></div><div class="mock-swatch-meta">Teal marca<span>--orc-teal</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#008f68"></div><div class="mock-swatch-meta">Teal hover<span>--orc-teal-dark</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#e6faf4"></div><div class="mock-swatch-meta">Teal claro<span>--orc-teal-light</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#ffc107"></div><div class="mock-swatch-meta">Âmbar (andamento)<span>--orc-amber</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#378add"></div><div class="mock-swatch-meta">Azul (aprovados KPI)<span>--orc-blue</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#e24b4a"></div><div class="mock-swatch-meta">Vermelho (recusado)<span>--orc-red</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#a682e6"></div><div class="mock-swatch-meta">Roxo (arquivado KPI)<span>--orc-purple</span></div></div>
+      <div class="mock-swatch"><div class="mock-swatch-color" style="background:#888780"></div><div class="mock-swatch-meta">Arquivados (stat)<span>lista .orc-premium-stat--arquivados</span></div></div>
+    </div>
+    <div class="mock-map">
+      <strong>Mapa rápido do módulo (CakePHP)</strong><br>
+      Rota: <code>/orcamentos/index</code> · Controller: <code>src/Controller/OrcamentosController.php</code> · Views: <code>src/Template/Orcamentos/*.ctp</code> · Estilo: <code>webroot/css/orcamentos-premium.css</code> · Doc: <code>docs/ORCAMENTOS_MODULO.md</code><br>
+      Status: <code>0</code> andamento · <code>1</code> enviado · <code>2</code> aprovado · <code>3</code> recusado · <code>4</code> arquivado · Tabela ORM: <code>orcamentosnovosdes</code>
+    </div>
+  </section>
+
+  <!-- Conteúdo alinhado a src/Template/Orcamentos/index.ctp (área premium) -->
+  <div class="orc-premium-page-root">
+    <div id="orc-premium-container" class="orc-premium-wrap orc-premium-index">
+      <header class="orc-premium-page-head">
+        <div class="orc-premium-page-head-text">
+          <p class="orc-premium-eyebrow">Módulo comercial</p>
+          <h1 class="orc-premium-h1">Orçamentos</h1>
+        </div>
+        <a class="btn orc-premium-btn-primary" href="#" onclick="return false;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          + Gerar Orçamento
+        </a>
+      </header>
+
+      <div class="orc-premium-stats" role="tablist" id="orc-mock-stats">
+        <button type="button" class="orc-premium-stat orc-premium-stat--pendentes active" data-orc-tab="pendentes" aria-selected="true">
+          <span class="orc-premium-stat-l">Andamento</span>
+          <span class="orc-premium-stat-n">12</span>
+        </button>
+        <button type="button" class="orc-premium-stat orc-premium-stat--enviados" data-orc-tab="enviados" aria-selected="false">
+          <span class="orc-premium-stat-l">Enviados</span>
+          <span class="orc-premium-stat-n">5</span>
+        </button>
+        <button type="button" class="orc-premium-stat orc-premium-stat--aprovados" data-orc-tab="aprovados" aria-selected="false">
+          <span class="orc-premium-stat-l">Aprovados</span>
+          <span class="orc-premium-stat-n">28</span>
+        </button>
+        <button type="button" class="orc-premium-stat orc-premium-stat--recusados" data-orc-tab="recusados" aria-selected="false">
+          <span class="orc-premium-stat-l">Recusados</span>
+          <span class="orc-premium-stat-n">3</span>
+        </button>
+        <button type="button" class="orc-premium-stat orc-premium-stat--arquivados" data-orc-tab="arquivados" aria-selected="false">
+          <span class="orc-premium-stat-l">Arquivados</span>
+          <span class="orc-premium-stat-n">7</span>
+        </button>
+      </div>
+
+      <div class="orc-premium-list-card orc-premium-list-card--admin">
+        <div class="orc-premium-list-toolbar">
+          <div class="orc-premium-tabs-strip" role="tablist" id="orc-mock-pills">
+            <a class="orc-premium-tab-pill active" href="#pendentes" data-panel="pendentes" role="tab" aria-selected="true">Pendentes</a>
+            <a class="orc-premium-tab-pill" href="#enviados" data-panel="enviados" role="tab" aria-selected="false">Enviados</a>
+            <a class="orc-premium-tab-pill" href="#aprovados" data-panel="aprovados" role="tab" aria-selected="false">Aprovados</a>
+            <a class="orc-premium-tab-pill" href="#recusados" data-panel="recusados" role="tab" aria-selected="false">Recusados</a>
+            <a class="orc-premium-tab-pill" href="#arquivados" data-panel="arquivados" role="tab" aria-selected="false">Arquivados</a>
+          </div>
+          <div class="orc-premium-toolbar-right">
+            <label class="orc-premium-search" for="orc-list-search">
+              <svg class="orc-premium-search-ic" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+              <input type="search" id="orc-list-search" placeholder="Buscar…" autocomplete="off" />
+            </label>
+            <span class="orc-premium-list-meta">55 registro(s) no total</span>
+          </div>
+        </div>
+
+        <div class="orc-premium-tab-panels" id="orc-mock-panels">
+          <div class="orc-mock-panel" data-panel="pendentes" role="tabpanel">
+            <div class="table-responsive orc-premium-tbl-wrap">
+              <table class="table orc-premium-tbl">
+                <thead>
+                  <tr>
+                    <th class="orc-premium-th-id">ID</th>
+                    <th>Empresa</th>
+                    <th class="orc-premium-th-ver">Versão</th>
+                    <th class="orc-premium-th-st">Status</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+                    <th class="orc-premium-th-data">Data</th>
+                    <th class="orc-premium-th-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1842</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">AC</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Alpha Comércio Ltda</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v2</span></td>
+                    <td><span class="orc-badge orc-badge--pend">Em andamento</span></td>
+                    <td class="text-right orc-premium-valor">R$ 14.320,00</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-margem orc-premium-margem--good">32%</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">18/04/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1841</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">BT</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Beta Tecnologia S.A.</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v1</span></td>
+                    <td><span class="orc-badge orc-badge--pend">Em andamento</span></td>
+                    <td class="text-right orc-premium-valor">R$ 8.950,50</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-margem orc-premium-margem--warn">18%</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">17/04/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1838</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">G</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Gamma Serviços</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v1</span></td>
+                    <td><span class="orc-badge orc-badge--pend">Em andamento</span></td>
+                    <td class="text-right orc-premium-valor">R$ 2.100,00</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-margem orc-premium-margem--bad">9%</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">15/04/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="orc-mock-panel" data-panel="enviados" role="tabpanel" hidden>
+            <div class="table-responsive orc-premium-tbl-wrap">
+              <table class="table orc-premium-tbl">
+                <thead>
+                  <tr>
+                    <th class="orc-premium-th-id">ID</th>
+                    <th>Empresa</th>
+                    <th class="orc-premium-th-ver">Versão</th>
+                    <th class="orc-premium-th-st">Status</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+                    <th class="orc-premium-th-data">Data</th>
+                    <th class="orc-premium-th-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1820</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">DL</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Delta Logística</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v3</span></td>
+                    <td><span class="orc-badge orc-badge--env">Enviado</span></td>
+                    <td class="text-right orc-premium-valor">R$ 22.000,00</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-margem orc-premium-margem--good">41%</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">10/04/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="orc-mock-panel" data-panel="aprovados" role="tabpanel" hidden>
+            <div class="table-responsive orc-premium-tbl-wrap">
+              <table class="table orc-premium-tbl">
+                <thead>
+                  <tr>
+                    <th class="orc-premium-th-id">ID</th>
+                    <th>Empresa</th>
+                    <th class="orc-premium-th-ver">Versão</th>
+                    <th class="orc-premium-th-st">Status</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+                    <th class="orc-premium-th-data">Data</th>
+                    <th class="orc-premium-th-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1701</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">EP</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Epsilon Projetos</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v1</span></td>
+                    <td><span class="orc-badge orc-badge--aprov">Aprovado</span></td>
+                    <td class="text-right orc-premium-valor">R$ 67.500,00</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-margem orc-premium-margem--good">35%</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">02/03/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="orc-mock-panel" data-panel="recusados" role="tabpanel" hidden>
+            <div class="table-responsive orc-premium-tbl-wrap">
+              <table class="table orc-premium-tbl">
+                <thead>
+                  <tr>
+                    <th class="orc-premium-th-id">ID</th>
+                    <th>Empresa</th>
+                    <th class="orc-premium-th-ver">Versão</th>
+                    <th class="orc-premium-th-st">Status</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+                    <th class="orc-premium-th-data">Data</th>
+                    <th class="orc-premium-th-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1790</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">Z</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Zeta Indústria</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v1</span></td>
+                    <td><span class="orc-badge orc-badge--recus">Recusado</span></td>
+                    <td class="text-right orc-premium-valor">R$ 3.400,00</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-muted">—</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">28/03/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="orc-mock-panel" data-panel="arquivados" role="tabpanel" hidden>
+            <div class="table-responsive orc-premium-tbl-wrap">
+              <table class="table orc-premium-tbl">
+                <thead>
+                  <tr>
+                    <th class="orc-premium-th-id">ID</th>
+                    <th>Empresa</th>
+                    <th class="orc-premium-th-ver">Versão</th>
+                    <th class="orc-premium-th-st">Status</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-total">Total</th>
+                    <th class="text-right orc-premium-th-r orc-premium-th-margem">Margem</th>
+                    <th class="orc-premium-th-data">Data</th>
+                    <th class="orc-premium-th-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a class="orc-premium-link orc-premium-id" href="#">#1600</a></td>
+                    <td>
+                      <div class="orc-premium-empresa-cell">
+                        <span class="orc-premium-av" aria-hidden="true">ET</span>
+                        <a class="orc-premium-link orc-premium-empresa-name" href="#">Eta Treinamentos</a>
+                      </div>
+                    </td>
+                    <td><span class="orc-premium-ver">v1</span></td>
+                    <td><span class="orc-badge orc-badge--arq">Arquivado</span></td>
+                    <td class="text-right orc-premium-valor">R$ 1.200,00</td>
+                    <td class="text-right orc-premium-margem-cell"><span class="orc-premium-muted">—</span></td>
+                    <td class="orc-premium-date-cell"><a class="orc-premium-link orc-premium-date-link" href="#">10/01/2026</a></td>
+                    <td><a class="btn btn-sm orc-premium-btn-ghost" href="#">Editar</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var key = "pendentes";
+  function showPanel(id) {
+    key = id;
+    document.querySelectorAll(".orc-mock-panel").forEach(function (el) {
+      var on = el.getAttribute("data-panel") === id;
+      el.hidden = !on;
+    });
+    document.querySelectorAll("#orc-mock-pills .orc-premium-tab-pill").forEach(function (a) {
+      var on = a.getAttribute("data-panel") === id;
+      a.classList.toggle("active", on);
+      a.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    document.querySelectorAll("#orc-mock-stats .orc-premium-stat").forEach(function (btn) {
+      var on = btn.getAttribute("data-orc-tab") === id;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+  document.getElementById("orc-mock-pills").addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-panel]");
+    if (!a) return;
+    e.preventDefault();
+    showPanel(a.getAttribute("data-panel"));
+  });
+  document.getElementById("orc-mock-stats").addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-orc-tab]");
+    if (!btn) return;
+    showPanel(btn.getAttribute("data-orc-tab"));
+  });
+})();
+</script>
+</body>
+</html>
