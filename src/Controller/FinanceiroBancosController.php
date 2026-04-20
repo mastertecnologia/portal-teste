@@ -1373,7 +1373,7 @@ class FinanceiroBancosController extends AppController
                     array_filter($resumo, function ($item) use ($nomeLower) {
                         $banco = $item["banco"] ?? null;
                         $nomeBanco = mb_strtolower(
-                            trim((string) ($banco->nome ?? "")),
+                            trim((string) ($banco->nome ?? ""))
                         );
 
                         return $nomeBanco !== "" &&
@@ -1386,9 +1386,7 @@ class FinanceiroBancosController extends AppController
                 $resumo = array_values(
                     array_filter($resumo, function ($item) use ($situacao) {
                         $quantidade = (int) ($item["quantidade"] ?? 0);
-                        $contaIncompleta = !empty(
-                            $item["conta_incompleta"],
-                        );
+                        $contaIncompleta = !empty($item["conta_incompleta"]);
 
                         if ($situacao === "com_remessa") {
                             return $quantidade > 0;
