@@ -41,8 +41,6 @@
  *
  * Fase 6b (sidebar): menu_filter_sidebar + menu_sidebar_gates — se true, blocos do menu (equipe) exigem
  *   pelo menos um dos códigos por chave (OR), salvo híbrido sem papéis. Neste repo: $fileMenuFilterSidebar=true.
- *   sidebar_functions_search — bloco «Buscar funções» (pesquisa.sidebar_search); portal (role≠0) ignora o gate na UI
- *   mas precisa do código no papel se RBAC enforce e AJAX Pesquisa/* (ex.: cliente_portal na migration).
  *
  * Fase 6c (submenus): chaves extra por ligação (ex.: ordensservico_list vs ordensservico_nova; tickets_servicedesk
  *   vs tickets_historico; relatorios_painel vs relatorios_indicadores_adv). O grupo colapsável mostra-se se qualquer
@@ -252,7 +250,6 @@ return [
 			'dashboard' => 'dashboard.view',
 			// Só painel PGM (cards requisições / notificações); não aparece na sidebar.
 			'dashboard_requisicoes' => 'users.requisicoes_acesso',
-			'sidebar_functions_search' => 'pesquisa.sidebar_search',
 			// Fase 6c: painel clássico vs indicadores avançados (cada ligação); secção visível se qualquer for true.
 			'relatorios_painel' => 'relatorios.painel.view',
 			'relatorios_indicadores_adv' => 'relatorios.indicadores.view',

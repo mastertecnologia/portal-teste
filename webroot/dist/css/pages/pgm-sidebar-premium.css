@@ -1,5 +1,5 @@
 /**
- * PGM Sidebar — Modern Dark (lista plana, Lucide, rodapé fixo).
+ * PGM Sidebar — Modern Dark (rodapé fixo + hierarquia .pgm-ng / .pgm-nc ou lista plana .pgm-nav-link).
  */
 
 :root {
@@ -186,6 +186,78 @@ html body .pgm-sidebar-shell .pgm-nav-lucide {
 html body .pgm-sidebar-shell a.pgm-nav-link.active .pgm-nav-lucide,
 html body .pgm-sidebar-shell a.pgm-nav-link:hover .pgm-nav-lucide {
 	opacity: 1 !important;
+}
+
+/* Nav hierárquica — accent / altura de submenus (layout-shell podia limitar a 220px) */
+html body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav > li {
+	display: list-item !important;
+	position: relative !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	height: auto !important;
+	min-height: 0 !important;
+	max-height: none !important;
+	overflow: visible !important;
+	float: none !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav > li > a.waves-effect.waves-dark {
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: nowrap !important;
+	width: calc(100% - 8px) !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+	margin: 0 4px 2px !important;
+	line-height: 1.35 !important;
+	min-height: 40px !important;
+	position: relative !important;
+	float: none !important;
+	clear: both !important;
+	border-left: none !important;
+	box-shadow: none !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav > li.active > a.waves-effect,
+html body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav > li > a.waves-effect.active {
+	background: var(--pgm-sb-item-active) !important;
+	color: var(--pgm-sb-text-main) !important;
+	box-shadow: inset 3px 0 0 var(--pgm-sb-accent) !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell li.pgm-nav-section-label span {
+	color: var(--pgm-sb-text-muted) !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-ng.open > .pgm-nc {
+	max-height: min(78vh, 1600px) !important;
+	overflow-y: auto !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-nc li.pgm-ng.open > .pgm-nc {
+	max-height: min(52vh, 720px) !important;
+	overflow-y: auto !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-ng.open > .pgm-nc::-webkit-scrollbar,
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-nc li.pgm-ng.open > .pgm-nc::-webkit-scrollbar {
+	width: 4px;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-ng.open > .pgm-nc::-webkit-scrollbar-thumb,
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-nc li.pgm-ng.open > .pgm-nc::-webkit-scrollbar-thumb {
+	background: var(--pgm-sb-border);
+	border-radius: 10px;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-np.open-p {
+	background: var(--pgm-sb-item-active) !important;
+	color: var(--pgm-sb-text-main) !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-np.open-p .ni-ico-fa {
+	color: var(--pgm-sb-accent) !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell a.pgm-nch.act {
+	color: var(--pgm-sb-accent) !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell a.pgm-nch.act .pgm-ndot {
+	background: var(--pgm-sb-accent) !important;
+}
+html body.layout-no-topbar .pgm-sidebar-shell .sidebar-nav > ul > li.pgm-ng.active > .pgm-np {
+	background: var(--pgm-sb-item-active) !important;
+	color: var(--pgm-sb-text-main) !important;
 }
 
 /* Badge OS na linha */
