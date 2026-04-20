@@ -3014,7 +3014,22 @@ body.layout-no-topbar .orc-premium-form select.form-control.orc-native-select {
   background-color: #ffffff !important;
   color: #1a1a18 !important;
   border-color: #e5e4e0 !important;
+  /* Sobrescreve o shorthand .form-material .form-control (pgm-advanced-module), que repõe background-repeat: repeat */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6a65' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px 10px !important;
+}
+
+/* Mesma prioridade que body.layout-no-topbar .page-wrapper .form-material .form-control (shorthand background) */
+body.layout-no-topbar .page-wrapper .form-material select.form-control.orc-native-select {
+  background-color: #ffffff !important;
+  color: #1a1a18 !important;
+  border-color: #e5e4e0 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6a65' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px 10px !important;
 }
 body.layout-no-topbar .orc-premium-form .form-control.orc-input-readonly-fill[readonly] {
   background: #f8f8f7 !important;
