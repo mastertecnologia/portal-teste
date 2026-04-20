@@ -303,8 +303,19 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   border-bottom: 1px solid #e5e4e0 !important;
 }
 
-#orc-premium-container.orc-premium-index a.orc-premium-link,
-#orc-premium-container.orc-premium-index a.orc-premium-id {
+/* Links teal: não aplicar a nome da empresa nem à data (texto #1a1a18) */
+#orc-premium-container.orc-premium-index a.orc-premium-id,
+#orc-premium-container.orc-premium-index a.orc-premium-link:not(.orc-premium-empresa-name):not(.orc-premium-date-link) {
+  color: #00c08b !important;
+}
+
+#orc-premium-container.orc-premium-index a.orc-premium-empresa-name,
+#orc-premium-container.orc-premium-index a.orc-premium-date-link {
+  color: #1a1a18 !important;
+}
+
+#orc-premium-container.orc-premium-index a.orc-premium-empresa-name:hover,
+#orc-premium-container.orc-premium-index a.orc-premium-date-link:hover {
   color: #00c08b !important;
 }
 
@@ -673,11 +684,11 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   background: #f8f8f7 !important;
 }
 
-.orc-premium-index .orc-premium-link {
+.orc-premium-index .orc-premium-link:not(.orc-premium-empresa-name):not(.orc-premium-date-link) {
   color: var(--orc-teal);
   font-weight: 500;
 }
-.orc-premium-index .orc-premium-link:hover {
+.orc-premium-index .orc-premium-link:not(.orc-premium-empresa-name):not(.orc-premium-date-link):hover {
   color: var(--orc-teal-dark);
 }
 
@@ -2731,8 +2742,18 @@ body.layout-no-topbar #orc-premium-container.orc-premium-index table.orc-premium
   border-bottom: 1px solid #e5e4e0 !important;
 }
 
-body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-link,
-body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-id {
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-id,
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-link:not(.orc-premium-empresa-name):not(.orc-premium-date-link) {
+  color: #00c08b !important;
+}
+
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-empresa-name,
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-date-link {
+  color: #1a1a18 !important;
+}
+
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-empresa-name:hover,
+body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-date-link:hover {
   color: #00c08b !important;
 }
 
