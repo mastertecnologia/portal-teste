@@ -97,16 +97,8 @@ html body .pgm-sidebar-shell .pgm-sidebar-workspace {
 }
 html body.layout-no-topbar .pgm-sidebar-shell .pgm-sidebar-workspace {
 	border-bottom: none !important;
-	position: relative;
-	z-index: 6;
-}
-/* Popup nativo do select: aside com overflow:hidden desloca/corta a lista no Chrome/Win */
-html body.layout-no-topbar aside.left-sidebar.pgm-sidebar-shell {
-	overflow: visible !important;
 }
 html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-sidebar-company-box {
-	width: 100%;
-	box-sizing: border-box;
 	padding: 4px 10px !important;
 	background: var(--pgm-sb-surface) !important;
 	border: 1px solid var(--pgm-sb-border) !important;
@@ -114,7 +106,6 @@ html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-sidebar-company-box {
 	display: flex !important;
 	align-items: center !important;
 	flex-shrink: 0;
-	min-width: 0;
 }
 /* Uma só caixa: sem borda no select; altura fina como as entradas do menu */
 html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-select,
@@ -123,19 +114,10 @@ html body .pgm-sidebar-shell .pgm-sidebar-company-box select#empresaSidebar {
 	box-shadow: none !important;
 	min-height: 0 !important;
 	height: auto !important;
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 0 !important;
 	padding: 2px 22px 2px 2px !important;
 	font-size: 12px !important;
 	line-height: 1.25 !important;
 	background-position: right 6px center !important;
-}
-/* Estilos em <option> (layout-shell) geram artefactos / lista torta no menu nativo */
-html body.layout-no-topbar .pgm-sidebar-shell .pgm-sidebar-workspace select#empresaSidebar option,
-html body.layout-no-topbar .pgm-sidebar-shell .pgm-sidebar-workspace select.pgm-empresa-select option {
-	background: revert !important;
-	color: revert !important;
 }
 html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-single {
 	padding-right: 6px !important;
