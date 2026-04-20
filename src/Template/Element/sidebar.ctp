@@ -11,6 +11,7 @@
 
 	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
 	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
+	$clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
 	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
 	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
@@ -60,7 +61,7 @@
 	$pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
 	$pgmSbOpenPlanner = (bool)($visitasActive ?? '');
 	$pgmSbOpenCofre = (bool)($senhasActive ?? '');
-	$pgmSbOpenCadastros = (bool)($clientesActive ?? '') || (bool)($produtosActive ?? '');
+	$pgmSbOpenCadastros = (bool)($clientesActive ?? '') || $clientesAddActive || (bool)($produtosActive ?? '');
 	$pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive;
 	$pgmSbOpenComercial = (bool)($orcamentosActive ?? '');
 	$pgmSbOpenFaturamento = (bool)($prefaturamentoActive ?? '') || (bool)($faturamentoActive ?? '');
@@ -127,6 +128,7 @@
 ?>
 <?php
 	$currentEmpresaNome = (string)($empresasOptSidebar[$empresa] ?? $nomeempresa ?? 'PGM Soluções em TI');
+	$pgmWsNomeDisplay = function_exists('mb_strtoupper') ? mb_strtoupper($currentEmpresaNome, 'UTF-8') : strtoupper($currentEmpresaNome);
 	$empresaParts = preg_split('/\s+/', trim($currentEmpresaNome), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 	$empresaInitials = '';
 	if (!empty($empresaParts[0])) {
@@ -145,8 +147,8 @@
 		<button class="workspace-btn" id="wsBtn" aria-expanded="false" type="button">
 			<div class="workspace-avatar" id="wsAvatar"><?= h($empresaInitials ?: 'PG') ?></div>
 			<div class="workspace-info">
-				<div class="workspace-name" id="wsName"><?= h($currentEmpresaNome) ?></div>
-				<div class="workspace-sub" id="wsSub">ERP · Matriz</div>
+				<div class="workspace-name" id="wsName"><?= h($pgmWsNomeDisplay) ?></div>
+				<div class="workspace-sub" id="wsSub">Matriz</div>
 			</div>
 			<svg class="workspace-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 		</button>
@@ -159,6 +161,7 @@
 			<div id="wsList">
 				<?php foreach (($empresasOptSidebar ?? []) as $empresaId => $empresaNome) :
 					$nomeAtual = (string)$empresaNome;
+					$nomeAtualDisplay = function_exists('mb_strtoupper') ? mb_strtoupper($nomeAtual, 'UTF-8') : strtoupper($nomeAtual);
 					$parts = preg_split('/\s+/', trim($nomeAtual), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 					$ini = '';
 					if (!empty($parts[0])) {
@@ -172,9 +175,9 @@
 					}
 					$isEmpresaAtiva = ((string)$empresaId === (string)$empresa);
 				?>
-				<button class="workspace-item<?= $isEmpresaAtiva ? ' active' : '' ?>" data-id="<?= h((string)$empresaId) ?>" data-name="<?= h($nomeAtual) ?>" data-initials="<?= h($ini ?: 'PG') ?>" type="button">
+				<button class="workspace-item<?= $isEmpresaAtiva ? ' active' : '' ?>" data-id="<?= h((string)$empresaId) ?>" data-name="<?= h($nomeAtualDisplay) ?>" data-initials="<?= h($ini ?: 'PG') ?>" type="button">
 					<div class="workspace-item-avatar"><?= h($ini ?: 'PG') ?></div>
-					<span class="workspace-item-name"><?= h($nomeAtual) ?></span>
+					<span class="workspace-item-name"><?= h($nomeAtualDisplay) ?></span>
 					<svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 				</button>
 				<?php endforeach; ?>
@@ -192,17 +195,9 @@
 		]) ?>
 	</div>
 
-	<div class="search-wrap">
-		<div class="search">
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-			<input id="pesquisa-funcoes" type="text" class="search-input" placeholder="Buscar..." autocomplete="off" />
-			<span class="kbd"><kbd>Ctrl</kbd><kbd>K</kbd></span>
-		</div>
-		<ul class="pgm-sb-typeahead htmlpesquisa list-unstyled m-0 p-0"></ul>
-		<div class="pgm-sidebar-hidden-dt-host" aria-hidden="true">
-			<div id="pgm-sidebar-functions-search"></div>
-			<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host pgm-sidebar-dt-host--pending"></div>
-		</div>
+	<div class="pgm-sidebar-hidden-dt-host" aria-hidden="true" style="display:none;">
+		<div id="pgm-sidebar-functions-search"></div>
+		<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host pgm-sidebar-dt-host--pending"></div>
 	</div>
 
 	<div class="scroll-sidebar ps ps--theme_default ps--active-y" data-ps-id="5c23612c-2012-1d1a-2b77-a7091df065d9">
@@ -229,6 +224,7 @@
 					<div class="nav-section-items">
 						<?php if (($sg['clientes'] ?? true)) : ?>
 						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], (bool)($clientesActive ?? ''), '', 'Clientes') ?>
+						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $clientesAddActive, '', 'Cadastrar clientes') ?>
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
 						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
@@ -619,51 +615,6 @@
 			});
 		});
 	}
-	$('#pesquisa-funcoes').on('keyup', function(e) {
-		e.preventDefault();
-		var q = $('#pesquisa-funcoes').val();
-		if (!q || q.length < 2) {
-			$('.htmlpesquisa').html('');
-			return;
-		}
-		$.ajax({
-			url: "<?= Router::url(['controller'=>'Pesquisa','action'=>'pesquisa']);?>/" + encodeURIComponent(q),
-			dataType: "json",
-			success: function(data) {
-				$('.htmlpesquisa').html('');
-				var rows = [];
-				if (Array.isArray(data)) {
-					rows = data;
-				} else if (data && typeof data === 'object') {
-					rows = Object.keys(data).map(function (k) { return data[k]; }).filter(function (row) {
-						return row && typeof row === 'object' && row.Controller !== undefined && row.Action !== undefined;
-					});
-				}
-				if (!rows.length) {
-					$('.htmlpesquisa').append('<li class="pgm-search-empty">Nenhum resultado encontrado.</li>');
-					return;
-				}
-				$.each(rows, function(key, array) {
-					$('.htmlpesquisa').append('<li><a class="link link-btn pgm-search-link" data-controller="'+array.Controller+'" data-action="'+array.Action+'">'+array.ControllerQueAparece+ ' > ' +array.ActionQueAparece+'</a></li>');
-				});
-			}
-		});
-	});
-	$(document).on("click", ".link-btn", function() {
-		var controller = $(this).attr('data-controller');
-		var action = $(this).attr('data-action');
-		$.ajax({
-			url: "<?= Router::url(['controller'=>'Pesquisa','action'=>'link']);?>/" + controller + '/' + action,
-			success: function(data) { window.location = data; }
-		});
-	});
-	document.addEventListener('keydown', function(e) {
-		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-			e.preventDefault();
-			var searchInput = document.getElementById('pesquisa-funcoes');
-			if (searchInput) searchInput.focus();
-		}
-	});
 	setTimeout(function() {
 		$('.pgm-nc').removeClass('in');
 	}, 0);

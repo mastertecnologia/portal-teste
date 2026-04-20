@@ -26,23 +26,8 @@
 
 <?= $this->Form->create($cliente, ['class' => 'cli-add-form']) ?>
 
-    <!-- ── Topbar ─────────────────────────────────────────── -->
-    <div class="cli-form-topbar">
-        <div>
-            <div class="cli-eyebrow">Módulo comercial</div>
-            <div class="cli-form-crumb">
-                <?= $this->Html->link('Clientes', ['action' => 'index'], ['escape' => false, 'class' => false]) ?>
-                › <span class="cli-form-crumb-current">Novo cliente</span>
-            </div>
-            <h1 class="cli-h1">Cadastrar cliente</h1>
-        </div>
-        <div class="cli-form-topbar-actions">
-            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false]) ?>
-        </div>
-    </div>
-
-    <!-- ── Form body ──────────────────────────────────────── -->
-    <div class="cli-form-body">
+    <!-- ── Form body (sem topbar — alinhado ao mock clientes-lista-layout-unificado) ── -->
+    <div class="cli-form-body cli-form-body--cadastro-lead">
 
         <!-- Avisos CNPJ -->
         <div id="cadastro-empresa-avisos" class="alert d-none" role="alert">

@@ -57,24 +57,8 @@
 <div class="col-md-12 p-0">
 <div class="cli-root pgm-ds-pilot" data-pgm-ds-pilot="clientes-index">
 
-    <!-- ── Topbar ─────────────────────────────────────────── -->
-    <div class="cli-topbar">
-        <div class="cli-topbar-left">
-            <div class="cli-eyebrow">Módulo comercial</div>
-            <h1 class="cli-h1">Clientes</h1>
-            <div class="cli-subtitle">Empresas e pessoas vinculadas ao ERP</div>
-        </div>
-        <div class="cli-topbar-right">
-            <?= $this->Html->link(
-                '<i class="fas fa-plus"></i> Novo cliente',
-                ['action' => 'add'],
-                ['class' => 'btn-cli-primary', 'escape' => false]
-            ) ?>
-        </div>
-    </div>
-
-    <!-- ── KPI Strip ──────────────────────────────────────── -->
-    <div class="cli-kpi-strip">
+    <!-- ── KPI Strip (sem topbar textual — alinhado ao mock clientes-lista-layout-unificado) ── -->
+    <div class="cli-kpi-strip cli-kpi-strip--list-lead">
         <div class="cli-kpi active" data-kpi="ativos-pj">
             <div class="cli-kpi-label">Ativos · PJ</div>
             <div class="cli-kpi-val teal"><?= $cntAPJ ?></div>
@@ -129,7 +113,7 @@
                     <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/>
                     <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-                <input type="text" id="cli-search" placeholder="Nome, CNPJ, CPF ou e-mail" autocomplete="off" inputmode="text" aria-describedby="cli-search-mode" />
+                <input type="text" id="cli-search" placeholder="Buscar por nome, CNPJ, e-mail…" autocomplete="off" inputmode="text" aria-describedby="cli-search-mode" />
                 <span class="cli-search-mode" id="cli-search-mode" title="Formato detectado para a busca"></span>
             </div>
         </div>
