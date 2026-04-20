@@ -207,8 +207,8 @@
   padding: 24px 12px 32px;
   margin-bottom: 0;
   min-height: calc(100vh - 120px);
-  font-family: -apple-system, 'Segoe UI', sans-serif;
-  font-size: 13px;
+  font-family: var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+  font-size: 12px;
 }
 
 /*
@@ -234,7 +234,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .page-wrapper > .container-flu
 body.layout-no-topbar:has(.orc-premium-page-root) .orc-premium-page-root {
   padding: 16px 10px 28px;
   min-height: calc(100vh - 72px);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer {
@@ -249,6 +249,12 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 .orc-premium-wrap.orc-premium-index {
+  /* Tipografia alinhada às pills (Pendentes / Enviados / …): DM Sans + 12px / 500 */
+  --orc-font-sans: var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+  font-family: var(--orc-font-sans);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
   /* Tokens espelhados do modelo HTML (modo claro) */
   --orc-teal: #00c08b;
   --orc-teal-dark: #008f68;
@@ -280,11 +286,15 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   background: transparent !important;
   color: #1a1a18 !important;
   min-height: 0;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
+  font-size: 12px;
 }
 
 /* DataTables: células e wrapper na listagem premium (fundo claro local; não aplicar em `tr` — quebra layout) */
 #orc-premium-container.orc-premium-index .dataTables_wrapper {
   color: #1a1a18 !important;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)) !important;
+  font-size: 12px;
 }
 
 #orc-premium-container.orc-premium-index table.dataTable tbody td,
@@ -297,8 +307,11 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 
 #orc-premium-container.orc-premium-index table.dataTable thead th,
 #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th {
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   background-color: #ffffff !important;
-  color: #1a1a18 !important;
+  color: #6b6a65 !important;
   border-color: #e5e4e0 !important;
   border-bottom: 1px solid #e5e4e0 !important;
 }
@@ -334,6 +347,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 .orc-premium-index .orc-premium-tab-pill {
   padding: 7px 14px;
   border-radius: var(--orc-radius-sm);
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 12px;
   font-weight: 500;
   color: var(--orc-text-muted) !important;
@@ -475,7 +489,9 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 .orc-premium-index .orc-premium-eyebrow {
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 11px;
+  font-weight: 500;
   color: var(--orc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -483,6 +499,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 .orc-premium-index .orc-premium-h1 {
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 22px;
   font-weight: 600;
   color: var(--orc-text);
@@ -496,6 +513,7 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   gap: 6px;
   padding: 7px 14px;
   border-radius: var(--orc-radius-sm);
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 12px;
   font-weight: 500;
   background: var(--orc-teal) !important;
@@ -511,8 +529,9 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 
 .orc-premium-index .orc-premium-btn-ghost {
   padding: 5px 12px;
-  font-size: 11px;
-  font-weight: 600;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
+  font-size: 12px;
+  font-weight: 500;
   border-radius: var(--orc-radius-sm);
   border: 1px solid var(--orc-border) !important;
   background: #fff !important;
@@ -561,15 +580,17 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 
 .orc-premium-index .orc-premium-stat-l {
   display: block;
-  font-size: 10px;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
+  font-size: 12px;
+  font-weight: 500;
   color: var(--orc-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  text-transform: none;
+  letter-spacing: 0;
   margin-bottom: 5px;
-  font-weight: 600;
 }
 
 .orc-premium-index .orc-premium-stat-n {
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 24px;
   font-weight: 600;
   line-height: 1.1;
@@ -651,7 +672,9 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 }
 
 .orc-premium-index .orc-premium-list-meta {
-  font-size: 11px;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
+  font-size: 12px;
+  font-weight: 500;
   color: var(--orc-text-muted);
   white-space: nowrap;
 }
@@ -662,18 +685,20 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 
 .orc-premium-index .orc-premium-tbl {
   margin: 0;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 12px;
   border-collapse: collapse;
 }
 
 .orc-premium-index .orc-premium-tbl thead th {
-  font-size: 10px;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
+  font-size: 12px;
   color: #6b6a65;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  text-transform: none;
+  letter-spacing: 0;
   padding: 8px 12px !important;
   border-bottom: 1px solid #e5e4e0 !important;
-  font-weight: 600;
+  font-weight: 500;
   background: #ffffff !important;
   vertical-align: middle;
 }
@@ -723,7 +748,9 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 .orc-premium-index .orc-premium-list-card .dataTables_info,
 .orc-premium-index .orc-premium-list-card .dataTables_paginate {
   padding: 10px 14px;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
   font-size: 12px;
+  font-weight: 500;
   color: var(--orc-text-muted) !important;
 }
 
@@ -2703,6 +2730,8 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 body.layout-no-topbar .orc-premium-page-root {
   background: transparent !important;
   color: #1a1a18;
+  font-family: var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+  font-size: 12px;
 }
 
 body.layout-no-topbar.skin-green .orc-premium-page-root {
@@ -2712,6 +2741,7 @@ body.layout-no-topbar.skin-green .orc-premium-page-root {
 /* Variáveis — índice / listagem */
 body.layout-no-topbar .orc-premium-wrap.orc-premium-index,
 body.layout-no-topbar #orc-premium-container.orc-premium-wrap.orc-premium-index {
+  --orc-font-sans: var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
   --orc-teal: #00c08b;
   --orc-teal-dark: #008f68;
   --orc-teal-light: #e6faf4;
@@ -2726,14 +2756,20 @@ body.layout-no-topbar #orc-premium-container.orc-premium-wrap.orc-premium-index 
   --orc-bg-card: #ffffff;
   --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   color: #1a1a18 !important;
+  font-family: var(--orc-font-sans);
+  font-size: 12px;
 }
 
 body.layout-no-topbar #orc-premium-container.orc-premium-wrap.orc-premium-index {
   color: #1a1a18 !important;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif));
+  font-size: 12px;
 }
 
 body.layout-no-topbar #orc-premium-container.orc-premium-index .dataTables_wrapper {
   color: #1a1a18 !important;
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)) !important;
+  font-size: 12px;
 }
 
 body.layout-no-topbar #orc-premium-container.orc-premium-index table.dataTable tbody td,
@@ -2746,8 +2782,11 @@ body.layout-no-topbar #orc-premium-container.orc-premium-index table.orc-premium
 
 body.layout-no-topbar #orc-premium-container.orc-premium-index table.dataTable thead th,
 body.layout-no-topbar #orc-premium-container.orc-premium-index table.orc-premium-tbl thead th {
+  font-family: var(--orc-font-sans, var(--pgm-font-sans, "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   background-color: #ffffff !important;
-  color: #1a1a18 !important;
+  color: #6b6a65 !important;
   border-color: #e5e4e0 !important;
   border-bottom: 1px solid #e5e4e0 !important;
 }
