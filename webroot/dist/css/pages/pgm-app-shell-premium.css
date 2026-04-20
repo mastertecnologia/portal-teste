@@ -1,0 +1,162 @@
+/**
+ * PGM — shell premium (topbar branca + zona de scroll no conteúdo).
+ * Contrato:
+ * - Usar classe NO header `pgm-app-topbar` (não `topbar` — layout-sidebar-shell.css oculta .topbar).
+ * - body: `pgm-app-shell-premium` (+ `layout-no-topbar` no ERP equipe).
+ * - Conteúdo principal: #pgm-dynamic-content recebe overflow-y (só rola a área abaixo da topbar).
+ * - Tokens alinhados ao mock orçamentos: teal destaque #00C08B (--pgm-app-shell-teal); fundo página --pgm-bg-page (#f2f1ee no tema light).
+ */
+:root {
+    --pgm-app-shell-teal: #00c08b;
+    --pgm-app-shell-teal-hover: #009e72;
+    --pgm-app-topbar-h: 60px;
+}
+
+/* ── Topbar (nunca usar classe genérica "topbar" sozinha) ─────────────────── */
+body.pgm-app-shell-premium .pgm-app-topbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--pgm-app-topbar-h);
+    padding: 0 30px;
+    background: #fff;
+    border-bottom: 1px solid var(--pgm-border, #e5e4e0);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__left {
+    min-width: 0;
+    flex: 1;
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__crumb {
+    font-size: 14px;
+    color: var(--pgm-text, #1a1a18);
+    line-height: 1.3;
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__parent {
+    color: var(--pgm-text-muted, #6b6a65);
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__sep {
+    color: var(--pgm-text-muted, #6b6a65);
+    font-weight: 400;
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__current {
+    color: var(--pgm-text, #1a1a18);
+    font-weight: 700;
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__bootstrap-bc {
+    margin-bottom: 0;
+    padding: 0;
+    background: transparent !important;
+    font-size: 14px;
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: #666;
+}
+
+body.pgm-app-shell-premium .pgm-app-topbar__avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--pgm-app-shell-teal);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* ── Coluna principal: flex + scroll só no conteúdo ───────────────────────── */
+body.pgm-app-shell-premium.layout-no-topbar .pgm-shell-main {
+    display: flex;
+    flex-direction: column;
+    min-height: var(--pgm-layout-min-h, 100vh);
+}
+
+body.pgm-app-shell-premium.layout-no-topbar .pgm-shell-main .page-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0 !important;
+}
+
+body.pgm-app-shell-premium.layout-no-topbar .pgm-shell-main .page-wrapper > .container-fluid {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-top: 0 !important;
+}
+
+/* Faixa antiga título + breadcrumb: conteúdo duplicado na topbar premium */
+body.pgm-app-shell-premium .row.page-titles {
+    display: none !important;
+}
+
+/* Zona scroll (flash + views) */
+body.pgm-app-shell-premium #pgm-dynamic-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 16px;
+    padding-bottom: 8px;
+}
+
+/* Portal cliente (Material): estrutura .wrapper > .main-panel */
+body.pgm-app-shell-premium.pgm-portal-client-shell .wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+body.pgm-app-shell-premium.pgm-portal-client-shell .main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+body.pgm-app-shell-premium.pgm-portal-client-shell .pgm-app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+body.pgm-app-shell-premium.pgm-portal-client-shell #pgm-dynamic-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px 24px 24px;
+}
+
+/* Layout orcamentos.ctp: shell mínimo full height */
+body.pgm-app-shell-premium.pgm-orcamentos-shell .main-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body.pgm-app-shell-premium.pgm-orcamentos-shell #pgm-dynamic-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 28px;
+}

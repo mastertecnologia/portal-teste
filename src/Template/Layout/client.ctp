@@ -27,6 +27,9 @@ use Cake\Routing\Router;
 	<?= $this->Html->css('/dist/css/pages/pgm-theme-tokens'); ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-components-base'); ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-legacy-material-theme'); ?>
+	<?php if (empty($disablePgmAppShellPremium)) : ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-app-shell-premium.css?v=1'); ?>
+	<?php endif; ?>
 	<?= $this->Html->css('http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css'); ?>
 	<?= $this->Html->css('http://fonts.googleapis.com/css?family=Roboto:400,700,300|Material+Icons'); ?>
 
@@ -41,13 +44,20 @@ use Cake\Routing\Router;
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="<?= h(trim($bodyPageClass ?? '')) ?>">
+<?php
+$pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-portal-client-shell ' : '';
+?>
+<body class="<?= h(trim($pgmShellBody . ($bodyPageClass ?? ''))) ?>">
 	<div class="wrapper">
 	    <?= $this->element('sidebar'); ?>
 		<?= $this->assign('title', $title); ?>
 
 	    <div class="main-panel">
+			<?php if (empty($disablePgmAppShellPremium)) : ?>
+			<?= $this->element('pgm_shell_topbar') ?>
+			<?php else : ?>
 			<?= $this->element('navbar'); ?>
+			<?php endif; ?>
 			<?= $this->element('content'); ?>
 			<?= $this->element('footer'); ?>
 	    </div>

@@ -19,6 +19,9 @@
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
+	<?php if (empty($disablePgmAppShellPremium)) : ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=1") ?>
+	<?php endif; ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']) ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
 
@@ -61,7 +64,7 @@
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 </head>
-<body class="fixed-layout skin-green mini layout-no-topbar">
+<body class="fixed-layout skin-green mini layout-no-topbar <?= empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-orcamentos-shell' : '' ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
 		<div class="loader">
@@ -71,6 +74,9 @@
 	</div>
 	<!-- Painel principal -->
 	<div class="main-wrapper">
+		<?php if (empty($disablePgmAppShellPremium)) : ?>
+		<?= $this->element('pgm_shell_topbar') ?>
+		<?php endif; ?>
 		<?= $this->element('content'); ?>
 	</div>
 </body>

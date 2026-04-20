@@ -88,6 +88,12 @@ composer install
 - Layout: `src/Template/Layout/`; shared partials in `src/Template/Element/`
 - For "Advanced" module controllers (`Advanced*`, `PortalAdvanced*`, `ContractManagement`, `PortalContratos`), the variable `pgmAdvancedModuleStylesheet = true` is set so views load premium CSS.
 
+### Premium app shell (topbar + scroll único)
+- **CSS:** `/dist/css/pages/pgm-app-shell-premium.css` (espelhado em `webroot/dist` e `public/dist`). Carregado em `Layout/default.ctp` (equipe), `Layout/orcamentos.ctp` e `Layout/client.ctp` **salvo** se a view definir `$disablePgmAppShellPremium` como verdadeiro (controllers podem usar `$this->set('disablePgmAppShellPremium', true)` para login, respostas AJAX só HTML, impressão/PDF, ou páginas que não suportam flex + overflow).
+- **Body:** `pgm-app-shell-premium`; orçamentos público/fluxo dedicado acrescenta `pgm-orcamentos-shell`; portal Material (`client.ctp`) acrescenta `pgm-portal-client-shell`.
+- **Topbar:** elemento `src/Template/Element/pgm_shell_topbar.ctp` — classe do header **`pgm-app-topbar`** (não usar só `topbar`: `layout-sidebar-shell.css` esconde `.topbar` em `layout-no-topbar`). Breadcrumb via helper quando existir; opcionais `$topbarParentLabel` e `$topbarCurrentLabel`; fallback `$title`. Data + avatar (iniciais de `$name` quando definido).
+- **Zona de scroll:** `src/Template/Element/content.ctp` — a linha principal tem `id="pgm-dynamic-content"` (flash + `fetch('content')`); o CSS limita `overflow-y` a essa região abaixo da topbar.
+
 ### Visual identity
 - Primary color: `#1D9E75` (teal)
 - CSS premium files served via `PgmAssetsController` at `/pgm-assets/css/:name` (avoids static 404 with APP_BASE=/portal)

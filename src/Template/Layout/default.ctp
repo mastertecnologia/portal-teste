@@ -40,6 +40,9 @@ use Cake\Routing\Router;
 	<?= $this->Html->css("/dist/css/pages/pgm-theme-tokens") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css?v=" . time()) ?>
+	<?php if (empty($disablePgmAppShellPremium)) : ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=1") ?>
+	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
@@ -141,7 +144,7 @@ use Cake\Routing\Router;
 	<!-- Páginas que precisam vencer o tema global (ex.: estoque em modo escuro) -->
 	<?= $this->fetch('css_late'); ?>
 </head>
-<body class="fixed-layout skin-green mini layout-no-topbar <?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($bodyPageClass ?? '') ?>">
+<body class="fixed-layout skin-green mini layout-no-topbar <?= empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium ' : '' ?><?= !empty($pgmPortalClient) ? 'pgm-portal-client ' : '' ?><?= h($bodyPageClass ?? '') ?>">
 	<!--- Pre loader -->
 	<div class="preloader">
         <div class="loader">
@@ -160,6 +163,9 @@ use Cake\Routing\Router;
 		?>
 		<div class="pgm-shell-main">
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
+		<?php if (empty($disablePgmAppShellPremium)) : ?>
+		<?= $this->element('pgm_shell_topbar') ?>
+		<?php endif; ?>
 		<div class="page-wrapper">
 			<div class="container-fluid">
 				<?php if (!($hideLayoutPageTitle ?? false)): ?>
