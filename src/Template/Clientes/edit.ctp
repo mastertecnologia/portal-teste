@@ -1,5 +1,7 @@
 <?php
-  	use Cake\Routing\Router;
+	use Cake\Routing\Router;
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 	// Breadcumbs
 	$this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
@@ -134,7 +136,8 @@
 .cli-token-callout strong{color:#e6edf3;}
 </style>
 <?= $this->element('Cli/ui_css') ?>
-<div class="col-md-12 cli-ficha-page-pad">
+<div class="col-md-12 p-0 cli-ficha-layout-unificado">
+	<div class="cli-form-root cli-layout-unificado cli-ficha-page-pad">
 	<div class="cli-card">
 		<div id="cli-ficha-loading" class="cli-ficha-loading d-none" aria-hidden="true" role="status">
 			<div class="cli-ficha-loading__box"><div class="cli-ficha-loading__spin" aria-hidden="true"></div><span>Salvando alterações…</span></div>
@@ -581,7 +584,7 @@
 		</div><!-- /tab-content -->
 
 	</div><!-- /cli-card -->
-</div><!-- /col-md-12 -->
+	</div><!-- /cli-form-root -->
 
 <?php
 	$sfAlert = !empty($cliFooter) && (!empty($cliFooter['contratos_vencidos']) || !empty($cliFooter['contratos_vencendo30']));
@@ -644,6 +647,8 @@
 		</div>
 	</div>
 </div>
+</div><!-- /col-md-12 cli-ficha-layout-unificado -->
+
 <!-- Modal gerir e-mails de faturamento -->
 <div class="modal fade none-border" id="modal-emails-faturamento">
 	<div class="modal-dialog">

@@ -1,8 +1,9 @@
 /**
  * Clientes — layout unificado (tema claro Orçamentos).
  * Espelho visual de webroot/clientes-lista-layout-unificado.html.
- * Usar em conjunto com class="cli-root cli-layout-unificado" (index) ou
- * "cli-form-root cli-layout-unificado" (add). Carregar depois de clientes-premium.css.
+ * Usar em conjunto com class="cli-root cli-layout-unificado" (index),
+ * "cli-form-root cli-layout-unificado" (add/edit) ou coluna "cli-ficha-layout-unificado"
+ * (edit — inclui rodapé fixo). Carregar depois de clientes-premium.css.
  */
 
 .cli-layout-unificado.cli-root,
@@ -499,4 +500,230 @@
 .cli-root.cli-layout-unificado .cli-btn-inativar,
 .cli-root.cli-layout-unificado .cli-btn-reativar {
   color: var(--orc-teal-dark);
+}
+
+/* ── Ficha Clientes/edit — tema claro (sobrescreve <style> inline da view + Cli/ui_css) ── */
+.cli-ficha-layout-unificado {
+  background: var(--orc-bg-page);
+}
+
+.cli-form-root.cli-layout-unificado .cli-page-head {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--orc-border);
+}
+.cli-form-root.cli-layout-unificado .cli-page-head-left .cli-eyebrow {
+  color: var(--orc-teal-dark);
+}
+.cli-form-root.cli-layout-unificado .cli-page-head-left h1 {
+  color: var(--orc-text);
+}
+.cli-form-root.cli-layout-unificado .cli-page-head-left p {
+  color: var(--orc-text-muted);
+}
+
+.cli-form-root.cli-layout-unificado .cli-tabs-nav {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  margin-bottom: 20px;
+}
+.cli-form-root.cli-layout-unificado .cli-tabs-nav .nav-link {
+  color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-tabs-nav .nav-link:hover {
+  color: var(--orc-text);
+  background: var(--orc-bg-card);
+}
+.cli-form-root.cli-layout-unificado .cli-tabs-nav .nav-link.active {
+  background: var(--orc-teal) !important;
+  color: #fff !important;
+}
+
+.cli-form-root.cli-layout-unificado .cli-card {
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  color: var(--orc-text);
+}
+
+.cli-form-root.cli-layout-unificado .cli-ficha-toolbar {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+}
+.cli-form-root.cli-layout-unificado .cli-ficha-hint {
+  color: var(--orc-text-muted) !important;
+}
+
+.cli-form-root.cli-layout-unificado .cli-subcard {
+  border: 1px solid var(--orc-border);
+  background: var(--orc-bg-card);
+}
+.cli-form-root.cli-layout-unificado .cli-subcard-head {
+  background: var(--orc-bg-surface);
+  border-bottom: 1px solid var(--orc-border);
+  color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-subcard-body {
+  background: var(--orc-bg-card);
+}
+
+.cli-form-root.cli-layout-unificado .cli-label,
+.cli-form-root.cli-layout-unificado .cli-cmp-label,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado .cli-cmp-label {
+  color: var(--orc-text-muted) !important;
+}
+.cli-form-root.cli-layout-unificado .cli-cmp-label--row,
+.cli-form-root.cli-layout-unificado .cli-cmp-label--row span,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado .cli-cmp-label--row,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado .cli-cmp-label--row span {
+  color: var(--orc-text-muted) !important;
+}
+
+.cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control,
+.cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control,
+.cli-form-root.cli-layout-unificado #form-edit-cliente select.form-control,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente select.form-control {
+  background: var(--orc-bg-card) !important;
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  -webkit-text-fill-color: var(--orc-text) !important;
+  color-scheme: light !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control[readonly],
+.cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control[readonly],
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control[readonly],
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control[readonly] {
+  background: var(--orc-bg-surface) !important;
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  cursor: default !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control:focus,
+.cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control:focus,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control:focus,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control:focus {
+  border-color: var(--orc-teal) !important;
+  box-shadow: 0 0 0 2px var(--cli-teal-glow) !important;
+}
+
+.cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control.cli-cmp-input,
+.cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control.cli-cmp-input,
+.cli-form-root.cli-layout-unificado #form-edit-cliente select.cli-cmp-select,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control.cli-cmp-input,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control.cli-cmp-input,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente select.cli-cmp-select {
+  background: var(--orc-bg-card) !important;
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control.cli-cmp-input[readonly],
+.cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control.cli-cmp-input[readonly],
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente input.form-control.cli-cmp-input[readonly],
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente textarea.form-control.cli-cmp-input[readonly] {
+  background: var(--orc-bg-surface) !important;
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text) !important;
+}
+
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select > .dropdown-toggle,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select > .dropdown-toggle {
+  background: var(--orc-bg-card) !important;
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select > .dropdown-toggle:focus,
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select.open > .dropdown-toggle,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select > .dropdown-toggle:focus,
+body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select.open > .dropdown-toggle {
+  border-color: var(--orc-teal) !important;
+  box-shadow: 0 0 0 2px var(--cli-teal-glow) !important;
+}
+
+.cli-form-root.cli-layout-unificado .cli-field-ro {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  color: var(--orc-text);
+}
+
+.cli-form-root.cli-layout-unificado .cli-acessos-table thead th {
+  color: var(--orc-text-muted);
+  border-bottom: 1px solid var(--orc-border);
+}
+.cli-form-root.cli-layout-unificado .cli-acessos-table tbody tr {
+  border-bottom: 1px solid var(--orc-border-light);
+}
+.cli-form-root.cli-layout-unificado .cli-acessos-table tbody tr:hover {
+  background: var(--orc-bg-surface);
+}
+.cli-form-root.cli-layout-unificado .cli-acessos-table td {
+  color: var(--orc-text);
+}
+
+.cli-form-root.cli-layout-unificado .cli-token-box {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  color: var(--orc-teal-dark);
+}
+.cli-form-root.cli-layout-unificado .cli-token-note {
+  color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-token-callout {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-token-callout strong {
+  color: var(--orc-text);
+}
+
+.cli-form-root.cli-layout-unificado .cli-smart-footer {
+  background: var(--orc-bg-surface);
+  border: 1px solid var(--orc-border);
+  color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-smart-footer strong {
+  color: var(--orc-text);
+}
+.cli-form-root.cli-layout-unificado .cli-smart-footer a {
+  color: var(--orc-teal-dark) !important;
+}
+
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed {
+  background: var(--orc-bg-card);
+  border-top: 1px solid var(--orc-border);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+}
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed .cli-ff-inner {
+  background: transparent;
+}
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed .cli-sf-kicker {
+  color: var(--orc-text-muted);
+}
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed .cli-sf-token-note,
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed .text-muted.small {
+  color: var(--orc-text-muted) !important;
+}
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed .custom-control-label {
+  color: var(--orc-text) !important;
+}
+.cli-ficha-layout-unificado .cli-ficha-footer-fixed.cli-smart-footer--alert {
+  border-top-color: rgba(226, 75, 74, 0.45);
+  background: rgba(226, 75, 74, 0.06);
+}
+
+.cli-ficha-layout-unificado .cli-ficha-loading {
+  background: rgba(242, 241, 238, 0.85);
+}
+.cli-ficha-layout-unificado .cli-ficha-loading__box {
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  color: var(--orc-text);
+}
+.cli-ficha-layout-unificado .cli-ficha-loading__spin {
+  border-color: var(--orc-border);
+  border-top-color: var(--orc-teal);
 }
