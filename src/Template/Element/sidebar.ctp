@@ -104,11 +104,8 @@
 		) ?>
 	</div>
 
-	<div class="pgm-sidebar-workspace pgm-sidebar-company-box">
-		<div class="pgm-ws-icon hide-menu" aria-hidden="true">
-			<span data-lucide="building-2" class="pgm-nav-lucide pgm-nav-lucide--inline"></span>
-		</div>
-		<div class="hide-menu pgm-sidebar-flex-min">
+	<div class="pgm-sidebar-workspace">
+		<div class="hide-menu pgm-sidebar-flex-min pgm-sidebar-company-box">
 			<?= $this->Form->control('empresaSidebar', [
 				'id' => 'empresaSidebar',
 				'class' => 'form-control pgm-empresa-select' . (!$multiEmpresa ? ' pgm-empresa-single' : ''),

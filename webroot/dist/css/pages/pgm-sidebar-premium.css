@@ -86,22 +86,34 @@ html body .pgm-sidebar-shell .pgm-sidebar-sub {
 	margin-top: 4px !important;
 }
 
-/* Empresa */
-html body .pgm-sidebar-shell .pgm-sidebar-workspace.pgm-sidebar-company-box {
+/* Empresa — wrapper sem caixa; borda/surface só no bloco do select */
+html body .pgm-sidebar-shell .pgm-sidebar-workspace {
 	margin: 0 14px 12px !important;
+	padding: 0 !important;
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	flex-shrink: 0;
+}
+html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-sidebar-company-box {
 	padding: 10px 12px !important;
 	background: var(--pgm-sb-surface) !important;
 	border: 1px solid var(--pgm-sb-border) !important;
 	border-radius: 6px !important;
 	display: flex !important;
 	align-items: center !important;
-	gap: 8px !important;
 	flex-shrink: 0;
 }
-html body .pgm-sidebar-shell .pgm-sidebar-company-box .pgm-ws-icon {
-	color: var(--pgm-sb-text-muted) !important;
-	display: flex !important;
-	align-items: center !important;
+/* Uma só caixa: o shell dá borda ao select; aqui fica só o contorno do .pgm-sidebar-company-box */
+html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-select,
+html body .pgm-sidebar-shell .pgm-sidebar-company-box select#empresaSidebar {
+	border: none !important;
+	box-shadow: none !important;
+}
+html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-select:focus,
+html body .pgm-sidebar-shell .pgm-sidebar-company-box select#empresaSidebar:focus {
+	box-shadow: none !important;
+	outline: none !important;
 }
 html body .pgm-sidebar-shell .pgm-nav-lucide--inline {
 	width: 14px !important;
