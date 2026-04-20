@@ -173,8 +173,8 @@
 			<button class="workspace-btn" id="wsBtn" type="button" aria-expanded="false">
 				<div class="workspace-avatar" id="wsAvatar">PG</div>
 				<div class="workspace-info">
-					<div class="workspace-name" id="wsName">PGM Soluções em TI</div>
-					<div class="workspace-sub" id="wsSub">ERP · Matriz</div>
+					<div class="workspace-name" id="wsName">PGM SOLUÇÕES EM TI</div>
+					<div class="workspace-sub" id="wsSub">Matriz</div>
 				</div>
 				<svg class="workspace-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 			</button>
@@ -184,9 +184,9 @@
 					<input type="text" id="wsSearchInput" placeholder="Buscar empresa..." autocomplete="off">
 				</div>
 				<div id="wsList">
-					<button type="button" class="workspace-item active" data-id="1" data-name="PGM Soluções em TI" data-initials="PG">
+					<button type="button" class="workspace-item active" data-id="1" data-name="PGM SOLUÇÕES EM TI" data-initials="PG">
 						<div class="workspace-item-avatar">PG</div>
-						<span class="workspace-item-name">PGM Soluções em TI</span>
+						<span class="workspace-item-name">PGM SOLUÇÕES EM TI</span>
 						<svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 					</button>
 					<button type="button" class="workspace-item" data-id="2" data-name="PGM Filial Bento" data-initials="PB">
@@ -210,6 +210,7 @@
 						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Cadastros</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
 						<div class="nav-section-items">
 							<a href="#clientes" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Clientes"><span class="pgm-nav-lucide" data-lucide="users" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Clientes</span></a>
+							<a href="#cadastrar-clientes" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Cadastrar clientes"><span class="pgm-nav-lucide" data-lucide="user-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Cadastrar clientes</span></a>
 							<a href="#produtos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Produtos"><span class="pgm-nav-lucide" data-lucide="package" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Produtos</span></a>
 						</div>
 					</li>
@@ -343,7 +344,7 @@
 		<div class="preview-body">
 			<div class="preview-card">
 				<h1 id="pageTitle">Sidebar staff</h1>
-				<p>Esta página usa o mesmo CSS do ficheiro <kbd>dist/css/pages/pgm-sidebar-premium.css</kbd> carregado a partir da pasta <strong>webroot</strong>. Serve para validar espaçamentos, cores teal, grupos colapsáveis, workspace e modo <strong>mini-sidebar</strong> sem precisar de sessão CakePHP.</p>
+				<p>Esta página usa o mesmo CSS do ficheiro <kbd>dist/css/pages/pgm-sidebar-premium.css</kbd> carregado a partir da pasta <strong>webroot</strong>. Serve para validar espaçamentos, cores teal, grupos colapsáveis, workspace, busca e modo <strong>mini-sidebar</strong> sem precisar de sessão CakePHP.</p>
 				<p><strong>Como abrir:</strong> com o servidor a servir <code>webroot</code> como raiz (ex.: <code>bin/cake server -p 8765</code> na raiz do projeto), abra <kbd>/sidebar-preview.html</kbd>. Se abrir o ficheiro em <code>file://</code>, o CSS pode falhar conforme o browser; prefira URL HTTP.</p>
 				<div class="preview-hint">
 					<strong>Dica:</strong> grupos (Cadastros, Gestão de Incidentes, OS, Contratos, Indicadores, Planner, Cofre de Senhas, Comercial, Faturamento, etc.) começam fechados; ao expandir ou ao escolher uma rota ativa, o estado guarda-se em <kbd>localStorage</kbd> (<code>pgmSidebarSectionExpanded</code>), igual ao portal. Mini-sidebar expande todos os grupos temporariamente; ao voltar ao menu largo, reaplica-se o estado guardado.

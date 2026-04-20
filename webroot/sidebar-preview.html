@@ -173,8 +173,8 @@
 			<button class="workspace-btn" id="wsBtn" type="button" aria-expanded="false">
 				<div class="workspace-avatar" id="wsAvatar">PG</div>
 				<div class="workspace-info">
-					<div class="workspace-name" id="wsName">PGM Soluções em TI</div>
-					<div class="workspace-sub" id="wsSub">ERP · Matriz</div>
+					<div class="workspace-name" id="wsName">PGM SOLUÇÕES EM TI</div>
+					<div class="workspace-sub" id="wsSub">Matriz</div>
 				</div>
 				<svg class="workspace-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 			</button>
@@ -184,9 +184,9 @@
 					<input type="text" id="wsSearchInput" placeholder="Buscar empresa..." autocomplete="off">
 				</div>
 				<div id="wsList">
-					<button type="button" class="workspace-item active" data-id="1" data-name="PGM Soluções em TI" data-initials="PG">
+					<button type="button" class="workspace-item active" data-id="1" data-name="PGM SOLUÇÕES EM TI" data-initials="PG">
 						<div class="workspace-item-avatar">PG</div>
-						<span class="workspace-item-name">PGM Soluções em TI</span>
+						<span class="workspace-item-name">PGM SOLUÇÕES EM TI</span>
 						<svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 					</button>
 					<button type="button" class="workspace-item" data-id="2" data-name="PGM Filial Bento" data-initials="PB">
@@ -195,19 +195,6 @@
 						<svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 					</button>
 				</div>
-			</div>
-		</div>
-
-		<div class="search-wrap">
-			<div class="search">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input id="pesquisa-funcoes" class="search-input" type="text" placeholder="Buscar..." autocomplete="off">
-				<span class="kbd"><kbd>Ctrl</kbd><kbd>K</kbd></span>
-			</div>
-			<ul class="pgm-sb-typeahead htmlpesquisa list-unstyled m-0 p-0"></ul>
-			<div class="pgm-sidebar-hidden-dt-host" aria-hidden="true">
-				<div id="pgm-sidebar-functions-search"></div>
-				<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host pgm-sidebar-dt-host--pending"></div>
 			</div>
 		</div>
 
@@ -223,6 +210,7 @@
 						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Cadastros</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
 						<div class="nav-section-items">
 							<a href="#clientes" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Clientes"><span class="pgm-nav-lucide" data-lucide="users" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Clientes</span></a>
+							<a href="#cadastrar-clientes" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Cadastrar clientes"><span class="pgm-nav-lucide" data-lucide="user-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Cadastrar clientes</span></a>
 							<a href="#produtos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Produtos"><span class="pgm-nav-lucide" data-lucide="package" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Produtos</span></a>
 						</div>
 					</li>
@@ -525,61 +513,6 @@
 			pgmPreviewApplyNavSectionStates();
 			lucideRefresh();
 		});
-	});
-
-	/* Busca mock */
-	var mockHits = [
-		{ t: 'Cadastros → Clientes', h: '#clientes' },
-		{ t: 'Cadastros → Produtos', h: '#produtos' },
-		{ t: 'Gestão de Incidentes → Service Desk', h: '#servicedesk' },
-		{ t: 'Gestão de Incidentes → Histórico', h: '#historico' },
-		{ t: 'Financeiro → Painel', h: '#fin-painel' },
-		{ t: 'Ordens de serviço → lista', h: '#os-lista' },
-		{ t: 'Comercial → Orçamentos', h: '#orcamentos' },
-		{ t: 'Faturamento → Pré-faturamento', h: '#pre-faturamento' },
-		{ t: 'Contratos → Gestão', h: '#gestao-contratos' },
-		{ t: 'Contratos → Locação', h: '#locacao' },
-		{ t: 'Indicadores → Painel', h: '#painel-indicadores' },
-		{ t: 'Planner → Agenda', h: '#agenda' },
-		{ t: 'Cofre de Senhas → Banco', h: '#banco-senhas' }
-	];
-	var pesq = document.getElementById('pesquisa-funcoes');
-	var listEl = document.querySelector('.htmlpesquisa');
-	function renderSearch(q) {
-		if (!listEl) return;
-		listEl.innerHTML = '';
-		if (!q || q.length < 2) return;
-		var qq = q.toLowerCase();
-		mockHits.filter(function (m) { return m.t.toLowerCase().indexOf(qq) !== -1; }).forEach(function (m) {
-			var li = document.createElement('li');
-			var a = document.createElement('a');
-			a.href = m.h;
-			a.className = 'link link-btn pgm-search-link';
-			a.textContent = m.t;
-			a.addEventListener('click', function (ev) {
-				ev.preventDefault();
-				setNavMessage('Busca', m.t);
-				listEl.innerHTML = '';
-				if (pesq) pesq.value = '';
-			});
-			li.appendChild(a);
-			listEl.appendChild(li);
-		});
-		if (!listEl.children.length) {
-			var empty = document.createElement('li');
-			empty.className = 'pgm-search-empty';
-			empty.textContent = 'Nenhum resultado (mock).';
-			listEl.appendChild(empty);
-		}
-	}
-	if (pesq) {
-		pesq.addEventListener('keyup', function () { renderSearch(pesq.value.trim()); });
-	}
-	document.addEventListener('keydown', function (e) {
-		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-			e.preventDefault();
-			if (pesq) pesq.focus();
-		}
 	});
 
 	/* Dropdown utilizador + notificações (mock: mesmo fluxo do portal) */

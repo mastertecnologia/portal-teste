@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clientes — layout unificado (referência)</title>
+<!--
+  Mapeamento rápido — módulo Clientes (CakePHP /portal)
+  Controller: src/Controller/ClientesController.php
+    • index      → lista (esta tela) — src/Template/Clientes/index.ctp
+    • add        → novo cadastro — src/Template/Clientes/add.ctp
+    • edit/$id   → edição — src/Template/Clientes/edit.ctp
+    • view/$id   → detalhe
+    • search     → busca legada (query string)
+    • inativar / reativar — alteração de status
+    • cadastrar, view, eventos, contrato, APIs — demais fluxos do mesmo controller
+  CSS produção (não alterado aqui): webroot/css/clientes-premium.css
+  Este arquivo é apenas mock HTML/CSS para validar visual “uma tela”, sem mudar JS de produção.
+  Paleta / ritmo visual: webroot/mockup-orcamentos-modulo.html + webroot/css/orcamentos-premium.css (.orc-premium-wrap).
+  Mock de navegação: lista em “Clientes” (comercial); formulário “Cadastrar cliente” sob menu “Cadastros”.
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="dist/css/pages/pgm-sidebar-premium.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%;
+  min-height: 100%;
+}
+/* Shell escuro de contexto — alinhado ao mock de Orçamentos */
+:root {
+  --pgm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mock-erp-shell: #0d0f14;
+  /* Tokens Orçamentos premium (espelho de .orc-premium-wrap) */
+  --orc-teal: #00c08b;
+  --orc-teal-dark: #008f68;
+  --orc-teal-light: #e6faf4;
+  --orc-teal-mid: #5cdbc0;
+  --orc-teal-dim: rgba(0, 192, 139, 0.15);
+  --orc-red: #e24b4a;
+  --orc-border: #e5e4e0;
+  --orc-border-light: #f8f8f7;
+  --orc-text: #1a1a18;
+  --orc-text-muted: #6b6a65;
+  --orc-text-hint: #9a9890;
+  --orc-bg-page: #f2f1ee;
+  --orc-bg-card: #ffffff;
+  --orc-bg-surface: #f8f8f7;
+  --orc-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --orc-radius-sm: 8px;
+  --orc-radius-lg: 12px;
+}
+body { background: var(--mock-erp-shell); font-family: var(--pgm-font-sans); }
+
+/* Coluna principal (sidebar + conteúdo) */
+.pv-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--orc-bg-page);
+}
+/* Barra de módulo — fixa no topo da área de conteúdo (como demais telas do portal) */
+.pv-app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 20px;
+  background: #fff;
+  border-top: 1px solid #1a1a18;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.pv-app-bar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--orc-text);
+  letter-spacing: -0.01em;
+}
+.pv-app-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.pv-app-bar-date {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+}
+.pv-app-bar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orc-teal), var(--orc-teal-dark));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+/* Troca de módulo (Clientes lista × Cadastros · novo cliente) */
+.pv-module {
+  display: none;
+  width: 100%;
+}
+.pv-module.pv-module--active {
+  display: block;
+}
+/* Shell + sidebar premium (estrutura = sidebar-preview.html) */
+.cli-mock-shell.pv-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  align-items: stretch;
+  overflow: hidden;
+}
+.cli-mock-shell .left-sidebar.pgm-sidebar-shell {
+  flex-shrink: 0;
+}
+/* Dropdown utilizador + painel notif. (mock — mesmo markup que sidebar-preview) */
+.preview-dd { position: relative; }
+.preview-dd-menu {
+  display: none;
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 6px;
+  min-width: 220px;
+  background: #1a1d23;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  z-index: 2000;
+  padding: 6px 0;
+}
+.preview-dd.open .preview-dd-menu { display: block; }
+.preview-dd-item {
+  display: block;
+  padding: 8px 14px;
+  color: #c7cede;
+  text-decoration: none;
+  font-size: 13px;
+}
+.preview-dd-item:hover { background: rgba(255,255,255,0.06); color: #f4f6fb; }
+.preview-dd-item.preview-dd-item--danger { color: #f85149; }
+.preview-dd-item.preview-dd-item--danger:hover { color: #ff7b72; }
+.preview-dd-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: #2d333b;
+}
+.pgm-notif-panel-fixed {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  font-family: var(--pgm-font-sans);
+}
+.pgm-notif-panel-fixed.is-open { display: block; }
+.pgm-notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #21262d;
+  color: #8b949e;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.pgm-portal-notif-item {
+  display: block;
+  padding: 10px 14px;
+  border-bottom: 1px solid #21262d;
+  color: #c9d1d9;
+  font-size: 12px;
+  text-decoration: none;
+}
+.pgm-portal-notif-item:hover { background: #1c2230; color: #e6edf3; }
+.pgm-portal-notif-item.unread { border-left: 3px solid #1d9e75; padding-left: 11px; }
+.pgm-nt-title { font-weight: 600; color: #e6edf3; margin-bottom: 2px; }
+.pgm-nt-meta { font-size: 10px; color: #6e7681; margin-top: 4px; }
+
+.pv-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  align-self: stretch;
+  overflow-y: auto;
+  background: transparent;
+  padding: 16px 20px 32px;
+  box-sizing: border-box;
+}
+/* ══ INDEX ══════════════════════════════════════════════════════ */
+.cli-root {
+  --cli-bg:#0d1117;--cli-surface:#161b22;--cli-surface2:#1c2230;
+  --cli-border:#21262d;--cli-border2:#30363d;--cli-text:#e6edf3;
+  --cli-muted:#7d8590;--cli-dim:#484f58;--cli-teal:#1d9e75;
+  --cli-teal-lt:#5cdbc0;--cli-teal-dim:rgba(29,158,117,0.12);
+  --cli-teal-glow:rgba(29,158,117,0.22);--cli-red:#f85149;
+  font-family:'DM Sans',sans-serif;color:var(--cli-text);background:var(--cli-bg);
+}
+.cli-eyebrow { font-size:10px;text-transform:uppercase;letter-spacing:.10em;color:var(--cli-teal-lt);font-weight:600;margin-bottom:3px; }
+.cli-h1 { font-size:20px;font-weight:600;color:var(--cli-text);margin:0 0 2px;line-height:1.2; }
+.cli-subtitle { font-size:11.5px;color:var(--cli-muted); }
+.btn-cli-primary {
+  display:inline-flex;align-items:center;gap:7px;padding:9px 18px;
+  border-radius:8px;background:var(--cli-teal);color:#fff;font-weight:600;
+  font-size:13px;border:none;cursor:pointer;text-decoration:none;
+  transition:background .15s;
+}
+.btn-cli-primary:hover { background:#178a63; }
+.btn-cli-secondary {
+  display:inline-flex;align-items:center;gap:7px;padding:8px 16px;
+  border-radius:8px;background:rgba(255,255,255,.05);color:#7d8590;
+  font-size:12.5px;border:1px solid #30363d;cursor:pointer;text-decoration:none;
+}
+.cli-kpi-strip { display:flex;gap:0;border-bottom:1px solid var(--cli-border);background:var(--cli-surface); }
+.cli-kpi {
+  flex:1;padding:12px 20px;border-right:1px solid var(--cli-border);
+  cursor:pointer;transition:background .15s;position:relative;
+}
+.cli-kpi:last-child { border-right:none; }
+.cli-kpi.active::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cli-teal);border-radius:2px 2px 0 0; }
+.cli-kpi-label { font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--cli-dim);font-weight:600;margin-bottom:4px; }
+.cli-kpi-val { font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;color:var(--cli-text); }
+.cli-kpi-val.teal { color:var(--cli-teal-lt); }
+.cli-kpi-val.muted { color:var(--cli-muted); }
+.cli-kpi-sub { font-size:10px;color:var(--cli-dim);margin-top:3px; }
+.cli-filter-bar {
+  display:flex;align-items:center;gap:12px;padding:10px 24px;
+  border-bottom:1px solid var(--cli-border);background:var(--cli-bg);flex-wrap:wrap;
+}
+.cli-pill-group { display:flex;gap:4px; }
+.cli-pill {
+  display:inline-flex;align-items:center;gap:5px;padding:5px 12px;
+  border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;
+  border:1px solid #30363d;background:transparent;color:#7d8590;transition:all .15s;
+}
+.cli-pill.active { background:var(--cli-teal-dim);border-color:var(--cli-teal);color:var(--cli-teal-lt); }
+.cli-pill .cnt {
+  display:inline-flex;align-items:center;justify-content:center;min-width:18px;
+  height:18px;padding:0 5px;border-radius:10px;font-size:10px;font-weight:700;
+  background:rgba(255,255,255,.08);font-family:'DM Mono',monospace;
+}
+.cli-pill.active .cnt { background:rgba(29,158,117,.20);color:var(--cli-teal-lt); }
+.cli-filter-divider { width:1px;height:22px;background:#30363d;flex-shrink:0; }
+.cli-filter-search {
+  display:flex;align-items:center;gap:8px;background:var(--cli-surface);
+  border:1px solid #30363d;border-radius:8px;padding:0 12px;height:32px;flex:1;max-width:320px;
+}
+.cli-filter-search input { background:none;border:none;outline:none;color:var(--cli-text);font-size:12.5px;font-family:inherit;width:100%; }
+.cli-filter-search input::placeholder { color:var(--cli-dim); }
+.cli-table-wrap { padding:14px 24px 24px;background:var(--cli-bg); }
+.cli-table-card { background:var(--cli-surface);border:1px solid var(--cli-border);border-radius:12px;overflow:hidden; }
+.cli-table { width:100%;border-collapse:collapse; }
+.cli-table thead th {
+  padding:10px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--cli-dim);font-weight:600;border-bottom:1px solid var(--cli-border);
+  background:var(--cli-surface);white-space:nowrap;
+}
+.cli-table tbody tr { border-bottom:1px solid var(--cli-border);cursor:pointer;transition:background .12s; }
+.cli-table tbody tr:last-child { border-bottom:none; }
+.cli-table tbody tr:hover { background:var(--cli-surface2); }
+.cli-table tbody td { padding:10px 14px;font-size:12.5px;vertical-align:middle; }
+.cli-td-name { display:flex;align-items:center;gap:10px; }
+.cli-av { width:30px;height:30px;border-radius:8px;background:var(--cli-teal-dim);color:var(--cli-teal-lt);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;letter-spacing:.05em;font-family:'DM Mono',monospace; }
+.cli-name-main { font-weight:500;color:var(--cli-text);font-size:12.5px; }
+.cli-td-doc { font-family:'DM Mono',monospace;font-size:11.5px;color:var(--cli-muted); }
+.cli-td-email { font-size:12px;color:var(--cli-muted); }
+.cli-td-phone { font-size:12px;color:var(--cli-muted);font-family:'DM Mono',monospace; }
+.cli-td-arrow { color:var(--cli-dim);font-size:12px;text-align:right; }
+.cli-table tbody tr:hover .cli-td-arrow { color:var(--cli-teal-lt); }
+
+/* ══ ADD FORM ═══════════════════════════════════════════════════ */
+.cli-form-root {
+  --cli-bg:#0d1117;--cli-surface:#161b22;--cli-surface2:#1c2230;
+  --cli-border:#21262d;--cli-border2:#30363d;--cli-text:#e6edf3;
+  --cli-muted:#7d8590;--cli-dim:#484f58;--cli-teal:#1d9e75;
+  --cli-teal-lt:#5cdbc0;--cli-teal-dim:rgba(29,158,117,0.12);
+  --cli-teal-glow:rgba(29,158,117,0.22);
+  font-family:'DM Sans',sans-serif;color:var(--cli-text);background:var(--cli-bg);
+}
+.cli-form-body { padding:20px 24px;display:flex;flex-direction:column;gap:14px; }
+.cli-section { background:var(--cli-surface);border:1px solid var(--cli-border);border-radius:12px;overflow:hidden; }
+.cli-section-head { display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--cli-border);background:var(--cli-surface2); }
+.cli-section-icon { width:28px;height:28px;border-radius:7px;background:var(--cli-teal-dim);color:var(--cli-teal-lt);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0; }
+.cli-section-title { font-size:12.5px;font-weight:600;color:var(--cli-text); }
+.cli-section-body { padding:16px 18px; }
+.cli-fg { display:grid;gap:12px 14px; }
+.cli-fgroup {}
+.cli-fgroup label { display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cli-muted);font-weight:600;margin-bottom:5px; }
+.cli-input {
+  width:100%;background:var(--cli-surface2);border:1px solid var(--cli-border2);
+  border-radius:8px;color:var(--cli-text);font-size:13px;padding:8px 12px;
+  height:38px;font-family:inherit;transition:border-color .15s;outline:none;
+}
+.cli-input::placeholder { color:var(--cli-dim); }
+.cli-input:focus { border-color:var(--cli-teal);box-shadow:0 0 0 2px var(--cli-teal-glow); }
+.cli-select { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b92a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:11px;padding-right:30px; }
+.cli-tipo-group { display:flex;gap:10px;margin-top:12px; }
+.cli-tipo-btn { display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;border:1.5px solid #30363d;background:#1c2230;color:#7d8590;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;font-family:inherit; }
+.cli-tipo-btn.active { background:var(--cli-teal-dim);border-color:var(--cli-teal);color:var(--cli-teal-lt); }
+.btn-cli-outline { display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:transparent;color:var(--cli-teal-lt);font-size:11.5px;font-weight:600;border:1px solid rgba(29,158,117,.35);cursor:pointer;font-family:inherit; }
+.cli-form-footer { padding:14px 24px;border-top:1px solid var(--cli-border);background:var(--cli-surface);display:flex;justify-content:space-between;align-items:center;gap:12px; }
+.cli-form-footer-left { font-size:11.5px;color:var(--cli-dim); }
+.cli-form-footer-right { display:flex;gap:8px; }
+.cli-check-row { display:flex;align-items:center;gap:10px; }
+.cli-check-row input { width:16px;height:16px;accent-color:var(--cli-teal);cursor:pointer; }
+.cli-check-row label { font-size:13px;color:var(--cli-text);cursor:pointer; }
+
+/* ══ Clientes mock — paleta / tipos / layout alinhados a Orçamentos premium ══ */
+.cli-layout-unificado.cli-root,
+.cli-layout-unificado.cli-form-root {
+  width: 100%;
+  max-width: none;
+  --cli-bg: var(--orc-bg-page);
+  --cli-surface: var(--orc-bg-page);
+  --cli-surface2: var(--orc-bg-surface);
+  --cli-border: var(--orc-border);
+  --cli-border2: var(--orc-border);
+  --cli-text: var(--orc-text);
+  --cli-muted: var(--orc-text-muted);
+  --cli-dim: var(--orc-text-hint);
+  --cli-teal: var(--orc-teal);
+  --cli-teal-lt: var(--orc-teal-dark);
+  --cli-teal-dim: var(--orc-teal-dim);
+  --cli-teal-glow: rgba(0, 192, 139, 0.22);
+  --cli-red: var(--orc-red);
+  font-family: var(--pgm-font-sans);
+  color: var(--cli-text);
+  background: transparent;
+  color-scheme: light;
+}
+.cli-layout-unificado .btn-cli-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--orc-teal) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: var(--orc-shadow-sm);
+  transition: background 0.15s ease;
+}
+.cli-layout-unificado .btn-cli-primary:hover {
+  background: var(--orc-teal-dark) !important;
+  color: #fff !important;
+}
+.cli-layout-unificado .btn-cli-secondary {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+.cli-layout-unificado .btn-cli-secondary:hover {
+  background: var(--orc-bg-surface) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-layout-unificado .btn-cli-outline {
+  color: var(--orc-teal-dark);
+  border-color: rgba(0, 192, 139, 0.35);
+}
+.cli-layout-unificado .cli-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border-bottom: none;
+}
+/* Lista: sem topbar textual — mantém ritmo visual após o cabeçalho da app bar */
+.cli-layout-unificado .cli-kpi-strip--list-lead {
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+@media (max-width: 991px) {
+  .cli-layout-unificado .cli-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.cli-layout-unificado .cli-kpi {
+  flex: unset;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  padding: 14px 16px;
+  background: var(--orc-bg-card);
+  box-shadow: var(--orc-shadow-sm);
+  border-left: 3px solid transparent;
+  border-right: none;
+  position: relative;
+  transition: box-shadow 0.15s ease, border-left-color 0.15s ease, background 0.15s ease;
+}
+.cli-layout-unificado .cli-kpi:hover,
+.cli-layout-unificado .cli-kpi.active {
+  border-left-color: var(--orc-teal);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.cli-layout-unificado .cli-kpi.active {
+  background: var(--orc-bg-surface);
+}
+.cli-layout-unificado .cli-kpi.active::after {
+  display: none;
+}
+.cli-layout-unificado .cli-kpi-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0 0 5px;
+}
+.cli-layout-unificado .cli-kpi-val {
+  font-family: var(--pgm-font-sans);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-kpi-val.teal {
+  color: var(--orc-teal);
+}
+.cli-layout-unificado .cli-kpi-val.muted {
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado .cli-kpi-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  margin-top: 4px;
+}
+.cli-layout-unificado .cli-list-card {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  overflow: hidden;
+}
+.cli-layout-unificado .cli-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--orc-border);
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-pill {
+  padding: 7px 14px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: none !important;
+  background: transparent !important;
+  color: var(--orc-text-muted) !important;
+}
+.cli-layout-unificado .cli-pill:hover {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-layout-unificado .cli-pill.active {
+  background: var(--orc-teal-light) !important;
+  color: var(--orc-teal-dark) !important;
+  border: none !important;
+}
+.cli-layout-unificado .cli-pill .cnt {
+  background: rgba(0, 0, 0, 0.05);
+  font-family: var(--pgm-font-sans);
+}
+.cli-layout-unificado .cli-pill.active .cnt {
+  background: rgba(0, 192, 139, 0.2);
+  color: var(--orc-teal-dark);
+}
+.cli-layout-unificado .cli-filter-divider {
+  background: var(--orc-border);
+}
+.cli-layout-unificado .cli-filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: auto;
+  min-height: 34px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-sm);
+  background: var(--orc-bg-card);
+  flex: 1 1 auto;
+  max-width: none;
+  width: auto;
+}
+.cli-layout-unificado .cli-filter-search svg {
+  color: var(--orc-text-hint);
+  flex-shrink: 0;
+}
+.cli-layout-unificado .cli-filter-search input {
+  font-size: 12px;
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-filter-search input::placeholder {
+  color: var(--orc-text-hint);
+}
+.cli-layout-unificado .cli-table-wrap {
+  padding: 0 0 0;
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-table-card {
+  background: var(--orc-bg-card);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow-x: auto;
+}
+.cli-layout-unificado .cli-table {
+  font-family: var(--pgm-font-sans);
+  font-size: 12px;
+}
+.cli-layout-unificado .cli-table thead th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid var(--orc-border) !important;
+  background: var(--orc-bg-card) !important;
+  white-space: nowrap;
+}
+.cli-layout-unificado .cli-table tbody td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--orc-border-light) !important;
+  vertical-align: middle;
+  color: var(--orc-text);
+  background: var(--orc-bg-card) !important;
+}
+.cli-layout-unificado .cli-table tbody tr {
+  border-bottom: none;
+}
+.cli-layout-unificado .cli-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+.cli-layout-unificado .cli-table tbody tr:hover,
+.cli-layout-unificado .cli-table tbody tr:hover td {
+  background: var(--orc-bg-surface) !important;
+}
+.cli-layout-unificado .cli-name-main {
+  font-weight: 600;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-td-doc,
+.cli-layout-unificado .cli-td-email,
+.cli-layout-unificado .cli-td-phone {
+  color: var(--orc-text);
+  font-family: var(--pgm-font-sans);
+  font-size: 12px;
+}
+.cli-layout-unificado .cli-av {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--orc-teal-light);
+  color: var(--orc-teal-dark);
+  font-family: var(--pgm-font-sans);
+  font-weight: 600;
+}
+.cli-layout-unificado .cli-td-arrow {
+  color: var(--orc-text-hint);
+}
+.cli-layout-unificado .cli-table tbody tr:hover .cli-td-arrow {
+  color: var(--orc-teal);
+}
+.cli-layout-unificado .cli-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-page-btn {
+  padding: 4px 10px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--orc-border);
+  background: var(--orc-bg-card);
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado .cli-page-btn:hover {
+  border-color: var(--orc-teal);
+  color: var(--orc-teal-dark);
+}
+.cli-layout-unificado .cli-page-btn.is-current {
+  background: var(--orc-teal-light);
+  border-color: var(--orc-teal);
+  color: var(--orc-teal-dark);
+}
+.cli-layout-unificado .cli-form-body {
+  padding: 0 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* Cadastro: sem topbar — alinha ao conteúdo da app bar + área principal */
+.cli-layout-unificado .cli-form-body--cadastro-lead {
+  padding-top: 4px;
+}
+.cli-layout-unificado .cli-section {
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-section-head {
+  background: var(--orc-bg-card);
+  border-bottom: 1px solid var(--orc-border);
+}
+.cli-layout-unificado .cli-section-icon {
+  background: var(--orc-teal-dim);
+  color: var(--orc-teal-dark);
+}
+.cli-layout-unificado .cli-tipo-btn {
+  background: var(--orc-bg-surface);
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado .cli-tipo-btn.active {
+  background: var(--orc-teal-light) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-layout-unificado .cli-input {
+  /* Só cor: evita o atalho `background` resetar background-repeat do <select.cli-select> (seta a repetir em mosaico). */
+  background-color: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-sm);
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-input:focus {
+  border-color: var(--orc-teal);
+  box-shadow: 0 0 0 2px var(--cli-teal-glow);
+}
+.cli-layout-unificado .cli-form-footer {
+  border-top: 1px solid var(--orc-border);
+  margin-top: 8px;
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-form-footer-left {
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado .cli-req {
+  color: var(--orc-teal);
+}
+.cli-layout-unificado .cli-icon-teal {
+  color: var(--orc-teal);
+}
+.cli-layout-unificado .cli-pill-dot--danger {
+  color: var(--orc-red) !important;
+}
+.cli-layout-unificado .cli-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9890' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 11px;
+  padding-right: 30px;
+}
+</style>
+</head>
+<body class="layout-no-topbar">
+
+<div class="pv-shell cli-mock-shell">
+
+  <!-- Sidebar = sidebar-preview.html (Cadastros → Cadastrar clientes) -->
+<aside class="left-sidebar skin-pgm pgm-sidebar-shell" id="sidebar">
+    <div class="workspace">
+      <button class="workspace-btn" id="wsBtn" type="button" aria-expanded="false">
+        <div class="workspace-avatar" id="wsAvatar">PG</div>
+        <div class="workspace-info">
+          <div class="workspace-name" id="wsName">PGM SOLUÇÕES EM TI</div>
+          <div class="workspace-sub" id="wsSub">Matriz</div>
+        </div>
+        <svg class="workspace-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="workspace-dropdown" id="wsDropdown">
+        <div class="workspace-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="wsSearchInput" placeholder="Buscar empresa..." autocomplete="off">
+        </div>
+        <div id="wsList">
+          <button type="button" class="workspace-item active" data-id="1" data-name="PGM SOLUÇÕES EM TI" data-initials="PG">
+            <div class="workspace-item-avatar">PG</div>
+            <span class="workspace-item-name">PGM SOLUÇÕES EM TI</span>
+            <svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button type="button" class="workspace-item" data-id="2" data-name="PGM Filial Bento" data-initials="PB">
+            <div class="workspace-item-avatar">PB</div>
+            <span class="workspace-item-name">PGM Filial Bento</span>
+            <svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-sidebar">
+      <nav class="sidebar-nav">
+        <ul id="sidebarnav" class="pgm-sidebar-nav-flat nav">
+          <li class="nav-section-flat">
+            <div class="nav-section-items" style="padding: 2px 0;">
+              <a href="#dashboard" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Dashboard"><span class="pgm-nav-lucide" data-lucide="layout-dashboard" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Dashboard</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="cadastros">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Cadastros</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#" class="pgm-nav-link nav-item waves-effect waves-dark active" data-switch="clientes" data-label="Clientes"><span class="pgm-nav-lucide" data-lucide="users" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Clientes</span></a>
+              <a href="#" class="pgm-nav-link nav-item waves-effect waves-dark" data-switch="cadastro-cliente" data-label="Cadastrar clientes"><span class="pgm-nav-lucide" data-lucide="user-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Cadastrar clientes</span></a>
+              <a href="#produtos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Produtos"><span class="pgm-nav-lucide" data-lucide="package" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Produtos</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="gestao-incidentes">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Gestão de Incidentes</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#servicedesk" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Service Desk"><span class="pgm-nav-lucide" data-lucide="headphones" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Service Desk</span><span class="badge badge-danger hide-menu">12</span></a>
+              <a href="#historico" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Histórico"><span class="pgm-nav-lucide" data-lucide="history" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Histórico</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="ordens-servico">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Ordens de Serviço</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#os-nova" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Nova ordem"><span class="pgm-nav-lucide" data-lucide="file-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Nova ordem</span></a>
+              <a href="#os-lista" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Ordens"><span class="pgm-nav-lucide" data-lucide="clipboard-list" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Ordens de Serviço</span></a>
+              <a href="#filas" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Filas"><span class="pgm-nav-lucide" data-lucide="layers" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Filas / técnicos</span><span class="badge badge-warning hide-menu">7</span></a>
+              <a href="#os-relatorios" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Relatórios OS"><span class="pgm-nav-lucide" data-lucide="bar-chart-2" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Relatórios</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="contratos">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Contratos</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#gestao-contratos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Gestão de contratos"><span class="pgm-nav-lucide" data-lucide="handshake" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Gestão de contratos</span></a>
+              <a href="#modelos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Modelos"><span class="pgm-nav-lucide" data-lucide="file-code" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Modelos</span></a>
+              <a href="#faturas-contr" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Faturas"><span class="pgm-nav-lucide" data-lucide="receipt" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Faturas</span><span class="badge badge-accent hide-menu">3</span></a>
+              <a href="#locacao" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Locação"><span class="pgm-nav-lucide" data-lucide="truck" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Locação</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="comercial">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Comercial</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#orcamentos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Orçamentos"><span class="pgm-nav-lucide" data-lucide="file-text" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Orçamentos</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="faturamento">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Faturamento</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#pre-faturamento" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Pré-faturamento"><span class="pgm-nav-lucide" data-lucide="clipboard-check" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Pré-faturamento</span></a>
+              <a href="#faturamento" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Faturamento"><span class="pgm-nav-lucide" data-lucide="file-check" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Faturamento</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="financeiro">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Financeiro</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#fin-painel" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Painel fin."><span class="pgm-nav-lucide" data-lucide="pie-chart" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Painel</span></a>
+              <a href="#fin-cr" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Contas a receber"><span class="pgm-nav-lucide" data-lucide="arrow-down-circle" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Contas a receber</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="bancos">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Bancos</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#bancos-cadastro" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Cadastro bancos"><span class="pgm-nav-lucide" data-lucide="landmark" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Cadastro</span></a>
+              <a href="#bancos-remessa" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Remessa"><span class="pgm-nav-lucide" data-lucide="send" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Remessa</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="fiscal">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Fiscal</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#fiscal-painel" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Painel fiscal"><span class="pgm-nav-lucide" data-lucide="layout-grid" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Painel</span></a>
+              <a href="#fiscal-notas" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Notas saída"><span class="pgm-nav-lucide" data-lucide="cloud-upload" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Notas de saída</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="indicadores">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Indicadores</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#painel-indicadores" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Painel e indicadores"><span class="pgm-nav-lucide" data-lucide="pie-chart" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Painel e indicadores</span></a>
+              <a href="#indicadores-avancados" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Indicadores avançados"><span class="pgm-nav-lucide" data-lucide="trending-up" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Indicadores avançados</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="planner">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Planner</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#agenda" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Agenda"><span class="pgm-nav-lucide" data-lucide="calendar" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Agenda</span></a>
+            </div>
+          </li>
+          <li class="nav-section collapsed" data-pgm-nav-section="cofre-senhas">
+            <div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Cofre de Senhas</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="nav-section-items">
+              <a href="#banco-senhas" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Banco de Senhas"><span class="pgm-nav-lucide" data-lucide="lock" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Banco de Senhas</span></a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="pgm-sidebar-footer sidebar-footer">
+      <div class="user-profile user-profile--footer">
+        <div class="user-pro-body preview-dd" id="userDd">
+          <a href="javascript:void(0)" class="dropdown-toggle u-dropdown link user text-white d-flex align-items-center" id="userDdToggle" role="button" aria-expanded="false">
+            <div class="user-avatar pgm-user-av">PM</div>
+            <div class="user-info pgm-sf-user-info hide-menu">
+              <div class="user-name pgm-sf-user-name">Paulo Machado</div>
+              <div class="user-role pgm-sf-user-role">Administrador</div>
+            </div>
+            <span class="caret hide-menu pgm-sidebar-user-caret" aria-hidden="true"></span>
+          </a>
+          <div class="preview-dd-menu" id="userDdMenu" role="menu">
+            <a class="preview-dd-item" href="#perfil">Alterar perfil</a>
+            <a class="preview-dd-item" href="#senha">Alterar senha</a>
+            <a class="preview-dd-item" href="#" id="pgmSidebarMenuOpenNotif">Notificações</a>
+            <a class="preview-dd-item" href="#remoto">Acesso remoto</a>
+            <a class="preview-dd-item" href="#2fa">Verificação de login</a>
+            <a class="preview-dd-item" href="#admin">Painel administrativo</a>
+            <div class="preview-dd-divider" role="separator"></div>
+            <a class="preview-dd-item preview-dd-item--danger" href="#logout">Sair</a>
+          </div>
+        </div>
+      </div>
+      <div class="pgm-sidebar-notif-host" id="pgmSidebarNotifHost" aria-hidden="true">
+        <div class="pgm-portal-notif-bell" id="pgmPortalNotifBell">
+          <a href="#" class="pgm-bell-btn" title="Notificações" id="pgmBellToggle"><i class="fas fa-bell"></i><span class="pgm-bell-badge" id="pgmBellBadge">12</span></a>
+        </div>
+      </div>
+      <div class="pgm-notif-panel-fixed" id="pgmNotifPanel" aria-hidden="true">
+        <div class="pgm-notif-panel-header"><span>Notificações</span><span style="font-size:11px;color:#5cdbc0;">Mock</span></div>
+        <div id="pgmNotifListBody">
+          <a href="#" class="pgm-portal-notif-item unread"><div class="pgm-nt-title">Ordem de serviço #4821</div><div class="pgm-nt-meta">Há 5 min · Service Desk</div></a>
+          <a href="#" class="pgm-portal-notif-item"><div class="pgm-nt-title">Fatura aprovada</div><div class="pgm-nt-meta">Ontem · Financeiro</div></a>
+        </div>
+      </div>
+      <a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn icon-btn" title="Colapsar sidebar" aria-label="Recolher menu lateral"><span data-lucide="chevrons-left" class="pgm-nav-lucide" id="collapseIcon" aria-hidden="true"></span></a>
+    </div>
+  </aside>
+
+  <div class="pv-content">
+  <header class="pv-app-bar" role="banner">
+    <span class="pv-app-bar-title" id="pv-app-bar-title">Lista de Clientes</span>
+    <div class="pv-app-bar-right">
+      <time class="pv-app-bar-date" datetime="2026-04-20">20/04/2026</time>
+      <div class="pv-app-bar-avatar" title="Usuário" aria-hidden="true">DB</div>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <div class="pv-main">
+
+    <!-- Módulo comercial · lista de clientes -->
+    <div class="pv-module pv-module--active" id="pv-mod-clientes">
+    <div class="cli-root cli-layout-unificado">
+      <div class="cli-kpi-strip cli-kpi-strip--list-lead">
+        <div class="cli-kpi active">
+          <div class="cli-kpi-label">Ativos · PJ</div>
+          <div class="cli-kpi-val teal">214</div>
+          <div class="cli-kpi-sub">Pessoa Jurídica</div>
+        </div>
+        <div class="cli-kpi">
+          <div class="cli-kpi-label">Ativos · PF</div>
+          <div class="cli-kpi-val teal">150</div>
+          <div class="cli-kpi-sub">Pessoa Física</div>
+        </div>
+        <div class="cli-kpi">
+          <div class="cli-kpi-label">Inativos</div>
+          <div class="cli-kpi-val muted">37</div>
+          <div class="cli-kpi-sub">PJ + PF</div>
+        </div>
+        <div class="cli-kpi">
+          <div class="cli-kpi-label">Total cadastros</div>
+          <div class="cli-kpi-val">401</div>
+          <div class="cli-kpi-sub">Todos</div>
+        </div>
+      </div>
+      <div class="cli-list-card">
+      <div class="cli-filter-bar">
+        <div class="cli-pill-group">
+          <button class="cli-pill active"><i class="fas fa-circle" style="font-size:6px;"></i> Ativos <span class="cnt">364</span></button>
+          <button class="cli-pill"><i class="fas fa-circle cli-pill-dot--danger" style="font-size:6px;" aria-hidden="true"></i> Inativos <span class="cnt">37</span></button>
+        </div>
+        <div class="cli-filter-divider"></div>
+        <div class="cli-pill-group">
+          <button class="cli-pill active"><i class="fas fa-building" style="font-size:10px;"></i> Pessoa Jurídica <span class="cnt">214</span></button>
+          <button class="cli-pill"><i class="fas fa-user" style="font-size:10px;"></i> Pessoa Física <span class="cnt">150</span></button>
+        </div>
+        <div class="cli-filter-divider"></div>
+        <div class="cli-filter-search">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input type="text" placeholder="Buscar por nome, CNPJ, e-mail…">
+        </div>
+      </div>
+      <div class="cli-table-wrap">
+        <div class="cli-table-card">
+          <table class="cli-table">
+            <thead><tr>
+              <th style="width:42%">Razão Social</th>
+              <th style="width:18%">CNPJ</th>
+              <th style="width:24%">E-mail</th>
+              <th style="width:14%">Telefone</th>
+              <th style="width:2%"></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">TR</div><span class="cli-name-main">TRIANON IND E COM LTDA</span></div></td>
+                <td class="cli-td-doc">50.187.817/0001-99</td>
+                <td class="cli-td-email">financeiro@trianon.com.br</td>
+                <td class="cli-td-phone">(054) 9198-6775</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">MB</div><span class="cli-name-main">MOBLES FAB DE MOV LTDA</span></div></td>
+                <td class="cli-td-doc">50.674.210/0001-33</td>
+                <td class="cli-td-email">alexandrezattera@hotmail.com</td>
+                <td class="cli-td-phone">(054) 9198-6775</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AC</div><span class="cli-name-main">A. CARLOS BRANDELLI LTDA</span></div></td>
+                <td class="cli-td-doc">63.336.965/0001-70</td>
+                <td class="cli-td-email">despachantebrandelli@gmail.com</td>
+                <td class="cli-td-phone">(054) 3451-5033</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AG</div><span class="cli-name-main">AGROPEC COM E ELETRICIDADE HENZEL LTDA.</span></div></td>
+                <td class="cli-td-doc">41.627.074/0001-30</td>
+                <td class="cli-td-email">magnojairhenzel@gmail.com</td>
+                <td class="cli-td-phone">(054) 9600-7241</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AL</div><span class="cli-name-main">ALEPLAST EMBALAGENS PLASTICAS LTDA</span></div></td>
+                <td class="cli-td-doc">01.737.383/0001-48</td>
+                <td class="cli-td-email">financeiro@aleplast.com.br</td>
+                <td class="cli-td-phone">(054) 9965-6415</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AF</div><span class="cli-name-main">ALFEMA IND DE MODELOS LTDA</span></div></td>
+                <td class="cli-td-doc">93.108.199/0001-57</td>
+                <td class="cli-td-email">fiscal@alfema.com.br</td>
+                <td class="cli-td-phone">(054) 3452-1048</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AL</div><span class="cli-name-main">ALLTEX SOLUCOES INDUSTRIAIS LTDA ME</span></div></td>
+                <td class="cli-td-doc">13.464.230/0001-53</td>
+                <td class="cli-td-email">financeiro@alltex.com.br</td>
+                <td class="cli-td-phone">(054) 9148-5866</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AM</div><span class="cli-name-main">AMX FABRICACAO DE ACESSORIOS PARA MOTOCICLETAS</span></div></td>
+                <td class="cli-td-doc">33.563.720/0001-14</td>
+                <td class="cli-td-email">financeiro@amxacessorios.com.br</td>
+                <td class="cli-td-phone">(054) 9156-4228</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">AN</div><span class="cli-name-main">ANDRESA PROVENZI SOCIEDADE INDIVIDUAL DE ADVOCACIA</span></div></td>
+                <td class="cli-td-doc">33.144.658/0001-26</td>
+                <td class="cli-td-email">andresa@provenziadvocacia.com.br</td>
+                <td class="cli-td-phone">(054) 3702-7717</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+              <tr>
+                <td><div class="cli-td-name"><div class="cli-av">UA</div><span class="cli-name-main">UFFICIO ASSESSORIA CONTABIL LTDA</span></div></td>
+                <td class="cli-td-doc">00.521.874/0001-22</td>
+                <td class="cli-td-email">financeiro@ufficio.com.br</td>
+                <td class="cli-td-phone">(054) 3321-4400</td>
+                <td class="cli-td-arrow"><i class="fas fa-chevron-right"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cli-table-footer">
+          <span>Mostrando 1 a 10 de 214 registros</span>
+          <div style="display:flex;gap:4px;">
+            <button type="button" class="cli-page-btn">&lt;&lt;</button>
+            <button type="button" class="cli-page-btn is-current">1</button>
+            <button type="button" class="cli-page-btn">2</button>
+            <button type="button" class="cli-page-btn">3</button>
+            <button type="button" class="cli-page-btn">&gt;&gt;</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Módulo de cadastros · novo cliente -->
+    <div class="pv-module" id="pv-mod-cadastro-cliente">
+    <div class="cli-form-root cli-layout-unificado">
+      <div class="cli-form-body cli-form-body--cadastro-lead">
+
+        <!-- Tipo -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-id-card"></i></div>
+            <div class="cli-section-title">Tipo de cliente</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-tipo-group">
+              <button class="cli-tipo-btn active"><i class="fas fa-building"></i> Pessoa Jurídica</button>
+              <button class="cli-tipo-btn"><i class="fas fa-user"></i> Pessoa Física</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados PJ -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-building"></i></div>
+            <div class="cli-section-title">Dados da empresa</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:5fr 4fr 3fr;margin-bottom:14px;">
+              <div class="cli-fgroup">
+                <label>Razão Social <span class="cli-req">*</span></label>
+                <input class="cli-input" placeholder="Nome empresarial completo">
+              </div>
+              <div class="cli-fgroup">
+                <label>Nome Fantasia</label>
+                <input class="cli-input" placeholder="Nome comercial">
+              </div>
+              <div class="cli-fgroup">
+                <label style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>CNPJ <span class="cli-req">*</span></span>
+                  <button class="btn-cli-outline"><i class="fas fa-search"></i> Buscar</button>
+                </label>
+                <input class="cli-input" placeholder="00.000.000/0000-00">
+              </div>
+            </div>
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Nome do Responsável</label>
+                <input class="cli-input" placeholder="Sócio / administrador">
+              </div>
+              <div class="cli-fgroup">
+                <label>CPF do Responsável</label>
+                <input class="cli-input" placeholder="000.000.000-00">
+              </div>
+              <div class="cli-fgroup">
+                <label>RG do Responsável</label>
+                <input class="cli-input" placeholder="Documento de identidade">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Endereço -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="cli-section-title">Endereço</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:4fr 1fr 2fr 2fr 1.5fr;margin-bottom:14px;">
+              <div class="cli-fgroup">
+                <label>Logradouro <span class="cli-req">*</span></label>
+                <input class="cli-input" placeholder="Rua, Av., Trav…">
+              </div>
+              <div class="cli-fgroup">
+                <label>Número <span class="cli-req">*</span></label>
+                <input class="cli-input" placeholder="Nro.">
+              </div>
+              <div class="cli-fgroup">
+                <label>Bairro <span class="cli-req">*</span></label>
+                <input class="cli-input" placeholder="Bairro">
+              </div>
+              <div class="cli-fgroup">
+                <label>Complemento</label>
+                <input class="cli-input" placeholder="Sala, Bloco…">
+              </div>
+              <div class="cli-fgroup">
+                <label>CEP <span class="cli-req">*</span></label>
+                <input class="cli-input" placeholder="00000-000">
+              </div>
+            </div>
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Cidade <span class="cli-req">*</span></label>
+                <select class="cli-input cli-select"><option>Selecione a cidade…</option><option>Caxias do Sul - RS</option><option>Porto Alegre - RS</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contato -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-phone-alt"></i></div>
+            <div class="cli-section-title">Contato</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Telefone <span class="cli-req">*</span></label>
+                <input class="cli-input" placeholder="(00) 0000-0000">
+              </div>
+              <div class="cli-fgroup">
+                <label>Celular</label>
+                <input class="cli-input" placeholder="(00) 00000-0000">
+              </div>
+              <div class="cli-fgroup">
+                <label>E-mail de faturamento</label>
+                <input class="cli-input" placeholder="financeiro@empresa.com.br" type="email">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fiscal -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-file-invoice"></i></div>
+            <div class="cli-section-title">Registros fiscais</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr;">
+              <div class="cli-fgroup">
+                <label>Inscrição Municipal</label>
+                <input class="cli-input" placeholder="Somente números">
+              </div>
+              <div class="cli-fgroup">
+                <label style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>Inscrição Estadual</span>
+                  <button class="btn-cli-outline"><i class="fas fa-search"></i> Buscar IE</button>
+                </label>
+                <input class="cli-input" placeholder="Somente números">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config -->
+        <div class="cli-section">
+          <div class="cli-section-head">
+            <div class="cli-section-icon"><i class="fas fa-cog"></i></div>
+            <div class="cli-section-title">Configurações</div>
+          </div>
+          <div class="cli-section-body">
+            <div class="cli-fg" style="grid-template-columns:1fr 1fr;align-items:center;">
+              <div class="cli-fgroup">
+                <label>Empresa dominante</label>
+                <select class="cli-input cli-select"><option>PGM Soluções em TI LTDA</option></select>
+              </div>
+              <div style="padding-top:22px;">
+                <div class="cli-check-row">
+                  <input type="checkbox" id="prev-contrato">
+                  <label for="prev-contrato">Possui contrato de serviço</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="cli-form-footer">
+        <div class="cli-form-footer-left">
+          <i class="fas fa-shield-alt cli-icon-teal" style="margin-right:5px;"></i>
+          Dados salvos com segurança no ERP
+        </div>
+        <div class="cli-form-footer-right">
+          <button type="button" class="btn-cli-secondary" onclick="switchView('clientes')"><i class="fa fa-arrow-left"></i> Cancelar</button>
+          <button type="button" class="btn-cli-primary"><i class="fas fa-check"></i> Cadastrar cliente</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </div><!-- /pv-main -->
+  </div><!-- /pv-content -->
+</div><!-- /pv-shell -->
+
+<script>
+(function () {
+  function lucideRefresh() {
+    if (window.lucide && lucide.createIcons) lucide.createIcons();
+  }
+  lucideRefresh();
+
+  var titles = {
+    clientes: 'Lista de Clientes',
+    'cadastro-cliente': 'Cadastrar Cliente'
+  };
+  var modIds = {
+    clientes: 'pv-mod-clientes',
+    'cadastro-cliente': 'pv-mod-cadastro-cliente'
+  };
+  window.switchView = function (view, navEl) {
+    Object.keys(modIds).forEach(function (key) {
+      var el = document.getElementById(modIds[key]);
+      if (el) el.classList.toggle('pv-module--active', key === view);
+    });
+    document.querySelectorAll('#sidebarnav a.pgm-nav-link').forEach(function (a) {
+      a.classList.remove('active');
+    });
+    var nav = navEl || document.querySelector('#sidebarnav a[data-switch="' + view + '"]');
+    if (nav) nav.classList.add('active');
+    var barTitle = document.getElementById('pv-app-bar-title');
+    if (barTitle) barTitle.textContent = titles[view] || 'Portal';
+    if (typeof window.pgmPreviewApplyNavSectionStates === 'function') window.pgmPreviewApplyNavSectionStates();
+    lucideRefresh();
+  };
+
+  function setNavMessage(crumb, title) {
+    var bcC = document.getElementById('bcCrumb');
+    var bcT = document.getElementById('bcTitle');
+    var pt = document.getElementById('pageTitle');
+    if (bcC) bcC.textContent = crumb;
+    if (bcT) bcT.textContent = title;
+    if (pt) pt.textContent = title;
+  }
+
+  /* Workspace */
+  var wsBtn = document.getElementById('wsBtn');
+  var wsDropdown = document.getElementById('wsDropdown');
+  var wsName = document.getElementById('wsName');
+  var wsAvatar = document.getElementById('wsAvatar');
+  var wsSearchInput = document.getElementById('wsSearchInput');
+  if (wsBtn && wsDropdown) {
+    wsBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var on = wsDropdown.classList.toggle('open');
+      wsBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (on && wsSearchInput) setTimeout(function () { wsSearchInput.focus(); }, 30);
+    });
+    document.addEventListener('click', function (e) {
+      if (!wsDropdown.contains(e.target) && !wsBtn.contains(e.target)) {
+        wsDropdown.classList.remove('open');
+        wsBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  document.querySelectorAll('.workspace-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.workspace-item').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      if (wsName) wsName.textContent = btn.getAttribute('data-name') || '';
+      if (wsAvatar) wsAvatar.textContent = btn.getAttribute('data-initials') || 'PG';
+      wsDropdown.classList.remove('open');
+      wsBtn.setAttribute('aria-expanded', 'false');
+      setNavMessage('Empresa', 'Selecionada: ' + (btn.getAttribute('data-name') || ''));
+    });
+  });
+  if (wsSearchInput) {
+    wsSearchInput.addEventListener('input', function () {
+      var q = (wsSearchInput.value || '').toLowerCase();
+      document.querySelectorAll('.workspace-item').forEach(function (item) {
+        var n = (item.getAttribute('data-name') || '').toLowerCase();
+        item.style.display = n.indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+  }
+
+  var PGM_SB_NAV_KEY = 'pgmSidebarSectionExpanded';
+  function pgmPreviewGetNavSectionStates() {
+    try {
+      var raw = localStorage.getItem(PGM_SB_NAV_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function pgmPreviewSetNavSectionState(id, expanded) {
+    if (!id) return;
+    var o = pgmPreviewGetNavSectionStates();
+    o[id] = expanded;
+    localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(o));
+  }
+  function pgmPreviewSyncNavSectionDom(sec, expanded) {
+    var label = sec.querySelector('.nav-section-label');
+    if (expanded) {
+      sec.classList.remove('collapsed');
+      if (label) label.setAttribute('aria-expanded', 'true');
+    } else {
+      sec.classList.add('collapsed');
+      if (label) label.setAttribute('aria-expanded', 'false');
+    }
+  }
+  function pgmPreviewApplyNavSectionStates() {
+    var states = pgmPreviewGetNavSectionStates();
+    document.querySelectorAll('.pgm-sidebar-shell #sidebarnav li.nav-section[data-pgm-nav-section]').forEach(function (sec) {
+      var id = sec.getAttribute('data-pgm-nav-section');
+      var hasActive = !!sec.querySelector('a.pgm-nav-link.active');
+      var expanded;
+      if (hasActive) {
+        expanded = true;
+        states[id] = true;
+      } else if (Object.prototype.hasOwnProperty.call(states, id)) {
+        expanded = !!states[id];
+      } else {
+        expanded = false;
+      }
+      pgmPreviewSyncNavSectionDom(sec, expanded);
+    });
+    localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(states));
+  }
+  window.pgmPreviewApplyNavSectionStates = pgmPreviewApplyNavSectionStates;
+  function pgmPreviewToggleNavSection(sec) {
+    if (!sec || !sec.getAttribute('data-pgm-nav-section')) return;
+    var expanded = sec.classList.contains('collapsed');
+    pgmPreviewSyncNavSectionDom(sec, expanded);
+    pgmPreviewSetNavSectionState(sec.getAttribute('data-pgm-nav-section'), expanded);
+  }
+  document.querySelectorAll('.nav-section-label').forEach(function (label) {
+    label.addEventListener('click', function () {
+      var sec = label.closest('.nav-section');
+      if (sec && sec.getAttribute('data-pgm-nav-section')) pgmPreviewToggleNavSection(sec);
+    });
+    label.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var secK = label.closest('.nav-section');
+        if (secK && secK.getAttribute('data-pgm-nav-section')) pgmPreviewToggleNavSection(secK);
+      }
+    });
+  });
+  function expandAllNavSections() {
+    document.querySelectorAll('.pgm-sidebar-shell .nav-section.collapsed').forEach(function (sec) {
+      sec.classList.remove('collapsed');
+    });
+    document.querySelectorAll('.pgm-sidebar-shell #sidebarnav .nav-section-label').forEach(function (lab) {
+      lab.setAttribute('aria-expanded', 'true');
+    });
+  }
+  document.querySelectorAll('.sidebartoggler').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.body.classList.toggle('mini-sidebar');
+      setTimeout(function () {
+        if (document.body.classList.contains('mini-sidebar')) {
+          expandAllNavSections();
+        } else {
+          pgmPreviewApplyNavSectionStates();
+        }
+        lucideRefresh();
+      }, 0);
+    });
+  });
+  pgmPreviewApplyNavSectionStates();
+
+  document.querySelectorAll('#sidebarnav a.pgm-nav-link.nav-item[href^="#"]').forEach(function (a) {
+    if (a.getAttribute('data-switch')) return;
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('#sidebarnav a.pgm-nav-link.nav-item').forEach(function (x) { x.classList.remove('active'); });
+      a.classList.add('active');
+      var label = (a.getAttribute('data-label') || a.getAttribute('href') || 'Item').replace(/^#/, '');
+      setNavMessage('Menu', label);
+      if (location.hash !== a.getAttribute('href')) {
+        history.replaceState(null, '', a.getAttribute('href'));
+      }
+      pgmPreviewApplyNavSectionStates();
+      lucideRefresh();
+    });
+  });
+  document.querySelectorAll('#sidebarnav a[data-switch]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.switchView(a.getAttribute('data-switch'), a);
+    });
+  });
+
+  var userDd = document.getElementById('userDd');
+  var userToggle = document.getElementById('userDdToggle');
+  var notifPanel = document.getElementById('pgmNotifPanel');
+  var bellToggle = document.getElementById('pgmBellToggle');
+  function positionNotifPanel() {
+    if (!notifPanel || !bellToggle) return;
+    var r = bellToggle.getBoundingClientRect();
+    if (!r.width && !r.height) {
+      notifPanel.style.top = '72px';
+      notifPanel.style.right = '20px';
+      notifPanel.style.left = 'auto';
+      return;
+    }
+    var top = Math.max(12, r.bottom + 8);
+    var left = Math.min(window.innerWidth - notifPanel.offsetWidth - 12, r.left);
+    notifPanel.style.top = top + 'px';
+    notifPanel.style.left = Math.max(12, left) + 'px';
+    notifPanel.style.right = 'auto';
+  }
+  function setNotifPanel(open) {
+    if (!notifPanel) return;
+    if (open) {
+      positionNotifPanel();
+      notifPanel.classList.add('is-open');
+      notifPanel.setAttribute('aria-hidden', 'false');
+    } else {
+      notifPanel.classList.remove('is-open');
+      notifPanel.setAttribute('aria-hidden', 'true');
+    }
+  }
+  if (userDd && userToggle) {
+    userToggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      userDd.classList.toggle('open');
+    });
+    document.addEventListener('click', function (e) {
+      if (!userDd.contains(e.target)) userDd.classList.remove('open');
+      if (!notifPanel || !notifPanel.classList.contains('is-open')) return;
+      var t = e.target;
+      if (notifPanel.contains(t) || (bellToggle && bellToggle.contains(t)) || (t && t.id === 'pgmSidebarMenuOpenNotif')) return;
+      setNotifPanel(false);
+    });
+    window.addEventListener('resize', function () {
+      if (notifPanel && notifPanel.classList.contains('is-open')) positionNotifPanel();
+    });
+    userDd.querySelectorAll('.preview-dd-item').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (a.id === 'pgmSidebarMenuOpenNotif') {
+          e.preventDefault();
+          userDd.classList.remove('open');
+          setNotifPanel(true);
+          return;
+        }
+        userDd.classList.remove('open');
+        setNavMessage('Utilizador', a.textContent.trim());
+      });
+    });
+  }
+  if (bellToggle && notifPanel) {
+    bellToggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      var on = !notifPanel.classList.contains('is-open');
+      setNotifPanel(on);
+    });
+  }
+
+  if (location.hash) {
+    var t = document.querySelector('#sidebarnav a.pgm-nav-link.nav-item[href="' + location.hash + '"]');
+    if (t) t.click();
+  }
+  lucideRefresh();
+})();
+</script>
+</body>
+</html>
