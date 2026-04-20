@@ -223,8 +223,8 @@
 							<a href="#historico" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Histórico"><span class="pgm-nav-lucide" data-lucide="history" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Histórico</span></a>
 						</div>
 					</li>
-					<li class="nav-section">
-						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true"><span>Ordens de Serviço</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+					<li class="nav-section collapsed" data-pgm-nav-section="ordens-servico">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Ordens de Serviço</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
 						<div class="nav-section-items">
 							<a href="#os-nova" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Nova ordem"><span class="pgm-nav-lucide" data-lucide="file-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Nova ordem</span></a>
 							<a href="#os-lista" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Ordens"><span class="pgm-nav-lucide" data-lucide="clipboard-list" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Ordens de Serviço</span></a>
@@ -232,18 +232,46 @@
 							<a href="#os-relatorios" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Relatórios OS"><span class="pgm-nav-lucide" data-lucide="bar-chart-2" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Relatórios</span></a>
 						</div>
 					</li>
-					<li class="nav-section">
-						<div class="nav-section-label" role="button" tabindex="0"><span>Contratos</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+					<li class="nav-section collapsed" data-pgm-nav-section="contratos">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Contratos</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
 						<div class="nav-section-items">
+							<a href="#gestao-contratos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Gestão de contratos"><span class="pgm-nav-lucide" data-lucide="handshake" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Gestão de contratos</span></a>
 							<a href="#modelos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Modelos"><span class="pgm-nav-lucide" data-lucide="file-code" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Modelos</span></a>
 							<a href="#faturas-contr" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Faturas"><span class="pgm-nav-lucide" data-lucide="receipt" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Faturas</span><span class="badge badge-accent hide-menu">3</span></a>
 						</div>
 					</li>
-					<li class="nav-section">
-						<div class="nav-section-label" role="button" tabindex="0"><span>Financeiro</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+					<li class="nav-section collapsed" data-pgm-nav-section="comercial">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Comercial</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#orcamentos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Orçamentos"><span class="pgm-nav-lucide" data-lucide="file-text" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Orçamentos</span></a>
+						</div>
+					</li>
+					<li class="nav-section collapsed" data-pgm-nav-section="faturamento">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Faturamento</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#pre-faturamento" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Pré-faturamento"><span class="pgm-nav-lucide" data-lucide="clipboard-check" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Pré-faturamento</span></a>
+							<a href="#faturamento" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Faturamento"><span class="pgm-nav-lucide" data-lucide="file-check" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Faturamento</span></a>
+						</div>
+					</li>
+					<li class="nav-section collapsed" data-pgm-nav-section="financeiro">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Financeiro</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
 						<div class="nav-section-items">
 							<a href="#fin-painel" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Painel fin."><span class="pgm-nav-lucide" data-lucide="pie-chart" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Painel</span></a>
 							<a href="#fin-cr" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Contas a receber"><span class="pgm-nav-lucide" data-lucide="arrow-down-circle" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Contas a receber</span></a>
+						</div>
+					</li>
+					<li class="nav-section collapsed" data-pgm-nav-section="bancos">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Bancos</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#bancos-cadastro" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Cadastro bancos"><span class="pgm-nav-lucide" data-lucide="landmark" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Cadastro</span></a>
+							<a href="#bancos-remessa" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Remessa"><span class="pgm-nav-lucide" data-lucide="send" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Remessa</span></a>
+						</div>
+					</li>
+					<li class="nav-section collapsed" data-pgm-nav-section="fiscal">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="false"><span>Fiscal</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#fiscal-painel" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Painel fiscal"><span class="pgm-nav-lucide" data-lucide="layout-grid" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Painel</span></a>
+							<a href="#fiscal-notas" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Notas saída"><span class="pgm-nav-lucide" data-lucide="cloud-upload" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Notas de saída</span></a>
 						</div>
 					</li>
 				</ul>
@@ -301,7 +329,7 @@
 				<p>Esta página usa o mesmo CSS do ficheiro <kbd>dist/css/pages/pgm-sidebar-premium.css</kbd> carregado a partir da pasta <strong>webroot</strong>. Serve para validar espaçamentos, cores teal, grupos colapsáveis, workspace, busca e modo <strong>mini-sidebar</strong> sem precisar de sessão CakePHP.</p>
 				<p><strong>Como abrir:</strong> com o servidor a servir <code>webroot</code> como raiz (ex.: <code>bin/cake server -p 8765</code> na raiz do projeto), abra <kbd>/sidebar-preview.html</kbd>. Se abrir o ficheiro em <code>file://</code>, o CSS pode falhar conforme o browser; prefira URL HTTP.</p>
 				<div class="preview-hint">
-					<strong>Dica:</strong> clique nos itens do menu para atualizar o título; use o botão de colapsar para ver tooltips; use <kbd>Ctrl</kbd>+<kbd>K</kbd> na busca; clique no nome da empresa para o dropdown; no rodapé, <strong>Perfil / notificações / sair</strong> estão só no menu ao clicar no nome do utilizador (sem fila de ícones).
+					<strong>Dica:</strong> grupos (OS, Contratos, Comercial, Faturamento, etc.) começam fechados; ao expandir ou ao escolher uma rota ativa, o estado guarda-se em <kbd>localStorage</kbd> (<code>pgmSidebarSectionExpanded</code>), igual ao portal. Mini-sidebar expande todos os grupos temporariamente; ao voltar ao menu largo, reaplica-se o estado guardado.
 				</div>
 			</div>
 		</div>
@@ -358,37 +386,92 @@
 		});
 	}
 
-	/* Grupos */
+	/* Grupos: mesmo modelo do portal (localStorage + secção com rota ativa aberta) */
+	var PGM_SB_NAV_KEY = 'pgmSidebarSectionExpanded';
+	function pgmPreviewGetNavSectionStates() {
+		try {
+			var raw = localStorage.getItem(PGM_SB_NAV_KEY);
+			return raw ? JSON.parse(raw) : {};
+		} catch (e) {
+			return {};
+		}
+	}
+	function pgmPreviewSetNavSectionState(id, expanded) {
+		if (!id) return;
+		var o = pgmPreviewGetNavSectionStates();
+		o[id] = expanded;
+		localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(o));
+	}
+	function pgmPreviewSyncNavSectionDom(sec, expanded) {
+		var label = sec.querySelector('.nav-section-label');
+		if (expanded) {
+			sec.classList.remove('collapsed');
+			if (label) label.setAttribute('aria-expanded', 'true');
+		} else {
+			sec.classList.add('collapsed');
+			if (label) label.setAttribute('aria-expanded', 'false');
+		}
+	}
+	function pgmPreviewApplyNavSectionStates() {
+		var states = pgmPreviewGetNavSectionStates();
+		document.querySelectorAll('.pgm-sidebar-shell #sidebarnav li.nav-section[data-pgm-nav-section]').forEach(function (sec) {
+			var id = sec.getAttribute('data-pgm-nav-section');
+			var hasActive = !!sec.querySelector('a.pgm-nav-link.active');
+			var expanded;
+			if (hasActive) {
+				expanded = true;
+				states[id] = true;
+			} else if (Object.prototype.hasOwnProperty.call(states, id)) {
+				expanded = !!states[id];
+			} else {
+				expanded = false;
+			}
+			pgmPreviewSyncNavSectionDom(sec, expanded);
+		});
+		localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(states));
+	}
+	function pgmPreviewToggleNavSection(sec) {
+		if (!sec || !sec.getAttribute('data-pgm-nav-section')) return;
+		var expanded = sec.classList.contains('collapsed');
+		pgmPreviewSyncNavSectionDom(sec, expanded);
+		pgmPreviewSetNavSectionState(sec.getAttribute('data-pgm-nav-section'), expanded);
+	}
 	document.querySelectorAll('.nav-section-label').forEach(function (label) {
 		label.addEventListener('click', function () {
 			var sec = label.closest('.nav-section');
-			if (sec) sec.classList.toggle('collapsed');
+			if (sec && sec.getAttribute('data-pgm-nav-section')) pgmPreviewToggleNavSection(sec);
 		});
 		label.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter' || e.key === ' ') {
 				e.preventDefault();
-				var sec = label.closest('.nav-section');
-				if (sec) sec.classList.toggle('collapsed');
+				var secK = label.closest('.nav-section');
+				if (secK && secK.getAttribute('data-pgm-nav-section')) pgmPreviewToggleNavSection(secK);
 			}
 		});
 	});
-
 	function expandAllNavSections() {
-		document.querySelectorAll('.nav-section.collapsed').forEach(function (sec) {
+		document.querySelectorAll('.pgm-sidebar-shell .nav-section.collapsed').forEach(function (sec) {
 			sec.classList.remove('collapsed');
 		});
+		document.querySelectorAll('.pgm-sidebar-shell #sidebarnav .nav-section-label').forEach(function (lab) {
+			lab.setAttribute('aria-expanded', 'true');
+		});
 	}
-
-	/* Mini-sidebar (igual ideia do portal: classe no body) */
+	/* Mini-sidebar */
 	document.querySelectorAll('.sidebartoggler').forEach(function (btn) {
 		btn.addEventListener('click', function () {
 			document.body.classList.toggle('mini-sidebar');
-			if (document.body.classList.contains('mini-sidebar')) {
-				expandAllNavSections();
-			}
-			lucideRefresh();
+			setTimeout(function () {
+				if (document.body.classList.contains('mini-sidebar')) {
+					expandAllNavSections();
+				} else {
+					pgmPreviewApplyNavSectionStates();
+				}
+				lucideRefresh();
+			}, 0);
 		});
 	});
+	pgmPreviewApplyNavSectionStates();
 
 	/* Navegação mock */
 	function setNavMessage(crumb, title) {
@@ -409,6 +492,8 @@
 			if (location.hash !== a.getAttribute('href')) {
 				history.replaceState(null, '', a.getAttribute('href'));
 			}
+			pgmPreviewApplyNavSectionStates();
+			lucideRefresh();
 		});
 	});
 
@@ -416,7 +501,10 @@
 	var mockHits = [
 		{ t: 'Clientes → index', h: '#clientes' },
 		{ t: 'Financeiro → Painel', h: '#fin-painel' },
-		{ t: 'Ordens de serviço → lista', h: '#os-lista' }
+		{ t: 'Ordens de serviço → lista', h: '#os-lista' },
+		{ t: 'Comercial → Orçamentos', h: '#orcamentos' },
+		{ t: 'Faturamento → Pré-faturamento', h: '#pre-faturamento' },
+		{ t: 'Contratos → Gestão', h: '#gestao-contratos' }
 	];
 	var pesq = document.getElementById('pesquisa-funcoes');
 	var listEl = document.querySelector('.htmlpesquisa');

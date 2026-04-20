@@ -198,6 +198,7 @@ html body .pgm-sidebar-shell a.pgm-nav-link.active {
 	background: var(--pgm-sb-item-active) !important;
 	color: #f4f6fb !important;
 	font-weight: 500 !important;
+	font-size: 13px !important;
 }
 html body .pgm-sidebar-shell a.pgm-nav-link.active::before {
 	content: "" !important;
@@ -425,6 +426,8 @@ body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat .nav
 	background: var(--pgm-sb-item-active) !important;
 	color: var(--pgm-sb-text-main) !important;
 	box-shadow: none !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
 }
 body.layout-no-topbar .pgm-sidebar-shell a.pgm-nav-link svg,
 body.layout-no-topbar .pgm-sidebar-shell a.pgm-nav-link .pgm-nav-lucide {
@@ -613,7 +616,7 @@ html body .pgm-sidebar-shell .nav-section-label {
 	justify-content: space-between !important;
 	padding: 4px 10px 4px !important;
 	margin-bottom: 2px !important;
-	font-size: 10.5px !important;
+	font-size: 11px !important;
 	font-weight: 600 !important;
 	text-transform: uppercase !important;
 	letter-spacing: 0.08em !important;
@@ -744,4 +747,26 @@ body.mini-sidebar .pgm-sidebar-shell a.pgm-nav-link.nav-item[data-label]::after 
 body.mini-sidebar .pgm-sidebar-shell a.pgm-nav-link.nav-item:hover::after {
 	opacity: 1 !important;
 	visibility: visible !important;
+}
+
+/*
+ * Tipografia do menu: mesmo corpo em lista plana e dentro de grupos (#sidebarnav
+ * ganha especificidade sobre regras genéricas em layout-sidebar-shell).
+ */
+body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav a.pgm-nav-link.nav-item,
+html body .pgm-sidebar-shell ul#sidebarnav a.pgm-nav-link.nav-item {
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	line-height: 1.35 !important;
+	letter-spacing: 0.01em !important;
+}
+body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav a.pgm-nav-link.nav-item.active,
+html body .pgm-sidebar-shell ul#sidebarnav a.pgm-nav-link.nav-item.active {
+	font-size: 13px !important;
+	font-weight: 500 !important;
+}
+html body .pgm-sidebar-shell ul#sidebarnav a.pgm-nav-link.nav-item .nav-item-label {
+	font-size: inherit !important;
+	font-weight: inherit !important;
+	line-height: inherit !important;
 }

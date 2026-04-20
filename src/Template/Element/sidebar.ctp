@@ -54,6 +54,18 @@
 
 	$relatoriosOsActive = ($ctrl === 'Ordensservico' && $act === 'relatorios');
 
+	/* Secções colapsáveis: abertas só na rota atual (PHP); persistência manual em localStorage (JS). */
+	$pgmSbOpenOrdens = $osIndexActive || $osAddActive || (bool)($queuesAtendimentoActive ?? '') || $relatoriosOsActive;
+	$pgmSbOpenContratos = $advMgmtAct || $advTplAct || $advInvAct;
+	$pgmSbOpenComercial = (bool)($orcamentosActive ?? '');
+	$pgmSbOpenFaturamento = (bool)($prefaturamentoActive ?? '') || (bool)($faturamentoActive ?? '');
+	$pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
+	$pgmSbOpenBancos = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
+	$pgmSbOpenFiscal = $fiscalDashAct || $fiscalDfeRecAct || $fiscalNotasAct || $fiscalEntradaAct
+		|| $fiscalInutActSaida || $fiscalInutActEntrada || $fiscalSeriesSaidaAct || $fiscalSeriesEntradaAct
+		|| $fiscalCertAct || $fiscalCfgAct || $fiscalRelAct || $fiscalConsultaChaveAct || $fiscalConsultaCadastroAct
+		|| $fiscalContingenciaAct || $fiscalImportarXmlAct;
+
 	$nameTrim = trim((string)($name ?? ''));
 	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
 	$u0 = $partsName[0] ?? '';
@@ -221,8 +233,8 @@
 					|| (!empty($admin) && ($sg['queues'] ?? true));
 				if ($sgOsGrp) :
 				?>
-				<li class="nav-section">
-					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true">
+				<li class="nav-section<?= $pgmSbOpenOrdens ? '' : ' collapsed' ?>" data-pgm-nav-section="ordens-servico">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenOrdens ? 'true' : 'false' ?>">
 						<span>Ordens de Serviço</span>
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
@@ -252,15 +264,22 @@
 				<?php endif; ?>
 
 				<?php
-				$sgContrGrp = $roleNav === 0 && (($sg['advanced_module_modelos'] ?? true) || ($sg['advanced_module_faturas'] ?? true));
+				$sgContrGrp = $roleNav === 0 && (
+					($sg['advanced_module_modelos'] ?? true)
+					|| ($sg['advanced_module_faturas'] ?? true)
+					|| ($sg['advanced_module_gestao'] ?? true)
+				);
 				if ($sgContrGrp) :
 				?>
-				<li class="nav-section">
-					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true">
+				<li class="nav-section<?= $pgmSbOpenContratos ? '' : ' collapsed' ?>" data-pgm-nav-section="contratos">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenContratos ? 'true' : 'false' ?>">
 						<span>Contratos</span>
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
 					<div class="nav-section-items">
+						<?php if ($roleNav === 0 && ($sg['advanced_module_gestao'] ?? true)) : ?>
+						<?= $pgmSbLink('handshake', ' Gestão de contratos', '/modulo-contratos', [], $advMgmtAct, '', 'Gestão de contratos') ?>
+						<?php endif; ?>
 						<?php if (($sg['advanced_module_modelos'] ?? true)) : ?>
 						<?= $pgmSbLink('file-code', ' Modelos', '/contract-templates', [], $advTplAct, '', 'Modelos') ?>
 						<?php endif; ?>
@@ -271,9 +290,44 @@
 				</li>
 				<?php endif; ?>
 
+				<?php if (($sg['orcamentos'] ?? true)) : ?>
+				<li class="nav-section<?= $pgmSbOpenComercial ? '' : ' collapsed' ?>" data-pgm-nav-section="comercial">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenComercial ? 'true' : 'false' ?>">
+						<span>Comercial</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
+						<?= $pgmSbLink('file-text', ' Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], [], (bool)($orcamentosActive ?? ''), '', 'Orçamentos') ?>
+					</div>
+				</li>
+				<?php endif; ?>
+
+				<?php
+				$sgFatGrp = (($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true)) || ($sg['faturamento'] ?? true);
+				if ($sgFatGrp) :
+				?>
+				<li class="nav-section<?= $pgmSbOpenFaturamento ? '' : ' collapsed' ?>" data-pgm-nav-section="faturamento">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenFaturamento ? 'true' : 'false' ?>">
+						<span>Faturamento</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
+						<?php
+						$sgPrefSec = ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true);
+						if ($sgPrefSec) :
+						?>
+						<?= $pgmSbLink('clipboard-check', ' Pré-faturamento', ['controller' => 'Prefaturamento', 'action' => 'index'], [], (bool)($prefaturamentoActive ?? ''), '', 'Pré-faturamento') ?>
+						<?php endif; ?>
+						<?php if (($sg['faturamento'] ?? true)) : ?>
+						<?= $pgmSbLink('file-check', ' Faturamento', ['controller' => 'Faturamento', 'action' => 'index'], [], (bool)($faturamentoActive ?? ''), '', 'Faturamento') ?>
+						<?php endif; ?>
+					</div>
+				</li>
+				<?php endif; ?>
+
 				<?php if (($sg['financeiro'] ?? true)) : ?>
-				<li class="nav-section">
-					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true">
+				<li class="nav-section<?= $pgmSbOpenFinanceiro ? '' : ' collapsed' ?>" data-pgm-nav-section="financeiro">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenFinanceiro ? 'true' : 'false' ?>">
 						<span>Financeiro</span>
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
@@ -293,8 +347,8 @@
 				<?php endif; ?>
 
 				<?php if (($sg['financeiro'] ?? true)) : ?>
-				<li class="nav-section">
-					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true">
+				<li class="nav-section<?= $pgmSbOpenBancos ? '' : ' collapsed' ?>" data-pgm-nav-section="bancos">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenBancos ? 'true' : 'false' ?>">
 						<span>Bancos</span>
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
@@ -311,8 +365,8 @@
 				$sgFiscalSec = ($sg['fiscal_modulo'] ?? true);
 				if ($roleNav === 0 && $sgFiscalSec) :
 				?>
-				<li class="nav-section">
-					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true">
+				<li class="nav-section<?= $pgmSbOpenFiscal ? '' : ' collapsed' ?>" data-pgm-nav-section="fiscal">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenFiscal ? 'true' : 'false' ?>">
 						<span>Fiscal</span>
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
@@ -368,27 +422,8 @@
 
 				<li class="nav-section-flat">
 					<div class="nav-section-items" style="padding: 2px 0;">
-						<?php if ($roleNav === 0 && ($sg['advanced_module_gestao'] ?? true)) : ?>
-						<?= $pgmSbLink('handshake', ' Gestão de contratos', '/modulo-contratos', [], $advMgmtAct, '', 'Gestão de contratos') ?>
-						<?php endif; ?>
-
 						<?php if (($sg['visitas_agenda'] ?? true)) : ?>
 						<?= $pgmSbLink('calendar', ' Agenda', ['controller' => 'Visitas', 'action' => 'calendario'], [], (bool)($visitasActive ?? ''), '', 'Agenda') ?>
-						<?php endif; ?>
-
-						<?php if (($sg['orcamentos'] ?? true)) : ?>
-						<?= $pgmSbLink('file-text', ' Orçamentos', ['controller' => 'Orcamentos', 'action' => 'index'], [], (bool)($orcamentosActive ?? ''), '', 'Orçamentos') ?>
-						<?php endif; ?>
-
-						<?php
-						$sgPrefSec = ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true);
-						if ($sgPrefSec) :
-						?>
-						<?= $pgmSbLink('clipboard-check', ' Pré-faturamento', ['controller' => 'Prefaturamento', 'action' => 'index'], [], (bool)($prefaturamentoActive ?? ''), '', 'Pré-faturamento') ?>
-						<?php endif; ?>
-
-						<?php if (($sg['faturamento'] ?? true)) : ?>
-						<?= $pgmSbLink('file-check', ' Faturamento', ['controller' => 'Faturamento', 'action' => 'index'], [], (bool)($faturamentoActive ?? ''), '', 'Faturamento') ?>
 						<?php endif; ?>
 
 						<?php if (($sg['faturas_locacao'] ?? true)) : ?>
@@ -586,19 +621,82 @@
 		$('.pgm-nc').removeClass('in');
 	}, 0);
 
+	var PGM_SB_NAV_KEY = 'pgmSidebarSectionExpanded';
+
+	function pgmSidebarGetNavSectionStates() {
+		try {
+			var raw = localStorage.getItem(PGM_SB_NAV_KEY);
+			return raw ? JSON.parse(raw) : {};
+		} catch (e) {
+			return {};
+		}
+	}
+
+	function pgmSidebarSetNavSectionState(id, expanded) {
+		if (!id) {
+			return;
+		}
+		var o = pgmSidebarGetNavSectionStates();
+		o[id] = expanded;
+		localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(o));
+	}
+
+	function pgmSidebarSyncNavSectionDom(sec, expanded) {
+		var label = sec.querySelector('.nav-section-label');
+		if (expanded) {
+			sec.classList.remove('collapsed');
+			if (label) {
+				label.setAttribute('aria-expanded', 'true');
+			}
+		} else {
+			sec.classList.add('collapsed');
+			if (label) {
+				label.setAttribute('aria-expanded', 'false');
+			}
+		}
+	}
+
+	function pgmSidebarApplyNavSectionStates() {
+		var states = pgmSidebarGetNavSectionStates();
+		document.querySelectorAll('.pgm-sidebar-shell #sidebarnav li.nav-section[data-pgm-nav-section]').forEach(function(sec) {
+			var id = sec.getAttribute('data-pgm-nav-section');
+			var hasActive = !!sec.querySelector('a.pgm-nav-link.active');
+			var expanded;
+			if (hasActive) {
+				expanded = true;
+				states[id] = true;
+			} else if (Object.prototype.hasOwnProperty.call(states, id)) {
+				expanded = !!states[id];
+			} else {
+				expanded = false;
+			}
+			pgmSidebarSyncNavSectionDom(sec, expanded);
+		});
+		localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(states));
+	}
+
+	function pgmSidebarToggleNavSection(sec) {
+		if (!sec || !sec.getAttribute('data-pgm-nav-section')) {
+			return;
+		}
+		var expanded = sec.classList.contains('collapsed');
+		pgmSidebarSyncNavSectionDom(sec, expanded);
+		pgmSidebarSetNavSectionState(sec.getAttribute('data-pgm-nav-section'), expanded);
+	}
+
 	document.querySelectorAll('.nav-section-label').forEach(function(label) {
 		label.addEventListener('click', function() {
 			var sec = label.closest('.nav-section');
-			if (sec) {
-				sec.classList.toggle('collapsed');
+			if (sec && sec.getAttribute('data-pgm-nav-section')) {
+				pgmSidebarToggleNavSection(sec);
 			}
 		});
 		label.addEventListener('keydown', function(e) {
 			if (e.key === 'Enter' || e.key === ' ') {
 				e.preventDefault();
 				var secK = label.closest('.nav-section');
-				if (secK) {
-					secK.classList.toggle('collapsed');
+				if (secK && secK.getAttribute('data-pgm-nav-section')) {
+					pgmSidebarToggleNavSection(secK);
 				}
 			}
 		});
@@ -608,15 +706,21 @@
 		document.querySelectorAll('.pgm-sidebar-shell .nav-section.collapsed').forEach(function(sec) {
 			sec.classList.remove('collapsed');
 		});
+		document.querySelectorAll('.pgm-sidebar-shell #sidebarnav .nav-section-label').forEach(function(lab) {
+			lab.setAttribute('aria-expanded', 'true');
+		});
 	}
 	document.querySelectorAll('.sidebartoggler').forEach(function(btn) {
 		btn.addEventListener('click', function() {
 			setTimeout(function() {
 				if (document.body.classList.contains('mini-sidebar')) {
 					pgmSidebarExpandAllSections();
+				} else {
+					pgmSidebarApplyNavSectionStates();
 				}
 				pgmSidebarLucideRefresh();
 			}, 0);
 		});
 	});
+	pgmSidebarApplyNavSectionStates();
 </script>
