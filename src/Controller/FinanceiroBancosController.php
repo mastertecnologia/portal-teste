@@ -198,7 +198,7 @@ class FinanceiroBancosController extends AppController
                     }
 
                     return true;
-                }),
+                })
             );
         }
 
@@ -600,12 +600,12 @@ class FinanceiroBancosController extends AppController
                     "ativos" => count(
                         array_filter($items, function ($item) {
                             return !empty($item["ativo"]);
-                        }),
+                        })
                     ),
                     "inativos" => count(
                         array_filter($items, function ($item) {
                             return empty($item["ativo"]);
-                        }),
+                        })
                     ),
                 ],
             ],
@@ -1363,7 +1363,7 @@ class FinanceiroBancosController extends AppController
                             trim((string) ($banco->numero_banco ?? "")) ===
                                 $codigo ||
                             trim((string) ($banco->cnab ?? "")) === $codigo;
-                    }),
+                    })
                 );
             }
 
@@ -1378,7 +1378,7 @@ class FinanceiroBancosController extends AppController
 
                         return $nomeBanco !== "" &&
                             mb_strpos($nomeBanco, $nomeLower) !== false;
-                    }),
+                    })
                 );
             }
 
@@ -1401,7 +1401,7 @@ class FinanceiroBancosController extends AppController
                         }
 
                         return true;
-                    }),
+                    })
                 );
             }
         }
@@ -2282,7 +2282,7 @@ class FinanceiroBancosController extends AppController
                         $diasParaProximoVencimento = (int) floor(
                             (strtotime($proximoVencimento->format("Y-m-d")) -
                                 strtotime(date("Y-m-d"))) /
-                                86400,
+                                86400
                         );
                     }
                 } catch (\Exception $e) {
@@ -2313,7 +2313,7 @@ class FinanceiroBancosController extends AppController
                         trim((string) ($banco->numero_banco ?? "")) ===
                             $codigo ||
                         trim((string) ($banco->cnab ?? "")) === $codigo;
-                }),
+                })
             );
         }
 
@@ -2323,12 +2323,12 @@ class FinanceiroBancosController extends AppController
                 array_filter($previsao, function ($item) use ($nomeLower) {
                     $banco = $item["banco"] ?? null;
                     $nomeBanco = mb_strtolower(
-                        trim((string) ($banco->nome ?? "")),
+                        trim((string) ($banco->nome ?? ""))
                     );
 
                     return $nomeBanco !== "" &&
                         mb_strpos($nomeBanco, $nomeLower) !== false;
-                }),
+                })
             );
         }
 
@@ -2367,7 +2367,7 @@ class FinanceiroBancosController extends AppController
                     }
 
                     return true;
-                }),
+                })
             );
         }
 
@@ -2514,7 +2514,7 @@ class FinanceiroBancosController extends AppController
                         trim((string) ($banco->numero_banco ?? "")) ===
                             $codigo ||
                         trim((string) ($banco->cnab ?? "")) === $codigo;
-                }),
+                })
             );
         }
 
@@ -2524,12 +2524,12 @@ class FinanceiroBancosController extends AppController
                 array_filter($resumo, function ($item) use ($nomeLower) {
                     $banco = $item["banco"] ?? null;
                     $nomeBanco = mb_strtolower(
-                        trim((string) ($banco->nome ?? "")),
+                        trim((string) ($banco->nome ?? ""))
                     );
 
                     return $nomeBanco !== "" &&
                         mb_strpos($nomeBanco, $nomeLower) !== false;
-                }),
+                })
             );
         }
 
@@ -2570,7 +2570,7 @@ class FinanceiroBancosController extends AppController
                     }
 
                     return true;
-                }),
+                })
             );
         }
 
@@ -3030,8 +3030,8 @@ class FinanceiroBancosController extends AppController
             array_unique(
                 array_filter($variacoes, function ($item) {
                     return trim((string) $item) !== "";
-                }),
-            ),
+                })
+            )
         );
 
         return $variacoes;
