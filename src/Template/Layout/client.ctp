@@ -43,6 +43,7 @@ use Cake\Routing\Router;
 	<?= $this->fetch('meta'); ?>
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
+	<?= $this->Html->script('jquery-3.1.0.min'); ?>
 </head>
 <?php
 $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-portal-client-shell ' : '';
@@ -63,8 +64,7 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 	    </div>
 	</div>
 
-	<!--- Data Tables -->
-	<?= $this->Html->script('jquery-3.1.0.min'); ?>
+	<!--- Data Tables (jQuery no head; sidebar inline precisa de $) -->
 	<?= $this->Html->script('/js/pgm-portal-theme'); ?>
 	<?= $this->Html->script('bootstrap.min'); ?>
 	<?= $this->Html->script('material.min'); ?>

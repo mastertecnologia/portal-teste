@@ -631,11 +631,19 @@
 			dataType: "json",
 			success: function(data) {
 				$('.htmlpesquisa').html('');
-				if (!data || !data.length) {
+				var rows = [];
+				if (Array.isArray(data)) {
+					rows = data;
+				} else if (data && typeof data === 'object') {
+					rows = Object.keys(data).map(function (k) { return data[k]; }).filter(function (row) {
+						return row && typeof row === 'object' && row.Controller !== undefined && row.Action !== undefined;
+					});
+				}
+				if (!rows.length) {
 					$('.htmlpesquisa').append('<li class="pgm-search-empty">Nenhum resultado encontrado.</li>');
 					return;
 				}
-				$.each(data, function(key, array) {
+				$.each(rows, function(key, array) {
 					$('.htmlpesquisa').append('<li><a class="link link-btn pgm-search-link" data-controller="'+array.Controller+'" data-action="'+array.Action+'">'+array.ControllerQueAparece+ ' > ' +array.ActionQueAparece+'</a></li>');
 				});
 			}
