@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="pt-BR" data-pgm-theme="dark">
+<html lang="pt-BR" data-pgm-theme="<?= empty($disablePgmAppShellPremium) ? 'light' : 'dark' ?>">
 <head>
 	<!-- Charset e propriedades -->
 	<?= $this->Html->charset() ?>
@@ -20,7 +20,7 @@
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=1") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=2") ?>
 	<?php endif; ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'orcamentos-premium']) ?>
 	<?= $this->element('pgm_premium_css', ['name' => 'pgm-action-buttons']) ?>
