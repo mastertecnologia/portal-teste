@@ -69,8 +69,11 @@
 	$multiEmpresa = count($empresasOptSidebar ?? []) > 1;
 
 	$html = $this->Html;
-	/** @param array<string, mixed> $linkOpts */
-	$pgmSbLink = function (string $iconLucide, string $labelInnerHtml, array $url, array $linkOpts, bool $isActive) use ($html) {
+	/**
+	 * @param array|string $url Rota Cake ou URL absoluta/caminho (ex.: '/modulo-contratos')
+	 * @param array<string, mixed> $linkOpts
+	 */
+	$pgmSbLink = function (string $iconLucide, string $labelInnerHtml, $url, array $linkOpts, bool $isActive) use ($html) {
 		$cls = 'pgm-nav-link waves-effect waves-dark' . ($isActive ? ' active' : '');
 		$linkOpts = array_merge($linkOpts, ['class' => $cls, 'escape' => false]);
 
@@ -130,7 +133,7 @@
 				<?php endif; ?>
 
 				<?php if (($sg['clientes'] ?? true)) : ?>
-				<li><?= $pgmSbLink('users-round', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], (bool)($clientesActive ?? '')) ?></li>
+				<li><?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], (bool)($clientesActive ?? '')) ?></li>
 				<?php endif; ?>
 
 				<?php if (($sg['produtos'] ?? true)) : ?>

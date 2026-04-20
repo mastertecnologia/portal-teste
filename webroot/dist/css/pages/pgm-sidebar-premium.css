@@ -318,6 +318,48 @@ html body .pgm-sidebar-shell .caret {
 	display: none !important;
 }
 
+/* Sobrescreve layout-sidebar-shell / tema legado (evita itens sobrepostos e conflito de “active”) */
+body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat > li {
+	display: list-item !important;
+	position: relative !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	height: auto !important;
+	min-height: 0 !important;
+	max-height: none !important;
+	overflow: visible !important;
+	float: none !important;
+}
+body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat > li > a.pgm-nav-link {
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: nowrap !important;
+	width: calc(100% - 8px) !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+	margin: 0 4px 2px !important;
+	line-height: 1.35 !important;
+	min-height: 40px !important;
+	position: relative !important;
+	float: none !important;
+	clear: both !important;
+	border-left: none !important;
+	box-shadow: none !important;
+}
+body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat > li > a.pgm-nav-link.active {
+	background: var(--pgm-sb-item-active) !important;
+	color: var(--pgm-sb-text-main) !important;
+	box-shadow: none !important;
+}
+body.layout-no-topbar .pgm-sidebar-shell a.pgm-nav-link svg,
+body.layout-no-topbar .pgm-sidebar-shell a.pgm-nav-link .pgm-nav-lucide {
+	width: 17px !important;
+	height: 17px !important;
+	flex-shrink: 0 !important;
+	display: block !important;
+	position: static !important;
+}
+
 /* Scrollbar nav */
 html body .pgm-sidebar-shell .scroll-sidebar::-webkit-scrollbar {
 	width: 4px;
