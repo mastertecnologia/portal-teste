@@ -198,19 +198,6 @@
 			</div>
 		</div>
 
-		<div class="search-wrap">
-			<div class="search">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input id="pesquisa-funcoes" class="search-input" type="text" placeholder="Buscar..." autocomplete="off">
-				<span class="kbd"><kbd>Ctrl</kbd><kbd>K</kbd></span>
-			</div>
-			<ul class="pgm-sb-typeahead htmlpesquisa list-unstyled m-0 p-0"></ul>
-			<div class="pgm-sidebar-hidden-dt-host" aria-hidden="true">
-				<div id="pgm-sidebar-functions-search"></div>
-				<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host pgm-sidebar-dt-host--pending"></div>
-			</div>
-		</div>
-
 		<div class="scroll-sidebar">
 			<nav class="sidebar-nav">
 				<ul id="sidebarnav" class="pgm-sidebar-nav-flat nav">
@@ -356,7 +343,7 @@
 		<div class="preview-body">
 			<div class="preview-card">
 				<h1 id="pageTitle">Sidebar staff</h1>
-				<p>Esta página usa o mesmo CSS do ficheiro <kbd>dist/css/pages/pgm-sidebar-premium.css</kbd> carregado a partir da pasta <strong>webroot</strong>. Serve para validar espaçamentos, cores teal, grupos colapsáveis, workspace, busca e modo <strong>mini-sidebar</strong> sem precisar de sessão CakePHP.</p>
+				<p>Esta página usa o mesmo CSS do ficheiro <kbd>dist/css/pages/pgm-sidebar-premium.css</kbd> carregado a partir da pasta <strong>webroot</strong>. Serve para validar espaçamentos, cores teal, grupos colapsáveis, workspace e modo <strong>mini-sidebar</strong> sem precisar de sessão CakePHP.</p>
 				<p><strong>Como abrir:</strong> com o servidor a servir <code>webroot</code> como raiz (ex.: <code>bin/cake server -p 8765</code> na raiz do projeto), abra <kbd>/sidebar-preview.html</kbd>. Se abrir o ficheiro em <code>file://</code>, o CSS pode falhar conforme o browser; prefira URL HTTP.</p>
 				<div class="preview-hint">
 					<strong>Dica:</strong> grupos (Cadastros, Gestão de Incidentes, OS, Contratos, Indicadores, Planner, Cofre de Senhas, Comercial, Faturamento, etc.) começam fechados; ao expandir ou ao escolher uma rota ativa, o estado guarda-se em <kbd>localStorage</kbd> (<code>pgmSidebarSectionExpanded</code>), igual ao portal. Mini-sidebar expande todos os grupos temporariamente; ao voltar ao menu largo, reaplica-se o estado guardado.
@@ -525,61 +512,6 @@
 			pgmPreviewApplyNavSectionStates();
 			lucideRefresh();
 		});
-	});
-
-	/* Busca mock */
-	var mockHits = [
-		{ t: 'Cadastros → Clientes', h: '#clientes' },
-		{ t: 'Cadastros → Produtos', h: '#produtos' },
-		{ t: 'Gestão de Incidentes → Service Desk', h: '#servicedesk' },
-		{ t: 'Gestão de Incidentes → Histórico', h: '#historico' },
-		{ t: 'Financeiro → Painel', h: '#fin-painel' },
-		{ t: 'Ordens de serviço → lista', h: '#os-lista' },
-		{ t: 'Comercial → Orçamentos', h: '#orcamentos' },
-		{ t: 'Faturamento → Pré-faturamento', h: '#pre-faturamento' },
-		{ t: 'Contratos → Gestão', h: '#gestao-contratos' },
-		{ t: 'Contratos → Locação', h: '#locacao' },
-		{ t: 'Indicadores → Painel', h: '#painel-indicadores' },
-		{ t: 'Planner → Agenda', h: '#agenda' },
-		{ t: 'Cofre de Senhas → Banco', h: '#banco-senhas' }
-	];
-	var pesq = document.getElementById('pesquisa-funcoes');
-	var listEl = document.querySelector('.htmlpesquisa');
-	function renderSearch(q) {
-		if (!listEl) return;
-		listEl.innerHTML = '';
-		if (!q || q.length < 2) return;
-		var qq = q.toLowerCase();
-		mockHits.filter(function (m) { return m.t.toLowerCase().indexOf(qq) !== -1; }).forEach(function (m) {
-			var li = document.createElement('li');
-			var a = document.createElement('a');
-			a.href = m.h;
-			a.className = 'link link-btn pgm-search-link';
-			a.textContent = m.t;
-			a.addEventListener('click', function (ev) {
-				ev.preventDefault();
-				setNavMessage('Busca', m.t);
-				listEl.innerHTML = '';
-				if (pesq) pesq.value = '';
-			});
-			li.appendChild(a);
-			listEl.appendChild(li);
-		});
-		if (!listEl.children.length) {
-			var empty = document.createElement('li');
-			empty.className = 'pgm-search-empty';
-			empty.textContent = 'Nenhum resultado (mock).';
-			listEl.appendChild(empty);
-		}
-	}
-	if (pesq) {
-		pesq.addEventListener('keyup', function () { renderSearch(pesq.value.trim()); });
-	}
-	document.addEventListener('keydown', function (e) {
-		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-			e.preventDefault();
-			if (pesq) pesq.focus();
-		}
 	});
 
 	/* Dropdown utilizador + notificações (mock: mesmo fluxo do portal) */
