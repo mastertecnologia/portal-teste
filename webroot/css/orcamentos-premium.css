@@ -312,11 +312,14 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 #orc-premium-container.orc-premium-index a.orc-premium-empresa-name,
 #orc-premium-container.orc-premium-index a.orc-premium-date-link {
   color: #1a1a18 !important;
+  font-style: italic !important;
+  font-weight: 600;
 }
 
 #orc-premium-container.orc-premium-index a.orc-premium-empresa-name:hover,
 #orc-premium-container.orc-premium-index a.orc-premium-date-link:hover {
   color: #00c08b !important;
+  font-style: italic !important;
 }
 
 /* Abas tipo pill (protótipo .tabs / .tab) */
@@ -415,19 +418,25 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #1a1a18;
+  font-style: italic;
+  font-weight: 600;
 }
 
 .orc-premium-index a.orc-premium-empresa-name:hover {
   color: #00c08b;
+  font-style: italic;
 }
 
 .orc-premium-index .orc-premium-date-cell,
 .orc-premium-index .orc-premium-date-link {
   color: #1a1a18 !important;
+  font-style: italic;
+  font-weight: 600;
 }
 
 .orc-premium-index a.orc-premium-date-link:hover {
   color: #00c08b;
+  font-style: italic;
 }
 
 .orc-premium-index .orc-badge {
@@ -448,7 +457,8 @@ body.layout-no-topbar:has(.orc-premium-page-root) .pgm-shell-main .footer a stro
 
 .orc-premium-index .orc-premium-valor {
   font-weight: 600;
-  color: var(--orc-text);
+  font-style: italic;
+  color: #1a1a18;
 }
 
 .orc-premium-index .orc-premium-list-card .dataTables_filter {
@@ -2750,11 +2760,14 @@ body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-lin
 body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-empresa-name,
 body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-date-link {
   color: #1a1a18 !important;
+  font-style: italic !important;
+  font-weight: 600;
 }
 
 body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-empresa-name:hover,
 body.layout-no-topbar #orc-premium-container.orc-premium-index a.orc-premium-date-link:hover {
   color: #00c08b !important;
+  font-style: italic !important;
 }
 
 body.layout-no-topbar .orc-premium-index .orc-premium-search {
