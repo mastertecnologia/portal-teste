@@ -1,6 +1,7 @@
 <?php
     use Cake\Routing\Router;
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+    $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
     $this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Novo cliente', [], ['class' => 'breadcrumb-item active']);
@@ -22,7 +23,7 @@
 ?>
 
 <div class="col-md-12 p-0">
-<div class="cli-form-root">
+<div class="cli-form-root cli-layout-unificado">
 
 <?= $this->Form->create($cliente, ['class' => 'cli-add-form']) ?>
 

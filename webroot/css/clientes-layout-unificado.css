@@ -1,0 +1,502 @@
+/**
+ * Clientes — layout unificado (tema claro Orçamentos).
+ * Espelho visual de webroot/clientes-lista-layout-unificado.html.
+ * Usar em conjunto com class="cli-root cli-layout-unificado" (index) ou
+ * "cli-form-root cli-layout-unificado" (add). Carregar depois de clientes-premium.css.
+ */
+
+.cli-layout-unificado.cli-root,
+.cli-layout-unificado.cli-form-root {
+  --pgm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --orc-teal: #00c08b;
+  --orc-teal-dark: #008f68;
+  --orc-teal-light: #e6faf4;
+  --orc-teal-mid: #5cdbc0;
+  --orc-teal-dim: rgba(0, 192, 139, 0.15);
+  --orc-red: #e24b4a;
+  --orc-border: #e5e4e0;
+  --orc-border-light: #f8f8f7;
+  --orc-text: #1a1a18;
+  --orc-text-muted: #6b6a65;
+  --orc-text-hint: #9a9890;
+  --orc-bg-page: #f2f1ee;
+  --orc-bg-card: #ffffff;
+  --orc-bg-surface: #f8f8f7;
+  --orc-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --orc-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --orc-radius-sm: 8px;
+  --orc-radius-lg: 12px;
+
+  width: 100%;
+  max-width: none;
+  --cli-bg: var(--orc-bg-page);
+  --cli-surface: var(--orc-bg-page);
+  --cli-surface2: var(--orc-bg-surface);
+  --cli-border: var(--orc-border);
+  --cli-border2: var(--orc-border);
+  --cli-text: var(--orc-text);
+  --cli-muted: var(--orc-text-muted);
+  --cli-dim: var(--orc-text-hint);
+  --cli-teal: var(--orc-teal);
+  --cli-teal-lt: var(--orc-teal-dark);
+  --cli-teal-dim: var(--orc-teal-dim);
+  --cli-teal-glow: rgba(0, 192, 139, 0.22);
+  --cli-red: var(--orc-red);
+  font-family: var(--pgm-font-sans);
+  color: var(--cli-text);
+  background: var(--orc-bg-page);
+  color-scheme: light;
+}
+
+/* Área da página (fundo #f2f1ee como no mock) */
+.cli-root.cli-layout-unificado,
+.cli-form-root.cli-layout-unificado {
+  margin: 0 !important;
+  min-height: 0 !important;
+  padding: 12px 16px 32px;
+  box-sizing: border-box;
+}
+
+.cli-layout-unificado .btn-cli-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--orc-teal) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: var(--orc-shadow-sm);
+  transition: background 0.15s ease;
+}
+.cli-layout-unificado .btn-cli-primary:hover {
+  background: var(--orc-teal-dark) !important;
+  color: #fff !important;
+}
+.cli-layout-unificado .btn-cli-secondary {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+.cli-layout-unificado .btn-cli-secondary:hover {
+  background: var(--orc-bg-surface) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-layout-unificado .btn-cli-outline {
+  color: var(--orc-teal-dark);
+  border-color: rgba(0, 192, 139, 0.35);
+}
+
+.cli-layout-unificado .cli-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border-bottom: none;
+}
+.cli-layout-unificado .cli-kpi-strip--list-lead {
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+@media (max-width: 991px) {
+  .cli-layout-unificado .cli-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.cli-layout-unificado .cli-kpi {
+  flex: unset;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  padding: 14px 16px;
+  background: var(--orc-bg-card);
+  box-shadow: var(--orc-shadow-sm);
+  border-left: 3px solid transparent;
+  border-right: none;
+  position: relative;
+  transition: box-shadow 0.15s ease, border-left-color 0.15s ease, background 0.15s ease;
+}
+.cli-layout-unificado .cli-kpi:hover,
+.cli-layout-unificado .cli-kpi.active {
+  border-left-color: var(--orc-teal);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.cli-layout-unificado .cli-kpi.active {
+  background: var(--orc-bg-surface);
+}
+.cli-layout-unificado .cli-kpi.active::after {
+  display: none;
+}
+.cli-layout-unificado .cli-kpi-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0 0 5px;
+}
+.cli-layout-unificado .cli-kpi-val {
+  font-family: var(--pgm-font-sans);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-kpi-val.teal {
+  color: var(--orc-teal);
+}
+.cli-layout-unificado .cli-kpi-val.muted {
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado .cli-kpi-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  margin-top: 4px;
+}
+
+.cli-layout-unificado .cli-list-card {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  overflow: hidden;
+}
+.cli-layout-unificado .cli-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--orc-border);
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-pill {
+  padding: 7px 14px;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: none !important;
+  background: transparent !important;
+  color: var(--orc-text-muted) !important;
+}
+.cli-layout-unificado .cli-pill:hover {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-layout-unificado .cli-pill.active {
+  background: var(--orc-teal-light) !important;
+  color: var(--orc-teal-dark) !important;
+  border: none !important;
+}
+.cli-layout-unificado .cli-pill .cnt {
+  background: rgba(0, 0, 0, 0.05);
+  font-family: var(--pgm-font-sans);
+}
+.cli-layout-unificado .cli-pill.active .cnt {
+  background: rgba(0, 192, 139, 0.2);
+  color: var(--orc-teal-dark);
+}
+.cli-layout-unificado .pgm-pill-dot--danger {
+  color: var(--orc-red) !important;
+}
+.cli-layout-unificado .cli-filter-divider {
+  background: var(--orc-border);
+}
+.cli-layout-unificado .cli-filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: auto;
+  min-height: 34px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-sm);
+  background: var(--orc-bg-card);
+  flex: 1 1 auto;
+  max-width: none;
+  width: auto;
+}
+.cli-layout-unificado .cli-filter-search svg {
+  color: var(--orc-text-hint);
+  flex-shrink: 0;
+}
+.cli-layout-unificado .cli-filter-search input {
+  font-size: 12px;
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-filter-search input::placeholder {
+  color: var(--orc-text-hint);
+}
+.cli-layout-unificado .cli-table-wrap {
+  padding: 0;
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-table-card {
+  background: var(--orc-bg-card);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow-x: auto;
+}
+.cli-layout-unificado .cli-table {
+  font-family: var(--pgm-font-sans);
+  font-size: 12px;
+}
+.cli-layout-unificado .cli-table thead th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid var(--orc-border) !important;
+  background: var(--orc-bg-card) !important;
+  white-space: nowrap;
+}
+.cli-layout-unificado .cli-table tbody td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--orc-border-light) !important;
+  vertical-align: middle;
+  color: var(--orc-text);
+  background: var(--orc-bg-card) !important;
+}
+.cli-layout-unificado .cli-table tbody tr {
+  border-bottom: none;
+}
+.cli-layout-unificado .cli-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+.cli-layout-unificado .cli-table tbody tr:hover,
+.cli-layout-unificado .cli-table tbody tr:hover td {
+  background: var(--orc-bg-surface) !important;
+}
+.cli-layout-unificado .cli-name-main {
+  font-weight: 600;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--orc-text);
+}
+.cli-layout-unificado .cli-td-doc,
+.cli-layout-unificado .cli-td-email,
+.cli-layout-unificado .cli-td-phone {
+  color: var(--orc-text);
+  font-family: var(--pgm-font-sans);
+  font-size: 12px;
+}
+.cli-layout-unificado .cli-av {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--orc-teal-light);
+  color: var(--orc-teal-dark);
+  font-family: var(--pgm-font-sans);
+  font-weight: 600;
+}
+.cli-layout-unificado .cli-td-arrow {
+  color: var(--orc-text-hint);
+}
+.cli-layout-unificado .cli-table tbody tr:hover .cli-td-arrow {
+  color: var(--orc-teal);
+}
+
+/* Cadastro (add) — secções e inputs no tema claro */
+.cli-layout-unificado .cli-form-body {
+  padding: 0 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.cli-layout-unificado .cli-form-body--cadastro-lead {
+  padding-top: 4px;
+}
+.cli-layout-unificado .cli-section {
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  background: var(--orc-bg-card);
+}
+.cli-layout-unificado .cli-section-head {
+  background: var(--orc-bg-card);
+  border-bottom: 1px solid var(--orc-border);
+}
+.cli-layout-unificado .cli-section-icon {
+  background: var(--orc-teal-dim);
+  color: var(--orc-teal-dark);
+}
+.cli-layout-unificado .cli-tipo-btn {
+  background: var(--orc-bg-surface);
+  border-color: var(--orc-border) !important;
+  color: var(--orc-text-muted);
+}
+.cli-layout-unificado .cli-tipo-btn.active {
+  background: var(--orc-teal-light) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
+}
+
+.cli-form-root.cli-layout-unificado .cli-fgroup label,
+.cli-form-root.cli-layout-unificado .cli-fgroup > label {
+  color: var(--orc-text-muted) !important;
+}
+.cli-form-root.cli-layout-unificado .form-control,
+.cli-form-root.cli-layout-unificado input.form-control,
+.cli-form-root.cli-layout-unificado select.form-control,
+.cli-form-root.cli-layout-unificado textarea.form-control {
+  background-color: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  border-radius: var(--orc-radius-sm) !important;
+  color: var(--orc-text) !important;
+  -webkit-text-fill-color: var(--orc-text) !important;
+  color-scheme: light !important;
+}
+.cli-form-root.cli-layout-unificado .form-control:focus,
+.cli-form-root.cli-layout-unificado input.form-control:focus,
+.cli-form-root.cli-layout-unificado select.form-control:focus,
+.cli-form-root.cli-layout-unificado textarea.form-control:focus {
+  border-color: var(--orc-teal) !important;
+  box-shadow: 0 0 0 2px var(--cli-teal-glow) !important;
+  background-color: var(--orc-bg-surface) !important;
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado select.form-control:not(.selectpicker) {
+  appearance: none;
+  background-color: var(--orc-bg-card) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9890' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 11px !important;
+  padding-right: 30px !important;
+}
+.cli-form-root.cli-layout-unificado select.form-control:not(.selectpicker):focus {
+  background-color: var(--orc-bg-surface) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9890' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 11px !important;
+}
+.cli-form-root.cli-layout-unificado .bootstrap-select > .dropdown-toggle,
+.cli-form-root.cli-layout-unificado .bootstrap-select .dropdown-toggle.btn-light,
+.cli-form-root.cli-layout-unificado .bootstrap-select .dropdown-toggle.btn-default {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado .bootstrap-select .filter-option-inner-inner {
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado .cli-form-footer {
+  border-top: 1px solid var(--orc-border);
+  margin-top: 8px;
+  background: var(--orc-bg-card);
+}
+.cli-form-root.cli-layout-unificado .cli-form-footer-left {
+  color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-req,
+.cli-form-root.cli-layout-unificado .cli-fgroup label .req {
+  color: var(--orc-teal);
+}
+.cli-form-root.cli-layout-unificado .cli-icon-teal {
+  color: var(--orc-teal);
+}
+.cli-form-root.cli-layout-unificado #cadastro-empresa-avisos {
+  background: var(--orc-teal-light) !important;
+  border: 1px solid rgba(0, 192, 139, 0.35) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-form-root.cli-layout-unificado #cadastro-empresa-avisos ul {
+  color: var(--orc-text-muted);
+}
+
+/* DataTables — tema claro dentro do layout unificado */
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_length,
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_filter,
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_info,
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_paginate {
+  color: var(--orc-text-muted) !important;
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_length select,
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_filter input {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  -webkit-text-fill-color: var(--orc-text) !important;
+  color-scheme: light !important;
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_length select option {
+  background: var(--orc-bg-card);
+  color: var(--orc-text);
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper label {
+  color: var(--orc-text-muted) !important;
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper .paginate_button {
+  color: var(--orc-text-muted) !important;
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper .paginate_button.current,
+.cli-root.cli-layout-unificado .dataTables_wrapper .paginate_button.current:hover {
+  background: var(--orc-teal-light) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper .paginate_button:hover {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-text) !important;
+}
+
+.cli-root.cli-layout-unificado table.dataTable {
+  background: var(--orc-bg-card) !important;
+}
+.cli-root.cli-layout-unificado table.dataTable thead th,
+.cli-root.cli-layout-unificado table.dataTable thead td {
+  background: var(--orc-bg-card) !important;
+  color: var(--orc-text-muted) !important;
+  border-bottom: 1px solid var(--orc-border) !important;
+}
+.cli-root.cli-layout-unificado table.dataTable tbody td {
+  background: var(--orc-bg-card) !important;
+  color: var(--orc-text) !important;
+  border-bottom: 1px solid var(--orc-border-light) !important;
+}
+.cli-root.cli-layout-unificado table.dataTable tbody tr:hover td {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-text) !important;
+}
+.cli-root.cli-layout-unificado table.dataTable.stripe tbody tr.even td,
+.cli-root.cli-layout-unificado table.dataTable tbody tr.even td {
+  background: var(--orc-bg-card) !important;
+}
+.cli-root.cli-layout-unificado table.dataTable tbody td .cli-name-main {
+  color: var(--orc-text) !important;
+}
+.cli-root.cli-layout-unificado table.dataTable tbody td .cli-td-doc,
+.cli-root.cli-layout-unificado table.dataTable tbody td .cli-td-email,
+.cli-root.cli-layout-unificado table.dataTable tbody td .cli-td-phone {
+  color: var(--orc-text) !important;
+}
+
+.cli-root.cli-layout-unificado .cli-btn-inativar,
+.cli-root.cli-layout-unificado .cli-btn-reativar {
+  color: var(--orc-teal-dark);
+}

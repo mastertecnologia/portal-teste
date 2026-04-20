@@ -4,7 +4,7 @@
  * @var string $name Slug sem .css (ex.: produtos-premium, pgm-action-buttons)
  */
 $name = $name ?? '';
-$allowed = ['produtos-premium', 'clientes-premium', 'orcamentos-premium', 'pgm-action-buttons', 'pgm-estoque'];
+$allowed = ['produtos-premium', 'clientes-premium', 'clientes-layout-unificado', 'orcamentos-premium', 'pgm-action-buttons', 'pgm-estoque'];
 if (!in_array($name, $allowed, true)) {
 	return;
 }

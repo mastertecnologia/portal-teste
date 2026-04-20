@@ -5,6 +5,7 @@
      */
     use Cake\Routing\Router;
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+    $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
     function Mask($mask, $str) {
         if ($str === null || $str === '') {
@@ -55,7 +56,7 @@
 ?>
 
 <div class="col-md-12 p-0">
-<div class="cli-root pgm-ds-pilot" data-pgm-ds-pilot="clientes-index">
+<div class="cli-root cli-layout-unificado pgm-ds-pilot" data-pgm-ds-pilot="clientes-index">
 
     <!-- ── KPI Strip (sem topbar textual — alinhado ao mock clientes-lista-layout-unificado) ── -->
     <div class="cli-kpi-strip cli-kpi-strip--list-lead">
@@ -81,7 +82,8 @@
         </div>
     </div>
 
-    <!-- ── Table area ─────────────────────────────────────── -->
+    <!-- ── Table area (cartão lista — mock clientes-lista-layout-unificado) ── -->
+    <div class="cli-list-card">
     <div class="cli-table-wrap">
 
         <!-- Status toggle (Ativos / Inativos) -->
@@ -307,6 +309,7 @@
         </div>
 
     </div><!-- /cli-table-wrap -->
+    </div><!-- /cli-list-card -->
 </div><!-- /cli-root -->
 </div>
 
