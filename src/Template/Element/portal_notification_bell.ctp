@@ -163,20 +163,21 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 		var $btn = $('#pgmBellToggle');
 		var $panel = $('#pgmNotifPanel');
 		if (!$btn.length) return;
-		var off = $btn.offset();
 		var winH = $(window).height();
 		var scrollTop = $(window).scrollTop();
-		var left = off.left + $btn.outerWidth() + 8;
-		// Altura máxima: quase toda a janela visível
 		var maxH = winH - 40;
 		$panel.css('max-height', maxH + 'px');
-		// Posicionar no topo da janela visível + margem
+		var off = $btn.offset();
+		if (!off || typeof off.left === 'undefined' || isNaN(off.left)) {
+			$panel.css({ top: (scrollTop + 20) + 'px', left: 'auto', right: '20px' });
+			return;
+		}
+		var left = off.left + $btn.outerWidth() + 8;
 		var top = scrollTop + 20;
-		// Se sai da tela pela direita, abre à esquerda do botão
 		if (left + 340 > $(window).width()) {
 			left = off.left - 340 - 8;
 		}
-		$panel.css({ top: top + 'px', left: left + 'px' });
+		$panel.css({ top: top + 'px', left: left + 'px', right: 'auto' });
 	}
 
 	$(function() {
@@ -199,7 +200,7 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 
 		$(document).on('click', function(e) {
 			var $panel = $('#pgmNotifPanel');
-			if (!$(e.target).closest('#pgmNotifPanel, #pgmBellToggle').length) {
+			if (!$(e.target).closest('#pgmNotifPanel, #pgmBellToggle, #pgmSidebarMenuOpenNotif').length) {
 				$panel.removeClass('is-open');
 			}
 		});

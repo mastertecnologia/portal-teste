@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Pré-visualização — Sidebar PGM (staff)</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="dist/css/pages/pgm-sidebar-premium.css">
+	<style>
+		/* Só para este mock: layout + utilitários mínimos (o portal usa Bootstrap) */
+		*, *::before, *::after { box-sizing: border-box; }
+		html, body { height: 100%; margin: 0; }
+		body.layout-no-topbar {
+			font-family: "DM Sans", "Inter", system-ui, sans-serif;
+			background: #0b0f12;
+			color: #c7cede;
+		}
+		.d-none { display: none !important; }
+		.preview-app {
+			display: flex;
+			height: 100vh;
+			overflow: hidden;
+		}
+		.preview-main {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			background: #0b0f12;
+			border-left: 1px solid rgba(255,255,255,0.06);
+		}
+		.preview-topbar {
+			height: 52px;
+			display: flex;
+			align-items: center;
+			padding: 0 20px;
+			border-bottom: 1px solid rgba(255,255,255,0.06);
+			background: #12161f;
+			font-size: 13px;
+			color: #8b94ab;
+		}
+		.preview-topbar strong { color: #f4f6fb; font-weight: 600; }
+		.preview-body {
+			flex: 1;
+			overflow: auto;
+			padding: 28px 32px;
+		}
+		.preview-card {
+			max-width: 640px;
+			padding: 22px;
+			background: #12161f;
+			border: 1px solid rgba(255,255,255,0.08);
+			border-radius: 10px;
+		}
+		.preview-card h1 {
+			margin: 0 0 8px;
+			font-size: 20px;
+			font-weight: 700;
+			color: #f4f6fb;
+		}
+		.preview-card p { margin: 0 0 14px; line-height: 1.55; font-size: 13px; }
+		.preview-card kbd {
+			background: #171b24;
+			border: 1px solid rgba(255,255,255,0.1);
+			padding: 1px 6px;
+			border-radius: 4px;
+			font-size: 11px;
+		}
+		.preview-hint {
+			margin-top: 16px;
+			padding: 12px 14px;
+			background: #171b24;
+			border: 1px solid rgba(255,255,255,0.1);
+			border-radius: 8px;
+			font-size: 12px;
+			color: #8b94ab;
+		}
+		/* Dropdown simples (sem Bootstrap) */
+		.preview-dd { position: relative; }
+		.preview-dd-menu {
+			display: none;
+			position: absolute;
+			left: 0;
+			bottom: 100%;
+			margin-bottom: 6px;
+			min-width: 220px;
+			background: #1a1d23;
+			border: 1px solid #2d333b;
+			border-radius: 8px;
+			box-shadow: 0 8px 24px rgba(0,0,0,.45);
+			z-index: 2000;
+			padding: 6px 0;
+		}
+		.preview-dd.open .preview-dd-menu { display: block; }
+		.preview-dd-item {
+			display: block;
+			padding: 8px 14px;
+			color: #c7cede;
+			text-decoration: none;
+			font-size: 13px;
+		}
+		.preview-dd-item:hover { background: rgba(255,255,255,0.06); color: #f4f6fb; }
+		.preview-dd-item.preview-dd-item--danger { color: #f85149; }
+		.preview-dd-item.preview-dd-item--danger:hover { color: #ff7b72; }
+		.preview-dd-divider {
+			height: 1px;
+			margin: 6px 0;
+			background: #2d333b;
+		}
+		/* Painel notificações (mock — mesmos IDs que o portal para validar posicionamento) */
+		.pgm-notif-panel-fixed {
+			display: none;
+			position: fixed;
+			z-index: 9999;
+			width: 340px;
+			max-height: 420px;
+			overflow-y: auto;
+			background: #161b22;
+			border: 1px solid #30363d;
+			border-radius: 10px;
+			box-shadow: 0 8px 24px rgba(0,0,0,.45);
+			font-family: "DM Sans", sans-serif;
+		}
+		.pgm-notif-panel-fixed.is-open { display: block; }
+		.pgm-notif-panel-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 10px 14px;
+			border-bottom: 1px solid #21262d;
+			color: #8b949e;
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: .06em;
+		}
+		.pgm-portal-notif-item {
+			display: block;
+			padding: 10px 14px;
+			border-bottom: 1px solid #21262d;
+			color: #c9d1d9;
+			font-size: 12px;
+			text-decoration: none;
+		}
+		.pgm-portal-notif-item:hover { background: #1c2230; color: #e6edf3; }
+		.pgm-portal-notif-item.unread { border-left: 3px solid #1d9e75; padding-left: 11px; }
+		.pgm-nt-title { font-weight: 600; color: #e6edf3; margin-bottom: 2px; }
+		.pgm-nt-meta { font-size: 10px; color: #6e7681; margin-top: 4px; }
+		.pgm-portal-notif-bell { position: relative; display: inline-block; }
+		.pgm-portal-notif-bell .pgm-bell-badge {
+			position: absolute;
+			top: -4px;
+			right: -4px;
+			min-width: 18px;
+			height: 18px;
+			padding: 0 5px;
+			border-radius: 9px;
+			font-size: 10px;
+			font-weight: 700;
+			line-height: 18px;
+			text-align: center;
+			background: #f85149;
+			color: #fff;
+		}
+	</style>
+</head>
+<body class="layout-no-topbar">
+
+<div class="preview-app">
+	<aside class="left-sidebar skin-pgm pgm-sidebar-shell" id="sidebar">
+		<div class="workspace">
+			<button class="workspace-btn" id="wsBtn" type="button" aria-expanded="false">
+				<div class="workspace-avatar" id="wsAvatar">PG</div>
+				<div class="workspace-info">
+					<div class="workspace-name" id="wsName">PGM Soluções em TI</div>
+					<div class="workspace-sub" id="wsSub">ERP · Matriz</div>
+				</div>
+				<svg class="workspace-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+			</button>
+			<div class="workspace-dropdown" id="wsDropdown">
+				<div class="workspace-search">
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+					<input type="text" id="wsSearchInput" placeholder="Buscar empresa..." autocomplete="off">
+				</div>
+				<div id="wsList">
+					<button type="button" class="workspace-item active" data-id="1" data-name="PGM Soluções em TI" data-initials="PG">
+						<div class="workspace-item-avatar">PG</div>
+						<span class="workspace-item-name">PGM Soluções em TI</span>
+						<svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+					</button>
+					<button type="button" class="workspace-item" data-id="2" data-name="PGM Filial Bento" data-initials="PB">
+						<div class="workspace-item-avatar">PB</div>
+						<span class="workspace-item-name">PGM Filial Bento</span>
+						<svg class="workspace-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="search-wrap">
+			<div class="search">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+				<input id="pesquisa-funcoes" class="search-input" type="text" placeholder="Buscar..." autocomplete="off">
+				<span class="kbd"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+			</div>
+			<ul class="pgm-sb-typeahead htmlpesquisa list-unstyled m-0 p-0"></ul>
+			<div class="pgm-sidebar-hidden-dt-host" aria-hidden="true">
+				<div id="pgm-sidebar-functions-search"></div>
+				<div id="pgm-sidebar-dt-host" class="pgm-sidebar-dt-host pgm-sidebar-dt-host--pending"></div>
+			</div>
+		</div>
+
+		<div class="scroll-sidebar">
+			<nav class="sidebar-nav">
+				<ul id="sidebarnav" class="pgm-sidebar-nav-flat nav">
+					<li class="nav-section-flat">
+						<div class="nav-section-items" style="padding: 2px 0;">
+							<a href="#dashboard" class="pgm-nav-link nav-item waves-effect waves-dark active" data-label="Dashboard"><span class="pgm-nav-lucide" data-lucide="layout-dashboard" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Dashboard</span></a>
+							<a href="#clientes" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Clientes"><span class="pgm-nav-lucide" data-lucide="users" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Clientes</span></a>
+							<a href="#produtos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Produtos"><span class="pgm-nav-lucide" data-lucide="package" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Produtos</span></a>
+							<a href="#servicedesk" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Service Desk"><span class="pgm-nav-lucide" data-lucide="headphones" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Service Desk</span><span class="badge badge-danger hide-menu">12</span></a>
+							<a href="#historico" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Histórico"><span class="pgm-nav-lucide" data-lucide="history" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Histórico</span></a>
+						</div>
+					</li>
+					<li class="nav-section">
+						<div class="nav-section-label" role="button" tabindex="0" aria-expanded="true"><span>Ordens de Serviço</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#os-nova" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Nova ordem"><span class="pgm-nav-lucide" data-lucide="file-plus" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Nova ordem</span></a>
+							<a href="#os-lista" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Ordens"><span class="pgm-nav-lucide" data-lucide="clipboard-list" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Ordens de Serviço</span></a>
+							<a href="#filas" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Filas"><span class="pgm-nav-lucide" data-lucide="layers" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Filas / técnicos</span><span class="badge badge-warning hide-menu">7</span></a>
+							<a href="#os-relatorios" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Relatórios OS"><span class="pgm-nav-lucide" data-lucide="bar-chart-2" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Relatórios</span></a>
+						</div>
+					</li>
+					<li class="nav-section">
+						<div class="nav-section-label" role="button" tabindex="0"><span>Contratos</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#modelos" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Modelos"><span class="pgm-nav-lucide" data-lucide="file-code" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Modelos</span></a>
+							<a href="#faturas-contr" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Faturas"><span class="pgm-nav-lucide" data-lucide="receipt" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Faturas</span><span class="badge badge-accent hide-menu">3</span></a>
+						</div>
+					</li>
+					<li class="nav-section">
+						<div class="nav-section-label" role="button" tabindex="0"><span>Financeiro</span><svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+						<div class="nav-section-items">
+							<a href="#fin-painel" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Painel fin."><span class="pgm-nav-lucide" data-lucide="pie-chart" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Painel</span></a>
+							<a href="#fin-cr" class="pgm-nav-link nav-item waves-effect waves-dark" data-label="Contas a receber"><span class="pgm-nav-lucide" data-lucide="arrow-down-circle" aria-hidden="true"></span><span class="nav-item-label hide-menu"> Contas a receber</span></a>
+						</div>
+					</li>
+				</ul>
+			</nav>
+		</div>
+
+		<div class="pgm-sidebar-footer sidebar-footer">
+			<div class="user-profile user-profile--footer">
+				<div class="user-pro-body preview-dd" id="userDd">
+					<a href="javascript:void(0)" class="dropdown-toggle u-dropdown link user text-white d-flex align-items-center" id="userDdToggle" role="button" aria-expanded="false">
+						<div class="user-avatar pgm-user-av">PM</div>
+						<div class="user-info pgm-sf-user-info hide-menu">
+							<div class="user-name pgm-sf-user-name">Paulo Machado</div>
+							<div class="user-role pgm-sf-user-role">Administrador</div>
+						</div>
+						<span class="caret hide-menu pgm-sidebar-user-caret" aria-hidden="true"></span>
+					</a>
+					<div class="preview-dd-menu" id="userDdMenu" role="menu">
+						<a class="preview-dd-item" href="#perfil">Alterar perfil</a>
+						<a class="preview-dd-item" href="#senha">Alterar senha</a>
+						<a class="preview-dd-item" href="#" id="pgmSidebarMenuOpenNotif">Notificações</a>
+						<a class="preview-dd-item" href="#remoto">Acesso remoto</a>
+						<a class="preview-dd-item" href="#2fa">Verificação de login</a>
+						<a class="preview-dd-item" href="#admin">Painel administrativo</a>
+						<div class="preview-dd-divider" role="separator"></div>
+						<a class="preview-dd-item preview-dd-item--danger" href="#logout">Sair</a>
+					</div>
+				</div>
+			</div>
+			<div class="pgm-sidebar-notif-host" id="pgmSidebarNotifHost" aria-hidden="true">
+				<div class="pgm-portal-notif-bell" id="pgmPortalNotifBell">
+					<a href="#" class="pgm-bell-btn" title="Notificações" id="pgmBellToggle"><i class="fas fa-bell"></i><span class="pgm-bell-badge" id="pgmBellBadge">12</span></a>
+				</div>
+			</div>
+			<div class="pgm-notif-panel-fixed" id="pgmNotifPanel" aria-hidden="true">
+				<div class="pgm-notif-panel-header"><span>Notificações</span><span style="font-size:11px;color:#5cdbc0;">Mock</span></div>
+				<div id="pgmNotifListBody">
+					<a href="#" class="pgm-portal-notif-item unread"><div class="pgm-nt-title">Ordem de serviço #4821</div><div class="pgm-nt-meta">Há 5 min · Service Desk</div></a>
+					<a href="#" class="pgm-portal-notif-item"><div class="pgm-nt-title">Fatura aprovada</div><div class="pgm-nt-meta">Ontem · Financeiro</div></a>
+				</div>
+			</div>
+			<a href="javascript:void(0)" class="sidebartoggler pgm-sidebar-collapse-btn icon-btn" title="Colapsar sidebar" aria-label="Recolher menu lateral"><span data-lucide="chevrons-left" class="pgm-nav-lucide" id="collapseIcon" aria-hidden="true"></span></a>
+		</div>
+	</aside>
+
+	<main class="preview-main">
+		<div class="preview-topbar">
+			<span id="bcCrumb">Pré-visualização</span>
+			&nbsp;›&nbsp;
+			<strong id="bcTitle">Sidebar staff</strong>
+		</div>
+		<div class="preview-body">
+			<div class="preview-card">
+				<h1 id="pageTitle">Sidebar staff</h1>
+				<p>Esta página usa o mesmo CSS do ficheiro <kbd>dist/css/pages/pgm-sidebar-premium.css</kbd> carregado a partir da pasta <strong>webroot</strong>. Serve para validar espaçamentos, cores teal, grupos colapsáveis, workspace, busca e modo <strong>mini-sidebar</strong> sem precisar de sessão CakePHP.</p>
+				<p><strong>Como abrir:</strong> com o servidor a servir <code>webroot</code> como raiz (ex.: <code>bin/cake server -p 8765</code> na raiz do projeto), abra <kbd>/sidebar-preview.html</kbd>. Se abrir o ficheiro em <code>file://</code>, o CSS pode falhar conforme o browser; prefira URL HTTP.</p>
+				<div class="preview-hint">
+					<strong>Dica:</strong> clique nos itens do menu para atualizar o título; use o botão de colapsar para ver tooltips; use <kbd>Ctrl</kbd>+<kbd>K</kbd> na busca; clique no nome da empresa para o dropdown; no rodapé, <strong>Perfil / notificações / sair</strong> estão só no menu ao clicar no nome do utilizador (sem fila de ícones).
+				</div>
+			</div>
+		</div>
+	</main>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+	function lucideRefresh() {
+		if (window.lucide && lucide.createIcons) lucide.createIcons();
+	}
+	lucideRefresh();
+
+	/* Workspace */
+	var wsBtn = document.getElementById('wsBtn');
+	var wsDropdown = document.getElementById('wsDropdown');
+	var wsName = document.getElementById('wsName');
+	var wsAvatar = document.getElementById('wsAvatar');
+	var wsSearchInput = document.getElementById('wsSearchInput');
+	if (wsBtn && wsDropdown) {
+		wsBtn.addEventListener('click', function (e) {
+			e.stopPropagation();
+			var on = wsDropdown.classList.toggle('open');
+			wsBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
+			if (on && wsSearchInput) setTimeout(function () { wsSearchInput.focus(); }, 30);
+		});
+		document.addEventListener('click', function (e) {
+			if (!wsDropdown.contains(e.target) && !wsBtn.contains(e.target)) {
+				wsDropdown.classList.remove('open');
+				wsBtn.setAttribute('aria-expanded', 'false');
+			}
+		});
+	}
+	document.querySelectorAll('.workspace-item').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			document.querySelectorAll('.workspace-item').forEach(function (b) { b.classList.remove('active'); });
+			btn.classList.add('active');
+			if (wsName) wsName.textContent = btn.getAttribute('data-name') || '';
+			if (wsAvatar) wsAvatar.textContent = btn.getAttribute('data-initials') || 'PG';
+			wsDropdown.classList.remove('open');
+			wsBtn.setAttribute('aria-expanded', 'false');
+			setNavMessage('Empresa', 'Selecionada: ' + (btn.getAttribute('data-name') || ''));
+		});
+	});
+	if (wsSearchInput) {
+		wsSearchInput.addEventListener('input', function () {
+			var q = (wsSearchInput.value || '').toLowerCase();
+			document.querySelectorAll('.workspace-item').forEach(function (item) {
+				var n = (item.getAttribute('data-name') || '').toLowerCase();
+				item.style.display = n.indexOf(q) !== -1 ? '' : 'none';
+			});
+		});
+	}
+
+	/* Grupos */
+	document.querySelectorAll('.nav-section-label').forEach(function (label) {
+		label.addEventListener('click', function () {
+			var sec = label.closest('.nav-section');
+			if (sec) sec.classList.toggle('collapsed');
+		});
+		label.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				var sec = label.closest('.nav-section');
+				if (sec) sec.classList.toggle('collapsed');
+			}
+		});
+	});
+
+	function expandAllNavSections() {
+		document.querySelectorAll('.nav-section.collapsed').forEach(function (sec) {
+			sec.classList.remove('collapsed');
+		});
+	}
+
+	/* Mini-sidebar (igual ideia do portal: classe no body) */
+	document.querySelectorAll('.sidebartoggler').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			document.body.classList.toggle('mini-sidebar');
+			if (document.body.classList.contains('mini-sidebar')) {
+				expandAllNavSections();
+			}
+			lucideRefresh();
+		});
+	});
+
+	/* Navegação mock */
+	function setNavMessage(crumb, title) {
+		var bcC = document.getElementById('bcCrumb');
+		var bcT = document.getElementById('bcTitle');
+		var pt = document.getElementById('pageTitle');
+		if (bcC) bcC.textContent = crumb;
+		if (bcT) bcT.textContent = title;
+		if (pt) pt.textContent = title;
+	}
+	document.querySelectorAll('a.pgm-nav-link.nav-item[href^="#"]').forEach(function (a) {
+		a.addEventListener('click', function (e) {
+			e.preventDefault();
+			document.querySelectorAll('a.pgm-nav-link.nav-item').forEach(function (x) { x.classList.remove('active'); });
+			a.classList.add('active');
+			var label = (a.getAttribute('data-label') || a.getAttribute('href') || 'Item').replace(/^#/, '');
+			setNavMessage('Menu', label);
+			if (location.hash !== a.getAttribute('href')) {
+				history.replaceState(null, '', a.getAttribute('href'));
+			}
+		});
+	});
+
+	/* Busca mock */
+	var mockHits = [
+		{ t: 'Clientes → index', h: '#clientes' },
+		{ t: 'Financeiro → Painel', h: '#fin-painel' },
+		{ t: 'Ordens de serviço → lista', h: '#os-lista' }
+	];
+	var pesq = document.getElementById('pesquisa-funcoes');
+	var listEl = document.querySelector('.htmlpesquisa');
+	function renderSearch(q) {
+		if (!listEl) return;
+		listEl.innerHTML = '';
+		if (!q || q.length < 2) return;
+		var qq = q.toLowerCase();
+		mockHits.filter(function (m) { return m.t.toLowerCase().indexOf(qq) !== -1; }).forEach(function (m) {
+			var li = document.createElement('li');
+			var a = document.createElement('a');
+			a.href = m.h;
+			a.className = 'link link-btn pgm-search-link';
+			a.textContent = m.t;
+			a.addEventListener('click', function (ev) {
+				ev.preventDefault();
+				setNavMessage('Busca', m.t);
+				listEl.innerHTML = '';
+				if (pesq) pesq.value = '';
+			});
+			li.appendChild(a);
+			listEl.appendChild(li);
+		});
+		if (!listEl.children.length) {
+			var empty = document.createElement('li');
+			empty.className = 'pgm-search-empty';
+			empty.textContent = 'Nenhum resultado (mock).';
+			listEl.appendChild(empty);
+		}
+	}
+	if (pesq) {
+		pesq.addEventListener('keyup', function () { renderSearch(pesq.value.trim()); });
+	}
+	document.addEventListener('keydown', function (e) {
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+			e.preventDefault();
+			if (pesq) pesq.focus();
+		}
+	});
+
+	/* Dropdown utilizador + notificações (mock: mesmo fluxo do portal) */
+	var userDd = document.getElementById('userDd');
+	var userToggle = document.getElementById('userDdToggle');
+	var notifPanel = document.getElementById('pgmNotifPanel');
+	var bellToggle = document.getElementById('pgmBellToggle');
+	function positionNotifPanel() {
+		if (!notifPanel || !bellToggle) return;
+		var r = bellToggle.getBoundingClientRect();
+		if (!r.width && !r.height) {
+			notifPanel.style.top = '72px';
+			notifPanel.style.right = '20px';
+			notifPanel.style.left = 'auto';
+			return;
+		}
+		var top = Math.max(12, r.bottom + 8);
+		var left = Math.min(window.innerWidth - notifPanel.offsetWidth - 12, r.left);
+		notifPanel.style.top = top + 'px';
+		notifPanel.style.left = Math.max(12, left) + 'px';
+		notifPanel.style.right = 'auto';
+	}
+	function setNotifPanel(open) {
+		if (!notifPanel) return;
+		if (open) {
+			positionNotifPanel();
+			notifPanel.classList.add('is-open');
+			notifPanel.setAttribute('aria-hidden', 'false');
+		} else {
+			notifPanel.classList.remove('is-open');
+			notifPanel.setAttribute('aria-hidden', 'true');
+		}
+	}
+	if (userDd && userToggle) {
+		userToggle.addEventListener('click', function (e) {
+			e.preventDefault();
+			userDd.classList.toggle('open');
+		});
+		document.addEventListener('click', function (e) {
+			if (!userDd.contains(e.target)) userDd.classList.remove('open');
+			if (!notifPanel || !notifPanel.classList.contains('is-open')) return;
+			var t = e.target;
+			if (notifPanel.contains(t) || (bellToggle && bellToggle.contains(t)) || (t && t.id === 'pgmSidebarMenuOpenNotif')) return;
+			setNotifPanel(false);
+		});
+		window.addEventListener('resize', function () {
+			if (notifPanel && notifPanel.classList.contains('is-open')) positionNotifPanel();
+		});
+		userDd.querySelectorAll('.preview-dd-item').forEach(function (a) {
+			a.addEventListener('click', function (e) {
+				if (a.id === 'pgmSidebarMenuOpenNotif') {
+					e.preventDefault();
+					userDd.classList.remove('open');
+					setNotifPanel(true);
+					return;
+				}
+				userDd.classList.remove('open');
+				setNavMessage('Utilizador', a.textContent.trim());
+			});
+		});
+	}
+	if (bellToggle && notifPanel) {
+		bellToggle.addEventListener('click', function (e) {
+			e.preventDefault();
+			var on = !notifPanel.classList.contains('is-open');
+			setNotifPanel(on);
+		});
+	}
+
+	/* Hash inicial */
+	if (location.hash) {
+		var t = document.querySelector('a.pgm-nav-link.nav-item[href="' + location.hash + '"]');
+		if (t) t.click();
+	}
+})();
+</script>
+</body>
+</html>
