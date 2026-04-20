@@ -512,6 +512,11 @@
 
 		var trendChartEl = document.getElementById('dashPgmTrendChart');
 		if (window.Chart && trendChartEl) {
+			var dashPgmRoot = trendChartEl.closest('.dash-pgm');
+			var dashPgmStyles = dashPgmRoot ? window.getComputedStyle(dashPgmRoot) : null;
+			var chartSurfaceColor = dashPgmStyles ? (dashPgmStyles.getPropertyValue('--surface').trim() || '#ffffff') : '#ffffff';
+			var chartGridColor = dashPgmStyles ? (dashPgmStyles.getPropertyValue('--border').trim() || '#e5e4e0') : '#e5e4e0';
+			var chartTickColor = dashPgmStyles ? (dashPgmStyles.getPropertyValue('--text-muted').trim() || '#6b6a65') : '#6b6a65';
 			var labels = <?= json_encode($trendLabels) ?>;
 			var opened = <?= json_encode($trendOpened) ?>;
 			var closed = <?= json_encode($trendClosed) ?>;
@@ -529,8 +534,8 @@
 					maintainAspectRatio: false,
 					plugins: { legend: { display: false } },
 					scales: {
-						x: { grid: { color: '#21262d' }, ticks: { color: '#484f58', maxTicksLimit: 7 } },
-						y: { grid: { color: '#21262d' }, ticks: { color: '#484f58', stepSize: 2 }, min: 0 }
+						x: { grid: { color: chartGridColor }, ticks: { color: chartTickColor, maxTicksLimit: 7 } },
+						y: { grid: { color: chartGridColor }, ticks: { color: chartTickColor, stepSize: 2 }, min: 0 }
 					},
 					elements: { line: { borderWidth: 1.5 } }
 				},
@@ -542,7 +547,7 @@
 						var h = chart.height;
 						if (w <= 0 || h <= 0) return;
 						ctx.save();
-						ctx.fillStyle = '#161b22';
+						ctx.fillStyle = chartSurfaceColor;
 						ctx.fillRect(0, 0, w, h);
 						ctx.restore();
 					}
