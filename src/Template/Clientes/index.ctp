@@ -56,7 +56,7 @@
 ?>
 
 <div class="col-md-12 p-0">
-<div class="cli-root cli-layout-unificado pgm-ds-pilot" data-pgm-ds-pilot="clientes-index">
+<div class="cli-root cli-layout-unificado">
 
     <!-- ── KPI Strip (sem topbar textual — alinhado ao mock clientes-lista-layout-unificado) ── -->
     <div class="cli-kpi-strip cli-kpi-strip--list-lead">
@@ -84,28 +84,27 @@
 
     <!-- ── Table area (cartão lista — mock clientes-lista-layout-unificado) ── -->
     <div class="cli-list-card">
-    <div class="cli-table-wrap">
 
-        <!-- Status toggle (Ativos / Inativos) -->
+        <!-- Status toggle (Ativos / Inativos) — mesma ordem do mock: barra de filtros antes da área da tabela -->
         <div class="cli-filter-bar" id="cli-filter-bar">
             <div class="cli-pill-group" id="cli-status-pills">
                 <button class="cli-pill active" data-status="ativos">
-                    <i class="fas fa-circle pgm-pill-dot" aria-hidden="true"></i> Ativos
+                    <i class="fas fa-circle" style="font-size:6px;" aria-hidden="true"></i> Ativos
                     <span class="cnt"><?= $cntAPJ + $cntAPF ?></span>
                 </button>
                 <button class="cli-pill" data-status="inativos">
-                    <i class="fas fa-circle pgm-pill-dot pgm-pill-dot--danger" aria-hidden="true"></i> Inativos
+                    <i class="fas fa-circle cli-pill-dot--danger" style="font-size:6px;" aria-hidden="true"></i> Inativos
                     <span class="cnt"><?= $cntIPJ + $cntIPF ?></span>
                 </button>
             </div>
             <div class="cli-filter-divider"></div>
             <div class="cli-pill-group" id="cli-type-pills">
                 <button class="cli-pill active" data-type="pj">
-                    <i class="fas fa-building pgm-icon-xs" aria-hidden="true"></i> Pessoa Jurídica
+                    <i class="fas fa-building" style="font-size:10px;" aria-hidden="true"></i> Pessoa Jurídica
                     <span class="cnt" id="cnt-pj"><?= $cntAPJ ?></span>
                 </button>
                 <button class="cli-pill" data-type="pf">
-                    <i class="fas fa-user pgm-icon-xs" aria-hidden="true"></i> Pessoa Física
+                    <i class="fas fa-user" style="font-size:10px;" aria-hidden="true"></i> Pessoa Física
                     <span class="cnt" id="cnt-pf"><?= $cntAPF ?></span>
                 </button>
             </div>
@@ -120,6 +119,8 @@
             </div>
         </div>
 
+    <div class="cli-table-wrap">
+
         <!-- ── Tables ─── -->
 
         <!-- ATIVOS PJ -->
@@ -129,11 +130,11 @@
                     <thead>
                         <tr>
                             <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th class="cli-col-rs">Razão Social</th>
-                            <th class="cli-col-doc">CNPJ</th>
-                            <th class="cli-col-mail">E-mail</th>
-                            <th class="cli-col-phone">Telefone</th>
-                            <th class="cli-col-icon" aria-hidden="true"></th>
+                            <th class="cli-col-rs" style="width:42%">Razão Social</th>
+                            <th class="cli-col-doc" style="width:18%">CNPJ</th>
+                            <th class="cli-col-mail" style="width:24%">E-mail</th>
+                            <th class="cli-col-phone" style="width:14%">Telefone</th>
+                            <th class="cli-col-icon" style="width:2%" aria-hidden="true"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -161,7 +162,7 @@
                                     ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();']
                                 ) ?>
                                 <?php endif; ?>
-                                <span class="cli-td-arrow-chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
                             </td>
                         </tr>
                         <?php $idxPjA++; endforeach; ?>
@@ -177,11 +178,11 @@
                     <thead>
                         <tr>
                             <th class="cli-dt-rank-col" data-orderable="true" aria-hidden="true"></th>
-                            <th class="cli-col-rs">Nome</th>
-                            <th class="cli-col-doc">CPF</th>
-                            <th class="cli-col-mail">E-mail</th>
-                            <th class="cli-col-phone">Telefone</th>
-                            <th class="cli-col-icon" aria-hidden="true"></th>
+                            <th class="cli-col-rs" style="width:42%">Nome</th>
+                            <th class="cli-col-doc" style="width:18%">CPF</th>
+                            <th class="cli-col-mail" style="width:24%">E-mail</th>
+                            <th class="cli-col-phone" style="width:14%">Telefone</th>
+                            <th class="cli-col-icon" style="width:2%" aria-hidden="true"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -209,7 +210,7 @@
                                     ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();']
                                 ) ?>
                                 <?php endif; ?>
-                                <span class="cli-td-arrow-chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
                             </td>
                         </tr>
                         <?php $idxPfA++; endforeach; ?>
@@ -574,7 +575,7 @@
             "sLoadingRecords":"Carregando...",
             "oPaginate": { "sFirst":"<<","sLast":">>","sNext":">","sPrevious":"<" }
         },
-        "dom": '<"d-flex justify-content-between align-items-center"lf>rt<"d-flex justify-content-between align-items-center"ip>',
+        "dom": 'rt<"cli-table-footer cli-dt-bottom w-100 d-flex justify-content-between align-items-center flex-wrap"lip>',
     };
 
     if (typeof $.fn.dataTable === 'undefined') {

@@ -315,9 +315,51 @@
 }
 .cli-layout-unificado .cli-td-arrow {
   color: var(--orc-text-hint);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .cli-layout-unificado .cli-table tbody tr:hover .cli-td-arrow {
   color: var(--orc-teal);
+}
+
+/* Rodapé da lista — espelho de .cli-table-footer no mock HTML */
+.cli-root.cli-layout-unificado .cli-table-footer.cli-dt-bottom {
+  padding: 12px 18px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--orc-text-muted);
+  background: var(--orc-bg-card);
+  border-top: 1px solid var(--orc-border);
+  box-sizing: border-box;
+  gap: 12px;
+}
+.cli-root.cli-layout-unificado .cli-table-footer .dataTables_length,
+.cli-root.cli-layout-unificado .cli-table-footer .dataTables_info,
+.cli-root.cli-layout-unificado .cli-table-footer .dataTables_paginate {
+  padding: 0 !important;
+  margin: 0 !important;
+  color: var(--orc-text-muted) !important;
+  font-size: 12px;
+  font-weight: 500;
+}
+.cli-root.cli-layout-unificado .cli-table-footer .dataTables_paginate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.cli-root.cli-layout-unificado .cli-table-footer .paginate_button {
+  padding: 4px 10px !important;
+  border-radius: var(--orc-radius-sm) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+.cli-root.cli-layout-unificado .dataTables_wrapper .dataTables_filter {
+  display: none !important;
 }
 
 /* Cadastro (add) — secções e inputs no tema claro */
@@ -411,6 +453,10 @@
 }
 .cli-form-root.cli-layout-unificado .cli-form-footer-left {
   color: var(--orc-text-muted);
+}
+.cli-form-root.cli-layout-unificado .cli-config-check-slot {
+  padding-top: 22px;
+  box-sizing: border-box;
 }
 .cli-form-root.cli-layout-unificado .cli-req,
 .cli-form-root.cli-layout-unificado .cli-fgroup label .req {

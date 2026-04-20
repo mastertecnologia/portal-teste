@@ -12,6 +12,7 @@ class PgmAssetsController extends AppController
 	protected static $allowedCss = [
 		'produtos-premium' => 'produtos-premium.css',
 		'clientes-premium' => 'clientes-premium.css',
+		'clientes-layout-unificado' => 'clientes-layout-unificado.css',
 		'orcamentos-premium' => 'orcamentos-premium.css',
 		'pgm-action-buttons' => 'pgm-action-buttons.css',
 		'pgm-estoque' => 'pgm-estoque.css',
@@ -42,6 +43,7 @@ class PgmAssetsController extends AppController
 		$map = [
 			'produtos-premium.css' => 'produtos-premium',
 			'clientes-premium.css' => 'clientes-premium',
+			'clientes-layout-unificado.css' => 'clientes-layout-unificado',
 			'orcamentos-premium.css' => 'orcamentos-premium',
 			'pgm-action-buttons.css' => 'pgm-action-buttons',
 			'pgm-estoque.css' => 'pgm-estoque',
