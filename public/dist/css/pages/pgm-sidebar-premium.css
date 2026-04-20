@@ -86,17 +86,20 @@ html body .pgm-sidebar-shell .pgm-sidebar-sub {
 	margin-top: 4px !important;
 }
 
-/* Empresa — wrapper sem caixa; borda/surface só no bloco do select */
+/* Empresa — wrapper sem caixa; borda/surface só no bloco do select; alinhado às linhas do menu */
 html body .pgm-sidebar-shell .pgm-sidebar-workspace {
-	margin: 0 14px 12px !important;
+	margin: 0 14px 6px !important;
 	padding: 0 !important;
 	background: transparent !important;
 	border: none !important;
 	box-shadow: none !important;
 	flex-shrink: 0;
 }
+html body.layout-no-topbar .pgm-sidebar-shell .pgm-sidebar-workspace {
+	border-bottom: none !important;
+}
 html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-sidebar-company-box {
-	padding: 10px 12px !important;
+	padding: 4px 10px !important;
 	background: var(--pgm-sb-surface) !important;
 	border: 1px solid var(--pgm-sb-border) !important;
 	border-radius: 6px !important;
@@ -104,11 +107,21 @@ html body .pgm-sidebar-shell .pgm-sidebar-workspace .pgm-sidebar-company-box {
 	align-items: center !important;
 	flex-shrink: 0;
 }
-/* Uma só caixa: o shell dá borda ao select; aqui fica só o contorno do .pgm-sidebar-company-box */
+/* Uma só caixa: sem borda no select; altura fina como as entradas do menu */
 html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-select,
 html body .pgm-sidebar-shell .pgm-sidebar-company-box select#empresaSidebar {
 	border: none !important;
 	box-shadow: none !important;
+	min-height: 0 !important;
+	height: auto !important;
+	padding: 2px 22px 2px 2px !important;
+	font-size: 12px !important;
+	line-height: 1.25 !important;
+	background-position: right 6px center !important;
+}
+html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-single {
+	padding-right: 6px !important;
+	background-image: none !important;
 }
 html body .pgm-sidebar-shell .pgm-sidebar-company-box select.pgm-empresa-select:focus,
 html body .pgm-sidebar-shell .pgm-sidebar-company-box select#empresaSidebar:focus {
@@ -124,12 +137,13 @@ html body .pgm-sidebar-shell .pgm-empresa-select {
 	border: none !important;
 	color: var(--pgm-sb-text-muted) !important;
 	border-radius: 0 !important;
-	font-size: 11px !important;
+	font-size: 12px !important;
 	height: auto !important;
-	min-height: 28px !important;
+	min-height: 0 !important;
 	padding: 0 4px 0 0 !important;
 	flex: 1 !important;
 	box-shadow: none !important;
+	line-height: 1.25 !important;
 }
 html body .pgm-sidebar-shell .pgm-empresa-select:focus {
 	color: var(--pgm-sb-text-main) !important;
