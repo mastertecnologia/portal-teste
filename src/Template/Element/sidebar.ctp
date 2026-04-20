@@ -497,16 +497,6 @@
 				</li>
 				<?php endif; ?>
 
-				<li id="mini-logout" class="<?= $sidebar != 'mini-sidebar' ? 'd-none' : '' ?> nav-section-flat">
-					<div class="nav-section-items" style="padding: 2px 0;">
-						<?= $this->Html->link(
-							'<span class="pgm-nav-lucide" data-lucide="log-out" aria-hidden="true"></span><span class="nav-item-label hide-menu">Sair</span>',
-							'/users/logout',
-							['class' => 'pgm-nav-link nav-item waves-effect waves-dark pgm-nav-link--danger', 'escape' => false, 'data-label' => 'Sair']
-						) ?>
-					</div>
-				</li>
-
 			</ul>
 		</nav>
 	</div>
