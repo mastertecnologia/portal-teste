@@ -56,7 +56,12 @@
 
 	/* Secções colapsáveis: abertas só na rota atual (PHP); persistência manual em localStorage (JS). */
 	$pgmSbOpenOrdens = $osIndexActive || $osAddActive || (bool)($queuesAtendimentoActive ?? '') || $relatoriosOsActive;
-	$pgmSbOpenContratos = $advMgmtAct || $advTplAct || $advInvAct;
+	$pgmSbOpenContratos = $advMgmtAct || $advTplAct || $advInvAct || (bool)($faturasActive ?? '');
+	$pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
+	$pgmSbOpenPlanner = (bool)($visitasActive ?? '');
+	$pgmSbOpenCofre = (bool)($senhasActive ?? '');
+	$pgmSbOpenCadastros = (bool)($clientesActive ?? '') || (bool)($produtosActive ?? '');
+	$pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive;
 	$pgmSbOpenComercial = (bool)($orcamentosActive ?? '');
 	$pgmSbOpenFaturamento = (bool)($prefaturamentoActive ?? '') || (bool)($faturamentoActive ?? '');
 	$pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
@@ -209,24 +214,48 @@
 						<?php if (($sg['dashboard'] ?? true)) : ?>
 						<?= $pgmSbLink('layout-dashboard', ' Dashboard', ['controller' => 'Users', 'action' => 'dashboard'], ['aria-label' => 'Dashboard'], (bool)($dashboard ?? ''), '', 'Dashboard') ?>
 						<?php endif; ?>
+					</div>
+				</li>
 
+				<?php
+				$sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true);
+				if ($sgCadGrp) :
+				?>
+				<li class="nav-section<?= $pgmSbOpenCadastros ? '' : ' collapsed' ?>" data-pgm-nav-section="cadastros">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenCadastros ? 'true' : 'false' ?>">
+						<span>Cadastros</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
 						<?php if (($sg['clientes'] ?? true)) : ?>
 						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], (bool)($clientesActive ?? ''), '', 'Clientes') ?>
 						<?php endif; ?>
-
 						<?php if (($sg['produtos'] ?? true)) : ?>
 						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
 						<?php endif; ?>
+					</div>
+				</li>
+				<?php endif; ?>
 
+				<?php
+				$sgIncGrp = ($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true);
+				if ($sgIncGrp) :
+				?>
+				<li class="nav-section<?= $pgmSbOpenIncidentes ? '' : ' collapsed' ?>" data-pgm-nav-section="gestao-incidentes">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenIncidentes ? 'true' : 'false' ?>">
+						<span>Gestão de Incidentes</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
 						<?php if (($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('headphones', ' Service Desk', ['controller' => 'Servicedesk', 'action' => 'index'], ['target' => '_blank', 'rel' => 'noopener noreferrer'], $ticketsServicedeskActive, '<span class="badge badge-danger hide-menu">12</span>', 'Service Desk') ?>
 						<?php endif; ?>
-
 						<?php if (($sg['tickets_historico'] ?? true)) : ?>
 						<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], [], $ticketsHistoricoActive, '', 'Histórico') ?>
 						<?php endif; ?>
 					</div>
 				</li>
+				<?php endif; ?>
 
 				<?php
 				$sgOsGrp = ($sg['ordensservico_list'] ?? true) || ($roleNav === 0 && ($sg['ordensservico_nova'] ?? true))
@@ -264,11 +293,12 @@
 				<?php endif; ?>
 
 				<?php
-				$sgContrGrp = $roleNav === 0 && (
+				$sgAdvContr = $roleNav === 0 && (
 					($sg['advanced_module_modelos'] ?? true)
 					|| ($sg['advanced_module_faturas'] ?? true)
 					|| ($sg['advanced_module_gestao'] ?? true)
 				);
+				$sgContrGrp = $sgAdvContr || ($sg['faturas_locacao'] ?? true);
 				if ($sgContrGrp) :
 				?>
 				<li class="nav-section<?= $pgmSbOpenContratos ? '' : ' collapsed' ?>" data-pgm-nav-section="contratos">
@@ -285,6 +315,9 @@
 						<?php endif; ?>
 						<?php if (($sg['advanced_module_faturas'] ?? true)) : ?>
 						<?= $pgmSbLink('receipt', ' Faturas', '/modulo-avancado/faturas', [], $advInvAct, '<span class="badge badge-accent hide-menu">3</span>', 'Faturas') ?>
+						<?php endif; ?>
+						<?php if (($sg['faturas_locacao'] ?? true)) : ?>
+						<?= $pgmSbLink('truck', ' Locação', ['controller' => 'Faturas', 'action' => 'index'], [], (bool)($faturasActive ?? ''), '', 'Locação') ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -420,33 +453,49 @@
 				</li>
 				<?php endif; ?>
 
-				<li class="nav-section-flat">
-					<div class="nav-section-items" style="padding: 2px 0;">
-						<?php if (($sg['visitas_agenda'] ?? true)) : ?>
-						<?= $pgmSbLink('calendar', ' Agenda', ['controller' => 'Visitas', 'action' => 'calendario'], [], (bool)($visitasActive ?? ''), '', 'Agenda') ?>
-						<?php endif; ?>
-
-						<?php if (($sg['faturas_locacao'] ?? true)) : ?>
-						<?= $pgmSbLink('truck', ' Locação', ['controller' => 'Faturas', 'action' => 'index'], [], (bool)($faturasActive ?? ''), '', 'Locação') ?>
-						<?php endif; ?>
-
-						<?php if (($sg['bancosenhas'] ?? true)) : ?>
-						<?= $pgmSbLink('lock', ' Banco de Senhas', ['controller' => 'Bancosenhas', 'action' => 'index'], [], (bool)($senhasActive ?? ''), '', 'Banco de Senhas') ?>
-						<?php endif; ?>
-
-						<?php
-						$sgRelSec = ($sg['relatorios_painel'] ?? true) || ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true));
-						if ($sgRelSec) :
-						?>
-							<?php if (($sg['relatorios_painel'] ?? true)) : ?>
+				<?php
+				$sgRelSec = ($sg['relatorios_painel'] ?? true) || ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true));
+				if ($sgRelSec) :
+				?>
+				<li class="nav-section<?= $pgmSbOpenIndicadores ? '' : ' collapsed' ?>" data-pgm-nav-section="indicadores">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenIndicadores ? 'true' : 'false' ?>">
+						<span>Indicadores</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
+						<?php if (($sg['relatorios_painel'] ?? true)) : ?>
 						<?= $pgmSbLink('pie-chart', ' Painel e indicadores', ['controller' => 'Relatorios', 'action' => 'index'], [], $relatoriosPainelActive, '', 'Painel e indicadores') ?>
-							<?php endif; ?>
-							<?php if ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true)) : ?>
+						<?php endif; ?>
+						<?php if ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true)) : ?>
 						<?= $pgmSbLink('trending-up', ' Indicadores avançados', '/modulo-avancado/indicadores', [], $relatoriosIndicadoresAdvActive, '', 'Indicadores avançados') ?>
-							<?php endif; ?>
 						<?php endif; ?>
 					</div>
 				</li>
+				<?php endif; ?>
+
+				<?php if (($sg['visitas_agenda'] ?? true)) : ?>
+				<li class="nav-section<?= $pgmSbOpenPlanner ? '' : ' collapsed' ?>" data-pgm-nav-section="planner">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenPlanner ? 'true' : 'false' ?>">
+						<span>Planner</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
+						<?= $pgmSbLink('calendar', ' Agenda', ['controller' => 'Visitas', 'action' => 'calendario'], [], (bool)($visitasActive ?? ''), '', 'Agenda') ?>
+					</div>
+				</li>
+				<?php endif; ?>
+
+				<?php if (($sg['bancosenhas'] ?? true)) : ?>
+				<li class="nav-section<?= $pgmSbOpenCofre ? '' : ' collapsed' ?>" data-pgm-nav-section="cofre-senhas">
+					<div class="nav-section-label" role="button" tabindex="0" aria-expanded="<?= $pgmSbOpenCofre ? 'true' : 'false' ?>">
+						<span>Cofre de Senhas</span>
+						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					</div>
+					<div class="nav-section-items">
+						<?= $pgmSbLink('lock', ' Banco de Senhas', ['controller' => 'Bancosenhas', 'action' => 'index'], [], (bool)($senhasActive ?? ''), '', 'Banco de Senhas') ?>
+					</div>
+				</li>
+				<?php endif; ?>
 
 				<li id="mini-logout" class="<?= $sidebar != 'mini-sidebar' ? 'd-none' : '' ?> nav-section-flat">
 					<div class="nav-section-items" style="padding: 2px 0;">
