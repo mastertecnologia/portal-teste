@@ -31,6 +31,39 @@
 		} catch (e) { /* ignore */ }
 	}
 
+	/**
+	 * Dispara o submit real do formulário (o botão nativo está oculto com d-none).
+	 * jQuery .trigger('click') em submit escondido costuma NÃO enviar o form no browser.
+	 */
+	function cliFichaFireFormSubmit() {
+		var form = document.getElementById('form-edit-cliente');
+		var btn = document.getElementById('cli-ficha-submit-fallback');
+		if (!form) {
+			return;
+		}
+		if (typeof form.requestSubmit === 'function' && btn) {
+			try {
+				form.requestSubmit(btn);
+				return;
+			} catch (e1) {
+				if (window.console && console.warn) {
+					console.warn('[Clientes/edit] requestSubmit falhou; tentando clique nativo no botão oculto.', e1);
+				}
+			}
+		}
+		if (btn && typeof btn.click === 'function') {
+			var $b = $(btn);
+			$b.removeClass('d-none');
+			try {
+				btn.click();
+			} finally {
+				$b.addClass('d-none');
+			}
+			return;
+		}
+		form.submit();
+	}
+
 	function cliFichaInitSelectpickers() {
 		if (typeof $.fn.selectpicker !== 'function') {
 			return;
@@ -174,7 +207,13 @@
 		$(document).on('click', '#btn-cli-ficha-save', function (e) {
 			e.preventDefault();
 			cliFichaPrepareSubmit();
-			$('#cli-ficha-submit-fallback').trigger('click');
+			try {
+				cliFichaFireFormSubmit();
+			} catch (err) {
+				if (window.console && console.error) {
+					console.error('[Clientes/edit] Não foi possível submeter o formulário (validação ou submit bloqueado).', err);
+				}
+			}
 		});
 		$('#form-edit-cliente').on('submit', function () {
 			cliFichaPrepareSubmit();
