@@ -138,7 +138,7 @@
 				<h5 class="modal-title" id="modal-senha-title">Confirmar exclusão</h5>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
 			</div>
-			<div class="modal-body cli-form-root cli-layout-unificado">
+			<div class="modal-body">
 				<div class="cli-fgroup">
 					<label for="senhaadministrativa">Senha administrativa</label>
 					<?= $this->Form->control('senhaadministrativa', ['type' => 'text', 'class' => 'form-control', 'label' => false, 'required' => true, 'placeholder' => 'Insira a senha administrativa']); ?>

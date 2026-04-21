@@ -58,6 +58,20 @@
   box-sizing: border-box;
 }
 
+/* Não aplicar o “shell” Clientes (fundo/padding/tokens de página) dentro de modais */
+.modal .cli-layout-unificado.cli-form-root,
+.modal .cli-layout-unificado.cli-root {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  font: inherit;
+  color: inherit;
+  box-shadow: none;
+  width: auto;
+  max-width: none;
+}
+
 .cli-layout-unificado .btn-cli-primary {
   display: inline-flex;
   align-items: center;
@@ -1072,79 +1086,4 @@ body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
 .cli-ficha-layout-unificado .table td,
 .cli-ficha-layout-unificado .table th {
   padding: 0.4rem;
-}
-
-/* Telas secundárias (view / search / eventos) no mesmo shell do módulo */
-.cli-page--module .cli-page-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 18px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--orc-border);
-}
-.cli-page--module .cli-page-head.cli-page-head--embedded {
-  border-bottom: none;
-  margin-bottom: 12px;
-  padding-bottom: 0;
-}
-.cli-page--module .cli-page-head-left .cli-eyebrow {
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--orc-teal-dark);
-  font-weight: 700;
-  margin-bottom: 3px;
-}
-.cli-page--module .cli-page-head-left h1 {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--orc-text);
-  margin: 0;
-}
-.cli-page--module .cli-page-head-left p,
-.cli-page--module .cli-page-head-left .text-muted {
-  color: var(--orc-text-muted);
-}
-.cli-page--module .cli-dl-view dt {
-  color: var(--orc-text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-.cli-page--module .cli-dl-view dd {
-  color: var(--orc-text);
-}
-.cli-page--module .pgm-cli-eventos-card {
-  background: var(--orc-bg-card);
-  border: 1px solid var(--orc-border);
-  border-radius: var(--orc-radius-lg);
-  box-shadow: var(--orc-shadow-sm);
-}
-.cli-page--module .pgm-cli-eventos-card .card-title {
-  color: var(--orc-text);
-}
-.cli-page--module .table {
-  color: var(--orc-text);
-}
-.cli-page--module .table thead th {
-  color: var(--orc-text-muted);
-  border-color: var(--orc-border);
-}
-.cli-page--module .table td {
-  border-color: var(--orc-border-light);
-}
-.cli-page--module .cli-root.cli-layout-unificado .form-control,
-.cli-page--module .cli-root.cli-layout-unificado label.control-label {
-  color: var(--orc-text);
-}
-.cli-page--module .cli-root.cli-layout-unificado .form-control {
-  background: var(--orc-bg-card);
-  border: 1px solid var(--orc-border);
-  color-scheme: light;
-}
-.cli-page--module .cli-root.cli-layout-unificado .form-control:focus {
-  border-color: var(--orc-teal);
-  box-shadow: 0 0 0 2px var(--cli-teal-glow);
 }
