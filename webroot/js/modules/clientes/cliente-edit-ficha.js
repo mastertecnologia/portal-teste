@@ -6,42 +6,6 @@
 (function ($) {
 	'use strict';
 
-	// #region agent log
-	function __dbgCli(hypothesisId, location, message, data) {
-		var payload = {
-			sessionId: 'e05fd8',
-			hypothesisId: hypothesisId,
-			location: location,
-			message: message,
-			data: data || {},
-			timestamp: Date.now(),
-			runId: 'dbg-clientes-1',
-		};
-		try {
-			fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'e05fd8' },
-				body: JSON.stringify(payload),
-			}).catch(function () {});
-		} catch (e0) { /* ignore */ }
-		if (window.console && console.info) {
-			console.info('[DBG clientes]', hypothesisId, message, data || {});
-		}
-		try {
-			var sk = 'pgm_dbg_clientes_e05fd8';
-			var q = JSON.parse(sessionStorage.getItem(sk) || '[]');
-			q.push(payload);
-			if (q.length > 100) {
-				q = q.slice(-100);
-			}
-			sessionStorage.setItem(sk, JSON.stringify(q));
-		} catch (eS) { /* ignore */ }
-	}
-	__dbgCli('H2', 'cliente-edit-ficha.js:file_load', 'script_parsed', {
-		hasJQuery: typeof window.jQuery !== 'undefined',
-	});
-	// #endregion
-
 	function conf() {
 		return window.PgmClienteEditConfig || {};
 	}
@@ -74,36 +38,17 @@
 	function cliFichaFireFormSubmit() {
 		var form = document.getElementById('form-edit-cliente');
 		var btn = document.getElementById('cli-ficha-submit-fallback');
-		// #region agent log
-		__dbgCli('H4', 'cliente-edit-ficha.js:cliFichaFireFormSubmit', 'enter', {
-			hasForm: !!form,
-			hasBtn: !!btn,
-			btnInForm: !!(form && btn && form.contains(btn)),
-			reqSubmit: !!(form && typeof form.requestSubmit === 'function'),
-		});
-		// #endregion
 		if (!form) {
-			// #region agent log
-			__dbgCli('H4', 'cliente-edit-ficha.js:cliFichaFireFormSubmit', 'abort_no_form', {});
-			// #endregion
 			return;
 		}
 		if (typeof form.requestSubmit === 'function' && btn) {
 			try {
 				form.requestSubmit(btn);
-				// #region agent log
-				__dbgCli('H4', 'cliente-edit-ficha.js:cliFichaFireFormSubmit', 'requestSubmit_ok', {});
-				// #endregion
 				return;
 			} catch (e1) {
 				if (window.console && console.warn) {
 					console.warn('[Clientes/edit] requestSubmit falhou; tentando clique nativo no botão oculto.', e1);
 				}
-				// #region agent log
-				__dbgCli('H4', 'cliente-edit-ficha.js:cliFichaFireFormSubmit', 'requestSubmit_catch', {
-					err: (e1 && e1.name) ? e1.name : 'unknown',
-				});
-				// #endregion
 			}
 		}
 		if (btn && typeof btn.click === 'function') {
@@ -111,17 +56,11 @@
 			$b.removeClass('d-none');
 			try {
 				btn.click();
-				// #region agent log
-				__dbgCli('H4', 'cliente-edit-ficha.js:cliFichaFireFormSubmit', 'native_click_done', {});
-				// #endregion
 			} finally {
 				$b.addClass('d-none');
 			}
 			return;
 		}
-		// #region agent log
-		__dbgCli('H4', 'cliente-edit-ficha.js:cliFichaFireFormSubmit', 'form_submit_fallback', {});
-		// #endregion
 		form.submit();
 	}
 
@@ -232,20 +171,7 @@
 
 	$(function () {
 		var C = conf();
-		// #region agent log
-		__dbgCli('H1', 'cliente-edit-ficha.js:ready', 'init', {
-			clienteId: C.clienteId || 0,
-			isEquipe: !!C.isEquipe,
-			hasForm: $('#form-edit-cliente').length,
-			hasEditBtn: $('#btn-cli-ficha-edit').length,
-			hasSaveBtn: $('#btn-cli-ficha-save').length,
-			hasSubmitFallback: $('#cli-ficha-submit-fallback').length,
-		});
-		// #endregion
 		if (!C.clienteId) {
-			// #region agent log
-			__dbgCli('H1', 'cliente-edit-ficha.js:ready', 'early_exit_no_clienteId', { clienteId: C.clienteId });
-			// #endregion
 			return;
 		}
 		var urls = C.urls || {};
@@ -255,9 +181,6 @@
 		// Se algum plugin falhar ao init, o utilizador ainda consegue entrar em modo edição.
 		$(document).on('click', '#btn-cli-ficha-edit', function (e) {
 			e.preventDefault();
-			// #region agent log
-			__dbgCli('H3', 'cliente-edit-ficha.js:edit_click', 'edit_clicked', {});
-			// #endregion
 			cliFichaSetEditMode();
 		});
 		$('#btn-cli-ficha-cancel').on('click', function () {
@@ -283,9 +206,6 @@
 		});
 		$(document).on('click', '#btn-cli-ficha-save', function (e) {
 			e.preventDefault();
-			// #region agent log
-			__dbgCli('H3', 'cliente-edit-ficha.js:save_click', 'save_clicked', {});
-			// #endregion
 			cliFichaPrepareSubmit();
 			try {
 				cliFichaFireFormSubmit();
@@ -293,17 +213,9 @@
 				if (window.console && console.error) {
 					console.error('[Clientes/edit] Não foi possível submeter o formulário (validação ou submit bloqueado).', err);
 				}
-				// #region agent log
-				__dbgCli('H4', 'cliente-edit-ficha.js:save_click', 'save_throw', {
-					err: (err && err.name) ? err.name : 'unknown',
-				});
-				// #endregion
 			}
 		});
 		$('#form-edit-cliente').on('submit', function () {
-			// #region agent log
-			__dbgCli('H5', 'cliente-edit-ficha.js:form_submit', 'submit_event', {});
-			// #endregion
 			cliFichaPrepareSubmit();
 			$('#cli-ficha-loading').removeClass('d-none').attr('aria-hidden', 'false');
 		});

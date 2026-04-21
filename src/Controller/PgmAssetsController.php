@@ -89,7 +89,30 @@ class PgmAssetsController extends AppController
 	}
 
 	/**
-	 * GET /pgm-assets/js/modules/clientes/*.js — leitura em WWW_ROOT/js/modules/clientes/.
+	 * Caminho físico do JS do módulo clientes (WWW_ROOT ou webroot/ na raiz do projeto).
+	 *
+	 * Em produção com WEBROOT_DIR=public, os ficheiros podem estar só em webroot/js/... no repositório.
+	 *
+	 * @param string $file ex.: cliente-edit-ficha.js
+	 * @return string|null
+	 */
+	protected static function clientesModuleJsPath($file)
+	{
+		$relative = 'js' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'clientes' . DIRECTORY_SEPARATOR . $file;
+		$inWww = WWW_ROOT . $relative;
+		if (is_readable($inWww)) {
+			return $inWww;
+		}
+		$inWebroot = ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . $relative;
+		if (is_readable($inWebroot)) {
+			return $inWebroot;
+		}
+
+		return null;
+	}
+
+	/**
+	 * GET /pgm-assets/js/modules/clientes/*.js (ou /js/modules/clientes/*.js) — ficheiros em WWW_ROOT ou webroot/.
 	 *
 	 * @param string|null $file Nome do ficheiro (ex.: cliente-edit-ficha.js)
 	 * @return \Cake\Http\Response
@@ -99,8 +122,8 @@ class PgmAssetsController extends AppController
 		if ($file === null || !in_array($file, static::$allowedClientesModuleJs, true)) {
 			throw new NotFoundException();
 		}
-		$full = WWW_ROOT . 'js' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'clientes' . DIRECTORY_SEPARATOR . $file;
-		if (!is_readable($full)) {
+		$full = static::clientesModuleJsPath($file);
+		if ($full === null) {
 			throw new NotFoundException();
 		}
 		$body = file_get_contents($full);
