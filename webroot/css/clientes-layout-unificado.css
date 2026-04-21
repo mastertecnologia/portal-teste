@@ -688,6 +688,23 @@ body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #for
   border-color: var(--orc-teal) !important;
   box-shadow: 0 0 0 2px var(--cli-teal-glow) !important;
 }
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu {
+  z-index: 1065;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item {
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item:hover,
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item.active,
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item:focus {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-text) !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .bs-searchbox input {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+}
 
 .cli-form-root.cli-layout-unificado .cli-field-ro {
   background: var(--orc-bg-surface);

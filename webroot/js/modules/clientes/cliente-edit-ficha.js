@@ -31,6 +31,21 @@
 		} catch (e) { /* ignore */ }
 	}
 
+	function cliFichaInitSelectpickers() {
+		if (typeof $.fn.selectpicker !== 'function') {
+			return;
+		}
+		$('.selectpicker').each(function () {
+			var $el = $(this);
+			if ($el.data('selectpicker')) {
+				return;
+			}
+			$el.selectpicker({
+				container: 'body',
+			});
+		});
+	}
+
 	function cliFichaSyncFooterOffset() {
 		var $layout = $('.cli-ficha-layout-unificado');
 		var $footer = $('#cli-ficha-footer-bar');
@@ -203,6 +218,7 @@
 		$('#senhaadministrativa').prop('disabled', false);
 		$('#exibirsenha').prop('disabled', false);
 
+		cliFichaInitSelectpickers();
 		cliFichaSetViewMode();
 		cliFichaSyncFooterOffset();
 		$(window).on('resize orientationchange', cliFichaSyncFooterOffset);
