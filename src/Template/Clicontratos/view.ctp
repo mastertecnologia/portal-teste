@@ -250,7 +250,7 @@
 												<?= $this->Html->link(
 													h((string)$fat->nro),
 													['controller' => 'Faturas', 'action' => $faturaUrlAction, $fat->id],
-													['target' => '_blank', 'class' => 'link']
+													['class' => 'link', 'data-turbo' => 'false']
 												) ?>
 											</td>
 											<td><?= !empty($fat->created) ? h($fat->created->format('d/m/Y')) : '—' ?></td>

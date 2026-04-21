@@ -401,7 +401,7 @@
 										<td><?= $reg->inativo ? 'Não' : 'Sim' ?></td>
 										<?php if ($isEquipe) { ?>
 											<td class="td-actions">
-												<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "cliacessos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+												<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "cliacessos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'data-turbo' => 'false']) ?>
 												<?php if($admin) echo $this->Html->link('<i class="fa fa-times"></i>', ["controller" => "cliacessos", "action" => "delete", $reg->id], ['confirm' => 'Você confirma a exclusão deste acesso?', 'rel' => 'tooltip', 'title' => 'Excluir', 'class' => 'btn btn-danger btn-simple btn-xs', 'escape' => false]) ?>
 											</td>
 										<?php }?>
@@ -417,7 +417,7 @@
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-users"></i> Usuários do cliente', 'extraClass' => 'mb-3']) ?>
 					<div class="d-flex flex-wrap align-items-center justify-content-between mb-2 pgm-gap-8">
 						<p class="text-muted small mb-0">Edição abre em nova aba. Novo usuário escolhe o cliente no formulário de cadastro.</p>
-						<?= $this->Html->link('<i class="fas fa-user-plus"></i> Novo usuário', ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+						<?= $this->Html->link('<i class="fas fa-user-plus"></i> Novo usuário', ['controller' => 'Users', 'action' => 'addcliente'], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'data-turbo' => 'false']) ?>
 					</div>
 					<div class="table-responsive">
 						<table class="cli-acessos-table" id="tableUsers">
@@ -442,7 +442,7 @@
 										<td><?= h($usr->name) ?></td>
 										<td><span class="badge <?= h($badgeClass) ?>"><?= h($sit) ?></span></td>
 										<td class="td-actions">
-											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "Users", "action" => "editcliente", $usr->id], ['rel' => 'tooltip', 'title' => 'Editar usuário do cliente', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "Users", "action" => "editcliente", $usr->id], ['rel' => 'tooltip', 'title' => 'Editar usuário do cliente', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'data-turbo' => 'false']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -496,8 +496,8 @@
 										<td><?php if(!empty($reg->dtvalidade)) { echo h(date_format($reg->dtvalidade, 'd/m/Y')); } ?></td>
 										<td><?php if(!empty($reg->dtcancelamento)) { echo h(date_format($reg->dtcancelamento, 'd/m/Y')); } ?></td>
 										<td class="td-actions">
-											<?= $this->Html->link('<i class="fa fa-eye"></i>', ['controller' => 'Clicontratos', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Detalhe', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
-											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "clicontratos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'target' => '_blank']) ?>
+											<?= $this->Html->link('<i class="fa fa-eye"></i>', ['controller' => 'Clicontratos', 'action' => 'view', $reg->id], ['rel' => 'tooltip', 'title' => 'Detalhe', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false, 'data-turbo' => 'false']) ?>
+											<?= $this->Html->link('<i class="fa fa-edit"></i>', ["controller" => "clicontratos", "action" => "edit", $reg->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'data-turbo' => 'false']) ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>

@@ -1,0 +1,10 @@
+---
+description: Navegação do módulo Clientes — evitar nova aba; alinhar com Turbo
+globs: src/Template/Clientes/**/*.ctp,src/Template/Users/index_clientes.ctp,src/Template/Cliacessos/**/*.ctp,src/Template/Clicontratos/**/*.ctp
+---
+
+# Módulo Clientes — links e Turbo
+
+- Não usar `'target' => '_blank'` nas telas do fluxo Clientes (ficha do cliente, gestão de clientes/usuários, satélites acessíveis a partir da ficha) sem justificativa de produto; manter navegação na mesma aba.
+- Para páginas que precisam de recarga completa com Turbo ativo no layout, preferir `'data-turbo' => 'false'` em `Html->link` em vez de nova aba.
+- Exceções: mencionar no PR.

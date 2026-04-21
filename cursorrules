@@ -265,3 +265,11 @@ composer install                          # instalar dependências
 - Usar rand() ou uniqid() para tokens de segurança
 - Copiar o HTML do protótipo literalmente — converter para templates PHP
 - Criar rotas do portal sem desabilitar o middleware de autenticação
+
+---
+
+## Módulo Clientes (navegação / Turbo)
+
+- Evitar `target="_blank"` / `'target' => '_blank'` nas views do fluxo Clientes (ficha `Clientes/edit`, gestão `Users/index_clientes`, links satélite Cliacessos / Users addcliente-editcliente / Clicontratos), salvo requisito explícito de produto; preferir mesma aba.
+- Quando o layout usar Hotwire Turbo e a navegação precisar de carga completa, usar `'data-turbo' => 'false'` nos `Html->link` em vez de abrir nova aba.
+- Se for necessário `_blank`, documentar no PR o motivo.

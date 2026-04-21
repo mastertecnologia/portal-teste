@@ -127,7 +127,7 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 			<?= $this->Html->link(
 				'<i class="fas fa-plus"></i> Novo cliente',
 				['action' => 'addcliente'],
-				['class' => 'btn-cli-primary', 'escape' => false, 'target' => '_blank']
+				['class' => 'btn-cli-primary', 'escape' => false, 'data-turbo' => 'false']
 			) ?>
 			<?php endif; ?>
 		</div>
@@ -252,7 +252,7 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 							<?= $this->Html->link(
 								'<i class="fas fa-user-plus"></i>',
 								['action' => 'addcliente'],
-								['class' => 'cli-btn-inativar', 'escape' => false, 'title' => 'Adicionar usuário', 'target' => '_blank', 'onclick' => 'event.stopPropagation();']
+								['class' => 'cli-btn-inativar', 'escape' => false, 'title' => 'Adicionar usuário', 'data-turbo' => 'false', 'onclick' => 'event.stopPropagation();']
 							) ?>
 							<?php endif; ?>
 						</td>
@@ -296,7 +296,7 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 								<div class="cli-usr-empty">
 									<i class="fas fa-user-friends" style="font-size:20px;display:block;margin-bottom:6px;opacity:.4"></i>
 									Nenhum usuário cadastrado.
-									<?= $this->Html->link('Adicionar primeiro usuário', ['action' => 'addcliente'], ['target' => '_blank']) ?>
+									<?= $this->Html->link('Adicionar primeiro usuário', ['action' => 'addcliente'], ['data-turbo' => 'false']) ?>
 								</div>
 								<?php endif; ?>
 							</div>
