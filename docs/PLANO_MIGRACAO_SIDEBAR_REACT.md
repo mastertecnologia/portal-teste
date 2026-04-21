@@ -25,7 +25,7 @@ Este documento alinha-se ao backup local **`BACKUP_PRE_MIGRACAO_SIDEBAR_REACT_20
 | Payload JSON cliente | `src/View/Sidebar/PgmSidebarClientPayloadBuilder.php` |
 | URLs API sino (staff) | `src/View/Sidebar/PgmPortalSidebarNotifUrls.php` |
 | Atribuição à vista | `AppController::beforeRender()` → `pgmSidebarReactProps` |
-| Bundle React (build) | `dashboard-react/` → `npm run build:sidebar` → `webroot/js/pgm-sidebar-react/sidebar-app.js` |
+| Bundle React (build) | `dashboard-react/` → `npm run build:sidebar` → `public/js/pgm-sidebar-react/sidebar-app.js` (DocumentRoot = `public/`) |
 | Código fonte React | `dashboard-react/src/sidebar/Sidebar.jsx`, `sidebarMount.jsx` |
 | Build Vite isolado | `dashboard-react/vite.sidebar.config.js` |
 
@@ -106,15 +106,16 @@ Opcional em Git, após commit estável: `git tag backup/pre-migracao-sidebar-rea
 ## Sidebar vazia com a flag ativa (produção)
 
 1. **URL do bundle (404):** com rewrite, `SCRIPT_NAME` pode ser `/index.php` (sem `/portal`). Os layouts usam `PgmAppUrlBase::path($this->request)` para alinhar ao `base` do Cake. No DevTools → Rede, confirme **200** em `…/portal/js/pgm-sidebar-react/sidebar-app.js`.
-2. **`APP_BASE`:** se o passo 1 ainda falhar, defina `APP_BASE=/portal` (ou o prefixo real) no `.env` e limpe o cache de config.
-3. **JSON das props:** UTF-8 inválido no nome do utilizador podia partir o `<script>` das props; usa-se `JSON_INVALID_UTF8_SUBSTITUTE` quando disponível.
-4. **Erro no React:** se o mount falhar, aparece mensagem vermelha dentro da coluna e o detalhe na consola (F12).
+2. **`Error: Controller class Js could not be found`:** o pedido ao `.js` está a ir ao `index.php` em vez de ficheiro estático — o bundle tem de existir sob **`public/js/pgm-sidebar-react/`** (DocumentRoot = `public/`), não só em `webroot/`. Volte a correr `npm run build:sidebar` após o alinhamento do Vite.
+3. **`APP_BASE`:** se o passo 1 ainda falhar, defina `APP_BASE=/portal` (ou o prefixo real) no `.env` e limpe o cache de config.
+4. **JSON das props:** UTF-8 inválido no nome do utilizador podia partir o `<script>` das props; usa-se `JSON_INVALID_UTF8_SUBSTITUTE` quando disponível.
+5. **Erro no React:** se o mount falhar, aparece mensagem vermelha dentro da coluna e o detalhe na consola (F12).
 
 ---
 
 ## Checklist rápido antes de ativar em produção
 
 - [ ] `npm run build:sidebar` integrado no pipeline de deploy
-- [ ] `webroot/js/pgm-sidebar-react/sidebar-app.js` presente no servidor
+- [ ] `public/js/pgm-sidebar-react/sidebar-app.js` presente no servidor (alinhado a `WEBROOT_DIR=public` / Apache em `public/`)
 - [ ] Testes manuais nas rotas críticas (OS, clientes, financeiro, logout)
 - [ ] Plano de rollback: `PGM_SIDEBAR_REACT=0` + deploy do `default.ctp` Cake
