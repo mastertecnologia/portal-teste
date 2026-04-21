@@ -714,28 +714,43 @@ body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #for
   border: 1px solid var(--orc-border) !important;
   color: var(--orc-text) !important;
 }
-body.layout-no-topbar .bs-container .dropdown-menu {
+/* Cidade (selectpicker container: body): .bs-container fica no body, fora de .cli-form-root — vars --orc-* não herdam; equipe sem layout-no-topbar também precisa destas regras. */
+body.layout-no-topbar .bs-container .dropdown-menu,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu {
   z-index: 2005 !important;
-  background: var(--orc-bg-card) !important;
-  border: 1px solid var(--orc-border) !important;
+  background: var(--orc-bg-card, #ffffff) !important;
+  border: 1px solid var(--orc-border, #e5e4e0) !important;
+}
+body.layout-no-topbar .bs-container .dropdown-menu .inner,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu .inner {
+  background: var(--orc-bg-card, #ffffff) !important;
 }
 body.layout-no-topbar .bs-container .dropdown-menu li > a,
-body.layout-no-topbar .bs-container .dropdown-menu .dropdown-item {
-  color: var(--orc-text) !important;
+body.layout-no-topbar .bs-container .dropdown-menu .dropdown-item,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu li > a,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu .dropdown-item {
+  color: var(--orc-text, #1a1a18) !important;
 }
 body.layout-no-topbar .bs-container .dropdown-menu li > a:hover,
 body.layout-no-topbar .bs-container .dropdown-menu li.selected > a,
 body.layout-no-topbar .bs-container .dropdown-menu li.active > a,
 body.layout-no-topbar .bs-container .dropdown-menu .dropdown-item:hover,
 body.layout-no-topbar .bs-container .dropdown-menu .active .dropdown-item,
-body.layout-no-topbar .bs-container .dropdown-menu .selected .dropdown-item {
-  background: var(--orc-bg-surface) !important;
-  color: var(--orc-text) !important;
+body.layout-no-topbar .bs-container .dropdown-menu .selected .dropdown-item,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu li > a:hover,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu li.selected > a,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu li.active > a,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu .dropdown-item:hover,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu .active .dropdown-item,
+body:not(.layout-no-topbar) .bs-container .dropdown-menu .selected .dropdown-item {
+  background: var(--orc-bg-surface, #f8f8f7) !important;
+  color: var(--orc-text, #1a1a18) !important;
 }
-body.layout-no-topbar .bs-container .bs-searchbox input {
-  background: var(--orc-bg-card) !important;
-  border: 1px solid var(--orc-border) !important;
-  color: var(--orc-text) !important;
+body.layout-no-topbar .bs-container .bs-searchbox input,
+body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
+  background: var(--orc-bg-card, #ffffff) !important;
+  border: 1px solid var(--orc-border, #e5e4e0) !important;
+  color: var(--orc-text, #1a1a18) !important;
 }
 
 .cli-form-root.cli-layout-unificado .cli-field-ro {
