@@ -124,6 +124,16 @@ body.pgm-app-shell-premium #pgm-dynamic-content {
     padding-bottom: 8px;
 }
 
+/*
+ * Módulo Clientes (cli-*): a .row #pgm-dynamic-content estica no eixo vertical (flex:1 no shell).
+ * Com align-items: stretch (padrão do Bootstrap), colunas altas fazem o cartão parecer “no meio”.
+ * flex-start alinha o bloco ao topo da zona de scroll.
+ */
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.cli-layout-unificado) {
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
 /* Portal cliente (Material): estrutura .wrapper > .main-panel */
 body.pgm-app-shell-premium.pgm-portal-client-shell .wrapper {
     display: flex;

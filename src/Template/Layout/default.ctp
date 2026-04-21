@@ -49,7 +49,7 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 	<?= $this->Html->css("/dist/css/pages/pgm-components-base") ?>
 	<?= $this->Html->css("/dist/css/pages/layout-sidebar-shell.css?v=" . time()) ?>
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
-	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=2") ?>
+	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=3") ?>
 	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
 	<?php if ($pgmReactSidebar) : ?>
