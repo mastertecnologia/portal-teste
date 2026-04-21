@@ -144,18 +144,10 @@
 		var urls = C.urls || {};
 		var U = window.PgmClienteEditUtils || {};
 
-		$('.datepicker').bootstrapMaterialDatePicker({
-			format: 'DD/MM/YYYY',
-			lang: 'pt-br',
-			time: false,
-			switchOnClick: true,
-			nowButton: true,
-			cancelText: 'Cancelar',
-			setDate: 'currentDate',
-			nowText: 'Hoje',
-		});
-
-		$('#btn-cli-ficha-edit').on('click', function () {
+		// Ações da barra inferior: registrar antes de plugins opcionais (datepicker/DataTables).
+		// Se algum plugin falhar ao init, o utilizador ainda consegue entrar em modo edição.
+		$(document).on('click', '#btn-cli-ficha-edit', function (e) {
+			e.preventDefault();
 			cliFichaSetEditMode();
 		});
 		$('#btn-cli-ficha-cancel').on('click', function () {
@@ -179,7 +171,8 @@
 				cliFichaSetViewMode();
 			}
 		});
-		$('#btn-cli-ficha-save').on('click', function () {
+		$(document).on('click', '#btn-cli-ficha-save', function (e) {
+			e.preventDefault();
 			cliFichaPrepareSubmit();
 			$('#cli-ficha-submit-fallback').trigger('click');
 		});
@@ -190,6 +183,25 @@
 		window.addEventListener('pageshow', function () {
 			$('#cli-ficha-loading').addClass('d-none').attr('aria-hidden', 'true');
 		});
+
+		try {
+			if ($.fn.bootstrapMaterialDatePicker) {
+				$('.datepicker').bootstrapMaterialDatePicker({
+					format: 'DD/MM/YYYY',
+					lang: 'pt-br',
+					time: false,
+					switchOnClick: true,
+					nowButton: true,
+					cancelText: 'Cancelar',
+					setDate: 'currentDate',
+					nowText: 'Hoje',
+				});
+			}
+		} catch (eDp) {
+			if (window.console && console.warn) {
+				console.warn('[Clientes/edit] bootstrapMaterialDatePicker indisponível ou falhou ao init.', eDp);
+			}
+		}
 
 		if (C.isEquipe) {
 			$('#cli-ff-switch-inativo').on('change', function () {
@@ -205,15 +217,23 @@
 			}
 		}
 
-		$('#cnpj').mask('99.999.999/9999-99');
-		$('#fone').mask('(999) 9999-9999');
-		$('#fone2').mask('(999) 99999-9999');
-		$('#cep').mask('99999-999');
-		$('#cpffisica').mask('999.999.999-99');
-		$('#cpfresponsavel').mask('999.999.999-99');
-		$('#confirmaCpfResponsavel').mask('999.999.999-99');
-		$('.telefone').mask('(99) 9999-9999');
-		$('.celular').mask('(99) 99999-9999');
+		try {
+			if ($.fn.mask) {
+				$('#cnpj').mask('99.999.999/9999-99');
+				$('#fone').mask('(999) 9999-9999');
+				$('#fone2').mask('(999) 99999-9999');
+				$('#cep').mask('99999-999');
+				$('#cpffisica').mask('999.999.999-99');
+				$('#cpfresponsavel').mask('999.999.999-99');
+				$('#confirmaCpfResponsavel').mask('999.999.999-99');
+				$('.telefone').mask('(99) 9999-9999');
+				$('.celular').mask('(99) 99999-9999');
+			}
+		} catch (eMask) {
+			if (window.console && console.warn) {
+				console.warn('[Clientes/edit] jQuery.mask indisponível ou falhou ao init.', eMask);
+			}
+		}
 
 		$('#senhaadministrativa').prop('disabled', false);
 		$('#exibirsenha').prop('disabled', false);
@@ -224,44 +244,52 @@
 		$(window).on('resize orientationchange', cliFichaSyncFooterOffset);
 
 		var table = $('#tableContatos, #tableContratos');
-		table.on('length.dt', function (e, settings, len) {
-			if (typeof pagelength === 'function') {
-				pagelength(len);
+		if (table.length && $.fn.DataTable) {
+			try {
+				table.on('length.dt', function (e, settings, len) {
+					if (typeof pagelength === 'function') {
+						pagelength(len);
+					}
+				});
+				table.DataTable({
+					pageLength: 20,
+					lengthChange: false,
+					language: {
+						sProcessing: 'Procesando...',
+						sLengthMenu: 'Mostrar _MENU_ registros',
+						sZeroRecords: 'Nenhum registro encontrado',
+						sEmptyTable: 'Nenhum dado disponível',
+						sInfo: 'Mostrando registros de _START_ até _END_ de um total de _TOTAL_ registros',
+						sInfoEmpty: 'Mostrando registros de 0 a 0 de um total de 0 registros',
+						sInfoFiltered: '(filtrado de um total de _MAX_ registros)',
+						sInfoPostFix: '',
+						sSearch: 'Buscar:',
+						sUrl: '',
+						sInfoThousands: ',',
+						sLoadingRecords: 'Carregando...',
+						oPaginate: {
+							sFirst: '<<',
+							sLast: '>>',
+							sNext: '>',
+							sPrevious: '<',
+						},
+						oAria: {
+							sSortAscending: ': Ordem Ascendente',
+							sSortDescending: ': Ordem descendente',
+						},
+					},
+					drawCallback: function () {
+						$('td').removeClass('dark-mode');
+					},
+				});
+				if (typeof filters !== 'undefined') {
+					table.search(filters).draw();
+				}
+			} catch (eDt) {
+				if (window.console && console.warn) {
+					console.warn('[Clientes/edit] DataTables indisponível ou falhou ao init.', eDt);
+				}
 			}
-		});
-		table.DataTable({
-			pageLength: 20,
-			lengthChange: false,
-			language: {
-				sProcessing: 'Procesando...',
-				sLengthMenu: 'Mostrar _MENU_ registros',
-				sZeroRecords: 'Nenhum registro encontrado',
-				sEmptyTable: 'Nenhum dado disponível',
-				sInfo: 'Mostrando registros de _START_ até _END_ de um total de _TOTAL_ registros',
-				sInfoEmpty: 'Mostrando registros de 0 a 0 de um total de 0 registros',
-				sInfoFiltered: '(filtrado de um total de _MAX_ registros)',
-				sInfoPostFix: '',
-				sSearch: 'Buscar:',
-				sUrl: '',
-				sInfoThousands: ',',
-				sLoadingRecords: 'Carregando...',
-				oPaginate: {
-					sFirst: '<<',
-					sLast: '>>',
-					sNext: '>',
-					sPrevious: '<',
-				},
-				oAria: {
-					sSortAscending: ': Ordem Ascendente',
-					sSortDescending: ': Ordem descendente',
-				},
-			},
-			drawCallback: function () {
-				$('td').removeClass('dark-mode');
-			},
-		});
-		if (typeof filters !== 'undefined') {
-			table.search(filters).draw();
 		}
 
 		var emailsFaturamentoRaw0 = $('#email').val() || '';
