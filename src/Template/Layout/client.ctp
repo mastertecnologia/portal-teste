@@ -1,8 +1,10 @@
 <?php
+use App\Utility\PgmAppUrlBase;
 use Cake\Core\Configure;
 use Cake\Routing\Router;
 
 $pgmReactSidebar = (bool) Configure::read('PgmSidebar.react_enabled') && !empty($iduser ?? null);
+$pgmSidebarReactJs = PgmAppUrlBase::path() . '/js/pgm-sidebar-react/sidebar-app.js';
 ?>
 <!doctype html>
 <html lang="pt-BR" data-pgm-theme="dark">
@@ -92,7 +94,7 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 	$pgmSidebarReactProps = isset($pgmSidebarReactProps) && is_array($pgmSidebarReactProps) ? $pgmSidebarReactProps : [];
 	echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) . ";</script>\n";
 	?>
-	<script type="module" src="<?= h($this->Url->build('/js/pgm-sidebar-react/sidebar-app.js')) ?>"></script>
+	<script type="module" src="<?= h($pgmSidebarReactJs) ?>"></script>
 	<?php endif; ?>
 </body>
 </html>

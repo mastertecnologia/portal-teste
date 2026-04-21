@@ -103,6 +103,12 @@ Opcional em Git, após commit estável: `git tag backup/pre-migracao-sidebar-rea
 
 ---
 
+## Sidebar vazia com a flag ativa (produção)
+
+Causa frequente: a app está num **prefixo** (ex. `https://…/portal/…`) e o browser pedia o bundle em `/js/pgm-sidebar-react/sidebar-app.js` (404). Os layouts usam `PgmAppUrlBase::path()` + `/js/…` para o `src` do módulo. Confirme no DevTools (Rede) que o script devolve **200**. Ajuste `APP_BASE` no `.env` se o prefixo não for inferido pelo `SCRIPT_NAME`.
+
+---
+
 ## Checklist rápido antes de ativar em produção
 
 - [ ] `npm run build:sidebar` integrado no pipeline de deploy
