@@ -7,24 +7,6 @@
 	'use strict';
 
 	// #region agent log
-	try {
-		fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'e05fd8' },
-			body: JSON.stringify({
-				sessionId: 'e05fd8',
-				hypothesisId: 'H2',
-				location: 'cliente-edit-ficha.js:file_load',
-				message: 'script_parsed',
-				data: { hasJQuery: typeof window.jQuery !== 'undefined' },
-				timestamp: Date.now(),
-				runId: 'dbg-clientes-1',
-			}),
-		}).catch(function () {});
-	} catch (eLoad) {}
-	// #endregion
-
-	// #region agent log
 	function __dbgCli(hypothesisId, location, message, data) {
 		var payload = {
 			sessionId: 'e05fd8',
@@ -45,7 +27,19 @@
 		if (window.console && console.info) {
 			console.info('[DBG clientes]', hypothesisId, message, data || {});
 		}
+		try {
+			var sk = 'pgm_dbg_clientes_e05fd8';
+			var q = JSON.parse(sessionStorage.getItem(sk) || '[]');
+			q.push(payload);
+			if (q.length > 100) {
+				q = q.slice(-100);
+			}
+			sessionStorage.setItem(sk, JSON.stringify(q));
+		} catch (eS) { /* ignore */ }
 	}
+	__dbgCli('H2', 'cliente-edit-ficha.js:file_load', 'script_parsed', {
+		hasJQuery: typeof window.jQuery !== 'undefined',
+	});
 	// #endregion
 
 	function conf() {

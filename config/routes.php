@@ -1698,6 +1698,15 @@ Router::scope("/", function ($routes) {
         ["controller" => "PgmAssets", "action" => "css"],
         ["pass" => ["name"]],
     );
+    // JS módulo Clientes/edit via Cake — evita 404 em /portal/js/... quando o estático não mapeia para webroot
+    $routes->connect(
+        "/pgm-assets/js/modules/clientes/:file",
+        ["controller" => "PgmAssets", "action" => "clientesModuleJs"],
+        [
+            "pass" => ["file"],
+            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos)\\.js",
+        ],
+    );
     // Compat: HTML em cache / links antigos ainda pedem /css/*.css — mesma resposta que pgm-assets
     $routes->connect(
         "/css/:file",

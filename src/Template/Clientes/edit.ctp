@@ -763,12 +763,12 @@
 		],
 	];
 ?>
-<?= $this->Html->script('/js/modules/clientes/cliente-edit') ?>
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-edit') ?>
 <script>
 window.PgmClienteEditConfig = <?= json_encode($pgmClienteEditCfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
 </script>
-<?= $this->Html->script('/js/modules/clientes/cliente-edit-ficha') ?>
-<?= $this->Html->script('/js/modules/clientes/cliente-edit-ficha-acessos') ?>
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-edit-ficha') ?>
+<?= $this->Html->script('/pgm-assets/js/modules/clientes/cliente-edit-ficha-acessos') ?>
 <script>
 <?= $this->element('Cli/toast_js') ?>
 <?= $this->element('Cli/edit_tabs_js') ?>
