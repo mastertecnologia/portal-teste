@@ -31,6 +31,19 @@
 		} catch (e) { /* ignore */ }
 	}
 
+	function cliFichaSyncFooterOffset() {
+		var $layout = $('.cli-ficha-layout-unificado');
+		var $footer = $('#cli-ficha-footer-bar');
+		if (!$layout.length || !$footer.length) {
+			return;
+		}
+		var footerHeight = Math.ceil($footer.outerHeight() || 0);
+		if (footerHeight < 80) {
+			footerHeight = 100;
+		}
+		$layout.css('--cli-footer-offset', footerHeight + 'px');
+	}
+
 	function tipo(tipoVal) {
 		if (String(tipoVal) === '2') {
 			$('#razaosocial, #nomefantasia, #cnpj').prop('disabled', false);
@@ -73,6 +86,7 @@
 			}
 			$el.prop('readonly', true);
 		});
+		cliFichaSyncFooterOffset();
 	}
 	window.cliFichaSetViewMode = cliFichaSetViewMode;
 
@@ -103,6 +117,7 @@
 			}
 			$el.prop('readonly', false);
 		});
+		cliFichaSyncFooterOffset();
 	}
 	window.cliFichaSetEditMode = cliFichaSetEditMode;
 
@@ -189,6 +204,8 @@
 		$('#exibirsenha').prop('disabled', false);
 
 		cliFichaSetViewMode();
+		cliFichaSyncFooterOffset();
+		$(window).on('resize orientationchange', cliFichaSyncFooterOffset);
 
 		var table = $('#tableContatos, #tableContratos');
 		table.on('length.dt', function (e, settings, len) {

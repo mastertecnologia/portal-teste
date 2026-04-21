@@ -109,12 +109,13 @@
 #form-edit-cliente.cli-ficha--readonly label[for="inativo"],#form-edit-cliente.cli-ficha--readonly label[for="contrato"],#form-edit-cliente.cli-ficha--readonly label[for="exibirsenhacliente"]{pointer-events:none;cursor:default;}
 .cli-ficha-toolbar{border:1px solid #21262d;border-radius:10px;padding:10px 14px;background:#161b22;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;}
 .cli-ficha-toolbar .cli-ficha-hint{font-size:.75rem;color:#6e7681;margin:0;}
-.cli-ficha-footer-fixed{position:fixed;left:0;right:0;bottom:0;z-index:1025;background:#161b22;border-top:1px solid #21262d;box-shadow:0 -4px 24px rgba(0,0,0,.35);padding:10px 16px;font-size:.78rem;}
+.cli-ficha-footer-fixed{position:sticky;bottom:0;z-index:1025;background:#161b22;border-top:1px solid #21262d;box-shadow:0 -4px 24px rgba(0,0,0,.35);padding:10px 16px;font-size:.78rem;}
 .cli-ficha-footer-fixed .cli-ff-inner{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;}
 .cli-ff-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
 .cli-ff-status .custom-switch{padding-left:2.5rem;}
 .cli-ff-status .custom-control-label{color:#c9d1d9;font-size:.78rem;}
-.cli-ficha-page-pad{padding-bottom:100px;}
+.cli-ficha-layout-unificado{--cli-footer-offset:12px;}
+.cli-ficha-page-pad{padding-bottom:12px;}
 /* Contratos — situação (ETAPA 6; regra alinhada ao rodapé via controller) */
 .cli-ctr-legend{font-size:.72rem;color:#8b949e;margin-bottom:10px;line-height:1.5;}
 .cli-ctr-legend .badge{font-size:.65rem;font-weight:600;margin-right:2px;}

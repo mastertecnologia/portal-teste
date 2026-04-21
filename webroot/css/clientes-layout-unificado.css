@@ -739,6 +739,8 @@ body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #for
 }
 
 .cli-ficha-layout-unificado .cli-ficha-footer-fixed {
+  position: sticky;
+  bottom: 0;
   background: var(--orc-bg-card);
   border-top: 1px solid var(--orc-border);
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
