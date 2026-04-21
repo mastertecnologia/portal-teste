@@ -47,6 +47,9 @@
 
 		return $map[$a] ?? h((string)$act);
 	};
+
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 ?>
 <style>
 	.clicontrato-view-tabs .nav-tabs.customtab { margin-bottom: 0; }
@@ -54,7 +57,8 @@
 	.clicontrato-head-main { min-width: 0; }
 	.clicontrato-th-key { width: 220px; }
 </style>
-<div class="col-md-12">
+<div class="col-md-12 p-0 clictr-cli-page">
+<div class="cli-root cli-layout-unificado">
 	<?php /* Cabeçalho — resumo do contrato */ ?>
 	<div class="card mb-3">
 		<div class="card-body">
@@ -72,9 +76,9 @@
 					</ul>
 				</div>
 				<div class="d-flex flex-wrap align-items-center">
-					<?= $this->Html->link('<i class="fa fa-edit"></i> Editar', ['action' => 'edit', $contrato->id], ['class' => 'btn btn-warning btn-sm m-r-5 m-b-5', 'escape' => false]) ?>
-					<?= $this->Html->link('<i class="fa fa-sync-alt"></i> Renovar', ['action' => 'renovar', $contrato->id], ['class' => 'btn btn-success btn-sm m-r-5 m-b-5', 'escape' => false]) ?>
-					<?= $this->Html->link('<i class="fa fa-arrow-left"></i> Voltar ao cliente', ['controller' => 'Clientes', 'action' => 'edit', $idcliente], ['class' => 'btn btn-secondary btn-sm m-b-5', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fa fa-edit"></i> Editar', ['action' => 'edit', $contrato->id], ['class' => 'btn btn-warning btn-sm m-r-5 m-b-5', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fa fa-sync-alt"></i> Renovar', ['action' => 'renovar', $contrato->id], ['class' => 'btn btn-success btn-sm m-r-5 m-b-5', 'escape' => false, 'data-turbo' => 'false']) ?>
+					<?= $this->Html->link('<i class="fa fa-arrow-left"></i> Voltar ao cliente', ['controller' => 'Clientes', 'action' => 'edit', $idcliente], ['class' => 'btn btn-secondary btn-sm m-b-5', 'escape' => false, 'data-turbo' => 'false']) ?>
 				</div>
 			</div>
 		</div>
@@ -331,4 +335,5 @@
 			</div>
 		</div>
 	</div>
+</div>
 </div>

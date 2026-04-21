@@ -1,83 +1,118 @@
 <?php
 	use Cake\Routing\Router;
+
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 	$this->Breadcrumbs->add('Cliente', ['controller' => 'Clientes', 'action' => 'edit', $idcliente], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Alterar contrato', [], ['class' => 'breadcrumb-item active']);
+	$urlFichaCliente = Router::url(['controller' => 'Clientes', 'action' => 'edit', $idcliente]) . '#contratos';
 ?>
-<?= $this->element('Pgm/form_shell_dark', ['formId' => 'form-clicontrato-edit']) ?>
-<div class="col-md-12 clictr-edit-page">
-	<div class="clictr-card">
-			<?= $this->Form->create($contrato, ['class' => 'form-material clictr-form', 'id' => 'form-clicontrato-edit']) ?>
-				<div class="clictr-section">
-					<div class="clictr-section-title">Identificação do item</div>
-					<div class="row">
-						<div class="col-lg-4 col-md-12">
-							<label class="clictr-label" for="codproduto">Código</label>
+<div class="col-md-12 p-0 clictr-cli-page">
+	<div class="cli-form-root cli-layout-unificado">
+		<?= $this->Form->create($contrato, ['class' => 'form-material', 'id' => 'form-clicontrato-edit']) ?>
+		<div class="cli-form-body cli-form-body--cadastro-lead">
+			<div class="d-flex justify-content-end flex-wrap mb-2">
+				<?= $this->Html->link(
+					'<i class="fas fa-arrow-left"></i> Voltar à ficha (contratos)',
+					$urlFichaCliente,
+					['class' => 'btn btn-sm btn-cli-outline', 'escape' => false, 'data-turbo' => 'false']
+				) ?>
+			</div>
+
+			<div class="cli-section">
+				<div class="cli-section-head">
+					<div class="cli-section-icon"><i class="fas fa-file-contract" aria-hidden="true"></i></div>
+					<div class="cli-section-title">Identificação do item</div>
+				</div>
+				<div class="cli-section-body">
+					<div class="cli-fg cli-fg-3-2">
+						<div class="cli-fgroup">
+							<label for="codproduto">Código</label>
 							<?= $this->Form->control('codproduto', ['class' => 'form-control selectpicker', 'data-live-search' => true, 'options' => $produtos, 'label' => false]) ?>
 						</div>
-						<div class="col-lg-8 col-md-12">
-							<label class="clictr-label" for="descricao">Descrição</label>
+						<div class="cli-fgroup">
+							<label for="descricao">Descrição</label>
 							<?= $this->Form->control('descricao', ['class' => 'form-control', 'label' => false]) ?>
 						</div>
 					</div>
-					<div class="row">
-						<div class="col-12">
-							<label class="clictr-label" for="infadicional">Informação adicional</label>
+					<div class="cli-fg cli-fg-1">
+						<div class="cli-fgroup">
+							<label for="infadicional">Informação adicional</label>
 							<?= $this->Form->control('infadicional', ['class' => 'form-control', 'label' => false]) ?>
 						</div>
 					</div>
 				</div>
-				<div class="clictr-section">
-					<div class="clictr-section-title">Datas</div>
-					<div class="row">
-						<div class="col-md-4 col-sm-6">
-							<label class="clictr-label" for="dtcontratacao">Data de inclusão</label>
+			</div>
+
+			<div class="cli-section">
+				<div class="cli-section-head">
+					<div class="cli-section-icon"><i class="fas fa-calendar-alt" aria-hidden="true"></i></div>
+					<div class="cli-section-title">Datas</div>
+				</div>
+				<div class="cli-section-body">
+					<div class="cli-fg cli-fg-3">
+						<div class="cli-fgroup">
+							<label for="dtcontratacao">Data de inclusão</label>
 							<?= $this->Form->text('dtcontratacao', ['class' => 'mensal form-control datepicker', 'label' => false, 'id' => 'dtcontratacao']) ?>
 						</div>
-						<div class="col-md-4 col-sm-6">
-							<label class="clictr-label" for="dtvalidade">Data de validade</label>
+						<div class="cli-fgroup">
+							<label for="dtvalidade">Data de validade</label>
 							<?= $this->Form->text('dtvalidade', ['class' => 'mensal form-control datepicker', 'label' => false, 'id' => 'dtvalidade']) ?>
 						</div>
-						<div class="col-md-4 col-sm-6">
-							<label class="clictr-label" for="dtcancelamento">Data de cancelamento</label>
+						<div class="cli-fgroup">
+							<label for="dtcancelamento">Data de cancelamento</label>
 							<?= $this->Form->text('dtcancelamento', ['class' => 'mensal form-control datepicker', 'label' => false, 'id' => 'dtcancelamento']) ?>
 						</div>
 					</div>
 				</div>
-				<div class="clictr-section">
-					<div class="clictr-section-title">Quantidade e valores</div>
-					<div class="row">
-						<div class="col-md-4 col-sm-6">
-							<label class="clictr-label" for="qtde">Qtde.</label>
+			</div>
+
+			<div class="cli-section">
+				<div class="cli-section-head">
+					<div class="cli-section-icon"><i class="fas fa-calculator" aria-hidden="true"></i></div>
+					<div class="cli-section-title">Quantidade e valores</div>
+				</div>
+				<div class="cli-section-body">
+					<div class="cli-fg cli-fg-3">
+						<div class="cli-fgroup">
+							<label for="qtde">Qtde.</label>
 							<?= $this->Form->control('qtde', ['onkeypress' => 'return SomenteNumero(event, "#qtde")', 'class' => 'qtde form-control', 'label' => false]) ?>
 						</div>
-						<div class="col-md-4 col-sm-6">
-							<label class="clictr-label" for="vlunit">Vl. unitário</label>
+						<div class="cli-fgroup">
+							<label for="vlunit">Vl. unitário</label>
 							<?= $this->Form->text('vlunit', ['id' => 'vlunit', 'class' => 'form-control mascaramonetaria', 'label' => false]) ?>
 						</div>
-						<div class="col-md-4 col-sm-6">
-							<label class="clictr-label" for="vltotal">Vl. total</label>
+						<div class="cli-fgroup">
+							<label for="vltotal">Vl. total</label>
 							<?= $this->Form->text('vltotal', ['id' => 'vltotal', 'class' => 'form-control', 'label' => false, 'readonly' => true]) ?>
 						</div>
 					</div>
 				</div>
-				<div class="clictr-actions row">
-					<div class="col-12">
-						<?= $this->Form->control('idcliente', ['value' => $idcliente, 'type' => 'hidden', 'label' => false]) ?>
-						<?= $this->Form->button('Salvar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-success']) ?>
-					</div>
-				</div>
-			<?= $this->Form->end() ?>
+			</div>
+		</div>
+
+		<div class="cli-form-footer">
+			<div class="cli-form-footer-left text-muted small">
+				Item #<?= (int)$contrato->id ?>
+			</div>
+			<div class="cli-form-footer-right">
+				<?= $this->Form->control('idcliente', ['value' => $idcliente, 'type' => 'hidden', 'label' => false]) ?>
+				<?= $this->Form->button('<i class="fas fa-check"></i> Salvar', ['class' => 'btn-cli-primary', 'escape' => false, 'type' => 'submit']) ?>
+			</div>
+		</div>
+
+		<?= $this->Form->end() ?>
 	</div>
 </div>
 
 <script>
 	// Só número
 		function SomenteNumero(e, campo){
-			var tecla=(window.event)?event.keyCode:e.which;  
+			var tecla=(window.event)?event.keyCode:e.which;
 
 			if((tecla>47 && tecla<58)) return true;
 			else if (tecla==8 || tecla==0) return true;
-			else if (tecla == 46)  return false;    
+			else if (tecla == 46)  return false;
 			else if( $(campo).val().indexOf(',') > -1 && tecla == 44 ) return false
 			else if( $(campo).val().indexOf(',') <= -1 && tecla == 44 ) return true
 			else  return false;
@@ -97,7 +132,7 @@
 				},
 				error: function (error) { console.log(error); }
 			});
-		
+
 		});
 	// Cálculos
 		$('#qtde, #vlunit, #idproduto').keyup(function(e){
@@ -130,5 +165,5 @@
 		};
 
 		$('#form-clicontrato-edit').preventDoubleSubmission();
-	// 
+	//
 </script>
