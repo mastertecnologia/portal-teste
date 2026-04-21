@@ -1,0 +1,49 @@
+/**
+ * Menu do utilizador na sidebar React (.preview-dd / .preview-dd-menu).
+ * No portal, layout-sidebar-shell.css trata só .dropdown-menu (Cake); sem isto,
+ * os .preview-dd-item ficam todos em fluxo e sobrepõem o painel de notificações.
+ */
+html body .pgm-sidebar-shell .preview-dd {
+  position: relative;
+}
+html body .pgm-sidebar-shell .preview-dd-menu {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  margin-bottom: 8px;
+  min-width: 220px;
+  background: #1c2230;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 2100;
+  padding: 6px 0;
+}
+html body .pgm-sidebar-shell .preview-dd.open .preview-dd-menu {
+  display: block;
+}
+html body .pgm-sidebar-shell .preview-dd-item {
+  display: block;
+  padding: 8px 14px;
+  color: #a8b0c4 !important;
+  text-decoration: none !important;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+html body .pgm-sidebar-shell .preview-dd-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f6fb !important;
+}
+html body .pgm-sidebar-shell .preview-dd-item.preview-dd-item--danger {
+  color: #f85149 !important;
+}
+html body .pgm-sidebar-shell .preview-dd-item.preview-dd-item--danger:hover {
+  color: #ff7b72 !important;
+}
+html body .pgm-sidebar-shell .preview-dd-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: rgba(255, 255, 255, 0.08);
+}

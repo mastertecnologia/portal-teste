@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import './preview-dd-sidebar.css';
 import ClientSidebar from './ClientSidebar.jsx';
 import PortalNotificationsBell from './PortalNotificationsBell.jsx';
 import { getTurboLinkProps, pathMatches, PGM_MAIN_FRAME_ID } from './sidebarNavUtils.js';

@@ -85,14 +85,18 @@ export default function PortalNotificationsBell({ api, open, onBellClick, bellRe
     if (!btn || !panel || typeof window === 'undefined') return;
     const rect = btn.getBoundingClientRect();
     const winH = window.innerHeight;
+    const winW = window.innerWidth;
     const maxH = winH - 40;
     panel.style.maxHeight = `${maxH}px`;
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     let left = rect.left + rect.width + 8;
-    const top = scrollTop + 20;
-    if (left + 340 > window.innerWidth) {
+    if (left + 340 > winW) {
       left = rect.left - 340 - 8;
     }
+    /* position: fixed — coordenadas em relação à viewport (não somar scrollTop). */
+    const estH = Math.min(420, maxH);
+    let top = rect.bottom + 10 - estH;
+    if (top < 12) top = 12;
+    if (top + estH > winH - 12) top = Math.max(12, winH - estH - 12);
     panel.style.top = `${top}px`;
     panel.style.left = `${left}px`;
     panel.style.right = 'auto';
