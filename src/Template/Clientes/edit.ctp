@@ -41,15 +41,24 @@
 	$_rbacClienteInativo = $isEquipe ? \App\Utility\RbacChecker::resourceFieldAccess($_uidRbacField, 'Clientes.field.inativo') : null;
 	$cliInativoRbacHidden = $isEquipe && $_rbacClienteInativo !== null && empty($_rbacClienteInativo['visible']);
 	$cliInativoRbacReadonly = $isEquipe && $_rbacClienteInativo !== null && !empty($_rbacClienteInativo['visible']) && empty($_rbacClienteInativo['editable']);
+	$cliPublicCode = trim((string)($cliente->public_code ?? ''));
 
 ?>
 <style>
 .table td, .table th { padding: 0.4rem; }
 /* ── Empresa edit — Premium tabs ─────────────────────────────── */
 .cli-page-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.cli-page-head-left{flex:1;min-width:0;}
 .cli-page-head-left .cli-eyebrow{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#1d9e75;font-weight:700;margin-bottom:3px;}
 .cli-page-head-left h1{font-size:1.2rem;font-weight:800;color:#e6edf3;margin:0;}
 .cli-page-head-left p{font-size:.78rem;color:#6e7681;margin:3px 0 0;}
+.cli-page-head-code-row{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;max-width:100%;}
+.cli-page-head-code-label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6e7681;}
+.cli-page-head-code{
+	display:inline-block;max-width:100%;font-family:'DM Mono',Consolas,monospace;font-size:.78rem;font-weight:600;
+	color:#5cdbc0;background:#0d1117;border:1px solid #30363d;border-radius:999px;padding:5px 12px;letter-spacing:.04em;
+	word-break:break-word;line-height:1.35;
+}
 /* Tab nav override */
 .cli-tabs-nav{display:flex;gap:2px;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:4px;margin-bottom:20px;flex-wrap:wrap;}
 .cli-tabs-nav .nav-item{flex:none;}
@@ -69,8 +78,10 @@
 	display:inline-block;width:auto;max-width:100%;min-width:0;
 	padding:8px 12px;font-family:'DM Mono',Consolas,monospace;font-size:.82rem;letter-spacing:.04em;
 }
-.cli-public-code-block .cli-public-code-hint{max-width:100%;line-height:1.35;}
-.cli-col-doc-public-code .cli-public-code-block{margin-top:10px;}
+.cli-public-code-block .cli-public-code-hint{max-width:min(100%,17rem);line-height:1.35;}
+@media (min-width:992px){
+	.cli-row-dados-empresa-head .cli-public-code-block{margin-left:auto;}
+}
 /* Section divider */
 .cli-section{margin-top:20px;padding-top:16px;border-top:1px solid #21262d;}
 .cli-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:14px;}
@@ -158,6 +169,10 @@
 				<div class="cli-eyebrow">Minha Empresa</div>
 				<h1><?= h($cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?: $cliente->nomefantasia)) ?></h1>
 				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
+				<div class="cli-page-head-code-row" title="<?= h(__('Identificador único na empresa; gerado pelo sistema ou informado pela integração.')) ?>">
+					<span class="cli-page-head-code-label"><?= __('Código do cliente') ?></span>
+					<span class="cli-page-head-code" translate="no"><?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?></span>
+				</div>
 			</div>
 			<?php if ($isEquipe): ?>
 				<div class="d-flex align-items-center flex-wrap pgm-gap-8">
@@ -176,32 +191,23 @@
 							<p class="cli-ficha-hint mb-0"><i class="fas fa-eye"></i> <span id="cli-ficha-mode-label">Modo leitura</span> — use a barra inferior para <strong>Editar</strong>, <strong>Salvar</strong> ou <strong>Cancelar</strong>.</p>
 						</div>
 						<?= $this->element('Cli/card', ['title' => 'Dados da empresa']) ?>
-						<div class="row">
-							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
+						<div class="row align-items-end cli-row-dados-empresa-head">
+							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-4 col-md-5 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
+							<div class="col-lg-auto col-md-7 col-sm-12 col-xs-12 mt-2 mt-md-0 cli-public-code-block">
+								<span class="cli-label"><?= __('Código do cliente') ?></span>
+								<div class="cli-field-ro cli-field-ro--code" id="cli-public-code-ro"><?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?></div>
+								<p class="small text-muted mb-0 cli-public-code-hint mt-1"><?= __('Identificador único na empresa; gerado pelo sistema ou informado pela integração.') ?></p>
+							</div>
 						</div>
 						<br>
 						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
 							<?= $this->element('Cli/input', ['label' => 'Razão Social', 'field' => 'razaosocial', 'colClass' => 'col-lg-5 col-md-4 col-sm-12 col-xs-12', 'options' => ['placeholder' => 'Insira a razão social']]) ?>
 							<?= $this->element('Cli/input', ['label' => 'Nome Fantasia', 'field' => 'nomefantasia', 'colClass' => 'col-lg-5 col-md-4 col-sm-12 col-xs-12', 'options' => ['placeholder' => 'Insira o nome fantasia']]) ?>
-							<div class="col-lg-2 col-md-4 col-sm-12 col-xs-12 cli-col-doc-public-code">
-								<?= $this->element('Cli/input', ['label' => 'CNPJ', 'field' => 'cnpj', 'colClass' => 'col-12', 'options' => ['id' => 'cnpj', 'placeholder' => 'Insira o CNPJ']]) ?>
-								<div class="cli-public-code-block">
-									<span class="cli-label"><?= __('Código do cliente') ?></span>
-									<div class="cli-field-ro cli-field-ro--code"><?= h((string)($cliente->public_code ?? '')) ?></div>
-									<p class="small text-muted mb-0 cli-public-code-hint mt-1"><?= __('Identificador único na empresa; gerado pelo sistema ou informado pela integração.') ?></p>
-								</div>
-							</div>
+							<?= $this->element('Cli/input', ['label' => 'CNPJ', 'field' => 'cnpj', 'colClass' => 'col-lg-2 col-md-4 col-sm-12 col-xs-12', 'options' => ['id' => 'cnpj', 'placeholder' => 'Insira o CNPJ']]) ?>
 						</div>
 						<div class="row pessoaFisica <?= $pessoaFisica ?>">
 							<?= $this->element('Cli/input', ['label' => 'Nome', 'field' => 'nome', 'colClass' => 'col-lg-8 col-xs-12', 'options' => ['placeholder' => 'Insira o nome']]) ?>
-							<div class="col-lg-4 col-xs-12 cli-col-doc-public-code">
-								<?= $this->element('Cli/input', ['label' => 'CPF', 'field' => 'cpf', 'colClass' => 'col-12', 'options' => ['id' => 'cpffisica', 'placeholder' => 'Insira o CPF']]) ?>
-								<div class="cli-public-code-block">
-									<span class="cli-label"><?= __('Código do cliente') ?></span>
-									<div class="cli-field-ro cli-field-ro--code"><?= h((string)($cliente->public_code ?? '')) ?></div>
-									<p class="small text-muted mb-0 cli-public-code-hint mt-1"><?= __('Identificador único na empresa; gerado pelo sistema ou informado pela integração.') ?></p>
-								</div>
-							</div>
+							<?= $this->element('Cli/input', ['label' => 'CPF', 'field' => 'cpf', 'colClass' => 'col-lg-4 col-xs-12', 'options' => ['id' => 'cpffisica', 'placeholder' => 'Insira o CPF']]) ?>
 						</div>
 						<?= $this->element('Cli/card_end') ?>
 						<?php if($isEquipe){ ?>
