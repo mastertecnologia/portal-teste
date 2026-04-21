@@ -212,6 +212,24 @@ html body .pgm-sidebar-shell a.pgm-nav-link.active::before {
 	border-radius: 0 2px 2px 0 !important;
 	box-shadow: 0 0 12px rgba(29, 158, 117, 0.15) !important;
 }
+/* Menu staff (#sidebarnav): só indicador à esquerda (evita conflito com layout-sidebar-shell e fundo “pill” duplo). */
+html body .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat a.pgm-nav-link.active {
+	background: transparent !important;
+	box-shadow: none !important;
+	color: #f4f6fb !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+}
+html body .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat a.pgm-nav-link.active::before {
+	left: 0 !important;
+	top: 5px !important;
+	bottom: 5px !important;
+	transform: none !important;
+	height: auto !important;
+	width: 3px !important;
+	border-radius: 0 3px 3px 0 !important;
+	box-shadow: 0 0 16px rgba(29, 158, 117, 0.45) !important;
+}
 html body .pgm-sidebar-shell a.pgm-nav-link.pgm-nav-link--danger {
 	color: rgba(248, 113, 113, 0.9) !important;
 }
@@ -458,11 +476,11 @@ body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat .nav
 }
 body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat > li > a.pgm-nav-link.active,
 body.layout-no-topbar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat .nav-section-items > a.pgm-nav-link.active {
-	background: var(--pgm-sb-item-active) !important;
+	background: transparent !important;
 	color: var(--pgm-sb-text-main) !important;
 	box-shadow: none !important;
 	font-size: 13px !important;
-	font-weight: 500 !important;
+	font-weight: 600 !important;
 }
 body.layout-no-topbar .pgm-sidebar-shell a.pgm-nav-link svg,
 body.layout-no-topbar .pgm-sidebar-shell a.pgm-nav-link .pgm-nav-lucide {
@@ -750,6 +768,13 @@ body.mini-sidebar .pgm-sidebar-shell .user-profile--footer .dropdown-toggle.user
 body.mini-sidebar .pgm-sidebar-shell a.pgm-nav-link.nav-item.active::before {
 	left: -2px !important;
 	height: 20px !important;
+}
+body.mini-sidebar .pgm-sidebar-shell ul#sidebarnav.pgm-sidebar-nav-flat a.pgm-nav-link.nav-item.active::before {
+	left: 0 !important;
+	top: 4px !important;
+	bottom: 4px !important;
+	height: auto !important;
+	transform: none !important;
 }
 body.mini-sidebar .pgm-sidebar-shell .pgm-sidebar-footer.sidebar-footer {
 	flex-direction: column !important;

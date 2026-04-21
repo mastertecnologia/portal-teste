@@ -12,6 +12,8 @@
 	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
 	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
 	$clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
+	/** Lista "Clientes" no menu: não marcar em `add` (há item próprio "Cadastrar clientes"). `$clientesActive` do AppController fica true em todo o controller. */
+	$clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
 	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
 	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
@@ -223,7 +225,7 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['clientes'] ?? true)) : ?>
-						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], (bool)($clientesActive ?? ''), '', 'Clientes') ?>
+						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], $clientesListNavActive, '', 'Clientes') ?>
 						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $clientesAddActive, '', 'Cadastrar clientes') ?>
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
