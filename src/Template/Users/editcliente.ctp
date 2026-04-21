@@ -6,6 +6,11 @@
 
 	$this->Breadcrumbs->add('Usuários', ['controller' => 'users', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
+
+	$idClienteVoltar = (int)($user->idcliente ?? 0);
+	$urlVoltarFichaCliente = $idClienteVoltar > 0
+		? Router::url(['controller' => 'Clientes', 'action' => 'edit', $idClienteVoltar]) . '#usuarios'
+		: Router::url(['controller' => 'Clientes', 'action' => 'index']);
 ?>
 <style>
 .cli-editcliente-page .cli-form-footer { flex-wrap: wrap; }
@@ -16,6 +21,13 @@
 	<div class="cli-form-root cli-layout-unificado">
 		<?= $this->Form->create($user, ['class' => 'form-material', 'id' => 'form-users-editcliente']) ?>
 		<div class="cli-form-body cli-form-body--cadastro-lead">
+			<div class="d-flex justify-content-end mb-3">
+				<?= $this->Html->link(
+					'<i class="fas fa-arrow-left"></i> Voltar à ficha do cliente',
+					$urlVoltarFichaCliente,
+					['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false, 'data-turbo' => 'false']
+				) ?>
+			</div>
 
 			<div class="cli-section mb-3">
 				<div class="cli-section-head">
@@ -46,19 +58,22 @@
 					<div class="cli-section-title">Perfil</div>
 				</div>
 				<div class="cli-section-body">
-					<div class="cli-fg cli-fg-3-2">
+					<div class="cli-fg cli-fg-1">
 						<div class="cli-fgroup">
 							<label for="name">Nome do usuário</label>
 							<?= $this->Form->control('name', ['class' => 'form-control', 'label' => false, 'placeholder' => 'Insira o nome']) ?>
 						</div>
+					</div>
+					<div class="cli-fg cli-fg-1">
 						<div class="cli-fgroup">
 							<label for="idcliente">Cliente <span class="cli-req">*</span></label>
 							<?= $this->Form->control('idcliente', [
-								'data-live-search' => true,
+								'type' => 'select',
+								'data-live-search' => 'true',
 								'data-container' => 'body',
 								'options' => $clientes,
 								'title' => 'Selecione um cliente',
-								'class' => 'form-control selectpicker',
+								'class' => 'form-control',
 								'label' => false,
 								'required' => true,
 							]) ?>
@@ -216,12 +231,22 @@
 			});
 		});
 
-		var $sp = $('#idcliente');
-		if ($sp.length && typeof $.fn.selectpicker === 'function') {
-			if ($sp.parent().hasClass('bootstrap-select')) {
-				$sp.selectpicker('destroy');
+		// Um único bootstrap-select: sem classe selectpicker no HTML (evita init global duplicado).
+		var $cliSel = $('#form-users-editcliente select[name="idcliente"]');
+		if ($cliSel.length && typeof $.fn.selectpicker === 'function') {
+			var $fg = $cliSel.closest('.cli-fgroup');
+			$fg.find('> .dropdown.bootstrap-select').each(function () {
+				var $w = $(this);
+				if (!$w.find('select[name="idcliente"]').length) {
+					$w.remove();
+				}
+			});
+			if ($cliSel.data('selectpicker')) {
+				try {
+					$cliSel.selectpicker('destroy');
+				} catch (eCli) {}
 			}
-			$sp.selectpicker({
+			$cliSel.selectpicker({
 				container: 'body',
 				liveSearch: true,
 			});
