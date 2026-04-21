@@ -65,6 +65,8 @@ use Cake\Routing\Router;
 
 	<!--- Scripts -->
 	<?= $this->Html->script("/assets/node_modules/jquery/jquery-3.2.1.min") ?>
+	<script src="https://unpkg.com/@hotwired/turbo@7.3.0/dist/turbo.es2017-umd.js"></script>
+	<script>try { if (window.Turbo) { Turbo.session.drive = false; } } catch (e) {}</script>
 	<?= $this->Html->script("/js/pgm-portal-theme") ?>
     <!-- Bootstrap popper Core JavaScript -->
 	<?= $this->Html->script("/assets/node_modules/popper/popper.min") ?>
@@ -163,6 +165,7 @@ use Cake\Routing\Router;
 		?>
 		<div class="pgm-shell-main">
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
+		<turbo-frame id="pgm-main-frame" data-turbo-action="advance">
 		<?php if (empty($disablePgmAppShellPremium)) : ?>
 		<?= $this->element('pgm_shell_topbar') ?>
 		<?php endif; ?>
@@ -186,6 +189,7 @@ use Cake\Routing\Router;
 			</div>
 		</div>
 		<?= $this->element('footer'); ?>
+		</turbo-frame>
 		</div>
 	</div>
 	<div class='hide' id='notificacao'></div>
@@ -420,6 +424,154 @@ use Cake\Routing\Router;
 		$(window).on('load', function () {
 			pgmLayoutNoTopbarMinHeight();
 		});
+
+		// Navegação parcial: Turbo Frame troca só a coluna principal; sidebar permanece no DOM.
+		(function pgmTurboShellInit() {
+			if (!window.Turbo) {
+				return;
+			}
+			var FRAME_ID = 'pgm-main-frame';
+
+			function pgmNormalizePath(p) {
+				if (!p) {
+					return '/';
+				}
+				p = String(p).split('?')[0].replace(/\/+/g, '/');
+				if (p.length > 1 && p.slice(-1) === '/') {
+					p = p.slice(0, -1);
+				}
+				return p === '' ? '/' : p;
+			}
+
+			function pgmTurboMarkNavLinks() {
+				document.querySelectorAll(
+					'aside.pgm-sidebar-shell .pgm-sidebar-brand a[href], aside.pgm-sidebar-shell .scroll-sidebar a[href]'
+				).forEach(function (a) {
+					var href = (a.getAttribute('href') || '').trim();
+					if (!href || href.charAt(0) !== '/' || href.indexOf('javascript:') === 0) {
+						return;
+					}
+					if (a.getAttribute('target') === '_blank') {
+						return;
+					}
+					if (a.closest('.dropdown-menu')) {
+						return;
+					}
+					if (href.indexOf('/users/logout') !== -1) {
+						return;
+					}
+					a.setAttribute('data-turbo-frame', FRAME_ID);
+					a.setAttribute('data-turbo-action', 'advance');
+				});
+			}
+
+			function pgmTurboSyncSidebarActive() {
+				var path = pgmNormalizePath(window.location.pathname);
+				var side = document.querySelector('aside.pgm-sidebar-shell');
+				if (!side) {
+					return;
+				}
+				var links = [];
+				side.querySelectorAll('a[href^="/"]').forEach(function (a) {
+					if (a.closest('.dropdown-menu')) {
+						return;
+					}
+					var href = (a.getAttribute('href') || '').trim();
+					if (!href || href.charAt(0) !== '/') {
+						return;
+					}
+					if (href.indexOf('/users/logout') !== -1) {
+						return;
+					}
+					try {
+						var p = pgmNormalizePath(new URL(href, window.location.origin).pathname);
+						if (path === p || (p !== '/' && path.indexOf(p + '/') === 0)) {
+							links.push({ a: a, plen: p.length, nav: a.classList.contains('pgm-nav-link') ? 1 : 0 });
+						}
+					} catch (err) {
+					}
+				});
+				links.sort(function (x, y) {
+					if (y.plen !== x.plen) {
+						return y.plen - x.plen;
+					}
+					return y.nav - x.nav;
+				});
+				var best = links.length ? links[0].a : null;
+
+				side.querySelectorAll('a.pgm-nav-link').forEach(function (a) {
+					a.classList.toggle('active', !!best && a === best);
+				});
+
+				var nav = document.getElementById('sidebarnav');
+				if (nav && !side.querySelector('a.pgm-nav-link')) {
+					nav.querySelectorAll('li.active').forEach(function (li) {
+						li.classList.remove('active');
+					});
+					nav.querySelectorAll('li.selected').forEach(function (li) {
+						li.classList.remove('selected');
+					});
+					nav.querySelectorAll('ul.collapse.in').forEach(function (ul) {
+						ul.classList.remove('in');
+					});
+					nav.querySelectorAll('a.has-arrow').forEach(function (t) {
+						t.setAttribute('aria-expanded', 'false');
+					});
+					if (best) {
+						var collapse = best.closest('ul.collapse');
+						if (collapse) {
+							collapse.classList.add('in');
+							var innerLi = best.closest('li');
+							if (innerLi) {
+								innerLi.classList.add('active');
+							}
+							var outer = collapse.closest('li.has-arrow-sub');
+							if (outer) {
+								outer.classList.add('active', 'selected');
+								var toggler = outer.querySelector('a.has-arrow');
+								if (toggler) {
+									toggler.setAttribute('aria-expanded', 'true');
+								}
+							}
+						} else {
+							var topLi = best.closest('#sidebarnav > li');
+							if (topLi && !topLi.classList.contains('has-arrow-sub')) {
+								topLi.classList.add('active');
+							}
+						}
+					}
+				}
+
+				if (typeof pgmSidebarApplyNavSectionStates === 'function') {
+					pgmSidebarApplyNavSectionStates();
+				}
+				if (typeof pgmSidebarLucideRefresh === 'function') {
+					pgmSidebarLucideRefresh();
+				}
+			}
+
+			function pgmTurboRebindDynamicUi() {
+				pgmLayoutNoTopbarMinHeight();
+			}
+
+			document.addEventListener('turbo:frame-load', function (e) {
+				if (!e.target || e.target.id !== FRAME_ID) {
+					return;
+				}
+				pgmTurboSyncSidebarActive();
+				pgmTurboRebindDynamicUi();
+			});
+
+			function pgmTurboBoot() {
+				pgmTurboMarkNavLinks();
+				pgmTurboSyncSidebarActive();
+			}
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', pgmTurboBoot);
+			} else {
+				pgmTurboBoot();
+			}
+		})();
 	//
 
 </script>
