@@ -44,10 +44,14 @@
         $isPj = (int)$reg->tipo === (int)C_ClientesTipoJuridica;
         $docDigits = preg_replace('/\D/', '', (string)($isPj ? ($reg->cnpj ?? '') : ($reg->cpf ?? '')));
         $emailLower = mb_strtolower(trim((string)($reg->email ?? '')), 'UTF-8');
+        $pub = mb_strtolower(trim((string)($reg->public_code ?? '')), 'UTF-8');
         $parts = $isPj ? [trim((string)($reg->razaosocial ?? '')), trim((string)($reg->nomefantasia ?? ''))] : [trim((string)($reg->nome ?? ''))];
         $textBlob = mb_strtolower(trim(preg_replace('/\s+/', ' ', implode(' ', array_filter($parts)))), 'UTF-8');
         if ($emailLower !== '') {
             $textBlob = trim($textBlob . ' ' . $emailLower);
+        }
+        if ($pub !== '') {
+            $textBlob = trim($textBlob . ' ' . $pub);
         }
         $primaryLower = mb_strtolower(trim($isPj ? (string)($reg->razaosocial ?? '') : (string)($reg->nome ?? '')), 'UTF-8');
         $primaryLower = trim(preg_replace('/\s+/', ' ', $primaryLower));

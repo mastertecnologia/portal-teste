@@ -7,6 +7,7 @@ use App\Service\Common\CryptoService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\ClienteDomain\InfrastructureGuard;
 use App\Service\ClienteIntegration\ClienteErpSyncService;
+use App\Model\Table\ClientesTable;
 use App\Utility\ClienteDomainEventType;
 use App\Utility\RbacChecker;
 use Cake\Event\Event;
@@ -200,6 +201,12 @@ class ClientesController extends AppController {
 		if ($kw === '') {
 			return [];
 		}
+		$qCode = $this->Clientes->find('all')->where(['Clientes.public_code' => $kw]);
+		$this->Abac->applyToQuery($qCode, 'Clientes');
+		$byPublicCode = $qCode->toArray();
+		if (!empty($byPublicCode)) {
+			return $byPublicCode;
+		}
 		if (mb_strpos($kw, '@') !== false) {
 			$email = mb_strtolower($kw, 'UTF-8');
 			$q = $this->Clientes->find('all')->where([
@@ -237,6 +244,7 @@ class ClientesController extends AppController {
 					['LOWER(Clientes.nomefantasia) LIKE' => '%' . $w . '%'],
 					['LOWER(Clientes.nome) LIKE' => '%' . $w . '%'],
 					['LOWER(Clientes.email) LIKE' => '%' . $w . '%'],
+					['LOWER(Clientes.public_code) LIKE' => '%' . $w . '%'],
 				],
 			]);
 		}
@@ -296,6 +304,7 @@ class ClientesController extends AppController {
 			}
 			if(empty($clientequejaexiste)){
 				if (!isset($data['inativo'])) $data['inativo'] = '0';
+				unset($data['public_code']);
 
 				// Geração do token
 				$cpfoucnpj = isset($data['cnpj']) ? $data['cnpj'] : $data['cpf'];
@@ -396,6 +405,7 @@ class ClientesController extends AppController {
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
+			unset($data['public_code']);
 			if ((int)$this->Auth->user('role') === C_RoleFuncionario) {
 				$inativoGate = RbacChecker::resourceFieldAccess((int)$this->Auth->user('id'), 'Clientes.field.inativo');
 				if ($inativoGate !== null && (empty($inativoGate['visible']) || empty($inativoGate['editable']))) {
@@ -1050,8 +1060,45 @@ class ClientesController extends AppController {
 			$cliente->idcidade = $cidade->id;
 			$cliente->empresadominante = (int)$empresa;
 
-			if (!$this->Clientes->save($cliente)) {
-				$err = json_encode($cliente->getErrors(), JSON_UNESCAPED_UNICODE);
+			$extPublic = null;
+			if (isset($json->public_code)) {
+				$extPublic = ClientesTable::normalizeIntegrationPublicCode($json->public_code);
+			} elseif (isset($json->codigo_publico)) {
+				$extPublic = ClientesTable::normalizeIntegrationPublicCode($json->codigo_publico);
+			}
+			if ($extPublic === false) {
+				return $apiRet('JSON inválido: public_code/codigo_publico com formato inválido (use até 32 caracteres: letras, números, ponto, hífen e sublinhado).', 400);
+			}
+			if ($extPublic !== null) {
+				$cliente->accessible('public_code', true);
+				$cliente->set('public_code', $extPublic);
+			}
+
+			try {
+				$saved = $this->Clientes->save($cliente);
+			} catch (\Throwable $e) {
+				$pdo = $e instanceof \PDOException ? $e : $e->getPrevious();
+				$msg = $pdo instanceof \PDOException ? $pdo->getMessage() : $e->getMessage();
+				if ($pdo instanceof \PDOException
+					&& (strpos($msg, '23505') !== false
+						|| stripos($msg, 'unique') !== false
+						|| stripos($msg, 'uq_clientes_idempresa_public_code') !== false)) {
+					return $this->jsonResponse([
+						'mensagem' => 'Código de cliente já cadastrado para esta empresa.',
+						'retorno' => 'Código de cliente já cadastrado para esta empresa.',
+					], 409);
+				}
+				throw $e;
+			}
+			if (!$saved) {
+				$errors = $cliente->getErrors();
+				if (!empty($errors['public_code'])) {
+					return $this->jsonResponse([
+						'mensagem' => 'Código de cliente já cadastrado para esta empresa.',
+						'retorno' => 'Código de cliente já cadastrado para esta empresa.',
+					], 409);
+				}
+				$err = json_encode($errors, JSON_UNESCAPED_UNICODE);
 
 				return $apiRet('Erro ao salvar cliente no portal: ' . $err, 400);
 			}
@@ -1145,10 +1192,15 @@ class ClientesController extends AppController {
 				} else {
 					$cliente = $this->Clientes->find('all')->where(['idempresa' => $retorno['Empresa']])->toArray(); 
 				}
-				foreach($cliente as $reg){
+				foreach ($cliente as $reg) {
+					$publicCode = $reg->get('public_code');
 					$reg = $this->Clientes->clicontratosArr($reg);
 					$reg = $this->Clientes->clientesArr($reg);
-				} 
+					if ($publicCode !== null && $publicCode !== '') {
+						$reg->accessible('public_code', true);
+						$reg->set('public_code', $publicCode);
+					}
+				}
 				return $this->jsonResponse($cliente, 200);
 			} else {
 				return $apiRetList('Autenticação Inválida', 401);

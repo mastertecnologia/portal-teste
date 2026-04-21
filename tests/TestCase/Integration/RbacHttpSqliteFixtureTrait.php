@@ -66,7 +66,12 @@ trait RbacHttpSqliteFixtureTrait {
 				razaosocial VARCHAR(255) NOT NULL DEFAULT \'\',
 				tipo VARCHAR(32) NULL,
 				nome VARCHAR(255) NULL,
-				inativo INTEGER NOT NULL DEFAULT 0
+				inativo INTEGER NOT NULL DEFAULT 0,
+				public_code VARCHAR(32) NULL
+			)',
+			'CREATE TABLE IF NOT EXISTS clientes_public_code_seq (
+				idempresa INTEGER NOT NULL PRIMARY KEY,
+				next_val INTEGER NOT NULL DEFAULT 0
 			)',
 			'CREATE TABLE IF NOT EXISTS orcamentosnovosdes (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -302,6 +307,14 @@ trait RbacHttpSqliteFixtureTrait {
 			$conn->execute($sql);
 		}
 		try {
+			$conn->execute('ALTER TABLE clientes ADD COLUMN public_code VARCHAR(32) NULL');
+		} catch (\Throwable $e) {
+		}
+		try {
+			$conn->execute('CREATE UNIQUE INDEX IF NOT EXISTS uq_clientes_idempresa_public_code ON clientes (idempresa, public_code)');
+		} catch (\Throwable $e) {
+		}
+		try {
 			$conn->execute('ALTER TABLE fiscal_empresas_config ADD COLUMN dfe_ult_nsu VARCHAR(15) NULL');
 		} catch (\Throwable $e) {
 			// SQLite: coluna já existe em esquemas antigos
@@ -430,6 +443,10 @@ trait RbacHttpSqliteFixtureTrait {
 		$conn->execute('DELETE FROM listamembros');
 		$conn->execute('DELETE FROM visitas');
 		$conn->execute('DELETE FROM orcamentosnovosdes');
+		try {
+			$conn->execute('DELETE FROM clientes_public_code_seq');
+		} catch (\Throwable $e) {
+		}
 		$conn->execute('DELETE FROM clientes');
 		$conn->execute('DELETE FROM feriados');
 		$conn->execute('DELETE FROM problemas');

@@ -15,6 +15,8 @@ $nome = $cliente->tipo == C_ClientesTipoFisica ? h($cliente->nome) : h($cliente-
 				<?= $this->Html->link('Editar', ['action' => 'edit', $cliente->id], ['class' => 'btn btn-sm btn-success']) ?>
 			</div>
 			<dl class="row m-b-0">
+				<dt class="col-sm-3">Código do cliente</dt>
+				<dd class="col-sm-9"><?= h((string)($cliente->public_code ?? '')) ?></dd>
 				<dt class="col-sm-3">Tipo</dt>
 				<dd class="col-sm-9"><?= (int)$cliente->tipo === (int)C_ClientesTipoFisica ? 'Pessoa física' : 'Pessoa jurídica' ?></dd>
 				<?php if (!empty($cliente->cnpj)): ?>

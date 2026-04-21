@@ -409,8 +409,9 @@ class RbacFinanceiroBancosCnabHttpTest extends TestCase
         int $clienteId,
         string $nome
     ): void {
+        $publicCode = 'P' . str_pad((string)$clienteId, 8, '0', STR_PAD_LEFT);
         self::$conn->execute(
-            'INSERT INTO clientes (id, idempresa, razaosocial, tipo, nome, inativo) VALUES (?,?,?,?,?,?)',
+            'INSERT INTO clientes (id, idempresa, razaosocial, tipo, nome, inativo, public_code) VALUES (?,?,?,?,?,?,?)',
             [
                 $clienteId,
                 $empresaId,
@@ -418,7 +419,12 @@ class RbacFinanceiroBancosCnabHttpTest extends TestCase
                 (string)$tipo,
                 $tipo === 1 ? $nome : '',
                 0,
+                $publicCode,
             ]
+        );
+        self::$conn->execute(
+            'INSERT INTO clientes_public_code_seq (idempresa, next_val) VALUES (?, ?) ON CONFLICT(idempresa) DO UPDATE SET next_val = CASE WHEN clientes_public_code_seq.next_val < excluded.next_val THEN excluded.next_val ELSE clientes_public_code_seq.next_val END',
+            [$empresaId, $clienteId]
         );
     }
 

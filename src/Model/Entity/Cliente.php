@@ -8,7 +8,8 @@ use Cake\ORM\Entity;
 class Cliente extends Entity {
       protected $_accessible = [
             '*' => true,
-            'id' => false
+            'id' => false,
+            'public_code' => false,
       ];
 
       protected function removeCaracteres($string) {

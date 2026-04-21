@@ -170,6 +170,11 @@
 						<?= $this->element('Cli/card', ['title' => 'Dados da empresa']) ?>
 						<div class="row">
 							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
+							<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+								<span class="cli-label"><?= __('Código do cliente') ?></span>
+								<div class="cli-field-ro" id="cli-public-code-ro"><?= h((string)($cliente->public_code ?? '')) ?></div>
+								<p class="small text-muted mb-0" style="margin-top:4px;"><?= __('Identificador único na empresa; gerado pelo sistema ou informado pela integração.') ?></p>
+							</div>
 						</div>
 						<br>
 						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
