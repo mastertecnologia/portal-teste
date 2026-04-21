@@ -18,7 +18,12 @@ use App\Utility\ErpApiRoutes;
 use App\Utility\ErpIntegrationRequest;
 use App\Utility\RbacChecker;
 use App\Service\Common\ModelService;
+use App\View\Sidebar\PgmPortalSidebarNotifUrls;
+use App\View\Sidebar\PgmSidebarClientPayloadBuilder;
+use App\View\Sidebar\PgmSidebarStaffContext;
+use App\View\Sidebar\PgmSidebarStaffPayloadBuilder;
 use Cake\Controller\Controller;
+use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 
@@ -190,6 +195,39 @@ class AppController extends Controller
             )
         ) {
             $this->set("pgmAdvancedModuleStylesheet", true);
+        }
+
+        if ((bool) Configure::read("PgmSidebar.react_enabled") && $this->Auth->user("id")) {
+            $role = (int) $this->Auth->user("role");
+            if ($role === 0) {
+                $ctx = PgmSidebarStaffContext::computeFromArray(
+                    $this->viewVars,
+                    $this->request,
+                );
+                $props = PgmSidebarStaffPayloadBuilder::build(
+                    $ctx,
+                    $this->viewVars,
+                    $this->request,
+                );
+                $api = PgmPortalSidebarNotifUrls::build(
+                    $this->request,
+                    $this->response,
+                    isset($ctx["sg"]) && is_array($ctx["sg"]) ? $ctx["sg"] : [],
+                    0,
+                );
+                if ($api !== null) {
+                    $props["notificationBellApi"] = $api;
+                }
+                $this->set("pgmSidebarReactProps", $props);
+            } else {
+                $this->set(
+                    "pgmSidebarReactProps",
+                    PgmSidebarClientPayloadBuilder::build(
+                        $this->viewVars,
+                        $this->request,
+                    ),
+                );
+            }
         }
     }
 

@@ -5,6 +5,8 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "dev:sidebar": "vite --config vite.sidebar.config.js",
+        "build:sidebar": "vite build --config vite.sidebar.config.js",
         "preview": "vite preview",
         "start": "vite --open --host",
         "lint": "eslint \"src/**/*.{js,jsx}\""

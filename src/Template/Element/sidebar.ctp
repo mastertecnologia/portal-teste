@@ -2,93 +2,11 @@
 	use Cake\Routing\Router;
 	require_once (ROOT . DS . 'vendor' . DS . 'PGMPackages' . DS . 'UserConstants.php');
 
-	$ctrl = $this->request->getParam('controller');
-	$act = $this->request->getParam('action');
+	use App\View\Sidebar\PgmSidebarStaffContext;
 
-	/* ── Active-state helpers ─────────────────────────────────────────── */
-	$roleNav = (int)($role ?? 1);
-	$sg = isset($sidebarMenuGates) && is_array($sidebarMenuGates) ? $sidebarMenuGates : [];
-
-	$osIndexActive = ($ctrl === 'Ordensservico' && $act === 'index');
-	$osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
-	$clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
-	/** Lista "Clientes" no menu: não marcar em `add` (há item próprio "Cadastrar clientes"). `$clientesActive` do AppController fica true em todo o controller. */
-	$clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
-	$ticketsServicedeskActive = ($ctrl === 'Servicedesk');
-	$ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
-
-	$advMgmtAct = ($ctrl === 'ContractManagement');
-	$advTplAct = ($ctrl === 'ContractTemplates');
-	$advInvAct = ($ctrl === 'AdvancedInvoices');
-
-	$relatoriosPainelActive = ($ctrl === 'Relatorios');
-	$relatoriosIndicadoresAdvActive = ($ctrl === 'AdvancedReports');
-
-	$finDashAct = ($ctrl === 'Financeiro' && $act === 'index');
-	$finRecAct = ($ctrl === 'Financeiro' && in_array($act, ['contasReceber', 'addReceita', 'editReceita'], true));
-	$finPagAct = ($ctrl === 'Financeiro' && in_array($act, ['contasPagar', 'addDespesa', 'editDespesa'], true));
-	$finFluxoAct = ($ctrl === 'Financeiro' && $act === 'fluxoCaixa');
-	$finRecorAct = ($ctrl === 'Financeiro' && in_array($act, ['recorrentes', 'addRecorrente', 'editRecorrente'], true));
-	$finConcAct = ($ctrl === 'Financeiro' && $act === 'conciliacao');
-	$finDreAct = ($ctrl === 'Financeiro' && $act === 'dre');
-	$finRelAct = ($ctrl === 'FinanceiroRelatorios');
-	$finPlanoAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['planoContas', 'planoContasAdd', 'planoContasEdit'], true));
-	$finCcAct = ($ctrl === 'FinanceiroConfig' && in_array($act, ['centrosCusto', 'centroCustoAdd', 'centroCustoEdit'], true));
-	$finBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['index', 'cadastrar', 'add', 'edit', 'delete', 'buscarCatalogo', 'bootstrapBancoPorCodigo'], true));
-	$finRemessaAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['remessa', 'remessaMultiempresas'], true));
-	$finRetornoAct = ($ctrl === 'FinanceiroBancos' && $act === 'retorno');
-	$finRelBancosAct = ($ctrl === 'FinanceiroBancos' && in_array($act, ['relatorios', 'relacaoBancos', 'relacaoRemessas', 'historicoRetorno', 'previsaoRecebimentosPorBanco', 'previsaoPorBancos'], true));
-
-	$fiscalDashAct = ($ctrl === 'Fiscal' && $act === 'index');
-	$fiscalDfeRecAct = ($ctrl === 'Fiscal' && $act === 'dfeRecebidos');
-	$fiscalNotasAct = ($ctrl === 'FiscalNotas' && !in_array($act, ['controleSeries', 'inutilizarNumeracao', 'consultarChave', 'consultarCadastro'], true));
-	$fiscalEntradaAct = ($ctrl === 'FiscalNotasEntrada' && !in_array($act, ['controleSeries', 'inutilizarNumeracao', 'consultarChave', 'consultarCadastro'], true));
-	$fiscalInutActSaida = ($ctrl === 'FiscalNotas' && $act === 'inutilizarNumeracao');
-	$fiscalInutActEntrada = ($ctrl === 'FiscalNotasEntrada' && $act === 'inutilizarNumeracao');
-	$fiscalSeriesSaidaAct = ($ctrl === 'FiscalNotas' && $act === 'controleSeries');
-	$fiscalSeriesEntradaAct = ($ctrl === 'FiscalNotasEntrada' && $act === 'controleSeries');
-	$fiscalCertAct = ($ctrl === 'FiscalCertificados');
-	$fiscalCfgAct = ($ctrl === 'FiscalConfig');
-	$fiscalRelAct = ($ctrl === 'FiscalRelatorios');
-	$fiscalConsultaChaveAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarChave');
-	$fiscalConsultaCadastroAct = (in_array($ctrl, ['FiscalNotas', 'FiscalNotasEntrada'], true) && $act === 'consultarCadastro');
-	$fiscalContingenciaAct = ($ctrl === 'Fiscal' && $act === 'contingencia');
-	$fiscalImportarXmlAct = ($ctrl === 'Fiscal' && $act === 'importarXmlLote');
-
-	$relatoriosOsActive = ($ctrl === 'Ordensservico' && $act === 'relatorios');
-
-	/* Secções colapsáveis: abertas só na rota atual (PHP); persistência manual em localStorage (JS). */
-	$pgmSbOpenOrdens = $osIndexActive || $osAddActive || (bool)($queuesAtendimentoActive ?? '') || $relatoriosOsActive;
-	$pgmSbOpenContratos = $advMgmtAct || $advTplAct || $advInvAct || (bool)($faturasActive ?? '');
-	$pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
-	$pgmSbOpenPlanner = (bool)($visitasActive ?? '');
-	$pgmSbOpenCofre = (bool)($senhasActive ?? '');
-	$pgmSbOpenCadastros = (bool)($clientesActive ?? '') || $clientesAddActive || (bool)($produtosActive ?? '');
-	$pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive;
-	$pgmSbOpenComercial = (bool)($orcamentosActive ?? '');
-	$pgmSbOpenFaturamento = (bool)($prefaturamentoActive ?? '') || (bool)($faturamentoActive ?? '');
-	$pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
-	$pgmSbOpenBancos = $finBancosAct || $finRemessaAct || $finRetornoAct || $finRelBancosAct;
-	$pgmSbOpenFiscal = $fiscalDashAct || $fiscalDfeRecAct || $fiscalNotasAct || $fiscalEntradaAct
-		|| $fiscalInutActSaida || $fiscalInutActEntrada || $fiscalSeriesSaidaAct || $fiscalSeriesEntradaAct
-		|| $fiscalCertAct || $fiscalCfgAct || $fiscalRelAct || $fiscalConsultaChaveAct || $fiscalConsultaCadastroAct
-		|| $fiscalContingenciaAct || $fiscalImportarXmlAct;
-
-	$nameTrim = trim((string)($name ?? ''));
-	$partsName = $nameTrim !== '' ? preg_split('/\s+/', $nameTrim, -1, PREG_SPLIT_NO_EMPTY) : [];
-	$u0 = $partsName[0] ?? '';
-	$u1 = $partsName[1] ?? '';
-	$userInitials = '';
-	if ($u0 !== '') {
-		$userInitials .= strtoupper($u0[0]);
-	}
-	if ($u1 !== '') {
-		$userInitials .= strtoupper($u1[0]);
-	} elseif (strlen($u0) > 1) {
-		$userInitials = strtoupper(substr($u0, 0, 2));
-	}
-
-	$multiEmpresa = count($empresasOptSidebar ?? []) > 1;
+	$__pgmSbPass = get_defined_vars();
+	unset($__pgmSbPass['this'], $__pgmSbPass['__pgmSbPass']);
+	extract(PgmSidebarStaffContext::computeFromArray($__pgmSbPass, $this->request), EXTR_OVERWRITE);
 
 	$html = $this->Html;
 	/**

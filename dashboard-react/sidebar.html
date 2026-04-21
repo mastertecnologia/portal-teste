@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PGM Sidebar (React dev)</title>
+  <!-- Com `npm run dev:sidebar`, ajuste o proxy ou sirva o webroot do Cake na mesma origem para este CSS -->
+  <link rel="stylesheet" href="/dist/css/pages/pgm-sidebar-premium.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body.layout-no-topbar { font-family: system-ui, sans-serif; background: #0b0f12; color: #c7cede; }
+  </style>
+</head>
+<body class="layout-no-topbar">
+  <div id="sidebar-app"></div>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+  <script type="module" src="/src/sidebar/sidebarMount.jsx"></script>
+</body>
+</html>

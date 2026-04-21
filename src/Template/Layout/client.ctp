@@ -1,5 +1,8 @@
 <?php
+use Cake\Core\Configure;
 use Cake\Routing\Router;
+
+$pgmReactSidebar = (bool) Configure::read('PgmSidebar.react_enabled') && !empty($iduser ?? null);
 ?>
 <!doctype html>
 <html lang="pt-BR" data-pgm-theme="dark">
@@ -30,6 +33,10 @@ use Cake\Routing\Router;
 	<?php if (empty($disablePgmAppShellPremium)) : ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-app-shell-premium.css?v=2'); ?>
 	<?php endif; ?>
+	<?php if (!empty($pgmReactSidebar)) : ?>
+	<?= $this->Html->css('/dist/css/pages/layout-sidebar-shell.css?v=2'); ?>
+	<?= $this->Html->css('/dist/css/pages/pgm-sidebar-premium.css?v=2'); ?>
+	<?php endif; ?>
 	<?= $this->Html->css('http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css'); ?>
 	<?= $this->Html->css('http://fonts.googleapis.com/css?family=Roboto:400,700,300|Material+Icons'); ?>
 
@@ -50,7 +57,12 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 ?>
 <body class="<?= h(trim($pgmShellBody . ($bodyPageClass ?? ''))) ?>">
 	<div class="wrapper">
-	    <?= $this->element('sidebar'); ?>
+		<?php if (!empty($pgmReactSidebar)) : ?>
+		<div id="sidebar-app"></div>
+		<script>window.__PGM_REACT_SIDEBAR__ = true;</script>
+		<?php else : ?>
+		<?= $this->element('sidebarcli'); ?>
+		<?php endif; ?>
 		<?= $this->assign('title', $title); ?>
 
 	    <div class="main-panel">
@@ -75,5 +87,12 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
     <?= $this->Html->script('/plugins/datatables/dataTables.bootstrap.min') ?>
 	<?= $this->Html->script('maskedinput.min') ?>
 	<?= $this->Html->script('/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js') ?>
+	<?php if (!empty($pgmReactSidebar)) : ?>
+	<?php
+	$pgmSidebarReactProps = isset($pgmSidebarReactProps) && is_array($pgmSidebarReactProps) ? $pgmSidebarReactProps : [];
+	echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) . ";</script>\n";
+	?>
+	<script type="module" src="<?= h($this->Url->build('/js/pgm-sidebar-react/sidebar-app.js')) ?>"></script>
+	<?php endif; ?>
 </body>
 </html>

@@ -154,6 +154,10 @@ if (file_exists(__DIR__ . DS . 'grid.php')) {
     Configure::load('grid', 'default', false);
 }
 
+if (file_exists(__DIR__ . DS . 'pgm_sidebar.php')) {
+    Configure::load('pgm_sidebar', 'default', false);
+}
+
 /*
  * When debug = true the metadata cache should only last
  * for a short time.

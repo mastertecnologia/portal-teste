@@ -1,5 +1,8 @@
 <?php
 use Cake\Routing\Router;
+
+$pgmReactSidebar = (bool)\Cake\Core\Configure::read('PgmSidebar.react_enabled')
+	&& !empty($iduser ?? null);
 ?>
 <!DOCTYPE HTML>
 <html lang="pt-BR" data-pgm-theme="light">
@@ -44,6 +47,9 @@ use Cake\Routing\Router;
 	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=2") ?>
 	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
+	<?php if ($pgmReactSidebar) : ?>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
 	<?php if (!empty($pgmPortalClient)): ?>
@@ -158,11 +164,19 @@ use Cake\Routing\Router;
 	<!-- Painel principal -->
 	<div class="main-wrapper" id="main-wrapper">
 		<!-- Header horizontal removido: empresa, data e perfil estão na sidebar (layout-sidebar-shell.css) -->
-		<!-- Sidebar -->
+		<!-- Sidebar: Cake (predefinição) ou montagem React se PGM_SIDEBAR_REACT=1 -->
+		<?php if ($pgmReactSidebar) : ?>
+		<div id="sidebar-app"></div>
+		<script>window.__PGM_REACT_SIDEBAR__ = true;</script>
+		<?php else : ?>
 		<?php
-			if ($role == 0) echo $this->element('sidebar');
-			else echo $this->element('sidebarcli');
+			if ($role == 0) {
+				echo $this->element('sidebar');
+			} else {
+				echo $this->element('sidebarcli');
+			}
 		?>
+		<?php endif; ?>
 		<div class="pgm-shell-main">
 		<a href="javascript:void(0)" class="nav-toggler d-flex d-md-none pgm-shell-mobile-nav waves-effect waves-dark" aria-label="Abrir menu"><i class="ti-menu"></i></a>
 		<turbo-frame id="pgm-main-frame" data-turbo-action="advance">
@@ -461,7 +475,7 @@ use Cake\Routing\Router;
 
 			function pgmTurboMarkNavLinks() {
 				document.querySelectorAll(
-					'aside.pgm-sidebar-shell .pgm-sidebar-brand a[href], aside.pgm-sidebar-shell .scroll-sidebar a[href]'
+					'aside.pgm-sidebar-shell .pgm-sidebar-brand a[href], aside.pgm-sidebar-shell .scroll-sidebar a[href], aside.pgm-sidebar-shell .pgm-sidebar-footer a.preview-dd-item[href], aside.pgm-sidebar-shell .pgm-sidebar-footer a.dropdown-item[href]'
 				).forEach(function (a) {
 					if (a.getAttribute('target') === '_blank') {
 						return;
@@ -478,11 +492,15 @@ use Cake\Routing\Router;
 			}
 
 			function pgmTurboSyncSidebarActive() {
-				var path = pgmNormalizePath(window.location.pathname);
 				var side = document.querySelector('aside.pgm-sidebar-shell');
 				if (!side) {
 					return;
 				}
+				if (window.__PGM_REACT_SIDEBAR__) {
+					pgmTurboRebindDynamicUi();
+					return;
+				}
+				var path = pgmNormalizePath(window.location.pathname);
 				var links = [];
 				side.querySelectorAll('a[href]').forEach(function (a) {
 					if (a.closest('.dropdown-menu')) {
@@ -586,7 +604,17 @@ use Cake\Routing\Router;
 			} else {
 				pgmTurboBoot();
 			}
+
+			window.pgmTurboShellMarkNavLinks = pgmTurboMarkNavLinks;
 		})();
 	//
 
 </script>
+<?php if ($pgmReactSidebar) : ?>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+<?php
+$pgmSidebarReactProps = isset($pgmSidebarReactProps) && is_array($pgmSidebarReactProps) ? $pgmSidebarReactProps : [];
+echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) . ";</script>\n";
+?>
+<script type="module" src="<?= h($this->Url->build('/js/pgm-sidebar-react/sidebar-app.js')) ?>"></script>
+<?php endif; ?>

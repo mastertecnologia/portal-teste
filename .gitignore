@@ -11,6 +11,8 @@ dashboard-react/.vite/
 /yes
 /yes.pub
 .cursorrules*
+# Cópias locais antes da migração sidebar React (restauro manual; não versionar)
+/BACKUP_PRE_MIGRACAO_SIDEBAR_REACT_*/
 # Fiscal: certificados/XML em disco (FISCAL_STORAGE_PATH padrão: storage/fiscal)
 /storage/fiscal/*
 !/storage/fiscal/.gitkeep

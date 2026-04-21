@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Validação — Sidebar React (migração)</title>
+	<meta name="csrfToken" content="" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="dist/css/pages/pgm-theme-tokens.css" />
+	<link rel="stylesheet" href="dist/css/pages/pgm-components-base.css" />
+	<link rel="stylesheet" href="dist/css/pages/layout-sidebar-shell.css" />
+	<link rel="stylesheet" href="dist/css/pages/pgm-sidebar-premium.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/themify-icons@0.1.2/css/themify-icons.min.css" />
+	<style>
+		*, *::before, *::after { box-sizing: border-box; }
+		html, body { height: 100%; margin: 0; }
+		body.layout-no-topbar {
+			font-family: "DM Sans", system-ui, sans-serif;
+			background: #0b0f12;
+			color: #c7cede;
+		}
+		.pgm-val-toolbar {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 100000;
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 8px 12px;
+			padding: 10px 14px;
+			background: #12161f;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+			font-size: 13px;
+		}
+		.pgm-val-toolbar a {
+			color: #5cdbc0;
+			text-decoration: none;
+			padding: 6px 10px;
+			border-radius: 6px;
+			border: 1px solid rgba(93, 219, 192, 0.35);
+		}
+		.pgm-val-toolbar a:hover { background: rgba(93, 219, 192, 0.12); }
+		.pgm-val-toolbar a.is-active {
+			background: rgba(29, 158, 117, 0.2);
+			border-color: #1d9e75;
+			color: #e6edf3;
+		}
+		.pgm-val-toolbar span { color: #8b94ab; }
+		.pgm-val-app {
+			display: flex;
+			height: 100vh;
+			padding-top: 52px;
+			overflow: hidden;
+		}
+		.pgm-val-main {
+			flex: 1;
+			min-width: 0;
+			overflow: auto;
+			padding: 20px 24px 32px;
+			border-left: 1px solid rgba(255, 255, 255, 0.06);
+		}
+		.pgm-val-main h1 { margin: 0 0 10px; font-size: 18px; color: #f4f6fb; }
+		.pgm-val-main p { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: #9aa3b5; max-width: 720px; }
+		.pgm-val-main ul { margin: 0 0 16px; padding-left: 20px; color: #9aa3b5; font-size: 13px; line-height: 1.6; max-width: 720px; }
+		.pgm-val-main kbd {
+			background: #171b24;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			padding: 2px 6px;
+			border-radius: 4px;
+			font-size: 11px;
+		}
+		.pgm-val-pre {
+			margin-top: 14px;
+			padding: 12px 14px;
+			background: #0d1117;
+			border: 1px solid #30363d;
+			border-radius: 8px;
+			font-size: 11px;
+			line-height: 1.45;
+			overflow: auto;
+			max-height: 220px;
+			color: #8b949e;
+		}
+		.d-none { display: none !important; }
+	</style>
+</head>
+<body class="layout-no-topbar pgm-app-shell-premium">
+	<div class="pgm-val-toolbar" role="navigation" aria-label="Variantes de validação">
+		<span>Variante:</span>
+		<a href="?v=staff" data-v="staff">Staff</a>
+		<a href="?v=staff_notif" data-v="staff_notif">Staff + sino (API real)</a>
+		<a href="?v=client" data-v="client">Cliente</a>
+		<a href="?v=client_min" data-v="client_min">Cliente (só tickets)</a>
+		<span style="margin-left:auto">Bundle: <kbd>js/pgm-sidebar-react/sidebar-app.js</kbd></span>
+	</div>
+	<div class="pgm-val-app">
+		<div id="sidebar-app"></div>
+		<div class="pgm-val-main">
+			<h1>Validação da migração Sidebar → React</h1>
+			<p>
+				Sirva esta página a partir do <strong>webroot</strong> do Cake (mesma origem que o portal), por exemplo
+				<code>/validacao-sidebar-react-migracao.html</code>, para que os CSS em <kbd>dist/css/…</kbd> e o bundle em <kbd>js/pgm-sidebar-react/</kbd> resolvam corretamente.
+				Execute antes <kbd>cd dashboard-react</kbd> e <kbd>npm run build:sidebar</kbd> se alterou o React.
+			</p>
+			<ul>
+				<li><strong>Staff</strong>: secções Lucide, workspace, footer, colapsar sem <code>sidebartoggler</code>.</li>
+				<li><strong>Staff + sino</strong>: requer sessão staff; URLs <code>/pgm-notifications/*</code>. Preencha o meta <code>csrfToken</code> no HTML ou nas DevTools se for testar POST (marcar lidas).</li>
+				<li><strong>Cliente</strong>: menu tipo <code>sidebarcli</code> (FA, submenus <code>collapse</code>), rodapé e empresa.</li>
+				<li><strong>Cliente (só tickets)</strong>: simula utilizador sem <code>permissaoacesso</code>.</li>
+			</ul>
+			<p>Variante atual: <strong id="pgmValVariantLabel"></strong></p>
+			<pre class="pgm-val-pre" id="pgmValPropsEcho"></pre>
+		</div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" crossorigin="anonymous"></script>
+	<script>
+		(function () {
+			var params = new URLSearchParams(window.location.search);
+			var v = params.get("v") || "staff";
+			var origin = window.location.origin;
+
+			function staffBase() {
+				return {
+					variant: "staff",
+					activePath: "/validacao-sidebar-react-migracao.html",
+					dashboardItem: {
+						icon: "layout-dashboard",
+						label: " Dashboard",
+						href: "/users/dashboard",
+						dataLabel: "Dashboard",
+						active: false,
+						badgeHtml: "",
+						target: null,
+						rel: null,
+					},
+					sections: [
+						{
+							id: "cadastros",
+							title: "Cadastros",
+							defaultOpen: true,
+							items: [
+								{
+									href: "/clientes",
+									label: " Clientes",
+									icon: "users",
+									dataLabel: "Clientes",
+									active: false,
+									badgeHtml: "",
+									target: null,
+									rel: null,
+								},
+								{
+									href: "/produtos",
+									label: " Produtos",
+									icon: "package",
+									dataLabel: "Produtos",
+									active: true,
+									badgeHtml: "",
+									target: null,
+									rel: null,
+								},
+							],
+						},
+						{
+							id: "gestao-incidentes",
+							title: "Gestão de Incidentes",
+							defaultOpen: false,
+							items: [
+								{
+									href: "/servicedesk",
+									label: " Service Desk",
+									icon: "headphones",
+									dataLabel: "Service Desk",
+									active: false,
+									badgeHtml: '<span class="badge badge-danger hide-menu">12</span>',
+									target: "_blank",
+									rel: "noopener noreferrer",
+								},
+							],
+						},
+					],
+					workspace: {
+						sub: "Matriz",
+						currentId: "1",
+						currentName: "PGM SOLUÇÕES EM TI",
+						currentInitials: "PG",
+						companies: [
+							{ id: "1", name: "PGM SOLUÇÕES EM TI", initials: "PG" },
+							{ id: "2", name: "PGM FILIAL BENTO", initials: "PB" },
+						],
+						empresaSelectOptions: { 1: "PGM Matriz", 2: "Filial Bento" },
+						empresaSelectValue: "1",
+						multiEmpresa: true,
+					},
+					user: {
+						name: "Utilizador de validação",
+						initials: "UV",
+						roleLabel: "Usuário",
+					},
+					footerLinks: [
+						{ label: "Alterar perfil", href: "/users/change_profile" },
+						{ label: "Alterar senha", href: "/users/change_password" },
+						{ label: "Notificações", href: "#", id: "pgmSidebarMenuOpenNotif" },
+						{ label: "Sair", href: "/users/logout", danger: true },
+					],
+					notificationsBell: true,
+				};
+			}
+
+			function staffFooterSemNotif() {
+				return [
+					{ label: "Alterar perfil", href: "/users/change_profile" },
+					{ label: "Alterar senha", href: "/users/change_password" },
+					{ label: "Sair", href: "/users/logout", danger: true },
+				];
+			}
+
+			function notifApi() {
+				return {
+					urlCount: origin + "/pgm-notifications/unread-count",
+					urlList: origin + "/pgm-notifications/list",
+					urlMarkAll: origin + "/pgm-notifications/mark-all-read",
+					urlMarkReadBase: origin + "/pgm-notifications/mark-read",
+					urlPrefs: origin + "/pgm-notifications/preferences",
+				};
+			}
+
+			function clientBlocks(full) {
+				var blocks = [];
+				if (full) {
+					blocks.push({
+						type: "link",
+						href: "/users/dashboard",
+						label: "Dashboard",
+						iconFa: "fa-columns",
+						active: false,
+					});
+					blocks.push({
+						type: "link",
+						href: "/clientes/edit/99",
+						label: "Empresa",
+						iconFa: "fa-building",
+						active: true,
+					});
+					blocks.push({
+						type: "group",
+						id: "orcamentos",
+						label: "Orçamentos",
+						iconFa: "fa-file-invoice-dollar",
+						defaultOpen: true,
+						active: true,
+						items: [
+							{ href: "/orcamentos/index", label: "Meus Orçamentos", active: true },
+							{ href: "/orcamentos/solicitar", label: "Solicitar Orçamento", active: false },
+						],
+					});
+					blocks.push({
+						type: "link",
+						href: "/cliente/relatorios",
+						label: "Relatórios",
+						iconFa: "fa-chart-bar",
+						active: false,
+					});
+					blocks.push({
+						type: "group",
+						id: "contratos-faturas",
+						label: "Contratos & faturas",
+						iconFa: "fa-layer-group",
+						defaultOpen: false,
+						active: false,
+						items: [
+							{ href: "/cliente/contratos", label: "Contratos", active: false },
+							{ href: "/cliente/contratos/franquia", label: "Franquia de horas", active: false },
+							{ href: "/cliente/faturas-avancadas", label: "Faturas", active: false },
+						],
+					});
+				}
+				blocks.push({
+					type: "group",
+					id: "tickets",
+					label: "Tickets",
+					iconFa: "fa-ticket-alt",
+					defaultOpen: true,
+					active: true,
+					items: [
+						{ href: "/servicedesk", label: "Meus tickets", active: true },
+						{ href: "/servicedesk/add", label: "Abrir chamado", active: false },
+						{ href: "/cliente/historico-atendimento-avancado", label: "Histórico de atendimento", active: false },
+					],
+				});
+				return blocks;
+			}
+
+			var props;
+			if (v === "staff_notif") {
+				props = staffBase();
+				props.notificationBellApi = notifApi();
+			} else if (v === "staff") {
+				props = staffBase();
+				props.notificationsBell = false;
+				props.footerLinks = staffFooterSemNotif();
+			} else if (v === "client_min") {
+				props = {
+					variant: "client",
+					activePath: "/servicedesk",
+					navBlocks: clientBlocks(false),
+					permissaoacesso: false,
+					workspace: {
+						sub: "ERP Enterprise",
+						currentId: "3",
+						currentName: "EMPRESA DEMO",
+						currentInitials: "ED",
+						companies: [{ id: "3", name: "EMPRESA DEMO", initials: "ED" }],
+						empresaSelectOptions: { 3: "Empresa demo" },
+						empresaSelectValue: "3",
+						multiEmpresa: false,
+					},
+					user: { name: "Cliente validação", initials: "CV", roleLabel: "Cliente" },
+					footerLinks: [
+						{ label: "Meu Perfil", href: "/users/change_profile" },
+						{ label: "Alterar Senha", href: "/users/change_password" },
+						{ label: "Verificação em 2 etapas", href: "/users/loginduasetapas" },
+						{ label: "Sair", href: "/users/logout", danger: true },
+					],
+					notificationsBell: false,
+					dashboardItem: null,
+					sections: [],
+				};
+			} else {
+				/* client */
+				props = {
+					variant: "client",
+					activePath: "/orcamentos/index",
+					navBlocks: clientBlocks(true),
+					permissaoacesso: true,
+					workspace: {
+						sub: "ERP Enterprise",
+						currentId: "1",
+						currentName: "PGM MATRIZ",
+						currentInitials: "PG",
+						companies: [
+							{ id: "1", name: "PGM MATRIZ", initials: "PG" },
+							{ id: "2", name: "PGM FILIAL", initials: "PF" },
+						],
+						empresaSelectOptions: { 1: "PGM Matriz", 2: "PGM Filial" },
+						empresaSelectValue: "1",
+						multiEmpresa: true,
+					},
+					user: { name: "Cliente validação", initials: "CV", roleLabel: "Cliente" },
+					footerLinks: [
+						{ label: "Meu Perfil", href: "/users/change_profile" },
+						{ label: "Alterar Senha", href: "/users/change_password" },
+						{ label: "Verificação em 2 etapas", href: "/users/loginduasetapas" },
+						{ label: "Sair", href: "/users/logout", danger: true },
+					],
+					notificationsBell: false,
+					dashboardItem: null,
+					sections: [],
+				};
+			}
+
+			window.__PGM_REACT_SIDEBAR__ = true;
+			window.__PGM_SIDEBAR_PROPS__ = props;
+			window.pgmTurboShellMarkNavLinks = window.pgmTurboShellMarkNavLinks || function () {};
+
+			document.querySelectorAll(".pgm-val-toolbar a[data-v]").forEach(function (a) {
+				if (a.getAttribute("data-v") === v) {
+					a.classList.add("is-active");
+				}
+			});
+			var labelEl = document.getElementById("pgmValVariantLabel");
+			if (labelEl) {
+				labelEl.textContent = v;
+			}
+			var echo = document.getElementById("pgmValPropsEcho");
+			if (echo) {
+				echo.textContent = JSON.stringify(props, null, 2);
+			}
+		})();
+	</script>
+	<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+	<script type="module" src="js/pgm-sidebar-react/sidebar-app.js"></script>
+</body>
+</html>
