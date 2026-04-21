@@ -20,7 +20,7 @@ $this->Breadcrumbs->add('Histórico', [], ['class' => 'breadcrumb-item active'])
 				<?= $this->Html->link(
 					'<i class="fas fa-arrow-left"></i> Voltar ao cadastro',
 					['action' => 'edit', $cliente->id],
-					['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false, 'data-turbo' => 'false']
+					['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]
 				) ?>
 			</div>
 			<?php if (empty($events)): ?>

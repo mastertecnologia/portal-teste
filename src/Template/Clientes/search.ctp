@@ -51,7 +51,7 @@ $this->Breadcrumbs->add('Pesquisa', [], ['class' => 'breadcrumb-item active']);
 								</tr>
 							</thead>
 							<tbody>
-								<?php foreach ($clientes as $reg):
+								<?php foreach ($clientes as $reg): 
 									?>
 									<tr>
 										<td width="25%"> <a class='link' href='<?= $this->Url->build(["controller" => $reg->controller, "action" => "edit", $reg->id]) ?>'><?= $reg->tipo == C_ClientesTipoFisica ? $reg->nome : $reg->razaosocial ?></td>

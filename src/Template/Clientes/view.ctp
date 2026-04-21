@@ -12,7 +12,7 @@ $nome = $cliente->tipo == C_ClientesTipoFisica ? h($cliente->nome) : h($cliente-
 		<div class="card-body">
 			<div class="d-flex justify-content-between align-items-center m-b-15">
 				<h5 class="card-title m-b-0"><?= $nome ?></h5>
-				<?= $this->Html->link('Editar', ['action' => 'edit', $cliente->id], ['class' => 'btn btn-sm btn-success', 'data-turbo' => 'false']) ?>
+				<?= $this->Html->link('Editar', ['action' => 'edit', $cliente->id], ['class' => 'btn btn-sm btn-success']) ?>
 			</div>
 			<dl class="row m-b-0">
 				<dt class="col-sm-3">Tipo</dt>
