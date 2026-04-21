@@ -65,7 +65,7 @@ use Cake\Routing\Router;
 
 	<!--- Scripts -->
 	<?= $this->Html->script("/assets/node_modules/jquery/jquery-3.2.1.min") ?>
-	<script src="https://unpkg.com/@hotwired/turbo@7.3.0/dist/turbo.es2017-umd.js"></script>
+	<script src="<?= h($this->Url->build('/js/turbo.es2017-umd.js')) ?>"></script>
 	<script>try { if (window.Turbo) { Turbo.session.drive = false; } } catch (e) {}</script>
 	<?= $this->Html->script("/js/pgm-portal-theme") ?>
     <!-- Bootstrap popper Core JavaScript -->
@@ -427,9 +427,6 @@ use Cake\Routing\Router;
 
 		// Navegação parcial: Turbo Frame troca só a coluna principal; sidebar permanece no DOM.
 		(function pgmTurboShellInit() {
-			if (!window.Turbo) {
-				return;
-			}
 			var FRAME_ID = 'pgm-main-frame';
 
 			function pgmNormalizePath(p) {
@@ -443,21 +440,36 @@ use Cake\Routing\Router;
 				return p === '' ? '/' : p;
 			}
 
+			function pgmTurboSameOriginHref(a) {
+				var raw = (a.getAttribute('href') || '').trim();
+				if (!raw || raw === '#' || raw.indexOf('javascript:') === 0) {
+					return null;
+				}
+				try {
+					var u = new URL(raw, window.location.href);
+					if (u.origin !== window.location.origin) {
+						return null;
+					}
+					if (/\/users\/logout(\/|$)/.test(u.pathname)) {
+						return null;
+					}
+					return u;
+				} catch (e1) {
+					return null;
+				}
+			}
+
 			function pgmTurboMarkNavLinks() {
 				document.querySelectorAll(
 					'aside.pgm-sidebar-shell .pgm-sidebar-brand a[href], aside.pgm-sidebar-shell .scroll-sidebar a[href]'
 				).forEach(function (a) {
-					var href = (a.getAttribute('href') || '').trim();
-					if (!href || href.charAt(0) !== '/' || href.indexOf('javascript:') === 0) {
-						return;
-					}
 					if (a.getAttribute('target') === '_blank') {
 						return;
 					}
 					if (a.closest('.dropdown-menu')) {
 						return;
 					}
-					if (href.indexOf('/users/logout') !== -1) {
+					if (!pgmTurboSameOriginHref(a)) {
 						return;
 					}
 					a.setAttribute('data-turbo-frame', FRAME_ID);
@@ -472,19 +484,16 @@ use Cake\Routing\Router;
 					return;
 				}
 				var links = [];
-				side.querySelectorAll('a[href^="/"]').forEach(function (a) {
+				side.querySelectorAll('a[href]').forEach(function (a) {
 					if (a.closest('.dropdown-menu')) {
 						return;
 					}
-					var href = (a.getAttribute('href') || '').trim();
-					if (!href || href.charAt(0) !== '/') {
-						return;
-					}
-					if (href.indexOf('/users/logout') !== -1) {
+					var u = pgmTurboSameOriginHref(a);
+					if (!u) {
 						return;
 					}
 					try {
-						var p = pgmNormalizePath(new URL(href, window.location.origin).pathname);
+						var p = pgmNormalizePath(u.pathname);
 						if (path === p || (p !== '/' && path.indexOf(p + '/') === 0)) {
 							links.push({ a: a, plen: p.length, nav: a.classList.contains('pgm-nav-link') ? 1 : 0 });
 						}
@@ -554,13 +563,19 @@ use Cake\Routing\Router;
 				pgmLayoutNoTopbarMinHeight();
 			}
 
-			document.addEventListener('turbo:frame-load', function (e) {
-				if (!e.target || e.target.id !== FRAME_ID) {
-					return;
+			if (window.Turbo) {
+				try {
+					Turbo.session.drive = false;
+				} catch (e2) {
 				}
-				pgmTurboSyncSidebarActive();
-				pgmTurboRebindDynamicUi();
-			});
+				document.addEventListener('turbo:frame-load', function (e) {
+					if (!e.target || e.target.id !== FRAME_ID) {
+						return;
+					}
+					pgmTurboSyncSidebarActive();
+					pgmTurboRebindDynamicUi();
+				});
+			}
 
 			function pgmTurboBoot() {
 				pgmTurboMarkNavLinks();
