@@ -324,6 +324,7 @@ export default function ClientSidebar(props) {
         </div>
         <div className="user-profile">
           <div className={`user-pro-body preview-dd${userMenuOpen ? ' open' : ''}`} ref={userDdRef}>
+            <div className="dropdown dropup">
             <a
               href="#"
               className="dropdown-toggle u-dropdown link hide-menu text-white d-flex align-items-center"
@@ -349,6 +350,7 @@ export default function ClientSidebar(props) {
                   {fl.label}
                 </a>
               ))}
+            </div>
             </div>
           </div>
         </div>

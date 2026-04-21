@@ -2,9 +2,70 @@
  * Menu do utilizador na sidebar React (.preview-dd / .preview-dd-menu).
  * No portal, layout-sidebar-shell.css trata só .dropdown-menu (Cake); sem isto,
  * os .preview-dd-item ficam todos em fluxo e sobrepõem o painel de notificações.
+ *
+ * O markup inclui `.dropdown.dropup` como na sidebar Cake para herdar
+ * `html body .pgm-sidebar-shell .user-profile--footer .dropdown { width:100% }`
+ * em pgm-sidebar-premium.css.
  */
 html body .pgm-sidebar-shell .preview-dd {
   position: relative;
+}
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown.dropup {
+  width: 100%;
+  min-width: 0;
+}
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle .pgm-sf-user-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+}
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle .caret.pgm-sidebar-user-caret,
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle .caret.hide-menu {
+  flex-shrink: 0;
+  align-self: center;
+}
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle .pgm-user-av,
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle .user-avatar.pgm-user-av {
+  flex-shrink: 0;
+}
+html body .pgm-sidebar-shell .user-pro-body.preview-dd .dropdown-toggle .pgm-cli-name-truncate {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+/* Rodapé staff em mini: manter linha (avatar + colapsar) alinhada ao ícone. */
+html body.mini-sidebar .pgm-sidebar-shell .pgm-sidebar-footer.sidebar-footer {
+  flex-direction: row !important;
+  align-items: center !important;
+}
+/* Premium só estiliza <a.pgm-sidebar-collapse-btn>; React usa <button>. */
+html body .pgm-sidebar-shell button.pgm-sidebar-collapse-btn.icon-btn,
+html body .pgm-sidebar-shell button.pgm-sidebar-collapse-react {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  color: #8b94ab !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+}
+html body .pgm-sidebar-shell button.pgm-sidebar-collapse-btn.icon-btn:hover,
+html body .pgm-sidebar-shell button.pgm-sidebar-collapse-react:hover {
+  color: #f4f6fb !important;
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 html body .pgm-sidebar-shell .preview-dd-menu {
   display: none;

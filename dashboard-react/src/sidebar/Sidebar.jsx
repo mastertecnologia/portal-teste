@@ -394,6 +394,7 @@ function StaffSidebar(props) {
       <div className="pgm-sidebar-footer sidebar-footer">
         <div className="user-profile user-profile--footer">
           <div className={`user-pro-body preview-dd${userMenuOpen ? ' open' : ''}`} ref={userDdRef}>
+            <div className="dropdown dropup">
             <a
               href="#"
               className="dropdown-toggle u-dropdown link user text-white d-flex align-items-center"
@@ -467,6 +468,7 @@ function StaffSidebar(props) {
                       Sair
                     </a>,
                   ]}
+            </div>
             </div>
           </div>
         </div>
