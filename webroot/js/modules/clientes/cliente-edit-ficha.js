@@ -183,21 +183,6 @@
 			cliFichaPrepareSubmit();
 			$('#cli-ficha-submit-fallback').trigger('click');
 		});
-		$('.btn-cli-voltar').on('click', function (e) {
-			var fallback = $(this).data('urlFallback') || $(this).attr('href') || '/clientes';
-			var sameOriginReferrer = false;
-			try {
-				sameOriginReferrer = !!document.referrer && (new URL(document.referrer, window.location.origin)).origin === window.location.origin;
-			} catch (err) {
-				sameOriginReferrer = false;
-			}
-			if (window.history.length > 1 && sameOriginReferrer) {
-				e.preventDefault();
-				window.history.back();
-				return;
-			}
-			window.location.href = fallback;
-		});
 		$('#form-edit-cliente').on('submit', function () {
 			cliFichaPrepareSubmit();
 			$('#cli-ficha-loading').removeClass('d-none').attr('aria-hidden', 'false');
