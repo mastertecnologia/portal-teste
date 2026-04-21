@@ -72,16 +72,6 @@
 .cli-label{font-size:.72rem;font-weight:600;color:#8b949e;margin-bottom:4px;display:block;letter-spacing:.04em;text-transform:uppercase;}
 /* Readonly display for clients */
 .cli-field-ro{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:9px 12px;color:#c9d1d9;font-size:.85rem;min-height:38px;}
-/* Código público do cliente — caixa compacta, alinhada ao fluxo da ficha */
-.cli-public-code-block{min-width:0;}
-.cli-public-code-block .cli-field-ro--code{
-	display:inline-block;width:auto;max-width:100%;min-width:0;
-	padding:8px 12px;font-family:'DM Mono',Consolas,monospace;font-size:.82rem;letter-spacing:.04em;
-}
-.cli-public-code-block .cli-public-code-hint{max-width:min(100%,17rem);line-height:1.35;}
-@media (min-width:992px){
-	.cli-row-dados-empresa-head .cli-public-code-block{margin-left:auto;}
-}
 /* Section divider */
 .cli-section{margin-top:20px;padding-top:16px;border-top:1px solid #21262d;}
 .cli-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:14px;}
@@ -171,7 +161,7 @@
 				<p><?= h($cliente->tipo == C_ClientesTipoFisica ? 'Pessoa Física' : 'Pessoa Jurídica') ?> · CNPJ/CPF: <?= h($cliente->tipo == C_ClientesTipoFisica ? Mask('###.###.###-##', $cliente->cpf ?? '') : Mask('##.###.###/####-##', $cliente->cnpj ?? '')) ?></p>
 				<div class="cli-page-head-code-row" title="<?= h(__('Identificador único na empresa; gerado pelo sistema ou informado pela integração.')) ?>">
 					<span class="cli-page-head-code-label"><?= __('Código do cliente') ?></span>
-					<span class="cli-page-head-code" translate="no"><?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?></span>
+					<span class="cli-page-head-code" id="cli-public-code-ro" translate="no"><?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?></span>
 				</div>
 			</div>
 			<?php if ($isEquipe): ?>
@@ -191,13 +181,8 @@
 							<p class="cli-ficha-hint mb-0"><i class="fas fa-eye"></i> <span id="cli-ficha-mode-label">Modo leitura</span> — use a barra inferior para <strong>Editar</strong>, <strong>Salvar</strong> ou <strong>Cancelar</strong>.</p>
 						</div>
 						<?= $this->element('Cli/card', ['title' => 'Dados da empresa']) ?>
-						<div class="row align-items-end cli-row-dados-empresa-head">
-							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-4 col-md-5 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
-							<div class="col-lg-auto col-md-7 col-sm-12 col-xs-12 mt-2 mt-md-0 cli-public-code-block">
-								<span class="cli-label"><?= __('Código do cliente') ?></span>
-								<div class="cli-field-ro cli-field-ro--code" id="cli-public-code-ro"><?= $cliPublicCode !== '' ? h($cliPublicCode) : '—' ?></div>
-								<p class="small text-muted mb-0 cli-public-code-hint mt-1"><?= __('Identificador único na empresa; gerado pelo sistema ou informado pela integração.') ?></p>
-							</div>
+						<div class="row">
+							<?= $this->element('Cli/select', ['label' => 'Tipo', 'field' => 'tipo', 'colClass' => 'col-lg-3 col-md-3 col-sm-12 col-xs-12', 'selectOptions' => C_ClientesTipo, 'options' => ['title' => 'Tipo do cliente', 'required' => true, 'class' => 'form-control']]) ?>
 						</div>
 						<br>
 						<div class="row pessoaJuridica <?= $pessoaJuridica ?>">
