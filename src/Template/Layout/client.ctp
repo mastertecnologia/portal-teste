@@ -5,6 +5,7 @@ use Cake\Routing\Router;
 
 $pgmReactSidebar = (bool) Configure::read('PgmSidebar.react_enabled') && !empty($iduser ?? null);
 $pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-app.js';
+$pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-assets.css';
 ?>
 <!doctype html>
 <html lang="pt-BR" data-pgm-theme="dark">
@@ -38,6 +39,7 @@ $pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-reac
 	<?php if (!empty($pgmReactSidebar)) : ?>
 	<?= $this->Html->css('/dist/css/pages/layout-sidebar-shell.css?v=2'); ?>
 	<?= $this->Html->css('/dist/css/pages/pgm-sidebar-premium.css?v=2'); ?>
+	<link rel="stylesheet" href="<?= h($pgmSidebarReactCss) ?>" crossorigin="anonymous" />
 	<?php endif; ?>
 	<?= $this->Html->css('http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css'); ?>
 	<?= $this->Html->css('http://fonts.googleapis.com/css?family=Roboto:400,700,300|Material+Icons'); ?>

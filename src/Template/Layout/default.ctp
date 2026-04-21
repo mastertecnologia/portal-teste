@@ -6,6 +6,8 @@ $pgmReactSidebar = (bool)\Cake\Core\Configure::read('PgmSidebar.react_enabled')
 	&& !empty($iduser ?? null);
 /** Web path do bundle (APP_BASE, pedido Cake ou SCRIPT_NAME — ver PgmAppUrlBase). */
 $pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-app.js';
+/** CSS extraído pelo Vite (`import` nos .jsx); tem de ser ligado explicitamente no layout. */
+$pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-assets.css';
 ?>
 <!DOCTYPE HTML>
 <html lang="pt-BR" data-pgm-theme="light">
@@ -52,6 +54,7 @@ $pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-reac
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
 	<?php if ($pgmReactSidebar) : ?>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+	<link rel="stylesheet" href="<?= h($pgmSidebarReactCss) ?>" crossorigin="anonymous" />
 	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-advanced-module") ?>
 	<?php $pgmPortalClient = isset($role) && (int)$role !== 0; ?>
