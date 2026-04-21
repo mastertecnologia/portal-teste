@@ -8,6 +8,7 @@
  * @var string|null $title Título da página
  * @var string|null $topbarParentLabel
  * @var string|null $topbarCurrentLabel
+ * @var bool $hidePgmTopbarCrumb Oculta breadcrumb / título à esquerda (ex.: cadastro cliente)
  */
 use Cake\I18n\Time;
 
@@ -34,8 +35,10 @@ try {
 } catch (\Throwable $e) {
     $dateStr = date('d/m/Y');
 }
+$noCrumb = (bool)($hidePgmTopbarCrumb ?? false);
 ?>
-<header class="pgm-app-topbar" role="banner">
+<header class="pgm-app-topbar<?= $noCrumb ? ' pgm-app-topbar--no-crumb' : '' ?>" role="banner">
+	<?php if (!$noCrumb) : ?>
 	<div class="pgm-app-topbar__left">
 		<?php if ($showSlash) : ?>
 			<nav class="pgm-app-topbar__crumb" aria-label="<?= __('Navegação secundária') ?>">
@@ -62,6 +65,7 @@ try {
 			</div>
 		<?php endif; ?>
 	</div>
+	<?php endif; ?>
 	<div class="pgm-app-topbar__right">
 		<span class="pgm-app-topbar__date" id="pgm-app-topbar-date"><?= h($dateStr) ?></span>
 		<?php if ($initials !== '') : ?>

@@ -28,6 +28,10 @@ body.pgm-app-shell-premium .pgm-app-topbar {
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
 }
 
+body.pgm-app-shell-premium .pgm-app-topbar--no-crumb {
+    justify-content: flex-end;
+}
+
 body.pgm-app-shell-premium .pgm-app-topbar__left {
     min-width: 0;
     flex: 1;

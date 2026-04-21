@@ -3,9 +3,6 @@
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
-    $this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
-    $this->Breadcrumbs->add('Novo cliente', [], ['class' => 'breadcrumb-item active']);
-
     // Empresa dominante padrão (PGM)
     $defaultEmpresaDominanteId = null;
     if (!empty($empresasOptSidebar)) {
