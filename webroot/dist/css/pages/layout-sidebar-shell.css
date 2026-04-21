@@ -863,6 +863,14 @@ body.layout-no-topbar .pgm-shell-main {
     flex: 1 1 auto;
     background: transparent !important;
 }
+/* Turbo frame: coluna flex para topbar + page-wrapper (flex:1) + footer — evita faixa vazia abaixo do rodapé */
+body.layout-no-topbar .pgm-shell-main > #pgm-main-frame {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}
 body.layout-no-topbar .pgm-shell-main .page-wrapper {
     flex: 1 1 auto;
     display: flex;
