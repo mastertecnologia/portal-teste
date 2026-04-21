@@ -105,7 +105,10 @@ Opcional em Git, após commit estável: `git tag backup/pre-migracao-sidebar-rea
 
 ## Sidebar vazia com a flag ativa (produção)
 
-Causa frequente: a app está num **prefixo** (ex. `https://…/portal/…`) e o browser pedia o bundle em `/js/pgm-sidebar-react/sidebar-app.js` (404). Os layouts usam `PgmAppUrlBase::path()` + `/js/…` para o `src` do módulo. Confirme no DevTools (Rede) que o script devolve **200**. Ajuste `APP_BASE` no `.env` se o prefixo não for inferido pelo `SCRIPT_NAME`.
+1. **URL do bundle (404):** com rewrite, `SCRIPT_NAME` pode ser `/index.php` (sem `/portal`). Os layouts usam `PgmAppUrlBase::path($this->request)` para alinhar ao `base` do Cake. No DevTools → Rede, confirme **200** em `…/portal/js/pgm-sidebar-react/sidebar-app.js`.
+2. **`APP_BASE`:** se o passo 1 ainda falhar, defina `APP_BASE=/portal` (ou o prefixo real) no `.env` e limpe o cache de config.
+3. **JSON das props:** UTF-8 inválido no nome do utilizador podia partir o `<script>` das props; usa-se `JSON_INVALID_UTF8_SUBSTITUTE` quando disponível.
+4. **Erro no React:** se o mount falhar, aparece mensagem vermelha dentro da coluna e o detalhe na consola (F12).
 
 ---
 

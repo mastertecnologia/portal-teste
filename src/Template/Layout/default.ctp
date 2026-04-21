@@ -4,8 +4,8 @@ use Cake\Routing\Router;
 
 $pgmReactSidebar = (bool)\Cake\Core\Configure::read('PgmSidebar.react_enabled')
 	&& !empty($iduser ?? null);
-/** Web path do bundle (respeita APP_BASE ou SCRIPT_NAME, ex. /portal). */
-$pgmSidebarReactJs = PgmAppUrlBase::path() . '/js/pgm-sidebar-react/sidebar-app.js';
+/** Web path do bundle (APP_BASE, pedido Cake ou SCRIPT_NAME — ver PgmAppUrlBase). */
+$pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-app.js';
 ?>
 <!DOCTYPE HTML>
 <html lang="pt-BR" data-pgm-theme="light">
@@ -617,7 +617,11 @@ $pgmSidebarReactJs = PgmAppUrlBase::path() . '/js/pgm-sidebar-react/sidebar-app.
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
 <?php
 $pgmSidebarReactProps = isset($pgmSidebarReactProps) && is_array($pgmSidebarReactProps) ? $pgmSidebarReactProps : [];
-echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) . ";</script>\n";
+$__pgmSbJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+	$__pgmSbJsonFlags |= JSON_INVALID_UTF8_SUBSTITUTE;
+}
+echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, $__pgmSbJsonFlags) . ";</script>\n";
 ?>
 <script type="module" src="<?= h($pgmSidebarReactJs) ?>"></script>
 <?php endif; ?>

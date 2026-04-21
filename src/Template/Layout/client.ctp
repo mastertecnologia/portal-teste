@@ -4,7 +4,7 @@ use Cake\Core\Configure;
 use Cake\Routing\Router;
 
 $pgmReactSidebar = (bool) Configure::read('PgmSidebar.react_enabled') && !empty($iduser ?? null);
-$pgmSidebarReactJs = PgmAppUrlBase::path() . '/js/pgm-sidebar-react/sidebar-app.js';
+$pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-app.js';
 ?>
 <!doctype html>
 <html lang="pt-BR" data-pgm-theme="dark">
@@ -92,7 +92,11 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 	<?php if (!empty($pgmReactSidebar)) : ?>
 	<?php
 	$pgmSidebarReactProps = isset($pgmSidebarReactProps) && is_array($pgmSidebarReactProps) ? $pgmSidebarReactProps : [];
-	echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) . ";</script>\n";
+	$__pgmSbJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+	if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+		$__pgmSbJsonFlags |= JSON_INVALID_UTF8_SUBSTITUTE;
+	}
+	echo '<script>window.__PGM_SIDEBAR_PROPS__ = ' . json_encode($pgmSidebarReactProps, $__pgmSbJsonFlags) . ";</script>\n";
 	?>
 	<script type="module" src="<?= h($pgmSidebarReactJs) ?>"></script>
 	<?php endif; ?>

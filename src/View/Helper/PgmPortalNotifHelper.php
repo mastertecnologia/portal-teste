@@ -28,7 +28,7 @@ class PgmPortalNotifHelper extends Helper {
 			$base = (string)$req->base;
 		}
 		if ($base === '') {
-			$base = PgmAppUrlBase::path();
+			$base = PgmAppUrlBase::path($req);
 		}
 		$base = rtrim($base, '/');
 		if ($base !== '' && $u !== '' && isset($u[0]) && $u[0] === '/' && strpos($u, $base . '/') !== 0) {
