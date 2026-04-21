@@ -209,6 +209,7 @@ Router::scope("/", function ($routes) {
         ->setMethods(["POST"]);
     // API integração ERP: clientes e contratos
     // Contratos (itens) — detalhe no ERP
+    // Path canónico: /view/123. Sem segmento, ClicontratosController aceita ?id= (links legados / reverse routing).
 
     $routes->connect(
         "/clicontratos/view/*",

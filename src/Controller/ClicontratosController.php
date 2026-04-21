@@ -38,6 +38,31 @@ class ClicontratosController extends AppController {
 		}
 	}
 
+	/**
+	 * ID do item: rota canónica /clicontratos/{action}/123 ou ?id= (links legados / reverse routing).
+	 *
+	 * @param string|int|null $id Argumento da action (pass).
+	 * @return int|null Null se ausente ou inválido.
+	 */
+	protected function resolveContratoItemId($id) {
+		if ($id !== null && $id !== '') {
+			$n = (int)$id;
+			return $n > 0 ? $n : null;
+		}
+		$q = $this->request->getQuery('id');
+		if ($q !== null && $q !== '') {
+			$n = (int)$q;
+			return $n > 0 ? $n : null;
+		}
+		$pass = $this->request->getParam('pass');
+		if (!empty($pass[0])) {
+			$n = (int)$pass[0];
+			return $n > 0 ? $n : null;
+		}
+
+		return null;
+	}
+
 	public function add($idcliente = null) {
         $contrato = $this->Clicontratos->newEntity();
         
@@ -83,6 +108,10 @@ class ClicontratosController extends AppController {
 	}
 
 	public function edit($id = null) {
+		$id = $this->resolveContratoItemId($id);
+		if ($id === null) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
+		}
 		$contrato = $this->Clicontratos->get($id);
 
 		@$contrato->vlunit = number_format($contrato->vlunit, 2, ',', '.');
@@ -132,6 +161,10 @@ class ClicontratosController extends AppController {
 	}
 
 	public function view($id = null) {
+		$id = $this->resolveContratoItemId($id);
+		if ($id === null) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
+		}
 		$contrato = $this->Clicontratos->get($id, ['contain' => ['Clientes']]);
 		if ((int)$contrato->idempresa !== (int)$this->Auth->user('idempresa')) {
 			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
@@ -174,6 +207,10 @@ class ClicontratosController extends AppController {
 	 * Fluxo de renovação: novo item no mesmo cliente (preenchimento no cadastro).
 	 */
 	public function renovar($id = null) {
+		$id = $this->resolveContratoItemId($id);
+		if ($id === null) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
+		}
 		$contrato = $this->Clicontratos->get($id);
 		if ((int)$contrato->idempresa !== (int)$this->Auth->user('idempresa')) {
 			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
@@ -183,6 +220,10 @@ class ClicontratosController extends AppController {
 	}
 
 	public function delete($id = null) {
+		$id = $this->resolveContratoItemId($id);
+		if ($id === null) {
+			throw new \Cake\Http\Exception\NotFoundException(__('Contrato não encontrado.'));
+		}
 		$contrato = $this->Clicontratos->get($id);
 
 		if ($this->Clicontratos->delete($contrato)) {
