@@ -280,7 +280,7 @@ class ClientesController extends AppController {
 		
 		$this->set('title', 'Adicionar Cliente');
 		$this->set('hideLayoutPageTitle', true);
-		$this->set('hidePgmTopbarCrumb', true);
+		$this->set('topbarCurrentLabel', __('Cadastrar clientes'));
 		$cliente = $this->Clientes->newEntity();
 
 		if ($this->request->is('post')) {
