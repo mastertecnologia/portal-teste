@@ -691,9 +691,18 @@ body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #for
 .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu {
   z-index: 1065;
 }
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .inner {
+  max-height: 260px !important;
+}
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu li > a {
+  color: var(--orc-text) !important;
+}
 .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item {
   color: var(--orc-text) !important;
 }
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu li > a:hover,
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu li.selected > a,
+.cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu li.active > a,
 .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item:hover,
 .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item.active,
 .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .dropdown-menu .dropdown-item:focus {
@@ -701,6 +710,29 @@ body.layout-no-topbar.pgm-portal-client .cli-form-root.cli-layout-unificado #for
   color: var(--orc-text) !important;
 }
 .cli-form-root.cli-layout-unificado #form-edit-cliente .bootstrap-select .bs-searchbox input {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+}
+body.layout-no-topbar .bs-container .dropdown-menu {
+  z-index: 2005 !important;
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+}
+body.layout-no-topbar .bs-container .dropdown-menu li > a,
+body.layout-no-topbar .bs-container .dropdown-menu .dropdown-item {
+  color: var(--orc-text) !important;
+}
+body.layout-no-topbar .bs-container .dropdown-menu li > a:hover,
+body.layout-no-topbar .bs-container .dropdown-menu li.selected > a,
+body.layout-no-topbar .bs-container .dropdown-menu li.active > a,
+body.layout-no-topbar .bs-container .dropdown-menu .dropdown-item:hover,
+body.layout-no-topbar .bs-container .dropdown-menu .active .dropdown-item,
+body.layout-no-topbar .bs-container .dropdown-menu .selected .dropdown-item {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-text) !important;
+}
+body.layout-no-topbar .bs-container .bs-searchbox input {
   background: var(--orc-bg-card) !important;
   border: 1px solid var(--orc-border) !important;
   color: var(--orc-text) !important;
