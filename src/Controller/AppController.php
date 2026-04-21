@@ -197,7 +197,11 @@ class AppController extends Controller
             $this->set("pgmAdvancedModuleStylesheet", true);
         }
 
-        if ((bool) Configure::read("PgmSidebar.react_enabled") && $this->Auth->user("id")) {
+        if (
+            (bool) Configure::read("PgmSidebar.react_enabled")
+            && $this->components()->has("Auth")
+            && $this->Auth->user("id")
+        ) {
             $role = (int) $this->Auth->user("role");
             if ($role === 0) {
                 $ctx = PgmSidebarStaffContext::computeFromArray(
