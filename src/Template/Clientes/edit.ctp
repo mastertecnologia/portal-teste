@@ -154,7 +154,7 @@
 			<?php if ($isEquipe): ?>
 				<div class="d-flex align-items-center flex-wrap pgm-gap-8">
 					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente']) ?>
-					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary btn-cli-voltar', 'escape' => false, 'data-url-fallback' => Router::url(['controller' => 'Clientes', 'action' => 'index'])]) ?>
 				</div>
 			<?php endif; ?>
 		</div>
