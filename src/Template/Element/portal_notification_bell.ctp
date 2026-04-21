@@ -71,7 +71,7 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 	</div>
 	<div class="pgm-portal-notif-footer">
 		<small class="text-muted">Eventos do módulo de clientes e integrações</small><br>
-		<a href="<?= h($urlPrefs) ?>" class="pgm-portal-notif-prefs-link">Preferências de alertas</a>
+		<a href="<?= h($urlPrefs) ?>" class="pgm-portal-notif-prefs-link" data-turbo="false">Preferências de alertas</a>
 	</div>
 </div>
 <script>

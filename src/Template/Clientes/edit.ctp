@@ -153,7 +153,7 @@
 			</div>
 			<?php if ($isEquipe): ?>
 				<div class="d-flex align-items-center flex-wrap pgm-gap-8">
-					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente']) ?>
+					<?= $this->Html->link('<i class="fas fa-history"></i> Histórico', ['action' => 'eventos', $cliente->id], ['class' => 'btn btn-sm btn-outline-info', 'escape' => false, 'title' => 'Eventos e auditoria do cliente', 'data-turbo' => 'false']) ?>
 					<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
 				</div>
 			<?php endif; ?>
@@ -642,8 +642,8 @@
 			<?= $this->element('Cli/button', ['text' => 'Inativar…', 'class' => 'btn-sm btn-outline-danger btn-inativar-cliente', 'attrs' => ['type' => 'button']]) ?>
 			<?php endif; ?>
 			<?php if ($isEquipe): ?>
-			<?= $this->Html->link('<i class="fas fa-history"></i>', ['action' => 'eventos', $cliente->id], ['escape' => false, 'class' => 'btn btn-sm btn-outline-info', 'title' => 'Histórico']) ?>
-			<?= $this->Html->link('<i class="fas fa-sliders-h"></i>', $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']), ['escape' => false, 'class' => 'btn btn-sm btn-outline-secondary', 'title' => 'Preferências de alertas']) ?>
+			<?= $this->Html->link('<i class="fas fa-history"></i>', ['action' => 'eventos', $cliente->id], ['escape' => false, 'class' => 'btn btn-sm btn-outline-info', 'title' => 'Histórico', 'data-turbo' => 'false']) ?>
+			<?= $this->Html->link('<i class="fas fa-sliders-h"></i>', $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', 'action' => 'preferences']), ['escape' => false, 'class' => 'btn btn-sm btn-outline-secondary', 'title' => 'Preferências de alertas', 'data-turbo' => 'false']) ?>
 			<?php endif; ?>
 		</div>
 	</div>
@@ -763,12 +763,12 @@
 		],
 	];
 ?>
-<?= $this->Html->script('/js/modules/clientes/cliente-edit.js') ?>
+<?= $this->Html->script('/js/modules/clientes/cliente-edit') ?>
 <script>
 window.PgmClienteEditConfig = <?= json_encode($pgmClienteEditCfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
 </script>
-<?= $this->Html->script('/js/modules/clientes/cliente-edit-ficha.js') ?>
-<?= $this->Html->script('/js/modules/clientes/cliente-edit-ficha-acessos.js') ?>
+<?= $this->Html->script('/js/modules/clientes/cliente-edit-ficha') ?>
+<?= $this->Html->script('/js/modules/clientes/cliente-edit-ficha-acessos') ?>
 <script>
 <?= $this->element('Cli/toast_js') ?>
 <?= $this->element('Cli/edit_tabs_js') ?>

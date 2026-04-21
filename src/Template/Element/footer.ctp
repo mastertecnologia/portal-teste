@@ -30,6 +30,6 @@
 </style>
 
 <footer class="footer">
-	&copy; <script>document.write(new Date().getFullYear())</script>
+	&copy; <?= h((string)date('Y')) ?>
 	<strong>PGM Soluções</strong>
 </footer>
