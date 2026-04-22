@@ -175,13 +175,46 @@
 	.sd-add-field .form-control,
 	.sd-add-field .bootstrap-select > .dropdown-toggle {
 		border-radius: 1rem !important;
-		border-color: var(--pgm-border, #cbd5e1) !important;
+		border: 1px solid var(--pgm-border, #cbd5e1) !important;
 		background-color: var(--pgm-bg-surface, #ffffff) !important;
 		color: var(--pgm-text, #0f172a) !important;
 		min-height: 2.75rem;
 		padding-top: 0.5rem;
 		padding-bottom: 0.5rem;
 		font-size: 0.875rem;
+		box-shadow: none !important;
+		background-image: none !important;
+	}
+	/* form-material / .btn do bootstrap-select podem zerar borda — mesma caixa do e-mail */
+	.tickets-add-wrap form.form-material .sd-add-field input.form-control:not([type="hidden"]):not(.ticket-add-readonly-name),
+	.tickets-add-wrap form.form-material .sd-add-field select.form-control,
+	.tickets-add-wrap form.form-material .sd-add-field textarea.form-control {
+		border: 1px solid var(--pgm-border, #cbd5e1) !important;
+		border-radius: 1rem !important;
+		background-color: var(--pgm-bg-surface, #ffffff) !important;
+		color: var(--pgm-text, #0f172a) !important;
+		box-shadow: none !important;
+	}
+	.tickets-add-wrap form.form-material .sd-add-field select.form-control.sd-add-native-select {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E") !important;
+		background-repeat: no-repeat !important;
+		background-position: right 0.75rem center !important;
+		background-size: 10px 10px !important;
+	}
+	.tickets-add-wrap form.form-material .sd-add-field input.form-control:not([type="hidden"]):not(.ticket-add-readonly-name):focus,
+	.tickets-add-wrap form.form-material .sd-add-field select.form-control:focus,
+	.tickets-add-wrap form.form-material .sd-add-field textarea.form-control:focus {
+		border-color: var(--pgm-primary, #1d9e75) !important;
+		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(29, 158, 117, 0.25)) !important;
+	}
+	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle.btn,
+	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle.btn-default,
+	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle.btn-light {
+		border: 1px solid var(--pgm-border, #cbd5e1) !important;
+		background-color: var(--pgm-bg-surface, #ffffff) !important;
+		background-image: none !important;
+		text-shadow: none !important;
+		box-shadow: none !important;
 	}
 	.sd-add-field .bootstrap-select { width: 100% !important; }
 	/* bootstrap-select: wrapper não herda “caixa” clara do .form-control */
@@ -201,7 +234,7 @@
 	.tickets-add-wrap .sd-add-field .bootstrap-select > .dropdown-toggle:focus,
 	.tickets-add-wrap .sd-add-field .bootstrap-select.show > .dropdown-toggle,
 	.tickets-add-wrap .sd-add-field .bootstrap-select.open > .dropdown-toggle {
-		border-color: var(--pgm-primary, #1d9e75) !important;
+		border: 1px solid var(--pgm-primary, #1d9e75) !important;
 		box-shadow: 0 0 0 3px var(--pgm-focus-ring, rgba(29, 158, 117, 0.35)) !important;
 		outline: none !important;
 	}
