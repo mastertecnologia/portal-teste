@@ -290,6 +290,15 @@
 .os-edit-shell .jsgrid-grid-header .jsgrid-table,
 .os-edit-shell .jsgrid-grid-body .jsgrid-table {
 	background: transparent !important;
+	table-layout: fixed;
+	width: 100% !important;
+}
+
+.os-edit-shell .jsgrid .inputDescricao .form-control,
+.os-edit-shell .jsgrid .editDescricao .form-control {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 .os-edit-shell .jsgrid-header-cell {

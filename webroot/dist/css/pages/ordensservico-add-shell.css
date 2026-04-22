@@ -210,6 +210,15 @@ body.os-add-page .os-add-shell .jsgrid-grid-header .jsgrid-table,
 body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
 	background: transparent !important;
 	table-layout: fixed;
+	width: 100% !important;
+}
+
+/* Coluna “Descrição” (width:auto no jsGrid): input preenche a célula */
+body.os-add-page .os-add-shell .jsgrid .inputDescricao .form-control,
+body.os-add-page .os-add-shell .jsgrid .editDescricao .form-control {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar,

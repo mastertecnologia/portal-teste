@@ -9,6 +9,17 @@
 		overflow: auto; 
 	} 
 	.jsgrid-cell > select > option { text-align: left; }
+	#grid_table .jsgrid-grid-header .jsgrid-table,
+	#grid_table .jsgrid-grid-body .jsgrid-table {
+		width: 100% !important;
+		table-layout: fixed;
+	}
+	#grid_table .jsgrid .inputDescricao .form-control,
+	#grid_table .jsgrid .editDescricao .form-control {
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
 </style>
 <div class="col-md-12">
     <div class="card">
@@ -505,7 +516,7 @@
 				},
 			},
 			fields: [
-				{ name: "id", title: "id", type: "text", css: 'hide', validade: 'required',  editing: false,},
+				{ name: "id", title: "id", type: "text", css: 'hide', visible: false, validade: 'required', editing: false },
 				{ name: "tipo", title: "Tipo", type: "select", items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
@@ -571,7 +582,7 @@
 						}
 					},
 				},
-				{ name: "descricao",  fixed: true, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
+				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required' },
 				{ name: "observacao",  title: "Observação", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao",},
 				{ name: "unidade",  title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
 				{ name: "quantidade",  title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "A quantidade não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},

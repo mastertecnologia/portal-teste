@@ -952,6 +952,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				title: "id",
 				type: "text",
 				css: 'hide',
+				visible: false,
 				editing: false
 			},
 			{
@@ -1038,7 +1039,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "descricao",
 				title: "Descrição",
 				type: "text",
-				width: 240,
+				width: "auto",
 				editing: false,
 				insertcss: 'cellInput inputDescricao',
 				editcss: "editDescricao"

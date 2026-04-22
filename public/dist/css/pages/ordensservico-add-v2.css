@@ -536,7 +536,11 @@ body.os-add-page .os-v2-root .jsgrid-grid-header.jsgrid-header-scrollbar {
 body.os-add-page .os-v2-root .jsgrid-grid-body { background: var(--v2-bg3) !important; }
 
 body.os-add-page .os-v2-root .jsgrid-grid-header .jsgrid-table,
-body.os-add-page .os-v2-root .jsgrid-grid-body  .jsgrid-table { background: transparent !important; }
+body.os-add-page .os-v2-root .jsgrid-grid-body  .jsgrid-table {
+	background: transparent !important;
+	table-layout: fixed;
+	width: 100% !important;
+}
 
 /* Webkit scrollbar */
 body.os-add-page .os-v2-root .jsgrid-grid-header::-webkit-scrollbar,

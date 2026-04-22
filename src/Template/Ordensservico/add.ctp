@@ -653,7 +653,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				},
 			},
 			fields: [
-				{ name: "id", title: "id", type: "text", css: 'hide', validade: 'required',  editing: false,},
+				{ name: "id", title: "id", type: "text", css: 'hide', visible: false, validade: 'required', editing: false },
 				{ name: "tipo", title: "Tipo", type: "select", width: 110, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
@@ -720,7 +720,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao",  fixed: true, title: "Descrição", type: "text",  validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required', },
+				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required' },
                 { name: "observacao",  title: "Referenciar ▼", width: 88, type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
                 { name: "unidade",  title: "Unidade", width: 68, type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
                 { name: "quantidade",  title: "Qtde", width: 68, type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
