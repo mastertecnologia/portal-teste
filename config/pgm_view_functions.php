@@ -51,6 +51,30 @@ if (!function_exists('OrdensAtendimento')) {
 	}
 }
 
+if (!function_exists('ProdutosTipo')) {
+	/**
+	 * Rótulo do tipo de item (produto/serviço/licença) em impressão de OS. Usa C_ProdutosTipo.
+	 *
+	 * @param mixed $tipo código gravado em itensordem / carrinho
+	 */
+	function ProdutosTipo($tipo) {
+		if (defined('C_ProdutosTipo') && is_array($opts = constant('C_ProdutosTipo'))) {
+			if (array_key_exists($tipo, $opts)) {
+				return (string) $opts[$tipo];
+			}
+			if (is_numeric($tipo) && array_key_exists((int) $tipo, $opts)) {
+				return (string) $opts[(int) $tipo];
+			}
+			$sk = (string) $tipo;
+			if (array_key_exists($sk, $opts)) {
+				return (string) $opts[$sk];
+			}
+		}
+
+		return htmlspecialchars((string) $tipo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
 /**
  * Função usada em templates (.ctp) de locação/faturas (ex.: Faturas/edit.ctp).
  * Evita "Call to undefined function LocacaoStatus" quando vendor/PGMPackages
