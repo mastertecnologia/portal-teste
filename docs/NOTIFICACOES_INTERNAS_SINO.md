@@ -40,6 +40,7 @@ Documentação operacional e técnica do módulo de **notificações in-app** pa
 | Peça | Caminho |
 |------|---------|
 | Controller API + prefs | `src/Controller/PortalNotificationsController.php` |
+| **Tela preferências (UI)** | `src/Template/PortalNotifications/preferences.ctp` — layout alinhado ao módulo **Clientes** (`clientes-premium.css` + `clientes-layout-unificado.css`, `cli-form-root` / `cli-list-card` / `cli-table`). |
 | Sino (HTML + JS) | `src/Template/Element/portal_notification_bell.ctp` |
 | URLs com `App.base` | `src/View/Helper/PgmPortalNotifHelper.php` (carregado em `src/View/AppView.php`) |
 | Emissão unificada de eventos | `src/Service/ClienteDomain/ClienteDomainBridge.php` |
@@ -51,6 +52,16 @@ Documentação operacional e técnica do módulo de **notificações in-app** pa
 | Tipos de evento / labels prefs | `src/Utility/ClienteDomainEventType.php` |
 
 **Autorização:** `PortalNotificationsController::isAuthorized` exige utilizador com `role === 0` (equipe).
+
+### 4.1. Tela “Preferências de notificações” (mapeamento)
+
+| Item | Detalhe |
+|------|---------|
+| **URL (canónica)** | `GET /pgm-notifications/preferences` (com `App.base`, ex. `/portal/pgm-notifications/preferences`). |
+| **Gravação** | `POST /pgm-notifications/save-preferences` → `savePreferences` (campos `codes[]` + `prefs[n][send_in_app]` / `prefs[n][send_email]`). |
+| **Catálogo de linhas** | `ClienteDomainEventType::preferenceEventTypes()` — código técnico (`event_type` na BD) + rótulo PT-BR. |
+| **Persistência** | Tabela `portal_notification_preferences` (`user_id`, `event_type`, `send_in_app`, `send_email`). Sem linha: defaults do controller (in-app ligado, e-mail desligado). |
+| **Breadcrumb / navegação** | Início → **Clientes** (lista) → Preferências; botão “Lista de clientes” na própria tela (`data-turbo` false). |
 
 ---
 

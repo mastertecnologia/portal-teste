@@ -1,25 +1,45 @@
 <?php
 /**
+ * Preferências de notificações (equipe) — eventos de domínio cliente/contrato/ERP/usuários.
+ *
  * @var \App\View\AppView $this
  * @var array<int, array{code:string,label:string,send_in_app:bool,send_email:bool}> $prefRows
  */
+$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
+
 $this->Breadcrumbs->add('Início', ['controller' => 'Users', 'action' => 'dashboard'], ['class' => 'breadcrumb-item']);
+$this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'breadcrumb-item active']);
 ?>
-<?= $this->element('Pgm/form_shell_dark', ['formId' => 'form-portal-notif-prefs']) ?>
-<div class="col-12 clictr-edit-page">
-	<div class="clictr-card clictr-card--wide">
-			<h4 class="clictr-page-title">Preferências de notificações</h4>
-			<p class="clictr-page-lead mb-0">Defina o que recebe no sino do portal e o que também gera e-mail automático quando o evento ocorrer.</p>
+<div class="col-md-12 p-0 cli-ficha-layout-unificado">
+<div class="cli-form-root cli-root cli-layout-unificado">
 
-			<?= $this->Form->create(null, ['url' => ['action' => 'savePreferences'], 'class' => 'form-material clictr-form', 'id' => 'form-portal-notif-prefs']) ?>
-			<div class="table-responsive m-t-20">
-				<table class="table table-hover">
+	<div class="cli-page-head">
+		<div class="cli-page-head-left">
+			<div class="cli-eyebrow">Notificações · Equipe</div>
+			<h1>Preferências de notificações</h1>
+			<p class="mb-0">Defina o que recebe no sino do portal e o que também gera e-mail automático quando o evento ocorrer.</p>
+		</div>
+		<div class="d-flex align-items-center flex-wrap pgm-gap-8">
+			<?= $this->Html->link(
+				'<i class="fas fa-arrow-left"></i> Lista de clientes',
+				['controller' => 'Clientes', 'action' => 'index'],
+				['class' => 'btn btn-sm btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']
+			) ?>
+		</div>
+	</div>
+
+	<div class="cli-list-card">
+		<?= $this->Form->create(null, ['url' => ['action' => 'savePreferences'], 'class' => 'form-material mb-0', 'id' => 'form-portal-notif-prefs']) ?>
+		<div class="cli-table-wrap">
+			<div class="cli-table-card">
+				<table class="table cli-table mb-0">
 					<thead>
 						<tr>
 							<th>Evento</th>
-							<th class="text-center">No sistema (sino)</th>
-							<th class="text-center">E-mail</th>
+							<th class="text-center" style="width:9rem">No sistema (sino)</th>
+							<th class="text-center" style="width:9rem">E-mail</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -28,7 +48,7 @@ $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'brea
 								<td>
 									<?= $this->Form->hidden("codes.$i", ['value' => $r['code']]) ?>
 									<strong><?= h($r['label']) ?></strong>
-									<div class="small text-muted"><?= h($r['code']) ?></div>
+									<div class="cli-td-doc small mt-1"><?= h($r['code']) ?></div>
 								</td>
 								<td class="text-center align-middle">
 									<?= $this->Form->checkbox("prefs.$i.send_in_app", [
@@ -51,7 +71,13 @@ $this->Breadcrumbs->add('Preferências de notificações', [], ['class' => 'brea
 					</tbody>
 				</table>
 			</div>
-			<?= $this->Form->button('Salvar preferências', ['class' => 'btn btn-success']) ?>
-			<?= $this->Form->end() ?>
+		</div>
+		<div class="cli-table-footer cli-dt-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+			<span class="small text-muted mb-0">As alterações aplicam-se à sua conta de equipe.</span>
+			<?= $this->Form->button('<i class="fas fa-save"></i> Salvar preferências', ['class' => 'btn btn-cli-primary', 'escape' => false]) ?>
+		</div>
+		<?= $this->Form->end() ?>
 	</div>
+
+</div>
 </div>
