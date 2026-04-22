@@ -63,7 +63,7 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 <body class="<?= h(trim($pgmShellBody . ($bodyPageClass ?? ''))) ?>">
 	<div class="wrapper">
 		<?php if (!empty($pgmReactSidebar)) : ?>
-		<div id="sidebar-app"></div>
+		<div id="sidebar-app" data-turbo="true"></div>
 		<script>window.__PGM_REACT_SIDEBAR__ = true;</script>
 		<?php else : ?>
 		<?= $this->element('sidebarcli'); ?>

@@ -61,7 +61,7 @@
 		$empresaInitials = strtoupper(substr($currentEmpresaNome, 0, 2));
 	}
 ?>
-<aside class="left-sidebar skin-pgm pgm-sidebar-shell" id="sidebar">
+<aside class="left-sidebar skin-pgm pgm-sidebar-shell" id="sidebar" data-turbo="true">
 
 	<div class="workspace">
 		<button class="workspace-btn" id="wsBtn" aria-expanded="false" type="button">

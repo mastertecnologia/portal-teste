@@ -71,7 +71,7 @@
 /* mini-sidebar: esconder texto do submenu mas manter ícone */
 .mini-sidebar .pgm-sidebar-shell .has-arrow-sub > ul{ display:none!important; }
 </style>
-<aside class="left-sidebar skin-pgm pgm-sidebar-shell">
+<aside class="left-sidebar skin-pgm pgm-sidebar-shell" data-turbo="true">
 	<div class="pgm-sidebar-brand">
 		<?= $this->Html->link(
 			'<div class="pgm-sidebar-mark">PGM</div><div class="pgm-sidebar-titles hide-menu"><strong>PGM Soluções em TI</strong><div class="pgm-sidebar-sub">ERP Enterprise</div></div>',

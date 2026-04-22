@@ -171,7 +171,7 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 		<!-- Header horizontal removido: empresa, data e perfil estão na sidebar (layout-sidebar-shell.css) -->
 		<!-- Sidebar: Cake (predefinição) ou montagem React se PGM_SIDEBAR_REACT=1 -->
 		<?php if ($pgmReactSidebar) : ?>
-		<div id="sidebar-app"></div>
+		<div id="sidebar-app" data-turbo="true"></div>
 		<script>window.__PGM_REACT_SIDEBAR__ = true;</script>
 		<?php else : ?>
 		<?php
