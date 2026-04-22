@@ -58,6 +58,9 @@
         return ' data-cli-doc="' . h($docDigits) . '" data-cli-email="' . h($emailLower) . '" data-cli-text="' . h($textBlob) . '" data-cli-primary="' . h($primaryLower) . '"';
     }
 ?>
+<?php /* Turbo Frame: CSS no corpo para o navegador aplicar após swap do frame (append só no <head> da resposta). */ ?>
+<?= $this->element('pgm_premium_css', ['name' => 'clientes-premium']) ?>
+<?= $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']) ?>
 
 <div class="col-md-12 p-0">
 <div class="cli-root cli-layout-unificado">
