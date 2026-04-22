@@ -275,6 +275,19 @@ html[data-pgm-theme="light"] body.sd-body {
 	overflow-x: clip;
 	background: var(--pgm-bg-base, #f8fafc);
 }
+
+/* Claro: main 100% da viewport — padding fica a cargo do React (gutters como Clientes/Produtos) */
+html[data-pgm-theme="light"] body.sd-body .sd-main {
+	flex: 1;
+	width: 100%;
+	max-width: 100%;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html[data-pgm-theme="light"] {
+	color-scheme: light;
+}
 html[data-pgm-theme="dark"] body.sd-body {
 	overflow-x: clip;
 

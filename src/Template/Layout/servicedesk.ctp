@@ -2,7 +2,7 @@
 $authSd = (bool)$this->request->getSession()->read('Auth.User.id');
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR" data-pgm-theme="dark">
+<html lang="pt-BR" data-pgm-theme="light">
 <head>
 	<?= $this->Html->charset() ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">

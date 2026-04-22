@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-pgm-theme="light">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Validação — Service Desk (navegação)</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="dist/css/pages/pgm-theme-tokens.css" />
+	<style>
+		*, *::before, *::after { box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+		body {
+			margin: 0;
+			font-family: "DM Sans", system-ui, sans-serif;
+			background: #f8fafc;
+			color: #0f172a;
+			line-height: 1.5;
+			padding-top: 56px;
+		}
+		.sd-val-nav {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 99999;
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 6px 10px;
+			padding: 10px 16px;
+			background: #fff;
+			border-bottom: 1px solid #e2e8f0;
+			box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+		}
+		.sd-val-nav a {
+			color: #0f172a;
+			text-decoration: none;
+			font-size: 13px;
+			font-weight: 500;
+			padding: 6px 10px;
+			border-radius: 8px;
+			border: 1px solid transparent;
+		}
+		.sd-val-nav a:hover {
+			background: #f1f5f9;
+			border-color: #cbd5e1;
+		}
+		.sd-val-nav a.is-anchor {
+			color: #0f6e56;
+		}
+		.sd-val-nav .sd-val-brand {
+			font-weight: 700;
+			font-size: 14px;
+			color: #1d9e75;
+			margin-right: 8px;
+		}
+		.sd-val-wrap {
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 24px 20px 48px;
+		}
+		.sd-val-card {
+			background: #fff;
+			border: 1px solid #e2e8f0;
+			border-radius: 12px;
+			padding: 20px 22px;
+			margin-bottom: 20px;
+			box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+		}
+		.sd-val-card h2 {
+			margin: 0 0 8px;
+			font-size: 1.1rem;
+			color: #0f172a;
+			scroll-margin-top: 64px;
+		}
+		.sd-val-card > p, .sd-val-note {
+			margin: 0 0 14px;
+			font-size: 14px;
+			color: #64748b;
+		}
+		.sd-val-links {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		.sd-val-links li {
+			border-top: 1px solid #f1f5f9;
+		}
+		.sd-val-links li:first-child { border-top: 0; }
+		.sd-val-links a {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 12px 4px;
+			color: #1d9e75;
+			font-weight: 600;
+			text-decoration: none;
+			font-size: 14px;
+		}
+		.sd-val-links a:hover { text-decoration: underline; color: #0f6e56; }
+		.sd-val-links code {
+			font-size: 12px;
+			font-weight: 400;
+			color: #64748b;
+			word-break: break-all;
+			text-align: right;
+		}
+		.sd-val-prefix {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 16px;
+			padding: 12px 14px;
+			background: #f1f5f9;
+			border-radius: 10px;
+			border: 1px solid #e2e8f0;
+		}
+		.sd-val-prefix label { font-size: 13px; font-weight: 600; color: #334155; }
+		.sd-val-prefix input {
+			flex: 1;
+			min-width: 140px;
+			padding: 8px 10px;
+			border: 1px solid #cbd5e1;
+			border-radius: 8px;
+			font-size: 13px;
+		}
+		.sd-val-prefix button {
+			padding: 8px 14px;
+			border: none;
+			border-radius: 8px;
+			background: #1d9e75;
+			color: #fff;
+			font-weight: 600;
+			font-size: 13px;
+			cursor: pointer;
+		}
+		.sd-val-prefix button:hover { background: #0f6e56; }
+		kbd {
+			background: #f1f5f9;
+			border: 1px solid #cbd5e1;
+			padding: 2px 6px;
+			border-radius: 4px;
+			font-size: 12px;
+		}
+	</style>
+</head>
+<body>
+	<nav class="sd-val-nav" aria-label="Validação Service Desk">
+		<span class="sd-val-brand">PGM · Validação</span>
+		<a class="is-anchor" href="#inicio">Início</a>
+		<a class="is-anchor" href="#prefixo">Prefixo</a>
+		<a class="is-anchor" href="#rotas">Rotas do app</a>
+		<a class="is-anchor" href="#estaticos">HTML estáticos</a>
+		<a class="is-anchor" href="#css">CSS</a>
+		<a class="is-anchor" href="#checklist">Checklist</a>
+	</nav>
+
+	<div class="sd-val-wrap" id="inicio">
+		<div class="sd-val-card">
+			<h2>Validação — Service Desk (layout claro / largura)</h2>
+			<p>
+				Sirva este ficheiro a partir da <strong>mesma origem</strong> que o portal CakePHP
+				(pasta pública: <kbd>public/</kbd> ou <kbd>webroot/</kbd> conforme <kbd>WEBROOT_DIR</kbd>), por exemplo
+				<code>/validacao-servicedesk-navegacao.html</code>, para os links relativos a <kbd>dist/css/…</kbd> e mockups funcionarem.
+			</p>
+			<p class="sd-val-note">
+				Rotas dinâmicas (<code>/servicedesk</code>, etc.) exigem sessão conforme permissões. Use o campo de prefixo se o portal estiver num subcaminho (ex.: <kbd>/portal</kbd>).
+			</p>
+		</div>
+
+		<div class="sd-val-card" id="prefixo">
+			<h2>Prefixo da aplicação</h2>
+			<p>Ex.: vazio para raiz, ou <kbd>/portal</kbd> se o DocumentRoot incluir subpasta.</p>
+			<div class="sd-val-prefix">
+				<label for="sdBasePrefix">Prefixo</label>
+				<input id="sdBasePrefix" type="text" placeholder="/portal ou vazio" autocomplete="off" />
+				<button type="button" id="sdBaseSave">Aplicar e gravar</button>
+			</div>
+		</div>
+
+		<div class="sd-val-card" id="rotas">
+			<h2>Rotas do portal (abrem no mesmo separador)</h2>
+			<p>Clique para abrir a UI real (login se necessário).</p>
+			<ul class="sd-val-links" id="sdRouteList"></ul>
+		</div>
+
+		<div class="sd-val-card" id="estaticos">
+			<h2>HTML estáticos (mesma origem)</h2>
+			<ul class="sd-val-links" id="sdStaticList"></ul>
+		</div>
+
+		<div class="sd-val-card" id="css">
+			<h2>CSS de referência</h2>
+			<ul class="sd-val-links">
+				<li>
+					<a href="dist/css/pages/pgm-servicedesk-premium.css" target="_blank" rel="noopener">pgm-servicedesk-premium.css <code>dist/css/pages/…</code></a>
+				</li>
+				<li>
+					<a href="dist/css/pages/pgm-theme-tokens.css" target="_blank" rel="noopener">pgm-theme-tokens.css <code>dist/css/pages/…</code></a>
+				</li>
+			</ul>
+		</div>
+
+		<div class="sd-val-card" id="checklist">
+			<h2>Checklist rápido</h2>
+			<ul style="margin:0;padding-left:1.25rem;color:#475569;font-size:14px;line-height:1.65;">
+				<li>Tema claro (fundo claro, texto escuro) na fila técnica e no painel operacional.</li>
+				<li>Tabela / filtros alinhados ao estilo da lista de tickets do cliente.</li>
+				<li>Conteúdo ocupa a largura útil da janela (sem “coluna” estreita centrada por padding excessivo no main).</li>
+				<li>Após alterar React: <kbd>cd dashboard-react</kbd> → <kbd>npm run build</kbd> (saída <kbd>public/tickets-app/</kbd>).</li>
+			</ul>
+		</div>
+	</div>
+
+	<script>
+		(function () {
+			var STORAGE_KEY = 'pgm_validacao_sd_base_prefix';
+			var input = document.getElementById('sdBasePrefix');
+			var btn = document.getElementById('sdBaseSave');
+			var routes = [
+				['Service Desk — fila / home', '/servicedesk'],
+				['Service Desk — painel operacional', '/servicedesk/operacional'],
+				['Service Desk — novo ticket', '/servicedesk/add'],
+				['Login portal (ajuste redirect manualmente)', '/users/login'],
+				['Dashboard staff', '/users/dashboard'],
+				['Clientes (referência layout)', '/clientes'],
+				['Produtos (referência layout)', '/produtos'],
+			];
+			var statics = [
+				['Mockup Service Desk v2 (legado escuro)', 'mockup-servicedesk-v2.html'],
+				['Validação sidebar React', 'validacao-sidebar-react-migracao.html'],
+				['Preview sidebar (HTML)', 'sidebar-preview.html'],
+			];
+
+			function normalizePrefix(v) {
+				v = (v || '').trim();
+				if (!v) return '';
+				if (v !== '/' && v.endsWith('/')) v = v.slice(0, -1);
+				if (!v.startsWith('/')) v = '/' + v;
+				return v;
+			}
+
+			function withPrefix(path) {
+				var p = normalizePrefix(input.value);
+				if (path.startsWith('http')) return path;
+				return p + path;
+			}
+
+			function renderLists() {
+				var rList = document.getElementById('sdRouteList');
+				var sList = document.getElementById('sdStaticList');
+				rList.innerHTML = routes.map(function (row) {
+					var href = withPrefix(row[1]);
+					return '<li><a href="' + href + '"><span>' + row[0] + '</span><code>' + href + '</code></a></li>';
+				}).join('');
+				sList.innerHTML = statics.map(function (row) {
+					var href = row[1];
+					return '<li><a href="' + href + '"><span>' + row[0] + '</span><code>' + href + '</code></a></li>';
+				}).join('');
+			}
+
+			try {
+				input.value = localStorage.getItem(STORAGE_KEY) || '';
+			} catch (e) {
+				input.value = '';
+			}
+			renderLists();
+
+			btn.addEventListener('click', function () {
+				try {
+					localStorage.setItem(STORAGE_KEY, normalizePrefix(input.value));
+				} catch (e) {}
+				renderLists();
+			});
+		})();
+	</script>
+</body>
+</html>

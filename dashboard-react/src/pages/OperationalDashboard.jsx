@@ -35,22 +35,22 @@ function IconCritical() {
 const KPI_TONE = {
   default: {
     icon: 'bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)]',
-    card: 'border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))]',
+    card: 'border-[var(--pgm-border-subtle)]',
     border: '',
   },
   success: {
     icon: 'bg-[var(--pgm-badge-green-bg)] text-[var(--pgm-badge-green-text)]',
-    card: 'border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))]',
+    card: 'border-[var(--pgm-border-subtle)]',
     border: '',
   },
   warn: {
     icon: 'bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)]',
-    card: 'border-l-[3px] border-l-[var(--pgm-badge-amber-text)] border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))]',
+    card: 'border-l-[3px] border-l-[var(--pgm-badge-amber-text)] border-[var(--pgm-border-subtle)]',
     border: '',
   },
   critical: {
     icon: 'bg-[var(--pgm-badge-red-bg)] text-[var(--pgm-badge-red-text)]',
-    card: 'border-l-[3px] border-l-[var(--pgm-badge-red-text)] border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] sd-kpi-glow',
+    card: 'border-l-[3px] border-l-[var(--pgm-badge-red-text)] border-[var(--pgm-border-subtle)] sd-kpi-glow',
     border: '',
   },
 };
@@ -59,16 +59,16 @@ function KpiCard({ label, value, tone = 'default', icon: Icon }) {
   const t = KPI_TONE[tone] || KPI_TONE.default;
   return (
     <div
-      className={`flex items-start gap-3 rounded-xl border bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[var(--pgm-bg-raised,#141820)] p-4 shadow-[var(--pgm-shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] hover:border-[var(--pgm-border,#3d4554)] ${t.card}`}
+      className={`flex items-start gap-3 rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] p-4 shadow-[var(--pgm-shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md)] hover:border-[var(--pgm-border)] ${t.card}`}
     >
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
         {Icon ? <Icon /> : <IconBacklog />}
       </div>
       <div className="min-w-0">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted,#9aa0a8)]">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">
           {label}
         </p>
-        <p className="mt-0.5 font-[var(--pgm-font-mono,'DM_Mono',ui-monospace,monospace)] text-[1.75rem] font-bold leading-tight tabular-nums text-[var(--pgm-text,#e8eaed)]">
+        <p className="mt-0.5 font-[var(--pgm-font-mono,'DM_Mono',ui-monospace,monospace)] text-[1.75rem] font-bold leading-tight tabular-nums text-[var(--pgm-text)]">
           {value}
         </p>
       </div>
@@ -80,26 +80,26 @@ function KeyValList({ title, obj }) {
   const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
   if (entries.length === 0) {
     return (
-      <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
-        <div className="flex items-center justify-between border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
-          <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">{title}</h3>
+      <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] shadow-[var(--pgm-shadow-md)]">
+        <div className="flex items-center justify-between border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-4 py-3">
+          <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text)]">{title}</h3>
         </div>
         <div className="p-4">
-          <p className="text-sm text-[var(--pgm-text-muted,#9aa0a8)]">Sem dados</p>
+          <p className="text-sm text-[var(--pgm-text-muted)]">Sem dados</p>
         </div>
       </div>
     );
   }
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
-      <div className="flex items-center justify-between border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
-        <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">{title}</h3>
+    <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] shadow-[var(--pgm-shadow-md)]">
+      <div className="flex items-center justify-between border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-4 py-3">
+        <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text)]">{title}</h3>
       </div>
-      <ul className="divide-y divide-[var(--pgm-border-subtle,rgba(255,255,255,0.06))]">
+      <ul className="divide-y divide-[var(--pgm-border-subtle)]">
         {entries.map(([k, v]) => (
           <li key={k} className="flex items-center justify-between gap-2 px-4 py-2.5">
-            <span className="text-[0.8125rem] text-[var(--pgm-text-secondary,#c4c9d1)]">{k}</span>
-            <span className="font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--pgm-text,#e8eaed)]">{v}</span>
+            <span className="text-[0.8125rem] text-[var(--pgm-text-secondary)]">{k}</span>
+            <span className="font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--pgm-text)]">{v}</span>
           </li>
         ))}
       </ul>
@@ -149,7 +149,7 @@ export default function OperationalDashboard({ boot }) {
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">
             Painel operacional
           </p>
-          <h2 className="text-[1.35rem] font-bold text-[var(--pgm-text,#e8eaed)]">
+          <h2 className="text-[1.35rem] font-bold text-[var(--pgm-text)]">
             Indicadores &amp; SLA
           </h2>
         </div>
@@ -157,7 +157,7 @@ export default function OperationalDashboard({ boot }) {
           {portalNav ? (
             <a
               href={backHref}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
               {boot?.servicedesk ? 'Fila técnica' : 'Listagem de tickets'}
@@ -165,7 +165,7 @@ export default function OperationalDashboard({ boot }) {
           ) : (
             <Link
               to="/tecnico"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
               Painel técnico
@@ -189,10 +189,10 @@ export default function OperationalDashboard({ boot }) {
       ) : null}
 
       {loading && !dash ? (
-        <p className="text-sm text-[var(--pgm-text-muted,#9aa0a8)]">Carregando indicadores…</p>
+        <p className="text-sm text-[var(--pgm-text-muted)]">Carregando indicadores…</p>
       ) : dash ? (
         <>
-          <p className="mb-4 text-xs text-[var(--pgm-text-muted,#9aa0a8)]">
+          <p className="mb-4 text-xs text-[var(--pgm-text-muted)]">
             Gerado em {dash.gerado_em ? new Date(dash.gerado_em).toLocaleString('pt-BR') : '—'}
             {!dash.colunas_sla_ativas ? ' · Colunas SLA ainda não disponíveis neste banco.' : ''}
           </p>
@@ -213,7 +213,7 @@ export default function OperationalDashboard({ boot }) {
             />
           </div>
           {(dash.alertas_sla_violado || []).length > 0 ? (
-            <p className="mb-2 text-xs text-[var(--pgm-text-muted,#9aa0a8)]">
+            <p className="mb-2 text-xs text-[var(--pgm-text-muted)]">
               Lista abaixo: até 25 tickets mais urgentes por limite de resolução.
             </p>
           ) : null}
@@ -226,9 +226,9 @@ export default function OperationalDashboard({ boot }) {
             <KeyValList title="Por fila (id)" obj={dash.por_fila_id} />
           </div>
           {(dash.alertas_sla_violado || []).length > 0 ? (
-            <div className="min-w-0 max-w-full overflow-hidden overflow-x-auto rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
-              <div className="flex items-center justify-between border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
-                <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">
+            <div className="min-w-0 max-w-full overflow-hidden overflow-x-auto rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] shadow-[var(--pgm-shadow-md)]">
+              <div className="flex items-center justify-between border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-4 py-3">
+                <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text)]">
                   Alertas — SLA violado
                 </h3>
                 <span className="inline-flex items-center gap-1 rounded-full border border-[var(--pgm-badge-red-ring)] bg-[var(--pgm-badge-red-bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--pgm-badge-red-text)]">
@@ -237,13 +237,13 @@ export default function OperationalDashboard({ boot }) {
                 </span>
               </div>
               <table className="min-w-full text-left text-[0.8125rem]">
-                <thead className="bg-[var(--pgm-bg-elevated,#222834)]">
+                <thead className="bg-[var(--pgm-bg-elevated)]">
                   <tr>
-                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted,#9aa0a8)]">Ticket</th>
-                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted,#9aa0a8)]">Prioridade</th>
-                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted,#9aa0a8)]">% SLA</th>
-                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted,#9aa0a8)]">Limite resolução</th>
-                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted,#9aa0a8)]">Fila</th>
+                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Ticket</th>
+                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Prioridade</th>
+                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">% SLA</th>
+                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Limite resolução</th>
+                    <th className="px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Fila</th>
                     <th className="px-3 py-2" />
                   </tr>
                 </thead>
@@ -251,21 +251,21 @@ export default function OperationalDashboard({ boot }) {
                   {dash.alertas_sla_violado.map((row) => (
                     <tr
                       key={row.id}
-                      className="border-t border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] transition-colors hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:shadow-[inset_3px_0_0_var(--pgm-badge-red-text)]"
+                      className="border-t border-[var(--pgm-border-subtle)] transition-colors hover:bg-[var(--pgm-bg-elevated)] hover:shadow-[inset_3px_0_0_var(--pgm-badge-red-text)]"
                     >
-                      <td className="px-3 py-2 font-mono text-[11.5px] font-semibold text-[var(--pgm-badge-teal-text,#5cdbc0)]">#{row.id}</td>
-                      <td className="px-3 py-2 text-[var(--pgm-text-secondary,#c4c9d1)]">{row.prioridade ?? '—'}</td>
-                      <td className="px-3 py-2 font-mono tabular-nums text-[var(--pgm-badge-red-text,#ff9492)]">{row.sla_percentual_consumido ?? '—'}%</td>
-                      <td className="px-3 py-2 font-mono text-xs text-[var(--pgm-text-muted,#9aa0a8)]">
+                      <td className="px-3 py-2 font-mono text-[11.5px] font-semibold text-[var(--pgm-primary-hover)]">#{row.id}</td>
+                      <td className="px-3 py-2 text-[var(--pgm-text-secondary)]">{row.prioridade ?? '—'}</td>
+                      <td className="px-3 py-2 font-mono tabular-nums text-[var(--pgm-badge-red-text)]">{row.sla_percentual_consumido ?? '—'}%</td>
+                      <td className="px-3 py-2 font-mono text-xs text-[var(--pgm-text-muted)]">
                         {row.data_limite_resolucao
                           ? new Date(row.data_limite_resolucao).toLocaleString('pt-BR')
                           : '—'}
                       </td>
-                      <td className="px-3 py-2 text-[var(--pgm-text-muted,#9aa0a8)]">{row.fila_nome ?? row.queue_id ?? '—'}</td>
+                      <td className="px-3 py-2 text-[var(--pgm-text-muted)]">{row.fila_nome ?? row.queue_id ?? '—'}</td>
                       <td className="px-3 py-2">
                         <a
                           href={ticketHref(row.id)}
-                          className="font-medium text-[var(--pgm-accent,#5cdbc0)] transition hover:text-white hover:underline"
+                          className="font-medium text-[var(--pgm-primary-hover)] transition hover:text-[var(--pgm-primary)] hover:underline"
                         >
                           Abrir
                         </a>
@@ -283,15 +283,15 @@ export default function OperationalDashboard({ boot }) {
 
   if (shellEmbedded) {
     return (
-      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-3 pb-6 pt-3 text-[var(--pgm-text,#e8eaed)] md:px-4">
+      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
         {inner}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--pgm-bg-base,#0c0f14)] text-[var(--pgm-text,#e8eaed)]">
-      <div className="mx-auto max-w-6xl px-4 py-8">{inner}</div>
+    <div className="min-h-screen bg-[var(--pgm-bg-base)] text-[var(--pgm-text)]">
+      <div className="w-full max-w-full px-4 py-8 sm:px-6">{inner}</div>
     </div>
   );
 }
