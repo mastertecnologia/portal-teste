@@ -568,6 +568,9 @@ body.layout-no-topbar.pgm-portal-client .cli-page-head-left .cli-eyebrow {
 body.layout-no-topbar.pgm-portal-client .cli-page-head-left h1 {
 	color: var(--pgm-premium-text);
 }
+body.layout-no-topbar.pgm-portal-client .cli-page-head-left .cli-page-head-code {
+	color: var(--pgm-premium-text);
+}
 body.layout-no-topbar.pgm-portal-client .cli-page-head-left p {
 	color: var(--pgm-premium-muted);
 }

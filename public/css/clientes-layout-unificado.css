@@ -564,6 +564,9 @@
 .cli-form-root.cli-layout-unificado .cli-page-head-left h1 {
   color: var(--orc-text);
 }
+.cli-form-root.cli-layout-unificado .cli-page-head-left .cli-page-head-code {
+  color: var(--orc-text);
+}
 .cli-form-root.cli-layout-unificado .cli-page-head-left p {
   color: var(--orc-text-muted);
 }
