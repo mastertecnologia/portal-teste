@@ -1,9 +1,60 @@
 <?php
 /**
+ * Funções usadas em templates (.ctp) quando vendor/PGMPackages/Utilities.php
+ * não está no deploy. Com PGMPackages presente, não redeclara (function_exists).
+ */
+if (!function_exists('OrdensPagamento')) {
+	/**
+	 * Rótulo da forma de pagamento (OS / faturas). Usa C_OrdensPagamento.
+	 *
+	 * @param mixed $pagamento código gravado na entidade
+	 */
+	function OrdensPagamento($pagamento) {
+		if (defined('C_OrdensPagamento') && is_array($opts = constant('C_OrdensPagamento'))) {
+			if (array_key_exists($pagamento, $opts)) {
+				return (string) $opts[$pagamento];
+			}
+			if (is_numeric($pagamento) && array_key_exists((int) $pagamento, $opts)) {
+				return (string) $opts[(int) $pagamento];
+			}
+			$sk = (string) $pagamento;
+			if (array_key_exists($sk, $opts)) {
+				return (string) $opts[$sk];
+			}
+		}
+
+		return htmlspecialchars((string) $pagamento, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+if (!function_exists('OrdensAtendimento')) {
+	/**
+	 * Rótulo do tipo de atendimento (histórico em Ordensservico/edit). Usa C_OrdensAtendimento.
+	 *
+	 * @param mixed $atendimento código gravado na entidade
+	 */
+	function OrdensAtendimento($atendimento) {
+		if (defined('C_OrdensAtendimento') && is_array($opts = constant('C_OrdensAtendimento'))) {
+			if (array_key_exists($atendimento, $opts)) {
+				return (string) $opts[$atendimento];
+			}
+			if (is_numeric($atendimento) && array_key_exists((int) $atendimento, $opts)) {
+				return (string) $opts[(int) $atendimento];
+			}
+			$sk = (string) $atendimento;
+			if (array_key_exists($sk, $opts)) {
+				return (string) $opts[$sk];
+			}
+		}
+
+		return htmlspecialchars((string) $atendimento, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+/**
  * Função usada em templates (.ctp) de locação/faturas (ex.: Faturas/edit.ctp).
  * Evita "Call to undefined function LocacaoStatus" quando vendor/PGMPackages
- * não expõe esse helper. (OrdensPagamento permanece em Utilities.php para
- * evitar conflito de redeclare com pacotes legados.)
+ * não expõe esse helper.
  */
 if (!function_exists('LocacaoStatus')) {
 	function LocacaoStatus($status) {
