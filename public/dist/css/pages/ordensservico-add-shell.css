@@ -239,8 +239,21 @@ body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
 
 body.os-add-page .os-add-shell .jsgrid th.os-col-desc,
 body.os-add-page .os-add-shell .jsgrid td.os-cell-desc {
-	width: 100% !important;
-	min-width: 120px;
+	width: auto !important;
+	min-width: 0;
+}
+
+body.os-add-page .os-add-shell .jsgrid th.jsgrid-control-field,
+body.os-add-page .os-add-shell .jsgrid td.jsgrid-control-field {
+	width: 64px !important;
+	min-width: 64px !important;
+	max-width: 64px !important;
+	box-sizing: border-box;
+}
+
+body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
+body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
+	overflow-x: hidden;
 }
 
 body.os-add-page .os-add-shell .jsgrid .inputDescricao .form-control,

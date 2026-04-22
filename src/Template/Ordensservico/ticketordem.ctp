@@ -20,6 +20,7 @@
 		width: 100% !important;
 		min-width: 0;
 		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 	#grid_table .jsgrid-grid-header .jsgrid-table,
 	#grid_table .jsgrid-grid-body .jsgrid-table {
@@ -28,8 +29,15 @@
 	}
 	#grid_table .jsgrid th.os-col-desc,
 	#grid_table .jsgrid td.os-cell-desc {
-		width: 100% !important;
-		min-width: 120px;
+		width: auto !important;
+		min-width: 0;
+	}
+	#grid_table .jsgrid th.jsgrid-control-field,
+	#grid_table .jsgrid td.jsgrid-control-field {
+		width: 64px !important;
+		min-width: 64px !important;
+		max-width: 64px !important;
+		box-sizing: border-box;
 	}
 	#grid_table .jsgrid .inputDescricao .form-control,
 	#grid_table .jsgrid .editDescricao .form-control {
@@ -539,7 +547,7 @@
 			},
 			fields: [
 				{ name: "id", title: "id", type: "text", css: 'hide', visible: false, validade: 'required', editing: false },
-				{ name: "tipo", title: "Tipo", type: "select", items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
+				{ name: "tipo", title: "Tipo", type: "select", width: 92, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
 					title: "Código do Produto",
@@ -550,7 +558,7 @@
 					insertcss: 'cellInput inputCodproduto',
 					editcss: "editCodproduto",
 					validate: "required",
-					width: 300,
+					width: 188,
 					insertTemplate: function() {
 						var $select = $("<select>").addClass("jsgrid-select2").select2({
 							placeholder: "Selecione um produto",
@@ -604,15 +612,15 @@
 						}
 					},
 				},
-				{ name: "descricao", title: "Descrição", type: "text", width: "100%", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
-				{ name: "observacao",  title: "Observação", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao",},
-				{ name: "unidade",  title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
-				{ name: "quantidade",  title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "A quantidade não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
-				{ name: "valorunitario",  title: "Vl. Unitário", type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "O valor unitário não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
-				{ name: "valordesconto",  title: "Vl. Desconto", type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
-				{ name: "valortotal",  title: "Vl. Total", type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal', validate: { message: "O valor total não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
-				{ name: "serialnumber",  title: "Serial Number", type: "text", insertcss: 'cellInput inputSerialnumber', editcss: "editSerialnumber", headercss: 'sai', css: 'fieldSerialnumber',},
-				{ type: "control" }
+				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
+				{ name: "observacao",  title: "Observação", type: "text", width: 100,  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao",},
+				{ name: "unidade",  title: "Unidade", type: "text", width: 56,  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
+				{ name: "quantidade",  title: "Qtde", type: "text", width: 56,  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "A quantidade não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
+				{ name: "valorunitario",  title: "Vl. Unitário", type: "text", width: 82,  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "O valor unitário não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
+				{ name: "valordesconto",  title: "Vl. Desconto", type: "text", width: 82,  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
+				{ name: "valortotal",  title: "Vl. Total", type: "text", width: 72,  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal', validate: { message: "O valor total não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
+				{ name: "serialnumber",  title: "Serial Number", type: "text", width: 120, insertcss: 'cellInput inputSerialnumber', editcss: "editSerialnumber", headercss: 'sai', css: 'fieldSerialnumber',},
+				{ type: "control", width: 64 }
 			], 
 			onRefreshed: function(args) {
 				$(".jsgrid-select2").select2();

@@ -2,7 +2,7 @@
 
 use Cake\Routing\Router;
 
-$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css?v=2', ['block' => true]);
+$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css?v=3', ['block' => true]);
 
 $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Edit', [], ['class' => 'breadcrumb-item active']);
@@ -18,9 +18,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 }
 ?>
 <style>
-	.jsgrid-grid-header,
-	.jsgrid-grid-body {
-		overflow: auto;
+	.os-edit-shell #grid_table .jsgrid-grid-header,
+	.os-edit-shell #grid_table .jsgrid-grid-body {
+		overflow-x: hidden;
+		overflow-y: auto;
 	}
 
 	.jsgrid-cell {
@@ -944,6 +945,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "codprodutosoocod",
 				title: "cod",
 				type: "text",
+				width: 0,
 				css: 'hide td-codproduto-soocod',
 				editing: false
 			},
@@ -959,7 +961,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "tipo",
 				title: "Tipo",
 				type: "select",
-				width: 108,
+				width: 96,
 				items: tiposOpt,
 				editing: false,
 				insertcss: 'cellInput inputTipo',
@@ -969,7 +971,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "codproduto",
 				title: "Código do Produto",
 				type: "text",
-				width: 220,
+				width: 188,
 				css: 'inputCodproduto',
 				validate: "required",
 				itemTemplate: function(value) {
@@ -1039,7 +1041,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "descricao",
 				title: "Descrição",
 				type: "text",
-				width: "100%",
+				width: "auto",
 				editing: false,
 				headercss: "os-col-desc",
 				css: "os-cell-desc",
@@ -1052,7 +1054,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				title: "Referenciar",
 				type: "text",
 				align: "center",
-				width: 132,
+				width: 118,
 				itemTemplate: function(value, item) {
 					return $("<div>")
 						.addClass("btn btn-sm btn-link os-edit-ref-link")
@@ -1098,7 +1100,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "unidade",
 				title: "Unidade",
 				type: "text",
-				width: 80,
+				width: 56,
 				editing: false,
 				insertcss: 'cellInput inputUnidade',
 				editcss: "editUnidade"
@@ -1107,7 +1109,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "quantidade",
 				title: "Qtde",
 				type: "text",
-				width: 72,
+				width: 60,
 				insertcss: 'cellInput inputQuantidade',
 				editcss: "editQuantidade"
 			},
@@ -1115,7 +1117,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "valorunitario",
 				title: "Vl. Unit.",
 				type: "text",
-				width: 108,
+				width: 88,
 				insertcss: 'cellInput inputValorunitario',
 				editcss: "editValorunitario"
 			},
@@ -1123,7 +1125,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "valordesconto",
 				title: "Desc.",
 				type: "text",
-				width: 108,
+				width: 88,
 				insertcss: 'cellInput inputValordesconto',
 				editcss: "editValordesconto"
 			},
@@ -1131,7 +1133,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "valortotal",
 				title: "Total",
 				type: "text",
-				width: 108,
+				width: 82,
 				editing: true,
 				insertcss: 'cellInput inputValortotal',
 				editcss: "editValortotal"
@@ -1211,6 +1213,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 			{
 				type: "control",
+				width: 64,
 				deleteButton: editing
 			}
 		],

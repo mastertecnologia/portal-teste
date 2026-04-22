@@ -292,6 +292,7 @@
 	width: 100% !important;
 	min-width: 0;
 	box-sizing: border-box;
+	overflow-x: hidden;
 }
 
 .os-edit-shell .jsgrid-grid-header,
@@ -313,8 +314,16 @@
 
 .os-edit-shell .jsgrid th.os-col-desc,
 .os-edit-shell .jsgrid td.os-cell-desc {
-	width: 100% !important;
-	min-width: 120px;
+	width: auto !important;
+	min-width: 0;
+}
+
+.os-edit-shell .jsgrid th.jsgrid-control-field,
+.os-edit-shell .jsgrid td.jsgrid-control-field {
+	width: 64px !important;
+	min-width: 64px !important;
+	max-width: 64px !important;
+	box-sizing: border-box;
 }
 
 .os-edit-shell .jsgrid .inputDescricao .form-control,

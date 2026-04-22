@@ -1,12 +1,20 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=2', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=3', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
 <style>
-	.jsgrid-grid-header, .jsgrid-grid-body {
-		overflow: auto;
+	/* Só o grid da OS: sem scroll horizontal no card (coluna de ações visível). */
+	body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
+	body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
+	/* Igual edit.ctp: colunas jsGrid com .hide não reservam largura (inputs seguem no DOM). */
+	body.os-add-page .os-add-shell .jsgrid th.hide,
+	body.os-add-page .os-add-shell .jsgrid td.hide {
+		display: none !important;
 	}
 	/* Linhas de inserção/edição: mantém overflow visível para dropdowns abrirem */
 	.jsgrid-insert-row .jsgrid-cell,
@@ -654,12 +662,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			},
 			fields: [
 				{ name: "id", title: "id", type: "text", css: 'hide', visible: false, validade: 'required', editing: false },
-				{ name: "tipo", title: "Tipo", type: "select", width: 110, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
+				{ name: "tipo", title: "Tipo", type: "select", width: 96, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
 					title: "Código do Produto",
 					type: "text", 
-					width: 175,
+					width: 152,
 					css: 'inputCodproduto',
 					validate: "required",
 
@@ -720,19 +728,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao", title: "Descrição", type: "text", width: "100%", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
-                { name: "observacao",  title: "Referenciar ▼", width: 88, type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
-                { name: "unidade",  title: "Unidade", width: 68, type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
-                { name: "quantidade",  title: "Qtde", width: 68, type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
-                { name: "valorunitario",  title: "Vl. Unitário", width: 98, type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
-                { name: "valordesconto",  title: "Vl. Desconto", width: 98, type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
+				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
+                { name: "observacao",  title: "Referenciar ▼", width: 76, type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
+                { name: "unidade",  title: "Unidade", width: 56, type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
+                { name: "quantidade",  title: "Qtde", width: 56, type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
+                { name: "valorunitario",  title: "Vl. Unitário", width: 82, type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
+                { name: "valordesconto",  title: "Vl. Desconto", width: 82, type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
                 /* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
-                { name: "valortotal",  title: "Vl. Total", width: 90, type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
-                { name: "modelo", type: "text", css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
-                { name: "serialnumber", type: "text", css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
-				{ name: "productkey", type: "text", css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},
-				{ name: "obsinterna", type: "text", css: 'hide', insertcss: 'hide inputObsInterna', editcss: 'hide editObsInterna'},
-				{ type: "control", modeSwitchButton: false }
+                { name: "valortotal",  title: "Vl. Total", width: 72, type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
+                { name: "modelo", type: "text", width: 0, css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
+                { name: "serialnumber", type: "text", width: 0, css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
+				{ name: "productkey", type: "text", width: 0, css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},
+				{ name: "obsinterna", type: "text", width: 0, css: 'hide', insertcss: 'hide inputObsInterna', editcss: 'hide editObsInterna'},
+				{ type: "control", width: 64, modeSwitchButton: false }
 			], 
 			onRefreshed: function() {
 				try {

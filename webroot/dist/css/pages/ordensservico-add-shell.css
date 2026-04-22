@@ -238,11 +238,25 @@ body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
 	width: 100% !important;
 }
 
-/* Coluna “Descrição”: em table-layout:fixed, width 100% na coluna faz absorver o espaço livre */
+/* Coluna “Descrição”: width auto absorve o espaço livre sem forçar scroll horizontal */
 body.os-add-page .os-add-shell .jsgrid th.os-col-desc,
 body.os-add-page .os-add-shell .jsgrid td.os-cell-desc {
-	width: 100% !important;
-	min-width: 120px;
+	width: auto !important;
+	min-width: 0;
+}
+
+/* Coluna de ações (jsGrid control): largura mínima estável */
+body.os-add-page .os-add-shell .jsgrid th.jsgrid-control-field,
+body.os-add-page .os-add-shell .jsgrid td.jsgrid-control-field {
+	width: 64px !important;
+	min-width: 64px !important;
+	max-width: 64px !important;
+	box-sizing: border-box;
+}
+
+body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
+body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
+	overflow-x: hidden;
 }
 
 /* Coluna “Descrição”: input preenche a célula */
