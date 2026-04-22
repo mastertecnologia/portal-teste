@@ -2,7 +2,7 @@
 
 use Cake\Routing\Router;
 
-$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css', ['block' => true]);
+$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css?v=2', ['block' => true]);
 
 $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Edit', [], ['class' => 'breadcrumb-item active']);
@@ -1039,10 +1039,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				name: "descricao",
 				title: "Descrição",
 				type: "text",
-				width: "auto",
+				width: "100%",
 				editing: false,
-				insertcss: 'cellInput inputDescricao',
-				editcss: "editDescricao"
+				headercss: "os-col-desc",
+				css: "os-cell-desc",
+				insertcss: "cellInput inputDescricao os-cell-desc",
+				editcss: "editDescricao os-cell-desc"
 			},
 
 			{
@@ -1214,6 +1216,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		],
 		onRefreshed: function(args) {
 			$(".jsgrid-select2").select2();
+			var $g = $('#grid_table');
+			$g.css({ width: '100%', maxWidth: '100%', minWidth: 0 });
+			$g.find('.jsgrid-grid-header, .jsgrid-grid-body').css({ width: '100%', minWidth: 0 });
 		}
 	});
 	$('#grid_table').on('keydown', 'input, select, textarea', function (e) {

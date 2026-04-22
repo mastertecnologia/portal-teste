@@ -1,6 +1,6 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=2', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
@@ -720,7 +720,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required' },
+				{ name: "descricao", title: "Descrição", type: "text", width: "100%", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
                 { name: "observacao",  title: "Referenciar ▼", width: 88, type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
                 { name: "unidade",  title: "Unidade", width: 68, type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
                 { name: "quantidade",  title: "Qtde", width: 68, type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
@@ -743,6 +743,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if (typeof window.initOsAddGridInsertRow === 'function') {
 					window.initOsAddGridInsertRow();
 				}
+				/* jsGrid + flex ancestors: garante largura total do card (evita tabela “encolhida”). */
+				var $g = $('#grid_table');
+				$g.css({ width: '100%', maxWidth: '100%', minWidth: 0 });
+				$g.find('.jsgrid-grid-header, .jsgrid-grid-body').css({ width: '100%', minWidth: 0 });
 			}
 		});
 		/* Grid está dentro do form da OS: Enter em qtde/preço submetia o form inteiro (refresh). */

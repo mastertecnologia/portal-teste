@@ -23,10 +23,17 @@
 	margin-bottom: 0.75rem;
 	overflow: hidden;
 	color: var(--os-text2);
+	min-width: 0;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 .os-add-shell .os-add-shell-body {
 	padding: 12px 14px 16px;
+	min-width: 0;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .os-add-shell .control-label,
@@ -188,6 +195,24 @@ body.os-add-page .bs-container .dropdown-menu li > a:hover {
 	background: var(--os-bg3);
 	color-scheme: light;
 	scrollbar-color: #c4c3c0 var(--os-bg2);
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+/* Instância #grid_table: ocupa toda a largura útil do card (shell premium / flex). */
+body.os-add-page .os-add-shell #grid_table.jsgrid {
+	width: 100% !important;
+	max-width: 100%;
+	min-width: 0;
+}
+
+body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
+body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
+	width: 100% !important;
+	min-width: 0;
+	box-sizing: border-box;
 }
 
 .os-add-shell .jsgrid-grid-body {
@@ -213,12 +238,26 @@ body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
 	width: 100% !important;
 }
 
-/* Coluna “Descrição” (width:auto no jsGrid): input preenche a célula */
+/* Coluna “Descrição”: em table-layout:fixed, width 100% na coluna faz absorver o espaço livre */
+body.os-add-page .os-add-shell .jsgrid th.os-col-desc,
+body.os-add-page .os-add-shell .jsgrid td.os-cell-desc {
+	width: 100% !important;
+	min-width: 120px;
+}
+
+/* Coluna “Descrição”: input preenche a célula */
 body.os-add-page .os-add-shell .jsgrid .inputDescricao .form-control,
 body.os-add-page .os-add-shell .jsgrid .editDescricao .form-control {
 	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;
+}
+
+/* Código do produto (input-group) estica na célula */
+body.os-add-page .os-add-shell .jsgrid .inputCodproduto .input-group {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
 }
 
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar,

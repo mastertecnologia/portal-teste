@@ -9,16 +9,38 @@
 		overflow: auto; 
 	} 
 	.jsgrid-cell > select > option { text-align: left; }
+	#grid_table.jsgrid {
+		width: 100% !important;
+		max-width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
+	}
+	#grid_table .jsgrid-grid-header,
+	#grid_table .jsgrid-grid-body {
+		width: 100% !important;
+		min-width: 0;
+		box-sizing: border-box;
+	}
 	#grid_table .jsgrid-grid-header .jsgrid-table,
 	#grid_table .jsgrid-grid-body .jsgrid-table {
 		width: 100% !important;
 		table-layout: fixed;
+	}
+	#grid_table .jsgrid th.os-col-desc,
+	#grid_table .jsgrid td.os-cell-desc {
+		width: 100% !important;
+		min-width: 120px;
 	}
 	#grid_table .jsgrid .inputDescricao .form-control,
 	#grid_table .jsgrid .editDescricao .form-control {
 		width: 100%;
 		max-width: 100%;
 		box-sizing: border-box;
+	}
+	#grid_table .jsgrid .inputCodproduto .input-group {
+		width: 100%;
+		max-width: 100%;
+		min-width: 0;
 	}
 </style>
 <div class="col-md-12">
@@ -582,7 +604,7 @@
 						}
 					},
 				},
-				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, insertcss: 'cellInput inputDescricao', editcss: "editDescricao", validade: 'required' },
+				{ name: "descricao", title: "Descrição", type: "text", width: "100%", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
 				{ name: "observacao",  title: "Observação", type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao",},
 				{ name: "unidade",  title: "Unidade", type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
 				{ name: "quantidade",  title: "Qtde", type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "A quantidade não pode ser igual ou inferior a 0!", validator: function(value) { return value.replace('.', '').replace(',', '.') > 0; }},},
@@ -594,6 +616,9 @@
 			], 
 			onRefreshed: function(args) {
 				$(".jsgrid-select2").select2();
+				var $g = $('#grid_table');
+				$g.css({ width: '100%', maxWidth: '100%', minWidth: 0 });
+				$g.find('.jsgrid-grid-header, .jsgrid-grid-body').css({ width: '100%', minWidth: 0 });
 			}
 		});
 		$('#grid_table').on('keydown', 'input, select, textarea', function (e) {

@@ -124,6 +124,11 @@ body.pgm-app-shell-premium #pgm-dynamic-content {
     padding-bottom: 8px;
 }
 
+/* Cadastro OS: evita encolher o card / jsGrid dentro do flex da zona principal */
+body.pgm-app-shell-premium.os-add-page.layout-no-topbar #pgm-dynamic-content.row:has(.os-add-shell) {
+    min-width: 0;
+}
+
 /*
  * Módulo Clientes (cli-*): a .row #pgm-dynamic-content estica no eixo vertical (flex:1 no shell).
  * Com align-items: stretch (padrão do Bootstrap), colunas altas fazem o cartão parecer “no meio”.
