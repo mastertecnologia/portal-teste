@@ -51,9 +51,11 @@
   }
   }
 ?>
+<?php /* Turbo Frame: reaplicar CSS após swap (mesmo padrão do módulo Clientes). */ ?>
+<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 
 <div class="col-md-12 p-0">
-<div class="prd-root">
+<div class="prd-root prd-layout-unificado">
 
   <!-- ── Topbar ─────────────────────────────────────────────── -->
   <div class="prd-topbar">
@@ -143,6 +145,8 @@
     </div>
   </div>
 
+  <!-- ── Lista: filtros + tabelas (cartão único — padrão Clientes) ── -->
+  <div class="prd-list-card">
   <!-- ── Filter Bar ─────────────────────────────────────────── -->
   <div class="prd-filter-bar">
     <div class="prd-pill-group">
@@ -327,6 +331,7 @@
 
     </div><!-- /.prd-table-card -->
   </div><!-- /.prd-table-wrap -->
+  </div><!-- /.prd-list-card -->
 
 </div><!-- /.prd-root -->
 </div>
