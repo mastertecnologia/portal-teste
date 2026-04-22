@@ -316,6 +316,21 @@ body.os-add-page .os-add-shell .jsgrid .inputCodproduto .input-group {
 	align-items: stretch;
 }
 
+/* Cód. produto + lupa: mesma linguagem visual dos outros inputs (cantos 7px do shell, altura alinhada). */
+body.os-add-page .os-add-shell #grid_table .inputCodproduto .input-group > .form-control.input-codigo-val {
+	border-radius: 7px 0 0 7px !important;
+	cursor: text;
+	min-height: 34px;
+}
+
+body.os-add-page .os-add-shell #grid_table .inputCodproduto .input-group-append .btn {
+	border-radius: 0 7px 7px 0 !important;
+	min-height: 34px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar,
 body.os-add-page .os-add-shell .jsgrid-grid-body::-webkit-scrollbar {
 	width: 10px;

@@ -1,6 +1,6 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=5', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=6', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
@@ -681,7 +681,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					
 					// Template para INSERÇÃO
 					insertTemplate: function() {
-						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true);
+						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val");
 						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 						
 						$btn.on("click", function(e) {
@@ -706,7 +706,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 					// Template para EDIÇÃO
 					editTemplate: function(value) {
-						var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true).val(value);
+						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val").val(value);
 						var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 						
 						$btn.on("click", function(e) {

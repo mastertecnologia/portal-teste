@@ -2,7 +2,7 @@
 
 use Cake\Routing\Router;
 
-$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css?v=3', ['block' => true]);
+$this->Html->css('/dist/css/pages/ordensservico-edit-shell-fixed.css?v=4', ['block' => true]);
 
 $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Edit', [], ['class' => 'breadcrumb-item active']);
@@ -980,8 +980,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					});
 					return item ? item.descricao : value;
 				},
-				insertTemplate: function() {
-					var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true);
+					insertTemplate: function() {
+						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val");
 					var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 
 					$btn.on("click", function() {
@@ -1006,8 +1006,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					return this.insertControl.val();
 				},
 
-				editTemplate: function(value) {
-					var $input = $("<input>").addClass("form-control input-codigo-val").prop("readonly", true).val(value);
+					editTemplate: function(value) {
+						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val").val(value);
 					var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 
 					$btn.on("click", function() {
