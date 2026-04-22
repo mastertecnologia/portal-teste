@@ -6,8 +6,13 @@
  */
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 ?>
+<?php /* Turbo / frame: reaplicar folha (padrão Produtos / Clientes). */ ?>
+<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 
-<div class="prec-root">
+<?php if (empty($embedEstoque)) : ?>
+<div class="col-md-12 p-0">
+<?php endif; ?>
+<div class="prec-root prec-layout-unificado">
 
   <!-- Topbar -->
   <div class="prec-topbar">
@@ -217,6 +222,10 @@ $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-prem
 
 <!-- Toast container -->
 <div class="prec-toast" id="prec-toast"></div>
+
+<?php if (empty($embedEstoque)) : ?>
+</div><!-- /.col-md-12 -->
+<?php endif; ?>
 
 <script>
 /* ── Dados do servidor ─────────────────────────────────────────── */
