@@ -4,9 +4,10 @@
   $this->Breadcrumbs->add('Novo Cadastro', [], ['class' => 'breadcrumb-item active']);
   $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
 ?>
+<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 
 <div class="col-md-12 p-0">
-<div class="prd-form-root">
+<div class="prd-form-root prd-layout-unificado">
 <?= $this->Form->create($produto, ['id' => 'prdForm', 'novalidate' => true]) ?>
 
   <!-- ── Topbar ─────────────────────────────────────────────── -->

@@ -3,14 +3,19 @@
   $this->Breadcrumbs->add('Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['class' => 'breadcrumb-item']);
   $this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
   $this->append('css', $this->element('pgm_premium_css', ['name' => 'produtos-premium']));
-
+?>
+<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
+<?php
   // Detectar tipo atual para mostrar seção correta
   $tipoAtual = $produto->tipo ?? '';
   $constTipoProduto = defined('C_ProdutosTipoProduto') ? C_ProdutosTipoProduto : 1;
   $isTipoProduto = (stripos((string)$tipoAtual, 'produto') !== false || $tipoAtual == $constTipoProduto);
 ?>
 
-<div class="prd-form-root">
+<?php if (empty($embedEstoque)) : ?>
+<div class="col-md-12 p-0">
+<?php endif; ?>
+<div class="prd-form-root prd-layout-unificado">
 <?php
 $_prdFormOpts = ['id' => 'prdForm', 'novalidate' => true];
 if (!empty($embedEstoque)) {
@@ -442,6 +447,10 @@ if (!empty($embedEstoque)) {
 
 <?= $this->Form->end() ?>
 </div><!-- /.prd-form-root -->
+
+<?php if (empty($embedEstoque)) : ?>
+</div><!-- /.col-md-12 -->
+<?php endif; ?>
 
 <script>
 (function () {

@@ -1125,8 +1125,10 @@ body.prec-screen-active .prec-overlay-killed {
 
 /* ══════════════════════════════════════════════════════════════
    INDEX — layout unificado (tema claro Orçamentos / módulo Clientes)
+   (+ cadastro produto: .prd-form-root.prd-layout-unificado)
 ══════════════════════════════════════════════════════════════ */
-.prd-root.prd-layout-unificado {
+.prd-root.prd-layout-unificado,
+.prd-form-root.prd-layout-unificado {
   --pgm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --orc-teal: #00c08b;
   --orc-teal-dark: #008f68;
@@ -1183,6 +1185,11 @@ body.prec-screen-active .prec-overlay-killed {
   min-height: 0 !important;
   padding: 12px 16px 32px;
   box-sizing: border-box;
+}
+
+.prd-form-root.prd-layout-unificado {
+  display: flex;
+  flex-direction: column;
 }
 
 .prd-layout-unificado .prd-topbar {
@@ -1246,6 +1253,30 @@ body.prec-screen-active .prec-overlay-killed {
   background: var(--orc-teal-dark) !important;
   transform: none;
   opacity: 1;
+}
+.prd-layout-unificado .btn-prd-primary {
+  background: var(--orc-teal) !important;
+  border-radius: var(--orc-radius-sm);
+  box-shadow: var(--orc-shadow-sm);
+}
+.prd-layout-unificado .btn-prd-primary:hover {
+  background: var(--orc-teal-dark) !important;
+  color: #fff !important;
+  transform: none;
+  opacity: 1;
+}
+.prd-layout-unificado .btn-prd-secondary {
+  background: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  border-radius: var(--orc-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+.prd-layout-unificado .btn-prd-secondary:hover {
+  background: var(--orc-bg-surface) !important;
+  border-color: var(--orc-teal) !important;
+  color: var(--orc-teal-dark) !important;
 }
 
 /* Resumo numérico — grelha de cartões como KPIs Clientes */
@@ -2016,4 +2047,116 @@ body.prec-screen-active:has(.prec-layout-unificado) .prec-btn-sel-apply:hover {
 body.prec-screen-active:has(.prec-layout-unificado) .prec-btn-sel-clear {
   border-color: #e5e4e0;
   color: #6b6a65;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM cadastro / edição — layout unificado + rodapé no fluxo
+══════════════════════════════════════════════════════════════ */
+body.pgm-app-shell-premium.layout-no-topbar .pgm-shell-main .page-wrapper > .container-fluid:has(.prd-form-root.prd-layout-unificado) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.prd-form-root.prd-layout-unificado) {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+
+.prd-form-root.prd-layout-unificado form#prdForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.prd-form-root.prd-layout-unificado .prd-form-topbar {
+  flex-shrink: 0;
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  background: var(--orc-bg-card);
+  box-shadow: var(--orc-shadow-sm);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border-bottom: none;
+}
+
+.prd-form-root.prd-layout-unificado .prd-form-layout {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  grid-template-columns: 1fr minmax(260px, 360px);
+  gap: 20px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1000px) {
+  .prd-form-root.prd-layout-unificado .prd-form-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prd-form-root.prd-layout-unificado .prd-form-aside {
+  top: 8px;
+}
+
+.prd-form-root.prd-layout-unificado .prd-form-footer {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 20px;
+  flex-shrink: 0;
+  background: var(--orc-bg-card);
+  border: 1px solid var(--orc-border);
+  border-radius: var(--orc-radius-lg);
+  box-shadow: var(--orc-shadow-sm);
+  backdrop-filter: none;
+  padding: 14px 20px;
+  z-index: 2;
+}
+
+.prd-form-root.prd-layout-unificado .prd-form-footer-left {
+  color: var(--orc-text-muted);
+}
+
+.prd-form-root.prd-layout-unificado .prd-form-footer-icon {
+  color: var(--orc-teal-dark);
+}
+
+.prd-form-root.prd-layout-unificado .prd-tipo-card {
+  background: var(--orc-bg-surface);
+  border-color: var(--orc-border);
+}
+.prd-form-root.prd-layout-unificado .prd-tipo-card:hover {
+  border-color: var(--orc-teal);
+  background: var(--orc-bg-card);
+}
+.prd-form-root.prd-layout-unificado .prd-tipo-card.tipo-active {
+  background: var(--orc-teal-light);
+  border-color: var(--orc-teal);
+  box-shadow: none;
+}
+.prd-form-root.prd-layout-unificado .prd-tipo-card.tipo-active .prd-tipo-card-title {
+  color: var(--orc-teal-dark);
+}
+
+.prd-form-root.prd-layout-unificado .prd-price-formula,
+.prd-form-root.prd-layout-unificado .prd-loc-chip {
+  background: var(--orc-bg-surface);
+  border-color: var(--orc-border);
+}
+
+.prd-form-root.prd-layout-unificado .prd-input-computed,
+.prd-form-root.prd-layout-unificado input.prd-computed {
+  background: var(--orc-bg-surface) !important;
+  color: var(--orc-teal-dark) !important;
+  border-color: var(--orc-border) !important;
 }
