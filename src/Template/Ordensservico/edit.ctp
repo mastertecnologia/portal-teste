@@ -242,16 +242,16 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 					<?php
 					echo '<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-t-20" form="form-os-edit">' . h(__('Salvar Ordem de Serviço')) . '</button>';
-					echo $this->Html->Link('Imprimir', ['action' => 'imprimir', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-l-5 m-t-20']);
-					echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-l-5 m-t-20']);
-					if (!$ordem->locacao) echo $this->Html->link('Locação', ['action' => 'locacao', $ordem->id, 1], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right']);
-					else echo $this->Html->link('Remover locação', ['action' => 'locacao', $ordem->id, 0], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-danger m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoLiberadaParaFaturamento) echo $this->Html->link('Voltar ordem', ['action' => 'pausar', $ordem->id], ['class' => 'btn btn-warning m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoAberta) echo $this->Html->link('Em execução', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right']);
-					if ($ordem->situacao != C_OrdensSituacaoFinalizada) echo $this->Html->link('Finalizar', ['action' => 'finalizar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right']);
+					echo $this->Html->link('Imprimir', ['action' => 'imprimir', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-l-5 m-t-20', 'data-turbo' => 'false']);
+					echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-l-5 m-t-20', 'data-turbo' => 'false']);
+					if (!$ordem->locacao) echo $this->Html->link('Locação', ['action' => 'locacao', $ordem->id, 1], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					else echo $this->Html->link('Remover locação', ['action' => 'locacao', $ordem->id, 0], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-danger m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoLiberadaParaFaturamento) echo $this->Html->link('Voltar ordem', ['action' => 'pausar', $ordem->id], ['class' => 'btn btn-warning m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoAberta) echo $this->Html->link('Em execução', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao != C_OrdensSituacaoFinalizada) echo $this->Html->link('Finalizar', ['action' => 'finalizar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					?>
 				</div>
 				<div class="tab-pane" id="movimentacoes">
