@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-pgm-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PGM ServiceDesk v2 — Paleta de cores (referência)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:light;scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--pgm-bg-base);
+  color:var(--pgm-text);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:2rem 1.5rem 4rem;
+  max-width:1100px;
+  margin:0 auto;
+}
+
+/* Tokens idênticos a pgm-servicedesk-v2-navegacao.html (:root) */
+:root{
+  --pgm-bg-base:#f8fafc;
+  --pgm-bg-raised:#ffffff;
+  --pgm-bg-surface:#ffffff;
+  --pgm-bg-elevated:#f1f5f9;
+  --pgm-bg-overlay:#e2e8f0;
+  --pgm-bg-page:#f8fafc;
+  --pgm-primary:#1d9e75;
+  --pgm-primary-hover:#0f6e56;
+  --pgm-primary-muted:rgba(29,158,117,0.10);
+  --pgm-secondary:#0f6e56;
+  --pgm-accent:#0f6e56;
+  --pgm-link:#1d9e75;
+  --pgm-text:#0f172a;
+  --pgm-text-secondary:#334155;
+  --pgm-text-muted:#64748b;
+  --pgm-border:#cbd5e1;
+  --pgm-border-subtle:#e2e8f0;
+  --pgm-border-strong:#94a3b8;
+  --pgm-border-accent:rgba(29,158,117,0.35);
+  --pgm-font-mono:'DM Mono','JetBrains Mono',ui-monospace,monospace;
+}
+
+h1{font-size:1.5rem;font-weight:700;margin-bottom:0.35rem;color:var(--pgm-text)}
+.lead{font-size:0.9rem;color:var(--pgm-text-muted);margin-bottom:2rem}
+.lead code{font-family:var(--pgm-font-mono);font-size:0.8rem;background:var(--pgm-bg-elevated);padding:0.1rem 0.35rem;border-radius:4px}
+
+.section{margin-bottom:2.25rem}
+.section-title{
+  font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--pgm-primary);margin-bottom:0.75rem;
+}
+.section-heading{font-size:1.1rem;font-weight:700;color:var(--pgm-text);margin-bottom:1rem}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:0.75rem;
+}
+.sw{
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--pgm-border-subtle);
+  background:var(--pgm-bg-surface);
+  box-shadow:0 1px 3px rgba(15,23,42,0.06);
+}
+.sw-color{height:56px;width:100%}
+.sw-meta{padding:0.5rem 0.65rem 0.65rem}
+.sw-name{font-size:0.7rem;font-weight:600;color:var(--pgm-text-muted);text-transform:uppercase;letter-spacing:0.06em}
+.sw-hex{font-family:var(--pgm-font-mono);font-size:0.72rem;color:var(--pgm-text);word-break:break-all;margin-top:2px}
+
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:0.5rem}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+  font-size:11px;font-weight:600;letter-spacing:0.04em;
+  box-shadow:0 1px 3px rgba(0,0,0,0.25);color:#fff;
+}
+.badge-teal{background:#1d9e75}
+.badge-blue{background:#2DAAE1}
+.badge-amber{background:#F39C12}
+.badge-red{background:#dc330f}
+.badge-green{background:#27AE60}
+.badge-purple{background:#8a5ac2}
+.badge-orange{background:#F39C12}
+.badge-violet{background:#8a5ac2}
+
+.note{
+  font-size:0.8rem;color:var(--pgm-text-secondary);
+  margin-top:0.75rem;padding:0.75rem 1rem;
+  background:var(--pgm-bg-elevated);
+  border-radius:8px;border-left:3px solid var(--pgm-primary);
+}
+</style>
+</head>
+<body>
+
+<h1>Paleta — Service Desk v2 (tema claro)</h1>
+<p class="lead">Extraída de <code>webroot/pgm-servicedesk-v2-navegacao.html</code>: variáveis CSS <code>:root</code>, badges sólidos da secção de demonstração e tons usados em botões.</p>
+
+<div class="section">
+  <div class="section-title">Marca</div>
+  <div class="section-heading">Primária e links</div>
+  <div class="grid">
+    <div class="sw"><div class="sw-color" style="background:#1d9e75"></div><div class="sw-meta"><div class="sw-name">Primary</div><div class="sw-hex">#1d9e75</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#0f6e56"></div><div class="sw-meta"><div class="sw-name">Hover / Secondary</div><div class="sw-hex">#0f6e56</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:linear-gradient(135deg,#1d9e75,#0f6e56)"></div><div class="sw-meta"><div class="sw-name">Grad. ícone</div><div class="sw-hex">135° 1d9e75 → 0f6e56</div></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Superfícies</div>
+  <div class="section-heading">Fundo e camadas</div>
+  <div class="grid">
+    <div class="sw"><div class="sw-color" style="background:#f8fafc"></div><div class="sw-meta"><div class="sw-name">bg-base / page</div><div class="sw-hex">#f8fafc</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#ffffff"></div><div class="sw-meta"><div class="sw-name">raised / surface</div><div class="sw-hex">#ffffff</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#f1f5f9"></div><div class="sw-meta"><div class="sw-name">elevated</div><div class="sw-hex">#f1f5f9</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#e2e8f0"></div><div class="sw-meta"><div class="sw-name">overlay</div><div class="sw-hex">#e2e8f0</div></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Texto</div>
+  <div class="section-heading">Hierarquia</div>
+  <div class="grid">
+    <div class="sw"><div class="sw-color" style="background:#0f172a"></div><div class="sw-meta"><div class="sw-name">text</div><div class="sw-hex">#0f172a</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#334155"></div><div class="sw-meta"><div class="sw-name">secondary</div><div class="sw-hex">#334155</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#64748b"></div><div class="sw-meta"><div class="sw-name">muted</div><div class="sw-hex">#64748b</div></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Bordas</div>
+  <div class="section-heading">Contorno e estados</div>
+  <div class="grid">
+    <div class="sw"><div class="sw-color" style="background:#cbd5e1"></div><div class="sw-meta"><div class="sw-name">border</div><div class="sw-hex">#cbd5e1</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#e2e8f0"></div><div class="sw-meta"><div class="sw-name">subtle</div><div class="sw-hex">#e2e8f0</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#94a3b8"></div><div class="sw-meta"><div class="sw-name">strong</div><div class="sw-hex">#94a3b8</div></div></div>
+  </div>
+  <p class="note" style="margin-top:0.75rem">Acento de borda: <code>rgba(29,158,117,0.35)</code> — <code>--pgm-border-accent</code></p>
+</div>
+
+<div class="section">
+  <div class="section-title">Badges (tokens — fundo / texto / anel)</div>
+  <div class="section-heading">Modo &quot;soft&quot; (KPI, ícones)</div>
+  <p style="font-size:0.8rem;color:var(--pgm-text-muted);margin-bottom:0.75rem">Valores de <code>--pgm-badge-*</code> no <code>:root</code> do mockup.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+    <div class="sw"><div class="sw-color" style="background:rgba(29,158,117,0.10)"></div><div class="sw-meta"><div class="sw-name">teal</div><div class="sw-hex">bg rgba(29,158,117,0.10) · text #0f6e56</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(37,99,235,0.08)"></div><div class="sw-meta"><div class="sw-name">blue</div><div class="sw-hex">text #1e40af</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(217,119,6,0.10)"></div><div class="sw-meta"><div class="sw-name">amber</div><div class="sw-hex">text #92400e</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(220,38,38,0.08)"></div><div class="sw-meta"><div class="sw-name">red</div><div class="sw-hex">text #b91c1c</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(22,163,74,0.10)"></div><div class="sw-meta"><div class="sw-name">green</div><div class="sw-hex">text #15803d</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(124,58,237,0.08)"></div><div class="sw-meta"><div class="sw-name">purple</div><div class="sw-hex">text #6d28d9</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(139,92,246,0.08)"></div><div class="sw-meta"><div class="sw-name">violet</div><div class="sw-hex">text #6d28d9</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(234,88,12,0.10)"></div><div class="sw-meta"><div class="sw-name">orange</div><div class="sw-hex">text #c2410c</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:rgba(15,23,42,0.05)"></div><div class="sw-meta"><div class="sw-name">muted</div><div class="sw-hex">text #64748b</div></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Badges (pills sólidos — demo)</div>
+  <div class="section-heading">Status na tabela e showcase</div>
+  <p style="font-size:0.8rem;color:var(--pgm-text-muted);margin-bottom:0.5rem">Classes <code>.badge-teal</code> … <code>.badge-violet</code> (texto branco sobre sólido).</p>
+  <div class="grid">
+    <div class="sw"><div class="sw-color" style="background:#1d9e75"></div><div class="sw-meta"><div class="sw-name">teal</div><div class="sw-hex">#1d9e75</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#2DAAE1"></div><div class="sw-meta"><div class="sw-name">blue</div><div class="sw-hex">#2DAAE1</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#F39C12"></div><div class="sw-meta"><div class="sw-name">amber / orange</div><div class="sw-hex">#F39C12</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#dc330f"></div><div class="sw-meta"><div class="sw-name">red</div><div class="sw-hex">#dc330f</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#27AE60"></div><div class="sw-meta"><div class="sw-name">green</div><div class="sw-hex">#27AE60</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#8a5ac2"></div><div class="sw-meta"><div class="sw-name">purple / violet</div><div class="sw-hex">#8a5ac2</div></div></div>
+  </div>
+  <div class="badge-row">
+    <span class="badge badge-teal">Teal</span>
+    <span class="badge badge-blue">Blue</span>
+    <span class="badge badge-amber">Amber</span>
+    <span class="badge badge-red">Red</span>
+    <span class="badge badge-green">Green</span>
+    <span class="badge badge-purple">Purple</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Botões (CTA no mockup)</div>
+  <div class="section-heading">Verde alternativo e gradiente</div>
+  <div class="grid">
+    <div class="sw"><div class="sw-color" style="background:#006D5B"></div><div class="sw-meta"><div class="sw-name">Abrir chamado (flat)</div><div class="sw-hex">#006D5B</div></div></div>
+    <div class="sw"><div class="sw-color" style="background:#168a64"></div><div class="sw-meta"><div class="sw-name">Gradiente (fim primary)</div><div class="sw-hex">#168a64</div></div></div>
+  </div>
+  <p class="note" style="margin-top:0.75rem">Sombras reutilizam <code>rgba(15,23,42, …)</code> em <code>--pgm-shadow-*</code>; brilho teal em <code>--pgm-shadow-glow: rgba(29,158,117,0.10)</code>. Animação KPI crítico: <code>rgba(220,38,38, …)</code>.</p>
+</div>
+
+</body>
+</html>

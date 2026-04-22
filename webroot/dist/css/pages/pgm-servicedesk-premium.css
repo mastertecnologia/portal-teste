@@ -571,9 +571,13 @@ html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd {
 	color: var(--pgm-text);
 }
 html[data-pgm-theme="light"] body.sd-body .tickets-sd-action-menu {
+	width: 260px !important;
+	max-width: calc(100vw - 16px);
+	border-radius: 14px !important;
 	background-color: var(--pgm-bg-surface) !important;
 	color: var(--pgm-text) !important;
-	border-color: var(--pgm-border) !important;
+	border: 1px solid var(--pgm-border-subtle) !important;
+	box-shadow: 0 10px 32px rgba(100, 116, 139, 0.14), 0 2px 10px rgba(100, 116, 139, 0.08) !important;
 }
 html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd a.tickets-sd-ticket-link {
 	color: var(--pgm-primary) !important;
@@ -732,9 +736,13 @@ html[data-pgm-theme="dark"] body.sd-body #tickets-react-root.tickets-react-sd {
 
 /* Menu de a├º├╡es (React portal em document.body): garante tema escuro mesmo com .bg-white / Bootstrap */
 html[data-pgm-theme="dark"] body.sd-body .tickets-sd-action-menu {
+	width: 260px !important;
+	max-width: calc(100vw - 16px);
+	border-radius: 14px !important;
 	background-color: var(--prd-surface, var(--pgm-bg-surface)) !important;
 	color: var(--prd-text, var(--pgm-text)) !important;
-	border-color: var(--prd-border, var(--pgm-border)) !important;
+	border: 1px solid var(--pgm-border-subtle) !important;
+	box-shadow: 0 10px 32px rgba(0, 0, 0, 0.38), 0 2px 10px rgba(0, 0, 0, 0.22) !important;
 }
 
 /* ── Modal / dropdown entrance animation ── */
@@ -1031,7 +1039,7 @@ html[data-pgm-theme="dark"] body.sd-body .pgm-table tbody tr.row-waiting:hover {
 html[data-pgm-theme="dark"] body.sd-body .pgm-table tbody tr.row-no-tech { box-shadow: inset 3px 0 0 var(--pgm-badge-amber-ring); }
 html[data-pgm-theme="dark"] body.sd-body .pgm-table tbody tr.row-no-tech:hover { box-shadow: inset 3px 0 0 var(--pgm-badge-amber-text); }
 
-/* Action menu */
+/* Action menu (HTML mock + portais; alinhado a pgm-servicedesk-v2-navegacao.html) */
 html[data-pgm-theme="dark"] body.sd-body .action-btn {
 	display: inline-flex; align-items: center; justify-content: center;
 	width: 28px; height: 28px; border-radius: var(--pgm-radius-sm);
@@ -1042,33 +1050,44 @@ html[data-pgm-theme="dark"] body.sd-body .action-btn {
 html[data-pgm-theme="dark"] body.sd-body .action-btn:hover { background: var(--pgm-bg-overlay); color: var(--pgm-text); border-color: var(--pgm-border); }
 html[data-pgm-theme="dark"] body.sd-body .action-menu {
 	position: absolute; right: 0; top: calc(100% + 4px);
-	width: 240px; border-radius: var(--pgm-radius-lg);
+	width: 260px; border-radius: 14px;
 	background: var(--pgm-bg-surface);
-	border: 1px solid var(--pgm-border);
-	box-shadow: var(--pgm-shadow-xl);
+	border: 1px solid var(--pgm-border-subtle);
+	box-shadow: 0 10px 32px rgba(0, 0, 0, 0.38), 0 2px 10px rgba(0, 0, 0, 0.22);
 	overflow: hidden; z-index: 50;
 	animation: pgm-modal-in 0.2s var(--pgm-transition-smooth);
 }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item {
-	display: flex; align-items: center; gap: 10px;
-	padding: 0.6rem 0.85rem; color: var(--pgm-text-secondary);
-	font-size: 0.8125rem; cursor: pointer;
-	border-left: 3px solid transparent;
-	transition: all var(--pgm-transition-fast);
+html[data-pgm-theme="dark"] body.sd-body .action-menu-header {
+	padding: 14px 16px 12px;
+	font-size: 0.6875rem; font-weight: 600;
+	letter-spacing: 0.1em; text-transform: uppercase;
+	color: var(--pgm-text-muted);
 }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item:hover { background: var(--pgm-bg-overlay); color: var(--pgm-text); border-left-color: var(--pgm-primary); }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-divider {
+	height: 1px; margin: 0;
+	background: var(--pgm-border-subtle); border: 0;
+}
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item {
+	display: flex; align-items: center; gap: 12px;
+	padding: 11px 16px; color: var(--pgm-text-secondary);
+	font-size: 0.875rem; font-weight: 500; cursor: pointer;
+	transition: background var(--pgm-transition-fast), color var(--pgm-transition-fast);
+}
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item:hover {
+	background: var(--pgm-bg-overlay);
+	color: var(--pgm-text-secondary);
+}
 html[data-pgm-theme="dark"] body.sd-body .action-menu-item.execucao { color: #2DAAE1; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item.execucao:hover { background: rgba(45, 170, 225, 0.08); color: #2DAAE1; border-left-color: #2DAAE1; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item.execucao:hover { background: rgba(45, 170, 225, 0.1); color: #2DAAE1; }
 html[data-pgm-theme="dark"] body.sd-body .action-menu-item.pendente { color: #F39C12; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item.pendente:hover { background: rgba(243, 156, 18, 0.08); color: #F39C12; border-left-color: #F39C12; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item.pendente:hover { background: rgba(243, 156, 18, 0.1); color: #F39C12; }
 html[data-pgm-theme="dark"] body.sd-body .action-menu-item.resolvido { color: #27AE60; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item.resolvido:hover { background: rgba(39, 174, 96, 0.08); color: #27AE60; border-left-color: #27AE60; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item.danger { color: #dc330f; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item.danger:hover { background: rgba(220, 51, 15, 0.08); color: #dc330f; border-left-color: #dc330f; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item.resolvido:hover { background: rgba(39, 174, 96, 0.1); color: #27AE60; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item.danger { color: #ea580c; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item.danger:hover { background: rgba(234, 88, 12, 0.1); color: #ea580c; }
 html[data-pgm-theme="dark"] body.sd-body .action-menu-item.imprimir { color: #8a5ac2; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item.imprimir:hover { background: rgba(138, 90, 194, 0.08); color: #8a5ac2; border-left-color: #8a5ac2; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-item .ami-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
-html[data-pgm-theme="dark"] body.sd-body .action-menu-divider { height: 1px; background: var(--pgm-border-subtle); margin: 0.25rem 0; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item.imprimir:hover { background: rgba(138, 90, 194, 0.1); color: #8a5ac2; }
+html[data-pgm-theme="dark"] body.sd-body .action-menu-item .ami-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 1; }
 
 /* Botões premium */
 html[data-pgm-theme="dark"] body.sd-body .btn-primary {

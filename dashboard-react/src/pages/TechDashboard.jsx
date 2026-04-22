@@ -60,7 +60,7 @@ function statusLabel(row) {
   return stripHtml(row.situacaoLabel || row.status);
 }
 
-const ACTION_MENU_WIDTH = 268;
+const ACTION_MENU_WIDTH = 260;
 
 /** Dots pulsantes alinhados ao mockup (execução, aguard. técnico, P1, crítica). */
 const PULSE_STATUS = new Set(['progress', 'pendingTech', 'critical', 'high']);
@@ -128,7 +128,7 @@ function ensureCoreActions(ticket) {
 
 function ActionMenuIcon({ actionKey }) {
   const k = String(actionKey || '').toLowerCase();
-  const c = 'h-4 w-4 shrink-0';
+  const c = 'h-[18px] w-[18px] shrink-0';
   const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' };
   switch (k) {
     case 'iniciar':
@@ -153,7 +153,8 @@ function ActionMenuIcon({ actionKey }) {
     case 'resolvido':
       return (
         <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
-          <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path d="M9 12.75l2.25 2.25L15 9.75" />
+          <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       );
     case 'transferir':
@@ -255,48 +256,45 @@ function TicketActionsMenu({
 
   const tc = {
     default:
-      'text-[var(--pgm-text-secondary)] hover:bg-[var(--pgm-bg-overlay)] hover:text-[var(--pgm-text)] border-l-transparent hover:border-l-[var(--pgm-primary)] focus-visible:outline-none',
+      'text-[var(--pgm-text-secondary)] hover:bg-[var(--pgm-bg-overlay)] hover:text-[var(--pgm-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pgm-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-surface)]',
     execucao:
-      'text-[#2DAAE1] hover:bg-[rgba(45,170,225,0.08)] hover:text-[#2DAAE1] border-l-transparent hover:border-l-[#2DAAE1] focus-visible:outline-none',
+      'text-[#2DAAE1] hover:bg-[rgba(45,170,225,0.1)] hover:text-[#2DAAE1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2DAAE1] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-surface)]',
     pendente:
-      'text-[#F39C12] hover:bg-[rgba(243,156,18,0.08)] hover:text-[#F39C12] border-l-transparent hover:border-l-[#F39C12] focus-visible:outline-none',
+      'text-[#F39C12] hover:bg-[rgba(243,156,18,0.1)] hover:text-[#F39C12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F39C12] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-surface)]',
     resolvido:
-      'text-[#27AE60] hover:bg-[rgba(39,174,96,0.08)] hover:text-[#27AE60] border-l-transparent hover:border-l-[#27AE60] focus-visible:outline-none',
+      'text-[#27AE60] hover:bg-[rgba(39,174,96,0.1)] hover:text-[#27AE60] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27AE60] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-surface)]',
     danger:
-      'text-[#dc330f] hover:bg-[rgba(220,51,15,0.08)] hover:text-[#dc330f] border-l-transparent hover:border-l-[#dc330f] focus-visible:outline-none',
+      'text-[#ea580c] hover:bg-[rgba(234,88,12,0.1)] hover:text-[#ea580c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ea580c] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-surface)]',
     imprimir:
-      'text-[#8a5ac2] hover:bg-[rgba(138,90,194,0.08)] hover:text-[#8a5ac2] border-l-transparent hover:border-l-[#8a5ac2] focus-visible:outline-none',
+      'text-[#8a5ac2] hover:bg-[rgba(138,90,194,0.1)] hover:text-[#8a5ac2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a5ac2] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pgm-bg-surface)]',
   };
 
   const rowBase =
-    'flex w-full items-center gap-[10px] border-l-[3px] bg-transparent px-3 py-2.5 text-left text-[0.8125rem] font-medium transition-all duration-[120ms] cursor-pointer disabled:cursor-not-allowed disabled:opacity-45';
+    'flex w-full items-center gap-3 bg-transparent px-4 py-[11px] text-left text-[0.875rem] font-medium transition-colors duration-[120ms] cursor-pointer disabled:cursor-not-allowed disabled:opacity-45';
 
   const menuPanel = open ? (
     <div
       ref={menuRef}
       role="menu"
       aria-label={`Ações do ticket ${ticket.id}`}
-      className="tickets-sd-action-menu fixed z-[60] w-[240px] overflow-hidden rounded-[var(--pgm-radius-lg,12px)] border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text)] shadow-[var(--pgm-shadow-xl)]"
+      className="tickets-sd-action-menu fixed z-[60] overflow-hidden bg-[var(--pgm-bg-surface)] text-[var(--pgm-text)]"
       style={{ top: pos.top, left: pos.left, animation: 'pgm-modal-in 0.2s cubic-bezier(0.16,1,0.3,1)' }}
     >
-      <div className="px-3 py-2">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">
-          Ticket
-        </p>
-        <p className="font-mono text-sm font-bold tabular-nums text-[var(--pgm-text)]">#{ticket.id}</p>
+      <div className="px-4 pb-3 pt-3.5 text-[0.6875rem] font-semibold uppercase leading-none tracking-[0.1em] text-[var(--pgm-text-muted)]">
+        Ticket #{ticket.id}
       </div>
       <div className="h-px bg-[var(--pgm-border-subtle)]" />
-      <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto py-1">
+      <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto">
         {acoesOrd.map((a) => {
           const tone = actionItemTone(a.key);
           const iconColors = {
             execucao: 'text-[#2DAAE1]',
             pendente: 'text-[#F39C12]',
             resolvido: 'text-[#27AE60]',
-            danger: 'text-[#dc330f]',
+            danger: 'text-[#ea580c]',
             imprimir: 'text-[#8a5ac2]',
           };
-          const iconWrap = `${iconColors[tone] || 'text-[var(--pgm-text-muted)]'} opacity-70`;
+          const iconWrap = `${iconColors[tone] || 'text-[var(--pgm-text-secondary)]'}`;
           if (a.behavior === 'reactTransfer') {
             return (
               <li key={`${a.key}-${a.label}`} role="none">
@@ -331,7 +329,7 @@ function TicketActionsMenu({
                     handleStartAtendimento(ticket);
                   }}
                 >
-                  <span className="text-[var(--pgm-primary)]">
+                  <span className="text-[var(--pgm-text-secondary)]">
                     <ActionMenuIcon actionKey={a.key} />
                   </span>
                   <span className="min-w-0 flex-1 leading-snug">{busy ? 'Iniciando…' : a.label}</span>
