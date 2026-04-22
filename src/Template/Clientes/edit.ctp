@@ -55,8 +55,8 @@
 .cli-page-head-code-row{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;max-width:100%;}
 .cli-page-head-code-label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6e7681;}
 .cli-page-head-code{
-	display:inline-block;max-width:100%;font-family:'DM Mono',Consolas,monospace;font-size:.78rem;font-weight:600;
-	color:#8b949e;background:transparent;border:none;border-radius:0;padding:0;letter-spacing:.04em;
+	display:inline-block;max-width:100%;font-family:'DM Mono',Consolas,monospace;font-size:.78rem;font-weight:800;
+	color:#e6edf3;background:transparent;border:none;border-radius:0;padding:0;letter-spacing:.04em;
 	word-break:break-word;line-height:1.35;
 }
 /* Tab nav override */
