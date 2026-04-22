@@ -31,6 +31,13 @@ if (!defined('C_Filial')) {
 if (!defined('C_ChaveAcesso')) {
 	define('C_ChaveAcesso', '');
 }
+/** Opções do campo Situação (ativo) em add/edit — definidas no PGMPackages/UserConstants.php quando existir. */
+if (!defined('C_ProdutosAtivo')) {
+	define('C_ProdutosAtivo', [1 => 'Sim', 0 => 'Não']);
+}
+if (!defined('C_ProdutosAtivoSim')) {
+	define('C_ProdutosAtivoSim', 1);
+}
 
 class ProdutosController extends AppController {
 	public function initialize() {
