@@ -746,13 +746,18 @@ export default function TechDashboard({ boot }) {
   const sdFieldToolbar =
     'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition placeholder:text-[var(--pgm-text-muted)] focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.20),var(--pgm-shadow-glow)]';
 
+  const filaCardClass = embedded && isSD
+    ? 'pgm-card flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-hidden'
+    : embedded
+      ? 'flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-hidden rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
+      : 'w-full min-w-0 max-w-full rounded-[28px] border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-[var(--pgm-shadow-md)]';
+
+  const filaToolbar = (className) =>
+    [className, embedded && isSD ? 'filter-toolbar' : ''].filter(Boolean).join(' ');
+
   const tableSection = (
     <section
-      className={
-        embedded
-          ? 'flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-hidden rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
-          : 'w-full min-w-0 max-w-full rounded-[28px] border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-[var(--pgm-shadow-md)]'
-      }
+      className={filaCardClass}
     >
       {loadError ? (
         <div className="border-b border-[var(--pgm-badge-amber-ring,rgba(210,153,34,0.30))] bg-[var(--pgm-badge-amber-bg,rgba(210,153,34,0.14))] px-3 py-2.5 text-sm text-[var(--pgm-badge-amber-text,#f0c060)]">
@@ -790,13 +795,18 @@ export default function TechDashboard({ boot }) {
           </div>
         </div>
       ) : wfEnabled ? (
-        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-2 border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2.5">
+        <div
+          className={filaToolbar(
+            'flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-2 border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2.5',
+          )}
+        >
           <span
             className="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
           >
             <span className="font-semibold text-[var(--pgm-text)]">{totalTodos}</span> na empresa
           </span>
+          {isSD && embedded ? <span className="filter-separator" aria-hidden="true" /> : null}
           <input
             id="sd-tech-q"
             value={q}
@@ -863,15 +873,20 @@ export default function TechDashboard({ boot }) {
           </select>
         </div>
       ) : (
-        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-2 border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2.5">
+        <div
+          className={filaToolbar(
+            'flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-2 border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2.5',
+          )}
+        >
           <span
             className="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--pgm-text-muted)]"
             title="Tickets na empresa (todos os status)"
           >
             <span className="font-semibold text-[var(--pgm-text)]">{totalTodos}</span> na empresa
           </span>
+          {isSD && embedded ? <span className="filter-separator" aria-hidden="true" /> : null}
           <input
-            id="sd-tech-q"
+            id="sd-tech-q-legacy"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar nº, cliente ou assunto"
@@ -879,7 +894,7 @@ export default function TechDashboard({ boot }) {
             className={`${sdFieldToolbar} min-w-[8rem] flex-[1_1_12rem] max-w-full`}
           />
           <select
-            id="sd-tech-status"
+            id="sd-tech-status-legacy"
             value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
             aria-label="Situação"
@@ -957,7 +972,7 @@ export default function TechDashboard({ boot }) {
       >
         <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-auto">
           <table
-            className={`min-w-full text-[0.8125rem] ${embedded ? 'divide-y divide-[var(--pgm-border)]' : ''}`}
+            className={`min-w-full text-[0.8125rem] ${embedded && isSD ? 'pgm-table' : ''} ${embedded && !isSD ? 'divide-y divide-[var(--pgm-border)]' : ''}`}
           >
             <thead className="bg-[var(--pgm-bg-elevated)] text-left text-[var(--pgm-text-muted)]">
               <tr>
@@ -977,7 +992,15 @@ export default function TechDashboard({ boot }) {
                 <th className="w-[7.25rem] min-w-[7.25rem] px-3 py-2 text-right text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Ações</th>
               </tr>
             </thead>
-            <tbody className={embedded ? 'divide-y divide-[var(--pgm-border)] bg-[var(--pgm-bg-surface)]' : ''}>
+            <tbody
+              className={
+                embedded && isSD
+                  ? 'bg-[var(--pgm-bg-surface)]'
+                  : embedded
+                    ? 'divide-y divide-[var(--pgm-border)] bg-[var(--pgm-bg-surface)]'
+                    : ''
+              }
+            >
               {rows.length === 0 ? (
                 <tr>
                   <td
@@ -1305,36 +1328,45 @@ export default function TechDashboard({ boot }) {
   if (embedded) {
     return (
       <div className="tickets-react-tech flex w-full min-w-0 max-w-full flex-1 flex-col overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
-        <header className="mb-3 flex min-h-[2.75rem] flex-wrap items-center justify-between gap-3 overflow-visible py-1">
-          <div>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">
-              {boot?.servicedesk ? 'Service Desk' : 'Painel Técnico'}
+        {boot?.servicedesk ? (
+          <header className="mb-2 border-b border-[var(--pgm-border-subtle)] pb-3">
+            <p className="m-0 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">
+              Service Desk
             </p>
-            <h2 className="m-0 min-w-0 self-center text-[1.15rem] font-bold leading-snug text-[var(--pgm-text)]">
-              {boot?.servicedesk ? 'Fila técnica' : 'Tickets — técnico'}
-            </h2>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            {!boot?.servicedesk && boot?.paths?.ticketsOperacional ? (
-              <a
-                href={boot.paths.ticketsOperacional}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                Painel operacional
-              </a>
-            ) : null}
-            {addTicket ? (
-              <a
-                href={addTicket}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#006D5B] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:-translate-y-px hover:brightness-110 hover:shadow-[0_4px_12px_rgba(0,109,91,0.30)] active:translate-y-0"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14m-7-7h14" /></svg>
-                Abrir ticket
-              </a>
-            ) : null}
-          </div>
-        </header>
+            <h2 className="m-0 text-[1.1rem] font-bold leading-snug text-[var(--pgm-text)]">Fila técnica</h2>
+          </header>
+        ) : (
+          <header className="mb-3 flex min-h-[2.75rem] flex-wrap items-center justify-between gap-3 overflow-visible py-1">
+            <div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">Painel Técnico</p>
+              <h2 className="m-0 min-w-0 self-center text-[1.15rem] font-bold leading-snug text-[var(--pgm-text)]">Tickets — técnico</h2>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {boot?.paths?.ticketsOperacional && Number(boot?.role) === 0 ? (
+                <a
+                  href={boot.paths.ticketsOperacional}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                  </svg>
+                  Painel operacional
+                </a>
+              ) : null}
+              {addTicket ? (
+                <a
+                  href={addTicket}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#006D5B] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:-translate-y-px hover:brightness-110 hover:shadow-[0_4px_12px_rgba(0,109,91,0.30)] active:translate-y-0"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14m-7-7h14" />
+                  </svg>
+                  Abrir ticket
+                </a>
+              ) : null}
+            </div>
+          </header>
+        )}
         {tableSection}
       </div>
     );

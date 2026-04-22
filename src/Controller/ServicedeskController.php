@@ -89,6 +89,8 @@ class ServicedeskController extends TicketsController {
 				'indexTecnico' => $sd,
 				'indexCliente' => $sd,
 				'servicedeskUrl' => $sd,
+				'ticketsOperacional' => Router::url(['controller' => 'Servicedesk', 'action' => 'operacional']),
+				'addTicket' => Router::url(['controller' => 'Servicedesk', 'action' => 'add']),
 				'erpDashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard']),
 				'ticketsClassicIndex' => Router::url(['controller' => 'Tickets', 'action' => 'index']),
 				'ticketsClassicCliente' => Router::url(['controller' => 'Tickets', 'action' => 'indexcliente']),

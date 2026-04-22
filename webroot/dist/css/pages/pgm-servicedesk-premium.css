@@ -388,6 +388,48 @@ html[data-pgm-theme="dark"] { color-scheme: dark; }
 	text-decoration: underline;
 }
 
+/* Service Desk: shell com topbar (tema claro) — barra de acento v2 + marca */
+html[data-pgm-theme="light"] body.sd-body--sd-topbar .sd-shell.sd-shell--with-sd-topbar {
+	min-height: 100vh;
+}
+html[data-pgm-theme="light"] body.sd-body--sd-topbar .sd-shell.sd-shell--with-sd-topbar::before {
+	content: '';
+	display: block;
+	height: 2px;
+	flex-shrink: 0;
+	background: linear-gradient(90deg, var(--pgm-primary), var(--pgm-accent), var(--pgm-primary));
+}
+.sd-topbar .flex-center,
+.sd-topbar .sd-brand-wrap {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.sd-topbar .sd-brand-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	margin-right: 0;
+	background: linear-gradient(135deg, var(--pgm-primary), var(--pgm-secondary));
+	color: #fff;
+	font-weight: 700;
+	font-size: 12px;
+}
+.sd-topbar a.sd-brand {
+	font-weight: 700;
+	font-size: 1.05rem;
+	letter-spacing: 0.02em;
+}
+html[data-pgm-theme="light"] body.sd-body--sd-topbar .sd-topbar {
+	position: sticky;
+	top: 0;
+	z-index: 40;
+	box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
+}
+
 .pgm-sd-theme-toggle {
 	display: inline-flex;
 	align-items: center;
@@ -1231,6 +1273,61 @@ html[data-pgm-theme="dark"] body.sd-body #tickets-react-root .text-slate-400 { c
 html[data-pgm-theme="dark"] body.sd-body #tickets-react-root .border-gray-200,
 html[data-pgm-theme="dark"] body.sd-body #tickets-react-root .border-gray-300,
 html[data-pgm-theme="dark"] body.sd-body #tickets-react-root .border-slate-200 { border-color: var(--pgm-border-subtle) !important; }
+
+/* MOCKUP v2 — fila React (tema claro) — pgm-card / filter-toolbar / pgm-table */
+html[data-pgm-theme="light"] body.sd-body .filter-separator {
+	width: 1px;
+	height: 20px;
+	background: var(--pgm-border);
+	flex-shrink: 0;
+	margin: 0 4px;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-card {
+	background: var(--pgm-bg-surface);
+	border: 1px solid var(--pgm-border-subtle);
+	border-radius: var(--pgm-radius-xl);
+	box-shadow: var(--pgm-shadow-md);
+	overflow: hidden;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .filter-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	padding: 0.65rem 1rem;
+	background: var(--pgm-bg-elevated);
+	border-bottom: 1px solid var(--pgm-border-subtle);
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8125rem;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table thead {
+	background: var(--pgm-bg-elevated);
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table thead th {
+	padding: 0.6rem 0.75rem;
+	text-align: left;
+	font-size: 0.65rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--pgm-text-muted);
+	border-bottom: 1px solid var(--pgm-border-subtle);
+	white-space: nowrap;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table tbody td {
+	padding: 0.65rem 0.75rem;
+	color: var(--pgm-text-secondary);
+	vertical-align: middle;
+}
+html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table .tickets-sd-ticket-link {
+	font-family: var(--pgm-font-mono, 'DM Mono', ui-monospace, monospace);
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--pgm-link, var(--pgm-primary));
+}
 
 @media (max-width: 768px) {
 	html[data-pgm-theme="dark"] body.sd-body .kpi-grid { grid-template-columns: 1fr 1fr; }

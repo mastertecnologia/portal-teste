@@ -92,6 +92,8 @@ class TicketsController extends AppController {
 				'indexTecnico' => Router::url(['controller' => 'Servicedesk', 'action' => 'index']),
 				'indexCliente' => Router::url(['controller' => 'Servicedesk', 'action' => 'index']),
 				'servicedeskUrl' => Router::url(['controller' => 'Servicedesk', 'action' => 'index']),
+				'ticketsOperacional' => Router::url(['controller' => 'Servicedesk', 'action' => 'operacional']),
+				'addTicket' => Router::url(['controller' => 'Servicedesk', 'action' => 'add']),
 				'erpDashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard']),
 				'ticketsClassicIndex' => Router::url(['controller' => 'Tickets', 'action' => 'index']),
 				'ticketsClassicCliente' => Router::url(['controller' => 'Tickets', 'action' => 'indexcliente']),
