@@ -587,6 +587,31 @@ html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd a
 	text-decoration: underline;
 }
 
+/* Menu de ações (React, portal em body): lista sem recuo global + divisor sempre visível */
+body.sd-body .tickets-sd-action-menu > ul.tickets-sd-action-menu-list {
+	padding-left: 0 !important;
+	margin: 0 !important;
+	list-style: none !important;
+}
+
+body.sd-body .tickets-sd-action-menu li.tickets-sd-action-menu-divider-wrap {
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+	line-height: 0 !important;
+}
+
+body.sd-body .tickets-sd-action-menu .tickets-sd-action-menu-divider {
+	display: block !important;
+	width: 100% !important;
+	height: 1px !important;
+	min-height: 1px !important;
+	margin: 0 !important;
+	border: 0 !important;
+	background-color: var(--pgm-border-subtle) !important;
+	opacity: 1 !important;
+}
+
 /* ── Abertura de chamado dark: mesmos tokens que Produtos (.prd-*) ── */
 html[data-pgm-theme="dark"] body.sd-body .tickets-add-wrap {
 	background: var(--prd-bg, var(--pgm-bg-page)) !important;

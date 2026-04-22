@@ -3205,9 +3205,6 @@ class TicketsController extends AppController {
 			if ($sit !== (int)C_TicketSituacaoResolvido) {
 				$acoes[] = ['key' => 'resolvido', 'label' => 'Resolvido', 'url' => $this->_ticketUrl(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoResolvido])];
 			}
-			if ($sit !== (int)C_TicketSituacaoFechado) {
-				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
-			}
 			if ($transferOk) {
 				$acoes[] = [
 					'key' => 'transferir',
@@ -3215,6 +3212,9 @@ class TicketsController extends AppController {
 					'behavior' => 'reactTransfer',
 					'url' => $this->_ticketUrl(['action' => 'edit', $id]),
 				];
+			}
+			if ($sit !== (int)C_TicketSituacaoFechado) {
+				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
 			}
 		}
 		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => $this->_ticketUrl(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];

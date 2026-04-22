@@ -290,7 +290,7 @@ function TicketActionsMenu({
         Ticket #{ticket.id}
       </div>
       <div className="h-px bg-[var(--pgm-border-subtle)]" />
-      <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto">
+      <ul className="tickets-sd-action-menu-list max-h-[min(320px,70vh)] list-none overflow-y-auto">
         {acoesOrd.flatMap((a, i) => {
           const prevKey = i > 0 ? acoesOrd[i - 1].key : null;
           const showDividerBefore =
@@ -300,11 +300,11 @@ function TicketActionsMenu({
           const divider = showDividerBefore ? (
             <li
               key={`sd-menu-divider-${ticket.id}-${i}`}
-              className="pointer-events-none list-none"
+              className="tickets-sd-action-menu-divider-wrap pointer-events-none"
               role="separator"
               aria-hidden="true"
             >
-              <div className="h-px w-full bg-[var(--pgm-border-subtle)]" />
+              <span className="tickets-sd-action-menu-divider" />
             </li>
           ) : null;
 
