@@ -139,6 +139,8 @@ return [
         // Vazio: assets estão em dist/css/, assets/, plugins/ (não em public/css/ nem public/js/)
         'cssBaseUrl' => '',
         'jsBaseUrl' => '',
+        // Tabela de UF no PostgreSQL (legado pode usar nome singular). Default: estados.
+        'estados_table' => env('PGM_DB_ESTADOS_TABLE', 'estados'),
         'paths' => [
             'plugins' => [ROOT . DS . 'plugins' . DS],
             // CakePHP 3: views em src/Template/*.ctp apenas. A pasta /templates na raiz do repo não é usada.
