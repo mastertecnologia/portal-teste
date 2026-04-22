@@ -56,7 +56,7 @@
 .cli-page-head-code-label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6e7681;}
 .cli-page-head-code{
 	display:inline-block;max-width:100%;font-family:'DM Mono',Consolas,monospace;font-size:.78rem;font-weight:600;
-	color:#5cdbc0;background:#0d1117;border:1px solid #30363d;border-radius:999px;padding:5px 12px;letter-spacing:.04em;
+	color:#8b949e;background:transparent;border:none;border-radius:0;padding:0;letter-spacing:.04em;
 	word-break:break-word;line-height:1.35;
 }
 /* Tab nav override */
