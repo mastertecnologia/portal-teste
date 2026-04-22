@@ -114,6 +114,10 @@ html[data-pgm-theme="dark"] .pgm-pill-dot--danger {
 	background: var(--pgm-bg-surface, #ffffff);
 	border-color: var(--pgm-border, #e5e4e0);
 }
+.pgm-cli-eventos-title {
+	color: var(--pgm-text, #1a1a18);
+	font-weight: 700;
+}
 .pgm-cli-eventos-table {
 	color: var(--pgm-text, #1a1a18);
 }

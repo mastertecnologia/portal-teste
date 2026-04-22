@@ -9,18 +9,18 @@ $this->Breadcrumbs->add('Clientes', ['controller' => 'Clientes', 'action' => 'in
 $this->Breadcrumbs->add('Editar', ['controller' => 'Clientes', 'action' => 'edit', $cliente->id], ['class' => 'breadcrumb-item']);
 $this->Breadcrumbs->add('Histórico', [], ['class' => 'breadcrumb-item active']);
 ?>
-<div class="col-md-12">
-	<div class="card pgm-cli-eventos-card">
+<div class="col-md-12 w-100 pgm-cli-eventos-page px-3 px-md-4">
+	<div class="card pgm-cli-eventos-card border shadow-sm mb-0">
 		<div class="card-body">
 			<div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 				<div>
-					<h5 class="card-title text-white mb-0">Histórico de eventos</h5>
+					<h5 class="card-title pgm-cli-eventos-title mb-0">Histórico de eventos</h5>
 					<small class="text-muted"><?= h($cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : $cliente->razaosocial) ?></small>
 				</div>
 				<?= $this->Html->link(
 					'<i class="fas fa-arrow-left"></i> Voltar ao cadastro',
-					['action' => 'edit', $cliente->id],
-					['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]
+					['controller' => 'Clientes', 'action' => 'edit', $cliente->id],
+					['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false, 'data-turbo' => 'false', 'title' => __('Voltar à ficha do cliente')]
 				) ?>
 			</div>
 			<?php if (empty($events)): ?>

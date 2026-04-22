@@ -129,9 +129,21 @@ body.pgm-app-shell-premium #pgm-dynamic-content {
  * Com align-items: stretch (padrão do Bootstrap), colunas altas fazem o cartão parecer “no meio”.
  * flex-start alinha o bloco ao topo da zona de scroll.
  */
-body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.cli-layout-unificado) {
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.cli-layout-unificado),
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.pgm-cli-eventos-page) {
     align-items: flex-start;
     align-content: flex-start;
+}
+
+/* Clientes /eventos — largura total na área principal (alinhado ao pedido de “100% da tela”) */
+body.pgm-app-shell-premium.layout-no-topbar .page-wrapper > .container-fluid:has(.pgm-cli-eventos-page) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100%;
+}
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.pgm-cli-eventos-page) > .col-md-12.aquivaiosalert {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
 }
 
 /* Portal cliente (Material): estrutura .wrapper > .main-panel */
