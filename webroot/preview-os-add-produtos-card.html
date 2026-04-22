@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Preview — Nova OS · Adicionar Produtos/Serviços</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous">
+	<link rel="stylesheet" href="dist/css/pages/ordensservico-add-shell.css?v=5">
+	<style>
+		/* Espelho do bloco inline em add.ctp (preview estático) */
+		body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
+		body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
+			overflow-x: auto;
+			overflow-y: auto;
+		}
+		body.os-add-page .os-add-shell .jsgrid th.hide,
+		body.os-add-page .os-add-shell .jsgrid td.hide {
+			display: none !important;
+		}
+		body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell,
+		body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell {
+			height: auto;
+			overflow: visible;
+			min-width: 0;
+		}
+		.preview-nav {
+			position: sticky;
+			top: 0;
+			z-index: 1000;
+			background: #1a1a18;
+			color: #f9f9f8;
+			padding: 10px 16px;
+			font-family: 'DM Sans', system-ui, sans-serif;
+			font-size: 13px;
+			box-shadow: 0 2px 12px rgba(0,0,0,.2);
+		}
+		.preview-nav a {
+			color: #8ee4c8;
+			margin-right: 18px;
+			font-weight: 600;
+		}
+		.preview-nav a:hover { color: #fff; text-decoration: none; }
+		.preview-page {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 20px 16px 48px;
+			background: #f2f1ee;
+			min-height: 100vh;
+		}
+		.preview-note {
+			background: #fff;
+			border: 1px solid #e5e4e0;
+			border-radius: 10px;
+			padding: 14px 16px;
+			margin-bottom: 18px;
+			font-size: 13px;
+			color: #6b6a65;
+		}
+		.preview-note code { background: #f9f9f8; padding: 2px 6px; border-radius: 4px; }
+	</style>
+</head>
+<body class="os-add-page layout-no-topbar pgm-app-shell-premium">
+	<nav class="preview-nav" aria-label="Pré-visualização">
+		<a href="#topo">Topo</a>
+		<a href="#preview-card">Card / grelha</a>
+		<a href="#mapa-campos">Mapa colunas</a>
+		<a href="#notas">Notas</a>
+		<a href="#checklist">Checklist</a>
+	</nav>
+
+	<div id="topo" class="preview-page">
+		<div class="preview-note">
+			<strong>Pré-visualização estática</strong> do bloco “Adicionar Produtos/Serviços” de
+			<code>src/Template/Ordensservico/add.ctp</code>, com
+			<code>webroot/dist/css/pages/ordensservico-add-shell.css?v=5</code>.
+			Abrir a partir de <code>webroot</code> ou em
+			<code>/preview-os-add-produtos-card.html</code> no servidor Cake.
+			Cabeçalhos da grelha em produção usam <code>display: table-cell</code> (sem <code>-webkit-box</code> em <code>&lt;th&gt;</code>).
+		</div>
+
+		<section id="preview-card">
+			<div class="os-add-shell form-material">
+				<div class="os-add-shell-body">
+					<h4 class="os-add-section-title text-center">Adicionar Produtos/Serviços</h4>
+
+					<!--
+						DOM alinhado ao jsGrid (jsgrid.js): <table> sem <thead> —
+						<tr class="jsgrid-header-row">, filter, insert em sequência.
+					-->
+					<div id="grid_table" class="jsgrid" style="position: relative;">
+						<div class="jsgrid-grid-header jsgrid-header-scrollbar">
+							<table class="jsgrid-table">
+								<tr class="jsgrid-header-row">
+									<th class="jsgrid-header-cell">Tipo</th>
+									<th class="jsgrid-header-cell">Cód. produto</th>
+									<th class="jsgrid-header-cell os-col-desc">Descrição</th>
+									<th class="jsgrid-header-cell">Ref.</th>
+									<th class="jsgrid-header-cell">Unid.</th>
+									<th class="jsgrid-header-cell">Qtde</th>
+									<th class="jsgrid-header-cell">Vl. unit.</th>
+									<th class="jsgrid-header-cell">Vl. desc.</th>
+									<th class="jsgrid-header-cell sai">Total</th>
+									<th class="jsgrid-header-cell jsgrid-control-field" aria-label="Ações"></th>
+								</tr>
+								<tr class="jsgrid-filter-row" style="display: none;">
+									<td class="jsgrid-cell" colspan="10"></td>
+								</tr>
+								<tr class="jsgrid-insert-row">
+									<td class="jsgrid-cell cellInput inputTipo">
+										<select class="form-control selectpicker" title="Tipo">
+											<option selected>Produto</option>
+											<option>Serviço</option>
+										</select>
+									</td>
+									<td class="jsgrid-cell inputCodproduto">
+										<div class="input-group">
+											<input type="text" class="form-control input-codigo-val" value="" readonly placeholder="Código">
+											<div class="input-group-append">
+												<button type="button" class="btn btn-secondary btn-sm" aria-label="Buscar produto"><i class="fa fa-search" aria-hidden="true"></i></button>
+											</div>
+										</div>
+									</td>
+									<td class="jsgrid-cell cellInput inputDescricao os-cell-desc">
+										<input type="text" class="form-control" readonly placeholder="Descrição do item">
+									</td>
+									<td class="jsgrid-cell cellInput inputObservacao">
+										<input type="text" class="form-control btn-modal-obs" placeholder="Detalhes/Obs">
+									</td>
+									<td class="jsgrid-cell cellInput inputUnidade">
+										<input type="text" class="form-control" readonly value="UN">
+									</td>
+									<td class="jsgrid-cell cellInput inputQuantidade">
+										<input type="text" class="form-control" value="1" inputmode="decimal">
+									</td>
+									<td class="jsgrid-cell cellInput inputValorunitario">
+										<input type="text" class="form-control" value="0,00" inputmode="decimal" aria-label="Valor unitário">
+									</td>
+									<td class="jsgrid-cell cellInput inputValordesconto">
+										<input type="text" class="form-control" value="0,00" inputmode="decimal" aria-label="Valor desconto">
+									</td>
+									<td class="jsgrid-cell cellInput inputValortotal fieldValortotal">
+										<input type="text" class="form-control" readonly value="0,00" aria-label="Total da linha">
+									</td>
+									<td class="jsgrid-cell jsgrid-control-field">
+										<button type="button" class="jsgrid-button jsgrid-insert-button btn btn-sm btn-secondary" title="Inserir">+</button>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div class="jsgrid-grid-body">
+							<table class="jsgrid-table">
+								<tbody>
+									<tr class="jsgrid-row">
+										<td class="jsgrid-cell">Produto</td>
+										<td class="jsgrid-cell">SKU-001</td>
+										<td class="jsgrid-cell os-cell-desc">Item de exemplo para alinhar descrição sob o cabeçalho</td>
+										<td class="jsgrid-cell">Ref. cliente</td>
+										<td class="jsgrid-cell">UN</td>
+										<td class="jsgrid-cell">2</td>
+										<td class="jsgrid-cell">10,00</td>
+										<td class="jsgrid-cell">0,00</td>
+										<td class="jsgrid-cell fieldValortotal">20,00</td>
+										<td class="jsgrid-cell jsgrid-control-field">
+											<button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Editar (preview)">✎</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="jsgrid-pager-container">
+							<div class="jsgrid-pager" style="text-align: right; padding: 8px 12px;">
+								<span class="os-add-total-label">Total geral:</span> R$ 20,00
+							</div>
+						</div>
+					</div>
+
+					<p class="mt-3"><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
+					<button type="button" class="btn btn-success" disabled>Abrir Ordem de Serviço (preview)</button>
+				</div>
+			</div>
+		</section>
+
+		<section id="mapa-campos" class="mt-5">
+			<div class="preview-note">
+				<h2 class="h6 text-dark font-weight-bold">Mapa coluna → campo (add.ctp / jsGrid)</h2>
+				<table class="table table-sm table-bordered mb-0 bg-white">
+					<thead class="thead-light">
+						<tr>
+							<th scope="col">Cabeçalho</th>
+							<th scope="col">Campo / uso</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>Tipo</td><td><code>tipo</code> (select)</td></tr>
+						<tr><td>Cód. produto</td><td><code>codproduto</code> + busca</td></tr>
+						<tr><td>Descrição</td><td><code>descricao</code> (somente leitura)</td></tr>
+						<tr><td>Ref.</td><td><code>observacao</code> (detalhes / ref.)</td></tr>
+						<tr><td>Unid.</td><td><code>unidade</code></td></tr>
+						<tr><td>Qtde</td><td><code>quantidade</code></td></tr>
+						<tr><td>Vl. unit.</td><td><code>valorunitario</code></td></tr>
+						<tr><td>Vl. desc.</td><td><code>valordesconto</code></td></tr>
+						<tr><td>Total</td><td><code>valortotal</code> (calculado)</td></tr>
+						<tr><td>(vazio)</td><td>Coluna de controlo jsGrid (inserir / linha)</td></tr>
+					</tbody>
+				</table>
+				<p class="mb-0 mt-2"><a href="#topo">Voltar ao topo</a></p>
+			</div>
+		</section>
+
+		<section id="notas" class="mt-5">
+			<div class="preview-note">
+				<h2 class="h6 text-dark font-weight-bold">Notas</h2>
+				<ul class="mb-0 pl-3">
+					<li>Colunas <code>.hide</code> (modelo, SN, etc.) estão omitidas neste HTML.</li>
+					<li>Em produção, <code>bootstrap-select</code> pode substituir o markup do <code>select</code> “Tipo”.</li>
+					<li>Caminho do CSS: relativo a este ficheiro em <code>webroot/</code> → <code>dist/css/pages/...</code></li>
+				</ul>
+			</div>
+		</section>
+
+		<section id="checklist">
+			<div class="preview-note">
+				<h2 class="h6 text-dark font-weight-bold">Checklist de aprovação</h2>
+				<ul class="mb-0 pl-3">
+					<li>Cabeçalhos numa única linha horizontal (sem empilhar).</li>
+					<li>Coluna ações visível; testar 1024–1440px.</li>
+					<li>Linha de exemplo alinhada com os cabeçalhos.</li>
+				</ul>
+				<p class="mb-0 mt-2"><a href="#topo">Voltar ao topo</a></p>
+			</div>
+		</section>
+	</div>
+</body>
+</html>

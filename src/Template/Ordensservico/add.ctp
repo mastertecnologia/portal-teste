@@ -1,14 +1,14 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=3', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=5', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
 <style>
-	/* Só o grid da OS: sem scroll horizontal no card (coluna de ações visível). */
+	/* Grid OS: scroll horizontal só se necessário; encaixe no card. */
 	body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
 	body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
-		overflow-x: hidden;
+		overflow-x: auto;
 		overflow-y: auto;
 	}
 	/* Igual edit.ctp: colunas jsGrid com .hide não reservam largura (inputs seguem no DOM). */
@@ -16,11 +16,12 @@
 	body.os-add-page .os-add-shell .jsgrid td.hide {
 		display: none !important;
 	}
-	/* Linhas de inserção/edição: mantém overflow visível para dropdowns abrirem */
-	.jsgrid-insert-row .jsgrid-cell,
-	.jsgrid-edit-row .jsgrid-cell {
+	/* Linha de inserção/edição: dropdowns + min-width 0 (ver ordensservico-add-shell.css). */
+	body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell,
+	body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell {
 		height: auto;
 		overflow: visible;
+		min-width: 0;
 	}
 	/* Linhas de dados: corta texto em vez de quebrar linha */
 	.jsgrid-row .jsgrid-cell,
@@ -665,7 +666,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				{ name: "tipo", title: "Tipo", type: "select", width: 96, items: tiposOpt, validade: 'required',  editing: false, insertcss: 'cellInput inputTipo', editcss: "editTipo",},
 				{
 					name: "codproduto",
-					title: "Código do Produto",
+					title: "Cód. produto",
 					type: "text", 
 					width: 152,
 					css: 'inputCodproduto',
@@ -728,14 +729,14 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao", title: "Descrição", type: "text", width: "auto", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
-                { name: "observacao",  title: "Referenciar ▼", width: 76, type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
-                { name: "unidade",  title: "Unidade", width: 56, type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
+				{ name: "descricao", title: "Descrição", type: "text", width: "26%", validate: "required", editing: false, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required" },
+                { name: "observacao",  title: "Ref.", width: 76, type: "text",  validate: "", insertcss: 'cellInput inputObservacao', editcss: "editObservacao", itemTemplate: function(value) { return "Detalhes/Obs"; } },
+                { name: "unidade",  title: "Unid.", width: 56, type: "text",  editing: false, readOnly: true, insertcss: 'cellInput inputUnidade', editcss: "editUnidade", validade: 'required', },
                 { name: "quantidade",  title: "Qtde", width: 56, type: "text",  insertcss: 'cellInput inputQuantidade', editcss: "editQuantidade", validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},},
-                { name: "valorunitario",  title: "Vl. Unitário", width: 82, type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
-                { name: "valordesconto",  title: "Vl. Desconto", width: 82, type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
+                { name: "valorunitario",  title: "Vl. unit.", width: 82, type: "text",  insertcss: 'cellInput inputValorunitario', editcss: "editValorunitario", validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},},
+                { name: "valordesconto",  title: "Vl. desc.", width: 82, type: "text",  insertcss: 'cellInput inputValordesconto', editcss: "editValordesconto",},
                 /* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
-                { name: "valortotal",  title: "Vl. Total", width: 72, type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
+                { name: "valortotal",  title: "Total", width: 72, type: "text",  readOnly: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal' },
                 { name: "modelo", type: "text", width: 0, css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
                 { name: "serialnumber", type: "text", width: 0, css: 'hide', insertcss: 'hide inputSerialnumber', editcss: 'hide editSerialnumber' },
 				{ name: "productkey", type: "text", width: 0, css: 'hide', insertcss: 'hide inputProductKey', editcss: 'hide editProductKey'},

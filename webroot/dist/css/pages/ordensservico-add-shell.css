@@ -238,10 +238,10 @@ body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
 	width: 100% !important;
 }
 
-/* Coluna “Descrição”: width auto absorve o espaço livre sem forçar scroll horizontal */
+/* Coluna “Descrição”: percentagem estável no table-layout:fixed */
 body.os-add-page .os-add-shell .jsgrid th.os-col-desc,
 body.os-add-page .os-add-shell .jsgrid td.os-cell-desc {
-	width: auto !important;
+	width: 26% !important;
 	min-width: 0;
 }
 
@@ -256,7 +256,46 @@ body.os-add-page .os-add-shell .jsgrid td.jsgrid-control-field {
 
 body.os-add-page .os-add-shell #grid_table .jsgrid-grid-header,
 body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
-	overflow-x: hidden;
+	overflow-x: auto;
+}
+
+/* Linha de inserção/edição: permite encolher dentro de table-layout:fixed (bootstrap-select / input-group) */
+body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell,
+body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell {
+	min-width: 0;
+}
+
+/* Tipo — bootstrap-select não impõe largura mínima maior que a célula */
+body.os-add-page .os-add-shell #grid_table .inputTipo .bootstrap-select,
+body.os-add-page .os-add-shell #grid_table .inputTipo .bootstrap-select.form-control {
+	width: 100% !important;
+	max-width: 100%;
+	min-width: 0 !important;
+}
+body.os-add-page .os-add-shell #grid_table .inputTipo .bootstrap-select > .dropdown-toggle {
+	width: 100% !important;
+	max-width: 100%;
+	min-width: 0 !important;
+	box-sizing: border-box;
+}
+
+/* Código — input encolhe dentro do input-group (só #grid_table) */
+body.os-add-page .os-add-shell #grid_table .inputCodproduto .input-group .form-control {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 1% !important;
+}
+
+/* Cabeçalhos: até ~2 linhas. Não usar display:-webkit-box em <th> — quebra table-row e empilha colunas. */
+body.os-add-page .os-add-shell #grid_table th.jsgrid-header-cell {
+	white-space: normal !important;
+	word-break: break-word;
+	line-height: 1.2;
+	vertical-align: middle;
+	max-height: 2.6em;
+	overflow: hidden;
+	text-overflow: clip;
+	display: table-cell;
 }
 
 /* Coluna “Descrição”: input preenche a célula */
@@ -272,6 +311,9 @@ body.os-add-page .os-add-shell .jsgrid .inputCodproduto .input-group {
 	width: 100%;
 	max-width: 100%;
 	min-width: 0;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
 }
 
 body.os-add-page .os-add-shell .jsgrid-grid-header::-webkit-scrollbar,
