@@ -198,7 +198,7 @@ export default function TechTicketEdit({ boot }) {
     <div className="flex flex-shrink-0 flex-wrap gap-2">
       {techListUrl && (
         <a
-          href={ticket.urls?.indexTecnico || techListUrl}
+          href={techListUrl || ticket.urls?.indexTecnico}
           className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border,#3d4554)] bg-transparent px-3 py-1.5 text-xs font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)] sm:text-[0.8125rem]"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>

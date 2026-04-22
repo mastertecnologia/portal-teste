@@ -3502,7 +3502,8 @@ class TicketsController extends AppController {
 			'anexos' => $anexos,
 			'urls' => [
 				'indexCliente' => $this->_ticketUrl(['action' => 'indexcliente']),
-				'indexTecnico' => $role === 0 ? $this->_ticketUrl(['action' => 'operacional']) : null,
+				'indexTecnico' => $role === 0 ? $this->_ticketUrl(['action' => 'index']) : null,
+				'operacional' => $role === 0 ? $this->_ticketUrl(['action' => 'operacional']) : null,
 				'edit' => $this->_ticketUrl(['action' => 'edit', $idticket]),
 				'cancelar' => $this->_ticketUrl(['action' => 'cancelar', $idticket]),
 				'imprimir' => $this->_ticketUrl(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
