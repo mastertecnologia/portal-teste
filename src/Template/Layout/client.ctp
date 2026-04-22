@@ -55,6 +55,7 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 	<?= $this->fetch('css'); ?>
 	<?= $this->fetch('script'); ?>
 	<?= $this->Html->script('jquery-3.1.0.min'); ?>
+	<?= $this->element('pgm_turbo_head'); ?>
 </head>
 <?php
 $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-portal-client-shell ' : '';
@@ -70,6 +71,7 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 		<?= $this->assign('title', $title); ?>
 
 	    <div class="main-panel">
+			<turbo-frame id="pgm-main-frame" data-turbo-action="advance">
 			<?php if (empty($disablePgmAppShellPremium)) : ?>
 			<?= $this->element('pgm_shell_topbar') ?>
 			<?php else : ?>
@@ -77,6 +79,7 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 			<?php endif; ?>
 			<?= $this->element('content'); ?>
 			<?= $this->element('footer'); ?>
+			</turbo-frame>
 	    </div>
 	</div>
 
@@ -102,5 +105,8 @@ $pgmShellBody = empty($disablePgmAppShellPremium) ? 'pgm-app-shell-premium pgm-p
 	?>
 	<script type="module" src="<?= h($pgmSidebarReactJs) ?>"></script>
 	<?php endif; ?>
+<script>
+<?= $this->element('pgm_turbo_shell'); ?>
+</script>
 </body>
 </html>
