@@ -801,6 +801,11 @@ body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
 .cli-form-root.cli-layout-unificado .cli-smart-footer strong {
   color: var(--orc-text);
 }
+.cli-form-root.cli-layout-unificado .cli-smart-footer .cli-sf-contracts-total-line,
+.cli-form-root.cli-layout-unificado .cli-smart-footer .cli-sf-contracts-total-line strong {
+  color: var(--orc-text) !important;
+  font-weight: 600;
+}
 .cli-form-root.cli-layout-unificado .cli-smart-footer a {
   color: var(--orc-teal-dark) !important;
 }

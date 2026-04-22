@@ -102,6 +102,7 @@
 .cli-sf-block{min-width:0;}
 .cli-sf-kicker{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6e7681;margin-bottom:4px;}
 .cli-sf-contracts .cli-sf-kicker + div{line-height:1.45;}
+.cli-smart-footer .cli-sf-contracts-total-line,.cli-smart-footer .cli-sf-contracts-total-line strong{color:#c9d1d9;font-weight:600;}
 .cli-sf-token-note{font-size:.72rem;color:#6e7681;line-height:1.4;max-width:360px;}
 .cli-sf-badge-danger{background:#da3633;color:#fff;}
 .cli-sf-badge-warn{background:#d29922;color:#1c1c1c;}
@@ -629,8 +630,8 @@
 			<?php if (!empty($cliFooter)): ?>
 			<div class="cli-sf-block cli-sf-contracts">
 				<div class="cli-sf-kicker">Contratos (resumo)</div>
-				<div class="text-muted small">
-					<strong class="text-secondary">Total:</strong> <?= (int)$cliFooter['contratos_total'] ?>
+				<div class="small cli-sf-contracts-total-line">
+					<strong>Total:</strong> <?= (int)$cliFooter['contratos_total'] ?>
 					<?php if (!empty($cliFooter['contratos_vencidos'])): ?>
 						<span class="badge cli-sf-badge-danger ml-1"><?= (int)$cliFooter['contratos_vencidos'] ?> vencido(s)</span>
 					<?php endif; ?>
