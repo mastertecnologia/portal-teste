@@ -194,6 +194,12 @@ function actionItemTone(key) {
   return 'default';
 }
 
+/** Ações finais do menu (mock: linha divisória antes deste grupo). */
+function isSecondaryMenuActionKey(key) {
+  const k = String(key || '').toLowerCase();
+  return k === 'cancelar' || k === 'imprimir';
+}
+
 /** Menu por linha: portal + posição fixa (não é cortado pelo overflow da tabela), visual alinhado ao Service Desk. */
 function TicketActionsMenu({
   ticket,
@@ -285,7 +291,23 @@ function TicketActionsMenu({
       </div>
       <div className="h-px bg-[var(--pgm-border-subtle)]" />
       <ul className="max-h-[min(320px,70vh)] list-none overflow-y-auto">
-        {acoesOrd.map((a) => {
+        {acoesOrd.flatMap((a, i) => {
+          const prevKey = i > 0 ? acoesOrd[i - 1].key : null;
+          const showDividerBefore =
+            i > 0 &&
+            isSecondaryMenuActionKey(a.key) &&
+            !isSecondaryMenuActionKey(prevKey);
+          const divider = showDividerBefore ? (
+            <li
+              key={`sd-menu-divider-${ticket.id}-${i}`}
+              className="pointer-events-none list-none"
+              role="separator"
+              aria-hidden="true"
+            >
+              <div className="h-px w-full bg-[var(--pgm-border-subtle)]" />
+            </li>
+          ) : null;
+
           const tone = actionItemTone(a.key);
           const iconColors = {
             execucao: 'text-[#2DAAE1]',
@@ -296,7 +318,7 @@ function TicketActionsMenu({
           };
           const iconWrap = `${iconColors[tone] || 'text-[var(--pgm-text-secondary)]'}`;
           if (a.behavior === 'reactTransfer') {
-            return (
+            const row = (
               <li key={`${a.key}-${a.label}`} role="none">
                 <button
                   type="button"
@@ -314,10 +336,11 @@ function TicketActionsMenu({
                 </button>
               </li>
             );
+            return divider ? [divider, row] : [row];
           }
           if (a.behavior === 'reactStart') {
             const busy = startBusyId === Number(ticket.id);
-            return (
+            const row = (
               <li key={`${a.key}-${a.label}`} role="none">
                 <button
                   type="button"
@@ -336,8 +359,9 @@ function TicketActionsMenu({
                 </button>
               </li>
             );
+            return divider ? [divider, row] : [row];
           }
-          return (
+          const row = (
             <li key={`${a.key}-${a.label}`} role="none">
               <a
                 role="menuitem"
@@ -354,6 +378,7 @@ function TicketActionsMenu({
               </a>
             </li>
           );
+          return divider ? [divider, row] : [row];
         })}
       </ul>
     </div>
