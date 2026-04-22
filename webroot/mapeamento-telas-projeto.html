@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapeamento da Tela de Clientes</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121c30;
+      --line: #253554;
+      --text: #e6edf8;
+      --muted: #97a8c6;
+      --ok: #1d9e75;
+      --warn: #d29922;
+      --danger: #da3633;
+      --info: #4ea1ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 { margin: 0 0 10px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 19px; margin-top: 28px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+    h3 { font-size: 15px; color: #d9e6ff; margin-top: 18px; }
+    p, li { color: var(--muted); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 12px;
+      margin-right: 6px;
+      color: #fff;
+    }
+    .ok { background: var(--ok); }
+    .warn { background: var(--warn); color: #1d1d1d; }
+    .danger { background: var(--danger); }
+    .info { background: var(--info); }
+    .muted { color: var(--muted); }
+    .tree ul { list-style: none; padding-left: 20px; margin: 6px 0; }
+    .tree li { margin: 5px 0; }
+    .tree li::before {
+      content: "▸";
+      color: #6f86ad;
+      margin-right: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background: #172641;
+      color: #dbe9ff;
+      text-align: left;
+    }
+    code {
+      color: #9fd0ff;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Mapeamento da Tela de Clientes</h1>
+    <p>Visão consolidada de menu, submenus, abas e recursos da tela de Clientes no Portal (equipe e portal cliente).</p>
+
+    <div class="card">
+      <span class="badge info">Fonte</span>
+      <span class="muted">
+        Sidebar: <code>src/Template/Element/sidebar.ctp</code> e <code>src/View/Sidebar/PgmSidebarStaffPayloadBuilder.php</code><br>
+        Tela: <code>src/Controller/ClientesController.php</code>, <code>src/Template/Clientes/index.ctp</code>, <code>src/Template/Clientes/add.ctp</code>, <code>src/Template/Clientes/edit.ctp</code>
+      </span>
+    </div>
+
+    <h2>1) Navegação principal (menu e submenu)</h2>
+    <div class="card tree">
+      <ul>
+        <li><strong>Cadastros</strong>
+          <ul>
+            <li><strong>Clientes</strong> → rota principal para listagem (<code>/clientes</code>)</li>
+            <li><strong>Cadastrar clientes</strong> → formulário de novo cliente (<code>/clientes/add</code>)</li>
+            <li>Produtos (mesmo grupo de menu, fora do escopo de detalhe)</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <h2>2) Fluxo da tela de Clientes</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Lista de clientes</h3>
+        <p><span class="badge ok">Tela</span> <code>/clientes</code></p>
+        <ul>
+          <li>KPIs: Ativos PJ, Ativos PF, Inativos, Total</li>
+          <li>Filtros por status e tipo</li>
+          <li>Busca por nome, CNPJ/CPF e e-mail</li>
+          <li>Ações por linha: abrir ficha (edit), inativar, reativar</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Cadastro de cliente</h3>
+        <p><span class="badge ok">Tela</span> <code>/clientes/add</code></p>
+        <ul>
+          <li>Tipo: Pessoa Jurídica / Pessoa Física</li>
+          <li>Seções: Dados, Endereço, Contato, Fiscal, Configurações</li>
+          <li>Consulta CNPJ e consulta IE (integrações)</li>
+          <li>Ação final: Cadastrar cliente</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Ficha de cliente (edição)</h3>
+        <p><span class="badge ok">Tela</span> <code>/clientes/edit/:id</code></p>
+        <ul>
+          <li>Barra fixa de ações: Editar, Salvar, Cancelar, Inativar</li>
+          <li>Resumo operacional: status, contratos e token</li>
+          <li>Controle por perfil (equipe vs cliente portal)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>3) Submenus internos da ficha (abas)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Aba</th>
+            <th>Disponível para</th>
+            <th>Recursos principais</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cliente</strong></td>
+            <td>Equipe e portal</td>
+            <td>Dados cadastrais, endereço, contato, fiscal, status e salvamento</td>
+          </tr>
+          <tr>
+            <td><strong>Acessos</strong></td>
+            <td>Equipe e usuários com permissão de acesso</td>
+            <td>Lista de acessos, permissões, inclusão/edição de acesso, visualização de senhas</td>
+          </tr>
+          <tr>
+            <td><strong>Usuários</strong></td>
+            <td>Equipe</td>
+            <td>Usuários vinculados ao cliente, status, atalho para novo usuário</td>
+          </tr>
+          <tr>
+            <td><strong>Contratos</strong></td>
+            <td>Equipe e usuários com permissão de acesso</td>
+            <td>Itens de contrato, situação (ativo/vencendo/vencido/cancelado), atalhos de gestão</td>
+          </tr>
+          <tr>
+            <td><strong>Token</strong></td>
+            <td>Equipe e portal (conforme RBAC)</td>
+            <td>Visualização do token, renovação (quando permitido), regras de segurança</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>4) Rotas e recursos de Clientes (menu + APIs)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Recurso</th>
+            <th>Rota / ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Menu</td><td>Listar clientes</td><td><code>/clientes</code> → <code>ClientesController::index</code></td></tr>
+          <tr><td>Menu</td><td>Cadastrar clientes</td><td><code>/clientes/add</code> → <code>ClientesController::add</code></td></tr>
+          <tr><td>Tela</td><td>Editar cliente</td><td><code>/clientes/edit/:id</code> → <code>ClientesController::edit</code></td></tr>
+          <tr><td>Tela</td><td>Histórico do cliente</td><td><code>/clientes/eventos/:id</code> → <code>ClientesController::eventos</code></td></tr>
+          <tr><td>Ação</td><td>Inativar/Reativar</td><td><code>/clientes/inativar/:id</code>, <code>/clientes/reativar/:id</code></td></tr>
+          <tr><td>API ERP</td><td>Cadastro/atualização via integração</td><td><code>/clientes/add-api</code> e <code>/clientes/addAPI</code></td></tr>
+          <tr><td>API ERP</td><td>Listagem via integração</td><td><code>/clientes/list-api</code> e <code>/clientes/listAPI</code></td></tr>
+          <tr><td>Consulta</td><td>Dados CNPJ/IE</td><td><code>consultacnpj</code> e <code>consultaIe</code> (AJAX)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>5) Regras de acesso relevantes</h2>
+    <div class="card">
+      <p><span class="badge warn">Permissão</span> Usuário com <code>role = 1</code> (portal cliente) não acessa a lista/cadastro administrativo de clientes.</p>
+      <p><span class="badge warn">RBAC</span> Campos e recursos sensíveis (ex.: <code>Clientes.field.inativo</code> e <code>Clientes.field.api_token</code>) podem ficar ocultos ou somente leitura.</p>
+      <p><span class="badge danger">Segurança</span> Renovação de token invalida o valor anterior para integrações.</p>
+    </div>
+  </div>
+</body>
+</html>

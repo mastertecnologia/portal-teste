@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clientes - Visualizacao Navegavel</title>
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --line: #e2e7ef;
+      --text: #2a3647;
+      --muted: #6b7687;
+      --teal: #1d9e75;
+      --shell: #1c232e;
+      --shell-2: #252d3b;
+      --surface: #ffffff;
+      --chip: #f1f4f9;
+      --demo-footer-offset: 108px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--text); background: var(--bg); }
+    body.view-editar-ativa .page-body { padding-bottom: calc(var(--demo-footer-offset) + 18px); }
+
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 230px;
+      background: linear-gradient(180deg, #121923 0%, #1b2230 100%);
+      color: #c9d2e2;
+      border-right: 1px solid #303849;
+      padding: 14px 10px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    .brand { font-weight: 700; font-size: 14px; margin-bottom: 14px; padding: 8px 10px; background: #202939; border-radius: 8px; }
+    .menu-title { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #8d98ad; margin: 14px 10px 6px; }
+    .menu-item { padding: 8px 10px; border-radius: 8px; font-size: 13px; margin: 2px 0; }
+    .menu-item.active { background: #263146; color: #fff; border-left: 3px solid var(--teal); }
+    .menu-sub { margin-left: 12px; color: #9eabbe; font-size: 12px; }
+
+    .main { flex: 1; min-width: 0; }
+    .topbar {
+      height: 54px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    .topbar .right { color: var(--muted); font-size: 12px; }
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 14px; }
+    .view-tabs { display: inline-flex; gap: 6px; padding: 4px; background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
+    .view-tab { border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 13px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+    .view-tab.active { background: var(--teal); color: #fff; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 6px 16px rgba(18, 36, 64, 0.05); }
+    .head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 10px; }
+    h2 { margin: 0; font-size: 19px; }
+    .head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { border: 1px solid #cfd7e5; background: #fff; color: #334a6b; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px; }
+    .btn.main { border: 0; background: var(--teal); color: #fff; }
+
+    .summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .tag { background: var(--chip); border-radius: 999px; font-size: 12px; padding: 4px 10px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .kpi { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fff; }
+    .kpi b { display: block; font-size: 23px; margin-top: 4px; }
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+    .pill { border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: #344963; padding: 6px 10px; font-size: 12px; }
+    .search { margin-left: auto; min-width: 240px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; color: var(--muted); }
+    .search input { border: 0; width: 100%; outline: none; font-size: 13px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid #e9edf4; text-align: left; padding: 9px 8px; }
+    th { color: #55657e; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .tabs-inline { display: inline-flex; gap: 4px; background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px; padding: 4px; margin-bottom: 10px; }
+    .tabs-inline button { border: 0; background: transparent; color: #5c6a80; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .tabs-inline button.active { background: #fff; color: #2b3e58; border: 1px solid var(--line); font-weight: 600; }
+    .edit-subview { display: none; }
+    .edit-subview.active { display: block; }
+    .note { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+    .badge-ok, .badge-warn, .badge-off {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .badge-ok { background: #e9f8f2; color: #0f7354; }
+    .badge-warn { background: #fff4dd; color: #8f6200; }
+    .badge-off { background: #fbe9e8; color: #9f302b; }
+
+    .form-group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .form-title { background: #f7f9fc; padding: 8px 10px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #60718a; font-weight: 700; }
+    .form-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; padding: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+    .field input, .field select { border: 1px solid #d6deea; border-radius: 8px; padding: 8px 9px; font-size: 13px; }
+    .col-2 { grid-column: span 2; } .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-5 { grid-column: span 5; } .col-6 { grid-column: span 6; } .col-12 { grid-column: span 12; }
+
+    .edit-footer-fixed {
+      position: fixed;
+      left: 230px;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      box-shadow: 0 -6px 16px rgba(18, 36, 64, 0.1);
+      z-index: 40;
+      padding: 9px 14px;
+    }
+    .footer-inner { max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+    .footer-note { color: var(--muted); font-size: 12px; }
+    .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    @media (max-width: 960px) {
+      .sidebar { display: none; }
+      .edit-footer-fixed { left: 0; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .form-grid { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .col-2, .col-3, .col-4, .col-5, .col-6, .col-12 { grid-column: span 1; }
+      .search { margin-left: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">PGM SOLUCOES</div>
+      <div class="menu-title">Cadastros</div>
+      <div class="menu-item active">Clientes</div>
+      <div class="menu-sub">- Cadastrar clientes</div>
+      <div class="menu-sub">- Produtos</div>
+      <div class="menu-title">Financeiro</div>
+      <div class="menu-item">Faturamento</div>
+      <div class="menu-item">Bancos</div>
+      <div class="menu-title">Indicadores</div>
+      <div class="menu-item">Planner</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>Portal PGM / Clientes</div>
+        <div class="right">Darli Gonca - Administrador</div>
+      </header>
+
+      <main class="page-body">
+        <div class="view-tabs">
+          <button class="view-tab active" data-view="view-lista">Lista de clientes</button>
+          <button class="view-tab" data-view="view-cadastro">Cadastro</button>
+          <button class="view-tab" data-view="view-editar">Editar cliente</button>
+        </div>
+
+        <section id="view-lista" class="view active">
+          <div class="kpi-grid">
+            <div class="kpi">Ativos PJ<b>128</b></div>
+            <div class="kpi">Ativos PF<b>36</b></div>
+            <div class="kpi">Inativos<b>22</b></div>
+            <div class="kpi">Total<b>186</b></div>
+          </div>
+          <div class="card">
+            <div class="filter-bar">
+              <span class="pill">Ativos</span><span class="pill">Inativos</span><span class="pill">Pessoa Juridica</span><span class="pill">Pessoa Fisica</span>
+              <div class="search">Buscar <input type="text" value="GRID"></div>
+            </div>
+            <table>
+              <thead><tr><th>Razao social</th><th>CNPJ/CPF</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Acoes</th></tr></thead>
+              <tbody>
+                <tr><td>GRID SISTEMAS LTDA</td><td>12.345.678/0001-90</td><td>financeiro@grid.com.br</td><td>(51) 3333-4455</td><td>Ativo</td><td><button class="btn">Editar</button></td></tr>
+                <tr><td>ALFA TECNOLOGIA S/A</td><td>98.765.432/0001-11</td><td>contato@alfa.com</td><td>(11) 4000-1234</td><td>Ativo</td><td><button class="btn">Editar</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="view-cadastro" class="view">
+          <div class="card">
+            <div class="head">
+              <h2>Cadastrar cliente</h2>
+              <div class="head-actions"><button class="btn">Cancelar</button><button class="btn main">Cadastrar cliente</button></div>
+            </div>
+            <div class="form-group">
+              <div class="form-title">Dados da empresa</div>
+              <div class="form-grid">
+                <div class="field col-5"><label>Razao social</label><input value="GRID SISTEMAS LTDA"></div>
+                <div class="field col-4"><label>Nome fantasia</label><input value="GRID SISTEMAS"></div>
+                <div class="field col-3"><label>CNPJ</label><input value="12.345.678/0001-90"></div>
+                <div class="field col-6"><label>Responsavel</label><input value="MARIA SILVA"></div>
+                <div class="field col-3"><label>CPF</label><input value="123.456.789-00"></div>
+                <div class="field col-3"><label>RG</label><input value="1087654321"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-editar" class="view">
+          <div class="card">
+            <div class="head">
+              <h2>Editar cliente: GRID SISTEMAS LTDA</h2>
+              <div class="head-actions"><button class="btn">Historico</button><button class="btn">Voltar</button></div>
+            </div>
+
+            <div class="summary">
+              <span class="tag">Status: Ativo</span>
+              <span class="tag">Contratos vencendo: 2</span>
+              <span class="tag">Token: renovacao manual</span>
+            </div>
+
+            <div class="tabs-inline">
+              <button class="active" data-edit-view="ev-cliente">Cliente</button>
+              <button data-edit-view="ev-acessos">Acessos</button>
+              <button data-edit-view="ev-usuarios">Usuarios</button>
+              <button data-edit-view="ev-contratos">Contratos</button>
+              <button data-edit-view="ev-token">Token</button>
+            </div>
+
+            <div id="ev-cliente" class="edit-subview active">
+              <div class="form-group">
+                <div class="form-title">Endereco</div>
+                <div class="form-grid">
+                  <div class="field col-6"><label>Endereco</label><input value="RUA ARTUR ZEIGER"></div>
+                  <div class="field col-2"><label>Nro</label><input value="705"></div>
+                  <div class="field col-4"><label>Bairro</label><input value="Licosul"></div>
+                  <div class="field col-2"><label>CEP</label><input value="95705-846"></div>
+                  <div class="field col-4"><label>Cidade</label><input value="Bento Goncalves"></div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="form-title">Contato</div>
+                <div class="form-grid">
+                  <div class="field col-3"><label>Telefone</label><input value="(54) 9663-537"></div>
+                  <div class="field col-3"><label>Celular</label><input value="(54) 99663-537"></div>
+                  <div class="field col-6"><label>E-mail de faturamento</label><input value="Nenhum e-mail de faturamento cadastrado"></div>
+                  <div class="field col-6"><label>Inscricao Municipal</label><input value=""></div>
+                  <div class="field col-6"><label>Inscricao Estadual</label><input value="1100196390"></div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="form-title">Dados operacionais</div>
+                <div class="form-grid">
+                  <div class="field col-3"><label>Senha para cliente</label><input value="Insira a senha"></div>
+                  <div class="field col-3"><label>Empresa dominante</label><input value="PGM SOLUCOES EM TI"></div>
+                  <div class="field col-3"><label>Inativo</label><input value="Nao"></div>
+                  <div class="field col-3"><label>Contrato</label><input value="Nao"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="ev-acessos" class="edit-subview">
+              <p class="note">Aba de acessos com listagem de provedores e status de ativacao.</p>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Servico</th><th>Provedor</th><th>Usuario</th><th>URL</th><th>Status</th><th>Acoes</th></tr></thead>
+                  <tbody>
+                    <tr><td>Firewall</td><td>Ubiquiti</td><td>admin.suporte</td><td>https://fw.cliente.local</td><td><span class="badge-ok">Ativo</span></td><td><button class="btn">Editar</button></td></tr>
+                    <tr><td>Servidor ERP</td><td>Windows</td><td>erp.portal</td><td>10.0.2.7:85</td><td><span class="badge-off">Inativo</span></td><td><button class="btn">Editar</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="ev-usuarios" class="edit-subview">
+              <p class="note">Usuarios vinculados ao cliente com status e acao de edicao.</p>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Usuario</th><th>E-mail</th><th>Nome</th><th>Status</th><th>Acoes</th></tr></thead>
+                  <tbody>
+                    <tr><td>maria.silva</td><td>maria@cliente.com</td><td>Maria Silva</td><td><span class="badge-ok">Ativo</span></td><td><button class="btn">Editar</button></td></tr>
+                    <tr><td>joao.souza</td><td>joao@cliente.com</td><td>Joao Souza</td><td><span class="badge-warn">Bloqueado</span></td><td><button class="btn">Editar</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="ev-contratos" class="edit-subview">
+              <p class="note">Resumo dos contratos com situacao equivalente ao rodape operacional.</p>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Situacao</th><th>Descricao</th><th>Valor</th><th>Validade</th><th>Acoes</th></tr></thead>
+                  <tbody>
+                    <tr><td><span class="badge-ok">Ativo</span></td><td>Suporte mensal</td><td>R$ 1.850,00</td><td>30/09/2026</td><td><button class="btn">Detalhe</button></td></tr>
+                    <tr><td><span class="badge-warn">Vence em 30 dias</span></td><td>Backup gerenciado</td><td>R$ 690,00</td><td>04/05/2026</td><td><button class="btn">Detalhe</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="ev-token" class="edit-subview">
+              <div class="form-group">
+                <div class="form-title">Token de integracao API</div>
+                <div class="form-grid">
+                  <div class="field col-12">
+                    <label>Valor atual</label>
+                    <input value="7f4a1d20-9e8f-4cfa-87bd-9c7e00fe12ab" readonly>
+                  </div>
+                </div>
+              </div>
+              <p class="note">A renovacao invalida o token anterior nas integracoes ativas.</p>
+              <button class="btn">Atualizar token</button>
+            </div>
+          </div>
+
+          <div class="edit-footer-fixed" id="edit-footer">
+            <div class="footer-inner">
+              <div class="footer-note">Rodape fixo com offset dinamico para nao sobrepor o conteudo.</div>
+              <div class="footer-actions">
+                <button class="btn">Editar cliente</button>
+                <button class="btn">Cancelar</button>
+                <button class="btn main">Salvar cliente</button>
+                <button class="btn">Inativar</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tabs = document.querySelectorAll(".view-tab");
+      const views = document.querySelectorAll(".view");
+      const footer = document.getElementById("edit-footer");
+      const editTabs = document.querySelectorAll("[data-edit-view]");
+      const editViews = document.querySelectorAll(".edit-subview");
+
+      const syncFooterOffset = () => {
+        if (!footer) return;
+        const h = Math.ceil(footer.getBoundingClientRect().height || 0);
+        document.body.style.setProperty("--demo-footer-offset", Math.max(h, 92) + "px");
+      };
+
+      tabs.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          tabs.forEach((x) => x.classList.remove("active"));
+          views.forEach((x) => x.classList.remove("active"));
+          btn.classList.add("active");
+          const view = document.getElementById(btn.dataset.view);
+          view.classList.add("active");
+          if (view.id === "view-editar") {
+            document.body.classList.add("view-editar-ativa");
+            syncFooterOffset();
+          } else {
+            document.body.classList.remove("view-editar-ativa");
+          }
+        });
+      });
+
+      editTabs.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          editTabs.forEach((x) => x.classList.remove("active"));
+          editViews.forEach((x) => x.classList.remove("active"));
+          btn.classList.add("active");
+          const target = document.getElementById(btn.dataset.editView);
+          if (target) target.classList.add("active");
+          syncFooterOffset();
+        });
+      });
+
+      window.addEventListener("resize", syncFooterOffset);
+      if (document.getElementById("view-editar").classList.contains("active")) {
+        document.body.classList.add("view-editar-ativa");
+      }
+      syncFooterOffset();
+    })();
+  </script>
+</body>
+</html>
