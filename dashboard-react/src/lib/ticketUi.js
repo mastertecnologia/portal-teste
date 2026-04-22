@@ -17,27 +17,29 @@ const BADGE_LIGHT = {
   cancelled:   'bg-[#dc330f] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
 };
 
-const SD_BASE = 'tracking-[0.04em] backdrop-blur-[4px] transition-all duration-[120ms] hover:brightness-110';
+/* Base: mockup v2 .badge (inset ring + frosted) — cores sólidas: .badge-blue #2DAAE1, .badge-amber #F39C12, etc. */
+const SD_BASE =
+  'tracking-[0.04em] backdrop-blur-[2px] transition-all duration-[120ms] hover:brightness-[1.08] shadow-[0_1px_2px_rgba(15,23,42,0.06)]';
 
 /**
- * Service Desk — Frosted Glass + Dots por cor de status.
- * Bg translúcido tintado do status + texto/dot na cor cheia do status
- * → cada status leva um dot de cor distinta (bg-current no <StatusDot />).
+ * Service Desk — “Status Indicators com Frosted Glass + Dots” (paleta
+ * webroot/pgm-servicedesk-v2-navegacao.html: #2DAAE1, #F39C12, #27AE60, #dc330f, #8a5ac2, #1d9e75).
+ * Texto e borda com o mesma matiz, fundo em rgba mais vivo que tokens --pgm-badge-*.
  */
 const BADGE_SERVICEDESK = {
-  success:     `${SD_BASE} bg-[rgba(39,174,96,0.16)] text-[#3ddc7f] shadow-[inset_0_0_0_1px_rgba(39,174,96,0.40)]`,
-  warning:     `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
-  critical:    `${SD_BASE} bg-[rgba(220,51,15,0.18)] text-[#ff6b4a] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.45)]`,
-  high:        `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
-  medium:      `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
+  success:     `${SD_BASE} bg-[rgba(39,174,96,0.22)] text-[#15803d] shadow-[inset_0_0_0_1px_rgba(39,174,96,0.55)]`, // #27AE60
+  warning:     `${SD_BASE} bg-[rgba(243,156,18,0.24)] text-[#c2410c] shadow-[inset_0_0_0_1px_rgba(234,88,12,0.5)]`, // F39C12
+  critical:    `${SD_BASE} bg-[rgba(220,51,15,0.24)] text-[#dc330f] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.55)]`, // #dc330f
+  high:        `${SD_BASE} bg-[rgba(243,156,18,0.24)] text-[#c2410c] shadow-[inset_0_0_0_1px_rgba(234,88,12,0.5)]`,
+  medium:      `${SD_BASE} bg-[rgba(243,156,18,0.2)] text-[#d97706] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.5)]`,
   low:         `${SD_BASE} bg-[var(--pgm-badge-muted-bg)] text-[var(--pgm-badge-muted-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-muted-ring)]`,
-  progress:    `${SD_BASE} bg-[rgba(45,170,225,0.16)] text-[#5ec4ea] shadow-[inset_0_0_0_1px_rgba(45,170,225,0.40)]`,
-  waiting:     `${SD_BASE} bg-[rgba(45,170,225,0.16)] text-[#5ec4ea] shadow-[inset_0_0_0_1px_rgba(45,170,225,0.40)]`,
-  pendingTech: `${SD_BASE} bg-[rgba(243,156,18,0.16)] text-[#f5b752] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.40)]`,
-  resolved:    `${SD_BASE} bg-[rgba(39,174,96,0.16)] text-[#3ddc7f] shadow-[inset_0_0_0_1px_rgba(39,174,96,0.40)]`,
-  escalated:   `${SD_BASE} bg-[rgba(220,51,15,0.18)] text-[#ff6b4a] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.45)]`,
-  closed:      `${SD_BASE} bg-[rgba(138,90,194,0.16)] text-[#b085e3] shadow-[inset_0_0_0_1px_rgba(138,90,194,0.40)]`,
-  cancelled:   `${SD_BASE} bg-[rgba(220,51,15,0.18)] text-[#ff6b4a] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.45)]`,
+  progress:    `${SD_BASE} bg-[rgba(45,170,225,0.24)] text-[#0284c7] shadow-[inset_0_0_0_1px_rgba(14,165,233,0.55)]`, // #2DAAE1
+  waiting:     `${SD_BASE} bg-[rgba(45,170,225,0.24)] text-[#0284c7] shadow-[inset_0_0_0_1px_rgba(14,165,233,0.55)]`,
+  pendingTech: `${SD_BASE} bg-[rgba(243,156,18,0.24)] text-[#ea580c] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.55)]`, // F39C12
+  resolved:    `${SD_BASE} bg-[rgba(39,174,96,0.22)] text-[#15803d] shadow-[inset_0_0_0_1px_rgba(22,163,74,0.5)]`,
+  escalated:   `${SD_BASE} bg-[rgba(220,51,15,0.24)] text-[#dc330f] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.55)]`,
+  closed:      `${SD_BASE} bg-[rgba(138,90,194,0.22)] text-[#6d28d9] shadow-[inset_0_0_0_1px_rgba(124,58,237,0.5)]`, // #8a5ac2
+  cancelled:   `${SD_BASE} bg-[rgba(220,51,15,0.24)] text-[#dc330f] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.55)]`,
 };
 
 /** Badges no embed portal cliente — preenchimento sólido + texto branco. */
@@ -94,6 +96,8 @@ export function priorityType(value) {
 export function statusType(value) {
   const v = normalizeStatusKey(value);
   if (!v || v === '-') return 'low';
+  if (v.includes('critica') || v.includes('critico')) return 'critical';
+  if (v.includes('urgente')) return 'high';
   if (v.includes('em execucao') || v.includes('em andamento')) return 'progress';
   if (v.includes('aguardando cliente') || v.includes('respondido')) return 'waiting';
   if (v.includes('aguardando tecnico') || v.includes('aguardando técnico')) return 'pendingTech';

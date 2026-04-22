@@ -62,8 +62,8 @@ function statusLabel(row) {
 
 const ACTION_MENU_WIDTH = 268;
 
-/** Status que devem pulsar no badge (urgência/ação imediata). */
-const PULSE_STATUS = new Set(['progress', 'pendingTech', 'critical']);
+/** Dots pulsantes alinhados ao mockup (execução, aguard. técnico, P1, crítica). */
+const PULSE_STATUS = new Set(['progress', 'pendingTech', 'critical', 'high']);
 /** Status sem indicador visual (texto puro). */
 const NO_DOT_STATUS = new Set(['low']);
 
@@ -76,9 +76,7 @@ function tecnicoLabel(t) {
 
 function StatusDot({ type }) {
   if (NO_DOT_STATUS.has(type)) return null;
-  const pulse = PULSE_STATUS.has(type)
-    ? ' [animation:pgm-pulse_2s_ease-in-out_infinite]'
-    : '';
+  const pulse = PULSE_STATUS.has(type) ? ' animate-pgm-pulse' : '';
   return (
     <span
       aria-hidden
