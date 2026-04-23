@@ -866,7 +866,7 @@ class TicketsController extends AppController {
 
 		// Formulário novo: não herdar DEFAULT 'media' da coluna (usuário deve escolher a urgência).
 		if (!$this->request->is('post') && in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
-			$ticket->severidade = null;
+			$ticket->set('severidade', '');
 		}
 
 		if ($this->request->is('post')) {
@@ -919,7 +919,7 @@ class TicketsController extends AppController {
 				));
 				$ticket = $this->Tickets->patchEntity($ticket, $post);
 				if ($__sevColAdd && trim((string)($post['severidade'] ?? '')) === '') {
-					$ticket->severidade = null;
+					$ticket->set('severidade', '');
 				}
 			} else {
 

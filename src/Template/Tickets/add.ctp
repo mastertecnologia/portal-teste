@@ -5,6 +5,13 @@
 	$this->Breadcrumbs->add('Abertura', [], ['class' => 'breadcrumb-item active']);
 	if($role == 0) $email = null;
 
+	// GET: urgência deve iniciar vazia (o schema da coluna tem DEFAULT 'media', que o Form ainda pode aplicar ao entity).
+	$__sdAddIsPost = $this->request->is('post');
+	$__sdSevFormValue = '';
+	if ($__sdAddIsPost && isset($ticket->severidade) && $ticket->severidade !== null && (string)$ticket->severidade !== '') {
+		$__sdSevFormValue = (string)$ticket->severidade;
+	}
+
 	$sdServicedeskAddShell = ($this->request->getParam('controller') === 'Servicedesk');
 	if ($sdServicedeskAddShell) {
 		$this->start('sd_topbar_actions');
@@ -750,7 +757,7 @@
 		font-weight: 500;
 	}
 </style>
-<div class="col-md-12 tickets-add-wrap">
+<div class="col-md-12 tickets-add-wrap" data-sd-add-is-post="<?= $__sdAddIsPost ? '1' : '0' ?>">
 	<div class="sd-add-page">
 		<header class="sd-add-header">
 			<div>
@@ -841,6 +848,7 @@
 									'class' => 'selectpicker form-control',
 									'title' => 'Grau de severidade',
 									'empty' => 'Escolha a urgência',
+									'value' => $__sdSevFormValue,
 									'label' => false,
 									'required' => true,
 								]) ?>
@@ -860,6 +868,7 @@
 									'class' => 'selectpicker form-control',
 									'title' => 'Grau de severidade',
 									'empty' => 'Escolha a urgência',
+									'value' => $__sdSevFormValue,
 									'label' => false,
 									'required' => true,
 								]) ?>
@@ -909,7 +918,7 @@
 					<div class="sd-sum-stack">
 						<?php
 							$__assuntoCur = (isset($ticket->assunto) && $ticket->assunto !== null && (string)$ticket->assunto !== '') ? (string)$ticket->assunto : '';
-							$__sevCur = (isset($ticket->severidade) && $ticket->severidade !== null && (string)$ticket->severidade !== '') ? (string)$ticket->severidade : '';
+							$__sevCur = $__sdSevFormValue;
 						?>
 						<div class="sd-add-field sd-sum-field">
 							<label class="control-label text-muted" for="sd-sum-assunto-select">Assunto</label>
@@ -1051,6 +1060,22 @@
 		}
 	}
 
+	/** GET: reforço contra DEFAULT do schema / bootstrap-select mostrando "Média". */
+	function sdTicketAddForceBlankSeveridadeIfNewForm() {
+		var $wrap = $('.tickets-add-wrap');
+		if (!$wrap.length || $wrap.attr('data-sd-add-is-post') === '1') {
+			return;
+		}
+		var $s = $('#severidade');
+		var $ss = $('#sd-sum-severidade-select');
+		if ($s.length) {
+			sdTicketAddBsSetVal($s, '');
+		}
+		if ($ss.length) {
+			sdTicketAddBsSetVal($ss, '');
+		}
+	}
+
 	function sdTicketAddFormBasicsComplete() {
 		var role = sdTicketAddGetRole();
 		if (role === 0) {
@@ -1121,6 +1146,7 @@
 			}, 0);
 		}
 		sdTicketAddMirrorFromMain();
+		sdTicketAddForceBlankSeveridadeIfNewForm();
 		sdTicketAddRefreshAtendimentoStatus();
 
 		var sdOnPickerOrChange = 'change changed.bs.select';
@@ -1139,6 +1165,7 @@
 
 		setTimeout(function () {
 			sdTicketAddMirrorFromMain();
+			sdTicketAddForceBlankSeveridadeIfNewForm();
 			sdTicketAddRefreshAtendimentoStatus();
 		}, 300);
 
