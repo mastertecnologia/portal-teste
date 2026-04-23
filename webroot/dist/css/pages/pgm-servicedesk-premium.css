@@ -1456,3 +1456,7 @@ body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#ticket
 	padding-left: 1rem !important;
 	padding-right: 1rem !important;
 }
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#tickets-react-root.tickets-react--operacional) > .col-md-12.tickets-react-shell {
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+}

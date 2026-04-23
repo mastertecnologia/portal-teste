@@ -151,6 +151,27 @@ body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.pgm-cl
     padding-right: 1rem !important;
 }
 
+/* Painel operacional (tickets React): largura total — gutters Bootstrap da coluna + container */
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#tickets-react-root.tickets-react--operacional) {
+    align-items: flex-start;
+    align-content: flex-start;
+    padding-left: 0;
+    padding-right: 0;
+}
+body.pgm-app-shell-premium.layout-no-topbar .page-wrapper > .container-fluid:has(#tickets-react-root.tickets-react--operacional) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100%;
+}
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#tickets-react-root.tickets-react--operacional) > .col-md-12.tickets-react-shell {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#tickets-react-root.tickets-react--operacional) > .col-md-12.aquivaiosalert {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
 /* Portal cliente (Material): estrutura .wrapper > .main-panel */
 body.pgm-app-shell-premium.pgm-portal-client-shell .wrapper {
     display: flex;

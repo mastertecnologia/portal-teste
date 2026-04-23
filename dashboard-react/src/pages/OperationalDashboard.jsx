@@ -148,6 +148,7 @@ export default function OperationalDashboard({ boot }) {
 
   const shellEmbedded = Boolean(boot);
   const portalNav = Boolean(boot);
+  const operacionalEmbed = shellEmbedded && boot?.screen === 'tech_operacional';
   const editBase = boot?.paths?.editTicketBase;
   const editQ = boot?.paths?.ticketEditQuery || '';
 
@@ -160,9 +161,8 @@ export default function OperationalDashboard({ boot }) {
 
   const inner = (
     <>
-      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[1.35rem] font-bold text-[var(--pgm-text)]">Painel Operacional</h2>
-        {!portalNav ? (
+      {!portalNav ? (
+        <div className="mb-5 flex justify-end">
           <Link
             to="/tecnico"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
@@ -170,8 +170,8 @@ export default function OperationalDashboard({ boot }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
             Painel técnico
           </Link>
-        ) : null}
-      </header>
+        </div>
+      ) : null}
 
       {err ? (
         <p className="mb-4 rounded-lg border border-[rgba(248,113,113,0.35)] bg-[var(--pgm-danger-bg)] px-3 py-2 text-sm text-[var(--pgm-danger-text)]">
@@ -273,8 +273,9 @@ export default function OperationalDashboard({ boot }) {
   );
 
   if (shellEmbedded) {
+    const padX = operacionalEmbed ? 'px-0' : 'px-4 sm:px-5';
     return (
-      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
+      <div className={`tickets-react-tech w-full min-w-0 max-w-full overflow-visible pb-6 pt-4 text-[var(--pgm-text)] ${padX}`}>
         {inner}
       </div>
     );
