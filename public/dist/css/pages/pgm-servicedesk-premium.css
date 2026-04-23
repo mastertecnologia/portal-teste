@@ -1385,3 +1385,20 @@ html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .
 @media (max-width: 768px) {
 	html[data-pgm-theme="dark"] body.sd-body .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* Painel operacional no shell ERP (layout default): largura útil total — alinhado a clientes /eventos */
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#tickets-react-root.tickets-react--operacional) {
+	align-items: flex-start;
+	align-content: flex-start;
+	padding-left: 0;
+	padding-right: 0;
+}
+body.pgm-app-shell-premium.layout-no-topbar .page-wrapper > .container-fluid:has(#tickets-react-root.tickets-react--operacional) {
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	max-width: 100%;
+}
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(#tickets-react-root.tickets-react--operacional) > .col-md-12.aquivaiosalert {
+	padding-left: 1rem !important;
+	padding-right: 1rem !important;
+}

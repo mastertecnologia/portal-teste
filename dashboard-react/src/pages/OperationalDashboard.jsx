@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchDashboardOperacional } from '../lib/api';
 
+/** Intervalo de polling no portal (aba visível); evita piscar a UI com `load({ silent: true })`. */
+const DASHBOARD_POLL_MS = 25000;
+
 /* ── KPI Icon SVGs ── */
 function IconBacklog() {
   return (
@@ -112,26 +115,39 @@ export default function OperationalDashboard({ boot }) {
   const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErr(null);
+  const load = useCallback(async (opts = {}) => {
+    const silent = Boolean(opts.silent);
+    if (!silent) {
+      setLoading(true);
+      setErr(null);
+    }
     const r = await fetchDashboardOperacional();
     if (!r.ok) {
       setErr(r.error || 'Falha ao carregar');
-      setDash(null);
+      if (!silent) {
+        setDash(null);
+      }
     } else {
+      setErr(null);
       setDash(r.dashboard);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    load();
+    load({ silent: false });
+  }, [load]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      load({ silent: true });
+    }, DASHBOARD_POLL_MS);
+    return () => window.clearInterval(id);
   }, [load]);
 
   const shellEmbedded = Boolean(boot);
   const portalNav = Boolean(boot);
-  const backHref = boot?.paths?.indexTecnico || '/tecnico';
   const editBase = boot?.paths?.editTicketBase;
   const editQ = boot?.paths?.ticketEditQuery || '';
 
@@ -145,41 +161,16 @@ export default function OperationalDashboard({ boot }) {
   const inner = (
     <>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">
-            Painel operacional
-          </p>
-          <h2 className="text-[1.35rem] font-bold text-[var(--pgm-text)]">
-            Indicadores &amp; SLA
-          </h2>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {portalNav ? (
-            <a
-              href={backHref}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-              {boot?.servicedesk ? 'Fila técnica' : 'Listagem de tickets'}
-            </a>
-          ) : (
-            <Link
-              to="/tecnico"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-              Painel técnico
-            </Link>
-          )}
-          <button
-            type="button"
-            onClick={() => load()}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-3 py-2 text-[0.8125rem] font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] active:translate-y-0 disabled:opacity-50"
+        <h2 className="text-[1.35rem] font-bold text-[var(--pgm-text)]">Painel Operacional</h2>
+        {!portalNav ? (
+          <Link
+            to="/tecnico"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--pgm-border)] bg-transparent px-3 py-2 text-[0.8125rem] font-medium text-[var(--pgm-text)] transition hover:bg-[var(--pgm-bg-overlay)] hover:border-[var(--pgm-border-strong)]"
           >
-            {loading ? 'Atualizando…' : 'Atualizar'}
-          </button>
-        </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+            Painel técnico
+          </Link>
+        ) : null}
       </header>
 
       {err ? (

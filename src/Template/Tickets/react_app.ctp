@@ -3,6 +3,7 @@
  * Shell da UI React dos tickets: injeta boot JSON e assets estáticos do Vite (public/tickets-app).
  *
  * @var list<array{title:string,url?:array|string,options?:array<string,mixed>}>|null $reactAppBreadcrumbs
+ * @var bool|null $reactAppOperacional classe extra no root para CSS full-bleed (painel operacional)
  */
 if (!empty($reactAppBreadcrumbs) && is_array($reactAppBreadcrumbs)) {
 	foreach ($reactAppBreadcrumbs as $bcRow) {
@@ -39,6 +40,10 @@ if (!empty($reactAppExtraCss) && is_array($reactAppExtraCss)) {
  * Scripts apenas em fetch('script') no <head> do layout default não rodam em navegação por frame — painel ficava em branco.
  */
 $ticketsJsSrc = $w . 'tickets-app/assets/tickets.js?v=' . $ticketsAssetV;
+$reactRootClass = 'tickets-react-host tickets-react-sd w-100';
+if (!empty($reactAppOperacional)) {
+	$reactRootClass .= ' tickets-react--operacional';
+}
 ?>
 <?php /* Filho direto de .row precisa ser .col-* no Bootstrap, senão largura/overflow quebram o React */ ?>
 <div class="col-md-12 tickets-react-shell p-0">
@@ -48,7 +53,7 @@ $ticketsJsSrc = $w . 'tickets-app/assets/tickets.js?v=' . $ticketsAssetV;
 	<link rel="stylesheet" href="<?= h((string)$extraCssHref) ?>">
 		<?php endforeach; ?>
 	<?php endif; ?>
-	<div id="tickets-react-root" class="tickets-react-host tickets-react-sd w-100"></div>
+	<div id="tickets-react-root" class="<?= h($reactRootClass) ?>"></div>
 </div>
 <script>
 window.__TICKETS_BOOT__ = <?= $bootJson ?>;

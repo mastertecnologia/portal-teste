@@ -31,16 +31,12 @@ class ServicedeskController extends TicketsController {
 		$this->set('title', 'Painel operacional');
 		$this->set('reactAppBreadcrumbs', [
 			[
-				'title' => 'Tickets',
-				'url' => ['controller' => 'Tickets', 'action' => 'index'],
-				'options' => ['class' => 'breadcrumb-item'],
-			],
-			[
 				'title' => 'Painel operacional',
 				'url' => [],
 				'options' => ['class' => 'breadcrumb-item active'],
 			],
 		]);
+		$this->set('reactAppOperacional', true);
 		$w = $this->request->getAttribute('webroot');
 		$this->set('reactAppExtraCss', [$w . 'dist/css/pages/pgm-servicedesk-premium.css']);
 		$this->set('reactBoot', $this->_reactBoot('tech_operacional', null, $this->_servicedeskBootExtra()));
