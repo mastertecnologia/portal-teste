@@ -40,9 +40,8 @@ export function useTicketCommentsPoll(ticketId, setComentarios, setTicket, inter
         if (res.descricaoAtendimento !== undefined) {
           next.descricaoAtendimento = res.descricaoAtendimento;
         }
-        if (res.horasTecnicas !== undefined) {
-          next.horasTecnicas = res.horasTecnicas;
-        }
+        // horasTecnicas: não mesclar aqui — GET /api-comments pode concluir após POST do timer
+        // e sobrescrever estado fresco com snapshot antigo (pausa “zera”, Parar/Iniciar inconsistentes).
         if (res.responsavel !== undefined) {
           next.responsavel = res.responsavel;
         }

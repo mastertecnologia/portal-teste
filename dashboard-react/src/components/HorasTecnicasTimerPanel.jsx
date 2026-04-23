@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { postTimerAction } from '../lib/api';
 
-function parseServerDateTime(s) {
+/** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTime). */
+function parseSqlLocalDateTime(s) {
   if (!s || typeof s !== 'string') return null;
-  const d = new Date(s.replace(' ', 'T'));
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(s.trim());
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6], 0);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -60,10 +63,10 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
 
   const elapsedSeconds = useMemo(() => {
     if (!sessao?.horaInicio) return 0;
-    const start = parseServerDateTime(sessao.horaInicio);
+    const start = parseSqlLocalDateTime(sessao.horaInicio);
     if (!start) return 0;
     if (sessao.pausado && sessao.horaPausa) {
-      const pause = parseServerDateTime(sessao.horaPausa);
+      const pause = parseSqlLocalDateTime(sessao.horaPausa);
       if (!pause) return 0;
       return Math.max(0, Math.floor((pause.getTime() - start.getTime()) / 1000));
     }
@@ -119,10 +122,29 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     setBusy(false);
 
     if (res.ok) {
-      setOptimistic(null);
       if (res.horasTecnicas && onSnapshot) {
         onSnapshot(res.horasTecnicas);
       }
+      setOptimistic(null);
+      // #region agent log
+      fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4d6f86' },
+        body: JSON.stringify({
+          sessionId: '4d6f86',
+          hypothesisId: 'H1',
+          location: 'HorasTecnicasTimerPanel.jsx:runAction',
+          message: 'timer_action_ok',
+          data: {
+            action,
+            hasSessao: Boolean(res.horasTecnicas?.sessao),
+            pausado: Boolean(res.horasTecnicas?.sessao?.pausado),
+            serverUnix: res.horasTecnicas?.serverUnix ?? null,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       if (onFeedback) onFeedback(res.message || null, null);
     } else {
       if (action === 'finalizar') {

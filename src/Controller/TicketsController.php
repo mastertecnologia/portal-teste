@@ -2219,6 +2219,52 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Converte datetime SQL (Y-m-d H:i:s, com ou sem fração) para DateTime.
+	 */
+	protected function _parseSqlDateTimeForTimer($v): ?\DateTime {
+		$str = $this->_ormTimeToString($v);
+		if ($str === null) {
+			return null;
+		}
+		$str = trim($str);
+		if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/', $str, $m)) {
+			$dt = \DateTime::createFromFormat('Y-m-d H:i:s', $m[1] . ' ' . $m[2]);
+
+			return $dt ?: null;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Grava minutos calculados na coluna existente no schema (instalações variam).
+	 */
+	protected function _atendimentoTimerApplyDuracaoMinutos($timer, int $minutos): void {
+		try {
+			$cols = $this->AtendimentoTimer->getSchema()->columns();
+		} catch (\Throwable $e) {
+			$timer->set('duracao_calculada', $minutos);
+
+			return;
+		}
+		if (in_array('duracao_calculada', $cols, true)) {
+			$timer->set('duracao_calculada', $minutos);
+		} elseif (in_array('duracao_calculada_minutos', $cols, true)) {
+			$timer->set('duracao_calculada_minutos', $minutos);
+		} elseif (in_array('duracaominutos', $cols, true)) {
+			$timer->set('duracaominutos', $minutos);
+		}
+	}
+
+	protected function _timerCriarMovSafe($idticket, $sitantiga, $sitnova, $observacao): void {
+		try {
+			$this->criarMov($idticket, $sitantiga, $sitnova, $observacao);
+		} catch (\Throwable $e) {
+			$this->log('apiTimer criarMov: ' . $e->getMessage(), 'error');
+		}
+	}
+
+	/**
 	 * Coluna do usuário em atendimento_timer (idusuario vs iduser conforme schema).
 	 */
 	protected function _atendimentoTimerUserColumn(): string {
@@ -2282,7 +2328,7 @@ class TicketsController extends AppController {
 				->first();
 			if ($timerAtivo) {
 				$hi = $this->_ormTimeToString($timerAtivo->get('hora_inicio') ?: $timerAtivo->get('horainicio'));
-				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa'));
+				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa') ?: $timerAtivo->get('horapausa'));
 				$base['sessao'] = [
 					'id' => (int)$timerAtivo->id,
 					'horaInicio' => $hi,
@@ -2366,7 +2412,7 @@ class TicketsController extends AppController {
 
 					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível gravar o timer. Verifique a tabela atendimento_timer.'];
 				}
-				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas iniciado.');
+				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas iniciado.');
 
 				return ['ok' => true, 'message' => 'Timer iniciado.'];
 			}
@@ -2383,7 +2429,7 @@ class TicketsController extends AppController {
 
 					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível pausar o timer.'];
 				}
-				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerPausado, 'Timer de horas técnicas pausado.');
+				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerPausado, 'Timer de horas técnicas pausado.');
 
 				return ['ok' => true, 'message' => 'Timer pausado.'];
 			}
@@ -2394,7 +2440,7 @@ class TicketsController extends AppController {
 
 					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível retomar o timer.'];
 				}
-				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas retomado.');
+				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas retomado.');
 
 				return ['ok' => true, 'message' => 'Timer retomado.'];
 			}
@@ -2403,23 +2449,17 @@ class TicketsController extends AppController {
 			$timer->set('hora_fim', $agoraStr);
 			$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
 			$horaFim = $timer->get('hora_fim') ?: $timer->get('horafim');
-			if ($horaInicio && is_object($horaInicio) && method_exists($horaInicio, 'format')) {
-				$horaInicio = $horaInicio->format('Y-m-d H:i:s');
-			}
-			if ($horaFim && is_object($horaFim) && method_exists($horaFim, 'format')) {
-				$horaFim = $horaFim->format('Y-m-d H:i:s');
-			}
 			$inicio = null;
 			$fim = null;
 			$duracaoSegundos = 0;
 			$duracaoMinutos = 0;
 			if ($horaInicio && $horaFim) {
-				$inicio = is_string($horaInicio) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaInicio) : null;
-				$fim = is_string($horaFim) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaFim) : null;
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicio);
+				$fim = $this->_parseSqlDateTimeForTimer($horaFim);
 				if ($inicio && $fim) {
 					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());
 					$duracaoMinutos = (int)round($duracaoSegundos / 60);
-					$timer->set('duracao_calculada', $duracaoMinutos);
+					$this->_atendimentoTimerApplyDuracaoMinutos($timer, $duracaoMinutos);
 				}
 			}
 			if (!$this->AtendimentoTimer->save($timer)) {
@@ -2442,7 +2482,7 @@ class TicketsController extends AppController {
 				} catch (\Throwable $e) {
 					$this->log('Timer JSON: falha ao registrar em Ticketshoras: ' . $e->getMessage(), 'error');
 				}
-				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
+				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
 				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $duracaoSegundos, $duracaoMinutos);
 			}
 
