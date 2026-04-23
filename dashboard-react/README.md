@@ -41,7 +41,10 @@ O Vite abre automaticamente `http://localhost:5173/`. Se não abrir, copie esse 
 cd dashboard-react
 npm install
 npm run build
+# equivalente: npm run build:tickets
 ```
+
+Na **raiz** do repositório também podes usar `npm run build:tickets` (delega para `dashboard-react`).
 
 O build escreve em **`../webroot/tickets-app/`** (o que o CakePHP expõe em `/tickets-app/`) e copia o mesmo conteúdo para **`../public/tickets-app/`** (`npm run build` = `vite build` + `scripts/postbuild_tickets_app_sync.cjs`). O layout `Tickets/react_app.ctp` usa ficheiros em `webroot/`.
 

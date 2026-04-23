@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build && node ../scripts/postbuild_tickets_app_sync.cjs",
+        "build:tickets": "npm run build",
         "dev:sidebar": "vite --config vite.sidebar.config.js",
         "build:sidebar": "vite build --config vite.sidebar.config.js",
         "preview": "vite preview",
