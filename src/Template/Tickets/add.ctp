@@ -712,7 +712,7 @@
 						<?php if ($role == 0) { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select selectpicker', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -720,7 +720,7 @@
 								<?= $this->Form->control('severidade', [
 									'type' => 'select',
 									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
-									'class' => 'form-control sd-add-native-select',
+									'class' => 'form-control sd-add-native-select selectpicker',
 									'title' => 'Grau de severidade',
 									'label' => false,
 									'required' => true,
@@ -732,7 +732,7 @@
 						<?php } else { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select selectpicker', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -740,7 +740,7 @@
 								<?= $this->Form->control('severidade', [
 									'type' => 'select',
 									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
-									'class' => 'form-control sd-add-native-select',
+									'class' => 'form-control sd-add-native-select selectpicker',
 									'title' => 'Grau de severidade',
 									'label' => false,
 									'required' => true,
@@ -795,7 +795,7 @@
 							$__assuntoCur = ($ticket->assunto !== null && $ticket->assunto !== '') ? $ticket->assunto : $assunto;
 							$__sevCur = $ticket->severidade ?? 'media';
 						?>
-						<div class="sd-sum-field">
+						<div class="sd-add-field sd-sum-field">
 							<label class="sd-sum-field-label" for="sd-sum-assunto-select">Assunto</label>
 							<select id="sd-sum-assunto-select" class="form-control sd-sum-select" title="Assunto / categoria">
 								<?php foreach (C_TicketCategoriaClienteQuery as $__aid => $__alabel) : ?>
@@ -804,7 +804,7 @@
 							</select>
 						</div>
 						<?php if (!empty($severidadeColumnReady)) : ?>
-						<div class="sd-sum-field">
+						<div class="sd-add-field sd-sum-field">
 							<label class="sd-sum-field-label" for="sd-sum-severidade-select">Urgência</label>
 							<select id="sd-sum-severidade-select" class="form-control sd-sum-select" title="Urgência (severidade)">
 								<?php
@@ -817,14 +817,14 @@
 						</div>
 						<?php endif; ?>
 						<?php if (!empty($ticketAddQueueFieldReady) && !empty($ticketAddQueues)) : ?>
-						<div class="sd-sum-field">
+						<div class="sd-add-field sd-sum-field">
 							<label class="sd-sum-field-label" for="queue_id">Destino (fila)</label>
 							<?= $this->Form->control('queue_id', [
 								'type' => 'select',
 								'options' => $ticketAddQueues,
 								'label' => false,
 								'id' => 'queue_id',
-								'class' => 'form-control sd-sum-select',
+								'class' => 'form-control sd-sum-select selectpicker',
 								'value' => $ticket->queue_id ?? $ticketAddDefaultQueueId,
 								'required' => false,
 							]) ?>
@@ -881,16 +881,29 @@
 		return parseInt(r || '1', 10);
 	}
 
+	function sdTicketAddBsSetVal($sel, v) {
+		if (!$sel || !$sel.length) return;
+		var s = (v != null && v !== undefined) ? String(v) : '';
+		if (String($sel.val() != null ? $sel.val() : '') === s) {
+			return;
+		}
+		if (typeof $ !== 'undefined' && $.fn && $.fn.selectpicker && $sel.data('selectpicker')) {
+			$sel.selectpicker('val', s);
+		} else {
+			$sel.val(s);
+		}
+	}
+
 	function sdTicketAddMirrorFromMain() {
 		var $a = $('#assunto');
 		var $sa = $('#sd-sum-assunto-select');
 		if ($a.length && $sa.length) {
-			$sa.val(String($a.val() != null ? $a.val() : ''));
+			sdTicketAddBsSetVal($sa, $a.val());
 		}
 		var $s = $('#severidade');
 		var $ss = $('#sd-sum-severidade-select');
 		if ($s.length && $ss.length) {
-			$ss.val(String($s.val() != null ? $s.val() : ''));
+			sdTicketAddBsSetVal($ss, $s.val());
 		}
 	}
 
@@ -898,13 +911,12 @@
 		var v = $('#sd-sum-assunto-select').val();
 		var $a = $('#assunto');
 		if ($a.length) {
-			$a.val(v != null ? v : '');
+			sdTicketAddBsSetVal($a, v != null ? v : '');
 		}
 		var $s = $('#severidade');
 		var $ss = $('#sd-sum-severidade-select');
 		if ($s.length && $ss.length) {
-			var sv = $ss.val();
-			$s.val(sv != null ? sv : '');
+			sdTicketAddBsSetVal($s, $ss.val());
 		}
 	}
 
@@ -945,26 +957,34 @@
 	}
 
 	$(document).ready(function () {
+		if (typeof $ !== 'undefined' && $.fn && $.fn.selectpicker) {
+			$('.tickets-add-wrap select.selectpicker').each(function () {
+				var $el = $(this);
+				if ($el.data('selectpicker')) return;
+				$el.selectpicker({
+					container: 'body',
+					style: '',
+					size: 8,
+					width: '100%'
+				});
+			});
+		}
 		sdTicketAddMirrorFromMain();
 		sdTicketAddRefreshAtendimentoStatus();
 
-		$('#sd-sum-assunto-select').on('change', function () {
-			sdTicketAddMirrorSidebarToMain();
-			sdTicketAddRefreshAtendimentoStatus();
-		});
-		$('#sd-sum-severidade-select').on('change', function () {
-			sdTicketAddMirrorSidebarToMain();
-			sdTicketAddRefreshAtendimentoStatus();
-		});
+		var sdOnPickerOrChange = 'change changed.bs.select';
 
-		$('#assunto, #severidade').on('change', function () {
+		$('#sd-sum-assunto-select, #sd-sum-severidade-select').on(sdOnPickerOrChange, function () {
+			sdTicketAddMirrorSidebarToMain();
+			sdTicketAddRefreshAtendimentoStatus();
+		});
+		$('#assunto, #severidade').on(sdOnPickerOrChange, function () {
 			sdTicketAddMirrorFromMain();
 			sdTicketAddRefreshAtendimentoStatus();
 		});
 
-		$('#idcliente').on('changed.bs.select change', sdTicketAddRefreshAtendimentoStatus);
+		$('#idcliente, #idsolicitante, #queue_id').on(sdOnPickerOrChange, sdTicketAddRefreshAtendimentoStatus);
 		$('#solicitacao').on('input change', sdTicketAddRefreshAtendimentoStatus);
-		$('#queue_id').on('change', sdTicketAddRefreshAtendimentoStatus);
 
 		setTimeout(function () {
 			sdTicketAddMirrorFromMain();
@@ -1142,8 +1162,8 @@
 			else if( $('#valor').val().indexOf(',') <= -1 && tecla == 44 ) return true
 			else  return false;
 		}
-	// Assunto
-		$('#assunto').change(function(){
+	// Assunto (nativo ou bootstrap-select)
+		$('#assunto').on('change changed.bs.select', function(){
 			if($(this).val() == 5) $('.data').show();
 			else $('.data').hide();
 		});

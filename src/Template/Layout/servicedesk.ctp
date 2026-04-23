@@ -29,6 +29,7 @@ $sdUrlHistorico = $sdRole === 1
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 	<?= $this->Html->css('/dist/css/style.min') ?>
+	<?= $this->Html->css('/dist/css/pages/bootstrap-select.css') ?>
 	<link rel="stylesheet" href="<?= $this->Url->build('/dist/css/pages/pgm-servicedesk-premium.css') ?>">
 	<?= $this->fetch('meta') ?>
 	<?= $this->fetch('css') ?>
@@ -57,5 +58,6 @@ $sdUrlHistorico = $sdRole === 1
 <?= $this->Html->script('/assets/node_modules/jquery/jquery-3.2.1.min') ?>
 <?= $this->Html->script('/js/pgm-portal-theme') ?>
 <?= $this->Html->script('/assets/node_modules/bootstrap/dist/js/bootstrap.min') ?>
+<?= $this->Html->script('/dist/js/pages/bootstrap-select') ?>
 </body>
 </html>
