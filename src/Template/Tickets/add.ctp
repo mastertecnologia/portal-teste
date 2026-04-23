@@ -676,7 +676,7 @@
 							</div>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Solicitante</label>
-								<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false]) ?>
+								<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => [], 'label' => false, 'required' => false]) ?>
 							</div>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Nome do solicitante</label>
@@ -712,7 +712,7 @@
 						<?php if ($role == 0) { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select selectpicker', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select selectpicker', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => $ticketAssuntoOptions, 'label' => false, 'required' => true]) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -732,7 +732,7 @@
 						<?php } else { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select selectpicker', 'title' => 'Escolha um assunto', 'options' => C_TicketCategoriaClienteQuery, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'form-control sd-add-native-select selectpicker', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => $ticketAssuntoOptions, 'label' => false, 'required' => true]) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -798,7 +798,7 @@
 						<div class="sd-add-field sd-sum-field">
 							<label class="sd-sum-field-label" for="sd-sum-assunto-select">Assunto</label>
 							<select id="sd-sum-assunto-select" class="form-control sd-sum-select" title="Assunto / categoria">
-								<?php foreach (C_TicketCategoriaClienteQuery as $__aid => $__alabel) : ?>
+								<?php foreach ($ticketAssuntoOptions as $__aid => $__alabel) : ?>
 									<option value="<?= h($__aid) ?>" <?= ((string)$__aid === (string)$__assuntoCur) ? 'selected' : '' ?>><?= h($__alabel) ?></option>
 								<?php endforeach; ?>
 							</select>
@@ -962,12 +962,15 @@
 				var $el = $(this);
 				if ($el.data('selectpicker')) return;
 				$el.selectpicker({
-					container: 'body',
+					container: '.sd-add-page',
 					style: '',
 					size: 8,
 					width: '100%'
 				});
 			});
+			setTimeout(function () {
+				$('.tickets-add-wrap select.selectpicker').selectpicker('refresh');
+			}, 0);
 		}
 		sdTicketAddMirrorFromMain();
 		sdTicketAddRefreshAtendimentoStatus();

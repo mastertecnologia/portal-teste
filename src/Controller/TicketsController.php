@@ -1054,6 +1054,7 @@ class TicketsController extends AppController {
 
 		
 		$this->set('assunto', $assunto);
+		$this->set('ticketAssuntoOptions', $this->_ticketAssuntoClienteOptions());
 		$this->set('clientes', $clientesList);
 		$this->set('authUserName', (string)($this->Auth->user('name') ?? ''));
 		$this->set('severidadeColumnReady', in_array('severidade', $this->Tickets->getSchema()->columns(), true));
@@ -2374,6 +2375,36 @@ class TicketsController extends AppController {
 		$raw = AssuntoTicket($assunto);
 		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 		return $t !== '' ? $t : (string)$assunto;
+	}
+
+	/**
+	 * Opções do select "Assunto / categoria" na abertura do ticket.
+	 * Prioridade: C_TicketCategoriaClienteQuery não vazio → config/ticket_assunto_cliente.php → lista mínima (chave 5 = visita no add.ctp).
+	 *
+	 * @return array<int|string, string>
+	 */
+	protected function _ticketAssuntoClienteOptions(): array {
+		if (defined('C_TicketCategoriaClienteQuery')) {
+			$c = constant('C_TicketCategoriaClienteQuery');
+			if (is_array($c) && $c !== []) {
+				return $c;
+			}
+		}
+		$path = CONFIG . 'ticket_assunto_cliente.php';
+		if (is_file($path)) {
+			$opts = include $path;
+			if (is_array($opts) && $opts !== []) {
+				return $opts;
+			}
+		}
+
+		return [
+			1 => 'Dúvida',
+			2 => 'Solicitação',
+			3 => 'Problema / erro',
+			4 => 'Requisição de acesso',
+			5 => 'Visita / agendamento',
+		];
 	}
 
 	/** Códigos persistidos em tickets.severidade */
