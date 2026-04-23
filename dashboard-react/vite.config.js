@@ -4,6 +4,10 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.js'],
+  },
   base: '/tickets-app/',
   build: {
     outDir: path.resolve(__dirname, '../public/tickets-app'),

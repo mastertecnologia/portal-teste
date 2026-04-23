@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { postTimerAction } from '../lib/api';
+import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
 
 /** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
 function parseSqlLocalDateTime(s) {
@@ -14,18 +15,6 @@ function localSqlDateTimeFromMs(ms) {
   const d = new Date(ms);
   const p = (n) => (n < 10 ? `0${n}` : String(n));
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
-
-/** HH:MM:SS.cc (centésimos), alinhado ao cronómetro de referência. */
-function formatTimeMs(ms) {
-  const safe = Math.max(0, Math.floor(ms));
-  const totalSeconds = Math.floor(safe / 1000);
-  const centiseconds = Math.floor((safe % 1000) / 10);
-  const seconds = totalSeconds % 60;
-  const minutes = Math.floor(totalSeconds / 60) % 60;
-  const hours = Math.floor(totalSeconds / 3600);
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(centiseconds)}`;
 }
 
 function minutosLabel(totalMin) {
@@ -45,25 +34,24 @@ function sessaoEstaPausada(sessao) {
   return hp != null && String(hp).trim() !== '';
 }
 
-/** Intervalo de atualização do display (igual ao HTML de referência, 50 ms). */
-const TICK_MS = 50;
-
 /**
- * Cronômetro de horas técnicas: display HH:MM:SS.cc (setInterval 50 ms + timestamps), API iniciar/pausar/retomar/finalizar.
- * Botão verde: Iniciar (idle) ou Retomar (pausado), como start() no HTML que usa elapsed acumulado.
+ * Painel: API iniciar / pausar / retomar / finalizar; display alimentado apenas por
+ * `formatElapsedHms(sw.getElapsedMs())` (módulo `precisionStopwatch`, sem lógica de tempo na UI).
  */
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [tick, setTick] = useState(0);
-  const offsetRef = useRef(0);
+  /** Força re-render quando o stopwatch notifica (intervalo só em running). */
+  const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
-  /** Último elapsed “bom” em ms; evita contar com relógio quando pausado sem horaPausa. */
-  const freezeElapsedRef = useRef(0);
-  /**
-   * Elapsed ms no instante da pausa (precisão real). SQL só tem segundos → sem isto os centésimos ficam .00 pausado.
-   */
-  const pauseFrozenMsRef = useRef(null);
+  const offsetRef = useRef(0);
+  const swRef = useRef(null);
+
+  if (swRef.current == null) {
+    swRef.current = createPrecisionStopwatch({
+      nowMs: () => Date.now() + offsetRef.current,
+    });
+  }
 
   const snap = horasTecnicas || {};
   const canUse = Boolean(snap.canUseTimer);
@@ -79,44 +67,46 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     }
   }, [serverUnix, serverSessao?.id, serverSessao?.horaInicio, serverSessao?.horaPausa, serverSessao?.pausado]);
 
-  const nowMs = useCallback(() => Date.now() + offsetRef.current, []);
+  const syncStopwatchToSessao = useCallback(() => {
+    const sw = swRef.current;
+    if (!sw) return;
 
-  const elapsedMs = useMemo(() => {
     if (!sessao?.horaInicio) {
-      freezeElapsedRef.current = 0;
-      return 0;
+      sw.syncIdle();
+      return;
     }
     const start = parseSqlLocalDateTime(sessao.horaInicio);
     if (!start) {
-      return 0;
+      sw.syncIdle();
+      return;
     }
     if (sessaoEstaPausada(sessao)) {
-      if (pauseFrozenMsRef.current != null) {
-        freezeElapsedRef.current = pauseFrozenMsRef.current;
-        return pauseFrozenMsRef.current;
+      const hp = sessao.horaPausa ? parseSqlLocalDateTime(sessao.horaPausa) : null;
+      if (hp) {
+        sw.syncPaused(Math.max(0, hp.getTime() - start.getTime()));
+      } else {
+        sw.syncPaused(0);
       }
-      if (sessao.horaPausa) {
-        const pause = parseSqlLocalDateTime(sessao.horaPausa);
-        if (pause) {
-          const frozen = Math.max(0, pause.getTime() - start.getTime());
-          freezeElapsedRef.current = frozen;
-          return frozen;
-        }
-      }
-      return freezeElapsedRef.current;
+      return;
     }
-    const running = Math.max(0, nowMs() - start.getTime());
-    freezeElapsedRef.current = running;
-    return running;
-  }, [sessao, tick, nowMs]);
+    sw.syncRunningFromAnchor(start.getTime());
+  }, [sessao]);
 
   useEffect(() => {
-    if (!sessao || sessaoEstaPausada(sessao)) return undefined;
-    const id = window.setInterval(() => {
-      setTick((t) => (t + 1) % 1_000_000);
-    }, TICK_MS);
-    return () => window.clearInterval(id);
-  }, [sessao?.id, sessao?.pausado, sessao?.horaPausa]);
+    const sw = swRef.current;
+    sw.setOnRender(() => setRender((n) => (n + 1) % 1_000_000));
+    return () => {
+      sw.setOnRender(null);
+      sw.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
+    syncStopwatchToSessao();
+    setRender((n) => (n + 1) % 1_000_000);
+  }, [syncStopwatchToSessao]);
+
+  const displayHms = formatElapsedHms(swRef.current.getElapsedMs());
 
   async function runAction(action) {
     if (!ticketId) return;
@@ -128,7 +118,6 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     rollbackRef.current = optimistic;
 
     if (action === 'iniciar') {
-      pauseFrozenMsRef.current = null;
       const t0 = Date.now() + offsetRef.current;
       setOptimistic({
         id: 'local',
@@ -137,10 +126,6 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         pausado: false,
       });
     } else if (action === 'pausar' && sessao?.horaInicio) {
-      const hi = parseSqlLocalDateTime(sessao.horaInicio);
-      if (hi) {
-        pauseFrozenMsRef.current = Math.max(0, nowMs() - hi.getTime());
-      }
       const tPause = Date.now() + offsetRef.current;
       setOptimistic({
         ...sessao,
@@ -148,7 +133,6 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         horaPausa: localSqlDateTimeFromMs(tPause),
       });
     } else if (action === 'retomar' && sessao?.horaInicio && sessao.horaPausa) {
-      pauseFrozenMsRef.current = null;
       const hi = parseSqlLocalDateTime(sessao.horaInicio);
       const hp = parseSqlLocalDateTime(sessao.horaPausa);
       if (hi && hp) {
@@ -168,7 +152,6 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         });
       }
     } else if (action === 'finalizar') {
-      pauseFrozenMsRef.current = null;
       rollbackRef.current = optimistic ?? serverSessao;
       setOptimistic(null);
     }
@@ -184,9 +167,6 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       setOptimistic(null);
       if (onFeedback) onFeedback(res.message || null, null);
     } else {
-      if (action === 'pausar') {
-        pauseFrozenMsRef.current = null;
-      }
       if (action === 'finalizar') {
         setOptimistic(rollbackRef.current);
       } else {
@@ -239,7 +219,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
               paused ? 'text-amber-300' : 'text-white'
             }`}
           >
-            {formatTimeMs(elapsedMs)}
+            {displayHms}
             {paused ? <span className="ml-3 font-sans text-sm font-medium text-amber-300/90">(pausado)</span> : null}
           </div>
 
