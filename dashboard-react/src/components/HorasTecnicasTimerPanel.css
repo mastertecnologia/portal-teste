@@ -1,16 +1,22 @@
-/* Escopo: Cronômetro Real-Time PGM (mesmo visual do snippet; sem estilos de body/viewport). */
+/*
+ * Cronômetro Real-Time PGM — alinhado a gemini-code / HTML de referência.
+ * isolation + !important onde o painel vive dentro do Service Desk (tema escuro no pai).
+ */
 .pgm-crono-realtime {
   font-family: 'Inter', sans-serif;
+  isolation: isolate;
+  color: #334155;
 }
 
 .pgm-crono-realtime .timer-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 12px;
   padding: 24px;
-  width: 100%;
-  max-width: 450px;
+  width: 450px;
+  max-width: 100%;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  color: #334155 !important;
 }
 
 .pgm-crono-realtime .header-section {
@@ -20,10 +26,15 @@
   margin-bottom: 20px;
 }
 
+.pgm-crono-realtime #statusLabel,
+.pgm-crono-realtime #statusText {
+  color: #64748b !important;
+}
+
 .pgm-crono-realtime .title-label {
   font-size: 12px;
   font-weight: 700;
-  color: #64748b;
+  color: #64748b !important;
   text-transform: uppercase;
 }
 
@@ -31,7 +42,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
+  background: #f1f5f9 !important;
   border-radius: 8px;
   padding: 30px 0;
   margin-bottom: 24px;
@@ -41,7 +52,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 48px;
   font-weight: 500;
-  color: #1e293b;
+  color: #1e293b !important;
 }
 
 .pgm-crono-realtime .controls {
@@ -61,32 +72,40 @@
   justify-content: center;
   gap: 6px;
   transition: 0.2s;
-  color: white;
+  color: #ffffff;
 }
 
-.pgm-crono-realtime .btn-start {
-  background-color: #10b981;
+.pgm-crono-realtime .btn-start:not(:disabled) {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.pgm-crono-realtime .btn-pause:not(:disabled) {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
 }
 
 .pgm-crono-realtime .btn-pause {
-  background-color: #f59e0b;
   display: none;
 }
 
-.pgm-crono-realtime .btn-stop {
-  background-color: #ef4444;
+.pgm-crono-realtime .btn-stop:not(:disabled) {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
 }
 
 .pgm-crono-realtime button:disabled {
-  background-color: #cbd5e1;
+  background-color: #cbd5e1 !important;
+  color: #ffffff !important;
   cursor: not-allowed;
 }
 
-.pgm-crono-realtime.running .btn-start {
+/* `running` no #timerCard, como no HTML modelo */
+.pgm-crono-realtime .timer-card.running .btn-start {
   display: none;
 }
 
-.pgm-crono-realtime.running .btn-pause {
+.pgm-crono-realtime .timer-card.running .btn-pause {
   display: flex;
 }
 
@@ -100,7 +119,7 @@
   visibility: hidden;
 }
 
-.pgm-crono-realtime.running .status-dot {
+.pgm-crono-realtime .timer-card.running .status-dot {
   visibility: visible;
   animation: pgm-crono-pulse 2s infinite;
 }
@@ -119,13 +138,13 @@
 
 .pgm-crono-realtime-footer {
   font-size: 12px;
-  color: #64748b;
+  color: #64748b !important;
   margin-top: 10px;
   max-width: 450px;
   line-height: 1.45;
 }
 
 .pgm-crono-realtime-footer strong {
-  color: #475569;
+  color: #475569 !important;
   font-weight: 600;
 }

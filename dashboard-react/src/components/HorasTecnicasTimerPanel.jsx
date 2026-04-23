@@ -208,12 +208,12 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const running = Boolean(sessao) && !paused;
   const statusText = idle ? 'Aguardando...' : paused ? 'Pausado' : 'Em execução';
 
-  const rootClass = running ? 'pgm-crono-realtime running' : 'pgm-crono-realtime';
+  const timerCardClass = `timer-card${running ? ' running' : ''}`;
 
   return (
     <div>
-      <div className={rootClass}>
-        <div className="timer-card" id="timerCard">
+      <div className="pgm-crono-realtime">
+        <div className={timerCardClass} id="timerCard">
           <div className="header-section">
             <div>
               <span className="title-label">Controle de Horas</span>
