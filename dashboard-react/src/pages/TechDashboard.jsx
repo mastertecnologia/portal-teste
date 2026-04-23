@@ -488,6 +488,7 @@ export default function TechDashboard({ boot }) {
   const [startBusyId, setStartBusyId] = useState(null);
   const [transferOkHint, setTransferOkHint] = useState('');
   const [loadError, setLoadError] = useState(null);
+  const sdTableScrollRef = useRef(null);
   /** sem = só fila / sem responsável; com = atribuir técnico */
   const [transferAssignMode, setTransferAssignMode] = useState('sem');
 
@@ -563,6 +564,85 @@ export default function TechDashboard({ boot }) {
     }, SERVICEDESK_POLL_MS);
     return () => window.clearInterval(id);
   }, [embedded, boot?.servicedesk, reload]);
+
+  // #region agent log
+  useEffect(() => {
+    if (!embedded || !boot?.servicedesk) return undefined;
+    const INGEST =
+      'http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d';
+    const send = (message, data, hypothesisId) => {
+      fetch(INGEST, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '15b735' },
+        body: JSON.stringify({
+          sessionId: '15b735',
+          location: 'TechDashboard.jsx:sdScrollProbe',
+          message,
+          data,
+          timestamp: Date.now(),
+          runId: 'pre-fix',
+          hypothesisId,
+        }),
+      }).catch(() => {});
+    };
+    const sample = (reason) => {
+      const el = sdTableScrollRef.current;
+      const win = window.pageYOffset || document.documentElement.scrollTop;
+      const docEl = document.documentElement;
+      const innerScroll = el ? el.scrollTop : null;
+      const sh = el ? el.scrollHeight : null;
+      const ch = el ? el.clientHeight : null;
+      const canInnerScroll = sh != null && ch != null && sh > ch + 1;
+      const filterEl = document.querySelector('#tickets-react-root .filter-toolbar');
+      const filterH = filterEl?.getBoundingClientRect?.().height;
+      const root = document.getElementById('tickets-react-root');
+      const chain = [];
+      let p = root;
+      for (let i = 0; i < 8 && p; i += 1) {
+        const cs = window.getComputedStyle(p);
+        chain.push({
+          tag: p.tagName,
+          cls: p.className && String(p.className).slice(0, 100),
+          oy: cs.overflowY,
+          minH: cs.minHeight,
+          flex: cs.flex,
+          flexGrow: cs.flexGrow,
+        });
+        p = p.parentElement;
+      }
+      send(
+        reason,
+        {
+          win,
+          docH: docEl?.scrollHeight,
+          viewH: window.innerHeight,
+          innerScroll,
+          innerSh: sh,
+          innerCh: ch,
+          canInnerScroll,
+          hasScrollEl: Boolean(el),
+          filterH,
+          chain,
+        },
+        'A',
+      );
+    };
+    const onWin = () => sample('win-scroll');
+    const onInner = () => sample('inner-scroll');
+    const ro = new ResizeObserver(() => sample('resize'));
+    sample('mount');
+    window.addEventListener('scroll', onWin, { passive: true });
+    const el0 = sdTableScrollRef.current;
+    el0?.addEventListener('scroll', onInner, { passive: true });
+    if (el0) ro.observe(el0);
+    return () => {
+      window.removeEventListener('scroll', onWin);
+      const inner = sdTableScrollRef.current;
+      inner?.removeEventListener('scroll', onInner);
+      ro.disconnect();
+    };
+  }, [embedded, boot?.servicedesk, groups, loadError]);
+  // #endregion
 
   const wfEnabled = Boolean(workflow?.enabled);
   const filasMeta = workflow?.filas || [];
@@ -991,7 +1071,10 @@ export default function TechDashboard({ boot }) {
             : 'mt-5 min-w-0 max-w-full overflow-x-clip rounded-2xl border border-[var(--pgm-border-subtle)]'
         }
       >
-        <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-auto">
+        <div
+          ref={sdTableScrollRef}
+          className="min-h-0 min-w-0 max-w-full flex-1 overflow-auto"
+        >
           <table
             className={`min-w-full text-[0.8125rem] ${embedded && isSD ? 'pgm-table' : ''} ${embedded && !isSD ? 'divide-y divide-[var(--pgm-border)]' : ''}`}
           >
