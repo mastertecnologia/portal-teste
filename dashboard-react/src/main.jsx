@@ -8,40 +8,6 @@ let ticketsReactRoot = null;
 
 function mountTicketsReact() {
   const el = document.getElementById('tickets-react-root') || document.getElementById('root');
-  // #region agent log
-  try {
-    const payload =
-      JSON.stringify({
-        sessionId: '369061',
-        location: 'main.jsx:mountTicketsReact',
-        message: 'mount',
-        data: {
-          hasEl: !!el,
-          screen: window.__TICKETS_BOOT__?.screen ?? null,
-          path: window.location?.pathname ?? null,
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'H2-mount-dom',
-      }) + '\n';
-    const k = 'pgm_debug_369061_log';
-    const prev = sessionStorage.getItem(k) || '';
-    sessionStorage.setItem(k, (prev + payload).slice(-12000));
-    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '369061' },
-      body: JSON.stringify({
-        sessionId: '369061',
-        location: 'main.jsx:mountTicketsReact',
-        message: 'mount',
-        data: { hasEl: !!el, screen: window.__TICKETS_BOOT__?.screen ?? null },
-        timestamp: Date.now(),
-        hypothesisId: 'H2-mount-dom',
-      }),
-    }).catch(() => {});
-  } catch {
-    /* ignore */
-  }
-  // #endregion
   if (!el) {
     return;
   }

@@ -130,35 +130,6 @@ export async function fetchTicketsTecnico(filters = {}) {
       workflow: null,
     };
   }
-  // #region agent log
-  try {
-    const g = json.groups || {};
-    const rows = []
-      .concat(g.pendentes || [], g.emandamento || [], g.resolvidos || [], g.fechados || [], g.todos || [])
-      .filter(Boolean);
-    const t1174 = rows.find((x) => String(x.id) === '1174');
-    const sample = t1174
-      ? {
-          id: t1174.id,
-          situacao: t1174.situacao,
-          acoesKeys: (t1174.acoes || []).map((a) => a.key),
-          hasIniciar: (t1174.acoes || []).some((a) => a.key === 'iniciar'),
-        }
-      : { note: 'no_1174_in_page' };
-    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4d6f86' },
-      body: JSON.stringify({
-        sessionId: '4d6f86',
-        hypothesisId: 'H5',
-        location: 'api.js:fetchTicketsTecnico',
-        message: 'groups_sample',
-        data: { sample, bootTicketStatus: getBoot()?.ticketStatus ?? null },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  } catch (_) {}
-  // #endregion
   return { ok: true, groups: json.groups, workflow: json.workflow || { enabled: false, filas: [] } };
 }
 

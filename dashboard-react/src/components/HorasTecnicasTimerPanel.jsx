@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { postTimerAction } from '../lib/api';
 
-/** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTime). */
+/** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
 function parseSqlLocalDateTime(s) {
   if (!s || typeof s !== 'string') return null;
   const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(s.trim());
@@ -10,8 +10,8 @@ function parseSqlLocalDateTime(s) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function localSqlDateTime() {
-  const d = new Date();
+function localSqlDateTimeFromMs(ms) {
+  const d = new Date(ms);
   const p = (n) => (n < 10 ? `0${n}` : String(n));
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
@@ -94,17 +94,19 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     rollbackRef.current = optimistic;
 
     if (action === 'iniciar') {
+      const t0 = Date.now() + offsetRef.current;
       setOptimistic({
         id: 'local',
-        horaInicio: localSqlDateTime(),
+        horaInicio: localSqlDateTimeFromMs(t0),
         horaPausa: null,
         pausado: false,
       });
     } else if (action === 'pausar' && sessao?.horaInicio) {
+      const tPause = Date.now() + offsetRef.current;
       setOptimistic({
         ...sessao,
         pausado: true,
-        horaPausa: localSqlDateTime(),
+        horaPausa: localSqlDateTimeFromMs(tPause),
       });
     } else if (action === 'retomar' && sessao?.horaInicio) {
       setOptimistic({
@@ -126,25 +128,6 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         onSnapshot(res.horasTecnicas);
       }
       setOptimistic(null);
-      // #region agent log
-      fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4d6f86' },
-        body: JSON.stringify({
-          sessionId: '4d6f86',
-          hypothesisId: 'H1',
-          location: 'HorasTecnicasTimerPanel.jsx:runAction',
-          message: 'timer_action_ok',
-          data: {
-            action,
-            hasSessao: Boolean(res.horasTecnicas?.sessao),
-            pausado: Boolean(res.horasTecnicas?.sessao?.pausado),
-            serverUnix: res.horasTecnicas?.serverUnix ?? null,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       if (onFeedback) onFeedback(res.message || null, null);
     } else {
       if (action === 'finalizar') {

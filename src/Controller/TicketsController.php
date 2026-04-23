@@ -1114,16 +1114,6 @@ class TicketsController extends AppController {
 				$ticketAddQueues[(int)$__row->id] = (string)($__row->name ?? ('Fila #' . $__row->id));
 			}
 		}
-		// #region agent log
-		$__agentDbg = [
-			'sessionId' => '62ce4c', 'hypothesisId' => 'H3', 'location' => 'TicketsController::add:render', 'message' => 'list sizes',
-			'data' => [
-				'nClientes' => \count($clientesList), 'nAssuntoOpts' => \count($__taOpts), 'nQueues' => \count($ticketAddQueues),
-				'queueFieldReady' => (bool)$ticketAddQueueFieldReady, 'role' => (int)($this->Auth->user('role') ?? -1),
-			], 'timestamp' => (int) \round(\microtime(true) * 1000),
-		];
-		@\file_put_contents(ROOT . DS . 'debug-62ce4c.log', \json_encode($__agentDbg, \JSON_UNESCAPED_UNICODE) . "\n", \FILE_APPEND);
-		// #endregion
 		$this->set(compact('ticket', 'ticketAddQueues', 'ticketAddQueueFieldReady', 'ticketAddDefaultQueueId'));
 	}
 
@@ -2301,16 +2291,6 @@ class TicketsController extends AppController {
 			$base['minutosRegistrados'] = (int)$this->Ticketshoras->minutosTicket($idticket, '2000-01-01', '2099-12-31');
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
-			// #region agent log
-			@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
-				'sessionId' => '4d6f86',
-				'hypothesisId' => 'H1',
-				'location' => 'TicketsController::_apiHorasTecnicasPayload',
-				'message' => 'minutosTicket_exception',
-				'data' => ['idticket' => $idticket, 'error' => substr($e->getMessage(), 0, 400)],
-				'timestamp' => (int)round(microtime(true) * 1000),
-			], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-			// #endregion
 
 			return $base;
 		}
@@ -2338,37 +2318,7 @@ class TicketsController extends AppController {
 			}
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
-			// #region agent log
-			@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
-				'sessionId' => '4d6f86',
-				'hypothesisId' => 'H2',
-				'location' => 'TicketsController::_apiHorasTecnicasPayload',
-				'message' => 'atendimentoTimer_query_exception',
-				'data' => [
-					'idticket' => $idticket,
-					'tUserCol' => $tUserCol ?? null,
-					'error' => substr($e->getMessage(), 0, 400),
-				],
-				'timestamp' => (int)round(microtime(true) * 1000),
-			], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-			// #endregion
 		}
-		// #region agent log
-		@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
-			'sessionId' => '4d6f86',
-			'hypothesisId' => 'H1-H2-summary',
-			'location' => 'TicketsController::_apiHorasTecnicasPayload',
-			'message' => 'horas_payload_result',
-			'data' => [
-				'idticket' => $idticket,
-				'timerDisponivel' => $base['timerDisponivel'],
-				'minutosRegistrados' => $base['minutosRegistrados'],
-				'hasSessao' => $base['sessao'] !== null,
-				'timerUserCol' => $this->_atendimentoTimerUserColumn(),
-			],
-			'timestamp' => (int)round(microtime(true) * 1000),
-		], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-		// #endregion
 
 		return $base;
 	}
@@ -3526,32 +3476,6 @@ class TicketsController extends AppController {
 			$row['severidade'] = $this->_ticketSeveridadeLabel((string)($reg->severidade ?? 'media'));
 			$row['severidadeCode'] = $this->_normalizeTicketSeveridade($reg->severidade ?? 'media');
 		}
-
-		// #region agent log
-		$acaoKeys = array_values(array_filter(array_map(static function ($a) {
-			return isset($a['key']) ? (string)$a['key'] : '';
-		}, $acoes)));
-		$hasIniciar = in_array('iniciar', $acaoKeys, true);
-		if ($id === 1174 || ($sit === (int)C_TicketSituacaoPendente && !$hasIniciar)) {
-			@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
-				'sessionId' => '4d6f86',
-				'hypothesisId' => 'H3-H4',
-				'location' => 'TicketsController::_ticketRowApiTecnico',
-				'message' => 'row_acoes',
-				'data' => [
-					'id' => $id,
-					'sit' => $sit,
-					'pendenteConst' => (int)C_TicketSituacaoPendente,
-					'emandamentoConst' => (int)C_TicketSituacaoEmandamento,
-					'hasIniciar' => $hasIniciar,
-					'acaoKeys' => $acaoKeys,
-					'idtecnico' => $row['idtecnico_responsavel'],
-					'situacaoLabel' => $row['situacaoLabel'] ?? '',
-				],
-				'timestamp' => (int)round(microtime(true) * 1000),
-			], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-		}
-		// #endregion
 
 		return $row;
 	}
