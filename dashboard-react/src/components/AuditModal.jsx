@@ -1,17 +1,31 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getBoot, postAuditValidate } from '../lib/api.js';
+
+function normalizeHms(s) {
+  const t = (s || '').trim();
+  if (/^\d{2}:\d{2}:\d{2}$/.test(t)) return t;
+  return '00:00:00';
+}
 
 /**
  * @param {object} p
  * @param {() => void} p.onClose
- * @param {string} p.currentTimeHms display atual HH:MM:SS
+ * @param {string} p.currentTimeHms display atual HH:MM:SS (cronómetro)
  * @param {number} p.ticketId
  * @param {{ duracaoHms: string, periodoInicio: string, periodoFim: string } | null | undefined} [p.ultimaFinalizacao]
+ * @param {boolean} [p.sessaoAtiva] true se há timer iniciado (em curso ou pausado)
  * @param {() => void} [p.onSuccess]
  */
-export default function AuditModal({ onClose, currentTimeHms, ticketId, ultimaFinalizacao, onSuccess }) {
+export default function AuditModal({
+  onClose,
+  currentTimeHms,
+  ticketId,
+  ultimaFinalizacao,
+  sessaoAtiva = false,
+  onSuccess,
+}) {
   const [authKey, setAuthKey] = useState('');
-  const [newTime, setNewTime] = useState(currentTimeHms);
+  const [newTime, setNewTime] = useState(() => normalizeHms(currentTimeHms));
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -21,9 +35,23 @@ export default function AuditModal({ onClose, currentTimeHms, ticketId, ultimaFi
   onSuccessRef.current = onSuccess;
   onCloseRef.current = onClose;
 
+  const displayHms = useMemo(() => normalizeHms(currentTimeHms), [currentTimeHms]);
+
+  /** Sem sessão ativa: o log de auditoria refere-se ao último bloco gravado em Horas cadastradas. */
+  const oldTimeForAudit = useMemo(() => {
+    if (!sessaoAtiva && ultimaFinalizacao?.duracaoHms && /^\d{2}:\d{2}:\d{2}$/.test(ultimaFinalizacao.duracaoHms)) {
+      return ultimaFinalizacao.duracaoHms;
+    }
+    return displayHms;
+  }, [sessaoAtiva, ultimaFinalizacao?.duracaoHms, displayHms]);
+
   useEffect(() => {
-    setNewTime(currentTimeHms);
-  }, [currentTimeHms]);
+    if (!sessaoAtiva && ultimaFinalizacao?.duracaoHms && /^\d{2}:\d{2}:\d{2}$/.test(ultimaFinalizacao.duracaoHms)) {
+      setNewTime(ultimaFinalizacao.duracaoHms);
+    } else {
+      setNewTime(displayHms);
+    }
+  }, [displayHms, sessaoAtiva, ultimaFinalizacao?.duracaoHms]);
 
   const boot = typeof window !== 'undefined' ? getBoot() : null;
   const userId = Number(boot?.userId) || 0;
@@ -63,8 +91,8 @@ export default function AuditModal({ onClose, currentTimeHms, ticketId, ultimaFi
       setError('Sessão inválida.');
       return;
     }
-    if (!/^\d{2}:\d{2}:\d{2}$/.test((currentTimeHms || '').trim())) {
-      setError('Tempo atual inválido.');
+    if (!/^\d{2}:\d{2}:\d{2}$/.test(oldTimeForAudit)) {
+      setError('Tempo anterior (origem do registo) inválido.');
       return;
     }
     if (!/^\d{2}:\d{2}:\d{2}$/.test((newTime || '').trim())) {
@@ -83,7 +111,7 @@ export default function AuditModal({ onClose, currentTimeHms, ticketId, ultimaFi
     const res = await postAuditValidate({
       ticketId,
       userId,
-      oldTime: currentTimeHms.trim(),
+      oldTime: oldTimeForAudit,
       newTime: newTime.trim(),
       reason: reason.trim(),
       authKey: authKey.trim(),
@@ -157,22 +185,43 @@ export default function AuditModal({ onClose, currentTimeHms, ticketId, ultimaFi
         </div>
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800">
-            <p className="font-bold text-slate-900">Último período gravado (Horas cadastradas)</p>
+            <p className="font-bold text-slate-900">Último tempo gravado (Horas cadastradas)</p>
             {ultimaFinalizacao?.duracaoHms ? (
               <>
                 <p className="mt-2 font-mono text-base font-semibold text-slate-900">{ultimaFinalizacao.duracaoHms}</p>
                 <p className="mt-1 text-xs text-slate-600">
                   Início: {ultimaFinalizacao.periodoInicio} · Fim: {ultimaFinalizacao.periodoFim}
                 </p>
-                <p className="mt-2 text-xs text-slate-500">
-                  Use como referência ao corrigir o tempo em curso, se o lançamento anterior tiver sido incorreto.
-                </p>
+                {!sessaoAtiva ? (
+                  <p className="mt-2 text-xs text-slate-600">
+                    Sem cronómetro em curso: o registo de auditoria usa esta duração como <strong>tempo anterior</strong>.
+                    Ajuste o campo abaixo para o valor correto.
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Com cronómetro ativo, o tempo anterior no log é o do display ({displayHms}); acima fica a última
+                    gravação no ticket como referência.
+                  </p>
+                )}
               </>
             ) : (
               <p className="mt-2 text-xs text-slate-600">
-                Ainda não há um período finalizado gravado no seu histórico neste ticket.
+                Não foi encontrado lançamento em Horas cadastradas para este ticket (ou datas inválidas na base).
               </p>
             )}
+          </div>
+          <div>
+            <label className="text-sm font-bold text-slate-900" htmlFor="audit-old-time">
+              Tempo anterior (enviado ao log)
+            </label>
+            <input
+              id="audit-old-time"
+              type="text"
+              readOnly
+              value={oldTimeForAudit}
+              className="mt-1.5 w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 font-mono text-sm text-slate-700"
+              aria-readonly="true"
+            />
           </div>
           <div>
             <label className="text-sm font-bold text-slate-900" htmlFor="audit-new-time">

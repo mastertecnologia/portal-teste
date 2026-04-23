@@ -382,6 +382,7 @@ export default function HorasTecnicasTimerPanel({
           ticketId={ticketId}
           currentTimeHms={auditHms}
           ultimaFinalizacao={snap.ultimaFinalizacao}
+          sessaoAtiva={Boolean(sessao)}
           onClose={() => setAuditOpen(false)}
         />
       )}

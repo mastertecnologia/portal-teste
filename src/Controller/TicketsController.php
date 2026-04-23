@@ -2280,24 +2280,33 @@ class TicketsController extends AppController {
 	}
 
 	/**
-	 * Último lançamento em ticketshoras (mesmo ticket + utilizador) para contexto no modal de auditoria.
+	 * Último lançamento em ticketshoras para o modal de auditoria.
+	 * Prioriza o utilizador da sessão; se não houver linhas dele, usa o último registo do ticket (horas antigas podem ter iduser vazio ou outro técnico).
 	 *
 	 * @return array{duracaoHms:string,periodoInicio:string,periodoFim:string}|null
 	 */
 	protected function _apiUltimaFinalizacaoTicketshoras(int $idticket): ?array {
 		$uid = (int)$this->Auth->user('id');
-		if ($uid < 1) {
-			return null;
+		$row = null;
+		if ($uid >= 1) {
+			$row = $this->Ticketshoras->find()
+				->where(['Ticketshoras.idticket' => $idticket, 'Ticketshoras.iduser' => $uid])
+				->orderDesc('Ticketshoras.id')
+				->first();
 		}
-		$row = $this->Ticketshoras->find()
-			->where(['Ticketshoras.idticket' => $idticket, 'Ticketshoras.iduser' => $uid])
-			->orderDesc('Ticketshoras.id')
-			->first();
+		if ($row === null) {
+			$row = $this->Ticketshoras->find()
+				->where(['Ticketshoras.idticket' => $idticket])
+				->orderDesc('Ticketshoras.id')
+				->first();
+		}
 		if ($row === null) {
 			return null;
 		}
-		$hiS = $this->_ormTimeToString($row->get('horaini'));
-		$hfS = $this->_ormTimeToString($row->get('horafin'));
+		$hiRaw = $row->horaini ?? $row->get('horaini');
+		$hfRaw = $row->horafin ?? $row->get('horafin');
+		$hiS = $this->_ormTimeToString($hiRaw);
+		$hfS = $this->_ormTimeToString($hfRaw);
 		$ini = $this->_parseSqlDateTimeForTimer($hiS);
 		$fim = $this->_parseSqlDateTimeForTimer($hfS);
 		if (!$ini || !$fim) {
