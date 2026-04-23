@@ -6,6 +6,7 @@
 <title>PGM ServiceDesk v2 — Tema de producao (claro)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 /* ===== RESET ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -627,6 +628,50 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
   .kpi-grid{grid-template-columns:1fr 1fr}
   .mockup-nav{display:none}
 }
+
+/* ===== Controle horas (cliente) — HTML ref. Cronômetro com Relatório; escopado em .ch-gemini-timer ===== */
+.ch-gemini-timer{
+  --primary:#10b981;
+  --primary-hover:#059669;
+  --bg-body:#f8fafc;
+  --text-main:#1e293b;
+  --border:#e2e8f0;
+  font-family:'Inter',sans-serif;
+  color:var(--text-main);
+}
+.ch-gemini-timer .timer-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;width:450px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1)}
+.ch-gemini-timer .display-container{display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:8px;padding:30px 0;margin:20px 0}
+.ch-gemini-timer .timer-display{font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:500;color:var(--text-main)}
+.ch-gemini-timer .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ch-gemini-timer button{cursor:pointer;border:none;border-radius:8px;padding:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:0.2s;color:#fff}
+.ch-gemini-timer .btn-start{background-color:var(--primary);width:100%}
+.ch-gemini-timer .btn-pause{background-color:#f59e0b;display:none;width:100%}
+.ch-gemini-timer .btn-stop{background-color:#ef4444}
+.ch-gemini-timer button:disabled{background-color:#cbd5e1;cursor:not-allowed}
+.ch-gemini-timer .modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(15,23,42,0.6);
+  display:none;justify-content:center;align-items:center;z-index:1000;
+  backdrop-filter:blur(4px);
+}
+.ch-gemini-timer .modal-content{
+  background:#fff;padding:30px;border-radius:16px;width:500px;
+  box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);
+  animation:ch-gemini-slideIn 0.3s ease-out;
+}
+@keyframes ch-gemini-slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ch-gemini-timer .modal-header{display:block;padding:0;margin:0;background:transparent;border:none}
+.ch-gemini-timer .modal-header h2{margin:0;font-size:1.25rem;color:var(--text-main)}
+.ch-gemini-timer .modal-header p{color:#64748b;font-size:0.9rem;margin-top:5px}
+.ch-gemini-timer .time-badge{background:#f1f5f9;color:var(--primary);padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:bold}
+.ch-gemini-timer textarea{
+  width:100%;border:1px solid var(--border);border-radius:8px;
+  padding:12px;margin:20px 0;font-family:inherit;resize:none;
+  box-sizing:border-box;focus:outline-none;focus:ring:2px solid var(--primary);
+}
+.ch-gemini-timer .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.ch-gemini-timer .btn-save{background-color:var(--primary);padding:10px 24px}
+.ch-gemini-timer .btn-cancel{background-color:transparent;color:#64748b;border:1px solid var(--border)}
 </style>
 </head>
 <body class="sd-body">
@@ -1178,22 +1223,38 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
           </div>
         </div>
 
-        <!-- Timer panel preview -->
-        <div class="pgm-card mt-2" style="max-width:320px">
-          <div class="pgm-card-header">
-            <span class="pgm-card-title">Horas Tecnicas</span>
-          </div>
-          <div style="padding:1rem;text-align:center">
-            <div style="font-family:var(--pgm-font-mono);font-size:2rem;font-weight:700;color:var(--pgm-badge-teal-text);padding:0.75rem;background:var(--pgm-bg-base);border-radius:var(--pgm-radius-md);border:1px solid var(--pgm-border-subtle);letter-spacing:0.1em;margin-bottom:0.75rem">
-              01:23:45
-            </div>
-            <div style="display:flex;gap:6px;justify-content:center">
-              <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.75rem;border-radius:999px">&#9654; Iniciar</button>
-              <button class="btn-ghost" style="padding:0.4rem 1rem;font-size:0.75rem;border-radius:999px">&#9646;&#9646; Pausar</button>
-              <button class="btn-ghost" style="padding:0.4rem 1rem;font-size:0.75rem;border-radius:999px;color:var(--pgm-badge-red-text);border-color:var(--pgm-badge-red-ring)">&#9632; Parar</button>
-            </div>
-          </div>
+        <!-- Controle horas (cliente) — mesmo markup do HTML de referência -->
+        <div class="ch-gemini-timer mt-2">
+    <div class="timer-card">
+        <div style="font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">Service Desk #1174</div>
+        <div class="display-container">
+            <div class="timer-display" id="display">00:00:00</div>
         </div>
+        <div class="controls">
+            <div id="mainAction">
+                <button id="startBtn" class="btn-start">Iniciar Atendimento</button>
+                <button id="pauseBtn" class="btn-pause">Pausar</button>
+            </div>
+            <button id="stopBtn" class="btn-stop" disabled>Finalizar</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Finalizar Atendimento</h2>
+                <p>Tempo total registrado: <span class="time-badge" id="modalTime">00:00:00</span></p>
+            </div>
+
+            <textarea id="activityLog" rows="5" placeholder="O que foi feito nestes minutos? Descreva as atividades..."></textarea>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Voltar</button>
+                <button class="btn-save" id="saveLogBtn">Salvar e Lançar Horas</button>
+            </div>
+        </div>
+    </div>
+</div>
       </div>
     </div>
 
@@ -1245,6 +1306,87 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
 
   </div><!-- sd-main -->
 </div><!-- sd-shell -->
+
+<script>
+(function () {
+let startTime, elapsedTime = 0, timerInterval;
+
+const display = document.getElementById('display');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const stopBtn = document.getElementById('stopBtn');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTime = document.getElementById('modalTime');
+const activityLog = document.getElementById('activityLog');
+const saveLogBtn = document.getElementById('saveLogBtn');
+
+if (!display || !startBtn || !pauseBtn || !stopBtn || !modalOverlay || !modalTime || !activityLog || !saveLogBtn) return;
+
+function timeToString(time) {
+    let diffInHrs = time / 3600000;
+    let hh = Math.floor(diffInHrs);
+    let diffInMin = (diffInHrs - hh) * 60;
+    let mm = Math.floor(diffInMin);
+    let diffInSec = (diffInMin - mm) * 60;
+    let ss = Math.floor(diffInSec);
+    return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+}
+
+function start() {
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        display.innerHTML = timeToString(elapsedTime);
+    }, 1000);
+    startBtn.style.display = 'none';
+    pauseBtn.style.display = 'flex';
+    stopBtn.disabled = false;
+}
+
+function pause() {
+    clearInterval(timerInterval);
+    startBtn.style.display = 'flex';
+    pauseBtn.style.display = 'none';
+}
+
+function stop() {
+    pause();
+    modalTime.innerText = timeToString(elapsedTime);
+    modalOverlay.style.display = 'flex';
+    activityLog.focus();
+}
+
+window.closeModal = function () {
+    modalOverlay.style.display = 'none';
+};
+
+saveLogBtn.addEventListener('click', () => {
+    const description = activityLog.value;
+    if (!description.trim()) {
+        alert("Por favor, descreva o que foi feito antes de salvar.");
+        return;
+    }
+
+    console.log({
+        tempo_ms: elapsedTime,
+        tempo_formatado: timeToString(elapsedTime),
+        descricao: description
+    });
+
+    alert("Horas lançadas com sucesso!");
+
+    elapsedTime = 0;
+    display.innerHTML = "00:00:00";
+    window.closeModal();
+    stopBtn.disabled = true;
+    activityLog.value = "";
+});
+
+startBtn.addEventListener('click', start);
+pauseBtn.addEventListener('click', pause);
+stopBtn.addEventListener('click', stop);
+})();
+</script>
 
 <script>
 // Simple scroll spy for mockup nav
