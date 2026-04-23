@@ -151,6 +151,15 @@ body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.pgm-cl
     padding-right: 1rem !important;
 }
 
+/*
+ * Tickets React no ERP: a #pgm-dynamic-content ocupa a altura útil (flex:1). Se a .row
+ * centrar itens no eixo vertical, o bloco fica “no meio” da página — alinhar ao topo.
+ */
+body.pgm-app-shell-premium.layout-no-topbar #pgm-dynamic-content.row:has(.tickets-react-shell) {
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
 /* Portal cliente (Material): estrutura .wrapper > .main-panel */
 body.pgm-app-shell-premium.pgm-portal-client-shell .wrapper {
     display: flex;

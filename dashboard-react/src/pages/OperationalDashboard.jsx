@@ -273,7 +273,7 @@ export default function OperationalDashboard({ boot }) {
 
   if (shellEmbedded) {
     return (
-      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
+      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-4 pb-6 pt-2 text-[var(--pgm-text)] sm:px-5">
         {inner}
       </div>
     );
