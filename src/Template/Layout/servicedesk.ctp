@@ -50,10 +50,15 @@ $sdAddLabel = ($sdRole === 1) ? __('Abrir ticket') : __('Abrir chamado');
 		<nav class="sd-actions" aria-label="<?= h(__('Service Desk — atalhos')) ?>">
 			<?php
 			$__sdTopbarActions = trim((string)$this->fetch('sd_topbar_actions'));
+			$__sdHideAbrir = !empty($hideServicedeskOpenTicketCta);
 			if ($__sdTopbarActions !== '') :
 				echo $__sdTopbarActions;
-			else :
+			elseif ($__sdHideAbrir) :
 			?>
+			<a href="<?= h($sdUrlFila) ?>" class="sd-topbar__btn sd-topbar__btn--voltar-fila" style="background:transparent;border:1px solid rgba(0,0,0,0.12);color:inherit;text-decoration:none">
+				<?= h(__('Voltar à fila')) ?>
+			</a>
+			<?php else : ?>
 			<a href="<?= h($sdUrlAdd) ?>" class="sd-topbar__btn sd-topbar__btn--abrir-chamado">
 				<span class="sd-topbar__btn-plus" aria-hidden="true">+</span>
 				<?= h($sdAddLabel) ?>

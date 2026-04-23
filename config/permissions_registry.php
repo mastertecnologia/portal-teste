@@ -1440,7 +1440,7 @@ return [
         "module" => "Tickets",
         "controller" => "Tickets",
         "action" =>
-            "edit,alterarsituacao,alterar_situacao,reabrir,cadhoras,cancelar,poderesolver,mudasituacaofatura,checkboxesParcelas,apisaveticket,apianexoupload",
+            "edit,alterarsituacao,alterar_situacao,apiAlterarSituacao,api_alterar_situacao,reabrir,cadhoras,cancelar,poderesolver,mudasituacaofatura,checkboxesParcelas,apisaveticket,apianexoupload",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>

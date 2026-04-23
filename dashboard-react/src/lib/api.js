@@ -593,4 +593,40 @@ export async function postTimerAction(ticketId, action) {
   };
 }
 
+export async function postAlterarSituacao(ticketId, situacao) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 120));
+    return { ok: true, situacao: Number(situacao), situacaoLabel: 'ok (mock)' };
+  }
+  const boot = getBoot();
+  const base = boot.paths?.apiAlterarSituacao;
+  if (!base) {
+    return { ok: false, error: 'no_api', message: 'apiAlterarSituacao não configurado no boot.' };
+  }
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ situacao: Number(situacao) }),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      message: json.message || json.error || 'Falha ao alterar situação',
+    };
+  }
+  return {
+    ok: true,
+    situacao: json.situacao,
+    situacaoLabel: json.situacaoLabel,
+  };
+}
+
 export { getBoot, USE_MOCK, MOCK_SESSION_CLIENTE };

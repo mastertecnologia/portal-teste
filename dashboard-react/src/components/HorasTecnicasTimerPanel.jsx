@@ -7,6 +7,12 @@ function parseServerDateTime(s) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+function localSqlDateTime() {
+  const d = new Date();
+  const p = (n) => (n < 10 ? `0${n}` : String(n));
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 function formatHms(totalSeconds) {
   const sec = Math.max(0, Math.floor(totalSeconds));
   const h = Math.floor(sec / 3600);
@@ -26,25 +32,29 @@ function minutosLabel(totalMin) {
 }
 
 /**
- * Cronômetro de horas técnicas (espelha o painel clássico): contagem em tempo real enquanto roda;
- * ao finalizar, grava Ticketshoras e consome contrato no servidor.
+ * Cronômetro de horas técnicas: contagem fluida (rAF), atualização otimista nos cliques,
+ * layout claro alinhado ao Service Desk (três ações sempre visíveis).
  */
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
-  const [tick, setTick] = useState(0);
+  const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [rafTick, setRafTick] = useState(0);
   const offsetRef = useRef(0);
+  const rollbackRef = useRef(null);
 
   const snap = horasTecnicas || {};
   const canUse = Boolean(snap.canUseTimer);
   const disponivel = snap.timerDisponivel !== false;
-  const sessao = snap.sessao || null;
+  const serverSessao = snap.sessao || null;
   const serverUnix = typeof snap.serverUnix === 'number' ? snap.serverUnix : null;
+
+  const sessao = optimistic ?? serverSessao;
 
   useEffect(() => {
     if (serverUnix != null) {
       offsetRef.current = serverUnix * 1000 - Date.now();
     }
-  }, [serverUnix, sessao?.id, sessao?.horaInicio, sessao?.horaPausa, sessao?.pausado]);
+  }, [serverUnix, serverSessao?.id, serverSessao?.horaInicio, serverSessao?.horaPausa, serverSessao?.pausado]);
 
   const nowMs = useCallback(() => Date.now() + offsetRef.current, []);
 
@@ -58,12 +68,17 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       return Math.max(0, Math.floor((pause.getTime() - start.getTime()) / 1000));
     }
     return Math.max(0, Math.floor((nowMs() - start.getTime()) / 1000));
-  }, [sessao, tick, nowMs]);
+  }, [sessao, rafTick, nowMs]);
 
   useEffect(() => {
     if (!sessao || sessao.pausado) return undefined;
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(id);
+    let id = 0;
+    const loop = () => {
+      setRafTick((t) => (t + 1) % 1_000_000);
+      id = requestAnimationFrame(loop);
+    };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
   }, [sessao?.id, sessao?.pausado]);
 
   async function runAction(action) {
@@ -72,15 +87,52 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       const ok = window.confirm('Finalizar o timer e registrar as horas no ticket e no contrato do cliente?');
       if (!ok) return;
     }
+
+    rollbackRef.current = optimistic;
+
+    if (action === 'iniciar') {
+      setOptimistic({
+        id: 'local',
+        horaInicio: localSqlDateTime(),
+        horaPausa: null,
+        pausado: false,
+      });
+    } else if (action === 'pausar' && sessao?.horaInicio) {
+      setOptimistic({
+        ...sessao,
+        pausado: true,
+        horaPausa: localSqlDateTime(),
+      });
+    } else if (action === 'retomar' && sessao?.horaInicio) {
+      setOptimistic({
+        ...sessao,
+        pausado: false,
+        horaPausa: null,
+      });
+    } else if (action === 'finalizar') {
+      rollbackRef.current = optimistic ?? serverSessao;
+      setOptimistic(null);
+    }
+
     setBusy(true);
     const res = await postTimerAction(ticketId, action);
     setBusy(false);
-    if (res.ok && res.horasTecnicas && onSnapshot) {
-      onSnapshot(res.horasTecnicas);
-    }
-    if (onFeedback) {
-      if (res.ok) onFeedback(res.message || null, null);
-      else onFeedback(null, res.message || res.error || 'Não foi possível atualizar o timer.');
+
+    if (res.ok) {
+      setOptimistic(null);
+      if (res.horasTecnicas && onSnapshot) {
+        onSnapshot(res.horasTecnicas);
+      }
+      if (onFeedback) onFeedback(res.message || null, null);
+    } else {
+      if (action === 'finalizar') {
+        setOptimistic(rollbackRef.current);
+      } else {
+        setOptimistic(null);
+      }
+      if (onFeedback) {
+        onFeedback(null, res.message || res.error || 'Não foi possível atualizar o timer.');
+      }
     }
     return res;
   }
@@ -91,96 +143,96 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
 
   if (!disponivel) {
     return (
-      <div className="rounded-xl border border-[var(--pgm-badge-amber-ring,rgba(210,153,34,0.30))] bg-[var(--pgm-badge-amber-bg,rgba(210,153,34,0.14))] p-4 text-sm text-[var(--pgm-badge-amber-text,#f0c060)]">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
         <h2 className="text-sm font-bold">Horas técnicas</h2>
         <p className="mt-1 text-xs">
-          Timer indisponível (tabela ou colunas). Use o formulário clássico ou execute o script de verificação do
-          atendimento_timer.
+          Timer indisponível (tabela ou colunas). Use o formulário clássico ou execute o script de verificação do atendimento_timer.
         </p>
       </div>
     );
   }
 
   const registrados = snap.minutosRegistrados ?? 0;
+  const paused = Boolean(sessao && sessao.pausado);
+  const idle = !sessao;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
-      <div className="border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
-        <h2 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">Horas técnicas e contrato</h2>
+    <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
+      <div className="border-b border-slate-200 bg-slate-100/90 px-4 py-3">
+        <h2 className="text-[0.9rem] font-bold tracking-tight text-slate-900">Horas técnicas</h2>
       </div>
       <div className="p-4">
-        <p className="text-xs text-[var(--pgm-text-muted,#9aa0a8)]">
-          Tempo já lançado neste ticket: <span className="font-semibold text-[var(--pgm-text,#e8eaed)]">{minutosLabel(registrados)}</span>. Ao
-          finalizar, o sistema grava em Horas cadastradas e desconta do contrato do cliente.
+        <p className="text-xs text-slate-600">
+          Tempo já lançado neste ticket:{' '}
+          <span className="font-semibold text-slate-800">{minutosLabel(registrados)}</span>. Ao finalizar, o sistema grava em
+          Horas cadastradas e desconta do contrato do cliente.
         </p>
 
-        {!sessao ? (
-          <div className="mt-3 text-center">
-            <div className="mb-3 rounded-lg border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-base,#0c0f14)] px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.1em] text-[var(--pgm-text-muted,#9aa0a8)] transition-all duration-300">
-              00:00:00
-            </div>
+        <div className="mt-3 text-center">
+          <div
+            className={`mb-3 rounded-lg border px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.12em] transition-colors ${
+              paused
+                ? 'border-amber-200 bg-amber-50/80 text-amber-800'
+                : 'border-slate-200 bg-slate-50 text-[#155E4A]'
+            }`}
+          >
+            {formatHms(elapsedSeconds)}
+            {paused ? <span className="ml-2 font-sans text-sm font-medium text-amber-800/90">(pausado)</span> : null}
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-2">
             <button
               type="button"
-              disabled={disabled || busy}
+              disabled={disabled || busy || !idle}
               onClick={() => runAction('iniciar')}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] px-4 py-1.5 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#2daa6a] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-              {busy ? '…' : 'Iniciar'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+              </svg>
+              {busy && idle ? '…' : 'Iniciar'}
             </button>
-          </div>
-        ) : (
-          <div className="mt-3 text-center">
-            <div
-              className={`relative mb-3 rounded-lg border px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.1em] transition-all duration-300 ${
-                sessao.pausado
-                  ? 'border-[var(--pgm-badge-amber-ring)] bg-[var(--pgm-badge-amber-bg)] text-[var(--pgm-badge-amber-text)]'
-                  : 'border-[rgba(29,158,117,0.25)] bg-[var(--pgm-bg-base,#0c0f14)] text-[var(--pgm-badge-teal-text,#5cdbc0)] shadow-[0_0_20px_rgba(29,158,117,0.08)]'
-              }`}
-            >
-              {!sessao.pausado && (
-                <span className="absolute right-3 top-3 flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--pgm-primary,#1d9e75)] opacity-50" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--pgm-primary,#1d9e75)]" />
-                </span>
-              )}
-              {formatHms(elapsedSeconds)}
-              {sessao.pausado ? <span className="ml-2 font-sans text-sm font-normal opacity-80">(pausado)</span> : null}
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {!sessao.pausado ? (
-                <button
-                  type="button"
-                  disabled={disabled || busy}
-                  onClick={() => runAction('pausar')}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pgm-border,#3d4554)] bg-transparent px-4 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)] disabled:opacity-50"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-                  Pausar
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={disabled || busy}
-                  onClick={() => runAction('retomar')}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pgm-border,#3d4554)] bg-transparent px-4 py-1.5 text-sm font-medium text-[var(--pgm-text,#e8eaed)] transition hover:bg-[var(--pgm-bg-overlay,#2a3140)] hover:border-[var(--pgm-border-strong,#4f5869)] disabled:opacity-50"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-                  Retomar
-                </button>
-              )}
+
+            {paused ? (
               <button
                 type="button"
                 disabled={disabled || busy}
-                onClick={() => runAction('finalizar')}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pgm-badge-red-ring,rgba(248,81,73,0.25))] bg-transparent px-4 py-1.5 text-sm font-medium text-[var(--pgm-badge-red-text,#ff9492)] transition hover:bg-[var(--pgm-badge-red-bg)] hover:border-[rgba(248,81,73,0.45)] hover:shadow-[0_0_12px_rgba(248,81,73,0.12)] disabled:opacity-50"
+                onClick={() => runAction('retomar')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
-                Parar
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+                Retomar
               </button>
-            </div>
+            ) : (
+              <button
+                type="button"
+                disabled={disabled || busy || idle}
+                onClick={() => runAction('pausar')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+                Pausar
+              </button>
+            )}
+
+            <button
+              type="button"
+              disabled={disabled || busy || idle}
+              onClick={() => runAction('finalizar')}
+              className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+              Parar
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

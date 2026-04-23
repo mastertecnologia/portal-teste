@@ -15,6 +15,8 @@ import {
   fetchQueuesForTicket,
   postTransferirTicket,
   postStartTicket,
+  postAlterarSituacao,
+  getBoot,
   USE_MOCK,
 } from '../lib/api';
 import { badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
@@ -100,13 +102,21 @@ function ensureCoreActions(ticket) {
     label.includes('em execucao') ||
     label.includes('em execução') ||
     label.includes('em andamento');
+  const boot = getBoot();
+  const pendenteCode = boot?.ticketStatus?.pendente;
+  const isPendenteByCode =
+    pendenteCode != null &&
+    ticket.situacao !== undefined &&
+    ticket.situacao !== null &&
+    Number(ticket.situacao) === Number(pendenteCode);
   // Iniciar só aparece em tickets pendentes (aguardando técnico / sem responsável);
   // se já está em execução, o atendimento foi assumido e a ação não faz sentido.
   const isPendente =
-    !inProgress &&
-    (label.includes('aguardando tecnico') ||
-      label.includes('aguardando técnico') ||
-      !ticket.idtecnico_responsavel);
+    isPendenteByCode ||
+    (!inProgress &&
+      (label.includes('aguardando tecnico') ||
+        label.includes('aguardando técnico') ||
+        !ticket.idtecnico_responsavel));
   if (isPendente && !has('iniciar')) {
     list.push({
       key: 'iniciar',
@@ -207,6 +217,8 @@ function TicketActionsMenu({
   openTransfer,
   handleStartAtendimento,
   startBusyId,
+  handleAlterarSituacao,
+  statusBusyKey,
 }) {
   const acoesOrd = sortTicketAcoes(acoes || []);
   const [open, setOpen] = useState(false);
@@ -361,6 +373,30 @@ function TicketActionsMenu({
             );
             return divider ? [divider, row] : [row];
           }
+          if (a.behavior === 'reactStatus' && typeof handleAlterarSituacao === 'function' && a.situacaoDestino != null) {
+            const sk = `${ticket.id}-${a.situacaoDestino}`;
+            const busy = statusBusyKey === sk;
+            const row = (
+              <li key={`${a.key}-${a.label}`} role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`${rowBase} ${tc[tone]}`}
+                  disabled={busy}
+                  onClick={() => {
+                    setOpen(false);
+                    handleAlterarSituacao(ticket, a.situacaoDestino);
+                  }}
+                >
+                  <span className={iconWrap}>
+                    <ActionMenuIcon actionKey={a.key} />
+                  </span>
+                  <span className="min-w-0 flex-1 leading-snug">{busy ? 'Atualizando…' : a.label}</span>
+                </button>
+              </li>
+            );
+            return divider ? [divider, row] : [row];
+          }
           const row = (
             <li key={`${a.key}-${a.label}`} role="none">
               <a
@@ -486,6 +522,7 @@ export default function TechDashboard({ boot }) {
   const [transferErr, setTransferErr] = useState('');
   const [transferQueuesErr, setTransferQueuesErr] = useState('');
   const [startBusyId, setStartBusyId] = useState(null);
+  const [statusBusyKey, setStatusBusyKey] = useState(null);
   const [transferOkHint, setTransferOkHint] = useState('');
   const [loadError, setLoadError] = useState(null);
   const sdTableScrollRef = useRef(null);
@@ -836,6 +873,24 @@ export default function TechDashboard({ boot }) {
       await reload();
     } finally {
       setStartBusyId(null);
+    }
+  };
+
+  const handleAlterarSituacao = async (ticket, situacaoDestino) => {
+    const id = Number(ticket.id);
+    const sk = `${id}-${situacaoDestino}`;
+    setStatusBusyKey(sk);
+    try {
+      const r = await postAlterarSituacao(id, situacaoDestino);
+      if (!r.ok) {
+        window.alert(r.message || r.error || 'Não foi possível alterar o status do ticket.');
+        return;
+      }
+      setTransferOkHint('Situação atualizada.');
+      window.setTimeout(() => setTransferOkHint(''), 4000);
+      await reload();
+    } finally {
+      setStatusBusyKey(null);
     }
   };
 
@@ -1261,6 +1316,8 @@ export default function TechDashboard({ boot }) {
                           openTransfer={openTransfer}
                           handleStartAtendimento={handleStartAtendimento}
                           startBusyId={startBusyId}
+                          handleAlterarSituacao={handleAlterarSituacao}
+                          statusBusyKey={statusBusyKey}
                         />
                       </td>
                     </tr>

@@ -143,6 +143,9 @@ class ServicedeskController extends TicketsController {
 	public function edit($idticket = null) {
 		$this->_servicedeskUseTicketsTemplates();
 		parent::edit($idticket);
+		if ($this->request->getQuery('classic') !== '1' && !$this->request->is(['post', 'put'])) {
+			$this->set('hideServicedeskOpenTicketCta', true);
+		}
 		$this->_servicedeskShellLayoutIfRendering();
 	}
 

@@ -291,6 +291,8 @@ class RbacCheckerTest extends TestCase {
 		$tm = ['controller' => 'Tickets', 'action' => 'timerIniciar,timer_iniciar,apiTimer,api_timer'];
 		$this->assertTrue(RbacChecker::matchAction('Tickets', 'timer_iniciar', $tm));
 		$this->assertTrue(RbacChecker::matchAction('Tickets', 'api_timer', $tm));
+		$st = ['controller' => 'Tickets', 'action' => 'apiAlterarSituacao,api_alterar_situacao'];
+		$this->assertTrue(RbacChecker::matchAction('Tickets', 'api_alterar_situacao', $st));
 	}
 
 	public function testMatchActionPortalNotificationsAndTicketsPortalUnderscore() {

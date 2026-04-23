@@ -12,6 +12,6 @@ class AtendimentoTimerTable extends Table {
 	public function initialize(array $config) {
 		$this->setTable('atendimento_timer');
 		$this->belongsTo('Tickets', ['foreignKey' => 'idticket']);
-		$this->belongsTo('Users', ['foreignKey' => 'iduser']);
+		$this->belongsTo('Users', ['foreignKey' => 'idusuario']);
 	}
 }
