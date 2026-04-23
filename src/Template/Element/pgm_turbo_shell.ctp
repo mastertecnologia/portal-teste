@@ -39,6 +39,10 @@
 			}
 
 			function pgmTurboMarkNavLinks() {
+				/* Sidebar React: atributos turbo vêm de getTurboLinkProps (incl. data-turbo="false"). Não mutar o DOM. */
+				if (window.__PGM_REACT_SIDEBAR__) {
+					return;
+				}
 				document.querySelectorAll(
 					'aside.pgm-sidebar-shell .pgm-sidebar-brand a[href], aside.pgm-sidebar-shell .scroll-sidebar a[href], aside.pgm-sidebar-shell .pgm-sidebar-footer a.preview-dd-item[href], aside.pgm-sidebar-shell .pgm-sidebar-footer a.dropdown-item[href]'
 				).forEach(function (a) {
