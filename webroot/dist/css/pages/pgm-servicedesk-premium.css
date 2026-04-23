@@ -388,6 +388,49 @@ html[data-pgm-theme="dark"] { color-scheme: dark; }
 	text-decoration: underline;
 }
 
+/* CTA topbar: “+ Abrir chamado” (pílula #006D5B) */
+.sd-topbar a.sd-topbar__btn--abrir-chamado,
+.sd-topbar .sd-topbar__btn--abrir-chamado {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	padding: 0.5rem 1.15rem;
+	font-size: 0.875rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	color: #fff !important;
+	background: #006d5b;
+	border-radius: 999px;
+	text-decoration: none;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+	transition: background-color 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+.sd-topbar a.sd-topbar__btn--abrir-chamado:hover,
+.sd-topbar .sd-topbar__btn--abrir-chamado:hover {
+	color: #fff !important;
+	text-decoration: none;
+	background: #005848;
+	filter: none;
+}
+.sd-topbar a.sd-topbar__btn--abrir-chamado:focus-visible,
+.sd-topbar .sd-topbar__btn--abrir-chamado:focus-visible {
+	color: #fff !important;
+	text-decoration: none;
+	outline: 2px solid rgba(0, 109, 91, 0.45);
+	outline-offset: 2px;
+}
+.sd-topbar .sd-topbar__btn-plus {
+	font-weight: 700;
+	font-size: 1em;
+	line-height: 1;
+}
+
+html[data-pgm-theme="dark"] body.sd-body--sd-topbar .sd-topbar a.sd-topbar__btn--abrir-chamado:hover,
+html[data-pgm-theme="dark"] body.sd-body--sd-topbar .sd-topbar .sd-topbar__btn--abrir-chamado:hover {
+	background: #007a66;
+}
+
 /* Service Desk: shell com topbar (tema claro) — barra de acento v2 + marca */
 html[data-pgm-theme="light"] body.sd-body--sd-topbar .sd-shell.sd-shell--with-sd-topbar {
 	min-height: 100vh;

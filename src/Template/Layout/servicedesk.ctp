@@ -4,10 +4,7 @@ $sdUser = $this->request->getSession()->read('Auth.User');
 $sdRole = is_array($sdUser) && isset($sdUser['role']) ? (int)$sdUser['role'] : -1;
 $sdUrlFila = $this->Url->build(['controller' => 'Servicedesk', 'action' => 'index']);
 $sdUrlAdd = $this->Url->build(['controller' => 'Servicedesk', 'action' => 'add']);
-$sdUrlOperacional = $sdRole === 0 ? $this->Url->build(['controller' => 'Servicedesk', 'action' => 'operacional']) : null;
-$sdUrlHistorico = $sdRole === 1
-	? $this->Url->build(['controller' => 'Tickets', 'action' => 'indexcliente'])
-	: $this->Url->build(['controller' => 'Tickets', 'action' => 'index']);
+$sdAddLabel = ($sdRole === 1) ? __('Abrir ticket') : __('Abrir chamado');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" data-pgm-theme="light">
@@ -51,11 +48,10 @@ $sdUrlHistorico = $sdRole === 1
 			<a href="<?= h($sdUrlFila) ?>" class="sd-brand" style="color:inherit;text-decoration:none"><?= h(__('PGM Service Desk')) ?></a>
 		</div>
 		<nav class="sd-actions" aria-label="<?= h(__('Service Desk — atalhos')) ?>">
-			<?php if ($sdUrlOperacional !== null) : ?>
-				<a href="<?= h($sdUrlOperacional) ?>"><?= h(__('Dashboard operacional')) ?></a>
-			<?php endif; ?>
-			<a href="<?= h($sdUrlAdd) ?>"><?= h(($sdRole === 1) ? __('Abrir ticket') : __('Abrir chamado')) ?></a>
-			<a href="<?= h($sdUrlHistorico) ?>"><?= h(__('Histórico')) ?></a>
+			<a href="<?= h($sdUrlAdd) ?>" class="sd-topbar__btn sd-topbar__btn--abrir-chamado">
+				<span class="sd-topbar__btn-plus" aria-hidden="true">+</span>
+				<?= h($sdAddLabel) ?>
+			</a>
 		</nav>
 	</header>
 	<main class="sd-main sd-main--full container-fluid p-0">

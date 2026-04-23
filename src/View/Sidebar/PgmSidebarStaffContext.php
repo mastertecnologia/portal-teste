@@ -27,7 +27,8 @@ final class PgmSidebarStaffContext
         $osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
         $clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
-        $ticketsServicedeskActive = ($ctrl === 'Servicedesk');
+        $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
+        $ticketsServicedeskActive = ($ctrl === 'Servicedesk' && $act !== 'operacional');
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
         $advMgmtAct = ($ctrl === 'ContractManagement');
@@ -86,7 +87,7 @@ final class PgmSidebarStaffContext
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
         $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive;
-        $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive;
+        $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive || $ticketsOperacionalActive;
         $pgmSbOpenComercial = (bool)$orcamentosActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
@@ -126,6 +127,7 @@ final class PgmSidebarStaffContext
             'clientesAddActive' => $clientesAddActive,
             'clientesListNavActive' => $clientesListNavActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
+            'ticketsOperacionalActive' => $ticketsOperacionalActive,
             'ticketsHistoricoActive' => $ticketsHistoricoActive,
             'advMgmtAct' => $advMgmtAct,
             'advTplAct' => $advTplAct,
