@@ -41,6 +41,8 @@ $sdUrlHistorico = $sdRole === 1
 	<?= $this->Html->script('/assets/node_modules/bootstrap/dist/js/bootstrap.min') ?>
 	<?= $this->Html->script('/dist/js/pages/bootstrap-select') ?>
 	<?= $this->Html->script('/plugins/Chrome-like-jQuery-Autocomplete-Autosuggest-Plugin-typeAhead/lib/jquery-typeahead.js') ?>
+	<?= $this->Html->script('/plugins/bootbox/bootbox.min.js') ?>
+	<?= $this->Html->script('/plugins/bootbox/bootbox.locales.min.js') ?>
 <div class="sd-shell sd-shell--with-sd-topbar prd-root">
 	<header class="sd-topbar" role="banner">
 		<div class="flex-center">

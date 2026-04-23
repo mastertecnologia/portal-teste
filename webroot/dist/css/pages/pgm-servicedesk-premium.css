@@ -430,9 +430,9 @@ html[data-pgm-theme="light"] body.sd-body--sd-topbar .sd-topbar {
 	box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
 }
 
-/* Abertura de chamado: bootstrap-select com container body deve ficar acima da topbar sticky (z-index 40) */
+/* Abertura de chamado: menu do select (container body) acima da topbar (40) e abaixo de .modal / bootbox (1050) */
 body.sd-body.tickets-add-page .bootstrap-select.bs-container {
-	z-index: 1060 !important;
+	z-index: 1035 !important;
 }
 
 .pgm-sd-theme-toggle {
