@@ -45,17 +45,25 @@ function sessaoEstaPausada(sessao) {
   return hp != null && String(hp).trim() !== '';
 }
 
+/** Intervalo de atualização do display (igual ao HTML de referência, 50 ms). */
+const TICK_MS = 50;
+
 /**
- * Cronômetro de horas técnicas: display HH:MM:SS.cc (rAF + timestamps), API iniciar/pausar/retomar/finalizar.
+ * Cronômetro de horas técnicas: display HH:MM:SS.cc (setInterval 50 ms + timestamps), API iniciar/pausar/retomar/finalizar.
+ * Botão verde: Iniciar (idle) ou Retomar (pausado), como start() no HTML que usa elapsed acumulado.
  */
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [rafTick, setRafTick] = useState(0);
+  const [tick, setTick] = useState(0);
   const offsetRef = useRef(0);
   const rollbackRef = useRef(null);
   /** Último elapsed “bom” em ms; evita contar com relógio quando pausado sem horaPausa. */
   const freezeElapsedRef = useRef(0);
+  /**
+   * Elapsed ms no instante da pausa (precisão real). SQL só tem segundos → sem isto os centésimos ficam .00 pausado.
+   */
+  const pauseFrozenMsRef = useRef(null);
 
   const snap = horasTecnicas || {};
   const canUse = Boolean(snap.canUseTimer);
@@ -83,6 +91,10 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       return 0;
     }
     if (sessaoEstaPausada(sessao)) {
+      if (pauseFrozenMsRef.current != null) {
+        freezeElapsedRef.current = pauseFrozenMsRef.current;
+        return pauseFrozenMsRef.current;
+      }
       if (sessao.horaPausa) {
         const pause = parseSqlLocalDateTime(sessao.horaPausa);
         if (pause) {
@@ -96,17 +108,14 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     const running = Math.max(0, nowMs() - start.getTime());
     freezeElapsedRef.current = running;
     return running;
-  }, [sessao, rafTick, nowMs]);
+  }, [sessao, tick, nowMs]);
 
   useEffect(() => {
     if (!sessao || sessaoEstaPausada(sessao)) return undefined;
-    let id = 0;
-    const loop = () => {
-      setRafTick((t) => (t + 1) % 1_000_000);
-      id = requestAnimationFrame(loop);
-    };
-    id = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(id);
+    const id = window.setInterval(() => {
+      setTick((t) => (t + 1) % 1_000_000);
+    }, TICK_MS);
+    return () => window.clearInterval(id);
   }, [sessao?.id, sessao?.pausado, sessao?.horaPausa]);
 
   async function runAction(action) {
@@ -119,6 +128,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     rollbackRef.current = optimistic;
 
     if (action === 'iniciar') {
+      pauseFrozenMsRef.current = null;
       const t0 = Date.now() + offsetRef.current;
       setOptimistic({
         id: 'local',
@@ -127,6 +137,10 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         pausado: false,
       });
     } else if (action === 'pausar' && sessao?.horaInicio) {
+      const hi = parseSqlLocalDateTime(sessao.horaInicio);
+      if (hi) {
+        pauseFrozenMsRef.current = Math.max(0, nowMs() - hi.getTime());
+      }
       const tPause = Date.now() + offsetRef.current;
       setOptimistic({
         ...sessao,
@@ -134,6 +148,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         horaPausa: localSqlDateTimeFromMs(tPause),
       });
     } else if (action === 'retomar' && sessao?.horaInicio && sessao.horaPausa) {
+      pauseFrozenMsRef.current = null;
       const hi = parseSqlLocalDateTime(sessao.horaInicio);
       const hp = parseSqlLocalDateTime(sessao.horaPausa);
       if (hi && hp) {
@@ -153,6 +168,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         });
       }
     } else if (action === 'finalizar') {
+      pauseFrozenMsRef.current = null;
       rollbackRef.current = optimistic ?? serverSessao;
       setOptimistic(null);
     }
@@ -168,6 +184,9 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       setOptimistic(null);
       if (onFeedback) onFeedback(res.message || null, null);
     } else {
+      if (action === 'pausar') {
+        pauseFrozenMsRef.current = null;
+      }
       if (action === 'finalizar') {
         setOptimistic(rollbackRef.current);
       } else {
@@ -227,38 +246,27 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
           <div className="flex flex-wrap justify-center gap-2">
             <button
               type="button"
-              disabled={disabled || busy || !idle}
-              onClick={() => runAction('iniciar')}
-              className={`${btnBase} bg-[#28a745] text-white hover:opacity-95`}
+              disabled={disabled || busy || (!idle && !paused)}
+              onClick={() => (paused ? runAction('retomar') : runAction('iniciar'))}
+              className={`${btnBase} m-[5px] bg-[#28a745] text-white hover:opacity-95`}
             >
-              {busy && idle ? '…' : 'Iniciar'}
+              {busy && (idle || paused) ? '…' : 'Iniciar'}
             </button>
 
-            {paused ? (
-              <button
-                type="button"
-                disabled={disabled || busy}
-                onClick={() => runAction('retomar')}
-                className={`${btnBase} bg-[#ffc107] text-black hover:opacity-95`}
-              >
-                Retomar
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={disabled || busy || idle}
-                onClick={() => runAction('pausar')}
-                className={`${btnBase} bg-[#ffc107] text-black hover:opacity-95`}
-              >
-                Pausar
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={disabled || busy || idle || paused}
+              onClick={() => runAction('pausar')}
+              className={`${btnBase} m-[5px] bg-[#ffc107] text-black hover:opacity-95`}
+            >
+              Pausar
+            </button>
 
             <button
               type="button"
               disabled={disabled || busy || idle}
               onClick={() => runAction('finalizar')}
-              className={`${btnBase} bg-[#dc3545] text-white hover:opacity-95`}
+              className={`${btnBase} m-[5px] bg-[#dc3545] text-white hover:opacity-95`}
             >
               Parar
             </button>
