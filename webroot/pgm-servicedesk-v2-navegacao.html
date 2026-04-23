@@ -1339,6 +1339,31 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
         const modalTime = document.getElementById('modalTime');
         const activityLog = document.getElementById('activityLog');
 
+        /* Como no gemini (modal irmao do card sob document): anexar overlay ao body para fixed/stacking fiaveis. */
+        if (modalOverlay && modalOverlay.parentNode !== document.body) {
+            document.body.appendChild(modalOverlay);
+        }
+
+        // #region agent log
+        (function () {
+            var _u = 'http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d';
+            function _L(m, h, d) {
+                var payload = { sessionId: '642b82', location: 'pgm-servicedesk-v2-navegacao.html:crono', message: m, data: d || {}, timestamp: Date.now(), hypothesisId: h };
+                try { console.log('[PGM_CHRONO_DEBUG]', JSON.stringify(payload)); } catch (e0) {}
+                fetch(_u, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '642b82' }, body: JSON.stringify(payload) }).catch(function () {});
+            }
+            window.__pgmChronoDbg = _L;
+            _L('boot_dom_refs', 'H1 H3 H5', {
+                display: !!display, startBtn: !!startBtn, pauseBtn: !!pauseBtn, stopBtn: !!stopBtn,
+                modalOverlay: !!modalOverlay, modalTime: !!modalTime, activityLog: !!activityLog,
+                saveLogBtn: !!document.getElementById('saveLogBtn'),
+                stopDisabled: stopBtn ? stopBtn.disabled : null,
+                typeofWindowStop: typeof window.stop,
+                modalParentTag: modalOverlay && modalOverlay.parentNode ? modalOverlay.parentNode.tagName : null
+            });
+        })();
+        // #endregion
+
         function timeToString(time) {
             let diffInHrs = time / 3600000;
             let hh = Math.floor(diffInHrs);
@@ -1360,6 +1385,9 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
             startBtn.style.display = 'none';
             pauseBtn.style.display = 'flex';
             stopBtn.disabled = false;
+            // #region agent log
+            if (window.__pgmChronoDbg) window.__pgmChronoDbg('start_enabled_stop', 'H5', { stopDisabled: stopBtn.disabled });
+            // #endregion
         }
 
         function pause() {
@@ -1368,17 +1396,29 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
             pauseBtn.style.display = 'none';
         }
 
-        function stop() {
+        /* Nome evita colisao com window.stop() nativo do browser (impedia o handler de abrir o modal). */
+        function pgmChronoOpenFinalizeModal() {
+            // #region agent log
+            if (window.__pgmChronoDbg) window.__pgmChronoDbg('finalize_handler_enter', 'H2 H3 H4', { elapsedTime: elapsedTime, hasOverlay: !!modalOverlay, stopDisabled: stopBtn ? stopBtn.disabled : null });
+            // #endregion
             pause();
             modalTime.innerText = timeToString(elapsedTime);
+            modalOverlay.classList.add('active');
             modalOverlay.style.display = 'flex';
+            // #region agent log
+            if (window.__pgmChronoDbg && modalOverlay) window.__pgmChronoDbg('finalize_after_display_flex', 'H4', { inlineDisplay: modalOverlay.style.display, hasActiveClass: modalOverlay.classList.contains('active'), computedDisplay: getComputedStyle(modalOverlay).display, computedVisibility: getComputedStyle(modalOverlay).visibility, zIndex: getComputedStyle(modalOverlay).zIndex });
+            // #endregion
             activityLog.focus();
         }
 
         function closeModal() {
+            modalOverlay.classList.remove('active');
             modalOverlay.style.display = 'none';
         }
 
+        // #region agent log
+        if (window.__pgmChronoDbg) window.__pgmChronoDbg('pre_saveLog_listener', 'H1', { hasSaveLogBtn: !!document.getElementById('saveLogBtn') });
+        // #endregion
         document.getElementById('saveLogBtn').addEventListener('click', () => {
             const description = activityLog.value;
             if (!description.trim()) {
@@ -1404,7 +1444,10 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
 
         startBtn.addEventListener('click', start);
         pauseBtn.addEventListener('click', pause);
-        stopBtn.addEventListener('click', stop);
+        stopBtn.addEventListener('click', pgmChronoOpenFinalizeModal);
+        // #region agent log
+        if (window.__pgmChronoDbg) window.__pgmChronoDbg('listeners_registered', 'H1', { ok: true });
+        // #endregion
 </script>
 
 <script>

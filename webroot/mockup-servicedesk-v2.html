@@ -1352,6 +1352,10 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
         const modalTime = document.getElementById('modalTime');
         const activityLog = document.getElementById('activityLog');
 
+        if (modalOverlay && modalOverlay.parentNode !== document.body) {
+            document.body.appendChild(modalOverlay);
+        }
+
         function timeToString(time) {
             let diffInHrs = time / 3600000;
             let hh = Math.floor(diffInHrs);
@@ -1381,14 +1385,17 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
             pauseBtn.style.display = 'none';
         }
 
-        function stop() {
+        /* Nome evita colisao com window.stop() nativo do browser (impedia o handler de abrir o modal). */
+        function pgmChronoOpenFinalizeModal() {
             pause();
             modalTime.innerText = timeToString(elapsedTime);
+            modalOverlay.classList.add('active');
             modalOverlay.style.display = 'flex';
             activityLog.focus();
         }
 
         function closeModal() {
+            modalOverlay.classList.remove('active');
             modalOverlay.style.display = 'none';
         }
 
@@ -1417,7 +1424,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
 
         startBtn.addEventListener('click', start);
         pauseBtn.addEventListener('click', pause);
-        stopBtn.addEventListener('click', stop);
+        stopBtn.addEventListener('click', pgmChronoOpenFinalizeModal);
 </script>
 
 <script>
