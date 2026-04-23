@@ -374,7 +374,7 @@ function StaffSidebar(props) {
                         rel={it.rel || undefined}
                         className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(it) ? ' active' : ''}`}
                         data-label={it.dataLabel || it.label}
-                        {...getTurboLinkProps(it.href, it.target)}
+                        {...getTurboLinkProps(it.href, it.target, it.skipTurboFrame)}
                       >
                         <span className="pgm-nav-lucide" data-lucide={it.icon} aria-hidden="true" />
                         <span className="nav-item-label hide-menu">{it.label}</span>

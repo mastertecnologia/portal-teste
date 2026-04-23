@@ -42,6 +42,9 @@
 				document.querySelectorAll(
 					'aside.pgm-sidebar-shell .pgm-sidebar-brand a[href], aside.pgm-sidebar-shell .scroll-sidebar a[href], aside.pgm-sidebar-shell .pgm-sidebar-footer a.preview-dd-item[href], aside.pgm-sidebar-shell .pgm-sidebar-footer a.dropdown-item[href]'
 				).forEach(function (a) {
+					if (a.getAttribute('data-turbo') === 'false') {
+						return;
+					}
 					if (a.getAttribute('target') === '_blank') {
 						return;
 					}

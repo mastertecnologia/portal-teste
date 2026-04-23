@@ -18,8 +18,9 @@ export function pathMatches(href, activePath) {
 }
 
 /** Espelha `pgmTurboSameOriginHref` + frame em `default.ctp`. */
-export function getTurboLinkProps(href, target) {
+export function getTurboLinkProps(href, target, skipTurboFrame = false) {
   if (typeof window === 'undefined') return {};
+  if (skipTurboFrame) return {};
   if (target === '_blank') return {};
   const raw = String(href || '').trim();
   if (!raw || raw === '#' || raw.indexOf('javascript:') === 0) return {};
