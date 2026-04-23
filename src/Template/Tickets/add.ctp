@@ -287,16 +287,30 @@
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu {
 		background: var(--pgm-bg-surface, #ffffff) !important;
 		border: 1px solid var(--pgm-border-subtle, #e2e8f0) !important;
-		/* Uma elevação suave: sombra larga + borda lida como “segunda caixa” em alguns temas */
 		box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12) !important;
 		border-radius: 0.75rem !important;
 		margin: 0 !important;
 		-webkit-box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12) !important;
+		/* BS aplica padding em .dropdown-menu; o <ul> interno TAMBÉM é .dropdown-menu → sobra e cantos partidos */
+		padding: 0 !important;
+		overflow: hidden !important;
 	}
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu > .inner {
 		border: 0 !important;
 		box-shadow: none !important;
 		-webkit-box-shadow: none !important;
+		margin: 0 !important;
+		padding: 0 !important;
+	}
+	/* ul.dropdown-menu.inner herdava padding (ex.: 0.5rem 0) = faixa vazia topo/base */
+	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu ul.dropdown-menu,
+	body.tickets-add-page .bootstrap-select.bs-container ul.dropdown-menu.inner {
+		padding: 0 !important;
+		margin: 0 !important;
+		border: none !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
+		min-width: 100% !important;
 	}
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li a {
 		color: var(--pgm-text, #0f172a) !important;
