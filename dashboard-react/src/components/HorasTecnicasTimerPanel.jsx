@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { postTimerAction } from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
 import TimerWidget from './TimerWidget.jsx';
+import AuditModal from './AuditModal.jsx';
 import './HorasTecnicasTimerPanel.css';
 
 /** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
@@ -38,11 +39,27 @@ function sessaoEstaPausada(sessao) {
 
 /**
  * Painel: API iniciar / pausar / retomar / finalizar; display via precisionStopwatch (Date.now, sem drift).
- * Layout “Cronômetro Real-Time PGM” (HTML/CSS de referência).
+ * Layout alinhado ao mock: cabeçalho TICKET #, Iniciar / Finalizar (+ Pausar / Retomar quando aplicável), Ajuste de Auditoria.
  */
+function TicketHeading({ ticketId }) {
+  const s = String(ticketId ?? '');
+  if (!s) return null;
+  const head = s.length > 1 ? s.slice(0, -1) : '';
+  const last = s.length > 1 ? s.slice(-1) : s;
+  return (
+    <div className="ticket-heading">
+      <span className="ticket-highlight">
+        TICKET #{head}
+      </span>
+      <span className="ticket-id-tail">{last}</span>
+    </div>
+  );
+}
+
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
   const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
@@ -207,22 +224,16 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const paused = sessaoEstaPausada(sessao);
   const idle = !sessao;
   const running = Boolean(sessao) && !paused;
-  const statusText = idle ? 'Aguardando...' : paused ? 'Pausado' : 'Em execução';
 
   const timerCardClass = `timer-card${running ? ' running' : ''}`;
+  const auditHms = displayHms && displayHms.length === 8 ? displayHms : '00:00:00';
 
   return (
     <div>
       <div className="pgm-crono-realtime">
         <div className={timerCardClass} id="timerCard">
           <div className="header-section">
-            <div>
-              <span className="title-label">Controle de Horas</span>
-              <div id="statusLabel" style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                <span className="status-dot" />
-                <span id="statusText">{statusText}</span>
-              </div>
-            </div>
+            <TicketHeading ticketId={ticketId} />
           </div>
 
           <div className="display-container">
@@ -231,35 +242,81 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
             </div>
           </div>
 
-          <div className="controls">
-            <button
-              id="startBtn"
-              type="button"
-              className="btn-start"
-              disabled={disabled || busy || running}
-              onClick={handlePrimaryClick}
-            >
-              {busy && (idle || paused) ? '…' : 'Iniciar'}
-            </button>
-            <button
-              id="pauseBtn"
-              type="button"
-              className="btn-pause"
-              disabled={disabled || busy || idle}
-              onClick={() => runAction('pausar')}
-            >
-              Pausar
-            </button>
-            <button
-              id="stopBtn"
-              type="button"
-              className="btn-stop"
-              disabled={disabled || busy || idle}
-              onClick={() => runAction('finalizar')}
-            >
-              Parar
-            </button>
+          <div className="controls controls-primary">
+            {running ? (
+              <>
+                <button
+                  id="pauseBtn"
+                  type="button"
+                  className="btn-pause"
+                  disabled={disabled || busy}
+                  onClick={() => runAction('pausar')}
+                >
+                  Pausar
+                </button>
+                <button
+                  id="stopBtn"
+                  type="button"
+                  className="btn-stop"
+                  disabled={disabled || busy}
+                  onClick={() => runAction('finalizar')}
+                >
+                  Finalizar
+                </button>
+              </>
+            ) : paused ? (
+              <>
+                <button
+                  id="startBtn"
+                  type="button"
+                  className="btn-start"
+                  disabled={disabled || busy}
+                  onClick={handlePrimaryClick}
+                >
+                  {busy ? '…' : 'Retomar'}
+                </button>
+                <button
+                  id="stopBtn"
+                  type="button"
+                  className="btn-stop"
+                  disabled={disabled || busy}
+                  onClick={() => runAction('finalizar')}
+                >
+                  Finalizar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  id="startBtn"
+                  type="button"
+                  className="btn-start"
+                  disabled={disabled || busy}
+                  onClick={handlePrimaryClick}
+                >
+                  {busy ? '…' : 'Iniciar'}
+                </button>
+                <button
+                  id="stopBtn"
+                  type="button"
+                  className="btn-stop"
+                  disabled={disabled || busy || idle}
+                  onClick={() => runAction('finalizar')}
+                >
+                  Finalizar
+                </button>
+              </>
+            )}
           </div>
+
+          <button
+            type="button"
+            className="btn-audit-adjust"
+            disabled={disabled || busy}
+            onClick={() => setAuditOpen(true)}
+          >
+            Ajuste de Auditoria
+          </button>
         </div>
       </div>
 
@@ -268,7 +325,26 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         cadastradas e desconta do contrato do cliente.
       </p>
 
-      <TimerWidget ticketId={ticketId} displayHms={displayHms} />
+      <TimerWidget
+        ticketId={ticketId}
+        displayHms={displayHms}
+        busy={busy}
+        disabled={disabled}
+        idle={idle}
+        running={running}
+        paused={paused}
+        onPlay={handlePrimaryClick}
+        onStop={() => runAction('finalizar')}
+        onOpenAudit={() => setAuditOpen(true)}
+      />
+
+      {auditOpen && (
+        <AuditModal
+          ticketId={ticketId}
+          currentTimeHms={auditHms}
+          onClose={() => setAuditOpen(false)}
+        />
+      )}
     </div>
   );
 }

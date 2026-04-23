@@ -134,81 +134,86 @@ export default function AuditModal({ onClose, currentTimeHms, ticketId, onSucces
 
   return (
     <div
-      className="fixed inset-0 z-[11000] flex items-center justify-center bg-[rgba(15,23,42,0.88)] p-4"
+      className="fixed inset-0 z-[11000] flex items-center justify-center bg-[rgba(15,23,42,0.55)] p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="audit-modal-title"
       onClick={dismissOverlay}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.08))] bg-[var(--pgm-bg-elevated,#222834)] p-6 text-[var(--pgm-text,#e8eaed)] shadow-xl"
+        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="audit-modal-title" className="text-sm font-semibold text-[var(--pgm-text,#e8eaed)]">
-          Auditoria de tempo
+        <h2 id="audit-modal-title" className="text-lg font-bold text-slate-900">
+          Ajuste de Auditoria
         </h2>
-        <p className="mt-1 text-xs text-[var(--pgm-text-muted,#9aa0a8)]">Ticket #{ticketId} — ajuste manual registado com senha (servidor).</p>
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+        <div
+          className="mt-3 rounded-md border-l-4 border-orange-500 bg-orange-50 px-3 py-2.5 text-sm text-slate-800"
+          role="status"
+        >
+          <span className="font-semibold text-orange-900">Segurança:</span>{' '}
+          Esta alteração será validada pelo CakePHP e gravada permanentemente no log.
+        </div>
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">
-              Senha de auditoria
+            <label className="text-sm font-bold text-slate-900" htmlFor="audit-new-time">
+              Novo Tempo (HH:MM:SS)
             </label>
             <input
-              type="password"
-              autoComplete="off"
-              value={authKey}
-              onChange={(e) => setAuthKey(e.target.value)}
-              className="mt-1 w-full rounded-md border border-[var(--pgm-border,#3d4554)] bg-[var(--pgm-bg-raised,#141820)] px-3 py-2 text-sm outline-none focus:border-[var(--pgm-primary,#1d9e75)]"
-            />
-          </div>
-          <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">Tempo exibido (registado)</label>
-            <input
-              type="text"
-              readOnly
-              value={currentTimeHms}
-              className="mt-1 w-full cursor-not-allowed rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 font-mono text-sm opacity-80"
-            />
-          </div>
-          <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">Novo tempo (HH:MM:SS)</label>
-            <input
+              id="audit-new-time"
               type="text"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
               placeholder="00:00:00"
-              className="mt-1 w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 font-mono text-sm outline-none focus:border-[var(--pgm-primary)]"
+              className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">Motivo</label>
+            <label className="text-sm font-bold text-slate-900" htmlFor="audit-password">
+              Senha de Auditoria (Admin)
+            </label>
+            <input
+              id="audit-password"
+              type="password"
+              autoComplete="off"
+              value={authKey}
+              onChange={(e) => setAuthKey(e.target.value)}
+              placeholder="Senha definida pelo Admin"
+              className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-slate-900" htmlFor="audit-reason">
+              Motivo da Alteração
+            </label>
             <textarea
+              id="audit-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
-              className="mt-1 w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 text-sm outline-none focus:border-[var(--pgm-primary)]"
+              placeholder="Justifique este ajuste..."
+              className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
-          {error && <p className="text-xs text-[var(--pgm-badge-red-text,#ff9492)]">{error}</p>}
-          <div className="flex justify-end gap-2 pt-2">
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="flex justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={onClose}
               disabled={busy}
-              className="rounded-lg border border-[var(--pgm-border)] px-3 py-2 text-sm text-[var(--pgm-text-muted)] hover:bg-[var(--pgm-bg-raised)] disabled:opacity-50"
+              className="rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-300 disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={busy}
-              className="rounded-lg bg-[#10b981] px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50"
             >
-              {busy ? '…' : 'Registar'}
+              {busy ? '…' : 'Validar e Salvar'}
             </button>
           </div>
         </form>
-        <p className="mt-2 text-[10px] text-slate-500">Tecla Esc fecha o painel (exceto enquanto grava).</p>
       </div>
     </div>
   );

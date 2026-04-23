@@ -21,21 +21,31 @@
 
 .pgm-crono-realtime .header-section {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-.pgm-crono-realtime #statusLabel,
-.pgm-crono-realtime #statusText {
-  color: #64748b !important;
-}
-
-.pgm-crono-realtime .title-label {
-  font-size: 12px;
+.pgm-crono-realtime .ticket-heading {
+  font-size: 15px;
   font-weight: 700;
-  color: #64748b !important;
-  text-transform: uppercase;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.pgm-crono-realtime .ticket-highlight {
+  display: inline;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  padding: 4px 6px 4px 8px;
+  border-radius: 6px 0 0 6px;
+}
+
+.pgm-crono-realtime .ticket-id-tail {
+  display: inline;
+  color: #0f172a !important;
+  font-weight: 800;
+  padding: 4px 0;
 }
 
 .pgm-crono-realtime .display-container {
@@ -55,13 +65,13 @@
   color: #1e293b !important;
 }
 
-.pgm-crono-realtime .controls {
+.pgm-crono-realtime .controls.controls-primary {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.pgm-crono-realtime button {
+.pgm-crono-realtime .controls.controls-primary button {
   cursor: pointer;
   border: none;
   border-radius: 8px;
@@ -85,55 +95,39 @@
   color: #ffffff !important;
 }
 
-.pgm-crono-realtime .btn-pause {
-  display: none;
-}
-
 .pgm-crono-realtime .btn-stop:not(:disabled) {
   background-color: #ef4444 !important;
   color: #ffffff !important;
 }
 
-.pgm-crono-realtime button:disabled {
+.pgm-crono-realtime .controls.controls-primary button:disabled {
   background-color: #cbd5e1 !important;
   color: #ffffff !important;
   cursor: not-allowed;
 }
 
-/* `running` no #timerCard, como no HTML modelo */
-.pgm-crono-realtime .timer-card.running .btn-start {
-  display: none;
+.pgm-crono-realtime .btn-audit-adjust {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2563eb !important;
+  background: #ffffff !important;
+  border: 1px solid #93c5fd !important;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
 }
 
-.pgm-crono-realtime .timer-card.running .btn-pause {
-  display: flex;
+.pgm-crono-realtime .btn-audit-adjust:hover:not(:disabled) {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
 }
 
-.pgm-crono-realtime .status-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #10b981;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 5px;
-  visibility: hidden;
-}
-
-.pgm-crono-realtime .timer-card.running .status-dot {
-  visibility: visible;
-  animation: pgm-crono-pulse 2s infinite;
-}
-
-@keyframes pgm-crono-pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 1;
-  }
+.pgm-crono-realtime .btn-audit-adjust:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .pgm-crono-realtime-footer {
