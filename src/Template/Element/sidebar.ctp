@@ -170,7 +170,7 @@
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?php endif; ?>
 						<?php if (($sg['tickets_historico'] ?? true)) : ?>
-						<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], [], $ticketsHistoricoActive, '', 'Histórico') ?>
+						<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ticketsHistoricoActive, '', 'Histórico') ?>
 						<?php endif; ?>
 					</div>
 				</li>

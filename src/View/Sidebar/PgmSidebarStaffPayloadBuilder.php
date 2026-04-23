@@ -71,7 +71,7 @@ final class PgmSidebarStaffPayloadBuilder
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
             }
             if (($sg['tickets_historico'] ?? true)) {
-                $items[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], [], $ctx['ticketsHistoricoActive'], '', 'Histórico');
+                $items[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
             }
             $sections[] = [
                 'id' => 'gestao-incidentes',
