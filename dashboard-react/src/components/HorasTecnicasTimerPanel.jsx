@@ -35,13 +35,12 @@ function sessaoEstaPausada(sessao) {
 }
 
 /**
- * Painel: API iniciar / pausar / retomar / finalizar; display alimentado apenas por
- * `formatElapsedHms(sw.getElapsedMs())` (módulo `precisionStopwatch`, sem lógica de tempo na UI).
+ * Painel: API iniciar / pausar / retomar / finalizar; display via precisionStopwatch (Date.now, sem drift).
+ * Layout alinhado ao Service Desk (cartão claro, três ações com ícones).
  */
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
-  /** Força re-render quando o stopwatch notifica (intervalo só em running). */
   const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
@@ -198,56 +197,79 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const paused = sessaoEstaPausada(sessao);
   const idle = !sessao;
 
-  const btnBase =
-    'rounded-md px-5 py-2.5 text-base font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-45';
-
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-700 bg-[#111] text-white shadow-lg">
-      <div className="border-b border-neutral-800 px-4 py-3">
-        <h2 className="text-[0.9rem] font-bold tracking-tight text-white">Horas técnicas</h2>
+    <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
+      <div className="border-b border-slate-200 bg-slate-100/90 px-4 py-3">
+        <h2 className="text-[0.9rem] font-bold tracking-tight text-slate-900">Horas técnicas</h2>
       </div>
       <div className="p-4">
-        <p className="text-xs text-slate-300">
+        <p className="text-xs text-slate-600">
           Tempo já lançado neste ticket:{' '}
-          <span className="font-semibold text-white">{minutosLabel(registrados)}</span>. Ao finalizar, o sistema grava em Horas
-          cadastradas e desconta do contrato do cliente.
+          <span className="font-semibold text-slate-800">{minutosLabel(registrados)}</span>. Ao finalizar, o sistema grava em
+          Horas cadastradas e desconta do contrato do cliente.
         </p>
 
-        <div className="mt-5 flex flex-col items-center">
+        <div className="mt-3 text-center">
           <div
-            className={`mb-5 font-mono text-5xl font-bold tracking-[0.08em] tabular-nums ${
-              paused ? 'text-amber-300' : 'text-white'
+            className={`mb-3 rounded-lg border px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.12em] transition-colors ${
+              paused
+                ? 'border-amber-200 bg-amber-50/80 text-amber-800'
+                : 'border-slate-200 bg-slate-50 text-[#155E4A]'
             }`}
           >
             {displayHms}
-            {paused ? <span className="ml-3 font-sans text-sm font-medium text-amber-300/90">(pausado)</span> : null}
+            {paused ? <span className="ml-2 font-sans text-sm font-medium text-amber-800/90">(pausado)</span> : null}
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
             <button
               type="button"
-              disabled={disabled || busy || (!idle && !paused)}
-              onClick={() => (paused ? runAction('retomar') : runAction('iniciar'))}
-              className={`${btnBase} m-[5px] bg-[#28a745] text-white hover:opacity-95`}
+              disabled={disabled || busy || !idle}
+              onClick={() => runAction('iniciar')}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#2daa6a] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {busy && (idle || paused) ? '…' : 'Iniciar'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+              </svg>
+              {busy && idle ? '…' : 'Iniciar'}
             </button>
 
-            <button
-              type="button"
-              disabled={disabled || busy || idle || paused}
-              onClick={() => runAction('pausar')}
-              className={`${btnBase} m-[5px] bg-[#ffc107] text-black hover:opacity-95`}
-            >
-              Pausar
-            </button>
+            {paused ? (
+              <button
+                type="button"
+                disabled={disabled || busy}
+                onClick={() => runAction('retomar')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+                Retomar
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={disabled || busy || idle}
+                onClick={() => runAction('pausar')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+                Pausar
+              </button>
+            )}
 
             <button
               type="button"
               disabled={disabled || busy || idle}
               onClick={() => runAction('finalizar')}
-              className={`${btnBase} m-[5px] bg-[#dc3545] text-white hover:opacity-95`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
               Parar
             </button>
           </div>
