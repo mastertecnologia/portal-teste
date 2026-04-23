@@ -638,49 +638,66 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
   .mockup-nav{display:none}
 }
 
-/* ===== Controle horas (cliente) — HTML ref. Cronômetro com Relatório; escopado em .ch-gemini-timer ===== */
-.ch-gemini-timer{
-  --primary:#10b981;
-  --primary-hover:#059669;
-  --bg-body:#f8fafc;
-  --text-main:#1e293b;
-  --border:#e2e8f0;
-  font-family:'Inter',sans-serif;
-  color:var(--text-main);
+/* ===== gemini-code-1776975162721.html — CSS idêntico, escopado em #pgm-chrono-ref-isolate (evita colisão com tema) ===== */
+#pgm-chrono-ref-isolate {
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --bg-body: #f8fafc;
+    --text-main: #1e293b;
+    --border: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-body);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 48px 24px;
 }
-.ch-gemini-timer .timer-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;width:450px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1)}
-.ch-gemini-timer .display-container{display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:8px;padding:30px 0;margin:20px 0}
-.ch-gemini-timer .timer-display{font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:500;color:var(--text-main)}
-.ch-gemini-timer .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ch-gemini-timer button{cursor:pointer;border:none;border-radius:8px;padding:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:0.2s;color:#fff}
-.ch-gemini-timer .btn-start{background-color:var(--primary);width:100%}
-.ch-gemini-timer .btn-pause{background-color:#f59e0b;display:none;width:100%}
-.ch-gemini-timer .btn-stop{background-color:#ef4444}
-.ch-gemini-timer button:disabled{background-color:#cbd5e1;cursor:not-allowed}
-.ch-gemini-timer .modal-overlay{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(15,23,42,0.6);
-  display:none;justify-content:center;align-items:center;z-index:1000;
-  backdrop-filter:blur(4px);
+
+#pgm-chrono-ref-isolate .timer-card { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 450px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+#pgm-chrono-ref-isolate .display-container { display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px; padding: 30px 0; margin: 20px 0; }
+#pgm-chrono-ref-isolate .timer-display { font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 500; color: var(--text-main); }
+
+#pgm-chrono-ref-isolate .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#pgm-chrono-ref-isolate button { cursor: pointer; border: none; border-radius: 8px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; color: white; }
+
+#pgm-chrono-ref-isolate .btn-start { background-color: var(--primary); width: 100%; }
+#pgm-chrono-ref-isolate .btn-pause { background-color: #f59e0b; display: none; width: 100%; }
+#pgm-chrono-ref-isolate .btn-stop { background-color: #ef4444; }
+#pgm-chrono-ref-isolate button:disabled { background-color: #cbd5e1; cursor: not-allowed; }
+
+#pgm-chrono-ref-isolate .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    display: none; justify-content: center; align-items: center; z-index: 1000;
+    backdrop-filter: blur(4px);
 }
-.ch-gemini-timer .modal-content{
-  background:#fff;padding:30px;border-radius:16px;width:500px;
-  box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);
-  animation:ch-gemini-slideIn 0.3s ease-out;
+
+#pgm-chrono-ref-isolate .modal-content {
+    background: white; padding: 30px; border-radius: 16px; width: 500px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideIn 0.3s ease-out;
 }
-@keyframes ch-gemini-slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.ch-gemini-timer .modal-header{display:block;padding:0;margin:0;background:transparent;border:none}
-.ch-gemini-timer .modal-header h2{margin:0;font-size:1.25rem;color:var(--text-main)}
-.ch-gemini-timer .modal-header p{color:#64748b;font-size:0.9rem;margin-top:5px}
-.ch-gemini-timer .time-badge{background:#f1f5f9;color:var(--primary);padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:bold}
-.ch-gemini-timer textarea{
-  width:100%;border:1px solid var(--border);border-radius:8px;
-  padding:12px;margin:20px 0;font-family:inherit;resize:none;
-  box-sizing:border-box;focus:outline-none;focus:ring:2px solid var(--primary);
+
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+#pgm-chrono-ref-isolate .modal-header { display: block; padding: 0; margin: 0; background: transparent; border: none; }
+#pgm-chrono-ref-isolate .modal-header h2 { margin: 0; font-size: 1.25rem; color: var(--text-main); }
+#pgm-chrono-ref-isolate .modal-header p { color: #64748b; font-size: 0.9rem; margin-top: 5px; }
+
+#pgm-chrono-ref-isolate .time-badge { background: #f1f5f9; color: var(--primary); padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono'; font-weight: bold; }
+
+#pgm-chrono-ref-isolate textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; margin: 20px 0; font-family: inherit; resize: none;
+    box-sizing: border-box; focus: outline-none; focus: ring: 2px solid var(--primary);
 }
-.ch-gemini-timer .modal-actions{display:flex;justify-content:flex-end;gap:10px}
-.ch-gemini-timer .btn-save{background-color:var(--primary);padding:10px 24px}
-.ch-gemini-timer .btn-cancel{background-color:transparent;color:#64748b;border:1px solid var(--border)}
+
+#pgm-chrono-ref-isolate .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+#pgm-chrono-ref-isolate .btn-save { background-color: var(--primary); padding: 10px 24px; }
+#pgm-chrono-ref-isolate .btn-cancel { background-color: transparent; color: #64748b; border: 1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -1236,8 +1253,7 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
           </div>
         </div>
 
-        <!-- Controle horas (cliente) — mesmo markup do HTML de referência -->
-        <div class="ch-gemini-timer mt-2">
+        <div id="pgm-chrono-ref-isolate">
     <div class="timer-card">
         <div style="font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">Service Desk #1174</div>
         <div class="display-container">
@@ -1321,84 +1337,82 @@ body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--p
 </div><!-- sd-shell -->
 
 <script>
-(function () {
-let startTime, elapsedTime = 0, timerInterval;
+        let startTime, elapsedTime = 0, timerInterval;
 
-const display = document.getElementById('display');
-const startBtn = document.getElementById('startBtn');
-const pauseBtn = document.getElementById('pauseBtn');
-const stopBtn = document.getElementById('stopBtn');
-const modalOverlay = document.getElementById('modalOverlay');
-const modalTime = document.getElementById('modalTime');
-const activityLog = document.getElementById('activityLog');
-const saveLogBtn = document.getElementById('saveLogBtn');
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTime = document.getElementById('modalTime');
+        const activityLog = document.getElementById('activityLog');
 
-if (!display || !startBtn || !pauseBtn || !stopBtn || !modalOverlay || !modalTime || !activityLog || !saveLogBtn) return;
+        function timeToString(time) {
+            let diffInHrs = time / 3600000;
+            let hh = Math.floor(diffInHrs);
+            let diffInMin = (diffInHrs - hh) * 60;
+            let mm = Math.floor(diffInMin);
+            let diffInSec = (diffInMin - mm) * 60;
+            let ss = Math.floor(diffInSec);
+            return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+        }
 
-function timeToString(time) {
-    let diffInHrs = time / 3600000;
-    let hh = Math.floor(diffInHrs);
-    let diffInMin = (diffInHrs - hh) * 60;
-    let mm = Math.floor(diffInMin);
-    let diffInSec = (diffInMin - mm) * 60;
-    let ss = Math.floor(diffInSec);
-    return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
-}
+        function start() {
+            startTime = Date.now() - elapsedTime;
+            const tick = () => {
+                elapsedTime = Date.now() - startTime;
+                display.innerHTML = timeToString(elapsedTime);
+            };
+            timerInterval = setInterval(tick, 1000);
+            tick();
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'flex';
+            stopBtn.disabled = false;
+        }
 
-function start() {
-    startTime = Date.now() - elapsedTime;
-    timerInterval = setInterval(() => {
-        elapsedTime = Date.now() - startTime;
-        display.innerHTML = timeToString(elapsedTime);
-    }, 1000);
-    startBtn.style.display = 'none';
-    pauseBtn.style.display = 'flex';
-    stopBtn.disabled = false;
-}
+        function pause() {
+            clearInterval(timerInterval);
+            startBtn.style.display = 'flex';
+            pauseBtn.style.display = 'none';
+        }
 
-function pause() {
-    clearInterval(timerInterval);
-    startBtn.style.display = 'flex';
-    pauseBtn.style.display = 'none';
-}
+        function stop() {
+            pause();
+            modalTime.innerText = timeToString(elapsedTime);
+            modalOverlay.style.display = 'flex';
+            activityLog.focus();
+        }
 
-function stop() {
-    pause();
-    modalTime.innerText = timeToString(elapsedTime);
-    modalOverlay.style.display = 'flex';
-    activityLog.focus();
-}
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+        }
 
-window.closeModal = function () {
-    modalOverlay.style.display = 'none';
-};
+        document.getElementById('saveLogBtn').addEventListener('click', () => {
+            const description = activityLog.value;
+            if (!description.trim()) {
+                alert("Por favor, descreva o que foi feito antes de salvar.");
+                return;
+            }
 
-saveLogBtn.addEventListener('click', () => {
-    const description = activityLog.value;
-    if (!description.trim()) {
-        alert("Por favor, descreva o que foi feito antes de salvar.");
-        return;
-    }
+            // AQUI VOCÊ FARIA O ENVIO PARA O SEU SISTEMA
+            console.log({
+                tempo_ms: elapsedTime,
+                tempo_formatado: timeToString(elapsedTime),
+                descricao: description
+            });
 
-    console.log({
-        tempo_ms: elapsedTime,
-        tempo_formatado: timeToString(elapsedTime),
-        descricao: description
-    });
+            alert("Horas lançadas com sucesso!");
 
-    alert("Horas lançadas com sucesso!");
+            elapsedTime = 0;
+            display.innerHTML = "00:00:00";
+            closeModal();
+            stopBtn.disabled = true;
+            activityLog.value = "";
+        });
 
-    elapsedTime = 0;
-    display.innerHTML = "00:00:00";
-    window.closeModal();
-    stopBtn.disabled = true;
-    activityLog.value = "";
-});
-
-startBtn.addEventListener('click', start);
-pauseBtn.addEventListener('click', pause);
-stopBtn.addEventListener('click', stop);
-})();
+        startBtn.addEventListener('click', start);
+        pauseBtn.addEventListener('click', pause);
+        stopBtn.addEventListener('click', stop);
 </script>
 
 <script>
