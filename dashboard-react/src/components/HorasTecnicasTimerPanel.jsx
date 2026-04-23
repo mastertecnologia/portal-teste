@@ -16,13 +16,16 @@ function localSqlDateTimeFromMs(ms) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-function formatHms(totalSeconds) {
-  const sec = Math.max(0, Math.floor(totalSeconds));
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  const pad = (n) => (n < 10 ? `0${n}` : String(n));
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+/** HH:MM:SS.cc (centésimos), alinhado ao cronómetro de referência. */
+function formatTimeMs(ms) {
+  const safe = Math.max(0, Math.floor(ms));
+  const totalSeconds = Math.floor(safe / 1000);
+  const centiseconds = Math.floor((safe % 1000) / 10);
+  const seconds = totalSeconds % 60;
+  const minutes = Math.floor(totalSeconds / 60) % 60;
+  const hours = Math.floor(totalSeconds / 3600);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(centiseconds)}`;
 }
 
 function minutosLabel(totalMin) {
@@ -43,8 +46,7 @@ function sessaoEstaPausada(sessao) {
 }
 
 /**
- * Cronômetro de horas técnicas: contagem fluida (rAF), atualização otimista nos cliques,
- * layout claro alinhado ao Service Desk (três ações sempre visíveis).
+ * Cronômetro de horas técnicas: display HH:MM:SS.cc (rAF + timestamps), API iniciar/pausar/retomar/finalizar.
  */
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
   const [optimistic, setOptimistic] = useState(null);
@@ -52,7 +54,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const [rafTick, setRafTick] = useState(0);
   const offsetRef = useRef(0);
   const rollbackRef = useRef(null);
-  /** Último elapsed “bom”; evita contar com relógio quando pausado sem horaPausa. */
+  /** Último elapsed “bom” em ms; evita contar com relógio quando pausado sem horaPausa. */
   const freezeElapsedRef = useRef(0);
 
   const snap = horasTecnicas || {};
@@ -71,7 +73,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
 
   const nowMs = useCallback(() => Date.now() + offsetRef.current, []);
 
-  const elapsedSeconds = useMemo(() => {
+  const elapsedMs = useMemo(() => {
     if (!sessao?.horaInicio) {
       freezeElapsedRef.current = 0;
       return 0;
@@ -84,14 +86,14 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       if (sessao.horaPausa) {
         const pause = parseSqlLocalDateTime(sessao.horaPausa);
         if (pause) {
-          const frozen = Math.max(0, Math.floor((pause.getTime() - start.getTime()) / 1000));
+          const frozen = Math.max(0, pause.getTime() - start.getTime());
           freezeElapsedRef.current = frozen;
           return frozen;
         }
       }
       return freezeElapsedRef.current;
     }
-    const running = Math.max(0, Math.floor((nowMs() - start.getTime()) / 1000));
+    const running = Math.max(0, nowMs() - start.getTime());
     freezeElapsedRef.current = running;
     return running;
   }, [sessao, rafTick, nowMs]);
@@ -135,11 +137,11 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       const hi = parseSqlLocalDateTime(sessao.horaInicio);
       const hp = parseSqlLocalDateTime(sessao.horaPausa);
       if (hi && hp) {
-        const elapsedMs = hp.getTime() - hi.getTime();
+        const elapsed = hp.getTime() - hi.getTime();
         const tResume = Date.now() + offsetRef.current;
         setOptimistic({
           ...sessao,
-          horaInicio: localSqlDateTimeFromMs(tResume - elapsedMs),
+          horaInicio: localSqlDateTimeFromMs(tResume - elapsed),
           pausado: false,
           horaPausa: null,
         });
@@ -197,28 +199,29 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const paused = sessaoEstaPausada(sessao);
   const idle = !sessao;
 
+  const btnBase =
+    'rounded-md px-5 py-2.5 text-base font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-45';
+
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
-      <div className="border-b border-slate-200 bg-slate-100/90 px-4 py-3">
-        <h2 className="text-[0.9rem] font-bold tracking-tight text-slate-900">Horas técnicas</h2>
+    <div className="overflow-hidden rounded-xl border border-neutral-700 bg-[#111] text-white shadow-lg">
+      <div className="border-b border-neutral-800 px-4 py-3">
+        <h2 className="text-[0.9rem] font-bold tracking-tight text-white">Horas técnicas</h2>
       </div>
       <div className="p-4">
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-slate-300">
           Tempo já lançado neste ticket:{' '}
-          <span className="font-semibold text-slate-800">{minutosLabel(registrados)}</span>. Ao finalizar, o sistema grava em
-          Horas cadastradas e desconta do contrato do cliente.
+          <span className="font-semibold text-white">{minutosLabel(registrados)}</span>. Ao finalizar, o sistema grava em Horas
+          cadastradas e desconta do contrato do cliente.
         </p>
 
-        <div className="mt-3 text-center">
+        <div className="mt-5 flex flex-col items-center">
           <div
-            className={`mb-3 rounded-lg border px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.12em] transition-colors ${
-              paused
-                ? 'border-amber-200 bg-amber-50/80 text-amber-800'
-                : 'border-slate-200 bg-slate-50 text-[#155E4A]'
+            className={`mb-5 font-mono text-5xl font-bold tracking-[0.08em] tabular-nums ${
+              paused ? 'text-amber-300' : 'text-white'
             }`}
           >
-            {formatHms(elapsedSeconds)}
-            {paused ? <span className="ml-2 font-sans text-sm font-medium text-amber-800/90">(pausado)</span> : null}
+            {formatTimeMs(elapsedMs)}
+            {paused ? <span className="ml-3 font-sans text-sm font-medium text-amber-300/90">(pausado)</span> : null}
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
@@ -226,11 +229,8 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
               type="button"
               disabled={disabled || busy || !idle}
               onClick={() => runAction('iniciar')}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#2daa6a] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45"
+              className={`${btnBase} bg-[#28a745] text-white hover:opacity-95`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-              </svg>
               {busy && idle ? '…' : 'Iniciar'}
             </button>
 
@@ -239,11 +239,8 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                 type="button"
                 disabled={disabled || busy}
                 onClick={() => runAction('retomar')}
-                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                className={`${btnBase} bg-[#ffc107] text-black hover:opacity-95`}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                </svg>
                 Retomar
               </button>
             ) : (
@@ -251,12 +248,8 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                 type="button"
                 disabled={disabled || busy || idle}
                 onClick={() => runAction('pausar')}
-                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                className={`${btnBase} bg-[#ffc107] text-black hover:opacity-95`}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <rect x="6" y="4" width="4" height="16" rx="1" />
-                  <rect x="14" y="4" width="4" height="16" rx="1" />
-                </svg>
                 Pausar
               </button>
             )}
@@ -265,11 +258,8 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
               type="button"
               disabled={disabled || busy || idle}
               onClick={() => runAction('finalizar')}
-              className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
+              className={`${btnBase} bg-[#dc3545] text-white hover:opacity-95`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
               Parar
             </button>
           </div>
