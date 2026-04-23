@@ -1187,10 +1187,11 @@ class TicketsController extends AppController {
 		$timerPausado = false;
 		try {
 			$this->loadModel('AtendimentoTimer');
+			$tUserCol = $this->_atendimentoTimerUserColumn();
 			$timerAtivo = $this->AtendimentoTimer->find()
 				->where([
 					'idticket' => $idticket,
-					'idusuario' => $this->Auth->user('id'),
+					$tUserCol => $this->Auth->user('id'),
 					'hora_fim IS' => null,
 				])
 				->orderDesc('id')
@@ -1911,7 +1912,8 @@ class TicketsController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 			$this->loadModel('AtendimentoTimer');
-			$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'idusuario' => $this->Auth->user('id'), 'hora_fim IS' => null])->first();
+			$tUserCol = $this->_atendimentoTimerUserColumn();
+			$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $this->Auth->user('id'), 'hora_fim IS' => null])->first();
 			if ($ativo) {
 				$this->Flash->warning('Já existe um timer em andamento para este ticket.');
 				return $this->redirect(['action' => 'edit', $idticket]);
@@ -1919,7 +1921,7 @@ class TicketsController extends AppController {
 			$agora = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
 			$novo = $this->AtendimentoTimer->newEntity([
 				'idticket' => (int)$idticket,
-				'idusuario' => (int)$this->Auth->user('id'),
+				$tUserCol => (int)$this->Auth->user('id'),
 				'idempresa' => (int)$this->Auth->user('idempresa'),
 				'hora_inicio' => $agora->format('Y-m-d H:i:s'),
 			]);
@@ -1963,7 +1965,8 @@ class TicketsController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 			$this->loadModel('AtendimentoTimer');
-			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'idusuario' => $this->Auth->user('id'), 'hora_fim IS' => null])->orderDesc('id')->first();
+			$tUserCol = $this->_atendimentoTimerUserColumn();
+			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $this->Auth->user('id'), 'hora_fim IS' => null])->orderDesc('id')->first();
 			if (!$timer) {
 				$this->Flash->error('Nenhum timer em andamento para este ticket.');
 				return $this->redirect(['action' => 'edit', $idticket]);
@@ -2010,7 +2013,8 @@ class TicketsController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 			$this->loadModel('AtendimentoTimer');
-			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'idusuario' => $this->Auth->user('id'), 'hora_fim IS' => null])->orderDesc('id')->first();
+			$tUserCol = $this->_atendimentoTimerUserColumn();
+			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $this->Auth->user('id'), 'hora_fim IS' => null])->orderDesc('id')->first();
 			if (!$timer) {
 				$this->Flash->error('Nenhum timer em andamento para este ticket.');
 				return $this->redirect(['action' => 'edit', $idticket]);
@@ -2056,7 +2060,8 @@ class TicketsController extends AppController {
 				return $this->redirect(['action' => 'index']);
 			}
 			$this->loadModel('AtendimentoTimer');
-			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'idusuario' => $this->Auth->user('id'), 'hora_fim IS' => null])->orderDesc('id')->first();
+			$tUserCol = $this->_atendimentoTimerUserColumn();
+			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $this->Auth->user('id'), 'hora_fim IS' => null])->orderDesc('id')->first();
 			if (!$timer) {
 				$this->Flash->error('Nenhum timer em andamento para este ticket.');
 				return $this->redirect(['action' => 'edit', $idticket]);
@@ -2214,6 +2219,24 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Coluna do usuário em atendimento_timer (idusuario vs iduser conforme schema).
+	 */
+	protected function _atendimentoTimerUserColumn(): string {
+		static $cached = null;
+		if ($cached !== null) {
+			return $cached;
+		}
+		try {
+			$this->loadModel('AtendimentoTimer');
+			$cached = $this->AtendimentoTimer->usuarioColumn();
+		} catch (\Throwable $e) {
+			$cached = 'idusuario';
+		}
+
+		return $cached;
+	}
+
+	/**
 	 * Estado do timer de horas técnicas + total já registrado em Ticketshoras (para o Service Desk React).
 	 */
 	protected function _apiHorasTecnicasPayload(int $idticket, $ticket): array {
@@ -2232,15 +2255,27 @@ class TicketsController extends AppController {
 			$base['minutosRegistrados'] = (int)$this->Ticketshoras->minutosTicket($idticket, '2000-01-01', '2099-12-31');
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
+			// #region agent log
+			@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
+				'sessionId' => '4d6f86',
+				'hypothesisId' => 'H1',
+				'location' => 'TicketsController::_apiHorasTecnicasPayload',
+				'message' => 'minutosTicket_exception',
+				'data' => ['idticket' => $idticket, 'error' => substr($e->getMessage(), 0, 400)],
+				'timestamp' => (int)round(microtime(true) * 1000),
+			], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+			// #endregion
 
 			return $base;
 		}
+		$tUserCol = null;
 		try {
 			$this->loadModel('AtendimentoTimer');
+			$tUserCol = $this->_atendimentoTimerUserColumn();
 			$timerAtivo = $this->AtendimentoTimer->find()
 				->where([
 					'idticket' => $idticket,
-					'idusuario' => $this->Auth->user('id'),
+					$tUserCol => $this->Auth->user('id'),
 					'hora_fim IS' => null,
 				])
 				->orderDesc('id')
@@ -2257,7 +2292,37 @@ class TicketsController extends AppController {
 			}
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
+			// #region agent log
+			@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
+				'sessionId' => '4d6f86',
+				'hypothesisId' => 'H2',
+				'location' => 'TicketsController::_apiHorasTecnicasPayload',
+				'message' => 'atendimentoTimer_query_exception',
+				'data' => [
+					'idticket' => $idticket,
+					'tUserCol' => $tUserCol ?? null,
+					'error' => substr($e->getMessage(), 0, 400),
+				],
+				'timestamp' => (int)round(microtime(true) * 1000),
+			], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+			// #endregion
 		}
+		// #region agent log
+		@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
+			'sessionId' => '4d6f86',
+			'hypothesisId' => 'H1-H2-summary',
+			'location' => 'TicketsController::_apiHorasTecnicasPayload',
+			'message' => 'horas_payload_result',
+			'data' => [
+				'idticket' => $idticket,
+				'timerDisponivel' => $base['timerDisponivel'],
+				'minutosRegistrados' => $base['minutosRegistrados'],
+				'hasSessao' => $base['sessao'] !== null,
+				'timerUserCol' => $this->_atendimentoTimerUserColumn(),
+			],
+			'timestamp' => (int)round(microtime(true) * 1000),
+		], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+		// #endregion
 
 		return $base;
 	}
@@ -2284,14 +2349,15 @@ class TicketsController extends AppController {
 		}
 
 		try {
+			$tUserCol = $this->_atendimentoTimerUserColumn();
 			if ($acao === 'iniciar') {
-				$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'idusuario' => $uid, 'hora_fim IS' => null])->first();
+				$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->first();
 				if ($ativo) {
 					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
 				}
 				$novo = $this->AtendimentoTimer->newEntity([
 					'idticket' => $idticket,
-					'idusuario' => $uid,
+					$tUserCol => $uid,
 					'idempresa' => (int)$this->Auth->user('idempresa'),
 					'hora_inicio' => $agoraStr,
 				]);
@@ -2305,7 +2371,7 @@ class TicketsController extends AppController {
 				return ['ok' => true, 'message' => 'Timer iniciado.'];
 			}
 
-			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, 'idusuario' => $uid, 'hora_fim IS' => null])->orderDesc('id')->first();
+			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->orderDesc('id')->first();
 			if (!$timer) {
 				return ['ok' => false, 'error' => 'no_timer', 'message' => 'Nenhum timer em andamento para este ticket.'];
 			}
@@ -3420,6 +3486,32 @@ class TicketsController extends AppController {
 			$row['severidade'] = $this->_ticketSeveridadeLabel((string)($reg->severidade ?? 'media'));
 			$row['severidadeCode'] = $this->_normalizeTicketSeveridade($reg->severidade ?? 'media');
 		}
+
+		// #region agent log
+		$acaoKeys = array_values(array_filter(array_map(static function ($a) {
+			return isset($a['key']) ? (string)$a['key'] : '';
+		}, $acoes)));
+		$hasIniciar = in_array('iniciar', $acaoKeys, true);
+		if ($id === 1174 || ($sit === (int)C_TicketSituacaoPendente && !$hasIniciar)) {
+			@file_put_contents(ROOT . DS . 'debug-4d6f86.log', json_encode([
+				'sessionId' => '4d6f86',
+				'hypothesisId' => 'H3-H4',
+				'location' => 'TicketsController::_ticketRowApiTecnico',
+				'message' => 'row_acoes',
+				'data' => [
+					'id' => $id,
+					'sit' => $sit,
+					'pendenteConst' => (int)C_TicketSituacaoPendente,
+					'emandamentoConst' => (int)C_TicketSituacaoEmandamento,
+					'hasIniciar' => $hasIniciar,
+					'acaoKeys' => $acaoKeys,
+					'idtecnico' => $row['idtecnico_responsavel'],
+					'situacaoLabel' => $row['situacaoLabel'] ?? '',
+				],
+				'timestamp' => (int)round(microtime(true) * 1000),
+			], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+		}
+		// #endregion
 
 		return $row;
 	}
@@ -4863,8 +4955,9 @@ class TicketsController extends AppController {
 		$timerPausadoElapsedTexto = null;
 		try {
 			$this->loadModel('AtendimentoTimer');
+			$tUserCol = $this->_atendimentoTimerUserColumn();
 			$timerAtivo = $this->AtendimentoTimer->find()
-				->where(['idticket' => $idticket, 'idusuario' => $this->Auth->user('id'), 'hora_fim IS' => null])
+				->where(['idticket' => $idticket, $tUserCol => $this->Auth->user('id'), 'hora_fim IS' => null])
 				->orderDesc('id')->first();
 			if ($timerAtivo) {
 				$horaPausa = $timerAtivo->get('hora_pausa');
