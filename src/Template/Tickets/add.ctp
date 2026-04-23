@@ -273,12 +273,30 @@
 		color: var(--pgm-text, #0f172a) !important;
 		border-radius: 0.5rem !important;
 	}
+	/* Menu anexado ao body: wrapper .bs-container não desenha caixa (evita “duas molduras” com .dropdown-menu) */
+	body.tickets-add-page .bootstrap-select.bs-container {
+		background: transparent !important;
+		border: none !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		outline: none !important;
+		box-shadow: none !important;
+		-webkit-box-shadow: none !important;
+	}
 	/* Menu anexado ao body (.bs-container) — mesmo tema */
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu {
 		background: var(--pgm-bg-surface, #ffffff) !important;
 		border: 1px solid var(--pgm-border-subtle, #e2e8f0) !important;
-		box-shadow: var(--pgm-shadow-lg, 0 8px 32px rgba(15, 23, 42, 0.1)) !important;
+		/* Uma elevação suave: sombra larga + borda lida como “segunda caixa” em alguns temas */
+		box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12) !important;
 		border-radius: 0.75rem !important;
+		margin: 0 !important;
+		-webkit-box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12) !important;
+	}
+	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu > .inner {
+		border: 0 !important;
+		box-shadow: none !important;
+		-webkit-box-shadow: none !important;
 	}
 	body.tickets-add-page .bootstrap-select.bs-container .dropdown-menu li a {
 		color: var(--pgm-text, #0f172a) !important;
