@@ -34,6 +34,7 @@ use Cake\Core\Configure;
 use Cake\I18n\FrozenTime;
 use Cake\Mailer\Email;
 use Cake\Mailer\TransportFactory;
+use Cake\Utility\Security;
 
 class UsersController extends AppController {
 	public function initialize() {
@@ -993,13 +994,23 @@ class UsersController extends AppController {
 			}
 			unset($data['empresa_vinculo_ids'], $data['process_empresa_vinculo']);
 
-			$auditPasswordNew = '';
-			$auditPasswordConfirm = '';
-			if ((int)$user->role === 0) {
-				$auditPasswordNew = trim((string)($data['audit_password_new'] ?? ''));
-				$auditPasswordConfirm = trim((string)($data['audit_password_confirm'] ?? ''));
+			$auditGenerate = (int)$user->role === 0 && !empty($data['audit_password_generate']);
+			unset(
+				$data['audit_password_generate'],
+				$data['audit_password_new'],
+				$data['audit_password_confirm'],
+				$data['audit_password_hash']
+			);
+
+			if ($auditGenerate && !$this->_userAdminMaySetAuditPasswordForUser($user)) {
+				$this->Flash->error('Não é permitido gerar chave de auditoria para um utilizador de outra empresa.');
+				$redirEdit = ['action' => 'edit', $id];
+				if ($fromQueues) {
+					$redirEdit['?'] = ['from' => 'queues'];
+				}
+
+				return $this->redirect($redirEdit);
 			}
-			unset($data['audit_password_new'], $data['audit_password_confirm'], $data['audit_password_hash']);
 
 			// Se o usuário permanecer ativo (inativo vazio ou 0), mantém a validação rígida de e-mail duplicado.
 			// Se ele estiver sendo inativado, permitimos salvar mesmo com e-mail duplicado, para justamente
@@ -1027,35 +1038,17 @@ class UsersController extends AppController {
 				}
 			}
 
-			if ((int)$user->role === 0 && ($auditPasswordNew !== '' || $auditPasswordConfirm !== '')) {
-				if (!$this->_userAdminMaySetAuditPasswordForUser($user)) {
-					$this->Flash->error('Não é permitido definir a senha de auditoria para um utilizador de outra empresa.');
-					$redirEdit = ['action' => 'edit', $id];
-					if ($fromQueues) {
-						$redirEdit['?'] = ['from' => 'queues'];
-					}
-
-					return $this->redirect($redirEdit);
-				}
-				$auditErr = $this->_validateAuditPasswordPair($auditPasswordNew, $auditPasswordConfirm);
-				if ($auditErr !== null) {
-					$this->Flash->error($auditErr);
-					$redirEdit = ['action' => 'edit', $id];
-					if ($fromQueues) {
-						$redirEdit['?'] = ['from' => 'queues'];
-					}
-
-					return $this->redirect($redirEdit);
-				}
-			}
-
 			if (isset($data['role'])) unset($data['role']);
 			$this->Users->patchEntity($user, $data);
 			$savedMain = (bool)$this->Users->save($user);
-			$auditHashSaved = true;
-			if ($savedMain && (int)$user->role === 0 && $auditPasswordNew !== '') {
-				$this->_applyAuditPasswordHashToUser($user, $auditPasswordNew);
-				$auditHashSaved = (bool)$this->Users->save($user);
+			$oneTimeAuditSecret = null;
+			if ($savedMain && $auditGenerate) {
+				$oneTimeAuditSecret = $this->_generateAuditPasswordPlain();
+				$this->_applyAuditPasswordHashToUser($user, $oneTimeAuditSecret);
+				if (!(bool)$this->Users->save($user)) {
+					$this->Flash->warning('Utilizador guardado, mas falhou a gravação da chave de auditoria. Marque de novo «Gerar nova chave» e salve.');
+					$oneTimeAuditSecret = null;
+				}
 			}
 
 			if ($savedMain) {
@@ -1074,10 +1067,21 @@ class UsersController extends AppController {
 					$this->_syncQueuesUsuario((int)$id, (int)$this->Auth->user('idempresa'));
 				}
 				$this->Flash->success('As informações do usuário foram alteradas com sucesso!');
-				if (!$auditHashSaved) {
-					$this->Flash->warning('A senha de auditoria não foi gravada. Volte a editar este utilizador e defina de novo.');
+				if ($oneTimeAuditSecret !== null) {
+					$this->Flash->warning(
+						'Chave de auditoria gerada (mostrada uma única vez). Guarde e entregue ao técnico por canal seguro. '
+						. 'Se perder, gere nova neste ecrã. Valor: ' . $oneTimeAuditSecret
+					);
 				}
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
+				if ($auditGenerate) {
+					$redirStay = ['action' => 'edit', $id];
+					if ($fromQueues) {
+						$redirStay['?'] = ['from' => 'queues'];
+					}
+
+					return $this->redirect($redirStay);
+				}
 				if ($fromQueues) {
 					return $this->redirect(['controller' => 'Queues', 'action' => 'adminTechnicians']);
 				}
@@ -1849,8 +1853,12 @@ class UsersController extends AppController {
 		return $this->jsonResponse(['ok' => true]);
 	}
 
-	/** Comprimento mínimo da senha de auditoria (timer / Service Desk). */
-	protected const AUDIT_PASSWORD_MIN_LENGTH = 6;
+	/**
+	 * Gera chave de auditoria em claro (uma vez); só deve ser mostrada ao admin e depois só existe o hash na base.
+	 */
+	protected function _generateAuditPasswordPlain(): string {
+		return bin2hex(Security::randomBytes(16));
+	}
 
 	/**
 	 * Administrador pode atribuir senha de auditoria ao alvo (mesma empresa).
@@ -1864,41 +1872,6 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * @param string $plain
-	 * @return string|null null se válida; senão mensagem de erro.
-	 */
-	protected function _validateAuditPasswordPlain(string $plain): ?string {
-		$len = strlen($plain);
-		if ($len < self::AUDIT_PASSWORD_MIN_LENGTH) {
-			return 'A senha de auditoria deve ter pelo menos ' . self::AUDIT_PASSWORD_MIN_LENGTH . ' caracteres.';
-		}
-		if ($len > 200) {
-			return 'A senha de auditoria é demasiado longa.';
-		}
-
-		return null;
-	}
-
-	/**
-	 * Valida par nova/confirmar no formulário de edição.
-	 *
-	 * @return string|null null se OK (incluindo ambos vazios — sem alteração).
-	 */
-	protected function _validateAuditPasswordPair(string $new, string $confirm): ?string {
-		if ($new === '' && $confirm === '') {
-			return null;
-		}
-		if ($new === '' || $confirm === '') {
-			return 'Preencha a nova senha de auditoria e a confirmação.';
-		}
-		if ($new !== $confirm) {
-			return 'A confirmação da senha de auditoria não coincide.';
-		}
-
-		return $this->_validateAuditPasswordPlain($new);
-	}
-
-	/**
 	 * Define hash da senha de auditoria na entidade (gravar com save()).
 	 *
 	 * @param \Cake\Datasource\EntityInterface $user
@@ -1909,8 +1882,8 @@ class UsersController extends AppController {
 	}
 
 	/**
-	 * Admin: define a senha de auditoria (hash) de outro usuário (POST JSON).
-	 * Corpo: { "userId": 1, "auditPassword": "..." }
+	 * Admin: gera nova chave de auditoria (hash gravado; chave em claro devolvida uma vez no JSON).
+	 * Corpo: { "userId": 1, "generate": true } (ou regenerate: true)
 	 */
 	public function apiSetUserAuditPassword() {
 		$this->request->allowMethod(['post']);
@@ -1922,19 +1895,21 @@ class UsersController extends AppController {
 		if (!is_array($body)) {
 			$body = $this->request->getData();
 		}
+		if (isset($body['auditPassword']) || isset($body['audit_password'])) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'invalid',
+				'message' => 'A chave é apenas gerada pelo sistema. Envie {"userId": N, "generate": true}.',
+			], 400);
+		}
 		$targetId = (int)($body['userId'] ?? $body['user_id'] ?? 0);
-		$plain = '';
-		if (isset($body['auditPassword'])) {
-			$plain = (string) $body['auditPassword'];
-		} elseif (isset($body['audit_password'])) {
-			$plain = (string) $body['audit_password'];
-		}
-		if ($targetId < 1 || $plain === '') {
-			return $this->jsonResponse(['ok' => false, 'error' => 'invalid', 'message' => 'Informe userId e auditPassword.'], 400);
-		}
-		$plainErr = $this->_validateAuditPasswordPlain($plain);
-		if ($plainErr !== null) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'invalid', 'message' => $plainErr], 400);
+		$doGen = !empty($body['generate']) || !empty($body['regenerate']);
+		if ($targetId < 1 || !$doGen) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'invalid',
+				'message' => 'Informe userId e generate: true (a chave não pode ser escolhida manualmente).',
+			], 400);
 		}
 		try {
 			$target = $this->Users->get($targetId);
@@ -1944,9 +1919,14 @@ class UsersController extends AppController {
 		if (!$this->_userAdminMaySetAuditPasswordForUser($target)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Usuário de outra empresa.'], 403);
 		}
+		$plain = $this->_generateAuditPasswordPlain();
 		$this->_applyAuditPasswordHashToUser($target, $plain);
 		if ($this->Users->save($target)) {
-			return $this->jsonResponse(['ok' => true]);
+			return $this->jsonResponse([
+				'ok' => true,
+				'generated_password' => $plain,
+				'message' => 'Guarde esta chave; não será possível recuperá-la. Gere nova se for perdida.',
+			]);
 		}
 
 		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
