@@ -381,6 +381,7 @@ export default function HorasTecnicasTimerPanel({
         <AuditModal
           ticketId={ticketId}
           currentTimeHms={auditHms}
+          ultimaFinalizacao={snap.ultimaFinalizacao}
           onClose={() => setAuditOpen(false)}
         />
       )}

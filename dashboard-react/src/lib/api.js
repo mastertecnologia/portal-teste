@@ -267,6 +267,7 @@ export async function fetchTicketDetail(id) {
       sessao: mockTimerSessao,
       serverUnix: Math.floor(Date.now() / 1000),
       timerDisponivel: true,
+      ultimaFinalizacao: null,
     };
     return {
       ok: true,
@@ -567,6 +568,14 @@ export async function postTimerAction(ticketId, action) {
     } else if (action === 'finalizar') {
       mockTimerSessao = null;
     }
+    const ultimaFinalizacao =
+      action === 'finalizar'
+        ? {
+            duracaoHms: '00:15:00',
+            periodoInicio: '23/04/2026 09:00',
+            periodoFim: '23/04/2026 09:15',
+          }
+        : null;
     return {
       ok: true,
       message: 'ok (mock)',
@@ -576,6 +585,7 @@ export async function postTimerAction(ticketId, action) {
         sessao: mockTimerSessao,
         serverUnix: Math.floor(Date.now() / 1000),
         timerDisponivel: true,
+        ultimaFinalizacao,
       },
     };
   }

@@ -6,9 +6,10 @@ import { getBoot, postAuditValidate } from '../lib/api.js';
  * @param {() => void} p.onClose
  * @param {string} p.currentTimeHms display atual HH:MM:SS
  * @param {number} p.ticketId
+ * @param {{ duracaoHms: string, periodoInicio: string, periodoFim: string } | null | undefined} [p.ultimaFinalizacao]
  * @param {() => void} [p.onSuccess]
  */
-export default function AuditModal({ onClose, currentTimeHms, ticketId, onSuccess }) {
+export default function AuditModal({ onClose, currentTimeHms, ticketId, ultimaFinalizacao, onSuccess }) {
   const [authKey, setAuthKey] = useState('');
   const [newTime, setNewTime] = useState(currentTimeHms);
   const [reason, setReason] = useState('');
@@ -155,6 +156,24 @@ export default function AuditModal({ onClose, currentTimeHms, ticketId, onSucces
           Esta alteração será validada pelo CakePHP e gravada permanentemente no log.
         </div>
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800">
+            <p className="font-bold text-slate-900">Último período gravado (Horas cadastradas)</p>
+            {ultimaFinalizacao?.duracaoHms ? (
+              <>
+                <p className="mt-2 font-mono text-base font-semibold text-slate-900">{ultimaFinalizacao.duracaoHms}</p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Início: {ultimaFinalizacao.periodoInicio} · Fim: {ultimaFinalizacao.periodoFim}
+                </p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Use como referência ao corrigir o tempo em curso, se o lançamento anterior tiver sido incorreto.
+                </p>
+              </>
+            ) : (
+              <p className="mt-2 text-xs text-slate-600">
+                Ainda não há um período finalizado gravado no seu histórico neste ticket.
+              </p>
+            )}
+          </div>
           <div>
             <label className="text-sm font-bold text-slate-900" htmlFor="audit-new-time">
               Novo Tempo (HH:MM:SS)

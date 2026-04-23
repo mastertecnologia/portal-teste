@@ -2280,6 +2280,43 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Último lançamento em ticketshoras (mesmo ticket + utilizador) para contexto no modal de auditoria.
+	 *
+	 * @return array{duracaoHms:string,periodoInicio:string,periodoFim:string}|null
+	 */
+	protected function _apiUltimaFinalizacaoTicketshoras(int $idticket): ?array {
+		$uid = (int)$this->Auth->user('id');
+		if ($uid < 1) {
+			return null;
+		}
+		$row = $this->Ticketshoras->find()
+			->where(['Ticketshoras.idticket' => $idticket, 'Ticketshoras.iduser' => $uid])
+			->orderDesc('Ticketshoras.id')
+			->first();
+		if ($row === null) {
+			return null;
+		}
+		$hiS = $this->_ormTimeToString($row->get('horaini'));
+		$hfS = $this->_ormTimeToString($row->get('horafin'));
+		$ini = $this->_parseSqlDateTimeForTimer($hiS);
+		$fim = $this->_parseSqlDateTimeForTimer($hfS);
+		if (!$ini || !$fim) {
+			return null;
+		}
+		$sec = max(0, (int)($fim->getTimestamp() - $ini->getTimestamp()));
+		$h = intdiv($sec, 3600);
+		$m = intdiv($sec % 3600, 60);
+		$s = $sec % 60;
+		$duracaoHms = sprintf('%02d:%02d:%02d', $h, $m, $s);
+
+		return [
+			'duracaoHms' => $duracaoHms,
+			'periodoInicio' => $ini->format('d/m/Y H:i'),
+			'periodoFim' => $fim->format('d/m/Y H:i'),
+		];
+	}
+
+	/**
 	 * Estado do timer de horas técnicas + total já registrado em Ticketshoras (para o Service Desk React).
 	 */
 	protected function _apiHorasTecnicasPayload(int $idticket, $ticket): array {
@@ -2290,6 +2327,7 @@ class TicketsController extends AppController {
 			'sessao' => null,
 			'serverUnix' => time(),
 			'timerDisponivel' => true,
+			'ultimaFinalizacao' => null,
 		];
 		if ($role !== 0) {
 			return $base;
@@ -2300,6 +2338,11 @@ class TicketsController extends AppController {
 			$base['timerDisponivel'] = false;
 
 			return $base;
+		}
+		try {
+			$base['ultimaFinalizacao'] = $this->_apiUltimaFinalizacaoTicketshoras($idticket);
+		} catch (\Throwable $e) {
+			$base['ultimaFinalizacao'] = null;
 		}
 		$tUserCol = null;
 		try {
