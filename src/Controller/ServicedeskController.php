@@ -24,11 +24,25 @@ class ServicedeskController extends TicketsController {
 		if ((int)$this->Auth->user('role') !== 0) {
 			return $this->redirect(['action' => 'index']);
 		}
-		$this->viewBuilder()->setLayout('servicedesk');
+		/* Mesmo shell do ERP que Histórico (layout default + turbo-frame), não o layout full-page servicedesk. */
+		$this->viewBuilder()->setLayout('default');
 		$this->viewBuilder()->setTemplatePath('Tickets');
 		$this->viewBuilder()->setTemplate('react_app');
-		$this->set('title', 'Service Desk — Painel operacional');
-		$this->set('hideLayoutPageTitle', true);
+		$this->set('title', 'Painel operacional');
+		$this->set('reactAppBreadcrumbs', [
+			[
+				'title' => 'Tickets',
+				'url' => ['controller' => 'Tickets', 'action' => 'index'],
+				'options' => ['class' => 'breadcrumb-item'],
+			],
+			[
+				'title' => 'Painel operacional',
+				'url' => [],
+				'options' => ['class' => 'breadcrumb-item active'],
+			],
+		]);
+		$w = $this->request->getAttribute('webroot');
+		$this->set('reactAppExtraCss', [$w . 'dist/css/pages/pgm-servicedesk-premium.css']);
 		$this->set('reactBoot', $this->_reactBoot('tech_operacional', null, $this->_servicedeskBootExtra()));
 	}
 

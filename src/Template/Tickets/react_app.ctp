@@ -1,7 +1,18 @@
 <?php
 /**
  * Shell da UI React dos tickets: injeta boot JSON e assets estáticos do Vite (public/tickets-app).
+ *
+ * @var list<array{title:string,url?:array|string,options?:array<string,mixed>}>|null $reactAppBreadcrumbs
  */
+if (!empty($reactAppBreadcrumbs) && is_array($reactAppBreadcrumbs)) {
+	foreach ($reactAppBreadcrumbs as $bcRow) {
+		$bcTitle = $bcRow['title'] ?? '';
+		if ($bcTitle === '') {
+			continue;
+		}
+		$this->Breadcrumbs->add($bcTitle, $bcRow['url'] ?? [], $bcRow['options'] ?? []);
+	}
+}
 $this->assign('title', $title ?? 'Tickets');
 $w = $this->request->getAttribute('webroot');
 $bootJson = json_encode(
@@ -18,6 +29,11 @@ $this->append(
 	'css',
 	'<link rel="stylesheet" href="' . h($w . 'tickets-app/assets/tickets.css?v=' . $ticketsAssetV) . '">'
 );
+if (!empty($reactAppExtraCss) && is_array($reactAppExtraCss)) {
+	foreach ($reactAppExtraCss as $extraCssHref) {
+		$this->append('css', '<link rel="stylesheet" href="' . h((string)$extraCssHref) . '">');
+	}
+}
 $this->append(
 	'script',
 	'<script>window.__TICKETS_BOOT__ = ' . $bootJson . ';</script>'
