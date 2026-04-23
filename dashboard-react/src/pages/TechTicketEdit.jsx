@@ -299,6 +299,8 @@ export default function TechTicketEdit({ boot }) {
     <HorasTecnicasTimerPanel
       ticketId={ticket.id}
       horasTecnicas={ticket.horasTecnicas}
+      canEditDescricaoAtendimento={Boolean(ticket.flags?.canEditDescricaoAtendimento)}
+      onRelatorioSaved={(texto) => setRelatorioAtendimento(texto)}
       onSnapshot={(ht) => setTicket((p) => (p ? { ...p, horasTecnicas: ht } : p))}
       onFeedback={(_okMsg, errMsg) => {
         if (errMsg) {

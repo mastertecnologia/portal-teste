@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { postTimerAction } from '../lib/api';
+import { postTimerAction, saveTicketDescricaoAtendimento } from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
 import TimerWidget from './TimerWidget.jsx';
 import AuditModal from './AuditModal.jsx';
+import FinalizarTimerModal from './FinalizarTimerModal.jsx';
 import './HorasTecnicasTimerPanel.css';
 
 /** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
@@ -56,10 +57,19 @@ function TicketHeading({ ticketId }) {
   );
 }
 
-export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
+export default function HorasTecnicasTimerPanel({
+  ticketId,
+  horasTecnicas,
+  disabled,
+  onSnapshot,
+  onFeedback,
+  canEditDescricaoAtendimento = false,
+  onRelatorioSaved,
+}) {
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
+  const [finalizeOpen, setFinalizeOpen] = useState(false);
   const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
@@ -126,13 +136,9 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
 
   const displayHms = formatElapsedHms(swRef.current.getElapsedMs());
 
-  async function runAction(action) {
+  async function runAction(action, options = {}) {
+    const { skipBusy = false } = options;
     if (!ticketId) return;
-    if (action === 'finalizar') {
-      const ok = window.confirm('Finalizar o timer e registrar as horas no ticket e no contrato do cliente?');
-      if (!ok) return;
-    }
-
     rollbackRef.current = optimistic;
 
     if (action === 'iniciar') {
@@ -174,9 +180,9 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       setOptimistic(null);
     }
 
-    setBusy(true);
+    if (!skipBusy) setBusy(true);
     const res = await postTimerAction(ticketId, action);
-    setBusy(false);
+    if (!skipBusy) setBusy(false);
 
     if (res.ok) {
       if (res.horasTecnicas && onSnapshot) {
@@ -195,6 +201,39 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
       }
     }
     return res;
+  }
+
+  function openFinalizeModal() {
+    if (!sessao || busy || disabled) return;
+    setFinalizeOpen(true);
+  }
+
+  async function handleFinalizeSubmit(atividade) {
+    const t = (atividade || '').trim();
+    if (canEditDescricaoAtendimento && t.length < 3) {
+      return { ok: false, error: 'Descreva o que foi feito nestes minutos (mínimo 3 caracteres).' };
+    }
+    setBusy(true);
+    try {
+      if (canEditDescricaoAtendimento && t) {
+        const sr = await saveTicketDescricaoAtendimento(ticketId, t);
+        if (!sr.ok) {
+          return { ok: false, error: sr.error || 'Não foi possível gravar o relatório do atendimento.' };
+        }
+        onRelatorioSaved?.(t);
+      }
+      const res = await runAction('finalizar', { skipBusy: true });
+      if (res && res.ok) {
+        setFinalizeOpen(false);
+        return { ok: true };
+      }
+      return {
+        ok: false,
+        error: (res && (res.message || res.error)) || 'Não foi possível finalizar o timer.',
+      };
+    } finally {
+      setBusy(false);
+    }
   }
 
   function handlePrimaryClick() {
@@ -259,7 +298,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                   type="button"
                   className="btn-stop"
                   disabled={disabled || busy}
-                  onClick={() => runAction('finalizar')}
+                  onClick={openFinalizeModal}
                 >
                   Finalizar
                 </button>
@@ -280,7 +319,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                   type="button"
                   className="btn-stop"
                   disabled={disabled || busy}
-                  onClick={() => runAction('finalizar')}
+                  onClick={openFinalizeModal}
                 >
                   Finalizar
                 </button>
@@ -301,7 +340,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
                   type="button"
                   className="btn-stop"
                   disabled={disabled || busy || idle}
-                  onClick={() => runAction('finalizar')}
+                  onClick={openFinalizeModal}
                 >
                   Finalizar
                 </button>
@@ -334,7 +373,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         running={running}
         paused={paused}
         onPlay={handlePrimaryClick}
-        onStop={() => runAction('finalizar')}
+        onStop={openFinalizeModal}
         onOpenAudit={() => setAuditOpen(true)}
       />
 
@@ -345,6 +384,15 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
           onClose={() => setAuditOpen(false)}
         />
       )}
+
+      <FinalizarTimerModal
+        open={finalizeOpen}
+        displayHms={displayHms}
+        busy={busy}
+        canEditDescricaoAtendimento={canEditDescricaoAtendimento}
+        onClose={() => !busy && setFinalizeOpen(false)}
+        onSubmit={handleFinalizeSubmit}
+      />
     </div>
   );
 }
