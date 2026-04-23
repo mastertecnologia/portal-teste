@@ -148,7 +148,6 @@ export default function OperationalDashboard({ boot }) {
 
   const shellEmbedded = Boolean(boot);
   const portalNav = Boolean(boot);
-  const operacionalEmbed = shellEmbedded && boot?.screen === 'tech_operacional';
   const editBase = boot?.paths?.editTicketBase;
   const editQ = boot?.paths?.ticketEditQuery || '';
 
@@ -273,9 +272,8 @@ export default function OperationalDashboard({ boot }) {
   );
 
   if (shellEmbedded) {
-    const padX = operacionalEmbed ? 'px-0' : 'px-4 sm:px-5';
     return (
-      <div className={`tickets-react-tech w-full min-w-0 max-w-full overflow-visible pb-6 pt-4 text-[var(--pgm-text)] ${padX}`}>
+      <div className="tickets-react-tech w-full min-w-0 max-w-full overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
         {inner}
       </div>
     );
