@@ -832,9 +832,6 @@ class TicketsController extends AppController {
 		$this->set('bodyPageClass', 'tickets-add-page');
 		$this->set('title', 'Abertura de Ticket');
 		$ticket = $this->Tickets->newEntity();
-		if (in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
-			$ticket->severidade = 'media';
-		}
 
 		// Cliente
 		if($this->Auth->user('role') == C_RoleCliente){
@@ -874,11 +871,31 @@ class TicketsController extends AppController {
 				$anexos = $this->_normalizeUploadFilesList($post['file-3']);
 			}
 			unset($post['file-3']);
-			if (!in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
+			$__sevColAdd = in_array('severidade', $this->Tickets->getSchema()->columns(), true);
+			if (!$__sevColAdd) {
 				unset($post['severidade']);
 			}
 
 			$__queueIdCol = in_array('queue_id', $this->Tickets->getSchema()->columns(), true);
+			$__needQueueId = $this->_queuesRelacionalReady() && $__queueIdCol;
+			if ($__needQueueId) {
+				$qCnt = $this->Queues->find()->order(['sort_order' => 'ASC', 'id' => 'ASC']);
+				$this->Abac->applyToQuery($qCnt, 'Queues', 'Queues');
+				$__needQueueId = $qCnt->count() > 0;
+			}
+			$__assuntoOk = trim((string)($post['assunto'] ?? '')) !== '';
+			$__sevOk = !$__sevColAdd || (string)($post['severidade'] ?? '') !== '';
+			$__qidPost = (int)($post['queue_id'] ?? 0);
+			$__qOk = !$__needQueueId || $__qidPost > 0;
+			$__addFormValid = $__assuntoOk && $__sevOk && $__qOk;
+
+			if (!$__addFormValid) {
+				$this->Flash->error(__(
+					'Selecione o assunto, a urgência (severidade) e o destino (fila) antes de enviar o chamado.'
+				));
+				$ticket = $this->Tickets->patchEntity($ticket, $post);
+			} else {
+
 			if (!$this->_queuesRelacionalReady() || !$__queueIdCol) {
 				unset($post['queue_id']);
 			} else {
@@ -902,7 +919,7 @@ class TicketsController extends AppController {
 
 			$ticket = $this->Tickets->patchEntity($ticket, $post);
 			if (in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
-				$ticket->severidade = $this->_normalizeTicketSeveridade($post['severidade'] ?? $ticket->severidade ?? 'media');
+				$ticket->severidade = $this->_normalizeTicketSeveridade((string)($post['severidade'] ?? ''));
 			}
 			$ticket->idautor = $this->Auth->user('id');
 			$ticket->situacao = 0;
@@ -1033,6 +1050,7 @@ class TicketsController extends AppController {
 				else return $this->redirect(['action' => 'edit', $ticket->id]);
 			}
 			$this->Flash->error(__('Não foi possível enviar o ticket.'));
+			}
 		}
 
 		$clientesFis = $this->Clientes->find('all')
@@ -1067,18 +1085,6 @@ class TicketsController extends AppController {
 			$this->Abac->applyToQuery($qAddQueues, 'Queues', 'Queues');
 			foreach ($qAddQueues->all() as $__row) {
 				$ticketAddQueues[(int)$__row->id] = (string)($__row->name ?? ('Fila #' . $__row->id));
-			}
-			if ($ticketAddQueues !== []) {
-				$qN1 = $this->Queues->find()->where(['codigo' => 'n1']);
-				$this->Abac->applyToQuery($qN1, 'Queues', 'Queues');
-				$__n1 = $qN1->first();
-				if (!empty($__n1)) {
-					$ticketAddDefaultQueueId = (int)$__n1->id;
-				} else {
-					reset($ticketAddQueues);
-					$__k = key($ticketAddQueues);
-					$ticketAddDefaultQueueId = $__k !== null ? (int)$__k : null;
-				}
 			}
 		}
 		// #region agent log

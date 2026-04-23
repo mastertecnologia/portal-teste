@@ -727,7 +727,7 @@
 						<?php if ($role == 0) { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => $ticketAssuntoOptions, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => $ticketAssuntoOptions, 'label' => false, 'required' => true, 'empty' => 'Escolha o assunto']) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -737,17 +737,16 @@
 									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
 									'class' => 'selectpicker form-control',
 									'title' => 'Grau de severidade',
+									'empty' => 'Escolha a urgência',
 									'label' => false,
 									'required' => true,
-									'default' => 'media',
-									'value' => $ticket->severidade ?? 'media',
 								]) ?>
 							</div>
 							<?php endif; ?>
 						<?php } else { ?>
 							<div class="sd-add-field">
 								<label class="control-label text-muted">Assunto / Categoria</label>
-								<?= $this->Form->control('assunto', ['value' => $assunto, 'class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => $ticketAssuntoOptions, 'label' => false, 'required' => true]) ?>
+								<?= $this->Form->control('assunto', ['class' => 'selectpicker form-control', 'title' => 'Escolha um assunto', 'data-live-search' => true, 'options' => $ticketAssuntoOptions, 'label' => false, 'required' => true, 'empty' => 'Escolha o assunto']) ?>
 							</div>
 							<?php if (!empty($severidadeColumnReady)) : ?>
 							<div class="sd-add-field">
@@ -757,10 +756,9 @@
 									'options' => ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'],
 									'class' => 'selectpicker form-control',
 									'title' => 'Grau de severidade',
+									'empty' => 'Escolha a urgência',
 									'label' => false,
 									'required' => true,
-									'default' => 'media',
-									'value' => $ticket->severidade ?? 'media',
 								]) ?>
 							</div>
 							<?php endif; ?>
@@ -807,14 +805,15 @@
 					<p class="sd-add-card-desc sd-add-card-desc--tight">Altere assunto, urgência ou fila aqui ou na etapa 2 — os campos ficam sincronizados.</p>
 					<div class="sd-sum-stack">
 						<?php
-							$__assuntoCur = ($ticket->assunto !== null && $ticket->assunto !== '') ? $ticket->assunto : $assunto;
-							$__sevCur = $ticket->severidade ?? 'media';
+							$__assuntoCur = (isset($ticket->assunto) && $ticket->assunto !== null && (string)$ticket->assunto !== '') ? (string)$ticket->assunto : '';
+							$__sevCur = (isset($ticket->severidade) && $ticket->severidade !== null && (string)$ticket->severidade !== '') ? (string)$ticket->severidade : '';
 						?>
 						<div class="sd-add-field sd-sum-field">
 							<label class="control-label text-muted" for="sd-sum-assunto-select">Assunto</label>
 							<select id="sd-sum-assunto-select" class="selectpicker form-control sd-sum-select" data-live-search="true" title="Assunto / categoria">
+								<option value=""><?= h('Escolha o assunto') ?></option>
 								<?php foreach ($ticketAssuntoOptions as $__aid => $__alabel) : ?>
-									<option value="<?= h($__aid) ?>" <?= ((string)$__aid === (string)$__assuntoCur) ? 'selected' : '' ?>><?= h($__alabel) ?></option>
+									<option value="<?= h($__aid) ?>" <?= ($__assuntoCur !== '' && (string)$__aid === (string)$__assuntoCur) ? 'selected' : '' ?>><?= h($__alabel) ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>
@@ -822,11 +821,12 @@
 						<div class="sd-add-field sd-sum-field">
 							<label class="control-label text-muted" for="sd-sum-severidade-select">Urgência</label>
 							<select id="sd-sum-severidade-select" class="selectpicker form-control sd-sum-select" title="Urgência (severidade)">
+								<option value=""><?= h('Escolha a urgência') ?></option>
 								<?php
 									$__sevOpts = ['baixa' => 'Baixa', 'media' => 'Média', 'alta' => 'Alta', 'urgente' => 'Urgente'];
 									foreach ($__sevOpts as $__sv => $__sl) :
 								?>
-									<option value="<?= h($__sv) ?>" <?= ((string)$__sv === (string)$__sevCur) ? 'selected' : '' ?>><?= h($__sl) ?></option>
+									<option value="<?= h($__sv) ?>" <?= ($__sevCur !== '' && (string)$__sv === (string)$__sevCur) ? 'selected' : '' ?>><?= h($__sl) ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>
@@ -840,8 +840,8 @@
 								'label' => false,
 								'id' => 'queue_id',
 								'class' => 'selectpicker form-control sd-sum-select',
-								'value' => $ticket->queue_id ?? $ticketAddDefaultQueueId,
-								'required' => false,
+								'empty' => 'Escolha a fila',
+								'required' => true,
 							]) ?>
 						</div>
 						<?php else : ?>
@@ -957,6 +957,10 @@
 			var sev = $('#severidade').val();
 			if (sev === null || sev === '' || sev === undefined) return false;
 		}
+		if ($('#queue_id').length) {
+			var qv = $('#queue_id').val();
+			if (qv === null || qv === '' || qv === undefined || String(qv) === '0') return false;
+		}
 		var sol = ($('#solicitacao').val() || '').replace(/^\s+|\s+$/g, '');
 		if (!sol) return false;
 		return true;
@@ -1025,6 +1029,7 @@
 		}, 300);
 
 		$('form.ticket-add-form').on('submit', function () {
+			sdTicketAddMirrorSidebarToMain();
 			sdTicketAddSubmitting = true;
 			sdTicketAddRefreshAtendimentoStatus();
 		});
