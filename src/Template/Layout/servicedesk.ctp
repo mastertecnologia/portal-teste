@@ -48,10 +48,17 @@ $sdAddLabel = ($sdRole === 1) ? __('Abrir ticket') : __('Abrir chamado');
 			<a href="<?= h($sdUrlFila) ?>" class="sd-brand" style="color:inherit;text-decoration:none"><?= h(__('PGM Service Desk')) ?></a>
 		</div>
 		<nav class="sd-actions" aria-label="<?= h(__('Service Desk — atalhos')) ?>">
+			<?php
+			$__sdTopbarActions = trim((string)$this->fetch('sd_topbar_actions'));
+			if ($__sdTopbarActions !== '') :
+				echo $__sdTopbarActions;
+			else :
+			?>
 			<a href="<?= h($sdUrlAdd) ?>" class="sd-topbar__btn sd-topbar__btn--abrir-chamado">
 				<span class="sd-topbar__btn-plus" aria-hidden="true">+</span>
 				<?= h($sdAddLabel) ?>
 			</a>
+			<?php endif; ?>
 		</nav>
 	</header>
 	<main class="sd-main sd-main--full container-fluid p-0">

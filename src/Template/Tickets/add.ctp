@@ -4,13 +4,25 @@
 	$this->Breadcrumbs->add('Tickets', ['controller' => 'Tickets', 'action' => $ticketsListAction], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Abertura', [], ['class' => 'breadcrumb-item active']);
 	if($role == 0) $email = null;
+
+	$sdServicedeskAddShell = ($this->request->getParam('controller') === 'Servicedesk');
+	if ($sdServicedeskAddShell) {
+		$this->start('sd_topbar_actions');
+		?>
+	<div class="sd-topbar-add-actions">
+		<button type="submit" form="sd-ticket-add-form" id="abrirticket" class="sd-topbar__btn sd-topbar__btn--enviar-chamado btn btn-pgm btn-pgm-salvar btn-success aparecedepois"><?= h('Enviar chamado') ?></button>
+		<a href="<?= h(Router::url(['controller' => 'Tickets', 'action' => $ticketsListAction])) ?>" class="sd-topbar__btn sd-topbar__btn--cancelar-chamado"><?= h('Cancelar') ?></a>
+	</div>
+		<?php
+		$this->end();
+	}
 ?>
 <style>
 	.tickets-add-wrap {
 		width: 100%;
 		max-width: none;
 		margin: 0;
-		padding: 0.5rem 0 2.5rem;
+		padding: 0.5rem 0 1.75rem;
 		box-sizing: border-box;
 		background: transparent;
 		border-radius: 0;
@@ -23,13 +35,82 @@
 	@media (min-width: 768px) {
 		.sd-add-page { padding: 0 1.25rem; }
 	}
+	body.tickets-add-page .sd-topbar-add-actions {
+		display: inline-flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		justify-content: flex-end;
+	}
+	body.tickets-add-page .sd-topbar__btn--enviar-chamado {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		padding: 0.5rem 1.15rem;
+		font-size: 0.875rem;
+		font-weight: 700;
+		letter-spacing: 0.01em;
+		font-family: inherit;
+		line-height: 1.2;
+		color: #fff !important;
+		background: linear-gradient(
+			135deg,
+			var(--pgm-primary, #1d9e75) 0%,
+			var(--pgm-erp-teal-active, #0f6e56) 100%
+		);
+		border: none;
+		border-radius: 999px;
+		cursor: pointer;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18),
+			0 2px 12px var(--pgm-primary-muted, rgba(29, 158, 117, 0.22));
+		transition: filter 0.15s ease, opacity 0.15s ease;
+	}
+	body.tickets-add-page .sd-topbar__btn--enviar-chamado:hover:not(:disabled):not(.disabled) {
+		filter: brightness(1.06);
+	}
+	body.tickets-add-page .sd-topbar__btn--enviar-chamado:disabled,
+	body.tickets-add-page .sd-topbar__btn--enviar-chamado.disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		filter: none;
+	}
+	body.tickets-add-page .sd-topbar__btn--enviar-chamado:focus-visible {
+		outline: 2px solid rgba(0, 109, 91, 0.45);
+		outline-offset: 2px;
+	}
+	body.tickets-add-page .sd-topbar__btn--cancelar-chamado {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 1.1rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--pgm-text-secondary, #334155) !important;
+		background: var(--pgm-bg-surface, #ffffff);
+		border: 1px solid var(--pgm-border, #cbd5e1);
+		border-radius: 999px;
+		text-decoration: none !important;
+		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+		transition: background 0.15s, border-color 0.15s, color 0.15s;
+	}
+	body.tickets-add-page .sd-topbar__btn--cancelar-chamado:hover {
+		background: var(--pgm-bg-overlay, #e2e8f0);
+		color: var(--pgm-text, #0f172a) !important;
+		border-color: var(--pgm-border-strong, #94a3b8);
+		text-decoration: none !important;
+	}
+	body.tickets-add-page .sd-topbar__btn--cancelar-chamado:focus-visible {
+		outline: 2px solid var(--pgm-border-strong, #94a3b8);
+		outline-offset: 2px;
+	}
 	.sd-add-header {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: flex-start;
 		justify-content: space-between;
-		gap: 1rem;
-		margin-bottom: 1.5rem;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
 	}
 	.sd-add-kicker {
 		font-size: 0.875rem;
@@ -56,33 +137,55 @@
 	}
 	.sd-add-status {
 		width: 100%;
-		border-radius: 1rem;
-		background: var(--pgm-bg-surface, #ffffff);
-		border: 1px solid var(--pgm-border-subtle, #e2e8f0);
-		padding: 0.65rem 1rem;
-		box-shadow: var(--pgm-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.06));
+		border-radius: 0.75rem;
+		padding: 0.45rem 0.75rem;
+		border: 1px solid transparent;
+		box-shadow: none;
+		transition: background 0.15s ease, border-color 0.15s ease;
 	}
 	@media (min-width: 768px) {
-		.sd-add-status { width: auto; max-width: 14rem; }
+		.sd-add-status { width: auto; max-width: 11.5rem; }
 	}
 	.sd-add-status-label {
-		font-size: 0.65rem;
+		font-size: 0.6rem;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--pgm-text-muted, #64748b);
 		margin: 0;
+		opacity: 0.92;
 	}
 	.sd-add-status-value {
-		margin: 0.15rem 0 0;
-		font-size: 0.875rem;
+		margin: 0.1rem 0 0;
+		font-size: 0.8125rem;
 		font-weight: 600;
-		color: var(--pgm-primary, #1d9e75);
+		line-height: 1.25;
 		transition: color 0.15s ease;
 	}
-	.sd-add-status-value.is-ok { color: var(--pgm-primary-hover, #0f6e56); }
-	.sd-add-status-value.is-warn { color: #d97706; }
-	.sd-add-status-value.is-muted { color: var(--pgm-text-muted, #64748b); }
-	.sd-add-status-value.is-danger { color: #dc2626; }
+	.sd-add-status.is-muted {
+		background: #475569;
+		border-color: rgba(255, 255, 255, 0.12);
+	}
+	.sd-add-status.is-warn {
+		background: #c2410c;
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+	.sd-add-status.is-ok {
+		background: #0f766e;
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+	.sd-add-status.is-danger {
+		background: #b91c1c;
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+	.sd-add-status.is-muted .sd-add-status-label,
+	.sd-add-status.is-muted .sd-add-status-value,
+	.sd-add-status.is-warn .sd-add-status-label,
+	.sd-add-status.is-warn .sd-add-status-value,
+	.sd-add-status.is-ok .sd-add-status-label,
+	.sd-add-status.is-ok .sd-add-status-value,
+	.sd-add-status.is-danger .sd-add-status-label,
+	.sd-add-status.is-danger .sd-add-status-value {
+		color: #fff !important;
+	}
 	.sd-sum-field {
 		display: flex;
 		flex-direction: column;
@@ -110,7 +213,7 @@
 	}
 	.sd-add-grid {
 		display: grid;
-		gap: 1.5rem;
+		gap: 1rem;
 		align-items: start;
 	}
 	@media (min-width: 1024px) {
@@ -118,23 +221,23 @@
 			grid-template-columns: 1.15fr 0.85fr;
 		}
 	}
-	.sd-add-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+	.sd-add-stack { display: flex; flex-direction: column; gap: 1rem; }
 	.sd-add-card {
 		background: var(--pgm-bg-surface, #ffffff);
 		border-radius: 1.5rem;
-		padding: 1.35rem 1.25rem;
+		padding: 1.15rem 1.1rem;
 		border: 1px solid var(--pgm-border-subtle, #e2e8f0);
 		box-shadow: var(--pgm-shadow-md, 0 4px 12px rgba(15, 23, 42, 0.08));
 	}
 	@media (min-width: 768px) {
-		.sd-add-card { padding: 1.5rem; }
+		.sd-add-card { padding: 1.25rem; }
 	}
 	.sd-add-card-head {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 0.75rem;
-		margin-bottom: 1.15rem;
+		margin-bottom: 0.9rem;
 	}
 	.sd-add-card-title {
 		font-size: 1.05rem;
@@ -520,18 +623,18 @@
 		background: var(--pgm-badge-amber-bg, rgba(217, 119, 6, 0.08));
 		border: 1px solid var(--pgm-badge-amber-ring, rgba(217, 119, 6, 0.22));
 		border-radius: 1.5rem;
-		padding: 1.35rem 1.25rem;
+		padding: 1.15rem 1.1rem;
 		box-shadow: var(--pgm-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.06));
 	}
 	@media (min-width: 768px) {
-		.sd-rules-card { padding: 1.5rem; }
+		.sd-rules-card { padding: 1.25rem; }
 	}
 	.sd-rule {
 		background: var(--pgm-bg-surface, #ffffff);
 		border: 1px solid var(--pgm-border-subtle, #e2e8f0);
 		border-radius: 1rem;
 		padding: 0.85rem 1rem;
-		margin-bottom: 0.65rem;
+		margin-bottom: 0.5rem;
 	}
 	.sd-rule:last-child { margin-bottom: 0; }
 	.sd-rule-pill {
@@ -581,7 +684,7 @@
 		font-size: 0.875rem;
 		font-weight: 700;
 		cursor: pointer;
-		transition: filter 0.15s ease, opacity 0.15s;
+		transition: filter 0.15s ease, opacity 0.15s ease;
 		background: linear-gradient(
 			135deg,
 			var(--pgm-primary, #1d9e75) 0%,
@@ -657,13 +760,13 @@
 					Preencha os dados abaixo para registrar um incidente, requisição ou solicitação de acesso.
 				</p>
 			</div>
-			<div class="sd-add-status" id="sd-add-status-card">
+			<div class="sd-add-status is-muted" id="sd-add-status-card">
 				<p class="sd-add-status-label">Status</p>
 				<p class="sd-add-status-value is-muted" id="sd-atendimento-status-value">Carregando…</p>
 			</div>
 		</header>
 
-		<?= $this->Form->create($ticket, ['enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
+		<?= $this->Form->create($ticket, ['id' => 'sd-ticket-add-form', 'enctype' => 'multipart/form-data', 'type' => 'file', 'class' => 'form-material ticket-add-form']) ?>
 		<div class="sd-add-role-holder" data-sd-role="<?= (int)$role ?>" hidden></div>
 
 		<div class="sd-add-grid">
@@ -877,6 +980,7 @@
 					</div>
 				</section>
 
+				<?php if (!$sdServicedeskAddShell) : ?>
 				<section class="sd-actions-card">
 					<h2>Ações</h2>
 					<div class="sd-actions-btns">
@@ -884,6 +988,8 @@
 						<a href="<?= h(Router::url(['controller' => 'Tickets', 'action' => $ticketsListAction])) ?>" class="sd-btn-ghost">Cancelar</a>
 					</div>
 				</section>
+				<?php endif; ?>
+
 			</div>
 		</div>
 
@@ -970,18 +1076,26 @@
 
 	function sdTicketAddRefreshAtendimentoStatus() {
 		var $el = $('#sd-atendimento-status-value');
+		var $card = $('#sd-add-status-card');
 		if (!$el.length) return;
+		function syncCard(state) {
+			if (!$card.length) return;
+			$card.removeClass('is-ok is-warn is-muted is-danger').addClass(state);
+		}
 		if (sdTicketAddSubmitting) {
 			$el.removeClass('is-ok is-warn is-danger').addClass('is-muted');
+			syncCard('is-muted');
 			$el.text('Enviando chamado…');
 			return;
 		}
 		if (!sdTicketAddFormBasicsComplete()) {
 			$el.removeClass('is-ok is-muted is-danger').addClass('is-warn');
+			syncCard('is-warn');
 			$el.text('Aguardando dados do chamado');
 			return;
 		}
 		$el.removeClass('is-warn is-muted is-danger').addClass('is-ok');
+		syncCard('is-ok');
 		$el.text('Pronto para enviar');
 	}
 
@@ -1227,7 +1341,7 @@
 		$('form.ticket-add-form').preventDoubleSubmission();
 
 		$('form.ticket-add-form').on('submit', function () {
-			$(this).find('#abrirticket').prop('disabled', true);
+			$('#abrirticket').prop('disabled', true);
 		});
 
 
