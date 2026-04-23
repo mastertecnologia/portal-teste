@@ -44,6 +44,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const [rafTick, setRafTick] = useState(0);
   const offsetRef = useRef(0);
   const rollbackRef = useRef(null);
+  const pausedElapsedRef = useRef(null);
 
   const snap = horasTecnicas || {};
   const canUse = Boolean(snap.canUseTimer);
@@ -73,6 +74,67 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     return Math.max(0, Math.floor((nowMs() - start.getTime()) / 1000));
   }, [sessao, rafTick, nowMs]);
 
+  // #region agent log
+  useEffect(() => {
+    const paused = Boolean(sessao && sessao.pausado);
+    let branch = 'idle';
+    if (sessao?.horaInicio) {
+      if (paused && sessao.horaPausa) branch = 'paused_frozen';
+      else if (paused && !sessao.horaPausa) branch = 'paused_missing_horaPausa_runs_wall_clock';
+      else branch = 'running_now_minus_start';
+    }
+    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '188b73' },
+      body: JSON.stringify({
+        sessionId: '188b73',
+        runId: 'pre-fix',
+        hypothesisId: 'H1_H2',
+        location: 'HorasTecnicasTimerPanel.jsx:elapsed_diag',
+        message: 'elapsed branch snapshot',
+        data: {
+          branch,
+          elapsedSeconds,
+          rafTick,
+          horaInicio: sessao?.horaInicio ?? null,
+          horaPausa: sessao?.horaPausa ?? null,
+          pausado: sessao?.pausado ?? null,
+          nowMsVal: nowMs(),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- instrumentação: só quando a sessão muda
+  }, [sessao?.id, sessao?.horaInicio, sessao?.horaPausa, sessao?.pausado]);
+  // #endregion
+
+  // #region agent log
+  useEffect(() => {
+    const paused = Boolean(sessao && sessao.pausado);
+    if (!paused) {
+      pausedElapsedRef.current = null;
+      return;
+    }
+    const prev = pausedElapsedRef.current;
+    if (prev != null && prev !== elapsedSeconds) {
+      fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '188b73' },
+        body: JSON.stringify({
+          sessionId: '188b73',
+          runId: 'pre-fix',
+          hypothesisId: 'H2',
+          location: 'HorasTecnicasTimerPanel.jsx:paused_drift',
+          message: 'elapsed changed while UI paused',
+          data: { prev, elapsedSeconds, horaPausa: sessao?.horaPausa ?? null },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    }
+    pausedElapsedRef.current = elapsedSeconds;
+  }, [elapsedSeconds, sessao]);
+  // #endregion
+
   useEffect(() => {
     if (!sessao || sessao.pausado) return undefined;
     let id = 0;
@@ -84,12 +146,52 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     return () => cancelAnimationFrame(id);
   }, [sessao?.id, sessao?.pausado]);
 
+  // #region agent log
+  useEffect(() => {
+    if (!sessao || sessao.pausado) return undefined;
+    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '188b73' },
+      body: JSON.stringify({
+        sessionId: '188b73',
+        runId: 'pre-fix',
+        hypothesisId: 'H3',
+        location: 'HorasTecnicasTimerPanel.jsx:raf_armed',
+        message: 'rAF loop armed (running)',
+        data: { sessaoId: sessao?.id ?? null, pausado: sessao?.pausado },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    return undefined;
+  }, [sessao?.id, sessao?.pausado]);
+  // #endregion
+
   async function runAction(action) {
     if (!ticketId) return;
     if (action === 'finalizar') {
       const ok = window.confirm('Finalizar o timer e registrar as horas no ticket e no contrato do cliente?');
       if (!ok) return;
     }
+
+    // #region agent log
+    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '188b73' },
+      body: JSON.stringify({
+        sessionId: '188b73',
+        runId: 'pre-fix',
+        hypothesisId: 'H1',
+        location: 'HorasTecnicasTimerPanel.jsx:runAction',
+        message: 'timer action',
+        data: {
+          action,
+          sessaoBefore: optimistic ?? serverSessao,
+          offsetMs: offsetRef.current,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     rollbackRef.current = optimistic;
 
@@ -124,6 +226,21 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     setBusy(false);
 
     if (res.ok) {
+      // #region agent log
+      fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '188b73' },
+        body: JSON.stringify({
+          sessionId: '188b73',
+          runId: 'pre-fix',
+          hypothesisId: 'H1_H5',
+          location: 'HorasTecnicasTimerPanel.jsx:runAction_ok',
+          message: 'timer API ok snapshot',
+          data: { action, sessaoServer: res.horasTecnicas?.sessao ?? null },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       if (res.horasTecnicas && onSnapshot) {
         onSnapshot(res.horasTecnicas);
       }
