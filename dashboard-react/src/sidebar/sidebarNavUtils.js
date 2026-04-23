@@ -20,7 +20,12 @@ export function pathMatches(href, activePath) {
 /** Espelha `pgmTurboSameOriginHref` + frame em `default.ctp`. */
 export function getTurboLinkProps(href, target, skipTurboFrame = false) {
   if (typeof window === 'undefined') return {};
-  if (skipTurboFrame) return {};
+  /*
+    skipTurboFrame: páginas com layout sem <turbo-frame id="pgm-main-frame"> (ex.: Service Desk).
+    Importante: devolver data-turbo="false" — senão `pgmTurboMarkNavLinks()` (Sidebar useLayoutEffect)
+    volta a injetar data-turbo-frame em todos os <a> da scroll-sidebar.
+  */
+  if (skipTurboFrame) return { 'data-turbo': 'false' };
   if (target === '_blank') return {};
   const raw = String(href || '').trim();
   if (!raw || raw === '#' || raw.indexOf('javascript:') === 0) return {};
