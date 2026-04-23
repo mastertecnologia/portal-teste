@@ -843,6 +843,10 @@ export default function TechDashboard({ boot }) {
 
   const isSD = Boolean(boot?.servicedesk);
 
+  /** Sticky no scroll interno (div overflow-auto). Fundo opaco + sombra; z-[2] fica abaixo do menu de ações (z-60). */
+  const techFilaThSticky =
+    'sticky top-0 z-[2] bg-[var(--pgm-bg-elevated)] shadow-[0_1px_0_0_var(--pgm-border-subtle)]';
+
   /** Barra de filtros: sem w-full para permitir flex-wrap na largura do painel (evita scroll horizontal na barra). */
   const sdFieldToolbar =
     'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition placeholder:text-[var(--pgm-text-muted)] focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.20),var(--pgm-shadow-glow)]';
@@ -1080,20 +1084,60 @@ export default function TechDashboard({ boot }) {
           >
             <thead className="bg-[var(--pgm-bg-elevated)] text-left text-[var(--pgm-text-muted)]">
               <tr>
-                <th className="px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Ticket</th>
-                <th className="max-w-[7rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Autor</th>
-                <th className="whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Data</th>
-                <th className="min-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)] sm:min-w-[10rem]">Assunto</th>
-                <th className="whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Status</th>
+                <th
+                  className={`${techFilaThSticky} px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Ticket
+                </th>
+                <th
+                  className={`${techFilaThSticky} max-w-[7rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Autor
+                </th>
+                <th
+                  className={`${techFilaThSticky} whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Data
+                </th>
+                <th
+                  className={`${techFilaThSticky} min-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)] sm:min-w-[10rem]`}
+                >
+                  Assunto
+                </th>
+                <th
+                  className={`${techFilaThSticky} whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Status
+                </th>
                 {wfEnabled ? (
                   <>
-                    <th className="max-w-[9rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Fila</th>
-                    <th className="whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Nível</th>
+                    <th
+                      className={`${techFilaThSticky} max-w-[9rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                    >
+                      Fila
+                    </th>
+                    <th
+                      className={`${techFilaThSticky} whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                    >
+                      Nível
+                    </th>
                   </>
                 ) : null}
-                <th className="max-w-[7rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Técnico</th>
-                <th className="max-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Cliente</th>
-                <th className="w-[7.25rem] min-w-[7.25rem] px-3 py-2 text-right text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Ações</th>
+                <th
+                  className={`${techFilaThSticky} max-w-[7rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Técnico
+                </th>
+                <th
+                  className={`${techFilaThSticky} max-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Cliente
+                </th>
+                <th
+                  className={`${techFilaThSticky} w-[7.25rem] min-w-[7.25rem] px-3 py-2 text-right text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody
