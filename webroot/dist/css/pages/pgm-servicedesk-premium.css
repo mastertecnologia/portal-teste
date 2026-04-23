@@ -1091,11 +1091,16 @@ html[data-pgm-theme="dark"] body.sd-body .filter-search-wrap .filter-input { pad
 html[data-pgm-theme="dark"] body.sd-body .pgm-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
 html[data-pgm-theme="dark"] body.sd-body .pgm-table thead { background: var(--pgm-bg-elevated); }
 html[data-pgm-theme="dark"] body.sd-body .pgm-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
 	padding: 0.6rem 0.75rem; text-align: left;
 	font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em;
 	text-transform: uppercase; color: var(--pgm-text-muted);
+	background: var(--pgm-bg-elevated);
 	border-bottom: 1px solid var(--pgm-border-subtle);
 	white-space: nowrap;
+	box-shadow: 0 1px 0 0 var(--pgm-border-subtle);
 }
 html[data-pgm-theme="dark"] body.sd-body .pgm-table tbody tr {
 	border-bottom: 1px solid var(--pgm-border-subtle);
@@ -1404,6 +1409,9 @@ html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .
 	background: var(--pgm-bg-elevated);
 }
 html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
 	padding: 0.6rem 0.75rem;
 	text-align: left;
 	font-size: 0.65rem;
@@ -1411,8 +1419,10 @@ html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--pgm-text-muted);
+	background: var(--pgm-bg-elevated);
 	border-bottom: 1px solid var(--pgm-border-subtle);
 	white-space: nowrap;
+	box-shadow: 0 1px 0 0 var(--pgm-border-subtle);
 }
 html[data-pgm-theme="light"] body.sd-body #tickets-react-root.tickets-react-sd .pgm-table tbody td {
 	padding: 0.65rem 0.75rem;
