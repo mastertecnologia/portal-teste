@@ -864,6 +864,11 @@ class TicketsController extends AppController {
 			}
 		}
 
+		// Formulário novo: não herdar DEFAULT 'media' da coluna (usuário deve escolher a urgência).
+		if (!$this->request->is('post') && in_array('severidade', $this->Tickets->getSchema()->columns(), true)) {
+			$ticket->severidade = null;
+		}
+
 		if ($this->request->is('post')) {
 			$post = $this->request->getData();
 			$anexos = [];
@@ -883,17 +888,39 @@ class TicketsController extends AppController {
 				$this->Abac->applyToQuery($qCnt, 'Queues', 'Queues');
 				$__needQueueId = $qCnt->count() > 0;
 			}
-			$__assuntoOk = trim((string)($post['assunto'] ?? '')) !== '';
-			$__sevOk = !$__sevColAdd || (string)($post['severidade'] ?? '') !== '';
-			$__qidPost = (int)($post['queue_id'] ?? 0);
-			$__qOk = !$__needQueueId || $__qidPost > 0;
-			$__addFormValid = $__assuntoOk && $__sevOk && $__qOk;
+			$__addRole = (int)$this->Auth->user('role');
+			$missingLabels = [];
+			if ($__addRole === C_RoleCliente) {
+				// idcliente vem do contexto; não exigir no POST
+			} elseif (trim((string)($post['idcliente'] ?? '')) === '') {
+				$missingLabels[] = __('Cliente');
+			}
+			if (trim((string)($post['email'] ?? '')) === '') {
+				$missingLabels[] = ($__addRole === C_RoleCliente) ? __('E-mail') : __('E-mail para contato');
+			}
+			if (trim((string)($post['assunto'] ?? '')) === '') {
+				$missingLabels[] = __('Assunto / Categoria');
+			}
+			if ($__sevColAdd && trim((string)($post['severidade'] ?? '')) === '') {
+				$missingLabels[] = __('Urgência (severidade)');
+			}
+			if ($__needQueueId && (int)($post['queue_id'] ?? 0) <= 0) {
+				$missingLabels[] = __('Destino (fila)');
+			}
+			if (trim((string)($post['solicitacao'] ?? '')) === '') {
+				$missingLabels[] = __('Descrição do problema / solicitação');
+			}
+			$__addFormValid = $missingLabels === [];
 
 			if (!$__addFormValid) {
 				$this->Flash->error(__(
-					'Selecione o assunto, a urgência (severidade) e o destino (fila) antes de enviar o chamado.'
+					'Preencha ou selecione os campos obrigatórios: {0}.',
+					[implode('; ', $missingLabels)]
 				));
 				$ticket = $this->Tickets->patchEntity($ticket, $post);
+				if ($__sevColAdd && trim((string)($post['severidade'] ?? '')) === '') {
+					$ticket->severidade = null;
+				}
 			} else {
 
 			if (!$this->_queuesRelacionalReady() || !$__queueIdCol) {

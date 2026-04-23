@@ -802,7 +802,7 @@
 							</div>
 							<div class="sd-add-field sd-email-main">
 								<label class="control-label text-muted" for="email">E-mail para contato</label>
-								<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'usuario@empresa.com']) ?>
+								<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'required' => true, 'placeholder' => 'usuario@empresa.com']) ?>
 							</div>
 						<?php } else { ?>
 							<div class="sd-add-field">
@@ -811,7 +811,7 @@
 							</div>
 							<div class="sd-add-field">
 								<label class="control-label text-muted" for="email">E-mail</label>
-								<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'placeholder' => 'usuario@empresa.com']) ?>
+								<?= $this->Form->email('email', ['value' => $email, 'type' => 'text', 'id' => 'email', 'class' => 'email form-control ticket-add-email', 'label' => false, 'required' => true, 'placeholder' => 'usuario@empresa.com']) ?>
 							</div>
 						<?php } ?>
 					</div>
