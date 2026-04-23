@@ -2510,6 +2510,8 @@ class TicketsController extends AppController {
 				'apiComments' => $w . 'tickets/api-comments/',
 				'apiSaveTicket' => $w . 'tickets/api-save/',
 				'apiTimer' => $w . 'tickets/api-timer/',
+				'apiAuditValidate' => $w . 'api/audit/validate',
+				'apiSetUserAuditPassword' => $w . 'users/api-set-user-audit-password',
 				'apiAlterarSituacao' => $w . 'tickets/api-alterar-situacao/',
 				'apiAnexoUpload' => $w . 'tickets/api-anexo-upload/',
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',

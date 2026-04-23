@@ -1485,6 +1485,17 @@ return [
         "sort_order" => $n(),
     ],
     [
+        "code" => "tickets.audit_timer",
+        "name" => "Tickets — auditoria de tempo (API)",
+        "module" => "Tickets",
+        "controller" => "Audit",
+        "action" => "apiValidate,api_validate",
+        "perm_type" => "rbac",
+        "abac_scope" => "empresa",
+        "description" => "POST /api/audit/validate — log de ajuste manual (senha de auditoria).",
+        "sort_order" => $n(),
+    ],
+    [
         "code" => "tickets.comments.api_add",
         "name" => "Tickets — comentário API (JSON)",
         "module" => "Tickets",

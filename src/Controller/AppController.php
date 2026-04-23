@@ -103,6 +103,8 @@ class AppController extends Controller
                 "apiComments",
                 "apiSaveTicket",
                 "apiTimer",
+                "apiValidate",
+                "apiSetUserAuditPassword",
                 "apiAlterarSituacao",
                 "apiAnexoUpload",
                 "apiAnexoDelete",

@@ -269,6 +269,18 @@ Router::scope("/", function ($routes) {
         ])
         ->setPass(["cnpj"])
         ->setMethods(["GET"]);
+    $routes
+        ->connect("/api/audit/validate", [
+            "controller" => "Audit",
+            "action" => "apiValidate",
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/users/api-set-user-audit-password", [
+            "controller" => "Users",
+            "action" => "apiSetUserAuditPassword",
+        ])
+        ->setMethods(["POST"]);
     // Tickets — rotas legadas redirecionam para /servicedesk (consolidação da UI React).
     $routes->redirect("/tickets", "/servicedesk", ["status" => 301]);
     $routes->redirect("/tickets/", "/servicedesk", ["status" => 301]);

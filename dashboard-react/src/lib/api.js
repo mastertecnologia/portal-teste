@@ -609,6 +609,51 @@ export async function postTimerAction(ticketId, action) {
   };
 }
 
+/**
+ * Registo de auditoria de tempo (senha verificada no servidor; não ajusta o timer no estado).
+ * @param {{ ticketId: number, userId: number, oldTime: string, newTime: string, reason: string, authKey: string }} p
+ */
+export async function postAuditValidate(p) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 100));
+    return { ok: true, message: 'ok (mock)' };
+  }
+  const boot = getBoot();
+  const url = boot?.paths?.apiAuditValidate;
+  if (!url) {
+    return { ok: false, error: 'no_api', message: 'apiAuditValidate não está no boot.' };
+  }
+  const body = {
+    user_id: p.userId,
+    ticket_id: p.ticketId,
+    old_time: p.oldTime,
+    new_time: p.newTime,
+    reason: p.reason,
+    authKey: p.authKey,
+  };
+  const r = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      message: json.message || json.error || (r.status === 503 ? 'Serviço indisponível (migrações?)' : 'Falha na autorização'),
+      httpStatus: r.status,
+    };
+  }
+  return { ok: true, message: json.message || null };
+}
+
 export async function postAlterarSituacao(ticketId, situacao) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 120));

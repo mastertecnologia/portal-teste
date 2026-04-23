@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { postTimerAction } from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
+import TimerWidget from './TimerWidget.jsx';
 import './HorasTecnicasTimerPanel.css';
 
 /** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
@@ -266,6 +267,8 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
         Tempo já lançado neste ticket: <strong>{minutosLabel(registrados)}</strong>. Ao finalizar, o sistema grava em Horas
         cadastradas e desconta do contrato do cliente.
       </p>
+
+      <TimerWidget ticketId={ticketId} displayHms={displayHms} />
     </div>
   );
 }

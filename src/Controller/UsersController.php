@@ -1810,6 +1810,48 @@ class UsersController extends AppController {
 		return $this->jsonResponse(['ok' => true]);
 	}
 
+	/**
+	 * Admin: define a senha de auditoria (hash) de outro usuário (POST JSON).
+	 * Corpo: { "userId": 1, "auditPassword": "..." }
+	 */
+	public function apiSetUserAuditPassword() {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		if (!(int) $this->Auth->user('admin')) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Apenas administrador.'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$targetId = (int)($body['userId'] ?? $body['user_id'] ?? 0);
+		$plain = '';
+		if (isset($body['auditPassword'])) {
+			$plain = (string) $body['auditPassword'];
+		} elseif (isset($body['audit_password'])) {
+			$plain = (string) $body['audit_password'];
+		}
+		if ($targetId < 1 || $plain === '') {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid', 'message' => 'Informe userId e auditPassword.'], 400);
+		}
+		$adminEmpresa = (int) $this->Auth->user('idempresa');
+		try {
+			$target = $this->Users->get($targetId);
+		} catch (RecordNotFoundException $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if ((int) $target->idempresa !== $adminEmpresa) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Usuário de outra empresa.'], 403);
+		}
+		$hasher = new DefaultPasswordHasher();
+		$target->set('audit_password_hash', $hasher->hash($plain));
+		if ($this->Users->save($target)) {
+			return $this->jsonResponse(['ok' => true]);
+		}
+
+		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+	}
+
 	public function selectSidebar(){
 		$this->autoRender = false;
 		$this->viewBuilder()->setLayout('ajax');
