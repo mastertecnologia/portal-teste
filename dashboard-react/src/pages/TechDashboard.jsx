@@ -851,10 +851,11 @@ export default function TechDashboard({ boot }) {
   const sdFieldToolbar =
     'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition placeholder:text-[var(--pgm-text-muted)] focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.20),var(--pgm-shadow-glow)]';
 
+  /** min-h-0: permite flex-1 encolher e ativar overflow-auto interno (sticky no thead). */
   const filaCardClass = embedded && isSD
-    ? 'pgm-card flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-hidden'
+    ? 'pgm-card flex w-full min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-y-hidden'
     : embedded
-      ? 'flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-hidden rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
+      ? 'flex w-full min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-x-clip overflow-y-hidden rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
       : 'w-full min-w-0 max-w-full rounded-[28px] border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-[var(--pgm-shadow-md)]';
 
   const filaToolbar = (className) =>
@@ -1071,13 +1072,13 @@ export default function TechDashboard({ boot }) {
       <div
         className={
           embedded
-            ? 'flex min-w-0 max-w-full flex-1 flex-col overflow-hidden'
+            ? 'flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden'
             : 'mt-5 min-w-0 max-w-full overflow-x-clip rounded-2xl border border-[var(--pgm-border-subtle)]'
         }
       >
         <div
           ref={sdTableScrollRef}
-          className="min-h-0 min-w-0 max-w-full flex-1 overflow-auto"
+          className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-auto overflow-y-auto"
         >
           <table
             className={`min-w-full text-[0.8125rem] ${embedded && isSD ? 'pgm-table' : ''} ${embedded && !isSD ? 'divide-y divide-[var(--pgm-border)]' : ''}`}
@@ -1475,7 +1476,7 @@ export default function TechDashboard({ boot }) {
 
   if (embedded) {
     return (
-      <div className="tickets-react-tech flex w-full min-w-0 max-w-full flex-1 flex-col overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
+      <div className="tickets-react-tech flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-visible px-4 pb-6 pt-4 text-[var(--pgm-text)] sm:px-5">
         {boot?.servicedesk ? (
           <header className="mb-2 border-b border-[var(--pgm-border-subtle)] pb-3">
             <p className="m-0 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--pgm-primary,#1d9e75)]">

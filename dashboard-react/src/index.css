@@ -191,6 +191,26 @@ html[data-pgm-theme='light'] {
   min-height: 0;
 }
 
+/*
+  Service Desk: o main (.sd-main--full) já é flex column; o root precisa consumir a altura
+  restante para o card da fila (flex-1 + min-h-0) gerar scroll interno — senão a página rola
+  inteira e o thead “sobe” junto (sticky sem scrollport útil).
+*/
+/* Coluna React: não depender de ser filha direta de .sd-main (Flash pode vir antes no main). */
+body.sd-body .sd-main.sd-main--full .tickets-react-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+body.sd-body .tickets-react-shell > #tickets-react-root.tickets-react-host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
 /* Fila técnica embutida: ancestrais flex com min-height podem cortar o topo do botão */
 #tickets-react-root .tickets-react-tech {
   overflow: visible;
