@@ -659,14 +659,18 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
 #pgm-chrono-ref-isolate .btn-stop { background-color: #ef4444; }
 #pgm-chrono-ref-isolate button:disabled { background-color: #cbd5e1; cursor: not-allowed; }
 
-#pgm-chrono-ref-isolate .modal-overlay {
+/* Modal fora do #pgm-chrono-ref-isolate: evita stacking/flex a impedir fixed; z-index acima de .toast/.mockup-nav (200) */
+#modalOverlay {
+    --primary: #10b981;
+    --text-main: #1e293b;
+    --border: #e2e8f0;
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.6);
-    display: none; justify-content: center; align-items: center; z-index: 1000;
+    display: none; justify-content: center; align-items: center; z-index: 10000;
     backdrop-filter: blur(4px);
 }
 
-#pgm-chrono-ref-isolate .modal-content {
+#modalOverlay .modal-content {
     background: white; padding: 30px; border-radius: 16px; width: 500px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     animation: slideIn 0.3s ease-out;
@@ -674,21 +678,22 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
 
 @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-#pgm-chrono-ref-isolate .modal-header { display: block; padding: 0; margin: 0; background: transparent; border: none; }
-#pgm-chrono-ref-isolate .modal-header h2 { margin: 0; font-size: 1.25rem; color: var(--text-main); }
-#pgm-chrono-ref-isolate .modal-header p { color: #64748b; font-size: 0.9rem; margin-top: 5px; }
+#modalOverlay .modal-header { display: block; padding: 0; margin: 0; background: transparent; border: none; }
+#modalOverlay .modal-header h2 { margin: 0; font-size: 1.25rem; color: var(--text-main); }
+#modalOverlay .modal-header p { color: #64748b; font-size: 0.9rem; margin-top: 5px; }
 
-#pgm-chrono-ref-isolate .time-badge { background: #f1f5f9; color: var(--primary); padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono'; font-weight: bold; }
+#modalOverlay .time-badge { background: #f1f5f9; color: var(--primary); padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono'; font-weight: bold; }
 
-#pgm-chrono-ref-isolate textarea {
+#modalOverlay textarea {
     width: 100%; border: 1px solid var(--border); border-radius: 8px;
     padding: 12px; margin: 20px 0; font-family: inherit; resize: none;
     box-sizing: border-box; focus: outline-none; focus: ring: 2px solid var(--primary);
 }
 
-#pgm-chrono-ref-isolate .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-#pgm-chrono-ref-isolate .btn-save { background-color: var(--primary); padding: 10px 24px; }
-#pgm-chrono-ref-isolate .btn-cancel { background-color: transparent; color: #64748b; border: 1px solid var(--border); }
+#modalOverlay .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+#modalOverlay .modal-actions button { font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; border-radius: 8px; }
+#modalOverlay .btn-save { background-color: var(--primary); padding: 10px 24px; color: #fff; border: none; }
+#modalOverlay .btn-cancel { background-color: transparent; color: #64748b; border: 1px solid var(--border); }
 </style>
 </head>
 <body class="sd-body">
@@ -1254,6 +1259,7 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
             <button id="stopBtn" class="btn-stop" disabled>Finalizar</button>
         </div>
     </div>
+</div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
@@ -1270,7 +1276,6 @@ body.sd-body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background
             </div>
         </div>
     </div>
-</div>
       </div>
     </div>
 
