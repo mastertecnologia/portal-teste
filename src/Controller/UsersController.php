@@ -993,6 +993,14 @@ class UsersController extends AppController {
 			}
 			unset($data['empresa_vinculo_ids'], $data['process_empresa_vinculo']);
 
+			$auditPasswordNew = '';
+			$auditPasswordConfirm = '';
+			if ((int)$user->role === 0) {
+				$auditPasswordNew = trim((string)($data['audit_password_new'] ?? ''));
+				$auditPasswordConfirm = trim((string)($data['audit_password_confirm'] ?? ''));
+			}
+			unset($data['audit_password_new'], $data['audit_password_confirm'], $data['audit_password_hash']);
+
 			// Se o usuário permanecer ativo (inativo vazio ou 0), mantém a validação rígida de e-mail duplicado.
 			// Se ele estiver sendo inativado, permitimos salvar mesmo com e-mail duplicado, para justamente
 			// conseguir desativar o usuário conflitante.
@@ -1019,10 +1027,38 @@ class UsersController extends AppController {
 				}
 			}
 
+			if ((int)$user->role === 0 && ($auditPasswordNew !== '' || $auditPasswordConfirm !== '')) {
+				if (!$this->_userAdminMaySetAuditPasswordForUser($user)) {
+					$this->Flash->error('Não é permitido definir a senha de auditoria para um utilizador de outra empresa.');
+					$redirEdit = ['action' => 'edit', $id];
+					if ($fromQueues) {
+						$redirEdit['?'] = ['from' => 'queues'];
+					}
+
+					return $this->redirect($redirEdit);
+				}
+				$auditErr = $this->_validateAuditPasswordPair($auditPasswordNew, $auditPasswordConfirm);
+				if ($auditErr !== null) {
+					$this->Flash->error($auditErr);
+					$redirEdit = ['action' => 'edit', $id];
+					if ($fromQueues) {
+						$redirEdit['?'] = ['from' => 'queues'];
+					}
+
+					return $this->redirect($redirEdit);
+				}
+			}
+
 			if (isset($data['role'])) unset($data['role']);
 			$this->Users->patchEntity($user, $data);
+			$savedMain = (bool)$this->Users->save($user);
+			$auditHashSaved = true;
+			if ($savedMain && (int)$user->role === 0 && $auditPasswordNew !== '') {
+				$this->_applyAuditPasswordHashToUser($user, $auditPasswordNew);
+				$auditHashSaved = (bool)$this->Users->save($user);
+			}
 
-			if ($this->Users->save($user)) {
+			if ($savedMain) {
 				if ((int)$user->role === 0) {
 					if ($empresaVinculoPost !== null) {
 						$allowedEv = $this->_empresaIdsAllowedForEquipeVinculo();
@@ -1038,6 +1074,9 @@ class UsersController extends AppController {
 					$this->_syncQueuesUsuario((int)$id, (int)$this->Auth->user('idempresa'));
 				}
 				$this->Flash->success('As informações do usuário foram alteradas com sucesso!');
+				if (!$auditHashSaved) {
+					$this->Flash->warning('A senha de auditoria não foi gravada. Volte a editar este utilizador e defina de novo.');
+				}
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
 				if ($fromQueues) {
 					return $this->redirect(['controller' => 'Queues', 'action' => 'adminTechnicians']);
@@ -1810,6 +1849,65 @@ class UsersController extends AppController {
 		return $this->jsonResponse(['ok' => true]);
 	}
 
+	/** Comprimento mínimo da senha de auditoria (timer / Service Desk). */
+	protected const AUDIT_PASSWORD_MIN_LENGTH = 6;
+
+	/**
+	 * Administrador pode atribuir senha de auditoria ao alvo (mesma empresa).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|array $target
+	 */
+	protected function _userAdminMaySetAuditPasswordForUser($target): bool {
+		$tid = (int)(is_object($target) ? $target->get('idempresa') : ($target['idempresa'] ?? 0));
+
+		return $tid === (int)$this->Auth->user('idempresa');
+	}
+
+	/**
+	 * @param string $plain
+	 * @return string|null null se válida; senão mensagem de erro.
+	 */
+	protected function _validateAuditPasswordPlain(string $plain): ?string {
+		$len = strlen($plain);
+		if ($len < self::AUDIT_PASSWORD_MIN_LENGTH) {
+			return 'A senha de auditoria deve ter pelo menos ' . self::AUDIT_PASSWORD_MIN_LENGTH . ' caracteres.';
+		}
+		if ($len > 200) {
+			return 'A senha de auditoria é demasiado longa.';
+		}
+
+		return null;
+	}
+
+	/**
+	 * Valida par nova/confirmar no formulário de edição.
+	 *
+	 * @return string|null null se OK (incluindo ambos vazios — sem alteração).
+	 */
+	protected function _validateAuditPasswordPair(string $new, string $confirm): ?string {
+		if ($new === '' && $confirm === '') {
+			return null;
+		}
+		if ($new === '' || $confirm === '') {
+			return 'Preencha a nova senha de auditoria e a confirmação.';
+		}
+		if ($new !== $confirm) {
+			return 'A confirmação da senha de auditoria não coincide.';
+		}
+
+		return $this->_validateAuditPasswordPlain($new);
+	}
+
+	/**
+	 * Define hash da senha de auditoria na entidade (gravar com save()).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $user
+	 */
+	protected function _applyAuditPasswordHashToUser($user, string $plain): void {
+		$hasher = new DefaultPasswordHasher();
+		$user->set('audit_password_hash', $hasher->hash($plain));
+	}
+
 	/**
 	 * Admin: define a senha de auditoria (hash) de outro usuário (POST JSON).
 	 * Corpo: { "userId": 1, "auditPassword": "..." }
@@ -1834,17 +1932,19 @@ class UsersController extends AppController {
 		if ($targetId < 1 || $plain === '') {
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid', 'message' => 'Informe userId e auditPassword.'], 400);
 		}
-		$adminEmpresa = (int) $this->Auth->user('idempresa');
+		$plainErr = $this->_validateAuditPasswordPlain($plain);
+		if ($plainErr !== null) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid', 'message' => $plainErr], 400);
+		}
 		try {
 			$target = $this->Users->get($targetId);
 		} catch (RecordNotFoundException $e) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
-		if ((int) $target->idempresa !== $adminEmpresa) {
+		if (!$this->_userAdminMaySetAuditPasswordForUser($target)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Usuário de outra empresa.'], 403);
 		}
-		$hasher = new DefaultPasswordHasher();
-		$target->set('audit_password_hash', $hasher->hash($plain));
+		$this->_applyAuditPasswordHashToUser($target, $plain);
 		if ($this->Users->save($target)) {
 			return $this->jsonResponse(['ok' => true]);
 		}

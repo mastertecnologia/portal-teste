@@ -171,6 +171,40 @@ if (!empty($fromQueues)) {
 			</div>
 			<?php endif; ?>
 
+			<?php if ((int)$user->role === 0) : ?>
+			<h6 class="text-muted m-t-20 m-b-10">Senha de auditoria (Service Desk)</h6>
+			<p class="small text-muted m-b-10">
+				<strong>Individual por utilizador:</strong> cada técnico tem a sua própria senha de auditoria, gravada neste perfil; no Service Desk só esse utilizador a introduz no
+				<strong>Ajuste de auditoria</strong> do timer (é distinta da senha de login). O registo de auditoria fica associado ao utilizador que confirma a alteração.
+				Só administradores da mesma empresa podem definir ou alterar este valor.
+			</p>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-group">
+						<label class="control-label text-muted">Estado atual</label>
+						<p class="form-control-static m-b-0">
+							<?= !empty($user->audit_password_hash) ? '<span class="text-success">Definida</span>' : '<span class="text-warning">Não definida</span>' ?>
+						</p>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label class="control-label text-muted" for="audit_password_new">Nova senha de auditoria</label>
+						<input type="password" name="audit_password_new" id="audit_password_new" class="form-control" autocomplete="new-password" placeholder="Deixe vazio para não alterar" maxlength="200">
+						<small class="form-text text-muted">Mínimo de 6 caracteres, se preencher.</small>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label class="control-label text-muted" for="audit_password_confirm">Confirmar senha de auditoria</label>
+						<input type="password" name="audit_password_confirm" id="audit_password_confirm" class="form-control" autocomplete="new-password" placeholder="Repita a nova senha" maxlength="200">
+					</div>
+				</div>
+			</div>
+			<?php endif; ?>
+
 			<h6 class="text-muted m-t-20 m-b-10">Assinaturas de e-mail</h6>
 			<div class="row">
 				<div class="col-md-6">
