@@ -1,0 +1,131 @@
+/* Escopo: Cronômetro Real-Time PGM (mesmo visual do snippet; sem estilos de body/viewport). */
+.pgm-crono-realtime {
+  font-family: 'Inter', sans-serif;
+}
+
+.pgm-crono-realtime .timer-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.pgm-crono-realtime .header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.pgm-crono-realtime .title-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.pgm-crono-realtime .display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 30px 0;
+  margin-bottom: 24px;
+}
+
+.pgm-crono-realtime .timer-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 48px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.pgm-crono-realtime .controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.pgm-crono-realtime button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: 0.2s;
+  color: white;
+}
+
+.pgm-crono-realtime .btn-start {
+  background-color: #10b981;
+}
+
+.pgm-crono-realtime .btn-pause {
+  background-color: #f59e0b;
+  display: none;
+}
+
+.pgm-crono-realtime .btn-stop {
+  background-color: #ef4444;
+}
+
+.pgm-crono-realtime button:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.pgm-crono-realtime.running .btn-start {
+  display: none;
+}
+
+.pgm-crono-realtime.running .btn-pause {
+  display: flex;
+}
+
+.pgm-crono-realtime .status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  visibility: hidden;
+}
+
+.pgm-crono-realtime.running .status-dot {
+  visibility: visible;
+  animation: pgm-crono-pulse 2s infinite;
+}
+
+@keyframes pgm-crono-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pgm-crono-realtime-footer {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 10px;
+  max-width: 450px;
+  line-height: 1.45;
+}
+
+.pgm-crono-realtime-footer strong {
+  color: #475569;
+  font-weight: 600;
+}

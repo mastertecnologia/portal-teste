@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { postTimerAction } from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
+import './HorasTecnicasTimerPanel.css';
 
 /** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
 function parseSqlLocalDateTime(s) {
@@ -36,7 +37,7 @@ function sessaoEstaPausada(sessao) {
 
 /**
  * Painel: API iniciar / pausar / retomar / finalizar; display via precisionStopwatch (Date.now, sem drift).
- * Layout alinhado ao Service Desk (cartão claro, três ações com ícones).
+ * Layout “Cronômetro Real-Time PGM” (HTML/CSS de referência).
  */
 export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disabled, onSnapshot, onFeedback }) {
   const [optimistic, setOptimistic] = useState(null);
@@ -178,6 +179,14 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     return res;
   }
 
+  function handlePrimaryClick() {
+    if (sessaoEstaPausada(sessao)) {
+      runAction('retomar');
+    } else {
+      runAction('iniciar');
+    }
+  }
+
   if (!canUse) {
     return null;
   }
@@ -196,85 +205,67 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   const registrados = snap.minutosRegistrados ?? 0;
   const paused = sessaoEstaPausada(sessao);
   const idle = !sessao;
+  const running = Boolean(sessao) && !paused;
+  const statusText = idle ? 'Aguardando...' : paused ? 'Pausado' : 'Em execução';
+
+  const rootClass = running ? 'pgm-crono-realtime running' : 'pgm-crono-realtime';
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
-      <div className="border-b border-slate-200 bg-slate-100/90 px-4 py-3">
-        <h2 className="text-[0.9rem] font-bold tracking-tight text-slate-900">Horas técnicas</h2>
-      </div>
-      <div className="p-4">
-        <p className="text-xs text-slate-600">
-          Tempo já lançado neste ticket:{' '}
-          <span className="font-semibold text-slate-800">{minutosLabel(registrados)}</span>. Ao finalizar, o sistema grava em
-          Horas cadastradas e desconta do contrato do cliente.
-        </p>
-
-        <div className="mt-3 text-center">
-          <div
-            className={`mb-3 rounded-lg border px-4 py-3 font-mono text-[2rem] font-bold tracking-[0.12em] transition-colors ${
-              paused
-                ? 'border-amber-200 bg-amber-50/80 text-amber-800'
-                : 'border-slate-200 bg-slate-50 text-[#155E4A]'
-            }`}
-          >
-            {displayHms}
-            {paused ? <span className="ml-2 font-sans text-sm font-medium text-amber-800/90">(pausado)</span> : null}
+    <div>
+      <div className={rootClass}>
+        <div className="timer-card" id="timerCard">
+          <div className="header-section">
+            <div>
+              <span className="title-label">Controle de Horas</span>
+              <div id="statusLabel" style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                <span className="status-dot" />
+                <span id="statusText">{statusText}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="display-container">
+            <div className="timer-display" id="display">
+              {displayHms}
+            </div>
+          </div>
+
+          <div className="controls">
             <button
+              id="startBtn"
               type="button"
-              disabled={disabled || busy || !idle}
-              onClick={() => runAction('iniciar')}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#2daa6a] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45"
+              className="btn-start"
+              disabled={disabled || busy || running}
+              onClick={handlePrimaryClick}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-              </svg>
-              {busy && idle ? '…' : 'Iniciar'}
+              {busy && (idle || paused) ? '…' : 'Iniciar'}
             </button>
-
-            {paused ? (
-              <button
-                type="button"
-                disabled={disabled || busy}
-                onClick={() => runAction('retomar')}
-                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                </svg>
-                Retomar
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={disabled || busy || idle}
-                onClick={() => runAction('pausar')}
-                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <rect x="6" y="4" width="4" height="16" rx="1" />
-                  <rect x="14" y="4" width="4" height="16" rx="1" />
-                </svg>
-                Pausar
-              </button>
-            )}
-
             <button
+              id="pauseBtn"
               type="button"
+              className="btn-pause"
+              disabled={disabled || busy || idle}
+              onClick={() => runAction('pausar')}
+            >
+              Pausar
+            </button>
+            <button
+              id="stopBtn"
+              type="button"
+              className="btn-stop"
               disabled={disabled || busy || idle}
               onClick={() => runAction('finalizar')}
-              className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
               Parar
             </button>
           </div>
         </div>
       </div>
+
+      <p className="pgm-crono-realtime-footer">
+        Tempo já lançado neste ticket: <strong>{minutosLabel(registrados)}</strong>. Ao finalizar, o sistema grava em Horas
+        cadastradas e desconta do contrato do cliente.
+      </p>
     </div>
   );
 }
