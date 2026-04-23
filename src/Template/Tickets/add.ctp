@@ -1119,18 +1119,24 @@
 		$("#idcliente").change(function() {
 			var idcliente = $(this).val();
 			loadSolicitantes(idcliente);
-			loadEmail(idcliente);
+			if (typeof loadEmail === 'function') {
+				loadEmail(idcliente);
+			}
 		});
 
 		// Só busca a lista de Solicitantes e Contadores se houver um cliente selecionado
 		if ($("#idcliente").val() != '' && $("#idcliente").val() != null) {
 			loadSolicitantes($("#idcliente").val());
-			loadEmail($("#idcliente").val());
+			if (typeof loadEmail === 'function') {
+				loadEmail($("#idcliente").val());
+			}
 		}
 
 	// Email
 		<?php if(isset($email)) { ?>
-			$('#email').typeAhead({ source: ['<?= $email ?>'], scope: this });
+			if (typeof $ !== 'undefined' && $.fn && typeof $.fn.typeAhead === 'function') {
+				$('#email').typeAhead({ source: <?= json_encode([$email], JSON_HEX_TAG | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) ?>, scope: this });
+			}
 			$('#email').focus();
 		<?php } ?>
 

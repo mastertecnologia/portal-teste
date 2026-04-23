@@ -36,6 +36,11 @@ $sdUrlHistorico = $sdRole === 1
 	<?= $this->fetch('script') ?>
 </head>
 <body class="sd-body sd-body--fullpage sd-body--sd-topbar <?= h(trim($bodyPageClass ?? '')) ?>">
+	<?= $this->Html->script('/assets/node_modules/jquery/jquery-3.2.1.min') ?>
+	<?= $this->Html->script('/js/pgm-portal-theme') ?>
+	<?= $this->Html->script('/assets/node_modules/bootstrap/dist/js/bootstrap.min') ?>
+	<?= $this->Html->script('/dist/js/pages/bootstrap-select') ?>
+	<?= $this->Html->script('/plugins/Chrome-like-jQuery-Autocomplete-Autosuggest-Plugin-typeAhead/lib/jquery-typeahead.js') ?>
 <div class="sd-shell sd-shell--with-sd-topbar prd-root">
 	<header class="sd-topbar" role="banner">
 		<div class="flex-center">
@@ -55,9 +60,5 @@ $sdUrlHistorico = $sdRole === 1
 		<?= $this->fetch('content') ?>
 	</main>
 </div>
-<?= $this->Html->script('/assets/node_modules/jquery/jquery-3.2.1.min') ?>
-<?= $this->Html->script('/js/pgm-portal-theme') ?>
-<?= $this->Html->script('/assets/node_modules/bootstrap/dist/js/bootstrap.min') ?>
-<?= $this->Html->script('/dist/js/pages/bootstrap-select') ?>
 </body>
 </html>
