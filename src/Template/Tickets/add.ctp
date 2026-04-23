@@ -876,6 +876,16 @@
 	</div>
 </div>
 <script>
+	// #region agent log
+	(function () {
+		if (window.__sdDbgH1Err) { return; } window.__sdDbgH1Err = true;
+		window.addEventListener('error', function (e) {
+			try {
+				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '62ce4c' }, body: JSON.stringify({ sessionId: '62ce4c', hypothesisId: 'H1', location: 'add.ctp:window.onerror', message: String(e.message || 'error'), data: { file: String(e.filename || ''), line: e.lineno || 0, col: e.colno || 0 }, timestamp: Date.now() }) }).catch(function () {});
+			} catch (ex) {}
+		});
+	}());
+	// #endregion
 	function sdTicketAddGetRole() {
 		var r = $('.sd-add-role-holder').attr('data-sd-role');
 		return parseInt(r || '1', 10);
@@ -957,12 +967,17 @@
 	}
 
 	$(document).ready(function () {
+		// #region agent log
+		try {
+			fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '62ce4c' }, body: JSON.stringify({ sessionId: '62ce4c', hypothesisId: 'H1', location: 'add.ctp:ready:init', message: 'libs', data: { jquery: typeof jQuery, selectpicker: !!(typeof $ !== 'undefined' && $ && $.fn && $.fn.selectpicker), role: (function () { var r = $('.sd-add-role-holder').attr('data-sd-role'); return parseInt(r || '1', 10); })() }, timestamp: Date.now() }) }).catch(function () {});
+		} catch (ex) {}
+		// #endregion
 		if (typeof $ !== 'undefined' && $.fn && $.fn.selectpicker) {
 			$('.tickets-add-wrap select.selectpicker').each(function () {
 				var $el = $(this);
 				if ($el.data('selectpicker')) return;
 				$el.selectpicker({
-					container: '.sd-add-page',
+					container: 'body',
 					style: '',
 					size: 8,
 					width: '100%'
@@ -998,6 +1013,28 @@
 			sdTicketAddSubmitting = true;
 			sdTicketAddRefreshAtendimentoStatus();
 		});
+		// #region agent log
+		$(document).on('shown.bs.select', '.tickets-add-wrap select.selectpicker', function () {
+			var $m = $(this).closest('.bootstrap-select').find('.dropdown-menu').first();
+			var sd = document.querySelector('.sd-add-page');
+			var bsc = document.querySelector('.sd-add-page .bootstrap-select.bs-container');
+			try {
+				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '62ce4c' }, body: JSON.stringify({ sessionId: '62ce4c', hypothesisId: 'H2', location: 'add.ctp:shown.bs.select', message: 'dropdown open', data: { id: this.id || '', nLi: $m.length ? $m.find('li').length : -1, overflowParent: sd ? window.getComputedStyle(sd).overflow : 'none', hasBsContainer: !!bsc, zMenu: $m.length ? $m.css('z-index') : 'na' }, timestamp: Date.now() }) }).catch(function () {});
+			} catch (ex) {}
+		});
+		setTimeout(function () {
+			var c = document.getElementById('idcliente');
+			var a = document.getElementById('assunto');
+			var q = document.getElementById('queue_id');
+			var nC = c ? c.querySelectorAll('option').length : -1;
+			var nA = a ? a.querySelectorAll('option').length : -1;
+			var nQ = q ? q.querySelectorAll('option').length : -1;
+			var sdp = document.querySelector('.sd-add-page');
+			try {
+				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '62ce4c' }, body: JSON.stringify({ sessionId: '62ce4c', hypothesisId: 'H4', location: 'add.ctp:domCounts', message: 'native select options', data: { nIdclienteOpts: nC, nAssuntoOpts: nA, nQueueOpts: nQ, sdAddPage: !!sdp }, timestamp: Date.now() }) }).catch(function () {});
+			} catch (ex) {}
+		}, 200);
+		// #endregion
 	});
 	// Idcliente
 		<?php if(isset($idcliente)) { ?>
@@ -1092,6 +1129,12 @@
 				headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
 				url: "<?= Router::url(['controller'=>'Clientes','action'=>'solicitantes']);?>/" + idcliente,
 				success: function(data){
+					// #region agent log
+					try {
+						var nk = (data && typeof data === 'object' && !Array.isArray(data)) ? Object.keys(data).length : -1;
+						fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '62ce4c' }, body: JSON.stringify({ sessionId: '62ce4c', hypothesisId: 'H5', location: 'add.ctp:loadSolicitantes:success', message: 'ajax solicitantes', data: { idcliente: idcliente, nKeys: nk }, timestamp: Date.now() }) }).catch(function () {});
+					} catch (ex) {}
+					// #endregion
 					$('#idsolicitante').find('option').remove().end();
 					$('#idsolicitante').append("<option value='' selected>Indefinido</option>");
 					$.each(data, function(key, array) {
@@ -1104,7 +1147,14 @@
 						$('#idsolicitante').selectpicker('refresh');
 					}
 				},
-				error: function (tab) { $('#idsolicitante').append("<option value='' selected>Indefinido</option>"); }
+				error: function (xhr) {
+					// #region agent log
+					try {
+						fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '62ce4c' }, body: JSON.stringify({ sessionId: '62ce4c', hypothesisId: 'H5', location: 'add.ctp:loadSolicitantes:error', message: 'ajax failed', data: { idcliente: idcliente, status: xhr && xhr.status, len: (xhr && xhr.responseText) ? String(xhr.responseText).length : 0 }, timestamp: Date.now() }) }).catch(function () {});
+					} catch (ex) {}
+					// #endregion
+					$('#idsolicitante').append("<option value='' selected>Indefinido</option>");
+				}
 			});
 		}
 

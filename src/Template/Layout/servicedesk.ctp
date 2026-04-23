@@ -38,6 +38,7 @@ $sdUrlHistorico = $sdRole === 1
 <body class="sd-body sd-body--fullpage sd-body--sd-topbar <?= h(trim($bodyPageClass ?? '')) ?>">
 	<?= $this->Html->script('/assets/node_modules/jquery/jquery-3.2.1.min') ?>
 	<?= $this->Html->script('/js/pgm-portal-theme') ?>
+	<?= $this->Html->script('/assets/node_modules/popper/popper.min') ?>
 	<?= $this->Html->script('/assets/node_modules/bootstrap/dist/js/bootstrap.min') ?>
 	<?= $this->Html->script('/dist/js/pages/bootstrap-select') ?>
 	<?= $this->Html->script('/plugins/Chrome-like-jQuery-Autocomplete-Autosuggest-Plugin-typeAhead/lib/jquery-typeahead.js') ?>

@@ -1054,7 +1054,8 @@ class TicketsController extends AppController {
 
 		
 		$this->set('assunto', $assunto);
-		$this->set('ticketAssuntoOptions', $this->_ticketAssuntoClienteOptions());
+		$__taOpts = $this->_ticketAssuntoClienteOptions();
+		$this->set('ticketAssuntoOptions', $__taOpts);
 		$this->set('clientes', $clientesList);
 		$this->set('authUserName', (string)($this->Auth->user('name') ?? ''));
 		$this->set('severidadeColumnReady', in_array('severidade', $this->Tickets->getSchema()->columns(), true));
@@ -1080,6 +1081,16 @@ class TicketsController extends AppController {
 				}
 			}
 		}
+		// #region agent log
+		$__agentDbg = [
+			'sessionId' => '62ce4c', 'hypothesisId' => 'H3', 'location' => 'TicketsController::add:render', 'message' => 'list sizes',
+			'data' => [
+				'nClientes' => \count($clientesList), 'nAssuntoOpts' => \count($__taOpts), 'nQueues' => \count($ticketAddQueues),
+				'queueFieldReady' => (bool)$ticketAddQueueFieldReady, 'role' => (int)($this->Auth->user('role') ?? -1),
+			], 'timestamp' => (int) \round(\microtime(true) * 1000),
+		];
+		@\file_put_contents(ROOT . DS . 'debug-62ce4c.log', \json_encode($__agentDbg, \JSON_UNESCAPED_UNICODE) . "\n", \FILE_APPEND);
+		// #endregion
 		$this->set(compact('ticket', 'ticketAddQueues', 'ticketAddQueueFieldReady', 'ticketAddDefaultQueueId'));
 	}
 
