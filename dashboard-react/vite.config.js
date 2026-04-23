@@ -10,7 +10,8 @@ export default defineConfig({
   },
   base: '/tickets-app/',
   build: {
-    outDir: path.resolve(__dirname, '../public/tickets-app'),
+    /** Saída em webroot: é aqui que `react_app.ctp` resolve WWW_ROOT (não public/). */
+    outDir: path.resolve(__dirname, '../webroot/tickets-app'),
     emptyOutDir: true,
     cssCodeSplit: false,
     rollupOptions: {

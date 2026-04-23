@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-/** Build isolado: não toca em `public/tickets-app` (vite.config.js principal). */
+/** Build isolado: não toca em `webroot/tickets-app` (vite.config.js principal). */
 export default defineConfig({
   plugins: [react()],
   base: '/js/pgm-sidebar-react/',

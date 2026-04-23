@@ -1,6 +1,6 @@
 <?php
 /**
- * Shell da UI React dos tickets: injeta boot JSON e assets estáticos do Vite (public/tickets-app).
+ * Shell da UI React dos tickets: injeta boot JSON e assets estáticos do Vite (webroot/tickets-app; espelho em public/ após npm run build).
  *
  * @var list<array{title:string,url?:array|string,options?:array<string,mixed>}>|null $reactAppBreadcrumbs
  */

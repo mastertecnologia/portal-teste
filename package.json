@@ -3,6 +3,7 @@
   "private": true,
   "description": "Raiz do repo PHP; scripts Node.js do dashboard em dashboard-react/",
   "scripts": {
-    "test": "npm run test --prefix=dashboard-react"
+    "test": "npm run test --prefix=dashboard-react",
+    "build:tickets": "npm run build --prefix=dashboard-react"
   }
 }

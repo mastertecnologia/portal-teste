@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && node ../scripts/postbuild_tickets_app_sync.cjs",
         "dev:sidebar": "vite --config vite.sidebar.config.js",
         "build:sidebar": "vite build --config vite.sidebar.config.js",
         "preview": "vite preview",

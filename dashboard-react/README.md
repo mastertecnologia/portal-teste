@@ -43,7 +43,7 @@ npm install
 npm run build
 ```
 
-Saída em **`../public/tickets-app/`** (`vite.config.js`). O layout `Tickets/react_app.ctp` carrega `tickets.js` / `tickets.css` desse diretório.
+O build escreve em **`../webroot/tickets-app/`** (o que o CakePHP expõe em `/tickets-app/`) e copia o mesmo conteúdo para **`../public/tickets-app/`** (`npm run build` = `vite build` + `scripts/postbuild_tickets_app_sync.cjs`). O layout `Tickets/react_app.ctp` usa ficheiros em `webroot/`.
 
 ## Reverter no Git
 
