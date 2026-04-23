@@ -2009,6 +2009,13 @@ class TicketsController extends AppController {
 				$this->Flash->error('Nenhum timer em andamento para este ticket.');
 				return $this->redirect(['action' => 'edit', $idticket]);
 			}
+			$agora = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+			$novaHi = $this->_timerRetomarShiftInicio($timer, $agora);
+			if ($novaHi === null) {
+				$this->Flash->error('Não é possível retomar: estado do timer inválido (pausa não registrada).');
+				return $this->redirect(['action' => 'edit', $idticket]);
+			}
+			$timer->set('hora_inicio', $novaHi);
 			$timer->set('hora_pausa', null);
 			if (!$this->AtendimentoTimer->save($timer)) {
 				$this->log('timerRetomar save: ' . json_encode($timer->getErrors()), 'error');
@@ -2324,6 +2331,29 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Ao retomar, desloca hora_inicio para que (agora - início) = tempo ativo já decorrido até a pausa.
+	 *
+	 * @return string|null Nova hora_inicio (Y-m-d H:i:s) ou null se estado inválido.
+	 */
+	protected function _timerRetomarShiftInicio($timer, \DateTime $agora): ?string {
+		$hiRaw = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+		$hpRaw = $timer->get('hora_pausa') ?: $timer->get('horapausa');
+		$inicio = $this->_parseSqlDateTimeForTimer($hiRaw);
+		$pausa = $this->_parseSqlDateTimeForTimer($hpRaw);
+		if (!$inicio || !$pausa) {
+			return null;
+		}
+		$elapsedSec = (int)($pausa->getTimestamp() - $inicio->getTimestamp());
+		if ($elapsedSec < 0) {
+			$elapsedSec = 0;
+		}
+		$novo = clone $agora;
+		$novo->modify('-' . $elapsedSec . ' seconds');
+
+		return $novo->format('Y-m-d H:i:s');
+	}
+
+	/**
 	 * Timer (JSON): mesma regra das ações POST legadas, sem redirect/Flash.
 	 *
 	 * @return array{ok:bool,error?:string,message?:string,duracaoMinutosFinal?:int}
@@ -2384,6 +2414,11 @@ class TicketsController extends AppController {
 				return ['ok' => true, 'message' => 'Timer pausado.'];
 			}
 			if ($acao === 'retomar') {
+				$novaHi = $this->_timerRetomarShiftInicio($timer, $agora);
+				if ($novaHi === null) {
+					return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Não é possível retomar: pausa não registrada no timer.'];
+				}
+				$timer->set('hora_inicio', $novaHi);
 				$timer->set('hora_pausa', null);
 				if (!$this->AtendimentoTimer->save($timer)) {
 					$this->log('apiTimer retomar save: ' . json_encode($timer->getErrors()), 'error');

@@ -547,7 +547,23 @@ export async function postTimerAction(ticketId, action) {
     } else if (action === 'pausar' && mockTimerSessao) {
       mockTimerSessao = { ...mockTimerSessao, pausado: true, horaPausa: nowStr };
     } else if (action === 'retomar' && mockTimerSessao) {
-      mockTimerSessao = { ...mockTimerSessao, pausado: false, horaPausa: null };
+      const parseMockLocal = (s) => {
+        if (!s || typeof s !== 'string') return null;
+        const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(s.trim());
+        if (!m) return null;
+        const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6], 0);
+        return Number.isNaN(d.getTime()) ? null : d.getTime();
+      };
+      const hi = parseMockLocal(mockTimerSessao.horaInicio);
+      const hp = parseMockLocal(mockTimerSessao.horaPausa);
+      let next = { ...mockTimerSessao, pausado: false, horaPausa: null };
+      if (hi != null && hp != null) {
+        const elapsed = hp - hi;
+        const d = new Date(Date.now() - elapsed);
+        const p = (n) => (n < 10 ? `0${n}` : String(n));
+        next.horaInicio = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+      }
+      mockTimerSessao = next;
     } else if (action === 'finalizar') {
       mockTimerSessao = null;
     }
