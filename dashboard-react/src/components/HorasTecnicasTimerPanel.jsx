@@ -34,6 +34,14 @@ function minutosLabel(totalMin) {
   return `${h} h ${r} min`;
 }
 
+/** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
+function sessaoEstaPausada(sessao) {
+  if (!sessao) return false;
+  if (sessao.pausado === true) return true;
+  const hp = sessao.horaPausa;
+  return hp != null && String(hp).trim() !== '';
+}
+
 /**
  * Cronômetro de horas técnicas: contagem fluida (rAF), atualização otimista nos cliques,
  * layout claro alinhado ao Service Desk (três ações sempre visíveis).
@@ -72,7 +80,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     if (!start) {
       return 0;
     }
-    if (sessao.pausado) {
+    if (sessaoEstaPausada(sessao)) {
       if (sessao.horaPausa) {
         const pause = parseSqlLocalDateTime(sessao.horaPausa);
         if (pause) {
@@ -89,7 +97,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   }, [sessao, rafTick, nowMs]);
 
   useEffect(() => {
-    if (!sessao || sessao.pausado) return undefined;
+    if (!sessao || sessaoEstaPausada(sessao)) return undefined;
     let id = 0;
     const loop = () => {
       setRafTick((t) => (t + 1) % 1_000_000);
@@ -97,7 +105,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
     };
     id = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(id);
-  }, [sessao?.id, sessao?.pausado]);
+  }, [sessao?.id, sessao?.pausado, sessao?.horaPausa]);
 
   async function runAction(action) {
     if (!ticketId) return;
@@ -186,7 +194,7 @@ export default function HorasTecnicasTimerPanel({ ticketId, horasTecnicas, disab
   }
 
   const registrados = snap.minutosRegistrados ?? 0;
-  const paused = Boolean(sessao && sessao.pausado);
+  const paused = sessaoEstaPausada(sessao);
   const idle = !sessao;
 
   return (
