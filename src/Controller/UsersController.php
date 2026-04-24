@@ -999,6 +999,19 @@ class UsersController extends AppController {
 					!empty($data['audit_password_generate_submit'])
 					|| !empty($data['audit_password_generate'])
 				);
+			// #region agent log
+			$this->_debugAuditLog('H1', 'UsersController::edit audit trigger computed', [
+				'authUserId' => (int)$this->Auth->user('id'),
+				'authUserEmpresa' => (int)$this->Auth->user('idempresa'),
+				'authUserAdminRaw' => (string)$this->Auth->user('admin'),
+				'targetUserId' => (int)$user->id,
+				'targetUserEmpresa' => (int)$user->idempresa,
+				'targetUserRole' => (int)$user->role,
+				'auditGenerate' => (bool)$auditGenerate,
+				'hasAuditGenerateSubmit' => !empty($data['audit_password_generate_submit']),
+				'hasAuditGenerateHidden' => !empty($data['audit_password_generate']),
+			]);
+			// #endregion
 			unset(
 				$data['audit_password_generate'],
 				$data['audit_password_generate_submit'],
@@ -1008,6 +1021,14 @@ class UsersController extends AppController {
 			);
 
 			if ($auditGenerate && !$this->_userAdminMaySetAuditPasswordForUser($user)) {
+				// #region agent log
+				$this->_debugAuditLog('H4', 'UsersController::edit blocked by permission check', [
+					'authUserId' => (int)$this->Auth->user('id'),
+					'targetUserId' => (int)$user->id,
+					'authUserEmpresa' => (int)$this->Auth->user('idempresa'),
+					'targetUserEmpresa' => (int)$user->idempresa,
+				]);
+				// #endregion
 				$this->Flash->error('Não é permitido gerar chave de auditoria para um utilizador de outra empresa.');
 				$redirEdit = ['action' => 'edit', $id];
 				if ($fromQueues) {
@@ -1880,15 +1901,40 @@ class UsersController extends AppController {
 	 */
 	protected function _isSystemAdminUser(): bool {
 		$v = $this->Auth->user('admin');
+		$r = false;
 		if (is_bool($v)) {
-			return $v;
+			$r = $v;
+			// #region agent log
+			$this->_debugAuditLog('H2', 'UsersController::_isSystemAdminUser bool branch', [
+				'adminRawType' => gettype($v),
+				'adminRawValue' => $v ? 'true' : 'false',
+				'isSystemAdmin' => $r,
+			]);
+			// #endregion
+			return $r;
 		}
 		if (is_int($v)) {
-			return $v === 1;
+			$r = ($v === 1);
+			// #region agent log
+			$this->_debugAuditLog('H2', 'UsersController::_isSystemAdminUser int branch', [
+				'adminRawType' => gettype($v),
+				'adminRawValue' => (string)$v,
+				'isSystemAdmin' => $r,
+			]);
+			// #endregion
+			return $r;
 		}
 		$s = strtolower(trim((string)$v));
+		$r = in_array($s, ['1', 't', 'true', 'yes', 'on', 'sim'], true);
+		// #region agent log
+		$this->_debugAuditLog('H2', 'UsersController::_isSystemAdminUser string branch', [
+			'adminRawType' => gettype($v),
+			'adminRawValue' => $s,
+			'isSystemAdmin' => $r,
+		]);
+		// #endregion
 
-		return in_array($s, ['1', 't', 'true', 'yes', 'on', 'sim'], true);
+		return $r;
 	}
 
 	/**
@@ -1900,9 +1946,25 @@ class UsersController extends AppController {
 		$adminEmpresaId = (int)$this->Auth->user('idempresa');
 		$tid = (int)(is_object($target) ? $target->get('idempresa') : ($target['idempresa'] ?? 0));
 		if ($tid < 1) {
+			// #region agent log
+			$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser invalid target empresa', [
+				'adminEmpresaId' => $adminEmpresaId,
+				'targetEmpresaId' => $tid,
+				'allowed' => false,
+			]);
+			// #endregion
 			return false;
 		}
-		if ($this->_isSystemAdminUser()) {
+		$isSystemAdmin = $this->_isSystemAdminUser();
+		if ($isSystemAdmin) {
+			// #region agent log
+			$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser allowed by system admin', [
+				'adminEmpresaId' => $adminEmpresaId,
+				'targetEmpresaId' => $tid,
+				'isSystemAdmin' => true,
+				'allowed' => true,
+			]);
+			// #endregion
 			return true;
 		}
 
@@ -1910,10 +1972,56 @@ class UsersController extends AppController {
 		$isAdminGlobalPgmMaster = in_array($adminEmpresaId, [(int)C_EmpresaPGM, (int)C_EmpresaMaster], true);
 		$isTargetPgmMaster = in_array($tid, [(int)C_EmpresaPGM, (int)C_EmpresaMaster], true);
 		if ($isAdminGlobalPgmMaster && $isTargetPgmMaster) {
+			// #region agent log
+			$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser allowed by pgm/master cross-company', [
+				'adminEmpresaId' => $adminEmpresaId,
+				'targetEmpresaId' => $tid,
+				'isAdminGlobalPgmMaster' => $isAdminGlobalPgmMaster,
+				'isTargetPgmMaster' => $isTargetPgmMaster,
+				'allowed' => true,
+			]);
+			// #endregion
 			return true;
 		}
+		$allowedSameEmpresa = ($tid === $adminEmpresaId);
+		// #region agent log
+		$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser fallback same-company decision', [
+			'adminEmpresaId' => $adminEmpresaId,
+			'targetEmpresaId' => $tid,
+			'isSystemAdmin' => $isSystemAdmin,
+			'isAdminGlobalPgmMaster' => $isAdminGlobalPgmMaster,
+			'isTargetPgmMaster' => $isTargetPgmMaster,
+			'allowed' => $allowedSameEmpresa,
+		]);
+		// #endregion
 
-		return $tid === $adminEmpresaId;
+		return $allowedSameEmpresa;
+	}
+
+	protected function _debugAuditLog(string $hypothesisId, string $message, array $data = []): void {
+		try {
+			$runId = (string)$this->request->getQuery('dbg_runid');
+			if ($runId === '') {
+				$runId = 'run-' . date('YmdHis');
+			}
+			$payload = [
+				'sessionId' => '9b064b',
+				'runId' => $runId,
+				'hypothesisId' => $hypothesisId,
+				'location' => 'src/Controller/UsersController.php',
+				'message' => $message,
+				'data' => $data,
+				'timestamp' => (int)round(microtime(true) * 1000),
+			];
+			$line = json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+			file_put_contents('c:\\Portal-git\\portal-teste\\debug-9b064b.log', $line, FILE_APPEND);
+			Log::info('[AUDIT_DEBUG_9b064b] ' . $line);
+		} catch (\Throwable $e) {
+			try {
+				Log::error('[AUDIT_DEBUG_9b064b_ERROR] ' . $e->getMessage());
+			} catch (\Throwable $e2) {
+			}
+		}
 	}
 
 	/**
