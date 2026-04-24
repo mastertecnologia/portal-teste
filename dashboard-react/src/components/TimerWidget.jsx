@@ -1,3 +1,43 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+const TIMER_WIDGET_POSITION_KEY = 'pgm_tickets_timer_widget_pos_v1';
+
+function readStoredPosition() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(TIMER_WIDGET_POSITION_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (typeof p?.left !== 'number' || typeof p?.top !== 'number') return null;
+    if (!Number.isFinite(p.left) || !Number.isFinite(p.top)) return null;
+    return { left: p.left, top: p.top };
+  } catch {
+    return null;
+  }
+}
+
+function defaultCornerPosition() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const w = Math.min(240, vw * 0.92);
+  const approxH = 200;
+  return { left: Math.round(vw - w - 20), top: Math.round(vh - approxH - 20) };
+}
+
+function clampWidgetPosition(left, top, elW, elH) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const pad = 8;
+  const minLeft = pad - elW + 48;
+  const maxLeft = vw - pad;
+  const minTop = pad;
+  const maxTop = vh - pad;
+  return {
+    left: Math.min(maxLeft, Math.max(minLeft, left)),
+    top: Math.min(maxTop, Math.max(minTop, top)),
+  };
+}
+
 /**
  * Widget flutuante (mock escuro): TICKET #, tempo, play / stop / ajuste (engrenagem).
  * Ações delegadas ao painel; engrenagem abre o mesmo modal de auditoria.
@@ -39,6 +79,40 @@ export default function TimerWidget({
   onStop,
   onOpenAudit,
 }) {
+  const rootRef = useRef(null);
+  const dragRef = useRef(null);
+  const [pos, setPos] = useState(() => {
+    if (typeof window === 'undefined') return { left: 0, top: 0 };
+    return readStoredPosition() ?? defaultCornerPosition();
+  });
+  const [dragging, setDragging] = useState(false);
+
+  const persistPos = useCallback((next) => {
+    try {
+      window.localStorage.setItem(TIMER_WIDGET_POSITION_KEY, JSON.stringify(next));
+    } catch {
+      /* quota / private mode */
+    }
+  }, []);
+
+  useEffect(() => {
+    function onResize() {
+      const el = rootRef.current;
+      if (!el) return;
+      const { width, height } = el.getBoundingClientRect();
+      setPos((p) => clampWidgetPosition(p.left, p.top, width, height));
+    }
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    setPos((p) => clampWidgetPosition(p.left, p.top, width, height));
+  }, [ticketId]);
+
   if (!ticketId) {
     return null;
   }
@@ -46,12 +120,79 @@ export default function TimerWidget({
   const playDisabled = disabled || busy || running;
   const stopDisabled = disabled || busy || idle;
 
+  function handleHeaderPointerDown(e) {
+    if (dragRef.current) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const el = rootRef.current;
+    const captureTarget = e.currentTarget;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origLeft: r.left,
+      origTop: r.top,
+    };
+    setDragging(true);
+    try {
+      captureTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* capture opcional */
+    }
+
+    function onMove(ev) {
+      const d = dragRef.current;
+      if (!d || ev.pointerId !== d.pointerId) return;
+      const dx = ev.clientX - d.startX;
+      const dy = ev.clientY - d.startY;
+      const { width, height } = el.getBoundingClientRect();
+      setPos(clampWidgetPosition(d.origLeft + dx, d.origTop + dy, width, height));
+    }
+
+    function onUp(ev) {
+      const d = dragRef.current;
+      if (!d || ev.pointerId !== d.pointerId) return;
+      dragRef.current = null;
+      setDragging(false);
+      try {
+        captureTarget.releasePointerCapture(ev.pointerId);
+      } catch {
+        /* */
+      }
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      const { width, height } = el.getBoundingClientRect();
+      setPos((p) => {
+        const c = clampWidgetPosition(p.left, p.top, width, height);
+        persistPos(c);
+        return c;
+      });
+    }
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  }
+
   return (
     <div
-      className="pointer-events-auto fixed bottom-5 right-5 z-[10000] w-[min(240px,92vw)] select-none overflow-hidden rounded-xl border border-[#334155] shadow-lg"
-      style={{ boxShadow: '0 12px 30px rgba(0,0,0,0.45)' }}
+      ref={rootRef}
+      className="pointer-events-auto fixed z-[10000] w-[min(240px,92vw)] select-none overflow-hidden rounded-xl border border-[#334155] shadow-lg"
+      style={{
+        left: pos.left,
+        top: pos.top,
+        boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
+      }}
     >
-      <div className="bg-[#0f172a] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+      <div
+        title="Arrastar para mover o widget"
+        onPointerDown={handleHeaderPointerDown}
+        className={`bg-[#0f172a] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-400 ${
+          dragging ? 'cursor-grabbing touch-none' : 'cursor-grab touch-manipulation'
+        }`}
+      >
         TICKET #{ticketId}
       </div>
       <div className="bg-[#1e293b] px-3 pb-3 pt-2">
