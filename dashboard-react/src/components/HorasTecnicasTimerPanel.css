@@ -35,10 +35,10 @@
 
 .pgm-crono-realtime .ticket-highlight {
   display: inline;
-  background: #2563eb !important;
-  color: #ffffff !important;
-  padding: 4px 6px 4px 8px;
-  border-radius: 6px 0 0 6px;
+  background: transparent !important;
+  color: #334155 !important;
+  padding: 0;
+  border-radius: 0;
 }
 
 .pgm-crono-realtime .ticket-id-tail {
@@ -112,17 +112,17 @@
   padding: 12px 14px;
   font-weight: 600;
   font-size: 14px;
-  color: #2563eb !important;
+  color: #334155 !important;
   background: #ffffff !important;
-  border: 1px solid #93c5fd !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
 
 .pgm-crono-realtime .btn-audit-adjust:hover:not(:disabled) {
-  background: #eff6ff !important;
-  border-color: #2563eb !important;
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
 }
 
 .pgm-crono-realtime .btn-audit-adjust:disabled {
