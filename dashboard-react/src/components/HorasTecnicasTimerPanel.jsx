@@ -408,7 +408,6 @@ export default function HorasTecnicasTimerPanel({
         paused={paused}
         onPlay={handlePrimaryClick}
         onStop={openFinalizeModal}
-        onOpenAudit={() => setAuditOpen(true)}
       />
 
       {auditOpen && (

@@ -593,7 +593,6 @@ function PersistentTimerWidget({ rows, boot }) {
       paused={paused}
       onPlay={goToActiveTicket}
       onStop={goToActiveTicket}
-      onOpenAudit={goToActiveTicket}
     />
   );
 }
