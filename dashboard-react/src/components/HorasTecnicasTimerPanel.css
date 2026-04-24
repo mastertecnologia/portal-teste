@@ -121,8 +121,9 @@
 }
 
 .pgm-crono-realtime .btn-audit-adjust:hover:not(:disabled) {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #ff8c00 !important;
+  border-color: #ff8c00 !important;
 }
 
 .pgm-crono-realtime .btn-audit-adjust:disabled {
