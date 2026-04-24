@@ -15,6 +15,7 @@ import { badgeClass, statusType } from '../lib/ticketUi';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
 import TicketTimeline from '../components/TicketTimeline.jsx';
+import CommentMessage from '../components/CommentMessage.jsx';
 
 /** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
 const SHOW_LEGACY_TICKET_UI = false;
@@ -24,6 +25,21 @@ function resolveTechIndexUrl(boot) {
   const w = boot?.webroot;
   if (w) return `${String(w).replace(/\/$/, '')}/tickets`;
   return null;
+}
+
+function PapelBadge({ papel }) {
+  const isTech = papel === 'tecnico';
+  return (
+    <span
+      className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+        isTech
+          ? 'border-cyan-700/50 bg-cyan-950/40 text-cyan-200'
+          : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]'
+      }`}
+    >
+      {isTech ? 'Suporte' : 'Cliente'}
+    </span>
+  );
 }
 
 export default function TechTicketEdit({ boot }) {
@@ -39,6 +55,8 @@ export default function TechTicketEdit({ boot }) {
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
+  /** 'chat' = conversa com bolhas (padrão); 'timeline' = eventos/horas/mov legado unificado */
+  const [rightPanelTab, setRightPanelTab] = useState('chat');
 
   useEffect(() => {
     let c = false;
@@ -92,6 +110,7 @@ export default function TechTicketEdit({ boot }) {
     setEnviando(false);
     setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
     if (res.ok) {
+      setRightPanelTab('chat');
       setComentarios((prev) => [...prev, res.data]);
       const tr = await fetchTicketTimeline(ticket.id);
       if (tr.ok) setTimelineEvents(tr.events || []);
@@ -344,30 +363,90 @@ export default function TechTicketEdit({ boot }) {
 
   const comentariosBlock = (
     <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
-      <div className="flex shrink-0 items-center justify-between border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-2.5">
-        <div>
-          <h3 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">Timeline</h3>
-          <p className="text-[0.65rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-            Comentários, horas, auditoria e eventos (unificado).
-          </p>
+      <div className="shrink-0 space-y-2 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-3 py-2.5 sm:px-4">
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setRightPanelTab('chat')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              rightPanelTab === 'chat'
+                ? 'bg-[var(--pgm-primary,#1d9e75)] text-white shadow-sm'
+                : 'border border-[var(--pgm-border,#3d4554)] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] hover:border-[var(--pgm-border-strong)] hover:text-[var(--pgm-text,#e8eaed)]'
+            }`}
+          >
+            Conversa
+            {comentarios.length > 0 ? (
+              <span className="ml-1 opacity-90">({comentarios.length})</span>
+            ) : null}
+          </button>
+          <button
+            type="button"
+            onClick={() => setRightPanelTab('timeline')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              rightPanelTab === 'timeline'
+                ? 'bg-[var(--pgm-primary,#1d9e75)] text-white shadow-sm'
+                : 'border border-[var(--pgm-border,#3d4554)] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] hover:border-[var(--pgm-border-strong)] hover:text-[var(--pgm-text,#e8eaed)]'
+            }`}
+          >
+            Eventos (histórico)
+            {timelineEvents.length > 0 ? (
+              <span className="ml-1 opacity-90">({timelineEvents.length})</span>
+            ) : null}
+          </button>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-[var(--pgm-badge-muted-ring,rgba(255,255,255,0.10))] bg-[var(--pgm-badge-muted-bg,rgba(255,255,255,0.06))] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--pgm-badge-muted-text,#9aa0a8)]">
-          {timelineEvents.length} {timelineEvents.length === 1 ? 'evento' : 'eventos'}
-        </span>
+        <p className="text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
+          {rightPanelTab === 'chat'
+            ? 'Mensagens com o cliente e a equipa — como antes. O histórico completo (horas, movs, auditoria) está no separador «Eventos».'
+            : 'Visão unificada: comentários duplicados do legado podem ser omitidos; horas, movimentações e eventos técnicos aparecem aqui.'}
+        </p>
       </div>
-      <div
-        ref={listRef}
-        onScroll={onListScroll}
-        className="min-h-0 flex-1 basis-0 space-y-3 overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--pgm-bg-base,#0c0f14)] p-3"
-      >
-        {timelineEvents.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-            Nenhum evento ainda. Envie um comentário ou registre horas.
-          </div>
-        ) : (
-          <TicketTimeline events={timelineEvents} />
-        )}
-      </div>
+      {rightPanelTab === 'chat' ? (
+        <ul
+          ref={listRef}
+          onScroll={onListScroll}
+          className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--pgm-bg-base,#0c0f14)] p-3"
+        >
+          {comentarios.length === 0 ? (
+            <li className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+              Nenhuma mensagem ainda. Escreva abaixo para contactar o cliente ou a equipa.
+            </li>
+          ) : (
+            comentarios.map((c) => {
+              return (
+                <li
+                  key={c.id}
+                  className={`rounded-lg border px-3 py-2 text-sm ${
+                    c.pending
+                      ? 'border-amber-700/50 bg-amber-950/35 text-amber-100'
+                      : c.papel === 'tecnico'
+                        ? 'border-cyan-700/50 bg-cyan-950/40 text-cyan-100'
+                        : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text)]'
+                  }`}
+                >
+                  <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="font-semibold text-[var(--pgm-text)]">{c.autor || '—'}</span>
+                      <PapelBadge papel={c.papel} />
+                    </div>
+                    <time className="flex-shrink-0">{c.quando}</time>
+                  </div>
+                  <CommentMessage texto={c.texto} />
+                </li>
+              );
+            })
+          )}
+        </ul>
+      ) : (
+        <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--pgm-bg-base,#0c0f14)] p-3">
+          {timelineEvents.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+              Nenhum evento ainda. Envie um comentário ou registre horas.
+            </div>
+          ) : (
+            <TicketTimeline events={timelineEvents} />
+          )}
+        </div>
+      )}
       <div className="flex shrink-0 gap-2 border-t border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-surface,#1a1f28)] p-3">
         <form onSubmit={handleComentario} className="flex flex-1 gap-2">
           <textarea
