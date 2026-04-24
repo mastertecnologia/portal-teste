@@ -67,17 +67,17 @@
       <?= $this->Html->link(
         '<i class="fas fa-warehouse"></i> Estoque',
         ['action' => 'estoque'],
-        ['class' => 'btn-prd-outline', 'escape' => false, 'target' => '_blank']
+        ['class' => 'btn-prd-outline', 'escape' => false, 'target' => '_blank', 'data-turbo' => 'false']
       ) ?>
       <?= $this->Html->link(
         '<i class="fas fa-tags"></i> Precificação',
         ['action' => 'precificacao'],
-        ['class' => 'btn-prd-price', 'escape' => false]
+        ['class' => 'btn-prd-price', 'escape' => false, 'data-turbo' => 'false']
       ) ?>
       <?= $this->Html->link(
         '<i class="fas fa-plus"></i> Novo Cadastro',
         ['action' => 'add'],
-        ['class' => 'btn-prd-new', 'escape' => false, 'target' => '_blank']
+        ['class' => 'btn-prd-new', 'escape' => false, 'target' => '_blank', 'data-turbo' => 'false']
       ) ?>
     </div>
   </div>
@@ -228,7 +228,7 @@
               <td><?= prdBadge($reg->ativo) ?></td>
               <td onclick="event.stopPropagation()">
                 <div class="prd-actions">
-                  <a href="<?= $urlEdit ?>" target="_blank" class="prd-act-btn edit" title="Editar">
+                  <a href="<?= $urlEdit ?>" target="_blank" class="prd-act-btn edit" title="Editar" data-turbo="false">
                     <i class="fas fa-pen"></i>
                   </a>
                 </div>
@@ -279,7 +279,7 @@
               <td><?= prdBadge($reg->ativo) ?></td>
               <td onclick="event.stopPropagation()">
                 <div class="prd-actions">
-                  <a href="<?= $urlEdit ?>" target="_blank" class="prd-act-btn edit" title="Editar"><i class="fas fa-pen"></i></a>
+                  <a href="<?= $urlEdit ?>" target="_blank" class="prd-act-btn edit" title="Editar" data-turbo="false"><i class="fas fa-pen"></i></a>
                 </div>
               </td>
             </tr>
@@ -320,7 +320,7 @@
               <td><?= prdBadge($reg->ativo) ?></td>
               <td onclick="event.stopPropagation()">
                 <div class="prd-actions">
-                  <a href="<?= $urlEdit ?>" target="_blank" class="prd-act-btn edit" title="Editar"><i class="fas fa-pen"></i></a>
+                  <a href="<?= $urlEdit ?>" target="_blank" class="prd-act-btn edit" title="Editar" data-turbo="false"><i class="fas fa-pen"></i></a>
                 </div>
               </td>
             </tr>

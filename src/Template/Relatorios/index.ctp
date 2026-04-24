@@ -58,15 +58,15 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 				<p class="dash-erp-subtitle">Indicadores consolidados por período (criação do ticket), escopo ABAC e empresa. Receita e inadimplência vêm dos lançamentos financeiros.</p>
 			</div>
 			<div class="d-flex flex-wrap align-items-center pgm-gap-8">
-				<a class="btn btn-outline-secondary" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>">Voltar ao dashboard</a>
+				<a class="btn btn-outline-secondary" href="<?= $this->Url->build(['controller' => 'Users', 'action' => 'dashboard']) ?>" data-turbo="false">Voltar ao dashboard</a>
 				<button type="button" class="btn btn-outline-info" onclick="window.location.reload()">Atualizar</button>
 				<button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir</button>
 				<div class="rel-dropdown" id="rel-export-dropdown">
 					<button type="button" class="btn btn-outline-secondary" id="rel-export-btn" aria-expanded="false" aria-haspopup="true">Exportar ▾</button>
 					<div class="rel-dropdown__menu" role="menu" aria-labelledby="rel-export-btn">
-						<a class="rel-dropdown__item" role="menuitem" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'pdf'])])) ?>">PDF</a>
-						<a class="rel-dropdown__item" role="menuitem" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'xlsx'])])) ?>">Excel</a>
-						<a class="rel-dropdown__item" role="menuitem" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'csv'])])) ?>">CSV</a>
+						<a class="rel-dropdown__item" role="menuitem" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'pdf'])])) ?>" data-turbo="false">PDF</a>
+						<a class="rel-dropdown__item" role="menuitem" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'xlsx'])])) ?>" data-turbo="false">Excel</a>
+						<a class="rel-dropdown__item" role="menuitem" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'csv'])])) ?>" data-turbo="false">CSV</a>
 					</div>
 				</div>
 			</div>
@@ -114,6 +114,7 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 					'class' => 'form-material',
 					'type' => 'get',
 					'url' => ['controller' => 'Relatorios', 'action' => 'index'],
+					'data-turbo' => 'false',
 				]) ?>
 				<?= $this->Form->hidden('aba', ['value' => $aba, 'id' => 'rel-filtro-aba']) ?>
 				<div class="row">
@@ -156,7 +157,7 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 					</div>
 					<div class="col-md-3 col-sm-6 m-b-10 dash-erp-filter-actions">
 						<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-r-5">Aplicar</button>
-						<a href="<?= $this->Url->build(['controller' => 'Relatorios', 'action' => 'index']) ?>" class="btn btn-outline-secondary">Limpar</a>
+						<a href="<?= $this->Url->build(['controller' => 'Relatorios', 'action' => 'index']) ?>" class="btn btn-outline-secondary" data-turbo="false">Limpar</a>
 					</div>
 				</div>
 				<?= $this->Form->end() ?>
@@ -215,7 +216,7 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 														$urlTicket = $this->Url->build(['controller' => 'Tickets', 'action' => 'edit', $reg->id]);
 														?>
 														<tr>
-															<td><a class="dash-erp-link" href="<?= h($urlTicket) ?>"><?= (int)$reg->id ?></a></td>
+															<td><a class="dash-erp-link" href="<?= h($urlTicket) ?>" data-turbo="false"><?= (int)$reg->id ?></a></td>
 															<td><?= h($abertura) ?></td>
 															<td><?= h($clienteNome) ?></td>
 															<td><?= h($assuntoTxt) ?></td>
@@ -317,9 +318,9 @@ $periodoPadrao = !empty($relatoriosPeriodoPadrao);
 			<div class="dash-erp-card-body">
 				<p class="rel-export-hint">Mesmos critérios da tela: PDF (mPDF), CSV UTF-8, Excel (.xlsx via PhpSpreadsheet; se a lib não estiver instalada, fallback .xls XML).</p>
 				<div class="rel-export-actions">
-					<a class="btn btn-outline-secondary btn-sm" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'pdf'])])) ?>" title="Rota preparada — implementar no controller">PDF</a>
-					<a class="btn btn-outline-secondary btn-sm" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'xlsx'])])) ?>">Excel</a>
-					<a class="btn btn-outline-secondary btn-sm" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'csv'])])) ?>">CSV</a>
+					<a class="btn btn-outline-secondary btn-sm" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'pdf'])])) ?>" title="Rota preparada — implementar no controller" data-turbo="false">PDF</a>
+					<a class="btn btn-outline-secondary btn-sm" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'xlsx'])])) ?>" data-turbo="false">Excel</a>
+					<a class="btn btn-outline-secondary btn-sm" href="<?= h($this->Url->build(['controller' => 'Relatorios', 'action' => 'exportar', '?' => array_merge($qExp, ['formato' => 'csv'])])) ?>" data-turbo="false">CSV</a>
 				</div>
 			</div>
 		</div>

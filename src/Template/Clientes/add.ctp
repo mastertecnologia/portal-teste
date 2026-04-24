@@ -22,7 +22,7 @@
 <div class="col-md-12 p-0">
 <div class="cli-form-root cli-layout-unificado">
 
-<?= $this->Form->create($cliente, ['class' => 'cli-add-form']) ?>
+<?= $this->Form->create($cliente, ['class' => 'cli-add-form', 'data-turbo' => 'false']) ?>
 
     <!-- ── Form body (sem topbar — alinhado ao mock clientes-lista-layout-unificado) ── -->
     <div class="cli-form-body cli-form-body--cadastro-lead">
@@ -234,7 +234,7 @@
             Dados salvos com segurança no ERP
         </div>
         <div class="cli-form-footer-right">
-            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> Cancelar', ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-arrow-left"></i> Cancelar', ['action' => 'index'], ['class' => 'btn-cli-secondary', 'escape' => false, 'data-turbo' => 'false']) ?>
             <?= $this->Form->button('<i class="fas fa-check"></i> Cadastrar cliente', ['class' => 'btn-cli-primary', 'escape' => false]) ?>
         </div>
     </div>

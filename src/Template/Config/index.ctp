@@ -213,3 +213,11 @@ $this->end();
 		<?php endif; ?>
 	</div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	document.querySelectorAll('.admin-panel-wrap a[href]').forEach(function (link) {
+		link.setAttribute('data-turbo', 'false');
+	});
+});
+</script>

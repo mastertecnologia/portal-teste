@@ -143,11 +143,11 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['clientes'] ?? true)) : ?>
-						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], $clientesListNavActive, '', 'Clientes') ?>
-						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $clientesAddActive, '', 'Cadastrar clientes') ?>
+						<?= $pgmSbLink('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['data-turbo' => 'false'], $clientesListNavActive, '', 'Clientes') ?>
+						<?= $pgmSbLink('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], ['data-turbo' => 'false'], $clientesAddActive, '', 'Cadastrar clientes') ?>
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
-						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
+						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -167,7 +167,7 @@
 						<?= $pgmSbLink('headphones', ' Service Desk', ['controller' => 'Servicedesk', 'action' => 'index'], ['target' => '_blank', 'rel' => 'noopener noreferrer'], $ticketsServicedeskActive, '<span class="badge badge-danger hide-menu">12</span>', 'Service Desk') ?>
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
-						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
+						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?php endif; ?>
 						<?php if (($sg['tickets_historico'] ?? true)) : ?>
 						<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ticketsHistoricoActive, '', 'Histórico') ?>
@@ -205,7 +205,7 @@
 						<?= $pgmSbLink('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], [], (bool)($queuesAtendimentoActive ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos') ?>
 						<?php endif; ?>
 						<?php if (($sg['ordensservico_list'] ?? true)) : ?>
-						<?= $pgmSbLink('bar-chart-2', ' Relatórios', ['controller' => 'Ordensservico', 'action' => 'relatorios'], [], $relatoriosOsActive, '', 'Relatórios') ?>
+						<?= $pgmSbLink('bar-chart-2', ' Relatórios', ['controller' => 'Ordensservico', 'action' => 'relatorios'], ['data-turbo' => 'false'], $relatoriosOsActive, '', 'Relatórios') ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -291,7 +291,7 @@
 						<?= $pgmSbLink('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], [], $finRecorAct, '', 'Recorrentes') ?>
 						<?= $pgmSbLink('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], [], $finConcAct, '', 'Conciliação bancária') ?>
 						<?= $pgmSbLink('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], [], $finDreAct, '', 'DRE') ?>
-						<?= $pgmSbLink('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], [], $finRelAct, '', 'Relatórios financeiros') ?>
+						<?= $pgmSbLink('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['data-turbo' => 'false'], $finRelAct, '', 'Relatórios financeiros') ?>
 						<?= $pgmSbLink('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], [], $finPlanoAct, '', 'Plano de contas') ?>
 						<?= $pgmSbLink('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], [], $finCcAct, '', 'Centros de custo') ?>
 					</div>
@@ -308,7 +308,7 @@
 						<?= $pgmSbLink('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], [], $finBancosAct, '', 'Cadastro de bancos') ?>
 						<?= $pgmSbLink('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], [], $finRemessaAct, '', 'Remessa') ?>
 						<?= $pgmSbLink('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], [], $finRetornoAct, '', 'Retorno') ?>
-						<?= $pgmSbLink('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], [], $finRelBancosAct, '', 'Relatórios bancos') ?>
+						<?= $pgmSbLink('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $finRelBancosAct, '', 'Relatórios bancos') ?>
 					</div>
 				</li>
 				<?php endif; ?>
@@ -366,7 +366,7 @@
 						<?= $pgmSbLink('sliders', ' Configuração fiscal', ['controller' => 'FiscalConfig', 'action' => 'index'], [], $fiscalCfgAct, '', 'Configuração fiscal') ?>
 						<?php endif; ?>
 						<?php if (($sg['fiscal_menu_relatorios'] ?? true)) : ?>
-						<?= $pgmSbLink('newspaper', ' Relatórios fiscais', ['controller' => 'FiscalRelatorios', 'action' => 'index'], [], $fiscalRelAct, '', 'Relatórios fiscais') ?>
+						<?= $pgmSbLink('newspaper', ' Relatórios fiscais', ['controller' => 'FiscalRelatorios', 'action' => 'index'], ['data-turbo' => 'false'], $fiscalRelAct, '', 'Relatórios fiscais') ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -383,10 +383,10 @@
 					</div>
 					<div class="nav-section-items">
 						<?php if (($sg['relatorios_painel'] ?? true)) : ?>
-						<?= $pgmSbLink('pie-chart', ' Painel e indicadores', ['controller' => 'Relatorios', 'action' => 'index'], [], $relatoriosPainelActive, '', 'Painel e indicadores') ?>
+						<?= $pgmSbLink('pie-chart', ' Painel e indicadores', ['controller' => 'Relatorios', 'action' => 'index'], ['data-turbo' => 'false'], $relatoriosPainelActive, '', 'Painel e indicadores') ?>
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['relatorios_indicadores_adv'] ?? true)) : ?>
-						<?= $pgmSbLink('trending-up', ' Indicadores avançados', '/modulo-avancado/indicadores', [], $relatoriosIndicadoresAdvActive, '', 'Indicadores avançados') ?>
+						<?= $pgmSbLink('trending-up', ' Indicadores avançados', '/modulo-avancado/indicadores', ['data-turbo' => 'false'], $relatoriosIndicadoresAdvActive, '', 'Indicadores avançados') ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -447,9 +447,9 @@
 						<?= $this->Html->link('Verificação de login', ['controller' => 'users', 'action' => 'loginduasetapas'], ['class' => 'dropdown-item']) ?>
 						<?php endif; ?>
 						<?php if (!empty($showConfigAdminHub)) : ?>
-						<?= $this->Html->link('Painel administrativo', ['controller' => 'config', 'action' => 'index'], ['class' => 'dropdown-item']) ?>
+						<?= $this->Html->link('Painel administrativo', ['controller' => 'config', 'action' => 'index'], ['class' => 'dropdown-item', 'data-turbo' => 'false']) ?>
 						<?php elseif (!empty($showPermissoesRbacShortcut)) : ?>
-						<?= $this->Html->link('Permissões RBAC / catálogo', ['controller' => 'config', 'action' => 'index'], ['class' => 'dropdown-item']) ?>
+						<?= $this->Html->link('Permissões RBAC / catálogo', ['controller' => 'config', 'action' => 'index'], ['class' => 'dropdown-item', 'data-turbo' => 'false']) ?>
 						<?php endif; ?>
 						<div class="dropdown-divider"></div>
 						<?= $this->Html->link('Sair', ['controller' => 'Users', 'action' => 'logout'], ['class' => 'dropdown-item text-danger']) ?>

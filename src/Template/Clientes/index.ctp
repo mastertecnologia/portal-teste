@@ -166,7 +166,7 @@
                                 <?= $this->Html->link(
                                     '<i class="fas fa-user-slash" title="Inativar cliente"></i>',
                                     ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
-                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();']
+                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']
                                 ) ?>
                                 <?php endif; ?>
                                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
@@ -214,7 +214,7 @@
                                 <?= $this->Html->link(
                                     '<i class="fas fa-user-slash" title="Inativar cliente"></i>',
                                     ['controller' => 'Clientes', 'action' => 'inativar', $reg->id],
-                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();']
+                                    ['class' => 'cli-btn-inativar', 'escape' => false, 'confirm' => 'Confirma inativar este cliente no portal e no ERP?', 'onclick' => 'event.stopPropagation();', 'data-turbo' => 'false']
                                 ) ?>
                                 <?php endif; ?>
                                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
@@ -261,7 +261,7 @@
                                 <?= $this->Html->link(
                                     '<i class="fas fa-redo-alt"></i> Reativar',
                                     ['controller' => 'Clientes', 'action' => 'reativar', $reg->id],
-                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?']
+                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?', 'data-turbo' => 'false']
                                 ) ?>
                             </td>
                         </tr>
@@ -306,7 +306,7 @@
                                 <?= $this->Html->link(
                                     '<i class="fas fa-redo-alt"></i> Reativar',
                                     ['controller' => 'Clientes', 'action' => 'reativar', $reg->id],
-                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?']
+                                    ['class' => 'cli-btn-reativar', 'escape' => false, 'confirm' => 'Confirmar reativação deste cliente?', 'data-turbo' => 'false']
                                 ) ?>
                             </td>
                         </tr>

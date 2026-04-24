@@ -41,14 +41,14 @@ $exportExcelUrl = $this->Url->build([
 						<i class="fa fa-download"></i> Exportar
 					</button>
 					<div class="dropdown-menu dropdown-menu-right">
-						<?= $this->Html->link('CSV (UTF-8)', $exportCsvUrl, ['class' => 'dropdown-item', 'escape' => false]) ?>
-						<?= $this->Html->link('Excel (.xlsx)', $exportExcelUrl, ['class' => 'dropdown-item', 'escape' => false]) ?>
+						<?= $this->Html->link('CSV (UTF-8)', $exportCsvUrl, ['class' => 'dropdown-item', 'escape' => false, 'data-turbo' => 'false']) ?>
+						<?= $this->Html->link('Excel (.xlsx)', $exportExcelUrl, ['class' => 'dropdown-item', 'escape' => false, 'data-turbo' => 'false']) ?>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<?= $this->Form->create(null, ['type' => 'get', 'url' => ['controller' => 'PortalRelatorios', 'action' => 'index'], 'class' => 'tkcli-filters']) ?>
+		<?= $this->Form->create(null, ['type' => 'get', 'url' => ['controller' => 'PortalRelatorios', 'action' => 'index'], 'class' => 'tkcli-filters', 'data-turbo' => 'false']) ?>
 			<div class="tkcli-filter-group tkcli-filter-group--grow">
 				<label>Período</label>
 				<input type="text" name="periodo" class="form-control" placeholder="Ex.: 01/04/2026 a 30/04/2026 (vazio = últimos 90 dias)" value="<?= h($f['periodo']) ?>">
@@ -75,7 +75,7 @@ $exportExcelUrl = $this->Url->build([
 				<button type="submit" class="tkcli-btn-abrir">Aplicar</button>
 			</div>
 			<div class="tkcli-filter-group tkcli-filter-group--actions">
-				<?= $this->Html->link('Limpar filtros', ['controller' => 'PortalRelatorios', 'action' => 'index'], ['class' => 'tkcli-btn-limpar']) ?>
+				<?= $this->Html->link('Limpar filtros', ['controller' => 'PortalRelatorios', 'action' => 'index'], ['class' => 'tkcli-btn-limpar', 'data-turbo' => 'false']) ?>
 			</div>
 		<?= $this->Form->end() ?>
 
@@ -137,7 +137,7 @@ $exportExcelUrl = $this->Url->build([
 									<td><?= h($t['assunto']) ?></td>
 									<td><?= h($t['situacao']) ?></td>
 									<td class="text-right">
-										<?= $this->Html->link('Abrir', ['controller' => 'Tickets', 'action' => 'view', $t['id']], ['class' => 'relcli-amostra-link']) ?>
+										<?= $this->Html->link('Abrir', ['controller' => 'Tickets', 'action' => 'view', $t['id']], ['class' => 'relcli-amostra-link', 'data-turbo' => 'false']) ?>
 									</td>
 								</tr>
 							<?php endforeach; ?>
