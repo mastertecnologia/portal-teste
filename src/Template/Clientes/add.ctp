@@ -1,5 +1,8 @@
 <?php
     use Cake\Routing\Router;
+    // Força recarga completa quando esta página for alcançada via Turbo,
+    // mantendo o cadastro independente da listagem.
+    $this->assign('meta', '<meta name="turbo-visit-control" content="reload">');
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
     $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
@@ -18,6 +21,8 @@
         }
     }
 ?>
+<?= $this->element('pgm_premium_css', ['name' => 'clientes-premium']) ?>
+<?= $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']) ?>
 
 <div class="col-md-12 p-0">
 <div class="cli-form-root cli-layout-unificado">
