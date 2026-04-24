@@ -346,6 +346,55 @@ Router::scope("/", function ($routes) {
         ->setMethods(["POST"]);
     $routes
         ->connect(
+            "/tickets/api-timeline/*",
+            ["controller" => "Tickets", "action" => "apiTimeline"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
+            "/tickets/api-validate-geolocation/*",
+            ["controller" => "Tickets", "action" => "apiValidateGeolocation"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-ticket-signature/*",
+            ["controller" => "Tickets", "action" => "apiTicketSignature"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-add-ticket-product/*",
+            ["controller" => "Tickets", "action" => "apiAddTicketProduct"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-add-evidence-photo/*",
+            ["controller" => "Tickets", "action" => "apiAddEvidencePhoto"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-pdf-ticket-os/*",
+            ["controller" => "Tickets", "action" => "apiPdfTicketOs"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
+            "/tickets/api-pdf-laudo/*",
+            ["controller" => "Tickets", "action" => "apiPdfLaudo"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
             "/tickets/start-ticket/*",
             ["controller" => "Tickets", "action" => "startTicket"],
             ["pass" => ["idticket"]],

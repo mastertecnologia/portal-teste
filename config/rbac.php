@@ -170,6 +170,13 @@ return [
 			'tickets#apianexoupload',
 			'tickets#apianexodelete',
 			'tickets#apitimer',
+			'tickets#apitimeline',
+			'tickets#apivalidategeolocation',
+			'tickets#apiticketsignature',
+			'tickets#apipdfticketos',
+			'tickets#apipdflaudo',
+			'tickets#apiaddticketproduct',
+			'tickets#apiaddevidencephoto',
 			'audit#apivalidate',
 			'tickets#apisaveticket',
 			// Portal cliente — lista JSON (híbrido: só aplica se o utilizador tiver papéis RBAC)

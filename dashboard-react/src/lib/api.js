@@ -10,11 +10,11 @@ import {
   MOCK_SESSION_CLIENTE,
 } from '../data/mockData';
 
-function getBoot() {
+export function getBoot() {
   return typeof window !== 'undefined' ? window.__TICKETS_BOOT__ : null;
 }
 
-const USE_MOCK = typeof window !== 'undefined' && !window.__TICKETS_BOOT__;
+export const USE_MOCK = typeof window !== 'undefined' && !window.__TICKETS_BOOT__;
 
 function qs(params) {
   const u = new URLSearchParams();
@@ -328,6 +328,49 @@ export async function fetchTicketComments(id) {
   };
 }
 
+export async function fetchTicketTimeline(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true, events: [] };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiTimeline;
+  if (!p) return { ok: false, error: 'no_api_timeline', events: [] };
+  const r = await fetch(`${p}${encodeURIComponent(ticketId)}`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  if (!r.ok) return { ok: false, error: r.statusText, events: [] };
+  const json = await r.json();
+  if (!json.ok) return { ok: false, error: json.error || 'erro', events: [] };
+  return { ok: true, events: json.events || [] };
+}
+
+export async function postTicketSignature(ticketId, imageDataUrl) {
+  if (USE_MOCK) {
+    return { ok: true, url: '#' };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiTicketSignature;
+  if (!base) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageDataUrl }),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) {
+    return { ok: false, error: json.error || r.statusText };
+  }
+  return { ok: true, url: json.url };
+}
+
 export async function postComentario(ticketId, texto) {
   if (USE_MOCK) {
     await new Promise((res) => setTimeout(res, 400));
@@ -539,7 +582,7 @@ export async function fetchDashboardOperacional() {
   return { ok: true, dashboard: json.dashboard || null };
 }
 
-export async function postTimerAction(ticketId, action) {
+export async function postTimerAction(ticketId, action, extra = {}) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 150));
     const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -596,7 +639,7 @@ export async function postTimerAction(ticketId, action) {
     method: 'POST',
     credentials: 'same-origin',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action }),
+    body: JSON.stringify({ action, ...(action === 'iniciar' && extra && typeof extra === 'object' ? extra : {}) }),
   });
   let json = {};
   try {
@@ -700,4 +743,4 @@ export async function postAlterarSituacao(ticketId, situacao) {
   };
 }
 
-export { getBoot, USE_MOCK, MOCK_SESSION_CLIENTE };
+export { MOCK_SESSION_CLIENTE };

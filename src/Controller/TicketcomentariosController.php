@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Service\Ticket\TicketInternalNotificationHelper;
+use App\Service\Ticket\TicketTimelineWriter;
 use Cake\Mailer\Email;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
@@ -295,6 +296,13 @@ class TicketcomentariosController extends BaseController {
 		if (!$this->Ticketcomentarios->save($comentario)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'validation', 'errors' => $comentario->getErrors()], 400);
 		}
+		TicketTimelineWriter::syncComment(
+			(int)$idticket,
+			(int)$this->Auth->user('idempresa'),
+			(int)$this->Auth->user('id'),
+			(string)($comentario->comentario ?? ''),
+			(int)($comentario->id ?? 0) > 0 ? (int)$comentario->id : null
+		);
 		$ticketReload = $this->Tickets->find('all')->where(['id' => $idticket, 'idempresa' => $this->Auth->user('idempresa')])->first();
 		if ($ticketReload) {
 			try {

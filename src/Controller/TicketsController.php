@@ -7,7 +7,10 @@ use App\Service\Ticket\DashboardService;
 use App\Service\Ticket\SlaService;
 use App\Service\Ticket\TicketHistoryLogger;
 use App\Service\Ticket\TicketInternalNotificationHelper;
+use App\Service\Ticket\TicketServiceDeskApiService;
+use App\Service\Ticket\TicketWorklogEventHelper;
 use Cake\Database\Expression\QueryExpression;
+use Cake\Datasource\ConnectionManager;
 use Cake\Mailer\Email;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
@@ -32,7 +35,8 @@ class TicketsController extends AppController {
 			'Ticketslogemail', 'Clientes', 'Cliservicos', 'Climodulos', 'Homologacoes',
 			'Servicos', 'Modulos', 'Faturas', 'Faturaparcelas', 'Cancelamento',
 			'Empresas', 'Empresasusers', 'Ordensservico', 'Config', 'Queues',
-			'QueuesUsers', 'SupportLevels'
+			'QueuesUsers', 'SupportLevels', 'TicketEvents', 'TicketProducts', 'Produtos',
+			'TechnicalReports', 'TicketChecklists', 'Assets', 'Holidays'
 		]);
 	}
 
@@ -49,6 +53,15 @@ class TicketsController extends AppController {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
 		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket', 'apiTimer', 'apiAlterarSituacao'], true)) {
+			return (int)$user['role'] === 0;
+		}
+		if (in_array($action, ['apiTimeline'], true)) {
+			return in_array((int)$user['role'], [0, 1], true);
+		}
+		if (in_array($action, ['apiValidateGeolocation'], true)) {
+			return (int)$user['role'] === 0;
+		}
+		if (in_array($action, ['apiTicketSignature', 'apiAddTicketProduct', 'apiAddEvidencePhoto', 'apiPdfTicketOs', 'apiPdfLaudo'], true)) {
 			return (int)$user['role'] === 0;
 		}
 		if ($action === 'operacional') {
@@ -2104,7 +2117,16 @@ class TicketsController extends AppController {
 						'horaini' => $inicio->format('Y-m-d H:i:s'),
 						'horafin' => $fim->format('Y-m-d H:i:s'),
 					]);
-					$this->Ticketshoras->save($regHora);
+					if ($this->Ticketshoras->save($regHora)) {
+						TicketWorklogEventHelper::afterHoraLancada(
+							$regHora,
+							(int)$this->Auth->user('idempresa'),
+							(int)$idticket,
+							(int)$this->Auth->user('id'),
+							$regHora->horaini,
+							$regHora->horafin
+						);
+					}
 				} catch (\Throwable $e) {
 					$this->log('Timer: falha ao registrar em Ticketshoras: ' . $e->getMessage(), 'error');
 				}
@@ -2406,11 +2428,60 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Se o cliente tem coordenadas, exige lat/lng no corpo e valida raio (m).
+	 *
+	 * @return array{ok?:bool,error?:string,message?:string,distanceM?:float}
+	 */
+	protected function _timerValidateGeoInicio($ticket, array $body): array {
+		try {
+			$cl = $this->Clientes->findById((int)$ticket->idcliente)->first();
+		} catch (\Throwable $e) {
+			return ['ok' => true];
+		}
+		if (empty($cl)) {
+			return ['ok' => true];
+		}
+		$cols = $this->Clientes->getSchema()->columns();
+		$hasLat = in_array('latitude', $cols, true) && $cl->get('latitude') !== null && $cl->get('latitude') !== '';
+		$hasLon = in_array('longitude', $cols, true) && $cl->get('longitude') !== null && $cl->get('longitude') !== '';
+		if (!$hasLat || !$hasLon) {
+			return ['ok' => true];
+		}
+		$lat = isset($body['lat']) ? (float)$body['lat'] : (isset($body['latitude']) ? (float)$body['latitude'] : null);
+		$lng = isset($body['lng']) ? (float)$body['lng'] : (isset($body['longitude']) ? (float)$body['longitude'] : null);
+		if ($lat === null || $lng === null || (abs($lat) < 1e-9 && abs($lng) < 1e-9)) {
+			return [
+				'ok' => false,
+				'error' => 'geo_required',
+				'message' => 'Informe lat e lng (geolocalização) para iniciar o timer neste cliente.',
+			];
+		}
+		$refLat = (float)$cl->get('latitude');
+		$refLng = (float)$cl->get('longitude');
+		$raioM = 500.0;
+		if (in_array('geo_validacao_raio_m', $cols, true) && $cl->get('geo_validacao_raio_m') !== null && (int)$cl->get('geo_validacao_raio_m') > 0) {
+			$raioM = (float)(int)$cl->get('geo_validacao_raio_m');
+		}
+		$km = TicketServiceDeskApiService::haversineKm($lat, $lng, $refLat, $refLng);
+		$distM = $km * 1000.0;
+		if ($distM > $raioM) {
+			return [
+				'ok' => false,
+				'error' => 'geo_outside',
+				'message' => 'Localização fora do raio permitido para este cliente.',
+				'distanceM' => $distM,
+			];
+		}
+
+		return ['ok' => true, 'distanceM' => $distM];
+	}
+
+	/**
 	 * Timer (JSON): mesma regra das ações POST legadas, sem redirect/Flash.
 	 *
 	 * @return array{ok:bool,error?:string,message?:string,duracaoMinutosFinal?:int}
 	 */
-	protected function _timerServiceExecute(int $idticket, $ticket, string $acao): array {
+	protected function _timerServiceExecute(int $idticket, $ticket, string $acao, array $body = []): array {
 		$acao = strtolower(trim($acao));
 		$allowed = ['iniciar', 'pausar', 'retomar', 'finalizar'];
 		if (!in_array($acao, $allowed, true)) {
@@ -2429,6 +2500,10 @@ class TicketsController extends AppController {
 		try {
 			$tUserCol = $this->_atendimentoTimerUserColumn();
 			if ($acao === 'iniciar') {
+				$geo = $this->_timerValidateGeoInicio($ticket, $body);
+				if (!empty($geo['ok']) && $geo['ok'] === false) {
+					return $geo;
+				}
 				$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->first();
 				if ($ativo) {
 					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
@@ -2515,7 +2590,16 @@ class TicketsController extends AppController {
 						'horaini' => $inicio->format('Y-m-d H:i:s'),
 						'horafin' => $fim->format('Y-m-d H:i:s'),
 					]);
-					$this->Ticketshoras->save($regHora);
+					if ($this->Ticketshoras->save($regHora)) {
+						TicketWorklogEventHelper::afterHoraLancada(
+							$regHora,
+							(int)$this->Auth->user('idempresa'),
+							$idticket,
+							(int)$this->Auth->user('id'),
+							$regHora->horaini,
+							$regHora->horafin
+						);
+					}
 				} catch (\Throwable $e) {
 					$this->log('Timer JSON: falha ao registrar em Ticketshoras: ' . $e->getMessage(), 'error');
 				}
@@ -2580,6 +2664,13 @@ class TicketsController extends AppController {
 				'apiAddComentario' => $w . 'ticket-comentarios/api-add/',
 				'apiEditComentario' => $w . 'ticket-comentarios/api-edit/',
 				'apiDeleteComentario' => $w . 'ticket-comentarios/api-delete/',
+				'apiTimeline' => $w . 'tickets/api-timeline/',
+				'apiValidateGeolocation' => $w . 'tickets/api-validate-geolocation/',
+				'apiTicketSignature' => $w . 'tickets/api-ticket-signature/',
+				'apiAddTicketProduct' => $w . 'tickets/api-add-ticket-product/',
+				'apiAddEvidencePhoto' => $w . 'tickets/api-add-evidence-photo/',
+				'apiPdfTicketOs' => $w . 'tickets/api-pdf-ticket-os/',
+				'apiPdfLaudo' => $w . 'tickets/api-pdf-laudo/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'ticketsOperacional' => Router::url(['controller' => 'Tickets', 'action' => 'operacional']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -4765,7 +4856,7 @@ class TicketsController extends AppController {
 		} elseif (!empty($body['acao'])) {
 			$acao = (string)$body['acao'];
 		}
-		$result = $this->_timerServiceExecute((int)$idticket, $ticket, $acao);
+		$result = $this->_timerServiceExecute((int)$idticket, $ticket, $acao, is_array($body) ? $body : []);
 		$payload = [
 			'ok' => $result['ok'],
 			'error' => $result['ok'] ? null : ($result['error'] ?? 'erro'),
@@ -5075,5 +5166,305 @@ class TicketsController extends AppController {
 		$this->set(compact('ticket', 'ticketsusers', 'ordem', 'timerAtivo', 'timerPausado', 'timerPausadoElapsedTexto', 'minutosTicket', 'minutosClienteMes', 'horasContratoTexto', 'tecnicoResponsavelLabel'));
 		$this->set('cliente', $clienteNome);
 		$this->set('solicitante', $solicitante ? $solicitante->name : null);
+	}
+
+	public function apiTimeline($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+		$ticket = $ticket->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$pack = TicketServiceDeskApiService::buildTimelineRows($this, $ticket);
+
+		return $this->jsonResponse(['ok' => true, 'events' => $pack->rows]);
+	}
+
+	public function apiValidateGeolocation($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$r = $this->_timerValidateGeoInicio($ticket, is_array($body) ? $body : []);
+		if (empty($r['ok']) || $r['ok'] !== true) {
+			return $this->jsonResponse($r, 400);
+		}
+		$out = ['ok' => true, 'message' => 'Dentro do raio permitido.'];
+		if (isset($r['distanceM'])) {
+			$out['distanceM'] = $r['distanceM'];
+		}
+
+		return $this->jsonResponse($out);
+	}
+
+	public function apiTicketSignature($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$raw = (string)($body['image'] ?? $body['data'] ?? '');
+		$raw = preg_replace('#^data:image/[^;]+;base64,#', '', $raw);
+		$bin = base64_decode($raw, true);
+		if ($bin === false || strlen($bin) < 10) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_image'], 400);
+		}
+		$maxSig = 2621440;
+		if (strlen($bin) > $maxSig) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'image_too_large'], 413);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$dir = $this->dirAnexos($emp, (int)$idticket);
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		$fn = 'assinatura_' . time() . '.png';
+		$path = $dir . DS . $fn;
+		if (file_put_contents($path, $bin) === false) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'write_failed'], 500);
+		}
+		$rel = 'arquivos/tickets/' . $emp . '/' . (int)$idticket . '/' . $fn;
+		$te = $this->TicketEvents;
+		$te->save($te->newEntity([
+			'idempresa' => $emp,
+			'ticket_id' => (int)$idticket,
+			'user_id' => (int)$this->Auth->user('id'),
+			'type' => 'signature',
+			'description' => 'Assinatura digital no encerramento',
+			'attachment' => $rel,
+			'created' => \Cake\I18n\Time::now(),
+		], ['validate' => false]), ['checkRules' => false, 'validate' => false, 'skipBillingClassify' => true]);
+
+		return $this->jsonResponse(['ok' => true, 'url' => '/' . str_replace('\\', '/', $rel)]);
+	}
+
+	public function apiAddTicketProduct($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$pid = (int)($body['produto_id'] ?? $body['produtoId'] ?? 0);
+		$q = isset($body['quantidade']) ? (float)$body['quantidade'] : 0;
+		if ($pid <= 0 || $q <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
+		}
+		$p = $this->Produtos->find()->where(['id' => $pid, 'idempresa' => (int)$this->Auth->user('idempresa')])->first();
+		if (!$p) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'produto_not_found'], 404);
+		}
+		$cols = $this->Produtos->getSchema()->columns();
+		$custo = in_array('vlcusto', $cols, true) ? $p->get('vlcusto') : null;
+		$preco = in_array('vlunitario', $cols, true) ? $p->get('vlunitario') : null;
+		$emp = (int)$this->Auth->user('idempresa');
+		$hasEstoque = in_array('estoque_atual', $cols, true);
+		$conn = ConnectionManager::get('default');
+		try {
+			$out = $conn->transactional(function () use ($conn, $hasEstoque, $q, $pid, $emp, $idticket, $custo, $preco) {
+				if ($hasEstoque) {
+					$st = $conn->execute(
+						'UPDATE produtos SET estoque_atual = COALESCE(estoque_atual, 0) - :q WHERE id = :id AND idempresa = :eid AND COALESCE(estoque_atual, 0) >= :q2',
+						['q' => $q, 'q2' => $q, 'id' => $pid, 'eid' => $emp]
+					);
+					$n = method_exists($st, 'rowCount') ? (int)$st->rowCount() : 0;
+					if ($n < 1) {
+						throw new \RuntimeException('estoque');
+					}
+				}
+				$tp = $this->TicketProducts->newEntity([
+					'idempresa' => $emp,
+					'ticket_id' => (int)$idticket,
+					'produto_id' => $pid,
+					'quantidade' => $q,
+					'custo_unitario' => $custo,
+					'preco_unitario' => $preco,
+					'user_id' => (int)$this->Auth->user('id'),
+				], ['validate' => false]);
+				if (!$this->TicketProducts->save($tp, ['_stockDeducted' => true])) {
+					throw new \RuntimeException('save_failed');
+				}
+
+				return (int)$tp->id;
+			});
+		} catch (\RuntimeException $e) {
+			if ($e->getMessage() === 'estoque') {
+				return $this->jsonResponse(['ok' => false, 'error' => 'estoque_insuficiente'], 400);
+			}
+			if ($e->getMessage() === 'save_failed') {
+				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			}
+			throw $e;
+		}
+
+		return $this->jsonResponse(['ok' => true, 'id' => $out]);
+	}
+
+	public function apiAddEvidencePhoto($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$raw = (string)($body['image'] ?? '');
+		$raw = preg_replace('#^data:image/[^;]+;base64,#', '', $raw);
+		$bin = base64_decode($raw, true);
+		if ($bin === false) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_image'], 400);
+		}
+		$maxEvid = 5242880;
+		if (strlen($bin) > $maxEvid) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'image_too_large'], 413);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$dir = $this->dirAnexos($emp, (int)$idticket);
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		$fn = 'evidencia_' . time() . '.png';
+		$path = $dir . DS . $fn;
+		file_put_contents($path, $bin);
+		$rel = 'arquivos/tickets/' . $emp . '/' . (int)$idticket . '/' . $fn;
+		$caption = (string)($body['caption'] ?? $body['legenda'] ?? '');
+		$this->TicketEvents->save($this->TicketEvents->newEntity([
+			'idempresa' => $emp,
+			'ticket_id' => (int)$idticket,
+			'user_id' => (int)$this->Auth->user('id'),
+			'type' => 'technical_report',
+			'description' => $caption !== '' ? $caption : 'Evidência fotográfica',
+			'attachment' => $rel,
+			'metadata' => ['caption' => $caption],
+			'created' => \Cake\I18n\Time::now(),
+		], ['validate' => false]), ['checkRules' => false, 'validate' => false, 'skipBillingClassify' => true]);
+
+		return $this->jsonResponse(['ok' => true, 'url' => '/' . str_replace('\\', '/', $rel)]);
+	}
+
+	public function apiPdfTicketOs($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if (!class_exists(\Mpdf\Mpdf::class)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'mpdf_missing'], 500);
+		}
+		$pack = TicketServiceDeskApiService::buildTimelineRows($this, $ticket);
+		$this->viewBuilder()->setTemplatePath('Servicedesk');
+		$this->viewBuilder()->setTemplate('pdf_os');
+		$this->viewBuilder()->setLayout(false);
+		$this->set('ticket', $ticket);
+		$this->set('idticket', (int)$idticket);
+		$this->set('timeline', $pack->rows);
+		$view = $this->createView();
+		$html = $view->render();
+		$tmp = TMP . 'mpdf' . DS;
+		if (!is_dir($tmp)) {
+			@mkdir($tmp, 0775, true);
+		}
+		$mpdf = new \Mpdf\Mpdf(['tempDir' => $tmp]);
+		$mpdf->SetTitle('OS ' . (int)$idticket);
+		$mpdf->WriteHTML($html);
+		$pdf = $mpdf->Output('', \Mpdf\Output\Destination::STRING_RETURN);
+
+		return $this->response
+			->withType('application/pdf')
+			->withHeader('Content-Disposition', 'inline; filename="os-' . (int)$idticket . '.pdf"')
+			->withStringBody($pdf);
+	}
+
+	public function apiPdfLaudo($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$rid = (int)($this->request->getQuery('reportId') ?? 0);
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$rep = null;
+		if ($rid > 0) {
+			$rep = $this->TechnicalReports->find()->where(['id' => $rid, 'ticket_id' => (int)$idticket])->first();
+		}
+		if (empty($rep)) {
+			$rep = $this->TechnicalReports->find()->where(['ticket_id' => (int)$idticket])->orderDesc('id')->first();
+		}
+		if (empty($rep)) {
+			$emp = (int)$this->Auth->user('idempresa');
+			$rep = $this->TechnicalReports->newEntity([
+				'idempresa' => $emp,
+				'ticket_id' => (int)$idticket,
+				'conclusao_tecnica' => '',
+			], ['validate' => false]);
+			$this->TechnicalReports->save($rep, ['checkRules' => false]);
+		}
+		$check = $this->TicketChecklists->find()->where(['technical_report_id' => (int)$rep->id])->order(['sort_order' => 'ASC', 'id' => 'ASC'])->all()->toList();
+		$this->viewBuilder()->setTemplatePath('Servicedesk');
+		$this->viewBuilder()->setTemplate('pdf_laudo');
+		$this->viewBuilder()->setLayout(false);
+		$this->set('ticket', $ticket);
+		$this->set('report', $rep);
+		$this->set('checklist', $check);
+		$view = $this->createView();
+		$html = $view->render();
+		if (!class_exists(\Mpdf\Mpdf::class)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'mpdf_missing'], 500);
+		}
+		$tmp = TMP . 'mpdf' . DS;
+		if (!is_dir($tmp)) {
+			@mkdir($tmp, 0775, true);
+		}
+		$mpdf = new \Mpdf\Mpdf(['tempDir' => $tmp]);
+		$mpdf->SetTitle('Laudo');
+		$mpdf->WriteHTML($html);
+		$pdf = $mpdf->Output('', \Mpdf\Output\Destination::STRING_RETURN);
+
+		return $this->response
+			->withType('application/pdf')
+			->withHeader('Content-Disposition', 'inline; filename="laudo-' . (int)$idticket . '.pdf"')
+			->withStringBody($pdf);
 	}
 }

@@ -73,6 +73,7 @@ class SlaService {
 		}
 
 		$now = Time::now();
+		$bh = new BusinessHoursService();
 
 		if (in_array('sla_policy_id', $cols, true)) {
 			$ticket->set('sla_policy_id', (int)$policy->id);
@@ -87,11 +88,11 @@ class SlaService {
 			$changed[] = 'sla_resolucao_minutos';
 		}
 		if (in_array('data_limite_resposta', $cols, true)) {
-			$ticket->set('data_limite_resposta', (clone $now)->addMinutes((int)$policy->resposta_minutos));
+			$ticket->set('data_limite_resposta', $bh->addBusinessMinutes($now, (int)$policy->resposta_minutos, $idempresa));
 			$changed[] = 'data_limite_resposta';
 		}
 		if (in_array('data_limite_resolucao', $cols, true)) {
-			$ticket->set('data_limite_resolucao', (clone $now)->addMinutes((int)$policy->resolucao_minutos));
+			$ticket->set('data_limite_resolucao', $bh->addBusinessMinutes($now, (int)$policy->resolucao_minutos, $idempresa));
 			$changed[] = 'data_limite_resolucao';
 		}
 		if (in_array('sla_percentual_consumido', $cols, true)) {

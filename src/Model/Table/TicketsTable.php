@@ -5,7 +5,10 @@ use App\Utility\SupportInboxMail;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
+use Cake\I18n\Time;
 use Cake\ORM\Table;
+use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Mailer\Email;
@@ -49,6 +52,7 @@ class TicketsTable extends Table {
 		$this->belongsTo('SlaPolicies', ['foreignKey' => 'sla_policy_id', 'joinType' => 'LEFT']);
 
 		$this->hasMany('TicketHistories', ['foreignKey' => 'ticket_id', 'dependent' => true]);
+		$this->hasMany('TicketEvents', ['foreignKey' => 'ticket_id', 'dependent' => true]);
 		$this->hasMany('Ticketsclientes', ['dependent' => true,'cascadeCallbacks' => true,])->setForeignKey('idticket'); 
 		
 		$this->hasOne('Empresas');
@@ -56,9 +60,9 @@ class TicketsTable extends Table {
 	}
 
 	/**
-	 * Responsável pelo ticket: referência canônica é idtecnico_responsavel (legado e regras de negócio).
-	 * owner_id é espelho persistido (API JSON, FK opcional) — sempre derivado de idtecnico_responsavel
-	 * para evitar divergência. Não use owner_id como fonte de verdade na aplicação.
+	 * (1) owner_id: espelha idtecnico_responsavel (ver legado; não usar owner_id como fonte de verdade).
+	 * (2) _auditPrev: snapshot para afterSave de ticket_events (type audit) — não duplicar outro beforeSave: em PHP
+	 *     só existe um beforeSave; combinar sempre aqui.
 	 */
 	public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
 		$cols = $this->getSchema()->columns();
@@ -69,8 +73,137 @@ class TicketsTable extends Table {
 			$uid = ($tid !== null && $tid !== '' && (int)$tid > 0) ? (int)$tid : null;
 			$entity->owner_id = $uid;
 		}
+		if (!empty($options['skipTicketEventAudit'])) {
+			return true;
+		}
+		if ($entity->isNew() || (int)($entity->id ?? 0) <= 0) {
+			return true;
+		}
+		if (!$this->_ticketEventsTableExists()) {
+			return true;
+		}
+		try {
+			$prev = $this->get($entity->id, [
+				'fields' => ['id', 'situacao', 'prioridade', 'severidade', 'idtecnico_responsavel', 'owner_id'],
+			]);
+			$options['_auditPrev'] = $prev;
+		} catch (\Throwable $e) {
+		}
 
 		return true;
+	}
+
+	public function afterSave(Event $event, EntityInterface $entity, ArrayObject $options) {
+		if (!empty($options['skipTicketEventAudit'])) {
+			return;
+		}
+		$te = $this->_ticketEventsTableExists();
+		if (!$te) {
+			return;
+		}
+		if ((int)($entity->id ?? 0) <= 0) {
+			return;
+		}
+		$prev = isset($options['_auditPrev']) ? $options['_auditPrev'] : null;
+		if ($prev === null) {
+			return;
+		}
+		$watch = [];
+		$schemaCols = $this->getSchema()->columns();
+		if (in_array('situacao', $schemaCols, true)) {
+			$p = $prev->get('situacao');
+			$n = $entity->get('situacao');
+			if ((string)$p !== (string)$n) {
+				$watch['situacao'] = 'Situação';
+			}
+		}
+		if (in_array('prioridade', $schemaCols, true)) {
+			$p = $prev->get('prioridade');
+			$n = $entity->get('prioridade');
+			if ((string)$p !== (string)$n) {
+				$watch['prioridade'] = 'Prioridade';
+			}
+		} elseif (in_array('severidade', $schemaCols, true)) {
+			$p = $prev->get('severidade');
+			$n = $entity->get('severidade');
+			if ((string)$p !== (string)$n) {
+				$watch['severidade'] = 'Severidade';
+			}
+		}
+		if (in_array('idtecnico_responsavel', $schemaCols, true)) {
+			$p = $prev->get('idtecnico_responsavel');
+			$n = $entity->get('idtecnico_responsavel');
+			if ((string)$p !== (string)$n) {
+				$watch['idtecnico_responsavel'] = 'Técnico responsável';
+			}
+		} elseif (in_array('owner_id', $schemaCols, true)) {
+			$p = $prev->get('owner_id');
+			$n = $entity->get('owner_id');
+			if ((string)$p !== (string)$n) {
+				$watch['owner_id'] = 'Responsável';
+			}
+		}
+		if ($watch === []) {
+			return;
+		}
+		$lines = [];
+		foreach ($watch as $field => $label) {
+			$ov = $prev->get($field);
+			$nv = $entity->get($field);
+			$lines[] = $label . ': ' . $this->fmtAuditVal($ov) . ' → ' . $this->fmtAuditVal($nv);
+		}
+		$uid = $this->currentRequestUserId();
+		$ev = $this->TicketEvents->newEntity([
+			'idempresa' => (int)($entity->idempresa ?? 0),
+			'ticket_id' => (int)$entity->id,
+			'user_id' => $uid,
+			'type' => 'audit',
+			'description' => implode("\n", $lines),
+			'created' => Time::now(),
+		], ['validate' => false, 'markClean' => true]);
+		try {
+			$this->TicketEvents->save($ev, ['checkRules' => false, 'validate' => false, 'skipBillingClassify' => true]);
+		} catch (\Throwable $e) {
+			$this->log('TicketsTable::afterSave audit event: ' . $e->getMessage(), 'warning');
+		}
+	}
+
+	protected function fmtAuditVal($v) {
+		if ($v === null) {
+			return '—';
+		}
+		if (is_object($v) && method_exists($v, 'format')) {
+			return (string)$v;
+		}
+
+		return (string)$v;
+	}
+
+	protected function currentRequestUserId(): ?int {
+		$req = Router::getRequest();
+		if ($req instanceof ServerRequest) {
+			$uid = $req->getSession()->read('Auth.User.id');
+			if ($uid !== null && $uid !== '') {
+				return (int)$uid;
+			}
+		}
+		// CLI / filas: sem sessão
+		return null;
+	}
+
+	protected function _ticketEventsTableExists(): bool {
+		static $y;
+		if ($y !== null) {
+			return $y;
+		}
+		try {
+			$c = \Cake\Datasource\ConnectionManager::get('default')->getSchemaCollection();
+			$y = in_array('ticket_events', $c->listTables(), true);
+		} catch (\Throwable $e) {
+			$y = false;
+		}
+
+		return $y;
 	}
 
 	/**

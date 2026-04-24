@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { postTimerAction, saveTicketDescricaoAtendimento } from '../lib/api';
+import { postTimerAction, postTicketSignature, saveTicketDescricaoAtendimento } from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
 import TimerWidget from './TimerWidget.jsx';
 import AuditModal from './AuditModal.jsx';
@@ -215,7 +215,30 @@ export default function HorasTecnicasTimerPanel({
     }
 
     if (!skipBusy) setBusy(true);
-    const res = await postTimerAction(ticketId, action);
+    let extra = {};
+    if (action === 'iniciar' && typeof navigator !== 'undefined' && navigator.geolocation) {
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 20000,
+            maximumAge: 120000,
+            enableHighAccuracy: true,
+          });
+        });
+        extra = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      } catch (geoErr) {
+        if (!skipBusy) setBusy(false);
+        setOptimistic(null);
+        if (onFeedback) {
+          onFeedback(
+            null,
+            'Não foi possível obter a localização. Permita o acesso à geolocalização para iniciar o timer no cliente.'
+          );
+        }
+        return { ok: false, error: 'geo_denied', message: geoErr?.message };
+      }
+    }
+    const res = await postTimerAction(ticketId, action, extra);
     if (!skipBusy) setBusy(false);
 
     if (res.ok) {
@@ -242,7 +265,7 @@ export default function HorasTecnicasTimerPanel({
     setFinalizeOpen(true);
   }
 
-  async function handleFinalizeSubmit(atividade) {
+  async function handleFinalizeSubmit(atividade, signatureDataUrl) {
     const t = (atividade || '').trim();
     if (canEditDescricaoAtendimento && t.length < 3) {
       return { ok: false, error: 'Descreva o que foi feito nestes minutos (mínimo 3 caracteres).' };
@@ -258,6 +281,12 @@ export default function HorasTecnicasTimerPanel({
       }
       const res = await runAction('finalizar', { skipBusy: true });
       if (res && res.ok) {
+        if (signatureDataUrl && String(signatureDataUrl).length > 80) {
+          const sigRes = await postTicketSignature(ticketId, signatureDataUrl);
+          if (!sigRes.ok) {
+            return { ok: false, error: sigRes.error || 'Timer finalizado, mas falha ao gravar assinatura.' };
+          }
+        }
         setFinalizeOpen(false);
         return { ok: true };
       }

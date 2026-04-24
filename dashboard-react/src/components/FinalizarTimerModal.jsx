@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SignaturePad from './SignaturePad.jsx';
 
 /**
  * @param {object} p
@@ -7,7 +8,7 @@ import { useEffect, useState } from 'react';
  * @param {boolean} p.busy
  * @param {boolean} p.canEditDescricaoAtendimento
  * @param {() => void} p.onClose
- * @param {(atividade: string) => Promise<{ ok: boolean, error?: string }>} p.onSubmit
+ * @param {(atividade: string, signatureDataUrl?: string | null) => Promise<{ ok: boolean, error?: string }>} p.onSubmit
  */
 export default function FinalizarTimerModal({
   open,
@@ -19,11 +20,13 @@ export default function FinalizarTimerModal({
 }) {
   const [texto, setTexto] = useState('');
   const [error, setError] = useState(null);
+  const [sig, setSig] = useState(null);
 
   useEffect(() => {
     if (open) {
       setTexto('');
       setError(null);
+      setSig(null);
     }
   }, [open]);
 
@@ -50,7 +53,7 @@ export default function FinalizarTimerModal({
       setError('Descreva o que foi feito nestes minutos (mínimo 3 caracteres).');
       return;
     }
-    const r = await onSubmit(texto);
+    const r = await onSubmit(texto, sig);
     if (r && !r.ok && r.error) {
       setError(r.error);
     }
@@ -101,6 +104,8 @@ export default function FinalizarTimerModal({
               As horas serão lançadas em Horas cadastradas. Confirme abaixo para finalizar o timer.
             </p>
           )}
+
+          <SignaturePad onChange={setSig} className="mt-3" />
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
