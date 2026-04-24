@@ -1878,13 +1878,31 @@ class UsersController extends AppController {
 	 *
 	 * @param \Cake\Datasource\EntityInterface|array $target
 	 */
+	protected function _isSystemAdminUser(): bool {
+		$v = $this->Auth->user('admin');
+		if (is_bool($v)) {
+			return $v;
+		}
+		if (is_int($v)) {
+			return $v === 1;
+		}
+		$s = strtolower(trim((string)$v));
+
+		return in_array($s, ['1', 't', 'true', 'yes', 'on', 'sim'], true);
+	}
+
+	/**
+	 * Administrador pode atribuir senha de auditoria ao alvo (mesma empresa).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|array $target
+	 */
 	protected function _userAdminMaySetAuditPasswordForUser($target): bool {
 		$adminEmpresaId = (int)$this->Auth->user('idempresa');
 		$tid = (int)(is_object($target) ? $target->get('idempresa') : ($target['idempresa'] ?? 0));
 		if ($tid < 1) {
 			return false;
 		}
-		if ((int)$this->Auth->user('admin') === 1) {
+		if ($this->_isSystemAdminUser()) {
 			return true;
 		}
 
@@ -1955,7 +1973,7 @@ class UsersController extends AppController {
 	public function apiSetUserAuditPassword() {
 		$this->request->allowMethod(['post']);
 		$this->autoRender = false;
-		if (!(int) $this->Auth->user('admin')) {
+		if (!$this->_isSystemAdminUser()) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden', 'message' => 'Apenas administrador.'], 403);
 		}
 		$body = $this->request->input('json_decode', true);
