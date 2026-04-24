@@ -1021,15 +1021,30 @@ class UsersController extends AppController {
 			);
 
 			if ($auditGenerate && !$this->_userAdminMaySetAuditPasswordForUser($user)) {
+				$adminRaw = $this->Auth->user('admin');
+				$adminRawType = gettype($adminRaw);
+				$adminRawValue = is_scalar($adminRaw) ? (string)$adminRaw : json_encode($adminRaw);
+				$isSystemAdmin = $this->_isSystemAdminUser();
 				// #region agent log
 				$this->_debugAuditLog('H4', 'UsersController::edit blocked by permission check', [
 					'authUserId' => (int)$this->Auth->user('id'),
 					'targetUserId' => (int)$user->id,
 					'authUserEmpresa' => (int)$this->Auth->user('idempresa'),
 					'targetUserEmpresa' => (int)$user->idempresa,
+					'adminRawType' => $adminRawType,
+					'adminRawValue' => $adminRawValue,
+					'isSystemAdmin' => $isSystemAdmin,
 				]);
 				// #endregion
-				$this->Flash->error('Não é permitido gerar chave de auditoria para um utilizador de outra empresa.');
+				$this->Flash->error(
+					'Não é permitido gerar chave de auditoria para um utilizador de outra empresa.'
+					. ' [DBG audit: adminType=' . $adminRawType
+					. ', adminRaw=' . $adminRawValue
+					. ', isSystemAdmin=' . ($isSystemAdmin ? '1' : '0')
+					. ', authEmpresa=' . (int)$this->Auth->user('idempresa')
+					. ', targetEmpresa=' . (int)$user->idempresa
+					. ']'
+				);
 				$redirEdit = ['action' => 'edit', $id];
 				if ($fromQueues) {
 					$redirEdit['?'] = ['from' => 'queues'];
