@@ -45,10 +45,10 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgCadGrp) {
             $items = [];
             if (($sg['clientes'] ?? true)) {
-                $items[] = self::item('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['clientesListNavActive'], '', 'Clientes');
+                $items[] = self::item('users', ' Clientes', ['controller' => 'Clientes', 'action' => 'index'], [], $ctx['clientesListNavActive'], '', 'Clientes');
             }
             if (($sg['clientes'] ?? true)) {
-                $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], ['data-turbo' => 'false'], $ctx['clientesAddActive'], '', 'Cadastrar clientes');
+                $items[] = self::item('user-plus', ' Cadastrar clientes', ['controller' => 'Clientes', 'action' => 'add'], [], $ctx['clientesAddActive'], '', 'Cadastrar clientes');
             }
             if (($sg['produtos'] ?? true)) {
                 $items[] = self::item('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($v['produtosActive'] ?? ''), '', 'Produtos');
