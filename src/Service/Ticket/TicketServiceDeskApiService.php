@@ -80,8 +80,9 @@ class TicketServiceDeskApiService {
 			}
 		}
 
+		// Comentários: por idticket (o ticket já foi validado em apiTimeline / pertença à empresa)
 		$comRows = $c->Ticketcomentarios->find()
-			->where(['idticket' => $tid, 'idempresa' => $idempresa])
+			->where(['idticket' => $tid])
 			->order(['id' => 'ASC'])
 			->all();
 		foreach ($comRows as $row) {
@@ -107,7 +108,8 @@ class TicketServiceDeskApiService {
 			];
 		}
 
-		$movs = $c->Ticketsmovs->find()->where(['idticket' => $tid, 'idempresa' => $idempresa])->order(['id' => 'ASC'])->all();
+		// Movimentações: igual à action edit (só idticket) — idempresa em ticketsmovs pode ser NULL em legado
+		$movs = $c->Ticketsmovs->find()->where(['idticket' => $tid])->order(['id' => 'ASC'])->all();
 		foreach ($movs as $m) {
 			$uid = (int)($m->idusuario ?? 0);
 			$u = $uid > 0 ? $c->Users->findById($uid)->select(['id', 'name'])->first() : null;
@@ -127,7 +129,8 @@ class TicketServiceDeskApiService {
 		}
 
 		$th = $c->Ticketshoras;
-		$hs = $th->find()->where(['idticket' => $tid, 'idempresa' => $idempresa])->order(['id' => 'ASC'])->all();
+		// Horas: igual à action edit (só idticket) — nalguns legados `idempresa` não está preenchido em ticketshoras
+		$hs = $th->find()->where(['idticket' => $tid])->order(['id' => 'ASC'])->all();
 		foreach ($hs as $h) {
 			$hid = (int)($h->id ?? 0);
 			if ($hid > 0 && in_array($hid, $horasCobertura, true)) {
