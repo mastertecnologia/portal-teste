@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   fetchTicketDetail,
   fetchTicketTimeline,
@@ -84,6 +84,12 @@ export default function TechTicketEdit({ boot }) {
   useTicketTimelinePoll(id, setTimelineEvents);
 
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
+
+  /** Eventos técnicos (mov, horas, audit, assinatura…); comentários só na aba «Conversa». */
+  const eventosOperacionais = useMemo(
+    () => (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() !== 'comment'),
+    [timelineEvents]
+  );
 
   async function handleComentario(e) {
     e.preventDefault();
@@ -389,15 +395,15 @@ export default function TechTicketEdit({ boot }) {
             }`}
           >
             Eventos (histórico)
-            {timelineEvents.length > 0 ? (
-              <span className="ml-1 opacity-90">({timelineEvents.length})</span>
+            {eventosOperacionais.length > 0 ? (
+              <span className="ml-1 opacity-90">({eventosOperacionais.length})</span>
             ) : null}
           </button>
         </div>
         <p className="text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
           {rightPanelTab === 'chat'
-            ? 'Mensagens com o cliente e a equipa — como antes. O histórico completo (horas, movs, auditoria) está no separador «Eventos».'
-            : 'Visão unificada: comentários duplicados do legado podem ser omitidos; horas, movimentações e eventos técnicos aparecem aqui.'}
+            ? 'Mensagens com o cliente e a equipa. Movimentações, horas e logs ficam no separador «Eventos (histórico)» — sem misturar com a conversa.'
+            : 'Apenas operação: movimentações, horas, auditoria, assinaturas, peças, etc. Comentários de chat estão em «Conversa».'}
         </p>
       </div>
       {rightPanelTab === 'chat' ? (
@@ -438,12 +444,14 @@ export default function TechTicketEdit({ boot }) {
         </ul>
       ) : (
         <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--pgm-bg-base,#0c0f14)] p-3">
-          {timelineEvents.length === 0 ? (
+          {eventosOperacionais.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-              Nenhum evento ainda. Envie um comentário ou registre horas.
+              {Array.isArray(timelineEvents) && timelineEvents.length > 0
+                ? 'Não há eventos operacionais (só comentários de conversa, na aba «Conversa»).'
+                : 'Nenhum evento ainda. Registre horas ou aguarde movimentações no ticket.'}
             </div>
           ) : (
-            <TicketTimeline events={timelineEvents} />
+            <TicketTimeline events={eventosOperacionais} />
           )}
         </div>
       )}

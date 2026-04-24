@@ -3786,13 +3786,20 @@ class TicketsController extends AppController {
 			if ($autor === '') {
 				$autor = $papel === 'tecnico' ? 'Técnico' : 'Cliente';
 			}
+			$quando = '';
+			if (!empty($c->created) && $c->created instanceof \DateTimeInterface) {
+				$ts = (int)$c->created->format('U');
+				if ($ts > 86400) {
+					$quando = $c->created->format('d/m/Y H:i');
+				}
+			}
 			$comentarios[] = [
 				'id' => (int)$c->id,
 				'idautor' => (int)$c->idautor,
 				'autor' => $autor,
 				'papel' => $papel,
 				'texto' => (string)($c->comentario ?? ''),
-				'quando' => $c->created ? $c->created->format('d/m/Y H:i') : '',
+				'quando' => $quando,
 			];
 		}
 
