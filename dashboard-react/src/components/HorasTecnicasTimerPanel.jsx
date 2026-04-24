@@ -70,7 +70,6 @@ export default function HorasTecnicasTimerPanel({
 }) {
   const safeStorage = typeof window !== 'undefined' ? window.localStorage : null;
   const [optimistic, setOptimistic] = useState(null);
-  const [persistedSessao, setPersistedSessao] = useState(null);
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
@@ -91,47 +90,7 @@ export default function HorasTecnicasTimerPanel({
   const serverSessao = snap.sessao || null;
   const serverUnix = typeof snap.serverUnix === 'number' ? snap.serverUnix : null;
 
-  const sessao = optimistic ?? serverSessao ?? persistedSessao;
-
-  useEffect(() => {
-    if (!safeStorage || !ticketId) return;
-    try {
-      const raw = safeStorage.getItem(TIMER_WIDGET_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!parsed || Number(parsed.ticketId) !== Number(ticketId)) return;
-      const ss = parsed.sessao || null;
-      if (ss && ss.horaInicio) {
-        setPersistedSessao(ss);
-      }
-    } catch (_e) {
-      // noop: storage indisponível ou conteúdo inválido
-    }
-  }, [safeStorage, ticketId]);
-
-  useEffect(() => {
-    if (!safeStorage || !ticketId) return undefined;
-    const onStorage = (event) => {
-      if (event.key !== TIMER_WIDGET_STORAGE_KEY) return;
-      try {
-        if (!event.newValue) {
-          setPersistedSessao(null);
-          return;
-        }
-        const parsed = JSON.parse(event.newValue);
-        if (!parsed || Number(parsed.ticketId) !== Number(ticketId)) {
-          setPersistedSessao(null);
-          return;
-        }
-        const ss = parsed.sessao || null;
-        setPersistedSessao(ss && ss.horaInicio ? ss : null);
-      } catch (_e) {
-        setPersistedSessao(null);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, [safeStorage, ticketId]);
+  const sessao = optimistic ?? serverSessao;
 
   useEffect(() => {
     if (!safeStorage || !ticketId) return;
