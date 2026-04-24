@@ -28,13 +28,15 @@ function clampWidgetPosition(left, top, elW, elH) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const pad = 8;
-  const minLeft = pad - elW + 48;
-  const maxLeft = vw - pad;
+  const w = Number.isFinite(elW) && elW > 0 ? elW : Math.min(240, vw * 0.92);
+  const h = Number.isFinite(elH) && elH > 0 ? elH : 200;
+  const minLeft = pad - w + 48;
+  const maxLeft = Math.max(minLeft, vw - w - pad);
   const minTop = pad;
-  const maxTop = vh - pad;
+  const maxTop = Math.max(minTop, vh - h - pad);
   return {
-    left: Math.min(maxLeft, Math.max(minLeft, left)),
-    top: Math.min(maxTop, Math.max(minTop, top)),
+    left: Math.round(Math.min(maxLeft, Math.max(minLeft, left))),
+    top: Math.round(Math.min(maxTop, Math.max(minTop, top))),
   };
 }
 
@@ -96,14 +98,27 @@ export default function TimerWidget({
   }, []);
 
   useEffect(() => {
-    function onResize() {
+    function reclampToViewport() {
       const el = rootRef.current;
       if (!el) return;
       const { width, height } = el.getBoundingClientRect();
       setPos((p) => clampWidgetPosition(p.left, p.top, width, height));
     }
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    window.addEventListener('resize', reclampToViewport);
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', reclampToViewport);
+      vv.addEventListener('scroll', reclampToViewport);
+    }
+    const id = requestAnimationFrame(() => reclampToViewport());
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener('resize', reclampToViewport);
+      if (vv) {
+        vv.removeEventListener('resize', reclampToViewport);
+        vv.removeEventListener('scroll', reclampToViewport);
+      }
+    };
   }, []);
 
   useEffect(() => {
