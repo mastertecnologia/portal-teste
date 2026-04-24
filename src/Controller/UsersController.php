@@ -1879,9 +1879,23 @@ class UsersController extends AppController {
 	 * @param \Cake\Datasource\EntityInterface|array $target
 	 */
 	protected function _userAdminMaySetAuditPasswordForUser($target): bool {
+		$adminEmpresaId = (int)$this->Auth->user('idempresa');
 		$tid = (int)(is_object($target) ? $target->get('idempresa') : ($target['idempresa'] ?? 0));
+		if ($tid < 1) {
+			return false;
+		}
+		if ((int)$this->Auth->user('admin') === 1) {
+			return true;
+		}
 
-		return $tid === (int)$this->Auth->user('idempresa');
+		// Multiempresas: admins da PGM/Master podem gerir senha de auditoria entre essas empresas.
+		$isAdminGlobalPgmMaster = in_array($adminEmpresaId, [(int)C_EmpresaPGM, (int)C_EmpresaMaster], true);
+		$isTargetPgmMaster = in_array($tid, [(int)C_EmpresaPGM, (int)C_EmpresaMaster], true);
+		if ($isAdminGlobalPgmMaster && $isTargetPgmMaster) {
+			return true;
+		}
+
+		return $tid === $adminEmpresaId;
 	}
 
 	/**
