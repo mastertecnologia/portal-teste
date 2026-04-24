@@ -1959,7 +1959,32 @@ class UsersController extends AppController {
 	 */
 	protected function _userAdminMaySetAuditPasswordForUser($target): bool {
 		$adminEmpresaId = (int)$this->Auth->user('idempresa');
+		$isSystemAdmin = $this->_isSystemAdminUser();
+		if ($isSystemAdmin) {
+			// #region agent log
+			$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser allowed by system admin', [
+				'adminEmpresaId' => $adminEmpresaId,
+				'targetEmpresaId' => (int)(is_object($target) ? $target->get('idempresa') : ($target['idempresa'] ?? 0)),
+				'isSystemAdmin' => true,
+				'allowed' => true,
+			]);
+			// #endregion
+			return true;
+		}
 		$tid = (int)(is_object($target) ? $target->get('idempresa') : ($target['idempresa'] ?? 0));
+		if ($tid < 1) {
+			$targetUserId = (int)(is_object($target) ? $target->get('id') : ($target['id'] ?? 0));
+			if ($targetUserId > 0) {
+				$linkEmpresa = $this->Empresasusers->find()
+					->select(['idempresa'])
+					->where(['iduser' => $targetUserId])
+					->order(['idempresa' => 'ASC'])
+					->first();
+				if ($linkEmpresa) {
+					$tid = (int)$linkEmpresa->idempresa;
+				}
+			}
+		}
 		if ($tid < 1) {
 			// #region agent log
 			$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser invalid target empresa', [
@@ -1969,18 +1994,6 @@ class UsersController extends AppController {
 			]);
 			// #endregion
 			return false;
-		}
-		$isSystemAdmin = $this->_isSystemAdminUser();
-		if ($isSystemAdmin) {
-			// #region agent log
-			$this->_debugAuditLog('H3', 'UsersController::_userAdminMaySetAuditPasswordForUser allowed by system admin', [
-				'adminEmpresaId' => $adminEmpresaId,
-				'targetEmpresaId' => $tid,
-				'isSystemAdmin' => true,
-				'allowed' => true,
-			]);
-			// #endregion
-			return true;
 		}
 
 		// Multiempresas: admins da PGM/Master podem gerir senha de auditoria entre essas empresas.
