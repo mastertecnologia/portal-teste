@@ -94,6 +94,56 @@ ALTER TABLE produtos DROP COLUMN IF EXISTS estoque_atual;
   - `bin/cake ticket_events_backfill worklogs --dry-run` — `ticketshoras` → worklogs (dedup por `metadata.ticketshoras_id`)
 - Correr `--dry-run` antes em produção; volume grande: filtrar por `--empresa` em comentários.
 
+## Plano de deploy (passo a passo, do mais seguro para produção)
+
+### Fase 0 — Pré-requisitos
+
+- **Código no repositório:** commit da feature no branch a usar; em cada ambiente, `git pull` (ou o vosso processo de deploy).
+- **Front (só se alterarem fonte):** `cd dashboard-react` → `npm install` se necessário → `npm run build` (atualiza `webroot/tickets-app` e `public/tickets-app`). Se a pipeline já publica o bundle, este passo é na CI.
+- **Stack:** sem dependências PHP novas obrigatórias além do que o projeto já usa (Cake, PostgreSQL, mPDF).
+
+### Fase 1 — Backup (antes de `migrate` em produção)
+
+1. **Base:** `pg_dump` (ex.: `pg_dump -Fc -f backup_pre_timelineB_YYYYMMDD.bak nomedb`) e guardar o ficheiro com política de restore testada.
+2. **Código (referência):** `.\scripts\backup-servicedesk-timeline.ps1` **ou** `git tag -a deploy/pre-servicedesk-timeline-YYYYMMDD -m "antes migrate" HEAD` (e `git push --tags` se usarem).
+3. Registar no ticket interno: **commit** + **caminho do dump**.
+
+### Fase 2 — Staging / UAT (sempre antes de produção)
+
+1. Mesmo *build* / commit aprovado que irá a produção.
+2. Na raiz do projeto: `php bin\cake.php migrations migrate` (ajustar caminho a `php` no Windows) ou `php bin/cake.php migrations migrate` no Linux.
+3. **Ordem Phinx:** ficheiros com prefixo de data `20260428…` (ex.: *Ticket audit*) correm **antes** de `20260429120000_…` e `20260429120100_…` porque o timestamp do nome impõe a ordem. O phinx aplica tudo o que ainda estiver *down*, por ordem crescente.
+4. `php bin\cake.php migrations status` — sem pendências inesperadas; em caso de erro, **não** promover a produção até corrigir.
+5. `php bin\cake.php cache clear_all` (ou equivalente do projeto).
+6. **RBAC (staging):** com utilizador de equipa, abrir módulo de tickets/Service Desk; se usarem o catálogo de permissões, validar visibilidade das ações mapeadas em `tickets.view` / `tickets.update` / `tickets.timer` (patch `20260429120100_…`).
+
+### Fase 3 — Dados (staging; repetir o que fizer sentido em produção)
+
+- **Feriados (`holidays`):** tabela vazia — carregar feriados (nacionais e, se necessário, por `idempresa`) para o SLA e a classificação comercial/feriado fazerem sentido.
+- **Geo:** `clientes.latitude`, `longitude`, `geo_validacao_raio_m` (opcional) para o fluxo de validação de proximidade com o timer.
+- **Estoque:** `produtos.estoque_atual` — testar com quantidade mínima em staging antes de abrir a baixa em produção.
+
+### Fase 4 — Backfill (opcional, após migrate)
+
+- `php bin\cake.php ticket_events_backfill comments --dry-run` → rever números → `… comments` (ou `--empresa=ID` em blocos). Idem `worklogs` se necessário. Preferir janela de baixo tráfego em produção; volumes grandes fatiar por empresa.
+
+### Fase 5 — Testes manuais (mínima)
+
+- Timeline, comentário (dual-write), timer/geo, assinatura/PDF se usados, regressão de tickets *clássicos*, portal cliente sem alteração indevida em fluxos fora de `api*`. Ver tabela de testes abaixo na checklist “Testes pós-migrate”.
+
+### Fase 6 — Produção
+
+- Repetir **Fase 1** (dump + tag) na janela acordada.
+- **Fase 2** (migrations + cache) no servidor de produção, mesmo commit que em staging.
+- **Fase 3** (feriados, geo) conforme decisão pós-OAT.
+- **Fase 4** (backfill) se ainda for preciso; sempre `--dry-run` antes.
+
+### Fase 7 — Pós-deploy (24–48 h)
+
+- Logs: erros 500 em `tickets/api-*`, mPDF, escrita de anexos; timeouts em PDF/upload.
+- Utilizadores com RBAC: quem fica sem ação após o patch precisa ajuste de papeis (modo *enforce*).
+- Comunicar equipa: novas tabelas; rollback (ver **Rollback** acima) não é “um clique” se já houver dados em `ticket_events`.
+
 ## Testes pós-migrate (checklist mínima)
 
 - `bin/cake migrations status` — migrations aplicadas na ordem esperada.
