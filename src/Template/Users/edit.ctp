@@ -190,11 +190,17 @@ if (!empty($fromQueues)) {
 			</div>
 			<div class="row">
 				<div class="col-md-12">
-					<div class="custom-control custom-checkbox mb-2">
-						<input type="checkbox" class="custom-control-input" name="audit_password_generate" id="audit_password_generate" value="1">
-						<label class="custom-control-label text-muted" for="audit_password_generate">Gerar nova chave de auditoria ao salvar (substitui a anterior)</label>
-					</div>
-					<small class="form-text text-muted">Só marque quando quiser criar ou trocar a chave. Não deixe marcado em edições normais do utilizador.</small>
+					<input type="hidden" name="audit_password_generate" id="audit_password_generate" value="0">
+					<button
+						type="button"
+						class="btn btn-outline-primary btn-sm"
+						id="btnGerarSenhaAuditoria"
+						name="audit_password_generate_submit"
+						value="1"
+					>
+						Gerar senha de auditoria
+					</button>
+					<small class="form-text text-muted">Ao clicar, o sistema gera uma nova chave (substitui a anterior), mostra uma única vez para anotação e envia por e-mail ao usuário.</small>
 				</div>
 			</div>
 			<?php endif; ?>
@@ -220,7 +226,7 @@ if (!empty($fromQueues)) {
 					<?= $this->Form->button('Salvar usuário', ['class' => 'queues-btn queues-btn--success', 'id' => 'btnSalvarUsuario']) ?>
 					<?= $this->Form->end(); ?>
 					<?= $this->Html->link('Alterar senha', ['action' => 'changePassword', $user->id], ['class' => 'queues-btn queues-btn--warning']) ?>
-					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'queues-btn queues-btn--danger']) ?>
+					<?= $this->Html->link('Excluir usuário', ['action' => 'delete', $user->id], ['class' => 'queues-btn queues-btn--danger', 'id' => 'btnExcluirUsuario']) ?>
 				</div>
 			</div>
 		</div>
@@ -234,6 +240,39 @@ if (!empty($fromQueues)) {
 		});
 		$('#queuesDesmarcarTodas').on('click', function () {
 			$('.queues-checkboxes .js-queue-cb').prop('checked', false);
+		});
+		$('#btnGerarSenhaAuditoria').on('click', function () {
+			var $form = $(this).closest('form');
+			bootbox.confirm({
+				message: 'Tem certeza que deseja gerar uma nova senha de auditoria? A senha atual será substituída e não poderá ser recuperada.',
+				buttons: {
+					confirm: { label: 'Sim, gerar senha', className: 'btn-primary' },
+					cancel: { label: 'Cancelar', className: 'btn-secondary' }
+				},
+				callback: function (result) {
+					if (!result) {
+						return;
+					}
+					$('#audit_password_generate').val('1');
+					$form.trigger('submit');
+				}
+			});
+		});
+		$('#btnExcluirUsuario').on('click', function (e) {
+			e.preventDefault();
+			var href = $(this).attr('href');
+			bootbox.confirm({
+				message: 'Tem certeza que deseja excluir este usuário? Esta ação não poderá ser desfeita.',
+				buttons: {
+					confirm: { label: 'Sim, excluir usuário', className: 'btn-danger' },
+					cancel: { label: 'Cancelar', className: 'btn-secondary' }
+				},
+				callback: function (result) {
+					if (result && href) {
+						window.location.href = href;
+					}
+				}
+			});
 		});
 	});
 

@@ -994,9 +994,14 @@ class UsersController extends AppController {
 			}
 			unset($data['empresa_vinculo_ids'], $data['process_empresa_vinculo']);
 
-			$auditGenerate = (int)$user->role === 0 && !empty($data['audit_password_generate']);
+			$auditGenerate = (int)$user->role === 0
+				&& (
+					!empty($data['audit_password_generate_submit'])
+					|| !empty($data['audit_password_generate'])
+				);
 			unset(
 				$data['audit_password_generate'],
+				$data['audit_password_generate_submit'],
 				$data['audit_password_new'],
 				$data['audit_password_confirm'],
 				$data['audit_password_hash']
@@ -1042,12 +1047,15 @@ class UsersController extends AppController {
 			$this->Users->patchEntity($user, $data);
 			$savedMain = (bool)$this->Users->save($user);
 			$oneTimeAuditSecret = null;
+			$auditEmailSent = null;
 			if ($savedMain && $auditGenerate) {
 				$oneTimeAuditSecret = $this->_generateAuditPasswordPlain();
 				$this->_applyAuditPasswordHashToUser($user, $oneTimeAuditSecret);
 				if (!(bool)$this->Users->save($user)) {
 					$this->Flash->warning('Utilizador guardado, mas falhou a gravação da chave de auditoria. Marque de novo «Gerar nova chave» e salve.');
 					$oneTimeAuditSecret = null;
+				} else {
+					$auditEmailSent = $this->_sendAuditPasswordEmailToUser($user, $oneTimeAuditSecret);
 				}
 			}
 
@@ -1072,6 +1080,11 @@ class UsersController extends AppController {
 						'Chave de auditoria gerada (mostrada uma única vez). Guarde e entregue ao técnico por canal seguro. '
 						. 'Se perder, gere nova neste ecrã. Valor: ' . $oneTimeAuditSecret
 					);
+					if ($auditEmailSent === true) {
+						$this->Flash->success('A chave de auditoria também foi enviada por e-mail ao usuário.');
+					} elseif ($auditEmailSent === false) {
+						$this->Flash->warning('A chave foi gerada, mas não foi possível enviar o e-mail ao usuário.');
+					}
 				}
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
 				if ($auditGenerate) {
@@ -1879,6 +1892,46 @@ class UsersController extends AppController {
 	protected function _applyAuditPasswordHashToUser($user, string $plain): void {
 		$hasher = new DefaultPasswordHasher();
 		$user->set('audit_password_hash', $hasher->hash($plain));
+	}
+
+	/**
+	 * Envia ao usuário a chave de auditoria recém-gerada.
+	 *
+	 * @param \Cake\Datasource\EntityInterface $user
+	 * @return bool true quando enviado; false quando não enviado/falhou.
+	 */
+	protected function _sendAuditPasswordEmailToUser($user, string $plain): bool {
+		$to = trim((string)$user->get('email'));
+		if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+			return false;
+		}
+		$idempresaEmail = (int)$user->get('idempresa');
+		if ($idempresaEmail < 1) {
+			$idempresaEmail = (int)$this->Auth->user('idempresa');
+		}
+		if ($idempresaEmail < 1) {
+			$idempresaEmail = (int)C_EmpresaPGM;
+		}
+		$nome = trim((string)$user->get('name'));
+		if ($nome === '') {
+			$nome = trim((string)$user->get('username'));
+		}
+		$from = 'helpdesk@pgm.inf.br';
+		$nomeSafe = htmlspecialchars($nome, ENT_QUOTES, 'UTF-8');
+		$plainSafe = htmlspecialchars($plain, ENT_QUOTES, 'UTF-8');
+		$saudacao = $nome !== '' ? 'Olá, ' . $nomeSafe . '.' : 'Olá.';
+		$message = '<p>' . $saudacao . '</p>'
+			. '<p>Sua senha de auditoria do Service Desk foi gerada/atualizada.</p>'
+			. '<p><strong>Senha de auditoria:</strong> <code>' . $plainSafe . '</code></p>'
+			. '<p>Guarde esta chave em local seguro. Ela é usada apenas para ajuste de auditoria de tempo e é diferente da senha de login.</p>';
+
+		return $this->_sendEmailWithTransportFallback(
+			$to,
+			[$from => 'PGM'],
+			'Senha de auditoria do Service Desk',
+			$message,
+			$idempresaEmail
+		);
 	}
 
 	/**
