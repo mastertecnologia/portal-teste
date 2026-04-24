@@ -6,6 +6,8 @@ import AuditModal from './AuditModal.jsx';
 import FinalizarTimerModal from './FinalizarTimerModal.jsx';
 import './HorasTecnicasTimerPanel.css';
 
+const TIMER_WIDGET_STORAGE_KEY = 'pgm_tickets_timer_widget_state_v1';
+
 /** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
 function parseSqlLocalDateTime(s) {
   if (!s || typeof s !== 'string') return null;
@@ -66,7 +68,9 @@ export default function HorasTecnicasTimerPanel({
   canEditDescricaoAtendimento = false,
   onRelatorioSaved,
 }) {
+  const safeStorage = typeof window !== 'undefined' ? window.localStorage : null;
   const [optimistic, setOptimistic] = useState(null);
+  const [persistedSessao, setPersistedSessao] = useState(null);
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
@@ -87,7 +91,78 @@ export default function HorasTecnicasTimerPanel({
   const serverSessao = snap.sessao || null;
   const serverUnix = typeof snap.serverUnix === 'number' ? snap.serverUnix : null;
 
-  const sessao = optimistic ?? serverSessao;
+  const sessao = optimistic ?? serverSessao ?? persistedSessao;
+
+  useEffect(() => {
+    if (!safeStorage || !ticketId) return;
+    try {
+      const raw = safeStorage.getItem(TIMER_WIDGET_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || Number(parsed.ticketId) !== Number(ticketId)) return;
+      const ss = parsed.sessao || null;
+      if (ss && ss.horaInicio) {
+        setPersistedSessao(ss);
+      }
+    } catch (_e) {
+      // noop: storage indisponível ou conteúdo inválido
+    }
+  }, [safeStorage, ticketId]);
+
+  useEffect(() => {
+    if (!safeStorage || !ticketId) return undefined;
+    const onStorage = (event) => {
+      if (event.key !== TIMER_WIDGET_STORAGE_KEY) return;
+      try {
+        if (!event.newValue) {
+          setPersistedSessao(null);
+          return;
+        }
+        const parsed = JSON.parse(event.newValue);
+        if (!parsed || Number(parsed.ticketId) !== Number(ticketId)) {
+          setPersistedSessao(null);
+          return;
+        }
+        const ss = parsed.sessao || null;
+        setPersistedSessao(ss && ss.horaInicio ? ss : null);
+      } catch (_e) {
+        setPersistedSessao(null);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [safeStorage, ticketId]);
+
+  useEffect(() => {
+    if (!safeStorage || !ticketId) return;
+    try {
+      if (sessao && sessao.horaInicio) {
+        safeStorage.setItem(
+          TIMER_WIDGET_STORAGE_KEY,
+          JSON.stringify({
+            ticketId: Number(ticketId),
+            sessao: {
+              id: sessao.id || null,
+              horaInicio: sessao.horaInicio,
+              horaPausa: sessao.horaPausa || null,
+              pausado: Boolean(sessaoEstaPausada(sessao)),
+            },
+            updatedAt: Date.now(),
+          })
+        );
+      } else {
+        const raw = safeStorage.getItem(TIMER_WIDGET_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (!parsed || Number(parsed.ticketId) === Number(ticketId)) {
+            safeStorage.removeItem(TIMER_WIDGET_STORAGE_KEY);
+          }
+        }
+      }
+    } catch (_e) {
+      // noop: storage indisponível ou quota excedida
+    }
+  }, [safeStorage, ticketId, sessao]);
 
   useEffect(() => {
     if (serverUnix != null) {
