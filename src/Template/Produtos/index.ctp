@@ -51,9 +51,6 @@
   }
   }
 ?>
-<?php /* Turbo Frame: reaplicar CSS após swap (mesmo padrão do módulo Clientes). */ ?>
-<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
-
 <div class="col-md-12 p-0">
 <div class="prd-root prd-layout-unificado">
 

@@ -52,6 +52,7 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 	<?= $this->Html->css("/dist/css/pages/pgm-app-shell-premium.css?v=7") ?>
 	<?php endif; ?>
 	<?= $this->Html->css("/dist/css/pages/pgm-sidebar-premium.css?v=" . time()) ?>
+	<?= $this->element('pgm_premium_css', ['name' => 'produtos-premium']) ?>
 	<?php if ($pgmReactSidebar) : ?>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
 	<link rel="stylesheet" href="<?= h($pgmSidebarReactCss) ?>" crossorigin="anonymous" />
