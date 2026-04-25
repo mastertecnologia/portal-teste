@@ -33,7 +33,7 @@ function PapelBadge({ papel }) {
     <span
       className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
         isTech
-          ? 'border-cyan-700/50 bg-cyan-950/40 text-cyan-200'
+          ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text-secondary)]'
           : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]'
       }`}
     >
@@ -425,7 +425,7 @@ export default function TechTicketEdit({ boot }) {
                     c.pending
                       ? 'border-amber-700/50 bg-amber-950/35 text-amber-100'
                       : c.papel === 'tecnico'
-                        ? 'border-cyan-700/50 bg-cyan-950/40 text-cyan-100'
+                        ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text)]'
                         : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text)]'
                   }`}
                 >

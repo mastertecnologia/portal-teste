@@ -16,7 +16,7 @@ function PapelBadge({ papel, embed }) {
       <span
         className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
           isTech
-            ? 'border-cyan-700/50 bg-cyan-950/40 text-cyan-200'
+            ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text-secondary)]'
             : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]'
         }`}
       >
@@ -27,7 +27,7 @@ function PapelBadge({ papel, embed }) {
   return (
     <span
       className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-        isTech ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-200 text-slate-700'
+        isTech ? 'bg-slate-200 text-slate-800' : 'bg-slate-200 text-slate-700'
       }`}
     >
       {isTech ? 'Suporte' : 'Cliente'}
@@ -343,8 +343,8 @@ export default function ClientTicketDetail({ boot }) {
                       : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
                     : c.papel === 'tecnico'
                       ? embedded
-                        ? 'rounded-lg border border-cyan-700/50 bg-cyan-950/40 px-3 py-2 text-sm text-cyan-100'
-                        : 'rounded-lg border border-cyan-200 bg-cyan-50/50 px-3 py-2 text-sm'
+                        ? 'rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 text-sm text-[var(--pgm-text)]'
+                        : 'rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-2 text-sm text-slate-800'
                       : embedded
                         ? 'rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm'
                         : 'rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm'
