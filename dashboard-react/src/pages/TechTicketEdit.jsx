@@ -33,8 +33,8 @@ function PapelBadge({ papel }) {
     <span
       className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
         isTech
-          ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text-secondary)]'
-          : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]'
+          ? 'border-[var(--pgm-badge-teal-ring)] bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)]'
+          : 'border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text-secondary)]'
       }`}
     >
       {isTech ? 'Suporte' : 'Cliente'}
@@ -424,9 +424,7 @@ export default function TechTicketEdit({ boot }) {
                   className={`rounded-lg border px-3 py-2 text-sm ${
                     c.pending
                       ? 'border-amber-700/50 bg-amber-950/35 text-amber-100'
-                      : c.papel === 'tecnico'
-                        ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text)]'
-                        : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text)]'
+                      : 'border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text)] shadow-[var(--pgm-shadow-sm)]'
                   }`}
                 >
                   <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]">

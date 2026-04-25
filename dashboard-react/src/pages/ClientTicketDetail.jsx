@@ -16,8 +16,8 @@ function PapelBadge({ papel, embed }) {
       <span
         className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
           isTech
-            ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text-secondary)]'
-            : 'border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-secondary)]'
+            ? 'border-[var(--pgm-badge-teal-ring)] bg-[var(--pgm-badge-teal-bg)] text-[var(--pgm-badge-teal-text)]'
+            : 'border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text-secondary)]'
         }`}
       >
         {isTech ? 'Suporte' : 'Cliente'}
@@ -341,13 +341,9 @@ export default function ClientTicketDetail({ boot }) {
                     ? embedded
                       ? 'rounded-lg border border-amber-700/50 bg-amber-950/35 px-3 py-2 text-sm text-amber-100'
                       : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
-                    : c.papel === 'tecnico'
-                      ? embedded
-                        ? 'rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 text-sm text-[var(--pgm-text)]'
-                        : 'rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-2 text-sm text-slate-800'
-                      : embedded
-                        ? 'rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm'
-                        : 'rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm'
+                    : embedded
+                      ? 'rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] px-3 py-2 text-sm text-[var(--pgm-text)] shadow-[var(--pgm-shadow-sm)]'
+                      : 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm'
                 }`}
               >
                 <div
