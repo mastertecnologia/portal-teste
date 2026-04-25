@@ -95,6 +95,22 @@ class TicketsController extends AppController {
 		return Router::url($parts);
 	}
 
+	// #region agent log
+	/** @internal debug session d63dd9 — não remover antes de verificação pós-correção */
+	protected function _agentDebugLog(string $hypothesisId, string $location, string $message, array $data = []): void {
+		$line = json_encode([
+			'sessionId' => 'd63dd9',
+			'hypothesisId' => $hypothesisId,
+			'location' => $location,
+			'message' => $message,
+			'data' => $data,
+			'timestamp' => (int) round(microtime(true) * 1000),
+		], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+		@file_put_contents(ROOT . DS . 'debug-d63dd9.log', $line, FILE_APPEND);
+		@file_put_contents(TMP . 'debug-d63dd9.log', $line, FILE_APPEND);
+	}
+	// #endregion
+
 	/** Mescla paths/layout do Service Desk quando ?sd=1 (edição/visualização a partir do /servicedesk). */
 	protected function _servicedeskBootMerge(): array {
 		if ($this->request->getQuery('sd') !== '1') {
@@ -3876,7 +3892,7 @@ class TicketsController extends AppController {
 			'descricao' => (string)($ticket->solicitacao ?? ''),
 			'descricaoAtendimento' => $descAtend,
 			'horasTecnicas' => $this->_apiHorasTecnicasPayload($idt, $ticket),
-			'responsavel' => $solicitante->name ?? '—',
+			'responsavel' => $solicitante ? (string)($solicitante->name ?? '') : '—',
 		];
 
 		return $this->response
@@ -3890,7 +3906,10 @@ class TicketsController extends AppController {
 		$role = (int)$this->Auth->user('role');
 		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo', 'cnpj', 'cpf', 'cidade'])->first();
 		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? '');
-		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+		$solicitante = null;
+		if (!empty($ticket->idsolicitante)) {
+			$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
+		}
 
 		$comentarios = $this->_apiComentariosPayload($idticket);
 
@@ -3942,7 +3961,7 @@ class TicketsController extends AppController {
 			'prioridade' => in_array('severidade', $this->Tickets->getSchema()->columns(), true)
 				? $this->_ticketSeveridadeLabel((string)($ticket->severidade ?? 'media'))
 				: '—',
-			'responsavel' => $solicitante->name ?? '—',
+			'responsavel' => $solicitante ? (string)($solicitante->name ?? '') : '—',
 			'abertoEm' => $createdFmt,
 			'atualizadoEm' => $atualizadoEm,
 			'atualizado' => $atualizadoEm,
@@ -4888,26 +4907,54 @@ class TicketsController extends AppController {
 	}
 
 	public function apiView($idticket = null) {
+		// #region agent log
+		$this->_agentDebugLog('H4', 'TicketsController::apiView:entry', 'enter', ['idticket' => $idticket]);
+		// #endregion
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
-		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
-			->where(['tickets.id' => $idticket]);
-		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
-		$ticket = $ticket->first();
-		if (empty($ticket)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
-		}
-		if (!$this->_apiTicketViewAllowed($ticket)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
-		}
-		$data = $this->_apiTicketDetailPayload($ticket, $idticket);
-		$body = json_encode(['ok' => true, 'ticket' => $data], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+		try {
+			$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
+				->where(['tickets.id' => $idticket]);
+			$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
+			$ticket = $ticket->first();
+			// #region agent log
+			$this->_agentDebugLog('H4', 'TicketsController::apiView:afterQuery', 'first()', ['empty' => empty($ticket), 'id' => $ticket ? (int)$ticket->id : null]);
+			// #endregion
+			if (empty($ticket)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+			if (!$this->_apiTicketViewAllowed($ticket)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+			}
+			// #region agent log
+			$this->_agentDebugLog('H1', 'TicketsController::apiView:beforePayload', 'calling _apiTicketDetailPayload', ['id' => (int)$ticket->id]);
+			// #endregion
+			$data = $this->_apiTicketDetailPayload($ticket, $idticket);
+			// #region agent log
+			$this->_agentDebugLog('H1', 'TicketsController::apiView:afterPayload', 'payload ok', ['hasContractHours' => isset($data['contractHours'])]);
+			// #endregion
+			$body = json_encode(['ok' => true, 'ticket' => $data], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+			// #region agent log
+			if ($body === false) {
+				$this->_agentDebugLog('H2', 'TicketsController::apiView:json_encode', 'json_encode failed', ['json_last_error' => json_last_error(), 'json_last_error_msg' => json_last_error_msg()]);
+			}
+			// #endregion
 
-		return $this->response
-			->withType('application/json')
-			->withHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate')
-			->withHeader('Pragma', 'no-cache')
-			->withStringBody($body);
+			return $this->response
+				->withType('application/json')
+				->withHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate')
+				->withHeader('Pragma', 'no-cache')
+				->withStringBody($body);
+		} catch (\Throwable $e) {
+			// #region agent log
+			$this->_agentDebugLog('H1', 'TicketsController::apiView:exception', $e->getMessage(), [
+				'class' => get_class($e),
+				'file' => $e->getFile(),
+				'line' => $e->getLine(),
+			]);
+			// #endregion
+			throw $e;
+		}
 	}
 
 	public function apiTimer($idticket = null) {
