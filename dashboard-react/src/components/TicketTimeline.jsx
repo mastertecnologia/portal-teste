@@ -29,6 +29,12 @@ function renderEvent(ev, w) {
     );
   }
   if (t === 'worklog') {
+    const secH =
+      ev.secondsSpent != null && ev.secondsSpent !== ''
+        ? ev.secondsSpent
+        : ev.seconds_spent != null && ev.seconds_spent !== ''
+          ? ev.seconds_spent
+          : 0;
     return (
       <div
         key={String(ev.id)}
@@ -36,7 +42,7 @@ function renderEvent(ev, w) {
       >
         <div className="text-xs font-semibold text-emerald-800">Horas</div>
         <div>
-          {formatSeconds(ev.secondsSpent || 0)}
+          {formatSeconds(secH || 0)}
           {ev.billingType ? ` · ${ev.billingType}` : ''}
         </div>
         {ev.description ? <p className="mt-1 text-xs text-emerald-900">{ev.description}</p> : null}

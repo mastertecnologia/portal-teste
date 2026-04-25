@@ -2,6 +2,7 @@
 namespace App\Service\Ticket;
 
 use Cake\Datasource\ConnectionManager;
+use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -38,7 +39,11 @@ class TicketServiceDeskApiService {
 		if ($hasTe) {
 			$Te = TableRegistry::get('TicketEvents');
 			$evs = $Te->find()
-				->where(['TicketEvents.ticket_id' => $tid, 'TicketEvents.idempresa' => $idempresa])
+				->where(['TicketEvents.ticket_id' => $tid])
+				->where(['OR' => [
+					['TicketEvents.idempresa' => $idempresa],
+					['TicketEvents.idempresa' => 0],
+				]])
 				->contain(['Users' => function ($q) {
 					return $q->select(['id', 'name', 'username']);
 				}])
@@ -53,29 +58,34 @@ class TicketServiceDeskApiService {
 				if (is_array($meta) && !empty($meta['ticket_comentario_id'])) {
 					$comCobertura[] = (int)$meta['ticket_comentario_id'];
 				}
-				$isWl = (string)$e->get('type') === 'worklog';
-				if (is_array($meta) && $isWl && !empty($meta['ticketshoras_id'])) {
-					$horasCobertura[] = (int)$meta['ticketshoras_id'];
+				$typeNorm = strtolower((string)$e->get('type'));
+				$isWl = $typeNorm === 'worklog';
+				$thFromMeta = 0;
+				if (is_array($meta) && $isWl) {
+					$thFromMeta = (int)($meta['ticketshoras_id'] ?? $meta['ticketshorasId'] ?? 0);
+					if ($thFromMeta > 0) {
+						$horasCobertura[] = $thFromMeta;
+					}
 				}
 				$secondsSpent = (int)($e->get('seconds_spent') ?? 0);
+				$secDb = $secondsSpent;
 				// Se o evento aponta para ticketshoras mas seconds_spent ficou 0 (legado/erro de gravação),
 				// recalcular a partir de horaini/horafin — a linha legada não é repete na timeline.
-				if ($isWl && $secondsSpent === 0 && is_array($meta) && !empty($meta['ticketshoras_id'])) {
-					$thId = (int)$meta['ticketshoras_id'];
-					if ($thId > 0) {
-						$hrow = $c->Ticketshoras->find()
-							->where(['id' => $thId, 'idticket' => $tid])
-							->first();
-						if ($hrow && $hrow->get('horaini') && $hrow->get('horafin')) {
-							try {
-								$min = (int)$c->Ticketshoras->getMinutos($hrow->horaini, $hrow->horafin);
-								if ($min > 0) {
-									$secondsSpent = (int)($min * 60);
-								}
-							} catch (\Throwable $ex) {
-							}
-						}
+				if ($isWl && $secondsSpent === 0 && is_array($meta) && $thFromMeta > 0) {
+					$hrow = $c->Ticketshoras->find()
+						->where(['id' => $thFromMeta, 'idticket' => $tid])
+						->first();
+					$resolved = self::resolveSecondsFromTicketshorasRow($c->Ticketshoras, $hrow);
+					if ($resolved > 0) {
+						$secondsSpent = $resolved;
 					}
+					// #region agent log
+					self::debugWorklogAgentLog('H1-H3', (int)$e->get('id'), $tid, $thFromMeta, $hrow !== null, $secDb, (int)$secondsSpent, is_array($meta) ? array_keys($meta) : [], $typeNorm);
+					// #endregion
+				} elseif ($isWl && $secDb === 0 && $thFromMeta === 0) {
+					// #region agent log
+					self::debugWorklogAgentLog('H2', (int)$e->get('id'), $tid, 0, null, $secDb, 0, is_array($meta) ? array_keys($meta) : [], $typeNorm);
+					// #endregion
 				}
 				$u = $e->user;
 				$autor = $u ? (string)($u->name ?? $u->username ?? '') : '';
@@ -158,11 +168,7 @@ class TicketServiceDeskApiService {
 			}
 			$uid = (int)($h->iduser ?? 0);
 			$u = $uid > 0 ? $c->Users->findById($uid)->select(['id', 'name'])->first() : null;
-			$min = 0;
-			try {
-				$min = (int)$th->getMinutos($h->horaini, $h->horafin);
-			} catch (\Throwable $e) {
-			}
+			$secH = self::resolveSecondsFromTicketshorasRow($th, $h);
 			$ini = is_object($h->horaini) && method_exists($h->horaini, 'getTimestamp') ? (int)$h->horaini->getTimestamp() : 0;
 			$rows[] = (object)[
 				'id' => 'legacy_h_' . (int)$h->id,
@@ -171,7 +177,7 @@ class TicketServiceDeskApiService {
 				'autor' => $u ? (string)$u->name : '—',
 				'userId' => $uid ?: null,
 				'description' => 'Registro de horas (legado)',
-				'secondsSpent' => (int)($min * 60),
+				'secondsSpent' => $secH,
 				'created' => $ini > 0 ? date('Y-m-d H:i:s', $ini) : null,
 				'createdLabel' => '',
 			];
@@ -188,6 +194,93 @@ class TicketServiceDeskApiService {
 		});
 
 		return (object)['rows' => $rows];
+	}
+
+	/**
+	 * Duração em segundos a partir de horaini/horafin (tipos string ou DateTime, cruza meia-noite; clone antes de getMinutos para não mutar a entidade).
+	 *
+	 * @param \Cake\ORM\Table $thTable
+	 * @param \Cake\Datasource\EntityInterface|object|null $hrow
+	 */
+	private static function resolveSecondsFromTicketshorasRow($thTable, $hrow): int {
+		if ($hrow === null) {
+			return 0;
+		}
+		$a = $hrow->get('horaini');
+		$b = $hrow->get('horafin');
+		if ($a === null || $b === null || $a === '' || $b === '') {
+			return 0;
+		}
+		if (!($a instanceof \DateTimeInterface)) {
+			try {
+				$a = new Time($a);
+			} catch (\Throwable $e) {
+				return 0;
+			}
+		}
+		if (!($b instanceof \DateTimeInterface)) {
+			try {
+				$b = new Time($b);
+			} catch (\Throwable $e) {
+				return 0;
+			}
+		}
+		$min = 0;
+		try {
+			$ca = clone $a;
+			$cb = clone $b;
+			$min = (int)$thTable->getMinutos($ca, $cb);
+		} catch (\Throwable $e) {
+			$min = 0;
+		}
+		if ($min > 0) {
+			return (int)($min * 60);
+		}
+		$diffSec = (int)($b->getTimestamp() - $a->getTimestamp());
+		if ($diffSec > 0) {
+			return $diffSec;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * @param int|null $hrowFound null = not aplicável
+	 * @param string[]   $metaKeys
+	 */
+	private static function debugWorklogAgentLog(
+		string $hypothesisId,
+		int $eventId,
+		int $ticketId,
+		int $thFromMeta,
+		?bool $hrowFound,
+		int $secDb,
+		int $secOut,
+		array $metaKeys,
+		string $typeNorm
+	): void {
+		// #region agent log
+		$logPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'debug-03e12a.log';
+		$payload = [
+			'sessionId' => '03e12a',
+			'runId' => 'worklog-timeline',
+			'hypothesisId' => $hypothesisId,
+			'location' => 'TicketServiceDeskApiService::buildTimelineRows',
+			'message' => 'worklog_seconds',
+			'data' => [
+				'eventId' => $eventId,
+				'ticketId' => $ticketId,
+				'thFromMeta' => $thFromMeta,
+				'hrowFound' => $hrowFound,
+				'secDb' => $secDb,
+				'secOut' => $secOut,
+				'metaKeys' => $metaKeys,
+				'typeNorm' => $typeNorm,
+			],
+			'timestamp' => (int)round(microtime(true) * 1000),
+		];
+		@file_put_contents($logPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+		// #endregion
 	}
 
 	public static function parseBrDateTime(string $s): int {

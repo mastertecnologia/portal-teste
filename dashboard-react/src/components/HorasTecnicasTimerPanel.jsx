@@ -8,12 +8,14 @@ import './HorasTecnicasTimerPanel.css';
 
 const TIMER_WIDGET_STORAGE_KEY = 'pgm_tickets_timer_widget_state_v1';
 
-/** Interpreta Y-m-d H:i:s como horário local (mesma convenção que localSqlDateTimeFromMs). */
+/** Interpreta Y-m-d H:i:s, Y-m-d H:i (e frações após s) como horário local (alinhado a localSqlDateTimeFromMs). */
 function parseSqlLocalDateTime(s) {
   if (!s || typeof s !== 'string') return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(s.trim());
+  const t = s.trim();
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(t);
   if (!m) return null;
-  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6], 0);
+  const sec = m[6] != null && m[6] !== '' ? +m[6] : 0;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], sec, 0);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
