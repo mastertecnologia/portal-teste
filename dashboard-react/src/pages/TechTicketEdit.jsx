@@ -424,7 +424,7 @@ export default function TechTicketEdit({ boot }) {
                   className={`rounded-lg border px-3 py-2 text-sm ${
                     c.pending
                       ? 'border-amber-700/50 bg-amber-950/35 text-amber-100'
-                      : 'border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] text-[var(--pgm-text)] shadow-[var(--pgm-shadow-sm)]'
+                      : 'border-[var(--pgm-border-subtle)] bg-white text-[var(--pgm-text)] shadow-sm'
                   }`}
                 >
                   <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]">

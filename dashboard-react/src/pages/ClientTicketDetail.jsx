@@ -342,7 +342,7 @@ export default function ClientTicketDetail({ boot }) {
                       ? 'rounded-lg border border-amber-700/50 bg-amber-950/35 px-3 py-2 text-sm text-amber-100'
                       : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
                     : embedded
-                      ? 'rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] px-3 py-2 text-sm text-[var(--pgm-text)] shadow-[var(--pgm-shadow-sm)]'
+                      ? 'rounded-lg border border-[var(--pgm-border-subtle)] bg-white px-3 py-2 text-sm text-[var(--pgm-text)] shadow-sm'
                       : 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm'
                 }`}
               >
