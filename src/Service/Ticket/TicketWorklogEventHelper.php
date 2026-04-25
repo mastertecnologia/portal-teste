@@ -16,7 +16,8 @@ class TicketWorklogEventHelper {
 				return;
 			}
 			$th = TableRegistry::get('Ticketshoras');
-			$min = (int)$th->getMinutos($horaini, $horafin);
+			$rawSec = TicketServiceDeskApiService::resolveSecondsFromTicketshorasRow($th, $ticketshorasEntity);
+			$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($rawSec);
 			$at = (is_object($horafin) && method_exists($horafin, 'format')) ? $horafin : Time::now();
 			$te = TableRegistry::get('TicketEvents');
 			$te->save($te->newEntity([
@@ -25,7 +26,7 @@ class TicketWorklogEventHelper {
 				'user_id' => $iduser,
 				'type' => 'worklog',
 				'description' => 'Horas técnicas registradas',
-				'seconds_spent' => (int)($min * 60),
+				'seconds_spent' => $billSec,
 				'metadata' => ['ticketshoras_id' => (int)($ticketshorasEntity->id ?? 0)],
 				'created' => $at,
 			], ['validate' => false]), ['checkRules' => false, 'validate' => false]);

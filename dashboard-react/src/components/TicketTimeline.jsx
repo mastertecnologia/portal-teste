@@ -35,18 +35,26 @@ function renderEvent(ev, w) {
         : ev.seconds_spent != null && ev.seconds_spent !== ''
           ? ev.seconds_spent
           : 0;
+    const dataHoraLine = [ev.workDateLabel, ev.workTimeRangeLabel].filter(Boolean).join(' · ');
+    const footerWhen = dataHoraLine ? '' : ev.createdLabel || '';
     return (
       <div
         key={String(ev.id)}
         className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950"
       >
         <div className="text-xs font-semibold text-emerald-800">Horas</div>
+        {dataHoraLine ? <div className="text-xs text-emerald-900/95">{dataHoraLine}</div> : null}
         <div>
           {formatSeconds(secH || 0)}
           {ev.billingType ? ` · ${ev.billingType}` : ''}
         </div>
-        {ev.description ? <p className="mt-1 text-xs text-emerald-900">{ev.description}</p> : null}
-        <div className="text-[10px] text-emerald-700">{ev.createdLabel || ''}</div>
+        {ev.autor ? <div className="text-[10px] text-emerald-800/90">Técnico: {ev.autor}</div> : null}
+        {ev.description ? (
+          <p className="mt-1 text-xs text-emerald-900">
+            <span className="font-medium text-emerald-800">Motivo:</span> {ev.description}
+          </p>
+        ) : null}
+        {footerWhen ? <div className="text-[10px] text-emerald-700">{footerWhen}</div> : null}
       </div>
     );
   }

@@ -2096,7 +2096,7 @@ class TicketsController extends AppController {
 				$fim = is_string($horaFim) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaFim) : null;
 				if ($inicio && $fim) {
 					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());
-					$duracaoMinutos = (int)round($duracaoSegundos / 60);
+					$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
 					$timer->set('duracao_calculada', $duracaoMinutos);
 				}
 			}
@@ -2131,7 +2131,8 @@ class TicketsController extends AppController {
 					$this->log('Timer: falha ao registrar em Ticketshoras: ' . $e->getMessage(), 'error');
 				}
 				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $duracaoSegundos, $duracaoMinutos);
+				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos);
 			}
 
 			$this->Flash->success('Timer finalizado. Horas registradas. Você pode iniciar um novo timer para continuar o atendimento.');
@@ -2160,7 +2161,9 @@ class TicketsController extends AppController {
 	 */
 	protected function subtrairHorasContrato($idcliente, $idempresa, $duracaoSegundos, $duracaoMinutos = null) {
 		if ($duracaoSegundos <= 0) return;
-		if ($duracaoMinutos === null) $duracaoMinutos = (int) round($duracaoSegundos / 60);
+		if ($duracaoMinutos === null) {
+			$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
+		}
 		$horasUsadas = round($duracaoSegundos / 3600.0, 4);
 		try {
 			$table = \Cake\ORM\TableRegistry::getTableLocator()->get('ContratosHoras');
@@ -2348,6 +2351,22 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Soma dos minutos contabilizados (cada lançamento: arredondamento para cima da duração real em minutos).
+	 */
+	protected function _apiMinutosRegistradosTicketCeiling(int $idticket): int {
+		$rows = $this->Ticketshoras->find()->where(['idticket' => $idticket])->all();
+		$sum = 0;
+		foreach ($rows as $h) {
+			$sec = TicketServiceDeskApiService::resolveSecondsFromTicketshorasRow($this->Ticketshoras, $h);
+			if ($sec > 0) {
+				$sum += (int)ceil($sec / 60);
+			}
+		}
+
+		return $sum;
+	}
+
+	/**
 	 * Estado do timer de horas técnicas + total já registrado em Ticketshoras (para o Service Desk React).
 	 */
 	protected function _apiHorasTecnicasPayload(int $idticket, $ticket): array {
@@ -2364,7 +2383,7 @@ class TicketsController extends AppController {
 			return $base;
 		}
 		try {
-			$base['minutosRegistrados'] = (int)$this->Ticketshoras->minutosTicket($idticket, '2000-01-01', '2099-12-31');
+			$base['minutosRegistrados'] = $this->_apiMinutosRegistradosTicketCeiling($idticket);
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
 
@@ -2570,7 +2589,7 @@ class TicketsController extends AppController {
 				$fim = $this->_parseSqlDateTimeForTimer($horaFim);
 				if ($inicio && $fim) {
 					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());
-					$duracaoMinutos = (int)round($duracaoSegundos / 60);
+					$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
 					$this->_atendimentoTimerApplyDuracaoMinutos($timer, $duracaoMinutos);
 				}
 			}
@@ -2604,7 +2623,8 @@ class TicketsController extends AppController {
 					$this->log('Timer JSON: falha ao registrar em Ticketshoras: ' . $e->getMessage(), 'error');
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $duracaoSegundos, $duracaoMinutos);
+				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos);
 			}
 
 			return ['ok' => true, 'message' => 'Timer finalizado. Horas registradas.', 'duracaoMinutosFinal' => $duracaoMinutos];

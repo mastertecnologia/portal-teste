@@ -10,6 +10,60 @@ use Cake\ORM\TableRegistry;
  */
 class TicketServiceDeskApiService {
 
+	/**
+	 * Contabilização em minutos inteiros: qualquer fraccção de minuto (segundos) sobe para o minuto seguinte.
+	 * Ex.: 7 s → 1 min; 4 min 18 s (258 s) → 5 min; 0 s → 0.
+	 */
+	public static function billingSecondsFromRaw(int $sec): int {
+		if ($sec <= 0) {
+			return 0;
+		}
+
+		return (int)ceil($sec / 60) * 60;
+	}
+
+	/**
+	 * Rótulos de data/intervalo a partir de linha em ticketshoras (para a aba Horas do Service Desk).
+	 *
+	 * @param \Cake\ORM\Table $thTable
+	 * @param \Cake\Datasource\EntityInterface|object|null $h
+	 * @return array{0:?string,1:?string} [workDateLabel, workTimeRangeLabel]
+	 */
+	public static function worklogLabelsFromTicketshorasRow($thTable, $h) {
+		if ($h === null) {
+			return [null, null];
+		}
+		$hiRaw = $h->get('horaini');
+		$hfRaw = $h->get('horafin');
+		$dataF = $h->get('data');
+		$dateLabel = null;
+		if ($dataF && is_object($dataF) && method_exists($dataF, 'format')) {
+			$dateLabel = $dataF->format('d/m/Y');
+		}
+		$hi = null;
+		$hf = null;
+		try {
+			if ($hiRaw instanceof \DateTimeInterface) {
+				$hi = $hiRaw;
+			} elseif (is_string($hiRaw) && $hiRaw !== '') {
+				$hi = new Time($hiRaw);
+			}
+			if ($hfRaw instanceof \DateTimeInterface) {
+				$hf = $hfRaw;
+			} elseif (is_string($hfRaw) && $hfRaw !== '') {
+				$hf = new Time($hfRaw);
+			}
+		} catch (\Throwable $e) {
+			return [null, null];
+		}
+		if ($hi && $dateLabel === null) {
+			$dateLabel = $hi->format('d/m/Y');
+		}
+		$range = ($hi && $hf) ? ($hi->format('H:i') . ' – ' . $hf->format('H:i')) : null;
+
+		return [$dateLabel, $range];
+	}
+
 	public static function haversineKm(float $lat1, float $lon1, float $lat2, float $lon2): float {
 		$earth = 6371.0;
 		$dLat = deg2rad($lat2 - $lat1);
@@ -49,6 +103,7 @@ class TicketServiceDeskApiService {
 				}])
 				->order(['TicketEvents.created' => 'ASC', 'TicketEvents.id' => 'ASC'])
 				->all();
+			$thRowCache = [];
 			foreach ($evs as $e) {
 				$meta = $e->get('metadata');
 				if (is_string($meta)) {
@@ -68,28 +123,53 @@ class TicketServiceDeskApiService {
 					}
 				}
 				$secondsSpent = (int)($e->get('seconds_spent') ?? 0);
-				$secDb = $secondsSpent;
-				// Se o evento aponta para ticketshoras mas seconds_spent ficou 0 (legado/erro de gravação),
-				// recalcular a partir de horaini/horafin — a linha legada não é repete na timeline.
-				if ($isWl && $secondsSpent === 0 && is_array($meta) && $thFromMeta > 0) {
-					$hrow = $c->Ticketshoras->find()
-						->where(['id' => $thFromMeta, 'idticket' => $tid])
-						->first();
-					$resolved = self::resolveSecondsFromTicketshorasRow($c->Ticketshoras, $hrow);
-					if ($resolved > 0) {
-						$secondsSpent = $resolved;
+				$hrowW = null;
+				if ($isWl && $thFromMeta > 0) {
+					if (!isset($thRowCache[$thFromMeta])) {
+						$thRowCache[$thFromMeta] = $c->Ticketshoras->find()
+							->where(['id' => $thFromMeta, 'idticket' => $tid])
+							->first();
 					}
-					// #region agent log
-					self::debugWorklogAgentLog('H1-H3', (int)$e->get('id'), $tid, $thFromMeta, $hrow !== null, $secDb, (int)$secondsSpent, is_array($meta) ? array_keys($meta) : [], $typeNorm);
-					// #endregion
-				} elseif ($isWl && $secDb === 0 && $thFromMeta === 0) {
-					// #region agent log
-					self::debugWorklogAgentLog('H2', (int)$e->get('id'), $tid, 0, null, $secDb, 0, is_array($meta) ? array_keys($meta) : [], $typeNorm);
-					// #endregion
+					$hrowW = $thRowCache[$thFromMeta];
+					// Se o evento aponta para ticketshoras mas seconds_spent ficou 0 (legado/erro de gravação),
+					// recalcular a partir de horaini/horafin — a linha legada não é repete na timeline.
+					if ($secondsSpent === 0) {
+						$resolved = self::resolveSecondsFromTicketshorasRow($c->Ticketshoras, $hrowW);
+						if ($resolved > 0) {
+							$secondsSpent = $resolved;
+						}
+					}
 				}
 				$u = $e->user;
 				$autor = $u ? (string)($u->name ?? $u->username ?? '') : '';
 				$att = (string)($e->get('attachment') ?? '');
+				$workDateLabel = null;
+				$workTimeRangeLabel = null;
+				if ($isWl && $hrowW) {
+					[$workDateLabel, $workTimeRangeLabel] = self::worklogLabelsFromTicketshorasRow($c->Ticketshoras, $hrowW);
+				}
+				$secBeforeBill = $secondsSpent;
+				$secondsOut = $isWl ? self::billingSecondsFromRaw($secondsSpent) : $secondsSpent;
+				// #region agent log
+				if ($isWl) {
+					$logPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'debug-b5ac87.log';
+					$payload = [
+						'sessionId' => 'b5ac87',
+						'runId' => 'horas-sd',
+						'hypothesisId' => 'H3-H4',
+						'location' => 'TicketServiceDeskApiService::buildTimelineRows(worklog)',
+						'message' => 'worklog_bill',
+						'data' => [
+							'ticketId' => $tid,
+							'secBefore' => $secBeforeBill,
+							'secAfter' => $secondsOut,
+							'thFromMeta' => $thFromMeta,
+						],
+						'timestamp' => (int)round(microtime(true) * 1000),
+					];
+					@file_put_contents($logPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+				}
+				// #endregion
 				$rows[] = (object)[
 					'id' => (int)$e->id,
 					'source' => 'event',
@@ -97,7 +177,7 @@ class TicketServiceDeskApiService {
 					'autor' => $autor,
 					'userId' => (int)($e->get('user_id') ?? 0) ?: null,
 					'description' => (string)($e->get('description') ?? ''),
-					'secondsSpent' => $secondsSpent,
+					'secondsSpent' => $secondsOut,
 					'billingType' => $e->get('billing_type'),
 					'hourlyRate' => $e->get('hourly_rate'),
 					'rating' => $e->get('rating'),
@@ -105,6 +185,8 @@ class TicketServiceDeskApiService {
 					'metadata' => is_array($meta) ? $meta : null,
 					'created' => $e->created ? $e->created->format('Y-m-d H:i:s') : null,
 					'createdLabel' => $e->created ? $e->created->i18nFormat("dd/MM/yyyy HH:mm") : '',
+					'workDateLabel' => $workDateLabel,
+					'workTimeRangeLabel' => $workTimeRangeLabel,
 					'isBilled' => (bool)($e->get('is_billed') ?? false),
 				];
 			}
@@ -169,7 +251,36 @@ class TicketServiceDeskApiService {
 			$uid = (int)($h->iduser ?? 0);
 			$u = $uid > 0 ? $c->Users->findById($uid)->select(['id', 'name'])->first() : null;
 			$secH = self::resolveSecondsFromTicketshorasRow($th, $h);
+			$secBill = self::billingSecondsFromRaw($secH);
+			[$wDate, $wRange] = self::worklogLabelsFromTicketshorasRow($th, $h);
 			$ini = is_object($h->horaini) && method_exists($h->horaini, 'getTimestamp') ? (int)$h->horaini->getTimestamp() : 0;
+			$labelLinha = '';
+			if ($wDate && $wRange) {
+				$labelLinha = $wDate . ' · ' . $wRange;
+			} elseif ($wDate) {
+				$labelLinha = $wDate;
+			} elseif ($wRange) {
+				$labelLinha = $wRange;
+			}
+			// #region agent log
+			$logPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'debug-b5ac87.log';
+			$payload = [
+				'sessionId' => 'b5ac87',
+				'runId' => 'horas-sd',
+				'hypothesisId' => 'H1-H2',
+				'location' => 'TicketServiceDeskApiService::buildTimelineRows(legacy_h)',
+				'message' => 'legacy_worklog_labels',
+				'data' => [
+					'ticketId' => $tid,
+					'secRaw' => $secH,
+					'secBill' => $secBill,
+					'workDateLabel' => $wDate,
+					'workTimeRangeLabel' => $wRange,
+				],
+				'timestamp' => (int)round(microtime(true) * 1000),
+			];
+			@file_put_contents($logPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+			// #endregion
 			$rows[] = (object)[
 				'id' => 'legacy_h_' . (int)$h->id,
 				'source' => 'legacy',
@@ -177,9 +288,11 @@ class TicketServiceDeskApiService {
 				'autor' => $u ? (string)$u->name : '—',
 				'userId' => $uid ?: null,
 				'description' => 'Registro de horas (legado)',
-				'secondsSpent' => $secH,
+				'secondsSpent' => $secBill,
 				'created' => $ini > 0 ? date('Y-m-d H:i:s', $ini) : null,
-				'createdLabel' => '',
+				'createdLabel' => $labelLinha,
+				'workDateLabel' => $wDate,
+				'workTimeRangeLabel' => $wRange,
 			];
 		}
 
@@ -202,7 +315,7 @@ class TicketServiceDeskApiService {
 	 * @param \Cake\ORM\Table $thTable
 	 * @param \Cake\Datasource\EntityInterface|object|null $hrow
 	 */
-	private static function resolveSecondsFromTicketshorasRow($thTable, $hrow): int {
+	public static function resolveSecondsFromTicketshorasRow($thTable, $hrow): int {
 		if ($hrow === null) {
 			return 0;
 		}
@@ -225,6 +338,10 @@ class TicketServiceDeskApiService {
 				return 0;
 			}
 		}
+		$diffSec = (int)($b->getTimestamp() - $a->getTimestamp());
+		if ($diffSec > 0) {
+			return $diffSec;
+		}
 		$min = 0;
 		try {
 			$ca = clone $a;
@@ -236,51 +353,8 @@ class TicketServiceDeskApiService {
 		if ($min > 0) {
 			return (int)($min * 60);
 		}
-		$diffSec = (int)($b->getTimestamp() - $a->getTimestamp());
-		if ($diffSec > 0) {
-			return $diffSec;
-		}
 
 		return 0;
-	}
-
-	/**
-	 * @param int|null $hrowFound null = not aplicável
-	 * @param string[]   $metaKeys
-	 */
-	private static function debugWorklogAgentLog(
-		string $hypothesisId,
-		int $eventId,
-		int $ticketId,
-		int $thFromMeta,
-		?bool $hrowFound,
-		int $secDb,
-		int $secOut,
-		array $metaKeys,
-		string $typeNorm
-	): void {
-		// #region agent log
-		$logPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'debug-03e12a.log';
-		$payload = [
-			'sessionId' => '03e12a',
-			'runId' => 'worklog-timeline',
-			'hypothesisId' => $hypothesisId,
-			'location' => 'TicketServiceDeskApiService::buildTimelineRows',
-			'message' => 'worklog_seconds',
-			'data' => [
-				'eventId' => $eventId,
-				'ticketId' => $ticketId,
-				'thFromMeta' => $thFromMeta,
-				'hrowFound' => $hrowFound,
-				'secDb' => $secDb,
-				'secOut' => $secOut,
-				'metaKeys' => $metaKeys,
-				'typeNorm' => $typeNorm,
-			],
-			'timestamp' => (int)round(microtime(true) * 1000),
-		];
-		@file_put_contents($logPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-		// #endregion
 	}
 
 	public static function parseBrDateTime(string $s): int {
