@@ -1,5 +1,23 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # =============================================================================
+    # Estáticos (FASE 2): NÃO reescrever estes pedidos para index.php.
+    #
+    # Problema anterior: ficheiros em falta (ex. *.map do DevTools) ou paths /dist/,
+    # /assets/ sem ficheiro físico passavam para o Cake, que interpretava o 1.º
+    # segmento como controlador → MissingController "Dist" / "Assets".
+    #
+    # ^ - [L] = não alterar o URI, parar reescritas; o Apache trata o pedido como
+    # estático (404 se não existir), sem passar pelo front controller.
+    # Prefixo /portal/ opcional (APP_BASE alinhado com config e Alias em produção).
+    # =============================================================================
+    RewriteCond %{REQUEST_URI} \.(?:css|js|mjs|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot)$ [NC]
+    RewriteRule ^ - [L]
+
+    RewriteCond %{REQUEST_URI} ^(/portal)?/(dist|assets)(/|$) [NC]
+    RewriteRule ^ - [L]
+
     # Webhook Autentique: ir sempre ao front controller (LiteSpeed/Apache)
     RewriteRule ^modulo-contratos/webhook/autentique/?$ index.php [QSA,L]
     RewriteRule ^portal/modulo-contratos/webhook/autentique/?$ index.php [QSA,L]
