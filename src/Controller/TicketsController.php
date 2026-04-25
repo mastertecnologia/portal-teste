@@ -3904,7 +3904,13 @@ class TicketsController extends AppController {
 
 	protected function _apiTicketDetailPayload($ticket, $idticket): array {
 		$role = (int)$this->Auth->user('role');
-		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo', 'cnpj', 'cpf', 'cidade'])->first();
+		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo', 'cnpj', 'cpf'])->first();
+		// #region agent log
+		$this->_agentDebugLog('H-cidade', 'TicketsController::_apiTicketDetailPayload:cliente', 'cliente select ok (no cidade column)', [
+			'idcliente' => (int)$ticket->idcliente,
+			'hasRow' => (bool)$cliente,
+		]);
+		// #endregion
 		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? '');
 		$solicitante = null;
 		if (!empty($ticket->idsolicitante)) {
