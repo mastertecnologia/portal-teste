@@ -410,7 +410,7 @@ export default function TechTicketEdit({ boot }) {
         <ul
           ref={listRef}
           onScroll={onListScroll}
-          className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--pgm-bg-base,#0c0f14)] p-3"
+          className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
         >
           {comentarios.length === 0 ? (
             <li className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
@@ -443,7 +443,7 @@ export default function TechTicketEdit({ boot }) {
           )}
         </ul>
       ) : (
-        <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--pgm-bg-base,#0c0f14)] p-3">
+        <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
           {eventosOperacionais.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
               {Array.isArray(timelineEvents) && timelineEvents.length > 0
