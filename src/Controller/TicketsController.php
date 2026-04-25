@@ -5846,7 +5846,7 @@ class TicketsController extends AppController {
 		}
 		if ($tab === 'financeiro') {
 			$pecas = 0.0;
-			foreach ($this->TicketProducts->find()->where(['ticket_id' => (int)$idticket, 'idempresa' => $eid]) as $x) {
+			foreach ($this->TicketProducts->find()->where(['TicketProducts.ticket_id' => (int)$idticket, 'TicketProducts.idempresa' => $eid]) as $x) {
 				$q = (float)($x->quantidade ?? 0);
 				$pu = (float)($x->preco_unitario ?? 0);
 				$pecas += $q * $pu;
@@ -5869,7 +5869,7 @@ class TicketsController extends AppController {
 			}
 			$geral = $pecas + $servVal;
 			$ledger = [];
-			foreach ($this->TicketProducts->find()->contain(['Produtos'])->where(['ticket_id' => (int)$idticket, 'idempresa' => $eid]) as $tp) {
+			foreach ($this->TicketProducts->find()->contain(['Produtos'])->where(['TicketProducts.ticket_id' => (int)$idticket, 'TicketProducts.idempresa' => $eid]) as $tp) {
 				$qtd = (float)($tp->quantidade ?? 0);
 				$pu = (float)($tp->preco_unitario ?? 0);
 				$ledger[] = [
