@@ -57,6 +57,26 @@ class TicketServiceDeskApiService {
 				if (is_array($meta) && $isWl && !empty($meta['ticketshoras_id'])) {
 					$horasCobertura[] = (int)$meta['ticketshoras_id'];
 				}
+				$secondsSpent = (int)($e->get('seconds_spent') ?? 0);
+				// Se o evento aponta para ticketshoras mas seconds_spent ficou 0 (legado/erro de gravação),
+				// recalcular a partir de horaini/horafin — a linha legada não é repete na timeline.
+				if ($isWl && $secondsSpent === 0 && is_array($meta) && !empty($meta['ticketshoras_id'])) {
+					$thId = (int)$meta['ticketshoras_id'];
+					if ($thId > 0) {
+						$hrow = $c->Ticketshoras->find()
+							->where(['id' => $thId, 'idticket' => $tid])
+							->first();
+						if ($hrow && $hrow->get('horaini') && $hrow->get('horafin')) {
+							try {
+								$min = (int)$c->Ticketshoras->getMinutos($hrow->horaini, $hrow->horafin);
+								if ($min > 0) {
+									$secondsSpent = (int)($min * 60);
+								}
+							} catch (\Throwable $ex) {
+							}
+						}
+					}
+				}
 				$u = $e->user;
 				$autor = $u ? (string)($u->name ?? $u->username ?? '') : '';
 				$att = (string)($e->get('attachment') ?? '');
@@ -67,7 +87,7 @@ class TicketServiceDeskApiService {
 					'autor' => $autor,
 					'userId' => (int)($e->get('user_id') ?? 0) ?: null,
 					'description' => (string)($e->get('description') ?? ''),
-					'secondsSpent' => (int)($e->get('seconds_spent') ?? 0),
+					'secondsSpent' => $secondsSpent,
 					'billingType' => $e->get('billing_type'),
 					'hourlyRate' => $e->get('hourly_rate'),
 					'rating' => $e->get('rating'),
