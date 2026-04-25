@@ -98,37 +98,15 @@ function renderEvent(ev, w) {
   );
 }
 
-const sectionTitleClass =
-  'mb-2 border-b border-[var(--pgm-border-subtle,#e2e8f0)] pb-1.5 text-[0.7rem] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted,#64748b)]';
-
 /**
- * Separado: movimentações/auditoria/… vs horas (worklog) para não misturar no histórico.
+ * Lista de eventos de timeline; o filtro (ex.: só horas) é feito no componente-pai.
  * @param {{ events: object[], className?: string }} p
  */
 export default function TicketTimeline({ events, className = '' }) {
   const w = (getBoot() || {}).webroot || '';
   const list = events || [];
-  const horas = list.filter((ev) => (ev.type || '').toLowerCase() === 'worklog');
-  const outras = list.filter((ev) => (ev.type || '').toLowerCase() !== 'worklog');
-
   if (list.length === 0) {
     return null;
   }
-
-  return (
-    <div className={`space-y-5 ${className}`}>
-      {outras.length > 0 ? (
-        <section>
-          <h3 className={sectionTitleClass}>Movimentações, auditoria e mais</h3>
-          <div className="space-y-2">{outras.map((ev) => renderEvent(ev, w))}</div>
-        </section>
-      ) : null}
-      {horas.length > 0 ? (
-        <section>
-          <h3 className={sectionTitleClass}>Horas</h3>
-          <div className="space-y-2">{horas.map((ev) => renderEvent(ev, w))}</div>
-        </section>
-      ) : null}
-    </div>
-  );
+  return <div className={`space-y-2 ${className}`}>{list.map((ev) => renderEvent(ev, w))}</div>;
 }

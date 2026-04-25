@@ -55,7 +55,7 @@ export default function TechTicketEdit({ boot }) {
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
-  /** 'chat' = conversa com bolhas (padrão); 'timeline' = eventos/horas/mov legado unificado */
+  /** 'chat' | 'timeline' (sem worklog) | 'horas' (só worklog) */
   const [rightPanelTab, setRightPanelTab] = useState('chat');
 
   useEffect(() => {
@@ -85,10 +85,20 @@ export default function TechTicketEdit({ boot }) {
 
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
 
-  /** Eventos técnicos (mov, horas, audit, assinatura…); comentários só na aba «Conversa». */
+  /** Todos os eventos técnicos (exceto comentários de chat). */
   const eventosOperacionais = useMemo(
     () => (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() !== 'comment'),
     [timelineEvents]
+  );
+  /** «Eventos (histórico)» — tudo exceto worklog (horas têm aba própria). */
+  const eventosHistorico = useMemo(
+    () => eventosOperacionais.filter((ev) => (ev.type || '').toLowerCase() !== 'worklog'),
+    [eventosOperacionais]
+  );
+  /** Aba «Horas» — só worklog. */
+  const eventosHoras = useMemo(
+    () => eventosOperacionais.filter((ev) => (ev.type || '').toLowerCase() === 'worklog'),
+    [eventosOperacionais]
   );
 
   async function handleComentario(e) {
@@ -395,15 +405,29 @@ export default function TechTicketEdit({ boot }) {
             }`}
           >
             Eventos (histórico)
-            {eventosOperacionais.length > 0 ? (
-              <span className="ml-1 opacity-90">({eventosOperacionais.length})</span>
+            {eventosHistorico.length > 0 ? (
+              <span className="ml-1 opacity-90">({eventosHistorico.length})</span>
             ) : null}
+          </button>
+          <button
+            type="button"
+            onClick={() => setRightPanelTab('horas')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              rightPanelTab === 'horas'
+                ? 'bg-[var(--pgm-primary,#1d9e75)] text-white shadow-sm'
+                : 'border border-[var(--pgm-border,#3d4554)] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] hover:border-[var(--pgm-border-strong)] hover:text-[var(--pgm-text,#e8eaed)]'
+            }`}
+          >
+            Horas
+            {eventosHoras.length > 0 ? <span className="ml-1 opacity-90">({eventosHoras.length})</span> : null}
           </button>
         </div>
         <p className="text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
           {rightPanelTab === 'chat'
-            ? 'Mensagens com o cliente e a equipa. Movimentações, horas e logs ficam no separador «Eventos (histórico)» — sem misturar com a conversa.'
-            : 'Apenas operação: movimentações, horas, auditoria, assinaturas, peças, etc. Comentários de chat estão em «Conversa».'}
+            ? 'Mensagens com o cliente e a equipa. Movimentações e histórico em «Eventos»; lançamentos de horas em «Horas».'
+            : rightPanelTab === 'timeline'
+              ? 'Movimentações, auditoria, assinaturas, peças, etc. Horas lançadas estão no separador «Horas».'
+              : 'Lançamentos de horas (legado e registos). Movimentações e restante histórico em «Eventos (histórico)».'}
         </p>
       </div>
       {rightPanelTab === 'chat' ? (
@@ -440,16 +464,32 @@ export default function TechTicketEdit({ boot }) {
             })
           )}
         </ul>
-      ) : (
+      ) : rightPanelTab === 'timeline' ? (
         <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
-          {eventosOperacionais.length === 0 ? (
+          {eventosHistorico.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-              {Array.isArray(timelineEvents) && timelineEvents.length > 0
-                ? 'Não há eventos operacionais (só comentários de conversa, na aba «Conversa»).'
-                : 'Nenhum evento ainda. Registre horas ou aguarde movimentações no ticket.'}
+              {eventosHoras.length > 0
+                ? 'Não há movimentações nem outros eventos aqui — só existem lançamentos de horas. Abra o separador «Horas».'
+                : Array.isArray(timelineEvents) && timelineEvents.length > 0
+                  ? 'Não há eventos deste tipo (só comentários de conversa, na aba «Conversa»).'
+                  : 'Nenhum evento ainda. Registre horas (separador «Horas») ou aguarde movimentações no ticket.'}
             </div>
           ) : (
-            <TicketTimeline events={eventosOperacionais} />
+            <TicketTimeline events={eventosHistorico} />
+          )}
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
+          {eventosHoras.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+              {eventosHistorico.length > 0
+                ? 'Sem lançamentos de horas neste ticket. Os restantes eventos estão em «Eventos (histórico)».'
+                : Array.isArray(timelineEvents) && timelineEvents.length > 0
+                  ? 'Não há horas registadas (só comentários de conversa, na aba «Conversa»).'
+                  : 'Nenhum lançamento de horas ainda. Use o timer do ticket para gravar tempo.'}
+            </div>
+          ) : (
+            <TicketTimeline events={eventosHoras} />
           )}
         </div>
       )}
