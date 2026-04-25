@@ -148,28 +148,7 @@ class TicketServiceDeskApiService {
 				if ($isWl && $hrowW) {
 					[$workDateLabel, $workTimeRangeLabel] = self::worklogLabelsFromTicketshorasRow($c->Ticketshoras, $hrowW);
 				}
-				$secBeforeBill = $secondsSpent;
 				$secondsOut = $isWl ? self::billingSecondsFromRaw($secondsSpent) : $secondsSpent;
-				// #region agent log
-				if ($isWl) {
-					$logPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'debug-b5ac87.log';
-					$payload = [
-						'sessionId' => 'b5ac87',
-						'runId' => 'horas-sd',
-						'hypothesisId' => 'H3-H4',
-						'location' => 'TicketServiceDeskApiService::buildTimelineRows(worklog)',
-						'message' => 'worklog_bill',
-						'data' => [
-							'ticketId' => $tid,
-							'secBefore' => $secBeforeBill,
-							'secAfter' => $secondsOut,
-							'thFromMeta' => $thFromMeta,
-						],
-						'timestamp' => (int)round(microtime(true) * 1000),
-					];
-					@file_put_contents($logPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-				}
-				// #endregion
 				$rows[] = (object)[
 					'id' => (int)$e->id,
 					'source' => 'event',
@@ -262,25 +241,6 @@ class TicketServiceDeskApiService {
 			} elseif ($wRange) {
 				$labelLinha = $wRange;
 			}
-			// #region agent log
-			$logPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'debug-b5ac87.log';
-			$payload = [
-				'sessionId' => 'b5ac87',
-				'runId' => 'horas-sd',
-				'hypothesisId' => 'H1-H2',
-				'location' => 'TicketServiceDeskApiService::buildTimelineRows(legacy_h)',
-				'message' => 'legacy_worklog_labels',
-				'data' => [
-					'ticketId' => $tid,
-					'secRaw' => $secH,
-					'secBill' => $secBill,
-					'workDateLabel' => $wDate,
-					'workTimeRangeLabel' => $wRange,
-				],
-				'timestamp' => (int)round(microtime(true) * 1000),
-			];
-			@file_put_contents($logPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-			// #endregion
 			$rows[] = (object)[
 				'id' => 'legacy_h_' . (int)$h->id,
 				'source' => 'legacy',

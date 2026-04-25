@@ -4,8 +4,18 @@
  * @var object $ticket
  * @var int $idticket
  * @var array $timeline
+ * @var string|null $signatureRelPath
+ * @var string|null $signatureDataUri
  */
 $title = 'Ordem de serviço nº ' . (int)$idticket;
+$totalSec = 0;
+if (!empty($timeline)) {
+	foreach ($timeline as $ev) {
+		if (!empty($ev->secondsSpent) && (int)$ev->secondsSpent > 0) {
+			$totalSec += (int)$ev->secondsSpent;
+		}
+	}
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -23,6 +33,9 @@ $title = 'Ordem de serviço nº ' . (int)$idticket;
 <body>
 	<h1><?= h($title) ?></h1>
 	<div class="meta">Cliente: <?= h((string)($ticket->solicitante ?? '—')) ?> — Assunto: <?= h((string)($ticket->assunto ?? '—')) ?></div>
+	<?php if ($totalSec > 0) : ?>
+		<p><strong>Total de horas (worklogs):</strong> <?= h(gmdate('H:i:s', $totalSec)) ?></p>
+	<?php endif; ?>
 	<h2>Timeline / histórico</h2>
 	<?php if (!empty($timeline)) : foreach ($timeline as $ev) : ?>
 		<div class="ev">
@@ -39,6 +52,12 @@ $title = 'Ordem de serviço nº ' . (int)$idticket;
 		</div>
 	<?php endforeach; else: ?>
 		<p>Nenhum evento.</p>
+	<?php endif; ?>
+	<h2>Assinatura</h2>
+	<?php if (!empty($signatureDataUri)) : ?>
+		<p><img src="<?= h($signatureDataUri) ?>" style="max-width: 220px; height: auto;" alt="Assinatura" /></p>
+	<?php else: ?>
+		<p class="muted">Sem assinatura digital registada neste ticket.</p>
 	<?php endif; ?>
 </body>
 </html>

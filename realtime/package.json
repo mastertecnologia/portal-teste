@@ -1,0 +1,14 @@
+{
+  "name": "pgm-service-desk-socket",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Socket.io relay for Service Desk chat (HMAC session token from PHP)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.2"
+  }
+}

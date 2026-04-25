@@ -346,6 +346,75 @@ export async function fetchTicketTimeline(ticketId) {
   return { ok: true, events: json.events || [] };
 }
 
+export async function fetchTicketMessages(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true, messages: [] };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiTicketMessages;
+  if (!p) return { ok: false, error: 'no_api', messages: [] };
+  const r = await fetch(`${p}${encodeURIComponent(ticketId)}`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  if (!r.ok) return { ok: false, error: r.statusText, messages: [] };
+  const j = await r.json();
+  if (!j.ok) return { ok: false, error: j.error, messages: [] };
+  return { ok: true, messages: j.messages || [] };
+}
+
+export async function postTicketMessage(ticketId, text) {
+  if (USE_MOCK) {
+    return { ok: true, message: { id: `m${Date.now()}`, message: text, userName: 'Eu' } };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiTicketMessages;
+  if (!p) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${p}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  return { ok: true, message: j.message };
+}
+
+export async function fetchRealtimeToken(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true, url: null, token: null, expires: 0 };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiRealtimeToken;
+  if (!p) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${p}${encodeURIComponent(ticketId)}`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  return { ok: true, url: j.url, token: j.token, expires: j.expires };
+}
+
+export async function fetchServicedeskData(ticketId, tab) {
+  if (USE_MOCK) {
+    return { ok: true, tab, rows: [] };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiServicedeskData;
+  if (!p) return { ok: false, error: 'no_api' };
+  const r = await fetch(
+    `${p}${encodeURIComponent(ticketId)}${qs({ tab: tab || 'ativos' })}`,
+    { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } },
+  );
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  return { ok: true, ...j };
+}
+
 export async function postTicketSignature(ticketId, imageDataUrl) {
   if (USE_MOCK) {
     return { ok: true, url: '#' };

@@ -33,4 +33,40 @@ class TicketWorklogEventHelper {
 		} catch (\Throwable $e) {
 		}
 	}
+
+	/**
+	 * Enriquece o último evento worklog do ticket com saldo/percentagem após débito no contrato.
+	 */
+	public static function attachContractSnapshotToLatestWorklog(int $idticket, int $idempresa, int $idcliente): void {
+		try {
+			$c = \Cake\Datasource\ConnectionManager::get('default')->getSchemaCollection();
+			if (!in_array('ticket_events', $c->listTables(), true)) {
+				return;
+			}
+			$snap = ServiceDeskContractHoursService::getSnapshot(
+				ServiceDeskContractHoursService::findContractForClient($idcliente, $idempresa)
+			);
+			$te = TableRegistry::get('TicketEvents');
+			$row = $te->find()
+				->where(['ticket_id' => $idticket, 'type' => 'worklog', 'idempresa' => $idempresa])
+				->orderDesc('id')
+				->first();
+			if (!$row) {
+				return;
+			}
+			$m = $row->get('metadata');
+			if (is_string($m)) {
+				$m = json_decode($m, true) ?: [];
+			}
+			if (!is_array($m)) {
+				$m = [];
+			}
+			$m['balance_hours'] = $snap['balanceHours'];
+			$m['percent_used'] = $snap['percentUsed'];
+			$m['contract_snapshot'] = $snap;
+			$row->set('metadata', $m);
+			$te->save($row, ['checkRules' => false, 'validate' => false, 'skipBillingClassify' => true]);
+		} catch (\Throwable $e) {
+		}
+	}
 }

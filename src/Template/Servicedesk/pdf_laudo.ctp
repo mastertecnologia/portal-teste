@@ -3,6 +3,7 @@
  * @var object $ticket
  * @var object $report
  * @var array $checklist
+ * @var array $evidenceUris
  */
 $title = 'Laudo técnico — OS ' . (int)($ticket->id ?? 0);
 ?>
@@ -36,5 +37,12 @@ $title = 'Laudo técnico — OS ' . (int)($ticket->id ?? 0);
 		<tr><td colspan="3">Nenhum item.</td></tr>
 		<?php endif; ?>
 	</table>
+	<h2>Fotos / evidências</h2>
+	<?php if (!empty($evidenceUris)) : foreach ($evidenceUris as $i => $uri) : ?>
+		<p><img src="<?= h($uri) ?>" style="max-width: 45%; height: auto; margin: 4px;" alt="Evidência <?= (int)$i + 1 ?>" /></p>
+	<?php endforeach; else: ?>
+		<p style="color:#666;">Nenhuma imagem anexada como evidência.</p>
+	<?php endif; ?>
+	<p style="margin-top:24px;"><strong>Assinatura do responsável</strong> ________________________________</p>
 </body>
 </html>

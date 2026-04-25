@@ -395,6 +395,27 @@ Router::scope("/", function ($routes) {
         ->setMethods(["GET"]);
     $routes
         ->connect(
+            "/tickets/api-ticket-messages/*",
+            ["controller" => "Tickets", "action" => "apiTicketMessages"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET", "POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-realtime-token/*",
+            ["controller" => "Tickets", "action" => "apiRealtimeToken"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
+            "/tickets/api-servicedesk-data/*",
+            ["controller" => "Tickets", "action" => "apiServicedeskData"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
             "/tickets/start-ticket/*",
             ["controller" => "Tickets", "action" => "startTicket"],
             ["pass" => ["idticket"]],

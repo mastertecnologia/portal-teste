@@ -7,8 +7,11 @@ use App\Service\Ticket\DashboardService;
 use App\Service\Ticket\SlaService;
 use App\Service\Ticket\TicketHistoryLogger;
 use App\Service\Ticket\TicketInternalNotificationHelper;
+use App\Service\Ticket\ServiceDeskAlertService;
+use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketWorklogEventHelper;
+use Cake\Core\Configure;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\ConnectionManager;
 use Cake\Mailer\Email;
@@ -36,7 +39,7 @@ class TicketsController extends AppController {
 			'Servicos', 'Modulos', 'Faturas', 'Faturaparcelas', 'Cancelamento',
 			'Empresas', 'Empresasusers', 'Ordensservico', 'Config', 'Queues',
 			'QueuesUsers', 'SupportLevels', 'TicketEvents', 'TicketProducts', 'Produtos',
-			'TechnicalReports', 'TicketChecklists', 'Assets', 'Holidays'
+			'TechnicalReports', 'TicketChecklists', 'Assets', 'Holidays', 'TicketMessages', 'ContratosHoras',
 		]);
 	}
 
@@ -55,7 +58,7 @@ class TicketsController extends AppController {
 		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket', 'apiTimer', 'apiAlterarSituacao'], true)) {
 			return (int)$user['role'] === 0;
 		}
-		if (in_array($action, ['apiTimeline'], true)) {
+		if (in_array($action, ['apiTimeline', 'apiTicketMessages', 'apiRealtimeToken', 'apiServicedeskData'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
 		if (in_array($action, ['apiValidateGeolocation'], true)) {
@@ -2132,7 +2135,7 @@ class TicketsController extends AppController {
 				}
 				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
 				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, (int)$idticket);
 			}
 
 			$this->Flash->success('Timer finalizado. Horas registradas. Você pode iniciar um novo timer para continuar o atendimento.');
@@ -2159,8 +2162,10 @@ class TicketsController extends AppController {
 	 * Subtrai tempo do contrato do cliente (segundos/minutos/horas conforme coluna na tabela).
 	 * Ordem: segundos_consumidos → horas_consumidas → saldo → saldo_horas (+ horas_utilizadas) → minutos_consumidos → saldo_minutos.
 	 */
-	protected function subtrairHorasContrato($idcliente, $idempresa, $duracaoSegundos, $duracaoMinutos = null) {
-		if ($duracaoSegundos <= 0) return;
+	protected function subtrairHorasContrato($idcliente, $idempresa, $duracaoSegundos, $duracaoMinutos = null, $idticket = null) {
+		if ($duracaoSegundos <= 0) {
+			return;
+		}
 		if ($duracaoMinutos === null) {
 			$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
 		}
@@ -2220,6 +2225,20 @@ class TicketsController extends AppController {
 				$this->log("subtrairHorasContrato: atualizado idcliente=$idcliente, -{$duracaoSegundos}s ({$horasUsadas}h)", 'debug');
 			} else {
 				$this->log("subtrairHorasContrato: nenhuma coluna editável. idcliente=$idcliente", 'error');
+			}
+			if ($saved && $idticket) {
+				TicketWorklogEventHelper::attachContractSnapshotToLatestWorklog(
+					(int)$idticket,
+					(int)$idempresa,
+					(int)$idcliente
+				);
+				ServiceDeskAlertService::afterContractDebit(
+					(int)$this->Auth->user('idempresa'),
+					(int)$idticket,
+					(int)$this->Auth->user('id'),
+					(int)$idcliente,
+					(int)$idempresa
+				);
 			}
 		} catch (\Throwable $e) {
 			$this->log('subtrairHorasContrato: ' . $e->getMessage() . ' (idcliente=' . $idcliente . ')', 'error');
@@ -2624,7 +2643,7 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
 				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket);
 			}
 
 			return ['ok' => true, 'message' => 'Timer finalizado. Horas registradas.', 'duracaoMinutosFinal' => $duracaoMinutos];
@@ -2691,6 +2710,9 @@ class TicketsController extends AppController {
 				'apiAddEvidencePhoto' => $w . 'tickets/api-add-evidence-photo/',
 				'apiPdfTicketOs' => $w . 'tickets/api-pdf-ticket-os/',
 				'apiPdfLaudo' => $w . 'tickets/api-pdf-laudo/',
+				'apiTicketMessages' => $w . 'tickets/api-ticket-messages/',
+				'apiRealtimeToken' => $w . 'tickets/api-realtime-token/',
+				'apiServicedeskData' => $w . 'tickets/api-servicedesk-data/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'ticketsOperacional' => Router::url(['controller' => 'Tickets', 'action' => 'operacional']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -3866,7 +3888,7 @@ class TicketsController extends AppController {
 
 	protected function _apiTicketDetailPayload($ticket, $idticket): array {
 		$role = (int)$this->Auth->user('role');
-		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo'])->first();
+		$cliente = $this->Clientes->findById($ticket->idcliente)->select(['razaosocial', 'nomefantasia', 'nome', 'tipo', 'cnpj', 'cpf', 'cidade'])->first();
 		$clienteNome = $cliente && $cliente->tipo == C_ClientesTipoFisica ? $cliente->nome : ($cliente->razaosocial ?? '');
 		$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
 
@@ -3881,8 +3903,23 @@ class TicketsController extends AppController {
 		}
 
 		$createdFmt = $ticket->created ? $ticket->created->format('d/m/Y H:i') : '';
+		$atualizadoEm = $createdFmt;
+		try {
+			$m = $ticket->get('modified');
+			if ($m && is_object($m) && method_exists($m, 'format')) {
+				$atualizadoEm = $m->format('d/m/Y H:i');
+			}
+		} catch (\Throwable $e) {
+		}
 
 		$descAtend = isset($ticket->descricao_atendimento) ? (string)$ticket->descricao_atendimento : '';
+		$docCli = null;
+		if ($cliente) {
+			$docCli = (string)(($cliente->tipo == C_ClientesTipoFisica) ? ($cliente->cpf ?? '') : ($cliente->cnpj ?? ''));
+		}
+		$chContr = ServiceDeskContractHoursService::getSnapshot(
+			ServiceDeskContractHoursService::findContractForClient((int)$ticket->idcliente, (int)$this->Auth->user('idempresa'))
+		);
 
 		return [
 			'id' => (int)$ticket->id,
@@ -3895,9 +3932,13 @@ class TicketsController extends AppController {
 				? $this->_ticketSeveridadeLabel((string)($ticket->severidade ?? 'media'))
 				: '—',
 			'responsavel' => $solicitante->name ?? '—',
-			'atualizado' => $createdFmt,
+			'abertoEm' => $createdFmt,
+			'atualizadoEm' => $atualizadoEm,
+			'atualizado' => $atualizadoEm,
 			'cliente' => $clienteNome,
+			'cnpj' => $docCli !== null && $docCli !== '' ? $docCli : null,
 			'email' => $ticket->email ?? '',
+			'contractHours' => $chContr,
 			'comentarios' => $comentarios,
 			'anexos' => $anexos,
 			'urls' => [
@@ -5418,12 +5459,32 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'mpdf_missing'], 500);
 		}
 		$pack = TicketServiceDeskApiService::buildTimelineRows($this, $ticket);
+		$sig = null;
+		$sigDataUri = null;
+		if ($this->TicketEvents) {
+			$se = $this->TicketEvents->find()
+				->where(['ticket_id' => (int)$idticket, 'type' => 'signature'])
+				->orderDesc('id')
+				->first();
+			if ($se && (string)($se->get('attachment') ?? '') !== '') {
+				$sig = (string)$se->get('attachment');
+				$abs = WWW_ROOT . str_replace(['/', '\\'], DS, ltrim($sig, '/\\'));
+				if (is_file($abs) && is_readable($abs)) {
+					$raw = @file_get_contents($abs);
+					if ($raw !== false) {
+						$sigDataUri = 'data:image/png;base64,' . base64_encode($raw);
+					}
+				}
+			}
+		}
 		$this->viewBuilder()->setTemplatePath('Servicedesk');
 		$this->viewBuilder()->setTemplate('pdf_os');
 		$this->viewBuilder()->setLayout(false);
 		$this->set('ticket', $ticket);
 		$this->set('idticket', (int)$idticket);
 		$this->set('timeline', $pack->rows);
+		$this->set('signatureRelPath', $sig);
+		$this->set('signatureDataUri', $sigDataUri);
 		$view = $this->createView();
 		$html = $view->render();
 		$tmp = TMP . 'mpdf' . DS;
@@ -5469,12 +5530,31 @@ class TicketsController extends AppController {
 			$this->TechnicalReports->save($rep, ['checkRules' => false]);
 		}
 		$check = $this->TicketChecklists->find()->where(['technical_report_id' => (int)$rep->id])->order(['sort_order' => 'ASC', 'id' => 'ASC'])->all()->toList();
+		$evidenceUris = [];
+		$teRows = $this->TicketEvents->find()
+			->where(['ticket_id' => (int)$idticket, 'type' => 'technical_report', 'idempresa' => (int)$this->Auth->user('idempresa')])
+			->order(['id' => 'ASC'])
+			->all();
+		foreach ($teRows as $ter) {
+			$at = (string)($ter->get('attachment') ?? '');
+			if ($at === '') {
+				continue;
+			}
+			$abs = WWW_ROOT . str_replace(['/', '\\'], DS, ltrim($at, '/\\'));
+			if (is_file($abs) && is_readable($abs)) {
+				$raw = @file_get_contents($abs);
+				if ($raw !== false) {
+					$evidenceUris[] = 'data:image/png;base64,' . base64_encode($raw);
+				}
+			}
+		}
 		$this->viewBuilder()->setTemplatePath('Servicedesk');
 		$this->viewBuilder()->setTemplate('pdf_laudo');
 		$this->viewBuilder()->setLayout(false);
 		$this->set('ticket', $ticket);
 		$this->set('report', $rep);
 		$this->set('checklist', $check);
+		$this->set('evidenceUris', $evidenceUris);
 		$view = $this->createView();
 		$html = $view->render();
 		if (!class_exists(\Mpdf\Mpdf::class)) {
@@ -5493,5 +5573,312 @@ class TicketsController extends AppController {
 			->withType('application/pdf')
 			->withHeader('Content-Disposition', 'inline; filename="laudo-' . (int)$idticket . '.pdf"')
 			->withStringBody($pdf);
+	}
+
+	public function apiTicketMessages($idticket = null) {
+		$this->request->allowMethod(['get', 'post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+		$ticket = $ticket->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		$tables = ConnectionManager::get('default')->getSchemaCollection()->listTables();
+		if (!in_array('ticket_messages', $tables, true)) {
+			if ($this->request->is('get')) {
+				return $this->jsonResponse(['ok' => true, 'messages' => []]);
+			}
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'table_missing'], 503);
+		}
+		if ($this->request->is('get')) {
+			$rows = $this->TicketMessages->find()
+				->where(['ticket_id' => (int)$idticket, 'idempresa' => $emp])
+				->order(['created' => 'ASC'])
+				->all();
+			$uidSet = [];
+			foreach ($rows as $r) {
+				if (!empty($r->user_id)) {
+					$uidSet[(int)$r->user_id] = true;
+				}
+			}
+			$names = [];
+			if ($uidSet !== []) {
+				foreach ($this->Users->find()->where(['id IN' => array_keys($uidSet)])->all() as $u) {
+					$names[(int)$u->id] = (string)($u->name ?? '');
+				}
+			}
+			$out = [];
+			foreach ($rows as $r) {
+				$uid = $r->user_id ? (int)$r->user_id : null;
+				$out[] = [
+					'id' => (string)$r->id,
+					'message' => (string)$r->message,
+					'type' => (string)($r->type ?? 'text'),
+					'metadata' => $r->metadata,
+					'created' => $r->created && is_object($r->created) && method_exists($r->created, 'format')
+						? $r->created->format('c') : null,
+					'userId' => $uid,
+					'userName' => $uid ? ($names[$uid] ?? '') : '',
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'messages' => $out]);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$text = trim((string)($body['message'] ?? $body['text'] ?? ''));
+		if ($text === '') {
+			return $this->jsonResponse(['ok' => false, 'error' => 'empty'], 400);
+		}
+		$typeIn = (string)($body['type'] ?? 'text');
+		$typeOk = in_array($typeIn, ['text', 'file', 'image', 'system'], true) ? $typeIn : 'text';
+		$e = $this->TicketMessages->newEntity([
+			'idempresa' => $emp,
+			'ticket_id' => (int)$idticket,
+			'user_id' => (int)$this->Auth->user('id'),
+			'message' => $text,
+			'type' => $typeOk,
+			'metadata' => is_array($body['metadata'] ?? null) ? $body['metadata'] : null,
+			'created' => \Cake\I18n\Time::now(),
+		], ['validate' => false]);
+		if (!$this->TicketMessages->save($e)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		$nm = (string)($this->Auth->user('name') ?? '');
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'message' => [
+				'id' => (string)$e->id,
+				'message' => (string)$e->message,
+				'type' => (string)$e->type,
+				'metadata' => $e->metadata,
+				'created' => $e->created && is_object($e->created) && method_exists($e->created, 'format')
+					? $e->created->format('c') : null,
+				'userId' => (int)$this->Auth->user('id'),
+				'userName' => $nm,
+			],
+		]);
+	}
+
+	public function apiRealtimeToken($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+		$ticket = $ticket->first();
+		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$exp = time() + 3600;
+		$payload = base64_encode((string)json_encode([
+			'uid' => (int)$this->Auth->user('id'),
+			'tid' => (int)$idticket,
+			'eid' => (int)$this->Auth->user('idempresa'),
+			'exp' => $exp,
+		], JSON_UNESCAPED_UNICODE));
+		$salt = (string)Configure::read('Security.salt');
+		$sig = hash_hmac('sha256', $payload, $salt);
+		$url = (string)env('PGM_SERVICE_DESK_SOCKET', 'http://127.0.0.1:3331');
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'url' => $url,
+			'token' => $payload . '.' . $sig,
+			'expires' => $exp,
+		]);
+	}
+
+	/**
+	 * Dados adicionais por aba do Service Desk (ativos, peças, laudos, finanças, contrato, alertas).
+	 * GET ?tab=ativos|pecas|laudos|financeiro|contrato|alertas
+	 */
+	public function apiServicedeskData($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$tab = strtolower((string)$this->request->getQuery('tab', 'ativos'));
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+		$ticket = $ticket->first();
+		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$eid = (int)$this->Auth->user('idempresa');
+		$idc = (int)$ticket->idcliente;
+
+		if ($tab === 'ativos') {
+			$rows = $this->Assets->find()
+				->where(['idempresa' => $eid, 'idcliente' => $idc])
+				->order(['id' => 'DESC'])
+				->limit(200)
+				->all();
+			$list = [];
+			foreach ($rows as $a) {
+				$list[] = [
+					'id' => (int)$a->id,
+					'descricao' => (string)($a->descricao ?? ''),
+					'identificador' => (string)($a->identificador ?? ''),
+					'codigo_qr' => (string)($a->codigo_qr ?? ''),
+					'ativo' => (bool)($a->ativo ?? true),
+					'created' => $a->created,
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'tab' => $tab, 'rows' => $list]);
+		}
+		if ($tab === 'pecas') {
+			$q = $this->TicketProducts->find()
+				->contain(['Produtos'])
+				->where(['TicketProducts.ticket_id' => (int)$idticket, 'TicketProducts.idempresa' => $eid])
+				->order(['TicketProducts.id' => 'ASC']);
+			$rows = $q->all();
+			$list = [];
+			$tot = 0.0;
+			foreach ($rows as $tp) {
+				$qtd = (float)($tp->quantidade ?? 0);
+				$pu = (float)($tp->preco_unitario ?? 0);
+				$line = $qtd * $pu;
+				$tot += $line;
+				$pnome = $tp->produto ? (string)($tp->produto->descricao ?? $tp->produto->nome ?? 'Produto') : '—';
+				$list[] = [
+					'id' => (int)$tp->id,
+					'data' => $tp->created,
+					'descricao' => $pnome,
+					'tipo' => 'Peça',
+					'quantidade' => $qtd,
+					'valorUnit' => $pu,
+					'valorTotal' => $line,
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'tab' => $tab, 'rows' => $list, 'total' => $tot]);
+		}
+		if ($tab === 'laudos') {
+			$rows = $this->TechnicalReports->find()
+				->where(['ticket_id' => (int)$idticket, 'idempresa' => $eid])
+				->orderDesc('id')
+				->all();
+			$list = [];
+			foreach ($rows as $r) {
+				$list[] = [
+					'id' => (int)$r->id,
+					'data' => $r->created,
+					'titulo' => 'Laudo #' . (int)$r->id,
+					'tipo' => (string)($r->condition_status ?? 'Manutenção'),
+					'responsavel' => '—',
+					'conclusao' => (string)($r->conclusao_tecnica ?? ''),
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'tab' => $tab, 'rows' => $list]);
+		}
+		if ($tab === 'financeiro') {
+			$pecas = 0.0;
+			foreach ($this->TicketProducts->find()->where(['ticket_id' => (int)$idticket, 'idempresa' => $eid]) as $x) {
+				$q = (float)($x->quantidade ?? 0);
+				$pu = (float)($x->preco_unitario ?? 0);
+				$pecas += $q * $pu;
+			}
+			$workSec = 0;
+			$te = $this->TicketEvents->find()
+				->where(['ticket_id' => (int)$idticket, 'type' => 'worklog', 'idempresa' => $eid]);
+			foreach ($te as $ev) {
+				$workSec += (int)($ev->seconds_spent ?? 0);
+			}
+			$workHours = $workSec / 3600.0;
+			$servVal = 0.0;
+			$cont = ServiceDeskContractHoursService::getSnapshot(
+				ServiceDeskContractHoursService::findContractForClient($idc, (int)$this->Auth->user('idempresa'))
+			);
+			$ch = ServiceDeskContractHoursService::findContractForClient($idc, (int)$this->Auth->user('idempresa'));
+			if ($ch && $ch->get('valor_hora_comercial') !== null) {
+				$vhc = (float)str_replace(',', '.', (string)$ch->get('valor_hora_comercial'));
+				$servVal = $workHours * $vhc;
+			}
+			$geral = $pecas + $servVal;
+			$ledger = [];
+			foreach ($this->TicketProducts->find()->contain(['Produtos'])->where(['ticket_id' => (int)$idticket, 'idempresa' => $eid]) as $tp) {
+				$qtd = (float)($tp->quantidade ?? 0);
+				$pu = (float)($tp->preco_unitario ?? 0);
+				$ledger[] = [
+					'data' => $tp->created,
+					'descricao' => $tp->produto ? (string)($tp->produto->descricao ?? 'Produto') : 'Peça',
+					'tipo' => 'Peça',
+					'valor' => $qtd * $pu,
+					'status' => 'Faturado',
+				];
+			}
+			if ($servVal > 0) {
+				$ledger[] = [
+					'data' => $ticket->modified ?? $ticket->created,
+					'descricao' => 'Serviço (horas técnicas)',
+					'tipo' => 'Serviço',
+					'valor' => $servVal,
+					'status' => 'Faturado',
+				];
+			}
+
+			return $this->jsonResponse([
+				'ok' => true,
+				'tab' => $tab,
+				'cards' => [
+					'totalHorasSeg' => (int)round($workSec),
+					'totalPecas' => $pecas,
+					'totalServicos' => $servVal,
+					'totalGeral' => $geral,
+				],
+				'ledger' => $ledger,
+				'contract' => $cont,
+			]);
+		}
+		if ($tab === 'contrato') {
+			$ch = ServiceDeskContractHoursService::findContractForClient($idc, (int)$this->Auth->user('idempresa'));
+			$sn = ServiceDeskContractHoursService::getSnapshot($ch);
+			$debits = [];
+			foreach ($this->TicketEvents->find()
+				->where(['ticket_id' => (int)$idticket, 'type' => 'worklog', 'idempresa' => $eid])
+				->order(['id' => 'ASC']) as $w) {
+				$debits[] = [
+					'ticket_id' => (int)$idticket,
+					'seconds' => (int)($w->seconds_spent ?? 0),
+					'data' => $w->created,
+					'meta' => $w->metadata,
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'tab' => $tab, 'snapshot' => $sn, 'debits' => $debits]);
+		}
+		if ($tab === 'alertas') {
+			$rows = $this->TicketEvents->find()
+				->where(['ticket_id' => (int)$idticket, 'type' => 'alert', 'idempresa' => $eid])
+				->orderDesc('id')
+				->all();
+			$al = [];
+			foreach ($rows as $r) {
+				$m = $r->metadata;
+				if (is_string($m)) {
+					$m = json_decode($m, true) ?: [];
+				}
+				$m = is_array($m) ? $m : [];
+				$al[] = [
+					'id' => (int)$r->id,
+					'created' => $r->created,
+					'level' => (string)($m['level'] ?? 'info'),
+					'message' => (string)($m['message'] ?? $r->description ?? ''),
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'tab' => $tab, 'rows' => $al]);
+		}
+
+		return $this->jsonResponse(['ok' => false, 'error' => 'invalid_tab'], 400);
 	}
 }

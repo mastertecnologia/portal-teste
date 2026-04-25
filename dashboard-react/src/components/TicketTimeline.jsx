@@ -71,6 +71,23 @@ function renderEvent(ev, w) {
       </div>
     );
   }
+  if (t === 'alert') {
+    const meta = ev.metadata && typeof ev.metadata === 'object' ? ev.metadata : {};
+    const lvl = String(meta.level || meta.severity || 'warning').toLowerCase();
+    const ring =
+      lvl === 'danger' || lvl === 'critical'
+        ? 'border-red-500/50 bg-red-950/30 text-red-100'
+        : lvl === 'warning'
+          ? 'border-amber-500/50 bg-amber-950/25 text-amber-100'
+          : 'border-sky-500/40 bg-sky-950/20 text-sky-100';
+    return (
+      <div key={String(ev.id)} className={`rounded-lg border px-3 py-2 text-sm ${ring}`}>
+        <div className="text-xs font-semibold">Alerta</div>
+        <p className="mt-1 whitespace-pre-wrap">{ev.description || '—'}</p>
+        <div className="text-[10px] opacity-80">{ev.createdLabel || ev.created || ''}</div>
+      </div>
+    );
+  }
   if (t === 'csat' && ev.rating != null) {
     return (
       <div key={String(ev.id)} className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm">

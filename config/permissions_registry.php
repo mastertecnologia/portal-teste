@@ -1416,7 +1416,7 @@ return [
         "module" => "Tickets",
         "controller" => "Tickets",
         "action" =>
-            "index,operacional,finalizados,historico,view,viewModal,imprimir,meustickets,empresatickets,panelLeftFragment,viewhomologacoes,faturas,viewfaturas,cancelamento,cancelamentoview,downloadAnexo,downloadFile,download_anexo,download_file,apiindex,apiview,apicomments,apidashboardoperacional,apitecnicoslista",
+            "index,operacional,finalizados,historico,view,viewModal,imprimir,meustickets,empresatickets,panelLeftFragment,viewhomologacoes,faturas,viewfaturas,cancelamento,cancelamentoview,downloadAnexo,downloadFile,download_anexo,download_file,apiindex,apiview,apicomments,apitimeline,apiticketmessages,apirealtimetoken,apiservicedeskdata,apidashboardoperacional,apitecnicoslista",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>

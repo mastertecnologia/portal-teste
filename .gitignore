@@ -7,6 +7,7 @@ logs/
 vendor/
 .ssh/
 dashboard-react/.vite/
+realtime/node_modules/
 # chaves acidentais na raiz do repo (não versionar)
 /yes
 /yes.pub

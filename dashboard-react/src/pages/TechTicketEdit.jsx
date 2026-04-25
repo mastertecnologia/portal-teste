@@ -16,6 +16,28 @@ import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
 import TicketTimeline from '../components/TicketTimeline.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
+import ChatCliente from '../components/ChatCliente.jsx';
+import ServiceDeskTabPanels from '../components/ServiceDeskTabPanels.jsx';
+import TicketInfoPanel, { TicketResumoPanel } from '../components/TicketInfoPanel.jsx';
+
+const SD_TAB_IDS = new Set([
+  'atendimento',
+  'historico',
+  'ativos',
+  'pecas',
+  'laudos',
+  'financeiro',
+  'contrato',
+  'alertas',
+]);
+
+function readSdHash() {
+  if (typeof window === 'undefined') {
+    return 'atendimento';
+  }
+  const h = (window.location.hash || '').replace(/^#/, '');
+  return SD_TAB_IDS.has(h) ? h : 'atendimento';
+}
 
 /** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
 const SHOW_LEGACY_TICKET_UI = false;
@@ -57,6 +79,13 @@ export default function TechTicketEdit({ boot }) {
   const [timelineEvents, setTimelineEvents] = useState([]);
   /** 'chat' | 'timeline' (sem worklog) | 'horas' (só worklog) */
   const [rightPanelTab, setRightPanelTab] = useState('chat');
+  const [mainSdTab, setMainSdTab] = useState(readSdHash);
+
+  useEffect(() => {
+    const h = () => setMainSdTab(readSdHash());
+    window.addEventListener('hashchange', h);
+    return () => window.removeEventListener('hashchange', h);
+  }, []);
 
   useEffect(() => {
     let c = false;
@@ -189,6 +218,69 @@ export default function TechTicketEdit({ boot }) {
   const statusLine = stripHtml(ticket.status);
   const techListUrl = resolveTechIndexUrl(boot);
 
+  function goSdTab(t) {
+    setMainSdTab(t);
+    if (typeof window !== 'undefined') {
+      window.location.hash = t;
+    }
+  }
+
+  const showSdTabs = Boolean(boot?.paths?.apiServicedeskData);
+  const tabLabels = {
+    atendimento: 'Atendimento',
+    historico: 'Histórico',
+    ativos: 'Ativos',
+    pecas: 'Peças / Serviços',
+    laudos: 'Laudos',
+    financeiro: 'Financeiro',
+    contrato: 'Contrato',
+    alertas: 'Alertas',
+  };
+
+  function SdTabIcon({ tabId }) {
+    const common = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, className: 'shrink-0 opacity-90' };
+    switch (tabId) {
+      case 'atendimento':
+        return <svg {...common}><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'historico':
+        return <svg {...common}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'ativos':
+        return <svg {...common}><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'pecas':
+        return <svg {...common}><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'laudos':
+        return <svg {...common}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'financeiro':
+        return <svg {...common}><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'contrato':
+        return <svg {...common}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'alertas':
+        return <svg {...common}><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      default:
+        return null;
+    }
+  }
+
+  const sdTabBar = showSdTabs && (
+    <div className="mb-2 flex flex-wrap gap-1 border-b border-[var(--pgm-border-subtle)] px-1 pb-2">
+      {Object.keys(tabLabels).map((t) => (
+        <button
+          key={t}
+          type="button"
+          onClick={() => goSdTab(t)}
+          className={`inline-flex items-center gap-1.5 rounded-t-md px-2.5 py-1.5 text-[0.7rem] font-semibold sm:text-xs ${
+            mainSdTab === t
+              ? 'bg-[#0056b3] text-white'
+              : 'bg-[var(--pgm-bg-elevated)] text-[var(--pgm-text-muted)] hover:text-[var(--pgm-text)]'
+          }`}
+        >
+          <SdTabIcon tabId={t} />
+          {tabLabels[t]}
+        </button>
+      ))}
+    </div>
+  );
+
   const headerActions = (
     <div className="flex flex-shrink-0 flex-wrap gap-2">
       {techListUrl && (
@@ -208,6 +300,26 @@ export default function TechTicketEdit({ boot }) {
           Clássico (timer, anexos)
         </a>
       )}
+      {boot?.paths?.apiPdfTicketOs && id ? (
+        <a
+          href={`${String(boot.paths.apiPdfTicketOs).replace(/\/$/, '')}/${id}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#0056b3]/50 bg-[#0056b3]/15 px-3 py-1.5 text-xs font-medium text-[#7eb8ff] transition hover:bg-[#0056b3]/25 sm:text-[0.8125rem]"
+        >
+          PDF OS
+        </a>
+      ) : null}
+      {boot?.paths?.apiPdfLaudo && id ? (
+        <a
+          href={`${String(boot.paths.apiPdfLaudo).replace(/\/$/, '')}/${id}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#0056b3]/50 bg-[#0056b3]/15 px-3 py-1.5 text-xs font-medium text-[#7eb8ff] transition hover:bg-[#0056b3]/25 sm:text-[0.8125rem]"
+        >
+          PDF Laudo
+        </a>
+      ) : null}
       {ticket.urls?.imprimir && (
         <a
           href={ticket.urls.imprimir}
@@ -525,21 +637,41 @@ export default function TechTicketEdit({ boot }) {
     </div>
   );
 
+  const atendimentoGrid = (
+    <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
+      <div className="min-h-0 min-w-0 space-y-4 lg:col-span-3">
+        {horasTecnicasBlock}
+        <TicketResumoPanel ticket={ticket} />
+      </div>
+      <div className="min-h-0 min-w-0 space-y-4 lg:col-span-5">
+        {descricaoBlock}
+        {relatorioAtendimentoBlock}
+        {anexosBlock}
+      </div>
+      <div className="flex min-h-0 min-w-0 flex-col gap-3 self-start lg:col-span-4">
+        {comentariosBlock}
+        {boot?.paths?.apiTicketMessages && id ? <ChatCliente ticketId={id} embedded={embedded} /> : null}
+        <TicketInfoPanel ticket={ticket} />
+      </div>
+    </div>
+  );
+
   if (embedded) {
     return (
       <div className="tickets-react-edit flex min-h-0 w-full max-w-full flex-1 flex-col overflow-x-hidden text-[var(--pgm-text,#e8eaed)]">
         {header}
+        {sdTabBar}
         <div className="min-h-0 flex-1 px-0">
           {alerts}
-          <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
-            <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
-              {descricaoBlock}
-              {horasTecnicasBlock}
-              {relatorioAtendimentoBlock}
-              {anexosBlock}
+          {mainSdTab === 'atendimento' ? (
+            atendimentoGrid
+          ) : showSdTabs ? (
+            <div className="min-h-[12rem] px-2">
+              <ServiceDeskTabPanels ticket={ticket} tab={mainSdTab} boot={boot} />
             </div>
-            <div className="min-h-0 min-w-0 self-start lg:col-span-5">{comentariosBlock}</div>
-          </div>
+          ) : (
+            atendimentoGrid
+          )}
         </div>
       </div>
     );
@@ -548,17 +680,18 @@ export default function TechTicketEdit({ boot }) {
   return (
     <div className="min-h-screen bg-[var(--pgm-bg-base,#0c0f14)] text-[var(--pgm-text,#e8eaed)]">
       {header}
-      <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-7xl space-y-4 px-4 py-6 sm:px-6">
+        {sdTabBar}
         {alerts}
-        <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
-          <div className="min-h-0 min-w-0 space-y-4 lg:col-span-7">
-            {descricaoBlock}
-            {horasTecnicasBlock}
-            {relatorioAtendimentoBlock}
-            {anexosBlock}
+        {mainSdTab === 'atendimento' ? (
+          atendimentoGrid
+        ) : showSdTabs ? (
+          <div className="min-h-[12rem]">
+            <ServiceDeskTabPanels ticket={ticket} tab={mainSdTab} boot={boot} />
           </div>
-          <div className="min-h-0 min-w-0 self-start lg:col-span-5">{comentariosBlock}</div>
-        </div>
+        ) : (
+          atendimentoGrid
+        )}
       </main>
     </div>
   );
