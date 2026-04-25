@@ -3917,9 +3917,20 @@ class TicketsController extends AppController {
 		if ($cliente) {
 			$docCli = (string)(($cliente->tipo == C_ClientesTipoFisica) ? ($cliente->cpf ?? '') : ($cliente->cnpj ?? ''));
 		}
-		$chContr = ServiceDeskContractHoursService::getSnapshot(
-			ServiceDeskContractHoursService::findContractForClient((int)$ticket->idcliente, (int)$this->Auth->user('idempresa'))
-		);
+		$chContr = [
+			'totalHours' => null,
+			'usedHours' => null,
+			'balanceHours' => null,
+			'percentUsed' => null,
+			'mode' => null,
+			'label' => '—',
+		];
+		try {
+			$chContr = ServiceDeskContractHoursService::getSnapshot(
+				ServiceDeskContractHoursService::findContractForClient((int)$ticket->idcliente, (int)$this->Auth->user('idempresa'))
+			);
+		} catch (\Throwable $e) {
+		}
 
 		return [
 			'id' => (int)$ticket->id,
