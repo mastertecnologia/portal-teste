@@ -147,33 +147,67 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-[0.7rem] text-[var(--pgm-text-muted)]">
           Dia / data
-          <input
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="dd/mm/aaaa"
-            value={dateFilterInput}
-            onChange={(e) => {
-              const v = e.target.value;
-              setDateFilterInput(v);
-              const r = parseBrDateFilter(v);
-              if (r.empty) setFilterDay('');
-              else if (r.iso) setFilterDay(r.iso);
-            }}
-            onBlur={() => {
-              const r = parseBrDateFilter(dateFilterInput.trim());
-              if (r.empty) {
-                setFilterDay('');
-                setDateFilterInput('');
-              } else if (r.iso) {
-                setFilterDay(r.iso);
-                setDateFilterInput(isoDateToBr(r.iso));
-              } else {
-                setDateFilterInput(filterDay ? isoDateToBr(filterDay) : '');
-              }
-            }}
-            className="w-[9.5rem] rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
-          />
+          <div className="flex items-center gap-1">
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="dd/mm/aaaa"
+              value={dateFilterInput}
+              onChange={(e) => {
+                const v = e.target.value;
+                setDateFilterInput(v);
+                const r = parseBrDateFilter(v);
+                if (r.empty) setFilterDay('');
+                else if (r.iso) setFilterDay(r.iso);
+              }}
+              onBlur={() => {
+                const r = parseBrDateFilter(dateFilterInput.trim());
+                if (r.empty) {
+                  setFilterDay('');
+                  setDateFilterInput('');
+                } else if (r.iso) {
+                  setFilterDay(r.iso);
+                  setDateFilterInput(isoDateToBr(r.iso));
+                } else {
+                  setDateFilterInput(filterDay ? isoDateToBr(filterDay) : '');
+                }
+              }}
+              className="w-[9.5rem] rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
+            />
+            <div
+              className="relative flex h-[2.125rem] w-[2.125rem] shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text-muted)] hover:text-[var(--pgm-text)]"
+              title="Calendário"
+            >
+              <svg
+                className="pointer-events-none h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <input
+                type="date"
+                lang="pt-BR"
+                value={filterDay}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFilterDay(v);
+                  setDateFilterInput(v ? isoDateToBr(v) : '');
+                }}
+                className="absolute inset-0 cursor-pointer opacity-0"
+                aria-label="Abrir calendário para escolher a data"
+              />
+            </div>
+          </div>
         </label>
         <label className="flex flex-col gap-1 text-[0.7rem] text-[var(--pgm-text-muted)]">
           Técnico
