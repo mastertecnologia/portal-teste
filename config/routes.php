@@ -1781,9 +1781,23 @@ Router::scope("/", function ($routes) {
         ["controller" => "PgmAssets", "action" => "css"],
         ["pass" => ["name"]],
     );
+    // Alias OGM (mesmas ações que pgm-assets) — HTML/deploy pode usar /ogm-assets/...
+    $routes->connect(
+        "/ogm-assets/css/:name",
+        ["controller" => "PgmAssets", "action" => "css"],
+        ["pass" => ["name"]],
+    );
     // JS módulo Clientes/edit via Cake — evita 404 em /portal/js/... quando o estático não mapeia para webroot
     $routes->connect(
         "/pgm-assets/js/modules/clientes/:file",
+        ["controller" => "PgmAssets", "action" => "clientesModuleJs"],
+        [
+            "pass" => ["file"],
+            "file" => "(cliente-edit|cliente-edit-ficha|cliente-edit-ficha-acessos)\\.js",
+        ],
+    );
+    $routes->connect(
+        "/ogm-assets/js/modules/clientes/:file",
         ["controller" => "PgmAssets", "action" => "clientesModuleJs"],
         [
             "pass" => ["file"],
