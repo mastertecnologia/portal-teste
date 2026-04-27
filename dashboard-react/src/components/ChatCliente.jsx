@@ -30,6 +30,11 @@ export default function ChatCliente({ ticketId, embedded = true }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const boot = getBoot();
+      // Com false no boot não carrega o chunk socket.io (tickets-index.js) nem chama a API.
+      if (boot?.serviceDeskRealtimeSocket === false) {
+        return;
+      }
       const tok = await fetchRealtimeToken(ticketId);
       if (!tok.ok || !tok.url || !tok.token || typeof window === 'undefined' || cancelled) {
         return;

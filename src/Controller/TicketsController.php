@@ -127,6 +127,20 @@ class TicketsController extends AppController {
 		return $scheme . '://' . $host . ':' . $port;
 	}
 
+	/**
+	 * Socket.io do Service Desk ativo (PGM_SERVICE_DESK_REALTIME). Falso → o React usa só polling.
+	 * Padrão 0: instalação só PHP (sem Node/proxy) não tenta wss. Com relay Node, definir =1.
+	 */
+	protected function _isServiceDeskRealtimeEnabled(): bool {
+		$raw = env('PGM_SERVICE_DESK_REALTIME', '0');
+		$rt = strtolower(trim((string)$raw));
+		if ($rt === '') {
+			return false;
+		}
+
+		return !in_array($rt, ['0', 'false', 'off', 'no'], true);
+	}
+
 	// #region agent log
 	/** @internal debug session d63dd9 — não remover antes de verificação pós-correção */
 	protected function _agentDebugLog(string $hypothesisId, string $location, string $message, array $data = []): void {
@@ -2714,6 +2728,7 @@ class TicketsController extends AppController {
 		$base = [
 			'screen' => $screen,
 			'ticketId' => $ticketId !== null ? (int)$ticketId : null,
+			'serviceDeskRealtimeSocket' => $this->_isServiceDeskRealtimeEnabled(),
 			'webroot' => $w,
 			'role' => (int)$this->Auth->user('role'),
 			'admin' => (int)$this->Auth->user('admin'),
@@ -5776,8 +5791,7 @@ class TicketsController extends AppController {
 		}
 		// Sem servidor Node (socket.io) e proxy de /socket.io: desative para evitar
 		// tentativas wss:// na mesma origem; o chat usa só polling (ChatCliente).
-		$rt = strtolower(trim((string)env('PGM_SERVICE_DESK_REALTIME', '1')));
-		if (in_array($rt, ['0', 'false', 'off', 'no'], true)) {
+		if (!$this->_isServiceDeskRealtimeEnabled()) {
 			return $this->jsonResponse([
 				'ok' => true,
 				'url' => null,
