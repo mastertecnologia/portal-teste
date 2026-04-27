@@ -27,6 +27,7 @@ final class PgmSidebarStaffContext
         $osAddActive = ($ctrl === 'Ordensservico' && $act === 'add');
         $clientesAddActive = ($ctrl === 'Clientes' && $act === 'add');
         $clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
+        $ativosActive = ($ctrl === 'Ativos');
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
         $ticketsServicedeskActive = ($ctrl === 'Servicedesk' && $act !== 'operacional');
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
@@ -86,7 +87,7 @@ final class PgmSidebarStaffContext
         $pgmSbOpenIndicadores = $relatoriosPainelActive || $relatoriosIndicadoresAdvActive;
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
-        $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive;
+        $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive || $ativosActive;
         $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive || $ticketsOperacionalActive;
         $pgmSbOpenComercial = (bool)$orcamentosActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
@@ -126,6 +127,7 @@ final class PgmSidebarStaffContext
             'osAddActive' => $osAddActive,
             'clientesAddActive' => $clientesAddActive,
             'clientesListNavActive' => $clientesListNavActive,
+            'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
             'ticketsOperacionalActive' => $ticketsOperacionalActive,
             'ticketsHistoricoActive' => $ticketsHistoricoActive,

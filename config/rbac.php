@@ -266,6 +266,7 @@ return [
 			'relatorios_indicadores_adv' => 'relatorios.indicadores.view',
 			'clientes' => 'clientes.view',
 			'produtos' => 'produtos.view',
+			'ativos' => 'ativos.view',
 			// Fase 6c: listar vs nova OS; secção visível se list OU nova.
 			'ordensservico_list' => ['ordensservico.list', 'ordensservico.full'],
 			'ordensservico_nova' => ['ordensservico.create', 'ordensservico.full'],

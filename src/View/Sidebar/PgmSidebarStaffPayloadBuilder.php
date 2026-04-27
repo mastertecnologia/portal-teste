@@ -41,7 +41,7 @@ final class PgmSidebarStaffPayloadBuilder
             ];
         }
 
-        $sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true);
+        $sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true) || ($sg['ativos'] ?? true);
         if ($sgCadGrp) {
             $items = [];
             if (($sg['clientes'] ?? true)) {
@@ -52,6 +52,9 @@ final class PgmSidebarStaffPayloadBuilder
             }
             if (($sg['produtos'] ?? true)) {
                 $items[] = self::item('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], [], (bool)($v['produtosActive'] ?? ''), '', 'Produtos');
+            }
+            if (($sg['ativos'] ?? true)) {
+                $items[] = self::item('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($ctx['ativosActive'] ?? false), '', 'Ativos de TI');
             }
             $sections[] = [
                 'id' => 'cadastros',
