@@ -115,8 +115,12 @@ class TicketsController extends AppController {
 		$secure = $this->request->is('ssl') || $xfProto === 'https';
 		$scheme = $secure ? 'https' : ($parts['scheme'] ?? 'http');
 		$host = (string)$this->request->getUri()->getHost();
-		$omittedPort = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
-		if ($omittedPort) {
+		// Página HTTPS: o servidor Node em 3331 é HTTP puro; WSS em :3331 falha. O cliente
+		// deve usar wss na mesma origem (443) e Apache/Nginx fazer proxy de /socket.io → :3331.
+		if ($secure) {
+			return $scheme . '://' . $host;
+		}
+		if ($port === 80) {
 			return $scheme . '://' . $host;
 		}
 

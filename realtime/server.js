@@ -2,6 +2,11 @@
  * Socket.io fan-out for ticket message relay.
  * Set SECURITY_SALT to the same value as config/app.php Security.salt.
  * Listen: PGM_SERVICE_DESK_SOCKET_PORT (default 3331).
+ *
+ * Produção HTTPS: não exponha TLS neste processo; faça proxy no vhost
+ * de /socket.io/ para http://127.0.0.1:3331/socket.io/ (mod_proxy +
+ * mod_proxy_wstunnel no Apache). O PHP devolve https://{host} sem porta
+ * para o token de realtime.
  */
 import { createServer } from 'http';
 import crypto from 'crypto';
