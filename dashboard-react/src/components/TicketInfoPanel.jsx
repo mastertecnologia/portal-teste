@@ -1,5 +1,15 @@
 import { stripHtml } from '../lib/text';
 
+function minutosLegivel(totalMin) {
+  const m = Math.max(0, Math.floor(Number(totalMin) || 0));
+  if (m <= 0) return '0 min';
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  if (h <= 0) return `${r} min`;
+  if (r === 0) return `${h} h`;
+  return `${h} h ${r} min`;
+}
+
 function row(label, value) {
   if (value === null || value === undefined || String(value).trim() === '') {
     return null;
@@ -39,7 +49,7 @@ export function TicketResumoPanel({ ticket }) {
         {min != null && min > 0 ? (
           <div className="flex flex-col gap-0.5 py-2">
             <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">Tempo neste ticket</span>
-            <span className="font-mono text-[0.85rem] text-[var(--pgm-text)]">{min} min registrados</span>
+            <span className="text-[0.85rem] text-[var(--pgm-text)]">{minutosLegivel(min)} registradas</span>
           </div>
         ) : null}
       </div>

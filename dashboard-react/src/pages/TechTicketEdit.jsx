@@ -15,7 +15,6 @@ import { finalizeOptimisticComment, formatCommentPostTimestamp, stripHtml } from
 import { badgeClass, statusType } from '../lib/ticketUi';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
-import TicketTimeline from '../components/TicketTimeline.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
 import ChatCliente from '../components/ChatCliente.jsx';
 import ServiceDeskTabPanels from '../components/ServiceDeskTabPanels.jsx';
@@ -24,6 +23,7 @@ import TicketInfoPanel, { TicketResumoPanel } from '../components/TicketInfoPane
 const SD_TAB_IDS = new Set([
   'atendimento',
   'historico',
+  'horas',
   'ativos',
   'pecas',
   'laudos',
@@ -31,6 +31,16 @@ const SD_TAB_IDS = new Set([
   'contrato',
   'alertas',
 ]);
+
+function minutosHumanosCurto(totalMin) {
+  const m = Math.max(0, Math.floor(Number(totalMin) || 0));
+  if (m <= 0) return '';
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  if (h <= 0) return `${r} min`;
+  if (r === 0) return `${h} h`;
+  return `${h} h ${r} min`;
+}
 
 function readSdHash() {
   if (typeof window === 'undefined') {
@@ -77,8 +87,6 @@ export default function TechTicketEdit({ boot }) {
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
-  /** 'chat' | 'horas' (só worklog) — o histórico completo fica no separador principal «Histórico». */
-  const [rightPanelTab, setRightPanelTab] = useState('chat');
   const [mainSdTab, setMainSdTab] = useState(readSdHash);
   /** Incrementado a cada `onSnapshot` do timer — evita que um GET /api-view tardio sobrescreva sessão ativa. */
   const horasTecnicasMutationsRef = useRef(0);
@@ -144,11 +152,22 @@ export default function TechTicketEdit({ boot }) {
 
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
 
-  /** Aba «Horas» no painel direito — só lançamentos de tempo (worklog). */
-  const eventosHoras = useMemo(
-    () => (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() === 'worklog'),
-    [timelineEvents]
-  );
+  /** Total em minutos para o rótulo da guia «Horas»: API (Horas cadastradas) ou soma dos worklogs na timeline. */
+  const horasTabBadgeMinutos = useMemo(() => {
+    const worklogs = (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() === 'worklog');
+    const mr = ticket?.horasTecnicas?.minutosRegistrados;
+    if (mr != null && Number(mr) > 0) return Number(mr);
+    const secs = worklogs.reduce((s, ev) => {
+      const sec =
+        ev.secondsSpent != null && ev.secondsSpent !== ''
+          ? ev.secondsSpent
+          : ev.seconds_spent != null && ev.seconds_spent !== ''
+            ? ev.seconds_spent
+            : 0;
+      return s + Math.max(0, Number(sec) || 0);
+    }, 0);
+    return Math.ceil(secs / 60);
+  }, [ticket?.horasTecnicas?.minutosRegistrados, timelineEvents]);
 
   async function handleComentario(e) {
     e.preventDefault();
@@ -181,7 +200,6 @@ export default function TechTicketEdit({ boot }) {
           idautor: res.data.idautor != null ? Number(res.data.idautor) : uid,
         };
         setComentarios((prev) => finalizeOptimisticComment(prev, tmpId, saved));
-        setRightPanelTab('chat');
         try {
           socketRef.current?.emit('ticket_comment_relay', {
             ticketId: Number(ticket.id),
@@ -266,6 +284,7 @@ export default function TechTicketEdit({ boot }) {
   const tabLabels = {
     atendimento: 'Atendimento',
     historico: 'Histórico',
+    horas: 'Horas',
     ativos: 'Ativos',
     pecas: 'Peças / Serviços',
     laudos: 'Laudos',
@@ -281,6 +300,12 @@ export default function TechTicketEdit({ boot }) {
         return <svg {...common}><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
       case 'historico':
         return <svg {...common}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+      case 'horas':
+        return (
+          <svg {...common}>
+            <path d="M12 8v5l3 3M12 3a9 9 0 100 18 9 9 0 000-18z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
       case 'ativos':
         return <svg {...common}><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
       case 'pecas':
@@ -313,6 +338,9 @@ export default function TechTicketEdit({ boot }) {
         >
           <SdTabIcon tabId={t} />
           {tabLabels[t]}
+          {t === 'horas' && horasTabBadgeMinutos > 0 ? (
+            <span className="ml-1 tabular-nums opacity-90">({minutosHumanosCurto(horasTabBadgeMinutos)})</span>
+          ) : null}
         </button>
       ))}
     </div>
@@ -533,84 +561,49 @@ export default function TechTicketEdit({ boot }) {
 
   const comentariosBlock = (
     <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
-      <div className="shrink-0 space-y-2 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-3 py-2.5 sm:px-4">
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setRightPanelTab('chat')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              rightPanelTab === 'chat'
-                ? 'bg-[var(--pgm-primary,#1d9e75)] text-white shadow-sm'
-                : 'border border-[var(--pgm-border,#3d4554)] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] hover:border-[var(--pgm-border-strong)] hover:text-[var(--pgm-text,#e8eaed)]'
-            }`}
-          >
+      <div className="shrink-0 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-3 py-2.5 sm:px-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-lg bg-[var(--pgm-primary,#1d9e75)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm">
             Conversa
             {comentarios.length > 0 ? (
               <span className="ml-1 opacity-90">({comentarios.length})</span>
             ) : null}
-          </button>
-          <button
-            type="button"
-            onClick={() => setRightPanelTab('horas')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              rightPanelTab === 'horas'
-                ? 'bg-[var(--pgm-primary,#1d9e75)] text-white shadow-sm'
-                : 'border border-[var(--pgm-border,#3d4554)] bg-transparent text-[var(--pgm-text-muted,#9aa0a8)] hover:border-[var(--pgm-border-strong)] hover:text-[var(--pgm-text,#e8eaed)]'
-            }`}
-          >
-            Horas
-            {eventosHoras.length > 0 ? <span className="ml-1 opacity-90">({eventosHoras.length})</span> : null}
-          </button>
+          </span>
         </div>
-        <p className="text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
-          {rightPanelTab === 'chat'
-            ? 'Mensagens com o cliente e a equipa. O histórico completo (todos os eventos) está no separador «Histórico»; aqui, só «Horas» (tempo).'
-            : 'Lançamentos de horas (legado e registos). O restante do histórico está no separador «Histórico».'}
+        <p className="mt-2 text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
+          Mensagens com o cliente e a equipa. Os lançamentos de tempo estão no separador «Horas»; o histórico completo, em
+          «Histórico».
         </p>
       </div>
-      {rightPanelTab === 'chat' ? (
-        <ul
-          ref={listRef}
-          onScroll={onListScroll}
-          className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
-        >
-          {comentarios.length === 0 ? (
-            <li className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-              Nenhuma mensagem ainda. Escreva abaixo para contactar o cliente ou a equipa.
-            </li>
-          ) : (
-            comentarios.map((c) => {
-              return (
-                <li
-                  key={c.id}
-                  className="rounded-lg border border-[var(--pgm-border-subtle)] bg-white px-3 py-2 text-sm text-[var(--pgm-text)] shadow-sm"
-                >
-                  <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <span className="font-semibold text-[var(--pgm-text)]">{c.autor || '—'}</span>
-                      <PapelBadge papel={c.papel} />
-                    </div>
-                    <time className="flex-shrink-0">{c.quando}</time>
+      <ul
+        ref={listRef}
+        onScroll={onListScroll}
+        className="min-h-0 flex-1 basis-0 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
+      >
+        {comentarios.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+            Nenhuma mensagem ainda. Escreva abaixo para contactar o cliente ou a equipa.
+          </li>
+        ) : (
+          comentarios.map((c) => {
+            return (
+              <li
+                key={c.id}
+                className="rounded-lg border border-[var(--pgm-border-subtle)] bg-white px-3 py-2 text-sm text-[var(--pgm-text)] shadow-sm"
+              >
+                <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="font-semibold text-[var(--pgm-text)]">{c.autor || '—'}</span>
+                    <PapelBadge papel={c.papel} />
                   </div>
-                  <CommentMessage texto={c.texto} />
-                </li>
-              );
-            })
-          )}
-        </ul>
-      ) : (
-        <div className="min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
-          {eventosHoras.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
-              {Array.isArray(timelineEvents) && timelineEvents.length > 0
-                ? 'Não há horas registadas neste ticket. Abra o separador «Histórico» para ver comentários e eventos, ou a aba «Conversa» para as mensagens.'
-                : 'Nenhum lançamento de horas ainda. Use o timer do ticket para gravar tempo.'}
-            </div>
-          ) : (
-            <TicketTimeline events={eventosHoras} />
-          )}
-        </div>
-      )}
+                  <time className="flex-shrink-0">{c.quando}</time>
+                </div>
+                <CommentMessage texto={c.texto} />
+              </li>
+            );
+          })
+        )}
+      </ul>
       <div className="flex shrink-0 gap-2 border-t border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-surface,#1a1f28)] p-3">
         <form onSubmit={handleComentario} className="flex flex-1 gap-2">
           <textarea

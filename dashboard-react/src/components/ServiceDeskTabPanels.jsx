@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchServicedeskData } from '../lib/api';
 import TicketTimeline from './TicketTimeline.jsx';
+import TicketHorasTabPanel from './TicketHorasTabPanel.jsx';
 
 const BR = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -57,7 +58,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     (async () => {
       setErr(null);
       setData(null);
-      if (tab === 'historico') {
+      if (tab === 'historico' || tab === 'horas') {
         return;
       }
       const r = await fetchServicedeskData(id, tab);
@@ -88,6 +89,10 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         )}
       </div>
     );
+  }
+
+  if (tab === 'horas') {
+    return <TicketHorasTabPanel ticket={ticket} timelineEvents={timelineEvents} />;
   }
 
   if (err) {
