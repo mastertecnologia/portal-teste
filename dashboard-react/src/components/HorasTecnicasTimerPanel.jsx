@@ -176,15 +176,17 @@ export default function HorasTecnicasTimerPanel({
     const { skipBusy = false } = options;
     if (!ticketId) return;
     rollbackRef.current = optimistic;
+    let optimisticIniciarSnapshot = null;
 
     if (action === 'iniciar') {
       const t0 = Date.now() + offsetRef.current;
-      setOptimistic({
+      optimisticIniciarSnapshot = {
         id: 'local',
         horaInicio: localSqlDateTimeFromMs(t0),
         horaPausa: null,
         pausado: false,
-      });
+      };
+      setOptimistic(optimisticIniciarSnapshot);
     } else if (action === 'pausar' && sessao?.horaInicio) {
       const tPause = Date.now() + offsetRef.current;
       setOptimistic({
@@ -245,7 +247,11 @@ export default function HorasTecnicasTimerPanel({
 
     if (res.ok) {
       if (res.horasTecnicas && onSnapshot) {
-        onSnapshot(res.horasTecnicas);
+        let ht = res.horasTecnicas;
+        if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio && !ht.sessao?.horaInicio) {
+          ht = { ...ht, sessao: optimisticIniciarSnapshot };
+        }
+        onSnapshot(ht);
       }
       setOptimistic(null);
       if (onFeedback) onFeedback(res.message || null, null);

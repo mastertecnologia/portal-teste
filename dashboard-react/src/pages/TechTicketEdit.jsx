@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchTicketDetail,
   fetchTicketTimeline,
@@ -80,6 +80,8 @@ export default function TechTicketEdit({ boot }) {
   /** 'chat' | 'timeline' (sem worklog) | 'horas' (só worklog) */
   const [rightPanelTab, setRightPanelTab] = useState('chat');
   const [mainSdTab, setMainSdTab] = useState(readSdHash);
+  /** Incrementado a cada `onSnapshot` do timer — evita que um GET /api-view tardio sobrescreva sessão ativa. */
+  const horasTecnicasMutationsRef = useRef(0);
 
   useEffect(() => {
     const h = () => setMainSdTab(readSdHash());
@@ -89,6 +91,9 @@ export default function TechTicketEdit({ boot }) {
 
   useEffect(() => {
     let c = false;
+    horasTecnicasMutationsRef.current = 0;
+    const ticketIdNum = id != null ? Number(id) : NaN;
+    const mutationsAtFetchStart = horasTecnicasMutationsRef.current;
     (async () => {
       const res = await fetchTicketDetail(id);
       if (c) return;
@@ -96,7 +101,30 @@ export default function TechTicketEdit({ boot }) {
         setErro(res.error || 'Ticket não encontrado');
         return;
       }
-      setTicket(res.data);
+      setTicket((prev) => {
+        const data = res.data;
+        const dataId = data?.id != null ? Number(data.id) : NaN;
+        if (!Number.isFinite(ticketIdNum) || dataId !== ticketIdNum) {
+          return prev ?? data;
+        }
+        const mergeStaleTimer =
+          horasTecnicasMutationsRef.current > mutationsAtFetchStart &&
+          prev &&
+          Number(prev.id) === ticketIdNum &&
+          prev.horasTecnicas?.sessao?.horaInicio &&
+          !data.horasTecnicas?.sessao?.horaInicio;
+        if (mergeStaleTimer) {
+          return {
+            ...data,
+            horasTecnicas: {
+              ...data.horasTecnicas,
+              sessao: prev.horasTecnicas.sessao,
+              serverUnix: data.horasTecnicas?.serverUnix ?? prev.horasTecnicas.serverUnix,
+            },
+          };
+        }
+        return data;
+      });
       setComentarios(res.data.comentarios || []);
       setDesc(res.data.descricao || '');
       setRelatorioAtendimento(res.data.descricaoAtendimento || '');
@@ -408,7 +436,10 @@ export default function TechTicketEdit({ boot }) {
       horasTecnicas={ticket.horasTecnicas}
       canEditDescricaoAtendimento={Boolean(ticket.flags?.canEditDescricaoAtendimento)}
       onRelatorioSaved={(texto) => setRelatorioAtendimento(texto)}
-      onSnapshot={(ht) => setTicket((p) => (p ? { ...p, horasTecnicas: ht } : p))}
+      onSnapshot={(ht) => {
+        horasTecnicasMutationsRef.current += 1;
+        setTicket((p) => (p ? { ...p, horasTecnicas: ht } : p));
+      }}
       onFeedback={(_okMsg, errMsg) => {
         if (errMsg) {
           setErro(errMsg);
