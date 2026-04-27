@@ -436,6 +436,11 @@ class TicketsController extends AppController {
 		if ($fromMagic !== null) {
 			return $fromMagic;
 		}
+		// GD/lib: reconhece JPEG/PNG/GIF/WebP/BMP/ICO válidos mesmo quando finfo falha.
+		$gis = @getimagesize($fullPath);
+		if (is_array($gis) && !empty($gis['mime']) && strpos($gis['mime'], 'image/') === 0) {
+			return $gis['mime'];
+		}
 		$mime = '';
 		if (class_exists('finfo')) {
 			$f = new \finfo(FILEINFO_MIME_TYPE);
@@ -457,28 +462,53 @@ class TicketsController extends AppController {
 
 	/**
 	 * Abre no navegador (imagens/PDF) em vez de forçar download.
+	 * Envia com header() + readfile: evita compressão automática do PHP (zlib.output_compression)
+	 * ou buffers que corrompem binário no fluxo via Response::withFile().
 	 */
 	protected function _sendFileInline($fullPath, $downloadName) {
 		$this->autoRender = false;
-		if (!is_readable($fullPath)) {
+		if (!is_readable($fullPath) || !is_file($fullPath)) {
 			return $this->response->withStatus(404);
 		}
-		$safeName = str_replace('"', '', basename($downloadName));
+		$mime = $this->_mimeForInlineDisplay($fullPath);
+		if ($mime === null) {
+			$mime = $this->_mimeFromPathExtension($fullPath);
+		}
+		if ($mime === null) {
+			$mime = 'application/octet-stream';
+		}
+		$safeName = (string)preg_replace('/[\r\n"]/', '', basename($downloadName));
+		$safeName = (string)preg_replace('/[^\x20-\x7E]/', '_', $safeName);
+		if ($safeName === '') {
+			$safeName = 'anexo';
+		}
+		$lenRaw = filesize($fullPath);
+		if ($lenRaw === false) {
+			return $this->response->withStatus(500);
+		}
+		$len = (int)$lenRaw;
 
-		$response = $this->response->withFile($fullPath, [
-			'download' => false,
-			'name' => $safeName,
-		]);
-		$sniff = $this->_mimeForInlineDisplay($fullPath);
-		if ($sniff !== null) {
-			// Evita text/html; charset=UTF-8 herdado ou tipo ambíguo do withFile.
-			if (method_exists($response, 'withoutHeader')) {
-				$response = $response->withoutHeader('Content-Type');
-			}
-			$response = $response->withType($sniff);
+		if (function_exists('session_write_close') && session_status() === PHP_SESSION_ACTIVE) {
+			session_write_close();
+		}
+		if (function_exists('ini_set')) {
+			@ini_set('zlib.output_compression', '0');
+		}
+		while (ob_get_level() > 0) {
+			ob_end_clean();
 		}
 
-		return $response;
+		header('Content-Type: ' . $mime);
+		header('Content-Length: ' . (string)$len);
+		header('Content-Disposition: inline; filename="' . str_replace('"', '\\"', $safeName) . '"');
+		header('Cache-Control: private, max-age=3600');
+		header('X-Content-Type-Options: nosniff');
+
+		$ok = @readfile($fullPath);
+		if ($ok === false) {
+			return $this->response->withStatus(500);
+		}
+		exit(0);
 	}
 
 	public function downloadAnexo($idanexo) {
