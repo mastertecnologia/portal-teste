@@ -21,6 +21,7 @@ import TicketInfoPanel, { TicketResumoPanel } from '../components/TicketInfoPane
 
 const SD_TAB_IDS = new Set([
   'atendimento',
+  'chat',
   'historico',
   'horas',
   'ativos',
@@ -31,6 +32,14 @@ const SD_TAB_IDS = new Set([
   'alertas',
 ]);
 
+/** Com `apiServicedeskData` desligado só existem as guias Atendimento e Chat. */
+function normalizeSdTab(h, canServicedeskTabs) {
+  const raw = (h || '').replace(/^#/, '');
+  if (!SD_TAB_IDS.has(raw)) return 'atendimento';
+  if (!canServicedeskTabs && raw !== 'atendimento' && raw !== 'chat') return 'atendimento';
+  return raw;
+}
+
 function minutosHumanosCurto(totalMin) {
   const m = Math.max(0, Math.floor(Number(totalMin) || 0));
   if (m <= 0) return '';
@@ -39,14 +48,6 @@ function minutosHumanosCurto(totalMin) {
   if (h <= 0) return `${r} min`;
   if (r === 0) return `${h} h`;
   return `${h} h ${r} min`;
-}
-
-function readSdHash() {
-  if (typeof window === 'undefined') {
-    return 'atendimento';
-  }
-  const h = (window.location.hash || '').replace(/^#/, '');
-  return SD_TAB_IDS.has(h) ? h : 'atendimento';
 }
 
 /** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
@@ -77,6 +78,25 @@ function PapelBadge({ papel }) {
 export default function TechTicketEdit({ boot }) {
   const id = boot?.ticketId;
   const embedded = Boolean(boot);
+  const canServicedeskTabs = Boolean(boot?.paths?.apiServicedeskData);
+  const mainTabKeys = useMemo(
+    () =>
+      canServicedeskTabs
+        ? [
+            'atendimento',
+            'chat',
+            'historico',
+            'horas',
+            'ativos',
+            'pecas',
+            'laudos',
+            'financeiro',
+            'contrato',
+            'alertas',
+          ]
+        : ['atendimento', 'chat'],
+    [canServicedeskTabs],
+  );
   const [ticket, setTicket] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [texto, setTexto] = useState('');
@@ -86,16 +106,25 @@ export default function TechTicketEdit({ boot }) {
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
-  const [mainSdTab, setMainSdTab] = useState(readSdHash);
+  const [mainSdTab, setMainSdTab] = useState(() =>
+    typeof window === 'undefined'
+      ? 'atendimento'
+      : normalizeSdTab((window.location.hash || '').replace(/^#/, ''), canServicedeskTabs),
+  );
   /** Incrementado a cada `onSnapshot` do timer — evita que um GET /api-view tardio sobrescreva sessão ativa. */
   const horasTecnicasMutationsRef = useRef(0);
   const comentarioEmProgressoRef = useRef(false);
 
   useEffect(() => {
-    const h = () => setMainSdTab(readSdHash());
+    const h = () =>
+      setMainSdTab(normalizeSdTab((window.location.hash || '').replace(/^#/, ''), canServicedeskTabs));
     window.addEventListener('hashchange', h);
     return () => window.removeEventListener('hashchange', h);
-  }, []);
+  }, [canServicedeskTabs]);
+
+  useEffect(() => {
+    setMainSdTab((prev) => normalizeSdTab(prev, canServicedeskTabs));
+  }, [canServicedeskTabs]);
 
   useEffect(() => {
     let c = false;
@@ -279,9 +308,9 @@ export default function TechTicketEdit({ boot }) {
     }
   }
 
-  const showSdTabs = Boolean(boot?.paths?.apiServicedeskData);
   const tabLabels = {
     atendimento: 'Atendimento',
+    chat: 'Chat com Cliente',
     historico: 'Histórico',
     horas: 'Horas',
     ativos: 'Ativos',
@@ -296,7 +325,17 @@ export default function TechTicketEdit({ boot }) {
     const common = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, className: 'shrink-0 opacity-90' };
     switch (tabId) {
       case 'atendimento':
-        return <svg {...common}><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+        return (
+          <svg {...common}>
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      case 'chat':
+        return (
+          <svg {...common}>
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
       case 'historico':
         return <svg {...common}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
       case 'horas':
@@ -322,9 +361,10 @@ export default function TechTicketEdit({ boot }) {
     }
   }
 
-  const sdTabBar = showSdTabs && (
+  const chatTabCount = comentarios.length;
+  const sdTabBar = (
     <div className="mb-2 flex flex-wrap gap-1 border-b border-[var(--pgm-border-subtle)] px-1 pb-2">
-      {Object.keys(tabLabels).map((t) => (
+      {mainTabKeys.map((t) => (
         <button
           key={t}
           type="button"
@@ -337,6 +377,11 @@ export default function TechTicketEdit({ boot }) {
         >
           <SdTabIcon tabId={t} />
           {tabLabels[t]}
+          {t === 'chat' && chatTabCount > 0 ? (
+            <span className="ml-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#1d9e75] px-1.5 text-[0.65rem] font-bold text-white tabular-nums">
+              {chatTabCount > 99 ? '99+' : chatTabCount}
+            </span>
+          ) : null}
           {t === 'horas' && horasTabBadgeMinutos > 0 ? (
             <span className="ml-1 tabular-nums opacity-90">({minutosHumanosCurto(horasTabBadgeMinutos)})</span>
           ) : null}
@@ -561,15 +606,7 @@ export default function TechTicketEdit({ boot }) {
   const comentariosBlock = (
     <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
       <div className="shrink-0 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-3 py-2.5 sm:px-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-lg bg-[var(--pgm-primary,#1d9e75)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm">
-            Chat
-            {comentarios.length > 0 ? (
-              <span className="ml-1 opacity-90">({comentarios.length})</span>
-            ) : null}
-          </span>
-        </div>
-        <p className="mt-2 text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
+        <p className="text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
           Mensagens com o cliente e a equipa. Os lançamentos de tempo estão no separador «Horas»; o histórico completo, em
           «Histórico».
         </p>
@@ -642,7 +679,6 @@ export default function TechTicketEdit({ boot }) {
         {anexosBlock}
       </div>
       <div className="flex min-h-0 min-w-0 flex-col gap-3 self-start lg:col-span-4">
-        {comentariosBlock}
         <TicketInfoPanel ticket={ticket} />
       </div>
     </div>
@@ -657,7 +693,9 @@ export default function TechTicketEdit({ boot }) {
           {alerts}
           {mainSdTab === 'atendimento' ? (
             atendimentoGrid
-          ) : showSdTabs ? (
+          ) : mainSdTab === 'chat' ? (
+            <div className="min-h-0 min-h-[12rem] flex-1 px-1 sm:px-2">{comentariosBlock}</div>
+          ) : canServicedeskTabs ? (
             <div className="min-h-[12rem] px-2">
               <ServiceDeskTabPanels
                 ticket={ticket}
@@ -682,7 +720,9 @@ export default function TechTicketEdit({ boot }) {
         {alerts}
         {mainSdTab === 'atendimento' ? (
           atendimentoGrid
-        ) : showSdTabs ? (
+        ) : mainSdTab === 'chat' ? (
+          <div className="min-h-0 min-h-[12rem] px-1 sm:px-2">{comentariosBlock}</div>
+        ) : canServicedeskTabs ? (
           <div className="min-h-[12rem]">
             <ServiceDeskTabPanels
               ticket={ticket}
