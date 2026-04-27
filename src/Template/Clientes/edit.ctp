@@ -174,7 +174,7 @@
 		</div>
 
 		<!-- Tab nav (element reutilizável + deep-link #hash) -->
-		<?= $this->element('Cli/edit_tabs_nav', array_merge(compact('isEquipe', 'isClientePortal', 'permissaoacesso'), ['showTokenTab' => $showClienteApiTokenTab])) ?>
+		<?= $this->element('Cli/edit_tabs_nav', array_merge(compact('isEquipe', 'isClientePortal', 'permissaoacesso'), ['showTokenTab' => $showClienteApiTokenTab, 'ativosCount' => is_countable($ativosCliente ?? null) ? count($ativosCliente) : 0])) ?>
 			<div class="tab-content">
 				<div class="tab-pane active" id="cliente" role="tabpanel" aria-labelledby="cli-tab-cliente">
 					<?=  $this->Form->create($cliente, ['class' => 'form-material', 'id' => 'form-edit-cliente']) ?>
@@ -520,7 +520,81 @@
 					</div>
 					<?= $this->element('Cli/card_end') ?>
 				</div>
-				<?php } if($isClientePortal ){ ?>
+				<?php }
+				if (!empty($cliente->id)) :
+					$ativosCli = $ativosCliente ?? [];
+					$ativosCount = is_countable($ativosCli) ? count($ativosCli) : 0;
+				?>
+				<div class="tab-pane" id="ativos" role="tabpanel" aria-labelledby="cli-tab-ativos">
+					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-server"></i> Ativos de TI deste cliente <span class="badge badge-secondary" style="margin-left:6px">' . (int)$ativosCount . '</span>', 'extraClass' => 'mb-3']) ?>
+					<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap:8px">
+						<input type="search" id="cli-ativos-filter" class="form-control form-control-sm" placeholder="Filtrar por descrição, série, hostname…" style="max-width:320px"/>
+						<div>
+							<?= $this->Html->link('<i class="fas fa-list"></i> Ver todos', ['controller' => 'Ativos', 'action' => 'index', '?' => ['idcliente' => $cliente->id]], ['class' => 'btn btn-sm btn-outline-secondary mr-2', 'escape' => false, 'data-turbo' => 'false']) ?>
+							<?= $this->Html->link('<i class="fas fa-plus"></i> Cadastrar ativo', ['controller' => 'Ativos', 'action' => 'add', '?' => ['idcliente' => $cliente->id]], ['class' => 'btn btn-sm btn-success', 'escape' => false, 'data-turbo' => 'false']) ?>
+						</div>
+					</div>
+					<?php if ($ativosCount === 0) : ?>
+						<p class="text-muted small mb-0">Nenhum ativo cadastrado para este cliente.</p>
+					<?php else : ?>
+					<div class="table-responsive">
+						<table class="table table-sm table-striped" id="cli-ativos-table">
+							<thead>
+								<tr>
+									<th>Identificador</th>
+									<th>Descrição</th>
+									<th>Tipo</th>
+									<th>Marca/Modelo</th>
+									<th>Nº Série</th>
+									<th>Hostname</th>
+									<th>Status</th>
+									<th class="td-actions">Ações</th>
+								</tr>
+							</thead>
+							<tbody>
+							<?php foreach ($ativosCli as $a) :
+								$idTag = $a->identificador ?: ('ATV-' . str_pad((string)$a->id, 6, '0', STR_PAD_LEFT));
+								$status = (string)($a->status_operacional ?? '');
+								$statusLabels = [
+									'em_uso' => 'Em uso', 'estoque' => 'Em estoque', 'manutencao' => 'Manutenção',
+									'reservado' => 'Reservado', 'descartado' => 'Descartado', 'perdido' => 'Perdido',
+								];
+							?>
+								<tr>
+									<td><code><?= h($idTag) ?></code></td>
+									<td><?= h($a->descricao ?: '—') ?></td>
+									<td><?= h($a->tipo ?: '—') ?></td>
+									<td><?= h(trim((string)($a->marca ?? '') . ' ' . (string)($a->modelo ?? ''))) ?: '—' ?></td>
+									<td><code><?= h($a->numero_serie ?: '—') ?></code></td>
+									<td><code><?= h($a->hostname ?: '—') ?></code></td>
+									<td><?= h($statusLabels[$status] ?? '—') ?></td>
+									<td class="td-actions">
+										<?= $this->Html->link('<i class="fa fa-eye"></i>', ['controller' => 'Ativos', 'action' => 'view', $a->id], ['rel' => 'tooltip', 'title' => 'Ver', 'class' => 'btn btn-info btn-simple btn-xs', 'escape' => false, 'data-turbo' => 'false']) ?>
+										<?= $this->Html->link('<i class="fa fa-edit"></i>', ['controller' => 'Ativos', 'action' => 'edit', $a->id], ['rel' => 'tooltip', 'title' => 'Editar', 'class' => 'btn btn-warning btn-simple btn-xs', 'escape' => false, 'data-turbo' => 'false']) ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+					<script>
+					(function () {
+						var input = document.getElementById('cli-ativos-filter');
+						var rows = document.querySelectorAll('#cli-ativos-table tbody tr');
+						if (!input || !rows.length) return;
+						input.addEventListener('input', function () {
+							var q = (input.value || '').toLowerCase();
+							rows.forEach(function (tr) {
+								tr.style.display = tr.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none';
+							});
+						});
+					})();
+					</script>
+					<?php endif; ?>
+					<?= $this->element('Cli/card_end') ?>
+				</div>
+				<?php endif; ?>
+				<?php if($isClientePortal ){ ?>
 				<div class="tab-pane" id="acessosCliente" role="tabpanel" aria-labelledby="cli-tab-acessosCliente">
 					<?= $this->element('Cli/card', ['headHtml' => '<i class="fas fa-desktop"></i> Meus acessos', 'extraClass' => 'mb-3']) ?>
 					<p class="text-muted small mb-2">Senhas podem ser exibidas mediante clique; não compartilhe em canais inseguros.</p>

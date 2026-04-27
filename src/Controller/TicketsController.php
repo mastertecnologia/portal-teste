@@ -67,6 +67,9 @@ class TicketsController extends AppController {
 		if (in_array($action, ['apiTicketSignature', 'apiAddTicketProduct', 'apiAddEvidencePhoto', 'apiPdfTicketOs', 'apiPdfLaudo'], true)) {
 			return (int)$user['role'] === 0;
 		}
+		if (in_array($action, ['apiTicketAssetsAttach', 'apiTicketAssetsDetach'], true)) {
+			return (int)$user['role'] === 0;
+		}
 		if ($action === 'operacional') {
 			return (int)$user['role'] === 0;
 		}
@@ -2776,6 +2779,8 @@ class TicketsController extends AppController {
 				'apiTicketMessages' => $w . 'tickets/api-ticket-messages/',
 				'apiRealtimeToken' => $w . 'tickets/api-realtime-token/',
 				'apiServicedeskData' => $w . 'tickets/api-servicedesk-data/',
+				'apiTicketAssetsAttach' => $w . 'tickets/api-assets-attach/',
+				'apiTicketAssetsDetach' => $w . 'tickets/api-assets-detach/',
 				'indexTecnico' => Router::url(['action' => 'index']),
 				'ticketsOperacional' => Router::url(['controller' => 'Tickets', 'action' => 'operacional']),
 				'indexCliente' => Router::url(['action' => 'indexcliente']),
@@ -5847,24 +5852,70 @@ class TicketsController extends AppController {
 		$idc = (int)$ticket->idcliente;
 
 		if ($tab === 'ativos') {
-			$rows = $this->Assets->find()
-				->where(['idempresa' => $eid, 'idcliente' => $idc])
-				->order(['id' => 'DESC'])
-				->limit(200)
-				->all();
-			$list = [];
-			foreach ($rows as $a) {
-				$list[] = [
+			$mapAsset = function ($a) {
+				return [
 					'id' => (int)$a->id,
 					'descricao' => (string)($a->descricao ?? ''),
 					'identificador' => (string)($a->identificador ?? ''),
 					'codigo_qr' => (string)($a->codigo_qr ?? ''),
+					'tipo' => (string)($a->tipo ?? ''),
+					'marca' => (string)($a->marca ?? ''),
+					'modelo' => (string)($a->modelo ?? ''),
+					'numero_serie' => (string)($a->numero_serie ?? ''),
+					'hostname' => (string)($a->hostname ?? ''),
+					'localizacao' => (string)($a->localizacao ?? ''),
+					'status_operacional' => (string)($a->status_operacional ?? ''),
 					'ativo' => (bool)($a->ativo ?? true),
 					'created' => $a->created,
 				];
+			};
+			// CIs já vinculados ao ticket (via pivot ticket_assets).
+			$linked = [];
+			$linkedIds = [];
+			try {
+				$ta = $this->loadModel('TicketAssets');
+				$pivotRows = $ta->find()
+					->contain(['Assets'])
+					->where(['TicketAssets.ticket_id' => (int)$idticket])
+					->order(['TicketAssets.id' => 'DESC'])
+					->limit(200)
+					->all();
+				foreach ($pivotRows as $p) {
+					if (!$p->asset) {
+						continue;
+					}
+					$row = $mapAsset($p->asset);
+					$row['ticket_asset_id'] = (int)$p->id;
+					$row['papel'] = (string)($p->papel ?: 'afetado');
+					$row['vinculado_em'] = $p->created;
+					$linked[] = $row;
+					$linkedIds[] = (int)$p->asset_id;
+				}
+			} catch (\Throwable $e) {
+				$linked = [];
+				$linkedIds = [];
+			}
+			// CIs disponíveis (do mesmo cliente/empresa, ainda não vinculados a este ticket).
+			$availQ = $this->Assets->find()
+				->where(['Assets.idempresa' => $eid, 'Assets.idcliente' => $idc])
+				->order(['Assets.descricao' => 'ASC', 'Assets.id' => 'DESC'])
+				->limit(200);
+			if (!empty($linkedIds)) {
+				$availQ->where(['Assets.id NOT IN' => $linkedIds]);
+			}
+			$available = [];
+			foreach ($availQ as $a) {
+				$available[] = $mapAsset($a);
 			}
 
-			return $this->jsonResponse(['ok' => true, 'tab' => $tab, 'rows' => $list]);
+			return $this->jsonResponse([
+				'ok' => true,
+				'tab' => $tab,
+				'rows' => $linked, // compat: clientes antigos esperam "rows" — manter alias
+				'linked' => $linked,
+				'available' => $available,
+				'cliente_id' => $idc,
+			]);
 		}
 		if ($tab === 'pecas') {
 			$q = $this->TicketProducts->find()
@@ -6012,5 +6063,122 @@ class TicketsController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => false, 'error' => 'invalid_tab'], 400);
+	}
+
+	/**
+	 * Vincula um ativo (CI) a um ticket. POST com JSON ou form: { asset_id, papel? }.
+	 */
+	public function apiTicketAssetsAttach($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => (int)$idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+		$ticket = $ticket->first();
+		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		// Cliente portal não pode vincular CIs.
+		if ((int)$this->Auth->user('role') === (int)C_RoleCliente) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$assetId = (int)($body['asset_id'] ?? $body['assetId'] ?? 0);
+		$papel = (string)($body['papel'] ?? 'afetado');
+		if (!in_array($papel, ['afetado', 'relacionado'], true)) {
+			$papel = 'afetado';
+		}
+		if ($assetId <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
+		}
+		$eid = (int)$this->Auth->user('idempresa');
+		$asset = $this->Assets->find()
+			->where([
+				'Assets.id' => $assetId,
+				'Assets.idempresa' => $eid,
+				'Assets.idcliente' => (int)$ticket->idcliente,
+			])->first();
+		if (!$asset) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'asset_not_found'], 404);
+		}
+		try {
+			$ta = $this->loadModel('TicketAssets');
+			$exists = $ta->find()
+				->where(['ticket_id' => (int)$idticket, 'asset_id' => $assetId])
+				->first();
+			if ($exists) {
+				return $this->jsonResponse([
+					'ok' => true,
+					'id' => (int)$exists->id,
+					'already_linked' => true,
+				]);
+			}
+			$row = $ta->newEntity([
+				'idempresa' => $eid,
+				'ticket_id' => (int)$idticket,
+				'asset_id' => $assetId,
+				'papel' => $papel,
+				'user_id' => (int)$this->Auth->user('id'),
+			]);
+			if (!$ta->save($row)) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'save_failed',
+					'errors' => $row->getErrors(),
+				], 422);
+			}
+
+			return $this->jsonResponse(['ok' => true, 'id' => (int)$row->id, 'asset_id' => $assetId]);
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'exception', 'message' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * Desvincula um ativo (CI) de um ticket. POST com JSON ou form: { asset_id } ou { ticket_asset_id }.
+	 */
+	public function apiTicketAssetsDetach($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => (int)$idticket]);
+		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
+		$ticket = $ticket->first();
+		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if ((int)$this->Auth->user('role') === (int)C_RoleCliente) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$assetId = (int)($body['asset_id'] ?? $body['assetId'] ?? 0);
+		$pivotId = (int)($body['ticket_asset_id'] ?? $body['id'] ?? 0);
+		if ($assetId <= 0 && $pivotId <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
+		}
+		try {
+			$ta = $this->loadModel('TicketAssets');
+			$where = ['ticket_id' => (int)$idticket];
+			if ($pivotId > 0) {
+				$where['id'] = $pivotId;
+			} else {
+				$where['asset_id'] = $assetId;
+			}
+			$row = $ta->find()->where($where)->first();
+			if (!$row) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+			if (!$ta->delete($row)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
+			}
+
+			return $this->jsonResponse(['ok' => true, 'id' => (int)$row->id]);
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'exception', 'message' => $e->getMessage()], 500);
+		}
 	}
 }

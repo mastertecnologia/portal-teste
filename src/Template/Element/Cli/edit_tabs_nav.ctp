@@ -39,6 +39,14 @@ $acessosPaneId = !empty($isClientePortal) ? 'acessosCliente' : 'acessos';
 			<i class="fas fa-file-contract" aria-hidden="true"></i> Contratos
 		</a>
 	</li>
+	<li class="nav-item" role="presentation">
+		<a class="nav-link" id="cli-tab-ativos" data-toggle="tab" href="#ativos" role="tab" aria-controls="ativos" aria-selected="false">
+			<i class="fas fa-server" aria-hidden="true"></i> Ativos
+			<?php if (isset($ativosCount) && (int)$ativosCount > 0) : ?>
+				<span class="badge badge-secondary" style="margin-left:6px"><?= (int)$ativosCount ?></span>
+			<?php endif; ?>
+		</a>
+	</li>
 	<?php if ($showTokenTab) : ?>
 	<li class="nav-item" role="presentation">
 		<a class="nav-link" id="cli-tab-token" data-toggle="tab" href="#token" role="tab" aria-controls="token" aria-selected="false">

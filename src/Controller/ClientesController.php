@@ -481,6 +481,19 @@ class ClientesController extends AppController {
 		$this->set('contratos', $contratos);
 		$this->set('contratosRowUi', $contratosRowUi);
 		$this->set('cliFooter', $cliFooter);
+		// Ativos de TI (CMDB) — listagem compacta na aba "Ativos" da ficha do cliente.
+		$ativosCliente = [];
+		try {
+			$assetsTbl = $this->loadModel('Assets');
+			$ativosCliente = $assetsTbl->find()
+				->where(['Assets.idcliente' => (int)$cliente->id])
+				->order(['Assets.id' => 'DESC'])
+				->limit(200)
+				->toArray();
+		} catch (\Throwable $e) {
+			$ativosCliente = [];
+		}
+		$this->set('ativosCliente', $ativosCliente);
 		// UF do contribuinte (para consulta IE na edição): a partir da cidade do cliente
 		$ufContribuinte = null;
 		if (!empty($cliente->idcidade)) {

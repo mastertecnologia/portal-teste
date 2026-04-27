@@ -820,4 +820,65 @@ export async function postAlterarSituacao(ticketId, situacao) {
   };
 }
 
+/**
+ * Vincula um CI (ativo) ao ticket. Devolve { ok, id }.
+ */
+export async function attachAssetToTicket(ticketId, assetId, papel = 'afetado') {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 120));
+    return { ok: true, id: Date.now(), asset_id: Number(assetId) };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiTicketAssetsAttach;
+  if (!base) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ asset_id: Number(assetId), papel }),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return { ok: false, error: json.error || r.statusText, errors: json.errors };
+  }
+  return { ok: true, id: json.id, asset_id: json.asset_id, alreadyLinked: !!json.already_linked };
+}
+
+/**
+ * Desvincula um CI do ticket. Aceita `assetId` ou `ticketAssetId`.
+ */
+export async function detachAssetFromTicket(ticketId, { assetId, ticketAssetId } = {}) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 120));
+    return { ok: true };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiTicketAssetsDetach;
+  if (!base) return { ok: false, error: 'no_api' };
+  const body = ticketAssetId
+    ? { ticket_asset_id: Number(ticketAssetId) }
+    : { asset_id: Number(assetId) };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return { ok: false, error: json.error || r.statusText };
+  }
+  return { ok: true, id: json.id };
+}
+
 export { MOCK_SESSION_CLIENTE };

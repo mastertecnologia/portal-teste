@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { fetchServicedeskData } from '../lib/api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  attachAssetToTicket,
+  detachAssetFromTicket,
+  fetchServicedeskData,
+} from '../lib/api';
 import TicketTimeline from './TicketTimeline.jsx';
 import TicketHorasTabPanel from './TicketHorasTabPanel.jsx';
 
@@ -40,10 +44,47 @@ function fmtHms(sec) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
 
+function statusOpLabel(s) {
+  const map = {
+    em_uso: 'Em uso',
+    estoque: 'Em estoque',
+    manutencao: 'Manutenção',
+    reservado: 'Reservado',
+    descartado: 'Descartado',
+    perdido: 'Perdido',
+  };
+  return map[String(s || '').toLowerCase()] || (s ? String(s) : '—');
+}
+
+function tipoLabel(t) {
+  const v = String(t || '').toLowerCase();
+  const map = {
+    notebook: 'Notebook',
+    desktop: 'Desktop',
+    servidor: 'Servidor',
+    impressora: 'Impressora',
+    switch: 'Switch',
+    roteador: 'Roteador',
+    firewall: 'Firewall',
+    monitor: 'Monitor',
+    storage: 'Storage',
+    nobreak: 'Nobreak',
+    telefone: 'Telefone',
+    celular: 'Celular',
+    tablet: 'Tablet',
+  };
+  return map[v] || (t ? String(t) : '—');
+}
+
 export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelineEvents = null }) {
   const id = ticket?.id;
   const [data, setData] = useState(null);
   const [ativosQ, setAtivosQ] = useState('');
+  const [ativosBusy, setAtivosBusy] = useState(false);
+  const [ativosError, setAtivosError] = useState(null);
+  const [showAddAsset, setShowAddAsset] = useState(false);
+  const [pickerQ, setPickerQ] = useState('');
+  const pickerRef = useRef(null);
   const [err, setErr] = useState(null);
 
   const historicoList = useMemo(() => {
@@ -103,58 +144,214 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   }
 
   if (data.tab === 'ativos') {
-    const all = data.rows || [];
+    const linked = Array.isArray(data.linked) ? data.linked : Array.isArray(data.rows) ? data.rows : [];
+    const available = Array.isArray(data.available) ? data.available : [];
+    const clienteId = data.cliente_id || ticket?.idcliente || null;
     const q = ativosQ.trim().toLowerCase();
-    const rows = q
-      ? all.filter((a) => {
-          const s = `${a.descricao || ''} ${a.identificador || ''} ${a.codigo_qr || ''}`.toLowerCase();
+    const filteredLinked = q
+      ? linked.filter((a) => {
+          const s = `${a.descricao || ''} ${a.identificador || ''} ${a.codigo_qr || ''} ${a.tipo || ''} ${a.numero_serie || ''} ${a.hostname || ''} ${a.localizacao || ''}`.toLowerCase();
           return s.includes(q);
         })
-      : all;
+      : linked;
+    const pq = pickerQ.trim().toLowerCase();
+    const filteredAvailable = pq
+      ? available.filter((a) => {
+          const s = `${a.descricao || ''} ${a.identificador || ''} ${a.codigo_qr || ''} ${a.tipo || ''} ${a.numero_serie || ''} ${a.hostname || ''}`.toLowerCase();
+          return s.includes(pq);
+        })
+      : available;
+    const ativosCadastrarUrl = clienteId
+      ? `/ativos/add?idcliente=${encodeURIComponent(clienteId)}`
+      : '/ativos/add';
+
+    const reload = async () => {
+      const r = await fetchServicedeskData(id, 'ativos');
+      if (r.ok) {
+        setData(r);
+      }
+    };
+    const handleAttach = async (assetId) => {
+      if (!assetId || ativosBusy) return;
+      setAtivosBusy(true);
+      setAtivosError(null);
+      const r = await attachAssetToTicket(id, assetId);
+      setAtivosBusy(false);
+      if (!r.ok) {
+        setAtivosError(r.error || 'erro_ao_vincular');
+
+        return;
+      }
+      setPickerQ('');
+      setShowAddAsset(false);
+      reload();
+    };
+    const handleDetach = async (asset) => {
+      if (!asset || ativosBusy) return;
+      const ok = typeof window !== 'undefined' && typeof window.confirm === 'function'
+        ? window.confirm(`Desvincular "${asset.descricao || asset.id}" deste chamado?`)
+        : true;
+      if (!ok) return;
+      setAtivosBusy(true);
+      setAtivosError(null);
+      const r = await detachAssetFromTicket(id, {
+        ticketAssetId: asset.ticket_asset_id,
+        assetId: asset.id,
+      });
+      setAtivosBusy(false);
+      if (!r.ok) {
+        setAtivosError(r.error || 'erro_ao_desvincular');
+
+        return;
+      }
+      reload();
+    };
+
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <input
             type="search"
             value={ativosQ}
             onChange={(e) => setAtivosQ(e.target.value)}
-            placeholder="Pesquisar…"
+            placeholder="Filtrar CIs vinculados…"
             className="min-w-[12rem] flex-1 rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
           />
-          {boot?.classicEditUrl ? (
-            <a
-              href={boot.classicEditUrl}
-              className="inline-flex items-center gap-1 rounded-md bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
-            >
-              + Novo (clássico)
-            </a>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              setShowAddAsset((v) => !v);
+              setTimeout(() => pickerRef.current?.focus(), 50);
+            }}
+            disabled={ativosBusy}
+            className="inline-flex items-center gap-1 rounded-md bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+          >
+            + Vincular CI
+          </button>
+          <a
+            href={ativosCadastrarUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2.5 py-1.5 text-xs font-semibold text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-elevated)]"
+            title="Cadastrar novo ativo (CMDB)"
+          >
+            Cadastrar ativo
+          </a>
         </div>
+
+        {showAddAsset ? (
+          <div className="rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] p-2">
+            <div className="mb-2 flex items-center gap-2">
+              <input
+                ref={pickerRef}
+                type="search"
+                value={pickerQ}
+                onChange={(e) => setPickerQ(e.target.value)}
+                placeholder="Pesquisar CI deste cliente…"
+                className="min-w-[12rem] flex-1 rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowAddAsset(false)}
+                className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)] hover:bg-[var(--pgm-bg-raised)]"
+              >
+                Fechar
+              </button>
+            </div>
+            {filteredAvailable.length === 0 ? (
+              <p className="px-1 py-2 text-xs text-[var(--pgm-text-muted)]">
+                {available.length === 0
+                  ? 'Nenhum ativo cadastrado para este cliente. Use "Cadastrar ativo" para criar um novo.'
+                  : 'Nenhum CI corresponde à pesquisa.'}
+              </p>
+            ) : (
+              <ul className="max-h-56 divide-y divide-[var(--pgm-border-subtle)] overflow-y-auto">
+                {filteredAvailable.slice(0, 50).map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-2 px-1 py-1.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm text-[var(--pgm-text)]">{a.descricao || `CI #${a.id}`}</div>
+                      <div className="truncate text-[0.7rem] text-[var(--pgm-text-muted)]">
+                        {tipoLabel(a.tipo)} · {a.identificador || a.numero_serie || `#${a.id}`}
+                        {a.localizacao ? ` · ${a.localizacao}` : ''}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAttach(a.id)}
+                      disabled={ativosBusy}
+                      className="shrink-0 rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                    >
+                      Vincular
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : null}
+
+        {ativosError ? (
+          <p className="text-xs text-red-300">Erro: {String(ativosError)}</p>
+        ) : null}
+
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[40rem] text-left text-sm">
+          <table className="w-full min-w-[44rem] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--pgm-border)] text-xs uppercase text-[var(--pgm-text-muted)]">
-                <th className="py-2 pr-2">Nome</th>
+                <th className="py-2 pr-2">CI</th>
                 <th className="py-2 pr-2">Tipo</th>
                 <th className="py-2 pr-2">Série / ID</th>
                 <th className="py-2 pr-2">Estado</th>
                 <th className="py-2 pr-2">Local</th>
+                <th className="py-2 pr-2 text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((a) => (
-                <tr key={a.id} className="border-b border-[var(--pgm-border-subtle)]">
-                  <td className="py-2 pr-2">{a.descricao || '—'}</td>
-                  <td className="py-2 pr-2 text-[var(--pgm-text-muted)]">—</td>
-                  <td className="py-2 pr-2 font-mono text-xs">{a.identificador || a.id}</td>
-                  <td className="py-2 pr-2">{a.ativo ? 'Ativo' : 'Inativo'}</td>
-                  <td className="py-2 pr-2 text-[var(--pgm-text-muted)]">—</td>
+              {filteredLinked.map((a) => (
+                <tr key={a.ticket_asset_id || a.id} className="border-b border-[var(--pgm-border-subtle)]">
+                  <td className="py-2 pr-2">
+                    <div className="text-[var(--pgm-text)]">{a.descricao || `CI #${a.id}`}</div>
+                    {a.hostname || a.marca || a.modelo ? (
+                      <div className="text-[0.7rem] text-[var(--pgm-text-muted)]">
+                        {[a.marca, a.modelo].filter(Boolean).join(' ')}
+                        {a.hostname ? ` · ${a.hostname}` : ''}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td className="py-2 pr-2 text-[var(--pgm-text-muted)]">{tipoLabel(a.tipo)}</td>
+                  <td className="py-2 pr-2 font-mono text-xs">
+                    {a.numero_serie || a.identificador || a.id}
+                  </td>
+                  <td className="py-2 pr-2">{statusOpLabel(a.status_operacional)}</td>
+                  <td className="py-2 pr-2 text-[var(--pgm-text-muted)]">{a.localizacao || '—'}</td>
+                  <td className="py-2 pr-2 text-right">
+                    <a
+                      href={`/ativos/view/${encodeURIComponent(a.id)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mr-2 inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] px-2 py-1 text-[0.7rem] text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]"
+                    >
+                      Ficha
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleDetach(a)}
+                      disabled={ativosBusy}
+                      className="inline-flex items-center gap-1 rounded-md border border-red-500/40 bg-red-950/30 px-2 py-1 text-[0.7rem] font-semibold text-red-200 hover:bg-red-900/40 disabled:opacity-50"
+                    >
+                      Desvincular
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {rows.length === 0 && <p className="text-sm text-[var(--pgm-text-muted)]">Nenhum ativo.</p>}
+        {filteredLinked.length === 0 && (
+          <p className="text-sm text-[var(--pgm-text-muted)]">
+            Nenhum CI vinculado a este chamado. Use "+ Vincular CI" para associar um ativo.
+          </p>
+        )}
       </div>
     );
   }

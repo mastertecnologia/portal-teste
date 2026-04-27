@@ -133,7 +133,8 @@
 				</li>
 
 				<?php
-				$sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true);
+				$sgCadGrp = ($sg['clientes'] ?? true) || ($sg['produtos'] ?? true) || ($sg['ativos'] ?? true);
+				$ativosActive = (($this->request->getParam('controller') ?? '') === 'Ativos');
 				if ($sgCadGrp) :
 				?>
 				<li class="nav-section<?= $pgmSbOpenCadastros ? '' : ' collapsed' ?>" data-pgm-nav-section="cadastros">
@@ -148,6 +149,9 @@
 						<?php endif; ?>
 						<?php if (($sg['produtos'] ?? true)) : ?>
 						<?= $pgmSbLink('package', ' Produtos', ['controller' => 'Produtos', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($produtosActive ?? ''), '', 'Produtos') ?>
+						<?php endif; ?>
+						<?php if (($sg['ativos'] ?? true)) : ?>
+						<?= $pgmSbLink('cpu', ' Ativos', ['controller' => 'Ativos', 'action' => 'index'], ['data-turbo' => 'false'], $ativosActive, '', 'Ativos de TI') ?>
 						<?php endif; ?>
 					</div>
 				</li>

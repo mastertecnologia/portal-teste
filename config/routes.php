@@ -1806,7 +1806,7 @@ Router::scope("/", function ($routes) {
         [
             "pass" => ["file"],
             "file" =>
-                "(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons|pgm-estoque)\.css",
+                "(produtos-premium|clientes-premium|orcamentos-premium|pgm-action-buttons|pgm-estoque|ativos-premium)\.css",
         ],
     );
     // Notificações internas (equipe) — JSON. Prefixo /pgm-notifications/ evita URLs /portal/portal-notifications
@@ -1874,6 +1874,72 @@ Router::scope("/", function ($routes) {
             "action" => "savePreferences",
         ])
         ->setMethods(["POST"]);
+    // —— Ativos / CMDB ITSM ——
+    $routes->connect("/ativos", [
+        "controller" => "Ativos",
+        "action" => "index",
+    ]);
+    $routes->connect("/ativos/index", [
+        "controller" => "Ativos",
+        "action" => "index",
+    ]);
+    $routes->connect("/ativos/add", [
+        "controller" => "Ativos",
+        "action" => "add",
+    ]);
+    $routes->connect("/ativos/edit/*", [
+        "controller" => "Ativos",
+        "action" => "edit",
+    ]);
+    $routes->connect("/ativos/view/*", [
+        "controller" => "Ativos",
+        "action" => "view",
+    ]);
+    $routes
+        ->connect("/ativos/delete/*", [
+            "controller" => "Ativos",
+            "action" => "delete",
+        ])
+        ->setMethods(["POST", "DELETE"]);
+    $routes
+        ->connect("/ativos/inativar/*", [
+            "controller" => "Ativos",
+            "action" => "inativar",
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/ativos/reativar/*", [
+            "controller" => "Ativos",
+            "action" => "reativar",
+        ])
+        ->setMethods(["POST"]);
+    $routes->connect("/ativos/qr/*", [
+        "controller" => "Ativos",
+        "action" => "qr",
+    ]);
+    $routes
+        ->connect(
+            "/ativos/api/by-cliente/*",
+            ["controller" => "Ativos", "action" => "apiAssetsByCliente"],
+            ["pass" => ["idcliente"]],
+        )
+        ->setMethods(["GET"]);
+    // —— Ticket ⇄ Asset (pivot) ——
+    $routes
+        ->connect(
+            "/tickets/api-assets-attach/*",
+            ["controller" => "Tickets", "action" => "apiTicketAssetsAttach"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-assets-detach/*",
+            ["controller" => "Tickets", "action" => "apiTicketAssetsDetach"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+
     $routes->fallbacks(DashedRoute::class);
 });
 
