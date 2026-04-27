@@ -26,12 +26,12 @@ $qrPayload = $isEdit ? ($asset->codigo_qr ?: ('ATV-' . str_pad((string)$asset->i
 $qrUrl = $isEdit ? 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' . urlencode($qrPayload) : '';
 ?>
 <div class="col-md-12 p-0">
-<div class="atv-form-root">
+<div class="atv-root atv-form-root">
 	<?= $this->Form->create($asset, ['type' => 'post', 'novalidate' => true, 'autocomplete' => 'off']) ?>
 
-	<div class="atv-form-head">
-		<div class="atv-form-head-info">
-			<div class="atv-eyebrow">Cadastros &rsaquo; CMDB</div>
+	<div class="atv-topbar">
+		<div>
+			<div class="atv-eyebrow">Cadastros &rsaquo; Ativos &rsaquo; <?= $isEdit ? 'Editar' : 'Novo' ?></div>
 			<h1 class="atv-h1">
 				<?= $isEdit ? 'Editar Ativo' : 'Novo Ativo' ?>
 				<?php if ($isEdit) : ?><span class="atv-form-head-id"><?= h($idTag) ?></span><?php endif; ?>
@@ -39,14 +39,16 @@ $qrUrl = $isEdit ? 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&dat
 			<?php if ($isEdit && $asset->cliente) :
 				$cliNome = $asset->cliente->razaosocial ?: ($asset->cliente->nomefantasia ?: ($asset->cliente->nome ?: 'Cliente'));
 			?>
-				<div style="color:var(--atv-text2);font-size:13px;margin-top:6px;">
+				<div class="atv-form-cliente-line">
 					<i class="fas fa-building"></i> <?= h($cliNome) ?>
 				</div>
 			<?php endif; ?>
 		</div>
-
-		<div class="atv-form-head-actions">
-			<?php if ($isEdit) : ?>
+		<div class="atv-topbar-actions">
+			<?php if (!$isEdit) : ?>
+				<?= $this->Html->link('<i class="fas fa-arrow-left"></i> Voltar', ['action' => 'index'], ['class' => 'btn-atv-outline', 'escape' => false]) ?>
+			<?php else : ?>
+				<?= $this->Html->link('<i class="fas fa-eye"></i> Ver ficha', ['action' => 'view', $asset->id], ['class' => 'btn-atv-outline', 'escape' => false]) ?>
 				<?= $this->Html->link('<i class="fas fa-qrcode"></i> Etiqueta', ['action' => 'qr', $asset->id], ['class' => 'btn-atv-outline', 'escape' => false, 'target' => '_blank']) ?>
 				<?php if ($asset->ativo) :
 					echo $this->Form->postLink(
@@ -276,8 +278,20 @@ $qrUrl = $isEdit ? 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&dat
 	</div>
 
 	<div class="atv-savebar">
-		<?= $this->Html->link('Cancelar', ['action' => 'index'], ['class' => 'btn-atv-outline']) ?>
-		<button type="submit" class="btn-atv-new"><i class="fas fa-save"></i> <?= $isEdit ? 'Salvar alterações' : 'Cadastrar ativo' ?></button>
+		<div class="atv-savebar-left">
+			<i class="fas fa-shield-alt atv-savebar-icon" aria-hidden="true"></i>
+			<span>Campos marcados com <span class="atv-req">*</span> são obrigatórios.</span>
+		</div>
+		<div class="atv-savebar-right">
+			<?= $this->Html->link('<i class="fas fa-times"></i> Cancelar', ['action' => 'index'], ['class' => 'btn-atv-outline', 'escape' => false]) ?>
+			<button type="submit" class="btn-atv-new">
+				<?php if ($isEdit) : ?>
+					<i class="fas fa-save"></i> Salvar Alterações
+				<?php else : ?>
+					<i class="fas fa-check"></i> Cadastrar ativo
+				<?php endif; ?>
+			</button>
+		</div>
 	</div>
 
 	<?= $this->Form->end() ?>

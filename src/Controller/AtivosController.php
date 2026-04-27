@@ -34,6 +34,11 @@ class AtivosController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->set('title', 'Ativos de TI');
+		$shellAction = $this->request->getParam('action');
+		if (in_array($shellAction, ['index', 'add', 'edit', 'view'], true)) {
+			$this->set('hideLayoutPageTitle', true);
+			$this->set('bodyPageClass', 'atv-screen-active');
+		}
 		// Cliente portal só pode ver os próprios; equipe gerencia tudo
 		if ((int)$this->Auth->user('role') === C_RoleCliente && !in_array($this->request->getParam('action'), ['index', 'view'], true)) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação.');
