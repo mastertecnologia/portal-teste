@@ -142,6 +142,28 @@ export default function TechTicketEdit({ boot }) {
   useTicketCommentsPoll(id, setComentarios, setTicket, TICKET_COMMENTS_POLL_MS, socketOn);
   useTicketTimelinePoll(id, setTimelineEvents);
 
+  useEffect(() => {
+    const b = typeof window !== 'undefined' ? getBoot() : null;
+    // #region agent log
+    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'efc03d' },
+      body: JSON.stringify({
+        sessionId: 'efc03d',
+        hypothesisId: 'H1',
+        location: 'TechTicketEdit.jsx:boot',
+        message: 'ticket edit shell boot',
+        data: {
+          ticketId: id ?? null,
+          serviceDeskRealtimeSocket: b?.serviceDeskRealtimeSocket,
+          debugBuild: 'efc03d-v1',
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [id]);
+
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
 
   /** Todos os eventos técnicos (exceto comentários de chat). */
@@ -179,6 +201,24 @@ export default function TechTicketEdit({ boot }) {
       texto: t,
       quando: formatCommentPostTimestamp(),
     };
+    // #region agent log
+    fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'efc03d' },
+      body: JSON.stringify({
+        sessionId: 'efc03d',
+        hypothesisId: 'H5',
+        location: 'TechTicketEdit.jsx:optimistic',
+        message: 'optimistic row',
+        data: {
+          tmpId,
+          pendingField: optimistic.pending === true,
+          keys: Object.keys(optimistic),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     setComentarios((prev) => [...prev, optimistic]);
     setTexto('');
     comentarioEmProgressoRef.current = true;
