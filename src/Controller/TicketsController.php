@@ -160,6 +160,20 @@ class TicketsController extends AppController {
 	}
 	// #endregion
 
+	// #region agent log
+	protected function _agentDebugLog48685b(string $hypothesisId, string $location, string $message, array $data = []): void {
+		$line = json_encode([
+			'sessionId' => '48685b',
+			'hypothesisId' => $hypothesisId,
+			'location' => $location,
+			'message' => $message,
+			'data' => $data,
+			'timestamp' => (int) round(microtime(true) * 1000),
+		], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+		@file_put_contents(ROOT . DS . 'debug-48685b.log', $line, FILE_APPEND);
+	}
+	// #endregion
+
 	/** Mescla paths/layout do Service Desk quando ?sd=1 (edição/visualização a partir do /servicedesk). */
 	protected function _servicedeskBootMerge(): array {
 		if ($this->request->getQuery('sd') !== '1') {
@@ -4901,6 +4915,9 @@ class TicketsController extends AppController {
 	public function apiAnexoUpload($idticket = null) {
 		$this->request->allowMethod(['post']);
 		$this->autoRender = false;
+		// #region agent log
+		$this->_agentDebugLog48685b('H0', 'apiAnexoUpload:entry', 'enter', ['idticket' => $idticket]);
+		// #endregion
 		$ticket = $this->Tickets->find('all', ['contain' => ['Clientes', 'Users']])
 			->where(['tickets.id' => $idticket]);
 		$this->Abac->applyToQuery($ticket, 'Tickets', 'tickets');
@@ -4930,15 +4947,52 @@ class TicketsController extends AppController {
 		if (!$this->Ticketsanexos->save($anexo)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
 		}
-		$this->criarMov((int)$idticket, 0, C_TicketAnexoAdicionado, $file['name']);
-		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoUpload', (int)$anexo->id);
+		// #region agent log
+		$this->_agentDebugLog48685b('H0', 'apiAnexoUpload:afterSave', 'save_ok', ['anexoId' => (int)$anexo->id]);
+		// #endregion
+		try {
+			// #region agent log
+			$this->_agentDebugLog48685b('H4', 'apiAnexoUpload:beforeCriarMov', 'check_const', [
+				'C_TicketAnexoAdicionado_defined' => defined('C_TicketAnexoAdicionado'),
+				'C_TicketAnexoAdicionado_value' => defined('C_TicketAnexoAdicionado') ? C_TicketAnexoAdicionado : null,
+			]);
+			// #endregion
+			$this->criarMov((int)$idticket, 0, C_TicketAnexoAdicionado, $file['name']);
+			// #region agent log
+			$this->_agentDebugLog48685b('H1', 'apiAnexoUpload:afterCriarMov', 'ok');
+			// #endregion
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoUpload', (int)$anexo->id);
+			// #region agent log
+			$this->_agentDebugLog48685b('H2', 'apiAnexoUpload:afterAtividadesRegistrar', 'ok');
+			// #endregion
+			$row = $this->_apiAnexoRow($anexo);
+			// #region agent log
+			$this->_agentDebugLog48685b('H3', 'apiAnexoUpload:afterApiAnexoRow', 'ok', ['row' => $row]);
+			// #endregion
 
-		return $this->jsonResponse(['ok' => true, 'anexo' => $this->_apiAnexoRow($anexo)]);
+			return $this->jsonResponse(['ok' => true, 'anexo' => $row]);
+		} catch (\Throwable $e) {
+			// #region agent log
+			$this->_agentDebugLog48685b('Hx', 'apiAnexoUpload:exception', 'caught', [
+				'class' => get_class($e),
+				'message' => $e->getMessage(),
+				'file' => $e->getFile(),
+				'line' => $e->getLine(),
+				'trace0' => explode("\n", $e->getTraceAsString())[0] ?? '',
+				'trace1' => explode("\n", $e->getTraceAsString())[1] ?? '',
+			]);
+			// #endregion
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'post_save_exception', 'detail' => $e->getMessage()], 500);
+		}
 	}
 
 	public function apiAnexoDelete($idanexo = null) {
 		$this->request->allowMethod(['post']);
 		$this->autoRender = false;
+		// #region agent log
+		$this->_agentDebugLog48685b('H0', 'apiAnexoDelete:entry', 'enter', ['idanexo' => $idanexo]);
+		// #endregion
 		try {
 			$anexo = $this->Ticketsanexos->get($idanexo);
 		} catch (\Exception $e) {
@@ -4962,17 +5016,50 @@ class TicketsController extends AppController {
 		if (!$this->Ticketsanexos->delete($anexo)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
 		}
-		$this->criarMov($idticket, 0, C_TicketAnexoDeletado, $anexo->arquivo);
-		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoDelete', (int)$idanexo);
-		$qAnx = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket]);
-		$this->Abac->applyToQuery($qAnx, 'Ticketsanexos', 'Ticketsanexos');
-		$anexosRows = $qAnx->toArray();
-		$list = [];
-		foreach ($anexosRows as $row) {
-			$list[] = $this->_apiAnexoRow($row);
-		}
+		// #region agent log
+		$this->_agentDebugLog48685b('H0', 'apiAnexoDelete:afterDelete', 'delete_ok', ['idticket' => $idticket]);
+		// #endregion
+		try {
+			// #region agent log
+			$this->_agentDebugLog48685b('H4', 'apiAnexoDelete:beforeCriarMov', 'check_const', [
+				'C_TicketAnexoDeletado_defined' => defined('C_TicketAnexoDeletado'),
+				'C_TicketAnexoDeletado_value' => defined('C_TicketAnexoDeletado') ? C_TicketAnexoDeletado : null,
+			]);
+			// #endregion
+			$this->criarMov($idticket, 0, C_TicketAnexoDeletado, $anexo->arquivo);
+			// #region agent log
+			$this->_agentDebugLog48685b('H1', 'apiAnexoDelete:afterCriarMov', 'ok');
+			// #endregion
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiAnexoDelete', (int)$idanexo);
+			// #region agent log
+			$this->_agentDebugLog48685b('H2', 'apiAnexoDelete:afterAtividadesRegistrar', 'ok');
+			// #endregion
+			$qAnx = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket]);
+			$this->Abac->applyToQuery($qAnx, 'Ticketsanexos', 'Ticketsanexos');
+			$anexosRows = $qAnx->toArray();
+			$list = [];
+			foreach ($anexosRows as $row) {
+				$list[] = $this->_apiAnexoRow($row);
+			}
+			// #region agent log
+			$this->_agentDebugLog48685b('H3', 'apiAnexoDelete:afterApiAnexoRow', 'ok', ['count' => count($list)]);
+			// #endregion
 
-		return $this->jsonResponse(['ok' => true, 'anexos' => $list]);
+			return $this->jsonResponse(['ok' => true, 'anexos' => $list]);
+		} catch (\Throwable $e) {
+			// #region agent log
+			$this->_agentDebugLog48685b('Hx', 'apiAnexoDelete:exception', 'caught', [
+				'class' => get_class($e),
+				'message' => $e->getMessage(),
+				'file' => $e->getFile(),
+				'line' => $e->getLine(),
+				'trace0' => explode("\n", $e->getTraceAsString())[0] ?? '',
+				'trace1' => explode("\n", $e->getTraceAsString())[1] ?? '',
+			]);
+			// #endregion
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'post_delete_exception', 'detail' => $e->getMessage()], 500);
+		}
 	}
 
 	public function apiView($idticket = null) {
