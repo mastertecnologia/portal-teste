@@ -5774,6 +5774,17 @@ class TicketsController extends AppController {
 		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
+		// Sem servidor Node (socket.io) e proxy de /socket.io: desative para evitar
+		// tentativas wss:// na mesma origem; o chat usa só polling (ChatCliente).
+		$rt = strtolower(trim((string)env('PGM_SERVICE_DESK_REALTIME', '1')));
+		if (in_array($rt, ['0', 'false', 'off', 'no'], true)) {
+			return $this->jsonResponse([
+				'ok' => true,
+				'url' => null,
+				'token' => null,
+				'expires' => null,
+			]);
+		}
 		$exp = time() + 3600;
 		$payload = base64_encode((string)json_encode([
 			'uid' => (int)$this->Auth->user('id'),
