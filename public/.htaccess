@@ -12,7 +12,9 @@
     # estático (404 se não existir), sem passar pelo front controller.
     # Prefixo /portal/ opcional (APP_BASE alinhado com config e Alias em produção).
     # =============================================================================
+    # Rotas virtuais Cake (PgmAssetsController): URLs com .js/.css no path; não servir como estático.
     RewriteCond %{REQUEST_URI} \.(?:css|js|mjs|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot)$ [NC]
+    RewriteCond %{REQUEST_URI} !^(/portal)?/(pgm-assets|ogm-assets)/ [NC]
     RewriteRule ^ - [L]
 
     RewriteCond %{REQUEST_URI} ^(/portal)?/(dist|assets)(/|$) [NC]
