@@ -548,9 +548,9 @@ export async function uploadTicketAnexo(ticketId, file) {
   let json = null;
   try { json = await r.json(); } catch { /* corpo não-JSON (ex. erro fatal do PHP) */ }
   if (!r.ok) {
-    return { ok: false, error: (json && json.error) || r.statusText || 'erro' };
+    return { ok: false, error: (json && json.error) || r.statusText || 'erro', detail: json && json.detail };
   }
-  if (!json || !json.ok) return { ok: false, error: (json && json.error) || 'erro' };
+  if (!json || !json.ok) return { ok: false, error: (json && json.error) || 'erro', detail: json && json.detail };
   return { ok: true, anexo: json.anexo };
 }
 
@@ -571,9 +571,9 @@ export async function deleteTicketAnexo(anexoId) {
   let json = null;
   try { json = await r.json(); } catch { /* corpo não-JSON */ }
   if (!r.ok) {
-    return { ok: false, error: (json && json.error) || r.statusText || 'erro' };
+    return { ok: false, error: (json && json.error) || r.statusText || 'erro', detail: json && json.detail };
   }
-  if (!json || !json.ok) return { ok: false, error: (json && json.error) || 'erro' };
+  if (!json || !json.ok) return { ok: false, error: (json && json.error) || 'erro', detail: json && json.detail };
   return { ok: true, anexos: json.anexos };
 }
 

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { deleteTicketAnexo, getBoot, uploadTicketAnexo, USE_MOCK } from '../lib/api';
 
 /** Traduz códigos do controller para algo legível ao usuário. */
-function describeAnexoError(code) {
+function describeAnexoError(code, detail) {
   const map = {
     no_file: 'Nenhum arquivo recebido. Tente novamente — verifique também o tamanho (post_max_size/upload_max_filesize do PHP).',
     upload_failed: 'Não foi possível salvar o arquivo no servidor (permissão da pasta webroot/arquivos/tickets ou disco cheio).',
@@ -12,9 +12,12 @@ function describeAnexoError(code) {
     unlink_failed: 'Não foi possível apagar o arquivo do disco.',
     delete_failed: 'Falha ao excluir o registro do anexo.',
     api_anexo_disabled: 'API de anexos indisponível neste contexto.',
+    post_save_exception: 'Arquivo salvo, mas o registro pós-save falhou.',
+    post_delete_exception: 'Anexo removido, mas a finalização falhou.',
   };
   if (!code) return null;
-  return map[code] || code;
+  const base = map[code] || code;
+  return detail ? `${base} — ${detail}` : base;
 }
 
 /**
@@ -38,7 +41,7 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
     if (res.ok && res.anexo) {
       onAnexosChange([...(anexos || []), res.anexo]);
     } else {
-      setErr(describeAnexoError(res.error) || 'Falha no envio do arquivo.');
+      setErr(describeAnexoError(res.error, res.detail) || 'Falha no envio do arquivo.');
     }
   }
 
@@ -55,7 +58,7 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
         onAnexosChange((anexos || []).filter((a) => String(a.id) !== String(id)));
       }
     } else {
-      setErr(describeAnexoError(res.error) || 'Falha ao remover.');
+      setErr(describeAnexoError(res.error, res.detail) || 'Falha ao remover.');
     }
   }
 
