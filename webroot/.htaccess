@@ -4,6 +4,7 @@
     RewriteEngine On
 
     RewriteCond %{REQUEST_URI} \.(?:css|js|mjs|map|png|jpe?g|gif|svg|ico|woff2?|ttf|eot)$ [NC]
+    RewriteCond %{REQUEST_URI} !^(/portal)?/(pgm-assets|ogm-assets)/ [NC]
     RewriteRule ^ - [L]
 
     RewriteCond %{REQUEST_URI} ^(/portal)?/(dist|assets)(/|$) [NC]
