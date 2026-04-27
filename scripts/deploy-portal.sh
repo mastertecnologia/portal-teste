@@ -35,6 +35,17 @@ fi
 mkdir -p /var/www/.npm
 chown -R "$DEPLOY_USER:$DEPLOY_USER" /var/www/.npm
 
+# Vite esvazia webroot/tickets-app; postbuild remove public/tickets-app — ambos precisam ser graváveis por DEPLOY_USER *antes* do npm.
+chown_tickets_bundle_paths() {
+	echo "==> Permissões: webroot|public tickets-app, dashboard-react/node_modules, /var/www/.npm"
+	mkdir -p "$REPO_ROOT/public/tickets-app" "$REPO_ROOT/webroot/tickets-app"
+	chown -R "$DEPLOY_USER:$DEPLOY_USER" "$REPO_ROOT/public/tickets-app" "$REPO_ROOT/webroot/tickets-app"
+	if [[ -d "$REPO_ROOT/dashboard-react/node_modules" ]]; then
+		chown -R "$DEPLOY_USER:$DEPLOY_USER" "$REPO_ROOT/dashboard-react/node_modules"
+	fi
+	chown -R "$DEPLOY_USER:$DEPLOY_USER" /var/www/.npm
+}
+
 git_sync() {
 	if [[ "${GIT_RESET:-0}" == "1" ]]; then
 		echo "==> Git: fetch + reset --hard origin/main (GIT_RESET=1)"
@@ -60,12 +71,7 @@ npm_tickets() {
 }
 
 fix_perms() {
-	echo "==> Permissões: public/tickets-app, dashboard-react/node_modules, /var/www/.npm"
-	chown -R "$DEPLOY_USER:$DEPLOY_USER" "$REPO_ROOT/public/tickets-app"
-	if [[ -d "$REPO_ROOT/dashboard-react/node_modules" ]]; then
-		chown -R "$DEPLOY_USER:$DEPLOY_USER" "$REPO_ROOT/dashboard-react/node_modules"
-	fi
-	chown -R "$DEPLOY_USER:$DEPLOY_USER" /var/www/.npm
+	chown_tickets_bundle_paths
 }
 
 # Pastas de PDFs / assinados / documentos avulsos (Contract.pdf.storage_path em produção)
@@ -79,6 +85,7 @@ ensure_contract_upload_dirs() {
 
 git_sync
 composer_install
+chown_tickets_bundle_paths
 npm_tickets
 ensure_contract_upload_dirs
 fix_perms
