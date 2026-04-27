@@ -1,5 +1,5 @@
 import { stripHtml } from '../lib/text';
-import { badgeClass, priorityType } from '../lib/ticketUi';
+import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
 
 function row(label, value) {
   if (value === null || value === undefined || String(value).trim() === '') {
@@ -19,6 +19,30 @@ function rowAlways(label, value) {
     <div className="flex flex-col gap-0.5 border-b border-[var(--pgm-border-subtle)] py-2 last:border-0">
       <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">{label}</span>
       <span className="text-[0.8rem] text-[var(--pgm-text)]">{v}</span>
+    </div>
+  );
+}
+
+/** Estado com as mesmas cores do badge do título do ticket (`statusType` + `badgeClass`). */
+function rowEstado(label, status, { embedded, servicedesk }) {
+  const raw = status === null || status === undefined || String(status).trim() === '' ? '' : stripHtml(String(status)).trim();
+  if (!raw) {
+    return rowAlways(label, '—');
+  }
+  return (
+    <div className="flex flex-col gap-0.5 border-b border-[var(--pgm-border-subtle)] py-2 last:border-0">
+      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">{label}</span>
+      <span>
+        <span
+          className={`inline-flex rounded-full font-semibold ${embedded ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'} ${badgeClass(
+            statusType(raw),
+            embedded,
+            servicedesk,
+          )}`}
+        >
+          {raw}
+        </span>
+      </span>
     </div>
   );
 }
@@ -158,7 +182,7 @@ export function TicketResumoPanel({ ticket }) {
 }
 
 /** Bloco “Informações do ticket” (coluna direita). */
-export default function TicketInfoPanel({ ticket }) {
+export default function TicketInfoPanel({ ticket, embedded = false, servicedesk = false }) {
   if (!ticket) return null;
   const assunto = stripHtml(ticket.assunto);
   const aberto = ticket.abertoEm || ticket.atualizado;
@@ -176,7 +200,7 @@ export default function TicketInfoPanel({ ticket }) {
         {rowAlways('Responsável solicitante', ticket.responsavel)}
         {row('Categoria / assunto', assunto)}
         {rowPrioridade('Prioridade', ticket.prioridade)}
-        {row('Estado', ticket.status)}
+        {rowEstado('Estado', ticket.status, { embedded, servicedesk })}
         {row('Aberto em', aberto)}
         {row('Última atualização', atual)}
       </div>

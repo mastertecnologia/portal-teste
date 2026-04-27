@@ -679,7 +679,11 @@ export default function TechTicketEdit({ boot }) {
         {anexosBlock}
       </div>
       <div className="flex min-h-0 min-w-0 flex-col gap-3 self-start lg:col-span-4">
-        <TicketInfoPanel ticket={ticket} />
+        <TicketInfoPanel
+          ticket={ticket}
+          embedded={embedded}
+          servicedesk={Boolean(boot?.servicedesk)}
+        />
       </div>
     </div>
   );
