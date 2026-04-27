@@ -205,7 +205,8 @@ class TicketsController extends AppController {
 		$mov->sitnova = $sitnova;
 		$mov->idusuario = $this->Auth->user('id');
 		$mov->idempresa = $this->Auth->user('idempresa');
-		$mov->datetime = date('d/m/Y H:i:s', time());
+		// PostgreSQL recusa "d/m/Y H:i:s" no timestamp (SQLSTATE[22008]); usar ISO 8601.
+		$mov->datetime = date('Y-m-d H:i:s', time());
 
 		if (!empty($observacao)) $mov->observacao = $observacao;
 
