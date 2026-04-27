@@ -76,6 +76,13 @@ function tipoLabel(t) {
   return map[v] || (t ? String(t) : '—');
 }
 
+/** Caminhos absolutos na raiz do host quebram com APP em subpasta (ex. /portal/). Alinha a tickets API (`boot.webroot`). */
+function pathWithWebroot(boot, path) {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  const b = boot?.webroot != null ? String(boot.webroot).replace(/\/$/, '') : '';
+  return b ? `${b}${p}` : p;
+}
+
 export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelineEvents = null }) {
   const id = ticket?.id;
   const [data, setData] = useState(null);
@@ -162,8 +169,8 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         })
       : available;
     const ativosCadastrarUrl = clienteId
-      ? `/ativos/add?idcliente=${encodeURIComponent(clienteId)}`
-      : '/ativos/add';
+      ? pathWithWebroot(boot, `/ativos/add?idcliente=${encodeURIComponent(clienteId)}`)
+      : pathWithWebroot(boot, '/ativos/add');
 
     const reload = async () => {
       const r = await fetchServicedeskData(id, 'ativos');
@@ -326,7 +333,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   <td className="py-2 pr-2 text-[var(--pgm-text-muted)]">{a.localizacao || '—'}</td>
                   <td className="py-2 pr-2 text-right">
                     <a
-                      href={`/ativos/view/${encodeURIComponent(a.id)}`}
+                      href={pathWithWebroot(boot, `/ativos/view/${encodeURIComponent(a.id)}`)}
                       target="_blank"
                       rel="noreferrer"
                       className="mr-2 inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] px-2 py-1 text-[0.7rem] text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]"
