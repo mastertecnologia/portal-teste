@@ -5790,7 +5790,7 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		// Sem servidor Node (socket.io) e proxy de /socket.io: desative para evitar
-		// tentativas wss:// na mesma origem; o chat usa só polling (ChatCliente).
+		// tentativas wss:// na mesma origem; sem realtime, o cliente usa só polling.
 		if (!$this->_isServiceDeskRealtimeEnabled()) {
 			return $this->jsonResponse([
 				'ok' => true,

@@ -248,7 +248,7 @@ export default function ClientTicketDetail({ boot }) {
         {ticket.responsavel && ticket.responsavel !== '—' ? ` · ${ticket.responsavel}` : ''}
       </p>
       <p className="tickets-react-ticket-strip-hint mt-2 border-t border-[var(--pgm-border)] pt-2 text-xs text-[var(--pgm-text-muted)]">
-        Conversa e status atualizam automaticamente (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
+        Chat e status atualizam automaticamente (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
       </p>
     </div>
   ) : (
@@ -326,7 +326,7 @@ export default function ClientTicketDetail({ boot }) {
   const chatCard = (
     <div className={chatShell}>
       <div className={embedded ? 'shrink-0 border-b border-[var(--pgm-border)] px-4 py-2' : 'shrink-0 border-b border-slate-100 px-4 py-2'}>
-        <h2 className={embedded ? 'text-sm font-bold text-[var(--pgm-text)]' : 'text-sm font-bold text-slate-900'}>Conversa</h2>
+        <h2 className={embedded ? 'text-sm font-bold text-[var(--pgm-text)]' : 'text-sm font-bold text-slate-900'}>Chat</h2>
         <p className={embedded ? 'text-xs text-[var(--pgm-text-muted)]' : 'text-xs text-slate-500'}>
           {meuNome
             ? `Você está como ${meuNome}. Cada mensagem fica gravada no chamado e no histórico (movimentações).`

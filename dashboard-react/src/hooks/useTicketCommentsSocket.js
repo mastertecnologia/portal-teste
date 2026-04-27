@@ -3,7 +3,7 @@ import { fetchRealtimeToken, getBoot } from '../lib/api';
 import { commentSortKey } from '../lib/text';
 
 /**
- * Socket.io para comentários da conversa (ticketcomentarios), espelhando o relay de ChatCliente.
+ * Socket.io para comentários do ticket (ticketcomentarios).
  * Quando `serviceDeskRealtimeSocket` está ativo no boot, recebe `ticket_comment` na sala do ticket.
  */
 export function useTicketCommentsSocket(ticketId, setComentarios) {
