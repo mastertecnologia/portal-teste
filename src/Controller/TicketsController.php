@@ -4983,8 +4983,9 @@ class TicketsController extends AppController {
 				'trace1' => explode("\n", $e->getTraceAsString())[1] ?? '',
 			]);
 			// #endregion
+			$detail = sprintf('%s @ %s:%d — %s', get_class($e), basename($e->getFile()), $e->getLine(), $e->getMessage());
 
-			return $this->jsonResponse(['ok' => false, 'error' => 'post_save_exception', 'detail' => $e->getMessage()], 500);
+			return $this->jsonResponse(['ok' => false, 'error' => 'post_save_exception', 'detail' => $detail], 500);
 		}
 	}
 
@@ -5058,8 +5059,9 @@ class TicketsController extends AppController {
 				'trace1' => explode("\n", $e->getTraceAsString())[1] ?? '',
 			]);
 			// #endregion
+			$detail = sprintf('%s @ %s:%d — %s', get_class($e), basename($e->getFile()), $e->getLine(), $e->getMessage());
 
-			return $this->jsonResponse(['ok' => false, 'error' => 'post_delete_exception', 'detail' => $e->getMessage()], 500);
+			return $this->jsonResponse(['ok' => false, 'error' => 'post_delete_exception', 'detail' => $detail], 500);
 		}
 	}
 
