@@ -35,9 +35,8 @@ class AtivosController extends AppController {
 		parent::beforeFilter($event);
 		$this->set('title', 'Ativos de TI');
 		$shellAction = $this->request->getParam('action');
-		if (in_array($shellAction, ['index', 'add', 'edit', 'view'], true)) {
+		if (in_array($shellAction, ['index', 'view', 'add', 'edit'], true)) {
 			$this->set('hideLayoutPageTitle', true);
-			$this->set('bodyPageClass', 'atv-screen-active');
 		}
 		// Cliente portal só pode ver os próprios; equipe gerencia tudo
 		if ((int)$this->Auth->user('role') === C_RoleCliente && !in_array($this->request->getParam('action'), ['index', 'view'], true)) {
@@ -163,6 +162,7 @@ class AtivosController extends AppController {
 			],
 		]);
 		$this->set('title', 'Ativos de TI / CMDB');
+		$this->set('topbarCurrentLabel', __('Ativos de TI / CMDB'));
 	}
 
 	public function view($id = null) {
@@ -182,6 +182,7 @@ class AtivosController extends AppController {
 			'tickets' => $tickets,
 		]);
 		$this->set('title', 'Ativo: ' . ($asset->descricao ?: ('#' . $asset->id)));
+		$this->set('topbarCurrentLabel', $asset->descricao ?: ('#' . $asset->id));
 	}
 
 	public function add() {
@@ -199,6 +200,7 @@ class AtivosController extends AppController {
 		if ($this->request->is('post')) {
 			$data = (array)$this->request->getData();
 			$data['idempresa'] = $idempresa;
+			$this->_normalizeAssetBrDates($data);
 			$asset = $this->Assets->patchEntity($asset, $data);
 			if ($this->Assets->save($asset)) {
 				if (!empty($this->Atividades) && $this->Auth->user('id')) {
@@ -224,6 +226,7 @@ class AtivosController extends AppController {
 			'propriedadeOpts' => $this->_propriedadeOptions(),
 		]);
 		$this->set('title', 'Cadastrar Ativo');
+		$this->set('topbarCurrentLabel', __('Cadastrar ativo'));
 	}
 
 	public function edit($id = null) {
@@ -236,6 +239,7 @@ class AtivosController extends AppController {
 		if ($this->request->is(['patch', 'post', 'put'])) {
 			$data = (array)$this->request->getData();
 			unset($data['idempresa']);
+			$this->_normalizeAssetBrDates($data);
 			$asset = $this->Assets->patchEntity($asset, $data);
 			if ($this->Assets->save($asset)) {
 				if (!empty($this->Atividades) && $this->Auth->user('id')) {
@@ -270,6 +274,40 @@ class AtivosController extends AppController {
 			'ticketsHist' => $ticketsHist,
 		]);
 		$this->set('title', 'Editar Ativo: ' . ($asset->descricao ?: ('#' . $asset->id)));
+		$this->set('topbarCurrentLabel', __('Editar ativo'));
+	}
+
+	/**
+	 * Converte datas do formulário (dd/mm/aaaa) para Y-m-d antes do patchEntity.
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	protected function _normalizeAssetBrDates(array &$data): void {
+		foreach (['dt_aquisicao', 'dt_instalacao', 'dt_garantia_fim'] as $field) {
+			if (!array_key_exists($field, $data)) {
+				continue;
+			}
+			$v = $data[$field];
+			if ($v === null || $v === '') {
+				$data[$field] = null;
+				continue;
+			}
+			if (!is_scalar($v)) {
+				continue;
+			}
+			$v = trim((string)$v);
+			if ($v === '') {
+				$data[$field] = null;
+				continue;
+			}
+			if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
+				continue;
+			}
+			$dt = \DateTimeImmutable::createFromFormat('d/m/Y', $v);
+			if ($dt !== false) {
+				$data[$field] = $dt->format('Y-m-d');
+			}
+		}
 	}
 
 	public function delete($id = null) {

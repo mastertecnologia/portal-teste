@@ -847,3 +847,141 @@ body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
   border-color: var(--orc-border);
   border-top-color: var(--orc-teal);
 }
+
+/* Ativos (add/edit) — mesmo layout unificado: área das abas + mini QR na ficha */
+.cli-form-root.cli-layout-unificado .atv-cli-tab-content {
+  padding-top: 4px;
+}
+.cli-form-root.cli-layout-unificado .atv-cli-qr-thumb img {
+  border-radius: 8px;
+  border: 1px solid var(--orc-border);
+  vertical-align: middle;
+}
+
+/* Ativos — listagem + ficha (tema claro, reutiliza tokens --orc-*) */
+.cli-root.cli-layout-unificado .atv-cli-list-head,
+.cli-form-root.cli-layout-unificado .atv-cli-list-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.cli-root.cli-layout-unificado .atv-cli-eyebrow,
+.cli-form-root.cli-layout-unificado .atv-cli-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orc-teal-dark);
+  margin-bottom: 4px;
+}
+.cli-root.cli-layout-unificado .atv-cli-h1,
+.cli-form-root.cli-layout-unificado .atv-cli-h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--orc-text);
+}
+.cli-root.cli-layout-unificado .atv-cli-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+  width: 100%;
+}
+.cli-layout-unificado .cli-kpi.atv-cli-kpi--static {
+  cursor: default;
+}
+.cli-layout-unificado .cli-kpi.atv-cli-kpi--static:hover {
+  border-left-color: transparent;
+  box-shadow: var(--orc-shadow-sm);
+}
+.cli-root.cli-layout-unificado .atv-cli-kpi-val--amber {
+  color: #c9a227 !important;
+}
+.cli-root.cli-layout-unificado .atv-cli-kpi-val--red {
+  color: var(--orc-red) !important;
+}
+.cli-root.cli-layout-unificado .atv-cli-filter-form {
+  border-bottom: 1px solid var(--orc-border);
+  background: var(--orc-bg-card);
+}
+.cli-root.cli-layout-unificado .atv-cli-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 14px;
+  padding: 14px 18px;
+  align-items: end;
+}
+.cli-root.cli-layout-unificado .atv-cli-filter-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--orc-text-muted);
+  margin-bottom: 4px;
+}
+.cli-root.cli-layout-unificado .atv-cli-filter-grid .form-control {
+  border-radius: var(--orc-radius-sm) !important;
+}
+.cli-root.cli-layout-unificado .atv-cli-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--orc-border);
+  background: var(--orc-bg-surface);
+}
+.cli-root.cli-layout-unificado .atv-cli-table-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--orc-text);
+}
+
+.cli-root.cli-layout-unificado .atv-cli-dl,
+.cli-form-root.cli-layout-unificado .atv-cli-dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 20px;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .cli-root.cli-layout-unificado .atv-cli-dl,
+  .cli-form-root.cli-layout-unificado .atv-cli-dl {
+    grid-template-columns: 1fr;
+  }
+}
+.cli-root.cli-layout-unificado .atv-cli-dl dt,
+.cli-form-root.cli-layout-unificado .atv-cli-dl dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--orc-text-muted);
+  margin: 0;
+  padding-top: 4px;
+}
+.cli-root.cli-layout-unificado .atv-cli-dl dd,
+.cli-form-root.cli-layout-unificado .atv-cli-dl dd {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--orc-text);
+  word-break: break-word;
+}
+.cli-form-root.cli-layout-unificado .atv-cli-notes {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--orc-text-muted);
+  white-space: pre-wrap;
+}
+.cli-form-root.cli-layout-unificado .atv-cli-qr-side img {
+  max-width: 160px;
+  border-radius: var(--orc-radius-sm);
+  border: 1px solid var(--orc-border);
+}
