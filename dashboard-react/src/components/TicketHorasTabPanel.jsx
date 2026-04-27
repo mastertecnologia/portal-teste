@@ -9,6 +9,25 @@ function parseEventDate(ev) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/**
+ * Chave YYYY-MM-DD alinhada ao <input type="date">.
+ * Usa a data do lançamento (workDateLabel = dia em ticketshoras), não TicketEvents.created
+ * (que pode ser outro dia após backfill ou fuso).
+ */
+function worklogDayKeyForFilter(ev) {
+  const label = String(ev?.workDateLabel || '').trim();
+  const br = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(label);
+  if (br) {
+    const day = String(br[1]).padStart(2, '0');
+    const month = String(br[2]).padStart(2, '0');
+    const year = br[3];
+    return `${year}-${month}-${day}`;
+  }
+  const d = parseEventDate(ev);
+  if (!d) return null;
+  return d.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
 function worklogSeconds(ev) {
   if ((ev.type || '').toLowerCase() !== 'worklog') return 0;
   const sec =
@@ -67,10 +86,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
     return eventosHoras.filter((ev) => {
       if (filterTec && (ev.autor || '').trim() !== filterTec) return false;
       if (filterDay) {
-        const d = parseEventDate(ev);
-        if (!d) return false;
-        const key = d.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        if (key !== filterDay) return false;
+        const key = worklogDayKeyForFilter(ev);
+        if (key == null || key !== filterDay) return false;
       }
       return true;
     });
