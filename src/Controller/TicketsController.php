@@ -95,6 +95,34 @@ class TicketsController extends AppController {
 		return Router::url($parts);
 	}
 
+	/**
+	 * URL do socket.io para o browser. Se env aponta a loopback, substitui pelo host
+	 * do pedido (nunca enviar 127.0.0.1/localhost no JSON — o cliente resolve isso
+	 * no PC do utilizador). Esquema segue a página (HTTPS) ou X-Forwarded-Proto.
+	 */
+	protected function _publicServiceDeskSocketUrl(): string {
+		$url = (string)env('PGM_SERVICE_DESK_SOCKET', 'http://127.0.0.1:3331');
+		$parts = parse_url($url);
+		if (empty($parts['host'])) {
+			return $url;
+		}
+		$localHosts = ['127.0.0.1', 'localhost', '::1'];
+		if (!in_array($parts['host'], $localHosts, true)) {
+			return $url;
+		}
+		$port = isset($parts['port']) ? (int)$parts['port'] : 3331;
+		$xfProto = strtolower((string)$this->request->getHeaderLine('X-Forwarded-Proto'));
+		$secure = $this->request->is('ssl') || $xfProto === 'https';
+		$scheme = $secure ? 'https' : ($parts['scheme'] ?? 'http');
+		$host = (string)$this->request->getUri()->getHost();
+		$omittedPort = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
+		if ($omittedPort) {
+			return $scheme . '://' . $host;
+		}
+
+		return $scheme . '://' . $host . ':' . $port;
+	}
+
 	// #region agent log
 	/** @internal debug session d63dd9 — não remover antes de verificação pós-correção */
 	protected function _agentDebugLog(string $hypothesisId, string $location, string $message, array $data = []): void {
@@ -5751,7 +5779,7 @@ class TicketsController extends AppController {
 		], JSON_UNESCAPED_UNICODE));
 		$salt = (string)Configure::read('Security.salt');
 		$sig = hash_hmac('sha256', $payload, $salt);
-		$url = (string)env('PGM_SERVICE_DESK_SOCKET', 'http://127.0.0.1:3331');
+		$url = $this->_publicServiceDeskSocketUrl();
 
 		return $this->jsonResponse([
 			'ok' => true,
