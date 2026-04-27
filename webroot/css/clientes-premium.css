@@ -663,7 +663,11 @@
   outline: none !important;
 }
 .cli-form-root .form-control::placeholder { color: var(--cli-dim) !important; }
-.cli-form-root select.form-control option { background: #161b22; color: var(--cli-text); }
+/* Só tema escuro: em .cli-layout-unificado o layout-unificado.css define fundo claro */
+.cli-form-root:not(.cli-layout-unificado) select.form-control option {
+  background: #161b22;
+  color: var(--cli-text);
+}
 
 /* Native select (ex.: empresa dominante): seta SVG sem repetir em mosaico (mock clientes-lista-layout-unificado) */
 .cli-form-root select.form-control:not(.selectpicker) {

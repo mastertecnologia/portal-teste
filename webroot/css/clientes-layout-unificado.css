@@ -436,6 +436,17 @@
   background-position: right 10px center !important;
   background-size: 11px !important;
 }
+/* <option> nativa: premium escuro não aplica aqui; garantir lista clara (Win/Chrome) */
+.cli-form-root.cli-layout-unificado select.form-control option,
+.cli-form-root.cli-layout-unificado select.form-control optgroup {
+  background-color: var(--orc-bg-card) !important;
+  color: var(--orc-text) !important;
+}
+.cli-root.cli-layout-unificado select.form-control option,
+.cli-root.cli-layout-unificado select.form-control optgroup {
+  background-color: var(--orc-bg-card) !important;
+  color: var(--orc-text) !important;
+}
 .cli-form-root.cli-layout-unificado .bootstrap-select > .dropdown-toggle,
 .cli-form-root.cli-layout-unificado .bootstrap-select .dropdown-toggle.btn-light,
 .cli-form-root.cli-layout-unificado .bootstrap-select .dropdown-toggle.btn-default {
@@ -924,8 +935,22 @@ body:not(.layout-no-topbar) .bs-container .bs-searchbox input {
   color: var(--orc-text-muted);
   margin-bottom: 4px;
 }
-.cli-root.cli-layout-unificado .atv-cli-filter-grid .form-control {
+.cli-root.cli-layout-unificado .atv-cli-filter-grid .form-control,
+.cli-root.cli-layout-unificado .atv-cli-filter-grid select.form-control {
+  background-color: var(--orc-bg-card) !important;
+  border: 1px solid var(--orc-border) !important;
+  color: var(--orc-text) !important;
+  -webkit-text-fill-color: var(--orc-text) !important;
+  color-scheme: light !important;
   border-radius: var(--orc-radius-sm) !important;
+}
+.cli-root.cli-layout-unificado .atv-cli-filter-grid select.form-control:not(.selectpicker) {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9890' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 11px !important;
+  padding-right: 30px !important;
 }
 .cli-root.cli-layout-unificado .atv-cli-table-toolbar {
   display: flex;
