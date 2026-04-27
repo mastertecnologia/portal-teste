@@ -2,12 +2,14 @@
 namespace App\Service\Clientes;
 
 use App\Model\Table\ClientesTable;
-use Cake\Database\Driver\Postgres;
 use Cake\Log\Log;
 
 /**
  * Correlaciona vários `clientes.id` na mesma empresa que representam o mesmo cliente operacional
- * (CNPJ/CPF, public_code, nome/razão normalizado). PostgreSQL: consulta com regexp_replace; demais drivers: só o id de referência.
+ * (CNPJ/CPF só dígitos ou removeCaracteres legado, public_code, nome/razão normalizado).
+ *
+ * Implementação em PHP sobre os registos da empresa — funciona em PostgreSQL, MySQL/MariaDB, etc.,
+ * sem depender de `instanceof` do driver nem de SQL específico.
  */
 class ClienteCorrelatedIds {
 
@@ -30,6 +32,113 @@ class ClienteCorrelatedIds {
 	}
 
 	/**
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowCnpjDigits($row): string {
+		$v = is_array($row) ? ($row['cnpj'] ?? '') : ($row->get('cnpj') ?? '');
+
+		return preg_replace('/\D/', '', (string)$v);
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowCpfDigits($row): string {
+		$v = is_array($row) ? ($row['cpf'] ?? '') : ($row->get('cpf') ?? '');
+
+		return preg_replace('/\D/', '', (string)$v);
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowPublicCode($row): string {
+		$v = is_array($row) ? ($row['public_code'] ?? '') : ($row->get('public_code') ?? '');
+
+		return trim((string)$v);
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowId($row): int {
+		$id = is_array($row) ? ($row['id'] ?? 0) : ($row->get('id') ?? 0);
+
+		return (int)$id;
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowTipo($row): int {
+		$t = is_array($row) ? ($row['tipo'] ?? 0) : ($row->get('tipo') ?? 0);
+
+		return (int)$t;
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowNomeKeys($row): array {
+		$rz = is_array($row) ? ($row['razaosocial'] ?? '') : ($row->get('razaosocial') ?? '');
+		$nm = is_array($row) ? ($row['nome'] ?? '') : ($row->get('nome') ?? '');
+
+		return [self::normalizeNomeKey($rz), self::normalizeNomeKey($nm)];
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface $ref
+	 * @param \Cake\Datasource\EntityInterface|array<string, mixed> $row
+	 */
+	protected static function _rowMatchesRef($ref, $row): bool {
+		$rid = (int)$ref->get('id');
+		if (self::_rowId($row) === $rid) {
+			return true;
+		}
+		$refPub = trim((string)($ref->get('public_code') ?? ''));
+		if ($refPub !== '' && self::_rowPublicCode($row) === $refPub) {
+			return true;
+		}
+		$refCnpjD = preg_replace('/\D/', '', (string)($ref->get('cnpj') ?? ''));
+		if (strlen($refCnpjD) >= 11 && self::_rowCnpjDigits($row) === $refCnpjD) {
+			return true;
+		}
+		if (function_exists('removeCaracteres')) {
+			$rc = removeCaracteres((string)($ref->get('cnpj') ?? ''));
+			$rowCnpj = is_array($row) ? ($row['cnpj'] ?? '') : ($row->get('cnpj') ?? '');
+			$rcc = removeCaracteres((string)$rowCnpj);
+			if ($rc !== '' && strlen($rc) >= 11 && $rcc === $rc) {
+				return true;
+			}
+		}
+		$refCpfD = preg_replace('/\D/', '', (string)($ref->get('cpf') ?? ''));
+		if (strlen($refCpfD) >= 9 && self::_rowCpfDigits($row) === $refCpfD) {
+			return true;
+		}
+		if (function_exists('removeCaracteres')) {
+			$rp = removeCaracteres((string)($ref->get('cpf') ?? ''));
+			$rowCpf = is_array($row) ? ($row['cpf'] ?? '') : ($row->get('cpf') ?? '');
+			$rcp = removeCaracteres((string)$rowCpf);
+			if ($rp !== '' && strlen($rp) >= 9 && $rcp === $rp) {
+				return true;
+			}
+		}
+		$tipoPj = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
+		$isPj = (int)($ref->get('tipo') ?? 0) === $tipoPj;
+		$nomeRaw = $isPj ? (string)($ref->get('razaosocial') ?? '') : (string)($ref->get('nome') ?? '');
+		$nomeKey = self::normalizeNomeKey($nomeRaw);
+		$nomeLen = function_exists('mb_strlen') ? mb_strlen($nomeKey, 'UTF-8') : strlen($nomeKey);
+		if ($nomeKey !== '' && $nomeLen >= 4) {
+			[$krz, $knm] = self::_rowNomeKeys($row);
+			if ($krz === $nomeKey || $knm === $nomeKey) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * @return int[]
 	 */
 	public static function forEmpresaCliente(ClientesTable $Clientes, int $idempresa, int $idclienteRef): array {
@@ -38,58 +147,40 @@ class ClienteCorrelatedIds {
 		if ($idempresa <= 0 || $idclienteRef <= 0) {
 			return $idclienteRef > 0 ? [$idclienteRef] : [];
 		}
+		$select = ['id', 'cnpj', 'cpf', 'razaosocial', 'nome', 'tipo'];
+		if (in_array('public_code', $Clientes->getSchema()->columns(), true)) {
+			$select[] = 'public_code';
+		}
 		$cli = $Clientes->find()
-			->select(['id', 'cnpj', 'cpf', 'public_code', 'razaosocial', 'nome', 'tipo', 'idempresa'])
+			->select($select)
 			->where(['Clientes.id' => $idclienteRef, 'Clientes.idempresa' => $idempresa])
 			->first();
 		if ($cli === null) {
 			return [$idclienteRef];
 		}
-		$driver = $Clientes->getConnection()->getDriver();
-		if (!($driver instanceof Postgres)) {
-			return [(int)$cli->id];
-		}
-		$cnpjD = preg_replace('/\D/', '', (string)($cli->cnpj ?? ''));
-		$cpfD = preg_replace('/\D/', '', (string)($cli->cpf ?? ''));
-		$pub = trim((string)($cli->public_code ?? ''));
-		$tipoPj = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
-		$isPj = (int)($cli->tipo ?? 0) === $tipoPj;
-		$nomeRaw = $isPj ? (string)($cli->razaosocial ?? '') : (string)($cli->nome ?? '');
-		$nomeKey = self::normalizeNomeKey($nomeRaw);
-
-		$conds = ['id = :cid'];
-		$params = ['eid' => $idempresa, 'cid' => (int)$cli->id];
-		if ($pub !== '') {
-			$conds[] = 'public_code = :pub';
-			$params['pub'] = $pub;
-		}
-		if (strlen($cnpjD) >= 11) {
-			$conds[] = "regexp_replace(coalesce(cnpj, ''), '[^0-9]', '', 'g') = :cnpjd";
-			$params['cnpjd'] = $cnpjD;
-		}
-		if (strlen($cpfD) >= 9) {
-			$conds[] = "regexp_replace(coalesce(cpf, ''), '[^0-9]', '', 'g') = :cpfd";
-			$params['cpfd'] = $cpfD;
-		}
-		$nomeLen = function_exists('mb_strlen') ? mb_strlen($nomeKey, 'UTF-8') : strlen($nomeKey);
-		if ($nomeKey !== '' && $nomeLen >= 4) {
-			$conds[] = "(lower(trim(regexp_replace(coalesce(razaosocial, ''), E'\\s+', ' ', 'g'))) = :nkey OR lower(trim(regexp_replace(coalesce(nome, ''), E'\\s+', ' ', 'g'))) = :nkey)";
-			$params['nkey'] = $nomeKey;
-		}
-		$sql = 'SELECT id FROM clientes WHERE idempresa = :eid AND (' . implode(' OR ', $conds) . ')';
-		try {
-			$stmt = $Clientes->getConnection()->execute($sql, $params);
-			$ids = [];
-			while (($row = $stmt->fetch('assoc')) !== false) {
-				$ids[] = (int)($row['id'] ?? 0);
+		$ids = [];
+		$scanned = 0;
+		$warnThreshold = 12000;
+		foreach (
+			$Clientes->find()
+				->select($select)
+				->where(['Clientes.idempresa' => $idempresa])
+				->all() as $row
+		) {
+			$scanned++;
+			if ($scanned === $warnThreshold) {
+				Log::warning(sprintf(
+					'ClienteCorrelatedIds: empresa %d tem ≥%d clientes; correlacionar ativos pode ficar lenta.',
+					$idempresa,
+					$warnThreshold
+				));
 			}
-			$ids = array_values(array_unique(array_filter($ids, static fn($v) => $v > 0)));
-
-			return !empty($ids) ? $ids : [(int)$cli->id];
-		} catch (\Throwable $e) {
-			Log::warning('ClienteCorrelatedIds: ' . $e->getMessage());
-
-			return [(int)$cli->id];
+			if (self::_rowMatchesRef($cli, $row)) {
+				$ids[] = self::_rowId($row);
+			}
 		}
+		$ids = array_values(array_unique(array_filter($ids, static fn($v) => $v > 0)));
+
+		return !empty($ids) ? $ids : [(int)$cli->get('id')];
 	}
 }
