@@ -15,6 +15,7 @@ class ContratosHora extends Entity {
 		'minutos_consumidos' => true,
 		'segundos_consumidos' => true,
 		'horas_contratadas' => true,
+		'horas_mensais' => true,
 		'horas_consumidas' => true,
 		'horas_utilizadas' => true,
 		'saldo' => true,

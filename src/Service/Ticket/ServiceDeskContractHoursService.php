@@ -128,4 +128,121 @@ class ServiceDeskContractHoursService {
 
 		return '—';
 	}
+
+	/**
+	 * Rótulo do plano para o resumo (ex.: «10 horas mensais», «1 hora mensal»).
+	 */
+	protected static function formatPlanoMensalLabel(float $horasMensais): string {
+		$h = (float)$horasMensais;
+		if ($h <= 0) {
+			return '';
+		}
+		if (abs($h - round($h)) < 0.0001) {
+			$n = (int)round($h);
+			if ($n === 1) {
+				return '1 hora mensal';
+			}
+
+			return $n . ' horas mensais';
+		}
+
+		$t = rtrim(rtrim(number_format($h, 2, ',', '.'), '0'), ',');
+
+		return $t . ' horas mensais';
+	}
+
+	/**
+	 * Formata horas decimais como HH:MM:SS (alinhado ao exibido na ficha de contrato).
+	 */
+	public static function hoursToHms(?float $h): ?string {
+		if ($h === null) {
+			return null;
+		}
+		$h = max(0.0, (float)$h);
+		$sec = (int)round($h * 3600.0);
+		$s = $sec % 60;
+		$m = intdiv($sec, 60) % 60;
+		$hr = intdiv($sec, 3600);
+
+		return sprintf('%02d:%02d:%02d', $hr, $m, $s);
+	}
+
+	/**
+	 * @param object      $c    linha contratos_horas
+	 * @param array<string, mixed> $snap retorno de getSnapshot()
+	 * @return array<string, mixed>
+	 */
+	public static function enrichContractHoursForApi($c, array $snap): array {
+		$snap['hasContract'] = true;
+		$id = (int)$c->get('id');
+		$idcli = (int)$c->get('idcliente');
+		$snap['contractId'] = $id;
+		$snap['contractCode'] = 'CT-' . $idcli . '-' . str_pad((string)$id, 3, '0', STR_PAD_LEFT);
+		$snap['horasMensais'] = null;
+		$hmRaw = $c->get('horas_mensais');
+		if ($hmRaw !== null && $hmRaw !== '') {
+			$hm = is_string($hmRaw) ? (float)str_replace(',', '.', $hmRaw) : (float)$hmRaw;
+			if ($hm > 0) {
+				$snap['horasMensais'] = $hm;
+				$snap['plano'] = self::formatPlanoMensalLabel($hm);
+			}
+		}
+		if (!isset($snap['plano']) || $snap['plano'] === null) {
+			$th = $snap['totalHours'];
+			if ($th !== null && $th > 0) {
+				$n = (int)round($th);
+				$snap['plano'] = $n . ' hora' . ($n === 1 ? '' : 's') . ' contratada' . ($n === 1 ? '' : 's');
+			} else {
+				$mt = $c->get('minutos_contratados');
+				if ($mt !== null && $mt !== '' && (int)$mt > 0) {
+					$nh = (int)round((int)$mt / 60.0);
+					$nh = max(1, $nh);
+					$snap['plano'] = $nh . ' hora' . ($nh === 1 ? '' : 's') . ' contratada' . ($nh === 1 ? '' : 's');
+				} else {
+					$snap['plano'] = null;
+				}
+			}
+		}
+		$snap['vigenciaTexto'] = null;
+		$di = $c->get('data_inicio');
+		$df = $c->get('data_fim');
+		$fmtD = function ($d): ?string {
+			if ($d === null || $d === '') {
+				return null;
+			}
+			if ($d instanceof \DateTimeInterface) {
+				return $d->format('d/m/Y');
+			}
+			$t = strtotime((string)$d);
+
+			return $t ? date('d/m/Y', $t) : null;
+		};
+		$sdi = $fmtD($di);
+		$sdf = $fmtD($df);
+		if ($sdi !== null && $sdf !== null) {
+			$snap['vigenciaTexto'] = $sdi . ' à ' . $sdf;
+		} elseif ($sdi !== null) {
+			$snap['vigenciaTexto'] = 'A partir de ' . $sdi;
+		} elseif ($sdf !== null) {
+			$snap['vigenciaTexto'] = 'Até ' . $sdf;
+		}
+		$snap['horasContratadasHms'] = self::hoursToHms($snap['totalHours'] ?? null);
+		$snap['horasUtilizadasHms'] = self::hoursToHms($snap['usedHours'] ?? null);
+		$snap['saldoHorasHms'] = self::hoursToHms($snap['balanceHours'] ?? null);
+		$snap['alertaAviso'] = null;
+		$snap['previsaoEsgotamento'] = null;
+		$tot = $snap['totalHours'];
+		$saldo = $snap['balanceHours'];
+		if ($tot !== null && $tot > 0 && $saldo !== null && $saldo > 0) {
+			$ratio = (float)$saldo / (float)$tot;
+			if ($ratio <= 0.25) {
+				$sh = self::hoursToHms($saldo);
+				if ($sh !== null) {
+					$snap['alertaAviso'] = 'Atenção: Restam apenas ' . $sh . ' de horas no período.';
+				}
+			}
+		}
+
+		return $snap;
+	}
 }

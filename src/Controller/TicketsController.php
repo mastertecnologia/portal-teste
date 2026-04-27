@@ -3996,12 +3996,30 @@ class TicketsController extends AppController {
 			'percentUsed' => null,
 			'mode' => null,
 			'label' => '—',
+			'hasContract' => false,
 		];
+		$chEntity = null;
 		try {
-			$chContr = ServiceDeskContractHoursService::getSnapshot(
-				ServiceDeskContractHoursService::findContractForClient((int)$ticket->idcliente, (int)$this->Auth->user('idempresa'))
-			);
+			$chEntity = ServiceDeskContractHoursService::findContractForClient((int)$ticket->idcliente, (int)$this->Auth->user('idempresa'));
+			if ($chEntity) {
+				$chContr = ServiceDeskContractHoursService::enrichContractHoursForApi(
+					$chEntity,
+					ServiceDeskContractHoursService::getSnapshot($chEntity)
+				);
+			}
 		} catch (\Throwable $e) {
+		}
+
+		$urls = [
+			'indexCliente' => $this->_ticketUrl(['action' => 'indexcliente']),
+			'indexTecnico' => $role === 0 ? $this->_ticketUrl(['action' => 'index']) : null,
+			'operacional' => $role === 0 ? $this->_ticketUrl(['action' => 'operacional']) : null,
+			'edit' => $this->_ticketUrl(['action' => 'edit', $idticket]),
+			'cancelar' => $this->_ticketUrl(['action' => 'cancelar', $idticket]),
+			'imprimir' => $this->_ticketUrl(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
+		];
+		if ($chEntity) {
+			$urls['contratoHoras'] = Router::url(['controller' => 'ContratosHoras', 'action' => 'edit', (int)$chEntity->get('id')]);
 		}
 
 		return [
@@ -4024,14 +4042,7 @@ class TicketsController extends AppController {
 			'contractHours' => $chContr,
 			'comentarios' => $comentarios,
 			'anexos' => $anexos,
-			'urls' => [
-				'indexCliente' => $this->_ticketUrl(['action' => 'indexcliente']),
-				'indexTecnico' => $role === 0 ? $this->_ticketUrl(['action' => 'index']) : null,
-				'operacional' => $role === 0 ? $this->_ticketUrl(['action' => 'operacional']) : null,
-				'edit' => $this->_ticketUrl(['action' => 'edit', $idticket]),
-				'cancelar' => $this->_ticketUrl(['action' => 'cancelar', $idticket]),
-				'imprimir' => $this->_ticketUrl(['action' => 'imprimir', $idticket, '?' => ['autoprint' => 1]]),
-			],
+			'urls' => $urls,
 			'situacao' => (int)$ticket->situacao,
 			'flags' => [
 				'role' => $role,

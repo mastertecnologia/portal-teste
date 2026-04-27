@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS contratos_horas (
 	data_inicio DATE NULL,
 	data_fim DATE NULL,
 	horas_contratadas NUMERIC(14,4) NULL,
+	horas_mensais NUMERIC(14,4) NULL,
 	saldo_horas NUMERIC(14,4) NULL,
 	horas_utilizadas NUMERIC(14,4) NOT NULL DEFAULT 0,
 	ativo BOOLEAN NOT NULL DEFAULT TRUE,

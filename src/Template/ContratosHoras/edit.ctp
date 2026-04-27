@@ -49,6 +49,19 @@
 							<?= $this->Form->control('ativo', ['type' => 'checkbox', 'label' => 'Ativo']) ?>
 						</div>
 					</div>
+					<div class="cli-fg cli-fg-1 mt-2">
+						<div class="cli-fgroup">
+							<label for="horas-mensais">Horas mensais (plano)</label>
+							<?= $this->Form->control('horas_mensais', [
+								'class' => 'form-control',
+								'label' => false,
+								'step' => '0.01',
+								'id' => 'horas-mensais',
+								'placeholder' => 'Ex.: 10',
+							]) ?>
+							<small class="form-text text-muted">Opcional. Se preenchido, o resumo do contrato no Service Desk exibe «N horas mensais» em vez de apenas o total contratado.</small>
+						</div>
+					</div>
 				</div>
 			</div>
 
