@@ -1,6 +1,22 @@
 import { useRef, useState } from 'react';
 import { deleteTicketAnexo, getBoot, uploadTicketAnexo, USE_MOCK } from '../lib/api';
 
+/** Traduz códigos do controller para algo legível ao usuário. */
+function describeAnexoError(code) {
+  const map = {
+    no_file: 'Nenhum arquivo recebido. Tente novamente — verifique também o tamanho (post_max_size/upload_max_filesize do PHP).',
+    upload_failed: 'Não foi possível salvar o arquivo no servidor (permissão da pasta webroot/arquivos/tickets ou disco cheio).',
+    save_failed: 'O arquivo foi enviado, mas o registro no banco falhou.',
+    not_found: 'Ticket ou anexo não encontrado.',
+    forbidden: 'Sem permissão para anexar neste ticket.',
+    unlink_failed: 'Não foi possível apagar o arquivo do disco.',
+    delete_failed: 'Falha ao excluir o registro do anexo.',
+    api_anexo_disabled: 'API de anexos indisponível neste contexto.',
+  };
+  if (!code) return null;
+  return map[code] || code;
+}
+
 /**
  * Lista anexos com envio, download, abrir no navegador e exclusão (API CakePHP).
  */
@@ -22,7 +38,7 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
     if (res.ok && res.anexo) {
       onAnexosChange([...(anexos || []), res.anexo]);
     } else {
-      setErr(res.error || 'Falha no envio do arquivo.');
+      setErr(describeAnexoError(res.error) || 'Falha no envio do arquivo.');
     }
   }
 
@@ -39,7 +55,7 @@ export default function TicketAnexosPanel({ ticketId, anexos, onAnexosChange, di
         onAnexosChange((anexos || []).filter((a) => String(a.id) !== String(id)));
       }
     } else {
-      setErr(res.error || 'Falha ao remover.');
+      setErr(describeAnexoError(res.error) || 'Falha ao remover.');
     }
   }
 

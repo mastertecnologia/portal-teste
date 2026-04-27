@@ -543,9 +543,14 @@ export async function uploadTicketAnexo(ticketId, file) {
     headers: { Accept: 'application/json' },
     body: fd,
   });
-  if (!r.ok) return { ok: false, error: r.statusText };
-  const json = await r.json();
-  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  // Lê o corpo JSON mesmo em status >=400; o controller responde JSON com `error` em
+  // todos os caminhos de falha (no_file, upload_failed, save_failed, forbidden, …).
+  let json = null;
+  try { json = await r.json(); } catch { /* corpo não-JSON (ex. erro fatal do PHP) */ }
+  if (!r.ok) {
+    return { ok: false, error: (json && json.error) || r.statusText || 'erro' };
+  }
+  if (!json || !json.ok) return { ok: false, error: (json && json.error) || 'erro' };
   return { ok: true, anexo: json.anexo };
 }
 
@@ -563,9 +568,12 @@ export async function deleteTicketAnexo(anexoId) {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
   });
-  if (!r.ok) return { ok: false, error: r.statusText };
-  const json = await r.json();
-  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  let json = null;
+  try { json = await r.json(); } catch { /* corpo não-JSON */ }
+  if (!r.ok) {
+    return { ok: false, error: (json && json.error) || r.statusText || 'erro' };
+  }
+  if (!json || !json.ok) return { ok: false, error: (json && json.error) || 'erro' };
   return { ok: true, anexos: json.anexos };
 }
 
