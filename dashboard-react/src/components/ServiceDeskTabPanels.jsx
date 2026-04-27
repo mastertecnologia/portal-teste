@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { fetchServicedeskData, fetchTicketTimeline } from '../lib/api';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchServicedeskData } from '../lib/api';
 import TicketTimeline from './TicketTimeline.jsx';
 
 const BR = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -31,14 +31,6 @@ function contractPercentRing(percent) {
   );
 }
 
-function eventDateKey(ev) {
-  const raw = ev.created;
-  if (!raw || typeof raw !== 'string') {
-    return '';
-  }
-  return raw.length >= 10 ? raw.slice(0, 10) : '';
-}
-
 function fmtHms(sec) {
   const s = Math.max(0, Number(sec) || 0);
   const h = Math.floor(s / 3600);
@@ -47,15 +39,18 @@ function fmtHms(sec) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
 
-export default function ServiceDeskTabPanels({ ticket, tab, boot = null }) {
+export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelineEvents = null }) {
   const id = ticket?.id;
   const [data, setData] = useState(null);
-  const [histEvents, setHistEvents] = useState([]);
-  const [filtro, setFiltro] = useState('todos');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [ativosQ, setAtivosQ] = useState('');
   const [err, setErr] = useState(null);
+
+  const historicoList = useMemo(() => {
+    if (!Array.isArray(timelineEvents)) {
+      return [];
+    }
+    return timelineEvents.filter((e) => String(e.type || '').toLowerCase() !== 'signature');
+  }, [timelineEvents]);
 
   useEffect(() => {
     let c = false;
@@ -63,15 +58,6 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null }) {
       setErr(null);
       setData(null);
       if (tab === 'historico') {
-        const tr = await fetchTicketTimeline(id);
-        if (!c) {
-          if (tr.ok) {
-            setHistEvents(tr.events || []);
-          } else {
-            setErr(tr.error);
-            setHistEvents([]);
-          }
-        }
         return;
       }
       const r = await fetchServicedeskData(id, tab);
@@ -89,62 +75,16 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null }) {
   }, [id, tab]);
 
   if (tab === 'historico') {
-    const ev = histEvents.filter((e) => {
-      if (filtro !== 'todos' && String(e.type || '').toLowerCase() !== filtro) {
-        return false;
-      }
-      const dk = eventDateKey(e);
-      if (dateFrom && dk && dk < dateFrom) {
-        return false;
-      }
-      if (dateTo && dk && dk > dateTo) {
-        return false;
-      }
-      return true;
-    });
     return (
-      <div className="space-y-3 px-1">
-        <div className="flex flex-wrap items-end gap-2">
-          <div>
-            <label className="mb-0.5 block text-xs text-[var(--pgm-text-muted)]">De</label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-sm text-[var(--pgm-text)]"
-            />
-          </div>
-          <div>
-            <label className="mb-0.5 block text-xs text-[var(--pgm-text-muted)]">Até</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-sm text-[var(--pgm-text)]"
-            />
-          </div>
-          <div>
-            <label className="mb-0.5 block text-xs text-[var(--pgm-text-muted)]">Tipo</label>
-            <select
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-sm text-[var(--pgm-text)]"
-            >
-              <option value="todos">Todos</option>
-              <option value="comment">Comentário</option>
-              <option value="audit">Auditoria</option>
-              <option value="worklog">Horas</option>
-              <option value="alert">Alerta</option>
-              <option value="product_usage">Peça / produto</option>
-              <option value="signature">Assinatura</option>
-            </select>
-          </div>
-        </div>
-        {err && <p className="text-sm text-red-300">{err}</p>}
-        {ev.length === 0 ? (
-          <p className="text-sm text-[var(--pgm-text-muted)]">Nenhum evento.</p>
+      <div className="min-h-0 space-y-3 px-1">
+        <p className="text-[0.7rem] leading-snug text-[var(--pgm-text-muted)]">
+          Histórico do chamado: comentários, situação, peças, horas e restantes eventos. Use o filtro por tipo. Assinaturas
+          na OS/impressão.
+        </p>
+        {historicoList.length === 0 ? (
+          <p className="text-sm text-[var(--pgm-text-muted)]">Nenhum evento ainda.</p>
         ) : (
-          <TicketTimeline events={ev} />
+          <TicketTimeline events={historicoList} layout="timeline" />
         )}
       </div>
     );

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { getBoot } from '../lib/api';
+import { stripHtml } from '../lib/text';
 
 function formatSeconds(sec) {
   const s = Math.max(0, parseInt(String(sec), 10) || 0);
@@ -90,6 +91,9 @@ function iconToneForType(t) {
   if (x === 'comment') {
     return 'bg-blue-500';
   }
+  if (x === 'worklog') {
+    return 'bg-emerald-500';
+  }
   return 'bg-[var(--pgm-text-muted,#6b7280)]';
 }
 
@@ -107,7 +111,18 @@ function titleSubtitleForEvent(ev) {
     return { title: 'Auditoria', subtitle: ev.autor ? `${ev.autor} · ${ev.description || '—'}` : (ev.description || '—') };
   }
   if (t === 'worklog') {
-    return { title: 'Horas', subtitle: ev.description || '—' };
+    const secH =
+      ev.secondsSpent != null && ev.secondsSpent !== ''
+        ? ev.secondsSpent
+        : ev.seconds_spent != null && ev.seconds_spent !== ''
+          ? ev.seconds_spent
+          : 0;
+    const dataHoraLine = [ev.workDateLabel, ev.workTimeRangeLabel].filter(Boolean).join(' · ');
+    const when = [dataHoraLine, formatSeconds(secH || 0), ev.billingType].filter(Boolean).join(' · ');
+    const sub = [when, ev.autor && `Técnico: ${ev.autor}`, ev.description && ev.description !== 'Registro de horas (legado)' ? ev.description : null]
+      .filter(Boolean)
+      .join(' · ');
+    return { title: 'Lançamento de horas', subtitle: sub || '—' };
   }
   if (t === 'alert') {
     return { title: 'Alerta', subtitle: ev.description || '—' };
@@ -128,7 +143,11 @@ function titleSubtitleForEvent(ev) {
     return { title: 'Evidência / registo técnico', subtitle: ev.description || '—' };
   }
   if (t === 'comment') {
-    return { title: 'Comentário', subtitle: (ev.autor ? `${ev.autor}: ` : '') + (ev.description || '—') };
+    const body = stripHtml(String(ev.description || '')).trim() || '—';
+    return {
+      title: 'Comentário',
+      subtitle: `${ev.autor || '—'} adicionou um comentário.\n${body}`,
+    };
   }
   return { title: `[${t || 'evento'}]`, subtitle: ev.description || '—' };
 }
@@ -351,7 +370,7 @@ function TimelineHistoryLayout({ events, className }) {
                   return (
                     <li
                       key={String(ev.id)}
-                      className="grid grid-cols-[auto_auto_1fr] gap-2.5 text-[0.8125rem] sm:grid-cols-[2.5rem_1.5rem_1fr] sm:gap-3"
+                      className="grid grid-cols-[auto_auto_1fr] gap-2.5 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.08))] pb-3 text-[0.8125rem] last:border-b-0 last:pb-0 sm:grid-cols-[2.5rem_1.5rem_1fr] sm:gap-3"
                     >
                       <time className="w-10 pt-0.5 text-right text-[0.75rem] tabular-nums text-[var(--pgm-text-muted,#9aa0a8)] sm:w-12">
                         {timeStr}
