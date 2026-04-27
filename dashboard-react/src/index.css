@@ -279,3 +279,20 @@ body.sd-body .tickets-react-shell > #tickets-react-root.tickets-react-host {
   color: var(--pgm-text-muted, #9aa0a8) !important;
   border-top-color: var(--pgm-border, #3d4554) !important;
 }
+
+/* Guia «Chat com Cliente»: pulso curto no badge quando chegam mensagens novas não lidas (TechTicketEdit). */
+@keyframes pgm-sd-chat-tab-badge-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(29, 158, 117, 0.55);
+  }
+  45% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 6px rgba(29, 158, 117, 0);
+  }
+}
+
+.pgm-sd-chat-tab-badge--pulse {
+  animation: pgm-sd-chat-tab-badge-pulse 0.85s ease-out 2;
+}

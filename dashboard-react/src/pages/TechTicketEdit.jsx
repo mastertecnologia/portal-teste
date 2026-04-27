@@ -50,6 +50,16 @@ function minutosHumanosCurto(totalMin) {
   return `${h} h ${r} min`;
 }
 
+/** Maior id numérico de comentário (ignora optimistic `pending-*`). */
+function maxNumericCommentId(comentarios) {
+  let m = 0;
+  for (const c of comentarios || []) {
+    const n = Number(c.id);
+    if (Number.isFinite(n) && n > m) m = n;
+  }
+  return m;
+}
+
 /** `false` = não exibir links para o formulário legado (timer / anexos clássicos). O `boot` PHP continua enviando as URLs. */
 const SHOW_LEGACY_TICKET_UI = false;
 
@@ -114,6 +124,19 @@ export default function TechTicketEdit({ boot }) {
   /** Incrementado a cada `onSnapshot` do timer — evita que um GET /api-view tardio sobrescreva sessão ativa. */
   const horasTecnicasMutationsRef = useRef(0);
   const comentarioEmProgressoRef = useRef(false);
+  /** Primeira sincronização de comentários após carregar o ticket (marca histórico como lido para o badge). */
+  const commentsHydratedForIdRef = useRef(null);
+  const [chatReadWatermark, setChatReadWatermark] = useState(0);
+  const [chatBaselineReady, setChatBaselineReady] = useState(false);
+  const [chatBadgePulse, setChatBadgePulse] = useState(false);
+  const prevChatUnreadRef = useRef(0);
+
+  useEffect(() => {
+    commentsHydratedForIdRef.current = null;
+    setChatBaselineReady(false);
+    setChatReadWatermark(0);
+    prevChatUnreadRef.current = 0;
+  }, [id]);
 
   useEffect(() => {
     const h = () =>
@@ -179,6 +202,47 @@ export default function TechTicketEdit({ boot }) {
   useTicketTimelinePoll(id, setTimelineEvents);
 
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
+
+  useEffect(() => {
+    if (ticket == null || Number(ticket.id) !== Number(id)) return;
+    if (commentsHydratedForIdRef.current === id) return;
+    commentsHydratedForIdRef.current = id;
+    setChatReadWatermark(maxNumericCommentId(comentarios));
+    setChatBaselineReady(true);
+  }, [id, ticket?.id, comentarios]);
+
+  useEffect(() => {
+    if (mainSdTab !== 'chat' || !chatBaselineReady) return;
+    const maxId = maxNumericCommentId(comentarios);
+    setChatReadWatermark((w) => (maxId > w ? maxId : w));
+  }, [mainSdTab, comentarios, chatBaselineReady]);
+
+  const chatUnreadCount = useMemo(() => {
+    if (!chatBaselineReady) return 0;
+    let n = 0;
+    for (const c of comentarios) {
+      if (c.papel !== 'cliente') continue;
+      const cid = Number(c.id);
+      if (!Number.isFinite(cid)) continue;
+      if (cid > chatReadWatermark) n += 1;
+    }
+    return n;
+  }, [comentarios, chatReadWatermark, chatBaselineReady]);
+
+  useEffect(() => {
+    if (mainSdTab === 'chat') {
+      prevChatUnreadRef.current = chatUnreadCount;
+      setChatBadgePulse(false);
+      return;
+    }
+    if (chatUnreadCount > prevChatUnreadRef.current && chatUnreadCount > 0) {
+      setChatBadgePulse(true);
+      const t = window.setTimeout(() => setChatBadgePulse(false), 1900);
+      prevChatUnreadRef.current = chatUnreadCount;
+      return () => window.clearTimeout(t);
+    }
+    prevChatUnreadRef.current = chatUnreadCount;
+  }, [chatUnreadCount, mainSdTab]);
 
   /** Total em minutos para o rótulo da guia «Horas»: API (Horas cadastradas) ou soma dos worklogs na timeline. */
   const horasTabBadgeMinutos = useMemo(() => {
@@ -361,7 +425,6 @@ export default function TechTicketEdit({ boot }) {
     }
   }
 
-  const chatTabCount = comentarios.length;
   const sdTabBar = (
     <div className="mb-2 flex flex-wrap gap-1 border-b border-[var(--pgm-border-subtle)] px-1 pb-2">
       {mainTabKeys.map((t) => (
@@ -377,9 +440,13 @@ export default function TechTicketEdit({ boot }) {
         >
           <SdTabIcon tabId={t} />
           {tabLabels[t]}
-          {t === 'chat' && chatTabCount > 0 ? (
-            <span className="ml-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#1d9e75] px-1.5 text-[0.65rem] font-bold text-white tabular-nums">
-              {chatTabCount > 99 ? '99+' : chatTabCount}
+          {t === 'chat' && chatUnreadCount > 0 && mainSdTab !== 'chat' ? (
+            <span
+              className={`ml-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#1d9e75] px-1.5 text-[0.65rem] font-bold text-white tabular-nums ${
+                chatBadgePulse ? 'pgm-sd-chat-tab-badge--pulse' : ''
+              }`}
+            >
+              {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
             </span>
           ) : null}
           {t === 'horas' && horasTabBadgeMinutos > 0 ? (
