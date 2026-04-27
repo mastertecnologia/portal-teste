@@ -330,6 +330,36 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * MIME pelo conteúdo do arquivo para inline (Chrome falha com tela preta se o tipo não for image/* ou PDF).
+	 * O withFile() do CakePHP 3 infere só pela extensão do nome salvo.
+	 *
+	 * @param string $fullPath Caminho absoluto no disco
+	 * @return string|null MIME completo ou null para manter o que withFile() definiu
+	 */
+	protected function _mimeForInlineDisplay($fullPath) {
+		if (!is_readable($fullPath)) {
+			return null;
+		}
+		$mime = '';
+		if (class_exists('finfo')) {
+			$f = new \finfo(FILEINFO_MIME_TYPE);
+			$detected = @$f->file($fullPath);
+			if (is_string($detected) && $detected !== '') {
+				$mime = $detected;
+			}
+		}
+		if ($mime === '' && function_exists('mime_content_type')) {
+			$mc = @mime_content_type($fullPath);
+			$mime = is_string($mc) ? $mc : '';
+		}
+		if (strpos($mime, 'image/') === 0 || $mime === 'application/pdf') {
+			return $mime;
+		}
+
+		return null;
+	}
+
+	/**
 	 * Abre no navegador (imagens/PDF) em vez de forçar download.
 	 */
 	protected function _sendFileInline($fullPath, $downloadName) {
@@ -339,10 +369,16 @@ class TicketsController extends AppController {
 		}
 		$safeName = str_replace('"', '', basename($downloadName));
 
-		return $this->response->withFile($fullPath, [
+		$response = $this->response->withFile($fullPath, [
 			'download' => false,
 			'name' => $safeName,
 		]);
+		$sniff = $this->_mimeForInlineDisplay($fullPath);
+		if ($sniff !== null) {
+			$response = $response->withType($sniff);
+		}
+
+		return $response;
 	}
 
 	public function downloadAnexo($idanexo) {
