@@ -21,9 +21,20 @@ $bootJson = json_encode(
 );
 $ticketsCssFs = defined('WWW_ROOT') ? WWW_ROOT . 'tickets-app' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'tickets.css' : '';
 $ticketsJsFs = defined('WWW_ROOT') ? WWW_ROOT . 'tickets-app' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'tickets.js' : '';
+/**
+ * Inclui hash do conteúdo de `tickets.js` (não só mtime) para o `?v=` mudar após `npm run build` mesmo
+ * se o Git/FS preservar datas. A navegação Turbo reutiliza o módulo em memória — o script abaixo força
+ * `location.reload()` quando esta versão diverge do valor já carregado.
+ */
 $ticketsAssetV = '1';
-if ($ticketsCssFs !== '' && $ticketsJsFs !== '' && is_file($ticketsCssFs) && is_file($ticketsJsFs)) {
-	$ticketsAssetV = (string)max(filemtime($ticketsCssFs), filemtime($ticketsJsFs));
+if ($ticketsJsFs !== '' && is_file($ticketsJsFs)) {
+	$md5f = @md5_file($ticketsJsFs);
+	$jsHash = (is_string($md5f) && strlen($md5f) === 32) ? substr($md5f, 0, 8) : '0';
+	$mt = filemtime($ticketsJsFs);
+	if ($ticketsCssFs !== '' && is_file($ticketsCssFs)) {
+		$mt = max($mt, filemtime($ticketsCssFs));
+	}
+	$ticketsAssetV = (string)$mt . '-' . $jsHash;
 }
 $this->append(
 	'css',
@@ -51,8 +62,15 @@ $ticketsJsSrc = $w . 'tickets-app/assets/tickets.js?v=' . $ticketsAssetV;
 	<div id="tickets-react-root" class="tickets-react-host tickets-react-sd w-100"></div>
 </div>
 <script>
-window.__TICKETS_BOOT__ = <?= $bootJson ?>;
 (function () {
+	var ticketsAppAssetV = <?= json_encode($ticketsAssetV, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_UNESCAPED_SLASHES) ?>;
+	if (window.__TICKETS_APP_ASSET_V__ && window.__TICKETS_APP_ASSET_V__ !== ticketsAppAssetV) {
+		window.__TICKETS_APP_ASSET_V__ = ticketsAppAssetV;
+		window.location.reload();
+		return;
+	}
+	window.__TICKETS_APP_ASSET_V__ = ticketsAppAssetV;
+	window.__TICKETS_BOOT__ = <?= $bootJson ?>;
 	var ticketsJsSrc = <?= json_encode($ticketsJsSrc, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_UNESCAPED_SLASHES) ?>;
 	function pgmTicketsReactMountWhenReady(attemptsLeft) {
 		if (typeof window.__pgmTicketsReactMount !== 'function') {
