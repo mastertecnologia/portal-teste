@@ -3729,6 +3729,29 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Nome para "Responsável solicitante" na API/React: contato do cliente (idsolicitante),
+	 * texto livre (nomesolicitante), ou quem abriu o ticket (idautor).
+	 *
+	 * @param \Cake\Datasource\EntityInterface|object $ticket
+	 * @param \Cake\Datasource\EntityInterface|object|null $solicitanteUser resultado de find por idsolicitante
+	 */
+	protected function _apiResponsavelSolicitanteDisplay($ticket, $solicitanteUser = null): string {
+		if ($solicitanteUser) {
+			$n = trim((string)($solicitanteUser->name ?? ''));
+			if ($n !== '') {
+				return $n;
+			}
+		}
+		$livre = isset($ticket->nomesolicitante) ? trim((string)$ticket->nomesolicitante) : '';
+		if ($livre !== '') {
+			return $livre;
+		}
+		$autor = trim($this->_ticketAutorNome($ticket));
+
+		return $autor !== '' ? $autor : '—';
+	}
+
+	/**
 	 * Nomes dos técnicos vinculados ao ticket (tabela ticketsusers), separados por vírgula.
 	 * Não depende de contain nem de idempresa em ticketsusers (legado pode ter NULL).
 	 * Restringe ao escopo ABAC (empresa/cliente) nos ids solicitados.
@@ -4113,7 +4136,7 @@ class TicketsController extends AppController {
 			'descricao' => (string)($ticket->solicitacao ?? ''),
 			'descricaoAtendimento' => $descAtend,
 			'horasTecnicas' => $this->_apiHorasTecnicasPayload($idt, $ticket),
-			'responsavel' => $solicitante ? (string)($solicitante->name ?? '') : '—',
+			'responsavel' => $this->_apiResponsavelSolicitanteDisplay($ticket, $solicitante),
 		];
 
 		return $this->response
@@ -4137,6 +4160,7 @@ class TicketsController extends AppController {
 		if (!empty($ticket->idsolicitante)) {
 			$solicitante = $this->Users->findById($ticket->idsolicitante)->select(['name'])->first();
 		}
+		$responsavelSolicitante = $this->_apiResponsavelSolicitanteDisplay($ticket, $solicitante);
 
 		$comentarios = $this->_apiComentariosPayload($idticket);
 
@@ -4206,7 +4230,7 @@ class TicketsController extends AppController {
 			'prioridade' => in_array('severidade', $this->Tickets->getSchema()->columns(), true)
 				? $this->_ticketSeveridadeLabel((string)($ticket->severidade ?? 'media'))
 				: '—',
-			'responsavel' => $solicitante ? (string)($solicitante->name ?? '') : '—',
+			'responsavel' => $responsavelSolicitante,
 			'abertoEm' => $createdFmt,
 			'atualizadoEm' => $atualizadoEm,
 			'atualizado' => $atualizadoEm,
