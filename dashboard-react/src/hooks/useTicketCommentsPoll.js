@@ -21,25 +21,7 @@ export function useTicketCommentsPoll(
   setT.current = setTicket;
 
   useEffect(() => {
-    if (USE_MOCK || !ticketId || pausePolling) {
-      // #region agent log
-      if (!USE_MOCK && ticketId) {
-        fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'efc03d' },
-          body: JSON.stringify({
-            sessionId: 'efc03d',
-            hypothesisId: 'H4',
-            location: 'useTicketCommentsPoll.js:effect',
-            message: 'poll effect inactive',
-            data: { ticketId, pausePolling, USE_MOCK },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-      }
-      // #endregion
-      return;
-    }
+    if (USE_MOCK || !ticketId || pausePolling) return;
     const boot = typeof window !== 'undefined' ? window.__TICKETS_BOOT__ : null;
     if (!boot?.paths?.apiComments) return;
 
@@ -47,26 +29,6 @@ export function useTicketCommentsPoll(
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       const res = await fetchTicketComments(ticketId);
       if (!res.ok) return;
-      // #region agent log
-      const pendingN = (res.comentarios || []).filter((x) => x && x.pending === true).length;
-      fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'efc03d' },
-        body: JSON.stringify({
-          sessionId: 'efc03d',
-          hypothesisId: 'H5',
-          location: 'useTicketCommentsPoll.js:run',
-          message: 'poll applied comentarios',
-          data: {
-            ticketId,
-            pausePolling,
-            n: (res.comentarios || []).length,
-            pendingN,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       setC.current(res.comentarios);
       setT.current((prev) => {
         if (!prev) return prev;
