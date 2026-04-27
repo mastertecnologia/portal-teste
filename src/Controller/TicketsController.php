@@ -330,6 +330,90 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * MIME a partir dos primeiros bytes (finfo em Linux costuma devolver application/octet-stream para JPEG/PNG).
+	 *
+	 * @param string $fullPath Caminho absoluto no disco
+	 * @return string|null
+	 */
+	protected function _mimeFromMagicBytes($fullPath) {
+		$h = @fopen($fullPath, 'rb');
+		if ($h === false) {
+			return null;
+		}
+		$buf = fread($h, 16);
+		fclose($h);
+		if (!is_string($buf) || strlen($buf) < 3) {
+			return null;
+		}
+		// JPEG
+		if (strncmp($buf, "\xFF\xD8\xFF", 3) === 0) {
+			return 'image/jpeg';
+		}
+		// PNG
+		if (strncmp($buf, "\x89PNG\r\n\x1a\n", 8) === 0) {
+			return 'image/png';
+		}
+		// GIF
+		if (strncmp($buf, 'GIF87a', 6) === 0 || strncmp($buf, 'GIF89a', 6) === 0) {
+			return 'image/gif';
+		}
+		// WebP (RIFF....WEBP)
+		if (strlen($buf) >= 12 && strncmp($buf, 'RIFF', 4) === 0 && substr($buf, 8, 4) === 'WEBP') {
+			return 'image/webp';
+		}
+		// BMP
+		if (strncmp($buf, 'BM', 2) === 0) {
+			return 'image/bmp';
+		}
+		// PDF
+		if (strncmp($buf, '%PDF', 4) === 0) {
+			return 'application/pdf';
+		}
+		// ISO BMFF: HEIC/HEIF (iPhone) e AVIF — Chrome desktop pode não renderizar HEIC, mas o tipo fica correto.
+		if (strlen($buf) >= 12 && substr($buf, 4, 4) === 'ftyp') {
+			$brand = substr($buf, 8, 4);
+			if (in_array($brand, ['heic', 'heix', 'hevc', 'heim', 'heis', 'mif1', 'msf1'], true)) {
+				return 'image/heic';
+			}
+			if ($brand === 'avif' || $brand === 'avis') {
+				return 'image/avif';
+			}
+		}
+		// TIFF (little-endian II+42, big-endian MM+42)
+		if (strlen($buf) >= 4 && (strncmp($buf, "II\x2a\x00", 4) === 0 || strncmp($buf, "MM\x00\x2a", 4) === 0)) {
+			return 'image/tiff';
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extensão do path no disco → MIME (fallback quando finfo devolve octet-stream).
+	 *
+	 * @param string $fullPath Caminho absoluto no disco
+	 * @return string|null
+	 */
+	protected function _mimeFromPathExtension($fullPath) {
+		$ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+		$map = [
+			'jpg' => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'jpe' => 'image/jpeg',
+			'jfif' => 'image/jpeg',
+			'png' => 'image/png',
+			'gif' => 'image/gif',
+			'webp' => 'image/webp',
+			'bmp' => 'image/bmp',
+			'tif' => 'image/tiff',
+			'tiff' => 'image/tiff',
+			'pdf' => 'application/pdf',
+			'svg' => 'image/svg+xml',
+		];
+
+		return isset($map[$ext]) ? $map[$ext] : null;
+	}
+
+	/**
 	 * MIME pelo conteúdo do arquivo para inline (Chrome falha com tela preta se o tipo não for image/* ou PDF).
 	 * O withFile() do CakePHP 3 infere só pela extensão do nome salvo.
 	 *
@@ -354,6 +438,18 @@ class TicketsController extends AppController {
 		}
 		if (strpos($mime, 'image/') === 0 || $mime === 'application/pdf') {
 			return $mime;
+		}
+		// finfo/mime_content_type muitas vezes: application/octet-stream, text/plain, inode/x-empty
+		$weak = ['', 'application/octet-stream', 'text/plain', 'inode/x-empty', 'application/x-empty'];
+		if (in_array($mime, $weak, true) || strpos($mime, 'application/octet-stream') === 0) {
+			$fromMagic = $this->_mimeFromMagicBytes($fullPath);
+			if ($fromMagic !== null) {
+				return $fromMagic;
+			}
+			$fromExt = $this->_mimeFromPathExtension($fullPath);
+			if ($fromExt !== null) {
+				return $fromExt;
+			}
 		}
 
 		return null;
