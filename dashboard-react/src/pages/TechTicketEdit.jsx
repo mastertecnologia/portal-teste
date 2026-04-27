@@ -149,9 +149,13 @@ export default function TechTicketEdit({ boot }) {
     () => (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() !== 'comment'),
     [timelineEvents]
   );
-  /** «Eventos (histórico)» — tudo exceto worklog (horas têm aba própria). */
+  /** «Eventos (histórico)» — tudo exceto worklog (aba «Horas») e assinatura (fica na OS/impressão). */
   const eventosHistorico = useMemo(
-    () => eventosOperacionais.filter((ev) => (ev.type || '').toLowerCase() !== 'worklog'),
+    () =>
+      eventosOperacionais.filter((ev) => {
+        const t = (ev.type || '').toLowerCase();
+        return t !== 'worklog' && t !== 'signature';
+      }),
     [eventosOperacionais]
   );
   /** Aba «Horas» — só worklog. */
@@ -590,8 +594,8 @@ export default function TechTicketEdit({ boot }) {
           {rightPanelTab === 'chat'
             ? 'Mensagens com o cliente e a equipa. Movimentações e histórico em «Eventos»; lançamentos de horas em «Horas».'
             : rightPanelTab === 'timeline'
-              ? 'Movimentações, auditoria, assinaturas, peças, etc. Horas lançadas estão no separador «Horas».'
-              : 'Lançamentos de horas (legado e registos). Movimentações e restante histórico em «Eventos (histórico)».'}
+              ? 'Histórico do chamado: situação, peças, alertas, etc. Use o filtro por tipo. Horas no separador «Horas».'
+              : 'Lançamentos de horas (legado e registos). O restante do histórico está em «Eventos (histórico)».'}
         </p>
       </div>
       {rightPanelTab === 'chat' ? (
@@ -629,13 +633,13 @@ export default function TechTicketEdit({ boot }) {
           {eventosHistorico.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[var(--pgm-border,#3d4554)] px-3 py-6 text-center text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
               {eventosHoras.length > 0
-                ? 'Não há movimentações nem outros eventos aqui — só existem lançamentos de horas. Abra o separador «Horas».'
+                ? 'Não há outros eventos aqui — só existem lançamentos de horas. Abra o separador «Horas».'
                 : Array.isArray(timelineEvents) && timelineEvents.length > 0
                   ? 'Não há eventos deste tipo (só comentários de conversa, na aba «Conversa»).'
-                  : 'Nenhum evento ainda. Registre horas (separador «Horas») ou aguarde movimentações no ticket.'}
+                  : 'Nenhum evento ainda. Registre horas (separador «Horas») ou aguarde alterações no ticket.'}
             </div>
           ) : (
-            <TicketTimeline events={eventosHistorico} />
+            <TicketTimeline events={eventosHistorico} layout="timeline" />
           )}
         </div>
       ) : (
