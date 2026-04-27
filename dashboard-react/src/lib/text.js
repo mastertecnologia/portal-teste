@@ -30,6 +30,7 @@ export function finalizeOptimisticComment(prev, tmpId, saved) {
 export function stripHtml(s) {
   if (s == null) return '—';
   const t = String(s)
+    .replace(/[\uFEFF\u200B-\u200D\u2060]/g, '')
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

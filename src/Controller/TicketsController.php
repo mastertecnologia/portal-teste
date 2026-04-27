@@ -2977,7 +2977,25 @@ class TicketsController extends AppController {
 	protected function _ticketAssuntoTexto($assunto) {
 		$raw = AssuntoTicket($assunto);
 		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-		return $t !== '' ? $t : (string)$assunto;
+		if ($t !== '') {
+			return $t;
+		}
+		// Código numérico sem rótulo no legado (ex.: PGMPackages desatualizado): mapa local do portal.
+		if (is_numeric($assunto)) {
+			$code = (int)$assunto;
+			if ($code !== 0) {
+				$opts = $this->_ticketAssuntoClienteOptions();
+				if (isset($opts[$code]) && trim((string)$opts[$code]) !== '') {
+					return (string)$opts[$code];
+				}
+			}
+		}
+		$s = trim((string)$assunto);
+		if ($s !== '' && $s !== '0') {
+			return $s;
+		}
+
+		return 'Não informado';
 	}
 
 	/**

@@ -1,6 +1,13 @@
 import { stripHtml } from '../lib/text';
 import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
 
+/** Rótulo legível para categoria/assunto (evita linha vazia, «0» ou traço só). */
+function categoriaAssuntoExibicao(raw) {
+  const t = stripHtml(raw).trim();
+  if (t === '' || t === '—' || t === '0') return 'Não informado';
+  return t;
+}
+
 function row(label, value) {
   if (value === null || value === undefined || String(value).trim() === '') {
     return null;
@@ -184,7 +191,6 @@ export function TicketResumoPanel({ ticket }) {
 /** Bloco “Informações do ticket” (coluna direita). */
 export default function TicketInfoPanel({ ticket, embedded = false, servicedesk = false }) {
   if (!ticket) return null;
-  const assunto = stripHtml(ticket.assunto);
   const aberto = ticket.abertoEm || ticket.atualizado;
   const atual = ticket.atualizadoEm || ticket.atualizado;
 
@@ -198,7 +204,7 @@ export default function TicketInfoPanel({ ticket, embedded = false, servicedesk 
         {row('Documento', ticket.cnpj)}
         {row('E-mail', ticket.email)}
         {rowAlways('Responsável solicitante', ticket.responsavel)}
-        {row('Categoria / assunto', assunto)}
+        {rowAlways('Categoria / assunto', categoriaAssuntoExibicao(ticket.assunto))}
         {rowPrioridade('Prioridade', ticket.prioridade)}
         {rowEstado('Estado', ticket.status, { embedded, servicedesk })}
         {row('Aberto em', aberto)}
