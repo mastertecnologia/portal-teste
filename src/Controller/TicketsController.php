@@ -321,18 +321,12 @@ class TicketsController extends AppController {
 	}
 
 	public function downloadFile($arquivo) {
-		ob_start();
-		header('Content-Description: File Transfer');
-		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename='.basename($arquivo));
-		header('Content-Transfer-Encoding: binary');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate');
-		header('Pragma: public');
-		header('Content-Length: ' . filesize($arquivo));
-		ob_clean();
-		readfile($arquivo);
-		exit;
+		$this->autoRender = false;
+
+		return $this->response->withFile($arquivo, [
+			'download' => true,
+			'name' => basename($arquivo),
+		]);
 	}
 
 	/**
@@ -341,27 +335,21 @@ class TicketsController extends AppController {
 	protected function _sendFileInline($fullPath, $downloadName) {
 		$this->autoRender = false;
 		if (!is_readable($fullPath)) {
-			return;
+			return $this->response->withStatus(404);
 		}
-		$mime = 'application/octet-stream';
-		if (function_exists('mime_content_type')) {
-			$m = @mime_content_type($fullPath);
-			if (is_string($m) && $m !== '') {
-				$mime = $m;
-			}
-		}
-		ob_start();
-		header('Content-Type: ' . $mime);
-		header('Content-Disposition: inline; filename="' . str_replace('"', '', basename($downloadName)) . '"');
-		header('Content-Length: ' . filesize($fullPath));
-		ob_clean();
-		readfile($fullPath);
-		exit;
+		$safeName = str_replace('"', '', basename($downloadName));
+
+		return $this->response->withFile($fullPath, [
+			'download' => false,
+			'name' => $safeName,
+		]);
 	}
 
 	public function downloadAnexo($idanexo) {
 		$this->autoRender = false;
-		$this->viewBuilder()->setLayout('ajax');
+		// Não usar layout ajax aqui: misturar saída/layout com header() manual
+		// podia gerar dois Content-Disposition (Chrome: ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION).
+		// withFile() define um único conjunto de cabeçalhos via Response.
 
 		if ($this->request->is('get')) {
 			$anexo = $this->Ticketsanexos->get($idanexo);
@@ -389,14 +377,14 @@ class TicketsController extends AppController {
 			$arquivo = $this->dirAnexos($anexo->idempresa, $anexo->idticket) . DS . $anexo->arquivo;
 			if (file_exists($arquivo)) {
 				if ($inline) {
-					$this->_sendFileInline($arquivo, $anexo->arquivo);
-				} else {
-					$this->downloadFile($arquivo);
+					return $this->_sendFileInline($arquivo, $anexo->arquivo);
 				}
-			} else {
-				$this->Flash->error('O arquivo solicitado para download não foi localizado!', ['params' => ['title' => 'Erro ao fazer download do anexo']]);
-				return $this->redirect($this->referer());
+
+				return $this->downloadFile($arquivo);
 			}
+			$this->Flash->error('O arquivo solicitado para download não foi localizado!', ['params' => ['title' => 'Erro ao fazer download do anexo']]);
+
+			return $this->redirect($this->referer());
 		}
 	}
 

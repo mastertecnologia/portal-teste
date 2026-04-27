@@ -82,24 +82,16 @@ class TicketsanexosController extends BaseController {
 	}
 
 	public function downloadFile($arquivo) {
+		$this->autoRender = false;
 
-		ob_start();
-		header('Content-Description: File Transfer');
-		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename='.basename($arquivo));
-		header('Content-Transfer-Encoding: binary');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate');
-		header('Pragma: public');
-		header('Content-Length: ' . filesize($arquivo));
-		ob_clean();
-		readfile($arquivo);
-		exit;
+		return $this->response->withFile($arquivo, [
+			'download' => true,
+			'name' => basename($arquivo),
+		]);
 	}
 
 	public function downloadAnexo($idanexo) {
 		$this->autoRender = false;
-		$this->viewBuilder()->setLayout('ajax');
 
 		if ($this->request->is('get')) {
 			$anexo = $this->Ticketsanexos->get($idanexo);
@@ -124,11 +116,12 @@ class TicketsanexosController extends BaseController {
 
 			// Arquivo para download
 			$arquivo = $this->dirAnexos($anexo->idempresa, $anexo->idticket) . DS . $anexo->arquivo;
-			if (file_exists($arquivo)) $this->downloadFile($arquivo);
-			else {
-				$this->Flash->error('O arquivo solicitado para download não foi localizado!', ['params' => ['title' => 'Erro ao fazer download do anexo']]);
-				return $this->redirect($this->referer());
+			if (file_exists($arquivo)) {
+				return $this->downloadFile($arquivo);
 			}
+			$this->Flash->error('O arquivo solicitado para download não foi localizado!', ['params' => ['title' => 'Erro ao fazer download do anexo']]);
+
+			return $this->redirect($this->referer());
 		}
 	}
 
