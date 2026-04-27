@@ -76,6 +76,35 @@ class TicketServiceDeskApiService {
 	}
 
 	/**
+	 * Foto de perfil em disco, se existir (cache por id de utilizador).
+	 * Caminhos relativos a WWW_ROOT: arquivos/usuarios/{id}.(jpg|jpeg|png|webp|gif).
+	 *
+	 * @param array<int, string|null> $cache
+	 * @return string|null URL pública (ex. /arquivos/usuarios/5.png)
+	 */
+	public static function userAvatarPublicPath(int $userId, array &$cache): ?string {
+		if ($userId < 1) {
+			return null;
+		}
+		if (array_key_exists($userId, $cache)) {
+			return $cache[$userId];
+		}
+		foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $ext) {
+			$rel = 'arquivos/usuarios/' . $userId . '.' . $ext;
+			$fs = WWW_ROOT . str_replace(['/', '\\'], DS, $rel);
+			if (is_file($fs) && is_readable($fs)) {
+				$out = '/' . str_replace(DS, '/', $rel);
+				$cache[$userId] = $out;
+
+				return $out;
+			}
+		}
+		$cache[$userId] = null;
+
+		return null;
+	}
+
+	/**
 	 * @param \App\Controller\TicketsController $c
 	 * @return object{rows: object[]}
 	 */
@@ -85,6 +114,7 @@ class TicketServiceDeskApiService {
 		$rows = [];
 		$comCobertura = [];
 		$horasCobertura = [];
+		$avatarCache = [];
 		try {
 			$hasTe = in_array('ticket_events', ConnectionManager::get('default')->getSchemaCollection()->listTables(), true);
 		} catch (\Throwable $e) {
@@ -149,12 +179,15 @@ class TicketServiceDeskApiService {
 					[$workDateLabel, $workTimeRangeLabel] = self::worklogLabelsFromTicketshorasRow($c->Ticketshoras, $hrowW);
 				}
 				$secondsOut = $isWl ? self::billingSecondsFromRaw($secondsSpent) : $secondsSpent;
+				$uidE = (int)($e->get('user_id') ?? 0);
+				$avatarUrlE = $uidE > 0 ? self::userAvatarPublicPath($uidE, $avatarCache) : null;
 				$rows[] = (object)[
 					'id' => (int)$e->id,
 					'source' => 'event',
 					'type' => (string)$e->get('type'),
 					'autor' => $autor,
 					'userId' => (int)($e->get('user_id') ?? 0) ?: null,
+					'avatarUrl' => $avatarUrlE,
 					'description' => (string)($e->get('description') ?? ''),
 					'secondsSpent' => $secondsOut,
 					'billingType' => $e->get('billing_type'),
@@ -184,12 +217,14 @@ class TicketServiceDeskApiService {
 			$uid = (int)($row->idautor ?? 0);
 			$u = $uid > 0 ? $c->Users->findById($uid)->select(['id', 'name', 'role'])->first() : null;
 			$ts = $row->created ? strtotime((string)$row->created) : 0;
+			$avatarUrlC = $uid > 0 ? self::userAvatarPublicPath($uid, $avatarCache) : null;
 			$rows[] = (object)[
 				'id' => 'legacy_c_' . $cid,
 				'source' => 'legacy',
 				'type' => 'comment',
 				'autor' => $u ? (string)($u->name ?? '') : '—',
 				'userId' => $uid ?: null,
+				'avatarUrl' => $avatarUrlC,
 				'description' => (string)($row->comentario ?? ''),
 				'secondsSpent' => 0,
 				'billingType' => null,
@@ -206,12 +241,14 @@ class TicketServiceDeskApiService {
 			$u = $uid > 0 ? $c->Users->findById($uid)->select(['id', 'name'])->first() : null;
 			$rawDt = (string)($m->datetime ?? '');
 			$ts = self::parseBrDateTime($rawDt);
+			$avatarUrlM = $uid > 0 ? self::userAvatarPublicPath($uid, $avatarCache) : null;
 			$rows[] = (object)[
 				'id' => 'legacy_m_' . (int)$m->id,
 				'source' => 'legacy',
 				'type' => 'mov',
 				'autor' => $u ? (string)$u->name : '—',
 				'userId' => $uid ?: null,
+				'avatarUrl' => $avatarUrlM,
 				'description' => trim((string)($m->observacao ?? '') . ' [movimento de situação]'),
 				'secondsSpent' => 0,
 				'created' => $ts > 0 ? date('Y-m-d H:i:s', $ts) : null,
@@ -241,12 +278,14 @@ class TicketServiceDeskApiService {
 			} elseif ($wRange) {
 				$labelLinha = $wRange;
 			}
+			$avatarUrlH = $uid > 0 ? self::userAvatarPublicPath($uid, $avatarCache) : null;
 			$rows[] = (object)[
 				'id' => 'legacy_h_' . (int)$h->id,
 				'source' => 'legacy',
 				'type' => 'worklog',
 				'autor' => $u ? (string)$u->name : '—',
 				'userId' => $uid ?: null,
+				'avatarUrl' => $avatarUrlH,
 				'description' => 'Registro de horas (legado)',
 				'secondsSpent' => $secBill,
 				'created' => $ini > 0 ? date('Y-m-d H:i:s', $ini) : null,

@@ -2,6 +2,96 @@ import { useMemo, useState } from 'react';
 import { getBoot } from '../lib/api';
 import { stripHtml } from '../lib/text';
 
+const AVATAR_BG = [
+  'bg-sky-600',
+  'bg-indigo-600',
+  'bg-violet-600',
+  'bg-emerald-600',
+  'bg-amber-600',
+  'bg-rose-600',
+  'bg-cyan-600',
+  'bg-fuchsia-600',
+  'bg-blue-600',
+  'bg-teal-600',
+];
+
+function hashName(s) {
+  let h = 0;
+  const str = String(s || 'x');
+  for (let i = 0; i < str.length; i += 1) h = (h * 33 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function avatarBgClass(userId, seed) {
+  if (userId != null && Number.isFinite(Number(userId)) && Number(userId) > 0) {
+    return AVATAR_BG[Number(userId) % AVATAR_BG.length];
+  }
+  return AVATAR_BG[hashName(seed) % AVATAR_BG.length];
+}
+
+function initialsFromName(name) {
+  const t = String(name || '').trim();
+  if (!t || t === '—') {
+    return null;
+  }
+  const parts = t.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+  if (parts[0].length === 1) {
+    return parts[0].toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
+const TYPE_AVATAR_RING = {
+  mov: 'ring-orange-400/55',
+  comment: 'ring-sky-400/50',
+  worklog: 'ring-emerald-400/50',
+  audit: 'ring-slate-400/50',
+  alert: 'ring-amber-400/50',
+  technical_report: 'ring-cyan-400/50',
+  product_usage: 'ring-amber-500/50',
+  csat: 'ring-amber-300/50',
+  signature: 'ring-slate-400/40',
+  default: 'ring-white/20',
+};
+
+function TimelineEventAvatar({ ev, eventType, webroot, titleForFallback }) {
+  const [imgErr, setImgErr] = useState(false);
+  const name = (ev.autor || '').trim();
+  let letters = initialsFromName(name);
+  if (!letters) {
+    const a = String(titleForFallback || eventType || '?').replace(/[^a-zA-ZÀ-ÿ0-9]/g, '');
+    letters = a.slice(0, 2).toUpperCase() || '?';
+  }
+  const rel = ev.avatarUrl;
+  const abs = rel && webroot
+    ? `${String(webroot).replace(/\/$/, '')}/${String(rel).replace(/^\//, '')}`
+    : null;
+  const showImg = abs && !imgErr;
+  const bg = avatarBgClass(ev.userId, name || `ev-${ev.id}-${eventType}`);
+  const ring = TYPE_AVATAR_RING[(eventType || '').toLowerCase()] || TYPE_AVATAR_RING.default;
+
+  return (
+    <div
+      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full text-[0.7rem] font-bold leading-none text-white ring-2 ring-offset-1 ring-offset-[var(--pgm-bg-surface,#1a1f28)] ${showImg ? '' : bg} ${ring}`}
+      title={name || undefined}
+    >
+      {showImg ? (
+        <img
+          src={abs}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => setImgErr(true)}
+        />
+      ) : (
+        <span className="select-none">{letters}</span>
+      )}
+    </div>
+  );
+}
+
 function formatSeconds(sec) {
   const s = Math.max(0, parseInt(String(sec), 10) || 0);
   const h = Math.floor(s / 3600);
@@ -66,35 +156,6 @@ function dateKeyForGroup(d) {
 function eventFilterKey(ev) {
   const t = (ev.type || '').toLowerCase();
   return t || 'other';
-}
-
-function iconToneForType(t) {
-  const x = (t || '').toLowerCase();
-  if (x === 'mov') {
-    return 'bg-[#e87722]';
-  }
-  if (x === 'audit') {
-    return 'bg-slate-500';
-  }
-  if (x === 'alert') {
-    return 'bg-amber-500';
-  }
-  if (x === 'technical_report') {
-    return 'bg-sky-500';
-  }
-  if (x === 'product_usage') {
-    return 'bg-amber-700';
-  }
-  if (x === 'csat') {
-    return 'bg-amber-400';
-  }
-  if (x === 'comment') {
-    return 'bg-blue-500';
-  }
-  if (x === 'worklog') {
-    return 'bg-emerald-500';
-  }
-  return 'bg-[var(--pgm-text-muted,#6b7280)]';
 }
 
 function titleSubtitleForEvent(ev) {
@@ -366,17 +427,21 @@ function TimelineHistoryLayout({ events, className }) {
                     : '—';
                   const t = (ev.type || '').toLowerCase();
                   const { title, subtitle } = titleSubtitleForEvent(ev);
-                  const tone = iconToneForType(t);
                   return (
                     <li
                       key={String(ev.id)}
-                      className="grid grid-cols-[auto_auto_1fr] gap-2.5 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.08))] pb-3 text-[0.8125rem] last:border-b-0 last:pb-0 sm:grid-cols-[2.5rem_1.5rem_1fr] sm:gap-3"
+                      className="grid grid-cols-[2.5rem_2.5rem_minmax(0,1fr)] gap-2.5 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.08))] pb-3 text-[0.8125rem] last:border-b-0 last:pb-0 sm:grid-cols-[2.5rem_2.5rem_minmax(0,1fr)] sm:gap-3"
                     >
-                      <time className="w-10 pt-0.5 text-right text-[0.75rem] tabular-nums text-[var(--pgm-text-muted,#9aa0a8)] sm:w-12">
+                      <time className="w-10 pt-1.5 text-right text-[0.75rem] tabular-nums text-[var(--pgm-text-muted,#9aa0a8)] sm:w-12 sm:pt-2">
                         {timeStr}
                       </time>
-                      <div className="flex w-3 justify-center pt-1 sm:w-3.5" aria-hidden>
-                        <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full sm:h-3 sm:w-3 ${tone}`} />
+                      <div className="flex shrink-0 items-start justify-center pt-0.5" aria-hidden>
+                        <TimelineEventAvatar
+                          ev={ev}
+                          eventType={t}
+                          webroot={w}
+                          titleForFallback={title}
+                        />
                       </div>
                       <div className="min-w-0">
                         <div className="font-semibold text-[var(--pgm-text,#e8eaed)]">{title}</div>

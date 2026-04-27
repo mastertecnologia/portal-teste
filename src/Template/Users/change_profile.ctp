@@ -8,7 +8,30 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-body">
-			<?= $this->Form->create($user, ['class' => 'form-material']) ?>
+			<?= $this->Form->create($user, ['class' => 'form-material', 'type' => 'file']) ?>
+				<div class="row padding-20">
+					<div class="col-md-12 col-xs-12 m-b-20">
+						<label class="control-label text-muted d-block m-b-10">Foto de perfil</label>
+						<p class="text-muted small m-b-10">Esta imagem aparece no histórico de chamados (Service Desk) e noutros ecrãs. JPG, PNG, GIF ou WebP, no máximo 2&nbsp;MB.</p>
+						<?php
+						$foto = !empty($fotoPerfilUrl) ? h($fotoPerfilUrl) : '';
+						$v = (string) time();
+						if ($foto !== ''): ?>
+							<div class="m-b-15 d-flex align-items-center flex-wrap" style="gap:12px;">
+								<img src="<?= $foto ?>?v=<?= h($v) ?>" alt="Foto atual" style="width:88px;height:88px;object-fit:cover;border-radius:50%;border:2px solid #e8eaed;" />
+							</div>
+						<?php endif; ?>
+						<input type="file" name="foto_perfil" id="foto_perfil" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control" />
+						<?php if ($foto !== ''): ?>
+							<div class="checkbox m-t-15">
+								<label>
+									<input type="checkbox" name="remover_foto" value="1" id="remover_foto" />
+									Remover foto atual
+								</label>
+							</div>
+						<?php endif; ?>
+					</div>
+				</div>
 				<div class="row padding-20">
 					<div class="col-md-4 col-xs-12">
 						<div class="form-group ">

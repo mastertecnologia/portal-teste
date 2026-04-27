@@ -61,7 +61,14 @@ class UsersController extends AppController {
 				['password', 'confirmPassword']
 			))));
 		}
-		
+		if ($this->request->getParam('action') === 'changeProfile' && in_array('Security', $this->components()->loaded(), true)) {
+			$existing = $this->Security->getConfig('unlockedFields');
+			$this->Security->setConfig('unlockedFields', array_values(array_unique(array_merge(
+				is_array($existing) ? $existing : [],
+				['foto_perfil', 'remover_foto']
+			))));
+		}
+
 		if (in_array('Security', $this->components()->loaded(), true)) {
 			$existingUnlocked = $this->Security->getConfig('unlockedActions');
 			if (!is_array($existingUnlocked)) {
@@ -1732,21 +1739,49 @@ class UsersController extends AppController {
 	}
 
 	public function changeProfile($id = null) {
-		if ($this->Auth->user('role') == 1 or $id == null) $id = $this->Auth->user('id');
+		if ($this->Auth->user('role') == 1 or $id == null) {
+			$id = $this->Auth->user('id');
+		}
 		$user = $this->Users->get($id);
+		$avatarCache = [];
+		$fotoPerfilUrl = \App\Service\Ticket\TicketServiceDeskApiService::userAvatarPublicPath((int)$id, $avatarCache);
+		$this->set('fotoPerfilUrl', $fotoPerfilUrl);
 
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
 
-			$this->usuarioExistente($data['email'], $id);
+			if (!empty($data['remover_foto'])) {
+				$this->_deleteUserAvatarFiles((int)$id);
+			}
+			$file = isset($data['foto_perfil']) && is_array($data['foto_perfil']) ? $data['foto_perfil'] : null;
+			if ($file !== null && !empty($file['tmp_name']) && (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+				$errFoto = $this->_saveUserAvatarFromUpload((int)$id, $file);
+				if ($errFoto !== null) {
+					$this->Flash->error($errFoto);
+				}
+			} elseif ($file !== null && isset($file['error']) && (int)$file['error'] !== UPLOAD_ERR_NO_FILE && (int)$file['error'] !== UPLOAD_ERR_OK) {
+				$this->Flash->error('Erro ao enviar a foto. Tente novamente.');
+			}
 
-			if (isset($data['role'])) unset($data['role']);
+			$email = isset($data['email']) ? (string)$data['email'] : '';
+			$this->usuarioExistente($email, $id);
+
+			if (isset($data['role'])) {
+				unset($data['role']);
+			}
+			unset($data['foto_perfil'], $data['remover_foto']);
+
 			$this->Users->patchEntity($user, $data);
-			// $user->username = $data['email'];
 
 			if ($this->Users->save($user)) {
 				$this->Flash->success('O perfil foi alterado com sucesso!!');
-				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->action, $id);
+				$this->Atividades->registrar(
+					$this->Auth->user('id'),
+					$this->request->getParam('controller'),
+					$this->request->getParam('action'),
+					$id
+				);
+
 				return $this->redirect(['action' => 'dashboard']);
 			}
 
@@ -3406,5 +3441,69 @@ class UsersController extends AppController {
 		} catch (\Throwable $e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Remove ficheiros de avatar em arquivos/usuarios/{id}.* (mesmos sufixos que a timeline do Service Desk).
+	 */
+	protected function _deleteUserAvatarFiles(int $userId): void {
+		if ($userId < 1) {
+			return;
+		}
+		$dir = WWW_ROOT . 'arquivos' . DS . 'usuarios';
+		foreach (['jpg', 'jpeg', 'png', 'gif', 'webp'] as $ext) {
+			$p = $dir . DS . $userId . '.' . $ext;
+			if (is_file($p)) {
+				@unlink($p);
+			}
+		}
+	}
+
+	/**
+	 * @param array $file Entrada estilo $_FILES
+	 * @return string|null Mensagem de erro ou null se OK
+	 */
+	protected function _saveUserAvatarFromUpload(int $userId, array $file): ?string {
+		if ($userId < 1) {
+			return 'Utilizador inválido.';
+		}
+		$maxBytes = 2097152;
+		if (!empty($file['size']) && (int)$file['size'] > $maxBytes) {
+			return 'A imagem deve ter no máximo 2 MB.';
+		}
+		$tmp = (string)($file['tmp_name'] ?? '');
+		if ($tmp === '' || !is_uploaded_file($tmp)) {
+			return 'Upload inválido.';
+		}
+		$info = @getimagesize($tmp);
+		if ($info === false) {
+			return 'Envie uma imagem válida (JPG, PNG, GIF ou WebP).';
+		}
+		$type = (int)($info[2] ?? 0);
+		$map = [
+			IMAGETYPE_JPEG => 'jpg',
+			IMAGETYPE_PNG => 'png',
+			IMAGETYPE_GIF => 'gif',
+		];
+		if (defined('IMAGETYPE_WEBP')) {
+			$map[(int) IMAGETYPE_WEBP] = 'webp';
+		}
+		if (!isset($map[$type])) {
+			return 'Formato de imagem não suportado. Use JPG, PNG, GIF ou WebP.';
+		}
+		$ext = $map[$type];
+		$dir = WWW_ROOT . 'arquivos' . DS . 'usuarios';
+		if (!is_dir($dir)) {
+			if (!@mkdir($dir, 0755, true)) {
+				return 'Não foi possível criar a pasta de fotos de perfil.';
+			}
+		}
+		$this->_deleteUserAvatarFiles($userId);
+		$dest = $dir . DS . $userId . '.' . $ext;
+		if (!@move_uploaded_file($tmp, $dest)) {
+			return 'Não foi possível salvar a imagem.';
+		}
+
+		return null;
 	}
 }
