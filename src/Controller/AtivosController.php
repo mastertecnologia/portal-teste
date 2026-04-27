@@ -22,6 +22,7 @@ class AtivosController extends AppController {
 		$this->loadModel('Assets');
 		$this->loadModel('Clientes');
 		$this->loadModel('Users');
+		$this->loadModel('Empresasusers');
 		$this->loadModel('TicketAssets');
 		try {
 			$this->loadModel('Atividades');
@@ -421,16 +422,27 @@ class AtivosController extends AppController {
 
 	protected function _usersOptions(): array {
 		$idempresa = (int)$this->Auth->user('idempresa');
-		$rows = $this->Users->find()
-			->select(['id', 'name', 'username', 'email'])
-			->where(['idempresa' => $idempresa])
-			->order(['name' => 'ASC', 'username' => 'ASC'])
+		// `users` não tem coluna `idempresa`; o vínculo é via tabela pivot `empresas_users` (Empresasusers).
+		// Mesmo padrão usado em TicketsController para listar técnicos da empresa.
+		$rows = $this->Empresasusers->find('all', ['contain' => ['Users']])
+			->where([
+				'Empresasusers.idempresa' => $idempresa,
+				'Users.role' => 0,
+				'Users.inativo' => 0,
+			])
+			->order(['Users.name' => 'ASC'])
 			->limit(2000)
 			->toArray();
 		$out = ['' => '— Sem responsável —'];
-		foreach ($rows as $u) {
+		$seen = [];
+		foreach ($rows as $r) {
+			$u = $r->user ?? null;
+			if (!$u || isset($seen[(int)$u->id])) {
+				continue;
+			}
+			$seen[(int)$u->id] = true;
 			$label = $u->name ?: ($u->username ?: ($u->email ?: ('User #' . $u->id)));
-			$out[$u->id] = $label;
+			$out[(int)$u->id] = $label;
 		}
 
 		return $out;
