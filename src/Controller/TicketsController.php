@@ -365,6 +365,10 @@ class TicketsController extends AppController {
 		if (strncmp($buf, 'BM', 2) === 0) {
 			return 'image/bmp';
 		}
+		// ICO / CUR
+		if (strlen($buf) >= 4 && $buf[0] === "\x00" && $buf[1] === "\x00" && $buf[3] === "\x00" && ($buf[2] === "\x01" || $buf[2] === "\x02")) {
+			return 'image/x-icon';
+		}
 		// PDF
 		if (strncmp($buf, '%PDF', 4) === 0) {
 			return 'application/pdf';
@@ -408,6 +412,7 @@ class TicketsController extends AppController {
 			'tiff' => 'image/tiff',
 			'pdf' => 'application/pdf',
 			'svg' => 'image/svg+xml',
+			'ico' => 'image/x-icon',
 		];
 
 		return isset($map[$ext]) ? $map[$ext] : null;
@@ -417,12 +422,19 @@ class TicketsController extends AppController {
 	 * MIME pelo conteúdo do arquivo para inline (Chrome falha com tela preta se o tipo não for image/* ou PDF).
 	 * O withFile() do CakePHP 3 infere só pela extensão do nome salvo.
 	 *
+	 * Ordem: assinatura binária primeiro (finfo devolve valores estranhos que não caem na lista "fraca"),
+	 * depois finfo quando já for image/* ou PDF, por último extensão no disco.
+	 *
 	 * @param string $fullPath Caminho absoluto no disco
 	 * @return string|null MIME completo ou null para manter o que withFile() definiu
 	 */
 	protected function _mimeForInlineDisplay($fullPath) {
 		if (!is_readable($fullPath)) {
 			return null;
+		}
+		$fromMagic = $this->_mimeFromMagicBytes($fullPath);
+		if ($fromMagic !== null) {
+			return $fromMagic;
 		}
 		$mime = '';
 		if (class_exists('finfo')) {
@@ -439,20 +451,8 @@ class TicketsController extends AppController {
 		if (strpos($mime, 'image/') === 0 || $mime === 'application/pdf') {
 			return $mime;
 		}
-		// finfo/mime_content_type muitas vezes: application/octet-stream, text/plain, inode/x-empty
-		$weak = ['', 'application/octet-stream', 'text/plain', 'inode/x-empty', 'application/x-empty'];
-		if (in_array($mime, $weak, true) || strpos($mime, 'application/octet-stream') === 0) {
-			$fromMagic = $this->_mimeFromMagicBytes($fullPath);
-			if ($fromMagic !== null) {
-				return $fromMagic;
-			}
-			$fromExt = $this->_mimeFromPathExtension($fullPath);
-			if ($fromExt !== null) {
-				return $fromExt;
-			}
-		}
 
-		return null;
+		return $this->_mimeFromPathExtension($fullPath);
 	}
 
 	/**
@@ -471,6 +471,10 @@ class TicketsController extends AppController {
 		]);
 		$sniff = $this->_mimeForInlineDisplay($fullPath);
 		if ($sniff !== null) {
+			// Evita text/html; charset=UTF-8 herdado ou tipo ambíguo do withFile.
+			if (method_exists($response, 'withoutHeader')) {
+				$response = $response->withoutHeader('Content-Type');
+			}
 			$response = $response->withType($sniff);
 		}
 
