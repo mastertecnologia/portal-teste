@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\Clientes\ClienteCorrelatedIds;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -393,11 +394,12 @@ class AtivosController extends AppController {
 		if (empty($cliente)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
+		$clienteIdsCorrel = ClienteCorrelatedIds::forEmpresaCliente($this->Clientes, $idempresa, $idc);
 		$busca = trim((string)$this->request->getQuery('q'));
 		$excludeTicket = (int)$this->request->getQuery('exclude_ticket');
 
 		$q = $this->Assets->find()
-			->where(['Assets.idempresa' => $idempresa, 'Assets.idcliente' => $idc])
+			->where(['Assets.idempresa' => $idempresa, 'Assets.idcliente IN' => $clienteIdsCorrel])
 			->order(['Assets.descricao' => 'ASC'])
 			->limit(200);
 		if ($busca !== '') {

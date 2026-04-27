@@ -11,6 +11,7 @@ use App\Service\Ticket\ServiceDeskAlertService;
 use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketWorklogEventHelper;
+use App\Service\Clientes\ClienteCorrelatedIds;
 use Cake\Core\Configure;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\ConnectionManager;
@@ -6181,9 +6182,10 @@ class TicketsController extends AppController {
 				$linked = [];
 				$linkedIds = [];
 			}
-			// CIs disponíveis (do mesmo cliente/empresa, ainda não vinculados a este ticket).
+			// CIs disponíveis: mesma empresa + mesmo cliente operacional (vários idcliente com mesmo CNPJ/CPF/código/nome).
+			$clienteIdsCorrel = ClienteCorrelatedIds::forEmpresaCliente($this->Clientes, $eid, $idc);
 			$availQ = $this->Assets->find()
-				->where(['Assets.idempresa' => $eid, 'Assets.idcliente' => $idc])
+				->where(['Assets.idempresa' => $eid, 'Assets.idcliente IN' => $clienteIdsCorrel])
 				->order(['Assets.descricao' => 'ASC', 'Assets.id' => 'DESC'])
 				->limit(200);
 			if (!empty($linkedIds)) {
@@ -6380,11 +6382,12 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
 		}
 		$eid = (int)$this->Auth->user('idempresa');
+		$clienteIdsCorrel = ClienteCorrelatedIds::forEmpresaCliente($this->Clientes, $eid, (int)$ticket->idcliente);
 		$asset = $this->Assets->find()
 			->where([
 				'Assets.id' => $assetId,
 				'Assets.idempresa' => $eid,
-				'Assets.idcliente' => (int)$ticket->idcliente,
+				'Assets.idcliente IN' => $clienteIdsCorrel,
 			])->first();
 		if (!$asset) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'asset_not_found'], 404);
