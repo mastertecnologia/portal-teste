@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchTicketDetail, postComentario, editComentario, deleteComentario, getBoot, USE_MOCK } from '../lib/api';
 import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
+import { useTicketCommentsSocket } from '../hooks/useTicketCommentsSocket';
 import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
 import { badgeClass, priorityType, statusType } from '../lib/ticketUi';
-import { stripHtml } from '../lib/text';
+import { finalizeOptimisticComment, formatCommentPostTimestamp, stripHtml } from '../lib/text';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
 
@@ -53,11 +54,11 @@ export default function ClientTicketDetail({ boot }) {
   const [ticket, setTicket] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [texto, setTexto] = useState('');
-  const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editTexto, setEditTexto] = useState('');
   const [editSaving, setEditSaving] = useState(false);
+  const comentarioEmProgressoRef = useRef(false);
 
   useEffect(() => {
     let c = false;
@@ -76,7 +77,8 @@ export default function ClientTicketDetail({ boot }) {
     };
   }, [id]);
 
-  useTicketCommentsPoll(id, setComentarios, setTicket);
+  const { socketRef, socketOn } = useTicketCommentsSocket(id, setComentarios);
+  useTicketCommentsPoll(id, setComentarios, setTicket, TICKET_COMMENTS_POLL_MS, socketOn);
 
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
 
@@ -84,33 +86,50 @@ export default function ClientTicketDetail({ boot }) {
     e.preventDefault();
     const t = texto.trim();
     if (!t || !ticket) return;
+    if (comentarioEmProgressoRef.current) return;
     pinToBottom();
     const b = getBoot();
     const nome = USE_MOCK
       ? MOCK_SESSION_CLIENTE.name
       : (b?.userName || 'Eu').trim();
     const papel = (b?.role ?? 1) === 0 ? 'tecnico' : 'cliente';
+    const uid = b?.userId != null ? Number(b.userId) : undefined;
     const tmpId = `pending-${Date.now()}`;
     const optimistic = {
       id: tmpId,
+      idautor: uid,
       autor: nome,
       papel,
       texto: t,
-      quando: 'Enviando…',
-      pending: true,
+      quando: formatCommentPostTimestamp(),
     };
     setComentarios((prev) => [...prev, optimistic]);
     setTexto('');
-    setEnviando(true);
+    comentarioEmProgressoRef.current = true;
     setErro(null);
-    const res = await postComentario(ticket.id, t);
-    setEnviando(false);
-    setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
-    if (res.ok) {
-      setComentarios((prev) => [...prev, res.data]);
-    } else {
-      setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
-      setTexto(t);
+    try {
+      const res = await postComentario(ticket.id, t);
+      if (res.ok) {
+        const saved = {
+          ...res.data,
+          idautor: res.data.idautor != null ? Number(res.data.idautor) : uid,
+        };
+        setComentarios((prev) => finalizeOptimisticComment(prev, tmpId, saved));
+        try {
+          socketRef.current?.emit('ticket_comment_relay', {
+            ticketId: Number(ticket.id),
+            comment: saved,
+          });
+        } catch {
+          /* ignore */
+        }
+      } else {
+        setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
+        setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
+        setTexto(t);
+      }
+    } finally {
+      comentarioEmProgressoRef.current = false;
     }
   }
 
@@ -311,7 +330,8 @@ export default function ClientTicketDetail({ boot }) {
         <p className={embedded ? 'text-xs text-[var(--pgm-text-muted)]' : 'text-xs text-slate-500'}>
           {meuNome
             ? `Você está como ${meuNome}. Cada mensagem fica gravada no chamado e no histórico (movimentações).`
-            : 'Mensagens com o suporte — gravadas no chamado e no histórico.'}
+            : 'Mensagens com o suporte — gravadas no chamado e no histórico.'}{' '}
+          {socketOn ? 'Atualização em tempo real.' : `Sincronização a cada ~${Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s com a aba visível.`}
         </p>
       </div>
       <ul
@@ -331,20 +351,17 @@ export default function ClientTicketDetail({ boot }) {
           </li>
         ) : (
           comentarios.map((c) => {
-            const isOwn = !c.pending && c.idautor != null && c.idautor === boot?.userId;
+            const isNumericId = typeof c.id === 'number' && Number.isFinite(c.id);
+            const isOwn = isNumericId && c.idautor != null && c.idautor === boot?.userId;
             const isEditing = editingId === c.id;
             return (
               <li
                 key={c.id}
-                className={`group relative ${
-                  c.pending
-                    ? embedded
-                      ? 'rounded-lg border border-amber-700/50 bg-amber-950/35 px-3 py-2 text-sm text-amber-100'
-                      : 'rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm'
-                    : embedded
-                      ? 'rounded-lg border border-[var(--pgm-border-subtle)] bg-white px-3 py-2 text-sm text-[var(--pgm-text)] shadow-sm'
-                      : 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm'
-                }`}
+                className={
+                  embedded
+                    ? 'group relative rounded-lg border border-[var(--pgm-border-subtle)] bg-white px-3 py-2 text-sm text-[var(--pgm-text)] shadow-sm'
+                    : 'group relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm'
+                }
               >
                 <div
                   className={
@@ -461,10 +478,9 @@ export default function ClientTicketDetail({ boot }) {
         />
         <button
           type="submit"
-          disabled={enviando}
-          className="mt-2 rounded-lg bg-[var(--pgm-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)] disabled:opacity-50"
+          className="mt-2 rounded-lg bg-[var(--pgm-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--pgm-erp-teal-active)]"
         >
-          {enviando ? 'Enviando…' : 'Enviar comentário'}
+          Enviar comentário
         </button>
       </form>
     </div>

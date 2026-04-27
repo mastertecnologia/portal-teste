@@ -8,9 +8,10 @@ import {
   getBoot,
 } from '../lib/api';
 import { useTicketCommentsPoll, TICKET_COMMENTS_POLL_MS } from '../hooks/useTicketCommentsPoll';
+import { useTicketCommentsSocket } from '../hooks/useTicketCommentsSocket';
 import { useTicketTimelinePoll } from '../hooks/useTicketTimelinePoll';
 import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
-import { stripHtml } from '../lib/text';
+import { finalizeOptimisticComment, formatCommentPostTimestamp, stripHtml } from '../lib/text';
 import { badgeClass, statusType } from '../lib/ticketUi';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
@@ -72,7 +73,6 @@ export default function TechTicketEdit({ boot }) {
   const [texto, setTexto] = useState('');
   const [desc, setDesc] = useState('');
   const [relatorioAtendimento, setRelatorioAtendimento] = useState('');
-  const [enviando, setEnviando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
   const [erro, setErro] = useState(null);
@@ -82,6 +82,7 @@ export default function TechTicketEdit({ boot }) {
   const [mainSdTab, setMainSdTab] = useState(readSdHash);
   /** Incrementado a cada `onSnapshot` do timer — evita que um GET /api-view tardio sobrescreva sessão ativa. */
   const horasTecnicasMutationsRef = useRef(0);
+  const comentarioEmProgressoRef = useRef(false);
 
   useEffect(() => {
     const h = () => setMainSdTab(readSdHash());
@@ -137,7 +138,8 @@ export default function TechTicketEdit({ boot }) {
     };
   }, [id]);
 
-  useTicketCommentsPoll(id, setComentarios, setTicket);
+  const { socketRef, socketOn } = useTicketCommentsSocket(id, setComentarios);
+  useTicketCommentsPoll(id, setComentarios, setTicket, TICKET_COMMENTS_POLL_MS, socketOn);
   useTicketTimelinePoll(id, setTimelineEvents);
 
   const { listRef, onListScroll, pinToBottom } = useConversationScrollToBottom(comentarios);
@@ -162,34 +164,51 @@ export default function TechTicketEdit({ boot }) {
     e.preventDefault();
     const t = texto.trim();
     if (!t || !ticket) return;
+    if (comentarioEmProgressoRef.current) return;
     pinToBottom();
     const b = getBoot();
     const papel = (b?.role ?? 1) === 0 ? 'tecnico' : 'cliente';
     const nome = (b?.userName || 'Eu').trim();
+    const uid = b?.userId != null ? Number(b.userId) : undefined;
     const tmpId = `pending-${Date.now()}`;
     const optimistic = {
       id: tmpId,
+      idautor: uid,
       autor: nome,
       papel,
       texto: t,
-      quando: 'Enviando…',
-      pending: true,
+      quando: formatCommentPostTimestamp(),
     };
     setComentarios((prev) => [...prev, optimistic]);
     setTexto('');
-    setEnviando(true);
+    comentarioEmProgressoRef.current = true;
     setErro(null);
-    const res = await postComentario(ticket.id, t);
-    setEnviando(false);
-    setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
-    if (res.ok) {
-      setRightPanelTab('chat');
-      setComentarios((prev) => [...prev, res.data]);
-      const tr = await fetchTicketTimeline(ticket.id);
-      if (tr.ok) setTimelineEvents(tr.events || []);
-    } else {
-      setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
-      setTexto(t);
+    try {
+      const res = await postComentario(ticket.id, t);
+      if (res.ok) {
+        const saved = {
+          ...res.data,
+          idautor: res.data.idautor != null ? Number(res.data.idautor) : uid,
+        };
+        setComentarios((prev) => finalizeOptimisticComment(prev, tmpId, saved));
+        setRightPanelTab('chat');
+        try {
+          socketRef.current?.emit('ticket_comment_relay', {
+            ticketId: Number(ticket.id),
+            comment: saved,
+          });
+        } catch {
+          /* ignore */
+        }
+        const tr = await fetchTicketTimeline(ticket.id);
+        if (tr.ok) setTimelineEvents(tr.events || []);
+      } else {
+        setComentarios((prev) => prev.filter((c) => c.id !== tmpId));
+        setErro(res.error || 'Não foi possível enviar o comentário. Tente novamente.');
+        setTexto(t);
+      }
+    } finally {
+      comentarioEmProgressoRef.current = false;
     }
   }
 
@@ -423,7 +442,9 @@ export default function TechTicketEdit({ boot }) {
       {erro && <p className="mb-2 rounded-lg border border-[rgba(248,113,113,0.35)] bg-[var(--pgm-badge-red-bg)] px-3 py-2 text-xs text-[var(--pgm-badge-red-text,#ff9492)] sm:text-sm">{erro}</p>}
       {embedded && (
         <p className="mb-3 text-xs text-[var(--pgm-text-muted,#9aa0a8)]">
-          Comentários e status do ticket atualizam (~{Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.
+          {socketOn
+            ? 'Conversa em tempo real (socket). Comentários e status continuam sincronizados com o servidor.'
+            : `Comentários e status do ticket atualizam (~${Math.round(TICKET_COMMENTS_POLL_MS / 1000)}s) com a aba visível.`}{' '}
           Envio de e-mail não bloqueia a resposta (PHP-FPM).
         </p>
       )}
@@ -588,11 +609,7 @@ export default function TechTicketEdit({ boot }) {
               return (
                 <li
                   key={c.id}
-                  className={`rounded-lg border px-3 py-2 text-sm ${
-                    c.pending
-                      ? 'border-amber-700/50 bg-amber-950/35 text-amber-100'
-                      : 'border-[var(--pgm-border-subtle)] bg-white text-[var(--pgm-text)] shadow-sm'
-                  }`}
+                  className="rounded-lg border border-[var(--pgm-border-subtle)] bg-white px-3 py-2 text-sm text-[var(--pgm-text)] shadow-sm"
                 >
                   <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--pgm-text-muted)]">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -653,15 +670,10 @@ export default function TechTicketEdit({ boot }) {
           />
           <button
             type="submit"
-            disabled={enviando}
             title="Enviar comentário"
-            className="self-end rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] p-2.5 text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] active:translate-y-0 disabled:opacity-50"
+            className="self-end rounded-lg bg-gradient-to-b from-[var(--pgm-primary,#1d9e75)] to-[#168a64] p-2.5 text-white shadow-[var(--pgm-shadow-sm),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:-translate-y-px hover:shadow-[var(--pgm-shadow-md),0_0_16px_rgba(29,158,117,0.25)] active:translate-y-0"
           >
-            {enviando ? (
-              <svg className="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
-            ) : (
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
-            )}
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
           </button>
         </form>
       </div>

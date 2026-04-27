@@ -76,6 +76,13 @@ io.on('connection', (socket) => {
     }
     io.to(`ticket_${claims.tid}`).emit('ticket_message', p);
   });
+
+  socket.on('ticket_comment_relay', (p) => {
+    if (String(p?.ticketId) !== String(claims.tid)) {
+      return;
+    }
+    io.to(`ticket_${claims.tid}`).emit('ticket_comment', p);
+  });
 });
 
 http.listen(port, () => {

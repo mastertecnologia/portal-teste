@@ -8,14 +8,20 @@ export const TICKET_COMMENTS_POLL_MS = 2000;
  * Atualiza comentários e status do ticket em intervalo (aba visível).
  * Não é WebSocket; reduz carga vs. api-view completo.
  */
-export function useTicketCommentsPoll(ticketId, setComentarios, setTicket, intervalMs = TICKET_COMMENTS_POLL_MS) {
+export function useTicketCommentsPoll(
+  ticketId,
+  setComentarios,
+  setTicket,
+  intervalMs = TICKET_COMMENTS_POLL_MS,
+  pausePolling = false,
+) {
   const setC = useRef(setComentarios);
   const setT = useRef(setTicket);
   setC.current = setComentarios;
   setT.current = setTicket;
 
   useEffect(() => {
-    if (USE_MOCK || !ticketId) return;
+    if (USE_MOCK || !ticketId || pausePolling) return;
     const boot = typeof window !== 'undefined' ? window.__TICKETS_BOOT__ : null;
     if (!boot?.paths?.apiComments) return;
 
@@ -59,5 +65,5 @@ export function useTicketCommentsPoll(ticketId, setComentarios, setTicket, inter
       clearInterval(iv);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [ticketId, intervalMs]);
+  }, [ticketId, intervalMs, pausePolling]);
 }
