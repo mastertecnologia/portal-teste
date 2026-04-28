@@ -226,7 +226,20 @@ $atvFmtDateBr = function ($d): string {
 							</div>
 							<div class="cli-fgroup">
 								<label>Senha</label>
-								<?= $this->Form->control('senha', ['type' => 'password', 'label' => false, 'class' => 'form-control', 'autocomplete' => 'new-password']) ?>
+								<div class="input-group">
+									<?= $this->Form->control('senha', [
+										'type' => 'password',
+										'label' => false,
+										'class' => 'form-control',
+										'autocomplete' => 'new-password',
+										'id' => 'atv-senha-input',
+									]) ?>
+									<div class="input-group-append">
+										<button type="button" class="btn btn-outline-secondary" id="atv-senha-toggle" aria-label="Mostrar senha" title="Mostrar senha">
+											<i class="fas fa-eye" aria-hidden="true"></i>
+										</button>
+									</div>
+								</div>
 							</div>
 							<div class="cli-fgroup">
 								<label>Porta interna</label>
@@ -421,6 +434,20 @@ $atvFmtDateBr = function ($d): string {
 				atvBindBrDatepickers($(href));
 			}
 		});
+
+		var senhaInput = document.getElementById('atv-senha-input');
+		var senhaToggle = document.getElementById('atv-senha-toggle');
+		if (senhaInput && senhaToggle) {
+			senhaToggle.addEventListener('click', function () {
+				var isHidden = senhaInput.getAttribute('type') === 'password';
+				senhaInput.setAttribute('type', isHidden ? 'text' : 'password');
+				senhaToggle.setAttribute('aria-label', isHidden ? 'Ocultar senha' : 'Mostrar senha');
+				senhaToggle.setAttribute('title', isHidden ? 'Ocultar senha' : 'Mostrar senha');
+				senhaToggle.innerHTML = isHidden
+					? '<i class="fas fa-eye-slash" aria-hidden="true"></i>'
+					: '<i class="fas fa-eye" aria-hidden="true"></i>';
+			});
+		}
 	});
 })();
 </script>
