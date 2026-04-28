@@ -82,8 +82,9 @@ class ClienteCorrelatedIds {
 	protected static function _rowNomeKeys($row): array {
 		$rz = is_array($row) ? ($row['razaosocial'] ?? '') : ($row->get('razaosocial') ?? '');
 		$nm = is_array($row) ? ($row['nome'] ?? '') : ($row->get('nome') ?? '');
+		$nf = is_array($row) ? ($row['nomefantasia'] ?? '') : ($row->get('nomefantasia') ?? '');
 
-		return [self::normalizeNomeKey($rz), self::normalizeNomeKey($nm)];
+		return [self::normalizeNomeKey($rz), self::normalizeNomeKey($nm), self::normalizeNomeKey($nf)];
 	}
 
 	/**
@@ -126,11 +127,14 @@ class ClienteCorrelatedIds {
 		$tipoPj = defined('C_ClientesTipoJuridica') ? (int)C_ClientesTipoJuridica : 2;
 		$isPj = (int)($ref->get('tipo') ?? 0) === $tipoPj;
 		$nomeRaw = $isPj ? (string)($ref->get('razaosocial') ?? '') : (string)($ref->get('nome') ?? '');
+		if (trim($nomeRaw) === '') {
+			$nomeRaw = (string)($ref->get('nomefantasia') ?? '');
+		}
 		$nomeKey = self::normalizeNomeKey($nomeRaw);
 		$nomeLen = function_exists('mb_strlen') ? mb_strlen($nomeKey, 'UTF-8') : strlen($nomeKey);
 		if ($nomeKey !== '' && $nomeLen >= 4) {
-			[$krz, $knm] = self::_rowNomeKeys($row);
-			if ($krz === $nomeKey || $knm === $nomeKey) {
+			[$krz, $knm, $knf] = self::_rowNomeKeys($row);
+			if ($krz === $nomeKey || $knm === $nomeKey || $knf === $nomeKey) {
 				return true;
 			}
 		}
@@ -147,7 +151,7 @@ class ClienteCorrelatedIds {
 		if ($idempresa <= 0 || $idclienteRef <= 0) {
 			return $idclienteRef > 0 ? [$idclienteRef] : [];
 		}
-		$select = ['id', 'cnpj', 'cpf', 'razaosocial', 'nome', 'tipo'];
+		$select = ['id', 'cnpj', 'cpf', 'razaosocial', 'nome', 'nomefantasia', 'tipo'];
 		if (in_array('public_code', $Clientes->getSchema()->columns(), true)) {
 			$select[] = 'public_code';
 		}
