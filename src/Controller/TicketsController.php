@@ -6188,20 +6188,47 @@ class TicketsController extends AppController {
 
 		if ($tab === 'ativos') {
 			$mapAsset = function ($a) {
+				$res = $a->responsavel ?? null;
+				$cli = $a->cliente ?? null;
+				$clienteNome = '';
+				if ($cli) {
+					$clienteNome = (string)($cli->razaosocial ?? $cli->nomefantasia ?? $cli->nome ?? '');
+				}
+				$responsavelNome = '';
+				if ($res) {
+					$responsavelNome = (string)($res->name ?? $res->username ?? '');
+				}
 				return [
 					'id' => (int)$a->id,
+					'idcliente' => (int)($a->idcliente ?? 0),
 					'descricao' => (string)($a->descricao ?? ''),
 					'identificador' => (string)($a->identificador ?? ''),
 					'codigo_qr' => (string)($a->codigo_qr ?? ''),
 					'tipo' => (string)($a->tipo ?? ''),
+					'categoria' => (string)($a->categoria ?? ''),
 					'marca' => (string)($a->marca ?? ''),
 					'modelo' => (string)($a->modelo ?? ''),
 					'numero_serie' => (string)($a->numero_serie ?? ''),
+					'patrimonio' => (string)($a->patrimonio ?? ''),
 					'hostname' => (string)($a->hostname ?? ''),
+					'ip' => (string)($a->ip ?? ''),
+					'mac' => (string)($a->mac ?? ''),
+					'sistema_operacional' => (string)($a->sistema_operacional ?? ''),
 					'localizacao' => (string)($a->localizacao ?? ''),
+					'responsavel_user_id' => (int)($a->responsavel_user_id ?? 0),
+					'responsavel_nome' => $responsavelNome,
+					'cliente_nome' => $clienteNome,
+					'propriedade' => (string)($a->propriedade ?? ''),
 					'status_operacional' => (string)($a->status_operacional ?? ''),
 					'ativo' => (bool)($a->ativo ?? true),
+					'dt_aquisicao' => $a->dt_aquisicao,
+					'dt_instalacao' => $a->dt_instalacao,
+					'dt_garantia_fim' => $a->dt_garantia_fim,
+					'fornecedor' => (string)($a->fornecedor ?? ''),
+					'custo_aquisicao' => $a->custo_aquisicao,
+					'observacoes' => (string)($a->observacoes ?? ''),
 					'created' => $a->created,
+					'modified' => $a->modified,
 				];
 			};
 			// CIs já vinculados ao ticket (via pivot ticket_assets).
@@ -6210,7 +6237,7 @@ class TicketsController extends AppController {
 			try {
 				$ta = $this->loadModel('TicketAssets');
 				$pivotRows = $ta->find()
-					->contain(['Assets'])
+					->contain(['Assets' => ['Clientes', 'Responsavel']])
 					->where(['TicketAssets.ticket_id' => (int)$idticket])
 					->order(['TicketAssets.id' => 'DESC'])
 					->limit(200)

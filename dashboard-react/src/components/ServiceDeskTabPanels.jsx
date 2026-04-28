@@ -126,6 +126,19 @@ function AssetFieldIcon({ field }) {
   }
 }
 
+function fmtDateBr(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('pt-BR');
+}
+
+function fmtCurrencyBr(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return BR.format(n);
+}
+
 /** Caminhos absolutos na raiz do host quebram com APP em subpasta (ex. /portal/). Alinha a tickets API (`boot.webroot`). */
 function pathWithWebroot(boot, path) {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -151,7 +164,7 @@ function debugLog18a583(runId, hypothesisId, location, message, data = {}) {
   // #endregion
 }
 
-function AssetDetailsModal({ assetModal, setAssetModal, detailRows, boot, assetModalRef }) {
+function AssetDetailsModal({ assetModal, setAssetModal, sections, boot, assetModalRef }) {
   if (!assetModal || typeof document === 'undefined') return null;
   return createPortal(
     <div
@@ -184,16 +197,27 @@ function AssetDetailsModal({ assetModal, setAssetModal, detailRows, boot, assetM
             Fechar
           </button>
         </div>
-        <div className="grid gap-2 px-4 py-4 sm:grid-cols-2">
-          {detailRows.map((row) => (
-            <div key={row.label} className="rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2">
-              <p className="flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.05em] text-[var(--pgm-text-muted)]">
-                <AssetFieldIcon field={row.key} />
-                {row.label}
-              </p>
-              <p className="mt-0.5 text-sm text-[var(--pgm-text)]">{row.value}</p>
-            </div>
-          ))}
+        <div className="max-h-[68vh] space-y-3 overflow-y-auto px-4 py-4">
+          {sections
+            .filter((s) => s.rows.length > 0)
+            .map((section) => (
+              <div key={section.title} className="rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-3">
+                <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">
+                  {section.title}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {section.rows.map((row) => (
+                    <div key={`${section.title}-${row.label}`} className="rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] px-3 py-2">
+                      <p className="flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.05em] text-[var(--pgm-text-muted)]">
+                        <AssetFieldIcon field={row.key} />
+                        {row.label}
+                      </p>
+                      <p className="mt-0.5 break-words text-sm text-[var(--pgm-text)]">{row.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
         </div>
         <div className="flex justify-end border-t border-[var(--pgm-border-subtle)] px-4 py-3">
           <a
@@ -412,16 +436,54 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
       }
       reload();
     };
-    const detailRows = [
-      { key: 'tipo', label: 'Tipo', value: tipoLabel(assetModal?.tipo) },
-      { key: 'estado', label: 'Estado', value: statusOpLabel(assetModal?.status_operacional) },
-      { key: 'serie', label: 'Série / ID', value: assetModal?.numero_serie || assetModal?.identificador || assetModal?.id },
-      { key: 'qr', label: 'Código QR', value: assetModal?.codigo_qr },
-      { key: 'hostname', label: 'Hostname', value: assetModal?.hostname },
-      { key: 'marcaModelo', label: 'Marca / Modelo', value: [assetModal?.marca, assetModal?.modelo].filter(Boolean).join(' ') || null },
-      { key: 'localizacao', label: 'Localização', value: assetModal?.localizacao },
-      { key: 'obs', label: 'Observações', value: assetModal?.observacoes },
-    ].filter((row) => row.value != null && String(row.value).trim() !== '');
+    const sections = [
+      {
+        title: 'Identificação',
+        rows: [
+          { key: 'tipo', label: 'Tipo', value: tipoLabel(assetModal?.tipo) },
+          { key: 'serie', label: 'Categoria', value: assetModal?.categoria || '—' },
+          { key: 'serie', label: 'Cliente', value: assetModal?.cliente_nome || '—' },
+          { key: 'serie', label: 'Patrimônio', value: assetModal?.patrimonio || '—' },
+          { key: 'serie', label: 'Identificador', value: assetModal?.identificador || `#${assetModal?.id || '—'}` },
+          { key: 'qr', label: 'Código QR', value: assetModal?.codigo_qr || '—' },
+          { key: 'estado', label: 'Estado', value: statusOpLabel(assetModal?.status_operacional) },
+        ],
+      },
+      {
+        title: 'Hardware / Rede',
+        rows: [
+          { key: 'marcaModelo', label: 'Marca', value: assetModal?.marca || '—' },
+          { key: 'marcaModelo', label: 'Modelo', value: assetModal?.modelo || '—' },
+          { key: 'serie', label: 'Nº de série', value: assetModal?.numero_serie || '—' },
+          { key: 'hostname', label: 'Hostname', value: assetModal?.hostname || '—' },
+          { key: 'hostname', label: 'IP', value: assetModal?.ip || '—' },
+          { key: 'hostname', label: 'MAC', value: assetModal?.mac || '—' },
+          { key: 'hostname', label: 'Sistema', value: assetModal?.sistema_operacional || '—' },
+          { key: 'localizacao', label: 'Localização', value: assetModal?.localizacao || '—' },
+        ],
+      },
+      {
+        title: 'Garantia / Financeiro',
+        rows: [
+          { key: 'serie', label: 'Aquisição', value: fmtDateBr(assetModal?.dt_aquisicao) },
+          { key: 'serie', label: 'Instalação', value: fmtDateBr(assetModal?.dt_instalacao) },
+          { key: 'serie', label: 'Fim da garantia', value: fmtDateBr(assetModal?.dt_garantia_fim) },
+          { key: 'serie', label: 'Fornecedor', value: assetModal?.fornecedor || '—' },
+          { key: 'serie', label: 'Custo', value: fmtCurrencyBr(assetModal?.custo_aquisicao) },
+          { key: 'serie', label: 'Propriedade', value: assetModal?.propriedade || '—' },
+        ],
+      },
+      {
+        title: 'Cadastro',
+        rows: [
+          { key: 'estado', label: 'Ativo no cadastro', value: assetModal?.ativo ? 'Sim' : 'Não' },
+          { key: 'serie', label: 'Responsável', value: assetModal?.responsavel_nome || '—' },
+          { key: 'serie', label: 'Criado em', value: fmtDateBr(assetModal?.created) },
+          { key: 'serie', label: 'Atualizado em', value: fmtDateBr(assetModal?.modified) },
+          { key: 'obs', label: 'Observações', value: assetModal?.observacoes || '—' },
+        ],
+      },
+    ];
 
     return (
       <div className="space-y-3">
@@ -573,7 +635,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         <AssetDetailsModal
           assetModal={assetModal}
           setAssetModal={setAssetModal}
-          detailRows={detailRows}
+          sections={sections}
           boot={boot}
           assetModalRef={assetModalRef}
         />
