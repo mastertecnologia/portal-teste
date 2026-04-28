@@ -552,6 +552,27 @@ $atvFmtDateBr = function ($d): string {
 </div>
 </div>
 
+<div class="modal fade" id="atv-add-item-modal" tabindex="-1" role="dialog" aria-labelledby="atv-add-item-modal-label" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="atv-add-item-modal-label">Adicionar item</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<label for="atv-add-item-input" id="atv-add-item-label">Novo item</label>
+				<input type="text" id="atv-add-item-input" class="form-control" maxlength="96" autocomplete="off">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn-cli-secondary" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn-cli-primary" id="atv-add-item-confirm"><i class="fas fa-check"></i> Adicionar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script>
 (function () {
 	function atvBindBrDatepickers($ctx) {
@@ -597,6 +618,46 @@ $atvFmtDateBr = function ($d): string {
 		atvBindPasswordToggle('atv-winkey-input', 'atv-winkey-toggle', 'chave');
 		atvBindPasswordToggle('atv-offkey-input', 'atv-offkey-toggle', 'chave');
 
+		function atvAskNewSelectItem(promptLabel, callback) {
+			var $modal = $('#atv-add-item-modal');
+			var inputEl = document.getElementById('atv-add-item-input');
+			var labelEl = document.getElementById('atv-add-item-label');
+			var titleEl = document.getElementById('atv-add-item-modal-label');
+			var confirmBtn = document.getElementById('atv-add-item-confirm');
+			if (!$modal.length || !inputEl || !labelEl || !titleEl || !confirmBtn) {
+				return;
+			}
+			titleEl.textContent = 'Adicionar item';
+			labelEl.textContent = 'Novo item para ' + promptLabel;
+			inputEl.value = '';
+
+			var onConfirm = function () {
+				var value = (inputEl.value || '').trim();
+				if (!value) {
+					inputEl.focus();
+					return;
+				}
+				$modal.modal('hide');
+				callback(value);
+			};
+			var onKeyDown = function (ev) {
+				if (ev.key === 'Enter') {
+					ev.preventDefault();
+					onConfirm();
+				}
+			};
+
+			confirmBtn.addEventListener('click', onConfirm, { once: true });
+			inputEl.addEventListener('keydown', onKeyDown);
+			$modal.one('hidden.bs.modal', function () {
+				inputEl.removeEventListener('keydown', onKeyDown);
+			});
+			$modal.one('shown.bs.modal', function () {
+				inputEl.focus();
+			});
+			$modal.modal('show');
+		}
+
 		function atvBindAddSelectOption(selectId, buttonId, promptLabel) {
 			var selectEl = document.getElementById(selectId);
 			var buttonEl = document.getElementById(buttonId);
@@ -604,29 +665,23 @@ $atvFmtDateBr = function ($d): string {
 				return;
 			}
 			buttonEl.addEventListener('click', function () {
-				var value = window.prompt('Digite o novo item para ' + promptLabel + ':', '');
-				if (value === null) {
-					return;
-				}
-				value = value.trim();
-				if (!value) {
-					return;
-				}
-				var found = null;
-				for (var i = 0; i < selectEl.options.length; i++) {
-					if ((selectEl.options[i].value || '').toLowerCase() === value.toLowerCase()) {
-						found = selectEl.options[i];
-						break;
+				atvAskNewSelectItem(promptLabel, function (value) {
+					var found = null;
+					for (var i = 0; i < selectEl.options.length; i++) {
+						if ((selectEl.options[i].value || '').toLowerCase() === value.toLowerCase()) {
+							found = selectEl.options[i];
+							break;
+						}
 					}
-				}
-				if (!found) {
-					found = document.createElement('option');
-					found.value = value;
-					found.textContent = value;
-					selectEl.appendChild(found);
-				}
-				selectEl.value = found.value;
-				selectEl.dispatchEvent(new Event('change'));
+					if (!found) {
+						found = document.createElement('option');
+						found.value = value;
+						found.textContent = value;
+						selectEl.appendChild(found);
+					}
+					selectEl.value = found.value;
+					selectEl.dispatchEvent(new Event('change'));
+				});
 			});
 		}
 		atvBindAddSelectOption('atv-so-edicao', 'atv-so-edicao-add', 'Edição do SO');
