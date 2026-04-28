@@ -26,6 +26,15 @@ $soEdicaoOpts = $soEdicaoOpts ?? [];
 $officeVersaoOpts = $officeVersaoOpts ?? [];
 $anexosNfe = $anexosNfe ?? [];
 
+$soEdicaoAtual = trim((string)($asset->so_edicao ?? ''));
+if ($soEdicaoAtual !== '' && !isset($soEdicaoOpts[$soEdicaoAtual])) {
+	$soEdicaoOpts[$soEdicaoAtual] = $soEdicaoAtual;
+}
+$officeVersaoAtual = trim((string)($asset->office_versao ?? ''));
+if ($officeVersaoAtual !== '' && !isset($officeVersaoOpts[$officeVersaoAtual])) {
+	$officeVersaoOpts[$officeVersaoAtual] = $officeVersaoAtual;
+}
+
 $idTag = $isEdit ? ($asset->identificador ?: ('ATV-' . str_pad((string)$asset->id, 6, '0', STR_PAD_LEFT))) : 'NOVO';
 $qrPayload = $isEdit ? ($asset->codigo_qr ?: ('ATV-' . str_pad((string)$asset->id, 6, '0', STR_PAD_LEFT))) : '';
 $qrUrl = $isEdit ? 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' . urlencode($qrPayload) : '';
@@ -274,7 +283,10 @@ $atvFmtDateBr = function ($d): string {
 						<div class="cli-fg cli-fg-2">
 							<div class="cli-fgroup">
 								<label>Edição do SO</label>
-								<?= $this->Form->select('so_edicao', $soEdicaoOpts, ['empty' => false, 'class' => 'form-control']) ?>
+								<div class="d-flex align-items-center pgm-gap-8">
+									<?= $this->Form->select('so_edicao', $soEdicaoOpts, ['empty' => false, 'class' => 'form-control', 'id' => 'atv-so-edicao']) ?>
+									<button type="button" class="btn-cli-outline" id="atv-so-edicao-add" title="Adicionar item de SO"><i class="fas fa-plus"></i></button>
+								</div>
 							</div>
 							<div class="cli-fgroup">
 								<label>Chave de série do Windows</label>
@@ -307,7 +319,10 @@ $atvFmtDateBr = function ($d): string {
 						<div class="cli-fg cli-fg-2">
 							<div class="cli-fgroup">
 								<label>Versão do Office</label>
-								<?= $this->Form->select('office_versao', $officeVersaoOpts, ['empty' => false, 'class' => 'form-control']) ?>
+								<div class="d-flex align-items-center pgm-gap-8">
+									<?= $this->Form->select('office_versao', $officeVersaoOpts, ['empty' => false, 'class' => 'form-control', 'id' => 'atv-office-versao']) ?>
+									<button type="button" class="btn-cli-outline" id="atv-office-versao-add" title="Adicionar item de Office"><i class="fas fa-plus"></i></button>
+								</div>
 							</div>
 							<div class="cli-fgroup">
 								<label>Chave serial do Office</label>
@@ -581,6 +596,41 @@ $atvFmtDateBr = function ($d): string {
 		atvBindPasswordToggle('atv-senha-input', 'atv-senha-toggle', 'senha');
 		atvBindPasswordToggle('atv-winkey-input', 'atv-winkey-toggle', 'chave');
 		atvBindPasswordToggle('atv-offkey-input', 'atv-offkey-toggle', 'chave');
+
+		function atvBindAddSelectOption(selectId, buttonId, promptLabel) {
+			var selectEl = document.getElementById(selectId);
+			var buttonEl = document.getElementById(buttonId);
+			if (!selectEl || !buttonEl) {
+				return;
+			}
+			buttonEl.addEventListener('click', function () {
+				var value = window.prompt('Digite o novo item para ' + promptLabel + ':', '');
+				if (value === null) {
+					return;
+				}
+				value = value.trim();
+				if (!value) {
+					return;
+				}
+				var found = null;
+				for (var i = 0; i < selectEl.options.length; i++) {
+					if ((selectEl.options[i].value || '').toLowerCase() === value.toLowerCase()) {
+						found = selectEl.options[i];
+						break;
+					}
+				}
+				if (!found) {
+					found = document.createElement('option');
+					found.value = value;
+					found.textContent = value;
+					selectEl.appendChild(found);
+				}
+				selectEl.value = found.value;
+				selectEl.dispatchEvent(new Event('change'));
+			});
+		}
+		atvBindAddSelectOption('atv-so-edicao', 'atv-so-edicao-add', 'Edição do SO');
+		atvBindAddSelectOption('atv-office-versao', 'atv-office-versao-add', 'Versão do Office');
 
 		var nfeBtn = document.getElementById('atv-nfe-buscar');
 		var nfeSelect = document.getElementById('atv-nfe-select');
