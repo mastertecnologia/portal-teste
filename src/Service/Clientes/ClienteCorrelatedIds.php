@@ -12,6 +12,20 @@ use Cake\Log\Log;
  * sem depender de `instanceof` do driver nem de SQL específico.
  */
 class ClienteCorrelatedIds {
+	// #region agent log
+	protected static function _agentDebugLog18a583(string $runId, string $hypothesisId, string $location, string $message, array $data = []): void {
+		$line = json_encode([
+			'sessionId' => '18a583',
+			'runId' => $runId,
+			'hypothesisId' => $hypothesisId,
+			'location' => $location,
+			'message' => $message,
+			'data' => $data,
+			'timestamp' => (int) round(microtime(true) * 1000),
+		], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+		@file_put_contents(ROOT . DS . 'debug-18a583.log', $line, FILE_APPEND);
+	}
+	// #endregion
 
 	/**
 	 * @param string|null $raw
@@ -165,6 +179,18 @@ class ClienteCorrelatedIds {
 		$ids = [];
 		$scanned = 0;
 		$warnThreshold = 12000;
+		$refNomeKeys = self::_rowNomeKeys($cli);
+		// #region agent log
+		self::_agentDebugLog18a583('post-fix', 'H9', 'ClienteCorrelatedIds::forEmpresaCliente:ref', 'reference cliente keys', [
+			'idempresa' => $idempresa,
+			'ref_idcliente' => (int)$cli->get('id'),
+			'ref_public_code' => (string)($cli->get('public_code') ?? ''),
+			'ref_cnpj_digits' => preg_replace('/\D/', '', (string)($cli->get('cnpj') ?? '')),
+			'ref_cpf_digits' => preg_replace('/\D/', '', (string)($cli->get('cpf') ?? '')),
+			'ref_nome_keys_sha1_8' => array_map(static function ($v) { return substr(sha1((string)$v), 0, 8); }, $refNomeKeys),
+		]);
+		// #endregion
+		$debugSample = [];
 		foreach (
 			$Clientes->find()
 				->select($select)
@@ -182,8 +208,28 @@ class ClienteCorrelatedIds {
 			if (self::_rowMatchesRef($cli, $row)) {
 				$ids[] = self::_rowId($row);
 			}
+			if (count($debugSample) < 20) {
+				[$krz, $knm, $knf] = self::_rowNomeKeys($row);
+				$debugSample[] = [
+					'row_idcliente' => self::_rowId($row),
+					'row_public_code' => self::_rowPublicCode($row),
+					'row_cnpj_digits' => self::_rowCnpjDigits($row),
+					'row_cpf_digits' => self::_rowCpfDigits($row),
+					'row_nome_keys_sha1_8' => [substr(sha1($krz), 0, 8), substr(sha1($knm), 0, 8), substr(sha1($knf), 0, 8)],
+					'matches' => self::_rowMatchesRef($cli, $row),
+				];
+			}
 		}
 		$ids = array_values(array_unique(array_filter($ids, static fn($v) => $v > 0)));
+		// #region agent log
+		self::_agentDebugLog18a583('post-fix', 'H10', 'ClienteCorrelatedIds::forEmpresaCliente:scanResult', 'scan completed', [
+			'idempresa' => $idempresa,
+			'ref_idcliente' => (int)$cli->get('id'),
+			'scanned' => $scanned,
+			'matched_ids' => $ids,
+			'debug_sample' => $debugSample,
+		]);
+		// #endregion
 
 		return !empty($ids) ? $ids : [(int)$cli->get('id')];
 	}
