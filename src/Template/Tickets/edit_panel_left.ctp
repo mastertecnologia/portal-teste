@@ -76,39 +76,52 @@ if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPe
 	<?php endif; ?>
 </p>
 <br>
-<h4> Timer (Horas Técnicas): </h4>
-<?php if (!empty($timerAtivo) && !$timerPausado): ?>
-	<?php
-	$horaInicioTimer = $timerAtivo->get('hora_inicio');
-	if (is_object($horaInicioTimer) && method_exists($horaInicioTimer, 'format')) {
-		$horaInicioTimer = $horaInicioTimer->format('Y-m-d H:i:s');
-	}
-	$horaInicioTimer = (string)$horaInicioTimer;
-	?>
-	<div id="timer-cronometro" class="sd-timer-display mb-2 p-2 bg-info text-white rounded" data-hora-inicio="<?= h($horaInicioTimer) ?>">00:00:00</div>
-<?php elseif (!empty($timerAtivo) && $timerPausado && !empty($timerPausadoElapsedTexto)): ?>
-	<div id="timer-cronometro-pausado" class="sd-timer-display mb-2 p-2 bg-warning text-dark rounded"><?= h($timerPausadoElapsedTexto) ?> <small>(pausado)</small></div>
-<?php endif; ?>
+<h4> Rastreamento de Tempo: </h4>
 <?php
 $urlIniciar = $this->Url->build(['controller' => 'Tickets', 'action' => 'timerIniciar', $ticket->id]);
 $urlPausar = $this->Url->build(['controller' => 'Tickets', 'action' => 'timerPausar', $ticket->id]);
 $urlRetomar = $this->Url->build(['controller' => 'Tickets', 'action' => 'timerRetomar', $ticket->id]);
 $urlFinalizar = $this->Url->build(['controller' => 'Tickets', 'action' => 'timerFinalizar', $ticket->id]);
+$urlTimeEntriesApi = $this->Url->build(['controller' => 'Tickets', 'action' => 'apiTimeEntries', $ticket->id]);
 $hxAttrs = ' hx-target="#ticket-panel-left" hx-swap="innerHTML" ';
-if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoPendente])) {
-	if (empty($timerAtivo)) {
-		echo '<form method="post" action="' . h($urlIniciar) . '" class="d-inline" hx-post="' . h($urlIniciar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-pgm btn-pgm-situacao btn-info btn-simple btn-xs m-r-5">Iniciar</button></form>';
-	} else {
-		if ($timerPausado) {
-			echo '<form method="post" action="' . h($urlRetomar) . '" class="d-inline" hx-post="' . h($urlRetomar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-warning btn-simple btn-xs m-r-5">Retomar</button></form>';
-		} else {
-			echo '<form method="post" action="' . h($urlPausar) . '" class="d-inline" hx-post="' . h($urlPausar) . '"' . $hxAttrs . '><button type="submit" class="btn btn-warning btn-simple btn-xs m-r-5">Pausar</button></form>';
-		}
-		echo ' ';
-		echo '<form method="post" action="' . h($urlFinalizar) . '" class="d-inline" hx-post="' . h($urlFinalizar) . '"' . $hxAttrs . ' hx-confirm="Finalizar o timer e registrar as horas?"><button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success btn-simple btn-xs m-r-5">Finalizar</button></form>';
+$horaInicioTimer = null;
+if (!empty($timerAtivo)) {
+	$horaInicioTimer = $timerAtivo->get('hora_inicio');
+	if (is_object($horaInicioTimer) && method_exists($horaInicioTimer, 'format')) {
+		$horaInicioTimer = $horaInicioTimer->format('Y-m-d H:i:s');
 	}
+	$horaInicioTimer = (string)$horaInicioTimer;
 }
 ?>
+<div class="sd-time-tracker-card" data-ticket-id="<?= (int)$ticket->id ?>" data-api-time-entries="<?= h($urlTimeEntriesApi) ?>">
+	<div class="sd-time-display bg-info text-white rounded p-2 mb-2 sd-timer-precision"
+		data-hora-inicio="<?= h((string)$horaInicioTimer) ?>"
+		data-pausado="<?= !empty($timerPausado) ? '1' : '0' ?>"
+		data-pausado-elapsed="<?= h((string)($timerPausadoElapsedTexto ?? '')) ?>">
+		00:00:00
+		<span class="float-right">
+			<?php if (empty($timerAtivo)): ?>
+				<form method="post" action="<?= h($urlIniciar) ?>" class="d-inline" hx-post="<?= h($urlIniciar) ?>" <?= $hxAttrs ?>><button type="submit" class="btn btn-link p-0 text-white" title="Iniciar">&#9658;</button></form>
+			<?php elseif (!empty($timerPausado)): ?>
+				<form method="post" action="<?= h($urlRetomar) ?>" class="d-inline" hx-post="<?= h($urlRetomar) ?>" <?= $hxAttrs ?>><button type="submit" class="btn btn-link p-0 text-dark" title="Retomar">&#9658;</button></form>
+			<?php else: ?>
+				<form method="post" action="<?= h($urlPausar) ?>" class="d-inline" hx-post="<?= h($urlPausar) ?>" <?= $hxAttrs ?>><button type="submit" class="btn btn-link p-0 text-white" title="Pausar">&#10074;&#10074;</button></form>
+			<?php endif; ?>
+			<?php if (!empty($timerAtivo)): ?>
+				<form method="post" action="<?= h($urlFinalizar) ?>" class="d-inline ml-2" hx-post="<?= h($urlFinalizar) ?>" <?= $hxAttrs ?> hx-confirm="Finalizar o timer e registrar as horas?"><button type="submit" class="btn btn-link p-0 text-white" title="Finalizar">&#9632;</button></form>
+			<?php endif; ?>
+		</span>
+	</div>
+	<div class="sd-time-links">
+		<a href="javascript:void(0)" class="js-time-entry-manual" data-ticket-id="<?= (int)$ticket->id ?>">Entrada Manual de Tempo</a>
+	</div>
+	<div class="sd-time-links m-t-5">
+		<a href="javascript:void(0)" class="js-time-entry-list" data-ticket-id="<?= (int)$ticket->id ?>">Ver todas as entradas</a>
+	</div>
+	<div class="sd-time-subtle m-t-5">
+		12h clock
+	</div>
+</div>
 <br>
 <h4> Ações: </h4>
 <?php

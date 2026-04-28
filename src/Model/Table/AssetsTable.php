@@ -60,6 +60,10 @@ class AssetsTable extends Table {
 		$validator->scalar('senha')->allowEmptyString('senha');
 		$validator->integer('porta_interna')->greaterThanOrEqual('porta_interna', 1)->lessThanOrEqual('porta_interna', 65535)->allowEmptyString('porta_interna');
 		$validator->integer('porta_externa')->greaterThanOrEqual('porta_externa', 1)->lessThanOrEqual('porta_externa', 65535)->allowEmptyString('porta_externa');
+		$validator->scalar('so_edicao')->maxLength('so_edicao', 48)->allowEmptyString('so_edicao');
+		$validator->scalar('windows_chave')->maxLength('windows_chave', 64)->allowEmptyString('windows_chave');
+		$validator->scalar('office_versao')->maxLength('office_versao', 48)->allowEmptyString('office_versao');
+		$validator->scalar('office_chave')->maxLength('office_chave', 64)->allowEmptyString('office_chave');
 		$validator->scalar('localizacao')->maxLength('localizacao', 160)->allowEmptyString('localizacao');
 		$validator->integer('responsavel_user_id')->allowEmptyString('responsavel_user_id');
 

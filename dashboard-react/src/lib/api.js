@@ -774,7 +774,7 @@ export async function upsertTimeEntry(ticketId, payload) {
   return { ok: true, id: j.id };
 }
 
-export async function deleteTimeEntry(ticketId, entryId) {
+export async function deleteTimeEntry(ticketId, entryId, audit = {}) {
   if (USE_MOCK) {
     return { ok: true };
   }
@@ -784,7 +784,12 @@ export async function deleteTimeEntry(ticketId, entryId) {
   const r = await fetch(`${base}${encodeURIComponent(ticketId)}?id=${encodeURIComponent(entryId)}`, {
     method: 'DELETE',
     credentials: 'same-origin',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: entryId,
+      auditReason: audit?.reason || '',
+      auditAuthKey: audit?.authKey || '',
+    }),
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };

@@ -26,6 +26,10 @@ class Asset extends Entity {
 		'senha' => true,
 		'porta_interna' => true,
 		'porta_externa' => true,
+		'so_edicao' => true,
+		'windows_chave' => true,
+		'office_versao' => true,
+		'office_chave' => true,
 		'localizacao' => true,
 		'responsavel_user_id' => true,
 		'propriedade' => true,
@@ -44,5 +48,5 @@ class Asset extends Entity {
 		'responsavel' => true,
 	];
 
-	protected $_hidden = ['senha'];
+	protected $_hidden = ['senha', 'windows_chave', 'office_chave'];
 }

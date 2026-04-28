@@ -250,6 +250,8 @@ class AtivosController extends AppController {
 			'tiposOpts' => $this->_tiposOptions(),
 			'statusOpts' => $this->_statusOptions(),
 			'propriedadeOpts' => $this->_propriedadeOptions(),
+			'soEdicaoOpts' => $this->_soEdicaoOptions(),
+			'officeVersaoOpts' => $this->_officeVersaoOptions(),
 			'anexosNfe' => [],
 		]);
 		$this->set('title', 'Cadastrar Ativo');
@@ -325,6 +327,8 @@ class AtivosController extends AppController {
 			'tiposOpts' => $this->_tiposOptions(),
 			'statusOpts' => $this->_statusOptions(),
 			'propriedadeOpts' => $this->_propriedadeOptions(),
+			'soEdicaoOpts' => $this->_soEdicaoOptions(),
+			'officeVersaoOpts' => $this->_officeVersaoOptions(),
 			'ticketsHist' => $ticketsHist,
 			'anexosNfe' => $this->_listAssetAttachments($idempresa, (int)$asset->id),
 		]);
@@ -789,6 +793,34 @@ class AtivosController extends AppController {
 			'proprio' => 'Próprio',
 			'locado' => 'Locado',
 			'comodato' => 'Comodato',
+		];
+	}
+
+	protected function _soEdicaoOptions(): array {
+		return [
+			'' => '— Selecione —',
+			'windows_pro' => 'Windows Pro',
+			'windows_home' => 'Windows Home',
+			'windows_enterprise' => 'Windows Enterprise',
+			'windows_ltsc' => 'Windows LTSC',
+			'windows_server' => 'Windows Server',
+			'linux' => 'Linux',
+			'macos' => 'macOS',
+			'outro' => 'Outro',
+		];
+	}
+
+	protected function _officeVersaoOptions(): array {
+		return [
+			'' => '— Selecione —',
+			'm365' => 'Microsoft 365',
+			'office_2024' => 'Office 2024',
+			'office_2021' => 'Office 2021',
+			'office_2019' => 'Office 2019',
+			'office_2016' => 'Office 2016',
+			'libreoffice' => 'LibreOffice',
+			'nao_possui' => 'Não possui',
+			'outro' => 'Outro',
 		];
 	}
 }

@@ -152,6 +152,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
     billable: true,
     descricao: '',
     taxa: '',
+    auditReason: '',
+    auditAuthKey: '',
     showMore: true,
   });
 
@@ -212,6 +214,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
       billable: entry?.billable !== false,
       descricao: String(entry?.note || ''),
       taxa: String(entry?.rate || ''),
+      auditReason: '',
+      auditAuthKey: '',
       showMore: true,
     });
     setManualOpen(true);
@@ -233,6 +237,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
       TechnicianContactID: Number(form.technicianContactId || 0),
       Rate: form.taxa || '',
       Description: form.descricao || '',
+      auditReason: form.auditReason || '',
+      auditAuthKey: form.auditAuthKey || '',
       TicketID: Number(ticket?.id || 0),
     };
     setEntriesBusy(true);
@@ -253,9 +259,19 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
       ? window.confirm('Excluir esta entrada de tempo?')
       : true;
     if (!ok) return;
+    const reason = typeof window !== 'undefined' ? window.prompt('Motivo da alteração (auditoria):', '') : '';
+    if (!reason || !String(reason).trim()) {
+      setEntriesErr('Motivo obrigatório para excluir horas.');
+      return;
+    }
+    const authKey = typeof window !== 'undefined' ? window.prompt('Senha de auditoria:', '') : '';
+    if (!authKey || !String(authKey).trim()) {
+      setEntriesErr('Senha de auditoria obrigatória para excluir horas.');
+      return;
+    }
     setEntriesBusy(true);
     setEntriesErr('');
-    const r = await deleteTimeEntry(ticket.id, entryId);
+    const r = await deleteTimeEntry(ticket.id, entryId, { reason: String(reason).trim(), authKey: String(authKey).trim() });
     setEntriesBusy(false);
     if (!r.ok) {
       setEntriesErr(r.error || 'Falha ao excluir entrada.');
@@ -379,6 +395,30 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
             <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm" />
           </label>
             <div className="text-right text-xs text-[var(--pgm-text-muted)]">12h clock</div>
+          </div>
+        ) : null}
+        {editingEntry ? (
+          <div className="mt-2 grid gap-4 sm:grid-cols-2">
+            <label className="text-xs text-[var(--pgm-text-muted)]">
+              Motivo da alteração (auditoria)
+              <input
+                type="text"
+                value={form.auditReason}
+                onChange={(e) => setForm((p) => ({ ...p, auditReason: e.target.value }))}
+                className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm"
+                required={Boolean(editingEntry)}
+              />
+            </label>
+            <label className="text-xs text-[var(--pgm-text-muted)]">
+              Senha de auditoria
+              <input
+                type="password"
+                value={form.auditAuthKey}
+                onChange={(e) => setForm((p) => ({ ...p, auditAuthKey: e.target.value }))}
+                className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm"
+                required={Boolean(editingEntry)}
+              />
+            </label>
           </div>
         ) : null}
         <div className="mt-5 flex justify-end gap-2 border-t border-[var(--pgm-border-subtle)] pt-4">

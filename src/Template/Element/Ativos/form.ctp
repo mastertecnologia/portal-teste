@@ -9,6 +9,8 @@
  * @var array $tiposOpts
  * @var array $statusOpts
  * @var array $propriedadeOpts
+ * @var array $soEdicaoOpts
+ * @var array $officeVersaoOpts
  * @var bool $isEdit
  * @var array $ticketsHist
  */
@@ -20,6 +22,8 @@ $usersOpts = $usersOpts ?? [];
 $tiposOpts = $tiposOpts ?? [];
 $statusOpts = $statusOpts ?? [];
 $propriedadeOpts = $propriedadeOpts ?? [];
+$soEdicaoOpts = $soEdicaoOpts ?? [];
+$officeVersaoOpts = $officeVersaoOpts ?? [];
 $anexosNfe = $anexosNfe ?? [];
 
 $idTag = $isEdit ? ($asset->identificador ?: ('ATV-' . str_pad((string)$asset->id, 6, '0', STR_PAD_LEFT))) : 'NOVO';
@@ -91,6 +95,11 @@ $atvFmtDateBr = function ($d): string {
 			<li class="nav-item" role="presentation">
 				<a class="nav-link" id="atv-tab-hw" data-toggle="tab" href="#tab-hw" role="tab" aria-controls="tab-hw" aria-selected="false">
 					<i class="fas fa-microchip" aria-hidden="true"></i> Hardware / Rede
+				</a>
+			</li>
+			<li class="nav-item" role="presentation">
+				<a class="nav-link" id="atv-tab-so" data-toggle="tab" href="#tab-so" role="tab" aria-controls="tab-so" aria-selected="false">
+					<i class="fas fa-key" aria-hidden="true"></i> SO e Licenças
 				</a>
 			</li>
 			<li class="nav-item" role="presentation">
@@ -249,6 +258,75 @@ $atvFmtDateBr = function ($d): string {
 							<div class="cli-fgroup">
 								<label>Porta externa</label>
 								<?= $this->Form->control('porta_externa', ['type' => 'number', 'label' => false, 'class' => 'form-control', 'min' => 1, 'max' => 65535, 'placeholder' => '443']) ?>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="tab-pane fade" id="tab-so" role="tabpanel" aria-labelledby="atv-tab-so">
+				<div class="cli-section">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fab fa-windows"></i></div>
+						<div class="cli-section-title">Sistema operacional</div>
+					</div>
+					<div class="cli-section-body">
+						<div class="cli-fg cli-fg-2">
+							<div class="cli-fgroup">
+								<label>Edição do SO</label>
+								<?= $this->Form->select('so_edicao', $soEdicaoOpts, ['empty' => false, 'class' => 'form-control']) ?>
+							</div>
+							<div class="cli-fgroup">
+								<label>Chave de série do Windows</label>
+								<div class="input-group">
+									<?= $this->Form->control('windows_chave', [
+										'type' => 'password',
+										'label' => false,
+										'class' => 'form-control',
+										'autocomplete' => 'new-password',
+										'maxlength' => 64,
+										'id' => 'atv-winkey-input',
+										'placeholder' => 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
+									]) ?>
+									<div class="input-group-append">
+										<button type="button" class="btn btn-outline-secondary" id="atv-winkey-toggle" aria-label="Mostrar chave" title="Mostrar chave">
+											<i class="fas fa-eye" aria-hidden="true"></i>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="cli-section" style="margin-top:14px">
+					<div class="cli-section-head">
+						<div class="cli-section-icon"><i class="fas fa-file-alt"></i></div>
+						<div class="cli-section-title">Office</div>
+					</div>
+					<div class="cli-section-body">
+						<div class="cli-fg cli-fg-2">
+							<div class="cli-fgroup">
+								<label>Versão do Office</label>
+								<?= $this->Form->select('office_versao', $officeVersaoOpts, ['empty' => false, 'class' => 'form-control']) ?>
+							</div>
+							<div class="cli-fgroup">
+								<label>Chave serial do Office</label>
+								<div class="input-group">
+									<?= $this->Form->control('office_chave', [
+										'type' => 'password',
+										'label' => false,
+										'class' => 'form-control',
+										'autocomplete' => 'new-password',
+										'maxlength' => 64,
+										'id' => 'atv-offkey-input',
+										'placeholder' => 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
+									]) ?>
+									<div class="input-group-append">
+										<button type="button" class="btn btn-outline-secondary" id="atv-offkey-toggle" aria-label="Mostrar chave" title="Mostrar chave">
+											<i class="fas fa-eye" aria-hidden="true"></i>
+										</button>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -483,19 +561,26 @@ $atvFmtDateBr = function ($d): string {
 			}
 		});
 
-		var senhaInput = document.getElementById('atv-senha-input');
-		var senhaToggle = document.getElementById('atv-senha-toggle');
-		if (senhaInput && senhaToggle) {
-			senhaToggle.addEventListener('click', function () {
-				var isHidden = senhaInput.getAttribute('type') === 'password';
-				senhaInput.setAttribute('type', isHidden ? 'text' : 'password');
-				senhaToggle.setAttribute('aria-label', isHidden ? 'Ocultar senha' : 'Mostrar senha');
-				senhaToggle.setAttribute('title', isHidden ? 'Ocultar senha' : 'Mostrar senha');
-				senhaToggle.innerHTML = isHidden
+		function atvBindPasswordToggle(inputId, toggleId, labelNoun) {
+			var input = document.getElementById(inputId);
+			var btn = document.getElementById(toggleId);
+			if (!input || !btn) {
+				return;
+			}
+			btn.addEventListener('click', function () {
+				var isHidden = input.getAttribute('type') === 'password';
+				input.setAttribute('type', isHidden ? 'text' : 'password');
+				var lbl = (isHidden ? 'Ocultar ' : 'Mostrar ') + labelNoun;
+				btn.setAttribute('aria-label', lbl);
+				btn.setAttribute('title', lbl);
+				btn.innerHTML = isHidden
 					? '<i class="fas fa-eye-slash" aria-hidden="true"></i>'
 					: '<i class="fas fa-eye" aria-hidden="true"></i>';
 			});
 		}
+		atvBindPasswordToggle('atv-senha-input', 'atv-senha-toggle', 'senha');
+		atvBindPasswordToggle('atv-winkey-input', 'atv-winkey-toggle', 'chave');
+		atvBindPasswordToggle('atv-offkey-input', 'atv-offkey-toggle', 'chave');
 
 		var nfeBtn = document.getElementById('atv-nfe-buscar');
 		var nfeSelect = document.getElementById('atv-nfe-select');

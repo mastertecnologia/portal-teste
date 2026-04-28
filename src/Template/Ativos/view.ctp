@@ -43,6 +43,20 @@ $tipos = [
 	'outro' => 'Outro',
 ];
 
+$soEdicaoLabels = [
+	'windows_pro' => 'Windows Pro', 'windows_home' => 'Windows Home',
+	'windows_enterprise' => 'Windows Enterprise', 'windows_ltsc' => 'Windows LTSC',
+	'windows_server' => 'Windows Server', 'linux' => 'Linux',
+	'macos' => 'macOS', 'outro' => 'Outro',
+];
+
+$officeVersaoLabels = [
+	'm365' => 'Microsoft 365', 'office_2024' => 'Office 2024',
+	'office_2021' => 'Office 2021', 'office_2019' => 'Office 2019',
+	'office_2016' => 'Office 2016', 'libreoffice' => 'LibreOffice',
+	'nao_possui' => 'Não possui', 'outro' => 'Outro',
+];
+
 $fmt = function ($d) {
 	if (empty($d)) {
 		return '—';
@@ -115,6 +129,21 @@ $cliNome = $cli ? ($cli->razaosocial ?: ($cli->nomefantasia ?: ($cli->nome ?: ('
 						<dt>Porta interna</dt><dd><?= $asset->porta_interna !== null && $asset->porta_interna !== '' ? h((string)$asset->porta_interna) : '—' ?></dd>
 						<dt>Porta externa</dt><dd><?= $asset->porta_externa !== null && $asset->porta_externa !== '' ? h((string)$asset->porta_externa) : '—' ?></dd>
 						<dt>Localização</dt><dd><?= h($asset->localizacao ?: '—') ?></dd>
+					</dl>
+				</div>
+			</div>
+
+			<div class="cli-section mb-3">
+				<div class="cli-section-head">
+					<div class="cli-section-icon"><i class="fas fa-key"></i></div>
+					<div class="cli-section-title">SO e Licenças</div>
+				</div>
+				<div class="cli-section-body">
+					<dl class="atv-cli-dl">
+						<dt>Edição do SO</dt><dd><?= h($soEdicaoLabels[$asset->so_edicao ?? ''] ?? ($asset->so_edicao ?: '—')) ?></dd>
+						<dt>Chave Windows</dt><dd><?= !empty($asset->windows_chave) ? '********' : '—' ?></dd>
+						<dt>Versão do Office</dt><dd><?= h($officeVersaoLabels[$asset->office_versao ?? ''] ?? ($asset->office_versao ?: '—')) ?></dd>
+						<dt>Chave Office</dt><dd><?= !empty($asset->office_chave) ? '********' : '—' ?></dd>
 					</dl>
 				</div>
 			</div>

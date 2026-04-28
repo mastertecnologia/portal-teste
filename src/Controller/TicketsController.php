@@ -12,6 +12,7 @@ use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
+use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\ConnectionManager;
@@ -6607,6 +6608,8 @@ class TicketsController extends AppController {
 
 		if ($this->request->is('delete')) {
 			$entryId = (int)($body['id'] ?? $this->request->getQuery('id') ?? 0);
+			$auditReason = trim((string)($body['auditReason'] ?? $body['reason'] ?? ''));
+			$auditAuthKey = trim((string)($body['auditAuthKey'] ?? $body['authKey'] ?? ''));
 			if ($entryId <= 0) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
 			}
@@ -6615,6 +6618,11 @@ class TicketsController extends AppController {
 				->first();
 			if (!$row) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+			$oldHms = $this->_ticketshorasDurationHms($row);
+			$audit = $this->_validateAuditPasswordForCurrentUser((int)$idticket, $auditAuthKey, $auditReason, $oldHms, '00:00:00');
+			if (!$audit['ok']) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'audit_required', 'message' => $audit['message']], 403);
 			}
 			if (!$this->Ticketshoras->delete($row)) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
@@ -6630,6 +6638,8 @@ class TicketsController extends AppController {
 		$billable = (bool)($body['billable'] ?? $body['Billable'] ?? true);
 		$rate = trim((string)($body['rate'] ?? $body['Rate'] ?? ''));
 		$note = trim((string)($body['descricao'] ?? $body['Description'] ?? $body['note'] ?? $body['Note'] ?? ''));
+		$auditReason = trim((string)($body['auditReason'] ?? $body['reason'] ?? ''));
+		$auditAuthKey = trim((string)($body['auditAuthKey'] ?? $body['authKey'] ?? ''));
 		if ($technicianId <= 0) {
 			$technicianId = $uid;
 		}
@@ -6649,6 +6659,13 @@ class TicketsController extends AppController {
 				->first();
 			if (!$row) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+			$oldHms = $this->_ticketshorasDurationHms($row);
+			$newSec = max(0, (int)($end->getTimestamp() - $start->getTimestamp()));
+			$newHms = gmdate('H:i:s', $newSec);
+			$audit = $this->_validateAuditPasswordForCurrentUser((int)$idticket, $auditAuthKey, $auditReason, $oldHms, $newHms);
+			if (!$audit['ok']) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'audit_required', 'message' => $audit['message']], 403);
 			}
 		} else {
 			$row = $this->Ticketshoras->newEntity();
@@ -6694,6 +6711,53 @@ class TicketsController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => true, 'id' => (int)$row->id]);
+	}
+
+	protected function _ticketshorasDurationHms($row): string {
+		try {
+			$sec = TicketServiceDeskApiService::resolveSecondsFromTicketshorasRow($this->Ticketshoras, $row);
+			$sec = max(0, (int)$sec);
+			return gmdate('H:i:s', $sec);
+		} catch (\Throwable $e) {
+			return '00:00:00';
+		}
+	}
+
+	protected function _validateAuditPasswordForCurrentUser(int $ticketId, string $authKey, string $reason, string $oldTime, string $newTime): array {
+		if ($authKey === '') {
+			return ['ok' => false, 'message' => 'Senha de auditoria obrigatória para alterar horas.'];
+		}
+		if ($reason === '') {
+			return ['ok' => false, 'message' => 'Motivo obrigatório para alterar horas.'];
+		}
+		$uid = (int)$this->Auth->user('id');
+		try {
+			$user = $this->Users->get($uid);
+		} catch (\Throwable $e) {
+			return ['ok' => false, 'message' => 'Utilizador inválido.'];
+		}
+		$hash = (string)($user->get('audit_password_hash') ?? '');
+		if ($hash === '') {
+			return ['ok' => false, 'message' => 'Senha de auditoria não definida.'];
+		}
+		$hasher = new DefaultPasswordHasher();
+		if (!$hasher->check($authKey, $hash)) {
+			return ['ok' => false, 'message' => 'Senha de auditoria inválida.'];
+		}
+		try {
+			$logs = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketAuditLogs');
+			$logs->save($logs->newEntity([
+				'ticket_id' => $ticketId,
+				'user_id' => $uid,
+				'old_time' => $oldTime,
+				'new_time' => $newTime,
+				'reason' => $reason,
+				'created' => \Cake\I18n\FrozenTime::now(),
+			]));
+		} catch (\Throwable $e) {
+			$this->log('apiTimeEntries audit log: ' . $e->getMessage(), 'error');
+		}
+		return ['ok' => true, 'message' => null];
 	}
 
 	/**
