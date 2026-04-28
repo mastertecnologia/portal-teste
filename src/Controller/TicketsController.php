@@ -6229,6 +6229,44 @@ class TicketsController extends AppController {
 				'cliente_ids_sample' => array_slice(array_values($clienteIdsCorrel), 0, 10),
 			]);
 			// #endregion
+			$diagSameEmpresaSameCliente = (int)$this->Assets->find()->where([
+				'Assets.idempresa' => $eid,
+				'Assets.idcliente' => $idc,
+			])->count();
+			$diagSameEmpresaAnyCliente = (int)$this->Assets->find()->where([
+				'Assets.idempresa' => $eid,
+			])->count();
+			$diagAnyEmpresaSameCliente = (int)$this->Assets->find()->where([
+				'Assets.idcliente' => $idc,
+			])->count();
+			$diagAnyEmpresaCorrel = (int)$this->Assets->find()->where([
+				'Assets.idcliente IN' => $clienteIdsCorrel,
+			])->count();
+			$diagRows = $this->Assets->find()
+				->select(['id', 'idempresa', 'idcliente'])
+				->where(['Assets.idcliente IN' => $clienteIdsCorrel])
+				->order(['Assets.id' => 'DESC'])
+				->limit(10)
+				->all();
+			$diagSample = [];
+			foreach ($diagRows as $dr) {
+				$diagSample[] = [
+					'id' => (int)($dr->id ?? 0),
+					'idempresa' => (int)($dr->idempresa ?? 0),
+					'idcliente' => (int)($dr->idcliente ?? 0),
+				];
+			}
+			// #region agent log
+			$this->_agentDebugLog18a583('pre-fix', 'H7', 'TicketsController::apiServicedeskData:assetsDiag', 'assets scope diagnostic', [
+				'eid_used' => $eid,
+				'idcliente_ref' => $idc,
+				'same_empresa_same_cliente_count' => $diagSameEmpresaSameCliente,
+				'same_empresa_any_cliente_count' => $diagSameEmpresaAnyCliente,
+				'any_empresa_same_cliente_count' => $diagAnyEmpresaSameCliente,
+				'any_empresa_correl_clientes_count' => $diagAnyEmpresaCorrel,
+				'diag_sample' => $diagSample,
+			]);
+			// #endregion
 			$availQ = $this->Assets->find()
 				->where(['Assets.idempresa' => $eid, 'Assets.idcliente IN' => $clienteIdsCorrel])
 				->order(['Assets.descricao' => 'ASC', 'Assets.id' => 'DESC'])
