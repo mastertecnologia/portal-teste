@@ -162,6 +162,21 @@ class TicketsController extends AppController {
 	// #endregion
 
 	// #region agent log
+	protected function _agentDebugLog18a583(string $runId, string $hypothesisId, string $location, string $message, array $data = []): void {
+		$line = json_encode([
+			'sessionId' => '18a583',
+			'runId' => $runId,
+			'hypothesisId' => $hypothesisId,
+			'location' => $location,
+			'message' => $message,
+			'data' => $data,
+			'timestamp' => (int) round(microtime(true) * 1000),
+		], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+		@file_put_contents(ROOT . DS . 'debug-18a583.log', $line, FILE_APPEND);
+	}
+	// #endregion
+
+	// #region agent log
 	protected function _agentDebugLog48685b(string $hypothesisId, string $location, string $message, array $data = []): void {
 		$line = json_encode([
 			'sessionId' => '48685b',
@@ -6129,14 +6144,36 @@ class TicketsController extends AppController {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
 		$tab = strtolower((string)$this->request->getQuery('tab', 'ativos'));
+		// #region agent log
+		$this->_agentDebugLog18a583('pre-fix', 'H4', 'TicketsController::apiServicedeskData:entry', 'entry', [
+			'idticket' => (int)$idticket,
+			'tab' => $tab,
+			'auth_idempresa' => (int)$this->Auth->user('idempresa'),
+		]);
+		// #endregion
 		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket]);
 		$this->Abac->applyToQuery($ticket, 'Tickets', 'Tickets');
 		$ticket = $ticket->first();
 		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			// #region agent log
+			$this->_agentDebugLog18a583('pre-fix', 'H4', 'TicketsController::apiServicedeskData:forbidden', 'ticket blocked or not found', [
+				'idticket' => (int)$idticket,
+				'tab' => $tab,
+				'ticket_empty' => empty($ticket),
+			]);
+			// #endregion
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		$eid = (int)($ticket->idempresa ?? $this->Auth->user('idempresa'));
 		$idc = (int)$ticket->idcliente;
+		// #region agent log
+		$this->_agentDebugLog18a583('pre-fix', 'H1', 'TicketsController::apiServicedeskData:ticketScope', 'ticket scope resolved', [
+			'ticket_id' => (int)$ticket->id,
+			'ticket_idempresa' => (int)($ticket->idempresa ?? 0),
+			'eid_used' => $eid,
+			'ticket_idcliente' => $idc,
+		]);
+		// #endregion
 
 		if ($tab === 'ativos') {
 			$mapAsset = function ($a) {
@@ -6184,6 +6221,14 @@ class TicketsController extends AppController {
 			}
 			// CIs disponíveis: mesma empresa + mesmo cliente operacional (vários idcliente com mesmo CNPJ/CPF/código/nome).
 			$clienteIdsCorrel = ClienteCorrelatedIds::forEmpresaCliente($this->Clientes, $eid, $idc);
+			// #region agent log
+			$this->_agentDebugLog18a583('pre-fix', 'H2', 'TicketsController::apiServicedeskData:clienteCorrel', 'cliente correlation result', [
+				'eid_used' => $eid,
+				'idcliente_ref' => $idc,
+				'cliente_ids_count' => count($clienteIdsCorrel),
+				'cliente_ids_sample' => array_slice(array_values($clienteIdsCorrel), 0, 10),
+			]);
+			// #endregion
 			$availQ = $this->Assets->find()
 				->where(['Assets.idempresa' => $eid, 'Assets.idcliente IN' => $clienteIdsCorrel])
 				->order(['Assets.descricao' => 'ASC', 'Assets.id' => 'DESC'])
@@ -6195,6 +6240,15 @@ class TicketsController extends AppController {
 			foreach ($availQ as $a) {
 				$available[] = $mapAsset($a);
 			}
+			// #region agent log
+			$this->_agentDebugLog18a583('pre-fix', 'H3', 'TicketsController::apiServicedeskData:availableResult', 'available assets computed', [
+				'eid_used' => $eid,
+				'idcliente_ref' => $idc,
+				'linked_ids_count' => count($linkedIds),
+				'available_count' => count($available),
+				'available_asset_ids_sample' => array_slice(array_map(static function ($x) { return (int)($x['id'] ?? 0); }, $available), 0, 10),
+			]);
+			// #endregion
 
 			return $this->jsonResponse([
 				'ok' => true,
