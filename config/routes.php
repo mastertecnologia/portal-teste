@@ -1938,6 +1938,20 @@ Router::scope("/", function ($routes) {
             ["pass" => ["idcliente"]],
         )
         ->setMethods(["GET"]);
+    $routes
+        ->connect(
+            "/ativos/api/nfe-by-cliente/*",
+            ["controller" => "Ativos", "action" => "apiNfeByCliente"],
+            ["pass" => ["idcliente"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
+            "/ativos/anexo/*",
+            ["controller" => "Ativos", "action" => "downloadAnexo"],
+            ["pass" => ["id", "file"]],
+        )
+        ->setMethods(["GET"]);
     // —— Ticket ⇄ Asset (pivot) ——
     $routes
         ->connect(

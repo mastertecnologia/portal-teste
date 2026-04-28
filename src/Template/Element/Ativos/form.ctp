@@ -20,6 +20,7 @@ $usersOpts = $usersOpts ?? [];
 $tiposOpts = $tiposOpts ?? [];
 $statusOpts = $statusOpts ?? [];
 $propriedadeOpts = $propriedadeOpts ?? [];
+$anexosNfe = $anexosNfe ?? [];
 
 $idTag = $isEdit ? ($asset->identificador ?: ('ATV-' . str_pad((string)$asset->id, 6, '0', STR_PAD_LEFT))) : 'NOVO';
 $qrPayload = $isEdit ? ($asset->codigo_qr ?: ('ATV-' . str_pad((string)$asset->id, 6, '0', STR_PAD_LEFT))) : '';
@@ -77,7 +78,7 @@ $atvFmtDateBr = function ($d): string {
 	</div>
 	<?php endif; ?>
 
-	<?= $this->Form->create($asset, ['type' => 'post', 'novalidate' => true, 'autocomplete' => 'off', 'id' => 'atv-asset-form', 'class' => 'atv-cli-form']) ?>
+	<?= $this->Form->create($asset, ['type' => 'file', 'novalidate' => true, 'autocomplete' => 'off', 'id' => 'atv-asset-form', 'class' => 'atv-cli-form']) ?>
 
 	<div class="cli-form-body cli-form-body--cadastro-lead">
 
@@ -331,6 +332,53 @@ $atvFmtDateBr = function ($d): string {
 								<?= $this->Form->control('custo_aquisicao', ['label' => false, 'class' => 'form-control', 'type' => 'number', 'step' => '0.01', 'min' => 0]) ?>
 							</div>
 						</div>
+						<div class="cli-fg cli-fg-2" style="margin-top:14px">
+							<div class="cli-fgroup">
+								<label>NFe (compra do cliente conosco)</label>
+								<?= $this->Form->control('nfe_referencia', [
+									'label' => false,
+									'class' => 'form-control',
+									'maxlength' => 64,
+									'id' => 'atv-nfe-ref',
+									'placeholder' => 'Digite a chave de acesso ou selecione na busca',
+								]) ?>
+								<small class="text-muted">Campo para vincular a NF-e de saída emitida para este cliente.</small>
+							</div>
+							<div class="cli-fgroup">
+								<label>&nbsp;</label>
+								<div class="d-flex align-items-center pgm-gap-8">
+									<button type="button" class="btn-cli-outline" id="atv-nfe-buscar"><i class="fas fa-search"></i> Buscar NFes do cliente</button>
+									<select class="form-control" id="atv-nfe-select">
+										<option value="">— Selecione a NF-e —</option>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="cli-fg cli-fg-2" style="margin-top:14px">
+							<div class="cli-fgroup">
+								<label>Anexar NFe XML</label>
+								<?= $this->Form->file('nfe_xml_file', ['class' => 'form-control', 'accept' => '.xml,application/xml,text/xml']) ?>
+							</div>
+							<div class="cli-fgroup">
+								<label>Anexar DANFE PDF</label>
+								<?= $this->Form->file('danfe_pdf_file', ['class' => 'form-control', 'accept' => '.pdf,application/pdf']) ?>
+							</div>
+						</div>
+						<?php if ($isEdit && !empty($anexosNfe)) : ?>
+						<div class="cli-fg cli-fg-1" style="margin-top:14px">
+							<div class="cli-fgroup">
+								<label>Anexos salvos</label>
+								<ul class="mb-0 pl-3">
+									<?php foreach ($anexosNfe as $ax) : ?>
+									<li>
+										<?= h($ax['tipo']) ?> -
+										<?= $this->Html->link(h($ax['file']), ['controller' => 'Ativos', 'action' => 'downloadAnexo', $asset->id, $ax['file']]) ?>
+									</li>
+									<?php endforeach; ?>
+								</ul>
+							</div>
+						</div>
+						<?php endif; ?>
 						<div class="cli-fg cli-fg-1" style="margin-top:14px">
 							<div class="cli-fgroup">
 								<label>Observações</label>
@@ -446,6 +494,50 @@ $atvFmtDateBr = function ($d): string {
 				senhaToggle.innerHTML = isHidden
 					? '<i class="fas fa-eye-slash" aria-hidden="true"></i>'
 					: '<i class="fas fa-eye" aria-hidden="true"></i>';
+			});
+		}
+
+		var nfeBtn = document.getElementById('atv-nfe-buscar');
+		var nfeSelect = document.getElementById('atv-nfe-select');
+		var nfeInput = document.getElementById('atv-nfe-ref');
+		var clienteSelect = document.getElementById('idcliente');
+		if (nfeBtn && nfeSelect && nfeInput && clienteSelect) {
+			nfeBtn.addEventListener('click', function () {
+				var idcliente = (clienteSelect.value || '').trim();
+				if (!idcliente) {
+					alert('Selecione o cliente para buscar NF-es.');
+					return;
+				}
+				nfeBtn.disabled = true;
+				nfeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+				fetch('<?= $this->Url->build(['controller' => 'Ativos', 'action' => 'apiNfeByCliente']) ?>/' + encodeURIComponent(idcliente), {
+					credentials: 'same-origin'
+				})
+					.then(function (r) { return r.json(); })
+					.then(function (json) {
+						nfeSelect.innerHTML = '<option value="">— Selecione a NF-e —</option>';
+						if (!json || !json.ok || !Array.isArray(json.rows)) {
+							return;
+						}
+						json.rows.forEach(function (row) {
+							var opt = document.createElement('option');
+							opt.value = row.chave || '';
+							opt.textContent = row.label || row.chave || '';
+							nfeSelect.appendChild(opt);
+						});
+					})
+					.catch(function () {
+						alert('Nao foi possivel buscar as NF-es agora.');
+					})
+					.finally(function () {
+						nfeBtn.disabled = false;
+						nfeBtn.innerHTML = '<i class="fas fa-search"></i> Buscar NFes do cliente';
+					});
+			});
+			nfeSelect.addEventListener('change', function () {
+				if (nfeSelect.value) {
+					nfeInput.value = nfeSelect.value;
+				}
 			});
 		}
 	});

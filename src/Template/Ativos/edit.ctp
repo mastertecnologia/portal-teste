@@ -29,4 +29,5 @@ echo $this->element('Ativos/form', [
 	'propriedadeOpts' => $propriedadeOpts,
 	'isEdit' => true,
 	'ticketsHist' => $ticketsHist ?? [],
+	'anexosNfe' => $anexosNfe ?? [],
 ]);

@@ -36,6 +36,7 @@ class Asset extends Entity {
 		'dt_garantia_fim' => true,
 		'fornecedor' => true,
 		'custo_aquisicao' => true,
+		'nfe_referencia' => true,
 		'observacoes' => true,
 		'created' => true,
 		'modified' => true,

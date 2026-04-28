@@ -81,6 +81,7 @@ class AssetsTable extends Table {
 		$validator->date('dt_garantia_fim')->allowEmptyDate('dt_garantia_fim');
 		$validator->scalar('fornecedor')->maxLength('fornecedor', 160)->allowEmptyString('fornecedor');
 		$validator->decimal('custo_aquisicao')->allowEmptyString('custo_aquisicao');
+		$validator->scalar('nfe_referencia')->maxLength('nfe_referencia', 64)->allowEmptyString('nfe_referencia');
 		$validator->scalar('observacoes')->allowEmptyString('observacoes');
 
 		return $validator;

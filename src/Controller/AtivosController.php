@@ -27,6 +27,11 @@ class AtivosController extends AppController {
 		$this->loadModel('Empresasusers');
 		$this->loadModel('TicketAssets');
 		try {
+			$this->loadModel('FiscalNotas');
+		} catch (\Exception $e) {
+			// opcional
+		}
+		try {
 			$this->loadModel('Atividades');
 		} catch (\Exception $e) {
 			// opcional
@@ -202,6 +207,7 @@ class AtivosController extends AppController {
 		if ($this->request->is('post')) {
 			$data = (array)$this->request->getData();
 			$data['idempresa'] = $idempresa;
+			$uploadResult = $this->_processAssetUploads($idempresa, 0, $data);
 			$this->_normalizeAssetBrDates($data);
 			$passwordEncryptionFailed = false;
 			try {
@@ -212,6 +218,15 @@ class AtivosController extends AppController {
 			}
 			$asset = $this->Assets->patchEntity($asset, $data);
 			if (!$passwordEncryptionFailed && $this->Assets->save($asset)) {
+				if ($uploadResult['has_files']) {
+					$uploadResult = $this->_processAssetUploads($idempresa, (int)$asset->id, (array)$this->request->getData());
+					foreach ($uploadResult['errors'] as $msg) {
+						$this->Flash->warning($msg);
+					}
+					foreach ($uploadResult['ok'] as $msg) {
+						$this->Flash->success($msg);
+					}
+				}
 				if (!empty($this->Atividades) && $this->Auth->user('id')) {
 					$this->Atividades->registrar(
 						(int)$this->Auth->user('id'),
@@ -235,6 +250,7 @@ class AtivosController extends AppController {
 			'tiposOpts' => $this->_tiposOptions(),
 			'statusOpts' => $this->_statusOptions(),
 			'propriedadeOpts' => $this->_propriedadeOptions(),
+			'anexosNfe' => [],
 		]);
 		$this->set('title', 'Cadastrar Ativo');
 		$this->set('topbarCurrentLabel', __('Cadastrar ativo'));
@@ -258,6 +274,7 @@ class AtivosController extends AppController {
 		if ($this->request->is(['patch', 'post', 'put'])) {
 			$data = (array)$this->request->getData();
 			unset($data['idempresa']);
+			$uploadResult = $this->_processAssetUploads($idempresa, 0, $data);
 			$this->_normalizeAssetBrDates($data);
 			$passwordEncryptionFailed = false;
 			try {
@@ -268,6 +285,15 @@ class AtivosController extends AppController {
 			}
 			$asset = $this->Assets->patchEntity($asset, $data);
 			if (!$passwordEncryptionFailed && $this->Assets->save($asset)) {
+				if ($uploadResult['has_files']) {
+					$uploadResult = $this->_processAssetUploads($idempresa, (int)$asset->id, (array)$this->request->getData());
+					foreach ($uploadResult['errors'] as $msg) {
+						$this->Flash->warning($msg);
+					}
+					foreach ($uploadResult['ok'] as $msg) {
+						$this->Flash->success($msg);
+					}
+				}
 				if (!empty($this->Atividades) && $this->Auth->user('id')) {
 					$this->Atividades->registrar(
 						(int)$this->Auth->user('id'),
@@ -300,6 +326,7 @@ class AtivosController extends AppController {
 			'statusOpts' => $this->_statusOptions(),
 			'propriedadeOpts' => $this->_propriedadeOptions(),
 			'ticketsHist' => $ticketsHist,
+			'anexosNfe' => $this->_listAssetAttachments($idempresa, (int)$asset->id),
 		]);
 		$this->set('title', 'Editar Ativo: ' . ($asset->descricao ?: ('#' . $asset->id)));
 		$this->set('topbarCurrentLabel', __('Editar ativo'));
@@ -476,6 +503,193 @@ class AtivosController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => true, 'rows' => $rows]);
+	}
+
+	/**
+	 * JSON: NF-es de saída do cliente (para campo NFe no ativo).
+	 * GET /ativos/api/nfe-by-cliente/:idcliente?q=
+	 */
+	public function apiNfeByCliente($idcliente = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$idc = (int)$idcliente;
+		if ($idc <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'idcliente_required'], 400);
+		}
+		$cliente = $this->_findClienteForCurrentUser($idc);
+		if (empty($cliente)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if (empty($this->FiscalNotas)) {
+			return $this->jsonResponse(['ok' => true, 'rows' => []]);
+		}
+		$busca = trim((string)$this->request->getQuery('q'));
+		$q = $this->FiscalNotas->find()
+			->select(['id', 'numero', 'serie', 'chave_acesso', 'data_emissao', 'modelo'])
+			->where([
+				'FiscalNotas.idempresa' => $idempresa,
+				'FiscalNotas.idcliente' => $idc,
+				'FiscalNotas.tipo_operacao' => 1,
+				'FiscalNotas.status' => 'autorizada',
+				'FiscalNotas.modelo IN' => ['55', '65'],
+			])
+			->order(['FiscalNotas.data_emissao' => 'DESC', 'FiscalNotas.id' => 'DESC'])
+			->limit(100);
+
+		if ($busca !== '') {
+			$like = '%' . $busca . '%';
+			$or = [['FiscalNotas.chave_acesso ILIKE' => $like]];
+			if (ctype_digit($busca)) {
+				$or[] = ['FiscalNotas.numero' => (int)$busca];
+			}
+			$q->where(['OR' => $or]);
+		}
+
+		$rows = [];
+		foreach ($q as $n) {
+			$chave = preg_replace('/\D/', '', (string)($n->chave_acesso ?? ''));
+			if ($chave === '') {
+				continue;
+			}
+			$dt = $n->data_emissao instanceof \DateTimeInterface ? $n->data_emissao->format('d/m/Y') : '';
+			$label = 'NF-e ' . (string)($n->numero ?? 's/n') . ' | Série ' . (string)($n->serie ?? '1');
+			if ($dt !== '') {
+				$label .= ' | ' . $dt;
+			}
+			$rows[] = [
+				'id' => (int)$n->id,
+				'chave' => $chave,
+				'label' => $label,
+			];
+		}
+
+		return $this->jsonResponse(['ok' => true, 'rows' => $rows]);
+	}
+
+	public function downloadAnexo($id = null, $file = null) {
+		$this->request->allowMethod(['get']);
+		$asset = $this->_findAssetForCurrentUser($id);
+		if (empty($asset)) {
+			throw new NotFoundException(__('Ativo não encontrado.'));
+		}
+		$filename = basename((string)$file);
+		if ($filename === '' || strpos($filename, '..') !== false) {
+			throw new NotFoundException(__('Arquivo inválido.'));
+		}
+		$path = $this->_assetAttachmentsDir((int)$asset->idempresa, (int)$asset->id, false) . DS . $filename;
+		if (!is_file($path)) {
+			throw new NotFoundException(__('Anexo não encontrado.'));
+		}
+		$ext = strtolower((string)pathinfo($filename, PATHINFO_EXTENSION));
+		$type = $ext === 'pdf' ? 'application/pdf' : 'application/xml';
+		$this->autoRender = false;
+		$this->response = $this->response
+			->withType($type)
+			->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+			->withStringBody((string)@file_get_contents($path));
+
+		return $this->response;
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array{has_files: bool, ok: array<int,string>, errors: array<int,string>}
+	 */
+	protected function _processAssetUploads(int $idempresa, int $assetId, array $data): array {
+		$out = ['has_files' => false, 'ok' => [], 'errors' => []];
+		$xml = $data['nfe_xml_file'] ?? null;
+		$pdf = $data['danfe_pdf_file'] ?? null;
+		foreach ([['f' => $xml, 'ext' => 'xml', 'label' => 'NFe XML'], ['f' => $pdf, 'ext' => 'pdf', 'label' => 'DANFE PDF']] as $cfg) {
+			$f = $cfg['f'];
+			$has = $f instanceof \Psr\Http\Message\UploadedFileInterface && $f->getError() !== UPLOAD_ERR_NO_FILE;
+			if (!$has) {
+				continue;
+			}
+			$out['has_files'] = true;
+			if ($assetId <= 0) {
+				continue;
+			}
+			$err = $this->_storeAssetAttachment($idempresa, $assetId, $f, $cfg['ext']);
+			if ($err !== null) {
+				$out['errors'][] = $cfg['label'] . ': ' . $err;
+			} else {
+				$out['ok'][] = $cfg['label'] . ' salvo com sucesso.';
+			}
+		}
+
+		return $out;
+	}
+
+	protected function _assetAttachmentsDir(int $idempresa, int $assetId, bool $create = true): string {
+		$dir = ROOT . DS . 'storage' . DS . 'ativos_nfe' . DS . 'emp' . $idempresa . DS . 'asset' . $assetId;
+		if ($create && !is_dir($dir)) {
+			@mkdir($dir, 0770, true);
+		}
+
+		return $dir;
+	}
+
+	protected function _storeAssetAttachment(int $idempresa, int $assetId, $file, string $expectedExt): ?string {
+		if (!($file instanceof \Psr\Http\Message\UploadedFileInterface)) {
+			return 'arquivo inválido.';
+		}
+		if ($file->getError() !== UPLOAD_ERR_OK) {
+			return 'falha no upload.';
+		}
+		$size = (int)$file->getSize();
+		if ($size <= 0 || $size > (10 * 1024 * 1024)) {
+			return 'tamanho máximo permitido é 10MB.';
+		}
+		$original = (string)($file->getClientFilename() ?? '');
+		$ext = strtolower((string)pathinfo($original, PATHINFO_EXTENSION));
+		if ($ext !== $expectedExt) {
+			return 'extensão inválida. Use .' . $expectedExt . '.';
+		}
+		$base = pathinfo($original, PATHINFO_FILENAME);
+		$base = preg_replace('/[^a-z0-9_-]+/i', '_', $base ?: 'arquivo');
+		$kind = $expectedExt === 'xml' ? 'nfe' : 'danfe';
+		$name = $kind . '_' . date('YmdHis') . '_' . substr(sha1((string)microtime(true) . $original), 0, 8) . '__' . $base . '.' . $ext;
+		$dir = $this->_assetAttachmentsDir($idempresa, $assetId, true);
+		try {
+			$file->moveTo($dir . DS . $name);
+		} catch (\Throwable $e) {
+			return 'não foi possível gravar no servidor.';
+		}
+
+		return null;
+	}
+
+	protected function _listAssetAttachments(int $idempresa, int $assetId): array {
+		$dir = $this->_assetAttachmentsDir($idempresa, $assetId, false);
+		if (!is_dir($dir)) {
+			return [];
+		}
+		$files = @scandir($dir) ?: [];
+		$out = [];
+		foreach ($files as $f) {
+			if ($f === '.' || $f === '..') {
+				continue;
+			}
+			$path = $dir . DS . $f;
+			if (!is_file($path)) {
+				continue;
+			}
+			$ext = strtolower((string)pathinfo($f, PATHINFO_EXTENSION));
+			if (!in_array($ext, ['xml', 'pdf'], true)) {
+				continue;
+			}
+			$out[] = [
+				'file' => $f,
+				'tipo' => $ext === 'pdf' ? 'DANFE PDF' : 'NFe XML',
+				'modified' => @filemtime($path) ?: 0,
+			];
+		}
+		usort($out, function ($a, $b) {
+			return (int)$b['modified'] <=> (int)$a['modified'];
+		});
+
+		return array_slice($out, 0, 20);
 	}
 
 	protected function _assetRowJson($a): array {
