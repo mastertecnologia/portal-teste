@@ -416,6 +416,13 @@ Router::scope("/", function ($routes) {
         ->setMethods(["GET"]);
     $routes
         ->connect(
+            "/tickets/api-time-entries/*",
+            ["controller" => "Tickets", "action" => "apiTimeEntries"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET", "POST", "PUT", "DELETE"]);
+    $routes
+        ->connect(
             "/tickets/start-ticket/*",
             ["controller" => "Tickets", "action" => "startTicket"],
             ["pass" => ["idticket"]],

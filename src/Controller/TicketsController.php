@@ -51,7 +51,7 @@ class TicketsController extends AppController {
 		$existingUnlocked = (array)$this->Security->getConfig('unlockedActions');
 		$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
 			$existingUnlocked,
-			['apiTicketAssetsAttach', 'apiTicketAssetsDetach']
+			['apiTicketAssetsAttach', 'apiTicketAssetsDetach', 'apiTimeEntries']
 		))));
 	}
 
@@ -68,6 +68,9 @@ class TicketsController extends AppController {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
 		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket', 'apiTimer', 'apiAlterarSituacao'], true)) {
+			return (int)$user['role'] === 0;
+		}
+		if ($action === 'apiTimeEntries') {
 			return (int)$user['role'] === 0;
 		}
 		if (in_array($action, ['apiTimeline', 'apiTicketMessages', 'apiRealtimeToken', 'apiServicedeskData'], true)) {
@@ -2950,6 +2953,7 @@ class TicketsController extends AppController {
 				'apiAuditValidate' => $w . 'api/audit/validate',
 				'apiSetUserAuditPassword' => $w . 'users/api-set-user-audit-password',
 				'apiAlterarSituacao' => $w . 'tickets/api-alterar-situacao/',
+				'apiTimeEntries' => $w . 'tickets/api-time-entries/',
 				'apiAnexoUpload' => $w . 'tickets/api-anexo-upload/',
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
 				'apiTecnicosLista' => $w . 'tickets/api-tecnicos-lista',
@@ -6537,6 +6541,159 @@ class TicketsController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => false, 'error' => 'invalid_tab'], 400);
+	}
+
+	/**
+	 * CRUD de entradas manuais de tempo (ticketshoras) para a UI React.
+	 * GET: lista entradas do ticket.
+	 * POST: cria/atualiza entrada (upsert por id opcional).
+	 * DELETE: remove entrada por id (query/body).
+	 */
+	public function apiTimeEntries($idticket = null) {
+		$this->request->allowMethod(['get', 'post', 'put', 'delete']);
+		$this->autoRender = false;
+
+		$ticketQ = $this->Tickets->find()->where(['Tickets.id' => (int)$idticket]);
+		$this->Abac->applyToQuery($ticketQ, 'Tickets', 'Tickets');
+		$ticket = $ticketQ->first();
+		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$eid = (int)$this->Auth->user('idempresa');
+		$uid = (int)$this->Auth->user('id');
+		$thCols = [];
+		try {
+			$thCols = $this->Ticketshoras->getSchema()->columns();
+		} catch (\Throwable $e) {
+			$thCols = [];
+		}
+
+		if ($this->request->is('get')) {
+			$rows = $this->Ticketshoras->find()
+				->contain(['Users'])
+				->where(['Ticketshoras.idticket' => (int)$idticket, 'Ticketshoras.idempresa' => $eid])
+				->order(['Ticketshoras.id' => 'DESC'])
+				->all();
+			$out = [];
+			foreach ($rows as $r) {
+				$inicio = $r->get('horaini');
+				$fim = $r->get('horafin');
+				$sec = TicketServiceDeskApiService::resolveSecondsFromTicketshorasRow($this->Ticketshoras, $r);
+				$out[] = [
+					'id' => (int)$r->id,
+					'ticketId' => (int)$r->idticket,
+					'technicianId' => (int)$r->iduser,
+					'technicianName' => (string)($r->user->name ?? $r->user->username ?? ''),
+					'startWorkHour' => ($inicio && is_object($inicio) && method_exists($inicio, 'format')) ? $inicio->format('c') : null,
+					'endWorkHour' => ($fim && is_object($fim) && method_exists($fim, 'format')) ? $fim->format('c') : null,
+					'durationSeconds' => (int)$sec,
+					'billable' => in_array('billable', $thCols, true) ? (bool)$r->get('billable')
+						: (in_array('faturavel', $thCols, true) ? (bool)$r->get('faturavel') : true),
+					'rate' => in_array('taxa', $thCols, true) ? (string)($r->get('taxa') ?? '')
+						: (in_array('rate', $thCols, true) ? (string)($r->get('rate') ?? '') : ''),
+					'note' => in_array('descricao', $thCols, true) ? (string)($r->get('descricao') ?? '')
+						: (in_array('observacao', $thCols, true) ? (string)($r->get('observacao') ?? '')
+						: (in_array('nota', $thCols, true) ? (string)($r->get('nota') ?? '') : '')),
+				];
+			}
+
+			return $this->jsonResponse(['ok' => true, 'entries' => $out]);
+		}
+
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+
+		if ($this->request->is('delete')) {
+			$entryId = (int)($body['id'] ?? $this->request->getQuery('id') ?? 0);
+			if ($entryId <= 0) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
+			}
+			$row = $this->Ticketshoras->find()
+				->where(['id' => $entryId, 'idticket' => (int)$idticket, 'idempresa' => $eid])
+				->first();
+			if (!$row) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+			if (!$this->Ticketshoras->delete($row)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'delete_failed'], 500);
+			}
+
+			return $this->jsonResponse(['ok' => true]);
+		}
+
+		$entryId = (int)($body['id'] ?? 0);
+		$startRaw = (string)($body['startWorkHour'] ?? $body['StartWorkHour'] ?? '');
+		$endRaw = (string)($body['endWorkHour'] ?? $body['EndWorkHour'] ?? '');
+		$technicianId = (int)($body['technicianContactId'] ?? $body['TechnicianContactID'] ?? $uid);
+		$billable = (bool)($body['billable'] ?? $body['Billable'] ?? true);
+		$rate = trim((string)($body['rate'] ?? $body['Rate'] ?? ''));
+		$note = trim((string)($body['descricao'] ?? $body['Description'] ?? $body['note'] ?? $body['Note'] ?? ''));
+		if ($technicianId <= 0) {
+			$technicianId = $uid;
+		}
+		try {
+			$start = new \DateTime($startRaw ?: 'now');
+			$end = new \DateTime($endRaw ?: 'now');
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_datetime'], 400);
+		}
+		if ($end <= $start) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_interval'], 400);
+		}
+
+		if ($entryId > 0) {
+			$row = $this->Ticketshoras->find()
+				->where(['id' => $entryId, 'idticket' => (int)$idticket, 'idempresa' => $eid])
+				->first();
+			if (!$row) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+		} else {
+			$row = $this->Ticketshoras->newEntity();
+			$row->set('idticket', (int)$idticket);
+			$row->set('idempresa', $eid);
+		}
+		$row->set('iduser', $technicianId);
+		$row->set('data', $start->format('Y-m-d'));
+		$row->set('horaini', $start->format('Y-m-d H:i:s'));
+		$row->set('horafin', $end->format('Y-m-d H:i:s'));
+		if (in_array('billable', $thCols, true)) {
+			$row->set('billable', $billable);
+		} elseif (in_array('faturavel', $thCols, true)) {
+			$row->set('faturavel', $billable);
+		}
+		if (in_array('taxa', $thCols, true)) {
+			$row->set('taxa', $rate);
+		} elseif (in_array('rate', $thCols, true)) {
+			$row->set('rate', $rate);
+		}
+		if (in_array('descricao', $thCols, true)) {
+			$row->set('descricao', $note);
+		} elseif (in_array('observacao', $thCols, true)) {
+			$row->set('observacao', $note);
+		} elseif (in_array('nota', $thCols, true)) {
+			$row->set('nota', $note);
+		}
+		if (!$this->Ticketshoras->save($row)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+
+		try {
+			TicketWorklogEventHelper::afterHoraLancada(
+				$row,
+				$eid,
+				(int)$idticket,
+				$technicianId,
+				$row->horaini,
+				$row->horafin
+			);
+		} catch (\Throwable $e) {
+			$this->log('apiTimeEntries afterHoraLancada: ' . $e->getMessage(), 'error');
+		}
+
+		return $this->jsonResponse(['ok' => true, 'id' => (int)$row->id]);
 	}
 
 	/**

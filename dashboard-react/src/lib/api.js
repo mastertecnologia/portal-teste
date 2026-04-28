@@ -739,6 +739,58 @@ export async function postTimerAction(ticketId, action, extra = {}) {
   };
 }
 
+export async function fetchTimeEntries(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true, entries: [] };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiTimeEntries;
+  if (!base) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText, entries: [] };
+  return { ok: true, entries: Array.isArray(j.entries) ? j.entries : [] };
+}
+
+export async function upsertTimeEntry(ticketId, payload) {
+  if (USE_MOCK) {
+    return { ok: true, id: Date.now() };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiTimeEntries;
+  if (!base) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {}),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  return { ok: true, id: j.id };
+}
+
+export async function deleteTimeEntry(ticketId, entryId) {
+  if (USE_MOCK) {
+    return { ok: true };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiTimeEntries;
+  if (!base) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}?id=${encodeURIComponent(entryId)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  return { ok: true };
+}
+
 /**
  * Registo de auditoria de tempo (senha verificada no servidor; não ajusta o timer no estado).
  * @param {{ ticketId: number, userId: number, oldTime: string, newTime: string, reason: string, authKey: string }} p
