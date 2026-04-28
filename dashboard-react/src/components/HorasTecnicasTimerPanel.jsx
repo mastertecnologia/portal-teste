@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { postTimerAction, postTicketSignature, saveTicketDescricaoAtendimento } from '../lib/api';
+import {
+  deleteTimeEntry,
+  fetchTimeEntries,
+  postTimerAction,
+  postTicketSignature,
+  saveTicketDescricaoAtendimento,
+  upsertTimeEntry,
+} from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
 import TimerWidget from './TimerWidget.jsx';
 import AuditModal from './AuditModal.jsx';
@@ -32,6 +39,22 @@ function minutosLabel(totalMin) {
   if (h <= 0) return `${r} min`;
   if (r === 0) return `${h} h`;
   return `${h} h ${r} min`;
+}
+
+function splitDateTimeLocal(isoLike) {
+  if (!isoLike) return { date: '', time: '' };
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) return { date: '', time: '' };
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  const s = local.toISOString();
+  return { date: s.slice(0, 10), time: s.slice(11, 19) };
+}
+
+function joinDateTimeLocal(date, time) {
+  if (!date || !time) return '';
+  const d = new Date(`${date}T${time}`);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString();
 }
 
 /** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
@@ -75,6 +98,24 @@ export default function HorasTecnicasTimerPanel({
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
+  const [entriesOpen, setEntriesOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [entriesBusy, setEntriesBusy] = useState(false);
+  const [entriesErr, setEntriesErr] = useState('');
+  const [entries, setEntries] = useState([]);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [form, setForm] = useState({
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+    technicianContactId: '',
+    billable: true,
+    descricao: '',
+    taxa: '',
+    auditReason: '',
+    auditAuthKey: '',
+  });
   const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
@@ -171,6 +212,20 @@ export default function HorasTecnicasTimerPanel({
   }, [syncStopwatchToSessao]);
 
   const displayHms = formatElapsedHms(swRef.current.getElapsedMs());
+
+  const loadEntries = useCallback(async () => {
+    if (!ticketId) return;
+    setEntriesBusy(true);
+    setEntriesErr('');
+    const r = await fetchTimeEntries(ticketId);
+    if (!r.ok) {
+      setEntriesErr(r.error || 'Falha ao carregar entradas.');
+      setEntries([]);
+    } else {
+      setEntries(Array.isArray(r.entries) ? r.entries : []);
+    }
+    setEntriesBusy(false);
+  }, [ticketId]);
 
   async function runAction(action, options = {}) {
     const { skipBusy = false } = options;
@@ -315,6 +370,105 @@ export default function HorasTecnicasTimerPanel({
     }
   }
 
+  function openEntriesModal() {
+    setEntriesOpen(true);
+    loadEntries();
+  }
+
+  function openManualModal(entry = null) {
+    const start = splitDateTimeLocal(entry?.startWorkHour || new Date().toISOString());
+    const end = splitDateTimeLocal(entry?.endWorkHour || new Date(Date.now() + 60000).toISOString());
+    setEditingEntry(entry || null);
+    setEntriesErr('');
+    setForm({
+      startDate: start.date,
+      startTime: start.time || '00:00:00',
+      endDate: end.date,
+      endTime: end.time || '00:01:00',
+      technicianContactId: entry?.technicianContactId ? String(entry.technicianContactId) : '',
+      billable: entry?.billable !== false,
+      descricao: String(entry?.note || ''),
+      taxa: String(entry?.rate || ''),
+      auditReason: '',
+      auditAuthKey: '',
+    });
+    setManualOpen(true);
+  }
+
+  async function submitManualForm(ev) {
+    ev.preventDefault();
+    if (!ticketId) return;
+    const startIso = joinDateTimeLocal(form.startDate, form.startTime);
+    const endIso = joinDateTimeLocal(form.endDate, form.endTime);
+    if (!startIso || !endIso) {
+      setEntriesErr('Preencha data e hora de início e término.');
+      return;
+    }
+    if (editingEntry && (!form.auditReason.trim() || !form.auditAuthKey.trim())) {
+      setEntriesErr('Editar horas exige motivo e senha de auditoria.');
+      return;
+    }
+    setEntriesBusy(true);
+    setEntriesErr('');
+    const payload = {
+      id: editingEntry?.id ? Number(editingEntry.id) : 0,
+      TicketID: Number(ticketId),
+      StartWorkHour: startIso,
+      EndWorkHour: endIso,
+      TechnicianContactID: Number(form.technicianContactId || 0),
+      Billable: !!form.billable,
+      Rate: form.taxa || '',
+      Description: form.descricao || '',
+      auditReason: form.auditReason || '',
+      auditAuthKey: form.auditAuthKey || '',
+    };
+    const r = await upsertTimeEntry(ticketId, payload);
+    if (!r.ok) {
+      setEntriesErr(r.error || 'Falha ao salvar entrada.');
+      setEntriesBusy(false);
+      return;
+    }
+    await loadEntries();
+    setEntriesBusy(false);
+    setManualOpen(false);
+    setEditingEntry(null);
+  }
+
+  async function handleDeleteEntry(entryId) {
+    if (!ticketId || !entryId) return;
+    if (!window.confirm('Excluir esta entrada de tempo?')) return;
+    const reason = window.prompt('Motivo da alteração (auditoria):', '') || '';
+    if (!reason.trim()) {
+      setEntriesErr('Motivo obrigatório para excluir.');
+      return;
+    }
+    const authKey = window.prompt('Senha de auditoria:', '') || '';
+    if (!authKey.trim()) {
+      setEntriesErr('Senha de auditoria obrigatória para excluir.');
+      return;
+    }
+    setEntriesBusy(true);
+    setEntriesErr('');
+    const r = await deleteTimeEntry(ticketId, entryId, { reason: reason.trim(), authKey: authKey.trim() });
+    if (!r.ok) {
+      setEntriesErr(r.error || 'Falha ao excluir entrada.');
+      setEntriesBusy(false);
+      return;
+    }
+    await loadEntries();
+    setEntriesBusy(false);
+  }
+
+  const previewSeconds = Math.max(
+    0,
+    Math.floor(
+      (new Date(joinDateTimeLocal(form.endDate, form.endTime)).getTime() -
+        new Date(joinDateTimeLocal(form.startDate, form.startTime)).getTime()) /
+        1000
+    ) || 0
+  );
+  const previewHms = formatElapsedHms(previewSeconds * 1000);
+
   if (!canUse) {
     return null;
   }
@@ -427,6 +581,15 @@ export default function HorasTecnicasTimerPanel({
           >
             Ajuste de Auditoria
           </button>
+
+          <div className="timer-entry-links">
+            <button type="button" className="timer-link-btn" disabled={disabled || busy} onClick={openManualModal}>
+              Entrada Manual de Tempo
+            </button>
+            <button type="button" className="timer-link-btn" disabled={disabled || busy} onClick={openEntriesModal}>
+              Ver todas as entradas
+            </button>
+          </div>
         </div>
       </div>
 
@@ -465,6 +628,104 @@ export default function HorasTecnicasTimerPanel({
         onClose={() => !busy && setFinalizeOpen(false)}
         onSubmit={handleFinalizeSubmit}
       />
+
+      {entriesOpen && (
+        <div className="htp-modal-backdrop" onClick={() => !entriesBusy && setEntriesOpen(false)}>
+          <div className="htp-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="htp-modal-head">
+              <strong>Entradas de Tempo</strong>
+              <button type="button" className="htp-close" onClick={() => setEntriesOpen(false)}>x</button>
+            </div>
+            {entriesErr ? <div className="htp-error">{entriesErr}</div> : null}
+            <div className="htp-table-wrap">
+              <table className="htp-table">
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Técnico</th><th>Duração</th><th>Faturável</th><th>Taxa</th><th>Observação</th><th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entriesBusy ? (
+                    <tr><td colSpan={7}>Carregando...</td></tr>
+                  ) : entries.length ? (
+                    entries.map((row) => (
+                      <tr key={row.id}>
+                        <td>{row.id}</td>
+                        <td>{row.technicianName || `ID ${row.technicianContactId || '-'}`}</td>
+                        <td>{formatElapsedHms((Number(row.durationSeconds || 0)) * 1000)}</td>
+                        <td>{row.billable ? 'Sim' : 'Não'}</td>
+                        <td>{row.rate || '-'}</td>
+                        <td>{row.note || '-'}</td>
+                        <td>
+                          <button type="button" className="htp-mini" onClick={() => openManualModal(row)}>Editar</button>
+                          <button type="button" className="htp-mini htp-mini-danger" onClick={() => handleDeleteEntry(row.id)}>Excluir</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={7}>Nenhuma entrada encontrada.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {manualOpen && (
+        <div className="htp-modal-backdrop" onClick={() => !entriesBusy && setManualOpen(false)}>
+          <div className="htp-modal htp-modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="htp-modal-head">
+              <strong>{editingEntry ? 'Editar entrada de tempo' : 'Adicionar entrada de tempo'}</strong>
+              <button type="button" className="htp-close" onClick={() => setManualOpen(false)}>x</button>
+            </div>
+            {entriesErr ? <div className="htp-error">{entriesErr}</div> : null}
+            <form className="htp-form" onSubmit={submitManualForm}>
+              <label>Duração
+                <input type="text" value={previewHms} readOnly />
+              </label>
+              <label>Descrição
+                <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} rows={3} />
+              </label>
+              <label className="htp-checkbox">
+                <input type="checkbox" checked={form.billable} onChange={(e) => setForm((p) => ({ ...p, billable: e.target.checked }))} />
+                Faturável
+              </label>
+              <label>Taxa
+                <select value={form.taxa} onChange={(e) => setForm((p) => ({ ...p, taxa: e.target.value }))}>
+                  <option value="">Nada selecionado</option>
+                  <option value="padrao">Padrão</option>
+                </select>
+              </label>
+              <div className="htp-grid2">
+                <label>Data de início<input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} required /></label>
+                <label>Hora de início<input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))} required /></label>
+              </div>
+              <div className="htp-grid2">
+                <label>Data de término<input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} required /></label>
+                <label>Hora de término<input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} required /></label>
+              </div>
+              <label>Técnico (ID)
+                <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} />
+              </label>
+              {editingEntry ? (
+                <div className="htp-grid2">
+                  <label>Motivo da alteração
+                    <input type="text" value={form.auditReason} onChange={(e) => setForm((p) => ({ ...p, auditReason: e.target.value }))} required />
+                  </label>
+                  <label>Senha de auditoria
+                    <input type="password" value={form.auditAuthKey} onChange={(e) => setForm((p) => ({ ...p, auditAuthKey: e.target.value }))} required />
+                  </label>
+                </div>
+              ) : null}
+              <div className="htp-actions">
+                <button type="button" onClick={() => setManualOpen(false)} disabled={entriesBusy}>Cancelar</button>
+                <button type="submit" disabled={entriesBusy}>{entriesBusy ? 'Salvando...' : 'Salvar'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
