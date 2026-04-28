@@ -6292,13 +6292,23 @@ class TicketsController extends AppController {
 					'nome_key_eq_ticket' => ($ticketNomeKey !== '' && $cliNomeKey !== '' && $cliNomeKey === $ticketNomeKey),
 				];
 			}
-			$firstAssetClienteId = !empty($assetsSameEmpresaSample) ? (int)($assetsSameEmpresaSample[0]['asset_idcliente'] ?? 0) : 0;
-			$firstAssetClienteAnyEmpresa = null;
-			if ($firstAssetClienteId > 0) {
-				$firstAssetClienteAnyEmpresa = $this->Clientes->find()
-					->select(['id', 'idempresa', 'public_code', 'cnpj', 'cpf', 'razaosocial', 'nome', 'nomefantasia'])
-					->where(['Clientes.id' => $firstAssetClienteId])
-					->first();
+			$invalidAssetClienteRefs = [];
+			$invalidCount = 0;
+			foreach ($assetsSameEmpresaRows as $ar) {
+				$cliAr = $ar->cliente ?? null;
+				$cliEmpresa = (int)($cliAr->idempresa ?? 0);
+				if (!$cliAr || $cliEmpresa !== $eid) {
+					$invalidCount++;
+					if (count($invalidAssetClienteRefs) < 10) {
+						$invalidAssetClienteRefs[] = [
+							'asset_id' => (int)($ar->id ?? 0),
+							'asset_idempresa' => (int)($ar->idempresa ?? 0),
+							'asset_idcliente' => (int)($ar->idcliente ?? 0),
+							'cliente_found' => (bool)$cliAr,
+							'cliente_idempresa' => $cliEmpresa,
+						];
+					}
+				}
 			}
 			// #region agent log
 			$this->_agentDebugLog18a583('pre-fix', 'H8', 'TicketsController::apiServicedeskData:assetsSameEmpresaSample', 'sample of assets in ticket company', [
@@ -6306,14 +6316,8 @@ class TicketsController extends AppController {
 				'ticket_public_code' => $ticketCli ? (string)($ticketCli->public_code ?? '') : '',
 				'ticket_nome_key_sha1_8' => substr(sha1($ticketNomeKey), 0, 8),
 				'sample' => $assetsSameEmpresaSample,
-				'first_asset_cliente_any_empresa' => $firstAssetClienteAnyEmpresa ? [
-					'id' => (int)($firstAssetClienteAnyEmpresa->id ?? 0),
-					'idempresa' => (int)($firstAssetClienteAnyEmpresa->idempresa ?? 0),
-					'public_code' => (string)($firstAssetClienteAnyEmpresa->public_code ?? ''),
-					'cnpj_digits' => preg_replace('/\D/', '', (string)($firstAssetClienteAnyEmpresa->cnpj ?? '')),
-					'cpf_digits' => preg_replace('/\D/', '', (string)($firstAssetClienteAnyEmpresa->cpf ?? '')),
-					'nome_key_sha1_8' => substr(sha1(ClienteCorrelatedIds::normalizeNomeKey((string)($firstAssetClienteAnyEmpresa->razaosocial ?? $firstAssetClienteAnyEmpresa->nome ?? $firstAssetClienteAnyEmpresa->nomefantasia ?? ''))), 0, 8),
-				] : null,
+				'invalid_asset_cliente_ref_count' => $invalidCount,
+				'invalid_asset_cliente_ref_sample' => $invalidAssetClienteRefs,
 			]);
 			// #endregion
 			$availQ = $this->Assets->find()
