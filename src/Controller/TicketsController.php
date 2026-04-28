@@ -15,6 +15,7 @@ use App\Service\Clientes\ClienteCorrelatedIds;
 use Cake\Core\Configure;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\ConnectionManager;
+use Cake\Event\Event;
 use Cake\Mailer\Email;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
@@ -42,6 +43,18 @@ class TicketsController extends AppController {
 			'QueuesUsers', 'SupportLevels', 'TicketEvents', 'TicketProducts', 'Produtos',
 			'TechnicalReports', 'TicketChecklists', 'Assets', 'Holidays', 'TicketMessages', 'ContratosHoras',
 		]);
+	}
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		// Endpoints JSON de vínculo/desvínculo de CI usam fetch() sem _Token de form.
+		$this->Security->unlockAction('apiTicketAssetsAttach');
+		$this->Security->unlockAction('apiTicketAssetsDetach');
+		$existingUnlocked = (array)$this->Security->getConfig('unlockedActions');
+		$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
+			$existingUnlocked,
+			['apiTicketAssetsAttach', 'apiTicketAssetsDetach']
+		))));
 	}
 
 	public function isAuthorized($user) {
@@ -6541,6 +6554,23 @@ class TicketsController extends AppController {
 				'Assets.idcliente IN' => $clienteIdsCorrel,
 			])->first();
 		if (!$asset) {
+			$assetSameEmpresa = (bool)$this->Assets->find()
+				->where(['Assets.id' => $assetId, 'Assets.idempresa' => $eid])
+				->count();
+			$this->_agentDebugLog18a583(
+				'asset-link',
+				'H9',
+				'TicketsController::apiTicketAssetsAttach:assetValidationFailed',
+				'asset link validation failed',
+				[
+					'ticket_id' => (int)$ticket->id,
+					'ticket_idempresa' => $eid,
+					'ticket_idcliente' => (int)$ticket->idcliente,
+					'asset_id' => $assetId,
+					'cliente_ids_permitidos' => array_values($clienteIdsCorrel),
+					'asset_found_same_empresa' => $assetSameEmpresa,
+				]
+			);
 			return $this->jsonResponse(['ok' => false, 'error' => 'asset_not_found'], 404);
 		}
 		try {

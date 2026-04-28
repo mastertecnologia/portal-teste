@@ -76,6 +76,24 @@ function tipoLabel(t) {
   return map[v] || (t ? String(t) : '—');
 }
 
+function ativosErrorMessage(raw) {
+  const code = String(raw || '').trim().toLowerCase();
+  const map = {
+    bad_request: 'Requisição inválida ao vincular ativo.',
+    forbidden: 'Você não tem permissão para vincular/desvincular CIs neste chamado.',
+    asset_not_found: 'O ativo não pertence ao cliente/empresa deste chamado.',
+    invalid_params: 'Dados inválidos para executar a ação.',
+    save_failed: 'Não foi possível salvar o vínculo do ativo.',
+    delete_failed: 'Não foi possível remover o vínculo do ativo.',
+    not_found: 'Vínculo não encontrado para este chamado.',
+    exception: 'Erro interno ao processar o vínculo do ativo.',
+    no_api: 'API de vínculo de ativos não configurada.',
+    erro_ao_vincular: 'Não foi possível vincular o ativo ao chamado.',
+    erro_ao_desvincular: 'Não foi possível desvincular o ativo do chamado.',
+  };
+  return map[code] || `Falha ao processar a ação (${String(raw || 'erro')}).`;
+}
+
 /** Caminhos absolutos na raiz do host quebram com APP em subpasta (ex. /portal/). Alinha a tickets API (`boot.webroot`). */
 function pathWithWebroot(boot, path) {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -342,7 +360,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         ) : null}
 
         {ativosError ? (
-          <p className="text-xs text-red-300">Erro: {String(ativosError)}</p>
+          <p className="text-xs text-red-300">Erro: {ativosErrorMessage(ativosError)}</p>
         ) : null}
 
         <div className="overflow-x-auto">

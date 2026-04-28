@@ -113,6 +113,8 @@ class AppController extends Controller
                 "apiTicketMessages",
                 "apiRealtimeToken",
                 "apiServicedeskData",
+                "apiTicketAssetsAttach",
+                "apiTicketAssetsDetach",
                 "apiValidate",
                 "apiSetUserAuditPassword",
                 "apiAlterarSituacao",
