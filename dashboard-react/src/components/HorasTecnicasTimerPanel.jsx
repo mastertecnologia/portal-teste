@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deleteTimeEntry,
   fetchTimeEntries,
+  fetchTecnicosParaTransferencia,
   postTimerAction,
   postTicketSignature,
   saveTicketDescricaoAtendimento,
@@ -67,6 +68,32 @@ function parseDurationToSeconds(value) {
   return hh * 3600 + mm * 60 + ss;
 }
 
+function formatEntryStart(isoLike) {
+  if (!isoLike) return '-';
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
+function technicianInitials(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return 'DD';
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'DD';
+  const a = parts[0]?.[0] || '';
+  const b = parts[1]?.[0] || parts[0]?.[1] || '';
+  const initials = `${a}${b}`.toUpperCase();
+  return initials || 'DD';
+}
+
 /** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
 function sessaoEstaPausada(sessao) {
   if (!sessao) return false;
@@ -113,6 +140,8 @@ export default function HorasTecnicasTimerPanel({
   const [entriesBusy, setEntriesBusy] = useState(false);
   const [entriesErr, setEntriesErr] = useState('');
   const [entries, setEntries] = useState([]);
+  const [tecnicos, setTecnicos] = useState([]);
+  const [tecnicosBusy, setTecnicosBusy] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [form, setForm] = useState({
     durationHms: '',
@@ -237,6 +266,19 @@ export default function HorasTecnicasTimerPanel({
     }
     setEntriesBusy(false);
   }, [ticketId]);
+
+  const loadTecnicos = useCallback(async () => {
+    setTecnicosBusy(true);
+    const r = await fetchTecnicosParaTransferencia();
+    if (!r.ok) {
+      setTecnicos([]);
+      setTecnicosBusy(false);
+      return;
+    }
+    const list = Array.isArray(r.tecnicos) ? r.tecnicos : [];
+    setTecnicos(list);
+    setTecnicosBusy(false);
+  }, []);
 
   async function runAction(action, options = {}) {
     const { skipBusy = false } = options;
@@ -383,6 +425,8 @@ export default function HorasTecnicasTimerPanel({
 
   function openEntriesModal() {
     setEntriesOpen(true);
+    setManualOpen(false);
+    setEditingEntry(null);
     loadEntries();
   }
 
@@ -391,11 +435,9 @@ export default function HorasTecnicasTimerPanel({
     const end = splitDateTimeLocal(entry?.endWorkHour || new Date(Date.now() + 60000).toISOString());
     setEditingEntry(entry || null);
     setEntriesErr('');
-    const startIso = joinDateTimeLocal(start.date, start.time || '00:00:00');
-    const endIso = joinDateTimeLocal(end.date, end.time || '00:01:00');
-    const seconds = Math.max(0, Math.floor((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000) || 0);
+    loadTecnicos();
     setForm({
-      durationHms: formatElapsedHms(seconds * 1000),
+      durationHms: '00:00:00',
       startDate: start.date,
       startTime: start.time || '00:00:00',
       endDate: end.date,
@@ -408,6 +450,7 @@ export default function HorasTecnicasTimerPanel({
       auditAuthKey: '',
     });
     setManualOpen(true);
+    setEntriesOpen(true);
   }
 
   async function submitManualForm(ev) {
@@ -519,6 +562,7 @@ export default function HorasTecnicasTimerPanel({
 
   const timerCardClass = `timer-card${running ? ' running' : ''}`;
   const auditHms = displayHms && displayHms.length === 8 ? displayHms : '00:00:00';
+  const entriesTotalSeconds = entries.reduce((sum, row) => sum + Math.max(0, Number(row?.durationSeconds) || 0), 0);
 
   return (
     <div>
@@ -665,11 +709,73 @@ export default function HorasTecnicasTimerPanel({
               <button type="button" className="htp-close" onClick={() => setEntriesOpen(false)}>x</button>
             </div>
             {entriesErr ? <div className="htp-error">{entriesErr}</div> : null}
+            {manualOpen && (
+              <form className="htp-form htp-form-inline" onSubmit={submitManualForm}>
+                <div className="htp-form-title">{editingEntry ? 'Editar entrada de tempo' : 'Adicionar entrada de tempo'}</div>
+                <label>Duração
+                  <input
+                    type="text"
+                    value={form.durationHms}
+                    onChange={(e) => handleDurationChange(e.target.value)}
+                    placeholder="HH:MM:SS"
+                  />
+                </label>
+                <label>Descrição
+                  <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} rows={3} />
+                </label>
+                <label className="htp-checkbox">
+                  <input type="checkbox" checked={form.billable} onChange={(e) => setForm((p) => ({ ...p, billable: e.target.checked }))} />
+                  Faturável
+                </label>
+                <label>Taxa
+                  <select value={form.taxa} onChange={(e) => setForm((p) => ({ ...p, taxa: e.target.value }))}>
+                    <option value="">Nada selecionado</option>
+                    <option value="padrao">Padrão</option>
+                  </select>
+                </label>
+                <div className="htp-grid2">
+                  <label>Data de início<input type="date" value={form.startDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startDate: e.target.value }))} required /></label>
+                  <label>Hora de início<input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startTime: e.target.value }))} required /></label>
+                </div>
+                <div className="htp-grid2">
+                  <label>Data de término<input type="date" value={form.endDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endDate: e.target.value }))} required /></label>
+                  <label>Hora de término<input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endTime: e.target.value }))} required /></label>
+                </div>
+                <label>Técnico (ID)
+                <select
+                  value={form.technicianContactId}
+                  onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))}
+                  disabled={tecnicosBusy}
+                >
+                  <option value="">{tecnicosBusy ? 'Carregando técnicos...' : 'Selecione o técnico'}</option>
+                  {tecnicos.map((t) => (
+                    <option key={t.id} value={String(t.id)}>
+                      {t.name || `Usuário #${t.id}`}
+                    </option>
+                  ))}
+                </select>
+                </label>
+                {editingEntry ? (
+                  <div className="htp-grid2">
+                    <label>Motivo da alteração
+                      <input type="text" value={form.auditReason} onChange={(e) => setForm((p) => ({ ...p, auditReason: e.target.value }))} required />
+                    </label>
+                    <label>Senha de auditoria
+                      <input type="password" value={form.auditAuthKey} onChange={(e) => setForm((p) => ({ ...p, auditAuthKey: e.target.value }))} required />
+                    </label>
+                  </div>
+                ) : null}
+                <div className="htp-actions">
+                  <button type="button" onClick={() => { setManualOpen(false); setEditingEntry(null); }} disabled={entriesBusy}>Cancelar</button>
+                  <button type="submit" disabled={entriesBusy}>{entriesBusy ? 'Salvando...' : 'Salvar'}</button>
+                </div>
+              </form>
+            )}
             <div className="htp-table-wrap">
               <table className="htp-table">
                 <thead>
                   <tr>
-                    <th>ID</th><th>Técnico</th><th>Duração</th><th>Faturável</th><th>Taxa</th><th>Observação</th><th>Ações</th>
+                    <th>ID</th><th>Técnico</th><th>Duração</th><th>Faturável</th><th>Taxa</th><th>Notas</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -679,14 +785,30 @@ export default function HorasTecnicasTimerPanel({
                     entries.map((row) => (
                       <tr key={row.id}>
                         <td>{row.id}</td>
-                        <td>{row.technicianName || `ID ${row.technicianContactId || '-'}`}</td>
-                        <td>{formatElapsedHms((Number(row.durationSeconds || 0)) * 1000)}</td>
+                        <td>
+                          <div className="htp-tech-cell">
+                            <span className="htp-tech-avatar">{technicianInitials(row.technicianName)}</span>
+                            <span className="htp-tech-name">{row.technicianName || `ID ${row.technicianContactId || '-'}`}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="htp-duration-cell"><strong>Total:</strong> {formatElapsedHms((Number(row.durationSeconds || 0)) * 1000)}</div>
+                          <div className="htp-start-cell"><strong>Início:</strong> {formatEntryStart(row.startWorkHour)}</div>
+                        </td>
                         <td>{row.billable ? 'Sim' : 'Não'}</td>
                         <td>{row.rate || '-'}</td>
                         <td>{row.note || '-'}</td>
-                        <td>
-                          <button type="button" className="htp-mini" onClick={() => openManualModal(row)}>Editar</button>
-                          <button type="button" className="htp-mini htp-mini-danger" onClick={() => handleDeleteEntry(row.id)}>Excluir</button>
+                        <td className="htp-actions-col">
+                          <button type="button" className="htp-icon-btn" aria-label="Editar entrada" onClick={() => openManualModal(row)}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm18-11.5a1 1 0 0 0 0-1.41l-1.34-1.34a1 1 0 0 0-1.41 0l-1.13 1.13 3.75 3.75L21 5.75z" />
+                            </svg>
+                          </button>
+                          <button type="button" className="htp-icon-btn htp-icon-btn-danger" aria-label="Excluir entrada" onClick={() => handleDeleteEntry(row.id)}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M6 7h12l-1 14H7L6 7zm3-3h6l1 2H8l1-2zM4 6h16v2H4z" />
+                            </svg>
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -696,66 +818,11 @@ export default function HorasTecnicasTimerPanel({
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-      )}
-
-      {manualOpen && (
-        <div className="htp-modal-backdrop" onClick={() => !entriesBusy && setManualOpen(false)}>
-          <div className="htp-modal htp-modal-sm" onClick={(e) => e.stopPropagation()}>
-            <div className="htp-modal-head">
-              <strong>{editingEntry ? 'Editar entrada de tempo' : 'Adicionar entrada de tempo'}</strong>
-              <button type="button" className="htp-close" onClick={() => setManualOpen(false)}>x</button>
+            <div className="htp-table-total">Total: {formatElapsedHms(entriesTotalSeconds * 1000)}</div>
+            <div className="htp-footer-actions">
+              <button type="button" className="htp-btn-close" onClick={() => setEntriesOpen(false)} disabled={entriesBusy}>Fechar</button>
+              <button type="button" className="htp-btn-add" onClick={() => openManualModal()} disabled={entriesBusy}>Adicionar entrada</button>
             </div>
-            {entriesErr ? <div className="htp-error">{entriesErr}</div> : null}
-            <form className="htp-form" onSubmit={submitManualForm}>
-              <label>Duração
-                <input
-                  type="text"
-                  value={form.durationHms}
-                  onChange={(e) => handleDurationChange(e.target.value)}
-                  placeholder="HH:MM:SS"
-                />
-              </label>
-              <label>Descrição
-                <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} rows={3} />
-              </label>
-              <label className="htp-checkbox">
-                <input type="checkbox" checked={form.billable} onChange={(e) => setForm((p) => ({ ...p, billable: e.target.checked }))} />
-                Faturável
-              </label>
-              <label>Taxa
-                <select value={form.taxa} onChange={(e) => setForm((p) => ({ ...p, taxa: e.target.value }))}>
-                  <option value="">Nada selecionado</option>
-                  <option value="padrao">Padrão</option>
-                </select>
-              </label>
-              <div className="htp-grid2">
-                <label>Data de início<input type="date" value={form.startDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startDate: e.target.value }))} required /></label>
-                <label>Hora de início<input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startTime: e.target.value }))} required /></label>
-              </div>
-              <div className="htp-grid2">
-                <label>Data de término<input type="date" value={form.endDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endDate: e.target.value }))} required /></label>
-                <label>Hora de término<input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endTime: e.target.value }))} required /></label>
-              </div>
-              <label>Técnico (ID)
-                <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} />
-              </label>
-              {editingEntry ? (
-                <div className="htp-grid2">
-                  <label>Motivo da alteração
-                    <input type="text" value={form.auditReason} onChange={(e) => setForm((p) => ({ ...p, auditReason: e.target.value }))} required />
-                  </label>
-                  <label>Senha de auditoria
-                    <input type="password" value={form.auditAuthKey} onChange={(e) => setForm((p) => ({ ...p, auditAuthKey: e.target.value }))} required />
-                  </label>
-                </div>
-              ) : null}
-              <div className="htp-actions">
-                <button type="button" onClick={() => setManualOpen(false)} disabled={entriesBusy}>Cancelar</button>
-                <button type="submit" disabled={entriesBusy}>{entriesBusy ? 'Salvando...' : 'Salvar'}</button>
-              </div>
-            </form>
           </div>
         </div>
       )}
