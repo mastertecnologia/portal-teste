@@ -94,6 +94,37 @@ function ativosErrorMessage(raw) {
   return map[code] || `Falha ao processar a ação (${String(raw || 'erro')}).`;
 }
 
+function AssetFieldIcon({ field }) {
+  const common = {
+    width: 14,
+    height: 14,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    className: 'text-[var(--pgm-text-muted)]',
+    'aria-hidden': true,
+  };
+  switch (field) {
+    case 'tipo':
+      return <svg {...common}><path d="M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4M3 17l9 4 9-4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case 'estado':
+      return <svg {...common}><path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case 'serie':
+      return <svg {...common}><path d="M8 7h8M8 12h8M8 17h5M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case 'qr':
+      return <svg {...common}><path d="M5 5h5v5H5V5zm9 0h5v5h-5V5zM5 14h5v5H5v-5zm9 0h2m3 0h-1m-4 3h5m-3-3v5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case 'hostname':
+      return <svg {...common}><path d="M4 6h16M4 12h16M4 18h16M8 4v16M16 4v16" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case 'marcaModelo':
+      return <svg {...common}><path d="M8 6h8M6 10h12M8 14h8M10 18h4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case 'localizacao':
+      return <svg {...common}><path d="M12 21s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11zm0-8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    default:
+      return <svg {...common}><path d="M12 8h.01M12 12h.01M12 16h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  }
+}
+
 /** Caminhos absolutos na raiz do host quebram com APP em subpasta (ex. /portal/). Alinha a tickets API (`boot.webroot`). */
 function pathWithWebroot(boot, path) {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -123,11 +154,14 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   const id = ticket?.id;
   const [data, setData] = useState(null);
   const [ativosQ, setAtivosQ] = useState('');
+  const [assetModal, setAssetModal] = useState(null);
   const [ativosBusy, setAtivosBusy] = useState(false);
   const [ativosError, setAtivosError] = useState(null);
   const [showAddAsset, setShowAddAsset] = useState(false);
   const [pickerQ, setPickerQ] = useState('');
   const pickerRef = useRef(null);
+  const assetModalRef = useRef(null);
+  const assetTriggerRef = useRef(null);
   const [err, setErr] = useState(null);
 
   const historicoList = useMemo(() => {
@@ -184,6 +218,48 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     });
     // #endregion
   }, [tab, data, id]);
+
+  useEffect(() => {
+    if (!assetModal) {
+      if (assetTriggerRef.current && typeof assetTriggerRef.current.focus === 'function') {
+        assetTriggerRef.current.focus();
+      }
+      return undefined;
+    }
+    const node = assetModalRef.current;
+    const selectors = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+    const focusables = node ? Array.from(node.querySelectorAll(selectors)) : [];
+    const firstFocusable = focusables[0] || null;
+    const lastFocusable = focusables[focusables.length - 1] || null;
+    firstFocusable?.focus();
+
+    const onKeydown = (ev) => {
+      if (ev.key === 'Escape') {
+        setAssetModal(null);
+        return;
+      }
+      if (ev.key === 'Tab' && focusables.length > 0) {
+        if (ev.shiftKey && document.activeElement === firstFocusable) {
+          ev.preventDefault();
+          lastFocusable?.focus();
+          return;
+        }
+        if (!ev.shiftKey && document.activeElement === lastFocusable) {
+          ev.preventDefault();
+          firstFocusable?.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeydown);
+    return () => window.removeEventListener('keydown', onKeydown);
+  }, [assetModal]);
 
   if (tab === 'historico') {
     return (
@@ -275,6 +351,16 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
       }
       reload();
     };
+    const detailRows = [
+      { key: 'tipo', label: 'Tipo', value: tipoLabel(assetModal?.tipo) },
+      { key: 'estado', label: 'Estado', value: statusOpLabel(assetModal?.status_operacional) },
+      { key: 'serie', label: 'Série / ID', value: assetModal?.numero_serie || assetModal?.identificador || assetModal?.id },
+      { key: 'qr', label: 'Código QR', value: assetModal?.codigo_qr },
+      { key: 'hostname', label: 'Hostname', value: assetModal?.hostname },
+      { key: 'marcaModelo', label: 'Marca / Modelo', value: [assetModal?.marca, assetModal?.modelo].filter(Boolean).join(' ') || null },
+      { key: 'localizacao', label: 'Localização', value: assetModal?.localizacao },
+      { key: 'obs', label: 'Observações', value: assetModal?.observacoes },
+    ].filter((row) => row.value != null && String(row.value).trim() !== '');
 
     return (
       <div className="space-y-3">
@@ -394,14 +480,16 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   <td className="py-2 pr-2">{statusOpLabel(a.status_operacional)}</td>
                   <td className="py-2 pr-2 text-[var(--pgm-text-muted)]">{a.localizacao || '—'}</td>
                   <td className="py-2 pr-2 text-right">
-                    <a
-                      href={pathWithWebroot(boot, `/ativos/view/${encodeURIComponent(a.id)}`)}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={(ev) => {
+                        assetTriggerRef.current = ev.currentTarget;
+                        setAssetModal(a);
+                      }}
                       className="mr-2 inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] px-2 py-1 text-[0.7rem] text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]"
                     >
                       Ficha
-                    </a>
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleDetach(a)}
@@ -418,9 +506,64 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         </div>
         {filteredLinked.length === 0 && (
           <p className="text-sm text-[var(--pgm-text-muted)]">
-            Nenhum CI vinculado a este chamado. Use "+ Vincular CI" para associar um ativo.
+            Nenhum CI vinculado a este chamado. Use &quot;+ Vincular CI&quot; para associar um ativo.
           </p>
         )}
+        {assetModal ? (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-3 py-6 backdrop-blur-[2px] transition-opacity duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Ficha do ativo"
+            onClick={() => setAssetModal(null)}
+          >
+            <div
+              className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out"
+              style={{ transform: 'translateY(0) scale(1)', opacity: 1 }}
+              ref={assetModalRef}
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-3 border-b border-[var(--pgm-border-subtle)] bg-gradient-to-r from-[var(--pgm-bg-elevated)] to-[var(--pgm-bg-surface)] px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[var(--pgm-text)]">
+                    {assetModal.descricao || `CI #${assetModal.id}`}
+                  </p>
+                  <p className="truncate text-[0.72rem] text-[var(--pgm-text-muted)]">
+                    {tipoLabel(assetModal.tipo)} · {assetModal.identificador || `#${assetModal.id}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAssetModal(null)}
+                  className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)] hover:bg-[var(--pgm-bg-raised)] hover:text-[var(--pgm-text)]"
+                >
+                  Fechar
+                </button>
+              </div>
+              <div className="grid gap-2 px-4 py-4 sm:grid-cols-2">
+                {detailRows.map((row) => (
+                  <div key={row.label} className="rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2">
+                    <p className="flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.05em] text-[var(--pgm-text-muted)]">
+                      <AssetFieldIcon field={row.key} />
+                      {row.label}
+                    </p>
+                    <p className="mt-0.5 text-sm text-[var(--pgm-text)]">{row.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end border-t border-[var(--pgm-border-subtle)] px-4 py-3">
+                <a
+                  href={pathWithWebroot(boot, `/ativos/view/${encodeURIComponent(assetModal.id)}`)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]"
+                >
+                  Abrir ficha completa
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }
