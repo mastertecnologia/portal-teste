@@ -48,8 +48,6 @@ class TicketsController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		// Endpoints JSON de vínculo/desvínculo de CI usam fetch() sem _Token de form.
-		$this->Security->unlockAction('apiTicketAssetsAttach');
-		$this->Security->unlockAction('apiTicketAssetsDetach');
 		$existingUnlocked = (array)$this->Security->getConfig('unlockedActions');
 		$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
 			$existingUnlocked,
