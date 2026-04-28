@@ -23,7 +23,6 @@ const SD_TAB_IDS = new Set([
   'atendimento',
   'chat',
   'historico',
-  'horas',
   'ativos',
   'pecas',
   'laudos',
@@ -96,7 +95,6 @@ export default function TechTicketEdit({ boot }) {
             'atendimento',
             'chat',
             'historico',
-            'horas',
             'ativos',
             'pecas',
             'laudos',
@@ -376,7 +374,6 @@ export default function TechTicketEdit({ boot }) {
     atendimento: 'Atendimento',
     chat: 'Chat com Cliente',
     historico: 'Histórico',
-    horas: 'Horas',
     ativos: 'Ativos',
     pecas: 'Peças / Serviços',
     laudos: 'Laudos',
@@ -402,12 +399,6 @@ export default function TechTicketEdit({ boot }) {
         );
       case 'historico':
         return <svg {...common}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-      case 'horas':
-        return (
-          <svg {...common}>
-            <path d="M12 8v5l3 3M12 3a9 9 0 100 18 9 9 0 000-18z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        );
       case 'ativos':
         return <svg {...common}><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
       case 'pecas':
@@ -448,9 +439,6 @@ export default function TechTicketEdit({ boot }) {
             >
               {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
             </span>
-          ) : null}
-          {t === 'horas' && horasTabBadgeMinutos > 0 ? (
-            <span className="ml-1 tabular-nums opacity-90">({minutosHumanosCurto(horasTabBadgeMinutos)})</span>
           ) : null}
         </button>
       ))}
@@ -674,8 +662,8 @@ export default function TechTicketEdit({ boot }) {
     <div className="flex h-[min(32rem,calc(100dvh-14rem))] min-h-[12rem] flex-col overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)] [contain:layout] sm:h-[min(34rem,calc(100dvh-15rem))]">
       <div className="shrink-0 border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-3 py-2.5 sm:px-4">
         <p className="text-[0.65rem] leading-snug text-[var(--pgm-text-muted,#9aa0a8)]">
-          Mensagens com o cliente e a equipa. Os lançamentos de tempo estão no separador «Horas»; o histórico completo, em
-          «Histórico».
+          Mensagens com o cliente e a equipa. Os lançamentos de tempo ficam no bloco de Atendimento (Ver todas as entradas e
+          Entrada manual de tempo); o histórico completo, em «Histórico».
         </p>
       </div>
       <ul
