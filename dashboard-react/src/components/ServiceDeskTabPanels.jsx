@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   attachAssetToTicket,
   detachAssetFromTicket,
@@ -148,6 +149,66 @@ function debugLog18a583(runId, hypothesisId, location, message, data = {}) {
     }),
   }).catch(() => {});
   // #endregion
+}
+
+function AssetDetailsModal({ assetModal, setAssetModal, detailRows, boot, assetModalRef }) {
+  if (!assetModal || typeof document === 'undefined') return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 px-3 py-6 backdrop-blur-[2px] transition-opacity duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Ficha do ativo"
+      onClick={() => setAssetModal(null)}
+    >
+      <div
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out"
+        style={{ transform: 'translateY(0) scale(1)', opacity: 1 }}
+        ref={assetModalRef}
+        onClick={(ev) => ev.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--pgm-border-subtle)] bg-gradient-to-r from-[var(--pgm-bg-elevated)] to-[var(--pgm-bg-surface)] px-4 py-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-[var(--pgm-text)]">
+              {assetModal.descricao || `CI #${assetModal.id}`}
+            </p>
+            <p className="truncate text-[0.72rem] text-[var(--pgm-text-muted)]">
+              {tipoLabel(assetModal.tipo)} · {assetModal.identificador || `#${assetModal.id}`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAssetModal(null)}
+            className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)] hover:bg-[var(--pgm-bg-raised)] hover:text-[var(--pgm-text)]"
+          >
+            Fechar
+          </button>
+        </div>
+        <div className="grid gap-2 px-4 py-4 sm:grid-cols-2">
+          {detailRows.map((row) => (
+            <div key={row.label} className="rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2">
+              <p className="flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.05em] text-[var(--pgm-text-muted)]">
+                <AssetFieldIcon field={row.key} />
+                {row.label}
+              </p>
+              <p className="mt-0.5 text-sm text-[var(--pgm-text)]">{row.value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end border-t border-[var(--pgm-border-subtle)] px-4 py-3">
+          <a
+            href={pathWithWebroot(boot, `/ativos/view/${encodeURIComponent(assetModal.id)}`)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]"
+          >
+            Abrir ficha completa
+          </a>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelineEvents = null }) {
@@ -509,61 +570,13 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
             Nenhum CI vinculado a este chamado. Use &quot;+ Vincular CI&quot; para associar um ativo.
           </p>
         )}
-        {assetModal ? (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-3 py-6 backdrop-blur-[2px] transition-opacity duration-200"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Ficha do ativo"
-            onClick={() => setAssetModal(null)}
-          >
-            <div
-              className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out"
-              style={{ transform: 'translateY(0) scale(1)', opacity: 1 }}
-              ref={assetModalRef}
-              onClick={(ev) => ev.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-3 border-b border-[var(--pgm-border-subtle)] bg-gradient-to-r from-[var(--pgm-bg-elevated)] to-[var(--pgm-bg-surface)] px-4 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[var(--pgm-text)]">
-                    {assetModal.descricao || `CI #${assetModal.id}`}
-                  </p>
-                  <p className="truncate text-[0.72rem] text-[var(--pgm-text-muted)]">
-                    {tipoLabel(assetModal.tipo)} · {assetModal.identificador || `#${assetModal.id}`}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAssetModal(null)}
-                  className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)] hover:bg-[var(--pgm-bg-raised)] hover:text-[var(--pgm-text)]"
-                >
-                  Fechar
-                </button>
-              </div>
-              <div className="grid gap-2 px-4 py-4 sm:grid-cols-2">
-                {detailRows.map((row) => (
-                  <div key={row.label} className="rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2">
-                    <p className="flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.05em] text-[var(--pgm-text-muted)]">
-                      <AssetFieldIcon field={row.key} />
-                      {row.label}
-                    </p>
-                    <p className="mt-0.5 text-sm text-[var(--pgm-text)]">{row.value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end border-t border-[var(--pgm-border-subtle)] px-4 py-3">
-                <a
-                  href={pathWithWebroot(boot, `/ativos/view/${encodeURIComponent(assetModal.id)}`)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-md border border-[var(--pgm-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]"
-                >
-                  Abrir ficha completa
-                </a>
-              </div>
-            </div>
-          </div>
-        ) : null}
+        <AssetDetailsModal
+          assetModal={assetModal}
+          setAssetModal={setAssetModal}
+          detailRows={detailRows}
+          boot={boot}
+          assetModalRef={assetModalRef}
+        />
       </div>
     );
   }
