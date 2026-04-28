@@ -57,6 +57,16 @@ function joinDateTimeLocal(date, time) {
   return d.toISOString();
 }
 
+function parseDurationToSeconds(value) {
+  const raw = String(value || '').trim();
+  const m = /^(\d{1,3}):([0-5]\d):([0-5]\d)$/.exec(raw);
+  if (!m) return null;
+  const hh = Number(m[1] || 0);
+  const mm = Number(m[2] || 0);
+  const ss = Number(m[3] || 0);
+  return hh * 3600 + mm * 60 + ss;
+}
+
 /** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
 function sessaoEstaPausada(sessao) {
   if (!sessao) return false;
@@ -105,6 +115,7 @@ export default function HorasTecnicasTimerPanel({
   const [entries, setEntries] = useState([]);
   const [editingEntry, setEditingEntry] = useState(null);
   const [form, setForm] = useState({
+    durationHms: '',
     startDate: '',
     startTime: '',
     endDate: '',
@@ -380,7 +391,11 @@ export default function HorasTecnicasTimerPanel({
     const end = splitDateTimeLocal(entry?.endWorkHour || new Date(Date.now() + 60000).toISOString());
     setEditingEntry(entry || null);
     setEntriesErr('');
+    const startIso = joinDateTimeLocal(start.date, start.time || '00:00:00');
+    const endIso = joinDateTimeLocal(end.date, end.time || '00:01:00');
+    const seconds = Math.max(0, Math.floor((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000) || 0);
     setForm({
+      durationHms: formatElapsedHms(seconds * 1000),
       startDate: start.date,
       startTime: start.time || '00:00:00',
       endDate: end.date,
@@ -459,15 +474,28 @@ export default function HorasTecnicasTimerPanel({
     setEntriesBusy(false);
   }
 
-  const previewSeconds = Math.max(
-    0,
-    Math.floor(
-      (new Date(joinDateTimeLocal(form.endDate, form.endTime)).getTime() -
-        new Date(joinDateTimeLocal(form.startDate, form.startTime)).getTime()) /
-        1000
-    ) || 0
-  );
-  const previewHms = formatElapsedHms(previewSeconds * 1000);
+  function recalcDurationFromRange(nextForm) {
+    const startIso = joinDateTimeLocal(nextForm.startDate, nextForm.startTime);
+    const endIso = joinDateTimeLocal(nextForm.endDate, nextForm.endTime);
+    const sec = Math.max(0, Math.floor((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000) || 0);
+    return { ...nextForm, durationHms: formatElapsedHms(sec * 1000) };
+  }
+
+  function handleDurationChange(rawValue) {
+    setForm((prev) => {
+      const next = { ...prev, durationHms: rawValue };
+      const parsedSeconds = parseDurationToSeconds(rawValue);
+      const startIso = joinDateTimeLocal(prev.startDate, prev.startTime);
+      if (parsedSeconds === null || !startIso) {
+        return next;
+      }
+      const endMs = new Date(startIso).getTime() + parsedSeconds * 1000;
+      const endParts = splitDateTimeLocal(new Date(endMs).toISOString());
+      next.endDate = endParts.date || prev.endDate;
+      next.endTime = endParts.time || prev.endTime;
+      return next;
+    });
+  }
 
   if (!canUse) {
     return null;
@@ -682,7 +710,12 @@ export default function HorasTecnicasTimerPanel({
             {entriesErr ? <div className="htp-error">{entriesErr}</div> : null}
             <form className="htp-form" onSubmit={submitManualForm}>
               <label>Duração
-                <input type="text" value={previewHms} readOnly />
+                <input
+                  type="text"
+                  value={form.durationHms}
+                  onChange={(e) => handleDurationChange(e.target.value)}
+                  placeholder="HH:MM:SS"
+                />
               </label>
               <label>Descrição
                 <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} rows={3} />
@@ -698,12 +731,12 @@ export default function HorasTecnicasTimerPanel({
                 </select>
               </label>
               <div className="htp-grid2">
-                <label>Data de início<input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} required /></label>
-                <label>Hora de início<input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))} required /></label>
+                <label>Data de início<input type="date" value={form.startDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startDate: e.target.value }))} required /></label>
+                <label>Hora de início<input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startTime: e.target.value }))} required /></label>
               </div>
               <div className="htp-grid2">
-                <label>Data de término<input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} required /></label>
-                <label>Hora de término<input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} required /></label>
+                <label>Data de término<input type="date" value={form.endDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endDate: e.target.value }))} required /></label>
+                <label>Hora de término<input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endTime: e.target.value }))} required /></label>
               </div>
               <label>Técnico (ID)
                 <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} />
