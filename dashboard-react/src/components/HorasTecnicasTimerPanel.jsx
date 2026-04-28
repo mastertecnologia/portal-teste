@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  deleteTimeEntry,
+  fetchTimeEntries,
+  fetchTecnicosParaTransferencia,
   postTimerAction,
   postTicketSignature,
   saveTicketDescricaoAtendimento,
+  upsertTimeEntry,
 } from '../lib/api';
 import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
 import TimerWidget from './TimerWidget.jsx';
@@ -36,6 +40,58 @@ function minutosLabel(totalMin) {
   if (h <= 0) return `${r} min`;
   if (r === 0) return `${h} h`;
   return `${h} h ${r} min`;
+}
+
+function splitDateTimeLocal(isoLike) {
+  if (!isoLike) return { date: '', time: '' };
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) return { date: '', time: '' };
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  const s = local.toISOString();
+  return { date: s.slice(0, 10), time: s.slice(11, 19) };
+}
+
+function joinDateTimeLocal(date, time) {
+  if (!date || !time) return '';
+  const d = new Date(`${date}T${time}`);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString();
+}
+
+function parseDurationToSeconds(value) {
+  const raw = String(value || '').trim();
+  const m = /^(\d{1,3}):([0-5]\d):([0-5]\d)$/.exec(raw);
+  if (!m) return null;
+  const hh = Number(m[1] || 0);
+  const mm = Number(m[2] || 0);
+  const ss = Number(m[3] || 0);
+  return hh * 3600 + mm * 60 + ss;
+}
+
+function formatEntryStart(isoLike) {
+  if (!isoLike) return '-';
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
+function technicianInitials(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return 'DD';
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'DD';
+  const a = parts[0]?.[0] || '';
+  const b = parts[1]?.[0] || parts[0]?.[1] || '';
+  const initials = `${a}${b}`.toUpperCase();
+  return initials || 'DD';
 }
 
 /** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
@@ -79,6 +135,27 @@ export default function HorasTecnicasTimerPanel({
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
+  const [entriesOpen, setEntriesOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [entriesBusy, setEntriesBusy] = useState(false);
+  const [entriesErr, setEntriesErr] = useState('');
+  const [entries, setEntries] = useState([]);
+  const [tecnicos, setTecnicos] = useState([]);
+  const [tecnicosBusy, setTecnicosBusy] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [form, setForm] = useState({
+    durationHms: '',
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+    technicianContactId: '',
+    billable: true,
+    descricao: '',
+    taxa: '',
+    auditReason: '',
+    auditAuthKey: '',
+  });
   const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
@@ -175,6 +252,33 @@ export default function HorasTecnicasTimerPanel({
   }, [syncStopwatchToSessao]);
 
   const displayHms = formatElapsedHms(swRef.current.getElapsedMs());
+
+  const loadEntries = useCallback(async () => {
+    if (!ticketId) return;
+    setEntriesBusy(true);
+    setEntriesErr('');
+    const r = await fetchTimeEntries(ticketId);
+    if (!r.ok) {
+      setEntriesErr(r.error || 'Falha ao carregar entradas.');
+      setEntries([]);
+    } else {
+      setEntries(Array.isArray(r.entries) ? r.entries : []);
+    }
+    setEntriesBusy(false);
+  }, [ticketId]);
+
+  const loadTecnicos = useCallback(async () => {
+    setTecnicosBusy(true);
+    const r = await fetchTecnicosParaTransferencia();
+    if (!r.ok) {
+      setTecnicos([]);
+      setTecnicosBusy(false);
+      return;
+    }
+    const list = Array.isArray(r.tecnicos) ? r.tecnicos : [];
+    setTecnicos(list);
+    setTecnicosBusy(false);
+  }, []);
 
   async function runAction(action, options = {}) {
     const { skipBusy = false } = options;
@@ -319,6 +423,123 @@ export default function HorasTecnicasTimerPanel({
     }
   }
 
+  function openEntriesModal() {
+    setEntriesOpen(true);
+    setManualOpen(false);
+    setEditingEntry(null);
+    loadEntries();
+  }
+
+  function openManualModal(entry = null) {
+    const start = splitDateTimeLocal(entry?.startWorkHour || new Date().toISOString());
+    const end = splitDateTimeLocal(entry?.endWorkHour || new Date(Date.now() + 60000).toISOString());
+    setEditingEntry(entry || null);
+    setEntriesErr('');
+    loadTecnicos();
+    setForm({
+      durationHms: '00:00:00',
+      startDate: start.date,
+      startTime: start.time || '00:00:00',
+      endDate: end.date,
+      endTime: end.time || '00:01:00',
+      technicianContactId: entry?.technicianContactId ? String(entry.technicianContactId) : '',
+      billable: entry?.billable !== false,
+      descricao: String(entry?.note || ''),
+      taxa: String(entry?.rate || ''),
+      auditReason: '',
+      auditAuthKey: '',
+    });
+    setManualOpen(true);
+    setEntriesOpen(true);
+  }
+
+  async function submitManualForm(ev) {
+    ev.preventDefault();
+    if (!ticketId) return;
+    const startIso = joinDateTimeLocal(form.startDate, form.startTime);
+    const endIso = joinDateTimeLocal(form.endDate, form.endTime);
+    if (!startIso || !endIso) {
+      setEntriesErr('Preencha data e hora de início e término.');
+      return;
+    }
+    if (editingEntry && (!form.auditReason.trim() || !form.auditAuthKey.trim())) {
+      setEntriesErr('Editar horas exige motivo e senha de auditoria.');
+      return;
+    }
+    setEntriesBusy(true);
+    setEntriesErr('');
+    const payload = {
+      id: editingEntry?.id ? Number(editingEntry.id) : 0,
+      TicketID: Number(ticketId),
+      StartWorkHour: startIso,
+      EndWorkHour: endIso,
+      TechnicianContactID: Number(form.technicianContactId || 0),
+      Billable: !!form.billable,
+      Rate: form.taxa || '',
+      Description: form.descricao || '',
+      auditReason: form.auditReason || '',
+      auditAuthKey: form.auditAuthKey || '',
+    };
+    const r = await upsertTimeEntry(ticketId, payload);
+    if (!r.ok) {
+      setEntriesErr(r.error || 'Falha ao salvar entrada.');
+      setEntriesBusy(false);
+      return;
+    }
+    await loadEntries();
+    setEntriesBusy(false);
+    setManualOpen(false);
+    setEditingEntry(null);
+  }
+
+  async function handleDeleteEntry(entryId) {
+    if (!ticketId || !entryId) return;
+    if (!window.confirm('Excluir esta entrada de tempo?')) return;
+    const reason = window.prompt('Motivo da alteração (auditoria):', '') || '';
+    if (!reason.trim()) {
+      setEntriesErr('Motivo obrigatório para excluir.');
+      return;
+    }
+    const authKey = window.prompt('Senha de auditoria:', '') || '';
+    if (!authKey.trim()) {
+      setEntriesErr('Senha de auditoria obrigatória para excluir.');
+      return;
+    }
+    setEntriesBusy(true);
+    setEntriesErr('');
+    const r = await deleteTimeEntry(ticketId, entryId, { reason: reason.trim(), authKey: authKey.trim() });
+    if (!r.ok) {
+      setEntriesErr(r.error || 'Falha ao excluir entrada.');
+      setEntriesBusy(false);
+      return;
+    }
+    await loadEntries();
+    setEntriesBusy(false);
+  }
+
+  function recalcDurationFromRange(nextForm) {
+    const startIso = joinDateTimeLocal(nextForm.startDate, nextForm.startTime);
+    const endIso = joinDateTimeLocal(nextForm.endDate, nextForm.endTime);
+    const sec = Math.max(0, Math.floor((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000) || 0);
+    return { ...nextForm, durationHms: formatElapsedHms(sec * 1000) };
+  }
+
+  function handleDurationChange(rawValue) {
+    setForm((prev) => {
+      const next = { ...prev, durationHms: rawValue };
+      const parsedSeconds = parseDurationToSeconds(rawValue);
+      const startIso = joinDateTimeLocal(prev.startDate, prev.startTime);
+      if (parsedSeconds === null || !startIso) {
+        return next;
+      }
+      const endMs = new Date(startIso).getTime() + parsedSeconds * 1000;
+      const endParts = splitDateTimeLocal(new Date(endMs).toISOString());
+      next.endDate = endParts.date || prev.endDate;
+      next.endTime = endParts.time || prev.endTime;
+      return next;
+    });
+  }
+
   if (!canUse) {
     return null;
   }
@@ -341,6 +562,7 @@ export default function HorasTecnicasTimerPanel({
 
   const timerCardClass = `timer-card${running ? ' running' : ''}`;
   const auditHms = displayHms && displayHms.length === 8 ? displayHms : '00:00:00';
+  const entriesTotalSeconds = entries.reduce((sum, row) => sum + Math.max(0, Number(row?.durationSeconds) || 0), 0);
 
   return (
     <div>
@@ -433,20 +655,10 @@ export default function HorasTecnicasTimerPanel({
           </button>
 
           <div className="timer-entry-links">
-            <button
-              type="button"
-              data-ticket-id={Number(ticketId || 0)}
-              className="timer-link-btn js-time-entry-manual"
-              disabled={disabled || busy}
-            >
+            <button type="button" className="timer-link-btn" disabled={disabled || busy} onClick={openManualModal}>
               Entrada Manual de Tempo
             </button>
-            <button
-              type="button"
-              data-ticket-id={Number(ticketId || 0)}
-              className="timer-link-btn js-time-entry-list"
-              disabled={disabled || busy}
-            >
+            <button type="button" className="timer-link-btn" disabled={disabled || busy} onClick={openEntriesModal}>
               Ver todas as entradas
             </button>
           </div>
@@ -488,6 +700,132 @@ export default function HorasTecnicasTimerPanel({
         onClose={() => !busy && setFinalizeOpen(false)}
         onSubmit={handleFinalizeSubmit}
       />
+
+      {entriesOpen && (
+        <div className="htp-modal-backdrop" onClick={() => !entriesBusy && setEntriesOpen(false)}>
+          <div className="htp-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="htp-modal-head">
+              <strong>Entradas de Tempo</strong>
+              <button type="button" className="htp-close" onClick={() => setEntriesOpen(false)}>x</button>
+            </div>
+            {entriesErr ? <div className="htp-error">{entriesErr}</div> : null}
+            {manualOpen && (
+              <form className="htp-form htp-form-inline" onSubmit={submitManualForm}>
+                <div className="htp-form-title">{editingEntry ? 'Editar entrada de tempo' : 'Adicionar entrada de tempo'}</div>
+                <label>Duração
+                  <input
+                    type="text"
+                    value={form.durationHms}
+                    onChange={(e) => handleDurationChange(e.target.value)}
+                    placeholder="HH:MM:SS"
+                  />
+                </label>
+                <label>Descrição
+                  <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} rows={3} />
+                </label>
+                <label className="htp-checkbox">
+                  <input type="checkbox" checked={form.billable} onChange={(e) => setForm((p) => ({ ...p, billable: e.target.checked }))} />
+                  Faturável
+                </label>
+                <label>Taxa
+                  <select value={form.taxa} onChange={(e) => setForm((p) => ({ ...p, taxa: e.target.value }))}>
+                    <option value="">Nada selecionado</option>
+                    <option value="padrao">Padrão</option>
+                  </select>
+                </label>
+                <div className="htp-grid2">
+                  <label>Data de início<input type="date" value={form.startDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startDate: e.target.value }))} required /></label>
+                  <label>Hora de início<input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, startTime: e.target.value }))} required /></label>
+                </div>
+                <div className="htp-grid2">
+                  <label>Data de término<input type="date" value={form.endDate} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endDate: e.target.value }))} required /></label>
+                  <label>Hora de término<input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => recalcDurationFromRange({ ...p, endTime: e.target.value }))} required /></label>
+                </div>
+                <label>Técnico (ID)
+                <select
+                  value={form.technicianContactId}
+                  onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))}
+                  disabled={tecnicosBusy}
+                >
+                  <option value="">{tecnicosBusy ? 'Carregando técnicos...' : 'Selecione o técnico'}</option>
+                  {tecnicos.map((t) => (
+                    <option key={t.id} value={String(t.id)}>
+                      {t.name || `Usuário #${t.id}`}
+                    </option>
+                  ))}
+                </select>
+                </label>
+                {editingEntry ? (
+                  <div className="htp-grid2">
+                    <label>Motivo da alteração
+                      <input type="text" value={form.auditReason} onChange={(e) => setForm((p) => ({ ...p, auditReason: e.target.value }))} required />
+                    </label>
+                    <label>Senha de auditoria
+                      <input type="password" value={form.auditAuthKey} onChange={(e) => setForm((p) => ({ ...p, auditAuthKey: e.target.value }))} required />
+                    </label>
+                  </div>
+                ) : null}
+                <div className="htp-actions">
+                  <button type="button" onClick={() => { setManualOpen(false); setEditingEntry(null); }} disabled={entriesBusy}>Cancelar</button>
+                  <button type="submit" disabled={entriesBusy}>{entriesBusy ? 'Salvando...' : 'Salvar'}</button>
+                </div>
+              </form>
+            )}
+            <div className="htp-table-wrap">
+              <table className="htp-table">
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Técnico</th><th>Duração</th><th>Faturável</th><th>Taxa</th><th>Notas</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entriesBusy ? (
+                    <tr><td colSpan={7}>Carregando...</td></tr>
+                  ) : entries.length ? (
+                    entries.map((row) => (
+                      <tr key={row.id}>
+                        <td>{row.id}</td>
+                        <td>
+                          <div className="htp-tech-cell">
+                            <span className="htp-tech-avatar">{technicianInitials(row.technicianName)}</span>
+                            <span className="htp-tech-name">{row.technicianName || `ID ${row.technicianContactId || '-'}`}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="htp-duration-cell"><strong>Total:</strong> {formatElapsedHms((Number(row.durationSeconds || 0)) * 1000)}</div>
+                          <div className="htp-start-cell"><strong>Início:</strong> {formatEntryStart(row.startWorkHour)}</div>
+                        </td>
+                        <td>{row.billable ? 'Sim' : 'Não'}</td>
+                        <td>{row.rate || '-'}</td>
+                        <td>{row.note || '-'}</td>
+                        <td className="htp-actions-col">
+                          <button type="button" className="htp-icon-btn" aria-label="Editar entrada" onClick={() => openManualModal(row)}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm18-11.5a1 1 0 0 0 0-1.41l-1.34-1.34a1 1 0 0 0-1.41 0l-1.13 1.13 3.75 3.75L21 5.75z" />
+                            </svg>
+                          </button>
+                          <button type="button" className="htp-icon-btn htp-icon-btn-danger" aria-label="Excluir entrada" onClick={() => handleDeleteEntry(row.id)}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M6 7h12l-1 14H7L6 7zm3-3h6l1 2H8l1-2zM4 6h16v2H4z" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={7}>Nenhuma entrada encontrada.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="htp-table-total">Total: {formatElapsedHms(entriesTotalSeconds * 1000)}</div>
+            <div className="htp-footer-actions">
+              <button type="button" className="htp-btn-close" onClick={() => setEntriesOpen(false)} disabled={entriesBusy}>Fechar</button>
+              <button type="button" className="htp-btn-add" onClick={() => openManualModal()} disabled={entriesBusy}>Adicionar entrada</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
