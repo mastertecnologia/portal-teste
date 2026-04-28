@@ -16,6 +16,7 @@ import { badgeClass, statusType } from '../lib/ticketUi';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
+import TicketHorasTabPanel from '../components/TicketHorasTabPanel.jsx';
 import ServiceDeskTabPanels from '../components/ServiceDeskTabPanels.jsx';
 import TicketInfoPanel, { TicketResumoPanel } from '../components/TicketInfoPanel.jsx';
 
@@ -588,6 +589,10 @@ export default function TechTicketEdit({ boot }) {
     />
   );
 
+  const horasEntradasBlock = (
+    <TicketHorasTabPanel ticket={ticket} timelineEvents={timelineEvents} onlyEntryActions />
+  );
+
   const descricaoBlock = (
     <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
       <div className="border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
@@ -726,6 +731,7 @@ export default function TechTicketEdit({ boot }) {
     <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
       <div className="min-h-0 min-w-0 space-y-4 lg:col-span-3">
         {horasTecnicasBlock}
+        {horasEntradasBlock}
         <TicketResumoPanel ticket={ticket} />
       </div>
       <div className="min-h-0 min-w-0 space-y-4 lg:col-span-5">

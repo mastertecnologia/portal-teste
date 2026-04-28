@@ -116,7 +116,7 @@ function parseBrDateFilter(s) {
   return { iso };
 }
 
-export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
+export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryActions = false }) {
   const eventosHoras = useMemo(
     () => (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() === 'worklog'),
     [timelineEvents]
@@ -440,6 +440,22 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
           Entrada manual de tempo
         </button>
       </div>
+      {onlyEntryActions ? (
+        <>
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+            <div>
+              <span className="text-[var(--pgm-text-muted)]">Total contabilizado neste ticket: </span>
+              <strong className="text-[var(--pgm-text)]">{formatMinutosHumanos(totalMinutosTicket)}</strong>
+              {minutosOficiais != null && Number(minutosOficiais) > 0 ? (
+                <span className="ml-1 text-[0.65rem] text-[var(--pgm-text-muted)]">(Horas cadastradas)</span>
+              ) : null}
+            </div>
+          </div>
+          {entriesModal}
+          {manualModal}
+        </>
+      ) : (
+        <>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
         <div>
           <span className="text-[var(--pgm-text-muted)]">Total contabilizado neste ticket: </span>
@@ -566,6 +582,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents }) {
       )}
       {entriesModal}
       {manualModal}
+        </>
+      )}
     </div>
   );
 }
