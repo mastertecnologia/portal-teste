@@ -246,6 +246,14 @@ class AtivosController extends AppController {
 			throw new NotFoundException(__('Ativo não encontrado.'));
 		}
 		$idempresa = (int)$this->Auth->user('idempresa');
+		if (!empty($asset->senha)) {
+			try {
+				$asset->senha = VaultCrypto::decrypt((string)$asset->senha, $idempresa);
+			} catch (\Exception $e) {
+				$asset->senha = '';
+				$this->Flash->warning(__('Não foi possível carregar a senha cadastrada para visualização.'));
+			}
+		}
 
 		if ($this->request->is(['patch', 'post', 'put'])) {
 			$data = (array)$this->request->getData();
