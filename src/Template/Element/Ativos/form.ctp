@@ -233,6 +233,7 @@ $atvFmtDateBr = function ($d): string {
 										'class' => 'form-control',
 										'autocomplete' => 'new-password',
 										'id' => 'atv-senha-input',
+										'value' => '',
 									]) ?>
 									<div class="input-group-append">
 										<button type="button" class="btn btn-outline-secondary" id="atv-senha-toggle" aria-label="Mostrar senha" title="Mostrar senha">
