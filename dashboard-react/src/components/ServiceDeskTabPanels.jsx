@@ -83,6 +83,24 @@ function pathWithWebroot(boot, path) {
   return b ? `${b}${p}` : p;
 }
 
+function debugLog18a583(runId, hypothesisId, location, message, data = {}) {
+  // #region agent log
+  fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '18a583' },
+    body: JSON.stringify({
+      sessionId: '18a583',
+      runId,
+      hypothesisId,
+      location,
+      message,
+      data,
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+}
+
 export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelineEvents = null }) {
   const id = ticket?.id;
   const [data, setData] = useState(null);
@@ -110,6 +128,17 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         return;
       }
       const r = await fetchServicedeskData(id, tab);
+      // #region agent log
+      debugLog18a583('pre-fix', 'H5', 'ServiceDeskTabPanels:fetchServicedeskData', 'api response received', {
+        ticketId: Number(id || 0),
+        tab,
+        ok: Boolean(r?.ok),
+        error: r?.error || null,
+        responseTab: r?.tab || null,
+        availableCount: Array.isArray(r?.available) ? r.available.length : null,
+        linkedCount: Array.isArray(r?.linked) ? r.linked.length : Array.isArray(r?.rows) ? r.rows.length : null,
+      });
+      // #endregion
       if (!c) {
         if (r.ok) {
           setData(r);
@@ -122,6 +151,21 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
       c = true;
     };
   }, [id, tab]);
+
+  useEffect(() => {
+    if (tab !== 'ativos' || !data?.ok) return;
+    const linked = Array.isArray(data.linked) ? data.linked : Array.isArray(data.rows) ? data.rows : [];
+    const available = Array.isArray(data.available) ? data.available : [];
+    // #region agent log
+    debugLog18a583('pre-fix', 'H6', 'ServiceDeskTabPanels:ativosRender', 'ativos payload rendered', {
+      ticketId: Number(id || 0),
+      clienteIdPayload: Number(data?.cliente_id || 0),
+      linkedCount: linked.length,
+      availableCount: available.length,
+      availableIdsSample: available.slice(0, 10).map((a) => Number(a?.id || 0)),
+    });
+    // #endregion
+  }, [tab, data, id]);
 
   if (tab === 'historico') {
     return (
