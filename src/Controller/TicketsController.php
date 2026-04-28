@@ -6135,7 +6135,7 @@ class TicketsController extends AppController {
 		if (empty($ticket) || !$this->_apiTicketViewAllowed($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
-		$eid = (int)$this->Auth->user('idempresa');
+		$eid = (int)($ticket->idempresa ?? $this->Auth->user('idempresa'));
 		$idc = (int)$ticket->idcliente;
 
 		if ($tab === 'ativos') {
@@ -6381,7 +6381,7 @@ class TicketsController extends AppController {
 		if ($assetId <= 0) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_params'], 400);
 		}
-		$eid = (int)$this->Auth->user('idempresa');
+		$eid = (int)($ticket->idempresa ?? $this->Auth->user('idempresa'));
 		$clienteIdsCorrel = ClienteCorrelatedIds::forEmpresaCliente($this->Clientes, $eid, (int)$ticket->idcliente);
 		$asset = $this->Assets->find()
 			->where([
