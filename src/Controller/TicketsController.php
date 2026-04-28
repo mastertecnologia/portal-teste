@@ -6321,6 +6321,9 @@ class TicketsController extends AppController {
 			]);
 			// #endregion
 			$availQ = $this->Assets->find()
+				->innerJoinWith('Clientes', function ($q) {
+					return $q->where(['Clientes.idempresa = Assets.idempresa']);
+				})
 				->where(['Assets.idempresa' => $eid, 'Assets.idcliente IN' => $clienteIdsCorrel])
 				->order(['Assets.descricao' => 'ASC', 'Assets.id' => 'DESC'])
 				->limit(200);
@@ -6529,6 +6532,9 @@ class TicketsController extends AppController {
 		$eid = (int)($ticket->idempresa ?? $this->Auth->user('idempresa'));
 		$clienteIdsCorrel = ClienteCorrelatedIds::forEmpresaCliente($this->Clientes, $eid, (int)$ticket->idcliente);
 		$asset = $this->Assets->find()
+			->innerJoinWith('Clientes', function ($q) {
+				return $q->where(['Clientes.idempresa = Assets.idempresa']);
+			})
 			->where([
 				'Assets.id' => $assetId,
 				'Assets.idempresa' => $eid,

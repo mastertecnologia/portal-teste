@@ -84,6 +84,23 @@ class AssetsTable extends Table {
 
 	public function buildRules(RulesChecker $rules) {
 		$rules->add(function ($entity) {
+			$idempresa = (int)($entity->idempresa ?? 0);
+			$idcliente = (int)($entity->idcliente ?? 0);
+			if ($idempresa <= 0 || $idcliente <= 0) {
+				return false;
+			}
+			$cli = $this->Clientes->find()
+				->select(['id'])
+				->where(['Clientes.id' => $idcliente, 'Clientes.idempresa' => $idempresa])
+				->first();
+
+			return $cli !== null;
+		}, 'cliente_empresa_match', [
+			'errorField' => 'idcliente',
+			'message' => 'Cliente informado não pertence à empresa do ativo.',
+		]);
+
+		$rules->add(function ($entity) {
 			$ns = trim((string)($entity->numero_serie ?? ''));
 			if ($ns === '') {
 				return true;
