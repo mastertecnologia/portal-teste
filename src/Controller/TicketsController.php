@@ -6267,6 +6267,39 @@ class TicketsController extends AppController {
 				'diag_sample' => $diagSample,
 			]);
 			// #endregion
+			$ticketCli = $this->Clientes->find()
+				->select(['id', 'public_code', 'razaosocial', 'nome', 'nomefantasia'])
+				->where(['Clientes.id' => $idc, 'Clientes.idempresa' => $eid])
+				->first();
+			$ticketNomeRaw = $ticketCli ? (string)($ticketCli->razaosocial ?? $ticketCli->nome ?? $ticketCli->nomefantasia ?? '') : '';
+			$ticketNomeKey = ClienteCorrelatedIds::normalizeNomeKey($ticketNomeRaw);
+			$assetsSameEmpresaRows = $this->Assets->find()
+				->contain(['Clientes'])
+				->where(['Assets.idempresa' => $eid])
+				->order(['Assets.id' => 'DESC'])
+				->limit(10)
+				->all();
+			$assetsSameEmpresaSample = [];
+			foreach ($assetsSameEmpresaRows as $ar) {
+				$cliAr = $ar->cliente ?? null;
+				$cliNomeRaw = $cliAr ? (string)($cliAr->razaosocial ?? $cliAr->nome ?? $cliAr->nomefantasia ?? '') : '';
+				$cliNomeKey = ClienteCorrelatedIds::normalizeNomeKey($cliNomeRaw);
+				$assetsSameEmpresaSample[] = [
+					'asset_id' => (int)($ar->id ?? 0),
+					'asset_idcliente' => (int)($ar->idcliente ?? 0),
+					'cliente_public_code' => $cliAr ? (string)($cliAr->public_code ?? '') : '',
+					'nome_key_sha1_8' => substr(sha1($cliNomeKey), 0, 8),
+					'nome_key_eq_ticket' => ($ticketNomeKey !== '' && $cliNomeKey !== '' && $cliNomeKey === $ticketNomeKey),
+				];
+			}
+			// #region agent log
+			$this->_agentDebugLog18a583('pre-fix', 'H8', 'TicketsController::apiServicedeskData:assetsSameEmpresaSample', 'sample of assets in ticket company', [
+				'ticket_idcliente' => $idc,
+				'ticket_public_code' => $ticketCli ? (string)($ticketCli->public_code ?? '') : '',
+				'ticket_nome_key_sha1_8' => substr(sha1($ticketNomeKey), 0, 8),
+				'sample' => $assetsSameEmpresaSample,
+			]);
+			// #endregion
 			$availQ = $this->Assets->find()
 				->where(['Assets.idempresa' => $eid, 'Assets.idcliente IN' => $clienteIdsCorrel])
 				->order(['Assets.descricao' => 'ASC', 'Assets.id' => 'DESC'])
