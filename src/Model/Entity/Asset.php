@@ -22,6 +22,10 @@ class Asset extends Entity {
 		'ip' => true,
 		'mac' => true,
 		'sistema_operacional' => true,
+		'usuario' => true,
+		'senha' => true,
+		'porta_interna' => true,
+		'porta_externa' => true,
 		'localizacao' => true,
 		'responsavel_user_id' => true,
 		'propriedade' => true,
@@ -38,4 +42,6 @@ class Asset extends Entity {
 		'cliente' => true,
 		'responsavel' => true,
 	];
+
+	protected $_hidden = ['senha'];
 }

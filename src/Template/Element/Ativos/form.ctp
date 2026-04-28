@@ -219,6 +219,24 @@ $atvFmtDateBr = function ($d): string {
 								<?= $this->Form->control('sistema_operacional', ['label' => false, 'class' => 'form-control', 'maxlength' => 96, 'placeholder' => 'Windows 11 Pro / Ubuntu 22.04 / …']) ?>
 							</div>
 						</div>
+						<div class="cli-fg cli-fg-4" style="margin-top:14px">
+							<div class="cli-fgroup">
+								<label>Usuário</label>
+								<?= $this->Form->control('usuario', ['label' => false, 'class' => 'form-control', 'maxlength' => 128]) ?>
+							</div>
+							<div class="cli-fgroup">
+								<label>Senha</label>
+								<?= $this->Form->control('senha', ['type' => 'password', 'label' => false, 'class' => 'form-control', 'autocomplete' => 'new-password']) ?>
+							</div>
+							<div class="cli-fgroup">
+								<label>Porta interna</label>
+								<?= $this->Form->control('porta_interna', ['type' => 'number', 'label' => false, 'class' => 'form-control', 'min' => 1, 'max' => 65535, 'placeholder' => '22']) ?>
+							</div>
+							<div class="cli-fgroup">
+								<label>Porta externa</label>
+								<?= $this->Form->control('porta_externa', ['type' => 'number', 'label' => false, 'class' => 'form-control', 'min' => 1, 'max' => 65535, 'placeholder' => '443']) ?>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

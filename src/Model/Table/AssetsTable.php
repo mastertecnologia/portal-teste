@@ -56,6 +56,10 @@ class AssetsTable extends Table {
 		$validator->scalar('ip')->maxLength('ip', 45)->allowEmptyString('ip');
 		$validator->scalar('mac')->maxLength('mac', 17)->allowEmptyString('mac');
 		$validator->scalar('sistema_operacional')->maxLength('sistema_operacional', 96)->allowEmptyString('sistema_operacional');
+		$validator->scalar('usuario')->maxLength('usuario', 128)->allowEmptyString('usuario');
+		$validator->scalar('senha')->allowEmptyString('senha');
+		$validator->integer('porta_interna')->greaterThanOrEqual('porta_interna', 1)->lessThanOrEqual('porta_interna', 65535)->allowEmptyString('porta_interna');
+		$validator->integer('porta_externa')->greaterThanOrEqual('porta_externa', 1)->lessThanOrEqual('porta_externa', 65535)->allowEmptyString('porta_externa');
 		$validator->scalar('localizacao')->maxLength('localizacao', 160)->allowEmptyString('localizacao');
 		$validator->integer('responsavel_user_id')->allowEmptyString('responsavel_user_id');
 

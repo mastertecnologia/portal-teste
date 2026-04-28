@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use App\Service\Clientes\ClienteCorrelatedIds;
+use App\Utility\VaultCrypto;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -202,8 +203,15 @@ class AtivosController extends AppController {
 			$data = (array)$this->request->getData();
 			$data['idempresa'] = $idempresa;
 			$this->_normalizeAssetBrDates($data);
+			$passwordEncryptionFailed = false;
+			try {
+				$this->_encryptAssetPassword($data, $idempresa);
+			} catch (\Exception $e) {
+				$this->Flash->error(__('Não foi possível criptografar a senha informada.'));
+				$passwordEncryptionFailed = true;
+			}
 			$asset = $this->Assets->patchEntity($asset, $data);
-			if ($this->Assets->save($asset)) {
+			if (!$passwordEncryptionFailed && $this->Assets->save($asset)) {
 				if (!empty($this->Atividades) && $this->Auth->user('id')) {
 					$this->Atividades->registrar(
 						(int)$this->Auth->user('id'),
@@ -215,7 +223,9 @@ class AtivosController extends AppController {
 				$this->Flash->success(__('Ativo cadastrado com sucesso.'));
 				return $this->redirect(['action' => 'edit', $asset->id]);
 			}
-			$this->Flash->error(__('Não foi possível salvar o ativo. Verifique os campos.'));
+			if (!$passwordEncryptionFailed) {
+				$this->Flash->error(__('Não foi possível salvar o ativo. Verifique os campos.'));
+			}
 		}
 
 		$this->set([
@@ -241,8 +251,15 @@ class AtivosController extends AppController {
 			$data = (array)$this->request->getData();
 			unset($data['idempresa']);
 			$this->_normalizeAssetBrDates($data);
+			$passwordEncryptionFailed = false;
+			try {
+				$this->_encryptAssetPassword($data, $idempresa, true);
+			} catch (\Exception $e) {
+				$this->Flash->error(__('Não foi possível criptografar a senha informada.'));
+				$passwordEncryptionFailed = true;
+			}
 			$asset = $this->Assets->patchEntity($asset, $data);
-			if ($this->Assets->save($asset)) {
+			if (!$passwordEncryptionFailed && $this->Assets->save($asset)) {
 				if (!empty($this->Atividades) && $this->Auth->user('id')) {
 					$this->Atividades->registrar(
 						(int)$this->Auth->user('id'),
@@ -254,7 +271,9 @@ class AtivosController extends AppController {
 				$this->Flash->success(__('Ativo atualizado com sucesso.'));
 				return $this->redirect(['action' => 'edit', $asset->id]);
 			}
-			$this->Flash->error(__('Não foi possível atualizar o ativo.'));
+			if (!$passwordEncryptionFailed) {
+				$this->Flash->error(__('Não foi possível atualizar o ativo.'));
+			}
 		}
 
 		// Histórico de chamados onde o CI apareceu
@@ -276,6 +295,23 @@ class AtivosController extends AppController {
 		]);
 		$this->set('title', 'Editar Ativo: ' . ($asset->descricao ?: ('#' . $asset->id)));
 		$this->set('topbarCurrentLabel', __('Editar ativo'));
+	}
+
+	/**
+	 * Criptografa a senha de acesso do ativo antes do patchEntity.
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	protected function _encryptAssetPassword(array &$data, int $idempresa, bool $preserveWhenEmpty = false): void {
+		$plain = isset($data['senha']) && is_scalar($data['senha']) ? trim((string)$data['senha']) : '';
+		if ($plain === '') {
+			if ($preserveWhenEmpty) {
+				unset($data['senha']);
+			}
+
+			return;
+		}
+		$data['senha'] = VaultCrypto::encrypt($plain, $idempresa);
 	}
 
 	/**

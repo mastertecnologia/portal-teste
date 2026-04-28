@@ -110,6 +110,10 @@ $cliNome = $cli ? ($cli->razaosocial ?: ($cli->nomefantasia ?: ($cli->nome ?: ('
 						<dt>IP</dt><dd><code><?= h($asset->ip ?: '—') ?></code></dd>
 						<dt>MAC</dt><dd><code><?= h($asset->mac ?: '—') ?></code></dd>
 						<dt>Sistema</dt><dd><?= h($asset->sistema_operacional ?: '—') ?></dd>
+						<dt>Usuário</dt><dd><?= h($asset->usuario ?: '—') ?></dd>
+						<dt>Senha</dt><dd><?= !empty($asset->senha) ? '********' : '—' ?></dd>
+						<dt>Porta interna</dt><dd><?= $asset->porta_interna !== null && $asset->porta_interna !== '' ? h((string)$asset->porta_interna) : '—' ?></dd>
+						<dt>Porta externa</dt><dd><?= $asset->porta_externa !== null && $asset->porta_externa !== '' ? h((string)$asset->porta_externa) : '—' ?></dd>
 						<dt>Localização</dt><dd><?= h($asset->localizacao ?: '—') ?></dd>
 					</dl>
 				</div>
