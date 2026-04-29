@@ -80,9 +80,11 @@ class ServicedeskController extends TicketsController {
 		if ($role === 1) {
 			$assunto = $this->request->getQuery('assunto');
 			$situacao = $this->request->getQuery('situacao');
+			// Cliente: nunca herda inline técnico (ClientTicketList; flag false no boot).
 			$this->set('reactBoot', $this->_reactBoot('client_index', null, array_replace_recursive($extra, [
 				'queryAssunto' => $assunto,
 				'querySituacao' => $situacao,
+				'inlineAssignment' => false,
 			])));
 			return;
 		}
@@ -94,6 +96,8 @@ class ServicedeskController extends TicketsController {
 		$sd = Router::url(['controller' => 'Servicedesk', 'action' => 'index']);
 		return [
 			'servicedesk' => true,
+			// Técnico /servicedesk: UI grid inline (boot.inlineAssignment); PATCH em paths continuam só como URLs.
+			'inlineAssignment' => true,
 			'paths' => [
 				'indexTecnico' => $sd,
 				'indexCliente' => $sd,

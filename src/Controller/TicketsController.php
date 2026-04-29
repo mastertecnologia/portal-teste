@@ -10,6 +10,7 @@ use App\Service\Ticket\TicketInternalNotificationHelper;
 use App\Service\Ticket\ServiceDeskAlertService;
 use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
+use App\Service\Ticket\TicketAttendimentoTimerService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
@@ -58,7 +59,14 @@ class TicketsController extends AppController {
 		$existingUnlocked = (array)$this->Security->getConfig('unlockedActions');
 		$this->Security->setConfig('unlockedActions', array_values(array_unique(array_merge(
 			$existingUnlocked,
-			['apiTicketAssetsAttach', 'apiTicketAssetsDetach', 'apiTimeEntries']
+			[
+				'apiTicketAssetsAttach',
+				'apiTicketAssetsDetach',
+				'apiTimeEntries',
+				'apiPatchAssignment',
+				'apiPatchTicketStatus',
+				'apiPatchTicketPriority',
+			]
 		))));
 	}
 
@@ -74,7 +82,17 @@ class TicketsController extends AppController {
 		if (in_array($action, ['apiView', 'apiSaveTicket', 'apiComments', 'apiAnexoUpload', 'apiAnexoDelete'], true)) {
 			return in_array((int)$user['role'], [0, 1], true);
 		}
-		if (in_array($action, ['apiTecnicosLista', 'apiTransferirTicket', 'apiStartTicket', 'startTicket', 'apiTimer', 'apiAlterarSituacao'], true)) {
+		if (in_array($action, [
+			'apiTecnicosLista',
+			'apiTransferirTicket',
+			'apiStartTicket',
+			'startTicket',
+			'apiTimer',
+			'apiAlterarSituacao',
+			'apiPatchAssignment',
+			'apiPatchTicketStatus',
+			'apiPatchTicketPriority',
+		], true)) {
 			return (int)$user['role'] === 0;
 		}
 		if ($action === 'apiTimeEntries') {
@@ -3144,6 +3162,11 @@ class TicketsController extends AppController {
 			'admin' => (int)$this->Auth->user('admin'),
 			'userId' => (int)$this->Auth->user('id'),
 			'userName' => (string)($this->Auth->user('name') ?? ''),
+			/**
+			 * Só UI da grid técnica (React): inline + ocultar Transferir quando true.
+			 * Não desativa endpoints PATCH; cliente nunca deve herdar true (Servicedesk força false no portal).
+			 */
+			'inlineAssignment' => false,
 			'ticketStatus' => [
 				'pendente' => (int)C_TicketSituacaoPendente,
 				'emandamento' => (int)C_TicketSituacaoEmandamento,
@@ -3166,6 +3189,9 @@ class TicketsController extends AppController {
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
 				'apiTecnicosLista' => $w . 'tickets/api-tecnicos-lista',
 				'apiTransferirTicket' => $w . 'tickets/api-transferir-ticket/',
+				'apiPatchTicketAssignment' => $w . 'tickets/',
+				'apiPatchTicketStatus' => $w . 'tickets/',
+				'apiPatchTicketPriority' => $w . 'tickets/',
 				'apiStartTicket' => $w . 'tickets/api-start-ticket/',
 				'apiStartTicketSlug' => $w . 'tickets/start-ticket/',
 				'apiQueuesForTicket' => $w . 'queues/api-for-ticket/',
@@ -3295,6 +3321,151 @@ class TicketsController extends AppController {
 		$c = $code !== null && $code !== '' ? $this->_normalizeTicketSeveridade($code) : 'media';
 
 		return $map[$c] ?? 'Média';
+	}
+
+	/** @return array<string,string> código => rótulo (Service Desk inline). */
+	protected function _ticketPrioridadeCatalog(): array {
+		return [
+			'baixa' => 'Baixo',
+			'media' => 'Médio',
+			'alta' => 'Alto',
+			'critica' => 'Crítico',
+		];
+	}
+
+	protected function _normalizeTicketPrioridadeCode($value): string {
+		$v = is_string($value) ? strtolower(trim($value)) : '';
+		if ($v === 'médio' || $v === 'medio') {
+			$v = 'media';
+		}
+		if ($v === 'baixo') {
+			$v = 'baixa';
+		}
+		if ($v === 'alto') {
+			$v = 'alta';
+		}
+		if ($v === 'crítico' || $v === 'critico') {
+			$v = 'critica';
+		}
+		$allow = array_keys($this->_ticketPrioridadeCatalog());
+		if (!in_array($v, $allow, true)) {
+			$v = 'media';
+		}
+
+		return $v;
+	}
+
+	protected function _ticketPrioridadeLabelFromCode(string $code): string {
+		$c = $this->_normalizeTicketPrioridadeCode($code);
+		$m = $this->_ticketPrioridadeCatalog();
+
+		return $m[$c] ?? 'Médio';
+	}
+
+	/**
+	 * Aceita rótulo ("Alto") ou código persistido ("alta") vindos do JSON.
+	 */
+	protected function _normalizeTicketPrioridadeFromRequest($raw): string {
+		$s = is_string($raw) ? trim($raw) : '';
+		if ($s === '') {
+			return 'media';
+		}
+		$low = strtolower($s);
+		foreach ($this->_ticketPrioridadeCatalog() as $code => $label) {
+			if ($low === strtolower($label) || $low === $code) {
+				return $code;
+			}
+		}
+
+		return $this->_normalizeTicketPrioridadeCode($s);
+	}
+
+	/**
+	 * Rótulo de status (UI) → tickets.situacao.
+	 *
+	 * @return int|null
+	 */
+	protected function _mapServicedeskStatusRequestToSituacaoInt(string $raw): ?int {
+		$t = trim(html_entity_decode(strip_tags($raw), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+		if ($t === '') {
+			return null;
+		}
+		$tLow = mb_strtolower($t, 'UTF-8');
+		$fold = strtr($tLow, [
+			'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a',
+			'é' => 'e', 'ê' => 'e',
+			'í' => 'i',
+			'ó' => 'o', 'ô' => 'o', 'õ' => 'o',
+			'ú' => 'u', 'ü' => 'u',
+			'ç' => 'c',
+		]);
+		$pend = (int)C_TicketSituacaoPendente;
+		$exec = (int)C_TicketSituacaoEmandamento;
+		$res = (int)C_TicketSituacaoResolvido;
+		$fec = (int)C_TicketSituacaoFechado;
+		if (strpos($fold, 'fechad') !== false) {
+			return $fec;
+		}
+		if (strpos($fold, 'resolvid') !== false) {
+			return $res;
+		}
+		if (strpos($fold, 'execu') !== false || strpos($fold, 'emandamento') !== false || strpos($fold, 'em andamento') !== false) {
+			return $exec;
+		}
+		if (strpos($fold, 'aguardando') !== false || strpos($fold, 'pendent') !== false || strpos($fold, 'abrir') !== false) {
+			return $pend;
+		}
+
+		return null;
+	}
+
+	protected function _servicedeskTicketRowPayload(int $idticket): ?array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		if ($empresa <= 0 || $idticket <= 0) {
+			return null;
+		}
+		$contain = ['users', 'Clientes'];
+		if ($this->_queuesRelacionalReady()) {
+			$contain['Queues'] = [];
+		}
+		$q = $this->Tickets->find('all', ['contain' => $contain])
+			->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $empresa]);
+		$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+		$reg = $q->first();
+		if (empty($reg)) {
+			return null;
+		}
+		if (!$this->_apiTicketViewAllowed($reg)) {
+			return null;
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		$hasRespCol = in_array('idtecnico_responsavel', $cols, true) || in_array('owner_id', $cols, true);
+		$tecLabel = '—';
+		if ($hasRespCol) {
+			$rid = (int)($reg->idtecnico_responsavel ?? 0);
+			if ($rid <= 0 && in_array('owner_id', $cols, true)) {
+				$rid = (int)($reg->owner_id ?? 0);
+			}
+			if ($rid > 0) {
+				$nm = $this->_batchUserDisplayNames([$rid]);
+				$tecLabel = $nm[$rid] ?? ('Usuário #' . $rid);
+			} else {
+				$tecLabel = 'Não atribuído';
+			}
+		}
+		$wf = $this->_ticketWorkflowSchemaReady();
+		$queuesUi = $this->_queuesRelacionalReady();
+		$transferEnabled = $this->_ticketTransferApiAllowed();
+		$transfSet = $hasRespCol ? $this->_ticketIdsComTransferencia([$idticket]) : [];
+		$hasSeveridadeCol = in_array('severidade', $cols, true);
+
+		return $this->_ticketRowApiTecnico($reg, $tecLabel, [
+			'workflow' => $wf,
+			'queuesUi' => $queuesUi,
+			'transferEnabled' => $transferEnabled,
+			'transferido' => isset($transfSet[$idticket]),
+			'hasSeveridadeCol' => $hasSeveridadeCol,
+		]);
 	}
 
 	protected function _ticketWorkflowSchemaReady(): bool {
@@ -4215,6 +4386,31 @@ class TicketsController extends AppController {
 		if (!empty($ctx['hasSeveridadeCol'])) {
 			$row['severidade'] = $this->_ticketSeveridadeLabel((string)($reg->severidade ?? 'media'));
 			$row['severidadeCode'] = $this->_normalizeTicketSeveridade($reg->severidade ?? 'media');
+		}
+		try {
+			$colsAll = $this->Tickets->getSchema()->columns();
+			if (in_array('prioridade', $colsAll, true)) {
+				$pc = $this->_normalizeTicketPrioridadeCode((string)($reg->prioridade ?? ''));
+				$row['prioridadeCode'] = $pc;
+				$row['prioridadeLabel'] = $this->_ticketPrioridadeLabelFromCode($pc);
+			}
+			if (in_array('started_at', $colsAll, true) && in_array('total_seconds', $colsAll, true)) {
+				$st = $reg->started_at;
+				$pa = $reg->paused_at ?? null;
+				$fi = $reg->finished_at ?? null;
+				$row['attendimentoTimer'] = [
+					'started_at' => $st ? $st->format('c') : null,
+					'paused_at' => $pa ? $pa->format('c') : null,
+					'finished_at' => $fi ? $fi->format('c') : null,
+					'total_seconds' => (int)($reg->total_seconds ?? 0),
+					'elapsed_seconds' => TicketAttendimentoTimerService::elapsedSecondsForDisplay(
+						$this->Tickets,
+						$reg,
+						time()
+					),
+				];
+			}
+		} catch (\Throwable $e) {
 		}
 
 		return $row;
@@ -5599,7 +5795,7 @@ class TicketsController extends AppController {
 	 * Altera situação do ticket (JSON) — mesma regra de negócio de alterarsituacao, sem redirect.
 	 */
 	public function apiAlterarSituacao($idticket = null) {
-		$this->request->allowMethod(['post']);
+		$this->request->allowMethod(['post', 'patch']);
 		$this->autoRender = false;
 		if ((int)$this->Auth->user('role') !== 0) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
@@ -5621,22 +5817,38 @@ class TicketsController extends AppController {
 		if ($situacaoNova === null || $situacaoNova === '') {
 			return $this->jsonResponse(['ok' => false, 'error' => 'missing_situacao', 'message' => 'Informe situacao no corpo JSON.'], 400);
 		}
-		$situacaoNova = is_numeric($situacaoNova) ? (int)$situacaoNova : $situacaoNova;
-		$allowed = [(int)C_TicketSituacaoPendente, (int)C_TicketSituacaoEmandamento, (int)C_TicketSituacaoResolvido];
+		if (is_numeric($situacaoNova)) {
+			$situacaoNova = (int)$situacaoNova;
+		} else {
+			$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
+			if ($mapped === null) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao', 'message' => 'Situação não permitida nesta API.'], 400);
+			}
+			$situacaoNova = $mapped;
+		}
+		$allowed = [
+			(int)C_TicketSituacaoPendente,
+			(int)C_TicketSituacaoEmandamento,
+			(int)C_TicketSituacaoResolvido,
+			(int)C_TicketSituacaoFechado,
+		];
 		if (!in_array((int)$situacaoNova, $allowed, true)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao', 'message' => 'Situação não permitida nesta API.'], 400);
 		}
-		$sitantiga = $ticket->situacao;
+		$sitantiga = (int)$ticket->situacao;
+		if ((int)$situacaoNova !== $sitantiga) {
+			TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, (int)$situacaoNova);
+		}
 		$ticket->situacao = $situacaoNova;
 
 		if ($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) {
 			$ticket->datafinalizado = date('d/m/Y');
 		}
 
-		if ((int)$situacaoNova === (int)C_TicketSituacaoEmandamento && (int)$situacaoNova !== (int)$sitantiga) {
+		if ((int)$situacaoNova === (int)C_TicketSituacaoEmandamento && (int)$situacaoNova !== $sitantiga) {
 			$this->_assignTecnicoEmExecucao($ticket, (int)$idticket);
 		}
-		if (($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) && (int)$situacaoNova !== (int)$sitantiga) {
+		if (($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) && (int)$situacaoNova !== $sitantiga) {
 			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
 		}
 
@@ -5667,6 +5879,342 @@ class TicketsController extends AppController {
 			'situacao' => (int)$ticket->situacao,
 			'situacaoLabel' => $this->_ticketSituacaoTexto($ticket->situacao),
 		]);
+	}
+
+	/**
+	 * PATCH /tickets/:id/assignment — atribui técnico, sincroniza nível (support_level / workflow) e fila.
+	 */
+	public function apiPatchAssignment($id = null) {
+		$this->request->allowMethod(['patch', 'post']);
+		$this->autoRender = false;
+		$idticket = (int)$id;
+		if ($idticket <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
+		}
+		if (!$this->_ticketTransferApiAllowed()) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_columns_missing'], 503);
+		}
+		$qTm = $this->Tickets->find('all')->where(['Tickets.id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_transferir_fila'], 403);
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		if ((int)$ticket->idempresa !== $empresa) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$tecnicoId = isset($body['tecnico_id']) ? (int)$body['tecnico_id'] : (isset($body['iduser_destino']) ? (int)$body['iduser_destino'] : 0);
+		$filaIdBody = array_key_exists('fila_id', $body) ? $body['fila_id'] : null;
+		$filaId = ($filaIdBody === null || $filaIdBody === '') ? null : (int)$filaIdBody;
+		if ($tecnicoId <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'tecnico_obrigatorio'], 400);
+		}
+		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $tecnicoId])->first();
+		$destUser = $this->Users->find()
+			->contain($this->_supportLevelsRoutingReady() ? ['SupportLevels'] : [])
+			->where(['Users.id' => $tecnicoId, 'Users.role' => 0, 'Users.inativo' => 0])
+			->first();
+		if (empty($vinculo) || empty($destUser)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'tecnico_invalido'], 400);
+		}
+		$oldQid = (int)($ticket->queue_id ?? 0);
+		$newQid = $oldQid;
+		$newQueue = null;
+		if ($filaId !== null && $filaId > 0) {
+			$newQid = $filaId;
+			$qf = $this->Queues->find()->where(['Queues.id' => $newQid]);
+			if ($this->_supportLevelsRoutingReady()) {
+				$qf->contain(['SupportLevels']);
+			}
+			$this->Abac->applyToQuery($qf, 'Queues', 'Queues');
+			$newQueue = $qf->first();
+			if (empty($newQueue)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'fila_invalida'], 400);
+			}
+		}
+		if ($newQid > 0 && $oldQid > 0 && $newQid !== $oldQid && $this->_supportLevelsRoutingReady()) {
+			$curOrd = $this->_ticketQueueLevelSort($ticket);
+			$dstOrd = $this->_queueLevelSortOrder($newQid);
+			if ($curOrd > 0 && $dstOrd > 0 && $dstOrd <= $curOrd) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'escalacao_invalida'], 400);
+			}
+		}
+		$qPerm = $newQid > 0 ? $newQid : $oldQid;
+		if ($qPerm > 0 && $this->_queuesRelacionalReady()) {
+			$dlink = $this->QueuesUsers->find()
+				->where(['QueuesUsers.user_id' => $tecnicoId, 'QueuesUsers.queue_id' => $qPerm])
+				->first();
+			$membersCount = (int)$this->QueuesUsers->find()->where(['QueuesUsers.queue_id' => $qPerm])->count();
+			if (empty($dlink) && $membersCount === 0) {
+				$ins = $this->QueuesUsers->newEntity(['queue_id' => $qPerm, 'user_id' => $tecnicoId]);
+				$this->QueuesUsers->save($ins);
+				$dlink = $ins;
+			}
+			if (empty($dlink) && $membersCount > 0) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'destino_sem_vinculo_fila'], 400);
+			}
+			if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($tecnicoId, $qPerm)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'destino_nivel_incompativel'], 400);
+			}
+		}
+		$tcols = $this->Tickets->getSchema()->columns();
+		$wf = $this->_ticketWorkflowSchemaReady();
+		$cat = $this->_filaSuporteCatalog();
+		$agoraSql = date('Y-m-d H:i:s');
+		$agoraDt = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+		$agora = $agoraDt->format('d/m/Y H:i:s');
+		$nmDest = trim((string)($destUser->name ?? ''));
+		if ($nmDest === '') {
+			$nmDest = trim((string)($destUser->username ?? ''));
+		}
+		if ($nmDest === '') {
+			$nmDest = 'Usuário #' . $tecnicoId;
+		}
+		$obsLinhas = [
+			'Atribuição inline (API)',
+			'Data/hora: ' . $agora,
+			'Novo responsável: ' . $nmDest . ' (id ' . $tecnicoId . ')',
+		];
+		try {
+			$this->Tickets->getConnection()->transactional(function () use (
+				$ticket,
+				$idticket,
+				$tecnicoId,
+				$empresa,
+				$agoraSql,
+				$obsLinhas,
+				$newQueue,
+				$newQid,
+				$wf,
+				$cat,
+				$tcols,
+				$destUser
+			) {
+				$set = ['idtecnico_responsavel' => $tecnicoId];
+				$slUser = (int)($destUser->support_level_id ?? 0);
+				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true) && $slUser > 0) {
+					$set['support_level_id'] = $slUser;
+				}
+				if ($this->_queuesRelacionalReady() && $newQid > 0 && in_array('queue_id', $tcols, true)) {
+					$set['queue_id'] = $newQid;
+				}
+				if ($wf && $newQueue && $newQueue->codigo !== null && $newQueue->codigo !== '' && isset($cat[(string)$newQueue->codigo])) {
+					$cd = (string)$newQueue->codigo;
+					$set['fila_suporte'] = $cd;
+					$set['nivel_atendimento'] = $cat[$cd]['nivel'];
+				} elseif ($wf && in_array('nivel_atendimento', $tcols, true)) {
+					$slId = (int)($set['support_level_id'] ?? 0);
+					if ($slId > 0) {
+						$ord = $this->_supportLevelSortById($slId);
+						if ($ord > 0) {
+							$set['nivel_atendimento'] = min(5, max(1, $ord));
+						}
+					}
+				}
+				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
+					if (empty($set['support_level_id']) && $newQueue) {
+						$slq = $this->_ticketSupportLevelIdFromQueue($newQueue);
+						if ($slq !== null) {
+							$set['support_level_id'] = $slq;
+						}
+					}
+				}
+				list($n, $plain) = $this->_ticketTransferApplyUpdate($idticket, $empresa, $set, $agoraSql);
+				$this->_ticketTransferAssertUpdated($idticket, $empresa, $plain, $n, 'inline_assignment');
+				$ja = $this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $tecnicoId])->first();
+				if (empty($ja)) {
+					$tu = $this->Ticketsusers->newEntity();
+					$tu->idticket = $idticket;
+					$tu->iduser = $tecnicoId;
+					$tu->idempresa = $empresa;
+					if (!$this->Ticketsusers->save($tu)) {
+						throw new \RuntimeException('save_ticketsusers');
+					}
+				}
+				$oldId = (int)($ticket->idtecnico_responsavel ?? 0);
+				if ($oldId > 0 && $oldId !== $tecnicoId) {
+					foreach ($this->Ticketsusers->find()->where(['idticket' => $idticket, 'iduser' => $oldId])->toArray() as $ent) {
+						$this->Ticketsusers->delete($ent);
+					}
+				}
+				$mov = $this->Ticketsmovs->newEntity();
+				$mov->idticket = $idticket;
+				$mov->sitantiga = (int)$ticket->situacao;
+				$mov->sitnova = C_TicketMovTransferencia;
+				$mov->idusuario = $this->Auth->user('id');
+				$mov->idempresa = $empresa;
+				$mov->datetime = $agoraSql;
+				$mov->observacao = $this->_ticketsmovsObservacaoLimitada(implode("\n", $obsLinhas));
+				if (!$this->Ticketsmovs->save($mov)) {
+					throw new \RuntimeException('save_mov');
+				}
+			});
+		} catch (\Throwable $e) {
+			$this->log('apiPatchAssignment: ' . $e->getMessage(), 'error');
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchAssignment', $idticket);
+		$row = $this->_servicedeskTicketRowPayload($idticket);
+
+		return $this->jsonResponse(['ok' => true, 'ticket' => $row]);
+	}
+
+	/**
+	 * PATCH /tickets/:id/status — corpo { "status": "Em execução" } ou situacao numérica; devolve linha da grid.
+	 */
+	public function apiPatchTicketStatus($id = null) {
+		$this->request->allowMethod(['patch', 'post']);
+		$this->autoRender = false;
+		$idticket = (int)$id;
+		if ($idticket <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$qTm = $this->Tickets->find('all')->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$situacaoNova = $body['status'] ?? $body['situacao'] ?? $body['sit'] ?? null;
+		if ($situacaoNova === null || $situacaoNova === '') {
+			return $this->jsonResponse(['ok' => false, 'error' => 'missing_status'], 400);
+		}
+		if (is_numeric($situacaoNova)) {
+			$situacaoNova = (int)$situacaoNova;
+		} else {
+			$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
+			if ($mapped === null) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao'], 400);
+			}
+			$situacaoNova = $mapped;
+		}
+		$allowed = [
+			(int)C_TicketSituacaoPendente,
+			(int)C_TicketSituacaoEmandamento,
+			(int)C_TicketSituacaoResolvido,
+			(int)C_TicketSituacaoFechado,
+		];
+		if (!in_array((int)$situacaoNova, $allowed, true)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao'], 400);
+		}
+		$sitantiga = (int)$ticket->situacao;
+		if ((int)$situacaoNova !== $sitantiga) {
+			TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, (int)$situacaoNova);
+		}
+		$ticket->situacao = $situacaoNova;
+		if ($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) {
+			$ticket->datafinalizado = date('d/m/Y');
+		}
+		if ((int)$situacaoNova === (int)C_TicketSituacaoEmandamento && (int)$situacaoNova !== $sitantiga) {
+			$this->_assignTecnicoEmExecucao($ticket, $idticket);
+		}
+		if (($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) && (int)$situacaoNova !== $sitantiga) {
+			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
+		}
+		if (!$this->Tickets->save($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		try {
+			$this->criarMov($ticket->id, $sitantiga, $ticket->situacao);
+		} catch (\Throwable $e) {
+			$this->log('Tickets::apiPatchTicketStatus criarMov: ' . $e->getMessage(), 'error');
+		}
+		try {
+			if ($situacaoNova == C_TicketSituacaoPendente && $situacaoNova != $sitantiga) {
+				$this->email($idticket, C_TicketsAcaoPendente, null, $this->Auth->user('idempresa'));
+			} elseif ($situacaoNova == C_TicketSituacaoEmandamento && $situacaoNova != $sitantiga) {
+				$this->email($idticket, C_TicketsAcaoEmandamento, null, $this->Auth->user('idempresa'));
+			} elseif ($situacaoNova == C_TicketSituacaoFechado && $situacaoNova != $sitantiga) {
+				$this->email($idticket, C_TicketsAcaoFechado, null, $this->Auth->user('idempresa'));
+			} elseif ($situacaoNova == C_TicketSituacaoResolvido && $situacaoNova != $sitantiga) {
+				$this->email($idticket, null, null, $this->Auth->user('idempresa'));
+			}
+		} catch (\Throwable $e) {
+			$this->log('Tickets::apiPatchTicketStatus email: ' . $e->getMessage(), 'error');
+		}
+		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchTicketStatus', $idticket);
+		$row = $this->_servicedeskTicketRowPayload($idticket);
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'ticket' => $row,
+			'situacao' => (int)$ticket->situacao,
+			'situacaoLabel' => $this->_ticketSituacaoTexto($ticket->situacao),
+		]);
+	}
+
+	/**
+	 * PATCH /tickets/:id/priority — { "prioridade": "Alto" } (tickets.prioridade ou severidade legada).
+	 */
+	public function apiPatchTicketPriority($id = null) {
+		$this->request->allowMethod(['patch', 'post']);
+		$this->autoRender = false;
+		$idticket = (int)$id;
+		if ($idticket <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$qTm = $this->Tickets->find('all')->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$raw = $body['prioridade'] ?? $body['priority'] ?? null;
+		if ($raw === null || $raw === '') {
+			return $this->jsonResponse(['ok' => false, 'error' => 'missing_prioridade'], 400);
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		$code = $this->_normalizeTicketPrioridadeFromRequest((string)$raw);
+		$saveFields = [];
+		if (in_array('prioridade', $cols, true)) {
+			$ticket->prioridade = $code;
+			$saveFields[] = 'prioridade';
+		} elseif (in_array('severidade', $cols, true)) {
+			$sevMap = ['baixa' => 'baixa', 'media' => 'media', 'alta' => 'alta', 'critica' => 'urgente', 'critico' => 'urgente'];
+			$ticket->severidade = $sevMap[$code] ?? $this->_normalizeTicketSeveridade((string)$raw);
+			$saveFields[] = 'severidade';
+		} else {
+			return $this->jsonResponse(['ok' => false, 'error' => 'prioridade_not_supported'], 503);
+		}
+		if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchTicketPriority', $idticket);
+		$row = $this->_servicedeskTicketRowPayload($idticket);
+
+		return $this->jsonResponse(['ok' => true, 'ticket' => $row]);
 	}
 
 	public function apiSaveTicket($idticket = null) {

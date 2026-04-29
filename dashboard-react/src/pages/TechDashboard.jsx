@@ -22,6 +22,7 @@ import {
 import { badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 import TimerWidget from '../components/TimerWidget.jsx';
+import TicketsServicedeskInlineRow from '../components/TicketsServicedeskInlineRow.jsx';
 
 const API_ERR_TRANSFER = {
   escalacao_invalida: 'Só é possível transferir para uma fila de nível superior (escalonamento).',
@@ -111,7 +112,8 @@ function StatusDot({ type }) {
  * Garante que tickets abertos exponham Iniciar atendimento (quando pendente) e Transferir
  * (sempre). Backend pode esconder conforme flags — UI sempre mostra para alinhar ao mockup.
  */
-function ensureCoreActions(ticket) {
+function ensureCoreActions(ticket, opts = {}) {
+  const hideTransfer = Boolean(opts.hideTransfer);
   const list = Array.isArray(ticket.acoes) ? [...ticket.acoes] : [];
   const label = String(ticket.situacaoLabel || ticket.status || '').toLowerCase();
   const closed =
@@ -145,7 +147,7 @@ function ensureCoreActions(ticket) {
       url: ticket.urls?.edit || '#',
     });
   }
-  if (!has('transferir')) {
+  if (!hideTransfer && !has('transferir')) {
     list.push({
       key: 'transferir',
       label: 'Transferir',
@@ -623,6 +625,10 @@ export default function TechDashboard({ boot }) {
   const [transferQueuesErr, setTransferQueuesErr] = useState('');
   const [startBusyId, setStartBusyId] = useState(null);
   const [statusBusyKey, setStatusBusyKey] = useState(null);
+  const [patchBusyId, setPatchBusyId] = useState(null);
+  /** Erro por PATCH inline (rollback já aplicado na linha). */
+  const [inlinePatchError, setInlinePatchError] = useState({ id: null, msg: '' });
+  const inlinePatchErrorTimerRef = useRef(null);
   const [transferOkHint, setTransferOkHint] = useState('');
   const [loadError, setLoadError] = useState(null);
   const sdTableScrollRef = useRef(null);
@@ -705,6 +711,13 @@ export default function TechDashboard({ boot }) {
   const wfEnabled = Boolean(workflow?.enabled);
   const filasMeta = workflow?.filas || [];
   const queuesRelacional = Boolean(workflow?.queuesRelacional);
+  const effectiveBoot = boot || getBoot();
+  /**
+   * Só controla UI da grid técnica (inline + ocultar Transferir). Endpoints PATCH existem no boot como URLs
+   * e não ativam este layout por si. Ausência da flag ou false = legado (/tickets). Timer do ticket ≠ apiTimer.
+   */
+  const inlineAssignment = effectiveBoot?.inlineAssignment === true;
+  const situacaoExecCode = effectiveBoot?.ticketStatus?.emandamento;
 
   useEffect(() => {
     if (!transferOpen || !queuesRelacional) return undefined;
@@ -756,6 +769,35 @@ export default function TechDashboard({ boot }) {
       );
     });
   }, [groups, filtroStatus, deferredQ]);
+
+  const mergeTicketInGroups = useCallback((ticketId, newRow) => {
+    setGroups((prev) => {
+      if (!prev || !newRow) return prev;
+      const repl = (arr) =>
+        Array.isArray(arr)
+          ? arr.map((t) => (Number(t?.id) === Number(ticketId) ? { ...t, ...newRow } : t))
+          : arr;
+      return {
+        ...prev,
+        todos: repl(prev.todos),
+        pendentes: repl(prev.pendentes),
+        emandamento: repl(prev.emandamento),
+        resolvidos: repl(prev.resolvidos),
+        fechados: repl(prev.fechados),
+      };
+    });
+  }, []);
+
+  const onInlinePatchError = useCallback((ticketId, msg) => {
+    if (inlinePatchErrorTimerRef.current) {
+      window.clearTimeout(inlinePatchErrorTimerRef.current);
+    }
+    setInlinePatchError({ id: ticketId, msg: String(msg || 'Erro') });
+    inlinePatchErrorTimerRef.current = window.setTimeout(() => {
+      inlinePatchErrorTimerRef.current = null;
+      setInlinePatchError({ id: null, msg: '' });
+    }, 6000);
+  }, []);
 
   const totalTodos = groups?.todos?.length ?? 0;
   const hoje = new Date().toLocaleDateString('pt-BR');
@@ -915,7 +957,13 @@ export default function TechDashboard({ boot }) {
     }
   };
 
-  const colCount = wfEnabled ? 10 : 8;
+  const colCount = useMemo(() => {
+    let n = wfEnabled ? 10 : 8;
+    if (inlineAssignment) {
+      n += 2;
+    }
+    return n;
+  }, [wfEnabled, inlineAssignment]);
 
   const isSD = Boolean(boot?.servicedesk);
 
@@ -945,6 +993,15 @@ export default function TechDashboard({ boot }) {
         <div className="border-b border-[var(--pgm-badge-amber-ring,rgba(210,153,34,0.30))] bg-[var(--pgm-badge-amber-bg,rgba(210,153,34,0.14))] px-3 py-2.5 text-sm text-[var(--pgm-badge-amber-text,#f0c060)]">
           <span className="font-semibold">Lista não carregou: </span>
           {loadError}
+        </div>
+      ) : null}
+      {inlineAssignment && inlinePatchError.msg ? (
+        <div
+          className="border-b border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm text-[var(--pgm-badge-amber-text,#f0c060)]"
+          role="alert"
+        >
+          <span className="font-semibold">Ticket #{inlinePatchError.id}: </span>
+          {inlinePatchError.msg}
         </div>
       ) : null}
       {!embedded ? (
@@ -1181,6 +1238,13 @@ export default function TechDashboard({ boot }) {
                 >
                   Assunto
                 </th>
+                {inlineAssignment ? (
+                  <th
+                    className={`${techFilaThSticky} max-w-[6rem] px-2 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                  >
+                    Prioridade
+                  </th>
+                ) : null}
                 <th
                   className={`${techFilaThSticky} whitespace-nowrap px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
                 >
@@ -1205,6 +1269,13 @@ export default function TechDashboard({ boot }) {
                 >
                   Técnico
                 </th>
+                {inlineAssignment ? (
+                  <th
+                    className={`${techFilaThSticky} whitespace-nowrap px-2 py-2 text-right text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                  >
+                    Tempo
+                  </th>
+                ) : null}
                 <th
                   className={`${techFilaThSticky} max-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
                 >
@@ -1288,42 +1359,61 @@ export default function TechDashboard({ boot }) {
                           </div>
                         ) : null}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        <span
-                          className={`inline-flex max-w-[10rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-[11px] ${badgeClass(
-                            statusType(st),
-                            embedded,
-                            isSD
-                          )}`}
-                          title={st}
-                        >
-                          <StatusDot type={statusType(st)} />
-                          <span className="truncate">{st}</span>
-                        </span>
-                      </td>
-                      {wfEnabled ? (
+                      {inlineAssignment ? (
+                        <TicketsServicedeskInlineRow
+                          ticket={ticket}
+                          wfEnabled={wfEnabled}
+                          queuesRelacional={queuesRelacional}
+                          queues={workflow?.queues || []}
+                          workflowFilas={filasMeta}
+                          tecnicos={tecnicosOpcoes}
+                          ticketStatus={effectiveBoot?.ticketStatus}
+                          situacaoExecCode={situacaoExecCode}
+                          onMergeTicket={mergeTicketInGroups}
+                          patchBusyId={patchBusyId}
+                          setPatchBusyId={setPatchBusyId}
+                          onPatchError={onInlinePatchError}
+                        />
+                      ) : (
                         <>
-                          <td
-                            className="max-w-[9rem] truncate px-3 py-2 text-[var(--pgm-text-muted)]"
-                            title={ticket.filaLabel || ''}
-                          >
-                            <span className="line-clamp-2">{ticket.filaLabel || '—'}</span>
-                            {ticket.transferido ? (
-                              <span className="mt-0.5 block text-[10px] font-semibold text-[var(--pgm-badge-amber-text,#f0c060)]">Transferido</span>
-                            ) : null}
+                          <td className="whitespace-nowrap px-3 py-2">
+                            <span
+                              className={`inline-flex max-w-[10rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-[11px] ${badgeClass(
+                                statusType(st),
+                                embedded,
+                                isSD
+                              )}`}
+                              title={st}
+                            >
+                              <StatusDot type={statusType(st)} />
+                              <span className="truncate">{st}</span>
+                            </span>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-[var(--pgm-text-muted)]">
-                            {ticket.supportLevelLabel
-                              ? ticket.supportLevelLabel
-                              : ticket.nivelAtendimento != null
-                                ? `N${ticket.nivelAtendimento}`
-                                : '—'}
+                          {wfEnabled ? (
+                            <>
+                              <td
+                                className="max-w-[9rem] truncate px-3 py-2 text-[var(--pgm-text-muted)]"
+                                title={ticket.filaLabel || ''}
+                              >
+                                <span className="line-clamp-2">{ticket.filaLabel || '—'}</span>
+                                {ticket.transferido ? (
+                                  <span className="mt-0.5 block text-[10px] font-semibold text-[var(--pgm-badge-amber-text,#f0c060)]">Transferido</span>
+                                ) : null}
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-2 text-[var(--pgm-text-muted)]">
+                                {ticket.supportLevelLabel
+                                  ? ticket.supportLevelLabel
+                                  : ticket.nivelAtendimento != null
+                                    ? `N${ticket.nivelAtendimento}`
+                                    : '—'}
+                              </td>
+                            </>
+                          ) : null}
+                          <td className="max-w-[7rem] truncate px-3 py-2 text-[var(--pgm-text-secondary)]" title={ticket.tecnicos || ''}>
+                            {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
                           </td>
                         </>
-                      ) : null}
-                      <td className="max-w-[7rem] truncate px-3 py-2 text-[var(--pgm-text-secondary)]" title={ticket.tecnicos || ''}>
-                        {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
-                      </td>
+                      )}
                       <td
                         className="max-w-[8rem] truncate px-3 py-2 text-[var(--pgm-text-muted)]"
                         title={ticket.cliente || ''}
@@ -1333,7 +1423,7 @@ export default function TechDashboard({ boot }) {
                       <td className="px-3 py-2 text-right">
                         <TicketActionsMenu
                           ticket={ticket}
-                          acoes={ensureCoreActions(ticket)}
+                          acoes={ensureCoreActions(ticket, { hideTransfer: inlineAssignment })}
                           openTransfer={openTransfer}
                           handleStartAtendimento={handleStartAtendimento}
                           startBusyId={startBusyId}

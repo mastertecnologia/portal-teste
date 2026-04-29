@@ -332,6 +332,27 @@ Router::scope("/", function ($routes) {
         ->setMethods(["POST", "PUT"]);
     $routes
         ->connect(
+            "/tickets/:id/assignment",
+            ["controller" => "Tickets", "action" => "apiPatchAssignment"],
+            ["pass" => ["id"], "id" => "\d+"],
+        )
+        ->setMethods(["PATCH", "POST"]);
+    $routes
+        ->connect(
+            "/tickets/:id/status",
+            ["controller" => "Tickets", "action" => "apiPatchTicketStatus"],
+            ["pass" => ["id"], "id" => "\d+"],
+        )
+        ->setMethods(["PATCH", "POST"]);
+    $routes
+        ->connect(
+            "/tickets/:id/priority",
+            ["controller" => "Tickets", "action" => "apiPatchTicketPriority"],
+            ["pass" => ["id"], "id" => "\d+"],
+        )
+        ->setMethods(["PATCH", "POST"]);
+    $routes
+        ->connect(
             "/tickets/api-anexo-upload/*",
             ["controller" => "Tickets", "action" => "apiAnexoUpload"],
             ["pass" => ["idticket"]],

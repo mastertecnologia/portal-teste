@@ -213,6 +213,92 @@ export async function fetchTecnicosParaTransferencia(queueId) {
   return { ok: true, tecnicos: json.tecnicos || [] };
 }
 
+/**
+ * patchTicketAssignment / patchTicketStatus / patchTicketPriority: URLs em `boot.paths`.
+ * Continuam no boot independentemente de inlineAssignment; só a grid técnica (TechDashboard) usa a flag para UI.
+ */
+export async function patchTicketAssignment(ticketId, payload) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 80));
+    return { ok: true, ticket: { id: Number(ticketId), ...payload } };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiPatchTicketAssignment;
+  if (!base) return { ok: false, error: 'no_api' };
+  const url = `${base}${encodeURIComponent(String(ticketId))}/assignment`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, ticket: null };
+  return { ok: true, ticket: json.ticket || null };
+}
+
+export async function patchTicketStatus(ticketId, body) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 80));
+    return { ok: true, situacao: 1, situacaoLabel: body?.status || 'mock', ticket: null };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiPatchTicketStatus;
+  if (!base) {
+    return { ok: false, error: 'no_api', ticket: null };
+  }
+  const url = `${base}${encodeURIComponent(String(ticketId))}/status`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, ticket: null };
+  return {
+    ok: true,
+    situacao: json.situacao,
+    situacaoLabel: json.situacaoLabel,
+    ticket: json.ticket || null,
+  };
+}
+
+export async function patchTicketPriority(ticketId, body) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 80));
+    return { ok: true, ticket: null };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiPatchTicketPriority;
+  if (!base) return { ok: false, error: 'no_api' };
+  const url = `${base}${encodeURIComponent(String(ticketId))}/priority`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, ticket: null };
+  return { ok: true, ticket: json.ticket || null };
+}
+
 export async function postTransferirTicket(ticketId, payload) {
   if (USE_MOCK) {
     return { ok: true };

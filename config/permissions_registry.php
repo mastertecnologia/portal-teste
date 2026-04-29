@@ -1519,7 +1519,7 @@ return [
         "module" => "Tickets",
         "controller" => "Tickets",
         "action" =>
-            "edit,alterarsituacao,alterar_situacao,apiAlterarSituacao,api_alterar_situacao,reabrir,cadhoras,cancelar,poderesolver,mudasituacaofatura,checkboxesParcelas,apisaveticket,apianexoupload",
+            "edit,alterarsituacao,alterar_situacao,apiAlterarSituacao,api_alterar_situacao,apiPatchTicketStatus,api_patch_ticket_status,apiPatchTicketPriority,api_patch_ticket_priority,reabrir,cadhoras,cancelar,poderesolver,mudasituacaofatura,checkboxesParcelas,apisaveticket,apianexoupload",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
@@ -1544,7 +1544,7 @@ return [
         "module" => "Tickets",
         "controller" => "Tickets",
         "action" =>
-            "startTicket,start_ticket,apiTransferirTicket,api_transferir_ticket,apiStartTicket,api_start_ticket",
+            "startTicket,start_ticket,apiTransferirTicket,api_transferir_ticket,apiPatchAssignment,api_patch_assignment,apiStartTicket,api_start_ticket",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>
