@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { deleteTimeEntry, fetchTimeEntries, getBoot, upsertTimeEntry } from '../lib/api';
 import TicketTimeline from './TicketTimeline.jsx';
@@ -73,7 +73,7 @@ function parseDurationHms(value) {
   return h * 3600 + min * 60 + sec;
 }
 
-function formatDateTimePtBr(value) {
+function formatDateTimePtBr(value, hourCycle = '24h') {
   if (!value) return '—';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
@@ -84,7 +84,7 @@ function formatDateTimePtBr(value) {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false,
+    hour12: hourCycle === '12h',
   });
 }
 
@@ -188,6 +188,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const [manualOpen, setManualOpen] = useState(false);
   const [entries, setEntries] = useState([]);
   const [entryTechnicians, setEntryTechnicians] = useState([]);
+  const [hourCycle, setHourCycle] = useState('24h');
   const [entriesBusy, setEntriesBusy] = useState(false);
   const [entriesErr, setEntriesErr] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
@@ -229,6 +230,18 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const segundosFiltrados = useMemo(() => filtered.reduce((s, ev) => s + worklogSeconds(ev), 0), [filtered]);
 
   const filtersActive = Boolean(filterDay || filterTec);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const saved = window.localStorage.getItem('ticketHorasHourCycle');
+      if (saved === '12h' || saved === '24h') {
+        setHourCycle(saved);
+      }
+    } catch (_) {
+      // ignore localStorage read errors
+    }
+  }, []);
 
   async function reloadEntries() {
     if (!ticket?.id) return;
@@ -394,7 +407,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
                   </td>
                   <td className="py-2.5">
                     <div className="font-medium leading-tight">Total: {formatDurationHms(en.durationSeconds)}</div>
-                    <div className="text-[10px] leading-tight text-[#6b7280]">Início: {formatDateTimePtBr(en.startWorkHour)}</div>
+                    <div className="text-[10px] leading-tight text-[#6b7280]">Início: {formatDateTimePtBr(en.startWorkHour, hourCycle)}</div>
                   </td>
                   <td className="py-2.5 text-center">{en.billable === false ? 'Não' : 'Sim'}</td>
                   <td className="py-2.5 text-center text-[#6b7280]">{en.rate || '—'}</td>
@@ -512,7 +525,27 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
               />
             )}
           </label>
-            <div className="text-right text-xs text-[#6b7280]">12h clock</div>
+            <label className="justify-self-end text-right text-xs text-[#6b7280]">
+              Formato de hora
+              <select
+                value={hourCycle}
+                onChange={(e) => {
+                  const next = e.target.value === '12h' ? '12h' : '24h';
+                  setHourCycle(next);
+                  if (typeof window !== 'undefined') {
+                    try {
+                      window.localStorage.setItem('ticketHorasHourCycle', next);
+                    } catch (_) {
+                      // ignore localStorage write errors
+                    }
+                  }
+                }}
+                className="mt-1 h-[30px] rounded border border-[#d1d5db] bg-white px-2 text-xs text-[#111827]"
+              >
+                <option value="12h">12h clock</option>
+                <option value="24h">24h clock</option>
+              </select>
+            </label>
           </div>
         ) : null}
         {editingEntry ? (
