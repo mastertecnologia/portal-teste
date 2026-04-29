@@ -287,7 +287,7 @@ export default function HorasTecnicasTimerPanel({
       }
       const msgLower = typeof res.message === 'string' ? res.message.toLowerCase() : '';
       const alreadyRunning =
-        action === 'iniciar' &&
+        (action === 'iniciar' || action === 'retomar') &&
         (res.error === 'already_running' ||
           msgLower.includes('já existe um timer') ||
           msgLower.includes('ja existe um timer'));

@@ -2886,7 +2886,39 @@ class TicketsController extends AppController {
 					->orderDesc('id')
 					->first();
 				if ($ativo) {
-					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
+					$hpStr = $this->_ormTimeToString($ativo->get('hora_pausa') ?: $ativo->get('horapausa'));
+					$isPausedOpen = ($hpStr !== null && $hpStr !== '');
+					// Fluxo clássico (timerPausar): só grava hora_pausa; hora_fim fica null — retomar deve
+					// ajustar esta linha (como timerRetomar), não criar outra nem devolver already_running.
+					if ($isPausedOpen) {
+						$novaHi = $this->_timerRetomarShiftInicio($ativo, $agora);
+						if ($novaHi === null) {
+							return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Não é possível retomar: estado do timer inválido (pausa não registrada).'];
+						}
+						$ativo->set('hora_inicio', $novaHi);
+						$ativo->set('hora_pausa', null);
+						$this->_atendimentoTimerApplyCanonicalFields($ativo, [
+							'status' => 'running',
+							'started_at' => $novaHi,
+							'paused_at' => null,
+						]);
+						if (!$this->AtendimentoTimer->save($ativo)) {
+							$this->log('apiTimer retomar save (linha aberta pausada): ' . json_encode($ativo->getErrors()), 'error');
+
+							return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível retomar o timer.'];
+						}
+						$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas retomado.');
+
+						return ['ok' => true, 'message' => 'Timer retomado.', 'status' => 'running', 'startedAt' => $novaHi];
+					}
+					// Sessão já em execução (sem pausa): idempotente para iniciar/retomar.
+					$hiStr = $this->_ormTimeToString($ativo->get('hora_inicio') ?: $ativo->get('horainicio'));
+					if ($hiStr === null || $hiStr === '') {
+						return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Estado do timer inválido (início não registrado).'];
+					}
+					$msg = $acao === 'retomar' ? 'Timer já estava em andamento.' : 'Timer já em andamento.';
+
+					return ['ok' => true, 'message' => $msg, 'status' => 'running', 'startedAt' => $hiStr];
 				}
 				$novo = $this->AtendimentoTimer->newEntity([
 					'idticket' => $idticket,
