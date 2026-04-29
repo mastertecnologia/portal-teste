@@ -741,7 +741,7 @@ export async function postTimerAction(ticketId, action, extra = {}) {
 
 export async function fetchTimeEntries(ticketId) {
   if (USE_MOCK) {
-    return { ok: true, entries: [] };
+    return { ok: true, entries: [], technicians: [] };
   }
   const boot = getBoot();
   const base = boot?.paths?.apiTimeEntries;
@@ -752,8 +752,12 @@ export async function fetchTimeEntries(ticketId) {
     headers: { Accept: 'application/json' },
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText, entries: [] };
-  return { ok: true, entries: Array.isArray(j.entries) ? j.entries : [] };
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText, entries: [], technicians: [] };
+  return {
+    ok: true,
+    entries: Array.isArray(j.entries) ? j.entries : [],
+    technicians: Array.isArray(j.technicians) ? j.technicians : [],
+  };
 }
 
 export async function upsertTimeEntry(ticketId, payload) {

@@ -6625,6 +6625,8 @@ class TicketsController extends AppController {
 					'ticketId' => (int)$r->idticket,
 					'technicianId' => (int)$r->iduser,
 					'technicianName' => (string)$tecLabel,
+					'technician_contact_id' => (int)$r->iduser,
+					'technician_name' => (string)$tecLabel,
 					'startWorkHour' => ($inicio && is_object($inicio) && method_exists($inicio, 'format')) ? $inicio->format('c') : null,
 					'endWorkHour' => ($fim && is_object($fim) && method_exists($fim, 'format')) ? $fim->format('c') : null,
 					'durationSeconds' => (int)$sec,
@@ -6637,8 +6639,37 @@ class TicketsController extends AppController {
 						: (in_array('nota', $thCols, true) ? (string)($r->get('nota') ?? '') : '')),
 				];
 			}
+			$technicians = [];
+			$techSeen = [];
+			foreach ($this->Users->find()
+				->where(['Users.idempresa' => $eid, 'Users.role' => 0])
+				->order(['Users.name' => 'ASC', 'Users.username' => 'ASC'])
+				->all() as $uTech) {
+				$techId = (int)$uTech->id;
+				if ($techId <= 0 || isset($techSeen[$techId])) {
+					continue;
+				}
+				$label = trim((string)(
+					(trim((string)($uTech->get('name') ?? '')) !== '')
+						? $uTech->get('name')
+						: ((trim((string)($uTech->get('username') ?? '')) !== '')
+							? $uTech->get('username')
+							: (string)($uTech->get('email') ?? ''))
+				));
+				$technicians[] = ['id' => $techId, 'name' => $label];
+				$techSeen[$techId] = true;
+			}
+			foreach ($out as $entryRow) {
+				$techId = (int)($entryRow['technicianId'] ?? 0);
+				if ($techId <= 0 || isset($techSeen[$techId])) {
+					continue;
+				}
+				$label = trim((string)($entryRow['technicianName'] ?? ''));
+				$technicians[] = ['id' => $techId, 'name' => $label];
+				$techSeen[$techId] = true;
+			}
 
-			return $this->jsonResponse(['ok' => true, 'entries' => $out]);
+			return $this->jsonResponse(['ok' => true, 'entries' => $out, 'technicians' => $technicians]);
 		}
 
 		$body = $this->request->input('json_decode', true);

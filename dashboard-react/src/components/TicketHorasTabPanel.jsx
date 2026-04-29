@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { deleteTimeEntry, fetchTimeEntries, upsertTimeEntry } from '../lib/api';
+import { deleteTimeEntry, fetchTimeEntries, getBoot, upsertTimeEntry } from '../lib/api';
 import TicketTimeline from './TicketTimeline.jsx';
 
 function parseEventDate(ev) {
@@ -137,7 +137,14 @@ function parseBrDateFilter(s) {
 
 /** Rótulo do técnico vindo do JSON (camelCase ou snake_case legado). */
 function technicianDisplayLabel(en) {
-  const raw = en?.technicianName ?? en?.technician_name ?? '';
+  const raw =
+    en?.technicianName ??
+    en?.technician_name ??
+    en?.technician ??
+    en?.tecnico ??
+    en?.userName ??
+    en?.user_name ??
+    '';
   return String(raw || '').trim();
 }
 
@@ -165,6 +172,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const [entriesOpen, setEntriesOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [entries, setEntries] = useState([]);
+  const [entryTechnicians, setEntryTechnicians] = useState([]);
+  const [entryTechSearch, setEntryTechSearch] = useState('');
   const [entriesBusy, setEntriesBusy] = useState(false);
   const [entriesErr, setEntriesErr] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
@@ -206,6 +215,11 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const segundosFiltrados = useMemo(() => filtered.reduce((s, ev) => s + worklogSeconds(ev), 0), [filtered]);
 
   const filtersActive = Boolean(filterDay || filterTec);
+  const filteredEntryTechnicians = useMemo(() => {
+    const term = String(entryTechSearch || '').trim().toLowerCase();
+    if (!term) return entryTechnicians;
+    return entryTechnicians.filter((tech) => String(tech?.name || `#${tech?.id || ''}`).toLowerCase().includes(term));
+  }, [entryTechnicians, entryTechSearch]);
 
   async function reloadEntries() {
     if (!ticket?.id) return;
@@ -215,9 +229,11 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
     setEntriesBusy(false);
     if (!r.ok) {
       setEntriesErr(r.error || 'Falha ao carregar entradas.');
-      return;
+      return r;
     }
     setEntries(r.entries || []);
+    setEntryTechnicians(r.technicians || []);
+    return r;
   }
 
   async function openEntriesModal() {
@@ -225,12 +241,30 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
     await reloadEntries();
   }
 
-  function openManualModal(entry = null) {
+  async function openManualModal(entry = null) {
+    let technicians = entryTechnicians;
+    if (technicians.length === 0) {
+      const loaded = await reloadEntries();
+      if (loaded?.ok) {
+        technicians = loaded.technicians || [];
+      }
+    }
     const startValue = entry ? toDateTimeLocalValue(entry.startWorkHour) : '';
     const endValue = entry ? toDateTimeLocalValue(entry.endWorkHour) : '';
     const s = splitDateTimeLocal(startValue);
     const e = splitDateTimeLocal(endValue);
     const nowParts = nowDateTimeLocalParts();
+    const boot = getBoot();
+    const fallbackTechId = Number(boot?.userId || 0);
+    const entryTechId = Number(
+      entry?.technicianId ??
+      entry?.technicianContactId ??
+      entry?.technician_contact_id ??
+      0
+    );
+    const defaultTechId = entryTechId || fallbackTechId || Number(technicians?.[0]?.id || 0);
+    const selectedTech = technicians.find((t) => Number(t?.id || 0) === Number(defaultTechId || 0));
+    setEntryTechSearch(String(selectedTech?.name || '').trim());
     setEditingEntry(entry);
     setForm({
       startDate: s.date || nowParts.date,
@@ -238,7 +272,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
       endDate: e.date || nowParts.date,
       endTime: e.time || nowParts.time,
       duration: '00:00:00',
-      technicianContactId: String(entry?.technicianId || ''),
+      technicianContactId: String(defaultTechId || ''),
       billable: entry?.billable !== false,
       descricao: String(entry?.note || ''),
       taxa: String(entry?.rate || ''),
@@ -443,9 +477,44 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
               <input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
             </div>
           </label>
-            <label className="text-xs text-[#6b7280]">
-            Técnico (ID)
-            <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" />
+          <label className="text-xs text-[#6b7280]">
+            Técnico
+            {entryTechnicians.length > 0 ? (
+              <>
+                <input
+                  type="text"
+                  value={entryTechSearch}
+                  onChange={(e) => setEntryTechSearch(e.target.value)}
+                  placeholder="Buscar técnico..."
+                  className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                />
+                <select
+                  value={form.technicianContactId}
+                  onChange={(e) => {
+                    const nextId = e.target.value;
+                    const selected = entryTechnicians.find((t) => String(t.id) === String(nextId));
+                    setForm((p) => ({ ...p, technicianContactId: nextId }));
+                    setEntryTechSearch(String(selected?.name || '').trim());
+                  }}
+                  className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                >
+                  <option value="">Selecione</option>
+                  {filteredEntryTechnicians.map((tech) => (
+                    <option key={tech.id} value={String(tech.id)}>
+                      {(tech.name || '').trim() || `#${tech.id}`}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <input
+                type="number"
+                min="1"
+                value={form.technicianContactId}
+                onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))}
+                className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+              />
+            )}
           </label>
             <div className="text-right text-xs text-[#6b7280]">12h clock</div>
           </div>
