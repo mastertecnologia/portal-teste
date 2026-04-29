@@ -6100,29 +6100,12 @@ class TicketsController extends AppController {
 		$produtosErp = [];
 		try {
 			$empresa = $this->Empresas->get($eid);
-			$soapprodutos = ErpGridUrl::wsdl($empresa->urlerp);
-			$produtosErp = $this->runTicketSoapBuffered(function () use ($soapprodutos, $bApenasComSaldo, $sCodProduto, $sDescricao) {
-				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-				if ($soap === null) {
-					throw new \RuntimeException('soap_client_not_initialized');
-				}
-				$codigo = ($sCodProduto === '0') ? '' : $sCodProduto;
-				$response = $soap->sendRequest('GetEstoqueProdutos', [
-					'Data' => [
-						'iFilial' => C_Filial,
-						'sChave' => C_ChaveAcesso,
-						'bApenasComSaldo' => $bApenasComSaldo,
-						'sCodProduto' => $codigo !== '' ? $codigo : null,
-						'sDescricao' => $sDescricao !== '' ? $sDescricao : null,
-					]
-				]);
-				$result = $response->GetEstoqueProdutosResult ?? null;
-				$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : [];
-				if ($lista !== [] && !is_array($lista)) {
-					$lista = [$lista];
-				}
-				return is_array($lista) ? $lista : [];
-			});
+			$produtosErp = $this->loadErpEstoqueBaseForTicketSearch(
+				(string)$empresa->urlerp,
+				$bApenasComSaldo,
+				$sCodProduto,
+				$sDescricao
+			);
 		} catch (\Throwable $e) {
 			// Evita 500 sem JSON no modal: mantém erro controlado.
 			$this->safeTicketProductSearchLog('error', 'apiTicketProductSearch SOAP: ' . $e->getMessage());
@@ -6138,8 +6121,22 @@ class TicketsController extends AppController {
 		}
 		$localByCodigo = [];
 		if (!empty($codigos)) {
+			$cols = $this->Produtos->getSchema()->columns();
+			$select = ['id', 'codigo'];
+			if (in_array('tipo', $cols, true)) {
+				$select[] = 'tipo';
+			}
+			if (in_array('vlunitario', $cols, true)) {
+				$select[] = 'vlunitario';
+			}
+			if (in_array('vlcusto', $cols, true)) {
+				$select[] = 'vlcusto';
+			}
+			if (in_array('ativo', $cols, true)) {
+				$select[] = 'ativo';
+			}
 			$rows = $this->Produtos->find()
-				->select(['id', 'codigo', 'tipo', 'vlunitario', 'vlcusto', 'ativo'])
+				->select($select)
 				->where(['idempresa' => $eid, 'codigo IN' => array_keys($codigos)])
 				->all();
 			foreach ($rows as $row) {
@@ -6158,9 +6155,13 @@ class TicketsController extends AppController {
 		}
 		$list = [];
 		foreach ($produtosErp as $reg) {
+			if (!is_object($reg)) {
+				continue;
+			}
 			$codigo = trim((string)($reg->sCodProduto ?? ''));
 			$local = $codigo !== '' ? ($localByCodigo[$codigo] ?? null) : null;
-			$tipoNum = $local ? (int)$local->get('tipo') : 1;
+			$locArr = $local ? $local->toArray() : [];
+			$tipoNum = array_key_exists('tipo', $locArr) ? (int)$locArr['tipo'] : 1;
 			$tipo = $tipoNum === 2 ? 'servico' : 'produto';
 			if ($tipoFiltro !== null && $tipoFiltro !== $tipo) {
 				continue;
@@ -6168,7 +6169,10 @@ class TicketsController extends AppController {
 			$estoque = $tipo === 'produto' ? (float)($reg->nQtdeAtual ?? 0) : null;
 			$precoVenda = (float)($reg->nPrecoVenda ?? 0);
 			$precoCusto = isset($reg->nPrecoCusto) ? (float)$reg->nPrecoCusto : null;
-			$valorPadrao = $local ? (float)($local->get('vlunitario') ?? $precoVenda) : $precoVenda;
+			$valorPadrao = $precoVenda;
+			if ($local !== null && array_key_exists('vlunitario', $locArr) && $locArr['vlunitario'] !== null && (string)$locArr['vlunitario'] !== '') {
+				$valorPadrao = (float)$locArr['vlunitario'];
+			}
 			$list[] = [
 				'id' => $local ? (int)$local->get('id') : 0,
 				'tipo' => $tipo,
@@ -6184,6 +6188,124 @@ class TicketsController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => true, 'items' => $list], 200);
+	}
+
+	private function loadErpEstoqueBaseForTicketSearch(string $erpUrl, bool $bApenasComSaldo, string $sCodProduto, string $sDescricao): array {
+		$soapprodutos = ErpGridUrl::wsdl($erpUrl);
+		$codigo = trim($sCodProduto);
+		if ($codigo === '0') {
+			$codigo = '';
+		}
+
+		$produtos = $this->runTicketSoapBuffered(function () use ($soapprodutos, $bApenasComSaldo, $codigo, $sDescricao) {
+			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+			if ($soap === null) {
+				throw new \RuntimeException('soap_client_not_initialized');
+			}
+			$response = $soap->sendRequest('GetEstoqueProdutos', [
+				'Data' => [
+					'iFilial' => C_Filial,
+					'sChave' => C_ChaveAcesso,
+					'bApenasComSaldo' => $bApenasComSaldo,
+					'sCodProduto' => $codigo !== '' ? $codigo : null,
+					'sDescricao' => $sDescricao !== '' ? $sDescricao : null,
+				]
+			]);
+			$result = $response->GetEstoqueProdutosResult ?? null;
+			$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : null;
+			if ($lista === null) {
+				return [];
+			}
+			if (!is_array($lista)) {
+				$lista = [$lista];
+			}
+			return array_values(array_filter($lista, function ($item) {
+				return is_object($item);
+			}));
+		});
+
+		usort($produtos, function ($a, $b) {
+			$descA = $a->sDescProduto ?? '';
+			$descB = $b->sDescProduto ?? '';
+			if ($descA === $descB) {
+				return 0;
+			}
+			return ($descA < $descB) ? -1 : 1;
+		});
+
+		return $this->applyDescricaoSearchRuleToTicketProducts($produtos, $sDescricao);
+	}
+
+	private function applyDescricaoSearchRuleToTicketProducts(array $produtos, string $sDescricao): array {
+		$busca = trim($sDescricao);
+		if ($busca === '') {
+			return $produtos;
+		}
+		$buscaNorm = $this->normalizeTicketSearchText($busca);
+		if ($buscaNorm === '') {
+			return $produtos;
+		}
+		$tokens = preg_split('/\s+/', $buscaNorm, -1, PREG_SPLIT_NO_EMPTY);
+		$stop = ['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'para', 'por', 'a', 'o', 'as', 'os'];
+		$tokens = array_values(array_filter($tokens, function ($t) use ($stop) {
+			return mb_strlen($t) >= 2 && !in_array($t, $stop, true);
+		}));
+		if (empty($tokens)) {
+			return $produtos;
+		}
+		$filtrados = array_filter($produtos, function ($p) use ($tokens) {
+			$descNorm = $this->normalizeTicketSearchText((string)($p->sDescProduto ?? ''));
+			foreach ($tokens as $tk) {
+				if (mb_strpos($descNorm, $tk) === false) {
+					return false;
+				}
+			}
+			return true;
+		});
+		usort($filtrados, function ($a, $b) use ($buscaNorm, $tokens) {
+			$da = $this->normalizeTicketSearchText((string)($a->sDescProduto ?? ''));
+			$db = $this->normalizeTicketSearchText((string)($b->sDescProduto ?? ''));
+			$score = function ($desc) use ($buscaNorm, $tokens) {
+				$s = 0;
+				if ($desc === $buscaNorm) {
+					$s += 100;
+				}
+				if (mb_strpos($desc, $buscaNorm) === 0) {
+					$s += 50;
+				}
+				foreach ($tokens as $tk) {
+					$pos = mb_strpos($desc, $tk);
+					if ($pos === 0) {
+						$s += 12;
+					} elseif ($pos !== false) {
+						$s += 5;
+					}
+				}
+				return $s;
+			};
+			$sa = $score($da);
+			$sb = $score($db);
+			if ($sa === $sb) {
+				return strcmp($da, $db);
+			}
+			return ($sa > $sb) ? -1 : 1;
+		});
+		return array_values($filtrados);
+	}
+
+	private function normalizeTicketSearchText(string $txt): string {
+		$txt = mb_strtolower(trim((string)$txt), 'UTF-8');
+		$txt = strtr($txt, [
+			'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
+			'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+			'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+			'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+			'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+			'ç' => 'c',
+		]);
+		$txt = preg_replace('/[^a-z0-9\s\-]/u', ' ', $txt);
+		$txt = preg_replace('/\s+/', ' ', $txt);
+		return trim((string)$txt);
 	}
 
 	private function runTicketSoapBuffered(callable $fn) {
@@ -6780,7 +6902,7 @@ class TicketsController extends AppController {
 				$pu = (float)($tp->preco_unitario ?? 0);
 				$line = $qtd * $pu;
 				$tot += $line;
-				$ptipo = (int)($tp->produto->tipo ?? 1);
+				$ptipo = $tp->produto ? (int)($tp->produto->tipo ?? 1) : 1;
 				$pnome = $tp->produto ? (string)($tp->produto->descricao ?? $tp->produto->nome ?? 'Produto') : '—';
 				$list[] = [
 					'id' => (int)$tp->id,
