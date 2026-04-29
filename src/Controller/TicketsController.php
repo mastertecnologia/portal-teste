@@ -6641,23 +6641,32 @@ class TicketsController extends AppController {
 			}
 			$technicians = [];
 			$techSeen = [];
-			foreach ($this->Users->find()
-				->where(['Users.idempresa' => $eid, 'Users.role' => 0])
-				->order(['Users.name' => 'ASC', 'Users.username' => 'ASC'])
-				->all() as $uTech) {
-				$techId = (int)$uTech->id;
-				if ($techId <= 0 || isset($techSeen[$techId])) {
-					continue;
+			try {
+				$rowsTech = $this->Empresasusers->find('all', ['contain' => ['Users']])
+					->where(['Empresasusers.idempresa' => $eid, 'Users.role' => 0, 'Users.inativo' => 0])
+					->order(['Users.name' => 'ASC'])
+					->all();
+				foreach ($rowsTech as $rTech) {
+					$uTech = $rTech->user ?? $rTech->users ?? null;
+					if (!$uTech) {
+						continue;
+					}
+					$techId = (int)$uTech->id;
+					if ($techId <= 0 || isset($techSeen[$techId])) {
+						continue;
+					}
+					$label = trim((string)(
+						(trim((string)($uTech->get('name') ?? '')) !== '')
+							? $uTech->get('name')
+							: ((trim((string)($uTech->get('username') ?? '')) !== '')
+								? $uTech->get('username')
+								: (string)($uTech->get('email') ?? ''))
+					));
+					$technicians[] = ['id' => $techId, 'name' => $label];
+					$techSeen[$techId] = true;
 				}
-				$label = trim((string)(
-					(trim((string)($uTech->get('name') ?? '')) !== '')
-						? $uTech->get('name')
-						: ((trim((string)($uTech->get('username') ?? '')) !== '')
-							? $uTech->get('username')
-							: (string)($uTech->get('email') ?? ''))
-				));
-				$technicians[] = ['id' => $techId, 'name' => $label];
-				$techSeen[$techId] = true;
+			} catch (\Throwable $e) {
+				// Não falhar o endpoint se houver variação de schema/relacionamento.
 			}
 			foreach ($out as $entryRow) {
 				$techId = (int)($entryRow['technicianId'] ?? 0);
