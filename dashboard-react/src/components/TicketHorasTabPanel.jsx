@@ -192,17 +192,84 @@ function parseBrDateFilter(s) {
   return { iso };
 }
 
-function parsePtBrDateToIso(value) {
+function parseDatePtBr(value) {
   const t = String(value || '').trim();
+  if (!t) return { ok: false, error: 'Data obrigatória. Use o formato DD/MM/AAAA.' };
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t);
-  if (!m) return null;
+  if (!m) return { ok: false, error: 'Data inválida. Use o formato DD/MM/AAAA.' };
   const day = Number(m[1]);
   const month = Number(m[2]);
   const year = Number(m[3]);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return { ok: false, error: 'Data inválida.' };
   const dt = new Date(year, month - 1, day);
-  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return null;
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) {
+    return { ok: false, error: 'Data inválida.' };
+  }
+  const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return { ok: true, iso };
+}
+
+function formatDatePtBr(iso) {
+  return isoDateToBr(iso);
+}
+
+function parseTimeByFormat(value, format) {
+  const t = String(value || '').trim();
+  if (!t) return { ok: false, error: 'Hora obrigatória.' };
+  if (format === '12h') {
+    const m12 = /^(\d{1,2}):([0-5]\d):([0-5]\d)\s*([AaPp][Mm])$/.exec(t);
+    if (!m12) return { ok: false, error: 'Hora inválida. Use hh:mm:ss AM/PM.' };
+    let h = Number(m12[1]);
+    const min = m12[2];
+    const sec = m12[3];
+    const ampm = String(m12[4]).toUpperCase();
+    if (h < 1 || h > 12) return { ok: false, error: 'Hora inválida no formato 12h.' };
+    if (ampm === 'AM') {
+      if (h === 12) h = 0;
+    } else if (ampm === 'PM') {
+      if (h !== 12) h += 12;
+    } else {
+      return { ok: false, error: 'Hora inválida no formato 12h.' };
+    }
+    return { ok: true, time24: `${String(h).padStart(2, '0')}:${min}:${sec}` };
+  }
+  const m24 = /^(\d{1,2}):([0-5]\d):([0-5]\d)$/.exec(t);
+  if (!m24) return { ok: false, error: 'Hora inválida. Use HH:mm:ss.' };
+  const h = Number(m24[1]);
+  if (h < 0 || h > 23) return { ok: false, error: 'Hora inválida no formato 24h.' };
+  return { ok: true, time24: `${String(h).padStart(2, '0')}:${m24[2]}:${m24[3]}` };
+}
+
+function formatTimeByFormat(time24, format) {
+  const t = String(time24 || '').trim();
+  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/.exec(t);
+  if (!m) return '';
+  let h = Number(m[1]);
+  const min = m[2];
+  const sec = m[3] || '00';
+  if (h < 0 || h > 23) return '';
+  if (format === '12h') {
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${String(h).padStart(2, '0')}:${min}:${sec} ${ampm}`;
+  }
+  return `${String(h).padStart(2, '0')}:${min}:${sec}`;
+}
+
+function validateDateTimeRange(startDateIso, startTime24, endDateIso, endTime24) {
+  if (!startDateIso || !startTime24 || !endDateIso || !endTime24) {
+    return { ok: false, error: 'Preencha data e hora de início e término.' };
+  }
+  const start = new Date(`${startDateIso}T${startTime24}`);
+  const end = new Date(`${endDateIso}T${endTime24}`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return { ok: false, error: 'Data/hora inválida.' };
+  }
+  if (end.getTime() < start.getTime()) {
+    return { ok: false, error: 'A data/hora de término não pode ser menor que a de início.' };
+  }
+  return { ok: true };
 }
 
 /** Rótulo do técnico vindo do JSON (camelCase ou snake_case legado). */
@@ -246,8 +313,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const [hourCycle, setHourCycle] = useState('24h');
   const [startDatePtBrDraft, setStartDatePtBrDraft] = useState('');
   const [endDatePtBrDraft, setEndDatePtBrDraft] = useState('');
-  const [startTime12hDraft, setStartTime12hDraft] = useState('');
-  const [endTime12hDraft, setEndTime12hDraft] = useState('');
+  const [startTimeDraft, setStartTimeDraft] = useState('');
+  const [endTimeDraft, setEndTimeDraft] = useState('');
   const [entriesBusy, setEntriesBusy] = useState(false);
   const [entriesErr, setEntriesErr] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
@@ -303,14 +370,13 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   }, []);
 
   useEffect(() => {
-    if (hourCycle !== '12h') return;
-    setStartTime12hDraft(to12hClock(form.startTime || '00:00:00'));
-    setEndTime12hDraft(to12hClock(form.endTime || '00:00:00'));
+    setStartTimeDraft(formatTimeByFormat(form.startTime || '00:00:00', hourCycle));
+    setEndTimeDraft(formatTimeByFormat(form.endTime || '00:00:00', hourCycle));
   }, [hourCycle, form.startTime, form.endTime]);
 
   useEffect(() => {
-    setStartDatePtBrDraft(isoDateToBr(form.startDate || ''));
-    setEndDatePtBrDraft(isoDateToBr(form.endDate || ''));
+    setStartDatePtBrDraft(formatDatePtBr(form.startDate || ''));
+    setEndDatePtBrDraft(formatDatePtBr(form.endDate || ''));
   }, [form.startDate, form.endDate]);
 
   async function reloadEntries() {
@@ -370,26 +436,51 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
       auditAuthKey: '',
       showMore: true,
     });
-    setStartDatePtBrDraft(isoDateToBr(s.date || nowParts.date));
-    setEndDatePtBrDraft(isoDateToBr(e.date || nowParts.date));
-    setStartTime12hDraft(to12hClock(s.time || nowParts.time || '00:00:00'));
-    setEndTime12hDraft(to12hClock(e.time || nowParts.time || '00:00:00'));
+    setStartDatePtBrDraft(formatDatePtBr(s.date || nowParts.date));
+    setEndDatePtBrDraft(formatDatePtBr(e.date || nowParts.date));
+    setStartTimeDraft(formatTimeByFormat(s.time || nowParts.time || '00:00:00', hourCycle));
+    setEndTimeDraft(formatTimeByFormat(e.time || nowParts.time || '00:00:00', hourCycle));
     setManualOpen(true);
   }
 
   async function submitManualForm(e) {
     e.preventDefault();
-    const startIso = fromDateTimeLocalToIso(joinDateTimeLocal(form.startDate, form.startTime || '00:00:00'));
-    const durationSeconds = parseDurationHms(form.duration);
-    if (!startIso) {
-      setEntriesErr('Preencha data/hora de início.');
+    const startDateParsed = parseDatePtBr(startDatePtBrDraft);
+    if (!startDateParsed.ok) {
+      setEntriesErr(startDateParsed.error);
       return;
     }
-    if (durationSeconds == null) {
-      setEntriesErr('Duração inválida. Use o formato hh:mm:ss.');
+    const endDateParsed = parseDatePtBr(endDatePtBrDraft);
+    if (!endDateParsed.ok) {
+      setEntriesErr(endDateParsed.error);
       return;
     }
-    const endIso = new Date(new Date(startIso).getTime() + durationSeconds * 1000).toISOString();
+    const startTimeParsed = parseTimeByFormat(startTimeDraft, hourCycle);
+    if (!startTimeParsed.ok) {
+      setEntriesErr(startTimeParsed.error);
+      return;
+    }
+    const endTimeParsed = parseTimeByFormat(endTimeDraft, hourCycle);
+    if (!endTimeParsed.ok) {
+      setEntriesErr(endTimeParsed.error);
+      return;
+    }
+    const range = validateDateTimeRange(
+      startDateParsed.iso,
+      startTimeParsed.time24,
+      endDateParsed.iso,
+      endTimeParsed.time24
+    );
+    if (!range.ok) {
+      setEntriesErr(range.error);
+      return;
+    }
+    const startIso = fromDateTimeLocalToIso(joinDateTimeLocal(startDateParsed.iso, startTimeParsed.time24));
+    const endIso = fromDateTimeLocalToIso(joinDateTimeLocal(endDateParsed.iso, endTimeParsed.time24));
+    if (!startIso || !endIso) {
+      setEntriesErr('Falha ao converter data/hora para envio.');
+      return;
+    }
     const payload = {
       id: editingEntry?.id || undefined,
       StartWorkHour: startIso,
@@ -568,44 +659,43 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
                 onChange={(e) => {
                   const next = e.target.value;
                   setStartDatePtBrDraft(next);
-                  const parsed = parsePtBrDateToIso(next);
-                  if (parsed) setForm((p) => ({ ...p, startDate: parsed }));
+                  const parsed = parseDatePtBr(next);
+                  if (parsed.ok) setForm((p) => ({ ...p, startDate: parsed.iso }));
                 }}
                 onBlur={() => {
-                  const parsed = parsePtBrDateToIso(startDatePtBrDraft);
-                  if (parsed) {
-                    setForm((p) => ({ ...p, startDate: parsed }));
-                    setStartDatePtBrDraft(isoDateToBr(parsed));
+                  const parsed = parseDatePtBr(startDatePtBrDraft);
+                  if (parsed.ok) {
+                    setForm((p) => ({ ...p, startDate: parsed.iso }));
+                    setStartDatePtBrDraft(formatDatePtBr(parsed.iso));
                   } else {
-                    setStartDatePtBrDraft(isoDateToBr(form.startDate || ''));
+                    setStartDatePtBrDraft(formatDatePtBr(form.startDate || ''));
                   }
                 }}
                 className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
                 required
               />
-              {hourCycle === '24h' ? (
-                <input
-                  type="time"
-                  value={to24hHourMinute(form.startTime)}
-                  onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
-                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
-                  required
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={startTime12hDraft}
-                  placeholder="hh:mm:ss AM"
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setStartTime12hDraft(next);
-                    const parsed = parse12hClock(next);
-                    if (parsed) setForm((p) => ({ ...p, startTime: parsed }));
-                  }}
-                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
-                  required
-                />
-              )}
+              <input
+                type="text"
+                value={startTimeDraft}
+                placeholder={hourCycle === '12h' ? 'hh:mm:ss AM/PM' : 'HH:mm:ss'}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setStartTimeDraft(next);
+                  const parsed = parseTimeByFormat(next, hourCycle);
+                  if (parsed.ok) setForm((p) => ({ ...p, startTime: parsed.time24 }));
+                }}
+                onBlur={() => {
+                  const parsed = parseTimeByFormat(startTimeDraft, hourCycle);
+                  if (parsed.ok) {
+                    setForm((p) => ({ ...p, startTime: parsed.time24 }));
+                    setStartTimeDraft(formatTimeByFormat(parsed.time24, hourCycle));
+                  } else {
+                    setStartTimeDraft(formatTimeByFormat(form.startTime || '00:00:00', hourCycle));
+                  }
+                }}
+                className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                required
+              />
             </div>
           </label>
             <label className="text-xs text-[#6b7280]">
@@ -619,44 +709,43 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
                 onChange={(e) => {
                   const next = e.target.value;
                   setEndDatePtBrDraft(next);
-                  const parsed = parsePtBrDateToIso(next);
-                  if (parsed) setForm((p) => ({ ...p, endDate: parsed }));
+                  const parsed = parseDatePtBr(next);
+                  if (parsed.ok) setForm((p) => ({ ...p, endDate: parsed.iso }));
                 }}
                 onBlur={() => {
-                  const parsed = parsePtBrDateToIso(endDatePtBrDraft);
-                  if (parsed) {
-                    setForm((p) => ({ ...p, endDate: parsed }));
-                    setEndDatePtBrDraft(isoDateToBr(parsed));
+                  const parsed = parseDatePtBr(endDatePtBrDraft);
+                  if (parsed.ok) {
+                    setForm((p) => ({ ...p, endDate: parsed.iso }));
+                    setEndDatePtBrDraft(formatDatePtBr(parsed.iso));
                   } else {
-                    setEndDatePtBrDraft(isoDateToBr(form.endDate || ''));
+                    setEndDatePtBrDraft(formatDatePtBr(form.endDate || ''));
                   }
                 }}
                 className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
                 required
               />
-              {hourCycle === '24h' ? (
-                <input
-                  type="time"
-                  value={to24hHourMinute(form.endTime)}
-                  onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
-                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
-                  required
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={endTime12hDraft}
-                  placeholder="hh:mm:ss PM"
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setEndTime12hDraft(next);
-                    const parsed = parse12hClock(next);
-                    if (parsed) setForm((p) => ({ ...p, endTime: parsed }));
-                  }}
-                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
-                  required
-                />
-              )}
+              <input
+                type="text"
+                value={endTimeDraft}
+                placeholder={hourCycle === '12h' ? 'hh:mm:ss AM/PM' : 'HH:mm:ss'}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setEndTimeDraft(next);
+                  const parsed = parseTimeByFormat(next, hourCycle);
+                  if (parsed.ok) setForm((p) => ({ ...p, endTime: parsed.time24 }));
+                }}
+                onBlur={() => {
+                  const parsed = parseTimeByFormat(endTimeDraft, hourCycle);
+                  if (parsed.ok) {
+                    setForm((p) => ({ ...p, endTime: parsed.time24 }));
+                    setEndTimeDraft(formatTimeByFormat(parsed.time24, hourCycle));
+                  } else {
+                    setEndTimeDraft(formatTimeByFormat(form.endTime || '00:00:00', hourCycle));
+                  }
+                }}
+                className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                required
+              />
             </div>
           </label>
           <label className="text-xs text-[#6b7280]">
