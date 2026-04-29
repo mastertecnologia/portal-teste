@@ -6575,16 +6575,56 @@ class TicketsController extends AppController {
 				->where(['Ticketshoras.idticket' => (int)$idticket, 'Ticketshoras.idempresa' => $eid])
 				->order(['Ticketshoras.id' => 'DESC'])
 				->all();
+			/** @var \App\Model\Entity\User[]|array<int,object> Mapa users.id → entidade para rótulos (independente de hidratar $r->user). */
+			$userMap = [];
+			$userIds = [];
+			foreach ($rows as $r0) {
+				$iu = (int)$r0->get('iduser');
+				if ($iu > 0) {
+					$userIds[$iu] = true;
+				}
+			}
+			if ($userIds !== []) {
+				foreach ($this->Users->find()
+					->where(['Users.id IN' => array_keys($userIds)])
+					->all() as $uTech) {
+					$userMap[(int)$uTech->id] = $uTech;
+				}
+			}
 			$out = [];
 			foreach ($rows as $r) {
 				$inicio = $r->get('horaini');
 				$fim = $r->get('horafin');
 				$sec = TicketServiceDeskApiService::resolveSecondsFromTicketshorasRow($this->Ticketshoras, $r);
+				$idTec = (int)$r->iduser;
+				$uDisp = isset($userMap[$idTec]) ? $userMap[$idTec] : null;
+				$tecLabel = '';
+				if ($uDisp) {
+					$tecLabel = trim((string)(
+						(trim((string)($uDisp->get('name') ?? '')) !== '')
+							? $uDisp->get('name')
+							: ((trim((string)($uDisp->get('username') ?? '')) !== '')
+								? $uDisp->get('username')
+								: (string)($uDisp->get('email') ?? ''))
+					));
+				}
+				if ($tecLabel === '' && $idTec > 0) {
+					$rp = $r->user ?? null;
+					if ($rp) {
+						$tecLabel = trim((string)(
+							(trim((string)($rp->get('name') ?? '')) !== '')
+								? $rp->get('name')
+								: ((trim((string)($rp->get('username') ?? '')) !== '')
+									? $rp->get('username')
+									: (string)($rp->get('email') ?? ''))
+						));
+					}
+				}
 				$out[] = [
 					'id' => (int)$r->id,
 					'ticketId' => (int)$r->idticket,
 					'technicianId' => (int)$r->iduser,
-					'technicianName' => (string)($r->user->name ?? $r->user->username ?? ''),
+					'technicianName' => (string)$tecLabel,
 					'startWorkHour' => ($inicio && is_object($inicio) && method_exists($inicio, 'format')) ? $inicio->format('c') : null,
 					'endWorkHour' => ($fim && is_object($fim) && method_exists($fim, 'format')) ? $fim->format('c') : null,
 					'durationSeconds' => (int)$sec,

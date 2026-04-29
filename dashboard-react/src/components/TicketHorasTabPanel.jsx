@@ -63,6 +63,16 @@ function formatDurationHms(totalSeconds) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
 
+function parseDurationHms(value) {
+  const t = String(value || '').trim();
+  const m = /^(\d{1,3}):([0-5]\d):([0-5]\d)$/.exec(t);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  const sec = Number(m[3]);
+  return h * 3600 + min * 60 + sec;
+}
+
 function toDateTimeLocalValue(value) {
   if (!value) return '';
   const d = new Date(value);
@@ -87,6 +97,15 @@ function splitDateTimeLocal(value) {
 function joinDateTimeLocal(date, time) {
   if (!date || !time) return '';
   return `${date}T${time}`;
+}
+
+function nowDateTimeLocalParts() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return {
+    date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+    time: `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`,
+  };
 }
 
 /** Exibe ISO (YYYY-MM-DD) como dd/mm/aaaa (PT-BR). */
@@ -114,6 +133,12 @@ function parseBrDateFilter(s) {
   }
   const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   return { iso };
+}
+
+/** Rótulo do técnico vindo do JSON (camelCase ou snake_case legado). */
+function technicianDisplayLabel(en) {
+  const raw = en?.technicianName ?? en?.technician_name ?? '';
+  return String(raw || '').trim();
 }
 
 export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryActions = false }) {
@@ -148,6 +173,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
     startTime: '',
     endDate: '',
     endTime: '',
+    duration: '00:00:00',
     technicianContactId: '',
     billable: true,
     descricao: '',
@@ -204,12 +230,14 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
     const endValue = entry ? toDateTimeLocalValue(entry.endWorkHour) : '';
     const s = splitDateTimeLocal(startValue);
     const e = splitDateTimeLocal(endValue);
+    const nowParts = nowDateTimeLocalParts();
     setEditingEntry(entry);
     setForm({
-      startDate: s.date,
-      startTime: s.time,
-      endDate: e.date,
-      endTime: e.time,
+      startDate: s.date || nowParts.date,
+      startTime: s.time || nowParts.time,
+      endDate: e.date || nowParts.date,
+      endTime: e.time || nowParts.time,
+      duration: '00:00:00',
       technicianContactId: String(entry?.technicianId || ''),
       billable: entry?.billable !== false,
       descricao: String(entry?.note || ''),
@@ -224,11 +252,16 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   async function submitManualForm(e) {
     e.preventDefault();
     const startIso = fromDateTimeLocalToIso(joinDateTimeLocal(form.startDate, form.startTime || '00:00:00'));
-    const endIso = fromDateTimeLocalToIso(joinDateTimeLocal(form.endDate, form.endTime || '00:00:00'));
-    if (!startIso || !endIso) {
-      setEntriesErr('Preencha início e término.');
+    const durationSeconds = parseDurationHms(form.duration);
+    if (!startIso) {
+      setEntriesErr('Preencha data/hora de início.');
       return;
     }
+    if (durationSeconds == null) {
+      setEntriesErr('Duração inválida. Use o formato hh:mm:ss.');
+      return;
+    }
+    const endIso = new Date(new Date(startIso).getTime() + durationSeconds * 1000).toISOString();
     const payload = {
       id: editingEntry?.id || undefined,
       StartWorkHour: startIso,
@@ -281,41 +314,67 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   }
 
   const entriesModal = entriesOpen && typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 px-3 py-6" onClick={() => setEntriesOpen(false)}>
-      <div className="w-full max-w-6xl rounded-2xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-[var(--pgm-shadow-md)]" onClick={(ev) => ev.stopPropagation()}>
-        <div className="mb-3 flex items-center justify-between border-b border-[var(--pgm-border-subtle)] pb-3">
-          <h3 className="text-[1.02rem] font-semibold text-[var(--pgm-text)]">Entradas de Tempo</h3>
-          <button type="button" className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)] hover:text-[var(--pgm-text)]" onClick={() => setEntriesOpen(false)}>Fechar</button>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-3 py-6" onClick={() => setEntriesOpen(false)}>
+      <div className="w-full max-w-6xl rounded-md border border-[#e5e7eb] bg-white p-5 text-[#1f2937] shadow-xl" onClick={(ev) => ev.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between border-b border-[#eef2f6] pb-3">
+          <h3 className="text-[1.02rem] font-semibold text-[#1f2937]">Entradas de Tempo</h3>
+          <button type="button" className="rounded-md border border-[#e5e7eb] px-2 py-1 text-xs text-[#6b7280] hover:text-[#111827]" onClick={() => setEntriesOpen(false)}>Fechar</button>
         </div>
-        {entriesErr ? <p className="mb-2 text-xs text-red-300">{entriesErr}</p> : null}
+        {entriesErr ? <p className="mb-2 text-xs text-red-600">{entriesErr}</p> : null}
         <div className="max-h-[55vh] overflow-auto">
           <table className="w-full min-w-[56rem] text-left text-sm">
             <thead>
-              <tr className="border-b border-[var(--pgm-border)] text-[11px] uppercase tracking-[0.03em] text-[var(--pgm-text-muted)]">
-                <th className="py-2.5">ID</th>
-                <th className="py-2.5">Técnico</th>
-                <th className="py-2.5">Duração</th>
-                <th className="py-2.5">Faturável</th>
-                <th className="py-2.5">Taxa</th>
-                <th className="py-2.5">Notas</th>
-                <th className="py-2.5 text-right">Ações</th>
+              <tr className="border-b border-[#edf1f5] text-[11px] uppercase tracking-[0.03em] text-[#6b7280]">
+                <th className="w-[64px] py-2 text-center">ID</th>
+                <th className="py-2">Técnico</th>
+                <th className="py-2">Duração</th>
+                <th className="w-[110px] py-2 text-center">Faturável</th>
+                <th className="w-[120px] py-2 text-center">Taxa</th>
+                <th className="py-2">Notas</th>
+                <th className="w-[96px] py-2 text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
               {entries.map((en) => (
-                <tr key={en.id} className="border-b border-[var(--pgm-border-subtle)]">
-                  <td className="py-3">{en.id}</td>
-                  <td className="py-3">{en.technicianName || `#${en.technicianId}`}</td>
-                  <td className="py-3">
-                    <div className="font-medium">Total: {formatDurationHms(en.durationSeconds)}</div>
-                    <div className="text-[11px] text-[var(--pgm-text-muted)]">Início: {en.startWorkHour ? new Date(en.startWorkHour).toLocaleString() : '—'}</div>
+                <tr key={en.id} className="border-b border-[#f1f5f9]">
+                  <td className="py-2.5 text-center">{en.id}</td>
+                  <td className="py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#e5e7eb] bg-[#f8fafc] text-[10px] font-semibold text-[#6b7280]">
+                        {String(technicianDisplayLabel(en) || 'T')
+                          .split(' ')
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((p) => p[0]?.toUpperCase() || '')
+                          .join('') || 'T'}
+                      </span>
+                      <span>{technicianDisplayLabel(en) || `#${en.technicianId}`}</span>
+                    </div>
                   </td>
-                  <td className="py-3">{en.billable === false ? 'Não' : 'Sim'}</td>
-                  <td className="py-3 text-[var(--pgm-text-muted)]">{en.rate || '—'}</td>
-                  <td className="max-w-[240px] truncate py-3 text-[var(--pgm-text-muted)]" title={en.note || ''}>{en.note || '—'}</td>
-                  <td className="py-3 text-right">
-                    <button type="button" className="mr-2 rounded border border-[var(--pgm-border)] px-1.5 py-0.5 text-[11px]" title="Editar" onClick={() => openManualModal(en)}>✎</button>
-                    <button type="button" className="rounded border border-[var(--pgm-border)] px-1.5 py-0.5 text-[11px]" title="Excluir" onClick={() => handleDeleteEntry(en.id)}>🗑</button>
+                  <td className="py-2.5">
+                    <div className="font-medium leading-tight">Total: {formatDurationHms(en.durationSeconds)}</div>
+                    <div className="text-[10px] leading-tight text-[#6b7280]">Início: {en.startWorkHour ? new Date(en.startWorkHour).toLocaleString() : '—'}</div>
+                  </td>
+                  <td className="py-2.5 text-center">{en.billable === false ? 'Não' : 'Sim'}</td>
+                  <td className="py-2.5 text-center text-[#6b7280]">{en.rate || '—'}</td>
+                  <td className="max-w-[240px] truncate py-2.5 text-[#6b7280]" title={en.note || ''}>{en.note || '—'}</td>
+                  <td className="py-2.5 text-right">
+                    <button
+                      type="button"
+                      className="mr-2 rounded border border-[#e5e7eb] px-1.5 py-0.5 text-[11px] text-[#374151] hover:bg-[#f8fafc]"
+                      title="Editar"
+                      onClick={() => openManualModal(en)}
+                    >
+                      <i className="fa fa-pencil" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border border-[#e5e7eb] px-1.5 py-0.5 text-[11px] text-[#374151] hover:bg-[#f8fafc]"
+                      title="Excluir"
+                      onClick={() => handleDeleteEntry(en.id)}
+                    >
+                      <i className="fa fa-times" aria-hidden="true" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -323,8 +382,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
           </table>
         </div>
         <div className="mt-4 flex items-center justify-between">
-          <button type="button" className="rounded-full border border-[var(--pgm-border)] px-4 py-1.5 text-xs text-[var(--pgm-text)]" onClick={() => setEntriesOpen(false)}>Fechar</button>
-          <button type="button" className="rounded-full bg-[var(--pgm-primary)] px-4 py-1.5 text-xs font-semibold text-white hover:brightness-110" onClick={() => openManualModal(null)}>Adicionar entrada</button>
+          <button type="button" className="rounded-full border border-[#d1d5db] bg-white px-5 py-1.5 text-sm font-semibold text-[#374151]" onClick={() => setEntriesOpen(false)}>Fechar</button>
+          <button type="button" className="rounded-full bg-[#f50074] px-5 py-1.5 text-sm font-semibold text-white hover:brightness-110" onClick={() => openManualModal(null)}>Adicionar entrada</button>
         </div>
       </div>
     </div>,
@@ -332,98 +391,92 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   ) : null;
 
   const manualModal = manualOpen && typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/55 px-3 py-6" onClick={() => setManualOpen(false)}>
-      <form className="w-full max-w-[860px] rounded-2xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-[var(--pgm-shadow-md)]" onClick={(ev) => ev.stopPropagation()} onSubmit={submitManualForm}>
-        <div className="mb-3 flex items-center justify-between pb-2">
-          <h3 className="text-[1.02rem] font-semibold text-[var(--pgm-text)]">{editingEntry ? 'Editar entrada de tempo' : 'Adicionar entrada de tempo'}</h3>
-          <button type="button" className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)] hover:text-[var(--pgm-text)]" onClick={() => setManualOpen(false)}>✕</button>
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-3 py-6" onClick={() => setManualOpen(false)}>
+      <form className="w-full max-w-[860px] rounded-md border border-[#e5e7eb] bg-white p-5 text-[#1f2937] shadow-xl" onClick={(ev) => ev.stopPropagation()} onSubmit={submitManualForm}>
+        <div className="mb-3 flex items-center justify-between border-b border-[#eef2f6] pb-3">
+          <h3 className="text-[1.02rem] font-semibold text-[#1f2937]">{editingEntry ? 'Editar entrada de tempo' : 'Adicionar entrada de tempo'}</h3>
+          <button type="button" className="rounded-md border border-[#e5e7eb] px-2 py-1 text-xs text-[#6b7280] hover:text-[#111827]" onClick={() => setManualOpen(false)}>Fechar</button>
         </div>
-        <div className="grid gap-4">
-          <label className="text-xs text-[var(--pgm-text-muted)]">
+        <div className="grid gap-3">
+          <label className="text-xs text-[#6b7280]">
             Duração
-            <input type="text" value={(() => {
-              const si = fromDateTimeLocalToIso(joinDateTimeLocal(form.startDate, form.startTime || '00:00:00'));
-              const ei = fromDateTimeLocalToIso(joinDateTimeLocal(form.endDate, form.endTime || '00:00:00'));
-              if (!si || !ei) return '00:00:00';
-              const sec = Math.max(0, Math.floor((new Date(ei).getTime() - new Date(si).getTime()) / 1000));
-              return formatDurationHms(sec);
-            })()} readOnly className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-1.5 text-sm text-[var(--pgm-text)]" />
+            <input type="text" value={form.duration} onChange={(e) => setForm((p) => ({ ...p, duration: e.target.value }))} className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm text-[#111827]" />
             <span className="mt-1 block text-[10px]">hh:mm:ss</span>
           </label>
-          <label className="text-xs text-[var(--pgm-text-muted)]">
+          <label className="text-xs text-[#6b7280]">
             Descrição
-            <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} placeholder="Digite sua descrição" rows={3} className="mt-1 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm text-[var(--pgm-text)]" />
-            <span className="mt-1 block text-right text-[10px] text-[var(--pgm-text-muted)]">{form.descricao.length}/4000</span>
+            <textarea value={form.descricao} onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))} placeholder="Digite sua descrição" rows={3} className="mt-1 w-full rounded border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#111827]" />
+            <span className="mt-1 block text-right text-[10px] text-[#6b7280]">{form.descricao.length}/4000</span>
           </label>
-          <label className="inline-flex items-center gap-2 text-xs text-[var(--pgm-text-muted)]">
+          <label className="inline-flex items-center gap-2 text-xs text-[#6b7280]">
             <input type="checkbox" checked={form.billable} onChange={(e) => setForm((p) => ({ ...p, billable: e.target.checked }))} />
             Faturável
           </label>
-          <label className="text-xs text-[var(--pgm-text-muted)]">
+          <label className="text-xs text-[#6b7280]">
             Taxa
-            <select value={form.taxa} onChange={(e) => setForm((p) => ({ ...p, taxa: e.target.value }))} className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-1.5 text-sm text-[var(--pgm-text)]">
+            <select value={form.taxa} onChange={(e) => setForm((p) => ({ ...p, taxa: e.target.value }))} className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm text-[#111827]">
               <option value="">Nada selecionado</option>
               <option value="padrao">Padrão</option>
             </select>
           </label>
           <div className="mt-1 flex items-center gap-2">
-            <span className="h-px flex-1 bg-[var(--pgm-border-subtle)]" />
-            <button type="button" className="w-fit text-xs text-[var(--pgm-text)]" onClick={() => setForm((p) => ({ ...p, showMore: !p.showMore }))}>
+            <span className="h-px flex-1 bg-[#e5e7eb]" />
+            <button type="button" className="w-fit text-xs text-[#374151]" onClick={() => setForm((p) => ({ ...p, showMore: !p.showMore }))}>
             {form.showMore ? 'Mostrar menos' : 'Mostrar mais'}
             </button>
-            <span className="h-px flex-1 bg-[var(--pgm-border-subtle)]" />
+            <span className="h-px flex-1 bg-[#e5e7eb]" />
           </div>
         </div>
         {form.showMore ? (
-          <div className="mt-1 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-[var(--pgm-text-muted)]">
+          <div className="mt-1 grid gap-3 sm:grid-cols-2">
+            <label className="text-xs text-[#6b7280]">
             Data de Início
             <div className="mt-1 grid grid-cols-[1fr_180px] gap-2">
-              <input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} className="h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm" required />
-              <input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))} className="h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm" required />
+              <input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
+              <input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
             </div>
           </label>
-            <label className="text-xs text-[var(--pgm-text-muted)]">
+            <label className="text-xs text-[#6b7280]">
             Data de Término
             <div className="mt-1 grid grid-cols-[1fr_180px] gap-2">
-              <input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} className="h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm" required />
-              <input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} className="h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm" required />
+              <input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
+              <input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
             </div>
           </label>
-            <label className="text-xs text-[var(--pgm-text-muted)]">
+            <label className="text-xs text-[#6b7280]">
             Técnico (ID)
-            <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm" />
+            <input type="number" min="1" value={form.technicianContactId} onChange={(e) => setForm((p) => ({ ...p, technicianContactId: e.target.value }))} className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" />
           </label>
-            <div className="text-right text-xs text-[var(--pgm-text-muted)]">12h clock</div>
+            <div className="text-right text-xs text-[#6b7280]">12h clock</div>
           </div>
         ) : null}
         {editingEntry ? (
-          <div className="mt-2 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-[var(--pgm-text-muted)]">
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <label className="text-xs text-[#6b7280]">
               Motivo da alteração (auditoria)
               <input
                 type="text"
                 value={form.auditReason}
                 onChange={(e) => setForm((p) => ({ ...p, auditReason: e.target.value }))}
-                className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm"
+                className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
                 required={Boolean(editingEntry)}
               />
             </label>
-            <label className="text-xs text-[var(--pgm-text-muted)]">
+            <label className="text-xs text-[#6b7280]">
               Senha de auditoria
               <input
                 type="password"
                 value={form.auditAuthKey}
                 onChange={(e) => setForm((p) => ({ ...p, auditAuthKey: e.target.value }))}
-                className="mt-1 h-10 w-full rounded border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-1.5 text-sm"
+                className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
                 required={Boolean(editingEntry)}
               />
             </label>
           </div>
         ) : null}
-        <div className="mt-5 flex justify-end gap-2 border-t border-[var(--pgm-border-subtle)] pt-4">
-          <button type="button" className="rounded-full border border-[var(--pgm-border)] px-4 py-2 text-xs text-[var(--pgm-text)]" onClick={() => setManualOpen(false)}>Cancelar</button>
-          <button type="submit" disabled={entriesBusy} className="rounded-full bg-[var(--pgm-primary)] px-4 py-2 text-xs font-semibold text-white hover:brightness-110">{entriesBusy ? 'Salvando...' : (editingEntry ? 'Salvar' : 'Adicionar entrada de tempo')}</button>
+        <div className="mt-5 flex justify-end gap-2 border-t border-[#eef2f6] pt-4">
+          <button type="button" className="rounded-full border border-[#d1d5db] px-4 py-2 text-xs text-[#374151]" onClick={() => setManualOpen(false)}>Cancelar</button>
+          <button type="submit" disabled={entriesBusy} className="rounded-full bg-[#1d9e75] px-4 py-2 text-xs font-semibold text-white hover:brightness-110">{entriesBusy ? 'Salvando...' : (editingEntry ? 'Salvar' : 'Adicionar entrada de tempo')}</button>
         </div>
       </form>
     </div>,
