@@ -28,7 +28,7 @@ function qs(params) {
 /** Texto amigável a partir do JSON de erro do Cake (message/detail/errors) ou do Response. */
 function patchTicketsErrorMessage(r, json) {
   if (json && typeof json === 'object') {
-    const m = json.message || json.detail;
+    const m = json.message || json.detail || json.error_description;
     if (typeof m === 'string' && m.trim() !== '') return m.trim();
     const er = json.errors;
     if (er && typeof er === 'object') {
