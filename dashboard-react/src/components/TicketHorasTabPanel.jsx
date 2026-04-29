@@ -188,7 +188,6 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const [manualOpen, setManualOpen] = useState(false);
   const [entries, setEntries] = useState([]);
   const [entryTechnicians, setEntryTechnicians] = useState([]);
-  const [entryTechSearch, setEntryTechSearch] = useState('');
   const [entriesBusy, setEntriesBusy] = useState(false);
   const [entriesErr, setEntriesErr] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
@@ -230,11 +229,6 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const segundosFiltrados = useMemo(() => filtered.reduce((s, ev) => s + worklogSeconds(ev), 0), [filtered]);
 
   const filtersActive = Boolean(filterDay || filterTec);
-  const filteredEntryTechnicians = useMemo(() => {
-    const term = String(entryTechSearch || '').trim().toLowerCase();
-    if (!term) return entryTechnicians;
-    return entryTechnicians.filter((tech) => String(tech?.name || `#${tech?.id || ''}`).toLowerCase().includes(term));
-  }, [entryTechnicians, entryTechSearch]);
 
   async function reloadEntries() {
     if (!ticket?.id) return;
@@ -278,8 +272,6 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
       0
     );
     const defaultTechId = entryTechId || fallbackTechId || Number(technicians?.[0]?.id || 0);
-    const selectedTech = technicians.find((t) => Number(t?.id || 0) === Number(defaultTechId || 0));
-    setEntryTechSearch(String(selectedTech?.name || '').trim());
     setEditingEntry(entry);
     setForm({
       startDate: s.date || nowParts.date,
@@ -495,32 +487,21 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
           <label className="text-xs text-[#6b7280]">
             Técnico
             {entryTechnicians.length > 0 ? (
-              <>
-                <input
-                  type="text"
-                  value={entryTechSearch}
-                  onChange={(e) => setEntryTechSearch(e.target.value)}
-                  placeholder="Buscar técnico..."
-                  className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
-                />
-                <select
-                  value={form.technicianContactId}
-                  onChange={(e) => {
-                    const nextId = e.target.value;
-                    const selected = entryTechnicians.find((t) => String(t.id) === String(nextId));
-                    setForm((p) => ({ ...p, technicianContactId: nextId }));
-                    setEntryTechSearch(String(selected?.name || '').trim());
-                  }}
-                  className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
-                >
-                  <option value="">Selecione</option>
-                  {filteredEntryTechnicians.map((tech) => (
-                    <option key={tech.id} value={String(tech.id)}>
-                      {(tech.name || '').trim() || `#${tech.id}`}
-                    </option>
-                  ))}
-                </select>
-              </>
+              <select
+                value={form.technicianContactId}
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  setForm((p) => ({ ...p, technicianContactId: nextId }));
+                }}
+                className="mt-1 h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+              >
+                <option value="">Selecione</option>
+                {entryTechnicians.map((tech) => (
+                  <option key={tech.id} value={String(tech.id)}>
+                    {(tech.name || '').trim() || `#${tech.id}`}
+                  </option>
+                ))}
+              </select>
             ) : (
               <input
                 type="number"
