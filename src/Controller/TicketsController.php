@@ -12,6 +12,7 @@ use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
+use App\Utility\ErpGridUrl;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Database\Expression\QueryExpression;
@@ -20,10 +21,15 @@ use Cake\Event\Event;
 use Cake\Mailer\Email;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
+use CakeSoap\Network\CakeSoap;
 
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'Utilities.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.php');
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
+$__cakeSoap = ROOT . DS . 'vendor' . DS . 'queencitycodefactory' . DS . 'cakesoap' . DS . 'src' . DS . 'Network' . DS . 'CakeSoap.php';
+if (is_file($__cakeSoap)) {
+	require_once $__cakeSoap;
+}
 require_once ROOT . DS . 'config' . DS . 'ticket_workflow_constants.php';
 
 //require_once $_SERVER['DOCUMENT_ROOT'].'/portal/vendor/PGMPackages/Utilities.php';
@@ -5867,17 +5873,36 @@ class TicketsController extends AppController {
 		}
 		$emp = (int)$this->Auth->user('idempresa');
 		$hasEstoque = in_array('estoque_atual', $cols, true);
+		$confirmZeroStock = !empty($body['confirm_zero_stock']);
+		$confirmOverStock = !empty($body['confirm_over_stock']);
+		$estoqueAtual = $hasEstoque ? (float)($p->get('estoque_atual') ?? 0) : null;
+		if ($tipoProduto === 1 && $hasEstoque) {
+			if ($estoqueAtual <= 0 && !$confirmZeroStock) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'confirm_zero_stock',
+					'message' => 'Atenção: este item está com estoque zerado. Deseja adicionar mesmo assim?',
+				], 409);
+			}
+			if ($q > $estoqueAtual && !$confirmOverStock) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'confirm_over_stock',
+					'message' => 'A quantidade informada é maior que o estoque disponível. Deseja continuar mesmo assim?',
+				], 409);
+			}
+		}
 		$conn = ConnectionManager::get('default');
 		try {
 			$out = $conn->transactional(function () use ($conn, $hasEstoque, $q, $pid, $emp, $idticket, $custo, $preco, $tipoProduto) {
 				if ($hasEstoque && $tipoProduto === 1) {
 					$st = $conn->execute(
-						'UPDATE produtos SET estoque_atual = COALESCE(estoque_atual, 0) - :q WHERE id = :id AND idempresa = :eid AND COALESCE(estoque_atual, 0) >= :q2',
-						['q' => $q, 'q2' => $q, 'id' => $pid, 'eid' => $emp]
+						'UPDATE produtos SET estoque_atual = COALESCE(estoque_atual, 0) - :q WHERE id = :id AND idempresa = :eid',
+						['q' => $q, 'id' => $pid, 'eid' => $emp]
 					);
 					$n = method_exists($st, 'rowCount') ? (int)$st->rowCount() : 0;
 					if ($n < 1) {
-						throw new \RuntimeException('estoque');
+						throw new \RuntimeException('produto_update_failed');
 					}
 				}
 				$tp = $this->TicketProducts->newEntity([
@@ -5896,11 +5921,11 @@ class TicketsController extends AppController {
 				return (int)$tp->id;
 			});
 		} catch (\RuntimeException $e) {
-			if ($e->getMessage() === 'estoque') {
-				return $this->jsonResponse(['ok' => false, 'error' => 'estoque_insuficiente'], 400);
-			}
 			if ($e->getMessage() === 'save_failed') {
 				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			}
+			if ($e->getMessage() === 'produto_update_failed') {
+				return $this->jsonResponse(['ok' => false, 'error' => 'produto_update_failed'], 500);
 			}
 			throw $e;
 		}
@@ -5920,49 +5945,103 @@ class TicketsController extends AppController {
 		}
 		$eid = (int)$this->Auth->user('idempresa');
 		$tipoParam = strtolower(trim((string)$this->request->getQuery('tipo')));
-		$q = trim((string)$this->request->getQuery('q'));
+		$sCodProduto = trim((string)$this->request->getQuery('sCodProduto'));
+		$sDescricao = trim((string)$this->request->getQuery('sDescricao'));
+		if ($sDescricao === '') {
+			$sDescricao = trim((string)$this->request->getQuery('q'));
+		}
+		$apenasComSaldoRaw = strtolower(trim((string)$this->request->getQuery('apenasComSaldo', '0')));
+		$bApenasComSaldo = in_array($apenasComSaldoRaw, ['1', 'true', 't', 'yes'], true);
+
+		$empresa = $this->Empresas->get($eid);
+		$soapprodutos = ErpGridUrl::wsdl($empresa->urlerp);
+		$produtosErp = [];
+		ob_start();
+		try {
+			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+			if ($soap === null) {
+				throw new \RuntimeException('soap_client_not_initialized');
+			}
+			if ($sCodProduto === '0') {
+				$sCodProduto = '';
+			}
+			$response = $soap->sendRequest('GetEstoqueProdutos', [
+				'Data' => [
+					'iFilial' => C_Filial,
+					'sChave' => C_ChaveAcesso,
+					'bApenasComSaldo' => $bApenasComSaldo,
+					'sCodProduto' => $sCodProduto !== '' ? $sCodProduto : null,
+					'sDescricao' => $sDescricao !== '' ? $sDescricao : null,
+				]
+			]);
+			$result = $response->GetEstoqueProdutosResult ?? null;
+			$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : [];
+			if ($lista !== [] && !is_array($lista)) {
+				$lista = [$lista];
+			}
+			$produtosErp = is_array($lista) ? $lista : [];
+		} catch (\Throwable $e) {
+			while (ob_get_level() > 0) {
+				ob_end_clean();
+			}
+			$this->log('apiTicketProductSearch SOAP: ' . $e->getMessage(), 'error');
+			return $this->jsonResponse(['ok' => false, 'error' => 'erp_estoque_failed'], 502);
+		}
+		$soapOut = ob_get_clean();
+		if (is_string($soapOut) && trim($soapOut) !== '') {
+			$this->log('apiTicketProductSearch SOAP output suprimido: ' . trim($soapOut), 'warning');
+		}
+
+		$codigos = [];
+		foreach ($produtosErp as $reg) {
+			$codigo = trim((string)($reg->sCodProduto ?? ''));
+			if ($codigo !== '') {
+				$codigos[$codigo] = true;
+			}
+		}
+		$localByCodigo = [];
+		if (!empty($codigos)) {
+			$rows = $this->Produtos->find()
+				->select(['id', 'codigo', 'tipo', 'vlunitario', 'vlcusto', 'ativo'])
+				->where(['idempresa' => $eid, 'codigo IN' => array_keys($codigos)])
+				->all();
+			foreach ($rows as $row) {
+				$ck = trim((string)$row->get('codigo'));
+				if ($ck !== '') {
+					$localByCodigo[$ck] = $row;
+				}
+			}
+		}
+
 		$tipoFiltro = null;
 		if ($tipoParam === 'produto') {
-			$tipoFiltro = 1;
+			$tipoFiltro = 'produto';
 		} elseif ($tipoParam === 'servico' || $tipoParam === 'serviço') {
-			$tipoFiltro = 2;
-		}
-		$query = $this->Produtos->find()
-			->select(['id', 'codigo', 'descricao', 'tipo', 'vlunitario'])
-			->where(['idempresa' => $eid, 'ativo' => 1, 'tipo IN' => [1, 2]])
-			->order(['descricao' => 'ASC'])
-			->limit(120);
-		if ($tipoFiltro !== null) {
-			$query->where(['tipo' => $tipoFiltro]);
-		}
-		if ($q !== '') {
-			$qLike = '%' . mb_strtolower($q, 'UTF-8') . '%';
-			$query->where([
-				'OR' => [
-					'LOWER(descricao) LIKE' => $qLike,
-					'LOWER(codigo) LIKE' => $qLike,
-				],
-			]);
-		}
-		$cols = $this->Produtos->getSchema()->columns();
-		$hasEstoque = in_array('estoque_atual', $cols, true);
-		if ($hasEstoque) {
-			$query->select(['estoque_atual']);
+			$tipoFiltro = 'servico';
 		}
 		$list = [];
-		foreach ($query->all() as $p) {
-			$tipoNum = (int)($p->get('tipo') ?? 0);
-			$estoque = null;
-			if ($tipoNum === 1 && $hasEstoque) {
-				$estoque = (float)($p->get('estoque_atual') ?? 0);
+		foreach ($produtosErp as $reg) {
+			$codigo = trim((string)($reg->sCodProduto ?? ''));
+			$local = $codigo !== '' ? ($localByCodigo[$codigo] ?? null) : null;
+			$tipoNum = $local ? (int)$local->get('tipo') : 1;
+			$tipo = $tipoNum === 2 ? 'servico' : 'produto';
+			if ($tipoFiltro !== null && $tipoFiltro !== $tipo) {
+				continue;
 			}
+			$estoque = $tipo === 'produto' ? (float)($reg->nQtdeAtual ?? 0) : null;
+			$precoVenda = (float)($reg->nPrecoVenda ?? 0);
+			$precoCusto = isset($reg->nPrecoCusto) ? (float)$reg->nPrecoCusto : null;
+			$valorPadrao = $local ? (float)($local->get('vlunitario') ?? $precoVenda) : $precoVenda;
 			$list[] = [
-				'id' => (int)$p->get('id'),
-				'tipo' => $tipoNum === 1 ? 'produto' : 'servico',
-				'codigo' => (string)($p->get('codigo') ?? ''),
-				'descricao' => (string)($p->get('descricao') ?? ''),
-				'valor' => (float)($p->get('vlunitario') ?? 0),
+				'id' => $local ? (int)$local->get('id') : 0,
+				'tipo' => $tipo,
+				'codigo' => $codigo,
+				'descricao' => (string)($reg->sDescProduto ?? ''),
+				'valor' => $valorPadrao,
+				'preco_custo' => $precoCusto,
+				'preco_venda' => $precoVenda,
 				'estoque' => $estoque,
+				'tem_cadastro_portal' => $local !== null,
 			];
 		}
 

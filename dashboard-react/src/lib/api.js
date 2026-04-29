@@ -423,7 +423,13 @@ export async function searchTicketProductsServices(ticketId, params = {}) {
   const p = boot?.paths?.apiTicketProductSearch;
   if (!p) return { ok: false, error: 'no_api', items: [] };
   const r = await fetch(
-    `${p}${encodeURIComponent(ticketId)}${qs({ q: params.q || '', tipo: params.tipo || '' })}`,
+    `${p}${encodeURIComponent(ticketId)}${qs({
+      q: params.q || '',
+      tipo: params.tipo || '',
+      sCodProduto: params.sCodProduto || '',
+      sDescricao: params.sDescricao || '',
+      apenasComSaldo: params.apenasComSaldo ? '1' : '0',
+    })}`,
     { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } },
   );
   const j = await r.json().catch(() => ({}));
@@ -445,7 +451,7 @@ export async function addTicketProduct(ticketId, payload) {
     body: JSON.stringify(payload || {}),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText, message: j.message || '' };
   return { ok: true, id: j.id };
 }
 

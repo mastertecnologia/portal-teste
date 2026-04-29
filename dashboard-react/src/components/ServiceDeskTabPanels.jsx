@@ -251,6 +251,9 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   const assetTriggerRef = useRef(null);
   const [err, setErr] = useState(null);
   const [pecasModalOpen, setPecasModalOpen] = useState(false);
+  const [pecasCodFiltro, setPecasCodFiltro] = useState('');
+  const [pecasDescFiltro, setPecasDescFiltro] = useState('');
+  const [pecasApenasComSaldo, setPecasApenasComSaldo] = useState(false);
   const [pecasCatalogQ, setPecasCatalogQ] = useState('');
   const [pecasCatalogTipo, setPecasCatalogTipo] = useState('');
   const [pecasCatalogItems, setPecasCatalogItems] = useState([]);
@@ -374,6 +377,9 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     const r = await searchTicketProductsServices(id, {
       q: opts.q ?? pecasCatalogQ,
       tipo: opts.tipo ?? pecasCatalogTipo,
+      sCodProduto: opts.sCodProduto ?? pecasCodFiltro,
+      sDescricao: opts.sDescricao ?? pecasDescFiltro,
+      apenasComSaldo: opts.apenasComSaldo ?? pecasApenasComSaldo,
     });
     setPecasCatalogBusy(false);
     if (!r.ok) {
@@ -396,10 +402,13 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
 
   const openPecasModal = async () => {
     setPecasCatalogQ('');
+    setPecasCodFiltro('');
+    setPecasDescFiltro('');
+    setPecasApenasComSaldo(false);
     setPecasCatalogTipo('');
     setPecasError(null);
     setPecasModalOpen(true);
-    await loadPecasCatalog({ q: '', tipo: '' });
+    await loadPecasCatalog({ q: '', tipo: '', sCodProduto: '', sDescricao: '', apenasComSaldo: false });
   };
 
   const handleAddPecaServico = async (item) => {
@@ -410,17 +419,33 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
       setPecasError('A quantidade deve ser maior que zero.');
       return;
     }
+    if (item?.tipo === 'produto') {
+      const estoqueAtual = Number(item?.estoque ?? 0);
+      if (estoqueAtual <= 0) {
+        const okZero = typeof window !== 'undefined' && typeof window.confirm === 'function'
+          ? window.confirm('Atenção: este item está com estoque zerado. Deseja adicionar mesmo assim?')
+          : true;
+        if (!okZero) return;
+      } else if (qty > estoqueAtual) {
+        const okOver = typeof window !== 'undefined' && typeof window.confirm === 'function'
+          ? window.confirm('A quantidade informada é maior que o estoque disponível. Deseja continuar mesmo assim?')
+          : true;
+        if (!okOver) return;
+      }
+    }
     setPecasActionBusyId(idProduto);
     setPecasError(null);
     const r = await addTicketProduct(id, {
       produto_id: idProduto,
       quantidade: qty,
       valor_unitario: Number(item?.valor || 0),
+      confirm_zero_stock: item?.tipo === 'produto' && Number(item?.estoque ?? 0) <= 0,
+      confirm_over_stock: item?.tipo === 'produto' && qty > Number(item?.estoque ?? 0),
     });
     setPecasActionBusyId(0);
     if (!r.ok) {
-      if (r.error === 'estoque_insuficiente') {
-        setPecasError('Estoque insuficiente para o produto selecionado.');
+      if (r.error === 'confirm_zero_stock' || r.error === 'confirm_over_stock') {
+        setPecasError(r.message || 'Confirmação de estoque pendente.');
       } else {
         setPecasError('Não foi possível adicionar o item ao ticket.');
       }
@@ -443,7 +468,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
       loadPecasCatalog();
     }, 250);
     return () => window.clearTimeout(t);
-  }, [pecasModalOpen, pecasCatalogQ, pecasCatalogTipo]);
+  }, [pecasModalOpen, pecasCatalogQ, pecasCatalogTipo, pecasCodFiltro, pecasDescFiltro, pecasApenasComSaldo]);
 
   useEffect(() => {
     if (!pecasSuccess) return undefined;
@@ -831,9 +856,25 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
               <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_180px]">
                 <input
                   type="search"
+                  value={pecasCodFiltro}
+                  onChange={(e) => setPecasCodFiltro(e.target.value)}
+                  placeholder="Filtro por código..."
+                  className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
+                />
+                <input
+                  type="search"
+                  value={pecasDescFiltro}
+                  onChange={(e) => setPecasDescFiltro(e.target.value)}
+                  placeholder="Filtro por descrição..."
+                  className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
+                />
+              </div>
+              <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_180px_180px]">
+                <input
+                  type="search"
                   value={pecasCatalogQ}
                   onChange={(e) => setPecasCatalogQ(e.target.value)}
-                  placeholder="Buscar por nome, código ou descrição..."
+                  placeholder="Busca rápida (adicional)..."
                   className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
                 />
                 <select
@@ -845,6 +886,17 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   <option value="produto">Produto</option>
                   <option value="servico">Serviço</option>
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setPecasApenasComSaldo((v) => !v)}
+                  className={`rounded-md border px-2 py-1.5 text-sm ${
+                    pecasApenasComSaldo
+                      ? 'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text)]'
+                      : 'border-emerald-700 bg-emerald-700 text-white'
+                  }`}
+                >
+                  {pecasApenasComSaldo ? 'Exibir todos' : 'Apenas com estoque'}
+                </button>
               </div>
               <div className="mb-3">
                 <label className="inline-flex items-center gap-2 text-xs text-[var(--pgm-text-muted)]">
@@ -860,10 +912,12 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                 <table className="w-full min-w-[52rem] text-left text-sm">
                   <thead>
                     <tr className="border-b border-[var(--pgm-border)] text-xs text-[var(--pgm-text-muted)]">
+                      <th className="py-2">Código</th>
                       <th className="py-2">Descrição</th>
                       <th className="py-2">Tipo</th>
-                      <th className="py-2">Valor padrão</th>
-                      <th className="py-2">Estoque</th>
+                      <th className="py-2">Quantidade atual</th>
+                      <th className="py-2">Preço custo</th>
+                      <th className="py-2">Preço venda</th>
                       <th className="py-2 w-[110px]">Qtd</th>
                       <th className="py-2">Total</th>
                       <th className="py-2 text-right">Ação</th>
@@ -877,13 +931,17 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                       const totalLinha = qty > 0 ? qty * valor : 0;
                       return (
                         <tr key={idItem} className="border-b border-[var(--pgm-border-subtle)]">
+                          <td className="py-2">{it.codigo || '—'}</td>
                           <td className="py-2">
                             <div className="text-[var(--pgm-text)]">{it.descricao || '—'}</div>
-                            <div className="text-[0.65rem] text-[var(--pgm-text-muted)]">{it.codigo || 'sem código'}</div>
+                            {!it.tem_cadastro_portal ? (
+                              <div className="text-[0.65rem] text-amber-300">Sem cadastro local no portal</div>
+                            ) : null}
                           </td>
                           <td className="py-2">{it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
-                          <td className="py-2">{BR.format(valor)}</td>
-                          <td className="py-2">{it.tipo === 'produto' ? (it.estoque ?? '—') : '—'}</td>
+                          <td className="py-2">{it.tipo === 'produto' ? (it.estoque ?? '0') : '—'}</td>
+                          <td className="py-2">{it.preco_custo != null ? BR.format(it.preco_custo) : '—'}</td>
+                          <td className="py-2">{BR.format(Number(it.preco_venda || valor || 0))}</td>
                           <td className="py-2">
                             <input
                               type="number"
@@ -901,10 +959,10 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                             <button
                               type="button"
                               onClick={() => handleAddPecaServico(it)}
-                              disabled={pecasActionBusyId === idItem || !Number.isFinite(qty) || qty <= 0}
+                              disabled={pecasActionBusyId === idItem || !Number.isFinite(qty) || qty <= 0 || idItem <= 0}
                               className="rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                             >
-                              {pecasActionBusyId === idItem ? 'Adicionando...' : 'Adicionar'}
+                              {idItem <= 0 ? 'Indisponível' : (pecasActionBusyId === idItem ? 'Adicionando...' : 'Adicionar')}
                             </button>
                           </td>
                         </tr>
@@ -912,7 +970,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                     })}
                     {!pecasCatalogBusy && pecasCatalogItems.length === 0 ? (
                       <tr>
-                        <td className="py-3 text-[var(--pgm-text-muted)]" colSpan={7}>
+                        <td className="py-3 text-[var(--pgm-text-muted)]" colSpan={9}>
                           Nenhum produto/serviço encontrado para os filtros informados.
                         </td>
                       </tr>
