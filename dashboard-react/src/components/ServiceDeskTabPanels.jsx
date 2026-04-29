@@ -260,7 +260,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   const [pecasModalOpen, setPecasModalOpen] = useState(false);
   const [pecasCodFiltro, setPecasCodFiltro] = useState('');
   const [pecasDescFiltro, setPecasDescFiltro] = useState('');
-  const [pecasApenasComSaldo, setPecasApenasComSaldo] = useState(false);
+  const [pecasApenasComSaldo, setPecasApenasComSaldo] = useState(true);
   const [pecasCatalogQ, setPecasCatalogQ] = useState('');
   const [pecasCatalogTipo, setPecasCatalogTipo] = useState('');
   const [pecasCatalogItems, setPecasCatalogItems] = useState([]);
@@ -412,11 +412,11 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     setPecasCatalogQ('');
     setPecasCodFiltro('');
     setPecasDescFiltro('');
-    setPecasApenasComSaldo(false);
+    setPecasApenasComSaldo(true);
     setPecasCatalogTipo('');
     setPecasError(null);
     setPecasModalOpen(true);
-    await loadPecasCatalog({ q: '', tipo: '', sCodProduto: '', sDescricao: '', apenasComSaldo: false });
+    await loadPecasCatalog({ q: '', tipo: '', sCodProduto: '', sDescricao: '', apenasComSaldo: true });
   };
 
   const handleAddPecaServico = async (item, lineKey) => {

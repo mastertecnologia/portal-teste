@@ -6186,6 +6186,54 @@ class TicketsController extends AppController {
 				'tem_cadastro_portal' => $local !== null,
 			];
 		}
+		// Serviços não vêm do GetEstoqueProdutos; completa via cadastro local.
+		if ($tipoFiltro !== 'produto') {
+			$svcQ = $this->Produtos->find()
+				->select(['id', 'codigo', 'descricao', 'nome', 'vlunitario', 'vlcusto', 'tipo'])
+				->where(['idempresa' => $eid, 'tipo' => 2]);
+			if ($sCodProduto !== '') {
+				$svcQ->where(['codigo LIKE' => '%' . $sCodProduto . '%']);
+			}
+			if ($sDescricao !== '') {
+				$svcQ->where(['OR' => [
+					'descricao LIKE' => '%' . $sDescricao . '%',
+					'nome LIKE' => '%' . $sDescricao . '%',
+				]]);
+			}
+			foreach ($svcQ->all() as $svc) {
+				$sid = (int)$svc->get('id');
+				$exists = false;
+				foreach ($list as $item) {
+					if ((int)($item['id'] ?? 0) === $sid && (string)($item['tipo'] ?? '') === 'servico') {
+						$exists = true;
+						break;
+					}
+				}
+				if ($exists) {
+					continue;
+				}
+				$valorServico = $svc->get('vlunitario') !== null ? (float)$svc->get('vlunitario') : 0.0;
+				$list[] = [
+					'id' => $sid,
+					'tipo' => 'servico',
+					'codigo' => trim((string)$svc->get('codigo')),
+					'descricao' => (string)($svc->get('descricao') ?: $svc->get('nome') ?: 'Serviço'),
+					'valor' => $valorServico,
+					'quantidade_atual' => null,
+					'preco_custo' => $svc->get('vlcusto') !== null ? (float)$svc->get('vlcusto') : null,
+					'preco_venda' => $valorServico,
+					'estoque' => null,
+					'tem_cadastro_portal' => true,
+				];
+			}
+		}
+		if ($sCodProduto !== '') {
+			$needle = trim((string)$sCodProduto);
+			$list = array_values(array_filter($list, function ($item) use ($needle) {
+				$cod = trim((string)($item['codigo'] ?? ''));
+				return $cod !== '' && mb_stripos($cod, $needle, 0, 'UTF-8') !== false;
+			}));
+		}
 
 		return $this->jsonResponse(['ok' => true, 'items' => $list], 200);
 	}
