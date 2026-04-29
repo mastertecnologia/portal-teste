@@ -5953,43 +5953,35 @@ class TicketsController extends AppController {
 		$apenasComSaldoRaw = strtolower(trim((string)$this->request->getQuery('apenasComSaldo', '0')));
 		$bApenasComSaldo = in_array($apenasComSaldoRaw, ['1', 'true', 't', 'yes'], true);
 
-		$empresa = $this->Empresas->get($eid);
-		$soapprodutos = ErpGridUrl::wsdl($empresa->urlerp);
 		$produtosErp = [];
-		ob_start();
 		try {
-			$soap = new CakeSoap(['wsdl' => $soapprodutos]);
-			if ($soap === null) {
-				throw new \RuntimeException('soap_client_not_initialized');
-			}
-			if ($sCodProduto === '0') {
-				$sCodProduto = '';
-			}
-			$response = $soap->sendRequest('GetEstoqueProdutos', [
-				'Data' => [
-					'iFilial' => C_Filial,
-					'sChave' => C_ChaveAcesso,
-					'bApenasComSaldo' => $bApenasComSaldo,
-					'sCodProduto' => $sCodProduto !== '' ? $sCodProduto : null,
-					'sDescricao' => $sDescricao !== '' ? $sDescricao : null,
-				]
-			]);
-			$result = $response->GetEstoqueProdutosResult ?? null;
-			$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : [];
-			if ($lista !== [] && !is_array($lista)) {
-				$lista = [$lista];
-			}
-			$produtosErp = is_array($lista) ? $lista : [];
+			$empresa = $this->Empresas->get($eid);
+			$soapprodutos = ErpGridUrl::wsdl($empresa->urlerp);
+			$produtosErp = $this->runTicketSoapBuffered(function () use ($soapprodutos, $bApenasComSaldo, $sCodProduto, $sDescricao) {
+				$soap = new CakeSoap(['wsdl' => $soapprodutos]);
+				if ($soap === null) {
+					throw new \RuntimeException('soap_client_not_initialized');
+				}
+				$codigo = ($sCodProduto === '0') ? '' : $sCodProduto;
+				$response = $soap->sendRequest('GetEstoqueProdutos', [
+					'Data' => [
+						'iFilial' => C_Filial,
+						'sChave' => C_ChaveAcesso,
+						'bApenasComSaldo' => $bApenasComSaldo,
+						'sCodProduto' => $codigo !== '' ? $codigo : null,
+						'sDescricao' => $sDescricao !== '' ? $sDescricao : null,
+					]
+				]);
+				$result = $response->GetEstoqueProdutosResult ?? null;
+				$lista = ($result && isset($result->tWsProdutosEstoque)) ? $result->tWsProdutosEstoque : [];
+				if ($lista !== [] && !is_array($lista)) {
+					$lista = [$lista];
+				}
+				return is_array($lista) ? $lista : [];
+			});
 		} catch (\Throwable $e) {
-			while (ob_get_level() > 0) {
-				ob_end_clean();
-			}
-			$this->log('apiTicketProductSearch SOAP: ' . $e->getMessage(), 'error');
-			return $this->jsonResponse(['ok' => false, 'error' => 'erp_estoque_failed'], 502);
-		}
-		$soapOut = ob_get_clean();
-		if (is_string($soapOut) && trim($soapOut) !== '') {
-			$this->log('apiTicketProductSearch SOAP output suprimido: ' . trim($soapOut), 'warning');
+			$this->safeTicketProductSearchLog('error', 'apiTicketProductSearch SOAP: ' . $e->getMessage());
+			return $this->jsonResponse(['ok' => false, 'error' => 'erp_estoque_failed', 'message' => $e->getMessage()], 502);
 		}
 
 		$codigos = [];
@@ -6038,6 +6030,7 @@ class TicketsController extends AppController {
 				'codigo' => $codigo,
 				'descricao' => (string)($reg->sDescProduto ?? ''),
 				'valor' => $valorPadrao,
+				'quantidade_atual' => $estoque,
 				'preco_custo' => $precoCusto,
 				'preco_venda' => $precoVenda,
 				'estoque' => $estoque,
@@ -6046,6 +6039,33 @@ class TicketsController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => true, 'items' => $list], 200);
+	}
+
+	private function runTicketSoapBuffered(callable $fn) {
+		ob_start();
+		try {
+			$result = $fn();
+		} catch (\Throwable $e) {
+			$this->discardTicketSoapBuffer();
+			throw $e;
+		}
+		$this->discardTicketSoapBuffer();
+		return $result;
+	}
+
+	private function discardTicketSoapBuffer() {
+		$buf = ob_get_clean();
+		if ($buf !== false && trim($buf) !== '') {
+			$this->safeTicketProductSearchLog('warning', 'apiTicketProductSearch SOAP output suprimido: ' . trim($buf));
+		}
+	}
+
+	private function safeTicketProductSearchLog(string $level, string $message): void {
+		try {
+			$this->log($message, $level);
+		} catch (\Throwable $ignored) {
+			@error_log($message);
+		}
 	}
 
 	public function apiAddEvidencePhoto($idticket = null) {
