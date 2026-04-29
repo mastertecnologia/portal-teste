@@ -20,15 +20,6 @@ function localSqlDateTimeFromMs(ms) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-function minutosLabel(totalMin) {
-  const m = Math.max(0, Math.floor(Number(totalMin) || 0));
-  const h = Math.floor(m / 60);
-  const r = m % 60;
-  if (h <= 0) return `${r} min`;
-  if (r === 0) return `${h} h`;
-  return `${h} h ${r} min`;
-}
-
 function parseHmsToSeconds(v) {
   const t = String(v || '').trim();
   const m = /^(\d{1,4}):([0-5]\d):([0-5]\d)$/.exec(t);
@@ -102,6 +93,7 @@ export default function HorasTecnicasTimerPanel({
   disabled,
   onSnapshot,
   onFeedback,
+  onRefetchHorasTecnicas = null,
   entryActionsContent = null,
 }) {
   const [optimistic, setOptimistic] = useState(null);
@@ -293,6 +285,23 @@ export default function HorasTecnicasTimerPanel({
       } else {
         setOptimistic(null);
       }
+      const msgLower = typeof res.message === 'string' ? res.message.toLowerCase() : '';
+      const alreadyRunning =
+        action === 'iniciar' &&
+        (res.error === 'already_running' ||
+          msgLower.includes('já existe um timer') ||
+          msgLower.includes('ja existe um timer'));
+      if (alreadyRunning && typeof onRefetchHorasTecnicas === 'function') {
+        try {
+          const okRefetch = await onRefetchHorasTecnicas();
+          if (okRefetch && onFeedback) {
+            onFeedback(null, null);
+            return res;
+          }
+        } catch (_) {
+          /* continuar com feedback de erro */
+        }
+      }
       if (onFeedback) {
         onFeedback(null, res.message || res.error || 'Não foi possível atualizar o timer.');
       }
@@ -352,7 +361,6 @@ export default function HorasTecnicasTimerPanel({
     );
   }
 
-  const registrados = snap.minutosRegistrados ?? 0;
   const timerCardClass = `timer-card compact${running ? ' running' : ''}`;
   const auditHms = displayHms && displayHms.length === 8 ? displayHms : '00:00:00';
 
@@ -407,7 +415,7 @@ export default function HorasTecnicasTimerPanel({
       </div>
 
       <p className="pgm-crono-realtime-footer">
-        Tempo já lançado neste ticket: <strong>{minutosLabel(registrados)}</strong>.
+        Tempo total neste ticket: <strong>{displayHms}</strong>.
       </p>
 
       {auditOpen && (

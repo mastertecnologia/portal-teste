@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchTicketDetail,
   fetchTicketTimeline,
@@ -122,6 +122,20 @@ export default function TechTicketEdit({ boot }) {
   );
   /** Incrementado a cada `onSnapshot` do timer — evita que um GET /api-view tardio sobrescreva sessão ativa. */
   const horasTecnicasMutationsRef = useRef(0);
+  const refetchTicketHorasTecnicas = useCallback(async () => {
+    const ticketIdNum = id != null ? Number(id) : NaN;
+    if (!Number.isFinite(ticketIdNum)) return false;
+    const res = await fetchTicketDetail(id);
+    if (!res.ok || !res.data) return false;
+    const d = res.data;
+    if (Number(d.id) !== ticketIdNum) return false;
+    horasTecnicasMutationsRef.current += 1;
+    setTicket((prev) => {
+      if (!prev || Number(prev.id) !== ticketIdNum) return d;
+      return { ...prev, horasTecnicas: d.horasTecnicas ?? prev.horasTecnicas };
+    });
+    return true;
+  }, [id]);
   const comentarioEmProgressoRef = useRef(false);
   /** Primeira sincronização de comentários após carregar o ticket (marca histórico como lido para o badge). */
   const commentsHydratedForIdRef = useRef(null);
@@ -594,6 +608,7 @@ export default function TechTicketEdit({ boot }) {
           setErro(null);
         }
       }}
+      onRefetchHorasTecnicas={refetchTicketHorasTecnicas}
     />
   );
 

@@ -2881,7 +2881,10 @@ class TicketsController extends AppController {
 						return $geo;
 					}
 				}
-				$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->first();
+				$ativo = $this->AtendimentoTimer->find()
+					->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])
+					->orderDesc('id')
+					->first();
 				if ($ativo) {
 					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
 				}
