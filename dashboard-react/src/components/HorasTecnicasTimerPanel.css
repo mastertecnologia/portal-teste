@@ -19,6 +19,12 @@
   color: #334155 !important;
 }
 
+.pgm-crono-realtime .timer-card.compact {
+  width: 420px;
+  padding: 14px 14px 12px;
+  border-radius: 10px;
+}
+
 .pgm-crono-realtime .header-section {
   display: flex;
   justify-content: flex-start;
@@ -58,6 +64,13 @@
   margin-bottom: 24px;
 }
 
+.pgm-crono-realtime .display-container.compact-row {
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
 .pgm-crono-realtime .timer-display {
   font-family: 'JetBrains Mono', monospace;
   font-size: 48px;
@@ -65,10 +78,57 @@
   color: #1e293b !important;
 }
 
+.pgm-crono-realtime .compact-row .timer-display {
+  font-size: 44px;
+  letter-spacing: 1px;
+}
+
 .pgm-crono-realtime .controls.controls-primary {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.pgm-crono-realtime .controls.controls-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pgm-crono-realtime .btn-neutral-icon,
+.pgm-crono-realtime .btn-neutral-inline {
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.18s ease;
+}
+
+.pgm-crono-realtime .btn-neutral-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.pgm-crono-realtime .btn-neutral-inline {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.pgm-crono-realtime .btn-neutral-icon:hover:not(:disabled),
+.pgm-crono-realtime .btn-neutral-inline:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+.pgm-crono-realtime .btn-neutral-icon:disabled,
+.pgm-crono-realtime .btn-neutral-inline:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .pgm-crono-realtime .controls.controls-primary button {

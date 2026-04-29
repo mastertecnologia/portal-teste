@@ -2674,6 +2674,20 @@ class TicketsController extends AppController {
 		return $sum;
 	}
 
+	/** Soma exata em segundos das entradas em Ticketshoras para o ticket. */
+	protected function _apiSegundosRegistradosTicket(int $idticket): int {
+		$rows = $this->Ticketshoras->find()->where(['idticket' => $idticket])->all();
+		$sum = 0;
+		foreach ($rows as $h) {
+			$sec = TicketServiceDeskApiService::resolveSecondsFromTicketshorasRow($this->Ticketshoras, $h);
+			if ($sec > 0) {
+				$sum += (int)$sec;
+			}
+		}
+
+		return max(0, (int)$sum);
+	}
+
 	/**
 	 * Estado do timer de horas técnicas + total já registrado em Ticketshoras (para o Service Desk React).
 	 */
@@ -2682,16 +2696,20 @@ class TicketsController extends AppController {
 		$base = [
 			'canUseTimer' => $role === 0,
 			'minutosRegistrados' => 0,
+			'accumulatedSeconds' => 0,
 			'sessao' => null,
+			'status' => 'idle',
 			'serverUnix' => time(),
 			'timerDisponivel' => true,
 			'ultimaFinalizacao' => null,
+			'ultimaSessao' => null,
 		];
 		if ($role !== 0) {
 			return $base;
 		}
 		try {
 			$base['minutosRegistrados'] = $this->_apiMinutosRegistradosTicketCeiling($idticket);
+			$base['accumulatedSeconds'] = $this->_apiSegundosRegistradosTicket($idticket);
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
 
@@ -2717,15 +2735,42 @@ class TicketsController extends AppController {
 			if ($timerAtivo) {
 				$hi = $this->_ormTimeToString($timerAtivo->get('hora_inicio') ?: $timerAtivo->get('horainicio'));
 				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa') ?: $timerAtivo->get('horapausa'));
+				$base['status'] = ($hp !== null && $hp !== '') ? 'paused' : 'running';
 				$base['sessao'] = [
 					'id' => (int)$timerAtivo->id,
-					'status' => ($hp !== null && $hp !== '') ? 'paused' : 'running',
+					'status' => $base['status'],
 					'startedAt' => $hi,
 					'pausedAt' => $hp,
 					'horaInicio' => $hi,
 					'horaPausa' => $hp,
 					'pausado' => $hp !== null && $hp !== '',
 				];
+			} else {
+				$ultimaSessao = $this->AtendimentoTimer->find()
+					->where(['idticket' => $idticket, $tUserCol => $this->Auth->user('id')])
+					->orderDesc('id')
+					->first();
+				if ($ultimaSessao) {
+					$hi = $this->_ormTimeToString($ultimaSessao->get('hora_inicio') ?: $ultimaSessao->get('horainicio'));
+					$hf = $this->_ormTimeToString($ultimaSessao->get('hora_fim') ?: $ultimaSessao->get('horafim'));
+					$status = strtolower((string)($ultimaSessao->get('status') ?? ''));
+					if ($status === 'paused' || $status === 'finished') {
+						$base['status'] = $status;
+					}
+					$duracaoSec = 0;
+					$iniDt = $this->_parseSqlDateTimeForTimer($hi);
+					$fimDt = $this->_parseSqlDateTimeForTimer($hf);
+					if ($iniDt && $fimDt) {
+						$duracaoSec = max(0, (int)($fimDt->getTimestamp() - $iniDt->getTimestamp()));
+					}
+					$base['ultimaSessao'] = [
+						'id' => (int)$ultimaSessao->id,
+						'status' => $status !== '' ? $status : 'idle',
+						'startedAt' => $hi,
+						'endedAt' => $hf,
+						'durationSeconds' => $duracaoSec,
+					];
+				}
 			}
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
@@ -2813,7 +2858,7 @@ class TicketsController extends AppController {
 	 */
 	protected function _timerServiceExecute(int $idticket, $ticket, string $acao, array $body = []): array {
 		$acao = strtolower(trim($acao));
-		$allowed = ['iniciar', 'pausar', 'retomar', 'finalizar'];
+		$allowed = ['iniciar', 'pausar', 'retomar', 'finalizar', 'editar_duracao_sessao'];
 		if (!in_array($acao, $allowed, true)) {
 			return ['ok' => false, 'error' => 'invalid_action', 'message' => 'Ação inválida. Use: iniciar, pausar, retomar ou finalizar.'];
 		}
@@ -2829,10 +2874,12 @@ class TicketsController extends AppController {
 
 		try {
 			$tUserCol = $this->_atendimentoTimerUserColumn();
-			if ($acao === 'iniciar') {
-				$geo = $this->_timerValidateGeoInicio($ticket, $body);
-				if (!empty($geo['ok']) && $geo['ok'] === false) {
-					return $geo;
+			if ($acao === 'iniciar' || $acao === 'retomar') {
+				if ($acao === 'iniciar') {
+					$geo = $this->_timerValidateGeoInicio($ticket, $body);
+					if (!empty($geo['ok']) && $geo['ok'] === false) {
+						return $geo;
+					}
 				}
 				$ativo = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->first();
 				if ($ativo) {
@@ -2858,49 +2905,92 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas iniciado.');
 
-				return ['ok' => true, 'message' => 'Timer iniciado.', 'status' => 'running', 'startedAt' => $agoraStr];
+				return ['ok' => true, 'message' => $acao === 'retomar' ? 'Timer retomado.' : 'Timer iniciado.', 'status' => 'running', 'startedAt' => $agoraStr];
 			}
 
 			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->orderDesc('id')->first();
 			if (!$timer) {
+				if ($acao === 'finalizar') {
+					return ['ok' => true, 'message' => 'Atendimento finalizado com o total já acumulado.', 'status' => 'finished'];
+				}
 				return ['ok' => false, 'error' => 'no_timer', 'message' => 'Nenhum timer em andamento para este ticket.'];
 			}
 
 			if ($acao === 'pausar') {
+				$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicio);
+				if (!$inicio) {
+					return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Não foi possível identificar o início da sessão.'];
+				}
 				$timer->set('hora_pausa', $agoraStr);
+				$timer->set('hora_fim', $agoraStr);
 				$this->_atendimentoTimerApplyCanonicalFields($timer, [
 					'status' => 'paused',
 					'paused_at' => $agoraStr,
+					'ended_at' => $agoraStr,
+				]);
+				$duracaoSegundos = max(0, (int)($agora->getTimestamp() - $inicio->getTimestamp()));
+				$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
+				$this->_atendimentoTimerApplyDuracaoMinutos($timer, $duracaoMinutos);
+				$this->_atendimentoTimerApplyCanonicalFields($timer, [
+					'duration_seconds' => $duracaoSegundos,
 				]);
 				if (!$this->AtendimentoTimer->save($timer)) {
 					$this->log('apiTimer pausar save: ' . json_encode($timer->getErrors()), 'error');
 
 					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível pausar o timer.'];
 				}
+				try {
+					$regHora = $this->Ticketshoras->newEntity([
+						'idticket' => $idticket,
+						'iduser' => (int)$this->Auth->user('id'),
+						'idempresa' => (int)$this->Auth->user('idempresa'),
+						'data' => $inicio->format('Y-m-d'),
+						'horaini' => $inicio->format('Y-m-d H:i:s'),
+						'horafin' => $agora->format('Y-m-d H:i:s'),
+					]);
+					if ($this->Ticketshoras->save($regHora)) {
+						TicketWorklogEventHelper::afterHoraLancada(
+							$regHora,
+							(int)$this->Auth->user('idempresa'),
+							$idticket,
+							(int)$this->Auth->user('id'),
+							$regHora->horaini,
+							$regHora->horafin
+						);
+					}
+				} catch (\Throwable $e) {
+					$this->log('Timer JSON: falha ao registrar pausa em Ticketshoras: ' . $e->getMessage(), 'error');
+				}
+				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket);
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerPausado, 'Timer de horas técnicas pausado.');
 
-				return ['ok' => true, 'message' => 'Timer pausado.', 'status' => 'paused'];
+				return ['ok' => true, 'message' => 'Timer pausado.', 'status' => 'paused', 'duracaoMinutosFinal' => $duracaoMinutos, 'durationSecondsFinal' => $duracaoSegundos];
 			}
-			if ($acao === 'retomar') {
-				$novaHi = $this->_timerRetomarShiftInicio($timer, $agora);
-				if ($novaHi === null) {
-					return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Não é possível retomar: pausa não registrada no timer.'];
+			if ($acao === 'editar_duracao_sessao') {
+				$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicio);
+				if (!$inicio) {
+					return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Sessão ativa inválida para edição.'];
 				}
-				$timer->set('hora_inicio', $novaHi);
-				$timer->set('hora_pausa', null);
+				$newDuration = (int)($body['durationSeconds'] ?? $body['duration_seconds'] ?? 0);
+				if ($newDuration < 0) {
+					$newDuration = 0;
+				}
+				$novoInicio = clone $agora;
+				$novoInicio->modify('-' . $newDuration . ' seconds');
+				$novoInicioStr = $novoInicio->format('Y-m-d H:i:s');
+				$timer->set('hora_inicio', $novoInicioStr);
 				$this->_atendimentoTimerApplyCanonicalFields($timer, [
-					'status' => 'running',
-					'started_at' => $novaHi,
-					'paused_at' => null,
+					'started_at' => $novoInicioStr,
 				]);
 				if (!$this->AtendimentoTimer->save($timer)) {
-					$this->log('apiTimer retomar save: ' . json_encode($timer->getErrors()), 'error');
-
-					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível retomar o timer.'];
+					$this->log('apiTimer editar_duracao_sessao save: ' . json_encode($timer->getErrors()), 'error');
+					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível editar a duração da sessão atual.'];
 				}
-				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas retomado.');
 
-				return ['ok' => true, 'message' => 'Timer retomado.', 'status' => 'running', 'startedAt' => $novaHi];
+				return ['ok' => true, 'message' => 'Duração da sessão atual atualizada.', 'status' => 'running', 'startedAt' => $novoInicioStr];
 			}
 
 			// finalizar
@@ -5980,6 +6070,7 @@ class TicketsController extends AppController {
 				return is_array($lista) ? $lista : [];
 			});
 		} catch (\Throwable $e) {
+			// Evita 500 sem JSON no modal: mantém erro controlado.
 			$this->safeTicketProductSearchLog('error', 'apiTicketProductSearch SOAP: ' . $e->getMessage());
 			return $this->jsonResponse(['ok' => false, 'error' => 'erp_estoque_failed', 'message' => $e->getMessage()], 502);
 		}

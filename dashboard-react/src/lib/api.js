@@ -735,6 +735,12 @@ export async function postTimerAction(ticketId, action, extra = {}) {
         next.startedAt = resumedAt;
       }
       mockTimerSessao = next;
+    } else if (action === 'editar_duracao_sessao' && mockTimerSessao) {
+      const secs = Math.max(0, Number(extra?.durationSeconds) || 0);
+      const d = new Date(Date.now() - (secs * 1000));
+      const p = (n) => (n < 10 ? `0${n}` : String(n));
+      const adjusted = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+      mockTimerSessao = { ...mockTimerSessao, horaInicio: adjusted, startedAt: adjusted };
     } else if (action === 'finalizar') {
       mockTimerSessao = null;
     }
@@ -766,7 +772,7 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     method: 'POST',
     credentials: 'same-origin',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...(action === 'iniciar' && extra && typeof extra === 'object' ? extra : {}) }),
+    body: JSON.stringify({ action, ...(extra && typeof extra === 'object' ? extra : {}) }),
   });
   let json = {};
   try {

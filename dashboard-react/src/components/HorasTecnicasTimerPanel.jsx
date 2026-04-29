@@ -1,16 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   postTimerAction,
   postTicketSignature,
   saveTicketDescricaoAtendimento,
 } from '../lib/api';
-import { createPrecisionStopwatch, formatElapsedHms } from '../lib/precisionStopwatch';
-import TimerWidget from './TimerWidget.jsx';
 import AuditModal from './AuditModal.jsx';
 import FinalizarTimerModal from './FinalizarTimerModal.jsx';
 import './HorasTecnicasTimerPanel.css';
-
-const TIMER_WIDGET_STORAGE_KEY = 'pgm_tickets_timer_widget_state_v1';
 
 /** Interpreta Y-m-d H:i:s, Y-m-d H:i (e frações após s) como horário local (alinhado a localSqlDateTimeFromMs). */
 function parseSqlLocalDateTime(s) {
@@ -36,6 +32,21 @@ function minutosLabel(totalMin) {
   if (h <= 0) return `${r} min`;
   if (r === 0) return `${h} h`;
   return `${h} h ${r} min`;
+}
+
+function parseHmsToSeconds(v) {
+  const t = String(v || '').trim();
+  const m = /^(\d{1,4}):([0-5]\d):([0-5]\d)$/.exec(t);
+  if (!m) return null;
+  return (Number(m[1]) * 3600) + (Number(m[2]) * 60) + Number(m[3]);
+}
+
+function formatSecondsHms(total) {
+  const s = Math.max(0, Math.floor(Number(total) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
 
 /** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
@@ -94,23 +105,18 @@ export default function HorasTecnicasTimerPanel({
   onRelatorioSaved,
   entryActionsContent = null,
 }) {
-  const safeStorage = typeof window !== 'undefined' ? window.localStorage : null;
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDuration, setEditDuration] = useState('00:00:00');
+  const [editErr, setEditErr] = useState('');
   const [, setRender] = useState(0);
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
-  const swRef = useRef(null);
   const stickySessaoRef = useRef(null);
   const finalizandoRef = useRef(false);
-
-  if (swRef.current == null) {
-    swRef.current = createPrecisionStopwatch({
-      nowMs: () => Date.now() + offsetRef.current,
-    });
-  }
 
   const snap = horasTecnicas || {};
   const canUse = Boolean(snap.canUseTimer);
@@ -143,85 +149,35 @@ export default function HorasTecnicasTimerPanel({
   }, [optimistic, serverSessao]);
 
   useEffect(() => {
-    if (!safeStorage || !ticketId) return;
-    try {
-      if (sessao && sessao.horaInicio) {
-        safeStorage.setItem(
-          TIMER_WIDGET_STORAGE_KEY,
-          JSON.stringify({
-            ticketId: Number(ticketId),
-            sessao: {
-              id: sessao.id || null,
-              horaInicio: sessao.horaInicio,
-              horaPausa: sessao.horaPausa || null,
-              pausado: Boolean(sessaoEstaPausada(sessao)),
-            },
-            updatedAt: Date.now(),
-          })
-        );
-      } else {
-        const raw = safeStorage.getItem(TIMER_WIDGET_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (!parsed || Number(parsed.ticketId) === Number(ticketId)) {
-            safeStorage.removeItem(TIMER_WIDGET_STORAGE_KEY);
-          }
-        }
-      }
-    } catch (_e) {
-      // noop: storage indisponível ou quota excedida
-    }
-  }, [safeStorage, ticketId, sessao]);
-
-  useEffect(() => {
     if (serverUnix != null) {
       offsetRef.current = serverUnix * 1000 - Date.now();
     }
   }, [serverUnix, serverSessao?.id, serverSessao?.horaInicio, serverSessao?.horaPausa, serverSessao?.pausado]);
-
-  const syncStopwatchToSessao = useCallback(() => {
-    const sw = swRef.current;
-    if (!sw) return;
-
-    if (!sessao?.horaInicio) {
-      sw.syncIdle();
-      return;
-    }
-    const start = parseSqlLocalDateTime(sessao.horaInicio);
-    if (!start) {
-      sw.syncIdle();
-      return;
-    }
-    if (sessaoEstaPausada(sessao)) {
-      const hp = sessao.horaPausa ? parseSqlLocalDateTime(sessao.horaPausa) : null;
-      if (hp) {
-        sw.syncPaused(Math.max(0, hp.getTime() - start.getTime()));
-      } else {
-        sw.syncPaused(0);
-      }
-      return;
-    }
-    sw.syncRunningFromAnchor(start.getTime());
-  }, [sessao]);
+  const nowMs = Date.now() + offsetRef.current;
+  const accumulatedSeconds = Math.max(
+    0,
+    Number(snap.accumulatedSeconds ?? ((Number(snap.minutosRegistrados) || 0) * 60)) || 0
+  );
+  const serverStatus = String(snap.status || '').toLowerCase();
+  const paused = serverStatus === 'paused' || sessaoEstaPausada(sessao);
+  const running = serverStatus === 'running' || (Boolean(sessao) && !sessaoEstaPausada(sessao));
+  const finished = serverStatus === 'finished';
+  const idle = !running && !paused && !finished;
+  const startDt = sessao?.horaInicio ? parseSqlLocalDateTime(sessao.horaInicio) : null;
+  const runningSessionSeconds = running && startDt
+    ? Math.max(0, Math.floor((nowMs - startDt.getTime()) / 1000))
+    : 0;
+  const displaySeconds = running ? (accumulatedSeconds + runningSessionSeconds) : accumulatedSeconds;
+  const displayHms = formatSecondsHms(displaySeconds);
 
   useEffect(() => {
-    const sw = swRef.current;
-    sw.setOnRender(() => setRender((n) => (n + 1) % 1_000_000));
-    return () => {
-      sw.setOnRender(null);
-      sw.dispose();
-    };
-  }, []);
-
-  useEffect(() => {
-    syncStopwatchToSessao();
-    setRender((n) => (n + 1) % 1_000_000);
-  }, [syncStopwatchToSessao]);
-
-  const displayHms = formatElapsedHms(swRef.current.getElapsedMs());
+    if (!running) return undefined;
+    const t = window.setInterval(() => setRender((n) => (n + 1) % 1_000_000), 500);
+    return () => window.clearInterval(t);
+  }, [running]);
 
   async function runAction(action, options = {}) {
-    const { skipBusy = false } = options;
+    const { skipBusy = false, payload = null } = options;
     if (!ticketId) return;
     rollbackRef.current = optimistic;
     let optimisticIniciarSnapshot = null;
@@ -269,7 +225,7 @@ export default function HorasTecnicasTimerPanel({
     }
 
     if (!skipBusy) setBusy(true);
-    let extra = {};
+    let extra = payload && typeof payload === 'object' ? { ...payload } : {};
     if (action === 'iniciar' && typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
         const pos = await new Promise((resolve, reject) => {
@@ -296,8 +252,8 @@ export default function HorasTecnicasTimerPanel({
     if (!skipBusy) setBusy(false);
 
     if (res.ok) {
+      let normalizedSessao = normalizeSessao(res.horasTecnicas?.sessao);
       if (res.horasTecnicas && onSnapshot) {
-        let normalizedSessao = normalizeSessao(res.horasTecnicas.sessao);
         if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio) {
           if (!normalizedSessao?.horaInicio) {
             normalizedSessao = optimisticIniciarSnapshot;
@@ -349,7 +305,7 @@ export default function HorasTecnicasTimerPanel({
   }
 
   function openFinalizeModal() {
-    if (!sessao || busy || disabled) return;
+    if (idle || busy || disabled) return;
     setFinalizeOpen(true);
   }
 
@@ -388,10 +344,39 @@ export default function HorasTecnicasTimerPanel({
   }
 
   function handlePrimaryClick() {
-    if (sessaoEstaPausada(sessao)) {
+    if (running) {
+      runAction('pausar');
+      return;
+    }
+    if (paused) {
       runAction('retomar');
-    } else {
-      runAction('iniciar');
+      return;
+    }
+    runAction('iniciar');
+  }
+
+  function openEditModal() {
+    if (paused) {
+      setAuditOpen(true);
+      return;
+    }
+    const baseSeconds = running ? runningSessionSeconds : Math.max(0, Number(snap?.ultimaSessao?.durationSeconds || 0));
+    setEditDuration(formatSecondsHms(baseSeconds));
+    setEditErr('');
+    setEditOpen(true);
+  }
+
+  async function saveEditDuration() {
+    const durationSeconds = parseHmsToSeconds(editDuration);
+    if (durationSeconds == null) {
+      setEditErr('Use o formato hh:mm:ss.');
+      return;
+    }
+    if (!running) return;
+    setEditErr('');
+    const r = await runAction('editar_duracao_sessao', { payload: { durationSeconds } });
+    if (r?.ok) {
+      setEditOpen(false);
     }
   }
 
@@ -411,11 +396,7 @@ export default function HorasTecnicasTimerPanel({
   }
 
   const registrados = snap.minutosRegistrados ?? 0;
-  const paused = sessaoEstaPausada(sessao);
-  const idle = !sessao;
-  const running = Boolean(sessao) && !paused;
-
-  const timerCardClass = `timer-card${running ? ' running' : ''}`;
+  const timerCardClass = `timer-card compact${running ? ' running' : ''}`;
   const auditHms = displayHms && displayHms.length === 8 ? displayHms : '00:00:00';
 
   return (
@@ -426,77 +407,41 @@ export default function HorasTecnicasTimerPanel({
             <TicketHeading ticketId={ticketId} />
           </div>
 
-          <div className="display-container">
+          <div className="display-container compact-row">
             <div className="timer-display" id="display">
               {displayHms}
             </div>
-          </div>
-
-          <div className="controls controls-primary">
-            {running ? (
-              <>
-                <button
-                  id="pauseBtn"
-                  type="button"
-                  className="btn-pause"
-                  disabled={disabled || busy}
-                  onClick={() => runAction('pausar')}
-                >
-                  Pausar
-                </button>
-                <button
-                  id="stopBtn"
-                  type="button"
-                  className="btn-stop"
-                  disabled={disabled || busy}
-                  onClick={openFinalizeModal}
-                >
-                  Finalizar
-                </button>
-              </>
-            ) : paused ? (
-              <>
-                <button
-                  id="startBtn"
-                  type="button"
-                  className="btn-start"
-                  disabled={disabled || busy}
-                  onClick={handlePrimaryClick}
-                >
-                  {busy ? '…' : 'Retomar'}
-                </button>
-                <button
-                  id="stopBtn"
-                  type="button"
-                  className="btn-stop"
-                  disabled={disabled || busy}
-                  onClick={openFinalizeModal}
-                >
-                  Finalizar
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  id="startBtn"
-                  type="button"
-                  className="btn-start"
-                  disabled={disabled || busy}
-                  onClick={handlePrimaryClick}
-                >
-                  {busy ? '…' : 'Iniciar'}
-                </button>
-                <button
-                  id="stopBtn"
-                  type="button"
-                  className="btn-stop"
-                  disabled={disabled || busy || idle}
-                  onClick={openFinalizeModal}
-                >
-                  Finalizar
-                </button>
-              </>
-            )}
+            <div className="controls controls-inline">
+              <button
+                type="button"
+                className="btn-neutral-icon"
+                disabled={disabled || busy}
+                onClick={handlePrimaryClick}
+                title={running ? 'Pausar' : (paused ? 'Retomar' : 'Iniciar')}
+                aria-label={running ? 'Pausar timer' : 'Iniciar ou retomar timer'}
+              >
+                <i className={`fa ${running ? 'fa-pause' : 'fa-play'}`} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="btn-neutral-icon"
+                disabled={disabled || busy}
+                onClick={openEditModal}
+                title="Editar duração da sessão atual"
+                aria-label="Editar duração da sessão atual"
+              >
+                <i className="fa fa-pencil" aria-hidden="true" />
+              </button>
+              <button
+                id="stopBtn"
+                type="button"
+                className="btn-neutral-inline"
+                disabled={disabled || busy || idle}
+                onClick={openFinalizeModal}
+              >
+                Finalizar
+              </button>
+            </div>
           </div>
 
           {entryActionsContent ? (
@@ -522,18 +467,6 @@ export default function HorasTecnicasTimerPanel({
         cadastradas e desconta do contrato do cliente.
       </p>
 
-      <TimerWidget
-        ticketId={ticketId}
-        displayHms={displayHms}
-        busy={busy}
-        disabled={disabled}
-        idle={idle}
-        running={running}
-        paused={paused}
-        onPlay={handlePrimaryClick}
-        onStop={openFinalizeModal}
-      />
-
       {auditOpen && (
         <AuditModal
           ticketId={ticketId}
@@ -552,6 +485,40 @@ export default function HorasTecnicasTimerPanel({
         onClose={() => !busy && setFinalizeOpen(false)}
         onSubmit={handleFinalizeSubmit}
       />
+
+      {editOpen && (
+        <div className="htp-modal-backdrop" onClick={() => !busy && setEditOpen(false)}>
+          <div className="htp-modal htp-modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="htp-modal-head">
+              Editar entrada de tempo
+              <button type="button" className="htp-close" onClick={() => !busy && setEditOpen(false)}>
+                ×
+              </button>
+            </div>
+            <div className="htp-form htp-form-inline">
+              <label>
+                Duração
+                <input
+                  type="text"
+                  value={editDuration}
+                  onChange={(e) => setEditDuration(e.target.value)}
+                  placeholder="00:00:00"
+                  disabled={busy}
+                />
+              </label>
+              {editErr ? <p className="htp-error">{editErr}</p> : null}
+              <div className="htp-actions">
+                <button type="button" disabled={busy} onClick={() => setEditOpen(false)}>
+                  Cancelar
+                </button>
+                <button type="button" disabled={busy} onClick={saveEditDuration}>
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
