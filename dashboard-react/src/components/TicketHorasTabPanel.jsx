@@ -414,7 +414,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
                       title="Editar"
                       onClick={() => openManualModal(en)}
                     >
-                      <i className="fa fa-pencil" aria-hidden="true" />
+                      <i className="fa fa-edit" aria-hidden="true" />
                     </button>
                     <button
                       type="button"
