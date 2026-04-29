@@ -88,6 +88,39 @@ function formatDateTimePtBr(value, hourCycle = '24h') {
   });
 }
 
+function to12hClock(time24) {
+  const t = String(time24 || '').trim();
+  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/.exec(t);
+  if (!m) return '';
+  let h = Number(m[1]);
+  const min = m[2];
+  const sec = m[3] || '00';
+  if (h < 0 || h > 23) return '';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${String(h).padStart(2, '0')}:${min}:${sec} ${ampm}`;
+}
+
+function parse12hClock(value) {
+  const t = String(value || '').trim();
+  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?\s*([AaPp][Mm])$/.exec(t);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = m[2];
+  const sec = m[3] || '00';
+  const ampm = String(m[4] || '').toUpperCase();
+  if (h < 1 || h > 12) return null;
+  if (ampm === 'AM') {
+    if (h === 12) h = 0;
+  } else if (ampm === 'PM') {
+    if (h !== 12) h += 12;
+  } else {
+    return null;
+  }
+  return `${String(h).padStart(2, '0')}:${min}:${sec}`;
+}
+
 function toDateTimeLocalValue(value) {
   if (!value) return '';
   const d = new Date(value);
@@ -189,6 +222,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const [entries, setEntries] = useState([]);
   const [entryTechnicians, setEntryTechnicians] = useState([]);
   const [hourCycle, setHourCycle] = useState('24h');
+  const [startTime12hDraft, setStartTime12hDraft] = useState('');
+  const [endTime12hDraft, setEndTime12hDraft] = useState('');
   const [entriesBusy, setEntriesBusy] = useState(false);
   const [entriesErr, setEntriesErr] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
@@ -242,6 +277,12 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
       // ignore localStorage read errors
     }
   }, []);
+
+  useEffect(() => {
+    if (hourCycle !== '12h') return;
+    setStartTime12hDraft(to12hClock(form.startTime || '00:00:00'));
+    setEndTime12hDraft(to12hClock(form.endTime || '00:00:00'));
+  }, [hourCycle, form.startTime, form.endTime]);
 
   async function reloadEntries() {
     if (!ticket?.id) return;
@@ -300,6 +341,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
       auditAuthKey: '',
       showMore: true,
     });
+    setStartTime12hDraft(to12hClock(s.time || nowParts.time || '00:00:00'));
+    setEndTime12hDraft(to12hClock(e.time || nowParts.time || '00:00:00'));
     setManualOpen(true);
   }
 
@@ -487,14 +530,60 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
             Data de Início
             <div className="mt-1 grid grid-cols-[1fr_180px] gap-2">
               <input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
-              <input type="time" step="1" value={form.startTime} onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
+              {hourCycle === '24h' ? (
+                <input
+                  type="time"
+                  step="1"
+                  value={form.startTime}
+                  onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
+                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                  required
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={startTime12hDraft}
+                  placeholder="hh:mm:ss AM"
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setStartTime12hDraft(next);
+                    const parsed = parse12hClock(next);
+                    if (parsed) setForm((p) => ({ ...p, startTime: parsed }));
+                  }}
+                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                  required
+                />
+              )}
             </div>
           </label>
             <label className="text-xs text-[#6b7280]">
             Data de Término
             <div className="mt-1 grid grid-cols-[1fr_180px] gap-2">
               <input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
-              <input type="time" step="1" value={form.endTime} onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
+              {hourCycle === '24h' ? (
+                <input
+                  type="time"
+                  step="1"
+                  value={form.endTime}
+                  onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
+                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                  required
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={endTime12hDraft}
+                  placeholder="hh:mm:ss PM"
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setEndTime12hDraft(next);
+                    const parsed = parse12hClock(next);
+                    if (parsed) setForm((p) => ({ ...p, endTime: parsed }));
+                  }}
+                  className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                  required
+                />
+              )}
             </div>
           </label>
           <label className="text-xs text-[#6b7280]">
