@@ -12,6 +12,13 @@ import TicketHorasTabPanel from './TicketHorasTabPanel.jsx';
 
 const BR = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
+/** Stable per-row key for catalog list React keys and qty/busy state (avoids collisions when items share id===0). */
+function pecasCatalogLinhaKey(it, idx) {
+  const cod = String(it?.codigo ?? '').trim();
+  const pid = Number(it?.id || 0);
+  return pid > 0 ? `idx${idx}_id${pid}` : `idx${idx}_cod${cod || 'nocod'}`;
+}
+
 function contractPercentRing(percent) {
   const p = Math.min(100, Math.max(0, Number(percent) || 0));
   const r = 40;
@@ -259,7 +266,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   const [pecasCatalogItems, setPecasCatalogItems] = useState([]);
   const [pecasQtyById, setPecasQtyById] = useState({});
   const [pecasCatalogBusy, setPecasCatalogBusy] = useState(false);
-  const [pecasActionBusyId, setPecasActionBusyId] = useState(0);
+  const [pecasActionBusyKey, setPecasActionBusyKey] = useState(null);
   const [pecasError, setPecasError] = useState(null);
   const [pecasSuccess, setPecasSuccess] = useState('');
   const [pecaLinhaDestaqueId, setPecaLinhaDestaqueId] = useState(0);
@@ -390,10 +397,11 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     setPecasCatalogItems(nextItems);
     setPecasQtyById((prev) => {
       const next = { ...prev };
-      nextItems.forEach((it) => {
-        const idKey = Number(it?.id || 0);
-        if (idKey > 0 && (!Number.isFinite(Number(next[idKey])) || Number(next[idKey]) <= 0)) {
-          next[idKey] = 1;
+      nextItems.forEach((it, idx) => {
+        const lineKey = pecasCatalogLinhaKey(it, idx);
+        const cur = Number(next[lineKey]);
+        if (!Number.isFinite(cur) || cur <= 0) {
+          next[lineKey] = 1;
         }
       });
       return next;
@@ -411,9 +419,9 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     await loadPecasCatalog({ q: '', tipo: '', sCodProduto: '', sDescricao: '', apenasComSaldo: false });
   };
 
-  const handleAddPecaServico = async (item) => {
+  const handleAddPecaServico = async (item, lineKey) => {
     const idProduto = Number(item?.id || 0);
-    const qty = Number(pecasQtyById[idProduto] || 0);
+    const qty = Number(pecasQtyById[lineKey] ?? pecasQtyById[idProduto] ?? 0);
     if (idProduto <= 0) return;
     if (!Number.isFinite(qty) || qty <= 0) {
       setPecasError('A quantidade deve ser maior que zero.');
@@ -433,7 +441,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         if (!okOver) return;
       }
     }
-    setPecasActionBusyId(idProduto);
+    setPecasActionBusyKey(lineKey);
     setPecasError(null);
     const r = await addTicketProduct(id, {
       produto_id: idProduto,
@@ -442,7 +450,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
       confirm_zero_stock: item?.tipo === 'produto' && Number(item?.estoque ?? 0) <= 0,
       confirm_over_stock: item?.tipo === 'produto' && qty > Number(item?.estoque ?? 0),
     });
-    setPecasActionBusyId(0);
+    setPecasActionBusyKey(null);
     if (!r.ok) {
       if (r.error === 'confirm_zero_stock' || r.error === 'confirm_over_stock') {
         setPecasError(r.message || 'Confirmação de estoque pendente.');
@@ -924,13 +932,14 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                     </tr>
                   </thead>
                   <tbody>
-                    {pecasCatalogItems.map((it) => {
+                    {pecasCatalogItems.map((it, idx) => {
                       const idItem = Number(it.id || 0);
-                      const qty = Number(pecasQtyById[idItem] || 1);
+                      const lineKey = pecasCatalogLinhaKey(it, idx);
+                      const qty = Number(pecasQtyById[lineKey] ?? (idItem > 0 ? pecasQtyById[idItem] : undefined) ?? 1);
                       const valor = Number(it.valor || 0);
                       const totalLinha = qty > 0 ? qty * valor : 0;
                       return (
-                        <tr key={idItem} className="border-b border-[var(--pgm-border-subtle)]">
+                        <tr key={lineKey} className="border-b border-[var(--pgm-border-subtle)]">
                           <td className="py-2">{it.codigo || '—'}</td>
                           <td className="py-2">
                             <div className="text-[var(--pgm-text)]">{it.descricao || '—'}</div>
@@ -949,7 +958,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                               step="0.01"
                               value={qty}
                               onChange={(e) =>
-                                setPecasQtyById((prev) => ({ ...prev, [idItem]: e.target.value }))
+                                setPecasQtyById((prev) => ({ ...prev, [lineKey]: e.target.value }))
                               }
                               className="w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-sm text-[var(--pgm-text)]"
                             />
@@ -958,11 +967,11 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                           <td className="py-2 text-right">
                             <button
                               type="button"
-                              onClick={() => handleAddPecaServico(it)}
-                              disabled={pecasActionBusyId === idItem || !Number.isFinite(qty) || qty <= 0 || idItem <= 0}
+                              onClick={() => handleAddPecaServico(it, lineKey)}
+                              disabled={pecasActionBusyKey === lineKey || !Number.isFinite(qty) || qty <= 0 || idItem <= 0}
                               className="rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                             >
-                              {idItem <= 0 ? 'Indisponível' : (pecasActionBusyId === idItem ? 'Adicionando...' : 'Adicionar')}
+                              {idItem <= 0 ? 'Indisponível' : (pecasActionBusyKey === lineKey ? 'Adicionando...' : 'Adicionar')}
                             </button>
                           </td>
                         </tr>
