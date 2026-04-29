@@ -71,6 +71,31 @@ function normalizeSessao(raw) {
   };
 }
 
+function IconPlay() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function IconPause() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
+    </svg>
+  );
+}
+
+function IconPencil() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
+
 export default function HorasTecnicasTimerPanel({
   ticketId,
   horasTecnicas,
@@ -134,8 +159,6 @@ export default function HorasTecnicasTimerPanel({
   const serverStatus = String(snap.status || '').toLowerCase();
   const paused = serverStatus === 'paused' || sessaoEstaPausada(sessao);
   const running = serverStatus === 'running' || (Boolean(sessao) && !sessaoEstaPausada(sessao));
-  const finished = serverStatus === 'finished';
-  const idle = !running && !paused && !finished;
   const startDt = sessao?.horaInicio ? parseSqlLocalDateTime(sessao.horaInicio) : null;
   const runningSessionSeconds = running && startDt
     ? Math.max(0, Math.floor((nowMs - startDt.getTime()) / 1000))
@@ -277,18 +300,16 @@ export default function HorasTecnicasTimerPanel({
     return res;
   }
 
-  function handlePlayClick() {
-    if (running) return;
+  function handlePlayPauseClick() {
+    if (running) {
+      runAction('pausar');
+      return;
+    }
     if (paused) {
       runAction('retomar');
       return;
     }
     runAction('iniciar');
-  }
-
-  function handlePauseClick() {
-    if (!running) return;
-    runAction('pausar');
   }
 
   function openEditModal() {
@@ -347,22 +368,12 @@ export default function HorasTecnicasTimerPanel({
               <button
                 type="button"
                 className="btn-neutral-icon"
-                disabled={disabled || busy || running}
-                onClick={handlePlayClick}
-                title={paused ? 'Retomar' : 'Iniciar'}
-                aria-label={paused ? 'Retomar timer' : 'Iniciar timer'}
+                disabled={disabled || busy}
+                onClick={handlePlayPauseClick}
+                title={running ? 'Pausar' : paused ? 'Retomar' : 'Iniciar'}
+                aria-label={running ? 'Pausar timer' : paused ? 'Retomar timer' : 'Iniciar timer'}
               >
-                <i className="fa fa-play" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className="btn-neutral-icon"
-                disabled={disabled || busy || !running}
-                onClick={handlePauseClick}
-                title="Pausar"
-                aria-label="Pausar timer"
-              >
-                <i className="fa fa-pause" aria-hidden="true" />
+                {running ? <IconPause /> : <IconPlay />}
               </button>
               <button
                 type="button"
@@ -372,7 +383,7 @@ export default function HorasTecnicasTimerPanel({
                 title="Editar duração da sessão atual"
                 aria-label="Editar duração da sessão atual"
               >
-                <i className="fa fa-pencil" aria-hidden="true" />
+                <IconPencil />
               </button>
             </div>
           </div>

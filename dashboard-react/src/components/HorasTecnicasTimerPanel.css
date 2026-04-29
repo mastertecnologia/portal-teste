@@ -120,6 +120,13 @@
   padding: 0;
 }
 
+.pgm-crono-realtime .btn-neutral-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .pgm-crono-realtime .btn-neutral-icon:hover:not(:disabled) {
   background: #f8fafc !important;
   border-color: #94a3b8 !important;
