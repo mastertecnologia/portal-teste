@@ -170,12 +170,15 @@ export default function TechTicketEdit({ boot }) {
         if (!Number.isFinite(ticketIdNum) || dataId !== ticketIdNum) {
           return prev ?? data;
         }
+        const dataHtStatus = String(data.horasTecnicas?.status || '').toLowerCase();
         const mergeStaleTimer =
           horasTecnicasMutationsRef.current > mutationsAtFetchStart &&
           prev &&
           Number(prev.id) === ticketIdNum &&
           prev.horasTecnicas?.sessao?.horaInicio &&
-          !data.horasTecnicas?.sessao?.horaInicio;
+          !data.horasTecnicas?.sessao?.horaInicio &&
+          dataHtStatus !== 'paused' &&
+          dataHtStatus !== 'finished';
         if (mergeStaleTimer) {
           return {
             ...data,

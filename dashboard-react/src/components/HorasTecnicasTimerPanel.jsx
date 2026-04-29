@@ -113,13 +113,21 @@ export default function HorasTecnicasTimerPanel({
   const disponivel = snap.timerDisponivel !== false;
   const serverSessao = normalizeSessao(snap.sessao);
   const serverUnix = typeof snap.serverUnix === 'number' ? snap.serverUnix : null;
+  const serverStatus = String(snap.status || '').toLowerCase();
 
   if (serverSessao?.horaInicio) {
     stickySessaoRef.current = serverSessao;
-  } else if (!finalizandoRef.current && !optimistic && stickySessaoRef.current?.horaInicio) {
-    // Mantém sessão ativa localmente quando um snapshot tardio chega sem `sessao`.
   } else if (!optimistic) {
-    stickySessaoRef.current = null;
+    // Só manter sticky se a API ainda indicar sessão em curso sem objeto `sessao` (corrida).
+    // Com `sessao` null após pausa JSON / idle / paused, descartar — senão o tempo segue a subir e
+    // "Pausar" chama a API sem linha aberta ("Nenhum timer em andamento").
+    const keepStaleSticky =
+      !finalizandoRef.current &&
+      stickySessaoRef.current?.horaInicio &&
+      serverStatus === 'running';
+    if (!keepStaleSticky) {
+      stickySessaoRef.current = null;
+    }
   }
 
   const sessao = normalizeSessao(optimistic) ?? serverSessao ?? stickySessaoRef.current;
@@ -148,7 +156,6 @@ export default function HorasTecnicasTimerPanel({
     0,
     Number(snap.accumulatedSeconds ?? ((Number(snap.minutosRegistrados) || 0) * 60)) || 0
   );
-  const serverStatus = String(snap.status || '').toLowerCase();
   const paused = serverStatus === 'paused' || sessaoEstaPausada(sessao);
   const running = serverStatus === 'running' || (Boolean(sessao) && !sessaoEstaPausada(sessao));
   const startDt = sessao?.horaInicio ? parseSqlLocalDateTime(sessao.horaInicio) : null;
@@ -262,9 +269,11 @@ export default function HorasTecnicasTimerPanel({
         });
         if (normalizedSessao?.horaInicio) {
           stickySessaoRef.current = normalizedSessao;
-        } else if (action === 'finalizar') {
+        } else if (action === 'finalizar' || action === 'pausar') {
           stickySessaoRef.current = null;
-          finalizandoRef.current = false;
+          if (action === 'finalizar') {
+            finalizandoRef.current = false;
+          }
         }
       }
       if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio) {

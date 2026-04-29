@@ -2753,9 +2753,13 @@ class TicketsController extends AppController {
 				if ($ultimaSessao) {
 					$hi = $this->_ormTimeToString($ultimaSessao->get('hora_inicio') ?: $ultimaSessao->get('horainicio'));
 					$hf = $this->_ormTimeToString($ultimaSessao->get('hora_fim') ?: $ultimaSessao->get('horafim'));
+					$hpU = $this->_ormTimeToString($ultimaSessao->get('hora_pausa') ?: $ultimaSessao->get('horapausa'));
 					$status = strtolower((string)($ultimaSessao->get('status') ?? ''));
 					if ($status === 'paused' || $status === 'finished') {
 						$base['status'] = $status;
+					} elseif (($hf !== null && $hf !== '') && ($hpU !== null && $hpU !== '')) {
+						// Pausa via API JSON (hora_fim + hora_pausa) sem coluna status canónica preenchida.
+						$base['status'] = 'paused';
 					}
 					$duracaoSec = 0;
 					$iniDt = $this->_parseSqlDateTimeForTimer($hi);
