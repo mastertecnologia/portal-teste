@@ -63,16 +63,6 @@ function formatDurationHms(totalSeconds) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
 
-function parseDurationHms(value) {
-  const t = String(value || '').trim();
-  const m = /^(\d{1,3}):([0-5]\d):([0-5]\d)$/.exec(t);
-  if (!m) return null;
-  const h = Number(m[1]);
-  const min = Number(m[2]);
-  const sec = Number(m[3]);
-  return h * 3600 + min * 60 + sec;
-}
-
 function formatDateTimePtBr(value, hourCycle = '24h') {
   if (!value) return '—';
   const d = new Date(value);
@@ -86,48 +76,6 @@ function formatDateTimePtBr(value, hourCycle = '24h') {
     second: '2-digit',
     hour12: hourCycle === '12h',
   });
-}
-
-function to12hClock(time24) {
-  const t = String(time24 || '').trim();
-  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/.exec(t);
-  if (!m) return '';
-  let h = Number(m[1]);
-  const min = m[2];
-  const sec = m[3] || '00';
-  if (h < 0 || h > 23) return '';
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12;
-  if (h === 0) h = 12;
-  return `${String(h).padStart(2, '0')}:${min}:${sec} ${ampm}`;
-}
-
-function to24hHourMinute(timeValue) {
-  const t = String(timeValue || '').trim();
-  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/.exec(t);
-  if (!m) return '';
-  const h = Number(m[1]);
-  if (h < 0 || h > 23) return '';
-  return `${String(h).padStart(2, '0')}:${m[2]}`;
-}
-
-function parse12hClock(value) {
-  const t = String(value || '').trim();
-  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?\s*([AaPp][Mm])$/.exec(t);
-  if (!m) return null;
-  let h = Number(m[1]);
-  const min = m[2];
-  const sec = m[3] || '00';
-  const ampm = String(m[4] || '').toUpperCase();
-  if (h < 1 || h > 12) return null;
-  if (ampm === 'AM') {
-    if (h === 12) h = 0;
-  } else if (ampm === 'PM') {
-    if (h !== 12) h += 12;
-  } else {
-    return null;
-  }
-  return `${String(h).padStart(2, '0')}:${min}:${sec}`;
 }
 
 function toDateTimeLocalValue(value) {

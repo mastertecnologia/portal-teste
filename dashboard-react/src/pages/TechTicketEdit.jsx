@@ -40,16 +40,6 @@ function normalizeSdTab(h, canServicedeskTabs) {
   return raw;
 }
 
-function minutosHumanosCurto(totalMin) {
-  const m = Math.max(0, Math.floor(Number(totalMin) || 0));
-  if (m <= 0) return '';
-  const h = Math.floor(m / 60);
-  const r = m % 60;
-  if (h <= 0) return `${r} min`;
-  if (r === 0) return `${h} h`;
-  return `${h} h ${r} min`;
-}
-
 /** Maior id numérico de comentário (ignora optimistic `pending-*`). */
 function maxNumericCommentId(comentarios) {
   let m = 0;
@@ -256,23 +246,6 @@ export default function TechTicketEdit({ boot }) {
     }
     prevChatUnreadRef.current = chatUnreadCount;
   }, [chatUnreadCount, mainSdTab]);
-
-  /** Total em minutos para o rótulo da guia «Horas»: API (Horas cadastradas) ou soma dos worklogs na timeline. */
-  const horasTabBadgeMinutos = useMemo(() => {
-    const worklogs = (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() === 'worklog');
-    const mr = ticket?.horasTecnicas?.minutosRegistrados;
-    if (mr != null && Number(mr) > 0) return Number(mr);
-    const secs = worklogs.reduce((s, ev) => {
-      const sec =
-        ev.secondsSpent != null && ev.secondsSpent !== ''
-          ? ev.secondsSpent
-          : ev.seconds_spent != null && ev.seconds_spent !== ''
-            ? ev.seconds_spent
-            : 0;
-      return s + Math.max(0, Number(sec) || 0);
-    }, 0);
-    return Math.ceil(secs / 60);
-  }, [ticket?.horasTecnicas?.minutosRegistrados, timelineEvents]);
 
   async function handleComentario(e) {
     e.preventDefault();
