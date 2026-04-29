@@ -2352,22 +2352,16 @@ class TicketsController extends AppController {
 			}
 			$agora = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
 			$timer->set('hora_fim', $agora->format('Y-m-d H:i:s'));
-			$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
-			$horaFim = $timer->get('hora_fim') ?: $timer->get('horafim');
-			// Normalizar para string Y-m-d H:i:s (o banco pode devolver objeto Time)
-			if ($horaInicio && is_object($horaInicio) && method_exists($horaInicio, 'format')) {
-				$horaInicio = $horaInicio->format('Y-m-d H:i:s');
-			}
-			if ($horaFim && is_object($horaFim) && method_exists($horaFim, 'format')) {
-				$horaFim = $horaFim->format('Y-m-d H:i:s');
-			}
+			$horaInicioSql = $this->_timerEntityHoraInicioSqlString($timer);
+			$horaFimRaw = $timer->get('hora_fim') ?: $timer->get('horafim');
+			$horaFimSql = $this->_ormTimeToString($horaFimRaw);
 			$inicio = null;
 			$fim = null;
 			$duracaoSegundos = 0;
 			$duracaoMinutos = 0;
-			if ($horaInicio && $horaFim) {
-				$inicio = is_string($horaInicio) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaInicio) : null;
-				$fim = is_string($horaFim) ? \DateTime::createFromFormat('Y-m-d H:i:s', $horaFim) : null;
+			if ($horaInicioSql && $horaFimSql !== null && $horaFimSql !== '') {
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicioSql);
+				$fim = $this->_parseSqlDateTimeForTimer($horaFimSql);
 				if ($inicio && $fim) {
 					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());
 					$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
@@ -2540,9 +2534,30 @@ class TicketsController extends AppController {
 		}
 		$str = trim($str);
 		if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/', $str, $m)) {
-			$dt = \DateTime::createFromFormat('Y-m-d H:i:s', $m[1] . ' ' . $m[2]);
+			$tz = new \DateTimeZone('America/Sao_Paulo');
+			$dt = \DateTime::createFromFormat('Y-m-d H:i:s', $m[1] . ' ' . $m[2], $tz);
 
 			return $dt ?: null;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Início da sessão em atendimento_timer: hora_inicio primeiro; started_at só se as legadas vazias.
+	 *
+	 * @param \Cake\Datasource\EntityInterface|object $timer
+	 */
+	protected function _timerEntityHoraInicioSqlString($timer): ?string {
+		foreach (['hora_inicio', 'horainicio', 'started_at'] as $field) {
+			try {
+				$s = $this->_ormTimeToString($timer->get($field));
+			} catch (\Throwable $e) {
+				$s = null;
+			}
+			if ($s !== null && $s !== '') {
+				return $s;
+			}
 		}
 
 		return null;
@@ -2733,7 +2748,7 @@ class TicketsController extends AppController {
 				->orderDesc('id')
 				->first();
 			if ($timerAtivo) {
-				$hi = $this->_ormTimeToString($timerAtivo->get('hora_inicio') ?: $timerAtivo->get('horainicio'));
+				$hi = $this->_timerEntityHoraInicioSqlString($timerAtivo);
 				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa') ?: $timerAtivo->get('horapausa'));
 				$base['status'] = ($hp !== null && $hp !== '') ? 'paused' : 'running';
 				$base['sessao'] = [
@@ -2751,7 +2766,7 @@ class TicketsController extends AppController {
 					->orderDesc('id')
 					->first();
 				if ($ultimaSessao) {
-					$hi = $this->_ormTimeToString($ultimaSessao->get('hora_inicio') ?: $ultimaSessao->get('horainicio'));
+					$hi = $this->_timerEntityHoraInicioSqlString($ultimaSessao);
 					$hf = $this->_ormTimeToString($ultimaSessao->get('hora_fim') ?: $ultimaSessao->get('horafim'));
 					$hpU = $this->_ormTimeToString($ultimaSessao->get('hora_pausa') ?: $ultimaSessao->get('horapausa'));
 					$status = strtolower((string)($ultimaSessao->get('status') ?? ''));
@@ -2789,7 +2804,7 @@ class TicketsController extends AppController {
 	 * @return string|null Nova hora_inicio (Y-m-d H:i:s) ou null se estado inválido.
 	 */
 	protected function _timerRetomarShiftInicio($timer, \DateTime $agora): ?string {
-		$hiRaw = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+		$hiRaw = $this->_timerEntityHoraInicioSqlString($timer);
 		$hpRaw = $timer->get('hora_pausa') ?: $timer->get('horapausa');
 		$inicio = $this->_parseSqlDateTimeForTimer($hiRaw);
 		$pausa = $this->_parseSqlDateTimeForTimer($hpRaw);
@@ -2916,7 +2931,7 @@ class TicketsController extends AppController {
 						return ['ok' => true, 'message' => 'Timer retomado.', 'status' => 'running', 'startedAt' => $novaHi];
 					}
 					// Sessão já em execução (sem pausa): idempotente para iniciar/retomar.
-					$hiStr = $this->_ormTimeToString($ativo->get('hora_inicio') ?: $ativo->get('horainicio'));
+					$hiStr = $this->_timerEntityHoraInicioSqlString($ativo);
 					if ($hiStr === null || $hiStr === '') {
 						return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Estado do timer inválido (início não registrado).'];
 					}
@@ -2956,8 +2971,8 @@ class TicketsController extends AppController {
 			}
 
 			if ($acao === 'pausar') {
-				$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
-				$inicio = $this->_parseSqlDateTimeForTimer($horaInicio);
+				$horaInicioSql = $this->_timerEntityHoraInicioSqlString($timer);
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicioSql);
 				if (!$inicio) {
 					return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Não foi possível identificar o início da sessão.'];
 				}
@@ -3008,8 +3023,8 @@ class TicketsController extends AppController {
 				return ['ok' => true, 'message' => 'Timer pausado.', 'status' => 'paused', 'duracaoMinutosFinal' => $duracaoMinutos, 'durationSecondsFinal' => $duracaoSegundos];
 			}
 			if ($acao === 'editar_duracao_sessao') {
-				$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
-				$inicio = $this->_parseSqlDateTimeForTimer($horaInicio);
+				$horaInicioSql = $this->_timerEntityHoraInicioSqlString($timer);
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicioSql);
 				if (!$inicio) {
 					return ['ok' => false, 'error' => 'invalid_state', 'message' => 'Sessão ativa inválida para edição.'];
 				}
@@ -3038,14 +3053,14 @@ class TicketsController extends AppController {
 				'status' => 'finished',
 				'ended_at' => $agoraStr,
 			]);
-			$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+			$horaInicioSql = $this->_timerEntityHoraInicioSqlString($timer);
 			$horaFim = $timer->get('hora_fim') ?: $timer->get('horafim');
 			$inicio = null;
 			$fim = null;
 			$duracaoSegundos = 0;
 			$duracaoMinutos = 0;
-			if ($horaInicio && $horaFim) {
-				$inicio = $this->_parseSqlDateTimeForTimer($horaInicio);
+			if ($horaInicioSql && $horaFim) {
+				$inicio = $this->_parseSqlDateTimeForTimer($horaInicioSql);
 				$fim = $this->_parseSqlDateTimeForTimer($horaFim);
 				if ($inicio && $fim) {
 					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());

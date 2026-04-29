@@ -7,6 +7,11 @@ import './HorasTecnicasTimerPanel.css';
 function parseSqlLocalDateTime(s) {
   if (!s || typeof s !== 'string') return null;
   const t = s.trim();
+  // ISO 8601 (API / serialização Cake): usar instante real, não componentes como hora local “cega”.
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(t)) {
+    const dIso = new Date(t);
+    return Number.isNaN(dIso.getTime()) ? null : dIso;
+  }
   const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(t);
   if (!m) return null;
   const sec = m[6] != null && m[6] !== '' ? +m[6] : 0;
