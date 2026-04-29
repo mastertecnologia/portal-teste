@@ -374,13 +374,19 @@ export default function TicketHorasTabPanel({
       0
     );
     const defaultTechId = entryTechId || fallbackTechId || Number(technicians?.[0]?.id || 0);
+    const durSecRaw =
+      entry != null ? Number(entry.durationSeconds ?? entry.duration_seconds ?? NaN) : NaN;
+    const durationInitial =
+      entry != null && Number.isFinite(durSecRaw) && durSecRaw >= 0
+        ? formatDurationHms(durSecRaw)
+        : '00:00:00';
     setEditingEntry(entry);
     setForm({
       startDate: s.date || nowParts.date,
       startTime: s.time || nowParts.time,
       endDate: e.date || nowParts.date,
       endTime: e.time || nowParts.time,
-      duration: '00:00:00',
+      duration: durationInitial,
       technicianContactId: String(defaultTechId || ''),
       billable: entry?.billable !== false,
       descricao: String(entry?.note || ''),
