@@ -20,9 +20,10 @@
 }
 
 .pgm-crono-realtime .timer-card.compact {
-  width: 420px;
-  padding: 14px 14px 12px;
-  border-radius: 10px;
+  width: 440px;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: none;
 }
 
 .pgm-crono-realtime .header-section {
@@ -66,9 +67,12 @@
 
 .pgm-crono-realtime .display-container.compact-row {
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }
 
 .pgm-crono-realtime .timer-display {
@@ -79,8 +83,10 @@
 }
 
 .pgm-crono-realtime .compact-row .timer-display {
-  font-size: 44px;
-  letter-spacing: 1px;
+  font-size: 52px;
+  letter-spacing: 0;
+  line-height: 1;
+  font-weight: 500;
 }
 
 .pgm-crono-realtime .controls.controls-primary {
@@ -92,7 +98,7 @@
 .pgm-crono-realtime .controls.controls-inline {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pgm-crono-realtime .btn-neutral-icon,
@@ -106,27 +112,20 @@
 }
 
 .pgm-crono-realtime .btn-neutral-icon {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
 }
 
-.pgm-crono-realtime .btn-neutral-inline {
-  height: 36px;
-  padding: 0 12px;
-}
-
-.pgm-crono-realtime .btn-neutral-icon:hover:not(:disabled),
-.pgm-crono-realtime .btn-neutral-inline:hover:not(:disabled) {
+.pgm-crono-realtime .btn-neutral-icon:hover:not(:disabled) {
   background: #f8fafc !important;
   border-color: #94a3b8 !important;
 }
 
-.pgm-crono-realtime .btn-neutral-icon:disabled,
-.pgm-crono-realtime .btn-neutral-inline:disabled {
+.pgm-crono-realtime .btn-neutral-icon:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }

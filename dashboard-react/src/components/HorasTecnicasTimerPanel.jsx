@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  postTimerAction,
-  postTicketSignature,
-  saveTicketDescricaoAtendimento,
-} from '../lib/api';
+import { postTimerAction } from '../lib/api';
 import AuditModal from './AuditModal.jsx';
-import FinalizarTimerModal from './FinalizarTimerModal.jsx';
 import './HorasTecnicasTimerPanel.css';
 
 /** Interpreta Y-m-d H:i:s, Y-m-d H:i (e frações após s) como horário local (alinhado a localSqlDateTimeFromMs). */
@@ -76,39 +71,17 @@ function normalizeSessao(raw) {
   };
 }
 
-/**
- * Painel: API iniciar / pausar / retomar / finalizar; display via precisionStopwatch (Date.now, sem drift).
- * Layout alinhado ao mock: cabeçalho TICKET #, Iniciar / Finalizar (+ Pausar / Retomar quando aplicável), Ajuste de Auditoria.
- */
-function TicketHeading({ ticketId }) {
-  const s = String(ticketId ?? '');
-  if (!s) return null;
-  const head = s.length > 1 ? s.slice(0, -1) : '';
-  const last = s.length > 1 ? s.slice(-1) : s;
-  return (
-    <div className="ticket-heading">
-      <span className="ticket-highlight">
-        TICKET #{head}
-      </span>
-      <span className="ticket-id-tail">{last}</span>
-    </div>
-  );
-}
-
 export default function HorasTecnicasTimerPanel({
   ticketId,
   horasTecnicas,
   disabled,
   onSnapshot,
   onFeedback,
-  canEditDescricaoAtendimento = false,
-  onRelatorioSaved,
   entryActionsContent = null,
 }) {
   const [optimistic, setOptimistic] = useState(null);
   const [busy, setBusy] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
-  const [finalizeOpen, setFinalizeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDuration, setEditDuration] = useState('00:00:00');
   const [editErr, setEditErr] = useState('');
@@ -304,55 +277,18 @@ export default function HorasTecnicasTimerPanel({
     return res;
   }
 
-  function openFinalizeModal() {
-    if (idle || busy || disabled) return;
-    setFinalizeOpen(true);
-  }
-
-  async function handleFinalizeSubmit(atividade, signatureDataUrl) {
-    const t = (atividade || '').trim();
-    if (canEditDescricaoAtendimento && t.length < 3) {
-      return { ok: false, error: 'Descreva o que foi feito nestes minutos (mínimo 3 caracteres).' };
-    }
-    setBusy(true);
-    try {
-      if (canEditDescricaoAtendimento && t) {
-        const sr = await saveTicketDescricaoAtendimento(ticketId, t);
-        if (!sr.ok) {
-          return { ok: false, error: sr.error || 'Não foi possível gravar o relatório do atendimento.' };
-        }
-        onRelatorioSaved?.(t);
-      }
-      const res = await runAction('finalizar', { skipBusy: true });
-      if (res && res.ok) {
-        if (signatureDataUrl && String(signatureDataUrl).length > 80) {
-          const sigRes = await postTicketSignature(ticketId, signatureDataUrl);
-          if (!sigRes.ok) {
-            return { ok: false, error: sigRes.error || 'Timer finalizado, mas falha ao gravar assinatura.' };
-          }
-        }
-        setFinalizeOpen(false);
-        return { ok: true };
-      }
-      return {
-        ok: false,
-        error: (res && (res.message || res.error)) || 'Não foi possível finalizar o timer.',
-      };
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function handlePrimaryClick() {
-    if (running) {
-      runAction('pausar');
-      return;
-    }
+  function handlePlayClick() {
+    if (running) return;
     if (paused) {
       runAction('retomar');
       return;
     }
     runAction('iniciar');
+  }
+
+  function handlePauseClick() {
+    if (!running) return;
+    runAction('pausar');
   }
 
   function openEditModal() {
@@ -403,10 +339,6 @@ export default function HorasTecnicasTimerPanel({
     <div>
       <div className="pgm-crono-realtime">
         <div className={timerCardClass} id="timerCard">
-          <div className="header-section">
-            <TicketHeading ticketId={ticketId} />
-          </div>
-
           <div className="display-container compact-row">
             <div className="timer-display" id="display">
               {displayHms}
@@ -415,12 +347,22 @@ export default function HorasTecnicasTimerPanel({
               <button
                 type="button"
                 className="btn-neutral-icon"
-                disabled={disabled || busy}
-                onClick={handlePrimaryClick}
-                title={running ? 'Pausar' : (paused ? 'Retomar' : 'Iniciar')}
-                aria-label={running ? 'Pausar timer' : 'Iniciar ou retomar timer'}
+                disabled={disabled || busy || running}
+                onClick={handlePlayClick}
+                title={paused ? 'Retomar' : 'Iniciar'}
+                aria-label={paused ? 'Retomar timer' : 'Iniciar timer'}
               >
-                <i className={`fa ${running ? 'fa-pause' : 'fa-play'}`} aria-hidden="true" />
+                <i className="fa fa-play" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="btn-neutral-icon"
+                disabled={disabled || busy || !running}
+                onClick={handlePauseClick}
+                title="Pausar"
+                aria-label="Pausar timer"
+              >
+                <i className="fa fa-pause" aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -431,15 +373,6 @@ export default function HorasTecnicasTimerPanel({
                 aria-label="Editar duração da sessão atual"
               >
                 <i className="fa fa-pencil" aria-hidden="true" />
-              </button>
-              <button
-                id="stopBtn"
-                type="button"
-                className="btn-neutral-inline"
-                disabled={disabled || busy || idle}
-                onClick={openFinalizeModal}
-              >
-                Finalizar
               </button>
             </div>
           </div>
@@ -463,8 +396,7 @@ export default function HorasTecnicasTimerPanel({
       </div>
 
       <p className="pgm-crono-realtime-footer">
-        Tempo já lançado neste ticket: <strong>{minutosLabel(registrados)}</strong>. Ao finalizar, o sistema grava em Horas
-        cadastradas e desconta do contrato do cliente.
+        Tempo já lançado neste ticket: <strong>{minutosLabel(registrados)}</strong>.
       </p>
 
       {auditOpen && (
@@ -476,15 +408,6 @@ export default function HorasTecnicasTimerPanel({
           onClose={() => setAuditOpen(false)}
         />
       )}
-
-      <FinalizarTimerModal
-        open={finalizeOpen}
-        displayHms={displayHms}
-        busy={busy}
-        canEditDescricaoAtendimento={canEditDescricaoAtendimento}
-        onClose={() => !busy && setFinalizeOpen(false)}
-        onSubmit={handleFinalizeSubmit}
-      />
 
       {editOpen && (
         <div className="htp-modal-backdrop" onClick={() => !busy && setEditOpen(false)}>
