@@ -47,6 +47,24 @@ function sessaoEstaPausada(sessao) {
   return hp != null && String(hp).trim() !== '';
 }
 
+function normalizeSessao(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const horaInicio = raw.startedAt || raw.horaInicio || null;
+  if (!horaInicio) return null;
+  const horaPausa = raw.pausedAt || raw.horaPausa || null;
+  const status = String(raw.status || '').toLowerCase();
+  const pausado = status === 'paused' || Boolean(raw.pausado) || Boolean(horaPausa);
+  return {
+    ...raw,
+    horaInicio,
+    horaPausa,
+    startedAt: horaInicio,
+    pausedAt: horaPausa,
+    status: status || (pausado ? 'paused' : 'running'),
+    pausado,
+  };
+}
+
 /**
  * Painel: API iniciar / pausar / retomar / finalizar; display via precisionStopwatch (Date.now, sem drift).
  * Layout alinhado ao mock: cabeçalho TICKET #, Iniciar / Finalizar (+ Pausar / Retomar quando aplicável), Ajuste de Auditoria.
@@ -85,6 +103,8 @@ export default function HorasTecnicasTimerPanel({
   const rollbackRef = useRef(null);
   const offsetRef = useRef(0);
   const swRef = useRef(null);
+  const stickySessaoRef = useRef(null);
+  const finalizandoRef = useRef(false);
 
   if (swRef.current == null) {
     swRef.current = createPrecisionStopwatch({
@@ -95,26 +115,31 @@ export default function HorasTecnicasTimerPanel({
   const snap = horasTecnicas || {};
   const canUse = Boolean(snap.canUseTimer);
   const disponivel = snap.timerDisponivel !== false;
-  const serverSessao = snap.sessao || null;
+  const serverSessao = normalizeSessao(snap.sessao);
   const serverUnix = typeof snap.serverUnix === 'number' ? snap.serverUnix : null;
 
-  const sessao = optimistic ?? serverSessao;
+  if (serverSessao?.horaInicio) {
+    stickySessaoRef.current = serverSessao;
+  } else if (!finalizandoRef.current && !optimistic && stickySessaoRef.current?.horaInicio) {
+    // Mantém sessão ativa localmente quando um snapshot tardio chega sem `sessao`.
+  } else if (!optimistic) {
+    stickySessaoRef.current = null;
+  }
+
+  const sessao = normalizeSessao(optimistic) ?? serverSessao ?? stickySessaoRef.current;
 
   useEffect(() => {
     if (!safeStorage || !ticketId) return;
     try {
-      const startedAt = sessao?.startedAt || sessao?.started_at || sessao?.horaInicio;
-      if (sessao && startedAt) {
+      if (sessao && sessao.horaInicio) {
         safeStorage.setItem(
           TIMER_WIDGET_STORAGE_KEY,
           JSON.stringify({
             ticketId: Number(ticketId),
             sessao: {
               id: sessao.id || null,
-              startedAt,
-              horaInicio: startedAt,
-              horaPausa: sessao.horaPausa || sessao.pausedAt || null,
-              status: sessao.status || (sessaoEstaPausada(sessao) ? 'paused' : 'running'),
+              horaInicio: sessao.horaInicio,
+              horaPausa: sessao.horaPausa || null,
               pausado: Boolean(sessaoEstaPausada(sessao)),
             },
             updatedAt: Date.now(),
@@ -144,18 +169,17 @@ export default function HorasTecnicasTimerPanel({
     const sw = swRef.current;
     if (!sw) return;
 
-    const startedAt = sessao?.startedAt || sessao?.started_at || sessao?.horaInicio;
-    if (!startedAt) {
+    if (!sessao?.horaInicio) {
       sw.syncIdle();
       return;
     }
-    const start = parseSqlLocalDateTime(startedAt);
+    const start = parseSqlLocalDateTime(sessao.horaInicio);
     if (!start) {
       sw.syncIdle();
       return;
     }
     if (sessaoEstaPausada(sessao)) {
-      const hp = (sessao.horaPausa || sessao.pausedAt) ? parseSqlLocalDateTime(sessao.horaPausa || sessao.pausedAt) : null;
+      const hp = sessao.horaPausa ? parseSqlLocalDateTime(sessao.horaPausa) : null;
       if (hp) {
         sw.syncPaused(Math.max(0, hp.getTime() - start.getTime()));
       } else {
@@ -186,55 +210,36 @@ export default function HorasTecnicasTimerPanel({
     const { skipBusy = false } = options;
     if (!ticketId) return;
     rollbackRef.current = optimistic;
-    let optimisticIniciarSnapshot = null;
-
     if (action === 'iniciar') {
-      const t0 = Date.now() + offsetRef.current;
-      optimisticIniciarSnapshot = {
-        id: 'local',
-        startedAt: localSqlDateTimeFromMs(t0),
-        started_at: localSqlDateTimeFromMs(t0),
-        horaInicio: localSqlDateTimeFromMs(t0),
-        horaPausa: null,
-        status: 'running',
-        pausado: false,
-      };
-      setOptimistic(optimisticIniciarSnapshot);
+      finalizandoRef.current = false;
     } else if (action === 'pausar' && sessao?.horaInicio) {
       const tPause = Date.now() + offsetRef.current;
       setOptimistic({
         ...sessao,
         pausado: true,
-        status: 'paused',
         horaPausa: localSqlDateTimeFromMs(tPause),
-        pausedAt: localSqlDateTimeFromMs(tPause),
       });
-    } else if (action === 'retomar' && (sessao?.startedAt || sessao?.started_at || sessao?.horaInicio) && (sessao.horaPausa || sessao.pausedAt)) {
-      const hi = parseSqlLocalDateTime(sessao.startedAt || sessao.started_at || sessao.horaInicio);
-      const hp = parseSqlLocalDateTime(sessao.horaPausa || sessao.pausedAt);
+    } else if (action === 'retomar' && sessao?.horaInicio && sessao.horaPausa) {
+      const hi = parseSqlLocalDateTime(sessao.horaInicio);
+      const hp = parseSqlLocalDateTime(sessao.horaPausa);
       if (hi && hp) {
         const elapsed = hp.getTime() - hi.getTime();
         const tResume = Date.now() + offsetRef.current;
         setOptimistic({
           ...sessao,
-          startedAt: localSqlDateTimeFromMs(tResume - elapsed),
-          started_at: localSqlDateTimeFromMs(tResume - elapsed),
           horaInicio: localSqlDateTimeFromMs(tResume - elapsed),
-          status: 'running',
           pausado: false,
           horaPausa: null,
-          pausedAt: null,
         });
       } else {
         setOptimistic({
           ...sessao,
-          status: 'running',
           pausado: false,
           horaPausa: null,
-          pausedAt: null,
         });
       }
     } else if (action === 'finalizar') {
+      finalizandoRef.current = true;
       rollbackRef.current = optimistic ?? serverSessao;
       setOptimistic(null);
     }
@@ -268,26 +273,24 @@ export default function HorasTecnicasTimerPanel({
 
     if (res.ok) {
       if (res.horasTecnicas && onSnapshot) {
-        let ht = res.horasTecnicas;
-        const confirmedStart = res.started_at || ht?.sessao?.startedAt || ht?.sessao?.started_at || ht?.sessao?.horaInicio || null;
-        if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio && !ht.sessao?.horaInicio && !ht.sessao?.startedAt && !ht.sessao?.started_at) {
-          ht = {
-            ...ht,
-            sessao: confirmedStart
-              ? {
-                  ...optimisticIniciarSnapshot,
-                  startedAt: confirmedStart,
-                  started_at: confirmedStart,
-                  horaInicio: confirmedStart,
-                }
-              : optimisticIniciarSnapshot,
-          };
+        const normalizedSessao = normalizeSessao(res.horasTecnicas.sessao);
+        onSnapshot({
+          ...res.horasTecnicas,
+          sessao: normalizedSessao,
+        });
+        if (normalizedSessao?.horaInicio) {
+          stickySessaoRef.current = normalizedSessao;
+        } else if (action === 'finalizar') {
+          stickySessaoRef.current = null;
+          finalizandoRef.current = false;
         }
-        onSnapshot(ht);
       }
       setOptimistic(null);
       if (onFeedback) onFeedback(res.message || null, null);
     } else {
+      if (action === 'finalizar') {
+        finalizandoRef.current = false;
+      }
       if (action === 'finalizar') {
         setOptimistic(rollbackRef.current);
       } else {

@@ -700,16 +700,15 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     if (action === 'iniciar') {
       mockTimerSessao = {
         id: 1,
+        status: 'running',
         startedAt: nowStr,
-        started_at: nowStr,
+        pausedAt: null,
         horaInicio: nowStr,
         horaPausa: null,
-        pausedAt: null,
-        status: 'running',
         pausado: false,
       };
     } else if (action === 'pausar' && mockTimerSessao) {
-      mockTimerSessao = { ...mockTimerSessao, pausado: true, status: 'paused', horaPausa: nowStr, pausedAt: nowStr };
+      mockTimerSessao = { ...mockTimerSessao, status: 'paused', pausedAt: nowStr, pausado: true, horaPausa: nowStr };
     } else if (action === 'retomar' && mockTimerSessao) {
       const parseMockLocal = (s) => {
         if (!s || typeof s !== 'string') return null;
@@ -718,16 +717,16 @@ export async function postTimerAction(ticketId, action, extra = {}) {
         const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6], 0);
         return Number.isNaN(d.getTime()) ? null : d.getTime();
       };
-      const hi = parseMockLocal(mockTimerSessao.startedAt || mockTimerSessao.started_at || mockTimerSessao.horaInicio);
-      const hp = parseMockLocal(mockTimerSessao.horaPausa || mockTimerSessao.pausedAt);
-      let next = { ...mockTimerSessao, pausado: false, status: 'running', horaPausa: null, pausedAt: null };
+      const hi = parseMockLocal(mockTimerSessao.horaInicio);
+      const hp = parseMockLocal(mockTimerSessao.horaPausa);
+      let next = { ...mockTimerSessao, status: 'running', pausedAt: null, pausado: false, horaPausa: null };
       if (hi != null && hp != null) {
         const elapsed = hp - hi;
         const d = new Date(Date.now() - elapsed);
         const p = (n) => (n < 10 ? `0${n}` : String(n));
-        next.horaInicio = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-        next.startedAt = next.horaInicio;
-        next.started_at = next.horaInicio;
+        const resumedAt = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        next.horaInicio = resumedAt;
+        next.startedAt = resumedAt;
       }
       mockTimerSessao = next;
     } else if (action === 'finalizar') {
@@ -744,7 +743,6 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     return {
       ok: true,
       message: 'ok (mock)',
-      started_at: action === 'iniciar' ? nowStr : undefined,
       horasTecnicas: {
         canUseTimer: true,
         minutosRegistrados: action === 'finalizar' ? 15 : 0,
@@ -781,8 +779,8 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     ok: true,
     message: json.message,
     horasTecnicas: json.horasTecnicas,
-    started_at: json.started_at,
     duracaoMinutosFinal: json.duracaoMinutosFinal,
+    durationSecondsFinal: json.durationSecondsFinal,
   };
 }
 

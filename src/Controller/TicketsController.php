@@ -2563,106 +2563,21 @@ class TicketsController extends AppController {
 	}
 
 	/**
-	 * Cache local das colunas da tabela atendimento_timer.
+	 * Preenche campos canônicos (started_at/ended_at/status etc.) quando existirem no schema.
 	 *
-	 * @return string[]
+	 * @param array<string,mixed> $values
 	 */
-	protected function _atendimentoTimerColumns(): array {
-		static $cached = null;
-		if ($cached !== null) {
-			return $cached;
-		}
+	protected function _atendimentoTimerApplyCanonicalFields($timer, array $values): void {
 		try {
-			$this->loadModel('AtendimentoTimer');
-			$cached = $this->AtendimentoTimer->getSchema()->columns();
+			$cols = $this->AtendimentoTimer->getSchema()->columns();
 		} catch (\Throwable $e) {
-			$cached = [];
+			return;
 		}
-
-		return $cached;
-	}
-
-	/**
-	 * Define campos de início do timer, preservando compatibilidade de schema legado/novo.
-	 */
-	protected function _atendimentoTimerApplyStart($timer, int $ticketId, int $customerId, int $userId, int $companyId, string $startedAt): void {
-		$cols = $this->_atendimentoTimerColumns();
-		$unguarded = ['guard' => false];
-		$timer->set('idticket', $ticketId);
-		$timer->set($this->_atendimentoTimerUserColumn(), $userId);
-		$timer->set('idempresa', $companyId);
-		if (in_array('ticket_id', $cols, true)) {
-			$timer->set('ticket_id', $ticketId, $unguarded);
+		foreach ($values as $col => $value) {
+			if (in_array($col, $cols, true)) {
+				$timer->set($col, $value);
+			}
 		}
-		if (in_array('customer_id', $cols, true)) {
-			$timer->set('customer_id', $customerId, $unguarded);
-		}
-		if (in_array('user_id', $cols, true)) {
-			$timer->set('user_id', $userId, $unguarded);
-		}
-		if (in_array('started_at', $cols, true)) {
-			$timer->set('started_at', $startedAt, $unguarded);
-		}
-		$timer->set('hora_inicio', $startedAt);
-		$timer->set('hora_fim', null);
-		if (in_array('ended_at', $cols, true)) {
-			$timer->set('ended_at', null, $unguarded);
-		}
-		if (in_array('duration_seconds', $cols, true)) {
-			$timer->set('duration_seconds', null, $unguarded);
-		}
-		if (in_array('status', $cols, true)) {
-			$timer->set('status', 'running', $unguarded);
-		}
-	}
-
-	/**
-	 * Define campos de fim do timer, preservando compatibilidade de schema legado/novo.
-	 */
-	protected function _atendimentoTimerApplyEnd($timer, string $endedAt, int $durationSeconds): void {
-		$cols = $this->_atendimentoTimerColumns();
-		$unguarded = ['guard' => false];
-		$timer->set('hora_fim', $endedAt);
-		if (in_array('ended_at', $cols, true)) {
-			$timer->set('ended_at', $endedAt, $unguarded);
-		}
-		if (in_array('duration_seconds', $cols, true)) {
-			$timer->set('duration_seconds', max(0, $durationSeconds), $unguarded);
-		}
-		if (in_array('status', $cols, true)) {
-			$timer->set('status', 'stopped', $unguarded);
-		}
-	}
-
-	/**
-	 * Snapshot canônico da sessão ativa para frontend (suporta campos legados e novos).
-	 */
-	protected function _atendimentoTimerSessaoPayload($timer, int $ticketId, int $customerId, int $userId): array {
-		$startedAt = $this->_ormTimeToString(
-			$timer->get('started_at')
-			?: $timer->get('hora_inicio')
-			?: $timer->get('horainicio')
-		);
-		$pausedAt = $this->_ormTimeToString($timer->get('hora_pausa') ?: $timer->get('horapausa'));
-		$status = (string)($timer->get('status') ?? '');
-		$normalizedStatus = $status !== '' ? strtolower($status) : (($pausedAt !== null && $pausedAt !== '') ? 'paused' : 'running');
-
-		return [
-			'id' => (int)$timer->id,
-			'startedAt' => $startedAt,
-			'started_at' => $startedAt,
-			'horaInicio' => $startedAt,
-			'horaPausa' => $pausedAt,
-			'pausedAt' => $pausedAt,
-			'status' => $normalizedStatus,
-			'ticketId' => $ticketId,
-			'ticket_id' => $ticketId,
-			'customerId' => $customerId,
-			'customer_id' => $customerId,
-			'userId' => $userId,
-			'user_id' => $userId,
-			'pausado' => $normalizedStatus === 'paused' || ($pausedAt !== null && $pausedAt !== ''),
-		];
 	}
 
 	protected function _timerCriarMovSafe($idticket, $sitantiga, $sitnova, $observacao): void {
@@ -2794,12 +2709,17 @@ class TicketsController extends AppController {
 				->orderDesc('id')
 				->first();
 			if ($timerAtivo) {
-				$base['sessao'] = $this->_atendimentoTimerSessaoPayload(
-					$timerAtivo,
-					(int)$idticket,
-					(int)($ticket->idcliente ?? 0),
-					(int)$this->Auth->user('id')
-				);
+				$hi = $this->_ormTimeToString($timerAtivo->get('hora_inicio') ?: $timerAtivo->get('horainicio'));
+				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa') ?: $timerAtivo->get('horapausa'));
+				$base['sessao'] = [
+					'id' => (int)$timerAtivo->id,
+					'status' => ($hp !== null && $hp !== '') ? 'paused' : 'running',
+					'startedAt' => $hi,
+					'pausedAt' => $hp,
+					'horaInicio' => $hi,
+					'horaPausa' => $hp,
+					'pausado' => $hp !== null && $hp !== '',
+				];
 			}
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
@@ -2883,7 +2803,7 @@ class TicketsController extends AppController {
 	/**
 	 * Timer (JSON): mesma regra das ações POST legadas, sem redirect/Flash.
 	 *
-	 * @return array{ok:bool,error?:string,message?:string,duracaoMinutosFinal?:int}
+	 * @return array{ok:bool,error?:string,message?:string,duracaoMinutosFinal?:int,durationSecondsFinal?:int}
 	 */
 	protected function _timerServiceExecute(int $idticket, $ticket, string $acao, array $body = []): array {
 		$acao = strtolower(trim($acao));
@@ -2912,15 +2832,19 @@ class TicketsController extends AppController {
 				if ($ativo) {
 					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
 				}
-				$novo = $this->AtendimentoTimer->newEntity([]);
-				$this->_atendimentoTimerApplyStart(
-					$novo,
-					$idticket,
-					(int)($ticket->idcliente ?? 0),
-					$uid,
-					(int)$this->Auth->user('idempresa'),
-					$agoraStr
-				);
+				$novo = $this->AtendimentoTimer->newEntity([
+					'idticket' => $idticket,
+					$tUserCol => $uid,
+					'idempresa' => (int)$this->Auth->user('idempresa'),
+					'hora_inicio' => $agoraStr,
+				]);
+				$this->_atendimentoTimerApplyCanonicalFields($novo, [
+					'ticket_id' => $idticket,
+					'customer_id' => (int)$ticket->idcliente,
+					'user_id' => $uid,
+					'status' => 'running',
+					'started_at' => $agoraStr,
+				]);
 				if (!$this->AtendimentoTimer->save($novo)) {
 					$this->log('apiTimer iniciar save: ' . json_encode($novo->getErrors()), 'error');
 
@@ -2928,7 +2852,7 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas iniciado.');
 
-				return ['ok' => true, 'message' => 'Timer iniciado.', 'started_at' => $agoraStr];
+				return ['ok' => true, 'message' => 'Timer iniciado.', 'status' => 'running', 'startedAt' => $agoraStr];
 			}
 
 			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->orderDesc('id')->first();
@@ -2938,6 +2862,10 @@ class TicketsController extends AppController {
 
 			if ($acao === 'pausar') {
 				$timer->set('hora_pausa', $agoraStr);
+				$this->_atendimentoTimerApplyCanonicalFields($timer, [
+					'status' => 'paused',
+					'paused_at' => $agoraStr,
+				]);
 				if (!$this->AtendimentoTimer->save($timer)) {
 					$this->log('apiTimer pausar save: ' . json_encode($timer->getErrors()), 'error');
 
@@ -2945,7 +2873,7 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerPausado, 'Timer de horas técnicas pausado.');
 
-				return ['ok' => true, 'message' => 'Timer pausado.'];
+				return ['ok' => true, 'message' => 'Timer pausado.', 'status' => 'paused'];
 			}
 			if ($acao === 'retomar') {
 				$novaHi = $this->_timerRetomarShiftInicio($timer, $agora);
@@ -2954,6 +2882,11 @@ class TicketsController extends AppController {
 				}
 				$timer->set('hora_inicio', $novaHi);
 				$timer->set('hora_pausa', null);
+				$this->_atendimentoTimerApplyCanonicalFields($timer, [
+					'status' => 'running',
+					'started_at' => $novaHi,
+					'paused_at' => null,
+				]);
 				if (!$this->AtendimentoTimer->save($timer)) {
 					$this->log('apiTimer retomar save: ' . json_encode($timer->getErrors()), 'error');
 
@@ -2961,12 +2894,17 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas retomado.');
 
-				return ['ok' => true, 'message' => 'Timer retomado.'];
+				return ['ok' => true, 'message' => 'Timer retomado.', 'status' => 'running', 'startedAt' => $novaHi];
 			}
 
 			// finalizar
-			$horaInicio = $timer->get('started_at') ?: $timer->get('hora_inicio') ?: $timer->get('horainicio');
-			$horaFim = $agoraStr;
+			$timer->set('hora_fim', $agoraStr);
+			$this->_atendimentoTimerApplyCanonicalFields($timer, [
+				'status' => 'finished',
+				'ended_at' => $agoraStr,
+			]);
+			$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
+			$horaFim = $timer->get('hora_fim') ?: $timer->get('horafim');
 			$inicio = null;
 			$fim = null;
 			$duracaoSegundos = 0;
@@ -2978,9 +2916,11 @@ class TicketsController extends AppController {
 					$duracaoSegundos = (int)($fim->getTimestamp() - $inicio->getTimestamp());
 					$duracaoMinutos = $duracaoSegundos > 0 ? (int)ceil($duracaoSegundos / 60) : 0;
 					$this->_atendimentoTimerApplyDuracaoMinutos($timer, $duracaoMinutos);
+					$this->_atendimentoTimerApplyCanonicalFields($timer, [
+						'duration_seconds' => $duracaoSegundos,
+					]);
 				}
 			}
-			$this->_atendimentoTimerApplyEnd($timer, $agoraStr, $duracaoSegundos);
 			if (!$this->AtendimentoTimer->save($timer)) {
 				$this->log('apiTimer finalizar save: ' . json_encode($timer->getErrors()), 'error');
 
@@ -3015,10 +2955,23 @@ class TicketsController extends AppController {
 				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket);
 			}
 
-			return ['ok' => true, 'message' => 'Timer finalizado. Horas registradas.', 'duracaoMinutosFinal' => $duracaoMinutos];
+			return [
+				'ok' => true,
+				'message' => 'Timer finalizado. Horas registradas.',
+				'duracaoMinutosFinal' => $duracaoMinutos,
+				'durationSecondsFinal' => $duracaoSegundos,
+				'status' => 'finished',
+				'endedAt' => $agoraStr,
+			];
 		} catch (\Throwable $e) {
 			$this->log($e->getMessage() . "\n" . $e->getTraceAsString(), 'error');
 			$msg = $e->getMessage();
+			if (
+				stripos($msg, 'ux_atendimento_timer_open_ticket_user') !== false ||
+				(stripos($msg, 'duplicate key') !== false && stripos($msg, 'atendimento_timer') !== false)
+			) {
+				return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
+			}
 			if (stripos($msg, 'does not exist') !== false || stripos($msg, 'relation') !== false || stripos($msg, 'undefined table') !== false) {
 				return ['ok' => false, 'error' => 'table_missing', 'message' => 'Tabela atendimento_timer não existe ou está inacessível.'];
 			}
@@ -5484,8 +5437,8 @@ class TicketsController extends AppController {
 		if (array_key_exists('duracaoMinutosFinal', $result)) {
 			$payload['duracaoMinutosFinal'] = (int)$result['duracaoMinutosFinal'];
 		}
-		if (array_key_exists('started_at', $result)) {
-			$payload['started_at'] = (string)$result['started_at'];
+		if (array_key_exists('durationSecondsFinal', $result)) {
+			$payload['durationSecondsFinal'] = (int)$result['durationSecondsFinal'];
 		}
 		$status = $result['ok'] ? 200 : 400;
 
