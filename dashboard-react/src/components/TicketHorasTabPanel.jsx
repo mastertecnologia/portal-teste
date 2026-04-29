@@ -307,6 +307,10 @@ export default function TicketHorasTabPanel({
   }, [eventosHoras, filterDay, filterTec]);
 
   const segundosFiltrados = useMemo(() => filtered.reduce((s, ev) => s + worklogSeconds(ev), 0), [filtered]);
+  const entriesTotalSeconds = useMemo(
+    () => entries.reduce((sum, en) => sum + Math.max(0, Number(en?.durationSeconds) || 0), 0),
+    [entries]
+  );
 
   const filtersActive = Boolean(filterDay || filterTec);
 
@@ -558,6 +562,9 @@ export default function TicketHorasTabPanel({
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="pt-3 text-center text-[1.04rem] font-semibold text-[#4b5563]">
+          Total: {formatDurationHms(entriesTotalSeconds)}
         </div>
         <div className="mt-4 flex items-center justify-between">
           <button type="button" className="rounded-full border border-[#d1d5db] bg-white px-5 py-1.5 text-sm font-semibold text-[#374151]" onClick={() => setEntriesOpen(false)}>Fechar</button>
