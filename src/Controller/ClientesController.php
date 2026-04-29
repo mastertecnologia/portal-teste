@@ -312,7 +312,7 @@ class ClientesController extends AppController {
 				$data['token'] = $this->Clientes->generateToken($string);
 			
 				$cliente = $this->Clientes->patchEntity($cliente, $data);
-				$cliente->membrodesde = date('d/m/y');
+				$cliente->membrodesde = date('Y-m-d');
 				$cliente->idempresa = $this->Auth->user('idempresa');
 				if(!empty($data['cnpj'])) $cliente->cnpj = \removeCaracteres($data['cnpj']);
 				if(!empty($data['cpf'])) $cliente->cpf = \removeCaracteres($data['cpf']);
@@ -1044,7 +1044,7 @@ class ClientesController extends AppController {
 				$cliente->tipo = C_ClientesTipoFisica;
 			}
 			$cliente->inscricaoestadual = $json->inscest ?? null;
-			$cliente->membrodesde = date('d/m/y');
+			$cliente->membrodesde = date('Y-m-d');
 			$cliente->idempresa = $empresa;
 			$cliente->endereco = $json->endereco ?? null;
 			$cliente->nroendereco = $json->nroendereco ?? null;
