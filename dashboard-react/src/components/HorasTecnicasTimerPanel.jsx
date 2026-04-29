@@ -73,6 +73,7 @@ export default function HorasTecnicasTimerPanel({
   onFeedback,
   canEditDescricaoAtendimento = false,
   onRelatorioSaved,
+  entryActionsContent = null,
 }) {
   const safeStorage = typeof window !== 'undefined' ? window.localStorage : null;
   const [optimistic, setOptimistic] = useState(null);
@@ -423,14 +424,20 @@ export default function HorasTecnicasTimerPanel({
             )}
           </div>
 
-          <button
-            type="button"
-            className="btn-audit-adjust"
-            disabled={disabled || busy}
-            onClick={() => setAuditOpen(true)}
-          >
-            Ajuste de Auditoria
-          </button>
+          {entryActionsContent ? (
+            <div className="timer-entry-actions-inline">
+              {entryActionsContent}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn-audit-adjust"
+              disabled={disabled || busy}
+              onClick={() => setAuditOpen(true)}
+            >
+              Ajuste de Auditoria
+            </button>
+          )}
 
         </div>
       </div>

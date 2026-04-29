@@ -285,7 +285,12 @@ function technicianDisplayLabel(en) {
   return String(raw || '').trim();
 }
 
-export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryActions = false }) {
+export default function TicketHorasTabPanel({
+  ticket,
+  timelineEvents,
+  onlyEntryActions = false,
+  compactOnlyEntryActions = false,
+}) {
   const eventosHoras = useMemo(
     () => (timelineEvents || []).filter((ev) => (ev.type || '').toLowerCase() === 'worklog'),
     [timelineEvents]
@@ -832,16 +837,30 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
     document.body
   ) : null;
 
+  const entryButtons = (
+    <div className="flex flex-wrap gap-2">
+      <button type="button" onClick={openEntriesModal} className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]">
+        Ver todas as entradas
+      </button>
+      <button type="button" onClick={() => openManualModal(null)} className="rounded-md bg-[var(--pgm-primary)] px-2.5 py-1.5 text-xs font-semibold text-white hover:brightness-110">
+        Entrada manual de tempo
+      </button>
+    </div>
+  );
+
+  if (onlyEntryActions && compactOnlyEntryActions) {
+    return (
+      <>
+        {entryButtons}
+        {entriesModal}
+        {manualModal}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-0 space-y-3 px-1">
-      <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={openEntriesModal} className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 py-1.5 text-xs font-semibold text-[var(--pgm-text)] hover:bg-[var(--pgm-bg-raised)]">
-          Ver todas as entradas
-        </button>
-        <button type="button" onClick={() => openManualModal(null)} className="rounded-md bg-[var(--pgm-primary)] px-2.5 py-1.5 text-xs font-semibold text-white hover:brightness-110">
-          Entrada manual de tempo
-        </button>
-      </div>
+      {entryButtons}
       {onlyEntryActions ? (
         <>
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">

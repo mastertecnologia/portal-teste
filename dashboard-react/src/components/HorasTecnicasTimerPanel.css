@@ -131,6 +131,10 @@
   cursor: not-allowed;
 }
 
+.pgm-crono-realtime .timer-entry-actions-inline {
+  margin-top: 14px;
+}
+
 .pgm-crono-realtime .timer-entry-links {
   margin-top: 10px;
   display: flex;

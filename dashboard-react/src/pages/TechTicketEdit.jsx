@@ -573,6 +573,14 @@ export default function TechTicketEdit({ boot }) {
     <HorasTecnicasTimerPanel
       ticketId={ticket.id}
       horasTecnicas={ticket.horasTecnicas}
+      entryActionsContent={(
+        <TicketHorasTabPanel
+          ticket={ticket}
+          timelineEvents={timelineEvents}
+          onlyEntryActions
+          compactOnlyEntryActions
+        />
+      )}
       canEditDescricaoAtendimento={Boolean(ticket.flags?.canEditDescricaoAtendimento)}
       onRelatorioSaved={(texto) => setRelatorioAtendimento(texto)}
       onSnapshot={(ht) => {
@@ -587,10 +595,6 @@ export default function TechTicketEdit({ boot }) {
         }
       }}
     />
-  );
-
-  const horasEntradasBlock = (
-    <TicketHorasTabPanel ticket={ticket} timelineEvents={timelineEvents} onlyEntryActions />
   );
 
   const descricaoBlock = (
@@ -731,7 +735,6 @@ export default function TechTicketEdit({ boot }) {
     <div className="grid min-h-0 gap-4 lg:grid-cols-12 lg:items-start">
       <div className="min-h-0 min-w-0 space-y-4 lg:col-span-3">
         {horasTecnicasBlock}
-        {horasEntradasBlock}
         <TicketResumoPanel ticket={ticket} />
       </div>
       <div className="min-h-0 min-w-0 space-y-4 lg:col-span-5">
