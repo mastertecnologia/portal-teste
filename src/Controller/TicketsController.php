@@ -80,7 +80,7 @@ class TicketsController extends AppController {
 		if (in_array($action, ['apiValidateGeolocation'], true)) {
 			return (int)$user['role'] === 0;
 		}
-		if (in_array($action, ['apiTicketSignature', 'apiAddTicketProduct', 'apiAddEvidencePhoto', 'apiPdfTicketOs', 'apiPdfLaudo'], true)) {
+		if (in_array($action, ['apiTicketSignature', 'apiAddTicketProduct', 'apiTicketProductSearch', 'apiAddEvidencePhoto', 'apiPdfTicketOs', 'apiPdfLaudo'], true)) {
 			return (int)$user['role'] === 0;
 		}
 		if (in_array($action, ['apiTicketAssetsAttach', 'apiTicketAssetsDetach'], true)) {
@@ -2562,6 +2562,109 @@ class TicketsController extends AppController {
 		}
 	}
 
+	/**
+	 * Cache local das colunas da tabela atendimento_timer.
+	 *
+	 * @return string[]
+	 */
+	protected function _atendimentoTimerColumns(): array {
+		static $cached = null;
+		if ($cached !== null) {
+			return $cached;
+		}
+		try {
+			$this->loadModel('AtendimentoTimer');
+			$cached = $this->AtendimentoTimer->getSchema()->columns();
+		} catch (\Throwable $e) {
+			$cached = [];
+		}
+
+		return $cached;
+	}
+
+	/**
+	 * Define campos de início do timer, preservando compatibilidade de schema legado/novo.
+	 */
+	protected function _atendimentoTimerApplyStart($timer, int $ticketId, int $customerId, int $userId, int $companyId, string $startedAt): void {
+		$cols = $this->_atendimentoTimerColumns();
+		$unguarded = ['guard' => false];
+		$timer->set('idticket', $ticketId);
+		$timer->set($this->_atendimentoTimerUserColumn(), $userId);
+		$timer->set('idempresa', $companyId);
+		if (in_array('ticket_id', $cols, true)) {
+			$timer->set('ticket_id', $ticketId, $unguarded);
+		}
+		if (in_array('customer_id', $cols, true)) {
+			$timer->set('customer_id', $customerId, $unguarded);
+		}
+		if (in_array('user_id', $cols, true)) {
+			$timer->set('user_id', $userId, $unguarded);
+		}
+		if (in_array('started_at', $cols, true)) {
+			$timer->set('started_at', $startedAt, $unguarded);
+		}
+		$timer->set('hora_inicio', $startedAt);
+		$timer->set('hora_fim', null);
+		if (in_array('ended_at', $cols, true)) {
+			$timer->set('ended_at', null, $unguarded);
+		}
+		if (in_array('duration_seconds', $cols, true)) {
+			$timer->set('duration_seconds', null, $unguarded);
+		}
+		if (in_array('status', $cols, true)) {
+			$timer->set('status', 'running', $unguarded);
+		}
+	}
+
+	/**
+	 * Define campos de fim do timer, preservando compatibilidade de schema legado/novo.
+	 */
+	protected function _atendimentoTimerApplyEnd($timer, string $endedAt, int $durationSeconds): void {
+		$cols = $this->_atendimentoTimerColumns();
+		$unguarded = ['guard' => false];
+		$timer->set('hora_fim', $endedAt);
+		if (in_array('ended_at', $cols, true)) {
+			$timer->set('ended_at', $endedAt, $unguarded);
+		}
+		if (in_array('duration_seconds', $cols, true)) {
+			$timer->set('duration_seconds', max(0, $durationSeconds), $unguarded);
+		}
+		if (in_array('status', $cols, true)) {
+			$timer->set('status', 'stopped', $unguarded);
+		}
+	}
+
+	/**
+	 * Snapshot canônico da sessão ativa para frontend (suporta campos legados e novos).
+	 */
+	protected function _atendimentoTimerSessaoPayload($timer, int $ticketId, int $customerId, int $userId): array {
+		$startedAt = $this->_ormTimeToString(
+			$timer->get('started_at')
+			?: $timer->get('hora_inicio')
+			?: $timer->get('horainicio')
+		);
+		$pausedAt = $this->_ormTimeToString($timer->get('hora_pausa') ?: $timer->get('horapausa'));
+		$status = (string)($timer->get('status') ?? '');
+		$normalizedStatus = $status !== '' ? strtolower($status) : (($pausedAt !== null && $pausedAt !== '') ? 'paused' : 'running');
+
+		return [
+			'id' => (int)$timer->id,
+			'startedAt' => $startedAt,
+			'started_at' => $startedAt,
+			'horaInicio' => $startedAt,
+			'horaPausa' => $pausedAt,
+			'pausedAt' => $pausedAt,
+			'status' => $normalizedStatus,
+			'ticketId' => $ticketId,
+			'ticket_id' => $ticketId,
+			'customerId' => $customerId,
+			'customer_id' => $customerId,
+			'userId' => $userId,
+			'user_id' => $userId,
+			'pausado' => $normalizedStatus === 'paused' || ($pausedAt !== null && $pausedAt !== ''),
+		];
+	}
+
 	protected function _timerCriarMovSafe($idticket, $sitantiga, $sitnova, $observacao): void {
 		try {
 			$this->criarMov($idticket, $sitantiga, $sitnova, $observacao);
@@ -2691,14 +2794,12 @@ class TicketsController extends AppController {
 				->orderDesc('id')
 				->first();
 			if ($timerAtivo) {
-				$hi = $this->_ormTimeToString($timerAtivo->get('hora_inicio') ?: $timerAtivo->get('horainicio'));
-				$hp = $this->_ormTimeToString($timerAtivo->get('hora_pausa') ?: $timerAtivo->get('horapausa'));
-				$base['sessao'] = [
-					'id' => (int)$timerAtivo->id,
-					'horaInicio' => $hi,
-					'horaPausa' => $hp,
-					'pausado' => $hp !== null && $hp !== '',
-				];
+				$base['sessao'] = $this->_atendimentoTimerSessaoPayload(
+					$timerAtivo,
+					(int)$idticket,
+					(int)($ticket->idcliente ?? 0),
+					(int)$this->Auth->user('id')
+				);
 			}
 		} catch (\Throwable $e) {
 			$base['timerDisponivel'] = false;
@@ -2811,12 +2912,15 @@ class TicketsController extends AppController {
 				if ($ativo) {
 					return ['ok' => false, 'error' => 'already_running', 'message' => 'Já existe um timer em andamento para este ticket.'];
 				}
-				$novo = $this->AtendimentoTimer->newEntity([
-					'idticket' => $idticket,
-					$tUserCol => $uid,
-					'idempresa' => (int)$this->Auth->user('idempresa'),
-					'hora_inicio' => $agoraStr,
-				]);
+				$novo = $this->AtendimentoTimer->newEntity([]);
+				$this->_atendimentoTimerApplyStart(
+					$novo,
+					$idticket,
+					(int)($ticket->idcliente ?? 0),
+					$uid,
+					(int)$this->Auth->user('idempresa'),
+					$agoraStr
+				);
 				if (!$this->AtendimentoTimer->save($novo)) {
 					$this->log('apiTimer iniciar save: ' . json_encode($novo->getErrors()), 'error');
 
@@ -2824,7 +2928,7 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerIniciado, 'Timer de horas técnicas iniciado.');
 
-				return ['ok' => true, 'message' => 'Timer iniciado.'];
+				return ['ok' => true, 'message' => 'Timer iniciado.', 'started_at' => $agoraStr];
 			}
 
 			$timer = $this->AtendimentoTimer->find()->where(['idticket' => $idticket, $tUserCol => $uid, 'hora_fim IS' => null])->orderDesc('id')->first();
@@ -2861,9 +2965,8 @@ class TicketsController extends AppController {
 			}
 
 			// finalizar
-			$timer->set('hora_fim', $agoraStr);
-			$horaInicio = $timer->get('hora_inicio') ?: $timer->get('horainicio');
-			$horaFim = $timer->get('hora_fim') ?: $timer->get('horafim');
+			$horaInicio = $timer->get('started_at') ?: $timer->get('hora_inicio') ?: $timer->get('horainicio');
+			$horaFim = $agoraStr;
 			$inicio = null;
 			$fim = null;
 			$duracaoSegundos = 0;
@@ -2877,6 +2980,7 @@ class TicketsController extends AppController {
 					$this->_atendimentoTimerApplyDuracaoMinutos($timer, $duracaoMinutos);
 				}
 			}
+			$this->_atendimentoTimerApplyEnd($timer, $agoraStr, $duracaoSegundos);
 			if (!$this->AtendimentoTimer->save($timer)) {
 				$this->log('apiTimer finalizar save: ' . json_encode($timer->getErrors()), 'error');
 
@@ -2974,6 +3078,7 @@ class TicketsController extends AppController {
 				'apiValidateGeolocation' => $w . 'tickets/api-validate-geolocation/',
 				'apiTicketSignature' => $w . 'tickets/api-ticket-signature/',
 				'apiAddTicketProduct' => $w . 'tickets/api-add-ticket-product/',
+				'apiTicketProductSearch' => $w . 'tickets/api-ticket-product-search/',
 				'apiAddEvidencePhoto' => $w . 'tickets/api-add-evidence-photo/',
 				'apiPdfTicketOs' => $w . 'tickets/api-pdf-ticket-os/',
 				'apiPdfLaudo' => $w . 'tickets/api-pdf-laudo/',
@@ -5379,6 +5484,9 @@ class TicketsController extends AppController {
 		if (array_key_exists('duracaoMinutosFinal', $result)) {
 			$payload['duracaoMinutosFinal'] = (int)$result['duracaoMinutosFinal'];
 		}
+		if (array_key_exists('started_at', $result)) {
+			$payload['started_at'] = (string)$result['started_at'];
+		}
 		$status = $result['ok'] ? 200 : 400;
 
 		return $this->jsonResponse($payload, $status);
@@ -5796,15 +5904,20 @@ class TicketsController extends AppController {
 		if (!$p) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'produto_not_found'], 404);
 		}
+		$tipoProduto = (int)($p->get('tipo') ?? 1);
 		$cols = $this->Produtos->getSchema()->columns();
 		$custo = in_array('vlcusto', $cols, true) ? $p->get('vlcusto') : null;
 		$preco = in_array('vlunitario', $cols, true) ? $p->get('vlunitario') : null;
+		$valorInformado = isset($body['valor_unitario']) ? (float)$body['valor_unitario'] : null;
+		if ($valorInformado !== null && $valorInformado >= 0) {
+			$preco = $valorInformado;
+		}
 		$emp = (int)$this->Auth->user('idempresa');
 		$hasEstoque = in_array('estoque_atual', $cols, true);
 		$conn = ConnectionManager::get('default');
 		try {
-			$out = $conn->transactional(function () use ($conn, $hasEstoque, $q, $pid, $emp, $idticket, $custo, $preco) {
-				if ($hasEstoque) {
+			$out = $conn->transactional(function () use ($conn, $hasEstoque, $q, $pid, $emp, $idticket, $custo, $preco, $tipoProduto) {
+				if ($hasEstoque && $tipoProduto === 1) {
 					$st = $conn->execute(
 						'UPDATE produtos SET estoque_atual = COALESCE(estoque_atual, 0) - :q WHERE id = :id AND idempresa = :eid AND COALESCE(estoque_atual, 0) >= :q2',
 						['q' => $q, 'q2' => $q, 'id' => $pid, 'eid' => $emp]
@@ -5840,6 +5953,67 @@ class TicketsController extends AppController {
 		}
 
 		return $this->jsonResponse(['ok' => true, 'id' => $out]);
+	}
+
+	public function apiTicketProductSearch($idticket = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$ticket = $this->Tickets->find()->where(['Tickets.id' => $idticket])->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$eid = (int)$this->Auth->user('idempresa');
+		$tipoParam = strtolower(trim((string)$this->request->getQuery('tipo')));
+		$q = trim((string)$this->request->getQuery('q'));
+		$tipoFiltro = null;
+		if ($tipoParam === 'produto') {
+			$tipoFiltro = 1;
+		} elseif ($tipoParam === 'servico' || $tipoParam === 'serviço') {
+			$tipoFiltro = 2;
+		}
+		$query = $this->Produtos->find()
+			->select(['id', 'codigo', 'descricao', 'tipo', 'vlunitario'])
+			->where(['idempresa' => $eid, 'ativo' => 1, 'tipo IN' => [1, 2]])
+			->order(['descricao' => 'ASC'])
+			->limit(120);
+		if ($tipoFiltro !== null) {
+			$query->where(['tipo' => $tipoFiltro]);
+		}
+		if ($q !== '') {
+			$qLike = '%' . mb_strtolower($q, 'UTF-8') . '%';
+			$query->where([
+				'OR' => [
+					'LOWER(descricao) LIKE' => $qLike,
+					'LOWER(codigo) LIKE' => $qLike,
+				],
+			]);
+		}
+		$cols = $this->Produtos->getSchema()->columns();
+		$hasEstoque = in_array('estoque_atual', $cols, true);
+		if ($hasEstoque) {
+			$query->select(['estoque_atual']);
+		}
+		$list = [];
+		foreach ($query->all() as $p) {
+			$tipoNum = (int)($p->get('tipo') ?? 0);
+			$estoque = null;
+			if ($tipoNum === 1 && $hasEstoque) {
+				$estoque = (float)($p->get('estoque_atual') ?? 0);
+			}
+			$list[] = [
+				'id' => (int)$p->get('id'),
+				'tipo' => $tipoNum === 1 ? 'produto' : 'servico',
+				'codigo' => (string)($p->get('codigo') ?? ''),
+				'descricao' => (string)($p->get('descricao') ?? ''),
+				'valor' => (float)($p->get('vlunitario') ?? 0),
+				'estoque' => $estoque,
+			];
+		}
+
+		return $this->jsonResponse(['ok' => true, 'items' => $list], 200);
 	}
 
 	public function apiAddEvidencePhoto($idticket = null) {
@@ -6409,12 +6583,13 @@ class TicketsController extends AppController {
 				$pu = (float)($tp->preco_unitario ?? 0);
 				$line = $qtd * $pu;
 				$tot += $line;
+				$ptipo = (int)($tp->produto->tipo ?? 1);
 				$pnome = $tp->produto ? (string)($tp->produto->descricao ?? $tp->produto->nome ?? 'Produto') : '—';
 				$list[] = [
 					'id' => (int)$tp->id,
 					'data' => $tp->created,
 					'descricao' => $pnome,
-					'tipo' => 'Peça',
+					'tipo' => $ptipo === 2 ? 'Serviço' : 'Produto',
 					'quantidade' => $qtd,
 					'valorUnit' => $pu,
 					'valorTotal' => $line,

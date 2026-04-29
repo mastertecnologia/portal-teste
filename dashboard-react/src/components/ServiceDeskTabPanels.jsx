@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  addTicketProduct,
   attachAssetToTicket,
   detachAssetFromTicket,
   fetchServicedeskData,
+  searchTicketProductsServices,
 } from '../lib/api';
 import TicketTimeline from './TicketTimeline.jsx';
 import TicketHorasTabPanel from './TicketHorasTabPanel.jsx';
@@ -248,6 +250,17 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   const assetModalRef = useRef(null);
   const assetTriggerRef = useRef(null);
   const [err, setErr] = useState(null);
+  const [pecasModalOpen, setPecasModalOpen] = useState(false);
+  const [pecasCatalogQ, setPecasCatalogQ] = useState('');
+  const [pecasCatalogTipo, setPecasCatalogTipo] = useState('');
+  const [pecasCatalogItems, setPecasCatalogItems] = useState([]);
+  const [pecasQtyById, setPecasQtyById] = useState({});
+  const [pecasCatalogBusy, setPecasCatalogBusy] = useState(false);
+  const [pecasActionBusyId, setPecasActionBusyId] = useState(0);
+  const [pecasError, setPecasError] = useState(null);
+  const [pecasSuccess, setPecasSuccess] = useState('');
+  const [pecaLinhaDestaqueId, setPecaLinhaDestaqueId] = useState(0);
+  const [pecasAddAndKeepOpen, setPecasAddAndKeepOpen] = useState(false);
 
   const historicoList = useMemo(() => {
     if (!Array.isArray(timelineEvents)) {
@@ -345,6 +358,104 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
     window.addEventListener('keydown', onKeydown);
     return () => window.removeEventListener('keydown', onKeydown);
   }, [assetModal]);
+
+  const reloadTabData = async (targetTab) => {
+    if (!id) return;
+    const r = await fetchServicedeskData(id, targetTab);
+    if (r.ok) {
+      setData(r);
+    }
+  };
+
+  const loadPecasCatalog = async (opts = {}) => {
+    if (!id) return;
+    setPecasCatalogBusy(true);
+    setPecasError(null);
+    const r = await searchTicketProductsServices(id, {
+      q: opts.q ?? pecasCatalogQ,
+      tipo: opts.tipo ?? pecasCatalogTipo,
+    });
+    setPecasCatalogBusy(false);
+    if (!r.ok) {
+      setPecasError(r.error || 'Erro ao buscar produtos/serviços.');
+      return;
+    }
+    const nextItems = r.items || [];
+    setPecasCatalogItems(nextItems);
+    setPecasQtyById((prev) => {
+      const next = { ...prev };
+      nextItems.forEach((it) => {
+        const idKey = Number(it?.id || 0);
+        if (idKey > 0 && (!Number.isFinite(Number(next[idKey])) || Number(next[idKey]) <= 0)) {
+          next[idKey] = 1;
+        }
+      });
+      return next;
+    });
+  };
+
+  const openPecasModal = async () => {
+    setPecasCatalogQ('');
+    setPecasCatalogTipo('');
+    setPecasError(null);
+    setPecasModalOpen(true);
+    await loadPecasCatalog({ q: '', tipo: '' });
+  };
+
+  const handleAddPecaServico = async (item) => {
+    const idProduto = Number(item?.id || 0);
+    const qty = Number(pecasQtyById[idProduto] || 0);
+    if (idProduto <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setPecasError('A quantidade deve ser maior que zero.');
+      return;
+    }
+    setPecasActionBusyId(idProduto);
+    setPecasError(null);
+    const r = await addTicketProduct(id, {
+      produto_id: idProduto,
+      quantidade: qty,
+      valor_unitario: Number(item?.valor || 0),
+    });
+    setPecasActionBusyId(0);
+    if (!r.ok) {
+      if (r.error === 'estoque_insuficiente') {
+        setPecasError('Estoque insuficiente para o produto selecionado.');
+      } else {
+        setPecasError('Não foi possível adicionar o item ao ticket.');
+      }
+      return;
+    }
+    setPecasSuccess('Item adicionado com sucesso.');
+    if (!pecasAddAndKeepOpen) {
+      setPecasModalOpen(false);
+      setPecasCatalogQ('');
+      setPecasCatalogTipo('');
+      setPecasError(null);
+    }
+    setPecaLinhaDestaqueId(Number(r.id || 0));
+    await reloadTabData('pecas');
+  };
+
+  useEffect(() => {
+    if (!pecasModalOpen) return undefined;
+    const t = window.setTimeout(() => {
+      loadPecasCatalog();
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [pecasModalOpen, pecasCatalogQ, pecasCatalogTipo]);
+
+  useEffect(() => {
+    if (!pecasSuccess) return undefined;
+    const t = window.setTimeout(() => setPecasSuccess(''), 2600);
+    return () => window.clearTimeout(t);
+  }, [pecasSuccess]);
+
+  useEffect(() => {
+    if (!pecaLinhaDestaqueId) return undefined;
+    const t = window.setTimeout(() => setPecaLinhaDestaqueId(0), 2200);
+    return () => window.clearTimeout(t);
+  }, [pecaLinhaDestaqueId]);
 
   if (tab === 'historico') {
     return (
@@ -644,44 +755,175 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
   }
 
   if (data.tab === 'pecas') {
+    const rows = data.rows || [];
     return (
       <div>
-        <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
-          {boot?.paths?.apiAddTicketProduct && id ? (
-            <span className="text-[0.65rem] text-[var(--pgm-text-muted)]">
-              Registo via API / legado: use o ecrã clássico se disponível.
-            </span>
-          ) : null}
-          {boot?.classicEditUrl ? (
-            <a
-              href={boot.classicEditUrl}
-              className="inline-flex items-center gap-1 rounded-md bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
-            >
-              + Peça / serviço
-            </a>
-          ) : null}
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[0.7rem] text-[var(--pgm-text-muted)]">
+            Produtos e serviços lançados no ticket.
+          </span>
+          <button
+            type="button"
+            onClick={openPecasModal}
+            className="inline-flex items-center gap-1 rounded-md bg-emerald-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
+          >
+            + Peça / serviço
+          </button>
         </div>
-        <table className="w-full min-w-[32rem] text-left text-sm">
+        {pecasSuccess ? <p className="mb-2 text-xs text-emerald-300">{pecasSuccess}</p> : null}
+        {pecasError ? <p className="mb-2 text-xs text-red-300">{pecasError}</p> : null}
+        <table className="w-full min-w-[38rem] text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--pgm-border)] text-xs text-[var(--pgm-text-muted)]">
               <th className="py-2">Data</th>
+              <th className="py-2">Tipo</th>
               <th className="py-2">Descrição</th>
               <th className="py-2">Qtd</th>
+              <th className="py-2">Vl. Unit.</th>
               <th className="py-2">Total</th>
             </tr>
           </thead>
           <tbody>
-            {(data.rows || []).map((r) => (
-              <tr key={r.id} className="border-b border-[var(--pgm-border-subtle)]">
+            {rows.map((r) => (
+              <tr
+                key={r.id}
+                className={`border-b border-[var(--pgm-border-subtle)] ${
+                  Number(r.id || 0) === Number(pecaLinhaDestaqueId || 0) ? 'bg-emerald-900/20' : ''
+                }`}
+              >
                 <td className="py-2">{r.data ? new Date(r.data).toLocaleString() : '—'}</td>
+                <td className="py-2">{r.tipo || 'Produto'}</td>
                 <td className="py-2">{r.descricao}</td>
                 <td className="py-2">{r.quantidade}</td>
+                <td className="py-2">{BR.format(r.valorUnit || 0)}</td>
                 <td className="py-2">{BR.format(r.valorTotal || 0)}</td>
               </tr>
             ))}
+            {rows.length === 0 ? (
+              <tr>
+                <td className="py-3 text-[var(--pgm-text-muted)]" colSpan={6}>Nenhum item adicionado.</td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
         <p className="mt-2 font-semibold">Total: {BR.format(data.total || 0)}</p>
+        {pecasModalOpen ? (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 px-3 py-6"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setPecasModalOpen(false)}
+          >
+            <div
+              className="w-full max-w-5xl rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-4 shadow-xl"
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--pgm-border-subtle)] pb-2">
+                <h3 className="text-sm font-semibold text-[var(--pgm-text)]">Selecionar peça / serviço</h3>
+                <button
+                  type="button"
+                  className="rounded-md border border-[var(--pgm-border)] px-2 py-1 text-xs text-[var(--pgm-text-muted)]"
+                  onClick={() => setPecasModalOpen(false)}
+                >
+                  Fechar
+                </button>
+              </div>
+              <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input
+                  type="search"
+                  value={pecasCatalogQ}
+                  onChange={(e) => setPecasCatalogQ(e.target.value)}
+                  placeholder="Buscar por nome, código ou descrição..."
+                  className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
+                />
+                <select
+                  value={pecasCatalogTipo}
+                  onChange={(e) => setPecasCatalogTipo(e.target.value)}
+                  className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
+                >
+                  <option value="">Todos os tipos</option>
+                  <option value="produto">Produto</option>
+                  <option value="servico">Serviço</option>
+                </select>
+              </div>
+              <div className="mb-3">
+                <label className="inline-flex items-center gap-2 text-xs text-[var(--pgm-text-muted)]">
+                  <input
+                    type="checkbox"
+                    checked={pecasAddAndKeepOpen}
+                    onChange={(e) => setPecasAddAndKeepOpen(Boolean(e.target.checked))}
+                  />
+                  Adicionar e continuar (não fechar modal)
+                </label>
+              </div>
+              <div className="max-h-[60vh] overflow-auto">
+                <table className="w-full min-w-[52rem] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-[var(--pgm-border)] text-xs text-[var(--pgm-text-muted)]">
+                      <th className="py-2">Descrição</th>
+                      <th className="py-2">Tipo</th>
+                      <th className="py-2">Valor padrão</th>
+                      <th className="py-2">Estoque</th>
+                      <th className="py-2 w-[110px]">Qtd</th>
+                      <th className="py-2">Total</th>
+                      <th className="py-2 text-right">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pecasCatalogItems.map((it) => {
+                      const idItem = Number(it.id || 0);
+                      const qty = Number(pecasQtyById[idItem] || 1);
+                      const valor = Number(it.valor || 0);
+                      const totalLinha = qty > 0 ? qty * valor : 0;
+                      return (
+                        <tr key={idItem} className="border-b border-[var(--pgm-border-subtle)]">
+                          <td className="py-2">
+                            <div className="text-[var(--pgm-text)]">{it.descricao || '—'}</div>
+                            <div className="text-[0.65rem] text-[var(--pgm-text-muted)]">{it.codigo || 'sem código'}</div>
+                          </td>
+                          <td className="py-2">{it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
+                          <td className="py-2">{BR.format(valor)}</td>
+                          <td className="py-2">{it.tipo === 'produto' ? (it.estoque ?? '—') : '—'}</td>
+                          <td className="py-2">
+                            <input
+                              type="number"
+                              min="1"
+                              step="0.01"
+                              value={qty}
+                              onChange={(e) =>
+                                setPecasQtyById((prev) => ({ ...prev, [idItem]: e.target.value }))
+                              }
+                              className="w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-sm text-[var(--pgm-text)]"
+                            />
+                          </td>
+                          <td className="py-2">{BR.format(totalLinha)}</td>
+                          <td className="py-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleAddPecaServico(it)}
+                              disabled={pecasActionBusyId === idItem || !Number.isFinite(qty) || qty <= 0}
+                              className="rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                            >
+                              {pecasActionBusyId === idItem ? 'Adicionando...' : 'Adicionar'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {!pecasCatalogBusy && pecasCatalogItems.length === 0 ? (
+                      <tr>
+                        <td className="py-3 text-[var(--pgm-text-muted)]" colSpan={7}>
+                          Nenhum produto/serviço encontrado para os filtros informados.
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+                {pecasCatalogBusy ? <p className="py-3 text-sm text-[var(--pgm-text-muted)]">Carregando...</p> : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }

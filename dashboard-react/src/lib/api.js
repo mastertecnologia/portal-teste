@@ -415,6 +415,40 @@ export async function fetchServicedeskData(ticketId, tab) {
   return { ok: true, ...j };
 }
 
+export async function searchTicketProductsServices(ticketId, params = {}) {
+  if (USE_MOCK) {
+    return { ok: true, items: [] };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiTicketProductSearch;
+  if (!p) return { ok: false, error: 'no_api', items: [] };
+  const r = await fetch(
+    `${p}${encodeURIComponent(ticketId)}${qs({ q: params.q || '', tipo: params.tipo || '' })}`,
+    { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } },
+  );
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText, items: [] };
+  return { ok: true, items: Array.isArray(j.items) ? j.items : [] };
+}
+
+export async function addTicketProduct(ticketId, payload) {
+  if (USE_MOCK) {
+    return { ok: true, id: Date.now() };
+  }
+  const boot = getBoot();
+  const p = boot?.paths?.apiAddTicketProduct;
+  if (!p) return { ok: false, error: 'no_api' };
+  const r = await fetch(`${p}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {}),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) return { ok: false, error: j.error || r.statusText };
+  return { ok: true, id: j.id };
+}
+
 export async function postTicketSignature(ticketId, imageDataUrl) {
   if (USE_MOCK) {
     return { ok: true, url: '#' };
@@ -664,9 +698,18 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     await new Promise((r) => setTimeout(r, 150));
     const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
     if (action === 'iniciar') {
-      mockTimerSessao = { id: 1, horaInicio: nowStr, horaPausa: null, pausado: false };
+      mockTimerSessao = {
+        id: 1,
+        startedAt: nowStr,
+        started_at: nowStr,
+        horaInicio: nowStr,
+        horaPausa: null,
+        pausedAt: null,
+        status: 'running',
+        pausado: false,
+      };
     } else if (action === 'pausar' && mockTimerSessao) {
-      mockTimerSessao = { ...mockTimerSessao, pausado: true, horaPausa: nowStr };
+      mockTimerSessao = { ...mockTimerSessao, pausado: true, status: 'paused', horaPausa: nowStr, pausedAt: nowStr };
     } else if (action === 'retomar' && mockTimerSessao) {
       const parseMockLocal = (s) => {
         if (!s || typeof s !== 'string') return null;
@@ -675,14 +718,16 @@ export async function postTimerAction(ticketId, action, extra = {}) {
         const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6], 0);
         return Number.isNaN(d.getTime()) ? null : d.getTime();
       };
-      const hi = parseMockLocal(mockTimerSessao.horaInicio);
-      const hp = parseMockLocal(mockTimerSessao.horaPausa);
-      let next = { ...mockTimerSessao, pausado: false, horaPausa: null };
+      const hi = parseMockLocal(mockTimerSessao.startedAt || mockTimerSessao.started_at || mockTimerSessao.horaInicio);
+      const hp = parseMockLocal(mockTimerSessao.horaPausa || mockTimerSessao.pausedAt);
+      let next = { ...mockTimerSessao, pausado: false, status: 'running', horaPausa: null, pausedAt: null };
       if (hi != null && hp != null) {
         const elapsed = hp - hi;
         const d = new Date(Date.now() - elapsed);
         const p = (n) => (n < 10 ? `0${n}` : String(n));
         next.horaInicio = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        next.startedAt = next.horaInicio;
+        next.started_at = next.horaInicio;
       }
       mockTimerSessao = next;
     } else if (action === 'finalizar') {
@@ -699,6 +744,7 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     return {
       ok: true,
       message: 'ok (mock)',
+      started_at: action === 'iniciar' ? nowStr : undefined,
       horasTecnicas: {
         canUseTimer: true,
         minutosRegistrados: action === 'finalizar' ? 15 : 0,
@@ -735,6 +781,7 @@ export async function postTimerAction(ticketId, action, extra = {}) {
     ok: true,
     message: json.message,
     horasTecnicas: json.horasTecnicas,
+    started_at: json.started_at,
     duracaoMinutosFinal: json.duracaoMinutosFinal,
   };
 }

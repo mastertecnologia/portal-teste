@@ -374,6 +374,13 @@ Router::scope("/", function ($routes) {
         ->setMethods(["POST"]);
     $routes
         ->connect(
+            "/tickets/api-ticket-product-search/*",
+            ["controller" => "Tickets", "action" => "apiTicketProductSearch"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
             "/tickets/api-add-evidence-photo/*",
             ["controller" => "Tickets", "action" => "apiAddEvidencePhoto"],
             ["pass" => ["idticket"]],
