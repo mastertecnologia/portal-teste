@@ -73,6 +73,21 @@ function parseDurationHms(value) {
   return h * 3600 + min * 60 + sec;
 }
 
+function formatDateTimePtBr(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
+
 function toDateTimeLocalValue(value) {
   if (!value) return '';
   const d = new Date(value);
@@ -387,7 +402,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
                   </td>
                   <td className="py-2.5">
                     <div className="font-medium leading-tight">Total: {formatDurationHms(en.durationSeconds)}</div>
-                    <div className="text-[10px] leading-tight text-[#6b7280]">Início: {en.startWorkHour ? new Date(en.startWorkHour).toLocaleString() : '—'}</div>
+                    <div className="text-[10px] leading-tight text-[#6b7280]">Início: {formatDateTimePtBr(en.startWorkHour)}</div>
                   </td>
                   <td className="py-2.5 text-center">{en.billable === false ? 'Não' : 'Sim'}</td>
                   <td className="py-2.5 text-center text-[#6b7280]">{en.rate || '—'}</td>
@@ -407,7 +422,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
                       title="Excluir"
                       onClick={() => handleDeleteEntry(en.id)}
                     >
-                      <i className="fa fa-times" aria-hidden="true" />
+                      <i className="fa fa-trash" aria-hidden="true" />
                     </button>
                   </td>
                 </tr>
