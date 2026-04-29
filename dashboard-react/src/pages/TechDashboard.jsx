@@ -534,15 +534,16 @@ function PersistentTimerWidget({ rows, boot }) {
         const parsed = JSON.parse(raw);
         const ticketId = Number(parsed?.ticketId);
         const sessao = parsed?.sessao || null;
-        if (!ticketId || !sessao?.horaInicio) {
+        const startedAt = sessao?.startedAt || sessao?.started_at || sessao?.horaInicio;
+        if (!ticketId || !startedAt) {
           setTimerState(null);
           return;
         }
         setTimerState({
           ticketId,
-          horaInicio: sessao.horaInicio,
-          horaPausa: sessao.horaPausa || null,
-          pausado: Boolean(sessao.pausado),
+          horaInicio: startedAt,
+          horaPausa: sessao.horaPausa || sessao.pausedAt || null,
+          pausado: Boolean(sessao.pausado) || String(sessao.status || '').toLowerCase() === 'paused',
         });
       } catch (_e) {
         setTimerState(null);

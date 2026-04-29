@@ -41,8 +41,9 @@ function minutosLabel(totalMin) {
 /** Pausa efetiva: flag do servidor ou marca de hora de pausa (evita JSON inconsistente). */
 function sessaoEstaPausada(sessao) {
   if (!sessao) return false;
+  if (String(sessao.status || '').toLowerCase() === 'paused') return true;
   if (sessao.pausado === true) return true;
-  const hp = sessao.horaPausa;
+  const hp = sessao.horaPausa || sessao.pausedAt;
   return hp != null && String(hp).trim() !== '';
 }
 
@@ -102,15 +103,18 @@ export default function HorasTecnicasTimerPanel({
   useEffect(() => {
     if (!safeStorage || !ticketId) return;
     try {
-      if (sessao && sessao.horaInicio) {
+      const startedAt = sessao?.startedAt || sessao?.started_at || sessao?.horaInicio;
+      if (sessao && startedAt) {
         safeStorage.setItem(
           TIMER_WIDGET_STORAGE_KEY,
           JSON.stringify({
             ticketId: Number(ticketId),
             sessao: {
               id: sessao.id || null,
-              horaInicio: sessao.horaInicio,
-              horaPausa: sessao.horaPausa || null,
+              startedAt,
+              horaInicio: startedAt,
+              horaPausa: sessao.horaPausa || sessao.pausedAt || null,
+              status: sessao.status || (sessaoEstaPausada(sessao) ? 'paused' : 'running'),
               pausado: Boolean(sessaoEstaPausada(sessao)),
             },
             updatedAt: Date.now(),
@@ -140,17 +144,18 @@ export default function HorasTecnicasTimerPanel({
     const sw = swRef.current;
     if (!sw) return;
 
-    if (!sessao?.horaInicio) {
+    const startedAt = sessao?.startedAt || sessao?.started_at || sessao?.horaInicio;
+    if (!startedAt) {
       sw.syncIdle();
       return;
     }
-    const start = parseSqlLocalDateTime(sessao.horaInicio);
+    const start = parseSqlLocalDateTime(startedAt);
     if (!start) {
       sw.syncIdle();
       return;
     }
     if (sessaoEstaPausada(sessao)) {
-      const hp = sessao.horaPausa ? parseSqlLocalDateTime(sessao.horaPausa) : null;
+      const hp = (sessao.horaPausa || sessao.pausedAt) ? parseSqlLocalDateTime(sessao.horaPausa || sessao.pausedAt) : null;
       if (hp) {
         sw.syncPaused(Math.max(0, hp.getTime() - start.getTime()));
       } else {
@@ -187,8 +192,11 @@ export default function HorasTecnicasTimerPanel({
       const t0 = Date.now() + offsetRef.current;
       optimisticIniciarSnapshot = {
         id: 'local',
+        startedAt: localSqlDateTimeFromMs(t0),
+        started_at: localSqlDateTimeFromMs(t0),
         horaInicio: localSqlDateTimeFromMs(t0),
         horaPausa: null,
+        status: 'running',
         pausado: false,
       };
       setOptimistic(optimisticIniciarSnapshot);
@@ -197,25 +205,33 @@ export default function HorasTecnicasTimerPanel({
       setOptimistic({
         ...sessao,
         pausado: true,
+        status: 'paused',
         horaPausa: localSqlDateTimeFromMs(tPause),
+        pausedAt: localSqlDateTimeFromMs(tPause),
       });
-    } else if (action === 'retomar' && sessao?.horaInicio && sessao.horaPausa) {
-      const hi = parseSqlLocalDateTime(sessao.horaInicio);
-      const hp = parseSqlLocalDateTime(sessao.horaPausa);
+    } else if (action === 'retomar' && (sessao?.startedAt || sessao?.started_at || sessao?.horaInicio) && (sessao.horaPausa || sessao.pausedAt)) {
+      const hi = parseSqlLocalDateTime(sessao.startedAt || sessao.started_at || sessao.horaInicio);
+      const hp = parseSqlLocalDateTime(sessao.horaPausa || sessao.pausedAt);
       if (hi && hp) {
         const elapsed = hp.getTime() - hi.getTime();
         const tResume = Date.now() + offsetRef.current;
         setOptimistic({
           ...sessao,
+          startedAt: localSqlDateTimeFromMs(tResume - elapsed),
+          started_at: localSqlDateTimeFromMs(tResume - elapsed),
           horaInicio: localSqlDateTimeFromMs(tResume - elapsed),
+          status: 'running',
           pausado: false,
           horaPausa: null,
+          pausedAt: null,
         });
       } else {
         setOptimistic({
           ...sessao,
+          status: 'running',
           pausado: false,
           horaPausa: null,
+          pausedAt: null,
         });
       }
     } else if (action === 'finalizar') {
@@ -253,8 +269,19 @@ export default function HorasTecnicasTimerPanel({
     if (res.ok) {
       if (res.horasTecnicas && onSnapshot) {
         let ht = res.horasTecnicas;
-        if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio && !ht.sessao?.horaInicio) {
-          ht = { ...ht, sessao: optimisticIniciarSnapshot };
+        const confirmedStart = res.started_at || ht?.sessao?.startedAt || ht?.sessao?.started_at || ht?.sessao?.horaInicio || null;
+        if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio && !ht.sessao?.horaInicio && !ht.sessao?.startedAt && !ht.sessao?.started_at) {
+          ht = {
+            ...ht,
+            sessao: confirmedStart
+              ? {
+                  ...optimisticIniciarSnapshot,
+                  startedAt: confirmedStart,
+                  started_at: confirmedStart,
+                  horaInicio: confirmedStart,
+                }
+              : optimisticIniciarSnapshot,
+          };
         }
         onSnapshot(ht);
       }
