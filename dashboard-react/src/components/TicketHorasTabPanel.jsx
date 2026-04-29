@@ -183,6 +183,19 @@ function parseBrDateFilter(s) {
   return { iso };
 }
 
+function parsePtBrDateToIso(value) {
+  const t = String(value || '').trim();
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t);
+  if (!m) return null;
+  const day = Number(m[1]);
+  const month = Number(m[2]);
+  const year = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const dt = new Date(year, month - 1, day);
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return null;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 /** Rótulo do técnico vindo do JSON (camelCase ou snake_case legado). */
 function technicianDisplayLabel(en) {
   const raw =
@@ -222,6 +235,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
   const [entries, setEntries] = useState([]);
   const [entryTechnicians, setEntryTechnicians] = useState([]);
   const [hourCycle, setHourCycle] = useState('24h');
+  const [startDatePtBrDraft, setStartDatePtBrDraft] = useState('');
+  const [endDatePtBrDraft, setEndDatePtBrDraft] = useState('');
   const [startTime12hDraft, setStartTime12hDraft] = useState('');
   const [endTime12hDraft, setEndTime12hDraft] = useState('');
   const [entriesBusy, setEntriesBusy] = useState(false);
@@ -284,6 +299,11 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
     setEndTime12hDraft(to12hClock(form.endTime || '00:00:00'));
   }, [hourCycle, form.startTime, form.endTime]);
 
+  useEffect(() => {
+    setStartDatePtBrDraft(isoDateToBr(form.startDate || ''));
+    setEndDatePtBrDraft(isoDateToBr(form.endDate || ''));
+  }, [form.startDate, form.endDate]);
+
   async function reloadEntries() {
     if (!ticket?.id) return;
     setEntriesBusy(true);
@@ -341,6 +361,8 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
       auditAuthKey: '',
       showMore: true,
     });
+    setStartDatePtBrDraft(isoDateToBr(s.date || nowParts.date));
+    setEndDatePtBrDraft(isoDateToBr(e.date || nowParts.date));
     setStartTime12hDraft(to12hClock(s.time || nowParts.time || '00:00:00'));
     setEndTime12hDraft(to12hClock(e.time || nowParts.time || '00:00:00'));
     setManualOpen(true);
@@ -529,7 +551,29 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
             <label className="text-xs text-[#6b7280]">
             Data de Início
             <div className="mt-1 grid grid-cols-[1fr_180px] gap-2">
-              <input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="dd/mm/aaaa"
+                value={startDatePtBrDraft}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setStartDatePtBrDraft(next);
+                  const parsed = parsePtBrDateToIso(next);
+                  if (parsed) setForm((p) => ({ ...p, startDate: parsed }));
+                }}
+                onBlur={() => {
+                  const parsed = parsePtBrDateToIso(startDatePtBrDraft);
+                  if (parsed) {
+                    setForm((p) => ({ ...p, startDate: parsed }));
+                    setStartDatePtBrDraft(isoDateToBr(parsed));
+                  } else {
+                    setStartDatePtBrDraft(isoDateToBr(form.startDate || ''));
+                  }
+                }}
+                className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                required
+              />
               {hourCycle === '24h' ? (
                 <input
                   type="time"
@@ -559,7 +603,29 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
             <label className="text-xs text-[#6b7280]">
             Data de Término
             <div className="mt-1 grid grid-cols-[1fr_180px] gap-2">
-              <input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm" required />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="dd/mm/aaaa"
+                value={endDatePtBrDraft}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setEndDatePtBrDraft(next);
+                  const parsed = parsePtBrDateToIso(next);
+                  if (parsed) setForm((p) => ({ ...p, endDate: parsed }));
+                }}
+                onBlur={() => {
+                  const parsed = parsePtBrDateToIso(endDatePtBrDraft);
+                  if (parsed) {
+                    setForm((p) => ({ ...p, endDate: parsed }));
+                    setEndDatePtBrDraft(isoDateToBr(parsed));
+                  } else {
+                    setEndDatePtBrDraft(isoDateToBr(form.endDate || ''));
+                  }
+                }}
+                className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
+                required
+              />
               {hourCycle === '24h' ? (
                 <input
                   type="time"
