@@ -842,13 +842,13 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
         <p className="mt-2 font-semibold">Total: {BR.format(data.total || 0)}</p>
         {pecasModalOpen ? (
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 px-3 py-6"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 px-2 py-2"
             role="dialog"
             aria-modal="true"
             onClick={() => setPecasModalOpen(false)}
           >
             <div
-              className="w-full max-w-5xl rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-4 shadow-xl"
+              className="flex h-[96vh] w-[98vw] max-w-[98vw] flex-col rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-3 shadow-xl"
               onClick={(ev) => ev.stopPropagation()}
             >
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--pgm-border-subtle)] pb-2">
@@ -861,7 +861,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   Fechar
                 </button>
               </div>
-              <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_180px]">
+              <div className="mb-2 grid gap-2 sm:grid-cols-[1fr_180px]">
                 <input
                   type="search"
                   value={pecasCodFiltro}
@@ -877,7 +877,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   className="rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1.5 text-sm text-[var(--pgm-text)]"
                 />
               </div>
-              <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_180px_180px]">
+              <div className="mb-2 grid gap-2 sm:grid-cols-[1fr_180px_180px]">
                 <input
                   type="search"
                   value={pecasCatalogQ}
@@ -906,7 +906,7 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   {pecasApenasComSaldo ? 'Exibir todos' : 'Apenas com estoque'}
                 </button>
               </div>
-              <div className="mb-3">
+              <div className="mb-2">
                 <label className="inline-flex items-center gap-2 text-xs text-[var(--pgm-text-muted)]">
                   <input
                     type="checkbox"
@@ -916,19 +916,19 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                   Adicionar e continuar (não fechar modal)
                 </label>
               </div>
-              <div className="max-h-[60vh] overflow-auto rounded-md border border-[var(--pgm-border-subtle)]">
-                <table className="w-full min-w-[64rem] text-left text-sm">
+              <div className="min-h-0 flex-1 overflow-auto rounded-md border border-[var(--pgm-border-subtle)]">
+                <table className="w-full table-fixed text-left text-xs">
                   <thead>
                     <tr className="border-b border-[var(--pgm-border)] text-xs text-[var(--pgm-text-muted)]">
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5">Código</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5">Descrição</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5">Tipo</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5 text-right">Quantidade atual</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5 text-right">Preço custo</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5 text-right">Preço venda</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5 text-right w-[120px]">Qtd</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5 text-right">Total</th>
-                      <th className="sticky top-0 z-10 bg-[var(--pgm-bg)] px-3 py-2.5 text-right">Ação</th>
+                      <th className="sticky top-0 z-10 w-[7%] bg-[var(--pgm-bg)] px-2 py-2">Código</th>
+                      <th className="sticky top-0 z-10 w-[37%] bg-[var(--pgm-bg)] px-2 py-2">Descrição</th>
+                      <th className="sticky top-0 z-10 w-[8%] bg-[var(--pgm-bg)] px-2 py-2">Tipo</th>
+                      <th className="sticky top-0 z-10 w-[9%] bg-[var(--pgm-bg)] px-2 py-2 text-right">Qtde</th>
+                      <th className="sticky top-0 z-10 w-[10%] bg-[var(--pgm-bg)] px-2 py-2 text-right">Custo</th>
+                      <th className="sticky top-0 z-10 w-[10%] bg-[var(--pgm-bg)] px-2 py-2 text-right">Venda</th>
+                      <th className="sticky top-0 z-10 w-[7%] bg-[var(--pgm-bg)] px-2 py-2 text-right">Qtd</th>
+                      <th className="sticky top-0 z-10 w-[8%] bg-[var(--pgm-bg)] px-2 py-2 text-right">Total</th>
+                      <th className="sticky top-0 z-10 w-[8%] bg-[var(--pgm-bg)] px-2 py-2 text-right">Ação</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -943,18 +943,18 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                           key={lineKey}
                           className={`border-b border-[var(--pgm-border-subtle)] align-top ${idx % 2 === 0 ? '' : 'bg-[var(--pgm-bg-raised)]/40'}`}
                         >
-                          <td className="px-3 py-2.5 whitespace-nowrap">{it.codigo || '—'}</td>
-                          <td className="px-3 py-2.5 min-w-[22rem]">
-                            <div className="leading-5 text-[var(--pgm-text)]">{it.descricao || '—'}</div>
+                          <td className="px-2 py-2 whitespace-nowrap">{it.codigo || '—'}</td>
+                          <td className="px-2 py-2">
+                            <div className="line-clamp-2 leading-4 text-[var(--pgm-text)]">{it.descricao || '—'}</div>
                             {!it.tem_cadastro_portal ? (
                               <div className="mt-0.5 text-[0.65rem] text-amber-300">Sem cadastro local no portal</div>
                             ) : null}
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">{it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
-                          <td className="px-3 py-2.5 whitespace-nowrap text-right">{it.tipo === 'produto' ? (it.estoque ?? '0') : '—'}</td>
-                          <td className="px-3 py-2.5 whitespace-nowrap text-right">{it.preco_custo != null ? BR.format(it.preco_custo) : '—'}</td>
-                          <td className="px-3 py-2.5 whitespace-nowrap text-right">{BR.format(Number(it.preco_venda || valor || 0))}</td>
-                          <td className="px-3 py-2.5 text-right">
+                          <td className="px-2 py-2 whitespace-nowrap">{it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
+                          <td className="px-2 py-2 whitespace-nowrap text-right">{it.tipo === 'produto' ? (it.estoque ?? '0') : '—'}</td>
+                          <td className="px-2 py-2 whitespace-nowrap text-right">{it.preco_custo != null ? BR.format(it.preco_custo) : '—'}</td>
+                          <td className="px-2 py-2 whitespace-nowrap text-right">{BR.format(Number(it.preco_venda || valor || 0))}</td>
+                          <td className="px-2 py-2 text-right">
                             <input
                               type="number"
                               min="1"
@@ -963,16 +963,16 @@ export default function ServiceDeskTabPanels({ ticket, tab, boot = null, timelin
                               onChange={(e) =>
                                 setPecasQtyById((prev) => ({ ...prev, [lineKey]: e.target.value }))
                               }
-                              className="w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-sm text-[var(--pgm-text)]"
+                              className="w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-1.5 py-1 text-xs text-[var(--pgm-text)]"
                             />
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap text-right">{BR.format(totalLinha)}</td>
-                          <td className="px-3 py-2.5 text-right">
+                          <td className="px-2 py-2 whitespace-nowrap text-right">{BR.format(totalLinha)}</td>
+                          <td className="px-2 py-2 text-right">
                             <button
                               type="button"
                               onClick={() => handleAddPecaServico(it, lineKey)}
                               disabled={pecasActionBusyKey === lineKey || !Number.isFinite(qty) || qty <= 0 || idItem <= 0}
-                              className="rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                              className="rounded-md bg-emerald-700 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                             >
                               {idItem <= 0 ? 'Indisponível' : (pecasActionBusyKey === lineKey ? 'Adicionando...' : 'Adicionar')}
                             </button>
