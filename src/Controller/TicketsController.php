@@ -138,6 +138,44 @@ class TicketsController extends AppController {
 		return Router::url($parts);
 	}
 
+	/** Corpo JSON (PATCH) como array; evita TypeError se getData() não for array. */
+	protected function _jsonPatchRequestBody(): array {
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+
+		return is_array($body) ? $body : [];
+	}
+
+	/**
+	 * ISO-8601 para o payload da grid; TIMESTAMPTZ pode hidratar como string no PostgreSQL.
+	 */
+	protected function _ticketTimerIsoForJson($value): ?string {
+		if ($value === null || $value === '') {
+			return null;
+		}
+		if ($value instanceof \DateTimeInterface) {
+			return $value->format('c');
+		}
+		if (is_string($value)) {
+			try {
+				return (new \DateTimeImmutable($value))->format('c');
+			} catch (\Throwable $e) {
+				return null;
+			}
+		}
+		if (is_object($value) && method_exists($value, 'format')) {
+			try {
+				return $value->format('c');
+			} catch (\Throwable $e) {
+				return null;
+			}
+		}
+
+		return null;
+	}
+
 	/**
 	 * URL do socket.io para o browser. Se env aponta a loopback, substitui pelo host
 	 * do pedido (nunca enviar 127.0.0.1/localhost no JSON — o cliente resolve isso
@@ -4395,13 +4433,10 @@ class TicketsController extends AppController {
 				$row['prioridadeLabel'] = $this->_ticketPrioridadeLabelFromCode($pc);
 			}
 			if (in_array('started_at', $colsAll, true) && in_array('total_seconds', $colsAll, true)) {
-				$st = $reg->started_at;
-				$pa = $reg->paused_at ?? null;
-				$fi = $reg->finished_at ?? null;
 				$row['attendimentoTimer'] = [
-					'started_at' => $st ? $st->format('c') : null,
-					'paused_at' => $pa ? $pa->format('c') : null,
-					'finished_at' => $fi ? $fi->format('c') : null,
+					'started_at' => $this->_ticketTimerIsoForJson($reg->started_at ?? null),
+					'paused_at' => $this->_ticketTimerIsoForJson($reg->paused_at ?? null),
+					'finished_at' => $this->_ticketTimerIsoForJson($reg->finished_at ?? null),
 					'total_seconds' => (int)($reg->total_seconds ?? 0),
 					'elapsed_seconds' => TicketAttendimentoTimerService::elapsedSecondsForDisplay(
 						$this->Tickets,
@@ -5910,15 +5945,16 @@ class TicketsController extends AppController {
 		if ((int)$ticket->idempresa !== $empresa) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
-		$body = $this->request->input('json_decode', true);
-		if (!is_array($body)) {
-			$body = $this->request->getData();
-		}
+		$body = $this->_jsonPatchRequestBody();
 		$tecnicoId = isset($body['tecnico_id']) ? (int)$body['tecnico_id'] : (isset($body['iduser_destino']) ? (int)$body['iduser_destino'] : 0);
 		$filaIdBody = array_key_exists('fila_id', $body) ? $body['fila_id'] : null;
 		$filaId = ($filaIdBody === null || $filaIdBody === '') ? null : (int)$filaIdBody;
 		if ($tecnicoId <= 0) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'tecnico_obrigatorio'], 400);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_obrigatorio',
+				'message' => 'É necessário selecionar um técnico.',
+			], 422);
 		}
 		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $tecnicoId])->first();
 		$destUser = $this->Users->find()
@@ -5926,7 +5962,11 @@ class TicketsController extends AppController {
 			->where(['Users.id' => $tecnicoId, 'Users.role' => 0, 'Users.inativo' => 0])
 			->first();
 		if (empty($vinculo) || empty($destUser)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'tecnico_invalido'], 400);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_invalido',
+				'message' => 'Técnico não encontrado ou sem vínculo com a empresa.',
+			], 404);
 		}
 		$oldQid = (int)($ticket->queue_id ?? 0);
 		$newQid = $oldQid;
@@ -5940,14 +5980,22 @@ class TicketsController extends AppController {
 			$this->Abac->applyToQuery($qf, 'Queues', 'Queues');
 			$newQueue = $qf->first();
 			if (empty($newQueue)) {
-				return $this->jsonResponse(['ok' => false, 'error' => 'fila_invalida'], 400);
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'fila_invalida',
+					'message' => 'Fila inválida ou sem permissão de acesso.',
+				], 422);
 			}
 		}
 		if ($newQid > 0 && $oldQid > 0 && $newQid !== $oldQid && $this->_supportLevelsRoutingReady()) {
 			$curOrd = $this->_ticketQueueLevelSort($ticket);
 			$dstOrd = $this->_queueLevelSortOrder($newQid);
 			if ($curOrd > 0 && $dstOrd > 0 && $dstOrd <= $curOrd) {
-				return $this->jsonResponse(['ok' => false, 'error' => 'escalacao_invalida'], 400);
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'escalacao_invalida',
+					'message' => 'Não é permitido mover o ticket para um nível igual ou inferior.',
+				], 422);
 			}
 		}
 		$qPerm = $newQid > 0 ? $newQid : $oldQid;
@@ -5962,10 +6010,18 @@ class TicketsController extends AppController {
 				$dlink = $ins;
 			}
 			if (empty($dlink) && $membersCount > 0) {
-				return $this->jsonResponse(['ok' => false, 'error' => 'destino_sem_vinculo_fila'], 400);
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'destino_sem_vinculo_fila',
+					'message' => 'O técnico não pertence à fila selecionada.',
+				], 422);
 			}
 			if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($tecnicoId, $qPerm)) {
-				return $this->jsonResponse(['ok' => false, 'error' => 'destino_nivel_incompativel'], 400);
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'destino_nivel_incompativel',
+					'message' => 'O nível de suporte do técnico é incompatível com a fila.',
+				], 422);
 			}
 		}
 		$tcols = $this->Tickets->getSchema()->columns();
@@ -6063,7 +6119,11 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {
 			$this->log('apiPatchAssignment: ' . $e->getMessage(), 'error');
 
-			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'save_failed',
+				'message' => 'Não foi possível gravar a atribuição. Tente novamente ou use Transferir.',
+			], 500);
 		}
 		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchAssignment', $idticket);
 		$row = $this->_servicedeskTicketRowPayload($idticket);
@@ -6093,20 +6153,25 @@ class TicketsController extends AppController {
 		if (!$this->_apiTicketViewAllowed($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
-		$body = $this->request->input('json_decode', true);
-		if (!is_array($body)) {
-			$body = $this->request->getData();
-		}
+		$body = $this->_jsonPatchRequestBody();
 		$situacaoNova = $body['status'] ?? $body['situacao'] ?? $body['sit'] ?? null;
 		if ($situacaoNova === null || $situacaoNova === '') {
-			return $this->jsonResponse(['ok' => false, 'error' => 'missing_status'], 400);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'missing_status',
+				'message' => 'Envie o campo status ou situacao.',
+			], 400);
 		}
 		if (is_numeric($situacaoNova)) {
 			$situacaoNova = (int)$situacaoNova;
 		} else {
 			$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
 			if ($mapped === null) {
-				return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao'], 400);
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'invalid_situacao',
+					'message' => 'Status não reconhecido. Use Pendente, Em execução, Resolvido ou Fechado.',
+				], 422);
 			}
 			$situacaoNova = $mapped;
 		}
@@ -6117,7 +6182,11 @@ class TicketsController extends AppController {
 			(int)C_TicketSituacaoFechado,
 		];
 		if (!in_array((int)$situacaoNova, $allowed, true)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao'], 400);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'invalid_situacao',
+				'message' => 'Situação numérica não permitida para esta operação.',
+			], 422);
 		}
 		$sitantiga = (int)$ticket->situacao;
 		if ((int)$situacaoNova !== $sitantiga) {
@@ -6134,7 +6203,14 @@ class TicketsController extends AppController {
 			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
 		}
 		if (!$this->Tickets->save($ticket)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			$errs = $ticket->getErrors();
+
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'save_failed',
+				'message' => 'Validação ao gravar o status do ticket.',
+				'errors' => $errs,
+			], 422);
 		}
 		try {
 			$this->criarMov($ticket->id, $sitantiga, $ticket->situacao);
@@ -6187,13 +6263,14 @@ class TicketsController extends AppController {
 		if (!$this->_apiTicketViewAllowed($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
-		$body = $this->request->input('json_decode', true);
-		if (!is_array($body)) {
-			$body = $this->request->getData();
-		}
+		$body = $this->_jsonPatchRequestBody();
 		$raw = $body['prioridade'] ?? $body['priority'] ?? null;
 		if ($raw === null || $raw === '') {
-			return $this->jsonResponse(['ok' => false, 'error' => 'missing_prioridade'], 400);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'missing_prioridade',
+				'message' => 'Envie prioridade ou priority no JSON.',
+			], 400);
 		}
 		$cols = $this->Tickets->getSchema()->columns();
 		$code = $this->_normalizeTicketPrioridadeFromRequest((string)$raw);
@@ -6209,7 +6286,12 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'prioridade_not_supported'], 503);
 		}
 		if (!$this->Tickets->save($ticket, ['fields' => $saveFields])) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'save_failed',
+				'message' => 'Validação ao gravar a prioridade.',
+				'errors' => $ticket->getErrors(),
+			], 422);
 		}
 		$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchTicketPriority', $idticket);
 		$row = $this->_servicedeskTicketRowPayload($idticket);

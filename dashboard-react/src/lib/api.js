@@ -25,6 +25,23 @@ function qs(params) {
   return s ? `?${s}` : '';
 }
 
+/** Texto amigável a partir do JSON de erro do Cake (message/detail/errors) ou do Response. */
+function patchTicketsErrorMessage(r, json) {
+  if (json && typeof json === 'object') {
+    const m = json.message || json.detail;
+    if (typeof m === 'string' && m.trim() !== '') return m.trim();
+    const er = json.errors;
+    if (er && typeof er === 'object') {
+      const vals = Object.values(er).flat(Infinity);
+      const first = vals.find((x) => typeof x === 'string');
+      if (first) return first;
+    }
+    if (typeof json.error === 'string' && json.error.trim() !== '') return json.error.trim();
+  }
+  if (r && typeof r.statusText === 'string' && r.statusText.trim() !== '') return r.statusText.trim();
+  return 'Erro';
+}
+
 function mockTicketToTechRow(t) {
   const open =
     t.status === 'Aguardando técnico' ||
@@ -238,7 +255,14 @@ export async function patchTicketAssignment(ticketId, payload) {
   } catch (_) {
     /* ignore */
   }
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, ticket: null };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      ticket: null,
+    };
+  }
   return { ok: true, ticket: json.ticket || null };
 }
 
@@ -265,7 +289,14 @@ export async function patchTicketStatus(ticketId, body) {
   } catch (_) {
     /* ignore */
   }
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, ticket: null };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      ticket: null,
+    };
+  }
   return {
     ok: true,
     situacao: json.situacao,
@@ -295,7 +326,14 @@ export async function patchTicketPriority(ticketId, body) {
   } catch (_) {
     /* ignore */
   }
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, ticket: null };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      ticket: null,
+    };
+  }
   return { ok: true, ticket: json.ticket || null };
 }
 

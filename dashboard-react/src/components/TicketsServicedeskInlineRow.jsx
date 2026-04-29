@@ -87,7 +87,7 @@ export default function TicketsServicedeskInlineRow({
     setBusy(false);
     if (!r.ok) {
       onMergeTicket(ticket.id, snap);
-      fail(r.error || r.message);
+      fail(r.message || r.error);
       return;
     }
     if (r.ticket) onMergeTicket(ticket.id, r.ticket);
@@ -103,7 +103,7 @@ export default function TicketsServicedeskInlineRow({
     setBusy(false);
     if (!r.ok) {
       onMergeTicket(ticket.id, snap);
-      fail(r.error || r.message);
+      fail(r.message || r.error);
       return;
     }
     if (r.ticket) onMergeTicket(ticket.id, r.ticket);
@@ -123,7 +123,7 @@ export default function TicketsServicedeskInlineRow({
     setBusy(false);
     if (!r.ok) {
       onMergeTicket(ticket.id, snap);
-      fail(r.error || r.message);
+      fail(r.message || r.error);
       return;
     }
     if (r.ticket) onMergeTicket(ticket.id, r.ticket);
@@ -141,7 +141,7 @@ export default function TicketsServicedeskInlineRow({
     setBusy(false);
     if (!r.ok) {
       onMergeTicket(ticket.id, snap);
-      fail(r.error || r.message);
+      fail(r.message || r.error);
       return;
     }
     if (r.ticket) onMergeTicket(ticket.id, r.ticket);
