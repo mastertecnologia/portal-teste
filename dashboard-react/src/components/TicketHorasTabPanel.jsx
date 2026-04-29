@@ -499,17 +499,17 @@ export default function TicketHorasTabPanel({
           <button type="button" className="rounded-md border border-[#e5e7eb] px-2 py-1 text-xs text-[#6b7280] hover:text-[#111827]" onClick={() => setEntriesOpen(false)}>Fechar</button>
         </div>
         {entriesErr ? <p className="mb-2 text-xs text-red-600">{entriesErr}</p> : null}
-        <div className="max-h-[55vh] overflow-auto">
-          <table className="w-full min-w-[56rem] text-left text-sm">
+        <div className="max-h-[55vh] overflow-auto overscroll-contain rounded-sm border border-[#eef2f6]">
+          <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-[#edf1f5] text-[11px] uppercase tracking-[0.03em] text-[#6b7280]">
-                <th className="w-[64px] py-2 text-center">ID</th>
-                <th className="py-2">Técnico</th>
-                <th className="py-2">Duração</th>
-                <th className="w-[110px] py-2 text-center">Faturável</th>
-                <th className="w-[120px] py-2 text-center">Taxa</th>
-                <th className="py-2">Notas</th>
-                <th className="w-[96px] py-2 text-right">Ações</th>
+              <tr className="text-[11px] uppercase tracking-[0.03em] text-[#6b7280]">
+                <th className="sticky top-0 z-10 w-[64px] border-b border-[#edf1f5] bg-white py-2 text-center shadow-[0_1px_0_rgba(15,23,42,0.06)]">ID</th>
+                <th className="sticky top-0 z-10 border-b border-[#edf1f5] bg-white py-2 shadow-[0_1px_0_rgba(15,23,42,0.06)]">Técnico</th>
+                <th className="sticky top-0 z-10 border-b border-[#edf1f5] bg-white py-2 shadow-[0_1px_0_rgba(15,23,42,0.06)]">Duração</th>
+                <th className="sticky top-0 z-10 w-[110px] border-b border-[#edf1f5] bg-white py-2 text-center shadow-[0_1px_0_rgba(15,23,42,0.06)]">Faturável</th>
+                <th className="sticky top-0 z-10 w-[120px] border-b border-[#edf1f5] bg-white py-2 text-center shadow-[0_1px_0_rgba(15,23,42,0.06)]">Taxa</th>
+                <th className="sticky top-0 z-10 border-b border-[#edf1f5] bg-white py-2 shadow-[0_1px_0_rgba(15,23,42,0.06)]">Notas</th>
+                <th className="sticky top-0 z-10 w-[96px] border-b border-[#edf1f5] bg-white py-2 text-right shadow-[0_1px_0_rgba(15,23,42,0.06)]">Ações</th>
               </tr>
             </thead>
             <tbody>
