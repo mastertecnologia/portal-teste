@@ -291,6 +291,21 @@ export default function HorasTecnicasTimerPanel({
         (res.error === 'already_running' ||
           msgLower.includes('já existe um timer') ||
           msgLower.includes('ja existe um timer'));
+      if (alreadyRunning && res.horasTecnicas && onSnapshot) {
+        const synced = normalizeSessao(res.horasTecnicas.sessao);
+        setOptimistic(null);
+        onSnapshot({
+          ...res.horasTecnicas,
+          sessao: synced ?? res.horasTecnicas.sessao,
+        });
+        if (synced?.horaInicio) {
+          stickySessaoRef.current = synced;
+        }
+        if (onFeedback) {
+          onFeedback(null, null);
+        }
+        return res;
+      }
       if (alreadyRunning && typeof onRefetchHorasTecnicas === 'function') {
         try {
           const okRefetch = await onRefetchHorasTecnicas();

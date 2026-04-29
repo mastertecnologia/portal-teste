@@ -785,6 +785,8 @@ export async function postTimerAction(ticketId, action, extra = {}) {
       ok: false,
       error: json.error || r.statusText,
       message: json.message || json.error || 'Falha no timer',
+      // O PHP envia horasTecnicas mesmo em 400 (ex.: already_running) — necessário para alinhar a UI ao BD.
+      horasTecnicas: json.horasTecnicas,
     };
   }
   return {
