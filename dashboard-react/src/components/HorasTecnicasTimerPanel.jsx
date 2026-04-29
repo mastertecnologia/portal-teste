@@ -129,6 +129,20 @@ export default function HorasTecnicasTimerPanel({
   const sessao = normalizeSessao(optimistic) ?? serverSessao ?? stickySessaoRef.current;
 
   useEffect(() => {
+    if (!optimistic?.horaInicio || !serverSessao?.horaInicio) return;
+    const localStart = parseSqlLocalDateTime(optimistic.horaInicio);
+    const srvStart = parseSqlLocalDateTime(serverSessao.horaInicio);
+    if (!localStart || !srvStart) {
+      setOptimistic(null);
+      return;
+    }
+    const diffMs = Math.abs(srvStart.getTime() - localStart.getTime());
+    if (diffMs < 3000) {
+      setOptimistic(null);
+    }
+  }, [optimistic, serverSessao]);
+
+  useEffect(() => {
     if (!safeStorage || !ticketId) return;
     try {
       if (sessao && sessao.horaInicio) {
@@ -210,8 +224,18 @@ export default function HorasTecnicasTimerPanel({
     const { skipBusy = false } = options;
     if (!ticketId) return;
     rollbackRef.current = optimistic;
+    let optimisticIniciarSnapshot = null;
     if (action === 'iniciar') {
       finalizandoRef.current = false;
+      const localStartedAtMs = Date.now() + offsetRef.current;
+      optimisticIniciarSnapshot = normalizeSessao({
+        id: 'local',
+        status: 'running',
+        startedAt: localSqlDateTimeFromMs(localStartedAtMs),
+        pausedAt: null,
+      });
+      setOptimistic(optimisticIniciarSnapshot);
+      stickySessaoRef.current = optimisticIniciarSnapshot;
     } else if (action === 'pausar' && sessao?.horaInicio) {
       const tPause = Date.now() + offsetRef.current;
       setOptimistic({
@@ -273,7 +297,21 @@ export default function HorasTecnicasTimerPanel({
 
     if (res.ok) {
       if (res.horasTecnicas && onSnapshot) {
-        const normalizedSessao = normalizeSessao(res.horasTecnicas.sessao);
+        let normalizedSessao = normalizeSessao(res.horasTecnicas.sessao);
+        if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio) {
+          if (!normalizedSessao?.horaInicio) {
+            normalizedSessao = optimisticIniciarSnapshot;
+          } else {
+            const localStart = parseSqlLocalDateTime(optimisticIniciarSnapshot.horaInicio);
+            const serverStart = parseSqlLocalDateTime(normalizedSessao.horaInicio);
+            if (localStart && serverStart) {
+              const diffMs = Math.abs(serverStart.getTime() - localStart.getTime());
+              if (diffMs >= 3000) {
+                normalizedSessao = optimisticIniciarSnapshot;
+              }
+            }
+          }
+        }
         onSnapshot({
           ...res.horasTecnicas,
           sessao: normalizedSessao,
@@ -285,7 +323,11 @@ export default function HorasTecnicasTimerPanel({
           finalizandoRef.current = false;
         }
       }
-      setOptimistic(null);
+      if (action === 'iniciar' && optimisticIniciarSnapshot?.horaInicio) {
+        setOptimistic(normalizedSessao || optimisticIniciarSnapshot);
+      } else {
+        setOptimistic(null);
+      }
       if (onFeedback) onFeedback(res.message || null, null);
     } else {
       if (action === 'finalizar') {
@@ -293,6 +335,9 @@ export default function HorasTecnicasTimerPanel({
       }
       if (action === 'finalizar') {
         setOptimistic(rollbackRef.current);
+      } else if (action === 'iniciar') {
+        stickySessaoRef.current = null;
+        setOptimistic(rollbackRef.current ?? null);
       } else {
         setOptimistic(null);
       }
