@@ -102,6 +102,15 @@ function to12hClock(time24) {
   return `${String(h).padStart(2, '0')}:${min}:${sec} ${ampm}`;
 }
 
+function to24hHourMinute(timeValue) {
+  const t = String(timeValue || '').trim();
+  const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/.exec(t);
+  if (!m) return '';
+  const h = Number(m[1]);
+  if (h < 0 || h > 23) return '';
+  return `${String(h).padStart(2, '0')}:${m[2]}`;
+}
+
 function parse12hClock(value) {
   const t = String(value || '').trim();
   const m = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?\s*([AaPp][Mm])$/.exec(t);
@@ -577,8 +586,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
               {hourCycle === '24h' ? (
                 <input
                   type="time"
-                  step="1"
-                  value={form.startTime}
+                  value={to24hHourMinute(form.startTime)}
                   onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
                   className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
                   required
@@ -629,8 +637,7 @@ export default function TicketHorasTabPanel({ ticket, timelineEvents, onlyEntryA
               {hourCycle === '24h' ? (
                 <input
                   type="time"
-                  step="1"
-                  value={form.endTime}
+                  value={to24hHourMinute(form.endTime)}
                   onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
                   className="h-[38px] w-full rounded border border-[#d1d5db] bg-white px-3 py-1.5 text-sm"
                   required
