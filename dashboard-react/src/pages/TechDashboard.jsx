@@ -735,11 +735,15 @@ export default function TechDashboard({ boot }) {
     if (current === next) return;
     const snap = { ...ticket };
     setPatchBusyId(Number(ticket.id));
-    const r = await patchTicketSubject(ticket.id, { assunto_id: next });
-    setPatchBusyId(null);
+    let r = null;
+    try {
+      r = await patchTicketSubject(ticket.id, { assunto_id: next });
+    } finally {
+      setPatchBusyId(null);
+    }
     if (!r.ok) {
       mergeTicketInGroups(ticket.id, snap);
-      onInlinePatchError(ticket.id, r.message || r.error || 'Falha ao alterar categoria.');
+      onInlinePatchError(ticket.id, r.message || r.error || 'Erro ao atualizar categoria');
       return;
     }
     if (r.ticket) {

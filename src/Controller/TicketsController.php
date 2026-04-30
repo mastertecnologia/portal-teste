@@ -4652,11 +4652,15 @@ class TicketsController extends AppController {
 		}
 		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => $this->_ticketUrl(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
 
+		$assuntoNome = trim((string)$this->_ticketAssuntoTexto($reg->assunto));
+		if ($assuntoNome === '' || $assuntoNome === '0') {
+			$assuntoNome = 'Não informado';
+		}
 		$row = [
 			'id' => $id,
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
-			'assunto_nome' => $this->_ticketAssuntoTexto($reg->assunto),
+			'assunto_nome' => $assuntoNome,
 			'assunto_id' => is_numeric($reg->assunto) ? (int)$reg->assunto : null,
 			'assuntoCode' => $reg->assunto,
 			'status' => $this->_ticketSituacaoTexto($reg->situacao),
@@ -4897,9 +4901,13 @@ class TicketsController extends AppController {
 			$urls['contratoHoras'] = Router::url(['controller' => 'ContratosHoras', 'action' => 'edit', (int)$chEntity->get('id')]);
 		}
 
+		$assuntoNome = trim((string)$this->_ticketAssuntoTexto($ticket->assunto));
+		if ($assuntoNome === '' || $assuntoNome === '0') {
+			$assuntoNome = 'Não informado';
+		}
 		return [
 			'id' => (int)$ticket->id,
-			'assunto_nome' => $this->_ticketAssuntoTexto($ticket->assunto),
+			'assunto_nome' => $assuntoNome,
 			'assunto_id' => is_numeric($ticket->assunto) ? (int)$ticket->assunto : null,
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,

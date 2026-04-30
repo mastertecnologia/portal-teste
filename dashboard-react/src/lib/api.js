@@ -360,8 +360,13 @@ export async function patchTicketSubject(ticketId, body) {
     return { ok: true, ticket: null };
   }
   const boot = getBoot();
-  const base = boot?.paths?.apiPatchTicketSubject;
-  if (!base) return { ok: false, error: 'no_api' };
+  const base = boot?.paths?.apiPatchTicketSubject
+    || boot?.paths?.apiPatchTicketAssignment
+    || boot?.paths?.apiPatchTicketStatus
+    || boot?.paths?.apiPatchTicketPriority;
+  if (!base) {
+    return { ok: false, error: 'no_api', message: 'Endpoint de edição de categoria não encontrado no boot.' };
+  }
   const url = `${base}${encodeURIComponent(String(ticketId))}/subject`;
   const r = await fetch(url, {
     method: 'PATCH',
