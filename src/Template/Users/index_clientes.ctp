@@ -8,6 +8,7 @@ $this->Breadcrumbs->add('Configurações', ['controller' => 'Config', 'action' =
 $this->Breadcrumbs->add('Gestão de clientes');
 
 $this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
+$this->append('css_late', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
 if (!defined('C_ClientesTipoJuridica')) define('C_ClientesTipoJuridica', 2);
 if (!defined('C_ClientesTipoFisica'))   define('C_ClientesTipoFisica', 1);
@@ -61,80 +62,65 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 /* Extensões para detail rows (gestão de usuários) */
 .cli-usr-detail { display: none; }
 .cli-usr-detail.cli-usr-open { display: table-row; }
-.cli-usr-detail > td { padding: 0 !important; background: var(--cli-bg) !important; border-bottom: 1px solid var(--cli-border) !important; }
+.cli-usr-detail > td { padding: 0 !important; background: var(--orc-bg-card, #fff) !important; border-bottom: 1px solid var(--orc-border-light, #f8f8f7) !important; }
 .cli-usr-inner { padding: 6px 14px 14px 56px; }
 .cli-usr-table { width: 100%; border-collapse: collapse; }
 .cli-usr-table thead th {
 	padding: 7px 12px; font-size: 9.5px; font-weight: 700;
 	text-transform: uppercase; letter-spacing: .06em;
-	color: var(--cli-dim); border-bottom: 1px solid var(--cli-border);
+	color: var(--orc-text-muted, #6b6a65); border-bottom: 1px solid var(--orc-border, #e5e4e0);
 }
 .cli-usr-table tbody td {
-	padding: 8px 12px; font-size: 12.5px; color: var(--cli-muted);
-	border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle;
+	padding: 10px 12px; font-size: 12px; color: var(--orc-text, #1a1a18);
+	border-bottom: 1px solid var(--orc-border-light, #f8f8f7); vertical-align: middle;
 }
 .cli-usr-table tbody tr:last-child td { border-bottom: none; }
-.cli-usr-table tbody tr:hover td { background: var(--cli-surface2); color: var(--cli-text); }
-.cli-usr-name { font-weight: 600; color: var(--cli-text) !important; }
-.cli-usr-email { color: var(--cli-dim) !important; font-size: 12px !important; }
+.cli-usr-table tbody tr:hover td { background: var(--orc-bg-surface, #f8f8f7); color: var(--orc-text, #1a1a18); }
+.cli-usr-name { font-weight: 600; color: var(--orc-text, #1a1a18) !important; }
+.cli-usr-email { color: var(--orc-text-muted, #6b6a65) !important; font-size: 12px !important; }
 .cli-usr-badge {
 	display: inline-block; padding: 2px 9px; border-radius: 10px;
 	font-size: 10.5px; font-weight: 600;
 }
-.cli-usr-badge--on { background: rgba(29,158,117,.12); color: #5cdbc0; }
+.cli-usr-badge--on { background: rgba(0,192,139,.14); color: #008f68; }
 .cli-usr-badge--off { background: rgba(248,81,73,.10); color: #f85149; }
-.cli-usr-badge--mixed { background: rgba(251,191,36,.10); color: #fcd34d; }
+.cli-usr-badge--mixed { background: rgba(251,191,36,.14); color: #b45309; }
 .cli-usr-edit {
 	display: inline-flex; align-items: center; gap: 5px;
 	padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500;
-	color: var(--cli-muted) !important; text-decoration: none !important;
-	border: 1px solid var(--cli-border2); background: transparent;
+	color: var(--orc-text, #1a1a18) !important; text-decoration: none !important;
+	border: 1px solid var(--orc-border, #e5e4e0); background: #fff;
 	transition: all .15s; font-family: inherit;
 }
-.cli-usr-edit:hover { background: var(--cli-surface2); color: #58a6ff !important; border-color: rgba(88,166,255,.4); }
+.cli-usr-edit:hover { background: var(--orc-bg-surface, #f8f8f7); color: #008f68 !important; border-color: #00c08b; }
 .cli-usr-count {
 	display: inline-flex; align-items: center; justify-content: center;
 	min-width: 24px; height: 22px; padding: 0 7px; border-radius: 6px;
-	font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace;
-	background: var(--cli-surface2); color: var(--cli-muted);
-	border: 1px solid var(--cli-border2);
+	font-size: 12px; font-weight: 700; font-family: var(--pgm-font-sans);
+	background: var(--orc-bg-surface, #f8f8f7); color: var(--orc-text-muted, #6b6a65);
+	border: 1px solid var(--orc-border, #e5e4e0);
 }
 .cli-usr-expand { transition: transform .2s ease; }
-.cli-row-open .cli-usr-expand { transform: rotate(90deg); color: var(--cli-teal-lt); }
-.cli-row-open td { background: var(--cli-surface2) !important; }
+.cli-row-open .cli-usr-expand { transform: rotate(90deg); color: var(--orc-teal, #00c08b); }
+.cli-row-open td { background: var(--orc-bg-surface, #f8f8f7) !important; }
 .cli-usr-empty {
-	padding: 20px 12px; text-align: center; color: var(--cli-dim); font-size: 12.5px;
+	padding: 20px 12px; text-align: center; color: var(--orc-text-muted, #6b6a65); font-size: 12px;
 }
-.cli-usr-empty a { color: var(--cli-teal-lt) !important; text-decoration: none !important; font-weight: 600; }
+.cli-usr-empty a { color: var(--orc-teal-dark, #008f68) !important; text-decoration: none !important; font-weight: 600; }
 .cli-usr-empty a:hover { text-decoration: underline !important; }
 .cli-usr-doc {
-	font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--cli-muted); white-space: nowrap;
+	font-family: var(--pgm-font-sans); font-size: 12px; color: var(--orc-text, #1a1a18); white-space: nowrap;
 }
 </style>
+<?php /* Turbo Frame: garante CSS aplicado após swap do frame. */ ?>
+<?= $this->element('pgm_premium_css', ['name' => 'clientes-premium']) ?>
+<?= $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']) ?>
 
 <div class="col-md-12 p-0">
-<div class="cli-root pgm-ds-pilot" data-pgm-ds-pilot="gestao-usuarios">
-
-	<!-- ── Topbar ── -->
-	<div class="cli-topbar">
-		<div class="cli-topbar-left">
-			<div class="cli-eyebrow">Painel administrativo</div>
-			<h1 class="cli-h1">Gestão de Clientes</h1>
-			<div class="cli-subtitle">Empresas e pessoas vinculadas ao portal — usuários e acessos</div>
-		</div>
-		<div class="cli-topbar-right">
-			<?php if ($admin): ?>
-			<?= $this->Html->link(
-				'<i class="fas fa-plus"></i> Novo cliente',
-				['action' => 'addcliente'],
-				['class' => 'btn-cli-primary', 'escape' => false, 'data-turbo' => 'false']
-			) ?>
-			<?php endif; ?>
-		</div>
-	</div>
+<div class="cli-root cli-layout-unificado">
 
 	<!-- ── KPI Strip (clicáveis) ── -->
-	<div class="cli-kpi-strip">
+	<div class="cli-kpi-strip cli-kpi-strip--list-lead">
 		<div class="cli-kpi active" data-kpi="ativos-pj">
 			<div class="cli-kpi-label">Ativos · PJ</div>
 			<div class="cli-kpi-val teal"><?= $cntAtivosPJ ?></div>
@@ -157,6 +143,7 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 		</div>
 	</div>
 
+	<div class="cli-list-card">
 	<!-- ── Filter bar ── -->
 	<div class="cli-filter-bar">
 		<div class="cli-pill-group" id="uc-status-pills">
@@ -188,6 +175,13 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 			</svg>
 			<input type="text" id="uc-search" placeholder="Nome, CNPJ, CPF ou e-mail" autocomplete="off" />
 		</div>
+		<?php if ($admin): ?>
+		<?= $this->Html->link(
+			'<i class="fas fa-plus"></i> Novo cliente',
+			['action' => 'addcliente'],
+			['class' => 'btn-cli-primary', 'escape' => false, 'data-turbo' => 'false']
+		) ?>
+		<?php endif; ?>
 	</div>
 
 	<!-- ── Table ── -->
@@ -306,6 +300,7 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 				</tbody>
 			</table>
 		</div>
+	</div>
 	</div>
 
 </div>
