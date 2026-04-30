@@ -313,94 +313,138 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 
 <script>
 (function() {
-	var $ = window.jQuery;
-	$(document).ready(function() {
-
+	function initClientesTableModule() {
 		var status = 'ativos';
 		var type = 'pj';
+		var container = document.getElementById('tableEmpresas');
+		if (!container) return;
+		if (container.__initialized) return;
+		container.__initialized = true;
+		var moduleRoot = container.closest('.cli-root') || document;
 
 		var counts = {
 			ativos:   { pj: <?= $cntAtivosPJ ?>, pf: <?= $cntAtivosPF ?> },
 			inativos: { pj: <?= $cntInativosPJ ?>, pf: <?= $cntInativosPF ?> }
 		};
 
+		var searchInput = moduleRoot.querySelector('#uc-search');
+		var kpis = Array.prototype.slice.call(moduleRoot.querySelectorAll('.cli-kpi'));
+		var statusPills = Array.prototype.slice.call(moduleRoot.querySelectorAll('#uc-status-pills .cli-pill'));
+		var typePills = Array.prototype.slice.call(moduleRoot.querySelectorAll('#uc-type-pills .cli-pill'));
+		var cntPj = moduleRoot.querySelector('#uc-cnt-pj');
+		var cntPf = moduleRoot.querySelector('#uc-cnt-pf');
+
+		function getRows(scopeContainer) {
+			if (!scopeContainer || typeof scopeContainer.querySelectorAll !== 'function') {
+				return [];
+			}
+			return Array.prototype.slice.call(scopeContainer.querySelectorAll('.cli-usr-row'));
+		}
+
+		function setActive(elements, predicate) {
+			elements.forEach(function(el) {
+				el.classList.toggle('active', predicate(el));
+			});
+		}
+
+		function debounce(fn, delay) {
+			var timer = null;
+			return function() {
+				clearTimeout(timer);
+				timer = setTimeout(fn, delay);
+			};
+		}
+
 		function applyFilters() {
-			var q = $('#uc-search').val().toLowerCase();
-			$('.cli-usr-row').each(function() {
-				var $row = $(this);
-				var rowStatus = $row.data('status');
-				var rowType = $row.data('type');
+			var q = ((searchInput && searchInput.value) ? searchInput.value : '').toLowerCase();
+			var rows = getRows(container);
+			rows.forEach(function(row) {
+				var rowStatus = row.getAttribute('data-status');
+				var rowType = row.getAttribute('data-type');
+				var searchText = (row.getAttribute('data-search') || '').toLowerCase();
 				var matchStatus = (rowStatus === status);
 				var matchType = (rowType === type);
-				var matchSearch = !q || $row.data('search').indexOf(q) !== -1;
+				var matchSearch = !q || searchText.indexOf(q) !== -1;
 				var show = matchStatus && matchType && matchSearch;
-				$row.toggle(show);
-				var $det = $('#' + $row.data('detail'));
+				row.style.display = show ? '' : 'none';
+
+				var detailId = row.getAttribute('data-detail');
+				var detail = detailId ? document.getElementById(detailId) : null;
+				if (!detail) return;
+
 				if (!show) {
-					$det.removeClass('cli-usr-open');
-					$row.removeClass('cli-row-open');
+					detail.classList.remove('cli-usr-open');
+					row.classList.remove('cli-row-open');
 				}
-				$det.toggle(show && $row.hasClass('cli-row-open'));
+				detail.style.display = (show && row.classList.contains('cli-row-open')) ? '' : 'none';
 			});
 		}
 
 		function updateTypePills() {
-			$('#uc-type-pills .cli-pill').removeClass('active');
-			$('#uc-type-pills .cli-pill[data-type="' + type + '"]').addClass('active');
-			var c = counts[status];
-			$('#uc-cnt-pj').text(c.pj);
-			$('#uc-cnt-pf').text(c.pf);
+			setActive(typePills, function(pill) { return pill.getAttribute('data-type') === type; });
+			var c = counts[status] || counts.ativos;
+			if (cntPj) cntPj.textContent = c.pj;
+			if (cntPf) cntPf.textContent = c.pf;
 		}
 
-		// KPI clicks
-		$('.cli-kpi').on('click', function() {
-			var kpi = $(this).data('kpi');
-			if (kpi === 'ativos-pj')  { status = 'ativos';   type = 'pj'; }
-			else if (kpi === 'ativos-pf')  { status = 'ativos';   type = 'pf'; }
-			else if (kpi === 'inativos')   { status = 'inativos'; type = 'pj'; }
-			else if (kpi === 'total')      { status = 'ativos';   type = 'pj'; }
-			$('.cli-kpi').removeClass('active');
-			$(this).addClass('active');
-			$('#uc-status-pills .cli-pill').removeClass('active');
-			$('#uc-status-pills .cli-pill[data-status="' + status + '"]').addClass('active');
-			updateTypePills();
-			applyFilters();
+		kpis.forEach(function(kpiEl) {
+			kpiEl.addEventListener('click', function() {
+				var kpi = kpiEl.getAttribute('data-kpi');
+				if (kpi === 'ativos-pj')      { status = 'ativos';   type = 'pj'; }
+				else if (kpi === 'ativos-pf') { status = 'ativos';   type = 'pf'; }
+				else if (kpi === 'inativos')  { status = 'inativos'; type = 'pj'; }
+				else if (kpi === 'total')     { status = 'ativos';   type = 'pj'; }
+
+				setActive(kpis, function(el) { return el === kpiEl; });
+				setActive(statusPills, function(el) { return el.getAttribute('data-status') === status; });
+				updateTypePills();
+				applyFilters();
+			});
 		});
 
-		// Status pills
-		$('#uc-status-pills .cli-pill').on('click', function() {
-			status = $(this).data('status');
-			$('#uc-status-pills .cli-pill').removeClass('active');
-			$(this).addClass('active');
-			type = 'pj';
-			updateTypePills();
-			applyFilters();
+		statusPills.forEach(function(pill) {
+			pill.addEventListener('click', function() {
+				status = pill.getAttribute('data-status');
+				type = 'pj';
+				setActive(statusPills, function(el) { return el === pill; });
+				updateTypePills();
+				applyFilters();
+			});
 		});
 
-		// Type pills
-		$('#uc-type-pills .cli-pill').on('click', function() {
-			type = $(this).data('type');
-			$('#uc-type-pills .cli-pill').removeClass('active');
-			$(this).addClass('active');
-			applyFilters();
+		typePills.forEach(function(pill) {
+			pill.addEventListener('click', function() {
+				type = pill.getAttribute('data-type');
+				setActive(typePills, function(el) { return el === pill; });
+				applyFilters();
+			});
 		});
 
-		// Expand/collapse
-		$(document).on('click', '.cli-usr-row', function(e) {
-			if ($(e.target).closest('a, button').length) return;
-			var $row = $(this);
-			var $detail = $('#' + $row.data('detail'));
-			$row.toggleClass('cli-row-open');
-			$detail.toggleClass('cli-usr-open');
+		container.addEventListener('click', function(event) {
+			var target = event.target;
+			if (!target || !container.contains(target)) return;
+			if (target.closest('a, button, input, select, textarea, label')) return;
+
+			var row = target.closest('.cli-usr-row');
+			if (!row || !container.contains(row)) return;
+			if (row.style.display === 'none') return;
+
+			var detailId = row.getAttribute('data-detail');
+			var detail = detailId ? document.getElementById(detailId) : null;
+			if (!detail) return;
+
+			row.classList.toggle('cli-row-open');
+			detail.classList.toggle('cli-usr-open');
+			detail.style.display = row.classList.contains('cli-row-open') ? '' : 'none';
 		});
 
-		// Busca
-		$('#uc-search').on('input', function() {
-			applyFilters();
-		});
+		if (searchInput) {
+			searchInput.addEventListener('input', debounce(applyFilters, 250));
+		}
 
-		// Initial render
 		applyFilters();
-	});
+	}
+
+	document.addEventListener('DOMContentLoaded', initClientesTableModule);
 })();
 </script>

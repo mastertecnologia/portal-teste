@@ -80,6 +80,7 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 	<?= $this->Html->script("/assets/node_modules/jquery/jquery-3.2.1.min") ?>
 	<?= $this->element('pgm_turbo_head'); ?>
 	<?= $this->Html->script("/js/pgm-portal-theme") ?>
+	<?= $this->Html->script("/js/app-http") ?>
     <!-- Bootstrap popper Core JavaScript -->
 	<?= $this->Html->script("/assets/node_modules/popper/popper.min") ?>
 	<?= $this->Html->script("/assets/node_modules/bootstrap/dist/js/bootstrap.min") ?>
@@ -216,27 +217,33 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 </body>
 </html>
 <script>
-	$(function() {
+	document.addEventListener('DOMContentLoaded', function() {
 		// Realiza a alteração do menu lateral
-		$(".sidebartoggler").on('click', function () {
-			verificaSidebar()
-	    });
+		Array.prototype.forEach.call(document.querySelectorAll('.sidebartoggler'), function(toggleBtn) {
+			toggleBtn.addEventListener('click', function() {
+				verificaSidebar();
+			});
+		});
 
 		// Verifica se é para ocultar o logo da sidebar
 		function verificaSidebar() {
-			var mini = $('body').hasClass('mini-sidebar');
-			if (mini) {
-				$('.mini-itens').addClass('d-none');
-				$('#mini-logout').removeClass('d-none');
-				$('.logo').addClass('imagem-sidebar-mini');
-				$('.logo').removeClass('imagem-sidebar-expandida');
-			} else {
-				$('.mini-itens').removeClass('d-none');
-				$('#mini-logout').addClass('d-none');
-				$('.logo').addClass('imagem-sidebar-expandida');
-				$('.logo').removeClass('imagem-sidebar-mini');
-			} 
-		};
+			var body = document.body;
+			var mini = body && body.classList.contains('mini-sidebar');
+			var miniItens = document.querySelectorAll('.mini-itens');
+			var miniLogout = document.getElementById('mini-logout');
+			var logos = document.querySelectorAll('.logo');
+
+			Array.prototype.forEach.call(miniItens, function(el) {
+				el.classList.toggle('d-none', !!mini);
+			});
+			if (miniLogout) {
+				miniLogout.classList.toggle('d-none', !mini);
+			}
+			Array.prototype.forEach.call(logos, function(el) {
+				el.classList.toggle('imagem-sidebar-mini', !!mini);
+				el.classList.toggle('imagem-sidebar-expandida', !mini);
+			});
+		}
 		verificaSidebar();
 	});
 
@@ -294,15 +301,24 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 			return true; // LINHA 51
 		}
 
-		$('#cnpj').change(function(){
-			if(validarCNPJ($(this).val()) == false) bootbox.alert('CNPJ inválido!');
-		})
+		document.addEventListener('DOMContentLoaded', function() {
+			var cnpjInput = document.getElementById('cnpj');
+			var cpfInput = document.getElementById('cpf');
 
-		$('#cpf').change(function(){
-			var regex = /[.-\s]/g;
-			var result = $(this).val().replace(regex, '');
-			if(validaCPF( result ) == false) bootbox.alert('CPF inválido!');
-		})
+			if (cnpjInput) {
+				cnpjInput.addEventListener('change', function() {
+					if (validarCNPJ(cnpjInput.value) == false) bootbox.alert('CNPJ inválido!');
+				});
+			}
+
+			if (cpfInput) {
+				cpfInput.addEventListener('change', function() {
+					var regex = /[.-\s]/g;
+					var result = String(cpfInput.value || '').replace(regex, '');
+					if (validaCPF(result) == false) bootbox.alert('CPF inválido!');
+				});
+			}
+		});
 
 		function validaCPF(cpf) {
 			var numeros, digitos, soma, i, resultado, digitos_iguais;
@@ -341,14 +357,10 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 		function pagelength(len){
 			var url = "<?= $this->Url->build(['controller' => 'Users', 'action' => 'pagelength']) ?>";
 			url = url + '/' + len;
-			$.ajax({
-				type:"POST",
-				url: url,
-				data: {"len": len},
-				error: function (tab) {
+			window.PGMHttp.httpPost(url, {len: len})
+				.catch(function() {
 					bootbox.alert('Um erro ocorreu ao salvar sua preferência! Tente novamente.');
-				}
-			});
+				});
 		}
 	// Misc 
 		function numberToReal(numero) {
@@ -360,7 +372,7 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 			}
 		}
 
-		$(function(){
+		document.addEventListener('DOMContentLoaded', function() {
 			if ($.fn.maskMoney) {
 				$(".mascaramonetaria").maskMoney({
 					allowNegative: true,
@@ -380,10 +392,15 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 	// Permissão pode ser concedida nas configurações do site ou num fluxo futuro com botão explícito.
 
 		function notificacaoTicket(){
-			$.ajax({ 
-				url: "<?= Router::url(['controller' => 'Notificacoes', 'action' => 'notificacoes']);?>",
-				success:function(data){ $('#notificacao').html(data); },
-			})
+			var url = "<?= Router::url(['controller' => 'Notificacoes', 'action' => 'notificacoes']);?>";
+			var notificacaoEl = document.getElementById('notificacao');
+			if (!notificacaoEl) return;
+			window.PGMHttp.httpGet(url)
+				.then(function(res) { return res.text(); })
+				.then(function(data) { notificacaoEl.innerHTML = data; })
+				.catch(function() {
+					// Mantém comportamento silencioso do legado em falhas transitórias.
+				});
 		}
 		
 		notificacaoTicket();
@@ -429,19 +446,19 @@ $pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-rea
 
 		function pgmLayoutNoTopbarMinHeight() {
 			var root = document.documentElement;
-			var $body = $('body');
-			if (!$body.hasClass('layout-no-topbar')) {
+			var body = document.body;
+			if (!body || !body.classList.contains('layout-no-topbar')) {
 				root.style.removeProperty('--pgm-layout-min-h');
-				$body.removeClass('pgm-layout-min-h-legacy-wrapper');
+				if (body) body.classList.remove('pgm-layout-min-h-legacy-wrapper');
 				return;
 			}
 			var h = Math.max(1, (window.innerHeight > 0 ? window.innerHeight : screen.height) - 1);
 			root.style.setProperty('--pgm-layout-min-h', h + 'px');
-			var $shell = $('.pgm-shell-main');
-			$body.toggleClass('pgm-layout-min-h-legacy-wrapper', $shell.length === 0);
+			var shell = document.querySelector('.pgm-shell-main');
+			body.classList.toggle('pgm-layout-min-h-legacy-wrapper', !shell);
 		}
-		$(window).on('resize', pgmLayoutNoTopbarMinHeight);
-		$(window).on('load', function () {
+		window.addEventListener('resize', pgmLayoutNoTopbarMinHeight);
+		window.addEventListener('load', function() {
 			pgmLayoutNoTopbarMinHeight();
 		});
 

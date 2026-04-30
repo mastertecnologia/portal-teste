@@ -76,36 +76,49 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 </div>
 <script>
 (function() {
+	if (window.__pgmPortalNotifBellInit) return;
+	window.__pgmPortalNotifBellInit = true;
+
 	var urlCount = <?= json_encode($urlCount) ?>;
 	var urlList = <?= json_encode($urlList) ?>;
 	var urlMarkAll = <?= json_encode($urlMarkAll) ?>;
 	var urlMarkReadBase = <?= json_encode($urlMarkReadBase) ?>;
+	var pollTimer = null;
 
-	function csrfToken() {
-		var m = document.querySelector('meta[name="csrfToken"]');
-		if (m && m.getAttribute('content')) return m.getAttribute('content');
-		var inp = document.querySelector('input[name="_csrfToken"]');
-		return inp ? inp.value : '';
+	function escHtml(str) {
+		return String(str || '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	function qs(id) {
+		return document.getElementById(id);
 	}
 
 	function refreshCount() {
-		$.ajax({
-			url: urlCount,
-			dataType: 'json',
-			cache: false,
-			headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-		})
-			.done(function(d) {
+		var bell = qs('pgmPortalNotifBell');
+		var badge = qs('pgmBellBadge');
+		if (!bell || !badge) return;
+
+		window.PGMHttp.httpGetJson(urlCount)
+			.then(function(d) {
 				var n = (d && typeof d.count !== 'undefined') ? parseInt(d.count, 10) : 0;
-				var $b = $('#pgmBellBadge');
-				$('#pgmPortalNotifBell').removeClass('pgm-notif-api-error');
-				if (n > 0) { $b.text(n > 99 ? '99+' : n).show(); } else { $b.hide(); }
-			})
-			.fail(function(xhr) {
-				if (window.console && console.warn) {
-					console.warn('PGM: falha ao obter contagem de notificações', xhr && xhr.status);
+				bell.classList.remove('pgm-notif-api-error');
+				if (n > 0) {
+					badge.textContent = n > 99 ? '99+' : String(n);
+					badge.style.display = 'inline-block';
+				} else {
+					badge.style.display = 'none';
 				}
-				$('#pgmPortalNotifBell').addClass('pgm-notif-api-error');
+			})
+			.catch(function(err) {
+				if (window.console && console.warn) {
+					console.warn('PGM: falha ao obter contagem de notificações', err && err.message);
+				}
+				bell.classList.add('pgm-notif-api-error');
 			});
 	}
 
@@ -117,99 +130,129 @@ $urlPrefs = $this->PgmPortalNotif->url(['controller' => 'PortalNotifications', '
 	}
 
 	function loadList() {
-		var $body = $('#pgmNotifListBody');
-		$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>');
-		$.ajax({
-			url: urlList,
-			dataType: 'json',
-			cache: false,
-			headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-		}).done(function(d) {
+		var body = qs('pgmNotifListBody');
+		if (!body) return;
+		body.innerHTML = '<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Carregando…</div>';
+
+		window.PGMHttp.httpGetJson(urlList).then(function(d) {
 			var items = (d && d.items) ? d.items : [];
 			if (!items.length) {
-				$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Nenhuma notificação</div>');
+				body.innerHTML = '<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Nenhuma notificação</div>';
 				return;
 			}
 			var h = '';
 			items.forEach(function(it) {
 				var cls = 'pgm-portal-notif-item' + (it.is_read ? '' : ' unread');
 				var markId = (it.id && !it.is_read) ? it.id : '';
-				h += '<a class="' + cls + '" href="' + (it.action_url || '#') + '" data-mark-id="' + markId + '">';
-				h += '<div><i class="fas ' + iconForType(it.type) + ' mr-1"></i><span class="pgm-nt-title">' + $('<div>').text(it.title || '').html() + '</span></div>';
-				if (it.message) h += '<div class="pgm-nt-msg">' + $('<div>').text(it.message).html() + '</div>';
-				h += '<div class="pgm-nt-meta">' + (it.created_human || '') + '</div></a>';
+				h += '<a class="' + cls + '" href="' + escHtml(it.action_url || '#') + '" data-mark-id="' + escHtml(markId) + '">';
+				h += '<div><i class="fas ' + iconForType(it.type) + ' mr-1"></i><span class="pgm-nt-title">' + escHtml(it.title || '') + '</span></div>';
+				if (it.message) h += '<div class="pgm-nt-msg">' + escHtml(it.message) + '</div>';
+				h += '<div class="pgm-nt-meta">' + escHtml(it.created_human || '') + '</div></a>';
 			});
-			$body.html(h);
-			$body.find('a.pgm-portal-notif-item').on('click', function(e) {
-				var $a = $(this);
-				var mid = $a.attr('data-mark-id');
-				var href = $a.attr('href') || '#';
-				var tok = csrfToken();
-				if (mid && tok) {
-					e.preventDefault();
-					$.post(urlMarkReadBase + '/' + encodeURIComponent(mid), { _csrfToken: tok })
-						.done(function() { refreshCount(); if (href !== '#') { window.location.href = href; } })
-						.fail(function() { if (href !== '#') { window.location.href = href; } });
-				} else if (mid && !tok) {
-					if (href !== '#') { return; }
-				}
-			});
-		}).fail(function() {
-			$body.html('<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Indisponível</div>');
+			body.innerHTML = h;
+		}).catch(function() {
+			body.innerHTML = '<div class="text-muted text-center py-3 pgm-notif-list-placeholder">Indisponível</div>';
 		});
 	}
 
 	function positionPanel() {
-		var $btn = $('#pgmBellToggle');
-		var $panel = $('#pgmNotifPanel');
-		if (!$btn.length) return;
-		var winH = $(window).height();
-		var scrollTop = $(window).scrollTop();
+		var btn = qs('pgmBellToggle');
+		var panel = qs('pgmNotifPanel');
+		if (!btn || !panel) return;
+		var winH = window.innerHeight || document.documentElement.clientHeight || 0;
+		var scrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
 		var maxH = winH - 40;
-		$panel.css('max-height', maxH + 'px');
-		var off = $btn.offset();
-		if (!off || typeof off.left === 'undefined' || isNaN(off.left)) {
-			$panel.css({ top: (scrollTop + 20) + 'px', left: 'auto', right: '20px' });
+		panel.style.maxHeight = maxH + 'px';
+
+		var rect = btn.getBoundingClientRect();
+		if (!rect || isNaN(rect.left)) {
+			panel.style.top = (scrollTop + 20) + 'px';
+			panel.style.left = 'auto';
+			panel.style.right = '20px';
 			return;
 		}
-		var left = off.left + $btn.outerWidth() + 8;
+		var left = rect.left + window.pageXOffset + rect.width + 8;
 		var top = scrollTop + 20;
-		if (left + 340 > $(window).width()) {
-			left = off.left - 340 - 8;
+		var winW = window.innerWidth || document.documentElement.clientWidth || 0;
+		if (left + 340 > winW) {
+			left = rect.left + window.pageXOffset - 340 - 8;
 		}
-		$panel.css({ top: top + 'px', left: left + 'px', right: 'auto' });
+		panel.style.top = top + 'px';
+		panel.style.left = left + 'px';
+		panel.style.right = 'auto';
 	}
 
-	$(function() {
-		refreshCount();
-		setInterval(refreshCount, 60000);
+	function handleListClick(event) {
+		var anchor = event.target.closest('a.pgm-portal-notif-item');
+		var body = qs('pgmNotifListBody');
+		if (!anchor || !body || !body.contains(anchor)) return;
+		var mid = anchor.getAttribute('data-mark-id');
+		var href = anchor.getAttribute('href') || '#';
+		if (mid) {
+			event.preventDefault();
+			window.PGMHttp.httpPost(urlMarkReadBase + '/' + encodeURIComponent(mid), {})
+				.then(function() {
+					refreshCount();
+					if (href !== '#') window.location.href = href;
+				})
+				.catch(function() {
+					if (href !== '#') window.location.href = href;
+				});
+		}
+	}
 
-		$('#pgmBellToggle').on('click', function(e) {
+	document.addEventListener('DOMContentLoaded', function() {
+		if (!window.PGMHttp || typeof window.PGMHttp.httpGetJson !== 'function' || typeof window.PGMHttp.httpPost !== 'function') {
+			if (window.console && console.warn) console.warn('PGM: PGMHttp indisponível');
+			return;
+		}
+		var bellToggle = qs('pgmBellToggle');
+		var panel = qs('pgmNotifPanel');
+		var markAll = qs('pgmMarkAllRead');
+		var listBody = qs('pgmNotifListBody');
+		if (!bellToggle || !panel || !markAll || !listBody) return;
+
+		refreshCount();
+		if (!pollTimer) {
+			pollTimer = window.setInterval(refreshCount, 60000);
+		}
+
+		bellToggle.addEventListener('click', function(e) {
 			e.preventDefault();
 			e.stopPropagation();
-			var $panel = $('#pgmNotifPanel');
-			var wasOpen = $panel.hasClass('is-open');
+			var wasOpen = panel.classList.contains('is-open');
 			if (wasOpen) {
-				$panel.removeClass('is-open');
+				panel.classList.remove('is-open');
 			} else {
 				loadList();
-				$panel.addClass('is-open');
+				panel.classList.add('is-open');
 				positionPanel();
 			}
 		});
 
-		$(document).on('click', function(e) {
-			var $panel = $('#pgmNotifPanel');
-			if (!$(e.target).closest('#pgmNotifPanel, #pgmBellToggle, #pgmSidebarMenuOpenNotif').length) {
-				$panel.removeClass('is-open');
+		document.addEventListener('click', function(e) {
+			if (!e.target.closest('#pgmNotifPanel, #pgmBellToggle, #pgmSidebarMenuOpenNotif')) {
+				panel.classList.remove('is-open');
 			}
 		});
 
-		$('#pgmMarkAllRead').on('click', function(e) {
+		markAll.addEventListener('click', function(e) {
 			e.preventDefault();
-			var tok = csrfToken();
-			if (!tok) { return; }
-			$.post(urlMarkAll, { _csrfToken: tok }).always(function() { refreshCount(); loadList(); });
+			if (!window.PGMHttp.getCsrfToken()) { return; }
+			window.PGMHttp.httpPost(urlMarkAll, {})
+				.then(function() {
+					refreshCount();
+					loadList();
+				})
+				.catch(function() {
+					refreshCount();
+					loadList();
+				});
+		});
+
+		listBody.addEventListener('click', handleListClick);
+		window.addEventListener('resize', function() {
+			if (panel.classList.contains('is-open')) positionPanel();
 		});
 	});
 })();
