@@ -4812,7 +4812,7 @@ class TicketsController extends AppController {
 			return $this->_ticketUrl(['_name' => 'ticketsGerarOs', 'id' => $ticketId]);
 		} catch (\Throwable $e) {
 			try {
-				return $this->_ticketUrl(['action' => 'gerarOs', $ticketId]);
+				return $this->_ticketUrl(['controller' => 'Ordensservico', 'action' => 'addFromTicket', $ticketId]);
 			} catch (\Throwable $e2) {
 				return '';
 			}
