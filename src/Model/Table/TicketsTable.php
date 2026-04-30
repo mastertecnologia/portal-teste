@@ -34,6 +34,63 @@ class TicketsTable extends Table {
 		return array_values(array_unique($out));
 	}
 
+	private function resolveTicketAssuntoTexto($assunto): string {
+		$raw = AssuntoTicket($assunto);
+		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+		if ($t !== '' && $t !== '0') {
+			return $t;
+		}
+
+		if (is_numeric($assunto)) {
+			$code = (int)$assunto;
+			if ($code >= 0) {
+				$opts = [];
+
+				// 1) Mapeamento por constante (prioridade maior)
+				if (defined('C_TicketCategoriaClienteQuery')) {
+					$c = constant('C_TicketCategoriaClienteQuery');
+					if (is_array($c) && $c !== []) {
+						$opts = $c;
+					}
+				}
+
+				// 2) Mapeamento por arquivo de config
+				if ($opts === []) {
+					$path = CONFIG . 'ticket_assunto_cliente.php';
+					if (is_file($path)) {
+						$cfg = include $path;
+						if (is_array($cfg) && $cfg !== []) {
+							$opts = $cfg;
+						}
+					}
+				}
+
+				// 3) Fallback interno mínimo (resiliência sem config externa)
+				if ($opts === []) {
+					$opts = [
+						0 => 'Comercial',
+						1 => 'Dúvida',
+						2 => 'Solicitação',
+						3 => 'Problema / erro',
+						4 => 'Requisição de acesso',
+						5 => 'Visita / agendamento',
+					];
+				}
+
+				if (isset($opts[$code]) && trim((string)$opts[$code]) !== '') {
+					return (string)$opts[$code];
+				}
+			}
+		}
+
+		$s = trim((string)$assunto);
+		if ($s !== '' && $s !== '0') {
+			return $s;
+		}
+
+		return 'Não informado';
+	}
+
 	public function initialize(array $config) {
 		$this->hasMany('Ticketcomentarios')->setForeignKey('idticket')->setDependent(true);
 		$this->hasOne('Ticketsusers')->setForeignKey('idticket')->setDependent(true);
@@ -248,7 +305,7 @@ class TicketsTable extends Table {
 
 		// Ticket criado: mesmo envio que UsersController::email (Cadastre-se) — ->to() com string de emailtickets.
 		if ($acao == C_TicketCriado) {
-			$assunto = AssuntoTicket($ticket->assunto);
+			$assunto = $this->resolveTicketAssuntoTexto($ticket->assunto);
 			$nomeClienteEmail = ($cliente->tipo == C_ClientesTipoFisica) ? $cliente->nome : $cliente->razaosocial;
 			$message =
 				"<h3> Ticket $idticket Criado! </h3>
@@ -311,7 +368,7 @@ class TicketsTable extends Table {
 		}
 
 		$data = @date_format($ticket->datafinalizado, 'd/m/Y');
-		$assunto = AssuntoTicket($ticket->assunto);
+		$assunto = $this->resolveTicketAssuntoTexto($ticket->assunto);
 
 		if (empty($acao)) {
 			$descSic = $ticket->situacao == C_TicketSituacaoRespondido ? 'respondido' : 'resolvido';
