@@ -24,7 +24,7 @@
 											}		
 											?>			
 										</td>
-										<td><?= DescricaoSituacaoVisitas($reg->situacao) ?></td>
+										<td><?= h($this->Visitas->descricaoSituacaoVisitas($reg->situacao)) ?></td>
 										<td data-order="<?= date_format($reg->data, 'Ymd') ?>"><?= date_format($reg->data, 'd/m/Y') ?></td>
 										<td><?= date_format($reg->horaini, 'H:i') . " - " . date_format($reg->horafim, 'H:i') ?></td>
 									</tr>

@@ -1440,6 +1440,17 @@ Router::scope("/", function ($routes) {
             "action" => "export",
         ])
         ->setMethods(["GET"]);
+    // Compat: URL curta /indicadores (evita DashedRoute → IndicadoresController inexistente)
+    $routes->connect("/indicadores", [
+        "controller" => "AdvancedReports",
+        "action" => "index",
+    ]);
+    $routes
+        ->connect("/indicadores/exportar", [
+            "controller" => "AdvancedReports",
+            "action" => "export",
+        ])
+        ->setMethods(["GET"]);
     // Gestão de contratos (ERP) — spec /modulo-contratos
     $routes->connect("/modulo-contratos", [
         "controller" => "ContractManagement",

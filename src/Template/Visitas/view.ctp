@@ -11,7 +11,7 @@
 					<h4><strong>Motivo</strong></h4><p> <?= nl2br($visita->motivo) ?></p>
 				</div>
 				<div class="col-lg-3">
-					<h4><strong>Situação</strong></h4><p> <?= DescricaoSituacaoVisitas($visita->situacao) ?></p>
+					<h4><strong>Situação</strong></h4><p> <?= h($this->Visitas->descricaoSituacaoVisitas($visita->situacao)) ?></p>
 				</div>
 				<div class="col-lg-4">
 					<h4><strong>Membro(s) da visita</strong></h4>

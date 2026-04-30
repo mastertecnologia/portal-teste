@@ -288,16 +288,16 @@
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
 					<div class="nav-section-items">
-						<?= $pgmSbLink('pie-chart', ' Painel', ['controller' => 'Financeiro', 'action' => 'index'], [], $finDashAct, '', 'Painel financeiro') ?>
-						<?= $pgmSbLink('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], [], $finRecAct, '', 'Contas a receber') ?>
-						<?= $pgmSbLink('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], [], $finPagAct, '', 'Contas a pagar') ?>
-						<?= $pgmSbLink('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], [], $finFluxoAct, '', 'Fluxo de caixa') ?>
-						<?= $pgmSbLink('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], [], $finRecorAct, '', 'Recorrentes') ?>
-						<?= $pgmSbLink('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], [], $finConcAct, '', 'Conciliação bancária') ?>
-						<?= $pgmSbLink('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], [], $finDreAct, '', 'DRE') ?>
+						<?= $pgmSbLink('pie-chart', ' Painel', ['controller' => 'Financeiro', 'action' => 'index'], ['data-turbo' => 'false'], $finDashAct, '', 'Painel financeiro') ?>
+						<?= $pgmSbLink('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], ['data-turbo' => 'false'], $finRecAct, '', 'Contas a receber') ?>
+						<?= $pgmSbLink('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], ['data-turbo' => 'false'], $finPagAct, '', 'Contas a pagar') ?>
+						<?= $pgmSbLink('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], ['data-turbo' => 'false'], $finFluxoAct, '', 'Fluxo de caixa') ?>
+						<?= $pgmSbLink('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], ['data-turbo' => 'false'], $finRecorAct, '', 'Recorrentes') ?>
+						<?= $pgmSbLink('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], ['data-turbo' => 'false'], $finConcAct, '', 'Conciliação bancária') ?>
+						<?= $pgmSbLink('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], ['data-turbo' => 'false'], $finDreAct, '', 'DRE') ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['data-turbo' => 'false'], $finRelAct, '', 'Relatórios financeiros') ?>
-						<?= $pgmSbLink('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], [], $finPlanoAct, '', 'Plano de contas') ?>
-						<?= $pgmSbLink('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], [], $finCcAct, '', 'Centros de custo') ?>
+						<?= $pgmSbLink('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], ['data-turbo' => 'false'], $finPlanoAct, '', 'Plano de contas') ?>
+						<?= $pgmSbLink('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], ['data-turbo' => 'false'], $finCcAct, '', 'Centros de custo') ?>
 					</div>
 				</li>
 				<?php endif; ?>
@@ -309,9 +309,9 @@
 						<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</div>
 					<div class="nav-section-items">
-						<?= $pgmSbLink('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], [], $finBancosAct, '', 'Cadastro de bancos') ?>
-						<?= $pgmSbLink('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], [], $finRemessaAct, '', 'Remessa') ?>
-						<?= $pgmSbLink('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], [], $finRetornoAct, '', 'Retorno') ?>
+						<?= $pgmSbLink('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], ['data-turbo' => 'false'], $finBancosAct, '', 'Cadastro de bancos') ?>
+						<?= $pgmSbLink('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $finRemessaAct, '', 'Remessa') ?>
+						<?= $pgmSbLink('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $finRetornoAct, '', 'Retorno') ?>
 						<?= $pgmSbLink('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $finRelBancosAct, '', 'Relatórios bancos') ?>
 					</div>
 				</li>

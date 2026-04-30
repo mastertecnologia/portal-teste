@@ -172,16 +172,16 @@ final class PgmSidebarStaffPayloadBuilder
                 'title' => 'Financeiro',
                 'defaultOpen' => (bool)$ctx['pgmSbOpenFinanceiro'],
                 'items' => [
-                    self::item('pie-chart', ' Painel', ['controller' => 'Financeiro', 'action' => 'index'], [], $ctx['finDashAct'], '', 'Painel financeiro'),
-                    self::item('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], [], $ctx['finRecAct'], '', 'Contas a receber'),
-                    self::item('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], [], $ctx['finPagAct'], '', 'Contas a pagar'),
-                    self::item('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], [], $ctx['finFluxoAct'], '', 'Fluxo de caixa'),
-                    self::item('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], [], $ctx['finRecorAct'], '', 'Recorrentes'),
-                    self::item('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], [], $ctx['finConcAct'], '', 'Conciliação bancária'),
-                    self::item('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], [], $ctx['finDreAct'], '', 'DRE'),
-                    self::item('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], [], $ctx['finRelAct'], '', 'Relatórios financeiros'),
-                    self::item('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], [], $ctx['finPlanoAct'], '', 'Plano de contas'),
-                    self::item('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], [], $ctx['finCcAct'], '', 'Centros de custo'),
+                    self::item('pie-chart', ' Painel', ['controller' => 'Financeiro', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finDashAct'], '', 'Painel financeiro'),
+                    self::item('arrow-down-circle', ' Contas a receber', ['controller' => 'Financeiro', 'action' => 'contasReceber'], ['data-turbo' => 'false'], $ctx['finRecAct'], '', 'Contas a receber'),
+                    self::item('arrow-up-circle', ' Contas a pagar', ['controller' => 'Financeiro', 'action' => 'contasPagar'], ['data-turbo' => 'false'], $ctx['finPagAct'], '', 'Contas a pagar'),
+                    self::item('activity', ' Fluxo de caixa', ['controller' => 'Financeiro', 'action' => 'fluxoCaixa'], ['data-turbo' => 'false'], $ctx['finFluxoAct'], '', 'Fluxo de caixa'),
+                    self::item('repeat', ' Recorrentes', ['controller' => 'Financeiro', 'action' => 'recorrentes'], ['data-turbo' => 'false'], $ctx['finRecorAct'], '', 'Recorrentes'),
+                    self::item('shuffle', ' Conciliação', ['controller' => 'Financeiro', 'action' => 'conciliacao'], ['data-turbo' => 'false'], $ctx['finConcAct'], '', 'Conciliação bancária'),
+                    self::item('line-chart', ' DRE', ['controller' => 'Financeiro', 'action' => 'dre'], ['data-turbo' => 'false'], $ctx['finDreAct'], '', 'DRE'),
+                    self::item('bar-chart-2', ' Relatórios financeiros', ['controller' => 'FinanceiroRelatorios', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finRelAct'], '', 'Relatórios financeiros'),
+                    self::item('book-open', ' Plano de contas', ['controller' => 'FinanceiroConfig', 'action' => 'planoContas'], ['data-turbo' => 'false'], $ctx['finPlanoAct'], '', 'Plano de contas'),
+                    self::item('folder-tree', ' Centros de custo', ['controller' => 'FinanceiroConfig', 'action' => 'centrosCusto'], ['data-turbo' => 'false'], $ctx['finCcAct'], '', 'Centros de custo'),
                 ],
             ];
         }
@@ -192,10 +192,10 @@ final class PgmSidebarStaffPayloadBuilder
                 'title' => 'Bancos',
                 'defaultOpen' => (bool)$ctx['pgmSbOpenBancos'],
                 'items' => [
-                    self::item('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], [], $ctx['finBancosAct'], '', 'Cadastro de bancos'),
-                    self::item('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], [], $ctx['finRemessaAct'], '', 'Remessa'),
-                    self::item('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], [], $ctx['finRetornoAct'], '', 'Retorno'),
-                    self::item('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], [], $ctx['finRelBancosAct'], '', 'Relatórios bancos'),
+                    self::item('landmark', ' Cadastro', ['controller' => 'FinanceiroBancos', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['finBancosAct'], '', 'Cadastro de bancos'),
+                    self::item('send', ' Remessa', ['controller' => 'FinanceiroBancos', 'action' => 'remessa'], ['data-turbo' => 'false'], $ctx['finRemessaAct'], '', 'Remessa'),
+                    self::item('inbox', ' Retorno', ['controller' => 'FinanceiroBancos', 'action' => 'retorno'], ['data-turbo' => 'false'], $ctx['finRetornoAct'], '', 'Retorno'),
+                    self::item('table-2', ' Relatórios bancos', ['controller' => 'FinanceiroBancos', 'action' => 'relatorios'], ['data-turbo' => 'false'], $ctx['finRelBancosAct'], '', 'Relatórios bancos'),
                 ],
             ];
         }
