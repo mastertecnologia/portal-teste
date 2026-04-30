@@ -245,9 +245,9 @@ body.os-add-page .os-add-shell .jsgrid td.os-cell-desc {
 
 body.os-add-page .os-add-shell .jsgrid th.jsgrid-control-field,
 body.os-add-page .os-add-shell .jsgrid td.jsgrid-control-field {
-	width: 64px !important;
-	min-width: 64px !important;
-	max-width: 64px !important;
+	width: 100px !important;
+	min-width: 100px !important;
+	max-width: 124px !important;
 	box-sizing: border-box;
 }
 
@@ -455,6 +455,65 @@ body.os-add-page .os-add-shell .jsgrid .jsgrid-control-field {
 
 body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
 	margin: 0 2px 0 0;
+}
+
+/* Leitura: colunas numéricas e texto alinhadas ao grid de inclusão */
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell .os-grid-ro-num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-height: 34px;
+	line-height: 34px;
+	padding: 0 6px;
+	box-sizing: border-box;
+	font-size: 12.5px;
+	color: var(--os-text);
+}
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell .os-grid-ro-inline {
+	display: block;
+	min-height: 34px;
+	line-height: 34px;
+	padding: 0 6px;
+	box-sizing: border-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 12.5px;
+	color: var(--os-text);
+}
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell .os-grid-ro-center.os-grid-ro-inline {
+	text-align: center;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell input.os-grid-ro-cell {
+	min-height: 34px !important;
+	font-size: 12.5px !important;
+	cursor: default !important;
+	pointer-events: none;
+	background-color: var(--os-bg3) !important;
+}
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .btn-pgm-icon,
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-edit .btn {
+	margin: 0 2px 0 0;
+	padding: 4px 7px !important;
+	min-width: 32px;
+}
+body.os-add-page .os-add-shell #grid_table .os-grid-ref-trigger {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 12.5px;
+	color: var(--os-accent2) !important;
+	text-decoration: underline !important;
+	line-height: 1.2;
+}
+body.os-add-page .os-add-shell #grid_table .os-grid-ref-trigger:hover,
+body.os-add-page .os-add-shell #grid_table .os-grid-ref-trigger:focus {
+	color: var(--os-accent) !important;
 }
 
 .os-add-shell .input-group .btn-secondary {
