@@ -4,6 +4,8 @@ namespace App\Shell;
 use App\Service\AccessDiagnosticService;
 use Cake\Console\Shell;
 use Cake\Core\Configure;
+use Cake\Database\Driver\Postgres;
+use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 
 /** GO LIVE pré-vôo IAM */
@@ -239,6 +241,35 @@ class RbacGoLiveCheckShell extends Shell {
 
 
 
+	/** Datasource default é PostgreSQL (GO LIVE em prod). */
+
+
+	protected function isPgsqlDatasource(): bool {
+
+
+		try {
+
+
+			return ConnectionManager::get('default')->getDriver() instanceof Postgres;
+
+
+		}
+
+
+		catch (\Throwable $e) {
+
+
+			return false;
+
+
+		}
+
+
+	}
+
+
+
+
 	protected function stepIndexes(): void {
 
 
@@ -253,7 +284,19 @@ class RbacGoLiveCheckShell extends Shell {
 			$h = false;
 
 
-			foreach ($r->indexes() as $def) {
+			foreach ($r->indexes() as $indexName) {
+
+
+				$def = $r->getIndex($indexName);
+
+
+				if (!is_array($def)) {
+
+
+					continue;
+
+
+				}
 
 
 				if ($this->idxMatch($def, ['user_id', 'controller', 'action', 'status'])) {
@@ -332,7 +375,22 @@ class RbacGoLiveCheckShell extends Shell {
 			$uniq = false;
 
 
-			foreach (TableRegistry::get('RbacUsersRoles')->getSchema()->indexes() as $def) {
+			$ursSchema = TableRegistry::get('RbacUsersRoles')->getSchema();
+
+
+			foreach ($ursSchema->indexes() as $indexName) {
+
+
+				$def = $ursSchema->getIndex($indexName);
+
+
+				if (!is_array($def)) {
+
+
+					continue;
+
+
+				}
 
 
 				$u = false;
@@ -388,6 +446,63 @@ class RbacGoLiveCheckShell extends Shell {
 				}
 
 
+
+
+			}
+
+
+
+
+			if (!$uniq) {
+
+
+				$pk = $ursSchema->primaryKey();
+
+
+				if (is_array($pk) && $this->idxMatch(['columns' => $pk], ['user_id', 'role_id'])) {
+
+
+					$uniq = true;
+
+
+				}
+
+
+			}
+
+
+
+
+			if (!$uniq && $this->isPgsqlDatasource()) {
+
+
+				try {
+
+
+					$q = ConnectionManager::get('default')->execute(
+						"SELECT 1 AS ok FROM pg_indexes WHERE tablename = 'rbac_users_roles' AND indexname = 'rbac_users_roles_user_role_uq' LIMIT 1"
+					);
+
+
+					$row = $q ? $q->fetch('assoc') : false;
+
+
+					if (is_array($row) && isset($row['ok'])) {
+
+
+						$uniq = true;
+
+
+					}
+
+
+				}
+
+
+				catch (\Throwable $ePg) {
+
+
+				}
 
 
 			}
@@ -756,7 +871,7 @@ class RbacGoLiveCheckShell extends Shell {
 
 				->find()
 
-				->select(['id', 'username', 'admin', 'idempresa', 'role'])
+				->select(['id', 'username', 'admin', 'role'])
 
 				->where(['role' => 0])
 
@@ -789,7 +904,46 @@ class RbacGoLiveCheckShell extends Shell {
 			$u = $row->toArray();
 
 
+			if (!isset($u['idempresa'])) {
 
+
+				$u['idempresa'] = 0;
+
+
+			}
+
+
+			if ((int)($u['role'] ?? 1) === 0) {
+
+
+				$eu = TableRegistry::get('Empresasusers')
+
+
+					->find()
+
+
+					->select(['idempresa'])
+
+
+					->where(['iduser' => (int)$u['id']])
+
+
+					->order(['idempresa' => 'ASC'])
+
+
+					->first();
+
+
+				if ($eu && isset($eu->idempresa)) {
+
+
+					$u['idempresa'] = (int)$eu->idempresa;
+
+
+				}
+
+
+			}
 
 
 			$svc = new AccessDiagnosticService();
