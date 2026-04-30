@@ -1961,7 +1961,7 @@ class FinanceiroController extends AppController
      */
     protected function _contaExtratoCompativel(
         string $contaExtrato,
-        string $contaBanco,
+        string $contaBanco
     ): bool {
         $extratoNormalizado = preg_replace("/\D+/", "", $contaExtrato) ?? "";
         $bancoNormalizado = preg_replace("/\D+/", "", $contaBanco) ?? "";
