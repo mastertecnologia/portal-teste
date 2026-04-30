@@ -2,7 +2,7 @@
 	use Cake\Routing\Router;
 
 	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-premium']));
-	$this->append('css', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
+	$this->append('css_late', $this->element('pgm_premium_css', ['name' => 'clientes-layout-unificado']));
 
 	$this->Breadcrumbs->add('Usuários', ['controller' => 'users', 'action' => 'index'], ['class' => 'breadcrumb-item']);
 	$this->Breadcrumbs->add('Editar', [], ['class' => 'breadcrumb-item active']);
