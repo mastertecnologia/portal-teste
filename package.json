@@ -5,6 +5,10 @@
   "scripts": {
     "test": "npm run test --prefix=dashboard-react",
     "build": "npm run build --prefix=dashboard-react",
-    "build:tickets": "npm run build --prefix=dashboard-react"
+    "build:tickets": "npm run build --prefix=dashboard-react",
+    "capture:admin-audit-round3": "node scripts/capture-admin-audit-round3.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
   }
 }
