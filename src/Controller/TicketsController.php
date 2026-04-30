@@ -12,6 +12,7 @@ use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketAttendimentoTimerService;
 use App\Service\Ticket\TicketClassificationService;
+use App\Service\Ticket\WorkflowService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
@@ -3313,6 +3314,7 @@ class TicketsController extends AppController {
 
 	protected function _reactBoot(string $screen, $ticketId = null, array $extra = []): array {
 		$w = $this->request->getAttribute('webroot');
+		$empresa = (int)$this->Auth->user('idempresa');
 		$base = [
 			'screen' => $screen,
 			'ticketId' => $ticketId !== null ? (int)$ticketId : null,
@@ -3327,6 +3329,7 @@ class TicketsController extends AppController {
 			 * Não desativa endpoints PATCH; cliente nunca deve herdar true (Servicedesk força false no portal).
 			 */
 			'inlineAssignment' => false,
+			'workflowEnabled' => $this->_ticketWorkflowEnabledForEmpresa($empresa),
 			'ticketStatus' => [
 				'pendente' => (int)C_TicketSituacaoPendente,
 				'emandamento' => (int)C_TicketSituacaoEmandamento,
@@ -3622,6 +3625,137 @@ class TicketsController extends AppController {
 				'attemptedValue' => $attemptedValue,
 			],
 		], 422);
+	}
+
+	protected function _ticketForbiddenPatchResponse(): \Cake\Http\Response {
+		return $this->jsonResponse([
+			'ok' => false,
+			'error' => 'forbidden',
+			'message' => 'Você não tem permissão para alterar este ticket.',
+		], 403);
+	}
+
+	protected function _ticketApplyForUpdateLock($query) {
+		try {
+			if (method_exists($query, 'epilog')) {
+				$query->epilog('FOR UPDATE');
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $query;
+	}
+
+	protected function _ticketWorkflowEnabledForEmpresa(int $empresaId): bool {
+		if ($empresaId <= 0) {
+			return false;
+		}
+		if (!Configure::read('Workflow.workflowEnabled', false)) {
+			return false;
+		}
+		$empresas = (array)Configure::read('Workflow.enabledEmpresas', []);
+		if ($empresas === []) {
+			return true;
+		}
+
+		return in_array($empresaId, array_map('intval', $empresas), true);
+	}
+
+	protected function _ticketWorkflowStateColumnReady(): bool {
+		static $ok = null;
+		if ($ok !== null) {
+			return $ok;
+		}
+		try {
+			$cols = $this->Tickets->getSchema()->columns();
+			$ok = in_array('workflow_state_id', $cols, true);
+		} catch (\Throwable $e) {
+			$ok = false;
+		}
+
+		return $ok;
+	}
+
+	protected function _ticketWorkflowService(): WorkflowService {
+		return new WorkflowService($this->Tickets);
+	}
+
+	/**
+	 * @return array|null
+	 */
+	protected function _ticketWorkflowPayloadForRow($reg): array {
+		static $service = null;
+		static $empresaEnabled = [];
+		static $empresaConfigured = [];
+		static $stateCache = [];
+		static $allowedCache = [];
+		$disabledPayload = [
+			'enabled' => false,
+			'current' => null,
+			'allowedTransitions' => [],
+		];
+		$empresa = (int)$this->Auth->user('idempresa');
+		if (!isset($empresaEnabled[$empresa])) {
+			$empresaEnabled[$empresa] = $this->_ticketWorkflowEnabledForEmpresa($empresa);
+		}
+		if (!$empresaEnabled[$empresa] || !$this->_ticketWorkflowStateColumnReady()) {
+			return $disabledPayload;
+		}
+		$currentStateId = (int)($reg->workflow_state_id ?? 0);
+		if ($service === null) {
+			$service = $this->_ticketWorkflowService();
+		}
+		if (!isset($empresaConfigured[$empresa])) {
+			$empresaConfigured[$empresa] = $service->hasConfiguredTransitionsForEmpresa($empresa);
+		}
+		if (!$empresaConfigured[$empresa]) {
+			return $disabledPayload;
+		}
+		if ($currentStateId <= 0) {
+			return [
+				'enabled' => true,
+				'current' => null,
+				'allowedTransitions' => [],
+			];
+		}
+		$stateKey = $empresa . ':' . $currentStateId;
+		if (!array_key_exists($stateKey, $stateCache)) {
+			$stateCache[$stateKey] = $service->getStateById($currentStateId);
+		}
+		$current = $stateCache[$stateKey];
+		if ($current === null) {
+			return [
+				'enabled' => true,
+				'current' => null,
+				'allowedTransitions' => [],
+			];
+		}
+		if (!array_key_exists($stateKey, $allowedCache)) {
+			$allowedCache[$stateKey] = $service->getAllowedTransitions($empresa, $currentStateId);
+		}
+		$allowedRaw = $allowedCache[$stateKey];
+		$allowed = [];
+		foreach ($allowedRaw as $row) {
+			$id = (int)($row['id'] ?? 0);
+			if ($id <= 0) {
+				continue;
+			}
+			$allowed[] = [
+				'id' => $id,
+				'label' => (string)($row['label'] ?? ''),
+				'codigo' => (string)($row['codigo'] ?? ''),
+			];
+		}
+
+		return [
+			'enabled' => true,
+			'current' => [
+				'id' => (int)$current['id'],
+				'label' => (string)$current['nome'],
+				'codigo' => (string)$current['codigo'],
+			],
+			'allowedTransitions' => $allowed,
+		];
 	}
 
 	protected function _servicedeskTicketRowPayload(int $idticket): ?array {
@@ -4482,6 +4616,14 @@ class TicketsController extends AppController {
 		$qEnt = $reg->queue ?? $reg->queues ?? null;
 		$filaCode = $wf ? (string)($reg->fila_suporte ?? 'n1') : '';
 		$nivel = $wf ? (int)($reg->nivel_atendimento ?? 1) : null;
+		$ordemId = null;
+		if (isset($ctx['ordemByTicket']) && is_array($ctx['ordemByTicket']) && array_key_exists($id, $ctx['ordemByTicket'])) {
+			$oid = (int)$ctx['ordemByTicket'][$id];
+			$ordemId = $oid > 0 ? $oid : null;
+		} else {
+			$ordemId = $this->_ticketOrdemId($id);
+		}
+
 		$acoes = [];
 		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
 			if ($sit !== (int)C_TicketSituacaoPendente) {
@@ -4531,6 +4673,21 @@ class TicketsController extends AppController {
 				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
 			}
 		}
+		if ($ordemId === null) {
+			$acoes[] = [
+				'key' => 'gerar_os',
+				'label' => 'Gerar Ordem de Serviço',
+				'url' => $this->_ticketUrl(['_name' => 'ticketsGerarOs', 'id' => $id]),
+				'target' => '_blank',
+			];
+		} else {
+			$acoes[] = [
+				'key' => 'ver_os',
+				'label' => 'Ver OS #' . $ordemId,
+				'url' => $this->_ticketUrl(['controller' => 'ordensservico', 'action' => 'edit', $ordemId]),
+				'target' => '_blank',
+			];
+		}
 		$acoes[] = ['key' => 'imprimir', 'label' => 'Imprimir', 'url' => $this->_ticketUrl(['action' => 'imprimir', $id, '?' => ['autoprint' => 1]]), 'target' => '_blank'];
 
 		$tecCol = $tecnicosLabel !== '' ? $tecnicosLabel : '—';
@@ -4559,6 +4716,7 @@ class TicketsController extends AppController {
 			],
 			'acoes' => $acoes,
 		];
+		$row['workflow'] = $this->_ticketWorkflowPayloadForRow($reg);
 		$canonicalResp = (int)($reg->idtecnico_responsavel ?? 0);
 		if ($canonicalResp <= 0 && isset($reg->owner_id) && $reg->owner_id !== null && $reg->owner_id !== '') {
 			$canonicalResp = (int)$reg->owner_id;
@@ -4638,6 +4796,22 @@ class TicketsController extends AppController {
 		}
 
 		return $row;
+	}
+
+	protected function _ticketOrdemId(int $ticketId): ?int {
+		static $cache = [];
+		if (array_key_exists($ticketId, $cache)) {
+			return $cache[$ticketId];
+		}
+		try {
+			$ordem = $this->Ordensservico->findByIdticket($ticketId)->select(['id'])->first();
+			$oid = (int)($ordem->id ?? 0);
+			$cache[$ticketId] = $oid > 0 ? $oid : null;
+		} catch (\Throwable $e) {
+			$cache[$ticketId] = null;
+		}
+
+		return $cache[$ticketId];
 	}
 
 	protected function _ticketRowApiCliente($reg, string $tecnicosLabel = '', array $ctx = []): array {
@@ -6435,44 +6609,88 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		$body = $this->_jsonPatchRequestBody();
+		$workflowStateDestinoId = isset($body['workflow_state_id']) ? (int)$body['workflow_state_id'] : 0;
 		$situacaoNova = $body['status'] ?? $body['situacao'] ?? $body['sit'] ?? null;
 		$rawStatusForDebug = $body['status'] ?? $body['situacao'] ?? $body['sit'] ?? null;
-		if ($situacaoNova === null || $situacaoNova === '') {
+		if (($situacaoNova === null || $situacaoNova === '') && $workflowStateDestinoId <= 0) {
 			return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
 		}
-		$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
-		if ($mapped === null) {
+		$mapped = null;
+		if ($situacaoNova !== null && $situacaoNova !== '') {
+			$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
+		}
+		if ($mapped === null && $workflowStateDestinoId <= 0) {
 			return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
 		}
-		$situacaoNova = $mapped;
-		$allowed = [
-			(int)C_TicketSituacaoPendente,
-			(int)C_TicketSituacaoEmandamento,
-			(int)C_TicketSituacaoResolvido,
-			(int)C_TicketSituacaoFechado,
-		];
-		if (!in_array((int)$situacaoNova, $allowed, true)) {
-			return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
+		$situacaoNovaInt = $mapped !== null ? (int)$mapped : (int)$ticket->situacao;
+		if ($mapped !== null) {
+			$allowed = [
+				(int)C_TicketSituacaoPendente,
+				(int)C_TicketSituacaoEmandamento,
+				(int)C_TicketSituacaoResolvido,
+				(int)C_TicketSituacaoFechado,
+			];
+			if (!in_array($situacaoNovaInt, $allowed, true)) {
+				return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
+			}
 		}
-		$situacaoNovaInt = (int)$situacaoNova;
 		$sitantigaAntes = (int)$ticket->situacao;
 		$empresa = (int)$this->Auth->user('idempresa');
+		$workflowFeatureEnabled = $this->_ticketWorkflowEnabledForEmpresa($empresa);
+		$workflowColumnReady = $this->_ticketWorkflowStateColumnReady();
 		try {
-			$this->Tickets->getConnection()->transactional(function () use ($idticket, $situacaoNovaInt, $empresa, $rawStatusForDebug) {
+			$this->Tickets->getConnection()->transactional(function () use (
+				$idticket,
+				$situacaoNovaInt,
+				$empresa,
+				$rawStatusForDebug,
+				$workflowStateDestinoId,
+				$workflowFeatureEnabled,
+				$workflowColumnReady
+			) {
 				$q = $this->Tickets->find('all')->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $empresa]);
 				$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+				$q = $this->_ticketApplyForUpdateLock($q);
 				$ticket = $q->first();
 				if (empty($ticket)) {
 					throw new \UnexpectedValueException('not_found');
+				}
+				if ((int)($ticket->idempresa ?? 0) !== $empresa) {
+					throw new \UnexpectedValueException('forbidden_view');
 				}
 				if (!$this->_apiTicketViewAllowed($ticket)) {
 					throw new \UnexpectedValueException('forbidden_view');
 				}
 				$sitantiga = (int)$ticket->situacao;
-				if ($situacaoNovaInt !== $sitantiga) {
-					TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, $situacaoNovaInt);
+				$workflowApplied = false;
+				$useWorkflow = false;
+				$workflowSvc = null;
+				if ($workflowFeatureEnabled && $workflowColumnReady) {
+					$workflowSvc = $this->_ticketWorkflowService();
+					if ($workflowSvc->hasConfiguredTransitionsForEmpresa($empresa)) {
+						$bootState = $workflowSvc->bootstrapStateForTicket($ticket);
+						$useWorkflow = $bootState !== null;
+					}
 				}
-				$ticket->situacao = $situacaoNovaInt;
+				if ($useWorkflow) {
+					$fromStateId = (int)$ticket->workflow_state_id;
+					$targetState = null;
+					if ($workflowStateDestinoId > 0) {
+						$targetState = $workflowSvc->getStateById($workflowStateDestinoId);
+					} else {
+						$targetState = $workflowSvc->getStateBySituacao($situacaoNovaInt);
+					}
+					if ($targetState === null || !$workflowSvc->canTransition($empresa, $fromStateId, (int)$targetState['id'])) {
+						throw new \UnexpectedValueException('invalid_transition');
+					}
+					$workflowSvc->applyTransition($ticket, (int)$targetState['id'], $empresa);
+					$situacaoNovaInt = (int)$ticket->situacao;
+					$workflowApplied = true;
+				}
+				if (!$workflowApplied && $situacaoNovaInt !== $sitantiga) {
+					TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, $situacaoNovaInt);
+					$ticket->situacao = $situacaoNovaInt;
+				}
 				$tcolsAll = $this->Tickets->getSchema()->columns();
 				$this->_ticketSetDatafinalizadoPorSituacao($ticket, $situacaoNovaInt, $tcolsAll);
 				if ($situacaoNovaInt === (int)C_TicketSituacaoEmandamento && $situacaoNovaInt !== $sitantiga) {
@@ -6514,7 +6732,14 @@ class TicketsController extends AppController {
 				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 			}
 			if ($e->getMessage() === 'forbidden_view') {
-				return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+				return $this->_ticketForbiddenPatchResponse();
+			}
+			if ($e->getMessage() === 'invalid_transition') {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'invalid_transition',
+					'message' => 'Transição de workflow inválida para este ticket.',
+				], 422);
 			}
 
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_state', 'message' => $e->getMessage()], 400);
