@@ -366,9 +366,9 @@ class OrdensservicoController extends AppController {
 		}
 		$qTp = $this->TicketProducts->find()
 			->contain(['Produtos'])
-			->where(['ticket_id' => $idticket]);
+			->where(['TicketProducts.ticket_id' => $idticket]);
 		if ($this->TicketProducts->getSchema()->hasColumn('idempresa')) {
-			$qTp->where(['idempresa' => $idempresa]);
+			$qTp->where(['TicketProducts.idempresa' => $idempresa]);
 		}
 		$rows = $qTp->toArray();
 		$codigosJa = [];
