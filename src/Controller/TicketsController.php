@@ -4609,16 +4609,28 @@ class TicketsController extends AppController {
 				$row['prioridadeLabel'] = $this->_ticketPrioridadeLabelFromCode($pc);
 			}
 			if (in_array('started_at', $colsAll, true) && in_array('total_seconds', $colsAll, true)) {
+				$totalSeconds = (int)($reg->total_seconds ?? 0);
+				if ($totalSeconds <= 0) {
+					try {
+						$totalSeconds = $this->_apiSegundosRegistradosTicket((int)$id);
+					} catch (\Throwable $e) {
+						$totalSeconds = 0;
+					}
+				}
+				$elapsedSeconds = TicketAttendimentoTimerService::elapsedSecondsForDisplay(
+					$this->Tickets,
+					$reg,
+					time()
+				);
+				if ($elapsedSeconds < $totalSeconds) {
+					$elapsedSeconds = $totalSeconds;
+				}
 				$row['attendimentoTimer'] = [
 					'started_at' => $this->_ticketTimerIsoForJson($reg->started_at ?? null),
 					'paused_at' => $this->_ticketTimerIsoForJson($reg->paused_at ?? null),
 					'finished_at' => $this->_ticketTimerIsoForJson($reg->finished_at ?? null),
-					'total_seconds' => (int)($reg->total_seconds ?? 0),
-					'elapsed_seconds' => TicketAttendimentoTimerService::elapsedSecondsForDisplay(
-						$this->Tickets,
-						$reg,
-						time()
-					),
+					'total_seconds' => $totalSeconds,
+					'elapsed_seconds' => $elapsedSeconds,
 				];
 			}
 		} catch (\Throwable $e) {

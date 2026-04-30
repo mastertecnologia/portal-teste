@@ -27,7 +27,11 @@ export default function TicketTimer({ ticket, situacaoExecCode }) {
   }, [running, ticket?.id, timer?.started_at, timer?.total_seconds]);
 
   const displaySeconds = useMemo(() => {
-    const base = Number(timer?.total_seconds) || 0;
+    const base = Math.max(
+      0,
+      Number(timer?.elapsed_seconds ?? 0) || 0,
+      Number(timer?.total_seconds ?? 0) || 0,
+    );
     if (!running || !timer?.started_at) {
       return Math.max(0, base);
     }
