@@ -4808,14 +4808,27 @@ class TicketsController extends AppController {
 		if ($ticketId <= 0) {
 			return '';
 		}
-		try {
-			return $this->_ticketUrl(['_name' => 'ticketsGerarOs', 'id' => $ticketId]);
-		} catch (\Throwable $e) {
+		$hasAddFromTicket = method_exists(OrdensservicoController::class, 'addFromTicket');
+		if ($hasAddFromTicket) {
 			try {
-				return $this->_ticketUrl(['controller' => 'Ordensservico', 'action' => 'addFromTicket', $ticketId]);
-			} catch (\Throwable $e2) {
-				return '';
+				return $this->_ticketUrl(['_name' => 'ticketsGerarOs', 'id' => $ticketId]);
+			} catch (\Throwable $e) {
+				try {
+					return $this->_ticketUrl(['controller' => 'Ordensservico', 'action' => 'addFromTicket', $ticketId]);
+				} catch (\Throwable $e2) {
+					try {
+						return $this->_ticketUrl(['controller' => 'Ordensservico', 'action' => 'ticketordem', $ticketId]);
+					} catch (\Throwable $e3) {
+						return '';
+					}
+				}
 			}
+		}
+
+		try {
+			return $this->_ticketUrl(['controller' => 'Ordensservico', 'action' => 'ticketordem', $ticketId]);
+		} catch (\Throwable $e) {
+			return '';
 		}
 	}
 
