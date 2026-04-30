@@ -1,6 +1,6 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=7', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=8', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
@@ -562,21 +562,37 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			}
 			return '';
 		}
-		function osAddFmtMoneyBrowse(v) {
+		/* Valores só numéricos BR (sem prefixo R$) — iguais aos inputs da imagem alvo */
+		function osAddFmtNumBrInput(v) {
 			if (v === null || v === undefined || v === '') {
-				return '—';
+				return '';
 			}
 			var n = parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
 			if (isNaN(n)) {
-				return pgmOsGridEscapeHtml(String(v));
+				return String(v);
 			}
-			return 'R$ ' + numberToReal(n);
+			return numberToReal(n);
 		}
-		function osAddFmtQtyBrowse(v) {
-			if (v === null || v === undefined || v === '') {
-				return '—';
+		function osAddReadonlyGridInput(val, alignRight) {
+			var $i = $('<input type="text" readonly tabindex="-1">')
+				.addClass('form-control form-control-sm os-grid-display-input');
+			if (alignRight) {
+				$i.addClass('text-right');
 			}
-			return pgmOsGridEscapeHtml(String(v));
+			$i.val(osAddFmtNumBrInput(val));
+			return $i;
+		}
+		function osAddBrowseCodProdutoCell(cod) {
+			var v = cod != null && cod !== '' ? String(cod) : '';
+			var $input = $('<input type="text" readonly tabindex="-1">')
+				.addClass('form-control input-codigo-val os-grid-display-input');
+			$input.val(v);
+			var $btn = $('<button type="button" tabindex="-1">')
+				.addClass('btn btn-secondary btn-sm os-grid-cod-search--browse')
+				.prop('disabled', true)
+				.html('<i class="fa fa-search"></i>')
+				.attr('title', 'Edite o item (lápis) para alterar o código ou pesquisar');
+			return $('<div class="input-group"/>').append($input).append($('<div class="input-group-append"/>').append($btn));
 		}
 	// Tipos e Produtos
 		var tiposOpt = <?= $tiposOpt ?>;
@@ -865,7 +881,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					editcss: "editTipo",
 					itemTemplate: function (value) {
 						var lbl = osAddTipoLabelBrowse(value);
-						return $('<span class="os-grid-ro-inline"></span>').text(lbl || '—');
+						return $('<span class="os-grid-ro-plain"></span>').text(lbl || '—');
 					},
 				},
 				{
@@ -877,7 +893,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					validate: "required",
 
 					itemTemplate: function(value) {
-						return $('<span class="os-grid-ro-inline"></span>').text(value != null && value !== '' ? String(value) : '—');
+						return osAddBrowseCodProdutoCell(value);
 					},
 					
 					// Template para INSERÇÃO
@@ -932,9 +948,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				},
 				{ name: "descricao", title: "Descrição", type: "text", width: "26%", validate: "required", editing: true, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required",
 					itemTemplate: function(value) {
-						return $('<input type="text" readonly tabindex="-1">')
-							.addClass('form-control form-control-sm os-grid-ro-cell')
-							.val(value != null ? String(value) : '');
+						var t = value != null ? String(value) : '';
+						return $('<span class="os-grid-ro-plain"></span>').text(t);
 					}
 				},
 				{
@@ -952,17 +967,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						if (value != null && String(value).trim() !== '') {
 							raw = String(value).trim();
 						}
-						var hasMeta = !!(item && (item.modelo || item.serialnumber || item.productkey || item.obsinterna || item.observacao));
+						var hasMeta = !!(item && (item.modelo || item.serialnumber || item.productkey || item.obsinterna));
 						if (!raw && hasMeta) {
-							raw = 'Detalhes';
-						}
-						if (!raw) {
 							raw = 'Ref.';
 						}
-						var vis = raw.length > 40 ? raw.substr(0, 37) + '…' : raw;
-						return $('<button type="button" class="btn btn-link btn-sm os-grid-ref-trigger text-left"></button>')
+						if (!raw) {
+							raw = '—';
+						}
+						var vis = raw.length > 48 ? raw.substr(0, 45) + '\u2026' : raw;
+						return $('<span class="os-grid-ref-trigger os-grid-ref-plain os-grid-ro-plain" role="button" tabindex="0"></span>')
 							.text(vis)
-							.attr('title', 'Detalhes / observação NF-e do item')
+							.attr('title', 'Detalhes do item')
 							.attr('aria-label', 'Abrir detalhes do item');
 					},
 				},
@@ -977,7 +992,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					editcss: "editUnidade",
 					validade: 'required',
 					itemTemplate: function(value) {
-						return $('<span class="os-grid-ro-inline os-grid-ro-center"></span>').text(value != null && String(value).trim() !== '' ? String(value).trim() : '—');
+						return $('<span class="os-grid-ro-plain os-grid-ro-plain--center"></span>').text(value != null && String(value).trim() !== '' ? String(value).trim() : '—');
 					},
 				},
 				{
@@ -990,9 +1005,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					editcss: "editQuantidade",
 					validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},
 					itemTemplate: function(value) {
-						var t = $('<div class="os-grid-ro-num"></div>');
-						t.text(osAddFmtQtyBrowse(value));
-						return t;
+						return osAddReadonlyGridInput(value, true);
 					},
 				},
 				{
@@ -1005,7 +1018,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					editcss: "editValorunitario",
 					validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},
 					itemTemplate: function(value) {
-						return $('<div class="os-grid-ro-num"></div>').html(osAddFmtMoneyBrowse(value));
+						return osAddReadonlyGridInput(value, true);
 					},
 				},
 				{
@@ -1017,13 +1030,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					insertcss: 'cellInput inputValordesconto',
 					editcss: "editValordesconto",
 					itemTemplate: function(value) {
-						return $('<div class="os-grid-ro-num"></div>').html(osAddFmtMoneyBrowse(value));
+						return osAddReadonlyGridInput(value, true);
 					},
 				},
 				/* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
 				{ name: "valortotal",  title: "Total", width: 90, align: "right", type: "text",  readOnly: true, editing: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal os-col-total',
 					itemTemplate: function(value) {
-						return $('<div class="os-grid-ro-num os-grid-ro-total"></div>').html(osAddFmtMoneyBrowse(value));
+						return osAddReadonlyGridInput(value, true);
 					},
 				},
                 { name: "modelo", type: "text", width: 0, css: 'hide', insertcss: 'hide inputModelo', editcss: 'hide editModelo' },
@@ -1037,7 +1050,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					editButton: false,
 					deleteButton: false,
 					itemTemplate: function (value, item) {
-						var $ed = $('<button type="button" class="btn btn-sm btn-outline-secondary btn-pgm-icon os-grid-act-edit"/>')
+						var $ed = $('<button type="button" class="btn btn-sm os-grid-act-edit"/>')
 							.html('<i class="fa fa-pencil"></i>')
 							.attr('title', 'Editar item');
 						$ed.on('click', function (e) {
@@ -1045,7 +1058,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							e.stopPropagation();
 							$('#grid_table').jsGrid('editItem', item);
 						});
-						var $del = $('<button type="button" class="btn btn-sm btn-outline-danger btn-pgm-icon"/>')
+						var $del = $('<button type="button" class="btn btn-sm os-grid-act-delete"/>')
 							.html('<i class="fa fa-trash"></i>')
 							.attr('title', 'Remover item');
 						$del.on('click', function (e) {
@@ -1056,12 +1069,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return $('<span class="os-grid-actions-cell"></span>').append($ed).append($del);
 					},
 					editTemplate: function () {
-						var $ok = $('<button type="button" class="btn btn-sm btn-success os-grid-act-save"/>')
+						var $ok = $('<button type="button" class="btn btn-sm btn-success text-white os-grid-act-save"/>')
 							.attr('title', 'Salvar edição')
 							.html('<i class="fa fa-check"></i>');
-						var $cancel = $('<button type="button" class="btn btn-sm btn-outline-secondary os-grid-act-cancel"/>')
+						var $cancel = $('<button type="button" class="btn btn-sm btn-light border os-grid-act-cancel"/>')
 							.attr('title', 'Cancelar edição')
-							.html('<i class="fa fa-times"></i>');
+							.html('<i class="fa fa-times text-dark"></i>');
 						$ok.on('click', function (e) {
 							e.preventDefault();
 							e.stopPropagation();
@@ -1084,6 +1097,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				} catch (e) { /* select2 opcional */ }
 				if (typeof window.initOsAddGridInsertRow === 'function') {
 					window.initOsAddGridInsertRow();
+				}
+				var $insBtn = $('#grid_table .jsgrid-insert-row .jsgrid-insert-button');
+				if ($insBtn.length) {
+					$insBtn.val('+').attr('title', 'Adicionar item');
 				}
 				var $actTh = $('#grid_table').find('.jsgrid-header-row th.jsgrid-control-field');
 				if ($actTh.length && $.trim($actTh.text()) === '') {
@@ -1329,10 +1346,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		window.targetRow = null;
         window.isEditMode = false;
 
-		$(document).on('click', '.os-grid-ref-trigger', function (e) {
-			e.preventDefault();
-			e.stopPropagation();
-			var $row = $(this).closest('tr');
+		function osAddOpenRefModalFromBrowseTrigger($el) {
+			var $row = $el.closest('tr');
 			if (!$row.hasClass('jsgrid-row') && !$row.hasClass('jsgrid-alt-row')) {
 				return;
 			}
@@ -1349,6 +1364,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$('#productkeymodal').val(item.productkey != null ? String(item.productkey) : '');
 			$('#observacainternaomodal').val(item.obsinterna != null ? String(item.obsinterna) : '');
 			$('#modal-observacao').modal('show');
+		}
+		$(document).on('click', '.os-grid-ref-trigger', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			osAddOpenRefModalFromBrowseTrigger($(this));
+		});
+		$(document).on('keydown', '.os-grid-ref-trigger', function (e) {
+			if (e.key === 'Enter' || e.which === 13) {
+				e.preventDefault();
+				osAddOpenRefModalFromBrowseTrigger($(this));
+			}
 		});
 
         $(document).on("click focus", ".inputObservacao > input, .editObservacao > input", function(e){
@@ -1465,10 +1491,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if ($c.hasClass('cellInput') || $c.hasClass('jsgrid-control-field')) {
 					return;
 				}
-				if ($c.find('.os-grid-ref-trigger, .os-grid-actions-cell, .os-grid-ro-num, .os-grid-ro-inline, .btn-exapndemuitotexto').length) {
-					return;
-				}
-				if ($c.find('input.os-grid-ro-cell').length) {
+				if ($c.find('.os-grid-ref-trigger, .os-grid-actions-cell, .os-grid-ro-plain, .os-grid-ref-plain, .os-grid-display-input, .btn-exapndemuitotexto').length) {
 					return;
 				}
 				var full = $.trim($c.text());
