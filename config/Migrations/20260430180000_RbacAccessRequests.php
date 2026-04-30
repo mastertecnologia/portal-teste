@@ -21,7 +21,6 @@ class RbacAccessRequests extends AbstractMigration {
 			->addColumn('status', 'string', ['limit' => 30, 'null' => false, 'default' => 'pending_manager'])
 			->addColumn('justification', 'text', ['null' => true, 'default' => null])
 			->addColumn('requester_message', 'text', ['null' => true, 'default' => null])
-			->addColumn('admin_response', 'text', ['null' => true, 'default' => null])
 			->addColumn('reviewed_by', 'integer', ['null' => true, 'default' => null])
 			->addColumn('reviewed_at', 'datetime', ['null' => true, 'default' => null])
 			->addColumn('manager_reviewed_by', 'integer', ['null' => true, 'default' => null])
