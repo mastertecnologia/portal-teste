@@ -12,6 +12,8 @@ realtime/node_modules/
 # chaves acidentais na raiz do repo (não versionar)
 /yes
 /yes.pub
+# Senha local só para script de captura (nunca versionar)
+/scripts/.pgm_audit_password
 .cursorrules*
 # Cópias locais antes da migração sidebar React (restauro manual; não versionar)
 /BACKUP_PRE_MIGRACAO_SIDEBAR_REACT_*/

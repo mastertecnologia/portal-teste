@@ -7,6 +7,10 @@
  *   $env:PGM_PASSWORD="***"
  *   node scripts/capture-admin-audit-round3.mjs
  *
+ * Alternativa (evita senha no histórico do shell): ficheiro local com uma linha
+ *   scripts/.pgm_audit_password   (gitignored)
+ * ou: $env:PGM_PASSWORD_FILE="C:\\caminho\\senha.txt"
+ *
  * Requisitos: `npx playwright install chromium` (uma vez).
  * Conta sem 2FA no clique de login (senão o script termina com erro).
  */
@@ -24,13 +28,35 @@ function joinUrl(base, rel) {
   return b + r;
 }
 
+function resolvePassword() {
+  const direct = (process.env.PGM_PASSWORD || '').trim();
+  if (direct) {
+    return direct;
+  }
+  const fromEnvFile = (process.env.PGM_PASSWORD_FILE || '').trim();
+  const defaultFile = path.join(__dirname, '.pgm_audit_password');
+  const candidates = [fromEnvFile, defaultFile].filter(Boolean);
+  for (const p of candidates) {
+    const abs = path.isAbsolute(p) ? p : path.join(process.cwd(), p);
+    if (!fs.existsSync(abs)) {
+      continue;
+    }
+    const raw = fs.readFileSync(abs, 'utf8').trim();
+    const line = raw.split(/\r?\n/)[0]?.trim() ?? '';
+    if (line) {
+      return line;
+    }
+  }
+  return '';
+}
+
 async function main() {
   const base = (process.env.PGM_BASE_URL || '').trim();
   const email = (process.env.PGM_EMAIL || '').trim();
-  const password = (process.env.PGM_PASSWORD || '').trim();
+  const password = resolvePassword();
   if (!base || !email || !password) {
     console.error(
-      'Defina PGM_BASE_URL (ex.: https://servidor/portal), PGM_EMAIL e PGM_PASSWORD.',
+      'Defina PGM_BASE_URL, PGM_EMAIL e PGM_PASSWORD (env), ou coloque a senha numa linha em scripts/.pgm_audit_password (gitignored) ou em PGM_PASSWORD_FILE.',
     );
     process.exit(1);
   }
