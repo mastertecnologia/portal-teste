@@ -127,7 +127,18 @@ if (!empty($timerAtivo)) {
 <?php
 	if (in_array($ticket->situacao, [C_TicketSituacaoEmandamento, C_TicketSituacaoResolvido])) echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ticket->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-r-5']);
 	if ($ticket->situacao == C_TicketSituacaoResolvido) echo $this->Html->link('Enviar e-mail', ["action" => "email", $ticket->id, null, 'redirect'], ['class' => 'btn btn-pgm btn-pgm-email btn-email btn-purple text-white m-r-5']);
-	if (empty($ordem)) echo $this->Html->link('Gerar Ordem de Serviço', ["controller" => "ordensservico", "action" => "ticketordem", $ticket->id], ['class' => 'btn btn-warning text-white m-r-5', 'target' => '_blank']);
-	else echo $this->Html->link("Ordem nº $ordem gerada", ["controller" => "ordensservico", "action" => "edit", $ordem], ['class' => 'btn btn-warning text-white m-r-5', 'target' => '_blank']);
+	if (empty($ordem)) {
+		echo $this->Html->link(
+			'Gerar Ordem de Serviço',
+			['_name' => 'ticketsGerarOs', 'id' => (int)$ticket->id],
+			['class' => 'btn btn-warning text-white m-r-5', 'target' => '_blank']
+		);
+	} else {
+		echo $this->Html->link(
+			"Ver OS #$ordem",
+			["controller" => "ordensservico", "action" => "edit", $ordem],
+			['class' => 'btn btn-warning text-white m-r-5', 'target' => '_blank']
+		);
+	}
 	echo $this->Html->link("Imprimir", ["controller" => "Tickets", "action" => "imprimir", $ticket->id, "?" => ["autoprint" => 1]], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-r-5', 'target' => '_blank']);
 ?>
