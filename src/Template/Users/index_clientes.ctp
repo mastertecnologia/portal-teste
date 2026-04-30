@@ -175,13 +175,6 @@ $cntInativos = $cntInativosPJ + $cntInativosPF;
 			</svg>
 			<input type="text" id="uc-search" placeholder="Nome, CNPJ, CPF ou e-mail" autocomplete="off" />
 		</div>
-		<?php if ($admin): ?>
-		<?= $this->Html->link(
-			'<i class="fas fa-plus"></i> Novo cliente',
-			['action' => 'addcliente'],
-			['class' => 'btn-cli-primary', 'escape' => false, 'data-turbo' => 'false']
-		) ?>
-		<?php endif; ?>
 	</div>
 
 	<!-- ── Table ── -->

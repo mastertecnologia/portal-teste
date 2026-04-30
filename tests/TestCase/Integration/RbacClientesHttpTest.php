@@ -106,7 +106,7 @@ class RbacClientesHttpTest extends TestCase {
 		$this->assertResponseOk();
 		$this->assertResponseContains('Módulo comercial');
 		$this->assertResponseContains('Clientes');
-		$this->assertResponseContains('Novo cliente');
+		$this->assertResponseContains('Razão Social / Nome');
 		$this->assertResponseContains('Ativos · PJ');
 	}
 
