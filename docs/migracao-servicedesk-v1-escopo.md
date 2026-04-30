@@ -20,3 +20,7 @@ Documento de fronteira para a migração alinhada a `webroot/pgm-servicedesk-v2-
 ## Atualização (fase 4)
 
 KPIs: **rota separada** mantida; nenhum embed de dashboard operacional na fila (reduz carga e escopo). Melhorias futuras: lazy embed opcional e mesma API `api-dashboard-operacional`.
+
+## Atualização (fase 5)
+
+Removido o widget flutuante de timer (`TICKET #...`) da fila técnica (`TechDashboard`) para simplificar a interface e manter foco na grade principal.

@@ -21,7 +21,6 @@ import {
 } from '../lib/api';
 import { badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
-import TimerWidget from '../components/TimerWidget.jsx';
 import TicketsServicedeskInlineRow from '../components/TicketsServicedeskInlineRow.jsx';
 
 const API_ERR_TRANSFER = {
@@ -64,26 +63,7 @@ function statusLabel(row) {
   return stripHtml(row.situacaoLabel || row.status);
 }
 
-function parseSqlLocalDateTime(s) {
-  if (!s || typeof s !== 'string') return null;
-  const t = s.trim();
-  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(t);
-  if (!m) return null;
-  const sec = m[6] != null && m[6] !== '' ? +m[6] : 0;
-  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], sec, 0);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-function formatElapsedHmsFromMs(ms) {
-  const total = Math.max(0, Math.floor(Number(ms) || 0));
-  const hh = Math.floor(total / 3600000);
-  const mm = Math.floor((total % 3600000) / 60000);
-  const ss = Math.floor((total % 60000) / 1000);
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-}
-
 const ACTION_MENU_WIDTH = 260;
-const TIMER_WIDGET_STORAGE_KEY = 'pgm_tickets_timer_widget_state_v1';
 
 /** Dots pulsantes alinhados ao mockup (execução, aguard. técnico, P1, crítica). */
 const PULSE_STATUS = new Set(['progress', 'pendingTech', 'critical', 'high']);
@@ -519,86 +499,6 @@ function techRowHighlightClass(ticket, servicedesk = false) {
     }
   }
   return parts.join(' ');
-}
-
-function PersistentTimerWidget({ rows, boot }) {
-  const [timerState, setTimerState] = useState(null);
-  const [nowMs, setNowMs] = useState(() => Date.now());
-
-  useEffect(() => {
-    const readFromStorage = () => {
-      try {
-        const raw = window.localStorage.getItem(TIMER_WIDGET_STORAGE_KEY);
-        if (!raw) {
-          setTimerState(null);
-          return;
-        }
-        const parsed = JSON.parse(raw);
-        const ticketId = Number(parsed?.ticketId);
-        const sessao = parsed?.sessao || null;
-        if (!ticketId || !sessao?.horaInicio) {
-          setTimerState(null);
-          return;
-        }
-        setTimerState({
-          ticketId,
-          horaInicio: sessao.startedAt || sessao.horaInicio,
-          horaPausa: sessao.pausedAt || sessao.horaPausa || null,
-          pausado: String(sessao.status || '').toLowerCase() === 'paused' || Boolean(sessao.pausado),
-        });
-      } catch (_e) {
-        setTimerState(null);
-      }
-    };
-
-    readFromStorage();
-    const onStorage = (event) => {
-      if (event.key === TIMER_WIDGET_STORAGE_KEY) {
-        readFromStorage();
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  useEffect(() => {
-    if (!timerState) return undefined;
-    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [timerState]);
-
-  if (!timerState) return null;
-
-  const inicio = parseSqlLocalDateTime(timerState.horaInicio);
-  if (!inicio) return null;
-  const pausa = timerState.horaPausa ? parseSqlLocalDateTime(timerState.horaPausa) : null;
-  const paused = Boolean(timerState.pausado) || Boolean(pausa);
-  const elapsedMs = paused && pausa
-    ? Math.max(0, pausa.getTime() - inicio.getTime())
-    : Math.max(0, nowMs - inicio.getTime());
-  const displayHms = formatElapsedHmsFromMs(elapsedMs);
-  const ticketId = timerState.ticketId;
-  const ticketRow = Array.isArray(rows) ? rows.find((r) => Number(r?.id) === Number(ticketId)) : null;
-  const fallbackHref = `${String(boot?.webroot || '').replace(/\/$/, '') || ''}/tickets/edit/${ticketId}`;
-  const ticketHref = ticketRow?.urls?.edit || fallbackHref;
-
-  const goToActiveTicket = () => {
-    window.location.href = ticketHref;
-  };
-
-  return (
-    <TimerWidget
-      ticketId={ticketId}
-      displayHms={displayHms}
-      busy={false}
-      disabled={false}
-      idle={false}
-      running={!paused}
-      paused={paused}
-      onPlay={goToActiveTicket}
-      onStop={goToActiveTicket}
-    />
-  );
 }
 
 export default function TechDashboard({ boot }) {
@@ -1685,7 +1585,6 @@ export default function TechDashboard({ boot }) {
           </header>
         )}
         {tableSection}
-        <PersistentTimerWidget rows={rows} boot={boot} />
       </div>
     );
   }
@@ -1754,7 +1653,6 @@ export default function TechDashboard({ boot }) {
 
           <div className="space-y-6 p-4 sm:p-6">
             {tableSection}
-            <PersistentTimerWidget rows={rows} boot={boot} />
             <p className="text-center text-xs text-[var(--pgm-text-muted)]">Modo demonstração — use Vite em localhost.</p>
           </div>
         </main>
