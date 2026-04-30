@@ -221,6 +221,7 @@ export default function TicketInfoPanel({
       : ticket.assuntoCode != null && ticket.assuntoCode !== ''
         ? String(ticket.assuntoCode)
         : '';
+  const assuntoOpts = Array.isArray(assuntoOptions) ? assuntoOptions : [];
 
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] shadow-[var(--pgm-shadow-md)]">
@@ -235,7 +236,7 @@ export default function TicketInfoPanel({
         <div className="flex flex-col gap-1 border-b border-[var(--pgm-border-subtle)] py-2 last:border-0">
           <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">Categoria / assunto</span>
           <span className="text-[0.8rem] text-[var(--pgm-text)]">{assuntoLinha}</span>
-          {canEditAssunto && Array.isArray(assuntoOptions) && assuntoOptions.length > 0 ? (
+          {canEditAssunto ? (
             <select
               className="mt-0.5 block w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-[0.78rem] text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)] disabled:cursor-not-allowed disabled:opacity-60"
               value={assuntoValue}
@@ -244,7 +245,7 @@ export default function TicketInfoPanel({
               aria-label={`Editar categoria/assunto ticket ${ticket.id}`}
             >
               <option value="">Não informado</option>
-              {assuntoOptions.map((opt, idx) => {
+              {assuntoOpts.map((opt, idx) => {
                 const v = assuntoOptionValue(opt);
                 const lbl = assuntoOptionLabel(opt);
                 if (!v || !lbl || lbl === '0') return null;

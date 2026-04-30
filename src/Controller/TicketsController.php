@@ -4911,6 +4911,7 @@ class TicketsController extends AppController {
 			'id' => (int)$ticket->id,
 			'assunto_nome' => $assuntoNome,
 			'assunto_id' => is_numeric($ticket->assunto) ? (int)$ticket->assunto : null,
+			'assunto_options' => $role === 0 ? $this->_ticketAssuntoApiOptionsList() : [],
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,
 			'descricao' => (string)($ticket->solicitacao ?? ''),

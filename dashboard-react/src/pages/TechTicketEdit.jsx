@@ -198,6 +198,10 @@ export default function TechTicketEdit({ boot }) {
       setComentarios(res.data.comentarios || []);
       setDesc(res.data.descricao || '');
       setRelatorioAtendimento(res.data.descricaoAtendimento || '');
+      const optsFromView = Array.isArray(res.data.assunto_options) ? res.data.assunto_options : [];
+      if (optsFromView.length > 0) {
+        setAssuntoOptions(optsFromView);
+      }
       fetchTicketTimeline(id).then((tr) => {
         if (tr.ok) setTimelineEvents(tr.events || []);
       });
@@ -210,8 +214,9 @@ export default function TechTicketEdit({ boot }) {
   useEffect(() => {
     let cancel = false;
     (async () => {
-      const role = Number(boot?.role ?? 0);
+      const role = Number(boot?.role ?? ticket?.flags?.role ?? 0);
       if (role !== 0) return;
+      if (Array.isArray(assuntoOptions) && assuntoOptions.length > 0) return;
       const r = await fetchTicketSubjectOptions();
       if (cancel || !r.ok) return;
       setAssuntoOptions(r.options || []);
@@ -219,7 +224,7 @@ export default function TechTicketEdit({ boot }) {
     return () => {
       cancel = true;
     };
-  }, [boot?.role]);
+  }, [boot?.role, ticket?.flags?.role, assuntoOptions]);
 
   const { socketRef, socketOn } = useTicketCommentsSocket(id, setComentarios);
   useTicketCommentsPoll(id, setComentarios, setTicket, TICKET_COMMENTS_POLL_MS, socketOn);
@@ -778,7 +783,7 @@ export default function TechTicketEdit({ boot }) {
           ticket={ticket}
           embedded={embedded}
           servicedesk={Boolean(boot?.servicedesk)}
-          canEditAssunto={Number(boot?.role ?? 0) === 0}
+          canEditAssunto={Number(boot?.role ?? ticket?.flags?.role ?? 0) === 0}
           assuntoOptions={assuntoOptions}
           assuntoBusy={salvandoAssunto}
           onChangeAssunto={handleAlterarAssunto}
