@@ -19,7 +19,7 @@ import {
   getBoot,
   USE_MOCK,
 } from '../lib/api';
-import { badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
+import { badgeClass, servicedeskStatusTypeFromTicket, sortTicketAcoes } from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 import TicketsServicedeskInlineRow from '../components/TicketsServicedeskInlineRow.jsx';
 
@@ -66,9 +66,9 @@ function statusLabel(row) {
 const ACTION_MENU_WIDTH = 260;
 
 /** Dots pulsantes alinhados ao mockup (execução, aguard. técnico, P1, crítica). */
-const PULSE_STATUS = new Set(['progress', 'pendingTech', 'critical', 'high']);
+const PULSE_STATUS = new Set(['progress', 'pendingTech', 'pendingTicket', 'critical', 'high']);
 /** Status sem indicador visual (texto puro). */
-const NO_DOT_STATUS = new Set(['low']);
+const NO_DOT_STATUS = new Set(['low', 'open']);
 
 /** “Nome — N2” quando existe nivel; cai para só o nome caso contrário. */
 function tecnicoLabel(t) {
@@ -1279,13 +1279,13 @@ export default function TechDashboard({ boot }) {
                           <td className="whitespace-nowrap px-3 py-2">
                             <span
                               className={`inline-flex max-w-[10rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-[11px] ${badgeClass(
-                                statusType(st),
+                                servicedeskStatusTypeFromTicket(ticket, st),
                                 embedded,
                                 isSD
                               )}`}
                               title={st}
                             >
-                              <StatusDot type={statusType(st)} />
+                              <StatusDot type={servicedeskStatusTypeFromTicket(ticket, st)} />
                               <span className="truncate">{st}</span>
                             </span>
                           </td>

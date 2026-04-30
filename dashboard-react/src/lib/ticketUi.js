@@ -17,29 +17,26 @@ const BADGE_LIGHT = {
   cancelled:   'bg-[#dc330f] text-white border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
 };
 
-/* Base: mockup v2 .badge (inset ring + frosted) — cores sólidas: .badge-blue #2DAAE1, .badge-amber #F39C12, etc. */
-const SD_BASE =
-  'tracking-[0.04em] backdrop-blur-[2px] transition-all duration-[120ms] hover:brightness-[1.08] shadow-[0_1px_2px_rgba(15,23,42,0.06)]';
+/* Service Desk grid: badges sólidos PGM v2 (legível + contraste). */
+const SD_SOLID =
+  'tracking-[0.04em] border border-transparent text-white shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition-all duration-[120ms] hover:brightness-[1.06]';
 
-/**
- * Service Desk — “Status Indicators com Frosted Glass + Dots” (paleta
- * webroot/pgm-servicedesk-v2-navegacao.html: #2DAAE1, #F39C12, #27AE60, #dc330f, #8a5ac2, #1d9e75).
- * Texto e borda com o mesma matiz, fundo em rgba mais vivo que tokens --pgm-badge-*.
- */
 const BADGE_SERVICEDESK = {
-  success:     `${SD_BASE} bg-[rgba(39,174,96,0.22)] text-[#15803d] shadow-[inset_0_0_0_1px_rgba(39,174,96,0.55)]`, // #27AE60
-  warning:     `${SD_BASE} bg-[rgba(243,156,18,0.24)] text-[#c2410c] shadow-[inset_0_0_0_1px_rgba(234,88,12,0.5)]`, // F39C12
-  critical:    `${SD_BASE} bg-[rgba(220,51,15,0.24)] text-[#dc330f] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.55)]`, // #dc330f
-  high:        `${SD_BASE} bg-[rgba(243,156,18,0.24)] text-[#c2410c] shadow-[inset_0_0_0_1px_rgba(234,88,12,0.5)]`,
-  medium:      `${SD_BASE} bg-[rgba(243,156,18,0.2)] text-[#d97706] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.5)]`,
-  low:         `${SD_BASE} bg-[var(--pgm-badge-muted-bg)] text-[var(--pgm-badge-muted-text)] shadow-[inset_0_0_0_1px_var(--pgm-badge-muted-ring)]`,
-  progress:    `${SD_BASE} bg-[rgba(45,170,225,0.24)] text-[#0284c7] shadow-[inset_0_0_0_1px_rgba(14,165,233,0.55)]`, // #2DAAE1
-  waiting:     `${SD_BASE} bg-[rgba(45,170,225,0.24)] text-[#0284c7] shadow-[inset_0_0_0_1px_rgba(14,165,233,0.55)]`,
-  pendingTech: `${SD_BASE} bg-[rgba(243,156,18,0.24)] text-[#ea580c] shadow-[inset_0_0_0_1px_rgba(243,156,18,0.55)]`, // F39C12
-  resolved:    `${SD_BASE} bg-[rgba(39,174,96,0.22)] text-[#15803d] shadow-[inset_0_0_0_1px_rgba(22,163,74,0.5)]`,
-  escalated:   `${SD_BASE} bg-[rgba(220,51,15,0.24)] text-[#dc330f] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.55)]`,
-  closed:      `${SD_BASE} bg-[rgba(138,90,194,0.22)] text-[#6d28d9] shadow-[inset_0_0_0_1px_rgba(124,58,237,0.5)]`, // #8a5ac2
-  cancelled:   `${SD_BASE} bg-[rgba(220,51,15,0.24)] text-[#dc330f] shadow-[inset_0_0_0_1px_rgba(220,51,15,0.55)]`,
+  open:        `${SD_SOLID} bg-[#64748b]`,
+  pendingTicket: `${SD_SOLID} bg-[#F39C12]`,
+  success:     `${SD_SOLID} bg-[#27AE60]`,
+  warning:     `${SD_SOLID} bg-[#F39C12]`,
+  critical:    `${SD_SOLID} bg-[#dc330f]`,
+  high:        `${SD_SOLID} bg-[#F39C12]`,
+  medium:      `${SD_SOLID} bg-[#F39C12]`,
+  low:         `${SD_SOLID} bg-[#1d9e75]`,
+  progress:    `${SD_SOLID} bg-[#2DAAE1]`,
+  waiting:     `${SD_SOLID} bg-[#2DAAE1]`,
+  pendingTech: `${SD_SOLID} bg-[#F39C12]`,
+  resolved:    `${SD_SOLID} bg-[#27AE60]`,
+  escalated:   `${SD_SOLID} bg-[#dc330f]`,
+  closed:      `${SD_SOLID} bg-[#334155]`,
+  cancelled:   `${SD_SOLID} bg-[#dc330f]`,
 };
 
 /** Badges no embed portal cliente — preenchimento sólido + texto branco. */
@@ -98,14 +95,82 @@ export function statusType(value) {
   if (!v || v === '-') return 'low';
   if (v.includes('critica') || v.includes('critico')) return 'critical';
   if (v.includes('urgente')) return 'high';
+  if (v.includes('aberto') || v.includes('reaberto')) return 'open';
   if (v.includes('em execucao') || v.includes('em andamento')) return 'progress';
   if (v.includes('aguardando cliente') || v.includes('respondido')) return 'waiting';
   if (v.includes('aguardando tecnico') || v.includes('aguardando técnico')) return 'pendingTech';
+  if (v.includes('pendente')) return 'pendingTicket';
   if (v.includes('resolvido')) return 'resolved';
   if (v.includes('escalado')) return 'escalated';
   if (v.includes('cancelado')) return 'cancelled';
-  if (v.includes('fechado')) return 'closed';
+  if (v.includes('fechado') || v.includes('encerrado')) return 'closed';
   return 'low';
+}
+
+/** Normaliza código de estado workflow (hífen/espaço → _, minúsculas, sem acento). */
+export function normalizeWorkflowCodigo(v) {
+  return String(v || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[\s-]+/g, '_')
+    .toLowerCase();
+}
+
+const _WF_EXEC = new Set(['emandamento', 'em_andamento', 'em_execucao', 'execucao', 'andamento']);
+
+function isWorkflowExecCodigo(c) {
+  if (!c) return false;
+  if (_WF_EXEC.has(c)) return true;
+  return c.startsWith('em_exec');
+}
+
+/**
+ * Coluna visual da timeline PGM (0 Aberto … 4 Fechado). -1 = fora do mapa.
+ */
+export function workflowStepColumnIndex(codigo) {
+  const c = normalizeWorkflowCodigo(codigo);
+  if (!c) return -1;
+  if (c === 'aberto' || c === 'open' || c === 'novo' || c === 'reaberto') return 0;
+  if (isWorkflowExecCodigo(c)) return 1;
+  if (c === 'pendente' || c === 'pending' || c === 'aguardando' || c === 'pausado') return 2;
+  if (c === 'resolvido' || c === 'resolved' || c === 'solucionado') return 3;
+  if (c === 'fechado' || c === 'encerrado' || c === 'closed' || c === 'cancelado') return 4;
+  return -1;
+}
+
+/** Compatível com o PATCH da grid (campo status) — mesmo critério do select inline. */
+export function workflowTransitionPatchStatusLabel(o) {
+  const c = normalizeWorkflowCodigo(o?.codigo);
+  const label = String(o?.label || '').trim();
+  if (['pendente', 'pending', 'aberto', 'open', 'novo', 'reaberto'].includes(c)) return 'Pendente';
+  if (isWorkflowExecCodigo(c)) return 'Em execução';
+  if (c === 'resolvido' || c === 'resolved' || c === 'solucionado') return 'Resolvido';
+  if (c === 'fechado' || c === 'encerrado' || c === 'closed') return 'Fechado';
+  if (c === 'cancelado') return label || 'Cancelado';
+  return label || '—';
+}
+
+function workflowCodigoToBadgeType(codigo) {
+  const cRaw = normalizeWorkflowCodigo(codigo);
+  if (cRaw === 'cancelado') return 'cancelled';
+  const idx = workflowStepColumnIndex(codigo);
+  if (idx === 0) return 'open';
+  if (idx === 1) return 'progress';
+  if (idx === 2) return 'pendingTicket';
+  if (idx === 3) return 'resolved';
+  if (idx === 4) return 'closed';
+  return 'low';
+}
+
+/**
+ * Tipo visual de badge na fila Service Desk: prioriza `workflow.current` quando habilitado.
+ */
+export function servicedeskStatusTypeFromTicket(ticket, situacaoLabelText) {
+  const wf = ticket?.workflow;
+  if (wf?.enabled === true && wf?.current?.codigo != null && String(wf.current.codigo).trim() !== '') {
+    return workflowCodigoToBadgeType(wf.current.codigo);
+  }
+  return statusType(situacaoLabelText ?? ticket?.situacaoLabel ?? ticket?.status ?? '');
 }
 
 /**

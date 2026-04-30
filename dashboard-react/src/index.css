@@ -129,6 +129,12 @@ html[data-pgm-theme='light'] {
   --pgm-border: #cbd5e1;
   --pgm-border-subtle: #e2e8f0;
   --pgm-border-strong: #94a3b8;
+  /* Aliases Service Desk v2 / spec PGM (espelham tokens já usados no shell) */
+  --pgm-surface: var(--pgm-bg-surface);
+  --pgm-elevated: var(--pgm-bg-elevated);
+  --pgm-overlay: var(--pgm-bg-overlay);
+  --pgm-muted: var(--pgm-text-muted);
+  --pgm-border-accent: rgba(29, 158, 117, 0.35);
   --pgm-link: #1d9e75;
   --pgm-success: #16a34a;
   --pgm-success-bg: rgba(22, 163, 74, 0.1);

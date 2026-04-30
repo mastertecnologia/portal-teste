@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchTicketsCliente, USE_MOCK } from '../lib/api';
 import { MOCK_SESSION_CLIENTE } from '../data/mockData';
-import { acaoLinkClassName, badgeClass, sortTicketAcoes, statusType } from '../lib/ticketUi';
+import { acaoLinkClassName, badgeClass, servicedeskStatusTypeFromTicket, sortTicketAcoes } from '../lib/ticketUi';
 import { stripHtml } from '../lib/text';
 
 const FILA_TO_API = {
@@ -296,7 +296,7 @@ export default function ClientTicketList({ boot }) {
                       <td className="whitespace-nowrap px-2 py-1.5 sm:px-3">
                         <span
                           className={`inline-flex max-w-[10rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight sm:max-w-[12rem] sm:text-xs ${badgeClass(
-                            statusType(st),
+                            servicedeskStatusTypeFromTicket(ticket, st),
                             embedded,
                             Boolean(boot?.servicedesk)
                           )}`}

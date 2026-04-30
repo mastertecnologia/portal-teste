@@ -14,7 +14,8 @@ import { useTicketCommentsSocket } from '../hooks/useTicketCommentsSocket';
 import { useTicketTimelinePoll } from '../hooks/useTicketTimelinePoll';
 import { useConversationScrollToBottom } from '../hooks/useConversationScrollToBottom';
 import { finalizeOptimisticComment, formatCommentPostTimestamp, stripHtml } from '../lib/text';
-import { badgeClass, statusType } from '../lib/ticketUi';
+import { badgeClass, servicedeskStatusTypeFromTicket } from '../lib/ticketUi';
+import WorkflowTimeline from '../components/WorkflowTimeline.jsx';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
@@ -552,18 +553,24 @@ export default function TechTicketEdit({ boot }) {
           </a>
         ) : null}
         <h1 className="mt-1 font-mono text-xl font-bold text-[var(--pgm-text,#e8eaed)]">Ticket #{ticket.id}</h1>
-        <p className="flex items-center gap-2 text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
+        <p className="flex flex-wrap items-center gap-2 text-[0.8125rem] text-[var(--pgm-text-muted,#9aa0a8)]">
           {stripHtml(ticket.cliente)}
           <span
             className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeClass(
-              statusType(statusLine),
+              servicedeskStatusTypeFromTicket(ticket, statusLine),
               embedded,
               Boolean(boot?.servicedesk)
             )}`}
+            title={statusLine}
           >
             {statusLine}
           </span>
         </p>
+        {ticket?.workflow?.enabled === true ? (
+          <div className="mt-2 min-w-0 max-w-[min(100%,28rem)]">
+            <WorkflowTimeline ticket={ticket} />
+          </div>
+        ) : null}
       </div>
       {headerActions}
     </div>
@@ -576,14 +583,20 @@ export default function TechTicketEdit({ boot }) {
             <span>{stripHtml(ticket.cliente)}</span>
             <span
               className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass(
-                statusType(statusLine),
+                servicedeskStatusTypeFromTicket(ticket, statusLine),
                 embedded,
                 Boolean(boot?.servicedesk)
               )}`}
+              title={statusLine}
             >
               {statusLine}
             </span>
           </p>
+          {ticket?.workflow?.enabled === true ? (
+            <div className="mt-2 min-w-0 max-w-[min(100%,32rem)]">
+              <WorkflowTimeline ticket={ticket} />
+            </div>
+          ) : null}
         </div>
         {headerActions}
       </div>

@@ -1,6 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import TicketTimer from './TicketTimer.jsx';
+import WorkflowTimeline from './WorkflowTimeline.jsx';
 import { patchTicketAssignment, patchTicketPriority, patchTicketStatus } from '../lib/api.js';
+import { badgeClass, servicedeskStatusTypeFromTicket, workflowTransitionPatchStatusLabel } from '../lib/ticketUi';
 
 const PRIORIDADE_OPTS = [
   { code: 'baixa', label: 'Baixo' },
@@ -13,9 +15,31 @@ function selectClass(disabled) {
   return [
     'max-w-full rounded-md border px-1.5 py-1 text-[11px] outline-none transition',
     'border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] text-[var(--pgm-text)]',
-    'focus:border-[var(--pgm-primary)]',
+    'focus:border-[var(--pgm-primary)] focus:shadow-[0_0_0_2px_var(--pgm-bg-surface),0_0_0_4px_rgba(29,158,117,0.22)]',
     disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
   ].join(' ');
+}
+
+/** Tarja à esquerda do bloco de status (PGM Service Desk v2). */
+function statusAccentBorderClass(type) {
+  const m = {
+    open: 'border-l-[#64748b]',
+    pendingTicket: 'border-l-[#F39C12]',
+    pendingTech: 'border-l-[#F39C12]',
+    progress: 'border-l-[#2DAAE1]',
+    waiting: 'border-l-[#2DAAE1]',
+    resolved: 'border-l-[#27AE60]',
+    closed: 'border-l-[#334155]',
+    cancelled: 'border-l-[#dc330f]',
+    escalated: 'border-l-[#dc330f]',
+    critical: 'border-l-[#dc330f]',
+    high: 'border-l-[#F39C12]',
+    medium: 'border-l-[#F39C12]',
+    warning: 'border-l-[#F39C12]',
+    success: 'border-l-[#27AE60]',
+    low: 'border-l-[#1d9e75]',
+  };
+  return m[type] || 'border-l-[#1d9e75]';
 }
 
 function rowSnapshot(ticket) {
@@ -58,7 +82,36 @@ export default function TicketsServicedeskInlineRow({
     [onPatchError, ticket.id],
   );
 
+  const [patchingWorkflowStateId, setPatchingWorkflowStateId] = useState(null);
+
+  const workflowOptions = useMemo(() => {
+    const list = ticket?.workflow?.allowedTransitions;
+    return Array.isArray(list) ? list : [];
+  }, [ticket]);
+
+  const allowedWorkflowStateIds = useMemo(() => {
+    const s = new Set();
+    for (const o of workflowOptions) {
+      const n = Number(o.id);
+      if (Number.isFinite(n) && n > 0) s.add(n);
+    }
+    return s;
+  }, [workflowOptions]);
+
+  const useWorkflowStatus =
+    ticket?.workflow?.enabled === true &&
+    workflowOptions.length > 0 &&
+    ticket?.workflow?.current?.id != null;
+
   const statusOptions = useMemo(() => {
+    if (useWorkflowStatus) {
+      return workflowOptions.map((o) => ({
+        value: String(o.id),
+        label: String(o.label || ''),
+        workflowStateId: Number(o.id),
+        statusLabel: workflowTransitionPatchStatusLabel(o),
+      }));
+    }
     const p = ticketStatus?.pendente;
     const e = ticketStatus?.emandamento;
     const r = ticketStatus?.resolvido;
@@ -69,28 +122,80 @@ export default function TicketsServicedeskInlineRow({
     if (r != null) opts.push({ value: 'Resolvido', code: r });
     if (f != null) opts.push({ value: 'Fechado', code: f });
     return opts;
-  }, [ticketStatus]);
+  }, [ticketStatus, useWorkflowStatus, workflowOptions]);
 
   const currentStatusCode = Number(ticket.situacao);
   const statusValue = useMemo(() => {
+    if (useWorkflowStatus) {
+      const currentId = Number(ticket?.workflow?.current?.id || 0);
+      return currentId > 0 ? String(currentId) : '';
+    }
     const hit = statusOptions.find((o) => Number(o.code) === currentStatusCode);
     return hit ? hit.value : String(ticket.situacaoLabel || '');
-  }, [statusOptions, currentStatusCode, ticket.situacaoLabel]);
+  }, [statusOptions, currentStatusCode, ticket.situacaoLabel, useWorkflowStatus, ticket]);
+
+  const applyStatusPatch = useCallback(
+    async (payload) => {
+      const snap = rowSnapshot(ticket);
+      const wfId =
+        payload && payload.workflowStateId != null && !Number.isNaN(Number(payload.workflowStateId))
+          ? Number(payload.workflowStateId)
+          : null;
+      setBusy(true);
+      if (wfId != null && wfId > 0) setPatchingWorkflowStateId(wfId);
+      try {
+        let body;
+        if (wfId != null && wfId > 0) {
+          const fromPayload =
+            payload?.statusLabel != null ? String(payload.statusLabel).trim() : '';
+          const fallback = workflowOptions.find((x) => Number(x.id) === wfId);
+          const statusStr =
+            fromPayload ||
+            (fallback ? workflowTransitionPatchStatusLabel(fallback) : '');
+          body = { workflow_state_id: wfId, status: statusStr || '—' };
+        } else {
+          body = { status: payload.status };
+        }
+        const r = await patchTicketStatus(ticket.id, body);
+        if (!r.ok) {
+          onMergeTicket(ticket.id, snap);
+          fail(r.message || r.error);
+          return;
+        }
+        if (r.ticket) onMergeTicket(ticket.id, r.ticket);
+      } finally {
+        setBusy(false);
+        setPatchingWorkflowStateId(null);
+      }
+    },
+    [ticket, setBusy, onMergeTicket, fail, workflowOptions],
+  );
+
+  const onTimelineTransition = useCallback(
+    async (transition) => {
+      if (!useWorkflowStatus || busy || !transition) return;
+      const sid = Number(transition.id);
+      if (!Number.isFinite(sid) || sid <= 0 || !allowedWorkflowStateIds.has(sid)) return;
+      await applyStatusPatch({
+        workflowStateId: sid,
+        statusLabel: workflowTransitionPatchStatusLabel(transition),
+      });
+    },
+    [useWorkflowStatus, busy, applyStatusPatch, allowedWorkflowStateIds],
+  );
 
   const onStatus = async (e) => {
-    const label = e.target.value;
-    const hit = statusOptions.find((o) => o.value === label);
+    const selected = e.target.value;
+    const hit = statusOptions.find((o) => o.value === selected);
     if (!hit) return;
-    const snap = rowSnapshot(ticket);
-    setBusy(true);
-    const r = await patchTicketStatus(ticket.id, { status: label });
-    setBusy(false);
-    if (!r.ok) {
-      onMergeTicket(ticket.id, snap);
-      fail(r.message || r.error);
-      return;
+    if (useWorkflowStatus) {
+      await applyStatusPatch({
+        workflowStateId: hit.workflowStateId,
+        statusLabel: hit.statusLabel,
+      });
+    } else {
+      await applyStatusPatch({ status: selected });
     }
-    if (r.ticket) onMergeTicket(ticket.id, r.ticket);
   };
 
   const onPrioridade = async (e) => {
@@ -175,6 +280,24 @@ export default function TicketsServicedeskInlineRow({
     return [];
   }, [queuesRelacional, queues, workflowFilas]);
 
+  const statusBadgeText = useMemo(() => {
+    const raw =
+      ticket?.workflow?.enabled === true && ticket?.workflow?.current?.label
+        ? ticket.workflow.current.label
+        : ticket.situacaoLabel || ticket.status || '—';
+    return String(raw)
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || '—';
+  }, [ticket]);
+
+  const gridStatusType = useMemo(
+    () => servicedeskStatusTypeFromTicket(ticket, ticket.situacaoLabel),
+    [ticket],
+  );
+
+  const statusSelectTitle = `Status do ticket ${ticket.id}: ${statusBadgeText}. Valor selecionado corresponde à próxima ação na fila.`;
+
   return (
     <>
       <td className="max-w-[7.5rem] px-2 py-2">
@@ -192,20 +315,44 @@ export default function TicketsServicedeskInlineRow({
           ))}
         </select>
       </td>
-      <td className="whitespace-nowrap px-2 py-2">
-        <select
-          className={selectClass(busy)}
-          value={statusValue}
-          onChange={onStatus}
-          disabled={busy}
-          aria-label={`Status ticket ${ticket.id}`}
-        >
-          {statusOptions.map((o) => (
-            <option key={String(o.code)} value={o.value}>
-              {o.value}
-            </option>
-          ))}
-        </select>
+      <td className="min-w-0 max-w-[11rem] whitespace-normal px-2 py-2 align-top">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span
+            className={`inline-flex max-w-full items-center gap-1 truncate rounded-full px-2 py-0.5 text-[9px] font-semibold leading-tight ${badgeClass(gridStatusType, false, true)}`}
+            title={statusBadgeText}
+          >
+            {statusBadgeText}
+          </span>
+          <div
+            className={`rounded-md border border-[var(--pgm-border-subtle)] border-l-[3px] bg-[var(--pgm-bg-raised)] pl-1 ${statusAccentBorderClass(gridStatusType)}`}
+          >
+            <select
+              className={`${selectClass(busy)} w-full max-w-full border-0 bg-transparent pl-0.5`}
+              value={statusValue}
+              onChange={onStatus}
+              disabled={busy}
+              aria-label={`Alterar status do ticket ${ticket.id}`}
+              title={statusSelectTitle}
+            >
+              {statusOptions.map((o) => (
+                <option
+                  key={String(o.workflowStateId || o.code || o.value)}
+                  value={o.value}
+                  title={String(o.label || o.value)}
+                >
+                  {o.label || o.value}
+                </option>
+              ))}
+            </select>
+          </div>
+          <WorkflowTimeline
+            ticket={ticket}
+            patchBusy={busy}
+            patchingWorkflowStateId={patchingWorkflowStateId}
+            interactive={useWorkflowStatus}
+            onTransitionClick={onTimelineTransition}
+          />
+        </div>
       </td>
       {wfEnabled ? (
         <>

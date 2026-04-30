@@ -1,0 +1,247 @@
+/* Escopo: tokens Service Desk v2 (alinhados a index.css / paleta PGM) */
+.pgm-workflow-timeline {
+  --pgm-wf-primary: var(--pgm-primary, #1d9e75);
+  --pgm-wf-primary-hover: var(--pgm-primary-hover, #0f6e56);
+  --pgm-wf-bg-base: var(--pgm-bg-base, #f8fafc);
+  --pgm-wf-surface: var(--pgm-bg-surface, #ffffff);
+  --pgm-wf-elevated: var(--pgm-bg-elevated, #f1f5f9);
+  --pgm-wf-overlay: var(--pgm-bg-overlay, #e2e8f0);
+  --pgm-wf-text: var(--pgm-text, #0f172a);
+  --pgm-wf-text-secondary: var(--pgm-text-secondary, #334155);
+  --pgm-wf-muted: var(--pgm-text-muted, #64748b);
+  --pgm-wf-border: var(--pgm-border, #cbd5e1);
+  --pgm-wf-border-subtle: var(--pgm-border-subtle, #e2e8f0);
+  --pgm-wf-border-strong: var(--pgm-border-strong, #94a3b8);
+  --pgm-wf-border-accent: var(--pgm-border-accent, rgba(29, 158, 117, 0.35));
+  --pgm-wf-glow: rgba(29, 158, 117, 0.1);
+  --pgm-wf-blue: #2daae1;
+  --pgm-wf-amber: #f39c12;
+  --pgm-wf-green: #27ae60;
+  --pgm-wf-slate: #334155;
+  --pgm-wf-muted-solid: #64748b;
+}
+
+.pgm-workflow-timeline ul.pgm-workflow-timeline__track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pgm-workflow-timeline__next-hint {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--pgm-wf-muted);
+  margin-bottom: 0.2rem;
+}
+
+.pgm-workflow-timeline__next-hint-strong {
+  color: var(--pgm-wf-text-secondary);
+}
+
+.pgm-workflow-timeline__track {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--pgm-wf-border-subtle);
+}
+
+.pgm-workflow-timeline__li {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.pgm-workflow-timeline__step-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pgm-workflow-timeline__connector {
+  width: 0.65rem;
+  height: 2px;
+  flex-shrink: 0;
+  background: var(--pgm-wf-border);
+  border-radius: 1px;
+  opacity: 0.85;
+}
+
+.pgm-workflow-timeline__pill,
+.pgm-workflow-timeline__pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0;
+  min-height: 1.35rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  max-width: 7.25rem;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pgm-workflow-timeline__pill-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.pgm-workflow-timeline__pill-hint {
+  font-size: 7px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.92;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pgm-workflow-timeline__pill-btn {
+  appearance: none;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+
+.pgm-workflow-timeline__pill-btn:focus-visible {
+  outline: 2px solid var(--pgm-wf-primary);
+  outline-offset: 2px;
+}
+
+.pgm-workflow-timeline__pill-btn:disabled {
+  cursor: not-allowed;
+}
+
+.pgm-workflow-timeline__pill--muted {
+  background: var(--pgm-wf-elevated);
+  color: var(--pgm-wf-muted);
+  border-color: var(--pgm-wf-border-subtle);
+}
+
+.pgm-workflow-timeline__pill--blocked {
+  background: var(--pgm-wf-overlay);
+  color: var(--pgm-wf-text-secondary);
+  border-color: var(--pgm-wf-border);
+  opacity: 0.72;
+  cursor: default;
+}
+
+.pgm-workflow-timeline__pill--open {
+  background: var(--pgm-wf-muted-solid);
+  color: #fff;
+  border-color: transparent;
+}
+
+.pgm-workflow-timeline__pill--exec {
+  background: var(--pgm-wf-blue);
+  color: #fff;
+  border-color: transparent;
+}
+
+.pgm-workflow-timeline__pill--pend {
+  background: var(--pgm-wf-amber);
+  color: #fff;
+  border-color: transparent;
+}
+
+.pgm-workflow-timeline__pill--resolved {
+  background: var(--pgm-wf-green);
+  color: #fff;
+  border-color: transparent;
+}
+
+.pgm-workflow-timeline__pill--closed {
+  background: var(--pgm-wf-slate);
+  color: #fff;
+  border-color: transparent;
+}
+
+.pgm-workflow-timeline__pill--fallback {
+  background: var(--pgm-wf-primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Estado atual */
+.pgm-workflow-timeline__pill--current {
+  box-shadow: 0 0 0 2px var(--pgm-wf-surface), 0 0 0 4px var(--pgm-wf-border-accent);
+}
+
+/* Próximas transições permitidas */
+.pgm-workflow-timeline__pill--allowed:not(.pgm-workflow-timeline__pill--clickable) {
+  box-shadow: 0 0 0 1px var(--pgm-wf-border-subtle), 0 2px 10px var(--pgm-wf-glow);
+}
+
+.pgm-workflow-timeline__pill--current.pgm-workflow-timeline__pill--allowed:not(.pgm-workflow-timeline__pill--clickable) {
+  box-shadow: 0 0 0 2px var(--pgm-wf-surface), 0 0 0 4px var(--pgm-wf-border-accent),
+    0 2px 10px var(--pgm-wf-glow);
+}
+
+/* Clicável: glow + hover PGM (teal) */
+.pgm-workflow-timeline__pill--clickable {
+  box-shadow: 0 0 0 1px var(--pgm-wf-border-subtle), 0 2px 12px var(--pgm-wf-glow);
+}
+
+.pgm-workflow-timeline__pill-btn.pgm-workflow-timeline__pill--clickable:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 0 1px rgba(29, 158, 117, 0.45),
+    0 2px 14px rgba(29, 158, 117, 0.16);
+}
+
+.pgm-workflow-timeline__pill-btn.pgm-workflow-timeline__pill--clickable:active:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.pgm-workflow-timeline__pill--patching {
+  position: relative;
+}
+
+.pgm-workflow-timeline__spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-top: 2px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pgm-wf-spin 0.65s linear infinite;
+}
+
+@keyframes pgm-wf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pgm-workflow-timeline__unknown {
+  margin-top: 0.35rem;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--pgm-wf-muted);
+}
+
+.pgm-workflow-timeline__unknown-strong {
+  color: var(--pgm-wf-text-secondary);
+}
+
+.pgm-workflow-timeline__unknown-note {
+  font-weight: 500;
+}
