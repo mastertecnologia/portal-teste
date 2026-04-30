@@ -238,19 +238,125 @@ body.os-add-page .os-add-shell .jsgrid-grid-body .jsgrid-table {
 	width: 100% !important;
 }
 
-/* Coluna “Descrição”: percentagem estável no table-layout:fixed */
-body.os-add-page .os-add-shell .jsgrid th.os-col-desc,
-body.os-add-page .os-add-shell .jsgrid td.os-cell-desc {
-	width: 26% !important;
+/* ─── Grid Produtos/OS: mesmas larguras em cabeçalho × inclusão × linha × edição ─── */
+body.os-add-page .os-add-shell #grid_table th.os-col-tipo,
+body.os-add-page .os-add-shell #grid_table td.os-col-tipo {
+	width: 110px !important;
+	min-width: 110px !important;
+	max-width: 110px !important;
+	box-sizing: border-box;
+	text-align: left !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-cod,
+body.os-add-page .os-add-shell #grid_table td.inputCodproduto:not(.hide) {
+	width: 150px !important;
+	min-width: 150px !important;
+	max-width: 150px !important;
+	box-sizing: border-box;
+	text-align: left !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-desc,
+body.os-add-page .os-add-shell #grid_table td.os-col-desc {
+	width: 380px !important;
+	min-width: 200px !important;
+	max-width: 380px !important;
+	box-sizing: border-box;
+	text-align: left !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-ref,
+body.os-add-page .os-add-shell #grid_table td.os-col-ref {
+	width: 120px !important;
+	min-width: 120px !important;
+	max-width: 120px !important;
+	box-sizing: border-box;
+	text-align: left !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-unid,
+body.os-add-page .os-add-shell #grid_table td.os-col-unid {
+	width: 70px !important;
+	min-width: 70px !important;
+	max-width: 70px !important;
+	box-sizing: border-box;
+	text-align: center !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-qtde,
+body.os-add-page .os-add-shell #grid_table td.os-col-qtde {
+	width: 80px !important;
+	min-width: 80px !important;
+	max-width: 80px !important;
+	box-sizing: border-box;
+	text-align: right !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-vlun,
+body.os-add-page .os-add-shell #grid_table td.os-col-vlun {
+	width: 110px !important;
+	min-width: 110px !important;
+	max-width: 110px !important;
+	box-sizing: border-box;
+	text-align: right !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-vld,
+body.os-add-page .os-add-shell #grid_table td.os-col-vld {
+	width: 110px !important;
+	min-width: 110px !important;
+	max-width: 110px !important;
+	box-sizing: border-box;
+	text-align: right !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-total,
+body.os-add-page .os-add-shell #grid_table td.os-col-total {
+	width: 110px !important;
+	min-width: 110px !important;
+	max-width: 110px !important;
+	box-sizing: border-box;
+	text-align: right !important;
+	vertical-align: middle !important;
+}
+body.os-add-page .os-add-shell #grid_table th.os-col-acoes.jsgrid-control-field,
+body.os-add-page .os-add-shell #grid_table td.os-col-acoes.jsgrid-control-field {
+	width: 100px !important;
+	min-width: 100px !important;
+	max-width: 100px !important;
+	box-sizing: border-box;
+	text-align: center !important;
+	vertical-align: middle !important;
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+
+/* Inputs e grupos: nunca maior que a célula */
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell:not(.hide) > .input-group,
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell:not(.hide) > .form-control,
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell:not(.hide) select {
+	width: 100% !important;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+body.os-add-page .os-add-shell #grid_table .jsgrid-cell:not(.hide) select.form-control {
 	min-width: 0;
 }
 
-/* Coluna de ações (jsGrid control): lápis + lixeira / salvar + cancelar */
-body.os-add-page .os-add-shell .jsgrid th.jsgrid-control-field,
-body.os-add-page .os-add-shell .jsgrid td.jsgrid-control-field {
-	width: 100px !important;
-	min-width: 100px !important;
-	max-width: 124px !important;
+/* Coluna REF: pill consistente */
+body.os-add-page .os-add-shell #grid_table .os-grid-ref-pill {
+	width: 100%;
+	max-width: 100%;
+	display: block;
+	padding: 4px 6px !important;
+	font-size: 11.5px !important;
+	line-height: 1.2 !important;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: left;
+	margin: 0 auto;
 	box-sizing: border-box;
 }
 
@@ -259,9 +365,9 @@ body.os-add-page .os-add-shell #grid_table .jsgrid-grid-body {
 	overflow-x: auto;
 }
 
-/* Linha de inserção/edição: permite encolher dentro de table-layout:fixed (bootstrap-select / input-group) */
-body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell,
-body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell {
+/* Só a coluna descrição encolhe dentro da largura fixa; demais colunas respeitam .os-col-* */
+body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell.os-cell-desc,
+body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell.os-cell-desc {
 	min-width: 0;
 }
 
@@ -451,14 +557,11 @@ body.os-add-page .os-add-shell .jsgrid-nodata-row > .jsgrid-cell {
 	padding: 12px 10px !important;
 }
 
-/* Botões + na coluna de controle: alinhar e evitar empilhar */
-body.os-add-page .os-add-shell .jsgrid-control-field,
-body.os-add-page .os-add-shell .jsgrid .jsgrid-control-field {
-	display: inline-flex;
-	flex-wrap: nowrap;
-	align-items: center;
-	gap: 4px;
-	vertical-align: middle;
+/* Coluna ações: manter como célula de tabela (inline-flex aqui quebrava o alinhamento) */
+body.os-add-page .os-add-shell #grid_table th.jsgrid-control-field,
+body.os-add-page .os-add-shell #grid_table td.jsgrid-control-field {
+	display: table-cell !important;
+	vertical-align: middle !important;
 }
 
 body.os-add-page .os-add-shell .jsgrid .jsgrid-button {
@@ -512,16 +615,23 @@ body.os-add-page .os-add-shell #grid_table .os-grid-ro-plain--center {
 	padding-left: 4px;
 	padding-right: 4px;
 }
-
-/* Ref. em leitura: texto como rótulo; sublinhado só no hover */
-body.os-add-page .os-add-shell #grid_table .os-grid-ref-plain.os-grid-ref-trigger {
-	cursor: pointer;
-	text-decoration: none !important;
-	color: var(--os-text) !important;
+body.os-add-page .os-add-shell #grid_table .os-grid-ro-plain--tipo {
+	text-align: left;
+	padding-left: 10px;
 }
-body.os-add-page .os-add-shell #grid_table .os-grid-ref-plain.os-grid-ref-trigger:hover,
-body.os-add-page .os-add-shell #grid_table .os-grid-ref-plain.os-grid-ref-trigger:focus {
-	text-decoration: underline !important;
+body.os-add-page .os-add-shell #grid_table .os-grid-ro-plain--desc {
+	text-align: left;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding-left: 10px;
+	padding-right: 6px;
+}
+
+body.os-add-page .os-add-shell #grid_table .os-grid-ref-pill.os-grid-ref-trigger:hover,
+body.os-add-page .os-add-shell #grid_table .os-grid-ref-pill.os-grid-ref-trigger:focus {
+	background: #fdfcfa !important;
+	border-color: var(--os-accent) !important;
 	color: var(--os-accent2) !important;
 	outline: none;
 }
@@ -529,6 +639,9 @@ body.os-add-page .os-add-shell #grid_table .os-grid-ref-plain.os-grid-ref-trigge
 /* Inputs brancos só leitura (qtde, valores, total, código) — iguais ao mock */
 body.os-add-page .os-add-shell #grid_table .jsgrid-row .os-grid-display-input,
 body.os-add-page .os-add-shell #grid_table .jsgrid-alt-row .os-grid-display-input {
+	width: 100% !important;
+	max-width: 100% !important;
+	box-sizing: border-box;
 	background: #ffffff !important;
 	border: 1px solid var(--os-border) !important;
 	color: var(--os-text) !important;
@@ -537,19 +650,50 @@ body.os-add-page .os-add-shell #grid_table .jsgrid-alt-row .os-grid-display-inpu
 	cursor: default !important;
 	pointer-events: none;
 	font-variant-numeric: tabular-nums;
+	padding-left: 6px;
+	padding-right: 6px;
 }
 body.os-add-page .os-add-shell #grid_table .inputCodproduto .os-grid-cod-search--browse {
 	pointer-events: none;
 	opacity: 0.92;
 }
 
-/* Ações: lápis laranja + lixeira com borda vermelha */
+/* Ações: lápis laranja (ícone visível) + lixeira vermelha, centralizados */
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex-wrap: nowrap !important;
+	gap: 5px;
+	width: 100%;
+	vertical-align: middle;
+}
 body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-edit {
-	background-color: #e67e22 !important;
-	border: 1px solid #cf711f !important;
+	background-color: #f57c00 !important;
+	border: 1px solid #e87500 !important;
 	color: #fff !important;
-	min-width: 34px;
-	padding: 5px 8px !important;
+	min-width: 36px !important;
+	width: 36px !important;
+	max-width: 36px !important;
+	height: 34px !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	line-height: 1 !important;
+	font-size: 0 !important;
+	overflow: visible !important;
+}
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-edit .fa {
+	font-size: 15px !important;
+	line-height: 1 !important;
+	color: #fff !important;
+	display: inline-block !important;
+	font-family: FontAwesome !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-edit:hover {
 	filter: brightness(0.96);
@@ -559,8 +703,18 @@ body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-de
 	background: #ffffff !important;
 	border: 1px solid #dc3545 !important;
 	color: #dc3545 !important;
-	min-width: 34px;
-	padding: 5px 8px !important;
+	min-width: 36px !important;
+	width: 36px !important;
+	max-width: 36px !important;
+	height: 34px !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-delete .fa {
+	font-size: 15px !important;
+	line-height: 1 !important;
 }
 body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-delete:hover {
 	background: #fff8f8 !important;
@@ -568,14 +722,27 @@ body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .os-grid-act-de
 	border-color: #c82333 !important;
 }
 
-body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .btn,
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-edit {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 5px;
+	width: 100%;
+}
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-cell .btn + .btn,
+body.os-add-page .os-add-shell #grid_table .os-grid-actions-edit .btn + .btn {
+	margin-left: 0 !important;
+}
 body.os-add-page .os-add-shell #grid_table .os-grid-actions-edit .btn {
-	margin: 0 3px 0 0;
-	min-width: 34px;
+	min-width: 36px;
+	height: 34px !important;
 	padding: 5px 8px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
 }
 body.os-add-page .os-add-shell #grid_table .os-grid-actions-edit .os-grid-act-save {
-	min-width: 36px;
+	min-width: 38px;
 }
 body.os-add-page .os-add-shell #grid_table .os-grid-actions-edit .os-grid-act-cancel {
 	background: #f4f3f0 !important;

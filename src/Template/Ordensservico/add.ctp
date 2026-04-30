@@ -1,6 +1,6 @@
 <?php
 	use Cake\Routing\Router;
-	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=8', ['block' => true]);
+	$this->Html->css('/dist/css/pages/ordensservico-add-shell.css?v=9', ['block' => true]);
     $this->Breadcrumbs->add('Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'breadcrumb-item']);
     $this->Breadcrumbs->add('Cadastrar', [], ['class' => 'breadcrumb-item active']);
 ?>
@@ -16,11 +16,15 @@
 	body.os-add-page .os-add-shell .jsgrid td.hide {
 		display: none !important;
 	}
-	/* Linha de inserção/edição: dropdowns + min-width 0 (ver ordensservico-add-shell.css). */
+	/* Linha de inserção/edição: descrição pode encolher; demais colunas seguem largura fixa do CSS. */
 	body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell,
 	body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell {
 		height: auto;
-		overflow: visible;
+		overflow: hidden;
+		vertical-align: middle;
+	}
+	body.os-add-page .os-add-shell #grid_table .jsgrid-insert-row > .jsgrid-cell.os-cell-desc,
+	body.os-add-page .os-add-shell #grid_table .jsgrid-edit-row > .jsgrid-cell.os-cell-desc {
 		min-width: 0;
 	}
 	/* Linhas de dados: corta texto em vez de quebrar linha */
@@ -874,22 +878,27 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					name: "tipo",
 					title: "Tipo",
 					type: "select",
-					width: 96,
+					align: "left",
+					width: 110,
 					items: tiposOpt,
 					validade: 'required',
-					insertcss: 'cellInput inputTipo',
-					editcss: "editTipo",
+					css: 'os-col-tipo',
+					headercss: 'os-col-tipo',
+					insertcss: 'cellInput inputTipo os-col-tipo',
+					editcss: "editTipo os-col-tipo",
 					itemTemplate: function (value) {
 						var lbl = osAddTipoLabelBrowse(value);
-						return $('<span class="os-grid-ro-plain"></span>').text(lbl || '—');
+						return $('<span class="os-grid-ro-plain os-grid-ro-plain--tipo"></span>').text(lbl || '—');
 					},
 				},
 				{
 					name: "codproduto",
 					title: "Cód. Produto",
 					type: "text", 
-					width: 152,
+					align: "left",
+					width: 150,
 					css: 'inputCodproduto os-col-cod',
+					headercss: 'os-col-cod',
 					validate: "required",
 
 					itemTemplate: function(value) {
@@ -946,37 +955,37 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						return this.editControl.val();
 					}
 				},
-				{ name: "descricao", title: "Descrição", type: "text", width: "26%", validate: "required", editing: true, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc", insertcss: "cellInput inputDescricao os-cell-desc", editcss: "editDescricao os-cell-desc", validade: "required",
+				{ name: "descricao", title: "Descrição", type: "text", align: "left", width: 380, validate: "required", editing: true, readOnly: true, headercss: "os-col-desc", css: "os-cell-desc os-col-desc", insertcss: "cellInput inputDescricao os-cell-desc os-col-desc", editcss: "editDescricao os-cell-desc os-col-desc", validade: "required",
 					itemTemplate: function(value) {
 						var t = value != null ? String(value) : '';
-						return $('<span class="os-grid-ro-plain"></span>').text(t);
+						return $('<span class="os-grid-ro-plain os-grid-ro-plain--desc"></span>').text(t);
 					}
 				},
 				{
 					name: "observacao",
 					title: "Ref.",
+					align: "left",
 					type: "text",
-					width: 88,
+					width: 120,
 					validate: "",
-					css: 'os-cell-ref',
+					css: 'os-cell-ref os-col-ref',
 					headercss: 'os-col-ref',
-					insertcss: 'cellInput inputObservacao',
-					editcss: "editObservacao",
+					insertcss: 'cellInput inputObservacao os-col-ref',
+					editcss: "editObservacao os-col-ref",
 					itemTemplate: function(value, item) {
 						var raw = '';
 						if (value != null && String(value).trim() !== '') {
 							raw = String(value).trim();
 						}
 						var hasMeta = !!(item && (item.modelo || item.serialnumber || item.productkey || item.obsinterna));
-						if (!raw && hasMeta) {
-							raw = 'Ref.';
+						var label = 'Detalhes';
+						if (raw.length > 0) {
+							label = raw.length > 28 ? raw.substr(0, 25) + '\u2026' : raw;
+						} else if (hasMeta) {
+							label = 'Detalhes';
 						}
-						if (!raw) {
-							raw = '—';
-						}
-						var vis = raw.length > 48 ? raw.substr(0, 45) + '\u2026' : raw;
-						return $('<span class="os-grid-ref-trigger os-grid-ref-plain os-grid-ro-plain" role="button" tabindex="0"></span>')
-							.text(vis)
+						return $('<button type="button" class="btn btn-sm btn-outline-secondary os-grid-ref-pill os-grid-ref-trigger"/>')
+							.text(label)
 							.attr('title', 'Detalhes do item')
 							.attr('aria-label', 'Abrir detalhes do item');
 					},
@@ -984,12 +993,15 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				{
 					name: "unidade",
 					title: "Unid.",
-					width: 56,
+					width: 70,
 					type: "text",
+					align: "center",
 					editing: true,
 					readOnly: true,
-					insertcss: 'cellInput inputUnidade',
-					editcss: "editUnidade",
+					css: 'os-col-unid',
+					headercss: 'os-col-unid',
+					insertcss: 'cellInput inputUnidade os-col-unid',
+					editcss: "editUnidade os-col-unid",
 					validade: 'required',
 					itemTemplate: function(value) {
 						return $('<span class="os-grid-ro-plain os-grid-ro-plain--center"></span>').text(value != null && String(value).trim() !== '' ? String(value).trim() : '—');
@@ -998,11 +1010,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				{
 					name: "quantidade",
 					title: "Qtde",
-					width: 56,
+					width: 80,
 					type: "text",
 					align: "right",
-					insertcss: 'cellInput inputQuantidade',
-					editcss: "editQuantidade",
+					css: 'os-col-qtde',
+					headercss: 'os-col-qtde',
+					insertcss: 'cellInput inputQuantidade os-col-qtde',
+					editcss: "editQuantidade os-col-qtde",
 					validate: { message: "Informe uma quantidade maior que zero.", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n > 0; }},
 					itemTemplate: function(value) {
 						return osAddReadonlyGridInput(value, true);
@@ -1013,9 +1027,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					title: "Vl. Unit.",
 					type: "text",
 					align: "right",
-					width: 90,
-					insertcss: 'cellInput inputValorunitario',
-					editcss: "editValorunitario",
+					width: 110,
+					css: 'os-col-vlun',
+					headercss: 'os-col-vlun',
+					insertcss: 'cellInput inputValorunitario os-col-vlun',
+					editcss: "editValorunitario os-col-vlun",
 					validate: { message: "Informe um valor unitário válido (pode ser zero para serviços cortesia).", validator: function(value) { var n = parseFloat(String(value || '').replace(/\./g, '').replace(',', '.')); return !isNaN(n) && n >= 0; }},
 					itemTemplate: function(value) {
 						return osAddReadonlyGridInput(value, true);
@@ -1026,15 +1042,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					title: "Vl. Desc.",
 					type: "text",
 					align: "right",
-					width: 90,
-					insertcss: 'cellInput inputValordesconto',
-					editcss: "editValordesconto",
+					width: 110,
+					css: 'os-col-vld',
+					headercss: 'os-col-vld',
+					insertcss: 'cellInput inputValordesconto os-col-vld',
+					editcss: "editValordesconto os-col-vld",
 					itemTemplate: function(value) {
 						return osAddReadonlyGridInput(value, true);
 					},
 				},
 				/* Total é calculado no cliente e recalculado no servidor; validar >0 bloqueava linha válida e rejeitava insertItem sem mensagem. */
-				{ name: "valortotal",  title: "Total", width: 90, align: "right", type: "text",  readOnly: true, editing: true, insertcss: 'cellInput inputValortotal', editcss: "editValortotal", headercss: 'sai', css: 'fieldValortotal os-col-total',
+				{ name: "valortotal",  title: "Total", width: 110, align: "right", type: "text",  readOnly: true, editing: true, css: 'fieldValortotal os-col-total', insertcss: 'cellInput inputValortotal os-col-total', editcss: "editValortotal os-col-total", headercss: 'os-col-total sai',
 					itemTemplate: function(value) {
 						return osAddReadonlyGridInput(value, true);
 					},
@@ -1045,13 +1063,16 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				{ name: "obsinterna", type: "text", width: 0, css: 'hide', insertcss: 'hide inputObsInterna', editcss: 'hide editObsInterna'},
 				{
 					type: "control",
+					align: "center",
 					width: 100,
+					headercss: 'jsgrid-control-field os-col-acoes',
+					css: 'jsgrid-control-field os-col-acoes',
 					modeSwitchButton: false,
 					editButton: false,
 					deleteButton: false,
 					itemTemplate: function (value, item) {
 						var $ed = $('<button type="button" class="btn btn-sm os-grid-act-edit"/>')
-							.html('<i class="fa fa-pencil"></i>')
+							.html('<i class="fa fa-pencil" aria-hidden="true"></i>')
 							.attr('title', 'Editar item');
 						$ed.on('click', function (e) {
 							e.preventDefault();
@@ -1059,8 +1080,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							$('#grid_table').jsGrid('editItem', item);
 						});
 						var $del = $('<button type="button" class="btn btn-sm os-grid-act-delete"/>')
-							.html('<i class="fa fa-trash"></i>')
-							.attr('title', 'Remover item');
+							.html('<i class="fa fa-trash" aria-hidden="true"></i>')
+							.attr('title', 'Excluir item');
 						$del.on('click', function (e) {
 							e.preventDefault();
 							e.stopPropagation();
@@ -1106,10 +1127,16 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if ($actTh.length && $.trim($actTh.text()) === '') {
 					$actTh.text('Ações');
 				}
-				/* jsGrid + flex ancestors: garante largura total do card (evita tabela “encolhida”). */
+				/* Mesma grade em cabeçalho / inclusão / dados / edição — largura fixa + scroll-X */
 				var $g = $('#grid_table');
+				var osGridMinW = 110 + 150 + 380 + 120 + 70 + 80 + 110 + 110 + 110 + 100;
 				$g.css({ width: '100%', maxWidth: '100%', minWidth: 0 });
-				$g.find('.jsgrid-grid-header, .jsgrid-grid-body').css({ width: '100%', minWidth: 0 });
+				$g.find('.jsgrid-grid-header, .jsgrid-grid-body').css({ width: '100%', overflowX: 'auto' });
+				$g.find('.jsgrid-grid-header .jsgrid-table, .jsgrid-grid-body .jsgrid-table').css({
+					tableLayout: 'fixed',
+					width: '100%',
+					minWidth: osGridMinW + 'px'
+				});
 			}
 		});
 		/* Grid está dentro do form da OS: Enter em qtde/preço submetia o form inteiro (refresh). */
@@ -1491,7 +1518,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if ($c.hasClass('cellInput') || $c.hasClass('jsgrid-control-field')) {
 					return;
 				}
-				if ($c.find('.os-grid-ref-trigger, .os-grid-actions-cell, .os-grid-ro-plain, .os-grid-ref-plain, .os-grid-display-input, .btn-exapndemuitotexto').length) {
+				if ($c.find('.os-grid-ref-trigger, .os-grid-ref-pill, .os-grid-actions-cell, .os-grid-ro-plain, .os-grid-display-input, .btn-exapndemuitotexto').length) {
 					return;
 				}
 				var full = $.trim($c.text());
