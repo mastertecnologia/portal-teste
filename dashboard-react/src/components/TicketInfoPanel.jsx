@@ -204,7 +204,7 @@ export default function TicketInfoPanel({ ticket, embedded = false, servicedesk 
         {row('Documento', ticket.cnpj)}
         {row('E-mail', ticket.email)}
         {rowAlways('Responsável solicitante', ticket.responsavel)}
-        {rowAlways('Categoria / assunto', categoriaAssuntoExibicao(ticket.assunto))}
+        {rowAlways('Categoria / assunto', categoriaAssuntoExibicao(ticket.assunto_nome ?? 'Não informado'))}
         {rowPrioridade('Prioridade', ticket.prioridade)}
         {rowEstado('Estado', ticket.status, { embedded, servicedesk })}
         {row('Aberto em', aberto)}

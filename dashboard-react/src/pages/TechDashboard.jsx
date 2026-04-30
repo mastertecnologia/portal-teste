@@ -16,6 +16,7 @@ import {
   postTransferirTicket,
   postStartTicket,
   postAlterarSituacao,
+  patchTicketSubject,
   getBoot,
   USE_MOCK,
 } from '../lib/api';
@@ -57,6 +58,19 @@ function stripHtml(raw) {
   const s = String(raw);
   const t = s.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   return t || '—';
+}
+
+function assuntoOptionValue(opt) {
+  if (!opt || typeof opt !== 'object') return '';
+  if (opt.value !== undefined && opt.value !== null && String(opt.value) !== '') return String(opt.value);
+  if (opt.id !== undefined && opt.id !== null && String(opt.id) !== '') return String(opt.id);
+  return '';
+}
+
+function assuntoOptionLabel(opt) {
+  if (!opt || typeof opt !== 'object') return '';
+  const raw = opt.nome ?? opt.label ?? opt.title ?? '';
+  return stripHtml(raw);
 }
 
 function statusLabel(row) {
@@ -528,7 +542,9 @@ export default function TechDashboard({ boot }) {
   const [patchBusyId, setPatchBusyId] = useState(null);
   /** Erro por PATCH inline (rollback já aplicado na linha). */
   const [inlinePatchError, setInlinePatchError] = useState({ id: null, msg: '' });
+  const [inlinePatchSuccess, setInlinePatchSuccess] = useState({ id: null, msg: '' });
   const inlinePatchErrorTimerRef = useRef(null);
+  const inlinePatchSuccessTimerRef = useRef(null);
   const [transferOkHint, setTransferOkHint] = useState('');
   const [loadError, setLoadError] = useState(null);
   const sdTableScrollRef = useRef(null);
@@ -609,9 +625,11 @@ export default function TechDashboard({ boot }) {
   }, [embedded, boot?.servicedesk, reload]);
 
   const wfEnabled = Boolean(workflow?.enabled);
+  const assuntoOptions = Array.isArray(workflow?.assuntoOptions) ? workflow.assuntoOptions : [];
   const filasMeta = workflow?.filas || [];
   const queuesRelacional = Boolean(workflow?.queuesRelacional);
   const effectiveBoot = boot || getBoot();
+  const canEditAssunto = Number(effectiveBoot?.role ?? boot?.role ?? 0) === 0;
   /**
    * Só controla UI da grid técnica (inline + ocultar Transferir). Endpoints PATCH existem no boot como URLs
    * e não ativam este layout por si. Ausência da flag ou false = legado (/tickets). Timer do ticket ≠ apiTimer.
@@ -657,7 +675,7 @@ export default function TechDashboard({ boot }) {
     return base.filter((t) => {
       const id = String(t.id);
       const cliente = String(t.cliente || '').toLowerCase();
-      const assunto = String(t.assunto_nome || t.assunto || '').toLowerCase();
+      const assunto = String(t.assunto_nome || '').toLowerCase();
       const tec = String(t.tecnicos || '').toLowerCase();
       const fila = String(t.filaLabel || '').toLowerCase();
       return (
@@ -698,6 +716,37 @@ export default function TechDashboard({ boot }) {
       setInlinePatchError({ id: null, msg: '' });
     }, 6000);
   }, []);
+
+  const onInlinePatchSuccess = useCallback((ticketId, msg) => {
+    if (inlinePatchSuccessTimerRef.current) {
+      window.clearTimeout(inlinePatchSuccessTimerRef.current);
+    }
+    setInlinePatchSuccess({ id: ticketId, msg: String(msg || 'Categoria atualizada') });
+    inlinePatchSuccessTimerRef.current = window.setTimeout(() => {
+      inlinePatchSuccessTimerRef.current = null;
+      setInlinePatchSuccess({ id: null, msg: '' });
+    }, 3000);
+  }, []);
+
+  const handleAssuntoChange = useCallback(async (ticket, nextValue) => {
+    if (!ticket || !canEditAssunto) return;
+    const next = String(nextValue ?? '');
+    const current = ticket.assunto_id != null ? String(ticket.assunto_id) : '';
+    if (current === next) return;
+    const snap = { ...ticket };
+    setPatchBusyId(Number(ticket.id));
+    const r = await patchTicketSubject(ticket.id, { assunto_id: next });
+    setPatchBusyId(null);
+    if (!r.ok) {
+      mergeTicketInGroups(ticket.id, snap);
+      onInlinePatchError(ticket.id, r.message || r.error || 'Falha ao alterar categoria.');
+      return;
+    }
+    if (r.ticket) {
+      mergeTicketInGroups(ticket.id, r.ticket);
+    }
+    onInlinePatchSuccess(ticket.id, 'Categoria atualizada');
+  }, [canEditAssunto, mergeTicketInGroups, onInlinePatchError, onInlinePatchSuccess]);
 
   const totalTodos = groups?.todos?.length ?? 0;
   const hoje = new Date().toLocaleDateString('pt-BR');
@@ -902,6 +951,15 @@ export default function TechDashboard({ boot }) {
         >
           <span className="font-semibold">Ticket #{inlinePatchError.id}: </span>
           {inlinePatchError.msg}
+        </div>
+      ) : null}
+      {inlineAssignment && inlinePatchSuccess.msg ? (
+        <div
+          className="border-b border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm text-[var(--pgm-primary)]"
+          role="status"
+        >
+          <span className="font-semibold">Ticket #{inlinePatchSuccess.id}: </span>
+          {inlinePatchSuccess.msg}
         </div>
       ) : null}
       {!embedded ? (
@@ -1211,7 +1269,14 @@ export default function TechDashboard({ boot }) {
               ) : (
                 rows.map((ticket) => {
                   const st = statusLabel(ticket);
-                  const assuntoLinha = stripHtml(ticket.assunto_nome || ticket.assunto || 'Não informado');
+                  const assuntoLinha = stripHtml(ticket.assunto_nome ?? 'Não informado');
+                  const assuntoValue =
+                    ticket.assunto_id != null && ticket.assunto_id !== ''
+                      ? String(ticket.assunto_id)
+                      : ticket.assuntoCode != null && ticket.assuntoCode !== ''
+                        ? String(ticket.assuntoCode)
+                        : '';
+                  const assuntoBusy = Number(patchBusyId) === Number(ticket.id);
                   return (
                     <tr
                       key={ticket.id}
@@ -1250,6 +1315,27 @@ export default function TechDashboard({ boot }) {
                         >
                           {assuntoLinha}
                         </div>
+                        {canEditAssunto && assuntoOptions.length > 0 ? (
+                          <select
+                            className="mt-1 block w-full max-w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-1.5 py-1 text-[11px] text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                            value={assuntoValue}
+                            onChange={(e) => handleAssuntoChange(ticket, e.target.value)}
+                            disabled={assuntoBusy}
+                            aria-label={`Categoria/assunto ticket ${ticket.id}`}
+                          >
+                            <option value="">Não informado</option>
+                            {assuntoOptions.map((opt, idx) => {
+                              const v = assuntoOptionValue(opt);
+                              const lbl = assuntoOptionLabel(opt);
+                              if (!v || !lbl || lbl === '0') return null;
+                              return (
+                                <option key={`${v}-${idx}`} value={v}>
+                                  {lbl}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        ) : null}
                         {ticket.solicitacaoPreview ? (
                           <div
                             className="line-clamp-1 text-[11px] leading-tight text-[var(--pgm-text-muted)]"

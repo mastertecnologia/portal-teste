@@ -292,7 +292,7 @@ export default function ClientTicketDetail({ boot }) {
   const descCard = (
     <div className={descShell}>
       <h2 className={descLabel}>Assunto</h2>
-      <p className={descTitle}>{stripHtml(ticket.assunto)}</p>
+      <p className={descTitle}>{stripHtml(ticket.assunto_nome ?? 'Não informado')}</p>
       <h2 className={`mt-4 ${descLabel}`}>Descrição</h2>
       <div className={descBody}>{ticket.descricao}</div>
       {relatoTecnico ? (

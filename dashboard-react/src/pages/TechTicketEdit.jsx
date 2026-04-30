@@ -591,7 +591,7 @@ export default function TechTicketEdit({ boot }) {
   const descricaoBlock = (
     <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-gradient-to-b from-[var(--pgm-bg-surface,#1a1f28)] to-[color-mix(in_srgb,var(--pgm-bg-surface,#1a1f28)_97%,rgba(255,255,255,0.03))] shadow-[var(--pgm-shadow-md)]">
       <div className="border-b border-[var(--pgm-border-subtle,rgba(255,255,255,0.06))] bg-[var(--pgm-bg-elevated,#222834)] px-4 py-3">
-        <h2 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">{stripHtml(ticket.assunto)}</h2>
+        <h2 className="text-[0.85rem] font-semibold text-[var(--pgm-text,#e8eaed)]">{stripHtml(ticket.assunto_nome ?? 'Não informado')}</h2>
       </div>
       <div className="p-4">
         {ticket.flags?.canEditDescricao ? (

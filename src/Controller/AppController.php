@@ -125,6 +125,7 @@ class AppController extends Controller
                 "apiPatchAssignment",
                 "apiPatchTicketStatus",
                 "apiPatchTicketPriority",
+                "apiPatchTicketSubject",
                 "apiStartTicket",
                 "startTicket",
                 "apiForTicket",

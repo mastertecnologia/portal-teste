@@ -67,6 +67,7 @@ class TicketsController extends AppController {
 				'apiPatchAssignment',
 				'apiPatchTicketStatus',
 				'apiPatchTicketPriority',
+				'apiPatchTicketSubject',
 			]
 		))));
 	}
@@ -93,6 +94,7 @@ class TicketsController extends AppController {
 			'apiPatchAssignment',
 			'apiPatchTicketStatus',
 			'apiPatchTicketPriority',
+			'apiPatchTicketSubject',
 		], true)) {
 			return (int)$user['role'] === 0;
 		}
@@ -3349,6 +3351,7 @@ class TicketsController extends AppController {
 				'apiPatchTicketAssignment' => $w . 'tickets/',
 				'apiPatchTicketStatus' => $w . 'tickets/',
 				'apiPatchTicketPriority' => $w . 'tickets/',
+				'apiPatchTicketSubject' => $w . 'tickets/',
 				'apiStartTicket' => $w . 'tickets/api-start-ticket/',
 				'apiStartTicketSlug' => $w . 'tickets/start-ticket/',
 				'apiQueuesForTicket' => $w . 'queues/api-for-ticket/',
@@ -3420,6 +3423,26 @@ class TicketsController extends AppController {
 		}
 
 		return [];
+	}
+
+	/** @return array<int,array<string,mixed>> */
+	protected function _ticketAssuntoApiOptionsList(): array {
+		$out = [];
+		foreach ($this->_ticketAssuntoClienteOptions() as $id => $label) {
+			$txt = trim((string)$label);
+			if ($txt === '' || $txt === '0') {
+				continue;
+			}
+			$key = is_numeric($id) ? (int)$id : (string)$id;
+			$out[] = [
+				'id' => $key,
+				'value' => $key,
+				'nome' => $txt,
+				'label' => $txt,
+			];
+		}
+
+		return $out;
 	}
 
 	/** Códigos persistidos em tickets.severidade */
@@ -4513,12 +4536,15 @@ class TicketsController extends AppController {
 			$tecCol = '—';
 		}
 
+		$assuntoNome = trim((string)$this->_ticketAssuntoTexto($reg->assunto));
+		if ($assuntoNome === '' || $assuntoNome === '0') {
+			$assuntoNome = 'Não informado';
+		}
 		$row = [
 			'id' => $id,
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
-			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
-			'assunto_nome' => $this->_ticketAssuntoTexto($reg->assunto),
+			'assunto_nome' => $assuntoNome,
 			'assunto_id' => is_numeric($reg->assunto) ? (int)$reg->assunto : null,
 			'assuntoCode' => $reg->assunto,
 			'situacao' => $sit,
@@ -4630,7 +4656,6 @@ class TicketsController extends AppController {
 			'id' => $id,
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
-			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assunto_nome' => $this->_ticketAssuntoTexto($reg->assunto),
 			'assunto_id' => is_numeric($reg->assunto) ? (int)$reg->assunto : null,
 			'assuntoCode' => $reg->assunto,
@@ -4874,7 +4899,6 @@ class TicketsController extends AppController {
 
 		return [
 			'id' => (int)$ticket->id,
-			'assunto' => $this->_ticketAssuntoTexto($ticket->assunto),
 			'assunto_nome' => $this->_ticketAssuntoTexto($ticket->assunto),
 			'assunto_id' => is_numeric($ticket->assunto) ? (int)$ticket->assunto : null,
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
@@ -5068,6 +5092,7 @@ class TicketsController extends AppController {
 				'filas' => $catalog,
 				'queuesRelacional' => $queuesUi,
 				'queues' => $dbQueues,
+				'assuntoOptions' => $this->_ticketAssuntoApiOptionsList(),
 				'supportLevels' => $supportLevelsOut,
 				'supportLevelsEnabled' => $this->_supportLevelsRoutingReady(),
 			],
@@ -6703,6 +6728,143 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'post_save_failed',
 				'message' => 'Prioridade gravada; falha ao montar a linha da grid. Atualize a página.',
+				'errors' => ['_root' => [$e->getMessage()]],
+				'debug' => $this->_ticketPatchDebugStub('ticket_row_payload', $idticket, null),
+				'detail' => $e->getMessage(),
+			], 500);
+		}
+
+		return $this->jsonResponse(['ok' => true, 'ticket' => $row]);
+	}
+
+	/**
+	 * PATCH /tickets/:id/subject — { "assunto_id": 2 } (ou assunto/assuntoCode).
+	 */
+	public function apiPatchTicketSubject($id = null) {
+		$this->request->allowMethod(['patch', 'post']);
+		$this->autoRender = false;
+		$idticket = (int)$id;
+		if ($idticket <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$qTm = $this->Tickets->find('all')->where(['id' => $idticket]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		if (!in_array('assunto', $cols, true)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'assunto_not_supported'], 503);
+		}
+		$body = $this->_jsonPatchRequestBody();
+		$raw = $body['assunto_id'] ?? $body['assunto'] ?? $body['assuntoCode'] ?? null;
+		$persistVal = null;
+		if (!($raw === null || $raw === '')) {
+			$opts = $this->_ticketAssuntoClienteOptions();
+			if (!is_array($opts) || $opts === []) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'assunto_options_unavailable',
+					'message' => 'Lista de categorias indisponível para validação.',
+				], 503);
+			}
+			if (is_numeric($raw)) {
+				$code = (int)$raw;
+				if (array_key_exists($code, $opts)) {
+					$persistVal = $code;
+				} elseif (array_key_exists((string)$code, $opts)) {
+					$persistVal = (string)$code;
+				}
+			} else {
+				$key = (string)$raw;
+				if (array_key_exists($key, $opts)) {
+					$persistVal = $key;
+				}
+			}
+			if ($persistVal === null) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'invalid_assunto',
+					'message' => 'Categoria/assunto inválido para este ticket.',
+					'debug' => $this->_ticketPatchDebugStub('assunto', $raw, null),
+				], 422);
+			}
+		}
+
+		$empresa = (int)$this->Auth->user('idempresa');
+		try {
+			$this->Tickets->getConnection()->transactional(function () use ($idticket, $empresa, $persistVal, $raw) {
+				$q = $this->Tickets->find('all')->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $empresa]);
+				$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+				$ticket = $q->first();
+				if (empty($ticket)) {
+					throw new \UnexpectedValueException('not_found');
+				}
+				if (!$this->_apiTicketViewAllowed($ticket)) {
+					throw new \UnexpectedValueException('forbidden_view');
+				}
+				$ticket->assunto = $persistVal;
+				if (!$this->Tickets->save($ticket, ['fields' => ['assunto'], 'atomic' => false])) {
+					$payload = [
+						'errors' => $ticket->getErrors(),
+						'debug' => $this->_ticketPatchSaveDebug($ticket, 'assunto', $raw, $persistVal),
+					];
+					throw new \RuntimeException('ticket_validation:' . json_encode($payload, JSON_UNESCAPED_UNICODE));
+				}
+			});
+		} catch (\UnexpectedValueException $e) {
+			$this->_ticketDbRollbackSafe();
+			$this->_logTicketPatchRootCause('apiPatchTicketSubject', $e);
+			if ($e->getMessage() === 'not_found') {
+				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
+			if ($e->getMessage() === 'forbidden_view') {
+				return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+			}
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_state', 'message' => $e->getMessage()], 400);
+		} catch (\Throwable $e) {
+			$this->_ticketDbRollbackSafe();
+			$this->_logTicketPatchRootCause('apiPatchTicketSubject', $e);
+			$msg = $e->getMessage();
+			$parsed = $this->_ticketParseTicketValidationMessage($msg);
+			if ($parsed !== null) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'save_failed',
+					'message' => 'Validação ao gravar categoria/assunto.',
+					'errors' => $parsed['errors'],
+					'debug' => $parsed['debug'],
+				], 422);
+			}
+
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'save_failed',
+				'message' => 'Erro ao gravar categoria/assunto.',
+				'errors' => ['_root' => [$msg]],
+				'debug' => $this->_ticketPatchDebugStub('assunto', $raw, $persistVal),
+				'detail' => $msg,
+			], 422);
+		}
+
+		try {
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'patch_subject', $idticket);
+			$row = $this->_servicedeskTicketRowPayload($idticket);
+		} catch (\Throwable $e) {
+			$this->_logTicketPatchRootCause('apiPatchTicketSubject.pos_tx', $e);
+
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'post_save_failed',
+				'message' => 'Categoria gravada; falha ao montar a linha da grid. Atualize a página.',
 				'errors' => ['_root' => [$e->getMessage()]],
 				'debug' => $this->_ticketPatchDebugStub('ticket_row_payload', $idticket, null),
 				'detail' => $e->getMessage(),

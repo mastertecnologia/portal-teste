@@ -353,6 +353,13 @@ Router::scope("/", function ($routes) {
         ->setMethods(["PATCH", "POST"]);
     $routes
         ->connect(
+            "/tickets/:id/subject",
+            ["controller" => "Tickets", "action" => "apiPatchTicketSubject"],
+            ["pass" => ["id"], "id" => "\d+"],
+        )
+        ->setMethods(["PATCH", "POST"]);
+    $routes
+        ->connect(
             "/tickets/api-anexo-upload/*",
             ["controller" => "Tickets", "action" => "apiAnexoUpload"],
             ["pass" => ["idticket"]],

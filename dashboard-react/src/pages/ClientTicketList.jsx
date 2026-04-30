@@ -84,7 +84,7 @@ export default function ClientTicketList({ boot }) {
       id: t.id,
       autor: MOCK_SESSION_CLIENTE.name,
       created: t.atualizado || '—',
-      assunto: t.assunto,
+      assunto_nome: t.assunto_nome ?? t.assunto ?? 'Não informado',
       solicitacaoPreview: t.descricao,
       situacaoLabel: t.status,
       status: t.status,
@@ -103,7 +103,7 @@ export default function ClientTicketList({ boot }) {
     return fromApiRows.filter((t) => {
       const id = String(t.id);
       const cliente = String(t.cliente || '').toLowerCase();
-      const assunto = String(t.assunto || '').toLowerCase();
+      const assunto = String(t.assunto_nome || '').toLowerCase();
       const autor = String(t.autor || '').toLowerCase();
       const tec = String(t.tecnicos || '').toLowerCase();
       return id.includes(qq) || cliente.includes(qq) || assunto.includes(qq) || autor.includes(qq) || tec.includes(qq);
@@ -249,7 +249,7 @@ export default function ClientTicketList({ boot }) {
               ) : (
                 rows.map((ticket) => {
                   const st = statusLabel(ticket);
-                  const assuntoLinha = stripHtml(ticket.assunto);
+                  const assuntoLinha = stripHtml(ticket.assunto_nome ?? 'Não informado');
                   const dest = ticket.urls?.view || `/cliente/ticket/${ticket.id}`;
                   const acoesOrd = sortTicketAcoes(ticket.acoes || []);
                   const idLinkCls = embedded

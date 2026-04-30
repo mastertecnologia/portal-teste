@@ -86,7 +86,7 @@ function mockTicketToTechRow(t) {
     id: t.id,
     autor: '—',
     created: t.atualizado || '—',
-    assunto: t.assunto,
+    assunto_nome: t.assunto ?? 'Não informado',
     situacao: open ? 1 : 2,
     situacaoLabel: t.status,
     cliente: t.cliente,
@@ -354,6 +354,38 @@ export async function patchTicketPriority(ticketId, body) {
   return { ok: true, ticket: json.ticket || null };
 }
 
+export async function patchTicketSubject(ticketId, body) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 80));
+    return { ok: true, ticket: null };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiPatchTicketSubject;
+  if (!base) return { ok: false, error: 'no_api' };
+  const url = `${base}${encodeURIComponent(String(ticketId))}/subject`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      ticket: null,
+    };
+  }
+  return { ok: true, ticket: json.ticket || null };
+}
+
 export async function postTransferirTicket(ticketId, payload) {
   if (USE_MOCK) {
     return { ok: true };
@@ -414,7 +446,7 @@ export async function fetchTicketDetail(id) {
       ok: true,
       data: {
         ...t,
-        assunto: t.assunto,
+        assunto_nome: t.assunto ?? 'Não informado',
         status: t.status,
         descricao: t.descricao || '',
         descricaoAtendimento: t.descricaoAtendimento || '',
