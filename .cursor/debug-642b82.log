@@ -1,0 +1,3 @@
+{"sessionId":"642b82","location":"pgm-servicedesk-v2-navegacao.html:crono","message":"boot_dom_refs","data":{"display":true,"startBtn":true,"pauseBtn":true,"stopBtn":true,"modalOverlay":true,"modalTime":true,"activityLog":true,"saveLogBtn":true,"stopDisabled":true,"typeofWindowStop":"function","modalParentTag":"BODY"},"timestamp":1777127585837,"hypothesisId":"H1 H3 H5"}
+{"sessionId":"642b82","location":"pgm-servicedesk-v2-navegacao.html:crono","message":"pre_saveLog_listener","data":{"hasSaveLogBtn":true},"timestamp":1777127585839,"hypothesisId":"H1"}
+{"sessionId":"642b82","location":"pgm-servicedesk-v2-navegacao.html:crono","message":"listeners_registered","data":{"ok":true},"timestamp":1777127585841,"hypothesisId":"H1"}

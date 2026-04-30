@@ -16,6 +16,57 @@
 .cli-editcliente-page .cli-form-footer { flex-wrap: wrap; }
 .cli-editcliente-page .cli-form-footer-right { flex-wrap: wrap; align-items: center; }
 .btn-cli-primary.btn-disabled { opacity: 0.55; pointer-events: none; cursor: not-allowed !important; }
+
+/* Fallback local: garante tema claro nesta tela mesmo com CSS global dark. */
+.cli-editcliente-page .cli-form-root.cli-layout-unificado {
+	background: #f2f1ee !important;
+	color: #1a1a18 !important;
+	color-scheme: light !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-section {
+	background: #ffffff !important;
+	border: 1px solid #e5e4e0 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-section-head {
+	background: #ffffff !important;
+	border-bottom: 1px solid #e5e4e0 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-section-title,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-check-row label {
+	color: #1a1a18 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-fgroup label {
+	color: #6b6a65 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .form-control,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado input.form-control,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado select.form-control,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado textarea.form-control {
+	background: #ffffff !important;
+	border: 1px solid #e5e4e0 !important;
+	color: #1a1a18 !important;
+	-webkit-text-fill-color: #1a1a18 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .form-control:focus,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado input.form-control:focus,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado select.form-control:focus,
+.cli-editcliente-page .cli-form-root.cli-layout-unificado textarea.form-control:focus {
+	border-color: #00c08b !important;
+	box-shadow: 0 0 0 2px rgba(0, 192, 139, 0.22) !important;
+	background: #f8f8f7 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-form-footer {
+	background: #ffffff !important;
+	border-top: 1px solid #e5e4e0 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .cli-form-footer-left {
+	color: #6b6a65 !important;
+}
+.cli-editcliente-page .cli-form-root.cli-layout-unificado .btn-cli-secondary {
+	background: #ffffff !important;
+	border: 1px solid #e5e4e0 !important;
+	color: #1a1a18 !important;
+}
 </style>
 <div class="col-md-12 p-0 cli-editcliente-page">
 	<div class="cli-form-root cli-layout-unificado">

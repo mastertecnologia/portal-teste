@@ -2,6 +2,8 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\AccessDiagnosticService;
+use App\Service\RbacAccessRequestService;
 use App\Service\Common\ModelService;
 use App\Service\ClienteDomain\ClienteDomainBridge;
 use App\Service\Ticket\DashboardService;
@@ -146,10 +148,65 @@ class UsersController extends AppController {
 
 	/**
 	 * Página de fallback quando RBAC (enforce) nega acesso; rota em whitelist (config/rbac.php).
+	 * Se existir captura em sessão (gravada pelo RbacComponent), mostra diagnóstico e sugestões (somente leitura).
 	 */
 	public function accessDenied() {
 		$this->set('title', 'Acesso não autorizado');
 		$this->set('hideLayoutPageTitle', true);
+
+		$rbacDenialReport = null;
+		$supportCode = null;
+		$canViewDetailedDiagnostic = false;
+		$allowAccessRequests = false;
+		$session = $this->request->getSession();
+		$cap = $session->read(AccessDiagnosticService::SESSION_ACCESS_DENIED_CAPTURE);
+		$session->delete(AccessDiagnosticService::SESSION_ACCESS_DENIED_CAPTURE);
+		$user = (array)$this->Auth->user();
+		$rbCfg = (array)Configure::read('Rbac');
+		$diagCfg = isset($rbCfg['diagnostics']) && is_array($rbCfg['diagnostics']) ? $rbCfg['diagnostics'] : [];
+		$diagEnabled = !array_key_exists('enabled', $diagCfg) || (bool)$diagCfg['enabled'];
+		$showDetailsOnDenied = !empty($diagCfg['show_details_on_access_denied']);
+		$ttlMin = isset($diagCfg['support_code_ttl_minutes']) ? (int)$diagCfg['support_code_ttl_minutes'] : 60;
+		if ($ttlMin <= 0) {
+			$ttlMin = 60;
+		}
+		$allowAccessRequests = !empty($diagCfg['allow_user_access_requests']) && !empty($user['id']);
+		$canViewDetailedDiagnostic = $diagEnabled
+			&& $showDetailsOnDenied
+			&& AccessDiagnosticService::canViewRbacDiagnostic($user);
+
+		try {
+			if (is_array($cap) && !empty($user['id']) && (int)$cap['user_id'] === (int)$user['id']) {
+				$ts = isset($cap['ts']) ? (int)$cap['ts'] : 0;
+				if ($ts > 0 && (time() - $ts) <= ($ttlMin * 60)) {
+					$supportCode = !empty($cap['support_code']) ? (string)$cap['support_code'] : null;
+					if ($allowAccessRequests && $supportCode !== null) {
+						$session->write(RbacAccessRequestService::SESSION_ACCESS_REQUEST_CAPTURE, [
+							'user_id' => (int)$user['id'],
+							'controller' => (string)($cap['controller'] ?? ''),
+							'action' => (string)($cap['action'] ?? ''),
+							'reason' => (string)($cap['reason'] ?? ''),
+							'prefix' => (string)($cap['prefix'] ?? ''),
+							'plugin' => (string)($cap['plugin'] ?? ''),
+							'support_code' => $supportCode,
+							'ts' => $ts,
+						]);
+					}
+					if ($canViewDetailedDiagnostic) {
+						$svc = new AccessDiagnosticService();
+						$rbacDenialReport = $svc->diagnoseFromDenialCapture($cap, $user);
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+			Log::warning(sprintf(
+				'RBAC accessDenied diagnostic failed user_id=%d msg=%s',
+				(int)($user['id'] ?? 0),
+				$e->getMessage()
+			));
+			$rbacDenialReport = null;
+		}
+		$this->set(compact('rbacDenialReport', 'supportCode', 'canViewDetailedDiagnostic', 'allowAccessRequests'));
 	}
 
 	public function dashboard($erro = null) {

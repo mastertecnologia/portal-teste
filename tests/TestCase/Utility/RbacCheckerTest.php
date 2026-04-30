@@ -310,6 +310,12 @@ class RbacCheckerTest extends TestCase {
 		$this->assertTrue(RbacChecker::matchAction('Ordensservico', 'relatorio_ver', $row));
 	}
 
+	public function testMatchActionOrdensservicoAddFromTicket() {
+		$row = ['controller' => 'Ordensservico', 'action' => 'add,addFromTicket,add_from_ticket'];
+		$this->assertTrue(RbacChecker::matchAction('Ordensservico', 'addFromTicket', $row));
+		$this->assertTrue(RbacChecker::matchAction('Ordensservico', 'add_from_ticket', $row));
+	}
+
 	public function testMatchActionPortalNotificationsJson() {
 		$rowRead = ['controller' => 'PortalNotifications', 'action' => 'unreadCount,listJson'];
 		$this->assertTrue(RbacChecker::matchAction('PortalNotifications', 'unreadCount', $rowRead));

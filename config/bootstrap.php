@@ -142,6 +142,10 @@ if (file_exists(__DIR__ . DS . 'abac.php')) {
     Configure::load('abac', 'default');
 }
 
+if (file_exists(__DIR__ . DS . 'workflow.php')) {
+    Configure::load('workflow', 'default');
+}
+
 if (file_exists(__DIR__ . DS . 'erp_api.php')) {
     Configure::load('erp_api', 'default', false);
 }

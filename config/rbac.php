@@ -150,6 +150,11 @@ $fileWarnFlash = false;
 $warnFlash = $__rbacTriStateEnv('RBAC_WARN_FLASH');
 $warnFlash = $warnFlash === null ? $fileWarnFlash : $warnFlash;
 
+// IAM: expiração de grants — default OFF (produção dia 0); RBAC_ACCESS_EXPIRATION_ENABLED=1 para ativar.
+$fileIamAccessExpirationEnabled = false;
+$iamAccessExpirationEnabled = $__rbacTriStateEnv('RBAC_ACCESS_EXPIRATION_ENABLED');
+$iamAccessExpirationEnabled = $iamAccessExpirationEnabled === null ? $fileIamAccessExpirationEnabled : $iamAccessExpirationEnabled;
+
 return [
 	'Rbac' => [
 		'mode' => in_array($mode, ['off', 'warn', 'enforce'], true) ? $mode : 'off',
@@ -312,6 +317,35 @@ return [
 			'footer_acesso_remoto' => 'normasempresa.acessoremoto',
 			'footer_perfil_senha' => ['users.profile', 'users.password'],
 			'footer_twofactor_menu' => 'users.twofactor',
+		],
+		// Diagnóstico e workflow de pedidos de acesso (sem liberação automática por padrão).
+		'diagnostics' => [
+			'enabled' => true,
+			'show_details_on_access_denied' => false,
+			'support_code_ttl_minutes' => 60,
+			'allow_user_access_requests' => true,
+			'allow_automatic_grant' => false,
+			'access_request_rate_limit_per_hour' => 5,
+			'allow_auto_grant_super_admin' => false,
+			'allow_auto_grant_critical' => false,
+		],
+		'notifications' => [
+			'enabled' => true,
+			'email_enabled' => true,
+			'slack_enabled' => false,
+			'slack_webhook_url' => function_exists('env') ? env('RBAC_SLACK_WEBHOOK_URL', null) : null,
+			'from_email' => function_exists('env') ? (env('RBAC_FROM_EMAIL', null) ?: 'no-reply@pgm.inf.br') : 'no-reply@pgm.inf.br',
+			'admin_notify_emails' => [],
+			'max_retries' => 3,
+			'max_notifications_per_minute' => 120,
+			'dedupe_ttl_seconds' => 604800,
+		],
+		'access_expiration' => [
+			'enabled' => $iamAccessExpirationEnabled,
+			'default_days' => 90,
+			'critical_default_days' => 7,
+			'notify_before_days' => [7, 1],
+			'auto_revoke_enabled' => false,
 		],
 	],
 ];

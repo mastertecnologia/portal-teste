@@ -2,12 +2,15 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\AccessDiagnosticService;
+use App\Service\RbacPermissionMatrixService;
 use App\Utility\RbacChecker;
 use App\Utility\RbacHierarchy;
 use App\Utility\RbacEffectivePermissionIds;
 use App\Utility\RbacUserRolesResolver;
 use Cake\Core\Configure;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 
 /**
  * Catálogo RBAC/ABAC e matriz de papéis (painel administrativo).
@@ -66,6 +69,12 @@ class PermissoesController extends AppController {
 			'adminFieldPermissionEdit' => ['permissoes.fields.manage'],
 			'adminFieldPermissionDelete' => ['permissoes.fields.manage'],
 			'adminRbacAudit' => ['permissoes.audit.view'],
+			'diagnosticarAcesso' => ['permissoes.users.effective', 'permissoes.users.assign_roles', 'usuarios.roles.assign'],
+			'simularDiagnosticoAcesso' => ['permissoes.users.effective', 'permissoes.users.assign_roles', 'usuarios.roles.assign'],
+			'matrizVisual' => ['permissoes.matriz_visual', 'permissoes.matrix.view'],
+			'matrizVisualCsv' => ['permissoes.matriz_visual', 'permissoes.matrix.view'],
+			'dashboardAcessos' => ['rbac.dashboard.view', 'rbac.requests.audit'],
+			'dashboardAcessosCsv' => ['rbac.dashboard.view', 'rbac.requests.audit'],
 			'adminGroups' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
 			'adminGroupEdit' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
 			'adminGroupRoles' => ['permissoes.groups.manage', 'usuarios.groups.assign'],
@@ -138,6 +147,18 @@ class PermissoesController extends AppController {
 			'catalogFilterModule' => $moduleFilter,
 			'catalogFilterQ' => $qFilter,
 		]);
+		$pendingAccessRequests = 0;
+		if ($this->_rbacAccessRequestsTableExists()) {
+			try {
+				$pendingAccessRequests = (int)TableRegistry::get('RbacAccessRequests')
+					->find()
+					->where(['status' => 'pending'])
+					->count();
+			} catch (\Throwable $e) {
+				$pendingAccessRequests = 0;
+			}
+		}
+		$this->set('pendingAccessRequests', $pendingAccessRequests);
 	}
 
 	public function adminSyncRegistry() {
@@ -1235,6 +1256,188 @@ class PermissoesController extends AppController {
 		return $this->redirect(['action' => 'adminFieldPermissions']);
 	}
 
+	/**
+	 * Simula RBAC/ABAC para um utilizador da equipe e uma rota (sem conceder acesso).
+	 */
+	public function diagnosticarAcesso() {
+		$this->set('title', 'Diagnóstico de acesso RBAC/ABAC (simulação)');
+		if (!$this->_rbacUsersTablesExist()) {
+			$this->set('rbacMissing', true);
+
+			return;
+		}
+		$this->_ensureDefaultRoles();
+		$report = null;
+		$recentUsers = $this->Users->find()
+			->select(['id', 'username', 'name'])
+			->where(['role' => 0, 'idcliente IS' => null])
+			->order(['id' => 'DESC'])
+			->limit(40);
+
+		if ($this->request->is('post')) {
+			$userId = (int)$this->request->getData('user_id');
+			$ctrl = trim((string)$this->request->getData('controller'));
+			$act = trim((string)$this->request->getData('action'));
+			$prefix = trim((string)$this->request->getData('prefix'));
+			$plugin = trim((string)$this->request->getData('plugin'));
+			if ($userId <= 0 || $ctrl === '' || $act === '') {
+				$this->Flash->error(__('Informe o ID do usuário (equipe), controller e action.'));
+			} else {
+				$user = $this->Users->find()
+					->where(['id' => $userId, 'role' => 0, 'idcliente IS' => null])
+					->first();
+				if (empty($user)) {
+					$this->Flash->error(__('Usuário da equipe não encontrado.'));
+				} else {
+					$svc = new AccessDiagnosticService();
+					$report = $svc->diagnose(
+						$user->toArray(),
+						$ctrl,
+						$act,
+						['prefix' => $prefix, 'plugin' => $plugin]
+					);
+				}
+			}
+		}
+		$this->set(compact('report', 'recentUsers'));
+	}
+
+	/**
+	 * Simula diagnóstico RBAC/ABAC sem negar o utilizador real (overrides opcionais idempresa/idcliente).
+	 */
+	public function simularDiagnosticoAcesso() {
+		$this->set('title', 'Simular diagnóstico de acesso (teste admin)');
+		if (!$this->_rbacUsersTablesExist()) {
+			$this->set('rbacMissing', true);
+
+			return;
+		}
+		$this->_ensureDefaultRoles();
+		$report = null;
+		$recentUsers = $this->Users->find()
+			->select(['id', 'username', 'name'])
+			->where(['role' => 0, 'idcliente IS' => null])
+			->order(['id' => 'DESC'])
+			->limit(40);
+
+		if ($this->request->is('post')) {
+			$userId = (int)$this->request->getData('user_id');
+			$ctrl = trim((string)$this->request->getData('controller'));
+			$act = trim((string)$this->request->getData('action'));
+			$prefix = trim((string)$this->request->getData('prefix'));
+			$plugin = trim((string)$this->request->getData('plugin'));
+			$sim = [
+				'prefix' => $prefix,
+				'plugin' => $plugin,
+			];
+			$idEmp = $this->request->getData('idempresa');
+			if ($idEmp !== null && $idEmp !== '') {
+				$sim['idempresa'] = (int)$idEmp;
+			}
+			$idCli = $this->request->getData('idcliente');
+			if ($idCli !== null && $idCli !== '') {
+				$sim['idcliente'] = (int)$idCli;
+			}
+			$resId = $this->request->getData('resource_id');
+			if ($resId !== null && trim((string)$resId) !== '') {
+				$sim['resource_id'] = trim((string)$resId);
+			}
+			if ($userId <= 0 || $ctrl === '' || $act === '') {
+				$this->Flash->error(__('Informe o ID do usuário (equipe), controller e action.'));
+			} else {
+				$user = $this->Users->find()
+					->where(['id' => $userId, 'role' => 0, 'idcliente IS' => null])
+					->first();
+				if (empty($user)) {
+					$this->Flash->error(__('Usuário da equipe não encontrado.'));
+				} else {
+					$svc = new AccessDiagnosticService();
+					$report = $svc->diagnoseWithSimulatorContext($user->toArray(), $ctrl, $act, $sim);
+				}
+			}
+		}
+		$this->set(compact('report', 'recentUsers'));
+	}
+
+	public function matrizVisual() {
+		$this->set('title', 'Matriz visual de permissões (somente leitura)');
+		if (!$this->_rbacTablesExist()) {
+			$this->set('rbacMissing', true);
+
+			return;
+		}
+		$svc = new RbacPermissionMatrixService();
+		$ctx = $svc->build([
+			'module' => (string)$this->request->getQuery('module'),
+			'controller' => (string)$this->request->getQuery('controller'),
+			'action' => (string)$this->request->getQuery('action'),
+			'role_id' => (int)$this->request->getQuery('role_id'),
+			'page' => (int)$this->request->getQuery('page'),
+			'limit' => 100,
+		]);
+		$moduleOptions = [];
+		foreach ($this->RbacPermissions->find()->select(['module'])->where(['module IS NOT' => null])->group('module')->order(['module' => 'ASC'])->all() as $m) {
+			$k = (string)$m->module;
+			if ($k !== '') {
+				$moduleOptions[$k] = $k;
+			}
+		}
+		$roleOptions = [];
+		foreach ($ctx['roles'] as $r) {
+			$roleOptions[(int)$r->id] = (string)$r->name;
+		}
+		$this->set(compact('ctx', 'moduleOptions', 'roleOptions'));
+	}
+
+	public function matrizVisualCsv() {
+		if (!$this->_rbacTablesExist()) {
+			return $this->response->withStatus(404);
+		}
+		$svc = new RbacPermissionMatrixService();
+		$ctx = $svc->build([
+			'module' => (string)$this->request->getQuery('module'),
+			'controller' => (string)$this->request->getQuery('controller'),
+			'action' => (string)$this->request->getQuery('action'),
+			'role_id' => (int)$this->request->getQuery('role_id'),
+			'for_export' => true,
+			'limit' => 5000,
+		]);
+		$out = "module,code,name,controller,action,criticality,roles\n";
+		$linkMap = (array)$ctx['link_map'];
+		$permissions = (array)$ctx['permissions'];
+		$maxCsv = 5000;
+		if (count($permissions) > $maxCsv) {
+			$permissions = array_slice($permissions, 0, $maxCsv);
+		}
+		foreach ($permissions as $p) {
+			$roleNames = [];
+			foreach ((array)$ctx['roles'] as $r) {
+				if (!empty($linkMap[(int)$r->id][(int)$p->id])) {
+					$roleNames[] = (string)$r->name;
+				}
+			}
+			$row = [
+				(string)($p->module ?? ''),
+				(string)($p->code ?? ''),
+				(string)($p->name ?? ''),
+				(string)($p->controller ?? ''),
+				(string)($p->action ?? ''),
+				(string)($p->criticality ?? ''),
+				implode('|', $roleNames),
+			];
+			$esc = array_map(function ($v) {
+				$v = str_replace('"', '""', (string)$v);
+				return '"' . $v . '"';
+			}, $row);
+			$out .= implode(',', $esc) . "\n";
+		}
+
+		return $this->response
+			->withType('text/csv')
+			->withDownload('rbac_matriz_visual.csv')
+			->withStringBody($out);
+	}
+
 	public function adminRbacAudit() {
 		$this->set('title', 'Auditoria RBAC');
 		if (!$this->_rbacAuditTableExists()) {
@@ -1370,6 +1573,16 @@ class PermissoesController extends AppController {
 		}
 	}
 
+	protected function _rbacAccessRequestsTableExists() {
+		try {
+			$tables = $this->RbacPermissions->getConnection()->getSchemaCollection()->listTables();
+
+			return in_array('rbac_access_requests', $tables, true);
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
 	protected function _rbacTablesExist() {
 		try {
 			$tables = $this->RbacPermissions->getConnection()->getSchemaCollection()->listTables();
@@ -1385,4 +1598,193 @@ class PermissoesController extends AppController {
 	protected function _ensureDefaultRoles() {
 		$this->RbacRoles->ensureDefaultSystemRoles();
 	}
+
+	public function dashboardAcessos() {
+		$this->set('title', 'Dashboard IAM');
+		$flt = [
+			'days' => (int)$this->request->getQuery('days'),
+			'company_id' => (int)$this->request->getQuery('company_id'),
+			'status' => (string)$this->request->getQuery('status'),
+		];
+		if ($flt['company_id'] < 1) {
+
+			unset($flt['company_id']);
+		}
+
+
+
+		if ($flt['days'] <= 0) {
+
+			$flt['days'] = 30;
+		}
+		if (trim((string)$flt['status']) === '') {
+
+
+
+
+			unset($flt['status']);
+
+
+		}
+		$d = (new \App\Service\RbacAccessDashboardService())->build($flt);
+		$this->set('dash', $d);
+		$this->set('filtros_dashboard', $flt);
+		try {
+			$this->set('lista_empresas', TableRegistry::get('Empresas')->find()
+
+				->select(['id', 'nomefantasia'])
+
+				->order(['nomefantasia' => 'ASC'])
+
+				->limit(900)
+
+				->all());
+
+
+
+
+
+		} catch (\Throwable $e) {
+
+
+			$this->set('lista_empresas', []);
+
+
+		}
+	}
+
+
+
+
+	public function dashboardAcessosCsv() {
+
+
+		$flt = [
+
+
+			'days' => max(1, (int)$this->request->getQuery('days', 30)),
+
+
+
+
+			'company_id' => (int)$this->request->getQuery('company_id'),
+
+
+
+
+			'status' => (string)$this->request->getQuery('status'),
+
+		];
+
+		if ($flt['company_id'] < 1) {
+
+
+			unset($flt['company_id']);
+
+
+		}
+		if (trim((string)$flt['status']) === '') {
+
+
+			unset($flt['status']);
+
+		}
+
+
+
+
+		$svc = new \App\Service\RbacAccessDashboardService();
+
+
+		$tipo = strtolower(trim((string)$this->request->getQuery('tipo', 'resumo')));
+
+
+
+
+
+		switch ($tipo) {
+
+
+			case 'pendentes':
+
+
+
+
+				$body = $svc->csvPendentes($flt);
+
+
+				$fn = 'iam_pendentes.csv';
+
+
+
+
+				break;
+
+
+
+
+
+
+
+			case 'grants':
+
+
+				$body = $svc->csvGrantsAtivos($flt);
+
+
+
+				$fn = 'iam_grants_ativos.csv';
+
+
+
+
+
+				break;
+
+
+
+
+			default:
+
+
+				$fn = 'dashboard_iam_resumo.csv';
+
+
+
+
+				$body = $svc->csvResumo($flt);
+
+
+
+				break;
+
+
+
+
+		}
+
+
+
+
+
+
+
+
+		return $this->response
+
+			->withType('text/csv')
+
+
+			->withDownload($fn)
+
+
+			->withStringBody($body);
+
+
+
+	}
+
+
+
+
 }

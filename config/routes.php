@@ -2034,6 +2034,132 @@ Router::scope("/", function ($routes) {
         )
         ->setMethods(["POST"]);
 
+    // IAM / pedidos RBAC
+    $routes->connect("/users/access-denied", [
+        "controller" => "Users",
+        "action" => "accessDenied",
+    ]);
+    $routes->connect("/permissoes/diagnosticar-acesso", [
+        "controller" => "Permissoes",
+        "action" => "diagnosticarAcesso",
+    ]);
+    $routes->connect("/permissoes/simular-diagnostico-acesso", [
+        "controller" => "Permissoes",
+        "action" => "simularDiagnosticoAcesso",
+    ]);
+    $routes
+        ->connect("/permissoes/solicitar-acesso/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "solicitarAcesso",
+            "pass" => ["supportCode"],
+        ])
+        ->setMethods(["POST"]);
+    $routes->connect("/permissoes/meus-pedidos-acesso", [
+        "controller" => "RbacAccessRequests",
+        "action" => "meusPedidosAcesso",
+    ]);
+    $routes->connect("/permissoes/pedidos-acesso", [
+        "controller" => "RbacAccessRequests",
+        "action" => "pedidosAcesso",
+    ]);
+    $routes->connect("/permissoes/visualizar-pedido-acesso/*", [
+        "controller" => "RbacAccessRequests",
+        "action" => "visualizarPedidoAcesso",
+        "pass" => ["id"],
+    ]);
+    $routes
+        ->connect("/permissoes/aprovar-pedido-acesso/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "aprovarAdminPedidoAcesso",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/permissoes/rejeitar-pedido-acesso/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "rejeitarAdminPedidoAcesso",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+    $routes->connect("/permissoes/pedidos-acesso-manager", [
+        "controller" => "RbacAccessRequests",
+        "action" => "pedidosAcessoManager",
+    ]);
+    $routes->connect("/permissoes/pedidos-acesso-admin", [
+        "controller" => "RbacAccessRequests",
+        "action" => "pedidosAcessoAdmin",
+    ]);
+    $routes
+        ->connect("/permissoes/aprovar-manager-pedido-acesso/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "aprovarManagerPedidoAcesso",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/permissoes/rejeitar-manager-pedido-acesso/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "rejeitarManagerPedidoAcesso",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/permissoes/preview-grant-existing-role/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "previewGrantExistingRole",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["GET"]);
+    $routes
+        ->connect("/permissoes/execute-grant-existing-role/*", [
+            "controller" => "RbacAccessRequests",
+            "action" => "executeGrantExistingRole",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+    $routes->connect("/permissoes/rbac-audit-logs", [
+        "controller" => "RbacAccessRequests",
+        "action" => "auditLogs",
+    ]);
+    $routes->connect("/permissoes/matriz-visual", [
+        "controller" => "Permissoes",
+        "action" => "matrizVisual",
+    ]);
+    $routes
+        ->connect("/permissoes/matriz-visual-csv", [
+            "controller" => "Permissoes",
+            "action" => "matrizVisualCsv",
+        ])
+        ->setMethods(["GET"]);
+    $routes->connect("/permissoes/dashboard-acessos", [
+        "controller" => "Permissoes",
+        "action" => "dashboardAcessos",
+    ]);
+    $routes
+        ->connect("/permissoes/dashboard-acessos-csv", [
+            "controller" => "Permissoes",
+            "action" => "dashboardAcessosCsv",
+        ])
+        ->setMethods(["GET"]);
+    $routes->connect("/permissoes/acessos-ativos-grants", [
+        "controller" => "RbacAccessGrants",
+        "action" => "index",
+    ]);
+    $routes
+        ->connect("/permissoes/acesso-grant-renovar/*", [
+            "controller" => "RbacAccessGrants",
+            "action" => "renovar",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/permissoes/acesso-grant-revogar/*", [
+            "controller" => "RbacAccessGrants",
+            "action" => "revogar",
+            "pass" => ["id"],
+        ])
+        ->setMethods(["POST"]);
+
     $routes->fallbacks(DashedRoute::class);
 });
 

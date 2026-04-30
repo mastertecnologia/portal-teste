@@ -100,7 +100,7 @@ if (!function_exists('LocacaoStatus')) {
 }
 
 /**
- * Detecção mobile em templates (.ctp). Ordensservico/add, edit, ticketordem e
+ * Detecção mobile em templates (.ctp). Ordensservico/add, edit, addFromTicket e
  * Orcamentos/novaordem chamam isMobile(); sem esta função o PHP encerra com
  * "Call to undefined function isMobile()" após renderizar o topo do formulário.
  */

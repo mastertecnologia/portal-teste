@@ -15,10 +15,19 @@ $this->Breadcrumbs->add('Permissões RBAC/ABAC', [], ['class' => 'breadcrumb-ite
 					<?= $this->Html->link('<i class="fa fa-user-tag"></i> Papéis por usuário', ['action' => 'adminUsers'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
 					<?= $this->Html->link('<i class="fa fa-users"></i> Grupos RBAC', ['action' => 'adminGroups'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
 					<?= $this->Html->link('<i class="fa fa-history"></i> Auditoria RBAC', ['action' => 'adminRbacAudit'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fa fa-stethoscope"></i> Diagnóstico de acesso', ['action' => 'diagnosticarAcesso'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fa fa-flask"></i> Simular diagnóstico (teste)', ['action' => 'simularDiagnosticoAcesso'], ['class' => 'admin-panel-btn admin-panel-btn--teal', 'escape' => false]) ?>
+					<?= $this->Html->link(
+						'<i class="fa fa-inbox"></i> Pedidos de acesso pendentes'
+						. ((int)($pendingAccessRequests ?? 0) > 0 ? ' <span class="badge">' . (int)$pendingAccessRequests . '</span>' : ''),
+						['controller' => 'RbacAccessRequests', 'action' => 'pedidosAcesso'],
+						['class' => 'admin-panel-btn', 'escape' => false]
+					) ?>
 					<?= $this->Html->link('<i class="fa fa-filter"></i> Políticas por permissão', ['action' => 'adminPermissionPolicies'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
 					<?= $this->Html->link('<i class="fa fa-i-cursor"></i> Campos por permissão', ['action' => 'adminFieldPermissions'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
 					<?= $this->Html->link('<i class="fa fa-user-tag"></i> Papéis RBAC (níveis)', ['action' => 'adminRoles'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
 					<?= $this->Html->link('<i class="fa fa-table"></i> Matriz papéis × permissões', ['action' => 'adminMatrix'], ['class' => 'admin-panel-btn admin-panel-btn--accent', 'escape' => false]) ?>
+					<?= $this->Html->link('<i class="fa fa-th"></i> Matriz visual', ['action' => 'matrizVisual'], ['class' => 'admin-panel-btn', 'escape' => false]) ?>
 					<?= $this->Form->postLink(
 						'<i class="fa fa-refresh"></i> Sincronizar catálogo',
 						['action' => 'adminSyncRegistry'],

@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller\Component;
 
+use App\Service\AccessDiagnosticService;
 use App\Utility\RbacChecker;
 use App\Utility\RbacPermissionResolver;
 use App\Utility\RbacPolicyConditions;
@@ -78,6 +79,7 @@ class RbacComponent extends Component {
 				$isEquipe = (int)($user['role'] ?? -1) === 0;
 				if (!$equipeOnly || $isEquipe) {
 					$this->_persistRbacAuditIfConfigured($uid, false, $controller, $action, $cfg, [], 'no_rbac_roles');
+					$this->_storeAccessDeniedDiagnostic($uid, $controller, $action, 'no_rbac_roles');
 					$msg = 'Sua conta ainda não tem papéis atribuídos no novo controle de acesso. Contate um administrador.';
 					$this->getController()->Flash->error($msg);
 
@@ -115,6 +117,7 @@ class RbacComponent extends Component {
 		}
 
 		if ($cfg['mode'] === 'enforce') {
+			$this->_storeAccessDeniedDiagnostic($uid, $controller, $action, $denyReason);
 			$this->getController()->Flash->error($msg);
 			// Destino em whitelist: users#accessdenied (config/rbac.php), para não depender de dashboard.view.
 
@@ -122,6 +125,71 @@ class RbacComponent extends Component {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Grava na sessão dados mínimos para a página accessDenied montar diagnóstico (sem alterar decisão RBAC).
+	 *
+	 * @param string $reason no_rbac_roles | no_matching_permission | policy_denied
+	 */
+	protected function _storeAccessDeniedDiagnostic($uid, $controller, $action, $reason) {
+		try {
+			$req = $this->getController()->getRequest();
+			$session = $req->getSession();
+			$prefix = $req->getParam('prefix');
+			$plugin = $req->getParam('plugin');
+			$supportCode = $this->_buildSupportCode();
+			$session->write(AccessDiagnosticService::SESSION_ACCESS_DENIED_CAPTURE, [
+				'user_id' => (int)$uid,
+				'controller' => (string)$controller,
+				'action' => (string)$action,
+				'reason' => substr((string)$reason, 0, 64),
+				'support_code' => $supportCode,
+				'ts' => time(),
+				'prefix' => ($prefix !== null && $prefix !== false) ? (string)$prefix : '',
+				'plugin' => ($plugin !== null && $plugin !== false) ? (string)$plugin : '',
+			]);
+			$this->_logDeniedSupport($supportCode, (int)$uid, (string)$controller, (string)$action, (string)$reason, $req);
+		} catch (\Throwable $e) {
+			// não interferir no fluxo de negação
+		}
+	}
+
+	protected function _buildSupportCode(): string {
+		try {
+			$bytes = random_bytes(4);
+
+			return 'RBAC-403-' . strtoupper(bin2hex($bytes));
+		} catch (\Throwable $e) {
+			try {
+				$fallback = strtoupper(substr(hash('sha256', (string)microtime(true) . '-' . (string)random_int(PHP_INT_MIN, PHP_INT_MAX)), 0, 8));
+			} catch (\Throwable $inner) {
+				$fallback = strtoupper(substr(hash('sha256', uniqid('', true)), 0, 8));
+			}
+
+			return 'RBAC-403-' . $fallback;
+		}
+	}
+
+	protected function _logDeniedSupport(string $supportCode, int $uid, string $controller, string $action, string $reason, $req): void {
+		try {
+			$ip = method_exists($req, 'clientIp') ? (string)$req->clientIp() : '';
+			$ua = (string)$req->getEnv('HTTP_USER_AGENT');
+			$ua = substr($ua, 0, 255);
+			Log::warning(sprintf(
+				'RBAC denied support_code=%s user_id=%d controller=%s action=%s reason=%s ip=%s ua=%s ts=%s',
+				$supportCode,
+				$uid,
+				strtolower($controller),
+				strtolower($action),
+				$reason,
+				$ip,
+				$ua,
+				date('c')
+			));
+		} catch (\Throwable $e) {
+			// não interferir no fluxo de negação
+		}
 	}
 
 	protected function _isWhitelisted($c, $a, $cfg) {
