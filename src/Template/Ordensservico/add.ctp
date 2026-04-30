@@ -32,12 +32,49 @@
 	.jsgrid-cell > select > option { text-align: left; }
 	.os-pesquisa-produto-sem-estoque { background-color: #f8d7da !important; }
 	.os-pesquisa-produto-sem-estoque td { color: #721c24; }
+	.os-add-bloco { border: 1px solid #e4e9ef; border-radius: 6px; padding: 16px 18px; margin-bottom: 18px; background: #fff; }
+	.os-add-bloco-title { font-size: 0.82rem; font-weight: 600; color: #1D9E75; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.04em; }
+	.os-add-bloco-origem { border-color: #cfe8de; }
+	/* Mantém selects no DOM fora da tela para selectpicker + AJAX (modo ticket). */
+	.os-add-shell-body { position: relative; }
+	.os-add-ticket-shadow-fields { position: absolute; left: -9999px; top: 0; width: 360px; min-height: 180px; overflow: hidden; opacity: 0; }
 </style>
+<?php
+	$osTicketMode = !empty($osOrigem) && $osOrigem === 'ticket';
+	$osDataAberturaVal = date('d/m/Y');
+	if (!empty($ordem->dataabertura)) {
+		if ($ordem->dataabertura instanceof \DateTimeInterface) {
+			$osDataAberturaVal = $ordem->dataabertura->format('d/m/Y');
+		} else {
+			$osDataAberturaVal = (string)$ordem->dataabertura;
+		}
+	}
+	$osDataPrevisaoVal = date('d/m/Y', strtotime('+7 days'));
+	if (!empty($ordem->dataprevisao)) {
+		if ($ordem->dataprevisao instanceof \DateTimeInterface) {
+			$osDataPrevisaoVal = $ordem->dataprevisao->format('d/m/Y');
+		} else {
+			$osDataPrevisaoVal = (string)$ordem->dataprevisao;
+		}
+	}
+?>
 <div class="col-md-12 p-0">
     <div class="os-add-shell form-material">
         <div class="os-add-shell-body">
-            <?= $this->Form->create($ordem, ['class' => 'form-material', 'id' => 'form-os-add']) ?>
-			<div class="row">
+			<?php
+				$formOsOpts = ['class' => 'form-material', 'id' => 'form-os-add'];
+				if (!empty($osFormPostAdd)) {
+					$formOsOpts['url'] = ['controller' => 'Ordensservico', 'action' => 'add'];
+				}
+			?>
+            <?= $this->Form->create($ordem, $formOsOpts) ?>
+			<?php if (!empty($osOrigemTicketId)): ?>
+				<?= $this->Form->hidden('idticket', ['value' => (int)$osOrigemTicketId]) ?>
+			<?php endif; ?>
+			<?php if ($osTicketMode && !empty($ticketOrigemPanel) && !empty($osOrigemTicketId)): ?>
+				<?= $this->element('Ordensservico/os_ticket_origem', ['p' => $ticketOrigemPanel, 'ticketId' => $osOrigemTicketId]) ?>
+			<?php endif; ?>
+			<div class="row<?= $osTicketMode ? ' os-add-ticket-shadow-fields' : '' ?>">
 				<div class="col-lg-6 col-sm-12">
 					<label class="control-label m-b-0">Cliente</label>
 					<?= $this->Form->control('idcliente', ['data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true]) ?>
@@ -58,6 +95,11 @@
 					</div>
 				</div>
 			</div>
+			<?php if ($osTicketMode): ?>
+				<p class="small text-muted m-b-15">Cliente e solicitante aparecem no bloco <strong>Origem do ticket</strong> acima; os campos permanecem no formulário para envio ao abrir a OS.</p>
+			<?php endif; ?>
+			<div class="os-add-bloco os-add-bloco-operacional">
+				<p class="os-add-bloco-title">Dados operacionais da OS</p>
 			<div class="row clienteTelemail m-t-10">
 					<div class="col-lg-3 col-sm-6">
 						<label class="control-label m-b-0">Telefone para contato</label>
@@ -76,13 +118,13 @@
 					<div class="col-lg-3 col-sm-12">
 						<div class="form-group ">
 							<label class="control-label m-b-0">Data de Abertura</label>
-							<?= $this->Form->text('dataabertura', ['value' => date('d/m/Y'), 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
+							<?= $this->Form->text('dataabertura', ['value' => $osDataAberturaVal, 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
 						</div>
 					</div>
 					<div class="col-lg-3 col-sm-12">
 						<div class="form-group ">
 							<label class="control-label m-b-0">Data de Previsão</label>
-							<?= $this->Form->text('dataprevisao', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
+							<?= $this->Form->text('dataprevisao', ['value' => $osDataPrevisaoVal, 'placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true]) ?>
 						</div>
 					</div>
 					<div class="col-lg-3 col-sm-12">
@@ -96,7 +138,7 @@
 				</div>
 				<div class="row">
 					<div class="col-lg-6 col-sm-12">
-						<label class="control-label m-b-0">Status</label>
+						<label class="control-label m-b-0">Área / status operacional</label>
 						<?= $this->Form->control('idarea', ['options' => $areas, 'class' => 'form-control os-add-native-select', 'label' => false, 'required' => true]) ?>
 					</div>
 					<div class="col-lg-6 col-sm-12">
@@ -110,8 +152,8 @@
 						<?= $this->Form->textarea('relato', ['maxlength' => 200, 'placeholder' => 'Insira a descrição do problema da ordem', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
 					</div>
 					<div class="col-lg-6 col-md-12">
-						<label class="control-label m-b-0">Observação</label>
-						<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Obs.', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
+						<label class="control-label m-b-0">Observação interna</label>
+						<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Observação interna (não fiscal).', 'class' => 'form-control', 'label' => false, 'required' => false]) ?>
 					</div>
 				</div>
 				<div class="row m-t-10">
@@ -123,9 +165,10 @@
 						<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
 					</div>
 				</div>
+			</div>
 				<hr>
-				<!-- Campos pro mobile  -->
-					<h4 class='text-center os-add-section-title'>Adicionar Produtos/Serviços</h4>
+				<div class="os-add-bloco os-add-bloco-produtos">
+					<h4 class="text-center os-add-section-title m-t-0">Produtos e serviços</h4>
 					<?php if(isMobile()){ ?>
 						<div class="row">
 							<div class="col-2">
@@ -185,6 +228,15 @@
 						</div>
 						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20']) ?>
 					<?php } ?>
+				</div>
+				<div class="os-add-bloco m-t-15">
+					<p class="os-add-bloco-title">Aprovação do cliente</p>
+					<p class="small text-muted m-b-0">Após <strong>Abrir Ordem de Serviço</strong>, use a tela de <strong>edição</strong> da OS para enviar ou acompanhar a aprovação do cliente, conforme o fluxo da sua empresa.</p>
+				</div>
+				<div class="os-add-bloco">
+					<p class="os-add-bloco-title">Dados fiscais, faturamento, liberação financeiro e NF-e / NFS-e</p>
+					<p class="small text-muted m-b-0">Tipo de faturamento, natureza da operação, centro de custo, condição de pagamento, observação fiscal, liberação para o financeiro e emissão de NF-e/NFS-e são definidos na <strong>edição</strong> da ordem (abas de pagamento e fiscal). O ticket não preenche nem substitui esses campos.</p>
+				</div>
 				<?= $this->Form->end() ?>
 				<!-- jsGrid fora do form: Enter/botões não submetem "Abrir OS"; campos abaixo usam form="form-os-add" (HTML5). -->
 				<div id="grid_table"></div>
@@ -318,6 +370,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	var osTiposComEstoqueErp = <?= json_encode($osTiposComEstoqueErp) ?>;
 	var osEstoquesLoteUrl = <?= json_encode(Router::url(['controller' => 'Produtos', 'action' => 'estoquesLote']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 	var pgmAuthIdempresa = <?= json_encode((int)($authIdempresa ?? 0)); ?>;
+	var pgmOsOrigemTicket = <?= json_encode(!empty($osOrigem) && $osOrigem === 'ticket'); ?>;
+	var pgmOsPrefillClienteId = <?= json_encode(!empty($ordem->idcliente) ? (int)$ordem->idcliente : null); ?>;
+	var pgmOsPrefillSolicitanteId = <?= json_encode(isset($idsolicitante) && $idsolicitante !== null && $idsolicitante !== '' ? (int)$idsolicitante : null); ?>;
 	function getEmpresaAtual() {
 		var v = $('#empresaSidebar').val();
 		if (v !== undefined && v !== null && v !== '') {
@@ -330,6 +385,24 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	}
 	$(function () {
 		$('#idEmpresaAtual').val(getEmpresaAtual());
+		if (pgmOsOrigemTicket && pgmOsPrefillClienteId) {
+			var cid = String(pgmOsPrefillClienteId);
+			$('#idcliente').val(cid);
+			if ($('#idcliente').hasClass('selectpicker')) {
+				$('#idcliente').selectpicker('refresh');
+			}
+			loadSolicitantes(pgmOsPrefillClienteId);
+			loadCliTelemail(pgmOsPrefillClienteId);
+			if (pgmOsPrefillSolicitanteId) {
+				window.setTimeout(function () {
+					$('#idsolicitante').val(String(pgmOsPrefillSolicitanteId));
+					if ($('#idsolicitante').hasClass('selectpicker')) {
+						$('#idsolicitante').selectpicker('refresh');
+					}
+					loadSolTelemail(pgmOsPrefillSolicitanteId);
+				}, 600);
+			}
+		}
 	});
 		
 	// Solicitantes e telemail
@@ -424,13 +497,15 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			var idcliente = $(this).val();
 			loadSolicitantes(idcliente);
 			loadCliTelemail(idcliente);
-			$.ajax({
-				url: "<?= Router::url(['controller'=>'Clientes','action'=>'contrato']);?>/" + $(this).val(),
-				success:function(data){
-					if(data == 1) $('#contrato').val(1); 
-					else $('#contrato').val(0); 
-				},
-			});
+			if (!pgmOsOrigemTicket) {
+				$.ajax({
+					url: "<?= Router::url(['controller'=>'Clientes','action'=>'contrato']);?>/" + $(this).val(),
+					success:function(data){
+						if(data == 1) $('#contrato').val(1);
+						else $('#contrato').val(0);
+					},
+				});
+			}
 		});
 
 	// URLsF
@@ -506,6 +581,65 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$row.find('.inputValorunitario > input, .inputValordesconto > input').addClass('mascaramonetaria');
 		};
 
+		function osParseDecimalBr(v, fallback) {
+			var n = parseFloat(String(v || '').replace(/\./g, '').replace(',', '.'));
+			if (isNaN(n)) return (fallback === undefined ? 0 : fallback);
+			return n;
+		}
+
+		function osTipoExigeEstoque(tipo) {
+			var t = parseInt(tipo, 10);
+			return !isNaN(t) && osTiposComEstoqueErp.indexOf(t) !== -1;
+		}
+
+		function osConfirmPromise(message) {
+			var d = $.Deferred();
+			if (typeof bootbox !== 'undefined') {
+				bootbox.confirm(message, function (ok) { d.resolve(!!ok); });
+			} else {
+				d.resolve(window.confirm(String(message)));
+			}
+			return d.promise();
+		}
+
+		function osValidarEstoqueAntesInsert(item) {
+			var d = $.Deferred();
+			if (!item || !osTipoExigeEstoque(item.tipo) || !item.codproduto) {
+				d.resolve(true);
+				return d.promise();
+			}
+			$.ajax({
+				url: "<?= Router::url(['controller'=>'Produtos','action'=>'qtdestoque']) ?>/" + encodeURIComponent(item.codproduto),
+				success: function(resp) {
+					var estoque = osParseDecimalBr(resp, -999);
+					var qtd = osParseDecimalBr(item.quantidade, 0);
+					if (estoque === -999) {
+						d.resolve(true);
+						return;
+					}
+					if (estoque <= 0) {
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('Produto com estoque zerado no ERP. Inclusão permitida com alerta.');
+						} else {
+							alert('Produto com estoque zerado no ERP. Inclusão permitida com alerta.');
+						}
+						d.resolve(true);
+						return;
+					}
+					if (qtd > estoque) {
+						osConfirmPromise('Quantidade (' + qtd + ') maior que o estoque disponível (' + estoque + '). Deseja incluir mesmo assim?')
+							.then(function(ok) { d.resolve(ok); });
+						return;
+					}
+					d.resolve(true);
+				},
+				error: function() {
+					d.resolve(true);
+				}
+			});
+			return d.promise();
+		}
+
 	// jsGrid
 		$('#grid_table').jsGrid({
 			// Options
@@ -573,7 +707,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						delete item.id;
 					}
 					item['idEmpresaAtual'] = getEmpresaAtual();
-					return $.ajax({
+					return osValidarEstoqueAntesInsert(item).then(function(okInsert) {
+						if (!okInsert) {
+							return $.Deferred().reject({ statusText: 'cancelled' }).promise();
+						}
+						return $.ajax({
 					type: "POST",
 					dataType: "json",
 					url: urlAdd + '/null/' + encodeURIComponent(item.codproduto || ''),
@@ -623,9 +761,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						$("#grid_table").jsGrid("loadData");
 					}, 
 					error: function(xhr) {
+						if (xhr && xhr.statusText === 'cancelled') {
+							return;
+						}
 						pgmOsGridAlertHtml(pgmOsGridExplainXhr(xhr, 'Não foi possível adicionar o item. Verifique os dados e tente novamente.'));
 						$("#grid_table").jsGrid("loadData");
 					}
+					});
 					});
 				},
 				updateItem: function(item){
@@ -1160,7 +1302,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						var q = map[cod];
 						if (q === 0) {
 							$tr.addClass('os-pesquisa-produto-sem-estoque').attr('data-estoque-status', 'zero');
-							$tr.find('.btn-os-modal-add').prop('disabled', true);
 						} else if (q === -999 || (typeof q === 'number' && q < 0)) {
 							$tr.attr('data-estoque-status', 'err');
 						} else {
@@ -1189,11 +1330,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			}
 			if (st === 'zero') {
 				if (typeof bootbox !== 'undefined') {
-					bootbox.alert('Este produto está com estoque zerado no ERP e não pode ser incluído na ordem de serviço.');
+					bootbox.alert('Produto com estoque zerado no ERP. Inclusão permitida com alerta.');
 				} else {
-					alert('Este produto está com estoque zerado no ERP e não pode ser incluído na ordem de serviço.');
+					alert('Produto com estoque zerado no ERP. Inclusão permitida com alerta.');
 				}
-				return;
 			}
 			if (st === 'err') {
 				if (typeof bootbox !== 'undefined') {

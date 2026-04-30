@@ -2,10 +2,13 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Service\OrdemServico\TicketOsPrefillService;
+use App\Service\Ticket\TicketHistoryLogger;
 use App\Utility\ErpGridUrl;
 use App\Utility\ErpIntegrationRequest;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Routing\Router;
 use Cake\Mailer\Email;
 use Cake\View\View;
 
@@ -39,6 +42,13 @@ class OrdensservicoController extends AppController {
 		$this->loadModel('Tickets'); 
 		$this->loadModel('Ticketcomentarios');
 		$this->loadModel('Ticketsmovs');
+		$this->loadModel('TicketProducts');
+		$this->loadModel('TechnicalReports');
+		$this->loadModel('TicketHistories');
+		$this->loadModel('Ticketsanexos');
+		$this->loadModel('Ticketshoras');
+		$this->loadModel('TicketAssets');
+		$this->loadModel('Users');
 	}
 
 	/**
@@ -268,7 +278,7 @@ class OrdensservicoController extends AppController {
 
 	/**
 	 * Diagnóstico extra do grid (debug no JSON + detalhes no Bootbox): debug global do Cake
-	 * ou sessão ativada com ?os_grid_diag=1 na página add/edit/ticketordem (apenas funcionário).
+	 * ou sessão ativada com ?os_grid_diag=1 na página add/edit/addFromTicket (apenas funcionário).
 	 */
 	protected function osGridDebugVerbose(): bool {
 		if (Configure::read('debug')) {
@@ -317,9 +327,151 @@ class OrdensservicoController extends AppController {
 		return $this->jsonResponse($out, $status);
 	}
 
+	/**
+	 * Sessão do carrinho (itensordem.idordempk) para nova OS — fluxo manual (só cria se ainda não existir).
+	 */
+	protected function initCarrinhoSessionNovaOsManual(int $idempresa, int $iduser): void {
+		if (!empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])) {
+			return;
+		}
+		$ultimo = $this->Empresas->prxOrdem($idempresa);
+		if ($ultimo == null || $ultimo == 0) {
+			$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . 1 . $iduser;
+			$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
+		} else {
+			$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . $ultimo . $iduser;
+			$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
+		}
+	}
+
+	/**
+	 * Nova sessão de carrinho ao abrir OS a partir de ticket (alinhado ao fluxo antigo ticketordem).
+	 */
+	protected function initCarrinhoSessionNovaOsTicket(int $idempresa, int $iduser): void {
+		$ultimo = $this->Empresas->prxOrdem($idempresa);
+		if ($ultimo == null || $ultimo == 0) {
+			$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . 1 . $iduser;
+		} else {
+			$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . $ultimo . $iduser;
+		}
+		$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
+	}
+
+	/**
+	 * Copia produtos/serviços lançados no ticket para o carrinho da OS (itensordem).
+	 */
+	protected function seedCarrinhoComProdutosDoTicket(int $idticket, string $idordempk, int $idempresa): void {
+		if (!$this->TicketProducts->getSchema()->hasColumn('ticket_id')) {
+			return;
+		}
+		$qTp = $this->TicketProducts->find()
+			->contain(['Produtos'])
+			->where(['ticket_id' => $idticket]);
+		if ($this->TicketProducts->getSchema()->hasColumn('idempresa')) {
+			$qTp->where(['idempresa' => $idempresa]);
+		}
+		$rows = $qTp->toArray();
+		$codigosJa = [];
+		foreach ($rows as $tp) {
+			$prod = $tp->produto ?? null;
+			if ($prod === null) {
+				continue;
+			}
+			$cod = trim((string)($prod->codigo ?? ''));
+			if ($cod === '') {
+				continue;
+			}
+			if (isset($codigosJa[$cod])) {
+				continue;
+			}
+			$codigosJa[$cod] = true;
+			$quantidade = (float)($tp->quantidade ?? 1);
+			if ($quantidade <= 0) {
+				$quantidade = 1.0;
+			}
+			$valorUnit = (float)($tp->preco_unitario ?? 0);
+			if ($valorUnit <= 0) {
+				$valorUnit = (float)($prod->vlunitario ?? 0);
+			}
+			$valordesconto = 0.0;
+			$valortotal = ($quantidade * $valorUnit) - $valordesconto;
+			$item = $this->Itensordem->newEntity([
+				'idordempk' => $idordempk,
+				'idempresa' => $idempresa,
+				'tipo' => (int)($prod->tipo ?? 0),
+				'codproduto' => $cod,
+				'descricao' => (string)($prod->descricao ?? ''),
+				'observacao' => '',
+				'unidade' => (string)($prod->unidade ?? ''),
+				'quantidade' => $quantidade,
+				'serialnumber' => '',
+				'modelo' => '',
+				'productkey' => '',
+				'obsinterna' => '',
+				'valorunitario' => $valorUnit,
+				'valordesconto' => $valordesconto,
+				'valortotal' => $valortotal,
+			]);
+			$item->unsetProperty('id');
+			$this->fixPostgresIdSequence('itensordem');
+			$this->Itensordem->save($item);
+		}
+	}
+
+	protected function logTicketHistoricoOsCriada(int $idticket, int $idordem): void {
+		try {
+			$userId = (int)$this->Auth->user('id');
+			$userNome = trim((string)($this->Auth->user('name') ?? 'Usuário #' . $userId));
+			$agora = date('d/m/Y H:i:s');
+			$linkOs = Router::url(['controller' => 'Ordensservico', 'action' => 'edit', $idordem], true);
+			$msg = sprintf(
+				'Ordem de Serviço #%d criada por %s em %s. Link: %s',
+				$idordem,
+				$userNome,
+				$agora,
+				$linkOs
+			);
+			TicketHistoryLogger::log(
+				$this->TicketHistories,
+				$idticket,
+				$userId,
+				'os_criada',
+				null,
+				(string)$idordem,
+				$msg,
+				'sistema'
+			);
+		} catch (\Throwable $e) {
+		}
+	}
+
+	protected function clearFiscalFieldsFromTicketPrefill($ordem): void {
+		$schema = $this->Ordensservico->getSchema();
+		$fiscalFields = [
+			'pagamento',
+			'condicao_pagamento',
+			'condicaopagamento',
+			'natureza_operacao',
+			'naturezaoperacao',
+			'centro_custo',
+			'centrocusto',
+			'tipo_faturamento',
+			'tipofaturamento',
+			'liberar_financeiro',
+			'liberacao_financeiro',
+			'nfe',
+			'nfse',
+		];
+		foreach ($fiscalFields as $ff) {
+			if ($schema->hasColumn($ff)) {
+				$ordem->set($ff, null);
+			}
+		}
+	}
+
 	public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
-		$gridDiagActions = ['add', 'edit', 'ticketordem'];
+		$gridDiagActions = ['add', 'edit', 'addFromTicket', 'ticketordem'];
 		if (in_array($this->request->getParam('action'), $gridDiagActions, true)) {
 			$this->syncOsGridDiagSession();
 		}
@@ -434,18 +586,7 @@ class OrdensservicoController extends AppController {
 		$idempresa = $this->Auth->user('idempresa');
 		$ordem = $this->Ordensservico->newEntity();
 
-		if(empty($_SESSION['PGM_Ordem_Idcarrinhoadd'])){
-			$ultimo = $this->Empresas->prxOrdem($this->Auth->user('idempresa'));
-			if($ultimo == null || $ultimo == 0) {
-				$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . 1 . $this->Auth->user('id');
-				$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
-				$idcarrinho = $idempresa . 1 . $this->Auth->user('id');
-			} else {
-				$idcarrinho =  $idempresa . $ultimo . $this->Auth->user('id');
-				$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . $ultimo . $this->Auth->user('id');
-				$_SESSION['PGM_Ordem_Idempresaadd'] = $idempresa;
-			}
-		}
+		$this->initCarrinhoSessionNovaOsManual($idempresa, (int)$this->Auth->user('id'));
 
 		if ($this->request->is('post')) {
 			$data = $this->request->getData();
@@ -460,6 +601,29 @@ class OrdensservicoController extends AppController {
 			$ordem->situacao = C_OrdensSituacaoAberta;
 			$ordem->valortotal = $data['valortotalordem'];
 			$ordem->id = $this->Empresas->incrementOrdem($this->Auth->user('idempresa'));
+
+			$idticketPost = (int)($data['idticket'] ?? 0);
+			if ($idticketPost > 0) {
+				$ticketRef = $this->Tickets->find()
+					->where(['id' => $idticketPost, 'idempresa' => $idempresa])
+					->first();
+				if ($ticketRef === null) {
+					$this->Empresas->decrementOrdem($this->Auth->user('idempresa'));
+					$this->Flash->error(__('Ticket inválido ou de outra empresa. A ordem de serviço não foi salva.'));
+					return $this->redirect(['action' => 'add']);
+				}
+				$jaOs = $this->Ordensservico->find()
+					->where(['idticket' => $idticketPost, 'idempresa' => $idempresa])
+					->count();
+				if ($jaOs > 0) {
+					$this->Empresas->decrementOrdem($this->Auth->user('idempresa'));
+					$this->Flash->error(__('Já existe ordem de serviço vinculada a este ticket.'));
+					return $this->redirect(['_name' => 'ticketsGerarOs', 'id' => $idticketPost]);
+				}
+				$ordem->idticket = $idticketPost;
+			} else {
+				$ordem->idticket = null;
+			}
 
             if ($this->Ordensservico->save($ordem)) {
 				$carrinho = $this->Ordemservicositens->newEntity();
@@ -489,6 +653,9 @@ class OrdensservicoController extends AppController {
 				// Movimentação
 				$this->Ordensservico->criarMov($ordem->id, 1, 1, $this->Auth->user('idempresa'), $this->Auth->user('id'));
 				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $ordem->id);
+				if (!empty($idticketPost)) {
+					$this->logTicketHistoricoOsCriada($idticketPost, (int)$ordem->id);
+				}
                 $this->Flash->success(__('A ordem de serviço foi cadastrada com sucesso!'));
                 return $this->redirect(['action' => 'edit', $ordem->id]);
 			}
@@ -498,59 +665,26 @@ class OrdensservicoController extends AppController {
             $this->Flash->error(__('Não foi possível cadastrar a ordem de serviço.'));
         }
 
-/* 		$clientes = $this->Clientes->find('all', ['keyField' => 'id', 'valueField' => 'razaosocial'])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
-		$clientesOpt = [];
-		foreach($clientes as $reg){
-			if($reg->tipo == C_ClientesTipoJuridica) $clientesOpt[$reg->id] = $reg->razaosocial;
-			else $clientesOpt[$reg->id] = $reg->nome;
+		$this->_assignOsAddViewVars($ordem, $idempresa);
+		$idticketReq = (int)($this->request->getData('idticket') ?? 0);
+		if ($this->request->is('post') && $idticketReq > 0) {
+			$ticketRef = $this->Tickets->findById($idticketReq)
+				->contain([
+					'Clientes' => ['fields' => ['id', 'contrato', 'tipo', 'cpf', 'cnpj', 'nome', 'razaosocial']],
+				])
+				->first();
+			if ($ticketRef !== null && (int)$ticketRef->idempresa === (int)$idempresa) {
+				$this->set('osOrigem', 'ticket');
+				$this->set('osOrigemTicketId', $idticketReq);
+				$this->set('osFormPostAdd', true);
+				$this->set('idsolicitante', $this->request->getData('idsolicitante'));
+				$this->set('ticketOrigemPanel', $this->buildTicketOrigemPanelView($ticketRef, $idempresa));
+			} else {
+				$this->_setOsAddViewContextManual();
+			}
+		} else {
+			$this->_setOsAddViewContextManual();
 		}
-		asort($clientesOpt); */
-
-		$clientes = $this->Clientes->find('all')
-			->select(['Clientes.id', 'Clientes.tipo', 'Clientes.razaosocial', 'Clientes.nome', 'Clientes.idcidade'])
-			->where(['Clientes.idempresa' => $idempresa, 'Clientes.inativo' => 0])
-			->contain(['Cidades' => ['fields' => ['Cidades.id', 'Cidades.nome']]])
-			->order(['Clientes.razaosocial'])
-			->toArray();
-
-		$clientesOpt = [];
-		foreach($clientes as $reg){
-			$nomeCliente = ($reg->tipo == C_ClientesTipoJuridica) ? $reg->razaosocial : $reg->nome;
-			$nomeCidade = (!empty($reg->cidade) && !empty($reg->cidade->nome)) ? $reg->cidade->nome : 'Sem Cidade';
-			$clientesOpt[$reg->id] = $nomeCliente . ' (' . $nomeCidade . ')';
-		}
-		asort($clientesOpt);
-
-
-		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
-			->where(['idempresa' => $idempresa])
-			->order(['descricao'])
-			->toArray();
-		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
-			->where(['idempresa' => $idempresa])
-			->order(['descricao'])
-			->toArray();
-
-		$produtosOpt = [];
-		foreach($this->Produtos->find('all')
-			->select(['codigo', 'descricao'])
-			->where(['idempresa' => $idempresa, 'ativo' => 1])
-			->order(['descricao'])
-			->toArray() as $reg)
-			$produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao).' ('.trim($reg->codigo).')'];
-		
-		$this->set('produtosMobile', $produtosOpt);
-		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
-		$this->set('tiposMobile', C_ProdutosTipo);
-		$this->set('tiposOpt', json_encode(C_ProdutosTipo, JSON_PRETTY_PRINT));
-		$this->set('problemas', $problemas);
-		$this->set('areas', $areas);
-		$this->set('clientes', $clientesOpt);
-		$this->set('ordem', $ordem);
-		$this->set('title', 'Nova ordem de serviço');
-		$this->set('bodyPageClass', 'os-add-page');
-		$this->set('authIdempresa', (int)$idempresa);
-		$this->set('osGridAjaxVerbose', $this->osGridDebugVerbose());
 	}
 
 	public function edit($id = null) {
@@ -1601,92 +1735,266 @@ class OrdensservicoController extends AppController {
 		$this->set('title', 'Imprimir ordens de serviços');
 	}
 
-	public function ticketordem($idticket) {
+	/**
+	 * Dados somente leitura do bloco “Origem do ticket” em add.ctp (GET gerar-os ou POST add com idticket).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $ticket Ticket já carregado com Clientes (campos mínimos).
+	 */
+	protected function buildTicketOrigemPanelView($ticket, int $idempresa): array {
+		$idticket = (int)$ticket->id;
+
+		$minutos = 0;
+		try {
+			$minutos = (int)$this->Ticketshoras->minutosTicket($idticket, '01/01/2000', '31/12/2099');
+		} catch (\Throwable $e) {
+		}
+
+		$anexosUi = [];
+		try {
+			$anRows = $this->Ticketsanexos->find('all')->where(['idticket' => $idticket])->order(['id' => 'ASC'])->limit(30)->toArray();
+			foreach ($anRows as $an) {
+				$aid = (int)($an->id ?? 0);
+				if ($aid <= 0) {
+					continue;
+				}
+				$nome = (string)($an->arquivo ?? 'Anexo');
+				$anexosUi[] = [
+					'id' => $aid,
+					'nome' => $nome,
+					'url' => Router::url(['controller' => 'Tickets', 'action' => 'downloadAnexo', $aid]),
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		$docCliente = '';
+		$clienteNome = '';
+		if (!empty($ticket->cliente)) {
+			$docCliente = (string)(($ticket->cliente->tipo == C_ClientesTipoJuridica)
+				? ($ticket->cliente->cnpj ?? '')
+				: ($ticket->cliente->cpf ?? ''));
+			$clienteNome = TicketOsPrefillService::clienteDisplayName($ticket->cliente);
+		}
+
+		$solicitanteLabel = '';
+		$sid = (int)($ticket->idsolicitante ?? 0);
+		if ($sid > 0) {
+			try {
+				$solU = $this->Users->find()->select(['name'])->where(['id' => $sid])->first();
+				if ($solU !== null) {
+					$solicitanteLabel = trim((string)($solU->name ?? ''));
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		if ($solicitanteLabel === '' && !empty($ticket->nomesolicitante)) {
+			$solicitanteLabel = trim((string)$ticket->nomesolicitante);
+		}
+		if ($solicitanteLabel === '') {
+			$solicitanteLabel = '—';
+		}
+
+		$tecUserId = 0;
+		$tSchema = $this->Tickets->getSchema();
+		if ($tSchema->hasColumn('idtecnico_responsavel')) {
+			$tecUserId = (int)($ticket->idtecnico_responsavel ?? 0);
+		} elseif ($tSchema->hasColumn('owner_id')) {
+			$tecUserId = (int)($ticket->owner_id ?? 0);
+		}
+		$tecnicoTicketNome = '';
+		if ($tecUserId > 0) {
+			try {
+				$tu = $this->Users->find()->select(['name'])->where(['id' => $tecUserId])->first();
+				if ($tu !== null) {
+					$tecnicoTicketNome = trim((string)($tu->name ?? ''));
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		if ($tecnicoTicketNome === '') {
+			$tecnicoTicketNome = '—';
+		}
+
+		$ativosTicketLabels = [];
+		try {
+			$qTa = $this->TicketAssets->find()->contain(['Assets'])->where(['ticket_id' => $idticket]);
+			if ($this->TicketAssets->getSchema()->hasColumn('idempresa')) {
+				$qTa->where(['idempresa' => $idempresa]);
+			}
+			$ativosTicketLabels = TicketOsPrefillService::labelsAtivosTicket($qTa->toArray());
+		} catch (\Throwable $e) {
+		}
+
+		$ticketAbertura = '';
+		try {
+			if (!empty($ticket->created) && is_object($ticket->created) && method_exists($ticket->created, 'format')) {
+				$ticketAbertura = $ticket->created->format('d/m/Y H:i');
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return [
+			'id' => $idticket,
+			'situacaoLabel' => TicketOsPrefillService::situacaoTicketLabel((int)($ticket->situacao ?? 0)),
+			'abertura' => $ticketAbertura,
+			'tempoRegistrado' => TicketOsPrefillService::formatMinutosRegistrados($minutos),
+			'voltarUrl' => Router::url(['controller' => 'Servicedesk', 'action' => 'edit', $idticket, '?' => ['sd' => '1']]),
+			'documentoCliente' => $docCliente,
+			'clienteNome' => $clienteNome,
+			'solicitanteLabel' => $solicitanteLabel,
+			'tecnicoTicketNome' => $tecnicoTicketNome,
+			'emailTicket' => trim((string)($ticket->email ?? '')),
+			'ativos' => $ativosTicketLabels,
+			'anexos' => $anexosUi,
+		];
+	}
+
+	protected function _setOsAddViewContextManual(): void {
+		$this->set('osOrigem', 'manual');
+		$this->set('osFormPostAdd', false);
+		$this->set('osOrigemTicketId', null);
+		$this->set('ticketOrigemPanel', null);
+		$this->set('idsolicitante', null);
+	}
+
+	/**
+	 * Abre o mesmo formulário de cadastro de OS (add.ctp) pré-preenchido a partir do ticket.
+	 * URL canónica: GET /tickets/:id/gerar-os (rota em config/routes.php).
+	 */
+	public function addFromTicket($id = null) {
 		if ($this->Auth->user('role') == C_RoleCliente) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
 
-		if ($idticket === null || $idticket === '' || !ctype_digit((string)$idticket)) {
+		if ($id === null || $id === '' || !ctype_digit((string)$id)) {
 			$this->Flash->error(
-				'URL inválida: use o número do ticket (ex.: …/ordensservico/ticketordem/456), não texto como "IDTICKET". Abra "Gerar Ordem de Serviço" a partir do ticket no sistema.'
+				'URL inválida: use o número do ticket (ex.: …/tickets/456/gerar-os).'
 			);
-
-			return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
+			return $this->redirect(['controller' => 'Servicedesk', 'action' => 'index']);
 		}
-		$idticket = (int)$idticket;
 
-		$idempresa = $this->Auth->user('idempresa');
-		$ticket = $this->Tickets->findById($idticket)->contain(['Clientes' => ['fields' => ['contrato']], 'Ticketcomentarios', 'Ticketcomentarios.Users'])->first();
+		$idticket = (int)$id;
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$iduser = (int)$this->Auth->user('id');
 
-		if ($ticket === null) {
-			$this->Flash->error('Ticket não encontrado.');
-			return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
+		$ticket = $this->Tickets->findById($idticket)
+			->contain([
+				'Clientes' => ['fields' => ['id', 'contrato', 'tipo', 'cpf', 'cnpj', 'nome', 'razaosocial']],
+			])
+			->first();
+
+		if ($ticket === null || (int)$ticket->idempresa !== $idempresa) {
+			$this->Flash->error(__('Ticket não encontrado.'));
+			return $this->redirect(['controller' => 'Servicedesk', 'action' => 'index']);
 		}
-		
+
+		$osExistente = $this->Ordensservico->find()
+			->where(['idticket' => $idticket, 'idempresa' => $idempresa])
+			->first();
+		if ($osExistente !== null) {
+			$this->Flash->warning(__('Este ticket já possui ordem de serviço vinculada. Redirecionando para a OS existente.'));
+			return $this->redirect(['action' => 'edit', $osExistente->id]);
+		}
+
+		$this->initCarrinhoSessionNovaOsTicket($idempresa, $iduser);
+		$pkCarrinho = (string)($_SESSION['PGM_Ordem_Idcarrinhoadd'] ?? '');
+		if ($pkCarrinho === '') {
+			$this->Flash->error(__('Não foi possível iniciar o carrinho da OS. Tente novamente.'));
+			return $this->redirect(['controller' => 'Servicedesk', 'action' => 'index']);
+		}
+
+		$this->seedCarrinhoComProdutosDoTicket($idticket, $pkCarrinho, $idempresa);
+
 		$ordem = $this->Ordensservico->newEntity();
 		$ordem->idcliente = $ticket->idcliente;
 		$ordem->idsolicitante = $ticket->idsolicitante;
-		$ordem->relato = $ticket->solicitacao;
+		$ordem->relato = TicketOsPrefillService::trunc((string)($ticket->solicitacao ?? ''), 200);
+		$ordem->prioridade = TicketOsPrefillService::mapPrioridadeTicketParaOs($ticket->prioridade ?? null);
 		$ordem->dataabertura = date('d/m/Y');
-		$ordem->contrato = $ticket->cliente->contrato;
-		$ordem->idarea = $this->Areas->find('all')->where(["LOWER(descricao) ilike '%aguardando técnico%'"])->first()->id;
-		$ordem->idproblema = $this->Problemas->find('all')->where([	'LOWER(descricao)' => 'corretiva'])->first()->id;
-		$idsolicitante = $ordem->idsolicitante;
-		foreach($ticket->ticketcomentarios as $reg) $ordem->observacao .= $reg->user->name . ': ' . $reg->comentario . '; ';
-
-		$ultimo = $this->Empresas->prxOrdem($this->Auth->user('idempresa'));
-		if($ultimo == null || $ultimo == 0) {
-			$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . 1 . $this->Auth->user('id');
-			$idcarrinho = $idempresa . 1 . $this->Auth->user('id');
-		} else {
-			$idcarrinho =  $idempresa . $ultimo . $this->Auth->user('id');
-			$_SESSION['PGM_Ordem_Idcarrinhoadd'] = $idempresa . $ultimo . $this->Auth->user('id');
+		$ordem->dataprevisao = date('d/m/Y', strtotime('+7 days'));
+		if (!empty($ticket->email)) {
+			$ordem->email = (string)$ticket->email;
 		}
 
-		if ($this->request->is('post')) {
-			$data = $this->request->getData();
-            $ordem = $this->Ordensservico->patchEntity($ordem, $data);
-			$ordem->idempresa = $idempresa;
-			$ordem->iduser = $this->Auth->user('id');
-			$ordem->situacao = C_OrdensSituacaoEmExecucao;
-			$ordem->valortotal = $data['valortotalordem'];
-			$ordem->id = $this->Empresas->incrementOrdem($this->Auth->user('idempresa'));
-			$ordem->idticket = $idticket;
+		$rep = null;
+		try {
+			$rep = $this->TechnicalReports->find()
+				->where(['ticket_id' => $idticket, 'idempresa' => $idempresa])
+				->order(['TechnicalReports.id' => 'DESC'])
+				->first();
+		} catch (\Throwable $e) {
+		}
+		$ordem->observacao = TicketOsPrefillService::buildOperationalObservacao(
+			isset($ticket->descricao_atendimento) ? (string)$ticket->descricao_atendimento : null,
+			$rep
+		);
+		$ordem->atendimento = 0;
+		$this->clearFiscalFieldsFromTicketPrefill($ordem);
 
-            if ($this->Ordensservico->save($ordem)) {
-				// Itens
-				$carrinho = $this->Ordemservicositens->newEntity();
-				$carrinho->iditens = $_SESSION['PGM_Ordem_Idcarrinhoadd'];
-				$carrinho->idordem = $ordem->id;
-				$carrinho->idempresa = $idempresa;
-				$this->fixPostgresIdSequence('ordemservicositens');
-				$this->Ordemservicositens->save($carrinho);
-				unset($_SESSION['PGM_Ordem_Idcarrinhoadd']);
-				// Movimentação
-				$this->Ordensservico->criarMov($ordem->id, 1, 1, $this->Auth->user('idempresa'), $this->Auth->user('id'));
-				$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $ordem->id);
-                $this->Flash->success(__('A ordem de serviço foi cadastrada com sucesso!'));
-                return $this->redirect(['action' => 'edit', $ordem->id]);
-			}
-			// Decrementa o último id em caso de erro
-			$this->Empresas->decrementOrdem($this->Auth->user('idempresa'));
-            $this->Flash->error(__('Não foi possível cadastrar a ordem de serviço.'));
-        }
+		$this->set('osOrigem', 'ticket');
+		$this->set('osOrigemTicketId', $idticket);
+		$this->set('osFormPostAdd', true);
+		$this->set('idsolicitante', $ordem->idsolicitante);
+		$this->set('ticketOrigemPanel', $this->buildTicketOrigemPanelView($ticket, $idempresa));
 
-		$clientes = $this->Clientes->find('all', ['keyField' => 'id', 'valueField' => 'razaosocial'])->where(['idempresa' => $idempresa, 'inativo' => 0])->order(['razaosocial'])->toArray();
+		// Reaproveita o mesmo carregamento de listas da OS manual (add).
+		$this->_assignOsAddViewVars($ordem, $idempresa);
+		$this->render('add');
+	}
+
+	/**
+	 * @deprecated Use addFromTicket ou a rota /tickets/:id/gerar-os. Mantido para links antigos.
+	 */
+	public function ticketordem($idticket) {
+		if ($this->Auth->user('role') == C_RoleCliente) {
+			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
+			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
+		}
+		if ($idticket === null || $idticket === '' || !ctype_digit((string)$idticket)) {
+			return $this->redirect(['controller' => 'Servicedesk', 'action' => 'index']);
+		}
+
+		return $this->redirect(['_name' => 'ticketsGerarOs', 'id' => (int)$idticket]);
+	}
+
+	/**
+	 * Monta variáveis de view compartilhadas entre add() manual e addFromTicket().
+	 */
+	protected function _assignOsAddViewVars($ordem, $idempresa): void {
+		$clientes = $this->Clientes->find('all')
+			->select(['Clientes.id', 'Clientes.tipo', 'Clientes.razaosocial', 'Clientes.nome', 'Clientes.idcidade'])
+			->where(['Clientes.idempresa' => $idempresa, 'Clientes.inativo' => 0])
+			->contain(['Cidades' => ['fields' => ['Cidades.id', 'Cidades.nome']]])
+			->order(['Clientes.razaosocial'])
+			->toArray();
+
 		$clientesOpt = [];
-		foreach($clientes as $reg) {
-			if($reg->tipo == C_ClientesTipoJuridica) $clientesOpt[$reg->id] = $reg->razaosocial;
-			else $clientesOpt[$reg->id] = $reg->nome;
+		foreach ($clientes as $reg) {
+			$nomeCliente = ($reg->tipo == C_ClientesTipoJuridica) ? $reg->razaosocial : $reg->nome;
+			$nomeCidade = (!empty($reg->cidade) && !empty($reg->cidade->nome)) ? $reg->cidade->nome : 'Sem Cidade';
+			$clientesOpt[$reg->id] = $nomeCliente . ' (' . $nomeCidade . ')';
 		}
 		asort($clientesOpt);
 
-		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->order(['descricao'])->toArray();
-		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->order(['descricao'])->toArray();
-		$produtosOpt1 = $this->Produtos->find('all')->where(['idempresa' => $idempresa, 'ativo' => 1])->order(['descricao'])->toArray();
-		foreach($produtosOpt1 as $reg) $produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao).' ('.trim($reg->codigo).')'];
-		
+		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray();
+		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])
+			->where(['idempresa' => $idempresa])
+			->order(['descricao'])
+			->toArray();
+
+		$produtosOpt = [];
+		foreach ($this->Produtos->find('all')
+			->select(['codigo', 'descricao'])
+			->where(['idempresa' => $idempresa, 'ativo' => 1])
+			->order(['descricao'])
+			->toArray() as $reg) {
+			$produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao) . ' (' . trim($reg->codigo) . ')'];
+		}
+
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
 		$this->set('tiposMobile', C_ProdutosTipo);
@@ -1694,10 +2002,9 @@ class OrdensservicoController extends AppController {
 		$this->set('problemas', $problemas);
 		$this->set('areas', $areas);
 		$this->set('clientes', $clientesOpt);
-		$this->set('idsolicitante', $idsolicitante);
 		$this->set('ordem', $ordem);
-		$this->set('idticket', $idticket);
-		$this->set('title', 'Cadastro de ordem de serviços');
+		$this->set('title', 'Nova ordem de serviço');
+		$this->set('bodyPageClass', 'os-add-page');
 		$this->set('authIdempresa', (int)$idempresa);
 		$this->set('osGridAjaxVerbose', $this->osGridDebugVerbose());
 	}

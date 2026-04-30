@@ -81,6 +81,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					if (!empty($ordem->idticket)) { ?>
 						<div class="row">
 							<div class="col-12">
+								<p class="small text-muted m-b-5">
+									Esta OS foi gerada a partir do Ticket #<?= h($ordem->idticket) ?>.
+									<?= $this->Html->link('Voltar ao ticket', ["controller" => "tickets", "action" => "edit", $ordem->idticket], ['target' => '_blank']) ?>
+								</p>
 								<legend> <?= $this->Html->link("Ticket nº: $ordem->idticket ", ["controller" => "tickets", "action" => "edit", $ordem->idticket], ['class' => 'link', 'target' => '_blank']); ?> </legend>
 							</div>
 						</div>

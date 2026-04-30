@@ -287,6 +287,13 @@ Router::scope("/", function ($routes) {
     $routes->redirect("/tickets/index", "/servicedesk", ["status" => 301]);
     $routes->redirect("/tickets/indexcliente", "/servicedesk", ["status" => 301]);
     $routes->redirect("/tickets/operacional", "/servicedesk/operacional", ["status" => 301]);
+    $routes
+        ->connect(
+            "/tickets/:id/gerar-os",
+            ["controller" => "Ordensservico", "action" => "addFromTicket"],
+            ["pass" => ["id"], "id" => "\d+", "_name" => "ticketsGerarOs"],
+        )
+        ->setMethods(["GET"]);
     $routes->connect("/tickets/historico", [
         "controller" => "Tickets",
         "action" => "historico",

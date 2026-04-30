@@ -8,6 +8,8 @@ use Cake\Validation\Validator;
 use DateTime;
 
 class OrdensservicoTable extends Table {
+	// TODO: separar status operacional / aprovação / financeiro (hoje tudo em `situacao` + edição).
+
 	public function initialize(array $config) {
 		$this->belongsTo('Clientes')->setForeignKey('idcliente')->setDependent(false);
 		$this->belongsTo('Users')->setForeignKey('iduser')->setDependent(false);

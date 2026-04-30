@@ -1340,7 +1340,7 @@ return [
         "name" => "Ordens de serviço — criar",
         "module" => "Menu principal",
         "controller" => "Ordensservico",
-        "action" => "add",
+        "action" => "add,addFromTicket",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" => "Abrir nova OS.",
