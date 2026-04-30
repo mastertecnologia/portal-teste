@@ -8,6 +8,19 @@ function categoriaAssuntoExibicao(raw) {
   return t;
 }
 
+function assuntoOptionValue(opt) {
+  if (!opt || typeof opt !== 'object') return '';
+  if (opt.value !== undefined && opt.value !== null && String(opt.value) !== '') return String(opt.value);
+  if (opt.id !== undefined && opt.id !== null && String(opt.id) !== '') return String(opt.id);
+  return '';
+}
+
+function assuntoOptionLabel(opt) {
+  if (!opt || typeof opt !== 'object') return '';
+  const raw = opt.nome ?? opt.label ?? opt.title ?? '';
+  return categoriaAssuntoExibicao(raw);
+}
+
 function row(label, value) {
   if (value === null || value === undefined || String(value).trim() === '') {
     return null;
@@ -189,10 +202,25 @@ export function TicketResumoPanel({ ticket }) {
 }
 
 /** Bloco “Informações do ticket” (coluna direita). */
-export default function TicketInfoPanel({ ticket, embedded = false, servicedesk = false }) {
+export default function TicketInfoPanel({
+  ticket,
+  embedded = false,
+  servicedesk = false,
+  canEditAssunto = false,
+  assuntoOptions = [],
+  assuntoBusy = false,
+  onChangeAssunto = null,
+}) {
   if (!ticket) return null;
   const aberto = ticket.abertoEm || ticket.atualizado;
   const atual = ticket.atualizadoEm || ticket.atualizado;
+  const assuntoLinha = categoriaAssuntoExibicao(ticket.assunto_nome ?? 'Não informado');
+  const assuntoValue =
+    ticket.assunto_id != null && ticket.assunto_id !== ''
+      ? String(ticket.assunto_id)
+      : ticket.assuntoCode != null && ticket.assuntoCode !== ''
+        ? String(ticket.assuntoCode)
+        : '';
 
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] shadow-[var(--pgm-shadow-md)]">
@@ -204,7 +232,31 @@ export default function TicketInfoPanel({ ticket, embedded = false, servicedesk 
         {row('Documento', ticket.cnpj)}
         {row('E-mail', ticket.email)}
         {rowAlways('Responsável solicitante', ticket.responsavel)}
-        {rowAlways('Categoria / assunto', categoriaAssuntoExibicao(ticket.assunto_nome ?? 'Não informado'))}
+        <div className="flex flex-col gap-1 border-b border-[var(--pgm-border-subtle)] py-2 last:border-0">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--pgm-text-muted)]">Categoria / assunto</span>
+          <span className="text-[0.8rem] text-[var(--pgm-text)]">{assuntoLinha}</span>
+          {canEditAssunto && Array.isArray(assuntoOptions) && assuntoOptions.length > 0 ? (
+            <select
+              className="mt-0.5 block w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-2 py-1 text-[0.78rem] text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              value={assuntoValue}
+              onChange={(e) => onChangeAssunto?.(e.target.value)}
+              disabled={assuntoBusy}
+              aria-label={`Editar categoria/assunto ticket ${ticket.id}`}
+            >
+              <option value="">Não informado</option>
+              {assuntoOptions.map((opt, idx) => {
+                const v = assuntoOptionValue(opt);
+                const lbl = assuntoOptionLabel(opt);
+                if (!v || !lbl || lbl === '0') return null;
+                return (
+                  <option key={`${v}-${idx}`} value={v}>
+                    {lbl}
+                  </option>
+                );
+              })}
+            </select>
+          ) : null}
+        </div>
         {rowPrioridade('Prioridade', ticket.prioridade)}
         {rowEstado('Estado', ticket.status, { embedded, servicedesk })}
         {row('Aberto em', aberto)}

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchTicketDetail,
   fetchTicketTimeline,
+  fetchTicketSubjectOptions,
+  patchTicketSubject,
   postComentario,
   saveTicketSolicitacao,
   saveTicketDescricaoAtendimento,
@@ -103,6 +105,8 @@ export default function TechTicketEdit({ boot }) {
   const [relatorioAtendimento, setRelatorioAtendimento] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
+  const [assuntoOptions, setAssuntoOptions] = useState([]);
+  const [salvandoAssunto, setSalvandoAssunto] = useState(false);
   const [erro, setErro] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
   const [mainSdTab, setMainSdTab] = useState(() =>
@@ -202,6 +206,20 @@ export default function TechTicketEdit({ boot }) {
       c = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const role = Number(boot?.role ?? 0);
+      if (role !== 0) return;
+      const r = await fetchTicketSubjectOptions();
+      if (cancel || !r.ok) return;
+      setAssuntoOptions(r.options || []);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [boot?.role]);
 
   const { socketRef, socketOn } = useTicketCommentsSocket(id, setComentarios);
   useTicketCommentsPoll(id, setComentarios, setTicket, TICKET_COMMENTS_POLL_MS, socketOn);
@@ -329,6 +347,28 @@ export default function TechTicketEdit({ boot }) {
       setErro(res.error || 'Falha ao salvar o relatório. Confira se o banco tem a coluna descricao_atendimento (SQL em config/schema).');
     }
   }
+
+  const handleAlterarAssunto = useCallback(async (nextValue) => {
+    if (!ticket) return;
+    const next = String(nextValue ?? '');
+    const current = ticket.assunto_id != null ? String(ticket.assunto_id) : '';
+    if (next === current) return;
+    setSalvandoAssunto(true);
+    try {
+      const r = await patchTicketSubject(ticket.id, { assunto_id: next });
+      if (!r.ok) {
+        setErro(r.message || r.error || 'Erro ao atualizar categoria');
+        return;
+      }
+      if (r.ticket) {
+        setTicket((prev) => ({ ...(prev || {}), ...r.ticket }));
+      } else {
+        await refetchTicketHorasTecnicas();
+      }
+    } finally {
+      setSalvandoAssunto(false);
+    }
+  }, [ticket, refetchTicketHorasTecnicas]);
 
   if (erro && !ticket) {
     return (
@@ -738,6 +778,10 @@ export default function TechTicketEdit({ boot }) {
           ticket={ticket}
           embedded={embedded}
           servicedesk={Boolean(boot?.servicedesk)}
+          canEditAssunto={Number(boot?.role ?? 0) === 0}
+          assuntoOptions={assuntoOptions}
+          assuntoBusy={salvandoAssunto}
+          onChangeAssunto={handleAlterarAssunto}
         />
       </div>
     </div>
