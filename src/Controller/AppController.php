@@ -121,6 +121,7 @@ class AppController extends Controller
                 "apiAnexoUpload",
                 "apiAnexoDelete",
                 "apiTecnicosLista",
+                "apiTicketSubjectOptions",
                 "apiTransferirTicket",
                 "apiPatchAssignment",
                 "apiPatchTicketStatus",

@@ -391,6 +391,25 @@ export async function patchTicketSubject(ticketId, body) {
   return { ok: true, ticket: json.ticket || null };
 }
 
+export async function fetchTicketSubjectOptions() {
+  if (USE_MOCK) {
+    return {
+      ok: true,
+      options: [
+        { id: 1, value: 1, nome: 'Dúvida', label: 'Dúvida' },
+        { id: 2, value: 2, nome: 'Incidente', label: 'Incidente' },
+      ],
+    };
+  }
+  const boot = getBoot();
+  const url = boot?.paths?.apiTicketSubjectOptions;
+  if (!url) return { ok: false, error: 'no_api', options: [] };
+  const r = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+  const json = await readBody(r);
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, options: [] };
+  return { ok: true, options: Array.isArray(json.options) ? json.options : [] };
+}
+
 export async function postTransferirTicket(ticketId, payload) {
   if (USE_MOCK) {
     return { ok: true };

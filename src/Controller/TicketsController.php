@@ -86,6 +86,7 @@ class TicketsController extends AppController {
 		}
 		if (in_array($action, [
 			'apiTecnicosLista',
+			'apiTicketSubjectOptions',
 			'apiTransferirTicket',
 			'apiStartTicket',
 			'startTicket',
@@ -3347,6 +3348,7 @@ class TicketsController extends AppController {
 				'apiAnexoUpload' => $w . 'tickets/api-anexo-upload/',
 				'apiAnexoDelete' => $w . 'tickets/api-anexo-delete/',
 				'apiTecnicosLista' => $w . 'tickets/api-tecnicos-lista',
+				'apiTicketSubjectOptions' => $w . 'tickets/api-subject-options',
 				'apiTransferirTicket' => $w . 'tickets/api-transferir-ticket/',
 				'apiPatchTicketAssignment' => $w . 'tickets/',
 				'apiPatchTicketStatus' => $w . 'tickets/',
@@ -5126,6 +5128,19 @@ class TicketsController extends AppController {
 				'workflow' => ['enabled' => false, 'filas' => [], 'queuesRelacional' => false, 'queues' => []],
 			], 500);
 		}
+	}
+
+	public function apiTicketSubjectOptions() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'options' => $this->_ticketAssuntoApiOptionsList(),
+		]);
 	}
 
 	public function apiDashboardOperacional() {

@@ -353,6 +353,12 @@ Router::scope("/", function ($routes) {
         ->setMethods(["PATCH", "POST"]);
     $routes
         ->connect(
+            "/tickets/api-subject-options",
+            ["controller" => "Tickets", "action" => "apiTicketSubjectOptions"],
+        )
+        ->setMethods(["GET"]);
+    $routes
+        ->connect(
             "/tickets/:id/subject",
             ["controller" => "Tickets", "action" => "apiPatchTicketSubject"],
             ["pass" => ["id"], "id" => "\d+"],

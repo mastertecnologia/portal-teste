@@ -17,6 +17,7 @@ import {
   postStartTicket,
   postAlterarSituacao,
   patchTicketSubject,
+  fetchTicketSubjectOptions,
   getBoot,
   USE_MOCK,
 } from '../lib/api';
@@ -519,6 +520,7 @@ export default function TechDashboard({ boot }) {
   const embedded = Boolean(boot);
   const [groups, setGroups] = useState(null);
   const [workflow, setWorkflow] = useState(null);
+  const [assuntoOptionsState, setAssuntoOptionsState] = useState([]);
   const [q, setQ] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('ativos');
   const [filaSuporte, setFilaSuporte] = useState('');
@@ -625,7 +627,7 @@ export default function TechDashboard({ boot }) {
   }, [embedded, boot?.servicedesk, reload]);
 
   const wfEnabled = Boolean(workflow?.enabled);
-  const assuntoOptions = Array.isArray(workflow?.assuntoOptions) ? workflow.assuntoOptions : [];
+  const assuntoOptions = Array.isArray(assuntoOptionsState) ? assuntoOptionsState : [];
   const filasMeta = workflow?.filas || [];
   const queuesRelacional = Boolean(workflow?.queuesRelacional);
   const effectiveBoot = boot || getBoot();
@@ -636,6 +638,27 @@ export default function TechDashboard({ boot }) {
    */
   const inlineAssignment = effectiveBoot?.inlineAssignment === true;
   const situacaoExecCode = effectiveBoot?.ticketStatus?.emandamento;
+
+  useEffect(() => {
+    const inline = Array.isArray(workflow?.assuntoOptions) ? workflow.assuntoOptions : [];
+    if (inline.length > 0) {
+      setAssuntoOptionsState(inline);
+    }
+  }, [workflow?.assuntoOptions]);
+
+  useEffect(() => {
+    if (!canEditAssunto) return undefined;
+    if (assuntoOptions.length > 0) return undefined;
+    let cancel = false;
+    (async () => {
+      const r = await fetchTicketSubjectOptions();
+      if (cancel || !r.ok) return;
+      setAssuntoOptionsState(r.options || []);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [canEditAssunto, assuntoOptions.length]);
 
   useEffect(() => {
     if (!transferOpen || !queuesRelacional) return undefined;
