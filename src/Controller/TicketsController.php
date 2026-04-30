@@ -6356,7 +6356,7 @@ class TicketsController extends AppController {
 			], 500);
 		}
 		try {
-			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchAssignment', $idticket);
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'patch_assignment', $idticket);
 			$row = $this->_servicedeskTicketRowPayload($idticket);
 		} catch (\Throwable $e) {
 			$this->_logTicketPatchRootCause('apiPatchAssignment.pos_tx', $e);
@@ -6532,7 +6532,7 @@ class TicketsController extends AppController {
 			$this->_logTicketPatchRootCause('apiPatchTicketStatus.email', $e);
 		}
 		try {
-			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchTicketStatus', $idticket);
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'patch_status', $idticket);
 			$row = $this->_servicedeskTicketRowPayload($idticket);
 		} catch (\Throwable $e) {
 			$this->_logTicketPatchRootCause('apiPatchTicketStatus.pos_tx', $e);
@@ -6705,7 +6705,7 @@ class TicketsController extends AppController {
 			], 422);
 		}
 		try {
-			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiPatchTicketPriority', $idticket);
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'patch_priority', $idticket);
 			$row = $this->_servicedeskTicketRowPayload($idticket);
 		} catch (\Throwable $e) {
 			$this->_logTicketPatchRootCause('apiPatchTicketPriority.pos_tx', $e);

@@ -39,6 +39,18 @@ class AtividadesTable extends Table
     }
 
 	public function registrar($iduser = null, $controller = null, $action = null, $idtable = null) {
+		$cols = $this->getSchema()->columns();
+		$controllerMax = in_array('controller', $cols, true) ? (int)$this->getSchema()->getColumn('controller')['length'] : 0;
+		$actionMax = in_array('action', $cols, true) ? (int)$this->getSchema()->getColumn('action')['length'] : 0;
+		$controller = (string)$controller;
+		$action = (string)$action;
+		if ($controllerMax > 0 && strlen($controller) > $controllerMax) {
+			$controller = substr($controller, 0, $controllerMax);
+		}
+		if ($actionMax > 0 && strlen($action) > $actionMax) {
+			$action = substr($action, 0, $actionMax);
+		}
+
 		$atividade = $this->newEntity();
 		$atividade->iduser = $iduser;
 		$atividade->controller = $controller;
