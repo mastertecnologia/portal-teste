@@ -4617,11 +4617,14 @@ class TicketsController extends AppController {
 		$filaCode = $wf ? (string)($reg->fila_suporte ?? 'n1') : '';
 		$nivel = $wf ? (int)($reg->nivel_atendimento ?? 1) : null;
 		$ordemId = null;
-		if (isset($ctx['ordemByTicket']) && is_array($ctx['ordemByTicket']) && array_key_exists($id, $ctx['ordemByTicket'])) {
-			$oid = (int)$ctx['ordemByTicket'][$id];
-			$ordemId = $oid > 0 ? $oid : null;
-		} else {
-			$ordemId = $this->_ticketOrdemId($id);
+		$ticketId = (int)($reg->id ?? 0);
+		if ($ticketId > 0) {
+			if (isset($ctx['ordemByTicket']) && is_array($ctx['ordemByTicket']) && array_key_exists($ticketId, $ctx['ordemByTicket'])) {
+				$oid = (int)$ctx['ordemByTicket'][$ticketId];
+				$ordemId = $oid > 0 ? $oid : null;
+			} elseif (method_exists($this, '_ticketOrdemId')) {
+				$ordemId = $this->_ticketOrdemId($ticketId);
+			}
 		}
 
 		$acoes = [];
@@ -4673,14 +4676,17 @@ class TicketsController extends AppController {
 				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
 			}
 		}
-		if ($ordemId === null) {
-			$acoes[] = [
-				'key' => 'gerar_os',
-				'label' => 'Gerar Ordem de Serviço',
-				'url' => $this->_ticketUrl(['_name' => 'ticketsGerarOs', 'id' => $id]),
-				'target' => '_blank',
-			];
-		} else {
+		if ($ticketId > 0 && $ordemId === null) {
+			$gerarOsUrl = $this->_ticketGerarOsUrl($ticketId);
+			if ($gerarOsUrl !== '') {
+				$acoes[] = [
+					'key' => 'gerar_os',
+					'label' => 'Gerar Ordem de Serviço',
+					'url' => $gerarOsUrl,
+					'target' => '_blank',
+				];
+			}
+		} elseif ($ticketId > 0) {
 			$acoes[] = [
 				'key' => 'ver_os',
 				'label' => 'Ver OS #' . $ordemId,
@@ -4796,6 +4802,21 @@ class TicketsController extends AppController {
 		}
 
 		return $row;
+	}
+
+	protected function _ticketGerarOsUrl(int $ticketId): string {
+		if ($ticketId <= 0) {
+			return '';
+		}
+		try {
+			return $this->_ticketUrl(['_name' => 'ticketsGerarOs', 'id' => $ticketId]);
+		} catch (\Throwable $e) {
+			try {
+				return $this->_ticketUrl(['action' => 'gerarOs', $ticketId]);
+			} catch (\Throwable $e2) {
+				return '';
+			}
+		}
 	}
 
 	protected function _ticketOrdemId(int $ticketId): ?int {
