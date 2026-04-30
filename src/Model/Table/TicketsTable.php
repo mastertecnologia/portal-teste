@@ -14,6 +14,9 @@ use Cake\Validation\Validator;
 use Cake\Mailer\Email;
 
 class TicketsTable extends Table {
+	/** @var array<string,string>|null */
+	private static $ticketAssuntoDynamicCache = null;
+
 	private function parseEmailList($value) {
 		$value = (string)$value;
 		if ($value === '') return [];
@@ -34,6 +37,109 @@ class TicketsTable extends Table {
 		return array_values(array_unique($out));
 	}
 
+	/**
+	 * Tenta carregar categorias/assuntos dinâmicos diretamente do banco.
+	 * Procura tabelas candidatas e retorna id => nome.
+	 *
+	 * @return array<int|string,string>
+	 */
+	private function ticketAssuntoOptionsFromDatabase(): array {
+		if (self::$ticketAssuntoDynamicCache !== null) {
+			return self::$ticketAssuntoDynamicCache;
+		}
+
+		$out = [];
+		try {
+			$conn = \Cake\Datasource\ConnectionManager::get('default');
+			$schema = $conn->getSchemaCollection();
+			$tables = $schema->listTables();
+			$candidates = [
+				'ticket_assuntos',
+				'ticket_categorias',
+				'tickets_assuntos',
+				'tickets_categorias',
+				'assuntos',
+				'categorias',
+			];
+			foreach ($candidates as $tableName) {
+				if (!in_array($tableName, $tables, true)) {
+					continue;
+				}
+
+				$t = TableRegistry::getTableLocator()->get($tableName, ['table' => $tableName]);
+				$cols = $t->getSchema()->columns();
+				if (!in_array('id', $cols, true)) {
+					continue;
+				}
+
+				$valueField = null;
+				foreach (['nome', 'titulo', 'descricao', 'assunto', 'categoria', 'name', 'title'] as $vf) {
+					if (in_array($vf, $cols, true)) {
+						$valueField = $vf;
+						break;
+					}
+				}
+				if ($valueField === null) {
+					continue;
+				}
+
+				$q = $t->find('list', ['keyField' => 'id', 'valueField' => $valueField]);
+				if (in_array('ativo', $cols, true)) {
+					$q = $q->where([$tableName . '.ativo' => 1]);
+				}
+				if (in_array('inativo', $cols, true)) {
+					$q = $q->where([$tableName . '.inativo' => 0]);
+				}
+				$arr = $q->toArray();
+				if (!is_array($arr) || $arr === []) {
+					continue;
+				}
+
+				foreach ($arr as $k => $v) {
+					$label = trim((string)$v);
+					if ($label !== '' && $label !== '0') {
+						$out[(string)$k] = $label;
+					}
+				}
+				if ($out !== []) {
+					break;
+				}
+			}
+		} catch (\Throwable $e) {
+			$out = [];
+		}
+
+		self::$ticketAssuntoDynamicCache = $out;
+		return self::$ticketAssuntoDynamicCache;
+	}
+
+	/**
+	 * Fonte única de opções de assunto/categoria para formulário e exibição.
+	 *
+	 * @return array<int|string,string>
+	 */
+	public function getTicketAssuntoOptions(): array {
+		$db = $this->ticketAssuntoOptionsFromDatabase();
+		if ($db !== []) {
+			return $db;
+		}
+		if (defined('C_TicketCategoriaClienteQuery')) {
+			$c = constant('C_TicketCategoriaClienteQuery');
+			if (is_array($c) && $c !== []) {
+				return $c;
+			}
+		}
+		$path = CONFIG . 'ticket_assunto_cliente.php';
+		if (is_file($path)) {
+			$cfg = include $path;
+			if (is_array($cfg) && $cfg !== []) {
+				return $cfg;
+			}
+		}
+
+		return [];
+	}
+
 	private function resolveTicketAssuntoTexto($assunto): string {
 		$raw = AssuntoTicket($assunto);
 		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
@@ -44,41 +150,12 @@ class TicketsTable extends Table {
 		if (is_numeric($assunto)) {
 			$code = (int)$assunto;
 			if ($code >= 0) {
-				$opts = [];
-
-				// 1) Mapeamento por constante (prioridade maior)
-				if (defined('C_TicketCategoriaClienteQuery')) {
-					$c = constant('C_TicketCategoriaClienteQuery');
-					if (is_array($c) && $c !== []) {
-						$opts = $c;
-					}
-				}
-
-				// 2) Mapeamento por arquivo de config
-				if ($opts === []) {
-					$path = CONFIG . 'ticket_assunto_cliente.php';
-					if (is_file($path)) {
-						$cfg = include $path;
-						if (is_array($cfg) && $cfg !== []) {
-							$opts = $cfg;
-						}
-					}
-				}
-
-				// 3) Fallback interno mínimo (resiliência sem config externa)
-				if ($opts === []) {
-					$opts = [
-						0 => 'Comercial',
-						1 => 'Dúvida',
-						2 => 'Solicitação',
-						3 => 'Problema / erro',
-						4 => 'Requisição de acesso',
-						5 => 'Visita / agendamento',
-					];
-				}
-
+				$opts = $this->getTicketAssuntoOptions();
 				if (isset($opts[$code]) && trim((string)$opts[$code]) !== '') {
 					return (string)$opts[$code];
+				}
+				if (isset($opts[(string)$code]) && trim((string)$opts[(string)$code]) !== '') {
+					return (string)$opts[(string)$code];
 				}
 			}
 		}
@@ -89,6 +166,10 @@ class TicketsTable extends Table {
 		}
 
 		return 'Não informado';
+	}
+
+	public function resolveTicketAssuntoTextoPublic($assunto): string {
+		return $this->resolveTicketAssuntoTexto($assunto);
 	}
 
 	public function initialize(array $config) {

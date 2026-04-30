@@ -3398,57 +3398,28 @@ class TicketsController extends AppController {
 	}
 
 	protected function _ticketAssuntoTexto($assunto) {
-		$raw = AssuntoTicket($assunto);
-		$t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-		if ($t !== '') {
-			return $t;
-		}
-		// Código numérico sem rótulo no legado (ex.: PGMPackages desatualizado): mapa local do portal.
-		if (is_numeric($assunto)) {
-			$code = (int)$assunto;
-			if ($code !== 0) {
-				$opts = $this->_ticketAssuntoClienteOptions();
-				if (isset($opts[$code]) && trim((string)$opts[$code]) !== '') {
-					return (string)$opts[$code];
-				}
-			}
+		if ($this->Tickets && method_exists($this->Tickets, 'resolveTicketAssuntoTextoPublic')) {
+			return $this->Tickets->resolveTicketAssuntoTextoPublic($assunto);
 		}
 		$s = trim((string)$assunto);
-		if ($s !== '' && $s !== '0') {
-			return $s;
-		}
-
-		return 'Não informado';
+		return ($s !== '' && $s !== '0') ? $s : 'Não informado';
 	}
 
 	/**
 	 * Opções do select "Assunto / categoria" na abertura do ticket.
-	 * Prioridade: C_TicketCategoriaClienteQuery não vazio → config/ticket_assunto_cliente.php → lista mínima (chave 5 = visita no add.ctp).
+	 * Prioridade: tabela dinâmica (quando existir) → C_TicketCategoriaClienteQuery → config/ticket_assunto_cliente.php.
 	 *
 	 * @return array<int|string, string>
 	 */
 	protected function _ticketAssuntoClienteOptions(): array {
-		if (defined('C_TicketCategoriaClienteQuery')) {
-			$c = constant('C_TicketCategoriaClienteQuery');
-			if (is_array($c) && $c !== []) {
-				return $c;
-			}
-		}
-		$path = CONFIG . 'ticket_assunto_cliente.php';
-		if (is_file($path)) {
-			$opts = include $path;
-			if (is_array($opts) && $opts !== []) {
+		if ($this->Tickets && method_exists($this->Tickets, 'getTicketAssuntoOptions')) {
+			$opts = $this->Tickets->getTicketAssuntoOptions();
+			if (is_array($opts)) {
 				return $opts;
 			}
 		}
 
-		return [
-			1 => 'Dúvida',
-			2 => 'Solicitação',
-			3 => 'Problema / erro',
-			4 => 'Requisição de acesso',
-			5 => 'Visita / agendamento',
-		];
+		return [];
 	}
 
 	/** Códigos persistidos em tickets.severidade */
@@ -4547,6 +4518,8 @@ class TicketsController extends AppController {
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
 			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
+			'assunto_nome' => $this->_ticketAssuntoTexto($reg->assunto),
+			'assunto_id' => is_numeric($reg->assunto) ? (int)$reg->assunto : null,
 			'assuntoCode' => $reg->assunto,
 			'situacao' => $sit,
 			'situacaoLabel' => $this->_ticketSituacaoTexto($reg->situacao),
@@ -4658,6 +4631,8 @@ class TicketsController extends AppController {
 			'autor' => $this->_ticketAutorNome($reg),
 			'created' => $reg->created ? $reg->created->format('d/m/Y') : '',
 			'assunto' => $this->_ticketAssuntoTexto($reg->assunto),
+			'assunto_nome' => $this->_ticketAssuntoTexto($reg->assunto),
+			'assunto_id' => is_numeric($reg->assunto) ? (int)$reg->assunto : null,
 			'assuntoCode' => $reg->assunto,
 			'status' => $this->_ticketSituacaoTexto($reg->situacao),
 			'situacao' => $sit,
@@ -4900,6 +4875,8 @@ class TicketsController extends AppController {
 		return [
 			'id' => (int)$ticket->id,
 			'assunto' => $this->_ticketAssuntoTexto($ticket->assunto),
+			'assunto_nome' => $this->_ticketAssuntoTexto($ticket->assunto),
+			'assunto_id' => is_numeric($ticket->assunto) ? (int)$ticket->assunto : null,
 			'status' => $this->_ticketSituacaoTexto($ticket->situacao),
 			'situacao' => (int)$ticket->situacao,
 			'descricao' => (string)($ticket->solicitacao ?? ''),

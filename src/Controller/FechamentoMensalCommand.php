@@ -12,6 +12,104 @@ require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'UserConstants.p
 require_once (ROOT . DS . 'vendor' . DS  . 'PGMPackages' . DS . 'TicketConstants.php');
 
 class FechamentoMensalCommand extends Command {
+    /** @var array<string,string>|null */
+    private static $ticketAssuntoOptsCache = null;
+
+    protected function ticketAssuntoOptionsFromDatabase(): array {
+        if (self::$ticketAssuntoOptsCache !== null) {
+            return self::$ticketAssuntoOptsCache;
+        }
+        $out = [];
+        try {
+            $conn = \Cake\Datasource\ConnectionManager::get('default');
+            $schema = $conn->getSchemaCollection();
+            $tables = $schema->listTables();
+            $candidates = ['ticket_assuntos', 'ticket_categorias', 'tickets_assuntos', 'tickets_categorias', 'assuntos', 'categorias'];
+            foreach ($candidates as $tableName) {
+                if (!in_array($tableName, $tables, true)) {
+                    continue;
+                }
+                $t = TableRegistry::getTableLocator()->get($tableName, ['table' => $tableName]);
+                $cols = $t->getSchema()->columns();
+                if (!in_array('id', $cols, true)) {
+                    continue;
+                }
+                $valueField = null;
+                foreach (['nome', 'titulo', 'descricao', 'assunto', 'categoria', 'name', 'title'] as $vf) {
+                    if (in_array($vf, $cols, true)) {
+                        $valueField = $vf;
+                        break;
+                    }
+                }
+                if ($valueField === null) {
+                    continue;
+                }
+                $q = $t->find('list', ['keyField' => 'id', 'valueField' => $valueField]);
+                if (in_array('ativo', $cols, true)) {
+                    $q = $q->where([$tableName . '.ativo' => 1]);
+                }
+                if (in_array('inativo', $cols, true)) {
+                    $q = $q->where([$tableName . '.inativo' => 0]);
+                }
+                $arr = $q->toArray();
+                foreach ($arr as $k => $v) {
+                    $label = trim((string)$v);
+                    if ($label !== '' && $label !== '0') {
+                        $out[(string)$k] = $label;
+                    }
+                }
+                if ($out !== []) {
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {
+            $out = [];
+        }
+        self::$ticketAssuntoOptsCache = $out;
+        return self::$ticketAssuntoOptsCache;
+    }
+
+    protected function resolveTicketAssuntoTexto($assunto): string {
+        $raw = AssuntoTicket($assunto);
+        $t = trim(html_entity_decode(preg_replace('/\s+/u', ' ', strip_tags((string)$raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if ($t !== '' && $t !== '0') {
+            return $t;
+        }
+        if (is_numeric($assunto)) {
+            $code = (int)$assunto;
+            if ($code >= 0) {
+                $opts = $this->ticketAssuntoOptionsFromDatabase();
+                if ($opts === [] && defined('C_TicketCategoriaClienteQuery')) {
+                    $c = constant('C_TicketCategoriaClienteQuery');
+                    if (is_array($c) && $c !== []) {
+                        $opts = $c;
+                    }
+                }
+                if ($opts === []) {
+                    $path = CONFIG . 'ticket_assunto_cliente.php';
+                    if (is_file($path)) {
+                        $cfg = include $path;
+                        if (is_array($cfg) && $cfg !== []) {
+                            $opts = $cfg;
+                        }
+                    }
+                }
+                if (isset($opts[$code]) && trim((string)$opts[$code]) !== '') {
+                    return (string)$opts[$code];
+                }
+                if (isset($opts[(string)$code]) && trim((string)$opts[(string)$code]) !== '') {
+                    return (string)$opts[(string)$code];
+                }
+            }
+        }
+        $s = trim((string)$assunto);
+        if ($s !== '' && $s !== '0') {
+            return $s;
+        }
+
+        return 'Não informado';
+    }
+
     public function execute(Arguments $args, ConsoleIo $io): int {
         $io->out('Iniciando fechamento mensal de horas técnicas de tickets...');
 
@@ -61,7 +159,7 @@ class FechamentoMensalCommand extends Command {
                 }
 
                 $horasTicketMes = number_format($minutosTicketMes / 60, 2, ',', '.');
-                $assunto = AssuntoTicket($ticket->assunto);
+                $assunto = $this->resolveTicketAssuntoTexto($ticket->assunto);
                 $autor = !empty($ticket->user) && !empty($ticket->user->name) ? $ticket->user->name : '-';
 
                 $linhasTickets .=

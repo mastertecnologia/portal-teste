@@ -61,6 +61,18 @@ class TicketcomentariosController extends BaseController {
 		return substr($t, 0, 240);
 	}
 
+	protected function _resolveTicketAssuntoTexto($assunto): string {
+		if ($this->Tickets && method_exists($this->Tickets, 'resolveTicketAssuntoTextoPublic')) {
+			return $this->Tickets->resolveTicketAssuntoTextoPublic($assunto);
+		}
+		$s = trim((string)$assunto);
+		if ($s !== '' && $s !== '0') {
+			return $s;
+		}
+
+		return 'Não informado';
+	}
+
 	/**
 	 * Envia o e-mail de “novo comentário” sem Flash/redirect (uso em criarMov e API).
 	 *
@@ -91,7 +103,7 @@ class TicketcomentariosController extends BaseController {
 			return false;
 		}
 
-		$assunto = AssuntoTicket($ticket->assunto);
+		$assunto = $this->_resolveTicketAssuntoTexto($ticket->assunto);
 		$message =
 			"<h3> Ticket $idticket </h3>
 			<p> <b> Assunto: </b> $assunto</p>

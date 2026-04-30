@@ -657,7 +657,7 @@ export default function TechDashboard({ boot }) {
     return base.filter((t) => {
       const id = String(t.id);
       const cliente = String(t.cliente || '').toLowerCase();
-      const assunto = String(t.assunto || '').toLowerCase();
+      const assunto = String(t.assunto_nome || t.assunto || '').toLowerCase();
       const tec = String(t.tecnicos || '').toLowerCase();
       const fila = String(t.filaLabel || '').toLowerCase();
       return (
@@ -1211,7 +1211,7 @@ export default function TechDashboard({ boot }) {
               ) : (
                 rows.map((ticket) => {
                   const st = statusLabel(ticket);
-                  const assuntoLinha = stripHtml(ticket.assunto);
+                  const assuntoLinha = stripHtml(ticket.assunto_nome || ticket.assunto || 'Não informado');
                   return (
                     <tr
                       key={ticket.id}
