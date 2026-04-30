@@ -83,8 +83,13 @@ class TicketsTable extends Table {
 			return true;
 		}
 		try {
+			$auditFields = ['id', 'situacao', 'prioridade', 'severidade', 'idtecnico_responsavel', 'owner_id'];
+			$auditFields = array_values(array_intersect($auditFields, $cols));
+			if (!in_array('id', $auditFields, true)) {
+				$auditFields[] = 'id';
+			}
 			$prev = $this->get($entity->id, [
-				'fields' => ['id', 'situacao', 'prioridade', 'severidade', 'idtecnico_responsavel', 'owner_id'],
+				'fields' => $auditFields,
 			]);
 			$options['_auditPrev'] = $prev;
 		} catch (\Throwable $e) {
