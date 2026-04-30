@@ -72,6 +72,49 @@ class SlaService {
 			return array_values(array_unique($changed));
 		}
 
+		$this->_applySlaPolicyToTicket($ticket, $idempresa, $policy, $changed, true);
+
+		return array_values(array_unique($changed));
+	}
+
+	/**
+	 * Após alteração manual da prioridade: reaplica política e prazos (sla_policies por empresa),
+	 * se existir linha para o valor atual (P1–P4 ou texto conforme cadastro).
+	 * Não zera sla_percentual_consumido (diferente do bootstrap de ticket novo).
+	 *
+	 * @return array<string> nomes de colunas alteradas na entidade (para save fields)
+	 */
+	public function syncPolicyForTicket(EntityInterface $ticket, int $idempresa): array {
+		$cols = $this->tickets->getSchema()->columns();
+		$changed = [];
+		if (!in_array('prioridade', $cols, true)) {
+			return $changed;
+		}
+		$policies = $this->loadPoliciesTable();
+		if ($policies === null) {
+			return $changed;
+		}
+		$prioridade = trim((string)$ticket->get('prioridade'));
+		if ($prioridade === '') {
+			return $changed;
+		}
+		$tipoTicket = in_array('tipo_ticket', $cols, true) ? $ticket->get('tipo_ticket') : null;
+		$policy = $this->findPolicy($policies, $idempresa, $prioridade, is_string($tipoTicket) ? $tipoTicket : null);
+		if ($policy === null) {
+			return $changed;
+		}
+		$this->_applySlaPolicyToTicket($ticket, $idempresa, $policy, $changed, false);
+
+		return array_values(array_unique($changed));
+	}
+
+	/**
+	 * @param object $policy registo SlaPolicies
+	 * @param array<string> $changed
+	 * @param bool $bootstrapNew quando true, zera percentual e sla_status como na abertura
+	 */
+	protected function _applySlaPolicyToTicket(EntityInterface $ticket, int $idempresa, $policy, array &$changed, bool $bootstrapNew): void {
+		$cols = $this->tickets->getSchema()->columns();
 		$now = Time::now();
 		$bh = new BusinessHoursService();
 
@@ -95,16 +138,16 @@ class SlaService {
 			$ticket->set('data_limite_resolucao', $bh->addBusinessMinutes($now, (int)$policy->resolucao_minutos, $idempresa));
 			$changed[] = 'data_limite_resolucao';
 		}
-		if (in_array('sla_percentual_consumido', $cols, true)) {
-			$ticket->set('sla_percentual_consumido', 0);
-			$changed[] = 'sla_percentual_consumido';
+		if ($bootstrapNew) {
+			if (in_array('sla_percentual_consumido', $cols, true)) {
+				$ticket->set('sla_percentual_consumido', 0);
+				$changed[] = 'sla_percentual_consumido';
+			}
+			if (in_array('sla_status', $cols, true)) {
+				$ticket->set('sla_status', 'dentro_sla');
+				$changed[] = 'sla_status';
+			}
 		}
-		if (in_array('sla_status', $cols, true)) {
-			$ticket->set('sla_status', 'dentro_sla');
-			$changed[] = 'sla_status';
-		}
-
-		return array_values(array_unique($changed));
 	}
 
 	/**

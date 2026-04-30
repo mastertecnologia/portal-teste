@@ -11,6 +11,7 @@ use App\Service\Ticket\ServiceDeskAlertService;
 use App\Service\Ticket\ServiceDeskContractHoursService;
 use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketAttendimentoTimerService;
+use App\Service\Ticket\TicketClassificationService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
@@ -199,6 +200,99 @@ class TicketsController extends AppController {
 			$d++;
 		}
 		$this->log(implode(' | ', $parts), 'error');
+	}
+
+	/** PATCH inline: basta coluna de responsável (não exige workflow/fila legada como apiTransferir). */
+	protected function _ticketInlineAssignmentAllowed(): bool {
+		$cols = $this->Tickets->getSchema()->columns();
+
+		return in_array('idtecnico_responsavel', $cols, true) || in_array('owner_id', $cols, true);
+	}
+
+	/**
+	 * Colunas a atualizar no UPDATE de responsável (idtecnico_responsavel tem precedência sobre owner_id).
+	 *
+	 * @return array<string,int>
+	 */
+	protected function _ticketAssignResponsavelSetArray(int $tecnicoId, array $tcols): array {
+		if (in_array('idtecnico_responsavel', $tcols, true)) {
+			return ['idtecnico_responsavel' => $tecnicoId];
+		}
+		if (in_array('owner_id', $tcols, true)) {
+			return ['owner_id' => $tecnicoId];
+		}
+
+		return [];
+	}
+
+	/** datafinalizado conforme tipo da coluna (PostgreSQL date/timestamp vs string legada). */
+	protected function _ticketSetDatafinalizadoPorSituacao($ticket, int $situacaoNovaInt, array $tcols): void {
+		if (!in_array('datafinalizado', $tcols, true)) {
+			return;
+		}
+		if ($situacaoNovaInt !== (int)C_TicketSituacaoResolvido && $situacaoNovaInt !== (int)C_TicketSituacaoFechado) {
+			return;
+		}
+		$colDef = $this->Tickets->getSchema()->getColumn('datafinalizado');
+		$ct = '';
+		if (is_array($colDef) && !empty($colDef['type'])) {
+			$ct = strtolower((string)$colDef['type']);
+		} elseif (is_object($colDef) && method_exists($colDef, 'getType')) {
+			$ct = strtolower((string)$colDef->getType());
+		}
+		if ($ct === 'date') {
+			$ticket->datafinalizado = (new \DateTimeImmutable('today'))->format('Y-m-d');
+		} elseif ($ct === 'datetime' || $ct === 'timestamp' || $ct === 'timestampfractional' || strpos($ct, 'time') !== false) {
+			$ticket->datafinalizado = date('Y-m-d H:i:s');
+		} else {
+			$ticket->datafinalizado = date('d/m/Y');
+		}
+	}
+
+	/**
+	 * @param mixed $rawInput
+	 * @param mixed $normalizedValue
+	 */
+	protected function _ticketPatchSaveDebug(\Cake\Datasource\EntityInterface $entity, string $primaryField, $rawInput, $normalizedValue): array {
+		return [
+			'field' => $primaryField,
+			'attemptedValue' => $rawInput,
+			'normalizedValue' => $normalizedValue,
+			'dirtyFields' => array_values($entity->getDirty()),
+		];
+	}
+
+	/** debug mínimo quando não há entidade (erros pós-parse, movimentos, etc.). */
+	protected function _ticketPatchDebugStub(string $field, $attemptedValue, $normalizedValue = null): array {
+		return [
+			'field' => $field,
+			'attemptedValue' => $attemptedValue,
+			'normalizedValue' => $normalizedValue,
+			'dirtyFields' => [],
+		];
+	}
+
+	/**
+	 * Decodifica exceção ticket_validation:{json} (formato novo com errors+debug ou legado só errors).
+	 *
+	 * @return array{errors:array,debug:?array}|null
+	 */
+	protected function _ticketParseTicketValidationMessage(string $msg): ?array {
+		if (strpos($msg, 'ticket_validation:') !== 0) {
+			return null;
+		}
+		$tail = substr($msg, strlen('ticket_validation:'));
+		$decoded = json_decode($tail, true);
+		if (!is_array($decoded)) {
+			return ['errors' => ['_root' => [$tail]], 'debug' => null];
+		}
+		if (isset($decoded['errors']) || isset($decoded['debug'])) {
+			$err = isset($decoded['errors']) && is_array($decoded['errors']) ? $decoded['errors'] : [];
+
+			return ['errors' => $err, 'debug' => isset($decoded['debug']) && is_array($decoded['debug']) ? $decoded['debug'] : null];
+		}
+
+		return ['errors' => $decoded, 'debug' => null];
 	}
 
 	/**
@@ -3398,6 +3492,17 @@ class TicketsController extends AppController {
 
 	protected function _normalizeTicketPrioridadeCode($value): string {
 		$v = is_string($value) ? strtolower(trim($value)) : '';
+		// P1–P4 (enterprise) → código semântico do catálogo (rótulos na grid / PATCH)
+		if (preg_match('/^p([1-4])$/', $v, $m)) {
+			$px = [
+				'1' => 'critica',
+				'2' => 'alta',
+				'3' => 'media',
+				'4' => 'baixa',
+			];
+
+			return $px[$m[1]] ?? 'media';
+		}
 		if ($v === 'médio' || $v === 'medio') {
 			$v = 'media';
 		}
@@ -3426,21 +3531,39 @@ class TicketsController extends AppController {
 	}
 
 	/**
-	 * Aceita rótulo ("Alto") ou código persistido ("alta") vindos do JSON.
+	 * Modo estrito: aceita apenas labels canônicos e P1..P4.
+	 *
+	 * @return array{semantic:string,px:string}|null
 	 */
-	protected function _normalizeTicketPrioridadeFromRequest($raw): string {
+	protected function _normalizeTicketPrioridadeFromRequest($raw): ?array {
 		$s = is_string($raw) ? trim($raw) : '';
 		if ($s === '') {
-			return 'media';
+			return null;
 		}
 		$low = strtolower($s);
-		foreach ($this->_ticketPrioridadeCatalog() as $code => $label) {
-			if ($low === strtolower($label) || $low === $code) {
-				return $code;
-			}
+		$labels = [
+			'crítico' => ['semantic' => 'critica', 'px' => TicketClassificationService::PRIORIDADE_P1],
+			'critico' => ['semantic' => 'critica', 'px' => TicketClassificationService::PRIORIDADE_P1],
+			'alto' => ['semantic' => 'alta', 'px' => TicketClassificationService::PRIORIDADE_P2],
+			'médio' => ['semantic' => 'media', 'px' => TicketClassificationService::PRIORIDADE_P3],
+			'medio' => ['semantic' => 'media', 'px' => TicketClassificationService::PRIORIDADE_P3],
+			'baixo' => ['semantic' => 'baixa', 'px' => TicketClassificationService::PRIORIDADE_P4],
+		];
+		if (isset($labels[$low])) {
+			return $labels[$low];
+		}
+		$px = strtoupper($s);
+		$mapPx = [
+			TicketClassificationService::PRIORIDADE_P1 => 'critica',
+			TicketClassificationService::PRIORIDADE_P2 => 'alta',
+			TicketClassificationService::PRIORIDADE_P3 => 'media',
+			TicketClassificationService::PRIORIDADE_P4 => 'baixa',
+		];
+		if (isset($mapPx[$px])) {
+			return ['semantic' => $mapPx[$px], 'px' => $px];
 		}
 
-		return $this->_normalizeTicketPrioridadeCode($s);
+		return null;
 	}
 
 	/**
@@ -3462,24 +3585,47 @@ class TicketsController extends AppController {
 			'ú' => 'u', 'ü' => 'u',
 			'ç' => 'c',
 		]);
+		$fold = preg_replace('/\s+/u', ' ', trim((string)$fold));
 		$pend = (int)C_TicketSituacaoPendente;
 		$exec = (int)C_TicketSituacaoEmandamento;
 		$res = (int)C_TicketSituacaoResolvido;
 		$fec = (int)C_TicketSituacaoFechado;
-		if (strpos($fold, 'fechad') !== false) {
-			return $fec;
+		$allowed = [
+			'em execucao' => $exec,
+			'pendente' => $pend,
+			'resolvido' => $res,
+			'fechado' => $fec,
+			// Compatibilidade opcional com códigos internos textuais já usados.
+			'emandamento' => $exec,
+			'em_andamento' => $exec,
+		];
+		if (isset($allowed[$fold])) {
+			return $allowed[$fold];
 		}
-		if (strpos($fold, 'resolvid') !== false) {
-			return $res;
-		}
-		if (strpos($fold, 'execu') !== false || strpos($fold, 'emandamento') !== false || strpos($fold, 'em andamento') !== false) {
-			return $exec;
-		}
-		if (strpos($fold, 'aguardando') !== false || strpos($fold, 'pendent') !== false || strpos($fold, 'abrir') !== false) {
-			return $pend;
-		}
-
+		// Qualquer outra variação é inválida no modo estrito.
 		return null;
+	}
+
+	/**
+	 * Resposta padronizada + log para status inválido no PATCH inline.
+	 */
+	protected function _ticketInvalidStatusResponse(int $idticket, $attemptedValue) {
+		$data = [
+			'ticket_id' => $idticket,
+			'user_id' => (int)$this->Auth->user('id'),
+			'status' => $attemptedValue,
+		];
+		$this->log('Status inválido: ' . json_encode($data, JSON_UNESCAPED_UNICODE), 'warning');
+
+		return $this->jsonResponse([
+			'ok' => false,
+			'error' => 'invalid_situacao',
+			'message' => 'Status inválido. Use: Em execução, Pendente, Resolvido ou Fechado.',
+			'debug' => [
+				'field' => 'status',
+				'attemptedValue' => $attemptedValue,
+			],
+		], 422);
 	}
 
 	protected function _servicedeskTicketRowPayload(int $idticket): ?array {
@@ -5956,8 +6102,12 @@ class TicketsController extends AppController {
 		if ($idticket <= 0) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
 		}
-		if (!$this->_ticketTransferApiAllowed()) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_columns_missing'], 503);
+		if (!$this->_ticketInlineAssignmentAllowed()) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'assignment_not_supported',
+				'message' => 'Este ambiente não possui coluna de técnico responsável (idtecnico_responsavel ou owner_id).',
+			], 503);
 		}
 		$qTm = $this->Tickets->find('all')->where(['Tickets.id' => $idticket]);
 		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
@@ -6094,7 +6244,10 @@ class TicketsController extends AppController {
 						throw new \RuntimeException('queues_users:' . json_encode($insQu->getErrors(), JSON_UNESCAPED_UNICODE));
 					}
 				}
-				$set = ['idtecnico_responsavel' => $tecnicoId];
+				$set = $this->_ticketAssignResponsavelSetArray($tecnicoId, $tcols);
+				if ($set === []) {
+					throw new \RuntimeException('assignment_no_ra_column');
+				}
 				$slUser = (int)($destUser->support_level_id ?? 0);
 				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true) && $slUser > 0) {
 					$set['support_level_id'] = $slUser;
@@ -6164,15 +6317,32 @@ class TicketsController extends AppController {
 					'message' => 'O ticket não foi atualizado (sem linhas afetadas ou divergência com o estado atual).',
 				], 422);
 			}
+			if ($msg === 'assignment_no_ra_column') {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'assignment_not_supported',
+					'message' => 'Schema sem coluna de responsável (idtecnico_responsavel ou owner_id).',
+				], 503);
+			}
 			if (strpos($msg, 'queues_users:') === 0 || strpos($msg, 'ticketsusers:') === 0 || strpos($msg, 'ticketsmovs:') === 0) {
 				$tail = substr($msg, strpos($msg, ':') + 1);
 				$decoded = json_decode($tail, true);
+				$field = 'assignment';
+				if (strpos($msg, 'queues_users:') === 0) {
+					$field = 'queues_users';
+				} elseif (strpos($msg, 'ticketsusers:') === 0) {
+					$field = 'ticketsusers';
+				} elseif (strpos($msg, 'ticketsmovs:') === 0) {
+					$field = 'ticketsmovs';
+				}
 
 				return $this->jsonResponse([
 					'ok' => false,
 					'error' => 'save_failed',
 					'message' => 'Validação ao gravar vínculo ou movimento do ticket.',
 					'errors' => is_array($decoded) ? $decoded : ['_root' => [$tail]],
+					'debug' => $this->_ticketPatchDebugStub($field, ['tecnico_id' => $tecnicoId, 'fila_id' => $filaIdBody], null),
+					'detail' => $tail,
 				], 422);
 			}
 
@@ -6180,6 +6350,8 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'save_failed',
 				'message' => 'Não foi possível gravar a atribuição. Tente novamente ou use Transferir.',
+				'errors' => ['_root' => [$msg]],
+				'debug' => $this->_ticketPatchDebugStub('assignment', ['tecnico_id' => $tecnicoId, 'fila_id' => $filaIdBody], null),
 				'detail' => $msg,
 			], 500);
 		}
@@ -6193,6 +6365,8 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'post_save_failed',
 				'message' => 'Atribuição pode ter sido gravada, mas a resposta da grid falhou. Atualize a página.',
+				'errors' => ['_root' => [$e->getMessage()]],
+				'debug' => $this->_ticketPatchDebugStub('ticket_row_payload', $idticket, null),
 				'detail' => $e->getMessage(),
 			], 500);
 		}
@@ -6224,26 +6398,15 @@ class TicketsController extends AppController {
 		}
 		$body = $this->_jsonPatchRequestBody();
 		$situacaoNova = $body['status'] ?? $body['situacao'] ?? $body['sit'] ?? null;
+		$rawStatusForDebug = $body['status'] ?? $body['situacao'] ?? $body['sit'] ?? null;
 		if ($situacaoNova === null || $situacaoNova === '') {
-			return $this->jsonResponse([
-				'ok' => false,
-				'error' => 'missing_status',
-				'message' => 'Envie o campo status ou situacao.',
-			], 400);
+			return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
 		}
-		if (is_numeric($situacaoNova)) {
-			$situacaoNova = (int)$situacaoNova;
-		} else {
-			$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
-			if ($mapped === null) {
-				return $this->jsonResponse([
-					'ok' => false,
-					'error' => 'invalid_situacao',
-					'message' => 'Status não reconhecido. Use Pendente, Em execução, Resolvido ou Fechado.',
-				], 422);
-			}
-			$situacaoNova = $mapped;
+		$mapped = $this->_mapServicedeskStatusRequestToSituacaoInt((string)$situacaoNova);
+		if ($mapped === null) {
+			return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
 		}
+		$situacaoNova = $mapped;
 		$allowed = [
 			(int)C_TicketSituacaoPendente,
 			(int)C_TicketSituacaoEmandamento,
@@ -6251,17 +6414,13 @@ class TicketsController extends AppController {
 			(int)C_TicketSituacaoFechado,
 		];
 		if (!in_array((int)$situacaoNova, $allowed, true)) {
-			return $this->jsonResponse([
-				'ok' => false,
-				'error' => 'invalid_situacao',
-				'message' => 'Situação numérica não permitida para esta operação.',
-			], 422);
+			return $this->_ticketInvalidStatusResponse($idticket, $rawStatusForDebug);
 		}
 		$situacaoNovaInt = (int)$situacaoNova;
 		$sitantigaAntes = (int)$ticket->situacao;
 		$empresa = (int)$this->Auth->user('idempresa');
 		try {
-			$this->Tickets->getConnection()->transactional(function () use ($idticket, $situacaoNovaInt, $empresa) {
+			$this->Tickets->getConnection()->transactional(function () use ($idticket, $situacaoNovaInt, $empresa, $rawStatusForDebug) {
 				$q = $this->Tickets->find('all')->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $empresa]);
 				$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
 				$ticket = $q->first();
@@ -6276,17 +6435,28 @@ class TicketsController extends AppController {
 					TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, $situacaoNovaInt);
 				}
 				$ticket->situacao = $situacaoNovaInt;
-				if ($situacaoNovaInt == C_TicketSituacaoResolvido || $situacaoNovaInt == C_TicketSituacaoFechado) {
-					$ticket->datafinalizado = date('d/m/Y');
-				}
+				$tcolsAll = $this->Tickets->getSchema()->columns();
+				$this->_ticketSetDatafinalizadoPorSituacao($ticket, $situacaoNovaInt, $tcolsAll);
 				if ($situacaoNovaInt === (int)C_TicketSituacaoEmandamento && $situacaoNovaInt !== $sitantiga) {
 					$this->_assignTecnicoEmExecucao($ticket, $idticket, true);
 				}
 				if (($situacaoNovaInt == C_TicketSituacaoResolvido || $situacaoNovaInt == C_TicketSituacaoFechado) && $situacaoNovaInt !== $sitantiga) {
 					$this->_ensureTecnicoResponsavelAoFechamento($ticket);
 				}
-				if (!$this->Tickets->save($ticket, ['atomic' => false])) {
-					throw new \RuntimeException('ticket_validation:' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE));
+				$saveFields = ['situacao'];
+				foreach ($ticket->getDirty() as $f) {
+					if ($f !== 'situacao' && in_array($f, $tcolsAll, true)) {
+						$saveFields[] = $f;
+					}
+				}
+				$saveFields = array_values(array_unique($saveFields));
+				$saveFields = $this->_ticketFieldsComResponsavel($this->_ticketIntersectSchemaFields($saveFields));
+				if (!$this->Tickets->save($ticket, ['fields' => $saveFields, 'atomic' => false])) {
+					$payload = [
+						'errors' => $ticket->getErrors(),
+						'debug' => $this->_ticketPatchSaveDebug($ticket, 'situacao', $rawStatusForDebug, $situacaoNovaInt),
+					];
+					throw new \RuntimeException('ticket_validation:' . json_encode($payload, JSON_UNESCAPED_UNICODE));
 				}
 				$mov = $this->Ticketsmovs->newEntity();
 				$mov->idticket = $idticket;
@@ -6314,26 +6484,28 @@ class TicketsController extends AppController {
 			$this->_ticketDbRollbackSafe();
 			$this->_logTicketPatchRootCause('apiPatchTicketStatus', $e);
 			$msg = $e->getMessage();
-			if (strpos($msg, 'ticket_validation:') === 0) {
-				$tail = substr($msg, strlen('ticket_validation:'));
-				$decoded = json_decode($tail, true);
-
+			$parsed = $this->_ticketParseTicketValidationMessage($msg);
+			if ($parsed !== null) {
 				return $this->jsonResponse([
 					'ok' => false,
 					'error' => 'save_failed',
 					'message' => 'Validação ao gravar o status do ticket.',
-					'errors' => is_array($decoded) ? $decoded : ['_root' => [$tail]],
+					'errors' => $parsed['errors'],
+					'debug' => $parsed['debug'],
 				], 422);
 			}
 			if (strpos($msg, 'ticketsusers:') === 0 || strpos($msg, 'ticketsmovs:') === 0) {
 				$tail = substr($msg, strpos($msg, ':') + 1);
 				$decoded = json_decode($tail, true);
+				$field = strpos($msg, 'ticketsusers:') === 0 ? 'ticketsusers' : 'ticketsmovs';
 
 				return $this->jsonResponse([
 					'ok' => false,
 					'error' => 'save_failed',
 					'message' => 'Erro ao gravar vínculo ou movimento do ticket.',
 					'errors' => is_array($decoded) ? $decoded : ['_root' => [$tail]],
+					'debug' => $this->_ticketPatchDebugStub($field, $rawStatusForDebug, $situacaoNovaInt),
+					'detail' => $tail,
 				], 422);
 			}
 
@@ -6341,6 +6513,8 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'save_failed',
 				'message' => 'Erro ao gravar o status do ticket.',
+				'errors' => ['_root' => [$msg]],
+				'debug' => $this->_ticketPatchDebugStub('situacao', $rawStatusForDebug, $situacaoNovaInt),
 				'detail' => $msg,
 			], 422);
 		}
@@ -6367,6 +6541,8 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'post_save_failed',
 				'message' => 'Situação gravada; falha ao montar a linha da grid. Atualize a página.',
+				'errors' => ['_root' => [$e->getMessage()]],
+				'debug' => $this->_ticketPatchDebugStub('ticket_row_payload', $idticket, null),
 				'detail' => $e->getMessage(),
 			], 500);
 		}
@@ -6411,7 +6587,26 @@ class TicketsController extends AppController {
 			], 400);
 		}
 		$cols = $this->Tickets->getSchema()->columns();
-		$code = $this->_normalizeTicketPrioridadeFromRequest((string)$raw);
+		$prio = $this->_normalizeTicketPrioridadeFromRequest((string)$raw);
+		if ($prio === null) {
+			$data = [
+				'ticket_id' => $idticket,
+				'user_id' => (int)$this->Auth->user('id'),
+				'priority' => $raw,
+			];
+			$this->log('Prioridade inválida: ' . json_encode($data, JSON_UNESCAPED_UNICODE), 'warning');
+
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'invalid_priority',
+				'message' => 'Prioridade inválida. Use: Crítico, Alto, Médio, Baixo ou P1–P4.',
+				'debug' => [
+					'field' => 'priority',
+					'attemptedValue' => $raw,
+				],
+			], 422);
+		}
+		$code = $prio['semantic'];
 		$saveFields = [];
 		$usePrioridade = in_array('prioridade', $cols, true);
 		if ($usePrioridade) {
@@ -6423,7 +6618,7 @@ class TicketsController extends AppController {
 		}
 		$empresa = (int)$this->Auth->user('idempresa');
 		try {
-			$this->Tickets->getConnection()->transactional(function () use ($idticket, $empresa, $saveFields, $code, $raw, $usePrioridade) {
+			$this->Tickets->getConnection()->transactional(function () use ($idticket, $empresa, $saveFields, $code, $raw, $usePrioridade, $prio) {
 				$q = $this->Tickets->find('all')->where(['Tickets.id' => $idticket, 'Tickets.idempresa' => $empresa]);
 				$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
 				$ticket = $q->first();
@@ -6433,14 +6628,45 @@ class TicketsController extends AppController {
 				if (!$this->_apiTicketViewAllowed($ticket)) {
 					throw new \UnexpectedValueException('forbidden_view');
 				}
+				$persistVal = null;
 				if ($usePrioridade) {
-					$ticket->prioridade = $code;
+					$curPrior = strtolower(trim((string)($ticket->prioridade ?? '')));
+					// P1–P4 alinhados a TicketClassificationService / sla_policies; texto legado preservado
+					$usePx = ($curPrior === '' || preg_match('/^p[1-4]$/', $curPrior));
+					if ($usePx) {
+						$persistVal = $prio['px'];
+					} else {
+						$persistVal = $code;
+					}
+					$ticket->prioridade = $persistVal;
 				} else {
 					$sevMap = ['baixa' => 'baixa', 'media' => 'media', 'alta' => 'alta', 'critica' => 'urgente', 'critico' => 'urgente'];
-					$ticket->severidade = $sevMap[$code] ?? $this->_normalizeTicketSeveridade((string)$raw);
+					$persistVal = $sevMap[$code] ?? $this->_normalizeTicketSeveridade((string)$raw);
+					$ticket->severidade = $persistVal;
 				}
-				if (!$this->Tickets->save($ticket, ['fields' => $saveFields, 'atomic' => false])) {
-					throw new \RuntimeException('ticket_validation:' . json_encode($ticket->getErrors(), JSON_UNESCAPED_UNICODE));
+				$fieldList = $saveFields;
+				if ($usePrioridade) {
+					$sit = (int)($ticket->situacao ?? 0);
+					$fechado = ($sit === (int)C_TicketSituacaoResolvido || $sit === (int)C_TicketSituacaoFechado);
+					if (!$fechado) {
+						$sla = new SlaService($this->Tickets);
+						$slaCols = $sla->syncPolicyForTicket($ticket, $empresa);
+						if ($slaCols !== []) {
+							$fieldList = array_values(array_unique(array_merge($fieldList, $slaCols)));
+						}
+					}
+				}
+				$fieldList = $this->_ticketIntersectSchemaFields($fieldList);
+				if (!$this->Tickets->save($ticket, ['fields' => $fieldList, 'atomic' => false])) {
+					$primaryField = $fieldList[0] ?? ($usePrioridade ? 'prioridade' : 'severidade');
+					$payload = [
+						'errors' => $ticket->getErrors(),
+						'debug' => array_merge(
+							$this->_ticketPatchSaveDebug($ticket, $primaryField, $raw, $persistVal),
+							['semanticCode' => $code],
+						),
+					];
+					throw new \RuntimeException('ticket_validation:' . json_encode($payload, JSON_UNESCAPED_UNICODE));
 				}
 			});
 		} catch (\UnexpectedValueException $e) {
@@ -6458,15 +6684,14 @@ class TicketsController extends AppController {
 			$this->_ticketDbRollbackSafe();
 			$this->_logTicketPatchRootCause('apiPatchTicketPriority', $e);
 			$msg = $e->getMessage();
-			if (strpos($msg, 'ticket_validation:') === 0) {
-				$tail = substr($msg, strlen('ticket_validation:'));
-				$decoded = json_decode($tail, true);
-
+			$parsed = $this->_ticketParseTicketValidationMessage($msg);
+			if ($parsed !== null) {
 				return $this->jsonResponse([
 					'ok' => false,
 					'error' => 'save_failed',
 					'message' => 'Validação ao gravar a prioridade.',
-					'errors' => is_array($decoded) ? $decoded : ['_root' => [$tail]],
+					'errors' => $parsed['errors'],
+					'debug' => $parsed['debug'],
 				], 422);
 			}
 
@@ -6474,6 +6699,8 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'save_failed',
 				'message' => 'Erro ao gravar a prioridade.',
+				'errors' => ['_root' => [$msg]],
+				'debug' => $this->_ticketPatchDebugStub($usePrioridade ? 'prioridade' : 'severidade', $raw, $code),
 				'detail' => $msg,
 			], 422);
 		}
@@ -6487,6 +6714,8 @@ class TicketsController extends AppController {
 				'ok' => false,
 				'error' => 'post_save_failed',
 				'message' => 'Prioridade gravada; falha ao montar a linha da grid. Atualize a página.',
+				'errors' => ['_root' => [$e->getMessage()]],
+				'debug' => $this->_ticketPatchDebugStub('ticket_row_payload', $idticket, null),
 				'detail' => $e->getMessage(),
 			], 500);
 		}

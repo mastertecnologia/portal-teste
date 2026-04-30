@@ -25,17 +25,34 @@ function qs(params) {
   return s ? `?${s}` : '';
 }
 
+/** Primeira mensagem de validação Cake (errors aninhados). */
+function firstNestedErrorString(errors) {
+  if (!errors || typeof errors !== 'object') return '';
+  for (const v of Object.values(errors)) {
+    if (typeof v === 'string' && v.trim()) return v.trim();
+    if (Array.isArray(v)) {
+      for (const x of v) {
+        if (typeof x === 'string' && x.trim()) return x.trim();
+      }
+    } else if (v && typeof v === 'object') {
+      const sub = firstNestedErrorString(v);
+      if (sub) return sub;
+    }
+  }
+  return '';
+}
+
 /** Texto amigável a partir do JSON de erro do Cake (message/detail/errors) ou do Response. */
 function patchTicketsErrorMessage(r, json) {
   if (json && typeof json === 'object') {
     const m = json.message || json.detail || json.error_description;
-    if (typeof m === 'string' && m.trim() !== '') return m.trim();
-    const er = json.errors;
-    if (er && typeof er === 'object') {
-      const vals = Object.values(er).flat(Infinity);
-      const first = vals.find((x) => typeof x === 'string');
-      if (first) return first;
+    const base = typeof m === 'string' && m.trim() !== '' ? m.trim() : '';
+    const fe = firstNestedErrorString(json.errors);
+    if (fe) {
+      if (base && !base.includes(fe)) return `${base}: ${fe}`;
+      if (!base) return fe;
     }
+    if (base) return base;
     if (typeof json.error === 'string' && json.error.trim() !== '') return json.error.trim();
   }
   if (r && typeof r.statusText === 'string' && r.statusText.trim() !== '') return r.statusText.trim();

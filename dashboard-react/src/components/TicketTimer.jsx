@@ -8,7 +8,8 @@ function parseIso(s) {
 
 /**
  * Timer persistido no ticket (não confundir com AtendimentoTimer / apiTimer).
- * Exibição: total_seconds + (agora − started_at) quando status = em execução.
+ * Exibição: total_seconds + (agora − started_at) quando status = em execução
+ * (mesma regra que TicketAttendimentoTimerService::elapsedSecondsForDisplay no PHP).
  *
  * @param {{ situacao: number, attendimentoTimer?: { started_at?: string|null, total_seconds?: number, finished_at?: string|null } }} props.ticket
  * @param {number} props.situacaoExecCode — tickets.situacao numérico "em execução"
