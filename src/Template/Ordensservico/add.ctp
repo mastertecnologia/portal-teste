@@ -48,6 +48,19 @@
 		padding: 0 !important;
 		overflow: hidden !important;
 	}
+	/* Cód. produto: mantém input/lupa na mesma linha e evita desalinhamento visual da célula. */
+	body.os-add-page .os-add-shell #grid_table td.inputCodproduto .input-group {
+		margin: 0 !important;
+		align-items: center !important;
+	}
+	body.os-add-page .os-add-shell #grid_table td.inputCodproduto input.input-codigo-val,
+	body.os-add-page .os-add-shell #grid_table td.inputCodproduto .input-group-append .btn {
+		height: 34px !important;
+		min-height: 34px !important;
+	}
+	body.os-add-page .os-add-shell #grid_table td.inputCodproduto .qtdEstoque {
+		display: none !important;
+	}
 	.os-add-bloco-title { font-size: 0.82rem; font-weight: 600; color: #1D9E75; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.04em; }
 	.os-add-bloco-origem { border-color: #cfe8de; }
 	/* Mantém selects no DOM fora da tela para selectpicker + AJAX (modo ticket). */
