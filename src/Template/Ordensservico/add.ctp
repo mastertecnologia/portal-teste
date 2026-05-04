@@ -37,6 +37,17 @@
 	.os-pesquisa-produto-sem-estoque { background-color: #f8d7da !important; }
 	.os-pesquisa-produto-sem-estoque td { color: #721c24; }
 	.os-add-bloco { border: 1px solid #e4e9ef; border-radius: 6px; padding: 16px 18px; margin-bottom: 18px; background: #fff; }
+	/* Compacta o card de produtos para reduzir o espaço inferior ocupado na área da grid. */
+	.os-add-bloco-produtos { padding-bottom: 8px; margin-bottom: 10px; }
+	body.os-add-page .os-add-shell #grid_table .vazio {
+		display: block !important;
+		height: 0 !important;
+		line-height: 0 !important;
+		font-size: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		overflow: hidden !important;
+	}
 	.os-add-bloco-title { font-size: 0.82rem; font-weight: 600; color: #1D9E75; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.04em; }
 	.os-add-bloco-origem { border-color: #cfe8de; }
 	/* Mantém selects no DOM fora da tela para selectpicker + AJAX (modo ticket). */
@@ -246,7 +257,7 @@
 				<div id="grid_table"></div>
 				<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
 				<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-add">
-				<p class='m-t-10'><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
+				<p class='m-t-5 m-b-5'><i>O cadastro de horas e parcelas ficará disponível apenas após a abertura da Ordem de Serviço.</i></p>
 				<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success" form="form-os-add"><?= __('Abrir Ordem de Serviço') ?></button>
             <div class="clearfix"></div>
         </div>
