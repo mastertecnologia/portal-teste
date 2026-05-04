@@ -207,20 +207,28 @@ class LaudosPareceresTable extends Table
      */
     public function calcularTotais(int $parecerId): array
     {
-        $conn = ConnectionManager::get('default');
-        $stmt = $conn->execute(
-            'SELECT total_pecas, total_servicos, total_geral, total_novo, percentual_reparo
-             FROM laudos_totais_view WHERE parecer_id = ?',
-            [$parecerId]
-        );
-        $row = $stmt->fetch('assoc');
-        return $row ?: [
+        $fallback = [
             'total_pecas' => 0,
             'total_servicos' => 0,
             'total_geral' => 0,
             'total_novo' => 0,
             'percentual_reparo' => null,
         ];
+        try {
+            $conn = ConnectionManager::get('default');
+            $stmt = $conn->execute(
+                'SELECT total_pecas, total_servicos, total_geral, total_novo, percentual_reparo
+                 FROM laudos_totais_view WHERE parecer_id = ?',
+                [$parecerId]
+            );
+            $row = $stmt->fetch('assoc');
+        } catch (\Throwable $e) {
+            $this->log('LaudosPareceres::calcularTotais: ' . $e->getMessage(), 'warning');
+
+            return $fallback;
+        }
+
+        return $row ?: $fallback;
     }
 
     /**

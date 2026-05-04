@@ -59,7 +59,7 @@ class LaudosPareceresController extends AppController
                 'titulo' => $p->titulo,
                 'status' => $p->status,
                 'status_label' => $p->status_label,
-                'tecnico_nome' => $p->tecnico_nome ?: ($p->tecnico->name ?? null),
+                'tecnico_nome' => $p->tecnico_nome ?: (($p->tecnico !== null && $p->tecnico !== false) ? $p->tecnico->name : null),
                 'requester_company_name' => $p->requester_company_name,
                 'requester_cnpj' => $p->requester_cnpj,
                 'data_emissao' => $p->data_emissao,
