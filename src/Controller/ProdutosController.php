@@ -433,32 +433,37 @@ class ProdutosController extends AppController {
 			}
 		}
 		$where = ['codigo' => $codigo, 'idempresa' => $idempresa];
-		$tiposFiltroDb = [];
-		if ($tipoFiltro !== null) {
-			$tiposFiltroDb = $this->produtosTipoPesquisaAliases((int)$tipoFiltro);
-			$where['tipo IN'] = $tiposFiltroDb;
-		}
-		$produto = $this->Produtos->find()->where($where)->first();
+		$produto = $this->Produtos->find()->where($where)->order(['id' => 'DESC'])->first();
 		if (!$produto) {
-			if ($tipoFiltro !== null) {
-				$anyTipo = $this->Produtos->findByCodigo($codigo)->where(['idempresa' => $idempresa])->first();
-				if ($anyTipo) {
-					$semFiltro = $this->produtoTipoSemantic($tipoFiltro);
-					$semAnyTipo = $this->produtoTipoSemantic($anyTipo->tipo);
-					if ($semFiltro !== null && $semAnyTipo !== null && $semFiltro === $semAnyTipo) {
-						$produto = $anyTipo;
-					} else {
-						return $this->jsonResponse(['mensagem' => 'Nenhum item encontrado para o tipo selecionado.'], 404);
-					}
+			return $this->jsonResponse(['mensagem' => 'Produto/serviço não encontrado'], 404);
+		}
+		if ($tipoFiltro !== null) {
+			/* Busca sempre por código+empresa; se existir variação por tipo no mesmo código,
+			 * prefere candidato semanticamente equivalente ao tipo selecionado na linha da OS. */
+			$candidatos = $this->Produtos->find()->where($where)->order(['id' => 'DESC'])->limit(20)->toArray();
+			foreach ($candidatos as $cand) {
+				if ($this->tipoEquivalente($tipoFiltro, $cand->tipo)) {
+					$produto = $cand;
+					break;
 				}
 			}
-			if (!$produto) {
-				return $this->jsonResponse(['mensagem' => 'Produto/serviço não encontrado'], 404);
+			$tipoBanco = (string)$produto->tipo;
+			$tipoFront = (string)$tipoFiltro;
+			if ($tipoFront !== $tipoBanco) {
+				$this->log(sprintf(
+					'Produtos::produto tipo divergente (não bloqueante) codigo=%s empresa=%d tipo_front=%s tipo_banco=%s equivalente=%s',
+					$codigo,
+					$idempresa,
+					$tipoFront,
+					$tipoBanco,
+					$this->tipoEquivalente($tipoFiltro, $produto->tipo) ? 'true' : 'false'
+				), 'warning');
 			}
 		}
 		$tipoProdutoConst = defined('C_ProdutosTipoProduto') ? (int) C_ProdutosTipoProduto : 1;
 		$tipoProdutoEncontrado = (int)$produto->tipo;
-		if ($tipoProdutoEncontrado === $tipoProdutoConst || in_array($tipoProdutoConst, $tiposFiltroDb, true)) {
+		$tipoFiltroEhProduto = $tipoFiltro !== null && $this->tipoEquivalente($tipoFiltro, $tipoProdutoConst);
+		if ($tipoProdutoEncontrado === $tipoProdutoConst || $tipoFiltroEhProduto) {
 			try {
 				$idempresa = $this->Auth->user('idempresa');
 				$empresa = $this->Empresas->get($idempresa);
@@ -743,6 +748,73 @@ class ProdutosController extends AppController {
 
 	private function produtoTipoEhProduto($tipo): bool {
 		return $this->produtoTipoSemantic($tipo) === 'produto';
+	}
+
+	/**
+	 * Equivalência semântica de tipo para fluxos da OS.
+	 * Não confia no inteiro bruto porque constants/UI/BD podem divergir por ambiente.
+	 */
+	private function tipoEquivalente($tipoFrontend, $tipoBanco): bool {
+		$a = $this->tipoCategoriaCanonica($tipoFrontend);
+		$b = $this->tipoCategoriaCanonica($tipoBanco);
+		if ($a === null || $b === null) {
+			return false;
+		}
+		return $a === $b;
+	}
+
+	private function tipoCategoriaCanonica($tipo): ?string {
+		$raw = is_scalar($tipo) ? trim((string)$tipo) : '';
+		if ($raw === '') {
+			return null;
+		}
+		$fromLabel = function (string $label): ?string {
+			$txt = mb_strtolower(trim($label), 'UTF-8');
+			if ($txt === '') {
+				return null;
+			}
+			if (strpos($txt, 'produto') !== false) {
+				return 'produto';
+			}
+			if (strpos($txt, 'servic') !== false) {
+				return 'servico';
+			}
+			if (strpos($txt, 'licenc') !== false || strpos($txt, 'contrat') !== false) {
+				return 'licenca';
+			}
+			if (strpos($txt, 'loca') !== false) {
+				return 'locacao';
+			}
+			return null;
+		};
+		if (preg_match('/^-?\d+$/', $raw)) {
+			$i = (int)$raw;
+			$pairs = [
+				'C_ProdutosTipoProduto' => 'produto',
+				'C_ProdutosTipoServico' => 'servico',
+				'C_ProdutosTipoLicenca' => 'licenca',
+				'C_ProdutosTipoLocacao' => 'locacao',
+			];
+			foreach ($pairs as $constName => $cat) {
+				if (defined($constName) && (int)constant($constName) === $i) {
+					return $cat;
+				}
+			}
+			$byLabel = $fromLabel($this->produtoTipoLabelByValue($i));
+			if ($byLabel !== null) {
+				return $byLabel;
+			}
+			if ($i === 1 || $i === 4) {
+				return 'produto';
+			}
+			if ($i === 2) {
+				return 'servico';
+			}
+			if ($i === 3) {
+				return 'licenca';
+			}
+		}
+		return $fromLabel($raw);
 	}
 
 	private function produtoTipoLegacyBySemantic(?string $semantic): ?int {
