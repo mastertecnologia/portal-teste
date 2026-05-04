@@ -443,10 +443,18 @@ class ProdutosController extends AppController {
 			if ($tipoFiltro !== null) {
 				$anyTipo = $this->Produtos->findByCodigo($codigo)->where(['idempresa' => $idempresa])->first();
 				if ($anyTipo) {
-					return $this->jsonResponse(['mensagem' => 'Nenhum item encontrado para o tipo selecionado.'], 404);
+					$semFiltro = $this->produtoTipoSemantic($tipoFiltro);
+					$semAnyTipo = $this->produtoTipoSemantic($anyTipo->tipo);
+					if ($semFiltro !== null && $semAnyTipo !== null && $semFiltro === $semAnyTipo) {
+						$produto = $anyTipo;
+					} else {
+						return $this->jsonResponse(['mensagem' => 'Nenhum item encontrado para o tipo selecionado.'], 404);
+					}
 				}
 			}
-			return $this->jsonResponse(['mensagem' => 'Produto/serviço não encontrado'], 404);
+			if (!$produto) {
+				return $this->jsonResponse(['mensagem' => 'Produto/serviço não encontrado'], 404);
+			}
 		}
 		$tipoProdutoConst = defined('C_ProdutosTipoProduto') ? (int) C_ProdutosTipoProduto : 1;
 		$tipoProdutoEncontrado = (int)$produto->tipo;
@@ -626,6 +634,10 @@ class ProdutosController extends AppController {
 		}
 		if (preg_match('/^-?\d+$/', $raw)) {
 			$i = (int)$raw;
+			$fromConst = $this->produtoTipoSemanticFromConstValue($i);
+			if ($fromConst !== null) {
+				return $fromConst;
+			}
 			if ($i === 1) {
 				return 'produto';
 			}
@@ -643,6 +655,25 @@ class ProdutosController extends AppController {
 		}
 
 		return $this->produtoTipoSemanticFromLabel($raw);
+	}
+
+	private function produtoTipoSemanticFromConstValue(int $value): ?string {
+		$pairs = [
+			'C_ProdutosTipoProduto' => 'produto',
+			'C_ProdutosTipoServico' => 'servico',
+			'C_ProdutosTipoLicenca' => 'contrato',
+			'C_ProdutosTipoLocacao' => 'contrato',
+		];
+		foreach ($pairs as $constName => $semantic) {
+			if (!defined($constName)) {
+				continue;
+			}
+			if ((int) constant($constName) === $value) {
+				return $semantic;
+			}
+		}
+
+		return null;
 	}
 
 	private function produtoTipoSemanticFromLabel(string $label): ?string {
