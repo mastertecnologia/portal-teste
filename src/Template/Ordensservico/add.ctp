@@ -600,6 +600,18 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		}
 	// Tipos e Produtos
 		var tiposOpt = <?= $tiposOpt ?>;
+		var tiposOptGridItems = <?= isset($tiposOptGridItems) ? $tiposOptGridItems : '[]' ?>;
+		if (!Array.isArray(tiposOptGridItems) || tiposOptGridItems.length === 0) {
+			tiposOptGridItems = [];
+			if (tiposOpt && typeof tiposOpt === 'object' && !Array.isArray(tiposOpt)) {
+				Object.keys(tiposOpt).forEach(function (k) {
+					var iv = parseInt(String(k), 10);
+					if (!isNaN(iv) && iv > 0) {
+						tiposOptGridItems.push({ value: iv, text: String(tiposOpt[k]) });
+					}
+				});
+			}
+		}
 		function osAddTipoLabelBrowse(tipo) {
 			var t = String(tipo);
 			var o = tiposOpt;
@@ -609,6 +621,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			if (o && typeof o === 'object' && tipo != null && o[String(tipo)] !== undefined) {
 				return String(o[String(tipo)]);
 			}
+			if (Array.isArray(tiposOptGridItems)) {
+				for (var gi = 0; gi < tiposOptGridItems.length; gi++) {
+					if (String(tiposOptGridItems[gi].value) === t) {
+						return String(tiposOptGridItems[gi].text);
+					}
+				}
+			}
 			return tipo != null && t !== '' && t !== 'undefined' ? t : '';
 		}
 		var osAddMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
@@ -616,12 +635,21 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
 		}
 		function osAddGridRowFromEl($el) {
-			var $r = $el.closest('#grid_table tr.jsgrid-insert-row, #grid_table tr.jsgrid-edit-row');
-			if ($r.length) {
-				return $r;
+			var el = $el && $el.length ? $el[0] : null;
+			if (!el) {
+				return $();
 			}
-			$r = $el.closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
-			return $r.length ? $r : $el.closest('tr');
+			var $g = $(el).closest('#grid_table');
+			if ($g.length) {
+				var $hit = $g.find('tr.jsgrid-insert-row, tr.jsgrid-edit-row').filter(function () {
+					return $.contains(this, el);
+				}).first();
+				if ($hit.length) {
+					return $hit;
+				}
+			}
+			var $r = $(el).closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+			return $r.length ? $r : $(el).closest('tr');
 		}
 		function osAddGridLinhaTipoSelecionado($row) {
 			if (!$row || !$row.length) {
@@ -641,12 +669,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			if (!$t.length) {
 				return NaN;
 			}
-			var raw = $t.val();
+			var raw = null;
+			var $optSel = $t.find('option:selected');
+			if ($optSel.length) {
+				raw = $optSel.attr('value');
+			}
+			if (raw === undefined || raw === null) {
+				raw = $t.val();
+			}
 			if ($t.data('selectpicker')) {
 				try {
 					var spv = $t.selectpicker('val');
 					if (spv !== null && spv !== undefined && spv !== '') {
-						raw = spv;
+						raw = Array.isArray(spv) ? spv[0] : spv;
 					}
 				} catch (eSp) { /* selectpicker indisponível ou não inicializado */ }
 			}
@@ -726,6 +761,14 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 	// jsGrid — re-inicializa linha de inserção após cada refresh (loadData)
 		window.initOsAddGridInsertRow = function () {
+			$('#grid_table td.inputTipo select, #grid_table td.editTipo select').each(function () {
+				var $s = $(this);
+				if ($s.data('selectpicker')) {
+					try {
+						$s.selectpicker('destroy');
+					} catch (eD) { }
+				}
+			});
 			var $ins = $('#grid_table .jsgrid-insert-row');
 			if ($ins.length) {
 				var $tipo = $ins.find('.inputTipo select');
@@ -997,7 +1040,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					type: "select",
 					align: "left",
 					width: 110,
-					items: tiposOpt,
+					items: tiposOptGridItems,
+					valueField: "value",
+					textField: "text",
 					validade: 'required',
 					css: 'os-col-tipo',
 					headercss: 'os-col-tipo',

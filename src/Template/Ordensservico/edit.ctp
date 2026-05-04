@@ -767,17 +767,38 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	}
 
 	var tiposOpt = <?= $tiposOpt ?>;
+	var tiposOptGridItems = <?= isset($tiposOptGridItems) ? $tiposOptGridItems : '[]' ?>;
+	if (!Array.isArray(tiposOptGridItems) || tiposOptGridItems.length === 0) {
+		tiposOptGridItems = [];
+		if (tiposOpt && typeof tiposOpt === 'object' && !Array.isArray(tiposOpt)) {
+			Object.keys(tiposOpt).forEach(function (k) {
+				var iv = parseInt(String(k), 10);
+				if (!isNaN(iv) && iv > 0) {
+					tiposOptGridItems.push({ value: iv, text: String(tiposOpt[k]) });
+				}
+			});
+		}
+	}
 	var osEditMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
 	function osEditTipoLabelNorm(s) {
 		return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
 	}
 	function osEditGridRowFromEl($el) {
-		var $r = $el.closest('#grid_table tr.jsgrid-insert-row, #grid_table tr.jsgrid-edit-row');
-		if ($r.length) {
-			return $r;
+		var el = $el && $el.length ? $el[0] : null;
+		if (!el) {
+			return $();
 		}
-		$r = $el.closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
-		return $r.length ? $r : $el.closest('tr');
+		var $g = $(el).closest('#grid_table');
+		if ($g.length) {
+			var $hit = $g.find('tr.jsgrid-insert-row, tr.jsgrid-edit-row').filter(function () {
+				return $.contains(this, el);
+			}).first();
+			if ($hit.length) {
+				return $hit;
+			}
+		}
+		var $r = $(el).closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+		return $r.length ? $r : $(el).closest('tr');
 	}
 	function osEditGridTipoDaLinha($row) {
 		if (!$row || !$row.length) {
@@ -794,12 +815,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$t = $row.children('td').first().find('select').first();
 		}
 		if ($t.length) {
-			var raw = $t.val();
+			var raw = null;
+			var $optSel = $t.find('option:selected');
+			if ($optSel.length) {
+				raw = $optSel.attr('value');
+			}
+			if (raw === undefined || raw === null) {
+				raw = $t.val();
+			}
 			if ($t.data('selectpicker')) {
 				try {
 					var spv = $t.selectpicker('val');
 					if (spv !== null && spv !== undefined && spv !== '') {
-						raw = spv;
+						raw = Array.isArray(spv) ? spv[0] : spv;
 					}
 				} catch (eSp) { }
 			}
@@ -1048,7 +1076,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				title: "Tipo",
 				type: "select",
 				width: 96,
-				items: tiposOpt,
+				items: tiposOptGridItems,
+				valueField: "value",
+				textField: "text",
 				editing: false,
 				insertcss: 'cellInput inputTipo',
 				editcss: "editTipo"
@@ -1331,6 +1361,14 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		],
 		onRefreshed: function(args) {
 			$(".jsgrid-select2").select2();
+			$('#grid_table td.inputTipo select, #grid_table td.editTipo select').each(function () {
+				var $s = $(this);
+				if ($s.data('selectpicker')) {
+					try {
+						$s.selectpicker('destroy');
+					} catch (eD) { }
+				}
+			});
 			var $ins = $('#grid_table .jsgrid-insert-row');
 			if ($ins.length) {
 				var $tipoIns = $ins.find('td.inputTipo select, .inputTipo select');

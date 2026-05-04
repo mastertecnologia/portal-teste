@@ -804,6 +804,7 @@ class OrdensservicoController extends AppController {
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
 		$this->set('tiposMobile', C_ProdutosTipo);
 		$this->set('tiposOpt', json_encode(C_ProdutosTipo, JSON_PRETTY_PRINT));
+		$this->set('tiposOptGridItems', json_encode($this->tiposOptGridItemsForJsGrid(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 		$this->set('problemas', $problemas);
 		$this->set('areas', $areas);
 		$this->set('clientes', $clientesOpt);
@@ -2011,6 +2012,7 @@ class OrdensservicoController extends AppController {
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
 		$this->set('tiposMobile', C_ProdutosTipo);
 		$this->set('tiposOpt', json_encode(C_ProdutosTipo, JSON_PRETTY_PRINT));
+		$this->set('tiposOptGridItems', json_encode($this->tiposOptGridItemsForJsGrid(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 		$this->set('problemas', $problemas);
 		$this->set('areas', $areas);
 		$this->set('clientes', $clientesOpt);
@@ -2696,5 +2698,51 @@ class OrdensservicoController extends AppController {
 			$this->Flash->error($msgErro);
 		}
 		return $this->redirect(['action' => 'relatorios', '?' => $filtros]);
+	}
+
+	/**
+	 * Itens para o campo jsGrid `tipo` com valueField/textField.
+	 * Se C_ProdutosTipo for lista PHP indexada (0 => Produto, 1 => Serviço, …), o jsGrid usaria value=0
+	 * e a lupa rejeita tipo <= 0. Aqui alinhamos cada rótulo ao inteiro real (C_ProdutosTipo* ou chave numérica).
+	 *
+	 * @return array
+	 */
+	protected function tiposOptGridItemsForJsGrid(): array {
+		if (!defined('C_ProdutosTipo') || !is_array(constant('C_ProdutosTipo'))) {
+			return [];
+		}
+		/** @var array<int|string, string> $src */
+		$src = constant('C_ProdutosTipo');
+		$keys = array_keys($src);
+		$isZeroIndexedList = $keys === range(0, count($src) - 1);
+		$out = [];
+		if (!$isZeroIndexedList) {
+			foreach ($src as $k => $label) {
+				$ik = (int)$k;
+				if ($ik > 0) {
+					$out[] = ['value' => $ik, 'text' => (string)$label];
+				}
+			}
+
+			return $out;
+		}
+		$constOrder = [];
+		foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoServico', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocacao'] as $cname) {
+			if (defined($cname)) {
+				$constOrder[] = (int)constant($cname);
+			}
+		}
+		$labels = array_values($src);
+		$nextFallback = count($constOrder) > 0 ? max($constOrder) + 1 : 1;
+		for ($i = 0; $i < count($labels); $i++) {
+			if (isset($constOrder[$i]) && (int)$constOrder[$i] > 0) {
+				$val = (int)$constOrder[$i];
+			} else {
+				$val = $nextFallback++;
+			}
+			$out[] = ['value' => $val, 'text' => (string)$labels[$i]];
+		}
+
+		return $out;
 	}
 }
