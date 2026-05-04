@@ -612,13 +612,85 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			return tipo != null && t !== '' && t !== 'undefined' ? t : '';
 		}
 		var osAddMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
+		function osAddTipoLabelNorm(s) {
+			return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
+		}
 		function osAddGridLinhaTipoSelecionado($row) {
-			var $t = $row.find('.inputTipo select, .editTipo select').first();
-			if (!$t.length) {
+			if (!$row || !$row.length) {
 				return NaN;
 			}
-			var v = parseInt(String($t.val()), 10);
-			return isNaN(v) ? NaN : v;
+			var $t = $row.find('td.inputTipo select, td.editTipo select').first();
+			if (!$t.length) {
+				$t = $row.find('.inputTipo select, .editTipo select').first();
+			}
+			/* Coluna Tipo é a 1ª célula visível da linha (campo id tem visible:false). */
+			if (!$t.length && ($row.hasClass('jsgrid-insert-row') || $row.hasClass('jsgrid-edit-row'))) {
+				$t = $row.children('td').first().find('select').first();
+			}
+			var dbg = {
+				rowClass: ($row.attr('class') || '').substring(0, 120),
+				td0Class: $row.children('td').first().attr('class') || '',
+				found: !!$t.length
+			};
+			if (!$t.length) {
+				// #region agent log
+				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'no tipo select',data:dbg,timestamp:Date.now(),hypothesisId:'H4'})}).catch(function(){});
+				// #endregion
+				return NaN;
+			}
+			var raw = $t.val();
+			if ($t.data('selectpicker')) {
+				try {
+					var spv = $t.selectpicker('val');
+					if (spv !== null && spv !== undefined && spv !== '') {
+						raw = spv;
+					}
+				} catch (eSp) { /* selectpicker indisponível ou não inicializado */ }
+			}
+			dbg.raw = raw;
+			var v = parseInt(String(raw === null || raw === undefined ? '' : raw), 10);
+			if (!isNaN(v) && v > 0) {
+				dbg.out = v;
+				dbg.path = 'val';
+				// #region agent log
+				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'tipo ok',data:dbg,timestamp:Date.now(),hypothesisId:'H1'})}).catch(function(){});
+				// #endregion
+				return v;
+			}
+			var label = $.trim($t.find('option:selected').first().text());
+			dbg.label = label;
+			var labelN = osAddTipoLabelNorm(label);
+			if (!labelN || labelN === osAddTipoLabelNorm('Tipo')) {
+				dbg.out = NaN;
+				dbg.path = 'placeholder';
+				// #region agent log
+				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'tipo placeholder',data:dbg,timestamp:Date.now(),hypothesisId:'H2'})}).catch(function(){});
+				// #endregion
+				return NaN;
+			}
+			var mapped = NaN;
+			if (tiposOpt && typeof tiposOpt === 'object') {
+				var keys = Object.keys(tiposOpt);
+				for (var i = 0; i < keys.length; i++) {
+					var k = keys[i];
+					if (osAddTipoLabelNorm(tiposOpt[k]) === labelN) {
+						var fk = parseInt(String(k), 10);
+						if (!isNaN(fk)) {
+							mapped = fk;
+						}
+						break;
+					}
+				}
+			}
+			dbg.out = mapped;
+			dbg.path = 'label';
+			// #region agent log
+			fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'tipo label map',data:dbg,timestamp:Date.now(),hypothesisId:'H3'})}).catch(function(){});
+			// #endregion
+			if (!isNaN(mapped) && mapped > 0) {
+				return mapped;
+			}
+			return NaN;
 		}
 		function osAddProdutoJsonUrl(cod) {
 			var base = "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + encodeURIComponent(cod || '');
@@ -677,6 +749,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					}
 					if ($tipo.val() === null || $tipo.val() === '') {
 						$tipo.val(0);
+					}
+					if ($tipo.data('selectpicker')) {
+						try {
+							$tipo.selectpicker('refresh');
+						} catch (eR) { /* evita quebrar a grid se o plugin falhar */ }
 					}
 				}
 				$ins.find('.inputValorunitario > input, .inputValordesconto > input').addClass('mascaramonetaria');

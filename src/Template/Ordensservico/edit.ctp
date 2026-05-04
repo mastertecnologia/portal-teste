@@ -768,12 +768,47 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 	var tiposOpt = <?= $tiposOpt ?>;
 	var osEditMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
+	function osEditTipoLabelNorm(s) {
+		return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
+	}
 	function osEditGridTipoDaLinha($row) {
-		var $t = $row.find('.inputTipo select, .editTipo select').first();
+		if (!$row || !$row.length) {
+			return NaN;
+		}
+		var $t = $row.find('td.inputTipo select, td.editTipo select').first();
+		if (!$t.length) {
+			$t = $row.find('.inputTipo select, .editTipo select').first();
+		}
+		if (!$t.length && ($row.hasClass('jsgrid-insert-row') || $row.hasClass('jsgrid-edit-row'))) {
+			$t = $row.children('td').first().find('select').first();
+		}
 		if ($t.length) {
-			var v = parseInt(String($t.val()), 10);
-			if (!isNaN(v)) {
+			var raw = $t.val();
+			if ($t.data('selectpicker')) {
+				try {
+					var spv = $t.selectpicker('val');
+					if (spv !== null && spv !== undefined && spv !== '') {
+						raw = spv;
+					}
+				} catch (eSp) { }
+			}
+			var v = parseInt(String(raw === null || raw === undefined ? '' : raw), 10);
+			if (!isNaN(v) && v > 0) {
 				return v;
+			}
+			var label = $.trim($t.find('option:selected').first().text());
+			var labelN = osEditTipoLabelNorm(label);
+			if (labelN && labelN !== osEditTipoLabelNorm('Tipo') && tiposOpt && typeof tiposOpt === 'object') {
+				var keys = Object.keys(tiposOpt);
+				for (var i = 0; i < keys.length; i++) {
+					var k = keys[i];
+					if (osEditTipoLabelNorm(tiposOpt[k]) === labelN) {
+						var fk = parseInt(String(k), 10);
+						if (!isNaN(fk) && fk > 0) {
+							return fk;
+						}
+					}
+				}
 			}
 		}
 		var item = $row.data('JSGridItem');
