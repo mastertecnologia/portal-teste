@@ -1099,6 +1099,41 @@ class ProdutosController extends AppController {
 		return trim((string)$txt);
 	}
 
+	/**
+	 * O value do tipo na OS vem de C_ProdutosTipo*; a coluna produtos.tipo no BD costuma ser o legado 1=mercadoria, 2=serviço.
+	 * Quando a constante difere (ex.: produto=5 no .env mas linhas gravadas como 1), a pesquisa deve aceitar ambos — sem misturar serviço.
+	 *
+	 * @param int $tipoInt tipo enviado pela grid (inteiro > 0).
+	 * @return int[]
+	 */
+	private function produtosTipoPesquisaAliases(int $tipoInt): array {
+		$out = [$tipoInt];
+		$pairs = [];
+		if (defined('C_ProdutosTipoProduto')) {
+			$pairs[] = [(int) constant('C_ProdutosTipoProduto'), 1];
+		}
+		if (defined('C_ProdutosTipoServico')) {
+			$pairs[] = [(int) constant('C_ProdutosTipoServico'), 2];
+		}
+		foreach ($pairs as $pair) {
+			list($constTipo, $legacyTipo) = $pair;
+			if ($constTipo <= 0 || $legacyTipo <= 0 || $constTipo === $legacyTipo) {
+				continue;
+			}
+			if ($tipoInt === $constTipo) {
+				$out[] = $legacyTipo;
+			}
+			if ($tipoInt === $legacyTipo) {
+				$out[] = $constTipo;
+			}
+		}
+		$out = array_values(array_unique(array_filter($out, function ($t) {
+			return (int) $t > 0;
+		})));
+
+		return $out !== [] ? $out : [$tipoInt];
+	}
+
 	public function pesquisar() {
         $this->autoRender = false;
 		/* Mesma origem do cadastro (tabela produtos no portal), alinhada ao módulo Produtos/Estoque para tipo produto;
@@ -1111,6 +1146,7 @@ class ProdutosController extends AppController {
 			], 422);
 		}
 		$tipoInt = (int) $tipoParam;
+		$tiposDb = $this->produtosTipoPesquisaAliases($tipoInt);
 
         $termo = $this->request->getQuery('termo');
         $idEmpresa = $this->Auth->user('idempresa');
@@ -1119,7 +1155,7 @@ class ProdutosController extends AppController {
             ->where([
 				'idempresa' => $idEmpresa,
 				'ativo' => 1,
-				'tipo' => $tipoInt,
+				'tipo IN' => $tiposDb,
 			]);
     
         if (!empty($termo)) {

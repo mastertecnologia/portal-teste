@@ -1854,11 +1854,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						tbody.html('<tr><td colspan="4" class="text-center text-danger">' + msgInv + '</td></tr>');
 						return;
 					}
-					var filtrados = data.filter(function (prod) {
-						return parseInt(prod.tipo, 10) === tipoFiltroOs;
-					});
-					if(filtrados.length > 0) {
-						$.each(filtrados, function(index, prod) {
+					/* O backend já filtra por tipo (com aliases legado 1/2 vs C_*); não re-filtrar aqui — senão sumiram
+					 * produtos com tipo=1 no JSON quando o select envia outro inteiro equivalente a "Produto". */
+					if(data.length > 0) {
+						$.each(data, function(index, prod) {
 							var tipoLinha = parseInt(prod.tipo, 10);
 							var precisaEstoque = (osTiposComEstoqueErp || []).indexOf(tipoLinha) !== -1;
 							var tr = $('<tr>').attr('data-codigo', prod.codigo != null ? String(prod.codigo) : '').attr('data-tipo', prod.tipo != null ? String(prod.tipo) : '')
@@ -1875,7 +1874,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							tr.append($('<td>').append(btn));
 							tbody.append(tr);
 						});
-						osModalAplicarEstoqueLinhas(filtrados);
+						osModalAplicarEstoqueLinhas(data);
 					} else {
 						tbody.html('<tr><td colspan="4" class="text-center">' + osAddMsgNenhumItemTipo + '</td></tr>');
 					}
