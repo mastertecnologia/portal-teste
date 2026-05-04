@@ -615,27 +615,26 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		function osAddTipoLabelNorm(s) {
 			return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
 		}
+		function osAddGridRowFromEl($el) {
+			var $r = $el.closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+			return $r.length ? $r : $el.closest('tr');
+		}
 		function osAddGridLinhaTipoSelecionado($row) {
 			if (!$row || !$row.length) {
 				return NaN;
 			}
-			var $t = $row.find('td.inputTipo select, td.editTipo select').first();
+			/* Marca aplicada em initOsAddGridInsertRow / onRefreshed: evita confundir com #tipo mobile (form) ou outros selects. */
+			var $t = $row.find('select.os-grid-tipo-select').first();
+			if (!$t.length) {
+				$t = $row.find('td.inputTipo select, td.editTipo select').first();
+			}
 			if (!$t.length) {
 				$t = $row.find('.inputTipo select, .editTipo select').first();
 			}
-			/* Coluna Tipo é a 1ª célula visível da linha (campo id tem visible:false). */
 			if (!$t.length && ($row.hasClass('jsgrid-insert-row') || $row.hasClass('jsgrid-edit-row'))) {
 				$t = $row.children('td').first().find('select').first();
 			}
-			var dbg = {
-				rowClass: ($row.attr('class') || '').substring(0, 120),
-				td0Class: $row.children('td').first().attr('class') || '',
-				found: !!$t.length
-			};
 			if (!$t.length) {
-				// #region agent log
-				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'no tipo select',data:dbg,timestamp:Date.now(),hypothesisId:'H4'})}).catch(function(){});
-				// #endregion
 				return NaN;
 			}
 			var raw = $t.val();
@@ -647,25 +646,13 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					}
 				} catch (eSp) { /* selectpicker indisponível ou não inicializado */ }
 			}
-			dbg.raw = raw;
 			var v = parseInt(String(raw === null || raw === undefined ? '' : raw), 10);
 			if (!isNaN(v) && v > 0) {
-				dbg.out = v;
-				dbg.path = 'val';
-				// #region agent log
-				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'tipo ok',data:dbg,timestamp:Date.now(),hypothesisId:'H1'})}).catch(function(){});
-				// #endregion
 				return v;
 			}
 			var label = $.trim($t.find('option:selected').first().text());
-			dbg.label = label;
 			var labelN = osAddTipoLabelNorm(label);
 			if (!labelN || labelN === osAddTipoLabelNorm('Tipo')) {
-				dbg.out = NaN;
-				dbg.path = 'placeholder';
-				// #region agent log
-				fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'tipo placeholder',data:dbg,timestamp:Date.now(),hypothesisId:'H2'})}).catch(function(){});
-				// #endregion
 				return NaN;
 			}
 			var mapped = NaN;
@@ -682,11 +669,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					}
 				}
 			}
-			dbg.out = mapped;
-			dbg.path = 'label';
-			// #region agent log
-			fetch('http://127.0.0.1:7753/ingest/17010d6d-b722-4a03-aba9-a1bdf34f817d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'eaae6e'},body:JSON.stringify({sessionId:'eaae6e',location:'add.ctp:osAddGridLinhaTipoSelecionado',message:'tipo label map',data:dbg,timestamp:Date.now(),hypothesisId:'H3'})}).catch(function(){});
-			// #endregion
 			if (!isNaN(mapped) && mapped > 0) {
 				return mapped;
 			}
@@ -744,6 +726,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			if ($ins.length) {
 				var $tipo = $ins.find('.inputTipo select');
 				if ($tipo.length) {
+					$tipo.addClass('os-grid-tipo-select').attr('data-os-field', 'tipo');
 					if (!$tipo.find('option[value="0"]').length) {
 						$tipo.prepend($('<option>', { value: 0, text: 'Tipo' }));
 					}
@@ -760,6 +743,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			}
 			var $edit = $('.jsgrid-edit-row');
 			if ($edit.length) {
+				$edit.find('td.editTipo select, td.inputTipo select').addClass('os-grid-tipo-select').attr('data-os-field', 'tipo');
+				if ($edit.find('td.editTipo select').data('selectpicker')) {
+					try {
+						$edit.find('td.editTipo select').selectpicker('refresh');
+					} catch (eE) { }
+				}
 				$edit.find('.editValorunitario > input, .editValordesconto > input').addClass('mascaramonetaria');
 				if (typeof calculoEdit === 'function') {
 					calculoEdit();
@@ -1036,7 +1025,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
-							var $rowBtn = $(this).closest('tr');
+							var $rowBtn = $(this).closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+							if (!$rowBtn.length) {
+								$rowBtn = $(this).closest('tr');
+							}
 							var tipoModal = osAddGridLinhaTipoSelecionado($rowBtn);
 							if (!tipoModal || tipoModal <= 0) {
 								if (typeof bootbox !== 'undefined') {
@@ -1070,7 +1062,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
-							var $rowBtn = $(this).closest('tr');
+							var $rowBtn = $(this).closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+							if (!$rowBtn.length) {
+								$rowBtn = $(this).closest('tr');
+							}
 							var tipoModal = osAddGridLinhaTipoSelecionado($rowBtn);
 							if (!tipoModal || tipoModal <= 0) {
 								if (typeof bootbox !== 'undefined') {
@@ -1447,8 +1442,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				$row.find('.inputValortotal > input').val(numberToReal(valortotal));
 			}
 
-			$(document).on('change', '.jsgrid-insert-row .inputTipo > select', function(){
-				var $row = $(this).closest('tr');
+			$(document).on('change', '.jsgrid-insert-row td.inputTipo select', function(){
+				var $row = osAddGridRowFromEl($(this));
 				$row.find('input.input-codigo-val').val('');
 				$row.find('.inputDescricao > input').val('');
 				$row.find('.inputUnidade > input').val('');
@@ -1465,7 +1460,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 			$(document).on('change', '.jsgrid-insert-row .inputCodproduto input.input-codigo-val', function(){
 				var cod = $.trim($(this).val() || '');
-				var $row = $(this).closest('tr');
+				var $row = osAddGridRowFromEl($(this));
 				if (!cod) {
 					return;
 				}
@@ -1541,8 +1536,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$(document).on('change', '.jsgrid-insert-row .inputValordesconto > input', function(){ calculoAdd(); });
 			$(document).on('change', '.jsgrid-insert-row .inputValorunitario > input', function(){ calculoAdd(); });
 
-			$(document).on('change', '.jsgrid-edit-row .editTipo > select', function(){
-				var $row = $(this).closest('tr');
+			$(document).on('change', '.jsgrid-edit-row td.editTipo select, .jsgrid-edit-row td.inputTipo select', function(){
+				var $row = osAddGridRowFromEl($(this));
 				$row.find('input.input-codigo-val').val('');
 				$row.find('.editDescricao > input').val('');
 				$row.find('.editUnidade > input').val('');
@@ -1559,7 +1554,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 			$(document).on('change', '.jsgrid-edit-row .inputCodproduto input.input-codigo-val', function(){
 				var cod = $.trim($(this).val() || '');
-				var $row = $(this).closest('tr');
+				var $row = osAddGridRowFromEl($(this));
 				if (!cod) {
 					return;
 				}
