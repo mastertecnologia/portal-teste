@@ -173,6 +173,7 @@ class AppController extends Controller
                 // Webhook Autentique (corpo JSON; sem _Token)
                 "webhookAutentique",
                 // Laudos: API JSON (fetch/AJAX sem _Token)
+                "clientesBuscar",
                 "delete",
                 "changeStatus",
                 "duplicar",

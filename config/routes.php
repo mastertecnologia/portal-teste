@@ -2169,6 +2169,7 @@ Router::scope("/", function ($routes) {
 Router::scope('/laudos', function (RouteBuilder $routes) {
     $routes->connect('/pareceres', ['controller' => 'Laudos', 'action' => 'index'])->setMethods(['GET']);
     $routes->connect('/pareceres/:id', ['controller' => 'Laudos', 'action' => 'view'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+    $routes->connect('/clientes-buscar', ['controller' => 'Laudos', 'action' => 'clientesBuscar'])->setMethods(['GET']);
 });
 
 // Rota pública de validação (sem autenticação)

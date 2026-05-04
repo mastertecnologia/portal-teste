@@ -6,6 +6,8 @@ import OperationalDashboard from "./pages/OperationalDashboard.jsx";
 import ClientTicketList from "./pages/ClientTicketList.jsx";
 import ClientTicketDetail from "./pages/ClientTicketDetail.jsx";
 import ModuloBancos from "./pages/financeiro/ModuloBancos.jsx";
+import ParecerListPage from "./laudos/pages/ParecerListPage.jsx";
+import ParecerEditPage from "./laudos/pages/ParecerEditPage.jsx";
 
 function EmbeddedTickets() {
     const boot = typeof window !== "undefined" ? window.__TICKETS_BOOT__ : null;
@@ -25,6 +27,10 @@ function EmbeddedTickets() {
         case "finance_remessas":
         case "finance_retorno":
             return <ModuloBancos boot={boot} />;
+        case "laudos_list":
+            return <ParecerListPage boot={boot} />;
+        case "laudos_edit":
+            return <ParecerEditPage boot={boot} />;
         default:
             return null;
     }
