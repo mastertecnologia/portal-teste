@@ -433,8 +433,10 @@ class ProdutosController extends AppController {
 			}
 		}
 		$where = ['codigo' => $codigo, 'idempresa' => $idempresa];
+		$tiposFiltroDb = [];
 		if ($tipoFiltro !== null) {
-			$where['tipo'] = $tipoFiltro;
+			$tiposFiltroDb = $this->produtosTipoPesquisaAliases((int)$tipoFiltro);
+			$where['tipo IN'] = $tiposFiltroDb;
 		}
 		$produto = $this->Produtos->find()->where($where)->first();
 		if (!$produto) {
@@ -447,7 +449,8 @@ class ProdutosController extends AppController {
 			return $this->jsonResponse(['mensagem' => 'Produto/serviço não encontrado'], 404);
 		}
 		$tipoProdutoConst = defined('C_ProdutosTipoProduto') ? (int) C_ProdutosTipoProduto : 1;
-		if ((int) $produto->tipo === $tipoProdutoConst) {
+		$tipoProdutoEncontrado = (int)$produto->tipo;
+		if ($tipoProdutoEncontrado === $tipoProdutoConst || in_array($tipoProdutoConst, $tiposFiltroDb, true)) {
 			try {
 				$idempresa = $this->Auth->user('idempresa');
 				$empresa = $this->Empresas->get($idempresa);
@@ -491,6 +494,10 @@ class ProdutosController extends AppController {
 			} catch (\Throwable $e) {
 				$this->log('Produtos::produto GetEstoqueProdutos: ' . $e->getMessage(), 'error');
 			}
+		}
+		// Mantém o tipo alinhado ao selecionado na OS, mesmo quando houver alias legado no banco.
+		if ($tipoFiltro !== null) {
+			$produto->tipo = (int)$tipoFiltro;
 		}
 		return $this->jsonResponse($produto, 200);
     }
