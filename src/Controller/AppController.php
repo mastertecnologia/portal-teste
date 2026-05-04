@@ -172,6 +172,22 @@ class AppController extends Controller
                 "conciliarExtrato",
                 // Webhook Autentique (corpo JSON; sem _Token)
                 "webhookAutentique",
+                // Laudos: API JSON (fetch/AJAX sem _Token)
+                "delete",
+                "changeStatus",
+                "duplicar",
+                "historico",
+                "uploadImagem",
+                "deleteImagem",
+                "uploadAnexo",
+                "downloadAnexo",
+                "pecas",
+                "addPeca",
+                "servicos",
+                "templates",
+                "enviarEmail",
+                "publica",
+                "validar",
             ],
         ]);
         $this->loadComponent("Auth", [
@@ -325,6 +341,7 @@ class AppController extends Controller
             "ordensActive" => "",
             "ticketsActive" => "",
             "senhasActive" => "",
+            "laudosActive" => "",
             "faturasActive" => "",
             "prefaturamentoActive" => "",
             "fiscalModuleActive" => "",
@@ -393,6 +410,7 @@ class AppController extends Controller
             "contracttemplates" => "advancedModuleActive",
             "advancedinvoices" => "advancedModuleActive",
             "advancedreports" => "relActive",
+            "laudos" => "laudosActive",
         ];
 
         if (isset($controllerToMenuMap[$controllerLower])) {

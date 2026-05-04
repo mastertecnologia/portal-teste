@@ -2163,6 +2163,66 @@ Router::scope("/", function ($routes) {
     $routes->fallbacks(DashedRoute::class);
 });
 
+// =============================================================================
+// MÓDULO LAUDOS — Rotas web (views CTP)
+// =============================================================================
+Router::scope('/laudos', function (RouteBuilder $routes) {
+    $routes->connect('/pareceres', ['controller' => 'Laudos', 'action' => 'index'])->setMethods(['GET']);
+    $routes->connect('/pareceres/:id', ['controller' => 'Laudos', 'action' => 'view'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+});
+
+// Rota pública de validação (sem autenticação)
+Router::scope('/validar', function (RouteBuilder $routes) {
+    $routes->connect('/:hash', ['controller' => 'Laudos', 'action' => 'validar'], ['pass' => ['hash']]);
+});
+
+// =============================================================================
+// MÓDULO LAUDOS — API REST
+// Controllers em App\Controller\Api\Laudos\ (prefix 'api/laudos')
+// =============================================================================
+Router::scope('/api/laudos', ['prefix' => 'api/laudos'], function (RouteBuilder $routes) {
+    $routes->setExtensions(['json']);
+
+    // Pareceres
+    $routes->connect('/pareceres', ['controller' => 'LaudosPareceres', 'action' => 'index'])->setMethods(['GET']);
+    $routes->connect('/pareceres', ['controller' => 'LaudosPareceres', 'action' => 'add'])->setMethods(['POST']);
+    $routes->connect('/pareceres/:id', ['controller' => 'LaudosPareceres', 'action' => 'view'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+    $routes->connect('/pareceres/:id', ['controller' => 'LaudosPareceres', 'action' => 'edit'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['PUT', 'PATCH']);
+    $routes->connect('/pareceres/:id', ['controller' => 'LaudosPareceres', 'action' => 'delete'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
+    $routes->connect('/pareceres/:id/duplicar', ['controller' => 'LaudosPareceres', 'action' => 'duplicar'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['POST']);
+    $routes->connect('/pareceres/:id/status', ['controller' => 'LaudosPareceres', 'action' => 'changeStatus'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['POST']);
+    $routes->connect('/pareceres/:id/historico', ['controller' => 'LaudosPareceres', 'action' => 'historico'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+    $routes->connect('/pareceres/:id/pdf', ['controller' => 'LaudosPdf', 'action' => 'pdf'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+    $routes->connect('/pareceres/:id/enviar-email', ['controller' => 'LaudosPdf', 'action' => 'enviarEmail'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['POST']);
+
+    // Produtos
+    $routes->connect('/produtos', ['controller' => 'LaudosProdutos', 'action' => 'add'])->setMethods(['POST']);
+    $routes->connect('/produtos/:id', ['controller' => 'LaudosProdutos', 'action' => 'edit'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['PUT', 'PATCH']);
+    $routes->connect('/produtos/:id', ['controller' => 'LaudosProdutos', 'action' => 'delete'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
+
+    // Imagens e Anexos
+    $routes->connect('/produto-imagens', ['controller' => 'LaudosUploads', 'action' => 'uploadImagem'])->setMethods(['POST']);
+    $routes->connect('/produto-imagens/:id', ['controller' => 'LaudosUploads', 'action' => 'deleteImagem'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
+    $routes->connect('/anexos', ['controller' => 'LaudosUploads', 'action' => 'uploadAnexo'])->setMethods(['POST']);
+    $routes->connect('/anexos/:id/download', ['controller' => 'LaudosUploads', 'action' => 'downloadAnexo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+
+    // Catálogo e Templates
+    $routes->connect('/catalogo/pecas', ['controller' => 'LaudosCatalogo', 'action' => 'pecas'])->setMethods(['GET']);
+    $routes->connect('/catalogo/pecas', ['controller' => 'LaudosCatalogo', 'action' => 'addPeca'])->setMethods(['POST']);
+    $routes->connect('/catalogo/servicos', ['controller' => 'LaudosCatalogo', 'action' => 'servicos'])->setMethods(['GET']);
+    $routes->connect('/templates/:tipo', ['controller' => 'LaudosCatalogo', 'action' => 'templates'], ['pass' => ['tipo']])->setMethods(['GET']);
+
+    // Validação pública (sem auth — liberada no ValidacaoController via Auth::allow)
+    $routes->connect('/validar/:hash', ['controller' => 'Validacao', 'action' => 'publica'], ['pass' => ['hash']]);
+});
+
+// Util (CNPJ/CEP) — namespace App\Controller\Api\
+// Scope em /api/util; rotas relativas sem repetir /util/
+Router::scope('/api/util', ['prefix' => 'api'], function (RouteBuilder $routes) {
+    $routes->connect('/cnpj/:cnpj', ['controller' => 'Util', 'action' => 'cnpj'], ['pass' => ['cnpj']]);
+    $routes->connect('/cep/:cep', ['controller' => 'Util', 'action' => 'cep'], ['pass' => ['cep']]);
+});
+
 /**
  * Load all plugin routes. See the Plugin documentation on
  * how to customize the loading of plugin routes.

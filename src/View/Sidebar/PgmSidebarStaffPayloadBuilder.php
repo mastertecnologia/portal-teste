@@ -109,6 +109,26 @@ final class PgmSidebarStaffPayloadBuilder
             ];
         }
 
+        // Laudos / Parecer Técnico
+        if ($roleNav === 0) {
+            $sections[] = [
+                'id' => 'laudos',
+                'title' => 'Laudos',
+                'defaultOpen' => (bool)($v['laudosActive'] ?? ''),
+                'items' => [
+                    self::item(
+                        'file-search',
+                        ' Parecer Técnico',
+                        '/laudos/pareceres',
+                        [],
+                        (bool)($v['laudosActive'] ?? ''),
+                        '',
+                        'Parecer Técnico'
+                    ),
+                ],
+            ];
+        }
+
         $sgAdvContr = $roleNav === 0 && (
             ($sg['advanced_module_modelos'] ?? true)
             || ($sg['advanced_module_faturas'] ?? true)
