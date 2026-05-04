@@ -713,6 +713,26 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			}
 			return NaN;
 		}
+		function osAddGridLinhaTipoLabelSelecionado($row) {
+			if (!$row || !$row.length) {
+				return '';
+			}
+			var $t = $row.find('select.os-item-tipo, select.os-grid-tipo-select').first();
+			if (!$t.length) {
+				$t = $row.find('td.inputTipo select, td.editTipo select').first();
+			}
+			if (!$t.length) {
+				$t = $row.find('.inputTipo select, .editTipo select').first();
+			}
+			if (!$t.length && ($row.hasClass('jsgrid-insert-row') || $row.hasClass('jsgrid-edit-row'))) {
+				$t = $row.children('td').first().find('select').first();
+			}
+			if (!$t.length) {
+				return '';
+			}
+			var txt = $.trim($t.find('option:selected').first().text() || '');
+			return txt;
+		}
 		function osAddProdutoJsonUrl(cod) {
 			var base = "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + encodeURIComponent(cod || '');
 			return base;
@@ -1086,6 +1106,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 								return;
 							}
 							window.osModalPesquisaTipo = tipoModal;
+							window.osModalPesquisaTipoLabel = osAddGridLinhaTipoLabelSelecionado($rowBtn);
 							window.activeInputCode = $input; 
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
@@ -1123,6 +1144,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 								return;
 							}
 							window.osModalPesquisaTipo = tipoModal;
+							window.osModalPesquisaTipoLabel = osAddGridLinhaTipoLabelSelecionado($rowBtn);
 							window.activeInputCode = $input;
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
@@ -1881,6 +1903,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			var tbody = $('#resultado-pesquisa-produtos');
 			tbody.html('<tr><td colspan="4" class="text-center">Buscando...</td></tr>');
 			var tipoFiltro = window.osModalPesquisaTipo;
+			var tipoFiltroLabel = $.trim(String(window.osModalPesquisaTipoLabel || ''));
 			var tipoFiltroOs = parseInt(String(tipoFiltro), 10);
 			if (isNaN(tipoFiltroOs) || tipoFiltroOs <= 0) {
 				tbody.html('<tr><td colspan="4" class="text-center text-warning">Selecione o tipo na linha da OS antes de pesquisar.</td></tr>');
@@ -1890,7 +1913,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$.ajax({
 				url: "<?= Router::url(['controller'=>'Produtos','action'=>'pesquisar']);?>", 
 				method: "GET",
-				data: { termo: termo, tipo: tipoFiltroOs },
+				data: { termo: termo, tipo: tipoFiltroOs, tipo_label: tipoFiltroLabel },
 				dataType: "json",
 				success: function(data) {
 					tbody.empty();

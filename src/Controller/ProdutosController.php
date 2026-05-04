@@ -719,6 +719,17 @@ class ProdutosController extends AppController {
 		return null;
 	}
 
+	private function produtoTiposDbBySemantic(?string $semantic): array {
+		$legacy = $this->produtoTipoLegacyBySemantic($semantic);
+		if ($legacy === null) {
+			return [];
+		}
+		if ($legacy === 1) {
+			return [1, 0];
+		}
+		return [$legacy];
+	}
+
     public function addAPI() {
         $this->autoRender = false;
         $responseApi = function ($mensagem, $status = 200) {
@@ -1335,6 +1346,14 @@ class ProdutosController extends AppController {
 		}
 		$tipoInt = (int) $tipoParam;
 		$tiposDb = $this->produtosTipoPesquisaAliases($tipoInt);
+		$tipoLabelParam = trim((string)$this->request->getQuery('tipo_label'));
+		if ($tipoLabelParam !== '') {
+			$semByLabel = $this->produtoTipoSemanticFromLabel($tipoLabelParam);
+			$tiposByLabel = $this->produtoTiposDbBySemantic($semByLabel);
+			if (!empty($tiposByLabel)) {
+				$tiposDb = $tiposByLabel;
+			}
+		}
 
         $termo = $this->request->getQuery('termo');
         $idEmpresa = $this->Auth->user('idempresa');
