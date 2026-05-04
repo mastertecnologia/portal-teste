@@ -634,6 +634,13 @@ class ProdutosController extends AppController {
 		}
 		if (preg_match('/^-?\d+$/', $raw)) {
 			$i = (int)$raw;
+			/* Em ambientes legados, o valor numérico pode divergir das constantes,
+			 * mas o rótulo em C_ProdutosTipo reflete o tipo usado na UI da OS. */
+			$lbl = $this->produtoTipoLabelByValue($i);
+			$fromLbl = $this->produtoTipoSemanticFromLabel($lbl);
+			if ($fromLbl !== null) {
+				return $fromLbl;
+			}
 			$fromConst = $this->produtoTipoSemanticFromConstValue($i);
 			if ($fromConst !== null) {
 				return $fromConst;
@@ -646,11 +653,6 @@ class ProdutosController extends AppController {
 			}
 			if ($i === 3) {
 				return 'contrato';
-			}
-			$lbl = $this->produtoTipoLabelByValue($i);
-			$fromLbl = $this->produtoTipoSemanticFromLabel($lbl);
-			if ($fromLbl !== null) {
-				return $fromLbl;
 			}
 		}
 
