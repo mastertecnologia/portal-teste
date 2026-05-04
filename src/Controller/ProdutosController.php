@@ -669,6 +669,15 @@ class ProdutosController extends AppController {
 		if (array_key_exists($sv, $map)) {
 			return (string)$map[$sv];
 		}
+		// Compatibilidade: quando C_ProdutosTipo vem como lista indexada (0..N), alguns fluxos enviam valor 1-based.
+		$keys = array_keys($map);
+		$isZeroIndexedList = $keys === range(0, count($map) - 1);
+		if ($isZeroIndexedList) {
+			$idx = $value - 1;
+			if (array_key_exists($idx, $map)) {
+				return (string)$map[$idx];
+			}
+		}
 
 		return '';
 	}
@@ -1298,6 +1307,10 @@ class ProdutosController extends AppController {
 		$out = array_values(array_unique(array_filter($out, function ($t) {
 			return (int) $t > 0;
 		})));
+		// Fallback operacional: em alguns ambientes da OS "Produto" chega como tipo=4 (mismatch de constants/lista).
+		if ($sem === null && $tipoInt === 4 && !in_array(1, $out, true)) {
+			$out[] = 1;
+		}
 
 		// Compatibilidade legado: algumas bases antigas gravaram "Produto" como 0.
 		$isTipoProduto = $sem === 'produto' || in_array(1, $out, true);
