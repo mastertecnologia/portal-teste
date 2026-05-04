@@ -333,7 +333,7 @@
 				<div class="col-12">
 					<div class="form-group ">
 						<label class="control-label m-b-0">Serial Number</label>
-						<?= $this->Form->text('serialnumbermodal', ['list' => 'listaSN', 'maxlength' => 100, 'placeholder' => 'Insira o serial number do item', 'id' => 'serialnumbermodal', 'class' => 'form-control', 'label' => false]);?>
+						<?= $this->Form->text('serialnumbermodal', ['list' => 'listaSN', 'maxlength' => 100, 'placeholder' => 'Insira o serial number do item', 'id' => 'serialnumbermodal_single', 'class' => 'form-control', 'label' => false]);?>
 						<small>*Informe apenas um Serial Number. Para mais códigos, adicione o produto novamente.</small>
 					</div>
 				</div>
