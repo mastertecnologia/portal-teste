@@ -139,6 +139,7 @@ class ProdutosController extends AppController {
         }
 
 		$this->set('produto', $produto);
+		$this->set('tiposProdutoOptions', $this->produtoTipoOptionsForForms());
 		$this->set('title', 'Cadastro de Produtos e Serviços');
 	}
 
@@ -219,6 +220,7 @@ class ProdutosController extends AppController {
         }
         
 		$this->set('produto', $produto);
+		$this->set('tiposProdutoOptions', $this->produtoTipoOptionsForForms());
 		$this->set('returnUrlEstoque', $returnUrlEstoque);
 		$this->set('embedEstoque', $embedEstoque);
 		$this->set('estoqueEmbedReturnUrl', $embedEstoque ? $returnUrlEstoque : null);
@@ -557,6 +559,50 @@ class ProdutosController extends AppController {
         $s = str_replace(',', '.', $s);
         return $s === '' ? null : (float) $s;
     }
+
+	/**
+	 * Opções do select de tipo para formularios de produto.
+	 * Garante chave legada 1/2/3 quando C_ProdutosTipo vier como lista indexada (0,1,2,...).
+	 *
+	 * @return array<int, string>
+	 */
+	private function produtoTipoOptionsForForms(): array {
+		if (!defined('C_ProdutosTipo') || !is_array(constant('C_ProdutosTipo'))) {
+			return [1 => 'Produto', 2 => 'Servico', 3 => 'Contrato'];
+		}
+		$src = constant('C_ProdutosTipo');
+		$keys = array_keys($src);
+		$isZeroIndexedList = $keys === range(0, count($src) - 1);
+		$out = [];
+		if (!$isZeroIndexedList) {
+			foreach ($src as $k => $label) {
+				$ik = (int)$k;
+				if ($ik > 0) {
+					$out[$ik] = (string)$label;
+				}
+			}
+
+			return $out;
+		}
+
+		$labels = array_values($src);
+		$constOrder = [];
+		foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoServico', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocacao'] as $cname) {
+			if (defined($cname) && (int)constant($cname) > 0) {
+				$constOrder[] = (int)constant($cname);
+			}
+		}
+		$nextFallback = count($constOrder) > 0 ? (max($constOrder) + 1) : 1;
+		for ($i = 0; $i < count($labels); $i++) {
+			$val = isset($constOrder[$i]) ? (int)$constOrder[$i] : $nextFallback++;
+			if ($val <= 0) {
+				continue;
+			}
+			$out[$val] = (string)$labels[$i];
+		}
+
+		return $out;
+	}
 
 	/**
 	 * Classifica um tipo numérico/textual no domínio legado do portal.

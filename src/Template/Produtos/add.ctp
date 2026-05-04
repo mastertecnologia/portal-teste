@@ -42,7 +42,7 @@
           <!-- Select real oculto — sincronizado pelo JS -->
           <div class="prd-tipo-select-wrap">
             <?= $this->Form->control('tipo', [
-              'options'  => C_ProdutosTipo,
+              'options'  => isset($tiposProdutoOptions) ? $tiposProdutoOptions : C_ProdutosTipo,
               'class'    => 'form-control',
               'label'    => false,
               'id'       => 'tipo',

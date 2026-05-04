@@ -84,7 +84,7 @@ if (!empty($embedEstoque)) {
           <div class="prd-tipo-cards" id="prdTipoCards"></div>
           <div class="prd-tipo-select-wrap">
             <?= $this->Form->control('tipo', [
-              'options'  => C_ProdutosTipo,
+              'options'  => isset($tiposProdutoOptions) ? $tiposProdutoOptions : C_ProdutosTipo,
               'class'    => 'form-control',
               'label'    => false,
               'id'       => 'tipo',
