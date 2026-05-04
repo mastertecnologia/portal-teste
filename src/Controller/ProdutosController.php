@@ -1150,11 +1150,12 @@ class ProdutosController extends AppController {
 
         $termo = $this->request->getQuery('termo');
         $idEmpresa = $this->Auth->user('idempresa');
+		/* Mesmo critério da listagem Produtos (aba Produtos/Serviços): index() não filtra por ativo;
+		 * filtrar só ativo=1 aqui esvaziava a modal quando ativo era null/0 legado ainda visível no módulo. */
         $query = $this->Produtos->find()
             ->select(['codigo', 'descricao', 'vlunitario', 'unidade', 'tipo'])
             ->where([
 				'idempresa' => $idEmpresa,
-				'ativo' => 1,
 				'tipo IN' => $tiposDb,
 			]);
     
