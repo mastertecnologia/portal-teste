@@ -780,6 +780,26 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		}
 	}
 	var osEditMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
+	function osEditNormalizeTipoValue(v) {
+		if (v === null || v === undefined) {
+			return '';
+		}
+		var n = parseInt(String(v), 10);
+		if (!isNaN(n) && n > 0) {
+			return String(n);
+		}
+		return $.trim(String(v)).toLowerCase();
+	}
+	function osEditEhErroItemNaoEncontrado(msg, statusCode) {
+		var t = $.trim(String(msg || ''));
+		if (statusCode === 404) {
+			return true;
+		}
+		if (!t) {
+			return false;
+		}
+		return /(nenhum item|nao encontrado|não encontrado|produto\/servi[cç]o não encontrado)/i.test(t);
+	}
 	function osEditTipoLabelNorm(s) {
 		return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
 	}
@@ -876,6 +896,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		$row.find('.inputValortotal input, .editValortotal input').val('');
 		$row.find('.inputValordesconto input, .editValordesconto input').val('');
 		$row.find('.inputSerialnumber input, .editSerialnumber input').val('');
+		$row.find('.btn-modal-obs').val('');
+		$row.find('.classe-modelo-input, .classe-serial-input, .classe-pk-input, .classe-obsinterna-input').val('');
+		$row.find('.td-codproduto-soocod').text('');
 	}
 	var produtosOpt = <?= $produtosOpt ?>;
 	produtosOpt.sort(function(a, b) {
@@ -1548,8 +1571,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				dataType: "json",
 				success: function(data) {
 					if (!data || data.mensagem) {
+						var msgApi = data && data.mensagem ? String(data.mensagem) : '';
+						var m = osEditEhErroItemNaoEncontrado(msgApi, 0) ? osEditMsgNenhumItemTipo : (msgApi || 'Não foi possível carregar o item informado.');
 						if (typeof bootbox !== 'undefined') {
-							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
 						}
 						$('#descricao').val('');
 						$('#unidade').val('');
@@ -1560,15 +1585,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						$('#serialnumber').val('');
 						return;
 					}
-					if (parseInt(data.tipo, 10) !== tipoSel) {
-						if (typeof bootbox !== 'undefined') {
-							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
-						}
-						$('#codproduto').val('');
-						$('#descricao').val('');
-						$('#unidade').val('');
-						$('#valorunitario').val('');
-						return;
+					var tipoSelNorm = osEditNormalizeTipoValue(tipoSel);
+					var tipoRespNorm = osEditNormalizeTipoValue(data.tipo);
+					if (tipoSelNorm !== '' && tipoRespNorm !== '' && tipoSelNorm !== tipoRespNorm) {
+						console.warn('[OS edit mobile] tipo divergente normalizado (seguindo item válido do backend).', { selecionado: tipoSelNorm, retornado: tipoRespNorm, codigo: cod });
 					}
 					$('#descricao').val(data.descricao);
 					$('#unidade').val(data.unidade);
@@ -1580,9 +1600,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					serialnumbers(data.codigo);
 				},
 				error: function(xhr) {
-					var m = osEditMsgNenhumItemTipo;
-					if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) {
-						m = xhr.responseJSON.mensagem;
+					var msgErr = (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) ? String(xhr.responseJSON.mensagem) : '';
+					var m = 'Não foi possível carregar o item informado.';
+					if (osEditEhErroItemNaoEncontrado(msgErr, xhr ? xhr.status : 0)) {
+						m = osEditMsgNenhumItemTipo;
+					} else if (msgErr) {
+						m = msgErr;
 					}
 					if (typeof bootbox !== 'undefined') {
 						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
@@ -1726,6 +1749,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 	$(document).on('change', '#grid_table .jsgrid-insert-row td.inputTipo select, #grid_table .jsgrid-insert-row .inputTipo > select', function() {
 		var $row = osEditGridRowFromEl($(this));
+		window.activeInputCode = null;
 		$row.find('input.input-codigo-val').val('');
 		$row.find('.inputDescricao input').val('');
 		$row.find('.inputUnidade input').val('');
@@ -1734,6 +1758,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		$row.find('.inputValortotal input').val('');
 		$row.find('.inputValordesconto input').val('');
 		$row.find('.inputSerialnumber input').val('');
+		$row.find('.btn-modal-obs').val('');
+		$row.find('.classe-modelo-input, .classe-serial-input, .classe-pk-input, .classe-obsinterna-input').val('');
+		$row.find('.td-codproduto-soocod').text('');
 		$('.qtdEstoque').text('');
 		if (typeof calculoAdd === 'function') {
 			calculoAdd();
@@ -1760,8 +1787,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			dataType: "json",
 			success: function(data) {
 				if (!data || data.mensagem) {
+					var msgApi = data && data.mensagem ? String(data.mensagem) : '';
+					var m = osEditEhErroItemNaoEncontrado(msgApi, 0) ? osEditMsgNenhumItemTipo : (msgApi || 'Não foi possível carregar o item informado.');
 					if (typeof bootbox !== 'undefined') {
-						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
 					}
 					osEditLimparCamposItemLinha($row);
 					$inputAtual.val('');
@@ -1770,16 +1799,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					else calculoEdit();
 					return;
 				}
-				if (parseInt(data.tipo, 10) !== tipoSel) {
-					if (typeof bootbox !== 'undefined') {
-						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
-					}
-					osEditLimparCamposItemLinha($row);
-					$inputAtual.val('');
-					$('.qtdEstoque').text('');
-					if ($row.hasClass('jsgrid-insert-row')) calculoAdd();
-					else calculoEdit();
-					return;
+				var tipoSelNorm = osEditNormalizeTipoValue(tipoSel);
+				var tipoRespNorm = osEditNormalizeTipoValue(data.tipo);
+				if (tipoSelNorm !== '' && tipoRespNorm !== '' && tipoSelNorm !== tipoRespNorm) {
+					console.warn('[OS edit card] tipo divergente normalizado (seguindo item válido do backend).', { selecionado: tipoSelNorm, retornado: tipoRespNorm, codigo: codigo });
 				}
 				if (data.tipo == <?= C_ProdutosTipoProduto ?>) {
 					$(".inputSerialnumber > input, .editSerialnumber > input").prop('disabled', false);
@@ -1804,9 +1827,12 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				else calculoEdit();
 			},
 			error: function(xhr) {
-				var m = osEditMsgNenhumItemTipo;
-				if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) {
-					m = xhr.responseJSON.mensagem;
+				var msgErr = (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) ? String(xhr.responseJSON.mensagem) : '';
+				var m = 'Não foi possível carregar o item informado.';
+				if (osEditEhErroItemNaoEncontrado(msgErr, xhr ? xhr.status : 0)) {
+					m = osEditMsgNenhumItemTipo;
+				} else if (msgErr) {
+					m = msgErr;
 				}
 				if (typeof bootbox !== 'undefined') {
 					bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
