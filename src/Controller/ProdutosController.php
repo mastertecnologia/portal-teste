@@ -393,6 +393,7 @@ class ProdutosController extends AppController {
 	public function produtostipo($tipo){
 		$this->autoRender = false;
 		error_reporting(0);
+		$produtosOpt = [];
 		$produtosOpt1 = $this->Produtos->find('all')->where(['tipo' => $tipo, 'idempresa' => $this->Auth->user('idempresa'), 'ativo' => 1])->order(['descricao'])->toArray();
 		foreach($produtosOpt1 as $reg) $produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao).' ('.trim($reg->codigo).')'];
 		//echo json_encode($produtosOpt, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -401,7 +402,9 @@ class ProdutosController extends AppController {
 
     /**
      * Retorna dados do produto/serviço por código (usado no orçamento).
-     * Para produtos (tipo 1), busca preço de venda no estoque/ERP e atualiza vlunitario se disponível.
+     * Opcional: filtrar por tipo (query ?tipo= ou segundo segmento da URL) para não devolver
+     * outro cadastro com o mesmo código em tipo diferente.
+     * Para produtos (C_ProdutosTipoProduto), busca preço de venda no estoque/ERP e atualiza vlunitario se disponível.
      */
     public function produto($codigo, $tipo = null){
 		$this->autoRender = false;
@@ -409,12 +412,36 @@ class ProdutosController extends AppController {
 		if ($codigo === '') {
 			return $this->jsonResponse(['mensagem' => 'Código não informado'], 400);
 		}
-		$produto = $this->Produtos->findByCodigo($codigo)->where(['idempresa' => $this->Auth->user('idempresa')])->first();
+		$idempresa = (int) $this->Auth->user('idempresa');
+		$tipoFiltro = null;
+		$tipoQuery = $this->request->getQuery('tipo');
+		if ($tipoQuery !== null && $tipoQuery !== '' && is_numeric($tipoQuery)) {
+			$tq = (int) $tipoQuery;
+			if ($tq > 0) {
+				$tipoFiltro = $tq;
+			}
+		} elseif ($tipo !== null && $tipo !== '' && is_numeric($tipo)) {
+			$tr = (int) $tipo;
+			if ($tr > 0) {
+				$tipoFiltro = $tr;
+			}
+		}
+		$where = ['codigo' => $codigo, 'idempresa' => $idempresa];
+		if ($tipoFiltro !== null) {
+			$where['tipo'] = $tipoFiltro;
+		}
+		$produto = $this->Produtos->find()->where($where)->first();
 		if (!$produto) {
+			if ($tipoFiltro !== null) {
+				$anyTipo = $this->Produtos->findByCodigo($codigo)->where(['idempresa' => $idempresa])->first();
+				if ($anyTipo) {
+					return $this->jsonResponse(['mensagem' => 'Nenhum item encontrado para o tipo selecionado.'], 404);
+				}
+			}
 			return $this->jsonResponse(['mensagem' => 'Produto/serviço não encontrado'], 404);
 		}
-		// Para produtos (tipo 1), buscar preço de venda no estoque/ERP e usar no orçamento
-		if ((int) $produto->tipo === 1) {
+		$tipoProdutoConst = defined('C_ProdutosTipoProduto') ? (int) C_ProdutosTipoProduto : 1;
+		if ((int) $produto->tipo === $tipoProdutoConst) {
 			try {
 				$idempresa = $this->Auth->user('idempresa');
 				$empresa = $this->Empresas->get($idempresa);
@@ -1079,6 +1106,14 @@ class ProdutosController extends AppController {
         $query = $this->Produtos->find()
             ->select(['codigo', 'descricao', 'vlunitario', 'unidade', 'tipo'])
             ->where(['idempresa' => $idEmpresa, 'ativo' => 1]);
+		$tipoParam = $this->request->getQuery('tipo');
+		if ($tipoParam !== null && $tipoParam !== '' && is_numeric($tipoParam)) {
+			$tipoInt = (int) $tipoParam;
+			if ($tipoInt > 0) {
+				// Locação (e demais tipos): filtro pela coluna produtos.tipo (valor C_ProdutosTipo* do ERP).
+				$query->where(['tipo' => $tipoInt]);
+			}
+		}
     
         if (!empty($termo)) {
             $termo = trim($termo);

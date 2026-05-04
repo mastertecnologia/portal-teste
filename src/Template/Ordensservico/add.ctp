@@ -611,6 +611,53 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			}
 			return tipo != null && t !== '' && t !== 'undefined' ? t : '';
 		}
+		var osAddMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
+		function osAddGridLinhaTipoSelecionado($row) {
+			var $t = $row.find('.inputTipo select, .editTipo select').first();
+			if (!$t.length) {
+				return NaN;
+			}
+			var v = parseInt(String($t.val()), 10);
+			return isNaN(v) ? NaN : v;
+		}
+		function osAddProdutoJsonUrl(cod) {
+			var base = "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + encodeURIComponent(cod || '');
+			return base;
+		}
+		function osAddProdutoJsonUrlComTipo(cod, tipo) {
+			var u = osAddProdutoJsonUrl(cod);
+			var ti = parseInt(String(tipo), 10);
+			if (!isNaN(ti) && ti > 0) {
+				u += (u.indexOf('?') === -1 ? '?' : '&') + 'tipo=' + encodeURIComponent(String(ti));
+			}
+			return u;
+		}
+		function osAddLimparCamposItemLinha($row, opts) {
+			opts = opts || {};
+			var isEdit = !!opts.isEdit;
+			$row.find('input.input-codigo-val').val('');
+			if (isEdit) {
+				$row.find('.editDescricao > input').val('');
+				$row.find('.editUnidade > input').val('');
+				$row.find('.editValorunitario > input').val('');
+				$row.find('.editQuantidade > input').val('');
+				$row.find('.editValortotal > input').val('');
+				$row.find('.editValordesconto > input').val('');
+				$row.find('.editSerialnumber > input').val('');
+				$row.find('.editObservacao > input').val('');
+				$row.find('.editModelo > input, .editProductKey > input').val('');
+			} else {
+				$row.find('.inputDescricao > input').val('');
+				$row.find('.inputUnidade > input').val('');
+				$row.find('.inputValorunitario > input').val('');
+				$row.find('.inputQuantidade > input').val('');
+				$row.find('.inputValortotal > input').val('');
+				$row.find('.inputValordesconto > input').val('');
+				$row.find('.inputSerialnumber > input').val('');
+				$row.find('.inputObservacao > input').val('');
+				$row.find('.inputModelo > input, .inputProductKey > input').val('');
+			}
+		}
 		window.isOsGridBrowseRef = false;
 		var produtosOpt = <?= $produtosOpt ?>;
 		produtosOpt.sort(function(a, b){
@@ -912,6 +959,15 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
+							var $rowBtn = $(this).closest('tr');
+							var tipoModal = osAddGridLinhaTipoSelecionado($rowBtn);
+							if (!tipoModal || tipoModal <= 0) {
+								if (typeof bootbox !== 'undefined') {
+									bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de abrir a pesquisa.</p>');
+								}
+								return;
+							}
+							window.osModalPesquisaTipo = tipoModal;
 							window.activeInputCode = $input; 
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
@@ -937,10 +993,20 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
+							var $rowBtn = $(this).closest('tr');
+							var tipoModal = osAddGridLinhaTipoSelecionado($rowBtn);
+							if (!tipoModal || tipoModal <= 0) {
+								if (typeof bootbox !== 'undefined') {
+									bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de abrir a pesquisa.</p>');
+								}
+								return;
+							}
+							window.osModalPesquisaTipo = tipoModal;
 							window.activeInputCode = $input;
 							$('#termo-pesquisa-produto').val('');
 							$('#resultado-pesquisa-produtos').html('');
 							$('#modal-pesquisa-produto').modal('show');
+							buscarProdutos();
 							setTimeout(function() { $('#termo-pesquisa-produto').focus(); }, 500);
 						});
 
@@ -1150,26 +1216,74 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	// Mobile
 		<?php if (isMobile()){ ?>
 		$(document).on('change', '#tipo', function(){
+			$('#codproduto').val('');
+			$('#descricao').val('');
+			$('#unidade').val('');
+			$('#valorunitario').val('');
+			$('#quantidade').val('');
+			$('#valortotal').val('');
+			$('#valordesconto').val('');
+			$('#serialnumber').val('');
+			$('.qtdEstoque').text('');
+			var tv = $(this).val();
 			$.ajax({
-				url: "<?= Router::url(['controller'=>'Produtos','action'=>'produtostipo']);?>/" + $(this).val(),
+				url: "<?= Router::url(['controller'=>'Produtos','action'=>'produtostipo']);?>/" + tv,
 				dataType: "json",
 				success:function(data){
 					$('#codproduto > option').remove();
-					$.each(data, function(key, array) {
+					$.each(data, function(_idx, row) {
+						if (!row || row.codigo === undefined) {
+							return;
+						}
 						$('#codproduto').append($('<option>', {
-							value: key,
-							text: array
+							value: row.codigo,
+							text: row.descricao
 						}));
-					})
+					});
 				}
 			});
 		});
 		$(document).on('change', '#codproduto', function(){
+			var cod = $.trim($(this).val() || '');
+			if (!cod) {
+				return;
+			}
+			var tipoSel = parseInt(String($('#tipo').val() || '0'), 10);
+			if (!tipoSel || tipoSel <= 0) {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de informar o código.</p>');
+				}
+				$(this).val('');
+				return;
+			}
+			var urlProd = "<?= Router::url(['controller'=>'Produtos','action'=>'produto']);?>/" + encodeURIComponent(cod) + '?tipo=' + encodeURIComponent(String(tipoSel));
 			$.ajax({
-				url: "<?= Router::url(['controller'=>'Produtos','action'=>'produto']);?>/" + $(this).val(),
+				url: urlProd,
 				dataType: "json",
 				success:function(data){
-					$('#tipo').val(data.tipo);
+					if (!data || data.mensagem) {
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osAddMsgNenhumItemTipo + '</p>');
+						}
+						$('#descricao').val('');
+						$('#unidade').val('');
+						$('#valorunitario').val('');
+						$('#quantidade').val('');
+						$('#valortotal').val('');
+						$('#valordesconto').val('');
+						$('#serialnumber').val('');
+						return;
+					}
+					if (parseInt(data.tipo, 10) !== tipoSel) {
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osAddMsgNenhumItemTipo + '</p>');
+						}
+						$('#codproduto').val('');
+						$('#descricao').val('');
+						$('#unidade').val('');
+						$('#valorunitario').val('');
+						return;
+					}
 					$('#descricao').val(data.descricao);
 					$('#unidade').val(data.unidade);
 					$('#valorunitario').val(numberToReal(data.vlunitario));
@@ -1178,10 +1292,22 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					$("#valordesconto").val("");
 					$("#serialnumber").val("");
 					serialnumbers(data.codigo);
+				},
+				error: function (xhr) {
+					var m = osAddMsgNenhumItemTipo;
+					if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) {
+						m = xhr.responseJSON.mensagem;
+					}
+					if (typeof bootbox !== 'undefined') {
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
+					}
+					$('#descricao').val('');
+					$('#unidade').val('');
+					$('#valorunitario').val('');
 				}
 			});
 			$.ajax({
-				url: "<?= Router::url(['controller'=>'Produtos','action'=>'qtdestoque']) ?>/" + $(this).val(),
+				url: "<?= Router::url(['controller'=>'Produtos','action'=>'qtdestoque']) ?>/" + encodeURIComponent(cod),
 				success:function(data){
 					$('.qtdEstoque').text('Qtd. em estoque: ' + data);
 				},
@@ -1254,6 +1380,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				$row.find('.inputValortotal > input').val('');
 				$row.find('.inputValordesconto > input').val('');
 				$row.find('.inputSerialnumber > input').val('');
+				$row.find('.inputObservacao > input').val('');
+				$row.find('.inputModelo > input, .inputProductKey > input').val('');
 				$('.qtdEstoque').text('');
 				calculoAdd();
 			});
@@ -1264,11 +1392,36 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if (!cod) {
 					return;
 				}
+				var tipoSel = osAddGridLinhaTipoSelecionado($row);
+				if (!tipoSel || tipoSel <= 0) {
+					if (typeof bootbox !== 'undefined') {
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de informar o código.</p>');
+					}
+					$(this).val('');
+					return;
+				}
 				$.ajax({
-					url: "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + encodeURIComponent(cod),
+					url: osAddProdutoJsonUrlComTipo(cod, tipoSel),
 					dataType: "json",
 					success:function(data){
-						if (!data) {
+						if (!data || data.mensagem) {
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osAddMsgNenhumItemTipo + '</p>');
+							}
+							osAddLimparCamposItemLinha($row, { isEdit: false });
+							$row.find('input.input-codigo-val').val('');
+							$('.qtdEstoque').text('');
+							calculoAdd();
+							return;
+						}
+						if (parseInt(data.tipo, 10) !== tipoSel) {
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osAddMsgNenhumItemTipo + '</p>');
+							}
+							osAddLimparCamposItemLinha($row, { isEdit: false });
+							$row.find('input.input-codigo-val').val('');
+							$('.qtdEstoque').text('');
+							calculoAdd();
 							return;
 						}
 						if(data.tipo == <?= C_ProdutosTipoProduto ?>) {
@@ -1282,7 +1435,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							$('.qtdEstoque').text('⠀⠀⠀');
 							$row.find(".inputSerialnumber > input").prop('disabled', true);
 						}
-						$row.find('.inputTipo > select').val(data.tipo);
 						$row.find('.inputDescricao > input').val(data.descricao);
 						$row.find('.inputUnidade > input').val(data.unidade);
 						$row.find('.inputValorunitario > input').val(numberToReal(data.vlunitario));
@@ -1292,6 +1444,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						$row.find(".inputSerialnumber > input").val("");
 						calculoAdd();
 					},
+					error: function (xhr) {
+						var m = osAddMsgNenhumItemTipo;
+						if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem && String(xhr.responseJSON.mensagem).indexOf('Nenhum item') !== -1) {
+							m = xhr.responseJSON.mensagem;
+						}
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
+						}
+						osAddLimparCamposItemLinha($row, { isEdit: false });
+						$row.find('input.input-codigo-val').val('');
+						$('.qtdEstoque').text('');
+						calculoAdd();
+					}
 				});
 			});
 
@@ -1309,6 +1474,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				$row.find('.editValortotal > input').val('');
 				$row.find('.editValordesconto > input').val('');
 				$row.find('.editSerialnumber > input').val('');
+				$row.find('.editObservacao > input').val('');
+				$row.find('.editModelo > input, .editProductKey > input').val('');
 				$('.qtdEstoque').text('');
 				calculoEdit();
 			});
@@ -1319,11 +1486,36 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if (!cod) {
 					return;
 				}
+				var tipoSel = osAddGridLinhaTipoSelecionado($row);
+				if (!tipoSel || tipoSel <= 0) {
+					if (typeof bootbox !== 'undefined') {
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de informar o código.</p>');
+					}
+					$(this).val('');
+					return;
+				}
 				$.ajax({
-					url: "<?= Router::url(['controller'=>'Produtos','action'=>'produto']) ?>/" + encodeURIComponent(cod),
+					url: osAddProdutoJsonUrlComTipo(cod, tipoSel),
 					dataType: "json",
 					success:function(data){
-						if (!data) {
+						if (!data || data.mensagem) {
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osAddMsgNenhumItemTipo + '</p>');
+							}
+							osAddLimparCamposItemLinha($row, { isEdit: true });
+							$row.find('input.input-codigo-val').val('');
+							$('.qtdEstoque').text('');
+							calculoEdit();
+							return;
+						}
+						if (parseInt(data.tipo, 10) !== tipoSel) {
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osAddMsgNenhumItemTipo + '</p>');
+							}
+							osAddLimparCamposItemLinha($row, { isEdit: true });
+							$row.find('input.input-codigo-val').val('');
+							$('.qtdEstoque').text('');
+							calculoEdit();
 							return;
 						}
 						if(data.tipo == <?= C_ProdutosTipoProduto ?>) {
@@ -1337,7 +1529,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							$('.qtdEstoque').text('⠀⠀⠀');
 							$row.find(".inputSerialnumber > input, .editSerialnumber > input").prop('disabled', true);
 						}
-						$row.find('.editTipo > select').val(data.tipo);
 						$row.find('.editDescricao > input').val(data.descricao);
 						$row.find('.editUnidade > input').val(data.unidade);
 						$row.find('.editValorunitario > input').val(numberToReal(data.vlunitario));
@@ -1347,6 +1538,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						$row.find(".editSerialnumber > input").val("");
 						calculoEdit();
 					},
+					error: function (xhr) {
+						var m = osAddMsgNenhumItemTipo;
+						if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem && String(xhr.responseJSON.mensagem).indexOf('Nenhum item') !== -1) {
+							m = xhr.responseJSON.mensagem;
+						}
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
+						}
+						osAddLimparCamposItemLinha($row, { isEdit: true });
+						$row.find('input.input-codigo-val').val('');
+						$('.qtdEstoque').text('');
+						calculoEdit();
+					}
 				});
 			});
 		<?php }  ?>
@@ -1554,13 +1758,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			var termo = $('#termo-pesquisa-produto').val();
 			var tbody = $('#resultado-pesquisa-produtos');
 			tbody.html('<tr><td colspan="4" class="text-center">Buscando...</td></tr>');
+			var tipoFiltro = window.osModalPesquisaTipo;
+			var tipoInt = parseInt(String(tipoFiltro), 10);
+			if (isNaN(tipoInt) || tipoInt <= 0) {
+				tbody.html('<tr><td colspan="4" class="text-center text-warning">Selecione o tipo na linha da OS antes de pesquisar.</td></tr>');
+				return;
+			}
 
-			// AJUSTE A URL ABAIXO PARA O SEU CONTROLLER DE PESQUISA REAL
-			// Exemplo de URL: Produtos/pesquisar?termo=X
 			$.ajax({
 				url: "<?= Router::url(['controller'=>'Produtos','action'=>'pesquisar']);?>", 
 				method: "GET",
-				data: { termo: termo },
+				data: { termo: termo, tipo: tipoInt },
 				dataType: "json",
 				success: function(data) {
 					tbody.empty();
@@ -1584,7 +1792,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						});
 						osModalAplicarEstoqueLinhas(data);
 					} else {
-						tbody.html('<tr><td colspan="4" class="text-center">Nenhum produto encontrado.</td></tr>');
+						tbody.html('<tr><td colspan="4" class="text-center">' + osAddMsgNenhumItemTipo + '</td></tr>');
 					}
 				},
 				error: function() {

@@ -767,6 +767,42 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	}
 
 	var tiposOpt = <?= $tiposOpt ?>;
+	var osEditMsgNenhumItemTipo = 'Nenhum item encontrado para o tipo selecionado.';
+	function osEditGridTipoDaLinha($row) {
+		var $t = $row.find('.inputTipo select, .editTipo select').first();
+		if ($t.length) {
+			var v = parseInt(String($t.val()), 10);
+			if (!isNaN(v)) {
+				return v;
+			}
+		}
+		var item = $row.data('JSGridItem');
+		if (item && item.tipo !== undefined && item.tipo !== null) {
+			var ti = parseInt(String(item.tipo), 10);
+			if (!isNaN(ti)) {
+				return ti;
+			}
+		}
+		return NaN;
+	}
+	function osEditProdutoJsonUrlComTipo(cod, tipo) {
+		var u = "<?= Router::url(['controller' => 'Produtos', 'action' => 'produto']) ?>/" + encodeURIComponent(cod || '');
+		var ti = parseInt(String(tipo), 10);
+		if (!isNaN(ti) && ti > 0) {
+			u += (u.indexOf('?') === -1 ? '?' : '&') + 'tipo=' + encodeURIComponent(String(ti));
+		}
+		return u;
+	}
+	function osEditLimparCamposItemLinha($row) {
+		$row.find('input.input-codigo-val').val('');
+		$row.find('.inputDescricao input, .editDescricao input').val('');
+		$row.find('.inputUnidade input, .editUnidade input').val('');
+		$row.find('.inputValorunitario input, .editValorunitario input').val('');
+		$row.find('.inputQuantidade input, .editQuantidade input').val('');
+		$row.find('.inputValortotal input, .editValortotal input').val('');
+		$row.find('.inputValordesconto input, .editValordesconto input').val('');
+		$row.find('.inputSerialnumber input, .editSerialnumber input').val('');
+	}
 	var produtosOpt = <?= $produtosOpt ?>;
 	produtosOpt.sort(function(a, b) {
 		if (a.descricao < b.descricao) return -1;
@@ -988,7 +1024,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val");
 					var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 
-					$btn.on("click", function() {
+					$btn.on("click", function(e) {
+						e.preventDefault();
+						var $rowBtn = $(this).closest('tr');
+						var tipoModal = osEditGridTipoDaLinha($rowBtn);
+						if (!tipoModal || tipoModal <= 0) {
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de abrir a pesquisa.</p>');
+							}
+							return;
+						}
+						window.osModalPesquisaTipo = tipoModal;
 						window.activeInputCode = $input;
 						$('#termo-pesquisa-produto').val('');
 						$('#resultado-pesquisa-produtos').html('');
@@ -1014,7 +1060,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val").val(value);
 					var $btn = $("<button>").attr("type", "button").addClass("btn btn-secondary btn-sm").html('<i class="fa fa-search"></i>');
 
-					$btn.on("click", function() {
+					$btn.on("click", function(e) {
+						e.preventDefault();
+						var $rowBtn = $(this).closest('tr');
+						var tipoModal = osEditGridTipoDaLinha($rowBtn);
+						if (!tipoModal || tipoModal <= 0) {
+							if (typeof bootbox !== 'undefined') {
+								bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de abrir a pesquisa.</p>');
+							}
+							return;
+						}
+						window.osModalPesquisaTipo = tipoModal;
 						window.activeInputCode = $input;
 						$('#termo-pesquisa-produto').val('');
 						$('#resultado-pesquisa-produtos').html('');
@@ -1337,29 +1393,74 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 	<?php if (isMobile()) { ?>
 		$(document).on('change', '#tipo', function() {
+			$('#codproduto').val('');
+			$('#descricao').val('');
+			$('#unidade').val('');
+			$('#valorunitario').val('');
+			$('#quantidade').val('');
+			$('#valortotal').val('');
+			$('#valordesconto').val('');
+			$('#serialnumber').val('');
+			$('.qtdEstoque').text('');
 			var url = "<?= Router::url(array('controller' => 'Produtos', 'action' => 'produtostipo')); ?>" + '/' + $(this).val();
 			$.ajax({
 				url: url,
 				dataType: "json",
 				success: function(data) {
-					$('.inputCodproduto > option').remove();
-					$.each(data, function(key, array) {
-						$('.inputCodproduto > select').append($('<option>', {
-							value: key,
-							text: array
+					$('#codproduto > option').remove();
+					$.each(data, function(_idx, row) {
+						if (!row || row.codigo === undefined) {
+							return;
+						}
+						$('#codproduto').append($('<option>', {
+							value: row.codigo,
+							text: row.descricao
 						}));
-					})
+					});
 				}
 			});
 		});
 		$(document).on('change', '#codproduto', function() {
-			var url = "<?= Router::url(array('controller' => 'Produtos', 'action' => 'produto')); ?>" + '/' + $(this).val();
-			if ($('#tipo').val() != '') url = url + '/' + $('#tipo').val();
+			var cod = $.trim($(this).val() || '');
+			if (!cod) {
+				return;
+			}
+			var tipoSel = parseInt(String($('#tipo').val() || '0'), 10);
+			if (!tipoSel || tipoSel <= 0) {
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de informar o código.</p>');
+				}
+				$(this).val('');
+				return;
+			}
+			var url = "<?= Router::url(array('controller' => 'Produtos', 'action' => 'produto')); ?>" + '/' + encodeURIComponent(cod) + '?tipo=' + encodeURIComponent(String(tipoSel));
 			$.ajax({
 				url: url,
 				dataType: "json",
 				success: function(data) {
-					$('#tipo').val(data.tipo);
+					if (!data || data.mensagem) {
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
+						}
+						$('#descricao').val('');
+						$('#unidade').val('');
+						$('#valorunitario').val('');
+						$('#quantidade').val('');
+						$('#valortotal').val('');
+						$('#valordesconto').val('');
+						$('#serialnumber').val('');
+						return;
+					}
+					if (parseInt(data.tipo, 10) !== tipoSel) {
+						if (typeof bootbox !== 'undefined') {
+							bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
+						}
+						$('#codproduto').val('');
+						$('#descricao').val('');
+						$('#unidade').val('');
+						$('#valorunitario').val('');
+						return;
+					}
 					$('#descricao').val(data.descricao);
 					$('#unidade').val(data.unidade);
 					$('#valorunitario').val(numberToReal(data.vlunitario));
@@ -1367,7 +1468,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					$("#valortotal").val("");
 					$("#valordesconto").val("");
 					$("#serialnumber").val("");
-					serialnumbers(data.codigo)
+					serialnumbers(data.codigo);
+				},
+				error: function(xhr) {
+					var m = osEditMsgNenhumItemTipo;
+					if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) {
+						m = xhr.responseJSON.mensagem;
+					}
+					if (typeof bootbox !== 'undefined') {
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
+					}
+					$('#descricao').val('');
+					$('#unidade').val('');
+					$('#valorunitario').val('');
 				}
 			});
 		});
@@ -1502,20 +1615,68 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		});
 	});
 
+	$(document).on('change', '.jsgrid-insert-row .inputTipo > select', function() {
+		var $row = $(this).closest('tr');
+		$row.find('input.input-codigo-val').val('');
+		$row.find('.inputDescricao input').val('');
+		$row.find('.inputUnidade input').val('');
+		$row.find('.inputValorunitario input').val('');
+		$row.find('.inputQuantidade input').val('');
+		$row.find('.inputValortotal input').val('');
+		$row.find('.inputValordesconto input').val('');
+		$row.find('.inputSerialnumber input').val('');
+		$('.qtdEstoque').text('');
+		if (typeof calculoAdd === 'function') {
+			calculoAdd();
+		}
+	});
+
 	$(document).on('change', '.inputCodproduto input.input-codigo-val', function() {
 		var $inputAtual = $(this);
-		var codigo = $inputAtual.val();
-
-		if (!codigo) return;
+		var codigo = $.trim($inputAtual.val() || '');
+		if (!codigo) {
+			return;
+		}
+		var $row = $inputAtual.closest('tr');
+		var tipoSel = osEditGridTipoDaLinha($row);
+		if (!tipoSel || tipoSel <= 0) {
+			if (typeof bootbox !== 'undefined') {
+				bootbox.alert('<p class="text-center pgm-bootbox-msg-md">Selecione o tipo do item antes de informar o código.</p>');
+			}
+			$inputAtual.val('');
+			return;
+		}
 		$.ajax({
-			url: "<?= Router::url(['controller' => 'Produtos', 'action' => 'produto']) ?>/" + codigo,
+			url: osEditProdutoJsonUrlComTipo(codigo, tipoSel),
 			dataType: "json",
 			success: function(data) {
+				if (!data || data.mensagem) {
+					if (typeof bootbox !== 'undefined') {
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
+					}
+					osEditLimparCamposItemLinha($row);
+					$inputAtual.val('');
+					$('.qtdEstoque').text('');
+					if ($row.hasClass('jsgrid-insert-row')) calculoAdd();
+					else calculoEdit();
+					return;
+				}
+				if (parseInt(data.tipo, 10) !== tipoSel) {
+					if (typeof bootbox !== 'undefined') {
+						bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + osEditMsgNenhumItemTipo + '</p>');
+					}
+					osEditLimparCamposItemLinha($row);
+					$inputAtual.val('');
+					$('.qtdEstoque').text('');
+					if ($row.hasClass('jsgrid-insert-row')) calculoAdd();
+					else calculoEdit();
+					return;
+				}
 				if (data.tipo == <?= C_ProdutosTipoProduto ?>) {
 					$(".inputSerialnumber > input, .editSerialnumber > input").prop('disabled', false);
 					serialnumbers(data.codigo);
 					$.ajax({
-						url: "<?= Router::url(['controller' => 'Produtos', 'action' => 'qtdestoque']) ?>" + '/' + data.codigo,
+						url: "<?= Router::url(['controller' => 'Produtos', 'action' => 'qtdestoque']) ?>" + '/' + encodeURIComponent(data.codigo),
 						success: function(qtd) {
 							if (qtd != -999) $('.qtdEstoque').text('Qtd. em estoque: ' + qtd);
 						},
@@ -1524,9 +1685,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					$('.qtdEstoque').text('⠀⠀⠀');
 					$(".inputSerialnumber > input, .editSerialnumber > input").prop('disabled', 'disabled');
 				}
-				// Preenche os campos da linha do Grid
-				var $row = $inputAtual.closest('tr');
-				$row.find('.inputTipo select, .editTipo select').val(data.tipo);
 				$row.find('.inputDescricao input, .editDescricao input').val(data.descricao);
 				$row.find('.inputUnidade input, .editUnidade input').val(data.unidade);
 				$row.find('.inputValorunitario input, .editValorunitario input').val(numberToReal(data.vlunitario));
@@ -1536,6 +1694,20 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if ($row.hasClass('jsgrid-insert-row')) calculoAdd();
 				else calculoEdit();
 			},
+			error: function(xhr) {
+				var m = osEditMsgNenhumItemTipo;
+				if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) {
+					m = xhr.responseJSON.mensagem;
+				}
+				if (typeof bootbox !== 'undefined') {
+					bootbox.alert('<p class="text-center pgm-bootbox-msg-md">' + m + '</p>');
+				}
+				osEditLimparCamposItemLinha($row);
+				$inputAtual.val('');
+				$('.qtdEstoque').text('');
+				if ($row.hasClass('jsgrid-insert-row')) calculoAdd();
+				else calculoEdit();
+			}
 		});
 	});
 
@@ -1552,12 +1724,18 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		var termo = $('#termo-pesquisa-produto').val();
 		var tbody = $('#resultado-pesquisa-produtos');
 		tbody.html('<tr><td colspan="4" class="text-center">Buscando...</td></tr>');
+		var tipoInt = parseInt(String(window.osModalPesquisaTipo), 10);
+		if (isNaN(tipoInt) || tipoInt <= 0) {
+			tbody.html('<tr><td colspan="4" class="text-center text-warning">Selecione o tipo na linha da OS antes de pesquisar.</td></tr>');
+			return;
+		}
 
 		$.ajax({
 			url: "<?= Router::url(['controller' => 'Produtos', 'action' => 'pesquisar']); ?>",
 			method: "GET",
 			data: {
-				termo: termo
+				termo: termo,
+				tipo: tipoInt
 			},
 			dataType: "json",
 			success: function(data) {
@@ -1584,7 +1762,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					});
 					osModalAplicarEstoqueLinhas(data);
 				} else {
-					tbody.html('<tr><td colspan="4" class="text-center">Nenhum produto encontrado.</td></tr>');
+					tbody.html('<tr><td colspan="4" class="text-center">' + osEditMsgNenhumItemTipo + '</td></tr>');
 				}
 			},
 			error: function() {
