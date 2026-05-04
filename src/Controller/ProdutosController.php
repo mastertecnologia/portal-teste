@@ -159,8 +159,8 @@ class ProdutosController extends AppController {
 		if ($embedEstoque) {
 			$this->viewBuilder()->setLayout('estoque_embed');
 		}
-        // Para produtos (tipo 1), atualizar Valor Unitário com Preço de Venda do ERP ao abrir a edição
-        if ($produto->tipo == 1 && !$this->request->is(['post', 'put'])) {
+        // Para itens de tipo produto, atualizar Valor Unitário com Preço de Venda do ERP ao abrir a edição.
+        if ($this->produtoTipoEhProduto($produto->tipo) && !$this->request->is(['post', 'put'])) {
             try {
                 $this->runSoapBuffered(function () use ($produto) {
                     $soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($this->Auth->user('idempresa'))->urlerp);
@@ -193,6 +193,10 @@ class ProdutosController extends AppController {
                 // Mantém vlunitario atual se o ERP não responder
             }
         }
+		if (!$this->request->is(['post', 'put'])) {
+			// Compatibilidade visual: quando constants divergem do legado (1/2/3), manter seleção correta do tipo.
+			$produto->tipo = $this->produtoTipoUiValue($produto->tipo);
+		}
         $produto->vlunitario = number_format($produto->vlunitario, 2, ",", ".");
         
 		if ($this->request->is(['post', 'put'])) {
@@ -554,6 +558,112 @@ class ProdutosController extends AppController {
         return $s === '' ? null : (float) $s;
     }
 
+	/**
+	 * Classifica um tipo numérico/textual no domínio legado do portal.
+	 * Retorno: produto | servico | contrato | null
+	 *
+	 * Regras:
+	 * - Legado BD: 1=produto, 2=serviço, 3=contrato
+	 * - Constants/rótulos (quando existirem) podem divergir e são tratados por semântica.
+	 */
+	private function produtoTipoSemantic($tipo): ?string {
+		$raw = is_scalar($tipo) ? trim((string)$tipo) : '';
+		if ($raw === '') {
+			return null;
+		}
+		if (preg_match('/^-?\d+$/', $raw)) {
+			$i = (int)$raw;
+			if ($i === 1) {
+				return 'produto';
+			}
+			if ($i === 2) {
+				return 'servico';
+			}
+			if ($i === 3) {
+				return 'contrato';
+			}
+			$lbl = $this->produtoTipoLabelByValue($i);
+			$fromLbl = $this->produtoTipoSemanticFromLabel($lbl);
+			if ($fromLbl !== null) {
+				return $fromLbl;
+			}
+		}
+
+		return $this->produtoTipoSemanticFromLabel($raw);
+	}
+
+	private function produtoTipoSemanticFromLabel(string $label): ?string {
+		$txt = mb_strtolower(trim($label), 'UTF-8');
+		if ($txt === '') {
+			return null;
+		}
+		$txt = strtr($txt, ['á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i', 'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ç' => 'c']);
+		if (strpos($txt, 'produt') !== false || strpos($txt, 'mercador') !== false) {
+			return 'produto';
+		}
+		if (strpos($txt, 'servic') !== false) {
+			return 'servico';
+		}
+		if (strpos($txt, 'contrat') !== false || strpos($txt, 'licenc') !== false || strpos($txt, 'loca') !== false) {
+			return 'contrato';
+		}
+
+		return null;
+	}
+
+	private function produtoTipoLabelByValue(int $value): string {
+		if (!defined('C_ProdutosTipo') || !is_array(constant('C_ProdutosTipo'))) {
+			return '';
+		}
+		$map = constant('C_ProdutosTipo');
+		if (array_key_exists($value, $map)) {
+			return (string)$map[$value];
+		}
+		$sv = (string)$value;
+		if (array_key_exists($sv, $map)) {
+			return (string)$map[$sv];
+		}
+
+		return '';
+	}
+
+	private function produtoTipoUiValue($storedTipo): int {
+		$semantic = $this->produtoTipoSemantic($storedTipo);
+		if ($semantic === null || !defined('C_ProdutosTipo') || !is_array(constant('C_ProdutosTipo'))) {
+			return (int)$storedTipo;
+		}
+		$map = constant('C_ProdutosTipo');
+		foreach ($map as $k => $label) {
+			$kk = (int)$k;
+			if ($kk <= 0) {
+				continue;
+			}
+			if ($this->produtoTipoSemanticFromLabel((string)$label) === $semantic) {
+				return $kk;
+			}
+		}
+
+		return (int)$storedTipo;
+	}
+
+	private function produtoTipoEhProduto($tipo): bool {
+		return $this->produtoTipoSemantic($tipo) === 'produto';
+	}
+
+	private function produtoTipoLegacyBySemantic(?string $semantic): ?int {
+		if ($semantic === 'produto') {
+			return 1;
+		}
+		if ($semantic === 'servico') {
+			return 2;
+		}
+		if ($semantic === 'contrato') {
+			return 3;
+		}
+
+		return null;
+	}
+
     public function addAPI() {
         $this->autoRender = false;
         $responseApi = function ($mensagem, $status = 200) {
@@ -602,7 +712,11 @@ class ProdutosController extends AppController {
             $produto->unidade = isset($json->unidade) ? trim((string) $json->unidade) : $produto->unidade;
             $vl = $this->_normalizarVlUnitarioApi(isset($json->vlunitario) ? $json->vlunitario : $produto->vlunitario);
             $produto->vlunitario = $vl !== null ? $vl : $produto->vlunitario;
-            $produto->tipo = isset($json->tipo) ? $json->tipo : $produto->tipo;
+            if (isset($json->tipo) && $json->tipo !== '') {
+				$sem = $this->produtoTipoSemantic($json->tipo);
+				$legacy = $this->produtoTipoLegacyBySemantic($sem);
+				$produto->tipo = $legacy !== null ? $legacy : (is_numeric($json->tipo) ? (int)$json->tipo : $produto->tipo);
+			}
             $produto->ativo = $this->_normalizarAtivoApi(isset($json->ativo) ? $json->ativo : (isset($produto->ativo) ? $produto->ativo : 1));
 
             // Campos de locação: se for entidade nova e o ERP não enviar, usar 0 para evitar falha em colunas NOT NULL
@@ -1100,15 +1214,22 @@ class ProdutosController extends AppController {
 	}
 
 	/**
-	 * O value do tipo na OS vem de C_ProdutosTipo*; a coluna produtos.tipo no BD pode trazer valores legados
-	 * (ex.: 0/1 para produto em bases antigas e 2 para serviço).
-	 * A pesquisa deve aceitar aliases equivalentes sem cruzar categoria errada.
+	 * O tipo da OS pode vir de constants antigas/novas; o BD da tabela produtos permanece no legado (1/2/3).
+	 * Esta função devolve aliases compatíveis por semântica para evitar lista vazia na pesquisa.
 	 *
 	 * @param int $tipoInt tipo enviado pela grid (inteiro > 0).
 	 * @return int[]
 	 */
 	private function produtosTipoPesquisaAliases(int $tipoInt): array {
-		$out = [$tipoInt];
+		$out = [];
+		$sem = $this->produtoTipoSemantic($tipoInt);
+		if ($sem !== null) {
+			$legacy = $this->produtoTipoLegacyBySemantic($sem);
+			if ($legacy !== null) {
+				$out[] = $legacy;
+			}
+		}
+		$out[] = $tipoInt;
 		$pairs = [];
 		if (defined('C_ProdutosTipoProduto')) {
 			$pairs[] = [(int) constant('C_ProdutosTipoProduto'), 1];
@@ -1133,8 +1254,7 @@ class ProdutosController extends AppController {
 		})));
 
 		// Compatibilidade legado: algumas bases antigas gravaram "Produto" como 0.
-		$tipoProdutoConst = defined('C_ProdutosTipoProduto') ? (int) constant('C_ProdutosTipoProduto') : 1;
-		$isTipoProduto = in_array($tipoProdutoConst, $out, true) || in_array(1, $out, true);
+		$isTipoProduto = $sem === 'produto' || in_array(1, $out, true);
 		if ($isTipoProduto) {
 			$out[] = 0;
 		}
