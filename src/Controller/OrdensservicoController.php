@@ -1046,14 +1046,6 @@ class OrdensservicoController extends AppController {
 		$descricao = $data['descricao'] ?? '';
 		$unidade = $data['unidade'] ?? '';
 		$tipo = isset($data['tipo']) ? (int)$data['tipo'] : 0;
-		// #region agent log
-		$agentTipoPost = $tipo;
-		$agentProdutoFound = false;
-		$agentCatalogTipo = null;
-		$agentProdutoId = null;
-		$agentDupCodigoCount = null;
-		$agentProdutoResolve = 'none';
-		// #endregion
 
 		$valordesconto = $this->parseDecimalBr($data['valordesconto'] ?? 0);
 		$quantidade = $this->parseDecimalBr($data['quantidade'] ?? 1, 1.0);
@@ -1063,9 +1055,6 @@ class OrdensservicoController extends AppController {
 
 		// Sempre buscar preço vigente: primeiro no ERP (Preço de Venda do estoque), senão no cadastro
 		if ($codproduto !== '') {
-			// #region agent log
-			$agentDupCodigoCount = $this->Produtos->find()->where(['codigo' => $codproduto, 'idempresa' => $idempresa])->count();
-			// #endregion
 			// Mesma regra que Produtos::produto: com tipo na linha, resolver cadastro por código+tipo (evita
 			// findByCodigo()->first() pegar outra linha quando existem dois registros com o mesmo código).
 			$produto = null;
@@ -1075,29 +1064,14 @@ class OrdensservicoController extends AppController {
 					'idempresa' => $idempresa,
 					'tipo' => $tipo,
 				])->first();
-				if ($produto) {
-					// #region agent log
-					$agentProdutoResolve = 'tipo_filter';
-					// #endregion
-				}
 			}
 			if (!$produto) {
 				$produto = $this->Produtos->findByCodigo($codproduto)->where(['idempresa' => $idempresa])->first();
-				if ($produto) {
-					// #region agent log
-					$agentProdutoResolve = 'codigo_fallback';
-					// #endregion
-				}
 			}
 			if ($produto) {
 				$descricao = $produto->descricao;
 				$unidade = $produto->unidade;
 				$tipo = (int)$produto->tipo;
-				// #region agent log
-				$agentProdutoFound = true;
-				$agentCatalogTipo = (int) $produto->tipo;
-				$agentProdutoId = (int) $produto->id;
-				// #endregion
 				$precoDoErp = null;
 				try {
 					$soapprodutos = ErpGridUrl::wsdl($this->Empresas->get($idempresa)->urlerp);
@@ -1136,32 +1110,6 @@ class OrdensservicoController extends AppController {
 				}
 			}
 		}
-
-		// #region agent log
-		@file_put_contents(
-			ROOT . DS . 'debug-eaae6e.log',
-			json_encode([
-				'sessionId' => 'eaae6e',
-				'timestamp' => (int) round(microtime(true) * 1000),
-				'location' => 'OrdensservicoController::carrinhoadd',
-				'message' => 'carrinhoadd tipo trace',
-				'hypothesisId' => 'H1-H5',
-				'data' => [
-					'tipo_raw' => array_key_exists('tipo', $data) ? $data['tipo'] : null,
-					'tipo_post_int' => $agentTipoPost,
-					'codproduto' => $codproduto,
-					'produto_found' => $agentProdutoFound,
-					'produto_id' => $agentProdutoId,
-					'catalog_tipo' => $agentCatalogTipo,
-					'tipo_saved' => $tipo,
-					'dup_codigo_count' => $agentDupCodigoCount,
-					'produto_resolve' => $agentProdutoResolve,
-					'tipo_post_vs_catalog' => ($agentProdutoFound && $agentCatalogTipo !== null && (int) $agentTipoPost !== (int) $agentCatalogTipo),
-				],
-			], JSON_UNESCAPED_UNICODE) . "\n",
-			FILE_APPEND | LOCK_EX
-		);
-		// #endregion
 
 		$valortotal = ($quantidade * $valorunitario) - $valordesconto;
 

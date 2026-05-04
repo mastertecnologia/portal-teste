@@ -616,7 +616,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			return $.trim(String(s || '')).toLowerCase().replace(/\s+/g, ' ');
 		}
 		function osAddGridRowFromEl($el) {
-			var $r = $el.closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+			var $r = $el.closest('#grid_table tr.jsgrid-insert-row, #grid_table tr.jsgrid-edit-row');
+			if ($r.length) {
+				return $r;
+			}
+			$r = $el.closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
 			return $r.length ? $r : $el.closest('tr');
 		}
 		function osAddGridLinhaTipoSelecionado($row) {
@@ -624,7 +628,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				return NaN;
 			}
 			/* Marca aplicada em initOsAddGridInsertRow / onRefreshed: evita confundir com #tipo mobile (form) ou outros selects. */
-			var $t = $row.find('select.os-grid-tipo-select').first();
+			var $t = $row.find('select.os-item-tipo, select.os-grid-tipo-select').first();
 			if (!$t.length) {
 				$t = $row.find('td.inputTipo select, td.editTipo select').first();
 			}
@@ -722,11 +726,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 	// jsGrid — re-inicializa linha de inserção após cada refresh (loadData)
 		window.initOsAddGridInsertRow = function () {
-			var $ins = $('.jsgrid-insert-row');
+			var $ins = $('#grid_table .jsgrid-insert-row');
 			if ($ins.length) {
 				var $tipo = $ins.find('.inputTipo select');
 				if ($tipo.length) {
-					$tipo.addClass('os-grid-tipo-select').attr('data-os-field', 'tipo');
+					$tipo.addClass('os-item-tipo os-grid-tipo-select').attr('data-os-field', 'tipo').attr('data-field', 'tipo');
 					if (!$tipo.find('option[value="0"]').length) {
 						$tipo.prepend($('<option>', { value: 0, text: 'Tipo' }));
 					}
@@ -741,9 +745,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				}
 				$ins.find('.inputValorunitario > input, .inputValordesconto > input').addClass('mascaramonetaria');
 			}
-			var $edit = $('.jsgrid-edit-row');
+			var $edit = $('#grid_table .jsgrid-edit-row');
 			if ($edit.length) {
-				$edit.find('td.editTipo select, td.inputTipo select').addClass('os-grid-tipo-select').attr('data-os-field', 'tipo');
+				$edit.find('td.editTipo select, td.inputTipo select').addClass('os-item-tipo os-grid-tipo-select').attr('data-os-field', 'tipo').attr('data-field', 'tipo');
 				if ($edit.find('td.editTipo select').data('selectpicker')) {
 					try {
 						$edit.find('td.editTipo select').selectpicker('refresh');
@@ -1025,9 +1029,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
-							var $rowBtn = $(this).closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+							var $rowBtn = $(this).closest('#grid_table tr.jsgrid-insert-row, #grid_table tr.jsgrid-edit-row');
 							if (!$rowBtn.length) {
-								$rowBtn = $(this).closest('tr');
+								$rowBtn = osAddGridRowFromEl($(this));
 							}
 							var tipoModal = osAddGridLinhaTipoSelecionado($rowBtn);
 							if (!tipoModal || tipoModal <= 0) {
@@ -1062,9 +1066,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						
 						$btn.on("click", function(e) {
 							e.preventDefault();
-							var $rowBtn = $(this).closest('tr.jsgrid-insert-row, tr.jsgrid-edit-row');
+							var $rowBtn = $(this).closest('#grid_table tr.jsgrid-insert-row, #grid_table tr.jsgrid-edit-row');
 							if (!$rowBtn.length) {
-								$rowBtn = $(this).closest('tr');
+								$rowBtn = osAddGridRowFromEl($(this));
 							}
 							var tipoModal = osAddGridLinhaTipoSelecionado($rowBtn);
 							if (!tipoModal || tipoModal <= 0) {
@@ -1257,6 +1261,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if (typeof window.initOsAddGridInsertRow === 'function') {
 					window.initOsAddGridInsertRow();
 				}
+				$('#grid_table td.inputTipo select, #grid_table td.editTipo select').addClass('os-item-tipo os-grid-tipo-select').attr('data-os-field', 'tipo').attr('data-field', 'tipo');
 				var $insBtn = $('#grid_table .jsgrid-insert-row .jsgrid-insert-button');
 				if ($insBtn.length) {
 					$insBtn.val('+').attr('title', 'Adicionar item');
@@ -1427,7 +1432,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	// Desktop — código do produto é <input> (pesquisa/modal), não <select>
 		<?php }else{  ?>
 			function calculoAdd(){
-				var $row = $('.jsgrid-insert-row');
+				var $row = $('#grid_table .jsgrid-insert-row');
 				if (!$row.length) {
 					return;
 				}
@@ -1442,7 +1447,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				$row.find('.inputValortotal > input').val(numberToReal(valortotal));
 			}
 
-			$(document).on('change', '.jsgrid-insert-row td.inputTipo select', function(){
+			$(document).on('change', '#grid_table .jsgrid-insert-row td.inputTipo select', function(){
 				var $row = osAddGridRowFromEl($(this));
 				$row.find('input.input-codigo-val').val('');
 				$row.find('.inputDescricao > input').val('');
@@ -1458,7 +1463,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				calculoAdd();
 			});
 
-			$(document).on('change', '.jsgrid-insert-row .inputCodproduto input.input-codigo-val', function(){
+			$(document).on('change', '#grid_table .jsgrid-insert-row .inputCodproduto input.input-codigo-val', function(){
 				var cod = $.trim($(this).val() || '');
 				var $row = osAddGridRowFromEl($(this));
 				if (!cod) {
@@ -1532,11 +1537,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				});
 			});
 
-			$(document).on('change', '.jsgrid-insert-row .inputQuantidade > input', function(){ calculoAdd(); });
-			$(document).on('change', '.jsgrid-insert-row .inputValordesconto > input', function(){ calculoAdd(); });
-			$(document).on('change', '.jsgrid-insert-row .inputValorunitario > input', function(){ calculoAdd(); });
+			$(document).on('change', '#grid_table .jsgrid-insert-row .inputQuantidade > input', function(){ calculoAdd(); });
+			$(document).on('change', '#grid_table .jsgrid-insert-row .inputValordesconto > input', function(){ calculoAdd(); });
+			$(document).on('change', '#grid_table .jsgrid-insert-row .inputValorunitario > input', function(){ calculoAdd(); });
 
-			$(document).on('change', '.jsgrid-edit-row td.editTipo select, .jsgrid-edit-row td.inputTipo select', function(){
+			$(document).on('change', '#grid_table .jsgrid-edit-row td.editTipo select, #grid_table .jsgrid-edit-row td.inputTipo select', function(){
 				var $row = osAddGridRowFromEl($(this));
 				$row.find('input.input-codigo-val').val('');
 				$row.find('.editDescricao > input').val('');
@@ -1552,7 +1557,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				calculoEdit();
 			});
 
-			$(document).on('change', '.jsgrid-edit-row .inputCodproduto input.input-codigo-val', function(){
+			$(document).on('change', '#grid_table .jsgrid-edit-row .inputCodproduto input.input-codigo-val', function(){
 				var cod = $.trim($(this).val() || '');
 				var $row = osAddGridRowFromEl($(this));
 				if (!cod) {
@@ -1627,11 +1632,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			});
 		<?php }  ?>
 	// Cálculo Edit
-		$(document).on('change', '.jsgrid-edit-row .editQuantidade > input', function(){ calculoEdit(); });
-		$(document).on('change', '.jsgrid-edit-row .editValordesconto > input', function(){ calculoEdit(); });
-		$(document).on('change', '.jsgrid-edit-row .editValorunitario > input', function(){ calculoEdit(); });
+		$(document).on('change', '#grid_table .jsgrid-edit-row .editQuantidade > input', function(){ calculoEdit(); });
+		$(document).on('change', '#grid_table .jsgrid-edit-row .editValordesconto > input', function(){ calculoEdit(); });
+		$(document).on('change', '#grid_table .jsgrid-edit-row .editValorunitario > input', function(){ calculoEdit(); });
 		function calculoEdit(){
-			var $row = $('.jsgrid-edit-row');
+			var $row = $('#grid_table .jsgrid-edit-row');
 			if (!$row.length) return;
 			var qtdeRaw = $row.find('.editQuantidade > input').val();
 			var qtde = (qtdeRaw === undefined || qtdeRaw === '') ? 0 : parseFloat(String(qtdeRaw).replace(/\./g, '').replace(',', '.')) || 0;
@@ -1831,8 +1836,8 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			var tbody = $('#resultado-pesquisa-produtos');
 			tbody.html('<tr><td colspan="4" class="text-center">Buscando...</td></tr>');
 			var tipoFiltro = window.osModalPesquisaTipo;
-			var tipoInt = parseInt(String(tipoFiltro), 10);
-			if (isNaN(tipoInt) || tipoInt <= 0) {
+			var tipoFiltroOs = parseInt(String(tipoFiltro), 10);
+			if (isNaN(tipoFiltroOs) || tipoFiltroOs <= 0) {
 				tbody.html('<tr><td colspan="4" class="text-center text-warning">Selecione o tipo na linha da OS antes de pesquisar.</td></tr>');
 				return;
 			}
@@ -1840,14 +1845,22 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$.ajax({
 				url: "<?= Router::url(['controller'=>'Produtos','action'=>'pesquisar']);?>", 
 				method: "GET",
-				data: { termo: termo, tipo: tipoInt },
+				data: { termo: termo, tipo: tipoFiltroOs },
 				dataType: "json",
 				success: function(data) {
 					tbody.empty();
-					if(data.length > 0) {
-						$.each(data, function(index, prod) {
-							var tipoInt = parseInt(prod.tipo, 10);
-							var precisaEstoque = (osTiposComEstoqueErp || []).indexOf(tipoInt) !== -1;
+					if (!Array.isArray(data)) {
+						var msgInv = (data && data.mensagem) ? String(data.mensagem) : 'Resposta inválida da pesquisa.';
+						tbody.html('<tr><td colspan="4" class="text-center text-danger">' + msgInv + '</td></tr>');
+						return;
+					}
+					var filtrados = data.filter(function (prod) {
+						return parseInt(prod.tipo, 10) === tipoFiltroOs;
+					});
+					if(filtrados.length > 0) {
+						$.each(filtrados, function(index, prod) {
+							var tipoLinha = parseInt(prod.tipo, 10);
+							var precisaEstoque = (osTiposComEstoqueErp || []).indexOf(tipoLinha) !== -1;
 							var tr = $('<tr>').attr('data-codigo', prod.codigo != null ? String(prod.codigo) : '').attr('data-tipo', prod.tipo != null ? String(prod.tipo) : '')
 								.attr('data-estoque-status', precisaEstoque ? 'loading' : 'na');
 							tr.append($('<td>').text(prod.codigo));
@@ -1862,13 +1875,17 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							tr.append($('<td>').append(btn));
 							tbody.append(tr);
 						});
-						osModalAplicarEstoqueLinhas(data);
+						osModalAplicarEstoqueLinhas(filtrados);
 					} else {
 						tbody.html('<tr><td colspan="4" class="text-center">' + osAddMsgNenhumItemTipo + '</td></tr>');
 					}
 				},
-				error: function() {
-					tbody.html('<tr><td colspan="4" class="text-center text-danger">Erro ao buscar produtos.</td></tr>');
+				error: function(xhr) {
+					var msgErr = 'Erro ao buscar produtos.';
+					if (xhr && xhr.responseJSON && xhr.responseJSON.mensagem) {
+						msgErr = String(xhr.responseJSON.mensagem);
+					}
+					tbody.html('<tr><td colspan="4" class="text-center text-danger">' + msgErr + '</td></tr>');
 				}
 			});
 		}

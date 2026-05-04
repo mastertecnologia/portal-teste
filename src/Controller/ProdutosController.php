@@ -1101,19 +1101,26 @@ class ProdutosController extends AppController {
 
 	public function pesquisar() {
         $this->autoRender = false;
+		/* Mesma origem do cadastro (tabela produtos no portal), alinhada ao módulo Produtos/Estoque para tipo produto;
+		 * não misturar tipos: o cliente da OS deve enviar sempre o tipo da linha (C_ProdutosTipo* / tiposOpt). */
+		$tipoParam = $this->request->getQuery('tipo');
+		if ($tipoParam === null || $tipoParam === '' || !is_numeric($tipoParam) || (int) $tipoParam <= 0) {
+			return $this->jsonResponse([
+				'mensagem' => 'Informe o tipo do item para pesquisar (produto, serviço, licença ou locação).',
+				'code' => 'pesquisa_tipo_obrigatorio',
+			], 422);
+		}
+		$tipoInt = (int) $tipoParam;
+
         $termo = $this->request->getQuery('termo');
         $idEmpresa = $this->Auth->user('idempresa');
         $query = $this->Produtos->find()
             ->select(['codigo', 'descricao', 'vlunitario', 'unidade', 'tipo'])
-            ->where(['idempresa' => $idEmpresa, 'ativo' => 1]);
-		$tipoParam = $this->request->getQuery('tipo');
-		if ($tipoParam !== null && $tipoParam !== '' && is_numeric($tipoParam)) {
-			$tipoInt = (int) $tipoParam;
-			if ($tipoInt > 0) {
-				// Locação (e demais tipos): filtro pela coluna produtos.tipo (valor C_ProdutosTipo* do ERP).
-				$query->where(['tipo' => $tipoInt]);
-			}
-		}
+            ->where([
+				'idempresa' => $idEmpresa,
+				'ativo' => 1,
+				'tipo' => $tipoInt,
+			]);
     
         if (!empty($termo)) {
             $termo = trim($termo);
