@@ -1100,8 +1100,9 @@ class ProdutosController extends AppController {
 	}
 
 	/**
-	 * O value do tipo na OS vem de C_ProdutosTipo*; a coluna produtos.tipo no BD costuma ser o legado 1=mercadoria, 2=serviço.
-	 * Quando a constante difere (ex.: produto=5 no .env mas linhas gravadas como 1), a pesquisa deve aceitar ambos — sem misturar serviço.
+	 * O value do tipo na OS vem de C_ProdutosTipo*; a coluna produtos.tipo no BD pode trazer valores legados
+	 * (ex.: 0/1 para produto em bases antigas e 2 para serviço).
+	 * A pesquisa deve aceitar aliases equivalentes sem cruzar categoria errada.
 	 *
 	 * @param int $tipoInt tipo enviado pela grid (inteiro > 0).
 	 * @return int[]
@@ -1130,6 +1131,14 @@ class ProdutosController extends AppController {
 		$out = array_values(array_unique(array_filter($out, function ($t) {
 			return (int) $t > 0;
 		})));
+
+		// Compatibilidade legado: algumas bases antigas gravaram "Produto" como 0.
+		$tipoProdutoConst = defined('C_ProdutosTipoProduto') ? (int) constant('C_ProdutosTipoProduto') : 1;
+		$isTipoProduto = in_array($tipoProdutoConst, $out, true) || in_array(1, $out, true);
+		if ($isTipoProduto) {
+			$out[] = 0;
+		}
+		$out = array_values(array_unique(array_map('intval', $out)));
 
 		return $out !== [] ? $out : [$tipoInt];
 	}
