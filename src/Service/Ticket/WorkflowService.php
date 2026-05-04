@@ -19,9 +19,13 @@ class WorkflowService {
 	/** @var SlaService */
 	protected $slaService;
 
-	public function __construct(Table $ticketsTable, ?SlaService $slaService = null) {
+	/** @var WorkflowSlaService */
+	protected $workflowSlaService;
+
+	public function __construct(Table $ticketsTable, ?SlaService $slaService = null, ?WorkflowSlaService $workflowSlaService = null) {
 		$this->tickets = $ticketsTable;
 		$this->slaService = $slaService ?: new SlaService($ticketsTable);
+		$this->workflowSlaService = $workflowSlaService ?: new WorkflowSlaService($ticketsTable, $this->slaService, $this);
 		$this->statesTable = $this->loadTable('WorkflowStates');
 		$this->transitionsTable = $this->loadTable('WorkflowTransitions');
 	}
@@ -144,10 +148,14 @@ class WorkflowService {
 	}
 
 	public function applySla(EntityInterface $ticket, int $empresaId, string $toStateCodigo): void {
-		if (!in_array($toStateCodigo, ['aberto', 'pendente', 'emandamento'], true)) {
+		$stateId = (int)($ticket->get('workflow_state_id') ?? 0);
+		if ($stateId > 0) {
+			$this->workflowSlaService->applyStateSla($ticket, $empresaId, $stateId);
 			return;
 		}
-		$this->slaService->syncPolicyForTicket($ticket, $empresaId);
+		if (in_array($toStateCodigo, ['aberto', 'pendente', 'emandamento'], true)) {
+			$this->slaService->syncPolicyForTicket($ticket, $empresaId);
+		}
 	}
 
 	/**

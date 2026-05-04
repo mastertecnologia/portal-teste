@@ -13,6 +13,7 @@ use App\Service\Ticket\TicketServiceDeskApiService;
 use App\Service\Ticket\TicketAttendimentoTimerService;
 use App\Service\Ticket\TicketClassificationService;
 use App\Service\Ticket\WorkflowService;
+use App\Service\Ticket\WorkflowSlaService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
@@ -3680,11 +3681,16 @@ class TicketsController extends AppController {
 		return new WorkflowService($this->Tickets);
 	}
 
+	protected function _ticketWorkflowSlaService(): WorkflowSlaService {
+		return new WorkflowSlaService($this->Tickets);
+	}
+
 	/**
 	 * @return array|null
 	 */
 	protected function _ticketWorkflowPayloadForRow($reg): array {
 		static $service = null;
+		static $workflowSlaService = null;
 		static $empresaEnabled = [];
 		static $empresaConfigured = [];
 		static $stateCache = [];
@@ -3693,6 +3699,14 @@ class TicketsController extends AppController {
 			'enabled' => false,
 			'current' => null,
 			'allowedTransitions' => [],
+			'slaByState' => [
+				'enabled' => false,
+				'isPaused' => false,
+				'isFinal' => false,
+				'deadlineResolucao' => null,
+				'autoEscalate' => false,
+				'isOverdue' => false,
+			],
 		];
 		$empresa = (int)$this->Auth->user('idempresa');
 		if (!isset($empresaEnabled[$empresa])) {
@@ -3705,6 +3719,9 @@ class TicketsController extends AppController {
 		if ($service === null) {
 			$service = $this->_ticketWorkflowService();
 		}
+		if ($workflowSlaService === null) {
+			$workflowSlaService = $this->_ticketWorkflowSlaService();
+		}
 		if (!isset($empresaConfigured[$empresa])) {
 			$empresaConfigured[$empresa] = $service->hasConfiguredTransitionsForEmpresa($empresa);
 		}
@@ -3712,10 +3729,12 @@ class TicketsController extends AppController {
 			return $disabledPayload;
 		}
 		if ($currentStateId <= 0) {
+			$slaPayload = $workflowSlaService->buildPayload($reg, $empresa);
 			return [
 				'enabled' => true,
 				'current' => null,
 				'allowedTransitions' => [],
+				'slaByState' => $slaPayload,
 			];
 		}
 		$stateKey = $empresa . ':' . $currentStateId;
@@ -3724,10 +3743,12 @@ class TicketsController extends AppController {
 		}
 		$current = $stateCache[$stateKey];
 		if ($current === null) {
+			$slaPayload = $workflowSlaService->buildPayload($reg, $empresa);
 			return [
 				'enabled' => true,
 				'current' => null,
 				'allowedTransitions' => [],
+				'slaByState' => $slaPayload,
 			];
 		}
 		if (!array_key_exists($stateKey, $allowedCache)) {
@@ -3755,6 +3776,7 @@ class TicketsController extends AppController {
 				'codigo' => (string)$current['codigo'],
 			],
 			'allowedTransitions' => $allowed,
+			'slaByState' => $workflowSlaService->buildPayload($reg, $empresa),
 		];
 	}
 
@@ -4723,6 +4745,14 @@ class TicketsController extends AppController {
 			'acoes' => $acoes,
 		];
 		$row['workflow'] = $this->_ticketWorkflowPayloadForRow($reg);
+		$row['slaByState'] = (array)($row['workflow']['slaByState'] ?? [
+			'enabled' => false,
+			'isPaused' => false,
+			'isFinal' => false,
+			'deadlineResolucao' => null,
+			'autoEscalate' => false,
+			'isOverdue' => false,
+		]);
 		$canonicalResp = (int)($reg->idtecnico_responsavel ?? 0);
 		if ($canonicalResp <= 0 && isset($reg->owner_id) && $reg->owner_id !== null && $reg->owner_id !== '') {
 			$canonicalResp = (int)$reg->owner_id;

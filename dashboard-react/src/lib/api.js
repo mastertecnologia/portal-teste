@@ -873,6 +873,26 @@ export async function fetchDashboardOperacional() {
             fila_nome: 'N1 — Triagem',
           },
         ],
+        sla_por_etapa: {
+          overdue: 2,
+          near_due: 4,
+          paused: 1,
+          avg_seconds_by_state: [
+            { workflow_state_id: 2, label: 'Em execução', avg_seconds: 9800 },
+            { workflow_state_id: 3, label: 'Pendente', avg_seconds: 5400 },
+          ],
+        },
+        alertas_sla_state: {
+          overdue: [
+            { id: 101, workflow_state_id: 2, prioridade: 'P1', data_limite_resolucao: new Date(Date.now() - 3600000).toISOString() },
+          ],
+          near_due: [
+            { id: 110, workflow_state_id: 2, prioridade: 'P2', data_limite_resolucao: new Date(Date.now() + 1200000).toISOString() },
+          ],
+          paused: [
+            { id: 115, workflow_state_id: 3, prioridade: 'P3', data_limite_resolucao: new Date(Date.now() + 7200000).toISOString() },
+          ],
+        },
       },
     };
   }

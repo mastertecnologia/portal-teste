@@ -44,6 +44,16 @@ function primaryNextTransition(allowedTransitions, curIdx) {
   return best || list[0];
 }
 
+function formatMinutesAsCompact(minutes) {
+  if (!Number.isFinite(Number(minutes))) return '—';
+  const total = Math.max(0, Math.floor(Number(minutes)));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h <= 0) return `${m}m`;
+  if (m <= 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
 /**
  * @typedef {object} WorkflowTimelineProps
  * @property {object} ticket
@@ -66,6 +76,7 @@ export default function WorkflowTimeline({
 }) {
   const wf = ticket?.workflow;
   const enabled = wf?.enabled === true;
+  const slaByState = ticket?.slaByState || wf?.slaByState || null;
 
   const derived = useMemo(() => {
     const w = ticket?.workflow;
@@ -145,6 +156,51 @@ export default function WorkflowTimeline({
     allowedTransitions.length > 0;
 
   const onlyCurrent = allowedTransitions.length === 0;
+  const slaEnabled = slaByState?.enabled === true;
+  const slaPaused = slaByState?.isPaused === true;
+  const slaFinal = slaByState?.isFinal === true;
+  const slaOverdue = slaByState?.isOverdue === true;
+  const deadlineText = slaByState?.deadlineResolucao
+    ? new Date(slaByState.deadlineResolucao).toLocaleString('pt-BR')
+    : '—';
+  const remainingMinutesRaw = Number.isFinite(Number(slaByState?.remainingMinutes))
+    ? Number(slaByState.remainingMinutes)
+    : null;
+  const totalMinutesRaw = Number.isFinite(Number(slaByState?.totalMinutes))
+    ? Number(slaByState.totalMinutes)
+    : null;
+  const nearDue =
+    !slaPaused &&
+    !slaFinal &&
+    !slaOverdue &&
+    remainingMinutesRaw !== null &&
+    remainingMinutesRaw <= 30;
+  const consumedMinutes =
+    remainingMinutesRaw !== null && totalMinutesRaw !== null
+      ? Math.max(0, totalMinutesRaw - Math.max(remainingMinutesRaw, 0))
+      : null;
+  const slaPillClass = slaOverdue
+    ? 'pgm-workflow-timeline__sla-pill pgm-workflow-timeline__sla-pill--overdue'
+    : nearDue
+      ? 'pgm-workflow-timeline__sla-pill pgm-workflow-timeline__sla-pill--near'
+      : slaPaused
+        ? 'pgm-workflow-timeline__sla-pill pgm-workflow-timeline__sla-pill--paused'
+        : slaFinal
+          ? 'pgm-workflow-timeline__sla-pill pgm-workflow-timeline__sla-pill--final'
+          : 'pgm-workflow-timeline__sla-pill pgm-workflow-timeline__sla-pill--running';
+  const slaStatusText = slaOverdue
+    ? 'SLA estourado'
+    : nearDue
+      ? 'SLA próximo do limite'
+      : slaPaused
+        ? 'SLA pausado'
+        : slaFinal
+          ? 'SLA finalizado'
+          : 'SLA ativo';
+  const slaExecutionText =
+    consumedMinutes != null && totalMinutesRaw != null && totalMinutesRaw > 0
+      ? `Em execução (${formatMinutesAsCompact(consumedMinutes)} / ${formatMinutesAsCompact(totalMinutesRaw)} SLA)`
+      : 'Em execução';
 
   const nextLabelShort = primaryNext
     ? String(primaryNext.label || primaryNext.codigo || `Estado #${primaryNext.id}`).trim()
@@ -265,6 +321,14 @@ export default function WorkflowTimeline({
 
   return (
     <div className="pgm-workflow-timeline" aria-label={rootAriaLabel} aria-busy={patchBusy || undefined}>
+      {slaEnabled ? (
+        <div className="pgm-workflow-timeline__sla-strip">
+          <span className={slaPillClass}>{slaExecutionText}</span>
+          <span className="pgm-workflow-timeline__sla-meta" title={`Deadline de resolução: ${deadlineText}`}>
+            {slaStatusText} · limite {deadlineText}
+          </span>
+        </div>
+      ) : null}
       {nextLabelShort ? (
         <div className="pgm-workflow-timeline__next-hint">
           Próximo:{' '}

@@ -16,6 +16,7 @@ import {
   postTransferirTicket,
   postStartTicket,
   postAlterarSituacao,
+  fetchDashboardOperacional,
   getBoot,
   USE_MOCK,
 } from '../lib/api';
@@ -42,6 +43,7 @@ const API_ERR_START = {
 
 /** Polling do Service Desk embutido — aba em segundo plano não dispara fetch. */
 const SERVICEDESK_POLL_MS = 10_000;
+const SLA_DASHBOARD_POLL_MS = 30_000;
 
 const GROUP_KEYS = {
   todos: 'todos',
@@ -61,6 +63,15 @@ function stripHtml(raw) {
 
 function statusLabel(row) {
   return stripHtml(row.situacaoLabel || row.status);
+}
+
+function formatSecondsCompact(totalSeconds) {
+  const n = Math.max(0, Number(totalSeconds) || 0);
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  if (h <= 0) return `${m}m`;
+  if (m <= 0) return `${h}h`;
+  return `${h}h ${m}m`;
 }
 
 const ACTION_MENU_WIDTH = 260;
@@ -505,6 +516,8 @@ export default function TechDashboard({ boot }) {
   const embedded = Boolean(boot);
   const [groups, setGroups] = useState(null);
   const [workflow, setWorkflow] = useState(null);
+  const [slaDashboard, setSlaDashboard] = useState(null);
+  const [slaDashboardFilter, setSlaDashboardFilter] = useState('all');
   const [q, setQ] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('ativos');
   const [filaSuporte, setFilaSuporte] = useState('');
@@ -562,6 +575,12 @@ export default function TechDashboard({ boot }) {
     );
   }, [loadFilters]);
 
+  const reloadSlaDashboard = useCallback(async () => {
+    const res = await fetchDashboardOperacional();
+    if (!res.ok || !res.dashboard) return;
+    setSlaDashboard(res.dashboard);
+  }, []);
+
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -600,6 +619,18 @@ export default function TechDashboard({ boot }) {
   }, []);
 
   useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const r = await fetchDashboardOperacional();
+      if (cancel || !r.ok || !r.dashboard) return;
+      setSlaDashboard(r.dashboard);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!embedded || !boot?.servicedesk) return undefined;
     const id = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return;
@@ -607,6 +638,14 @@ export default function TechDashboard({ boot }) {
     }, SERVICEDESK_POLL_MS);
     return () => window.clearInterval(id);
   }, [embedded, boot?.servicedesk, reload]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      reloadSlaDashboard();
+    }, SLA_DASHBOARD_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [reloadSlaDashboard]);
 
   const wfEnabled = Boolean(workflow?.enabled);
   const filasMeta = workflow?.filas || [];
@@ -701,6 +740,18 @@ export default function TechDashboard({ boot }) {
 
   const totalTodos = groups?.todos?.length ?? 0;
   const hoje = new Date().toLocaleDateString('pt-BR');
+  const slaStateSummary = slaDashboard?.sla_por_etapa || {};
+  const slaAlertsByType = slaDashboard?.alertas_sla_state || {};
+  const slaAlertRows = useMemo(() => {
+    const overdue = Array.isArray(slaAlertsByType.overdue) ? slaAlertsByType.overdue.map((x) => ({ ...x, _type: 'overdue' })) : [];
+    const near = Array.isArray(slaAlertsByType.near_due) ? slaAlertsByType.near_due.map((x) => ({ ...x, _type: 'near_due' })) : [];
+    const paused = Array.isArray(slaAlertsByType.paused) ? slaAlertsByType.paused.map((x) => ({ ...x, _type: 'paused' })) : [];
+    const all = [...overdue, ...near, ...paused];
+    if (slaDashboardFilter === 'overdue') return all.filter((x) => x._type === 'overdue');
+    if (slaDashboardFilter === 'near_due') return all.filter((x) => x._type === 'near_due');
+    if (slaDashboardFilter === 'paused') return all.filter((x) => x._type === 'paused');
+    return all;
+  }, [slaAlertsByType, slaDashboardFilter]);
 
   const addTicket = boot?.paths?.addTicket;
 
@@ -893,6 +944,103 @@ export default function TechDashboard({ boot }) {
         <div className="border-b border-[var(--pgm-badge-amber-ring,rgba(210,153,34,0.30))] bg-[var(--pgm-badge-amber-bg,rgba(210,153,34,0.14))] px-3 py-2.5 text-sm text-[var(--pgm-badge-amber-text,#f0c060)]">
           <span className="font-semibold">Lista não carregou: </span>
           {loadError}
+        </div>
+      ) : null}
+      {slaDashboard ? (
+        <div className="border-b border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">
+              SLA por etapa
+            </span>
+            <span className="text-[10px] text-[var(--pgm-text-muted)]">
+              atualização {new Date(slaDashboard.gerado_em || Date.now()).toLocaleTimeString('pt-BR')}
+            </span>
+          </div>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="rounded-md border border-[rgba(220,51,15,0.3)] bg-[rgba(220,51,15,0.12)] px-2.5 py-2 text-[0.75rem] text-[var(--pgm-badge-red-text,#ff9492)]">
+              <div className="text-[10px] uppercase tracking-[0.06em]">SLA estourado</div>
+              <div className="text-[1rem] font-bold">{Number(slaStateSummary.overdue || 0)}</div>
+            </div>
+            <div className="rounded-md border border-[rgba(243,156,18,0.3)] bg-[rgba(243,156,18,0.12)] px-2.5 py-2 text-[0.75rem] text-[var(--pgm-badge-amber-text,#f0c060)]">
+              <div className="text-[10px] uppercase tracking-[0.06em]">Próximos do limite</div>
+              <div className="text-[1rem] font-bold">{Number(slaStateSummary.near_due || 0)}</div>
+            </div>
+            <div className="rounded-md border border-[rgba(39,174,96,0.3)] bg-[rgba(39,174,96,0.12)] px-2.5 py-2 text-[0.75rem] text-[var(--pgm-badge-green-text,#7ee787)]">
+              <div className="text-[10px] uppercase tracking-[0.06em]">Pausados</div>
+              <div className="text-[1rem] font-bold">{Number(slaStateSummary.paused || 0)}</div>
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {[
+              { key: 'all', label: 'Todos' },
+              { key: 'overdue', label: 'Estourado' },
+              { key: 'near_due', label: 'Próx. limite' },
+              { key: 'paused', label: 'Pausado' },
+            ].map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setSlaDashboardFilter(f.key)}
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                  slaDashboardFilter === f.key
+                    ? 'border-[var(--pgm-primary)] bg-[rgba(29,158,117,0.18)] text-[var(--pgm-primary-hover)]'
+                    : 'border-[var(--pgm-border)] bg-transparent text-[var(--pgm-text-muted)]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2">
+            <div className="rounded-md border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] p-2">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">
+                Alertas ativos
+              </div>
+              {slaAlertRows.length === 0 ? (
+                <div className="text-[11px] text-[var(--pgm-text-muted)]">Sem alertas no filtro.</div>
+              ) : (
+                <ul className="space-y-1.5">
+                  {slaAlertRows.slice(0, 6).map((row) => {
+                    const tone =
+                      row._type === 'overdue'
+                        ? 'text-[var(--pgm-badge-red-text,#ff9492)]'
+                        : row._type === 'near_due'
+                          ? 'text-[var(--pgm-badge-amber-text,#f0c060)]'
+                          : 'text-[var(--pgm-badge-green-text,#7ee787)]';
+                    const label = row._type === 'overdue' ? 'SLA estourado' : row._type === 'near_due' ? 'Próx. limite' : 'Pausado';
+                    return (
+                      <li key={`${row._type}-${row.id}`} className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-mono text-[var(--pgm-text-muted)]">#{row.id}</span>
+                        <span className={`font-semibold ${tone}`}>{label}</span>
+                        <span className="truncate text-[var(--pgm-text-muted)]">
+                          {row.data_limite_resolucao
+                            ? new Date(row.data_limite_resolucao).toLocaleString('pt-BR')
+                            : 'sem prazo'}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+            <div className="rounded-md border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] p-2">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">
+                Tempo médio por etapa
+              </div>
+              {Array.isArray(slaStateSummary.avg_seconds_by_state) && slaStateSummary.avg_seconds_by_state.length > 0 ? (
+                <ul className="space-y-1">
+                  {slaStateSummary.avg_seconds_by_state.slice(0, 6).map((item) => (
+                    <li key={`avg-${item.workflow_state_id}`} className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="truncate text-[var(--pgm-text-secondary)]">{item.label || `Estado #${item.workflow_state_id}`}</span>
+                      <span className="font-semibold text-[var(--pgm-primary-hover)]">{formatSecondsCompact(item.avg_seconds)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-[11px] text-[var(--pgm-text-muted)]">Sem dados de média por etapa.</div>
+              )}
+            </div>
+          </div>
         </div>
       ) : null}
       {inlineAssignment && inlinePatchError.msg ? (
