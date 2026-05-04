@@ -252,7 +252,13 @@ class DashboardService {
 				['sla_resolucao_pausado' => true],
 				['sla_resposta_pausado' => true],
 			],
-		])->order(['modified' => 'DESC', 'id' => 'DESC'])->limit(30);
+		]);
+		if (in_array('modified', $cols, true)) {
+			$pausedQ->order(['modified' => 'DESC', 'id' => 'DESC']);
+		} else {
+			$pausedQ->order(['id' => 'DESC']);
+		}
+		$pausedQ->limit(30);
 
 		return [
 			'overdue_count' => $this->tickets->find()->where($activeBase + [
