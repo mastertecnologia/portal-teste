@@ -53,6 +53,46 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		margin: 12px 0;
 		text-align: center;
 	}
+
+	.os-situacao-badge {
+		display: inline-block;
+		padding: 4px 10px;
+		border-radius: 999px;
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	/* Padrão visual alinhado ao ServiceDesk (warn/info/success/danger/muted). */
+	.os-situacao-warn {
+		background: rgba(217, 119, 6, 0.10);
+		color: #92400e;
+		border: 1px solid rgba(217, 119, 6, 0.25);
+	}
+
+	.os-situacao-info {
+		background: rgba(37, 99, 235, 0.08);
+		color: #1e40af;
+		border: 1px solid rgba(37, 99, 235, 0.20);
+	}
+
+	.os-situacao-success {
+		background: rgba(22, 163, 74, 0.10);
+		color: #15803d;
+		border: 1px solid rgba(22, 163, 74, 0.25);
+	}
+
+	.os-situacao-danger {
+		background: rgba(220, 38, 38, 0.08);
+		color: #b91c1c;
+		border: 1px solid rgba(220, 38, 38, 0.20);
+	}
+
+	.os-situacao-muted {
+		background: rgba(15, 23, 42, 0.05);
+		color: #64748b;
+		border: 1px solid rgba(15, 23, 42, 0.10);
+	}
 </style>
 <div class="col-md-12 p-0">
 	<div class="os-edit-shell form-material">
@@ -165,7 +205,29 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					<div class="row">
 						<div class="col-md-2 col-12">
 							<label class="control-label">Situação</label>
-							<?= SituacaoOrdem($ordem->situacao) ?>
+							<?php
+							$sitLabel = function_exists('DescricaoSituacaoOrdem')
+								? (string)DescricaoSituacaoOrdem((int)$ordem->situacao)
+								: trim(strip_tags((string)SituacaoOrdem($ordem->situacao)));
+							$sit = (int)$ordem->situacao;
+							$osSituacoesSucesso = [];
+							foreach (['C_OrdensSituacaoLiberadaParaFaturamento', 'C_OrdensSituacaoSincronizadaPeloGrid', 'C_OrdensSituacaoFaturada', 'C_OrdensSituacaoFinalizada'] as $cs) {
+								if (defined($cs)) {
+									$osSituacoesSucesso[] = (int)constant($cs);
+								}
+							}
+							$sitClass = 'os-situacao-muted';
+							if (defined('C_OrdensSituacaoAberta') && $sit === (int)constant('C_OrdensSituacaoAberta')) {
+								$sitClass = 'os-situacao-warn';
+							} elseif (defined('C_OrdensSituacaoEmExecucao') && $sit === (int)constant('C_OrdensSituacaoEmExecucao')) {
+								$sitClass = 'os-situacao-info';
+							} elseif (defined('C_OrdensSituacaoCancelada') && $sit === (int)constant('C_OrdensSituacaoCancelada')) {
+								$sitClass = 'os-situacao-danger';
+							} elseif (in_array($sit, $osSituacoesSucesso, true)) {
+								$sitClass = 'os-situacao-success';
+							}
+							?>
+							<span class="os-situacao-badge <?= h($sitClass) ?>"><?= h($sitLabel !== '' ? $sitLabel : 'Sem situação') ?></span>
 						</div>
 						<div class="col-md-2 col-12">
 							<label class="control-label">Atendimento</label>
@@ -252,11 +314,24 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-edit">
 
 					<?php
-					echo '<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-t-20" form="form-os-edit">' . h(__('Salvar Ordem de Serviço')) . '</button>';
+					$problemaSelecionadoLabel = isset($problemas[$ordem->idproblema]) ? trim((string)$problemas[$ordem->idproblema]) : '';
+					$problemaSelecionadoLabel = function_exists('mb_strtolower')
+						? mb_strtolower($problemaSelecionadoLabel, 'UTF-8')
+						: strtolower($problemaSelecionadoLabel);
+					$mostrarBotaoLocacao = ((int)$ordem->locacao === 1) || (strpos($problemaSelecionadoLabel, 'loca') !== false);
+					echo $this->Html->link('Voltar', ['action' => 'index'], ['class' => 'btn btn-secondary m-t-20', 'data-turbo' => 'false']);
+					echo '<button type="submit" class="btn btn-pgm btn-pgm-salvar btn-success m-l-5 m-t-20" form="form-os-edit">' . h(__('Salvar')) . '</button>';
 					echo $this->Html->link('Imprimir', ['action' => 'imprimir', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-imprimir btn-orange text-white m-l-5 m-t-20', 'data-turbo' => 'false']);
 					echo $this->Html->link('Cadastrar Horas', ["action" => "cadhoras", $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar text-white m-l-5 m-t-20', 'data-turbo' => 'false']);
-					if (!$ordem->locacao) echo $this->Html->link('Locação', ['action' => 'locacao', $ordem->id, 1], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
-					else echo $this->Html->link('Remover locação', ['action' => 'locacao', $ordem->id, 0], ['class' => 'btn btn-pink m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					echo '<span id="os-locacao-slot" data-url-on="' . h(Router::url(['action' => 'locacao', $ordem->id, 1])) . '" data-url-off="' . h(Router::url(['action' => 'locacao', $ordem->id, 0])) . '" data-locacao-ativa="' . ((int)$ordem->locacao === 1 ? '1' : '0') . '">';
+					if ($mostrarBotaoLocacao) {
+						if (!$ordem->locacao) {
+							echo $this->Html->link('Locação', ['action' => 'locacao', $ordem->id, 1], ['id' => 'btn-os-locacao', 'class' => 'btn btn-pink m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+						} else {
+							echo $this->Html->link('Remover locação', ['action' => 'locacao', $ordem->id, 0], ['id' => 'btn-os-locacao', 'class' => 'btn btn-pink m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+						}
+					}
+					echo '</span>';
 					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-danger m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoLiberadaParaFaturamento) echo $this->Html->link('Voltar ordem', ['action' => 'pausar', $ordem->id], ['class' => 'btn btn-warning m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
@@ -610,6 +685,46 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		}
 		return pgmAuthIdempresa;
 	}
+
+	function osEditTipoEhLocacao() {
+		var txt = '';
+		var $sel = $('#idproblema');
+		if ($sel.length) {
+			txt = String($sel.find('option:selected').text() || '');
+		}
+		return txt.toLowerCase().indexOf('loca') !== -1;
+	}
+
+	function osEditToggleBotaoLocacao() {
+		var $slot = $('#os-locacao-slot');
+		if (!$slot.length) {
+			return;
+		}
+		var locacaoAtiva = String($slot.data('locacao-ativa') || '') === '1';
+		var mostrar = locacaoAtiva || osEditTipoEhLocacao();
+		var $btn = $('#btn-os-locacao');
+		if (!mostrar) {
+			if ($btn.length) {
+				$btn.remove();
+			}
+			return;
+		}
+		var href = locacaoAtiva ? String($slot.data('url-off') || '') : String($slot.data('url-on') || '');
+		var label = locacaoAtiva ? 'Remover locação' : 'Locação';
+		if ($btn.length) {
+			$btn.attr('href', href).text(label);
+			return;
+		}
+		$slot.append(
+			$('<a>')
+				.attr('id', 'btn-os-locacao')
+				.attr('href', href)
+				.attr('data-turbo', 'false')
+				.addClass('btn btn-pink m-r-5 m-t-20 float-right')
+				.text(label)
+		);
+	}
+
 	var idcliente = $("#idcliente").val();
 	var idsolicitante = $("#idsolicitante").val();
 
@@ -619,6 +734,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		$('.dataval2, .dataval3, .dataval4, .dataval5').hide();
 
 		loadSolicitantes($('#idcliente').val());
+		osEditToggleBotaoLocacao();
 
 		var currentSolicitanteOutros = '<?= $ordem->solicitante_outros ?>';
 		var currentSolicitante = '<?= $ordem->idsolicitante ?>';
@@ -628,6 +744,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			$('#solicitante-outros').val(currentSolicitanteOutros);
 		}
 		$('#idsolicitante').selectpicker("refresh");
+	});
+
+	$("#idproblema").on('change', function() {
+		osEditToggleBotaoLocacao();
 	});
 
 	$("#idcliente").change(function() {
@@ -961,7 +1081,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 								if (valortotal > 0 && numParcelas > 0) {
 									var valorBase = Math.floor((valortotal / numParcelas) * 100) / 100;
 									var diferenca = valortotal - (valorBase * numParcelas);
-									diferenca = Math.round(diferenca * 100) / 100; 
+									diferenca = Math.round(diferenca * 100) / 100;
 									$celulas.each(function(index) {
 										var valorFinal = 0;
 										if (index === 0) {
@@ -1383,8 +1503,51 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 			{
 				type: "control",
-				width: 64,
-				deleteButton: editing
+				align: "center",
+				width: 100,
+				headercss: 'jsgrid-control-field os-col-acoes',
+				css: 'jsgrid-control-field os-col-acoes',
+				modeSwitchButton: false,
+				editButton: false,
+				deleteButton: false,
+				itemTemplate: function(value, item) {
+					var $ed = $('<button type="button" class="btn btn-sm os-grid-act-edit"/>')
+						.html('<i class="fa fa-pencil" aria-hidden="true"></i>')
+						.attr('title', 'Editar item');
+					$ed.on('click', function(e) {
+						e.preventDefault();
+						e.stopPropagation();
+						$('#grid_table').jsGrid('editItem', item);
+					});
+					var $del = $('<button type="button" class="btn btn-sm os-grid-act-delete"/>')
+						.html('<i class="fa fa-trash" aria-hidden="true"></i>')
+						.attr('title', 'Excluir item');
+					$del.on('click', function(e) {
+						e.preventDefault();
+						e.stopPropagation();
+						$('#grid_table').jsGrid('deleteItem', item);
+					});
+					return $('<span class="os-grid-actions-cell"></span>').append($ed).append($del);
+				},
+				editTemplate: function() {
+					var $ok = $('<button type="button" class="btn btn-sm btn-success text-white os-grid-act-save"/>')
+						.attr('title', 'Salvar edição')
+						.html('<i class="fa fa-check"></i>');
+					var $cancel = $('<button type="button" class="btn btn-sm btn-light border os-grid-act-cancel"/>')
+						.attr('title', 'Cancelar edição')
+						.html('<i class="fa fa-times text-dark"></i>');
+					$ok.on('click', function(e) {
+						e.preventDefault();
+						e.stopPropagation();
+						$('#grid_table').jsGrid('updateItem');
+					});
+					$cancel.on('click', function(e) {
+						e.preventDefault();
+						e.stopPropagation();
+						$('#grid_table').jsGrid('cancelEdit');
+					});
+					return $('<span class="os-grid-actions-edit"></span>').append($ok).append($cancel);
+				}
 			}
 		],
 		onRefreshed: function(args) {
@@ -1419,6 +1582,10 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 			var $g = $('#grid_table');
 			$g.css({ width: '100%', maxWidth: '100%', minWidth: 0 });
 			$g.find('.jsgrid-grid-header, .jsgrid-grid-body').css({ width: '100%', minWidth: 0 });
+			var $actTh = $('#grid_table').find('.jsgrid-header-row th.jsgrid-control-field');
+			if ($actTh.length && $.trim($actTh.text()) === '') {
+				$actTh.text('Ações');
+			}
 		}
 	});
 	$('#grid_table').on('keydown', 'input, select, textarea', function (e) {
@@ -1457,9 +1624,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	});
 
 	// Caso necessite retornar como era antes sem a concatenação do product key na obsNfe
-	/*     $(document).on("click", ".btn-observacao", function(e){ 
+	/*     $(document).on("click", ".btn-observacao", function(e){
 	        e.preventDefault();
-	        
+
 	        if(window.currentRowContext){
 	            var obs = $('#observacaomodal').val();
 	            var mod = $('#modelomodal').val();
@@ -1472,7 +1639,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				window.currentRowContext.find('.classe-pk-input').val(pk).trigger('change');
 				window.currentRowContext.find('.classe-obsinterna-input').val(obsInt).trigger('change');
 	        }
-	        
+
 	        $('#modal-observacao').modal('hide');
 	    });
 	 */
@@ -1702,7 +1869,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		$('.inputValordesconto > input, .inputValorunitario > input').addClass('mascaramonetaria');
 	});
 
-	// Nmrparcelas 
+	// Nmrparcelas
 	$("#nmrparcelas").change(function() {
 		var nmrparcelas = $(this).val();
 		switch (nmrparcelas) {

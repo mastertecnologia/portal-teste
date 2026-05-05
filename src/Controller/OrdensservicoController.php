@@ -32,14 +32,14 @@ class OrdensservicoController extends AppController {
 		$this->loadModel('Problemas');
 		$this->loadModel('Produtos');
 		$this->loadModel('Itensordem');
-		$this->loadModel('Ordemservicositens'); 
+		$this->loadModel('Ordemservicositens');
 		$this->loadModel('Ordemmovs');
 		$this->loadModel('Ordemhoras');
 		$this->loadModel('Ordemparcelas');
-		$this->loadModel('Empresas'); 
-		$this->loadModel('Cidades'); 
-		$this->loadModel('Estados'); 
-		$this->loadModel('Tickets'); 
+		$this->loadModel('Empresas');
+		$this->loadModel('Cidades');
+		$this->loadModel('Estados');
+		$this->loadModel('Tickets');
 		$this->loadModel('Ticketcomentarios');
 		$this->loadModel('Ticketsmovs');
 		$this->loadModel('TicketProducts');
@@ -475,17 +475,17 @@ class OrdensservicoController extends AppController {
 		if (in_array($this->request->getParam('action'), $gridDiagActions, true)) {
 			$this->syncOsGridDiagSession();
 		}
-        
+
         if($event->_subject->request->params['action'] == 'imprimir' && $this->Auth->user('role') == 1){
             $ordem = $this->Ordensservico->get($event->_subject->request->params['pass'][0])->idcliente;
             $cliente = $this->Clientes->get($this->Auth->user('idcliente'))->id;
-            
+
             if ($ordem != $cliente) {
                 $this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
                 return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
             }
         }
-        $this->Auth->allow(['refreshAPI', 'listAPI']);  
+        $this->Auth->allow(['refreshAPI', 'listAPI']);
         if (in_array('Security', $this->components()->loaded())) {
             $this->Security->setConfig('unlockedActions', ['refreshAPI', 'listAPI']);
         }
@@ -552,7 +552,7 @@ class OrdensservicoController extends AppController {
 		$problemas1 = [];
 		$clientesOpt1 = [];
 		$clientesOpt = [];
-		
+
 		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
 		foreach($problemas as $key=>$reg) $problemas1[$key] = $reg;
 
@@ -593,7 +593,7 @@ class OrdensservicoController extends AppController {
 			if($data['idEmpresaAtual'] != $this->Auth->user('idempresa')) {
 				$this->Flash->error('Ocorreu um erro ao salvar a ordem de serviço. Verifique sua empresa atual e tente novamente');
 				return $this->redirect(['action' => 'add']);
-			}			
+			}
             $ordem = $this->Ordensservico->patchEntity($ordem, $data);
 			$ordem->idempresa = $idempresa;
 			$ordem->iduser = $this->Auth->user('id');
@@ -659,7 +659,7 @@ class OrdensservicoController extends AppController {
                 $this->Flash->success(__('A ordem de serviço foi cadastrada com sucesso!'));
                 return $this->redirect(['action' => 'edit', $ordem->id]);
 			}
-			
+
 			// Decrementa o último id em caso de erro
 			$this->Empresas->decrementOrdem($this->Auth->user('idempresa'));
             $this->Flash->error(__('Não foi possível cadastrar a ordem de serviço.'));
@@ -706,28 +706,28 @@ class OrdensservicoController extends AppController {
 
 		$data = $this->request->getData();
 
-		
+
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $idempresa])->first();
-		
+
 		if($this->request->is(['post', 'put']) && $data['idEmpresaAtual'] != $idempresa || empty($ordem) ) {
 			$this->Flash->error('Ocorreu um erro ao editar a ordem de serviço. Verifique sua empresa atual e tente novamente');
 			return $this->redirect(['action' => 'index']);
-		}	
-		
+		}
+
 
 		$ordem->dataabertura = date_format($ordem->dataabertura, 'd/m/Y');
 		$ordem->dataprevisao = date_format($ordem->dataprevisao, 'd/m/Y');
 
 		$movimentacoes = $this->Ordemmovs->find('all')->where(['idordem' => $id, 'Ordemmovs.idempresa' => $idempresa])->contain(['Users' => ['fields' => ['Users.name']]])->order(['data'])->toArray();
 		$parcelas = $this->Ordemparcelas->find('all')->where(['idordem' => $id, 'Ordemparcelas.idempresa' => $idempresa])->contain(['Users' => ['fields' => ['Users.name']]])->order(['data'])->toArray();
-		
+
 		if ($this->request->is(['post', 'put'])) {
 			$data = $this->request->getData();
 
 			if($data['idEmpresaAtual'] != $this->Auth->user('idempresa')) {
 				$this->Flash->error('Ocorreu um erro ao editar a ordem de serviço. Verifique sua empresa atual e tente novamente');
 				return $this->redirect(['action' => 'add']);
-			}	
+			}
 
 			$atendAnt = $ordem['atendimento'];
 			$ordem = $this->Ordensservico->patchEntity($ordem, $data);
@@ -771,7 +771,37 @@ class OrdensservicoController extends AppController {
 			->where(['idempresa' => $idempresa])
 			->order(['descricao'])
 			->toArray();
-		
+
+		// Mantém o valor selecionado na edição mesmo quando cliente/problema ficou inativo.
+		$idClienteAtual = (int)($ordem->idcliente ?? 0);
+		if ($idClienteAtual > 0 && !isset($clientesOpt[$idClienteAtual])) {
+			$clienteAtual = $this->Clientes->find('all')
+				->select(['Clientes.id', 'Clientes.tipo', 'Clientes.razaosocial', 'Clientes.nome', 'Clientes.idcidade'])
+				->where(['Clientes.idempresa' => $idempresa, 'Clientes.id' => $idClienteAtual])
+				->contain(['Cidades' => ['fields' => ['Cidades.id', 'Cidades.nome']]])
+				->first();
+			if (!empty($clienteAtual)) {
+				$nomeClienteAtual = ((int)$clienteAtual->tipo === C_ClientesTipoJuridica)
+					? (string)$clienteAtual->razaosocial
+					: (string)$clienteAtual->nome;
+				$nomeCidadeAtual = (!empty($clienteAtual->cidade) && !empty($clienteAtual->cidade->nome))
+					? (string)$clienteAtual->cidade->nome
+					: 'Sem Cidade';
+				$clientesOpt[$idClienteAtual] = trim($nomeClienteAtual) . ' (' . $nomeCidadeAtual . ')';
+			}
+		}
+
+		$idProblemaAtual = (int)($ordem->idproblema ?? 0);
+		if ($idProblemaAtual > 0 && !isset($problemas[$idProblemaAtual])) {
+			$problemaAtual = $this->Problemas->find('all')
+				->select(['id', 'descricao'])
+				->where(['idempresa' => $idempresa, 'id' => $idProblemaAtual])
+				->first();
+			if (!empty($problemaAtual)) {
+				$problemas[$idProblemaAtual] = (string)$problemaAtual->descricao;
+			}
+		}
+
 		$produtosOpt = [];
 		foreach($this->Produtos->find('all')
 			->select(['codigo', 'descricao'])
@@ -885,7 +915,7 @@ class OrdensservicoController extends AppController {
 		$this->set('faturamentos', $faturamentos);
 		$this->set('title', 'Visualizar ordem de serviços');
 	}
-	
+
 	public function cadhoras($idordem = null) {
 		if ($this->Auth->user('role') == C_RoleCliente) {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
@@ -910,7 +940,7 @@ class OrdensservicoController extends AppController {
 			$this->Flash->error('Você não possui permissão para realizar esta ação, contate um administrador do sistema.');
 			return $this->redirect(['controller' => 'users', 'action' => 'dashboard']);
 		}
-		
+
 		$idempresa = $this->Auth->user('idempresa');
 		$ordem = $this->Ordensservico->find('all')
 			->where(['id' => $id, 'idempresa' => $idempresa])
@@ -962,14 +992,14 @@ class OrdensservicoController extends AppController {
             $output[] = array(
             'id'            => $row->id,
             'tipo'          => $row->tipo,
-            'codprodutosoocod' => $row->codproduto,   
-            'codproduto'    => $row->codproduto,   
+            'codprodutosoocod' => $row->codproduto,
+            'codproduto'    => $row->codproduto,
             'descricao'     => $row->descricao,
             'observacao'    => $row->observacao,
             'unidade'       => $row->unidade,
             'quantidade'    => $row->quantidade,
             'serialnumber'  => $row->serialnumber,
-            'modelo'        => $row->modelo, 
+            'modelo'        => $row->modelo,
 			'productkey'	=> $row->productkey,
 			'obsinterna'	=> $row->obsinterna,
             'valorunitario' => number_format($row->valorunitario, 2, ",", "."),
@@ -1005,7 +1035,7 @@ class OrdensservicoController extends AppController {
 			}
 			$idordem = $iditensPk;
 		}
-		
+
 		$carrinho = $this->Itensordem->findByIdordempk($idordem)->order(['id'])->toArray();
 
 		$data = $this->request->getData();
@@ -1124,7 +1154,7 @@ class OrdensservicoController extends AppController {
         $ordem->unidade = $unidade;
         $ordem->quantidade = $quantidade;
         $ordem->serialnumber = $data['serialnumber'] ?? '';
-        $ordem->modelo = $data['modelo'] ?? ''; 
+        $ordem->modelo = $data['modelo'] ?? '';
 		$ordem->productkey = isset($data['productkey']) ? $data['productkey'] : '';
         $ordem->obsinterna = isset($data['obsinterna']) ? $data['obsinterna'] : '';
         $ordem->valorunitario = $valorunitario;
@@ -1229,7 +1259,7 @@ class OrdensservicoController extends AppController {
         }
 
         $ordem = $this->Itensordem->findById($data['id'])->first();
-        
+
         if ($ordem) {
             $ordem->tipo =  $data['tipo'];
             $ordem->codproduto = $data['codproduto'];
@@ -1242,18 +1272,18 @@ class OrdensservicoController extends AppController {
             $ordem->unidade =  $data['unidade'];
             $ordem->quantidade = $data['quantidade'];
             $ordem->valorunitario = str_replace('.', '', $data['valorunitario']);
-            $ordem->valorunitario = str_replace(',', '.', $ordem->valorunitario);          
+            $ordem->valorunitario = str_replace(',', '.', $ordem->valorunitario);
             $ordem->valordesconto = str_replace('.', '', $data['valordesconto']);
-            $ordem->valordesconto = str_replace(',', '.', $ordem->valordesconto); 
+            $ordem->valordesconto = str_replace(',', '.', $ordem->valordesconto);
             $ordem->valortotal = str_replace('.', '', $data['valortotal']);
             $ordem->valortotal = str_replace(',', '.', $ordem->valortotal);
 
             if( $this->Itensordem->save($ordem) ) {
                 echo('boa');
-            } 
+            }
         }
     }
-	
+
 	public function carrinhodelitem(){
 		$this->autoRender = false;
 		$data = $this->request->getData();
@@ -1267,7 +1297,7 @@ class OrdensservicoController extends AppController {
 		}
 
 		$ordem = $this->Itensordem->findById($data['id'])->first();
-		
+
 		if( $this->Itensordem->delete($ordem) ) echo('boa');
 	}
 
@@ -1289,7 +1319,7 @@ class OrdensservicoController extends AppController {
 				? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
 				: [];
 		}
-		
+
 		$valortotal = 0;
 		foreach($carrinho as $reg) {
 			 $valortotal += $reg->valortotal;
@@ -1303,7 +1333,7 @@ class OrdensservicoController extends AppController {
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])->first();
 		$data = $this->request->getData();
 		$sitantiga = $ordem->situacao;
-		
+
 		$this->Ordensservico->patchEntity($ordem, $data);
 		$ordem->situacao = C_OrdensSituacaoAberta;
 
@@ -1320,7 +1350,7 @@ class OrdensservicoController extends AppController {
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])->first();
 		$data = $this->request->getData();
 		$sitantiga = $ordem->situacao;
-		
+
 		$this->Ordensservico->patchEntity($ordem, $data);
 		$ordem->situacao = C_OrdensSituacaoCancelada;
 
@@ -1367,7 +1397,7 @@ class OrdensservicoController extends AppController {
 
 		$data = $this->request->getData();
 		$sitantiga = $ordem->situacao;
-		
+
 		$this->Ordensservico->patchEntity($ordem, $data);
 		$ordem->situacao = C_OrdensSituacaoLiberadaParaFaturamento;
 
@@ -1402,12 +1432,12 @@ class OrdensservicoController extends AppController {
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])->first();
 		$data = $this->request->getData();
 		$sitantiga = $ordem->situacao;
-		
+
 		$this->Ordensservico->patchEntity($ordem, $data);
 		$ordem->situacao = C_OrdensSituacaoFinalizada;
 
 		if ($this->Ordensservico->save($ordem)) {
-			
+
 			$this->Atividades->registrar($this->Auth->user('id'), $this->request->getParam('controller'), $this->request->getParam('action'), $ordem->id);
 			$this->Ordensservico->criarMov($id, $sitantiga, C_OrdensSituacaoFinalizada, $this->Auth->user('idempresa'), $this->Auth->user('id'));
 			$this->Flash->success('A ordem de serviço foi finalizada com sucesso!');
@@ -1420,7 +1450,7 @@ class OrdensservicoController extends AppController {
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])->first();
 		$data = $this->request->getData();
 		$sitantiga = $ordem->situacao;
-		
+
 		$this->Ordensservico->patchEntity($ordem, $data);
 		$ordem->situacao = C_OrdensSituacaoEmExecucao;
 
@@ -1457,13 +1487,13 @@ class OrdensservicoController extends AppController {
 			if (empty($token) || empty($empresa) || $situacaoInt === null) {
 				return $apiRet('Parâmetros da requisição inválidos. Envie empresa, token e situacao (ex.: situacao=4).', 400);
 			}
-			
+
 			if(empty($this->Empresas->findById($empresa)->first())) return $apiRet('Parâmetros da requisição inválidos', 400);
 			if($token == $this->Empresas->get($empresa)->token) {
 				if(!empty($id)){
 					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'Ordensservico.id' => $id, 'situacao' => $situacaoInt])
 						->contain([
-							'Clientes' => ['fields' => ['Clientes.cnpj', 'Clientes.cpf', 'Clientes.razaosocial', 'Clientes.nome', 
+							'Clientes' => ['fields' => ['Clientes.cnpj', 'Clientes.cpf', 'Clientes.razaosocial', 'Clientes.nome',
 							'Clientes.inscricaoestadual', 'Clientes.endereco', 'Clientes.nroendereco', 'Clientes.complemento', 'Clientes.bairro', 'Clientes.idcidade',
 							'Clientes.cep', 'Clientes.fone', 'Clientes.email', 'Clientes.contrato', 'Clientes.tipo']]
 						])
@@ -1472,7 +1502,7 @@ class OrdensservicoController extends AppController {
 				}else{
 					$ordem = $this->Ordensservico->find('all')->where(['Ordensservico.idempresa' => $empresa, 'situacao' => $situacaoInt])
 						->contain([
-							'Clientes' => ['fields' => ['Clientes.cnpj', 'Clientes.cpf', 'Clientes.razaosocial', 'Clientes.nome', 
+							'Clientes' => ['fields' => ['Clientes.cnpj', 'Clientes.cpf', 'Clientes.razaosocial', 'Clientes.nome',
 							'Clientes.inscricaoestadual', 'Clientes.endereco', 'Clientes.nroendereco', 'Clientes.complemento', 'Clientes.bairro', 'Clientes.idcidade',
 							'Clientes.cep', 'Clientes.fone', 'Clientes.email', 'Clientes.contrato', 'Clientes.tipo']]
 						])
@@ -1536,7 +1566,7 @@ class OrdensservicoController extends AppController {
 			);
 
 			$pagamentoarr[0]['parcelas'][] = array('vencimento' => date_format($pagamento->dataval1, 'd/m/Y'), 'valor' => $pagamento->valor1);
-			
+
 			if($pagamento->dataval2 != null)
 			$pagamentoarr[0]['parcelas'][] = array('vencimento' => date_format($pagamento->dataval2, 'd/m/Y'), 'valor' => $pagamento->valor2);
 			if($pagamento->dataval3 != null)
@@ -1548,14 +1578,14 @@ class OrdensservicoController extends AppController {
 		}
 		return $pagamentoarr;
 	}
-	
+
 	public function itensArr($itens){
 		$itensarr = [];
 		foreach($itens as $row){
 			$itensarr[] = array(
 			'id'    		=> $row->id,
 			'tipo'   		=> $row->tipo,
-			'codproduto'    => $row->codproduto,   
+			'codproduto'    => $row->codproduto,
 			'descricao'  	=> $row->descricao,
 			'observacao'  	=> $row->observacao,
 			'unidade'   	=> $row->unidade,
@@ -1619,7 +1649,7 @@ class OrdensservicoController extends AppController {
 				return $apiRet('Parâmetros da requisição inválidos.', 400);
 			}
 			if($token == $this->Empresas->get($empresa)->token){
-				$ordem = $this->Ordensservico->findById($json->nroordem)->where(['idempresa' => $empresa])->first(); 
+				$ordem = $this->Ordensservico->findById($json->nroordem)->where(['idempresa' => $empresa])->first();
 
 				if ($ordem == null) {
 					$this->log('[API-ORDENS refreshAPI] resposta 400 ordem nao encontrada nroordem=' . ($json->nroordem ?? '?') . ' empresa=' . $empresa, 'info');
@@ -2096,7 +2126,7 @@ class OrdensservicoController extends AppController {
 		}
 		$this->Flash->success('As ordem selecionadas foram movidas para "'. DescricaoSituacaoOrdem($data['situacao']) .'" com sucesso!');
 		return $this->redirect(['action' => 'index']);
-	}	
+	}
 
 	public function locacao($id, $locacao) {
 		$ordem = $this->Ordensservico->find('all')->where(['id' => $id, 'idempresa' => $this->Auth->user('idempresa')])->first();
