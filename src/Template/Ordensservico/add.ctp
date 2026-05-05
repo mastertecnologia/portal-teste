@@ -387,12 +387,7 @@
     </div>
 </div>
 <?php
-$osTiposComEstoqueErp = [];
-foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocacao'] as $osConst) {
-	if (defined($osConst)) {
-		$osTiposComEstoqueErp[] = (int)constant($osConst);
-	}
-}
+$osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 ?>
 <script>
 	var osTiposComEstoqueErp = <?= json_encode($osTiposComEstoqueErp) ?>;
@@ -1611,7 +1606,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						if (tipoSelNorm !== '' && tipoRespNorm !== '' && tipoSelNorm !== tipoRespNorm) {
 							console.warn('[OS add] tipo divergente normalizado (seguindo item válido do backend).', { selecionado: tipoSelNorm, retornado: tipoRespNorm, codigo: cod });
 						}
-						if(data.tipo == <?= C_ProdutosTipoProduto ?>) {
+						if(data.tipo == <?= (int)$tipoProdutoMercadoriaOs ?>) {
 							$row.find(".inputSerialnumber > input").prop('disabled', false);
 							serialnumbers(data.codigo);
 							$.ajax({
@@ -1707,7 +1702,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						if (tipoSelNorm !== '' && tipoRespNorm !== '' && tipoSelNorm !== tipoRespNorm) {
 							console.warn('[OS edit-row] tipo divergente normalizado (seguindo item válido do backend).', { selecionado: tipoSelNorm, retornado: tipoRespNorm, codigo: cod });
 						}
-						if(data.tipo == <?= C_ProdutosTipoProduto ?>) {
+						if(data.tipo == <?= (int)$tipoProdutoMercadoriaOs ?>) {
 							$row.find(".inputSerialnumber > input, .editSerialnumber > input").prop('disabled', false);
 							serialnumbers(data.codigo);
 							$.ajax({

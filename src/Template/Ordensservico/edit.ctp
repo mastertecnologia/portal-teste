@@ -10,12 +10,7 @@ $this->Breadcrumbs->add('Edit', [], ['class' => 'breadcrumb-item active']);
 if ($ordem->situacao != C_OrdensSituacaoAberta && $ordem->situacao != C_OrdensSituacaoEmExecucao) $disabled = true;
 else $disabled = false;
 
-$osTiposComEstoqueErp = [];
-foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocacao'] as $osConst) {
-	if (defined($osConst)) {
-		$osTiposComEstoqueErp[] = (int)constant($osConst);
-	}
-}
+$osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 ?>
 <style>
 	.os-edit-shell #grid_table .jsgrid-grid-header,
@@ -1976,7 +1971,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				if (tipoSelNorm !== '' && tipoRespNorm !== '' && tipoSelNorm !== tipoRespNorm) {
 					console.warn('[OS edit card] tipo divergente normalizado (seguindo item válido do backend).', { selecionado: tipoSelNorm, retornado: tipoRespNorm, codigo: codigo });
 				}
-				if (data.tipo == <?= C_ProdutosTipoProduto ?>) {
+				if (data.tipo == <?= (int)$tipoProdutoMercadoriaOs ?>) {
 					$(".inputSerialnumber > input, .editSerialnumber > input").prop('disabled', false);
 					serialnumbers(data.codigo);
 					$.ajax({
