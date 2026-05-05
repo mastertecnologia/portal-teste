@@ -206,7 +206,7 @@
 						) ?>
 						<?php endif; ?>
 						<?php if (!empty($admin) && ($sg['queues'] ?? true)) : ?>
-						<?= $pgmSbLink('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], [], (bool)($queuesAtendimentoActive ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos') ?>
+						<?= $pgmSbLink('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], ['data-turbo' => 'false'], (bool)($queuesAtendimentoActive ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos') ?>
 						<?php endif; ?>
 						<?php if (($sg['ordensservico_list'] ?? true)) : ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatórios', ['controller' => 'Ordensservico', 'action' => 'relatorios'], ['data-turbo' => 'false'], $relatoriosOsActive, '', 'Relatórios') ?>
@@ -272,7 +272,7 @@
 						$sgPrefSec = ($sg['prefaturamento_fila'] ?? true) || ($sg['prefaturamento_conferencia'] ?? true);
 						if ($sgPrefSec) :
 						?>
-						<?= $pgmSbLink('clipboard-check', ' Pré-faturamento', ['controller' => 'Prefaturamento', 'action' => 'index'], [], (bool)($prefaturamentoActive ?? ''), '', 'Pré-faturamento') ?>
+						<?= $pgmSbLink('clipboard-check', ' Pré-faturamento', ['controller' => 'Prefaturamento', 'action' => 'index'], ['data-turbo' => 'false'], (bool)($prefaturamentoActive ?? ''), '', 'Pré-faturamento') ?>
 						<?php endif; ?>
 						<?php if (($sg['faturamento'] ?? true)) : ?>
 						<?= $pgmSbLink('file-check', ' Faturamento', ['controller' => 'Faturamento', 'action' => 'index'], [], (bool)($faturamentoActive ?? ''), '', 'Faturamento') ?>
