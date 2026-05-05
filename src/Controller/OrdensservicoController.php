@@ -803,12 +803,14 @@ class OrdensservicoController extends AppController {
 		}
 
 		$produtosOpt = [];
-		foreach($this->Produtos->find('all')
+		$tipoMercadoriaOs = $this->tipoMercadoriaOrdemServico();
+		foreach ($this->Produtos->find('all')
 			->select(['codigo', 'descricao'])
-			->where(['idempresa' => $idempresa])
+			->where(['idempresa' => $idempresa, 'tipo' => $tipoMercadoriaOs])
 			->order(['descricao'])
-			->toArray() as $reg)
+			->toArray() as $reg) {
 			$produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao).' ('.trim($reg->codigo).')'];
+		}
 
 		$ordemhoras = $this->Ordemhoras->find('all')
 			->contain([
@@ -832,7 +834,7 @@ class OrdensservicoController extends AppController {
 
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
-		$this->set('tiposMobile', C_ProdutosTipo);
+		$this->set('tiposMobile', $this->tiposMobileOrdemServico());
 		$this->set('tiposOpt', json_encode(C_ProdutosTipo, JSON_PRETTY_PRINT));
 		$this->set('tiposOptGridItems', json_encode($this->tiposOptGridItemsForJsGrid(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 		$this->set('problemas', $problemas);
@@ -875,12 +877,14 @@ class OrdensservicoController extends AppController {
 
 		$areas = $this->Areas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
 		$problemas = $this->Problemas->find('list', ['keyField' => 'id', 'valueField' => 'descricao'])->where(['idempresa' => $idempresa])->order(['descricao'])->toArray();
+		$produtosOpt = [];
+		$tipoMercadoriaOs = $this->tipoMercadoriaOrdemServico();
 		$produtosOpt1 = $this->Produtos->find('all')
 			->select(['codigo', 'descricao'])
-			->where(['idempresa' => $idempresa, 'ativo' => 1])
+			->where(['idempresa' => $idempresa, 'ativo' => 1, 'tipo' => $tipoMercadoriaOs])
 			->order(['descricao'])
 			->toArray();
-		foreach($produtosOpt1 as $reg){
+		foreach ($produtosOpt1 as $reg) {
 			$produtosOpt[$reg->codigo] = $reg->descricao.' ('.$reg->codigo.')';
 		}
 
@@ -903,7 +907,7 @@ class OrdensservicoController extends AppController {
 		$this->set('carrinho', $carrinho);
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
-		$this->set('tiposMobile', $tiposOpt);
+		$this->set('tiposMobile', $this->tiposMobileOrdemServico());
 		$this->set('tiposOpt', json_encode($tiposOpt, JSON_PRETTY_PRINT));
 		$this->set('problemas', $problemas);
 		$this->set('areas', $areas);
@@ -1084,6 +1088,11 @@ class OrdensservicoController extends AppController {
 			$quantidade = 1.0;
 		}
 
+		$tipoMercadoria = $this->tipoMercadoriaOrdemServico();
+		if ($tipo > 0 && $tipo !== $tipoMercadoria) {
+			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Itens da ordem de serviço aceitam apenas cadastros do tipo produto (mercadoria).', []);
+		}
+
 		// Sempre buscar preço vigente: primeiro no ERP (Preço de Venda do estoque), senão no cadastro
 		if ($codproduto !== '') {
 			// Mesma regra que Produtos::produto: com tipo na linha, resolver cadastro por código+tipo (evita
@@ -1097,7 +1106,12 @@ class OrdensservicoController extends AppController {
 				])->first();
 			}
 			if (!$produto) {
-				$produto = $this->Produtos->findByCodigo($codproduto)->where(['idempresa' => $idempresa])->first();
+				// Não usar findByCodigo()->first(): com o mesmo código podem existir serviço/contrato; OS só aceita mercadoria.
+				$produto = $this->Produtos->find()->where([
+					'codigo' => $codproduto,
+					'idempresa' => $idempresa,
+					'tipo' => $tipoMercadoria,
+				])->first();
 			}
 			if ($produto) {
 				$descricao = $produto->descricao;
@@ -1140,6 +1154,10 @@ class OrdensservicoController extends AppController {
 					$valorunitario = (float) $produto->vlunitario;
 				}
 			}
+		}
+
+		if ((int)$tipo !== $tipoMercadoria) {
+			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Itens da ordem de serviço aceitam apenas cadastros do tipo produto (mercadoria). Verifique o código na pesquisa.', []);
 		}
 
 		$valortotal = ($quantidade * $valorunitario) - $valordesconto;
@@ -2030,9 +2048,10 @@ class OrdensservicoController extends AppController {
 			->toArray();
 
 		$produtosOpt = [];
+		$tipoMercadoriaOs = $this->tipoMercadoriaOrdemServico();
 		foreach ($this->Produtos->find('all')
 			->select(['codigo', 'descricao'])
-			->where(['idempresa' => $idempresa, 'ativo' => 1])
+			->where(['idempresa' => $idempresa, 'ativo' => 1, 'tipo' => $tipoMercadoriaOs])
 			->order(['descricao'])
 			->toArray() as $reg) {
 			$produtosOpt[] = ['codigo' => trim($reg->codigo), 'descricao' => trim($reg->descricao) . ' (' . trim($reg->codigo) . ')'];
@@ -2040,7 +2059,7 @@ class OrdensservicoController extends AppController {
 
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
-		$this->set('tiposMobile', C_ProdutosTipo);
+		$this->set('tiposMobile', $this->tiposMobileOrdemServico());
 		$this->set('tiposOpt', json_encode(C_ProdutosTipo, JSON_PRETTY_PRINT));
 		$this->set('tiposOptGridItems', json_encode($this->tiposOptGridItemsForJsGrid(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 		$this->set('problemas', $problemas);
@@ -2731,13 +2750,34 @@ class OrdensservicoController extends AppController {
 	}
 
 	/**
-	 * Itens para o campo jsGrid `tipo` com valueField/textField.
-	 * Se C_ProdutosTipo for lista PHP indexada (0 => Produto, 1 => Serviço, …), o jsGrid usaria value=0
-	 * e a lupa rejeita tipo <= 0. Aqui alinhamos cada rótulo ao inteiro real (C_ProdutosTipo* ou chave numérica).
-	 *
-	 * @return array
+	 * Cadastros permitidos nos itens (grid) da OS: somente tipo mercadoria / produto.
 	 */
-	protected function tiposOptGridItemsForJsGrid(): array {
+	protected function tipoMercadoriaOrdemServico(): int {
+		return defined('C_ProdutosTipoProduto') ? (int)constant('C_ProdutosTipoProduto') : 1;
+	}
+
+	/**
+	 * Select de tipo no formulário mobile da OS — uma opção, alinhada ao grid.
+	 *
+	 * @return array<int, string>
+	 */
+	protected function tiposMobileOrdemServico(): array {
+		$want = $this->tipoMercadoriaOrdemServico();
+		foreach ($this->tiposOptGridItemsForJsGridAll() as $row) {
+			if (is_array($row) && isset($row['value'], $row['text']) && (int)$row['value'] === $want) {
+				return [(int)$row['value'] => (string)$row['text']];
+			}
+		}
+
+		return [$want => 'Produto'];
+	}
+
+	/**
+	 * Lista completa de tipos para mapeamento interno (rótulos).
+	 *
+	 * @return array<int, array{value: int, text: string}>
+	 */
+	protected function tiposOptGridItemsForJsGridAll(): array {
 		if (!defined('C_ProdutosTipo') || !is_array(constant('C_ProdutosTipo'))) {
 			return [];
 		}
@@ -2774,5 +2814,27 @@ class OrdensservicoController extends AppController {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Itens para o campo jsGrid `tipo` com valueField/textField.
+	 * Na OS só entram cadastros do tipo mercadoria (produto); serviço, contrato, licença e locação não são opções aqui.
+	 * {@see tiposOpt} na view mantém lista completa para rótulos de linhas antigas.
+	 *
+	 * @return array<int, array{value: int, text: string}>
+	 */
+	protected function tiposOptGridItemsForJsGrid(): array {
+		$want = $this->tipoMercadoriaOrdemServico();
+		$filtered = [];
+		foreach ($this->tiposOptGridItemsForJsGridAll() as $row) {
+			if (is_array($row) && isset($row['value']) && (int)$row['value'] === $want) {
+				$filtered[] = $row;
+			}
+		}
+		if ($filtered !== []) {
+			return $filtered;
+		}
+
+		return [['value' => $want, 'text' => 'Produto']];
 	}
 }
