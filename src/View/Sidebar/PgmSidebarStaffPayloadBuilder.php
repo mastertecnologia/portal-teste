@@ -93,7 +93,7 @@ final class PgmSidebarStaffPayloadBuilder
             }
             if (($sg['ordensservico_list'] ?? true)) {
                 $badgeOs = $ctx['osIndexActive'] ? '<span class="pgm-os-badge badge badge-warning hide-menu" id="badge-exec-os">—</span>' : '';
-                $items[] = self::item('clipboard-list', ' Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], [], $ctx['osIndexActive'], $badgeOs, 'Ordens de Serviço');
+                $items[] = self::item('clipboard-list', ' Ordens de Serviço', ['controller' => 'Ordensservico', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['osIndexActive'], $badgeOs, 'Ordens de Serviço');
             }
             if ($admin && ($sg['queues'] ?? true)) {
                 $items[] = self::item('layers', ' Filas / técnicos', ['controller' => 'Queues', 'action' => 'adminIndex'], [], (bool)($v['queuesAtendimentoActive'] ?? ''), '<span class="badge badge-warning hide-menu">7</span>', 'Filas / técnicos');

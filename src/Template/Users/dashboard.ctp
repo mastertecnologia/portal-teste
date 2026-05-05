@@ -685,7 +685,7 @@
 			<div class="dcli-kpi-meta">
 				<p class="dcli-kpi-label">Ordens de serviço</p>
 				<p class="dcli-kpi-value"><?= (int)$ordensCliente ?></p>
-				<?= $this->Html->link('Ver ordens →', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'dcli-kpi-link']); ?>
+				<?= $this->Html->link('Ver ordens →', ['controller' => 'Ordensservico', 'action' => 'index'], ['class' => 'dcli-kpi-link', 'data-turbo' => 'false']); ?>
 			</div>
 			<div class="dcli-kpi-bar"><div class="dcli-kpi-bar-fill" data-w="<?= min(100, (int)$ordensCliente) ?>"></div></div>
 		</div>
