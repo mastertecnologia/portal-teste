@@ -832,11 +832,18 @@ class OrdensservicoController extends AppController {
 			$this->set('finaliza', 'finaliza');
 		}
 
+		$tiposExtrasOrdem = [];
+		if ($iditensPk !== null) {
+			foreach ($this->Itensordem->findByIdordempk($iditensPk)->select(['tipo'])->toArray() as $ri) {
+				$tiposExtrasOrdem[] = (int)$ri->tipo;
+			}
+		}
+
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
-		$this->set('tiposMobile', $this->tiposMobileOrdemServico());
-		$this->set('tiposOpt', json_encode($this->tiposOptOrdemServicoParaRotulos(), JSON_PRETTY_PRINT));
-		$this->set('tiposOptGridItems', json_encode($this->tiposOptGridItemsForJsGrid(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+		$this->set('tiposMobile', $this->tiposMobileOrdemServico($tiposExtrasOrdem));
+		$this->set('tiposOpt', json_encode($this->tiposOptOrdemServicoParaRotulos($tiposExtrasOrdem), JSON_PRETTY_PRINT));
+		$this->set('tiposOptGridItems', json_encode($this->tiposOptGridItemsForJsGrid($tiposExtrasOrdem), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 		$this->set('tipoProdutoMercadoriaOs', $this->tipoProdutoMercadoriaOrdemServico());
 		$this->set('problemas', $problemas);
 		$this->set('areas', $areas);
@@ -889,8 +896,6 @@ class OrdensservicoController extends AppController {
 			$produtosOpt[$reg->codigo] = $reg->descricao.' ('.$reg->codigo.')';
 		}
 
-		$tiposOpt = $this->tiposOptOrdemServicoParaRotulos();
-
 		$ordemhoras = $this->Ordemhoras->find('all', ['contain' => 'Users'])->where(['idordem' => $id])->toArray();
 		$ordemparcelas = $this->Ordemparcelas->find('all', ['contain' => 'Users'])->where(['idordem' => $id])->first();
 
@@ -898,6 +903,10 @@ class OrdensservicoController extends AppController {
 		$carrinho = $iditensPk !== null
 			? $this->Itensordem->findByIdordempk($iditensPk)->order(['id'])->toArray()
 			: [];
+		$tiposExtrasOrdem = [];
+		foreach ($carrinho as $ci) {
+			$tiposExtrasOrdem[] = (int)$ci->tipo;
+		}
 
 		$this->loadModel('Faturamento');
 		$faturamentos = $this->Faturamento->find('all')
@@ -908,8 +917,8 @@ class OrdensservicoController extends AppController {
 		$this->set('carrinho', $carrinho);
 		$this->set('produtosMobile', $produtosOpt);
 		$this->set('produtosOpt', json_encode($produtosOpt, JSON_PRETTY_PRINT));
-		$this->set('tiposMobile', $this->tiposMobileOrdemServico());
-		$this->set('tiposOpt', json_encode($tiposOpt, JSON_PRETTY_PRINT));
+		$this->set('tiposMobile', $this->tiposMobileOrdemServico($tiposExtrasOrdem));
+		$this->set('tiposOpt', json_encode($this->tiposOptOrdemServicoParaRotulos($tiposExtrasOrdem), JSON_PRETTY_PRINT));
 		$this->set('tipoProdutoMercadoriaOs', $this->tipoProdutoMercadoriaOrdemServico());
 		$this->set('problemas', $problemas);
 		$this->set('areas', $areas);
@@ -1090,25 +1099,28 @@ class OrdensservicoController extends AppController {
 			$quantidade = 1.0;
 		}
 
-		$tiposPerm = $this->tiposValoresPermitidosListaProdutosOs();
-		$mapPerm = array_fill_keys($tiposPerm, true);
+		$tiposUiPerm = $this->tiposUiPermitidosOrdemServico();
+		$mapUiPerm = array_fill_keys($tiposUiPerm, true);
+		$tiposDbPerm = $this->tiposValoresPermitidosListaProdutosOs();
+		$mapDbPerm = array_fill_keys($tiposDbPerm, true);
 		if ($tipo === 0) {
-			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Selecione o tipo Produto ou Serviço antes de adicionar o item.', []);
+			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Selecione o tipo do item antes de adicionar (mesma lista do cadastro de Produtos).', []);
 		}
-		if ($tipo === 3 || empty($mapPerm[$tipo])) {
-			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Tipo de cadastro não permitido neste item da ordem de serviço (ex.: contrato). Use apenas Produto ou Serviço.', []);
+		if (empty($mapUiPerm[$tipo])) {
+			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Tipo de cadastro não permitido neste item da ordem de serviço.', []);
 		}
+		$tipoDb = $this->mapOsLineTipoToProdutosTipo($tipo);
 
 		// Sempre buscar preço vigente: primeiro no ERP (Preço de Venda do estoque), senão no cadastro
 		if ($codproduto !== '') {
 			// Mesma regra que Produtos::produto: com tipo na linha, resolver cadastro por código+tipo (evita
 			// findByCodigo()->first() pegar outra linha quando existem dois registros com o mesmo código).
 			$produto = null;
-			if (!empty($mapPerm[$tipo])) {
+			if (!empty($mapDbPerm[$tipoDb])) {
 				$produto = $this->Produtos->find()->where([
 					'codigo' => $codproduto,
 					'idempresa' => $idempresa,
-					'tipo' => $tipo,
+					'tipo' => $tipoDb,
 				])->first();
 			}
 			if (!$produto) {
@@ -1116,17 +1128,16 @@ class OrdensservicoController extends AppController {
 				$queryAlt = $this->Produtos->find()->where([
 					'codigo' => $codproduto,
 					'idempresa' => $idempresa,
-					'tipo IN' => $tiposPerm,
+					'tipo IN' => $tiposDbPerm,
 				])->orderAsc('tipo');
 				$cands = $queryAlt->toArray();
 				if ($cands !== []) {
 					foreach ($cands as $row) {
-						if ((int)$row->tipo === $tipo) {
+						if ((int)$row->tipo === $tipoDb) {
 							$produto = $row;
 							break;
 						}
 					}
-					$produto = $produto ?? $cands[0];
 				}
 			}
 			if ($produto) {
@@ -1173,8 +1184,8 @@ class OrdensservicoController extends AppController {
 			}
 		}
 
-		if (!empty($mapPerm) && !isset($mapPerm[(int)$tipo])) {
-			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Tipo de cadastro não permitido neste item da ordem de serviço. Escolha produto ou serviço.', []);
+		if (!empty($mapDbPerm) && !isset($mapDbPerm[(int)$tipo])) {
+			return $this->osGridJsonError(422, 'os_grid_tipo_nao_permitido', 'Tipo de cadastro não permitido neste item da ordem de serviço.', []);
 		}
 
 		$valortotal = ($quantidade * $valorunitario) - $valordesconto;
@@ -1300,7 +1311,13 @@ class OrdensservicoController extends AppController {
         $ordem = $this->Itensordem->findById($data['id'])->first();
 
         if ($ordem) {
-            $ordem->tipo =  $data['tipo'];
+			$tipoLinha = isset($data['tipo']) ? (int)$data['tipo'] : 0;
+			$mapUi = array_fill_keys($this->tiposUiPermitidosOrdemServico(), true);
+			if ($tipoLinha > 0 && isset($mapUi[$tipoLinha])) {
+				$ordem->tipo = $this->mapOsLineTipoToProdutosTipo($tipoLinha);
+			} else {
+				$ordem->tipo = $tipoLinha > 0 ? $tipoLinha : $ordem->tipo;
+			}
             $ordem->codproduto = $data['codproduto'];
             $ordem->descricao =  $data['descricao'];
             $ordem->observacao = isset($data['observacao']) ? $data['observacao'] : '';
@@ -2772,25 +2789,91 @@ class OrdensservicoController extends AppController {
 	}
 
 	/**
-	 * Tipos de `produtos.tipo` permitidos em linhas novas da OS (convenção real do banco PGM: 1 mercadoria, 2 serviço, 3 contrato).
-	 * Não usa C_ProdutosTipoProduto/Servico: as constantes globais são 0-based e divergem desta base.
+	 * Opções de tipo na OS (value => rótulo), espelhando ProdutosController (opções de formulário / C_ProdutosTipo).
+	 * Valores podem ser 1–3 (BD) ou constantes (ex. Licença/Locação com IDs próprios); o cadastro em `produtos` segue 1/2/3.
 	 *
 	 * @return array<int, string>
 	 */
 	protected function tiposItensPermitidosOrdemServico(): array {
-		return [
-			1 => 'Produto',
-			2 => 'Serviço',
-		];
+		return $this->produtoTipoOptionsOrdemServicoComoModuloProdutos();
 	}
 
 	/**
-	 * Valores numéricos permitidos na listagem/pesquisa e no filtro `tipo IN` da OS.
+	 * Mesma lógica de `ProdutosController::produtoTipoOptionsForForms()` para manter o grid da OS alinhado ao cadastro de Produtos.
+	 *
+	 * @return array<int, string>
+	 */
+	protected function produtoTipoOptionsOrdemServicoComoModuloProdutos(): array {
+		if (!defined('C_ProdutosTipo') || !is_array(constant('C_ProdutosTipo'))) {
+			return [1 => 'Produto', 2 => 'Serviço', 3 => 'Contrato'];
+		}
+		$src = constant('C_ProdutosTipo');
+		$keys = array_keys($src);
+		$isZeroIndexedList = $keys === range(0, count($src) - 1);
+		$out = [];
+		if (!$isZeroIndexedList) {
+			foreach ($src as $k => $label) {
+				$ik = (int)$k;
+				if ($ik > 0) {
+					$out[$ik] = (string)$label;
+				}
+			}
+
+			return $out !== [] ? $out : [1 => 'Produto', 2 => 'Serviço', 3 => 'Contrato'];
+		}
+
+		$labels = array_values($src);
+		$constOrder = [];
+		foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoServico', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocacao'] as $cname) {
+			if (defined($cname) && (int)constant($cname) > 0) {
+				$constOrder[] = (int)constant($cname);
+			}
+		}
+		$nextFallback = count($constOrder) > 0 ? (max($constOrder) + 1) : 1;
+		for ($i = 0; $i < count($labels); $i++) {
+			$val = isset($constOrder[$i]) ? (int)$constOrder[$i] : $nextFallback++;
+			if ($val <= 0) {
+				continue;
+			}
+			$out[$val] = (string)$labels[$i];
+		}
+
+		return $out !== [] ? $out : [1 => 'Produto', 2 => 'Serviço', 3 => 'Contrato'];
+	}
+
+	/**
+	 * Valores do select da OS (podem incluir constantes de Licença/Locação além de 1/2/3).
+	 *
+	 * @return int[]
+	 */
+	protected function tiposUiPermitidosOrdemServico(): array {
+		return array_map('intval', array_keys($this->tiposItensPermitidosOrdemServico()));
+	}
+
+	/**
+	 * Valores de `produtos.tipo` usados em `tipo IN` / pesquisa (sempre o legado PGM: 1, 2, 3).
 	 *
 	 * @return array<int, int>
 	 */
 	protected function tiposValoresPermitidosListaProdutosOs(): array {
-		return array_keys($this->tiposItensPermitidosOrdemServico());
+		return [1, 2, 3];
+	}
+
+	/**
+	 * Converte o valor selecionado na linha da OS para `produtos.tipo` (1 mercadoria, 2 serviço, 3 contrato/licenças/locações).
+	 */
+	protected function mapOsLineTipoToProdutosTipo(int $tipoLinha): int {
+		if ($tipoLinha >= 1 && $tipoLinha <= 3) {
+			return $tipoLinha;
+		}
+		if (defined('C_ProdutosTipoLicenca') && (int)constant('C_ProdutosTipoLicenca') === $tipoLinha) {
+			return 3;
+		}
+		if (defined('C_ProdutosTipoLocacao') && (int)constant('C_ProdutosTipoLocacao') === $tipoLinha) {
+			return 3;
+		}
+
+		return $tipoLinha;
 	}
 
 	/**
@@ -2801,31 +2884,44 @@ class OrdensservicoController extends AppController {
 	}
 
 	/**
-	 * Rótulos para `tiposOpt` nas telas de OS: inclui tipo 3 para linhas antigas no carrinho; grid novo só oferece 1 e 2.
+	 * Rótulos para `tiposOpt` nas telas de OS (opções atuais + tipos já presentes na ordem, p.ex. legado).
 	 *
+	 * @param int[] $tiposExtrasLinha valores de `itensordem.tipo` a incluir ainda que fora do cadastro atual
 	 * @return array<int, string>
 	 */
-	protected function tiposOptOrdemServicoParaRotulos(): array {
-		return $this->tiposItensPermitidosOrdemServico() + [3 => 'Contrato'];
+	protected function tiposOptOrdemServicoParaRotulos(array $tiposExtrasLinha = []): array {
+		$base = $this->tiposItensPermitidosOrdemServico();
+		foreach ($tiposExtrasLinha as $t) {
+			$t = (int)$t;
+			if ($t < 0 || isset($base[$t])) {
+				continue;
+			}
+			$base[$t] = 'Tipo ' . $t;
+		}
+		ksort($base, SORT_NUMERIC);
+
+		return $base;
 	}
 
 	/**
-	 * Select de tipo no formulário mobile da OS — mesmo conjunto do grid (1 Produto, 2 Serviço).
+	 * Select de tipo no formulário mobile da OS — mesmo conjunto do grid.
 	 *
+	 * @param int[] $tiposExtrasLinha
 	 * @return array<int, string>
 	 */
-	protected function tiposMobileOrdemServico(): array {
-		return $this->tiposItensPermitidosOrdemServico();
+	protected function tiposMobileOrdemServico(array $tiposExtrasLinha = []): array {
+		return $this->tiposOptOrdemServicoParaRotulos($tiposExtrasLinha);
 	}
 
 	/**
-	 * Itens para o campo jsGrid `tipo` com valueField/textField (apenas 1 e 2).
+	 * Itens para o campo jsGrid `tipo` com valueField/textField.
 	 *
+	 * @param int[] $tiposExtrasLinha
 	 * @return array<int, array{value: int, text: string}>
 	 */
-	protected function tiposOptGridItemsForJsGrid(): array {
+	protected function tiposOptGridItemsForJsGrid(array $tiposExtrasLinha = []): array {
 		$out = [];
-		foreach ($this->tiposItensPermitidosOrdemServico() as $id => $label) {
+		foreach ($this->tiposOptOrdemServicoParaRotulos($tiposExtrasLinha) as $id => $label) {
 			$out[] = ['value' => (int)$id, 'text' => (string)$label];
 		}
 

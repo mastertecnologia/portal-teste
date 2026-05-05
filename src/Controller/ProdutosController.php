@@ -1399,6 +1399,19 @@ class ProdutosController extends AppController {
 	 * @return int[]
 	 */
 	private function produtosTipoPesquisaAliases(int $tipoInt): array {
+		/* Valores gravados em produtos.tipo neste portal (legado PGM): 1 produto, 2 serviço, 3 contrato/licenças/locações.
+		 * A grid da OS envia estes inteiros diretamente; não expandir via C_ProdutosTipo* (0-based) para não misturar
+		 * categorias na modal Pesquisar (ex.: tipo 2 puxando também tipo 1). */
+		if ($tipoInt >= 1 && $tipoInt <= 3) {
+			return [$tipoInt];
+		}
+		/* Mesmo cadastro (produtos.tipo = 3): UI do módulo Produtos pode usar constantes próprias para Licença/Locação. */
+		if (defined('C_ProdutosTipoLicenca') && (int) constant('C_ProdutosTipoLicenca') === $tipoInt) {
+			return [3];
+		}
+		if (defined('C_ProdutosTipoLocacao') && (int) constant('C_ProdutosTipoLocacao') === $tipoInt) {
+			return [3];
+		}
 		$out = [];
 		$sem = $this->produtoTipoSemantic($tipoInt);
 		if ($sem !== null) {
