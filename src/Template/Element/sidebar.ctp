@@ -199,7 +199,7 @@
 							'clipboard-list',
 							' Ordens de Serviço',
 							['controller' => 'Ordensservico', 'action' => 'index'],
-							[],
+							['data-turbo' => 'false'],
 							$osIndexActive,
 							($osIndexActive ? '<span class="pgm-os-badge badge badge-warning hide-menu" id="badge-exec-os">—</span>' : ''),
 							'Ordens de Serviço'
