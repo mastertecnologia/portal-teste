@@ -118,7 +118,7 @@
 							<span class="hide-menu">Orçamentos</span>
 						</a>
 						<ul class="collapse <?= !empty($orcamentosActive) ? 'in' : '' ?>">
-							<li><?= $this->Html->link('Meus Orçamentos', '/orcamentos/index', ['class' => 'waves-effect waves-dark']) ?></li>
+							<li><?= $this->Html->link('Meus Orçamentos', '/orcamentos/index', ['class' => 'waves-effect waves-dark', 'data-turbo' => 'false']) ?></li>
 							<?php if (!empty($canClienteSolicitarOrcamento)) : ?>
 							<li><?= $this->Html->link('Solicitar Orçamento', '/orcamentos/solicitar', ['class' => 'waves-effect waves-dark']) ?></li>
 							<?php endif; ?>
