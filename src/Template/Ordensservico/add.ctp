@@ -1940,6 +1940,57 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 		// Variável global para armazenar qual input está chamando o modal (Insert ou Edit)
 		window.activeInputCode = null;
+		function osAddFocusFallbackTarget() {
+			if (window.activeInputCode && window.activeInputCode.length && window.activeInputCode.is(':visible')) {
+				return window.activeInputCode;
+			}
+			var $insertBtn = $('#grid_table .jsgrid-insert-row .jsgrid-insert-button').first();
+			if ($insertBtn.length && $insertBtn.is(':visible')) {
+				return $insertBtn;
+			}
+			var $grid = $('#grid_table');
+			if ($grid.length) {
+				if (!$grid.attr('tabindex')) {
+					$grid.attr('tabindex', '-1');
+				}
+				return $grid;
+			}
+			return $();
+		}
+		function osAddBlurModalFocus($modal) {
+			if (!$modal || !$modal.length) {
+				return;
+			}
+			var active = document.activeElement;
+			if (active && $modal[0].contains(active) && typeof active.blur === 'function') {
+				active.blur();
+			}
+			$modal.find(':focus').each(function () {
+				if (typeof this.blur === 'function') {
+					this.blur();
+				}
+			});
+		}
+		function osAddRestoreFocusAfterModalClose() {
+			var $target = osAddFocusFallbackTarget();
+			if ($target.length) {
+				window.setTimeout(function () { $target.trigger('focus'); }, 0);
+			}
+		}
+		$('#modal-pesquisa-produto')
+			.off('hidden.bs.modal.osFocusFix')
+			.on('hidden.bs.modal.osFocusFix', function () {
+				osAddRestoreFocusAfterModalClose();
+			});
+		$(document)
+			.off('hide.bs.modal.osBootboxFocusFix', '.bootbox.modal')
+			.on('hide.bs.modal.osBootboxFocusFix', '.bootbox.modal', function () {
+				osAddBlurModalFocus($(this));
+			})
+			.off('hidden.bs.modal.osBootboxFocusFix', '.bootbox.modal')
+			.on('hidden.bs.modal.osBootboxFocusFix', '.bootbox.modal', function () {
+				osAddRestoreFocusAfterModalClose();
+			});
 
 		// Função para buscar produtos (Enter no input ou clique no botão)
 		$('#termo-pesquisa-produto').on('keypress', function (e) {
@@ -2111,7 +2162,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 				window.activeInputCode.val(codigo);
 				
 				// 2. Fecha o modal
-				$('#modal-pesquisa-produto').modal('hide');
+				var $modal = $('#modal-pesquisa-produto');
+				osAddBlurModalFocus($modal);
+				$modal.modal('hide');
 				
 				// 3. IMPORTANTE: Dispara o evento 'change' manualmente
 				// O seu código original escuta "change" para preencher descrição, preço, etc.

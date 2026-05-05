@@ -1848,6 +1848,57 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 
 
 	window.activeInputCode = null;
+	function osEditFocusFallbackTarget() {
+		if (window.activeInputCode && window.activeInputCode.length && window.activeInputCode.is(':visible')) {
+			return window.activeInputCode;
+		}
+		var $insertBtn = $('#grid_table .jsgrid-insert-row .jsgrid-insert-button').first();
+		if ($insertBtn.length && $insertBtn.is(':visible')) {
+			return $insertBtn;
+		}
+		var $grid = $('#grid_table');
+		if ($grid.length) {
+			if (!$grid.attr('tabindex')) {
+				$grid.attr('tabindex', '-1');
+			}
+			return $grid;
+		}
+		return $();
+	}
+	function osEditBlurModalFocus($modal) {
+		if (!$modal || !$modal.length) {
+			return;
+		}
+		var active = document.activeElement;
+		if (active && $modal[0].contains(active) && typeof active.blur === 'function') {
+			active.blur();
+		}
+		$modal.find(':focus').each(function () {
+			if (typeof this.blur === 'function') {
+				this.blur();
+			}
+		});
+	}
+	function osEditRestoreFocusAfterModalClose() {
+		var $target = osEditFocusFallbackTarget();
+		if ($target.length) {
+			window.setTimeout(function () { $target.trigger('focus'); }, 0);
+		}
+	}
+	$('#modal-pesquisa-produto')
+		.off('hidden.bs.modal.osFocusFix')
+		.on('hidden.bs.modal.osFocusFix', function () {
+			osEditRestoreFocusAfterModalClose();
+		});
+	$(document)
+		.off('hide.bs.modal.osBootboxFocusFix', '.bootbox.modal')
+		.on('hide.bs.modal.osBootboxFocusFix', '.bootbox.modal', function () {
+			osEditBlurModalFocus($(this));
+		})
+		.off('hidden.bs.modal.osBootboxFocusFix', '.bootbox.modal')
+		.on('hidden.bs.modal.osBootboxFocusFix', '.bootbox.modal', function () {
+			osEditRestoreFocusAfterModalClose();
+		});
 
 	$('#termo-pesquisa-produto').on('keypress', function(e) {
 		if (e.which === 13) {
@@ -2020,7 +2071,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 		}
 		if (window.activeInputCode) {
 			window.activeInputCode.val(codigo);
-			$('#modal-pesquisa-produto').modal('hide');
+			var $modal = $('#modal-pesquisa-produto');
+			osEditBlurModalFocus($modal);
+			$modal.modal('hide');
 			window.activeInputCode.trigger('change');
 		}
 	}
