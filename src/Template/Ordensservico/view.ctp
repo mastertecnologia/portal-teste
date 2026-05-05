@@ -7,6 +7,48 @@
 ?>
 <style>
 	.table td{padding: 0.7rem !important;}
+	.os-view-shell {
+		background: #fff;
+		border: 1px solid #e5e4e0;
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+		overflow: hidden;
+	}
+	.os-view-shell .os-view-tabs {
+		border-bottom: 1px solid #e5e4e0;
+		padding: 0 4px 0 10px;
+		margin-bottom: 0 !important;
+		background: #f2f1ee;
+	}
+	.os-view-shell .os-view-tabs .nav-item {
+		margin-bottom: -1px;
+	}
+	.os-view-shell .os-view-tabs .nav-link {
+		border: none !important;
+		border-radius: 0 !important;
+		padding: 8px 12px 6px;
+		font-size: 12px;
+		font-weight: 500;
+		color: #6b6a65 !important;
+		background: transparent !important;
+	}
+	.os-view-shell .os-view-tabs .nav-link.active {
+		color: #1d9e75 !important;
+		background: #fff !important;
+		border-bottom: 2px solid #1d9e75 !important;
+		padding-bottom: 4px;
+	}
+	.os-view-shell .tab-content {
+		padding: 16px 16px 20px;
+		background: #fff;
+	}
+	.os-view-stack-gap {
+		margin-top: 12px;
+	}
+	.os-view-empty-state {
+		margin: 12px 0;
+		text-align: center;
+	}
 	.os-view-fat-heading {
 		font-size: 12px;
 		text-transform: uppercase;
@@ -18,9 +60,9 @@
 	}
 </style>
 <div class="col-md-12">
-    <div class="card">
+    <div class="os-view-shell">
         <div class="card-body">
-			<ul class="nav nav-tabs customtab m-b-20" role="tablist">
+			<ul class="nav nav-tabs os-view-tabs" role="tablist">
                 <li class="nav-item"> <a class="nav-link active " data-toggle="tab" href="#ordem" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Ordem de Serviço</span></a> </li>
                 <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#movimentacoes" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-reload"></i></span> <span class="hidden-xs-down">Movimentações (<?= count($movimentacoes) ?>)</span></a> </li>
 				<li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#horas" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-time"></i></span> <span class="hidden-xs-down">Horas Cadastradas (<?= count($ordemhoras) ?>)</span></a> </li>
@@ -43,11 +85,11 @@
 							</div>
 						<?php }	 ?>
 						<div class="row m-b-5">
-							<div class="col-md-3 col-xs-12">
+							<div class="col-md-3 col-12">
 								<label class="control-label">Cliente</label>
 								<?= $this->Form->control('idcliente', ['id' => 'idcliente', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-3 col-xs-12">
+							<div class="col-md-3 col-12">
 								<label class="control-label">Solicitante</label>
 								<?= $this->Form->control('idsolicitante', ['class' => 'selectpicker form-control', 'title' => 'Solicitante (opcional)', 'data-live-search' => true, 'options' => '', 'label' => false, 'required' => false, 'disabled' => true]) ?>
 								
@@ -63,80 +105,79 @@
 									]) ?>
 								</div>
 							</div>
-							<div class="col-md-2 col-xs-6 clienteTelemail">
+							<div class="col-md-2 col-6 clienteTelemail">
 								<label class="control-label">Telefone para contato</label>
 								<?= $this->Form->control('telefone', ['class' => 'telefone form-control', 'label' => false, 'placeholder' => 'Nenhum telefone', 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-6 clienteTelemail">
+							<div class="col-md-2 col-6 clienteTelemail">
 								<label class="control-label">Celular para contato</label>
 								<?= $this->Form->control('celular', ['class' => 'celular form-control', 'label' => false, 'placeholder' => 'Nenhum celular', 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-12 clienteTelemail">
+							<div class="col-md-2 col-12 clienteTelemail">
 								<label class="control-label">E-mail para contato</label>
 								<?= $this->Form->email('email', ['type' => 'text', 'class' => 'email form-control', 'label' => false, 'placeholder' =>'Nenhum email', 'disabled' => true]) ?>
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<div class="form-group ">
 									<label class="control-label">Data de Abertura</label>
 									<?= $this->Form->text('dataabertura', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 								</div>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<div class="form-group ">
 									<label class="control-label">Data de Previsão</label>
 									<?= $this->Form->text('dataprevisao', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 								</div>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Prioridade</label>
 								<?= $this->Form->control('prioridade', ['placeholder' => 'Data', 'options' => C_OrdensPrioridade,  'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Contrato</label>
 								<?= $this->Form->control('contrato', ['placeholder' => 'Data', 'options' => C_OrdensContrato,  'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Status</label>
 								<?= $this->Form->control('idarea', ['options' => $areas, 'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Tipo de OS</label>
 								<?= $this->Form->control('idproblema', ['data-live-search' => true, 'options' => $problemas, 'title' => 'Selecione um problema', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-md-2 col-xs-12">
-								<label class="control-label">Situação</label><br>
+							<div class="col-md-2 col-12">
+								<label class="control-label">Situação</label>
 								<?= SituacaoOrdem($ordem->situacao) ?>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Atendimento</label>
 								<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Modelo</label>
 								<?= $this->Form->control('modelo', ['placeholder' => 'Insira o modelo',  'class' => 'form-control', 'label' => false, 'required' => false, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">N/S</label>
 								<?= $this->Form->control('nmrserie', ['placeholder' => 'Insira o número de série', 'class' => 'form-control', 'label' => false, 'required' => false, 'disabled' => true]) ?>
 							</div>
 							<?php if(!empty($ordem->nrodestino)){ ?>
-								<div class="col-md-2 col-xs-12">
+								<div class="col-md-2 col-12">
 									<label class="control-label">Nro. Destino</label>
 									<p> <?= $ordem->nrodestino ?> </p> 
 								</div>
 							<?php } ?>
 						</div>
-						<br>
-						<div class="row">
-							<div class="col-md-6 col-xs-12">
+						<div class="row os-view-stack-gap">
+							<div class="col-md-6 col-12">
 								<label class="control-label">Descrição do Problema</label>
 								<?= $this->Form->textarea('relato', ['placeholder' => 'Insira a descrição do problema da ordem', 'class' => 'form-control', 'label' => false, 'required' => true, 'rows' => 3, 'disabled' => true]) ?>
 							</div>
-							<div class="col-md-6 col-xs-12">
+							<div class="col-md-6 col-12">
 								<label class="control-label">Observação</label>
 								<?= $this->Form->textarea('observacao', ['placeholder' => 'Observação', 'class' => 'form-control', 'label' => false, 'required' => true, 'rows' => 3, 'disabled' => true]) ?>
 							</div>
@@ -144,7 +185,7 @@
 						<hr>
 						<div class="row">
 							<div class="col-12">
-								<h3 class='bg-dark text-white text-center p-2'> Produtos e Serviços </h3><br>
+								<h3 class='bg-dark text-white text-center p-2'> Produtos e Serviços </h3>
 							</div>
 						</div>
 						<div class="table-responsive">
@@ -249,9 +290,9 @@
 					<?php
 					foreach (array_reverse($movimentacoes) as $reg):
 						$data = $reg['data'];
-						echo "<br><div class='col-lg-12'>";
+						echo "<div class='col-lg-12 os-view-stack-gap'>";
 						if(!empty($reg->user)) echo "<strong>" . $reg->user->name . "</strong>  - " ;
-						echo $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y') . " às " . $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('H:i') . "<br>";
+						echo $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y') . " às " . $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('H:i');
 						echo "<p>";
 						if ($reg['sitnova'] == C_OrdensSituacaoAberta) {
 							if($reg['sitantiga'] == C_OrdensSituacaoLiberadaParaFaturamento) echo "Voltou a ordem de serviço";
@@ -291,7 +332,7 @@
 								</tbody>
 							</table>
 						</div>
-					<?php } else echo "<br><center><h4>Nenhum registro de horas encontrado</h4></center><br>"; ?>
+					<?php } else echo "<div class='os-view-empty-state'><h4>Nenhum registro de horas encontrado</h4></div>"; ?>
 				</div>
 				<div class="tab-pane" id="parcelas">
 					<div class="table-responsive">
@@ -342,7 +383,7 @@
 								</tr>
 							</tbody>
 						</table>
-					<?php }else echo "<br><center><h4>Nenhum registro de parcelas encontrado</h4></center><br>"; ?>
+					<?php }else echo "<div class='os-view-empty-state'><h4>Nenhum registro de parcelas encontrado</h4></div>"; ?>
 					</div>					
 				</div>
 			</div>

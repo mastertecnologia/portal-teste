@@ -69,6 +69,11 @@
 	background: var(--os-bg2);
 }
 
+.os-edit-shell .tab-content > .tab-pane {
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+}
+
 /* Título OS nº */
 .os-edit-shell .os-edit-os-legend {
 	font-size: 15px;
@@ -550,36 +555,36 @@
 		margin: 0;
 		box-shadow: none;
 	}
-	
+
 	.os-edit-shell .os-edit-tabs {
 		padding: 0 2px;
 	}
-	
+
 	.os-edit-shell .os-edit-tabs .nav-link {
 		padding: 6px 8px;
 		font-size: 11px;
 	}
-	
+
 	.os-edit-shell .tab-content {
 		padding: 12px 8px;
 	}
-	
+
 	.os-edit-shell .form-control,
 	.os-edit-shell select.form-control {
 		min-height: 42px;
 		font-size: 14px;
 		padding: 10px 12px;
 	}
-	
+
 	.os-edit-shell .control-label {
 		font-size: 10px;
 		margin-bottom: 6px;
 	}
-	
+
 	.os-edit-shell .form-group {
 		margin-bottom: 16px;
 	}
-	
+
 	.os-edit-shell .tab-pane#ordem .btn {
 		padding: 10px 20px;
 		font-size: 13px;
@@ -593,11 +598,11 @@
 		font-size: 10px;
 		padding: 4px 6px;
 	}
-	
+
 	.os-edit-shell .os-edit-os-legend {
 		font-size: 14px;
 	}
-	
+
 	.os-edit-shell .form-control,
 	.os-edit-shell select.form-control {
 		font-size: 16px;
@@ -617,12 +622,7 @@
 }
 
 .os-edit-shell .clienteTelemail {
-	display: flex;
-	gap: 8px;
-}
-
-.os-edit-shell .clienteTelemail > div {
-	flex: 1;
+	display: block;
 }
 
 /* Correção para campos de data */

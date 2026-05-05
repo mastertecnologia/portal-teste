@@ -44,10 +44,19 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 	.hide {
 		display: none !important;
 	}
+
+	.os-edit-stack-gap {
+		margin-top: 12px;
+	}
+
+	.os-edit-empty-state {
+		margin: 12px 0;
+		text-align: center;
+	}
 </style>
 <div class="col-md-12 p-0">
 	<div class="os-edit-shell form-material">
-			<ul class="nav nav-tabs os-edit-tabs customtab" role="tablist">
+			<ul class="nav nav-tabs os-edit-tabs" role="tablist">
 				<li class="nav-item"> <a class="nav-link active " data-toggle="tab" href="#ordem" role="tab" aria-selected="true"><span class="hidden-sm-up"><i class="ti-user"></i></span> <span class="hidden-xs-down">Ordem de Serviço</span></a> </li>
 				<li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#movimentacoes" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti ti-reload"></i></span> <span class="hidden-xs-down">Movimentações (<?= count($movimentacoes) ?>)</span></a> </li>
 				<li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#horas" role="tab" aria-selected="false"><span class="hidden-sm-up"><i class="ti-time"></i></span> <span class="hidden-xs-down">Horas Cadastradas (<?= count($ordemhoras) ?>)</span></a> </li>
@@ -90,11 +99,11 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						</div>
 					<?php }	 ?>
 					<div class="row m-b-5">
-						<div class="col-md-3 col-xs-12">
+						<div class="col-md-3 col-12">
 							<label class="control-label">Cliente</label>
 							<?= $this->Form->control('idcliente', ['id' => 'idcliente', 'data-live-search' => true, 'options' => $clientes, 'title' => 'Selecione um cliente', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => !in_array($ordem->situacao, [C_OrdensSituacaoAberta, C_OrdensSituacaoEmExecucao, C_OrdensSituacaoLiberadaParaFaturamento])]) ?>
 						</div>
-						<div class="col-md-3 col-xs-12">
+						<div class="col-md-3 col-12">
 							<label class="control-label">Solicitante</label>
 							<?= $this->Form->control('idsolicitante', ['id' => 'idsolicitante', 'data-live-search' => true, 'options' => '', 'class' => 'form-control selectpicker', 'label' => false, 'required' => false, 'disabled' => !in_array($ordem->situacao, [C_OrdensSituacaoAberta, C_OrdensSituacaoEmExecucao, C_OrdensSituacaoLiberadaParaFaturamento])]) ?>
 
@@ -110,55 +119,55 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 								]) ?>
 							</div>
 						</div>
-						<div class="col-md-2 col-xs-6 clienteTelemail">
+						<div class="col-md-2 col-6 clienteTelemail">
 							<label class="control-label">Telefone para contato</label>
 							<?= $this->Form->control('telefone', ['class' => 'telefone form-control', 'label' => false, 'placeholder' => 'Nenhum telefone', 'readonly' => true]) ?>
 						</div>
-						<div class="col-md-2 col-xs-6 clienteTelemail">
+						<div class="col-md-2 col-6 clienteTelemail">
 							<label class="control-label">Celular para contato</label>
 							<?= $this->Form->control('celular', ['class' => 'celular form-control', 'label' => false, 'placeholder' => 'Nenhum celular', 'readonly' => true]) ?>
 						</div>
-						<div class="col-md-2 col-xs-12 clienteTelemail">
+						<div class="col-md-2 col-12 clienteTelemail">
 							<label class="control-label">E-mail para contato</label>
 							<?= $this->Form->email('email', ['type' => 'text', 'class' => 'email form-control', 'label' => false, 'placeholder' => 'Nenhum email', 'readonly' => true]) ?>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<div class="form-group ">
 								<label class="control-label">Data de Abertura</label>
 								<?= $this->Form->text('dataabertura', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
 						</div>
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<div class="form-group ">
 								<label class="control-label">Data de Previsão</label>
 								<?= $this->Form->text('dataprevisao', ['placeholder' => 'Data', 'class' => 'form-control datepicker', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
 						</div>
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<label class="control-label">Prioridade</label>
 							<?= $this->Form->control('prioridade', ['placeholder' => 'Data', 'options' => C_OrdensPrioridade,  'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 						</div>
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<label class="control-label">Contrato</label>
 							<?= $this->Form->control('contrato', ['placeholder' => 'Data', 'options' => C_OrdensContrato,  'class' => 'form-control', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 						</div>
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<label class="control-label">Status</label>
 							<?= $this->Form->control('idarea', ['options' => $areas, 'class' => 'form-control os-edit-native-select', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 						</div>
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<label class="control-label">Tipo de OS</label>
 							<?= $this->Form->control('idproblema', ['data-live-search' => true, 'options' => $problemas, 'title' => 'Selecione um problema', 'class' => 'form-control selectpicker', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-2 col-xs-12">
-							<label class="control-label">Situação</label><br>
+						<div class="col-md-2 col-12">
+							<label class="control-label">Situação</label>
 							<?= SituacaoOrdem($ordem->situacao) ?>
 						</div>
-						<div class="col-md-2 col-xs-12">
+						<div class="col-md-2 col-12">
 							<label class="control-label">Atendimento</label>
 							<?= $this->Form->control('atendimento', ['placeholder' => 'Data', 'options' => C_OrdensAtendimento,  'class' => 'form-control', 'label' => false, 'required' => true]) ?>
 						</div>
@@ -166,24 +175,22 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							<?= $this->Form->control('idEmpresaAtual', ['id' => 'idEmpresaAtual', 'class' => 'form-control inputMobile', 'label' => false, 'type' => 'hidden', 'value' => (int)($authIdempresa ?? 0)]) ?>
 						</div>
 						<?php if (!empty($ordem->nrodestino)) { ?>
-							<div class="col-md-2 col-xs-12">
+							<div class="col-md-2 col-12">
 								<label class="control-label">Nro. Destino</label>
 								<p> <?= $ordem->nrodestino ?> </p>
 							</div>
 						<?php } ?>
 					</div>
-					<br>
-					<div class="row">
-						<div class="col-md-6 col-xs-12">
+					<div class="row os-edit-stack-gap">
+						<div class="col-md-6 col-12">
 							<label class="control-label">Descrição do Problema</label>
 							<?= $this->Form->textarea('relato', ['maxlength' => 200, 'placeholder' => 'Insira a descrição do problema da ordem', 'class' => 'form-control', 'label' => false, 'required' => false, 'rows' => 3]) ?>
 						</div>
-						<div class="col-md-6 col-xs-12">
+						<div class="col-md-6 col-12">
 							<label class="control-label">Observação</label>
 							<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Observação', 'class' => 'form-control', 'label' => false, 'required' => false, 'rows' => 3]) ?>
 						</div>
 					</div>
-					<br>
 					<!-- Mobile -->
 					<h4 class="os-edit-section-title text-center">Adicionar Produtos/Serviços</h4>
 					<?php if (isMobile() && $disabled == false) { ?>
@@ -262,9 +269,9 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 					<?php
 					foreach (array_reverse($movimentacoes) as $reg):
 						$data = $reg['data'];
-						echo "<br><div class='col-md-12'>";
+						echo "<div class='col-md-12 os-edit-stack-gap'>";
 						if (!empty($reg->user)) echo "<strong>" . $reg->user->name . "</strong>  - ";
-						echo $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y') . " às " . $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('H:i') . "<br>";
+						echo $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y') . " às " . $data->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('H:i');
 						echo "<p>";
 						//0 - Aberta
 						if ($reg['sitnova'] == C_OrdensSituacaoAberta) {
@@ -330,52 +337,51 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 								</tbody>
 							</table>
 						</div>
-					<?php } else echo "<br><center><h4>Nenhum registro de horas encontrado</h4></center><br>"; ?>
+					<?php } else echo "<div class='os-edit-empty-state'><h4>Nenhum registro de horas encontrado</h4></div>"; ?>
 				</div>
 				<div class="tab-pane" id="parcelas">
 					<?php if ($ordem->situacao == C_OrdensSituacaoAberta || $ordem->situacao == C_OrdensSituacaoEmExecucao) { ?>
 						<?= $this->Form->create(null, ['class' => 'form-material', 'url' => ['controller' => 'Ordemparcelas', 'action' => 'add', $ordem->id]]); ?>
 						<div class="row">
-							<div class="col-md-4 col-xs-12">
+							<div class="col-md-4 col-12">
 								<label class="control-label">Pagamento</label>
 								<?= $this->Form->control('pagamento', ['options' => C_OrdensPagamento, 'class' => 'form-control os-edit-native-select', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
-							<div class="col-md-3 col-xs-12">
+							<div class="col-md-3 col-12">
 								<div class="custom-control custom-checkbox mr-sm-2 m-r-10 m-l-10 m-t-10">
-									<br><?= $this->Form->checkbox('entrada', ['class' => 'custom-control-input', 'id' => 'entrada']); ?>
+									<?= $this->Form->checkbox('entrada', ['class' => 'custom-control-input', 'id' => 'entrada']); ?>
 									<label class="custom-control-label text-muted" for="entrada">Primeira parcela recebida como Entrada</label>
 								</div>
 							</div>
 						</div>
-						<br>
-						<div class="row">
-							<div class="col-md-2 col-xs-6 ">
+						<div class="row os-edit-stack-gap">
+							<div class="col-md-2 col-6 ">
 								<label class="control-label">Parcelas</label>
 								<?= $this->Form->control('nmrparcelas', ['id' => 'nmrparcelas', 'options' => C_OrdensParcelas, 'class' => 'form-control os-edit-native-select', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
-							<div class="col-md-2 col-xs-6 ">
+							<div class="col-md-2 col-6 ">
 								<label class="control-label text-muted dataval1">Parcela 1 </label>
 								<?= $this->Form->text('dataval1', ['id' => 'dataval1', 'default' => date('d/m/Y'), 'class' => 'form-control datepicker dataval1', 'label' => false, 'required' => true, 'disabled' => $disabled]) ?>
 							</div>
-							<div class="col-md-2 col-xs-6 ">
+							<div class="col-md-2 col-6 ">
 								<label class="control-label text-muted dataval2">Parcela 2 </label>
 								<?= $this->Form->text('dataval2', ['id' => 'dataval2', 'default' => date('d/m/Y'), 'class' => 'form-control datepicker dataval2', 'label' => false, 'disabled' => $disabled]) ?>
 							</div>
-							<div class="col-md-2 col-xs-6 ">
+							<div class="col-md-2 col-6 ">
 								<label class="control-label text-muted dataval3">Parcela 3 </label>
 								<?= $this->Form->text('dataval3', ['id' => 'dataval3', 'default' => date('d/m/Y'), 'class' => 'form-control datepicker dataval3', 'label' => false, 'disabled' => $disabled]) ?>
 							</div>
-							<div class="col-md-2 col-xs-6 ">
+							<div class="col-md-2 col-6 ">
 								<label class="control-label text-muted dataval4">Parcela 4 </label>
 								<?= $this->Form->text('dataval4', ['id' => 'dataval4', 'default' => date('d/m/Y'), 'class' => 'form-control datepicker dataval4', 'label' => false, 'disabled' => $disabled]) ?>
 							</div>
-							<div class="col-md-2 col-xs-6 ">
+							<div class="col-md-2 col-6 ">
 								<label class="control-label text-muted dataval5">Parcela 5 </label>
 								<?= $this->Form->text('dataval5', ['id' => 'dataval5', 'default' => date('d/m/Y'), 'class' => 'form-control datepicker dataval5', 'label' => false, 'disabled' => $disabled]) ?>
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-md-2 col-md-3 col-xs-6  m-t-20">
+							<div class="col-md-3 col-6 m-t-20">
 								<?= $this->Form->button('Enviar', ['class' => 'btn btn-pgm btn-pgm-salvar btn-primary ']) ?>
 							</div>
 						</div>
@@ -434,7 +440,7 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 							<?php if ($ordem->situacao == C_OrdensSituacaoAberta || $ordem->situacao == C_OrdensSituacaoEmExecucao) { ?>
 								<?= $this->Html->link('Excluir', ["controller" => "Ordemparcelas", "action" => "delete", $ordemparcelas->id], ['class' => 'btn btn-danger m-t-20']); ?>
 							<?php } ?>
-						<?php } else echo "<br><center><h4>Nenhum registro de parcelas encontrado</h4></center><br>"; ?>
+						<?php } else echo "<div class='os-edit-empty-state'><h4>Nenhum registro de parcelas encontrado</h4></div>"; ?>
 					</div>
 				</div>
 			</div>
@@ -531,7 +537,6 @@ foreach (['C_ProdutosTipoProduto', 'C_ProdutosTipoLicenca', 'C_ProdutosTipoLocac
 						</div>
 					</div>
 				</div>
-				<br>
 				<div class="table-responsive">
 					<table class="table table-hover table-bordered">
 						<thead>
