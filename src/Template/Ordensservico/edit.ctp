@@ -197,6 +197,16 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		align-items: center;
 		justify-content: center;
 	}
+
+	.os-edit-shell #grid_table .jsgrid-insert-button {
+		background: #1d9e75 !important;
+		border: 1px solid #1d9e75 !important;
+		color: #fff !important;
+		border-radius: 8px !important;
+		font-weight: 700;
+		font-size: 18px;
+		line-height: 1;
+	}
 </style>
 <div class="col-md-12 p-0">
 	<div class="os-edit-shell form-material">
@@ -1674,7 +1684,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 				deleteButton: false,
 				itemTemplate: function(value, item) {
 					var $ed = $('<button type="button" class="btn btn-sm os-grid-act-edit"/>')
-						.html('<i class="fa fa-pencil" aria-hidden="true"></i>')
+						.html('<i class="fa fa-edit" aria-hidden="true"></i>')
 						.attr('title', 'Editar item');
 					$ed.on('click', function(e) {
 						e.preventDefault();
@@ -1747,6 +1757,10 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 			var $actTh = $('#grid_table').find('.jsgrid-header-row th.jsgrid-control-field');
 			if ($actTh.length && $.trim($actTh.text()) === '') {
 				$actTh.text('Ações');
+			}
+			var $insBtn = $('#grid_table .jsgrid-insert-row .jsgrid-insert-button');
+			if ($insBtn.length) {
+				$insBtn.val('+').attr('title', 'Adicionar item').attr('aria-label', 'Adicionar item');
 			}
 		}
 	});
