@@ -61,6 +61,63 @@
 	body.os-add-page .os-add-shell #grid_table td.inputCodproduto .qtdEstoque {
 		display: none !important;
 	}
+	/* Garante contraste dos botões de ação do jsGrid (editar/excluir). */
+	body.os-add-page .os-add-shell .os-grid-act-edit {
+		background-color: #f0ad4e !important;
+		border-color: #eea236 !important;
+		color: #fff !important;
+	}
+	body.os-add-page .os-add-shell .os-grid-act-delete {
+		background-color: #d9534f !important;
+		border-color: #d43f3a !important;
+		color: #fff !important;
+	}
+	/* Mantém os botões de ação dentro da coluna AÇÕES. */
+	body.os-add-page .os-add-shell #grid_table th.os-col-acoes,
+	body.os-add-page .os-add-shell #grid_table td.os-col-acoes {
+		width: 86px !important;
+		min-width: 86px !important;
+		max-width: 86px !important;
+		padding-left: 6px !important;
+		padding-right: 6px !important;
+	}
+	body.os-add-page .os-add-shell .os-grid-actions-cell,
+	body.os-add-page .os-add-shell .os-grid-actions-edit {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		white-space: nowrap;
+	}
+	body.os-add-page .os-add-shell .os-grid-act-edit,
+	body.os-add-page .os-add-shell .os-grid-act-delete,
+	body.os-add-page .os-add-shell .os-grid-act-save,
+	body.os-add-page .os-add-shell .os-grid-act-cancel {
+		width: 30px;
+		height: 30px;
+		padding: 0 !important;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+	body.os-add-page .os-add-shell #grid_table .jsgrid-insert-button {
+		background: #1d9e75 !important;
+		border: 1px solid #1d9e75 !important;
+		color: #fff !important;
+		border-radius: 8px !important;
+		font-weight: 700;
+		font-size: 18px;
+		line-height: 1;
+		width: 30px;
+		height: 30px;
+		padding: 0 !important;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background-image: none !important;
+		text-indent: 0 !important;
+		overflow: hidden;
+	}
 	.os-add-bloco-title { font-size: 0.82rem; font-weight: 600; color: #1D9E75; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.04em; }
 	.os-add-bloco-origem { border-color: #cfe8de; }
 	/* Mantém selects no DOM fora da tela para selectpicker + AJAX (modo ticket). */
@@ -1320,7 +1377,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 					deleteButton: false,
 					itemTemplate: function (value, item) {
 						var $ed = $('<button type="button" class="btn btn-sm os-grid-act-edit"/>')
-							.html('<i class="fa fa-pencil" aria-hidden="true"></i>')
+							.html('<i class="fa fa-edit" aria-hidden="true"></i>')
 							.attr('title', 'Editar item');
 						$ed.on('click', function (e) {
 							e.preventDefault();
@@ -1370,7 +1427,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 				$('#grid_table td.inputTipo select, #grid_table td.editTipo select').addClass('os-item-tipo os-grid-tipo-select').attr('data-os-field', 'tipo').attr('data-field', 'tipo');
 				var $insBtn = $('#grid_table .jsgrid-insert-row .jsgrid-insert-button');
 				if ($insBtn.length) {
-					$insBtn.val('+').attr('title', 'Adicionar item');
+					$insBtn.val('+').attr('title', 'Adicionar item').attr('aria-label', 'Adicionar item');
 				}
 				var $actTh = $('#grid_table').find('.jsgrid-header-row th.jsgrid-control-field');
 				if ($actTh.length && $.trim($actTh.text()) === '') {
