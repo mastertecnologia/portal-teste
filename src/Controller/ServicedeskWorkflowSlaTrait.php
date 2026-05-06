@@ -170,7 +170,7 @@ trait ServicedeskWorkflowSlaTrait {
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', 'Workflow & SLA');
 		$this->set('hideLayoutPageTitle', true);
-		$w = $this->request->getAttribute('webroot');
+		$w = rtrim((string)$this->request->getAttribute('webroot'), '/') . '/';
 		$this->set('reactAppExtraCss', [$w . 'dist/css/pages/pgm-servicedesk-premium.css']);
 		$this->set('reactAppBreadcrumbs', [
 			['title' => 'Service Desk', 'url' => ['action' => 'index'], 'options' => []],
@@ -183,7 +183,9 @@ trait ServicedeskWorkflowSlaTrait {
 				'workflowSlaPolicies' => $w . 'servicedesk/workflow-sla',
 				'workflowSlaPolicyBase' => $w . 'servicedesk/workflow-sla/',
 				'workflowStates' => $w . 'servicedesk/workflow-states',
+				'workflowSlaStates' => $w . 'servicedesk/workflow-states',
 				'workflowTransitions' => $w . 'servicedesk/workflow-transitions',
+				'workflowSlaTransitions' => $w . 'servicedesk/workflow-transitions',
 				'workflowTransitionBase' => $w . 'servicedesk/workflow-transitions/',
 				'workflowSlaLogs' => $w . 'servicedesk/workflow-sla-logs',
 				'workflowSlaEmpresas' => $w . 'servicedesk/workflow-sla-empresas',
@@ -200,7 +202,18 @@ trait ServicedeskWorkflowSlaTrait {
 		$id = $this->request->getParam('id');
 		$table = $this->_wfPoliciesTable();
 		if ($table === null) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'schema'], 500);
+			if ($id === null || $id === '') {
+				if ($this->request->is('get')) {
+					return $this->jsonResponse(['ok' => true, 'policies' => [], 'prioridade' => '']);
+				}
+
+				return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
+			}
+			if ($this->request->is('get')) {
+				return $this->jsonResponse(['ok' => true, 'policy' => null]);
+			}
+
+			return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
 		}
 		$eidSession = $this->_wfSessionEmpresaId();
 
@@ -361,7 +374,7 @@ trait ServicedeskWorkflowSlaTrait {
 		}
 		$table = $this->_wfStatesTable();
 		if ($table === null) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'schema'], 500);
+			return $this->jsonResponse(['ok' => true, 'states' => []]);
 		}
 		$rows = $table->find()->order(['nome' => 'ASC'])->all();
 		$out = [];
@@ -385,7 +398,11 @@ trait ServicedeskWorkflowSlaTrait {
 		}
 		$table = $this->_wfTransitionsTable();
 		if ($table === null) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'schema'], 500);
+			if ($this->request->is('get')) {
+				return $this->jsonResponse(['ok' => true, 'transitions' => []]);
+			}
+
+			return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
 		}
 		$eidSession = $this->_wfSessionEmpresaId();
 		if ($this->request->is('get')) {
@@ -479,7 +496,7 @@ trait ServicedeskWorkflowSlaTrait {
 		}
 		$table = $this->_wfTransitionsTable();
 		if ($table === null) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'schema'], 500);
+			return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
 		}
 		$eidSession = $this->_wfSessionEmpresaId();
 		try {

@@ -18,8 +18,20 @@ import WorkflowTransitionList from './WorkflowTransitionList.jsx';
 const toolbarField =
   'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)]';
 
+function wfSdHomeUrl(b) {
+  const p = b?.paths || {};
+  const fromBoot = p.servicedeskUrl || p.indexTecnico;
+  if (typeof fromBoot === 'string' && fromBoot.trim() !== '') return fromBoot.trim();
+  const w = b?.webroot;
+  if (typeof w === 'string' && w !== '') {
+    const base = w.endsWith('/') ? w : `${w}/`;
+    return `${base}servicedesk`;
+  }
+  return '/servicedesk';
+}
+
 export default function WorkflowSlaAdmin({ boot }) {
-  const sdUrl = boot?.paths?.servicedeskUrl || boot?.paths?.indexTecnico || '/servicedesk';
+  const sdUrl = wfSdHomeUrl(boot);
   const [tab, setTab] = useState('policies');
   const [policies, setPolicies] = useState([]);
   const [prioridadeMsg, setPrioridadeMsg] = useState('');

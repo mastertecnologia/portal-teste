@@ -1232,18 +1232,47 @@ export async function detachAssetFromTicket(ticketId, { assetId, ticketAssetId }
   return { ok: true, id: json.id };
 }
 
+/** Webroot do Cake (`/portal/` ou `/`); sempre com barra final para concatenar rotas da app. */
+function normalizeWebrootForFetch(w) {
+  if (w === null || w === undefined || w === '') return '/';
+  let s = String(w);
+  if (!s.startsWith('/')) s = `/${s}`;
+  if (!s.endsWith('/')) s = `${s}/`;
+  return s;
+}
+
+function pickFirstBootPath(paths, keys) {
+  for (let i = 0; i < keys.length; i += 1) {
+    const v = paths[keys[i]];
+    if (typeof v === 'string' && v.trim() !== '') return v.trim();
+  }
+  return null;
+}
+
+/** Garante URL absoluta no site (path começando em `/` ou URL completa). */
+function wfSlaAbsUrl(u, webrootNorm) {
+  const t = (u || '').trim();
+  if (!t) return null;
+  if (t.startsWith('http://') || t.startsWith('https://')) return t;
+  if (t.startsWith('/')) return t;
+  return `${webrootNorm}${t.replace(/^\//, '')}`;
+}
+
 function wfSlaPaths() {
   const boot = getBoot();
   const p = boot?.paths || {};
-  const w = boot?.webroot || '/';
+  const w = normalizeWebrootForFetch(boot?.webroot);
+  const pick = (keys, relUnderWebroot) => wfSlaAbsUrl(pickFirstBootPath(p, keys), w) || `${w}${String(relUnderWebroot).replace(/^\//, '')}`;
+  let policyBase = pick(['workflowSlaPolicyBase'], 'servicedesk/workflow-sla/');
+  if (!policyBase.endsWith('/')) policyBase = `${policyBase}/`;
   return {
-    policies: p.workflowSlaPolicies || `${w}servicedesk/workflow-sla`,
-    policyBase: p.workflowSlaPolicyBase || `${w}servicedesk/workflow-sla/`,
-    states: p.workflowStates || `${w}servicedesk/workflow-states`,
-    transitions: p.workflowTransitions || `${w}servicedesk/workflow-transitions`,
-    transitionBase: p.workflowTransitionBase || `${w}servicedesk/workflow-transitions/`,
-    logs: p.workflowSlaLogs || `${w}servicedesk/workflow-sla-logs`,
-    empresas: p.workflowSlaEmpresas || `${w}servicedesk/workflow-sla-empresas`,
+    policies: pick(['workflowSlaPolicies'], 'servicedesk/workflow-sla').replace(/\/+$/, ''),
+    policyBase,
+    states: pick(['workflowSlaStates', 'workflowStates'], 'servicedesk/workflow-states'),
+    transitions: pick(['workflowSlaTransitions', 'workflowTransitions'], 'servicedesk/workflow-transitions'),
+    transitionBase: pick(['workflowTransitionBase'], 'servicedesk/workflow-transitions/').replace(/\/?$/, '/'),
+    logs: pick(['workflowSlaLogs'], 'servicedesk/workflow-sla-logs'),
+    empresas: pick(['workflowSlaEmpresas'], 'servicedesk/workflow-sla-empresas'),
   };
 }
 
