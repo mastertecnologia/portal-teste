@@ -182,7 +182,7 @@ trait ServicedeskWorkflowSlaTrait {
 		$sd = \Cake\Routing\Router::url(['controller' => 'Servicedesk', 'action' => 'index']);
 		$this->set('reactBoot', $this->_reactBoot('tech_workflow_sla_admin', null, array_replace_recursive($extra, [
 			'paths' => [
-				'workflowSlaPolicies' => $w . 'servicedesk/workflow-sla',
+				'workflowSlaPolicies' => $w . 'servicedesk/workflow-sla-policies',
 				'workflowSlaPolicyBase' => $w . 'servicedesk/workflow-sla/',
 				'workflowStates' => $w . 'servicedesk/workflow-states',
 				'workflowSlaStates' => $w . 'servicedesk/workflow-states',

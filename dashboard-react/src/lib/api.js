@@ -1262,7 +1262,7 @@ function wfSlaAbsUrl(u, webrootNorm) {
 function wfSlaPolicyListUrl(boot) {
   const v = typeof boot?.paths?.workflowSlaPolicies === 'string' ? boot.paths.workflowSlaPolicies.trim() : '';
   if (v) return v.replace(/\/+$/, '');
-  return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla`.replace(/\/+$/, '');
+  return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla-policies`.replace(/\/+$/, '');
 }
 
 function wfSlaPolicyBaseFromBoot(boot) {
