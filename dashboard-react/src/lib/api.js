@@ -1429,12 +1429,30 @@ export async function fetchWorkflowSlaEmpresas() {
   const json = await r.json().catch(() => ({}));
   if (!r.ok || !json.ok) return { ok: false, empresas: [], error: json.error || r.statusText };
   const raw = json.empresas || [];
+  const trimStr = (v) => (v != null && String(v).trim() !== '' ? String(v).trim() : '');
   const empresas = raw.map((e) => {
-    const label = e.label != null && String(e.label).trim() !== '' ? String(e.label).trim() : '';
-    const nome = e.nome != null && String(e.nome).trim() !== '' ? String(e.nome).trim() : label;
-    return { ...e, label: label || nome, nome: nome || label };
+    const label =
+      trimStr(e.label) ||
+      trimStr(e.nome) ||
+      trimStr(e.razaosocial) ||
+      trimStr(e.nomefantasia) ||
+      (e.id != null ? `Empresa #${e.id}` : '');
+    return {
+      ...e,
+      label,
+      nome: label,
+      nomefantasia: trimStr(e.nomefantasia),
+      razaosocial: trimStr(e.razaosocial),
+    };
   });
-  return { ok: true, empresas };
+  const out = { ok: true, empresas };
+  if (Object.prototype.hasOwnProperty.call(json, 'allowedEmpresaIds') || Object.prototype.hasOwnProperty.call(json, 'workflowEmpresasConfigured')) {
+    out.slaEmpresasDebug = {
+      allowedEmpresaIds: json.allowedEmpresaIds,
+      workflowEmpresasConfigured: json.workflowEmpresasConfigured,
+    };
+  }
+  return out;
 }
 
 export { MOCK_SESSION_CLIENTE };

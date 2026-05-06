@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 
+function trimStr(v) {
+  return v != null && String(v).trim() !== '' ? String(v).trim() : '';
+}
+
+/** Rótulo para select/preview: API envia label; fallback razaosocial / nomefantasia. */
+function empresaOptionLabel(e) {
+  if (!e || typeof e !== 'object') return '';
+  return (
+    trimStr(e.label) ||
+    trimStr(e.nome) ||
+    trimStr(e.razaosocial) ||
+    trimStr(e.nomefantasia) ||
+    (e.id != null ? `Empresa #${e.id}` : '')
+  );
+}
+
 function buildPreview(form, empresas, states) {
-  const emp = form.is_global
-    ? 'qualquer empresa (regra global)'
-    : empresas.find((e) => Number(e.id) === Number(form.empresa_id))?.label ||
-      empresas.find((e) => Number(e.id) === Number(form.empresa_id))?.nome ||
-      'empresa selecionada';
+  const row = empresas.find((x) => Number(x.id) === Number(form.empresa_id));
+  const emp = form.is_global ? 'qualquer empresa (regra global)' : empresaOptionLabel(row) || 'empresa selecionada';
   const st = states.find((s) => Number(s.id) === Number(form.workflow_state_id))?.nome || 'estado';
   const resMin = Number(form.resolucao_minutos) || 0;
   const dest = states.find((s) => Number(s.id) === Number(form.escalate_to_state_id))?.nome || '—';
@@ -70,6 +83,12 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!form.is_global && empresas.length === 0) {
+      return;
+    }
+    if (!form.is_global && (form.empresa_id === '' || form.empresa_id === undefined)) {
+      return;
+    }
     onSubmit({
       is_global: form.is_global,
       empresa_id: form.is_global ? null : Number(form.empresa_id),
@@ -106,18 +125,25 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
 
       <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">
         Empresa
-        <select
-          disabled={form.is_global}
-          className="mt-1 w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 text-sm text-[var(--pgm-text)] disabled:opacity-50"
-          value={String(form.empresa_id)}
-          onChange={(e) => setForm((f) => ({ ...f, empresa_id: e.target.value }))}
-        >
-          {empresas.map((e) => (
-            <option key={e.id} value={String(e.id)}>
-              {e.label || e.nome || `Empresa #${e.id}`}
-            </option>
-          ))}
-        </select>
+        {!form.is_global && empresas.length === 0 ? (
+          <p className="mt-2 rounded-md border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] px-3 py-2 text-sm text-[var(--pgm-text-muted)]">
+            Nenhuma empresa disponível para configuração. Verifique o endpoint workflow-sla-empresas, WORKFLOW_EMPRESAS e
+            cadastro em empresas (inativa).
+          </p>
+        ) : (
+          <select
+            disabled={form.is_global}
+            className="mt-1 w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 text-sm text-[var(--pgm-text)] disabled:opacity-50"
+            value={empresas.length ? String(form.empresa_id) : ''}
+            onChange={(e) => setForm((f) => ({ ...f, empresa_id: e.target.value }))}
+          >
+            {empresas.map((e) => (
+              <option key={e.id} value={String(e.id)}>
+                {empresaOptionLabel(e)}
+              </option>
+            ))}
+          </select>
+        )}
       </label>
 
       <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">
@@ -237,7 +263,7 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
         </button>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || (!form.is_global && empresas.length === 0)}
           className="rounded-lg bg-gradient-to-b from-[var(--pgm-primary)] to-[#168a64] px-4 py-2 text-sm font-semibold text-white shadow-[var(--pgm-shadow-sm)] disabled:opacity-50"
         >
           {submitting ? 'Salvando…' : 'Salvar'}

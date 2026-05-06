@@ -27,6 +27,22 @@ trait ServicedeskWorkflowSlaTrait {
 	}
 
 	/**
+	 * Condição ORM: empresa considerada ativa para configuração SLA (coluna inativa em empresas).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function _wfEmpresaWhereAtivos(): array {
+		return [
+			'OR' => [
+				['inativa IS' => null],
+				['inativa' => 0],
+				['inativa' => '0'],
+				['inativa' => false],
+			],
+		];
+	}
+
+	/**
 	 * Empresas ativas (inativa ≠ 1); se WORKFLOW_EMPRESAS estiver definido, interseção com essa lista.
 	 *
 	 * @return array<int,int>
@@ -34,17 +50,9 @@ trait ServicedeskWorkflowSlaTrait {
 	protected function _wfSlaAdminSelectableEmpresaIds(): array {
 		try {
 			$enabled = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
-			// Mesmo critério de ativas que EmpresasController::index (inativa = 0), com OR para legado (null / string).
 			$q = $this->Empresas->find()
 				->select(['id'])
-				->where([
-					'OR' => [
-						['inativa' => 0],
-						['inativa' => '0'],
-						['inativa' => false],
-						['inativa IS' => null],
-					],
-				]);
+				->where($this->_wfEmpresaWhereAtivos());
 			$activeIds = [];
 			foreach ($q->all() as $r) {
 				$activeIds[] = (int)$r->id;
@@ -737,15 +745,33 @@ trait ServicedeskWorkflowSlaTrait {
 			return;
 		}
 		try {
+			$enabledConfigured = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
 			$ids = $this->_wfSlaAdminSelectableEmpresaIds();
-			if ($ids === []) {
-				return $this->jsonResponse(['ok' => true, 'empresas' => []]);
+			$rows = null;
+			if ($ids !== []) {
+				$rows = $this->Empresas->find()
+					->select(['id', 'nomefantasia', 'razaosocial'])
+					->where(['id IN' => array_values($ids)])
+					->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC'])
+					->all();
 			}
-			$rows = $this->Empresas->find()
-				->select(['id', 'nomefantasia', 'razaosocial'])
-				->where(['Empresas.id IN' => $ids])
-				->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC'])
-				->all();
+			if ($rows === null || $rows->count() === 0) {
+				$q = $this->Empresas->find()
+					->select(['id', 'nomefantasia', 'razaosocial'])
+					->where($this->_wfEmpresaWhereAtivos());
+				if ($enabledConfigured !== []) {
+					$q->where(['id IN' => $enabledConfigured]);
+				}
+				$rows = $q->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC'])->all();
+			}
+			if ($rows->count() === 0) {
+				Log::warning('workflowSlaEmpresasOptions: nenhuma empresa ativa pelo critério inativa; listando cadastro bruto (limite 500).');
+				$rows = $this->Empresas->find()
+					->select(['id', 'nomefantasia', 'razaosocial'])
+					->order(['id' => 'ASC'])
+					->limit(500)
+					->all();
+			}
 			$out = [];
 			foreach ($rows as $r) {
 				$nf = trim((string)($r->nomefantasia ?? ''));
@@ -755,10 +781,18 @@ trait ServicedeskWorkflowSlaTrait {
 					'id' => (int)$r->id,
 					'label' => $label,
 					'nome' => $label,
+					'nomefantasia' => $nf,
+					'razaosocial' => $rz,
 				];
 			}
+			$response = ['ok' => true, 'empresas' => $out];
+			$debugOn = (bool)Configure::read('debug') || (string)$this->request->getQuery('verbose') === '1';
+			if ($debugOn) {
+				$response['allowedEmpresaIds'] = $this->_wfSlaAdminSelectableEmpresaIds();
+				$response['workflowEmpresasConfigured'] = $enabledConfigured;
+			}
 
-			return $this->jsonResponse(['ok' => true, 'empresas' => $out]);
+			return $this->jsonResponse($response);
 		} catch (\Throwable $e) {
 			Log::warning('workflowSlaEmpresasOptions: ' . $e->getMessage());
 

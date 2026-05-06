@@ -117,14 +117,37 @@ export default function WorkflowSlaAdmin({ boot }) {
     return () => clearTimeout(t);
   }, [filters, reloadPolicies]);
 
-  const openCreate = () => {
+  const openCreate = useCallback(async () => {
+    setErr('');
+    const re = await fetchWorkflowSlaEmpresas();
+    if (re.ok) {
+      setEmpresas(re.empresas || []);
+      if (re.slaEmpresasDebug && typeof console !== 'undefined' && console.debug) {
+        console.debug('workflow-sla-empresas', re.slaEmpresasDebug);
+      }
+    } else {
+      setEmpresas([]);
+      setErr('Não foi possível carregar a lista de empresas para o formulário.');
+    }
     setEditingPolicy(null);
     setFormOpen(true);
-  };
-  const openEdit = (p) => {
+  }, []);
+
+  const openEdit = useCallback(async (p) => {
+    setErr('');
+    const re = await fetchWorkflowSlaEmpresas();
+    if (re.ok) {
+      setEmpresas(re.empresas || []);
+      if (re.slaEmpresasDebug && typeof console !== 'undefined' && console.debug) {
+        console.debug('workflow-sla-empresas', re.slaEmpresasDebug);
+      }
+    } else {
+      setEmpresas([]);
+      setErr('Não foi possível carregar a lista de empresas para o formulário.');
+    }
     setEditingPolicy(p);
     setFormOpen(true);
-  };
+  }, []);
 
   const onSavePolicy = async (payload) => {
     setFormBusy(true);
@@ -504,6 +527,7 @@ export default function WorkflowSlaAdmin({ boot }) {
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-xl">
             <h3 className="mb-3 text-lg font-bold text-[var(--pgm-text)]">{editingPolicy ? 'Editar política' : 'Nova política'}</h3>
             <WorkflowSlaPolicyForm
+              key={editingPolicy ? `policy-${editingPolicy.id}` : `create-${empresas.length}`}
               empresas={empresas}
               states={states}
               initial={editingPolicy}
