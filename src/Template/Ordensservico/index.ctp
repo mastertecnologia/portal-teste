@@ -117,7 +117,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				<?php if ($role == 0) { ?>
 					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Situação</p>
-						<?= $this->Form->control('situacao', ['title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false]) ?>
+						<?= $this->Form->control('situacao', ['title' => 'Todas', 'empty' => 'Todos', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false]) ?>
 					</div>
 					<div class="col-lg-3 col-md-6 col-sm-6 col-12">
 						<p>Problema</p>
@@ -134,7 +134,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 				<?php } else { ?>
 					<div class="col-md-4 col-12">
 						<p>Situação</p>
-						<?= $this->Form->control('situacao', ['title' => 'Todas', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false]) ?>
+						<?= $this->Form->control('situacao', ['title' => 'Todas', 'empty' => 'Todos', 'value' => $situacao, 'id' => 'situacao', 'class' => 'form-control os-filter-native-select', 'options' => C_OrdensSituacao, 'label' => false]) ?>
 					</div>
 				<?php } ?>
 			</div>
@@ -360,6 +360,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 	var osAddUrl = <?= $role == 0 ? json_encode($this->Url->build(['action' => 'add'])) : 'null' ?>;
 	var osDrawerActiveRow = null;
 	var osKpiSituacaoMap = {
+		open: <?= json_encode(C_OrdensSituacaoAberta) ?>,
 		exec: <?= json_encode(C_OrdensSituacaoEmExecucao) ?>,
 		sync: <?= json_encode(C_OrdensSituacaoSincronizadaPeloGrid) ?>,
 		lib: <?= json_encode(C_OrdensSituacaoLiberadaParaFaturamento) ?>
@@ -370,6 +371,7 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		problema: <?= json_encode((string)$problema) ?>,
 		locacao: <?= json_encode((string)$locacao) ?>
 	};
+	var osUseDefaultOperationalFilter = false;
 	<?php
 	$_osIndexJson = json_encode(!empty($osRowsById) ? $osRowsById : new \stdClass(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
 	if ($_osIndexJson === false) {
@@ -502,11 +504,15 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 		$('#os-drawer-backdrop, #os-drawer').appendTo('body');
 
 		$('#situacao, #cliente, #problema, #locacao').on('change', function() {
+			if (this && this.id === 'situacao') {
+				osUseDefaultOperationalFilter = false;
+			}
 			osApplyClientFilters();
 		});
 
 		$(document).on('click', '[data-os-kpi]', function() {
 			var k = $(this).data('os-kpi');
+			osUseDefaultOperationalFilter = false;
 			if (k === 'all') {
 				$('#situacao').val('');
 			} else if (osKpiSituacaoMap[k] != null) {
@@ -668,7 +674,13 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			var fCliente = $('#cliente').val();
 			var fProblema = $('#problema').val();
 			var fLocacao = $('#locacao').val();
-			if (fSituacao && String(row.situacao_id) !== String(fSituacao)) return false;
+			if (fSituacao) {
+				if (String(row.situacao_id) !== String(fSituacao)) return false;
+			} else if (osUseDefaultOperationalFilter) {
+				var isOpen = String(row.situacao_id) === String(osKpiSituacaoMap.open);
+				var isExec = String(row.situacao_id) === String(osKpiSituacaoMap.exec);
+				if (!isOpen && !isExec) return false;
+			}
 			if (fCliente && fCliente !== '0' && String(row.idcliente) !== String(fCliente)) return false;
 			if (fProblema && fProblema !== '0' && String(row.idproblema) !== String(fProblema)) return false;
 			if (fLocacao && fLocacao !== '-1' && String(row.locacao) !== String(fLocacao)) return false;
@@ -752,8 +764,14 @@ if ((string)$situacao === (string)C_OrdensSituacaoEmExecucao) {
 			osDt.draw();
 		}
 
-		/* Aplica filtros da URL somente como estado inicial, sem request extra. */
-		if (osInitialFilters.situacao) $('#situacao').val(osInitialFilters.situacao);
+		/* Primeira abertura sem query aplica filtro operacional: Aberta + Em execução. */
+		if (osInitialFilters.situacao) {
+			$('#situacao').val(osInitialFilters.situacao);
+			osUseDefaultOperationalFilter = false;
+		} else {
+			osUseDefaultOperationalFilter = true;
+			$('#situacao').val('');
+		}
 		if (osInitialFilters.cliente) $('#cliente').val(osInitialFilters.cliente);
 		if (osInitialFilters.problema) $('#problema').val(osInitialFilters.problema);
 		if (osInitialFilters.locacao) $('#locacao').val(osInitialFilters.locacao);
