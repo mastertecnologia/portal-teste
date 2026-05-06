@@ -385,7 +385,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 					}
 					echo '</span>';
 					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
-					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-danger m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-danger m-r-5 m-t-20 float-right', 'style' => 'background-color:#dc3545;border-color:#dc3545;color:#fff;', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoLiberadaParaFaturamento) echo $this->Html->link('Voltar ordem', ['action' => 'pausar', $ordem->id], ['class' => 'btn btn-warning m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoAberta) echo $this->Html->link('Em execução', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
