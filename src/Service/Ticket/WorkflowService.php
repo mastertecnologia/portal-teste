@@ -126,11 +126,11 @@ class WorkflowService {
 		if (empty($toState)) {
 			return $ticket;
 		}
-		$codigo = $this->normalizeStateCodigo((string)$toState->codigo);
-		$newSituacao = $this->stateCodigoToSituacao($codigo);
+		$newSituacao = $this->legacySituacaoForWorkflowStateId((int)$toState->id);
 		if ($newSituacao === null) {
 			return $ticket;
 		}
+		$codigo = $this->normalizeStateCodigo((string)$toState->codigo);
 		$oldSituacao = (int)($ticket->get('situacao') ?? 0);
 		$ticket->set('workflow_state_id', (int)$toState->id);
 		$ticket->set('situacao', $newSituacao);
@@ -188,6 +188,18 @@ class WorkflowService {
 	/**
 	 * @return array{id:int,nome:string,codigo:string,is_final:bool}|null
 	 */
+	/**
+	 * Mapeamento workflow_states → tickets.situacao (mesma regra do PATCH status / stateCodigoToSituacao).
+	 */
+	public function legacySituacaoForWorkflowStateId(int $stateId): ?int {
+		$st = $this->getStateById($stateId);
+		if ($st === null) {
+			return null;
+		}
+
+		return $this->stateCodigoToSituacao((string)($st['codigo'] ?? ''));
+	}
+
 	public function getStateById(int $stateId): ?array {
 		if ($this->statesTable === null || $stateId <= 0) {
 			return null;

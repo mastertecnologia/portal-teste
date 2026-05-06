@@ -83,6 +83,9 @@ class CheckSlaEscalationShell extends Shell {
 					$escalated++;
 				}
 				$this->verbose(sprintf('ticket %s %s', $tid, (string)($r['code'] ?? 'skipped_processing_error')));
+				if (!empty($r['legacy_sync'])) {
+					$this->verbose(sprintf('  legacy_sync=%s', (string)$r['legacy_sync']));
+				}
 				if (!empty($r['deadline_eval']) && is_array($r['deadline_eval'])) {
 					foreach ($r['deadline_eval'] as $k => $v) {
 						$this->verbose(sprintf(

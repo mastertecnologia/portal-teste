@@ -113,7 +113,7 @@ class WorkflowSlaService {
 	/**
 	 * Mesma avaliação e efeitos de {@see checkAndEscalate()}, com código de diagnóstico para jobs (-v).
 	 *
-	 * @return array{applied: bool, code: string, deadline_eval?: array<string, scalar>}
+	 * @return array{applied: bool, code: string, deadline_eval?: array<string, mixed>, legacy_sync?: string}
 	 */
 	public function escalateIfDue(EntityInterface $ticket): array {
 		$empresaId = (int)($ticket->get('idempresa') ?? 0);
@@ -165,14 +165,66 @@ class WorkflowSlaService {
 		if (!$workflow->canTransition($empresaId, $stateId, $toStateId)) {
 			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
 		}
-		$workflow->applyTransition($ticket, $toStateId, $empresaId);
-		$changed = array_values(array_unique($ticket->getDirty()));
-		if ($changed !== []) {
-			$this->tickets->save($ticket, ['fields' => $changed, 'atomic' => false]);
+		$legacyProbe = $workflow->legacySituacaoForWorkflowStateId($toStateId);
+		if ($legacyProbe === null) {
+			try {
+				\Cake\Log\Log::warning(sprintf(
+					'WorkflowSlaService skipped_legacy_status_sync ticket=%d to_state=%d (codigo sem situacao legado; escalonamento cancelado)',
+					(int)$ticket->get('id'),
+					$toStateId
+				));
+			} catch (\Throwable $e) {
+			}
+
+			return [
+				'applied' => false,
+				'code' => 'skipped_legacy_status_sync',
+				'legacy_sync' => 'legacy_status_not_mapped',
+			];
+		}
+		$legacySync = 'legacy_status_synced';
+		try {
+			$this->tickets->getConnection()->transactional(function () use ($ticket, $empresaId, $stateId, $toStateId, $workflow, $legacyProbe): void {
+				$workflow->applyTransition($ticket, $toStateId, $empresaId);
+				if ((int)$ticket->get('workflow_state_id') !== $toStateId) {
+					throw new \RuntimeException('legacy_transition_noop');
+				}
+				$ticket->set('situacao', (int)$legacyProbe);
+				if (method_exists($ticket, 'dirty')) {
+					$ticket->dirty('situacao', true);
+				}
+				$changed = array_values(array_unique($ticket->getDirty()));
+				if ($changed === []) {
+					throw new \RuntimeException('no_dirty_after_escalation');
+				}
+				if (!$this->tickets->save($ticket, ['fields' => $changed, 'atomic' => false])) {
+					throw new \RuntimeException('save_failed_escalation');
+				}
+			});
+		} catch (\Throwable $e) {
+			$msg = $e->getMessage();
+			if ($msg === 'legacy_transition_noop') {
+				try {
+					\Cake\Log\Log::warning(sprintf(
+						'WorkflowSlaService skipped_legacy_status_sync ticket=%d to_state=%d (applyTransition nao alterou workflow_state_id)',
+						(int)$ticket->get('id'),
+						$toStateId
+					));
+				} catch (\Throwable $e2) {
+				}
+
+				return ['applied' => false, 'code' => 'skipped_legacy_status_sync', 'legacy_sync' => 'skipped_legacy_status_sync'];
+			}
+			try {
+				\Cake\Log\Log::warning('WorkflowSlaService::escalateIfDue: ' . $msg);
+			} catch (\Throwable $e2) {
+			}
+
+			return ['applied' => false, 'code' => 'skipped_transition_not_allowed', 'legacy_sync' => $legacySync];
 		}
 		$this->logEscalation((int)$ticket->get('id'), $empresaId, $stateId, $toStateId);
 
-		return ['applied' => true, 'code' => 'escalated'];
+		return ['applied' => true, 'code' => 'escalated', 'legacy_sync' => $legacySync];
 	}
 
 	public function checkAndEscalate(EntityInterface $ticket): bool {
