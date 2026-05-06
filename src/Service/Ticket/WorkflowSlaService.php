@@ -110,49 +110,62 @@ class WorkflowSlaService {
 		return array_values(array_unique($changed));
 	}
 
+	/**
+	 * Mesma avaliação e efeitos de {@see checkAndEscalate()}, com código de diagnóstico para jobs (-v).
+	 *
+	 * @return array{applied: bool, code: string}
+	 */
+	public function escalateIfDue(EntityInterface $ticket): array {
+		$empresaId = (int)($ticket->get('idempresa') ?? 0);
+		$stateId = (int)($ticket->get('workflow_state_id') ?? 0);
+		if ($empresaId <= 0 || $stateId <= 0) {
+			return ['applied' => false, 'code' => 'skipped_no_workflow_state'];
+		}
+		if (!$this->isWorkflowAutoEscalationEnabledForEmpresa($empresaId)) {
+			return ['applied' => false, 'code' => 'skipped_auto_escalar_false'];
+		}
+		$policy = $this->findPolicy($empresaId, $stateId);
+		if ($policy === null) {
+			return ['applied' => false, 'code' => 'skipped_no_policy'];
+		}
+		if (!(bool)$policy->auto_escalar || (bool)$policy->is_final) {
+			return ['applied' => false, 'code' => 'skipped_auto_escalar_false'];
+		}
+		$toStateId = (int)($policy->escalate_to_state_id ?? 0);
+		if ($toStateId <= 0 || $toStateId === $stateId) {
+			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
+		}
+		$deadline = $this->readTime($ticket->get('data_limite_resolucao'));
+		if ($deadline === null) {
+			return ['applied' => false, 'code' => 'skipped_no_deadline'];
+		}
+		$afterMin = max(0, (int)($policy->escalate_after_minutos ?? 0));
+		$bhEsc = new BusinessHoursService();
+		$compareAt = $bhEsc->addBusinessMinutes($deadline, $afterMin, $empresaId);
+		if (Time::now()->getTimestamp() <= $compareAt->getTimestamp()) {
+			return ['applied' => false, 'code' => 'skipped_deadline_not_reached'];
+		}
+		$workflow = $this->workflowService ?: new WorkflowService($this->tickets, $this->slaService, $this);
+		$target = $workflow->getStateById($toStateId);
+		if ($target === null || !empty($target['is_final'])) {
+			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
+		}
+		if (!$workflow->canTransition($empresaId, $stateId, $toStateId)) {
+			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
+		}
+		$workflow->applyTransition($ticket, $toStateId, $empresaId);
+		$changed = array_values(array_unique($ticket->getDirty()));
+		if ($changed !== []) {
+			$this->tickets->save($ticket, ['fields' => $changed, 'atomic' => false]);
+		}
+		$this->logEscalation((int)$ticket->get('id'), $empresaId, $stateId, $toStateId);
+
+		return ['applied' => true, 'code' => 'escalated'];
+	}
+
 	public function checkAndEscalate(EntityInterface $ticket): bool {
 		try {
-			$empresaId = (int)($ticket->get('idempresa') ?? 0);
-			$stateId = (int)($ticket->get('workflow_state_id') ?? 0);
-			if ($empresaId <= 0 || $stateId <= 0) {
-				return false;
-			}
-			if (!$this->isWorkflowAutoEscalationEnabledForEmpresa($empresaId)) {
-				return false;
-			}
-			$policy = $this->findPolicy($empresaId, $stateId);
-			if ($policy === null || !(bool)$policy->auto_escalar || (bool)$policy->is_final) {
-				return false;
-			}
-			$toStateId = (int)($policy->escalate_to_state_id ?? 0);
-			if ($toStateId <= 0 || $toStateId === $stateId) {
-				return false;
-			}
-			$deadline = $this->readTime($ticket->get('data_limite_resolucao'));
-			if ($deadline === null) {
-				return false;
-			}
-			$afterMin = max(0, (int)($policy->escalate_after_minutos ?? 0));
-			$bhEsc = new BusinessHoursService();
-			$compareAt = $bhEsc->addBusinessMinutes($deadline, $afterMin, $empresaId);
-			if (Time::now()->getTimestamp() <= $compareAt->getTimestamp()) {
-				return false;
-			}
-			$workflow = $this->workflowService ?: new WorkflowService($this->tickets, $this->slaService, $this);
-			$target = $workflow->getStateById($toStateId);
-			if ($target === null || !empty($target['is_final'])) {
-				return false;
-			}
-			if (!$workflow->canTransition($empresaId, $stateId, $toStateId)) {
-				return false;
-			}
-			$workflow->applyTransition($ticket, $toStateId, $empresaId);
-			$changed = array_values(array_unique($ticket->getDirty()));
-			if ($changed !== []) {
-				$this->tickets->save($ticket, ['fields' => $changed, 'atomic' => false]);
-			}
-			$this->logEscalation((int)$ticket->get('id'), $empresaId, $stateId, $toStateId);
-			return true;
+			return $this->escalateIfDue($ticket)['applied'];
 		} catch (\Throwable $e) {
 			try {
 				\Cake\Log\Log::warning('WorkflowSlaService::checkAndEscalate: ' . $e->getMessage());
