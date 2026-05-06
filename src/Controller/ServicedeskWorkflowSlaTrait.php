@@ -34,27 +34,44 @@ trait ServicedeskWorkflowSlaTrait {
 	protected function _wfSlaAdminSelectableEmpresaIds(): array {
 		try {
 			$enabled = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
+			// Mesmo critério de ativas que EmpresasController::index (inativa = 0), com OR para legado (null / string).
 			$q = $this->Empresas->find()
 				->select(['id'])
 				->where([
 					'OR' => [
-						['Empresas.inativa' => 0],
-						['Empresas.inativa' => false],
-						['Empresas.inativa' => '0'],
-						['Empresas.inativa IS' => null],
+						['inativa' => 0],
+						['inativa' => '0'],
+						['inativa' => false],
+						['inativa IS' => null],
 					],
 				]);
 			$activeIds = [];
 			foreach ($q->all() as $r) {
 				$activeIds[] = (int)$r->id;
 			}
+			if ($activeIds === []) {
+				foreach ($this->Empresas->find()->select(['id'])->order(['id' => 'ASC'])->limit(500)->all() as $r) {
+					$activeIds[] = (int)$r->id;
+				}
+				if ($activeIds !== []) {
+					Log::warning('Workflow SLA admin: nenhuma empresa com inativa ativa (0/false/null); usando todas as cadastradas (limite 500).');
+				}
+			}
 			sort($activeIds);
 			if ($enabled === []) {
 				return $activeIds;
 			}
+			$intersect = array_values(array_intersect($activeIds, $enabled));
+			if ($intersect === [] && $activeIds !== []) {
+				Log::warning('Workflow SLA admin: WORKFLOW_EMPRESAS não intersecta nenhuma empresa ativa; usando todas as ativas para o dropdown e validação.');
 
-			return array_values(array_intersect($activeIds, $enabled));
+				return $activeIds;
+			}
+
+			return $intersect;
 		} catch (\Throwable $e) {
+			Log::warning('Workflow SLA admin _wfSlaAdminSelectableEmpresaIds: ' . $e->getMessage());
+
 			return [];
 		}
 	}
