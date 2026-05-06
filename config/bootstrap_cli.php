@@ -21,6 +21,12 @@ use Cake\Core\Plugin;
  * be put here.
  */
 
+/*
+ * CheckSlaEscalation: runners restritos (ex.: produção) rejeitam opções custom antes do execute.
+ * Extrai -t / --ticket / id posicional e define CHECK_SLA_TICKET_ID; reduz argv ao que o parser aceita.
+ */
+\App\Utility\Ticket\SlaEscalationCliBootstrap::normalizeArgvIfCheckSlaEscalation();
+
 // Set the fullBaseUrl to allow URLs to be generated in shell tasks.
 // This is useful when sending email from shells.
 //Configure::write('App.fullBaseUrl', php_uname('n'));
