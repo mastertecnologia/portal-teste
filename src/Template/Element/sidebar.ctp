@@ -173,11 +173,35 @@
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?php endif; ?>
-						<?php if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) : ?>
-						<div class="pgm-nav-subsection-label px-3 py-1 small text-muted text-uppercase" role="presentation">Configurações</div>
-						<?= $pgmSbLink('git-branch', ' Workflow & SLA', ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'], ['data-turbo' => 'false'], $ticketsWorkflowSlaActive, '', 'Workflow e SLA') ?>
+						<?php
+						$incCfgChildren = [];
+						if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {
+							$incCfgChildren[] = ['wf' => true];
+						}
+						if ($roleNav === 0 && ($sg['tickets_historico'] ?? true)) {
+							$incCfgChildren[] = ['hist' => true];
+						}
+						$showIncCfgGrp = $roleNav === 0 && $incCfgChildren !== [];
+						?>
+						<?php if ($showIncCfgGrp) : ?>
+						<div class="pgm-nav-subgroup<?= !empty($ticketsIncidentesConfigOpen) ? '' : ' collapsed' ?>" data-pgm-nav-subgroup="gestao-incidentes-config">
+							<div class="pgm-nav-subgroup-label" role="button" tabindex="0" aria-expanded="<?= !empty($ticketsIncidentesConfigOpen) ? 'true' : 'false' ?>">
+								<span class="pgm-nav-subgroup-label-text"><span class="pgm-nav-lucide" data-lucide="settings" aria-hidden="true"></span><span class="pgm-nav-subgroup-title">Configurações</span></span>
+								<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+							</div>
+							<div class="pgm-nav-subgroup-items">
+								<?php foreach ($incCfgChildren as $incCfgRow) : ?>
+									<?php if (!empty($incCfgRow['wf'])) : ?>
+									<?= $pgmSbLink('git-branch', ' Workflow & SLA', ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'], ['data-turbo' => 'false'], $ticketsWorkflowSlaActive, '', 'Workflow e SLA') ?>
+									<?php endif; ?>
+									<?php if (!empty($incCfgRow['hist'])) : ?>
+									<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ticketsHistoricoActive, '', 'Histórico') ?>
+									<?php endif; ?>
+								<?php endforeach; ?>
+							</div>
+						</div>
 						<?php endif; ?>
-						<?php if (($sg['tickets_historico'] ?? true)) : ?>
+						<?php if ($roleNav !== 0 && ($sg['tickets_historico'] ?? true)) : ?>
 						<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ticketsHistoricoActive, '', 'Histórico') ?>
 						<?php endif; ?>
 					</div>
@@ -602,6 +626,70 @@
 			pgmSidebarSyncNavSectionDom(sec, expanded);
 		});
 		localStorage.setItem(PGM_SB_NAV_KEY, JSON.stringify(states));
+		pgmSidebarApplySubgroupStates();
+	}
+
+	var PGM_SB_SUB_KEY = 'pgmSidebarSubExpanded';
+
+	function pgmSidebarGetSubgroupStates() {
+		try {
+			var raw = localStorage.getItem(PGM_SB_SUB_KEY);
+			return raw ? JSON.parse(raw) : {};
+		} catch (e) {
+			return {};
+		}
+	}
+
+	function pgmSidebarSetSubgroupState(id, expanded) {
+		if (!id) {
+			return;
+		}
+		var o = pgmSidebarGetSubgroupStates();
+		o[id] = expanded;
+		localStorage.setItem(PGM_SB_SUB_KEY, JSON.stringify(o));
+	}
+
+	function pgmSidebarSyncSubgroupDom(sg, expanded) {
+		var label = sg.querySelector('.pgm-nav-subgroup-label');
+		if (expanded) {
+			sg.classList.remove('collapsed');
+			if (label) {
+				label.setAttribute('aria-expanded', 'true');
+			}
+		} else {
+			sg.classList.add('collapsed');
+			if (label) {
+				label.setAttribute('aria-expanded', 'false');
+			}
+		}
+	}
+
+	function pgmSidebarApplySubgroupStates() {
+		var states = pgmSidebarGetSubgroupStates();
+		document.querySelectorAll('.pgm-nav-subgroup[data-pgm-nav-subgroup]').forEach(function(sg) {
+			var id = sg.getAttribute('data-pgm-nav-subgroup');
+			var hasActive = !!sg.querySelector('a.pgm-nav-link.active');
+			var expanded;
+			if (hasActive) {
+				expanded = true;
+				states[id] = true;
+			} else if (Object.prototype.hasOwnProperty.call(states, id)) {
+				expanded = !!states[id];
+			} else {
+				expanded = false;
+			}
+			pgmSidebarSyncSubgroupDom(sg, expanded);
+		});
+		localStorage.setItem(PGM_SB_SUB_KEY, JSON.stringify(states));
+	}
+
+	function pgmSidebarToggleSubgroup(sg) {
+		if (!sg || !sg.getAttribute('data-pgm-nav-subgroup')) {
+			return;
+		}
+		var expanded = sg.classList.contains('collapsed');
+		pgmSidebarSyncSubgroupDom(sg, expanded);
+		pgmSidebarSetSubgroupState(sg.getAttribute('data-pgm-nav-subgroup'), expanded);
 	}
 
 	function pgmSidebarToggleNavSection(sec) {
@@ -631,11 +719,36 @@
 		});
 	});
 
+	document.querySelectorAll('.pgm-nav-subgroup-label').forEach(function(label) {
+		label.addEventListener('click', function(e) {
+			e.stopPropagation();
+			var sg = label.closest('.pgm-nav-subgroup');
+			if (sg && sg.getAttribute('data-pgm-nav-subgroup')) {
+				pgmSidebarToggleSubgroup(sg);
+			}
+		});
+		label.addEventListener('keydown', function(e) {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				var sgK = label.closest('.pgm-nav-subgroup');
+				if (sgK && sgK.getAttribute('data-pgm-nav-subgroup')) {
+					pgmSidebarToggleSubgroup(sgK);
+				}
+			}
+		});
+	});
+
 	function pgmSidebarExpandAllSections() {
 		document.querySelectorAll('.pgm-sidebar-shell .nav-section.collapsed').forEach(function(sec) {
 			sec.classList.remove('collapsed');
 		});
+		document.querySelectorAll('.pgm-sidebar-shell .pgm-nav-subgroup.collapsed').forEach(function(sg) {
+			sg.classList.remove('collapsed');
+		});
 		document.querySelectorAll('.pgm-sidebar-shell #sidebarnav .nav-section-label').forEach(function(lab) {
+			lab.setAttribute('aria-expanded', 'true');
+		});
+		document.querySelectorAll('.pgm-sidebar-shell .pgm-nav-subgroup-label').forEach(function(lab) {
 			lab.setAttribute('aria-expanded', 'true');
 		});
 	}

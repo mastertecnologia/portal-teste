@@ -24,13 +24,60 @@ function writeSectionStates(states) {
   }
 }
 
+const PGM_SB_SUB_KEY = 'pgmSidebarSubExpanded';
+
+function readSubgroupStates() {
+  try {
+    const raw = localStorage.getItem(PGM_SB_SUB_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeSubgroupStates(states) {
+  try {
+    localStorage.setItem(PGM_SB_SUB_KEY, JSON.stringify(states));
+  } catch {
+    /* ignore */
+  }
+}
+
+function buildInitialSubgroupMap(sectionsList, activePath) {
+  const stored = readSubgroupStates();
+  const next = { ...stored };
+  for (const sec of sectionsList) {
+    for (const it of sec.items || []) {
+      if (it.itemKind !== 'group' || !it.groupId) continue;
+      const gid = it.groupId;
+      const childActive =
+        it.children?.some((c) => c && (c.active === true || pathMatches(c.href, activePath))) ?? false;
+      if (childActive) {
+        next[gid] = true;
+      } else if (it.groupDefaultOpen && next[gid] === undefined) {
+        next[gid] = true;
+      } else if (next[gid] === undefined) {
+        next[gid] = false;
+      }
+    }
+  }
+  writeSubgroupStates(next);
+  return next;
+}
+
+function sectionItemMatchesPath(it, activePath) {
+  if (!it || it.itemKind === 'header') return false;
+  if (it.itemKind === 'group') {
+    return it.children?.some((c) => c && (c.active === true || pathMatches(c.href, activePath))) ?? false;
+  }
+  return it.active === true || pathMatches(it.href, activePath);
+}
+
 function buildInitialExpandedMap(sectionsList, activePath) {
   const stored = readSectionStates();
   const next = { ...stored };
   for (const sec of sectionsList) {
-    const hasActive = sec.items?.some(
-      (it) => it.itemKind !== 'header' && (it.active || pathMatches(it.href, activePath)),
-    );
+    const hasActive = sec.items?.some((it) => sectionItemMatchesPath(it, activePath));
     if (hasActive) next[sec.id] = true;
     else if (sec.defaultOpen) next[sec.id] = true;
     else if (next[sec.id] === undefined) next[sec.id] = false;
@@ -141,18 +188,27 @@ function StaffSidebar(props) {
   }, [workspace?.currentId, currentFromServer]);
 
   const isItemActive = useCallback((it) => {
-    if (!it || it.itemKind === 'header') return false;
+    if (!it || it.itemKind === 'header' || it.itemKind === 'group') return false;
     return it.active === true || pathMatches(it.href, livePath);
   }, [livePath]);
 
+  const itemOrGroupChildActive = useCallback((it) => {
+    if (!it || it.itemKind === 'header') return false;
+    if (it.itemKind === 'group') {
+      return it.children?.some((c) => isItemActive(c)) ?? false;
+    }
+    return isItemActive(it);
+  }, [isItemActive]);
+
   const [expandedMap, setExpandedMap] = useState(() => buildInitialExpandedMap(sections, serverActivePath));
+  const [subExpanded, setSubExpanded] = useState(() => buildInitialSubgroupMap(sections, serverActivePath));
 
   useEffect(() => {
     const stored = readSectionStates();
     const next = { ...stored };
     let changed = false;
     for (const sec of sections) {
-      const hasActive = sec.items?.some((it) => isItemActive(it));
+      const hasActive = sec.items?.some((it) => itemOrGroupChildActive(it));
       if (hasActive && !next[sec.id]) {
         next[sec.id] = true;
         changed = true;
@@ -162,18 +218,57 @@ function StaffSidebar(props) {
       writeSectionStates(next);
       setExpandedMap((prev) => ({ ...prev, ...next }));
     }
+  }, [livePath, sections, itemOrGroupChildActive]);
+
+  useEffect(() => {
+    const stored = readSubgroupStates();
+    const next = { ...stored };
+    let changed = false;
+    for (const sec of sections) {
+      for (const it of sec.items || []) {
+        if (it.itemKind !== 'group' || !it.groupId) continue;
+        const any = it.children?.some((c) => isItemActive(c));
+        if (any && !next[it.groupId]) {
+          next[it.groupId] = true;
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      writeSubgroupStates(next);
+      setSubExpanded((prev) => ({ ...prev, ...next }));
+    }
   }, [livePath, sections, isItemActive]);
 
   const toggleSection = (id) => {
     setExpandedMap((prev) => {
       const sec = sections.find((s) => s.id === id);
-      const hasActive = sec?.items?.some((it) => isItemActive(it));
+      const hasActive = sec?.items?.some((it) => itemOrGroupChildActive(it));
       const open = hasActive || !!prev[id];
       const next = { ...readSectionStates(), ...prev, [id]: !open };
       writeSectionStates(next);
       return next;
     });
   };
+
+  const toggleSubgroup = useCallback((groupId) => {
+    setSubExpanded((prev) => {
+      let groupItem = null;
+      for (const sec of sections) {
+        const found = sec.items?.find((it) => it.itemKind === 'group' && it.groupId === groupId);
+        if (found) {
+          groupItem = found;
+          break;
+        }
+      }
+      const hasActive = groupItem?.children?.some((c) => isItemActive(c)) ?? false;
+      const open = hasActive || !!prev[groupId];
+      const nextVal = !open;
+      const next = { ...readSubgroupStates(), ...prev, [groupId]: nextVal };
+      writeSubgroupStates(next);
+      return next;
+    });
+  }, [sections, isItemActive]);
 
   const toggleMiniSidebar = () => {
     document.body.classList.toggle('mini-sidebar');
@@ -186,16 +281,39 @@ function StaffSidebar(props) {
         writeSectionStates({ ...readSectionStates(), ...allOpen });
         return { ...prev, ...allOpen };
       });
+      setSubExpanded((prev) => {
+        const allSub = {};
+        for (const sec of sections) {
+          for (const it of sec.items || []) {
+            if (it.itemKind === 'group' && it.groupId) allSub[it.groupId] = true;
+          }
+        }
+        writeSubgroupStates({ ...readSubgroupStates(), ...allSub });
+        return { ...prev, ...allSub };
+      });
     } else {
       const stored = readSectionStates();
       const next = { ...stored };
       for (const sec of sections) {
-        const hasActive = sec.items?.some((it) => isItemActive(it));
+        const hasActive = sec.items?.some((it) => itemOrGroupChildActive(it));
         if (hasActive) next[sec.id] = true;
         else if (next[sec.id] === undefined) next[sec.id] = false;
       }
       writeSectionStates(next);
       setExpandedMap(next);
+      const subStored = readSubgroupStates();
+      const nextSub = { ...subStored };
+      for (const sec of sections) {
+        for (const it of sec.items || []) {
+          if (it.itemKind !== 'group' || !it.groupId) continue;
+          const gid = it.groupId;
+          const hasA = it.children?.some((c) => isItemActive(c));
+          if (hasA) nextSub[gid] = true;
+          else if (nextSub[gid] === undefined) nextSub[gid] = false;
+        }
+      }
+      writeSubgroupStates(nextSub);
+      setSubExpanded(nextSub);
     }
   };
 
@@ -211,7 +329,7 @@ function StaffSidebar(props) {
     if (typeof window !== 'undefined' && window.lucide?.createIcons) {
       window.lucide.createIcons();
     }
-  }, [workspaceOpen, expandedMap, isMiniSidebar, workspaceQuery, userMenuOpen, notifOpen, selectedCompany, sections, dashboardItem, livePath]);
+  }, [workspaceOpen, expandedMap, subExpanded, isMiniSidebar, workspaceQuery, userMenuOpen, notifOpen, selectedCompany, sections, dashboardItem, livePath]);
 
   useEffect(() => {
     const onDoc = (e) => {
@@ -341,7 +459,7 @@ function StaffSidebar(props) {
             ) : null}
 
             {sections.map((sec) => {
-              const hasActive = sec.items?.some((it) => isItemActive(it));
+              const hasActive = sec.items?.some((it) => itemOrGroupChildActive(it));
               const expanded = hasActive || !!expandedMap[sec.id];
               return (
                 <li
@@ -368,16 +486,88 @@ function StaffSidebar(props) {
                     </svg>
                   </div>
                   <div className="nav-section-items">
-                    {sec.items?.map((it, idx) =>
-                      it.itemKind === 'header' ? (
-                        <div
-                          key={`${sec.id}-hdr-${idx}`}
-                          className="pgm-nav-subsection-label px-3 py-1 small text-white-50 text-uppercase"
-                          role="presentation"
-                        >
-                          {it.label}
-                        </div>
-                      ) : (
+                    {sec.items?.map((it, idx) => {
+                      if (it.itemKind === 'header') {
+                        return (
+                          <div
+                            key={`${sec.id}-hdr-${idx}`}
+                            className="pgm-nav-subsection-label px-3 py-1 small text-white-50 text-uppercase"
+                            role="presentation"
+                          >
+                            {it.label}
+                          </div>
+                        );
+                      }
+                      if (it.itemKind === 'group') {
+                        const gid = it.groupId || `${sec.id}-g-${idx}`;
+                        const hasActiveChild = it.children?.some((c) => isItemActive(c)) ?? false;
+                        const subOpen = hasActiveChild || !!subExpanded[gid];
+                        return (
+                          <div
+                            key={`${sec.id}-grp-${gid}`}
+                            className={`pgm-nav-subgroup${subOpen ? '' : ' collapsed'}`}
+                            data-pgm-nav-subgroup={gid}
+                          >
+                            <div
+                              className="pgm-nav-subgroup-label"
+                              role="button"
+                              tabIndex={0}
+                              aria-expanded={subOpen ? 'true' : 'false'}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSubgroup(gid);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSubgroup(gid);
+                                }
+                              }}
+                            >
+                              <span className="pgm-nav-subgroup-label-text">
+                                {it.icon ? (
+                                  <span className="pgm-nav-lucide" data-lucide={it.icon} aria-hidden="true" />
+                                ) : null}
+                                <span className="pgm-nav-subgroup-title">{it.label?.trim() || it.dataLabel}</span>
+                              </span>
+                              <svg
+                                className="chevron"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            </div>
+                            <div className="pgm-nav-subgroup-items">
+                              {(it.children || []).map((c, jidx) => (
+                                <a
+                                  key={`${sec.id}-${gid}-${jidx}-${c.href}`}
+                                  href={c.href}
+                                  target={c.target || undefined}
+                                  rel={c.rel || undefined}
+                                  className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(c) ? ' active' : ''}`}
+                                  data-label={c.dataLabel || c.label}
+                                  {...getTurboLinkProps(c.href, c.target, c.skipTurboFrame)}
+                                >
+                                  <span className="pgm-nav-lucide" data-lucide={c.icon} aria-hidden="true" />
+                                  <span className="nav-item-label hide-menu">{c.label}</span>
+                                  {c.badgeHtml ? (
+                                    <span className="pgm-nav-badge-host" dangerouslySetInnerHTML={{ __html: c.badgeHtml }} />
+                                  ) : null}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
                         <a
                           key={`${sec.id}-${idx}-${it.href}`}
                           href={it.href}
@@ -393,8 +583,8 @@ function StaffSidebar(props) {
                             <span className="pgm-nav-badge-host" dangerouslySetInnerHTML={{ __html: it.badgeHtml }} />
                           ) : null}
                         </a>
-                      ),
-                    )}
+                      );
+                    })}
                   </div>
                 </li>
               );

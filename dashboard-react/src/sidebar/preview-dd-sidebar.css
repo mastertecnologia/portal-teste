@@ -114,3 +114,66 @@ html body .pgm-sidebar-shell .nav-section-items .pgm-nav-subsection-label {
   font-weight: 600;
   opacity: 0.72;
 }
+
+html body .pgm-sidebar-shell .pgm-nav-subgroup {
+  margin-top: 4px;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  margin: 0 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(244, 246, 251, 0.78);
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-label:hover {
+  color: #f4f6fb;
+  background: rgba(255, 255, 255, 0.04);
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-label .chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  opacity: 0.75;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup.collapsed .pgm-nav-subgroup-label .chevron {
+  transform: rotate(-90deg);
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-label-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 0 4px 6px;
+  margin: 0 0 2px 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  max-height: 240px;
+  overflow: hidden;
+  transition: max-height 0.2s ease, opacity 0.15s ease;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup.collapsed .pgm-nav-subgroup-items {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  border-left-color: transparent;
+}
+html body .pgm-sidebar-shell .pgm-nav-subgroup-items a.pgm-nav-link.nav-item {
+  padding-left: 8px;
+}

@@ -89,6 +89,7 @@ final class PgmSidebarStaffContext
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
         $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive || $ativosActive;
+        $ticketsIncidentesConfigOpen = $ticketsWorkflowSlaActive || ($roleNav === 0 && $ticketsHistoricoActive);
         $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive;
         $pgmSbOpenComercial = (bool)$orcamentosActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
@@ -133,6 +134,7 @@ final class PgmSidebarStaffContext
             'ticketsOperacionalActive' => $ticketsOperacionalActive,
             'ticketsWorkflowSlaActive' => $ticketsWorkflowSlaActive,
             'ticketsHistoricoActive' => $ticketsHistoricoActive,
+            'ticketsIncidentesConfigOpen' => $ticketsIncidentesConfigOpen,
             'advMgmtAct' => $advMgmtAct,
             'advTplAct' => $advTplAct,
             'advInvAct' => $advInvAct,

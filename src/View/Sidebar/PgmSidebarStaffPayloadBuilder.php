@@ -73,9 +73,9 @@ final class PgmSidebarStaffPayloadBuilder
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
             }
+            $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {
-                $items[] = self::subsectionHeader(' Configurações');
-                $items[] = self::item(
+                $configChildren[] = self::item(
                     'git-branch',
                     ' Workflow & SLA',
                     ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'],
@@ -85,7 +85,18 @@ final class PgmSidebarStaffPayloadBuilder
                     'Workflow e SLA'
                 );
             }
-            if (($sg['tickets_historico'] ?? true)) {
+            if ($roleNav === 0 && ($sg['tickets_historico'] ?? true)) {
+                $configChildren[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
+            }
+            if ($roleNav === 0 && $configChildren !== []) {
+                $items[] = self::navGroup(
+                    'Configurações',
+                    'gestao-incidentes-config',
+                    $configChildren,
+                    (bool)($ctx['ticketsIncidentesConfigOpen'] ?? false)
+                );
+            }
+            if ($roleNav !== 0 && ($sg['tickets_historico'] ?? true)) {
                 $items[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
             }
             $sections[] = [
@@ -446,16 +457,20 @@ final class PgmSidebarStaffPayloadBuilder
     }
 
     /**
-     * Rótulo de subsecção (não é link) — ex.: "Configurações" sob Gestão de Incidentes.
+     * Agrupador colapsável (submenu) com filhos — ex.: Configurações sob Gestão de Incidentes.
      *
+     * @param list<array<string, mixed>|null> $children
      * @return array<string, mixed>
      */
-    private static function subsectionHeader(string $labelPlain): array
+    private static function navGroup(string $labelPlain, string $groupId, array $children, bool $defaultOpen): array
     {
+        $clean = array_values(array_filter($children));
+
         return [
-            'itemKind' => 'header',
-            'icon' => '',
-            'label' => $labelPlain,
+            'itemKind' => 'group',
+            'groupId' => $groupId,
+            'icon' => 'settings',
+            'label' => ' ' . $labelPlain,
             'href' => '',
             'dataLabel' => strip_tags($labelPlain),
             'active' => false,
@@ -463,6 +478,8 @@ final class PgmSidebarStaffPayloadBuilder
             'target' => null,
             'rel' => null,
             'skipTurboFrame' => false,
+            'children' => $clean,
+            'groupDefaultOpen' => $defaultOpen,
         ];
     }
 
