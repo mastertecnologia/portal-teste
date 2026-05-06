@@ -27,86 +27,199 @@ trait ServicedeskWorkflowSlaTrait {
 	}
 
 	/**
-	 * Condição ORM: empresa ativa (inativa em empresas).
-	 * Evita `inativa = 0` em coluna boolean PostgreSQL (gera erro e esvazia o endpoint).
+	 * IDs permitidos por WORKFLOW_EMPRESAS (env + config/workflow.php).
+	 * Vazio = sem filtro (todas as empresas ativas na UI).
 	 *
-	 * @return array<string,mixed>
+	 * @return array<int,int>
 	 */
-	protected function _wfEmpresaWhereAtivos(): array {
+	protected function _wfWorkflowEmpresaFilterIds(): array {
+		$ids = [];
+		$from = Configure::read('Workflow.enabledEmpresas');
+		if (is_string($from) && trim($from) !== '') {
+			foreach (explode(',', $from) as $part) {
+				$i = (int)trim($part);
+				if ($i > 0) {
+					$ids[] = $i;
+				}
+			}
+		} elseif (is_array($from)) {
+			foreach ($from as $v) {
+				$i = (int)$v;
+				if ($i > 0) {
+					$ids[] = $i;
+				}
+			}
+		}
+		if ($ids !== []) {
+			return array_values(array_unique($ids));
+		}
+		$raw = env('WORKFLOW_EMPRESAS', '');
+		if (!is_string($raw) || trim($raw) === '') {
+			return [];
+		}
+		foreach (explode(',', $raw) as $part) {
+			$i = (int)trim($part);
+			if ($i > 0) {
+				$ids[] = $i;
+			}
+		}
+
+		return array_values(array_unique($ids));
+	}
+
+	/**
+	 * Filtros ORM "empresa ativa" a tentar em ordem (PostgreSQL boolean vs int não podem ir no mesmo OR).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function _wfEmpresaWhereAtivoAttempts(): array {
 		return [
-			'OR' => [
-				['inativa IS' => null],
-				['inativa NOT IN' => [1, '1', true]],
+			[
+				'OR' => [
+					['inativa IS' => null],
+					['inativa' => false],
+				],
+			],
+			[
+				'OR' => [
+					['inativa IS' => null],
+					['inativa' => 0],
+					['inativa' => '0'],
+				],
 			],
 		];
+	}
+
+	/**
+	 * Rótulo COALESCE(nomefantasia, razaosocial) em PHP (evita SQL dialect).
+	 *
+	 * @param array<string,mixed> $r
+	 */
+	protected function _wfEmpresaLabelFromRow(array $r): string {
+		$nf = trim((string)($r['nomefantasia'] ?? ''));
+		$rz = trim((string)($r['razaosocial'] ?? ''));
+
+		return $nf !== '' ? $nf : ($rz !== '' ? $rz : ('Empresa #' . (int)($r['id'] ?? 0)));
 	}
 
 	/**
 	 * Linhas de empresas para o select SLA (ativas + opcional WORKFLOW_EMPRESAS).
 	 *
 	 * @param array<int,int> $enabledConfigured
-	 * @return array<mixed>
+	 * @return array<int,array<string,mixed>>
 	 */
 	protected function _wfEmpresaRowsForWorkflowSlaDropdown(array $enabledConfigured): array {
-		$q = $this->Empresas->find()
-			->select(['id', 'nomefantasia', 'razaosocial', 'inativa'])
-			->where($this->_wfEmpresaWhereAtivos());
-		if ($enabledConfigured !== []) {
-			$q->where(['id IN' => array_values($enabledConfigured)]);
+		$enabledConfigured = array_values(array_filter(array_map('intval', $enabledConfigured), function ($id) {
+			return $id > 0;
+		}));
+		$attempts = $this->_wfEmpresaWhereAtivoAttempts();
+		$all = [];
+		foreach ($attempts as $idx => $where) {
+			try {
+				$q = $this->Empresas->find()
+					->enableHydration(false)
+					->select(['id', 'nomefantasia', 'razaosocial', 'inativa'])
+					->where($where);
+				if ($enabledConfigured !== []) {
+					$q->where(['id IN' => $enabledConfigured]);
+				}
+				$candidate = $q->all()->toArray();
+				if ($candidate !== []) {
+					$all = $candidate;
+					break;
+				}
+			} catch (\Throwable $e) {
+				Log::warning('workflowSla empresas where attempt ' . (string)$idx . ': ' . $e->getMessage());
+			}
 		}
-		$q->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC']);
-		$all = $q->all()->toArray();
 		if ($all === [] && $enabledConfigured !== []) {
-			Log::warning('workflowSlaEmpresasOptions: nenhuma empresa ativa no recorte WORKFLOW_EMPRESAS; repetindo sem esse filtro.');
-			$q2 = $this->Empresas->find()
-				->select(['id', 'nomefantasia', 'razaosocial', 'inativa'])
-				->where($this->_wfEmpresaWhereAtivos())
-				->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC']);
-			$all = $q2->all()->toArray();
+			Log::warning('workflowSlaEmpresasOptions: nenhuma empresa no recorte WORKFLOW_EMPRESAS; repetindo sem filtro de IDs.');
+			foreach ($attempts as $idx => $where) {
+				try {
+					$q = $this->Empresas->find()
+						->enableHydration(false)
+						->select(['id', 'nomefantasia', 'razaosocial', 'inativa'])
+						->where($where);
+					$candidate = $q->all()->toArray();
+					if ($candidate !== []) {
+						$all = $candidate;
+						break;
+					}
+				} catch (\Throwable $e) {
+					Log::warning('workflowSla empresas retry attempt ' . (string)$idx . ': ' . $e->getMessage());
+				}
+			}
 		}
 		if ($all === []) {
-			Log::warning('workflowSlaEmpresasOptions: critério inativa não retornou linhas; listando cadastro bruto (limite 500).');
-			$all = $this->Empresas->find()
-				->select(['id', 'nomefantasia', 'razaosocial', 'inativa'])
-				->order(['id' => 'ASC'])
-				->limit(500)
-				->all()
-				->toArray();
+			Log::warning('workflowSlaEmpresasOptions: critérios inativa falharam ou vazios; listando cadastro bruto (limite 500).');
+			try {
+				$all = $this->Empresas->find()
+					->enableHydration(false)
+					->select(['id', 'nomefantasia', 'razaosocial', 'inativa'])
+					->order(['id' => 'ASC'])
+					->limit(500)
+					->all()
+					->toArray();
+			} catch (\Throwable $e) {
+				Log::error('workflowSlaEmpresasOptions fallback bruto: ' . $e->getMessage());
+				$all = [];
+			}
 		}
+		usort($all, function (array $a, array $b): int {
+			$la = $this->_wfEmpresaLabelFromRow($a);
+			$lb = $this->_wfEmpresaLabelFromRow($b);
+
+			return strcasecmp($la, $lb);
+		});
 
 		return $all;
 	}
 
 	/**
-	 * Empresas ativas (inativa ≠ 1); se WORKFLOW_EMPRESAS estiver definido, interseção com essa lista.
+	 * Empresas ativas; se WORKFLOW_EMPRESAS estiver definido, interseção com essa lista.
 	 *
 	 * @return array<int,int>
 	 */
 	protected function _wfSlaAdminSelectableEmpresaIds(): array {
 		try {
-			$enabled = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
-			$q = $this->Empresas->find()
-				->select(['id'])
-				->where($this->_wfEmpresaWhereAtivos());
+			$enabled = $this->_wfWorkflowEmpresaFilterIds();
 			$activeIds = [];
-			foreach ($q->all() as $r) {
-				$activeIds[] = (int)$r->id;
+			foreach ($this->_wfEmpresaWhereAtivoAttempts() as $idx => $where) {
+				try {
+					$q = $this->Empresas->find()
+						->enableHydration(false)
+						->select(['id'])
+						->where($where);
+					foreach ($q->all() as $r) {
+						$activeIds[] = (int)$r['id'];
+					}
+					if ($activeIds !== []) {
+						break;
+					}
+				} catch (\Throwable $e) {
+					Log::warning('Workflow SLA admin selectable ids attempt ' . (string)$idx . ': ' . $e->getMessage());
+				}
 			}
 			if ($activeIds === []) {
-				foreach ($this->Empresas->find()->select(['id'])->order(['id' => 'ASC'])->limit(500)->all() as $r) {
-					$activeIds[] = (int)$r->id;
-				}
-				if ($activeIds !== []) {
-					Log::warning('Workflow SLA admin: nenhuma empresa com inativa ativa (0/false/null); usando todas as cadastradas (limite 500).');
+				try {
+					foreach ($this->Empresas->find()->enableHydration(false)->select(['id'])->order(['id' => 'ASC'])->limit(500)->all() as $r) {
+						$activeIds[] = (int)$r['id'];
+					}
+					if ($activeIds !== []) {
+						Log::warning('Workflow SLA admin: critérios inativa vazios; usando todas as cadastradas (limite 500).');
+					}
+				} catch (\Throwable $e) {
+					Log::warning('Workflow SLA admin fallback ids: ' . $e->getMessage());
 				}
 			}
 			sort($activeIds);
+			$activeIds = array_values(array_unique($activeIds));
 			if ($enabled === []) {
 				return $activeIds;
 			}
 			$intersect = array_values(array_intersect($activeIds, $enabled));
 			if ($intersect === [] && $activeIds !== []) {
-				Log::warning('Workflow SLA admin: WORKFLOW_EMPRESAS não intersecta nenhuma empresa ativa; usando todas as ativas para o dropdown e validação.');
+				Log::warning('Workflow SLA admin: WORKFLOW_EMPRESAS não intersecta empresas ativas; usando todas as ativas.');
 
 				return $activeIds;
 			}
@@ -330,7 +443,7 @@ trait ServicedeskWorkflowSlaTrait {
 
 			return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
 		}
-		$enabledEmpresas = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
+		$enabledEmpresas = $this->_wfWorkflowEmpresaFilterIds();
 
 		if ($id === null || $id === '') {
 			if ($this->request->is('get')) {
@@ -779,16 +892,22 @@ trait ServicedeskWorkflowSlaTrait {
 		if (!$this->_wfTechOr403()) {
 			return;
 		}
-		$enabledConfigured = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
+		$enabledConfigured = $this->_wfWorkflowEmpresaFilterIds();
 		$debugOn = (bool)Configure::read('debug') || (string)$this->request->getQuery('verbose') === '1';
 		try {
 			$list = $this->_wfEmpresaRowsForWorkflowSlaDropdown($enabledConfigured);
 			$out = [];
 			foreach ($list as $r) {
-				$nf = trim((string)($r['nomefantasia'] ?? $r->nomefantasia ?? ''));
-				$rz = trim((string)($r['razaosocial'] ?? $r->razaosocial ?? ''));
-				$label = $nf !== '' ? $nf : ($rz !== '' ? $rz : ('Empresa #' . ($r['id'] ?? $r->id)));
-				$eid = (int)($r['id'] ?? $r->id);
+				if (!is_array($r)) {
+					continue;
+				}
+				$label = $this->_wfEmpresaLabelFromRow($r);
+				$eid = (int)($r['id'] ?? 0);
+				if ($eid <= 0) {
+					continue;
+				}
+				$nf = trim((string)($r['nomefantasia'] ?? ''));
+				$rz = trim((string)($r['razaosocial'] ?? ''));
 				$out[] = [
 					'id' => $eid,
 					'label' => $label,
@@ -801,12 +920,15 @@ trait ServicedeskWorkflowSlaTrait {
 			if ($debugOn) {
 				$wfDbg = [];
 				foreach ($list as $r) {
-					$eid = (int)($r['id'] ?? $r->id);
-					$nf = trim((string)($r['nomefantasia'] ?? $r->nomefantasia ?? ''));
-					$rz = trim((string)($r['razaosocial'] ?? $r->razaosocial ?? ''));
+					if (!is_array($r)) {
+						continue;
+					}
+					$eid = (int)($r['id'] ?? 0);
+					$nf = trim((string)($r['nomefantasia'] ?? ''));
+					$rz = trim((string)($r['razaosocial'] ?? ''));
 					$wfDbg[] = [
 						'id' => $eid,
-						'inativa' => $r['inativa'] ?? $r->inativa,
+						'inativa' => $r['inativa'] ?? null,
 						'nomefantasia' => $nf,
 						'razaosocial' => $rz,
 					];
@@ -819,9 +941,9 @@ trait ServicedeskWorkflowSlaTrait {
 				];
 			}
 
-			return $this->jsonResponse($response);
+			return $this->jsonResponse($response, 200);
 		} catch (\Throwable $e) {
-			Log::warning('workflowSlaEmpresasOptions: ' . $e->getMessage());
+			Log::error('workflowSlaEmpresasOptions: ' . $e->getMessage());
 
 			$response = ['ok' => false, 'empresas' => [], 'error' => 'empresas_query'];
 			if ($debugOn) {
@@ -832,7 +954,7 @@ trait ServicedeskWorkflowSlaTrait {
 				];
 			}
 
-			return $this->jsonResponse($response);
+			return $this->jsonResponse($response, 200);
 		}
 	}
 }
