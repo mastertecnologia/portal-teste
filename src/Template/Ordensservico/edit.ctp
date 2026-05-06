@@ -166,6 +166,23 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		border-color: #d43f3a !important;
 		color: #fff !important;
 	}
+	/* Força visual idêntico ao card referência (sem contorno claro no excluir). */
+	.os-edit-shell #grid_table .os-grid-act-edit,
+	.os-edit-shell #grid_table .os-grid-act-delete {
+		box-shadow: none !important;
+		outline: 0 !important;
+	}
+	.os-edit-shell #grid_table .os-grid-act-delete {
+		background-color: #d9534f !important;
+		border-color: #d43f3a !important;
+		color: #fff !important;
+	}
+	.os-edit-shell #grid_table .os-grid-act-delete i,
+	.os-edit-shell #grid_table .os-grid-act-edit i {
+		color: #fff !important;
+		font-size: 13px;
+		line-height: 1;
+	}
 
 	/* Mantém os botões de ação dentro da coluna AÇÕES. */
 	.os-edit-shell #grid_table th.os-col-acoes,
