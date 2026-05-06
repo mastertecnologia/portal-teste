@@ -1,5 +1,22 @@
 export const PGM_MAIN_FRAME_ID = 'pgm-main-frame';
 
+/** Admin Workflow & SLA: sempre mesma aba (evita `target="_blank"` legado no JSON do menu). */
+export function pgmSidebarSameTabStaffHref(href) {
+  const h = String(href || '');
+  return h.indexOf('workflow-sla-admin') !== -1;
+}
+
+/** `target` / `rel` seguros para o `<a>` da sidebar staff (não altera outros itens). */
+export function pgmSidebarNavAnchorTargetRel(href, target, rel) {
+  if (pgmSidebarSameTabStaffHref(href)) {
+    return { target: undefined, rel: undefined };
+  }
+  return {
+    target: target ? target : undefined,
+    rel: rel ? rel : undefined,
+  };
+}
+
 export function normalizePath(p) {
   if (!p) return '/';
   const base = String(p).split('?')[0];
@@ -26,7 +43,8 @@ export function getTurboLinkProps(href, target, skipTurboFrame = false) {
     volta a injetar data-turbo-frame em todos os <a> da scroll-sidebar.
   */
   if (skipTurboFrame) return { 'data-turbo': 'false' };
-  if (target === '_blank') return {};
+  const effTarget = pgmSidebarSameTabStaffHref(href) ? null : target;
+  if (effTarget === '_blank') return {};
   const raw = String(href || '').trim();
   if (!raw || raw === '#' || raw.indexOf('javascript:') === 0) return {};
   try {

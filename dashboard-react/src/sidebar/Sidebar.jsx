@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import './preview-dd-sidebar.css';
 import ClientSidebar from './ClientSidebar.jsx';
 import PortalNotificationsBell from './PortalNotificationsBell.jsx';
-import { getTurboLinkProps, pathMatches, PGM_MAIN_FRAME_ID } from './sidebarNavUtils.js';
+import {
+  getTurboLinkProps,
+  pathMatches,
+  PGM_MAIN_FRAME_ID,
+  pgmSidebarNavAnchorTargetRel,
+  pgmSidebarSameTabStaffHref,
+} from './sidebarNavUtils.js';
 
 /** Mesma chave que `sidebar-preview.html` e o portal. */
 const PGM_SB_NAV_KEY = 'pgmSidebarSectionExpanded';
@@ -546,14 +552,22 @@ function StaffSidebar(props) {
                               </svg>
                             </div>
                             <div className="pgm-nav-subgroup-items">
-                              {(it.children || []).map((c, jidx) => (
+                              {(it.children || []).map((c, jidx) => {
+                                const navTR = pgmSidebarNavAnchorTargetRel(c.href, c.target, c.rel);
+                                return (
                                 <a
                                   key={`${sec.id}-${gid}-${jidx}-${c.href}`}
                                   href={c.href}
-                                  target={c.target || undefined}
-                                  rel={c.rel || undefined}
+                                  target={navTR.target}
+                                  rel={navTR.rel}
                                   className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(c) ? ' active' : ''}`}
                                   data-label={c.dataLabel || c.label}
+                                  onClick={(e) => {
+                                    if (c.target !== '_blank' || !pgmSidebarSameTabStaffHref(c.href)) return;
+                                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                                    e.preventDefault();
+                                    window.location.assign(c.href);
+                                  }}
                                   {...getTurboLinkProps(c.href, c.target, c.skipTurboFrame)}
                                 >
                                   <span className="pgm-nav-lucide" data-lucide={c.icon} aria-hidden="true" />
@@ -562,19 +576,27 @@ function StaffSidebar(props) {
                                     <span className="pgm-nav-badge-host" dangerouslySetInnerHTML={{ __html: c.badgeHtml }} />
                                   ) : null}
                                 </a>
-                              ))}
+                              );
+                              })}
                             </div>
                           </div>
                         );
                       }
+                      const navTR = pgmSidebarNavAnchorTargetRel(it.href, it.target, it.rel);
                       return (
                         <a
                           key={`${sec.id}-${idx}-${it.href}`}
                           href={it.href}
-                          target={it.target || undefined}
-                          rel={it.rel || undefined}
+                          target={navTR.target}
+                          rel={navTR.rel}
                           className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(it) ? ' active' : ''}`}
                           data-label={it.dataLabel || it.label}
+                          onClick={(e) => {
+                            if (it.target !== '_blank' || !pgmSidebarSameTabStaffHref(it.href)) return;
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                            e.preventDefault();
+                            window.location.assign(it.href);
+                          }}
                           {...getTurboLinkProps(it.href, it.target, it.skipTurboFrame)}
                         >
                           <span className="pgm-nav-lucide" data-lucide={it.icon} aria-hidden="true" />
