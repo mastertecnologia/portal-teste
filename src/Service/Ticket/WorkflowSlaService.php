@@ -243,6 +243,8 @@ class WorkflowSlaService {
 	}
 
 	protected function findPolicy(int $empresaId, int $stateId) {
+		$empresaId = (int)$empresaId;
+		$stateId = (int)$stateId;
 		if ($empresaId <= 0 || $stateId <= 0) {
 			return null;
 		}
@@ -250,19 +252,25 @@ class WorkflowSlaService {
 		if ($table === null) {
 			return null;
 		}
-		// Preferir linha da empresa; depois fallback global (empresa_id NULL). CASE evita NULLS FIRST em ORDER BY DESC no PostgreSQL.
-		$q = $table->find();
-		$rank = $q->newExpr('CASE WHEN empresa_id IS NULL THEN 0 ELSE 1 END');
-
-		return $q
+		// Preferir política da empresa; depois fallback global (empresa_id NULL).
+		// Não usar Expression como chave em order([]): em PHP causa "Illegal offset type".
+		$specific = $table->find()
 			->where([
 				'workflow_state_id' => $stateId,
-				'OR' => [
-					['empresa_id' => $empresaId],
-					['empresa_id IS' => null],
-				],
+				'empresa_id' => $empresaId,
 			])
-			->order([$rank => 'DESC', $table->aliasField('id') => 'ASC'])
+			->order([$table->aliasField('id') => 'ASC'])
+			->first();
+		if ($specific !== null) {
+			return $specific;
+		}
+
+		return $table->find()
+			->where([
+				'workflow_state_id' => $stateId,
+				'empresa_id IS' => null,
+			])
+			->order([$table->aliasField('id') => 'ASC'])
 			->first();
 	}
 
