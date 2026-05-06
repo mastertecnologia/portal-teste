@@ -45,7 +45,8 @@ class CheckSlaEscalationCommand extends Command {
 					$escalated++;
 				}
 			} catch (\Throwable $e) {
-				// Fallback silencioso por ticket: nunca derruba o job.
+				$io->verbose(sprintf('CheckSlaEscalation skip ticket %s: %s', (string)$ticket->get('id'), $e->getMessage()));
+				// Nunca derruba o job; log detalhe em verbose para diagnostico sem poluir erro.log.
 			}
 		}
 

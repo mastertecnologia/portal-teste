@@ -1,6 +1,7 @@
 <?php
 namespace App\Service\Ticket;
 
+use App\Utility\Ticket\TicketPriorityKpi;
 use Cake\I18n\Time;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -86,9 +87,8 @@ class DashboardService {
 		if (in_array('prioridade', $cols, true) && $closed !== []) {
 			$p1Abertos = $this->tickets->find()
 				->where($base + [
-					'prioridade' => 'P1',
 					'situacao NOT IN' => $closed,
-				])
+				] + TicketPriorityKpi::p1MatchOrConditions('Tickets.prioridade'))
 				->count();
 		}
 

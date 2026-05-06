@@ -154,20 +154,8 @@ class SlaService {
 	 * @param \Cake\ORM\Table $policies SlaPolicies
 	 */
 	protected function findPolicy($policies, int $idempresa, string $prioridade, ?string $tipoTicket) {
-		$q = $policies->find()
-			->where([
-				'idempresa' => $idempresa,
-				'prioridade' => $prioridade,
-				'ativo' => true,
-				'tipo_ticket IS' => null,
-			])
-			->order(['id' => 'ASC'])
-			->first();
-		if ($q !== null) {
-			return $q;
-		}
 		if ($tipoTicket !== null && $tipoTicket !== '') {
-			return $policies->find()
+			$specific = $policies->find()
 				->where([
 					'idempresa' => $idempresa,
 					'prioridade' => $prioridade,
@@ -176,9 +164,20 @@ class SlaService {
 				])
 				->order(['id' => 'ASC'])
 				->first();
+			if ($specific !== null) {
+				return $specific;
+			}
 		}
 
-		return null;
+		return $policies->find()
+			->where([
+				'idempresa' => $idempresa,
+				'prioridade' => $prioridade,
+				'ativo' => true,
+				'tipo_ticket IS' => null,
+			])
+			->order(['id' => 'ASC'])
+			->first();
 	}
 
 	/**

@@ -134,8 +134,10 @@ class WorkflowService {
 		$oldSituacao = (int)($ticket->get('situacao') ?? 0);
 		$ticket->set('workflow_state_id', (int)$toState->id);
 		$ticket->set('situacao', $newSituacao);
-		$this->applyTimer($ticket, $oldSituacao, $newSituacao, $codigo);
+		// SLA antes do timer agregado em tickets.paused_at: retomada de SLA precisa da âncora
+		// (pendência) antes que applyOnSituacaoChange altere/remova paused_at.
 		$this->applySla($ticket, $empresaId, $codigo);
+		$this->applyTimer($ticket, $oldSituacao, $newSituacao, $codigo);
 
 		return $ticket;
 	}

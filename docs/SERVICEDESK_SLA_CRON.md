@@ -20,3 +20,4 @@ Observacoes:
   - `WORKFLOW_AUTO_ESCALATION_ENABLED=true`
 - O comando ignora tickets fechados/resolvidos/cancelados.
 - Erros por ticket sao tratados de forma silenciosa para nao derrubar o processamento inteiro.
+- Os minutos configurados em `escalate_after_minutos` (workflow_sla_policies) são somados sobre `data_limite_resolucao` em **horario util** (`BusinessHoursService`), alinhado ao calculo principal de prazos de SLA — nao sao apenas minutos corrido de relogio.

@@ -255,6 +255,87 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Situação canônica alinhando timer agregado (tickets), workflow e SLA de etapa quando habilitados.
+	 * Fallback seguro quando não há transição de workflow válida para o estado desejado.
+	 *
+	 * @param \Cake\Datasource\EntityInterface $ticket
+	 */
+	protected function _ticketApplyOperationalSituacaoChange($ticket, int $idticket, int $targetSituacao): bool {
+		$empresa = (int)($ticket->idempresa ?? 0);
+		if ($empresa <= 0 || $idticket <= 0) {
+			return false;
+		}
+		$sitantiga = (int)($ticket->situacao ?? 0);
+		if ($sitantiga === $targetSituacao) {
+			return true;
+		}
+
+		$workflowUsed = false;
+		if ($this->_ticketWorkflowEnabledForEmpresa($empresa) && $this->_ticketWorkflowStateColumnReady()) {
+			$wf = $this->_ticketWorkflowService();
+			if ($wf->hasConfiguredTransitionsForEmpresa($empresa)) {
+				$wf->bootstrapStateForTicket($ticket);
+				$fromId = (int)($ticket->workflow_state_id ?? 0);
+				$targetState = $wf->getStateBySituacao($targetSituacao);
+				if ($fromId > 0 && $targetState !== null) {
+					$toId = (int)$targetState['id'];
+					if ($wf->canTransition($empresa, $fromId, $toId)) {
+						try {
+							$wf->applyTransition($ticket, $toId, $empresa);
+							$workflowUsed = true;
+						} catch (\Throwable $e) {
+							$this->log('_ticketApplyOperationalSituacaoChange workflow: ' . $e->getMessage(), 'warning');
+						}
+					}
+				}
+			}
+		}
+
+		$tcols = $this->Tickets->getSchema()->columns();
+		if ($workflowUsed) {
+			$sitNow = (int)($ticket->situacao ?? 0);
+			$this->_ticketSetDatafinalizadoPorSituacao($ticket, $sitNow, $tcols);
+			if ($sitNow === (int)C_TicketSituacaoEmandamento) {
+				$this->_assignTecnicoEmExecucao($ticket, $idticket);
+			}
+			if ($sitNow === (int)C_TicketSituacaoResolvido || $sitNow === (int)C_TicketSituacaoFechado) {
+				$this->_ensureTecnicoResponsavelAoFechamento($ticket);
+			}
+		} else {
+			TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, $targetSituacao);
+			$ticket->situacao = $targetSituacao;
+			$this->_ticketSetDatafinalizadoPorSituacao($ticket, $targetSituacao, $tcols);
+			if ($targetSituacao === (int)C_TicketSituacaoEmandamento) {
+				$this->_assignTecnicoEmExecucao($ticket, $idticket);
+			}
+			if ($targetSituacao === (int)C_TicketSituacaoResolvido || $targetSituacao === (int)C_TicketSituacaoFechado) {
+				$this->_ensureTecnicoResponsavelAoFechamento($ticket);
+			}
+			try {
+				if ((int)($ticket->workflow_state_id ?? 0) <= 0) {
+					if (in_array($targetSituacao, [(int)C_TicketSituacaoPendente, (int)C_TicketSituacaoEmandamento], true)) {
+						$sla = new SlaService($this->Tickets);
+						$sla->syncPolicyForTicket($ticket, $empresa);
+					}
+				}
+			} catch (\Throwable $e) {
+				$this->log('_ticketApplyOperationalSituacaoChange sla sync: ' . $e->getMessage(), 'warning');
+			}
+		}
+
+		$saveFields = array_values(array_unique(array_merge(
+			['situacao'],
+			array_keys($ticket->getDirty())
+		)));
+		if ($saveFields === []) {
+			$saveFields = ['situacao'];
+		}
+		$saveFields = $this->_ticketFieldsComResponsavel($this->_ticketIntersectSchemaFields($saveFields));
+
+		return (bool)$this->Tickets->save($ticket, ['fields' => $saveFields]);
+	}
+
+	/**
 	 * @param mixed $rawInput
 	 * @param mixed $normalizedValue
 	 */
@@ -1937,13 +2018,24 @@ class TicketsController extends AppController {
 			if (isset($data['observacao'])) $observacao = $data['observacao'];
 
 			$sitantiga = $ticket->situacao;
-			$ticket->situacao = C_TicketSituacaoFechado;
 			$sd = $this->request->getQuery('sd') === '1' || (isset($data['sd']) && (string)$data['sd'] === '1');
 
-			if ($this->Tickets->save($ticket)) {
-				$this->criarMov($idticket, $sitantiga, C_TicketSituacaoFechado, $observacao);
+			if ((int)$sitantiga === (int)C_TicketSituacaoFechado) {
+				$this->Flash->info(__('Este ticket já estava encerrado.'));
+
+				return $this->redirect(['action' => $this->Auth->user('role') == 0 ? 'edit' : 'view', $idticket, '?' => $sd ? ['sd' => '1'] : []]);
+			}
+
+			if ($this->_ticketApplyOperationalSituacaoChange($ticket, (int)$idticket, (int)C_TicketSituacaoFechado)) {
+				try {
+					$this->criarMov($idticket, $sitantiga, (int)$ticket->situacao, $observacao);
+				} catch (\Throwable $e) {
+					$this->log('Tickets::cancelar criarMov: ' . $e->getMessage(), 'error');
+				}
 				$this->Flash->success("Ticket cancelado.");
-			} else $this->Flash->error("Erro ao cancelar Ticket.");
+			} else {
+				$this->Flash->error("Erro ao cancelar Ticket.");
+			}
 
 			return $this->redirect(['action' => $this->Auth->user('role') == 0 ? 'edit' : 'view', $idticket, '?' => $sd ? ['sd' => '1'] : []]);
 		}
@@ -1963,18 +2055,26 @@ class TicketsController extends AppController {
 
 			$sitantiga = $ticket->situacao;
 
-			$ticket->situacao = C_TicketSituacaoPendente;
+			if ((int)$sitantiga === (int)C_TicketSituacaoPendente) {
+				$this->Flash->info(__('Este ticket já estava pendente.'));
 
-			if ($this->Tickets->save($ticket)) {
-				//Cria a movimentação.
-				$this->criarMov($idticket, $sitantiga, C_TicketSituacaoPendente, $observacao);
+				return $this->redirect(['action' => 'edit', $idticket]);
+			}
+
+			if ($this->_ticketApplyOperationalSituacaoChange($ticket, (int)$idticket, (int)C_TicketSituacaoPendente)) {
+				try {
+					$this->criarMov($idticket, $sitantiga, (int)$ticket->situacao, $observacao);
+				} catch (\Throwable $e) {
+					$this->log('Tickets::reabrir criarMov: ' . $e->getMessage(), 'error');
+				}
 				$this->Flash->success("Ticket Reaberto.");
 
 				return $this->redirect(['action' => 'edit', $idticket]);
-			} else {
-				$this->Flash->error("Erro ao reabrir Ticket.");
-				return $this->redirect(['action' => 'edit', $idticket]);
 			}
+
+			$this->Flash->error("Erro ao reabrir Ticket.");
+
+			return $this->redirect(['action' => 'edit', $idticket]);
 		}
 		$this->set('title', 'Ticket ' . $idticket);
 		$this->set('ticket', $ticket);
@@ -2013,44 +2113,48 @@ class TicketsController extends AppController {
 			$this->Flash->error('Ticket não encontrado.');
 			return $this->redirect(['action' => 'index']);
 		}
-		$situacao = $sit;
+		$situacaoInt = (int)$sit;
 		$sitantiga = $ticket->situacao;
-		$ticket->situacao = $situacao;
 
-		if ($situacao == C_TicketSituacaoResolvido || $situacao == C_TicketSituacaoFechado) $ticket->datafinalizado = date('d/m/Y');
-
-		if ((int)$situacao === (int)C_TicketSituacaoEmandamento && (int)$situacao !== (int)$sitantiga) {
-			$this->_assignTecnicoEmExecucao($ticket, (int)$idticket);
-		}
-		if (($situacao == C_TicketSituacaoResolvido || $situacao == C_TicketSituacaoFechado) && (int)$situacao !== (int)$sitantiga) {
-			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
+		if ((int)$sitantiga === $situacaoInt) {
+			$this->Flash->info(__('Situação já é a solicitada.'));
+			return $this->redirect(['controller' => 'Tickets', 'action' => 'edit', $idticket, '?' => $this->request->getQuery('sd') === '1' ? ['sd' => '1'] : []]);
 		}
 
-		if ($this->Tickets->save($ticket)) {
-			try {
-				$this->criarMov($ticket->id, $sitantiga, $ticket->situacao);
-			} catch (\Throwable $e) {
-				$this->log('Tickets::alterarsituacao criarMov: ' . $e->getMessage(), 'error');
-			}
-			$this->Flash->success("Situação do ticket alterada.");
-			try {
-				if ($situacao == C_TicketSituacaoPendente && $situacao != $sitantiga) $this->email($idticket, C_TicketsAcaoPendente, null, $this->Auth->user('idempresa'));
-				else if ($situacao == C_TicketSituacaoEmandamento && $situacao != $sitantiga) $this->email($idticket, C_TicketsAcaoEmandamento, null, $this->Auth->user('idempresa'));
-				else if ($situacao == C_TicketSituacaoFechado && $situacao != $sitantiga) $this->email($idticket, C_TicketsAcaoFechado, null, $this->Auth->user('idempresa'));
-				else if ($situacao == C_TicketSituacaoResolvido && $situacao != $sitantiga) $this->email($idticket, null, null, $this->Auth->user('idempresa'));
-			} catch (\Throwable $e) {
-				$this->log('Tickets::alterarsituacao email: ' . $e->getMessage(), 'error');
-			}
-			if ($this->request->getHeaderLine('HX-Request')) {
-				return $this->redirect(['controller' => 'Tickets', 'action' => 'panelLeftFragment', $idticket]);
-			}
-			$sd = $this->request->getQuery('sd') === '1';
-			if (in_array($ticket->situacao, [C_TicketSituacaoPendente, C_TicketSituacaoResolvido], true)) {
-				return $this->redirect($sd ? ['controller' => 'Servicedesk', 'action' => 'index'] : ['controller' => 'Tickets', 'action' => 'index']);
-			}
+		if (!$this->_ticketApplyOperationalSituacaoChange($ticket, (int)$idticket, $situacaoInt)) {
+			$this->Flash->error('Não foi possível gravar a situação do ticket.');
 
-			return $this->redirect(['controller' => 'Tickets', 'action' => 'edit', $idticket, '?' => $sd ? ['sd' => '1'] : []]);
+			return $this->redirect(['action' => 'edit', $idticket]);
 		}
+
+		try {
+			$this->criarMov($ticket->id, $sitantiga, (int)$ticket->situacao);
+		} catch (\Throwable $e) {
+			$this->log('Tickets::alterarsituacao criarMov: ' . $e->getMessage(), 'error');
+		}
+		$this->Flash->success("Situação do ticket alterada.");
+		try {
+			if ($situacaoInt === (int)C_TicketSituacaoPendente && $situacaoInt !== (int)$sitantiga) {
+				$this->email($idticket, C_TicketsAcaoPendente, null, $this->Auth->user('idempresa'));
+			} elseif ($situacaoInt === (int)C_TicketSituacaoEmandamento && $situacaoInt !== (int)$sitantiga) {
+				$this->email($idticket, C_TicketsAcaoEmandamento, null, $this->Auth->user('idempresa'));
+			} elseif ($situacaoInt === (int)C_TicketSituacaoFechado && $situacaoInt !== (int)$sitantiga) {
+				$this->email($idticket, C_TicketsAcaoFechado, null, $this->Auth->user('idempresa'));
+			} elseif ($situacaoInt === (int)C_TicketSituacaoResolvido && $situacaoInt !== (int)$sitantiga) {
+				$this->email($idticket, null, null, $this->Auth->user('idempresa'));
+			}
+		} catch (\Throwable $e) {
+			$this->log('Tickets::alterarsituacao email: ' . $e->getMessage(), 'error');
+		}
+		if ($this->request->getHeaderLine('HX-Request')) {
+			return $this->redirect(['controller' => 'Tickets', 'action' => 'panelLeftFragment', $idticket]);
+		}
+		$sd = $this->request->getQuery('sd') === '1';
+		if (in_array($ticket->situacao, [C_TicketSituacaoPendente, C_TicketSituacaoResolvido], true)) {
+			return $this->redirect($sd ? ['controller' => 'Servicedesk', 'action' => 'index'] : ['controller' => 'Tickets', 'action' => 'index']);
+		}
+
+		return $this->redirect(['controller' => 'Tickets', 'action' => 'edit', $idticket, '?' => $sd ? ['sd' => '1'] : []]);
 	}
 
 	/**
@@ -5892,10 +5996,24 @@ class TicketsController extends AppController {
 		}
 		$ticket->situacao = C_TicketSituacaoEmandamento;
 		$this->_assignTecnicoEmExecucao($ticket, $idticket);
+		if (TicketAttendimentoTimerService::columnsReady($this->Tickets)) {
+			TicketAttendimentoTimerService::applyOnSituacaoChange(
+				$this->Tickets,
+				$ticket,
+				$sitantiga,
+				(int)C_TicketSituacaoEmandamento
+			);
+		}
 		$fields = ['situacao'];
 		$cols = $this->Tickets->getSchema()->columns();
 		if (in_array('idtecnico_responsavel', $cols, true)) {
 			$fields[] = 'idtecnico_responsavel';
+		}
+		$timerCols = ['started_at', 'total_seconds', 'paused_at', 'finished_at'];
+		foreach ($timerCols as $tc) {
+			if (in_array($tc, $cols, true) && $ticket->isDirty($tc)) {
+				$fields[] = $tc;
+			}
 		}
 		$fields = $this->_ticketFieldsComResponsavel($fields);
 		if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $cols, true)) {
@@ -5950,7 +6068,7 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => true]);
 		}
 
-		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 422);
 	}
 
 	public function apiIndexCliente() {

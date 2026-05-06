@@ -26,6 +26,7 @@ class WorkflowSlaService {
 
 	public function applyStateSla(EntityInterface $ticket, int $empresaId, int $stateId): array {
 		$changed = [];
+		$wasSlaPausedBeforeApply = (bool)$ticket->get('sla_resposta_pausado') || (bool)$ticket->get('sla_resolucao_pausado');
 		if (!$this->isWorkflowSlaEnabledForEmpresa($empresaId)) {
 			return $this->slaService->syncPolicyForTicket($ticket, $empresaId);
 		}
@@ -42,6 +43,7 @@ class WorkflowSlaService {
 		if ((bool)$policy->is_final) {
 			$this->setIfExists($ticket, $cols, 'sla_resposta_pausado', false, $changed);
 			$this->setIfExists($ticket, $cols, 'sla_resolucao_pausado', false, $changed);
+			$this->setIfExists($ticket, $cols, 'paused_at', null, $changed);
 			$this->setIfExists($ticket, $cols, 'finished_at', $now, $changed);
 			return array_values(array_unique($changed));
 		}
@@ -50,6 +52,15 @@ class WorkflowSlaService {
 		if ($isPauseState) {
 			$this->setIfExists($ticket, $cols, 'sla_resposta_pausado', true, $changed);
 			$this->setIfExists($ticket, $cols, 'sla_resolucao_pausado', true, $changed);
+			// Fonte da âncora para resumeSlaWithoutReset: tickets.paused_at (compartilhado com timer
+			// agregado na pendência; aqui preenche só se ainda não houver âncora).
+			if (!$wasSlaPausedBeforeApply && in_array('paused_at', $cols, true)) {
+				$pa = $ticket->get('paused_at');
+				if ($pa === null || $pa === '') {
+					$this->setIfExists($ticket, $cols, 'paused_at', clone $now, $changed);
+				}
+			}
+
 			return array_values(array_unique($changed));
 		}
 
@@ -60,6 +71,17 @@ class WorkflowSlaService {
 
 		$this->setIfExists($ticket, $cols, 'sla_resposta_pausado', false, $changed);
 		$this->setIfExists($ticket, $cols, 'sla_resolucao_pausado', false, $changed);
+
+		$pendCode = defined('C_TicketSituacaoPendente') ? (int)constant('C_TicketSituacaoPendente') : null;
+		if ($pendCode !== null
+			&& in_array('paused_at', $cols, true)
+			&& (int)($ticket->get('situacao') ?? 0) !== $pendCode
+		) {
+			$pa = $ticket->get('paused_at');
+			if ($pa !== null && $pa !== '') {
+				$this->setIfExists($ticket, $cols, 'paused_at', null, $changed);
+			}
+		}
 
 		if ($this->hasSlaStarted($ticket)) {
 			return array_values(array_unique($changed));
@@ -110,11 +132,9 @@ class WorkflowSlaService {
 			if ($deadline === null) {
 				return false;
 			}
-			$compareAt = clone $deadline;
 			$afterMin = max(0, (int)($policy->escalate_after_minutos ?? 0));
-			if ($afterMin > 0) {
-				$compareAt = $compareAt->addMinutes($afterMin);
-			}
+			$bhEsc = new BusinessHoursService();
+			$compareAt = $bhEsc->addBusinessMinutes($deadline, $afterMin, $empresaId);
 			if (Time::now()->getTimestamp() <= $compareAt->getTimestamp()) {
 				return false;
 			}
@@ -134,6 +154,11 @@ class WorkflowSlaService {
 			$this->logEscalation((int)$ticket->get('id'), $empresaId, $stateId, $toStateId);
 			return true;
 		} catch (\Throwable $e) {
+			try {
+				\Cake\Log\Log::warning('WorkflowSlaService::checkAndEscalate: ' . $e->getMessage());
+			} catch (\Throwable $e2) {
+			}
+
 			return false;
 		}
 	}
@@ -225,7 +250,11 @@ class WorkflowSlaService {
 		if ($table === null) {
 			return null;
 		}
-		return $table->find()
+		// Preferir linha da empresa; depois fallback global (empresa_id NULL). CASE evita NULLS FIRST em ORDER BY DESC no PostgreSQL.
+		$q = $table->find();
+		$rank = $q->newExpr('CASE WHEN empresa_id IS NULL THEN 0 ELSE 1 END');
+
+		return $q
 			->where([
 				'workflow_state_id' => $stateId,
 				'OR' => [
@@ -233,7 +262,7 @@ class WorkflowSlaService {
 					['empresa_id IS' => null],
 				],
 			])
-			->order(['empresa_id' => 'DESC', 'id' => 'ASC'])
+			->order([$rank => 'DESC', $table->aliasField('id') => 'ASC'])
 			->first();
 	}
 

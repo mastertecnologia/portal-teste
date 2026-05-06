@@ -5,6 +5,7 @@ class WorkflowSlaPolicies extends AbstractMigration {
 
 	public function up() {
 		if (!$this->hasTable('workflow_sla_policies')) {
+			// Instalacoes novas: empresa_id será NOT NULL aqui e pode ser tornado NULL pela migration AlterWorkflowSlaPoliciesEmpresaNullable (policas globais).
 			$this->table('workflow_sla_policies')
 				->addColumn('empresa_id', 'integer', ['null' => false])
 				->addColumn('workflow_state_id', 'integer', ['null' => false])

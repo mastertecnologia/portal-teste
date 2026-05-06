@@ -37,6 +37,7 @@ class CheckSlaEscalationShell extends Shell {
 					$escalated++;
 				}
 			} catch (\Throwable $e) {
+				$this->verbose(sprintf('CheckSlaEscalation skip ticket %s: %s', (string)$ticket->get('id'), $e->getMessage()));
 			}
 		}
 

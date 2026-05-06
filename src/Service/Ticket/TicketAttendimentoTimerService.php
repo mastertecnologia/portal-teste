@@ -42,6 +42,9 @@ class TicketAttendimentoTimerService {
 		if (!self::columnsReady($ticketsTable)) {
 			return;
 		}
+		if ($oldSituacao === $newSituacao) {
+			return;
+		}
 		$now = Time::now();
 		$pend = (int)constant('C_TicketSituacaoPendente');
 		$exec = (int)constant('C_TicketSituacaoEmandamento');
