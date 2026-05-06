@@ -47,6 +47,7 @@ class ServicedeskController extends TicketsController {
 		$action = $this->request->getParam('action');
 		if (in_array($action, [
 			'workflowSlaAdmin',
+			'workflowSlaPolicies',
 			'workflowSla',
 			'workflowStates',
 			'workflowTransitions',

@@ -534,11 +534,11 @@ Router::scope("/", function ($routes) {
             "action" => "workflowSlaEmpresasOptions",
         ])
         ->setMethods(["GET"]);
-    // Lista + POST criar: URL distinta de /workflow-sla/:id (evita 404 por cache de rotas, proxies ou ordem de matching).
+    // Lista + POST criar — action workflowSlaPolicies (URL dashed; fallback sem rota explícita não pode usar workflowSla).
     $routes
         ->connect("/servicedesk/workflow-sla-policies", [
             "controller" => "Servicedesk",
-            "action" => "workflowSla",
+            "action" => "workflowSlaPolicies",
         ])
         ->setMethods(["GET", "POST"]);
     $routes

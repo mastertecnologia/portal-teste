@@ -130,6 +130,7 @@ class AppController extends Controller
                 "apiStartTicket",
                 "startTicket",
                 "workflowSlaAdmin",
+                "workflowSlaPolicies",
                 "workflowSla",
                 "workflowStates",
                 "workflowTransitions",

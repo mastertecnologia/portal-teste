@@ -196,6 +196,13 @@ trait ServicedeskWorkflowSlaTrait {
 		])));
 	}
 
+	/**
+	 * GET lista + POST criar em /servicedesk/workflow-sla-policies (alinha ao DashedRoute: workflow-sla-policies → workflowSlaPolicies).
+	 */
+	public function workflowSlaPolicies() {
+		return $this->workflowSla();
+	}
+
 	public function workflowSla() {
 		$this->autoRender = false;
 		if (!$this->_wfTechOr403()) {
