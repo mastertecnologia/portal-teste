@@ -19,8 +19,22 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		overflow-y: auto;
 	}
 
-	.jsgrid-cell {
+	.os-edit-shell #grid_table .jsgrid-insert-row > .jsgrid-cell,
+	.os-edit-shell #grid_table .jsgrid-edit-row > .jsgrid-cell {
+		height: auto;
 		overflow: hidden;
+		vertical-align: middle;
+	}
+
+	.os-edit-shell #grid_table .jsgrid-insert-row > .jsgrid-cell.os-cell-desc,
+	.os-edit-shell #grid_table .jsgrid-edit-row > .jsgrid-cell.os-cell-desc {
+		min-width: 0;
+	}
+
+	.jsgrid-row .jsgrid-cell,
+	.jsgrid-alt-row .jsgrid-cell {
+		overflow: hidden;
+		white-space: nowrap;
 	}
 
 	.jsgrid-cell>select>option {
@@ -55,6 +69,31 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 	.os-edit-shell .os-add-section-title {
 		font-size: 16px;
 		font-weight: 600;
+	}
+
+	.os-edit-shell #grid_table .vazio {
+		display: block !important;
+		height: 0 !important;
+		line-height: 0 !important;
+		font-size: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		overflow: hidden !important;
+	}
+
+	.os-edit-shell #grid_table td.inputCodproduto .input-group {
+		margin: 0 !important;
+		align-items: center !important;
+	}
+
+	.os-edit-shell #grid_table td.inputCodproduto input.input-codigo-val,
+	.os-edit-shell #grid_table td.inputCodproduto .input-group-append .btn {
+		height: 34px !important;
+		min-height: 34px !important;
+	}
+
+	.os-edit-shell #grid_table td.inputCodproduto .qtdEstoque {
+		display: none !important;
 	}
 
 	.os-edit-stack-gap {
@@ -1049,7 +1088,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 
 	$('#grid_table').jsGrid({
 		width: "100%",
-		height: "800px",
+		height: "auto",
 		filtering: false,
 		inserting: editing,
 		editing: editing,
@@ -1107,7 +1146,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 								} else {
 									$celulas.text('R$ 0,00');
 								}
-								$('.valortotalordem').html('<font color="#212529"> Total geral:</font> R$ ' + numberToReal(valortotal));
+								$('.valortotalordem').html('<span class="os-add-total-label">Total geral:</span> R$ ' + numberToReal(valortotal));
 								if (data && data.warning === 'sessao_carrinho' && data.msg) {
 									console.warn('[OS grid valortotal]', data.msg);
 								}
