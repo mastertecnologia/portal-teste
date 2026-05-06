@@ -1427,7 +1427,14 @@ export async function fetchWorkflowSlaEmpresas() {
   const url = wfSlaEmpresasUrl(boot);
   const r = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, empresas: [], error: json.error || r.statusText };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      empresas: [],
+      error: json.error || r.statusText,
+      debug: json.debug && typeof json.debug === 'object' ? json.debug : undefined,
+    };
+  }
   const raw = json.empresas || [];
   const trimStr = (v) => (v != null && String(v).trim() !== '' ? String(v).trim() : '');
   const empresas = raw.map((e) => {
@@ -1446,6 +1453,9 @@ export async function fetchWorkflowSlaEmpresas() {
     };
   });
   const out = { ok: true, empresas };
+  if (json.debug && typeof json.debug === 'object') {
+    out.debug = json.debug;
+  }
   if (Object.prototype.hasOwnProperty.call(json, 'allowedEmpresaIds') || Object.prototype.hasOwnProperty.call(json, 'workflowEmpresasConfigured')) {
     out.slaEmpresasDebug = {
       allowedEmpresaIds: json.allowedEmpresaIds,

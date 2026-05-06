@@ -122,12 +122,19 @@ export default function WorkflowSlaAdmin({ boot }) {
     const re = await fetchWorkflowSlaEmpresas();
     if (re.ok) {
       setEmpresas(re.empresas || []);
-      if (re.slaEmpresasDebug && typeof console !== 'undefined' && console.debug) {
-        console.debug('workflow-sla-empresas', re.slaEmpresasDebug);
+      if ((re.debug || re.slaEmpresasDebug) && typeof console !== 'undefined' && console.debug) {
+        console.debug('workflow-sla-empresas', re.debug || re.slaEmpresasDebug);
       }
     } else {
-      setEmpresas([]);
-      setErr('Não foi possível carregar a lista de empresas para o formulário.');
+      setEmpresas((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : []));
+      setErr(
+        re.error
+          ? `Não foi possível carregar empresas (${re.error}).`
+          : 'Não foi possível carregar a lista de empresas para o formulário.',
+      );
+      if (re.debug && typeof console !== 'undefined' && console.debug) {
+        console.debug('workflow-sla-empresas erro', re.debug);
+      }
     }
     setEditingPolicy(null);
     setFormOpen(true);
@@ -138,12 +145,19 @@ export default function WorkflowSlaAdmin({ boot }) {
     const re = await fetchWorkflowSlaEmpresas();
     if (re.ok) {
       setEmpresas(re.empresas || []);
-      if (re.slaEmpresasDebug && typeof console !== 'undefined' && console.debug) {
-        console.debug('workflow-sla-empresas', re.slaEmpresasDebug);
+      if ((re.debug || re.slaEmpresasDebug) && typeof console !== 'undefined' && console.debug) {
+        console.debug('workflow-sla-empresas', re.debug || re.slaEmpresasDebug);
       }
     } else {
-      setEmpresas([]);
-      setErr('Não foi possível carregar a lista de empresas para o formulário.');
+      setEmpresas((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : []));
+      setErr(
+        re.error
+          ? `Não foi possível carregar empresas (${re.error}).`
+          : 'Não foi possível carregar a lista de empresas para o formulário.',
+      );
+      if (re.debug && typeof console !== 'undefined' && console.debug) {
+        console.debug('workflow-sla-empresas erro', re.debug);
+      }
     }
     setEditingPolicy(p);
     setFormOpen(true);
