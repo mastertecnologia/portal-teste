@@ -153,6 +153,19 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		border-color: #dc3545 !important;
 		color: #fff !important;
 	}
+
+	/* Garante contraste dos botões de ação do jsGrid (editar/excluir). */
+	.os-edit-shell .os-grid-act-edit {
+		background-color: #f0ad4e !important;
+		border-color: #eea236 !important;
+		color: #fff !important;
+	}
+
+	.os-edit-shell .os-grid-act-delete {
+		background-color: #d9534f !important;
+		border-color: #d43f3a !important;
+		color: #fff !important;
+	}
 </style>
 <div class="col-md-12 p-0">
 	<div class="os-edit-shell form-material">
