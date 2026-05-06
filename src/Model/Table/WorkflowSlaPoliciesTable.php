@@ -17,7 +17,7 @@ class WorkflowSlaPoliciesTable extends Table {
 		]);
 		$this->belongsTo('WorkflowStates', [
 			'foreignKey' => 'workflow_state_id',
-			'joinType' => 'INNER',
+			'joinType' => 'LEFT',
 		]);
 		$this->belongsTo('EscalateToStates', [
 			'className' => 'WorkflowStates',

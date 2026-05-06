@@ -273,7 +273,7 @@ export default function WorkflowSlaAdmin({ boot }) {
               <option value="global">Só globais</option>
               {empresas.map((e) => (
                 <option key={e.id} value={String(e.id)}>
-                  Empresa #{e.id}
+                  {e.label || e.nome || `Empresa #${e.id}`}
                 </option>
               ))}
             </select>

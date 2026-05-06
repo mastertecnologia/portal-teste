@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 function buildPreview(form, empresas, states) {
   const emp = form.is_global
     ? 'qualquer empresa (regra global)'
-    : empresas.find((e) => Number(e.id) === Number(form.empresa_id))?.nome || 'empresa selecionada';
+    : empresas.find((e) => Number(e.id) === Number(form.empresa_id))?.label ||
+      empresas.find((e) => Number(e.id) === Number(form.empresa_id))?.nome ||
+      'empresa selecionada';
   const st = states.find((s) => Number(s.id) === Number(form.workflow_state_id))?.nome || 'estado';
   const resMin = Number(form.resolucao_minutos) || 0;
   const dest = states.find((s) => Number(s.id) === Number(form.escalate_to_state_id))?.nome || '—';
@@ -57,6 +59,13 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
     }
   }, [initial]);
 
+  useEffect(() => {
+    if (initial) return;
+    const first = empresas[0]?.id;
+    if (first === undefined || first === '') return;
+    setForm((f) => (f.empresa_id !== '' && f.empresa_id !== undefined ? f : { ...f, empresa_id: first }));
+  }, [empresas, initial]);
+
   const preview = useMemo(() => buildPreview(form, empresas, states), [form, empresas, states]);
 
   const handleSubmit = (e) => {
@@ -105,7 +114,7 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
         >
           {empresas.map((e) => (
             <option key={e.id} value={String(e.id)}>
-              {e.nome}
+              {e.label || e.nome || `Empresa #${e.id}`}
             </option>
           ))}
         </select>

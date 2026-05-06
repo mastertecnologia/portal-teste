@@ -26,6 +26,51 @@ trait ServicedeskWorkflowSlaTrait {
 		return (int)$this->Auth->user('idempresa');
 	}
 
+	/**
+	 * Empresas ativas (inativa ≠ 1); se WORKFLOW_EMPRESAS estiver definido, interseção com essa lista.
+	 *
+	 * @return array<int,int>
+	 */
+	protected function _wfSlaAdminSelectableEmpresaIds(): array {
+		try {
+			$enabled = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
+			$q = $this->Empresas->find()
+				->select(['id'])
+				->where([
+					'OR' => [
+						['Empresas.inativa' => 0],
+						['Empresas.inativa' => false],
+						['Empresas.inativa' => '0'],
+						['Empresas.inativa IS' => null],
+					],
+				]);
+			$activeIds = [];
+			foreach ($q->all() as $r) {
+				$activeIds[] = (int)$r->id;
+			}
+			sort($activeIds);
+			if ($enabled === []) {
+				return $activeIds;
+			}
+
+			return array_values(array_intersect($activeIds, $enabled));
+		} catch (\Throwable $e) {
+			return [];
+		}
+	}
+
+	/**
+	 * Técnico pode ver/editar policy desta empresa (ou global) na admin SLA.
+	 */
+	protected function _wfPolicyEmpresaAllowedForAdmin(?int $empresaId): bool {
+		if ($empresaId === null) {
+			return true;
+		}
+		$allowed = $this->_wfSlaAdminSelectableEmpresaIds();
+
+		return in_array((int)$empresaId, $allowed, true);
+	}
+
 	protected function _wfPoliciesTable() {
 		try {
 			return TableRegistry::get('WorkflowSlaPolicies');
@@ -99,7 +144,8 @@ trait ServicedeskWorkflowSlaTrait {
 			$data['empresa_id'] = null;
 		} else {
 			$data['empresa_id'] = (int)$eid;
-			if ($data['empresa_id'] !== $this->_wfSessionEmpresaId()) {
+			$allowed = $this->_wfSlaAdminSelectableEmpresaIds();
+			if ($allowed === [] || !in_array((int)$data['empresa_id'], $allowed, true)) {
 				$errs[] = 'empresa_invalida';
 			}
 		}
@@ -224,7 +270,7 @@ trait ServicedeskWorkflowSlaTrait {
 
 			return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
 		}
-		$eidSession = $this->_wfSessionEmpresaId();
+		$enabledEmpresas = array_values(array_unique(array_map('intval', (array)Configure::read('Workflow.enabledEmpresas', []))));
 
 		if ($id === null || $id === '') {
 			if ($this->request->is('get')) {
@@ -237,13 +283,20 @@ trait ServicedeskWorkflowSlaTrait {
 					$fFinal = $this->request->getQuery('is_final');
 
 					$query = $table->find()
-						->contain(['WorkflowStates', 'Empresas', 'EscalateToStates'])
-						->where([
-							'OR' => [
-								['WorkflowSlaPolicies.empresa_id' => $eidSession],
-								['WorkflowSlaPolicies.empresa_id IS' => null],
-							],
-						]);
+						->contain(['WorkflowStates', 'Empresas', 'EscalateToStates']);
+					if ($enabledEmpresas !== []) {
+						$allowed = $this->_wfSlaAdminSelectableEmpresaIds();
+						if ($allowed === []) {
+							$query->where(['WorkflowSlaPolicies.empresa_id IS' => null]);
+						} else {
+							$query->where([
+								'OR' => [
+									['WorkflowSlaPolicies.empresa_id IS' => null],
+									['WorkflowSlaPolicies.empresa_id IN' => $allowed],
+								],
+							]);
+						}
+					}
 					if ($fEmp !== null && $fEmp !== '' && $fEmp !== 'all') {
 						if ($fEmp === 'global') {
 							$query->where(['WorkflowSlaPolicies.empresa_id IS' => null]);
@@ -280,7 +333,7 @@ trait ServicedeskWorkflowSlaTrait {
 						$list[] = $this->_wfSerializePolicy($row);
 					}
 
-					return $this->jsonResponse(['ok' => true, 'policies' => $list, 'prioridade' => 'Regras da empresa vigente na sessão sobrescrevem regras globais (empresa_id nulo).']);
+					return $this->jsonResponse(['ok' => true, 'policies' => $list, 'prioridade' => 'Regras por empresa sobrescrevem regras globais (empresa_id nulo).']);
 				} catch (\Throwable $e) {
 					Log::warning('workflowSla GET list: ' . $e->getMessage());
 
@@ -322,7 +375,8 @@ trait ServicedeskWorkflowSlaTrait {
 					return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 				}
 				$eid = $row->empresa_id;
-				if ($eid !== null && (int)$eid !== $eidSession) {
+				$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
+				if (!$this->_wfPolicyEmpresaAllowedForAdmin($eidInt)) {
 					return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 				}
 
@@ -335,7 +389,8 @@ trait ServicedeskWorkflowSlaTrait {
 					return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 				}
 				$eid = $row->empresa_id;
-				if ($eid !== null && (int)$eid !== $eidSession) {
+				$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
+				if (!$this->_wfPolicyEmpresaAllowedForAdmin($eidInt)) {
 					return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 				}
 				$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
@@ -370,7 +425,8 @@ trait ServicedeskWorkflowSlaTrait {
 					return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 				}
 				$eid = $row->empresa_id;
-				if ($eid !== null && (int)$eid !== $eidSession) {
+				$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
+				if (!$this->_wfPolicyEmpresaAllowedForAdmin($eidInt)) {
 					return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 				}
 				if ($table->delete($row)) {
@@ -620,14 +676,14 @@ trait ServicedeskWorkflowSlaTrait {
 		if ($table === null) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'schema'], 500);
 		}
-		$eidSession = $this->_wfSessionEmpresaId();
 		try {
 			$row = $table->get($id);
 		} catch (\Throwable $e) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
 		}
 		$eid = $row->empresa_id;
-		if ($eid !== null && (int)$eid !== $eidSession) {
+		$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
+		if (!$this->_wfPolicyEmpresaAllowedForAdmin($eidInt)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
@@ -664,10 +720,13 @@ trait ServicedeskWorkflowSlaTrait {
 			return;
 		}
 		try {
-			$eidSession = $this->_wfSessionEmpresaId();
+			$ids = $this->_wfSlaAdminSelectableEmpresaIds();
+			if ($ids === []) {
+				return $this->jsonResponse(['ok' => true, 'empresas' => []]);
+			}
 			$rows = $this->Empresas->find()
 				->select(['id', 'nomefantasia', 'razaosocial'])
-				->where(['id' => $eidSession])
+				->where(['Empresas.id IN' => $ids])
 				->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC'])
 				->all();
 			$out = [];
