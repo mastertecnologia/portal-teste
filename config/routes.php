@@ -521,8 +521,27 @@ Router::scope("/", function ($routes) {
         "controller" => "Servicedesk",
         "action" => "workflowSlaAdmin",
     ]);
+    // Prefixos mais longos antes de /workflow-sla e /workflow-sla/:id (evita ambiguidade com proxies / cache).
+    $routes
+        ->connect("/servicedesk/workflow-sla-logs", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSlaLogs",
+        ])
+        ->setMethods(["GET"]);
+    $routes
+        ->connect("/servicedesk/workflow-sla-empresas", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSlaEmpresasOptions",
+        ])
+        ->setMethods(["GET"]);
     $routes
         ->connect("/servicedesk/workflow-sla", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSla",
+        ])
+        ->setMethods(["GET", "POST"]);
+    $routes
+        ->connect("/servicedesk/workflow-sla/", [
             "controller" => "Servicedesk",
             "action" => "workflowSla",
         ])
@@ -560,18 +579,6 @@ Router::scope("/", function ($routes) {
             "id",
         ], ["pass" => ["id"], "id" => "\d+"])
         ->setMethods(["PATCH", "DELETE"]);
-    $routes
-        ->connect("/servicedesk/workflow-sla-logs", [
-            "controller" => "Servicedesk",
-            "action" => "workflowSlaLogs",
-        ])
-        ->setMethods(["GET"]);
-    $routes
-        ->connect("/servicedesk/workflow-sla-empresas", [
-            "controller" => "Servicedesk",
-            "action" => "workflowSlaEmpresasOptions",
-        ])
-        ->setMethods(["GET"]);
     // Precificação / Gestão de Preços
     $routes->connect("/produtos/estoque-pdf/*", [
         "controller" => "Produtos",

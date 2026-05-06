@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use Cake\Core\Configure;
 use Cake\I18n\FrozenTime;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -56,7 +57,8 @@ trait ServicedeskWorkflowSlaTrait {
 		$eid = $row->get('empresa_id');
 		$empresaNome = null;
 		if ($eid !== null && $eid !== '') {
-			$empresaNome = $row->get('empresa') ? (string)($row->empresa->fantasia ?? $row->empresa->razaosocial ?? '') : null;
+			$em = $row->get('empresa');
+			$empresaNome = $em ? (string)($em->nomefantasia ?? $em->fantasia ?? $em->razaosocial ?? '') : null;
 		}
 		$st = $row->workflow_state ?? $row->workflow_states ?? null;
 		$toSt = $row->escalate_to_state ?? $row->escalate_to_states ?? null;
@@ -219,57 +221,64 @@ trait ServicedeskWorkflowSlaTrait {
 
 		if ($id === null || $id === '') {
 			if ($this->request->is('get')) {
-				$q = trim((string)$this->request->getQuery('q', ''));
-				$fEmp = $this->request->getQuery('empresa_id');
-				$fState = $this->request->getQuery('workflow_state_id');
-				$fAuto = $this->request->getQuery('auto_escalar');
-				$fPausa = $this->request->getQuery('pausa_sla');
-				$fFinal = $this->request->getQuery('is_final');
+				try {
+					$q = trim((string)$this->request->getQuery('q', ''));
+					$fEmp = $this->request->getQuery('empresa_id');
+					$fState = $this->request->getQuery('workflow_state_id');
+					$fAuto = $this->request->getQuery('auto_escalar');
+					$fPausa = $this->request->getQuery('pausa_sla');
+					$fFinal = $this->request->getQuery('is_final');
 
-				$query = $table->find()
-					->contain(['WorkflowStates', 'Empresas', 'EscalateToStates'])
-					->where([
-						'OR' => [
-							['WorkflowSlaPolicies.empresa_id' => $eidSession],
-							['WorkflowSlaPolicies.empresa_id IS' => null],
-						],
-					]);
-				if ($fEmp !== null && $fEmp !== '' && $fEmp !== 'all') {
-					if ($fEmp === 'global') {
-						$query->where(['WorkflowSlaPolicies.empresa_id IS' => null]);
-					} elseif (ctype_digit((string)$fEmp)) {
-						$query->where(['WorkflowSlaPolicies.empresa_id' => (int)$fEmp]);
+					$query = $table->find()
+						->contain(['WorkflowStates', 'Empresas', 'EscalateToStates'])
+						->where([
+							'OR' => [
+								['WorkflowSlaPolicies.empresa_id' => $eidSession],
+								['WorkflowSlaPolicies.empresa_id IS' => null],
+							],
+						]);
+					if ($fEmp !== null && $fEmp !== '' && $fEmp !== 'all') {
+						if ($fEmp === 'global') {
+							$query->where(['WorkflowSlaPolicies.empresa_id IS' => null]);
+						} elseif (ctype_digit((string)$fEmp)) {
+							$query->where(['WorkflowSlaPolicies.empresa_id' => (int)$fEmp]);
+						}
 					}
-				}
-				if ($fState !== null && $fState !== '' && ctype_digit((string)$fState)) {
-					$query->where(['WorkflowSlaPolicies.workflow_state_id' => (int)$fState]);
-				}
-				if ($fAuto === '1' || $fAuto === '0') {
-					$query->where(['WorkflowSlaPolicies.auto_escalar' => $fAuto === '1']);
-				}
-				if ($fPausa === '1' || $fPausa === '0') {
-					$query->where(['WorkflowSlaPolicies.pausa_sla' => $fPausa === '1']);
-				}
-				if ($fFinal === '1' || $fFinal === '0') {
-					$query->where(['WorkflowSlaPolicies.is_final' => $fFinal === '1']);
-				}
-				if ($q !== '') {
-					$qq = '%' . addcslashes($q, '%_\\') . '%';
-					$query->where([
-						'OR' => [
-							'WorkflowStates.nome LIKE' => $qq,
-							'WorkflowStates.codigo LIKE' => $qq,
-							'Empresas.fantasia LIKE' => $qq,
-						],
-					]);
-				}
-				$rows = $query->order(['WorkflowSlaPolicies.empresa_id' => 'DESC', 'WorkflowSlaPolicies.id' => 'ASC'])->all();
-				$list = [];
-				foreach ($rows as $row) {
-					$list[] = $this->_wfSerializePolicy($row);
-				}
+					if ($fState !== null && $fState !== '' && ctype_digit((string)$fState)) {
+						$query->where(['WorkflowSlaPolicies.workflow_state_id' => (int)$fState]);
+					}
+					if ($fAuto === '1' || $fAuto === '0') {
+						$query->where(['WorkflowSlaPolicies.auto_escalar' => $fAuto === '1']);
+					}
+					if ($fPausa === '1' || $fPausa === '0') {
+						$query->where(['WorkflowSlaPolicies.pausa_sla' => $fPausa === '1']);
+					}
+					if ($fFinal === '1' || $fFinal === '0') {
+						$query->where(['WorkflowSlaPolicies.is_final' => $fFinal === '1']);
+					}
+					if ($q !== '') {
+						$qq = '%' . addcslashes($q, '%_\\') . '%';
+						$query->where([
+							'OR' => [
+								'WorkflowStates.nome LIKE' => $qq,
+								'WorkflowStates.codigo LIKE' => $qq,
+								'Empresas.nomefantasia LIKE' => $qq,
+								'Empresas.razaosocial LIKE' => $qq,
+							],
+						]);
+					}
+					$rows = $query->order(['WorkflowSlaPolicies.empresa_id' => 'DESC', 'WorkflowSlaPolicies.id' => 'ASC'])->all();
+					$list = [];
+					foreach ($rows as $row) {
+						$list[] = $this->_wfSerializePolicy($row);
+					}
 
-				return $this->jsonResponse(['ok' => true, 'policies' => $list, 'prioridade' => 'Regras da empresa vigente na sessão sobrescrevem regras globais (empresa_id nulo).']);
+					return $this->jsonResponse(['ok' => true, 'policies' => $list, 'prioridade' => 'Regras da empresa vigente na sessão sobrescrevem regras globais (empresa_id nulo).']);
+				} catch (\Throwable $e) {
+					Log::warning('workflowSla GET list: ' . $e->getMessage());
+
+					return $this->jsonResponse(['ok' => true, 'policies' => [], 'prioridade' => '']);
+				}
 			}
 			if ($this->request->is('post')) {
 				$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
@@ -647,21 +656,30 @@ trait ServicedeskWorkflowSlaTrait {
 		if (!$this->_wfTechOr403()) {
 			return;
 		}
-		$eidSession = $this->_wfSessionEmpresaId();
-		$rows = $this->Empresas->find()
-			->select(['id', 'fantasia', 'razaosocial'])
-			->where(['id' => $eidSession])
-			->order(['fantasia' => 'ASC'])
-			->all();
-		$out = [];
-		foreach ($rows as $r) {
-			$nm = trim((string)($r->fantasia ?? ''));
-			if ($nm === '') {
-				$nm = trim((string)($r->razaosocial ?? ''));
+		try {
+			$eidSession = $this->_wfSessionEmpresaId();
+			$rows = $this->Empresas->find()
+				->select(['id', 'nomefantasia', 'razaosocial'])
+				->where(['id' => $eidSession])
+				->order(['nomefantasia' => 'ASC', 'razaosocial' => 'ASC'])
+				->all();
+			$out = [];
+			foreach ($rows as $r) {
+				$nf = trim((string)($r->nomefantasia ?? ''));
+				$rz = trim((string)($r->razaosocial ?? ''));
+				$label = $nf !== '' ? $nf : ($rz !== '' ? $rz : ('Empresa #' . $r->id));
+				$out[] = [
+					'id' => (int)$r->id,
+					'label' => $label,
+					'nome' => $label,
+				];
 			}
-			$out[] = ['id' => (int)$r->id, 'nome' => $nm !== '' ? $nm : ('Empresa #' . $r->id)];
-		}
 
-		return $this->jsonResponse(['ok' => true, 'empresas' => $out]);
+			return $this->jsonResponse(['ok' => true, 'empresas' => $out]);
+		} catch (\Throwable $e) {
+			Log::warning('workflowSlaEmpresasOptions: ' . $e->getMessage());
+
+			return $this->jsonResponse(['ok' => true, 'empresas' => []]);
+		}
 	}
 }

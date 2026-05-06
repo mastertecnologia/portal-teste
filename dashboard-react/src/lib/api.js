@@ -1258,21 +1258,39 @@ function wfSlaAbsUrl(u, webrootNorm) {
   return `${webrootNorm}${t.replace(/^\//, '')}`;
 }
 
+/** Lista de políticas: usa só `boot.paths.workflowSlaPolicies` quando definido (evita duplicar webroot). */
+function wfSlaPolicyListUrl(boot) {
+  const v = typeof boot?.paths?.workflowSlaPolicies === 'string' ? boot.paths.workflowSlaPolicies.trim() : '';
+  if (v) return v.replace(/\/+$/, '');
+  return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla`.replace(/\/+$/, '');
+}
+
+function wfSlaPolicyBaseFromBoot(boot) {
+  const v = typeof boot?.paths?.workflowSlaPolicyBase === 'string' ? boot.paths.workflowSlaPolicyBase.trim() : '';
+  if (v) return v.endsWith('/') ? v : `${v}/`;
+  return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla/`;
+}
+
+/** Empresas da sessão: só `boot.paths.workflowSlaEmpresas` quando definido. */
+function wfSlaEmpresasUrl(boot) {
+  const v = typeof boot?.paths?.workflowSlaEmpresas === 'string' ? boot.paths.workflowSlaEmpresas.trim() : '';
+  if (v) return v.replace(/\/+$/, '');
+  return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla-empresas`.replace(/\/+$/, '');
+}
+
 function wfSlaPaths() {
   const boot = getBoot();
   const p = boot?.paths || {};
   const w = normalizeWebrootForFetch(boot?.webroot);
   const pick = (keys, relUnderWebroot) => wfSlaAbsUrl(pickFirstBootPath(p, keys), w) || `${w}${String(relUnderWebroot).replace(/^\//, '')}`;
-  let policyBase = pick(['workflowSlaPolicyBase'], 'servicedesk/workflow-sla/');
-  if (!policyBase.endsWith('/')) policyBase = `${policyBase}/`;
   return {
-    policies: pick(['workflowSlaPolicies'], 'servicedesk/workflow-sla').replace(/\/+$/, ''),
-    policyBase,
-    states: pick(['workflowSlaStates', 'workflowStates'], 'servicedesk/workflow-states'),
-    transitions: pick(['workflowSlaTransitions', 'workflowTransitions'], 'servicedesk/workflow-transitions'),
+    policies: wfSlaPolicyListUrl(boot),
+    policyBase: wfSlaPolicyBaseFromBoot(boot),
+    states: pick(['workflowSlaStates', 'workflowStates'], 'servicedesk/workflow-states').replace(/\/+$/, ''),
+    transitions: pick(['workflowSlaTransitions', 'workflowTransitions'], 'servicedesk/workflow-transitions').replace(/\/+$/, ''),
     transitionBase: pick(['workflowTransitionBase'], 'servicedesk/workflow-transitions/').replace(/\/?$/, '/'),
-    logs: pick(['workflowSlaLogs'], 'servicedesk/workflow-sla-logs'),
-    empresas: pick(['workflowSlaEmpresas'], 'servicedesk/workflow-sla-empresas'),
+    logs: pick(['workflowSlaLogs'], 'servicedesk/workflow-sla-logs').replace(/\/+$/, ''),
+    empresas: wfSlaEmpresasUrl(boot),
   };
 }
 
@@ -1280,7 +1298,8 @@ export async function fetchWorkflowSlaPolicies(filters = {}) {
   if (USE_MOCK) {
     return { ok: true, policies: [], prioridade: '' };
   }
-  const url = wfSlaPaths().policies + qs(filters);
+  const boot = getBoot();
+  const url = wfSlaPolicyListUrl(boot) + qs(filters);
   const r = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' }, cache: 'no-store' });
   const json = await r.json().catch(() => ({}));
   if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, policies: [] };
@@ -1301,8 +1320,9 @@ export async function fetchWorkflowSlaPolicy(id) {
 
 export async function saveWorkflowSlaPolicy(id, body, method = 'POST') {
   if (USE_MOCK) return { ok: true, policy: { id: 1, ...body } };
-  const base = wfSlaPaths().policyBase;
-  const url = id ? `${base}${encodeURIComponent(id)}` : wfSlaPaths().policies;
+  const boot = getBoot();
+  const base = wfSlaPolicyBaseFromBoot(boot);
+  const url = id ? `${base}${encodeURIComponent(id)}` : wfSlaPolicyListUrl(boot);
   const r = await fetch(url, {
     method: id ? 'PATCH' : 'POST',
     credentials: 'same-origin',
@@ -1352,7 +1372,7 @@ export async function fetchWorkflowStates() {
   }
   const r = await fetch(wfSlaPaths().states, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, states: [] };
+  if (!r.ok || !json.ok) return { ok: false, states: [], error: json.error || r.statusText };
   return { ok: true, states: json.states || [] };
 }
 
@@ -1360,7 +1380,7 @@ export async function fetchWorkflowTransitions() {
   if (USE_MOCK) return { ok: true, transitions: [] };
   const r = await fetch(wfSlaPaths().transitions, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, transitions: [] };
+  if (!r.ok || !json.ok) return { ok: false, transitions: [], error: json.error || r.statusText };
   return { ok: true, transitions: json.transitions || [] };
 }
 
@@ -1397,16 +1417,24 @@ export async function fetchWorkflowSlaLogs(limit = 80) {
     headers: { Accept: 'application/json' },
   });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, logs: [] };
+  if (!r.ok || !json.ok) return { ok: false, logs: [], error: json.error || r.statusText };
   return { ok: true, logs: json.logs || [] };
 }
 
 export async function fetchWorkflowSlaEmpresas() {
-  if (USE_MOCK) return { ok: true, empresas: [{ id: 1, nome: 'PGM' }] };
-  const r = await fetch(wfSlaPaths().empresas, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+  if (USE_MOCK) return { ok: true, empresas: [{ id: 1, nome: 'PGM', label: 'PGM' }] };
+  const boot = getBoot();
+  const url = wfSlaEmpresasUrl(boot);
+  const r = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, empresas: [] };
-  return { ok: true, empresas: json.empresas || [] };
+  if (!r.ok || !json.ok) return { ok: false, empresas: [], error: json.error || r.statusText };
+  const raw = json.empresas || [];
+  const empresas = raw.map((e) => {
+    const label = e.label != null && String(e.label).trim() !== '' ? String(e.label).trim() : '';
+    const nome = e.nome != null && String(e.nome).trim() !== '' ? String(e.nome).trim() : label;
+    return { ...e, label: label || nome, nome: nome || label };
+  });
+  return { ok: true, empresas };
 }
 
 export { MOCK_SESSION_CLIENTE };

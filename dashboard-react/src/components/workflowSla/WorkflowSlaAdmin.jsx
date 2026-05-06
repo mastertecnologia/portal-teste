@@ -69,7 +69,8 @@ export default function WorkflowSlaAdmin({ boot }) {
       setPolicies(r.policies || []);
       setPrioridadeMsg(r.prioridade || '');
     } else {
-      setErr(r.error || 'Falha ao carregar políticas');
+      const extra = r.error && r.error !== 'not_found' ? ` (${r.error})` : '';
+      setErr(`Erro ao carregar políticas SLA${extra}`);
     }
   }, [filters]);
 
@@ -91,6 +92,17 @@ export default function WorkflowSlaAdmin({ boot }) {
     }
     const rl = await fetchWorkflowSlaLogs(100);
     if (rl.ok) setLogs(rl.logs || []);
+    const parts = [];
+    const appendErr = (label, err) => {
+      if (!err || err === 'not_found') parts.push(label);
+      else parts.push(`${label} (${err})`);
+    };
+    if (!rs.ok) appendErr('Erro ao carregar estados do workflow', rs.error);
+    if (!rt.ok) appendErr('Erro ao carregar transições', rt.error);
+    if (!re.ok) appendErr('Erro ao carregar empresas', re.error);
+    if (!rp.ok) appendErr('Erro ao carregar políticas SLA', rp.error);
+    if (!rl.ok) appendErr('Erro ao carregar logs SLA', rl.error);
+    if (parts.length) setErr(parts.join('. '));
     setLoading(false);
   }, []);
 
