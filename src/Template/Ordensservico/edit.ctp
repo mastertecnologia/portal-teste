@@ -166,6 +166,37 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		border-color: #d43f3a !important;
 		color: #fff !important;
 	}
+
+	/* Mantém os botões de ação dentro da coluna AÇÕES. */
+	.os-edit-shell #grid_table th.os-col-acoes,
+	.os-edit-shell #grid_table td.os-col-acoes {
+		width: 86px !important;
+		min-width: 86px !important;
+		max-width: 86px !important;
+		padding-left: 6px !important;
+		padding-right: 6px !important;
+	}
+
+	.os-edit-shell .os-grid-actions-cell,
+	.os-edit-shell .os-grid-actions-edit {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		white-space: nowrap;
+	}
+
+	.os-edit-shell .os-grid-act-edit,
+	.os-edit-shell .os-grid-act-delete,
+	.os-edit-shell .os-grid-act-save,
+	.os-edit-shell .os-grid-act-cancel {
+		width: 30px;
+		height: 30px;
+		padding: 0 !important;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
 </style>
 <div class="col-md-12 p-0">
 	<div class="os-edit-shell form-material">
