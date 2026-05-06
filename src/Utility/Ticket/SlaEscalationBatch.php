@@ -125,4 +125,90 @@ final class SlaEscalationBatch {
 
 		return implode(' | ', $parts);
 	}
+
+	/**
+	 * Resolve o ID do ticket para modo diagnóstico (compatível com Shell Cake 3 e Command Cake 4+).
+	 * Ordem: opções nomeadas → argumentos posicionais (Command/Shell) → env CHECK_SLA_TICKET_ID.
+	 *
+	 * @param array<string,mixed>|null $shellParams $this->params no Shell
+	 * @param array<int,mixed>|null    $shellPositionalArgs $this->args no Shell
+	 * @param object|null              $commandArguments  objeto Arguments do Command (se houver)
+	 */
+	public static function parseDiagnosticTicketId(?array $shellParams, ?array $shellPositionalArgs, $commandArguments = null): ?int {
+		$asPositiveInt = function ($v): ?int {
+			if ($v === null || $v === false || $v === '') {
+				return null;
+			}
+			$s = trim((string)$v);
+			if ($s === '' || !ctype_digit($s)) {
+				return null;
+			}
+			$i = (int)$s;
+
+			return $i > 0 ? $i : null;
+		};
+
+		$optionKeys = ['ticket', 'ticket_id', 'ticket-id'];
+
+		if (is_array($shellParams)) {
+			foreach ($optionKeys as $k) {
+				if (array_key_exists($k, $shellParams)) {
+					$id = $asPositiveInt($shellParams[$k]);
+					if ($id !== null) {
+						return $id;
+					}
+				}
+			}
+		}
+
+		if (is_object($commandArguments) && method_exists($commandArguments, 'getOption')) {
+			foreach ($optionKeys as $k) {
+				$id = $asPositiveInt($commandArguments->getOption($k));
+				if ($id !== null) {
+					return $id;
+				}
+			}
+		}
+
+		if (is_object($commandArguments)) {
+			if (method_exists($commandArguments, 'getArgument')) {
+				foreach (['id', 'ticket', 'ticket_id'] as $name) {
+					$id = $asPositiveInt($commandArguments->getArgument($name));
+					if ($id !== null) {
+						return $id;
+					}
+				}
+			}
+			if (method_exists($commandArguments, 'getArgumentAt')) {
+				for ($i = 0; $i < 4; $i++) {
+					$id = $asPositiveInt($commandArguments->getArgumentAt($i));
+					if ($id !== null) {
+						return $id;
+					}
+				}
+			}
+			if (method_exists($commandArguments, 'getArguments')) {
+				$all = $commandArguments->getArguments();
+				if (is_array($all)) {
+					foreach ($all as $a) {
+						$id = $asPositiveInt($a);
+						if ($id !== null) {
+							return $id;
+						}
+					}
+				}
+			}
+		}
+
+		if (is_array($shellPositionalArgs) && isset($shellPositionalArgs[0])) {
+			$id = $asPositiveInt($shellPositionalArgs[0]);
+			if ($id !== null) {
+				return $id;
+			}
+		}
+
+		$env = getenv('CHECK_SLA_TICKET_ID');
+
+		return $asPositiveInt($env !== false ? $env : null);
+	}
 }

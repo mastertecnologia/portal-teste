@@ -25,8 +25,19 @@ class CheckSlaEscalationCommand extends Command {
 			'Verifica SLA de workflow e escalona tickets quando aplicável (cron). '
 			. 'Use -v para filtros/SQL por ticket.'
 		);
+		$parser->addOption('ticket', [
+			'short' => 't',
+			'help' => 'Modo diagnóstico: só este ID. Alternativas: --ticket-id, primeiro argumento posicional, env CHECK_SLA_TICKET_ID.',
+		]);
 		$parser->addOption('ticket-id', [
-			'help' => 'Apenas o ticket informado (modo diagnóstico, sem os filtros do batch).',
+			'help' => 'Igual a --ticket (hífen).',
+		]);
+		$parser->addOption('ticket_id', [
+			'help' => 'Igual a --ticket (underscore).',
+		]);
+		$parser->addArgument('id', [
+			'required' => false,
+			'help' => 'ID do ticket (modo diagnóstico), posicional.',
 		]);
 
 		return $parser;
@@ -42,11 +53,7 @@ class CheckSlaEscalationCommand extends Command {
 			return static::CODE_SUCCESS;
 		}
 
-		$ticketIdOpt = method_exists($args, 'getOption') ? $args->getOption('ticket-id') : null;
-		$onlyTicketId = null;
-		if ($ticketIdOpt !== null && $ticketIdOpt !== '' && ctype_digit(trim((string)$ticketIdOpt))) {
-			$onlyTicketId = (int)$ticketIdOpt;
-		}
+		$onlyTicketId = SlaEscalationBatch::parseDiagnosticTicketId(null, null, $args);
 
 		$tickets = TableRegistry::getTableLocator()->get('Tickets');
 		$slaService = new WorkflowSlaService($tickets, new SlaService($tickets));
