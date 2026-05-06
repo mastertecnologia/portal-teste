@@ -28,7 +28,9 @@ function buildInitialExpandedMap(sectionsList, activePath) {
   const stored = readSectionStates();
   const next = { ...stored };
   for (const sec of sectionsList) {
-    const hasActive = sec.items?.some((it) => it.active || pathMatches(it.href, activePath));
+    const hasActive = sec.items?.some(
+      (it) => it.itemKind !== 'header' && (it.active || pathMatches(it.href, activePath)),
+    );
     if (hasActive) next[sec.id] = true;
     else if (sec.defaultOpen) next[sec.id] = true;
     else if (next[sec.id] === undefined) next[sec.id] = false;
@@ -138,10 +140,10 @@ function StaffSidebar(props) {
     }
   }, [workspace?.currentId, currentFromServer]);
 
-  const isItemActive = useCallback(
-    (it) => it.active === true || pathMatches(it.href, livePath),
-    [livePath]
-  );
+  const isItemActive = useCallback((it) => {
+    if (!it || it.itemKind === 'header') return false;
+    return it.active === true || pathMatches(it.href, livePath);
+  }, [livePath]);
 
   const [expandedMap, setExpandedMap] = useState(() => buildInitialExpandedMap(sections, serverActivePath));
 
@@ -366,23 +368,33 @@ function StaffSidebar(props) {
                     </svg>
                   </div>
                   <div className="nav-section-items">
-                    {sec.items?.map((it, idx) => (
-                      <a
-                        key={`${sec.id}-${idx}-${it.href}`}
-                        href={it.href}
-                        target={it.target || undefined}
-                        rel={it.rel || undefined}
-                        className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(it) ? ' active' : ''}`}
-                        data-label={it.dataLabel || it.label}
-                        {...getTurboLinkProps(it.href, it.target, it.skipTurboFrame)}
-                      >
-                        <span className="pgm-nav-lucide" data-lucide={it.icon} aria-hidden="true" />
-                        <span className="nav-item-label hide-menu">{it.label}</span>
-                        {it.badgeHtml ? (
-                          <span className="pgm-nav-badge-host" dangerouslySetInnerHTML={{ __html: it.badgeHtml }} />
-                        ) : null}
-                      </a>
-                    ))}
+                    {sec.items?.map((it, idx) =>
+                      it.itemKind === 'header' ? (
+                        <div
+                          key={`${sec.id}-hdr-${idx}`}
+                          className="pgm-nav-subsection-label px-3 py-1 small text-white-50 text-uppercase"
+                          role="presentation"
+                        >
+                          {it.label}
+                        </div>
+                      ) : (
+                        <a
+                          key={`${sec.id}-${idx}-${it.href}`}
+                          href={it.href}
+                          target={it.target || undefined}
+                          rel={it.rel || undefined}
+                          className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(it) ? ' active' : ''}`}
+                          data-label={it.dataLabel || it.label}
+                          {...getTurboLinkProps(it.href, it.target, it.skipTurboFrame)}
+                        >
+                          <span className="pgm-nav-lucide" data-lucide={it.icon} aria-hidden="true" />
+                          <span className="nav-item-label hide-menu">{it.label}</span>
+                          {it.badgeHtml ? (
+                            <span className="pgm-nav-badge-host" dangerouslySetInnerHTML={{ __html: it.badgeHtml }} />
+                          ) : null}
+                        </a>
+                      ),
+                    )}
                   </div>
                 </li>
               );

@@ -108,3 +108,9 @@ html body .pgm-sidebar-shell .preview-dd-divider {
   margin: 6px 0;
   background: rgba(255, 255, 255, 0.08);
 }
+
+html body .pgm-sidebar-shell .nav-section-items .pgm-nav-subsection-label {
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  opacity: 0.72;
+}
