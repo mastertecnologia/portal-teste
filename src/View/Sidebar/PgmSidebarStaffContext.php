@@ -29,7 +29,8 @@ final class PgmSidebarStaffContext
         $clientesListNavActive = ($ctrl === 'Clientes' && $act !== 'add');
         $ativosActive = ($ctrl === 'Ativos');
         $ticketsOperacionalActive = ($ctrl === 'Servicedesk' && $act === 'operacional');
-        $ticketsServicedeskActive = ($ctrl === 'Servicedesk' && $act !== 'operacional');
+        $ticketsWorkflowSlaActive = ($ctrl === 'Servicedesk' && $act === 'workflowSlaAdmin');
+        $ticketsServicedeskActive = ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin'], true));
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
         $advMgmtAct = ($ctrl === 'ContractManagement');
@@ -88,7 +89,7 @@ final class PgmSidebarStaffContext
         $pgmSbOpenPlanner = (bool)$visitasActive;
         $pgmSbOpenCofre = (bool)$senhasActive;
         $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive || $ativosActive;
-        $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive || $ticketsOperacionalActive;
+        $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive;
         $pgmSbOpenComercial = (bool)$orcamentosActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
@@ -130,6 +131,7 @@ final class PgmSidebarStaffContext
             'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
             'ticketsOperacionalActive' => $ticketsOperacionalActive,
+            'ticketsWorkflowSlaActive' => $ticketsWorkflowSlaActive,
             'ticketsHistoricoActive' => $ticketsHistoricoActive,
             'advMgmtAct' => $advMgmtAct,
             'advTplAct' => $advTplAct,

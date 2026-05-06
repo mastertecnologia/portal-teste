@@ -2,6 +2,7 @@
 namespace App\Service\Ticket;
 
 use App\Utility\Ticket\TicketPriorityKpi;
+use Cake\Core\Configure;
 use Cake\I18n\Time;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -119,6 +120,75 @@ class DashboardService {
 				'near_due' => (array)($slaByState['near_due_list'] ?? []),
 				'paused' => (array)($slaByState['paused_list'] ?? []),
 			],
+			'sla_operational_kpis' => $this->slaOperationalKpis($base, $cols),
+			'sla_future' => [
+				'proactive_alerts' => (bool)Configure::read('Workflow.slaFutureProactiveAlerts', false),
+				'metrics_per_stage' => true,
+				'per_technician' => (bool)Configure::read('Workflow.slaFuturePerTechnician', false),
+				'bottlenecks' => (bool)Configure::read('Workflow.slaFutureBottlenecks', false),
+				'business_hours_vs_24h' => (bool)Configure::read('Workflow.slaFutureBusinessHoursMode', false),
+				'rules_by_client_queue_team' => (bool)Configure::read('Workflow.slaFutureScopedRules', false),
+			],
+		];
+	}
+
+	/**
+	 * KPIs extras para cards SLA (Service Desk técnico); só leitura.
+	 *
+	 * @param array<string,mixed> $base
+	 * @param string[] $cols
+	 * @return array<string,int>
+	 */
+	protected function slaOperationalKpis(array $base, array $cols): array {
+		$closed = $this->closedSituacoes();
+		$openBase = $base;
+		if ($closed !== []) {
+			$openBase['situacao NOT IN'] = $closed;
+		}
+
+		$escaladosHoje = 0;
+		if (in_array('sla_escalated_at', $cols, true)) {
+			$d0 = Time::today()->format('Y-m-d') . ' 00:00:00';
+			$d1 = Time::today()->format('Y-m-d') . ' 23:59:59';
+			$escaladosHoje = $this->tickets->find()
+				->where($openBase + [
+					'sla_escalated_at >=' => $d0,
+					'sla_escalated_at <=' => $d1,
+				])
+				->count();
+		}
+
+		$criticosAbertos = 0;
+		if (in_array('prioridade', $cols, true) && $closed !== []) {
+			$criticosAbertos = $this->tickets->find()
+				->where($openBase + TicketPriorityKpi::p1MatchOrConditions('Tickets.prioridade'))
+				->count();
+		}
+
+		$semTecnico = 0;
+		if (in_array('idtecnico_responsavel', $cols, true) && $closed !== []) {
+			$semTecnico = $this->tickets->find()
+				->where($openBase + [
+					'OR' => [
+						['idtecnico_responsavel IS' => null],
+						['idtecnico_responsavel' => 0],
+					],
+				])
+				->count();
+		}
+
+		$aguardandoCliente = 0;
+		if (defined('C_TicketSituacaoRespondido') && in_array('situacao', $cols, true) && $closed !== []) {
+			$aguardandoCliente = $this->tickets->find()
+				->where($openBase + ['situacao' => (int)C_TicketSituacaoRespondido])
+				->count();
+		}
+
+		return [
+			'escalados_hoje' => $escaladosHoje,
+			'criticos_abertos' => $criticosAbertos,
+			'sem_tecnico' => $semTecnico,
+			'aguardando_cliente' => $aguardandoCliente,
 		];
 	}
 

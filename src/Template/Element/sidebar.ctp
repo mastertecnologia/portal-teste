@@ -172,6 +172,7 @@
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
+						<?= $pgmSbLink('settings', ' Configurações: Workflow & SLA', ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'], ['data-turbo' => 'false'], $ticketsWorkflowSlaActive, '', 'Workflow e SLA') ?>
 						<?php endif; ?>
 						<?php if (($sg['tickets_historico'] ?? true)) : ?>
 						<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ticketsHistoricoActive, '', 'Histórico') ?>

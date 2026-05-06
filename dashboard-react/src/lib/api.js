@@ -893,6 +893,20 @@ export async function fetchDashboardOperacional() {
             { id: 115, workflow_state_id: 3, prioridade: 'P3', data_limite_resolucao: new Date(Date.now() + 7200000).toISOString() },
           ],
         },
+        sla_operational_kpis: {
+          escalados_hoje: 0,
+          criticos_abertos: 1,
+          sem_tecnico: 3,
+          aguardando_cliente: 2,
+        },
+        sla_future: {
+          proactive_alerts: false,
+          metrics_per_stage: true,
+          per_technician: false,
+          bottlenecks: false,
+          business_hours_vs_24h: false,
+          rules_by_client_queue_team: false,
+        },
       },
     };
   }
@@ -1216,6 +1230,154 @@ export async function detachAssetFromTicket(ticketId, { assetId, ticketAssetId }
     return { ok: false, error: json.error || r.statusText };
   }
   return { ok: true, id: json.id };
+}
+
+function wfSlaPaths() {
+  const boot = getBoot();
+  const p = boot?.paths || {};
+  const w = boot?.webroot || '/';
+  return {
+    policies: p.workflowSlaPolicies || `${w}servicedesk/workflow-sla`,
+    policyBase: p.workflowSlaPolicyBase || `${w}servicedesk/workflow-sla/`,
+    states: p.workflowStates || `${w}servicedesk/workflow-states`,
+    transitions: p.workflowTransitions || `${w}servicedesk/workflow-transitions`,
+    transitionBase: p.workflowTransitionBase || `${w}servicedesk/workflow-transitions/`,
+    logs: p.workflowSlaLogs || `${w}servicedesk/workflow-sla-logs`,
+    empresas: p.workflowSlaEmpresas || `${w}servicedesk/workflow-sla-empresas`,
+  };
+}
+
+export async function fetchWorkflowSlaPolicies(filters = {}) {
+  if (USE_MOCK) {
+    return { ok: true, policies: [], prioridade: '' };
+  }
+  const url = wfSlaPaths().policies + qs(filters);
+  const r = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' }, cache: 'no-store' });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, policies: [] };
+  return { ok: true, policies: json.policies || [], prioridade: json.prioridade || '' };
+}
+
+export async function fetchWorkflowSlaPolicy(id) {
+  if (USE_MOCK) return { ok: false, error: 'mock' };
+  const r = await fetch(`${wfSlaPaths().policyBase}${encodeURIComponent(id)}`, {
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText };
+  return { ok: true, policy: json.policy };
+}
+
+export async function saveWorkflowSlaPolicy(id, body, method = 'POST') {
+  if (USE_MOCK) return { ok: true, policy: { id: 1, ...body } };
+  const base = wfSlaPaths().policyBase;
+  const url = id ? `${base}${encodeURIComponent(id)}` : wfSlaPaths().policies;
+  const r = await fetch(url, {
+    method: id ? 'PATCH' : 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, errors: json.errors };
+  return { ok: true, policy: json.policy };
+}
+
+export async function deleteWorkflowSlaPolicy(id) {
+  if (USE_MOCK) return { ok: true };
+  const r = await fetch(`${wfSlaPaths().policyBase}${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText };
+  return { ok: true };
+}
+
+export async function duplicateWorkflowSlaPolicy(id, body = {}) {
+  if (USE_MOCK) return { ok: true, policy: { id: 2 } };
+  const base = wfSlaPaths().policyBase.replace(/\/?$/, '/');
+  const r = await fetch(`${base}${encodeURIComponent(id)}/duplicate`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, errors: json.errors };
+  return { ok: true, policy: json.policy };
+}
+
+export async function fetchWorkflowStates() {
+  if (USE_MOCK) {
+    return {
+      ok: true,
+      states: [
+        { id: 1, nome: 'Aberto', codigo: 'aberto', is_inicial: true, is_final: false },
+        { id: 2, nome: 'Em execução', codigo: 'emandamento', is_inicial: false, is_final: false },
+      ],
+    };
+  }
+  const r = await fetch(wfSlaPaths().states, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, states: [] };
+  return { ok: true, states: json.states || [] };
+}
+
+export async function fetchWorkflowTransitions() {
+  if (USE_MOCK) return { ok: true, transitions: [] };
+  const r = await fetch(wfSlaPaths().transitions, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, transitions: [] };
+  return { ok: true, transitions: json.transitions || [] };
+}
+
+export async function saveWorkflowTransition(body, id = null) {
+  if (USE_MOCK) return { ok: true, transition: { id: 1 } };
+  const url = id ? `${wfSlaPaths().transitionBase}${encodeURIComponent(id)}` : wfSlaPaths().transitions;
+  const r = await fetch(url, {
+    method: id ? 'PATCH' : 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, errors: json.errors };
+  return { ok: true, transition: json.transition };
+}
+
+export async function deleteWorkflowTransition(id) {
+  if (USE_MOCK) return { ok: true };
+  const r = await fetch(`${wfSlaPaths().transitionBase}${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText };
+  return { ok: true };
+}
+
+export async function fetchWorkflowSlaLogs(limit = 80) {
+  if (USE_MOCK) return { ok: true, logs: [] };
+  const r = await fetch(`${wfSlaPaths().logs}${qs({ limit })}`, {
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, logs: [] };
+  return { ok: true, logs: json.logs || [] };
+}
+
+export async function fetchWorkflowSlaEmpresas() {
+  if (USE_MOCK) return { ok: true, empresas: [{ id: 1, nome: 'PGM' }] };
+  const r = await fetch(wfSlaPaths().empresas, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) return { ok: false, empresas: [] };
+  return { ok: true, empresas: json.empresas || [] };
 }
 
 export { MOCK_SESSION_CLIENTE };

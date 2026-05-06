@@ -8,6 +8,7 @@ import ClientTicketDetail from "./pages/ClientTicketDetail.jsx";
 import ModuloBancos from "./pages/financeiro/ModuloBancos.jsx";
 import ParecerListPage from "./laudos/pages/ParecerListPage.jsx";
 import ParecerEditPage from "./laudos/pages/ParecerEditPage.jsx";
+import WorkflowSlaAdmin from "./components/workflowSla/WorkflowSlaAdmin.jsx";
 
 function EmbeddedTickets() {
     const boot = typeof window !== "undefined" ? window.__TICKETS_BOOT__ : null;
@@ -31,6 +32,8 @@ function EmbeddedTickets() {
             return <ParecerListPage boot={boot} />;
         case "laudos_edit":
             return <ParecerEditPage boot={boot} />;
+        case "tech_workflow_sla_admin":
+            return <WorkflowSlaAdmin boot={boot} />;
         default:
             return null;
     }

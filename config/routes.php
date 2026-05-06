@@ -517,6 +517,61 @@ Router::scope("/", function ($routes) {
         "controller" => "Servicedesk",
         "action" => "operacional",
     ]);
+    $routes->connect("/servicedesk/workflow-sla-admin", [
+        "controller" => "Servicedesk",
+        "action" => "workflowSlaAdmin",
+    ]);
+    $routes
+        ->connect("/servicedesk/workflow-sla", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSla",
+        ])
+        ->setMethods(["GET", "POST"]);
+    $routes
+        ->connect("/servicedesk/workflow-sla/:id/duplicate", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSlaDuplicate",
+            "id",
+        ], ["pass" => ["id"], "id" => "\d+"])
+        ->setMethods(["POST"]);
+    $routes
+        ->connect("/servicedesk/workflow-sla/:id", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSla",
+            "id",
+        ], ["pass" => ["id"], "id" => "\d+"])
+        ->setMethods(["GET", "PATCH", "DELETE"]);
+    $routes
+        ->connect("/servicedesk/workflow-states", [
+            "controller" => "Servicedesk",
+            "action" => "workflowStates",
+        ])
+        ->setMethods(["GET"]);
+    $routes
+        ->connect("/servicedesk/workflow-transitions", [
+            "controller" => "Servicedesk",
+            "action" => "workflowTransitions",
+        ])
+        ->setMethods(["GET", "POST"]);
+    $routes
+        ->connect("/servicedesk/workflow-transitions/:id", [
+            "controller" => "Servicedesk",
+            "action" => "workflowTransition",
+            "id",
+        ], ["pass" => ["id"], "id" => "\d+"])
+        ->setMethods(["PATCH", "DELETE"]);
+    $routes
+        ->connect("/servicedesk/workflow-sla-logs", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSlaLogs",
+        ])
+        ->setMethods(["GET"]);
+    $routes
+        ->connect("/servicedesk/workflow-sla-empresas", [
+            "controller" => "Servicedesk",
+            "action" => "workflowSlaEmpresasOptions",
+        ])
+        ->setMethods(["GET"]);
     // Precificação / Gestão de Preços
     $routes->connect("/produtos/estoque-pdf/*", [
         "controller" => "Produtos",

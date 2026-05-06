@@ -73,6 +73,9 @@ final class PgmSidebarStaffPayloadBuilder
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
             }
+            if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
+                $items[] = self::item('settings', ' Configurações: Workflow & SLA', ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'], ['data-turbo' => 'false'], (bool)($ctx['ticketsWorkflowSlaActive'] ?? false), '', 'Workflow e SLA');
+            }
             if (($sg['tickets_historico'] ?? true)) {
                 $items[] = self::item('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ctx['ticketsHistoricoActive'], '', 'Histórico');
             }

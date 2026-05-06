@@ -9,6 +9,8 @@ use Cake\Routing\Router;
  */
 class ServicedeskController extends TicketsController {
 
+	use ServicedeskWorkflowSlaTrait;
+
 	public function beforeFilter(Event $event) {
 		$this->Auth->allow(['index']);
 		parent::beforeFilter($event);
@@ -43,6 +45,18 @@ class ServicedeskController extends TicketsController {
 
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
+		if (in_array($action, [
+			'workflowSlaAdmin',
+			'workflowSla',
+			'workflowStates',
+			'workflowTransitions',
+			'workflowTransition',
+			'workflowSlaLogs',
+			'workflowSlaDuplicate',
+			'workflowSlaEmpresasOptions',
+		], true)) {
+			return !empty($user) && (int)$user['role'] === 0;
+		}
 		if ($action === 'operacional') {
 			return !empty($user) && (int)$user['role'] === 0;
 		}
@@ -102,6 +116,7 @@ class ServicedeskController extends TicketsController {
 				'indexTecnico' => $sd,
 				'indexCliente' => $sd,
 				'servicedeskUrl' => $sd,
+				'workflowSlaAdmin' => Router::url(['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin']),
 				'ticketsOperacional' => Router::url(['controller' => 'Servicedesk', 'action' => 'operacional']),
 				'addTicket' => Router::url(['controller' => 'Servicedesk', 'action' => 'add']),
 				'erpDashboard' => Router::url(['controller' => 'Users', 'action' => 'dashboard']),

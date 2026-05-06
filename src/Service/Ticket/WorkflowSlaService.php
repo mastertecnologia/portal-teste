@@ -3,6 +3,7 @@ namespace App\Service\Ticket;
 
 use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
+use Cake\I18n\FrozenTime;
 use Cake\I18n\Time;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -135,6 +136,13 @@ class WorkflowSlaService {
 		if ($toStateId <= 0 || $toStateId === $stateId) {
 			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
 		}
+		if ((int)$ticket->get('workflow_state_id') === $toStateId) {
+			return ['applied' => false, 'code' => 'skipped_already_at_target'];
+		}
+		$ticketCols = $this->safeColumns();
+		if (in_array('sla_escalated_at', $ticketCols, true) && $ticket->get('sla_escalated_at') !== null && $ticket->get('sla_escalated_at') !== '') {
+			return ['applied' => false, 'code' => 'skipped_already_escalated'];
+		}
 		$deadline = $this->readTime($ticket->get('data_limite_resolucao'));
 		if ($deadline === null) {
 			return ['applied' => false, 'code' => 'skipped_no_deadline'];
@@ -184,7 +192,7 @@ class WorkflowSlaService {
 		}
 		$legacySync = 'legacy_status_synced';
 		try {
-			$this->tickets->getConnection()->transactional(function () use ($ticket, $empresaId, $stateId, $toStateId, $workflow, $legacyProbe): void {
+			$this->tickets->getConnection()->transactional(function () use ($ticket, $empresaId, $stateId, $toStateId, $workflow, $legacyProbe, $ticketCols): void {
 				$workflow->applyTransition($ticket, $toStateId, $empresaId);
 				if ((int)$ticket->get('workflow_state_id') !== $toStateId) {
 					throw new \RuntimeException('legacy_transition_noop');
@@ -196,6 +204,11 @@ class WorkflowSlaService {
 				$changed = array_values(array_unique($ticket->getDirty()));
 				if ($changed === []) {
 					throw new \RuntimeException('no_dirty_after_escalation');
+				}
+				if (in_array('sla_escalated_at', $ticketCols, true)) {
+					$ticket->set('sla_escalated_at', FrozenTime::now());
+					$changed[] = 'sla_escalated_at';
+					$changed = array_values(array_unique($changed));
 				}
 				if (!$this->tickets->save($ticket, ['fields' => $changed, 'atomic' => false])) {
 					throw new \RuntimeException('save_failed_escalation');
@@ -223,6 +236,14 @@ class WorkflowSlaService {
 			return ['applied' => false, 'code' => 'skipped_transition_not_allowed', 'legacy_sync' => $legacySync];
 		}
 		$this->logEscalation((int)$ticket->get('id'), $empresaId, $stateId, $toStateId);
+		try {
+			$this->persistEscalationLogRow((int)$ticket->get('id'), $empresaId, $stateId, $toStateId, 'escalated');
+		} catch (\Throwable $e) {
+		}
+		try {
+			\Cake\Log\Log::info(sprintf('Ticket %d escalado por SLA (empresa=%d %d→%d)', (int)$ticket->get('id'), $empresaId, $stateId, $toStateId));
+		} catch (\Throwable $e) {
+		}
 
 		return ['applied' => true, 'code' => 'escalated', 'legacy_sync' => $legacySync];
 	}
@@ -472,5 +493,22 @@ class WorkflowSlaService {
 			));
 		} catch (\Throwable $e) {
 		}
+	}
+
+	protected function persistEscalationLogRow(int $ticketId, int $empresaId, int $fromStateId, int $toStateId, string $reasonCode): void {
+		try {
+			$logs = TableRegistry::get('WorkflowSlaEscalationLogs');
+		} catch (\Throwable $e) {
+			return;
+		}
+		$e = $logs->newEntity([
+			'ticket_id' => $ticketId,
+			'empresa_id' => $empresaId,
+			'workflow_state_from' => $fromStateId,
+			'workflow_state_to' => $toStateId,
+			'reason_code' => $reasonCode,
+			'created_at' => FrozenTime::now(),
+		]);
+		$logs->save($e);
 	}
 }

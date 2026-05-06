@@ -970,6 +970,35 @@ export default function TechDashboard({ boot }) {
               <div className="text-[1rem] font-bold">{Number(slaStateSummary.paused || 0)}</div>
             </div>
           </div>
+          {slaDashboard?.sla_operational_kpis ? (
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                ['Escalonados hoje', slaDashboard.sla_operational_kpis.escalados_hoje],
+                ['Tickets críticos', slaDashboard.sla_operational_kpis.criticos_abertos],
+                ['Sem técnico', slaDashboard.sla_operational_kpis.sem_tecnico],
+                ['Aguard. cliente', slaDashboard.sla_operational_kpis.aguardando_cliente],
+              ].map(([label, val]) => (
+                <div
+                  key={label}
+                  className="rounded-md border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-surface)] px-2.5 py-2 text-[0.72rem] text-[var(--pgm-text-secondary)]"
+                >
+                  <div className="text-[9px] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">{label}</div>
+                  <div className="text-[0.95rem] font-bold tabular-nums text-[var(--pgm-text)]">{Number(val || 0)}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {effectiveBoot?.paths?.workflowSlaAdmin && Number(effectiveBoot?.role) === 0 ? (
+            <div className="mt-2">
+              <a
+                href={effectiveBoot.paths.workflowSlaAdmin}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--pgm-primary-hover)] no-underline hover:underline"
+              >
+                Configurar SLA
+                <span aria-hidden>→</span>
+              </a>
+            </div>
+          ) : null}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[
               { key: 'all', label: 'Todos' },

@@ -132,7 +132,18 @@ class WorkflowService {
 		}
 		$codigo = $this->normalizeStateCodigo((string)$toState->codigo);
 		$oldSituacao = (int)($ticket->get('situacao') ?? 0);
-		$ticket->set('workflow_state_id', (int)$toState->id);
+		$prevWf = (int)($ticket->get('workflow_state_id') ?? 0);
+		$newWf = (int)$toState->id;
+		if ($prevWf !== $newWf) {
+			try {
+				$cols = $this->tickets->getSchema()->columns();
+				if (in_array('sla_escalated_at', $cols, true)) {
+					$ticket->set('sla_escalated_at', null);
+				}
+			} catch (\Throwable $e) {
+			}
+		}
+		$ticket->set('workflow_state_id', $newWf);
 		$ticket->set('situacao', $newSituacao);
 		// SLA antes do timer agregado em tickets.paused_at: retomada de SLA precisa da âncora
 		// (pendência) antes que applyOnSituacaoChange altere/remova paused_at.

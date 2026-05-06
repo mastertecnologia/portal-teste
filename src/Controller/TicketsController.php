@@ -3444,6 +3444,7 @@ class TicketsController extends AppController {
 			'paths' => [
 				'apiIndex' => $w . 'tickets/api-index',
 				'apiDashboardOperacional' => $w . 'tickets/api-dashboard-operacional',
+				'workflowSlaAdmin' => Router::url(['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin']),
 				'apiIndexCliente' => $w . 'tickets/api-index-cliente',
 				'apiView' => $w . 'tickets/api-view/',
 				'apiComments' => $w . 'tickets/api-comments/',
