@@ -144,6 +144,15 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		color: #64748b;
 		border: 1px solid rgba(15, 23, 42, 0.10);
 	}
+
+	/* Forca o Cancelar em vermelho mesmo com classes base de situacao. */
+	.os-edit-shell .os-btn-cancelar,
+	.os-edit-shell .os-btn-cancelar:hover,
+	.os-edit-shell .os-btn-cancelar:focus {
+		background-color: #dc3545 !important;
+		border-color: #dc3545 !important;
+		color: #fff !important;
+	}
 </style>
 <div class="col-md-12 p-0">
 	<div class="os-edit-shell form-material">
@@ -385,7 +394,7 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 					}
 					echo '</span>';
 					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Liberar para sincronização', ['action' => 'liberar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
-					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-danger m-r-5 m-t-20 float-right', 'style' => 'background-color:#dc3545;border-color:#dc3545;color:#fff;', 'data-turbo' => 'false']);
+					if ($ordem->situacao == C_OrdensSituacaoEmExecucao) echo $this->Html->link('Cancelar', ['action' => 'cancelar', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-danger os-btn-cancelar m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoLiberadaParaFaturamento) echo $this->Html->link('Voltar ordem', ['action' => 'pausar', $ordem->id], ['class' => 'btn btn-warning m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoAberta) echo $this->Html->link('Em execução', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
 					if ($ordem->situacao == C_OrdensSituacaoCancelada) echo $this->Html->link('Reabrir', ['action' => 'emexec', $ordem->id], ['class' => 'btn btn-pgm btn-pgm-salvar btn-success m-r-5 m-t-20 float-right', 'data-turbo' => 'false']);
