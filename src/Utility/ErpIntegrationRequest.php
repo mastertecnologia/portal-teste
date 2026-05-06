@@ -75,7 +75,7 @@ final class ErpIntegrationRequest
      */
     public static function applyCorsHeaders(
         Response $response,
-        ServerRequest $request,
+        ServerRequest $request
     ): Response {
         $allowOrigin = self::accessControlAllowOriginValue($request);
         if ($allowOrigin === null) {

@@ -398,7 +398,7 @@ class FinanceiroBancosTable extends Table
 
     public function listByEmpresa(
         int $idempresa,
-        bool $apenasAtivos = true,
+        bool $apenasAtivos = true
     ): array {
         $conditions = ["FinanceiroBancos.idempresa" => $idempresa];
         if ($apenasAtivos) {
