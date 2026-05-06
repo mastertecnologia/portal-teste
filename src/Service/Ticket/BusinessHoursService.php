@@ -63,6 +63,31 @@ class BusinessHoursService {
 	}
 
 	/**
+	 * Conta minutos úteis entre dois instantes, alinhado a {@see addBusinessMinutes()}.
+	 * Uso principal: diagnóstico CLI (-v). Não altera SLAs nem timers.
+	 */
+	public function countBusinessMinutesBetween(\DateTimeInterface $from, \DateTimeInterface $to, ?int $idempresa): int {
+		$fromT = $this->toImmutable($from)->getTimestamp();
+		$toT = $this->toImmutable($to)->getTimestamp();
+		if ($toT <= $fromT) {
+			return 0;
+		}
+		$lo = 0;
+		$hi = 527040;
+		while ($lo < $hi) {
+			$mid = (int)(($lo + $hi + 1) / 2);
+			$at = $this->addBusinessMinutes($from, $mid, $idempresa);
+			if ($at->getTimestamp() <= $toT) {
+				$lo = $mid;
+			} else {
+				$hi = $mid - 1;
+			}
+		}
+
+		return $lo;
+	}
+
+	/**
 	 * Se fim de semana/feriado, vai para o próximo dia útil às 08:00.
 	 */
 	protected function alignToWorkday(\DateTimeImmutable $cur, ?int $idempresa): \DateTimeImmutable {

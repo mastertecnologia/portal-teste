@@ -83,6 +83,15 @@ class CheckSlaEscalationShell extends Shell {
 					$escalated++;
 				}
 				$this->verbose(sprintf('ticket %s %s', $tid, (string)($r['code'] ?? 'skipped_processing_error')));
+				if (!empty($r['deadline_eval']) && is_array($r['deadline_eval'])) {
+					foreach ($r['deadline_eval'] as $k => $v) {
+						$this->verbose(sprintf(
+							'  %s=%s',
+							$k,
+							is_scalar($v) || $v === null ? (string)$v : '[non-scalar]'
+						));
+					}
+				}
 			} catch (\Throwable $e) {
 				$this->verbose(sprintf('CheckSlaEscalation skip ticket %s: %s', $tid, $e->getMessage()));
 			}

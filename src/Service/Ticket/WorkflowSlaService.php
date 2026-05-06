@@ -113,7 +113,7 @@ class WorkflowSlaService {
 	/**
 	 * Mesma avaliação e efeitos de {@see checkAndEscalate()}, com código de diagnóstico para jobs (-v).
 	 *
-	 * @return array{applied: bool, code: string}
+	 * @return array{applied: bool, code: string, deadline_eval?: array<string, scalar>}
 	 */
 	public function escalateIfDue(EntityInterface $ticket): array {
 		$empresaId = (int)($ticket->get('idempresa') ?? 0);
@@ -142,8 +142,20 @@ class WorkflowSlaService {
 		$afterMin = max(0, (int)($policy->escalate_after_minutos ?? 0));
 		$bhEsc = new BusinessHoursService();
 		$compareAt = $bhEsc->addBusinessMinutes($deadline, $afterMin, $empresaId);
-		if (Time::now()->getTimestamp() <= $compareAt->getTimestamp()) {
-			return ['applied' => false, 'code' => 'skipped_deadline_not_reached'];
+		$now = Time::now();
+		if ($now->getTimestamp() <= $compareAt->getTimestamp()) {
+			return [
+				'applied' => false,
+				'code' => 'skipped_deadline_not_reached',
+				'deadline_eval' => $this->describeDeadlineEvaluation(
+					$now,
+					$deadline,
+					$compareAt,
+					$afterMin,
+					$empresaId,
+					$bhEsc
+				),
+			];
 		}
 		$workflow = $this->workflowService ?: new WorkflowService($this->tickets, $this->slaService, $this);
 		$target = $workflow->getStateById($toStateId);
@@ -323,6 +335,51 @@ class WorkflowSlaService {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Explica skipped_deadline_not_reached para CLI -v (só leitura, não muda regra).
+	 *
+	 * @return array<string, scalar>
+	 */
+	protected function describeDeadlineEvaluation(
+		Time $now,
+		Time $deadlineOriginal,
+		Time $businessDeadline,
+		int $escalateAfterMinutos,
+		int $empresaId,
+		BusinessHoursService $bh
+	): array {
+		$nowTs = $now->getTimestamp();
+		$bizTs = $businessDeadline->getTimestamp();
+		$wallRem = $bizTs > $nowTs ? (int)floor(($bizTs - $nowTs) / 60) : 0;
+		$bizRem = null;
+		try {
+			$bizRem = $bh->countBusinessMinutesBetween($now, $businessDeadline, $empresaId);
+		} catch (\Throwable $e) {
+			$bizRem = '(indisponível: ' . $e->getMessage() . ')';
+		}
+
+		return [
+			'now' => $now->format('Y-m-d H:i:s'),
+			'deadline' => $deadlineOriginal->format('Y-m-d H:i:s'),
+			'business_deadline' => $businessDeadline->format('Y-m-d H:i:s'),
+			'escalate_after_minutos' => $escalateAfterMinutos,
+			'timezone' => BusinessHoursService::TIMEZONE . ' (php default: ' . date_default_timezone_get() . ')',
+			'business_hours_add_minutes' => sprintf(
+				'addBusinessMinutes(deadline=%s, after=%d, idempresa=%d)',
+				$deadlineOriginal->format('Y-m-d H:i:s'),
+				$escalateAfterMinutos,
+				$empresaId
+			),
+			'business_hours_result' => $businessDeadline->format('c'),
+			'idempresa' => $empresaId,
+			'now_ts' => $nowTs,
+			'business_deadline_ts' => $bizTs,
+			'decision' => $nowTs <= $bizTs ? 'now_ts<=business_deadline_ts (hold escalation)' : 'unexpected',
+			'wall_minutes_remaining' => $wallRem,
+			'business_minutes_remaining' => $bizRem,
+		];
 	}
 
 	protected function isWorkflowSlaEnabledForEmpresa(int $empresaId): bool {
