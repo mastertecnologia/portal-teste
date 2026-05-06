@@ -15,12 +15,11 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 <style>
 	.os-edit-shell #grid_table .jsgrid-grid-header,
 	.os-edit-shell #grid_table .jsgrid-grid-body {
-		overflow-x: hidden;
+		overflow-x: auto;
 		overflow-y: auto;
 	}
 
 	.jsgrid-cell {
-		height: 50px;
 		overflow: hidden;
 	}
 
@@ -38,6 +37,24 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 
 	.hide {
 		display: none !important;
+	}
+
+	.os-edit-shell .os-add-bloco {
+		border: 1px solid #e4e9ef;
+		border-radius: 6px;
+		padding: 16px 18px;
+		margin-bottom: 18px;
+		background: #fff;
+	}
+
+	.os-edit-shell .os-add-bloco-produtos {
+		padding-bottom: 8px;
+		margin-bottom: 10px;
+	}
+
+	.os-edit-shell .os-add-section-title {
+		font-size: 16px;
+		font-weight: 600;
 	}
 
 	.os-edit-stack-gap {
@@ -248,10 +265,10 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 							<?= $this->Form->textarea('observacao', ['maxlength' => 200, 'placeholder' => 'Observação', 'class' => 'form-control', 'label' => false, 'required' => false, 'rows' => 3]) ?>
 						</div>
 					</div>
-					<!-- Mobile -->
-					<h4 class="os-edit-section-title text-center">Adicionar Produtos/Serviços</h4>
-					<?php if (isMobile() && $disabled == false) { ?>
-						<div class="row">
+					<div class="os-add-bloco os-add-bloco-produtos">
+						<h4 class="text-center os-add-section-title m-t-0">Produtos e serviços</h4>
+						<?php if (isMobile() && $disabled == false) { ?>
+							<div class="row">
 							<div class="col-3">
 								<label class="control-label text-muted">Código</label>
 								<?= $this->Form->control('codproduto', ['data-live-search' => true, 'options' => $produtosMobile, 'title' => 'Código', 'class' => 'inputMobile form-control selectpicker p-0', 'label' => false, 'disabled' => $disabled]) ?>
@@ -299,14 +316,15 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 									<datalist id="listaSN"> </datalist>
 								</div>
 							</div>
-						</div>
-						<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20', 'disabled' => $disabled]) ?>
-					<?php } ?>
+							</div>
+							<?= $this->Html->link('Adicionar item', [], ['class' => 'btn btn-pgm btn-pgm-situacao btn-info btn-additem m-b-20', 'disabled' => $disabled]) ?>
+						<?php } ?>
 					<?= $this->Form->end() ?>
 					<!-- jsGrid fora do form da OS (evita submit acidental). Campos abaixo: form="form-os-edit". -->
 					<div id="grid_table"></div>
 					<?= '<h5 class="text-right text-success font-weight-bold m-r-15 valortotalordem"> </h5>' ?>
 					<input type="hidden" name="valortotalordem" id="valortotalordem" value="<?= h($ordem->valortotalordem ?? '') ?>" form="form-os-edit">
+					</div>
 
 					<?php
 					$problemaSelecionadoLabel = isset($problemas[$ordem->idproblema]) ? trim((string)$problemas[$ordem->idproblema]) : '';
@@ -1218,26 +1236,32 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 				name: "tipo",
 				title: "Tipo",
 				type: "select",
-				width: 96,
+				align: "left",
+				width: 110,
 				items: tiposOptGridItems,
 				valueField: "value",
 				textField: "text",
 				editing: false,
-				insertcss: 'cellInput inputTipo',
-				editcss: "editTipo"
+				css: 'os-col-tipo',
+				headercss: 'os-col-tipo',
+				insertcss: 'cellInput inputTipo os-col-tipo',
+				editcss: "editTipo os-col-tipo",
+				itemTemplate: function(value) {
+					var lbl = osEditTipoLabelBrowse(value);
+					return $('<span class="os-grid-ro-plain os-grid-ro-plain--tipo"></span>').text(lbl || '—');
+				}
 			},
 			{
 				name: "codproduto",
-				title: "Código do Produto",
+				title: "Cód. Produto",
 				type: "text",
-				width: 188,
-				css: 'inputCodproduto',
+				align: "left",
+				width: 150,
+				css: 'inputCodproduto os-col-cod',
+				headercss: 'os-col-cod',
 				validate: "required",
 				itemTemplate: function(value) {
-					var item = produtosOpt.find(function(produto) {
-						return produto.codigo == value;
-					});
-					return item ? item.descricao : value;
+					return osEditBrowseCodProdutoCell(value);
 				},
 					insertTemplate: function() {
 						var $input = $("<input>").attr("type", "text").addClass("form-control input-codigo-val");
@@ -1326,24 +1350,45 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 				name: "descricao",
 				title: "Descrição",
 				type: "text",
-				width: "auto",
+				align: "left",
+				width: 380,
 				editing: false,
 				headercss: "os-col-desc",
-				css: "os-cell-desc",
-				insertcss: "cellInput inputDescricao os-cell-desc",
-				editcss: "editDescricao os-cell-desc"
+				css: "os-cell-desc os-col-desc",
+				insertcss: "cellInput inputDescricao os-cell-desc os-col-desc",
+				editcss: "editDescricao os-cell-desc os-col-desc",
+				itemTemplate: function(value) {
+					var t = value != null ? String(value) : '';
+					return $('<span class="os-grid-ro-plain os-grid-ro-plain--desc"></span>').text(t);
+				}
 			},
 
 			{
 				name: "observacao",
-				title: "Referenciar",
+				title: "Ref.",
 				type: "text",
-				align: "center",
-				width: 118,
+				align: "left",
+				width: 120,
+				css: 'os-cell-ref os-col-ref',
+				headercss: 'os-col-ref',
+				insertcss: 'cellInput inputObservacao os-col-ref',
+				editcss: 'editObservacao os-col-ref',
 				itemTemplate: function(value, item) {
-					return $("<div>")
-						.addClass("btn btn-sm btn-link os-edit-ref-link")
-						.html('<i class="fa fa-file-text-o"></i> Referenciar')
+					var raw = '';
+					if (value != null && String(value).trim() !== '') {
+						raw = String(value).trim();
+					}
+					var hasMeta = !!(item && (item.modelo || item.serialnumber || item.productkey || item.obsinterna));
+					var label = 'Detalhes';
+					if (raw.length > 0) {
+						label = raw.length > 28 ? raw.substr(0, 25) + '\u2026' : raw;
+					} else if (hasMeta) {
+						label = 'Detalhes';
+					}
+					return $('<button type="button" class="btn btn-sm btn-outline-secondary os-grid-ref-pill os-edit-ref-link"/>')
+						.text(label)
+						.attr('title', 'Detalhes do item')
+						.attr('aria-label', 'Abrir detalhes do item')
 						.on("click", function(e) {
 							e.stopPropagation();
 							$('#observacaomodal').val(item.observacao);
@@ -1383,45 +1428,75 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 
 			{
 				name: "unidade",
-				title: "Unidade",
+				title: "Unid.",
 				type: "text",
-				width: 56,
+				align: "center",
+				width: 70,
 				editing: false,
-				insertcss: 'cellInput inputUnidade',
-				editcss: "editUnidade"
+				css: 'os-col-unid',
+				headercss: 'os-col-unid',
+				insertcss: 'cellInput inputUnidade os-col-unid',
+				editcss: "editUnidade os-col-unid",
+				itemTemplate: function(value) {
+					return $('<span class="os-grid-ro-plain os-grid-ro-plain--center"></span>').text(value != null && String(value).trim() !== '' ? String(value).trim() : '—');
+				}
 			},
 			{
 				name: "quantidade",
 				title: "Qtde",
 				type: "text",
-				width: 60,
-				insertcss: 'cellInput inputQuantidade',
-				editcss: "editQuantidade"
+				align: "right",
+				width: 80,
+				css: 'os-col-qtde',
+				headercss: 'os-col-qtde',
+				insertcss: 'cellInput inputQuantidade os-col-qtde',
+				editcss: "editQuantidade os-col-qtde",
+				itemTemplate: function(value) {
+					return osEditReadonlyGridInput(value, true);
+				}
 			},
 			{
 				name: "valorunitario",
 				title: "Vl. Unit.",
 				type: "text",
-				width: 88,
-				insertcss: 'cellInput inputValorunitario',
-				editcss: "editValorunitario"
+				align: "right",
+				width: 110,
+				css: 'os-col-vlun',
+				headercss: 'os-col-vlun',
+				insertcss: 'cellInput inputValorunitario os-col-vlun',
+				editcss: "editValorunitario os-col-vlun",
+				itemTemplate: function(value) {
+					return osEditReadonlyGridInput(value, true);
+				}
 			},
 			{
 				name: "valordesconto",
-				title: "Desc.",
+				title: "Vl. Desc.",
 				type: "text",
-				width: 88,
-				insertcss: 'cellInput inputValordesconto',
-				editcss: "editValordesconto"
+				align: "right",
+				width: 110,
+				css: 'os-col-vld',
+				headercss: 'os-col-vld',
+				insertcss: 'cellInput inputValordesconto os-col-vld',
+				editcss: "editValordesconto os-col-vld",
+				itemTemplate: function(value) {
+					return osEditReadonlyGridInput(value, true);
+				}
 			},
 			{
 				name: "valortotal",
 				title: "Total",
 				type: "text",
-				width: 82,
+				align: "right",
+				width: 110,
 				editing: true,
-				insertcss: 'cellInput inputValortotal',
-				editcss: "editValortotal"
+				css: 'os-col-total',
+				headercss: 'os-col-total',
+				insertcss: 'cellInput inputValortotal os-col-total',
+				editcss: "editValortotal os-col-total",
+				itemTemplate: function(value) {
+					return osEditReadonlyGridInput(value, true);
+				}
 			},
 			{
 				name: "modelo",
@@ -1676,6 +1751,56 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 			return numero.join(',');
 		}
 	}
+
+function osEditFmtNumBrInput(v) {
+	if (v === null || v === undefined || v === '') {
+		return '';
+	}
+	var n = parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
+	if (isNaN(n)) {
+		return String(v);
+	}
+	return numberToReal(n);
+}
+
+function osEditReadonlyGridInput(val, alignRight) {
+	var $i = $('<input type="text" readonly tabindex="-1">')
+		.addClass('form-control form-control-sm os-grid-display-input');
+	if (alignRight) {
+		$i.addClass('text-right');
+	}
+	$i.val(osEditFmtNumBrInput(val));
+	return $i;
+}
+
+function osEditBrowseCodProdutoCell(cod) {
+	var v = cod != null && cod !== '' ? String(cod) : '';
+	var $input = $('<input type="text" readonly tabindex="-1">')
+		.addClass('form-control input-codigo-val os-grid-display-input')
+		.val(v);
+	var $btn = $('<button type="button" tabindex="-1">')
+		.addClass('btn btn-secondary btn-sm os-grid-cod-search--browse')
+		.prop('disabled', true)
+		.html('<i class="fa fa-search"></i>')
+		.attr('title', 'Edite o item (lápis) para alterar o código ou pesquisar');
+	return $('<div class="input-group"/>').append($input).append($('<div class="input-group-append"/>').append($btn));
+}
+
+function osEditTipoLabelBrowse(tipo) {
+	var t = String(tipo);
+	var o = tiposOpt;
+	if (o && typeof o === 'object' && o[t] !== undefined && o[t] !== null) {
+		return String(o[t]);
+	}
+	if (Array.isArray(tiposOptGridItems)) {
+		for (var i = 0; i < tiposOptGridItems.length; i++) {
+			if (String(tiposOptGridItems[i].value) === t) {
+				return String(tiposOptGridItems[i].text);
+			}
+		}
+	}
+	return tipo != null && t !== '' && t !== 'undefined' ? t : '';
+}
 
 	function serialnumbers(codproduto) {
 		$('#listaSN').html('');
