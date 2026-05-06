@@ -391,6 +391,7 @@ trait ServicedeskWorkflowSlaTrait {
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', 'Workflow & SLA');
 		$this->set('hideLayoutPageTitle', true);
+		$this->set('hideServicedeskOpenTicketCta', true);
 		$w = rtrim((string)$this->request->getAttribute('webroot'), '/') . '/';
 		$this->set('reactAppExtraCss', [$w . 'dist/css/pages/pgm-servicedesk-premium.css']);
 		$this->set('reactAppBreadcrumbs', [

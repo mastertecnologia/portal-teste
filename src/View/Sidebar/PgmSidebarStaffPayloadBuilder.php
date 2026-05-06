@@ -68,7 +68,7 @@ final class PgmSidebarStaffPayloadBuilder
         if ($sgIncGrp) {
             $items = [];
             if (($sg['tickets_servicedesk'] ?? true)) {
-                $items[] = self::item('headphones', ' Service Desk', ['controller' => 'Servicedesk', 'action' => 'index'], ['target' => '_blank', 'rel' => 'noopener noreferrer'], $ctx['ticketsServicedeskActive'], '<span class="badge badge-danger hide-menu">12</span>', 'Service Desk');
+                $items[] = self::item('headphones', ' Service Desk', ['controller' => 'Servicedesk', 'action' => 'index'], ['data-turbo' => 'false'], $ctx['ticketsServicedeskActive'], '<span class="badge badge-danger hide-menu">12</span>', 'Service Desk');
             }
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
