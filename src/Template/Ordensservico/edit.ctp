@@ -206,6 +206,15 @@ $osTiposComEstoqueErp = [(int)$tipoProdutoMercadoriaOs];
 		font-weight: 700;
 		font-size: 18px;
 		line-height: 1;
+		width: 30px;
+		height: 30px;
+		padding: 0 !important;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background-image: none !important;
+		text-indent: 0 !important;
+		overflow: hidden;
 	}
 </style>
 <div class="col-md-12 p-0">
