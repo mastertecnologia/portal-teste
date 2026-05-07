@@ -46,6 +46,21 @@ function rowSnapshot(ticket) {
   return { ...ticket };
 }
 
+function workflowStateForUi(state) {
+  if (!state) return null;
+  const id = Number(state.id);
+  if (!Number.isFinite(id) || id <= 0) return null;
+  const code = state.codigo ?? state.code ?? state.slug ?? '';
+  const label = String(state.label || '').trim();
+  const normalized = { ...state, codigo: code };
+  return {
+    value: String(id),
+    label: label || workflowTransitionPatchStatusLabel(normalized),
+    workflowStateId: id,
+    statusLabel: workflowTransitionPatchStatusLabel(normalized),
+  };
+}
+
 /**
  * Células editáveis (técnico, fila, status, prioridade) + timer do ticket.
  * PATCH assignment: apenas { tecnico_id, fila_id } — fila só com técnico (regra da API).
@@ -102,17 +117,19 @@ export default function TicketsServicedeskInlineRow({
 
   const useWorkflowStatus =
     ticket?.workflow?.enabled === true &&
-    workflowOptions.length > 0 &&
     ticket?.workflow?.current?.id != null;
 
   const statusOptions = useMemo(() => {
     if (useWorkflowStatus) {
-      return workflowOptions.map((o) => ({
-        value: String(o.id),
-        label: String(o.label || ''),
-        workflowStateId: Number(o.id),
-        statusLabel: workflowTransitionPatchStatusLabel(o),
-      }));
+      const current = workflowStateForUi(ticket?.workflow?.current);
+      const currentId = current ? current.workflowStateId : 0;
+      const options = current ? [current] : [];
+      for (const o of workflowOptions) {
+        const next = workflowStateForUi(o);
+        if (!next || next.workflowStateId === currentId) continue;
+        options.push(next);
+      }
+      return options;
     }
     const p = ticketStatus?.pendente;
     const e = ticketStatus?.emandamento;
@@ -124,7 +141,7 @@ export default function TicketsServicedeskInlineRow({
     if (r != null) opts.push({ value: 'Resolvido', code: r });
     if (f != null) opts.push({ value: 'Fechado', code: f });
     return opts;
-  }, [ticketStatus, useWorkflowStatus, workflowOptions]);
+  }, [ticketStatus, useWorkflowStatus, workflowOptions, ticket]);
 
   const currentStatusCode = Number(ticket.situacao);
   const statusValue = useMemo(() => {
