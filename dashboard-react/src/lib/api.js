@@ -1258,23 +1258,45 @@ function wfSlaAbsUrl(u, webrootNorm) {
   return `${webrootNorm}${t.replace(/^\//, '')}`;
 }
 
+/**
+ * Garante path absoluto no site (evita POST relativo a partir de /portal/servicedesk/… virar …/servicedesk/servicedesk/…).
+ */
+function wfSlaAbsolutePathFromBoot(boot, relativeOrAbsolute) {
+  const t = (relativeOrAbsolute || '').trim();
+  if (!t) return null;
+  if (t.startsWith('http://') || t.startsWith('https://')) return t.replace(/\/+$/, '');
+  if (t.startsWith('/')) return t.replace(/\/+$/, '');
+  const w = normalizeWebrootForFetch(boot?.webroot);
+  return `${w}${t.replace(/^\//, '')}`.replace(/\/+$/, '');
+}
+
 /** Lista de políticas: usa só `boot.paths.workflowSlaPolicies` quando definido (evita duplicar webroot). */
 function wfSlaPolicyListUrl(boot) {
   const v = typeof boot?.paths?.workflowSlaPolicies === 'string' ? boot.paths.workflowSlaPolicies.trim() : '';
-  if (v) return v.replace(/\/+$/, '');
+  if (v) {
+    const abs = wfSlaAbsolutePathFromBoot(boot, v);
+    return abs ? abs.replace(/\/+$/, '') : v.replace(/\/+$/, '');
+  }
   return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla-policies`.replace(/\/+$/, '');
 }
 
 function wfSlaPolicyBaseFromBoot(boot) {
   const v = typeof boot?.paths?.workflowSlaPolicyBase === 'string' ? boot.paths.workflowSlaPolicyBase.trim() : '';
-  if (v) return v.endsWith('/') ? v : `${v}/`;
+  if (v) {
+    const abs = wfSlaAbsolutePathFromBoot(boot, v);
+    const u = abs || v;
+    return u.endsWith('/') ? u : `${u}/`;
+  }
   return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla/`;
 }
 
 /** Empresas da sessão: só `boot.paths.workflowSlaEmpresas` quando definido. */
 function wfSlaEmpresasUrl(boot) {
   const v = typeof boot?.paths?.workflowSlaEmpresas === 'string' ? boot.paths.workflowSlaEmpresas.trim() : '';
-  if (v) return v.replace(/\/+$/, '');
+  if (v) {
+    const abs = wfSlaAbsolutePathFromBoot(boot, v);
+    return abs ? abs.replace(/\/+$/, '') : v.replace(/\/+$/, '');
+  }
   return `${normalizeWebrootForFetch(boot?.webroot)}servicedesk/workflow-sla-empresas`.replace(/\/+$/, '');
 }
 
@@ -1295,6 +1317,76 @@ function wfSlaPaths() {
 }
 
 /** Id inteiro > 0 ou null (criação / id ausente ou inválido — evita PATCH em …/undefined). */
+function snippetResponseBody(s, max = 320) {
+  const t = String(s || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return t.length > max ? `${t.slice(0, max)}…` : t;
+}
+
+/**
+ * Interpreta resposta do CRUD de políticas SLA (JSON, HTML ou corpo inválido).
+ * @returns {Promise<object>}
+ */
+async function parseWorkflowSlaPolicyResponse(r, url, method) {
+  let text = '';
+  try {
+    text = await r.text();
+  } catch (_) {
+    text = '';
+  }
+  const meta = {
+    httpStatus: r.status,
+    statusText: r.statusText || '',
+    requestUrl: url,
+    requestMethod: method || '',
+  };
+  let body = {};
+  if (text && text.trim()) {
+    try {
+      body = JSON.parse(text);
+    } catch (_) {
+      const line1 = snippetResponseBody((text.split('\n')[0] || text).trim(), 220);
+      return {
+        ok: false,
+        ...meta,
+        responseBodySnippet: snippetResponseBody(text),
+        error: 'non_json',
+        errorMessages: [
+          `HTTP ${r.status} — resposta não é JSON válido${line1 ? ` (${line1})` : ''}`,
+        ],
+      };
+    }
+  }
+  const businessOk = body && body.ok === true;
+  if (!r.ok || !businessOk) {
+    const msgs = [];
+    if (Array.isArray(body.error_messages)) msgs.push(...body.error_messages);
+    if (body.error_message) msgs.push(body.error_message);
+    if (msgs.length === 0 && body.error) msgs.push(String(body.error));
+    if (msgs.length === 0) msgs.push(`HTTP ${r.status} ${meta.statusText}`.trim());
+    const sn = snippetResponseBody(text);
+    const hasServerMsgs = Array.isArray(body.error_messages) && body.error_messages.length > 0;
+    if (sn && !hasServerMsgs) {
+      msgs.push(sn);
+    }
+    return {
+      ok: false,
+      ...meta,
+      responseBodySnippet: sn,
+      error: body.error,
+      errorMessage: body.error_message,
+      errors: body.errors,
+      errorMessages: [...new Set(msgs.filter(Boolean))],
+    };
+  }
+  return {
+    ok: true,
+    policy: body.policy,
+    ...meta,
+  };
+}
+
 export function normalizeWorkflowSlaPolicyId(id) {
   if (id === null || id === undefined || id === '') return null;
   if (typeof id === 'string') {
@@ -1305,6 +1397,7 @@ export function normalizeWorkflowSlaPolicyId(id) {
   if (!Number.isFinite(n) || n <= 0) return null;
   return n;
 }
+
 
 export async function fetchWorkflowSlaPolicies(filters = {}) {
   if (USE_MOCK) {
@@ -1366,17 +1459,7 @@ export async function createWorkflowSlaPolicy(body) {
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) {
-    return {
-      ok: false,
-      error: json.error || r.statusText,
-      errorMessage: json.error_message,
-      errors: json.errors,
-      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
-    };
-  }
-  return { ok: true, policy: json.policy };
+  return parseWorkflowSlaPolicyResponse(r, url, 'POST');
 }
 
 /** PATCH atualização — `…/workflow-sla/{id}` com id inteiro > 0. */
@@ -1400,17 +1483,7 @@ export async function updateWorkflowSlaPolicy(id, body) {
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) {
-    return {
-      ok: false,
-      error: json.error || r.statusText,
-      errorMessage: json.error_message,
-      errors: json.errors,
-      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
-    };
-  }
-  return { ok: true, policy: json.policy };
+  return parseWorkflowSlaPolicyResponse(r, url, 'PATCH');
 }
 
 /** @deprecated Prefer {@link createWorkflowSlaPolicy} / {@link updateWorkflowSlaPolicy}. */

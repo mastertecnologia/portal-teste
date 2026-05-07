@@ -20,12 +20,9 @@ import WorkflowTransitionList from './WorkflowTransitionList.jsx';
 const toolbarField =
   'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)]';
 
-/** Junta error_messages, error_message e errors do backend em texto único para a UI. */
+/** Junta error_messages, error_message, HTTP e trecho de corpo para a UI. */
 function formatWorkflowSlaApiFailure(r, opts = {}) {
   if (!r || r.ok) return '';
-  if (opts.isCreate && r.error === 'not_found') {
-    return 'Não foi possível criar a política (resposta inesperada do servidor). Atualize a página e tente de novo.';
-  }
   const parts = [];
   if (Array.isArray(r.errorMessages) && r.errorMessages.length) parts.push(...r.errorMessages);
   if (r.errorMessage) parts.push(r.errorMessage);
@@ -42,8 +39,21 @@ function formatWorkflowSlaApiFailure(r, opts = {}) {
     }
   }
   if (!parts.length && r.error) parts.push(String(r.error));
+  if (typeof r.httpStatus === 'number') {
+    const line = `HTTP ${r.httpStatus}${r.statusText ? ` ${r.statusText}` : ''}`;
+    if (!parts.some((p) => String(p).includes(String(r.httpStatus)))) parts.push(line);
+  }
+  if (r.requestUrl && typeof r.requestUrl === 'string') {
+    parts.push(`URL: ${r.requestUrl}`);
+  }
+  if (r.responseBodySnippet && typeof r.responseBodySnippet === 'string' && r.responseBodySnippet.trim()) {
+    parts.push(`Resposta: ${r.responseBodySnippet.trim()}`);
+  }
+  if (opts.isCreate && r.error === 'not_found' && parts.length <= 2) {
+    parts.unshift('Falha ao criar (404). Verifique se o POST usa /servicedesk/workflow-sla-policies com path absoluto.');
+  }
   const u = [...new Set(parts.filter(Boolean))];
-  return u.length ? u.join(' ') : 'Erro ao processar solicitação';
+  return u.length ? u.join(' — ') : 'Erro ao processar solicitação';
 }
 
 function wfSdHomeUrl(b) {

@@ -258,6 +258,19 @@ trait ServicedeskWorkflowSlaTrait {
 		}
 	}
 
+	protected function _wfWorkflowStateNome(int $stateId): string {
+		if ($stateId <= 0) {
+			return '';
+		}
+		$stt = $this->_wfStatesTable();
+		if ($stt === null) {
+			return '';
+		}
+		$r = $stt->find()->select(['nome'])->where(['id' => $stateId])->first();
+
+		return $r ? trim((string)$r->nome) : '';
+	}
+
 	protected function _wfSerializePolicy($row): array {
 		if (!$row) {
 			return [];
@@ -438,7 +451,13 @@ trait ServicedeskWorkflowSlaTrait {
 					]);
 				}
 				if (!$tq->first()) {
-					$errs[] = 'escalate_to_transicao_invalida';
+					$fn = $this->_wfWorkflowStateNome($wfSid);
+					$tn = $this->_wfWorkflowStateNome($escTo);
+					$errs[] = sprintf(
+						'Não existe transição configurada de %s para %s.',
+						$fn !== '' ? $fn : ('estado #' . $wfSid),
+						$tn !== '' ? $tn : ('estado #' . $escTo)
+					);
 				}
 			}
 		}
@@ -589,33 +608,45 @@ trait ServicedeskWorkflowSlaTrait {
 				}
 			}
 			if ($this->request->is('post')) {
-				$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
-				[$ok, $errs] = $this->_wfValidatePolicyPayload($body, null);
-				if (!$ok) {
-					return $this->jsonResponse($this->_wfPolicyValidationErrorResponse($errs), 422);
-				}
-				$autoOn = !empty($body['auto_escalar']);
-				$respIn = $body['resposta_minutos'] ?? null;
-				$resoIn = $body['resolucao_minutos'] ?? null;
-				$ent = $table->newEntity([
-					'empresa_id' => !empty($body['is_global']) ? null : (int)$body['empresa_id'],
-					'workflow_state_id' => (int)$body['workflow_state_id'],
-					'resposta_minutos' => ($respIn === null || $respIn === '') ? null : (int)$respIn,
-					'resolucao_minutos' => ($resoIn === null || $resoIn === '') ? null : (int)$resoIn,
-					'pausa_sla' => !empty($body['pausa_sla']),
-					'is_final' => !empty($body['is_final']),
-					'auto_escalar' => $autoOn,
-					'escalate_to_state_id' => $autoOn && !empty($body['escalate_to_state_id']) ? (int)$body['escalate_to_state_id'] : null,
-					'escalate_after_minutos' => $autoOn ? (isset($body['escalate_after_minutos']) ? (int)$body['escalate_after_minutos'] : 0) : 0,
-					'created_at' => FrozenTime::now(),
-					'updated_at' => FrozenTime::now(),
-				]);
-				if (!$table->save($ent)) {
-					return $this->jsonResponse($this->_wfPolicySaveErrorResponse($ent->getErrors()), 422);
-				}
-				$ent = $table->get($ent->id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
+				try {
+					$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
+					[$ok, $errs] = $this->_wfValidatePolicyPayload($body, null);
+					if (!$ok) {
+						return $this->jsonResponse($this->_wfPolicyValidationErrorResponse($errs), 422);
+					}
+					$autoOn = !empty($body['auto_escalar']);
+					$respIn = $body['resposta_minutos'] ?? null;
+					$resoIn = $body['resolucao_minutos'] ?? null;
+					$ent = $table->newEntity([
+						'empresa_id' => !empty($body['is_global']) ? null : (int)$body['empresa_id'],
+						'workflow_state_id' => (int)$body['workflow_state_id'],
+						'resposta_minutos' => ($respIn === null || $respIn === '') ? null : (int)$respIn,
+						'resolucao_minutos' => ($resoIn === null || $resoIn === '') ? null : (int)$resoIn,
+						'pausa_sla' => !empty($body['pausa_sla']),
+						'is_final' => !empty($body['is_final']),
+						'auto_escalar' => $autoOn,
+						'escalate_to_state_id' => $autoOn && !empty($body['escalate_to_state_id']) ? (int)$body['escalate_to_state_id'] : null,
+						'escalate_after_minutos' => $autoOn ? (isset($body['escalate_after_minutos']) ? (int)$body['escalate_after_minutos'] : 0) : 0,
+						'created_at' => FrozenTime::now(),
+						'updated_at' => FrozenTime::now(),
+					]);
+					if (!$table->save($ent)) {
+						return $this->jsonResponse($this->_wfPolicySaveErrorResponse($ent->getErrors()), 422);
+					}
+					$ent = $table->get($ent->id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
 
-				return $this->jsonResponse(['ok' => true, 'policy' => $this->_wfSerializePolicy($ent)], 201);
+					return $this->jsonResponse(['ok' => true, 'policy' => $this->_wfSerializePolicy($ent)], 201);
+				} catch (\Throwable $e) {
+					Log::warning('workflowSla POST create: ' . $e->getMessage());
+					$detail = Configure::read('debug') ? $e->getMessage() : 'Erro interno ao gravar a política.';
+
+					return $this->jsonResponse([
+						'ok' => false,
+						'error' => 'server_error',
+						'error_message' => 'Erro ao gravar a política.',
+						'error_messages' => [$detail],
+					], 500);
+				}
 			}
 		} else {
 			$id = (int)$id;
