@@ -298,7 +298,7 @@ class WorkflowSlaService {
 			'autoEscalate' => (bool)$policy->auto_escalar && (int)$policy->escalate_to_state_id > 0,
 			'isOverdue' => $isOverdue,
 			'remainingMinutes' => $remainingMin,
-			'totalMinutes' => (int)($ticket->get('sla_resolucao_minutos') ?? 0),
+			'totalMinutes' => $this->slaResolucaoTotalMinutesForUi($ticket, $policy),
 		];
 	}
 
@@ -338,6 +338,19 @@ class WorkflowSlaService {
 		}
 		$ticket->set($field, $value);
 		$changed[] = $field;
+	}
+
+	/**
+	 * Minutos de resolução para o cartão SLA na UI: política do estado em vigor;
+	 * se não houver valor na política, usa o campo do ticket (compatível com dados antigos).
+	 */
+	protected function slaResolucaoTotalMinutesForUi(EntityInterface $ticket, EntityInterface $policy): int {
+		$rawPolicy = $policy->get('resolucao_minutos');
+		if ($rawPolicy !== null && $rawPolicy !== '') {
+			return max(0, (int)$rawPolicy);
+		}
+
+		return max(0, (int)($ticket->get('sla_resolucao_minutos') ?? 0));
 	}
 
 	protected function findPolicy(int $empresaId, int $stateId) {
