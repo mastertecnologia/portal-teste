@@ -442,11 +442,18 @@ trait ServicedeskWorkflowSlaTrait {
 		if ($auto && $escTo === $wfSid) {
 			$errs[] = 'escalate_to_igual_origem';
 		}
+		/*
+		 * Estado final como destino: permitido por padrão sempre que houver transição em workflow_transitions
+		 * (ex.: Em execução → Resolvido). Bloqueio só ocorre se Workflow.disallowEscalateToFinalInSlaPolicy=true (opt-in).
+		 * Mantém Workflow.allowEscalateToFinalInSlaPolicy como override legado.
+		 */
 		if ($escTo > 0) {
 			$stt = $this->_wfStatesTable();
-			if ($stt) {
+			$blockFinal = (bool)Configure::read('Workflow.disallowEscalateToFinalInSlaPolicy', false);
+			$legacyAllow = (bool)Configure::read('Workflow.allowEscalateToFinalInSlaPolicy', true);
+			if ($stt && $blockFinal && !$legacyAllow) {
 				$target = $stt->find()->where(['id' => $escTo])->first();
-				if ($target && !empty($target->is_final) && !Configure::read('Workflow.allowEscalateToFinalInSlaPolicy', false)) {
+				if ($target && !empty($target->is_final)) {
 					$errs[] = 'escalate_to_final_nao_permitido';
 				}
 			}

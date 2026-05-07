@@ -17,8 +17,10 @@ function empresaOptionLabel(e) {
 }
 
 /**
- * Estados permitidos como destino do auto-escalonamento: transição from→to existente
- * (global ou da empresa), exclui o próprio estado e estados finais (alinha ao backend padrão).
+ * Estados permitidos como destino do auto-escalonamento: qualquer transição from→to existente
+ * em workflow_transitions (transição global empresa_id NULL vale para todas as empresas).
+ * Não remove estados is_final — se a transição existe (ex.: Em execução → Resolvido), o destino aparece.
+ * Exclui apenas o próprio estado de origem.
  */
 function allowedEscalateStateIds(form, transitions, states) {
   const from = Number(form.workflow_state_id);
@@ -37,11 +39,9 @@ function allowedEscalateStateIds(form, transitions, states) {
       })
       .map((t) => Number(t.to_state_id));
   } else {
-    toIds = (states || []).filter((s) => Number(s.id) !== from && !s.is_final).map((s) => Number(s.id));
+    toIds = (states || []).filter((s) => Number(s.id) !== from).map((s) => Number(s.id));
   }
-  const uniq = [...new Set(toIds.filter((x) => Number.isFinite(x) && x > 0 && x !== from))];
-  const nonFinal = new Set((states || []).filter((s) => !s.is_final).map((s) => Number(s.id)));
-  return uniq.filter((id) => nonFinal.has(id));
+  return [...new Set(toIds.filter((x) => Number.isFinite(x) && x > 0 && x !== from))];
 }
 
 function buildPreview(form, empresas, states) {
@@ -319,7 +319,7 @@ export default function WorkflowSlaPolicyForm({ empresas, states, transitions = 
             </select>
             {showTransHint ? (
               <p className="mt-1 text-xs text-[var(--pgm-text-muted)]">
-                Não há transição (global ou desta empresa) saindo deste estado. Configure na aba Transições.
+                Nenhuma transição configurada para este estado. Cadastre em workflow_transitions (aba Transições).
               </p>
             ) : null}
           </label>
