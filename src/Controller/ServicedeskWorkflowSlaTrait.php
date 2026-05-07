@@ -343,6 +343,7 @@ trait ServicedeskWorkflowSlaTrait {
 			'escalate_to_final_nao_permitido' => 'Não é permitido escalar para um estado final.',
 			'escalate_to_transicao_invalida' => 'Não existe transição de workflow do estado atual para o destino escolhido (global ou da empresa).',
 			'escalate_after_negativo' => 'Tolerância após vencimento não pode ser negativa.',
+			'estado_final_auto_escalar_conflito' => 'Um estado final não pode auto-escalar. Desmarque Estado final ou Auto-escalar.',
 			'duplicado_estado_empresa' => 'Já existe política para esta empresa e estado.',
 			'duplicado_estado_global' => 'Já existe política global para este estado.',
 			'tabela_indisponivel' => 'Tabela de políticas indisponível no servidor.',
@@ -432,6 +433,10 @@ trait ServicedeskWorkflowSlaTrait {
 			}
 		}
 		$auto = !empty($data['auto_escalar']);
+		$isFinal = !empty($data['is_final']);
+		if ($auto && $isFinal) {
+			$errs[] = 'estado_final_auto_escalar_conflito';
+		}
 		$escTo = 0;
 		if ($auto) {
 			$escTo = isset($data['escalate_to_state_id']) ? (int)$data['escalate_to_state_id'] : 0;

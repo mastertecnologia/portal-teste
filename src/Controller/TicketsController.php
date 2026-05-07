@@ -4330,28 +4330,46 @@ class TicketsController extends AppController {
 		if (empty($ticket)) {
 			return false;
 		}
-		$cols = $this->Tickets->getSchema()->columns();
-		$rid = 0;
-		if (in_array('idtecnico_responsavel', $cols, true)) {
-			$rid = (int)($ticket->idtecnico_responsavel ?? 0);
-		}
-		if ($rid <= 0 && in_array('owner_id', $cols, true)) {
-			$rid = (int)($ticket->owner_id ?? 0);
-		}
-		if ($rid <= 0) {
+		$ticketId = (int)($ticket->id ?? 0);
+		$qid = (int)($ticket->queue_id ?? 0);
+		if ($ticketId <= 0 || $qid <= 0 || !$this->_queuesRelacionalReady()) {
 			return false;
 		}
-		if (in_array('queue_id', $cols, true) && $this->_queuesRelacionalReady()) {
-			return (int)($ticket->queue_id ?? 0) > 0;
-		}
-		$fila = trim((string)($ticket->fila_suporte ?? ''));
-		if ($fila === '' || $fila === '-') {
+		$links = $this->Ticketsusers->find()
+			->select(['iduser'])
+			->where(['idticket' => $ticketId])
+			->toArray();
+		if (empty($links)) {
 			return false;
 		}
-		if (in_array('nivel_atendimento', $cols, true) && (int)($ticket->nivel_atendimento ?? 0) <= 0) {
+		$userIds = [];
+		foreach ($links as $l) {
+			$uid = (int)($l->iduser ?? 0);
+			if ($uid > 0) {
+				$userIds[] = $uid;
+			}
+		}
+		$userIds = array_values(array_unique($userIds));
+		if ($userIds === []) {
 			return false;
 		}
-		return true;
+		$qu = $this->QueuesUsers->find()
+			->select(['id'])
+			->where(['queue_id' => $qid, 'user_id IN' => $userIds])
+			->first();
+		return !empty($qu);
+	}
+
+	protected function _ticketPrimaryLinkedUserId(int $ticketId): int {
+		if ($ticketId <= 0) {
+			return 0;
+		}
+		$link = $this->Ticketsusers->find()
+			->select(['iduser'])
+			->where(['idticket' => $ticketId])
+			->order(['id' => 'ASC'])
+			->first();
+		return $link ? (int)($link->iduser ?? 0) : 0;
 	}
 
 	protected function _supportLevelName(?int $levelId): string {
@@ -4959,6 +4977,9 @@ class TicketsController extends AppController {
 		$canonicalResp = (int)($reg->idtecnico_responsavel ?? 0);
 		if ($canonicalResp <= 0 && isset($reg->owner_id) && $reg->owner_id !== null && $reg->owner_id !== '') {
 			$canonicalResp = (int)$reg->owner_id;
+		}
+		if ($canonicalResp <= 0) {
+			$canonicalResp = $this->_ticketPrimaryLinkedUserId((int)$id);
 		}
 		$row['idtecnico_responsavel'] = $canonicalResp > 0 ? $canonicalResp : null;
 		$row['owner_id'] = $canonicalResp > 0 ? $canonicalResp : null;

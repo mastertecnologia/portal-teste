@@ -159,6 +159,10 @@ export default function WorkflowSlaPolicyForm({ empresas, states, transitions = 
         return;
       }
     }
+    if (form.auto_escalar && form.is_final) {
+      setFormError('Um estado final não pode auto-escalar. Desmarque Estado final ou Auto-escalar.');
+      return;
+    }
 
     const autoOn = !!form.auto_escalar;
     const afterMin =

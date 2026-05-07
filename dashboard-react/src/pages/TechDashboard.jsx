@@ -94,7 +94,14 @@ function workflowCodeToLabel(code) {
 }
 
 function hasValidTecnico(ticket) {
-  const id = Number(ticket?.idtecnico_responsavel ?? ticket?.owner_id ?? 0);
+  const id = Number(
+    ticket?.idtecnico_responsavel
+    ?? ticket?.tecnico_id
+    ?? ticket?.iduser
+    ?? ticket?.tecnico?.id
+    ?? ticket?.owner_id
+    ?? 0,
+  );
   return Number.isFinite(id) && id > 0;
 }
 
@@ -962,7 +969,7 @@ export default function TechDashboard({ boot }) {
   const handleStartAtendimento = async (ticket) => {
     const id = Number(ticket.id);
     if (!hasValidTecnico(ticket) || !hasValidFila(ticket)) {
-      window.alert('Selecione um técnico e uma fila válidos antes de iniciar o atendimento.');
+      window.alert('Salve o técnico e a fila antes de iniciar o atendimento.');
       return;
     }
     setStartBusyId(id);
@@ -985,6 +992,7 @@ export default function TechDashboard({ boot }) {
         const friendly = API_ERR_START[code];
         const detail = r.message ? ` (${r.message})` : '';
         window.alert((friendly || code || 'Não foi possível iniciar o atendimento.') + detail);
+        await reload();
         return;
       }
       if (r.ticket) {
