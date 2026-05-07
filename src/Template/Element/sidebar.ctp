@@ -172,6 +172,7 @@
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
+						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', ['controller' => 'Servicedesk', 'action' => 'slaRelatorio'], ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];

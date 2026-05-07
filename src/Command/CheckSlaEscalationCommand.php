@@ -1,7 +1,9 @@
 <?php
 namespace App\Command;
 
+use App\Service\Ticket\SlaRecalculationService;
 use App\Service\Ticket\SlaService;
+use App\Service\Ticket\TicketSlaCycleService;
 use App\Service\Ticket\WorkflowSlaService;
 use App\Utility\Ticket\SlaEscalationBatch;
 use Cake\Command\Command;
@@ -108,9 +110,21 @@ class CheckSlaEscalationCommand extends Command {
 							));
 						}
 					}
+					if (!empty($r['escalation']) && is_array($r['escalation'])) {
+						$io->verbose(sprintf('  escalation=%s', json_encode($r['escalation'], JSON_UNESCAPED_UNICODE)));
+					}
 				}
 			} catch (\Throwable $e) {
 				$io->verbose(sprintf('CheckSlaEscalation skip ticket %s: %s', $tid, $e->getMessage()));
+			}
+			try {
+				$recalc = new SlaRecalculationService($tickets);
+				$cols = $tickets->getSchema()->columns();
+				$st = $recalc->evaluateSlaState($ticket, $cols);
+				if (!empty($st['violado_for_cycle'])) {
+					(new TicketSlaCycleService($tickets))->ensureOverdueEventForViolatedTicket($ticket, true);
+				}
+			} catch (\Throwable $e) {
 			}
 		}
 

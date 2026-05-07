@@ -339,6 +339,20 @@ Router::scope("/", function ($routes) {
         ->setMethods(["POST", "PUT"]);
     $routes
         ->connect(
+            "/tickets/api-sla-pause/*",
+            ["controller" => "Tickets", "action" => "apiTicketSlaPause"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-sla-resume/*",
+            ["controller" => "Tickets", "action" => "apiTicketSlaResume"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
             "/tickets/:id/assignment",
             ["controller" => "Tickets", "action" => "apiPatchAssignment"],
             ["pass" => ["id"], "id" => "\d+"],
@@ -1807,6 +1821,12 @@ Router::scope("/", function ($routes) {
         ["controller" => "ContractManagement", "action" => "index"],
         ["status" => 302],
     );
+    $routes
+        ->connect("/modulo-contratos/sla-api/:id", [
+            "controller" => "ContractManagement",
+            "action" => "contractSlaApi",
+        ], ["pass" => ["id"], "id" => "\d+"])
+        ->setMethods(["GET", "POST"]);
     $routes
         ->connect("/modulo-contratos/exportar", [
             "controller" => "ContractManagement",

@@ -320,6 +320,11 @@ trait ServicedeskWorkflowSlaTrait {
 			'escalate_to_state_id' => $row->escalate_to_state_id !== null ? (int)$row->escalate_to_state_id : null,
 			'escalate_to_nome' => $toSt ? (string)$toSt->nome : null,
 			'escalate_after_minutos' => $row->escalate_after_minutos !== null ? (int)$row->escalate_after_minutos : 0,
+			'escalate_to_queue_id' => $row->get('escalate_to_queue_id') !== null && $row->get('escalate_to_queue_id') !== '' ? (int)$row->escalate_to_queue_id : null,
+			'escalate_to_support_level_id' => $row->get('escalate_to_support_level_id') !== null && $row->get('escalate_to_support_level_id') !== '' ? (int)$row->escalate_to_support_level_id : null,
+			'notify_manager' => (bool)($row->get('notify_manager') ?? false),
+			'notify_customer' => (bool)($row->get('notify_customer') ?? false),
+			'notify_technician' => (bool)($row->get('notify_technician') ?? false),
 			'created_at' => $row->created_at ? $row->created_at->format('c') : null,
 			'updated_at' => $row->updated_at ? $row->updated_at->format('c') : null,
 		];
@@ -338,7 +343,7 @@ trait ServicedeskWorkflowSlaTrait {
 			'workflow_state_obrigatorio' => 'Selecione o estado do workflow.',
 			'resposta_minutos_negativo' => 'Minutos de resposta não podem ser negativos.',
 			'resolucao_minutos_negativo' => 'Minutos de resolução não podem ser negativos.',
-			'escalate_to_obrigatorio' => 'Com auto-escalar ativo, informe o estado de destino.',
+			'escalate_to_obrigatorio' => 'Com auto-escalar ativo, informe estado de destino, fila, nível e/ou ao menos uma notificação.',
 			'escalate_to_igual_origem' => 'O destino do escalonamento não pode ser o mesmo estado atual.',
 			'escalate_to_final_nao_permitido' => 'Não é permitido escalar para um estado final.',
 			'escalate_to_transicao_invalida' => 'Não existe transição de workflow do estado atual para o destino escolhido (global ou da empresa).',
@@ -441,10 +446,14 @@ trait ServicedeskWorkflowSlaTrait {
 		if ($auto) {
 			$escTo = isset($data['escalate_to_state_id']) ? (int)$data['escalate_to_state_id'] : 0;
 		}
-		if ($auto && $escTo <= 0) {
+		$escQueue = $auto ? (int)($data['escalate_to_queue_id'] ?? 0) : 0;
+		$escLevel = $auto ? (int)($data['escalate_to_support_level_id'] ?? 0) : 0;
+		$hasNotify = $auto && (!empty($data['notify_manager']) || !empty($data['notify_customer']) || !empty($data['notify_technician']));
+		$hasRoute = $escTo > 0 || $escQueue > 0 || $escLevel > 0;
+		if ($auto && !$hasRoute && !$hasNotify) {
 			$errs[] = 'escalate_to_obrigatorio';
 		}
-		if ($auto && $escTo === $wfSid) {
+		if ($auto && $escTo > 0 && $escTo === $wfSid) {
 			$errs[] = 'escalate_to_igual_origem';
 		}
 		/*
@@ -659,6 +668,11 @@ trait ServicedeskWorkflowSlaTrait {
 						'is_final' => !empty($body['is_final']),
 						'auto_escalar' => $autoOn,
 						'escalate_to_state_id' => $autoOn && !empty($body['escalate_to_state_id']) ? (int)$body['escalate_to_state_id'] : null,
+						'escalate_to_queue_id' => $autoOn && !empty($body['escalate_to_queue_id']) ? (int)$body['escalate_to_queue_id'] : null,
+						'escalate_to_support_level_id' => $autoOn && !empty($body['escalate_to_support_level_id']) ? (int)$body['escalate_to_support_level_id'] : null,
+						'notify_manager' => $autoOn && !empty($body['notify_manager']),
+						'notify_customer' => $autoOn && !empty($body['notify_customer']),
+						'notify_technician' => $autoOn && !empty($body['notify_technician']),
 						'escalate_after_minutos' => $autoOn ? (isset($body['escalate_after_minutos']) ? (int)$body['escalate_after_minutos'] : 0) : 0,
 						'created_at' => FrozenTime::now(),
 						'updated_at' => FrozenTime::now(),
@@ -718,12 +732,31 @@ trait ServicedeskWorkflowSlaTrait {
 					? !empty($body['is_global'])
 					: ($row->empresa_id === null || $row->empresa_id === '');
 				$escToPatch = null;
+				$escQueuePatch = null;
+				$escLevelPatch = null;
+				$notifyMgrPatch = false;
+				$notifyCliPatch = false;
+				$notifyTecPatch = false;
 				if ($autoOn) {
 					if (array_key_exists('escalate_to_state_id', $body) && $body['escalate_to_state_id'] !== '' && $body['escalate_to_state_id'] !== null) {
 						$escToPatch = (int)$body['escalate_to_state_id'];
 					} else {
 						$escToPatch = $row->escalate_to_state_id !== null ? (int)$row->escalate_to_state_id : null;
 					}
+					if (array_key_exists('escalate_to_queue_id', $body) && $body['escalate_to_queue_id'] !== '' && $body['escalate_to_queue_id'] !== null) {
+						$escQueuePatch = (int)$body['escalate_to_queue_id'];
+					} else {
+						$escQueuePatch = $row->get('escalate_to_queue_id') !== null && $row->get('escalate_to_queue_id') !== '' ? (int)$row->escalate_to_queue_id : null;
+					}
+					if (array_key_exists('escalate_to_support_level_id', $body) && $body['escalate_to_support_level_id'] !== '' && $body['escalate_to_support_level_id'] !== null) {
+						$escLevelPatch = (int)$body['escalate_to_support_level_id'];
+					} else {
+						$lv = $row->get('escalate_to_support_level_id');
+						$escLevelPatch = $lv !== null && $lv !== '' ? (int)$lv : null;
+					}
+					$notifyMgrPatch = array_key_exists('notify_manager', $body) ? (bool)$body['notify_manager'] : (bool)($row->get('notify_manager') ?? false);
+					$notifyCliPatch = array_key_exists('notify_customer', $body) ? (bool)$body['notify_customer'] : (bool)($row->get('notify_customer') ?? false);
+					$notifyTecPatch = array_key_exists('notify_technician', $body) ? (bool)$body['notify_technician'] : (bool)($row->get('notify_technician') ?? false);
 				}
 				$escAfterPatch = $autoOn
 					? (array_key_exists('escalate_after_minutos', $body) ? (int)$body['escalate_after_minutos'] : (int)($row->escalate_after_minutos ?? 0))
@@ -739,6 +772,11 @@ trait ServicedeskWorkflowSlaTrait {
 					'is_final' => array_key_exists('is_final', $body) ? (bool)$body['is_final'] : $row->is_final,
 					'auto_escalar' => array_key_exists('auto_escalar', $body) ? (bool)$body['auto_escalar'] : $row->auto_escalar,
 					'escalate_to_state_id' => $escToPatch,
+					'escalate_to_queue_id' => $escQueuePatch,
+					'escalate_to_support_level_id' => $escLevelPatch,
+					'notify_manager' => $notifyMgrPatch,
+					'notify_customer' => $notifyCliPatch,
+					'notify_technician' => $notifyTecPatch,
 					'escalate_after_minutos' => $escAfterPatch,
 					'updated_at' => FrozenTime::now(),
 				]);
@@ -973,9 +1011,12 @@ trait ServicedeskWorkflowSlaTrait {
 		$eidSession = $this->_wfSessionEmpresaId();
 		$limit = (int)$this->request->getQuery('limit', 80);
 		$limit = max(1, min(200, $limit));
-		$rows = $logs->find()
-			->where(['empresa_id' => $eidSession])
-			->order(['created_at' => 'DESC', 'id' => 'DESC'])
+		$ticketFilter = (int)$this->request->getQuery('ticket_id', 0);
+		$q = $logs->find()->where(['empresa_id' => $eidSession]);
+		if ($ticketFilter > 0) {
+			$q->where(['ticket_id' => $ticketFilter]);
+		}
+		$rows = $q->order(['created_at' => 'DESC', 'id' => 'DESC'])
 			->limit($limit)
 			->all();
 		$out = [];
@@ -1031,6 +1072,11 @@ trait ServicedeskWorkflowSlaTrait {
 			'is_final' => (bool)$row->is_final,
 			'auto_escalar' => (bool)$row->auto_escalar,
 			'escalate_to_state_id' => $row->escalate_to_state_id,
+			'escalate_to_queue_id' => $row->get('escalate_to_queue_id'),
+			'escalate_to_support_level_id' => $row->get('escalate_to_support_level_id'),
+			'notify_manager' => (bool)($row->get('notify_manager') ?? false),
+			'notify_customer' => (bool)($row->get('notify_customer') ?? false),
+			'notify_technician' => (bool)($row->get('notify_technician') ?? false),
 			'escalate_after_minutos' => $row->escalate_after_minutos,
 			'created_at' => FrozenTime::now(),
 			'updated_at' => FrozenTime::now(),

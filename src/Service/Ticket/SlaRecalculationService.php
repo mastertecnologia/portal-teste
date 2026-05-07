@@ -55,29 +55,33 @@ class SlaRecalculationService {
 	}
 
 	/**
+	 * Avalia violação e percentual sem persistir.
+	 *
 	 * @param \Cake\Datasource\EntityInterface $ticket
-	 * @param string[] $cols
+	 * @param string[]|null $cols
+	 * @return array{violado: bool, violado_for_cycle: bool, pct: float, status: string}
 	 */
-	public function recalculateOne($ticket, array $cols = null): bool {
+	public function evaluateSlaState($ticket, ?array $cols = null): array {
 		$cols = $cols ?? $this->tickets->getSchema()->columns();
+		$default = ['violado' => false, 'violado_for_cycle' => false, 'pct' => 0.0, 'status' => 'dentro_sla'];
 		if (!in_array('sla_status', $cols, true)) {
-			return false;
+			return $default;
 		}
 
 		if (!empty($ticket->get('sla_resolucao_pausado'))) {
-			return false;
+			return $default;
 		}
 
 		$now = Time::now();
 		$created = $this->toTime($ticket->get('created'));
 		if ($created === null) {
-			return false;
+			return $default;
 		}
 
 		$resM = (int)($ticket->get('sla_resolucao_minutos') ?? 0);
 		$respM = (int)($ticket->get('sla_resposta_minutos') ?? 0);
 		if ($resM <= 0) {
-			return false;
+			return $default;
 		}
 
 		$deadlineRes = $this->toTime($ticket->get('data_limite_resolucao'));
@@ -116,6 +120,21 @@ class SlaRecalculationService {
 			$violado = true;
 		}
 
+		$violadoForCycle = false;
+		if (!$isClosed) {
+			if ($deadlineRes !== null && $now > $deadlineRes) {
+				$violadoForCycle = true;
+			}
+			if ($firstResp === null && $deadlineResp !== null && $now > $deadlineResp) {
+				$violadoForCycle = true;
+			}
+		} else {
+			$resolv = in_array('data_resolucao', $cols, true) ? $this->toTime($ticket->get('data_resolucao')) : null;
+			if ($resolv !== null && $deadlineRes !== null && $resolv > $deadlineRes) {
+				$violadoForCycle = true;
+			}
+		}
+
 		if ($isClosed) {
 			$resolv = in_array('data_resolucao', $cols, true) ? $this->toTime($ticket->get('data_resolucao')) : null;
 			if ($resolv !== null && $deadlineRes !== null) {
@@ -134,13 +153,55 @@ class SlaRecalculationService {
 			$status = 'em_risco';
 		}
 
-		$ticket->set('sla_percentual_consumido', $pct);
-		$ticket->set('sla_status', $status);
+		return [
+			'violado' => $violado,
+			'violado_for_cycle' => $violadoForCycle,
+			'pct' => $pct,
+			'status' => $status,
+		];
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface $ticket
+	 * @param string[] $cols
+	 */
+	public function recalculateOne($ticket, array $cols = null): bool {
+		$cols = $cols ?? $this->tickets->getSchema()->columns();
+		if (!in_array('sla_status', $cols, true)) {
+			return false;
+		}
+
+		if (!empty($ticket->get('sla_resolucao_pausado'))) {
+			return false;
+		}
+
+		$resM = (int)($ticket->get('sla_resolucao_minutos') ?? 0);
+		if ($resM <= 0) {
+			return false;
+		}
+		$created = $this->toTime($ticket->get('created'));
+		if ($created === null) {
+			return false;
+		}
+
+		$state = $this->evaluateSlaState($ticket, $cols);
+
+		$ticket->set('sla_percentual_consumido', $state['pct']);
+		$ticket->set('sla_status', $state['status']);
 
 		$saveFields = ['sla_percentual_consumido', 'sla_status'];
 		$saveFields = array_values(array_intersect($saveFields, $cols));
 
-		return (bool)$this->tickets->save($ticket, ['fields' => $saveFields]);
+		$ok = (bool)$this->tickets->save($ticket, ['fields' => $saveFields]);
+		if ($ok && !empty($state['violado_for_cycle'])) {
+			try {
+				$cycleSvc = new TicketSlaCycleService($this->tickets);
+				$cycleSvc->ensureOverdueEventForViolatedTicket($ticket, true);
+			} catch (\Throwable $e) {
+			}
+		}
+
+		return $ok;
 	}
 
 	/**

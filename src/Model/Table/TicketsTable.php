@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Table;
 
+use App\Service\Ticket\TicketSlaFlowService;
 use App\Utility\SupportInboxMail;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
@@ -203,6 +204,7 @@ class TicketsTable extends Table {
 	 *     só existe um beforeSave; combinar sempre aqui.
 	 */
 	public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
+		$options['_slaWasNew'] = $entity->isNew();
 		$cols = $this->getSchema()->columns();
 		$hasOwner = in_array('owner_id', $cols, true);
 		$hasTec = in_array('idtecnico_responsavel', $cols, true);
@@ -210,6 +212,40 @@ class TicketsTable extends Table {
 			$tid = $entity->idtecnico_responsavel;
 			$uid = ($tid !== null && $tid !== '' && (int)$tid > 0) ? (int)$tid : null;
 			$entity->owner_id = $uid;
+		}
+		if (empty($options['skipTicketSlaFlow']) && $this->_ticketSlaCyclesTableExists()) {
+			if (!$entity->isNew() && (int)($entity->id ?? 0) > 0) {
+				try {
+					$slaFields = [
+						'id',
+						'idempresa',
+						'workflow_state_id',
+						'queue_id',
+						'idtecnico_responsavel',
+						'owner_id',
+						'problema_id',
+						'idproblema',
+						'contract_id',
+						'contract_service_id',
+						'data_primeira_resposta',
+						'situacao',
+					];
+					$slaFields = array_values(array_intersect($slaFields, $cols));
+					if (!in_array('id', $slaFields, true)) {
+						$slaFields[] = 'id';
+					}
+					if (in_array('idempresa', $cols, true) && !in_array('idempresa', $slaFields, true)) {
+						$slaFields[] = 'idempresa';
+					}
+					$options['_slaPrev'] = $this->get($entity->id, [
+						'fields' => $slaFields,
+					]);
+				} catch (\Throwable $e) {
+					$options['_slaPrev'] = null;
+				}
+			} else {
+				$options['_slaPrev'] = null;
+			}
 		}
 		if (!empty($options['skipTicketEventAudit'])) {
 			return true;
@@ -237,6 +273,12 @@ class TicketsTable extends Table {
 	}
 
 	public function afterSave(Event $event, EntityInterface $entity, ArrayObject $options) {
+		try {
+			$flow = new TicketSlaFlowService($this);
+			$flow->afterTicketSaved($entity, $options);
+		} catch (\Throwable $e) {
+			$this->log('TicketsTable::afterSave TicketSlaFlow: ' . $e->getMessage(), 'warning');
+		}
 		if (!empty($options['skipTicketEventAudit'])) {
 			return;
 		}
@@ -332,6 +374,21 @@ class TicketsTable extends Table {
 		}
 		// CLI / filas: sem sessão
 		return null;
+	}
+
+	protected function _ticketSlaCyclesTableExists(): bool {
+		static $y;
+		if ($y !== null) {
+			return $y;
+		}
+		try {
+			$c = \Cake\Datasource\ConnectionManager::get('default')->getSchemaCollection();
+			$y = in_array('ticket_sla_cycles', $c->listTables(), true);
+		} catch (\Throwable $e) {
+			$y = false;
+		}
+
+		return $y;
 	}
 
 	protected function _ticketEventsTableExists(): bool {

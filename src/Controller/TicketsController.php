@@ -14,6 +14,8 @@ use App\Service\Ticket\TicketAttendimentoTimerService;
 use App\Service\Ticket\TicketClassificationService;
 use App\Service\Ticket\WorkflowService;
 use App\Service\Ticket\WorkflowSlaService;
+use App\Service\Ticket\TicketSlaCycleService;
+use App\Service\Ticket\TicketSlaDetailService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
@@ -93,6 +95,8 @@ class TicketsController extends AppController {
 			'apiStartTicket',
 			'startTicket',
 			'apiTimer',
+			'apiTicketSlaPause',
+			'apiTicketSlaResume',
 			'apiAlterarSituacao',
 			'apiPatchAssignment',
 			'apiPatchTicketStatus',
@@ -3532,6 +3536,8 @@ class TicketsController extends AppController {
 				'apiComments' => $w . 'tickets/api-comments/',
 				'apiSaveTicket' => $w . 'tickets/api-save/',
 				'apiTimer' => $w . 'tickets/api-timer/',
+				'apiSlaPause' => $w . 'tickets/api-sla-pause/',
+				'apiSlaResume' => $w . 'tickets/api-sla-resume/',
 				'apiAuditValidate' => $w . 'api/audit/validate',
 				'apiSetUserAuditPassword' => $w . 'users/api-set-user-audit-password',
 				'apiAlterarSituacao' => $w . 'tickets/api-alterar-situacao/',
@@ -5438,6 +5444,11 @@ class TicketsController extends AppController {
 		if ($assuntoNome === '' || $assuntoNome === '0') {
 			$assuntoNome = 'Não informado';
 		}
+		$snap = $this->_apiSlaSnapshotForTicket($ticket);
+		$wfPayload = $snap['workflow'];
+		$slaByState = $snap['slaByState'];
+		$slaDetail = $snap['slaDetail'];
+
 		return [
 			'id' => (int)$ticket->id,
 			'assunto_nome' => $assuntoNome,
@@ -5470,6 +5481,9 @@ class TicketsController extends AppController {
 					&& (int)$ticket->situacao !== (int)C_TicketSituacaoFechado,
 			],
 			'horasTecnicas' => $this->_apiHorasTecnicasPayload((int)$idticket, $ticket),
+			'workflow' => $wfPayload,
+			'slaByState' => $slaByState,
+			'slaDetail' => $slaDetail,
 		];
 	}
 
@@ -6713,6 +6727,106 @@ class TicketsController extends AppController {
 		$status = $result['ok'] ? 200 : 400;
 
 		return $this->jsonResponse($payload, $status);
+	}
+
+	/**
+	 * Pausa SLA (ciclo ticket_sla_cycles + relógios do ticket).
+	 */
+	public function apiTicketSlaPause($idticket = null) {
+		return $this->_apiTicketSlaPauseResume((string)$idticket, true);
+	}
+
+	/**
+	 * Retoma SLA após pausa manual.
+	 */
+	public function apiTicketSlaResume($idticket = null) {
+		return $this->_apiTicketSlaPauseResume((string)$idticket, false);
+	}
+
+	/**
+	 * @param string $pause true = pausar, false = retomar
+	 */
+	protected function _apiTicketSlaPauseResume($idticket, bool $pause) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$tid = (int)$idticket;
+		if ($tid <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'bad_request'], 400);
+		}
+		$qTm = $this->Tickets->find()->where(['id' => $tid]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$uid = (int)$this->Auth->user('id');
+		$cycleSvc = new TicketSlaCycleService($this->Tickets);
+		if ($pause) {
+			if (!$cycleSvc->pauseCycle($tid, $empresa, $uid)) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'pause_failed',
+					'message' => __('Não foi possível pausar: verifique se há ciclo SLA aberto.'),
+				], 400);
+			}
+			$this->_ticketWorkflowSlaService()->manualPauseClocks($ticket);
+		} else {
+			if (!$cycleSvc->resumeCycle($tid, $empresa, $uid)) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'resume_failed',
+					'message' => __('Não foi possível retomar: ciclo não está pausado.'),
+				], 400);
+			}
+			$this->_ticketWorkflowSlaService()->manualResumeClocks($ticket);
+			$cycleSvc->syncOpenCycleAfterResumeFromTicket($ticket, $uid);
+		}
+		try {
+			if (!$this->Tickets->save($ticket, ['skipTicketSlaFlow' => true])) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+			}
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_exception'], 500);
+		}
+		$ticket = $this->Tickets->get($tid);
+		$snap = $this->_apiSlaSnapshotForTicket($ticket);
+
+		return $this->jsonResponse([
+			'ok' => true,
+			'workflow' => $snap['workflow'],
+			'slaByState' => $snap['slaByState'],
+			'slaDetail' => $snap['slaDetail'],
+		]);
+	}
+
+	/**
+	 * @param \Cake\Datasource\EntityInterface $ticket
+	 * @return array{workflow: array, slaByState: array, slaDetail: array}
+	 */
+	protected function _apiSlaSnapshotForTicket($ticket): array {
+		$wfPayload = $this->_ticketWorkflowPayloadForRow($ticket);
+		$slaByState = (array)($wfPayload['slaByState'] ?? []);
+		$slaDetSvc = new TicketSlaDetailService();
+		$slaDetail = $slaDetSvc->build($ticket, (int)$this->Auth->user('idempresa'), $slaByState);
+		$tidForLog = (int)($ticket->id ?? 0);
+		$slaDetail['urls']['workflowSlaAdmin'] = Router::url(['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin']);
+		$slaDetail['urls']['workflowSlaLogs'] = $tidForLog > 0
+			? Router::url(['controller' => 'Servicedesk', 'action' => 'workflowSlaLogs', '?' => ['ticket_id' => $tidForLog]])
+			: Router::url(['controller' => 'Servicedesk', 'action' => 'workflowSlaLogs']);
+		$slaDetail['actions'] = $slaDetSvc->computeActions($ticket, $slaByState, $slaDetail['cycleOpen'], (int)$this->Auth->user('role'));
+
+		return [
+			'workflow' => $wfPayload,
+			'slaByState' => $slaByState,
+			'slaDetail' => $slaDetail,
+		];
 	}
 
 	/**

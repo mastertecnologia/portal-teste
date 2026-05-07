@@ -61,22 +61,35 @@ final class SlaEscalationBatch {
 		$query = $tickets->find()
 			->where(['idempresa >' => 0]);
 
-		$closed = self::closedSituacoes();
-		$hasWf = self::hasWorkflowStateColumn($tickets);
-		if ($closed !== []) {
-			if ($hasWf) {
+		try {
+			$cols = $tickets->getSchema()->columns();
+			if (in_array('sla_escalated_at', $cols, true)) {
 				$query->where([
 					'OR' => [
-						['situacao NOT IN' => $closed],
-						[
-							'workflow_state_id IS NOT' => null,
-							'workflow_state_id >' => 0,
-						],
+						['sla_escalated_at IS' => null],
+						['sla_escalated_at' => ''],
 					],
 				]);
-			} else {
-				$query->where(['situacao NOT IN' => $closed]);
 			}
+			if (in_array('data_limite_resolucao', $cols, true)) {
+				$query->where(['data_limite_resolucao IS NOT' => null]);
+			}
+			if (in_array('sla_resolucao_pausado', $cols, true)) {
+				$query->where([
+					'OR' => [
+						['sla_resolucao_pausado IS' => null],
+						['sla_resolucao_pausado' => false],
+					],
+				]);
+			}
+		} catch (\Throwable $e) {
+		}
+
+		// Somente tickets “abertos” no legado (situacao). O OR anterior incluía qualquer ticket
+		// com workflow_state_id > 0 mesmo quando situacao já era resolvido/fechado — risco de escalar fechados.
+		$closed = self::closedSituacoes();
+		if ($closed !== []) {
+			$query->where(['situacao NOT IN' => $closed]);
 		}
 
 		try {
@@ -99,21 +112,16 @@ final class SlaEscalationBatch {
 			return sprintf('modo_diagnostico ticket_id=%d (sem filtro situacao / limite 1000)', $onlyTicketId);
 		}
 		$closed = self::closedSituacoes();
-		$hasWf = self::hasWorkflowStateColumn($tickets);
 		$parts = ['idempresa>0'];
 		if ($closed === []) {
 			$parts[] = 'situacao: sem filtro (constantes fechado vazias)';
-		} elseif ($hasWf) {
-			$parts[] = sprintf(
-				'Situacao: (situacao NOT IN [%s]) OR (workflow_state_id IS NOT NULL AND workflow_state_id>0)',
-				implode(',', $closed)
-			);
 		} else {
 			$parts[] = sprintf('situacao NOT IN [%s]', implode(',', $closed));
 		}
 		try {
 			$cols = $tickets->getSchema()->columns();
 			if (in_array('data_limite_resolucao', $cols, true)) {
+				$parts[] = 'sla_escalated_at vazio | data_limite_resolucao NOT NULL | sla_resolucao_pausado não true';
 				$parts[] = 'ORDER BY data_limite_resolucao ASC, id ASC';
 			} else {
 				$parts[] = 'ORDER BY id ASC';

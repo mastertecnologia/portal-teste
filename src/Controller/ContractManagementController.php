@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Service\AutentiqueService;
+use App\Service\Contract\ContractSlaPolicyAdminService;
 use App\Service\ContractLifecycleService;
 use App\Service\ContractNotificationService;
 use App\Service\ContractPdfService;
@@ -11,7 +12,9 @@ use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Routing\Router;
 /**
  * Gestão de contratos (ERP) — URLs /modulo-contratos/* (spec MODULO_CONTRATOS_COMPLETO).
  * Equipe interna role 0; regras de negócio em App\Service\Contract*.
@@ -243,6 +246,78 @@ class ContractManagementController extends AppController {
 		$this->set('title', __('Contrato: {0}', $c->name));
 		$this->set('contract', $c);
 		$this->set('contractMayEditCore', $this->_contractMayEditCore($c));
+
+		$slaSvc = new ContractSlaPolicyAdminService();
+		$wfSlaOk = (bool)Configure::read('Workflow.workflowEnabled', false)
+			&& (bool)Configure::read('Workflow.workflowSlaEnabled', false);
+		$slaReady = $wfSlaOk && $slaSvc->isSchemaReady();
+		$this->set('contractSlaUiEnabled', $slaReady);
+		$this->set('contractSlaApiUrl', $slaReady ? Router::url(['controller' => 'ContractManagement', 'action' => 'contractSlaApi', $c->id]) : null);
+	}
+
+	/**
+	 * JSON: listar opções + políticas SLA do contrato (GET) ou criar/editar/toggle (POST).
+	 *
+	 * @param int|string|null $id
+	 * @return \Cake\Http\Response
+	 */
+	public function contractSlaApi($id = null) {
+		if (!$this->request->is(['get', 'post'])) {
+			throw new MethodNotAllowedException();
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+
+		$contract = $this->_getContractOrFail($id, []);
+		$empresaId = $this->_idempresa();
+		$cid = (int)$contract->id;
+		$idcliente = (int)($contract->idcliente ?? 0);
+
+		$svc = new ContractSlaPolicyAdminService();
+		if (!$svc->isSchemaReady()) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'errors' => ['Schema SLA indisponível.']]));
+		}
+
+		if ($this->request->is('get')) {
+			return $this->response->withStringBody(json_encode([
+				'ok' => true,
+				'policies' => $svc->listForContract($cid, $empresaId),
+				'options' => $svc->buildFormOptions($empresaId, $contract),
+				'contract' => ['id' => $cid, 'idcliente' => $idcliente],
+			]));
+		}
+
+		$payload = $this->request->getData();
+		if (!is_array($payload) || $payload === []) {
+			$raw = (string)$this->request->getBody();
+			if ($raw !== '') {
+				$decoded = json_decode($raw, true);
+				$payload = is_array($decoded) ? $decoded : [];
+			}
+		}
+		$op = (string)($payload['op'] ?? '');
+		if ($op === 'create') {
+			return $this->response->withStringBody(json_encode($svc->create($empresaId, $cid, $idcliente, $payload)));
+		}
+		if ($op === 'update') {
+			$pid = (int)($payload['id'] ?? 0);
+			if ($pid <= 0) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'errors' => ['ID inválido.']]));
+			}
+
+			return $this->response->withStringBody(json_encode($svc->update($empresaId, $cid, $idcliente, $pid, $payload)));
+		}
+		if ($op === 'toggle' || $op === 'setAtivo') {
+			$pid = (int)($payload['id'] ?? 0);
+			$ativo = !empty($payload['ativo']);
+			if ($pid <= 0) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'errors' => ['ID inválido.']]));
+			}
+
+			return $this->response->withStringBody(json_encode($svc->setAtivo($empresaId, $cid, $pid, $ativo)));
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => false, 'errors' => ['Operação inválida.']]));
 	}
 
 	public function add() {

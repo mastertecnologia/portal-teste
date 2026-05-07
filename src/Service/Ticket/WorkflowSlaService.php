@@ -1,6 +1,7 @@
 <?php
 namespace App\Service\Ticket;
 
+use App\Utility\Ticket\SlaEscalationBatch;
 use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
 use Cake\I18n\FrozenTime;
@@ -31,7 +32,7 @@ class WorkflowSlaService {
 		if (!$this->isWorkflowSlaEnabledForEmpresa($empresaId)) {
 			return $this->slaService->syncPolicyForTicket($ticket, $empresaId);
 		}
-		$policy = $this->findPolicy($empresaId, $stateId);
+		$policy = $this->resolveEscalationPolicy($ticket, $empresaId, $stateId);
 		if ($policy === null) {
 			return $this->slaService->syncPolicyForTicket($ticket, $empresaId);
 		}
@@ -191,32 +192,32 @@ class WorkflowSlaService {
 	/**
 	 * Mesma avaliação e efeitos de {@see checkAndEscalate()}, com código de diagnóstico para jobs (-v).
 	 *
-	 * @return array{applied: bool, code: string, deadline_eval?: array<string, mixed>, legacy_sync?: string}
+	 * @return array{applied: bool, code: string, deadline_eval?: array<string, mixed>, legacy_sync?: string, escalation?: array<string, mixed>}
 	 */
 	public function escalateIfDue(EntityInterface $ticket): array {
 		$empresaId = (int)($ticket->get('idempresa') ?? 0);
 		$stateId = (int)($ticket->get('workflow_state_id') ?? 0);
+		$closedLegado = SlaEscalationBatch::closedSituacoes();
+		if ($closedLegado !== [] && in_array((int)($ticket->get('situacao') ?? -1), $closedLegado, true)) {
+			return ['applied' => false, 'code' => 'skipped_ticket_closed'];
+		}
 		if ($empresaId <= 0 || $stateId <= 0) {
 			return ['applied' => false, 'code' => 'skipped_no_workflow_state'];
 		}
 		if (!$this->isWorkflowAutoEscalationEnabledForEmpresa($empresaId)) {
 			return ['applied' => false, 'code' => 'skipped_auto_escalar_false'];
 		}
-		$policy = $this->findPolicy($empresaId, $stateId);
+		$policy = $this->resolveEscalationPolicy($ticket, $empresaId, $stateId);
 		if ($policy === null) {
 			return ['applied' => false, 'code' => 'skipped_no_policy'];
 		}
 		if (!(bool)$policy->auto_escalar || (bool)$policy->is_final) {
 			return ['applied' => false, 'code' => 'skipped_auto_escalar_false'];
 		}
-		$toStateId = (int)($policy->escalate_to_state_id ?? 0);
-		if ($toStateId <= 0 || $toStateId === $stateId) {
-			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
-		}
-		if ((int)$ticket->get('workflow_state_id') === $toStateId) {
-			return ['applied' => false, 'code' => 'skipped_already_at_target'];
-		}
 		$ticketCols = $this->safeColumns();
+		if (in_array('sla_resolucao_pausado', $ticketCols, true) && (bool)$ticket->get('sla_resolucao_pausado')) {
+			return ['applied' => false, 'code' => 'skipped_sla_resolution_paused'];
+		}
 		if (in_array('sla_escalated_at', $ticketCols, true) && $ticket->get('sla_escalated_at') !== null && $ticket->get('sla_escalated_at') !== '') {
 			return ['applied' => false, 'code' => 'skipped_already_escalated'];
 		}
@@ -242,50 +243,109 @@ class WorkflowSlaService {
 				),
 			];
 		}
-		$workflow = $this->workflowService ?: new WorkflowService($this->tickets, $this->slaService, $this);
-		$target = $workflow->getStateById($toStateId);
-		if ($target === null || !empty($target['is_final'])) {
-			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
-		}
-		if (!$workflow->canTransition($empresaId, $stateId, $toStateId)) {
-			return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
-		}
-		$legacyProbe = $workflow->legacySituacaoForWorkflowStateId($toStateId);
-		if ($legacyProbe === null) {
-			try {
-				\Cake\Log\Log::warning(sprintf(
-					'WorkflowSlaService skipped_legacy_status_sync ticket=%d to_state=%d (codigo sem situacao legado; escalonamento cancelado)',
-					(int)$ticket->get('id'),
-					$toStateId
-				));
-			} catch (\Throwable $e) {
-			}
 
-			return [
-				'applied' => false,
-				'code' => 'skipped_legacy_status_sync',
-				'legacy_sync' => 'legacy_status_not_mapped',
-			];
+		$toStateId = (int)($policy->escalate_to_state_id ?? 0);
+		$toQueueId = $this->policyPositiveInt($policy, 'escalate_to_queue_id');
+		$toLevelId = $this->policyPositiveInt($policy, 'escalate_to_support_level_id');
+		$notifyMgr = $this->policyBool($policy, 'notify_manager');
+		$notifyCli = $this->policyBool($policy, 'notify_customer');
+		$notifyTec = $this->policyBool($policy, 'notify_technician');
+
+		$hasStateTarget = $toStateId > 0 && $toStateId !== $stateId;
+		$curQueue = in_array('queue_id', $ticketCols, true) ? (int)($ticket->get('queue_id') ?? 0) : 0;
+		$curLevel = in_array('support_level_id', $ticketCols, true) ? (int)($ticket->get('support_level_id') ?? 0) : 0;
+		$queueWillChange = $toQueueId !== null && $toQueueId > 0 && $toQueueId !== $curQueue;
+		$levelWillChange = $toLevelId !== null && $toLevelId > 0 && $toLevelId !== $curLevel;
+		$hasNotify = $notifyMgr || $notifyCli || $notifyTec;
+
+		if (!$hasStateTarget && !$queueWillChange && !$levelWillChange && !$hasNotify) {
+			return ['applied' => false, 'code' => 'skipped_no_escalation_targets'];
 		}
+
+		$workflow = $this->workflowService ?: new WorkflowService($this->tickets, $this->slaService, $this);
 		$legacySync = 'legacy_status_synced';
-		try {
-			$this->tickets->getConnection()->transactional(function () use ($ticket, $empresaId, $stateId, $toStateId, $workflow, $legacyProbe, $ticketCols): void {
-				$workflow->applyTransition($ticket, $toStateId, $empresaId);
-				if ((int)$ticket->get('workflow_state_id') !== $toStateId) {
-					throw new \RuntimeException('legacy_transition_noop');
+		$legacyProbe = null;
+
+		if ($hasStateTarget) {
+			$target = $workflow->getStateById($toStateId);
+			if ($target === null || !empty($target['is_final'])) {
+				return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
+			}
+			if (!$workflow->canTransition($empresaId, $stateId, $toStateId)) {
+				return ['applied' => false, 'code' => 'skipped_transition_not_allowed'];
+			}
+			$legacyProbe = $workflow->legacySituacaoForWorkflowStateId($toStateId);
+			if ($legacyProbe === null) {
+				try {
+					\Cake\Log\Log::warning(sprintf(
+						'WorkflowSlaService skipped_legacy_status_sync ticket=%d to_state=%d (codigo sem situacao legado; escalonamento cancelado)',
+						(int)$ticket->get('id'),
+						$toStateId
+					));
+				} catch (\Throwable $e) {
 				}
-				$ticket->set('situacao', (int)$legacyProbe);
-				if (method_exists($ticket, 'dirty')) {
-					$ticket->dirty('situacao', true);
+
+				return [
+					'applied' => false,
+					'code' => 'skipped_legacy_status_sync',
+					'legacy_sync' => 'legacy_status_not_mapped',
+				];
+			}
+		}
+
+		$payloadBase = [
+			'from_workflow_state_id' => $stateId,
+			'to_workflow_state_id' => $hasStateTarget ? $toStateId : null,
+			'from_queue_id' => $curQueue > 0 ? $curQueue : null,
+			'to_queue_id' => $queueWillChange ? $toQueueId : null,
+			'from_support_level_id' => $curLevel > 0 ? $curLevel : null,
+			'to_support_level_id' => $levelWillChange ? $toLevelId : null,
+			'notify' => [
+				'manager' => $notifyMgr,
+				'customer' => $notifyCli,
+				'technician' => $notifyTec,
+			],
+			'deadline_resolucao' => $deadline->format('c'),
+			'escalate_after_minutos' => $afterMin,
+		];
+
+		try {
+			$this->tickets->getConnection()->transactional(function () use (
+				$ticket,
+				$empresaId,
+				$stateId,
+				$toStateId,
+				$hasStateTarget,
+				$workflow,
+				$legacyProbe,
+				$ticketCols,
+				$queueWillChange,
+				$toQueueId,
+				$levelWillChange,
+				$toLevelId
+			): void {
+				if ($hasStateTarget) {
+					$workflow->applyTransition($ticket, $toStateId, $empresaId);
+					if ((int)$ticket->get('workflow_state_id') !== $toStateId) {
+						throw new \RuntimeException('legacy_transition_noop');
+					}
+					$ticket->set('situacao', (int)$legacyProbe);
+					if (method_exists($ticket, 'dirty')) {
+						$ticket->dirty('situacao', true);
+					}
+				}
+				if ($queueWillChange && in_array('queue_id', $ticketCols, true)) {
+					$ticket->set('queue_id', $toQueueId);
+				}
+				if ($levelWillChange && in_array('support_level_id', $ticketCols, true)) {
+					$ticket->set('support_level_id', $toLevelId);
+				}
+				if (in_array('sla_escalated_at', $ticketCols, true)) {
+					$ticket->set('sla_escalated_at', FrozenTime::now());
 				}
 				$changed = array_values(array_unique($ticket->getDirty()));
 				if ($changed === []) {
 					throw new \RuntimeException('no_dirty_after_escalation');
-				}
-				if (in_array('sla_escalated_at', $ticketCols, true)) {
-					$ticket->set('sla_escalated_at', FrozenTime::now());
-					$changed[] = 'sla_escalated_at';
-					$changed = array_values(array_unique($changed));
 				}
 				if (!$this->tickets->save($ticket, ['fields' => $changed, 'atomic' => false])) {
 					throw new \RuntimeException('save_failed_escalation');
@@ -312,17 +372,84 @@ class WorkflowSlaService {
 
 			return ['applied' => false, 'code' => 'skipped_transition_not_allowed', 'legacy_sync' => $legacySync];
 		}
-		$this->logEscalation((int)$ticket->get('id'), $empresaId, $stateId, $toStateId);
+
+		$notifyResults = [];
+		if ($hasNotify) {
+			$notifier = new SlaEscalationNotifier();
+			$note = [];
+			if ($hasStateTarget) {
+				$note[] = sprintf('Estado workflow: %d → %d.', $stateId, $toStateId);
+			}
+			if ($queueWillChange) {
+				$note[] = sprintf('Fila: %d → %d.', $curQueue, (int)$toQueueId);
+			}
+			if ($levelWillChange) {
+				$note[] = sprintf('Nível suporte: %d → %d.', $curLevel, (int)$toLevelId);
+			}
+			$notifyResults = $notifier->notify($ticket, $empresaId, [
+				'manager' => $notifyMgr,
+				'customer' => $notifyCli,
+				'technician' => $notifyTec,
+			], implode(' ', $note));
+		}
+
+		$payloadBase['notifications'] = $notifyResults;
+		$finalToState = $hasStateTarget ? $toStateId : null;
+
+		$this->logEscalation(
+			(int)$ticket->get('id'),
+			$empresaId,
+			$stateId,
+			$hasStateTarget ? $toStateId : $stateId,
+			$payloadBase
+		);
 		try {
-			$this->persistEscalationLogRow((int)$ticket->get('id'), $empresaId, $stateId, $toStateId, 'escalated');
+			$this->persistEscalationLogRow(
+				(int)$ticket->get('id'),
+				$empresaId,
+				$stateId,
+				$finalToState,
+				'escalated',
+				$payloadBase,
+				'escalated'
+			);
 		} catch (\Throwable $e) {
 		}
 		try {
-			\Cake\Log\Log::info(sprintf('Ticket %d escalado por SLA (empresa=%d %d→%d)', (int)$ticket->get('id'), $empresaId, $stateId, $toStateId));
+			$cycleSvc = new TicketSlaCycleService($this->tickets);
+			$resolver = new SlaPolicyResolverService(null, $this->tickets);
+			$polEnt = $resolver->resolveForTicket($ticket);
+			$polId = $polEnt ? (int)$polEnt->get('id') : null;
+			$open = $cycleSvc->findOpenCycle((int)$ticket->get('id'));
+			$cycleId = $open ? (int)$open->get('id') : null;
+			$cycleSvc->logEvent(
+				(int)$ticket->get('id'),
+				$empresaId,
+				TicketSlaCycleService::EVENT_SLA_AUTO_ESCALATED,
+				$cycleId > 0 ? $cycleId : null,
+				$polId !== null && $polId > 0 ? $polId : null,
+				$payloadBase,
+				null
+			);
+		} catch (\Throwable $e) {
+		}
+		try {
+			\Cake\Log\Log::info(sprintf(
+				'Ticket %d escalado por SLA (empresa=%d state %s→%s)',
+				(int)$ticket->get('id'),
+				$empresaId,
+				(string)$stateId,
+				$hasStateTarget ? (string)$toStateId : '(sem mudança estado)'
+			));
 		} catch (\Throwable $e) {
 		}
 
-		return ['applied' => true, 'code' => 'escalated', 'legacy_sync' => $legacySync];
+		return [
+			'applied' => true,
+			'code' => 'escalated',
+			'legacy_sync' => $legacySync,
+			'escalation' => $payloadBase,
+		];
 	}
 
 	public function checkAndEscalate(EntityInterface $ticket): bool {
@@ -372,7 +499,14 @@ class WorkflowSlaService {
 			'isPaused' => $isPaused,
 			'isFinal' => $isFinal,
 			'deadlineResolucao' => $this->isoTime($ticket->get('data_limite_resolucao')),
-			'autoEscalate' => (bool)$policy->auto_escalar && (int)$policy->escalate_to_state_id > 0,
+			'autoEscalate' => (bool)$policy->auto_escalar && (
+				(int)$policy->escalate_to_state_id > 0
+				|| ($this->policyPositiveInt($policy, 'escalate_to_queue_id') ?? 0) > 0
+				|| ($this->policyPositiveInt($policy, 'escalate_to_support_level_id') ?? 0) > 0
+				|| $this->policyBool($policy, 'notify_manager')
+				|| $this->policyBool($policy, 'notify_customer')
+				|| $this->policyBool($policy, 'notify_technician')
+			),
 			'isOverdue' => $isOverdue,
 			'remainingMinutes' => $remainingMin,
 			'totalMinutes' => $this->slaResolucaoTotalMinutesForUi($ticket, $policy),
@@ -441,6 +575,46 @@ class WorkflowSlaService {
 		return max(0, (int)($ticket->get('sla_resolucao_minutos') ?? 0));
 	}
 
+	protected function policyBool(EntityInterface $policy, string $field): bool {
+		try {
+			$table = $this->loadPoliciesTable();
+			if ($table === null) {
+				return false;
+			}
+			if (!in_array($field, $table->getSchema()->columns(), true)) {
+				return false;
+			}
+		} catch (\Throwable $e) {
+			return false;
+		}
+
+		return (bool)$policy->get($field);
+	}
+
+	/**
+	 * @return int|null
+	 */
+	protected function policyPositiveInt(EntityInterface $policy, string $field) {
+		try {
+			$table = $this->loadPoliciesTable();
+			if ($table === null) {
+				return null;
+			}
+			if (!in_array($field, $table->getSchema()->columns(), true)) {
+				return null;
+			}
+		} catch (\Throwable $e) {
+			return null;
+		}
+		$v = $policy->get($field);
+		if ($v === null || $v === '') {
+			return null;
+		}
+		$i = (int)$v;
+
+		return $i > 0 ? $i : null;
+	}
+
 	protected function findPolicy(int $empresaId, int $stateId) {
 		$empresaId = (int)$empresaId;
 		$stateId = (int)$stateId;
@@ -453,24 +627,57 @@ class WorkflowSlaService {
 		}
 		// Preferir política da empresa; depois fallback global (empresa_id NULL).
 		// Não usar Expression como chave em order([]): em PHP causa "Illegal offset type".
-		$specific = $table->find()
+		$qSpecific = $table->find()
 			->where([
 				'workflow_state_id' => $stateId,
 				'empresa_id' => $empresaId,
-			])
-			->order([$table->aliasField('id') => 'ASC'])
-			->first();
+			]);
+		$qSpecific = $this->filterActiveSlaPolicies($table, $qSpecific);
+		$specific = $qSpecific->order([$table->aliasField('id') => 'ASC'])->first();
 		if ($specific !== null) {
 			return $specific;
 		}
 
-		return $table->find()
+		$qGlobal = $table->find()
 			->where([
 				'workflow_state_id' => $stateId,
 				'empresa_id IS' => null,
-			])
-			->order([$table->aliasField('id') => 'ASC'])
-			->first();
+			]);
+		$qGlobal = $this->filterActiveSlaPolicies($table, $qGlobal);
+
+		return $qGlobal->order([$table->aliasField('id') => 'ASC'])->first();
+	}
+
+	/**
+	 * Política para autoescalonamento: escopos (contrato/cliente/…) com fallback legado {@see findPolicy}.
+	 */
+	protected function resolveEscalationPolicy(EntityInterface $ticket, int $empresaId, int $stateId): ?EntityInterface {
+		try {
+			$resolver = new SlaPolicyResolverService(null, $this->tickets);
+			$p = $resolver->resolveForTicket($ticket);
+			if ($p !== null) {
+				return $p;
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $this->findPolicy($empresaId, $stateId);
+	}
+
+	/**
+	 * @param \Cake\ORM\Table $table
+	 * @param \Cake\ORM\Query $query
+	 * @return \Cake\ORM\Query
+	 */
+	protected function filterActiveSlaPolicies(Table $table, $query) {
+		try {
+			if (in_array('ativo', $table->getSchema()->columns(), true)) {
+				$query->andWhere([$table->aliasField('ativo') => true]);
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $query;
 	}
 
 	protected function loadPoliciesTable(): ?Table {
@@ -583,33 +790,105 @@ class WorkflowSlaService {
 		return true;
 	}
 
-	protected function logEscalation(int $ticketId, int $empresaId, int $fromStateId, int $toStateId): void {
+	protected function logEscalation(int $ticketId, int $empresaId, int $fromStateId, int $toStateIdReported, ?array $detail = null): void {
 		try {
+			$extra = $detail !== null ? (' | ' . json_encode($detail, JSON_UNESCAPED_UNICODE)) : '';
 			\Cake\Log\Log::warning(sprintf(
-				'SLA estourado - auto escalonado | ticket=%d empresa=%d from_state=%d to_state=%d',
+				'SLA estourado - auto escalonado | ticket=%d empresa=%d from_state=%d to_state_reported=%d%s',
 				$ticketId,
 				$empresaId,
 				$fromStateId,
-				$toStateId
+				$toStateIdReported,
+				$extra
 			));
 		} catch (\Throwable $e) {
 		}
 	}
 
-	protected function persistEscalationLogRow(int $ticketId, int $empresaId, int $fromStateId, int $toStateId, string $reasonCode): void {
+	protected function persistEscalationLogRow(
+		int $ticketId,
+		int $empresaId,
+		?int $fromStateId,
+		?int $toStateId,
+		string $reasonCode,
+		?array $payload = null,
+		?string $eventType = null
+	): void {
 		try {
 			$logs = TableRegistry::get('WorkflowSlaEscalationLogs');
 		} catch (\Throwable $e) {
 			return;
 		}
-		$e = $logs->newEntity([
+		try {
+			$cols = $logs->getSchema()->columns();
+		} catch (\Throwable $e) {
+			$cols = [];
+		}
+		$row = [
 			'ticket_id' => $ticketId,
 			'empresa_id' => $empresaId,
 			'workflow_state_from' => $fromStateId,
 			'workflow_state_to' => $toStateId,
 			'reason_code' => $reasonCode,
 			'created_at' => FrozenTime::now(),
-		]);
-		$logs->save($e);
+		];
+		if (in_array('payload', $cols, true) && $payload !== null) {
+			$row['payload'] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+		}
+		if (in_array('event_type', $cols, true) && $eventType !== null) {
+			$row['event_type'] = $eventType;
+		}
+		$e = $logs->newEntity($row, ['validate' => false]);
+		$logs->save($e, ['checkRules' => false]);
+	}
+
+	/**
+	 * Pausa manual (UI ticket): bandeiras de SLA + âncora paused_at para extensão ao retomar.
+	 *
+	 * @return string[]
+	 */
+	public function manualPauseClocks(EntityInterface $ticket): array {
+		$changed = [];
+		$cols = $this->safeColumns();
+		if ($cols === []) {
+			return [];
+		}
+		$now = Time::now();
+		$was = (bool)$ticket->get('sla_resposta_pausado') || (bool)$ticket->get('sla_resolucao_pausado');
+		$this->setIfExists($ticket, $cols, 'sla_resposta_pausado', true, $changed);
+		$this->setIfExists($ticket, $cols, 'sla_resolucao_pausado', true, $changed);
+		if (!$was && in_array('paused_at', $cols, true)) {
+			$pa = $ticket->get('paused_at');
+			if ($pa === null || $pa === '') {
+				$this->setIfExists($ticket, $cols, 'paused_at', clone $now, $changed);
+			}
+		}
+
+		return array_values(array_unique($changed));
+	}
+
+	/**
+	 * Retoma SLA após pausa manual: estende prazos conforme paused_at e limpa bandeiras.
+	 *
+	 * @return string[]
+	 */
+	public function manualResumeClocks(EntityInterface $ticket): array {
+		$changed = [];
+		$cols = $this->safeColumns();
+		if ($cols === []) {
+			return [];
+		}
+		$now = Time::now();
+		$wasPaused = (bool)$ticket->get('sla_resposta_pausado') || (bool)$ticket->get('sla_resolucao_pausado');
+		if ($wasPaused) {
+			$this->resumeSlaWithoutReset($ticket, $cols, $changed, $now);
+		}
+		$this->setIfExists($ticket, $cols, 'sla_resposta_pausado', false, $changed);
+		$this->setIfExists($ticket, $cols, 'sla_resolucao_pausado', false, $changed);
+		if (in_array('paused_at', $cols, true)) {
+			$this->setIfExists($ticket, $cols, 'paused_at', null, $changed);
+		}
+
+		return array_values(array_unique($changed));
 	}
 }

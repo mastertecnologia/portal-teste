@@ -37,6 +37,19 @@ class WorkflowSlaPoliciesTable extends Table {
 		$validator->boolean('auto_escalar');
 		$validator->integer('escalate_to_state_id')->allowEmpty('escalate_to_state_id');
 		$validator->integer('escalate_after_minutos')->allowEmpty('escalate_after_minutos');
+		$validator->integer('escalate_to_queue_id')->allowEmpty('escalate_to_queue_id');
+		$validator->integer('escalate_to_support_level_id')->allowEmpty('escalate_to_support_level_id');
+		$validator->boolean('notify_manager');
+		$validator->boolean('notify_customer');
+		$validator->boolean('notify_technician');
+		$validator->boolean('ativo');
+		$validator->integer('idcliente')->allowEmpty('idcliente');
+		$validator->integer('contract_id')->allowEmpty('contract_id');
+		$validator->integer('contract_service_id')->allowEmpty('contract_service_id');
+		$validator->integer('problema_id')->allowEmpty('problema_id');
+		$validator->integer('queue_id')->allowEmpty('queue_id');
+		$validator->integer('support_level_id')->allowEmpty('support_level_id');
+		$validator->integer('scope_priority')->allowEmpty('scope_priority');
 
 		return $validator;
 	}

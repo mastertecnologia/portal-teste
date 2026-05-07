@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Service\Ticket\SlaReportingService;
 use Cake\Event\Event;
 use Cake\Routing\Router;
 
@@ -43,6 +44,241 @@ class ServicedeskController extends TicketsController {
 		$this->set('reactBoot', $this->_reactBoot('tech_operacional', null, $this->_servicedeskBootExtra()));
 	}
 
+	/**
+	 * Relatório de SLA (filtros + KPIs + tabelas por fila/técnico/consumo de horas).
+	 */
+	public function slaRelatorio() {
+		$this->viewBuilder()->setLayout('default');
+		$this->viewBuilder()->setTemplatePath('Tickets');
+		$this->viewBuilder()->setTemplate('sla_relatorio');
+		$this->set('title', 'Relatório de SLA');
+
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$this->loadModel('Clicontratos');
+		$this->loadModel('Problemas');
+
+		$f = SlaReportingService::parseFilters($this->request->getQueryParams(), $idempresa);
+		$cols = $this->Tickets->getSchema()->columns();
+
+		$clientesList = $this->_slaRelatorioClientesList();
+		if ($f['idcliente'] !== null && !isset($clientesList[(int)$f['idcliente']])) {
+			$f['idcliente'] = null;
+		}
+		$tecnicosList = $this->_slaRelatorioTecnicosList();
+		if ($f['idtecnico'] !== null && !isset($tecnicosList[(int)$f['idtecnico']])) {
+			$f['idtecnico'] = null;
+		}
+		if ($f['queue_id'] !== null) {
+			$qid = (int)$f['queue_id'];
+			$okQueue = $this->Queues->find()->where(['id' => $qid])->count() > 0;
+			if (!$okQueue) {
+				$f['queue_id'] = null;
+			}
+		}
+		if ($f['problema_id'] !== null) {
+			$pid = (int)$f['problema_id'];
+			if ($this->Problemas->find()->where(['id' => $pid])->count() === 0) {
+				$f['problema_id'] = null;
+			}
+		}
+		$clicontratosList = $this->_slaRelatorioClicontratosList($clientesList);
+		if ($f['idclicontrato'] !== null && !isset($clicontratosList[(int)$f['idclicontrato']])) {
+			$f['idclicontrato'] = null;
+		}
+		$contratosHorasList = $this->_slaRelatorioContratosHorasList();
+		if ($f['id_contrato_horas'] !== null && !isset($contratosHorasList[(int)$f['id_contrato_horas']])) {
+			$f['id_contrato_horas'] = null;
+		}
+		if ($f['ticket_contract_id'] !== null && !in_array('contract_id', $cols, true)) {
+			$f['ticket_contract_id'] = null;
+		}
+
+		$report = SlaReportingService::buildReport(function () {
+			$q = $this->Tickets->find();
+			$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+
+			return $q;
+		}, $this->Tickets, $cols, $f);
+
+		$sitLabels = $this->_slaRelatorioSitLabels();
+		$queuesList = $this->Queues->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->order(['name' => 'ASC'])
+			->toArray();
+
+		$problemasList = $this->_slaRelatorioProblemasList();
+
+		$this->set('slaFiltros', $f);
+		$this->set('slaReport', $report);
+		$this->set('slaClientesList', $clientesList);
+		$this->set('slaTecnicosList', $tecnicosList);
+		$this->set('slaQueuesList', $queuesList);
+		$this->set('slaProblemasList', $problemasList);
+		$this->set('slaClicontratosList', $clicontratosList);
+		$this->set('slaContratosHorasList', $contratosHorasList);
+		$this->set('slaSitLabels', $sitLabels);
+		$this->set('slaSchemaCols', $cols);
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	protected function _slaRelatorioClientesList(): array {
+		$clientesJur = $this->Clientes->find('all')
+			->where(['AND' => ['inativo' => '0', 'tipo' => '2']])
+			->order(['razaosocial']);
+		$this->Abac->applyToQuery($clientesJur, 'Clientes');
+		$clientesFis = $this->Clientes->find('all')
+			->where(['AND' => ['inativo' => '0', 'tipo' => '1']])
+			->order(['nome']);
+		$this->Abac->applyToQuery($clientesFis, 'Clientes');
+		$list = [];
+		foreach ($clientesJur->all() as $reg) {
+			$list[(int)$reg->id] = (string)$reg->razaosocial;
+		}
+		foreach ($clientesFis->all() as $reg) {
+			$list[(int)$reg->id] = (string)$reg->nome;
+		}
+
+		return $list;
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	protected function _slaRelatorioTecnicosList(): array {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$roleFunc = defined('C_RoleFuncionario') ? (int)C_RoleFuncionario : 0;
+		$qry = $this->Empresasusers->find('all', ['contain' => ['Users']])
+			->where([
+				'Empresasusers.idempresa' => $empresa,
+				'Users.role' => $roleFunc,
+				'Users.inativo' => 0,
+			]);
+		$list = [];
+		foreach ($qry->order(['Users.name' => 'ASC'])->toArray() as $r) {
+			$u = $r->user ?? $r->users ?? null;
+			if (!$u) {
+				continue;
+			}
+			$nm = trim((string)($u->name ?? ''));
+			if ($nm === '') {
+				$nm = trim((string)($u->username ?? ''));
+			}
+			if ($nm === '') {
+				$nm = 'Usuário #' . (int)$u->id;
+			}
+			$list[(int)$u->id] = $nm;
+		}
+
+		return $list;
+	}
+
+	/**
+	 * @param array<int,string> $clientesList
+	 * @return array<int,string>
+	 */
+	protected function _slaRelatorioClicontratosList(array $clientesList): array {
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$cids = array_keys($clientesList);
+		if ($cids === [] || !in_array('idempresa', $this->Clicontratos->getSchema()->columns(), true)) {
+			return [];
+		}
+		$rows = $this->Clicontratos->find('all')
+			->where(['Clicontratos.idempresa' => $idempresa, 'Clicontratos.idcliente IN' => $cids])
+			->order(['Clicontratos.id' => 'DESC'])
+			->limit(500)
+			->toArray();
+		$list = [];
+		foreach ($rows as $r) {
+			$d = (string)($r->descricao ?? '');
+			if (mb_strlen($d) > 55) {
+				$d = mb_substr($d, 0, 52) . '…';
+			}
+			$list[(int)$r->id] = 'CL #' . (int)$r->id . ($d !== '' ? ' — ' . $d : '');
+		}
+
+		return $list;
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	protected function _slaRelatorioContratosHorasList(): array {
+		if (!in_array('idempresa', $this->ContratosHoras->getSchema()->columns(), true)) {
+			return [];
+		}
+		$idempresa = (int)$this->Auth->user('idempresa');
+		$rows = $this->ContratosHoras->find('all')
+			->where(['ContratosHoras.idempresa' => $idempresa])
+			->order(['ContratosHoras.id' => 'DESC'])
+			->limit(400)
+			->toArray();
+		$list = [];
+		foreach ($rows as $r) {
+			$id = (int)$r->get('id');
+			$idc = (int)$r->get('idcliente');
+			$list[$id] = 'Horas #' . $id . ' (cliente ' . $idc . ')';
+		}
+
+		return $list;
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	protected function _slaRelatorioProblemasList(): array {
+		$schema = $this->Problemas->getSchema();
+		$probCols = $schema->columns();
+		$labelCol = 'id';
+		foreach (['descricao', 'nome', 'titulo'] as $cand) {
+			if (in_array($cand, $probCols, true)) {
+				$labelCol = $cand;
+				break;
+			}
+		}
+		$rows = $this->Problemas->find()
+			->select(['id', $labelCol])
+			->order([$labelCol => 'ASC'])
+			->limit(800)
+			->all();
+		$list = [];
+		foreach ($rows as $r) {
+			$lb = (string)($r->get($labelCol) ?? '');
+			if ($lb === '' || $labelCol === 'id') {
+				$lb = 'Problema #' . (int)$r->get('id');
+			}
+			$list[(int)$r->get('id')] = $lb;
+		}
+
+		return $list;
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	protected function _slaRelatorioSitLabels(): array {
+		$pend = defined('C_TicketSituacaoPendente') ? (int)C_TicketSituacaoPendente : 0;
+		$em = defined('C_TicketSituacaoEmandamento') ? (int)C_TicketSituacaoEmandamento : 1;
+		$res = defined('C_TicketSituacaoResolvido') ? (int)C_TicketSituacaoResolvido : 2;
+		$fec = defined('C_TicketSituacaoFechado') ? (int)C_TicketSituacaoFechado : 3;
+		$out = [
+			$pend => $this->_ticketSituacaoTexto($pend),
+			$em => $this->_ticketSituacaoTexto($em),
+			$res => $this->_ticketSituacaoTexto($res),
+			$fec => $this->_ticketSituacaoTexto($fec),
+		];
+		if (defined('C_TicketSituacaoRespondido')) {
+			$rsp = (int)C_TicketSituacaoRespondido;
+			$out[$rsp] = $this->_ticketSituacaoTexto($rsp);
+		}
+		if (defined('C_TicketSituacaoCancelado')) {
+			$cx = (int)C_TicketSituacaoCancelado;
+			$out[$cx] = $this->_ticketSituacaoTexto($cx);
+		}
+
+		return $out;
+	}
+
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
 		if (in_array($action, [
@@ -56,6 +292,9 @@ class ServicedeskController extends TicketsController {
 			'workflowSlaDuplicate',
 			'workflowSlaEmpresasOptions',
 		], true)) {
+			return !empty($user) && (int)$user['role'] === 0;
+		}
+		if ($action === 'slaRelatorio') {
 			return !empty($user) && (int)$user['role'] === 0;
 		}
 		if ($action === 'operacional') {

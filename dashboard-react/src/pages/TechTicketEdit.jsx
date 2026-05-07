@@ -16,6 +16,7 @@ import { useConversationScrollToBottom } from '../hooks/useConversationScrollToB
 import { finalizeOptimisticComment, formatCommentPostTimestamp, stripHtml } from '../lib/text';
 import { badgeClass, servicedeskStatusTypeFromTicket } from '../lib/ticketUi';
 import WorkflowTimeline from '../components/WorkflowTimeline.jsx';
+import TicketSlaPanel from '../components/TicketSlaPanel.jsx';
 import TicketAnexosPanel from '../components/TicketAnexosPanel.jsx';
 import HorasTecnicasTimerPanel from '../components/HorasTecnicasTimerPanel.jsx';
 import CommentMessage from '../components/CommentMessage.jsx';
@@ -140,6 +141,16 @@ export default function TechTicketEdit({ boot }) {
     });
     return true;
   }, [id]);
+  const handleSlaUpdated = useCallback((snap) => {
+    setTicket((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev };
+      if (snap.workflow != null) next.workflow = snap.workflow;
+      if (snap.slaByState != null) next.slaByState = snap.slaByState;
+      if (snap.slaDetail != null) next.slaDetail = snap.slaDetail;
+      return next;
+    });
+  }, []);
   const comentarioEmProgressoRef = useRef(false);
   /** Primeira sincronização de comentários após carregar o ticket (marca histórico como lido para o badge). */
   const commentsHydratedForIdRef = useRef(null);
@@ -580,6 +591,9 @@ export default function TechTicketEdit({ boot }) {
             <WorkflowTimeline ticket={ticket} />
           </div>
         ) : null}
+        <div className="mt-2 min-w-0 max-w-[min(100%,28rem)]">
+          <TicketSlaPanel ticket={ticket} boot={boot} onSlaUpdated={handleSlaUpdated} />
+        </div>
       </div>
       {headerActions}
     </div>
@@ -606,6 +620,9 @@ export default function TechTicketEdit({ boot }) {
               <WorkflowTimeline ticket={ticket} />
             </div>
           ) : null}
+          <div className="mt-2 min-w-0 max-w-[min(100%,32rem)]">
+            <TicketSlaPanel ticket={ticket} boot={boot} onSlaUpdated={handleSlaUpdated} />
+          </div>
         </div>
         {headerActions}
       </div>

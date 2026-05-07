@@ -1071,6 +1071,90 @@ export async function postTimerAction(ticketId, action, extra = {}) {
   };
 }
 
+/**
+ * Pausa o SLA manualmente (ciclo + relógios do ticket).
+ * @param {string|number} ticketId
+ */
+export async function postTicketSlaPause(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true, workflow: null, slaByState: null, slaDetail: null, message: 'ok (mock)' };
+  }
+  const boot = getBoot();
+  const base = boot.paths?.apiSlaPause;
+  if (!base) return { ok: false, error: 'no_api', message: 'apiSlaPause não configurado no boot.' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      message: json.message || json.error || 'Falha ao pausar SLA',
+      workflow: json.workflow,
+      slaByState: json.slaByState,
+      slaDetail: json.slaDetail,
+    };
+  }
+  return {
+    ok: true,
+    message: json.message,
+    workflow: json.workflow,
+    slaByState: json.slaByState,
+    slaDetail: json.slaDetail,
+  };
+}
+
+/**
+ * Retoma o SLA manualmente.
+ * @param {string|number} ticketId
+ */
+export async function postTicketSlaResume(ticketId) {
+  if (USE_MOCK) {
+    return { ok: true, workflow: null, slaByState: null, slaDetail: null, message: 'ok (mock)' };
+  }
+  const boot = getBoot();
+  const base = boot.paths?.apiSlaResume;
+  if (!base) return { ok: false, error: 'no_api', message: 'apiSlaResume não configurado no boot.' };
+  const r = await fetch(`${base}${encodeURIComponent(ticketId)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    json = {};
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      message: json.message || json.error || 'Falha ao retomar SLA',
+      workflow: json.workflow,
+      slaByState: json.slaByState,
+      slaDetail: json.slaDetail,
+    };
+  }
+  return {
+    ok: true,
+    message: json.message,
+    workflow: json.workflow,
+    slaByState: json.slaByState,
+    slaDetail: json.slaDetail,
+  };
+}
+
 export async function fetchTimeEntries(ticketId) {
   if (USE_MOCK) {
     return { ok: true, entries: [], technicians: [] };
