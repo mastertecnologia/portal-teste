@@ -943,15 +943,29 @@ export async function fetchDashboardOperacional() {
   if (!url) {
     return { ok: false, error: 'no_api', dashboard: null };
   }
-  const r = await fetch(url, {
-    credentials: 'same-origin',
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-  });
+  let r;
+  try {
+    r = await fetch(url, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error && err.message ? err.message : 'network_error',
+      dashboard: null,
+    };
+  }
   if (!r.ok) {
     return { ok: false, error: r.statusText, dashboard: null };
   }
-  const json = await r.json();
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    return { ok: false, error: 'invalid_json', dashboard: null };
+  }
   if (!json.ok) {
     return { ok: false, error: json.error || 'erro', dashboard: null };
   }
