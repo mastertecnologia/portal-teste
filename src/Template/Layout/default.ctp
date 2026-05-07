@@ -4,10 +4,15 @@ use Cake\Routing\Router;
 
 $pgmReactSidebar = (bool)\Cake\Core\Configure::read('PgmSidebar.react_enabled')
 	&& !empty($iduser ?? null);
-/** Web path do bundle (APP_BASE, pedido Cake ou SCRIPT_NAME — ver PgmAppUrlBase). */
-$pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-app.js';
+/** Web path do bundle (APP_BASE, pedido Cake ou SCRIPT_NAME — ver PgmAppUrlBase). `?v=` evita sidebar-app.js antigo em cache agressivo. */
+$__pgmSbJsFs = ROOT . DS . 'public' . DS . 'js' . DS . 'pgm-sidebar-react' . DS . 'sidebar-app.js';
+$__pgmSbCssFs = ROOT . DS . 'public' . DS . 'js' . DS . 'pgm-sidebar-react' . DS . 'sidebar-assets.css';
+$pgmSidebarReactAssetV = is_file($__pgmSbJsFs) ? (string)filemtime($__pgmSbJsFs) : (string)time();
+$pgmSidebarReactCssV = is_file($__pgmSbCssFs) ? (string)filemtime($__pgmSbCssFs) : (string)$pgmSidebarReactAssetV;
+$__pgmSbWebBase = PgmAppUrlBase::path($this->request);
+$pgmSidebarReactJs = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-app.js?v=' . rawurlencode($pgmSidebarReactAssetV);
 /** CSS extraído pelo Vite (`import` nos .jsx); tem de ser ligado explicitamente no layout. */
-$pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-assets.css';
+$pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.css?v=' . rawurlencode($pgmSidebarReactCssV);
 ?>
 <!DOCTYPE HTML>
 <html lang="pt-BR" data-pgm-theme="light">

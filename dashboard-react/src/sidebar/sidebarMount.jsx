@@ -1,6 +1,36 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Sidebar from './Sidebar.jsx';
+import { pgmSidebarRawTargetIsBlank, pgmSidebarSameTabStaffHref } from './sidebarNavUtils.js';
+
+/**
+ * Última linha de defesa: algum script externo ou payload estranho pode repor `target="_blank"` no DOM.
+ * Captura no host da sidebar antes de outros listeners.
+ */
+function pgmSidebarInstallWorkflowSlaSameTabCapture() {
+  if (typeof document === 'undefined' || window.__PGM_SIDEBAR_SLA_SAME_TAB__) return;
+  const host = document.getElementById('sidebar-app');
+  if (!host) return;
+  window.__PGM_SIDEBAR_SLA_SAME_TAB__ = true;
+  host.addEventListener(
+    'click',
+    function (e) {
+      if (e.defaultPrevented) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const el = e.target;
+      if (!el || typeof el.closest !== 'function') return;
+      const a = el.closest('a[href]');
+      if (!a || !host.contains(a)) return;
+      const hrefAttr = a.getAttribute('href') || '';
+      if (!pgmSidebarSameTabStaffHref(hrefAttr)) return;
+      if (!pgmSidebarRawTargetIsBlank(a.getAttribute('target'))) return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.assign(a.href);
+    },
+    true
+  );
+}
 
 /**
  * Monta a sidebar no primeiro `#sidebar-app` encontrado.
@@ -13,6 +43,7 @@ export function mountPgmSidebar() {
   try {
     const root = createRoot(container);
     root.render(<Sidebar {...(boot && typeof boot === 'object' ? boot : {})} />);
+    pgmSidebarInstallWorkflowSlaSameTabCapture();
     queueMicrotask(function () {
       if (typeof window.pgmTurboShellMarkNavLinks === 'function') {
         window.pgmTurboShellMarkNavLinks();

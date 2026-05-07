@@ -1,9 +1,21 @@
 export const PGM_MAIN_FRAME_ID = 'pgm-main-frame';
 
-/** Admin Workflow & SLA: sempre mesma aba (evita `target="_blank"` legado no JSON do menu). */
+/** `target="_blank"` vindo do JSON (com espaços / casing). */
+export function pgmSidebarRawTargetIsBlank(target) {
+  return String(target || '').trim().toLowerCase() === '_blank';
+}
+
+/**
+ * Admin Workflow & SLA — sempre mesma aba.
+ * Cobre: URL dashed oficial, slug camelCase legado, e comparação case-insensitive.
+ */
 export function pgmSidebarSameTabStaffHref(href) {
-  const h = String(href || '');
-  return h.indexOf('workflow-sla-admin') !== -1;
+  const raw = String(href || '').trim();
+  if (raw === '') return false;
+  const lower = raw.toLowerCase();
+  if (lower.includes('workflow-sla-admin')) return true;
+  if (/\/servicedesk\/workflowslaadmin(?:\/|$|\?|#)/i.test(lower)) return true;
+  return false;
 }
 
 /** `target` / `rel` seguros para o `<a>` da sidebar staff (não altera outros itens). */
@@ -44,7 +56,7 @@ export function getTurboLinkProps(href, target, skipTurboFrame = false) {
   */
   if (skipTurboFrame) return { 'data-turbo': 'false' };
   const effTarget = pgmSidebarSameTabStaffHref(href) ? null : target;
-  if (effTarget === '_blank') return {};
+  if (pgmSidebarRawTargetIsBlank(effTarget)) return {};
   const raw = String(href || '').trim();
   if (!raw || raw === '#' || raw.indexOf('javascript:') === 0) return {};
   try {

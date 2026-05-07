@@ -4,8 +4,13 @@ use Cake\Core\Configure;
 use Cake\Routing\Router;
 
 $pgmReactSidebar = (bool) Configure::read('PgmSidebar.react_enabled') && !empty($iduser ?? null);
-$pgmSidebarReactJs = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-app.js';
-$pgmSidebarReactCss = PgmAppUrlBase::path($this->request) . '/js/pgm-sidebar-react/sidebar-assets.css';
+$__pgmSbJsFs = ROOT . DS . 'public' . DS . 'js' . DS . 'pgm-sidebar-react' . DS . 'sidebar-app.js';
+$__pgmSbCssFs = ROOT . DS . 'public' . DS . 'js' . DS . 'pgm-sidebar-react' . DS . 'sidebar-assets.css';
+$pgmSidebarReactAssetV = is_file($__pgmSbJsFs) ? (string)filemtime($__pgmSbJsFs) : (string)time();
+$pgmSidebarReactCssV = is_file($__pgmSbCssFs) ? (string)filemtime($__pgmSbCssFs) : (string)$pgmSidebarReactAssetV;
+$__pgmSbWebBase = PgmAppUrlBase::path($this->request);
+$pgmSidebarReactJs = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-app.js?v=' . rawurlencode($pgmSidebarReactAssetV);
+$pgmSidebarReactCss = $__pgmSbWebBase . '/js/pgm-sidebar-react/sidebar-assets.css?v=' . rawurlencode($pgmSidebarReactCssV);
 ?>
 <!doctype html>
 <html lang="pt-BR" data-pgm-theme="dark">

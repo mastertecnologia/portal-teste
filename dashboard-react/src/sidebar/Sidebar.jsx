@@ -7,6 +7,7 @@ import {
   pathMatches,
   PGM_MAIN_FRAME_ID,
   pgmSidebarNavAnchorTargetRel,
+  pgmSidebarRawTargetIsBlank,
   pgmSidebarSameTabStaffHref,
 } from './sidebarNavUtils.js';
 
@@ -563,7 +564,7 @@ function StaffSidebar(props) {
                                   className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(c) ? ' active' : ''}`}
                                   data-label={c.dataLabel || c.label}
                                   onClick={(e) => {
-                                    if (c.target !== '_blank' || !pgmSidebarSameTabStaffHref(c.href)) return;
+                                    if (!pgmSidebarRawTargetIsBlank(c.target) || !pgmSidebarSameTabStaffHref(c.href)) return;
                                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                                     e.preventDefault();
                                     window.location.assign(c.href);
@@ -592,7 +593,7 @@ function StaffSidebar(props) {
                           className={`pgm-nav-link nav-item waves-effect waves-dark${isItemActive(it) ? ' active' : ''}`}
                           data-label={it.dataLabel || it.label}
                           onClick={(e) => {
-                            if (it.target !== '_blank' || !pgmSidebarSameTabStaffHref(it.href)) return;
+                            if (!pgmSidebarRawTargetIsBlank(it.target) || !pgmSidebarSameTabStaffHref(it.href)) return;
                             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                             e.preventDefault();
                             window.location.assign(it.href);
