@@ -22,6 +22,26 @@ trait ServicedeskWorkflowSlaTrait {
 		return true;
 	}
 
+	/**
+	 * Id de política na URL (/workflow-sla/:id). Só inteiros > 0; caso contrário null (lista/POST em …/workflow-sla-policies).
+	 * Sem isso, id 0 ou false fazia cair no ramo de recurso único e POST de criação devolvia 404 not_found.
+	 */
+	protected function _wfWorkflowSlaRequestPolicyId(): ?int {
+		$raw = $this->request->getParam('id');
+		if ($raw === null || $raw === '' || $raw === false) {
+			return null;
+		}
+		if (!is_numeric($raw)) {
+			return null;
+		}
+		$n = (int)$raw;
+		if ($n <= 0) {
+			return null;
+		}
+
+		return $n;
+	}
+
 	protected function _wfSessionEmpresaId(): int {
 		return (int)$this->Auth->user('idempresa');
 	}
@@ -536,10 +556,10 @@ trait ServicedeskWorkflowSlaTrait {
 		if (!$this->_wfTechOr403()) {
 			return;
 		}
-		$id = $this->request->getParam('id');
+		$id = $this->_wfWorkflowSlaRequestPolicyId();
 		$table = $this->_wfPoliciesTable();
 		if ($table === null) {
-			if ($id === null || $id === '') {
+			if ($id === null) {
 				if ($this->request->is('get')) {
 					return $this->jsonResponse(['ok' => true, 'policies' => [], 'prioridade' => '']);
 				}
@@ -552,7 +572,7 @@ trait ServicedeskWorkflowSlaTrait {
 
 			return $this->jsonResponse($this->_wfPolicyValidationErrorResponse(['tabela_indisponivel']), 422);
 		}
-		if ($id === null || $id === '') {
+		if ($id === null) {
 			if ($this->request->is('get')) {
 				try {
 					$q = trim((string)$this->request->getQuery('q', ''));
@@ -649,7 +669,6 @@ trait ServicedeskWorkflowSlaTrait {
 				}
 			}
 		} else {
-			$id = (int)$id;
 			if ($this->request->is('get')) {
 				try {
 					$row = $table->get($id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
