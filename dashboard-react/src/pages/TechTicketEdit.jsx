@@ -63,6 +63,15 @@ function resolveTechIndexUrl(boot) {
   return null;
 }
 
+function normalizeDetailStatusLabel(rawStatus) {
+  const raw = stripHtml(rawStatus || '').trim();
+  const key = raw.toLowerCase();
+  if (key === 'aguardando técnico' || key === 'aguardando tecnico') {
+    return 'Pendente';
+  }
+  return raw;
+}
+
 function PapelBadge({ papel }) {
   const isTech = papel === 'tecnico';
   return (
@@ -397,7 +406,7 @@ export default function TechTicketEdit({ boot }) {
     );
   }
 
-  const statusLine = stripHtml(ticket.status);
+  const statusLine = normalizeDetailStatusLabel(ticket.status);
   const techListUrl = resolveTechIndexUrl(boot);
 
   function goSdTab(t) {
@@ -794,6 +803,7 @@ export default function TechTicketEdit({ boot }) {
       <div className="flex min-h-0 min-w-0 flex-col gap-3 self-start lg:col-span-4">
         <TicketInfoPanel
           ticket={ticket}
+          statusDisplay={statusLine}
           embedded={embedded}
           servicedesk={Boolean(boot?.servicedesk)}
           canEditAssunto={Number(boot?.role ?? ticket?.flags?.role ?? 0) === 0}

@@ -204,6 +204,7 @@ export function TicketResumoPanel({ ticket }) {
 /** Bloco “Informações do ticket” (coluna direita). */
 export default function TicketInfoPanel({
   ticket,
+  statusDisplay = null,
   embedded = false,
   servicedesk = false,
   canEditAssunto = false,
@@ -259,7 +260,7 @@ export default function TicketInfoPanel({
           ) : null}
         </div>
         {rowPrioridade('Prioridade', ticket.prioridade)}
-        {rowEstado('Estado', ticket.status, { embedded, servicedesk })}
+        {rowEstado('Estado', statusDisplay ?? ticket.status, { embedded, servicedesk })}
         {row('Aberto em', aberto)}
         {row('Última atualização', atual)}
       </div>

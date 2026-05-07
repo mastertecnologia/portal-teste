@@ -511,6 +511,81 @@ class TicketsController extends AppController {
 		return $this->Ticketsmovs->save($mov);
 	}
 
+	/**
+	 * Observação de auditoria para mudanças operacionais de situação.
+	 *
+	 * @param array<string,mixed> $payloadContext
+	 */
+	protected function _ticketStatusChangeObservacao(
+		string $origem,
+		int $ticketId,
+		int $sitAntiga,
+		int $sitNova,
+		?int $wfAntigo = null,
+		?int $wfNovo = null,
+		array $payloadContext = [],
+		?string $modo = null
+	): string {
+		$uid = (int)$this->Auth->user('id');
+		$parts = [
+			'Origem: ' . $origem,
+			'Usuário: ' . $uid,
+			'Ticket: ' . $ticketId,
+			'Situação: ' . $sitAntiga . ' -> ' . $sitNova,
+		];
+		if ($wfAntigo !== null || $wfNovo !== null) {
+			$parts[] = 'Workflow: ' . ($wfAntigo !== null ? (string)$wfAntigo : 'null')
+				. ' -> ' . ($wfNovo !== null ? (string)$wfNovo : 'null');
+		}
+		if ($modo !== null && trim($modo) !== '') {
+			$parts[] = 'Modo: ' . trim($modo);
+		}
+		if ($payloadContext !== []) {
+			$clean = [];
+			foreach ($payloadContext as $k => $v) {
+				if ($v === null || $v === '') {
+					continue;
+				}
+				$clean[$k] = $v;
+			}
+			if ($clean !== []) {
+				$pairs = [];
+				foreach ($clean as $k => $v) {
+					$val = is_scalar($v) ? (string)$v : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+					$pairs[] = $k . '=' . $val;
+				}
+				$parts[] = 'Payload: ' . implode(',', $pairs);
+			}
+		}
+
+		return $this->_ticketsmovsObservacaoLimitada(implode('; ', $parts));
+	}
+
+	protected function _ticketIsEmExecucaoParaTimer($ticket): bool {
+		if ((int)($ticket->situacao ?? 0) !== (int)C_TicketSituacaoEmandamento) {
+			return false;
+		}
+		$empresa = (int)($ticket->idempresa ?? $this->Auth->user('idempresa'));
+		if (!$this->_ticketWorkflowEnabledForEmpresa($empresa) || !$this->_ticketWorkflowStateColumnReady()) {
+			return true;
+		}
+		$wfId = (int)($ticket->workflow_state_id ?? 0);
+		if ($wfId <= 0) {
+			return true;
+		}
+		try {
+			$wf = $this->_ticketWorkflowService();
+			$st = $wf->getStateById($wfId);
+			if ($st === null) {
+				return false;
+			}
+			$code = strtolower(trim((string)($st['codigo'] ?? '')));
+			return in_array($code, ['emandamento', 'em_execucao', 'em-andamento', 'em_andamento', 'execucao'], true);
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
 	public function criaLogEmail($idticket, $acao) {
 		$log = $this->Ticketslogemail->newEntity();
 		$log->idticket = $idticket;
@@ -3178,6 +3253,13 @@ class TicketsController extends AppController {
 		try {
 			$tUserCol = $this->_atendimentoTimerUserColumn();
 			if ($acao === 'iniciar' || $acao === 'retomar') {
+				if (!$this->_ticketIsEmExecucaoParaTimer($ticket)) {
+					return [
+						'ok' => false,
+						'error' => 'ticket_not_in_progress',
+						'message' => 'Para iniciar o timer, coloque o ticket em Em execução.',
+					];
+				}
 				if ($acao === 'iniciar') {
 					$geo = $this->_timerValidateGeoInicio($ticket, $body);
 					if (!empty($geo['ok']) && $geo['ok'] === false) {
@@ -6603,6 +6685,9 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_situacao', 'message' => 'Situação não permitida nesta API.'], 400);
 		}
 		$sitantiga = (int)$ticket->situacao;
+		$wfAntigo = isset($ticket->workflow_state_id) && $ticket->workflow_state_id !== null
+			? (int)$ticket->workflow_state_id
+			: null;
 		if ((int)$situacaoNova !== $sitantiga) {
 			$ok = $this->_ticketApplyOperationalSituacaoChange($ticket, (int)$idticket, (int)$situacaoNova);
 			if (!$ok) {
@@ -6614,7 +6699,23 @@ class TicketsController extends AppController {
 			}
 		}
 		try {
-			$this->criarMov($ticket->id, $sitantiga, $ticket->situacao);
+			$wfNovo = isset($ticket->workflow_state_id) && $ticket->workflow_state_id !== null
+				? (int)$ticket->workflow_state_id
+				: null;
+			$obsMov = $this->_ticketStatusChangeObservacao(
+				'apiAlterarSituacao',
+				(int)$ticket->id,
+				$sitantiga,
+				(int)$ticket->situacao,
+				$wfAntigo,
+				$wfNovo,
+				[
+					'situacao' => $body['situacao'] ?? null,
+					'sit' => $body['sit'] ?? null,
+				],
+				'manual'
+			);
+			$this->criarMov($ticket->id, $sitantiga, $ticket->situacao, $obsMov);
 		} catch (\Throwable $e) {
 			$this->log('Tickets::apiAlterarSituacao criarMov: ' . $e->getMessage(), 'error');
 		}
@@ -6986,6 +7087,7 @@ class TicketsController extends AppController {
 				$situacaoNovaInt,
 				$empresa,
 				$rawStatusForDebug,
+				$body,
 				$workflowStateDestinoId,
 				$workflowFeatureEnabled,
 				$workflowColumnReady
@@ -7080,6 +7182,25 @@ class TicketsController extends AppController {
 				$mov->idusuario = $this->Auth->user('id');
 				$mov->idempresa = $empresa;
 				$mov->datetime = date('Y-m-d H:i:s', time());
+				$wfNovo = isset($ticket->workflow_state_id) && $ticket->workflow_state_id !== null
+					? (int)$ticket->workflow_state_id
+					: null;
+				$wfAntigo = isset($fromStateId) && (int)$fromStateId > 0 ? (int)$fromStateId : null;
+				$mov->observacao = $this->_ticketStatusChangeObservacao(
+					'apiPatchTicketStatus',
+					$idticket,
+					$sitantiga,
+					$situacaoNovaInt,
+					$wfAntigo,
+					$wfNovo,
+					[
+						'workflow_state_id' => $workflowStateDestinoId > 0 ? $workflowStateDestinoId : null,
+						'status' => $rawStatusForDebug,
+						'situacao' => $body['situacao'] ?? null,
+						'sit' => $body['sit'] ?? null,
+					],
+					$workflowApplied ? 'workflow' : 'legacy/manual'
+				);
 				if (!$this->Ticketsmovs->save($mov, ['atomic' => false])) {
 					throw new \RuntimeException('ticketsmovs:' . json_encode($mov->getErrors(), JSON_UNESCAPED_UNICODE));
 				}

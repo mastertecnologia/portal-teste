@@ -331,6 +331,18 @@ export default function HorasTecnicasTimerPanel({
           /* continuar com feedback de erro */
         }
       }
+      const blockedNotInProgress =
+        (action === 'iniciar' || action === 'retomar') &&
+        (res.error === 'ticket_not_in_progress' ||
+          msgLower.includes('coloque o ticket em em execução') ||
+          msgLower.includes('coloque o ticket em em execucao'));
+      if (blockedNotInProgress && typeof onRefetchHorasTecnicas === 'function') {
+        try {
+          await onRefetchHorasTecnicas();
+        } catch (_) {
+          /* manter feedback de erro do backend */
+        }
+      }
       if (onFeedback) {
         onFeedback(null, res.message || res.error || 'Não foi possível atualizar o timer.');
       }
