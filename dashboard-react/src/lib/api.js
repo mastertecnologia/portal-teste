@@ -1294,6 +1294,18 @@ function wfSlaPaths() {
   };
 }
 
+/** Id inteiro > 0 ou null (criação / id ausente ou inválido — evita PATCH em …/undefined). */
+export function normalizeWorkflowSlaPolicyId(id) {
+  if (id === null || id === undefined || id === '') return null;
+  if (typeof id === 'string') {
+    const t = id.trim();
+    if (t === '' || t === 'undefined' || t === 'null' || t === 'NaN') return null;
+  }
+  const n = typeof id === 'number' && Number.isFinite(id) ? id : parseInt(String(id).trim(), 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
 export async function fetchWorkflowSlaPolicies(filters = {}) {
   if (USE_MOCK) {
     return { ok: true, policies: [], prioridade: '' };
@@ -1316,7 +1328,16 @@ export async function fetchWorkflowSlaPolicies(filters = {}) {
 
 export async function fetchWorkflowSlaPolicy(id) {
   if (USE_MOCK) return { ok: false, error: 'mock' };
-  const r = await fetch(`${wfSlaPaths().policyBase}${encodeURIComponent(id)}`, {
+  const nid = normalizeWorkflowSlaPolicyId(id);
+  if (nid === null) {
+    return {
+      ok: false,
+      error: 'invalid_policy_id',
+      errorMessage: 'Identificador de política inválido.',
+      errorMessages: ['Identificador de política inválido.'],
+    };
+  }
+  const r = await fetch(`${wfSlaPaths().policyBase}${encodeURIComponent(nid)}`, {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
     cache: 'no-store',
@@ -1334,13 +1355,13 @@ export async function fetchWorkflowSlaPolicy(id) {
   return { ok: true, policy: json.policy };
 }
 
-export async function saveWorkflowSlaPolicy(id, body, method = 'POST') {
+/** POST criação — sempre `…/workflow-sla-policies` (sem id na URL). */
+export async function createWorkflowSlaPolicy(body) {
   if (USE_MOCK) return { ok: true, policy: { id: 1, ...body } };
   const boot = getBoot();
-  const base = wfSlaPolicyBaseFromBoot(boot);
-  const url = id ? `${base}${encodeURIComponent(id)}` : wfSlaPolicyListUrl(boot);
+  const url = wfSlaPolicyListUrl(boot);
   const r = await fetch(url, {
-    method: id ? 'PATCH' : 'POST',
+    method: 'POST',
     credentials: 'same-origin',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -1358,9 +1379,59 @@ export async function saveWorkflowSlaPolicy(id, body, method = 'POST') {
   return { ok: true, policy: json.policy };
 }
 
+/** PATCH atualização — `…/workflow-sla/{id}` com id inteiro > 0. */
+export async function updateWorkflowSlaPolicy(id, body) {
+  if (USE_MOCK) return { ok: true, policy: { id, ...body } };
+  const nid = normalizeWorkflowSlaPolicyId(id);
+  if (nid === null) {
+    return {
+      ok: false,
+      error: 'invalid_policy_id',
+      errorMessage: 'Identificador de política inválido para edição.',
+      errorMessages: ['Identificador de política inválido para edição.'],
+    };
+  }
+  const boot = getBoot();
+  const base = wfSlaPolicyBaseFromBoot(boot);
+  const url = `${base}${encodeURIComponent(nid)}`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errorMessage: json.error_message,
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
+  return { ok: true, policy: json.policy };
+}
+
+/** @deprecated Prefer {@link createWorkflowSlaPolicy} / {@link updateWorkflowSlaPolicy}. */
+export async function saveWorkflowSlaPolicy(id, body) {
+  const nid = normalizeWorkflowSlaPolicyId(id);
+  if (nid !== null) return updateWorkflowSlaPolicy(nid, body);
+  return createWorkflowSlaPolicy(body);
+}
+
 export async function deleteWorkflowSlaPolicy(id) {
   if (USE_MOCK) return { ok: true };
-  const r = await fetch(`${wfSlaPaths().policyBase}${encodeURIComponent(id)}`, {
+  const nid = normalizeWorkflowSlaPolicyId(id);
+  if (nid === null) {
+    return {
+      ok: false,
+      error: 'invalid_policy_id',
+      errorMessage: 'Identificador de política inválido.',
+      errorMessages: ['Identificador de política inválido.'],
+    };
+  }
+  const r = await fetch(`${wfSlaPaths().policyBase}${encodeURIComponent(nid)}`, {
     method: 'DELETE',
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
@@ -1380,8 +1451,17 @@ export async function deleteWorkflowSlaPolicy(id) {
 
 export async function duplicateWorkflowSlaPolicy(id, body = {}) {
   if (USE_MOCK) return { ok: true, policy: { id: 2 } };
+  const nid = normalizeWorkflowSlaPolicyId(id);
+  if (nid === null) {
+    return {
+      ok: false,
+      error: 'invalid_policy_id',
+      errorMessage: 'Identificador de política inválido.',
+      errorMessages: ['Identificador de política inválido.'],
+    };
+  }
   const base = wfSlaPaths().policyBase.replace(/\/?$/, '/');
-  const r = await fetch(`${base}${encodeURIComponent(id)}/duplicate`, {
+  const r = await fetch(`${base}${encodeURIComponent(nid)}/duplicate`, {
     method: 'POST',
     credentials: 'same-origin',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },

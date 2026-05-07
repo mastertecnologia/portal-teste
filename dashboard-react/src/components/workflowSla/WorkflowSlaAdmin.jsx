@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  createWorkflowSlaPolicy,
   deleteWorkflowSlaPolicy,
   deleteWorkflowTransition,
   duplicateWorkflowSlaPolicy,
@@ -8,7 +9,8 @@ import {
   fetchWorkflowSlaPolicies,
   fetchWorkflowStates,
   fetchWorkflowTransitions,
-  saveWorkflowSlaPolicy,
+  normalizeWorkflowSlaPolicyId,
+  updateWorkflowSlaPolicy,
   saveWorkflowTransition,
 } from '../../lib/api';
 import WorkflowSlaPolicyForm from './WorkflowSlaPolicyForm.jsx';
@@ -19,8 +21,11 @@ const toolbarField =
   'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)]';
 
 /** Junta error_messages, error_message e errors do backend em texto único para a UI. */
-function formatWorkflowSlaApiFailure(r) {
+function formatWorkflowSlaApiFailure(r, opts = {}) {
   if (!r || r.ok) return '';
+  if (opts.isCreate && r.error === 'not_found') {
+    return 'Não foi possível criar a política (resposta inesperada do servidor). Atualize a página e tente de novo.';
+  }
   const parts = [];
   if (Array.isArray(r.errorMessages) && r.errorMessages.length) parts.push(...r.errorMessages);
   if (r.errorMessage) parts.push(r.errorMessage);
@@ -141,6 +146,7 @@ export default function WorkflowSlaAdmin({ boot }) {
   }, [filters, reloadPolicies]);
 
   const openCreate = useCallback(async () => {
+    setEditingPolicy(null);
     setErr('');
     const re = await fetchWorkflowSlaEmpresas();
     if (re.ok) {
@@ -159,7 +165,6 @@ export default function WorkflowSlaAdmin({ boot }) {
         console.debug('workflow-sla-empresas erro', re.debug);
       }
     }
-    setEditingPolicy(null);
     setFormOpen(true);
   }, []);
 
@@ -189,14 +194,16 @@ export default function WorkflowSlaAdmin({ boot }) {
   const onSavePolicy = async (payload) => {
     setFormBusy(true);
     setErr('');
-    const id = editingPolicy?.id;
-    const r = await saveWorkflowSlaPolicy(id, payload, id ? 'PATCH' : 'POST');
+    const editId = normalizeWorkflowSlaPolicyId(editingPolicy?.id);
+    const isCreate = editId === null;
+    const r = isCreate ? await createWorkflowSlaPolicy(payload) : await updateWorkflowSlaPolicy(editId, payload);
     setFormBusy(false);
     if (!r.ok) {
-      setErr(formatWorkflowSlaApiFailure(r) || r.error || 'Erro ao salvar');
+      setErr(formatWorkflowSlaApiFailure(r, { isCreate }) || r.error || 'Erro ao salvar');
       return;
     }
     setFormOpen(false);
+    setEditingPolicy(null);
     setOkHint('Política salva.');
     setTimeout(() => setOkHint(''), 4000);
     await reloadPolicies();
@@ -562,15 +569,24 @@ export default function WorkflowSlaAdmin({ boot }) {
       {formOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--pgm-border)] bg-[var(--pgm-bg-surface)] p-5 shadow-xl">
-            <h3 className="mb-3 text-lg font-bold text-[var(--pgm-text)]">{editingPolicy ? 'Editar política' : 'Nova política'}</h3>
+            <h3 className="mb-3 text-lg font-bold text-[var(--pgm-text)]">
+              {normalizeWorkflowSlaPolicyId(editingPolicy?.id) != null ? 'Editar política' : 'Nova política'}
+            </h3>
             <WorkflowSlaPolicyForm
-              key={editingPolicy ? `policy-${editingPolicy.id}` : `create-${empresas.length}`}
+              key={
+                normalizeWorkflowSlaPolicyId(editingPolicy?.id) != null
+                  ? `policy-${normalizeWorkflowSlaPolicyId(editingPolicy.id)}`
+                  : `create-${empresas.length}`
+              }
               empresas={empresas}
               states={states}
               transitions={transitions}
-              initial={editingPolicy}
+              initial={normalizeWorkflowSlaPolicyId(editingPolicy?.id) != null ? editingPolicy : null}
               submitting={formBusy}
-              onCancel={() => setFormOpen(false)}
+              onCancel={() => {
+                setFormOpen(false);
+                setEditingPolicy(null);
+              }}
               onSubmit={onSavePolicy}
             />
           </div>

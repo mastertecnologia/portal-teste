@@ -61,6 +61,7 @@ function buildPreview(form, empresas, states) {
   return text;
 }
 
+/** `initial` null/undefined = nova política; objeto com `id` válido = edição (preenchido pelo admin). */
 export default function WorkflowSlaPolicyForm({ empresas, states, transitions = [], initial, onSubmit, onCancel, submitting }) {
   const empty = {
     is_global: false,
