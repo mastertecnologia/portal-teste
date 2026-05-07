@@ -643,6 +643,8 @@ export default function TechDashboard({ boot }) {
   const [transferOkHint, setTransferOkHint] = useState('');
   const [loadError, setLoadError] = useState(null);
   const sdTableScrollRef = useRef(null);
+  /** Impede dois polls `api-index` em paralelo (tick ignorado se o anterior ainda não terminou). */
+  const pollReloadInFlightRef = useRef(false);
   /** sem = só fila / sem responsável; com = atribuir técnico */
   const [transferAssignMode, setTransferAssignMode] = useState('sem');
 
@@ -655,22 +657,48 @@ export default function TechDashboard({ boot }) {
     [filaSuporte, nivelAtendimento, idResponsavel]
   );
 
-  const reload = useCallback(async () => {
-    const res = await fetchTicketsTecnico(loadFilters);
+  const reload = useCallback(async (opts = {}) => {
+    const silent = opts.silent === true;
+
+    const applyHttpError = (res) => {
+      const hint = res.httpStatus ? ` (HTTP ${res.httpStatus})` : '';
+      setLoadError(
+        res.error === 'session_empresa_invalida'
+          ? 'Sessão sem empresa válida. Troque de empresa ou faça login novamente.'
+          : res.error === 'api_index_failed'
+            ? `Falha ao montar a lista de tickets no servidor.${hint} Veja o log da aplicação (apiIndex).`
+            : `Não foi possível carregar os tickets.${hint} ${res.error || ''}`.trim(),
+      );
+    };
+
+    let res;
+    try {
+      res = await fetchTicketsTecnico(loadFilters);
+    } catch (err) {
+      if (silent) {
+        if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+          console.debug('[tech-dashboard] reload polling: falha de rede ou fetch', err);
+        }
+      } else {
+        setLoadError(
+          'Não foi possível carregar os tickets. Verifique a conexão e tente novamente.',
+        );
+      }
+      return;
+    }
+
     if (res.ok && res.groups) {
       setLoadError(null);
       setGroups(res.groups);
       setWorkflow(res.workflow ?? { enabled: false, filas: [] });
       return;
     }
-    const hint = res.httpStatus ? ` (HTTP ${res.httpStatus})` : '';
-    setLoadError(
-      res.error === 'session_empresa_invalida'
-        ? 'Sessão sem empresa válida. Troque de empresa ou faça login novamente.'
-        : res.error === 'api_index_failed'
-          ? `Falha ao montar a lista de tickets no servidor.${hint} Veja o log da aplicação (apiIndex).`
-          : `Não foi possível carregar os tickets.${hint} ${res.error || ''}`.trim(),
-    );
+
+    if (!silent) {
+      applyHttpError(res);
+    } else if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      console.debug('[tech-dashboard] reload polling: resposta não ok', res.error, res.httpStatus);
+    }
   }, [loadFilters]);
 
   const reloadSlaDashboard = useCallback(async () => {
@@ -680,29 +708,8 @@ export default function TechDashboard({ boot }) {
   }, []);
 
   useEffect(() => {
-    let cancel = false;
-    (async () => {
-      const res = await fetchTicketsTecnico(loadFilters);
-      if (cancel) return;
-      if (res.ok && res.groups) {
-        setLoadError(null);
-        setGroups(res.groups);
-        setWorkflow(res.workflow ?? { enabled: false, filas: [] });
-      } else {
-        const hint = res.httpStatus ? ` (HTTP ${res.httpStatus})` : '';
-        setLoadError(
-          res.error === 'session_empresa_invalida'
-            ? 'Sessão sem empresa válida. Troque de empresa ou faça login novamente.'
-            : res.error === 'api_index_failed'
-              ? `Falha ao montar a lista de tickets no servidor.${hint}`
-              : `Não foi possível carregar os tickets.${hint} ${res.error || ''}`.trim(),
-        );
-      }
-    })();
-    return () => {
-      cancel = true;
-    };
-  }, [loadFilters]);
+    void reload({ silent: false });
+  }, [loadFilters, reload]);
 
   useEffect(() => {
     let cancel = false;
@@ -732,7 +739,15 @@ export default function TechDashboard({ boot }) {
     if (!embedded || !boot?.servicedesk) return undefined;
     const id = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return;
-      reload();
+      if (pollReloadInFlightRef.current) return;
+      pollReloadInFlightRef.current = true;
+      void (async () => {
+        try {
+          await reload({ silent: true });
+        } finally {
+          pollReloadInFlightRef.current = false;
+        }
+      })();
     }, SERVICEDESK_POLL_MS);
     return () => window.clearInterval(id);
   }, [embedded, boot?.servicedesk, reload]);
