@@ -18,6 +18,29 @@ import WorkflowTransitionList from './WorkflowTransitionList.jsx';
 const toolbarField =
   'h-8 min-w-0 rounded-lg border border-[var(--pgm-border)] bg-[var(--pgm-bg-elevated)] px-2.5 text-sm text-[var(--pgm-text)] outline-none transition focus:border-[var(--pgm-primary)]';
 
+/** Junta error_messages, error_message e errors do backend em texto único para a UI. */
+function formatWorkflowSlaApiFailure(r) {
+  if (!r || r.ok) return '';
+  const parts = [];
+  if (Array.isArray(r.errorMessages) && r.errorMessages.length) parts.push(...r.errorMessages);
+  if (r.errorMessage) parts.push(r.errorMessage);
+  if (r.error === 'not_found' && r.errorMessage) parts.push(r.errorMessage);
+  else if (r.error && r.error !== 'not_found') parts.push(r.error);
+  if (!parts.length && r.errors) {
+    if (Array.isArray(r.errors)) parts.push(...r.errors.map((x) => String(x)));
+    else if (typeof r.errors === 'object') {
+      try {
+        parts.push(JSON.stringify(r.errors));
+      } catch (e) {
+        parts.push('Erro de validação');
+      }
+    }
+  }
+  if (!parts.length && r.error) parts.push(String(r.error));
+  const u = [...new Set(parts.filter(Boolean))];
+  return u.length ? u.join(' ') : 'Erro ao processar solicitação';
+}
+
 function wfSdHomeUrl(b) {
   const p = b?.paths || {};
   const fromBoot = p.servicedeskUrl || p.indexTecnico;
@@ -69,8 +92,7 @@ export default function WorkflowSlaAdmin({ boot }) {
       setPolicies(r.policies || []);
       setPrioridadeMsg(r.prioridade || '');
     } else {
-      const extra = r.error && r.error !== 'not_found' ? ` (${r.error})` : '';
-      setErr(`Erro ao carregar políticas SLA${extra}`);
+      setErr(formatWorkflowSlaApiFailure(r) || 'Erro ao carregar políticas SLA');
     }
   }, [filters]);
 
@@ -93,15 +115,16 @@ export default function WorkflowSlaAdmin({ boot }) {
     const rl = await fetchWorkflowSlaLogs(100);
     if (rl.ok) setLogs(rl.logs || []);
     const parts = [];
-    const appendErr = (label, err) => {
-      if (!err || err === 'not_found') parts.push(label);
-      else parts.push(`${label} (${err})`);
+    const appendErr = (label, obj) => {
+      if (!obj || obj.ok) return;
+      const detail = formatWorkflowSlaApiFailure(obj);
+      parts.push(detail ? `${label}: ${detail}` : label);
     };
-    if (!rs.ok) appendErr('Erro ao carregar estados do workflow', rs.error);
-    if (!rt.ok) appendErr('Erro ao carregar transições', rt.error);
-    if (!re.ok) appendErr('Erro ao carregar empresas', re.error);
-    if (!rp.ok) appendErr('Erro ao carregar políticas SLA', rp.error);
-    if (!rl.ok) appendErr('Erro ao carregar logs SLA', rl.error);
+    if (!rs.ok) appendErr('Erro ao carregar estados do workflow', rs);
+    if (!rt.ok) appendErr('Erro ao carregar transições', rt);
+    if (!re.ok) appendErr('Erro ao carregar empresas', re);
+    if (!rp.ok) appendErr('Erro ao carregar políticas SLA', rp);
+    if (!rl.ok) appendErr('Erro ao carregar logs SLA', rl);
     if (parts.length) setErr(parts.join('. '));
     setLoading(false);
   }, []);
@@ -170,7 +193,7 @@ export default function WorkflowSlaAdmin({ boot }) {
     const r = await saveWorkflowSlaPolicy(id, payload, id ? 'PATCH' : 'POST');
     setFormBusy(false);
     if (!r.ok) {
-      setErr((r.errors && JSON.stringify(r.errors)) || r.error || 'Erro ao salvar');
+      setErr(formatWorkflowSlaApiFailure(r) || r.error || 'Erro ao salvar');
       return;
     }
     setFormOpen(false);
@@ -200,7 +223,7 @@ export default function WorkflowSlaAdmin({ boot }) {
     if (!wid) return;
     const r = await duplicateWorkflowSlaPolicy(p.id, { workflow_state_id: Number(wid) });
     if (!r.ok) {
-      setErr((r.errors && JSON.stringify(r.errors)) || r.error || 'Duplicar falhou');
+      setErr(formatWorkflowSlaApiFailure(r) || r.error || 'Duplicar falhou');
       return;
     }
     setOkHint('Política duplicada.');
@@ -544,6 +567,7 @@ export default function WorkflowSlaAdmin({ boot }) {
               key={editingPolicy ? `policy-${editingPolicy.id}` : `create-${empresas.length}`}
               empresas={empresas}
               states={states}
+              transitions={transitions}
               initial={editingPolicy}
               submitting={formBusy}
               onCancel={() => setFormOpen(false)}

@@ -1302,7 +1302,15 @@ export async function fetchWorkflowSlaPolicies(filters = {}) {
   const url = wfSlaPolicyListUrl(boot) + qs(filters);
   const r = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' }, cache: 'no-store' });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, policies: [] };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      policies: [],
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
   return { ok: true, policies: json.policies || [], prioridade: json.prioridade || '' };
 }
 
@@ -1314,7 +1322,15 @@ export async function fetchWorkflowSlaPolicy(id) {
     cache: 'no-store',
   });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errorMessage: json.error_message,
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
   return { ok: true, policy: json.policy };
 }
 
@@ -1330,7 +1346,15 @@ export async function saveWorkflowSlaPolicy(id, body, method = 'POST') {
     body: JSON.stringify(body),
   });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, errors: json.errors };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errorMessage: json.error_message,
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
   return { ok: true, policy: json.policy };
 }
 
@@ -1342,7 +1366,15 @@ export async function deleteWorkflowSlaPolicy(id) {
     headers: { Accept: 'application/json' },
   });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errorMessage: json.error_message,
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
   return { ok: true };
 }
 
@@ -1356,7 +1388,15 @@ export async function duplicateWorkflowSlaPolicy(id, body = {}) {
     body: JSON.stringify(body),
   });
   const json = await r.json().catch(() => ({}));
-  if (!r.ok || !json.ok) return { ok: false, error: json.error || r.statusText, errors: json.errors };
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      errorMessage: json.error_message,
+      errors: json.errors,
+      errorMessages: Array.isArray(json.error_messages) ? json.error_messages : [],
+    };
+  }
   return { ok: true, policy: json.policy };
 }
 

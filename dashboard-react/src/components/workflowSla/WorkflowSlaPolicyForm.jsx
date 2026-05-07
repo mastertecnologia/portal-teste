@@ -16,6 +16,34 @@ function empresaOptionLabel(e) {
   );
 }
 
+/**
+ * Estados permitidos como destino do auto-escalonamento: transição from→to existente
+ * (global ou da empresa), exclui o próprio estado e estados finais (alinha ao backend padrão).
+ */
+function allowedEscalateStateIds(form, transitions, states) {
+  const from = Number(form.workflow_state_id);
+  if (!Number.isFinite(from) || from <= 0) return [];
+  const globalRule = !!form.is_global;
+  const eid = Number(form.empresa_id);
+  const list = Array.isArray(transitions) ? transitions : [];
+  let toIds = [];
+  if (list.length > 0) {
+    const rows = list.filter((t) => Number(t.from_state_id) === from);
+    toIds = rows
+      .filter((t) => {
+        const te = t.empresa_id;
+        if (globalRule) return te == null || te === '';
+        return te == null || te === '' || Number(te) === eid;
+      })
+      .map((t) => Number(t.to_state_id));
+  } else {
+    toIds = (states || []).filter((s) => Number(s.id) !== from && !s.is_final).map((s) => Number(s.id));
+  }
+  const uniq = [...new Set(toIds.filter((x) => Number.isFinite(x) && x > 0 && x !== from))];
+  const nonFinal = new Set((states || []).filter((s) => !s.is_final).map((s) => Number(s.id)));
+  return uniq.filter((id) => nonFinal.has(id));
+}
+
 function buildPreview(form, empresas, states) {
   const row = empresas.find((x) => Number(x.id) === Number(form.empresa_id));
   const emp = form.is_global ? 'qualquer empresa (regra global)' : empresaOptionLabel(row) || 'empresa selecionada';
@@ -33,10 +61,10 @@ function buildPreview(form, empresas, states) {
   return text;
 }
 
-export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSubmit, onCancel, submitting }) {
+export default function WorkflowSlaPolicyForm({ empresas, states, transitions = [], initial, onSubmit, onCancel, submitting }) {
   const empty = {
     is_global: false,
-    empresa_id: empresas[0]?.id || '',
+    empresa_id: empresas[0]?.id ?? '',
     workflow_state_id: '',
     resposta_minutos: '',
     resolucao_minutos: '',
@@ -48,12 +76,14 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
     nota_local: '',
   };
   const [form, setForm] = useState(empty);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (initial) {
+      const isGlobal = initial.scope === 'global';
       setForm({
-        is_global: initial.scope === 'global',
-        empresa_id: initial.empresa_id ?? empresas[0]?.id ?? '',
+        is_global: isGlobal,
+        empresa_id: isGlobal ? '' : initial.empresa_id ?? empresas[0]?.id ?? '',
         workflow_state_id: String(initial.workflow_state_id || ''),
         resposta_minutos: initial.resposta_minutos ?? '',
         resolucao_minutos: initial.resolucao_minutos ?? '',
@@ -67,45 +97,97 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
     } else {
       setForm({
         ...empty,
-        empresa_id: empresas[0]?.id || '',
+        empresa_id: empresas[0]?.id ?? '',
       });
     }
-  }, [initial]);
+    setFormError('');
+  }, [initial, empresas]);
 
   useEffect(() => {
     if (initial) return;
     const first = empresas[0]?.id;
     if (first === undefined || first === '') return;
-    setForm((f) => (f.empresa_id !== '' && f.empresa_id !== undefined ? f : { ...f, empresa_id: first }));
+    setForm((f) => (f.is_global ? f : f.empresa_id !== '' && f.empresa_id !== undefined ? f : { ...f, empresa_id: first }));
   }, [empresas, initial]);
+
+  const allowedEscalateIds = useMemo(
+    () => allowedEscalateStateIds(form, transitions, states),
+    [form.is_global, form.empresa_id, form.workflow_state_id, transitions, states],
+  );
+
+  useEffect(() => {
+    if (!form.auto_escalar) return;
+    const cur = Number(form.escalate_to_state_id);
+    if (!cur) return;
+    if (!allowedEscalateIds.includes(cur)) {
+      setForm((f) => ({ ...f, escalate_to_state_id: '' }));
+    }
+  }, [allowedEscalateIds, form.auto_escalar, form.escalate_to_state_id]);
 
   const preview = useMemo(() => buildPreview(form, empresas, states), [form, empresas, states]);
 
+  const escalateStates = useMemo(() => {
+    const setIds = new Set(allowedEscalateIds);
+    return (states || []).filter((s) => setIds.has(Number(s.id)));
+  }, [states, allowedEscalateIds]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    setFormError('');
     if (!form.is_global && empresas.length === 0) {
+      setFormError('Nenhuma empresa disponível. Marque regra global ou cadastre empresas ativas.');
       return;
     }
     if (!form.is_global && (form.empresa_id === '' || form.empresa_id === undefined)) {
+      setFormError('Selecione a empresa ou marque regra global.');
       return;
     }
+    const wid = Number(form.workflow_state_id);
+    if (!Number.isFinite(wid) || wid <= 0) {
+      setFormError('Selecione o estado do workflow.');
+      return;
+    }
+    if (form.auto_escalar) {
+      const to = Number(form.escalate_to_state_id);
+      if (!Number.isFinite(to) || to <= 0) {
+        setFormError('Com auto-escalar ativo, selecione o estado de destino.');
+        return;
+      }
+      if (!allowedEscalateIds.includes(to)) {
+        setFormError('O destino precisa corresponder a uma transição válida a partir do estado atual.');
+        return;
+      }
+    }
+
+    const autoOn = !!form.auto_escalar;
+    const afterMin =
+      form.escalate_after_minutos === '' || form.escalate_after_minutos === null
+        ? 0
+        : Number(form.escalate_after_minutos);
     onSubmit({
       is_global: form.is_global,
       empresa_id: form.is_global ? null : Number(form.empresa_id),
-      workflow_state_id: Number(form.workflow_state_id),
+      workflow_state_id: wid,
       resposta_minutos: form.resposta_minutos === '' ? null : Number(form.resposta_minutos),
       resolucao_minutos: form.resolucao_minutos === '' ? null : Number(form.resolucao_minutos),
-      pausa_sla: form.pausa_sla,
-      is_final: form.is_final,
-      auto_escalar: form.auto_escalar,
-      escalate_to_state_id: form.auto_escalar ? Number(form.escalate_to_state_id) || null : null,
-      escalate_after_minutos: Number(form.escalate_after_minutos) || 0,
-      nota_local: form.nota_local,
+      pausa_sla: !!form.pausa_sla,
+      is_final: !!form.is_final,
+      auto_escalar: autoOn,
+      escalate_to_state_id: autoOn ? Number(form.escalate_to_state_id) : null,
+      escalate_after_minutos: autoOn ? (Number.isFinite(afterMin) ? afterMin : 0) : 0,
     });
   };
 
+  const showTransHint = Array.isArray(transitions) && transitions.length > 0 && allowedEscalateIds.length === 0 && !!form.workflow_state_id;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {formError ? (
+        <div className="rounded-md border border-[var(--pgm-badge-red-ring)] bg-[rgba(220,51,15,0.12)] px-3 py-2 text-sm text-[var(--pgm-badge-red-text)]">
+          {formError}
+        </div>
+      ) : null}
+
       <div className="rounded-lg border border-[var(--pgm-border-subtle)] bg-[var(--pgm-bg-elevated)] p-3">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]">Preview</p>
         <p className="mt-1 text-sm leading-relaxed text-[var(--pgm-text-secondary)]">{preview}</p>
@@ -115,7 +197,14 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
         <input
           type="checkbox"
           checked={form.is_global}
-          onChange={(e) => setForm((f) => ({ ...f, is_global: e.target.checked }))}
+          onChange={(e) => {
+            const g = e.target.checked;
+            setForm((f) => ({
+              ...f,
+              is_global: g,
+              empresa_id: g ? '' : f.empresa_id || empresas[0]?.id || '',
+            }));
+          }}
         />
         Regra global
         <span className="rounded-full bg-[rgba(45,170,225,0.15)] px-2 py-0.5 text-[10px] font-semibold text-[#2DAAE1]">
@@ -134,7 +223,7 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
           <select
             disabled={form.is_global}
             className="mt-1 w-full rounded-md border border-[var(--pgm-border)] bg-[var(--pgm-bg-raised)] px-3 py-2 text-sm text-[var(--pgm-text)] disabled:opacity-50"
-            value={empresas.length ? String(form.empresa_id) : ''}
+            value={empresas.length && !form.is_global ? String(form.empresa_id) : ''}
             onChange={(e) => setForm((f) => ({ ...f, empresa_id: e.target.value }))}
           >
             {empresas.map((e) => (
@@ -221,14 +310,17 @@ export default function WorkflowSlaPolicyForm({ empresas, states, initial, onSub
               onChange={(e) => setForm((f) => ({ ...f, escalate_to_state_id: e.target.value }))}
             >
               <option value="">Selecione…</option>
-              {states
-                .filter((s) => Number(s.id) !== Number(form.workflow_state_id))
-                .map((s) => (
-                  <option key={s.id} value={String(s.id)}>
-                    {s.nome}
-                  </option>
-                ))}
+              {escalateStates.map((s) => (
+                <option key={s.id} value={String(s.id)}>
+                  {s.nome}
+                </option>
+              ))}
             </select>
+            {showTransHint ? (
+              <p className="mt-1 text-xs text-[var(--pgm-text-muted)]">
+                Não há transição (global ou desta empresa) saindo deste estado. Configure na aba Transições.
+              </p>
+            ) : null}
           </label>
           <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.06em] text-[var(--pgm-text-muted)]">
             Tolerância após vencimento (min úteis)

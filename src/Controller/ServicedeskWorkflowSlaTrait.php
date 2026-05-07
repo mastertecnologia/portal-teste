@@ -176,13 +176,13 @@ trait ServicedeskWorkflowSlaTrait {
 	}
 
 	/**
-	 * Empresas ativas; se WORKFLOW_EMPRESAS estiver definido, interseção com essa lista.
+	 * Empresas ativas elegíveis no CRUD de políticas SLA (admin interno).
+	 * Não restringe por WORKFLOW_EMPRESAS: políticas e tickets podem existir para qualquer empresa ativa.
 	 *
 	 * @return array<int,int>
 	 */
 	protected function _wfSlaAdminSelectableEmpresaIds(): array {
 		try {
-			$enabled = $this->_wfWorkflowEmpresaFilterIds();
 			$activeIds = [];
 			foreach ($this->_wfEmpresaWhereAtivoAttempts() as $idx => $where) {
 				try {
@@ -213,18 +213,8 @@ trait ServicedeskWorkflowSlaTrait {
 				}
 			}
 			sort($activeIds);
-			$activeIds = array_values(array_unique($activeIds));
-			if ($enabled === []) {
-				return $activeIds;
-			}
-			$intersect = array_values(array_intersect($activeIds, $enabled));
-			if ($intersect === [] && $activeIds !== []) {
-				Log::warning('Workflow SLA admin: WORKFLOW_EMPRESAS não intersecta empresas ativas; usando todas as ativas.');
 
-				return $activeIds;
-			}
-
-			return $intersect;
+			return array_values(array_unique($activeIds));
 		} catch (\Throwable $e) {
 			Log::warning('Workflow SLA admin _wfSlaAdminSelectableEmpresaIds: ' . $e->getMessage());
 
@@ -303,12 +293,84 @@ trait ServicedeskWorkflowSlaTrait {
 	}
 
 	/**
+	 * Mensagens legíveis para códigos de validação de política SLA (UI + API).
+	 *
+	 * @param array<int|string> $codes
+	 * @return array<int,string>
+	 */
+	protected function _wfPolicyValidationErrorMessages(array $codes): array {
+		$map = [
+			'empresa_obrigatoria' => 'Selecione a empresa ou marque regra global.',
+			'empresa_invalida' => 'Empresa inválida ou inativa para esta operação.',
+			'workflow_state_obrigatorio' => 'Selecione o estado do workflow.',
+			'resposta_minutos_negativo' => 'Minutos de resposta não podem ser negativos.',
+			'resolucao_minutos_negativo' => 'Minutos de resolução não podem ser negativos.',
+			'escalate_to_obrigatorio' => 'Com auto-escalar ativo, informe o estado de destino.',
+			'escalate_to_igual_origem' => 'O destino do escalonamento não pode ser o mesmo estado atual.',
+			'escalate_to_final_nao_permitido' => 'Não é permitido escalar para um estado final.',
+			'escalate_to_transicao_invalida' => 'Não existe transição de workflow do estado atual para o destino escolhido (global ou da empresa).',
+			'escalate_after_negativo' => 'Tolerância após vencimento não pode ser negativa.',
+			'duplicado_estado_empresa' => 'Já existe política para esta empresa e estado.',
+			'duplicado_estado_global' => 'Já existe política global para este estado.',
+			'tabela_indisponivel' => 'Tabela de políticas indisponível no servidor.',
+		];
+		$out = [];
+		foreach ($codes as $c) {
+			$key = is_string($c) ? $c : (string)$c;
+			$out[] = $map[$key] ?? $key;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param array<string,mixed> $entityErrors Resultado de `Entity::getErrors()`.
+	 * @return array<string,mixed>
+	 */
+	protected function _wfPolicySaveErrorResponse(array $entityErrors): array {
+		$msgs = [];
+		foreach ($entityErrors as $rules) {
+			if (!is_array($rules)) {
+				continue;
+			}
+			foreach ($rules as $msg) {
+				if (is_string($msg)) {
+					$msgs[] = $msg;
+				}
+			}
+		}
+
+		return [
+			'ok' => false,
+			'errors' => $entityErrors,
+			'error_messages' => $msgs !== [] ? $msgs : ['Não foi possível gravar a política.'],
+		];
+	}
+
+	/**
+	 * @param array<int|string> $errs
+	 * @return array<string,mixed>
+	 */
+	protected function _wfPolicyValidationErrorResponse(array $errs): array {
+		return [
+			'ok' => false,
+			'errors' => $errs,
+			'error_messages' => $this->_wfPolicyValidationErrorMessages($errs),
+		];
+	}
+
+	/**
 	 * @param array<string,mixed> $data
 	 * @return array{0:bool,1:array<string>}
 	 */
 	protected function _wfValidatePolicyPayload(array $data, ?int $ignoreId = null): array {
 		$errs = [];
-		$global = !empty($data['is_global']);
+		if (array_key_exists('is_global', $data)) {
+			$global = !empty($data['is_global']);
+		} else {
+			$eidInfer = array_key_exists('empresa_id', $data) ? $data['empresa_id'] : null;
+			$global = ($eidInfer === null || $eidInfer === '');
+		}
 		$eid = array_key_exists('empresa_id', $data) ? $data['empresa_id'] : null;
 		if (!$global && ($eid === null || $eid === '' || (int)$eid <= 0)) {
 			$errs[] = 'empresa_obrigatoria';
@@ -337,7 +399,10 @@ trait ServicedeskWorkflowSlaTrait {
 			}
 		}
 		$auto = !empty($data['auto_escalar']);
-		$escTo = isset($data['escalate_to_state_id']) ? (int)$data['escalate_to_state_id'] : 0;
+		$escTo = 0;
+		if ($auto) {
+			$escTo = isset($data['escalate_to_state_id']) ? (int)$data['escalate_to_state_id'] : 0;
+		}
 		if ($auto && $escTo <= 0) {
 			$errs[] = 'escalate_to_obrigatorio';
 		}
@@ -350,6 +415,30 @@ trait ServicedeskWorkflowSlaTrait {
 				$target = $stt->find()->where(['id' => $escTo])->first();
 				if ($target && !empty($target->is_final) && !Configure::read('Workflow.allowEscalateToFinalInSlaPolicy', false)) {
 					$errs[] = 'escalate_to_final_nao_permitido';
+				}
+			}
+		}
+		if ($auto && $escTo > 0 && $errs === []) {
+			$transTable = $this->_wfTransitionsTable();
+			if ($transTable !== null) {
+				$tq = $transTable->find()
+					->where([
+						'from_state_id' => $wfSid,
+						'to_state_id' => $escTo,
+					]);
+				if ($global) {
+					$tq->where(['empresa_id IS' => null]);
+				} else {
+					$empPol = (int)$data['empresa_id'];
+					$tq->where([
+						'OR' => [
+							['empresa_id IS' => null],
+							['empresa_id' => $empPol],
+						],
+					]);
+				}
+				if (!$tq->first()) {
+					$errs[] = 'escalate_to_transicao_invalida';
 				}
 			}
 		}
@@ -376,7 +465,7 @@ trait ServicedeskWorkflowSlaTrait {
 			$q->where(['id !=' => $ignoreId]);
 		}
 		if ($q->first()) {
-			return [false, ['duplicado_estado_empresa']];
+			return [false, [$global ? 'duplicado_estado_global' : 'duplicado_estado_empresa']];
 		}
 
 		return [true, []];
@@ -436,16 +525,14 @@ trait ServicedeskWorkflowSlaTrait {
 					return $this->jsonResponse(['ok' => true, 'policies' => [], 'prioridade' => '']);
 				}
 
-				return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
+				return $this->jsonResponse($this->_wfPolicyValidationErrorResponse(['tabela_indisponivel']), 422);
 			}
 			if ($this->request->is('get')) {
 				return $this->jsonResponse(['ok' => true, 'policy' => null]);
 			}
 
-			return $this->jsonResponse(['ok' => false, 'errors' => ['tabela_indisponivel']], 422);
+			return $this->jsonResponse($this->_wfPolicyValidationErrorResponse(['tabela_indisponivel']), 422);
 		}
-		$enabledEmpresas = $this->_wfWorkflowEmpresaFilterIds();
-
 		if ($id === null || $id === '') {
 			if ($this->request->is('get')) {
 				try {
@@ -458,19 +545,6 @@ trait ServicedeskWorkflowSlaTrait {
 
 					$query = $table->find()
 						->contain(['WorkflowStates', 'Empresas', 'EscalateToStates']);
-					if ($enabledEmpresas !== []) {
-						$allowed = $this->_wfSlaAdminSelectableEmpresaIds();
-						if ($allowed === []) {
-							$query->where(['WorkflowSlaPolicies.empresa_id IS' => null]);
-						} else {
-							$query->where([
-								'OR' => [
-									['WorkflowSlaPolicies.empresa_id IS' => null],
-									['WorkflowSlaPolicies.empresa_id IN' => $allowed],
-								],
-							]);
-						}
-					}
 					if ($fEmp !== null && $fEmp !== '' && $fEmp !== 'all') {
 						if ($fEmp === 'global') {
 							$query->where(['WorkflowSlaPolicies.empresa_id IS' => null]);
@@ -518,23 +592,26 @@ trait ServicedeskWorkflowSlaTrait {
 				$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
 				[$ok, $errs] = $this->_wfValidatePolicyPayload($body, null);
 				if (!$ok) {
-					return $this->jsonResponse(['ok' => false, 'errors' => $errs], 422);
+					return $this->jsonResponse($this->_wfPolicyValidationErrorResponse($errs), 422);
 				}
+				$autoOn = !empty($body['auto_escalar']);
+				$respIn = $body['resposta_minutos'] ?? null;
+				$resoIn = $body['resolucao_minutos'] ?? null;
 				$ent = $table->newEntity([
 					'empresa_id' => !empty($body['is_global']) ? null : (int)$body['empresa_id'],
 					'workflow_state_id' => (int)$body['workflow_state_id'],
-					'resposta_minutos' => $body['resposta_minutos'] ?? null,
-					'resolucao_minutos' => $body['resolucao_minutos'] ?? null,
+					'resposta_minutos' => ($respIn === null || $respIn === '') ? null : (int)$respIn,
+					'resolucao_minutos' => ($resoIn === null || $resoIn === '') ? null : (int)$resoIn,
 					'pausa_sla' => !empty($body['pausa_sla']),
 					'is_final' => !empty($body['is_final']),
-					'auto_escalar' => !empty($body['auto_escalar']),
-					'escalate_to_state_id' => !empty($body['escalate_to_state_id']) ? (int)$body['escalate_to_state_id'] : null,
-					'escalate_after_minutos' => isset($body['escalate_after_minutos']) ? (int)$body['escalate_after_minutos'] : 0,
+					'auto_escalar' => $autoOn,
+					'escalate_to_state_id' => $autoOn && !empty($body['escalate_to_state_id']) ? (int)$body['escalate_to_state_id'] : null,
+					'escalate_after_minutos' => $autoOn ? (isset($body['escalate_after_minutos']) ? (int)$body['escalate_after_minutos'] : 0) : 0,
 					'created_at' => FrozenTime::now(),
 					'updated_at' => FrozenTime::now(),
 				]);
 				if (!$table->save($ent)) {
-					return $this->jsonResponse(['ok' => false, 'errors' => $ent->getErrors()], 422);
+					return $this->jsonResponse($this->_wfPolicySaveErrorResponse($ent->getErrors()), 422);
 				}
 				$ent = $table->get($ent->id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
 
@@ -546,7 +623,7 @@ trait ServicedeskWorkflowSlaTrait {
 				try {
 					$row = $table->get($id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
 				} catch (\Throwable $e) {
-					return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+					return $this->jsonResponse(['ok' => false, 'error' => 'not_found', 'error_message' => 'Política não encontrada.'], 404);
 				}
 				$eid = $row->empresa_id;
 				$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
@@ -560,7 +637,7 @@ trait ServicedeskWorkflowSlaTrait {
 				try {
 					$row = $table->get($id);
 				} catch (\Throwable $e) {
-					return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+					return $this->jsonResponse(['ok' => false, 'error' => 'not_found', 'error_message' => 'Política não encontrada.'], 404);
 				}
 				$eid = $row->empresa_id;
 				$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
@@ -571,22 +648,39 @@ trait ServicedeskWorkflowSlaTrait {
 				$merged = array_merge($row->toArray(), $body);
 				[$ok, $errs] = $this->_wfValidatePolicyPayload($merged, $id);
 				if (!$ok) {
-					return $this->jsonResponse(['ok' => false, 'errors' => $errs], 422);
+					return $this->jsonResponse($this->_wfPolicyValidationErrorResponse($errs), 422);
 				}
+				$autoOn = !empty($merged['auto_escalar']);
+				$isGlobalPatch = array_key_exists('is_global', $body)
+					? !empty($body['is_global'])
+					: ($row->empresa_id === null || $row->empresa_id === '');
+				$escToPatch = null;
+				if ($autoOn) {
+					if (array_key_exists('escalate_to_state_id', $body) && $body['escalate_to_state_id'] !== '' && $body['escalate_to_state_id'] !== null) {
+						$escToPatch = (int)$body['escalate_to_state_id'];
+					} else {
+						$escToPatch = $row->escalate_to_state_id !== null ? (int)$row->escalate_to_state_id : null;
+					}
+				}
+				$escAfterPatch = $autoOn
+					? (array_key_exists('escalate_after_minutos', $body) ? (int)$body['escalate_after_minutos'] : (int)($row->escalate_after_minutos ?? 0))
+					: 0;
+				$respPatch = array_key_exists('resposta_minutos', $body) ? $body['resposta_minutos'] : $row->resposta_minutos;
+				$resoPatch = array_key_exists('resolucao_minutos', $body) ? $body['resolucao_minutos'] : $row->resolucao_minutos;
 				$table->patchEntity($row, [
-					'empresa_id' => !empty($body['is_global']) ? null : (int)($body['empresa_id'] ?? $row->empresa_id),
+					'empresa_id' => $isGlobalPatch ? null : (int)($body['empresa_id'] ?? $row->empresa_id),
 					'workflow_state_id' => (int)($body['workflow_state_id'] ?? $row->workflow_state_id),
-					'resposta_minutos' => array_key_exists('resposta_minutos', $body) ? $body['resposta_minutos'] : $row->resposta_minutos,
-					'resolucao_minutos' => array_key_exists('resolucao_minutos', $body) ? $body['resolucao_minutos'] : $row->resolucao_minutos,
+					'resposta_minutos' => ($respPatch === null || $respPatch === '') ? null : (int)$respPatch,
+					'resolucao_minutos' => ($resoPatch === null || $resoPatch === '') ? null : (int)$resoPatch,
 					'pausa_sla' => array_key_exists('pausa_sla', $body) ? (bool)$body['pausa_sla'] : $row->pausa_sla,
 					'is_final' => array_key_exists('is_final', $body) ? (bool)$body['is_final'] : $row->is_final,
 					'auto_escalar' => array_key_exists('auto_escalar', $body) ? (bool)$body['auto_escalar'] : $row->auto_escalar,
-					'escalate_to_state_id' => array_key_exists('escalate_to_state_id', $body) ? $body['escalate_to_state_id'] : $row->escalate_to_state_id,
-					'escalate_after_minutos' => array_key_exists('escalate_after_minutos', $body) ? (int)$body['escalate_after_minutos'] : $row->escalate_after_minutos,
+					'escalate_to_state_id' => $escToPatch,
+					'escalate_after_minutos' => $escAfterPatch,
 					'updated_at' => FrozenTime::now(),
 				]);
 				if (!$table->save($row)) {
-					return $this->jsonResponse(['ok' => false, 'errors' => $row->getErrors()], 422);
+					return $this->jsonResponse($this->_wfPolicySaveErrorResponse($row->getErrors()), 422);
 				}
 				$row = $table->get($id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
 
@@ -596,7 +690,7 @@ trait ServicedeskWorkflowSlaTrait {
 				try {
 					$row = $table->get($id);
 				} catch (\Throwable $e) {
-					return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+					return $this->jsonResponse(['ok' => false, 'error' => 'not_found', 'error_message' => 'Política não encontrada.'], 404);
 				}
 				$eid = $row->empresa_id;
 				$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
@@ -853,7 +947,7 @@ trait ServicedeskWorkflowSlaTrait {
 		try {
 			$row = $table->get($id);
 		} catch (\Throwable $e) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found', 'error_message' => 'Política não encontrada.'], 404);
 		}
 		$eid = $row->empresa_id;
 		$eidInt = $eid === null || $eid === '' ? null : (int)$eid;
@@ -863,7 +957,7 @@ trait ServicedeskWorkflowSlaTrait {
 		$body = (array)$this->request->input('json_decode', true) + $this->request->getData();
 		$newStateId = isset($body['workflow_state_id']) ? (int)$body['workflow_state_id'] : (int)$row->workflow_state_id;
 		if ($newStateId <= 0) {
-			return $this->jsonResponse(['ok' => false, 'errors' => ['workflow_state_obrigatorio']], 422);
+			return $this->jsonResponse($this->_wfPolicyValidationErrorResponse(['workflow_state_obrigatorio']), 422);
 		}
 		$copy = $table->newEntity([
 			'empresa_id' => $row->empresa_id,
@@ -880,8 +974,11 @@ trait ServicedeskWorkflowSlaTrait {
 		]);
 		if (!$table->save($copy)) {
 			$err = $copy->getErrors();
+			if ($err !== []) {
+				return $this->jsonResponse($this->_wfPolicySaveErrorResponse($err), 422);
+			}
 
-			return $this->jsonResponse(['ok' => false, 'errors' => $err !== [] ? $err : ['duplicado_estado_empresa']], 422);
+			return $this->jsonResponse($this->_wfPolicyValidationErrorResponse(['duplicado_estado_empresa']), 422);
 		}
 		$copy = $table->get($copy->id, ['contain' => ['WorkflowStates', 'Empresas', 'EscalateToStates']]);
 
@@ -896,7 +993,7 @@ trait ServicedeskWorkflowSlaTrait {
 		$enabledConfigured = $this->_wfWorkflowEmpresaFilterIds();
 		$debugOn = (bool)Configure::read('debug') || (string)$this->request->getQuery('verbose') === '1';
 		try {
-			$list = $this->_wfEmpresaRowsForWorkflowSlaDropdown($enabledConfigured);
+			$list = $this->_wfEmpresaRowsForWorkflowSlaDropdown([]);
 			$out = [];
 			foreach ($list as $r) {
 				if (!is_array($r)) {
