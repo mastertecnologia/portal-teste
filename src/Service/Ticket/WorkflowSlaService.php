@@ -84,27 +84,104 @@ class WorkflowSlaService {
 			}
 		}
 
-		if ($this->hasSlaStarted($ticket)) {
+		// Com SLA já iniciado mas minutos do ticket ≠ policy do estado (ex.: legado 4320 vs policy 1),
+		// recalcular prazos; sem divergência, manter deadlines (ex.: extensão após pausa).
+		// Null em resposta/resolução na policy = dimensão não gerida aqui (não tratar como 0).
+		$bh = new BusinessHoursService();
+		$rawPolResp = $policy->get('resposta_minutos');
+		$rawPolRes = $policy->get('resolucao_minutos');
+		$policyRespostaDefined = $rawPolResp !== null && $rawPolResp !== '';
+		$policyResolucaoDefined = $rawPolRes !== null && $rawPolRes !== '';
+		$respostaMin = $policyRespostaDefined ? max(0, (int)$rawPolResp) : null;
+		$resolucaoMin = $policyResolucaoDefined ? max(0, (int)$rawPolRes) : null;
+
+		$hasStarted = $this->hasSlaStarted($ticket);
+		$canRespMin = in_array('sla_resposta_minutos', $cols, true);
+		$canResMin = in_array('sla_resolucao_minutos', $cols, true);
+
+		$respMisaligned = false;
+		if ($canRespMin && $policyRespostaDefined && $respostaMin !== null) {
+			$sr = $ticket->get('sla_resposta_minutos');
+			if ($sr === null || $sr === '') {
+				$respMisaligned = $hasStarted;
+			} else {
+				$respMisaligned = ((int)$sr !== $respostaMin);
+			}
+		}
+
+		$resMisaligned = false;
+		if ($canResMin && $policyResolucaoDefined && $resolucaoMin !== null) {
+			$sz = $ticket->get('sla_resolucao_minutos');
+			if ($sz === null || $sz === '') {
+				$resMisaligned = $hasStarted;
+			} else {
+				$resMisaligned = ((int)$sz !== $resolucaoMin);
+			}
+		}
+
+		if ($hasStarted && !$respMisaligned && !$resMisaligned) {
 			return array_values(array_unique($changed));
 		}
 
-		$bh = new BusinessHoursService();
-		$respostaMin = max(0, (int)($policy->resposta_minutos ?? 0));
-		$resolucaoMin = max(0, (int)($policy->resolucao_minutos ?? 0));
-
-		if (in_array('sla_resposta_minutos', $cols, true)) {
+		if ($canRespMin && $policyRespostaDefined && $respostaMin !== null) {
 			$this->setIfExists($ticket, $cols, 'sla_resposta_minutos', $respostaMin, $changed);
 		}
-		if (in_array('sla_resolucao_minutos', $cols, true)) {
+		if ($canResMin && $policyResolucaoDefined && $resolucaoMin !== null) {
 			$this->setIfExists($ticket, $cols, 'sla_resolucao_minutos', $resolucaoMin, $changed);
 		}
-		if (in_array('data_limite_resposta', $cols, true) && $ticket->get('data_limite_resposta') === null && $respostaMin > 0) {
-			$this->setIfExists($ticket, $cols, 'data_limite_resposta', $bh->addBusinessMinutes($now, $respostaMin, $empresaId), $changed);
+
+		if ($policyRespostaDefined && $respostaMin !== null && in_array('data_limite_resposta', $cols, true)) {
+			if ($respMisaligned) {
+				if ($respostaMin > 0) {
+					$this->setIfExists(
+						$ticket,
+						$cols,
+						'data_limite_resposta',
+						$bh->addBusinessMinutes($now, $respostaMin, $empresaId),
+						$changed
+					);
+				} else {
+					$this->clearTimestampIfNeeded($ticket, $cols, 'data_limite_resposta', $changed);
+				}
+			} elseif (!$hasStarted && $respostaMin > 0 && $ticket->get('data_limite_resposta') === null) {
+				$this->setIfExists(
+					$ticket,
+					$cols,
+					'data_limite_resposta',
+					$bh->addBusinessMinutes($now, $respostaMin, $empresaId),
+					$changed
+				);
+			}
 		}
-		if (in_array('data_limite_resolucao', $cols, true) && $ticket->get('data_limite_resolucao') === null && $resolucaoMin > 0) {
-			$this->setIfExists($ticket, $cols, 'data_limite_resolucao', $bh->addBusinessMinutes($now, $resolucaoMin, $empresaId), $changed);
+
+		if ($policyResolucaoDefined && $resolucaoMin !== null && in_array('data_limite_resolucao', $cols, true)) {
+			if ($resMisaligned) {
+				if ($resolucaoMin > 0) {
+					$this->setIfExists(
+						$ticket,
+						$cols,
+						'data_limite_resolucao',
+						$bh->addBusinessMinutes($now, $resolucaoMin, $empresaId),
+						$changed
+					);
+				} else {
+					$this->clearTimestampIfNeeded($ticket, $cols, 'data_limite_resolucao', $changed);
+				}
+			} elseif (!$hasStarted && $resolucaoMin > 0 && $ticket->get('data_limite_resolucao') === null) {
+				$this->setIfExists(
+					$ticket,
+					$cols,
+					'data_limite_resolucao',
+					$bh->addBusinessMinutes($now, $resolucaoMin, $empresaId),
+					$changed
+				);
+			}
 		}
-		if (in_array('sla_status', $cols, true) && !$ticket->get('sla_status')) {
+
+		if (
+			in_array('sla_status', $cols, true)
+			&& (!$ticket->get('sla_status') || $respMisaligned || $resMisaligned)
+		) {
 			$this->setIfExists($ticket, $cols, 'sla_status', 'dentro_sla', $changed);
 		}
 
@@ -327,6 +404,17 @@ class WorkflowSlaService {
 
 	protected function hasSlaStarted(EntityInterface $ticket): bool {
 		return $ticket->get('data_limite_resposta') !== null || $ticket->get('data_limite_resolucao') !== null;
+	}
+
+	protected function clearTimestampIfNeeded(EntityInterface $ticket, array $cols, string $field, array &$changed): void {
+		if (!in_array($field, $cols, true)) {
+			return;
+		}
+		$v = $ticket->get($field);
+		if ($v === null || $v === '') {
+			return;
+		}
+		$this->setIfExists($ticket, $cols, $field, null, $changed);
 	}
 
 	protected function setIfExists(EntityInterface $ticket, array $cols, string $field, $value, array &$changed): void {
