@@ -124,6 +124,35 @@ function isWorkflowExecCodigo(c) {
   return c.startsWith('em_exec');
 }
 
+/** Indica transição PATCH para estado “Em execução” (critério alinhado a `workflowTransitionPatchStatusLabel`). */
+export function workflowTransitionTargetsExecucao(transitionLike) {
+  return isWorkflowExecCodigo(normalizeWorkflowCodigo(transitionLike?.codigo));
+}
+
+/**
+ * Backend `tecnico_fila_obrigatorios` usa `queue_id` + vínculos em fila (modo filas relacionais).
+ * Com `queuesRelacional`, só conta ID numérico — não aceitar apenas `filaSuporte` legado.
+ */
+export function ticketHasValidTecnico(ticket) {
+  const id = Number(
+    ticket?.idtecnico_responsavel
+      ?? ticket?.tecnico_id
+      ?? ticket?.iduser
+      ?? ticket?.tecnico?.id
+      ?? ticket?.owner_id
+      ?? 0,
+  );
+  return Number.isFinite(id) && id > 0;
+}
+
+export function ticketHasValidQueueForStart(ticket, queuesRelacional) {
+  const qid = Number(ticket?.filaQueueId ?? ticket?.queue_id ?? 0);
+  if (Number.isFinite(qid) && qid > 0) return true;
+  if (queuesRelacional) return false;
+  const fila = String(ticket?.filaSuporte ?? '').trim().toLowerCase();
+  return fila !== '' && fila !== '-' && fila !== '0' && fila !== 'null' && fila !== 'undefined';
+}
+
 /**
  * Coluna visual da timeline PGM (0 Aberto … 4 Fechado). -1 = fora do mapa.
  */

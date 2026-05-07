@@ -21,7 +21,13 @@ import {
   getBoot,
   USE_MOCK,
 } from '../lib/api';
-import { badgeClass, servicedeskStatusTypeFromTicket, sortTicketAcoes } from '../lib/ticketUi';
+import {
+  badgeClass,
+  servicedeskStatusTypeFromTicket,
+  sortTicketAcoes,
+  ticketHasValidQueueForStart,
+  ticketHasValidTecnico,
+} from '../lib/ticketUi';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 import TicketsServicedeskInlineRow from '../components/TicketsServicedeskInlineRow.jsx';
 
@@ -102,25 +108,6 @@ function workflowCodeToLabel(code) {
   return '';
 }
 
-function hasValidTecnico(ticket) {
-  const id = Number(
-    ticket?.idtecnico_responsavel
-    ?? ticket?.tecnico_id
-    ?? ticket?.iduser
-    ?? ticket?.tecnico?.id
-    ?? ticket?.owner_id
-    ?? 0,
-  );
-  return Number.isFinite(id) && id > 0;
-}
-
-function hasValidFila(ticket) {
-  const qid = Number(ticket?.filaQueueId ?? ticket?.queue_id ?? 0);
-  if (Number.isFinite(qid) && qid > 0) return true;
-  const fila = String(ticket?.filaSuporte ?? '').trim().toLowerCase();
-  return fila !== '' && fila !== '-' && fila !== '0' && fila !== 'null' && fila !== 'undefined';
-}
-
 function effectiveStatus(ticket) {
   const wf = ticket?.workflow;
   const hasCurrent = wf?.enabled === true && wf?.current && (wf?.current?.id != null || wf?.current?.codigo != null || wf?.current?.code != null || wf?.current?.slug != null);
@@ -182,6 +169,7 @@ function StatusDot({ type }) {
  */
 function ensureCoreActions(ticket, opts = {}) {
   const hideTransfer = Boolean(opts.hideTransfer);
+  const queuesRel = Boolean(opts.queuesRelacional);
   const list = Array.isArray(ticket.acoes) ? [...ticket.acoes] : [];
   const st = effectiveStatus(ticket);
   const label = String(st.label || '').toLowerCase();
@@ -218,7 +206,7 @@ function ensureCoreActions(ticket, opts = {}) {
   const findTransition = (matcher) => transitions.find((t) => matcher(normalizeWorkflowCode(t?.codigo)));
   const execTransition = findTransition((c) => c === 'emandamento' || c === 'em_execucao' || c === 'execucao' || c === 'em_andamento');
   const pendTransition = findTransition((c) => c === 'pendente' || c === 'aberto');
-  const canManualStart = hasValidTecnico(ticket) && hasValidFila(ticket);
+  const canManualStart = ticketHasValidTecnico(ticket) && ticketHasValidQueueForStart(ticket, queuesRel);
   if (isPendente && canManualStart && !has('iniciar') && (!wfEnabled || !!execTransition)) {
     list.push({
       key: 'iniciar',
@@ -240,7 +228,7 @@ function ensureCoreActions(ticket, opts = {}) {
       url: ticket.urls?.edit || '#',
     });
   }
-  if (!hideTransfer && hasValidTecnico(ticket) && hasValidFila(ticket) && !has('transferir')) {
+  if (!hideTransfer && ticketHasValidTecnico(ticket) && ticketHasValidQueueForStart(ticket, queuesRel) && !has('transferir')) {
     list.push({
       key: 'transferir',
       label: 'Transferir',
@@ -906,7 +894,7 @@ export default function TechDashboard({ boot }) {
   const addTicket = boot?.paths?.addTicket;
 
   const openTransfer = async (ticket) => {
-    if (!hasValidTecnico(ticket) || !hasValidFila(ticket)) {
+    if (!ticketHasValidTecnico(ticket) || !ticketHasValidQueueForStart(ticket, queuesRelacional)) {
       window.alert('Para escalonar/transferir, selecione um técnico e uma fila válidos.');
       return;
     }
@@ -1021,8 +1009,12 @@ export default function TechDashboard({ boot }) {
 
   const handleStartAtendimento = async (ticket) => {
     const id = Number(ticket.id);
-    if (!hasValidTecnico(ticket) || !hasValidFila(ticket)) {
-      window.alert('Salve o técnico e a fila antes de iniciar o atendimento.');
+    if (!ticketHasValidTecnico(ticket) || !ticketHasValidQueueForStart(ticket, queuesRelacional)) {
+      window.alert(
+        queuesRelacional
+          ? 'Escolha e salve a fila no dropdown “Fila…” (além do técnico). Sem fila válida gravada no ticket o servidor não inicia o atendimento.'
+          : 'Salve o técnico e a fila antes de iniciar o atendimento.',
+      );
       return;
     }
     setStartBusyId(id);
@@ -1048,7 +1040,9 @@ export default function TechDashboard({ boot }) {
       if (!r.ok) {
         const code = r.error;
         const friendly = API_ERR_START[code];
-        const detail = r.message ? ` (${r.message})` : '';
+        const rawMsg = r.message ? String(r.message).trim() : '';
+        const detail =
+          rawMsg && rawMsg !== friendly ? ` (${rawMsg})` : '';
         window.alert((friendly || code || 'Não foi possível iniciar o atendimento.') + detail);
         await reload();
         return;
@@ -1695,7 +1689,7 @@ export default function TechDashboard({ boot }) {
                       <td className="px-3 py-2 text-right">
                         <TicketActionsMenu
                           ticket={ticket}
-                          acoes={ensureCoreActions(ticket, { hideTransfer: inlineAssignment })}
+                          acoes={ensureCoreActions(ticket, { hideTransfer: inlineAssignment, queuesRelacional })}
                           openTransfer={openTransfer}
                           handleStartAtendimento={handleStartAtendimento}
                           startBusyId={startBusyId}

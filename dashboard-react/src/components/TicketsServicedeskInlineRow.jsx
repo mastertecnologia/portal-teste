@@ -2,7 +2,14 @@ import { useCallback, useMemo, useState } from 'react';
 import TicketTimer from './TicketTimer.jsx';
 import WorkflowTimeline from './WorkflowTimeline.jsx';
 import { patchTicketAssignment, patchTicketPriority, patchTicketStatus } from '../lib/api.js';
-import { badgeClass, servicedeskStatusTypeFromTicket, workflowTransitionPatchStatusLabel } from '../lib/ticketUi';
+import {
+  badgeClass,
+  servicedeskStatusTypeFromTicket,
+  ticketHasValidQueueForStart,
+  ticketHasValidTecnico,
+  workflowTransitionPatchStatusLabel,
+  workflowTransitionTargetsExecucao,
+} from '../lib/ticketUi';
 
 const PRIORIDADE_OPTS = [
   { code: 'baixa', label: 'Baixo' },
@@ -208,6 +215,16 @@ export default function TicketsServicedeskInlineRow({
       if (!useWorkflowStatus || busy || !transition) return;
       const sid = Number(transition.id);
       if (!Number.isFinite(sid) || sid <= 0 || !allowedWorkflowStateIds.has(sid)) return;
+      if (workflowTransitionTargetsExecucao(transition) && queuesRelacional) {
+        if (!ticketHasValidTecnico(ticket) || !ticketHasValidQueueForStart(ticket, true)) {
+          fail(
+            !ticketHasValidTecnico(ticket)
+              ? 'Atribua um técnico ao ticket antes de colocá-lo em execução.'
+              : 'Escolha a fila no dropdown “Fila…” antes de Em execução. Sem fila gravada no ticket o servidor recusa.',
+          );
+          return;
+        }
+      }
       await applyStatusPatch(
         {
           workflowStateId: sid,
@@ -216,7 +233,15 @@ export default function TicketsServicedeskInlineRow({
         'timeline',
       );
     },
-    [useWorkflowStatus, busy, applyStatusPatch, allowedWorkflowStateIds],
+    [
+      useWorkflowStatus,
+      busy,
+      applyStatusPatch,
+      allowedWorkflowStateIds,
+      queuesRelacional,
+      ticket,
+      fail,
+    ],
   );
 
   const onStatus = async (e) => {
@@ -224,6 +249,24 @@ export default function TicketsServicedeskInlineRow({
     const selected = e.target.value;
     const hit = statusOptions.find((o) => o.value === selected);
     if (!hit) return;
+    let movingToExec = false;
+    if (useWorkflowStatus) {
+      const tr = workflowOptions.find((x) => Number(x.id) === Number(hit.workflowStateId));
+      movingToExec = tr ? workflowTransitionTargetsExecucao(tr) : false;
+    } else {
+      movingToExec =
+        situacaoExecCode != null && Number(situacaoExecCode) === Number(hit.code);
+    }
+    if (movingToExec && queuesRelacional) {
+      if (!ticketHasValidTecnico(ticket) || !ticketHasValidQueueForStart(ticket, true)) {
+        fail(
+          !ticketHasValidTecnico(ticket)
+            ? 'Atribua um técnico ao ticket antes de colocá-lo em execução.'
+            : 'Escolha a fila no dropdown “Fila…” antes de Em execução. Sem fila gravada no ticket o servidor recusa.',
+        );
+        return;
+      }
+    }
     if (useWorkflowStatus) {
       await applyStatusPatch(
         {
