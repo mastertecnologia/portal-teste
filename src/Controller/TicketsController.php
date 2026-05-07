@@ -5476,8 +5476,13 @@ class TicketsController extends AppController {
 	public function apiIndex() {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
+		$apiIndexStartedAt = microtime(true);
 		$empresa = (int)$this->Auth->user('idempresa');
 		if ($empresa <= 0) {
+			$durMs = (int)round((microtime(true) - $apiIndexStartedAt) * 1000);
+			$this->response = $this->response
+				->withHeader('Server-Timing', 'api-index;dur=' . $durMs)
+				->withHeader('X-ServiceDesk-ApiIndex-Ms', (string)$durMs);
 			return $this->jsonResponse([
 				'ok' => false,
 				'error' => 'session_empresa_invalida',
@@ -5498,25 +5503,41 @@ class TicketsController extends AppController {
 		$tierContains[] = [];
 
 		try {
+		$tickets = [];
+		$ticketsTodos = [];
+		$ticketsPendentes = [];
+		$ticketsEmandamento = [];
+		$ticketsResolvidos = [];
+		$ticketsFechados = [];
 		$loadEx = null;
 		foreach ($tierContains as $tierIdx => $contain) {
 			try {
 				$base = ['contain' => $contain, 'order' => ['Tickets.id' => 'DESC']];
-				$qPend = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoPendente]);
-				$this->Abac->applyToQuery($qPend, 'Tickets', 'Tickets');
-				$ticketsPendentes = $this->_applyApiIndexWorkflowFilters($qPend)->toArray();
-				$qEm = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoEmandamento]);
-				$this->Abac->applyToQuery($qEm, 'Tickets', 'Tickets');
-				$ticketsEmandamento = $this->_applyApiIndexWorkflowFilters($qEm)->toArray();
-				$qRes = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoResolvido]);
-				$this->Abac->applyToQuery($qRes, 'Tickets', 'Tickets');
-				$ticketsResolvidos = $this->_applyApiIndexWorkflowFilters($qRes)->toArray();
-				$qFec = $this->Tickets->find('all', $base)->where(['situacao' => C_TicketSituacaoFechado]);
-				$this->Abac->applyToQuery($qFec, 'Tickets', 'Tickets');
-				$ticketsFechados = $this->_applyApiIndexWorkflowFilters($qFec)->toArray();
-				$qAll = $this->Tickets->find('all', $base)->order(['Tickets.situacao' => 'ASC', 'Tickets.id' => 'DESC']);
+				$qAll = $this->Tickets->find('all', $base);
 				$this->Abac->applyToQuery($qAll, 'Tickets', 'Tickets');
 				$tickets = $this->_applyApiIndexWorkflowFilters($qAll)->toArray();
+				$ticketsPendentes = array_values(array_filter($tickets, function ($t) {
+					return (int)($t->situacao ?? 0) === (int)C_TicketSituacaoPendente;
+				}));
+				$ticketsEmandamento = array_values(array_filter($tickets, function ($t) {
+					return (int)($t->situacao ?? 0) === (int)C_TicketSituacaoEmandamento;
+				}));
+				$ticketsResolvidos = array_values(array_filter($tickets, function ($t) {
+					return (int)($t->situacao ?? 0) === (int)C_TicketSituacaoResolvido;
+				}));
+				$ticketsFechados = array_values(array_filter($tickets, function ($t) {
+					return (int)($t->situacao ?? 0) === (int)C_TicketSituacaoFechado;
+				}));
+				$ticketsTodos = $tickets;
+				usort($ticketsTodos, function ($a, $b) {
+					$sa = (int)($a->situacao ?? 0);
+					$sb = (int)($b->situacao ?? 0);
+					if ($sa === $sb) {
+						return (int)($b->id ?? 0) <=> (int)($a->id ?? 0);
+					}
+
+					return $sa <=> $sb;
+				});
 				$loadEx = null;
 				if ($tierIdx > 0) {
 					$this->log('apiIndex: carregou com contain reduzido (tier ' . $tierIdx . ')', 'warning');
@@ -5534,11 +5555,15 @@ class TicketsController extends AppController {
 			throw $loadEx;
 		}
 
-		$allForTec = array_merge($ticketsPendentes, $ticketsEmandamento, $ticketsResolvidos, $ticketsFechados, $tickets);
+		$allForTec = $tickets;
 		$tecIds = [];
 		foreach ($allForTec as $t) {
-			$tecIds[] = (int)$t->id;
+			$tid = (int)($t->id ?? 0);
+			if ($tid > 0) {
+				$tecIds[$tid] = $tid;
+			}
 		}
+		$tecIds = array_values($tecIds);
 		$wf = $this->_ticketWorkflowSchemaReady();
 		$queuesUi = $this->_queuesRelacionalReady();
 		$cols = $this->Tickets->getSchema()->columns();
@@ -5580,6 +5605,33 @@ class TicketsController extends AppController {
 				'hasSeveridadeCol' => $hasSeveridadeCol,
 			]);
 		};
+		$mappedById = [];
+		foreach ($tickets as $reg) {
+			$tid = (int)($reg->id ?? 0);
+			if ($tid <= 0) {
+				continue;
+			}
+			$mappedById[$tid] = $mapTec($reg);
+		}
+		$mapGroupUnique = function (array $group) use ($mappedById): array {
+			$out = [];
+			$seen = [];
+			foreach ($group as $reg) {
+				$tid = (int)($reg->id ?? 0);
+				if ($tid <= 0 || isset($seen[$tid]) || !isset($mappedById[$tid])) {
+					continue;
+				}
+				$seen[$tid] = true;
+				$out[] = $mappedById[$tid];
+			}
+
+			return $out;
+		};
+		$mappedTodos = $mapGroupUnique($ticketsTodos);
+		$mappedPendentes = $mapGroupUnique($ticketsPendentes);
+		$mappedEmAndamento = $mapGroupUnique($ticketsEmandamento);
+		$mappedResolvidos = $mapGroupUnique($ticketsResolvidos);
+		$mappedFechados = $mapGroupUnique($ticketsFechados);
 		$catalog = [];
 		foreach ($this->_filaSuporteCatalog() as $code => $meta) {
 			$catalog[] = ['code' => $code, 'label' => $meta['label'], 'nivel' => $meta['nivel']];
@@ -5639,19 +5691,27 @@ class TicketsController extends AppController {
 				'supportLevelsEnabled' => $this->_supportLevelsRoutingReady(),
 			],
 			'groups' => [
-				'todos' => array_map($mapTec, $tickets),
-				'pendentes' => array_map($mapTec, $ticketsPendentes),
-				'emandamento' => array_map($mapTec, $ticketsEmandamento),
-				'resolvidos' => array_map($mapTec, $ticketsResolvidos),
-				'fechados' => array_map($mapTec, $ticketsFechados),
+				'todos' => $mappedTodos,
+				'pendentes' => $mappedPendentes,
+				'emandamento' => $mappedEmAndamento,
+				'resolvidos' => $mappedResolvidos,
+				'fechados' => $mappedFechados,
 			],
 		];
+		$durMs = (int)round((microtime(true) - $apiIndexStartedAt) * 1000);
+		$this->response = $this->response
+			->withHeader('Server-Timing', 'api-index;dur=' . $durMs)
+			->withHeader('X-ServiceDesk-ApiIndex-Ms', (string)$durMs);
 		return $this->jsonResponse($out);
 		} catch (\Throwable $e) {
 			$this->log(
 				'apiIndex: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(),
 				'error'
 			);
+			$durMs = (int)round((microtime(true) - $apiIndexStartedAt) * 1000);
+			$this->response = $this->response
+				->withHeader('Server-Timing', 'api-index;dur=' . $durMs)
+				->withHeader('X-ServiceDesk-ApiIndex-Ms', (string)$durMs);
 
 			return $this->jsonResponse([
 				'ok' => false,
@@ -5678,18 +5738,25 @@ class TicketsController extends AppController {
 	public function apiDashboardOperacional() {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
+		$startedAt = microtime(true);
 		$empresa = (int)$this->Auth->user('idempresa');
 		$svc = new DashboardService($this->Tickets);
+		$dashboard = $svc->operationalSnapshot($empresa);
+		$durMs = (int)round((microtime(true) - $startedAt) * 1000);
+		$this->response = $this->response
+			->withHeader('Server-Timing', 'api-dashboard-operacional;dur=' . $durMs)
+			->withHeader('X-ServiceDesk-ApiDashboard-Ms', (string)$durMs);
 
 		return $this->jsonResponse([
 			'ok' => true,
-			'dashboard' => $svc->operationalSnapshot($empresa),
+			'dashboard' => $dashboard,
 		]);
 	}
 
 	public function apiTecnicosLista() {
 		$this->request->allowMethod(['get']);
 		$this->autoRender = false;
+		$startedAt = microtime(true);
 		$empresa = (int)$this->Auth->user('idempresa');
 		$qFilter = $this->request->getQuery('queue_id');
 		$queueUserFilter = null;
@@ -5698,6 +5765,10 @@ class TicketsController extends AppController {
 				->where(['Queues.id' => (int)$qFilter, 'Queues.idempresa' => $empresa])
 				->first();
 			if (empty($qRow)) {
+				$durMs = (int)round((microtime(true) - $startedAt) * 1000);
+				$this->response = $this->response
+					->withHeader('Server-Timing', 'api-tecnicos-lista;dur=' . $durMs)
+					->withHeader('X-ServiceDesk-ApiTecnicos-Ms', (string)$durMs);
 				return $this->jsonResponse(['ok' => true, 'tecnicos' => []]);
 			}
 			$linkedIds = $this->QueuesUsers->find()
@@ -5747,6 +5818,10 @@ class TicketsController extends AppController {
 			}
 			$list[] = $entry;
 		}
+		$durMs = (int)round((microtime(true) - $startedAt) * 1000);
+		$this->response = $this->response
+			->withHeader('Server-Timing', 'api-tecnicos-lista;dur=' . $durMs)
+			->withHeader('X-ServiceDesk-ApiTecnicos-Ms', (string)$durMs);
 
 		return $this->jsonResponse(['ok' => true, 'tecnicos' => $list]);
 	}

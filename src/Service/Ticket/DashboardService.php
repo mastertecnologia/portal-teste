@@ -2,6 +2,7 @@
 namespace App\Service\Ticket;
 
 use App\Utility\Ticket\TicketPriorityKpi;
+use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\I18n\Time;
 use Cake\ORM\Table;
@@ -23,6 +24,16 @@ class DashboardService {
 	 * @return array Snapshot JSON-safe
 	 */
 	public function operationalSnapshot(int $idempresa): array {
+		$cacheTtlSeconds = (int)Configure::read('ServiceDesk.dashboardSnapshotCacheSeconds', 12);
+		$cacheEnabled = $cacheTtlSeconds > 0;
+		$cacheBucket = (int)floor(time() / max(1, $cacheTtlSeconds));
+		$cacheKey = 'sd_dash_v1_' . $idempresa . '_' . $cacheBucket;
+		if ($cacheEnabled) {
+			$cached = Cache::read($cacheKey, 'default');
+			if (is_array($cached)) {
+				return $cached;
+			}
+		}
 		$cols = $this->tickets->getSchema()->columns();
 		$todayStart = Time::today()->format('Y-m-d H:i:s');
 
@@ -97,7 +108,7 @@ class DashboardService {
 		$slaByState = $this->stateSlaSnapshot($base, $cols);
 		$avgByState = $this->averageSecondsByWorkflowState($base, $cols);
 
-		return [
+		$snapshot = [
 			'empresa_id' => $idempresa,
 			'gerado_em' => Time::now()->format('c'),
 			'colunas_sla_ativas' => in_array('sla_status', $cols, true),
@@ -130,6 +141,11 @@ class DashboardService {
 				'rules_by_client_queue_team' => (bool)Configure::read('Workflow.slaFutureScopedRules', false),
 			],
 		];
+		if ($cacheEnabled) {
+			Cache::write($cacheKey, $snapshot, 'default');
+		}
+
+		return $snapshot;
 	}
 
 	/**

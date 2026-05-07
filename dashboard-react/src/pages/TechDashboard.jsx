@@ -56,6 +56,15 @@ const GROUP_KEYS = {
   fechados: 'fechados',
 };
 
+function runWhenBrowserIdle(task, timeoutMs = 900) {
+  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+    const id = window.requestIdleCallback(() => task(), { timeout: timeoutMs });
+    return () => window.cancelIdleCallback(id);
+  }
+  const timerId = window.setTimeout(task, 150);
+  return () => window.clearTimeout(timerId);
+}
+
 /** Legado pode mandar HTML em situacaoLabel até o servidor atualizar — remove tags. */
 function stripHtml(raw) {
   if (raw == null) return '—';
@@ -713,25 +722,31 @@ export default function TechDashboard({ boot }) {
 
   useEffect(() => {
     let cancel = false;
-    (async () => {
-      const r = await fetchTecnicosParaTransferencia();
-      if (cancel || !r.ok) return;
-      setTecnicosOpcoes(r.tecnicos || []);
-    })();
+    const stop = runWhenBrowserIdle(() => {
+      void (async () => {
+        const r = await fetchTecnicosParaTransferencia();
+        if (cancel || !r.ok) return;
+        setTecnicosOpcoes(r.tecnicos || []);
+      })();
+    }, 1200);
     return () => {
       cancel = true;
+      stop();
     };
   }, []);
 
   useEffect(() => {
     let cancel = false;
-    (async () => {
-      const r = await fetchDashboardOperacional();
-      if (cancel || !r.ok || !r.dashboard) return;
-      setSlaDashboard(r.dashboard);
-    })();
+    const stop = runWhenBrowserIdle(() => {
+      void (async () => {
+        const r = await fetchDashboardOperacional();
+        if (cancel || !r.ok || !r.dashboard) return;
+        setSlaDashboard(r.dashboard);
+      })();
+    }, 1500);
     return () => {
       cancel = true;
+      stop();
     };
   }, []);
 
