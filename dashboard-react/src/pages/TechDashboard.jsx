@@ -13,6 +13,7 @@ import {
   fetchTicketsTecnico,
   fetchTecnicosParaTransferencia,
   fetchQueuesForTicket,
+  patchTicketStatus,
   postTransferirTicket,
   postStartTicket,
   postAlterarSituacao,
@@ -32,6 +33,7 @@ const API_ERR_TRANSFER = {
   destino_nivel_incompativel: 'O nível do técnico de destino não cobre essa fila.',
   motivo_obrigatorio: 'Informe o motivo (mín. 3 caracteres).',
   destino_ou_fila_obrigatorio: 'Indique fila de destino e/ou técnico, conforme a opção escolhida.',
+  tecnico_fila_obrigatorios: 'Para escalonar, selecione um técnico e uma fila válidos.',
   save_failed:
     'Não foi possível gravar a transferência no servidor. Se persistir, veja o log (apiTransferirTicket: update_ticket, mov_errors ou SQL).',
 };
@@ -39,6 +41,7 @@ const API_ERR_TRANSFER = {
 const API_ERR_START = {
   sem_permissao_fila:
     'Não é possível assumir: seu usuário precisa estar vinculado à fila deste ticket e ter nível de suporte compatível (ex.: fila N2 → nível N2). Admin: Portal → Filas / técnicos → Editar no seu usuário (filas + nível).',
+  tecnico_fila_obrigatorios: 'Selecione um técnico e uma fila válidos antes de iniciar o atendimento.',
 };
 
 /** Polling do Service Desk embutido — aba em segundo plano não dispara fetch. */
@@ -62,7 +65,65 @@ function stripHtml(raw) {
 }
 
 function statusLabel(row) {
-  return stripHtml(row.situacaoLabel || row.status);
+  const raw = stripHtml(row.situacaoLabel || row.status);
+  const k = raw
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .trim();
+  if (k.includes('aguardando tecnico')) return 'Pendente';
+  return raw;
+}
+
+function normalizeWorkflowCode(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[\s-]+/g, '_')
+    .toLowerCase()
+    .trim();
+}
+
+function workflowCodeToLabel(code) {
+  const c = normalizeWorkflowCode(code);
+  if (c === 'resolvido') return 'Resolvido';
+  if (c === 'fechado') return 'Fechado';
+  if (c === 'pendente' || c === 'aberto' || c === 'aguardando_tecnico') return 'Pendente';
+  if (c === 'emandamento' || c === 'em_execucao' || c === 'execucao' || c === 'em_andamento') return 'Em execução';
+  return '';
+}
+
+function hasValidTecnico(ticket) {
+  const id = Number(ticket?.idtecnico_responsavel ?? ticket?.owner_id ?? 0);
+  return Number.isFinite(id) && id > 0;
+}
+
+function hasValidFila(ticket) {
+  const qid = Number(ticket?.filaQueueId ?? ticket?.queue_id ?? 0);
+  if (Number.isFinite(qid) && qid > 0) return true;
+  const fila = String(ticket?.filaSuporte ?? '').trim().toLowerCase();
+  return fila !== '' && fila !== '-' && fila !== '0' && fila !== 'null' && fila !== 'undefined';
+}
+
+function effectiveStatus(ticket) {
+  const wf = ticket?.workflow;
+  const hasCurrent = wf?.enabled === true && wf?.current && (wf?.current?.id != null || wf?.current?.codigo != null || wf?.current?.code != null || wf?.current?.slug != null);
+  if (hasCurrent) {
+    const wfCodeRaw = wf?.current?.codigo ?? wf?.current?.code ?? wf?.current?.slug ?? '';
+    const wfCode = normalizeWorkflowCode(wfCodeRaw);
+    const wfLabelRaw = stripHtml(wf?.current?.label || '');
+    const wfLabel = wfLabelRaw !== '—' ? wfLabelRaw : workflowCodeToLabel(wfCodeRaw);
+    return {
+      label: wfLabel || statusLabel(ticket),
+      code: wfCode,
+      source: 'workflow',
+    };
+  }
+  return {
+    label: statusLabel(ticket),
+    code: '',
+    source: 'legacy',
+  };
 }
 
 function formatSecondsCompact(totalSeconds) {
@@ -106,7 +167,10 @@ function StatusDot({ type }) {
 function ensureCoreActions(ticket, opts = {}) {
   const hideTransfer = Boolean(opts.hideTransfer);
   const list = Array.isArray(ticket.acoes) ? [...ticket.acoes] : [];
-  const label = String(ticket.situacaoLabel || ticket.status || '').toLowerCase();
+  const st = effectiveStatus(ticket);
+  const label = String(st.label || '').toLowerCase();
+  const wfCode = String(st.code || '');
+  const wfEnabled = st.source === 'workflow' && ticket?.workflow?.enabled === true;
   const closed =
     label.includes('resolvido') || label.includes('fechado') || label.includes('cancelado');
   if (closed) return list;
@@ -124,21 +188,43 @@ function ensureCoreActions(ticket, opts = {}) {
     Number(ticket.situacao) === Number(pendenteCode);
   // Iniciar só aparece em tickets pendentes (aguardando técnico / sem responsável);
   // se já está em execução, o atendimento foi assumido e a ação não faz sentido.
-  const isPendente =
+  const isPendenteByWorkflow = wfEnabled && (wfCode === 'pendente' || wfCode === 'aberto');
+  const isPendenteLegacy =
     isPendenteByCode ||
     (!inProgress &&
       (label.includes('aguardando tecnico') ||
         label.includes('aguardando técnico') ||
         !ticket.idtecnico_responsavel));
-  if (isPendente && !has('iniciar')) {
+  const isPendente = wfEnabled ? isPendenteByWorkflow : isPendenteLegacy;
+  const transitions = wfEnabled && Array.isArray(ticket?.workflow?.allowedTransitions)
+    ? ticket.workflow.allowedTransitions
+    : [];
+  const findTransition = (matcher) => transitions.find((t) => matcher(normalizeWorkflowCode(t?.codigo)));
+  const execTransition = findTransition((c) => c === 'emandamento' || c === 'em_execucao' || c === 'execucao' || c === 'em_andamento');
+  const pendTransition = findTransition((c) => c === 'pendente' || c === 'aberto');
+  const canManualStart = hasValidTecnico(ticket) && hasValidFila(ticket);
+  if (isPendente && canManualStart && !has('iniciar') && (!wfEnabled || !!execTransition)) {
     list.push({
       key: 'iniciar',
       label: 'Iniciar atendimento',
       behavior: 'reactStart',
+      workflowStateId: execTransition ? Number(execTransition.id) : null,
+      statusLabel: execTransition?.label || 'Em execução',
       url: ticket.urls?.edit || '#',
     });
   }
-  if (!hideTransfer && !has('transferir')) {
+  if (wfEnabled && pendTransition && !has('pendente')) {
+    list.push({
+      key: 'pendente',
+      label: 'Pendente',
+      behavior: 'reactStatus',
+      situacaoDestino: boot?.ticketStatus?.pendente ?? null,
+      workflowStateId: Number(pendTransition.id),
+      statusLabel: pendTransition?.label || 'Pendente',
+      url: ticket.urls?.edit || '#',
+    });
+  }
+  if (!hideTransfer && hasValidTecnico(ticket) && hasValidFila(ticket) && !has('transferir')) {
     list.push({
       key: 'transferir',
       label: 'Transferir',
@@ -386,8 +472,8 @@ function TicketActionsMenu({
             );
             return divider ? [divider, row] : [row];
           }
-          if (a.behavior === 'reactStatus' && typeof handleAlterarSituacao === 'function' && a.situacaoDestino != null) {
-            const sk = `${ticket.id}-${a.situacaoDestino}`;
+          if (a.behavior === 'reactStatus' && typeof handleAlterarSituacao === 'function' && (a.situacaoDestino != null || a.workflowStateId != null)) {
+            const sk = `${ticket.id}-${a.workflowStateId || a.situacaoDestino}`;
             const busy = statusBusyKey === sk;
             const row = (
               <li key={`${a.key}-${a.label}`} role="none">
@@ -398,7 +484,11 @@ function TicketActionsMenu({
                   disabled={busy}
                   onClick={() => {
                     setOpen(false);
-                    handleAlterarSituacao(ticket, a.situacaoDestino);
+                    handleAlterarSituacao(ticket, {
+                      situacaoDestino: a.situacaoDestino,
+                      workflowStateId: a.workflowStateId,
+                      statusLabel: a.statusLabel,
+                    });
                   }}
                 >
                   <span className={iconWrap}>
@@ -479,7 +569,7 @@ function TicketActionsMenu({
 
 /** Destaques operacionais na fila (Service Desk / técnico). */
 function techRowHighlightClass(ticket, servicedesk = false) {
-  const label = String(ticket.situacaoLabel || ticket.status || '').toLowerCase();
+  const label = String(effectiveStatus(ticket).label || '').toLowerCase();
   const closed =
     label.includes('resolvido') || label.includes('fechado') || label.includes('cancelado');
   const semResp =
@@ -756,6 +846,10 @@ export default function TechDashboard({ boot }) {
   const addTicket = boot?.paths?.addTicket;
 
   const openTransfer = async (ticket) => {
+    if (!hasValidTecnico(ticket) || !hasValidFila(ticket)) {
+      window.alert('Para escalonar/transferir, selecione um técnico e uma fila válidos.');
+      return;
+    }
     setTransferTicket(ticket);
     setTransferDest('');
     setTransferMotivo('');
@@ -802,6 +896,11 @@ export default function TechDashboard({ boot }) {
     setTransferSaving(true);
     setTransferErr('');
     const qid = Number(transferQueueId) || 0;
+    if (transferAssignMode !== 'com') {
+      setTransferSaving(false);
+      setTransferErr('Escalonamento manual exige técnico e fila de destino válidos.');
+      return;
+    }
     let payload;
     if (queuesRelacional) {
       if (!qid) {
@@ -809,41 +908,31 @@ export default function TechDashboard({ boot }) {
         setTransferErr('Selecione a fila de destino.');
         return;
       }
-      if (transferAssignMode === 'com') {
-        if (!dest) {
-          setTransferSaving(false);
-          setTransferErr('Selecione o técnico ou marque “somente fila (sem responsável)”.');
-          return;
-        }
-        payload = { iduser_destino: dest, queue_id: qid, motivo: transferMotivo.trim() };
-      } else {
-        setTransferDest('');
-        payload = { queue_id: qid, motivo: transferMotivo.trim() };
+      if (!dest) {
+        setTransferSaving(false);
+        setTransferErr('Selecione o técnico de destino.');
+        return;
       }
+      payload = { iduser_destino: dest, queue_id: qid, motivo: transferMotivo.trim() };
     } else {
       if (wfEnabled) {
         const fc = transferFila || 'n1';
-        const cur = transferTicket.filaSuporte || 'n1';
-        if (transferAssignMode === 'sem') {
-          if (fc === cur) {
-            setTransferSaving(false);
-            setTransferErr('Escolha uma fila de destino diferente da atual ou atribua um técnico.');
-            return;
-          }
-          payload = { fila_suporte: fc, motivo: transferMotivo.trim() };
-        } else {
-          if (!dest) {
-            setTransferSaving(false);
-            setTransferErr('Selecione o técnico de destino.');
-            return;
-          }
-          payload = {
-            iduser_destino: dest,
-            motivo: transferMotivo.trim(),
-          };
-          if (transferFila) {
-            payload.fila_suporte = transferFila;
-          }
+        if (!dest) {
+          setTransferSaving(false);
+          setTransferErr('Selecione o técnico de destino.');
+          return;
+        }
+        if (!fc || fc === '-') {
+          setTransferSaving(false);
+          setTransferErr('Selecione uma fila válida.');
+          return;
+        }
+        payload = {
+          iduser_destino: dest,
+          motivo: transferMotivo.trim(),
+        };
+        if (transferFila) {
+          payload.fila_suporte = transferFila;
         }
       } else {
         if (!dest) {
@@ -872,9 +961,25 @@ export default function TechDashboard({ boot }) {
 
   const handleStartAtendimento = async (ticket) => {
     const id = Number(ticket.id);
+    if (!hasValidTecnico(ticket) || !hasValidFila(ticket)) {
+      window.alert('Selecione um técnico e uma fila válidos antes de iniciar o atendimento.');
+      return;
+    }
     setStartBusyId(id);
     try {
-      const r = await postStartTicket(id);
+      const execTransition = Array.isArray(ticket?.workflow?.allowedTransitions)
+        ? ticket.workflow.allowedTransitions.find((tr) => {
+            const c = normalizeWorkflowCode(tr?.codigo);
+            return c === 'emandamento' || c === 'em_execucao' || c === 'execucao' || c === 'em_andamento';
+          })
+        : null;
+      const hasWorkflow = ticket?.workflow?.enabled === true && ticket?.workflow?.current?.id != null;
+      const r = hasWorkflow && execTransition
+        ? await patchTicketStatus(id, {
+            workflow_state_id: Number(execTransition.id),
+            status: String(execTransition.label || 'Em execução'),
+          })
+        : await postStartTicket(id);
       if (!r.ok) {
         const code = r.error;
         const friendly = API_ERR_START[code];
@@ -882,27 +987,41 @@ export default function TechDashboard({ boot }) {
         window.alert((friendly || code || 'Não foi possível iniciar o atendimento.') + detail);
         return;
       }
+      if (r.ticket) {
+        mergeTicketInGroups(id, r.ticket);
+      }
       setTransferOkHint('Atendimento iniciado.');
       window.setTimeout(() => setTransferOkHint(''), 4000);
-      await reload();
+      if (!r.ticket) await reload();
     } finally {
       setStartBusyId(null);
     }
   };
 
-  const handleAlterarSituacao = async (ticket, situacaoDestino) => {
+  const handleAlterarSituacao = async (ticket, req) => {
     const id = Number(ticket.id);
-    const sk = `${id}-${situacaoDestino}`;
+    const situacaoDestino = req && typeof req === 'object' ? req.situacaoDestino : req;
+    const workflowStateId = req && typeof req === 'object' ? req.workflowStateId : null;
+    const statusLabelText = req && typeof req === 'object' ? req.statusLabel : null;
+    const sk = `${id}-${workflowStateId || situacaoDestino}`;
     setStatusBusyKey(sk);
     try {
-      const r = await postAlterarSituacao(id, situacaoDestino);
+      const r = workflowStateId != null && Number(workflowStateId) > 0
+        ? await patchTicketStatus(id, {
+            workflow_state_id: Number(workflowStateId),
+            status: String(statusLabelText || '—'),
+          })
+        : await postAlterarSituacao(id, situacaoDestino);
       if (!r.ok) {
         window.alert(r.message || r.error || 'Não foi possível alterar o status do ticket.');
         return;
       }
+      if (r.ticket) {
+        mergeTicketInGroups(id, r.ticket);
+      }
       setTransferOkHint('Situação atualizada.');
       window.setTimeout(() => setTransferOkHint(''), 4000);
-      await reload();
+      if (!r.ticket) await reload();
     } finally {
       setStatusBusyKey(null);
     }
@@ -1103,7 +1222,7 @@ export default function TechDashboard({ boot }) {
             >
               <option value="todos">Todos</option>
               <option value="ativos">Aguardando + Em execução</option>
-              <option value="pendente">Aguardando técnico</option>
+              <option value="pendente">Pendente</option>
               <option value="execucao">Em execução</option>
               <option value="resolvido">Resolvidos</option>
               <option value="fechados">Cancelados / fechados</option>
@@ -1140,7 +1259,7 @@ export default function TechDashboard({ boot }) {
           >
             <option value="todos">Todos</option>
             <option value="ativos">Aguardando + Em execução</option>
-            <option value="pendente">Aguardando técnico</option>
+            <option value="pendente">Pendente</option>
             <option value="execucao">Em execução</option>
             <option value="resolvido">Resolvidos</option>
             <option value="fechados">Cancelados / fechados</option>
@@ -1218,7 +1337,7 @@ export default function TechDashboard({ boot }) {
           >
             <option value="todos">Todos</option>
             <option value="ativos">Aguardando + Em execução</option>
-            <option value="pendente">Aguardando técnico</option>
+            <option value="pendente">Pendente</option>
             <option value="execucao">Em execução</option>
             <option value="resolvido">Resolvidos</option>
             <option value="fechados">Cancelados / fechados</option>
@@ -1387,7 +1506,7 @@ export default function TechDashboard({ boot }) {
                 </tr>
               ) : (
                 rows.map((ticket) => {
-                  const st = statusLabel(ticket);
+                  const st = effectiveStatus(ticket).label;
                   const assuntoLinha = stripHtml(ticket.assunto_nome ?? 'Não informado');
                   return (
                     <tr
@@ -1446,6 +1565,7 @@ export default function TechDashboard({ boot }) {
                           tecnicos={tecnicosOpcoes}
                           ticketStatus={effectiveBoot?.ticketStatus}
                           situacaoExecCode={situacaoExecCode}
+                          effectiveStatus={effectiveStatus(ticket)}
                           onMergeTicket={mergeTicketInGroups}
                           patchBusyId={patchBusyId}
                           setPatchBusyId={setPatchBusyId}

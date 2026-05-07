@@ -4326,6 +4326,34 @@ class TicketsController extends AppController {
 		return $this->_userCanWorkQueue($uid, $qid);
 	}
 
+	protected function _ticketHasValidTecnicoAndFila($ticket): bool {
+		if (empty($ticket)) {
+			return false;
+		}
+		$cols = $this->Tickets->getSchema()->columns();
+		$rid = 0;
+		if (in_array('idtecnico_responsavel', $cols, true)) {
+			$rid = (int)($ticket->idtecnico_responsavel ?? 0);
+		}
+		if ($rid <= 0 && in_array('owner_id', $cols, true)) {
+			$rid = (int)($ticket->owner_id ?? 0);
+		}
+		if ($rid <= 0) {
+			return false;
+		}
+		if (in_array('queue_id', $cols, true) && $this->_queuesRelacionalReady()) {
+			return (int)($ticket->queue_id ?? 0) > 0;
+		}
+		$fila = trim((string)($ticket->fila_suporte ?? ''));
+		if ($fila === '' || $fila === '-') {
+			return false;
+		}
+		if (in_array('nivel_atendimento', $cols, true) && (int)($ticket->nivel_atendimento ?? 0) <= 0) {
+			return false;
+		}
+		return true;
+	}
+
 	protected function _supportLevelName(?int $levelId): string {
 		if (!$this->_supportLevelsRoutingReady() || $levelId === null || $levelId <= 0) {
 			return '';
@@ -4754,12 +4782,82 @@ class TicketsController extends AppController {
 			}
 		}
 
+		$workflowPayload = $this->_ticketWorkflowPayloadForRow($reg);
+		$workflowDrivenActions = !empty($workflowPayload['enabled'])
+			&& !empty($workflowPayload['current'])
+			&& is_array($workflowPayload['allowedTransitions'] ?? null);
 		$acoes = [];
-		if ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
+		if ($workflowDrivenActions) {
+			$curCodeRaw = (string)($workflowPayload['current']['codigo'] ?? '');
+			$curCode = strtolower(trim(str_replace([' ', '-'], '_', $curCodeRaw)));
+			$isPendenteCurrent = in_array($curCode, ['pendente', 'aberto'], true);
+			foreach ((array)$workflowPayload['allowedTransitions'] as $tr) {
+				$toId = (int)($tr['id'] ?? 0);
+				if ($toId <= 0) {
+					continue;
+				}
+				$toLabel = (string)($tr['label'] ?? '');
+				$toCodeRaw = (string)($tr['codigo'] ?? '');
+				$toCode = strtolower(trim(str_replace([' ', '-'], '_', $toCodeRaw)));
+				$key = null;
+				$situacaoDestino = null;
+				$label = $toLabel;
+				if (in_array($toCode, ['pendente', 'aberto'], true)) {
+					$key = 'pendente';
+					$label = 'Pendente';
+					$situacaoDestino = (int)C_TicketSituacaoPendente;
+				} elseif (in_array($toCode, ['emandamento', 'em_execucao', 'execucao', 'em_andamento'], true)) {
+					$key = 'emandamento';
+					$label = 'Em execução';
+					$situacaoDestino = (int)C_TicketSituacaoEmandamento;
+				} elseif ($toCode === 'resolvido') {
+					$key = 'resolvido';
+					$label = 'Resolvido';
+					$situacaoDestino = (int)C_TicketSituacaoResolvido;
+				} elseif ($toCode === 'fechado') {
+					$key = 'fechado';
+					$label = 'Fechado';
+					$situacaoDestino = (int)C_TicketSituacaoFechado;
+				}
+				if ($key === null) {
+					continue;
+				}
+				$acoes[] = [
+					'key' => $key,
+					'label' => $label,
+					'behavior' => 'reactStatus',
+					'situacaoDestino' => $situacaoDestino,
+					'workflowStateId' => $toId,
+					'statusLabel' => $toLabel !== '' ? $toLabel : $label,
+					'url' => $this->_ticketUrl(['action' => 'edit', $id]),
+				];
+				if ($isPendenteCurrent && $key === 'emandamento') {
+					$acoes[] = [
+						'key' => 'iniciar',
+						'label' => 'Iniciar atendimento',
+						'behavior' => 'reactStart',
+						'workflowStateId' => $toId,
+						'statusLabel' => $toLabel !== '' ? $toLabel : 'Em execução',
+						'url' => $this->_ticketUrl(['action' => 'edit', $id]),
+					];
+				}
+			}
+			if ($transferOk) {
+				$acoes[] = [
+					'key' => 'transferir',
+					'label' => 'Transferir',
+					'behavior' => 'reactTransfer',
+					'url' => $this->_ticketUrl(['action' => 'edit', $id]),
+				];
+			}
+			if ($sit !== (int)C_TicketSituacaoFechado) {
+				$acoes[] = ['key' => 'cancelar', 'label' => 'Cancelar', 'url' => $this->_ticketUrl(['action' => 'cancelar', $id])];
+			}
+		} elseif ($sit !== (int)C_TicketSituacaoResolvido && $sit !== (int)C_TicketSituacaoFechado) {
 			if ($sit !== (int)C_TicketSituacaoPendente) {
 				$acoes[] = [
 					'key' => 'pendente',
-					'label' => 'Aguardando técnico',
+					'label' => 'Pendente',
 					'behavior' => 'reactStatus',
 					'situacaoDestino' => (int)C_TicketSituacaoPendente,
 					'url' => $this->_ticketUrl(['action' => 'alterarsituacao', $id, (string)C_TicketSituacaoPendente]),
@@ -4849,7 +4947,7 @@ class TicketsController extends AppController {
 			],
 			'acoes' => $acoes,
 		];
-		$row['workflow'] = $this->_ticketWorkflowPayloadForRow($reg);
+		$row['workflow'] = $workflowPayload;
 		$row['slaByState'] = (array)($row['workflow']['slaByState'] ?? [
 			'enabled' => false,
 			'isPaused' => false,
@@ -5584,8 +5682,12 @@ class TicketsController extends AppController {
 		$filaBody = ($filaNova !== '' && isset($cat[$filaNova])) ? $filaNova : null;
 		$filaWorkflowSemTecnicoOk = $wf && $filaBody !== null && $filaBody !== $filaAnt;
 
-		if ($destId <= 0 && $queueIdBody <= 0 && !$filaWorkflowSemTecnicoOk) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'destino_ou_fila_obrigatorio'], 400);
+		if ($destId <= 0) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_fila_obrigatorios',
+				'message' => 'Para escalonar manualmente, informe um técnico e uma fila válidos.',
+			], 422);
 		}
 
 		$empresa = (int)$this->Auth->user('idempresa');
@@ -5595,6 +5697,21 @@ class TicketsController extends AppController {
 		}
 		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
 			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_transferir_fila'], 403);
+		}
+		if (!$this->_ticketHasValidTecnicoAndFila($ticket)) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_fila_obrigatorios',
+				'message' => 'Para escalonar manualmente, selecione um técnico e uma fila válidos.',
+			], 422);
+		}
+		$hasValidTargetQueue = $queueIdBody > 0 || ($filaWorkflowSemTecnicoOk && $filaBody !== null);
+		if (!$hasValidTargetQueue) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_fila_obrigatorios',
+				'message' => 'Para escalonar manualmente, informe uma fila de destino válida.',
+			], 422);
 		}
 		$newQueue = null;
 		if ($queueIdBody > 0) {
@@ -5993,17 +6110,46 @@ class TicketsController extends AppController {
 		if ($sitantiga === (int)C_TicketSituacaoEmandamento
 			&& (int)($ticket->idtecnico_responsavel ?? 0) === (int)$this->Auth->user('id')) {
 			// Ticket já está em execução com este técnico — operação idempotente, nada a fazer.
-			return $this->jsonResponse(['ok' => true, 'noop' => true]);
+			$rowNoop = $this->_servicedeskTicketRowPayload((int)$idticket);
+			return $this->jsonResponse(['ok' => true, 'noop' => true, 'ticket' => $rowNoop]);
 		}
-		$ticket->situacao = C_TicketSituacaoEmandamento;
-		$this->_assignTecnicoEmExecucao($ticket, $idticket);
-		if (TicketAttendimentoTimerService::columnsReady($this->Tickets)) {
-			TicketAttendimentoTimerService::applyOnSituacaoChange(
-				$this->Tickets,
-				$ticket,
-				$sitantiga,
-				(int)C_TicketSituacaoEmandamento
-			);
+		if (!$this->_ticketHasValidTecnicoAndFila($ticket)) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_fila_obrigatorios',
+				'message' => 'Selecione um técnico e uma fila válidos antes de iniciar o atendimento.',
+			], 422);
+		}
+		$workflowApplied = false;
+		$empresa = (int)$this->Auth->user('idempresa');
+		if ($this->_ticketWorkflowEnabledForEmpresa($empresa) && $this->_ticketWorkflowStateColumnReady()) {
+			try {
+				$wf = $this->_ticketWorkflowService();
+				if ($wf->hasConfiguredTransitionsForEmpresa($empresa)) {
+					$wf->bootstrapStateForTicket($ticket);
+					$fromStateId = (int)($ticket->workflow_state_id ?? 0);
+					$targetState = $wf->getStateBySituacao((int)C_TicketSituacaoEmandamento);
+					if ($fromStateId > 0 && $targetState !== null && $wf->canTransition($empresa, $fromStateId, (int)$targetState['id'])) {
+						$wf->applyTransition($ticket, (int)$targetState['id'], $empresa);
+						$this->_assignTecnicoEmExecucao($ticket, $idticket);
+						$workflowApplied = true;
+					}
+				}
+			} catch (\Throwable $e) {
+				$this->log('apiStartTicket workflow transition: ' . $e->getMessage(), 'warning');
+			}
+		}
+		if (!$workflowApplied) {
+			$ticket->situacao = C_TicketSituacaoEmandamento;
+			$this->_assignTecnicoEmExecucao($ticket, $idticket);
+			if (TicketAttendimentoTimerService::columnsReady($this->Tickets)) {
+				TicketAttendimentoTimerService::applyOnSituacaoChange(
+					$this->Tickets,
+					$ticket,
+					$sitantiga,
+					(int)C_TicketSituacaoEmandamento
+				);
+			}
 		}
 		$fields = ['situacao'];
 		$cols = $this->Tickets->getSchema()->columns();
@@ -6065,8 +6211,15 @@ class TicketsController extends AppController {
 				$this->log('apiStartTicket email: ' . $e->getMessage(), 'error');
 			}
 			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'apiStartTicket', $idticket);
+			$row = null;
+			try {
+				$row = $this->_servicedeskTicketRowPayload((int)$idticket);
+			} catch (\Throwable $e) {
+				$this->log('apiStartTicket row payload: ' . $e->getMessage(), 'warning');
+				$row = null;
+			}
 
-			return $this->jsonResponse(['ok' => true]);
+			return $this->jsonResponse(['ok' => true, 'ticket' => $row]);
 		}
 
 		return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 422);
@@ -6430,23 +6583,14 @@ class TicketsController extends AppController {
 		}
 		$sitantiga = (int)$ticket->situacao;
 		if ((int)$situacaoNova !== $sitantiga) {
-			TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, (int)$situacaoNova);
-		}
-		$ticket->situacao = $situacaoNova;
-
-		if ($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) {
-			$ticket->datafinalizado = date('d/m/Y');
-		}
-
-		if ((int)$situacaoNova === (int)C_TicketSituacaoEmandamento && (int)$situacaoNova !== $sitantiga) {
-			$this->_assignTecnicoEmExecucao($ticket, (int)$idticket);
-		}
-		if (($situacaoNova == C_TicketSituacaoResolvido || $situacaoNova == C_TicketSituacaoFechado) && (int)$situacaoNova !== $sitantiga) {
-			$this->_ensureTecnicoResponsavelAoFechamento($ticket);
-		}
-
-		if (!$this->Tickets->save($ticket)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível gravar o ticket.'], 500);
+			$ok = $this->_ticketApplyOperationalSituacaoChange($ticket, (int)$idticket, (int)$situacaoNova);
+			if (!$ok) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível gravar o ticket.'], 500);
+			}
+			$ticket = $this->Tickets->find()->where(['id' => (int)$idticket])->first();
+			if (empty($ticket)) {
+				return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+			}
 		}
 		try {
 			$this->criarMov($ticket->id, $sitantiga, $ticket->situacao);
@@ -6466,11 +6610,18 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {
 			$this->log('Tickets::apiAlterarSituacao email: ' . $e->getMessage(), 'error');
 		}
-
+		$row = null;
+		try {
+			$row = $this->_servicedeskTicketRowPayload((int)$idticket);
+		} catch (\Throwable $e) {
+			$this->log('Tickets::apiAlterarSituacao row payload: ' . $e->getMessage(), 'warning');
+			$row = null;
+		}
 		return $this->jsonResponse([
 			'ok' => true,
 			'situacao' => (int)$ticket->situacao,
 			'situacaoLabel' => $this->_ticketSituacaoTexto($ticket->situacao),
+			'ticket' => $row,
 		]);
 	}
 
@@ -6853,11 +7004,28 @@ class TicketsController extends AppController {
 					if ($targetState === null || !$workflowSvc->canTransition($empresa, $fromStateId, (int)$targetState['id'])) {
 						throw new \UnexpectedValueException('invalid_transition');
 					}
+					$targetSituacao = $workflowSvc->legacySituacaoForWorkflowStateId((int)$targetState['id']);
+					if ($targetSituacao === (int)C_TicketSituacaoEmandamento
+						&& $sitantiga !== (int)C_TicketSituacaoEmandamento
+					) {
+						if (!$this->_ticketHasValidTecnicoAndFila($ticket)) {
+							throw new \UnexpectedValueException('tecnico_fila_obrigatorios');
+						}
+						if (!$this->_userMayAssumeTicketTechnically($ticket)) {
+							throw new \UnexpectedValueException('sem_permissao_fila');
+						}
+					}
 					$workflowSvc->applyTransition($ticket, (int)$targetState['id'], $empresa);
 					$situacaoNovaInt = (int)$ticket->situacao;
 					$workflowApplied = true;
 				}
 				if (!$workflowApplied && $situacaoNovaInt !== $sitantiga) {
+					if ($situacaoNovaInt === (int)C_TicketSituacaoEmandamento
+						&& $sitantiga !== (int)C_TicketSituacaoEmandamento
+						&& !$this->_ticketHasValidTecnicoAndFila($ticket)
+					) {
+						throw new \UnexpectedValueException('tecnico_fila_obrigatorios');
+					}
 					TicketAttendimentoTimerService::applyOnSituacaoChange($this->Tickets, $ticket, $sitantiga, $situacaoNovaInt);
 					$ticket->situacao = $situacaoNovaInt;
 				}
@@ -6909,6 +7077,20 @@ class TicketsController extends AppController {
 					'ok' => false,
 					'error' => 'invalid_transition',
 					'message' => 'Transição de workflow inválida para este ticket.',
+				], 422);
+			}
+			if ($e->getMessage() === 'sem_permissao_fila') {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'sem_permissao_fila',
+					'message' => 'Você não possui permissão técnica para assumir este ticket nesta fila.',
+				], 403);
+			}
+			if ($e->getMessage() === 'tecnico_fila_obrigatorios') {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'tecnico_fila_obrigatorios',
+					'message' => 'Selecione um técnico e uma fila válidos antes de iniciar o atendimento.',
 				], 422);
 			}
 

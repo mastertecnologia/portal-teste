@@ -13,12 +13,16 @@ function parseIso(s) {
  *
  * @param {{ situacao: number, attendimentoTimer?: { started_at?: string|null, total_seconds?: number, finished_at?: string|null } }} props.ticket
  * @param {number} props.situacaoExecCode — tickets.situacao numérico "em execução"
+ * @param {{ source?: string, code?: string }} [props.effectiveStatus]
  */
-export default function TicketTimer({ ticket, situacaoExecCode }) {
+export default function TicketTimer({ ticket, situacaoExecCode, effectiveStatus = null }) {
   const timer = ticket?.attendimentoTimer;
   const [tick, setTick] = useState(0);
   const exec = Number(situacaoExecCode);
-  const running = Number(ticket?.situacao) === exec;
+  const wfCode = String(effectiveStatus?.code || '');
+  const runningByWorkflow = effectiveStatus?.source === 'workflow'
+    && (wfCode === 'emandamento' || wfCode === 'em_execucao' || wfCode === 'execucao' || wfCode === 'em_andamento');
+  const running = runningByWorkflow || Number(ticket?.situacao) === exec;
 
   useEffect(() => {
     if (!running) return undefined;

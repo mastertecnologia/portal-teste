@@ -59,6 +59,7 @@ export default function TicketsServicedeskInlineRow({
   tecnicos,
   ticketStatus,
   situacaoExecCode,
+  effectiveStatus,
   onMergeTicket,
   patchBusyId,
   setPatchBusyId,
@@ -281,6 +282,9 @@ export default function TicketsServicedeskInlineRow({
   }, [queuesRelacional, queues, workflowFilas]);
 
   const statusBadgeText = useMemo(() => {
+    if (effectiveStatus?.source === 'workflow' && effectiveStatus?.label) {
+      return String(effectiveStatus.label).trim() || '—';
+    }
     const raw =
       ticket?.workflow?.enabled === true && ticket?.workflow?.current?.label
         ? ticket.workflow.current.label
@@ -289,11 +293,11 @@ export default function TicketsServicedeskInlineRow({
       .replace(/<[^>]*>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim() || '—';
-  }, [ticket]);
+  }, [ticket, effectiveStatus]);
 
   const gridStatusType = useMemo(
-    () => servicedeskStatusTypeFromTicket(ticket, ticket.situacaoLabel),
-    [ticket],
+    () => servicedeskStatusTypeFromTicket(ticket, effectiveStatus?.label || ticket.situacaoLabel),
+    [ticket, effectiveStatus],
   );
 
   const statusSelectTitle = `Status do ticket ${ticket.id}: ${statusBadgeText}. Valor selecionado corresponde à próxima ação na fila.`;
@@ -399,7 +403,7 @@ export default function TicketsServicedeskInlineRow({
         </select>
       </td>
       <td className="whitespace-nowrap px-2 py-2 text-right">
-        <TicketTimer ticket={ticket} situacaoExecCode={situacaoExecCode} />
+        <TicketTimer ticket={ticket} situacaoExecCode={situacaoExecCode} effectiveStatus={effectiveStatus} />
       </td>
     </>
   );

@@ -62,9 +62,10 @@ function patchTicketsErrorMessage(r, json) {
 function mockTicketToTechRow(t) {
   const open =
     t.status === 'Aguardando técnico' ||
+    t.status === 'Pendente' ||
     t.status === 'Em execução' ||
     t.status === 'Em andamento';
-  const pendente = t.status === 'Aguardando técnico';
+  const pendente = t.status === 'Aguardando técnico' || t.status === 'Pendente';
   const acoes = [];
   if (open) {
     if (pendente) {
@@ -88,7 +89,7 @@ function mockTicketToTechRow(t) {
     created: t.atualizado || '—',
     assunto_nome: t.assunto ?? 'Não informado',
     situacao: open ? 1 : 2,
-    situacaoLabel: t.status,
+    situacaoLabel: pendente ? 'Pendente' : t.status,
     cliente: t.cliente,
     tecnicos: t.tecnicos ?? t.responsavel ?? '—',
     filaSuporte: t.filaSuporte || 'n1',
@@ -107,7 +108,7 @@ export async function fetchTicketsTecnico(filters = {}) {
     const all = listTicketsForTecnico().map(mockTicketToTechRow);
     const groups = {
       todos: all,
-      pendentes: all.filter((t) => t.situacaoLabel === 'Aguardando técnico'),
+      pendentes: all.filter((t) => t.situacaoLabel === 'Pendente'),
       emandamento: all.filter((t) => t.situacaoLabel === 'Em execução' || t.situacaoLabel === 'Em andamento'),
       resolvidos: all.filter((t) => t.situacaoLabel === 'Resolvido'),
       fechados: all.filter((t) => t.situacaoLabel === 'Cancelado' || t.situacaoLabel === 'Fechado'),
