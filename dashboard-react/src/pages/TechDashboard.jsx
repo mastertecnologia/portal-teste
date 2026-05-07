@@ -636,6 +636,7 @@ export default function TechDashboard({ boot }) {
   const [startBusyId, setStartBusyId] = useState(null);
   const [statusBusyKey, setStatusBusyKey] = useState(null);
   const [patchBusyId, setPatchBusyId] = useState(null);
+  const [statusInteractionLock, setStatusInteractionLock] = useState({});
   /** Erro por PATCH inline (rollback já aplicado na linha). */
   const [inlinePatchError, setInlinePatchError] = useState({ id: null, msg: '' });
   const inlinePatchErrorTimerRef = useRef(null);
@@ -824,6 +825,28 @@ export default function TechDashboard({ boot }) {
     });
   }, []);
 
+  const lockTicketStatusInteraction = useCallback((ticketId, ms = 1200) => {
+    const id = Number(ticketId);
+    if (!Number.isFinite(id) || id <= 0) return;
+    setStatusInteractionLock((prev) => ({ ...prev, [id]: true }));
+    window.setTimeout(() => {
+      setStatusInteractionLock((prev) => {
+        if (!prev[id]) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }, ms);
+  }, []);
+
+  const isTicketStatusInteractionLocked = useCallback(
+    (ticketId) => {
+      const id = Number(ticketId);
+      return Number(startBusyId) === id || Number(patchBusyId) === id || Boolean(statusInteractionLock[id]);
+    },
+    [startBusyId, patchBusyId, statusInteractionLock],
+  );
+
   const onInlinePatchError = useCallback((ticketId, msg) => {
     if (inlinePatchErrorTimerRef.current) {
       window.clearTimeout(inlinePatchErrorTimerRef.current);
@@ -973,6 +996,7 @@ export default function TechDashboard({ boot }) {
       return;
     }
     setStartBusyId(id);
+    lockTicketStatusInteraction(id, 1500);
     try {
       const execTransition = Array.isArray(ticket?.workflow?.allowedTransitions)
         ? ticket.workflow.allowedTransitions.find((tr) => {
@@ -1008,6 +1032,9 @@ export default function TechDashboard({ boot }) {
 
   const handleAlterarSituacao = async (ticket, req) => {
     const id = Number(ticket.id);
+    if (isTicketStatusInteractionLocked(id)) {
+      return;
+    }
     const situacaoDestino = req && typeof req === 'object' ? req.situacaoDestino : req;
     const workflowStateId = req && typeof req === 'object' ? req.workflowStateId : null;
     const statusLabelText = req && typeof req === 'object' ? req.statusLabel : null;
@@ -1027,13 +1054,14 @@ export default function TechDashboard({ boot }) {
       if (r.ticket) {
         mergeTicketInGroups(id, r.ticket);
       }
+      lockTicketStatusInteraction(id, 700);
       setTransferOkHint('Situação atualizada.');
       window.setTimeout(() => setTransferOkHint(''), 4000);
       if (!r.ticket) await reload();
     } finally {
       setStatusBusyKey(null);
     }
-  };
+  }, [isTicketStatusInteractionLocked, mergeTicketInGroups, reload, lockTicketStatusInteraction]);
 
   const colCount = useMemo(() => {
     let n = wfEnabled ? 10 : 8;
@@ -1577,6 +1605,7 @@ export default function TechDashboard({ boot }) {
                           onMergeTicket={mergeTicketInGroups}
                           patchBusyId={patchBusyId}
                           setPatchBusyId={setPatchBusyId}
+                          statusInteractionLocked={isTicketStatusInteractionLocked(ticket.id)}
                           onPatchError={onInlinePatchError}
                         />
                       ) : (

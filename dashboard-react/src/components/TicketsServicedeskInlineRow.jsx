@@ -63,9 +63,10 @@ export default function TicketsServicedeskInlineRow({
   onMergeTicket,
   patchBusyId,
   setPatchBusyId,
+  statusInteractionLocked = false,
   onPatchError,
 }) {
-  const busy = Number(patchBusyId) === Number(ticket.id);
+  const busy = Number(patchBusyId) === Number(ticket.id) || Boolean(statusInteractionLocked);
   const tid = Number(ticket.idtecnico_responsavel) || 0;
   const canChangeQueue = tid > 0;
 
@@ -145,6 +146,19 @@ export default function TicketsServicedeskInlineRow({
       setBusy(true);
       if (wfId != null && wfId > 0) setPatchingWorkflowStateId(wfId);
       try {
+        if (useWorkflowStatus && wfId != null && wfId > 0) {
+          const currentWfId = Number(ticket?.workflow?.current?.id || 0);
+          if (currentWfId > 0 && currentWfId === wfId) {
+            return;
+          }
+        }
+        if (!useWorkflowStatus) {
+          const nextStatus = String(payload?.status || '').trim().toLowerCase();
+          const currentStatus = String(ticket.situacaoLabel || ticket.status || '').trim().toLowerCase();
+          if (nextStatus !== '' && nextStatus === currentStatus) {
+            return;
+          }
+        }
         let body;
         if (wfId != null && wfId > 0) {
           const fromPayload =
@@ -169,7 +183,7 @@ export default function TicketsServicedeskInlineRow({
         setPatchingWorkflowStateId(null);
       }
     },
-    [ticket, setBusy, onMergeTicket, fail, workflowOptions],
+    [ticket, setBusy, onMergeTicket, fail, workflowOptions, useWorkflowStatus],
   );
 
   const onTimelineTransition = useCallback(
@@ -186,6 +200,7 @@ export default function TicketsServicedeskInlineRow({
   );
 
   const onStatus = async (e) => {
+    if (statusInteractionLocked) return;
     const selected = e.target.value;
     const hit = statusOptions.find((o) => o.value === selected);
     if (!hit) return;
