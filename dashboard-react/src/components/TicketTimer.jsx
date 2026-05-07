@@ -1,17 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-function parseIso(s) {
-  if (s == null || s === '') return null;
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
+/** Segundos: diff pequeno entre projeção local e novo payload — suaviza pulo no poll. */
+const ANCHOR_SYNC_EPS_SEC = 2.5;
 
 /**
  * Timer persistido no ticket (não confundir com AtendimentoTimer / apiTimer).
- * Exibição: total_seconds + (agora − started_at) quando status = em execução
- * (mesma regra que TicketAttendimentoTimerService::elapsedSecondsForDisplay no PHP).
+ * Em execução: âncora em `elapsed_seconds` do servidor no momento do payload + relógio local
+ * (sem somar de novo `Date.now() - started_at` sobre `elapsed_seconds`).
  *
- * @param {{ situacao: number, attendimentoTimer?: { started_at?: string|null, total_seconds?: number, finished_at?: string|null } }} props.ticket
+ * @param {{ situacao: number, attendimentoTimer?: { started_at?: string|null, total_seconds?: number, elapsed_seconds?: number, finished_at?: string|null } }} props.ticket
  * @param {number} props.situacaoExecCode — tickets.situacao numérico "em execução"
  * @param {{ source?: string, code?: string }} [props.effectiveStatus]
  */
@@ -24,27 +21,66 @@ export default function TicketTimer({ ticket, situacaoExecCode, effectiveStatus 
     && (wfCode === 'emandamento' || wfCode === 'em_execucao' || wfCode === 'execucao' || wfCode === 'em_andamento');
   const running = runningByWorkflow || Number(ticket?.situacao) === exec;
 
+  const anchorTicketIdRef = useRef(null);
+  const anchorElapsedRef = useRef(0);
+  const anchorAtRef = useRef(Date.now());
+
   useEffect(() => {
-    if (!running) return undefined;
+    if (!running) {
+      anchorTicketIdRef.current = null;
+      return undefined;
+    }
     const id = window.setInterval(() => setTick((x) => x + 1), 1000);
     return () => window.clearInterval(id);
-  }, [running, ticket?.id, timer?.started_at, timer?.total_seconds]);
+  }, [running, ticket?.id]);
 
-  const displaySeconds = useMemo(() => {
-    const base = Math.max(
+  useLayoutEffect(() => {
+    if (!running) return;
+
+    const tid = ticket?.id;
+    const incoming = Math.max(
       0,
       Number(timer?.elapsed_seconds ?? 0) || 0,
       Number(timer?.total_seconds ?? 0) || 0,
     );
-    if (!running || !timer?.started_at) {
-      return Math.max(0, base);
+    const now = Date.now();
+
+    if (anchorTicketIdRef.current !== tid) {
+      anchorTicketIdRef.current = tid;
+      anchorElapsedRef.current = incoming;
+      anchorAtRef.current = now;
+      setTick((x) => x + 1);
+      return;
     }
-    const st = parseIso(timer.started_at);
-    if (!st) {
-      return Math.max(0, base);
+
+    const projected = anchorElapsedRef.current + (now - anchorAtRef.current) / 1000;
+
+    if (incoming + 0.5 < projected) {
+      return;
     }
-    return Math.max(0, base + Math.floor((Date.now() - st.getTime()) / 1000));
-  }, [timer?.total_seconds, timer?.started_at, running, tick]);
+
+    const diff = Math.abs(incoming - projected);
+    if (diff <= ANCHOR_SYNC_EPS_SEC || incoming > projected + ANCHOR_SYNC_EPS_SEC) {
+      anchorElapsedRef.current = incoming;
+      anchorAtRef.current = now;
+      setTick((x) => x + 1);
+    }
+  }, [running, ticket?.id, timer?.elapsed_seconds, timer?.total_seconds]);
+
+  const displaySeconds = useMemo(() => {
+    const staticDisplay = Math.max(
+      0,
+      Number(timer?.elapsed_seconds ?? 0) || 0,
+      Number(timer?.total_seconds ?? 0) || 0,
+    );
+    if (!running) {
+      return staticDisplay;
+    }
+    return Math.max(
+      0,
+      anchorElapsedRef.current + Math.floor((Date.now() - anchorAtRef.current) / 1000),
+    );
+  }, [running, timer?.elapsed_seconds, timer?.total_seconds, tick, ticket?.id]);
 
   const hh = String(Math.floor(displaySeconds / 3600)).padStart(2, '0');
   const mm = String(Math.floor((displaySeconds % 3600) / 60)).padStart(2, '0');

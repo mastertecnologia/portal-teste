@@ -1006,10 +1006,14 @@ export default function TechDashboard({ boot }) {
         : null;
       const hasWorkflow = ticket?.workflow?.enabled === true && ticket?.workflow?.current?.id != null;
       const r = hasWorkflow && execTransition
-        ? await patchTicketStatus(id, {
-            workflow_state_id: Number(execTransition.id),
-            status: String(execTransition.label || 'Em execução'),
-          })
+        ? await patchTicketStatus(
+            id,
+            {
+              workflow_state_id: Number(execTransition.id),
+              status: String(execTransition.label || 'Em execução'),
+            },
+            { source: 'start' },
+          )
         : await postStartTicket(id);
       if (!r.ok) {
         const code = r.error;
@@ -1042,10 +1046,14 @@ export default function TechDashboard({ boot }) {
     setStatusBusyKey(sk);
     try {
       const r = workflowStateId != null && Number(workflowStateId) > 0
-        ? await patchTicketStatus(id, {
-            workflow_state_id: Number(workflowStateId),
-            status: String(statusLabelText || '—'),
-          })
+        ? await patchTicketStatus(
+            id,
+            {
+              workflow_state_id: Number(workflowStateId),
+              status: String(statusLabelText || '—'),
+            },
+            { source: 'menu' },
+          )
         : await postAlterarSituacao(id, situacaoDestino);
       if (!r.ok) {
         window.alert(r.message || r.error || 'Não foi possível alterar o status do ticket.');

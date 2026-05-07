@@ -284,7 +284,34 @@ export async function patchTicketAssignment(ticketId, payload) {
   return { ok: true, ticket: json.ticket || null };
 }
 
-export async function patchTicketStatus(ticketId, body) {
+/**
+ * PATCH status do ticket (workflow ou legado).
+ * @param {number|string} ticketId
+ * @param {object} body
+ * @param {{ source?: string }} [meta] — opcional; para diagnóstico (`debugTicketStatusPatch` no localStorage).
+ */
+export async function patchTicketStatus(ticketId, body, meta = {}) {
+  try {
+    const debugOn =
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem('debugTicketStatusPatch') === '1';
+    if (debugOn) {
+      const payload = {
+        ts: new Date().toISOString(),
+        ticketId: Number(ticketId),
+        workflow_state_id: body?.workflow_state_id ?? null,
+        status: body?.status ?? null,
+        source: meta?.source || 'outro',
+      };
+      if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+        payload.stack = new Error('[ticket-status-patch]').stack;
+      }
+      console.debug('[ticket-status-patch]', payload);
+    }
+  } catch (_) {
+    /* ignore debug failures */
+  }
+
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 80));
     return { ok: true, situacao: 1, situacaoLabel: body?.status || 'mock', ticket: null };

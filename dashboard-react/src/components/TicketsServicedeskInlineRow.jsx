@@ -137,7 +137,7 @@ export default function TicketsServicedeskInlineRow({
   }, [statusOptions, currentStatusCode, ticket.situacaoLabel, useWorkflowStatus, ticket]);
 
   const applyStatusPatch = useCallback(
-    async (payload) => {
+    async (payload, patchSource = 'outro') => {
       const snap = rowSnapshot(ticket);
       const wfId =
         payload && payload.workflowStateId != null && !Number.isNaN(Number(payload.workflowStateId))
@@ -171,7 +171,7 @@ export default function TicketsServicedeskInlineRow({
         } else {
           body = { status: payload.status };
         }
-        const r = await patchTicketStatus(ticket.id, body);
+        const r = await patchTicketStatus(ticket.id, body, { source: patchSource });
         if (!r.ok) {
           onMergeTicket(ticket.id, snap);
           fail(r.message || r.error);
@@ -191,10 +191,13 @@ export default function TicketsServicedeskInlineRow({
       if (!useWorkflowStatus || busy || !transition) return;
       const sid = Number(transition.id);
       if (!Number.isFinite(sid) || sid <= 0 || !allowedWorkflowStateIds.has(sid)) return;
-      await applyStatusPatch({
-        workflowStateId: sid,
-        statusLabel: workflowTransitionPatchStatusLabel(transition),
-      });
+      await applyStatusPatch(
+        {
+          workflowStateId: sid,
+          statusLabel: workflowTransitionPatchStatusLabel(transition),
+        },
+        'timeline',
+      );
     },
     [useWorkflowStatus, busy, applyStatusPatch, allowedWorkflowStateIds],
   );
@@ -205,12 +208,15 @@ export default function TicketsServicedeskInlineRow({
     const hit = statusOptions.find((o) => o.value === selected);
     if (!hit) return;
     if (useWorkflowStatus) {
-      await applyStatusPatch({
-        workflowStateId: hit.workflowStateId,
-        statusLabel: hit.statusLabel,
-      });
+      await applyStatusPatch(
+        {
+          workflowStateId: hit.workflowStateId,
+          statusLabel: hit.statusLabel,
+        },
+        'dropdown',
+      );
     } else {
-      await applyStatusPatch({ status: selected });
+      await applyStatusPatch({ status: selected }, 'dropdown');
     }
   };
 
