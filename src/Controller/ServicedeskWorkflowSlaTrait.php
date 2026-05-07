@@ -521,7 +521,8 @@ trait ServicedeskWorkflowSlaTrait {
 		if (!$this->Auth->user() || (int)$this->Auth->user('role') !== 0) {
 			return $this->redirect(['action' => 'index']);
 		}
-		$this->viewBuilder()->setLayout('servicedesk');
+		/* Mesmo shell do ERP que Histórico/Operacional (layout default + turbo-frame), não o layout full-page servicedesk. */
+		$this->viewBuilder()->setLayout('default');
 		$this->viewBuilder()->setTemplatePath('Tickets');
 		$this->viewBuilder()->setTemplate('react_app');
 		$this->set('title', 'Workflow & SLA');
