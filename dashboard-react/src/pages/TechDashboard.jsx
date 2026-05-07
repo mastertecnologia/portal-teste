@@ -1061,7 +1061,7 @@ export default function TechDashboard({ boot }) {
     } finally {
       setStatusBusyKey(null);
     }
-  }, [isTicketStatusInteractionLocked, mergeTicketInGroups, reload, lockTicketStatusInteraction]);
+  };
 
   const colCount = useMemo(() => {
     let n = wfEnabled ? 10 : 8;
