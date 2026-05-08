@@ -1,6 +1,38 @@
 <?php
 $this->assign('title', $title ?? 'Editar');
 $__initialMonthly = (float)($contract->monthly_value ?? 0);
+$__contractDatePtBr = static function ($v) {
+	if ($v instanceof \DateTimeInterface) {
+		return $v->format('d/m/Y');
+	}
+	if (is_string($v)) {
+		$v = trim($v);
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})(?:\s|T|$)/', $v, $m)) {
+			$y = (int)$m[1];
+			$mo = (int)$m[2];
+			$d = (int)$m[3];
+
+			return sprintf('%02d/%02d/%04d', $d, $mo, $y);
+		}
+		if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $v)) {
+			return $v;
+		}
+	}
+
+	return '';
+};
+$__startDisp = $__contractDatePtBr($contract->start_date ?? null);
+$__endDisp = $__contractDatePtBr($contract->end_date ?? null);
+if ($this->request->is(['post', 'put'])) {
+	$tIni = $this->request->getData('start_date');
+	if ($tIni !== null && $tIni !== '') {
+		$__startDisp = is_scalar($tIni) ? (string)$tIni : $__startDisp;
+	}
+	$tFim = $this->request->getData('end_date');
+	if ($tFim !== null && $tFim !== '') {
+		$__endDisp = is_scalar($tFim) ? (string)$tFim : $__endDisp;
+	}
+}
 ?>
 <div class="col-12 pgm-adv-page">
 	<div class="pgm-adv-panel card">
@@ -25,53 +57,75 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 			?>
 			<?= $this->Form->control('status', ['label' => __('Status'), 'options' => $__stEdit, 'class' => 'form-control']) ?>
 			<?= $this->Form->control('template_id', ['options' => $templatesList, 'empty' => true, 'label' => __('Modelo'), 'class' => 'form-control']) ?>
-			<div class="contract-vigencia-panel contract-vigencia-card">
-				<h5 class="mb-2"><?= __('Vigência') ?></h5>
-				<div class="row contract-vigencia-info">
-					<div class="col-md-4 col-sm-12">
-						<div class="form-group">
-							<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Data de início'), 'class' => 'form-control']) ?>
+			<div class="contract-form-inner-stack">
+				<div class="pgm-adv-panel card contract-form-inner-card mb-3">
+					<div class="card-body">
+						<h5 class="contract-form-section-title"><?= __('Vigência') ?></h5>
+						<div class="row contract-vigencia-info">
+							<div class="col-md-4 col-sm-12">
+								<div class="form-group">
+									<label class="control-label" for="contract_start_date_pt"><?= __('Data de início') ?></label>
+									<input type="text"
+										name="start_date"
+										id="contract_start_date_pt"
+										class="form-control datepicker"
+										placeholder="<?= __('dd/mm/aaaa') ?>"
+										value="<?= h($__startDisp) ?>"
+										autocomplete="off"
+									>
+								</div>
+							</div>
+							<div class="col-md-4 col-sm-12">
+								<div class="form-group">
+									<label class="control-label" for="contract_end_date_pt"><?= __('Data de fim') ?></label>
+									<input type="text"
+										name="end_date"
+										id="contract_end_date_pt"
+										class="form-control datepicker"
+										placeholder="<?= __('dd/mm/aaaa') ?>"
+										value="<?= h($__endDisp) ?>"
+										autocomplete="off"
+									>
+								</div>
+							</div>
+							<div class="col-md-4 col-sm-12">
+								<div class="form-group">
+									<label class="control-label"><?= __('Prazo comercial') ?></label>
+									<input type="text" class="form-control contract-readonly-soft" id="vigencia_prazo_comercial_preview" value="—" readonly>
+								</div>
+							</div>
 						</div>
-					</div>
-					<div class="col-md-4 col-sm-12">
-						<div class="form-group">
-							<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Data de fim'), 'class' => 'form-control']) ?>
+						<div class="row contract-vigencia-info">
+							<div class="col-md-12 col-sm-12">
+								<div class="form-group">
+									<label class="control-label"><?= __('Prazo da vigência') ?></label>
+									<input type="text" class="form-control contract-readonly-soft" id="vigencia_prazo_preview" value="—" readonly>
+								</div>
+							</div>
 						</div>
-					</div>
-					<div class="col-md-4 col-sm-12">
-						<div class="form-group">
-							<label class="control-label"><?= __('Prazo da vigência') ?></label>
-							<input type="text" class="form-control" id="vigencia_prazo_preview" value="—" readonly>
+						<div class="alert alert-warning small contract-vigencia-alert mb-0" id="vigencia_prazo_alert" style="display:none;">
+							<?= __('Atenção: vigência fora dos prazos comerciais padrão (12, 24, 36, 48 ou 60 meses).') ?>
 						</div>
 					</div>
 				</div>
-				<div class="row contract-vigencia-info">
-					<div class="col-md-4 col-sm-12">
-						<div class="form-group">
-							<label class="control-label"><?= __('Prazo comercial') ?></label>
-							<input type="text" class="form-control" id="vigencia_prazo_comercial_preview" value="—" readonly>
-						</div>
-					</div>
-				</div>
-				<div class="alert alert-warning small contract-vigencia-alert" id="vigencia_prazo_alert" style="display:none;">
-					<?= __('Atenção: vigência fora dos prazos comerciais padrão (12, 24, 36, 48 ou 60 meses).') ?>
-				</div>
-			</div>
-			<div class="contract-valores-panel" data-monthly-value="<?= h(number_format($__initialMonthly, 2, '.', '')) ?>">
-				<h5 class="mb-2"><?= __('Valores do contrato') ?></h5>
-				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label class="control-label"><?= __('Valor mensal') ?></label>
-							<input type="text" class="form-control" id="contract_monthly_value_preview" readonly>
-							<small class="text-muted"><?= __('Calculado automaticamente pela soma da aba Serviços.') ?></small>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="form-group">
-							<label class="control-label"><?= __('Valor total') ?></label>
-							<input type="text" class="form-control" id="contract_total_value_preview" readonly>
-							<small class="text-muted"><?= __('Calculado automaticamente pela vigência x valor mensal.') ?></small>
+				<div class="pgm-adv-panel card contract-form-inner-card mb-3 contract-valores-panel" data-monthly-value="<?= h(number_format($__initialMonthly, 2, '.', '')) ?>">
+					<div class="card-body">
+						<h5 class="contract-form-section-title"><?= __('Valores do contrato') ?></h5>
+						<div class="row">
+							<div class="col-md-6 col-sm-12">
+								<div class="form-group">
+									<label class="control-label"><?= __('Valor mensal') ?></label>
+									<input type="text" class="form-control contract-readonly-soft" id="contract_monthly_value_preview" readonly>
+									<small class="text-muted"><?= __('Calculado automaticamente pela soma da aba Serviços.') ?></small>
+								</div>
+							</div>
+							<div class="col-md-6 col-sm-12">
+								<div class="form-group">
+									<label class="control-label"><?= __('Valor total') ?></label>
+									<input type="text" class="form-control contract-readonly-soft" id="contract_total_value_preview" readonly>
+									<small class="text-muted"><?= __('Calculado automaticamente pela vigência x valor mensal.') ?></small>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -90,8 +144,8 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 </div>
 <script>
 (function () {
-	var startInputs = document.querySelectorAll('[name="start_date[year]"], [name="start_date[month]"], [name="start_date[day]"]');
-	var endInputs = document.querySelectorAll('[name="end_date[year]"], [name="end_date[month]"], [name="end_date[day]"]');
+	var startEl = document.getElementById('contract_start_date_pt');
+	var endEl = document.getElementById('contract_end_date_pt');
 	var prazoPreview = document.getElementById('vigencia_prazo_preview');
 	var prazoComercialPreview = document.getElementById('vigencia_prazo_comercial_preview');
 	var prazoAlert = document.getElementById('vigencia_prazo_alert');
@@ -103,15 +157,19 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 	var money = function (v) {
 		return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 	};
-	var makeDate = function (prefix) {
-		var y = document.querySelector('[name="' + prefix + '[year]"]');
-		var m = document.querySelector('[name="' + prefix + '[month]"]');
-		var d = document.querySelector('[name="' + prefix + '[day]"]');
-		if (!y || !m || !d || !y.value || !m.value || !d.value) {
+	var parsePtDateInput = function (el) {
+		if (!el || !el.value) {
 			return null;
 		}
-		var date = new Date(Number(y.value), Number(m.value) - 1, Number(d.value));
-		if (isNaN(date.getTime())) {
+		var m = String(el.value).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		if (!m) {
+			return null;
+		}
+		var day = parseInt(m[1], 10);
+		var mo = parseInt(m[2], 10) - 1;
+		var y = parseInt(m[3], 10);
+		var date = new Date(y, mo, day);
+		if (date.getFullYear() !== y || date.getMonth() !== mo || date.getDate() !== day) {
 			return null;
 		}
 		return date;
@@ -133,8 +191,8 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 		return { months: billingMonths, days: days };
 	};
 	var refresh = function () {
-		var start = makeDate('start_date');
-		var end = makeDate('end_date');
+		var start = parsePtDateInput(startEl);
+		var end = parsePtDateInput(endEl);
 		monthlyPreview.value = money(monthlyValue);
 		if (!start || !end) {
 			prazoPreview.value = '—';
@@ -156,8 +214,13 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 		prazoAlert.style.display = standardTerms.indexOf(diff.months) === -1 ? '' : 'none';
 		totalPreview.value = money(monthlyValue * diff.months);
 	};
-	Array.prototype.forEach.call(startInputs, function (el) { el.addEventListener('change', refresh); });
-	Array.prototype.forEach.call(endInputs, function (el) { el.addEventListener('change', refresh); });
+	if (!startEl || !endEl) {
+		return;
+	}
+	startEl.addEventListener('change', refresh);
+	endEl.addEventListener('change', refresh);
+	startEl.addEventListener('keyup', refresh);
+	endEl.addEventListener('keyup', refresh);
 	refresh();
 })();
 </script>

@@ -101,6 +101,19 @@ class ContractsTable extends Table {
 				$data[$field] = $parsed;
 			}
 		}
+		foreach (['start_date', 'end_date'] as $dateField) {
+			if (!isset($data[$dateField])) {
+				continue;
+			}
+			$raw = $data[$dateField];
+			if ($raw === null || $raw === '' || is_array($raw)) {
+				continue;
+			}
+			$converted = static::_parseContractDateInput($raw);
+			if ($converted !== null) {
+				$data[$dateField] = $converted;
+			}
+		}
 	}
 
 	/**
@@ -126,6 +139,41 @@ class ContractsTable extends Table {
 	 * @param mixed $raw
 	 * @return float|null
 	 */
+	/**
+	 * Aceita dd/mm/aaaa (formulário PT-BR), yyyy-mm-dd ou DateTimeInterface.
+	 *
+	 * @param mixed $raw
+	 * @return string|null yyyy-mm-dd ou null se não converter (mantém validação sobre o texto bruto)
+	 */
+	protected static function _parseContractDateInput($raw) {
+		if ($raw instanceof \DateTimeInterface) {
+			return $raw->format('Y-m-d');
+		}
+		if (!is_string($raw)) {
+			return null;
+		}
+		$s = trim($raw);
+		if ($s === '') {
+			return null;
+		}
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m)) {
+			$y = (int)$m[1];
+			$mo = (int)$m[2];
+			$d = (int)$m[3];
+
+			return checkdate($mo, $d, $y) ? sprintf('%04d-%02d-%02d', $y, $mo, $d) : null;
+		}
+		if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $s, $m)) {
+			$d = (int)$m[1];
+			$mo = (int)$m[2];
+			$y = (int)$m[3];
+
+			return checkdate($mo, $d, $y) ? sprintf('%04d-%02d-%02d', $y, $mo, $d) : null;
+		}
+
+		return null;
+	}
+
 	protected static function _parseDecimalFromForm($raw) {
 		if ($raw === null || $raw === '') {
 			return null;

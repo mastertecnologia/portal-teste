@@ -178,17 +178,29 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row [class*="c
 body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row .form-group {
 	margin-bottom: 1rem;
 }
-body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-vigencia-card {
-	margin-top: 24px;
-	padding-top: 16px;
-	border-top: 1px solid var(--pgm-border, #e5e4e0);
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel.card .contract-form-inner-stack {
+	margin-top: 1.25rem;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel.card .contract-form-inner-card.pgm-adv-panel.card {
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel.card .contract-form-inner-card.pgm-adv-panel.card .card-body {
+	padding: 16px 18px;
+}
+body.layout-no-topbar .pgm-adv-page .contract-form-inner-card .contract-form-section-title {
+	margin-top: 0;
+	margin-bottom: 0.85rem;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--pgm-text, #1a1a18);
+}
+body.layout-no-topbar .pgm-adv-page .contract-readonly-soft[readonly],
+body.layout-no-topbar .pgm-adv-page .contract-form-inner-card .contract-readonly-soft {
+	background: rgba(0, 0, 0, 0.02) !important;
 }
 body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-vigencia-info .form-group,
-body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-valores-panel .form-group {
+body.layout-no-topbar .pgm-adv-page .contract-form-inner-card .form-group {
 	margin-bottom: 0.85rem;
-}
-body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-valores-panel {
-	margin-top: 0.5rem;
 }
 
 /* Selects do formulário de contrato: fundo escuro (evita lista/opções brancas no tema) */
