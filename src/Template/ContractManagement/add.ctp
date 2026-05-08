@@ -23,27 +23,17 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 			<?= $this->Form->control('name', ['label' => __('Nome'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('type', ['label' => __('Tipo'), 'class' => 'form-control']) ?>
 			<?= $this->Form->control('template_id', ['options' => $templatesList, 'empty' => true, 'label' => __('Modelo'), 'class' => 'form-control']) ?>
-			<div class="row contract-date-row contract-vigencia-row">
-				<div class="col-sm-6">
-					<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Início'), 'class' => 'form-control']) ?>
-				</div>
-				<div class="col-sm-6">
-					<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Fim'), 'class' => 'form-control']) ?>
-				</div>
-			</div>
-			<div class="contract-vigencia-panel">
+			<div class="contract-vigencia-panel contract-vigencia-card">
 				<h5 class="mb-2"><?= __('Vigência') ?></h5>
 				<div class="row contract-vigencia-info">
-					<div class="col-md-4 col-sm-6">
+					<div class="col-md-4 col-sm-12">
 						<div class="form-group">
-							<label class="control-label"><?= __('Início') ?></label>
-							<input type="text" class="form-control" id="vigencia_inicio_preview" value="—" readonly>
+							<?= $this->Form->control('start_date', ['type' => 'date', 'label' => __('Data de início'), 'class' => 'form-control']) ?>
 						</div>
 					</div>
-					<div class="col-md-4 col-sm-6">
+					<div class="col-md-4 col-sm-12">
 						<div class="form-group">
-							<label class="control-label"><?= __('Fim') ?></label>
-							<input type="text" class="form-control" id="vigencia_fim_preview" value="—" readonly>
+							<?= $this->Form->control('end_date', ['type' => 'date', 'label' => __('Data de fim'), 'class' => 'form-control']) ?>
 						</div>
 					</div>
 					<div class="col-md-4 col-sm-12">
@@ -54,7 +44,7 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 					</div>
 				</div>
 				<div class="row contract-vigencia-info">
-					<div class="col-md-6 col-sm-12">
+					<div class="col-md-4 col-sm-12">
 						<div class="form-group">
 							<label class="control-label"><?= __('Prazo comercial') ?></label>
 							<input type="text" class="form-control" id="vigencia_prazo_comercial_preview" value="—" readonly>
@@ -101,8 +91,6 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 (function () {
 	var startInputs = document.querySelectorAll('[name="start_date[year]"], [name="start_date[month]"], [name="start_date[day]"]');
 	var endInputs = document.querySelectorAll('[name="end_date[year]"], [name="end_date[month]"], [name="end_date[day]"]');
-	var startPreview = document.getElementById('vigencia_inicio_preview');
-	var endPreview = document.getElementById('vigencia_fim_preview');
 	var prazoPreview = document.getElementById('vigencia_prazo_preview');
 	var prazoComercialPreview = document.getElementById('vigencia_prazo_comercial_preview');
 	var prazoAlert = document.getElementById('vigencia_prazo_alert');
@@ -113,9 +101,6 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 	var monthlyValue = parseFloat(valuesWrap ? valuesWrap.getAttribute('data-monthly-value') : '0') || 0;
 	var money = function (v) {
 		return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
-	};
-	var pad = function (n) {
-		return String(n || '').padStart(2, '0');
 	};
 	var makeDate = function (prefix) {
 		var y = document.querySelector('[name="' + prefix + '[year]"]');
@@ -129,9 +114,6 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 			return null;
 		}
 		return date;
-	};
-	var fmtDate = function (date) {
-		return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear();
 	};
 	var calcMonthsAndDays = function (start, end) {
 		var months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
@@ -153,8 +135,6 @@ $__initialMonthly = (float)($contract->monthly_value ?? 0);
 		var start = makeDate('start_date');
 		var end = makeDate('end_date');
 		monthlyPreview.value = money(monthlyValue);
-		startPreview.value = start ? fmtDate(start) : '—';
-		endPreview.value = end ? fmtDate(end) : '—';
 		if (!start || !end) {
 			prazoPreview.value = '—';
 			prazoComercialPreview.value = '—';
