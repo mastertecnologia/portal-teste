@@ -216,10 +216,10 @@ if ($this->request->is('post')) {
 	if (!startEl || !endEl) {
 		return;
 	}
-	startEl.addEventListener('change', refresh);
-	endEl.addEventListener('change', refresh);
-	startEl.addEventListener('keyup', refresh);
-	endEl.addEventListener('keyup', refresh);
+	['input', 'change', 'keyup'].forEach(function (eventName) {
+		startEl.addEventListener(eventName, refresh);
+		endEl.addEventListener(eventName, refresh);
+	});
 	refresh();
 })();
 </script>
