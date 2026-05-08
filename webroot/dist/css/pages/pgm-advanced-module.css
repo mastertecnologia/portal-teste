@@ -178,6 +178,21 @@ body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row [class*="c
 body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-date-row .form-group {
 	margin-bottom: 1rem;
 }
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-vigencia-row {
+	margin-bottom: 0.5rem;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-vigencia-panel {
+	margin-top: 1rem;
+	padding-top: 0.5rem;
+	border-top: 1px solid var(--pgm-border, #e5e4e0);
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-vigencia-info .form-group,
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-valores-panel .form-group {
+	margin-bottom: 0.85rem;
+}
+body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-valores-panel {
+	margin-top: 0.5rem;
+}
 
 /* Selects do formulário de contrato: fundo escuro (evita lista/opções brancas no tema) */
 body.layout-no-topbar .pgm-adv-page .pgm-adv-panel .contract-management-form select,

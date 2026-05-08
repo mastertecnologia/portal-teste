@@ -2,6 +2,7 @@
 namespace App\Model\Table;
 
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 class ContractServicesTable extends Table {
@@ -48,5 +49,46 @@ class ContractServicesTable extends Table {
 		$validator->scalar('observacoes')->allowEmpty('observacoes');
 
 		return $validator;
+	}
+
+	/**
+	 * Mantém os valores do contrato sincronizados com a soma dos serviços.
+	 *
+	 * @param \Cake\Event\Event $event
+	 * @param \Cake\Datasource\EntityInterface $entity
+	 * @param \ArrayObject $options
+	 * @return void
+	 */
+	public function afterSave(\Cake\Event\Event $event, \Cake\Datasource\EntityInterface $entity, \ArrayObject $options) {
+		$this->syncContractFinancials((int)$entity->get('contract_id'));
+	}
+
+	/**
+	 * @param \Cake\Event\Event $event
+	 * @param \Cake\Datasource\EntityInterface $entity
+	 * @param \ArrayObject $options
+	 * @return void
+	 */
+	public function afterDelete(\Cake\Event\Event $event, \Cake\Datasource\EntityInterface $entity, \ArrayObject $options) {
+		$this->syncContractFinancials((int)$entity->get('contract_id'));
+	}
+
+	/**
+	 * @param int $contractId
+	 * @return void
+	 */
+	protected function syncContractFinancials($contractId) {
+		$contractId = (int)$contractId;
+		if ($contractId <= 0) {
+			return;
+		}
+
+		try {
+			TableRegistry::getTableLocator()
+				->get('Contracts')
+				->recalculateFinancialsFromServices($contractId);
+		} catch (\Throwable $e) {
+			// Não interrompe fluxo de serviços por falha de sincronização.
+		}
 	}
 }

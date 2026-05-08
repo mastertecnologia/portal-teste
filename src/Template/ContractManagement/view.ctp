@@ -29,11 +29,31 @@ $podeCancelar  = !in_array($st, ['cancelado', 'encerrado'], true);
 $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso'], true);
 $fmtMoney = static function ($value) {
 	if ($value === null || $value === '' || (float)$value <= 0) {
-		return '—';
+		return 'R$ 0,00';
 	}
 
 	return 'R$ ' . number_format((float)$value, 2, ',', '.');
 };
+$vigenciaInicio = $contract->start_date ?? null;
+$vigenciaFim = $contract->end_date ?? null;
+$vigenciaPrazo = '—';
+$vigenciaPrazoComercial = '—';
+$vigenciaPrazoPadrao = true;
+if ($vigenciaInicio instanceof \DateTimeInterface && $vigenciaFim instanceof \DateTimeInterface && $vigenciaFim >= $vigenciaInicio) {
+	$__diff = $vigenciaInicio->diff($vigenciaFim);
+	$__months = ((int)$__diff->y * 12) + (int)$__diff->m;
+	if ((int)$__diff->d > 0) {
+		$__months++;
+	}
+	if ($__months <= 0) {
+		$__months = 1;
+	}
+	$vigenciaPrazo = (int)$__diff->d > 0
+		? sprintf('%d meses e %d dias', $__months, (int)$__diff->d)
+		: sprintf('%d meses', $__months);
+	$vigenciaPrazoComercial = sprintf('%d meses', $__months);
+	$vigenciaPrazoPadrao = in_array($__months, [12, 24, 36, 48, 60], true);
+}
 ?>
 
 <div class="col-12 pgm-adv-page">
@@ -188,9 +208,22 @@ $fmtMoney = static function ($value) {
 							<tr>
 								<td class="text-muted adv-cm-kv-label">Vigência</td>
 								<td>
-									<?= h($contract->start_date ? $contract->start_date->format('d/m/Y') : '—') ?>
-									→
-									<?= h($contract->end_date   ? $contract->end_date->format('d/m/Y')   : 'Indeterminado') ?>
+									<strong>Início:</strong> <?= h($vigenciaInicio ? $vigenciaInicio->format('d/m/Y') : '—') ?>
+									&nbsp;&nbsp;
+									<strong>Fim:</strong> <?= h($vigenciaFim ? $vigenciaFim->format('d/m/Y') : '—') ?>
+									&nbsp;&nbsp;
+									<strong>Prazo:</strong> <?= h($vigenciaPrazo) ?>
+								</td>
+							</tr>
+							<tr>
+								<td class="text-muted adv-cm-kv-label">Prazo comercial</td>
+								<td>
+									<?= h($vigenciaPrazoComercial) ?>
+									<?php if (!$vigenciaPrazoPadrao && $vigenciaPrazoComercial !== '—'): ?>
+									<div class="text-warning small">
+										<?= __('Atenção: vigência fora dos prazos comerciais padrão (12, 24, 36, 48 ou 60 meses).') ?>
+									</div>
+									<?php endif; ?>
 								</td>
 							</tr>
 						</tbody>
@@ -200,8 +233,12 @@ $fmtMoney = static function ($value) {
 					<table class="table table-condensed mb-0 adv-cm-kv-table">
 						<tbody>
 							<tr>
-								<td class="text-muted adv-cm-kv-label">Mensalidade</td>
-								<td><strong><?= $contract->monthly_value ? 'R$ ' . number_format((float)$contract->monthly_value, 2, ',', '.') : '—' ?></strong></td>
+								<td class="text-muted adv-cm-kv-label">Valor mensal</td>
+								<td><strong><?= h($fmtMoney($contract->monthly_value ?? 0)) ?></strong></td>
+							</tr>
+							<tr>
+								<td class="text-muted adv-cm-kv-label">Valor total</td>
+								<td><strong><?= h($fmtMoney($contract->valor_total ?? 0)) ?></strong></td>
 							</tr>
 							<tr>
 								<td class="text-muted adv-cm-kv-label">SLA (h)</td>

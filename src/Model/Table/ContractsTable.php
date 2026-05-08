@@ -2,7 +2,9 @@
 namespace App\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -102,6 +104,25 @@ class ContractsTable extends Table {
 	}
 
 	/**
+	 * Garante consistência financeira: mensalidade vem da soma dos serviços
+	 * e valor_total é mensalidade x meses de vigência.
+	 *
+	 * @param \Cake\Event\Event $event
+	 * @param \Cake\Datasource\EntityInterface $entity
+	 * @param \ArrayObject $options
+	 * @return void
+	 */
+	public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
+		$monthly = $this->sumMonthlyValueFromServices((int)$entity->get('id'));
+		$entity->set('monthly_value', $monthly);
+
+		$startDate = $entity->get('start_date');
+		$endDate = $entity->get('end_date');
+		$months = $this->calculateVigencyMonths($startDate, $endDate);
+		$entity->set('valor_total', $months > 0 ? round($monthly * $months, 2) : 0);
+	}
+
+	/**
 	 * @param mixed $raw
 	 * @return float|null
 	 */
@@ -153,6 +174,101 @@ class ContractsTable extends Table {
 		]);
 	}
 
+	/**
+	 * Recalcula mensalidade e valor total baseado em serviços e vigência.
+	 *
+	 * @param int $contractId
+	 * @return bool
+	 */
+	public function recalculateFinancialsFromServices($contractId) {
+		$contractId = (int)$contractId;
+		if ($contractId <= 0) {
+			return false;
+		}
+
+		$contract = $this->find()
+			->select(['id', 'start_date', 'end_date', 'monthly_value', 'valor_total'])
+			->where(['id' => $contractId])
+			->first();
+		if (!$contract) {
+			return false;
+		}
+
+		$monthly = $this->sumMonthlyValueFromServices($contractId);
+		$months = $this->calculateVigencyMonths($contract->get('start_date'), $contract->get('end_date'));
+		$total = $months > 0 ? round($monthly * $months, 2) : 0;
+
+		$this->patchEntity($contract, [
+			'monthly_value' => $monthly,
+			'valor_total' => $total,
+		], [
+			'validate' => false,
+			'fields' => ['monthly_value', 'valor_total'],
+		]);
+
+		return (bool)$this->save($contract, ['checkRules' => false, 'validate' => false]);
+	}
+
+	/**
+	 * @param int $contractId
+	 * @return float
+	 */
+	public function sumMonthlyValueFromServices($contractId) {
+		$contractId = (int)$contractId;
+		if ($contractId <= 0) {
+			return 0.0;
+		}
+
+		$services = $this->getAssociation('ContractServices')->getTarget();
+		$q = $services->find();
+		$row = $q
+			->select(['sum_total' => $q->func()->sum('valor_total')])
+			->where(['contract_id' => $contractId])
+			->first();
+
+		return round((float)($row->sum_total ?? 0), 2);
+	}
+
+	/**
+	 * Meses para cobrança: conta meses completos e arredonda para cima quando há dias remanescentes.
+	 * Ex.: 07/05/2026 a 07/05/2027 => 12; 07/05/2026 a 22/06/2027 => 14.
+	 * Regra comercial: vigência em meses cheios; qualquer dia excedente arredonda para mais.
+	 *
+	 * @param \DateTimeInterface|string|null $startDate
+	 * @param \DateTimeInterface|string|null $endDate
+	 * @return int
+	 */
+	public function calculateVigencyMonths($startDate, $endDate) {
+		$start = $this->normalizeDate($startDate);
+		$end = $this->normalizeDate($endDate);
+		if ($start === null || $end === null || $end < $start) {
+			return 0;
+		}
+
+		$diff = $start->diff($end);
+		$months = ($diff->y * 12) + $diff->m;
+		if ($diff->d > 0) {
+			$months++;
+		}
+
+		return max(1, $months);
+	}
+
+	/**
+	 * @param \DateTimeInterface|string|null $date
+	 * @return \Cake\I18n\FrozenDate|null
+	 */
+	protected function normalizeDate($date) {
+		if ($date instanceof \DateTimeInterface) {
+			return FrozenDate::parseDate($date->format('Y-m-d'), 'yyyy-MM-dd');
+		}
+		if (!is_string($date) || trim($date) === '') {
+			return null;
+		}
+
+		return FrozenDate::parseDate(trim($date), 'yyyy-MM-dd');
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator
 			->integer('idcliente')
@@ -193,6 +309,22 @@ class ContractsTable extends Table {
 			->date('end_date')
 			->requirePresence('end_date', 'create')
 			->notEmpty('end_date');
+		$validator->add('end_date', 'afterStartDate', [
+			'rule' => function ($value, $context) {
+				$start = $context['data']['start_date'] ?? null;
+				if (empty($start) || empty($value)) {
+					return true;
+				}
+				$startDate = $this->normalizeDate($start);
+				$endDate = $this->normalizeDate($value);
+				if ($startDate === null || $endDate === null) {
+					return true;
+				}
+
+				return $endDate >= $startDate;
+			},
+			'message' => __('A data final da vigência deve ser posterior à data inicial.'),
+		]);
 
 		$validator->scalar('nivel_sla')->maxLength('nivel_sla', 30)->allowEmpty('nivel_sla');
 		$validator->scalar('autentique_doc_id')->maxLength('autentique_doc_id', 255)->allowEmpty('autentique_doc_id');
