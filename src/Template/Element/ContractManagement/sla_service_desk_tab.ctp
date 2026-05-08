@@ -32,7 +32,7 @@ $contractCode = trim((string)($contractCode ?? ''));
 					'aria-controls' => 'cm-tab-ficha',
 				]) ?>
 				<?php if ($idcliente > 0): ?>
-				<?= $this->Html->link(__('← Voltar ao cliente'), ['controller' => 'Clientes', 'action' => 'view', $idcliente], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
+				<?= $this->Html->link(__('← Voltar aos contratos'), ['controller' => 'ContractManagement', 'action' => 'index', '?' => ['idcliente' => $idcliente]], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
 				<?php else: ?>
 				<?= $this->Html->link(__('← Voltar aos clientes'), ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
 				<?php endif; ?>
