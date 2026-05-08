@@ -531,6 +531,10 @@ Router::scope("/", function ($routes) {
         "controller" => "Servicedesk",
         "action" => "operacional",
     ]);
+    $routes->connect("/servicedesk/sla-relatorio", [
+        "controller" => "Servicedesk",
+        "action" => "slaRelatorio",
+    ]);
     $routes->connect("/servicedesk/workflow-sla-admin", [
         "controller" => "Servicedesk",
         "action" => "workflowSlaAdmin",

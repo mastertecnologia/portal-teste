@@ -72,14 +72,14 @@ final class PgmSidebarStaffPayloadBuilder
             }
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
-                $items[] = self::item('bar-chart-3', ' Relatório SLA', ['controller' => 'Servicedesk', 'action' => 'slaRelatorio'], ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
+                $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
             }
             $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {
                 $configChildren[] = self::item(
                     'git-branch',
                     ' Workflow & SLA',
-                    ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'],
+                    '/servicedesk/workflow-sla-admin',
                     ['data-turbo' => 'false'],
                     (bool)($ctx['ticketsWorkflowSlaActive'] ?? false),
                     '',

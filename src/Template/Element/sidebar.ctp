@@ -172,7 +172,7 @@
 						<?php endif; ?>
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
-						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', ['controller' => 'Servicedesk', 'action' => 'slaRelatorio'], ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
+						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];
@@ -193,7 +193,7 @@
 							<div class="pgm-nav-subgroup-items">
 								<?php foreach ($incCfgChildren as $incCfgRow) : ?>
 									<?php if (!empty($incCfgRow['wf'])) : ?>
-									<?= $pgmSbLink('git-branch', ' Workflow & SLA', ['controller' => 'Servicedesk', 'action' => 'workflowSlaAdmin'], ['data-turbo' => 'false'], $ticketsWorkflowSlaActive, '', 'Workflow e SLA') ?>
+									<?= $pgmSbLink('git-branch', ' Workflow & SLA', '/servicedesk/workflow-sla-admin', ['data-turbo' => 'false'], $ticketsWorkflowSlaActive, '', 'Workflow e SLA') ?>
 									<?php endif; ?>
 									<?php if (!empty($incCfgRow['hist'])) : ?>
 									<?= $pgmSbLink('history', ' Histórico', ['controller' => 'Tickets', 'action' => 'historico'], ['data-turbo' => 'false'], $ticketsHistoricoActive, '', 'Histórico') ?>
