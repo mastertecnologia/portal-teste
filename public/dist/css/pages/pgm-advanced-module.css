@@ -829,8 +829,16 @@ body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .form-group {
 	margin-bottom: 0;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline select.form-control {
-	width: auto;
-	min-width: 150px;
+	width: 132px;
+	min-width: 132px;
+	height: 30px;
+	padding: 5px 8px;
+	font-size: 12px;
+}
+body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .btn.btn-sm {
+	height: 30px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-reenvio {
 	display: inline;
