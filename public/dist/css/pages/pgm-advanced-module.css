@@ -829,10 +829,10 @@ body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .form-group {
 	margin-bottom: 0;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline select.form-control {
-	width: 132px;
-	min-width: 132px;
+	width: 120px;
+	min-width: 120px;
 	height: 30px;
-	padding: 5px 8px;
+	padding: 5px 10px;
 	font-size: 12px;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .btn.btn-sm {
