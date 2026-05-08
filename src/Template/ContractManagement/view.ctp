@@ -443,6 +443,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 	<?= $this->element('ContractManagement/sla_service_desk_tab', [
 		'contractId' => $id,
 		'apiUrl' => $contractSlaApiUrl ?? '',
+		'idcliente' => (int)($contract->idcliente ?? 0),
 	]) ?>
 </div>
 </div>

@@ -4,11 +4,20 @@
  *
  * @var int $contractId
  * @var string $apiUrl
+ * @var int $idcliente
  */
 $contractId = (int)($contractId ?? 0);
 $apiUrl = (string)($apiUrl ?? '');
+$idcliente = (int)($idcliente ?? 0);
 ?>
 <div class="adv-cm-sla-wrap">
+	<div class="mb-2">
+		<?php if ($idcliente > 0): ?>
+		<?= $this->Html->link(__('← Voltar ao cliente'), ['controller' => 'Clientes', 'action' => 'view', $idcliente], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
+		<?php else: ?>
+		<?= $this->Html->link(__('← Voltar aos clientes'), ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
+		<?php endif; ?>
+	</div>
 	<p class="text-muted small mb-2">
 		<?= __('Políticas de SLA por estado do workflow, escopo de serviço/problema/fila/nível. Workflow é definido pelos estados cadastrados; cada política refere-se a um estado.') ?>
 	</p>
