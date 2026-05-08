@@ -202,7 +202,9 @@ if ($this->request->is(['post', 'put'])) {
 		if (!start || !end) {
 			prazoPreview.value = '—';
 			prazoComercialPreview.value = '—';
-			prazoAlert.style.display = 'none';
+			if (prazoAlert) {
+				prazoAlert.style.display = 'none';
+			}
 			totalPreview.value = money(0);
 			return;
 		}
@@ -210,13 +212,17 @@ if ($this->request->is(['post', 'put'])) {
 		if (monthsCommercial === 0) {
 			prazoPreview.value = 'Período inválido';
 			prazoComercialPreview.value = '—';
-			prazoAlert.style.display = 'none';
+			if (prazoAlert) {
+				prazoAlert.style.display = 'none';
+			}
 			totalPreview.value = money(0);
 			return;
 		}
 		prazoPreview.value = monthsCommercial + ' meses';
 		prazoComercialPreview.value = monthsCommercial + ' meses';
-		prazoAlert.style.display = standardTerms.indexOf(monthsCommercial) === -1 ? '' : 'none';
+		if (prazoAlert) {
+			prazoAlert.style.display = standardTerms.indexOf(monthsCommercial) === -1 ? '' : 'none';
+		}
 		totalPreview.value = money(monthlyValue * monthsCommercial);
 	};
 	if (!startEl || !endEl) {
@@ -226,6 +232,16 @@ if ($this->request->is(['post', 'put'])) {
 		startEl.addEventListener(eventName, refresh);
 		endEl.addEventListener(eventName, refresh);
 	});
+	/** Material datetimepicker faz $.trigger('change'|'dateSelected') — só jQuery ouve; input nativo já não atualiza o preview */
+	if (window.jQuery) {
+		window.jQuery(startEl).on('change dateSelected', refresh);
+		window.jQuery(endEl).on('change dateSelected', refresh);
+	}
+	['blur', 'focusout'].forEach(function (eventName) {
+		startEl.addEventListener(eventName, refresh);
+		endEl.addEventListener(eventName, refresh);
+	});
+	window.addEventListener('load', refresh);
 	refresh();
 })();
 </script>
