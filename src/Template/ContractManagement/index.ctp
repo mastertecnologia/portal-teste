@@ -9,6 +9,11 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 .pgm-adv-page .btn-default:hover, .pgm-adv-page a.btn-default:hover { background-color:#607d8b!important;border-color:#607d8b!important;color:#fff!important; }
 .pgm-adv-page .label-default, .pgm-adv-page span.label-default { background-color:#546e7a!important;color:#fff!important; }
 .pgm-adv-page .well { background-color:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.1)!important;color:inherit!important; }
+.pgm-contract-status-badge { display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;line-height:1.3; }
+.pgm-contract-status-cancelado { background-color:#F51000;color:#fff; }
+.pgm-contract-status-ativo { background-color:#4BF56C;color:#1f2937; }
+.pgm-contract-status-assinado { background-color:#7E1EE5;color:#fff; }
+.pgm-contract-status-aguardando-assinatura { background-color:#FF9B2A;color:#1f2937; }
 </style>
 <div class="col-12 pgm-adv-page">
 	<div class="row mb-3">
@@ -24,7 +29,19 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 			<?php
 			$statusOpts = ['' => __('Todos os status')];
 			$__lbl = \App\Model\Entity\Contract::statusLabelMap();
-			foreach (\App\Model\Table\ContractsTable::allowedStatusValues() as $__st) {
+			foreach ([
+				'rascunho',
+				'revisao',
+				'aguardando_assinatura',
+				'ativo',
+				'a_vencer',
+				'em_renovacao',
+				'suspenso',
+				'encerrado',
+				'cancelado',
+				'recusado',
+				'assinatura_expirada',
+			] as $__st) {
 				$statusOpts[$__st] = $__lbl[$__st] ?? $__st;
 			}
 			$stF = $statusFilter ?? '';
@@ -72,11 +89,25 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 					</thead>
 					<tbody>
 						<?php foreach ($contracts as $c): ?>
+						<?php
+						$statusNorm = strtolower(trim((string)$c->status));
+						$statusClass = '';
+						$canDelete = in_array($statusNorm, ['rascunho', 'cancelado'], true);
+						if (in_array($statusNorm, ['cancelado'], true)) {
+							$statusClass = 'pgm-contract-status-cancelado';
+						} elseif (in_array($statusNorm, ['ativo', 'active'], true)) {
+							$statusClass = 'pgm-contract-status-ativo';
+						} elseif (in_array($statusNorm, ['assinado'], true)) {
+							$statusClass = 'pgm-contract-status-assinado';
+						} elseif (in_array($statusNorm, ['aguardando_assinatura', 'awaiting_signature'], true)) {
+							$statusClass = 'pgm-contract-status-aguardando-assinatura';
+						}
+						?>
 						<tr>
 							<td><?= h($c->code) ?></td>
 							<td><?= h($c->name) ?></td>
 							<td><?= !empty($c->cliente) ? h($c->cliente->razaosocial ?: $c->cliente->nome) : '—' ?></td>
-							<td><span title="<?= h($c->status) ?>"><?= h($c->status_label) ?></span></td>
+							<td><span class="pgm-contract-status-badge <?= h($statusClass) ?>" title="<?= h($c->status) ?>"><?= h($c->status_label) ?></span></td>
 							<td>
 								<?= h($c->start_date ? $c->start_date->format('d/m/Y') : '') ?> — <?= h($c->end_date ? $c->end_date->format('d/m/Y') : '') ?>
 								<?php if ($c->dias_para_vencer !== null && $c->end_date): ?>
@@ -88,7 +119,26 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 									?></span>
 								<?php endif; ?>
 							</td>
-							<td><?= $this->Html->link(__('Ver'), ['action' => 'view', $c->id], ['class' => 'btn btn-xs btn-outline-primary']) ?></td>
+							<td>
+								<?= $this->Html->link(__('Ver'), ['action' => 'view', $c->id], ['class' => 'btn btn-xs btn-outline-primary']) ?>
+								<?php if ($canDelete): ?>
+									<?= $this->Form->postLink(
+										__('Excluir'),
+										['action' => 'delete', $c->id],
+										[
+											'class' => 'btn btn-xs btn-outline-danger',
+											'confirm' => __('Tem certeza que deseja excluir o contrato "{0}"?', $c->name),
+										]
+									) ?>
+								<?php else: ?>
+									<span
+										class="text-muted small"
+										title="<?= h(__('Exclusão disponível apenas para contratos em rascunho ou cancelados.')) ?>"
+									>
+										<?= __('Sem exclusão') ?>
+									</span>
+								<?php endif; ?>
+							</td>
 						</tr>
 						<?php endforeach; ?>
 						<?php if ($count === 0): ?>

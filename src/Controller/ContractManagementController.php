@@ -215,7 +215,14 @@ class ContractManagementController extends AppController {
 				$q->where(['Contracts.idcliente' => $cid]);
 			}
 			if ($st !== '') {
-				$q->where(['Contracts.status' => $st]);
+				$stNorm = ContractLifecycleService::normalizeStatus($st);
+				if ($stNorm === 'ativo') {
+					$q->where(['Contracts.status IN' => ['ativo', 'active']]);
+				} elseif ($stNorm === 'aguardando_assinatura') {
+					$q->where(['Contracts.status IN' => ['aguardando_assinatura', 'awaiting_signature']]);
+				} else {
+					$q->where(['Contracts.status' => $stNorm]);
+				}
 			}
 			$this->paginate = ['limit' => 30];
 			$this->set('contracts', $this->paginate($q));
@@ -246,6 +253,24 @@ class ContractManagementController extends AppController {
 		$this->set('title', __('Contrato: {0}', $c->name));
 		$this->set('contract', $c);
 		$this->set('contractMayEditCore', $this->_contractMayEditCore($c));
+		$manualStatusOptions = [];
+		$statusLabels = \App\Model\Entity\Contract::statusLabelMap();
+		foreach ([
+			'rascunho',
+			'revisao',
+			'aguardando_assinatura',
+			'ativo',
+			'a_vencer',
+			'em_renovacao',
+			'suspenso',
+			'encerrado',
+			'cancelado',
+			'recusado',
+			'assinatura_expirada',
+		] as $allowedStatus) {
+			$manualStatusOptions[$allowedStatus] = $statusLabels[$allowedStatus] ?? $allowedStatus;
+		}
+		$this->set('manualStatusOptions', $manualStatusOptions);
 
 		$slaSvc = new ContractSlaPolicyAdminService();
 		$wfSlaOk = (bool)Configure::read('Workflow.workflowEnabled', false)
@@ -809,6 +834,45 @@ class ContractManagementController extends AppController {
 			$this->Flash->error($e->getMessage());
 		}
 		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function updateStatus($id = null) {
+		$this->request->allowMethod(['post']);
+		$c = $this->_getContractOrFail($id);
+		$newStatus = ContractLifecycleService::normalizeStatus(trim((string)$this->request->getData('status', '')));
+		if (!in_array($newStatus, \App\Model\Table\ContractsTable::allowedStatusValues(), true)) {
+			$this->Flash->error(__('Status inválido.'));
+			return $this->redirect(['action' => 'view', $id]);
+		}
+		$this->Contracts->patchEntity($c, ['status' => $newStatus], ['fields' => ['status']]);
+		if ($this->Contracts->save($c)) {
+			$this->Flash->success(__('Status do contrato atualizado manualmente.'));
+		} else {
+			$this->Flash->error(__('Não foi possível atualizar o status do contrato.'));
+		}
+
+		return $this->redirect(['action' => 'view', $id]);
+	}
+
+	public function delete($id = null) {
+		$this->request->allowMethod(['post']);
+		$c = $this->_getContractOrFail($id);
+		$statusNorm = ContractLifecycleService::normalizeStatus((string)$c->get('status'));
+		if (!in_array($statusNorm, ['rascunho', 'cancelado'], true)) {
+			$this->Flash->error(__('Só é permitido excluir contratos em rascunho ou cancelados.'));
+			return $this->redirect(['action' => 'index']);
+		}
+		try {
+			if ($this->Contracts->delete($c)) {
+				$this->Flash->success(__('Contrato excluído.'));
+			} else {
+				$this->Flash->error(__('Não foi possível excluir o contrato.'));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Não foi possível excluir o contrato: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['action' => 'index']);
 	}
 
 	public function reenviarLink($id = null) {

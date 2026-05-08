@@ -108,6 +108,17 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<?php if ($podeAssinar): ?>
 				<?= $this->Html->link('📨 Enviar assinatura', ['action' => 'enviarAssinatura', $id], ['class' => 'btn btn-sm btn-info']) ?>
 				<?php endif; ?>
+				<?= $this->Form->create(null, ['url' => ['action' => 'updateStatus', $id], 'class' => 'adv-cm-form-inline']) ?>
+				<?= $this->Form->control('status', [
+					'type' => 'select',
+					'options' => $manualStatusOptions ?? [],
+					'value' => \App\Service\ContractLifecycleService::normalizeStatus((string)($contract->status ?? '')),
+					'label' => false,
+					'empty' => false,
+					'class' => 'form-control input-sm',
+				]) ?>
+				<?= $this->Form->button('💾 Salvar status', ['class' => 'btn btn-sm btn-default']) ?>
+				<?= $this->Form->end() ?>
 
 				<?php /* Aprovar → só quando rascunho ou revisão */ ?>
 				<?php if ($podeAprovar): ?>

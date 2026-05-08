@@ -1698,6 +1698,20 @@ Router::scope("/", function ($routes) {
             ["pass" => ["id"], "id" => "\d+"],
         )
         ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/modulo-contratos/update-status/:id",
+            ["controller" => "ContractManagement", "action" => "updateStatus"],
+            ["pass" => ["id"], "id" => "\d+"],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/modulo-contratos/delete/:id",
+            ["controller" => "ContractManagement", "action" => "delete"],
+            ["pass" => ["id"], "id" => "\d+"],
+        )
+        ->setMethods(["POST"]);
     $routes->redirect(
         "/modulo-contratos/cancelar",
         ["controller" => "ContractManagement", "action" => "index"],
