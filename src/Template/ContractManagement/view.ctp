@@ -39,20 +39,16 @@ $vigenciaFim = $contract->end_date ?? null;
 $vigenciaPrazo = '—';
 $vigenciaPrazoComercial = '—';
 $vigenciaPrazoPadrao = true;
+$__mesesComercial = 0;
 if ($vigenciaInicio instanceof \DateTimeInterface && $vigenciaFim instanceof \DateTimeInterface && $vigenciaFim >= $vigenciaInicio) {
-	$__diff = $vigenciaInicio->diff($vigenciaFim);
-	$__months = ((int)$__diff->y * 12) + (int)$__diff->m;
-	if ((int)$__diff->d > 0) {
-		$__months++;
+	$__mesesComercial = \Cake\ORM\TableRegistry::getTableLocator()
+		->get('Contracts')
+		->calculateVigencyMonths($vigenciaInicio, $vigenciaFim);
+	if ($__mesesComercial > 0) {
+		$vigenciaPrazo = sprintf('%d meses', $__mesesComercial);
+		$vigenciaPrazoComercial = sprintf('%d meses', $__mesesComercial);
+		$vigenciaPrazoPadrao = in_array($__mesesComercial, [12, 24, 36, 48, 60], true);
 	}
-	if ($__months <= 0) {
-		$__months = 1;
-	}
-	$vigenciaPrazo = (int)$__diff->d > 0
-		? sprintf('%d meses e %d dias', $__months, (int)$__diff->d)
-		: sprintf('%d meses', $__months);
-	$vigenciaPrazoComercial = sprintf('%d meses', $__months);
-	$vigenciaPrazoPadrao = in_array($__months, [12, 24, 36, 48, 60], true);
 }
 ?>
 

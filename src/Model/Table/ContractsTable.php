@@ -315,9 +315,9 @@ class ContractsTable extends Table {
 	}
 
 	/**
-	 * Meses para cobrança: conta meses completos e arredonda para cima quando há dias remanescentes.
-	 * Ex.: 07/05/2026 a 07/05/2027 => 12; 07/05/2026 a 22/06/2027 => 14.
-	 * Regra comercial: vigência em meses cheios; qualquer dia excedente arredonda para mais.
+	 * Meses comerciais de vigência (alinhado ao preview PT-BR da aba Dados).
+	 * months = (ano_fim − ano_ini)×12 + (mês_fim − mês_ini); se dia_fim > dia_ini, months++.
+	 * Ex.: 07/05/2026–07/05/2027 = 12; 07/05/2026–07/05/2028 = 24; 07/05/2026–08/05/2027 = 13.
 	 *
 	 * @param \DateTimeInterface|string|null $startDate
 	 * @param \DateTimeInterface|string|null $endDate
@@ -330,9 +330,15 @@ class ContractsTable extends Table {
 			return 0;
 		}
 
-		$diff = $start->diff($end);
-		$months = ($diff->y * 12) + $diff->m;
-		if ($diff->d > 0) {
+		$sy = (int)$start->format('Y');
+		$sm = (int)$start->format('n');
+		$sd = (int)$start->format('j');
+		$ey = (int)$end->format('Y');
+		$em = (int)$end->format('n');
+		$ed = (int)$end->format('j');
+
+		$months = (($ey - $sy) * 12) + ($em - $sm);
+		if ($ed > $sd) {
 			$months++;
 		}
 

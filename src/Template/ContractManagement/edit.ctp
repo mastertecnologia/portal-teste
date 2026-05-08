@@ -157,42 +157,47 @@ if ($this->request->is(['post', 'put'])) {
 	var money = function (v) {
 		return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 	};
-	var parsePtDateInput = function (el) {
+	var parsePtParts = function (el) {
 		if (!el || !el.value) {
 			return null;
 		}
-		var m = String(el.value).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-		if (!m) {
+		var parts = String(el.value).trim().split('/');
+		if (parts.length !== 3) {
 			return null;
 		}
-		var day = parseInt(m[1], 10);
-		var mo = parseInt(m[2], 10) - 1;
-		var y = parseInt(m[3], 10);
-		var date = new Date(y, mo, day);
-		if (date.getFullYear() !== y || date.getMonth() !== mo || date.getDate() !== day) {
+		var day = parseInt(parts[0], 10);
+		var mo = parseInt(parts[1], 10);
+		var y = parseInt(parts[2], 10);
+		if (isNaN(day) || isNaN(mo) || isNaN(y) || mo < 1 || mo > 12 || day < 1 || day > 31 || y < 1900) {
 			return null;
 		}
-		return date;
+		var cal = new Date(y, mo - 1, day);
+		if (cal.getFullYear() !== y || cal.getMonth() !== mo - 1 || cal.getDate() !== day) {
+			return null;
+		}
+		return { day: day, month: mo, year: y };
 	};
-	var calcMonthsAndDays = function (start, end) {
-		var months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-		var anchor = new Date(start.getTime());
-		anchor.setMonth(anchor.getMonth() + months);
-		while (anchor > end && months > 0) {
-			months--;
-			anchor = new Date(start.getTime());
-			anchor.setMonth(anchor.getMonth() + months);
+	var calculateCommercialMonths = function (start, end) {
+		if (!start || !end) {
+			return 0;
 		}
-		var days = Math.floor((end - anchor) / 86400000);
-		var billingMonths = months + (days > 0 ? 1 : 0);
-		if (billingMonths <= 0) {
-			billingMonths = 1;
+		var sn = start.year * 10000 + start.month * 100 + start.day;
+		var en = end.year * 10000 + end.month * 100 + end.day;
+		if (en < sn) {
+			return 0;
 		}
-		return { months: billingMonths, days: days };
+		var months = ((end.year - start.year) * 12) + (end.month - start.month);
+		if (end.day > start.day) {
+			months++;
+		}
+		if (months <= 0) {
+			months = 1;
+		}
+		return months;
 	};
 	var refresh = function () {
-		var start = parsePtDateInput(startEl);
-		var end = parsePtDateInput(endEl);
+		var start = parsePtParts(startEl);
+		var end = parsePtParts(endEl);
 		monthlyPreview.value = money(monthlyValue);
 		if (!start || !end) {
 			prazoPreview.value = '—';
@@ -201,18 +206,18 @@ if ($this->request->is(['post', 'put'])) {
 			totalPreview.value = money(0);
 			return;
 		}
-		if (end < start) {
+		var monthsCommercial = calculateCommercialMonths(start, end);
+		if (monthsCommercial === 0) {
 			prazoPreview.value = 'Período inválido';
 			prazoComercialPreview.value = '—';
 			prazoAlert.style.display = 'none';
 			totalPreview.value = money(0);
 			return;
 		}
-		var diff = calcMonthsAndDays(start, end);
-		prazoPreview.value = diff.days > 0 ? (diff.months + ' meses e ' + diff.days + ' dias') : (diff.months + ' meses');
-		prazoComercialPreview.value = diff.months + ' meses';
-		prazoAlert.style.display = standardTerms.indexOf(diff.months) === -1 ? '' : 'none';
-		totalPreview.value = money(monthlyValue * diff.months);
+		prazoPreview.value = monthsCommercial + ' meses';
+		prazoComercialPreview.value = monthsCommercial + ' meses';
+		prazoAlert.style.display = standardTerms.indexOf(monthsCommercial) === -1 ? '' : 'none';
+		totalPreview.value = money(monthlyValue * monthsCommercial);
 	};
 	if (!startEl || !endEl) {
 		return;
