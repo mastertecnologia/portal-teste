@@ -38,6 +38,10 @@ class ContractServicesTable extends Table {
 		$validator->decimal('franquia_horas')->allowEmpty('franquia_horas');
 		$validator->decimal('valor_unitario')->allowEmpty('valor_unitario');
 		$validator->decimal('valor_total')->allowEmpty('valor_total');
+		$validator->decimal('unit_overage_rate')->allowEmpty('unit_overage_rate');
+		$validator->decimal('business_hour_rate')->allowEmpty('business_hour_rate');
+		$validator->decimal('after_hours_rate')->allowEmpty('after_hours_rate');
+		$validator->decimal('weekend_holiday_rate')->allowEmpty('weekend_holiday_rate');
 		$validator->date('vigencia_inicio')->allowEmpty('vigencia_inicio');
 		$validator->date('vigencia_fim')->allowEmpty('vigencia_fim');
 		$validator->boolean('ativo')->allowEmpty('ativo');

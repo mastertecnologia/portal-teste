@@ -8,6 +8,7 @@ use App\Service\ContractNotificationService;
 use App\Service\ContractPdfService;
 use App\Service\ContractRenewalService;
 use App\Service\ContractSigningService;
+use App\Service\PortalAdvanced\InvoiceGenerationService;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
@@ -458,6 +459,26 @@ class ContractManagementController extends AppController {
 		} else {
 			$this->set('service', $this->ContractServices->newEntity(['contract_id' => $contract->id]));
 		}
+	}
+
+	public function conferenciaConsumo($id = null) {
+		$contract = $this->_getContractOrFail($id, []);
+		try {
+			$this->Contracts->loadInto($contract, ['ContractServices', 'Clientes']);
+		} catch (\Throwable $e) {
+			$contract->contract_services = [];
+		}
+		$referenceMonth = trim((string)$this->request->getQuery('reference_month', date('Y-m')));
+		if (!preg_match('/^\d{4}-\d{2}$/', $referenceMonth)) {
+			$referenceMonth = date('Y-m');
+		}
+		$conference = InvoiceGenerationService::buildConsumptionConferenceForContract($contract, $referenceMonth);
+
+		$this->set('title', __('Conferência de consumo'));
+		$this->set('contract', $contract);
+		$this->set('referenceMonth', $referenceMonth);
+		$this->set('conference', $conference);
+		$this->set('contractMayEditCore', $this->_contractMayEditCore($contract));
 	}
 
 	public function deleteServico($svcId = null, $contractId = null) {

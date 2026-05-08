@@ -3,6 +3,13 @@ $this->assign('title', $title ?? 'Serviços');
 $svc        = $service;
 $services   = $contract->contract_services ?? [];
 $contractId = (int)$contract->id;
+$fmtMoney = static function ($value) {
+	if ($value === null || $value === '' || (float)$value <= 0) {
+		return '—';
+	}
+
+	return 'R$ ' . number_format((float)$value, 2, ',', '.');
+};
 
 $tipoOpts = [
     'servico'  => 'Serviço',
@@ -65,6 +72,17 @@ $unidOpts = [
 						<?= h($cs->service_name) ?>
 						<?php if (!empty($cs->service_description)): ?>
 						<br><small class="text-muted"><?= h($cs->service_description) ?></small>
+						<?php endif; ?>
+						<?php if (($cs->unidade ?? '') === 'h'): ?>
+						<div class="small text-muted">
+							Excedente (hora): comercial <?= h($fmtMoney($cs->business_hour_rate ?? null)) ?> |
+							fora horário <?= h($fmtMoney($cs->after_hours_rate ?? null)) ?> |
+							fim de semana/feriado <?= h($fmtMoney($cs->weekend_holiday_rate ?? null)) ?>
+						</div>
+						<?php else: ?>
+						<div class="small text-muted">
+							Excedente por unidade: <?= h($fmtMoney($cs->unit_overage_rate ?? null)) ?>
+						</div>
 						<?php endif; ?>
 					</td>
 					<td><span class="label label-info"><?= h($tipoOpts[$cs->tipo_item ?? ''] ?? ($cs->tipo_item ?? '—')) ?></span></td>
@@ -133,7 +151,7 @@ $unidOpts = [
 		<div class="col-md-2">
 			<div class="form-group">
 				<label class="control-label">Unidade</label>
-				<?= $this->Form->select('unidade', $unidOpts, ['class' => 'form-control input-sm', 'value' => 'unid']) ?>
+				<?= $this->Form->select('unidade', $unidOpts, ['class' => 'form-control input-sm', 'id' => 'svc_unidade', 'value' => 'unid']) ?>
 			</div>
 		</div>
 		<div class="col-md-3">
@@ -161,6 +179,56 @@ $unidOpts = [
 		</div>
 	</div>
 
+	<div class="panel panel-default">
+		<div class="panel-heading"><strong>Valores de excedente</strong></div>
+		<div class="panel-body">
+			<div id="hour_overage_fields">
+				<div class="row">
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="control-label">Hora excedente - horário comercial</label>
+							<div class="input-group input-group-sm">
+								<span class="input-group-addon">R$</span>
+								<?= $this->Form->number('business_hour_rate', ['class' => 'form-control', 'step' => '0.01']) ?>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="control-label">Hora excedente - fora do horário</label>
+							<div class="input-group input-group-sm">
+								<span class="input-group-addon">R$</span>
+								<?= $this->Form->number('after_hours_rate', ['class' => 'form-control', 'step' => '0.01']) ?>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="control-label">Hora excedente - fim de semana/feriado</label>
+							<div class="input-group input-group-sm">
+								<span class="input-group-addon">R$</span>
+								<?= $this->Form->number('weekend_holiday_rate', ['class' => 'form-control', 'step' => '0.01']) ?>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="unit_overage_field" style="display:none;">
+				<div class="row">
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="control-label">Valor excedente por unidade</label>
+							<div class="input-group input-group-sm">
+								<span class="input-group-addon">R$</span>
+								<?= $this->Form->number('unit_overage_rate', ['class' => 'form-control', 'step' => '0.01']) ?>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="form-group">
 		<div class="checkbox">
 			<label>
@@ -182,14 +250,29 @@ $unidOpts = [
 	var qtde = document.getElementById('svc_max_hours');
 	var unit = document.getElementById('svc_vl_unit');
 	var tot  = document.getElementById('svc_vl_total');
+	var unidade = document.getElementById('svc_unidade');
+	var hourOverageFields = document.getElementById('hour_overage_fields');
+	var unitOverageField = document.getElementById('unit_overage_field');
 	function calc() {
 		var q = parseFloat(qtde.value) || 0;
 		var u = parseFloat(unit.value) || 0;
 		tot.value = (q * u).toFixed(2);
 	}
+	function toggleOverageFields() {
+		if (!unidade || !hourOverageFields || !unitOverageField) {
+			return;
+		}
+		var isHour = (String(unidade.value || '').toLowerCase() === 'h');
+		hourOverageFields.style.display = isHour ? '' : 'none';
+		unitOverageField.style.display = isHour ? 'none' : '';
+	}
 	if (qtde && unit && tot) {
 		qtde.addEventListener('input', calc);
 		unit.addEventListener('input', calc);
+	}
+	if (unidade) {
+		unidade.addEventListener('change', toggleOverageFields);
+		toggleOverageFields();
 	}
 })();
 </script>

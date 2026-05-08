@@ -1590,6 +1590,11 @@ Router::scope("/", function ($routes) {
         ["controller" => "ContractManagement", "action" => "addServicos"],
         ["pass" => ["id"], "id" => "\d+"],
     );
+    $routes->connect(
+        "/modulo-contratos/conferencia-consumo/:id",
+        ["controller" => "ContractManagement", "action" => "conferenciaConsumo"],
+        ["pass" => ["id"], "id" => "\d+"],
+    );
     $routes
         ->connect(
             "/modulo-contratos/servicos/delete/:svcId/:contractId",

@@ -34,6 +34,12 @@ class ContractConsumptionsTable extends Table {
 
 		$validator->integer('ticket_id')->allowEmpty('ticket_id');
 		$validator->integer('service_order_id')->allowEmpty('service_order_id');
+		$validator->integer('contract_service_id')->allowEmpty('contract_service_id');
+		$validator->scalar('period_type')->maxLength('period_type', 40)->allowEmpty('period_type');
+		$validator->scalar('source_type')->maxLength('source_type', 50)->allowEmpty('source_type');
+		$validator->scalar('source_id')->maxLength('source_id', 100)->allowEmpty('source_id');
+		$validator->scalar('source_hash')->maxLength('source_hash', 191)->allowEmpty('source_hash');
+		$validator->decimal('consumed_quantity')->allowEmpty('consumed_quantity');
 		$validator->decimal('consumed_hours')->allowEmpty('consumed_hours');
 		$validator->decimal('consumed_amount')->allowEmpty('consumed_amount');
 		$validator->scalar('notes')->allowEmpty('notes');

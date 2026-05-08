@@ -27,6 +27,13 @@ $podeAssinar   = in_array($st, ['rascunho', 'revisao', 'aguardando_assinatura'],
 $podeSuspender = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'aguardando_assinatura'], true);
 $podeCancelar  = !in_array($st, ['cancelado', 'encerrado'], true);
 $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso'], true);
+$fmtMoney = static function ($value) {
+	if ($value === null || $value === '' || (float)$value <= 0) {
+		return '—';
+	}
+
+	return 'R$ ' . number_format((float)$value, 2, ',', '.');
+};
 ?>
 
 <div class="col-12 pgm-adv-page">
@@ -78,6 +85,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<?= $this->Html->link('✏ Editar', ['action' => 'edit', $id], ['class' => 'btn btn-sm btn-default']) ?>
 				<?php endif; ?>
 				<?= $this->Html->link('📋 Serviços', ['action' => 'addServicos', $id], ['class' => 'btn btn-sm btn-default']) ?>
+				<?= $this->Html->link('🧾 Conferência consumo', ['action' => 'conferenciaConsumo', $id], ['class' => 'btn btn-sm btn-default']) ?>
 				<?php if ($__cmSlaTab): ?>
 				<?= $this->Html->link('📊 ' . __('Ficha SLA & Service Desk'), '#cm-tab-sla', [
 					'class' => 'btn btn-sm btn-default',
@@ -243,6 +251,17 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 								<?= h($cs->service_name) ?>
 								<?php if (!empty($cs->service_description)): ?>
 								<br><small class="text-muted"><?= h($cs->service_description) ?></small>
+								<?php endif; ?>
+								<?php if (($cs->unidade ?? '') === 'h'): ?>
+								<div class="small text-muted">
+									Excedente (hora): comercial <?= h($fmtMoney($cs->business_hour_rate ?? null)) ?> |
+									fora horário <?= h($fmtMoney($cs->after_hours_rate ?? null)) ?> |
+									fim de semana/feriado <?= h($fmtMoney($cs->weekend_holiday_rate ?? null)) ?>
+								</div>
+								<?php else: ?>
+								<div class="small text-muted">
+									Excedente por unidade: <?= h($fmtMoney($cs->unit_overage_rate ?? null)) ?>
+								</div>
 								<?php endif; ?>
 							</td>
 							<td><span class="label label-info"><?= h($tipoLabel[$cs->tipo_item ?? ''] ?? ($cs->tipo_item ?? '—')) ?></span></td>

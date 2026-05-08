@@ -17,6 +17,7 @@ use App\Service\Ticket\WorkflowSlaService;
 use App\Service\Ticket\TicketSlaCycleService;
 use App\Service\Ticket\TicketSlaDetailService;
 use App\Service\Ticket\TicketWorklogEventHelper;
+use App\Service\PortalAdvanced\ContractConsumptionRecorderService;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
 use Cake\Auth\DefaultPasswordHasher;
@@ -2739,6 +2740,7 @@ class TicketsController extends AppController {
 
 			// Registra as horas em Ticketshoras (Horas Cadastradas) para o ticket
 			if ($inicio && $fim) {
+				$worklogSourceId = null;
 				try {
 					$regHora = $this->Ticketshoras->newEntity([
 						'idticket' => (int)$idticket,
@@ -2749,6 +2751,7 @@ class TicketsController extends AppController {
 						'horafin' => $fim->format('Y-m-d H:i:s'),
 					]);
 					if ($this->Ticketshoras->save($regHora)) {
+						$worklogSourceId = (string)((int)$regHora->id);
 						TicketWorklogEventHelper::afterHoraLancada(
 							$regHora,
 							(int)$this->Auth->user('idempresa'),
@@ -2763,7 +2766,7 @@ class TicketsController extends AppController {
 				}
 				$this->criarMov($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
 				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, (int)$idticket);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, (int)$idticket, $fim, 'ticket_worklog', $worklogSourceId);
 			}
 
 			$this->Flash->success('Timer finalizado. Horas registradas. Você pode iniciar um novo timer para continuar o atendimento.');
@@ -2790,7 +2793,7 @@ class TicketsController extends AppController {
 	 * Subtrai tempo do contrato do cliente (segundos/minutos/horas conforme coluna na tabela).
 	 * Ordem: segundos_consumidos → horas_consumidas → saldo → saldo_horas (+ horas_utilizadas) → minutos_consumidos → saldo_minutos.
 	 */
-	protected function subtrairHorasContrato($idcliente, $idempresa, $duracaoSegundos, $duracaoMinutos = null, $idticket = null) {
+	protected function subtrairHorasContrato($idcliente, $idempresa, $duracaoSegundos, $duracaoMinutos = null, $idticket = null, $workedAt = null, $sourceType = null, $sourceId = null) {
 		if ($duracaoSegundos <= 0) {
 			return;
 		}
@@ -2853,6 +2856,22 @@ class TicketsController extends AppController {
 				$this->log("subtrairHorasContrato: atualizado idcliente=$idcliente, -{$duracaoSegundos}s ({$horasUsadas}h)", 'debug');
 			} else {
 				$this->log("subtrairHorasContrato: nenhuma coluna editável. idcliente=$idcliente", 'error');
+			}
+			if ($idticket) {
+				try {
+					$workedAtDt = $workedAt instanceof \DateTimeInterface ? $workedAt : null;
+					ContractConsumptionRecorderService::recordFromTicketWorklog(
+						(int)$idticket,
+						(int)$idcliente,
+						(int)$idempresa,
+						(float)$horasUsadas,
+						$workedAtDt,
+						$sourceType !== null ? (string)$sourceType : null,
+						$sourceId !== null ? (string)$sourceId : null
+					);
+				} catch (\Throwable $e) {
+					$this->log('subtrairHorasContrato::recordFromTicketWorklog ' . $e->getMessage(), 'warning');
+				}
 			}
 			if ($saved && $idticket) {
 				TicketWorklogEventHelper::attachContractSnapshotToLatestWorklog(
@@ -3364,6 +3383,7 @@ class TicketsController extends AppController {
 
 					return ['ok' => false, 'error' => 'save_failed', 'message' => 'Não foi possível pausar o timer.'];
 				}
+				$worklogSourceId = null;
 				try {
 					$regHora = $this->Ticketshoras->newEntity([
 						'idticket' => $idticket,
@@ -3374,6 +3394,7 @@ class TicketsController extends AppController {
 						'horafin' => $agora->format('Y-m-d H:i:s'),
 					]);
 					if ($this->Ticketshoras->save($regHora)) {
+						$worklogSourceId = (string)((int)$regHora->id);
 						TicketWorklogEventHelper::afterHoraLancada(
 							$regHora,
 							(int)$this->Auth->user('idempresa'),
@@ -3387,7 +3408,7 @@ class TicketsController extends AppController {
 					$this->log('Timer JSON: falha ao registrar pausa em Ticketshoras: ' . $e->getMessage(), 'error');
 				}
 				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket, $agora, 'ticket_worklog', $worklogSourceId);
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerPausado, 'Timer de horas técnicas pausado.');
 
 				return ['ok' => true, 'message' => 'Timer pausado.', 'status' => 'paused', 'duracaoMinutosFinal' => $duracaoMinutos, 'durationSecondsFinal' => $duracaoSegundos];
@@ -3448,6 +3469,7 @@ class TicketsController extends AppController {
 			}
 
 			if ($inicio && $fim) {
+				$worklogSourceId = null;
 				try {
 					$regHora = $this->Ticketshoras->newEntity([
 						'idticket' => $idticket,
@@ -3458,6 +3480,7 @@ class TicketsController extends AppController {
 						'horafin' => $fim->format('Y-m-d H:i:s'),
 					]);
 					if ($this->Ticketshoras->save($regHora)) {
+						$worklogSourceId = (string)((int)$regHora->id);
 						TicketWorklogEventHelper::afterHoraLancada(
 							$regHora,
 							(int)$this->Auth->user('idempresa'),
@@ -3472,7 +3495,7 @@ class TicketsController extends AppController {
 				}
 				$this->_timerCriarMovSafe($idticket, $ticket->situacao, C_TicketTimerFinalizado, 'Duração: ' . $duracaoMinutos . ' min. Horas registradas em Horas Cadastradas.');
 				$billSec = TicketServiceDeskApiService::billingSecondsFromRaw($duracaoSegundos);
-				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket);
+				$this->subtrairHorasContrato($ticket->idcliente, $this->Auth->user('idempresa'), $billSec, $duracaoMinutos, $idticket, $fim, 'ticket_worklog', $worklogSourceId);
 			}
 
 			return [
@@ -9467,6 +9490,23 @@ class TicketsController extends AppController {
 			);
 		} catch (\Throwable $e) {
 			$this->log('apiTimeEntries afterHoraLancada: ' . $e->getMessage(), 'error');
+		}
+		if ($entryId <= 0) {
+			try {
+				$workedSeconds = max(0, (int)($end->getTimestamp() - $start->getTimestamp()));
+				$workedHours = round($workedSeconds / 3600.0, 4);
+				ContractConsumptionRecorderService::recordFromTicketWorklog(
+					(int)$idticket,
+					(int)$ticket->idcliente,
+					$eid,
+					$workedHours,
+					$end,
+					'manual_time_entry',
+					(string)((int)$row->id)
+				);
+			} catch (\Throwable $e) {
+				$this->log('apiTimeEntries recordFromTicketWorklog: ' . $e->getMessage(), 'warning');
+			}
 		}
 
 		return $this->jsonResponse(['ok' => true, 'id' => (int)$row->id]);
