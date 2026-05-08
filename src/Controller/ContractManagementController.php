@@ -827,6 +827,10 @@ class ContractManagementController extends AppController {
 		$this->request->allowMethod(['post']);
 		$c = $this->_getContractOrFail($id);
 		$motivo = trim((string)$this->request->getData('motivo', ''));
+		if ($motivo === '') {
+			$this->Flash->error(__('Para cancelar o contrato, informe o motivo.'));
+			return $this->redirect(['action' => 'view', $id]);
+		}
 		try {
 			(new ContractLifecycleService())->cancelar($this->Contracts, $c, $motivo, true);
 			$this->Flash->success(__('Contrato cancelado.'));
@@ -857,13 +861,29 @@ class ContractManagementController extends AppController {
 	public function delete($id = null) {
 		$this->request->allowMethod(['post']);
 		$c = $this->_getContractOrFail($id);
+		$motivo = trim((string)$this->request->getData('motivo', ''));
+		if ($motivo === '') {
+			$this->Flash->error(__('Para excluir o contrato, informe o motivo.'));
+			return $this->redirect(['action' => 'index']);
+		}
 		$statusNorm = ContractLifecycleService::normalizeStatus((string)$c->get('status'));
 		if (!in_array($statusNorm, ['rascunho', 'cancelado'], true)) {
 			$this->Flash->error(__('Só é permitido excluir contratos em rascunho ou cancelados.'));
 			return $this->redirect(['action' => 'index']);
 		}
 		try {
-			if ($this->Contracts->delete($c)) {
+			$ok = $this->Contracts->getConnection()->transactional(function () use ($c, $motivo) {
+				$this->Contracts->patchEntity($c, [
+					'motivo_cancelamento' => $motivo,
+					'cancelado_em' => date('Y-m-d H:i:s'),
+				], ['fields' => ['motivo_cancelamento', 'cancelado_em']]);
+				if (!$this->Contracts->save($c)) {
+					throw new \RuntimeException('Falha ao registar motivo de exclusão.');
+				}
+
+				return (bool)$this->Contracts->delete($c);
+			});
+			if ($ok) {
 				$this->Flash->success(__('Contrato excluído.'));
 			} else {
 				$this->Flash->error(__('Não foi possível excluir o contrato.'));

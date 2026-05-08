@@ -122,14 +122,19 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 							<td>
 								<?= $this->Html->link(__('Ver'), ['action' => 'view', $c->id], ['class' => 'btn btn-xs btn-outline-primary']) ?>
 								<?php if ($canDelete): ?>
-									<?= $this->Form->postLink(
-										__('Excluir'),
-										['action' => 'delete', $c->id],
-										[
-											'class' => 'btn btn-xs btn-outline-danger',
-											'confirm' => __('Tem certeza que deseja excluir o contrato "{0}"?', $c->name),
-										]
-									) ?>
+									<?= $this->Form->create(null, [
+										'url' => ['action' => 'delete', $c->id],
+										'class' => 'd-inline-block js-contract-delete-form',
+										'id' => 'delete-contract-form-' . (int)$c->id,
+									]) ?>
+									<?= $this->Form->hidden('motivo', ['value' => '', 'class' => 'js-contract-delete-motivo']) ?>
+									<button
+										type="button"
+										class="btn btn-xs btn-outline-danger js-contract-delete-btn"
+										data-form-id="delete-contract-form-<?= (int)$c->id ?>"
+										data-contract-name="<?= h($c->name) ?>"
+									><?= __('Excluir') ?></button>
+									<?= $this->Form->end() ?>
 								<?php else: ?>
 									<span
 										class="text-muted small"
@@ -153,3 +158,35 @@ $kpis = $kpis ?? ['ativos' => 0, 'a_vencer' => 0, 'aguardando_assinatura' => 0, 
 		</div>
 	</div>
 </div>
+<script>
+document.addEventListener('click', function (event) {
+	var button = event.target.closest('.js-contract-delete-btn');
+	if (!button) {
+		return;
+	}
+	var formId = button.getAttribute('data-form-id');
+	if (!formId) {
+		return;
+	}
+	var form = document.getElementById(formId);
+	if (!form) {
+		return;
+	}
+	var contractName = button.getAttribute('data-contract-name') || '';
+	var motivo = window.prompt('Informe o motivo da exclusao do contrato "' + contractName + '":', '');
+	if (motivo === null) {
+		return;
+	}
+	motivo = motivo.trim();
+	if (!motivo) {
+		window.alert('Motivo obrigatorio para excluir.');
+		return;
+	}
+	var input = form.querySelector('.js-contract-delete-motivo');
+	if (!input) {
+		return;
+	}
+	input.value = motivo;
+	form.submit();
+});
+</script>

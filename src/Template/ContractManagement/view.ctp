@@ -108,7 +108,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<?php if ($podeAssinar): ?>
 				<?= $this->Html->link('📨 Enviar assinatura', ['action' => 'enviarAssinatura', $id], ['class' => 'btn btn-sm btn-info']) ?>
 				<?php endif; ?>
-				<?= $this->Form->create(null, ['url' => ['action' => 'updateStatus', $id], 'class' => 'adv-cm-form-inline']) ?>
+				<?= $this->Form->create(null, ['url' => ['action' => 'updateStatus', $id], 'class' => 'adv-cm-form-inline adv-cm-form-status-inline']) ?>
 				<?= $this->Form->control('status', [
 					'type' => 'select',
 					'options' => $manualStatusOptions ?? [],
@@ -155,6 +155,7 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 					'label'       => false,
 					'placeholder' => 'Motivo do cancelamento (obrigatório)',
 					'class'       => 'form-control input-sm adv-cm-motivo-input',
+					'required'    => true,
 				]) ?>
 				<?= $this->Form->button('🚫 Cancelar contrato', ['class' => 'btn btn-sm btn-danger']) ?>
 				<?= $this->Form->end() ?>
