@@ -22,7 +22,7 @@ $contractCode = trim((string)($contractCode ?? ''));
 				<div class="small text-muted">
 					<span class="adv-cm-code-inline"><strong><?= __('Código') ?>:</strong> <?= h($contractCode !== '' ? $contractCode : '—') ?></span>
 				</div>
-				<h5 class="card-title text-primary mb-0 mt-2 small"><?= __('SLA & Service Desk') ?></h5>
+				<h5 class="card-title text-primary mb-0 mt-2 small"><?= __('Ficha SLA & Service Desk') ?></h5>
 			</div>
 			<div>
 				<?php if ($idcliente > 0): ?>

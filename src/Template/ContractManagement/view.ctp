@@ -32,10 +32,14 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 <div class="col-12 pgm-adv-page">
 <?php $__cmSlaTab = !empty($contractSlaUiEnabled); ?>
 <?php if ($__cmSlaTab): ?>
-<ul class="nav nav-tabs adv-cm-view-tabs" role="tablist">
-	<li role="presentation" class="active"><a href="#cm-tab-ficha" aria-controls="cm-tab-ficha" role="tab" data-toggle="tab"><?= __('Ficha') ?></a></li>
-	<li role="presentation"><a href="#cm-tab-sla" aria-controls="cm-tab-sla" role="tab" data-toggle="tab"><?= __('SLA & Service Desk') ?></a></li>
-</ul>
+<div class="pgm-adv-panel card mb-3">
+	<div class="card-body adv-cm-view-tabs-card-body">
+		<ul class="nav nav-tabs adv-cm-view-tabs" role="tablist">
+			<li role="presentation" class="active"><a href="#cm-tab-ficha" aria-controls="cm-tab-ficha" role="tab" data-toggle="tab"><?= __('Ficha') ?></a></li>
+			<li role="presentation"><a href="#cm-tab-sla" aria-controls="cm-tab-sla" role="tab" data-toggle="tab"><?= __('Ficha SLA & Service Desk') ?></a></li>
+		</ul>
+	</div>
+</div>
 <div class="tab-content adv-cm-tab-content">
 <div role="tabpanel" class="tab-pane active" id="cm-tab-ficha">
 <?php endif; ?>
