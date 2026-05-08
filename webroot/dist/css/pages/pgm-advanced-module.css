@@ -834,17 +834,18 @@ body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .form-group {
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline select.form-control {
 	width: 120px;
 	min-width: 120px;
-	height: 30px;
-	padding: 5px 10px;
+	height: 30px !important;
+	padding: 5px 10px !important;
 	font-size: 12px;
-	line-height: 1.5;
+	line-height: 1.5 !important;
 	vertical-align: middle;
+	box-sizing: border-box;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .btn.btn-sm {
-	height: 30px;
+	height: 30px !important;
 	padding-top: 5px;
 	padding-bottom: 5px;
-	line-height: 1.5;
+	line-height: 1.5 !important;
 	vertical-align: middle;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-reenvio {
