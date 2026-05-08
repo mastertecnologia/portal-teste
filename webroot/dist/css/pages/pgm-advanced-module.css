@@ -761,15 +761,6 @@ body.layout-no-topbar #calendar .fc-timegrid .fc-daygrid-day.fc-day-today {
 	background-color: var(--fc-today-bg-color) !important;
 }
 
-/* ContractManagement — abas Ficha / SLA (card; evita nav solto acima da ficha) */
-.pgm-adv-page .adv-cm-view-tabs-card-body {
-	padding-top: 12px;
-	padding-bottom: 0;
-}
-.pgm-adv-page .adv-cm-view-tabs {
-	margin-bottom: 0;
-}
-
 /* ContractManagement — layout ficha (sem style= na view) */
 body.layout-no-topbar .pgm-adv-page .adv-cm-title-row {
 	display: flex;

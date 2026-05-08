@@ -24,7 +24,13 @@ $contractCode = trim((string)($contractCode ?? ''));
 				</div>
 				<h5 class="card-title text-primary mb-0 mt-2 small"><?= __('Ficha SLA & Service Desk') ?></h5>
 			</div>
-			<div>
+			<div class="adv-cm-actions-row">
+				<?= $this->Html->link(__('← Voltar à ficha'), '#cm-tab-ficha', [
+					'class' => 'btn btn-sm btn-default adv-cm-back-link',
+					'role' => 'tab',
+					'data-toggle' => 'tab',
+					'aria-controls' => 'cm-tab-ficha',
+				]) ?>
 				<?php if ($idcliente > 0): ?>
 				<?= $this->Html->link(__('← Voltar ao cliente'), ['controller' => 'Clientes', 'action' => 'view', $idcliente], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
 				<?php else: ?>
