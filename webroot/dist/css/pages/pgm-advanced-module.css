@@ -824,9 +824,12 @@ body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
+	height: 30px;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .form-group {
 	margin-bottom: 0;
+	display: inline-flex;
+	align-items: center;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline select.form-control {
 	width: 120px;
@@ -834,11 +837,15 @@ body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline select.form-c
 	height: 30px;
 	padding: 5px 10px;
 	font-size: 12px;
+	line-height: 1.5;
+	vertical-align: middle;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-status-inline .btn.btn-sm {
 	height: 30px;
 	padding-top: 5px;
 	padding-bottom: 5px;
+	line-height: 1.5;
+	vertical-align: middle;
 }
 body.layout-no-topbar .pgm-adv-page form.adv-cm-form-reenvio {
 	display: inline;
