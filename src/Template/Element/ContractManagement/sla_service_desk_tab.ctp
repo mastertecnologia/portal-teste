@@ -5,30 +5,50 @@
  * @var int $contractId
  * @var string $apiUrl
  * @var int $idcliente
+ * @var string $contractName
+ * @var string $contractCode
  */
 $contractId = (int)($contractId ?? 0);
 $apiUrl = (string)($apiUrl ?? '');
 $idcliente = (int)($idcliente ?? 0);
+$contractName = trim((string)($contractName ?? ''));
+$contractCode = trim((string)($contractCode ?? ''));
 ?>
-<div class="adv-cm-sla-wrap">
-	<div class="mb-2">
-		<?php if ($idcliente > 0): ?>
-		<?= $this->Html->link(__('← Voltar ao cliente'), ['controller' => 'Clientes', 'action' => 'view', $idcliente], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
-		<?php else: ?>
-		<?= $this->Html->link(__('← Voltar aos clientes'), ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
-		<?php endif; ?>
-	</div>
-	<p class="text-muted small mb-2">
-		<?= __('Políticas de SLA por estado do workflow, escopo de serviço/problema/fila/nível. Workflow é definido pelos estados cadastrados; cada política refere-se a um estado.') ?>
-	</p>
-	<div id="cm-sla-alert" class="alert alert-danger" style="display:none;"></div>
-	<p id="cm-sla-loading" class="text-muted small" style="display:none;"><?= __('Carregando…') ?></p>
-	<div class="mb-2">
-		<button type="button" class="btn btn-sm btn-success" id="cm-sla-btn-new"><?= __('Nova política') ?></button>
-		<button type="button" class="btn btn-sm btn-default" id="cm-sla-btn-refresh"><?= __('Atualizar') ?></button>
-	</div>
-	<div class="table-responsive">
-		<table class="table table-sm table-striped table-bordered mb-0" id="cm-sla-table">
+<div class="pgm-adv-panel card mb-3 adv-cm-sla-wrap">
+	<div class="card-body">
+		<div class="adv-cm-title-row">
+			<div>
+				<h4 class="card-title mb-1 adv-cm-contract-title"><?= __('Contrato') ?>: <?= h($contractName !== '' ? $contractName : '—') ?></h4>
+				<div class="small text-muted">
+					<span class="adv-cm-code-inline"><strong><?= __('Código') ?>:</strong> <?= h($contractCode !== '' ? $contractCode : '—') ?></span>
+				</div>
+				<h5 class="card-title text-primary mb-0 mt-2 small"><?= __('SLA & Service Desk') ?></h5>
+			</div>
+			<div>
+				<?php if ($idcliente > 0): ?>
+				<?= $this->Html->link(__('← Voltar ao cliente'), ['controller' => 'Clientes', 'action' => 'view', $idcliente], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
+				<?php else: ?>
+				<?= $this->Html->link(__('← Voltar aos clientes'), ['controller' => 'Clientes', 'action' => 'index'], ['class' => 'btn btn-sm btn-default adv-cm-back-link']) ?>
+				<?php endif; ?>
+			</div>
+		</div>
+
+		<hr class="adv-cm-hr">
+
+		<p class="text-muted small mb-2">
+			<?= __('Políticas de SLA por estado do workflow, escopo de serviço/problema/fila/nível. Workflow é definido pelos estados cadastrados; cada política refere-se a um estado.') ?>
+		</p>
+
+		<div id="cm-sla-alert" class="alert alert-danger" style="display:none;"></div>
+		<p id="cm-sla-loading" class="text-muted small mb-2" style="display:none;"><?= __('Carregando…') ?></p>
+
+		<div class="adv-cm-actions-row">
+			<button type="button" class="btn btn-sm btn-default" id="cm-sla-btn-new">📋 <?= __('Nova política') ?></button>
+			<button type="button" class="btn btn-sm btn-default" id="cm-sla-btn-refresh">🔄 <?= __('Atualizar') ?></button>
+		</div>
+
+		<div class="table-responsive">
+			<table class="table table-condensed table-striped table-bordered mb-0 adv-cm-sla-table" id="cm-sla-table">
 			<thead>
 				<tr>
 					<th><?= __('ID') ?></th>
@@ -47,6 +67,7 @@ $idcliente = (int)($idcliente ?? 0);
 			</thead>
 			<tbody></tbody>
 		</table>
+		</div>
 	</div>
 </div>
 

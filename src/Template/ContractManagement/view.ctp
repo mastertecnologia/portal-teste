@@ -82,6 +82,9 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<?= $this->Html->link('✏ Editar', ['action' => 'edit', $id], ['class' => 'btn btn-sm btn-default']) ?>
 				<?php endif; ?>
 				<?= $this->Html->link('📋 Serviços', ['action' => 'addServicos', $id], ['class' => 'btn btn-sm btn-default']) ?>
+				<?php if ($podeAssinar): ?>
+				<?= $this->Html->link('📨 Enviar assinatura', ['action' => 'enviarAssinatura', $id], ['class' => 'btn btn-sm btn-default']) ?>
+				<?php endif; ?>
 				<?= $this->Html->link('✍ Signatários', ['action' => 'addSignatarios', $id], ['class' => 'btn btn-sm btn-default']) ?>
 
 				<?php /* PDF */ ?>
@@ -99,11 +102,6 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 				<?= $this->Form->create(null, ['url' => ['action' => 'gerarPdf', $id], 'class' => 'adv-cm-form-inline']) ?>
 				<?= $this->Form->button('🔄 Regenerar PDF', ['class' => 'btn btn-sm btn-default']) ?>
 				<?= $this->Form->end() ?>
-
-				<?php /* Enviar para assinatura */ ?>
-				<?php if ($podeAssinar): ?>
-				<?= $this->Html->link('📨 Enviar assinatura', ['action' => 'enviarAssinatura', $id], ['class' => 'btn btn-sm btn-info']) ?>
-				<?php endif; ?>
 
 				<?php /* Aprovar → só quando rascunho ou revisão */ ?>
 				<?php if ($podeAprovar): ?>
@@ -444,6 +442,8 @@ $podeRenovar   = in_array($st, ['ativo', 'a_vencer', 'em_renovacao', 'suspenso']
 		'contractId' => $id,
 		'apiUrl' => $contractSlaApiUrl ?? '',
 		'idcliente' => (int)($contract->idcliente ?? 0),
+		'contractName' => (string)($contract->name ?? ''),
+		'contractCode' => (string)($contract->code ?? ''),
 	]) ?>
 </div>
 </div>
