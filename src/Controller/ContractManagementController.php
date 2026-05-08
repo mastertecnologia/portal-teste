@@ -238,6 +238,16 @@ class ContractManagementController extends AppController {
 	}
 
 	public function view($id = null) {
+		$contractId = (int)$id;
+		if ($contractId > 0) {
+			try {
+				// Backfill defensivo: garante consistência em contratos antigos já com serviços.
+				$this->Contracts->recalculateFinancialsFromServices($contractId);
+			} catch (\Throwable $e) {
+				$this->log('ContractManagement::view recalculateFinancialsFromServices: ' . $e->getMessage(), 'error');
+			}
+		}
+
 		$c = $this->_getContractOrFail($id, [
 			'Clientes',
 			'ContractServices',
@@ -434,6 +444,15 @@ class ContractManagementController extends AppController {
 	}
 
 	public function addServicos($id = null) {
+		$contractId = (int)$id;
+		if ($contractId > 0) {
+			try {
+				$this->Contracts->recalculateFinancialsFromServices($contractId);
+			} catch (\Throwable $e) {
+				$this->log('ContractManagement::addServicos recalculateFinancialsFromServices: ' . $e->getMessage(), 'error');
+			}
+		}
+
 		$contract = $this->_getContractOrFail($id, []);
 		try {
 			$this->Contracts->loadInto($contract, ['ContractServices']);

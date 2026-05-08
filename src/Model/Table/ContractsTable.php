@@ -194,7 +194,8 @@ class ContractsTable extends Table {
 			return false;
 		}
 
-		$monthly = $this->sumMonthlyValueFromServices($contractId);
+		$snapshot = $this->getServiceFinancialSnapshot($contractId);
+		$monthly = (float)$snapshot['monthly_sum'];
 		$months = $this->calculateVigencyMonths($contract->get('start_date'), $contract->get('end_date'));
 		$total = $months > 0 ? round($monthly * $months, 2) : 0;
 
@@ -206,7 +207,18 @@ class ContractsTable extends Table {
 			'fields' => ['monthly_value', 'valor_total'],
 		]);
 
-		return (bool)$this->save($contract, ['checkRules' => false, 'validate' => false]);
+		$saved = (bool)$this->save($contract, ['checkRules' => false, 'validate' => false]);
+		$this->log(sprintf(
+			'ContractsTable::recalculateFinancialsFromServices contract_id=%d services=%d monthly_sum=%.2f months=%d total=%.2f saved=%s',
+			$contractId,
+			(int)$snapshot['service_count'],
+			$monthly,
+			$months,
+			$total,
+			$saved ? 'true' : 'false'
+		), 'info');
+
+		return $saved;
 	}
 
 	/**
@@ -214,19 +226,44 @@ class ContractsTable extends Table {
 	 * @return float
 	 */
 	public function sumMonthlyValueFromServices($contractId) {
+		$snapshot = $this->getServiceFinancialSnapshot($contractId);
+
+		return (float)$snapshot['monthly_sum'];
+	}
+
+	/**
+	 * Snapshot financeiro dos serviços ativos do contrato.
+	 *
+	 * @param int $contractId
+	 * @return array{service_count:int,monthly_sum:float}
+	 */
+	protected function getServiceFinancialSnapshot($contractId) {
 		$contractId = (int)$contractId;
 		if ($contractId <= 0) {
-			return 0.0;
+			return ['service_count' => 0, 'monthly_sum' => 0.0];
 		}
 
 		$services = $this->getAssociation('ContractServices')->getTarget();
 		$q = $services->find();
+		$where = ['contract_id' => $contractId];
+		if ($services->getSchema()->hasColumn('ativo')) {
+			$where['OR'] = [
+				['ativo' => true],
+				['ativo IS' => null],
+			];
+		}
 		$row = $q
-			->select(['sum_total' => $q->func()->sum('valor_total')])
-			->where(['contract_id' => $contractId])
+			->select([
+				'service_count' => $q->func()->count('id'),
+				'sum_total' => $q->func()->sum('valor_total'),
+			])
+			->where($where)
 			->first();
 
-		return round((float)($row->sum_total ?? 0), 2);
+		return [
+			'service_count' => (int)($row->service_count ?? 0),
+			'monthly_sum' => round((float)($row->sum_total ?? 0), 2),
+		];
 	}
 
 	/**

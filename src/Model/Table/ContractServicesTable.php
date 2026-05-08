@@ -88,7 +88,14 @@ class ContractServicesTable extends Table {
 				->get('Contracts')
 				->recalculateFinancialsFromServices($contractId);
 		} catch (\Throwable $e) {
-			// Não interrompe fluxo de serviços por falha de sincronização.
+			$this->log(
+				sprintf(
+					'ContractServicesTable::syncContractFinancials falhou (contract_id=%d): %s',
+					$contractId,
+					$e->getMessage()
+				),
+				'error'
+			);
 		}
 	}
 }
