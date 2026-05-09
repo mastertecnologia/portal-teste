@@ -4387,40 +4387,6 @@ class TicketsController extends AppController {
 		return 0;
 	}
 
-	protected function _userEffectiveLevelSortForQueue(int $userId, int $queueId): int {
-		$uOrd = 0;
-		try {
-			$u = $this->Users->get($userId);
-			if ($this->_supportLevelsRoutingReady() && !empty($u->support_level_id)) {
-				$uOrd = $this->_supportLevelSortById((int)$u->support_level_id);
-			}
-		} catch (\Throwable $e) {
-			$uOrd = 0;
-		}
-		$qu = $this->QueuesUsers->find()->where(['user_id' => $userId, 'queue_id' => $queueId])->first();
-		if (!empty($qu) && !empty($qu->support_level_id) && $this->_supportLevelsRoutingReady()) {
-			$qOrd = $this->_supportLevelSortById((int)$qu->support_level_id);
-
-			return max($uOrd, $qOrd);
-		}
-
-		return $uOrd;
-	}
-
-	/** Técnico com nível efetivo >= exigência da fila (N3 atende N1–N3). */
-	protected function _userCanWorkQueue(int $userId, int $queueId): bool {
-		$need = $this->_queueLevelSortOrder($queueId);
-		if ($need <= 0) {
-			return true;
-		}
-		$eff = $this->_userEffectiveLevelSortForQueue($userId, $queueId);
-		if ($eff <= 0) {
-			return true;
-		}
-
-		return $eff >= $need;
-	}
-
 	protected function _userMayAssumeTicketTechnically($ticket): bool {
 		$uid = (int)$this->Auth->user('id');
 		$qid = (int)($ticket->queue_id ?? 0);
@@ -4428,14 +4394,8 @@ class TicketsController extends AppController {
 			return true;
 		}
 		$link = $this->QueuesUsers->find()->where(['user_id' => $uid, 'queue_id' => $qid])->first();
-		if (empty($link)) {
-			return false;
-		}
-		if (!$this->_supportLevelsRoutingReady()) {
-			return true;
-		}
 
-		return $this->_userCanWorkQueue($uid, $qid);
+		return !empty($link);
 	}
 
 	protected function _ticketHasValidTecnicoAndFila($ticket): bool {
@@ -6154,9 +6114,6 @@ class TicketsController extends AppController {
 				if (empty($dlink) && $membersCount > 0) {
 					return $this->jsonResponse(['ok' => false, 'error' => 'destino_sem_vinculo_fila'], 400);
 				}
-				if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($destId, $qPerm)) {
-					return $this->jsonResponse(['ok' => false, 'error' => 'destino_nivel_incompativel'], 400);
-				}
 			}
 		}
 
@@ -7064,13 +7021,6 @@ class TicketsController extends AppController {
 					'ok' => false,
 					'error' => 'destino_sem_vinculo_fila',
 					'message' => 'O técnico não possui permissão explícita para a fila selecionada.',
-				], 422);
-			}
-			if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($tecnicoId, $qPerm)) {
-				return $this->jsonResponse([
-					'ok' => false,
-					'error' => 'destino_nivel_incompativel',
-					'message' => 'O nível de suporte do técnico é incompatível com a fila.',
 				], 422);
 			}
 		}
