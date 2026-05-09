@@ -262,9 +262,10 @@ class RbacCheckerTest extends TestCase {
 	public function testMatchActionPermissoesQueuesConfigUnderscoreRoutes() {
 		$perm = ['controller' => 'Permissoes', 'action' => 'adminSyncRegistry,admin_sync_registry'];
 		$this->assertTrue(RbacChecker::matchAction('Permissoes', 'admin_sync_registry', $perm));
-		$q = ['controller' => 'Queues', 'action' => 'adminIndex,admin_index,apiForTicket,api_for_ticket'];
+		$q = ['controller' => 'Queues', 'action' => 'adminIndex,admin_index,apiForTicket,api_for_ticket,apiForUser,api_for_user'];
 		$this->assertTrue(RbacChecker::matchAction('Queues', 'admin_index', $q));
 		$this->assertTrue(RbacChecker::matchAction('Queues', 'api_for_ticket', $q));
+		$this->assertTrue(RbacChecker::matchAction('Queues', 'api_for_user', $q));
 		$cfg = ['controller' => 'Config', 'action' => 'createFinanceiroIfNotExist,create_financeiro_if_not_exist'];
 		$this->assertTrue(RbacChecker::matchAction('Config', 'create_financeiro_if_not_exist', $cfg));
 	}

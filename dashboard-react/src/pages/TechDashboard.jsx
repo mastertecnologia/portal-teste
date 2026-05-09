@@ -32,14 +32,16 @@ import { MOCK_SESSION_TECNICO } from '../data/mockData';
 import TicketsServicedeskInlineRow from '../components/TicketsServicedeskInlineRow.jsx';
 
 const API_ERR_TRANSFER = {
-  escalacao_invalida: 'Só é possível transferir para uma fila de nível superior (escalonamento).',
+  escalacao_invalida: 'Não foi possível concluir a transferência para a fila indicada.',
   mesma_fila: 'Selecione uma fila diferente da atual.',
   sem_permissao_transferir_fila: 'Você não está vinculado a esta fila ou seu nível não permite esta ação.',
+  tecnico_sem_empresa: 'O técnico informado não pertence à empresa atual.',
+  tecnico_fila_obrigatorios:
+    'Informe técnico e fila válidos (atribuição na grade, transferência ou escalonamento).',
   destino_sem_vinculo_fila: 'O técnico de destino não está vinculado à fila indicada.',
   destino_nivel_incompativel: 'O nível do técnico de destino não cobre essa fila.',
   motivo_obrigatorio: 'Informe o motivo (mín. 3 caracteres).',
   destino_ou_fila_obrigatorio: 'Indique fila de destino e/ou técnico, conforme a opção escolhida.',
-  tecnico_fila_obrigatorios: 'Para escalonar, selecione um técnico e uma fila válidos.',
   save_failed:
     'Não foi possível gravar a transferência no servidor. Se persistir, veja o log (apiTransferirTicket: update_ticket, mov_errors ou SQL).',
 };
@@ -908,8 +910,8 @@ export default function TechDashboard({ boot }) {
     setTransferQueueId('');
     setTransferAssignMode('com');
     if (queuesRelacional) {
-      const useEscalation = Boolean(workflow?.supportLevelsEnabled);
-      const rq = await fetchQueuesForTicket(ticket.id, { escalationOnly: useEscalation });
+      // Lista completa de filas do ticket (ABAC); sem escalation_only — alinhado a mover para qualquer nível.
+      const rq = await fetchQueuesForTicket(ticket.id, { escalationOnly: false });
       if (!rq.ok) {
         setTransferQueuesErr(rq.error || 'Não foi possível carregar as filas.');
         setTransferQueues([]);
@@ -918,9 +920,6 @@ export default function TechDashboard({ boot }) {
         const list = rq.queues || [];
         setTransferQueues(list);
         setTransferQueuesErr('');
-        if (useEscalation && list.length === 0) {
-          setTransferQueuesErr('Não há filas de escalonamento disponíveis acima do nível atual.');
-        }
         const pref =
           ticket.filaQueueId && list.some((x) => Number(x.id) === Number(ticket.filaQueueId))
             ? String(ticket.filaQueueId)
@@ -1517,6 +1516,11 @@ export default function TechDashboard({ boot }) {
                 {wfEnabled ? (
                   <>
                     <th
+                      className={`${techFilaThSticky} max-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                    >
+                      Técnico
+                    </th>
+                    <th
                       className={`${techFilaThSticky} max-w-[9rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
                     >
                       Fila
@@ -1528,11 +1532,13 @@ export default function TechDashboard({ boot }) {
                     </th>
                   </>
                 ) : null}
-                <th
-                  className={`${techFilaThSticky} max-w-[7rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
-                >
-                  Técnico
-                </th>
+                {!wfEnabled ? (
+                  <th
+                    className={`${techFilaThSticky} max-w-[7rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                  >
+                    Técnico
+                  </th>
+                ) : null}
                 {inlineAssignment ? (
                   <th
                     className={`${techFilaThSticky} whitespace-nowrap px-2 py-2 text-right text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
@@ -1628,7 +1634,6 @@ export default function TechDashboard({ boot }) {
                           ticket={ticket}
                           wfEnabled={wfEnabled}
                           queuesRelacional={queuesRelacional}
-                          queues={workflow?.queues || []}
                           workflowFilas={filasMeta}
                           tecnicos={tecnicosOpcoes}
                           ticketStatus={effectiveBoot?.ticketStatus}
@@ -1657,6 +1662,9 @@ export default function TechDashboard({ boot }) {
                           </td>
                           {wfEnabled ? (
                             <>
+                              <td className="max-w-[8rem] truncate px-3 py-2 text-[var(--pgm-text-secondary)]" title={ticket.tecnicos || ''}>
+                                {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
+                              </td>
                               <td
                                 className="max-w-[9rem] truncate px-3 py-2 text-[var(--pgm-text-muted)]"
                                 title={ticket.filaLabel || ''}
@@ -1675,9 +1683,11 @@ export default function TechDashboard({ boot }) {
                               </td>
                             </>
                           ) : null}
-                          <td className="max-w-[7rem] truncate px-3 py-2 text-[var(--pgm-text-secondary)]" title={ticket.tecnicos || ''}>
-                            {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
-                          </td>
+                          {!wfEnabled ? (
+                            <td className="max-w-[7rem] truncate px-3 py-2 text-[var(--pgm-text-secondary)]" title={ticket.tecnicos || ''}>
+                              {ticket.tecnicos && ticket.tecnicos !== '—' ? ticket.tecnicos : '—'}
+                            </td>
+                          ) : null}
                         </>
                       )}
                       <td

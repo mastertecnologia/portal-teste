@@ -192,6 +192,57 @@ export async function fetchQueuesForTicket(ticketId, opts = {}) {
   return { ok: true, queues: json.queues || [] };
 }
 
+/**
+ * Filas com vínculo explícito em queues_users. GET queues/api-for-user/:id
+ * @param {number|string} userId
+ * @param {{ signal?: AbortSignal }} [opts]
+ */
+export async function fetchQueuesForUser(userId, opts = {}) {
+  if (USE_MOCK) {
+    return {
+      ok: true,
+      queues: [
+        { id: 1, name: 'N1 — Triagem', codigo: 'n1' },
+        { id: 2, name: 'N2 — Avançado', codigo: 'n2' },
+      ],
+    };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiQueuesForUser;
+  if (!base || !(Number(userId) > 0)) {
+    return { ok: false, error: 'no_api', queues: [] };
+  }
+  const url = `${base}${encodeURIComponent(String(userId))}`;
+  let r;
+  try {
+    r = await fetch(url, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+      signal: opts.signal,
+    });
+  } catch (e) {
+    if (e && e.name === 'AbortError') {
+      return { ok: false, error: 'aborted', aborted: true, queues: [] };
+    }
+    return { ok: false, error: 'network', message: e?.message || 'Erro de rede', queues: [] };
+  }
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      queues: [],
+    };
+  }
+  return { ok: true, queues: json.queues || [] };
+}
+
 export async function postStartTicket(ticketId) {
   if (USE_MOCK) {
     return { ok: true };

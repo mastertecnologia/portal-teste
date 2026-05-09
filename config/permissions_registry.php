@@ -553,7 +553,7 @@ return [
         "module" => "Filas",
         "controller" => "Queues",
         "action" =>
-            "apiIndex,api_index,apiForTicket,api_for_ticket,getAvailableQueues,get_available_queues",
+            "apiIndex,api_index,apiForTicket,api_for_ticket,apiForUser,api_for_user,getAvailableQueues,get_available_queues",
         "perm_type" => "rbac",
         "abac_scope" => "empresa",
         "description" =>

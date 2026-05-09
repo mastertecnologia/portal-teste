@@ -3577,6 +3577,7 @@ class TicketsController extends AppController {
 				'apiStartTicket' => $w . 'tickets/api-start-ticket/',
 				'apiStartTicketSlug' => $w . 'tickets/start-ticket/',
 				'apiQueuesForTicket' => $w . 'queues/api-for-ticket/',
+				'apiQueuesForUser' => $w . 'queues/api-for-user/',
 				'apiGetAvailableQueues' => $w . 'queues/get-available-queues/',
 				'apiQueuesIndex' => $w . 'queues/api-index',
 				'apiQueuesEnsureDefaults' => $w . 'queues/api-ensure-defaults',
@@ -5945,13 +5946,6 @@ class TicketsController extends AppController {
 			if ($destId <= 0 && (int)($ticket->queue_id ?? 0) === $queueIdBody) {
 				return $this->jsonResponse(['ok' => false, 'error' => 'mesma_fila'], 400);
 			}
-			if ($this->_supportLevelsRoutingReady()) {
-				$curOrd = $this->_ticketQueueLevelSort($ticket);
-				$dstOrd = $this->_queueLevelSortOrder($queueIdBody);
-				if ($curOrd > 0 && $dstOrd > 0 && $dstOrd <= $curOrd) {
-					return $this->jsonResponse(['ok' => false, 'error' => 'escalacao_invalida'], 400);
-				}
-			}
 		}
 
 		$filaPost = $filaNova !== '' && isset($cat[$filaNova]) ? $filaNova : null;
@@ -5992,10 +5986,6 @@ class TicketsController extends AppController {
 
 		// Workflow legado sem queue_id no POST: só fila/nível, sem técnico (espelha filas relacionais quando possível).
 		if ($destId <= 0 && $queueIdBody <= 0 && $wf && $filaPost !== null && $filaPost !== $filaAnt) {
-			$nDestWf = (int)($cat[$filaPost]['nivel'] ?? 0);
-			if ($nDestWf > 0 && $nDestWf < $nivelAnt) {
-				return $this->jsonResponse(['ok' => false, 'error' => 'escalacao_invalida'], 400);
-			}
 			$mappedQ = null;
 			if ($this->_queuesRelacionalReady()) {
 				$qf = $this->Queues->find()->where(['Queues.idempresa' => $ticketEmpresa, 'Queues.codigo' => $filaPost]);
@@ -7004,21 +6994,50 @@ class TicketsController extends AppController {
 			], 422);
 		}
 		$vinculo = $this->Empresasusers->find()->where(['idempresa' => $empresa, 'iduser' => $tecnicoId])->first();
+		if (empty($vinculo)) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'tecnico_sem_empresa',
+				'message' => 'Técnico sem vínculo com a empresa atual.',
+			], 403);
+		}
 		$destUser = $this->Users->find()
 			->contain($this->_supportLevelsRoutingReady() ? ['SupportLevels'] : [])
 			->where(['Users.id' => $tecnicoId, 'Users.role' => 0, 'Users.inativo' => 0])
 			->first();
-		if (empty($vinculo) || empty($destUser)) {
+		if (empty($destUser)) {
 			return $this->jsonResponse([
 				'ok' => false,
 				'error' => 'tecnico_invalido',
-				'message' => 'Técnico não encontrado ou sem vínculo com a empresa.',
+				'message' => 'Técnico não encontrado, inativo ou sem perfil de equipe.',
 			], 404);
 		}
 		$oldQid = (int)($ticket->queue_id ?? 0);
 		$newQid = $oldQid;
 		$newQueue = null;
-		if ($filaId !== null && $filaId > 0) {
+		if ($this->_queuesRelacionalReady()) {
+			if ($filaId === null || $filaId <= 0) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'tecnico_fila_obrigatorios',
+					'message' => 'Informe técnico e fila (fila_id) para gravar a atribuição.',
+				], 422);
+			}
+			$newQid = $filaId;
+			$qf = $this->Queues->find()->where(['Queues.id' => $newQid]);
+			if ($this->_supportLevelsRoutingReady()) {
+				$qf->contain(['SupportLevels']);
+			}
+			$this->Abac->applyToQuery($qf, 'Queues', 'Queues');
+			$newQueue = $qf->first();
+			if (empty($newQueue) || (int)$newQueue->idempresa !== $empresa) {
+				return $this->jsonResponse([
+					'ok' => false,
+					'error' => 'fila_invalida',
+					'message' => 'Fila inválida ou sem permissão de acesso.',
+				], 422);
+			}
+		} elseif ($filaId !== null && $filaId > 0) {
 			$newQid = $filaId;
 			$qf = $this->Queues->find()->where(['Queues.id' => $newQid]);
 			if ($this->_supportLevelsRoutingReady()) {
@@ -7034,32 +7053,17 @@ class TicketsController extends AppController {
 				], 422);
 			}
 		}
-		if ($newQid > 0 && $oldQid > 0 && $newQid !== $oldQid && $this->_supportLevelsRoutingReady()) {
-			$curOrd = $this->_ticketQueueLevelSort($ticket);
-			$dstOrd = $this->_queueLevelSortOrder($newQid);
-			if ($curOrd > 0 && $dstOrd > 0 && $dstOrd <= $curOrd) {
-				return $this->jsonResponse([
-					'ok' => false,
-					'error' => 'escalacao_invalida',
-					'message' => 'Não é permitido mover o ticket para um nível igual ou inferior.',
-				], 422);
-			}
-		}
 		$qPerm = $newQid > 0 ? $newQid : $oldQid;
-		$mustInsertQueuesLink = false;
 		if ($qPerm > 0 && $this->_queuesRelacionalReady()) {
 			$dlink = $this->QueuesUsers->find()
 				->where(['QueuesUsers.user_id' => $tecnicoId, 'QueuesUsers.queue_id' => $qPerm])
 				->first();
-			$membersCount = (int)$this->QueuesUsers->find()->where(['QueuesUsers.queue_id' => $qPerm])->count();
-			if (empty($dlink) && $membersCount === 0) {
-				$mustInsertQueuesLink = true;
-			}
-			if (empty($dlink) && $membersCount > 0) {
+			// Somente vínculo explícito em queues_users (alinhado a apiForUser; sem auto-inclusão em fila "vazia").
+			if (empty($dlink)) {
 				return $this->jsonResponse([
 					'ok' => false,
 					'error' => 'destino_sem_vinculo_fila',
-					'message' => 'O técnico não pertence à fila selecionada.',
+					'message' => 'O técnico não possui permissão explícita para a fila selecionada.',
 				], 422);
 			}
 			if ($this->_supportLevelsRoutingReady() && !$this->_userCanWorkQueue($tecnicoId, $qPerm)) {
@@ -7086,8 +7090,16 @@ class TicketsController extends AppController {
 		$obsLinhas = [
 			'Atribuição inline (API)',
 			'Data/hora: ' . $agora,
+			'Operador: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
 			'Novo responsável: ' . $nmDest . ' (id ' . $tecnicoId . ')',
 		];
+		if ($this->_queuesRelacionalReady() && $newQid > 0) {
+			$obsLinhas[] = 'Fila anterior (queue_id): ' . ($oldQid > 0 ? (string)$oldQid : '—');
+			$obsLinhas[] = 'Nova fila (queue_id): ' . (string)$newQid;
+			if ($newQueue && trim((string)($newQueue->name ?? '')) !== '') {
+				$obsLinhas[] = 'Nome da fila: ' . trim((string)$newQueue->name);
+			}
+		}
 		try {
 			$this->Tickets->getConnection()->transactional(function () use (
 				$ticket,
@@ -7102,15 +7114,8 @@ class TicketsController extends AppController {
 				$cat,
 				$tcols,
 				$destUser,
-				$mustInsertQueuesLink,
 				$qPerm
 			) {
-				if ($mustInsertQueuesLink && $qPerm > 0) {
-					$insQu = $this->QueuesUsers->newEntity(['queue_id' => $qPerm, 'user_id' => $tecnicoId]);
-					if (!$this->QueuesUsers->save($insQu, ['atomic' => false])) {
-						throw new \RuntimeException('queues_users:' . json_encode($insQu->getErrors(), JSON_UNESCAPED_UNICODE));
-					}
-				}
 				$set = $this->_ticketAssignResponsavelSetArray($tecnicoId, $tcols);
 				if ($set === []) {
 					throw new \RuntimeException('assignment_no_ra_column');

@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TicketTimer from './TicketTimer.jsx';
 import WorkflowTimeline from './WorkflowTimeline.jsx';
-import { patchTicketAssignment, patchTicketPriority, patchTicketStatus } from '../lib/api.js';
+import { fetchQueuesForUser, patchTicketAssignment, patchTicketPriority, patchTicketStatus } from '../lib/api.js';
 import {
   badgeClass,
   servicedeskStatusTypeFromTicket,
@@ -69,14 +69,13 @@ function workflowStateForUi(state) {
 }
 
 /**
- * Células editáveis (técnico, fila, status, prioridade) + timer do ticket.
- * PATCH assignment: apenas { tecnico_id, fila_id } — fila só com técnico (regra da API).
+ * Células editáveis (técnico → fila, status, prioridade) + timer.
+ * Modo filas relacionais: lista de filas vem da API por técnico (queues_users); fila só após escolher técnico.
  */
 export default function TicketsServicedeskInlineRow({
   ticket,
   wfEnabled,
   queuesRelacional,
-  queues,
   workflowFilas,
   tecnicos,
   ticketStatus,
@@ -89,8 +88,101 @@ export default function TicketsServicedeskInlineRow({
   onPatchError,
 }) {
   const busy = Number(patchBusyId) === Number(ticket.id) || Boolean(statusInteractionLocked);
-  const tid = Number(ticket.idtecnico_responsavel) || 0;
-  const canChangeQueue = tid > 0;
+  const tid = (() => {
+    const raw =
+      ticket?.idtecnico_responsavel ??
+      ticket?.tecnico_id ??
+      ticket?.iduser ??
+      ticket?.tecnico?.id ??
+      ticket?.owner_id ??
+      0;
+    const id = Number(raw);
+    return Number.isFinite(id) && id > 0 ? id : 0;
+  })();
+
+  /** Técnico escolhido na UI ainda não gravado (aguardando escolha de fila). */
+  const [pendingTecnicoId, setPendingTecnicoId] = useState(null);
+  const [permittedQueues, setPermittedQueues] = useState([]);
+  const [queuesLoading, setQueuesLoading] = useState(false);
+  const [queuesLoadError, setQueuesLoadError] = useState(null);
+  const queuesFetchSeqRef = useRef(0);
+
+  useEffect(() => {
+    setPendingTecnicoId(null);
+    setQueuesLoadError(null);
+  }, [tid, ticket.filaQueueId, ticket.id]);
+
+  useEffect(() => {
+    if (!queuesRelacional) {
+      setPermittedQueues([]);
+      setQueuesLoading(false);
+      setQueuesLoadError(null);
+      return undefined;
+    }
+    const uid = pendingTecnicoId !== null ? pendingTecnicoId : tid;
+    if (uid <= 0) {
+      setPermittedQueues([]);
+      setQueuesLoading(false);
+      setQueuesLoadError(null);
+      return undefined;
+    }
+    const ac = new AbortController();
+    const seq = ++queuesFetchSeqRef.current;
+    setQueuesLoading(true);
+    setQueuesLoadError(null);
+    setPermittedQueues([]);
+    void fetchQueuesForUser(uid, { signal: ac.signal }).then((r) => {
+      if (seq !== queuesFetchSeqRef.current) {
+        return;
+      }
+      if (r.aborted) {
+        if (seq === queuesFetchSeqRef.current) {
+          setQueuesLoading(false);
+        }
+        return;
+      }
+      setQueuesLoading(false);
+      if (r.ok && Array.isArray(r.queues)) {
+        setPermittedQueues(r.queues);
+        if (r.queues.length === 0) {
+          setQueuesLoadError('Nenhuma fila permitida para este técnico. Cadastre o vínculo em Filas → técnicos.');
+        } else {
+          setQueuesLoadError(null);
+        }
+      } else {
+        setPermittedQueues([]);
+        setQueuesLoadError(r.message || r.error || 'Não foi possível carregar as filas do técnico.');
+      }
+    });
+    return () => {
+      ac.abort();
+    };
+  }, [queuesRelacional, ticket.id, tid, pendingTecnicoId]);
+
+  const mandanteTecId = pendingTecnicoId !== null ? pendingTecnicoId : tid;
+
+  const permittedIdSet = useMemo(() => {
+    const s = new Set();
+    for (const q of permittedQueues || []) {
+      const id = Number(q.id);
+      if (Number.isFinite(id) && id > 0) s.add(id);
+    }
+    return s;
+  }, [permittedQueues]);
+
+  const canOpenFilaSelectRelacional =
+    queuesRelacional && mandanteTecId > 0 && !queuesLoading && permittedIdSet.size > 0;
+
+  const filaSelectValueRelacional = (() => {
+    if (pendingTecnicoId !== null) {
+      return '';
+    }
+    const cur = Number(ticket.filaQueueId) || 0;
+    if (cur > 0 && permittedIdSet.has(cur)) {
+      return String(cur);
+    }
+    return '';
+  })();
 
   const setBusy = useCallback(
     (v) => {
@@ -286,52 +378,87 @@ export default function TicketsServicedeskInlineRow({
     if (!hit) return;
     const snap = rowSnapshot(ticket);
     setBusy(true);
-    const r = await patchTicketPriority(ticket.id, { prioridade: hit.label });
-    setBusy(false);
-    if (!r.ok) {
-      onMergeTicket(ticket.id, snap);
-      fail(r.message || r.error);
-      return;
+    try {
+      const r = await patchTicketPriority(ticket.id, { prioridade: hit.label });
+      if (!r.ok) {
+        onMergeTicket(ticket.id, snap);
+        fail(r.message || r.error);
+        return;
+      }
+      if (r.ticket) onMergeTicket(ticket.id, r.ticket);
+    } finally {
+      setBusy(false);
     }
-    if (r.ticket) onMergeTicket(ticket.id, r.ticket);
   };
 
   const onTecnico = async (e) => {
     const v = e.target.value;
     const newTid = v === '' ? 0 : Number(v);
     if (newTid <= 0) return;
-    const snap = rowSnapshot(ticket);
-    setBusy(true);
-    const body = {
-      tecnico_id: newTid,
-      fila_id: ticket.filaQueueId > 0 ? Number(ticket.filaQueueId) : null,
-    };
-    const r = await patchTicketAssignment(ticket.id, body);
-    setBusy(false);
-    if (!r.ok) {
-      onMergeTicket(ticket.id, snap);
-      fail(r.message || r.error);
+
+    if (!queuesRelacional) {
+      const snap = rowSnapshot(ticket);
+      setBusy(true);
+      try {
+        const body = {
+          tecnico_id: newTid,
+          fila_id: ticket.filaQueueId > 0 ? Number(ticket.filaQueueId) : null,
+        };
+        const r = await patchTicketAssignment(ticket.id, body);
+        if (!r.ok) {
+          onMergeTicket(ticket.id, snap);
+          fail(r.message || r.error);
+          return;
+        }
+        if (r.ticket) onMergeTicket(ticket.id, r.ticket);
+      } finally {
+        setBusy(false);
+      }
       return;
     }
-    if (r.ticket) onMergeTicket(ticket.id, r.ticket);
+
+    if (newTid === tid && pendingTecnicoId === null) return;
+
+    if (newTid === tid) {
+      setPendingTecnicoId(null);
+      return;
+    }
+
+    setPendingTecnicoId(newTid);
   };
 
   const onFila = async (e) => {
     const qid = Number(e.target.value);
-    if (!qid || !canChangeQueue) return;
-    const snap = rowSnapshot(ticket);
-    setBusy(true);
-    const r = await patchTicketAssignment(ticket.id, {
-      tecnico_id: tid,
-      fila_id: qid,
-    });
-    setBusy(false);
-    if (!r.ok) {
-      onMergeTicket(ticket.id, snap);
-      fail(r.message || r.error);
+    if (!qid) return;
+    if (queuesRelacional) {
+      if (queuesLoading || permittedIdSet.size === 0) {
+        fail('Aguarde o carregamento das filas ou selecione um técnico com filas permitidas.');
+        return;
+      }
+    }
+    const tecPatch = pendingTecnicoId !== null ? pendingTecnicoId : tid;
+    if (tecPatch <= 0) return;
+    if (queuesRelacional && !permittedIdSet.has(qid)) {
+      fail('Fila não permitida para o técnico selecionado.');
       return;
     }
-    if (r.ticket) onMergeTicket(ticket.id, r.ticket);
+    const snap = rowSnapshot(ticket);
+    setBusy(true);
+    try {
+      const r = await patchTicketAssignment(ticket.id, {
+        tecnico_id: tecPatch,
+        fila_id: qid,
+      });
+      if (!r.ok) {
+        onMergeTicket(ticket.id, snap);
+        fail(r.message || r.error);
+        return;
+      }
+      setPendingTecnicoId(null);
+      if (r.ticket) onMergeTicket(ticket.id, r.ticket);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const priorCode = (() => {
@@ -349,8 +476,11 @@ export default function TicketsServicedeskInlineRow({
   })();
 
   const queueOptions = useMemo(() => {
-    if (queuesRelacional && Array.isArray(queues)) {
-      return queues.map((q) => ({ id: q.id, label: q.name || q.codigo || `#${q.id}` }));
+    if (queuesRelacional) {
+      return (permittedQueues || []).map((q) => ({
+        id: q.id,
+        label: q.name || q.codigo || `#${q.id}`,
+      }));
     }
     if (Array.isArray(workflowFilas)) {
       return workflowFilas.map((f) => ({
@@ -360,7 +490,21 @@ export default function TicketsServicedeskInlineRow({
       }));
     }
     return [];
-  }, [queuesRelacional, queues, workflowFilas]);
+  }, [queuesRelacional, permittedQueues, workflowFilas]);
+
+  const filaSelectDisabledRelacional = busy || !canOpenFilaSelectRelacional;
+
+  const filaSelectTitleRelacional = (() => {
+    if (!queuesRelacional) return undefined;
+    if (mandanteTecId <= 0) return 'Selecione o técnico primeiro; em seguida aparecem só as filas permitidas para ele.';
+    if (queuesLoading) return 'Carregando filas…';
+    if (queuesLoadError) return queuesLoadError;
+    if (permittedIdSet.size === 0) return 'Nenhuma fila permitida para este técnico.';
+    if (pendingTecnicoId !== null) return 'Escolha a fila para gravar técnico e fila no chamado.';
+    return undefined;
+  })();
+
+  const tecnicoSelectValue = String((pendingTecnicoId !== null ? pendingTecnicoId : tid) || '');
 
   const statusBadgeText = useMemo(() => {
     if (effectiveStatus?.source === 'workflow' && effectiveStatus?.label) {
@@ -441,17 +585,36 @@ export default function TicketsServicedeskInlineRow({
       </td>
       {wfEnabled ? (
         <>
+          <td className="max-w-[8rem] px-2 py-2">
+            <select
+              className={selectClass(busy)}
+              value={tecnicoSelectValue}
+              onChange={onTecnico}
+              disabled={busy}
+              aria-label={`Técnico ticket ${ticket.id}`}
+              title="Escolha o técnico primeiro; as filas listadas depois são só as que ele pode atender."
+            >
+              <option value="">—</option>
+              {tecnicos.map((t) => (
+                <option key={t.id} value={String(t.id)}>
+                  {t.nivel_label ? `${t.name} — ${t.nivel_label}` : t.name}
+                </option>
+              ))}
+            </select>
+          </td>
           <td className="max-w-[9rem] px-2 py-2">
             {queuesRelacional ? (
               <select
-                className={selectClass(busy || !canChangeQueue)}
-                value={ticket.filaQueueId ? String(ticket.filaQueueId) : ''}
+                className={selectClass(filaSelectDisabledRelacional)}
+                value={filaSelectValueRelacional}
                 onChange={onFila}
-                disabled={busy || !canChangeQueue}
-                title={!canChangeQueue ? 'Atribua um técnico para alterar a fila (PATCH assignment).' : undefined}
+                disabled={filaSelectDisabledRelacional}
+                title={filaSelectTitleRelacional}
                 aria-label={`Fila ticket ${ticket.id}`}
               >
-                <option value="">{canChangeQueue ? 'Fila…' : 'Sem técnico'}</option>
+                <option value="">
+                  {mandanteTecId <= 0 ? 'Técnico…' : queuesLoading ? 'Carregando…' : 'Fila…'}
+                </option>
                 {queueOptions.map((q) => (
                   <option key={String(q.id)} value={String(q.id)}>
                     {q.label}
@@ -466,23 +629,25 @@ export default function TicketsServicedeskInlineRow({
             {ticket.supportLevelLabel ? ticket.supportLevelLabel : ticket.nivelAtendimento != null ? `N${ticket.nivelAtendimento}` : '—'}
           </td>
         </>
-      ) : null}
-      <td className="max-w-[8rem] px-2 py-2">
-        <select
-          className={selectClass(busy)}
-          value={ticket.idtecnico_responsavel ? String(ticket.idtecnico_responsavel) : ''}
-          onChange={onTecnico}
-          disabled={busy}
-          aria-label={`Técnico ticket ${ticket.id}`}
-        >
-          <option value="">—</option>
-          {tecnicos.map((t) => (
-            <option key={t.id} value={String(t.id)}>
-              {t.nivel_label ? `${t.name} — ${t.nivel_label}` : t.name}
-            </option>
-          ))}
-        </select>
-      </td>
+      ) : (
+        <td className="max-w-[8rem] px-2 py-2">
+          <select
+            className={selectClass(busy)}
+            value={tecnicoSelectValue}
+            onChange={onTecnico}
+            disabled={busy}
+            aria-label={`Técnico ticket ${ticket.id}`}
+            title="Alterar técnico responsável."
+          >
+            <option value="">—</option>
+            {tecnicos.map((t) => (
+              <option key={t.id} value={String(t.id)}>
+                {t.nivel_label ? `${t.name} — ${t.nivel_label}` : t.name}
+              </option>
+            ))}
+          </select>
+        </td>
+      )}
       <td className="whitespace-nowrap px-2 py-2 text-right">
         <TicketTimer ticket={ticket} situacaoExecCode={situacaoExecCode} effectiveStatus={effectiveStatus} />
       </td>

@@ -30,7 +30,7 @@ class QueuesController extends AppController {
 
 	public function isAuthorized($user) {
 		$action = $this->request->getParam('action');
-		if (in_array($action, ['apiForTicket', 'getAvailableQueues', 'apiSupportLevels'], true)) {
+		if (in_array($action, ['apiForTicket', 'apiForUser', 'getAvailableQueues', 'apiSupportLevels'], true)) {
 			return (int)$user['role'] === 0;
 		}
 		if (in_array($action, ['apiIndex', 'apiEnsureDefaults', 'apiSave'], true)) {
@@ -376,7 +376,8 @@ class QueuesController extends AppController {
 
 	/**
 	 * Filas da mesma empresa do ticket (para transferência / UI).
-	 * Query: escalation_only=1 — só filas com nível (sort) estritamente acima do nível atual do ticket.
+	 * Query opcional escalation_only=1: apenas restringe a LISTAGEM (nível acima do ticket);
+	 * não bloqueia PATCH/apiTransferirTicket — uso legado; preferir escalationOnly=false para qualquer nível.
 	 */
 	public function apiForTicket($ticketId = null) {
 		$this->request->allowMethod(['get']);
@@ -445,6 +446,94 @@ class QueuesController extends AppController {
 	 */
 	public function getAvailableQueues($ticketId = null) {
 		return $this->apiForTicket($ticketId);
+	}
+
+	/**
+	 * Filas em que o técnico tem permissão explícita (queues_users).
+	 * Alinhado a apiPatchAssignment: não lista fila “aberta” sem vínculo — cadastrar técnico na fila no admin.
+	 * GET /queues/api-for-user/:userId — empresa da sessão; ABAC em Queues.
+	 */
+	public function apiForUser($userId = null) {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		if (!$this->_queuesTableExists()) {
+			return $this->_json(['ok' => false, 'error' => 'queues_not_installed'], 503);
+		}
+		$uid = (int)$userId;
+		if ($uid <= 0) {
+			return $this->_json(['ok' => false, 'error' => 'invalid_user'], 400);
+		}
+		$emp = (int)$this->Auth->user('idempresa');
+		if ($emp <= 0) {
+			return $this->_json(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$eu = $this->Empresasusers->find()
+			->where(['idempresa' => $emp, 'iduser' => $uid])
+			->first();
+		if (empty($eu)) {
+			return $this->_json(['ok' => false, 'error' => 'user_not_in_company'], 404);
+		}
+		$u = $this->Users->find()
+			->where(['Users.id' => $uid, 'Users.role' => 0, 'Users.inativo' => 0])
+			->first();
+		if (empty($u)) {
+			return $this->_json(['ok' => false, 'error' => 'invalid_user'], 404);
+		}
+
+		$linkedQueueIds = [];
+		foreach ($this->QueuesUsers->find()->select(['queue_id'])->where(['user_id' => $uid])->all() as $link) {
+			$qid = (int)$link->queue_id;
+			if ($qid > 0) {
+				$linkedQueueIds[$qid] = true;
+			}
+		}
+		if ($linkedQueueIds === []) {
+			return $this->_json([
+				'ok' => true,
+				'queues' => [],
+				'userId' => $uid,
+				'idempresa' => $emp,
+				'company_id' => $emp,
+			]);
+		}
+
+		$qf = $this->Queues->find()
+			->where(['Queues.idempresa' => $emp, 'Queues.id IN' => array_keys($linkedQueueIds)])
+			->order(['Queues.sort_order' => 'ASC', 'Queues.id' => 'ASC']);
+		if ($this->_supportLevelsRoutingReady()) {
+			$qf->contain(['SupportLevels']);
+		}
+		$this->Abac->applyToQuery($qf, 'Queues', 'Queues');
+		$out = [];
+		foreach ($qf->all() as $r) {
+			$qid = (int)$r->id;
+			if (!isset($linkedQueueIds[$qid])) {
+				continue;
+			}
+			$item = [
+				'id' => $qid,
+				'name' => (string)$r->name,
+				'company_id' => $emp,
+				'idempresa' => $emp,
+				'codigo' => $r->codigo !== null ? (string)$r->codigo : null,
+				'sort_order' => (int)$r->sort_order,
+				'description' => isset($r->description) && $r->description !== null ? (string)$r->description : null,
+			];
+			if ($this->_supportLevelsRoutingReady()) {
+				$item['support_level_id'] = !empty($r->support_level_id) ? (int)$r->support_level_id : null;
+				$item['supportLevelName'] = !empty($r->support_level) ? (string)$r->support_level->name : null;
+				$item['supportLevelSort'] = $this->_queueRowLevelSort($r);
+			}
+			$out[] = $item;
+		}
+
+		return $this->_json([
+			'ok' => true,
+			'queues' => $out,
+			'userId' => $uid,
+			'idempresa' => $emp,
+			'company_id' => $emp,
+		]);
 	}
 
 	/**

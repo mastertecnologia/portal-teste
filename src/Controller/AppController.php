@@ -142,6 +142,7 @@ class AppController extends Controller
                 "workflowSlaEmpresasOptions",
                 "contractSlaApi",
                 "apiForTicket",
+                "apiForUser",
                 "getAvailableQueues",
                 "apiEnsureDefaults",
                 "apiSupportLevels",
