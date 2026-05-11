@@ -5163,6 +5163,100 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Transição de destino parece “aguardar cliente” (código ou rótulo).
+	 *
+	 * @param array<string,mixed> $tr
+	 */
+	protected function _ticketTransitionMatchesAwaitCliente(array $tr): bool {
+		$tc = strtolower(trim(str_replace([' ', '-'], '_', (string)($tr['codigo'] ?? ''))));
+		$lb = mb_strtolower(preg_replace('/\s+/u', ' ', (string)($tr['label'] ?? '')), 'UTF-8');
+		$lbCompact = str_replace([' ', '-', '_'], '', $lb);
+		if ($tc !== '') {
+			if (strpos($tc, 'aguardando') !== false && strpos($tc, 'cliente') !== false) {
+				return true;
+			}
+			if (strpos($tc, 'aguarda') !== false && strpos($tc, 'cliente') !== false) {
+				return true;
+			}
+			if (strpos($tc, 'espera') !== false && strpos($tc, 'cliente') !== false) {
+				return true;
+			}
+			if (strpos($tc, 'waiting') !== false && strpos($tc, 'client') !== false) {
+				return true;
+			}
+		}
+		if ($lbCompact !== '') {
+			if (strpos($lb, 'aguardando') !== false && strpos($lb, 'cliente') !== false) {
+				return true;
+			}
+			if (strpos($lb, 'aguarda') !== false && strpos($lb, 'cliente') !== false) {
+				return true;
+			}
+			if (strpos($lb, 'espera') !== false && strpos($lb, 'cliente') !== false) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Transição para pendente/aberto como fallback de “pausar à espera” (não é estado dedicado aguardando cliente).
+	 *
+	 * @param array<string,mixed> $tr
+	 */
+	protected function _ticketTransitionMatchesPendenteAwaitFallback(array $tr): bool {
+		if ($this->_ticketTransitionMatchesAwaitCliente($tr)) {
+			return false;
+		}
+		$tc = strtolower(trim(str_replace([' ', '-'], '_', (string)($tr['codigo'] ?? ''))));
+		$lb = mb_strtolower(preg_replace('/\s+/u', ' ', (string)($tr['label'] ?? '')), 'UTF-8');
+		if ($tc === 'pendente' || $tc === 'pending' || strpos($tc, 'pendente') === 0) {
+			return true;
+		}
+		if ($tc === 'aberto' || $tc === 'open') {
+			return true;
+		}
+		if ($lb !== '' && strpos($lb, 'pendente') !== false && strpos($lb, 'execu') === false) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Estado atual do workflow conta como “em execução” para oferecer pausa / aguardar cliente.
+	 */
+	protected function _ticketWorkflowCurrentIsExec(array $wf): bool {
+		$cur = strtolower(trim(str_replace([' ', '-'], '_', (string)($wf['current']['codigo'] ?? ''))));
+		if (in_array($cur, [
+			'emandamento',
+			'em_andamento',
+			'em_execucao',
+			'execucao',
+			'andamento',
+			'in_progress',
+			'inprogress',
+			'running',
+			'executando',
+			'atendimento',
+		], true)) {
+			return true;
+		}
+		if (strpos($cur, 'em_exec') === 0 || strpos($cur, 'exec_') === 0) {
+			return true;
+		}
+		$lb = mb_strtolower(preg_replace('/\s+/u', ' ', (string)($wf['current']['label'] ?? '')), 'UTF-8');
+		if ($lb !== '' && (strpos($lb, 'execu') !== false || strpos($lb, 'andamento') !== false)) {
+			if (strpos($lb, 'pendente') === false && strpos($lb, 'aguard') === false) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Ações compostas da grid Service Desk (flags para o React).
 	 *
 	 * @param array<string,mixed> $row
@@ -5178,19 +5272,19 @@ class TicketsController extends AppController {
 			'escalateTargetFilaCode' => null,
 		];
 		$wf = $row['workflow'] ?? null;
-		if (!empty($wf['enabled']) && !empty($wf['current']['codigo'])) {
-			$cur = strtolower(trim(str_replace([' ', '-'], '_', (string)$wf['current']['codigo'])));
-			$isExec = in_array($cur, ['emandamento', 'em_andamento', 'em_execucao', 'execucao', 'andamento'], true)
-				|| strpos($cur, 'em_exec') === 0;
+		if (!empty($wf['enabled']) && !empty($wf['current']) && is_array($wf['current'])) {
+			$isExec = $this->_ticketWorkflowCurrentIsExec($wf);
 			if ($isExec && !empty($wf['allowedTransitions']) && is_array($wf['allowedTransitions'])) {
 				$awaitId = null;
 				$pendId = null;
 				foreach ($wf['allowedTransitions'] as $tr) {
-					$tc = strtolower(trim(str_replace([' ', '-'], '_', (string)($tr['codigo'] ?? ''))));
-					if ($awaitId === null && strpos($tc, 'aguardando') !== false && strpos($tc, 'cliente') !== false) {
+					if (!is_array($tr)) {
+						continue;
+					}
+					if ($awaitId === null && $this->_ticketTransitionMatchesAwaitCliente($tr)) {
 						$awaitId = (int)($tr['id'] ?? 0);
 					}
-					if ($pendId === null && ($tc === 'pendente' || $tc === 'pending')) {
+					if ($pendId === null && $this->_ticketTransitionMatchesPendenteAwaitFallback($tr)) {
 						$pendId = (int)($tr['id'] ?? 0);
 					}
 				}
