@@ -4397,6 +4397,10 @@ class TicketsController extends AppController {
 	}
 
 	protected function _userMayAssumeTicketTechnically($ticket): bool {
+		// users.admin === 1: operação global (sem exigência de queues_users para este utilizador).
+		if ((int)$this->Auth->user('admin') === 1) {
+			return true;
+		}
 		$uid = (int)$this->Auth->user('id');
 		$qid = (int)($ticket->queue_id ?? 0);
 		if (!$this->_queuesRelacionalReady() || $qid <= 0) {
