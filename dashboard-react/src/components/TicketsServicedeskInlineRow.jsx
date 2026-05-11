@@ -18,6 +18,10 @@ const PRIORIDADE_OPTS = [
   { code: 'critica', label: 'Crítico' },
 ];
 
+/** Alinhado ao 403 sem_permissao_transferir_fila (queues_users). */
+const ASSIGN_QUEUE_VINCULO_HINT =
+  'Sem permissão para alterar técnico/fila: o seu utilizador não está vinculado à fila deste ticket. Peça inclusão em Filas → Técnicos (queues_users).';
+
 function selectClass(disabled) {
   return [
     'max-w-full rounded-md border px-1.5 py-1 text-[11px] outline-none transition',
@@ -106,6 +110,7 @@ export default function TicketsServicedeskInlineRow({
   queuesAdminUrl = '',
 }) {
   const busy = Number(patchBusyId) === Number(ticket.id) || Boolean(statusInteractionLocked);
+  const assignmentLockedByQueue = ticket?.mayAssumeTicketQueue === false;
   const tid = (() => {
     const raw =
       ticket?.idtecnico_responsavel ??
@@ -189,7 +194,11 @@ export default function TicketsServicedeskInlineRow({
   }, [permittedQueues]);
 
   const canOpenFilaSelectRelacional =
-    queuesRelacional && mandanteTecId > 0 && !queuesLoading && permittedIdSet.size > 0;
+    queuesRelacional &&
+    mandanteTecId > 0 &&
+    !queuesLoading &&
+    permittedIdSet.size > 0 &&
+    !assignmentLockedByQueue;
 
   const filaSelectValueRelacional = (() => {
     if (pendingTecnicoId !== null) {
@@ -418,6 +427,9 @@ export default function TicketsServicedeskInlineRow({
   };
 
   const onTecnico = async (e) => {
+    if (assignmentLockedByQueue) {
+      return;
+    }
     const v = e.target.value;
     const newTid = v === '' ? 0 : Number(v);
     if (newTid <= 0) return;
@@ -458,6 +470,9 @@ export default function TicketsServicedeskInlineRow({
   };
 
   const onFila = async (e) => {
+    if (assignmentLockedByQueue) {
+      return;
+    }
     const qid = Number(e.target.value);
     if (!qid) return;
     if (queuesRelacional) {
@@ -526,9 +541,10 @@ export default function TicketsServicedeskInlineRow({
     return [];
   }, [queuesRelacional, permittedQueues, workflowFilas]);
 
-  const filaSelectDisabledRelacional = busy || !canOpenFilaSelectRelacional;
+  const filaSelectDisabledRelacional = busy || !canOpenFilaSelectRelacional || assignmentLockedByQueue;
 
   const filaSelectTitleRelacional = (() => {
+    if (assignmentLockedByQueue) return ASSIGN_QUEUE_VINCULO_HINT;
     if (!queuesRelacional) return undefined;
     if (mandanteTecId <= 0) return 'Selecione o técnico primeiro; em seguida aparecem só as filas permitidas para ele.';
     if (queuesLoading) return 'Carregando filas…';
@@ -621,12 +637,16 @@ export default function TicketsServicedeskInlineRow({
         <>
           <td className="max-w-[8rem] px-2 py-2">
             <select
-              className={selectClass(busy)}
+              className={selectClass(busy || assignmentLockedByQueue)}
               value={tecnicoSelectValue}
               onChange={onTecnico}
-              disabled={busy}
+              disabled={busy || assignmentLockedByQueue}
               aria-label={`Técnico ticket ${ticket.id}`}
-              title="Escolha o técnico primeiro; as filas listadas depois são só as que ele pode atender."
+              title={
+                assignmentLockedByQueue
+                  ? ASSIGN_QUEUE_VINCULO_HINT
+                  : 'Escolha o técnico primeiro; as filas listadas depois são só as que ele pode atender.'
+              }
             >
               <option value="">—</option>
               {tecnicos.map((t) => (
@@ -676,12 +696,12 @@ export default function TicketsServicedeskInlineRow({
       ) : (
         <td className="max-w-[8rem] px-2 py-2">
           <select
-            className={selectClass(busy)}
+            className={selectClass(busy || assignmentLockedByQueue)}
             value={tecnicoSelectValue}
             onChange={onTecnico}
-            disabled={busy}
+            disabled={busy || assignmentLockedByQueue}
             aria-label={`Técnico ticket ${ticket.id}`}
-            title="Alterar técnico responsável."
+            title={assignmentLockedByQueue ? ASSIGN_QUEUE_VINCULO_HINT : 'Alterar técnico responsável.'}
           >
             <option value="">—</option>
             {tecnicos.map((t) => (

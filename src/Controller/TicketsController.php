@@ -5153,6 +5153,8 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {
 		}
 
+		$row['mayAssumeTicketQueue'] = $this->_userMayAssumeTicketTechnically($reg);
+
 		return $row;
 	}
 
@@ -5952,7 +5954,11 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_transferir_fila'], 403);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'sem_permissao_transferir_fila',
+				'message' => 'Sem vínculo com a fila deste ticket (queues_users). Peça inclusão em Filas → Técnicos ou use um utilizador já vinculado a essa fila.',
+			], 403);
 		}
 		if (!$this->_ticketHasValidTecnicoAndFila($ticket)) {
 			return $this->jsonResponse([
@@ -7370,7 +7376,11 @@ class TicketsController extends AppController {
 			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
 		}
 		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
-			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_transferir_fila'], 403);
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'sem_permissao_transferir_fila',
+				'message' => 'Sem vínculo com a fila deste ticket (queues_users). Peça inclusão em Filas → Técnicos ou use um utilizador já vinculado a essa fila.',
+			], 403);
 		}
 		$empresa = (int)$this->Auth->user('idempresa');
 		if ((int)$ticket->idempresa !== $empresa) {

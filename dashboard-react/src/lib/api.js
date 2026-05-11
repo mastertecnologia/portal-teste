@@ -114,6 +114,7 @@ function mockTicketToTechRow(t) {
       canEscalateLevel: true,
       escalateTargetFilaCode: 'n2',
     },
+    mayAssumeTicketQueue: true,
   };
 }
 
