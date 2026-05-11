@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ClientesAPI } from '../api';
 
 /**
- * Autocomplete de clientes do sistema (tabela clientes, campo razaosocial).
- *
- * Props:
- *   value: { id, razao_social, cnpj } | null  — cliente selecionado
- *   onSelect: (cliente | null) => void
+ * Busca de clientes com autocomplete.
+ * Alinhado a `laudos-package/frontend/components/ClientSearch.jsx`;
+ * resposta do Portal: `{ success, data }` com `razaosocial` nos itens.
  */
 export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cliente por nome ou CNPJ...' }) {
   const [query, setQuery] = useState('');
@@ -18,7 +16,9 @@ export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cl
 
   useEffect(() => {
     const handler = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -26,14 +26,18 @@ export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cl
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!query || query.length < 2) { setResults([]); return; }
+
+    if (!query || query.length < 2) {
+      setResults([]);
+      return;
+    }
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
         const resp = await ClientesAPI.search(query);
-        // O endpoint retorna { data: [...] } ou diretamente um array
-        setResults(resp.data || (Array.isArray(resp) ? resp : []));
+        const list = resp?.data ?? (Array.isArray(resp) ? resp : []);
+        setResults(list);
         setOpen(true);
       } catch (err) {
         console.error('Erro ao buscar clientes:', err);
@@ -53,14 +57,18 @@ export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cl
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', marginBottom: 12 }}>
+    <div ref={containerRef} style={{ position: 'relative' }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+          style={{
+            flex: 1, padding: '8px 12px',
+            border: '1px solid #d1d5db', borderRadius: 6,
+            fontSize: 14,
+          }}
         />
         {loading && <span style={{ fontSize: 12, color: '#6b7280' }}>buscando...</span>}
       </div>
@@ -74,12 +82,17 @@ export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cl
         }}>
           <div>
             <strong>{value.razao_social || value.requester_company_name || value.razaosocial}</strong>
-            <div style={{ fontSize: 11, color: '#6b7280' }}>CNPJ: {value.cnpj || value.requester_cnpj}</div>
+            <div style={{ fontSize: 11, color: '#6b7280' }}>
+              CNPJ: {value.cnpj || value.requester_cnpj}
+            </div>
           </div>
           <button
             type="button"
             onClick={() => onSelect?.(null)}
-            style={{ border: 'none', background: 'transparent', color: '#dc2626', cursor: 'pointer', fontSize: 12 }}
+            style={{
+              border: 'none', background: 'transparent',
+              color: '#dc2626', cursor: 'pointer', fontSize: 12,
+            }}
           >
             Desvincular
           </button>
@@ -89,8 +102,9 @@ export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cl
       {open && results.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0,
-          background: 'white', border: '1px solid #d1d5db', borderRadius: 6,
-          marginTop: 4, maxHeight: 280, overflowY: 'auto', zIndex: 100,
+          background: 'white', border: '1px solid #d1d5db',
+          borderRadius: 6, marginTop: 4,
+          maxHeight: 280, overflowY: 'auto', zIndex: 100,
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
         }}>
           {results.map((c) => (
@@ -99,14 +113,16 @@ export default function ClientSearch({ value, onSelect, placeholder = 'Buscar cl
               type="button"
               onClick={() => handleSelect(c)}
               style={{
-                display: 'block', width: '100%', padding: '10px 14px', textAlign: 'left',
+                display: 'block', width: '100%',
+                padding: '10px 14px', textAlign: 'left',
                 border: 'none', borderBottom: '1px solid #f3f4f6',
-                background: 'white', cursor: 'pointer', fontSize: 13,
+                background: 'white', cursor: 'pointer',
+                fontSize: 13,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#f9fafb'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
             >
-              <div style={{ fontWeight: 500 }}>{c.razaosocial || c.razao_social || c.nome}</div>
+              <div style={{ fontWeight: 500 }}>{c.razao_social || c.razaosocial || c.nome}</div>
               <div style={{ fontSize: 11, color: '#6b7280' }}>
                 CNPJ: {c.cnpj} {c.cidade && `• ${c.cidade}`}
               </div>

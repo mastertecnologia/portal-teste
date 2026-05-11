@@ -35,7 +35,7 @@ export const PareceresAPI = {
   list(params = {}) { return api.get('/laudos/pareceres', { params }); },
   get(id) { return api.get(`/laudos/pareceres/${id}`); },
   create(data = {}) { return api.post('/laudos/pareceres', data); },
-  update(id, data) { return api.patch(`/laudos/pareceres/${id}`, data); },
+  update(id, data) { return api.put(`/laudos/pareceres/${id}`, data); },
   remove(id) { return api.delete(`/laudos/pareceres/${id}`); },
   duplicate(id) { return api.post(`/laudos/pareceres/${id}/duplicar`); },
   changeStatus(id, status) { return api.post(`/laudos/pareceres/${id}/status`, { status }); },
@@ -47,7 +47,7 @@ export const PareceresAPI = {
 // ---- Produtos ----
 export const ProdutosAPI = {
   create(data) { return api.post('/laudos/produtos', data); },
-  update(id, data) { return api.patch(`/laudos/produtos/${id}`, data); },
+  update(id, data) { return api.put(`/laudos/produtos/${id}`, data); },
   remove(id) { return api.delete(`/laudos/produtos/${id}`); },
 };
 

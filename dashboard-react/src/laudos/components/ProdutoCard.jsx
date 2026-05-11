@@ -10,9 +10,9 @@ export default function ProdutoCard({ produto, onChange, onRemove, index = 1 }) 
   const [servicosCatalog, setServicosCatalog] = useState([]);
 
   useEffect(() => {
-    TemplatesAPI.list('diagnostico').then((r) => setDiagnTemplates(r.data || [])).catch(() => {});
-    CatalogoAPI.pecas().then((r) => setPecasCatalog(r.data || [])).catch(() => {});
-    CatalogoAPI.servicos().then((r) => setServicosCatalog(r.data || [])).catch(() => {});
+    TemplatesAPI.list('diagnostico').then((r) => setDiagnTemplates(r.data || []));
+    CatalogoAPI.pecas().then((r) => setPecasCatalog(r.data || []));
+    CatalogoAPI.servicos().then((r) => setServicosCatalog(r.data || []));
   }, []);
 
   const update = (changes) => {
@@ -21,6 +21,10 @@ export default function ProdutoCard({ produto, onChange, onRemove, index = 1 }) 
     if (produto.id) {
       ProdutosAPI.update(produto.id, changes).catch(console.error);
     }
+  };
+
+  const handleApplyDiagnTemplate = (tpl) => {
+    update({ diagnostico: tpl.conteudo });
   };
 
   const addPeca = (catalogItem = null) => {
@@ -66,7 +70,7 @@ export default function ProdutoCard({ produto, onChange, onRemove, index = 1 }) 
     <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 16, overflow: 'hidden' }}>
       <div style={{ padding: '12px 16px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-          Equipamento {index}{produto.nome ? ` — ${produto.nome}` : ''}
+          Equipamento {index} {produto.nome ? `— ${produto.nome}` : ''}
         </h3>
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="button" onClick={() => setCollapsed(!collapsed)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#6b7280' }}>
@@ -88,7 +92,13 @@ export default function ProdutoCard({ produto, onChange, onRemove, index = 1 }) 
               <Field label="Tipo">
                 <select value={produto.tipo || ''} onChange={(e) => update({ tipo: e.target.value })} style={inputStyle}>
                   <option value="">Selecione...</option>
-                  {['Servidor','Desktop','Notebook','Storage','Nobreak','Switch/Roteador','Outro'].map((t) => <option key={t} value={t}>{t}</option>)}
+                  <option value="Servidor">Servidor</option>
+                  <option value="Desktop">Desktop</option>
+                  <option value="Notebook">Notebook</option>
+                  <option value="Storage">Storage</option>
+                  <option value="Nobreak">Nobreak</option>
+                  <option value="Switch/Roteador">Switch/Roteador</option>
+                  <option value="Outro">Outro</option>
                 </select>
               </Field>
               <Field label="Número de Série">
@@ -103,7 +113,13 @@ export default function ProdutoCard({ produto, onChange, onRemove, index = 1 }) 
               </Field>
             </div>
             <Field label="Especificações" style={{ marginTop: 12 }}>
-              <textarea value={produto.especificacoes || ''} onChange={(e) => update({ especificacoes: e.target.value })} rows={3} style={textareaStyle} placeholder="Configuração técnica detalhada..." />
+              <textarea
+                value={produto.especificacoes || ''}
+                onChange={(e) => update({ especificacoes: e.target.value })}
+                rows={3}
+                style={textareaStyle}
+                placeholder="Configuração técnica detalhada do equipamento..."
+              />
             </Field>
           </Section>
 
@@ -112,13 +128,28 @@ export default function ProdutoCard({ produto, onChange, onRemove, index = 1 }) 
               <div style={{ marginBottom: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: '#6b7280', alignSelf: 'center' }}>Templates:</span>
                 {diagnTemplates.map((t) => (
-                  <button key={t.id} type="button" onClick={() => update({ diagnostico: t.conteudo })} style={{ fontSize: 11, padding: '3px 10px', border: '1px solid #d1d5db', borderRadius: 999, background: '#f9fafb', cursor: 'pointer' }}>
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => handleApplyDiagnTemplate(t)}
+                    style={{
+                      fontSize: 11, padding: '3px 10px',
+                      border: '1px solid #d1d5db', borderRadius: 999,
+                      background: '#f9fafb', cursor: 'pointer',
+                    }}
+                  >
                     {t.nome}
                   </button>
                 ))}
               </div>
             )}
-            <textarea value={produto.diagnostico || ''} onChange={(e) => update({ diagnostico: e.target.value })} rows={6} style={textareaStyle} placeholder="Descreva o diagnóstico técnico..." />
+            <textarea
+              value={produto.diagnostico || ''}
+              onChange={(e) => update({ diagnostico: e.target.value })}
+              rows={6}
+              style={textareaStyle}
+              placeholder="Descreva o diagnóstico técnico do equipamento..."
+            />
           </Section>
 
           {produto.id && (
