@@ -332,6 +332,12 @@ class WorkflowService {
 		if ($codigo === 'emandamento') {
 			return (int)C_TicketSituacaoEmandamento;
 		}
+		// Estados de espera (cliente / terceiros) usam o mesmo slot legado "pendente" na tabela tickets.
+		if ($codigo === 'aguardando_cliente'
+			|| $codigo === 'aguardandocliente'
+			|| strpos($codigo, 'aguardando_cliente') === 0) {
+			return (int)C_TicketSituacaoPendente;
+		}
 		if ($codigo === 'pendente' || $codigo === 'aberto') {
 			return (int)C_TicketSituacaoPendente;
 		}

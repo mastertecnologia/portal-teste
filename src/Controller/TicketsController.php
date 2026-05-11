@@ -16,10 +16,12 @@ use App\Service\Ticket\WorkflowService;
 use App\Service\Ticket\WorkflowSlaService;
 use App\Service\Ticket\TicketSlaCycleService;
 use App\Service\Ticket\TicketSlaDetailService;
+use App\Service\Ticket\SlaUrgencyBandService;
 use App\Service\Ticket\TicketWorklogEventHelper;
 use App\Service\PortalAdvanced\ContractConsumptionRecorderService;
 use App\Service\Clientes\ClienteCorrelatedIds;
 use App\Utility\ErpGridUrl;
+use App\Utility\Ticket\TicketAssignmentJson;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Database\Expression\QueryExpression;
@@ -73,6 +75,8 @@ class TicketsController extends AppController {
 				'apiPatchTicketStatus',
 				'apiPatchTicketPriority',
 				'apiPatchTicketSubject',
+				'apiServicedeskAwaitCliente',
+				'apiServicedeskEscalateLevel',
 			]
 		))));
 	}
@@ -103,6 +107,8 @@ class TicketsController extends AppController {
 			'apiPatchTicketStatus',
 			'apiPatchTicketPriority',
 			'apiPatchTicketSubject',
+			'apiServicedeskAwaitCliente',
+			'apiServicedeskEscalateLevel',
 		], true)) {
 			return (int)$user['role'] === 0;
 		}
@@ -3561,6 +3567,8 @@ class TicketsController extends AppController {
 				'apiTimer' => $w . 'tickets/api-timer/',
 				'apiSlaPause' => $w . 'tickets/api-sla-pause/',
 				'apiSlaResume' => $w . 'tickets/api-sla-resume/',
+				'apiServicedeskAwaitCliente' => $w . 'tickets/api-servicedesk-await-cliente/',
+				'apiServicedeskEscalateLevel' => $w . 'tickets/api-servicedesk-escalate-level/',
 				'apiAuditValidate' => $w . 'api/audit/validate',
 				'apiSetUserAuditPassword' => $w . 'users/api-set-user-audit-password',
 				'apiAlterarSituacao' => $w . 'tickets/api-alterar-situacao/',
@@ -3580,6 +3588,7 @@ class TicketsController extends AppController {
 				'apiQueuesForUser' => $w . 'queues/api-for-user/',
 				'apiGetAvailableQueues' => $w . 'queues/get-available-queues/',
 				'apiQueuesIndex' => $w . 'queues/api-index',
+				'queuesAdmin' => Router::url(['controller' => 'Queues', 'action' => 'adminIndex']),
 				'apiQueuesEnsureDefaults' => $w . 'queues/api-ensure-defaults',
 				'apiSupportLevels' => $w . 'queues/api-support-levels',
 				'apiQueuesSave' => $w . 'queues/api-save',
@@ -5127,7 +5136,78 @@ class TicketsController extends AppController {
 		} catch (\Throwable $e) {
 		}
 
+		$row['servicedeskActions'] = [
+			'canAwaitCliente' => false,
+			'awaitClienteWorkflowStateId' => null,
+			'awaitClienteUsesPendenteFallback' => false,
+			'canEscalateLevel' => false,
+			'escalateTargetFilaCode' => null,
+		];
+		try {
+			$colsAll = $this->Tickets->getSchema()->columns();
+			$slaUrg = new SlaUrgencyBandService();
+			foreach ($slaUrg->buildListFragment($reg, $colsAll) as $k => $v) {
+				$row[$k] = $v;
+			}
+			$row['servicedeskActions'] = $this->_ticketServicedeskRowActions($reg, $row, $colsAll);
+		} catch (\Throwable $e) {
+		}
+
 		return $row;
+	}
+
+	/**
+	 * Ações compostas da grid Service Desk (flags para o React).
+	 *
+	 * @param array<string,mixed> $row
+	 * @param string[] $cols
+	 * @return array<string,mixed>
+	 */
+	protected function _ticketServicedeskRowActions($reg, array $row, array $cols): array {
+		$out = [
+			'canAwaitCliente' => false,
+			'awaitClienteWorkflowStateId' => null,
+			'awaitClienteUsesPendenteFallback' => false,
+			'canEscalateLevel' => false,
+			'escalateTargetFilaCode' => null,
+		];
+		$wf = $row['workflow'] ?? null;
+		if (!empty($wf['enabled']) && !empty($wf['current']['codigo'])) {
+			$cur = strtolower(trim(str_replace([' ', '-'], '_', (string)$wf['current']['codigo'])));
+			$isExec = in_array($cur, ['emandamento', 'em_andamento', 'em_execucao', 'execucao', 'andamento'], true)
+				|| strpos($cur, 'em_exec') === 0;
+			if ($isExec && !empty($wf['allowedTransitions']) && is_array($wf['allowedTransitions'])) {
+				$awaitId = null;
+				$pendId = null;
+				foreach ($wf['allowedTransitions'] as $tr) {
+					$tc = strtolower(trim(str_replace([' ', '-'], '_', (string)($tr['codigo'] ?? ''))));
+					if ($awaitId === null && strpos($tc, 'aguardando') !== false && strpos($tc, 'cliente') !== false) {
+						$awaitId = (int)($tr['id'] ?? 0);
+					}
+					if ($pendId === null && ($tc === 'pendente' || $tc === 'pending')) {
+						$pendId = (int)($tr['id'] ?? 0);
+					}
+				}
+				if ($awaitId > 0) {
+					$out['canAwaitCliente'] = true;
+					$out['awaitClienteWorkflowStateId'] = $awaitId;
+				} elseif ($pendId > 0) {
+					$out['canAwaitCliente'] = true;
+					$out['awaitClienteWorkflowStateId'] = $pendId;
+					$out['awaitClienteUsesPendenteFallback'] = true;
+				}
+			}
+		}
+		if ($this->_ticketTransferApiAllowed() && $this->_queuesRelacionalReady()) {
+			$code = strtolower(trim((string)($row['filaSuporte'] ?? '')));
+			$map = ['n1' => 'n2', 'n2' => 'n3'];
+			if ($code !== '' && isset($map[$code])) {
+				$out['canEscalateLevel'] = true;
+				$out['escalateTargetFilaCode'] = $map[$code];
+			}
+		}
+
+		return $out;
 	}
 
 	protected function _ticketGerarOsUrl(int $ticketId): string {
@@ -6112,7 +6192,12 @@ class TicketsController extends AppController {
 					}
 				}
 				if (empty($dlink) && $membersCount > 0) {
-					return $this->jsonResponse(['ok' => false, 'error' => 'destino_sem_vinculo_fila'], 400);
+					$qn = $newQueue ? trim((string)($newQueue->name ?? '')) : '';
+
+					return $this->jsonResponse(
+						TicketAssignmentJson::destinoSemVinculoFilaPayload($qn !== '' ? $qn : null),
+						400
+					);
 				}
 			}
 		}
@@ -6129,20 +6214,36 @@ class TicketsController extends AppController {
 		if ($destName === '') {
 			$destName = 'Usuário #' . $destId;
 		}
+		$opNomeTr = trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id')));
+		$qidAntTr = (int)($ticket->queue_id ?? 0);
+		$filaAntNomeTr = '';
+		if ($qidAntTr > 0 && $this->_queuesRelacionalReady()) {
+			try {
+				$qantTr = $this->Queues->get($qidAntTr);
+				$filaAntNomeTr = trim((string)($qantTr->name ?? ''));
+			} catch (\Throwable $e) {
+				$filaAntNomeTr = '';
+			}
+		}
 		$obsLinhas = [
-			'Transferência de atendimento',
+			'Transferência manual de atendimento (modal)',
 			'Data/hora: ' . $agora,
-			'Técnico que transferiu: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
-			'Técnico anterior (responsável): ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
-			'Novo técnico: ' . $destName . ' (id ' . $destId . ')',
+			'Operador: ' . $opNomeTr,
+			'Técnico anterior: ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+			'Novo responsável: ' . $destName . ' (id ' . $destId . ')',
 			'Motivo: ' . $motivo,
 		];
+		if ($filaAntNomeTr !== '') {
+			$obsLinhas[] = 'Fila anterior: ' . $filaAntNomeTr . ' (id ' . $qidAntTr . ')';
+		} elseif ($qidAntTr > 0) {
+			$obsLinhas[] = 'Fila anterior (queue_id): ' . $qidAntTr;
+		}
 		$obsLinhas[] = 'Nível anterior: ' . $levelAntLabel;
 		if ($newLevelLabelForObs !== '') {
 			$obsLinhas[] = 'Novo nível: ' . $newLevelLabelForObs;
 		}
 		if ($newQueue) {
-			$obsLinhas[] = 'Fila de destino: ' . $newQueue->name . ' (id ' . (int)$newQueue->id . ')';
+			$obsLinhas[] = 'Nova fila: ' . trim((string)($newQueue->name ?? '')) . ' (id ' . (int)$newQueue->id . ')';
 		} elseif ($filaPost !== null && $filaPost !== $filaAnt) {
 			$obsLinhas[] = 'Fila: ' . $this->_filaLabelFromCode($filaAnt) . ' → ' . $this->_filaLabelFromCode($filaPost);
 		} elseif ($nivelPost !== null && $nivelPost !== $nivelAnt && $filaPost === null) {
@@ -6800,6 +6901,342 @@ class TicketsController extends AppController {
 	}
 
 	/**
+	 * Alinha ciclo ticket_sla_cycles com retomada após voltar a "Em execução" (espelha api-sla-resume).
+	 */
+	protected function _ticketSlaResumeCycleOpenIfPaused(int $ticketId): void {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$uid = (int)$this->Auth->user('id');
+		$cycleSvc = new TicketSlaCycleService($this->Tickets);
+		$cycled = $cycleSvc->resumeCycle($ticketId, $empresa, $uid);
+		$ticket = $this->Tickets->get($ticketId);
+		$tcols = $this->Tickets->getSchema()->columns();
+		$hadFlagPause = (in_array('sla_resolucao_pausado', $tcols, true) && (bool)$ticket->get('sla_resolucao_pausado'))
+			|| (in_array('sla_resposta_pausado', $tcols, true) && (bool)$ticket->get('sla_resposta_pausado'));
+		$didManual = false;
+		if ($hadFlagPause) {
+			$this->_ticketWorkflowSlaService()->manualResumeClocks($ticket);
+			try {
+				if (!$this->Tickets->save($ticket, ['skipTicketSlaFlow' => true])) {
+					return;
+				}
+			} catch (\Throwable $e) {
+				return;
+			}
+			$didManual = true;
+			$ticket = $this->Tickets->get($ticketId);
+		}
+		if (!$cycled && !$didManual) {
+			return;
+		}
+		try {
+			$cycleSvc->syncOpenCycleAfterResumeFromTicket($ticket, $uid);
+		} catch (\Throwable $e) {
+		}
+	}
+
+	/**
+	 * Pausa ciclo + relógios quando o ticket entra em espera pelo cliente (espelha api-sla-pause quando necessário).
+	 */
+	protected function _ticketSlaPauseCycleAfterAwaitCliente(int $ticketId): void {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$uid = (int)$this->Auth->user('id');
+		$cycleSvc = new TicketSlaCycleService($this->Tickets);
+		$cycleSvc->pauseCycle($ticketId, $empresa, $uid);
+		$ticket = $this->Tickets->get($ticketId);
+		$tcols = $this->Tickets->getSchema()->columns();
+		$resPausa = in_array('sla_resolucao_pausado', $tcols, true) && (bool)$ticket->get('sla_resolucao_pausado');
+		$respPausa = in_array('sla_resposta_pausado', $tcols, true) && (bool)$ticket->get('sla_resposta_pausado');
+		$stillUnpaused = !($resPausa || $respPausa);
+		if ($stillUnpaused) {
+			$this->_ticketWorkflowSlaService()->manualPauseClocks($ticket);
+			try {
+				$this->Tickets->save($ticket, ['skipTicketSlaFlow' => true]);
+			} catch (\Throwable $e) {
+				$this->log('_ticketSlaPauseCycleAfterAwaitCliente save: ' . $e->getMessage(), 'warning');
+			}
+		}
+	}
+
+	/**
+	 * POST /tickets/api-servicedesk-await-cliente/:id — transição de workflow + SLA pausado (ciclo quando existir).
+	 */
+	public function apiServicedeskAwaitCliente($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$tid = (int)$idticket;
+		if ($tid <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$targetFromBody = isset($body['workflow_state_id']) ? (int)$body['workflow_state_id'] : 0;
+		$empresa = (int)$this->Auth->user('idempresa');
+		$qTm = $this->Tickets->find('all')->where(['Tickets.id' => $tid, 'Tickets.idempresa' => $empresa]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		$wfEnabled = $this->_ticketWorkflowEnabledForEmpresa($empresa) && $this->_ticketWorkflowStateColumnReady();
+		if (!$wfEnabled) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'workflow_required',
+				'message' => 'Workflow não está habilitado para esta empresa.',
+			], 422);
+		}
+		$workflowSvc = $this->_ticketWorkflowService();
+		if (!$workflowSvc->hasConfiguredTransitionsForEmpresa($empresa)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_required', 'message' => 'Sem transições de workflow configuradas.'], 422);
+		}
+		$workflowSvc->bootstrapStateForTicket($ticket);
+		$fromStateId = (int)($ticket->workflow_state_id ?? 0);
+		if ($fromStateId <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_workflow_state'], 422);
+		}
+		$rowPreview = $this->_ticketRowApiTecnico($ticket, '—', [
+			'workflow' => $this->_ticketWorkflowSchemaReady(),
+			'queuesUi' => $this->_queuesRelacionalReady(),
+			'transferEnabled' => $this->_ticketTransferApiAllowed(),
+			'transferido' => false,
+			'hasSeveridadeCol' => in_array('severidade', $this->Tickets->getSchema()->columns(), true),
+		]);
+		$actions = (array)($rowPreview['servicedeskActions'] ?? []);
+		$targetStateId = $targetFromBody > 0 ? $targetFromBody : (int)($actions['awaitClienteWorkflowStateId'] ?? 0);
+		if ($targetStateId <= 0 || !$workflowSvc->canTransition($empresa, $fromStateId, $targetStateId)) {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'invalid_transition',
+				'message' => 'Transição para aguardar cliente não disponível neste estado.',
+			], 422);
+		}
+		$sitantiga = (int)$ticket->situacao;
+		try {
+			$this->Tickets->getConnection()->transactional(function () use ($workflowSvc, $targetStateId, $empresa, $tid, $sitantiga) {
+				$q = $this->Tickets->find('all')->where(['Tickets.id' => $tid, 'Tickets.idempresa' => $empresa]);
+				$this->Abac->applyToQuery($q, 'Tickets', 'Tickets');
+				$q = $this->_ticketApplyForUpdateLock($q);
+				$ticket = $q->first();
+				if (empty($ticket)) {
+					throw new \UnexpectedValueException('not_found');
+				}
+				$workflowSvc->bootstrapStateForTicket($ticket);
+				$fromId = (int)($ticket->workflow_state_id ?? 0);
+				if (!$workflowSvc->canTransition($empresa, $fromId, $targetStateId)) {
+					throw new \UnexpectedValueException('invalid_transition');
+				}
+				$workflowSvc->applyTransition($ticket, $targetStateId, $empresa);
+				$sitNova = (int)$ticket->situacao;
+				$tcolsAll = $this->Tickets->getSchema()->columns();
+				$this->_ticketSetDatafinalizadoPorSituacao($ticket, $sitNova, $tcolsAll);
+				$saveFields = ['situacao'];
+				foreach ($ticket->getDirty() as $f) {
+					if ($f !== 'situacao' && in_array($f, $tcolsAll, true)) {
+						$saveFields[] = $f;
+					}
+				}
+				$saveFields = array_values(array_unique($saveFields));
+				$saveFields = $this->_ticketFieldsComResponsavel($this->_ticketIntersectSchemaFields($saveFields));
+				if (!$this->Tickets->save($ticket, ['fields' => $saveFields, 'atomic' => false])) {
+					throw new \RuntimeException('ticket_save');
+				}
+				$mov = $this->Ticketsmovs->newEntity();
+				$mov->idticket = $tid;
+				$mov->sitantiga = $sitantiga;
+				$mov->sitnova = $sitNova;
+				$mov->idusuario = $this->Auth->user('id');
+				$mov->idempresa = $empresa;
+				$mov->datetime = date('Y-m-d H:i:s', time());
+				$mov->observacao = $this->_ticketsmovsObservacaoLimitada(
+					"Pausar para Aguardando Cliente (workflow_state_id={$targetStateId})"
+				);
+				if (!$this->Ticketsmovs->save($mov, ['atomic' => false])) {
+					throw new \RuntimeException('ticketsmovs');
+				}
+			});
+		} catch (\Throwable $e) {
+			$this->log('apiServicedeskAwaitCliente: ' . $e->getMessage(), 'error');
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed', 'message' => $e->getMessage()], 500);
+		}
+		$this->_ticketSlaPauseCycleAfterAwaitCliente($tid);
+		try {
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'servicedesk_await_cliente', $tid);
+			$row = $this->_servicedeskTicketRowPayload($tid);
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'post_save_failed', 'message' => $e->getMessage()], 500);
+		}
+
+		return $this->jsonResponse(['ok' => true, 'ticket' => $row]);
+	}
+
+	/**
+	 * POST /tickets/api-servicedesk-escalate-level/:id — N1→N2 ou N2→N3 (fila relacionada + pendente + sem técnico).
+	 */
+	public function apiServicedeskEscalateLevel($idticket = null) {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$tid = (int)$idticket;
+		if ($tid <= 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'invalid_id'], 400);
+		}
+		if ((int)$this->Auth->user('role') !== 0) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if (!$this->_ticketTransferApiAllowed() || !$this->_queuesRelacionalReady()) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'workflow_columns_missing'], 503);
+		}
+		$body = $this->request->input('json_decode', true);
+		if (!is_array($body)) {
+			$body = $this->request->getData();
+		}
+		$motivo = isset($body['motivo']) ? trim((string)$body['motivo']) : '';
+		if (mb_strlen($motivo) < 3) {
+			$motivo = 'Escalonamento de nível (Service Desk)';
+		}
+		$empresa = (int)$this->Auth->user('idempresa');
+		$qTm = $this->Tickets->find('all')->where(['Tickets.id' => $tid, 'Tickets.idempresa' => $empresa]);
+		$this->Abac->applyToQuery($qTm, 'Tickets', 'Tickets');
+		$ticket = $qTm->first();
+		if (empty($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+		}
+		if (!$this->_apiTicketViewAllowed($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'forbidden'], 403);
+		}
+		if (!$this->_userMayAssumeTicketTechnically($ticket)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'sem_permissao_fila'], 403);
+		}
+		$rowPreview = $this->_ticketRowApiTecnico($ticket, '—', [
+			'workflow' => $this->_ticketWorkflowSchemaReady(),
+			'queuesUi' => true,
+			'transferEnabled' => true,
+			'transferido' => false,
+			'hasSeveridadeCol' => in_array('severidade', $this->Tickets->getSchema()->columns(), true),
+		]);
+		$targetCode = (string)($rowPreview['servicedeskActions']['escalateTargetFilaCode'] ?? '');
+		if ($targetCode === '') {
+			return $this->jsonResponse([
+				'ok' => false,
+				'error' => 'cannot_escalate',
+				'message' => 'Só é possível subir nível a partir das filas N1 ou N2.',
+			], 422);
+		}
+		$qf = $this->Queues->find()->where(['Queues.idempresa' => $empresa, 'Queues.codigo' => $targetCode]);
+		if ($this->_supportLevelsRoutingReady()) {
+			$qf->contain(['SupportLevels']);
+		}
+		$this->Abac->applyToQuery($qf, 'Queues', 'Queues');
+		$newQueue = $qf->first();
+		if (empty($newQueue)) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'fila_invalida', 'message' => 'Fila de destino não encontrada.'], 400);
+		}
+		$wf = $this->_ticketWorkflowSchemaReady();
+		$cat = $this->_filaSuporteCatalog();
+		$filaPost = $targetCode;
+		$nivelPost = $cat[$filaPost]['nivel'] ?? null;
+		$agoraDt = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
+		$agora = $agoraDt->format('d/m/Y H:i:s');
+		$agoraSql = $agoraDt->format('Y-m-d H:i:s');
+		$sitAntes = (int)$ticket->situacao;
+		$oldId = (int)($ticket->idtecnico_responsavel ?? 0);
+		$oldName = 'Não atribuído';
+		if ($oldId > 0) {
+			$oldName = ($this->_batchUserDisplayNames([$oldId])[$oldId]) ?? ('Usuário #' . $oldId);
+		}
+		$levelAntLabel = $this->_ticketSupportLevelLabelForHistory($ticket);
+		$newLevelLabelForObs = '';
+		if (!empty($newQueue->support_level)) {
+			$newLevelLabelForObs = (string)$newQueue->support_level->name;
+		} elseif (!empty($newQueue->support_level_id) && $this->_supportLevelsRoutingReady()) {
+			$newLevelLabelForObs = $this->_supportLevelName((int)$newQueue->support_level_id);
+		}
+		$obsLinhas = [
+			'Subir nível (Service Desk)',
+			'Data/hora: ' . $agora,
+			'Operador: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
+			'Técnico anterior (responsável): ' . $oldName . ($oldId > 0 ? ' (id ' . $oldId . ')' : ''),
+			'Nova fila: ' . trim((string)($newQueue->name ?? '')) . ' (código ' . $filaPost . ')',
+			'Motivo: ' . $motivo,
+			'Nível anterior: ' . $levelAntLabel,
+		];
+		if ($newLevelLabelForObs !== '') {
+			$obsLinhas[] = 'Novo nível: ' . $newLevelLabelForObs;
+		}
+		try {
+			$this->Tickets->getConnection()->transactional(function () use (
+				$tid,
+				$empresa,
+				$agoraSql,
+				$obsLinhas,
+				$newQueue,
+				$wf,
+				$cat,
+				$filaPost,
+				$nivelPost,
+				$sitAntes
+			) {
+				$tcols = $this->Tickets->getSchema()->columns();
+				$set = [
+					'idtecnico_responsavel' => null,
+					'situacao' => C_TicketSituacaoPendente,
+					'queue_id' => (int)$newQueue->id,
+				];
+				if ($wf && $filaPost !== null) {
+					$set['fila_suporte'] = $filaPost;
+					$set['nivel_atendimento'] = $nivelPost ?? $cat[$filaPost]['nivel'];
+				}
+				if ($this->_supportLevelsRoutingReady() && in_array('support_level_id', $tcols, true)) {
+					$set['support_level_id'] = $this->_ticketSupportLevelIdFromQueue($newQueue);
+				}
+				if (in_array('sla_escalated_at', $tcols, true)) {
+					$set['sla_escalated_at'] = $agoraSql;
+				}
+				if ($wf && $this->_ticketWorkflowStateColumnReady()) {
+					$ws = $this->_ticketWorkflowService()->getStateBySituacao((int)C_TicketSituacaoPendente);
+					if ($ws !== null && (int)($ws['id'] ?? 0) > 0) {
+						$set['workflow_state_id'] = (int)$ws['id'];
+					}
+				}
+				list($n, $plain) = $this->_ticketTransferApplyUpdate($tid, $empresa, $set, $agoraSql);
+				$this->_ticketTransferAssertUpdated($tid, $empresa, $plain, $n, 'servicedesk_escalate');
+				$this->Ticketsusers->deleteAll(['idticket' => $tid]);
+				$mov = $this->Ticketsmovs->newEntity();
+				$mov->idticket = $tid;
+				$mov->sitantiga = $sitAntes;
+				$mov->sitnova = C_TicketMovTransferencia;
+				$mov->idusuario = $this->Auth->user('id');
+				$mov->idempresa = $empresa;
+				$mov->datetime = $agoraSql;
+				$mov->observacao = $this->_ticketsmovsObservacaoLimitada(implode("\n", $obsLinhas));
+				if (!$this->Ticketsmovs->save($mov)) {
+					throw new \RuntimeException('save_mov');
+				}
+			});
+		} catch (\Throwable $e) {
+			$this->log('apiServicedeskEscalateLevel: ' . $e->getMessage(), 'error');
+
+			return $this->jsonResponse(['ok' => false, 'error' => 'save_failed'], 500);
+		}
+		try {
+			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'servicedesk_escalate_level', $tid);
+			$row = $this->_servicedeskTicketRowPayload($tid);
+		} catch (\Throwable $e) {
+			return $this->jsonResponse(['ok' => false, 'error' => 'post_save_failed', 'message' => $e->getMessage()], 500);
+		}
+
+		return $this->jsonResponse(['ok' => true, 'ticket' => $row]);
+	}
+
+	/**
 	 * Altera situação do ticket (JSON) — mesma regra de negócio de alterarsituacao, sem redirect.
 	 */
 	public function apiAlterarSituacao($idticket = null) {
@@ -7017,14 +7454,38 @@ class TicketsController extends AppController {
 				->first();
 			// Somente vínculo explícito em queues_users (alinhado a apiForUser; sem auto-inclusão em fila "vazia").
 			if (empty($dlink)) {
-				return $this->jsonResponse([
-					'ok' => false,
-					'error' => 'destino_sem_vinculo_fila',
-					'message' => 'O técnico não possui permissão explícita para a fila selecionada.',
-				], 422);
+				$qn = $newQueue ? trim((string)($newQueue->name ?? '')) : '';
+
+				return $this->jsonResponse(
+					TicketAssignmentJson::destinoSemVinculoFilaPayload($qn !== '' ? $qn : null),
+					422
+				);
 			}
 		}
 		$tcols = $this->Tickets->getSchema()->columns();
+		$oldTecIdPatch = (int)($ticket->idtecnico_responsavel ?? 0);
+		if ($oldTecIdPatch <= 0 && in_array('owner_id', $tcols, true)) {
+			$oldTecIdPatch = (int)($ticket->owner_id ?? 0);
+		}
+		$oldTecLabelPatch = 'Não atribuído';
+		if ($oldTecIdPatch > 0) {
+			$oldTecLabelPatch = ($this->_batchUserDisplayNames([$oldTecIdPatch])[$oldTecIdPatch]) ?? ('Usuário #' . $oldTecIdPatch);
+		}
+		$oldQueueLabelPatch = '—';
+		if ($oldQid > 0) {
+			try {
+				$qoPatch = $this->Queues->get($oldQid);
+				$oldQueueLabelPatch = trim((string)($qoPatch->name ?? '')) !== '' ? trim((string)$qoPatch->name) : ('id ' . $oldQid);
+			} catch (\Throwable $e) {
+				$oldQueueLabelPatch = 'id ' . $oldQid;
+			}
+		}
+		$newQueueLabelPatch = '—';
+		if ($newQueue && trim((string)($newQueue->name ?? '')) !== '') {
+			$newQueueLabelPatch = trim((string)$newQueue->name) . ' (id ' . (int)$newQueue->id . ')';
+		} elseif ($newQid > 0) {
+			$newQueueLabelPatch = 'id ' . $newQid;
+		}
 		$wf = $this->_ticketWorkflowSchemaReady();
 		$cat = $this->_filaSuporteCatalog();
 		$agoraSql = date('Y-m-d H:i:s');
@@ -7037,18 +7498,19 @@ class TicketsController extends AppController {
 		if ($nmDest === '') {
 			$nmDest = 'Usuário #' . $tecnicoId;
 		}
+		$opNomePatch = trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id')));
 		$obsLinhas = [
-			'Atribuição inline (API)',
+			'Transferência manual de atendimento (grade)',
 			'Data/hora: ' . $agora,
-			'Operador: ' . trim((string)($this->Auth->user('name') ?: $this->Auth->user('username') ?: 'id ' . (int)$this->Auth->user('id'))),
+			'Operador: ' . $opNomePatch,
+			'Técnico anterior: ' . $oldTecLabelPatch . ($oldTecIdPatch > 0 ? ' (id ' . $oldTecIdPatch . ')' : ''),
 			'Novo responsável: ' . $nmDest . ' (id ' . $tecnicoId . ')',
 		];
 		if ($this->_queuesRelacionalReady() && $newQid > 0) {
-			$obsLinhas[] = 'Fila anterior (queue_id): ' . ($oldQid > 0 ? (string)$oldQid : '—');
-			$obsLinhas[] = 'Nova fila (queue_id): ' . (string)$newQid;
-			if ($newQueue && trim((string)($newQueue->name ?? '')) !== '') {
-				$obsLinhas[] = 'Nome da fila: ' . trim((string)$newQueue->name);
-			}
+			$obsLinhas[] = 'Fila anterior: ' . ($oldQid > 0 ? $oldQueueLabelPatch . ' (id ' . $oldQid . ')' : '—');
+			$obsLinhas[] = 'Nova fila: ' . $newQueueLabelPatch;
+		} elseif ($newQueue && trim((string)($newQueue->name ?? '')) !== '') {
+			$obsLinhas[] = 'Fila: ' . trim((string)$newQueue->name) . ' (id ' . (int)$newQueue->id . ')';
 		}
 		try {
 			$this->Tickets->getConnection()->transactional(function () use (
@@ -7454,6 +7916,13 @@ class TicketsController extends AppController {
 			}
 		} catch (\Throwable $e) {
 			$this->_logTicketPatchRootCause('apiPatchTicketStatus.email', $e);
+		}
+		try {
+			if ($situacaoNovaInt === (int)C_TicketSituacaoEmandamento && $situacaoNovaInt !== (int)$sitantigaAntes) {
+				$this->_ticketSlaResumeCycleOpenIfPaused((int)$idticket);
+			}
+		} catch (\Throwable $e) {
+			$this->_logTicketPatchRootCause('apiPatchTicketStatus.sla_cycle_resume', $e);
 		}
 		try {
 			$this->Atividades->registrar($this->Auth->user('id'), 'Tickets', 'patch_status', $idticket);

@@ -68,23 +68,27 @@ class SlaRecalculationService {
 			return $default;
 		}
 
-		if (!empty($ticket->get('sla_resolucao_pausado'))) {
+		$pausedRes = in_array('sla_resolucao_pausado', $cols, true) && !empty($ticket->get('sla_resolucao_pausado'));
+		$pausedResp = in_array('sla_resposta_pausado', $cols, true) && !empty($ticket->get('sla_resposta_pausado'));
+		if ($pausedRes || $pausedResp) {
 			return $default;
 		}
 
 		$now = Time::now();
-		$created = $this->toTime($ticket->get('created'));
+		$created = in_array('created', $cols, true) ? $this->toTime($ticket->get('created')) : null;
 		if ($created === null) {
 			return $default;
 		}
 
-		$resM = (int)($ticket->get('sla_resolucao_minutos') ?? 0);
-		$respM = (int)($ticket->get('sla_resposta_minutos') ?? 0);
+		$resM = in_array('sla_resolucao_minutos', $cols, true) ? (int)($ticket->get('sla_resolucao_minutos') ?? 0) : 0;
+		$respM = in_array('sla_resposta_minutos', $cols, true) ? (int)($ticket->get('sla_resposta_minutos') ?? 0) : 0;
 		if ($resM <= 0) {
 			return $default;
 		}
 
-		$deadlineRes = $this->toTime($ticket->get('data_limite_resolucao'));
+		$deadlineRes = in_array('data_limite_resolucao', $cols, true)
+			? $this->toTime($ticket->get('data_limite_resolucao'))
+			: null;
 		$deadlineResp = in_array('data_limite_resposta', $cols, true)
 			? $this->toTime($ticket->get('data_limite_resposta'))
 			: null;
@@ -171,15 +175,17 @@ class SlaRecalculationService {
 			return false;
 		}
 
-		if (!empty($ticket->get('sla_resolucao_pausado'))) {
+		$pausedRes = in_array('sla_resolucao_pausado', $cols, true) && !empty($ticket->get('sla_resolucao_pausado'));
+		$pausedResp = in_array('sla_resposta_pausado', $cols, true) && !empty($ticket->get('sla_resposta_pausado'));
+		if ($pausedRes || $pausedResp) {
 			return false;
 		}
 
-		$resM = (int)($ticket->get('sla_resolucao_minutos') ?? 0);
+		$resM = in_array('sla_resolucao_minutos', $cols, true) ? (int)($ticket->get('sla_resolucao_minutos') ?? 0) : 0;
 		if ($resM <= 0) {
 			return false;
 		}
-		$created = $this->toTime($ticket->get('created'));
+		$created = in_array('created', $cols, true) ? $this->toTime($ticket->get('created')) : null;
 		if ($created === null) {
 			return false;
 		}

@@ -17,6 +17,8 @@ import {
   postTransferirTicket,
   postStartTicket,
   postAlterarSituacao,
+  postServicedeskAwaitCliente,
+  postServicedeskEscalateLevel,
   fetchDashboardOperacional,
   getBoot,
   USE_MOCK,
@@ -28,17 +30,20 @@ import {
   ticketHasValidQueueForStart,
   ticketHasValidTecnico,
 } from '../lib/ticketUi';
+import { compareTicketsBySlaUrgency, slaUrgencyBadgeClass, slaUrgencyLabel } from '../lib/slaUi.js';
 import { MOCK_SESSION_TECNICO } from '../data/mockData';
 import TicketsServicedeskInlineRow from '../components/TicketsServicedeskInlineRow.jsx';
 
 const API_ERR_TRANSFER = {
   escalacao_invalida: 'Não foi possível concluir a transferência para a fila indicada.',
   mesma_fila: 'Selecione uma fila diferente da atual.',
-  sem_permissao_transferir_fila: 'Você não está vinculado a esta fila ou seu nível não permite esta ação.',
+  sem_permissao_transferir_fila:
+    'Você precisa estar vinculado à fila deste ticket. Cadastre-se na fila em Filas → Técnicos.',
   tecnico_sem_empresa: 'O técnico informado não pertence à empresa atual.',
   tecnico_fila_obrigatorios:
     'Informe técnico e fila válidos (atribuição na grade, transferência ou escalonamento).',
-  destino_sem_vinculo_fila: 'O técnico de destino não está vinculado à fila indicada.',
+  destino_sem_vinculo_fila:
+    'O técnico selecionado não está vinculado à fila escolhida. Cadastre o técnico na fila em Filas → Técnicos e tente novamente.',
   destino_nivel_incompativel: 'O nível do técnico de destino não cobre essa fila.',
   motivo_obrigatorio: 'Informe o motivo (mín. 3 caracteres).',
   destino_ou_fila_obrigatorio: 'Indique fila de destino e/ou técnico, conforme a opção escolhida.',
@@ -48,7 +53,7 @@ const API_ERR_TRANSFER = {
 
 const API_ERR_START = {
   sem_permissao_fila:
-    'Não é possível assumir: seu usuário precisa estar vinculado à fila deste ticket e ter nível de suporte compatível (ex.: fila N2 → nível N2). Admin: Portal → Filas / técnicos → Editar no seu usuário (filas + nível).',
+    'Não é possível assumir: seu usuário precisa estar vinculado à fila deste ticket (Filas → Técnicos).',
   tecnico_fila_obrigatorios: 'Selecione um técnico e uma fila válidos antes de iniciar o atendimento.',
 };
 
@@ -165,6 +170,22 @@ function StatusDot({ type }) {
   );
 }
 
+function SlaUrgencyCell({ ticket }) {
+  const band = ticket?.sla_urgency_band || 'unknown';
+  const tip = String(ticket?.sla_tooltip || '').trim() || 'SLA';
+  return (
+    <button
+      type="button"
+      className={`${slaUrgencyBadgeClass(band)} max-w-full`}
+      title={tip}
+      aria-label={tip}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {slaUrgencyLabel(band)}
+    </button>
+  );
+}
+
 /**
  * Garante que tickets abertos exponham Iniciar atendimento (quando pendente) e Transferir
  * (sempre). Backend pode esconder conforme flags — UI sempre mostra para alinhar ao mockup.
@@ -238,6 +259,24 @@ function ensureCoreActions(ticket, opts = {}) {
       url: ticket.urls?.edit || '#',
     });
   }
+  const sdAct = ticket.servicedeskActions && typeof ticket.servicedeskActions === 'object' ? ticket.servicedeskActions : {};
+  if (sdAct.canAwaitCliente && !has('aguardcliente')) {
+    list.push({
+      key: 'aguardcliente',
+      label: sdAct.awaitClienteUsesPendenteFallback
+        ? 'Pausar SLA (pendente / aguarda)'
+        : 'Pausar para Aguardando Cliente',
+      behavior: 'reactAwaitCliente',
+      workflowStateId: sdAct.awaitClienteWorkflowStateId != null ? Number(sdAct.awaitClienteWorkflowStateId) : null,
+    });
+  }
+  if (sdAct.canEscalateLevel && !has('subirnivel')) {
+    list.push({
+      key: 'subirnivel',
+      label: 'Subir nível',
+      behavior: 'reactEscalateLevel',
+    });
+  }
   return list;
 }
 
@@ -290,6 +329,18 @@ function ActionMenuIcon({ actionKey }) {
           <path d="M6.72 13.829v-.63A1.125 1.125 0 017.848 12h11.304a1.125 1.125 0 011.128 1.198v.63m-3.75 0v3.375c0 .621-.504 1.125-1.125 1.125H9.375c-.621 0-1.125-.504-1.125-1.125v-3.375m0 0h-.375A1.125 1.125 0 018.25 15.75h7.5c.621 0 1.125.504 1.125 1.125v.375m-12 0h.008v.008H6v-.008zm11.25 0h.008v.008H17.25v-.008z" />
         </svg>
       );
+    case 'aguardcliente':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+      );
+    case 'subirnivel':
+      return (
+        <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
+          <path d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21l3.75-3.75" />
+        </svg>
+      );
     default:
       return (
         <svg className={c} viewBox="0 0 24 24" aria-hidden {...stroke}>
@@ -306,6 +357,8 @@ function actionItemTone(key) {
   if (k === 'resolvido') return 'resolvido';
   if (k === 'cancelar') return 'danger';
   if (k === 'imprimir') return 'imprimir';
+  if (k === 'aguardcliente') return 'pendente';
+  if (k === 'subirnivel') return 'default';
   return 'default';
 }
 
@@ -324,6 +377,8 @@ function TicketActionsMenu({
   startBusyId,
   handleAlterarSituacao,
   statusBusyKey,
+  handleServicedeskAwaitCliente,
+  handleServicedeskEscalateLevel,
 }) {
   const acoesOrd = sortTicketAcoes(acoes || []);
   const [open, setOpen] = useState(false);
@@ -434,6 +489,52 @@ function TicketActionsMenu({
             imprimir: 'text-[#8a5ac2]',
           };
           const iconWrap = `${iconColors[tone] || 'text-[var(--pgm-text-secondary)]'}`;
+          if (a.behavior === 'reactAwaitCliente' && typeof handleServicedeskAwaitCliente === 'function') {
+            const busy = statusBusyKey === `await-${ticket.id}`;
+            const row = (
+              <li key={`${a.key}-${a.label}`} role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`${rowBase} ${tc.pendente}`}
+                  disabled={busy}
+                  onClick={() => {
+                    setOpen(false);
+                    handleServicedeskAwaitCliente(ticket, a);
+                  }}
+                >
+                  <span className="text-[#F39C12]">
+                    <ActionMenuIcon actionKey={a.key} />
+                  </span>
+                  <span className="min-w-0 flex-1 leading-snug">{busy ? 'Aplicando…' : a.label}</span>
+                </button>
+              </li>
+            );
+            return divider ? [divider, row] : [row];
+          }
+          if (a.behavior === 'reactEscalateLevel' && typeof handleServicedeskEscalateLevel === 'function') {
+            const busy = statusBusyKey === `escalate-${ticket.id}`;
+            const row = (
+              <li key={`${a.key}-${a.label}`} role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`${rowBase} ${tc.default}`}
+                  disabled={busy}
+                  onClick={() => {
+                    setOpen(false);
+                    handleServicedeskEscalateLevel(ticket);
+                  }}
+                >
+                  <span className="text-[var(--pgm-text-secondary)]">
+                    <ActionMenuIcon actionKey={a.key} />
+                  </span>
+                  <span className="min-w-0 flex-1 leading-snug">{busy ? 'Escalonando…' : a.label}</span>
+                </button>
+              </li>
+            );
+            return divider ? [divider, row] : [row];
+          }
           if (a.behavior === 'reactTransfer') {
             const row = (
               <li key={`${a.key}-${a.label}`} role="none">
@@ -616,6 +717,7 @@ export default function TechDashboard({ boot }) {
   const [slaDashboardFilter, setSlaDashboardFilter] = useState('all');
   const [q, setQ] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('ativos');
+  const [sortBySlaUrgency, setSortBySlaUrgency] = useState(false);
   const [filaSuporte, setFilaSuporte] = useState('');
   const [nivelAtendimento, setNivelAtendimento] = useState('');
   const [idResponsavel, setIdResponsavel] = useState('');
@@ -631,13 +733,19 @@ export default function TechDashboard({ boot }) {
   const [tecnicosModal, setTecnicosModal] = useState([]);
   const [transferSaving, setTransferSaving] = useState(false);
   const [transferErr, setTransferErr] = useState('');
+  const [transferErrLink, setTransferErrLink] = useState(null);
   const [transferQueuesErr, setTransferQueuesErr] = useState('');
   const [startBusyId, setStartBusyId] = useState(null);
   const [statusBusyKey, setStatusBusyKey] = useState(null);
   const [patchBusyId, setPatchBusyId] = useState(null);
   const [statusInteractionLock, setStatusInteractionLock] = useState({});
   /** Erro por PATCH inline (rollback já aplicado na linha). */
-  const [inlinePatchError, setInlinePatchError] = useState({ id: null, msg: '' });
+  const [inlinePatchError, setInlinePatchError] = useState({
+    id: null,
+    msg: '',
+    linkUrl: null,
+    linkLabel: null,
+  });
   const inlinePatchErrorTimerRef = useRef(null);
   const [transferOkHint, setTransferOkHint] = useState('');
   const [loadError, setLoadError] = useState(null);
@@ -804,7 +912,11 @@ export default function TechDashboard({ boot }) {
         seen.add(t.id);
         return true;
       });
-      base.sort((x, y) => Number(y.id) - Number(x.id));
+      if (sortBySlaUrgency) {
+        base = [...base].sort(compareTicketsBySlaUrgency);
+      } else {
+        base.sort((x, y) => Number(y.id) - Number(x.id));
+      }
     } else {
       const key = GROUP_KEYS[filtroStatus] || 'todos';
       base = groups[key] || [];
@@ -825,7 +937,7 @@ export default function TechDashboard({ boot }) {
         fila.includes(qq)
       );
     });
-  }, [groups, filtroStatus, deferredQ]);
+  }, [groups, filtroStatus, deferredQ, sortBySlaUrgency]);
 
   const mergeTicketInGroups = useCallback((ticketId, newRow) => {
     setGroups((prev) => {
@@ -867,14 +979,28 @@ export default function TechDashboard({ boot }) {
     [startBusyId, patchBusyId, statusInteractionLock],
   );
 
-  const onInlinePatchError = useCallback((ticketId, msg) => {
+  const onInlinePatchError = useCallback((ticketId, detail) => {
     if (inlinePatchErrorTimerRef.current) {
       window.clearTimeout(inlinePatchErrorTimerRef.current);
     }
-    setInlinePatchError({ id: ticketId, msg: String(msg || 'Erro') });
+    if (typeof detail === 'string') {
+      setInlinePatchError({
+        id: ticketId,
+        msg: String(detail || 'Erro'),
+        linkUrl: null,
+        linkLabel: null,
+      });
+    } else {
+      setInlinePatchError({
+        id: ticketId,
+        msg: String(detail?.msg || 'Erro'),
+        linkUrl: detail?.linkUrl || null,
+        linkLabel: detail?.linkLabel || null,
+      });
+    }
     inlinePatchErrorTimerRef.current = window.setTimeout(() => {
       inlinePatchErrorTimerRef.current = null;
-      setInlinePatchError({ id: null, msg: '' });
+      setInlinePatchError({ id: null, msg: '', linkUrl: null, linkLabel: null });
     }, 6000);
   }, []);
 
@@ -905,6 +1031,7 @@ export default function TechDashboard({ boot }) {
     setTransferMotivo('');
     setTransferFila(wfEnabled ? ticket.filaSuporte || 'n1' : '');
     setTransferErr('');
+    setTransferErrLink(null);
     setTransferQueuesErr('');
     setTransferQueues([]);
     setTransferQueueId('');
@@ -938,14 +1065,17 @@ export default function TechDashboard({ boot }) {
     const dest = Number(transferDest);
     if (transferMotivo.trim().length < 3) {
       setTransferErr('Informe o motivo da transferência (mín. 3 caracteres).');
+      setTransferErrLink(null);
       return;
     }
     setTransferSaving(true);
     setTransferErr('');
+    setTransferErrLink(null);
     const qid = Number(transferQueueId) || 0;
     if (transferAssignMode !== 'com') {
       setTransferSaving(false);
       setTransferErr('Escalonamento manual exige técnico e fila de destino válidos.');
+      setTransferErrLink(null);
       return;
     }
     let payload;
@@ -953,11 +1083,13 @@ export default function TechDashboard({ boot }) {
       if (!qid) {
         setTransferSaving(false);
         setTransferErr('Selecione a fila de destino.');
+        setTransferErrLink(null);
         return;
       }
       if (!dest) {
         setTransferSaving(false);
         setTransferErr('Selecione o técnico de destino.');
+        setTransferErrLink(null);
         return;
       }
       payload = { iduser_destino: dest, queue_id: qid, motivo: transferMotivo.trim() };
@@ -967,11 +1099,13 @@ export default function TechDashboard({ boot }) {
         if (!dest) {
           setTransferSaving(false);
           setTransferErr('Selecione o técnico de destino.');
+          setTransferErrLink(null);
           return;
         }
         if (!fc || fc === '-') {
           setTransferSaving(false);
           setTransferErr('Selecione uma fila válida.');
+          setTransferErrLink(null);
           return;
         }
         payload = {
@@ -985,6 +1119,7 @@ export default function TechDashboard({ boot }) {
         if (!dest) {
           setTransferSaving(false);
           setTransferErr('Selecione o técnico de destino.');
+          setTransferErrLink(null);
           return;
         }
         payload = {
@@ -997,9 +1132,24 @@ export default function TechDashboard({ boot }) {
     setTransferSaving(false);
     if (!r.ok) {
       const code = r.error;
-      setTransferErr(API_ERR_TRANSFER[code] || code || 'Falha ao transferir.');
+      let msg = API_ERR_TRANSFER[code] || r.message || code || 'Falha ao transferir.';
+      if (code === 'destino_sem_vinculo_fila') {
+        if (r.message && String(r.message).trim() !== '') {
+          msg = String(r.message).trim();
+        }
+        if (r.queue_name && !msg.includes(String(r.queue_name))) {
+          msg += ` Fila: ${r.queue_name}.`;
+        }
+        setTransferErr(msg);
+        const href = effectiveBoot?.paths?.queuesAdmin;
+        setTransferErrLink(href ? { href, label: 'Abrir Filas / técnicos' } : null);
+      } else {
+        setTransferErr(msg);
+        setTransferErrLink(null);
+      }
       return;
     }
+    setTransferErrLink(null);
     setTransferOpen(false);
     setTransferOkHint('Transferência registrada.');
     window.setTimeout(() => setTransferOkHint(''), 4000);
@@ -1057,6 +1207,54 @@ export default function TechDashboard({ boot }) {
     }
   };
 
+  const handleServicedeskAwaitCliente = async (ticket, action) => {
+    const id = Number(ticket.id);
+    if (isTicketStatusInteractionLocked(id)) return;
+    setStatusBusyKey(`await-${id}`);
+    try {
+      const body =
+        action && action.workflowStateId != null && Number(action.workflowStateId) > 0
+          ? { workflow_state_id: Number(action.workflowStateId) }
+          : {};
+      const r = await postServicedeskAwaitCliente(id, body);
+      if (!r.ok) {
+        window.alert(r.message || r.error || 'Não foi possível pausar para aguardando cliente.');
+        return;
+      }
+      if (r.ticket) mergeTicketInGroups(id, r.ticket);
+      lockTicketStatusInteraction(id, 900);
+      setTransferOkHint('Ticket em espera; SLA pausado quando aplicável.');
+      window.setTimeout(() => setTransferOkHint(''), 4000);
+      if (!r.ticket) await reload();
+    } finally {
+      setStatusBusyKey(null);
+    }
+  };
+
+  const handleServicedeskEscalateLevel = async (ticket) => {
+    const id = Number(ticket.id);
+    if (isTicketStatusInteractionLocked(id)) return;
+    const ok = window.confirm(
+      'Subir nível (N1→N2 ou N2→N3)? O ticket volta para pendente sem técnico responsável na fila de destino.',
+    );
+    if (!ok) return;
+    setStatusBusyKey(`escalate-${id}`);
+    try {
+      const r = await postServicedeskEscalateLevel(id, { motivo: 'Escalonamento de nível (Service Desk)' });
+      if (!r.ok) {
+        window.alert(r.message || r.error || 'Não foi possível escalar o nível.');
+        return;
+      }
+      if (r.ticket) mergeTicketInGroups(id, r.ticket);
+      lockTicketStatusInteraction(id, 900);
+      setTransferOkHint('Nível escalonado; ticket na fila de destino.');
+      window.setTimeout(() => setTransferOkHint(''), 4000);
+      if (!r.ticket) await reload();
+    } finally {
+      setStatusBusyKey(null);
+    }
+  };
+
   const handleAlterarSituacao = async (ticket, req) => {
     const id = Number(ticket.id);
     if (isTicketStatusInteractionLocked(id)) {
@@ -1095,7 +1293,7 @@ export default function TechDashboard({ boot }) {
   };
 
   const colCount = useMemo(() => {
-    let n = wfEnabled ? 10 : 8;
+    let n = wfEnabled ? 11 : 9;
     if (inlineAssignment) {
       n += 2;
     }
@@ -1264,7 +1462,18 @@ export default function TechDashboard({ boot }) {
           role="alert"
         >
           <span className="font-semibold">Ticket #{inlinePatchError.id}: </span>
-          {inlinePatchError.msg}
+          <span>{inlinePatchError.msg}</span>
+          {inlinePatchError.linkUrl ? (
+            <>
+              {' '}
+              <a
+                href={inlinePatchError.linkUrl}
+                className="font-semibold text-[var(--pgm-primary-hover)] underline"
+              >
+                {inlinePatchError.linkLabel || 'Abrir gestão de filas'}
+              </a>
+            </>
+          ) : null}
         </div>
       ) : null}
       {!embedded ? (
@@ -1294,6 +1503,17 @@ export default function TechDashboard({ boot }) {
               <option value="resolvido">Resolvidos</option>
               <option value="fechados">Cancelados / fechados</option>
             </select>
+            {filtroStatus === 'ativos' ? (
+              <label className="flex cursor-pointer items-center gap-2 whitespace-nowrap text-[0.78rem] text-[var(--pgm-text-secondary)]">
+                <input
+                  type="checkbox"
+                  className="rounded border-[var(--pgm-border)]"
+                  checked={sortBySlaUrgency}
+                  onChange={(e) => setSortBySlaUrgency(e.target.checked)}
+                />
+                Ordenar por urgência SLA
+              </label>
+            ) : null}
           </div>
         </div>
       ) : wfEnabled ? (
@@ -1331,6 +1551,17 @@ export default function TechDashboard({ boot }) {
             <option value="resolvido">Resolvidos</option>
             <option value="fechados">Cancelados / fechados</option>
           </select>
+          {filtroStatus === 'ativos' ? (
+            <label className="flex cursor-pointer items-center gap-2 whitespace-nowrap text-xs text-[var(--pgm-text-secondary)]">
+              <input
+                type="checkbox"
+                className="rounded border-[var(--pgm-border)]"
+                checked={sortBySlaUrgency}
+                onChange={(e) => setSortBySlaUrgency(e.target.checked)}
+              />
+              Urgência SLA
+            </label>
+          ) : null}
           <select
             id="sd-wf-fila"
             value={filaSuporte}
@@ -1409,6 +1640,17 @@ export default function TechDashboard({ boot }) {
             <option value="resolvido">Resolvidos</option>
             <option value="fechados">Cancelados / fechados</option>
           </select>
+          {filtroStatus === 'ativos' ? (
+            <label className="flex cursor-pointer items-center gap-2 whitespace-nowrap text-xs text-[var(--pgm-text-secondary)]">
+              <input
+                type="checkbox"
+                className="rounded border-[var(--pgm-border)]"
+                checked={sortBySlaUrgency}
+                onChange={(e) => setSortBySlaUrgency(e.target.checked)}
+              />
+              Urgência SLA
+            </label>
+          ) : null}
         </div>
       )}
 
@@ -1500,6 +1742,11 @@ export default function TechDashboard({ boot }) {
                   className={`${techFilaThSticky} min-w-[8rem] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)] sm:min-w-[10rem]`}
                 >
                   Assunto
+                </th>
+                <th
+                  className={`${techFilaThSticky} w-[4.75rem] min-w-[4.75rem] px-2 py-2 text-center text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-[var(--pgm-text-muted)]`}
+                >
+                  SLA
                 </th>
                 {inlineAssignment ? (
                   <th
@@ -1629,6 +1876,9 @@ export default function TechDashboard({ boot }) {
                           </div>
                         ) : null}
                       </td>
+                      <td className="w-[4.75rem] min-w-[4.75rem] px-2 py-2 text-center align-middle">
+                        <SlaUrgencyCell ticket={ticket} />
+                      </td>
                       {inlineAssignment ? (
                         <TicketsServicedeskInlineRow
                           ticket={ticket}
@@ -1644,6 +1894,7 @@ export default function TechDashboard({ boot }) {
                           setPatchBusyId={setPatchBusyId}
                           statusInteractionLocked={isTicketStatusInteractionLocked(ticket.id)}
                           onPatchError={onInlinePatchError}
+                          queuesAdminUrl={effectiveBoot?.paths?.queuesAdmin || ''}
                         />
                       ) : (
                         <>
@@ -1705,6 +1956,8 @@ export default function TechDashboard({ boot }) {
                           startBusyId={startBusyId}
                           handleAlterarSituacao={handleAlterarSituacao}
                           statusBusyKey={statusBusyKey}
+                          handleServicedeskAwaitCliente={handleServicedeskAwaitCliente}
+                          handleServicedeskEscalateLevel={handleServicedeskEscalateLevel}
                         />
                       </td>
                     </tr>
@@ -1892,7 +2145,21 @@ export default function TechDashboard({ boot }) {
                   placeholder="Ex.: Escalação para N2 — necessidade de visita presencial."
                 />
               </label>
-              {transferErr ? <p className="text-sm text-[var(--pgm-badge-red-text,#ff9492)]">{transferErr}</p> : null}
+              {transferErr ? (
+                <div className="space-y-1 text-sm text-[var(--pgm-badge-red-text,#ff9492)]">
+                  <p>{transferErr}</p>
+                  {transferErrLink?.href ? (
+                    <p>
+                      <a
+                        href={transferErrLink.href}
+                        className="font-semibold text-[var(--pgm-primary-hover)] underline"
+                      >
+                        {transferErrLink.label || 'Abrir Filas / técnicos'}
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
             <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--pgm-border-subtle)] px-5 py-4">
               <button

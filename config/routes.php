@@ -353,6 +353,20 @@ Router::scope("/", function ($routes) {
         ->setMethods(["POST"]);
     $routes
         ->connect(
+            "/tickets/api-servicedesk-await-cliente/*",
+            ["controller" => "Tickets", "action" => "apiServicedeskAwaitCliente"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
+            "/tickets/api-servicedesk-escalate-level/*",
+            ["controller" => "Tickets", "action" => "apiServicedeskEscalateLevel"],
+            ["pass" => ["idticket"]],
+        )
+        ->setMethods(["POST"]);
+    $routes
+        ->connect(
             "/tickets/:id/assignment",
             ["controller" => "Tickets", "action" => "apiPatchAssignment"],
             ["pass" => ["id"], "id" => "\d+"],

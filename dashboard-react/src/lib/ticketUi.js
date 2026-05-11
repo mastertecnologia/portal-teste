@@ -239,7 +239,17 @@ export function acaoLinkClassName(key, embed = false, servicedesk = false) {
 }
 
 /** Mesma ordem visual para qualquer status (como na fila “Em execução”). */
-const ACAO_ORDER = ['iniciar', 'pendente', 'emandamento', 'resolvido', 'transferir', 'cancelar', 'imprimir'];
+const ACAO_ORDER = [
+  'iniciar',
+  'aguardcliente',
+  'subirnivel',
+  'pendente',
+  'emandamento',
+  'resolvido',
+  'transferir',
+  'cancelar',
+  'imprimir',
+];
 
 export function sortTicketAcoes(acoes) {
   if (!Array.isArray(acoes) || acoes.length === 0) return [];

@@ -100,6 +100,20 @@ function mockTicketToTechRow(t) {
     solicitacaoPreview: (t.descricao || '').slice(0, 120),
     urls: { edit: `#/mock-ticket/${t.id}` },
     acoes,
+    sla_status: 'dentro_sla',
+    sla_percentual_consumido: 12,
+    sla_resolucao_pausado: false,
+    data_limite_resolucao_iso: new Date(Date.now() + 3600000).toISOString(),
+    sla_remaining_minutes: 60,
+    sla_urgency_band: 'ok',
+    sla_tooltip: 'SLA dentro do esperado (mock).',
+    servicedeskActions: {
+      canAwaitCliente: true,
+      awaitClienteWorkflowStateId: 99,
+      awaitClienteUsesPendenteFallback: false,
+      canEscalateLevel: true,
+      escalateTargetFilaCode: 'n2',
+    },
   };
 }
 
@@ -329,6 +343,7 @@ export async function patchTicketAssignment(ticketId, payload) {
       ok: false,
       error: (json && json.error) || r.statusText,
       message: patchTicketsErrorMessage(r, json),
+      queue_name: json && typeof json.queue_name === 'string' ? json.queue_name : undefined,
       ticket: null,
     };
   }
@@ -399,6 +414,89 @@ export async function patchTicketStatus(ticketId, body, meta = {}) {
     situacaoLabel: json.situacaoLabel,
     ticket: json.ticket || null,
   };
+}
+
+/** POST: transição de workflow + pausa de SLA (aguardando cliente). */
+export async function postServicedeskAwaitCliente(ticketId, body = {}) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 60));
+    return {
+      ok: true,
+      ticket: {
+        id: Number(ticketId),
+        sla_urgency_band: 'paused',
+        sla_status: 'dentro_sla',
+        sla_tooltip: 'SLA pausado (mock).',
+        servicedeskActions: { canAwaitCliente: false, canEscalateLevel: true, escalateTargetFilaCode: 'n2' },
+      },
+    };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiServicedeskAwaitCliente;
+  if (!base) return { ok: false, error: 'no_api', message: 'API indisponível', ticket: null };
+  const url = `${base}${encodeURIComponent(String(ticketId))}`;
+  const r = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body && typeof body === 'object' ? body : {}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      ticket: null,
+    };
+  }
+  return { ok: true, ticket: json.ticket || null };
+}
+
+/** POST: escalonamento N1→N2 ou N2→N3 (fila + pendente). */
+export async function postServicedeskEscalateLevel(ticketId, body = {}) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 60));
+    return {
+      ok: true,
+      ticket: {
+        id: Number(ticketId),
+        filaSuporte: 'n2',
+        nivelAtendimento: 2,
+        servicedeskActions: { canAwaitCliente: false, canEscalateLevel: true, escalateTargetFilaCode: 'n3' },
+      },
+    };
+  }
+  const boot = getBoot();
+  const base = boot?.paths?.apiServicedeskEscalateLevel;
+  if (!base) return { ok: false, error: 'no_api', message: 'API indisponível', ticket: null };
+  const url = `${base}${encodeURIComponent(String(ticketId))}`;
+  const r = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body && typeof body === 'object' ? body : {}),
+  });
+  let json = {};
+  try {
+    json = await r.json();
+  } catch (_) {
+    /* ignore */
+  }
+  if (!r.ok || !json.ok) {
+    return {
+      ok: false,
+      error: (json && json.error) || r.statusText,
+      message: patchTicketsErrorMessage(r, json),
+      ticket: null,
+    };
+  }
+  return { ok: true, ticket: json.ticket || null };
 }
 
 export async function patchTicketPriority(ticketId, body) {
@@ -507,8 +605,22 @@ export async function postTransferirTicket(ticketId, payload) {
   } catch (_) {
     /* ignore */
   }
-  if (!r.ok) return { ok: false, error: json.error || r.statusText };
-  if (!json.ok) return { ok: false, error: json.error || 'erro' };
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: json.error || r.statusText,
+      message: typeof json.message === 'string' ? json.message : undefined,
+      queue_name: typeof json.queue_name === 'string' ? json.queue_name : undefined,
+    };
+  }
+  if (!json.ok) {
+    return {
+      ok: false,
+      error: json.error || 'erro',
+      message: typeof json.message === 'string' ? json.message : undefined,
+      queue_name: typeof json.queue_name === 'string' ? json.queue_name : undefined,
+    };
+  }
   return { ok: true };
 }
 

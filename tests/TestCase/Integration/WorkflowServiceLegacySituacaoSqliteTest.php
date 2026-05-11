@@ -66,6 +66,13 @@ class WorkflowServiceLegacySituacaoSqliteTest extends TestCase {
 			'is_final' => 0,
 			'is_inicial' => 0,
 		]);
+		self::$conn->insert('workflow_states', [
+			'id' => 4,
+			'codigo' => 'aguardando_cliente',
+			'nome' => 'Aguardando Cliente',
+			'is_final' => 0,
+			'is_inicial' => 0,
+		]);
 		TableRegistry::clear();
 	}
 
@@ -79,6 +86,12 @@ class WorkflowServiceLegacySituacaoSqliteTest extends TestCase {
 		$tickets = TableRegistry::get('Tickets', ['table' => 'tickets']);
 		$w = new WorkflowService($tickets);
 		$this->assertSame((int)C_TicketSituacaoEmandamento, $w->legacySituacaoForWorkflowStateId(2));
+	}
+
+	public function testLegacyAguardandoClienteMapsToPendente(): void {
+		$tickets = TableRegistry::get('Tickets', ['table' => 'tickets']);
+		$w = new WorkflowService($tickets);
+		$this->assertSame((int)C_TicketSituacaoPendente, $w->legacySituacaoForWorkflowStateId(4));
 	}
 
 	public function testLegacyUnknownIdReturnsNull(): void {

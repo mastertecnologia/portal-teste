@@ -53,6 +53,23 @@ function rowSnapshot(ticket) {
   return { ...ticket };
 }
 
+/** Erro destino_sem_vinculo_fila: texto acionável + link opcional para Filas / técnicos. */
+function buildAssignmentDestinoSemVinculoDetail(r, queuesAdminUrl) {
+  let msg = (r.message && String(r.message).trim()) || '';
+  if (!msg) {
+    msg =
+      'O técnico selecionado não está vinculado à fila escolhida. Cadastre o técnico na fila em Filas → Técnicos e tente novamente.';
+  }
+  if (r.queue_name && !msg.includes(String(r.queue_name))) {
+    msg += ` Fila: ${r.queue_name}.`;
+  }
+  return {
+    msg,
+    linkUrl: queuesAdminUrl || null,
+    linkLabel: queuesAdminUrl ? 'Abrir Filas / técnicos' : null,
+  };
+}
+
 function workflowStateForUi(state) {
   if (!state) return null;
   const id = Number(state.id);
@@ -86,6 +103,7 @@ export default function TicketsServicedeskInlineRow({
   setPatchBusyId,
   statusInteractionLocked = false,
   onPatchError,
+  queuesAdminUrl = '',
 }) {
   const busy = Number(patchBusyId) === Number(ticket.id) || Boolean(statusInteractionLocked);
   const tid = (() => {
@@ -192,8 +210,16 @@ export default function TicketsServicedeskInlineRow({
   );
 
   const fail = useCallback(
-    (msg) => {
-      onPatchError?.(Number(ticket.id), msg || 'Falha ao salvar');
+    (detail) => {
+      if (typeof detail === 'string') {
+        onPatchError?.(Number(ticket.id), detail || 'Falha ao salvar');
+        return;
+      }
+      onPatchError?.(Number(ticket.id), {
+        msg: String(detail?.msg || 'Falha ao salvar'),
+        linkUrl: detail?.linkUrl || null,
+        linkLabel: detail?.linkLabel || null,
+      });
     },
     [onPatchError, ticket.id],
   );
@@ -407,7 +433,11 @@ export default function TicketsServicedeskInlineRow({
         const r = await patchTicketAssignment(ticket.id, body);
         if (!r.ok) {
           onMergeTicket(ticket.id, snap);
-          fail(r.message || r.error);
+          if (r.error === 'destino_sem_vinculo_fila') {
+            fail(buildAssignmentDestinoSemVinculoDetail(r, queuesAdminUrl));
+          } else {
+            fail(r.message || r.error);
+          }
           return;
         }
         if (r.ticket) onMergeTicket(ticket.id, r.ticket);
@@ -451,7 +481,11 @@ export default function TicketsServicedeskInlineRow({
       });
       if (!r.ok) {
         onMergeTicket(ticket.id, snap);
-        fail(r.message || r.error);
+        if (r.error === 'destino_sem_vinculo_fila') {
+          fail(buildAssignmentDestinoSemVinculoDetail(r, queuesAdminUrl));
+        } else {
+          fail(r.message || r.error);
+        }
         return;
       }
       setPendingTecnicoId(null);
@@ -604,23 +638,33 @@ export default function TicketsServicedeskInlineRow({
           </td>
           <td className="max-w-[9rem] px-2 py-2">
             {queuesRelacional ? (
-              <select
-                className={selectClass(filaSelectDisabledRelacional)}
-                value={filaSelectValueRelacional}
-                onChange={onFila}
-                disabled={filaSelectDisabledRelacional}
-                title={filaSelectTitleRelacional}
-                aria-label={`Fila ticket ${ticket.id}`}
-              >
-                <option value="">
-                  {mandanteTecId <= 0 ? 'Técnico…' : queuesLoading ? 'Carregando…' : 'Fila…'}
-                </option>
-                {queueOptions.map((q) => (
-                  <option key={String(q.id)} value={String(q.id)}>
-                    {q.label}
+              <div className="flex min-w-0 flex-col gap-1">
+                <select
+                  className={selectClass(filaSelectDisabledRelacional)}
+                  value={filaSelectValueRelacional}
+                  onChange={onFila}
+                  disabled={filaSelectDisabledRelacional}
+                  title={filaSelectTitleRelacional}
+                  aria-label={`Fila ticket ${ticket.id}`}
+                >
+                  <option value="">
+                    {mandanteTecId <= 0 ? 'Técnico…' : queuesLoading ? 'Carregando…' : 'Fila…'}
                   </option>
-                ))}
-              </select>
+                  {queueOptions.map((q) => (
+                    <option key={String(q.id)} value={String(q.id)}>
+                      {q.label}
+                    </option>
+                  ))}
+                </select>
+                {pendingTecnicoId !== null ? (
+                  <span
+                    className="rounded border border-[var(--pgm-border-subtle)] bg-[color-mix(in_srgb,var(--pgm-badge-amber-ring)_12%,transparent)] px-1.5 py-0.5 text-[9px] font-medium leading-snug text-[var(--pgm-text-secondary)]"
+                    role="status"
+                  >
+                    Técnico escolhido — falta confirmar fila. Escolha uma fila para gravar.
+                  </span>
+                ) : null}
+              </div>
             ) : (
               <span className="line-clamp-2 text-[0.75rem] text-[var(--pgm-text-muted)]">{ticket.filaLabel || '—'}</span>
             )}
