@@ -208,6 +208,8 @@ class AppController extends Controller
             "loginAction" => [
                 "controller" => "Users",
                 "action" => "login",
+                // Sem isto, pedidos sob prefixo (ex.: api/laudos) geram URL de login com o mesmo prefixo e o Router falha.
+                "prefix" => false,
             ],
             "authenticate" => [
                 "Form" => [
@@ -228,6 +230,7 @@ class AppController extends Controller
             "logoutRedirect" => [
                 "controller" => "Users",
                 "action" => "login",
+                "prefix" => false,
             ],
             "authError" => false,
         ]);
