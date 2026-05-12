@@ -27,6 +27,7 @@ class LaudosController extends AppController
         $this->set('topbarCurrentLabel', 'Pareceres Técnicos');
         $this->set('reactBoot', [
             'screen' => 'laudos_list',
+            'webroot' => $this->request->getAttribute('webroot'),
         ]);
         $this->viewBuilder()->setTemplate('react_app');
     }
@@ -49,6 +50,7 @@ class LaudosController extends AppController
         $this->set('reactBoot', [
             'screen' => 'laudos_edit',
             'parecerId' => (int)$id,
+            'webroot' => $this->request->getAttribute('webroot'),
         ]);
         $this->viewBuilder()->setTemplate('react_app');
     }

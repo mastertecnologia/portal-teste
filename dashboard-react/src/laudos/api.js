@@ -1,8 +1,28 @@
 /**
  * API client do módulo Laudos — usa axios com credenciais de sessão CakePHP.
  * Usa o mesmo padrão de http do projeto (withCredentials + X-Requested-With).
+ * Com APP_BASE=/portal, `window.__TICKETS_BOOT__.webroot` (definido no react_app.ctp) evita pedidos a /api em vez de /portal/api.
  */
 import axios from 'axios';
+
+/** @returns {string} ex.: "/" ou "/portal/" */
+function pgmWebrootPrefix() {
+  if (typeof window === 'undefined') {
+    return '/';
+  }
+  const w = window.__TICKETS_BOOT__?.webroot;
+  if (typeof w !== 'string' || w === '') {
+    return '/';
+  }
+  return w.endsWith('/') ? w : `${w}/`;
+}
+
+/** @returns {string} ex.: "/api" ou "/portal/api" */
+function pgmLaudosApiBase() {
+  const root = pgmWebrootPrefix();
+  const trimmed = root === '/' ? '' : root.replace(/\/+$/, '');
+  return `${trimmed}/api`;
+}
 
 const api = axios.create({
   baseURL: '/api',
@@ -14,11 +34,16 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  config.baseURL = pgmLaudosApiBase();
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/users/login';
+      window.location.href = `${pgmWebrootPrefix()}users/login`;
       return Promise.reject(error);
     }
     const msg =
@@ -40,7 +65,7 @@ export const PareceresAPI = {
   duplicate(id) { return api.post(`/laudos/pareceres/${id}/duplicar`); },
   changeStatus(id, status) { return api.post(`/laudos/pareceres/${id}/status`, { status }); },
   history(id) { return api.get(`/laudos/pareceres/${id}/historico`); },
-  pdfUrl(id) { return `/api/laudos/pareceres/${id}/pdf`; },
+  pdfUrl(id) { return `${pgmLaudosApiBase()}/laudos/pareceres/${id}/pdf`; },
   sendEmail(id, payload) { return api.post(`/laudos/pareceres/${id}/enviar-email`, payload); },
 };
 
@@ -75,7 +100,7 @@ export const AnexosAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  downloadUrl(id) { return `/api/laudos/anexos/${id}/download`; },
+  downloadUrl(id) { return `${pgmLaudosApiBase()}/laudos/anexos/${id}/download`; },
   remove(id) { return api.delete(`/laudos/anexos/${id}`); },
 };
 
@@ -115,7 +140,8 @@ export const TemplatesAPI = {
 // ---- Clientes (busca JSON via LaudosController) ----
 export const ClientesAPI = {
   search(query) {
-    return axios.get('/laudos/clientes-buscar', {
+    const path = `${pgmWebrootPrefix()}laudos/clientes-buscar`;
+    return axios.get(path, {
       params: { q: query },
       withCredentials: true,
       headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
