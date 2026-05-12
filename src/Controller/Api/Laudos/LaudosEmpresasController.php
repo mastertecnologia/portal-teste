@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Laudos;
 
-use App\Controller\AppController;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
@@ -11,7 +10,7 @@ use Cake\Http\Exception\NotFoundException;
 /**
  * Dados da empresa emissora (tabela laudos_empresas), alinhada ao idempresa da sessão.
  */
-class LaudosEmpresasController extends AppController
+class LaudosEmpresasController extends LaudosApiController
 {
     private const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 

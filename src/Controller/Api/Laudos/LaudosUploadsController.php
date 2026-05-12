@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Laudos;
 
-use App\Controller\AppController;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 
-class LaudosUploadsController extends AppController
+class LaudosUploadsController extends LaudosApiController
 {
     private const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     private const ALLOWED_DOC_MIMES = [

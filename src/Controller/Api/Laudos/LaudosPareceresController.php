@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Laudos;
 
-use App\Controller\AppController;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
@@ -14,7 +13,7 @@ use Cake\I18n\FrozenDate;
  * Rotas montadas sob /api/laudos/pareceres
  * Auth: usa o componente Auth padrão do sistema (CakePHP 3).
  */
-class LaudosPareceresController extends AppController
+class LaudosPareceresController extends LaudosApiController
 {
     public function initialize(): void
     {

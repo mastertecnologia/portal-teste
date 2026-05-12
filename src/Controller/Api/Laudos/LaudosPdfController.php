@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Laudos;
 
-use App\Controller\AppController;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Mailer\Email;
@@ -13,7 +12,7 @@ use Cake\View\View;
  * Geração de PDF e envio de e-mail para pareceres.
  * Usa mPDF (mpdf/mpdf ^8.2) já presente no projeto.
  */
-class LaudosPdfController extends AppController
+class LaudosPdfController extends LaudosApiController
 {
     public function initialize(): void
     {

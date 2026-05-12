@@ -3,11 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Laudos;
 
-use App\Controller\AppController;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Exception\ForbiddenException;
 
-class LaudosProdutosController extends AppController
+class LaudosProdutosController extends LaudosApiController
 {
     public function initialize(): void
     {

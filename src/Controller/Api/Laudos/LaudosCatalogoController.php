@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Laudos;
 
-use App\Controller\AppController;
-
-class LaudosCatalogoController extends AppController
+class LaudosCatalogoController extends LaudosApiController
 {
     public function initialize(): void
     {
