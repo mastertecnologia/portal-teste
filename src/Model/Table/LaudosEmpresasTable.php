@@ -83,7 +83,7 @@ class LaudosEmpresasTable extends Table
             'site' => $this->truncateNullable($emp->site ?? null, 150),
         ], ['validate' => false]);
 
-        $row->set('id', $portalEmpresaId, false);
+        $row->set('id', $portalEmpresaId, ['guard' => false]);
         $row->isNew(true);
 
         try {
