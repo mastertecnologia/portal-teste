@@ -21,6 +21,24 @@ $fmtDate = function($d) {
     $s = is_object($d) ? $d->format('d/m/Y') : date('d/m/Y', strtotime((string)$d));
     return $s;
 };
+
+/** Caminho relativo seguro sob uploads/laudos/ (evita .. e prefixos externos). */
+$laudosUploadsFs = function (?string $relative): ?string {
+    if ($relative === null || $relative === '') {
+        return null;
+    }
+    $relative = str_replace('\\', '/', trim($relative));
+    if ($relative === '' || strpos($relative, '..') !== false) {
+        return null;
+    }
+    $prefix = 'uploads/laudos/';
+    if (strpos($relative, $prefix) !== 0) {
+        return null;
+    }
+    $fs = WWW_ROOT . str_replace('/', DS, $relative);
+
+    return is_file($fs) ? $fs : null;
+};
 ?><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -79,7 +97,19 @@ $fmtDate = function($d) {
 <body>
 
 <!-- Cabeçalho -->
+<?php
+$logoFs = ($empresa && !empty($empresa->logo_path)) ? $laudosUploadsFs($empresa->logo_path) : null;
+$logoOk = $logoFs !== null && $logoFs !== '';
+$carimboFs = ($empresa && !empty($empresa->carimbo_path)) ? $laudosUploadsFs($empresa->carimbo_path) : null;
+$carimboOk = $carimboFs !== null && $carimboFs !== '';
+?>
 <div class="header">
+  <div style="display:flex;gap:12px;align-items:flex-start;flex:1">
+    <?php if ($logoOk): ?>
+    <div style="flex-shrink:0">
+      <img src="<?= h($logoFs) ?>" alt="Logo" style="max-height:52px;max-width:140px;object-fit:contain">
+    </div>
+    <?php endif; ?>
   <div class="header-empresa">
     <?php if ($empresa): ?>
       <div class="nome"><?= h($empresa->razao_social) ?></div>
@@ -87,6 +117,7 @@ $fmtDate = function($d) {
       <div><?= h($empresa->endereco) ?></div>
       <div><?= h($empresa->telefone) ?> | <?= h($empresa->email) ?></div>
     <?php endif; ?>
+  </div>
   </div>
   <div class="numero-box">
     <div class="numero"><?= h($parecer->numero) ?></div>
@@ -177,10 +208,10 @@ $fmtDate = function($d) {
     <div style="margin-top:8px">
       <?php foreach ($produto->laudos_produto_imagens as $img): ?>
         <?php
-          $imgPath = WWW_ROOT . str_replace('/', DS, $img->file_path);
-          if (file_exists($imgPath)):
+          $imgPath = $laudosUploadsFs($img->file_path ?? '');
+          if ($imgPath !== null):
         ?>
-        <img class="produto-img" src="<?= $imgPath ?>" alt="Foto do equipamento">
+        <img class="produto-img" src="<?= h($imgPath) ?>" alt="Foto do equipamento">
         <?php endif; ?>
       <?php endforeach; ?>
     </div>
@@ -284,13 +315,22 @@ $fmtDate = function($d) {
   <?php endif; ?>
 
   <div class="assinatura-area" style="float:left">
+    <?php if ($carimboOk): ?>
+    <div style="margin-bottom:10px">
+      <img src="<?= h($carimboFs) ?>" alt="Carimbo" style="max-height:72px;max-width:200px;object-fit:contain">
+    </div>
+    <?php endif; ?>
     <?php if ($parecer->assinatura_path): ?>
       <?php
-      $sigPath = WWW_ROOT . str_replace('/', DS, $parecer->assinatura_path);
-      if (file_exists($sigPath)):
-      ?>
-      <img src="<?= $sigPath ?>" style="height:60px;margin-bottom:8px" alt="Assinatura">
-      <?php endif; ?>
+      $sigRaw = (string)$parecer->assinatura_path;
+      if (strpos($sigRaw, 'data:image/') === 0): ?>
+      <img src="<?= h($sigRaw) ?>" style="height:60px;margin-bottom:8px" alt="Assinatura">
+      <?php else:
+      $sigFs = $laudosUploadsFs($sigRaw);
+      if ($sigFs !== null): ?>
+      <img src="<?= h($sigFs) ?>" style="height:60px;margin-bottom:8px" alt="Assinatura">
+      <?php endif;
+      endif; ?>
     <?php endif; ?>
     <div class="assinatura-linha"></div>
     <div style="font-size:9.5pt"><?= h($parecer->tecnico_nome ?: 'Técnico Responsável') ?></div>

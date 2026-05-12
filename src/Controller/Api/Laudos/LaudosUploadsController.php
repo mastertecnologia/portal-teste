@@ -5,6 +5,7 @@ namespace App\Controller\Api\Laudos;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\BadRequestException;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 
 class LaudosUploadsController extends AppController
@@ -30,6 +31,19 @@ class LaudosUploadsController extends AppController
         $this->viewBuilder()->setClassName('Json');
     }
 
+    protected function getEmpresaId(): int
+    {
+        return (int)($this->Auth->user('idempresa') ?? 1);
+    }
+
+    protected function assertParecerEmpresa(int $parecerId): void
+    {
+        $parecer = $this->LaudosPareceres->get($parecerId);
+        if ((int)$parecer->empresa_id !== $this->getEmpresaId()) {
+            throw new ForbiddenException('Sem permissão para este parecer');
+        }
+    }
+
     /**
      * POST /api/laudos/produto-imagens
      * Form-data: produto_id, file
@@ -46,6 +60,8 @@ class LaudosUploadsController extends AppController
         }
 
         $produto = $this->LaudosProdutos->get($produtoId, ['contain' => ['LaudosPareceres']]);
+
+        $this->assertParecerEmpresa((int)$produto->laudos_parecer->id);
 
         $mime = $file->getClientMediaType();
         if (!in_array($mime, self::ALLOWED_IMAGE_MIMES, true)) {
@@ -105,7 +121,8 @@ class LaudosUploadsController extends AppController
     {
         $this->request->allowMethod('DELETE');
 
-        $imagem = $this->LaudosProdutoImagens->get((int)$id, ['contain' => ['LaudosProdutos']]);
+        $imagem = $this->LaudosProdutoImagens->get((int)$id, ['contain' => ['LaudosProdutos' => ['LaudosPareceres']]]);
+        $this->assertParecerEmpresa((int)$imagem->laudos_produto->laudos_parecer->id);
         $absolutePath = WWW_ROOT . str_replace('/', DS, $imagem->file_path);
 
         if (file_exists($absolutePath)) {
@@ -132,6 +149,8 @@ class LaudosUploadsController extends AppController
         if (!$parecerId || !$file || $file->getError() !== UPLOAD_ERR_OK) {
             throw new BadRequestException('Arquivo ou parecer inválido');
         }
+
+        $this->assertParecerEmpresa($parecerId);
 
         $mime = $file->getClientMediaType();
         if (!in_array($mime, self::ALLOWED_DOC_MIMES, true)) {
@@ -184,12 +203,45 @@ class LaudosUploadsController extends AppController
      */
     public function downloadAnexo($id)
     {
-        $anexo = $this->LaudosAnexos->get((int)$id);
+        $anexo = $this->LaudosAnexos->get((int)$id, ['contain' => ['LaudosPareceres']]);
+        $this->assertParecerEmpresa((int)$anexo->parecer_id);
         $path = WWW_ROOT . str_replace('/', DS, $anexo->file_path);
         if (!file_exists($path)) {
             throw new NotFoundException('Arquivo não encontrado');
         }
+
         return $this->response
             ->withFile($path, ['name' => $anexo->nome_original, 'download' => true]);
+    }
+
+    /**
+     * DELETE /api/laudos/anexos/:id
+     */
+    public function deleteAnexo($id): void
+    {
+        $this->request->allowMethod('DELETE');
+
+        $anexo = $this->LaudosAnexos->get((int)$id, ['contain' => ['LaudosPareceres']]);
+        $parecerId = (int)$anexo->parecer_id;
+        $this->assertParecerEmpresa($parecerId);
+
+        $path = WWW_ROOT . str_replace('/', DS, $anexo->file_path);
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
+        $this->LaudosAnexos->delete($anexo);
+
+        $userId = (int)($this->Auth->user('id') ?? 0) ?: null;
+        $this->LaudosHistorico->logEvent(
+            $parecerId,
+            $userId,
+            $this->Auth->user('name'),
+            'attachment.removed',
+            ['anexo_id' => (int)$id, 'nome' => $anexo->nome_original]
+        );
+
+        $this->set(['success' => true]);
+        $this->viewBuilder()->setOption('serialize', ['success']);
     }
 }

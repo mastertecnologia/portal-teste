@@ -76,6 +76,28 @@ export const AnexosAPI = {
     });
   },
   downloadUrl(id) { return `/api/laudos/anexos/${id}/download`; },
+  remove(id) { return api.delete(`/laudos/anexos/${id}`); },
+};
+
+// ---- Empresa emissora (laudos_empresas) ----
+export const EmpresasAPI = {
+  update(id, data) { return api.put(`/laudos/empresas/${id}`, data); },
+  uploadLogo(empresaId, file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post(`/laudos/empresas/${empresaId}/logo`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteLogo(empresaId) { return api.delete(`/laudos/empresas/${empresaId}/logo`); },
+  uploadCarimbo(empresaId, file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post(`/laudos/empresas/${empresaId}/carimbo`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteCarimbo(empresaId) { return api.delete(`/laudos/empresas/${empresaId}/carimbo`); },
 };
 
 // ---- Catálogo ----

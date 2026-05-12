@@ -126,6 +126,24 @@ export default function ParecerForm({ parecer, onChange }) {
             style={inputStyle}
           />
         </Field>
+        <Grid cols={2} style={{ marginTop: 12 }}>
+          <Field label="Técnico Responsável">
+            <input
+              type="text"
+              value={parecer.tecnico_nome || ''}
+              onChange={(e) => onChange({ tecnico_nome: e.target.value })}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Registro (CRT/CRA)">
+            <input
+              type="text"
+              value={parecer.tecnico_registro || ''}
+              onChange={(e) => onChange({ tecnico_registro: e.target.value })}
+              style={inputStyle}
+            />
+          </Field>
+        </Grid>
       </Card>
 
       {/* Requerente */}

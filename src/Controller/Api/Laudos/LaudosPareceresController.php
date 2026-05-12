@@ -160,8 +160,19 @@ class LaudosPareceresController extends AppController
 
         $data = $this->request->getData();
 
-        unset($data['id'], $data['public_hash'], $data['numero'],
-              $data['empresa_id'], $data['created'], $data['created_by']);
+        unset(
+            $data['id'],
+            $data['public_hash'],
+            $data['numero'],
+            $data['empresa_id'],
+            $data['created'],
+            $data['created_by'],
+            $data['deleted'],
+            $data['deleted_by'],
+            $data['status'],
+            $data['tecnico_user_id'],
+            $data['modified']
+        );
 
         $data['modified_by'] = $this->getCurrentUserId();
 

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ImagensAPI } from '../api';
 import { compressImage, humanFileSize } from '../utils/imageCompression';
+import { friendlyLaudosError } from '../utils/friendlyError';
 
 /**
  * Upload de imagens para um produto/equipamento.
@@ -37,8 +38,7 @@ export default function ImageUpload({ produtoId, imagens = [], onChange }) {
           _stats: { originalSize, newSize, reduction },
         });
       } catch (err) {
-        console.error('Erro ao subir imagem:', err);
-        alert(`Erro ao subir ${file.name}: ${err.friendlyMessage || err.message}`);
+        alert(`Erro ao subir ${file.name}: ${friendlyLaudosError(err)}`);
       }
     }
 
@@ -54,7 +54,7 @@ export default function ImageUpload({ produtoId, imagens = [], onChange }) {
       await ImagensAPI.remove(img.id);
       onChange?.(imagens.filter((i) => i.id !== img.id));
     } catch (err) {
-      alert('Erro ao remover: ' + (err.friendlyMessage || err.message));
+      alert('Erro ao remover: ' + friendlyLaudosError(err));
     }
   };
 

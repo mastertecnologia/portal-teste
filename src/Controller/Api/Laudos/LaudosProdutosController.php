@@ -111,7 +111,7 @@ class LaudosProdutosController extends AppController
     {
         $empresaId = (int)($this->Auth->user('idempresa') ?? 1);
         if ((int)$parecer->empresa_id !== $empresaId) {
-            throw new ForbiddenException();
+            throw new ForbiddenException('Sem permissão para este parecer');
         }
     }
 

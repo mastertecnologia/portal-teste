@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { PareceresAPI, ProdutosAPI } from '../api';
+import { PareceresAPI, ProdutosAPI, EmpresasAPI } from '../api';
 import useDebounceSave from '../hooks/useDebounceSave';
 import ParecerForm from '../components/ParecerForm';
 import ProdutoCard from '../components/ProdutoCard';
 import StatusBar from '../components/StatusBar';
 import SaveIndicator from '../components/SaveIndicator';
 import SignaturePad from '../components/SignaturePad';
+import LaudosEmpresaEmitenteCard from '../components/LaudosEmpresaEmitenteCard';
+import LaudosAnexosPanel from '../components/LaudosAnexosPanel';
 import { formatBRL, formatDateTime } from '../utils/masks';
+import { friendlyLaudosError } from '../utils/friendlyError';
 
 /**
  * Página de edição de um parecer (integração CakePHP: recebe `boot` com parecerId).
@@ -33,8 +36,7 @@ export default function ParecerEditPage({ boot }) {
       setParecer(resp.data);
       setTotais(resp.totais || {});
     } catch (err) {
-      console.error(err);
-      alert('Erro ao carregar parecer');
+      alert(`Erro ao carregar parecer: ${friendlyLaudosError(err)}`);
     } finally {
       setLoading(false);
     }
@@ -73,7 +75,7 @@ export default function ParecerEditPage({ boot }) {
       await PareceresAPI.changeStatus(id, novoStatus);
       load();
     } catch (err) {
-      alert('Erro ao mudar status: ' + (err.friendlyMessage || err.message));
+      alert(`Erro ao mudar status: ${friendlyLaudosError(err)}`);
     }
   };
 
@@ -86,7 +88,7 @@ export default function ParecerEditPage({ boot }) {
       });
       load();
     } catch (err) {
-      alert('Erro ao adicionar equipamento: ' + (err.friendlyMessage || err.message));
+      alert(`Erro ao adicionar equipamento: ${friendlyLaudosError(err)}`);
     }
   };
 
@@ -109,7 +111,7 @@ export default function ParecerEditPage({ boot }) {
       await ProdutosAPI.remove(produtoId);
       load();
     } catch (err) {
-      alert('Erro ao remover: ' + (err.friendlyMessage || err.message));
+      alert(`Erro ao remover: ${friendlyLaudosError(err)}`);
     }
   };
 
@@ -119,9 +121,231 @@ export default function ParecerEditPage({ boot }) {
       setHistory(resp.data || []);
       setShowHistory(true);
     } catch (err) {
-      alert('Erro ao carregar histórico');
+      alert(`Erro ao carregar histórico: ${friendlyLaudosError(err)}`);
     }
   };
+
+  const exportBackup = useCallback(() => {
+    if (!parecer) return;
+    const omit = (obj, keys) => {
+      const o = { ...obj };
+      keys.forEach((k) => { delete o[k]; });
+      return o;
+    };
+    const stripProduct = (p) => ({
+      ordem: p.ordem,
+      nome: p.nome,
+      tipo: p.tipo,
+      serial_number: p.serial_number,
+      especificacoes: p.especificacoes,
+      diagnostico: p.diagnostico,
+      recomendacao: p.recomendacao,
+      laudos_produto_pecas: (p.laudos_produto_pecas || []).map((pe) => ({
+        nome: pe.nome,
+        codigo: pe.codigo || '',
+        quantidade: pe.quantidade,
+        unidade: pe.unidade,
+        preco_unitario: pe.preco_unitario,
+        catalogo_id: pe.catalogo_id ?? null,
+      })),
+      laudos_produto_servicos: (p.laudos_produto_servicos || []).map((s) => ({
+        descricao: s.descricao,
+        horas: s.horas,
+        valor_hora: s.valor_hora,
+        catalogo_id: s.catalogo_id ?? null,
+      })),
+      laudos_produto_imagens_meta: (p.laudos_produto_imagens || []).map((im) => ({
+        nome_original: im.nome_original,
+        ordem: im.ordem,
+        descricao: im.descricao,
+      })),
+    });
+    const snap = {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      parecer_id: parecer.id,
+      parecer: omit(parecer, [
+        'laudos_produtos', 'laudos_anexos', 'laudos_historico', 'laudos_empresa', 'tecnico', 'clientes', 'assinatura_path',
+      ]),
+      laudos_empresa: parecer.laudos_empresa ? {
+        razao_social: parecer.laudos_empresa.razao_social,
+        cnpj: parecer.laudos_empresa.cnpj,
+        email: parecer.laudos_empresa.email,
+        telefone: parecer.laudos_empresa.telefone,
+        telefone2: parecer.laudos_empresa.telefone2,
+        cep: parecer.laudos_empresa.cep,
+        endereco: parecer.laudos_empresa.endereco,
+        site: parecer.laudos_empresa.site,
+        public_validation_url: parecer.laudos_empresa.public_validation_url,
+      } : null,
+      produtos: (parecer.laudos_produtos || []).map(stripProduct),
+    };
+    const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const num = (parecer.numero || String(parecer.id)).replace(/[^\w.-]+/g, '_');
+    a.download = `parecer-${num}-backup-v2.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }, [parecer]);
+
+  const importBackup = useCallback(() => {
+    if (!parecer || parecer.pode_editar === false) return;
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = async () => {
+      const file = inp.files?.[0];
+      if (!file) return;
+      let snap;
+      try {
+        snap = JSON.parse(await file.text());
+      } catch {
+        alert('Arquivo JSON inválido.');
+        return;
+      }
+      if (!snap.parecer || typeof snap.parecer !== 'object') {
+        alert('Backup inválido: falta o objeto "parecer".');
+        return;
+      }
+      const isV2 = snap.version === 2;
+      const produtosBackup = Array.isArray(snap.produtos) ? snap.produtos : [];
+      const isV1 = !isV2 && (snap.version === 1 || snap.version === undefined);
+
+      if (!isV2 && !isV1) {
+        alert('Versão de backup não suportada. Use ficheiros version 1 (parcial) ou 2 (completo).');
+        return;
+      }
+
+      if (snap.parecer_id && snap.parecer_id !== parecer.id) {
+        if (!window.confirm('Este backup foi exportado para outro parecer (ID diferente). Continuar a mesclar neste parecer?')) {
+          return;
+        }
+      }
+
+      const allowParecer = [
+        'titulo', 'cidade', 'data_emissao', 'objetivo', 'documentacao', 'conclusao',
+        'estimated_new_equipment', 'show_comparison',
+        'requester_client_id', 'requester_company_name', 'requester_attention_to',
+        'requester_cnpj', 'requester_phone', 'requester_email', 'requester_cep', 'requester_address',
+        'tecnico_nome', 'tecnico_registro',
+      ];
+
+      const buildParecerPayload = () => {
+        const payload = {};
+        allowParecer.forEach((k) => {
+          if (snap.parecer[k] !== undefined) {
+            payload[k] = snap.parecer[k];
+          }
+        });
+        return payload;
+      };
+
+      if (isV2) {
+        const msg = [
+          'RESTAURAÇÃO COMPLETA (backup versão 2)',
+          '',
+          'Serão atualizados: todos os campos do parecer listados no backup, dados textuais da empresa emissora (logótipo e carimbo no servidor não são alterados por este ficheiro), e TODOS os equipamentos atuais serão removidos e substituídos pelos do backup.',
+          '',
+          'Não são restaurados: ficheiros de imagens dos equipamentos, anexos do parecer, nem assinatura digital.',
+          '',
+          'Os dados atuais do parecer e equipamentos podem ser sobrescritos ou apagados.',
+          '',
+          'Deseja continuar?',
+        ].join('\n');
+        if (!window.confirm(msg)) {
+          return;
+        }
+        let restoreErr = null;
+        try {
+          await PareceresAPI.update(id, buildParecerPayload());
+          if (snap.laudos_empresa && parecer.empresa_id) {
+            const { logo_path: _l, carimbo_path: _c, ...empText } = snap.laudos_empresa;
+            await EmpresasAPI.update(parecer.empresa_id, empText);
+          }
+          const fresh = await PareceresAPI.get(id);
+          const existing = fresh.data.laudos_produtos || [];
+          for (let i = existing.length - 1; i >= 0; i -= 1) {
+            await ProdutosAPI.remove(existing[i].id);
+          }
+          for (const template of produtosBackup) {
+            const rec = ['repair', 'replace', 'partial'].includes(template.recomendacao)
+              ? template.recomendacao
+              : 'replace';
+            const cr = await ProdutosAPI.create({
+              parecer_id: id,
+              nome: template.nome || 'Equipamento',
+              recomendacao: rec,
+              tipo: template.tipo || '',
+              serial_number: template.serial_number || '',
+              especificacoes: template.especificacoes || '',
+              diagnostico: template.diagnostico || '',
+              ordem: template.ordem ?? 0,
+            });
+            const newId = cr.data.id;
+            await ProdutosAPI.update(newId, {
+              nome: template.nome,
+              tipo: template.tipo,
+              serial_number: template.serial_number,
+              especificacoes: template.especificacoes,
+              diagnostico: template.diagnostico,
+              recomendacao: rec,
+              laudos_produto_pecas: (template.laudos_produto_pecas || []).map((pe) => ({
+                nome: pe.nome,
+                codigo: pe.codigo || '',
+                quantidade: pe.quantidade ?? 1,
+                unidade: pe.unidade || 'un',
+                preco_unitario: pe.preco_unitario ?? 0,
+                catalogo_id: pe.catalogo_id ?? null,
+              })),
+              laudos_produto_servicos: (template.laudos_produto_servicos || []).map((s) => ({
+                descricao: s.descricao,
+                horas: s.horas ?? 1,
+                valor_hora: s.valor_hora ?? 0,
+                catalogo_id: s.catalogo_id ?? null,
+              })),
+            });
+          }
+        } catch (err) {
+          restoreErr = friendlyLaudosError(err);
+        } finally {
+          await load();
+        }
+        if (restoreErr) {
+          alert(
+            `Erro ao restaurar backup completo: ${restoreErr}\n\n` +
+            'O parecer foi recarregado do servidor para mostrar o estado atual (pode estar incompleto se a operação falhou a meio).',
+          );
+        }
+        return;
+      }
+
+      if (!window.confirm('Mesclar dados do backup (versão 1) neste parecer? Apenas campos textuais do parecer e da empresa serão atualizados. Equipamentos e anexos não são alterados.')) {
+        return;
+      }
+      let v1Err = null;
+      try {
+        await PareceresAPI.update(id, buildParecerPayload());
+        if (snap.laudos_empresa && parecer.empresa_id) {
+          const { logo_path: _l, carimbo_path: _c, ...empText } = snap.laudos_empresa;
+          await EmpresasAPI.update(parecer.empresa_id, empText);
+        }
+      } catch (err) {
+        v1Err = friendlyLaudosError(err);
+      } finally {
+        await load();
+      }
+      if (v1Err) {
+        alert(
+          `Erro ao restaurar: ${v1Err}\n\n` +
+          'O parecer foi recarregado do servidor para mostrar o estado atual.',
+        );
+      }
+    };
+    inp.click();
+  }, [parecer, id, load]);
 
   if (!id) {
     return <div style={{ padding: 40, textAlign: 'center' }}>ID do parecer não informado.</div>;
@@ -174,6 +398,17 @@ export default function ParecerEditPage({ boot }) {
           >
             📄 PDF
           </button>
+          <button type="button" onClick={exportBackup} style={btnSecondaryStyle}>
+            ⬇ Backup
+          </button>
+          <button
+            type="button"
+            onClick={importBackup}
+            style={btnSecondaryStyle}
+            disabled={parecer?.pode_editar === false}
+          >
+            ⬆ Restaurar
+          </button>
           <button
             type="button"
             onClick={() => setShowEmailModal(true)}
@@ -194,7 +429,24 @@ export default function ParecerEditPage({ boot }) {
 
       {/* Conteúdo */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
+        <LaudosEmpresaEmitenteCard
+          empresa={parecer.laudos_empresa || {}}
+          empresaId={parecer.empresa_id}
+          disabled={parecer.pode_editar === false}
+          onEmpresaUpdated={(patch) => {
+            setParecer((prev) => ({
+              ...prev,
+              laudos_empresa: { ...(prev.laudos_empresa || {}), ...patch },
+            }));
+          }}
+        />
         <ParecerForm parecer={parecer} onChange={handleChange} />
+        <LaudosAnexosPanel
+          parecerId={parecer.id}
+          anexos={parecer.laudos_anexos || []}
+          disabled={parecer.pode_editar === false}
+          onChanged={load}
+        />
 
         {/* Equipamentos */}
         <div style={{ marginTop: 24 }}>
@@ -380,7 +632,7 @@ function EmailModal({ parecer, onClose, onSent }) {
       alert('E-mail enviado com sucesso!');
       onSent?.();
     } catch (err) {
-      alert('Erro ao enviar: ' + (err.friendlyMessage || err.message));
+      alert(`Erro ao enviar: ${friendlyLaudosError(err)}`);
     } finally {
       setSending(false);
     }
@@ -439,6 +691,7 @@ function actionLabel(action) {
     'produto.removed': 'Equipamento removido',
     'imagem.added': 'Foto adicionada',
     'attachment.added': 'Anexo adicionado',
+    'attachment.removed': 'Anexo removido',
     'pdf.generated': 'PDF gerado',
     'email.sent': 'E-mail enviado',
     'cnpj.consulted': 'CNPJ consultado',

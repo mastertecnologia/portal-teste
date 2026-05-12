@@ -2332,6 +2332,13 @@ Router::scope('/api/laudos', ['prefix' => 'api/laudos'], function (RouteBuilder 
     $routes->connect('/produto-imagens/:id', ['controller' => 'LaudosUploads', 'action' => 'deleteImagem'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
     $routes->connect('/anexos', ['controller' => 'LaudosUploads', 'action' => 'uploadAnexo'])->setMethods(['POST']);
     $routes->connect('/anexos/:id/download', ['controller' => 'LaudosUploads', 'action' => 'downloadAnexo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['GET']);
+    $routes->connect('/anexos/:id', ['controller' => 'LaudosUploads', 'action' => 'deleteAnexo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
+
+    $routes->connect('/empresas/:id/logo', ['controller' => 'LaudosEmpresas', 'action' => 'uploadLogo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['POST']);
+    $routes->connect('/empresas/:id/logo', ['controller' => 'LaudosEmpresas', 'action' => 'deleteLogo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
+    $routes->connect('/empresas/:id/carimbo', ['controller' => 'LaudosEmpresas', 'action' => 'uploadCarimbo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['POST']);
+    $routes->connect('/empresas/:id/carimbo', ['controller' => 'LaudosEmpresas', 'action' => 'deleteCarimbo'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['DELETE']);
+    $routes->connect('/empresas/:id', ['controller' => 'LaudosEmpresas', 'action' => 'edit'], ['pass' => ['id'], 'id' => '[0-9]+'])->setMethods(['PUT', 'PATCH']);
 
     // Catálogo e Templates
     $routes->connect('/catalogo/pecas', ['controller' => 'LaudosCatalogo', 'action' => 'pecas'])->setMethods(['GET']);
