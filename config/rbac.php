@@ -235,6 +235,13 @@ return [
 			'portalnotifications#markallread',
 			'portalnotifications#preferences',
 			'portalnotifications#savepreferences',
+			// Laudos (Parecer Técnico): shell React em layout default + turbo-frame.
+			// Sem permissão no catálogo RBAC, enforce devolvia 302 → o Turbo no frame mostrava "Content missing".
+			// APIs JSON ficam em Api/Laudos/* (prefixo api nas exclusões do componente).
+			'laudos#index',
+			'laudos#view',
+			'laudos#clientesbuscar',
+			'laudos#validar',
 		],
 		// Em modo warn, também exibir Flash (pode ser repetitivo); env RBAC_WARN_FLASH
 		'warn_flash' => $warnFlash,

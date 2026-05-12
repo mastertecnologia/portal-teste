@@ -47,9 +47,12 @@ if (typeof document !== 'undefined') {
     if (!screen || typeof window.__pgmTicketsReactMount !== 'function') {
       return;
     }
-    const isTicketsScreen =
-      screen.startsWith('tech_') || screen.startsWith('client_') || screen.startsWith('finance_');
-    if (!isTicketsScreen) {
+    const isEmbeddedShellScreen =
+      screen.startsWith('tech_') ||
+      screen.startsWith('client_') ||
+      screen.startsWith('finance_') ||
+      screen.startsWith('laudos_');
+    if (!isEmbeddedShellScreen) {
       return;
     }
     requestAnimationFrame(() => {
