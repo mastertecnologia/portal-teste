@@ -73,6 +73,7 @@ final class PgmSidebarStaffPayloadBuilder
             if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) {
                 $items[] = self::item('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], [], (bool)($ctx['ticketsOperacionalActive'] ?? false), '', 'Dashboard operacional');
                 $items[] = self::item('bar-chart-3', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ctx['ticketsSlaRelatorioActive'] ?? false), '', 'Relatório SLA');
+                $items[] = self::item('layers', ' SD protótipo (teste)', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ctx['ticketsSdPrototypeActive'] ?? false), '<span class="badge badge-accent hide-menu">β</span>', 'Service Desk protótipo');
             }
             $configChildren = [];
             if ($roleNav === 0 && (($sg['tickets_servicedesk'] ?? true) || ($sg['tickets_historico'] ?? true))) {

@@ -32,6 +32,7 @@ final class PgmSidebarStaffContext
         $ticketsSlaRelatorioActive = ($ctrl === 'Servicedesk' && $act === 'slaRelatorio');
         $ticketsWorkflowSlaActive = ($ctrl === 'Servicedesk' && $act === 'workflowSlaAdmin');
         $ticketsServicedeskActive = ($ctrl === 'Servicedesk' && !in_array($act, ['operacional', 'workflowSlaAdmin', 'slaRelatorio'], true));
+        $ticketsSdPrototypeActive = ($ctrl === 'ServicedeskPrototype');
         $ticketsHistoricoActive = ($ctrl === 'Tickets' && $act === 'historico');
 
         $advMgmtAct = ($ctrl === 'ContractManagement');
@@ -91,7 +92,7 @@ final class PgmSidebarStaffContext
         $pgmSbOpenCofre = (bool)$senhasActive;
         $pgmSbOpenCadastros = (bool)$clientesActive || $clientesAddActive || (bool)$produtosActive || $ativosActive;
         $ticketsIncidentesConfigOpen = $ticketsWorkflowSlaActive || ($roleNav === 0 && $ticketsHistoricoActive);
-        $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive || $ticketsSlaRelatorioActive;
+        $pgmSbOpenIncidentes = $ticketsServicedeskActive || $ticketsSdPrototypeActive || $ticketsHistoricoActive || $ticketsOperacionalActive || $ticketsWorkflowSlaActive || $ticketsSlaRelatorioActive;
         $pgmSbOpenComercial = (bool)$orcamentosActive;
         $pgmSbOpenFaturamento = (bool)$prefaturamentoActive || (bool)$faturamentoActive;
         $pgmSbOpenFinanceiro = $finDashAct || $finRecAct || $finPagAct || $finFluxoAct || $finRecorAct || $finConcAct || $finDreAct || $finRelAct || $finPlanoAct || $finCcAct;
@@ -132,6 +133,7 @@ final class PgmSidebarStaffContext
             'clientesListNavActive' => $clientesListNavActive,
             'ativosActive' => $ativosActive,
             'ticketsServicedeskActive' => $ticketsServicedeskActive,
+            'ticketsSdPrototypeActive' => $ticketsSdPrototypeActive,
             'ticketsOperacionalActive' => $ticketsOperacionalActive,
             'ticketsSlaRelatorioActive' => $ticketsSlaRelatorioActive,
             'ticketsWorkflowSlaActive' => $ticketsWorkflowSlaActive,

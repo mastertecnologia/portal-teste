@@ -545,6 +545,18 @@ Router::scope("/", function ($routes) {
         "controller" => "Servicedesk",
         "action" => "operacional",
     ]);
+    $routes->connect("/servicedesk-prototype", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "index",
+    ]);
+    $routes->connect("/servicedesk-prototype/", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "index",
+    ]);
+    $routes->connect("/servicedesk-prototype/fila", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "fila",
+    ]);
     $routes->connect("/servicedesk/sla-relatorio", [
         "controller" => "Servicedesk",
         "action" => "slaRelatorio",
