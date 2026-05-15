@@ -20,3 +20,16 @@ realtime/node_modules/
 # Fiscal: certificados/XML em disco (FISCAL_STORAGE_PATH padrão: storage/fiscal)
 /storage/fiscal/*
 !/storage/fiscal/.gitkeep
+# Legado local / cópias de trabalho — não versionar (PSR-4 usa só *Controller.php canônicos)
+backup/
+src/Controller/*Controller_old.php
+src/Controller/_*Controller.php
+src/Controller/UsersController--*.php
+src/Application_old.php
+src/Template/**/*_old.ctp
+config/app_old.php
+config/bootstrap_old.php
+config/httpd-vhosts_old.conf
+config/routes - backup.php
+config/routes_darli.php
+vendor/PGMPackages/*_old.php
