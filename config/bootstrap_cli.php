@@ -41,4 +41,8 @@ try {
     // Do not halt if the plugin is missing
 }
 
-Plugin::load('Migrations');
+try {
+	Plugin::load('Migrations');
+} catch (MissingPluginException $e) {
+	// vendor/cakephp/migrations ausente — use bin/apply_migration_*.php ou composer install
+}

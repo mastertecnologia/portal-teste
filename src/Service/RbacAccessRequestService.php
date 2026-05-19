@@ -46,6 +46,8 @@ class RbacAccessRequestService {
 				->order(['id' => 'DESC'])
 				->first();
 			if ($pending) {
+				$this->syncApprovalInbox($pending);
+
 				return ['created' => false, 'reused' => true, 'row' => $pending, 'rate_limited' => false];
 			}
 			$reqPerm = $diag['required_permission_codes'] ?? ($diag['missing_permission_codes'] ?? []);
@@ -70,9 +72,24 @@ class RbacAccessRequestService {
 				'requester_message' => $requesterMessage !== null ? trim($requesterMessage) : null,
 			]);
 			$saved = $reqTbl->save($row);
+			if ($saved) {
+				$this->syncApprovalInbox($row);
+			}
 
 			return ['created' => (bool)$saved, 'reused' => false, 'row' => $saved ?: null, 'rate_limited' => false];
 		});
+	}
+
+	/**
+	 * Piloto approval_requests: espelha pedido RBAC na fila unificada (ignora falhas).
+	 *
+	 * @param \Cake\Datasource\EntityInterface $rbacRow
+	 */
+	public function syncApprovalInbox($rbacRow): void {
+		try {
+			(new ApprovalRequestSyncService())->syncFromRbacAccessRequest($rbacRow);
+		} catch (\Throwable $e) {
+		}
 	}
 
 	/**

@@ -557,6 +557,14 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "fila",
     ]);
+    $routes->connect("/servicedesk-prototype/ticket/:id", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "ticket",
+    ], ["pass" => ["id"], "id" => "[0-9]+"]);
+    $routes->connect("/servicedesk-prototype/:page", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "view",
+    ], ["pass" => ["page"], "page" => "[a-z0-9-]+"]);
     $routes->connect("/servicedesk/sla-relatorio", [
         "controller" => "Servicedesk",
         "action" => "slaRelatorio",

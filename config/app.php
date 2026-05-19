@@ -351,7 +351,8 @@ return [
             'cacheMetadata' => false,
             'log' => false,
             'quoteIdentifiers' => false,
-            'url' => env('DATABASE_URL', null),
+            // String vazia em variável de ambiente não deve passar ao parseDsn (sobrepõe host/user/password).
+            'url' => env('DATABASE_URL', null) ?: null,
         ],
 
         /**
@@ -479,5 +480,15 @@ return [
             'auto_close_expired' => filter_var(env('CONTRACT_ALERTS_AUTO_CLOSE', false), FILTER_VALIDATE_BOOLEAN),
             'auto_mark_ending_status' => filter_var(env('CONTRACT_ALERTS_MARK_ENDING', false), FILTER_VALIDATE_BOOLEAN),
         ],
+    ],
+
+    'Servicedesk' => [
+        // Fila SD “fechamento”: só tickets resolvidos alterados/resolvidos nos últimos N dias.
+        'aprovacoes_fechamento_dias' => (int)env('SERVICEDESK_APROVACOES_FECHAMENTO_DIAS', 30),
+    ],
+
+    'ApprovalRequests' => [
+        // Piloto: espelha rbac_access_requests em approval_requests (requer migration).
+        'dual_write_rbac' => filter_var(env('APPROVAL_REQUESTS_DUAL_WRITE_RBAC', true), FILTER_VALIDATE_BOOLEAN),
     ],
 ];
