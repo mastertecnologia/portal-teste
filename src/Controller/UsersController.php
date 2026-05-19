@@ -44,8 +44,8 @@ class UsersController extends AppController {
 		// Use ModelService instead of repetitive loadModel calls
 		// This reduces code duplication from 19 loadModel calls to 1 line
 		ModelService::loadModelsIntoController($this, [
-			'Clientes', 'Clicontratos', 'Users', 'Atividades', 'Books', 'Tickets', 
-			'Ticketsmovs', 'Visitas', 'Tarefas', 'Empresas', 'Queues', 'QueuesUsers',
+			'Clientes', 'Clicontratos', 'Users', 'Atividades', 'Tickets',
+			'Ticketsmovs', 'Visitas', 'Empresas', 'Queues', 'QueuesUsers',
 			'SupportLevels', 'Empresasusers', 'Orcamentos', 'Orcamentosservicos',
 			'Produtos', 'Ordensservico', 'Config'
 		]);
@@ -1353,8 +1353,14 @@ class UsersController extends AppController {
 		if ($s === 'servicedesk' || preg_match('#(^|/)servicedesk/?$#', $s)) {
 			return ['controller' => 'Servicedesk', 'action' => 'index'];
 		}
+		if (preg_match('#(^|/)servicedesk-prototype#', $s)) {
+			return $s;
+		}
 		if ($wTrim !== '' && $wTrim !== '/' && ($s === $wTrim . '/servicedesk' || $s === $w . 'servicedesk')) {
 			return ['controller' => 'Servicedesk', 'action' => 'index'];
+		}
+		if ($wTrim !== '' && $wTrim !== '/' && strpos($s, $wTrim . '/servicedesk-prototype') === 0) {
+			return $s;
 		}
 		if ($s[0] === '/' && preg_match('#^[a-zA-Z0-9/_?&=\-.]+$#', $s)) {
 			return $s;

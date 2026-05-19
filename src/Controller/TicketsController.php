@@ -3817,6 +3817,7 @@ class TicketsController extends AppController {
 		$res = (int)C_TicketSituacaoResolvido;
 		$fec = (int)C_TicketSituacaoFechado;
 		$allowed = [
+			'aberto' => $pend,
 			'em execucao' => $exec,
 			'pendente' => $pend,
 			'resolvido' => $res,

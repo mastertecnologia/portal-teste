@@ -411,6 +411,10 @@ class RbacChecker {
 		$actionsRaw = strtolower(trim(isset($permissionRow['action']) ? (string)$permissionRow['action'] : '*'));
 		$req = strtolower((string)$controller);
 		$act = strtolower((string)$action);
+		/* UI de testes: ServicedeskPrototype partilha permissões Servicedesk (servicedesk.tickets com action *). */
+		if ($req === 'servicedeskprototype') {
+			$req = 'servicedesk';
+		}
 		if ($req !== $c) {
 			// URLs canónicas /cliente/contratos → PortalContratos; RBAC legado usa PortalAdvancedContracts
 			if ($req === 'portalcontratos' && $c === 'portaladvancedcontracts') {

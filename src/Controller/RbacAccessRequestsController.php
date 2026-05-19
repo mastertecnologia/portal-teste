@@ -401,6 +401,7 @@ class RbacAccessRequestsController extends AppController {
 		}
 		$saved = $this->RbacAccessRequests->save($row);
 		if ($saved) {
+			$svcReq->syncApprovalInbox($row);
 			$svcReq->logAudit([
 				'actor_user_id' => (int)$this->Auth->user('id'),
 				'target_user_id' => (int)$row->user_id,
@@ -416,6 +417,7 @@ class RbacAccessRequestsController extends AppController {
 				$stageBefore = $row->toArray();
 				$wf->enqueueForAdmin($row);
 				if ($this->RbacAccessRequests->save($row)) {
+					$svcReq->syncApprovalInbox($row);
 					$svcReq->logAudit([
 						'actor_user_id' => (int)$this->Auth->user('id'),
 						'target_user_id' => (int)$row->user_id,
@@ -480,6 +482,7 @@ class RbacAccessRequestsController extends AppController {
 		}
 		$saved = $this->RbacAccessRequests->save($row);
 		if ($saved) {
+			$svcReq->syncApprovalInbox($row);
 			$svcReq->logAudit([
 				'actor_user_id' => (int)$this->Auth->user('id'),
 				'target_user_id' => (int)$row->user_id,

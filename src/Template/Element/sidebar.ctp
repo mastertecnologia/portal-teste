@@ -173,6 +173,7 @@
 						<?php if ($roleNav === 0 && ($sg['tickets_servicedesk'] ?? true)) : ?>
 						<?= $pgmSbLink('gauge', ' Dashboard operacional', ['controller' => 'Servicedesk', 'action' => 'operacional'], ['data-turbo' => 'false'], $ticketsOperacionalActive, '', 'Dashboard operacional') ?>
 						<?= $pgmSbLink('bar-chart-2', ' Relatório SLA', '/servicedesk/sla-relatorio', ['data-turbo' => 'false'], (bool)($ticketsSlaRelatorioActive ?? false), '', 'Relatório SLA') ?>
+						<?= $pgmSbLink('layers', ' SD protótipo (teste)', '/servicedesk-prototype', ['data-turbo' => 'false'], (bool)($ticketsSdPrototypeActive ?? false), '<span class="badge badge-accent hide-menu">β</span>', 'Service Desk protótipo') ?>
 						<?php endif; ?>
 						<?php
 						$incCfgChildren = [];

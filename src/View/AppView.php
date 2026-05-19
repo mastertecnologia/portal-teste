@@ -38,5 +38,6 @@ class AppView extends View
     {
         $this->loadHelper('PgmPortalNotif');
         $this->loadHelper('Visitas');
+        $this->loadHelper('ServicedeskPrototype');
     }
 }
