@@ -389,33 +389,60 @@ class BancosPrototypeController extends AppController {
 
 				foreach ($rows as $e) {
 					$valor = (float)$e->get('valor');
+					$valorAbs = abs($valor);
 					$data = $e->get('data');
+					$descExt = (string)$e->get('descricao');
 					$conciliado = (int)$e->get('conciliado') === 1 || (int)$e->get('financeiro_lancamento_id') > 0;
 					$matchSuggest = null;
 					if (!$conciliado && $data instanceof \DateTimeInterface) {
-						$ini = $data->copy()->subDays(3);
-						$fim = $data->copy()->addDays(3);
-						$try = $lan->find()
+						$ini = $data->copy()->subDays(5);
+						$fim = $data->copy()->addDays(5);
+						// Fuzzy: tolerância de R$ 1 OU 1%
+						$tol = max(1.0, $valorAbs * 0.01);
+						$candidatos = $lan->find()
 							->where([
 								'FinanceiroLancamentos.idempresa' => $empresa,
-								'FinanceiroLancamentos.valor' => $valor,
 								'FinanceiroLancamentos.data_lancamento >=' => $ini,
 								'FinanceiroLancamentos.data_lancamento <=' => $fim,
 							])
-							->limit(1)
-							->first();
-						if ($try !== null) {
-							$matchSuggest = [
-								'id' => (int)$try->get('id'),
-								'descricao' => (string)$try->get('descricao'),
-								'data' => $try->get('data_lancamento'),
-							];
+							->all();
+						$bestScore = 0.0;
+						foreach ($candidatos as $c) {
+							$vc = abs((float)$c->get('valor'));
+							$diff = abs($vc - $valorAbs);
+							if ($diff > $tol) {
+								continue;
+							}
+							// Score: 60 (valor) + 0..30 (data proximity) + 0..10 (texto)
+							$score = 60.0;
+							$dt = $c->get('data_lancamento');
+							if ($dt instanceof \DateTimeInterface) {
+								$days = abs((int)$data->diffInDays($dt));
+								$score += max(0, 30 - $days * 5);
+							}
+							$descLan = (string)$c->get('descricao');
+							if ($descExt !== '' && $descLan !== '') {
+								$pct = 0.0;
+								similar_text(strtoupper($descExt), strtoupper($descLan), $pct);
+								$score += min(10, $pct / 10);
+							}
+							if ($score > $bestScore) {
+								$bestScore = $score;
+								$matchSuggest = [
+									'id' => (int)$c->get('id'),
+									'descricao' => $descLan,
+									'data' => $dt,
+									'valor' => (float)$c->get('valor'),
+									'score' => round($score),
+									'diff_valor' => round($diff, 2),
+								];
+							}
 						}
 					}
 					if ($conciliado) {
 						$kpi['conciliados']++;
 						$status = 'conciliado';
-					} elseif ($matchSuggest !== null) {
+					} elseif ($matchSuggest !== null && (int)$matchSuggest['score'] >= 70) {
 						$kpi['divergentes']++;
 						$status = 'sugerido';
 					} else {
@@ -425,7 +452,7 @@ class BancosPrototypeController extends AppController {
 					$items[] = [
 						'id' => (int)$e->get('id'),
 						'data' => $data,
-						'descricao' => (string)$e->get('descricao'),
+						'descricao' => $descExt,
 						'tipo' => strtolower((string)$e->get('tipo')),
 						'valor' => $valor,
 						'conta' => (string)$e->get('conta_bancaria'),

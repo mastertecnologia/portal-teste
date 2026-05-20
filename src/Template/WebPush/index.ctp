@@ -52,7 +52,7 @@ WEB_PUSH_VAPID_PRIVATE=xMVy...
 			<div style="display:flex;gap:8px;flex-wrap:wrap;">
 				<button type="button" id="pushSubBtn" class="btn btn-primary"><?= h(__('🔔 Ativar notificações')) ?></button>
 				<button type="button" id="pushUnsubBtn" class="btn btn-ghost"><?= h(__('🔕 Desativar')) ?></button>
-				<button type="button" id="pushTestBtn" class="btn btn-ghost" disabled><?= h(__('🧪 Enviar teste (roadmap)')) ?></button>
+				<button type="button" id="pushTestBtn" class="btn btn-ghost"<?= (int)$subscriptionsAtivas === 0 ? ' disabled' : '' ?>><?= h(__('🧪 Enviar teste')) ?></button>
 			</div>
 			<div id="pushMsg" style="margin-top:14px;font-size:12px;"></div>
 		</div>
@@ -100,6 +100,28 @@ WEB_PUSH_VAPID_PRIVATE=xMVy...
 
 	var sub = document.getElementById('pushSubBtn');
 	var uns = document.getElementById('pushUnsubBtn');
+	var tst = document.getElementById('pushTestBtn');
+
+	tst && tst.addEventListener('click', function () {
+		setMsg('⏳ Enviando teste...');
+		var fd = new FormData();
+		fd.append('_csrfToken', csrf);
+		fetch('<?= h($this->Url->build(['controller' => 'WebPush', 'action' => 'test'])) ?>', {
+			method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (d) {
+				if (!d.ok && (d.sent === 0 && d.dry === 0)) {
+					setMsg('✗ Falha: ' + (d.error || 'sem inscrições ativas'), '#7A1822');
+					return;
+				}
+				var modo = d.driver === 'minishlink'
+					? '(envio real via minishlink/web-push — verifique seu navegador)'
+					: '(dry-run: minishlink/web-push não instalado; logado em logs/debug.log)';
+				setMsg('✓ Enviadas: ' + d.sent + ' · Dry-run: ' + d.dry + ' · Erros: ' + d.errors + ' ' + modo, '#0F6E56');
+			})
+			.catch(function (e) { setMsg('✗ Erro de rede.', '#7A1822'); });
+	});
 
 	sub && sub.addEventListener('click', function () {
 		if (!('serviceWorker' in navigator) || !('PushManager' in window)) {

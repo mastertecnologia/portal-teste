@@ -233,6 +233,21 @@ class ServicedeskPrototypeController extends AppController {
 			}
 			(new \App\Service\RbacAccessRequestService())->syncApprovalInbox($row);
 			$this->Flash->success($msg);
+			// Hook: notifica solicitante via push (assíncrono via send service; falha silenciosa)
+			try {
+				(new \App\Service\WebPushSenderService())->sendToUser(
+					(int)$row->get('user_id'),
+					[
+						'title' => $aprovar ? '✓ ' . __('Pedido de acesso aprovado') : '✗ ' . __('Pedido de acesso recusado'),
+						'body' => $isAdminStage
+							? ($aprovar ? __('Admin liberou seu acesso.') : __('Admin recusou.'))
+							: ($aprovar ? __('Manager aprovou. Aguardando admin.') : __('Manager recusou.')),
+						'url' => $this->Url->build(['controller' => 'RbacAccessRequests', 'action' => 'visualizarPedidoAcesso', (int)$row->get('id')]),
+						'tag' => 'rbac-' . (int)$row->get('id'),
+					]
+				);
+			} catch (\Throwable $e) {
+			}
 		}
 	}
 
@@ -292,6 +307,19 @@ class ServicedeskPrototypeController extends AppController {
 			$row->set('data_fechamento', date('Y-m-d H:i:s'));
 			if ($this->Tickets->save($row)) {
 				$this->Flash->success(__('Ticket #{0} fechado.', $id));
+				// Hook: notifica owner/idtecnico do ticket via push
+				try {
+					$tecnico = (int)($row->get('owner_id') ?? $row->get('idtecnico_responsavel') ?? 0);
+					if ($tecnico > 0) {
+						(new \App\Service\WebPushSenderService())->sendToUser($tecnico, [
+							'title' => '✓ ' . __('Ticket #{0} fechado', $id),
+							'body' => __('Aprovação concluída. Ticket arquivado.'),
+							'url' => $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'ticket', $id]),
+							'tag' => 'ticket-' . $id,
+						]);
+					}
+				} catch (\Throwable $e) {
+				}
 			}
 		}
 	}

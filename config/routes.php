@@ -596,6 +596,10 @@ Router::scope("/", function ($routes) {
         "controller" => "WebPush",
         "action" => "unsubscribe",
     ]);
+    $routes->connect("/web-push/test", [
+        "controller" => "WebPush",
+        "action" => "test",
+    ]);
 
     // ===== CSAT público (cliente acessa via token) =====
     $routes->connect("/csat/:token/ok", [

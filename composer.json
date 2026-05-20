@@ -25,7 +25,8 @@
         "markstory/asset_compress": "An asset compression plugin which provides file concatenation and a flexible filter system for preprocessing and minification.",
         "dereuromark/cakephp-ide-helper": "After baking your code, this keeps your annotations in sync with the code evolving from there on for maximum IDE and PHPStan compatibility.",
         "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
-        "cakephp/cakephp-codesniffer": "Allows to check the code against the coding standards used in CakePHP."
+        "cakephp/cakephp-codesniffer": "Allows to check the code against the coding standards used in CakePHP.",
+        "minishlink/web-push": "Envio real de Web Push (VAPID). Sem ela, WebPushSenderService faz dry-run (loga em debug.log). Requer ext-gmp ou ext-openssl."
     },
     "autoload": {
         "psr-4": {

@@ -28,8 +28,8 @@ $urlConc = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'co
 </div>
 
 <div class="alert-box alert-blue">
-	<strong><?= h(__('Matching automático:')) ?></strong>
-	<?= h(__('para cada movimento pendente do extrato, o sistema procura lançamentos no financeiro com mesmo valor e data ±3 dias. Aceite ou rejeite no fluxo clássico.')) ?>
+	<strong><?= h(__('Fuzzy matching:')) ?></strong>
+	<?= h(__('o sistema procura lançamentos com valor ±1% (ou ±R$ 1) e data ±5 dias, calculando um score: valor (60%) + proximidade da data (30%) + similaridade do descritivo (10%). Sugere quando score ≥ 70%.')) ?>
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
@@ -63,15 +63,24 @@ $urlConc = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'co
 						<td>
 							<?php if (!empty($it['match'])) :
 								$m = (array)$it['match'];
+								$score = (int)($m['score'] ?? 0);
+								$diff = (float)($m['diff_valor'] ?? 0);
+								$scoreColor = $score >= 90 ? '#0F6E56' : ($score >= 70 ? '#0C447C' : '#8A4D02');
 							?>
 								<div style="font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
 									<div style="flex:1;min-width:120px;">
-										<strong>#<?= (int)$m['id'] ?></strong>
-										· <?= h(\Cake\Utility\Text::truncate((string)$m['descricao'], 40, ['ellipsis' => '…'])) ?>
+										<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+											<strong>#<?= (int)$m['id'] ?></strong>
+											<span style="font-weight:600;background:rgba(<?= $score >= 90 ? '15,110,86' : ($score >= 70 ? '12,68,124' : '138,77,2') ?>,.12);color:<?= $scoreColor ?>;padding:1px 6px;border-radius:8px;font-size:10px;"><?= $score ?>%</span>
+											<?php if ($diff > 0) : ?>
+												<span style="font-size:10px;color:#8A4D02;" title="<?= h(__('Diferença')) ?>">±<?= h($H->brl($diff)) ?></span>
+											<?php endif; ?>
+										</div>
+										<div style="color:var(--text);font-size:11px;margin-top:2px;"><?= h(\Cake\Utility\Text::truncate((string)$m['descricao'], 40, ['ellipsis' => '…'])) ?></div>
 										<div style="color:var(--text-muted);font-size:10px;"><?= h($H->dt($m['data'])) ?></div>
 									</div>
 									<?php if ($st !== 'conciliado') : ?>
-										<form method="post" action="<?= h($urlConc) ?>" style="margin:0;display:inline;" onsubmit="return confirm('<?= h(__('Conciliar movimento ao lançamento #{0}?', (int)$m['id'])) ?>')">
+										<form method="post" action="<?= h($urlConc) ?>" style="margin:0;display:inline;" onsubmit="return confirm('<?= h(__('Conciliar movimento ao lançamento #{0} (score {1}%)?', (int)$m['id'], $score)) ?>')">
 											<input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">
 											<input type="hidden" name="extrato_id" value="<?= (int)$it['id'] ?>">
 											<input type="hidden" name="lancamento_id" value="<?= (int)$m['id'] ?>">

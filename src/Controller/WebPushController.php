@@ -141,4 +141,26 @@ class WebPushController extends AppController {
 			return $this->response->withStatus(500)->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
 		}
 	}
+
+	/**
+	 * POST /web-push/test — envia notificação de teste ao usuário logado.
+	 */
+	public function test() {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$uid = (int)$this->Auth->user('id');
+		if ($uid <= 0) {
+			return $this->response->withStatus(401)->withStringBody(json_encode(['ok' => false, 'error' => 'auth_required']));
+		}
+		$nome = trim((string)$this->Auth->user('name')) ?: __('você');
+		$result = (new \App\Service\WebPushSenderService())->sendToUser($uid, [
+			'title' => '🔔 Olá, ' . $nome . '!',
+			'body' => __('Notificação de teste do PGM ERP às {0}.', date('H:i:s')),
+			'url' => $this->Url->build(['controller' => 'WebPush', 'action' => 'index']),
+			'tag' => 'pgm-test',
+		]);
+
+		return $this->response->withStringBody(json_encode($result));
+	}
 }
