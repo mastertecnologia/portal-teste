@@ -17,6 +17,9 @@ $badges = (array)($erpNavBadges ?? []);
 $cls = static function (string $key) use ($active): string {
 	return $key === $active ? ' active' : '';
 };
+$session = $this->getRequest()->getSession();
+$isAdmin = (int)$session->read('Auth.User.admin') === 1;
+$isEquipe = (int)$session->read('Auth.User.role') === 0;
 $badge = static function (string $key, string $style = '') use ($badges): string {
 	$n = (int)($badges[$key] ?? 0);
 	$extra = $style !== '' ? ' ' . h($style) : '';
@@ -114,6 +117,7 @@ $sections = [
 	],
 	[
 		'title' => __('Sistema'),
+		'requires_admin' => true,
 		'items' => [
 			['key' => 'empresas', 'label' => __('Empresas · multi-empresa'), 'url' => ['controller' => 'EmpresasPrototype', 'action' => 'lista'], 'badgeStyle' => 'teal'],
 			['key' => 'config', 'label' => __('Configurações'), 'url' => ['controller' => 'SistemaPrototype', 'action' => 'config']],
@@ -126,6 +130,14 @@ $sections = [
 		],
 	],
 ];
+// Filtra seções por permissão
+$sections = array_values(array_filter($sections, static function (array $sec) use ($isAdmin) {
+	if (!empty($sec['requires_admin']) && !$isAdmin) {
+		return false;
+	}
+
+	return true;
+}));
 ?>
 <div class="sidebar">
 	<div class="sidebar-logo">

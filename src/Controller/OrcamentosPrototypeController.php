@@ -435,6 +435,144 @@ class OrcamentosPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /orcamentos-prototype/export.csv — exporta lista filtrada como CSV.
+	 * Mesmos filtros de lista() (status, cliente, datas).
+	 */
+	public function exportCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$where = ['Orcamentos.idempresa' => $empresa];
+		if (isset($query['status']) && is_numeric($query['status']) && $query['status'] !== '') {
+			$where['Orcamentos.status'] = (int)$query['status'];
+		}
+		if (!empty($query['cliente'])) {
+			$where['Orcamentos.idcliente'] = (int)$query['cliente'];
+		}
+		if (!empty($query['de']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$query['de'])) {
+			$where['Orcamentos.created >='] = $query['de'] . ' 00:00:00';
+		}
+		if (!empty($query['ate']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$query['ate'])) {
+			$where['Orcamentos.created <='] = $query['ate'] . ' 23:59:59';
+		}
+		$rows = $this->Orcamentos->find()->contain(['Clientes', 'Users'])->where($where)->order(['Orcamentos.created' => 'DESC'])->limit(5000)->all();
+
+		$labels = [0 => 'Pendente', 1 => 'Enviado', 2 => 'Aprovado', 3 => 'Recusado', 4 => 'Arquivado'];
+		$this->autoRender = false;
+		$fname = 'orcamentos-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 para Excel
+		fputcsv($out, ['ID', 'Cliente', 'Autor', 'Valor', 'Status', 'Criado', 'Modificado'], ';');
+		foreach ($rows as $o) {
+			$cli = $o->cliente ?? null;
+			$autor = $o->user ?? null;
+			fputcsv($out, [
+				'ORC-' . str_pad((string)$o->get('id'), 4, '0', STR_PAD_LEFT),
+				$cli ? (string)($cli->get('razaosocial') ?? $cli->get('nome') ?? '') : '',
+				$autor ? trim((string)($autor->get('name') ?? $autor->get('username'))) : '',
+				number_format((float)($o->get('valortotal') ?? $o->get('valor') ?? 0), 2, ',', '.'),
+				(string)($labels[(int)$o->get('status')] ?? $o->get('status')),
+				$o->get('created') instanceof \DateTimeInterface ? $o->get('created')->format('d/m/Y H:i') : '',
+				$o->get('modified') instanceof \DateTimeInterface ? $o->get('modified')->format('d/m/Y H:i') : '',
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
+	 * POST /orcamentos-prototype/mudar-status — avança/recua status do orçamento.
+	 * Transições permitidas:
+	 *   Pendente(0) → Enviado(1) | Recusado(3) | Arquivado(4)
+	 *   Enviado(1)  → Aprovado(2) | Recusado(3) | Pendente(0)
+	 *   Aprovado(2) → Arquivado(4) | Pendente(0)  (reabertura)
+	 *   Recusado(3) → Pendente(0)
+	 */
+	public function mudarStatus() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$id = (int)$this->request->getData('orcamento_id');
+		$novo = (int)$this->request->getData('novo_status');
+		if ($id <= 0) {
+			$this->Flash->error(__('Orçamento inválido.'));
+
+			return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'lista']);
+		}
+		$valid = [
+			0 => [1, 3, 4],
+			1 => [0, 2, 3],
+			2 => [0, 4],
+			3 => [0],
+			4 => [0],
+		];
+		try {
+			$orc = $this->Orcamentos->find()->where(['id' => $id, 'idempresa' => $empresa])->first();
+			if ($orc === null) {
+				$this->Flash->error(__('Orçamento fora do escopo.'));
+
+				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'lista']);
+			}
+			$atual = (int)$orc->get('status');
+			if (!isset($valid[$atual]) || !in_array($novo, $valid[$atual], true)) {
+				$this->Flash->error(__('Transição de status não permitida.'));
+
+				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $id]);
+			}
+			$orc->set('status', $novo);
+			if ($this->Orcamentos->save($orc)) {
+				$labels = [0 => __('Pendente'), 1 => __('Enviado'), 2 => __('Aprovado'), 3 => __('Recusado'), 4 => __('Arquivado')];
+				$this->Flash->success(__('Status alterado para "{0}".', (string)($labels[$novo] ?? $novo)));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $id]);
+	}
+
+	/**
+	 * POST /orcamentos-prototype/api/atualizar-item — edita qtd/valor unitário de item existente.
+	 */
+	public function apiAtualizarItem() {
+		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$itemId = (int)$this->request->getData('item_id');
+		$qtd = (float)str_replace(',', '.', (string)$this->request->getData('quantidade'));
+		$vu = (float)str_replace(',', '.', (string)$this->request->getData('valor_unitario'));
+		if ($itemId <= 0 || $qtd <= 0 || $vu < 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Dados inválidos.')]));
+		}
+		try {
+			$itens = $this->loadModel('Orcamentositens');
+			$row = $itens->find()->where(['Orcamentositens.id' => $itemId, 'Orcamentositens.idempresa' => $empresa])->first();
+			if ($row === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Item fora do escopo.')]));
+			}
+			$row->set('quantidade', $qtd);
+			$row->set('valorunitario', $vu);
+			if (!$itens->save($row)) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao salvar.')]));
+			}
+
+			return $this->response->withStringBody(json_encode([
+				'ok' => true,
+				'item' => ['id' => $itemId, 'qtd' => $qtd, 'vlr' => $vu, 'subtotal' => $qtd * $vu],
+			], JSON_UNESCAPED_UNICODE));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
+	}
+
+	/**
 	 * POST /orcamentos-prototype/api/excluir-item — remove item do orçamento.
 	 */
 	public function apiExcluirItem() {

@@ -27,9 +27,41 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link('← ' . __('Lista de OS'), ['controller' => 'OrdensservicoPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('✍ ' . __('Editar (clássico)'), ['controller' => 'Ordensservico', 'action' => 'view', (int)$os['id']], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('✍ ' . __('Editar (clássico)'), ['controller' => 'Ordensservico', 'action' => 'view', (int)$os['id']], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>
+
+<?php
+$urlEtapa = $this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'avancarEtapa']);
+$csrf3 = (string)$this->request->getAttribute('csrfToken');
+// Detecta situação atual de forma heurística (texto livre × inteiro)
+$rawSit = strtolower((string)$os['situacao']);
+$sitId = 0;
+if (strpos($rawSit, 'concl') !== false || strpos($rawSit, 'fech') !== false) $sitId = 3;
+elseif (strpos($rawSit, 'aguard') !== false || strpos($rawSit, 'aprov') !== false) $sitId = 2;
+elseif (strpos($rawSit, 'execu') !== false) $sitId = 1;
+
+$proximosOs = [
+	0 => [['s' => 1, 'lbl' => '▶ ' . __('Iniciar execução'), 'cls' => 'btn-primary']],
+	1 => [['s' => 2, 'lbl' => '✓ ' . __('Enviar para aprovação'), 'cls' => 'btn-primary'], ['s' => 0, 'lbl' => '↩ ' . __('Voltar a Aberta'), 'cls' => 'btn-ghost']],
+	2 => [['s' => 3, 'lbl' => '✓ ' . __('Concluir OS'), 'cls' => 'btn-primary'], ['s' => 1, 'lbl' => '↩ ' . __('Voltar à execução'), 'cls' => 'btn-ghost']],
+	3 => [['s' => 2, 'lbl' => '↩ ' . __('Reabrir'), 'cls' => 'btn-ghost']],
+];
+$optsOs = (array)($proximosOs[$sitId] ?? []);
+?>
+<?php if ($optsOs !== []) : ?>
+	<div class="card" style="background:var(--bg-surface);padding:14px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+		<strong style="font-size:12px;color:var(--text-muted);"><?= h(__('Próximas etapas:')) ?></strong>
+		<?php foreach ($optsOs as $o) : ?>
+			<form method="post" action="<?= h($urlEtapa) ?>" style="margin:0;display:inline;" onsubmit="return confirm('<?= h(__('Confirmar mudança?')) ?>')">
+				<input type="hidden" name="_csrfToken" value="<?= h($csrf3) ?>">
+				<input type="hidden" name="ordem_id" value="<?= (int)$os['id'] ?>">
+				<input type="hidden" name="nova_situacao" value="<?= (int)$o['s'] ?>">
+				<button type="submit" class="btn <?= h((string)$o['cls']) ?> btn-sm"><?= $o['lbl'] ?></button>
+			</form>
+		<?php endforeach; ?>
+	</div>
+<?php endif; ?>
 
 <div class="summary-grid" style="margin-bottom:14px;">
 	<div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl"><?= h(__('Situação')) ?></div><div class="val"><?= $H->badge((string)$os['situacao'] !== '' ? (string)$os['situacao'] : '—', $badge) ?></div></div>
@@ -93,16 +125,31 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 			<tbody>
 				<?php if ($osLinhas === []) : ?>
 					<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Sem itens neste OS.')) ?></td></tr>
-				<?php else : foreach ($osLinhas as $l) : ?>
-					<tr>
+				<?php else : foreach ($osLinhas as $l) :
+					$lid = (int)($l['id'] ?? 0);
+				?>
+					<tr data-os-row="<?= $lid ?>">
 						<td><?= h(\Cake\Utility\Text::truncate((string)$l['descricao'], 80, ['ellipsis' => '…'])) ?></td>
 						<td class="mu"><?= h((string)$l['unidade']) ?></td>
-						<td class="r"><?= number_format((float)$l['qtd'], 2, ',', '.') ?></td>
-						<td class="r"><?= h($H->brl((float)$l['vlr'])) ?></td>
-						<td class="r"><strong><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
 						<td class="r">
-							<?php if (!empty($l['id'])) : ?>
-								<button type="button" class="btn btn-ghost btn-xs" data-os-del="<?= (int)$l['id'] ?>" title="<?= h(__('Excluir item')) ?>">🗑</button>
+							<?php if ($lid > 0) : ?>
+								<input type="number" step="0.01" min="0.01" data-os-qtd="<?= $lid ?>" value="<?= h(number_format((float)$l['qtd'], 2, '.', '')) ?>" style="width:78px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:right;">
+							<?php else : ?>
+								<?= number_format((float)$l['qtd'], 2, ',', '.') ?>
+							<?php endif; ?>
+						</td>
+						<td class="r">
+							<?php if ($lid > 0) : ?>
+								<input type="number" step="0.01" min="0" data-os-vlr="<?= $lid ?>" value="<?= h(number_format((float)$l['vlr'], 2, '.', '')) ?>" style="width:92px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:right;">
+							<?php else : ?>
+								<?= h($H->brl((float)$l['vlr'])) ?>
+							<?php endif; ?>
+						</td>
+						<td class="r"><strong data-os-subtotal="<?= $lid ?>"><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
+						<td class="r" style="white-space:nowrap;">
+							<?php if ($lid > 0) : ?>
+								<button type="button" class="btn btn-primary btn-xs" data-os-save="<?= $lid ?>" title="<?= h(__('Salvar alterações')) ?>">💾</button>
+								<button type="button" class="btn btn-ghost btn-xs" data-os-del="<?= $lid ?>" title="<?= h(__('Excluir item')) ?>">🗑</button>
 							<?php endif; ?>
 						</td>
 					</tr>
@@ -127,6 +174,32 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
 	var btn = document.getElementById('osItemBtn');
 	var msg = document.getElementById('osItemMsg');
+	// Editar item inline
+	var urlUpd = <?= json_encode($this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'apiAtualizarItem'])) ?>;
+	function brl(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+	document.querySelectorAll('[data-os-save]').forEach(function (el) {
+		el.addEventListener('click', function () {
+			var id = this.getAttribute('data-os-save');
+			var q = parseFloat(document.querySelector('[data-os-qtd="' + id + '"]').value);
+			var v = parseFloat(document.querySelector('[data-os-vlr="' + id + '"]').value) || 0;
+			if (!(q > 0)) { alert('Quantidade inválida.'); return; }
+			var fd = new FormData();
+			fd.append('_csrfToken', csrf);
+			fd.append('item_id', id);
+			fd.append('quantidade', q);
+			fd.append('valor_unitario', v);
+			fetch(urlUpd, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					if (!data.ok) { alert('Falha: ' + (data.error || '?')); return; }
+					var sub = document.querySelector('[data-os-subtotal="' + id + '"]');
+					if (sub) sub.textContent = brl(data.item.subtotal);
+					el.textContent = '✓';
+					setTimeout(function () { el.textContent = '💾'; }, 1500);
+				});
+		});
+	});
+
 	// Excluir item via AJAX
 	var urlDel = <?= json_encode($this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'apiExcluirItem'])) ?>;
 	document.querySelectorAll('[data-os-del]').forEach(function (el) {

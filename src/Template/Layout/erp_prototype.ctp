@@ -75,6 +75,60 @@ if (!$csrf && method_exists($this->getRequest(), 'getParam')) {
 	<?= $this->fetch('script') ?>
 <script>
 (function () {
+	// === Atalhos de teclado: g+f fila SD, g+a aprovações, g+o orçamentos, g+d dashboard SD, g+h home, ? mostra ajuda ===
+	var leader = false;
+	var leaderTo = null;
+	var routes = {
+		f: <?= json_encode($this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'fila'])) ?>,
+		a: <?= json_encode($this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'view', 'aprovacoes'])) ?>,
+		o: <?= json_encode($this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'lista'])) ?>,
+		s: <?= json_encode($this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'lista'])) ?>,
+		c: <?= json_encode($this->Url->build(['controller' => 'ClientesPrototype', 'action' => 'lista'])) ?>,
+		p: <?= json_encode($this->Url->build(['controller' => 'ProdutosPrototype', 'action' => 'lista'])) ?>,
+		d: <?= json_encode($this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'index'])) ?>,
+		h: <?= json_encode($this->Url->build(['controller' => 'Users', 'action' => 'dashboard'])) ?>,
+		b: <?= json_encode($this->Url->build(['controller' => 'FinanceiroPrototype', 'action' => 'lista'])) ?>
+	};
+	var helpMap = {f: 'Fila SD', a: 'Aprovações', o: 'Orçamentos', s: 'OS', c: 'Clientes', p: 'Produtos', d: 'Dashboard SD', h: 'Home', b: 'Financeiro'};
+	function showToast (txt) {
+		var t = document.getElementById('pgm-kbd-toast');
+		if (!t) {
+			t = document.createElement('div');
+			t.id = 'pgm-kbd-toast';
+			t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.2);opacity:0;transition:opacity .15s;';
+			document.body.appendChild(t);
+		}
+		t.innerHTML = txt;
+		t.style.opacity = '1';
+		clearTimeout(t._h);
+		t._h = setTimeout(function () { t.style.opacity = '0'; }, 1500);
+	}
+	document.addEventListener('keydown', function (e) {
+		var tag = (e.target && e.target.tagName) || '';
+		if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		var k = e.key.toLowerCase();
+		if (k === '?') {
+			var lines = Object.keys(helpMap).map(function (key) { return 'g ' + key + ' = ' + helpMap[key]; });
+			showToast('Atalhos:<br>' + lines.join('<br>'));
+			return;
+		}
+		if (k === 'g') {
+			leader = true;
+			showToast('g…');
+			clearTimeout(leaderTo);
+			leaderTo = setTimeout(function () { leader = false; }, 1200);
+			return;
+		}
+		if (leader && routes[k]) {
+			leader = false;
+			clearTimeout(leaderTo);
+			showToast('→ ' + helpMap[k]);
+			window.location.href = routes[k];
+		}
+	});
+
+	// === Long-poll badges ===
 	var url = <?= json_encode($this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'apiBadges'])) ?>;
 	function refreshBadges () {
 		fetch(url, {credentials: 'same-origin'})

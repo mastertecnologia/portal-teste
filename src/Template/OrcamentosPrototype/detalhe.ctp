@@ -28,9 +28,35 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
 		<?= $this->Html->link('← ' . __('Voltar à lista'), ['controller' => 'OrcamentosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('🖨 ' . __('PDF'), ['controller' => 'Orcamentos', 'action' => 'imprimirPdf', (int)$orc['id']], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('✍ ' . __('Editar (clássico)'), ['controller' => 'Orcamentos', 'action' => 'edit', (int)$orc['id']], ['class' => 'btn btn-primary btn-sm']) ?>
+		<?= $this->Html->link('✍ ' . __('Editar (clássico)'), ['controller' => 'Orcamentos', 'action' => 'edit', (int)$orc['id']], ['class' => 'btn btn-ghost btn-sm']) ?>
 	</div>
 </div>
+
+<?php
+$urlStatus = $this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'mudarStatus']);
+$csrf2 = (string)$this->request->getAttribute('csrfToken');
+$proximos = [
+	0 => [['s' => 1, 'lbl' => '📨 ' . __('Marcar como Enviado'), 'cls' => 'btn-primary'], ['s' => 3, 'lbl' => '✗ ' . __('Recusar'), 'cls' => 'btn-red']],
+	1 => [['s' => 2, 'lbl' => '✓ ' . __('Aprovar'), 'cls' => 'btn-primary'], ['s' => 3, 'lbl' => '✗ ' . __('Recusar'), 'cls' => 'btn-red'], ['s' => 0, 'lbl' => '↩ ' . __('Voltar a Pendente'), 'cls' => 'btn-ghost']],
+	2 => [['s' => 4, 'lbl' => '📦 ' . __('Arquivar'), 'cls' => 'btn-ghost'], ['s' => 0, 'lbl' => '↩ ' . __('Reabrir'), 'cls' => 'btn-ghost']],
+	3 => [['s' => 0, 'lbl' => '↩ ' . __('Reabrir'), 'cls' => 'btn-primary']],
+	4 => [['s' => 0, 'lbl' => '↩ ' . __('Reabrir'), 'cls' => 'btn-primary']],
+];
+$opts = (array)($proximos[$st] ?? []);
+?>
+<?php if ($opts !== []) : ?>
+	<div class="card" style="background:var(--bg-surface);padding:14px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+		<strong style="font-size:12px;color:var(--text-muted);"><?= h(__('Próximas ações:')) ?></strong>
+		<?php foreach ($opts as $o) : ?>
+			<form method="post" action="<?= h($urlStatus) ?>" style="margin:0;display:inline;" onsubmit="return confirm('<?= h(__('Confirmar mudança?')) ?>')">
+				<input type="hidden" name="_csrfToken" value="<?= h($csrf2) ?>">
+				<input type="hidden" name="orcamento_id" value="<?= (int)$orc['id'] ?>">
+				<input type="hidden" name="novo_status" value="<?= (int)$o['s'] ?>">
+				<button type="submit" class="btn <?= h((string)$o['cls']) ?> btn-sm"><?= $o['lbl'] ?></button>
+			</form>
+		<?php endforeach; ?>
+	</div>
+<?php endif; ?>
 
 <div class="summary-grid" style="margin-bottom:14px;">
 	<div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl"><?= h(__('Status')) ?></div><div class="val"><?= $H->badge($statusLabels[$st] ?? '—', $statusBadges[$st] ?? 'arq') ?></div></div>
@@ -90,18 +116,33 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 			<tbody>
 				<?php if ($orcLinhas === []) : ?>
 					<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Sem itens neste orçamento.')) ?></td></tr>
-				<?php else : foreach ($orcLinhas as $l) : ?>
-					<tr>
+				<?php else : foreach ($orcLinhas as $l) :
+					$lid = (int)($l['id'] ?? 0);
+				?>
+					<tr data-orc-row="<?= $lid ?>">
 						<td style="font-family:monospace;font-size:11px;"><?= h((string)$l['codigo']) ?></td>
 						<td><?= h(\Cake\Utility\Text::truncate((string)$l['descricao'], 80, ['ellipsis' => '…'])) ?></td>
 						<td class="mu"><?= h((string)$l['unidade']) ?></td>
-						<td class="r"><?= number_format((float)$l['qtd'], 2, ',', '.') ?></td>
-						<td class="r"><?= h($H->brl((float)$l['vlr'])) ?></td>
-						<td class="r" style="color:#7A1822;"><?php if ((float)$l['desconto'] > 0) : ?>−<?= h($H->brl((float)$l['desconto'])) ?><?php else : ?>—<?php endif; ?></td>
-						<td class="r"><strong><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
 						<td class="r">
-							<?php if (!empty($l['id'])) : ?>
-								<button type="button" class="btn btn-ghost btn-xs" data-orc-del="<?= (int)$l['id'] ?>" title="<?= h(__('Excluir item')) ?>">🗑</button>
+							<?php if ($lid > 0) : ?>
+								<input type="number" step="0.01" min="0.01" data-orc-qtd="<?= $lid ?>" value="<?= h(number_format((float)$l['qtd'], 2, '.', '')) ?>" style="width:78px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:right;">
+							<?php else : ?>
+								<?= number_format((float)$l['qtd'], 2, ',', '.') ?>
+							<?php endif; ?>
+						</td>
+						<td class="r">
+							<?php if ($lid > 0) : ?>
+								<input type="number" step="0.01" min="0" data-orc-vlr="<?= $lid ?>" value="<?= h(number_format((float)$l['vlr'], 2, '.', '')) ?>" style="width:92px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:right;">
+							<?php else : ?>
+								<?= h($H->brl((float)$l['vlr'])) ?>
+							<?php endif; ?>
+						</td>
+						<td class="r" style="color:#7A1822;"><?php if ((float)$l['desconto'] > 0) : ?>−<?= h($H->brl((float)$l['desconto'])) ?><?php else : ?>—<?php endif; ?></td>
+						<td class="r"><strong data-orc-subtotal="<?= $lid ?>"><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
+						<td class="r" style="white-space:nowrap;">
+							<?php if ($lid > 0) : ?>
+								<button type="button" class="btn btn-primary btn-xs" data-orc-save="<?= $lid ?>" title="<?= h(__('Salvar alterações')) ?>">💾</button>
+								<button type="button" class="btn btn-ghost btn-xs" data-orc-del="<?= $lid ?>" title="<?= h(__('Excluir item')) ?>">🗑</button>
 							<?php endif; ?>
 						</td>
 					</tr>
@@ -126,6 +167,34 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
 	var btn = document.getElementById('orcItemBtn');
 	var msg = document.getElementById('orcItemMsg');
+	// Editar item inline (qtd/preço)
+	var urlUpd = <?= json_encode($this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'apiAtualizarItem'])) ?>;
+	function brl(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+	document.querySelectorAll('[data-orc-save]').forEach(function (el) {
+		el.addEventListener('click', function () {
+			var id = this.getAttribute('data-orc-save');
+			var qInput = document.querySelector('[data-orc-qtd="' + id + '"]');
+			var vInput = document.querySelector('[data-orc-vlr="' + id + '"]');
+			var q = parseFloat(qInput.value);
+			var v = parseFloat(vInput.value) || 0;
+			if (!(q > 0)) { alert('Quantidade inválida.'); return; }
+			var fd = new FormData();
+			fd.append('_csrfToken', csrf);
+			fd.append('item_id', id);
+			fd.append('quantidade', q);
+			fd.append('valor_unitario', v);
+			fetch(urlUpd, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					if (!data.ok) { alert('Falha: ' + (data.error || '?')); return; }
+					var sub = document.querySelector('[data-orc-subtotal="' + id + '"]');
+					if (sub) sub.textContent = brl(data.item.subtotal);
+					el.textContent = '✓';
+					setTimeout(function () { el.textContent = '💾'; }, 1500);
+				});
+		});
+	});
+
 	// Excluir item via AJAX
 	var urlDel = <?= json_encode($this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'apiExcluirItem'])) ?>;
 	document.querySelectorAll('[data-orc-del]').forEach(function (el) {

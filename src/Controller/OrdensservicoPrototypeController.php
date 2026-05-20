@@ -161,6 +161,132 @@ class OrdensservicoPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /ordens-prototype/export.csv — exporta OS filtradas.
+	 */
+	public function exportCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$query = $this->request->getQueryParams();
+		$where = ['Ordensservico.idempresa' => $empresa];
+		if (isset($query['situacao']) && is_numeric($query['situacao']) && $query['situacao'] !== '') {
+			$where['Ordensservico.situacao'] = (int)$query['situacao'];
+		}
+		if (!empty($query['cliente'])) {
+			$where['Ordensservico.idcliente'] = (int)$query['cliente'];
+		}
+		if (!empty($query['de']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$query['de'])) {
+			$where['Ordensservico.dataabertura >='] = $query['de'];
+		}
+		if (!empty($query['ate']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$query['ate'])) {
+			$where['Ordensservico.dataabertura <='] = $query['ate'];
+		}
+		$rows = $this->Ordensservico->find()->contain(['Clientes'])->where($where)->order(['Ordensservico.id' => 'DESC'])->limit(5000)->all();
+
+		$this->autoRender = false;
+		$fname = 'ordens-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, ['ID', 'Cliente', 'Descrição', 'Valor total', 'Situação', 'Abertura'], ';');
+		foreach ($rows as $os) {
+			$cli = $os->cliente ?? null;
+			fputcsv($out, [
+				'OS-' . str_pad((string)$os->get('id'), 5, '0', STR_PAD_LEFT),
+				$cli ? (string)($cli->get('razaosocial') ?? $cli->get('nome') ?? '') : '',
+				\Cake\Utility\Text::truncate((string)($os->get('descricao') ?? $os->get('observacao') ?? ''), 200, ['ellipsis' => '…']),
+				number_format((float)($os->get('valortotal') ?? $os->get('valor_total') ?? 0), 2, ',', '.'),
+				(string)($os->get('situacao') ?? ''),
+				$os->get('dataabertura') instanceof \DateTimeInterface ? $os->get('dataabertura')->format('d/m/Y') : '',
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
+	 * POST /ordens-prototype/avancar-etapa — muda situação da OS.
+	 * situacao: 0 Aberta, 1 Em execução, 2 Aguardando aprovação, 3 Concluída
+	 */
+	public function avancarEtapa() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$id = (int)$this->request->getData('ordem_id');
+		$nova = (int)$this->request->getData('nova_situacao');
+		if ($id <= 0 || !in_array($nova, [0, 1, 2, 3], true)) {
+			$this->Flash->error(__('Dados inválidos.'));
+
+			return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'lista']);
+		}
+		try {
+			$os = $this->Ordensservico->find()->where(['id' => $id, 'idempresa' => $empresa])->first();
+			if ($os === null) {
+				$this->Flash->error(__('OS fora do escopo.'));
+
+				return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'lista']);
+			}
+			$atual = (int)$os->get('situacao');
+			// Transições básicas: sempre permite voltar 1 passo ou avançar 1 passo
+			$diff = $nova - $atual;
+			if ($diff !== 1 && $diff !== -1 && $diff !== 0) {
+				$this->Flash->error(__('Salte uma etapa por vez (atual: {0} → desejada: {1}).', $atual, $nova));
+
+				return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', $id]);
+			}
+			$os->set('situacao', $nova);
+			if ($this->Ordensservico->save($os)) {
+				$labels = [0 => __('Aberta'), 1 => __('Em execução'), 2 => __('Aguardando aprovação'), 3 => __('Concluída')];
+				$this->Flash->success(__('OS movida para "{0}".', (string)($labels[$nova] ?? $nova)));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', $id]);
+	}
+
+	/**
+	 * POST /ordens-prototype/api/atualizar-item — edita qtd/valor unitário.
+	 */
+	public function apiAtualizarItem() {
+		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$itemId = (int)$this->request->getData('item_id');
+		$qtd = (float)str_replace(',', '.', (string)$this->request->getData('quantidade'));
+		$vu = (float)str_replace(',', '.', (string)$this->request->getData('valor_unitario'));
+		if ($itemId <= 0 || $qtd <= 0 || $vu < 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Dados inválidos.')]));
+		}
+		try {
+			$itens = $this->loadModel('Itensordem');
+			$row = $itens->find()->where(['Itensordem.id' => $itemId, 'Itensordem.idempresa' => $empresa])->first();
+			if ($row === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Item fora do escopo.')]));
+			}
+			$row->set('quantidade', $qtd);
+			$row->set('valorunitario', $vu);
+			$row->set('valortotal', $qtd * $vu);
+			if (!$itens->save($row)) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao salvar.')]));
+			}
+
+			return $this->response->withStringBody(json_encode([
+				'ok' => true,
+				'item' => ['id' => $itemId, 'qtd' => $qtd, 'vlr' => $vu, 'subtotal' => $qtd * $vu],
+			], JSON_UNESCAPED_UNICODE));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
+	}
+
+	/**
 	 * POST /ordens-prototype/api/excluir-item — remove item da OS.
 	 */
 	public function apiExcluirItem() {

@@ -23,6 +23,7 @@ $clientesOptions = (array)($orcClientesOptions ?? []);
 		</div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'OrcamentosPrototype', 'action' => 'exportCsv', '?' => array_filter($f)], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📊 ' . __('Relatórios'), ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'cobranca'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('+ ' . __('Novo orçamento'), ['controller' => 'OrcamentosPrototype', 'action' => 'view', 'novo'], ['class' => 'btn btn-primary btn-sm']) ?>
 	</div>

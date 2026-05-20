@@ -636,6 +636,14 @@ Router::scope("/", function ($routes) {
         "controller" => "OrcamentosPrototype",
         "action" => "salvarRascunho",
     ]);
+    $routes->connect("/orcamentos-prototype/mudar-status", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "mudarStatus",
+    ]);
+    $routes->connect("/orcamentos-prototype/export.csv", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "exportCsv",
+    ]);
     $routes->connect("/orcamentos-prototype/api/produtos", [
         "controller" => "OrcamentosPrototype",
         "action" => "apiProdutos",
@@ -652,6 +660,10 @@ Router::scope("/", function ($routes) {
         "controller" => "OrcamentosPrototype",
         "action" => "apiExcluirItem",
     ]);
+    $routes->connect("/orcamentos-prototype/api/atualizar-item", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiAtualizarItem",
+    ]);
     $routes->connect("/ordens-prototype/api/adicionar-item", [
         "controller" => "OrdensservicoPrototype",
         "action" => "apiAdicionarItem",
@@ -659,6 +671,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/ordens-prototype/api/excluir-item", [
         "controller" => "OrdensservicoPrototype",
         "action" => "apiExcluirItem",
+    ]);
+    $routes->connect("/ordens-prototype/api/atualizar-item", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "apiAtualizarItem",
     ]);
     $routes->connect("/orcamentos-prototype/:page", [
         "controller" => "OrcamentosPrototype",
@@ -681,6 +697,14 @@ Router::scope("/", function ($routes) {
     $routes->connect("/ordens-prototype/salvar-rascunho", [
         "controller" => "OrdensservicoPrototype",
         "action" => "salvarRascunho",
+    ]);
+    $routes->connect("/ordens-prototype/avancar-etapa", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "avancarEtapa",
+    ]);
+    $routes->connect("/ordens-prototype/export.csv", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "exportCsv",
     ]);
     $routes->connect("/ordens-prototype/:page", [
         "controller" => "OrdensservicoPrototype",

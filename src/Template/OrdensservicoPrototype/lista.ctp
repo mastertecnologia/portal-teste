@@ -22,6 +22,7 @@ $clientesOpt = (array)($osClientesOptions ?? []);
 		</div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'OrdensservicoPrototype', 'action' => 'exportCsv', '?' => array_filter($f)], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('🗂 ' . __('Kanban'), ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'kanban'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('+ ' . __('Nova OS'), ['controller' => 'OrdensservicoPrototype', 'action' => 'view', 'abertura'], ['class' => 'btn btn-primary btn-sm']) ?>
 	</div>
