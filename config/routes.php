@@ -579,6 +579,24 @@ Router::scope("/", function ($routes) {
         "decisao" => "aprovar|reprovar",
     ]);
 
+    // ===== Web Push =====
+    $routes->connect("/web-push", [
+        "controller" => "WebPush",
+        "action" => "index",
+    ]);
+    $routes->connect("/web-push/vapid", [
+        "controller" => "WebPush",
+        "action" => "vapid",
+    ]);
+    $routes->connect("/web-push/subscribe", [
+        "controller" => "WebPush",
+        "action" => "subscribe",
+    ]);
+    $routes->connect("/web-push/unsubscribe", [
+        "controller" => "WebPush",
+        "action" => "unsubscribe",
+    ]);
+
     // ===== CSAT público (cliente acessa via token) =====
     $routes->connect("/csat/:token/ok", [
         "controller" => "TicketCsat",
@@ -617,6 +635,14 @@ Router::scope("/", function ($routes) {
     $routes->connect("/orcamentos-prototype/api/clientes", [
         "controller" => "OrcamentosPrototype",
         "action" => "apiClientes",
+    ]);
+    $routes->connect("/orcamentos-prototype/api/adicionar-item", [
+        "controller" => "OrcamentosPrototype",
+        "action" => "apiAdicionarItem",
+    ]);
+    $routes->connect("/ordens-prototype/api/adicionar-item", [
+        "controller" => "OrdensservicoPrototype",
+        "action" => "apiAdicionarItem",
     ]);
     $routes->connect("/orcamentos-prototype/:page", [
         "controller" => "OrcamentosPrototype",
@@ -739,6 +765,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/bancos-prototype/", [
         "controller" => "BancosPrototype",
         "action" => "lista",
+    ]);
+    $routes->connect("/bancos-prototype/conciliar", [
+        "controller" => "BancosPrototype",
+        "action" => "conciliar",
     ]);
     $routes->connect("/bancos-prototype/:page", [
         "controller" => "BancosPrototype",

@@ -64,8 +64,19 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
+	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
 		<strong style="font-size:13px;"><?= h(__('Itens / serviços')) ?></strong>
+		<button type="button" class="btn btn-primary btn-xs" onclick="document.getElementById('osNovoItem').style.display = document.getElementById('osNovoItem').style.display==='none'?'block':'none'">+ <?= h(__('Adicionar item')) ?></button>
+	</div>
+	<div id="osNovoItem" style="display:none;padding:12px 14px;background:#FAFAF9;border-bottom:1px solid var(--border-light);">
+		<div style="display:grid;grid-template-columns:2fr 90px 90px 110px auto;gap:8px;align-items:end;">
+			<div class="field"><label><?= h(__('Descrição')) ?></label><input type="text" id="osItemDesc" placeholder="<?= h(__('Serviço/material...')) ?>"></div>
+			<div class="field"><label><?= h(__('Un')) ?></label><input type="text" id="osItemUn" value="un"></div>
+			<div class="field"><label><?= h(__('Qtd')) ?></label><input type="number" step="0.01" min="0.01" id="osItemQtd" value="1"></div>
+			<div class="field"><label><?= h(__('Vlr unit. R$')) ?></label><input type="number" step="0.01" min="0" id="osItemVlr" value="0"></div>
+			<button type="button" id="osItemBtn" class="btn btn-primary btn-sm">💾 <?= h(__('Salvar')) ?></button>
+		</div>
+		<div id="osItemMsg" style="font-size:11px;margin-top:6px;"></div>
 	</div>
 	<div style="overflow-x:auto;">
 		<table class="tbl" style="margin:0;">
@@ -96,8 +107,46 @@ if (strpos($st, 'concl') !== false || strpos($st, 'fech') !== false) {
 	<?php if ($osLinhas !== []) : ?>
 		<div class="tot-wrap" style="padding:14px;">
 			<div class="tot-inner">
-				<div class="tot-l"><span><?= h(__('Total dos itens')) ?></span><span class="g"><?= h($H->brl($osTotalItens)) ?></span></div>
+				<div class="tot-l"><span><?= h(__('Total dos itens')) ?></span><span class="g" id="osTotalLbl"><?= h($H->brl($osTotalItens)) ?></span></div>
 			</div>
 		</div>
 	<?php endif; ?>
 </div>
+
+<?php $this->start('script'); ?>
+<script>
+(function () {
+	var url = <?= json_encode($this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'apiAdicionarItem'])) ?>;
+	var osId = <?= (int)$os['id'] ?>;
+	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
+	var btn = document.getElementById('osItemBtn');
+	var msg = document.getElementById('osItemMsg');
+	btn && btn.addEventListener('click', function () {
+		var d = document.getElementById('osItemDesc').value.trim();
+		var un = document.getElementById('osItemUn').value.trim() || 'un';
+		var q = parseFloat(document.getElementById('osItemQtd').value);
+		var v = parseFloat(document.getElementById('osItemVlr').value) || 0;
+		if (!d || !(q > 0)) { msg.innerHTML = '<span style="color:#7A1822">Preencha descrição e quantidade.</span>'; return; }
+		msg.innerHTML = '⏳ Salvando...';
+		var fd = new FormData();
+		fd.append('_csrfToken', csrf);
+		fd.append('ordem_id', osId);
+		fd.append('descricao', d);
+		fd.append('unidade', un);
+		fd.append('quantidade', q);
+		fd.append('valor_unitario', v);
+		fetch(url, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				if (!data.ok) { msg.innerHTML = '<span style="color:#7A1822">' + (data.error || 'Falha.') + '</span>'; return; }
+				msg.innerHTML = '<span style="color:#0F6E56">✓ Item adicionado. Recarregue para ver na lista.</span>';
+				document.getElementById('osItemDesc').value = '';
+				document.getElementById('osItemQtd').value = '1';
+				document.getElementById('osItemVlr').value = '0';
+				setTimeout(function () { window.location.reload(); }, 800);
+			})
+			.catch(function (e) { msg.innerHTML = '<span style="color:#7A1822">Erro de rede.</span>'; });
+	});
+})();
+</script>
+<?php $this->end(); ?>

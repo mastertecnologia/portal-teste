@@ -309,6 +309,54 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
+	 * POST /bancos-prototype/conciliar — aceita match sugerido.
+	 * Recebe extrato_id + lancamento_id; vincula e marca como conciliado.
+	 */
+	public function conciliar() {
+		$this->request->allowMethod(['post']);
+		$empresa = (int)$this->Auth->user('idempresa');
+		$eid = (int)$this->request->getData('extrato_id');
+		$lid = (int)$this->request->getData('lancamento_id');
+		if ($eid <= 0 || $lid <= 0) {
+			$this->Flash->error(__('Dados inválidos.'));
+
+			return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+		}
+		try {
+			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+			$row = $ext->find()->where(['id' => $eid, 'idempresa' => $empresa])->first();
+			if ($row === null) {
+				$this->Flash->error(__('Movimento de extrato fora do escopo.'));
+
+				return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+			}
+			if ((int)$row->get('conciliado') === 1 || (int)$row->get('financeiro_lancamento_id') > 0) {
+				$this->Flash->info(__('Movimento já conciliado.'));
+
+				return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+			}
+			$lan = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroLancamentos');
+			$lanRow = $lan->find()->where(['id' => $lid, 'idempresa' => $empresa])->first();
+			if ($lanRow === null) {
+				$this->Flash->error(__('Lançamento financeiro fora do escopo.'));
+
+				return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+			}
+			$row->set('financeiro_lancamento_id', (int)$lanRow->get('id'));
+			$row->set('conciliado', 1);
+			if ($ext->save($row)) {
+				$this->Flash->success(__('Movimento conciliado com o lançamento #{0}.', (int)$lanRow->get('id')));
+			} else {
+				$this->Flash->error(__('Falha ao gravar conciliação.'));
+			}
+		} catch (\Throwable $e) {
+			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
+		}
+
+		return $this->redirect(['controller' => 'BancosPrototype', 'action' => 'view', 'conciliacao']);
+	}
+
+	/**
 	 * Conciliação simplificada: lê extrato bancário, mostra status (conciliado/pendente)
 	 * e tenta sugerir matching por valor + data (±3 dias) com financeiro_lancamentos.
 	 *

@@ -58,8 +58,20 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
+	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
 		<strong style="font-size:13px;"><?= h(__('Itens do orçamento')) ?></strong>
+		<button type="button" class="btn btn-primary btn-xs" onclick="document.getElementById('orcNovoItem').style.display = document.getElementById('orcNovoItem').style.display==='none'?'block':'none'">+ <?= h(__('Adicionar item')) ?></button>
+	</div>
+	<div id="orcNovoItem" style="display:none;padding:12px 14px;background:#FAFAF9;border-bottom:1px solid var(--border-light);">
+		<div style="display:grid;grid-template-columns:90px 2fr 70px 80px 110px auto;gap:8px;align-items:end;">
+			<div class="field"><label><?= h(__('Código')) ?></label><input type="text" id="orcItemCod" placeholder="—"></div>
+			<div class="field"><label><?= h(__('Descrição')) ?></label><input type="text" id="orcItemDesc" placeholder="<?= h(__('Produto/serviço...')) ?>"></div>
+			<div class="field"><label><?= h(__('Un')) ?></label><input type="text" id="orcItemUn" value="un"></div>
+			<div class="field"><label><?= h(__('Qtd')) ?></label><input type="number" step="0.01" min="0.01" id="orcItemQtd" value="1"></div>
+			<div class="field"><label><?= h(__('Vlr unit. R$')) ?></label><input type="number" step="0.01" min="0" id="orcItemVlr" value="0"></div>
+			<button type="button" id="orcItemBtn" class="btn btn-primary btn-sm">💾 <?= h(__('Salvar')) ?></button>
+		</div>
+		<div id="orcItemMsg" style="font-size:11px;margin-top:6px;"></div>
 	</div>
 	<div style="overflow-x:auto;">
 		<table class="tbl" style="margin:0;">
@@ -99,3 +111,44 @@ if ($valorFinal <= 0 && $orcLinhas !== []) {
 		</div>
 	</div>
 </div>
+
+<?php $this->start('script'); ?>
+<script>
+(function () {
+	var url = <?= json_encode($this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'apiAdicionarItem'])) ?>;
+	var orcId = <?= (int)$orc['id'] ?>;
+	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
+	var btn = document.getElementById('orcItemBtn');
+	var msg = document.getElementById('orcItemMsg');
+	btn && btn.addEventListener('click', function () {
+		var cod = document.getElementById('orcItemCod').value.trim();
+		var d = document.getElementById('orcItemDesc').value.trim();
+		var un = document.getElementById('orcItemUn').value.trim() || 'un';
+		var q = parseFloat(document.getElementById('orcItemQtd').value);
+		var v = parseFloat(document.getElementById('orcItemVlr').value) || 0;
+		if (!d || !(q > 0)) { msg.innerHTML = '<span style="color:#7A1822">Preencha descrição e quantidade.</span>'; return; }
+		msg.innerHTML = '⏳ Salvando...';
+		var fd = new FormData();
+		fd.append('_csrfToken', csrf);
+		fd.append('orcamento_id', orcId);
+		fd.append('codigo', cod);
+		fd.append('descricao', d);
+		fd.append('unidade', un);
+		fd.append('quantidade', q);
+		fd.append('valor_unitario', v);
+		fetch(url, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				if (!data.ok) { msg.innerHTML = '<span style="color:#7A1822">' + (data.error || 'Falha.') + '</span>'; return; }
+				msg.innerHTML = '<span style="color:#0F6E56">✓ Item adicionado.</span>';
+				document.getElementById('orcItemCod').value = '';
+				document.getElementById('orcItemDesc').value = '';
+				document.getElementById('orcItemQtd').value = '1';
+				document.getElementById('orcItemVlr').value = '0';
+				setTimeout(function () { window.location.reload(); }, 800);
+			})
+			.catch(function (e) { msg.innerHTML = '<span style="color:#7A1822">Erro de rede.</span>'; });
+	});
+})();
+</script>
+<?php $this->end(); ?>

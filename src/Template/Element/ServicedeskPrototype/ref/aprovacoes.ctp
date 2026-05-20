@@ -113,7 +113,30 @@ $dueClass = static function (array $due): string {
 						$inlineRid = (int)$mm[2];
 					}
 					$csrf = (string)$this->request->getAttribute('csrfToken');
+					$rbacStage = (string)($it['rbac_stage'] ?? '');
 					?>
+					<?php if ($inlineSrc === 'rbac' && $rbacStage !== '') :
+						$mgrAt = $it['rbac_manager_at'] ?? null;
+						$mgrResp = (string)($it['rbac_manager_response'] ?? '');
+					?>
+						<div style="display:flex;gap:6px;align-items:center;margin:6px 0 10px;padding:6px 10px;background:var(--bg-surface);border-radius:6px;font-size:11px;">
+							<span style="display:inline-flex;align-items:center;gap:4px;color:<?= in_array($rbacStage, ['manager_approved', 'pending_admin'], true) ? 'var(--teal-dark)' : '#8A4D02' ?>;">
+								<?= in_array($rbacStage, ['manager_approved', 'pending_admin'], true) ? '✓' : '⌛' ?>
+								<strong><?= h(__('Manager')) ?></strong>
+							</span>
+							<span style="color:var(--text-muted);">→</span>
+							<span style="display:inline-flex;align-items:center;gap:4px;color:<?= $rbacStage === 'pending_admin' || $rbacStage === 'manager_approved' ? '#8A4D02' : 'var(--text-muted)' ?>;">
+								<?= $rbacStage === 'pending_admin' || $rbacStage === 'manager_approved' ? '⌛' : '○' ?>
+								<strong><?= h(__('Admin')) ?></strong>
+							</span>
+							<?php if ($mgrAt instanceof \DateTimeInterface) : ?>
+								<span style="color:var(--text-muted);margin-left:auto;font-size:10px;">
+									<?= h($mgrAt->format('d/m H:i')) ?>
+									<?php if ($mgrResp !== '') : ?>· "<?= h(\Cake\Utility\Text::truncate($mgrResp, 40, ['ellipsis' => '…'])) ?>"<?php endif; ?>
+								</span>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
 					<div class="sdp-ap-card">
 						<div class="sdp-ap-card-head">
 							<div>

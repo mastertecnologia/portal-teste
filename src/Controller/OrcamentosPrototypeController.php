@@ -431,6 +431,62 @@ class OrcamentosPrototypeController extends AppController {
 	}
 
 	/**
+	 * POST /orcamentos-prototype/api/adicionar-item — adiciona item ao orçamento.
+	 */
+	public function apiAdicionarItem() {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$orcId = (int)$this->request->getData('orcamento_id');
+		$descricao = trim((string)$this->request->getData('descricao'));
+		$qtd = (float)str_replace(',', '.', (string)$this->request->getData('quantidade'));
+		$vu = (float)str_replace(',', '.', (string)$this->request->getData('valor_unitario'));
+		$codigo = trim((string)$this->request->getData('codigo'));
+		$unidade = trim((string)$this->request->getData('unidade'));
+		if ($orcId <= 0 || $descricao === '' || $qtd <= 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Descrição e quantidade obrigatórias.')]));
+		}
+		try {
+			$orc = $this->Orcamentos->find()->where(['id' => $orcId, 'idempresa' => $empresa])->first();
+			if ($orc === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Orçamento fora do escopo.')]));
+			}
+			$itens = $this->loadModel('Orcamentositens');
+			$entity = $itens->newEntity([
+				'idempresa' => $empresa,
+				'idorcamento' => $orcId,
+				'codproduto' => $codigo,
+				'descricao' => $descricao,
+				'unidade' => $unidade !== '' ? $unidade : 'un',
+				'quantidade' => $qtd,
+				'valorunitario' => $vu,
+				'valordesconto' => 0,
+				'tipo' => 'serv',
+			], ['validate' => false]);
+			$saved = $itens->save($entity);
+			if (!$saved) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao gravar item.')]));
+			}
+
+			return $this->response->withStringBody(json_encode([
+				'ok' => true,
+				'item' => [
+					'id' => (int)$entity->get('id'),
+					'codigo' => $codigo,
+					'descricao' => $descricao,
+					'unidade' => $unidade,
+					'qtd' => $qtd,
+					'vlr' => $vu,
+					'subtotal' => $qtd * $vu,
+				],
+			], JSON_UNESCAPED_UNICODE));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
+	}
+
+	/**
 	 * Salva orçamento rascunho a partir do wizard premium (pg-novo).
 	 * Cria registro em orcamentosnovosdes status=Pendente e redireciona ao detalhe.
 	 */

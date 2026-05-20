@@ -7,6 +7,8 @@
  * @var array<int,array<string,mixed>> $concItems
  */
 $H = $this->ErpPrototype;
+$csrf = (string)$this->request->getAttribute('csrfToken');
+$urlConc = $this->Url->build(['controller' => 'BancosPrototype', 'action' => 'conciliar']);
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -62,10 +64,20 @@ $H = $this->ErpPrototype;
 							<?php if (!empty($it['match'])) :
 								$m = (array)$it['match'];
 							?>
-								<div style="font-size:11px;">
-									<strong>#<?= (int)$m['id'] ?></strong>
-									· <?= h(\Cake\Utility\Text::truncate((string)$m['descricao'], 50, ['ellipsis' => '…'])) ?>
-									<div style="color:var(--text-muted);font-size:10px;"><?= h($H->dt($m['data'])) ?></div>
+								<div style="font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+									<div style="flex:1;min-width:120px;">
+										<strong>#<?= (int)$m['id'] ?></strong>
+										· <?= h(\Cake\Utility\Text::truncate((string)$m['descricao'], 40, ['ellipsis' => '…'])) ?>
+										<div style="color:var(--text-muted);font-size:10px;"><?= h($H->dt($m['data'])) ?></div>
+									</div>
+									<?php if ($st !== 'conciliado') : ?>
+										<form method="post" action="<?= h($urlConc) ?>" style="margin:0;display:inline;" onsubmit="return confirm('<?= h(__('Conciliar movimento ao lançamento #{0}?', (int)$m['id'])) ?>')">
+											<input type="hidden" name="_csrfToken" value="<?= h($csrf) ?>">
+											<input type="hidden" name="extrato_id" value="<?= (int)$it['id'] ?>">
+											<input type="hidden" name="lancamento_id" value="<?= (int)$m['id'] ?>">
+											<button type="submit" class="btn btn-primary btn-xs">✓ <?= h(__('Aceitar')) ?></button>
+										</form>
+									<?php endif; ?>
 								</div>
 							<?php else : ?>
 								<span style="color:var(--text-muted);font-size:11px;">—</span>

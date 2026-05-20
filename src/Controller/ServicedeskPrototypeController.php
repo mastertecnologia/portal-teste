@@ -191,20 +191,48 @@ class ServicedeskPrototypeController extends AppController {
 
 			return;
 		}
+		$status = (string)$row->get('status');
+		$isAdminStage = in_array($status, ['pending_admin', 'manager_approved'], true);
+		$isAdmin = !empty($user['admin']);
 		$wf = new \App\Service\RbacApprovalWorkflowService();
-		if (!$wf->managerCanReview($user, (int)$row->get('user_id'))) {
-			$this->Flash->error(__('Você não pode revisar este pedido.'));
 
-			return;
-		}
-		if ($aprovar) {
-			$wf->approveManager($row, $user, $nota);
+		if ($isAdminStage) {
+			if (!$isAdmin) {
+				$this->Flash->error(__('Pedido em fila admin: apenas administradores podem decidir.'));
+
+				return;
+			}
+			if ($aprovar) {
+				$wf->approveAdmin($row, $user, $nota);
+			} else {
+				$wf->rejectAdmin($row, $user, $nota);
+			}
+			$msg = $aprovar
+				? __('Admin aprovou o pedido (etapa final). Acesso liberado.')
+				: __('Admin recusou o pedido.');
 		} else {
-			$wf->rejectManager($row, $user, $nota);
+			if (!$wf->managerCanReview($user, (int)$row->get('user_id'))) {
+				$this->Flash->error(__('Você não pode revisar este pedido (não está na equipe do solicitante).'));
+
+				return;
+			}
+			if ($aprovar) {
+				$wf->approveManager($row, $user, $nota);
+			} else {
+				$wf->rejectManager($row, $user, $nota);
+			}
+			$msg = $aprovar
+				? __('Manager aprovou. Pedido encaminhado à fila admin.')
+				: __('Manager recusou o pedido.');
 		}
 		if ($tbl->save($row)) {
+			// Avança para fila admin automaticamente após manager aprovar
+			if (!$isAdminStage && $aprovar) {
+				$wf->enqueueForAdmin($row);
+				$tbl->save($row);
+			}
 			(new \App\Service\RbacAccessRequestService())->syncApprovalInbox($row);
-			$this->Flash->success(__('Pedido RBAC {0}.', $aprovar ? __('aprovado') : __('reprovado')));
+			$this->Flash->success($msg);
 		}
 	}
 

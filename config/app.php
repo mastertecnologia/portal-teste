@@ -491,4 +491,11 @@ return [
         // Piloto: espelha rbac_access_requests em approval_requests (requer migration).
         'dual_write_rbac' => filter_var(env('APPROVAL_REQUESTS_DUAL_WRITE_RBAC', true), FILTER_VALIDATE_BOOLEAN),
     ],
+
+    'WebPush' => [
+        // Chaves VAPID — gere com: npx web-push generate-vapid-keys
+        // A pública vai para o cliente; a privada SÓ no servidor.
+        'public_key' => env('WEB_PUSH_VAPID_PUBLIC', ''),
+        'private_key' => env('WEB_PUSH_VAPID_PRIVATE', ''),
+    ],
 ];

@@ -158,6 +158,62 @@ class OrdensservicoPrototypeController extends AppController {
 	}
 
 	/**
+	 * POST /ordens-prototype/api/adicionar-item — adiciona item à OS.
+	 * Aceita ordem_id + descricao + quantidade + valor_unitario; cria itensordem.
+	 */
+	public function apiAdicionarItem() {
+		$this->request->allowMethod(['post']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$osId = (int)$this->request->getData('ordem_id');
+		$descricao = trim((string)$this->request->getData('descricao'));
+		$qtd = (float)str_replace(',', '.', (string)$this->request->getData('quantidade'));
+		$vu = (float)str_replace(',', '.', (string)$this->request->getData('valor_unitario'));
+		$unidade = trim((string)$this->request->getData('unidade'));
+		if ($osId <= 0 || $descricao === '' || $qtd <= 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Descrição e quantidade obrigatórias.')]));
+		}
+		try {
+			$os = $this->Ordensservico->find()->where(['id' => $osId, 'idempresa' => $empresa])->first();
+			if ($os === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('OS fora do escopo.')]));
+			}
+			$itens = $this->loadModel('Itensordem');
+			$subtotal = $qtd * $vu;
+			$entity = $itens->newEntity([
+				'idempresa' => $empresa,
+				'idordempk' => $osId,
+				'descricao' => $descricao,
+				'unidade' => $unidade !== '' ? $unidade : 'un',
+				'quantidade' => $qtd,
+				'valorunitario' => $vu,
+				'valordesconto' => 0,
+				'valortotal' => $subtotal,
+				'tipo' => 'serv',
+			], ['validate' => false]);
+			$saved = $itens->save($entity);
+			if (!$saved) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao gravar item.')]));
+			}
+
+			return $this->response->withStringBody(json_encode([
+				'ok' => true,
+				'item' => [
+					'id' => (int)$entity->get('id'),
+					'descricao' => $descricao,
+					'unidade' => $unidade,
+					'qtd' => $qtd,
+					'vlr' => $vu,
+					'subtotal' => $subtotal,
+				],
+			], JSON_UNESCAPED_UNICODE));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
+	}
+
+	/**
 	 * Salva OS rascunho a partir do wizard premium (pg-os-abertura).
 	 */
 	public function salvarRascunho() {
