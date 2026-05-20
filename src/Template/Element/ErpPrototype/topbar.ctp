@@ -97,6 +97,22 @@ $currentCnpj = $current['cnpj'] ?? '';
 			<div class="topbar-sep"></div>
 		<?php endif; ?>
 
+		<div style="position:relative;" id="pgm-notif-wrap">
+			<button type="button" id="pgm-notif-btn" style="background:none;border:none;cursor:pointer;padding:6px;position:relative;font-size:18px;">
+				🔔
+				<span id="pgm-notif-badge" style="display:none;position:absolute;top:2px;right:0;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:14px;text-align:center;">0</span>
+			</button>
+			<div id="pgm-notif-panel" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 8px 24px rgba(0,0,0,.15);width:340px;max-height:420px;overflow-y:auto;z-index:1000;">
+				<div style="padding:10px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between;">
+					<span>🔔 <?= h(__('Notificações recentes')) ?></span>
+					<span id="pgm-notif-count" style="font-weight:400;">0</span>
+				</div>
+				<div id="pgm-notif-list" style="padding:6px 0;">
+					<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px;"><?= h(__('Carregando...')) ?></div>
+				</div>
+			</div>
+		</div>
+		<div class="topbar-sep"></div>
 		<span style="font-size:11px;color:var(--text-muted);"><?= h(date('d/m/Y')) ?></span>
 		<div class="topbar-sep"></div>
 		<?php
@@ -125,4 +141,60 @@ document.addEventListener('click', function (e) {
 		d.classList.remove('open');
 	}
 });
+
+// === Sino de notificações ===
+(function () {
+	var btn = document.getElementById('pgm-notif-btn');
+	var panel = document.getElementById('pgm-notif-panel');
+	var list = document.getElementById('pgm-notif-list');
+	var badge = document.getElementById('pgm-notif-badge');
+	var countLabel = document.getElementById('pgm-notif-count');
+	if (!btn) return;
+	var url = <?= json_encode($this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'apiNotificacoes'])) ?>;
+	var loaded = false;
+
+	function loadNotifs () {
+		fetch(url, {credentials: 'same-origin'})
+			.then(function (r) { return r.ok ? r.json() : null; })
+			.then(function (data) {
+				if (!data || !data.ok) return;
+				if (data.count > 0) {
+					badge.style.display = 'inline-block';
+					badge.textContent = data.count;
+					countLabel.textContent = data.count + ' nos últimos 7 dias';
+				}
+				if (!loaded) {
+					if (data.items.length === 0) {
+						list.innerHTML = '<div style="padding:24px;text-align:center;color:#6b6a65;font-size:12px;">📭 Nenhuma alteração recente.</div>';
+					} else {
+						list.innerHTML = data.items.map(function (n) {
+							var href = n.url || '#';
+							var by = n.by ? ' · ' + n.by : '';
+							return '<a href="' + href + '" style="display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #f0efec;text-decoration:none;color:#1a1a18;align-items:start;">' +
+								'<div style="font-size:18px;line-height:1;">' + n.icon + '</div>' +
+								'<div style="flex:1;min-width:0;">' +
+								'  <div style="font-size:12px;font-weight:500;">' + n.title + '</div>' +
+								'  <div style="font-size:11px;color:#6b6a65;">' + n.sub + '</div>' +
+								'  <div style="font-size:10px;color:#9a9890;margin-top:2px;">' + n.at + by + '</div>' +
+								'</div></a>';
+						}).join('');
+					}
+					loaded = true;
+				}
+			});
+	}
+	btn.addEventListener('click', function (e) {
+		e.stopPropagation();
+		var open = panel.style.display !== 'none';
+		panel.style.display = open ? 'none' : 'block';
+		if (!open && !loaded) loadNotifs();
+	});
+	document.addEventListener('click', function (e) {
+		var wrap = document.getElementById('pgm-notif-wrap');
+		if (wrap && !wrap.contains(e.target)) panel.style.display = 'none';
+	});
+	// Refresh badge a cada 60s sem abrir painel
+	loadNotifs();
+	setInterval(function () { loaded = false; loadNotifs(); }, 60000);
+})();
 </script>

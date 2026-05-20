@@ -58,9 +58,60 @@ class PcpPrototypeController extends AppController {
 	}
 
 	/**
+	 * Dashboard PCP demo com gráficos Chart.js (dados sintéticos).
+	 */
+	public function dashboard() {
+		// Dados demo: OEE últimos 14 dias, OPs por status, produção × meta
+		$dias = [];
+		$oee = [];
+		$disponibilidade = [];
+		$performance = [];
+		$qualidade = [];
+		for ($i = 13; $i >= 0; $i--) {
+			$d = \Cake\I18n\Time::now()->subDays($i);
+			$dias[] = $d->format('d/m');
+			// Simulação determinística baseada em dia da semana
+			$dow = (int)$d->format('w');
+			$base = $dow === 0 || $dow === 6 ? 65 : 82;
+			$disp = $base + (($i * 3) % 12);
+			$perf = $base + (($i * 7) % 14);
+			$qual = 88 + (($i * 5) % 10);
+			$disponibilidade[] = min(100, $disp);
+			$performance[] = min(100, $perf);
+			$qualidade[] = min(100, $qual);
+			$oee[] = round(($disp / 100) * ($perf / 100) * ($qual / 100) * 100, 1);
+		}
+
+		$this->set([
+			'title' => __('PCP · Dashboard'),
+			'erpNavActive' => 'pcp-dashboard',
+			'erpBreadcrumb' => [
+				['label' => 'PGM ERP'],
+				['label' => __('Indústria'), 'url' => ['controller' => 'PcpPrototype', 'action' => 'lista']],
+				['label' => __('Dashboard'), 'cur' => true],
+			],
+			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
+			'useChartJs' => true,
+			'pcpChart' => [
+				'labels' => $dias,
+				'oee' => $oee,
+				'disp' => $disponibilidade,
+				'perf' => $performance,
+				'qual' => $qualidade,
+				'opsKpi' => ['abertas' => 18, 'em_execucao' => 7, 'aguardando_mat' => 3, 'concluidas' => 142],
+			],
+		]);
+
+		return $this->render('dashboard');
+	}
+
+	/**
 	 * @param string $page
 	 */
 	public function view($page = 'dashboard') {
+		if ($page === 'dashboard') {
+			return $this->dashboard();
+		}
 		$pages = $this->buildPages();
 		if (!isset($pages[$page])) {
 			throw new NotFoundException(__('Tela PCP não encontrada.'));

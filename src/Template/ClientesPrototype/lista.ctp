@@ -7,6 +7,7 @@
  * @var array<int,array<string,mixed>> $cliItems
  */
 $H = $this->ErpPrototype;
+$f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -32,9 +33,32 @@ $H = $this->ErpPrototype;
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
-		<input type="text" placeholder="🔍 <?= h(__('Buscar nome, CNPJ, e-mail, telefone...')) ?>" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;"/>
-	</div>
+	<form method="get" style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+			<div class="field" style="flex:1;min-width:240px;">
+				<label><?= h(__('Buscar')) ?></label>
+				<input type="search" name="q" value="<?= h((string)$f['q']) ?>" placeholder="🔍 <?= h(__('Nome, CNPJ, e-mail, telefone...')) ?>">
+			</div>
+			<div class="field" style="flex:0 0 120px;">
+				<label><?= h(__('Tipo')) ?></label>
+				<select name="tipo">
+					<option value=""><?= h(__('Todos')) ?></option>
+					<option value="pj"<?= (string)$f['tipo'] === 'pj' ? ' selected' : '' ?>>PJ</option>
+					<option value="pf"<?= (string)$f['tipo'] === 'pf' ? ' selected' : '' ?>>PF</option>
+				</select>
+			</div>
+			<div class="field" style="flex:0 0 140px;">
+				<label><?= h(__('Status')) ?></label>
+				<select name="status">
+					<option value=""><?= h(__('Todos')) ?></option>
+					<option value="ativo"<?= (string)$f['status'] === 'ativo' ? ' selected' : '' ?>>Ativo</option>
+					<option value="inativo"<?= (string)$f['status'] === 'inativo' ? ' selected' : '' ?>>Inativo</option>
+				</select>
+			</div>
+			<button type="submit" class="btn btn-primary btn-sm">🔍 <?= h(__('Filtrar')) ?></button>
+			<?= $this->Html->link(__('Limpar'), ['controller' => 'ClientesPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		</div>
+	</form>
 	<div style="overflow-x:auto;">
 		<table class="tbl" style="margin:0;">
 			<thead>
@@ -52,7 +76,7 @@ $H = $this->ErpPrototype;
 				<?php if ($cliItems === []) : ?>
 					<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Nenhum cliente no escopo.')) ?></td></tr>
 				<?php else : foreach ($cliItems as $it) : ?>
-					<tr>
+					<tr data-cli-row="<?= (int)$it['id'] ?>">
 						<td><span class="badge <?= $it['tipo'] === 'PJ' ? 'b-aprov' : 'b-env' ?>"><?= h((string)$it['tipo']) ?></span></td>
 						<td>
 							<strong><?= h((string)$it['nome']) ?></strong>
@@ -62,8 +86,14 @@ $H = $this->ErpPrototype;
 						</td>
 						<td style="font-family:monospace;font-size:11px;"><?= h((string)$it['cnpj']) ?></td>
 						<td style="font-size:11px;">
-							<?php if (!empty($it['email'])) : ?>📧 <?= h((string)$it['email']) ?><br><?php endif; ?>
-							<?php if (!empty($it['fone'])) : ?>📞 <?= h((string)$it['fone']) ?><?php endif; ?>
+							<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;">
+								<span title="<?= h(__('E-mail')) ?>">📧</span>
+								<input type="email" data-cli-edit="email" data-cli-id="<?= (int)$it['id'] ?>" value="<?= h((string)$it['email']) ?>" placeholder="—" style="border:1px dashed transparent;background:transparent;font-size:11px;padding:2px 4px;border-radius:3px;flex:1;min-width:120px;">
+							</div>
+							<div style="display:flex;align-items:center;gap:4px;">
+								<span title="<?= h(__('Telefone')) ?>">📞</span>
+								<input type="tel" data-cli-edit="fone" data-cli-id="<?= (int)$it['id'] ?>" value="<?= h((string)$it['fone']) ?>" placeholder="—" style="border:1px dashed transparent;background:transparent;font-size:11px;padding:2px 4px;border-radius:3px;flex:1;min-width:120px;">
+							</div>
 						</td>
 						<td class="mu"><?= h($H->dt($it['desde'])) ?></td>
 						<td><?= $H->badge($it['inativo'] ? __('Inativo') : __('Ativo'), $it['inativo'] ? 'arq' : 'paga') ?></td>
@@ -76,3 +106,46 @@ $H = $this->ErpPrototype;
 		</table>
 	</div>
 </div>
+
+<div class="alert-box alert-blue" style="margin-top:14px;">
+	💡 <?= h(__('Você pode editar e-mail e telefone direto na tabela — basta clicar no campo, alterar e sair (Tab/clique fora).')) ?>
+</div>
+
+<?php $this->start('script'); ?>
+<script>
+(function () {
+	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
+	var url = <?= json_encode($this->Url->build(['controller' => 'ClientesPrototype', 'action' => 'apiAtualizarContato'])) ?>;
+	document.querySelectorAll('[data-cli-edit]').forEach(function (el) {
+		var orig = el.value;
+		el.addEventListener('focus', function () {
+			el.style.borderColor = '#1D9E75';
+			el.style.background = '#fff';
+		});
+		el.addEventListener('blur', function () {
+			el.style.borderColor = 'transparent';
+			el.style.background = 'transparent';
+			var v = el.value.trim();
+			if (v === orig) return;
+			var fd = new FormData();
+			fd.append('_csrfToken', csrf);
+			fd.append('cliente_id', el.getAttribute('data-cli-id'));
+			fd.append('campo', el.getAttribute('data-cli-edit'));
+			fd.append('valor', v);
+			fetch(url, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					if (data.ok) {
+						orig = v;
+						el.style.background = '#E1F5EE';
+						setTimeout(function () { el.style.background = 'transparent'; }, 800);
+					} else {
+						el.value = orig;
+						alert(data.error || 'Falha ao salvar');
+					}
+				});
+		});
+	});
+})();
+</script>
+<?php $this->end(); ?>

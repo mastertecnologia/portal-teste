@@ -49,10 +49,29 @@ class ProdutosPrototypeController extends AppController {
 	 */
 	public function lista() {
 		$empresa = (int)$this->Auth->user('idempresa');
+		$busca = trim((string)$this->request->getQuery('q', ''));
+		$filtroTipo = (string)$this->request->getQuery('tipo', '');
+		$filtroAtivo = (string)$this->request->getQuery('ativo', '');
+		$where = ['Produtos.idempresa' => $empresa];
+		if ($busca !== '') {
+			$where['OR'] = [
+				'Produtos.descricao ILIKE' => '%' . $busca . '%',
+				'Produtos.codigo ILIKE' => '%' . $busca . '%',
+				'Produtos.ncm ILIKE' => '%' . $busca . '%',
+			];
+		}
+		if (in_array($filtroTipo, ['prod', 'serv', 'lic', 'loc'], true)) {
+			$where['Produtos.tipo'] = $filtroTipo;
+		}
+		if ($filtroAtivo === '1') {
+			$where['Produtos.ativo'] = 1;
+		} elseif ($filtroAtivo === '0') {
+			$where['Produtos.ativo'] = 0;
+		}
 		$rows = [];
 		try {
 			$rows = $this->Produtos->find()
-				->where(['Produtos.idempresa' => $empresa])
+				->where($where)
 				->order(['Produtos.id' => 'DESC'])
 				->limit(200)
 				->all()
@@ -103,6 +122,7 @@ class ProdutosPrototypeController extends AppController {
 			'prodCounts' => $counts,
 			'prodValorTotal' => $valorTotal,
 			'prodItems' => $items,
+			'prodFiltros' => ['q' => $busca, 'tipo' => $filtroTipo, 'ativo' => $filtroAtivo],
 		]);
 	}
 

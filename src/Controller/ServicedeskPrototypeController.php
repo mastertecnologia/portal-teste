@@ -229,6 +229,50 @@ class ServicedeskPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /servicedesk-prototype/api/notificacoes — JSON com últimas mudanças
+	 * relevantes ao usuário (sino do topbar).
+	 */
+	public function apiNotificacoes() {
+		$this->request->allowMethod(['get']);
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$out = [];
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('PrototypeStatusHistory');
+			$desde = \Cake\I18n\Time::now()->subDays(7);
+			$rows = $tbl->find()
+				->where(['idempresa' => $empresa, 'created >=' => $desde])
+				->order(['created' => 'DESC'])
+				->limit(15)
+				->all();
+			foreach ($rows as $r) {
+				$type = (string)$r->get('source_type');
+				$sid = (int)$r->get('source_id');
+				$url = null;
+				if ($type === 'orcamento') {
+					$url = $this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $sid]);
+				} elseif ($type === 'os') {
+					$url = $this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', $sid]);
+				} elseif ($type === 'ticket') {
+					$url = $this->Url->build(['controller' => 'ServicedeskPrototype', 'action' => 'ticket', $sid]);
+				}
+				$out[] = [
+					'icon' => $type === 'orcamento' ? '📋' : ($type === 'os' ? '🛠' : ($type === 'ticket' ? '🎟' : '🔔')),
+					'title' => sprintf('%s #%d', ucfirst($type), $sid),
+					'sub' => (string)($r->get('status_from') ?? '—') . ' → ' . (string)$r->get('status_to'),
+					'by' => (string)($r->get('actor_name') ?? ''),
+					'at' => $r->get('created') instanceof \DateTimeInterface ? $r->get('created')->format('d/m H:i') : '',
+					'url' => $url,
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		return $this->response->withStringBody(json_encode(['ok' => true, 'items' => $out, 'count' => count($out)], JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
 	 * GET /servicedesk-prototype/api/badges — JSON com contagens para o sidebar.
 	 * Usado pelo long-poll do shell premium (atualiza a cada 30s).
 	 */

@@ -577,6 +577,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "apiBadges",
     ]);
+    $routes->connect("/servicedesk-prototype/api/notificacoes", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "apiNotificacoes",
+    ]);
     $routes->connect("/servicedesk-prototype/aprovacao/:source_type/:source_id/:decisao", [
         "controller" => "ServicedeskPrototype",
         "action" => "aprovacao",
@@ -727,6 +731,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/clientes-prototype/export.csv", [
         "controller" => "ClientesPrototype",
         "action" => "exportCsv",
+    ]);
+    $routes->connect("/clientes-prototype/api/atualizar-contato", [
+        "controller" => "ClientesPrototype",
+        "action" => "apiAtualizarContato",
     ]);
     $routes->connect("/clientes-prototype/:page", [
         "controller" => "ClientesPrototype",

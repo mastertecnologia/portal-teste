@@ -58,6 +58,31 @@ $opts = (array)($proximos[$st] ?? []);
 	</div>
 <?php endif; ?>
 
+<?php $hist = (array)($orcHistorico ?? []); ?>
+<?php if ($hist !== []) : ?>
+	<div class="card">
+		<div class="sec-title">🕒 <?= h(__('Histórico de status')) ?></div>
+		<?php foreach ($hist as $ev) : ?>
+			<div class="tl-item">
+				<div class="tl-dot" style="background:var(--teal-light);color:var(--teal-dark);">●</div>
+				<div class="tl-body">
+					<div class="tl-title">
+						<?php if ($ev['from'] !== '') : ?>
+							<span style="color:var(--text-muted);"><?= h((string)$ev['from']) ?></span> →
+						<?php endif; ?>
+						<strong><?= h((string)$ev['to']) ?></strong>
+					</div>
+					<div class="tl-sub">
+						<?= h((string)$ev['user_name'] ?: '—') ?>
+						<?php if ($ev['created'] instanceof \DateTimeInterface) : ?> · <?= h($ev['created']->format('d/m/Y H:i')) ?><?php endif; ?>
+						<?php if (!empty($ev['note'])) : ?> · "<?= h(\Cake\Utility\Text::truncate((string)$ev['note'], 80, ['ellipsis' => '…'])) ?>"<?php endif; ?>
+					</div>
+				</div>
+			</div>
+		<?php endforeach; ?>
+	</div>
+<?php endif; ?>
+
 <div class="summary-grid" style="margin-bottom:14px;">
 	<div class="summary-card" style="border-left:3px solid var(--teal);"><div class="lbl"><?= h(__('Status')) ?></div><div class="val"><?= $H->badge($statusLabels[$st] ?? '—', $statusBadges[$st] ?? 'arq') ?></div></div>
 	<div class="summary-card" style="border-left:3px solid var(--blue);"><div class="lbl"><?= h(__('Itens')) ?></div><div class="val" style="color:#0C447C;"><?= count($orcLinhas) ?></div></div>

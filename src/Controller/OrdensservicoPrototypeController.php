@@ -235,11 +235,15 @@ class OrdensservicoPrototypeController extends AppController {
 
 				return $this->redirect(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', $id]);
 			}
+			$labels = [0 => __('Aberta'), 1 => __('Em execução'), 2 => __('Aguardando aprovação'), 3 => __('Concluída')];
 			$os->set('situacao', $nova);
 			if ($this->Ordensservico->save($os)) {
-				$labels = [0 => __('Aberta'), 1 => __('Em execução'), 2 => __('Aguardando aprovação'), 3 => __('Concluída')];
 				$lbl = (string)($labels[$nova] ?? $nova);
 				$this->Flash->success(__('OS movida para "{0}".', $lbl));
+				(new \App\Service\PrototypeStatusHistoryService())->record(
+					'os', $id, (string)($labels[$atual] ?? $atual), $lbl,
+					(array)$this->Auth->user(), '', $empresa
+				);
 				// Push hook ao técnico responsável (iduser)
 				try {
 					$tecId = (int)$os->get('iduser');
@@ -513,8 +517,10 @@ class OrdensservicoPrototypeController extends AppController {
 		}
 
 		$cliente = $os->cliente ?? null;
+		$historico = (new \App\Service\PrototypeStatusHistoryService())->fetch('os', $id, 30);
 		$this->set([
 			'title' => __('OS #{0}', $id),
+			'osHistorico' => $historico,
 			'erpNavActive' => 'os-lista',
 			'erpBreadcrumb' => [
 				['label' => 'PGM ERP'],

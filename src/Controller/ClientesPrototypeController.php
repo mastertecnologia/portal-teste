@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -13,6 +14,8 @@ use Cake\Http\Exception\NotFoundException;
  * Somente leitura nesta fase.
  */
 class ClientesPrototypeController extends AppController {
+
+	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -49,10 +52,35 @@ class ClientesPrototypeController extends AppController {
 	 */
 	public function lista() {
 		$empresa = (int)$this->Auth->user('idempresa');
+		$busca = trim((string)$this->request->getQuery('q', ''));
+		$filtroTipo = (string)$this->request->getQuery('tipo', '');
+		$filtroStatus = (string)$this->request->getQuery('status', '');
+		$where = ['Clientes.idempresa' => $empresa];
+		if ($busca !== '') {
+			$where['OR'] = [
+				'Clientes.nome ILIKE' => '%' . $busca . '%',
+				'Clientes.razaosocial ILIKE' => '%' . $busca . '%',
+				'Clientes.nomefantasia ILIKE' => '%' . $busca . '%',
+				'Clientes.cnpj ILIKE' => '%' . $busca . '%',
+				'Clientes.cpf ILIKE' => '%' . $busca . '%',
+				'Clientes.email ILIKE' => '%' . $busca . '%',
+				'Clientes.fone ILIKE' => '%' . $busca . '%',
+			];
+		}
+		if ($filtroTipo === 'pj') {
+			$where['Clientes.tipo'] = 2;
+		} elseif ($filtroTipo === 'pf') {
+			$where['Clientes.tipo IS NOT'] = 2;
+		}
+		if ($filtroStatus === 'ativo') {
+			$where['Clientes.inativo'] = 0;
+		} elseif ($filtroStatus === 'inativo') {
+			$where['Clientes.inativo'] = 1;
+		}
 		$rows = [];
 		try {
 			$rows = $this->Clientes->find()
-				->where(['Clientes.idempresa' => $empresa])
+				->where($where)
 				->order(['Clientes.id' => 'DESC'])
 				->limit(200)
 				->all()
@@ -104,7 +132,44 @@ class ClientesPrototypeController extends AppController {
 			'erpEmpresas' => $this->loadEmpresasParaTopbar(),
 			'cliCounts' => $counts,
 			'cliItems' => $items,
+			'cliFiltros' => ['q' => $busca, 'tipo' => $filtroTipo, 'status' => $filtroStatus],
 		]);
+	}
+
+	/**
+	 * POST /clientes-prototype/api/atualizar-contato — edita telefone/e-mail inline.
+	 */
+	public function apiAtualizarContato() {
+		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$cliId = (int)$this->request->getData('cliente_id');
+		$campo = (string)$this->request->getData('campo');
+		$valor = trim((string)$this->request->getData('valor'));
+		if (!in_array($campo, ['email', 'fone'], true) || $cliId <= 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Campo inválido.')]));
+		}
+		if ($campo === 'email' && $valor !== '' && !filter_var($valor, FILTER_VALIDATE_EMAIL)) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('E-mail inválido.')]));
+		}
+		try {
+			$row = $this->Clientes->find()->where(['Clientes.id' => $cliId, 'Clientes.idempresa' => $empresa])->first();
+			if ($row === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Fora do escopo.')]));
+			}
+			$row->set($campo, $valor !== '' ? $valor : null);
+			if (!$this->Clientes->save($row)) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao salvar.')]));
+			}
+
+			return $this->response->withStringBody(json_encode(['ok' => true, 'campo' => $campo, 'valor' => $valor]));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
 	}
 
 	/**

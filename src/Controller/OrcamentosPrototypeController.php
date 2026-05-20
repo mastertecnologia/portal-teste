@@ -209,8 +209,10 @@ class OrcamentosPrototypeController extends AppController {
 
 		$cliente = $orc->cliente ?? null;
 		$autor = $orc->user ?? null;
+		$historico = (new \App\Service\PrototypeStatusHistoryService())->fetch('orcamento', $id, 30);
 		$this->set([
 			'title' => __('Orçamento #{0}', $id),
+			'orcHistorico' => $historico,
 			'erpNavActive' => 'orc-lista',
 			'erpBreadcrumb' => [
 				['label' => 'PGM ERP'],
@@ -522,11 +524,16 @@ class OrcamentosPrototypeController extends AppController {
 
 				return $this->redirect(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $id]);
 			}
+			$labels = [0 => __('Pendente'), 1 => __('Enviado'), 2 => __('Aprovado'), 3 => __('Recusado'), 4 => __('Arquivado')];
 			$orc->set('status', $novo);
 			if ($this->Orcamentos->save($orc)) {
-				$labels = [0 => __('Pendente'), 1 => __('Enviado'), 2 => __('Aprovado'), 3 => __('Recusado'), 4 => __('Arquivado')];
 				$lbl = (string)($labels[$novo] ?? $novo);
+				$nota = trim((string)$this->request->getData('nota'));
 				$this->Flash->success(__('Status alterado para "{0}".', $lbl));
+				(new \App\Service\PrototypeStatusHistoryService())->record(
+					'orcamento', $id, (string)($labels[$atual] ?? $atual), $lbl,
+					(array)$this->Auth->user(), $nota, $empresa
+				);
 				// Push hook ao autor
 				try {
 					$autorId = (int)$orc->get('idautor');

@@ -14,6 +14,7 @@ $tipoLabels = [
 	'lic' => __('Licença'),
 	'loc' => __('Locação'),
 ];
+$f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 ?>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
 	<div>
@@ -39,9 +40,33 @@ $tipoLabels = [
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-	<div style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
-		<input type="text" placeholder="🔍 <?= h(__('Buscar código, descrição, NCM...')) ?>" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;"/>
-	</div>
+	<form method="get" style="padding:12px 14px;background:var(--bg-surface);border-bottom:1px solid var(--border-light);">
+		<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+			<div class="field" style="flex:1;min-width:240px;">
+				<label><?= h(__('Buscar')) ?></label>
+				<input type="search" name="q" value="<?= h((string)$f['q']) ?>" placeholder="🔍 <?= h(__('Código, descrição, NCM...')) ?>">
+			</div>
+			<div class="field" style="flex:0 0 140px;">
+				<label><?= h(__('Tipo')) ?></label>
+				<select name="tipo">
+					<option value=""><?= h(__('Todos')) ?></option>
+					<?php foreach ($tipoLabels as $k => $l) : ?>
+						<option value="<?= h($k) ?>"<?= (string)$f['tipo'] === $k ? ' selected' : '' ?>><?= h($l) ?></option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="field" style="flex:0 0 130px;">
+				<label><?= h(__('Status')) ?></label>
+				<select name="ativo">
+					<option value=""><?= h(__('Todos')) ?></option>
+					<option value="1"<?= (string)$f['ativo'] === '1' ? ' selected' : '' ?>>Ativo</option>
+					<option value="0"<?= (string)$f['ativo'] === '0' ? ' selected' : '' ?>>Inativo</option>
+				</select>
+			</div>
+			<button type="submit" class="btn btn-primary btn-sm">🔍 <?= h(__('Filtrar')) ?></button>
+			<?= $this->Html->link(__('Limpar'), ['controller' => 'ProdutosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		</div>
+	</form>
 	<div style="overflow-x:auto;">
 		<table class="tbl" style="margin:0;">
 			<thead>
