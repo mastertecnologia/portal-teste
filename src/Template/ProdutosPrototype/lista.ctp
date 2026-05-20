@@ -100,18 +100,74 @@ $f = (array)($prodFiltros ?? ['q' => '', 'tipo' => '', 'ativo' => '']);
 					$est = (float)$it['estoque'];
 					$estCol = $est <= 0 ? '#7A1822' : ($est < 5 ? '#8A4D02' : 'var(--teal-dark)');
 				?>
-					<tr>
+					<?php
+					$detUrl = $this->Url->build([
+						'controller' => 'ProdutosPrototype',
+						'action' => 'view',
+						'detalhe',
+						'?' => ['id' => (int)$it['id']],
+					]);
+					?>
+					<tr data-pgm-row-href="<?= h($detUrl) ?>" tabindex="0">
 						<td style="font-family:monospace;font-size:11px;font-weight:600;"><?= h((string)$it['codigo']) ?></td>
-						<td><?= h(\Cake\Utility\Text::truncate((string)$it['descricao'], 90, ['ellipsis' => '…'])) ?></td>
+						<td>
+							<input type="text" data-prod-edit="descricao" data-prod-id="<?= (int)$it['id'] ?>" value="<?= h((string)$it['descricao']) ?>" style="border:1px dashed transparent;background:transparent;font-size:12px;padding:2px 4px;border-radius:3px;width:100%;min-width:160px;">
+						</td>
 						<td><span class="badge <?= h($badge) ?>"><?= h($tipoLbl) ?></span></td>
 						<td class="mu"><?= h((string)$it['unidade']) ?></td>
-						<td class="r"><strong><?= h($H->brl((float)$it['preco'])) ?></strong></td>
+						<td class="r">
+							<input type="text" data-prod-edit="vlunitario" data-prod-id="<?= (int)$it['id'] ?>" value="<?= h(number_format((float)$it['preco'], 2, ',', '.')) ?>" style="border:1px dashed transparent;background:transparent;font-size:11px;padding:2px 4px;border-radius:3px;width:88px;text-align:right;">
+						</td>
 						<td class="r" style="color:<?= h($estCol) ?>;font-weight:600;"><?= number_format($est, 2, ',', '.') ?></td>
 						<td><?= $H->badge($it['ativo'] ? __('Ativo') : __('Inativo'), $it['ativo'] ? 'paga' : 'arq') ?></td>
-						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'Produtos', 'action' => 'view', (int)$it['id']], ['class' => 'btn btn-ghost btn-xs']) ?></td>
+						<td class="r"><?= $this->Html->link(__('Abrir'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'detalhe', '?' => ['id' => (int)$it['id']]], ['class' => 'btn btn-ghost btn-xs']) ?></td>
 					</tr>
 				<?php endforeach; endif; ?>
 			</tbody>
 		</table>
 	</div>
 </div>
+
+<div class="alert-box alert-blue" style="margin-top:14px;">
+	💡 <?= h(__('Edite descrição e preço na tabela — clique no campo, altere e sair (Tab ou clique fora).')) ?>
+</div>
+
+<?php $this->start('script'); ?>
+<script>
+(function () {
+	var csrf = <?= json_encode((string)$this->request->getAttribute('csrfToken')) ?>;
+	var url = <?= json_encode($this->Url->build(['controller' => 'ProdutosPrototype', 'action' => 'apiAtualizarCampo'])) ?>;
+	document.querySelectorAll('[data-prod-edit]').forEach(function (el) {
+		var orig = el.value;
+		el.addEventListener('focus', function () {
+			el.style.borderColor = '#1D9E75';
+			el.style.background = '#fff';
+		});
+		el.addEventListener('blur', function () {
+			el.style.borderColor = 'transparent';
+			el.style.background = 'transparent';
+			var v = el.value.trim();
+			if (v === orig) return;
+			var fd = new FormData();
+			fd.append('_csrfToken', csrf);
+			fd.append('produto_id', el.getAttribute('data-prod-id'));
+			fd.append('campo', el.getAttribute('data-prod-edit'));
+			fd.append('valor', v);
+			fetch(url, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					if (data.ok) {
+						el.value = data.valor || v;
+						orig = el.value;
+						el.style.background = '#E1F5EE';
+						setTimeout(function () { el.style.background = 'transparent'; }, 800);
+					} else {
+						el.value = orig;
+						alert(data.error || 'Falha ao salvar');
+					}
+				});
+		});
+	});
+})();
+</script>
+<?php $this->end(); ?>

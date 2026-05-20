@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Controller\Traits\PrototypeApiSecurityTrait;
 use App\Service\Ticket\ServicedeskPrototypeDataService;
 use App\Service\Ticket\ServicedeskPrototypeScreensService;
 use Cake\Event\Event;
@@ -13,6 +15,8 @@ use Cake\Http\Exception\NotFoundException;
  * Dados reais via ORM + ABAC.
  */
 class ServicedeskPrototypeController extends AppController {
+
+	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -36,17 +40,8 @@ class ServicedeskPrototypeController extends AppController {
 		$this->viewBuilder()->setLayout('servicedesk_prototype');
 	}
 
-	public function isAuthorized($user) {
-		if (empty($user)) {
-			return false;
-		}
-		if ((int)($user['role'] ?? -1) !== 0) {
-			$this->Flash->error(__('O protótipo Service Desk é só para a equipe técnica. Saia do portal do cliente ou use Acesso PGM / Master.'));
-
-			return false;
-		}
-
-		return parent::isAuthorized($user);
+	protected function _erpPrototypeDenyPortalUser(): void {
+		$this->Flash->error(__('O protótipo Service Desk é só para a equipe técnica. Saia do portal do cliente ou use Acesso PGM / Master.'));
 	}
 
 	public function index() {
@@ -234,6 +229,10 @@ class ServicedeskPrototypeController extends AppController {
 	 */
 	public function apiNotificacoes() {
 		$this->request->allowMethod(['get']);
+		if ($guard = $this->guardApiEquipeGet()) {
+			return $guard;
+		}
+		$this->_trackPrototypeApiHit('ServicedeskPrototype.apiNotificacoes');
 		$this->autoRender = false;
 		$this->response = $this->response->withType('application/json');
 		$empresa = (int)$this->Auth->user('idempresa');
@@ -278,6 +277,10 @@ class ServicedeskPrototypeController extends AppController {
 	 */
 	public function apiBadges() {
 		$this->request->allowMethod(['get']);
+		if ($guard = $this->guardApiEquipeGet()) {
+			return $guard;
+		}
+		$this->_trackPrototypeApiHit('ServicedeskPrototype.apiBadges');
 		$this->autoRender = false;
 		$this->response = $this->response->withType('application/json');
 		$empresa = (int)$this->Auth->user('idempresa');

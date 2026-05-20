@@ -21,21 +21,13 @@ $session = $this->getRequest()->getSession();
 $isAdmin = (int)$session->read('Auth.User.admin') === 1;
 $isEquipe = (int)$session->read('Auth.User.role') === 0;
 $userId = (int)$session->read('Auth.User.id');
-$hasPerm = static function (?string $code) use ($userId, $isAdmin): bool {
-	if ($code === null || $code === '') {
-		return true;
-	}
-	if ($isAdmin) {
-		return true;
-	}
-	if (!class_exists('\\App\\Utility\\RbacChecker') || $userId <= 0) {
-		return true; // sem RBAC ativo, permite (compatível com legado)
-	}
-	try {
-		return (bool)\App\Utility\RbacChecker::userHasPermissionCode($userId, $code);
-	} catch (\Throwable $e) {
-		return true;
-	}
+$adminFlag = $isAdmin ? 1 : 0;
+$roleEquipe = 0;
+$gateVisible = static function ($codes) use ($adminFlag, $roleEquipe, $userId): bool {
+	return \App\Utility\ErpPrototypeAccess::sidebarItemVisible($adminFlag, $roleEquipe, $userId, $codes);
+};
+$gateForKey = static function (string $itemKey) use ($adminFlag, $roleEquipe, $userId): bool {
+	return \App\Utility\ErpPrototypeAccess::sidebarKeyVisible($adminFlag, $roleEquipe, $userId, $itemKey);
 };
 $badge = static function (string $key, string $style = '') use ($badges): string {
 	$n = (int)($badges[$key] ?? 0);
@@ -144,30 +136,35 @@ $sections = [
 			['key' => 'acesso-papeis', 'label' => __('Papéis'), 'url' => ['controller' => 'SistemaPrototype', 'action' => 'acessoPapeis'], 'indent2' => true],
 			['key' => 'acesso-auditoria', 'label' => __('Auditoria de Acessos'), 'url' => ['controller' => 'SistemaPrototype', 'action' => 'view', 'acesso-auditoria'], 'indent2' => true],
 			['key' => 'auditoria', 'label' => __('Auditoria · LGPD'), 'url' => ['controller' => 'SistemaPrototype', 'action' => 'auditoria'], 'indent' => true],
+			['key' => 'prototype-history', 'label' => __('Histórico transições'), 'url' => ['controller' => 'PrototypeHistory', 'action' => 'index'], 'indent' => true],
 		],
 	],
 ];
-// Filtra seções por permissão (requires_admin / requires_permission)
-$sections = array_values(array_filter($sections, static function (array $sec) use ($isAdmin, $hasPerm) {
+// Filtra seções por permissão (requires_admin / requires_permission / chave sidebar_item_gates)
+$sections = array_values(array_filter($sections, static function (array $sec) use ($isAdmin, $gateVisible) {
 	if (!empty($sec['requires_admin']) && !$isAdmin) {
 		return false;
 	}
-	if (!empty($sec['requires_permission']) && !$hasPerm((string)$sec['requires_permission'])) {
+	if (!empty($sec['requires_permission']) && !$gateVisible($sec['requires_permission'])) {
 		return false;
 	}
 
 	return true;
 }));
-// Filtra itens individuais por permission code
+// Filtra itens individuais por permission code ou sidebar_item_gates
 foreach ($sections as &$sec) {
 	if (!isset($sec['items'])) {
 		continue;
 	}
-	$sec['items'] = array_values(array_filter($sec['items'], static function (array $item) use ($hasPerm, $isAdmin) {
+	$sec['items'] = array_values(array_filter($sec['items'], static function (array $item) use ($gateVisible, $gateForKey, $isAdmin) {
 		if (!empty($item['requires_admin']) && !$isAdmin) {
 			return false;
 		}
-		if (!empty($item['requires_permission']) && !$hasPerm((string)$item['requires_permission'])) {
+		if (!empty($item['requires_permission']) && !$gateVisible($item['requires_permission'])) {
+			return false;
+		}
+		$itemKey = (string)($item['key'] ?? '');
+		if ($itemKey !== '' && !$gateForKey($itemKey)) {
 			return false;
 		}
 

@@ -1,0 +1,78 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PGM ERP Prototype\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Produtos"
+msgstr "Products"
+
+msgid "Clientes"
+msgstr "Clients"
+
+msgid "Orçamentos"
+msgstr "Quotes"
+
+msgid "Ordens de Serviço"
+msgstr "Work orders"
+
+msgid "Service Desk"
+msgstr "Service Desk"
+
+msgid "Financeiro"
+msgstr "Finance"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Filtrar"
+msgstr "Filter"
+
+msgid "Limpar"
+msgstr "Clear"
+
+msgid "Exportar CSV"
+msgstr "Export CSV"
+
+msgid "Ativo"
+msgstr "Active"
+
+msgid "Inativo"
+msgstr "Inactive"
+
+msgid "Histórico de transições"
+msgstr "Transition history"
+
+msgid "Alternar tema"
+msgstr "Toggle theme"
+
+msgid "Instalar PGM ERP no dispositivo"
+msgstr "Install PGM ERP on this device"
+
+msgid "Instalar"
+msgstr "Install"
+
+msgid "Notificações recentes"
+msgstr "Recent notifications"
+
+msgid "Todos"
+msgstr "All"
+
+msgid "Buscar"
+msgstr "Search"
+
+msgid "Sistema"
+msgstr "System"
+
+msgid "Histórico transições"
+msgstr "Transition log"
+
+msgid "Orçamento"
+msgstr "Quote"
+
+msgid "Ordem de serviço"
+msgstr "Work order"
+
+msgid "Ticket"
+msgstr "Ticket"

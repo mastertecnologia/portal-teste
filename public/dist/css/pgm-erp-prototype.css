@@ -420,3 +420,75 @@
 	text-transform: uppercase; font-weight: 600; letter-spacing: .4px;
 }
 .pgm-erp-shell .summary-card .val { font-size: 18px; font-weight: 700; color: var(--text); }
+
+/* ===== TEMA ESCURO (opt-in: data-pgm-theme="dark" no <html>) ===== */
+html[data-pgm-theme="dark"] .pgm-erp-shell {
+	--gray-50: #1e1e1c;
+	--gray-100: #252523;
+	--gray-200: #3a3935;
+	--gray-400: #8a8880;
+	--gray-600: #b5b3ad;
+	--gray-900: #f2f1ee;
+	--border: #3a3935;
+	--border-light: #2e2e2b;
+	--text: #f2f1ee;
+	--text-muted: #a8a6a0;
+	--text-hint: #7a7872;
+	--bg: #141413;
+	--bg-surface: #1e1e1c;
+	--bg-raised: #252523;
+	--teal-light: #0a3d2c;
+	--shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+html[data-pgm-theme="dark"] .pgm-erp-shell .sidebar {
+	background: #0f0f0e;
+	border-color: var(--border);
+}
+html[data-pgm-theme="dark"] .pgm-erp-shell .topbar {
+	background: var(--bg-raised);
+	border-color: var(--border);
+}
+html[data-pgm-theme="dark"] .pgm-erp-shell .card,
+html[data-pgm-theme="dark"] .pgm-erp-shell .tbl tbody tr {
+	background: var(--bg-raised);
+}
+html[data-pgm-theme="dark"] .pgm-erp-shell .dropdown-menu,
+html[data-pgm-theme="dark"] #pgm-notif-panel {
+	background: var(--bg-raised);
+	color: var(--text);
+}
+html[data-pgm-theme="dark"] .pgm-erp-shell tr.pgm-row-focus {
+	outline: 2px solid var(--teal-mid);
+	outline-offset: -2px;
+	background: var(--teal-light) !important;
+}
+html[data-pgm-theme="dark"] .pgm-erp-shell tr.pgm-row-focus td {
+	background: transparent;
+}
+
+/* ===== NAVEGAÇÃO j/k em listas ===== */
+.pgm-erp-shell tr.pgm-row-focus {
+	outline: 2px solid var(--teal);
+	outline-offset: -2px;
+	background: var(--teal-light) !important;
+}
+.pgm-erp-shell tr.pgm-row-focus td {
+	background: transparent;
+}
+
+/* Service Desk prototype shell — tema escuro + foco de linha */
+html[data-pgm-theme="dark"] .sdp-shell {
+	background: #141413;
+}
+html[data-pgm-theme="dark"] .sdp-shell-main {
+	color: #f2f1ee;
+}
+html[data-pgm-theme="dark"] .pgm-sd-prototype .card,
+html[data-pgm-theme="dark"] .pgm-sd-prototype .tbl tbody tr {
+	background: #252523;
+	color: #f2f1ee;
+}
+html[data-pgm-theme="dark"] .pgm-sd-prototype tr.pgm-row-focus {
+	outline: 2px solid var(--teal-mid);
+	background: #0a3d2c !important;
+}

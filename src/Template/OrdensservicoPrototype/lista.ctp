@@ -91,7 +91,8 @@ $clientesOpt = (array)($osClientesOptions ?? []);
 						$badge = 'b-pendente';
 					}
 				?>
-					<tr>
+					<?php $osHref = $this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', (int)$it['id']]); ?>
+					<tr data-pgm-row-href="<?= h($osHref) ?>" tabindex="0">
 						<td><strong><?= sprintf('OS-%05d', (int)$it['id']) ?></strong></td>
 						<td><?= h((string)$it['cliente']) ?></td>
 						<td><?= h(\Cake\Utility\Text::truncate((string)$it['descricao'], 80, ['ellipsis' => '…'])) ?></td>

@@ -411,9 +411,13 @@ class RbacChecker {
 		$actionsRaw = strtolower(trim(isset($permissionRow['action']) ? (string)$permissionRow['action'] : '*'));
 		$req = strtolower((string)$controller);
 		$act = strtolower((string)$action);
-		/* UI de testes: ServicedeskPrototype partilha permissões Servicedesk (servicedesk.tickets com action *). */
-		if ($req === 'servicedeskprototype') {
-			$req = 'servicedesk';
+		$protoAliases = [];
+		$protoCfg = Configure::read('ErpPrototypeRbac');
+		if (is_array($protoCfg) && !empty($protoCfg['controller_aliases']) && is_array($protoCfg['controller_aliases'])) {
+			$protoAliases = $protoCfg['controller_aliases'];
+		}
+		if (isset($protoAliases[$req])) {
+			$req = (string)$protoAliases[$req];
 		}
 		if ($req !== $c) {
 			// URLs canónicas /cliente/contratos → PortalContratos; RBAC legado usa PortalAdvancedContracts

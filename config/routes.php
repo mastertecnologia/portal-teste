@@ -762,6 +762,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ProdutosPrototype",
         "action" => "precoSave",
     ]);
+    $routes->connect("/produtos-prototype/api/atualizar-campo", [
+        "controller" => "ProdutosPrototype",
+        "action" => "apiAtualizarCampo",
+    ]);
     $routes->connect("/produtos-prototype/:page", [
         "controller" => "ProdutosPrototype",
         "action" => "view",
@@ -882,6 +886,21 @@ Router::scope("/", function ($routes) {
         "controller" => "SistemaPrototype",
         "action" => "viewAs",
     ]);
+
+    // Histórico global de transições + troca de idioma (shell premium)
+    $routes->connect("/prototype-history", [
+        "controller" => "PrototypeHistory",
+        "action" => "index",
+    ]);
+    $routes->connect("/prototype-history/", [
+        "controller" => "PrototypeHistory",
+        "action" => "index",
+    ]);
+    $routes->connect("/prototype-history/set-locale/:locale", [
+        "controller" => "PrototypeHistory",
+        "action" => "setLocale",
+    ], ["pass" => ["locale"], "locale" => "[a-z]{2}(_[A-Z]{2})?"]);
+
     $routes->connect("/sistema-prototype/:page", [
         "controller" => "SistemaPrototype",
         "action" => "view",

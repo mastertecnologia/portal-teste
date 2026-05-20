@@ -195,6 +195,19 @@ return [
 			'queues#apisupportlevels',
 			// Comentários JSON (Ticketcomentarios; equipe + portal)
 			'ticketcomentarios#apiadd',
+			// ERP prototype — JSON com RBAC de escrita/leitura
+			'clientesprototype#apiatualizarcontato',
+			'produtosprototype#apiatualizarcampo',
+			'orcamentosprototype#apiprodutos',
+			'orcamentosprototype#apiclientes',
+			'orcamentosprototype#apiatualizaritem',
+			'orcamentosprototype#apiexcluiritem',
+			'orcamentosprototype#apiadicionaritem',
+			'ordensservicoprototype#apiatualizaritem',
+			'ordensservicoprototype#apiexcluiritem',
+			'ordensservicoprototype#apiadicionaritem',
+			'servicedeskprototype#apinotificacoes',
+			'servicedeskprototype#apibadges',
 		],
 		// Controller#action ou controller#* (minúsculo)
 		'whitelist' => [
@@ -242,6 +255,7 @@ return [
 			'laudos#view',
 			'laudos#clientesbuscar',
 			'laudos#validar',
+			'prototypehistory#setlocale',
 		],
 		// Em modo warn, também exibir Flash (pode ser repetitivo); env RBAC_WARN_FLASH
 		'warn_flash' => $warnFlash,

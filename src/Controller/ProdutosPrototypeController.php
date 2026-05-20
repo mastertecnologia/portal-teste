@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\ErpPrototypeRbacTrait;
+use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -13,6 +15,9 @@ use Cake\Http\Exception\NotFoundException;
  * Lado-a-lado com ProdutosController (legado). Rotas em /produtos-prototype/*.
  */
 class ProdutosPrototypeController extends AppController {
+
+	use ErpPrototypeRbacTrait;
+	use PrototypeApiSecurityTrait;
 
 	public function initialize() {
 		parent::initialize();
@@ -31,17 +36,6 @@ class ProdutosPrototypeController extends AppController {
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
 		$this->viewBuilder()->setLayout('erp_prototype');
-	}
-
-	public function isAuthorized($user) {
-		if (empty($user)) {
-			return false;
-		}
-		if ((int)($user['role'] ?? -1) !== 0) {
-			return false;
-		}
-
-		return parent::isAuthorized($user);
 	}
 
 	/**
@@ -245,6 +239,36 @@ class ProdutosPrototypeController extends AppController {
 			return $this->render('import');
 		}
 
+		if ($page === 'detalhe') {
+			$empresa = (int)$this->Auth->user('idempresa');
+			$prodId = (int)$this->request->getQuery('id', 0);
+			$produto = null;
+			if ($prodId > 0) {
+				try {
+					$row = $this->Produtos->find()
+						->where(['Produtos.id' => $prodId, 'Produtos.idempresa' => $empresa])
+						->first();
+					if ($row !== null) {
+						$produto = [
+							'id' => (int)$row->get('id'),
+							'codigo' => (string)$row->get('codigo'),
+							'descricao' => (string)$row->get('descricao'),
+							'tipo' => (string)$row->get('tipo'),
+							'preco' => (float)$row->get('vlunitario'),
+							'estoque' => (float)$row->get('estoque_atual'),
+							'ativo' => (int)$row->get('ativo') === 1,
+						];
+					}
+				} catch (\Throwable $e) {
+				}
+			}
+			$set['produto'] = $produto;
+			$set['produtoId'] = $prodId;
+			$this->set($set);
+
+			return $this->render('detalhe');
+		}
+
 		$this->set($set);
 
 		return $this->render('placeholder');
@@ -382,6 +406,61 @@ class ProdutosPrototypeController extends AppController {
 		rewind($out);
 
 		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
+	 * POST — edição inline de descrição ou preço (lista de produtos).
+	 */
+	public function apiAtualizarCampo() {
+		$this->request->allowMethod(['post']);
+		if ($guard = $this->guardApiEquipe()) {
+			return $guard;
+		}
+		$this->autoRender = false;
+		$this->response = $this->response->withType('application/json');
+		$empresa = (int)$this->Auth->user('idempresa');
+		$prodId = (int)$this->request->getData('produto_id');
+		$campo = (string)$this->request->getData('campo');
+		$valor = trim((string)$this->request->getData('valor'));
+		if (!in_array($campo, ['descricao', 'vlunitario'], true) || $prodId <= 0) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Campo inválido.')]));
+		}
+		if ($campo === 'descricao' && $valor === '') {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Descrição obrigatória.')]));
+		}
+		if ($campo === 'vlunitario') {
+			$preco = (float)str_replace(',', '.', $valor);
+			if ($preco < 0) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Preço inválido.')]));
+			}
+		}
+		try {
+			$row = $this->Produtos->find()
+				->where(['Produtos.id' => $prodId, 'Produtos.idempresa' => $empresa])
+				->first();
+			if ($row === null) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Fora do escopo.')]));
+			}
+			if ($campo === 'descricao') {
+				$row->set('descricao', $valor);
+			} else {
+				$row->set('vlunitario', (float)str_replace(',', '.', $valor));
+			}
+			if (!$this->Produtos->save($row)) {
+				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao salvar.')]));
+			}
+			$display = $campo === 'vlunitario'
+				? number_format((float)$row->get('vlunitario'), 2, ',', '.')
+				: (string)$row->get('descricao');
+
+			return $this->response->withStringBody(json_encode([
+				'ok' => true,
+				'campo' => $campo,
+				'valor' => $display,
+			], JSON_UNESCAPED_UNICODE));
+		} catch (\Throwable $e) {
+			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));
+		}
 	}
 
 	/**

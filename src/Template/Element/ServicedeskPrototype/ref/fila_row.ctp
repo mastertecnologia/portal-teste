@@ -49,7 +49,7 @@ if (defined('C_TicketSituacaoFechado')) {
 	$statusOptions[(int)C_TicketSituacaoFechado] = 'Fechado';
 }
 ?>
-<tr class="sdp-fila-row" style="border-bottom:1px solid var(--border-light);vertical-align:middle;background:#fff;" data-sdp-ticket-id="<?= $ticketId ?>" data-sdp-nivel="<?= h($nivelLabel) ?>"<?= $sitInconsistente ? ' data-sdp-situacao-inconsistente="1"' : '' ?>>
+<tr class="sdp-fila-row" style="border-bottom:1px solid var(--border-light);vertical-align:middle;background:#fff;" data-sdp-ticket-id="<?= $ticketId ?>" data-sdp-nivel="<?= h($nivelLabel) ?>" data-pgm-row-href="<?= h($ticketUrl) ?>" tabindex="0"<?= $sitInconsistente ? ' data-sdp-situacao-inconsistente="1"' : '' ?>>
 	<td style="padding:14px 12px;">
 		<?= $this->Html->link('#' . $ticketId, $ticketUrl, [
 			'style' => 'color:var(--teal);font-weight:700;font-family:monospace;text-decoration:none;',

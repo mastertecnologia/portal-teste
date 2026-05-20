@@ -94,7 +94,8 @@ $clientesOptions = (array)($orcClientesOptions ?? []);
 						$badge = 'b-recus';
 					}
 				?>
-					<tr>
+					<?php $orcHref = $this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', (int)$it['id']]); ?>
+					<tr data-pgm-row-href="<?= h($orcHref) ?>" tabindex="0">
 						<td><strong><?= sprintf('ORC-%04d', (int)$it['id']) ?></strong></td>
 						<td><?= h((string)$it['cliente']) ?></td>
 						<td><?= h((string)$it['autor']) ?></td>
@@ -109,6 +110,7 @@ $clientesOptions = (array)($orcClientesOptions ?? []);
 	</div>
 </div>
 
-<div class="alert-box alert-blue" style="margin-top:14px;">
-	<?= h(__('Esta tela é o protótipo premium em modo somente leitura. Ações de criação/aprovação continuam disponíveis no módulo Orçamentos clássico.')) ?>
+<div class="alert-box alert-teal" style="margin-top:14px;">
+	💡 <?= h(__('Use os filtros e abra o detalhe para editar itens, mudar status ou exportar CSV. O módulo Orçamentos clássico continua disponível em paralelo.')) ?>
+	<span style="color:var(--text-muted);"> · ⌨️ <code>j</code>/<code>k</code> <?= h(__('navega linhas')) ?></span>
 </div>

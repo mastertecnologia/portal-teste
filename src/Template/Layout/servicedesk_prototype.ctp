@@ -7,12 +7,18 @@
  * @var string|null $sdpNavActive
  */
 $w = $this->request->getAttribute('webroot');
+$erpLocale = (string)$this->getRequest()->getSession()->read('Erp.locale');
+if (!in_array($erpLocale, ['pt_BR', 'en_US', 'es'], true)) {
+	$erpLocale = 'pt_BR';
+}
+$htmlLang = $erpLocale === 'en_US' ? 'en' : ($erpLocale === 'es' ? 'es' : 'pt-BR');
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR" data-pgm-theme="light">
+<html lang="<?= h($htmlLang) ?>" data-pgm-theme="light">
 <head>
 	<?= $this->Html->charset() ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1D9E75">
 	<?php
 	$csrf = $this->request->getAttribute('csrfToken');
 	if (!$csrf && method_exists($this->request, 'getParam')) {
@@ -25,6 +31,7 @@ $w = $this->request->getAttribute('webroot');
 	<title><?= h($title ?? 'Service Desk (β)') ?> — PGM</title>
 	<?= $this->Html->meta('icon') ?>
 	<?= $this->Html->css($w . 'dist/css/style.min') ?>
+	<?= $this->Html->css($w . 'dist/css/pgm-erp-prototype.css') ?>
 	<?= $this->Html->css($w . 'dist/css/pages/pgm-servicedesk-prototype.css', ['block' => false]) ?>
 	<style>
 		.sdp-shell{display:flex;min-height:100vh;background:var(--bg-surface,#f9f9f8);}
@@ -41,7 +48,7 @@ $w = $this->request->getAttribute('webroot');
 	<?= $this->fetch('css') ?>
 </head>
 <body>
-<div class="sdp-shell">
+<div class="sdp-shell pgm-sd-prototype">
 	<nav class="sdp-shell-nav" aria-label="<?= h(__('Módulo Service Desk (protótipo)')) ?>">
 		<div class="sdp-shell-brand">
 			SD · <?= h(__('Protótipo')) ?>
@@ -60,10 +67,24 @@ $w = $this->request->getAttribute('webroot');
 	$fluidMain = in_array((string)($sdpNavActive ?? ''), ['portal', 'portal-novo', 'kb', 'calendar', 'aprovacoes'], true);
 	?>
 	<main class="sdp-shell-main<?= $fluidMain ? ' sdp-shell-main-fluid' : '' ?>">
+		<?= $this->element('ErpPrototype/sdp_toolbar') ?>
 		<?= $this->Flash->render() ?>
 		<?= $this->fetch('content') ?>
 	</main>
 </div>
 <?= $this->fetch('script') ?>
+<?php
+use Cake\Core\Configure;
+$pgmSwScope = '/';
+$appBase = (string)(Configure::read('App.base') ?: '');
+if ($appBase !== '') {
+	$pgmSwScope = rtrim($appBase, '/') . '/';
+}
+echo $this->element('ErpPrototype/shell_runtime', [
+	'pgmShellWebroot' => $w,
+	'pgmSwScope' => $pgmSwScope,
+	'pgmShellPwa' => false,
+]);
+?>
 </body>
 </html>

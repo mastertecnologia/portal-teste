@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\ErpPrototypeRbacTrait;
 use App\Controller\Traits\PrototypeApiSecurityTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
@@ -11,8 +12,8 @@ use Cake\Http\Exception\NotFoundException;
  * Orçamentos — protótipo (telas do mockup pgm_erp_completo.html, prefixo `pg-`).
  *
  * Lado-a-lado com OrcamentosController (legado). Rotas em /orcamentos-prototype/*.
- * Dados reais via ORM, somente leitura nesta fase 2; ações de escrita
- * permanecem nas rotas legadas até validação.
+ * Dados reais via ORM; lista/detalhe com filtros, edição inline de itens e
+ * transição de status no protótipo (convive com OrcamentosController legado).
  */
 class OrcamentosPrototypeController extends AppController {
 
@@ -38,17 +39,6 @@ class OrcamentosPrototypeController extends AppController {
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
 		$this->viewBuilder()->setLayout('erp_prototype');
-	}
-
-	public function isAuthorized($user) {
-		if (empty($user)) {
-			return false;
-		}
-		if ((int)($user['role'] ?? -1) !== 0) {
-			return false;
-		}
-
-		return parent::isAuthorized($user);
 	}
 
 	/**
@@ -365,6 +355,9 @@ class OrcamentosPrototypeController extends AppController {
 	 */
 	public function apiProdutos() {
 		$this->request->allowMethod(['get']);
+		if ($guard = $this->guardApiEquipeGet()) {
+			return $guard;
+		}
 		$this->autoRender = false;
 		$this->response = $this->response->withType('application/json');
 		$empresa = (int)$this->Auth->user('idempresa');
@@ -404,6 +397,9 @@ class OrcamentosPrototypeController extends AppController {
 	 */
 	public function apiClientes() {
 		$this->request->allowMethod(['get']);
+		if ($guard = $this->guardApiEquipeGet()) {
+			return $guard;
+		}
 		$this->autoRender = false;
 		$this->response = $this->response->withType('application/json');
 		$empresa = (int)$this->Auth->user('idempresa');

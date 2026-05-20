@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Controller\Traits\ErpPrototypeRbacTrait;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 
@@ -28,17 +29,6 @@ class FornecedoresPrototypeController extends AppController {
 		$this->Auth->setConfig('unauthorizedRedirect', $staffLogin);
 		parent::beforeFilter($event);
 		$this->viewBuilder()->setLayout('erp_prototype');
-	}
-
-	public function isAuthorized($user) {
-		if (empty($user)) {
-			return false;
-		}
-		if ((int)($user['role'] ?? -1) !== 0) {
-			return false;
-		}
-
-		return parent::isAuthorized($user);
 	}
 
 	public function lista() {

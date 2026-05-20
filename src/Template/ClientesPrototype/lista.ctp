@@ -75,8 +75,10 @@ $f = (array)($cliFiltros ?? ['q' => '', 'tipo' => '', 'status' => '']);
 			<tbody>
 				<?php if ($cliItems === []) : ?>
 					<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-muted);"><?= h(__('Nenhum cliente no escopo.')) ?></td></tr>
-				<?php else : foreach ($cliItems as $it) : ?>
-					<tr data-cli-row="<?= (int)$it['id'] ?>">
+				<?php else : foreach ($cliItems as $it) :
+					$cliHref = $this->Url->build(['controller' => 'ClientesPrototype', 'action' => 'view', '360', '?' => ['id' => (int)$it['id']]]);
+				?>
+					<tr data-cli-row="<?= (int)$it['id'] ?>" data-pgm-row-href="<?= h($cliHref) ?>" tabindex="0">
 						<td><span class="badge <?= $it['tipo'] === 'PJ' ? 'b-aprov' : 'b-env' ?>"><?= h((string)$it['tipo']) ?></span></td>
 						<td>
 							<strong><?= h((string)$it['nome']) ?></strong>
