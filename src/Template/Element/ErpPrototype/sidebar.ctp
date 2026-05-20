@@ -20,6 +20,23 @@ $cls = static function (string $key) use ($active): string {
 $session = $this->getRequest()->getSession();
 $isAdmin = (int)$session->read('Auth.User.admin') === 1;
 $isEquipe = (int)$session->read('Auth.User.role') === 0;
+$userId = (int)$session->read('Auth.User.id');
+$hasPerm = static function (?string $code) use ($userId, $isAdmin): bool {
+	if ($code === null || $code === '') {
+		return true;
+	}
+	if ($isAdmin) {
+		return true;
+	}
+	if (!class_exists('\\App\\Utility\\RbacChecker') || $userId <= 0) {
+		return true; // sem RBAC ativo, permite (compatível com legado)
+	}
+	try {
+		return (bool)\App\Utility\RbacChecker::userHasPermissionCode($userId, $code);
+	} catch (\Throwable $e) {
+		return true;
+	}
+};
 $badge = static function (string $key, string $style = '') use ($badges): string {
 	$n = (int)($badges[$key] ?? 0);
 	$extra = $style !== '' ? ' ' . h($style) : '';
@@ -130,13 +147,36 @@ $sections = [
 		],
 	],
 ];
-// Filtra seções por permissão
-$sections = array_values(array_filter($sections, static function (array $sec) use ($isAdmin) {
+// Filtra seções por permissão (requires_admin / requires_permission)
+$sections = array_values(array_filter($sections, static function (array $sec) use ($isAdmin, $hasPerm) {
 	if (!empty($sec['requires_admin']) && !$isAdmin) {
+		return false;
+	}
+	if (!empty($sec['requires_permission']) && !$hasPerm((string)$sec['requires_permission'])) {
 		return false;
 	}
 
 	return true;
+}));
+// Filtra itens individuais por permission code
+foreach ($sections as &$sec) {
+	if (!isset($sec['items'])) {
+		continue;
+	}
+	$sec['items'] = array_values(array_filter($sec['items'], static function (array $item) use ($hasPerm, $isAdmin) {
+		if (!empty($item['requires_admin']) && !$isAdmin) {
+			return false;
+		}
+		if (!empty($item['requires_permission']) && !$hasPerm((string)$item['requires_permission'])) {
+			return false;
+		}
+
+		return true;
+	}));
+}
+unset($sec);
+$sections = array_values(array_filter($sections, static function (array $sec) {
+	return !isset($sec['items']) || $sec['items'] !== [];
 }));
 ?>
 <div class="sidebar">

@@ -238,7 +238,21 @@ class OrdensservicoPrototypeController extends AppController {
 			$os->set('situacao', $nova);
 			if ($this->Ordensservico->save($os)) {
 				$labels = [0 => __('Aberta'), 1 => __('Em execução'), 2 => __('Aguardando aprovação'), 3 => __('Concluída')];
-				$this->Flash->success(__('OS movida para "{0}".', (string)($labels[$nova] ?? $nova)));
+				$lbl = (string)($labels[$nova] ?? $nova);
+				$this->Flash->success(__('OS movida para "{0}".', $lbl));
+				// Push hook ao técnico responsável (iduser)
+				try {
+					$tecId = (int)$os->get('iduser');
+					if ($tecId > 0) {
+						(new \App\Service\WebPushSenderService())->sendToUser($tecId, [
+							'title' => '🛠 ' . __('OS {0} · {1}', sprintf('OS-%05d', $id), $lbl),
+							'body' => __('Etapa alterada por {0}.', trim((string)$this->Auth->user('name')) ?: 'equipe'),
+							'url' => $this->Url->build(['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', $id]),
+							'tag' => 'os-' . $id,
+						]);
+					}
+				} catch (\Throwable $e) {
+				}
 			}
 		} catch (\Throwable $e) {
 			$this->Flash->error(__('Erro: {0}', $e->getMessage()));

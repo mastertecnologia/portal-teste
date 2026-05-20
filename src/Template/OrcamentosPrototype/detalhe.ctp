@@ -137,7 +137,13 @@ $opts = (array)($proximos[$st] ?? []);
 								<?= h($H->brl((float)$l['vlr'])) ?>
 							<?php endif; ?>
 						</td>
-						<td class="r" style="color:#7A1822;"><?php if ((float)$l['desconto'] > 0) : ?>−<?= h($H->brl((float)$l['desconto'])) ?><?php else : ?>—<?php endif; ?></td>
+						<td class="r">
+							<?php if ($lid > 0) : ?>
+								<input type="number" step="0.01" min="0" data-orc-desc="<?= $lid ?>" value="<?= h(number_format((float)$l['desconto'], 2, '.', '')) ?>" style="width:78px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:right;color:#7A1822;">
+							<?php elseif ((float)$l['desconto'] > 0) : ?>
+								<span style="color:#7A1822;">−<?= h($H->brl((float)$l['desconto'])) ?></span>
+							<?php else : ?>—<?php endif; ?>
+						</td>
 						<td class="r"><strong data-orc-subtotal="<?= $lid ?>"><?= h($H->brl((float)$l['subtotal'])) ?></strong></td>
 						<td class="r" style="white-space:nowrap;">
 							<?php if ($lid > 0) : ?>
@@ -175,14 +181,17 @@ $opts = (array)($proximos[$st] ?? []);
 			var id = this.getAttribute('data-orc-save');
 			var qInput = document.querySelector('[data-orc-qtd="' + id + '"]');
 			var vInput = document.querySelector('[data-orc-vlr="' + id + '"]');
+			var dInput = document.querySelector('[data-orc-desc="' + id + '"]');
 			var q = parseFloat(qInput.value);
 			var v = parseFloat(vInput.value) || 0;
+			var d = dInput ? (parseFloat(dInput.value) || 0) : 0;
 			if (!(q > 0)) { alert('Quantidade inválida.'); return; }
 			var fd = new FormData();
 			fd.append('_csrfToken', csrf);
 			fd.append('item_id', id);
 			fd.append('quantidade', q);
 			fd.append('valor_unitario', v);
+			fd.append('desconto', d);
 			fetch(urlUpd, {method: 'POST', body: fd, credentials: 'same-origin', headers: {'X-CSRF-Token': csrf}})
 				.then(function (r) { return r.json(); })
 				.then(function (data) {

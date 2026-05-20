@@ -155,6 +155,50 @@ class BancosPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /bancos-prototype/extrato/export.csv — exporta extrato filtrado.
+	 */
+	public function exportExtratoCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$q = $this->request->getQueryParams();
+		$dias = (int)($q['dias'] ?? 30);
+		if ($dias <= 0 || $dias > 365) { $dias = 30; }
+		$desde = \Cake\I18n\Time::now()->subDays($dias);
+		$where = ['FinanceiroExtratoBancario.idempresa' => $empresa, 'FinanceiroExtratoBancario.data >=' => $desde];
+		if (!empty($q['conta'])) { $where['FinanceiroExtratoBancario.conta_bancaria'] = (string)$q['conta']; }
+		if (!empty($q['tipo']) && in_array($q['tipo'], ['c', 'd'], true)) {
+			$where['FinanceiroExtratoBancario.tipo'] = strtoupper((string)$q['tipo']);
+		}
+		try {
+			$ext = \Cake\ORM\TableRegistry::getTableLocator()->get('FinanceiroExtratoBancario');
+			$rows = $ext->find()->where($where)->order(['FinanceiroExtratoBancario.data' => 'DESC'])->limit(10000)->all();
+		} catch (\Throwable $e) {
+			$rows = [];
+		}
+		$this->autoRender = false;
+		$fname = 'extrato-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, ['Data', 'Descrição', 'Conta', 'Tipo', 'Valor', 'Conciliado'], ';');
+		foreach ($rows as $r) {
+			$tipo = strtolower((string)$r->get('tipo'));
+			fputcsv($out, [
+				$r->get('data') instanceof \DateTimeInterface ? $r->get('data')->format('d/m/Y') : '',
+				(string)$r->get('descricao'),
+				(string)$r->get('conta_bancaria'),
+				$tipo === 'c' ? 'Crédito' : ($tipo === 'd' ? 'Débito' : $tipo),
+				number_format((float)$r->get('valor'), 2, ',', '.'),
+				(int)$r->get('conciliado') === 1 || (int)$r->get('financeiro_lancamento_id') > 0 ? 'Sim' : 'Não',
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
 	 * Extrato bancário com filtros (período, conta, tipo).
 	 *
 	 * @return array<string,mixed>

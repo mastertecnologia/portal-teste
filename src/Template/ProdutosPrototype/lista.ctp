@@ -24,6 +24,7 @@ $tipoLabels = [
 		</div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
+		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'ProdutosPrototype', 'action' => 'exportCsv'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('📦 ' . __('Estoque'), ['controller' => 'ProdutosPrototype', 'action' => 'estoque'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('💲 ' . __('Tabela de preços'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'precos'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('+ ' . __('Novo produto'), ['controller' => 'ProdutosPrototype', 'action' => 'view', 'novo'], ['class' => 'btn btn-primary btn-sm']) ?>

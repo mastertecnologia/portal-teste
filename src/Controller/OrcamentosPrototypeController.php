@@ -525,7 +525,21 @@ class OrcamentosPrototypeController extends AppController {
 			$orc->set('status', $novo);
 			if ($this->Orcamentos->save($orc)) {
 				$labels = [0 => __('Pendente'), 1 => __('Enviado'), 2 => __('Aprovado'), 3 => __('Recusado'), 4 => __('Arquivado')];
-				$this->Flash->success(__('Status alterado para "{0}".', (string)($labels[$novo] ?? $novo)));
+				$lbl = (string)($labels[$novo] ?? $novo);
+				$this->Flash->success(__('Status alterado para "{0}".', $lbl));
+				// Push hook ao autor
+				try {
+					$autorId = (int)$orc->get('idautor');
+					if ($autorId > 0) {
+						(new \App\Service\WebPushSenderService())->sendToUser($autorId, [
+							'title' => '📋 ' . __('Orçamento {0} · {1}', sprintf('ORC-%04d', $id), $lbl),
+							'body' => __('Status do orçamento alterado por {0}.', trim((string)$this->Auth->user('name')) ?: 'equipe'),
+							'url' => $this->Url->build(['controller' => 'OrcamentosPrototype', 'action' => 'detalhe', $id]),
+							'tag' => 'orc-' . $id,
+						]);
+					}
+				} catch (\Throwable $e) {
+				}
 			}
 		} catch (\Throwable $e) {
 			$this->Flash->error(__('Erro: {0}', $e->getMessage()));
@@ -548,7 +562,9 @@ class OrcamentosPrototypeController extends AppController {
 		$itemId = (int)$this->request->getData('item_id');
 		$qtd = (float)str_replace(',', '.', (string)$this->request->getData('quantidade'));
 		$vu = (float)str_replace(',', '.', (string)$this->request->getData('valor_unitario'));
-		if ($itemId <= 0 || $qtd <= 0 || $vu < 0) {
+		$descRaw = $this->request->getData('desconto');
+		$desc = $descRaw !== null && $descRaw !== '' ? (float)str_replace(',', '.', (string)$descRaw) : null;
+		if ($itemId <= 0 || $qtd <= 0 || $vu < 0 || ($desc !== null && $desc < 0)) {
 			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Dados inválidos.')]));
 		}
 		try {
@@ -559,13 +575,18 @@ class OrcamentosPrototypeController extends AppController {
 			}
 			$row->set('quantidade', $qtd);
 			$row->set('valorunitario', $vu);
+			if ($desc !== null) {
+				$row->set('valordesconto', $desc);
+			}
+			$descFinal = (float)($row->get('valordesconto') ?? 0);
 			if (!$itens->save($row)) {
 				return $this->response->withStringBody(json_encode(['ok' => false, 'error' => __('Falha ao salvar.')]));
 			}
+			$subtotal = $qtd * $vu - $descFinal;
 
 			return $this->response->withStringBody(json_encode([
 				'ok' => true,
-				'item' => ['id' => $itemId, 'qtd' => $qtd, 'vlr' => $vu, 'subtotal' => $qtd * $vu],
+				'item' => ['id' => $itemId, 'qtd' => $qtd, 'vlr' => $vu, 'desconto' => $descFinal, 'subtotal' => $subtotal],
 			], JSON_UNESCAPED_UNICODE));
 		} catch (\Throwable $e) {
 			return $this->response->withStringBody(json_encode(['ok' => false, 'error' => $e->getMessage()]));

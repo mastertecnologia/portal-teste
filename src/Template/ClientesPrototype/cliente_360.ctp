@@ -63,6 +63,34 @@ $initials = $hasCliente ? $H->initials((string)($c['nome'] ?? '')) : '?';
 	</div>
 </div>
 
-<div class="alert-box alert-blue" style="margin-top:14px;">
-	<?= h(__('Visão 360º em construção: nas próximas iterações vamos juntar timeline de tickets, OS recentes, contratos ativos, NPS, NPV e mapa de relacionamento.')) ?>
-</div>
+<?php $timeline = (array)($payload360['timeline'] ?? []); ?>
+<?php if ($timeline !== []) : ?>
+	<div class="card">
+		<div class="sec-title">📜 <?= h(__('Linha do tempo')) ?></div>
+		<?php foreach ($timeline as $t) :
+			$kind = (string)$t['kind'];
+			$dot = $kind === 'ticket' ? 'background:var(--blue-light);color:#0C447C;' : ($kind === 'os' ? 'background:var(--amber-light);color:#8A4D02;' : 'background:var(--teal-light);color:var(--teal-dark);');
+		?>
+			<div class="tl-item">
+				<div class="tl-dot" style="<?= $dot ?>"><?= $t['icon'] ?></div>
+				<div class="tl-body">
+					<div class="tl-title">
+						<?php if (!empty($t['url'])) : ?>
+							<?= $this->Html->link((string)$t['label'], $t['url'], ['style' => 'color:inherit;font-weight:500;']) ?>
+						<?php else : ?>
+							<?= h((string)$t['label']) ?>
+						<?php endif; ?>
+					</div>
+					<div class="tl-sub">
+						<?= h((string)$t['sub']) ?>
+						<?php if ($t['data'] instanceof \DateTimeInterface) : ?> · <?= h($t['data']->format('d/m/Y H:i')) ?><?php endif; ?>
+					</div>
+				</div>
+			</div>
+		<?php endforeach; ?>
+	</div>
+<?php else : ?>
+	<div class="alert-box alert-blue" style="margin-top:14px;">
+		<?= h(__('Sem registros recentes (tickets, OS ou faturas) para este cliente.')) ?>
+	</div>
+<?php endif; ?>

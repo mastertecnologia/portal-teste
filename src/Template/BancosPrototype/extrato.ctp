@@ -17,7 +17,10 @@ $saldo = $extKpi['entradas'] - $extKpi['saidas'];
 		<h1 style="font-size:22px;font-weight:600;margin:0;">📊 <?= h(__('Extrato Bancário')) ?></h1>
 		<div style="font-size:12px;color:var(--text-muted);"><?= sprintf(h(__('Últimos %d dias · %d movimentos')), (int)$extFiltros['dias'], (int)$extKpi['total_mov']) ?></div>
 	</div>
-	<?= $this->Html->link('← ' . __('Voltar'), ['controller' => 'BancosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	<div style="display:flex;gap:8px;">
+		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'BancosPrototype', 'action' => 'exportExtratoCsv', '?' => array_filter($extFiltros)], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('← ' . __('Voltar'), ['controller' => 'BancosPrototype', 'action' => 'lista'], ['class' => 'btn btn-ghost btn-sm']) ?>
+	</div>
 </div>
 
 <div class="summary-grid" style="margin-bottom:14px;">

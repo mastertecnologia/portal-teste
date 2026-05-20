@@ -90,6 +90,41 @@ if (!$csrf && method_exists($this->getRequest(), 'getParam')) {
 		b: <?= json_encode($this->Url->build(['controller' => 'FinanceiroPrototype', 'action' => 'lista'])) ?>
 	};
 	var helpMap = {f: 'Fila SD', a: 'Aprovações', o: 'Orçamentos', s: 'OS', c: 'Clientes', p: 'Produtos', d: 'Dashboard SD', h: 'Home', b: 'Financeiro'};
+	function showHelpModal () {
+		var m = document.getElementById('pgm-help-modal');
+		if (m) { m.style.display = 'flex'; return; }
+		m = document.createElement('div');
+		m.id = 'pgm-help-modal';
+		m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;';
+		var rows = Object.keys(helpMap).map(function (k) {
+			return '<tr><td style="padding:6px 14px;font-family:monospace;font-size:13px;color:#1D9E75;font-weight:600;text-align:center;">g ' + k + '</td><td style="padding:6px 14px;color:#1a1a18;">' + helpMap[k] + '</td></tr>';
+		}).join('');
+		m.innerHTML = '' +
+			'<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;">' +
+			'  <div style="padding:18px 22px;border-bottom:1px solid #e5e4e0;display:flex;justify-content:space-between;align-items:center;">' +
+			'    <strong style="font-size:16px;">⌨️ Atalhos de teclado</strong>' +
+			'    <button type="button" onclick="document.getElementById(\'pgm-help-modal\').style.display=\'none\'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b6a65;">×</button>' +
+			'  </div>' +
+			'  <div style="padding:6px 0;max-height:60vh;overflow-y:auto;">' +
+			'    <table style="width:100%;border-collapse:collapse;">' +
+			'      <thead><tr style="background:#f9f9f8;"><th style="padding:8px 14px;text-align:center;font-size:11px;color:#6b6a65;text-transform:uppercase;letter-spacing:.4px;">Tecla</th><th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b6a65;text-transform:uppercase;letter-spacing:.4px;">Vai para</th></tr></thead>' +
+			'      <tbody>' + rows + '</tbody>' +
+			'    </table>' +
+			'    <div style="padding:14px 22px;border-top:1px solid #f0efec;font-size:11px;color:#6b6a65;line-height:1.6;">' +
+			'      <strong>Como usar:</strong> aperte <code style="background:#f2f1ee;padding:2px 6px;border-radius:4px;">g</code> e depois a próxima tecla (dentro de 1,2s). Não funciona enquanto você digita em campos.' +
+			'    </div>' +
+			'  </div>' +
+			'</div>';
+		m.addEventListener('click', function (e) { if (e.target === m) m.style.display = 'none'; });
+		document.body.appendChild(m);
+	}
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape') {
+			var m = document.getElementById('pgm-help-modal');
+			if (m) m.style.display = 'none';
+		}
+	});
+
 	function showToast (txt) {
 		var t = document.getElementById('pgm-kbd-toast');
 		if (!t) {
@@ -109,8 +144,7 @@ if (!$csrf && method_exists($this->getRequest(), 'getParam')) {
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 		var k = e.key.toLowerCase();
 		if (k === '?') {
-			var lines = Object.keys(helpMap).map(function (key) { return 'g ' + key + ' = ' + helpMap[key]; });
-			showToast('Atalhos:<br>' + lines.join('<br>'));
+			showHelpModal();
 			return;
 		}
 		if (k === 'g') {

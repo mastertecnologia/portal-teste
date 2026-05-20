@@ -322,6 +322,49 @@ class ProdutosPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /produtos-prototype/export.csv — exporta produtos do escopo da empresa.
+	 */
+	public function exportCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		try {
+			$rows = $this->Produtos->find()
+				->where(['Produtos.idempresa' => $empresa])
+				->order(['Produtos.codigo' => 'ASC'])
+				->limit(10000)
+				->all();
+		} catch (\Throwable $e) {
+			$rows = [];
+		}
+		$tipoLbl = ['prod' => 'Produto', 'serv' => 'Serviço', 'lic' => 'Licença', 'loc' => 'Locação'];
+		$this->autoRender = false;
+		$fname = 'produtos-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, ['ID', 'Código', 'Descrição', 'Tipo', 'Unidade', 'NCM', 'Preço venda', 'Loc diária', 'Loc mensal', 'Estoque', 'Status'], ';');
+		foreach ($rows as $p) {
+			fputcsv($out, [
+				(int)$p->get('id'),
+				(string)$p->get('codigo'),
+				(string)$p->get('descricao'),
+				(string)($tipoLbl[(string)$p->get('tipo')] ?? $p->get('tipo')),
+				(string)$p->get('unidade'),
+				(string)($p->get('ncm') ?? ''),
+				number_format((float)$p->get('vlunitario'), 2, ',', '.'),
+				number_format((float)$p->get('vllocdiario'), 2, ',', '.'),
+				number_format((float)$p->get('vllocmensal'), 2, ',', '.'),
+				number_format((float)$p->get('estoque_atual'), 2, ',', '.'),
+				(int)$p->get('ativo') === 1 ? 'Ativo' : 'Inativo',
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
 	 * Centro de Cálculo — simula impacto de margem/desconto a partir de um produto base.
 	 *
 	 * @return array<string,mixed>

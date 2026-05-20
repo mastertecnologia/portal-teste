@@ -108,6 +108,52 @@ class ClientesPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /clientes-prototype/export.csv — exporta clientes.
+	 */
+	public function exportCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$rows = [];
+		try {
+			$rows = $this->Clientes->find()
+				->where(['Clientes.idempresa' => $empresa])
+				->order(['Clientes.id' => 'DESC'])
+				->limit(10000)
+				->all();
+		} catch (\Throwable $e) {
+		}
+		$this->autoRender = false;
+		$fname = 'clientes-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, ['ID', 'Tipo', 'Nome / Razão social', 'Fantasia', 'CNPJ/CPF', 'E-mail', 'Telefone', 'Cidade', 'Estado', 'Status', 'Desde'], ';');
+		foreach ($rows as $c) {
+			$tipo = (int)$c->get('tipo') === 2 ? 'PJ' : 'PF';
+			$nome = $tipo === 'PJ'
+				? (string)($c->get('razaosocial') ?? $c->get('nome'))
+				: (string)$c->get('nome');
+			fputcsv($out, [
+				(int)$c->get('id'),
+				$tipo,
+				$nome,
+				(string)($c->get('nomefantasia') ?? ''),
+				(string)($c->get('cnpj') ?? $c->get('cpf') ?? ''),
+				(string)($c->get('email') ?? ''),
+				(string)($c->get('fone') ?? $c->get('fone2') ?? ''),
+				(string)($c->get('idcidade') ?? ''),
+				(string)($c->get('estado') ?? ''),
+				(int)$c->get('inativo') === 1 ? 'Inativo' : 'Ativo',
+				$c->get('membrodesde') instanceof \DateTimeInterface ? $c->get('membrodesde')->format('d/m/Y') : '',
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
 	 * Telas adicionais (novo, 360, import, export).
 	 *
 	 * @param string $page
@@ -188,6 +234,8 @@ class ClientesPrototypeController extends AppController {
 		} catch (\Throwable $e) {
 		}
 
+		$payload['timeline'] = [];
+
 		try {
 			$tickets = $this->loadModel('Tickets');
 			$closed = [];
@@ -201,10 +249,41 @@ class ClientesPrototypeController extends AppController {
 			if ($cliId > 0) {
 				$where['Tickets.idcliente'] = $cliId;
 			}
+			$wAbertos = $where;
 			if ($closed !== []) {
-				$where['Tickets.situacao NOT IN'] = $closed;
+				$wAbertos['Tickets.situacao NOT IN'] = $closed;
 			}
-			$payload['tickets_abertos'] = (int)$tickets->find()->where($where)->count();
+			$payload['tickets_abertos'] = (int)$tickets->find()->where($wAbertos)->count();
+			// Timeline: últimos 5 tickets
+			foreach ($tickets->find()->where($where)->order(['Tickets.created' => 'DESC'])->limit(5)->all() as $t) {
+				$payload['timeline'][] = [
+					'kind' => 'ticket',
+					'icon' => '🎟',
+					'label' => '#' . (int)$t->get('id') . ' · ' . \Cake\Utility\Text::truncate((string)$t->get('solicitacao'), 60, ['ellipsis' => '…']),
+					'sub' => (string)$t->get('situacao'),
+					'data' => $t->get('created'),
+					'url' => ['controller' => 'ServicedeskPrototype', 'action' => 'ticket', (int)$t->get('id')],
+				];
+			}
+		} catch (\Throwable $e) {
+		}
+
+		try {
+			$os = $this->loadModel('Ordensservico');
+			$w = ['Ordensservico.idempresa' => $empresa];
+			if ($cliId > 0) {
+				$w['Ordensservico.idcliente'] = $cliId;
+			}
+			foreach ($os->find()->where($w)->order(['Ordensservico.id' => 'DESC'])->limit(5)->all() as $o) {
+				$payload['timeline'][] = [
+					'kind' => 'os',
+					'icon' => '🛠',
+					'label' => sprintf('OS-%05d', (int)$o->get('id')) . ' · ' . \Cake\Utility\Text::truncate((string)($o->get('relato') ?? $o->get('descricao') ?? ''), 60, ['ellipsis' => '…']),
+					'sub' => (string)$o->get('situacao'),
+					'data' => $o->get('dataabertura') ?? $o->get('created'),
+					'url' => ['controller' => 'OrdensservicoPrototype', 'action' => 'detalhe', (int)$o->get('id')],
+				];
+			}
 		} catch (\Throwable $e) {
 		}
 
@@ -214,9 +293,10 @@ class ClientesPrototypeController extends AppController {
 			if ($cliId > 0) {
 				$w['Faturas.idcliente'] = $cliId;
 			}
-			$rows = $faturas->find()->where($w)->all();
+			$rows = $faturas->find()->where($w)->order(['Faturas.vencimento' => 'DESC'])->limit(50)->all();
 			$now = \Cake\I18n\Time::now();
 			$ltv = 0.0;
+			$timelineFat = 0;
 			foreach ($rows as $f) {
 				$v = (float)($f->get('valor') ?? 0);
 				$ltv += $v;
@@ -226,10 +306,30 @@ class ClientesPrototypeController extends AppController {
 				if (!$pago && $venc instanceof \DateTimeInterface && $venc < $now) {
 					$payload['faturas_vencidas']++;
 				}
+				if ($timelineFat < 5) {
+					$payload['timeline'][] = [
+						'kind' => 'fatura',
+						'icon' => '💵',
+						'label' => 'Fatura ' . (string)($f->get('nro') ?? '#' . (int)$f->get('id')) . ' · ' . ($pago ? 'paga' : ($venc instanceof \DateTimeInterface && $venc < $now ? 'vencida' : 'pendente')),
+						'sub' => 'R$ ' . number_format($v, 2, ',', '.'),
+						'data' => $venc,
+						'url' => ['controller' => 'Faturas', 'action' => 'view', (int)$f->get('id')],
+					];
+					$timelineFat++;
+				}
 			}
 			$payload['ltv'] = $ltv;
 		} catch (\Throwable $e) {
 		}
+
+		// Ordena timeline por data desc (mais recentes primeiro)
+		usort($payload['timeline'], static function ($a, $b) {
+			$ta = $a['data'] instanceof \DateTimeInterface ? $a['data']->getTimestamp() : 0;
+			$tb = $b['data'] instanceof \DateTimeInterface ? $b['data']->getTimestamp() : 0;
+
+			return $tb <=> $ta;
+		});
+		$payload['timeline'] = array_slice($payload['timeline'], 0, 15);
 
 		$this->set('payload360', $payload);
 

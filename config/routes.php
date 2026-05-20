@@ -569,6 +569,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ServicedeskPrototype",
         "action" => "csatHistorico",
     ]);
+    $routes->connect("/servicedesk-prototype/csat-export.csv", [
+        "controller" => "ServicedeskPrototype",
+        "action" => "csatExportCsv",
+    ]);
     $routes->connect("/servicedesk-prototype/api/badges", [
         "controller" => "ServicedeskPrototype",
         "action" => "apiBadges",
@@ -720,6 +724,10 @@ Router::scope("/", function ($routes) {
         "controller" => "ClientesPrototype",
         "action" => "lista",
     ]);
+    $routes->connect("/clientes-prototype/export.csv", [
+        "controller" => "ClientesPrototype",
+        "action" => "exportCsv",
+    ]);
     $routes->connect("/clientes-prototype/:page", [
         "controller" => "ClientesPrototype",
         "action" => "view",
@@ -737,6 +745,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/produtos-prototype/estoque", [
         "controller" => "ProdutosPrototype",
         "action" => "estoque",
+    ]);
+    $routes->connect("/produtos-prototype/export.csv", [
+        "controller" => "ProdutosPrototype",
+        "action" => "exportCsv",
     ]);
     $routes->connect("/produtos-prototype/preco-save", [
         "controller" => "ProdutosPrototype",
@@ -809,6 +821,10 @@ Router::scope("/", function ($routes) {
     $routes->connect("/bancos-prototype/conciliar", [
         "controller" => "BancosPrototype",
         "action" => "conciliar",
+    ]);
+    $routes->connect("/bancos-prototype/extrato/export.csv", [
+        "controller" => "BancosPrototype",
+        "action" => "exportExtratoCsv",
     ]);
     $routes->connect("/bancos-prototype/rejeitar-match", [
         "controller" => "BancosPrototype",

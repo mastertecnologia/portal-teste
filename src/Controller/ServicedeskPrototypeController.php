@@ -104,6 +104,56 @@ class ServicedeskPrototypeController extends AppController {
 	}
 
 	/**
+	 * GET /servicedesk-prototype/csat-export.csv — exporta histórico filtrado.
+	 */
+	public function csatExportCsv() {
+		$empresa = (int)$this->Auth->user('idempresa');
+		$q = $this->request->getQueryParams();
+		$where = ['TicketCsatResponses.idempresa' => $empresa];
+		if (!empty($q['mes']) && preg_match('/^\d{4}-\d{2}$/', (string)$q['mes'])) {
+			$where['TicketCsatResponses.responded_at >='] = $q['mes'] . '-01 00:00:00';
+			$where['TicketCsatResponses.responded_at <='] = date('Y-m-t 23:59:59', strtotime($q['mes'] . '-01'));
+		}
+		if (!empty($q['min_csat']) && (int)$q['min_csat'] > 0) {
+			$where['TicketCsatResponses.csat_score >='] = (int)$q['min_csat'];
+		}
+		if (!empty($q['nps'])) {
+			$where['TicketCsatResponses.nps_score IS NOT'] = null;
+		}
+		if (!empty($q['q'])) {
+			$where['TicketCsatResponses.comentario ILIKE'] = '%' . $q['q'] . '%';
+		}
+		try {
+			$tbl = \Cake\ORM\TableRegistry::getTableLocator()->get('TicketCsatResponses');
+			$rows = $tbl->find()->contain(['Clientes'])->where($where)->order(['TicketCsatResponses.responded_at' => 'DESC'])->limit(10000)->all();
+		} catch (\Throwable $e) {
+			$rows = [];
+		}
+		$this->autoRender = false;
+		$fname = 'csat-' . date('Ymd-His') . '.csv';
+		$this->response = $this->response
+			->withType('text/csv')
+			->withHeader('Content-Disposition', 'attachment; filename="' . $fname . '"');
+		$out = fopen('php://temp', 'w+');
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, ['Quando', 'Ticket', 'Cliente', 'CSAT', 'NPS', 'Comentário'], ';');
+		foreach ($rows as $r) {
+			$cli = $r->cliente ?? null;
+			fputcsv($out, [
+				$r->get('responded_at') instanceof \DateTimeInterface ? $r->get('responded_at')->format('d/m/Y H:i') : '',
+				(int)$r->get('ticket_id'),
+				$cli ? (string)($cli->get('razaosocial') ?? $cli->get('nome') ?? '') : '',
+				(int)$r->get('csat_score'),
+				$r->get('nps_score') !== null ? (int)$r->get('nps_score') : '',
+				(string)($r->get('comentario') ?? ''),
+			], ';');
+		}
+		rewind($out);
+
+		return $this->response->withStringBody(stream_get_contents($out));
+	}
+
+	/**
 	 * GET /servicedesk-prototype/csat-historico — histórico CSAT/NPS com filtros.
 	 */
 	public function csatHistorico() {

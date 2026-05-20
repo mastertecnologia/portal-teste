@@ -16,7 +16,10 @@ $f = (array)$csatFiltros;
 			<h1 style="font-size:22px;font-weight:600;margin:0;">📊 <?= h(__('Histórico CSAT & NPS')) ?></h1>
 			<div style="font-size:12px;color:var(--text-muted);"><?= sprintf(h(__('%d respostas no escopo do filtro')), (int)$csatKpi['total']) ?></div>
 		</div>
-		<?= $this->Html->link('← ' . __('Resumo CSAT'), ['controller' => 'ServicedeskPrototype', 'action' => 'view', 'csat'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<div style="display:flex;gap:8px;">
+			<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'ServicedeskPrototype', 'action' => 'csatExportCsv', '?' => array_filter($f)], ['class' => 'btn btn-ghost btn-sm']) ?>
+			<?= $this->Html->link('← ' . __('Resumo CSAT'), ['controller' => 'ServicedeskPrototype', 'action' => 'view', 'csat'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		</div>
 	</div>
 
 	<div class="summary-grid" style="margin-bottom:14px;">

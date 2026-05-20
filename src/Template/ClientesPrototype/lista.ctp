@@ -17,8 +17,8 @@ $H = $this->ErpPrototype;
 		</div>
 	</div>
 	<div style="display:flex;gap:8px;flex-wrap:wrap;">
-		<?= $this->Html->link('📤 ' . __('Exportar'), ['controller' => 'ClientesPrototype', 'action' => 'view', 'export'], ['class' => 'btn btn-ghost btn-sm']) ?>
-		<?= $this->Html->link('📥 ' . __('Importar'), ['controller' => 'ClientesPrototype', 'action' => 'view', 'import'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('📥 ' . __('Exportar CSV'), ['controller' => 'ClientesPrototype', 'action' => 'exportCsv'], ['class' => 'btn btn-ghost btn-sm']) ?>
+		<?= $this->Html->link('📤 ' . __('Importar'), ['controller' => 'ClientesPrototype', 'action' => 'view', 'import'], ['class' => 'btn btn-ghost btn-sm']) ?>
 		<?= $this->Html->link('+ ' . __('Novo cliente'), ['controller' => 'ClientesPrototype', 'action' => 'view', 'novo'], ['class' => 'btn btn-primary btn-sm']) ?>
 	</div>
 </div>
